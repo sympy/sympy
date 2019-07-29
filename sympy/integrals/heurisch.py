@@ -19,6 +19,8 @@ from sympy.functions import hankel1, hankel2, jn, yn
 from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.elementary.piecewise import Piecewise
 
+from sympy.simplify.radsimp import collect
+
 from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
 
@@ -55,7 +57,7 @@ def components(f, x):
     result = set()
 
     if x in f.free_symbols:
-        if f.is_Symbol:
+        if f.is_symbol and f.is_commutative:
             result.add(f)
         elif f.is_Function or f.is_Derivative:
             for g in f.args:
@@ -448,7 +450,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     rev_mapping = {v: k for k, v in mapping}                            #
     if mappings is None:                                                #
         # optimizing the number of permutations of mapping              #
-        assert mapping[-1][0] == x  # if not, find it and correct this comment
+        assert mapping[-1][0] == x # if not, find it and correct this comment
         unnecessary_permutations = [mapping.pop(-1)]
         mappings = permutations(mapping)
     else:
@@ -486,8 +488,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             if _derivation(p) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
                 return _deflation(c)*gcd(q, q.diff(y)).as_expr()
-        else:
-            return p
+
+        return p
 
     def _splitter(p):
         for y in V:
@@ -510,8 +512,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 q_split = _splitter(cancel(q / s))
 
                 return (c_split[0]*q_split[0]*s, c_split[1]*q_split[1])
-        else:
-            return (S.One, p)
+
+        return (S.One, p)
 
     special = {}
 
@@ -562,9 +564,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = itermonomials(V, A + B - 1 + degree_offset)
+        monoms = tuple(itermonomials(V, A + B - 1 + degree_offset))
     else:
-        monoms = itermonomials(V, A + B + degree_offset)
+        monoms = tuple(itermonomials(V, A + B + degree_offset))
 
     poly_coeffs = _symbols('A', len(monoms))
 
@@ -608,18 +610,20 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
         log_part, atan_part = [], []
 
-        x, y = symbols('x y', cls=Wild, exclude=[I])
         for poly in list(irreducibles):
-            m = poly.match(x + I*y)
-            if m[y] == 0:  # No coefficient of I
-                continue
-            pairs.add((m[x], m[y]))  # It is enough to save the coefficients
-            irreducibles.remove(poly)
+            m = collect(poly, I, evaluate=False)
+            y = m.get(I, S.Zero)
+            if y:
+                x = m.get(S.One, S.Zero)
+                if x.has(I) or y.has(I):
+                    continue  # nontrivial x + I*y
+                pairs.add((x, y))
+                irreducibles.remove(poly)
 
         while pairs:
             x, y = pairs.pop()
-            if (x,-y) in pairs:
-                pairs.remove((x,-y))
+            if (x, -y) in pairs:
+                pairs.remove((x, -y))
                 # Choosing b with no minus sign
                 if y.could_extract_minus_sign():
                     y = -y

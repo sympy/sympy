@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core.assumptions import StdFactKB
+from sympy.core.assumptions import StdFactKB, _assume_defined
 from sympy.core.compatibility import (string_types, range, is_sequence,
     ordered)
 from .basic import Basic
@@ -11,13 +11,24 @@ from .cache import cacheit
 from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.iterables import cartes
+from sympy.utilities.iterables import cartes, sift
 from sympy.core.containers import Tuple
 
 import string
 import re as _re
 import random
 
+
+def _filter_assumptions(kwargs):
+    """Split the given dict into assumptions and non-assumptions.
+    Keys are taken as assumptions if they correspond to an
+    entry in ``_assume_defined``.
+    """
+    assumptions, nonassumptions = map(dict, sift(kwargs.items(),
+        lambda i: i[0] in _assume_defined,
+        binary=True))
+    Symbol._sanitize(assumptions)
+    return assumptions, nonassumptions
 
 def _symbol(s, matching_symbol=None, **assumptions):
     """Return s if s is a Symbol, else if s is a string, return either
@@ -102,7 +113,7 @@ def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumpti
             is printed, e.g. this includes underscores that appear on
             Dummy symbols)
         modify : a single arg function that changes its string argument
-            in some way (the default is to preppend underscores)
+            in some way (the default is to prepend underscores)
 
     Examples
     ========
@@ -199,6 +210,17 @@ class Symbol(AtomicExpr, Boolean):
                 continue
             assumptions[key] = bool(v)
 
+    def _merge(self, assumptions):
+        base = self.assumptions0
+        for k in set(assumptions) & set(base):
+            if assumptions[k] != base[k]:
+                raise ValueError(filldedent('''
+                    non-matching assumptions for %s: existing value
+                    is %s and new value is %s''' % (
+                    k, base[k], assumptions[k])))
+        base.update(assumptions)
+        return base
+
     def __new__(cls, name, **assumptions):
         """Symbols are identified by name and assumptions::
 
@@ -251,6 +273,11 @@ class Symbol(AtomicExpr, Boolean):
         # Note: user-specified assumptions not hashed, just derived ones
         return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
+    def _eval_subs(self, old, new):
+        from sympy.core.power import Pow
+        if old.is_Pow:
+            return Pow(self, S.One, evaluate=False)._eval_subs(old, new)
+
     @property
     def assumptions0(self):
         return dict((key, value) for key, value
@@ -261,12 +288,7 @@ class Symbol(AtomicExpr, Boolean):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def as_dummy(self):
-        """Return a Dummy having the same name and same assumptions as self."""
-        return Dummy(self.name, **self._assumptions.generator)
-
-    def __call__(self, *args):
-        from .function import Function
-        return Function(self.name)(*args)
+        return Dummy(self.name)
 
     def as_real_imag(self, deep=True, **hints):
         from sympy import im, re
@@ -479,9 +501,6 @@ class Wild(Symbol):
         repl_dict = repl_dict.copy()
         repl_dict[self] = expr
         return repl_dict
-
-    def __call__(self, *args, **kwargs):
-        raise TypeError("'%s' object is not callable" % type(self).__name__)
 
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
@@ -809,9 +828,9 @@ def disambiguate(*iter):
     for k in mapping:
         # the first or only symbol doesn't get subscripted but make
         # sure that it's a Symbol, not a Dummy
-        k0 = Symbol("%s" % (k), **mapping[k][0].assumptions0)
-        if k != k0:
-            reps[mapping[k][0]] = k0
+        mapk0 = Symbol("%s" % (k), **mapping[k][0].assumptions0)
+        if mapping[k][0] != mapk0:
+            reps[mapping[k][0]] = mapk0
         # the others get subscripts (and are made into Symbols)
         skip = 0
         for i in range(1, len(mapping[k])):

@@ -1,9 +1,12 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc, Abs, symbols)
+                   cot, sec, csc, Abs, symbols, I, re, Lambda, simplify,
+                   ImageSet)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 periodicity, lcim, AccumBounds)
+                                 periodicity, lcim, AccumBounds, is_convex,
+                                 stationary_points, minimum, maximum)
 from sympy.core import Add, Mul, Pow
-from sympy.sets.sets import Interval, FiniteSet, Complement, Union
+from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
+                            Union)
 from sympy.utilities.pytest import raises
 from sympy.abc import x
 
@@ -21,7 +24,7 @@ def test_function_range():
     assert function_range(tan(x), x, Interval(pi/2, pi)
         ) == Interval(-oo, 0)
     assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)
-        ) == Union(Interval(-oo, 2/7), Interval(8/3, oo))
+        ) == Union(Interval(-oo, S(2)/7), Interval(S(8)/3, oo))
     assert function_range(1/(x**2), x, Interval(-1, 1)
         ) == Interval(1, oo)
     assert function_range(exp(x), x, Interval(-1, 1)
@@ -38,6 +41,7 @@ def test_function_range():
         ) == Union(Interval(-sin(3), 1), FiniteSet(sin(4)))
     assert function_range(cos(x), x, Interval(-oo, -4)
         ) == Interval(-1, 1)
+    assert function_range(cos(x), x, S.EmptySet) == S.EmptySet
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
     raises(NotImplementedError, lambda : function_range(
@@ -55,7 +59,7 @@ def test_continuous_domain():
     assert continuous_domain((x - 1)/((x - 1)**2), x, S.Reals) == \
         Union(Interval(-oo, 1, True, True), Interval(1, oo, True, True))
     assert continuous_domain(log(x) + log(4*x - 1), x, S.Reals) == \
-        Interval(1/4, oo, True, True)
+        Interval(S(1)/4, oo, True, True)
     assert continuous_domain(1/sqrt(x - 3), x, S.Reals) == Interval(3, oo, True, True)
     assert continuous_domain(1/x - 2, x, S.Reals) == \
         Union(Interval.open(-oo, 0), Interval.open(0, oo))
@@ -88,11 +92,16 @@ def test_not_empty_in():
     assert not_empty_in(FiniteSet(1).intersect(Interval(3, 4)), x) == S.EmptySet
     assert not_empty_in(FiniteSet(x**2/(x + 2)).intersect(Interval(1, oo)), x) == \
         Union(Interval(-2, -1, True, False), Interval(2, oo))
+    raises(ValueError, lambda: not_empty_in(x))
+    raises(ValueError, lambda: not_empty_in(Interval(0, 1), x))
+    raises(NotImplementedError,
+           lambda: not_empty_in(FiniteSet(x).intersect(S.Reals), x, a))
 
 
 def test_periodicity():
     x = Symbol('x')
     y = Symbol('y')
+    z = Symbol('z', real=True)
 
     assert periodicity(sin(2*x), x) == pi
     assert periodicity((-2)*tan(4*x), x) == pi/4
@@ -114,14 +123,25 @@ def test_periodicity():
     assert periodicity(2*tan(x)**2, x) == pi
     assert periodicity(sin(x%4), x) == 4
     assert periodicity(sin(x)%4, x) == 2*pi
-    assert periodicity(tan((3*x-2)%4), x) == 4/3
+    assert periodicity(tan((3*x-2)%4), x) == S(4)/3
     assert periodicity((sqrt(2)*(x+1)+x) % 3, x) == 3 / (sqrt(2)+1)
     assert periodicity((x**2+1) % x, x) == None
-
+    assert periodicity(sin(re(x)), x) == 2*pi
     assert periodicity(sin(x)**2 + cos(x)**2, x) == S.Zero
     assert periodicity(tan(x), y) == S.Zero
+    assert periodicity(sin(x) + I*cos(x), x) == 2*pi
+    assert periodicity(x - sin(2*y), y) == pi
 
     assert periodicity(exp(x), x) is None
+    assert periodicity(exp(I*x), x) == 2*pi
+    assert periodicity(exp(I*z), z) == 2*pi
+    assert periodicity(exp(z), z) is None
+    assert periodicity(exp(log(sin(z) + I*cos(2*z)), evaluate=False), z) == 2*pi
+    assert periodicity(exp(log(sin(2*z) + I*cos(z)), evaluate=False), z) == 2*pi
+    assert periodicity(exp(sin(z)), z) == 2*pi
+    assert periodicity(exp(2*I*z), z) == pi
+    assert periodicity(exp(z + I*sin(z)), z) is None
+    assert periodicity(exp(cos(z/2) + sin(z)), z) == 4*pi
     assert periodicity(log(x), x) is None
     assert periodicity(exp(x)**sin(x), x) is None
     assert periodicity(sin(x)**y, y) is None
@@ -140,6 +160,7 @@ def test_periodicity():
 
     assert periodicity((x**2 + 4)%2, x) is None
     assert periodicity((E**x)%3, x) is None
+
 
 def test_periodicity_check():
     x = Symbol('x')
@@ -160,6 +181,105 @@ def test_lcim():
     assert lcim([2*pi, pi/2]) == 2*pi
     assert lcim([S(1), 2*pi]) is None
     assert lcim([S(2) + 2*E, E/3 + S(1)/3, S(1) + E]) == S(2) + 2*E
+
+
+def test_is_convex():
+    assert is_convex(1/x, x, domain=Interval(0, oo)) == True
+    assert is_convex(1/x, x, domain=Interval(-oo, 0)) == False
+    assert is_convex(x**2, x, domain=Interval(0, oo)) == True
+    assert is_convex(log(x), x) == False
+    raises(NotImplementedError, lambda: is_convex(log(x), x, a))
+
+
+def test_stationary_points():
+    x, y = symbols('x y')
+
+    assert stationary_points(sin(x), x, Interval(-pi/2, pi/2)
+        ) == {-pi/2, pi/2}
+    assert  stationary_points(sin(x), x, Interval.Ropen(0, pi/4)
+        ) == EmptySet()
+    assert stationary_points(tan(x), x,
+        ) == EmptySet()
+    assert stationary_points(sin(x)*cos(x), x, Interval(0, pi)
+        ) == {pi/4, 3*pi/4}
+    assert stationary_points(sec(x), x, Interval(0, pi)
+        ) == {0, pi}
+    assert stationary_points((x+3)*(x-2), x
+        ) == FiniteSet(-S.Half)
+    assert stationary_points((x + 3)/(x - 2), x, Interval(-5, 5)
+        ) == EmptySet()
+    assert stationary_points((x**2+3)/(x-2), x
+        ) == {2 - sqrt(7), 2 + sqrt(7)}
+    assert stationary_points((x**2+3)/(x-2), x, Interval(0, 5)
+        ) == {2 + sqrt(7)}
+    assert stationary_points(x**4 + x**3 - 5*x**2, x, S.Reals
+        ) == FiniteSet(-2, 0, S(5)/4)
+    assert stationary_points(exp(x), x
+        ) == EmptySet()
+    assert stationary_points(log(x) - x, x, S.Reals
+        ) == {1}
+    assert stationary_points(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
+        ) == {0, -pi, pi}
+    assert stationary_points(y, x, S.Reals
+        ) == S.Reals
+    assert stationary_points(y, x, S.EmptySet) == S.EmptySet
+
+
+def test_maximum():
+    x, y = symbols('x y')
+    assert maximum(sin(x), x) == S.One
+    assert maximum(sin(x), x, Interval(0, 1)) == sin(1)
+    assert maximum(tan(x), x) == oo
+    assert maximum(tan(x), x, Interval(-pi/4, pi/4)) == S.One
+    assert maximum(sin(x)*cos(x), x, S.Reals) == S.Half
+    assert simplify(maximum(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
+        ) == sqrt(2)/4
+    assert maximum((x+3)*(x-2), x) == oo
+    assert maximum((x+3)*(x-2), x, Interval(-5, 0)) == S(14)
+    assert maximum((x+3)/(x-2), x, Interval(-5, 0)) == S(2)/7
+    assert simplify(maximum(-x**4-x**3+x**2+10, x)
+        ) == 41*sqrt(41)/512 + S(5419)/512
+    assert maximum(exp(x), x, Interval(-oo, 2)) == exp(2)
+    assert maximum(log(x) - x, x, S.Reals) == -S.One
+    assert maximum(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
+        ) == S.One
+    assert maximum(cos(x)-sin(x), x, S.Reals) == sqrt(2)
+    assert maximum(y, x, S.Reals) == y
+
+    raises(ValueError, lambda : maximum(sin(x), x, S.EmptySet))
+    raises(ValueError, lambda : maximum(log(cos(x)), x, S.EmptySet))
+    raises(ValueError, lambda : maximum(1/(x**2 + y**2 + 1), x, S.EmptySet))
+    raises(ValueError, lambda : maximum(sin(x), sin(x)))
+    raises(ValueError, lambda : maximum(sin(x), x*y, S.EmptySet))
+    raises(ValueError, lambda : maximum(sin(x), S(1)))
+
+
+def test_minimum():
+    x, y = symbols('x y')
+
+    assert minimum(sin(x), x) == -S.One
+    assert minimum(sin(x), x, Interval(1, 4)) == sin(4)
+    assert minimum(tan(x), x) == -oo
+    assert minimum(tan(x), x, Interval(-pi/4, pi/4)) == -S.One
+    assert minimum(sin(x)*cos(x), x, S.Reals) == -S.Half
+    assert simplify(minimum(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
+        ) == -sqrt(2)/4
+    assert minimum((x+3)*(x-2), x) == -S(25)/4
+    assert minimum((x+3)/(x-2), x, Interval(-5, 0)) == -S(3)/2
+    assert minimum(x**4-x**3+x**2+10, x) == S(10)
+    assert minimum(exp(x), x, Interval(-2, oo)) == exp(-2)
+    assert minimum(log(x) - x, x, S.Reals) == -oo
+    assert minimum(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
+        ) == -S.One
+    assert minimum(cos(x)-sin(x), x, S.Reals) == -sqrt(2)
+    assert minimum(y, x, S.Reals) == y
+
+    raises(ValueError, lambda : minimum(sin(x), x, S.EmptySet))
+    raises(ValueError, lambda : minimum(log(cos(x)), x, S.EmptySet))
+    raises(ValueError, lambda : minimum(1/(x**2 + y**2 + 1), x, S.EmptySet))
+    raises(ValueError, lambda : minimum(sin(x), sin(x)))
+    raises(ValueError, lambda : minimum(sin(x), x*y, S.EmptySet))
+    raises(ValueError, lambda : minimum(sin(x), S(1)))
 
 
 def test_AccumBounds():
@@ -203,6 +323,9 @@ def test_AccumBounds():
     assert abs(AccumBounds(-2, -1)) == AccumBounds(1, 2)
     assert abs(AccumBounds(-2, 1)) == AccumBounds(0, 2)
     assert abs(AccumBounds(-1, 2)) == AccumBounds(0, 2)
+    c = Symbol('c')
+    raises(ValueError, lambda: AccumBounds(0, c))
+    raises(ValueError, lambda: AccumBounds(1, -1))
 
 
 def test_AccumBounds_mul():
@@ -348,8 +471,24 @@ def test_comparison_AccumBounds():
     assert (AccumBounds(1, 3) < AccumBounds(2, 4)).rel_op == '<'
     assert (AccumBounds(1, 3) < AccumBounds(-2, 0)) == S.false
 
+    assert (AccumBounds(1, 3) <= AccumBounds(4, 6)) == S.true
+    assert (AccumBounds(1, 3) <= AccumBounds(-2, 0)) == S.false
+
+    assert (AccumBounds(1, 3) > AccumBounds(4, 6)) == S.false
+    assert (AccumBounds(1, 3) > AccumBounds(-2, 0)) == S.true
+
+    assert (AccumBounds(1, 3) >= AccumBounds(4, 6)) == S.false
+    assert (AccumBounds(1, 3) >= AccumBounds(-2, 0)) == S.true
+
     # issue 13499
     assert (cos(x) > 0).subs(x, oo) == (AccumBounds(-1, 1) > 0)
+
+    c = Symbol('c')
+    raises(TypeError, lambda: (AccumBounds(0, 1) < c))
+    raises(TypeError, lambda: (AccumBounds(0, 1) <= c))
+    raises(TypeError, lambda: (AccumBounds(0, 1) > c))
+    raises(TypeError, lambda: (AccumBounds(0, 1) >= c))
+
 
 def test_contains_AccumBounds():
     assert (1 in AccumBounds(1, 2)) == S.true
@@ -359,3 +498,26 @@ def test_contains_AccumBounds():
         (cos(1)**2 + sin(1)**2 - 1) in AccumBounds(-1, 0))
     assert (-oo in AccumBounds(1, oo)) == S.true
     assert (oo in AccumBounds(-oo, 0)) == S.true
+
+    # issue 13159
+    assert Mul(0, AccumBounds(-1, 1)) == Mul(AccumBounds(-1, 1), 0) == 0
+    import itertools
+    for perm in itertools.permutations([0, AccumBounds(-1, 1), x]):
+        assert Mul(*perm) == 0
+
+
+def test_intersection_AccumBounds():
+    assert AccumBounds(0, 3).intersection(AccumBounds(1, 2)) == AccumBounds(1, 2)
+    assert AccumBounds(0, 3).intersection(AccumBounds(1, 4)) == AccumBounds(1, 3)
+    assert AccumBounds(0, 3).intersection(AccumBounds(-1, 2)) == AccumBounds(0, 2)
+    assert AccumBounds(0, 3).intersection(AccumBounds(-1, 4)) == AccumBounds(0, 3)
+    assert AccumBounds(0, 1).intersection(AccumBounds(2, 3)) == S.EmptySet
+    raises(TypeError, lambda: AccumBounds(0, 3).intersection(1))
+
+
+def test_union_AccumBounds():
+    assert AccumBounds(0, 3).union(AccumBounds(1, 2)) == AccumBounds(0, 3)
+    assert AccumBounds(0, 3).union(AccumBounds(1, 4)) == AccumBounds(0, 4)
+    assert AccumBounds(0, 3).union(AccumBounds(-1, 2)) == AccumBounds(-1, 3)
+    assert AccumBounds(0, 3).union(AccumBounds(-1, 4)) == AccumBounds(-1, 4)
+    raises(TypeError, lambda: AccumBounds(0, 3).union(1))

@@ -18,11 +18,11 @@ Segment3D
 """
 from __future__ import division, print_function
 
-import warnings
 
+from sympy import Expr
 from sympy.core import S, sympify
 from sympy.core.compatibility import ordered
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
@@ -34,7 +34,7 @@ from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.sets import Intersection
 from sympy.matrices import Matrix
-
+from sympy.solvers.solveset import linear_coeffs
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
 from sympy.utilities.misc import Undecidable, filldedent
@@ -234,7 +234,7 @@ class LinearEntity(GeometrySet):
 
         See Also
         ========
-        angle_bewteen, Ray2D.closing_angle
+        angle_between, Ray2D.closing_angle
         """
         if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
@@ -456,9 +456,9 @@ class LinearEntity(GeometrySet):
                 return []
             elif st1 >= 0 and st2 >= 0:
                 return [seg]
-            elif st1 >= 0 and st2 < 0:
+            elif st1 >= 0: # st2 < 0:
                 return [Segment(ray.p1, seg.p1)]
-            elif st1 <= 0 and st2 > 0:
+            elif st2 >= 0: # st1 < 0:
                 return [Segment(ray.p1, seg.p2)]
 
         def intersect_parallel_segments(seg1, seg2):
@@ -533,7 +533,9 @@ class LinearEntity(GeometrySet):
                 if isinstance(self, Line) and isinstance(other, Line):
                     return [line_intersection]
 
-                if self.contains(line_intersection) and other.contains(line_intersection):
+                if ((isinstance(self, Line) or
+                        self.contains(line_intersection)) and
+                        other.contains(line_intersection)):
                     return [line_intersection]
                 return []
             else:
@@ -1031,9 +1033,8 @@ class LinearEntity(GeometrySet):
 class Line(LinearEntity):
     """An infinite line in space.
 
-    A line is declared with two distinct points.
-    A 2D line may be declared with a point and slope
-    and a 3D line may be defined with a point and a direction ratio.
+    A 2D line is declared with two distinct points, point and slope, or
+    an equation. A 3D line may be defined with a point and a direction ratio.
 
     Parameters
     ==========
@@ -1042,6 +1043,7 @@ class Line(LinearEntity):
     p2 : Point
     slope : sympy expression
     direction_ratio : list
+    equation : equation of a line
 
     Notes
     =====
@@ -1061,8 +1063,10 @@ class Line(LinearEntity):
     Examples
     ========
 
-    >>> from sympy import Point
+    >>> from sympy import Point, Eq
     >>> from sympy.geometry import Line, Segment
+    >>> from sympy.abc import x, y, a, b
+
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
     Line2D(Point2D(2, 3), Point2D(3, 5))
@@ -1083,24 +1087,64 @@ class Line(LinearEntity):
     >>> s = Segment((0, 0), (0, 1))
     >>> Line(s).equation()
     x
+
+    The line corresponding to an equation in the for `ax + by + c = 0`,
+    can be entered:
+
+    >>> Line(3*x + y + 18)
+    Line2D(Point2D(0, -18), Point2D(1, -21))
+
+    If `x` or `y` has a different name, then they can be specified, too,
+    as a string (to match the name) or symbol:
+
+    >>> Line(Eq(3*a + b, -18), x='a', y=b)
+    Line2D(Point2D(0, -18), Point2D(1, -21))
     """
 
-    def __new__(cls, p1, p2=None, **kwargs):
-        if isinstance(p1, LinearEntity):
-            if p2:
-                raise ValueError('If p1 is a LinearEntity, p2 must be None.')
-            dim = len(p1.p1)
-        else:
-            p1 = Point(p1)
-            dim = len(p1)
-            if p2 is not None or isinstance(p2, Point) and p2.ambient_dimension != dim:
-                p2 = Point(p2)
+    def __new__(cls, *args, **kwargs):
+        from sympy.geometry.util import find
 
-        if dim == 2:
-            return Line2D(p1, p2, **kwargs)
-        elif dim == 3:
-            return Line3D(p1, p2, **kwargs)
-        return LinearEntity.__new__(cls, p1, p2, **kwargs)
+        if len(args) == 1 and isinstance(args[0], Expr):
+            x = kwargs.get('x', 'x')
+            y = kwargs.get('y', 'y')
+            equation = args[0]
+            if isinstance(equation, Eq):
+                equation = equation.lhs - equation.rhs
+            xin, yin = x, y
+            x = find(x, equation) or Dummy()
+            y = find(y, equation) or Dummy()
+
+            a, b, c = linear_coeffs(equation, x, y)
+
+            if b:
+                return Line((0, -c/b), slope=-a/b)
+            if a:
+                return Line((-c/a, 0), slope=oo)
+            raise ValueError('neither %s nor %s were found in the equation' % (xin, yin))
+
+        else:
+            if len(args) > 0:
+                p1 = args[0]
+                if len(args) > 1:
+                    p2 = args[1]
+                else:
+                    p2=None
+
+                if isinstance(p1, LinearEntity):
+                    if p2:
+                        raise ValueError('If p1 is a LinearEntity, p2 must be None.')
+                    dim = len(p1.p1)
+                else:
+                    p1 = Point(p1)
+                    dim = len(p1)
+                    if p2 is not None or isinstance(p2, Point) and p2.ambient_dimension != dim:
+                        p2 = Point(p2)
+
+                if dim == 2:
+                    return Line2D(p1, p2, **kwargs)
+                elif dim == 3:
+                    return Line3D(p1, p2, **kwargs)
+                return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def contains(self, other):
         """
@@ -1544,6 +1588,19 @@ class Segment(LinearEntity):
             other = Point(other, dim=self.ambient_dimension)
         if isinstance(other, Point):
             if Point.is_collinear(other, self.p1, self.p2):
+                if isinstance(self, Segment2D):
+                    # if it is collinear and is in the bounding box of the
+                    # segment then it must be on the segment
+                    vert = (1/self.slope).equals(0)
+                    if vert is False:
+                        isin = (self.p1.x - other.x)*(self.p2.x - other.x) <= 0
+                        if isin in (True, False):
+                            return isin
+                    if vert is True:
+                        isin = (self.p1.y - other.y)*(self.p2.y - other.y) <= 0
+                        if isin in (True, False):
+                            return isin
+                # use the triangle inequality
                 d1, d2 = other - self.p1, other - self.p2
                 d = self.p2 - self.p1
                 # without the call to simplify, sympy cannot tell that an expression

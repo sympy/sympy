@@ -42,7 +42,7 @@ returned.
 
 Example of construction of a finitely-presented group.
 The symmetric group of degree 4 may be represented as a two generator group
-with presentation `\langle a, b \mid a^2, b^3, (ab)^4 \rangle`. Giving the relations as a
+with presentation `\left\langle a, b \mid a^2, b^3, (ab)^4 \right\rangle`. Giving the relations as a
 list of relators, group in SymPy would be specified as:
 
 >>> F, a, b = free_group("a, b")
@@ -51,7 +51,7 @@ list of relators, group in SymPy would be specified as:
 <fp group on the generators (a, b)>
 
 Currently groups with relators having presentation like
-`\langle r, s, t \mid r^2, s^2, t^2, rst = str = trs \rangle` will have to be specified as:
+`\left\langle r, s, t \mid r^2, s^2, t^2, rst = str = trs \right\rangle` will have to be specified as:
 
 >>> F, r, s, t = free_group("r, s, t")
 >>> G = FpGroup(F, [r**2, s**2, t**2, r*s*t*r**-1*t**-1*s**-1, s*t*r*s**-1*r**-1*t**-1])
@@ -174,12 +174,12 @@ manipulate the algorithm, like
   have finite index, and even if it has it may take many more intermediate
   cosets than the actual index of the subgroup is. To avoid a coset enumeration
   "running away" therefore SymPy has a "safety stop" built-in. This is
-  controlled by this variable. For example:
+  controlled by this variable. To change it, use `max_cosets` keyword.
+  For example:
 
-  >>> CosetTable.coset_table_max_limit = 50
   >>> F, a, b = free_group("a, b")
   >>> Cox = FpGroup(F, [a**6, b**6, (a*b)**2, (a**2*b**2)**2, (a**3*b**3)**5])
-  >>> C_r = coset_enumeration_r(Cox, [a])
+  >>> C_r = coset_enumeration_r(Cox, [a], max_cosets=50)
   Traceback (most recent call last):
     ...
   ValueError: the coset enumeration has defined more than 50 cosets
@@ -209,12 +209,12 @@ whose index does not exceed some (modest) integer bound.
 Low Index Subgroups
 ```````````````````
 
-``low_index_subgroups(G, N)``: Given a finitely presented group `G = \langle X \mid R \rangle`
+``low_index_subgroups(G, N)``: Given a finitely presented group `G = \left\langle X \mid R \right\rangle`
 (can be a free group), and ``N`` a positive integer, determine the conjugacy classes of
 subgroups of ``G`` whose indices is less than or equal to ``N``.
 
-For example to find all subgroups of `G = \langle a, b \mid a^2 = b^3 = (ab)^4 = 1 \rangle`
-having index <= 4, can be found as follows:
+For example to find all subgroups of `G = \left\langle a, b \mid a^2 = b^3 = (ab)^4 = 1 \right\rangle`
+having index `\le` 4, can be found as follows:
 
 >>> from sympy.combinatorics.fp_groups import low_index_subgroups
 >>> F, a, b = free_group("a, b")

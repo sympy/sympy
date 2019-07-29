@@ -4,7 +4,7 @@ from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises, XFAIL
 
 # import test:
-from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
+from sympy import IndexedBase, Idx, Indexed, S, sin, cos, exp, log, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
     GreaterThan, StrictLessThan, Range, Array, Subs, Function, KroneckerDelta, Derivative
 
 
@@ -27,6 +27,9 @@ def test_Idx_construction():
 def test_Idx_properties():
     i, a, b = symbols('i a b', integer=True)
     assert Idx(i).is_integer
+    assert Idx(i).name == 'i'
+    assert Idx(i + 2).name == 'i + 2'
+    assert Idx('foo').name == 'foo'
 
 
 def test_Idx_bounds():
@@ -173,14 +176,15 @@ def test_IndexedBase_sugar():
     assert A1 == A2[Tuple(i, j)]
     assert all(a.is_Integer for a in A2[1, 0].args[1:])
 
+
 def test_IndexedBase_subs():
-    i, j, k = symbols('i j k', integer=True)
-    a, b, c = symbols('a b c')
+    i = symbols('i', integer=True)
+    a, b = symbols('a b')
     A = IndexedBase(a)
     B = IndexedBase(b)
-    C = IndexedBase(c)
     assert A[i] == B[i].subs(b, a)
-    assert isinstance(C[1].subs(C, {1: 2}), type(A[1]))
+    C = {1: 2}
+    assert C[1] == A[1].subs(A, C)
 
 
 def test_IndexedBase_shape():
@@ -198,6 +202,34 @@ def test_IndexedBase_shape():
     assert F.shape == Tuple(m)
     assert F[i].subs(i, j) == F[j]
     raises(IndexException, lambda: F[i, j])
+
+
+def test_IndexedBase_assumptions():
+    i = Symbol('i', integer=True)
+    a = Symbol('a')
+    A = IndexedBase(a, positive=True)
+    for c in (A, A[i]):
+        assert c.is_real
+        assert c.is_complex
+        assert not c.is_imaginary
+        assert c.is_nonnegative
+        assert c.is_nonzero
+        assert c.is_commutative
+        assert log(exp(c)) == c
+
+    assert A != IndexedBase(a)
+    assert A == IndexedBase(a, positive=True, real=True)
+    assert A[i] != Indexed(a, i)
+
+
+def test_IndexedBase_assumptions_inheritance():
+    I = Symbol('I', integer=True)
+    I_inherit = IndexedBase(I)
+    I_explicit = IndexedBase('I', integer=True)
+
+    assert I_inherit.is_integer
+    assert I_explicit.is_integer
+    assert I_inherit == I_explicit
 
 
 def test_Indexed_constructor():
@@ -229,6 +261,7 @@ def test_Indexed_subs():
 def test_Indexed_properties():
     i, j = symbols('i j', integer=True)
     A = Indexed('A', i, j)
+    assert A.name == 'A[i, j]'
     assert A.rank == 2
     assert A.indices == (i, j)
     assert A.base == IndexedBase('A')

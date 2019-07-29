@@ -102,7 +102,10 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     For example, when solving, `x^2 - y^2 = 0` this is treated as
     `(x + y)(x - y) = 0` and `x + y = 0` and `x - y = 0` are solved
     independently and combined. Each term is solved by calling
-    ``diop_solve()``.
+    ``diop_solve()``. (Although it is possible to call ``diop_solve()``
+    directly, one must be careful to pass an equation in the correct
+    form and to interpret the output correctly; ``diophantine()`` is
+    the public-facing function to use in general.)
 
     Output of ``diophantine()`` is a set of tuples. The elements of the
     tuple are the solutions for each variable in the equation and
@@ -176,9 +179,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                 return {tuple([t[dict_sym_index[i]] for i in var])
                             for t in diophantine(eq, param)}
         n, d = eq.as_numer_denom()
-        if not n.free_symbols:
+        if n.is_number:
             return set()
-        if d.free_symbols:
+        if not d.is_number:
             dsol = diophantine(d)
             good = diophantine(n) - dsol
             return {s for s in good if _mexpand(d.subs(zip(var, s)))}
@@ -240,7 +243,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x,), (y, )]
                     for v1 in var_mul:
                         try:
-                            coeff = c[var[0]]
+                            coeff = c[v1[0]]
                         except KeyError:
                             coeff = 0
                         x_coeff = bool(x_coeff) and bool(coeff)
@@ -265,7 +268,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x,), (y, )]
                     for v1 in var_mul:
                         try:
-                            coeff = c[var[0]]
+                            coeff = c[v1[0]]
                         except KeyError:
                             coeff = 0
                         x_coeff = bool(x_coeff) and bool(coeff)
@@ -383,6 +386,10 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     ``classify_diop()`` to determine the type of the equation and calls
     the appropriate solver function.
 
+    Use of ``diophantine()`` is recommended over other helper functions.
+    ``diop_solve()`` can return either a set or a tuple depending on the
+    nature of the equation.
+
     Usage
     =====
 
@@ -401,7 +408,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     >>> from sympy.solvers.diophantine import diop_solve
     >>> from sympy.abc import x, y, z, w
     >>> diop_solve(2*x + 3*y - 5)
-    (3*t_0 - 5, -2*t_0 + 5)
+    (3*t_0 - 5, 5 - 2*t_0)
     >>> diop_solve(4*x + 3*y - 4*z + 5)
     (t_0, 8*t_0 + 4*t_1 + 5, 7*t_0 + 3*t_1 + 5)
     >>> diop_solve(x + 3*y - 4*z + w - 6)
@@ -827,7 +834,7 @@ def base_solution_linear(c, a, b, t=None):
     >>> base_solution_linear(0, 5, 7) # equation 5*x + 7*y = 0
     (0, 0)
     >>> base_solution_linear(5, 2, 3, t) # equation 2*x + 3*y = 5
-    (3*t - 5, -2*t + 5)
+    (3*t - 5, 5 - 2*t)
     >>> base_solution_linear(0, 5, 7, t) # equation 5*x + 7*y = 0
     (7*t, -5*t)
     """
@@ -1281,7 +1288,6 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
 
                         for i in pqa:
 
-                            a = i[2]
                             G.append(i[5])
                             B.append(i[4])
 
@@ -1505,7 +1511,7 @@ def PQa(P_0, Q_0, D):
     P_i = P_0
     Q_i = Q_0
 
-    while(1):
+    while True:
 
         a_i = floor((P_i + sqrt(D))/Q_i)
         A_i = a_i*A_i_1 + A_i_2
@@ -1676,7 +1682,7 @@ def length(P, Q, D):
     >>> length(-2 , 4, 5) # (-2 + sqrt(5))/4
     3
     >>> length(-5, 4, 17) # (-5 + sqrt(17))/4
-    5
+    4
 
     See Also
     ========
@@ -1977,11 +1983,12 @@ def _diop_ternary_quadratic(_var, coeff):
             min_sum = abs(s[0]) + abs(s[1])
 
             for r in sols:
-                if abs(r[0]) + abs(r[1]) < min_sum:
+                m = abs(r[0]) + abs(r[1])
+                if m < min_sum:
                     s = r
-                    min_sum = abs(s[0]) + abs(s[1])
+                    min_sum = m
 
-                x_0, y_0, z_0 = s[0], -coeff[x*z], s[1]
+            x_0, y_0, z_0 = s[0], -coeff[x*z], s[1]
 
         else:
             var[0], var[1] = _var[1], _var[0]
@@ -2197,8 +2204,6 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
     # called for a*x**2 + b*y**2 + c*z**2 + d*x*y + e*y*z + f*x*z = 0
     assert 1 not in coeff
 
-    x, y, z = _var
-
     x_0, y_0, z_0 = solution
 
     v = list(_var)  # copy
@@ -2363,7 +2368,7 @@ def sqf_normal(a, b, c, steps=False):
 
     reconstruct()
     """
-    ABC = A, B, C = _remove_gcd(a, b, c)
+    ABC = _remove_gcd(a, b, c)
     sq = tuple(square_factor(i) for i in ABC)
     sqf = A, B, C = tuple([i//j**2 for i,j in zip(ABC, sq)])
     pc = igcd(A, B)
@@ -3185,7 +3190,7 @@ def power_representation(n, p, k, zeros=False):
             '''Todd G. Will, "When Is n^2 a Sum of k Squares?", [online].
                 Available: https://www.maa.org/sites/default/files/Will-MMz-201037918.pdf'''
             return
-        if feasible is 1:  # it's prime and k == 2
+        if feasible is not True:  # it's prime and k == 2
             yield prime_as_sum_of_two_squares(n)
             return
 

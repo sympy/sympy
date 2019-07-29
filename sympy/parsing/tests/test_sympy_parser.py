@@ -1,4 +1,8 @@
+# -*- coding: utf-8 -*-
+
+
 import sys
+
 
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
 from sympy.core.compatibility import PY3
@@ -10,7 +14,9 @@ from sympy.utilities.pytest import raises, skip
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
     split_symbols, implicit_multiplication, convert_equals_signs,
-)
+    convert_xor, function_exponentiation,
+    implicit_multiplication_application,
+    )
 
 
 def test_sympy_parser():
@@ -45,9 +51,21 @@ def test_sympy_parser():
             evaluate=False),
         'Limit(sin(x), x, 0, dir="-")': Limit(sin(x), x, 0, dir='-'),
 
+
     }
     for text, result in inputs.items():
         assert parse_expr(text) == result
+
+    raises(TypeError, lambda:
+        parse_expr('x', standard_transformations))
+    raises(TypeError, lambda:
+        parse_expr('x', transformations=lambda x,y: 1))
+    raises(TypeError, lambda:
+        parse_expr('x', transformations=(lambda x,y: 1,)))
+    raises(TypeError, lambda: parse_expr('x', transformations=((),)))
+    raises(TypeError, lambda: parse_expr('x', {}, [], []))
+    raises(TypeError, lambda: parse_expr('x', [], [], {}))
+    raises(TypeError, lambda: parse_expr('x', [], [], {}))
 
 
 def test_rationalize():
@@ -62,6 +80,7 @@ def test_rationalize():
 def test_factorial_fail():
     inputs = ['x!!!', 'x!!!!', '(!)']
 
+
     for text in inputs:
         try:
             parse_expr(text)
@@ -74,17 +93,21 @@ def test_repeated_fail():
     inputs = ['1[1]', '.1e1[1]', '0x1[1]', '1.1j[1]', '1.1[1 + 1]',
         '0.1[[1]]', '0x1.1[1]']
 
+
     # All are valid Python, so only raise TypeError for invalid indexing
     for text in inputs:
         raises(TypeError, lambda: parse_expr(text))
+
 
     inputs = ['0.1[', '0.1[1', '0.1[]']
     for text in inputs:
         raises((TokenError, SyntaxError), lambda: parse_expr(text))
 
+
 def test_repeated_dot_only():
     assert parse_expr('.[1]') == Rational(1, 9)
     assert parse_expr('1 + .[1]') == Rational(10, 9)
+
 
 def test_local_dict():
     local_dict = {
@@ -95,6 +118,22 @@ def test_local_dict():
     }
     for text, result in inputs.items():
         assert parse_expr(text, local_dict=local_dict) == result
+
+
+def test_local_dict_split_implmult():
+    t = standard_transformations + (split_symbols, implicit_multiplication,)
+    w = Symbol('w', real=True)
+    y = Symbol('y')
+    assert parse_expr('yx', local_dict={'x':w}, transformations=t) == y*w
+
+
+def test_local_dict_symbol_to_fcn():
+    x = Symbol('x')
+    d = {'foo': Function('bar')}
+    assert parse_expr('foo(x)', local_dict=d) == d['foo'](x)
+    # XXX: bit odd, but would be error if parser left the Symbol
+    d = {'foo': Symbol('baz')}
+    assert parse_expr('foo(x)', local_dict=d) == Function('baz')(x)
 
 
 def test_global_dict():
@@ -117,6 +156,7 @@ def test_issue_7663():
     x = Symbol('x')
     e = '2*(x+1)'
     assert parse_expr(e, evaluate=0) == parse_expr(e, evaluate=False)
+    assert parse_expr(e, evaluate=0).equals(2*(x+1))
 
 def test_issue_10560():
     inputs = {
@@ -125,6 +165,7 @@ def test_issue_10560():
     }
     for text, result in inputs.items():
         assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
+
 
 def test_issue_10773():
     inputs = {
@@ -142,6 +183,7 @@ def test_split_symbols():
     y = Symbol('y')
     xy = Symbol('xy')
 
+
     assert parse_expr("xy") == xy
     assert parse_expr("xy", transformations=transformations) == x*y
 
@@ -154,14 +196,30 @@ def test_split_symbols_function():
     a = Symbol('a')
     f = Function('f')
 
+
     assert parse_expr("ay(x+1)", transformations=transformations) == a*y*(x+1)
     assert parse_expr("af(x+1)", transformations=transformations,
                       local_dict={'f':f}) == a*f(x+1)
+
+
+def test_functional_exponent():
+    t = standard_transformations + (convert_xor, function_exponentiation)
+    x = Symbol('x')
+    y = Symbol('y')
+    a = Symbol('a')
+    yfcn = Function('y')
+    assert parse_expr("sin^2(x)", transformations=t) == (sin(x))**2
+    assert parse_expr("sin^y(x)", transformations=t) == (sin(x))**y
+    assert parse_expr("exp^y(x)", transformations=t) == (exp(x))**y
+    assert parse_expr("E^y(x)", transformations=t) == exp(yfcn(x))
+    assert parse_expr("a^y(x)", transformations=t) == a**(yfcn(x))
+
 
 def test_match_parentheses_implicit_multiplication():
     transformations = standard_transformations + \
                       (implicit_multiplication,)
     raises(TokenError, lambda: parse_expr('(1,2),(3,4]',transformations=transformations))
+
 
 def test_convert_equals_signs():
     transformations = standard_transformations + \
@@ -173,16 +231,40 @@ def test_convert_equals_signs():
     assert parse_expr("(2*y = x) = False",
         transformations=transformations) == Eq(Eq(2*y, x), False)
 
+
+def test_parse_function_issue_3539():
+    x = Symbol('x')
+    f = Function('f')
+    assert parse_expr('f(x)') == f(x)
+
+
+def test_split_symbols_numeric():
+    transformations = (
+        standard_transformations +
+        (implicit_multiplication_application,))
+
+    n = Symbol('n')
+    expr1 = parse_expr('2**n * 3**n')
+    expr2 = parse_expr('2**n3**n', transformations=transformations)
+    assert expr1 == expr2 == 2**n*3**n
+
+    expr1 = parse_expr('n12n34', transformations=transformations)
+    assert expr1 == n*12*n*34
+
+
 def test_unicode_names():
     if not PY3:
         skip("test_unicode_names can only pass in Python 3")
 
+
     assert parse_expr(u'α') == Symbol(u'α')
+
 
 def test_python3_features():
     # Make sure the tokenizer can handle Python 3-only features
     if sys.version_info < (3, 6):
         skip("test_python3_features requires Python 3.6 or newer")
+
 
     assert parse_expr("123_456") == 123456
     assert parse_expr("1.2[3_4]") == parse_expr("1.2[34]") == Rational(611, 495)

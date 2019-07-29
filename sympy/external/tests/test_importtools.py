@@ -1,4 +1,5 @@
 from sympy.external import import_module
+from sympy.utilities.pytest import warns
 
 # fixes issue that arose in addressing issue 6533
 def test_no_stdlib_collections():
@@ -35,4 +36,5 @@ def test_no_stdlib_collections3():
         assert collections != matplotlib.collections
 
 def test_min_module_version_python3_basestring_error():
-    import_module('mpmath', min_module_version='1000.0.1')
+    with warns(UserWarning):
+        import_module('mpmath', min_module_version='1000.0.1')

@@ -1,15 +1,46 @@
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
-    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
-    log, cos, sin)
+    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
+    log, cos, sin, Add, floor, ceiling, trigsimp)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
-                                   Gt, Ge, Ne, _canonical)
+                                   Gt, Ge, Ne)
 from sympy.sets.sets import Interval, FiniteSet
 
+from itertools import combinations
+
 x, y, z, t = symbols('x,y,z,t')
+
+
+def rel_check(a, b):
+    from sympy.utilities.pytest import raises
+    assert a.is_number and b.is_number
+    for do in range(len(set([type(a), type(b)]))):
+        if S.NaN in (a, b):
+            v = [(a == b), (a != b)]
+            assert len(set(v)) == 1 and v[0] == False
+            assert not (a != b) and not (a == b)
+            assert raises(TypeError, lambda: a < b)
+            assert raises(TypeError, lambda: a <= b)
+            assert raises(TypeError, lambda: a > b)
+            assert raises(TypeError, lambda: a >= b)
+        else:
+            E = [(a == b), (a != b)]
+            assert len(set(E)) == 2
+            v = [
+            (a < b), (a <= b), (a > b), (a >= b)]
+            i = [
+            [True,    True,     False,   False],
+            [False,   True,     False,   True], # <-- i == 1
+            [False,   False,    True,    True]].index(v)
+            if i == 1:
+                assert E[0] or (a.is_Float != b.is_Float) # ugh
+            else:
+                assert E[1]
+        a, b = b, a
+    return True
 
 
 def test_rel_ne():
@@ -85,10 +116,11 @@ def test_wrappers():
 
 
 def test_Eq():
-    assert Eq(x**2) == Eq(x**2, 0)
-    assert Eq(x**2) != Eq(x**2, 1)
 
     assert Eq(x, x)  # issue 5719
+
+    with warns_deprecated_sympy():
+        assert Eq(x) == Eq(x, 0)
 
     # issue 6116
     p = Symbol('p', positive=True)
@@ -181,18 +213,20 @@ def test_doit():
 def test_new_relational():
     x = Symbol('x')
 
-    assert Eq(x) == Relational(x, 0)       # None ==> Equality
-    assert Eq(x) == Relational(x, 0, '==')
-    assert Eq(x) == Relational(x, 0, 'eq')
-    assert Eq(x) == Equality(x, 0)
+    assert Eq(x, 0) == Relational(x, 0)       # None ==> Equality
+    assert Eq(x, 0) == Relational(x, 0, '==')
+    assert Eq(x, 0) == Relational(x, 0, 'eq')
+    assert Eq(x, 0) == Equality(x, 0)
+
+    assert Eq(x, 0) != Relational(x, 1)       # None ==> Equality
+    assert Eq(x, 0) != Relational(x, 1, '==')
+    assert Eq(x, 0) != Relational(x, 1, 'eq')
+    assert Eq(x, 0) != Equality(x, 1)
+
     assert Eq(x, -1) == Relational(x, -1)       # None ==> Equality
     assert Eq(x, -1) == Relational(x, -1, '==')
     assert Eq(x, -1) == Relational(x, -1, 'eq')
     assert Eq(x, -1) == Equality(x, -1)
-    assert Eq(x) != Relational(x, 1)       # None ==> Equality
-    assert Eq(x) != Relational(x, 1, '==')
-    assert Eq(x) != Relational(x, 1, 'eq')
-    assert Eq(x) != Equality(x, 1)
     assert Eq(x, -1) != Relational(x, 1)       # None ==> Equality
     assert Eq(x, -1) != Relational(x, 1, '==')
     assert Eq(x, -1) != Relational(x, 1, 'eq')
@@ -275,7 +309,8 @@ def test_new_relational():
 
         raises(ValueError, lambda: Relational(x, 1, relation_type))
     assert all(Relational(x, 0, op).rel_op == '==' for op in ('eq', '=='))
-    assert all(Relational(x, 0, op).rel_op == '!=' for op in ('ne', '<>', '!='))
+    assert all(Relational(x, 0, op).rel_op == '!='
+               for op in ('ne', '<>', '!='))
     assert all(Relational(x, 0, op).rel_op == '>' for op in ('gt', '>'))
     assert all(Relational(x, 0, op).rel_op == '<' for op in ('lt', '<'))
     assert all(Relational(x, 0, op).rel_op == '>=' for op in ('ge', '>='))
@@ -380,7 +415,7 @@ def test_imaginary_compare_raises_TypeError():
 def test_complex_compare_not_real():
     # two cases which are not real
     y = Symbol('y', imaginary=True)
-    z = Symbol('z', complex=True, real=False)
+    z = Symbol('z', complex=True, extended_real=False)
     for w in (y, z):
         assert_all_ineq_raise_TypeError(2, w)
     # some cases which should remain un-evaluated
@@ -549,30 +584,32 @@ def test_ineq_avoid_wild_symbol_flip():
 
 def test_issue_8245():
     a = S("6506833320952669167898688709329/5070602400912917605986812821504")
-    q = a.n(10)
-    assert (a == q) is True
-    assert (a != q) is False
-    assert (a > q) == False
-    assert (a < q) == False
-    assert (a >= q) == True
-    assert (a <= q) == True
+    assert rel_check(a, a.n(10))
+    assert rel_check(a, a.n(20))
+    assert rel_check(a, a.n())
+    # prec of 30 is enough to fully capture a as mpf
+    assert Float(a, 30) == Float(str(a.p), '')/Float(str(a.q), '')
+    for i in range(31):
+        r = Rational(Float(a, i))
+        f = Float(r)
+        assert (f < a) == (Rational(f) < a)
+    # test sign handling
+    assert (-f < -a) == (Rational(-f) < -a)
+    # test equivalence handling
+    isa = Float(a.p,'')/Float(a.q,'')
+    assert isa <= a
+    assert not isa < a
+    assert isa >= a
+    assert not isa > a
+    assert isa > 0
 
     a = sqrt(2)
     r = Rational(str(a.n(30)))
-    assert (r == a) is False
-    assert (r != a) is True
-    assert (r > a) == True
-    assert (r < a) == False
-    assert (r >= a) == True
-    assert (r <= a) == False
+    assert rel_check(a, r)
+
     a = sqrt(2)
     r = Rational(str(a.n(29)))
-    assert (r == a) is False
-    assert (r != a) is True
-    assert (r > a) == False
-    assert (r < a) == True
-    assert (r >= a) == False
-    assert (r <= a) == True
+    assert rel_check(a, r)
 
     assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
 
@@ -585,7 +622,7 @@ def test_issue_8449():
     assert Le(oo, -p) is S.false
 
 
-def test_simplify():
+def test_simplify_relational():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
     r = S(1) < x
     # canonical operations are not the same as simplification,
@@ -598,7 +635,16 @@ def test_simplify():
     # reason for the 'if r.is_Relational' in Relational's
     # _eval_simplify routine
     assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
-        2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
+                    2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
+    # canonical at least
+    for f in (Eq, Ne):
+        f(y, x).simplify() == f(x, y)
+        f(x - 1, 0).simplify() == f(x, 1)
+        f(x - 1, x).simplify() == S.false
+        f(2*x - 1, x).simplify() == f(x, 1)
+        f(2*x, 4).simplify() == f(x, 2)
+        z = cos(1)**2 + sin(1)**2 - 1  # z.is_zero is None
+        f(z*x, 0).simplify() == f(z*x, 0)
 
 
 def test_equals():
@@ -649,17 +695,21 @@ def test_canonical():
 
 
 @XFAIL
-def test_issue_8444():
+def test_issue_8444_nonworkingtests():
     x = symbols('x', real=True)
     assert (x <= oo) == (x >= -oo) == True
 
     x = symbols('x')
     assert x >= floor(x)
     assert (x < floor(x)) == False
-    assert Gt(x, floor(x)) == Gt(x, floor(x), evaluate=False)
-    assert Ge(x, floor(x)) == Ge(x, floor(x), evaluate=False)
     assert x <= ceiling(x)
     assert (x > ceiling(x)) == False
+
+
+def test_issue_8444_workingtests():
+    x = symbols('x')
+    assert Gt(x, floor(x)) == Gt(x, floor(x), evaluate=False)
+    assert Ge(x, floor(x)) == Ge(x, floor(x), evaluate=False)
     assert Lt(x, ceiling(x)) == Lt(x, ceiling(x), evaluate=False)
     assert Le(x, ceiling(x)) == Le(x, ceiling(x), evaluate=False)
     i = symbols('i', integer=True)
@@ -694,7 +744,6 @@ def test_issue_10401():
     assert Eq(fin/inf, 0) is T
     assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
     assert Eq(inf, -inf) is F
-
 
     assert Eq(fin/(fin + 1), 1) is S.false
 
@@ -736,35 +785,21 @@ def test_issues_13081_12583_12534():
     # Rational(pi.n(p    )).n(25) = 3.14159265358979323846 1987
     assert [p for p in range(20, 50) if
             (Rational(pi.n(p)) < pi) and
-            (pi < Rational(pi.n(p + 1)))
-        ] == [20, 24, 27, 33, 37, 43, 48]
+            (pi < Rational(pi.n(p + 1)))] == [20, 24, 27, 33, 37, 43, 48]
     # pick one such precision and affirm that the reversed operation
     # gives the opposite result, i.e. if x < y is true then x > y
     # must be false
-    p = 20
-    # Rational vs NumberSymbol
-    G = [Rational(pi.n(i)) > pi for i in (p, p + 1)]
-    L = [Rational(pi.n(i)) < pi for i in (p, p + 1)]
-    assert G == [False, True]
-    assert all(i is not j for i, j in zip(L, G))
-    # Float vs NumberSymbol
-    G = [pi.n(i) > pi for i in (p, p + 1)]
-    L = [pi.n(i) < pi for i in (p, p + 1)]
-    assert G == [False, True]
-    assert all(i is not j for i, j in zip(L, G))
-    # Float vs Float
-    G = [pi.n(p) > pi.n(p + 1)]
-    L = [pi.n(p) < pi.n(p + 1)]
-    assert G == [True]
-    assert all(i is not j for i, j in zip(L, G))
+    for i in (20, 21):
+        v = pi.n(i)
+        assert rel_check(Rational(v), pi)
+        assert rel_check(v, pi)
+    assert rel_check(pi.n(20), pi.n(21))
     # Float vs Rational
     # the rational form is less than the floating representation
     # at the same precision
-    assert [i for i in range(15, 50) if Rational(pi.n(i)) > pi.n(i)
-        ] == []
+    assert [i for i in range(15, 50) if Rational(pi.n(i)) > pi.n(i)] == []
     # this should be the same if we reverse the relational
-    assert [i for i in range(15, 50) if pi.n(i) < Rational(pi.n(i))
-        ] == []
+    assert [i for i in range(15, 50) if pi.n(i) < Rational(pi.n(i))] == []
 
 
 def test_binary_symbols():
@@ -786,3 +821,100 @@ def test_rel_args():
         for b in (S.true, x < 1, And(x, y)):
             for v in (0.1, 1, 2**32, t, S(1)):
                 raises(TypeError, lambda: Relational(b, v, op))
+
+
+def test_Equality_rewrite_as_Add():
+    eq = Eq(x + y, y - x)
+    assert eq.rewrite(Add) == 2*x
+    assert eq.rewrite(Add, evaluate=None).args == (x, x, y, -y)
+    assert eq.rewrite(Add, evaluate=False).args == (x, y, x, -y)
+
+
+def test_issue_15847():
+    a = Ne(x*(x+y), x**2 + x*y)
+    assert simplify(a) == False
+
+
+def test_negated_property():
+    eq = Eq(x, y)
+    assert eq.negated == Ne(x, y)
+
+    eq = Ne(x, y)
+    assert eq.negated == Eq(x, y)
+
+    eq = Ge(x + y, y - x)
+    assert eq.negated == Lt(x + y, y - x)
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(x, y).negated.negated == f(x, y)
+
+
+def test_reversedsign_property():
+    eq = Eq(x, y)
+    assert eq.reversedsign == Eq(-x, -y)
+
+    eq = Ne(x, y)
+    assert eq.reversedsign == Ne(-x, -y)
+
+    eq = Ge(x + y, y - x)
+    assert eq.reversedsign == Le(-x - y, x - y)
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(x, y).reversedsign.reversedsign == f(x, y)
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(-x, y).reversedsign.reversedsign == f(-x, y)
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(x, -y).reversedsign.reversedsign == f(x, -y)
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(-x, -y).reversedsign.reversedsign == f(-x, -y)
+
+
+def test_reversed_reversedsign_property():
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(x, y).reversed.reversedsign == f(x, y).reversedsign.reversed
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(-x, y).reversed.reversedsign == f(-x, y).reversedsign.reversed
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(x, -y).reversed.reversedsign == f(x, -y).reversedsign.reversed
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(-x, -y).reversed.reversedsign == \
+            f(-x, -y).reversedsign.reversed
+
+
+def test_improved_canonical():
+    def test_different_forms(listofforms):
+        for form1, form2 in combinations(listofforms, 2):
+            assert form1.canonical == form2.canonical
+
+    def generate_forms(expr):
+        return [expr, expr.reversed, expr.reversedsign,
+                expr.reversed.reversedsign]
+
+    test_different_forms(generate_forms(x > -y))
+    test_different_forms(generate_forms(x >= -y))
+    test_different_forms(generate_forms(Eq(x, -y)))
+    test_different_forms(generate_forms(Ne(x, -y)))
+    test_different_forms(generate_forms(pi < x))
+    test_different_forms(generate_forms(pi - 5*y < -x + 2*y**2 - 7))
+
+    assert (pi >= x).canonical == (x <= pi)
+
+
+def test_trigsimp():
+    # issue 16736
+    s, c = sin(2*x), cos(2*x)
+    eq = Eq(s, c)
+    assert trigsimp(eq) == eq  # no rearrangement of sides
+    # simplification of sides might result in
+    # an unevaluated Eq
+    changed = trigsimp(Eq(s + c, sqrt(2)))
+    assert isinstance(changed, Eq)
+    assert changed.subs(x, pi/8) is S.true
+    # or an evaluated one
+    assert trigsimp(Eq(cos(x)**2 + sin(x)**2, 1)) is S.true

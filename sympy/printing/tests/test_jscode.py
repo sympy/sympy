@@ -1,5 +1,6 @@
 from sympy.core import (pi, oo, symbols, Rational, Integer, GoldenRatio,
-                        EulerGamma, Catalan, Lambda, Dummy, S)
+                        EulerGamma, Catalan, Lambda, Dummy, S, Eq, Ne, Le,
+                        Lt, Gt, Ge)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              sinh, cosh, tanh, asin, acos, acosh, Max, Min)
 from sympy.utilities.pytest import raises
@@ -52,6 +53,16 @@ def test_jscode_Rational():
     assert jscode(Rational(18, 9)) == "2"
     assert jscode(Rational(3, -7)) == "-3/7"
     assert jscode(Rational(-3, -7)) == "3/7"
+
+
+def test_Relational():
+    assert jscode(Eq(x, y)) == "x == y"
+    assert jscode(Ne(x, y)) == "x != y"
+    assert jscode(Le(x, y)) == "x <= y"
+    assert jscode(Lt(x, y)) == "x < y"
+    assert jscode(Gt(x, y)) == "x > y"
+    assert jscode(Ge(x, y)) == "x >= y"
+
 
 
 def test_jscode_Integer():
@@ -382,4 +393,4 @@ def test_MatrixElement_printing():
     assert(jscode(3 * A[0, 0]) == "3*A[0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(jscode(F) == "((-1)*B + A)[0]")
+    assert(jscode(F) == "(A - B)[0]")

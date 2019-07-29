@@ -10,7 +10,8 @@ AST Type Tree
 ::
 
   *Basic*
-       |--->Assignment
+       |--->AssignmentBase
+       |             |--->Assignment
        |             |--->AugmentedAssignment
        |                                    |--->AddAugmentedAssignment
        |                                    |--->SubAugmentedAssignment
@@ -20,23 +21,40 @@ AST Type Tree
        |
        |--->CodeBlock
        |
-       |--->For
        |
        |--->Token
        |        |--->Attribute
+       |        |--->For
+       |        |--->String
+       |        |       |--->QuotedString
+       |        |       |--->Comment
        |        |--->Type
-       |                |--->IntBaseType
-       |                |              |--->_SizedIntType
-       |                |                               |--->SignedIntType
-       |                |                               |--->UnsignedIntType
-       |                |--->FloatType
-       |                             |--->ComplexType
+       |        |       |--->IntBaseType
+       |        |       |              |--->_SizedIntType
+       |        |       |                               |--->SignedIntType
+       |        |       |                               |--->UnsignedIntType
+       |        |       |--->FloatBaseType
+       |        |                        |--->FloatType
+       |        |                        |--->ComplexBaseType
+       |        |                                           |--->ComplexType
+       |        |--->Node
+       |        |       |--->Variable
+       |        |       |           |---> Pointer
+       |        |       |--->FunctionPrototype
+       |        |                            |--->FunctionDefinition
+       |        |--->Element
+       |        |--->Declaration
+       |        |--->While
+       |        |--->Scope
+       |        |--->Stream
+       |        |--->Print
+       |        |--->FunctionCall
+       |        |--->BreakToken
+       |        |--->ContinueToken
+       |        |--->NoneToken
        |
-       |--->Variable
-       |           |---> Pointer
-       |
-       |--->Declaration
-
+       |--->Statement
+       |--->Return
 
 
 Predefined types
@@ -57,27 +75,385 @@ The other ``Type`` instances defined are:
 - ``complex64``: Complex number represented by two ``float32`` numbers
 - ``complex128``: Complex number represented by two ``float64`` numbers
 
+Using the nodes
+---------------
+It is possible to construct simple algorithms using the AST nodes. Let's construct a loop applying
+Newton's method::
+
+    >>> from sympy import symbols, cos
+    >>> from sympy.codegen.ast import While, Assignment, aug_assign, Print
+    >>> t, dx, x = symbols('tol delta val')
+    >>> expr = cos(x) - x**3
+    >>> whl = While(abs(dx) > t, [
+    ...     Assignment(dx, -expr/expr.diff(x)),
+    ...     aug_assign(x, '+', dx),
+    ...     Print([x])
+    ... ])
+    >>> from sympy.printing import pycode
+    >>> py_str = pycode(whl)
+    >>> print(py_str)
+    while (abs(delta) > tol):
+        delta = (val**3 - math.cos(val))/(-3*val**2 - math.sin(val))
+        val += delta
+        print(val)
+    >>> import math
+    >>> tol, val, delta = 1e-5, 0.5, float('inf')
+    >>> exec(py_str)
+    1.1121416371
+    0.909672693737
+    0.867263818209
+    0.865477135298
+    0.865474033111
+    >>> print('%3.1g' % (math.cos(val) - val**3))
+    -3e-11
+
+If we want to generate Fortran code for the same while loop we simple call ``fcode``::
+
+    >>> from sympy.printing.fcode import fcode
+    >>> print(fcode(whl, standard=2003, source_format='free'))
+    do while (abs(delta) > tol)
+       delta = (val**3 - cos(val))/(-3*val**2 - sin(val))
+       val = val + delta
+       print *, val
+    end do
+
+There is a function constructing a loop (or a complete function) like this in
+:mod:`sympy.codegen.algorithms`.
+
 """
-
-
 
 from __future__ import print_function, division
 
-
-from sympy.core import Symbol, Tuple
+from itertools import chain
+from collections import defaultdict
+from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
+from sympy.core.compatibility import string_types
+from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
-from sympy.core.relational import Relational
-from sympy.core.sympify import _sympify, sympify
-from sympy.sets import FiniteSet
+from sympy.core.relational import Lt, Le, Ge, Gt
+from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import iterable
 
-class Assignment(Relational):
+
+
+def _mk_Tuple(args):
+    """
+    Create a Sympy Tuple object from an iterable, converting Python strings to
+    AST strings.
+
+    Parameters
+    ==========
+
+    args: iterable
+        Arguments to :class:`sympy.Tuple`.
+
+    Returns
+    =======
+
+    sympy.Tuple
+    """
+    args = [String(arg) if isinstance(arg, string_types) else arg for arg in args]
+    return Tuple(*args)
+
+
+class Token(Basic):
+    """ Base class for the AST types.
+
+    Defining fields are set in ``__slots__``. Attributes (defined in __slots__)
+    are only allowed to contain instances of Basic (unless atomic, see
+    ``String``). The arguments to ``__new__()`` correspond to the attributes in
+    the order defined in ``__slots__`. The ``defaults`` class attribute is a
+    dictionary mapping attribute names to their default values.
+
+    Subclasses should not need to override the ``__new__()`` method. They may
+    define a class or static method named ``_construct_<attr>`` for each
+    attribute to process the value passed to ``__new__()``. Attributes listed
+    in the class attribute ``not_in_args`` are not passed to :class:`sympy.Basic`.
+    """
+
+    __slots__ = []
+    defaults = {}
+    not_in_args = []
+    indented_args = ['body']
+
+    @property
+    def is_Atom(self):
+        return len(self.__slots__) == 0
+
+    @classmethod
+    def _get_constructor(cls, attr):
+        """ Get the constructor function for an attribute by name. """
+        return getattr(cls, '_construct_%s' % attr, lambda x: x)
+
+    @classmethod
+    def _construct(cls, attr, arg):
+        """ Construct an attribute value from argument passed to ``__new__()``. """
+        if arg == None: # Must be "== None", cannot be "is None"
+            return cls.defaults.get(attr, none)
+        else:
+            if isinstance(arg, Dummy):  # sympy's replace uses Dummy instances
+                return arg
+            else:
+                return cls._get_constructor(attr)(arg)
+
+    def __new__(cls, *args, **kwargs):
+        # Pass through existing instances when given as sole argument
+        if len(args) == 1 and not kwargs and isinstance(args[0], cls):
+            return args[0]
+
+        if len(args) > len(cls.__slots__):
+            raise ValueError("Too many arguments (%d), expected at most %d" % (len(args), len(cls.__slots__)))
+
+        attrvals = []
+
+        # Process positional arguments
+        for attrname, argval in zip(cls.__slots__, args):
+            if attrname in kwargs:
+                raise TypeError('Got multiple values for attribute %r' % attrname)
+
+            attrvals.append(cls._construct(attrname, argval))
+
+        # Process keyword arguments
+        for attrname in cls.__slots__[len(args):]:
+            if attrname in kwargs:
+                argval = kwargs.pop(attrname)
+
+            elif attrname in cls.defaults:
+                argval = cls.defaults[attrname]
+
+            else:
+                raise TypeError('No value for %r given and attribute has no default' % attrname)
+
+            attrvals.append(cls._construct(attrname, argval))
+
+        if kwargs:
+            raise ValueError("Unknown keyword arguments: %s" % ' '.join(kwargs))
+
+        # Parent constructor
+        basic_args = [
+            val for attr, val in zip(cls.__slots__, attrvals)
+            if attr not in cls.not_in_args
+        ]
+        obj = Basic.__new__(cls, *basic_args)
+
+        # Set attributes
+        for attr, arg in zip(cls.__slots__, attrvals):
+            setattr(obj, attr, arg)
+
+        return obj
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        for attr in self.__slots__:
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+        return True
+
+    def _hashable_content(self):
+        return tuple([getattr(self, attr) for attr in self.__slots__])
+
+    def __hash__(self):
+        return super(Token, self).__hash__()
+
+    def _joiner(self, k, indent_level):
+        return (',\n' + ' '*indent_level) if k in self.indented_args else ', '
+
+    def _indented(self, printer, k, v, *args, **kwargs):
+        il = printer._context['indent_level']
+        def _print(arg):
+            if isinstance(arg, Token):
+                return printer._print(arg, *args, joiner=self._joiner(k, il), **kwargs)
+            else:
+                return printer._print(v, *args, **kwargs)
+
+        if isinstance(v, Tuple):
+            joined = self._joiner(k, il).join([_print(arg) for arg in v.args])
+            if k in self.indented_args:
+                return '(\n' + ' '*il + joined + ',\n' + ' '*(il - 4) + ')'
+            else:
+                return ('({0},)' if len(v.args) == 1 else '({0})').format(joined)
+        else:
+            return _print(v)
+
+    def _sympyrepr(self, printer, *args, **kwargs):
+        from sympy.printing.printer import printer_context
+        exclude = kwargs.get('exclude', ())
+        values = [getattr(self, k) for k in self.__slots__]
+        indent_level = printer._context.get('indent_level', 0)
+        joiner = kwargs.pop('joiner', ', ')
+
+        arg_reprs = []
+
+        for i, (attr, value) in enumerate(zip(self.__slots__, values)):
+            if attr in exclude:
+                continue
+
+            # Skip attributes which have the default value
+            if attr in self.defaults and value == self.defaults[attr]:
+                continue
+
+            ilvl = indent_level + 4 if attr in self.indented_args else 0
+            with printer_context(printer, indent_level=ilvl):
+                indented = self._indented(printer, attr, value, *args, **kwargs)
+            arg_reprs.append(('{1}' if i == 0 else '{0}={1}').format(attr, indented.lstrip()))
+
+        return "{0}({1})".format(self.__class__.__name__, joiner.join(arg_reprs))
+
+    _sympystr = _sympyrepr
+
+    def __repr__(self):  # sympy.core.Basic.__repr__ uses sstr
+        from sympy.printing import srepr
+        return srepr(self)
+
+    def kwargs(self, exclude=(), apply=None):
+        """ Get instance's attributes as dict of keyword arguments.
+
+        Parameters
+        ==========
+
+        exclude : collection of str
+            Collection of keywords to exclude.
+
+        apply : callable, optional
+            Function to apply to all values.
+        """
+        kwargs = {k: getattr(self, k) for k in self.__slots__ if k not in exclude}
+        if apply is not None:
+            return {k: apply(v) for k, v in kwargs.items()}
+        else:
+            return kwargs
+
+
+class BreakToken(Token):
+    """ Represents 'break' in C/Python ('exit' in Fortran).
+
+    Use the premade instance ``break_`` or instantiate manually.
+
+    Examples
+    ========
+
+    >>> from sympy.printing import ccode, fcode
+    >>> from sympy.codegen.ast import break_
+    >>> ccode(break_)
+    'break'
+    >>> fcode(break_, source_format='free')
+    'exit'
+    """
+
+break_ = BreakToken()
+
+
+class ContinueToken(Token):
+    """ Represents 'continue' in C/Python ('cycle' in Fortran)
+
+    Use the premade instance ``continue_`` or instantiate manually.
+
+    Examples
+    ========
+
+    >>> from sympy.printing import ccode, fcode
+    >>> from sympy.codegen.ast import continue_
+    >>> ccode(continue_)
+    'continue'
+    >>> fcode(continue_, source_format='free')
+    'cycle'
+    """
+
+continue_ = ContinueToken()
+
+class NoneToken(Token):
+    """ The AST equivalence of Python's NoneType
+
+    The corresponding instance of Python's ``None`` is ``none``.
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import none, Variable
+    >>> from sympy.printing.pycode import pycode
+    >>> print(pycode(Variable('x').as_Declaration(value=none)))
+    x = None
+
+    """
+    def __eq__(self, other):
+        return other is None or isinstance(other, NoneToken)
+
+    def _hashable_content(self):
+        return ()
+
+    def __hash__(self):
+        return super(NoneToken, self).__hash__()
+
+
+none = NoneToken()
+
+
+class AssignmentBase(Basic):
+    """ Abstract base class for Assignment and AugmentedAssignment.
+
+    Attributes:
+    ===========
+
+    op : str
+        Symbol for assignment operator, e.g. "=", "+=", etc.
+    """
+
+    def __new__(cls, lhs, rhs):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+
+        cls._check_args(lhs, rhs)
+
+        return super(AssignmentBase, cls).__new__(cls, lhs, rhs)
+
+    @property
+    def lhs(self):
+        return self.args[0]
+
+    @property
+    def rhs(self):
+        return self.args[1]
+
+    @classmethod
+    def _check_args(cls, lhs, rhs):
+        """ Check arguments to __new__ and raise exception if any problems found.
+
+        Derived classes may wish to override this.
+        """
+        from sympy.matrices.expressions.matexpr import (
+            MatrixElement, MatrixSymbol)
+        from sympy.tensor.indexed import Indexed
+
+        # Tuple of things that can be on the lhs of an assignment
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable)
+        if not isinstance(lhs, assignable):
+            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+
+        # Indexed types implement shape, but don't define it until later. This
+        # causes issues in assignment validation. For now, matrices are defined
+        # as anything with a shape that is not an Indexed
+        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
+        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
+
+        # If lhs and rhs have same structure, then this assignment is ok
+        if lhs_is_mat:
+            if not rhs_is_mat:
+                raise ValueError("Cannot assign a scalar to a matrix.")
+            elif lhs.shape != rhs.shape:
+                raise ValueError("Dimensions of lhs and rhs don't align.")
+        elif rhs_is_mat and not lhs_is_mat:
+            raise ValueError("Cannot assign a matrix to a scalar.")
+
+
+class Assignment(AssignmentBase):
     """
     Represents variable assignment for code generation.
 
     Parameters
-    ----------
+    ==========
+
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -108,72 +484,54 @@ class Assignment(Relational):
     Assignment(A[0, 1], x)
     """
 
-    rel_op = ':='
-    __slots__ = []
-
-    def __new__(cls, lhs, rhs=0, **assumptions):
-        from sympy.matrices.expressions.matexpr import (
-            MatrixElement, MatrixSymbol)
-        from sympy.tensor.indexed import Indexed
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        # Indexed types implement shape, but don't define it until later. This
-        # causes issues in assignment validation. For now, matrices are defined
-        # as anything with a shape that is not an Indexed
-        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
-        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
-        # If lhs and rhs have same structure, then this assignment is ok
-        if lhs_is_mat:
-            if not rhs_is_mat:
-                raise ValueError("Cannot assign a scalar to a matrix.")
-            elif lhs.shape != rhs.shape:
-                raise ValueError("Dimensions of lhs and rhs don't align.")
-        elif rhs_is_mat and not lhs_is_mat:
-            raise ValueError("Cannot assign a matrix to a scalar.")
-        return Relational.__new__(cls, lhs, rhs, **assumptions)
-
-# XXX: This should be handled better
-Relational.ValidRelationOperator[':='] = Assignment
+    op = ':='
 
 
-class AugmentedAssignment(Assignment):
+class AugmentedAssignment(AssignmentBase):
     """
-    Base class for augmented assignments
+    Base class for augmented assignments.
+
+    Attributes:
+    ===========
+
+    binop : str
+       Symbol for binary operation being applied in the assignment, such as "+",
+       "*", etc.
     """
 
     @property
-    def rel_op(self):
-        return self._symbol + '='
+    def op(self):
+        return self.binop + '='
+
 
 class AddAugmentedAssignment(AugmentedAssignment):
-    _symbol = '+'
+    binop = '+'
 
 
 class SubAugmentedAssignment(AugmentedAssignment):
-    _symbol = '-'
+    binop = '-'
 
 
 class MulAugmentedAssignment(AugmentedAssignment):
-    _symbol = '*'
+    binop = '*'
 
 
 class DivAugmentedAssignment(AugmentedAssignment):
-    _symbol = '/'
+    binop = '/'
 
 
 class ModAugmentedAssignment(AugmentedAssignment):
-    _symbol = '%'
+    binop = '%'
 
 
-Relational.ValidRelationOperator['+='] = AddAugmentedAssignment
-Relational.ValidRelationOperator['-='] = SubAugmentedAssignment
-Relational.ValidRelationOperator['*='] = MulAugmentedAssignment
-Relational.ValidRelationOperator['/='] = DivAugmentedAssignment
-Relational.ValidRelationOperator['%='] = ModAugmentedAssignment
+# Mapping from binary op strings to AugmentedAssignment subclasses
+augassign_classes = {
+    cls.binop: cls for cls in [
+        AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
+        DivAugmentedAssignment, ModAugmentedAssignment
+    ]
+}
+
 
 def aug_assign(lhs, op, rhs):
     """
@@ -184,7 +542,8 @@ def aug_assign(lhs, op, rhs):
     directly, like AddAugmentedAssignment(x, y).
 
     Parameters
-    ----------
+    ==========
+
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -201,7 +560,7 @@ def aug_assign(lhs, op, rhs):
         the dimensions will not align.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import aug_assign
@@ -209,9 +568,9 @@ def aug_assign(lhs, op, rhs):
     >>> aug_assign(x, '+', y)
     AddAugmentedAssignment(x, y)
     """
-    if op + '=' not in Relational.ValidRelationOperator:
+    if op not in augassign_classes:
         raise ValueError("Unrecognized operator %s" % op)
-    return Relational.ValidRelationOperator[op + '='](lhs, rhs)
+    return augassign_classes[op](lhs, rhs)
 
 
 class CodeBlock(Basic):
@@ -221,12 +580,17 @@ class CodeBlock(Basic):
     For now only assignments are supported. This restriction will be lifted in
     the future.
 
-    Useful methods on this object are
+    Useful attributes on this object are:
 
     ``left_hand_sides``:
         Tuple of left-hand sides of assignments, in order.
     ``left_hand_sides``:
         Tuple of right-hand sides of assignments, in order.
+    ``free_symbols``: Free symbols of the expressions in the right-hand sides
+        which do not appear in the left-hand side of an assignment.
+
+    Useful methods on this object are:
+
     ``topological_sort``:
         Class method. Return a CodeBlock with assignments
         sorted so that variables are assigned before they
@@ -235,8 +599,8 @@ class CodeBlock(Basic):
         Return a new CodeBlock with common subexpressions eliminated and
         pulled out as assignments.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import symbols, ccode
     >>> from sympy.codegen.ast import CodeBlock, Assignment
@@ -260,8 +624,23 @@ class CodeBlock(Basic):
 
         obj.left_hand_sides = Tuple(*left_hand_sides)
         obj.right_hand_sides = Tuple(*right_hand_sides)
-
         return obj
+
+    def __iter__(self):
+        return iter(self.args)
+
+    def _sympyrepr(self, printer, *args, **kwargs):
+        il = printer._context.get('indent_level', 0)
+        joiner = ',\n' + ' '*il
+        joined = joiner.join(map(printer._print, self.args))
+        return ('{0}(\n'.format(' '*(il-4) + self.__class__.__name__,) +
+                ' '*il + joined + '\n' + ' '*(il - 4) + ')')
+
+    _sympystr = _sympyrepr
+
+    @property
+    def free_symbols(self):
+        return super(CodeBlock, self).free_symbols - set(self.left_hand_sides)
 
     @classmethod
     def topological_sort(cls, assignments):
@@ -276,8 +655,8 @@ class CodeBlock(Basic):
         This is a class constructor so that the default constructor for
         CodeBlock can error when variables are used before they are assigned.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.codegen.ast import CodeBlock, Assignment
@@ -289,10 +668,22 @@ class CodeBlock(Basic):
         ...     Assignment(z, 2),
         ... ]
         >>> CodeBlock.topological_sort(assignments)
-        CodeBlock(Assignment(z, 2), Assignment(y, z + 1), Assignment(x, y + z))
+        CodeBlock(
+            Assignment(z, 2),
+            Assignment(y, z + 1),
+            Assignment(x, y + z)
+        )
 
         """
         from sympy.utilities.iterables import topological_sort
+
+        if not all(isinstance(i, Assignment) for i in assignments):
+            # Will support more things later
+            raise NotImplementedError("CodeBlock.topological_sort only supports Assignments")
+
+        if any(isinstance(i, AugmentedAssignment) for i in assignments):
+            raise NotImplementedError("CodeBlock.topological_sort doesn't yet work with AugmentedAssignments")
+
         # Create a graph where the nodes are assignments and there is a directed edge
         # between nodes that use a variable and nodes that assign that
         # variable, like
@@ -313,26 +704,25 @@ class CodeBlock(Basic):
         # the same variable when those are implemented.
         A = list(enumerate(assignments))
 
-        # var_map = {variable: [assignments using variable]}
-        # like {x: [y := x + 1, z := y + x], ...}
-        var_map = {}
+        # var_map = {variable: [nodes for which this variable is assigned to]}
+        # like {x: [(1, x := y + z), (4, x := 2 * w)], ...}
+        var_map = defaultdict(list)
+        for node in A:
+            i, a = node
+            var_map[a.lhs].append(node)
 
         # E = Edges in the graph
         E = []
-        for i in A:
-            if i[1].lhs in var_map:
-                E.append((var_map[i[1].lhs], i))
-            var_map[i[1].lhs] = i
-        for i in A:
-            for x in i[1].rhs.free_symbols:
-                if x not in var_map:
-                    # XXX: Allow this case?
-                    raise ValueError("Undefined variable %s" % x)
-                E.append((var_map[x], i))
+        for dst_node in A:
+            i, a = dst_node
+            for s in a.rhs.free_symbols:
+                for src_node in var_map[s]:
+                    E.append((src_node, dst_node))
 
         ordered_assignments = topological_sort([A, E])
+
         # De-enumerate the result
-        return cls(*list(zip(*ordered_assignments))[1])
+        return cls(*[a for i, a in ordered_assignments])
 
     def cse(self, symbols=None, optimizations=None, postprocess=None,
         order='canonical'):
@@ -356,12 +746,18 @@ class CodeBlock(Basic):
         ... )
         ...
         >>> c.cse()
-        CodeBlock(Assignment(x, 1), Assignment(x0, sin(x)), Assignment(y, x0 + 1), Assignment(z, x0 - 1))
+        CodeBlock(
+            Assignment(x, 1),
+            Assignment(x0, sin(x)),
+            Assignment(y, x0 + 1),
+            Assignment(z, x0 - 1)
+        )
 
         """
-        # TODO: Check that the symbols are new
         from sympy.simplify.cse_main import cse
+        from sympy.utilities.iterables import numbered_symbols, filter_symbols
 
+        # Check that the CodeBlock only contains assignments to unique variables
         if not all(isinstance(i, Assignment) for i in self.args):
             # Will support more things later
             raise NotImplementedError("CodeBlock.cse only supports Assignments")
@@ -374,16 +770,23 @@ class CodeBlock(Basic):
                 raise NotImplementedError("Duplicate assignments to the same "
                     "variable are not yet supported (%s)" % lhs)
 
-        replacements, reduced_exprs = cse(self.right_hand_sides, symbols=symbols,
-            optimizations=optimizations, postprocess=postprocess, order=order)
-        assert len(reduced_exprs) == 1
-        new_block = tuple(Assignment(var, expr) for var, expr in
-            zip(self.left_hand_sides, reduced_exprs[0]))
-        new_assignments = tuple(Assignment(*i) for i in replacements)
+        # Ensure new symbols for subexpressions do not conflict with existing
+        existing_symbols = self.atoms(Symbol)
+        if symbols is None:
+            symbols = numbered_symbols()
+        symbols = filter_symbols(symbols, existing_symbols)
+
+        replacements, reduced_exprs = cse(list(self.right_hand_sides),
+            symbols=symbols, optimizations=optimizations, postprocess=postprocess,
+            order=order)
+
+        new_block = [Assignment(var, expr) for var, expr in
+            zip(self.left_hand_sides, reduced_exprs)]
+        new_assignments = [Assignment(var, expr) for var, expr in replacements]
         return self.topological_sort(new_assignments + new_block)
 
 
-class For(Basic):
+class For(Token):
     """Represents a 'for-loop' in the code.
 
     Expressions are of the form:
@@ -391,122 +794,165 @@ class For(Basic):
             body..."
 
     Parameters
-    ----------
+    ==========
+
     target : symbol
     iter : iterable
-    body : sympy expr
+    body : CodeBlock or iterable
+!        When passed an iterable it is used to instantiate a CodeBlock.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import symbols, Range
     >>> from sympy.codegen.ast import aug_assign, For
-    >>> x, n = symbols('x n')
-    >>> For(n, Range(10), [aug_assign(x, '+', n)])
-    For(n, Range(0, 10, 1), CodeBlock(AddAugmentedAssignment(x, n)))
-
-    """
-
-    def __new__(cls, target, iter, body):
-        target = _sympify(target)
-        if not iterable(iter):
-            raise TypeError("iter must be an iterable")
-        if isinstance(iter, list):
-            # _sympify errors on lists because they are mutable
-            iter = tuple(iter)
-        iter = _sympify(iter)
-        if not isinstance(body, CodeBlock):
-            if not iterable(body):
-                raise TypeError("body must be an iterable or CodeBlock")
-            body = CodeBlock(*(_sympify(i) for i in body))
-        return Basic.__new__(cls, target, iter, body)
-
-    @property
-    def target(self):
-        """
-        Return the symbol (target) from the for-loop representation.
-        This object changes each iteration.
-        Target must be a symbol.
-        """
-        return self._args[0]
-
-    @property
-    def iterable(self):
-        """
-        Return the iterable from the for-loop representation.
-        This is the object that target takes values from.
-        Must be an iterable object.
-        """
-        return self._args[1]
-
-    @property
-    def body(self):
-        """
-        Return the sympy expression (body) from the for-loop representation.
-        This is run for each value of target.
-        Must be an iterable object or CodeBlock.
-        """
-        return self._args[2]
-
-
-class Token(Basic):
-    """ Similar to Symbol, but takes no assumptions.
-
-    Defining fields are set in __slots__.
-    """
-
-    __slots__ = []
-
-    def __new__(cls, *args, **kwargs):
-        if len(args) == 1 and not kwargs and isinstance(args[0], cls):
-            return args[0]
-        args = args + tuple([kwargs[k] for k in cls.__slots__[len(args):]])
-        obj = Basic.__new__(cls)
-        for attr, arg in zip(cls.__slots__, args):
-            setattr(obj, attr, arg)
-        return obj
-
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
-        for attr in self.__slots__:
-            if getattr(self, attr) != getattr(other, attr):
-                return False
-        return True
-
-    def _hashable_content(self):
-        return tuple([getattr(self, attr) for attr in self.__slots__])
-
-    def __hash__(self):
-        return super(Token, self).__hash__()
-
-    def _sympystr(self, printer):
-        return "{0}({1})".format(self.__class__.__name__, ', '.join(
-            ['%s=%s' % (k, printer._print(getattr(self, k))) for k in self.__slots__]
+    >>> x, i, j, k = symbols('x i j k')
+    >>> for_i = For(i, Range(10), [aug_assign(x, '+', i*j*k)])
+    >>> for_i  # doctest: -NORMALIZE_WHITESPACE
+    For(i, iterable=Range(0, 10, 1), body=CodeBlock(
+        AddAugmentedAssignment(x, i*j*k)
+    ))
+    >>> for_ji = For(j, Range(7), [for_i])
+    >>> for_ji  # doctest: -NORMALIZE_WHITESPACE
+    For(j, iterable=Range(0, 7, 1), body=CodeBlock(
+        For(i, iterable=Range(0, 10, 1), body=CodeBlock(
+            AddAugmentedAssignment(x, i*j*k)
         ))
+    ))
+    >>> for_kji =For(k, Range(5), [for_ji])
+    >>> for_kji  # doctest: -NORMALIZE_WHITESPACE
+    For(k, iterable=Range(0, 5, 1), body=CodeBlock(
+        For(j, iterable=Range(0, 7, 1), body=CodeBlock(
+            For(i, iterable=Range(0, 10, 1), body=CodeBlock(
+                AddAugmentedAssignment(x, i*j*k)
+            ))
+        ))
+    ))
+    """
+    __slots__ = ['target', 'iterable', 'body']
+    _construct_target = staticmethod(_sympify)
+
+    @classmethod
+    def _construct_body(cls, itr):
+        if isinstance(itr, CodeBlock):
+            return itr
+        else:
+            return CodeBlock(*itr)
+
+    @classmethod
+    def _construct_iterable(cls, itr):
+        if not iterable(itr):
+            raise TypeError("iterable must be an iterable")
+        if isinstance(itr, list):  # _sympify errors on lists because they are mutable
+            itr = tuple(itr)
+        return _sympify(itr)
+
+
+class String(Token):
+    """ SymPy object representing a string.
+
+    Atomic object which is not an expression (as opposed to Symbol).
+
+    Parameters
+    ==========
+
+    text : str
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import String
+    >>> f = String('foo')
+    >>> f
+    foo
+    >>> str(f)
+    'foo'
+    >>> f.text
+    'foo'
+    >>> print(repr(f))
+    String('foo')
+
+    """
+    __slots__ = ['text']
+    not_in_args = ['text']
+    is_Atom = True
+
+    @classmethod
+    def _construct_text(cls, text):
+        if not isinstance(text, string_types):
+            raise TypeError("Argument text is not a string type.")
+        return text
+
+    def _sympystr(self, printer, *args, **kwargs):
+        return self.text
+
+
+class QuotedString(String):
+    """ Represents a string which should be printed with quotes. """
+
+class Comment(String):
+    """ Represents a comment. """
+
+class Node(Token):
+    """ Subclass of Token, carrying the attribute 'attrs' (Tuple)
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import Node, value_const, pointer_const
+    >>> n1 = Node([value_const])
+    >>> n1.attr_params('value_const')  # get the parameters of attribute (by name)
+    ()
+    >>> from sympy.codegen.fnodes import dimension
+    >>> n2 = Node([value_const, dimension(5, 3)])
+    >>> n2.attr_params(value_const)  # get the parameters of attribute (by Attribute instance)
+    ()
+    >>> n2.attr_params('dimension')  # get the parameters of attribute (by name)
+    (5, 3)
+    >>> n2.attr_params(pointer_const) is None
+    True
+
+    """
+
+    __slots__ = ['attrs']
+
+    defaults = {'attrs': Tuple()}
+
+    _construct_attrs = staticmethod(_mk_Tuple)
+
+    def attr_params(self, looking_for):
+        """ Returns the parameters of the Attribute with name ``looking_for`` in self.attrs """
+        for attr in self.attrs:
+            if str(attr.name) == str(looking_for):
+                return attr.parameters
 
 
 class Type(Token):
     """ Represents a type.
 
-    The naming is a super-set of NumPy naming, see [1]_. Type has a classmethod
+    The naming is a super-set of NumPy naming. Type has a classmethod
     ``from_expr`` which offer type deduction. It also has a method
     ``cast_check`` which casts the argument to its type, possibly raising an
     exception if rounding error is not within tolerances, or if the value is not
     representable by the underlying data type (e.g. unsigned integers).
 
-    Arguments
-    ---------
+    Parameters
+    ==========
+
     name : str
         Name of the type, e.g. ``object``, ``int16``, ``float16`` (where the latter two
         would use the ``Type`` sub-classes ``IntType`` and ``FloatType`` respectively).
         If a ``Type`` instance is given, the said instance is returned.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.ast import Type
-    >>> Type.from_expr(42).name
-    'integer'
+    >>> t = Type.from_expr(42)
+    >>> t
+    integer
+    >>> print(repr(t))
+    IntBaseType(String('integer'))
     >>> from sympy.codegen.ast import uint8
     >>> uint8.cast_check(-1)   # doctest: +ELLIPSIS
     Traceback (most recent call last):
@@ -525,34 +971,35 @@ class Type(Token):
     >>> from sympy import Symbol
     >>> from sympy.printing.cxxcode import cxxcode
     >>> from sympy.codegen.ast import Declaration, Variable
-    >>> cxxcode(Declaration(Variable(Symbol('x'), type_=boost_mp50)))
+    >>> cxxcode(Declaration(Variable('x', type=boost_mp50)))
     'boost::multiprecision::cpp_dec_float_50 x'
 
     References
-    ----------
+    ==========
 
-    .. [1] Numpy types
-        https://docs.scipy.org/doc/numpy/user/basics.types.html
+    .. [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
 
     """
     __slots__ = ['name']
 
-    default_precision_targets = {}
+    _construct_name = String
 
-    def __str__(self):
-        return self.name
+    def _sympystr(self, printer, *args, **kwargs):
+        return str(self.name)
 
     @classmethod
     def from_expr(cls, expr):
         """ Deduces type from an expression or a ``Symbol``.
 
         Parameters
-        ----------
+        ==========
+
         expr : number or SymPy object
             The type will be deduced from type or properties.
 
         Examples
-        --------
+        ========
+
         >>> from sympy.codegen.ast import Type, integer, complex_
         >>> Type.from_expr(2) == integer
         True
@@ -565,7 +1012,8 @@ class Type(Token):
         ValueError: Could not deduce type from expr.
 
         Raises
-        ------
+        ======
+
         ValueError when type deduction fails.
 
         """
@@ -589,7 +1037,8 @@ class Type(Token):
         """ Casts a value to the data type of the instance.
 
         Parameters
-        ----------
+        ==========
+
         value : number
         rtol : floating point number
             Relative tolerance. (will be deduced if not given).
@@ -602,7 +1051,8 @@ class Type(Token):
             Maps substitutions for Type, e.g. {integer: int64, real: float32}
 
         Examples
-        --------
+        ========
+
         >>> from sympy.codegen.ast import Type, integer, float32, int8
         >>> integer.cast_check(3.0) == 3
         True
@@ -633,7 +1083,6 @@ class Type(Token):
         0.123456789012345649
 
         """
-        from sympy.functions.elementary.complexes import im, re
         val = sympify(value)
 
         ten = Integer(10)
@@ -645,7 +1094,7 @@ class Type(Token):
         def tol(num):
             return atol + rtol*abs(num)
 
-        new_val = self._cast_nocheck(value)
+        new_val = self.cast_nocheck(value)
         self._check(new_val)
 
         delta = new_val - val
@@ -658,11 +1107,13 @@ class Type(Token):
 class IntBaseType(Type):
     """ Integer base type, contains no size information. """
     __slots__ = ['name']
-    _cast_nocheck = Integer
+    cast_nocheck = lambda self, i: Integer(int(i))
 
 
 class _SizedIntType(IntBaseType):
     __slots__ = ['name', 'nbits']
+
+    _construct_nbits = Integer
 
     def _check(self, value):
         if value < self.min:
@@ -672,6 +1123,7 @@ class _SizedIntType(IntBaseType):
 
 
 class SignedIntType(_SizedIntType):
+    """ Represents a signed integer type. """
     @property
     def min(self):
         return -2**(self.nbits-1)
@@ -682,6 +1134,7 @@ class SignedIntType(_SizedIntType):
 
 
 class UnsignedIntType(_SizedIntType):
+    """ Represents an unsigned integer type. """
     @property
     def min(self):
         return 0
@@ -692,13 +1145,18 @@ class UnsignedIntType(_SizedIntType):
 
 two = Integer(2)
 
-class FloatType(Type):
-    """ Represents a floating point value.
+class FloatBaseType(Type):
+    """ Represents a floating point number type. """
+    cast_nocheck = Float
+
+class FloatType(FloatBaseType):
+    """ Represents a floating point type with fixed bit width.
 
     Base 2 & one sign bit is assumed.
 
-    Arguments
-    ---------
+    Parameters
+    ==========
+
     name : str
         Name of the type.
     nbits : integer
@@ -709,7 +1167,8 @@ class FloatType(Type):
         Number of bits used to represent the mantissa.
 
     Examples
-    --------
+    ========
+
     >>> from sympy import S, Float
     >>> from sympy.codegen.ast import FloatType
     >>> half_precision = FloatType('f16', nbits=16, nmant=10, nexp=5)
@@ -732,6 +1191,9 @@ class FloatType(Type):
     """
 
     __slots__ = ['name', 'nbits', 'nmant', 'nexp']
+
+    _construct_nbits = _construct_nmant = _construct_nexp = Integer
+
 
     @property
     def max_exponent(self):
@@ -786,7 +1248,12 @@ class FloatType(Type):
         from sympy.functions import ceiling, log
         return ceiling((self.nmant + 1) * log(2)/log(10) + 1)
 
-    def _cast_nocheck(self, value):
+    def cast_nocheck(self, value):
+        """ Casts without checking if out of bounds or subnormal. """
+        if value == oo:  # float(oo) or oo
+            return float(oo)
+        elif value == -oo:  # float(-oo) or -oo
+            return float(-oo)
         return Float(str(sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
 
     def _check(self, value):
@@ -797,21 +1264,24 @@ class FloatType(Type):
         if abs(value) < self.tiny:
             raise ValueError("Smallest (absolute) value for data type bigger than new value.")
 
+class ComplexBaseType(FloatBaseType):
 
-class ComplexType(FloatType):
-    """ Represents a complex floating point number. """
-
-    def _cast_nocheck(self, value):
+    def cast_nocheck(self, value):
+        """ Casts without checking if out of bounds or subnormal. """
         from sympy.functions import re, im
         return (
-            super(ComplexType, self)._cast_nocheck(re(value)) +
-            super(ComplexType, self)._cast_nocheck(im(value))*1j
+            super(ComplexBaseType, self).cast_nocheck(re(value)) +
+            super(ComplexBaseType, self).cast_nocheck(im(value))*1j
         )
 
     def _check(self, value):
         from sympy.functions import re, im
-        super(ComplexType, self)._check(re(value))
-        super(ComplexType, self)._check(im(value))
+        super(ComplexBaseType, self)._check(re(value))
+        super(ComplexBaseType, self)._check(im(value))
+
+
+class ComplexType(ComplexBaseType, FloatType):
+    """ Represents a complex floating point number. """
 
 
 # NumPy types:
@@ -832,66 +1302,137 @@ float80 = FloatType('float80', 80, nexp=15, nmant=63)  # x86 extended precision 
 float128 = FloatType('float128', 128, nexp=15, nmant=112)  # IEEE 754 binary128, Quadruple precision
 float256 = FloatType('float256', 256, nexp=19, nmant=236)  # IEEE 754 binary256, Octuple precision
 
-complex64 = ComplexType('complex64', 64, **{k: getattr(float32, k) for k in FloatType.__slots__[2:]})
-complex128 = ComplexType('complex128', 128, **{k: getattr(float64, k) for k in FloatType.__slots__[2:]})
+complex64 = ComplexType('complex64', nbits=64, **float32.kwargs(exclude=('name', 'nbits')))
+complex128 = ComplexType('complex128', nbits=128, **float64.kwargs(exclude=('name', 'nbits')))
 
 # Generic types (precision may be chosen by code printers):
-real = Type('real')
+untyped = Type('untyped')
+real = FloatBaseType('real')
 integer = IntBaseType('integer')
-complex_ = Type('complex')
+complex_ = ComplexBaseType('complex')
 bool_ = Type('bool')
 
 
 class Attribute(Token):
-    """ Variable attribute """
-    __slots__ = ['name']
+    """ Attribute (possibly parametrized)
+
+    For use with :class:`sympy.codegen.ast.Node` (which takes instances of
+    ``Attribute`` as ``attrs``).
+
+    Parameters
+    ==========
+    name : str
+    parameters : Tuple
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import Attribute
+    >>> volatile = Attribute('volatile')
+    >>> volatile
+    volatile
+    >>> print(repr(volatile))
+    Attribute(String('volatile'))
+    >>> a = Attribute('foo', [1, 2, 3])
+    >>> a
+    foo(1, 2, 3)
+    >>> a.parameters == (1, 2, 3)
+    True
+    """
+    __slots__ = ['name', 'parameters']
+    defaults = {'parameters': Tuple()}
+    _construct_name = String
+    _construct_parameters = staticmethod(_mk_Tuple)
+
+    def _sympystr(self, printer, *args, **kwargs):
+        result = str(self.name)
+        if self.parameters:
+            result += '(%s)' % ', '.join(map(lambda arg: printer._print(
+                arg, *args, **kwargs), self.parameters))
+        return result
 
 value_const = Attribute('value_const')
 pointer_const = Attribute('pointer_const')
 
-class Variable(Basic):
+
+class Variable(Node):
     """ Represents a variable
 
     Parameters
-    ----------
+    ==========
+
     symbol : Symbol
-    attrs : iterable of Attribute instances
-        Will be stored as a FiniteSet.
-    type_ : Type (optional)
+    type : Type (optional)
         Type of the variable.
+    attrs : iterable of Attribute instances
+        Will be stored as a Tuple.
 
     Examples
-    --------
+    ========
+
     >>> from sympy import Symbol
     >>> from sympy.codegen.ast import Variable, float32, integer
     >>> x = Symbol('x')
-    >>> v = Variable(x, type_=float32)
+    >>> v = Variable(x, type=float32)
+    >>> v.attrs
+    ()
+    >>> v == Variable('x')
+    False
+    >>> v == Variable('x', type=float32)
+    True
+    >>> v
+    Variable(x, type=float32)
 
     One may also construct a ``Variable`` instance with the type deduced from
-    assumptions about the symbol using the ``deduced`` classmethod::
+    assumptions about the symbol using the ``deduced`` classmethod:
+
     >>> i = Symbol('i', integer=True)
     >>> v = Variable.deduced(i)
     >>> v.type == integer
     True
+    >>> v == Variable('i')
+    False
+    >>> from sympy.codegen.ast import value_const
+    >>> value_const in v.attrs
+    False
+    >>> w = Variable('w', attrs=[value_const])
+    >>> w
+    Variable(w, attrs=(value_const,))
+    >>> value_const in w.attrs
+    True
+    >>> w.as_Declaration(value=42)
+    Declaration(Variable(w, value=42, attrs=(value_const,)))
 
     """
 
-    nargs = (2, 3)  # type is optional
+    __slots__ = ['symbol', 'type', 'value'] + Node.__slots__
+    defaults = dict(chain(Node.defaults.items(), {
+        'type': untyped,
+        'value': none
+    }.items()))
 
-    def __new__(cls, symbol, attrs=FiniteSet(), type_=None):
-        args = (_sympify(symbol), attrs if isinstance(attrs, FiniteSet) else FiniteSet(*attrs))
-        if type_ is not None:
-            if not isinstance(type_, Type):
-                raise TypeError("type_ argument should be an instance of Type")
-            args += (type_,)
-        return Basic.__new__(cls, *args)
+    _construct_symbol = staticmethod(sympify)
+    _construct_value = staticmethod(sympify)
 
     @classmethod
-    def deduced(cls, symbol, attrs=FiniteSet()):
+    def deduced(cls, symbol, value=None, attrs=Tuple(), cast_check=True):
         """ Alt. constructor with type deduction from ``Type.from_expr``.
 
+        Deduces type primarily from ``symbol``, secondarily from ``value``.
+
+        Parameters
+        ==========
+
+        symbol : Symbol
+        value : expr
+            (optional) value of the variable.
+        attrs : iterable of Attribute instances
+        cast_check : bool
+            Whether to apply ``Type.cast_check`` on ``value``.
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Symbol
         >>> from sympy.codegen.ast import Variable, complex_
         >>> n = Symbol('n', integer=True)
@@ -900,120 +1441,372 @@ class Variable(Basic):
         >>> x = Symbol('x', real=True)
         >>> v = Variable.deduced(x)
         >>> v.type
-        Type(name='real')
+        real
         >>> z = Symbol('z', complex=True)
         >>> Variable.deduced(z).type == complex_
         True
 
         """
-        return cls(symbol, attrs, Type.from_expr(symbol))
+        if isinstance(symbol, Variable):
+            return symbol
 
-    @property
-    def symbol(self):
-        return self.args[0]
-
-    @property
-    def attributes(self):
-        return self.args[1]
-
-    @property
-    def type(self):
-        if len(self.args) == 3:
-            return self.args[2]
-        else:
-            return None
-
-    @property
-    def value_const(self):
-        """ Boolean value describing whether the value is constant. """
-        return self.attributes.contains(value_const) == True
-
-
-class Pointer(Variable):
-    """ Represents a pointer """
-
-    @property
-    def pointer_const(self):
-        """ Boolean value describing whether the pointer address is constant. """
-        return self.attributes.contains(pointer_const) == True
-
-
-class Declaration(Basic):
-    """ Represents a variable declaration
-
-    Parameters
-    ----------
-    var : Variable, Pointer or IndexedBase
-    val : Value (optional)
-        Value to be assigned upon declaration.
-    cast : bool
-        If val is not ``None`` val will be casted using
-        ``var.Type.cast_check()``.
-
-    Examples
-    --------
-    >>> from sympy import Symbol
-    >>> from sympy.codegen.ast import Declaration, Type, Variable, integer
-    >>> x = Symbol('x')
-    >>> xvar = Variable(x)
-    >>> decl = Declaration.deduced(xvar, 3)
-    >>> decl.variable.type == integer
-    True
-    >>> k = Symbol('k', integer=True)
-    >>> k_decl = Declaration.deduced(k, 3.0)
-    >>> k_decl.variable.type == integer
-    True
-
-    """
-
-    nargs = (1, 2)
-
-    def __new__(cls, var, val=None, cast=False):
-        if not isinstance(var, Variable):
-            raise TypeError("var argument should be an instance of Variable")
-        args = var,
-        if val is not None:
-            if cast:
-                args += (var.type.cast_check(val),)
-            else:
-                args += (_sympify(val),)
-        return Basic.__new__(cls, *args)
-
-    @classmethod
-    def deduced(cls, symbol, value=None, attrs=FiniteSet(), **kwargs):
-        """ Deduces type primarily from ``symbol``, secondarily from ``value``.
-
-        Examples
-        --------
-        >>> from sympy import Symbol
-        >>> from sympy.codegen.ast import Declaration, real, integer
-        >>> x = Symbol('x', real=True)
-        >>> decl = Declaration.deduced(x)
-        >>> decl.variable.type == real
-        True
-        >>> decl.value is None
-        True
-        >>> n = Symbol('n', integer=True)
-        >>> Declaration.deduced(n).variable
-        Variable(n, EmptySet(), IntBaseType(name='integer'))
-
-        """
         try:
             type_ = Type.from_expr(symbol)
         except ValueError:
             type_ = Type.from_expr(value)
-        var = Variable(symbol, attrs, type_)
-        return cls(var, value, **kwargs)
 
-    @property
-    def variable(self):
-        """ Variable of the declaration """
-        return self.args[0]
+        if value is not None and cast_check:
+            value = type_.cast_check(value)
+        return cls(symbol, type=type_, value=value, attrs=attrs)
 
-    @property
-    def value(self):
-        """ Initialization value of the declaration """
-        if len(self.args) == 2:
-            return self.args[1]
+    def as_Declaration(self, **kwargs):
+        """ Convenience method for creating a Declaration instance.
+
+        If the variable of the Declaration need to wrap a modified
+        variable keyword arguments may be passed (overriding e.g.
+        the ``value`` of the Variable instance).
+
+        Examples
+        ========
+
+        >>> from sympy.codegen.ast import Variable
+        >>> x = Variable('x')
+        >>> decl1 = x.as_Declaration()
+        >>> decl1.variable.value == None
+        True
+        >>> decl2 = x.as_Declaration(value=42.0)
+        >>> decl2.variable.value == 42
+        True
+
+        """
+        kw = self.kwargs()
+        kw.update(kwargs)
+        return Declaration(self.func(**kw))
+
+    def _relation(self, rhs, op):
+        try:
+            rhs = _sympify(rhs)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s < %s" % (self, rhs))
+        return op(self, rhs, evaluate=False)
+
+    __lt__ = lambda self, other: self._relation(other, Lt)
+    __le__ = lambda self, other: self._relation(other, Le)
+    __ge__ = lambda self, other: self._relation(other, Ge)
+    __gt__ = lambda self, other: self._relation(other, Gt)
+
+
+
+
+class Pointer(Variable):
+    """ Represents a pointer. See ``Variable``.
+
+    Examples
+    ========
+
+    Can create instances of ``Element``:
+
+    >>> from sympy import Symbol
+    >>> from sympy.codegen.ast import Pointer
+    >>> i = Symbol('i', integer=True)
+    >>> p = Pointer('x')
+    >>> p[i+1]
+    Element(x, indices=((i + 1,),))
+
+    """
+
+    def __getitem__(self, key):
+        try:
+            return Element(self.symbol, key)
+        except TypeError:
+            return Element(self.symbol, (key,))
+
+
+class Element(Token):
+    """ Element in (a possibly N-dimensional) array.
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import Element
+    >>> elem = Element('x', 'ijk')
+    >>> elem.symbol.name == 'x'
+    True
+    >>> elem.indices
+    (i, j, k)
+    >>> from sympy import ccode
+    >>> ccode(elem)
+    'x[i][j][k]'
+    >>> ccode(Element('x', 'ijk', strides='lmn', offset='o'))
+    'x[i*l + j*m + k*n + o]'
+
+    """
+    __slots__ = ['symbol', 'indices', 'strides', 'offset']
+    defaults = {'strides': none, 'offset': none}
+    _construct_symbol = staticmethod(sympify)
+    _construct_indices = staticmethod(lambda arg: Tuple(*arg))
+    _construct_strides = staticmethod(lambda arg: Tuple(*arg))
+    _construct_offset = staticmethod(sympify)
+
+
+class Declaration(Token):
+    """ Represents a variable declaration
+
+    Parameters
+    ==========
+
+    variable : Variable
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.codegen.ast import Declaration, Type, Variable, integer, untyped
+    >>> z = Declaration('z')
+    >>> z.variable.type == untyped
+    True
+    >>> z.variable.value == None
+    True
+    """
+    __slots__ = ['variable']
+    _construct_variable = Variable
+
+
+class While(Token):
+    """ Represents a 'for-loop' in the code.
+
+    Expressions are of the form:
+        "while condition:
+             body..."
+
+    Parameters
+    ==========
+
+    condition : expression convertible to Boolean
+    body : CodeBlock or iterable
+        When passed an iterable it is used to instantiate a CodeBlock.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Gt, Abs
+    >>> from sympy.codegen import aug_assign, Assignment, While
+    >>> x, dx = symbols('x dx')
+    >>> expr = 1 - x**2
+    >>> whl = While(Gt(Abs(dx), 1e-9), [
+    ...     Assignment(dx, -expr/expr.diff(x)),
+    ...     aug_assign(x, '+', dx)
+    ... ])
+
+    """
+    __slots__ = ['condition', 'body']
+    _construct_condition = staticmethod(lambda cond: _sympify(cond))
+
+    @classmethod
+    def _construct_body(cls, itr):
+        if isinstance(itr, CodeBlock):
+            return itr
         else:
-            return None
+            return CodeBlock(*itr)
+
+
+class Scope(Token):
+    """ Represents a scope in the code.
+
+    Parameters
+    ==========
+
+    body : CodeBlock or iterable
+        When passed an iterable it is used to instantiate a CodeBlock.
+
+    """
+    __slots__ = ['body']
+
+    @classmethod
+    def _construct_body(cls, itr):
+        if isinstance(itr, CodeBlock):
+            return itr
+        else:
+            return CodeBlock(*itr)
+
+
+class Stream(Token):
+    """ Represents a stream.
+
+    There are two predefined Stream instances ``stdout`` & ``stderr``.
+
+    Parameters
+    ==========
+
+    name : str
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.printing.pycode import pycode
+    >>> from sympy.codegen.ast import Print, stderr, QuotedString
+    >>> print(pycode(Print(['x'], file=stderr)))
+    print(x, file=sys.stderr)
+    >>> x = Symbol('x')
+    >>> print(pycode(Print([QuotedString('x')], file=stderr)))  # print literally "x"
+    print("x", file=sys.stderr)
+
+    """
+    __slots__ = ['name']
+    _construct_name = String
+
+stdout = Stream('stdout')
+stderr = Stream('stderr')
+
+
+class Print(Token):
+    """ Represents print command in the code.
+
+    Parameters
+    ==========
+
+    formatstring : str
+    *args : Basic instances (or convertible to such through sympify)
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import Print
+    >>> from sympy.printing.pycode import pycode
+    >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g")))
+    print("coordinate: %12.5g %12.5g" % (x, y))
+
+    """
+
+    __slots__ = ['print_args', 'format_string', 'file']
+    defaults = {'format_string': none, 'file': none}
+
+    _construct_print_args = staticmethod(_mk_Tuple)
+    _construct_format_string = QuotedString
+    _construct_file = Stream
+
+
+class FunctionPrototype(Node):
+    """ Represents a function prototype
+
+    Allows the user to generate forward declaration in e.g. C/C++.
+
+    Parameters
+    ==========
+
+    return_type : Type
+    name : str
+    parameters: iterable of Variable instances
+    attrs : iterable of Attribute instances
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.codegen.ast import real, FunctionPrototype
+    >>> from sympy.printing.ccode import ccode
+    >>> x, y = symbols('x y', real=True)
+    >>> fp = FunctionPrototype(real, 'foo', [x, y])
+    >>> ccode(fp)
+    'double foo(double x, double y)'
+
+    """
+
+    __slots__ = ['return_type', 'name', 'parameters', 'attrs']
+
+    _construct_return_type = Type
+    _construct_name = String
+
+    @staticmethod
+    def _construct_parameters(args):
+        def _var(arg):
+            if isinstance(arg, Declaration):
+                return arg.variable
+            elif isinstance(arg, Variable):
+                return arg
+            else:
+                return Variable.deduced(arg)
+        return Tuple(*map(_var, args))
+
+    @classmethod
+    def from_FunctionDefinition(cls, func_def):
+        if not isinstance(func_def, FunctionDefinition):
+            raise TypeError("func_def is not an instance of FunctionDefiniton")
+        return cls(**func_def.kwargs(exclude=('body',)))
+
+
+class FunctionDefinition(FunctionPrototype):
+    """ Represents a function definition in the code.
+
+    Parameters
+    ==========
+
+    return_type : Type
+    name : str
+    parameters: iterable of Variable instances
+    body : CodeBlock or iterable
+    attrs : iterable of Attribute instances
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.codegen.ast import real, FunctionPrototype
+    >>> from sympy.printing.ccode import ccode
+    >>> x, y = symbols('x y', real=True)
+    >>> fp = FunctionPrototype(real, 'foo', [x, y])
+    >>> ccode(fp)
+    'double foo(double x, double y)'
+    >>> from sympy.codegen.ast import FunctionDefinition, Return
+    >>> body = [Return(x*y)]
+    >>> fd = FunctionDefinition.from_FunctionPrototype(fp, body)
+    >>> print(ccode(fd))
+    double foo(double x, double y){
+        return x*y;
+    }
+    """
+
+    __slots__ = FunctionPrototype.__slots__[:-1] + ['body', 'attrs']
+
+    @classmethod
+    def _construct_body(cls, itr):
+        if isinstance(itr, CodeBlock):
+            return itr
+        else:
+            return CodeBlock(*itr)
+
+    @classmethod
+    def from_FunctionPrototype(cls, func_proto, body):
+        if not isinstance(func_proto, FunctionPrototype):
+            raise TypeError("func_proto is not an instance of FunctionPrototype")
+        return cls(body=body, **func_proto.kwargs())
+
+
+class Return(Basic):
+    """ Represents a return command in the code. """
+
+
+class FunctionCall(Token, Expr):
+    """ Represents a call to a function in the code.
+
+    Parameters
+    ==========
+
+    name : str
+    function_args : Tuple
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import FunctionCall
+    >>> from sympy.printing.pycode import pycode
+    >>> fcall = FunctionCall('foo', 'bar baz'.split())
+    >>> print(pycode(fcall))
+    foo(bar, baz)
+
+    """
+    __slots__ = ['name', 'function_args']
+
+    _construct_name = String
+    _construct_function_args = staticmethod(lambda args: Tuple(*args))

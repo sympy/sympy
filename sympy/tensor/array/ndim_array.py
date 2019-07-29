@@ -1,9 +1,13 @@
 from __future__ import print_function, division
-import collections
 
 from sympy import Basic
-from sympy.core.compatibility import SYMPY_INTS
+from sympy import S
+from sympy.core.expr import Expr
+from sympy.core.numbers import Integer
+from sympy.core.sympify import sympify
+from sympy.core.compatibility import SYMPY_INTS, Iterable
 
+import itertools
 
 class NDimArray(object):
     """
@@ -65,11 +69,11 @@ class NDimArray(object):
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
 
     def _parse_index(self, index):
-
         if isinstance(index, (SYMPY_INTS, Integer)):
-            if index >= self._loop_size:
-                raise ValueError("index out of range")
-            return index
+            raise ValueError("Only a tuple index is accepted")
+
+        if self._loop_size == 0:
+            raise ValueError("Index not valide with an empty array")
 
         if len(index) != self._rank:
             raise ValueError('Wrong number of array axes')
@@ -104,13 +108,13 @@ class NDimArray(object):
 
     def _setter_iterable_check(self, value):
         from sympy.matrices.matrices import MatrixBase
-        if isinstance(value, (collections.Iterable, MatrixBase, NDimArray)):
+        if isinstance(value, (Iterable, MatrixBase, NDimArray)):
             raise NotImplementedError
 
     @classmethod
     def _scan_iterable_shape(cls, iterable):
         def f(pointer):
-            if not isinstance(pointer, collections.Iterable):
+            if not isinstance(pointer, Iterable):
                 return [pointer], ()
 
             result = []
@@ -126,33 +130,45 @@ class NDimArray(object):
     @classmethod
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
+        from sympy import Dict, Tuple
 
-        if shape is None and iterable is None:
-            shape = ()
-            iterable = ()
-        # Construction from another `NDimArray`:
-        elif shape is None and isinstance(iterable, NDimArray):
-            shape = iterable.shape
-            iterable = list(iterable)
-        # Construct N-dim array from an iterable (numpy arrays included):
-        elif shape is None and isinstance(iterable, collections.Iterable):
-            iterable, shape = cls._scan_iterable_shape(iterable)
+        if shape is None:
+            if iterable is None:
+                shape = ()
+                iterable = ()
+            # Construction of a sparse array from a sparse array
+            elif isinstance(iterable, SparseNDimArray):
+                return iterable._shape, iterable._sparse_array
+            # Construction from another `NDimArray`:
+            elif isinstance(iterable, NDimArray):
+                shape = iterable.shape
+                iterable = list(iterable)
+            # Construct N-dim array from an iterable (numpy arrays included):
+            elif isinstance(iterable, Iterable):
+                iterable, shape = cls._scan_iterable_shape(iterable)
 
-        # Construct N-dim array from a Matrix:
-        elif shape is None and isinstance(iterable, MatrixBase):
-            shape = iterable.shape
+            # Construct N-dim array from a Matrix:
+            elif isinstance(iterable, MatrixBase):
+                shape = iterable.shape
 
-        # Construct N-dim array from another N-dim array:
-        elif shape is None and isinstance(iterable, NDimArray):
-            shape = iterable.shape
+            # Construct N-dim array from another N-dim array:
+            elif isinstance(iterable, NDimArray):
+                shape = iterable.shape
 
-        # Construct NDimArray(iterable, shape)
-        elif shape is not None:
-            pass
+            else:
+                shape = ()
+                iterable = (iterable,)
 
-        else:
-            shape = ()
-            iterable = (iterable,)
+        if isinstance(iterable, (Dict, dict)) and shape is not None:
+            new_dict = iterable.copy()
+            for k, v in new_dict.items():
+                if isinstance(k, (tuple, Tuple)):
+                    new_key = 0
+                    for i, idx in enumerate(k):
+                        new_key = new_key * shape[i] + idx
+                    iterable[new_key] = iterable[k]
+                    del iterable[k]
 
         if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
@@ -209,7 +225,7 @@ class NDimArray(object):
         """
         return self._rank
 
-    def diff(self, *args):
+    def diff(self, *args, **kwargs):
         """
         Calculate the derivative of each element in the array.
 
@@ -224,7 +240,8 @@ class NDimArray(object):
 
         """
         from sympy import Derivative
-        return Derivative(self.as_immutable(), *args, evaluate=True)
+        kwargs.setdefault('evaluate', True)
+        return Derivative(self.as_immutable(), *args, **kwargs)
 
     def _accept_eval_derivative(self, s):
         return s._visit_eval_derivative_array(self)
@@ -242,10 +259,15 @@ class NDimArray(object):
         return Basic._eval_derivative_n_times(self, s, n)
 
     def _eval_derivative(self, arg):
+        return self.applyfunc(lambda x: x.diff(arg))
+
+    def _eval_derivative_array(self, arg):
         from sympy import derive_by_array
-        from sympy import Derivative, Tuple
+        from sympy import Tuple
+        from sympy import SparseNDimArray
         from sympy.matrices.common import MatrixCommon
-        if isinstance(arg, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+
+        if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):
             return derive_by_array(self, arg)
         else:
             return self.applyfunc(lambda x: x.diff(arg))
@@ -263,6 +285,11 @@ class NDimArray(object):
         >>> m.applyfunc(lambda i: 2*i)
         [[0, 2], [4, 6]]
         """
+        from sympy.tensor.array import SparseNDimArray
+
+        if isinstance(self, SparseNDimArray) and f(S.Zero) == 0:
+            return type(self)({k: f(v) for k, v in self._sparse_array.items() if f(v) != 0}, self.shape)
+
         return type(self)(map(f, self), self.shape)
 
     def __str__(self):
@@ -279,7 +306,7 @@ class NDimArray(object):
         """
         def f(sh, shape_left, i, j):
             if len(shape_left) == 1:
-                return "["+", ".join([str(self[e]) for e in range(i, j)])+"]"
+                return "["+", ".join([str(self[self._get_tuple_index(e)]) for e in range(i, j)])+"]"
 
             sh //= shape_left[0]
             return "[" + ", ".join([f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]) + "]" # + "\n"*len(shape_left)
@@ -291,6 +318,25 @@ class NDimArray(object):
 
     def __repr__(self):
         return self.__str__()
+
+    # We don't define _repr_png_ here because it would add a large amount of
+    # data to any notebook containing SymPy expressions, without adding
+    # anything useful to the notebook. It can still enabled manually, e.g.,
+    # for the qtconsole, with init_printing().
+    def _repr_latex_(self):
+        """
+        IPython/Jupyter LaTeX printing
+
+        To change the behavior of this (e.g., pass in some settings to LaTeX),
+        use init_printing(). init_printing() will also enable LaTeX printing
+        for built in numeric types like ints and container types that contain
+        SymPy objects, like lists and dictionaries of expressions.
+        """
+        from sympy.printing.latex import latex
+        s = latex(self, mode='plain')
+        return "$\\displaystyle %s$" % s
+
+    _repr_latex_orig = _repr_latex_
 
     def tolist(self):
         """
@@ -310,7 +356,7 @@ class NDimArray(object):
 
         def f(sh, shape_left, i, j):
             if len(shape_left) == 1:
-                return [self[e] for e in range(i, j)]
+                return [self[self._get_tuple_index(e)] for e in range(i, j)]
             result = []
             sh //= shape_left[0]
             for e in range(shape_left[0]):
@@ -341,28 +387,47 @@ class NDimArray(object):
 
     def __mul__(self, other):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
 
-        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
+        if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
+
         other = sympify(other)
+        if isinstance(self, SparseNDimArray):
+            if(other == S.Zero):
+                return type(self)({}, self.shape)
+            return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [i*other for i in self]
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
 
-        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
+        if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
+
         other = sympify(other)
+        if isinstance(self, SparseNDimArray):
+            if(other == S.Zero):
+                return type(self)({}, self.shape)
+            return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [other*i for i in self]
         return type(self)(result_list, self.shape)
 
     def __div__(self, other):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
 
-        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
+        if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected")
+
         other = sympify(other)
+        if isinstance(self, SparseNDimArray) and other != S.Zero:
+            return type(self)({k: v/other for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [i/other for i in self]
         return type(self)(result_list, self.shape)
 
@@ -370,6 +435,11 @@ class NDimArray(object):
         raise NotImplementedError('unsupported operation on NDimArray')
 
     def __neg__(self):
+        from sympy.tensor.array import SparseNDimArray
+
+        if isinstance(self, SparseNDimArray):
+            return type(self)({k: -v for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [-i for i in self]
         return type(self)(result_list, self.shape)
 
@@ -394,9 +464,17 @@ class NDimArray(object):
         >>> a == b
         False
         """
+        from sympy.tensor.array import SparseNDimArray
         if not isinstance(other, NDimArray):
             return False
-        return (self.shape == other.shape) and (list(self) == list(other))
+
+        if not self.shape == other.shape:
+            return False
+
+        if isinstance(self, SparseNDimArray) and isinstance(other, SparseNDimArray):
+            return dict(self._sparse_array) == dict(other._sparse_array)
+
+        return list(self) == list(other)
 
     def __ne__(self, other):
         return not self == other
@@ -425,6 +503,32 @@ class NDimArray(object):
     def adjoint(self):
         return self._eval_adjoint()
 
+    def _slice_expand(self, s, dim):
+        if not isinstance(s, slice):
+                return (s,)
+        start, stop, step = s.indices(dim)
+        return [start + i*step for i in range((stop-start)//step)]
+
+    def _get_slice_data_for_array_access(self, index):
+        sl_factors = [self._slice_expand(i, dim) for (i, dim) in zip(index, self.shape)]
+        eindices = itertools.product(*sl_factors)
+        return sl_factors, eindices
+
+    def _get_slice_data_for_array_assignment(self, index, value):
+        if not isinstance(value, NDimArray):
+            value = type(self)(value)
+        sl_factors, eindices = self._get_slice_data_for_array_access(index)
+        slice_offsets = [min(i) if isinstance(i, list) else None for i in sl_factors]
+        # TODO: add checks for dimensions for `value`?
+        return value, eindices, slice_offsets
+
+    @classmethod
+    def _check_special_bounds(cls, flat_list, shape):
+        if shape == () and len(flat_list) != 1:
+            raise ValueError("arrays without shape need one scalar value")
+        if shape == (0,) and len(flat_list) > 0:
+            raise ValueError("if array shape is (0,) there cannot be elements")
+
 
 class ImmutableNDimArray(NDimArray, Basic):
     _op_priority = 11.0
@@ -437,9 +541,3 @@ class ImmutableNDimArray(NDimArray, Basic):
 
     def as_mutable(self):
         raise NotImplementedError("abstract method")
-
-
-from sympy.core.numbers import Integer
-from sympy.core.sympify import sympify
-from sympy.core.function import Derivative
-from sympy.core.expr import Expr

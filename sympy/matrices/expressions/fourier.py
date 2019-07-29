@@ -8,7 +8,7 @@ class DFT(MatrixExpr):
     n = property(lambda self: self.args[0])
     shape = property(lambda self: (self.n, self.n))
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         w = exp(-2*S.Pi*I/self.n)
         return w**(i*j) / sqrt(self.n)
 
@@ -17,7 +17,7 @@ class DFT(MatrixExpr):
 
 class IDFT(DFT):
     """ Inverse Discrete Fourier Transform """
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         w = exp(-2*S.Pi*I/self.n)
         return w**(-i*j) / sqrt(self.n)
 

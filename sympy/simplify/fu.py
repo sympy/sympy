@@ -190,27 +190,27 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from sympy.simplify.simplify import bottom_up
-from sympy.core.sympify import sympify
-from sympy.functions.elementary.trigonometric import (
-    cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
-from sympy.functions.elementary.hyperbolic import (
-    cosh, sinh, tanh, coth, sech, csch, HyperbolicFunction)
-from sympy.functions.combinatorial.factorials import binomial
+from sympy.core.add import Add
+from sympy.core.basic import S
 from sympy.core.compatibility import ordered, range
 from sympy.core.expr import Expr
-from sympy.core.mul import Mul
-from sympy.core.power import Pow
-from sympy.core.function import expand_mul
-from sympy.core.add import Add
-from sympy.core.symbol import Dummy
 from sympy.core.exprtools import Factors, gcd_terms, factor_terms
-from sympy.core.basic import S
+from sympy.core.function import expand_mul
+from sympy.core.mul import Mul
 from sympy.core.numbers import pi, I
+from sympy.core.power import Pow
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.elementary.hyperbolic import (
+    cosh, sinh, tanh, coth, sech, csch, HyperbolicFunction)
+from sympy.functions.elementary.trigonometric import (
+    cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
+from sympy.ntheory.factor_ import perfect_power
+from sympy.polys.polytools import factor
+from sympy.simplify.simplify import bottom_up
 from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
-from sympy.polys.polytools import factor
-from sympy.ntheory.factor_ import perfect_power
 
 from sympy import SYMPY_DEBUG
 
@@ -429,6 +429,8 @@ def TR3(rv):
         if not isinstance(rv, TrigonometricFunction):
             return rv
         rv = rv.func(signsimp(rv.args[0]))
+        if not isinstance(rv, TrigonometricFunction):
+            return rv
         if (rv.args[0] - S.Pi/4).is_positive is (S.Pi/2 - rv.args[0]).is_positive is True:
             fmap = {cos: sin, sin: cos, tan: cot, cot: tan, sec: csc, csc: sec}
             rv = fmap[rv.func](S.Pi/2 - rv.args[0])
@@ -484,11 +486,11 @@ def _TR56(rv, f, g, h, max, pow):
     >>> T(sin(x)**3, sin, cos, h, 4, False)
     sin(x)**3
     >>> T(sin(x)**6, sin, cos, h, 6, False)
-    (-cos(x)**2 + 1)**3
+    (1 - cos(x)**2)**3
     >>> T(sin(x)**6, sin, cos, h, 6, True)
     sin(x)**6
     >>> T(sin(x)**8, sin, cos, h, 10, True)
-    (-cos(x)**2 + 1)**4
+    (1 - cos(x)**2)**4
     """
 
     def _f(rv):
@@ -497,6 +499,8 @@ def _TR56(rv, f, g, h, max, pow):
         # make the changes in powers that appear in sums -- making an isolated
         # change is not going to allow a simplification as far as I can tell.
         if not (rv.is_Pow and rv.base.func == f):
+            return rv
+        if not rv.exp.is_real:
             return rv
 
         if (rv.exp < 0) == True:
@@ -534,11 +538,11 @@ def TR5(rv, max=4, pow=False):
     >>> from sympy.abc import x
     >>> from sympy import sin
     >>> TR5(sin(x)**2)
-    -cos(x)**2 + 1
+    1 - cos(x)**2
     >>> TR5(sin(x)**-2)  # unchanged
     sin(x)**(-2)
     >>> TR5(sin(x)**4)
-    (-cos(x)**2 + 1)**2
+    (1 - cos(x)**2)**2
     """
     return _TR56(rv, sin, cos, lambda x: 1 - x, max=max, pow=pow)
 
@@ -555,11 +559,11 @@ def TR6(rv, max=4, pow=False):
     >>> from sympy.abc import x
     >>> from sympy import cos
     >>> TR6(cos(x)**2)
-    -sin(x)**2 + 1
+    1 - sin(x)**2
     >>> TR6(cos(x)**-2)  #unchanged
     cos(x)**(-2)
     >>> TR6(cos(x)**4)
-    (-sin(x)**2 + 1)**2
+    (1 - sin(x)**2)**2
     """
     return _TR56(rv, cos, sin, lambda x: 1 - x, max=max, pow=pow)
 
@@ -1280,13 +1284,16 @@ def TRmorrie(rv):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Morrie%27s_law
+    https://en.wikipedia.org/wiki/Morrie%27s_law
 
     """
 
-    def f(rv):
+    def f(rv, first=True):
         if not rv.is_Mul:
             return rv
+        if first:
+            n, d = rv.as_numer_denom()
+            return f(n, 0)/f(d, 0)
 
         args = defaultdict(list)
         coss = {}
@@ -1532,7 +1539,7 @@ def TR111(rv):
     >>> from sympy.abc import x
     >>> from sympy import tan
     >>> TR111(1 - 1/tan(x)**2)
-    -cot(x)**2 + 1
+    1 - cot(x)**2
 
     """
 
@@ -2080,7 +2087,7 @@ def _osborne(e, d):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Hyperbolic_function
+    https://en.wikipedia.org/wiki/Hyperbolic_function
     """
 
     def f(rv):
@@ -2119,7 +2126,7 @@ def _osbornei(e, d):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Hyperbolic_function
+    https://en.wikipedia.org/wiki/Hyperbolic_function
     """
 
     def f(rv):
@@ -2169,7 +2176,7 @@ def hyper_as_trig(rv):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Hyperbolic_function
+    https://en.wikipedia.org/wiki/Hyperbolic_function
     """
     from sympy.simplify.simplify import signsimp
     from sympy.simplify.radsimp import collect

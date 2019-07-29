@@ -1,6 +1,6 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
-                        Tuple, Symbol)
-from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda
+                        Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
+from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
 from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
@@ -10,7 +10,6 @@ from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
                                             besselk, hankel1, hankel2, airyai,
                                             airybi, airyaiprime, airybiprime)
 from sympy.utilities.pytest import XFAIL
-from sympy.core.compatibility import range
 
 from sympy import julia_code
 
@@ -31,6 +30,15 @@ def test_Rational():
     assert julia_code(Rational(3, 7)*x) == "3*x/7"
 
 
+def test_Relational():
+    assert julia_code(Eq(x, y)) == "x == y"
+    assert julia_code(Ne(x, y)) == "x != y"
+    assert julia_code(Le(x, y)) == "x <= y"
+    assert julia_code(Lt(x, y)) == "x < y"
+    assert julia_code(Gt(x, y)) == "x > y"
+    assert julia_code(Ge(x, y)) == "x >= y"
+
+
 def test_Function():
     assert julia_code(sin(x) ** cos(x)) == "sin(x).^cos(x)"
     assert julia_code(abs(x)) == "abs(x)"
@@ -44,6 +52,9 @@ def test_Pow():
     g = implemented_function('g', Lambda(x, 2*x))
     assert julia_code(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "(3.5*2*x).^(-x + y.^x)./(x.^2 + y)"
+    # For issue 14160
+    assert julia_code(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
+                                                evaluate=False)) == '-2*x./(y.*y)'
 
 
 def test_basic_ops():
@@ -374,4 +385,4 @@ def test_MatrixElement_printing():
     assert(julia_code(3 * A[0, 0]) == "3*A[1,1]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(julia_code(F) == "((-1)*B + A)[1,1]")
+    assert(julia_code(F) == "(A - B)[1,1]")

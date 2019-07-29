@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.sympify import _sympify, sympify
-from sympy.core.basic import Basic, _aresame
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, range
 from sympy.core.logic import fuzzy_and
@@ -31,8 +31,13 @@ class AssocOp(Basic):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
-        if not options.pop('evaluate', global_evaluate[0]):
-            return cls._from_args(args)
+        evaluate = options.get('evaluate')
+        if evaluate is None:
+            evaluate = global_evaluate[0]
+        if not evaluate:
+            obj = cls._from_args(args)
+            obj = cls._exec_constructor_postprocessors(obj)
+            return obj
 
         if len(args) == 0:
             return cls.identity
@@ -50,7 +55,10 @@ class AssocOp(Basic):
 
     @classmethod
     def _from_args(cls, args, is_commutative=None):
-        """Create new instance with already-processed args"""
+        """Create new instance with already-processed args.
+        If the args are not in canonical order, then a non-canonical
+        result will be returned, so use with caution. The order of
+        args may change if the sign of the args is changed."""
         if len(args) == 0:
             return cls.identity
         elif len(args) == 1:
@@ -123,6 +131,8 @@ class AssocOp(Basic):
                 seq.extend(o.args)
             else:
                 new_seq.append(o)
+        new_seq.reverse()
+
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
@@ -291,7 +301,7 @@ class AssocOp(Basic):
         was a number with no functions it would have been evaluated, but
         it wasn't so we must judiciously extract the numbers and reconstruct
         the object. This is *not* simply replacing numbers with evaluated
-        numbers. Nunmbers should be handled in the largest pure-number
+        numbers. Numbers should be handled in the largest pure-number
         expression as possible. So the code below separates ``self`` into
         number and non-number parts and evaluates the number parts and
         walks the args of the non-number part recursively (doing the same
@@ -392,7 +402,7 @@ class LatticeOp(AssocOp):
 
     References:
 
-    [1] - http://en.wikipedia.org/wiki/Lattice_%28order%29
+    [1] - https://en.wikipedia.org/wiki/Lattice_%28order%29
     """
 
     is_commutative = True

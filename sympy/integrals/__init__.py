@@ -1,4 +1,4 @@
-"""Integration functions that integrates a sympy expression.
+"""Integration functions that integrate a sympy expression.
 
     Examples
     ========

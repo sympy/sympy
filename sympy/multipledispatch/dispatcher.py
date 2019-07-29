@@ -73,7 +73,7 @@ class Dispatcher(object):
         self.doc = doc
 
     def register(self, *types, **kwargs):
-        """ register dispatcher with new implementation
+        """ Register dispatcher with new implementation
 
         >>> from sympy.multipledispatch.dispatcher import Dispatcher
         >>> f = Dispatcher('f')
@@ -112,7 +112,7 @@ class Dispatcher(object):
 
     @classmethod
     def get_func_annotations(cls, func):
-        """ get annotations of function positional paremeters
+        """ Get annotations of function positional parameters
         """
         params = cls.get_func_params(func)
         if params:
@@ -214,7 +214,7 @@ class Dispatcher(object):
     __repr__ = __str__
 
     def dispatch(self, *types):
-        """Deterimine appropriate implementation for this type signature
+        """ Deterimine appropriate implementation for this type signature
 
         This method is internal.  Users should call this object as a function.
         Implementation resolution occurs within the ``__call__`` method.

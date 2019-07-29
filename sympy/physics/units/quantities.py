@@ -1,17 +1,15 @@
-# -*- coding: utf-8 -*-
-
 """
 Physical quantities.
 """
 
 from __future__ import division
 
-from sympy import (Abs, Add, AtomicExpr, Basic, Derivative, Function, Mul,
+from sympy import (Abs, Add, AtomicExpr, Derivative, Function, Mul,
     Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
-from sympy.physics.units.dimensions import dimsys_default, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 class Quantity(AtomicExpr):
@@ -25,13 +23,73 @@ class Quantity(AtomicExpr):
     is_nonzero = True
     _diff_wrt = True
 
-    def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, dim_sys=dimsys_default, **assumptions):
+    def __new__(cls, name, abbrev=None, dimension=None, scale_factor=None,
+                latex_repr=None, pretty_unicode_repr=None,
+                pretty_ascii_repr=None, mathml_presentation_repr=None,
+                **assumptions):
 
         if not isinstance(name, Symbol):
             name = Symbol(name)
 
-        if not isinstance(dim_sys, DimensionSystem):
-            raise TypeError("%s is not a DimensionSystem" % dim_sys)
+        # For Quantity(name, dim, scale, abbrev) to work like in the
+        # old version of Sympy:
+        if not isinstance(abbrev, string_types) and not \
+                   isinstance(abbrev, Symbol):
+            dimension, scale_factor, abbrev = abbrev, dimension, scale_factor
+
+        if dimension is not None:
+            SymPyDeprecationWarning(
+                deprecated_since_version="1.3",
+                issue=14319,
+                feature="Quantity arguments",
+                useinstead="SI_quantity_dimension_map",
+            ).warn()
+
+        if scale_factor is not None:
+            SymPyDeprecationWarning(
+                deprecated_since_version="1.3",
+                issue=14319,
+                feature="Quantity arguments",
+                useinstead="SI_quantity_scale_factors",
+            ).warn()
+
+        if abbrev is None:
+            abbrev = name
+        elif isinstance(abbrev, string_types):
+            abbrev = Symbol(abbrev)
+
+        obj = AtomicExpr.__new__(cls, name, abbrev)
+        obj._name = name
+        obj._abbrev = abbrev
+        obj._latex_repr = latex_repr
+        obj._unicode_repr = pretty_unicode_repr
+        obj._ascii_repr = pretty_ascii_repr
+        obj._mathml_repr = mathml_presentation_repr
+
+        if dimension is not None:
+            # TODO: remove after deprecation:
+            obj.set_dimension(dimension)
+
+        if scale_factor is not None:
+            # TODO: remove after deprecation:
+            obj.set_scale_factor(scale_factor)
+        return obj
+
+    ### Currently only SI is supported: ###
+
+    # Dimensional representations for the SI units:
+    SI_quantity_dimension_map = {}
+    # Scale factors in SI units:
+    SI_quantity_scale_factors = {}
+
+    def set_dimension(self, dimension, unit_system="SI"):
+        from sympy.physics.units.dimensions import dimsys_default, DimensionSystem
+
+        if unit_system != "SI":
+            # TODO: add support for more units and dimension systems:
+            raise NotImplementedError("Currently only SI is supported")
+
+        dim_sys = dimsys_default
 
         if not isinstance(dimension, dimensions.Dimension):
             if dimension == 1:
@@ -43,31 +101,19 @@ class Quantity(AtomicExpr):
                 if dim_sym not in [i.name for i in dim_sys._dimensional_dependencies]:
                     raise ValueError("Dimension %s is not registered in the "
                                      "dimensional dependency tree." % dim_sym)
+        Quantity.SI_quantity_dimension_map[self] = dimension
+
+    def set_scale_factor(self, scale_factor, unit_system="SI"):
+        if unit_system != "SI":
+            # TODO: add support for more units and dimension systems:
+            raise NotImplementedError("Currently only SI is supported")
 
         scale_factor = sympify(scale_factor)
-
-        dimex = Quantity.get_dimensional_expr(scale_factor)
-        if dimex != 1:
-            if not dim_sys.equivalent_dims(dimension, Dimension(dimex)):
-                raise ValueError("quantity value and dimension mismatch")
-
         # replace all prefixes by their ratio to canonical units:
         scale_factor = scale_factor.replace(lambda x: isinstance(x, Prefix), lambda x: x.scale_factor)
         # replace all quantities by their ratio to canonical units:
         scale_factor = scale_factor.replace(lambda x: isinstance(x, Quantity), lambda x: x.scale_factor)
-
-        if abbrev is None:
-            abbrev = name
-        elif isinstance(abbrev, string_types):
-            abbrev = Symbol(abbrev)
-
-        obj = AtomicExpr.__new__(cls, name, dimension, scale_factor, abbrev)
-        obj._name = name
-        obj._dimension = dimension
-        obj._scale_factor = scale_factor
-        obj._dim_sys = dim_sys
-        obj._abbrev = abbrev
-        return obj
+        Quantity.SI_quantity_scale_factors[self] = scale_factor
 
     @property
     def name(self):
@@ -75,11 +121,8 @@ class Quantity(AtomicExpr):
 
     @property
     def dimension(self):
-        return self._dimension
-
-    @property
-    def dim_sys(self):
-        return self._dim_sys
+        # TODO: add support for units other than SI:
+        return Quantity.SI_quantity_dimension_map[self]
 
     @property
     def abbrev(self):
@@ -95,7 +138,7 @@ class Quantity(AtomicExpr):
         """
         Overall magnitude of the quantity as compared to the canonical units.
         """
-        return self._scale_factor
+        return Quantity.SI_quantity_scale_factors.get(self, S.One)
 
     def _eval_is_positive(self):
         return self.scale_factor.is_positive
@@ -104,9 +147,11 @@ class Quantity(AtomicExpr):
         return self.scale_factor.is_constant()
 
     def _eval_Abs(self):
-        # FIXME prefer usage of self.__class__ or type(self) instead
-        return self.func(self.name, self.dimension, Abs(self.scale_factor),
-                         self.abbrev, self.dim_sys)
+        scale_factor = Abs(self.scale_factor)
+        if scale_factor == self.scale_factor:
+            return self
+        return None
+        q = self.func(self.name, self.abbrev)
 
     def _eval_subs(self, old, new):
         if isinstance(new, Quantity) and self != old:
@@ -162,7 +207,7 @@ class Quantity(AtomicExpr):
                     raise ValueError(
                         'Dimension of "{0}" is {1}, '
                         'but it should be {2}'.format(
-                            addend, addend_dim.name, dim.name))
+                            addend, addend_dim, dim))
                 factor += addend_factor
             return factor, dim
         elif isinstance(expr, Derivative):
@@ -181,6 +226,13 @@ class Quantity(AtomicExpr):
             return 1, expr
         else:
             return expr, Dimension(1)
+
+    def _latex(self, printer):
+        if self._latex_repr:
+            return self._latex_repr
+        else:
+            return r'\text{{{}}}'.format(self.args[1] \
+                          if len(self.args) >= 2 else self.args[0])
 
     def convert_to(self, other):
         """
@@ -206,28 +258,3 @@ class Quantity(AtomicExpr):
     def free_symbols(self):
         """Return free symbols from quantity."""
         return self.scale_factor.free_symbols
-
-
-def _Quantity_constructor_postprocessor_Add(expr):
-    # Construction postprocessor for the addition,
-    # checks for dimension mismatches of the addends, thus preventing
-    # expressions like `meter + second` to be created.
-
-    deset = {
-        tuple(sorted(dimsys_default.get_dimensional_dependencies(
-            Dimension(Quantity.get_dimensional_expr(i) if not i.is_number else 1
-        )).items()))
-        for i in expr.args
-        if i.free_symbols == set()  # do not raise if there are symbols
-                    # (free symbols could contain the units corrections)
-    }
-    # If `deset` has more than one element, then some dimensions do not
-    # match in the sum:
-    if len(deset) > 1:
-        raise ValueError("summation of quantities of incompatible dimensions")
-    return expr
-
-
-Basic._constructor_postprocessor_mapping[Quantity] = {
-    "Add" : [_Quantity_constructor_postprocessor_Add],
-}

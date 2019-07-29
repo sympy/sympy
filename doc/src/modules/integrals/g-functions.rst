@@ -161,7 +161,7 @@ is satisfies `G(\operatorname{Exp}(2 \pi i)z) = G(z)` for all `z \in \mathcal{S}
 be used to exploit the information. This is done transparently by the
 integration code.
 
-.. [BlogPost] http://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/
+.. [BlogPost] https://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/
 
 The G-Function Integration Theorems
 ***********************************

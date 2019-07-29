@@ -16,7 +16,7 @@ def normalize(i, parentsize):
         i.append(1)
     start, stop, step = i
     start = start or 0
-    if stop == None:
+    if stop is None:
         stop = parentsize
     if (start < 0) == True:
         start += parentsize
@@ -76,9 +76,10 @@ class MatrixSlice(MatrixExpr):
         cols = cols if self.colslice[2] == 1 else floor(cols/self.colslice[2])
         return rows, cols
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         return self.parent._entry(i*self.rowslice[2] + self.rowslice[0],
-                                  j*self.colslice[2] + self.colslice[0])
+                                  j*self.colslice[2] + self.colslice[0],
+                                  **kwargs)
 
     @property
     def on_diag(self):

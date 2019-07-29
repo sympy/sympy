@@ -9,7 +9,7 @@ from .expr import Expr
 from .evalf import PrecisionExhausted
 from .function import (_coeff_isneg, expand_complex, expand_multinomial,
     expand_mul)
-from .logic import fuzzy_bool, fuzzy_not
+from .logic import fuzzy_bool, fuzzy_not, fuzzy_and
 from .compatibility import as_int, range
 from .evaluate import global_evaluate
 from sympy.utilities.iterables import sift
@@ -22,9 +22,21 @@ from math import sqrt as _sqrt
 
 def isqrt(n):
     """Return the largest integer less than or equal to sqrt(n)."""
-    if n < 17984395633462800708566937239552:
-        return int(_sqrt(n))
-    return integer_nthroot(int(n), 2)[0]
+    if n < 0:
+        raise ValueError("n must be nonnegative")
+    n = int(n)
+
+    # Fast path: with IEEE 754 binary64 floats and a correctly-rounded
+    # math.sqrt, int(math.sqrt(n)) works for any integer n satisfying 0 <= n <
+    # 4503599761588224 = 2**52 + 2**27. But Python doesn't guarantee either
+    # IEEE 754 format floats *or* correct rounding of math.sqrt, so check the
+    # answer and fall back to the slow method if necessary.
+    if n < 4503599761588224:
+        s = int(_sqrt(n))
+        if 0 <= n - s*s <= 2*s:
+            return s
+
+    return integer_nthroot(n, 2)[0]
 
 
 def integer_nthroot(y, n):
@@ -232,9 +244,9 @@ class Pow(Expr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Exponentiation
-    .. [2] http://en.wikipedia.org/wiki/Exponentiation#Zero_to_the_power_of_zero
-    .. [3] http://en.wikipedia.org/wiki/Indeterminate_forms
+    .. [1] https://en.wikipedia.org/wiki/Exponentiation
+    .. [2] https://en.wikipedia.org/wiki/Exponentiation#Zero_to_the_power_of_zero
+    .. [3] https://en.wikipedia.org/wiki/Indeterminate_forms
 
     """
     is_Pow = True
@@ -256,6 +268,8 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
+            elif e == -1 and not b:
+                return S.ComplexInfinity
             # Only perform autosimplification if exponent or base is a Symbol or number
             elif (b.is_Symbol or b.is_number) and (e.is_Symbol or e.is_number) and\
                 e.is_integer and _coeff_isneg(b):
@@ -325,7 +339,7 @@ class Pow(Expr):
             s = 1
         elif b.is_polar:  # e.g. exp_polar, besselj, var('p', polar=True)...
             s = 1
-        elif e.is_real is not None:
+        elif e.is_extended_real is not None:
             # helper functions ===========================
             def _half(e):
                 """Return True if the exponent has a literal 2 as the
@@ -345,7 +359,7 @@ class Pow(Expr):
                 except PrecisionExhausted:
                     pass
             # ===================================================
-            if e.is_real:
+            if e.is_extended_real:
                 # we need _half(other) with constant floor or
                 # floor(S.Half - e*arg(b)/2/pi) == 0
 
@@ -355,31 +369,31 @@ class Pow(Expr):
                     if _half(other):
                         if b.is_negative is True:
                             return S.NegativeOne**other*Pow(-b, e*other)
-                        if b.is_real is False:
+                        if b.is_extended_real is False:
                             return Pow(b.conjugate()/Abs(b)**2, other)
                 elif e.is_even:
-                    if b.is_real:
+                    if b.is_extended_real:
                         b = abs(b)
                     if b.is_imaginary:
                         b = abs(im(b))*S.ImaginaryUnit
 
                 if (abs(e) < 1) == True or e == 1:
                     s = 1  # floor = 0
-                elif b.is_nonnegative:
+                elif b.is_extended_nonnegative:
                     s = 1  # floor = 0
-                elif re(b).is_nonnegative and (abs(e) < 2) == True:
+                elif re(b).is_extended_nonnegative and (abs(e) < 2) == True:
                     s = 1  # floor = 0
                 elif fuzzy_not(im(b).is_zero) and abs(e) == 2:
                     s = 1  # floor = 0
                 elif _half(other):
                     s = exp(2*S.Pi*S.ImaginaryUnit*other*floor(
                         S.Half - e*arg(b)/(2*S.Pi)))
-                    if s.is_real and _n2(sign(s) - s) == 0:
+                    if s.is_extended_real and _n2(sign(s) - s) == 0:
                         s = sign(s)
                     else:
                         s = None
             else:
-                # e.is_real is False requires:
+                # e.is_extended_real is False requires:
                 #     _half(other) with constant floor or
                 #     floor(S.Half - im(e*log(b))/2/pi) == 0
                 try:
@@ -387,7 +401,7 @@ class Pow(Expr):
                         floor(S.Half - im(e*log(b))/2/S.Pi))
                     # be careful to test that s is -1 or 1 b/c sign(I) == I:
                     # so check that s is real
-                    if s.is_real and _n2(sign(s) - s) == 0:
+                    if s.is_extended_real and _n2(sign(s) - s) == 0:
                         s = sign(s)
                     else:
                         s = None
@@ -404,29 +418,55 @@ class Pow(Expr):
 
             '''
             For unevaluated Integer power, use built-in pow modular
-            exponentiation.
+            exponentiation, if powers are not too large wrt base.
             '''
             if self.base.is_Integer and self.exp.is_Integer and q.is_Integer:
-                return pow(int(self.base), int(self.exp), int(q))
+                b, e, m = int(self.base), int(self.exp), int(q)
+                # For very large powers, use totient reduction if e >= lg(m).
+                # Bound on m, is for safe factorization memory wise ie m^(1/4).
+                # For pollard-rho to be faster than built-in pow lg(e) > m^(1/4)
+                # check is added.
+                mb = m.bit_length()
+                if mb <= 80  and e >= mb and e.bit_length()**4 >= m:
+                    from sympy.ntheory import totient
+                    phi = totient(m)
+                    return pow(b, phi + e%phi, m)
+                else:
+                    return pow(b, e, m)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
             return self.base.is_even
 
+    def _eval_is_negative(self):
+        ext_neg = Pow._eval_is_extended_negative(self)
+        if ext_neg is True:
+            return self.is_finite
+        return ext_neg
+
     def _eval_is_positive(self):
+        ext_pos = Pow._eval_is_extended_positive(self)
+        if ext_pos is True:
+            return self.is_finite
+        return ext_pos
+
+    def _eval_is_extended_positive(self):
         from sympy import log
         if self.base == self.exp:
-            if self.base.is_nonnegative:
+            if self.base.is_extended_nonnegative:
                 return True
         elif self.base.is_positive:
-            if self.exp.is_real:
+            if self.exp.is_extended_real:
                 return True
-        elif self.base.is_negative:
+        elif self.base.is_extended_negative:
             if self.exp.is_even:
                 return True
             if self.exp.is_odd:
                 return False
-        elif self.base.is_nonpositive:
+        elif self.base.is_zero:
+            if self.exp.is_extended_real:
+                return self.exp.is_zero
+        elif self.base.is_extended_nonpositive:
             if self.exp.is_odd:
                 return False
         elif self.base.is_imaginary:
@@ -439,39 +479,44 @@ class Pow(Expr):
             if self.exp.is_imaginary:
                 return log(self.base).is_imaginary
 
-    def _eval_is_negative(self):
-        if self.base.is_negative:
-            if self.exp.is_odd:
+    def _eval_is_extended_negative(self):
+        if self.base.is_extended_negative:
+            if self.exp.is_odd and self.base.is_finite:
                 return True
             if self.exp.is_even:
                 return False
-        elif self.base.is_positive:
-            if self.exp.is_real:
+        elif self.base.is_extended_positive:
+            if self.exp.is_extended_real:
                 return False
-        elif self.base.is_nonnegative:
-            if self.exp.is_nonnegative:
+        elif self.base.is_zero:
+            if self.exp.is_extended_real:
                 return False
-        elif self.base.is_nonpositive:
+        elif self.base.is_extended_nonnegative:
+            if self.exp.is_extended_nonnegative:
+                return False
+        elif self.base.is_extended_nonpositive:
             if self.exp.is_even:
                 return False
-        elif self.base.is_real:
+        elif self.base.is_extended_real:
             if self.exp.is_even:
                 return False
 
     def _eval_is_zero(self):
         if self.base.is_zero:
-            if self.exp.is_positive:
+            if self.exp.is_extended_positive:
                 return True
-            elif self.exp.is_nonpositive:
+            elif self.exp.is_extended_nonpositive:
                 return False
         elif self.base.is_zero is False:
-            if self.exp.is_finite:
+            if self.exp.is_negative:
+                return self.base.is_infinite
+            elif self.exp.is_nonnegative:
                 return False
             elif self.exp.is_infinite:
-                if (1 - abs(self.base)).is_positive:
-                    return self.exp.is_positive
-                elif (1 - abs(self.base)).is_negative:
-                    return self.exp.is_negative
+                if (1 - abs(self.base)).is_extended_positive:
+                    return self.exp.is_extended_positive
+                elif (1 - abs(self.base)).is_extended_negative:
+                    return self.exp.is_extended_negative
         else:
             # when self.base.is_zero is None
             return None
@@ -493,30 +538,30 @@ class Pow(Expr):
             check = self.func(*self.args)
             return check.is_Integer
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         from sympy import arg, exp, log, Mul
-        real_b = self.base.is_real
+        real_b = self.base.is_extended_real
         if real_b is None:
             if self.base.func == exp and self.base.args[0].is_imaginary:
                 return self.exp.is_imaginary
             return
-        real_e = self.exp.is_real
+        real_e = self.exp.is_extended_real
         if real_e is None:
             return
         if real_b and real_e:
-            if self.base.is_positive:
+            if self.base.is_extended_positive:
                 return True
-            elif self.base.is_nonnegative:
-                if self.exp.is_nonnegative:
+            elif self.base.is_extended_nonnegative:
+                if self.exp.is_extended_nonnegative:
                     return True
             else:
                 if self.exp.is_integer:
                     return True
-                elif self.base.is_negative:
+                elif self.base.is_extended_negative:
                     if self.exp.is_Rational:
                         return False
-        if real_e and self.exp.is_negative:
-            return Pow(self.base, -self.exp).is_real
+        if real_e and self.exp.is_extended_negative:
+            return Pow(self.base, -self.exp).is_extended_real
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary
         if im_b:
@@ -531,7 +576,7 @@ class Pow(Expr):
                 c, a = self.exp.as_coeff_Add()
                 if c and c.is_Integer:
                     return Mul(
-                        self.base**c, self.base**a, evaluate=False).is_real
+                        self.base**c, self.base**a, evaluate=False).is_extended_real
             elif self.base in (-S.ImaginaryUnit, S.ImaginaryUnit):
                 if (self.exp/2).is_integer is False:
                     return False
@@ -566,7 +611,7 @@ class Pow(Expr):
             if imlog is not None:
                 return False  # I**i -> real; (2*I)**i -> complex ==> not imaginary
 
-        if self.base.is_real and self.exp.is_real:
+        if self.base.is_extended_real and self.exp.is_extended_real:
             if self.base.is_positive:
                 return False
             else:
@@ -581,7 +626,7 @@ class Pow(Expr):
                         return self.base.is_negative
                     return half
 
-        if self.base.is_real is False:  # we already know it's not imag
+        if self.base.is_extended_real is False:  # we already know it's not imag
             i = arg(self.base)*self.exp/S.Pi
             isodd = (2*i).is_odd
             if isodd is not None:
@@ -603,7 +648,7 @@ class Pow(Expr):
         if self.exp.is_negative:
             if self.base.is_zero:
                 return False
-            if self.base.is_infinite:
+            if self.base.is_infinite or self.base.is_nonzero:
                 return True
         c1 = self.base.is_finite
         if c1 is None:
@@ -619,7 +664,7 @@ class Pow(Expr):
         '''
         An integer raised to the n(>=2)-th power cannot be a prime.
         '''
-        if self.base.is_integer and self.exp.is_integer and (self.exp-1).is_positive:
+        if self.base.is_integer and self.exp.is_integer and (self.exp - 1).is_positive:
             return False
 
     def _eval_is_composite(self):
@@ -627,8 +672,8 @@ class Pow(Expr):
         A power is composite if both base and exponent are greater than 1
         """
         if (self.base.is_integer and self.exp.is_integer and
-            ((self.base-1).is_positive and (self.exp-1).is_positive or
-            (self.base+1).is_negative and self.exp.is_positive and self.exp.is_even)):
+            ((self.base - 1).is_positive and (self.exp - 1).is_positive or
+            (self.base + 1).is_negative and self.exp.is_positive and self.exp.is_even)):
             return True
 
     def _eval_is_polar(self):
@@ -660,12 +705,12 @@ class Pow(Expr):
                     # Allow fractional powers for commutative objects
                     pow = coeff1/coeff2
                     try:
-                        pow = as_int(pow)
+                        as_int(pow, strict=False)
                         combines = True
                     except ValueError:
-                        combines = Pow._eval_power(
+                        combines = isinstance(Pow._eval_power(
                             Pow(*old.as_base_exp(), evaluate=False),
-                            pow) is not None
+                            pow), (Pow, exp, Symbol))
                     return combines, pow, None
                 else:
                     # With noncommutative symbols, substitute only integer powers
@@ -713,7 +758,7 @@ class Pow(Expr):
                     if remainder_pow is not None:
                         result = Mul(result, Pow(old.base, remainder_pow))
                     return result
-            else:  # b**(6*x+a).subs(b**(3*x), y) -> y**2 * b**a
+            else:  # b**(6*x + a).subs(b**(3*x), y) -> y**2 * b**a
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
                 oarg = old.exp
                 new_l = []
@@ -738,7 +783,7 @@ class Pow(Expr):
                     new_l.append(Pow(self.base, expo, evaluate=False) if expo != 1 else self.base)
                     return Mul(*new_l)
 
-        if isinstance(old, exp) and self.exp.is_real and self.base.is_positive:
+        if isinstance(old, exp) and self.exp.is_extended_real and self.base.is_positive:
             ct1 = old.args[0].as_independent(Symbol, as_Add=False)
             ct2 = (self.exp*log(self.base)).as_independent(
                 Symbol, as_Add=False)
@@ -796,7 +841,7 @@ class Pow(Expr):
             expanded = expand_complex(self)
             if expanded != self:
                 return c(expanded)
-        if self.is_real:
+        if self.is_extended_real:
             return self
 
     def _eval_transpose(self):
@@ -812,7 +857,7 @@ class Pow(Expr):
                 return transpose(expanded)
 
     def _eval_expand_power_exp(self, **hints):
-        """a**(n+m) -> a**n*a**m"""
+        """a**(n + m) -> a**n*a**m"""
         b = self.base
         e = self.exp
         if e.is_Add and e.is_commutative:
@@ -845,7 +890,7 @@ class Pow(Expr):
                 if e.is_positive:
                     rv = Mul(*nc*e)
                 else:
-                    rv = 1/Mul(*nc*-e)
+                    rv = Mul(*[i**-1 for i in nc[::-1]]*-e)
                 if cargs:
                     rv *= Mul(*cargs)**e
                 return rv
@@ -856,7 +901,7 @@ class Pow(Expr):
             nc = [Mul(*nc)]
 
         # sift the commutative bases
-        other, maybe_real = sift(cargs, lambda x: x.is_real is False,
+        other, maybe_real = sift(cargs, lambda x: x.is_extended_real is False,
             binary=True)
         def pred(x):
             if x is S.ImaginaryUnit:
@@ -865,7 +910,7 @@ class Pow(Expr):
             if polar:
                 return True
             if polar is None:
-                return fuzzy_bool(x.is_nonnegative)
+                return fuzzy_bool(x.is_extended_nonnegative)
         sifted = sift(maybe_real, pred)
         nonneg = sifted[True]
         other += sifted[None]
@@ -941,7 +986,7 @@ class Pow(Expr):
         return rv
 
     def _eval_expand_multinomial(self, **hints):
-        """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
+        """(a + b + ..)**n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
 
         base, exp = self.args
         result = self
@@ -1022,7 +1067,7 @@ class Pow(Expr):
                             return Integer(c)/k + I*d/k
 
                 p = other_terms
-                # (x+y)**3 -> x**3 + 3*x**2*y + 3*x*y**2 + y**3
+                # (x + y)**3 -> x**3 + 3*x**2*y + 3*x*y**2 + y**3
                 # in this particular example:
                 # p = [x,y]; n = 3
                 # so now it's easy to get the correct result -- we get the
@@ -1076,7 +1121,8 @@ class Pow(Expr):
                 if re.is_Number and im.is_Number:
                     # We can be more efficient in this case
                     expr = expand_multinomial(self.base**exp)
-                    return expr.as_real_imag()
+                    if expr != self:
+                        return expr.as_real_imag()
 
                 expr = poly(
                     (a + b)**exp)  # a = re, b = im; expr = (a + b*I)**exp
@@ -1086,7 +1132,8 @@ class Pow(Expr):
                 if re.is_Number and im.is_Number:
                     # We can be more efficient in this case
                     expr = expand_multinomial((re + im*S.ImaginaryUnit)**-exp)
-                    return expr.as_real_imag()
+                    if expr != self:
+                        return expr.as_real_imag()
 
                 expr = poly((a + b)**-exp)
 
@@ -1106,9 +1153,9 @@ class Pow(Expr):
             re, im = self.base.as_real_imag(deep=deep)
 
             if im.is_zero and self.exp is S.Half:
-                if re.is_nonnegative:
+                if re.is_extended_nonnegative:
                     return self, S.Zero
-                if re.is_nonpositive:
+                if re.is_extended_nonpositive:
                     return S.Zero, (-self.base)**self.exp
 
             # XXX: This is not totally correct since for x**(p/q) with
@@ -1144,7 +1191,7 @@ class Pow(Expr):
         base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
-        if exp.is_negative and base.is_number and base.is_real is False:
+        if exp.is_negative and base.is_number and base.is_extended_real is False:
             base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
             return self.func(base, exp).expand()
@@ -1161,6 +1208,12 @@ class Pow(Expr):
             return True
 
     def _eval_is_rational(self):
+        # The evaluation of self.func below can be very expensive in the case
+        # of integer**integer if the exponent is large.  We should try to exit
+        # before that if possible:
+        if (self.exp.is_integer and self.base.is_rational
+                and fuzzy_not(fuzzy_and([self.exp.is_negative, self.base.is_zero]))):
+            return True
         p = self.func(*self.as_base_exp())  # in case it's unevaluated
         if not p.is_Pow:
             return p.is_rational
@@ -1219,6 +1272,20 @@ class Pow(Expr):
         else:
             return True
 
+    def _eval_rewrite_as_exp(self, base, expo, **kwargs):
+        from sympy import exp, log, I, arg
+
+        if base.is_zero or base.has(exp) or expo.has(exp):
+            return base**expo
+
+        if base.has(Symbol):
+            # delay evaluation if expo is non symbolic
+            # (as exp(x*log(5)) automatically reduces to x**5)
+            return exp(log(base)*expo, evaluate=expo.has(Symbol))
+
+        else:
+            return exp((log(abs(base)) + I*arg(base))*expo)
+
     def as_numer_denom(self):
         if not self.is_commutative:
             return self, S.One
@@ -1235,7 +1302,7 @@ class Pow(Expr):
         # sqrt(a/b) != sqrt(a)/sqrt(b) when a=1 and b=-1. But if the
         # denominator is negative the numerator and denominator can
         # be negated and the denominator (now positive) separated.
-        if not (d.is_real or int_exp):
+        if not (d.is_extended_real or int_exp):
             n = base
             d = S.One
         dnonpos = d.is_nonpositive
@@ -1300,13 +1367,13 @@ class Pow(Expr):
         if e.is_Integer:
             if e > 0:
                 # positive integer powers are easy to expand, e.g.:
-                # sin(x)**4 = (x-x**3/3+...)**4 = ...
+                # sin(x)**4 = (x - x**3/3 + ...)**4 = ...
                 return expand_multinomial(self.func(b._eval_nseries(x, n=n,
                     logx=logx), e), deep=False)
             elif e is S.NegativeOne:
                 # this is also easy to expand using the formula:
                 # 1/(1 + x) = 1 - x + x**2 - x**3 ...
-                # so we need to rewrite base to the form "1+x"
+                # so we need to rewrite base to the form "1 + x"
 
                 nuse = n
                 cf = 1
@@ -1375,7 +1442,7 @@ class Pow(Expr):
             else:
                 # negative powers are rewritten to the cases above, for
                 # example:
-                # sin(x)**(-4) = 1/( sin(x)**4) = ...
+                # sin(x)**(-4) = 1/(sin(x)**4) = ...
                 # and expand the denominator:
                 nuse, denominator = n, O(1, x)
                 while denominator.is_Order:
@@ -1410,7 +1477,7 @@ class Pow(Expr):
                 try:
                     n = int(n)
                 except TypeError:
-                    #well, the n is something more complicated (like 1+log(2))
+                    # well, the n is something more complicated (like 1 + log(2))
                     try:
                         n = int(n.evalf()) + 1  # XXX why is 1 being added?
                     except TypeError:
@@ -1443,7 +1510,7 @@ class Pow(Expr):
 
             nuse = n - ei
 
-            if e.is_real and e.is_positive:
+            if e.is_extended_real and e.is_positive:
                 lt = b.as_leading_term(x)
 
                 # Try to correct nuse (= m) guess from:
@@ -1486,7 +1553,7 @@ class Pow(Expr):
             return rv
 
         # either b0 is bounded but neither 1 nor 0 or e is infinite
-        # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
+        # b -> b0 + (b - b0) -> b0 * (1 + (b/b0 - 1))
         o2 = order*(b0**-e)
         z = (b/b0 - 1)
         o = O(z, x)
@@ -1519,7 +1586,7 @@ class Pow(Expr):
         return exp(self.exp * log(self.base)).as_leading_term(x)
 
     @cacheit
-    def _taylor_term(self, n, x, *previous_terms): # of (1+x)**e
+    def _taylor_term(self, n, x, *previous_terms): # of (1 + x)**e
         from sympy import binomial
         return binomial(self.exp, n) * self.func(x, n)
 
@@ -1580,7 +1647,7 @@ class Pow(Expr):
             #=> self
             #= b**(ce*h)*b**(ce*t)
             #= b**(cehp/cehq)*b**(ce*t)
-            #= b**(iceh+r/cehq)*b**(ce*t)
+            #= b**(iceh + r/cehq)*b**(ce*t)
             #= b**(iceh)*b**(r/cehq)*b**(ce*t)
             #= b**(iceh)*b**(ce*t + r/cehq)
             h, t = pe.as_coeff_Add()

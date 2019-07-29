@@ -1,25 +1,20 @@
-import os
-import glob
-import tempfile
-import shutil
-import difflib
-
+# Testing import
 from sympy.parsing.latex._build_latex_antlr import (
     build_parser,
     check_antlr_version,
     dir_latex_antlr
 )
 
-from sympy.utilities import pytest
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.external import import_module
 
 from sympy import (
     Symbol, Mul, Add, Eq, Abs, sin, asin, cos, Pow,
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
-    GreaterThan, Sum, Product, E, log, tan
+    GreaterThan, Sum, Product, E, log, tan, Function
 )
-from sympy.abc import x, y, z, a, b, c, f, t, k, n
+from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
 # disable tests if antlr4-python*-runtime is not present
@@ -27,6 +22,7 @@ if not antlr4:
     disabled = True
 
 theta = Symbol('theta')
+f = Function('f')
 
 
 # shorthand definitions
@@ -97,7 +93,7 @@ GOOD_PAIRS = [
     ("f(x, y)", f(x, y)),
     ("f(x, y, z)", f(x, y, z)),
     ("\\frac{d f(x)}{dx}", Derivative(f(x), x)),
-    ("\\frac{d\\theta(x)}{dx}", Derivative(theta(x), x)),
+    ("\\frac{d\\theta(x)}{dx}", Derivative(Function('theta')(x), x)),
     ("|x|", _Abs(x)),
     ("||x||", _Abs(Abs(x))),
     ("|x||y|", _Abs(x)*_Abs(y)),
@@ -133,7 +129,7 @@ GOOD_PAIRS = [
     ("h_\\theta", Symbol('h_{theta}')),
     ("h_{\\theta}", Symbol('h_{theta}')),
     ("h_{\\theta}(x_0, x_1)",
-     Symbol('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}'))),
+     Function('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}'))),
     ("x!", _factorial(x)),
     ("100!", _factorial(100)),
     ("\\theta!", _factorial(theta)),
@@ -178,6 +174,22 @@ GOOD_PAIRS = [
     ("\\frac{d}{dx} [ \\tan x ]", Derivative(tan(x), x))
 ]
 
+def test_parseable():
+    from sympy.parsing.latex import parse_latex
+    for latex_str, sympy_expr in GOOD_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr
+
+# At time of migration from latex2sympy, should work but doesn't
+FAILING_PAIRS = [
+    ("\\log_2 x", _log(x, 2)),
+    ("\\log_a x", _log(x, a)),
+]
+def test_failing_parseable():
+    from sympy.parsing.latex import parse_latex
+    for latex_str, sympy_expr in FAILING_PAIRS:
+        with raises(Exception):
+            assert parse_latex(latex_str) == sympy_expr
+
 # These bad LaTeX strings should raise a LaTeXParsingError when parsed
 BAD_STRINGS = [
     "(",
@@ -218,11 +230,11 @@ BAD_STRINGS = [
     "\\frac{(2 + x}{1 - x)}"
 ]
 
-# At time of migration from latex2sympy, should work but doesn't
-FAILING_PAIRS = [
-    ("\\log_2 x", _log(x, 2)),
-    ("\\log_a x", _log(x, a)),
-]
+def test_not_parseable():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    for latex_str in BAD_STRINGS:
+        with raises(LaTeXParsingError):
+            parse_latex(latex_str)
 
 # At time of migration from latex2sympy, should fail but doesn't
 FAILING_BAD_STRINGS = [
@@ -238,56 +250,9 @@ FAILING_BAD_STRINGS = [
     "a / b /",
 ]
 
-
-def test_parseable():
-    from sympy.parsing.latex import parse_latex
-    for latex_str, sympy_expr in GOOD_PAIRS:
-        assert parse_latex(latex_str) == sympy_expr
-
-
-def test_failing_parseable():
-    from sympy.parsing.latex import parse_latex
-    for latex_str, sympy_expr in FAILING_PAIRS:
-        with pytest.raises(Exception):
-            assert parse_latex(latex_str) == sympy_expr
-
-
-def test_not_parseable():
-    from sympy.parsing.latex import parse_latex, LaTeXParsingError
-    for latex_str in BAD_STRINGS:
-        with pytest.raises(LaTeXParsingError):
-            print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(
-                latex_str, parse_latex(latex_str)))
-
-
+@XFAIL
 def test_failing_not_parseable():
-    from sympy.parsing.latex import parse_latex
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
     for latex_str in FAILING_BAD_STRINGS:
-        print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(
-            latex_str, parse_latex(latex_str)))
-
-
-def test_antlr_generation():
-    """ Does rebuilding the parser create the same content as
-        what is checked in?
-    """
-    if not check_antlr_version():
-        return pytest.skip('antlr4 not available, skipping')
-
-    tmpdir = tempfile.mkdtemp()
-
-    try:
-        build_parser(tmpdir)
-
-        for filename in sorted(glob.glob(os.path.join(tmpdir, "*.*"))):
-            base = os.path.basename(filename)
-            print("Comparing {}...".format(base))
-            with open(filename) as generated:
-                with open(os.path.join(dir_latex_antlr, base)) as checked_in:
-                    diff = difflib.context_diff(
-                        checked_in.readlines(),
-                        generated.readlines()
-                    )
-                    assert list(diff) == [], "{} not the same".format(base)
-    finally:
-        shutil.rmtree(tmpdir)
+        with raises(LaTeXParsingError):
+            parse_latex(latex_str)

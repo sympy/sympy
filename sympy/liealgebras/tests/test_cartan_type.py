@@ -6,4 +6,7 @@ def test_Standard_Cartan():
     assert c.series == "A"
     m = Standard_Cartan("A", 2)
     assert m.rank() == 2
-    assert c.series == "A"
+    assert m.series == "A"
+    b = CartanType("B12")
+    assert b.rank() == 12
+    assert b.series == "B"

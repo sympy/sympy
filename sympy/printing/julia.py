@@ -22,7 +22,7 @@ from re import search
 known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "asin", "acos", "atan", "acot", "asec", "acsc",
                    "sinh", "cosh", "tanh", "coth", "sech", "csch",
-                   "asinh", "acosh", "atanh", "acoth", "asech", "acsch"
+                   "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
                    "sinc", "atan2", "sign", "floor", "log", "exp",
                    "cbrt", "sqrt", "erf", "erfc", "erfi",
                    "factorial", "gamma", "digamma", "trigamma",
@@ -62,6 +62,7 @@ class JuliaCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
     }
@@ -134,6 +135,8 @@ class JuliaCodePrinter(CodePrinter):
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
+        pow_paren = []  # Will collect all pow with more than one base element and exp = -1
+
         if self.order not in ('old', 'none'):
             args = expr.as_ordered_factors()
         else:
@@ -147,6 +150,8 @@ class JuliaCodePrinter(CodePrinter):
                 if item.exp != -1:
                     b.append(Pow(item.base, -item.exp, evaluate=False))
                 else:
+                    if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
+                        pow_paren.append(item)
                     b.append(Pow(item.base, -item.exp))
             elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
@@ -161,6 +166,11 @@ class JuliaCodePrinter(CodePrinter):
         a_str = [self.parenthesize(x, prec) for x in a]
         b_str = [self.parenthesize(x, prec) for x in b]
 
+        # To parenthesize Pow with exp = -1 and having more than one Symbol
+        for item in pow_paren:
+            if item.base in b:
+                b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
+
         # from here it differs from str.py to deal with "*" and ".*"
         def multjoin(a, a_str):
             # here we probably are assuming the constants will come first
@@ -170,7 +180,7 @@ class JuliaCodePrinter(CodePrinter):
                 r = r + mulsym + a_str[i]
             return r
 
-        if len(b) == 0:
+        if not b:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
             divsym = '/' if b[0].is_number else './'
@@ -180,6 +190,11 @@ class JuliaCodePrinter(CodePrinter):
             return (sign + multjoin(a, a_str) +
                     divsym + "(%s)" % multjoin(b, b_str))
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     def _print_Pow(self, expr):
         powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'

@@ -16,22 +16,17 @@ each function for more information.
 """
 from __future__ import print_function, division
 
-from sympy.core import Dummy, ilcm, Add, Mul, Pow, S, oo
-
-from sympy.matrices import zeros, eye
-from sympy.polys.polymatrix import PolyMatrix as Matrix
-
-from sympy.solvers import solve
-
-from sympy.polys import Poly, lcm, cancel, sqf_list
-
-from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    NonElementaryIntegralException, residue_reduce, splitfactor,
-    residue_reduce_derivation, DecrementLevel, recognize_log_derivative)
-from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
-    bound_degree, spde, solve_poly_rde)
+from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 from sympy.core.compatibility import reduce, range
-from sympy.utilities.misc import debug
+from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
+    bound_degree)
+from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
+    residue_reduce, splitfactor, residue_reduce_derivation, DecrementLevel,
+    recognize_log_derivative)
+from sympy.matrices import zeros, eye
+from sympy.polys import Poly, lcm, cancel, sqf_list
+from sympy.polys.polymatrix import PolyMatrix as Matrix
+from sympy.solvers import solve
 
 
 def prde_normal_denom(fa, fd, G, DE):
@@ -132,8 +127,8 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                 etaa, etad = frac_in(dcoeff, DE.t)
                 A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
                 if A is not None:
-                    a, m, z = A
-                    if a == 1:
+                    Q, m, z = A
+                    if Q == 1:
                         n = min(n, m)
 
         elif case == 'tan':
@@ -147,9 +142,9 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                     A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
                     B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
                     if A is not None and B is not None:
-                        a, s, z = A
+                        Q, s, z = A
                         # TODO: Add test
-                        if a == 1:
+                        if Q == 1:
                             n = min(n, s/2)
 
     N = max(0, -nb)
@@ -781,7 +776,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     if DE.case in ['base', 'primitive', 'exp', 'tan']:
         hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es)  # lcm(ds, es1, ..., esm)
         a = hn*hs
-        b = -derivation(hn, DE) - (hn*derivation(hs, DE)).quo(hs)
+        b -= (hn*derivation(hs, DE)).quo(hs)
         mu = min(order_at_oo(fa, fd, DE.t), min([order_at_oo(ga, gd, DE.t) for
             ga, gd in G]))
         # So far, all the above are also nonlinear or Liouvillian, but if this
@@ -801,7 +796,7 @@ def limited_integrate(fa, fd, G, DE):
     Solves the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
     """
     fa, fd = fa*Poly(1/fd.LC(), DE.t), fd.monic()
-    # interpretting limited integration problem as a
+    # interpreting limited integration problem as a
     # parametric Risch DE problem
     Fa = Poly(0, DE.t)
     Fd = Poly(1, DE.t)
@@ -858,8 +853,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
             # deg(q) > B, no solution for c.
             return None
 
-        N, M = s[c1].as_numer_denom()  # N and M are integers
-        N, M = Poly(N, DE.t), Poly(M, DE.t)
+        M, N = s[c1].as_numer_denom()
 
         nfmwa = N*fa*wd - M*wa*fd
         nfmwd = fd*wd
@@ -869,9 +863,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
             # (N*f - M*w) is not the logarithmic derivative of a k(t)-radical.
             return None
 
-        Q, e, v = Qv
-        if e != 1:
-            return None
+        Q, v = Qv
 
         if Q.is_zero or v.is_zero:
             return None

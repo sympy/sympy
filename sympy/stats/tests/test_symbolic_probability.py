@@ -1,7 +1,8 @@
 from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum
+from sympy.core.expr import unchanged
 from sympy.stats import Normal, Poisson, variance
-from sympy.stats.rv import probability, expectation
 from sympy.stats import Covariance, Variance, Probability, Expectation
+from sympy.stats.rv import probability, expectation
 
 
 def test_literal_probability():
@@ -40,7 +41,7 @@ def test_literal_probability():
                                        2 * Covariance(X, Y) + 2 * Covariance(X, Z) + 2 * Covariance(X, W) +
                                        2 * Covariance(Y, Z) + 2 * Covariance(Y, W) + 2 * Covariance(W, Z))
     assert Variance(X**2).evaluate_integral() == variance(X**2)
-    assert Variance(X**2) == Variance(X**2)
+    assert unchanged(Variance, X**2)
     assert Variance(x*X**2).doit() == x**2*Variance(X**2)
     assert Variance(sin(X)).args == (sin(X),)
     assert Variance(sin(X)).doit() == Variance(sin(X))

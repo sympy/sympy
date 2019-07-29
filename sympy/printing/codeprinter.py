@@ -4,7 +4,6 @@ from functools import wraps
 
 from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
@@ -35,6 +34,7 @@ class AssignmentError(Exception):
     """
     pass
 
+
 class CodePrinter(StrPrinter):
     """
     The base class for code-printing subclasses.
@@ -52,13 +52,20 @@ class CodePrinter(StrPrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'human': True,
-        'inline': False
+        'inline': False,
+        'allow_unknown_functions': False,
+    }
+
+    # Functions which are "simple" to rewrite to other functions that
+    # may be supported
+    _rewriteable_functions = {
+            'erf2': 'erf',
+            'Li': 'li',
     }
 
     def __init__(self, settings=None):
 
         super(CodePrinter, self).__init__(settings=settings)
-
         if not hasattr(self, 'reserved_words'):
             self.reserved_words = set()
 
@@ -102,7 +109,7 @@ class CodePrinter(StrPrinter):
         # format the output
         if self._settings["human"]:
             frontlines = []
-            if len(self._not_supported) > 0:
+            if self._not_supported:
                 frontlines.append(self._get_comment(
                         "Not supported in {0}:".format(self.language)))
                 for expr in sorted(self._not_supported, key=str):
@@ -116,8 +123,8 @@ class CodePrinter(StrPrinter):
             lines = self._format_code(lines)
             num_syms = set([(k, self._print(v)) for k, v in self._number_symbols])
             result = (num_syms, self._not_supported, "\n".join(lines))
-        del self._not_supported
-        del self._number_symbols
+        self._not_supported = set()
+        self._number_symbols = set()
         return result
 
     def _doprint_loops(self, expr, assign_to=None):
@@ -282,6 +289,15 @@ class CodePrinter(StrPrinter):
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
 
+    def _print_String(self, string):
+        return str(string)
+
+    def _print_QuotedString(self, arg):
+        return '"%s"' % arg.text
+
+    def _print_Comment(self, string):
+        return self._get_comment(str(string))
+
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -318,6 +334,26 @@ class CodePrinter(StrPrinter):
             rhs_code = self._print(rhs)
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
 
+    def _print_AugmentedAssignment(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        return self._get_statement("{0} {1} {2}".format(
+            *map(lambda arg: self._print(arg),
+                 [lhs_code, expr.op, rhs_code])))
+
+    def _print_FunctionCall(self, expr):
+        return '%s(%s)' % (
+            expr.name,
+            ', '.join(map(lambda arg: self._print(arg),
+                          expr.function_args)))
+
+    def _print_Variable(self, expr):
+        return self._print(expr.symbol)
+
+    def _print_Statement(self, expr):
+        arg, = expr.args
+        return self._get_statement(self._print(arg))
+
     def _print_Symbol(self, expr):
 
         name = super(CodePrinter, self)._print_Symbol(expr)
@@ -331,11 +367,11 @@ class CodePrinter(StrPrinter):
         else:
             return name
 
-    def _print_Function(self, expr, **kwargs):
+    def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
             func = None
-            if isinstance(cond_func, str):
+            if isinstance(cond_func, string_types):
                 func = cond_func
             else:
                 for cond, func in cond_func:
@@ -343,15 +379,18 @@ class CodePrinter(StrPrinter):
                         break
             if func is not None:
                 try:
-                    return func(self, *[self.parenthesize(item, 0) for item in expr.args], **kwargs)
+                    return func(*[self.parenthesize(item, 0) for item in expr.args])
                 except TypeError:
-                    try:
-                        return func(*[self.parenthesize(item, 0) for item in expr.args])
-                    except TypeError:
-                        return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                    return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
+        elif expr.is_Function and self._settings.get('allow_unknown_functions', False):
+            return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
+        elif (expr.func.__name__ in self._rewriteable_functions and
+              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+            # Simple rewrite to supported function possible
+            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
         else:
             return self._print_not_supported(expr)
 
@@ -372,6 +411,8 @@ class CodePrinter(StrPrinter):
     def _print_EulerGamma(self, expr):
         return self._print_NumberSymbol(expr)
     def _print_GoldenRatio(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_TribonacciConstant(self, expr):
         return self._print_NumberSymbol(expr)
     def _print_Exp1(self, expr):
         return self._print_NumberSymbol(expr)
@@ -420,6 +461,8 @@ class CodePrinter(StrPrinter):
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
+        pow_paren = []  # Will collect all pow with more than one base element and exp = -1
+
         if self.order not in ('old', 'none'):
             args = expr.as_ordered_factors()
         else:
@@ -432,6 +475,8 @@ class CodePrinter(StrPrinter):
                 if item.exp != -1:
                     b.append(Pow(item.base, -item.exp, evaluate=False))
                 else:
+                    if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
+                        pow_paren.append(item)
                     b.append(Pow(item.base, -item.exp))
             else:
                 a.append(item)
@@ -441,7 +486,12 @@ class CodePrinter(StrPrinter):
         a_str = [self.parenthesize(x, prec) for x in a]
         b_str = [self.parenthesize(x, prec) for x in b]
 
-        if len(b) == 0:
+        # To parenthesize Pow with exp = -1 and having more than one Symbol
+        for item in pow_paren:
+            if item.base in b:
+                b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
+
+        if not b:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
             return sign + '*'.join(a_str) + "/" + b_str[0]
@@ -471,15 +521,15 @@ class CodePrinter(StrPrinter):
     _print_DeferredVector = _print_not_supported
     _print_NaN = _print_not_supported
     _print_NegativeInfinity = _print_not_supported
-    _print_Normal = _print_not_supported
     _print_Order = _print_not_supported
-    _print_PDF = _print_not_supported
     _print_RootOf = _print_not_supported
     _print_RootsOf = _print_not_supported
     _print_RootSum = _print_not_supported
-    _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
+    _print_MutableSparseMatrix = _print_not_supported
+    _print_ImmutableSparseMatrix = _print_not_supported
     _print_Uniform = _print_not_supported
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported
     _print_WildFunction = _print_not_supported
+    _print_Relational = _print_not_supported

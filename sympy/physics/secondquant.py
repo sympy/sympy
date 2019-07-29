@@ -126,24 +126,22 @@ class Dagger(Expr):
         The eval() method is called automatically.
 
         """
-        try:
-            d = arg._dagger_()
-        except AttributeError:
-            if isinstance(arg, Basic):
-                if arg.is_Add:
-                    return Add(*tuple(map(Dagger, arg.args)))
-                if arg.is_Mul:
-                    return Mul(*tuple(map(Dagger, reversed(arg.args))))
-                if arg.is_Number:
-                    return arg
-                if arg.is_Pow:
-                    return Pow(Dagger(arg.args[0]), arg.args[1])
-                if arg == I:
-                    return -arg
-            else:
-                return None
+        dagger = getattr(arg, '_dagger_', None)
+        if dagger is not None:
+            return dagger()
+        if isinstance(arg, Basic):
+            if arg.is_Add:
+                return Add(*tuple(map(Dagger, arg.args)))
+            if arg.is_Mul:
+                return Mul(*tuple(map(Dagger, reversed(arg.args))))
+            if arg.is_Number:
+                return arg
+            if arg.is_Pow:
+                return Pow(Dagger(arg.args[0]), arg.args[1])
+            if arg == I:
+                return -arg
         else:
-            return d
+            return None
 
     def _dagger_(self):
         return self.args[0]
@@ -2310,7 +2308,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     the structure of the term.  For each term, we obtain a sequence of all
     dummy variables, where the order is determined by the index range, what
     factors the index belongs to and its position in each factor.  See
-    _get_ordered_dummies() for more inforation about the sorting of dummies.
+    _get_ordered_dummies() for more information about the sorting of dummies.
     The index sequence is then substituted consistently in each term.
 
     Examples

@@ -1,8 +1,13 @@
-from sympy import sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix
+from sympy import symbols, sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
-                                  dynamicsymbols, time_derivative, express)
+                                  dynamicsymbols, time_derivative, express,
+                                  dot)
+from sympy.physics.vector.frame import _check_frame
+from sympy.physics.vector.vector import VectorTypeError
+from sympy.utilities.pytest import raises
 
 Vector.simp = True
+
 
 def test_coordinate_vars():
     """Tests the coordinate variables functionality"""
@@ -10,6 +15,7 @@ def test_coordinate_vars():
     assert CoordinateSym('Ax', A, 0) == A[0]
     assert CoordinateSym('Ax', A, 1) == A[1]
     assert CoordinateSym('Ax', A, 2) == A[2]
+    raises(ValueError, lambda: CoordinateSym('Ax', A, 3))
     q = dynamicsymbols('q')
     qd = dynamicsymbols('q', 1)
     assert isinstance(A[0], CoordinateSym) and \
@@ -116,7 +122,7 @@ def test_ang_vel():
         2 * (q2d * q0 + q3d * q1 - q1d * q3 - q0d * q2) * E.y +
         2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3) * E.z)
 
-    F = N.orientnew('F', 'Body', (q1, q2, q3), '313')
+    F = N.orientnew('F', 'Body', (q1, q2, q3), 313)
     assert F.ang_vel_in(N) == ((sin(q2)*sin(q3)*q1d + cos(q3)*q2d)*F.x +
         (sin(q2)*cos(q3)*q1d - sin(q3)*q2d)*F.y + (cos(q2)*q1d + q3d)*F.z)
     G = N.orientnew('G', 'Axis', (q1, N.x + N.y))
@@ -157,6 +163,64 @@ def test_dcm():
         sin(q2)*cos(q1)*cos(q3), - sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),
          cos(q1)*cos(q2)]])
 
+def test_w_diff_dcm1():
+    # Ref:
+    # Dynamics Theory and Applications, Kane 1985
+    # Sec. 2.1 ANGULAR VELOCITY
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+
+    c11, c12, c13 = dynamicsymbols('C11 C12 C13')
+    c21, c22, c23 = dynamicsymbols('C21 C22 C23')
+    c31, c32, c33 = dynamicsymbols('C31 C32 C33')
+
+    c11d, c12d, c13d = dynamicsymbols('C11 C12 C13', level=1)
+    c21d, c22d, c23d = dynamicsymbols('C21 C22 C23', level=1)
+    c31d, c32d, c33d = dynamicsymbols('C31 C32 C33', level=1)
+
+    DCM = Matrix([
+        [c11, c12, c13],
+        [c21, c22, c23],
+        [c31, c32, c33]
+    ])
+
+    B.orient(A, 'DCM', DCM)
+    b1a = (B.x).express(A)
+    b2a = (B.y).express(A)
+    b3a = (B.z).express(A)
+
+    # Equation (2.1.1)
+    B.set_ang_vel(A, B.x*(dot((b3a).dt(A), B.y))
+                   + B.y*(dot((b1a).dt(A), B.z))
+                   + B.z*(dot((b2a).dt(A), B.x)))
+
+    # Equation (2.1.21)
+    expr = (  (c12*c13d + c22*c23d + c32*c33d)*B.x
+            + (c13*c11d + c23*c21d + c33*c31d)*B.y
+            + (c11*c12d + c21*c22d + c31*c32d)*B.z)
+    assert B.ang_vel_in(A) - expr == 0
+
+def test_w_diff_dcm2():
+    q1, q2, q3 = dynamicsymbols('q1:4')
+    N = ReferenceFrame('N')
+    A = N.orientnew('A', 'axis', [q1, N.x])
+    B = A.orientnew('B', 'axis', [q2, A.y])
+    C = B.orientnew('C', 'axis', [q3, B.z])
+
+    DCM = C.dcm(N).T
+    D = N.orientnew('D', 'DCM', DCM)
+
+    # Frames D and C are the same ReferenceFrame,
+    # since they have equal DCM respect to frame N.
+    # Therefore, D and C should have same angle velocity in N.
+    assert D.dcm(N) == C.dcm(N) == Matrix([
+        [cos(q2)*cos(q3), sin(q1)*sin(q2)*cos(q3) +
+        sin(q3)*cos(q1), sin(q1)*sin(q3) -
+        sin(q2)*cos(q1)*cos(q3)], [-sin(q3)*cos(q2),
+        -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3),
+        sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1)],
+        [sin(q2), -sin(q1)*cos(q2), cos(q1)*cos(q2)]])
+    assert (D.ang_vel_in(N) - C.ang_vel_in(N)).express(N).simplify() == 0
 
 def test_orientnew_respects_parent_class():
     class MyReferenceFrame(ReferenceFrame):
@@ -165,6 +229,59 @@ def test_orientnew_respects_parent_class():
     C = B.orientnew('C', 'Axis', [0, B.x])
     assert isinstance(C, MyReferenceFrame)
 
+
+def test_orientnew_respects_input_indices():
+    N = ReferenceFrame('N')
+    q1 = dynamicsymbols('q1')
+    A = N.orientnew('a', 'Axis', [q1, N.z])
+    #modify default indices:
+    minds = [x+'1' for x in N.indices]
+    B = N.orientnew('b', 'Axis', [q1, N.z], indices=minds)
+
+    assert N.indices == A.indices
+    assert B.indices == minds
+
+def test_orientnew_respects_input_latexs():
+    N = ReferenceFrame('N')
+    q1 = dynamicsymbols('q1')
+    A = N.orientnew('a', 'Axis', [q1, N.z])
+
+    #build default and alternate latex_vecs:
+    def_latex_vecs = [(r"\mathbf{\hat{%s}_%s}" % (A.name.lower(),
+                      A.indices[0])), (r"\mathbf{\hat{%s}_%s}" %
+                      (A.name.lower(), A.indices[1])),
+                      (r"\mathbf{\hat{%s}_%s}" % (A.name.lower(),
+                      A.indices[2]))]
+
+    name = 'b'
+    indices = [x+'1' for x in N.indices]
+    new_latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+                      indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
+                      (name.lower(), indices[1])),
+                      (r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+                      indices[2]))]
+
+    B = N.orientnew(name, 'Axis', [q1, N.z], latexs=new_latex_vecs)
+
+    assert A.latex_vecs == def_latex_vecs
+    assert B.latex_vecs == new_latex_vecs
+    assert B.indices != indices
+
+def test_orientnew_respects_input_variables():
+    N = ReferenceFrame('N')
+    q1 = dynamicsymbols('q1')
+    A = N.orientnew('a', 'Axis', [q1, N.z])
+
+    #build non-standard variable names
+    name = 'b'
+    new_variables = ['notb_'+x+'1' for x in N.indices]
+    B = N.orientnew(name, 'Axis', [q1, N.z], variables=new_variables)
+
+    for j,var in enumerate(A.varlist):
+        assert var.name == A.name + '_' + A.indices[j]
+
+    for j,var in enumerate(B.varlist):
+        assert var.name == new_variables[j]
 
 def test_issue_10348():
     u = dynamicsymbols('u:3')
@@ -214,3 +331,54 @@ def test_issue_11498():
     assert B.dcm(A) == Matrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]])
     assert A.dcm(B) == Matrix([[0, 0, -1], [1, 0, 0], [0, -1, 0]])
     assert B.dcm(A).T == A.dcm(B)
+
+
+def test_reference_frame():
+    raises(TypeError, lambda: ReferenceFrame(0))
+    raises(TypeError, lambda: ReferenceFrame('N', 0))
+    raises(ValueError, lambda: ReferenceFrame('N', [0, 1]))
+    raises(TypeError, lambda: ReferenceFrame('N', [0, 1, 2]))
+    raises(TypeError, lambda: ReferenceFrame('N', ['a', 'b', 'c'], 0))
+    raises(ValueError, lambda: ReferenceFrame('N', ['a', 'b', 'c'], [0, 1]))
+    raises(TypeError, lambda: ReferenceFrame('N', ['a', 'b', 'c'], [0, 1, 2]))
+    raises(TypeError, lambda: ReferenceFrame('N', ['a', 'b', 'c'],
+                                                 ['a', 'b', 'c'], 0))
+    raises(ValueError, lambda: ReferenceFrame('N', ['a', 'b', 'c'],
+                                              ['a', 'b', 'c'], [0, 1]))
+    raises(TypeError, lambda: ReferenceFrame('N', ['a', 'b', 'c'],
+                                             ['a', 'b', 'c'], [0, 1, 2]))
+    N = ReferenceFrame('N')
+    assert N[0] == CoordinateSym('N_x', N, 0)
+    assert N[1] == CoordinateSym('N_y', N, 1)
+    assert N[2] == CoordinateSym('N_z', N, 2)
+    raises(ValueError, lambda: N[3])
+    N = ReferenceFrame('N', ['a', 'b', 'c'])
+    assert N['a'] == N.x
+    assert N['b'] == N.y
+    assert N['c'] == N.z
+    raises(ValueError, lambda: N['d'])
+    assert str(N) == 'N'
+
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
+    raises(TypeError, lambda: A.orient(B, 'DCM', 0))
+    raises(TypeError, lambda: B.orient(N, 'Space', [q1, q2, q3], '222'))
+    raises(TypeError, lambda: B.orient(N, 'Axis', [q1, N.x + 2 * N.y], '222'))
+    raises(TypeError, lambda: B.orient(N, 'Axis', q1))
+    raises(TypeError, lambda: B.orient(N, 'Axis', [q1]))
+    raises(TypeError, lambda: B.orient(N, 'Quaternion', [q0, q1, q2, q3], '222'))
+    raises(TypeError, lambda: B.orient(N, 'Quaternion', q0))
+    raises(TypeError, lambda: B.orient(N, 'Quaternion', [q0, q1, q2]))
+    raises(NotImplementedError, lambda: B.orient(N, 'Foo', [q0, q1, q2]))
+    raises(TypeError, lambda: B.orient(N, 'Body', [q1, q2], '232'))
+    raises(TypeError, lambda: B.orient(N, 'Space', [q1, q2], '232'))
+
+    N.set_ang_acc(B, 0)
+    assert N.ang_acc_in(B) == Vector(0)
+    N.set_ang_vel(B, 0)
+    assert N.ang_vel_in(B) == Vector(0)
+
+
+def test_check_frame():
+    raises(VectorTypeError, lambda: _check_frame(0))

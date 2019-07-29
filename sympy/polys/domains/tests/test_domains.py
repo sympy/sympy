@@ -15,6 +15,7 @@ from sympy.polys.polyerrors import (
     CoercionFailed,
     NotInvertible,
     DomainError)
+from sympy.polys.polyutils import illegal
 
 from sympy.utilities.pytest import raises
 
@@ -322,25 +323,15 @@ def test_Domain__contains__():
     assert (3.14 in QQ[x, y]) is True
     assert (3.14 in RR[x, y]) is True
 
-    assert (oo in EX) is True
-    assert (oo in ZZ) is False
-    assert (oo in QQ) is False
-    assert (oo in RR) is True
-    assert (oo in CC) is True
     assert (oo in ALG) is False
     assert (oo in ZZ[x, y]) is False
     assert (oo in QQ[x, y]) is False
-    assert (oo in RR[x, y]) is True
 
-    assert (-oo in EX) is True
     assert (-oo in ZZ) is False
     assert (-oo in QQ) is False
-    assert (-oo in RR) is True
-    assert (-oo in CC) is True
     assert (-oo in ALG) is False
     assert (-oo in ZZ[x, y]) is False
     assert (-oo in QQ[x, y]) is False
-    assert (-oo in RR[x, y]) is True
 
     assert (sqrt(7) in EX) is True
     assert (sqrt(7) in ZZ) is False
@@ -588,9 +579,17 @@ def test_RealField_from_sympy():
     assert RR.convert(S(1)) == RR.dtype(1)
     assert RR.convert(S(1.0)) == RR.dtype(1.0)
     assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
-    assert RR.convert(oo) == RR("+inf")
-    assert RR.convert(-oo) == RR("-inf")
-    raises(CoercionFailed, lambda: RR.convert(x))
+
+
+def test_not_in_any_domain():
+    check = illegal + [x] + [
+        float(i) for i in illegal if i != S.ComplexInfinity]
+    for dom in (ZZ, QQ, RR, CC, EX):
+        for i in check:
+            if i == x and dom == EX:
+                continue
+            assert i not in dom, (i, dom)
+            raises(CoercionFailed, lambda: dom.convert(i))
 
 
 def test_ModularInteger():
@@ -680,6 +679,8 @@ def test_ModularInteger():
     a = F7(3)**100000000000
     assert isinstance(a, F7.dtype) and a == 4
     a = F7(3)**-100000000000
+    assert isinstance(a, F7.dtype) and a == 2
+    a = F7(3)**S(2)
     assert isinstance(a, F7.dtype) and a == 2
 
     assert bool(F3(3)) is False

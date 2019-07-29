@@ -15,7 +15,7 @@ TODO:
 from __future__ import print_function, division
 
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
-from sympy.core.compatibility import string_types, range
+from sympy.core.compatibility import string_types, range, unicode
 
 
 class stringPict(object):
@@ -333,7 +333,7 @@ class stringPict(object):
         return ncols
 
     def __eq__(self, o):
-        if isinstance(o, str):
+        if isinstance(o, string_types):
             return '\n'.join(self.picture) == o
         elif isinstance(o, stringPict):
             return o.picture == self.picture
@@ -430,15 +430,19 @@ class prettyForm(stringPict):
         """Make a pretty multiplication.
         Parentheses are needed around +, - and neg.
         """
+        quantity = {
+            'degree': u"\N{DEGREE SIGN}"
+        }
+
         if len(others) == 0:
             return self # We aren't actually multiplying... So nothing to do here.
-
         args = self
         if args.binding > prettyForm.MUL:
             arg = stringPict(*args.parens())
         result = [args]
         for arg in others:
-            result.append(xsym('*'))
+            if arg.picture[0] not in quantity.values():
+                result.append(xsym('*'))
             #add parentheses for weak binders
             if arg.binding > prettyForm.MUL:
                 arg = stringPict(*arg.parens())

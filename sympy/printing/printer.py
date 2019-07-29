@@ -123,7 +123,7 @@ in a shorter form.
 
 The output of the code above is::
 
-    \\frac{\\partial^{2}}{\\partial x\\partial y}  f{\\left (x,y \\right )}
+    \\frac{\\partial^{2}}{\\partial x\\partial y}  f{\\left(x,y \\right)}
     f_{xy}
 
 Example of Custom Printing Method
@@ -172,12 +172,24 @@ The output of the code above is::
 
 from __future__ import print_function, division
 
+from contextlib import contextmanager
+
 from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
 
 from functools import cmp_to_key
+
+
+@contextmanager
+def printer_context(printer, **kwargs):
+    original = printer._context.copy()
+    try:
+        printer._context.update(kwargs)
+        yield
+    finally:
+        printer._context = original
 
 
 class Printer(object):
@@ -200,6 +212,7 @@ class Printer(object):
         self._str = str
 
         self._settings = self._default_settings.copy()
+        self._context = dict()  # mutable during printing
 
         for key, val in self._global_settings.items():
             if key in self._default_settings:
@@ -235,7 +248,7 @@ class Printer(object):
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
 
-    def _print(self, expr, *args, **kwargs):
+    def _print(self, expr, **kwargs):
         """Internal dispatcher
 
         Tries the following concepts to print an expression:
@@ -250,7 +263,7 @@ class Printer(object):
             # should be printed, use that method.
             if (self.printmethod and hasattr(expr, self.printmethod)
                     and not isinstance(expr, BasicMeta)):
-                return getattr(expr, self.printmethod)(self, *args, **kwargs)
+                return getattr(expr, self.printmethod)(self, **kwargs)
 
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
@@ -271,8 +284,12 @@ class Printer(object):
             for cls in classes:
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
-                    return getattr(self, printmethod)(expr, *args, **kwargs)
-            # Unknown object, fall back to the emptyPrinter.
+                    return getattr(self, printmethod)(expr, **kwargs)
+            # Unknown object, fall back to the emptyPrinter. Checks what type of
+            # decimal separator to print.
+            if (self.emptyPrinter == str) & \
+                (self._settings.get('decimal_separator', None) == 'comma'):
+                expr = str(expr).replace('.', '{,}')
             return self.emptyPrinter(expr)
         finally:
             self._print_level -= 1

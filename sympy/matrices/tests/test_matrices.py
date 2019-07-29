@@ -1,10 +1,8 @@
-import collections
 import random
-import warnings
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
+    S, Symbol, cos, exp, expand_mul, oo, pi, signsimp, simplify, sin, sqrt, symbols,
     sympify, trigsimp, tan, sstr, diff, Function)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
@@ -13,15 +11,16 @@ from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
-    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
-from sympy.core.compatibility import long, iterable, range
-from sympy.core import Tuple
+    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
+from sympy.core.compatibility import long, iterable, range, Hashable
+from sympy.core import Tuple, Wild
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
+from sympy.matrices.expressions import MatPow
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
@@ -224,17 +223,17 @@ def test_power():
         [0, 0, b**n]])
 
     A = Matrix([[1, 0], [1, 7]])
-    assert A._matrix_pow_by_jordan_blocks(3) == A._eval_pow_by_recursion(3)
+    assert A._matrix_pow_by_jordan_blocks(S(3)) == A._eval_pow_by_recursion(3)
     A = Matrix([[2]])
-    assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(10) == \
+    assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(S(10)) == \
         A._eval_pow_by_recursion(10)
 
     # testing a matrix that cannot be jordan blocked issue 11766
     m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
-    raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(10))
+    raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(S(10)))
 
     # test issue 11964
-    raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(-10))
+    raises(MatrixError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(S(-10)))
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])  # Nilpotent jordan block size 3
     assert A**10.0 == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     raises(ValueError, lambda: A**2.1)
@@ -242,18 +241,48 @@ def test_power():
     A = Matrix([[8, 1], [3, 2]])
     assert A**10.0 == Matrix([[1760744107, 272388050], [817164150, 126415807]])
     A = Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 1
-    assert A**10.2 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 2
     assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     n = Symbol('n', integer=True)
+    assert isinstance(A**n, MatPow)
+    n = Symbol('n', integer=True, negative=True)
     raises(ValueError, lambda: A**n)
     n = Symbol('n', integer=True, nonnegative=True)
-    raises(ValueError, lambda: A**n)
+    assert A**n == Matrix([
+        [KroneckerDelta(0, n), KroneckerDelta(1, n), -KroneckerDelta(0, n) - KroneckerDelta(1, n) + 1],
+        [                   0, KroneckerDelta(0, n),                         1 - KroneckerDelta(0, n)],
+        [                   0,                    0,                                                1]])
     assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     raises(ValueError, lambda: A**(S(3)/2))
     A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
     assert A**5.0 == Matrix([[168,  72,  89], [291, 144, 161], [572, 267, 329]])
     assert A**5.0 == A**5
+    A = Matrix([[0, 1, 0],[-1, 0, 0],[0, 0, 0]])
+    n = Symbol("n")
+    An = A**n
+    assert An.subs(n, 2).doit() == A**2
+    raises(ValueError, lambda: An.subs(n, -2).doit())
+    assert An * An == A**(2*n)
+
+    # concretizing behavior for non-integer and complex powers
+    A = Matrix([[0,0,0],[0,0,0],[0,0,0]])
+    n = Symbol('n', integer=True, positive=True)
+    assert A**n == A
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert A**n == diag(0**n, 0**n, 0**n)
+    assert (A**n).subs(n, 0) == eye(3)
+    assert (A**n).subs(n, 1) == zeros(3)
+    A = Matrix ([[2,0,0],[0,2,0],[0,0,2]])
+    assert A**2.1 == diag (2**2.1, 2**2.1, 2**2.1)
+    assert A**I == diag (2**I, 2**I, 2**I)
+    A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])
+    raises(ValueError, lambda: A**2.1)
+    raises(ValueError, lambda: A**I)
+    A = Matrix([[S.Half, S.Half], [S.Half, S.Half]])
+    assert A**S.Half == A
+    A = Matrix([[1, 1],[3, 3]])
+    assert A**S.Half == Matrix ([[S.Half, S.Half], [3*S.Half, 3*S.Half]])
 
 
 def test_creation():
@@ -266,6 +295,9 @@ def test_creation():
         Matrix((1, 2))[3] = 5
 
     assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
+    # anything can go into a matrix (laplace_transform uses tuples)
+    assert Matrix([[[], ()]]).tolist() == [[[], ()]]
+    assert Matrix([[[], ()]]).T.tolist() == [[[]], [()]]
 
     a = Matrix([[x, 0], [0, 0]])
     m = a
@@ -283,13 +315,9 @@ def test_creation():
 
     assert Matrix(b) == b
 
-    c = Matrix((
-        Matrix((
-            (1, 2, 3),
-            (4, 5, 6)
-        )),
-        (7, 8, 9)
-    ))
+    c23 = Matrix(2, 3, range(1, 7))
+    c13 = Matrix(1, 3, range(7, 10))
+    c = Matrix([c23, c13])
     assert c.cols == 3
     assert c.rows == 3
     assert c[:] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -300,6 +328,40 @@ def test_creation():
     assert Matrix(ImmutableMatrix(c)) == ImmutableMatrix(c).as_mutable()
 
     assert c is not Matrix(c)
+
+    dat = [[ones(3,2), ones(3,3)*2], [ones(2,3)*3, ones(2,2)*4]]
+    M = Matrix(dat)
+    assert M == Matrix([
+        [1, 1, 2, 2, 2],
+        [1, 1, 2, 2, 2],
+        [1, 1, 2, 2, 2],
+        [3, 3, 3, 4, 4],
+        [3, 3, 3, 4, 4]])
+    assert M.tolist() != dat
+    # keep block form if evaluate=False
+    assert Matrix(dat, evaluate=False).tolist() == dat
+    A = MatrixSymbol("A", 2, 2)
+    dat = [ones(2), A]
+    assert Matrix(dat) == Matrix([
+    [      1,       1],
+    [      1,       1],
+    [A[0, 0], A[0, 1]],
+    [A[1, 0], A[1, 1]]])
+    assert Matrix(dat, evaluate=False).tolist() == [[i] for i in dat]
+
+    # 0-dim tolerance
+    assert Matrix([ones(2), ones(0)]) == Matrix([ones(2)])
+    raises(ValueError, lambda: Matrix([ones(2), ones(0, 3)]))
+    raises(ValueError, lambda: Matrix([ones(2), ones(3, 0)]))
+
+
+def test_irregular_block():
+    assert Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
+        ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7) == Matrix([
+        [1, 2, 2, 2, 3, 3],
+        [1, 2, 2, 2, 3, 3],
+        [4, 2, 2, 2, 5, 5],
+        [6, 6, 7, 7, 5, 5]])
 
 
 def test_tolist():
@@ -329,12 +391,14 @@ def test_determinant():
 
     assert M.det(method="bareiss") == -1
     assert M.det(method="berkowitz") == -1
+    assert M.det(method="lu") == -1
 
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
     assert M.det(method="bareiss") == 2*x*y - y
     assert M.det(method="berkowitz") == 2*x*y - y
+    assert M.det(method="lu") == 2*x*y - y
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),
@@ -342,6 +406,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == 1
     assert M.det(method="berkowitz") == 1
+    assert M.det(method="lu") == 1
 
     M = Matrix(( ( 3, -2,  0, 5),
                  (-2,  1, -2, 2),
@@ -350,6 +415,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == -289
     assert M.det(method="berkowitz") == -289
+    assert M.det(method="lu") == -289
 
     M = Matrix(( ( 1,  2,  3,  4),
                  ( 5,  6,  7,  8),
@@ -358,6 +424,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == 0
     assert M.det(method="berkowitz") == 0
+    assert M.det(method="lu") == 0
 
     M = Matrix(( (3, 2, 0, 0, 0),
                  (0, 3, 2, 0, 0),
@@ -367,6 +434,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == 275
     assert M.det(method="berkowitz") == 275
+    assert M.det(method="lu") == 275
 
     M = Matrix(( (1, 0,  1,  2, 12),
                  (2, 0,  1,  1,  4),
@@ -376,6 +444,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == -55
     assert M.det(method="berkowitz") == -55
+    assert M.det(method="lu") == -55
 
     M = Matrix(( (-5,  2,  3,  4,  5),
                  ( 1, -4,  3,  4,  5),
@@ -385,6 +454,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == 11664
     assert M.det(method="berkowitz") == 11664
+    assert M.det(method="lu") == 11664
 
     M = Matrix(( ( 2,  7, -1, 3, 2),
                  ( 0,  0,  1, 0, 1),
@@ -394,6 +464,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == 123
     assert M.det(method="berkowitz") == 123
+    assert M.det(method="lu") == 123
 
     M = Matrix(( (x, y, z),
                  (1, 0, 0),
@@ -401,6 +472,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == z**2 - x*y
     assert M.det(method="berkowitz") == z**2 - x*y
+    assert M.det(method="lu") == z**2 - x*y
 
     # issue 13835
     a = symbols('a')
@@ -409,73 +481,6 @@ def test_determinant():
     assert M(5).det() == 0
     assert M(6).det() == 0
     assert M(7).det() == 0
-
-
-def test_det_LU_decomposition():
-
-    for M in [Matrix(), Matrix([[1]])]:
-        assert M.det(method="lu") == 1
-
-    M = Matrix(( (-3,  2),
-                 ( 8, -5) ))
-
-    assert M.det(method="lu") == -1
-
-    M = Matrix(( (x,   1),
-                 (y, 2*y) ))
-
-    assert M.det(method="lu") == 2*x*y - y
-
-    M = Matrix(( (1, 1, 1),
-                 (1, 2, 3),
-                 (1, 3, 6) ))
-
-    assert M.det(method="lu") == 1
-
-    M = Matrix(( ( 3, -2,  0, 5),
-                 (-2,  1, -2, 2),
-                 ( 0, -2,  5, 0),
-                 ( 5,  0,  3, 4) ))
-
-    assert M.det(method="lu") == -289
-
-    M = Matrix(( (3, 2, 0, 0, 0),
-                 (0, 3, 2, 0, 0),
-                 (0, 0, 3, 2, 0),
-                 (0, 0, 0, 3, 2),
-                 (2, 0, 0, 0, 3) ))
-
-    assert M.det(method="lu") == 275
-
-    M = Matrix(( (1, 0,  1,  2, 12),
-                 (2, 0,  1,  1,  4),
-                 (2, 1,  1, -1,  3),
-                 (3, 2, -1,  1,  8),
-                 (1, 1,  1,  0,  6) ))
-
-    assert M.det(method="lu") == -55
-
-    M = Matrix(( (-5,  2,  3,  4,  5),
-                 ( 1, -4,  3,  4,  5),
-                 ( 1,  2, -3,  4,  5),
-                 ( 1,  2,  3, -2,  5),
-                 ( 1,  2,  3,  4, -1) ))
-
-    assert M.det(method="lu") == 11664
-
-    M = Matrix(( ( 2,  7, -1, 3, 2),
-                 ( 0,  0,  1, 0, 1),
-                 (-2,  0,  7, 0, 2),
-                 (-3, -2,  4, 5, 3),
-                 ( 1,  0,  0, 0, 1) ))
-
-    assert M.det(method="lu") == 123
-
-    M = Matrix(( (x, y, z),
-                 (1, 0, 0),
-                 (y, z, x) ))
-
-    assert M.det(method="lu") == z**2 - x*y
 
 
 def test_slicing():
@@ -682,6 +687,13 @@ def test_LUdecomp():
     P, L, Dee, U = M.LUdecompositionFF()
     assert P*M == L*Dee.inv()*U
 
+    # issue 15794
+    M = Matrix(
+        [[1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]]
+    )
+    raises(ValueError, lambda : M.LUdecomposition_Simple(rankcheck=True))
 
 def test_LUsolve():
     A = Matrix([[2, 3, 5],
@@ -698,6 +710,29 @@ def test_LUsolve():
     b = A*x
     soln = A.LUsolve(b)
     assert soln == x
+    A = Matrix([[2, 1], [1, 0], [1, 0]])   # issue 14548
+    b = Matrix([3, 1, 1])
+    assert A.LUsolve(b) == Matrix([1, 1])
+    b = Matrix([3, 1, 2])                  # inconsistent
+    raises(ValueError, lambda: A.LUsolve(b))
+    A = Matrix([[0, -1, 2],
+                [5, 10, 7],
+                [8,  3, 4],
+                [2, 3, 5],
+                [3, 6, 2],
+                [8, 3, 6]])
+    x = Matrix([2, 1, -4])
+    b = A*x
+    soln = A.LUsolve(b)
+    assert soln == x
+    A = Matrix([[0, -1, 2], [5, 10, 7]])  # underdetermined
+    x = Matrix([-1, 2, 0])
+    b = A*x
+    raises(NotImplementedError, lambda: A.LUsolve(b))
+
+    A = Matrix(4, 4, lambda i, j: 1/(i+j+1) if i != 3 else 0)
+    b = Matrix.zeros(4, 1)
+    raises(NotImplementedError, lambda: A.LUsolve(b))
 
 
 def test_QRsolve():
@@ -762,6 +797,17 @@ def test_matrix_inverse_mod():
     assert A.inv_mod(3) == Ai
     A = Matrix(2, 2, [1, 0, 0, 1])
     assert A.inv_mod(2) == A
+    A = Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+    raises(ValueError, lambda: A.inv_mod(5))
+    A = Matrix(3, 3, [5, 1, 3, 2, 6, 0, 2, 1, 1])
+    Ai = Matrix(3, 3, [6, 8, 0, 1, 5, 6, 5, 6, 4])
+    assert A.inv_mod(9) == Ai
+    A = Matrix(3, 3, [1, 6, -3, 4, 1, -5, 3, -5, 5])
+    Ai = Matrix(3, 3, [4, 3, 3, 1, 2, 5, 1, 5, 1])
+    assert A.inv_mod(6) == Ai
+    A = Matrix(3, 3, [1, 6, 1, 4, 1, 5, 3, 2, 5])
+    Ai = Matrix(3, 3, [6, 0, 3, 6, 6, 4, 1, 6, 1])
+    assert A.inv_mod(7) == Ai
 
 
 def test_util():
@@ -831,6 +877,7 @@ def test_QR():
 
 
 def test_QR_non_square():
+    # Narrow (cols < rows) matrices
     A = Matrix([[9, 0, 26], [12, 0, -7], [0, 4, 4], [0, -3, -3]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)
@@ -838,6 +885,101 @@ def test_QR_non_square():
     assert A == Q*R
 
     A = Matrix([[1, -1, 4], [1, 4, -2], [1, 4, 2], [1, -1, 0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix(2, 1, [1, 2])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    # Wide (cols > rows) matrices
+    A = Matrix([[1, 2, 3], [4, 5, 6]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[1, 2, 3, 4], [1, 4, 9, 16], [1, 8, 27, 64]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix(1, 2, [1, 2])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+def test_QR_trivial():
+    # Rank deficient matrices
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    # Zero rank matrices
+    A = Matrix([[0, 0, 0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0], [0, 0, 0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0], [0, 0, 0]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    # Rank deficient matrices with zero norm from beginning columns
+    A = Matrix([[0, 0, 0], [1, 2, 3]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0, 0], [1, 2, 3, 4], [0, 0, 0, 0]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0, 0], [1, 2, 3, 4], [0, 0, 0, 0], [2, 4, 6, 8]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0], [1, 2, 3]]).T
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)
     assert R.is_upper
@@ -935,6 +1077,7 @@ def test_eigen():
                 [0, 0, 1]])
 
     assert M.eigenvals(multiple=False) == {S.One: 3}
+    assert M.eigenvals(multiple=True) == [1, 1, 1]
 
     assert M.eigenvects() == (
         [(1, 3, [Matrix([1, 0, 0]),
@@ -1024,16 +1167,16 @@ def test_eigen():
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
     M = Matrix([[S(1)/4, 1], [1, 1]])
     assert M.eigenvects(simplify=True) == [
-        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-S(3)/8 + sqrt(73)/8], [1]])]),
-        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[-sqrt(73)/8 - S(3)/8], [1]])])]
-    assert M.eigenvects(simplify=False) ==[(S(5)/8 + sqrt(73)/8, 1, [Matrix([
-       [-1/(-sqrt(73)/8 - S(3)/8)],
-       [                     1]])]), (-sqrt(73)/8 + S(5)/8, 1, [Matrix([
-       [-1/(-S(3)/8 + sqrt(73)/8)],
-       [                     1]])])]
+        (S(5)/8 - sqrt(73)/8, 1, [Matrix([[-sqrt(73)/8 - S(3)/8], [1]])]),
+        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-S(3)/8 + sqrt(73)/8], [1]])])]
+    assert M.eigenvects(simplify=False) ==[
+        (S(5)/8 - sqrt(73)/8, 1, [Matrix([[-1/(-S(3)/8 + sqrt(73)/8)],
+                                          [                     1]])]),
+        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-1/(-sqrt(73)/8 - S(3)/8)],
+                                          [                     1]])])]
 
     m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
-    evals = {-sqrt(385)/20 + S(5)/4: 1, sqrt(385)/20 + S(5)/4: 1, S.Zero: 1}
+    evals = { S(5)/4 - sqrt(385)/20: 1, sqrt(385)/20 + S(5)/4: 1, S.Zero: 1}
     assert m.eigenvals() == evals
     nevals = list(sorted(m.eigenvals(rational=False).keys()))
     sevals = list(sorted(evals.keys()))
@@ -1042,6 +1185,148 @@ def test_eigen():
     # issue 10719
     assert Matrix([]).eigenvals() == {}
     assert Matrix([]).eigenvects() == []
+
+    # issue 15119
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2], [0, 4], [0, 0]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0], [3, 4], [5, 6]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals(error_when_incomplete = False))
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals(error_when_incomplete = False))
+
+    # issue 15125
+    from sympy.core.function import count_ops
+    q = Symbol("q", positive = True)
+    m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
+    assert count_ops(m.eigenvals(simplify=False)) > count_ops(m.eigenvals(simplify=True))
+    assert count_ops(m.eigenvals(simplify=lambda x: x)) > count_ops(m.eigenvals(simplify=True))
+
+    assert isinstance(m.eigenvals(simplify=True, multiple=False), dict)
+    assert isinstance(m.eigenvals(simplify=True, multiple=True), list)
+    assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
+    assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
+
+def test_definite():
+    # Examples from Gilbert Strang, "Introduction to Linear Algebra"
+    # Positive definite matrices
+    m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[5, 4], [4, 5]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Positive semidefinite matrices
+    m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[1, 2], [2, 4]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Examples from Mathematica documentation
+    # Non-hermitian positive definite matrices
+    m = Matrix([[2, 3], [4, 8]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[1, 2*I], [-I, 4]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Symbolic matrices examples
+    a = Symbol('a', positive=True)
+    b = Symbol('b', negative=True)
+    m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == False
+    assert m.is_negative_definite == True
+    assert m.is_negative_semidefinite == True
+    assert m.is_indefinite == False
+
+    m = Matrix([[a, 0], [0, b]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == False
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == True
+
+
+def test_positive_definite():
+    # Test alternative algorithms for testing positive definitiveness.
+    m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[5, 4], [4, 5]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
+
+    m = Matrix([[1, 2], [2, 4]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
+
+    m = Matrix([[2, 3], [4, 8]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[1, 2*I], [-I, 4]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    a = Symbol('a', positive=True)
+    b = Symbol('b', negative=True)
+    m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
+
+    m = Matrix([[a, 0], [0, b]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
 
 
 def test_subs():
@@ -1067,7 +1352,8 @@ def test_xreplace():
         assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).xreplace({1: 2})
 
 def test_simplify():
-    f, n = symbols('f, n')
+    n = Symbol('n')
+    f = Function('f')
 
     M = Matrix([[            1/x + 1/y,                 (x + x*y) / x  ],
                 [ (f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n) / pi ]])
@@ -1417,52 +1703,11 @@ def test_vech_errors():
 
 
 def test_diag():
-    a = Matrix([[1, 2], [2, 3]])
-    b = Matrix([[3, x], [y, 3]])
-    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
-    assert diag(a, b, b) == Matrix([
-        [1, 2, 0, 0, 0, 0],
-        [2, 3, 0, 0, 0, 0],
-        [0, 0, 3, x, 0, 0],
-        [0, 0, y, 3, 0, 0],
-        [0, 0, 0, 0, 3, x],
-        [0, 0, 0, 0, y, 3],
-    ])
-    assert diag(a, b, c) == Matrix([
-        [1, 2, 0, 0, 0, 0, 0],
-        [2, 3, 0, 0, 0, 0, 0],
-        [0, 0, 3, x, 0, 0, 0],
-        [0, 0, y, 3, 0, 0, 0],
-        [0, 0, 0, 0, 3, x, 3],
-        [0, 0, 0, 0, y, 3, z],
-        [0, 0, 0, 0, x, y, z],
-    ])
-    assert diag(a, c, b) == Matrix([
-        [1, 2, 0, 0, 0, 0, 0],
-        [2, 3, 0, 0, 0, 0, 0],
-        [0, 0, 3, x, 3, 0, 0],
-        [0, 0, y, 3, z, 0, 0],
-        [0, 0, x, y, z, 0, 0],
-        [0, 0, 0, 0, 0, 3, x],
-        [0, 0, 0, 0, 0, y, 3],
-    ])
-    a = Matrix([x, y, z])
-    b = Matrix([[1, 2], [3, 4]])
-    c = Matrix([[5, 6]])
-    assert diag(a, 7, b, c) == Matrix([
-        [x, 0, 0, 0, 0, 0],
-        [y, 0, 0, 0, 0, 0],
-        [z, 0, 0, 0, 0, 0],
-        [0, 7, 0, 0, 0, 0],
-        [0, 0, 1, 2, 0, 0],
-        [0, 0, 3, 4, 0, 0],
-        [0, 0, 0, 0, 5, 6],
-    ])
-    assert diag(1, [2, 3], [[4, 5]]) == Matrix([
-        [1, 0, 0, 0],
-        [0, 2, 0, 0],
-        [0, 3, 0, 0],
-        [0, 0, 4, 5]])
+    # mostly tested in testcommonmatrix.py
+    assert diag([1, 2, 3]) == Matrix([1, 2, 3])
+    m = [1, 2, [3]]
+    raises(ValueError, lambda: diag(m))
+    assert diag(m, strict=False) == Matrix([1, 2, 3])
 
 
 def test_get_diag_blocks1():
@@ -1511,13 +1756,14 @@ def test_creation_args():
     raises(TypeError, lambda: zeros(1, 2, 3, 4))
     assert zeros(long(3)) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
-    assert zeros(3.) == zeros(3)
+    raises(ValueError, lambda: zeros(3.))
     assert eye(long(3)) == eye(3)
     assert eye(Integer(3)) == eye(3)
-    assert eye(3.) == eye(3)
+    raises(ValueError, lambda: eye(3.))
     assert ones(long(3), Integer(4)) == ones(3, 4)
     raises(TypeError, lambda: Matrix(5))
     raises(TypeError, lambda: Matrix(1, 2))
+    raises(ValueError, lambda: Matrix([1, [2]]))
 
 
 def test_diagonal_symmetrical():
@@ -1619,6 +1865,26 @@ def test_diagonalization():
     m = Matrix(2, 2, [a, c, c, b])
     assert m.is_symmetric()
     assert m.is_diagonalizable()
+
+
+def test_issue_15887():
+    # Mutable matrix should not use cache
+    a = MutableDenseMatrix([[0, 1], [1, 0]])
+    assert a.is_diagonalizable() is True
+    a[1, 0] = 0
+    assert a.is_diagonalizable() is False
+
+    a = MutableDenseMatrix([[0, 1], [1, 0]])
+    a.diagonalize()
+    a[1, 0] = 0
+    raises(MatrixError, lambda: a.diagonalize())
+
+    # Test deprecated cache and kwargs
+    with warns_deprecated_sympy():
+        a.is_diagonalizable(clear_cache=True)
+
+    with warns_deprecated_sympy():
+        a.is_diagonalizable(clear_subproducts=True)
 
 
 @XFAIL
@@ -1743,6 +2009,23 @@ def test_issue_10220():
                         [0, 0, 1, 0],
                         [0, 0, 0, 1]])
 
+def test_jordan_form_issue_15858():
+    A = Matrix([
+        [1, 1, 1, 0],
+        [-2, -1, 0, -1],
+        [0, 0, -1, -1],
+        [0, 0, 2, 1]])
+    (P, J) = A.jordan_form()
+    assert simplify(P) == Matrix([
+        [-I, -I/2, I, I/2],
+        [-1 + I, 0, -1 - I, 0],
+        [0, I*(-1 + I)/2, 0, I*(1 + I)/2],
+        [0, 1, 0, 1]])
+    assert J == Matrix([
+        [-I, 1, 0, 0],
+        [0, -I, 0, 0],
+        [0, 0, I, 1],
+        [0, 0, 0, I]])
 
 def test_Matrix_berkowitz_charpoly():
     UA, K_i, K_w = symbols('UA K_i K_w')
@@ -1767,6 +2050,20 @@ def test_Matrix_berkowitz_charpoly():
     assert p.as_expr().subs(p.gen, x) == x**2 - 3*x
 
 
+def test_exp_jordan_block():
+    l = Symbol('lamda')
+
+    m = Matrix.jordan_block(1, l)
+    assert m._eval_matrix_exp_jblock() == Matrix([[exp(l)]])
+
+    m = Matrix.jordan_block(3, l)
+    assert m._eval_matrix_exp_jblock() == \
+        Matrix([
+            [exp(l), exp(l), exp(l)/2],
+            [0, exp(l), exp(l)],
+            [0, 0, exp(l)]])
+
+
 def test_exp():
     m = Matrix([[3, 4], [0, -2]])
     m_exp = Matrix([[exp(3), -4*exp(-2)/5 + 4*exp(3)/5], [0, exp(-2)]])
@@ -1776,6 +2073,9 @@ def test_exp():
     m = Matrix([[1, 0], [0, 1]])
     assert m.exp() == Matrix([[E, 0], [0, E]])
     assert exp(m) == Matrix([[E, 0], [0, E]])
+
+    m = Matrix([[1, -1], [1, 1]])
+    assert m.exp() == Matrix([[E*cos(1), -E*sin(1)], [E*sin(1), E*cos(1)]])
 
 
 def test_has():
@@ -1884,9 +2184,6 @@ def test_errors():
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).trace())
     raises(TypeError, lambda: Matrix([1]).applyfunc(1))
     raises(ShapeError, lambda: Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]])))
-    raises(MatrixError, lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]
-           ]).QRdecomposition())
-    raises(MatrixError, lambda: Matrix(1, 2, [1, 2]).QRdecomposition())
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor(4, 5))
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor_submatrix(4, 5))
     raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))
@@ -1894,6 +2191,9 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
     raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
+    with warns_deprecated_sympy():
+        Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]]))
+    raises(ShapeError, lambda: Matrix([1, 2]).dot([1, 2, 3]))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
     raises(ValueError, lambda: Matrix([1, 2]).inv(method='not a method'))
@@ -1907,6 +2207,12 @@ def test_errors():
     raises(ValueError,
         lambda: Matrix([[1, 2], [3, 4]]).det(method='Not a real method'))
     raises(ValueError,
+        lambda: Matrix([[1, 2, 3, 4], [5, 6, 7, 8],
+        [9, 10, 11, 12], [13, 14, 15, 16]]).det(iszerofunc="Not function"))
+    raises(ValueError,
+        lambda: Matrix([[1, 2, 3, 4], [5, 6, 7, 8],
+        [9, 10, 11, 12], [13, 14, 15, 16]]).det(iszerofunc=False))
+    raises(ValueError,
         lambda: hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]])))
     raises(ValueError, lambda: hessian(Matrix([[1, 2], [3, 4]]), []))
     raises(ValueError, lambda: hessian(Symbol('x')**2, 'a'))
@@ -1914,7 +2220,11 @@ def test_errors():
     raises(IndexError, lambda: eye(3)[2, 5])
     M = Matrix(((1, 2, 3, 4), (5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16)))
     raises(ValueError, lambda: M.det('method=LU_decomposition()'))
-
+    V = Matrix([[10, 10, 10]])
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(ValueError, lambda: M.row_insert(4.7, V))
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(ValueError, lambda: M.col_insert(-4.2, V))
 
 def test_len():
     assert len(Matrix()) == 0
@@ -1942,6 +2252,7 @@ def test_limit():
 
 def test_diff():
     A = MutableDenseMatrix(((1, 4, x), (y, 2, 4), (10, 5, x**2 + 1)))
+    assert isinstance(A.diff(x), type(A))
     assert A.diff(x) == MutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert A.diff(y) == MutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
@@ -1949,11 +2260,15 @@ def test_diff():
     assert diff(A, y) == MutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
     A_imm = A.as_immutable()
+    assert isinstance(A_imm.diff(x), type(A_imm))
     assert A_imm.diff(x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert A_imm.diff(y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
     assert diff(A_imm, x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert diff(A_imm, y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+
+
+def test_diff_by_matrix():
 
     # Derive matrix by matrix:
 
@@ -1969,15 +2284,8 @@ def test_diff():
     assert A.diff(a) == MutableDenseMatrix([[0, 0], [0, 0]])
 
     B = ImmutableDenseMatrix([a, b])
-    assert A.diff(B) == Array(
-        [[[
-            [0,0],
-            [0,0]
-        ]],
-        [[
-            [0,0],
-            [0,0]
-        ]]])
+    assert A.diff(B) == Array.zeros(2, 1, 2, 2)
+    assert A.diff(A) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
 
     # Test diff with tuples:
 
@@ -2039,15 +2347,33 @@ def test_hessenberg():
 def test_cholesky():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2)).cholesky())
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky())
+    raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).cholesky())
+    raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).cholesky())
+    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky(hermitian=False))
+    assert Matrix(((5 + I, 0), (0, 1))).cholesky(hermitian=False) == Matrix([
+        [sqrt(5 + I), 0], [0, 1]])
+    A = Matrix(((1, 5), (5, 1)))
+    L = A.cholesky(hermitian=False)
+    assert L == Matrix([[1, 0], [5, 2*sqrt(6)*I]])
+    assert L*L.T == A
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-    assert A.cholesky() * A.cholesky().T == A
-    assert A.cholesky().is_lower
-    assert A.cholesky() == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
+    L = A.cholesky()
+    assert L * L.T == A
+    assert L.is_lower
+    assert L == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
+    A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
+    assert A.cholesky() == Matrix(((2, 0, 0), (I, 1, 0), (1 - I, 0, 3)))
 
 
 def test_LDLdecomposition():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2)).LDLdecomposition())
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition())
+    raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).LDLdecomposition())
+    raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).LDLdecomposition())
+    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition(hermitian=False))
+    A = Matrix(((1, 5), (5, 1)))
+    L, D = A.LDLdecomposition(hermitian=False)
+    assert L * D * L.T == A
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     L, D = A.LDLdecomposition()
     assert L * D * L.T == A
@@ -2055,6 +2381,11 @@ def test_LDLdecomposition():
     assert L == Matrix([[1, 0, 0], [ S(3)/5, 1, 0], [S(-1)/5, S(1)/3, 1]])
     assert D.is_diagonal()
     assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])
+    A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
+    L, D = A.LDLdecomposition()
+    assert expand_mul(L * D * L.H) == A
+    assert L == Matrix(((1, 0, 0), (I/2, 1, 0), (S(1)/2 - I/2, 0, 1)))
+    assert D == Matrix(((4, 0, 0), (0, 1, 0), (0, 0, 9)))
 
 
 def test_cholesky_solve():
@@ -2072,6 +2403,26 @@ def test_cholesky_solve():
     b = A*x
     soln = A.cholesky_solve(b)
     assert soln == x
+    A = Matrix(((1, 5), (5, 1)))
+    x = Matrix((4, -3))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert soln == x
+    A = Matrix(((9, 3*I), (-3*I, 5)))
+    x = Matrix((-2, 1))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert expand_mul(soln) == x
+    A = Matrix(((9*I, 3), (-3 + I, 5)))
+    x = Matrix((2 + 3*I, -1))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert expand_mul(soln) == x
+    a00, a01, a11, b0, b1 = symbols('a00, a01, a11, b0, b1')
+    A = Matrix(((a00, a01), (a01, a11)))
+    b = Matrix((b0, b1))
+    x = A.cholesky_solve(b)
+    assert simplify(A*x) == b
 
 
 def test_LDLsolve():
@@ -2082,6 +2433,7 @@ def test_LDLsolve():
     b = A*x
     soln = A.LDLsolve(b)
     assert soln == x
+
     A = Matrix([[0, -1, 2],
                 [5, 10, 7],
                 [8,  3, 4]])
@@ -2089,6 +2441,29 @@ def test_LDLsolve():
     b = A*x
     soln = A.LDLsolve(b)
     assert soln == x
+
+    A = Matrix(((9, 3*I), (-3*I, 5)))
+    x = Matrix((-2, 1))
+    b = A*x
+    soln = A.LDLsolve(b)
+    assert expand_mul(soln) == x
+
+    A = Matrix(((9*I, 3), (-3 + I, 5)))
+    x = Matrix((2 + 3*I, -1))
+    b = A*x
+    soln = A.LDLsolve(b)
+    assert expand_mul(soln) == x
+
+    A = Matrix(((9, 3), (3, 9)))
+    x = Matrix((1, 1))
+    b = A * x
+    soln = A.LDLsolve(b)
+    assert expand_mul(soln) == x
+
+    A = Matrix([[-5, -3, -4], [-3, -7, 7]])
+    x = Matrix([[8], [7], [-2]])
+    b = A * x
+    raises(NotImplementedError, lambda: A.LDLsolve(b))
 
 
 def test_lower_triangular_solve():
@@ -2133,6 +2508,9 @@ def test_diagonal_solve():
     B = Matrix([[x, y], [y, x]])
     assert A.diagonal_solve(B) == B/2
 
+    A = Matrix([[1, 0], [1, 2]])
+    raises(TypeError, lambda: A.diagonal_solve(B))
+
 
 def test_matrix_norm():
     # Vector Tests
@@ -2169,7 +2547,7 @@ def test_matrix_norm():
     assert A.norm('frobenius') == sqrt(389)/2
 
     # Test properties of matrix norms
-    # http://en.wikipedia.org/wiki/Matrix_norm#Definition
+    # https://en.wikipedia.org/wiki/Matrix_norm#Definition
     # Two matrices
     A = Matrix([[1, 2], [3, 4]])
     B = Matrix([[5, 5], [-2, 2]])
@@ -2194,7 +2572,7 @@ def test_matrix_norm():
             assert dif == 0
 
     # Test Properties of Vector Norms
-    # http://en.wikipedia.org/wiki/Vector_norm
+    # https://en.wikipedia.org/wiki/Vector_norm
     # Two column vectors
     a = Matrix([1, 1 - 1*I, -3])
     b = Matrix([S(1)/2, 1*I, 1])
@@ -2291,6 +2669,15 @@ def test_normalized():
     assert Matrix([3, 4]).normalized() == \
         Matrix([Rational(3, 5), Rational(4, 5)])
 
+    # Zero vector trivial cases
+    assert Matrix([0, 0, 0]).normalized() == Matrix([0, 0, 0])
+
+    # Machine precision error truncation trivial cases
+    m = Matrix([0,0,1.e-100])
+    assert m.normalized(
+    iszerofunc=lambda x: x.evalf(n=10, chop=True).is_zero
+    ) == Matrix([0, 0, 0])
+
 
 def test_print_nonzero():
     assert capture(lambda: eye(3).print_nonzero()) == \
@@ -2358,6 +2745,9 @@ def test_rotation_matrices():
 def test_DeferredVector():
     assert str(DeferredVector("vector")[4]) == "vector[4]"
     assert sympify(DeferredVector("d")) == DeferredVector("d")
+    raises(IndexError, lambda: DeferredVector("d")[-1])
+    assert str(DeferredVector("d")) == "d"
+    assert repr(DeferredVector("test")) == "DeferredVector('test')"
 
 def test_DeferredVector_not_iterable():
     assert not iterable(DeferredVector('X'))
@@ -2448,7 +2838,6 @@ def test_invertible_check():
     raises(ValueError, lambda: m.inv(method="LU"))
 
 
-@XFAIL
 def test_issue_3959():
     x, y = symbols('x, y')
     e = x*y
@@ -2482,6 +2871,16 @@ def test_is_Identity():
 def test_dot():
     assert ones(1, 3).dot(ones(3, 1)) == 3
     assert ones(1, 3).dot([1, 1, 1]) == 3
+    assert Matrix([1, 2, 3]).dot(Matrix([1, 2, 3])) == 14
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I])) == -5 + I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I]), hermitian=False) == -5 + I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I]), hermitian=True) == 13 + I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I]), hermitian=True, conjugate_convention="physics") == 13 - I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([4, 5*I, 6]), hermitian=True, conjugate_convention="right") == 4 + 8*I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([4, 5*I, 6]), hermitian=True, conjugate_convention="left") == 4 - 8*I
+    assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), hermitian=False, conjugate_convention="left") == -5
+    assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), conjugate_convention="left") == 5
+    raises(ValueError, lambda: Matrix([1, 2]).dot(Matrix([3, 4]), hermitian=True, conjugate_convention="test"))
 
 
 def test_dual():
@@ -2585,7 +2984,7 @@ def test_hash():
         assert len(s) == 1 and s.pop() == cls.eye(1)
     # issue 3979
     for cls in classes[:2]:
-        assert not isinstance(cls.eye(1), collections.Hashable)
+        assert not isinstance(cls.eye(1), Hashable)
 
 
 @XFAIL
@@ -2628,7 +3027,7 @@ def test_issue_11434():
 
 def test_rank_regression_from_so():
     # see:
-    # http://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
+    # https://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
 
     nu, lamb = symbols('nu, lambda')
     A = Matrix([[-3*nu,         1,                  0,  0],
@@ -2668,23 +3067,49 @@ def test_atoms():
     assert m.atoms() == {S(1),S(2),S(-1), x}
     assert m.atoms(Symbol) == {x}
 
-@slow
+
 def test_pinv():
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])
-    assert simplify(A1.pinv()) == simplify(A1.inv())
+    assert simplify(A1.pinv(method="RD")) == simplify(A1.inv())
+
     # Test the four properties of the pseudoinverse for various matrices.
     As = [Matrix([[13, 104], [2212, 3], [-3, 5]]),
           Matrix([[1, 7, 9], [11, 17, 19]]),
           Matrix([a, b])]
+
     for A in As:
-        A_pinv = A.pinv()
+        A_pinv = A.pinv(method="RD")
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert simplify(AAp * A) == A
         assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
+
+    # XXX Pinv with diagonalization makes expression too complicated.
+    for A in As:
+        A_pinv = simplify(A.pinv(method="ED"))
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
+    # XXX Computing pinv using diagonalization makes an expression that
+    # is too complicated to simplify.
+    # A1 = Matrix([[a, b], [c, d]])
+    # assert simplify(A1.pinv(method="ED")) == simplify(A1.inv())
+    # so this is tested numerically at a fixed random point
+    from sympy.core.numbers import comp
+    q = A1.pinv(method="ED")
+    w = A1.inv()
+    reps = {a: -73633, b: 11362, c: 55486, d: 62570}
+    assert all(
+        comp(i.n(), j.n())
+        for i, j in zip(q.subs(reps), w.subs(reps))
+        )
 
 def test_pinv_solve():
     # Fully determined system (unique result, identical to other solvers).
@@ -2719,19 +3144,30 @@ def test_pinv_solve():
     # Proof the solution is not exact.
     assert A * A.pinv() * B != B
 
-@XFAIL
 def test_pinv_rank_deficient():
     # Test the four properties of the pseudoinverse for various matrices.
     As = [Matrix([[1, 1, 1], [2, 2, 2]]),
-          Matrix([[1, 0], [0, 0]])]
+          Matrix([[1, 0], [0, 0]]),
+          Matrix([[1, 2], [2, 4], [3, 6]])]
+
     for A in As:
-        A_pinv = A.pinv()
+        A_pinv = A.pinv(method="RD")
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert simplify(AAp * A) == A
         assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
+
+    for A in As:
+        A_pinv = A.pinv(method="ED")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
     # Test solving with rank-deficient matrices.
     A = Matrix([[1, 0], [0, 0]])
     # Exact, non-unique solution.
@@ -2749,6 +3185,43 @@ def test_pinv_rank_deficient():
     assert solution == Matrix([3, w1])
     assert A * A.pinv() * B != B
 
+@XFAIL
+def test_pinv_rank_deficient_when_diagonalization_fails():
+    # Test the four properties of the pseudoinverse for matrices when
+    # diagonalization of A.H*A fails.
+    As = [Matrix([
+        [61, 89, 55, 20, 71, 0],
+        [62, 96, 85, 85, 16, 0],
+        [69, 56, 17,  4, 54, 0],
+        [10, 54, 91, 41, 71, 0],
+        [ 7, 30, 10, 48, 90, 0],
+        [0,0,0,0,0,0]])]
+    for A in As:
+        A_pinv = A.pinv(method="ED")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
+def test_pinv_succeeds_with_rank_decomposition_method():
+    # Test rank decomposition method of pseudoinverse succeeding
+    As = [Matrix([
+        [61, 89, 55, 20, 71, 0],
+        [62, 96, 85, 85, 16, 0],
+        [69, 56, 17,  4, 54, 0],
+        [10, 54, 91, 41, 71, 0],
+        [ 7, 30, 10, 48, 90, 0],
+        [0,0,0,0,0,0]])]
+    for A in As:
+        A_pinv = A.pinv(method="RD")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
 
 def test_gauss_jordan_solve():
 
@@ -2758,6 +3231,13 @@ def test_gauss_jordan_solve():
     sol, params = A.gauss_jordan_solve(b)
     assert sol == Matrix([[-1], [2], [0]])
     assert params == Matrix(0, 1, [])
+
+    # Square, full rank, unique solution, B has more columns than rows
+    A = eye(3)
+    B = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == B
+    assert params == Matrix(0, 4, [])
 
     # Square, reduced rank, parametrized solution
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -2769,6 +3249,20 @@ def test_gauss_jordan_solve():
         w[s.name] = s
     assert sol == Matrix([[w['tau0'] - 1], [-2*w['tau0'] + 2], [w['tau0']]])
     assert params == Matrix([[w['tau0']]])
+    assert freevar == [2]
+
+    # Square, reduced rank, parametrized solution, B has two columns
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    B = Matrix([[3, 4], [6, 8], [9, 12]])
+    sol, params, freevar = A.gauss_jordan_solve(B, freevar=True)
+    w = {}
+    for s in sol.atoms(Symbol):
+        # Extract dummy symbols used in the solution.
+        w[s.name] = s
+    assert sol == Matrix([[w['tau0'] - 1, w['tau1'] - S(4)/3],
+                          [-2*w['tau0'] + 2, -2*w['tau1'] + S(8)/3],
+                          [w['tau0'], w['tau1']],])
+    assert params == Matrix([[w['tau0'], w['tau1']]])
     assert freevar == [2]
 
     # Square, reduced rank, parametrized solution
@@ -2804,10 +3298,27 @@ def test_gauss_jordan_solve():
     assert sol == Matrix([[-S(1)/2], [0], [S(1)/6]])
     assert params == Matrix(0, 1, [])
 
+    # Rectangular, tall, full rank, unique solution, B has less columns than rows
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [1, 2], [0, 0]])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == Matrix([[-S(1)/2, -S(2)/2], [0, 0], [S(1)/6, S(2)/6]])
+    assert params == Matrix(0, 2, [])
+
     # Rectangular, tall, full rank, no solution
     A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
     b = Matrix([0, 0, 0, 1])
     raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+    # Rectangular, tall, full rank, no solution, B has two columns (2nd has no solution)
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [1, 0], [0, 1]])
+    raises(ValueError, lambda: A.gauss_jordan_solve(B))
+
+    # Rectangular, tall, full rank, no solution, B has two columns (1st has no solution)
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [0, 1], [1, 0]])
+    raises(ValueError, lambda: A.gauss_jordan_solve(B))
 
     # Rectangular, tall, reduced rank, parametrized solution
     A = Matrix([[1, 5, 3], [2, 10, 6], [3, 15, 9], [1, 4, 3]])
@@ -2860,6 +3371,12 @@ def test_gauss_jordan_solve():
     b = Matrix([1, 1, 1])
     raises(ValueError, lambda: A.gauss_jordan_solve(b))
 
+def test_solve():
+    A = Matrix([[1,2], [2,4]])
+    b = Matrix([[3], [4]])
+    raises(ValueError, lambda: A.solve(b)) #no solution
+    b = Matrix([[ 4], [8]])
+    raises(ValueError, lambda: A.solve(b)) #infinite solution
 
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
@@ -2982,7 +3499,7 @@ def test_opportunistic_simplification():
 
 def test_partial_pivoting():
     # example from https://en.wikipedia.org/wiki/Pivot_element
-    # partial pivoting with back subsitution gives a perfect result
+    # partial pivoting with back substitution gives a perfect result
     # naive pivoting give an error ~1e-13, so anything better than
     # 1e-15 is good
     mm=Matrix([[0.003 ,59.14, 59.17],[ 5.291, -6.13,46.78]])
@@ -3011,8 +3528,35 @@ def test_iszero_substitution():
     # if a zero-substitution wasn't made, this entry will be -1.11022302462516e-16
     assert m_rref[2,2] == 0
 
+def test_rank_decomposition():
+    a = Matrix(0, 0, [])
+    c, f = a.rank_decomposition()
+    assert f.is_echelon
+    assert c.cols == f.rows == a.rank()
+    assert c * f == a
 
-@slow
+    a = Matrix(1, 1, [5])
+    c, f = a.rank_decomposition()
+    assert f.is_echelon
+    assert c.cols == f.rows == a.rank()
+    assert c * f == a
+
+    a = Matrix(3, 3, [1, 2, 3, 1, 2, 3, 1, 2, 3])
+    c, f = a.rank_decomposition()
+    assert f.is_echelon
+    assert c.cols == f.rows == a.rank()
+    assert c * f == a
+
+    a = Matrix([
+        [0, 0, 1, 2, 2, -5, 3],
+        [-1, 5, 2, 2, 1, -7, 5],
+        [0, 0, -2, -3, -3, 8, -5],
+        [-1, 5, 0, -1, -2, 1, 0]])
+    c, f = a.rank_decomposition()
+    assert f.is_echelon
+    assert c.cols == f.rows == a.rank()
+    assert c * f == a
+
 def test_issue_11238():
     from sympy import Point
     xx = 8*tan(13*pi/45)/(tan(13*pi/45) + sqrt(3))
@@ -3024,9 +3568,13 @@ def test_issue_11238():
     m2 = Matrix([p1 - p0, p2 - p0])
     m3 = Matrix([simplify(p1 - p0), simplify(p2 - p0)])
 
-    assert m1.rank(simplify=True) == 1
-    assert m2.rank(simplify=True) == 1
-    assert m3.rank(simplify=True) == 1
+    # This system has expressions which are zero and
+    # cannot be easily proved to be such, so without
+    # numerical testing, these assertions will fail.
+    Z = lambda x: abs(x.n()) < 1e-20
+    assert m1.rank(simplify=True, iszerofunc=Z) == 1
+    assert m2.rank(simplify=True, iszerofunc=Z) == 1
+    assert m3.rank(simplify=True, iszerofunc=Z) == 1
 
 def test_as_real_imag():
     m1 = Matrix(2,2,[1,2,3,4])
@@ -3042,9 +3590,140 @@ def test_deprecated():
     # Maintain tests for deprecated functions.  We must capture
     # the deprecation warnings.  When the deprecated functionality is
     # removed, the corresponding tests should be removed.
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
-        P, Jcells = m.jordan_cells()
-        assert Jcells[1] == Matrix(1, 1, [2])
-        assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+    m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
+    P, Jcells = m.jordan_cells()
+    assert Jcells[1] == Matrix(1, 1, [2])
+    assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+    with warns_deprecated_sympy():
+        assert Matrix([[1,2],[3,4]]).dot(Matrix([[1,3],[4,5]])) == [10, 19, 14, 28]
+
+
+def test_issue_14489():
+    from sympy import Mod
+    A = Matrix([-1, 1, 2])
+    B = Matrix([10, 20, -15])
+
+    assert Mod(A, 3) == Matrix([2, 1, 2])
+    assert Mod(B, 4) == Matrix([2, 0, 1])
+
+def test_issue_14517():
+    M = Matrix([
+        [   0, 10*I,    10*I,       0],
+        [10*I,    0,       0,    10*I],
+        [10*I,    0, 5 + 2*I,    10*I],
+        [   0, 10*I,    10*I, 5 + 2*I]])
+    ev = M.eigenvals()
+    # test one random eigenvalue, the computation is a little slow
+    test_ev = random.choice(list(ev.keys()))
+    assert (M - test_ev*eye(4)).det() == 0
+
+def test_issue_14943():
+    # Test that __array__ accepts the optional dtype argument
+    try:
+        from numpy import array
+    except ImportError:
+        skip('NumPy must be available to test creating matrices from ndarrays')
+
+    M = Matrix([[1,2], [3,4]])
+    assert array(M, dtype=float).dtype.name == 'float64'
+
+def test_issue_8240():
+    # Eigenvalues of large triangular matrices
+    n = 200
+
+    diagonal_variables = [Symbol('x%s' % i) for i in range(n)]
+    M = [[0 for i in range(n)] for j in range(n)]
+    for i in range(n):
+        M[i][i] = diagonal_variables[i]
+    M = Matrix(M)
+
+    eigenvals = M.eigenvals()
+    assert len(eigenvals) == n
+    for i in range(n):
+        assert eigenvals[diagonal_variables[i]] == 1
+
+    eigenvals = M.eigenvals(multiple=True)
+    assert set(eigenvals) == set(diagonal_variables)
+
+    # with multiplicity
+    M = Matrix([[x, 0, 0], [1, y, 0], [2, 3, x]])
+    eigenvals = M.eigenvals()
+    assert eigenvals == {x: 2, y: 1}
+
+    eigenvals = M.eigenvals(multiple=True)
+    assert len(eigenvals) == 3
+    assert eigenvals.count(x) == 2
+    assert eigenvals.count(y) == 1
+
+def test_legacy_det():
+    # Minimal support for legacy keys for 'method' in det()
+    # Partially copied from test_determinant()
+
+    M = Matrix(( ( 3, -2,  0, 5),
+                 (-2,  1, -2, 2),
+                 ( 0, -2,  5, 0),
+                 ( 5,  0,  3, 4) ))
+
+    assert M.det(method="bareis") == -289
+    assert M.det(method="det_lu") == -289
+    assert M.det(method="det_LU") == -289
+
+    M = Matrix(( (3, 2, 0, 0, 0),
+                 (0, 3, 2, 0, 0),
+                 (0, 0, 3, 2, 0),
+                 (0, 0, 0, 3, 2),
+                 (2, 0, 0, 0, 3) ))
+
+    assert M.det(method="bareis") == 275
+    assert M.det(method="det_lu") == 275
+    assert M.det(method="Bareis") == 275
+
+    M = Matrix(( (1, 0,  1,  2, 12),
+                 (2, 0,  1,  1,  4),
+                 (2, 1,  1, -1,  3),
+                 (3, 2, -1,  1,  8),
+                 (1, 1,  1,  0,  6) ))
+
+    assert M.det(method="bareis") == -55
+    assert M.det(method="det_lu") == -55
+    assert M.det(method="BAREISS") == -55
+
+    M = Matrix(( (-5,  2,  3,  4,  5),
+                 ( 1, -4,  3,  4,  5),
+                 ( 1,  2, -3,  4,  5),
+                 ( 1,  2,  3, -2,  5),
+                 ( 1,  2,  3,  4, -1) ))
+
+    assert M.det(method="bareis") == 11664
+    assert M.det(method="det_lu") == 11664
+    assert M.det(method="BERKOWITZ") == 11664
+
+    M = Matrix(( ( 2,  7, -1, 3, 2),
+                 ( 0,  0,  1, 0, 1),
+                 (-2,  0,  7, 0, 2),
+                 (-3, -2,  4, 5, 3),
+                 ( 1,  0,  0, 0, 1) ))
+
+    assert M.det(method="bareis") == 123
+    assert M.det(method="det_lu") == 123
+    assert M.det(method="LU") == 123
+
+def test_case_6913():
+    m = MatrixSymbol('m', 1, 1)
+    a = Symbol("a")
+    a = m[0, 0]>0
+    assert str(a) == 'm[0, 0] > 0'
+
+def test_issue_15872():
+    A = Matrix([[1, 1, 1, 0], [-2, -1, 0, -1], [0, 0, -1, -1], [0, 0, 2, 1]])
+    B = A - Matrix.eye(4) * I
+    assert B.rank() == 3
+    assert (B**2).rank() == 2
+    assert (B**3).rank() == 2
+
+def test_issue_11948():
+    A = MatrixSymbol('A', 3, 3)
+    a = Wild('a')
+    assert A.match(a) == {a: A}

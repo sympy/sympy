@@ -1,31 +1,39 @@
 from __future__ import print_function, division
 
 from itertools import product
+from collections import defaultdict
+import inspect
 
-from sympy.core.sympify import (_sympify, sympify, converter,
-    SympifyError)
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
-from sympy.core.singleton import Singleton, S
-from sympy.core.evalf import EvalfMixin
-from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import Float
 from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range, PY3)
+    ordered, range, PY3, is_sequence)
+from sympy.core.cache import cacheit
+from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
+from sympy.core.expr import Expr
 from sympy.core.function import FunctionClass
+from sympy.core.logic import fuzzy_bool, fuzzy_or
 from sympy.core.mul import Mul
+from sympy.core.numbers import Float
+from sympy.core.operations import LatticeOp
 from sympy.core.relational import Eq, Ne
+from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
+from sympy.core.sympify import _sympify, sympify, converter
+from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.sets.contains import Contains
+from sympy.utilities import subsets
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
-from sympy.logic.boolalg import And, Or, Not, true, false
-from sympy.utilities import subsets
-from sympy.multipledispatch import dispatch
 
+
+tfn = defaultdict(lambda: None, {
+    True: S.true,
+    S.true: S.true,
+    False: S.false,
+    S.false: S.false})
 
 class Set(Basic):
     """
@@ -132,7 +140,7 @@ class Set(Basic):
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Disjoint_sets
+        .. [1] https://en.wikipedia.org/wiki/Disjoint_sets
         """
         return self.intersect(other) == S.EmptySet
 
@@ -154,7 +162,7 @@ class Set(Basic):
         Union(Interval.open(-oo, 0), Interval.open(1, oo))
 
         >>> Interval(0, 1).complement(S.UniversalSet)
-        UniversalSet() \ Interval(0, 1)
+        UniversalSet \ Interval(0, 1)
 
         """
         return Complement(universe, self)
@@ -175,14 +183,14 @@ class Set(Basic):
                                      zip(self.sets, other.sets))
             product_sets = (ProductSet(*set) for set in switch_sets)
             # Union of all combinations but this one
-            return Union(p for p in product_sets if p != other)
+            return Union(*(p for p in product_sets if p != other))
 
         elif isinstance(other, Interval):
             if isinstance(self, Interval) or isinstance(self, FiniteSet):
                 return Intersection(other, self.complement(S.Reals))
 
         elif isinstance(other, Union):
-            return Union(o - self for o in other.args)
+            return Union(*(o - self for o in other.args))
 
         elif isinstance(other, Complement):
             return Complement(other.args[0], Union(other.args[1], self), evaluate=False)
@@ -214,7 +222,7 @@ class Set(Basic):
 
         >>> from sympy import S, EmptySet
         >>> S.Reals.symmetric_difference(EmptySet())
-        S.Reals
+        Reals
 
         References
         ==========
@@ -270,28 +278,57 @@ class Set(Basic):
 
     def contains(self, other):
         """
-        Returns True if 'other' is contained in 'self' as an element.
-
-        As a shortcut it is possible to use the 'in' operator:
+        Returns a SymPy value indicating whether ``other`` is contained
+        in ``self``: ``true`` if it is, ``false`` if it isn't, else
+        an unevaluated ``Contains`` expression (or, as in the case of
+        ConditionSet and a union of FiniteSet/Intervals, an expression
+        indicating the conditions for containment).
 
         Examples
         ========
 
-        >>> from sympy import Interval
+        >>> from sympy import Interval, S
+        >>> from sympy.abc import x
+
         >>> Interval(0, 1).contains(0.5)
         True
-        >>> 0.5 in Interval(0, 1)
-        True
 
+        As a shortcut it is possible to use the 'in' operator, but that
+        will raise an error unless an affirmative true or false is not
+        obtained.
+
+        >>> Interval(0, 1).contains(x)
+        (0 <= x) & (x <= 1)
+        >>> x in Interval(0, 1)
+        Traceback (most recent call last):
+        ...
+        TypeError: did not evaluate to a bool: None
+
+        The result of 'in' is a bool, not a SymPy value
+
+        >>> 1 in Interval(0, 2)
+        True
+        >>> _ is S.true
+        False
         """
         other = sympify(other, strict=True)
-        ret = sympify(self._contains(other))
-        if ret is None:
-            ret = Contains(other, self, evaluate=False)
-        return ret
+        c = self._contains(other)
+        if c is None:
+            return Contains(other, self, evaluate=False)
+        b = tfn[c]
+        if b is None:
+            return c
+        return b
 
     def _contains(self, other):
-        raise NotImplementedError("(%s)._contains(%s)" % (self, other))
+        raise NotImplementedError(filldedent('''
+            (%s)._contains(%s) is not defined. This method, when
+            defined, will receive a sympified object. The method
+            should return True, False, None or something that
+            expresses what must be true for the containment of that
+            object in self to be evaluated. If None is returned
+            then a generic Contains object will be returned
+            by the ``contains`` method.''' % (self, other)))
 
     def is_subset(self, other):
         """
@@ -308,7 +345,12 @@ class Set(Basic):
 
         """
         if isinstance(other, Set):
-            return self.intersect(other) == self
+            s_o = self.intersect(other)
+            if s_o == self:
+                return True
+            elif not isinstance(other, Intersection):
+                return False
+            return s_o
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
@@ -403,7 +445,7 @@ class Set(Basic):
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Power_set
+        .. [1] https://en.wikipedia.org/wiki/Power_set
 
         """
         return self._eval_powerset()
@@ -498,7 +540,7 @@ class Set(Basic):
         ========
         >>> from sympy import S, Interval
         >>> S.Reals.closure
-        S.Reals
+        Reals
         >>> Interval(0, 1).closure
         Interval(0, 1)
         """
@@ -524,10 +566,6 @@ class Set(Basic):
     @property
     def _boundary(self):
         raise NotImplementedError()
-
-    def _eval_imageset(self, f):
-        from sympy.sets.setexpr import SetExpr
-        return SetExpr(self)._eval_func(f).set
 
     @property
     def _measure(self):
@@ -557,10 +595,12 @@ class Set(Basic):
         return Complement(self, other)
 
     def __contains__(self, other):
-        symb = sympify(self.contains(other))
-        if not (symb is S.true or symb is S.false):
-            raise TypeError('contains did not evaluate to a bool: %r' % symb)
-        return bool(symb)
+        other = sympify(other)
+        c = self._contains(other)
+        b = tfn[c]
+        if b is None:
+            raise TypeError('did not evaluate to a bool: %r' % c)
+        return b
 
 
 class ProductSet(Set):
@@ -600,7 +640,7 @@ class ProductSet(Set):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Cartesian_product
+    .. [1] https://en.wikipedia.org/wiki/Cartesian_product
     """
     is_ProductSet = True
 
@@ -649,13 +689,21 @@ class ProductSet(Set):
 
         Passes operation on to constituent sets
         """
-        try:
+        if is_sequence(element):
             if len(element) != len(self.args):
-                return false
-        except TypeError:  # maybe element isn't an iterable
-            return false
-        return And(*
-            [set.contains(item) for set, item in zip(self.sets, element)])
+                return False
+        elif len(self.args) > 1:
+            return False
+        d = [Dummy() for i in element]
+        reps = dict(zip(d, element))
+        return tfn[self.as_relational(*d).xreplace(reps)]
+
+    def as_relational(self, *symbols):
+        if len(symbols) != len(self.args) or not all(
+                i.is_Symbol for i in symbols):
+            raise ValueError(
+                'number of symbols must match the number of sets')
+        return And(*[s.contains(i) for s, i in zip(self.args, symbols)])
 
     @property
     def sets(self):
@@ -663,10 +711,9 @@ class ProductSet(Set):
 
     @property
     def _boundary(self):
-        return Union(ProductSet(b + b.boundary if i != j else b.boundary
+        return Union(*(ProductSet(b + b.boundary if i != j else b.boundary
                                 for j, b in enumerate(self.sets))
-                                for i, a in enumerate(self.sets))
-
+                                for i, a in enumerate(self.sets)))
 
     @property
     def is_iterable(self):
@@ -755,7 +802,7 @@ class Interval(Set, EvalfMixin):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Interval_%28mathematics%29
+    .. [1] https://en.wikipedia.org/wiki/Interval_%28mathematics%29
     """
     is_Interval = True
 
@@ -773,8 +820,8 @@ class Interval(Set, EvalfMixin):
                 "got %s and %s" % (left_open, right_open))
 
         inftys = [S.Infinity, S.NegativeInfinity]
-        # Only allow real intervals (use symbols with 'is_real=True').
-        if not all(i.is_real is not False or i in inftys for i in (start, end)):
+        # Only allow real intervals (use symbols with 'is_extended_real=True').
+        if not all(i.is_extended_real is not False or i in inftys for i in (start, end)):
             raise ValueError("Non-real intervals are not supported")
 
         # evaluate if possible
@@ -910,24 +957,28 @@ class Interval(Set, EvalfMixin):
                 other is S.Infinity or
                 other is S.NegativeInfinity or
                 other is S.NaN or
-                other is S.ComplexInfinity) or other.is_real is False:
+                other is S.ComplexInfinity) or other.is_extended_real is False:
             return false
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
-            if not other.is_real is None:
-                return other.is_real
+            if not other.is_extended_real is None:
+                return other.is_extended_real
 
-        if self.left_open:
-            expr = other > self.start
-        else:
-            expr = other >= self.start
+        d = Dummy()
+        return self.as_relational(d).subs(d, other)
 
+    def as_relational(self, x):
+        """Rewrite an interval in terms of inequalities and logic operators."""
+        x = sympify(x)
         if self.right_open:
-            expr = And(expr, other < self.end)
+            right = x < self.end
         else:
-            expr = And(expr, other <= self.end)
-
-        return _sympify(expr)
+            right = x <= self.end
+        if self.left_open:
+            left = self.start < x
+        else:
+            left = self.start <= x
+        return And(left, right)
 
     @property
     def _measure(self):
@@ -960,25 +1011,12 @@ class Interval(Set, EvalfMixin):
         """Return ``True`` if the right endpoint is positive infinity. """
         return self.right is S.Infinity or self.right == Float("+inf")
 
-    def as_relational(self, x):
-        """Rewrite an interval in terms of inequalities and logic operators."""
-        x = sympify(x)
-        if self.right_open:
-            right = x < self.end
-        else:
-            right = x <= self.end
-        if self.left_open:
-            left = self.start < x
-        else:
-            left = self.start <= x
-        return And(left, right)
-
     def _eval_Eq(self, other):
-        if not other.is_Interval:
-            if (other.is_Union or other.is_Complement or
-                other.is_Intersection or other.is_ProductSet):
-                return
-
+        if not isinstance(other, Interval):
+            if isinstance(other, FiniteSet):
+                return false
+            elif isinstance(other, Set):
+                return None
             return false
 
         return And(Eq(self.left, other.left),
@@ -987,7 +1025,7 @@ class Interval(Set, EvalfMixin):
                    self.right_open == other.right_open)
 
 
-class Union(Set, EvalfMixin):
+class Union(Set, LatticeOp, EvalfMixin):
     """
     Represents a union of sets as a :class:`Set`.
 
@@ -1012,38 +1050,39 @@ class Union(Set, EvalfMixin):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Union_%28set_theory%29
+    .. [1] https://en.wikipedia.org/wiki/Union_%28set_theory%29
     """
     is_Union = True
+
+    @property
+    def identity(self):
+        return S.EmptySet
+
+    @property
+    def zero(self):
+        return S.UniversalSet
 
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
-        args = list(args)
-
-        def flatten(arg):
-            if isinstance(arg, Set):
-                if arg.is_Union:
-                    return sum(map(flatten, arg.args), [])
-                else:
-                    return [arg]
-            if iterable(arg):  # and not isinstance(arg, Set) (implicit)
-                return sum(map(flatten, arg), [])
-            raise TypeError("Input must be Sets or iterables of Sets")
-        args = flatten(args)
-
-        # Union of no sets is EmptySet
-        if len(args) == 0:
-            return S.EmptySet
+        args = _sympify(args)
 
         # Reduce sets using known rules
         if evaluate:
+            args = list(cls._new_args_filter(args))
             return simplify_union(args)
 
         args = list(ordered(args, Set._infimum_key))
 
-        return Basic.__new__(cls, *args)
+        obj = Basic.__new__(cls, *args)
+        obj._argset = frozenset(args)
+        return obj
+
+    @property
+    @cacheit
+    def args(self):
+        return self._args
 
     def _complement(self, universe):
         # DeMorgan's Law
@@ -1062,9 +1101,6 @@ class Union(Set, EvalfMixin):
         # end points.
         from sympy.functions.elementary.miscellaneous import Max
         return Max(*[set.sup for set in self.args])
-
-    def _contains(self, other):
-        return Or(*[set.contains(other) for set in self.args])
 
     @property
     def _measure(self):
@@ -1119,16 +1155,30 @@ class Union(Set, EvalfMixin):
                 if j != i:
                     b = b - a.interior
             return b
-        return Union(map(boundary_of_set, range(len(self.args))))
+        return Union(*map(boundary_of_set, range(len(self.args))))
+
+    def _contains(self, other):
+        try:
+            d = Dummy()
+            r = self.as_relational(d).subs(d, other)
+            b = tfn[r]
+            if b is None and not any(isinstance(i.contains(other), Contains)
+                    for i in self.args):
+                return r
+            return b
+        except (TypeError, NotImplementedError):
+            return Or(*[s.contains(other) for s in self.args])
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
-        if len(self.args) == 2:
-            a, b = self.args
-            if (a.sup == b.inf and a.inf is S.NegativeInfinity
-                    and b.sup is S.Infinity):
-                return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
-        return Or(*[set.as_relational(symbol) for set in self.args])
+        if all(isinstance(i, (FiniteSet, Interval)) for i in self.args):
+            if len(self.args) == 2:
+                a, b = self.args
+                if (a.sup == b.inf and a.inf is S.NegativeInfinity
+                        and b.sup is S.Infinity):
+                    return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
+            return Or(*[set.as_relational(symbol) for set in self.args])
+        raise NotImplementedError('relational of Union with non-Intervals')
 
     @property
     def is_iterable(self):
@@ -1136,7 +1186,7 @@ class Union(Set, EvalfMixin):
 
     def _eval_evalf(self, prec):
         try:
-            return Union(set._eval_evalf(prec) for set in self.args)
+            return Union(*(set._eval_evalf(prec) for set in self.args))
         except (TypeError, ValueError, NotImplementedError):
             import sys
             raise (TypeError("Not all sets are evalf-able"),
@@ -1169,7 +1219,8 @@ class Union(Set, EvalfMixin):
         else:
             raise TypeError("Not all constituent sets are iterable")
 
-class Intersection(Set):
+
+class Intersection(Set, LatticeOp):
     """
     Represents an intersection of sets as a :class:`Set`.
 
@@ -1193,39 +1244,39 @@ class Intersection(Set):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Intersection_%28set_theory%29
+    .. [1] https://en.wikipedia.org/wiki/Intersection_%28set_theory%29
     """
     is_Intersection = True
+
+    @property
+    def identity(self):
+        return S.UniversalSet
+
+    @property
+    def zero(self):
+        return S.EmptySet
 
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
-        args = list(args)
-
-        def flatten(arg):
-            if isinstance(arg, Set):
-                if arg.is_Intersection:
-                    return sum(map(flatten, arg.args), [])
-                else:
-                    return [arg]
-            if iterable(arg):  # and not isinstance(arg, Set) (implicit)
-                return sum(map(flatten, arg), [])
-            raise TypeError("Input must be Sets or iterables of Sets")
-        args = flatten(args)
-
-        if len(args) == 0:
-            return S.UniversalSet
-
-        # args can't be ordered for Partition see issue #9608
-        if 'Partition' not in [type(a).__name__ for a in args]:
-            args = list(ordered(args, Set._infimum_key))
+        args = list(ordered(set(_sympify(args))))
 
         # Reduce sets using known rules
         if evaluate:
+            args = list(cls._new_args_filter(args))
             return simplify_intersection(args)
 
-        return Basic.__new__(cls, *args)
+        args = list(ordered(args, Set._infimum_key))
+
+        obj = Basic.__new__(cls, *args)
+        obj._argset = frozenset(args)
+        return obj
+
+    @property
+    @cacheit
+    def args(self):
+        return self._args
 
     @property
     def is_iterable(self):
@@ -1248,7 +1299,7 @@ class Intersection(Set):
             if s.is_iterable:
                 no_iter = False
                 other_sets = set(self.args) - set((s,))
-                other = Intersection(other_sets, evaluate=False)
+                other = Intersection(*other_sets, evaluate=False)
                 for x in s:
                     c = sympify(other.contains(x))
                     if c is S.true:
@@ -1270,6 +1321,7 @@ class Intersection(Set):
             binary=True)
         if not fs_args:
             return
+        fs_args.sort(key=len)
         s = fs_args[0]
         fs_args = fs_args[1:]
 
@@ -1284,6 +1336,7 @@ class Intersection(Set):
                 unk.append(x)
             else:
                 pass  # drop arg
+
         res = FiniteSet(
             *res, evaluate=False) if res else S.EmptySet
         if unk:
@@ -1318,9 +1371,12 @@ class Intersection(Set):
             other_sets = Intersection(*other)
             if not other_sets:
                 return S.EmptySet  # b/c we use evaluate=False below
-            res += Intersection(
-                FiniteSet(*unk),
-                other_sets, evaluate=False)
+            elif other_sets == S.UniversalSet:
+                res += FiniteSet(*unk)
+            else:
+                res += Intersection(
+                    FiniteSet(*unk),
+                    other_sets, evaluate=False)
         return res
 
     def as_relational(self, symbol):
@@ -1371,10 +1427,10 @@ class Complement(Set, EvalfMixin):
             return EmptySet()
 
         if isinstance(B, Union):
-            return Intersection(s.complement(A) for s in B.args)
+            return Intersection(*(s.complement(A) for s in B.args))
 
         result = B._complement(A)
-        if result != None:
+        if result is not None:
             return result
         else:
             return Complement(A, B, evaluate=False)
@@ -1408,7 +1464,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Empty_set
+    .. [1] https://en.wikipedia.org/wiki/Empty_set
     """
     is_EmptySet = True
     is_FiniteSet = True
@@ -1453,7 +1509,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     >>> from sympy import S, Interval
     >>> S.UniversalSet
-    UniversalSet()
+    UniversalSet
 
     >>> Interval(1, 2).intersect(S.UniversalSet)
     Interval(1, 2)
@@ -1466,7 +1522,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Universal_set
+    .. [1] https://en.wikipedia.org/wiki/Universal_set
     """
 
     is_UniversalSet = True
@@ -1517,7 +1573,7 @@ class FiniteSet(Set, EvalfMixin):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Finite_set
+    .. [1] https://en.wikipedia.org/wiki/Finite_set
     """
     is_FiniteSet = True
     is_iterable = True
@@ -1532,17 +1588,16 @@ class FiniteSet(Set, EvalfMixin):
         else:
             args = list(map(sympify, args))
 
-        args = list(ordered(frozenset(tuple(args)), Set._infimum_key))
+        args = list(ordered(set(args), Set._infimum_key))
         obj = Basic.__new__(cls, *args)
-        obj._elements = frozenset(args)
         return obj
 
     def _eval_Eq(self, other):
-        if not other.is_FiniteSet:
-            if (other.is_Union or other.is_Complement or
-                other.is_Intersection or other.is_ProductSet):
-                return
-
+        if not isinstance(other, FiniteSet):
+            if isinstance(other, Interval):
+                return false
+            elif isinstance(other, Set):
+                return None
             return false
 
         if len(self) != len(other):
@@ -1567,10 +1622,10 @@ class FiniteSet(Set, EvalfMixin):
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
 
                 if syms != []:
-                    return Complement(Union(intervals, evaluate=False),
+                    return Complement(Union(*intervals, evaluate=False),
                             FiniteSet(*syms), evaluate=False)
                 else:
-                    return Union(intervals, evaluate=False)
+                    return Union(*intervals, evaluate=False)
             elif nums == []:
                 return None
 
@@ -1609,16 +1664,9 @@ class FiniteSet(Set, EvalfMixin):
         False
 
         """
-        r = false
-        for e in self._elements:
-            # override global evaluation so we can use Eq to do
-            # do the evaluation
-            t = Eq(e, other, evaluate=True)
-            if t is true:
-                return t
-            elif t is not false:
-                r = None
-        return r
+        # evaluate=True is needed to override evaluate=False context;
+        # we need Eq to do the evaluation
+        return fuzzy_or([tfn[Eq(e, other, evaluate=True)] for e in self.args])
 
     @property
     def _boundary(self):
@@ -1652,12 +1700,9 @@ class FiniteSet(Set, EvalfMixin):
     def _eval_evalf(self, prec):
         return FiniteSet(*[elem._eval_evalf(prec) for elem in self])
 
-    def _hashable_content(self):
-        return (self._elements,)
-
     @property
     def _sorted_args(self):
-        return tuple(ordered(self.args, Set._infimum_key))
+        return self.args
 
     def _eval_powerset(self):
         return self.func(*[self.func(*s) for s in subsets(self.args)])
@@ -1706,7 +1751,7 @@ class SymmetricDifference(Set):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Symmetric_difference
+    .. [1] https://en.wikipedia.org/wiki/Symmetric_difference
     """
 
     is_SymmetricDifference = True
@@ -1754,7 +1799,7 @@ def imageset(*args):
     >>> imageset(sin, Interval(-2, 1))
     ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
     >>> imageset(lambda y: x + y, Interval(-2, 1))
-    ImageSet(Lambda(_x, _x + x), Interval(-2, 1))
+    ImageSet(Lambda(y, x + y), Interval(-2, 1))
 
     Expressions applied to the set of Integers are simplified
     to show as few negatives as possible and linear expressions
@@ -1762,7 +1807,7 @@ def imageset(*args):
     then the unevaluated ImageSet should be used.
 
     >>> imageset(x, -2*x + 5, S.Integers)
-    ImageSet(Lambda(x, 2*x + 1), S.Integers)
+    ImageSet(Lambda(x, 2*x + 1), Integers)
 
     See Also
     ========
@@ -1772,6 +1817,7 @@ def imageset(*args):
     """
     from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
+    from sympy.sets.setexpr import set_function
 
     if len(args) < 2:
         raise ValueError('imageset expects at least 2 args, got: %s' % len(args))
@@ -1783,24 +1829,36 @@ def imageset(*args):
         f = args[0]
         set_list = args[1:]
 
-        if isinstance(f, Lambda):
-            pass
-        elif (
-                isinstance(f, FunctionClass) # like cos
-                or func_name(f) == '<lambda>'
-                ):
-            # TODO: should we support a way to sympify `lambda`?
-            if len(set_list) == 1:
-                var = _uniquely_named_symbol(Symbol('x'), f(Dummy()))
-                expr = f(var)
+    if isinstance(f, Lambda):
+        pass
+    elif callable(f):
+        nargs = getattr(f, 'nargs', {})
+        if nargs:
+            if len(nargs) != 1:
+                raise NotImplemented(filldedent('''
+                    This function can take more than 1 arg
+                    but the potentially complicated set input
+                    has not been analyzed at this point to
+                    know its dimensions. TODO
+                    '''))
+            N = nargs.args[0]
+            if N == 1:
+                s = 'x'
             else:
-                var = [Symbol('x%i' % (i+1)) for i in range(len(set_list))]
-                expr = f(*var)
-            f = Lambda(var, expr)
+                s = [Symbol('x%i' % i) for i in range(1, N + 1)]
         else:
-            raise TypeError(filldedent('''
-        expecting lambda, Lambda, or FunctionClass, not \'%s\'.''' %
-        func_name(f)))
+            if PY3:
+                s = inspect.signature(f).parameters
+            else:
+                s = inspect.getargspec(f).args
+        dexpr = _sympify(f(*[Dummy() for i in s]))
+        var = [_uniquely_named_symbol(Symbol(i), dexpr) for i in s]
+        expr = f(*var)
+        f = Lambda(var, expr)
+    else:
+        raise TypeError(filldedent('''
+            expecting lambda, Lambda, or FunctionClass,
+            not \'%s\'.''' % func_name(f)))
 
     if any(not isinstance(s, Set) for s in set_list):
         name = [func_name(s) for s in set_list]
@@ -1809,7 +1867,15 @@ def imageset(*args):
 
     if len(set_list) == 1:
         set = set_list[0]
-        r = set._eval_imageset(f)
+        try:
+            # TypeError if arg count != set dimensions
+            r = set_function(f, set)
+            if r is None:
+                raise TypeError
+            if not r:
+                return r
+        except TypeError:
+            r = ImageSet(f, set)
         if isinstance(r, ImageSet):
             f, set = r.args
 
@@ -1818,9 +1884,11 @@ def imageset(*args):
 
         if isinstance(set, ImageSet):
             if len(set.lamda.variables) == 1 and len(f.variables) == 1:
-                return imageset(Lambda(set.lamda.variables[0],
-                                       f.expr.subs(f.variables[0], set.lamda.expr)),
-                                set.base_set)
+                x = set.lamda.variables[0]
+                y = f.variables[0]
+                return imageset(
+                    Lambda(x, f.expr.subs(y, set.lamda.expr)),
+                    set.base_set)
 
         if r is not None:
             return r
@@ -1860,6 +1928,13 @@ def simplify_union(args):
     from sympy.sets.handlers.union import union_sets
 
     # ===== Global Rules =====
+    if not args:
+        return S.EmptySet
+
+    for arg in args:
+        if not isinstance(arg, Set):
+            raise TypeError("Input args to Union must be Sets")
+
     # Merge all finite sets
     finite_sets = [x for x in args if x.is_FiniteSet]
     if len(finite_sets) > 1:
@@ -1871,7 +1946,7 @@ def simplify_union(args):
     # Here we depend on rules built into the constituent sets
     args = set(args)
     new_args = True
-    while(new_args):
+    while new_args:
         for s in args:
             new_args = False
             for t in args - set((s,)):
@@ -1890,7 +1965,7 @@ def simplify_union(args):
     if len(args) == 1:
         return args.pop()
     else:
-        return Union(args, evaluate=False)
+        return Union(*args, evaluate=False)
 
 
 def simplify_intersection(args):
@@ -1905,8 +1980,15 @@ def simplify_intersection(args):
     """
 
     # ===== Global Rules =====
+    if not args:
+        return S.UniversalSet
+
+    for arg in args:
+        if not isinstance(arg, Set):
+            raise TypeError("Input args to Union must be Sets")
+
     # If any EmptySets return EmptySet
-    if any(s.is_EmptySet for s in args):
+    if S.EmptySet in args:
         return S.EmptySet
 
     # Handle Finite sets
@@ -1920,8 +2002,8 @@ def simplify_intersection(args):
         if s.is_Union:
             other_sets = set(args) - set((s,))
             if len(other_sets) > 0:
-                other = Intersection(other_sets)
-                return Union(Intersection(arg, other) for arg in s.args)
+                other = Intersection(*other_sets)
+                return Union(*(Intersection(arg, other) for arg in s.args))
             else:
                 return Union(*[arg for arg in s.args])
 
@@ -1941,7 +2023,7 @@ def simplify_intersection(args):
     # Here we depend on rules built into the constituent sets
     args = set(args)
     new_args = True
-    while(new_args):
+    while new_args:
         for s in args:
             new_args = False
             for t in args - set((s,)):
@@ -1959,4 +2041,61 @@ def simplify_intersection(args):
     if len(args) == 1:
         return args.pop()
     else:
-        return Intersection(args, evaluate=False)
+        return Intersection(*args, evaluate=False)
+
+
+def _handle_finite_sets(op, x, y, commutative):
+    # Handle finite sets:
+    fs_args, other = sift([x, y], lambda x: isinstance(x, FiniteSet), binary=True)
+    if len(fs_args) == 2:
+        return FiniteSet(*[op(i, j) for i in fs_args[0] for j in fs_args[1]])
+    elif len(fs_args) == 1:
+        sets = [_apply_operation(op, other[0], i, commutative) for i in fs_args[0]]
+        return Union(*sets)
+    else:
+        return None
+
+def _apply_operation(op, x, y, commutative):
+    from sympy.sets import ImageSet
+    from sympy import symbols,Lambda
+    d = Dummy('d')
+
+    out = _handle_finite_sets(op, x, y, commutative)
+    if out is None:
+        out = op(x, y)
+
+    if out is None and commutative:
+        out = op(y, x)
+    if out is None:
+        _x, _y = symbols("x y")
+        if isinstance(x, Set) and not isinstance(y, Set):
+            out = ImageSet(Lambda(d, op(d, y)), x).doit()
+        elif not isinstance(x, Set) and isinstance(y, Set):
+            out = ImageSet(Lambda(d, op(x, d)), y).doit()
+        else:
+            out = ImageSet(Lambda((_x, _y), op(_x, _y)), x, y)
+    return out
+
+def set_add(x, y):
+    from sympy.sets.handlers.add import _set_add
+    return _apply_operation(_set_add, x, y, commutative=True)
+
+def set_sub(x, y):
+    from sympy.sets.handlers.add import _set_sub
+    return _apply_operation(_set_sub, x, y, commutative=False)
+
+def set_mul(x, y):
+    from sympy.sets.handlers.mul import _set_mul
+    return _apply_operation(_set_mul, x, y, commutative=True)
+
+def set_div(x, y):
+    from sympy.sets.handlers.mul import _set_div
+    return _apply_operation(_set_div, x, y, commutative=False)
+
+def set_pow(x, y):
+    from sympy.sets.handlers.power import _set_pow
+    return _apply_operation(_set_pow, x, y, commutative=False)
+
+def set_function(f, x):
+    from sympy.sets.handlers.functions import _set_function
+    return _set_function(f, x)

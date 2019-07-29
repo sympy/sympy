@@ -1,7 +1,9 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify,Expr
+from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify, \
+                  Expr, sqrt
 from sympy.utilities.pytest import raises
 
-from sympy.printing.lambdarepr import lambdarepr, LambdaPrinter, TensorflowPrinter, NumExprPrinter
+from sympy.printing.tensorflow import TensorflowPrinter
+from sympy.printing.lambdarepr import lambdarepr, LambdaPrinter, NumExprPrinter
 
 
 x, y, z = symbols("x,y,z")
@@ -76,7 +78,7 @@ def test_piecewise():
     l = lambdarepr(p)
     eval(h + l)
     assert l == "((x**2) if (x < 0) else (x) if (x < 1)"\
-                                " else (-x + 2) if (x >= 1) else (0))"
+                                " else (2 - x) if (x >= 1) else (0))"
 
     p = Piecewise(
         (x**2, x < 0),
@@ -86,7 +88,7 @@ def test_piecewise():
     l = lambdarepr(p)
     eval(h + l)
     assert l == "((x**2) if (x < 0) else (x) if (x < 1)"\
-                    " else (-x + 2) if (x >= 1) else None)"
+                    " else (2 - x) if (x >= 1) else None)"
 
     p = Piecewise(
         (1, x >= 1),
@@ -187,6 +189,14 @@ def test_multiple_sums():
     f_ref = s.subs(zip(args, vals)).doit()
     f_res = f(*vals)
     assert f_res == f_ref
+
+
+def test_sqrt():
+    prntr = LambdaPrinter({'standard' : 'python2'})
+    assert prntr._print_Pow(sqrt(x), rational=False) == 'sqrt(x)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1./2.)'
+    prntr = LambdaPrinter({'standard' : 'python3'})
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
 
 
 def test_settings():

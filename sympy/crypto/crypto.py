@@ -23,12 +23,13 @@ from sympy.core import Rational, Symbol
 from sympy.core.numbers import igcdex, mod_inverse
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
-from sympy.ntheory import isprime, totient, primitive_root
+from sympy.ntheory import isprime, primitive_root
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq
-from sympy.utilities.randtest import _randrange
+from sympy.utilities.randtest import _randrange, _randint
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def AZ(s=None):
@@ -47,7 +48,9 @@ def AZ(s=None):
 
     See Also
     ========
+
     check_and_join
+
     """
     if not s:
         return uppercase
@@ -82,6 +85,7 @@ def padded_key(key, symbols, filter=True):
     Traceback (most recent call last):
     ...
     ValueError: duplicate characters in symbols: T
+
     """
     syms = list(uniq(symbols))
     if len(syms) != len(symbols):
@@ -105,8 +109,9 @@ def check_and_join(phrase, symbols=None, filter=None):
     Parameters
     ==========
 
-    phrase:     string or list of strings to be returned as a string
-    symbols:    iterable of characters allowed in ``phrase``;
+    phrase :    string or list of strings to be returned as a string
+
+    symbols :   iterable of characters allowed in ``phrase``;
                 if ``symbols`` is None, no checking is performed
 
     Examples
@@ -177,27 +182,19 @@ def encipher_shift(msg, key, symbols=None):
     Performs shift cipher encryption on plaintext msg, and returns the
     ciphertext.
 
-    Notes
-    =====
+    Parameters
+    ==========
 
-    The shift cipher is also called the Caesar cipher, after
-    Julius Caesar, who, according to Suetonius, used it with a
-    shift of three to protect messages of military significance.
-    Caesar's nephew Augustus reportedly used a similar cipher, but
-    with a right shift of 1.
+            key : an integer (the secret key)
 
+            msg : plaintext of upper-case letters
+
+    Returns
+    =======
+
+            ct : ciphertext of upper-case letters
 
     ALGORITHM:
-
-        INPUT:
-
-            ``key``: an integer (the secret key)
-
-            ``msg``: plaintext of upper-case letters
-
-        OUTPUT:
-
-            ``ct``: ciphertext of upper-case letters
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
@@ -226,6 +223,27 @@ def encipher_shift(msg, key, symbols=None):
 
     >>> decipher_shift(ct, 1)
     'GONAVYBEATARMY'
+
+    Notes
+    =====
+
+    The shift cipher is also called the Caesar cipher, after
+    Julius Caesar, who, according to Suetonius, used it with a
+    shift of three to protect messages of military significance.
+    Caesar's nephew Augustus reportedly used a similar cipher, but
+    with a right shift of 1.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Caesar_cipher
+    .. [2] http://mathworld.wolfram.com/CaesarsMethod.html
+
+    See Also
+    ========
+
+    decipher_shift
+
     """
     msg, _, A = _prep(msg, '', symbols)
     shift = len(A) - key % len(A)
@@ -255,9 +273,67 @@ def decipher_shift(msg, key, symbols=None):
 
     >>> decipher_shift(ct, 1)
     'GONAVYBEATARMY'
+
     """
     return encipher_shift(msg, -key, symbols)
 
+def encipher_rot13(msg, symbols=None):
+    """
+    Performs the ROT13 encryption on a given plaintext ``msg``.
+
+    Notes
+    =====
+
+    ROT13 is a substitution cipher which substitutes each letter
+    in the plaintext message for the letter furthest away from it
+    in the English alphabet.
+
+    Equivalently, it is just a Caeser (shift) cipher with a shift
+    key of 13 (midway point of the alphabet).
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/ROT13
+
+    See Also
+    ========
+
+    decipher_rot13
+    encipher_shift
+
+    """
+    return encipher_shift(msg, 13, symbols)
+
+def decipher_rot13(msg, symbols=None):
+    """
+    Performs the ROT13 decryption on a given plaintext ``msg``.
+
+    Notes
+    =====
+
+    ``decipher_rot13`` is equivalent to ``encipher_rot13`` as both
+    ``decipher_shift`` with a key of 13 and ``encipher_shift`` key with a
+    key of 13 will return the same results. Nonetheless,
+    ``decipher_rot13`` has nonetheless been explicitly defined here for
+    consistency.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_rot13, decipher_rot13
+    >>> msg = 'GONAVYBEATARMY'
+    >>> ciphertext = encipher_rot13(msg);ciphertext
+    'TBANILORNGNEZL'
+    >>> decipher_rot13(ciphertext)
+    'GONAVYBEATARMY'
+    >>> encipher_rot13(msg) == decipher_rot13(msg)
+    True
+    >>> msg == decipher_rot13(ciphertext)
+    True
+
+    """
+    return decipher_shift(msg, 13, symbols)
 
 ######## affine cipher examples ############
 
@@ -275,29 +351,24 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     `\mathrm{gcd}(a, N) = 1` and an error will be raised if this is
     not true.
 
-    Notes
-    =====
+    Parameters
+    ==========
 
-    This is a straightforward generalization of the shift cipher with
-    the added complexity of requiring 2 characters to be deciphered in
-    order to recover the key.
+            msg : string of characters that appear in ``symbols``
 
-    ALGORITHM:
-
-        INPUT:
-
-            ``msg``: string of characters that appear in ``symbols``
-
-            ``a, b``: a pair integers, with ``gcd(a, N) = 1``
+            a, b : a pair integers, with ``gcd(a, N) = 1``
             (the secret key)
 
-            ``symbols``: string of characters (default = uppercase
+            symbols : string of characters (default = uppercase
             letters). When no symbols are given, ``msg`` is converted
-            to upper case letters and all other charactes are ignored.
+            to upper case letters and all other characters are ignored.
 
-        OUTPUT:
+    Returns
+    =======
 
-            ``ct``: string of characters (the ciphertext message)
+            ct : string of characters (the ciphertext message)
+
+    ALGORITHM:
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
@@ -309,8 +380,21 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
             3. Compute from the list ``L2`` a string ``ct`` of
                corresponding letters.
 
+    Notes
+    =====
+
+    This is a straightforward generalization of the shift cipher with
+    the added complexity of requiring 2 characters to be deciphered in
+    order to recover the key.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Affine_cipher
+
     See Also
     ========
+
     decipher_affine
 
     """
@@ -345,9 +429,75 @@ def decipher_affine(msg, key, symbols=None):
     >>> decipher_affine(_, key)
     'GONAVYBEATARMY'
 
+    See Also
+    ========
+
+    encipher_affine
+
     """
     return encipher_affine(msg, key, symbols, _inverse=True)
 
+
+def encipher_atbash(msg, symbols=None):
+    r"""
+    Enciphers a given ``msg`` into its Atbash ciphertext and returns it.
+
+    Notes
+    =====
+
+    Atbash is a substitution cipher originally used to encrypt the Hebrew
+    alphabet. Atbash works on the principle of mapping each alphabet to its
+    reverse / counterpart (i.e. a would map to z, b to y etc.)
+
+    Atbash is functionally equivalent to the affine cipher with ``a = 25``
+    and ``b = 25``
+
+    See Also
+    ========
+
+    decipher_atbash
+
+    """
+    return encipher_affine(msg, (25,25), symbols)
+
+
+def decipher_atbash(msg, symbols=None):
+    r"""
+    Deciphers a given ``msg`` using Atbash cipher and returns it.
+
+    Notes
+    =====
+
+    ``decipher_atbash`` is functionally equivalent to ``encipher_atbash``.
+    However, it has still been added as a separate function to maintain
+    consistency.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_atbash, decipher_atbash
+    >>> msg = 'GONAVYBEATARMY'
+    >>> encipher_atbash(msg)
+    'TLMZEBYVZGZINB'
+    >>> decipher_atbash(msg)
+    'TLMZEBYVZGZINB'
+    >>> encipher_atbash(msg) == decipher_atbash(msg)
+    True
+    >>> msg == encipher_atbash(encipher_atbash(msg))
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Atbash
+
+    See Also
+    ========
+
+    encipher_atbash
+
+    """
+    return decipher_affine(msg, (25,25), symbols)
 
 #################### substitution cipher ###########################
 
@@ -401,6 +551,12 @@ def encipher_substitution(msg, old, new=None):
     >>> ords = dict(zip('abc', ['\\%i' % ord(i) for i in 'abc']))
     >>> print(encipher_substitution('abc', ords))
     \97\98\99
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Substitution_cipher
+
     """
     return translate(msg, old, new)
 
@@ -559,9 +715,9 @@ def encipher_vigenere(msg, key, symbols=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Vigenere_cipher
+    .. [1] https://en.wikipedia.org/wiki/Vigenere_cipher
     .. [2] http://web.archive.org/web/20071116100808/
-       http://filebox.vt.edu/users/batman/kryptos.html
+    .. [3] http://filebox.vt.edu/users/batman/kryptos.html
        (short URL: https://goo.gl/ijr22d)
 
     """
@@ -589,6 +745,7 @@ def decipher_vigenere(msg, key, symbols=None):
     >>> ct = "QRGK kt HRZQE BPR"
     >>> decipher_vigenere(ct, key)
     'MEETMEONMONDAY'
+
     """
     msg, key, A = _prep(msg, key, symbols)
     map = {c: i for i, c in enumerate(A)}
@@ -625,22 +782,25 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     linear transformation `K: Z_{N}^k \rightarrow Z_{N}^k`
     is one-to-one).
 
-    ALGORITHM:
 
-        INPUT:
+    Parameters
+    ==========
 
-            ``msg``: plaintext message of `n` upper-case letters
+            msg : plaintext message of `n` upper-case letters
 
-            ``key``: a `k x k` invertible matrix `K`, all of whose
+            key : a `k x k` invertible matrix `K`, all of whose
             entries are in `Z_{26}` (or whatever number of symbols
             are being used).
 
-            ``pad``: character (default "Q") to use to make length
+            pad : character (default "Q") to use to make length
             of text be a multiple of ``k``
 
-        OUTPUT:
+    Returns
+    =======
 
-            ``ct``: ciphertext of upper-case letters
+            ct : ciphertext of upper-case letters
+
+    ALGORITHM:
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
@@ -660,13 +820,14 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     References
     ==========
 
-    .. [1] en.wikipedia.org/wiki/Hill_cipher
+    .. [1] https://en.wikipedia.org/wiki/Hill_cipher
     .. [2] Lester S. Hill, Cryptography in an Algebraic Alphabet,
        The American Mathematical Monthly Vol.36, June-July 1929,
        pp.306-312.
 
     See Also
     ========
+
     decipher_hill
 
     """
@@ -733,6 +894,11 @@ def decipher_hill(msg, key, symbols=None):
     >>> decipher_hill("IS", key)
     'UIKY'
 
+    See Also
+    ========
+
+    encipher_hill
+
     """
     assert key.is_square
     msg, _, A = _prep(msg, '', symbols)
@@ -763,24 +929,32 @@ def encipher_bifid(msg, key, symbols=None):
     This is the version of the Bifid cipher that uses an `n \times n`
     Polybius square.
 
-        INPUT:
+    Parameters
+    ==========
 
-            ``msg``: plaintext string
+            msg : plaintext string
 
-            ``key``: short string for key; duplicate characters are
+            key : short string for key; duplicate characters are
             ignored and then it is padded with the characters in
             ``symbols`` that were not in the short key
 
-            ``symbols``: `n \times n` characters defining the alphabet
+            symbols : `n \times n` characters defining the alphabet
             (default is string.printable)
 
-        OUTPUT:
+    Returns
+    =======
 
             ciphertext (using Bifid5 cipher without spaces)
 
     See Also
     ========
+
     decipher_bifid, encipher_bifid5, encipher_bifid6
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Bifid_cipher
 
     """
     msg, key, A = _prep(msg, key, symbols, bifid10)
@@ -795,8 +969,7 @@ def encipher_bifid(msg, key, symbols=None):
       long_key = list(long_key) + [x for x in A if x not in long_key]
 
     # the fractionalization
-    row_col = dict([(ch, divmod(i, N))
-        for i, ch in enumerate(long_key)])
+    row_col = {ch: divmod(i, N) for i, ch in enumerate(long_key)}
     r, c = zip(*[row_col[x] for x in msg])
     rc = r + c
     ch = {i: ch for ch, i in row_col.items()}
@@ -812,18 +985,20 @@ def decipher_bifid(msg, key, symbols=None):
     This is the version of the Bifid cipher that uses the `n \times n`
     Polybius square.
 
-        INPUT:
+    Parameters
+    ==========
 
-            ``msg``: ciphertext string
+            msg : ciphertext string
 
-            ``key``: short string for key; duplicate characters are
+            key : short string for key; duplicate characters are
             ignored and then it is padded with the characters in
-            ``symbols`` that were not in the short key
+            symbols that were not in the short key
 
-            ``symbols``: `n \times n` characters defining the alphabet
+            symbols : `n \times n` characters defining the alphabet
             (default=string.printable, a `10 \times 10` matrix)
 
-        OUTPUT:
+    Returns
+    =======
 
             deciphered text
 
@@ -922,7 +1097,9 @@ def bifid_square(key):
 
     See Also
     ========
+
     padded_key
+
     """
     A = ''.join(uniq(''.join(key)))
     n = len(A)**.5
@@ -944,35 +1121,7 @@ def encipher_bifid5(msg, key):
     Polybius square. The letter "J" is ignored so it must be replaced
     with something else (traditionally an "I") before encryption.
 
-    Notes
-    =====
-
-    The Bifid cipher was invented around 1901 by Felix Delastelle.
-    It is a *fractional substitution* cipher, where letters are
-    replaced by pairs of symbols from a smaller alphabet. The
-    cipher uses a `5 \times 5` square filled with some ordering of the
-    alphabet, except that "J" is replaced with "I" (this is a so-called
-    Polybius square; there is a `6 \times 6` analog if you add back in
-    "J" and also append onto the usual 26 letter alphabet, the digits
-    0, 1, ..., 9).
-    According to Helen Gaines' book *Cryptanalysis*, this type of cipher
-    was used in the field by the German Army during World War I.
-
     ALGORITHM: (5x5 case)
-
-        INPUT:
-
-            ``msg``: plaintext string; converted to upper case and
-            filtered of anything but all letters except J.
-
-            ``key``: short string for key; non-alphabetic letters, J
-            and duplicated characters are ignored and then, if the
-            length is less than 25 characters, it is padded with other
-            letters of the alphabet (in alphabetical order).
-
-        OUTPUT:
-
-            ciphertext (all caps, no spaces)
 
         STEPS:
             0. Create the `5 \times 5` Polybius square ``S`` associated
@@ -1000,6 +1149,22 @@ def encipher_bifid5(msg, key):
                form ``S[i, j]``, for all ``(i, j)`` in ``L``. As a
                string, this is the ciphertext of ``msg``.
 
+    Parameters
+    ==========
+
+            msg : plaintext string; converted to upper case and
+            filtered of anything but all letters except J.
+
+            key : short string for key; non-alphabetic letters, J
+            and duplicated characters are ignored and then, if the
+            length is less than 25 characters, it is padded with other
+            letters of the alphabet (in alphabetical order).
+
+    Returns
+    =======
+
+            ct : ciphertext (all caps, no spaces)
+
     Examples
     ========
 
@@ -1020,8 +1185,24 @@ def encipher_bifid5(msg, key):
     >>> round_trip(msg.replace("J", j), key).replace(j, "J")
     'JOSIE'
 
+
+    Notes
+    =====
+
+    The Bifid cipher was invented around 1901 by Felix Delastelle.
+    It is a *fractional substitution* cipher, where letters are
+    replaced by pairs of symbols from a smaller alphabet. The
+    cipher uses a `5 \times 5` square filled with some ordering of the
+    alphabet, except that "J" is replaced with "I" (this is a so-called
+    Polybius square; there is a `6 \times 6` analog if you add back in
+    "J" and also append onto the usual 26 letter alphabet, the digits
+    0, 1, ..., 9).
+    According to Helen Gaines' book *Cryptanalysis*, this type of cipher
+    was used in the field by the German Army during World War I.
+
     See Also
     ========
+
     decipher_bifid5, encipher_bifid
 
     """
@@ -1038,16 +1219,18 @@ def decipher_bifid5(msg, key):
     Polybius square; the letter "J" is ignored unless a ``key`` of
     length 25 is used.
 
-    INPUT:
+    Parameters
+    ==========
 
-        ``msg``: ciphertext string
+        msg : ciphertext string
 
-        ``key``: short string for key; duplicated characters are
+        key : short string for key; duplicated characters are
         ignored and if the length is less then 25 characters, it
         will be padded with other letters from the alphabet omitting
         "J". Non-alphabetic characters are ignored.
 
-    OUTPUT:
+    Returns
+    =======
 
         plaintext from Bifid5 cipher (all caps, no spaces)
 
@@ -1104,20 +1287,23 @@ def encipher_bifid6(msg, key):
     This is the version of the Bifid cipher that uses the `6 \times 6`
     Polybius square.
 
-    INPUT:
+    Parameters
+    ==========
 
-        ``msg``: plaintext string (digits okay)
+        msg : plaintext string (digits okay)
 
-        ``key``: short string for key (digits okay). If ``key`` is
+        key : short string for key (digits okay). If ``key`` is
         less than 36 characters long, the square will be filled with
         letters A through Z and digits 0 through 9.
 
-    OUTPUT:
+    Returns
+    =======
 
         ciphertext from Bifid cipher (all caps, no spaces)
 
     See Also
     ========
+
     decipher_bifid6, encipher_bifid
 
     """
@@ -1134,16 +1320,18 @@ def decipher_bifid6(msg, key):
     This is the version of the Bifid cipher that uses the `6 \times 6`
     Polybius square.
 
-    INPUT:
+    Parameters
+    ==========
 
-        ``msg``: ciphertext string (digits okay); converted to upper case
+        msg : ciphertext string (digits okay); converted to upper case
 
-        ``key``: short string for key (digits okay). If ``key`` is
+        key : short string for key (digits okay). If ``key`` is
         less than 36 characters long, the square will be filled with
         letters A through Z and digits 0 through 9. All letters are
         converted to uppercase.
 
-    OUTPUT:
+    Returns
+    =======
 
         plaintext from Bifid cipher (all caps, no spaces)
 
@@ -1183,6 +1371,7 @@ def bifid6_square(key=None):
     [R, S, T, V, W, X],
     [Y, Z, 0, 1, 2, 3],
     [4, 5, 6, 7, 8, 9]])
+
     """
     if not key:
         key = bifid6
@@ -1212,10 +1401,30 @@ def rsa_public_key(p, q, e):
     >>> rsa_public_key(p, q, 30)
     False
 
+    See Also
+    ========
+
+    rsa_private_key
+    encipher_rsa
+    decipher_rsa
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
+
     """
     n = p*q
     if isprime(p) and isprime(q):
-        phi = totient(n)
+        if p == q:
+            SymPyDeprecationWarning(
+                feature="Using non-distinct primes for rsa_public_key",
+                useinstead="distinct primes",
+                issue=16162,
+                deprecated_since_version="1.4").warn()
+            phi = p * (p - 1)
+        else:
+            phi = (p - 1) * (q - 1)
         if gcd(e, phi) == 1:
             return n, e
     return False
@@ -1241,7 +1450,15 @@ def rsa_private_key(p, q, e):
     """
     n = p*q
     if isprime(p) and isprime(q):
-        phi = totient(n)
+        if p == q:
+            SymPyDeprecationWarning(
+                feature="Using non-distinct primes for rsa_public_key",
+                useinstead="distinct primes",
+                issue=16162,
+                deprecated_since_version="1.4").warn()
+            phi = p * (p - 1)
+        else:
+            phi = (p - 1) * (q - 1)
         if gcd(e, phi) == 1:
             d = mod_inverse(e, phi)
             return n, d
@@ -1409,7 +1626,7 @@ morse_char = {
     "..-": "U", "...-": "V",
     ".--": "W", "-..-": "X",
     "-.--": "Y", "--..": "Z",
-    "-----": "0", "----": "1",
+    "-----": "0", ".----": "1",
     "..---": "2", "...--": "3",
     "....-": "4", ".....": "5",
     "-....": "6", "--...": "7",
@@ -1430,11 +1647,6 @@ def encode_morse(msg, sep='|', mapping=None):
     Encodes a plaintext into popular Morse Code with letters
     separated by `sep` and words by a double `sep`.
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Morse_code
-
     Examples
     ========
 
@@ -1442,6 +1654,11 @@ def encode_morse(msg, sep='|', mapping=None):
     >>> msg = 'ATTACK RIGHT FLANK'
     >>> encode_morse(msg)
     '.-|-|-|.-|-.-.|-.-||.-.|..|--.|....|-||..-.|.-..|.-|-.|-.-'
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Morse_code
 
     """
 
@@ -1478,11 +1695,6 @@ def decode_morse(msg, sep='|', mapping=None):
     (default is '|') and words by `word_sep` (default is '||)
     into plaintext.
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Morse_code
-
     Examples
     ========
 
@@ -1490,6 +1702,11 @@ def decode_morse(msg, sep='|', mapping=None):
     >>> mc = '--|---|...-|.||.|.-|...|-'
     >>> decode_morse(mc)
     'MOVE EAST'
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Morse_code
 
     """
 
@@ -1511,22 +1728,24 @@ def decode_morse(msg, sep='|', mapping=None):
 
 def lfsr_sequence(key, fill, n):
     r"""
-    This function creates an lfsr sequence.
+    This function creates an LFSR sequence.
 
-    INPUT:
+    Parameters
+    ==========
 
-        ``key``: a list of finite field elements,
+        key : a list of finite field elements,
             `[c_0, c_1, \ldots, c_k].`
 
-        ``fill``: the list of the initial terms of the lfsr
+        fill : the list of the initial terms of the LFSR
             sequence, `[x_0, x_1, \ldots, x_k].`
 
-        ``n``: number of terms of the sequence that the
+        n : number of terms of the sequence that the
             function returns.
 
-    OUTPUT:
+    Returns
+    =======
 
-        The lfsr sequence defined by
+        The LFSR sequence defined by
         `x_{n+1} = c_k x_n + \ldots + c_0 x_{n-k}`, for
         `n \leq k`.
 
@@ -1571,12 +1790,6 @@ def lfsr_sequence(key, fill, n):
       Moreover, there are as many runs of `1`'s as there are of
       `0`'s.
 
-    References
-    ==========
-
-    .. [G] Solomon Golomb, Shift register sequences, Aegean Park Press,
-       Laguna Hills, Ca, 1967
-
     Examples
     ========
 
@@ -1588,6 +1801,12 @@ def lfsr_sequence(key, fill, n):
     >>> lfsr_sequence(key, fill, 10)
     [1 mod 2, 1 mod 2, 0 mod 2, 1 mod 2, 0 mod 2,
     1 mod 2, 1 mod 2, 0 mod 2, 0 mod 2, 1 mod 2]
+
+    References
+    ==========
+
+    .. [G] Solomon Golomb, Shift register sequences, Aegean Park Press,
+       Laguna Hills, Ca, 1967
 
     """
     if not isinstance(key, list):
@@ -1612,18 +1831,20 @@ def lfsr_autocorrelation(L, P, k):
     """
     This function computes the LFSR autocorrelation function.
 
-    INPUT:
+    Parameters
+    ==========
 
-        ``L``: is a periodic sequence of elements of `GF(2)`.
-        ``L`` must have length larger than ``P``.
+        L : is a periodic sequence of elements of `GF(2)`.
+        L must have length larger than P.
 
-        ``P``: the period of ``L``
+        P : the period of L
 
-        ``k``: an integer (`0 < k < p`)
+        k : an integer (`0 < k < P`)
 
-    OUTPUT:
+    Returns
+    =======
 
-        the ``k``-th value of the autocorrelation of the LFSR ``L``
+        The k-th value of the autocorrelation of the LFSR L
 
     Examples
     ========
@@ -1656,25 +1877,20 @@ def lfsr_connection_polynomial(s):
     """
     This function computes the LFSR connection polynomial.
 
-    INPUT:
+    Parameters
+    ==========
 
-        ``s``: a sequence of elements of even length, with entries in
+        s : a sequence of elements of even length, with entries in
         a finite field
 
-    OUTPUT:
+    Returns
+    =======
 
-        ``C(x)``: the connection polynomial of a minimal LFSR yielding
-        ``s``.
+        C(x) : the connection polynomial of a minimal LFSR yielding
+        s.
 
     This implements the algorithm in section 3 of J. L. Massey's
     article [M]_.
-
-    References
-    ==========
-
-    .. [M] James L. Massey, "Shift-Register Synthesis and BCH Decoding."
-        IEEE Trans. on Information Theory, vol. 15(1), pp. 122-127,
-        Jan 1969.
 
     Examples
     ========
@@ -1704,10 +1920,16 @@ def lfsr_connection_polynomial(s):
     >>> lfsr_connection_polynomial(s)
     x**3 + x + 1
 
+    References
+    ==========
+
+    .. [M] James L. Massey, "Shift-Register Synthesis and BCH Decoding."
+        IEEE Trans. on Information Theory, vol. 15(1), pp. 122-127,
+        Jan 1969.
+
     """
     # Initialization:
     p = s[0].mod
-    F = FF(p)
     x = Symbol("x")
     C = 1*x**0
     B = 1*x**0
@@ -1807,6 +2029,7 @@ def elgamal_public_key(key):
 
     Returns
     =======
+
     (p, r, e = r**d mod p) : d is a random number in private key.
 
     Examples
@@ -1985,7 +2208,7 @@ def dh_public_key(key):
     Parameters
     ==========
 
-    key: Tuple (p, g, a) generated by ``dh_private_key``
+    key : Tuple (p, g, a) generated by ``dh_private_key``
 
     Returns
     =======
@@ -2018,8 +2241,8 @@ def dh_shared_key(key, b):
     Parameters
     ==========
 
-    key: Tuple (p, g, x) generated by ``dh_public_key``
-    b: Random number in the range of 2 to p - 1
+    key : Tuple (p, g, x) generated by ``dh_public_key``
+    b : Random number in the range of 2 to p - 1
        (Chosen by second key exchange member (Bob))
 
     Returns
@@ -2072,7 +2295,7 @@ def _legendre(a, p):
     legendre symbol (a / p) (int)
 
     """
-    sig = pow(a%p, (p - 1)//2) % p
+    sig = pow(a, (p - 1)//2, p)
     if sig == 1:
         return 1
     elif sig == 0:
@@ -2156,7 +2379,7 @@ def gm_private_key(p, q, a=None):
 def gm_public_key(p, q, a=None, seed=None):
     """
     Compute public keys for p and q.
-    Note that in Goldwasser-Micali Encrpytion,
+    Note that in Goldwasser-Micali Encryption,
     public keys are randomly selected.
 
     Parameters
@@ -2172,6 +2395,7 @@ def gm_public_key(p, q, a=None, seed=None):
         some random integer coprime to p and q.
 
         N is the product of p and q
+
     """
 
     p, q = gm_private_key(p, q)
@@ -2192,18 +2416,18 @@ def gm_public_key(p, q, a=None, seed=None):
 def encipher_gm(i, key, seed=None):
     """
     Encrypt integer 'i' using public_key 'key'
-    Note that gm uses random encrpytion.
+    Note that gm uses random encryption.
 
     Parameters
     ==========
 
-    i: (int) the message to encrypt
-    key: Tuple (a, N) the public key
+    i : (int) the message to encrypt
+    key : Tuple (a, N) the public key
 
     Returns
     =======
 
-    List[int] the randomized encrpyted message.
+    List[int] : the randomized encrypted message.
 
     """
     if i < 0:
@@ -2230,13 +2454,14 @@ def decipher_gm(message, key):
     Parameters
     ==========
 
-    List[int]: the randomized encrpyted message.
-    key: Tuple (p, q) the private key
+    List[int] : the randomized encrypted message.
+    key : Tuple (p, q) the private key
 
     Returns
     =======
 
-    i (int) the encrpyted message
+    i : (int) the encrypted message
+
     """
     p, q = key
     res = lambda m, p: _legendre(m, p) > 0
@@ -2246,3 +2471,175 @@ def decipher_gm(message, key):
         m <<= 1
         m += not b
     return m
+
+################ Blum–Goldwasser cryptosystem  #########################
+
+def bg_private_key(p, q):
+    """
+    Check if p and q can be used as private keys for
+    the Blum–Goldwasser cryptosystem.
+
+    The three necessary checks for p and q to pass
+    so that they can be used as private keys:
+
+        1. p and q must both be prime
+        2. p and q must be distinct
+        3. p and q must be congruent to 3 mod 4
+
+    Parameters
+    ==========
+
+    p, q : the keys to be checked
+
+    Returns
+    =======
+
+    p, q : input values
+
+    Raises
+    ======
+
+    ValueError : if p and q do not pass the above conditions
+
+    """
+
+    if not isprime(p) or not isprime(q):
+        raise ValueError("the two arguments must be prime, "
+                         "got %i and %i" %(p, q))
+    elif p == q:
+        raise ValueError("the two arguments must be distinct, "
+                         "got two copies of %i. " %p)
+    elif (p - 3) % 4 != 0 or (q - 3) % 4 != 0:
+        raise ValueError("the two arguments must be congruent to 3 mod 4, "
+                         "got %i and %i" %(p, q))
+    return p, q
+
+def bg_public_key(p, q):
+    """
+    Calculates public keys from private keys.
+
+    The function first checks the validity of
+    private keys passed as arguments and
+    then returns their product.
+
+    Parameters
+    ==========
+
+    p, q : the private keys
+
+    Returns
+    =======
+
+    N : the public key
+
+    """
+    p, q = bg_private_key(p, q)
+    N = p * q
+    return N
+
+def encipher_bg(i, key, seed=None):
+    """
+    Encrypts the message using public key and seed.
+
+    ALGORITHM:
+        1. Encodes i as a string of L bits, m.
+        2. Select a random element r, where 1 < r < key, and computes
+           x = r^2 mod key.
+        3. Use BBS pseudo-random number generator to generate L random bits, b,
+        using the initial seed as x.
+        4. Encrypted message, c_i = m_i XOR b_i, 1 <= i <= L.
+        5. x_L = x^(2^L) mod key.
+        6. Return (c, x_L)
+
+    Parameters
+    ==========
+
+    i : message, a non-negative integer
+    key : the public key
+
+    Returns
+    =======
+
+    (encrypted_message, x_L) : Tuple
+
+    Raises
+    ======
+
+    ValueError : if i is negative
+
+    """
+
+    if i < 0:
+        raise ValueError(
+            "message must be a non-negative "
+            "integer: got %d instead" % i)
+
+    enc_msg = []
+    while i > 0:
+        enc_msg.append(i % 2)
+        i //= 2
+    enc_msg.reverse()
+    L = len(enc_msg)
+
+    r = _randint(seed)(2, key - 1)
+    x = r**2 % key
+    x_L = pow(int(x), int(2**L), int(key))
+
+    rand_bits = []
+    for k in range(L):
+        rand_bits.append(x % 2)
+        x = x**2 % key
+
+    encrypt_msg = [m ^ b for (m, b) in zip(enc_msg, rand_bits)]
+
+    return (encrypt_msg, x_L)
+
+def decipher_bg(message, key):
+    """
+    Decrypts the message using private keys.
+
+    ALGORITHM:
+        1. Let, c be the encrypted message, y the second number received,
+        and p and q be the private keys.
+        2. Compute, r_p = y^((p+1)/4 ^ L) mod p and
+        r_q = y^((q+1)/4 ^ L) mod q.
+        3. Compute x_0 = (q(q^-1 mod p)r_p + p(p^-1 mod q)r_q) mod N.
+        4. From, recompute the bits using the BBS generator, as in the
+        encryption algorithm.
+        5. Compute original message by XORing c and b.
+
+    Parameters
+    ==========
+
+    message : Tuple of encrypted message and a non-negative integer.
+    key : Tuple of private keys
+
+    Returns
+    =======
+
+    orig_msg : The original message
+
+    """
+
+    p, q = key
+    encrypt_msg, y = message
+    public_key = p * q
+    L = len(encrypt_msg)
+    p_t = ((p + 1)/4)**L
+    q_t = ((q + 1)/4)**L
+    r_p = pow(int(y), int(p_t), int(p))
+    r_q = pow(int(y), int(q_t), int(q))
+
+    x = (q * mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
+
+    orig_bits = []
+    for k in range(L):
+        orig_bits.append(x % 2)
+        x = x**2 % public_key
+
+    orig_msg = 0
+    for (m, b) in zip(encrypt_msg, orig_bits):
+        orig_msg = orig_msg * 2
+        orig_msg += (m ^ b)
+
+    return orig_msg

@@ -60,3 +60,8 @@ def test_combsimp():
         n*(n - 1)*(n - 2)
     assert combsimp(6*RisingFactorial(4, -n - 1)/factorial(-n - 1)) == \
         -n*(n - 1)*(n - 2)
+
+def test_issue_14528():
+    p = symbols("p", integer=True, positive=True)
+    assert combsimp(binomial(1,p)) == 1/(factorial(p)*factorial(1-p))
+    assert combsimp(factorial(2-p)) == factorial(2-p)

@@ -1,11 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.core.function import Function
 from sympy.core import S, Integer
-from sympy.core.mul import prod
-from sympy.core.logic import fuzzy_not
-from sympy.utilities.iterables import (has_dups, default_sort_key)
 from sympy.core.compatibility import range, SYMPY_INTS
+from sympy.core.function import Function
+from sympy.core.logic import fuzzy_not
+from sympy.core.mul import prod
+from sympy.utilities.iterables import (has_dups, default_sort_key)
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -127,7 +127,7 @@ class KroneckerDelta(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Kronecker_delta
+    .. [1] https://en.wikipedia.org/wiki/Kronecker_delta
     """
 
     is_integer = True
@@ -444,3 +444,9 @@ class KroneckerDelta(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.kronecker_delta(self.args[0]._sage_(), self.args[1]._sage_())
+
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.core.relational import Ne
+        i, j = args
+        return Piecewise((0, Ne(i, j)), (1, True))

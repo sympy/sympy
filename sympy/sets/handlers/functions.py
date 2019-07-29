@@ -1,10 +1,12 @@
-from sympy.multipledispatch import dispatch, Dispatcher
-from sympy.core import Basic, Expr, Function, Add, Mul, Pow, Dummy, Integer
-from sympy import Min, Max, Set, sympify, Lambda, symbols, exp, log, S
+from sympy import Set, symbols, exp, log, S, Wild, Dummy, oo
+from sympy.core import Expr, Add
+from sympy.core.function import Lambda, _coeff_isneg, FunctionClass
+from sympy.core.mod import Mod
+from sympy.logic.boolalg import true
+from sympy.multipledispatch import dispatch
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-    ProductSet, EmptySet, Intersection)
-from sympy.core.function import FunctionClass
-from sympy.logic.boolalg import And, Or, Not, true, false
+                        EmptySet, Intersection, Range)
+from sympy.sets.fancysets import Integers, Naturals, Reals
 
 
 _x, _y = symbols("x y")
@@ -12,12 +14,16 @@ _x, _y = symbols("x y")
 FunctionUnion = (FunctionClass, Lambda)
 
 
+@dispatch(FunctionClass, Set)
+def _set_function(f, x):
+    return None
+
 @dispatch(FunctionUnion, FiniteSet)
-def function_sets(f, x):
+def _set_function(f, x):
     return FiniteSet(*map(f, x))
 
 @dispatch(Lambda, Interval)
-def function_sets(f, x):
+def _set_function(f, x):
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.solvers.solveset import solveset
     from sympy.core.function import diff, Lambda
@@ -31,6 +37,9 @@ def function_sets(f, x):
     if len(expr.free_symbols) > 1 or len(f.variables) != 1:
         return
     var = f.variables[0]
+    if not var.is_real:
+        if expr.subs(var, Dummy(real=True)).is_real is False:
+            return
 
     if expr.is_Piecewise:
         result = S.EmptySet
@@ -50,7 +59,7 @@ def function_sets(f, x):
 
             # remove the part which has been `imaged`
             domain_set = Complement(domain_set, intrvl)
-            if domain_set.is_EmptySet:
+            if domain_set is S.EmptySet:
                 break
         return result
 
@@ -103,7 +112,7 @@ def function_sets(f, x):
             imageset(f, Interval(sing[-1], x.end, True, x.right_open))
 
 @dispatch(FunctionClass, Interval)
-def function_sets(f, x):
+def _set_function(f, x):
     if f == exp:
         return Interval(exp(x.start), exp(x.end), x.left_open, x.right_open)
     elif f == log:
@@ -111,22 +120,125 @@ def function_sets(f, x):
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, Union)
-def function_sets(f, x):
-    return Union(imageset(f, arg) for arg in x.args)
+def _set_function(f, x):
+    return Union(*(imageset(f, arg) for arg in x.args))
 
 @dispatch(FunctionUnion, Intersection)
-def function_sets(f, x):
+def _set_function(f, x):
     from sympy.sets.sets import is_function_invertible_in_set
     # If the function is invertible, intersect the maps of the sets.
     if is_function_invertible_in_set(f, x):
-        return Intersection(imageset(f, arg) for arg in x.args)
+        return Intersection(*(imageset(f, arg) for arg in x.args))
     else:
         return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, EmptySet)
-def function_sets(f, x):
+def _set_function(f, x):
     return x
 
 @dispatch(FunctionUnion, Set)
-def function_sets(f, x):
+def _set_function(f, x):
     return ImageSet(Lambda(_x, f(_x)), x)
+
+@dispatch(FunctionUnion, Range)
+def _set_function(f, self):
+    from sympy.core.function import expand_mul
+    if not self:
+        return S.EmptySet
+    if not isinstance(f.expr, Expr):
+        return
+    if self.size == 1:
+        return FiniteSet(f(self[0]))
+    if f is S.IdentityFunction:
+        return self
+
+    x = f.variables[0]
+    expr = f.expr
+    # handle f that is linear in f's variable
+    if x not in expr.free_symbols or x in expr.diff(x).free_symbols:
+        return
+    if self.start.is_finite:
+        F = f(self.step*x + self.start)  # for i in range(len(self))
+    else:
+        F = f(-self.step*x + self[-1])
+    F = expand_mul(F)
+    if F != expr:
+        return imageset(x, F, Range(self.size))
+
+@dispatch(FunctionUnion, Integers)
+def _set_function(f, self):
+    expr = f.expr
+    if not isinstance(expr, Expr):
+        return
+
+    n = f.variables[0]
+    if expr == abs(n):
+        return S.Naturals0
+
+    # f(x) + c and f(-x) + c cover the same integers
+    # so choose the form that has the fewest negatives
+    c = f(0)
+    fx = f(n) - c
+    f_x = f(-n) - c
+    neg_count = lambda e: sum(_coeff_isneg(_) for _ in Add.make_args(e))
+    if neg_count(f_x) < neg_count(fx):
+        expr = f_x + c
+
+    a = Wild('a', exclude=[n])
+    b = Wild('b', exclude=[n])
+    match = expr.match(a*n + b)
+    if match and match[a]:
+        # canonical shift
+        b = match[b]
+        if abs(match[a]) == 1:
+            nonint = []
+            for bi in Add.make_args(b):
+                if not bi.is_integer:
+                    nonint.append(bi)
+            b = Add(*nonint)
+        if b.is_number and match[a].is_real:
+            mod = b % match[a]
+            reps = dict([(m, m.args[0]) for m in mod.atoms(Mod)
+                if not m.args[0].is_real])
+            mod = mod.xreplace(reps)
+            expr = match[a]*n + mod
+        else:
+            expr = match[a]*n + b
+
+    if expr != f.expr:
+        return ImageSet(Lambda(n, expr), S.Integers)
+
+
+@dispatch(FunctionUnion, Naturals)
+def _set_function(f, self):
+    expr = f.expr
+    if not isinstance(expr, Expr):
+        return
+
+    x = f.variables[0]
+    if not expr.free_symbols - {x}:
+        if expr == abs(x):
+            if self is S.Naturals:
+                return self
+            return S.Naturals0
+        step = expr.coeff(x)
+        c = expr.subs(x, 0)
+        if c.is_Integer and step.is_Integer and expr == step*x + c:
+            if self is S.Naturals:
+                c += step
+            if step > 0:
+                if step == 1:
+                    if c == 0:
+                        return S.Naturals0
+                    elif c == 1:
+                        return S.Naturals
+                return Range(c, oo, step)
+            return Range(c, -oo, step)
+
+
+@dispatch(FunctionUnion, Reals)
+def _set_function(f, self):
+    expr = f.expr
+    if not isinstance(expr, Expr):
+        return
+    return _set_function(f, Interval(-oo, oo))

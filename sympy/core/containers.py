@@ -8,12 +8,13 @@
 
 from __future__ import print_function, division
 
+from collections import OrderedDict, defaultdict
+
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, range
+from sympy.core.compatibility import as_int, range, MutableSet
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 
-import collections
 
 
 class Tuple(Basic):
@@ -268,12 +269,15 @@ class Dict(Basic):
         return tuple(sorted(self.args, key=default_sort_key))
 
 
-class OrderedSet(collections.MutableSet):
+# this handles dict, defaultdict, OrderedDict
+converter[dict] = lambda d: Dict(*d.items())
+
+class OrderedSet(MutableSet):
     def __init__(self, iterable=None):
         if iterable:
-            self.map = collections.OrderedDict((item, None) for item in iterable)
+            self.map = OrderedDict((item, None) for item in iterable)
         else:
-            self.map = collections.OrderedDict()
+            self.map = OrderedDict()
 
     def __len__(self):
         return len(self.map)

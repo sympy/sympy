@@ -1,6 +1,7 @@
 """Tests for functions for generating interesting polynomials. """
 
-from sympy import Poly, ZZ, symbols
+from sympy import Poly, ZZ, symbols, sqrt, prime, Add
+from sympy.utilities.iterables import permute_signs
 from sympy.utilities.pytest import raises
 
 from sympy.polys.specialpolys import (
@@ -29,6 +30,12 @@ def test_swinnerton_dyer_poly():
     assert swinnerton_dyer_poly(2, x) == x**4 - 10*x**2 + 1
     assert swinnerton_dyer_poly(
         3, x) == x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
+    # we only need to check that the polys arg works but
+    # we may as well test that the roots are correct
+    p = [sqrt(prime(i)) for i in range(1, 5)]
+    assert str([i.n(3) for i in
+        swinnerton_dyer_poly(4, polys=True).all_roots()]
+        ) == str(sorted([Add(*i).n(3) for i in permute_signs(p)]))
 
 
 def test_cyclotomic_poly():
@@ -70,7 +77,7 @@ def test_random_poly():
 
 
 def test_interpolating_poly():
-    x0, x1, x2, y0, y1, y2 = symbols('x:3, y:3')
+    x0, x1, x2, x3, y0, y1, y2, y3 = symbols('x:4, y:4')
 
     assert interpolating_poly(0, x) == 0
     assert interpolating_poly(1, x) == y0
@@ -82,6 +89,12 @@ def test_interpolating_poly():
         y0*(x - x1)*(x - x2)/((x0 - x1)*(x0 - x2)) + \
         y1*(x - x0)*(x - x2)/((x1 - x0)*(x1 - x2)) + \
         y2*(x - x0)*(x - x1)/((x2 - x0)*(x2 - x1))
+
+    assert interpolating_poly(4, x) == \
+        y0*(x - x1)*(x - x2)*(x - x3)/((x0 - x1)*(x0 - x2)*(x0 - x3)) + \
+        y1*(x - x0)*(x - x2)*(x - x3)/((x1 - x0)*(x1 - x2)*(x1 - x3)) + \
+        y2*(x - x0)*(x - x1)*(x - x3)/((x2 - x0)*(x2 - x1)*(x2 - x3)) + \
+        y3*(x - x0)*(x - x1)*(x - x2)/((x3 - x0)*(x3 - x1)*(x3 - x2))
 
 
 def test_fateman_poly_F_1():

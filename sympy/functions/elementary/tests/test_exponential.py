@@ -1,9 +1,12 @@
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
-    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
-    AccumBounds)
+    sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
+    AccumBounds, MatrixSymbol, Pow)
 from sympy.abc import x, y, z
+from sympy.core.expr import unchanged
+from sympy.core.function import ArgumentIndexError
+from sympy.utilities.pytest import raises, XFAIL
 
 
 def test_exp_values():
@@ -40,6 +43,28 @@ def test_exp_values():
 
     assert exp(3*log(x) + oo*x) == exp(oo*x) * x**3
     assert exp(4*log(x)*log(y) + 3*log(x)) == x**3 * exp(4*log(x)*log(y))
+
+    assert exp(-oo, evaluate=False).is_finite is True
+    assert exp(oo, evaluate=False).is_finite is False
+
+
+def test_exp_period():
+    assert exp(9*I*pi/4) == exp(I*pi/4)
+    assert exp(46*I*pi/18) == exp(5*I*pi/9)
+    assert exp(25*I*pi/7) == exp(-3*I*pi/7)
+    assert exp(-19*I*pi/3) == exp(-I*pi/3)
+    assert exp(37*I*pi/8) - exp(-11*I*pi/8) == 0
+    assert exp(-5*I*pi/3) / exp(11*I*pi/5) * exp(148*I*pi/15) == 1
+
+    assert exp(2 - 17*I*pi/5) == exp(2 + 3*I*pi/5)
+    assert exp(log(3) + 29*I*pi/9) == 3 * exp(-7*I*pi/9)
+
+    n = Symbol('n', integer=True)
+    e = Symbol('e', even=True)
+    assert exp(e*I*pi) == 1
+    assert exp((e + 1)*I*pi) == -1
+    assert exp((1 + 4*n)*I*pi/2) == I
+    assert exp((-1 + 4*n)*I*pi/2) == -I
 
 
 def test_exp_log():
@@ -81,6 +106,7 @@ def test_exp_infinity():
     assert refine(exp(I*oo)) == nan
     assert refine(exp(-I*oo)) == nan
     assert exp(y*I*oo) != nan
+    assert exp(zoo) == nan
 
 
 def test_exp_subs():
@@ -107,12 +133,24 @@ def test_exp_conjugate():
 
 
 def test_exp_rewrite():
+    from sympy.concrete.summations import Sum
     assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
     assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
     assert exp(1).rewrite(cos) == sinh(1) + cosh(1)
     assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
     assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
     assert exp(x).rewrite(tanh) == (1 + tanh(x/2))/(1 - tanh(x/2))
+    assert exp(pi*I/4).rewrite(sqrt) == sqrt(2)/2 + sqrt(2)*I/2
+    assert exp(pi*I/3).rewrite(sqrt) == S(1)/2 + sqrt(3)*I/2
+    assert exp(x*log(y)).rewrite(Pow) == y**x
+    assert exp(log(x)*log(y)).rewrite(Pow) in [x**log(y), y**log(x)]
+    assert exp(log(log(x))*y).rewrite(Pow) == log(x)**y
+
+    n = Symbol('n', integer=True)
+
+    assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == S(4)/5 + 2*I/5
+    assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
+    assert Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(S(3)/4 - sqrt(3)*I/4)
 
 
 def test_exp_leading_term():
@@ -125,6 +163,17 @@ def test_exp_taylor_term():
     assert exp(x).taylor_term(1, x) == x
     assert exp(x).taylor_term(3, x) == x**3/6
     assert exp(x).taylor_term(4, x) == x**4/24
+    assert exp(x).taylor_term(-1, x) == S.Zero
+
+
+def test_exp_MatrixSymbol():
+    A = MatrixSymbol("A", 2, 2)
+    assert exp(A).has(exp)
+
+
+def test_exp_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: exp(x).fdiff(2))
 
 
 def test_log_values():
@@ -144,10 +193,10 @@ def test_log_values():
     assert log(E) == 1
     assert log(-E).expand() == 1 + I*pi
 
-    assert log(pi) == log(pi)
+    assert unchanged(log, pi)
     assert log(-pi).expand() == log(pi) + I*pi
 
-    assert log(17) == log(17)
+    assert unchanged(log, 17)
     assert log(-17) == log(17) + I*pi
 
     assert log(I) == I*pi/2
@@ -178,10 +227,12 @@ def test_log_base():
     assert log(3**3, 3) == 3
     assert log(5, 1) == zoo
     assert log(1, 1) == nan
-    assert log(Rational(2, 3), 10) == (-log(3) + log(2))/log(10)
+    assert log(Rational(2, 3), 10) == log(S(2)/3)/log(10)
     assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
     assert log(Rational(2, 3), Rational(2, 5)) == \
-        (-log(3) + log(2))/(-log(5) + log(2))
+        log(S(2)/3)/log(S(2)/5)
+    # issue 17148
+    assert log(S(8)/3, 2) == -log(3)/log(2) + 3
 
 
 def test_log_symbolic():
@@ -232,7 +283,7 @@ def test_exp_assumptions():
         assert e(i).is_imaginary is None
         assert e(r).is_real is True
         assert e(r).is_imaginary is False
-        assert e(re(x)).is_real is True
+        assert e(re(x)).is_extended_real is True
         assert e(re(x)).is_imaginary is False
 
     assert exp(0, evaluate=False).is_algebraic
@@ -255,10 +306,10 @@ def test_log_assumptions():
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
     z = symbols('z', zero=True)
-    x = symbols('x', infinite=True, positive=True)
+    x = symbols('x', infinite=True, extended_positive=True)
 
     assert log(z).is_positive is False
-    assert log(x).is_positive is True
+    assert log(x).is_extended_positive is True
     assert log(2) > 0
     assert log(1, evaluate=False).is_zero
     assert log(1 + z).is_zero
@@ -315,8 +366,6 @@ def test_log_expand():
         log((log(y) + log(z))*log(x)) + log(2)]
     assert log(x**log(x**2)).expand(deep=False) == log(x)*log(x**2)
     assert log(x**log(x**2)).expand() == 2*log(x)**2
-    assert (log(x*(y + z))*(x + y)), expand(mul=True, log=True) == y*log(
-        x) + y*log(y + z) + z*log(x) + z*log(y + z)
     x, y = symbols('x,y')
     assert log(x*y).expand(force=True) == log(x) + log(y)
     assert log(x**y).expand(force=True) == y*log(x)
@@ -326,6 +375,13 @@ def test_log_expand():
     # factoring and if simplification is sought, it's cheaper to put
     # logs together than it is to take them apart.
     assert log(2*3**2).expand() != 2*log(3) + log(2)
+
+
+@XFAIL
+def test_log_expand_fail():
+    x, y, z = symbols('x,y,z', positive=True)
+    assert (log(x*(y + z))*(x + y)).expand(mul=True, log=True) == y*log(
+        x) + y*log(y + z) + z*log(x) + z*log(y + z)
 
 
 def test_log_simplify():
@@ -388,9 +444,22 @@ def test_issue_5673():
     assert e.is_comparable is False
     assert e.is_positive is not True
     e2 = 1 - 1/(1 - exp(-1000))
-    assert e.is_positive is not True
+    assert e2.is_positive is not True
     e3 = -2 + exp(exp(LambertW(log(2)))*LambertW(log(2)))
     assert e3.is_nonzero is not True
+
+
+def test_log_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: log(x).fdiff(2))
+
+
+def test_log_taylor_term():
+    x = symbols('x')
+    assert log(x).taylor_term(0, x) == x
+    assert log(x).taylor_term(1, x) == -x**2/2
+    assert log(x).taylor_term(4, x) == x**5/5
+    assert log(x).taylor_term(-1, x) == S.Zero
 
 
 def test_exp_expand_NC():
@@ -439,14 +508,24 @@ def test_log_product():
     from sympy.abc import n, m
     i, j = symbols('i,j', positive=True, integer=True)
     x, y = symbols('x,y', positive=True)
-    from sympy.concrete import Product, Sum
-    f, g = Function('f'), Function('g')
-    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
+    from sympy.concrete import Product
+    assert simplify(log(Product(x**i, (i, 1, n)))) == log(Product(x**i, (i, 1, n)))
     assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
             log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))
 
     expr = log(Product(-2, (n, 0, 4)))
     assert simplify(expr) == expr
+
+
+@XFAIL
+def test_log_product_simplify_to_sum():
+    from sympy.abc import n, m
+    i, j = symbols('i,j', positive=True, integer=True)
+    x, y = symbols('x,y', positive=True)
+    from sympy.concrete import Product, Sum
+    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
+    assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
+            Sum(i*log(x) + j*log(y), (i, 1, n), (j, 1, m))
 
 
 def test_issue_8866():

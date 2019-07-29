@@ -33,9 +33,9 @@ from __future__ import print_function, division
 
 from .add import Add
 from .assumptions import ManagedProperties, _assume_defined
-from .basic import Basic
+from .basic import Basic, _atomic
 from .cache import cacheit
-from .compatibility import iterable, is_sequence, as_int, ordered
+from .compatibility import iterable, is_sequence, as_int, ordered, Iterable
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float
@@ -46,19 +46,17 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
-from sympy.core.compatibility import string_types, with_metaclass, range
+from sympy.core.compatibility import string_types, with_metaclass, PY3, range
 from sympy.utilities import default_sort_key
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import has_dups, sift
 from sympy.core.evaluate import global_evaluate
-
-import sys
 
 import mpmath
 import mpmath.libmp as mlib
 
 import inspect
-import collections
+from collections import Counter
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -77,11 +75,21 @@ def _coeff_isneg(a):
     >>> _coeff_isneg(Symbol('n', negative=True)) # coeff is 1
     False
 
+    For matrix expressions:
+
+    >>> from sympy import MatrixSymbol, sqrt
+    >>> A = MatrixSymbol("A", 3, 3)
+    >>> _coeff_isneg(-sqrt(2)*A)
+    True
+    >>> _coeff_isneg(sqrt(2)*A)
+    False
     """
 
+    if a.is_MatMul:
+        a = a.args[0]
     if a.is_Mul:
         a = a.args[0]
-    return a.is_Number and a.is_negative
+    return a.is_Number and a.is_extended_negative
 
 
 class PoleError(Exception):
@@ -93,43 +101,50 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                (self.args[1], self.args[0]))
 
-def _getnargs(cls):
-    if hasattr(cls, 'eval'):
-        if sys.version_info < (3, ):
-            return _getnargs_old(cls.eval)
+
+# Python 2/3 version that does not raise a Deprecation warning
+def arity(cls):
+    """Return the arity of the function if it is known, else None.
+
+    When default values are specified for some arguments, they are
+    optional and the arity is reported as a tuple of possible values.
+
+    Examples
+    ========
+
+    >>> from sympy.core.function import arity
+    >>> from sympy import log
+    >>> arity(lambda x: x)
+    1
+    >>> arity(log)
+    (1, 2)
+    >>> arity(lambda *x: sum(x)) is None
+    True
+    """
+    eval_ = getattr(cls, 'eval', cls)
+    if PY3:
+        parameters = inspect.signature(eval_).parameters.items()
+        if [p for _, p in parameters if p.kind == p.VAR_POSITIONAL]:
+            return
+        p_or_k = [p for _, p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
+        # how many have no default and how many have a default value
+        no, yes = map(len, sift(p_or_k,
+            lambda p:p.default == p.empty, binary=True))
+        return no if not yes else tuple(range(no, no + yes + 1))
+    else:
+        cls_ = int(hasattr(cls, 'eval'))  # correction for cls arguments
+        evalargspec = inspect.getargspec(eval_)
+        if evalargspec.varargs:
+            return
         else:
-            return _getnargs_new(cls.eval)
-    else:
-        return None
-
-def _getnargs_old(eval_):
-    evalargspec = inspect.getargspec(eval_)
-    if evalargspec.varargs:
-        return None
-    else:
-        evalargs = len(evalargspec.args) - 1  # subtract 1 for cls
-        if evalargspec.defaults:
-            # if there are default args then they are optional; the
-            # fewest args will occur when all defaults are used and
-            # the most when none are used (i.e. all args are given)
-            return tuple(range(
-                evalargs - len(evalargspec.defaults), evalargs + 1))
-
-        return evalargs
-
-def _getnargs_new(eval_):
-    parameters = inspect.signature(eval_).parameters.items()
-    if [p for n,p in parameters if p.kind == p.VAR_POSITIONAL]:
-        return None
-    else:
-        p_or_k = [p for n,p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
-        num_no_default = len(list(filter(lambda p:p.default == p.empty, p_or_k)))
-        num_with_default = len(list(filter(lambda p:p.default != p.empty, p_or_k)))
-        if not num_with_default:
-            return num_no_default
-        return tuple(range(num_no_default, num_no_default+num_with_default+1))
-
-
+            evalargs = len(evalargspec.args) - cls_
+            if evalargspec.defaults:
+                # if there are default args then they are optional; the
+                # fewest args will occur when all defaults are used and
+                # the most when none are used (i.e. all args are given)
+                fewest = evalargs - len(evalargspec.defaults)
+                return tuple(range(fewest, evalargs + 1))
+            return evalargs
 
 
 class FunctionClass(ManagedProperties):
@@ -144,8 +159,7 @@ class FunctionClass(ManagedProperties):
     def __init__(cls, *args, **kwargs):
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
-        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', _getnargs(cls)))
-        super(FunctionClass, cls).__init__(args, kwargs)
+        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', arity(cls)))
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
@@ -161,6 +175,8 @@ class FunctionClass(ManagedProperties):
         elif nargs is not None:
             nargs = (as_int(nargs),)
         cls._nargs = nargs
+
+        super(FunctionClass, cls).__init__(*args, **kwargs)
 
     @property
     def __signature__(self):
@@ -179,6 +195,17 @@ class FunctionClass(ManagedProperties):
         return signature(self.eval)
 
     @property
+    def free_symbols(self):
+        return set()
+
+    @property
+    def xreplace(self):
+        # Function needs args so we define a property that returns
+        # a function that takes args...and then use that function
+        # to return the right value
+        return lambda rule, **_: rule.get(self, self)
+
+    @property
     def nargs(self):
         """Return a set of the allowed number of arguments for the function.
 
@@ -193,7 +220,7 @@ class FunctionClass(ManagedProperties):
         numbers is returned:
 
         >>> Function('f').nargs
-        S.Naturals0
+        Naturals0
 
         If the function was initialized to accept one or more arguments, a
         corresponding set will be returned:
@@ -209,7 +236,7 @@ class FunctionClass(ManagedProperties):
 
         >>> f = Function('f')
         >>> f(1).nargs
-        S.Naturals0
+        Naturals0
         >>> len(f(1).args)
         1
         """
@@ -254,19 +281,21 @@ class Application(with_metaclass(FunctionClass, Basic)):
         obj = super(Application, cls).__new__(cls, *args, **options)
 
         # make nargs uniform here
-        try:
+        sentinel = object()
+        objnargs = getattr(obj, "nargs", sentinel)
+        if objnargs is not sentinel:
             # things passing through here:
             #  - functions subclassed from Function (e.g. myfunc(1).nargs)
             #  - functions like cos(1).nargs
             #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
             # Canonicalize nargs here
-            if is_sequence(obj.nargs):
-                nargs = tuple(ordered(set(obj.nargs)))
-            elif obj.nargs is not None:
-                nargs = (as_int(obj.nargs),)
+            if is_sequence(objnargs):
+                nargs = tuple(ordered(set(objnargs)))
+            elif objnargs is not None:
+                nargs = (as_int(objnargs),)
             else:
                 nargs = None
-        except AttributeError:
+        else:
             # things passing through here:
             #  - WildFunction('f').nargs
             #  - AppliedUndef with no nargs like Function('f')(1).nargs
@@ -313,7 +342,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
         if (old.is_Function and new.is_Function and
             callable(old) and callable(new) and
             old == self.func and len(self.args) in new.nargs):
-            return new(*self.args)
+            return new(*[i._subs(old, new) for i in self.args])
 
 
 class Function(Application, Expr):
@@ -343,10 +372,14 @@ class Function(Application, Expr):
     >>> g.diff(x)
     Derivative(g(x), x)
 
-    Assumptions can be passed to Function.
+    Assumptions can be passed to Function, and if function is initialized with a
+    Symbol, the function inherits the name and assumptions associated with the Symbol:
 
     >>> f_real = Function('f', real=True)
     >>> f_real(x).is_real
+    True
+    >>> f_real_inherit = Function(Symbol('f', real=True))
+    >>> f_real_inherit(x).is_real
     True
 
     Note that assumptions on a function are unrelated to the assumptions on
@@ -401,19 +434,7 @@ class Function(Application, Expr):
 
     @property
     def _diff_wrt(self):
-        """Allow derivatives wrt functions.
-
-        Examples
-        ========
-
-        >>> from sympy import Function, Symbol
-        >>> f = Function('f')
-        >>> x = Symbol('x')
-        >>> f(x)._diff_wrt
-        True
-
-        """
-        return True
+        return False
 
     @cacheit
     def __new__(cls, *args, **options):
@@ -509,18 +530,31 @@ class Function(Application, Expr):
             return False
 
     def _eval_evalf(self, prec):
-        # Lookup mpmath function based on name
-        fname = self.func.__name__
-        try:
+
+        def _get_mpmath_func(fname):
+            """Lookup mpmath function based on name"""
+            if isinstance(self, AppliedUndef):
+                # Shouldn't lookup in mpmath but might have ._imp_
+                return None
+
             if not hasattr(mpmath, fname):
                 from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
-                fname = MPMATH_TRANSLATIONS[fname]
-            func = getattr(mpmath, fname)
-        except (AttributeError, KeyError):
+                fname = MPMATH_TRANSLATIONS.get(fname, None)
+                if fname is None:
+                    return None
+            return getattr(mpmath, fname)
+
+        func = _get_mpmath_func(self.func.__name__)
+
+        # Fall-back evaluation
+        if func is None:
+            imp = getattr(self, '_imp_', None)
+            if imp is None:
+                return None
             try:
-                return Float(self._imp_(*[i.evalf(prec) for i in self.args]), prec)
-            except (AttributeError, TypeError, ValueError):
-                return
+                return Float(imp(*[i.evalf(prec) for i in self.args]), prec)
+            except (TypeError, ValueError) as e:
+                return None
 
         # Convert all args to mpf or mpc
         # Convert the arguments to *higher* precision than requested for the
@@ -601,6 +635,7 @@ class Function(Application, Expr):
         """
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
+
         Examples
         ========
 
@@ -639,7 +674,7 @@ class Function(Application, Expr):
             # where 'logx' is given in the argument
             a = [t._eval_nseries(x, n, logx) for t in args]
             z = [r - r0 for (r, r0) in zip(a, a0)]
-            p = [Dummy() for t in z]
+            p = [Dummy() for _ in z]
             q = []
             v = None
             for ai, zi, pi in zip(a0, z, p):
@@ -708,22 +743,31 @@ class Function(Application, Expr):
         """
         if not (1 <= argindex <= len(self.args)):
             raise ArgumentIndexError(self, argindex)
-
-        if self.args[argindex - 1].is_Symbol:
-            for i in range(len(self.args)):
-                if i == argindex - 1:
-                    continue
-                # See issue 8510
-                if self.args[argindex - 1] in self.args[i].free_symbols:
-                    break
+        ix = argindex - 1
+        A = self.args[ix]
+        if A._diff_wrt:
+            if len(self.args) == 1:
+                return Derivative(self, A)
+            if A.is_Symbol:
+                for i, v in enumerate(self.args):
+                    if i != ix and A in v.free_symbols:
+                        # it can't be in any other argument's free symbols
+                        # issue 8510
+                        break
+                else:
+                    return Derivative(self, A)
             else:
-                return Derivative(self, self.args[argindex - 1], evaluate=False)
-        # See issue 4624 and issue 4719 and issue 5600
-        arg_dummy = Dummy('xi_%i' % argindex, dummy_index=hash(self.args[argindex - 1]))
-        new_args = [arg for arg in self.args]
-        new_args[argindex-1] = arg_dummy
-        return Subs(Derivative(self.func(*new_args), arg_dummy),
-            arg_dummy, self.args[argindex - 1])
+                free = A.free_symbols
+                for i, a in enumerate(self.args):
+                    if ix != i and a.free_symbols & free:
+                        break
+                else:
+                    # there is no possible interaction bewtween args
+                    return Derivative(self, A)
+        # See issue 4624 and issue 4719, 5600 and 8510
+        D = Dummy('xi_%i' % argindex, dummy_index=hash(A))
+        args = self.args[:ix] + (D,) + self.args[ix + 1:]
+        return Subs(Derivative(self.func(*args), D), D, A)
 
     def _eval_as_leading_term(self, x):
         """Stub that should be overridden by new Functions to return
@@ -756,13 +800,13 @@ class Function(Application, Expr):
     def _sage_(self):
         import sage.all as sage
         fname = self.func.__name__
-        func = getattr(sage, fname,None)
+        func = getattr(sage, fname, None)
         args = [arg._sage_() for arg in self.args]
 
         # In the case the function is not known in sage:
         if func is None:
             import sympy
-            if getattr(sympy, fname,None) is None:
+            if getattr(sympy, fname, None) is None:
                 # abstract function
                 return sage.function(fname)(*args)
 
@@ -797,39 +841,77 @@ class AppliedUndef(Function):
         func = sage.function(fname)(*args)
         return func
 
+    @property
+    def _diff_wrt(self):
+        """
+        Allow derivatives wrt to undefined functions.
+
+        Examples
+        ========
+
+        >>> from sympy import Function, Symbol
+        >>> f = Function('f')
+        >>> x = Symbol('x')
+        >>> f(x)._diff_wrt
+        True
+        >>> f(x).diff(x)
+        Derivative(f(x), x)
+        """
+        return True
+
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
     """
     def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
-        __dict__ = __dict__ or {}
+        from .symbol import _filter_assumptions
         # Allow Function('f', real=True)
-        __dict__.update({'is_' + arg: val for arg, val in kwargs.items() if arg in _assume_defined})
+        # and/or Function(Symbol('f', real=True))
+        assumptions, kwargs = _filter_assumptions(kwargs)
+        if isinstance(name, Symbol):
+            assumptions = name._merge(assumptions)
+            name = name.name
+        elif not isinstance(name, string_types):
+            raise TypeError('expecting string or Symbol for name')
+        else:
+            commutative = assumptions.get('commutative', None)
+            assumptions = Symbol(name, **assumptions).assumptions0
+            if commutative is None:
+                assumptions.pop('commutative')
+        __dict__ = __dict__ or {}
+        # put the `is_*` for into __dict__
+        __dict__.update({'is_%s' % k: v for k, v in assumptions.items()})
         # You can add other attributes, although they do have to be hashable
         # (but seriously, if you want to add anything other than assumptions,
         # just subclass Function)
         __dict__.update(kwargs)
+        # add back the sanitized assumptions without the is_ prefix
+        kwargs.update(assumptions)
         # Save these for __eq__
-        __dict__.update({'_extra_kwargs': kwargs})
-        __dict__['__module__'] = None # For pickling
-        ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
-        return ret
+        __dict__.update({'_kwargs': kwargs})
+        # do this for pickling
+        __dict__['__module__'] = None
+        obj = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
+        obj.name = name
+        return obj
 
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-    _extra_kwargs = {}
+    _kwargs = {}
 
     def __hash__(self):
-        return hash((self.class_key(), frozenset(self._extra_kwargs.items())))
+        return hash((self.class_key(), frozenset(self._kwargs.items())))
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
             self.class_key() == other.class_key() and
-            self._extra_kwargs == other._extra_kwargs)
+            self._kwargs == other._kwargs)
 
     def __ne__(self, other):
         return not self == other
+
 
 class WildFunction(Function, AtomicExpr):
     """
@@ -843,7 +925,7 @@ class WildFunction(Function, AtomicExpr):
     >>> F = WildFunction('F')
     >>> f = Function('f')
     >>> F.nargs
-    S.Naturals0
+    Naturals0
     >>> x.match(F)
     >>> F.match(F)
     {F_: F_}
@@ -909,11 +991,52 @@ class Derivative(Expr):
     """
     Carries out differentiation of the given expression with respect to symbols.
 
-    expr must define ._eval_derivative(symbol) method that returns
-    the differentiation result. This function only needs to consider the
-    non-trivial case where expr contains symbol and it should call the diff()
-    method internally (not _eval_derivative); Derivative should be the only
-    one to call _eval_derivative.
+    Examples
+    ========
+
+    >>> from sympy import Derivative, Function, symbols, Subs
+    >>> from sympy.abc import x, y
+    >>> f, g = symbols('f g', cls=Function)
+
+    >>> Derivative(x**2, x, evaluate=True)
+    2*x
+
+    Denesting of derivatives retains the ordering of variables:
+
+        >>> Derivative(Derivative(f(x, y), y), x)
+        Derivative(f(x, y), y, x)
+
+    Contiguously identical symbols are merged into a tuple giving
+    the symbol and the count:
+
+        >>> Derivative(f(x), x, x, y, x)
+        Derivative(f(x), (x, 2), y, x)
+
+    If the derivative cannot be performed, and evaluate is True, the
+    order of the variables of differentiation will be made canonical:
+
+        >>> Derivative(f(x, y), y, x, evaluate=True)
+        Derivative(f(x, y), x, y)
+
+    Derivatives with respect to undefined functions can be calculated:
+
+        >>> Derivative(f(x)**2, f(x), evaluate=True)
+        2*f(x)
+
+    Such derivatives will show up when the chain rule is used to
+    evalulate a derivative:
+
+        >>> f(g(x)).diff(x)
+        Derivative(f(g(x)), g(x))*Derivative(g(x), x)
+
+    Substitution is used to represent derivatives of functions with
+    arguments that are not symbols or functions:
+
+        >>> f(2*x + 3).diff(x) == 2*Subs(f(y).diff(y), y, 2*x + 3)
+        True
+
+    Notes
+    =====
 
     Simplification of high-order derivatives:
 
@@ -922,8 +1045,10 @@ class Derivative(Expr):
     automatically simplified in a fairly conservative fashion unless the
     keyword ``simplify`` is set to False.
 
-        >>> from sympy import sqrt, diff
-        >>> from sympy.abc import x
+        >>> from sympy import cos, sin, sqrt, diff, Function, symbols
+        >>> from sympy.abc import x, y, z
+        >>> f, g = symbols('f,g', cls=Function)
+
         >>> e = sqrt((x + 1)**2 + x)
         >>> diff(e, (x, 5), simplify=False).count_ops()
         136
@@ -932,192 +1057,168 @@ class Derivative(Expr):
 
     Ordering of variables:
 
-    If evaluate is set to True and the expression can not be evaluated, the
+    If evaluate is set to True and the expression cannot be evaluated, the
     list of differentiation symbols will be sorted, that is, the expression is
-    assumed to have continuous derivatives up to the order asked. This sorting
-    assumes that derivatives wrt Symbols commute, derivatives wrt non-Symbols
-    commute, but Symbol and non-Symbol derivatives don't commute with each
-    other.
+    assumed to have continuous derivatives up to the order asked.
 
     Derivative wrt non-Symbols:
 
-    This class also allows derivatives wrt non-Symbols that have _diff_wrt
-    set to True, such as Function and Derivative. When a derivative wrt a non-
-    Symbol is attempted, the non-Symbol is temporarily converted to a Symbol
-    while the differentiation is performed.
+    For the most part, one may not differentiate wrt non-symbols.
+    For example, we do not allow differentiation wrt `x*y` because
+    there are multiple ways of structurally defining where x*y appears
+    in an expression: a very strict definition would make
+    (x*y*z).diff(x*y) == 0. Derivatives wrt defined functions (like
+    cos(x)) are not allowed, either:
 
-    Note that this may seem strange, that Derivative allows things like
-    f(g(x)).diff(g(x)), or even f(cos(x)).diff(cos(x)).  The motivation for
-    allowing this syntax is to make it easier to work with variational calculus
-    (i.e., the Euler-Lagrange method).  The best way to understand this is that
-    the action of derivative with respect to a non-Symbol is defined by the
-    above description:  the object is substituted for a Symbol and the
-    derivative is taken with respect to that.  This action is only allowed for
-    objects for which this can be done unambiguously, for example Function and
-    Derivative objects.  Note that this leads to what may appear to be
-    mathematically inconsistent results.  For example::
-
-        >>> from sympy import cos, sin, sqrt
-        >>> from sympy.abc import x
-        >>> (2*cos(x)).diff(cos(x))
-        2
-        >>> (2*sqrt(1 - sin(x)**2)).diff(cos(x))
-        0
-
-    This appears wrong because in fact 2*cos(x) and 2*sqrt(1 - sin(x)**2) are
-    identically equal.  However this is the wrong way to think of this.  Think
-    of it instead as if we have something like this::
-
-        >>> from sympy.abc import c, s, u, x
-        >>> def F(u):
-        ...     return 2*u
-        ...
-        >>> def G(u):
-        ...     return 2*sqrt(1 - u**2)
-        ...
-        >>> F(cos(x))
-        2*cos(x)
-        >>> G(sin(x))
-        2*sqrt(-sin(x)**2 + 1)
-        >>> F(c).diff(c)
-        2
-        >>> F(cos(x)).diff(cos(x))
-        2
-        >>> G(s).diff(c)
-        0
-        >>> G(sin(x)).diff(cos(x))
-        0
-
-    Here, the Symbols c and s act just like the functions cos(x) and sin(x),
-    respectively. Think of 2*cos(x) as f(c).subs(c, cos(x)) (or f(c) *at*
-    c = cos(x)) and 2*sqrt(1 - sin(x)**2) as g(s).subs(s, sin(x)) (or g(s) *at*
-    s = sin(x)), where f(u) == 2*u and g(u) == 2*sqrt(1 - u**2).  Here, we
-    define the function first and evaluate it at the function, but we can
-    actually unambiguously do this in reverse in SymPy, because
-    expr.subs(Function, Symbol) is well-defined:  just structurally replace the
-    function everywhere it appears in the expression.
-
-    This is the same notational convenience used in the Euler-Lagrange method
-    when one says F(t, f(t), f'(t)).diff(f(t)).  What is actually meant is
-    that the expression in question is represented by some F(t, u, v) at u =
-    f(t) and v = f'(t), and F(t, f(t), f'(t)).diff(f(t)) simply means F(t, u,
-    v).diff(u) at u = f(t).
-
-    We do not allow derivatives to be taken with respect to expressions where this
-    is not so well defined.  For example, we do not allow expr.diff(x*y)
-    because there are multiple ways of structurally defining where x*y appears
-    in an expression, some of which may surprise the reader (for example, a
-    very strict definition would have that (x*y*z).diff(x*y) == 0).
-
-        >>> from sympy.abc import x, y, z
         >>> (x*y*z).diff(x*y)
         Traceback (most recent call last):
         ...
-        ValueError: Can't differentiate wrt the variable: x*y, 1
+        ValueError: Can't calculate derivative wrt x*y.
 
-    Note that this definition also fits in nicely with the definition of the
-    chain rule.  Note how the chain rule in SymPy is defined using unevaluated
-    Subs objects::
+    To make it easier to work with variational calculus, however,
+    derivatives wrt AppliedUndef and Derivatives are allowed.
+    For example, in the Euler-Lagrange method one may write
+    F(t, u, v) where u = f(t) and v = f'(t). These variables can be
+    written explicitly as functions of time::
 
-        >>> from sympy import symbols, Function
-        >>> f, g = symbols('f g', cls=Function)
-        >>> f(2*g(x)).diff(x)
-        2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
-                                              (_xi_1,), (2*g(x),))
-        >>> f(g(x)).diff(x)
-        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
-                                            (_xi_1,), (g(x),))
+        >>> from sympy.abc import t
+        >>> F = Function('F')
+        >>> U = f(t)
+        >>> V = U.diff(t)
 
-    Finally, note that, to be consistent with variational calculus, and to
-    ensure that the definition of substituting a Function for a Symbol in an
-    expression is well-defined, derivatives of functions are assumed to not be
-    related to the function.  In other words, we have::
+    The derivative wrt f(t) can be obtained directly:
 
-        >>> from sympy import diff
-        >>> diff(f(x), x).diff(f(x))
+        >>> direct = F(t, U, V).diff(U)
+
+    When differentiation wrt a non-Symbol is attempted, the non-Symbol
+    is temporarily converted to a Symbol while the differentiation
+    is performed and the same answer is obtained:
+
+        >>> indirect = F(t, U, V).subs(U, x).diff(x).subs(x, U)
+        >>> assert direct == indirect
+
+    The implication of this non-symbol replacement is that all
+    functions are treated as independent of other functions and the
+    symbols are independent of the functions that contain them::
+
+        >>> x.diff(f(x))
+        0
+        >>> g(x).diff(f(x))
         0
 
-    The same is true for derivatives of different orders::
+    It also means that derivatives are assumed to depend only
+    on the variables of differentiation, not on anything contained
+    within the expression being differentiated::
 
-        >>> diff(f(x), x, 2).diff(diff(f(x), x, 1))
+        >>> F = f(x)
+        >>> Fx = F.diff(x)
+        >>> Fx.diff(F)  # derivative depends on x, not F
         0
-        >>> diff(f(x), x, 1).diff(diff(f(x), x, 2))
+        >>> Fxx = Fx.diff(x)
+        >>> Fxx.diff(Fx)  # derivative depends on x, not Fx
         0
 
-    Note, any class can allow derivatives to be taken with respect to itself.
-    See the docstring of Expr._diff_wrt.
+    The last example can be made explicit by showing the replacement
+    of Fx in Fxx with y:
 
-    Examples
+        >>> Fxx.subs(Fx, y)
+        Derivative(y, x)
+
+        Since that in itself will evaluate to zero, differentiating
+        wrt Fx will also be zero:
+
+        >>> _.doit()
+        0
+
+    Replacing undefined functions with concrete expressions
+
+    One must be careful to replace undefined functions with expressions
+    that contain variables consistent with the function definition and
+    the variables of differentiation or else insconsistent result will
+    be obtained. Consider the following example:
+
+    >>> eq = f(x)*g(y)
+    >>> eq.subs(f(x), x*y).diff(x, y).doit()
+    y*Derivative(g(y), y) + g(y)
+    >>> eq.diff(x, y).subs(f(x), x*y).doit()
+    y*Derivative(g(y), y)
+
+    The results differ because `f(x)` was replaced with an expression
+    that involved both variables of differentiation. In the abstract
+    case, differentiation of `f(x)` by `y` is 0; in the concrete case,
+    the presence of `y` made that derivative nonvanishing and produced
+    the extra `g(y)` term.
+
+    Defining differentiation for an object
+
+    An object must define ._eval_derivative(symbol) method that returns
+    the differentiation result. This function only needs to consider the
+    non-trivial case where expr contains symbol and it should call the diff()
+    method internally (not _eval_derivative); Derivative should be the only
+    one to call _eval_derivative.
+
+    Any class can allow derivatives to be taken with respect to
+    itself (while indicating its scalar nature). See the
+    docstring of Expr._diff_wrt.
+
+    See Also
     ========
-
-    Some basic examples:
-
-        >>> from sympy import Derivative, Symbol, Function
-        >>> f = Function('f')
-        >>> g = Function('g')
-        >>> x = Symbol('x')
-        >>> y = Symbol('y')
-
-        >>> Derivative(x**2, x, evaluate=True)
-        2*x
-        >>> Derivative(Derivative(f(x,y), x), y)
-        Derivative(f(x, y), x, y)
-        >>> Derivative(f(x), x, 3)
-        Derivative(f(x), (x, 3))
-        >>> Derivative(f(x, y), y, x, evaluate=True)
-        Derivative(f(x, y), x, y)
-
-    Now some derivatives wrt functions:
-
-        >>> Derivative(f(x)**2, f(x), evaluate=True)
-        2*f(x)
-        >>> Derivative(f(g(x)), x, evaluate=True)
-        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
-                                            (_xi_1,), (g(x),))
-
+    _sort_variable_count
     """
 
     is_Derivative = True
 
     @property
     def _diff_wrt(self):
-        """Allow derivatives wrt Derivatives if it contains a function.
+        """An expression may be differentiated wrt a Derivative if
+        it is in elementary form.
 
         Examples
         ========
 
-            >>> from sympy import Function, Symbol, Derivative
-            >>> f = Function('f')
-            >>> x = Symbol('x')
-            >>> Derivative(f(x),x)._diff_wrt
-            True
-            >>> Derivative(x**2,x)._diff_wrt
-            False
+        >>> from sympy import Function, Derivative, cos
+        >>> from sympy.abc import x
+        >>> f = Function('f')
+
+        >>> Derivative(f(x), x)._diff_wrt
+        True
+        >>> Derivative(cos(x), x)._diff_wrt
+        False
+        >>> Derivative(x + 1, x)._diff_wrt
+        False
+
+        A Derivative might be an unevaluated form of what will not be
+        a valid variable of differentiation if evaluated. For example,
+
+        >>> Derivative(f(f(x)), x).doit()
+        Derivative(f(x), x)*Derivative(f(f(x)), f(x))
+
+        Such an expression will present the same ambiguities as arise
+        when dealing with any other product, like `2*x`, so `_diff_wrt`
+        is False:
+
+        >>> Derivative(f(f(x)), x)._diff_wrt
+        False
         """
-        if self.expr.is_Function:
-            return True
-        else:
-            return False
+        return self.expr._diff_wrt and isinstance(self.doit(), Derivative)
 
     def __new__(cls, expr, *variables, **kwargs):
 
         from sympy.matrices.common import MatrixCommon
-        from sympy import Integer
+        from sympy import Integer, MatrixExpr
         from sympy.tensor.array import Array, NDimArray, derive_by_array
         from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
-        try:
-            has_symbol_set = isinstance(expr.free_symbols, set)
-        except AttributeError:
-            has_symbol_set = False
+        symbols_or_none = getattr(expr, "free_symbols", None)
+        has_symbol_set = isinstance(symbols_or_none, set)
+
         if not has_symbol_set:
             raise ValueError(filldedent('''
                 Since there are no variables in the expression %s,
                 it cannot be differentiated.''' % expr))
 
-        # There are no variables, we differentiate wrt all of the free symbols
-        # in expr.
+        # determine value for variables if it wasn't given
         if not variables:
             variables = expr.free_symbols
             if len(variables) != 1:
@@ -1142,22 +1243,20 @@ class Derivative(Expr):
         # s is the entity to diff wrt and count is the order of the
         # derivative.
         variable_count = []
-        j = 0
         array_likes = (tuple, list, Tuple)
 
         for i, v in enumerate(variables):
             if isinstance(v, Integer):
-                count = v
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
-                prev, prevcount = variable_count[j-1]
+                count = v
+                prev, prevcount = variable_count[-1]
                 if prevcount != 1:
                     raise TypeError("tuple {0} followed by number {1}".format((prev, prevcount), v))
                 if count == 0:
-                    j -= 1
                     variable_count.pop()
                 else:
-                    variable_count[j-1] = Tuple(prev, count)
+                    variable_count[-1] = Tuple(prev, count)
             else:
                 if isinstance(v, array_likes):
                     if len(v) == 0:
@@ -1173,21 +1272,40 @@ class Derivative(Expr):
                             v = Array(v)
                     else:
                         v, count = v
+                    if count == 0:
+                        continue
                 else:
-                    count = S(1)
-                if count == 0:
-                    continue
-                if not v._diff_wrt:
-                    last_digit = int(str(count)[-1])
-                    ordinal = 'st' if last_digit == 1 else 'nd' if last_digit == 2 else 'rd' if last_digit == 3 else 'th'
-                    raise ValueError(filldedent('''
-                    Can\'t calculate %s%s derivative wrt %s.''' % (count, ordinal, v)))
-                if j != 0 and v == variable_count[-1][0]:
-                    prev, prevcount = variable_count[j-1]
-                    variable_count[-1] = Tuple(prev, prevcount + count)
+                    count = 1
+                variable_count.append(Tuple(v, count))
+
+        # light evaluation of contiguous, identical
+        # items: (x, 1), (x, 1) -> (x, 2)
+        merged = []
+        for t in variable_count:
+            v, c = t
+            if c.is_negative:
+                raise ValueError(
+                    'order of differentiation must be nonnegative')
+            if merged and merged[-1][0] == v:
+                c += merged[-1][1]
+                if not c:
+                    merged.pop()
                 else:
-                    variable_count.append(Tuple(v, count))
-                    j += 1
+                    merged[-1] = Tuple(v, c)
+            else:
+                merged.append(t)
+        variable_count = merged
+
+        # sanity check of variables of differentation; we waited
+        # until the counts were computed since some variables may
+        # have been removed because the count was 0
+        for v, c in variable_count:
+            # v must have _diff_wrt True
+            if not v._diff_wrt:
+                __ = ''  # filler to make error message neater
+                raise ValueError(filldedent('''
+                    Can't calculate derivative wrt %s.%s''' % (v,
+                    __)))
 
         # We make a special case for 0th derivative, because there is no
         # good way to unambiguously print this.
@@ -1196,95 +1314,136 @@ class Derivative(Expr):
 
         evaluate = kwargs.get('evaluate', False)
 
-        # Look for a quick exit if there are symbols that don't appear in
-        # expression at all. Note, this cannot check non-symbols like
-        # functions and Derivatives as those can be created by intermediate
-        # derivatives.
-        if evaluate and all(isinstance(sc[0], Symbol) for sc in variable_count):
-            symbol_set = set(sc[0] for sc in variable_count if sc[1].is_positive)
-            if symbol_set.difference(expr.free_symbols):
+        if evaluate:
+            if isinstance(expr, Derivative):
+                expr = expr.canonical
+            variable_count = [
+                (v.canonical if isinstance(v, Derivative) else v, c)
+                for v, c in variable_count]
+
+            # Look for a quick exit if there are symbols that don't appear in
+            # expression at all. Note, this cannot check non-symbols like
+            # Derivatives as those can be created by intermediate
+            # derivatives.
+            zero = False
+            free = expr.free_symbols
+            for v, c in variable_count:
+                vfree = v.free_symbols
+                if c.is_positive and vfree:
+                    if isinstance(v, AppliedUndef):
+                        # these match exactly since
+                        # x.diff(f(x)) == g(x).diff(f(x)) == 0
+                        # and are not created by differentiation
+                        D = Dummy()
+                        if not expr.xreplace({v: D}).has(D):
+                            zero = True
+                            break
+                    elif isinstance(v, MatrixExpr):
+                        zero = False
+                        break
+                    elif isinstance(v, Symbol) and v not in free:
+                        zero = True
+                        break
+                    else:
+                        if not free & vfree:
+                            # e.g. v is IndexedBase or Matrix
+                            zero = True
+                            break
+            if zero:
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
-                else:
+                elif expr.is_scalar:
                     return S.Zero
 
-        # If we can't compute the derivative of expr (but we wanted to) and
-        # expr is itself not a Derivative, finish building an unevaluated
-        # derivative class by calling Expr.__new__.
-        if (not (hasattr(expr, '_eval_derivative') and evaluate) and
-           (not isinstance(expr, Derivative))):
-            # If we wanted to evaluate, we sort the variables into standard
-            # order for later comparisons. This is too aggressive if evaluate
-            # is False, so we don't do it in that case.
-            if evaluate:
-                #TODO: check if assumption of discontinuous derivatives exist
-                variable_count = cls._sort_variable_count(variable_count)
-            obj = Expr.__new__(cls, expr, *variable_count)
-            return obj
+            # make the order of symbols canonical
+            #TODO: check if assumption of discontinuous derivatives exist
+            variable_count = cls._sort_variable_count(variable_count)
 
-        # Compute the derivative now by repeatedly calling the
-        # _eval_derivative method of expr for each variable. When this method
-        # returns None, the derivative couldn't be computed wrt that variable
-        # and we save the variable for later.
-        unhandled_variable_count = []
+        # denest
+        if isinstance(expr, Derivative):
+            variable_count = list(expr.variable_count) + variable_count
+            expr = expr.expr
+            return Derivative(expr, *variable_count, **kwargs)
 
-        # Once we encouter a non_symbol that is unhandled, we stop taking
-        # derivatives entirely. This is because derivatives wrt functions
-        # don't commute with derivatives wrt symbols and we can't safely
-        # continue.
-        unhandled_non_symbol = False
+        # we return here if evaluate is False or if there is no
+        # _eval_derivative method
+        if not evaluate or not hasattr(expr, '_eval_derivative'):
+            # return an unevaluated Derivative
+            if evaluate and variable_count == [(expr, 1)] and expr.is_scalar:
+                # special hack providing evaluation for classes
+                # that have defined is_scalar=True but have no
+                # _eval_derivative defined
+                return S.One
+            return Expr.__new__(cls, expr, *variable_count)
+
+        # evaluate the derivative by calling _eval_derivative method
+        # of expr for each variable
+        # -------------------------------------------------------------
         nderivs = 0  # how many derivatives were performed
-        for v, count in variable_count:
-            is_symbol = v.is_symbol
+        unhandled = []
+        for i, (v, count) in enumerate(variable_count):
 
-            if unhandled_non_symbol:
-                obj = None
-            elif (count < 0) == True:
-                obj = None
-            else:
-                if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
-                    # Treat derivatives by arrays/matrices as much as symbols.
-                    is_symbol = True
-                if not is_symbol:
-                    new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
-                    expr = expr.xreplace({v: new_v})
-                    old_v = v
-                    v = new_v
-                # Evaluate the derivative `n` times.  If
-                # `_eval_derivative_n_times` is not overridden by the current
-                # object, the default in `Basic` will call a loop over
-                # `_eval_derivative`:
-                obj = expr._eval_derivative_n_times(v, count)
-                nderivs += count
-                if not is_symbol:
-                    if obj is not None:
-                        if not old_v.is_symbol and obj.is_Derivative:
-                            # Derivative evaluated at a point that is not a
-                            # symbol
-                            obj = Subs(obj, v, old_v)
-                        else:
-                            obj = obj.xreplace({v: old_v})
-                    v = old_v
+            old_expr = expr
+            old_v = None
+
+            is_symbol = v.is_symbol or isinstance(v,
+                (Iterable, Tuple, MatrixCommon, NDimArray))
+
+            if not is_symbol:
+                old_v = v
+                v = Dummy('xi')
+                expr = expr.xreplace({old_v: v})
+                # Derivatives and UndefinedFunctions are independent
+                # of all others
+                clashing = not (isinstance(old_v, Derivative) or \
+                    isinstance(old_v, AppliedUndef))
+                if not v in expr.free_symbols and not clashing:
+                    return expr.diff(v)  # expr's version of 0
+                if not old_v.is_scalar and not hasattr(
+                        old_v, '_eval_derivative'):
+                    # special hack providing evaluation for classes
+                    # that have defined is_scalar=True but have no
+                    # _eval_derivative defined
+                    expr *= old_v.diff(old_v)
+
+            # Evaluate the derivative `n` times.  If
+            # `_eval_derivative_n_times` is not overridden by the current
+            # object, the default in `Basic` will call a loop over
+            # `_eval_derivative`:
+            obj = expr._eval_derivative_n_times(v, count)
+            if obj is not None and obj.is_zero:
+                return obj
+
+            nderivs += count
+
+            if old_v is not None:
+                if obj is not None:
+                    # remove the dummy that was used
+                    obj = obj.subs(v, old_v)
+                # restore expr
+                expr = old_expr
 
             if obj is None:
-                unhandled_variable_count.append(Tuple(v, count))
-                if not is_symbol:
-                    unhandled_non_symbol = True
-            elif obj is S.Zero:
-                return S.Zero
-            else:
-                expr = obj
+                # we've already checked for quick-exit conditions
+                # that give 0 so the remaining variables
+                # are contained in the expression but the expression
+                # did not compute a derivative so we stop taking
+                # derivatives
+                unhandled = variable_count[i:]
+                break
 
-        if unhandled_variable_count:
-            unhandled_variable_count = cls._sort_variable_count(unhandled_variable_count)
-            expr = Expr.__new__(cls, expr, *unhandled_variable_count)
-        else:
-            # We got a Derivative at the end of it all, and we rebuild it by
-            # sorting its variables.
+            expr = obj
+
+        # what we have so far can be made canonical
+        expr = expr.replace(
+            lambda x: isinstance(x, Derivative),
+            lambda x: x.canonical)
+
+        if unhandled:
             if isinstance(expr, Derivative):
-                expr = cls(
-                    expr.args[0], *cls._sort_variable_count(expr.args[1:])
-                )
+                unhandled = list(expr.variable_count) + unhandled
+                expr = expr.expr
+            expr = Expr.__new__(cls, expr, *unhandled)
 
         if (nderivs > 1) == True and kwargs.get('simplify', True):
             from sympy.core.exprtools import factor_terms
@@ -1292,135 +1451,129 @@ class Derivative(Expr):
             expr = factor_terms(signsimp(expr))
         return expr
 
-    @classmethod
-    def _remove_derived_once(cls, v):
-        return [i[0] if i[1] == 1 else i for i in v]
+    @property
+    def canonical(cls):
+        return cls.func(cls.expr,
+            *Derivative._sort_variable_count(cls.variable_count))
 
     @classmethod
-    def _sort_variable_count(cls, varcounts):
-        """Like ``_sort_variables``, but acting on variable-count pairs.
+    def _sort_variable_count(cls, vc):
+        """
+        Sort (variable, count) pairs into canonical order while
+        retaining order of variables that do not commute during
+        differentiation:
+
+        * symbols and functions commute with each other
+        * derivatives commute with each other
+        * a derivative doesn't commute with anything it contains
+        * any other object is not allowed to commute if it has
+          free symbols in common with another object
 
         Examples
         ========
 
-        >>> from sympy import Derivative, Function, symbols
+        >>> from sympy import Derivative, Function, symbols, cos
         >>> vsort = Derivative._sort_variable_count
         >>> x, y, z = symbols('x y z')
         >>> f, g, h = symbols('f g h', cls=Function)
 
-        >>> vsort([(x, 1), (y, 2), (z, 1)])
-        [(x, 1), (y, 2), (z, 1)]
+        Contiguous items are collapsed into one pair:
 
-        >>> vsort([(z, 1), (y, 1), (x, 1), (h(x), 1), (g(x), 1), (f(x), 1)])
-        [(x, 1), (y, 1), (z, 1), (f(x), 1), (g(x), 1), (h(x), 1)]
+        >>> vsort([(x, 1), (x, 1)])
+        [(x, 2)]
+        >>> vsort([(y, 1), (f(x), 1), (y, 1), (f(x), 1)])
+        [(y, 2), (f(x), 2)]
+
+        Ordering is canonical.
+
+        >>> def vsort0(*v):
+        ...     # docstring helper to
+        ...     # change vi -> (vi, 0), sort, and return vi vals
+        ...     return [i[0] for i in vsort([(i, 0) for i in v])]
+
+        >>> vsort0(y, x)
+        [x, y]
+        >>> vsort0(g(y), g(x), f(y))
+        [f(y), g(x), g(y)]
+
+        Symbols are sorted as far to the left as possible but never
+        move to the left of a derivative having the same symbol in
+        its variables; the same applies to AppliedUndef which are
+        always sorted after Symbols:
+
+        >>> dfx = f(x).diff(x)
+        >>> assert vsort0(dfx, y) == [y, dfx]
+        >>> assert vsort0(dfx, x) == [dfx, x]
         """
-        d = dict(varcounts)
-        varsorted = cls._sort_variables([i for i, j in varcounts])
-        return [Tuple(var, d[var]) for var in varsorted]
-
-    @classmethod
-    def _sort_variables(cls, vars):
-        """Sort variables, but disallow sorting of non-symbols.
-
-        When taking derivatives, the following rules usually hold:
-
-        * Derivative wrt different symbols commute.
-        * Derivative wrt different non-symbols commute.
-        * Derivatives wrt symbols and non-symbols don't commute.
-
-        Examples
-        ========
-
-        >>> from sympy import Derivative, Function, symbols
-        >>> vsort = Derivative._sort_variables
-        >>> x, y, z = symbols('x y z')
-        >>> f, g, h = symbols('f g h', cls=Function)
-
-        >>> vsort((x,y,z))
-        [x, y, z]
-
-        >>> vsort((h(x),g(x),f(x)))
-        [f(x), g(x), h(x)]
-
-        >>> vsort((z,y,x,h(x),g(x),f(x)))
-        [x, y, z, f(x), g(x), h(x)]
-
-        >>> vsort((x,f(x),y,f(y)))
-        [x, f(x), y, f(y)]
-
-        >>> vsort((y,x,g(x),f(x),z,h(x),y,x))
-        [x, y, f(x), g(x), z, h(x), x, y]
-
-        >>> vsort((z,y,f(x),x,f(x),g(x)))
-        [y, z, f(x), x, f(x), g(x)]
-
-        >>> vsort((z,y,f(x),x,f(x),g(x),z,z,y,x))
-        [y, z, f(x), x, f(x), g(x), x, y, z, z]
-        """
-
-        sorted_vars = []
-        symbol_part = []
-        non_symbol_part = []
-        for v in vars:
-            if not v.is_symbol:
-                if len(symbol_part) > 0:
-                    sorted_vars.extend(sorted(symbol_part,
-                                              key=default_sort_key))
-                    symbol_part = []
-                non_symbol_part.append(v)
+        from sympy.utilities.iterables import uniq, topological_sort
+        if not vc:
+            return []
+        vc = list(vc)
+        if len(vc) == 1:
+            return [Tuple(*vc[0])]
+        V = list(range(len(vc)))
+        E = []
+        v = lambda i: vc[i][0]
+        D = Dummy()
+        def _block(d, v, wrt=False):
+            # return True if v should not come before d else False
+            if d == v:
+                return wrt
+            if d.is_Symbol:
+                return False
+            if isinstance(d, Derivative):
+                # a derivative blocks if any of it's variables contain
+                # v; the wrt flag will return True for an exact match
+                # and will cause an AppliedUndef to block if v is in
+                # the arguments
+                if any(_block(k, v, wrt=True)
+                        for k in d._wrt_variables):
+                    return True
+                return False
+            if not wrt and isinstance(d, AppliedUndef):
+                return False
+            if v.is_Symbol:
+                return v in d.free_symbols
+            if isinstance(v, AppliedUndef):
+                return _block(d.xreplace({v: D}), D)
+            return d.free_symbols & v.free_symbols
+        for i in range(len(vc)):
+            for j in range(i):
+                if _block(v(j), v(i)):
+                    E.append((j,i))
+        # this is the default ordering to use in case of ties
+        O = dict(zip(ordered(uniq([i for i, c in vc])), range(len(vc))))
+        ix = topological_sort((V, E), key=lambda i: O[v(i)])
+        # merge counts of contiguously identical items
+        merged = []
+        for v, c in [vc[i] for i in ix]:
+            if merged and merged[-1][0] == v:
+                merged[-1][1] += c
             else:
-                if len(non_symbol_part) > 0:
-                    sorted_vars.extend(sorted(non_symbol_part,
-                                              key=default_sort_key))
-                    non_symbol_part = []
-                symbol_part.append(v)
-        if len(non_symbol_part) > 0:
-            sorted_vars.extend(sorted(non_symbol_part,
-                                      key=default_sort_key))
-        if len(symbol_part) > 0:
-            sorted_vars.extend(sorted(symbol_part,
-                                      key=default_sort_key))
-        return sorted_vars
+                merged.append([v, c])
+        return [Tuple(*i) for i in merged]
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative
 
-    def _eval_derivative_n_times(self, s, n):
-        from sympy import Integer
-        if isinstance(n, (int, Integer)):
-            # TODO: it would be desirable to squash `_eval_derivative` into
-            # this code.
-            return super(Derivative, self)._eval_derivative_n_times(s, n)
-        dict_var_count = dict(self.variable_count)
-        if s in dict_var_count:
-            dict_var_count[s] += n
-        else:
-            dict_var_count[s] = n
-        return Derivative(self.expr, *dict_var_count.items())
-
     def _eval_derivative(self, v):
-        # If the variable s we are diff wrt is not in self.variables, we
-        # assume that we might be able to take the derivative.
-        if v not in self.variables:
-            obj = self.expr.diff(v)
-            if obj is S.Zero:
-                return S.Zero
-            if isinstance(obj, Derivative):
-                return obj.func(obj.expr, *(self.variable_count + obj.variable_count))
-            # The derivative wrt s could have simplified things such that the
+        # If v (the variable of differentiation) is not in
+        # self.variables, we might be able to take the derivative.
+        if v not in self._wrt_variables:
+            dedv = self.expr.diff(v)
+            if isinstance(dedv, Derivative):
+                return dedv.func(dedv.expr, *(self.variable_count + dedv.variable_count))
+            # dedv (d(self.expr)/dv) could have simplified things such that the
             # derivative wrt things in self.variables can now be done. Thus,
             # we set evaluate=True to see if there are any other derivatives
-            # that can be done. The most common case is when obj is a simple
+            # that can be done. The most common case is when dedv is a simple
             # number so that the derivative wrt anything else will vanish.
-            return self.func(obj, *self.variables, evaluate=True)
-        # In this case s was in self.variables so the derivatve wrt s has
+            return self.func(dedv, *self.variables, evaluate=True)
+        # In this case v was in self.variables so the derivative wrt v has
         # already been attempted and was not computed, either because it
         # couldn't be or evaluate=False originally.
         variable_count = list(self.variable_count)
-        if variable_count[-1][0] == v:
-            variable_count[-1] = Tuple(v, variable_count[-1][1] + 1)
-        else:
-            variable_count.append(Tuple(v, S(1)))
+        variable_count.append((v, 1))
         return self.func(self.expr, *variable_count, evaluate=False)
 
     def doit(self, **hints):
@@ -1428,7 +1581,10 @@ class Derivative(Expr):
         if hints.get('deep', True):
             expr = expr.doit(**hints)
         hints['evaluate'] = True
-        return self.func(expr, *self.variable_count, **hints)
+        rv = self.func(expr, *self.variable_count, **hints)
+        if rv!= self and rv.has(Derivative):
+            rv =  rv.doit(**hints)
+        return rv
 
     @_sympifyit('z0', NotImplementedError)
     def doit_numerically(self, z0):
@@ -1438,8 +1594,6 @@ class Derivative(Expr):
         When we can represent derivatives at a point, this should be folded
         into the normal evalf. For now, we need a special method.
         """
-        import mpmath
-        from sympy.core.expr import Expr
         if len(self.free_symbols) != 1 or len(self.variables) != 1:
             raise NotImplementedError('partials and higher order derivatives')
         z = list(self.free_symbols)[0]
@@ -1457,10 +1611,25 @@ class Derivative(Expr):
         return self._args[0]
 
     @property
+    def _wrt_variables(self):
+        # return the variables of differentiation without
+        # respect to the type of count (int or symbolic)
+        return [i[0] for i in self.variable_count]
+
+    @property
     def variables(self):
-        # TODO: deprecate?
+        # TODO: deprecate?  YES, make this 'enumerated_variables' and
+        #       name _wrt_variables as variables
         # TODO: support for `d^n`?
-        return tuple(v for v, count in self.variable_count if count.is_Integer for i in (range(count) if count.is_Integer else [1]))
+        rv = []
+        for v, count in self.variable_count:
+            if not count.is_Integer:
+                raise TypeError(filldedent('''
+                Cannot give expansion for symbolic count. If you just
+                want a list of all variables of differentiation, use
+                _wrt_variables.'''))
+            rv.extend([v]*count)
+        return tuple(rv)
 
     @property
     def variable_count(self):
@@ -1475,26 +1644,103 @@ class Derivative(Expr):
         return self.expr.free_symbols
 
     def _eval_subs(self, old, new):
-        if old in self.variables and not new._diff_wrt:
-            # issue 4719
-            return Subs(self, old, new)
+        # The substitution (old, new) cannot be done inside
+        # Derivative(expr, vars) for a variety of reasons
+        # as handled below.
+        if old in self._wrt_variables:
+            # first handle the counts
+            expr = self.func(self.expr, *[(v, c.subs(old, new))
+                for v, c in self.variable_count])
+            if expr != self:
+                return expr._eval_subs(old, new)
+            # quick exit case
+            if not getattr(new, '_diff_wrt', False):
+                # case (0): new is not a valid variable of
+                # differentiation
+                if isinstance(old, Symbol):
+                    # don't introduce a new symbol if the old will do
+                    return Subs(self, old, new)
+                else:
+                    xi = Dummy('xi')
+                    return Subs(self.xreplace({old: xi}), xi, new)
+
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
         if old.is_Derivative and old.expr == self.expr:
-            # Check if canonnical order of variables is equal.
-            old_vars = collections.Counter(dict(reversed(old.variable_count)))
-            self_vars = collections.Counter(dict(reversed(self.variable_count)))
-            if old_vars == self_vars:
+            if self.canonical == old.canonical:
                 return new
 
             # collections.Counter doesn't have __le__
             def _subset(a, b):
                 return all((a[i] <= b[i]) == True for i in a)
 
+            old_vars = Counter(dict(reversed(old.variable_count)))
+            self_vars = Counter(dict(reversed(self.variable_count)))
             if _subset(old_vars, self_vars):
-                return Derivative(new, *(self_vars - old_vars).items())
+                return Derivative(new, *(self_vars - old_vars).items()).canonical
 
-        return Derivative(*(x._subs(old, new) for x in self.args))
+        args = list(self.args)
+        newargs = list(x._subs(old, new) for x in args)
+        if args[0] == old:
+            # complete replacement of self.expr
+            # we already checked that the new is valid so we know
+            # it won't be a problem should it appear in variables
+            return Derivative(*newargs)
+
+        if newargs[0] != args[0]:
+            # case (1) can't change expr by introducing something that is in
+            # the _wrt_variables if it was already in the expr
+            # e.g.
+            # for Derivative(f(x, g(y)), y), x cannot be replaced with
+            # anything that has y in it; for f(g(x), g(y)).diff(g(y))
+            # g(x) cannot be replaced with anything that has g(y)
+            syms = {vi: Dummy() for vi in self._wrt_variables
+                if not vi.is_Symbol}
+            wrt = set(syms.get(vi, vi) for vi in self._wrt_variables)
+            forbidden = args[0].xreplace(syms).free_symbols & wrt
+            nfree = new.xreplace(syms).free_symbols
+            ofree = old.xreplace(syms).free_symbols
+            if (nfree - ofree) & forbidden:
+                return Subs(self, old, new)
+
+        viter = ((i, j) for ((i, _), (j, _)) in zip(newargs[1:], args[1:]))
+        if any(i != j for i, j in viter):  # a wrt-variable change
+            # case (2) can't change vars by introducing a variable
+            # that is contained in expr, e.g.
+            # for Derivative(f(z, g(h(x), y)), y), y cannot be changed to
+            # x, h(x), or g(h(x), y)
+            for a in _atomic(self.expr, recursive=True):
+                for i in range(1, len(newargs)):
+                    vi, _ = newargs[i]
+                    if a == vi and vi != args[i][0]:
+                        return Subs(self, old, new)
+            # more arg-wise checks
+            vc = newargs[1:]
+            oldv = self._wrt_variables
+            newe = self.expr
+            subs = []
+            for i, (vi, ci) in enumerate(vc):
+                if not vi._diff_wrt:
+                    # case (3) invalid differentiation expression so
+                    # create a replacement dummy
+                    xi = Dummy('xi_%i' % i)
+                    # replace the old valid variable with the dummy
+                    # in the expression
+                    newe = newe.xreplace({oldv[i]: xi})
+                    # and replace the bad variable with the dummy
+                    vc[i] = (xi, ci)
+                    # and record the dummy with the new (invalid)
+                    # differentiation expression
+                    subs.append((xi, vi))
+
+            if subs:
+                # handle any residual substitution in the expression
+                newe = newe._subs(old, new)
+                # return the Subs-wrapped derivative
+                return Subs(Derivative(newe, *vc), *zip(*subs))
+
+        # everything was ok
+        return Derivative(*newargs)
 
     def _eval_lseries(self, x, logx):
         dx = self.variables
@@ -1575,6 +1821,14 @@ class Derivative(Expr):
         >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
         2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/...
 
+        To approximate ``Derivative`` around ``x0`` using a non-equidistant
+        spacing step, the algorithm supports assignment of undefined
+        functions to ``points``:
+
+        >>> dx = Function('dx')
+        >>> f(x).diff(x).as_finite_difference(points=dx(x), x0=x-h)
+        -f(-h + x - dx(-h + x)/2)/dx(-h + x) + f(-h + x + dx(-h + x)/2)/dx(-h + x)
+
         Partial derivatives are also supported:
 
         >>> y = Symbol('y')
@@ -1637,8 +1891,11 @@ class Lambda(Expr):
         from sympy.sets.sets import FiniteSet
         v = list(variables) if iterable(variables) else [variables]
         for i in v:
-            if not getattr(i, 'is_Symbol', False):
+            if not getattr(i, 'is_symbol', False):
                 raise TypeError('variable is not a symbol: %s' % i)
+        if len(v) != len(set(v)):
+            x = [i for i in v if v.count(i) > 1][0]
+            raise SyntaxError("duplicate argument '%s' in Lambda args" % x)
         if len(v) == 1 and v[0] == expr:
             return S.IdentityFunction
 
@@ -1650,6 +1907,8 @@ class Lambda(Expr):
     def variables(self):
         """The variables used in the internal representation of the function"""
         return self._args[0]
+
+    bound_symbols = variables
 
     @property
     def expr(self):
@@ -1731,35 +1990,68 @@ class Subs(Expr):
     this case the expression is always expanded (for the unevaluated form, use
     Derivative()).
 
-    A simple example:
+    Examples
+    ========
 
-    >>> from sympy import Subs, Function, sin
+    >>> from sympy import Subs, Function, sin, cos
     >>> from sympy.abc import x, y, z
     >>> f = Function('f')
-    >>> e = Subs(f(x).diff(x), x, y)
-    >>> e.subs(y, 0)
-    Subs(Derivative(f(x), x), (x,), (0,))
-    >>> e.subs(f, sin).doit()
-    cos(y)
 
-    An example with several variables:
+    Subs are created when a particular substitution cannot be made. The
+    x in the derivative cannot be replaced with 0 because 0 is not a
+    valid variables of differentiation:
+
+    >>> f(x).diff(x).subs(x, 0)
+    Subs(Derivative(f(x), x), x, 0)
+
+    Once f is known, the derivative and evaluation at 0 can be done:
+
+    >>> _.subs(f, sin).doit() == sin(x).diff(x).subs(x, 0) == cos(0)
+    True
+
+    Subs can also be created directly with one or more variables:
 
     >>> Subs(f(x)*sin(y) + z, (x, y), (0, 1))
     Subs(z + f(x)*sin(y), (x, y), (0, 1))
     >>> _.doit()
     z + f(0)*sin(1)
 
+    Notes
+    =====
+
+    In order to allow expressions to combine before doit is done, a
+    representation of the Subs expression is used internally to make
+    expressions that are superficially different compare the same:
+
+    >>> a, b = Subs(x, x, 0), Subs(y, y, 0)
+    >>> a + b
+    2*Subs(x, x, 0)
+
+    This can lead to unexpected consequences when using methods
+    like `has` that are cached:
+
+    >>> s = Subs(x, x, 0)
+    >>> s.has(x), s.has(y)
+    (True, False)
+    >>> ss = s.subs(x, y)
+    >>> ss.has(x), ss.has(y)
+    (True, False)
+    >>> s, ss
+    (Subs(x, x, 0), Subs(y, y, 0))
     """
     def __new__(cls, expr, variables, point, **assumptions):
         from sympy import Symbol
+
         if not is_sequence(variables, Tuple):
             variables = [variables]
-        variables = list(sympify(variables))
+        variables = Tuple(*variables)
 
-        if list(uniq(variables)) != variables:
-            repeated = [ v for v in set(variables) if variables.count(v) > 1 ]
-            raise ValueError('cannot substitute expressions %s more than '
-                             'once.' % repeated)
+        if has_dups(variables):
+            repeated = [str(v) for v, i in Counter(variables).items() if i > 1]
+            __ = ', '.join(repeated)
+            raise ValueError(filldedent('''
+                The following expressions appear more than once: %s
+                ''' % __))
 
         point = Tuple(*(point if is_sequence(point, Tuple) else [point]))
 
@@ -1767,9 +2059,18 @@ class Subs(Expr):
             raise ValueError('Number of point values must be the same as '
                              'the number of variables.')
 
-        expr = sympify(expr)
+        if not point:
+            return sympify(expr)
 
-        # use symbols with names equal to the point value (with preppended _)
+        # denest
+        if isinstance(expr, Subs):
+            variables = expr.variables + variables
+            point = expr.point + point
+            expr = expr.expr
+        else:
+            expr = sympify(expr)
+
+        # use symbols with names equal to the point value (with prepended _)
         # to give a variable-independent expression
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
@@ -1784,7 +2085,7 @@ class Subs(Expr):
             s_pts = {p: Symbol(pre + mystr(p)) for p in pts}
             reps = [(v, s_pts[p])
                 for v, p in zip(variables, point)]
-            # if any underscore-preppended symbol is already a free symbol
+            # if any underscore-prepended symbol is already a free symbol
             # and is a variable with a different point value, then there
             # is a clash, e.g. _0 clashes in Subs(_0 + _1, (_0, _1), (1, 0))
             # because the new symbol that would be created is _1 but _1
@@ -1799,14 +2100,69 @@ class Subs(Expr):
             break
 
         obj = Expr.__new__(cls, expr, Tuple(*variables), point)
-        obj._expr = expr.subs(reps)
+        obj._expr = expr.xreplace(dict(reps))
         return obj
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative
 
-    def doit(self):
-        return self.expr.doit().subs(list(zip(self.variables, self.point)))
+    def doit(self, **hints):
+        e, v, p = self.args
+
+        # remove self mappings
+        for i, (vi, pi) in enumerate(zip(v, p)):
+            if vi == pi:
+                v = v[:i] + v[i + 1:]
+                p = p[:i] + p[i + 1:]
+        if not v:
+            return self.expr
+
+        if isinstance(e, Derivative):
+            # apply functions first, e.g. f -> cos
+            undone = []
+            for i, vi in enumerate(v):
+                if isinstance(vi, FunctionClass):
+                    e = e.subs(vi, p[i])
+                else:
+                    undone.append((vi, p[i]))
+            if not isinstance(e, Derivative):
+                e = e.doit()
+            if isinstance(e, Derivative):
+                # do Subs that aren't related to differentiation
+                undone2 = []
+                D = Dummy()
+                for vi, pi in undone:
+                    if D not in e.xreplace({vi: D}).free_symbols:
+                        e = e.subs(vi, pi)
+                    else:
+                        undone2.append((vi, pi))
+                undone = undone2
+                # differentiate wrt variables that are present
+                wrt = []
+                D = Dummy()
+                expr = e.expr
+                free = expr.free_symbols
+                for vi, ci in e.variable_count:
+                    if isinstance(vi, Symbol) and vi in free:
+                        expr = expr.diff((vi, ci))
+                    elif D in expr.subs(vi, D).free_symbols:
+                        expr = expr.diff((vi, ci))
+                    else:
+                        wrt.append((vi, ci))
+                # inject remaining subs
+                rv = expr.subs(undone)
+                # do remaining differentiation *in order given*
+                for vc in wrt:
+                    rv = rv.diff(vc)
+            else:
+                # inject remaining subs
+                rv = e.subs(undone)
+        else:
+            rv = e.doit(**hints).subs(list(zip(v, p)))
+
+        if hints.get('deep', True) and rv != self:
+            rv = rv.doit(**hints)
+        return rv
 
     def evalf(self, prec=None, **options):
         return self.doit().evalf(prec, **options)
@@ -1817,6 +2173,8 @@ class Subs(Expr):
     def variables(self):
         """The variables to be evaluated"""
         return self._args[1]
+
+    bound_symbols = variables
 
     @property
     def expr(self):
@@ -1838,15 +2196,10 @@ class Subs(Expr):
         return (self.expr.expr_free_symbols - set(self.variables) |
             set(self.point.expr_free_symbols))
 
-    def _has(self, pattern):
-        if pattern in self.variables and pattern not in self.point:
-            return False
-        return super(Subs, self)._has(pattern)
-
     def __eq__(self, other):
         if not isinstance(other, Subs):
             return False
-        return self._expr == other._expr
+        return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
         return not(self == other)
@@ -1855,14 +2208,33 @@ class Subs(Expr):
         return super(Subs, self).__hash__()
 
     def _hashable_content(self):
-        return (self._expr.xreplace(self.canonical_variables),)
+        return (self._expr.xreplace(self.canonical_variables),
+            ) + tuple(ordered([(v, p) for v, p in
+            zip(self.variables, self.point) if not self.expr.has(v)]))
 
     def _eval_subs(self, old, new):
+        # Subs doit will do the variables in order; the semantics
+        # of subs for Subs is have the following invariant for
+        # Subs object foo:
+        #    foo.doit().subs(reps) == foo.subs(reps).doit()
+        pt = list(self.point)
         if old in self.variables:
-            if old in self.point:
-                newpoint = tuple(new if i == old else i for i in self.point)
-                return self.func(self.expr, self.variables, newpoint)
-            return self
+            if _atomic(new) == set([new]) and not any(
+                    i.has(new) for i in self.args):
+                # the substitution is neutral
+                return self.xreplace({old: new})
+            # any occurrence of old before this point will get
+            # handled by replacements from here on
+            i = self.variables.index(old)
+            for j in range(i, len(self.variables)):
+                pt[j] = pt[j]._subs(old, new)
+            return self.func(self.expr, self.variables, pt)
+        v = [i._subs(old, new) for i in self.variables]
+        if v != list(self.variables):
+            return self.func(self.expr, self.variables + (old,), pt + [new])
+        expr = self.expr._subs(old, new)
+        pt = [i._subs(old, new) for i in self.point]
+        return self.func(expr, v, pt)
 
     def _eval_derivative(self, s):
         # Apply the chain rule of the derivative on the substitution variables:
@@ -1884,14 +2256,15 @@ class Subs(Expr):
             # x is the variable being substituted into
             apos = self.point.index(x)
             other = self.variables[apos]
-            arg = self.expr.nseries(other, n=n, logx=logx)
-            o = arg.getO()
-            subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
-            return Add(*subs_args) + o.subs(other, x)
-        arg = self.expr.nseries(x, n=n, logx=logx)
+        else:
+            other = x
+        arg = self.expr.nseries(other, n=n, logx=logx)
         o = arg.getO()
-        subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
-        return Add(*subs_args) + o
+        terms = Add.make_args(arg.removeO())
+        rv = Add(*[self.func(a, *self.args[1:]) for a in terms])
+        if o:
+            rv += o.subs(other, x)
+        return rv
 
     def _eval_as_leading_term(self, x):
         if x in self.point:
@@ -1967,11 +2340,9 @@ def diff(f, *symbols, **kwargs):
     sympy.geometry.util.idiff: computes the derivative implicitly
 
     """
+    if hasattr(f, 'diff'):
+        return f.diff(*symbols, **kwargs)
     kwargs.setdefault('evaluate', True)
-    try:
-        return f._eval_diff(*symbols, **kwargs)
-    except AttributeError:
-        pass
     return Derivative(f, *symbols, **kwargs)
 
 
@@ -2606,10 +2977,6 @@ def count_ops(expr, visual=False):
         while args:
             a = args.pop()
 
-            # XXX: This is a hack to support non-Basic args
-            if isinstance(a, string_types):
-                continue
-
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:
@@ -2675,7 +3042,7 @@ def count_ops(expr, visual=False):
             if not a.is_Symbol:
                 args.extend(a.args)
 
-    elif type(expr) is dict:
+    elif isinstance(expr, Dict):
         ops = [count_ops(k, visual=visual) +
                count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):
@@ -2696,10 +3063,6 @@ def count_ops(expr, visual=False):
             args = [expr]
             while args:
                 a = args.pop()
-
-                # XXX: This is a hack to support non-Basic args
-                if isinstance(a, string_types):
-                    continue
 
                 if a.args:
                     o = Symbol(a.func.__name__.upper())
@@ -2725,9 +3088,10 @@ def count_ops(expr, visual=False):
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
 
-def nfloat(expr, n=15, exponent=False):
+def nfloat(expr, n=15, exponent=False, dkeys=False):
     """Make all Rationals in expr Floats except those in exponents
-    (unless the exponents flag is set to True).
+    (unless the exponents flag is set to True). When processing
+    dictionaries, don't modify the keys unless ``dkeys=True``.
 
     Examples
     ========
@@ -2740,15 +3104,31 @@ def nfloat(expr, n=15, exponent=False):
     >>> nfloat(x**4 + sqrt(y), exponent=True)
     x**4.0 + y**0.5
 
+    Container types are not modified:
+
+    >>> type(nfloat((1, 2))) is tuple
+    True
     """
     from sympy.core.power import Pow
     from sympy.polys.rootoftools import RootOf
 
+    kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+    # handling of iterable containers
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):
-            return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
-                               list(expr.items())])
-        return type(expr)([nfloat(a, n, exponent) for a in expr])
+            if dkeys:
+                args = [tuple(map(lambda i: nfloat(i, **kw), a))
+                    for a in expr.items()]
+            else:
+                args = [(k, nfloat(v, **kw)) for k, v in expr.items()]
+            if isinstance(expr, dict):
+                return type(expr)(args)
+            else:
+                return expr.func(*args)
+        elif isinstance(expr, Basic):
+            return expr.func(*[nfloat(a, **kw) for a in expr.args])
+        return type(expr)([nfloat(a, **kw) for a in expr])
+
     rv = sympify(expr)
 
     if rv.is_Number:
@@ -2760,6 +3140,8 @@ def nfloat(expr, n=15, exponent=False):
             rv = Float(rv.n(n), n)
         else:
             pass  # pure_complex(rv) is likely True
+        return rv
+    elif rv.is_Atom:
         return rv
 
     # watch out for RootOf instances that don't like to have

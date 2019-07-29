@@ -10,12 +10,19 @@
 
 # Regular Python bytecode file
 *.pyc
+__pycache__/
 
 # Optimized Python bytecode file
 *.pyo
 
 # Vim's swap files
 *.sw[op]
+
+# VSCode settings file
+.vscode/
+
+# PyCharm settings file
+/.idea/
 
 # Generated files from Jython
 *$py.class
@@ -70,7 +77,7 @@ sample.tex
 .ipynb_checkpoints/
 
 # pytest cache folder
-.cache
+.*cache
 
 # pytest related data file for slow tests
 .ci/durations.log

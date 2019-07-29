@@ -11,7 +11,7 @@ def print_gtk(x, start_viewer=True):
 
     Needs libgtkmathview-bin"""
     with tempfile.NamedTemporaryFile('w') as file:
-        file.write( c2p(mathml(x), simple=True) )
+        file.write(c2p(mathml(x), simple=True))
         file.flush()
 
         if start_viewer:

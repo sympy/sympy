@@ -15,7 +15,7 @@ assumptions
 .. automodule:: sympy.core.assumptions
 
 cache
--------
+-----
 .. module:: sympy.core.cache
 
 cacheit
@@ -223,6 +223,12 @@ GoldenRatio
 ^^^^^^^^^^^
 
 .. autoclass:: GoldenRatio
+   :members:
+
+TribonacciConstant
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: TribonacciConstant
    :members:
 
 power

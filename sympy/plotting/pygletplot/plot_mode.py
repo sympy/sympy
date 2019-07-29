@@ -1,11 +1,11 @@
 from __future__ import print_function, division
 
 from sympy import Symbol, sympify
-from plot_interval import PlotInterval
-from plot_object import PlotObject
-from util import parse_option_string
+from sympy.core.compatibility import is_sequence, range, string_types
 from sympy.geometry.entity import GeometryEntity
-from sympy.core.compatibility import is_sequence, range
+from .plot_interval import PlotInterval
+from .plot_object import PlotObject
+from .util import parse_option_string
 
 
 class PlotMode(PlotObject):
@@ -144,7 +144,7 @@ class PlotMode(PlotObject):
                                      m.i_var_count))
             return m
         # If it is a string, there are two possibilities.
-        if isinstance(mode_arg, str):
+        if isinstance(mode_arg, string_types):
             i, d = i_var_count, d_var_count
             if i > PlotMode._i_var_max:
                 raise ValueError(var_count_error(True, True))
@@ -168,7 +168,7 @@ class PlotMode(PlotObject):
             i_vars = i
         try:
             return PlotMode._mode_default_map[d][i]
-        except TypeError:
+        except KeyError:
             # Keep looking for modes in higher i var counts
             # which support the given d var count until we
             # reach the max i_var count.
@@ -376,7 +376,7 @@ class PlotMode(PlotObject):
     def _extract_options(args, kwargs):
         newkwargs, newargs = {}, []
         for a in args:
-            if isinstance(a, str):
+            if isinstance(a, string_types):
                 newkwargs = dict(newkwargs, **parse_option_string(a))
             else:
                 newargs.append(a)

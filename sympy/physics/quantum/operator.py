@@ -94,8 +94,8 @@ class Operator(QExpr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Operator_%28physics%29
-    .. [2] http://en.wikipedia.org/wiki/Observable
+    .. [1] https://en.wikipedia.org/wiki/Operator_%28physics%29
+    .. [2] https://en.wikipedia.org/wiki/Observable
     """
 
     @classmethod
@@ -384,7 +384,7 @@ class OuterProduct(Operator):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Outer_product
+    .. [1] https://en.wikipedia.org/wiki/Outer_product
     """
     is_commutative = False
 

@@ -286,6 +286,40 @@ def test_inversion():
     assert meijerint_inversion(exp(-s**2), s, t) is None
 
 
+def test_inversion_conditional_output():
+    from sympy import Symbol, InverseLaplaceTransform
+
+    a = Symbol('a', positive=True)
+    F = sqrt(pi/a)*exp(-2*sqrt(a)*sqrt(s))
+    f = meijerint_inversion(F, s, t)
+    assert not f.is_Piecewise
+
+    b = Symbol('b', real=True)
+    F = F.subs(a, b)
+    f2 = meijerint_inversion(F, s, t)
+    assert f2.is_Piecewise
+    # first piece is same as f
+    assert f2.args[0][0] == f.subs(a, b)
+    # last piece is an unevaluated transform
+    assert f2.args[-1][1]
+    ILT = InverseLaplaceTransform(F, s, t, None)
+    assert f2.args[-1][0] == ILT or f2.args[-1][0] == ILT.as_integral
+
+
+def test_inversion_exp_real_nonreal_shift():
+    from sympy import Symbol, DiracDelta
+    r = Symbol('r', real=True)
+    c = Symbol('c', extended_real=False)
+    a = 1 + 2*I
+    z = Symbol('z')
+    assert not meijerint_inversion(exp(r*s), s, t).is_Piecewise
+    assert meijerint_inversion(exp(a*s), s, t) is None
+    assert meijerint_inversion(exp(c*s), s, t) is None
+    f = meijerint_inversion(exp(z*s), s, t)
+    assert f.is_Piecewise
+    assert isinstance(f.args[0][0], DiracDelta)
+
+
 @slow
 def test_lookup_table():
     from random import uniform, randrange
@@ -340,10 +374,9 @@ def test_probability():
     # various integrals from probability theory
     from sympy.abc import x, y
     from sympy import symbols, Symbol, Abs, expand_mul, gammasimp, powsimp, sin
-    mu1, mu2 = symbols('mu1 mu2', real=True, nonzero=True, finite=True)
-    sigma1, sigma2 = symbols('sigma1 sigma2', real=True, nonzero=True,
-                             finite=True, positive=True)
-    rate = Symbol('lambda', real=True, positive=True, finite=True)
+    mu1, mu2 = symbols('mu1 mu2', nonzero=True)
+    sigma1, sigma2 = symbols('sigma1 sigma2', positive=True)
+    rate = Symbol('lambda', positive=True)
 
     def normal(x, mu, sigma):
         return 1/sqrt(2*pi*sigma**2)*exp(-(x - mu)**2/2/sigma**2)
@@ -487,8 +520,12 @@ def test_probability():
     # higher moments oo
 
     # log-logistic
+    alpha, beta = symbols('alpha beta', positive=True)
     distn = (beta/alpha)*x**(beta - 1)/alpha**(beta - 1)/ \
         (1 + x**beta/alpha**beta)**2
+    # FIXME: If alpha, beta are not declared as finite the line below hangs
+    # after the changes in:
+    #    https://github.com/sympy/sympy/pull/16603
     assert simplify(integrate(distn, (x, 0, oo))) == 1
     # NOTE the conditions are a mess, but correctly state beta > 1
     assert simplify(integrate(x*distn, (x, 0, oo), conds='none')) == \
@@ -529,6 +566,7 @@ def test_probability():
                               (x, 0, oo)))) == polygamma(0, k)
 
 
+@slow
 def test_expint():
     """ Test various exponential integrals. """
     from sympy import (expint, unpolarify, Symbol, Ci, Si, Shi, Chi,
@@ -596,7 +634,7 @@ def test_messy():
 
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
-        (0, And(S(0) < re(a/2) + S(1)/2, S(0) < re(a/2) + 1))
+        (0, And(re(a/2) + S(1)/2 > S(0), re(a/2) + 1 > S(0)))
 
     # NOTE s < 0 can be done, but argument reduction is not good enough yet
     assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \
@@ -622,7 +660,7 @@ def test_issue_6122():
 def test_issue_6252():
     expr = 1/x/(a + b*x)**(S(1)/3)
     anti = integrate(expr, x, meijerg=True)
-    assert not expr.has(hyper)
+    assert not anti.has(hyper)
     # XXX the expression is a mess, but actually upon differentiation and
     # putting in numerical values seems to work...
 

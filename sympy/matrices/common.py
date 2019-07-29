@@ -4,27 +4,26 @@ when creating more advanced matrices (e.g., matrices over rings,
 etc.).
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import collections
-from sympy.core.add import Add
-from sympy.core.basic import Basic, Atom
+from collections import defaultdict
+from inspect import isfunction
+
+from sympy.assumptions.refine import refine
+from sympy.core.basic import Atom
+from sympy.core.compatibility import (
+    Iterable, as_int, is_sequence, range, reduce)
+from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
-from sympy.core.symbol import Symbol
 from sympy.core.function import count_ops
 from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key, range, \
-    NotIterable
-
-from sympy.simplify import simplify as _simplify, signsimp, nsimplify
-from sympy.utilities.iterables import flatten
 from sympy.functions import Abs
-from sympy.core.compatibility import reduce, as_int, string_types
-from sympy.assumptions.refine import refine
-from sympy.core.decorators import call_highest_priority
-
-from types import FunctionType
+from sympy.simplify import simplify as _simplify
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import flatten
+from sympy.utilities.misc import filldedent
 
 
 class MatrixError(Exception):
@@ -37,6 +36,16 @@ class ShapeError(ValueError, MatrixError):
 
 
 class NonSquareMatrixError(ShapeError):
+    pass
+
+
+class NonInvertibleMatrixError(ValueError, MatrixError):
+    """The matrix in not invertible (division by multidimensional zero error)."""
+    pass
+
+
+class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
+    """The matrix is not a positive-definite matrix."""
     pass
 
 
@@ -204,6 +213,8 @@ class MatrixShaping(MatrixRequired):
         if not self:
             return type(self)(other)
 
+        pos = as_int(pos)
+
         if pos < 0:
             pos = self.cols + pos
         if pos < 0:
@@ -213,7 +224,7 @@ class MatrixShaping(MatrixRequired):
 
         if self.rows != other.rows:
             raise ShapeError(
-                "self and other must have the same number of rows.")
+                "`self` and `other` must have the same number of rows.")
 
         return self._eval_col_insert(pos, other)
 
@@ -436,10 +447,11 @@ class MatrixShaping(MatrixRequired):
         row
         col_insert
         """
-        from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
             return self._new(other)
+
+        pos = as_int(pos)
 
         if pos < 0:
             pos = self.rows + pos
@@ -483,6 +495,55 @@ class MatrixShaping(MatrixRequired):
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
         return self._eval_row_join(other)
+
+    def diagonal(self, k=0):
+        """Returns the kth diagonal of self. The main diagonal
+        corresponds to `k=0`; diagonals above and below correspond to
+        `k > 0` and `k < 0`, respectively. The values of `self[i, j]`
+        for which `j - i = k`, are returned in order of increasing
+        `i + j`, starting with `i + j = |k|`.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, SparseMatrix
+        >>> m = Matrix(3, 3, lambda i, j: j - i); m
+        Matrix([
+        [ 0,  1, 2],
+        [-1,  0, 1],
+        [-2, -1, 0]])
+        >>> _.diagonal()
+        Matrix([[0, 0, 0]])
+        >>> m.diagonal(1)
+        Matrix([[1, 1]])
+        >>> m.diagonal(-2)
+        Matrix([[-2]])
+
+        Even though the diagonal is returned as a Matrix, the element
+        retrieval can be done with a single index:
+
+        >>> Matrix.diag(1, 2, 3).diagonal()[1]  # instead of [0, 1]
+        2
+
+        See Also
+        ========
+        diag - to create a diagonal matrix
+        """
+        rv = []
+        k = as_int(k)
+        r = 0 if k > 0 else -k
+        c = 0 if r else k
+        while True:
+            if r == self.rows or c == self.cols:
+                break
+            rv.append(self[r, c])
+            r += 1
+            c += 1
+        if not rv:
+            raise ValueError(filldedent('''
+            The %s diagonal is out of range [%s, %s]''' % (
+            k, 1 - self.rows, self.cols - 1)))
+        return self._new(1, len(rv), rv)
 
     def row(self, i):
         """Elementary row selector.
@@ -612,13 +673,13 @@ class MatrixSpecial(MatrixRequired):
         """diag_dict is a defaultdict containing
         all the entries of the diagonal matrix."""
         def entry(i, j):
-            return diag_dict[(i,j)]
+            return diag_dict[(i, j)]
         return cls._new(rows, cols, entry)
 
     @classmethod
     def _eval_eye(cls, rows, cols):
         def entry(i, j):
-            return S.One if i == j else S.Zero
+            return cls.one if i == j else cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
@@ -628,43 +689,51 @@ class MatrixSpecial(MatrixRequired):
                 if i == j:
                     return eigenvalue
                 elif j + 1 == i:
-                    return S.One
-                return S.Zero
+                    return cls.one
+                return cls.zero
         else:
             def entry(i, j):
                 if i == j:
                     return eigenvalue
                 elif i + 1 == j:
-                    return S.One
-                return S.Zero
+                    return cls.one
+                return cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
     def _eval_ones(cls, rows, cols):
         def entry(i, j):
-            return S.One
+            return cls.one
         return cls._new(rows, cols, entry)
 
     @classmethod
     def _eval_zeros(cls, rows, cols):
         def entry(i, j):
-            return S.Zero
+            return cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
     def diag(kls, *args, **kwargs):
         """Returns a matrix with the specified diagonal.
         If matrices are passed, a block-diagonal matrix
-        is created.
+        is created (i.e. the "direct sum" of the matrices).
 
         kwargs
         ======
 
         rows : rows of the resulting matrix; computed if
                not given.
+
         cols : columns of the resulting matrix; computed if
                not given.
+
         cls : class for the resulting matrix
+
+        unpack : bool which, when True (default), unpacks a single
+        sequence rather than interpreting it as a Matrix.
+
+        strict : bool which, when False (default), allows Matrices to
+        have variable-length rows.
 
         Examples
         ========
@@ -675,87 +744,118 @@ class MatrixSpecial(MatrixRequired):
         [1, 0, 0],
         [0, 2, 0],
         [0, 0, 3]])
-        >>> Matrix.diag([1, 2, 3])
+
+        The current default is to unpack a single sequence. If this is
+        not desired, set `unpack=False` and it will be interpreted as
+        a matrix.
+
+        >>> Matrix.diag([1, 2, 3]) == Matrix.diag(1, 2, 3)
+        True
+
+        When more than one element is passed, each is interpreted as
+        something to put on the diagonal. Lists are converted to
+        matricecs. Filling of the diagonal always continues from
+        the bottom right hand corner of the previous item: this
+        will create a block-diagonal matrix whether the matrices
+        are square or not.
+
+        >>> col = [1, 2, 3]
+        >>> row = [[4, 5]]
+        >>> Matrix.diag(col, row)
         Matrix([
         [1, 0, 0],
-        [0, 2, 0],
-        [0, 0, 3]])
+        [2, 0, 0],
+        [3, 0, 0],
+        [0, 4, 5]])
 
-        The diagonal elements can be matrices; diagonal filling will
-        continue on the diagonal from the last element of the matrix:
+        When `unpack` is False, elements within a list need not all be
+        of the same length. Setting `strict` to True would raise a
+        ValueError for the following:
 
-        >>> from sympy.abc import x, y, z
-        >>> a = Matrix([x, y, z])
-        >>> b = Matrix([[1, 2], [3, 4]])
-        >>> c = Matrix([[5, 6]])
-        >>> Matrix.diag(a, 7, b, c)
+        >>> Matrix.diag([[1, 2, 3], [4, 5], [6]], unpack=False)
         Matrix([
-        [x, 0, 0, 0, 0, 0],
-        [y, 0, 0, 0, 0, 0],
-        [z, 0, 0, 0, 0, 0],
-        [0, 7, 0, 0, 0, 0],
-        [0, 0, 1, 2, 0, 0],
-        [0, 0, 3, 4, 0, 0],
-        [0, 0, 0, 0, 5, 6]])
+        [1, 2, 3],
+        [4, 5, 0],
+        [6, 0, 0]])
 
-        A given band off the diagonal can be made by padding with a
-        vertical or horizontal "kerning" vector:
-
-        >>> hpad = Matrix(0, 2, [])
-        >>> vpad = Matrix(2, 0, [])
-        >>> Matrix.diag(vpad, 1, 2, 3, hpad) + Matrix.diag(hpad, 4, 5, 6, vpad)
-        Matrix([
-        [0, 0, 4, 0, 0],
-        [0, 0, 0, 5, 0],
-        [1, 0, 0, 0, 6],
-        [0, 2, 0, 0, 0],
-        [0, 0, 3, 0, 0]])
-
-        The type of the resulting matrix can be affected with the ``cls``
+        The type of the returned matrix can be set with the ``cls``
         keyword.
 
-        >>> type(Matrix.diag(1))
-        <class 'sympy.matrices.dense.MutableDenseMatrix'>
         >>> from sympy.matrices import ImmutableMatrix
-        >>> type(Matrix.diag(1, cls=ImmutableMatrix))
-        <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
-        """
+        >>> from sympy.utilities.misc import func_name
+        >>> func_name(Matrix.diag(1, cls=ImmutableMatrix))
+        'ImmutableDenseMatrix'
 
+        A zero dimension matrix can be used to position the start of
+        the filling at the start of an arbitrary row or column:
+
+        >>> from sympy import ones
+        >>> r2 = ones(0, 2)
+        >>> Matrix.diag(r2, 1, 2)
+        Matrix([
+        [0, 0, 1, 0],
+        [0, 0, 0, 2]])
+
+        See Also
+        ========
+        eye
+        diagonal - to extract a diagonal
+        .dense.diag
+        .expressions.blockmatrix.BlockMatrix
+       """
+        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.dense import Matrix
+        from sympy.matrices.sparse import SparseMatrix
         klass = kwargs.get('cls', kls)
-        # allow a sequence to be passed in as the only argument
-        if len(args) == 1 and is_sequence(args[0]) and not getattr(args[0], 'is_Matrix', False):
+        strict = kwargs.get('strict', False) # lists -> Matrices
+        unpack = kwargs.get('unpack', True)  # unpack single sequence
+        if unpack and len(args) == 1 and is_sequence(args[0]) and \
+                not isinstance(args[0], MatrixBase):
             args = args[0]
 
-        def size(m):
-            """Compute the size of the diagonal block"""
-            if hasattr(m, 'rows'):
-                return m.rows, m.cols
-            return 1, 1
-        diag_rows = sum(size(m)[0] for m in args)
-        diag_cols =  sum(size(m)[1] for m in args)
-        rows = kwargs.get('rows', diag_rows)
-        cols = kwargs.get('cols', diag_cols)
-        if rows < diag_rows or cols < diag_cols:
-            raise ValueError("A {} x {} diagnal matrix cannot accommodate a"
-                             "diagonal of size at least {} x {}.".format(rows, cols,
-                                                                         diag_rows, diag_cols))
-
         # fill a default dict with the diagonal entries
-        diag_entries = collections.defaultdict(lambda: S.Zero)
-        row_pos, col_pos = 0, 0
+        diag_entries = defaultdict(int)
+        rmax = cmax = 0  # keep track of the biggest index seen
         for m in args:
-            if hasattr(m, 'rows'):
-                # in this case, we're a matrix
-                for i in range(m.rows):
-                    for j in range(m.cols):
-                        diag_entries[(i + row_pos, j + col_pos)] = m[i, j]
-                row_pos += m.rows
-                col_pos += m.cols
-            else:
-                # in this case, we're a single value
-                diag_entries[(row_pos, col_pos)] = m
-                row_pos += 1
-                col_pos += 1
+            if isinstance(m, list):
+                if strict:
+                    # if malformed, Matrix will raise an error
+                    _ = Matrix(m)
+                    r, c = _.shape
+                    m = _.tolist()
+                else:
+                    m = SparseMatrix(m)
+                    for (i, j), _ in m._smat.items():
+                        diag_entries[(i + rmax, j + cmax)] = _
+                    r, c = m.shape
+                    m = []  # to skip process below
+            elif hasattr(m, 'shape'):  # a Matrix
+                # convert to list of lists
+                r, c = m.shape
+                m = m.tolist()
+            else:  # in this case, we're a single value
+                diag_entries[(rmax, cmax)] = m
+                rmax += 1
+                cmax += 1
+                continue
+            # process list of lists
+            for i in range(len(m)):
+                for j, _ in enumerate(m[i]):
+                    diag_entries[(i + rmax, j + cmax)] = _
+            rmax += r
+            cmax += c
+        rows = kwargs.get('rows', None)
+        cols = kwargs.get('cols', None)
+        if rows is None:
+            rows, cols = cols, rows
+        if rows is None:
+            rows, cols = rmax, cmax
+        else:
+            cols = rows if cols is None else cols
+        if rows < rmax or cols < cmax:
+            raise ValueError(filldedent('''
+                The constructed matrix is {} x {} but a size of {} x {}
+                was specified.'''.format(rmax, cmax, rows, cols)))
         return klass._eval_diag(rows, cols, diag_entries)
 
     @classmethod
@@ -780,25 +880,58 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_eye(rows, cols)
 
     @classmethod
-    def jordan_block(kls, *args, **kwargs):
-        """Returns a Jordan block with the specified size
-        and eigenvalue.  You may call `jordan_block` with
-        two args (size, eigenvalue) or with keyword arguments.
+    def jordan_block(kls, size=None, eigenvalue=None, **kwargs):
+        """Returns a Jordan block
 
-        kwargs
+        Parameters
+        ==========
+
+        size : Integer, optional
+            Specifies the shape of the Jordan block matrix.
+
+        eigenvalue : Number or Symbol
+            Specifies the value for the main diagonal of the matrix.
+
+            .. note::
+                The keyword ``eigenval`` is also specified as an alias
+                of this keyword, but it is not recommended to use.
+
+                We may deprecate the alias in later release.
+
+        band : 'upper' or 'lower', optional
+            Specifies the position of the off-diagonal to put `1` s on.
+
+        cls : Matrix, optional
+            Specifies the matrix class of the output form.
+
+            If it is not specified, the class type where the method is
+            being executed on will be returned.
+
+        rows, cols : Integer, optional
+            Specifies the shape of the Jordan block matrix. See Notes
+            section for the details of how these key works.
+
+            .. note::
+                This feature will be deprecated in the future.
+
+
+        Returns
+        =======
+
+        Matrix
+            A Jordan block matrix.
+
+        Raises
         ======
 
-        size : rows and columns of the matrix
-        rows : rows of the matrix (if None, rows=size)
-        cols : cols of the matrix (if None, cols=size)
-        eigenvalue : value on the diagonal of the matrix
-        band : position of off-diagonal 1s.  May be 'upper' or
-               'lower'. (Default: 'upper')
-
-        cls : class of the returned matrix
+        ValueError
+            If insufficient arguments are given for matrix size
+            specification, or no eigenvalue is given.
 
         Examples
         ========
+
+        Creating a default Jordan block:
 
         >>> from sympy import Matrix
         >>> from sympy.abc import x
@@ -808,37 +941,85 @@ class MatrixSpecial(MatrixRequired):
         [0, x, 1, 0],
         [0, 0, x, 1],
         [0, 0, 0, x]])
+
+        Creating an alternative Jordan block matrix where `1` is on
+        lower off-diagonal:
+
         >>> Matrix.jordan_block(4, x, band='lower')
         Matrix([
         [x, 0, 0, 0],
         [1, x, 0, 0],
         [0, 1, x, 0],
         [0, 0, 1, x]])
+
+        Creating a Jordan block with keyword arguments
+
         >>> Matrix.jordan_block(size=4, eigenvalue=x)
         Matrix([
         [x, 1, 0, 0],
         [0, x, 1, 0],
         [0, 0, x, 1],
         [0, 0, 0, x]])
+
+        Notes
+        =====
+
+        .. note::
+            This feature will be deprecated in the future.
+
+        The keyword arguments ``size``, ``rows``, ``cols`` relates to
+        the Jordan block size specifications.
+
+        If you want to create a square Jordan block, specify either
+        one of the three arguments.
+
+        If you want to create a rectangular Jordan block, specify
+        ``rows`` and ``cols`` individually.
+
+        +--------------------------------+---------------------+
+        |        Arguments Given         |     Matrix Shape    |
+        +----------+----------+----------+----------+----------+
+        |   size   |   rows   |   cols   |   rows   |   cols   |
+        +==========+==========+==========+==========+==========+
+        |   size   |         Any         |   size   |   size   |
+        +----------+----------+----------+----------+----------+
+        |          |        None         |     ValueError      |
+        |          +----------+----------+----------+----------+
+        |   None   |   rows   |   None   |   rows   |   rows   |
+        |          +----------+----------+----------+----------+
+        |          |   None   |   cols   |   cols   |   cols   |
+        +          +----------+----------+----------+----------+
+        |          |   rows   |   cols   |   rows   |   cols   |
+        +----------+----------+----------+----------+----------+
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Jordan_matrix
         """
+        if 'rows' in kwargs or 'cols' in kwargs:
+            SymPyDeprecationWarning(
+                feature="Keyword arguments 'rows' or 'cols'",
+                issue=16102,
+                useinstead="a more generic banded matrix constructor",
+                deprecated_since_version="1.4"
+            ).warn()
 
-        klass = kwargs.get('cls', kls)
-        size, eigenvalue = None, None
-        if len(args) == 2:
-            size, eigenvalue = args
-        elif len(args) == 1:
-            size = args[0]
-        elif len(args) != 0:
-            raise ValueError("'jordan_block' accepts 0, 1, or 2 arguments, not {}".format(len(args)))
-        rows, cols = kwargs.get('rows', None), kwargs.get('cols', None)
-        size = kwargs.get('size', size)
-        band = kwargs.get('band', 'upper')
-        # allow for a shortened form of `eigenvalue`
-        eigenvalue = kwargs.get('eigenval', eigenvalue)
-        eigenvalue = kwargs.get('eigenvalue', eigenvalue)
+        klass = kwargs.pop('cls', kls)
+        band = kwargs.pop('band', 'upper')
+        rows = kwargs.pop('rows', None)
+        cols = kwargs.pop('cols', None)
 
-        if eigenvalue is None:
+        eigenval = kwargs.get('eigenval', None)
+        if eigenvalue is None and eigenval is None:
             raise ValueError("Must supply an eigenvalue")
+        elif eigenvalue != eigenval and None not in (eigenval, eigenvalue):
+            raise ValueError(
+                "Inconsistent values are given: 'eigenval'={}, "
+                "'eigenvalue'={}".format(eigenval, eigenvalue))
+        else:
+            if eigenval is not None:
+                eigenvalue = eigenval
 
         if (size, rows, cols) == (None, None, None):
             raise ValueError("Must supply a matrix size")
@@ -960,7 +1141,7 @@ class MatrixProperties(MatrixRequired):
     def _eval_is_zero(self):
         if any(i.is_zero == False for i in self):
             return False
-        if any(i.is_zero == None for i in self):
+        if any(i.is_zero is None for i in self):
             return None
         return True
 
@@ -1094,7 +1275,7 @@ class MatrixProperties(MatrixRequired):
         """
         # accept custom simplification
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         if not self.is_square:
@@ -1177,7 +1358,7 @@ class MatrixProperties(MatrixRequired):
             return False
 
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         return self._eval_is_matrix_hermitian(simpfunc)
@@ -1357,7 +1538,7 @@ class MatrixProperties(MatrixRequired):
         True
         """
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         if not self.is_square:
@@ -1770,7 +1951,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: x.replace(F, G, map))
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, **kwargs):
         """Apply simplify to each element of the matrix.
 
         Examples
@@ -1784,7 +1965,7 @@ class MatrixOperations(MatrixRequired):
         >>> _.simplify()
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.simplify(ratio, measure))
+        return self.applyfunc(lambda x: x.simplify(**kwargs))
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
@@ -1817,7 +1998,7 @@ class MatrixOperations(MatrixRequired):
         5
 
         """
-        if not self.rows == self.cols:
+        if self.rows != self.cols:
             raise NonSquareMatrixError()
         return self._eval_trace()
 
@@ -1938,6 +2119,10 @@ class MatrixArithmetic(MatrixRequired):
     def _eval_scalar_rmul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
+    def _eval_Mod(self, other):
+        from sympy import Mod
+        return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
+
     # python arithmetic functions
     def __abs__(self):
         """Returns a new matrix with entry-wise absolute values."""
@@ -1969,7 +2154,7 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return self * (S.One / other)
+        return self * (self.one / other)
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
@@ -1978,6 +2163,9 @@ class MatrixArithmetic(MatrixRequired):
             return NotImplemented
 
         return self.__mul__(other)
+
+    def __mod__(self, other):
+        return self.applyfunc(lambda x: x % other)
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
@@ -2023,7 +2211,7 @@ class MatrixArithmetic(MatrixRequired):
             return MatrixArithmetic._eval_matrix_mul(self, other)
 
         # if 'other' is not iterable then scalar multiplication.
-        if not isinstance(other, collections.Iterable):
+        if not isinstance(other, Iterable):
             try:
                 return self._eval_scalar_mul(other)
             except TypeError:
@@ -2035,36 +2223,51 @@ class MatrixArithmetic(MatrixRequired):
         return self._eval_scalar_mul(-1)
 
     @call_highest_priority('__rpow__')
-    def __pow__(self, num):
-        if not self.rows == self.cols:
+    def __pow__(self, exp):
+        if self.rows != self.cols:
             raise NonSquareMatrixError()
-        try:
-            a = self
-            num = sympify(num)
-            if num.is_Number and num % 1 == 0:
-                if a.rows == 1:
-                    return a._new([[a[0]**num]])
-                if num == 0:
-                    return self._new(self.rows, self.cols, lambda i, j: int(i == j))
-                if num < 0:
-                    num = -num
-                    a = a.inv()
-                # When certain conditions are met,
-                # Jordan block algorithm is faster than
-                # computation by recursion.
-                elif a.rows == 2 and num > 100000:
-                    try:
-                        return a._matrix_pow_by_jordan_blocks(num)
-                    except (AttributeError, MatrixError):
-                        pass
-                return a._eval_pow_by_recursion(num)
-            elif isinstance(num, (Expr, float)):
-                return a._matrix_pow_by_jordan_blocks(num)
-            else:
-                raise TypeError(
-                    "Only SymPy expressions or integers are supported as exponent for matrices")
-        except AttributeError:
-            raise TypeError("Don't know how to raise {} to {}".format(self.__class__, num))
+        a = self
+        jordan_pow = getattr(a, '_matrix_pow_by_jordan_blocks', None)
+        exp = sympify(exp)
+
+        if exp.is_zero:
+            return a._new(a.rows, a.cols, lambda i, j: int(i == j))
+        if exp == 1:
+            return a
+
+        diagonal = getattr(a, 'is_diagonal', None)
+        if diagonal is not None and diagonal():
+            return a._new(a.rows, a.cols, lambda i, j: a[i,j]**exp if i == j else 0)
+
+        if exp.is_Number and exp % 1 == 0:
+            if a.rows == 1:
+                return a._new([[a[0]**exp]])
+            if exp < 0:
+                exp = -exp
+                a = a.inv()
+            # When certain conditions are met,
+            # Jordan block algorithm is faster than
+            # computation by recursion.
+            elif a.rows == 2 and exp > 100000 and jordan_pow is not None:
+                try:
+                    return jordan_pow(exp)
+                except MatrixError:
+                    pass
+            return a._eval_pow_by_recursion(exp)
+
+        if jordan_pow:
+            try:
+                return jordan_pow(exp)
+            except NonInvertibleMatrixError:
+                # Raised by jordan_pow on zero determinant matrix unless exp is
+                # definitely known to be a non-negative integer.
+                # Here we raise if n is definitely not a non-negative integer
+                # but otherwise we can leave this as an unevaluated MatPow.
+                if exp.is_integer is False or exp.is_nonnegative is False:
+                    raise
+
+        from sympy.matrices.expressions import MatPow
+        return MatPow(a, exp)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
@@ -2095,7 +2298,7 @@ class MatrixArithmetic(MatrixRequired):
             return MatrixArithmetic._eval_matrix_rmul(self, other)
 
         # if 'other' is not iterable then scalar multiplication.
-        if not isinstance(other, collections.Iterable):
+        if not isinstance(other, Iterable):
             try:
                 return self._eval_scalar_rmul(other)
             except TypeError:
@@ -2153,7 +2356,7 @@ class _MinimalMatrix(object):
     """Class providing the minimum functionality
     for a matrix-like object and implementing every method
     required for a `MatrixRequired`.  This class does not have everything
-    needed to become a full-fledged sympy object, but it will satisfy the
+    needed to become a full-fledged SymPy object, but it will satisfy the
     requirements of anything inheriting from `MatrixRequired`.  If you wish
     to make a specialized matrix type, make sure to implement these
     methods and properties with the exception of `__init__` and `__repr__`
@@ -2162,6 +2365,8 @@ class _MinimalMatrix(object):
     is_MatrixLike = True
     _sympify = staticmethod(sympify)
     _class_priority = 3
+    zero = S.Zero
+    one = S.One
 
     is_Matrix = True
     is_MatrixExpr = False
@@ -2171,15 +2376,12 @@ class _MinimalMatrix(object):
         return cls(*args, **kwargs)
 
     def __init__(self, rows, cols=None, mat=None):
-        if isinstance(mat, FunctionType):
+        if isfunction(mat):
             # if we passed in a function, use that to populate the indices
             mat = list(mat(i, j) for i in range(rows) for j in range(cols))
-        try:
-            if cols is None and mat is None:
-                mat = rows
-            rows, cols = mat.shape
-        except AttributeError:
-            pass
+        if cols is None and mat is None:
+            mat = rows
+        rows, cols = getattr(mat, 'shape', (rows, cols))
         try:
             # if we passed in a list of lists, flatten it and set the size
             if cols is None and mat is None:
@@ -2234,7 +2436,12 @@ class _MinimalMatrix(object):
         return self.mat[key]
 
     def __eq__(self, other):
-        return self.shape == other.shape and list(self) == list(other)
+        try:
+            classof(self, other)
+        except TypeError:
+            return False
+        return (
+            self.shape == other.shape and list(self) == list(other))
 
     def __len__(self):
         return self.rows*self.cols
@@ -2285,9 +2492,10 @@ def _matrixify(mat):
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
     if type(j) is not int:
-        try:
-            j = j.__index__()
-        except AttributeError:
+        jindex = getattr(j, '__index__', None)
+        if jindex is not None:
+            j = jindex()
+        else:
             raise IndexError("Invalid index a[%r]" % (j,))
     if n is not None:
         if j < 0:
@@ -2307,25 +2515,28 @@ def classof(A, B):
     ========
 
     >>> from sympy import Matrix, ImmutableMatrix
-    >>> from sympy.matrices.matrices import classof
+    >>> from sympy.matrices.common import classof
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
     <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
     """
-    try:
+    priority_A = getattr(A, '_class_priority', None)
+    priority_B = getattr(B, '_class_priority', None)
+    if None not in (priority_A, priority_B):
         if A._class_priority > B._class_priority:
             return A.__class__
         else:
             return B.__class__
-    except Exception:
-        pass
+
     try:
         import numpy
+    except ImportError:
+        pass
+    else:
         if isinstance(A, numpy.ndarray):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except Exception:
-        pass
+
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))

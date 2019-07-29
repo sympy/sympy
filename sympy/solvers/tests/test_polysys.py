@@ -45,6 +45,8 @@ def test_solve_poly_system():
         [x + x*y - 3, y + x*y - 4], x, y) == [(-3, -2), (1, 2)]
 
     raises(NotImplementedError, lambda: solve_poly_system([x**3 - y**3], x, y))
+    raises(NotImplementedError, lambda: solve_poly_system(
+        [z, -2*x*y**2 + x + y**2*z, y**2*(-z - 4) + 2]))
     raises(PolynomialError, lambda: solve_poly_system([1/x], x))
 
 
@@ -122,7 +124,7 @@ def test_solve_triangulated():
 
 def test_solve_issue_3686():
     roots = solve_poly_system([((x - 5)**2/250000 + (y - S(5)/10)**2/250000) - 1, x], x, y)
-    assert roots == [(0, S(1)/2 + 15*sqrt(1111)), (0, S(1)/2 - 15*sqrt(1111))]
+    assert roots == [(0, S(1)/2 - 15*sqrt(1111)), (0, S(1)/2 + 15*sqrt(1111))]
 
     roots = solve_poly_system([((x - 5)**2/250000 + (y - 5.0/10)**2/250000) - 1, x], x, y)
     # TODO: does this really have to be so complicated?!

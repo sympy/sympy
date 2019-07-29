@@ -2,7 +2,7 @@
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
+                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs, Piecewise)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
@@ -191,7 +191,7 @@ def test_reduce_abs_inequalities():
     assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7) == \
         Or(And(S(-2) < x, x < -1), And(S(1)/2 < x, x < 4))
 
-    nr = Symbol('nr', real=False)
+    nr = Symbol('nr', extended_real=False)
     raises(TypeError, lambda: reduce_inequalities(abs(nr - 5) < 3))
     assert reduce_inequalities(x < 3, symbols=[x, nr]) == And(-oo < x, x < 3)
 
@@ -312,7 +312,7 @@ def test_solve_univariate_inequality():
         x**2 < zero*I, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
-    raises(TypeError, lambda: isolve(x - I < 0, x))
+    raises(ValueError, lambda: isolve(x - I < 0, x))
 
     zero = x**2 + x - x*(x + 1)
     assert isolve(zero < 0, x, relational=False) is S.EmptySet
@@ -387,9 +387,12 @@ def test_issue_10198():
 
 
 def test_issue_10047():
-    # this must remain an inequality, not True, since if x
+    # issue 10047: this must remain an inequality, not True, since if x
     # is not real the inequality is invalid
-    assert solve(sin(x) < 2) == (x <= oo)
+    # assert solve(sin(x) < 2) == (x <= oo)
+
+    # with PR 16956, (x <= oo) autoevaluates when x is extended_real
+    assert solve(sin(x) < 2) == True
 
 
 def test_issue_10268():
@@ -423,7 +426,7 @@ def test__solve_inequality():
         for c in (0, 1):
             e = 2*fx - c > 0
             assert _solve_inequality(e, x, linear=True) == (
-                fx > c/2)
+                fx > c/S(2))
     assert _solve_inequality(2*x**2 + 2*x - 1 < 0, x, linear=True) == (
         x*(x + 1) < S.Half)
     assert _solve_inequality(Eq(x*y, 1), x) == Eq(x*y, 1)

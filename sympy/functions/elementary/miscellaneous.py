@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify
+from sympy.core import Function, S, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
@@ -15,9 +15,8 @@ from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
-from sympy.core.compatibility import as_int, with_metaclass, range
+from sympy.core.compatibility import with_metaclass, range
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
-from sympy.functions.elementary.integers import floor
 from sympy.logic.boolalg import And, Or
 
 def _minmax_as_Piecewise(op, *args):
@@ -61,10 +60,13 @@ Id = S.IdentityFunction
 ###############################################################################
 
 
-def sqrt(arg):
+def sqrt(arg, evaluate=None):
     """The square root function
 
     sqrt(x) -> Returns the principal square root of x.
+
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate
 
     Examples
     ========
@@ -122,16 +124,19 @@ def sqrt(arg):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Square_root
-    .. [2] http://en.wikipedia.org/wiki/Principal_value
+    .. [1] https://en.wikipedia.org/wiki/Square_root
+    .. [2] https://en.wikipedia.org/wiki/Principal_value
     """
     # arg = sympify(arg) is handled by Pow
-    return Pow(arg, S.Half)
+    return Pow(arg, S.Half, evaluate=evaluate)
 
 
-def cbrt(arg):
+def cbrt(arg, evaluate=None):
     """This function computes the principal cube root of `arg`, so
     it's just a shortcut for `arg**Rational(1, 3)`.
+
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate.
 
     Examples
     ========
@@ -172,17 +177,19 @@ def cbrt(arg):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Cube_root
-    * http://en.wikipedia.org/wiki/Principal_value
+    * https://en.wikipedia.org/wiki/Cube_root
+    * https://en.wikipedia.org/wiki/Principal_value
 
     """
-    return Pow(arg, Rational(1, 3))
+    return Pow(arg, Rational(1, 3), evaluate=evaluate)
 
 
-def root(arg, n, k=0):
+def root(arg, n, k=0, evaluate=None):
     """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
     principal root (k=0).
 
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate.
 
     Examples
     ========
@@ -256,24 +263,27 @@ def root(arg, n, k=0):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Square_root
-    * http://en.wikipedia.org/wiki/Real_root
-    * http://en.wikipedia.org/wiki/Root_of_unity
-    * http://en.wikipedia.org/wiki/Principal_value
+    * https://en.wikipedia.org/wiki/Square_root
+    * https://en.wikipedia.org/wiki/Real_root
+    * https://en.wikipedia.org/wiki/Root_of_unity
+    * https://en.wikipedia.org/wiki/Principal_value
     * http://mathworld.wolfram.com/CubeRoot.html
 
     """
     n = sympify(n)
     if k:
-        return Pow(arg, S.One/n)*S.NegativeOne**(2*k/n)
-    return Pow(arg, 1/n)
+        return Mul(Pow(arg, S.One/n, evaluate=evaluate), S.NegativeOne**(2*k/n), evaluate=evaluate)
+    return Pow(arg, 1/n, evaluate=evaluate)
 
 
-def real_root(arg, n=None):
+def real_root(arg, n=None, evaluate=None):
     """Return the real nth-root of arg if possible. If n is omitted then
     all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
     will only create a real root of a principal root -- the presence of
     other factors may cause the result to not be real.
+
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate.
 
     Examples
     ========
@@ -308,10 +318,10 @@ def real_root(arg, n=None):
     from sympy.functions.elementary.piecewise import Piecewise
     if n is not None:
         return Piecewise(
-            (root(arg, n), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
-            (sign(arg)*root(Abs(arg), n), And(Eq(im(arg), S.Zero),
-                Eq(Mod(n, 2), S.One))),
-            (root(arg, n), True))
+            (root(arg, n, evaluate=evaluate), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
+            (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate),
+            And(Eq(im(arg), S.Zero), Eq(Mod(n, 2), S.One))),
+            (root(arg, n, evaluate=evaluate), True))
     rv = sympify(arg)
     n1pow = Transform(lambda x: -(-x.base)**x.exp,
                       lambda x:
@@ -328,24 +338,25 @@ def real_root(arg, n=None):
 
 class MinMaxBase(Expr, LatticeOp):
     def __new__(cls, *args, **assumptions):
-        if not args:
-            raise ValueError("The Max/Min functions must have arguments.")
-
+        evaluate = assumptions.pop('evaluate', True)
         args = (sympify(arg) for arg in args)
 
         # first standard filter, for cls.zero and cls.identity
         # also reshape Max(a, Max(b, c)) to Max(a, b, c)
-        try:
-            args = frozenset(cls._new_args_filter(args))
-        except ShortCircuit:
-            return cls.zero
 
-        if assumptions.pop('evaluate', True):
+        if evaluate:
+            try:
+                args = frozenset(cls._new_args_filter(args))
+            except ShortCircuit:
+                return cls.zero
+        else:
+            args = frozenset(args)
+
+        if evaluate:
             # remove redundant args that are easily identified
             args = cls._collapse_arguments(args, **assumptions)
-
-        # find local zeros
-        args = cls._find_localzeros(args, **assumptions)
+            # find local zeros
+            args = cls._find_localzeros(args, **assumptions)
 
         if not args:
             return cls.identity
@@ -385,7 +396,6 @@ class MinMaxBase(Expr, LatticeOp):
 
         """
         from sympy.utilities.iterables import ordered
-        from sympy.utilities.iterables import sift
         from sympy.simplify.simplify import walk
 
         if not args:
@@ -506,7 +516,7 @@ class MinMaxBase(Expr, LatticeOp):
         for arg in arg_sequence:
 
             # pre-filter, checking comparability of arguments
-            if not isinstance(arg, Expr) or arg.is_real is False or (
+            if not isinstance(arg, Expr) or arg.is_extended_real is False or (
                     arg.is_number and
                     not arg.is_comparable):
                 raise ValueError("The argument '%s' is not comparable." % arg)
@@ -595,7 +605,7 @@ class MinMaxBase(Expr, LatticeOp):
             l.append(df * da)
         return Add(*l)
 
-    def _eval_rewrite_as_Abs(self, *args):
+    def _eval_rewrite_as_Abs(self, *args, **kwargs):
         from sympy.functions.elementary.complexes import Abs
         s = (args[0] + self.func(*args[1:]))/2
         d = abs(args[0] - self.func(*args[1:]))/2
@@ -628,6 +638,7 @@ class MinMaxBase(Expr, LatticeOp):
     _eval_is_prime = lambda s: _torf(i.is_prime for i in s.args)
     _eval_is_rational = lambda s: _torf(i.is_rational for i in s.args)
     _eval_is_real = lambda s: _torf(i.is_real for i in s.args)
+    _eval_is_extended_real = lambda s: _torf(i.is_extended_real for i in s.args)
     _eval_is_transcendental = lambda s: _torf(i.is_transcendental for i in s.args)
     _eval_is_zero = lambda s: _torf(i.is_zero for i in s.args)
 
@@ -708,8 +719,8 @@ class Max(MinMaxBase, Application):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
-    .. [2] http://en.wikipedia.org/wiki/Lattice_%28order%29
+    .. [1] https://en.wikipedia.org/wiki/Directed_complete_partial_order
+    .. [2] https://en.wikipedia.org/wiki/Lattice_%28order%29
 
     See Also
     ========
@@ -731,12 +742,12 @@ class Max(MinMaxBase, Application):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Heaviside(self, *args):
+    def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
-    def _eval_rewrite_as_Piecewise(self, *args):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         return _minmax_as_Piecewise('>=', *args)
 
     def _eval_is_positive(self):
@@ -794,12 +805,12 @@ class Min(MinMaxBase, Application):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Heaviside(self, *args):
+    def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
 
-    def _eval_rewrite_as_Piecewise(self, *args):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         return _minmax_as_Piecewise('<=', *args)
 
     def _eval_is_positive(self):

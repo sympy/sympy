@@ -1,31 +1,30 @@
-from sympy.multipledispatch import dispatch, Dispatcher
-from sympy.core import Basic, Expr, Function, Add, Mul, Pow, Dummy, Integer
-from sympy import Min, Max, Set, sympify, Lambda, symbols, exp, log, S
-from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-    ProductSet, EmptySet, Intersection)
-from sympy.core.function import FunctionClass
-from sympy.logic.boolalg import And, Or, Not, true, false
-
+from sympy import Set, symbols
+from sympy.core import Basic, Expr
+from sympy.multipledispatch import dispatch
+from sympy.sets import Interval
 
 _x, _y = symbols("x y")
 
 
-@dispatch(Set, Set)
-def mul_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x * _y)), x, y)
+@dispatch(Basic, Basic)
+def _set_mul(x, y):
+    return None
 
+@dispatch(Set, Set)
+def _set_mul(x, y):
+    return None
 
 @dispatch(Expr, Expr)
-def mul_sets(x, y):
+def _set_mul(x, y):
     return x*y
 
-
 @dispatch(Interval, Interval)
-def mul_sets(x, y):
+def _set_mul(x, y):
     """
     Multiplications in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
     """
+    # TODO: some intervals containing 0 and oo will fail as 0*oo returns nan.
     comvals = (
         (x.start * y.start, bool(x.left_open or y.left_open)),
         (x.start * y.end, bool(x.left_open or y.right_open)),
@@ -44,23 +43,34 @@ def mul_sets(x, y):
     return SetExpr(Interval(start, end))
 
 
+@dispatch(Basic, Basic)
+def _set_div(x, y):
+    return None
+
 @dispatch(Expr, Expr)
-def div_sets(x, y):
+def _set_div(x, y):
     return x/y
 
-
 @dispatch(Set, Set)
-def div_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x / _y)), x, y)
-
+def _set_div(x, y):
+    return None
 
 @dispatch(Interval, Interval)
-def div_sets(x, y):
+def _set_div(x, y):
     """
     Divisions in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
     """
+    from sympy.sets.setexpr import set_mul
+    from sympy import oo
     if (y.start*y.end).is_negative:
-        from sympy import oo
         return Interval(-oo, oo)
-    return mul_sets(x, Interval(1/y.end, 1/y.start, y.right_open, y.left_open))
+    if y.start == 0:
+        s2 = oo
+    else:
+        s2 = 1/y.start
+    if y.end == 0:
+        s1 = -oo
+    else:
+        s1 = 1/y.end
+    return set_mul(x, Interval(s1, s2, y.right_open, y.left_open))

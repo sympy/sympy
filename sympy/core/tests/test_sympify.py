@@ -1,8 +1,9 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
-    Pow, Or, true, false, Abs, pi, Range)
+    Pow, Or, true, false, Abs, pi, Range, Xor)
 from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
+from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
+    CantSympify)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, XFAIL, skip
@@ -13,9 +14,10 @@ from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-from sympy.external import import_module
 
 import mpmath
+from collections import defaultdict, OrderedDict
+from mpmath.rational import mpq
 
 
 numpy = import_module('numpy')
@@ -116,6 +118,8 @@ def test_sympify_mpmath():
 
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
 
+    assert sympify(mpq(1, 2)) == S.Half
+
 
 def test_sympify2():
     class A:
@@ -158,9 +162,24 @@ def test_sympify_bool():
 def test_sympyify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(['.3', '.2'], rational=True) == ans
-    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
     assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
     assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
+
+
+@XFAIL
+def test_issue_16772():
+    # because there is a converter for tuple, the
+    # args are only sympified without the flags being passed
+    # along; list, on the other hand, is not converted
+    # with a converter so its args are traversed later
+    ans = [Rational(3, 10), Rational(1, 5)]
+    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
+
+
+def test_issue_16859():
+    class no(float, CantSympify):
+        pass
+    raises(SympifyError, lambda: sympify(no(1.2)))
 
 
 def test_sympify4():
@@ -397,11 +416,13 @@ def test_evaluate_false():
         '2 + 3': Add(2, 3, evaluate=False),
         '2**2 / 3': Mul(Pow(2, 2, evaluate=False), Pow(3, -1, evaluate=False), evaluate=False),
         '2 + 3 * 5': Add(2, Mul(3, 5, evaluate=False), evaluate=False),
-        '2 - 3 * 5': Add(2, -Mul(3, 5, evaluate=False), evaluate=False),
+        '2 - 3 * 5': Add(2, Mul(-1, Mul(3, 5,evaluate=False), evaluate=False), evaluate=False),
         '1 / 3': Mul(1, Pow(3, -1, evaluate=False), evaluate=False),
         'True | False': Or(True, False, evaluate=False),
         '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x**2/2, evaluate=False),
         '2 * 4 * 6 + 8': Add(Mul(2, 4, 6, evaluate=False), 8, evaluate=False),
+        '2 - 8 / 4': Add(2, Mul(-1, Mul(8, Pow(4, -1, evaluate=False), evaluate=False), evaluate=False), evaluate=False),
+        '2 - 2**2': Add(2, Mul(-1, Pow(2, 2, evaluate=False), evaluate=False), evaluate=False),
     }
     for case, result in cases.items():
         assert sympify(case, evaluate=False) == result
@@ -440,8 +461,7 @@ def test_issue_3218():
 
 def test_issue_4988_builtins():
     C = Symbol('C')
-    vars = {}
-    vars['C'] = C
+    vars = {'C': C}
     exp1 = sympify('C')
     assert exp1 == C  # Make sure it did not get mixed up with sympy.C
 
@@ -477,6 +497,13 @@ def test_kernS():
     assert kernS(['2*(x + y)*y', ('2*(x + y)*y',)]) == [e, (e,)]
     assert kernS('-(2*sin(x)**2 + 2*sin(x)*cos(x))*y/2') == \
         -y*(2*sin(x)**2 + 2*sin(x)*cos(x))/2
+    # issue 15132
+    assert kernS('(1 - x)/(1 - x*(1-y))') == kernS('(1-x)/(1-(1-y)*x)')
+    assert kernS('(1-2**-(4+1)*(1-y)*x)') == (1 - x*(1 - y)/32)
+    assert kernS('(1-2**(4+1)*(1-y)*x)') == (1 - 32*x*(1 - y))
+    assert kernS('(1-2.*(1-y)*x)') == 1 - 2.*x*(1 - y)
+    one = kernS('x - (x - 1)')
+    assert one != 1 and one.expand() == 1
 
 
 def test_issue_6540_6552():
@@ -514,9 +541,10 @@ def test_issue_10295():
 
     B = numpy.array([-7, x, 3*y**2])
     sB = S(B)
-    assert B[0] == -7
-    assert B[1] == x
-    assert B[2] == 3*y**2
+    assert sB.shape == (3,)
+    assert B[0] == sB[0] == -7
+    assert B[1] == sB[1] == x
+    assert B[2] == sB[2] == 3*y**2
 
     C = numpy.arange(0, 24)
     C.resize(2,3,4)
@@ -585,17 +613,14 @@ def test_sympify_numpy():
     assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
     assert equal(sympify(np.longcomplex(1 + 2j)), S(1.0 + 2.0*I))
 
-    try:
+    #float96 does not exist on all platforms
+    if hasattr(np, 'float96'):
         assert equal(sympify(np.float96(1.123456789)),
                     Float(1.123456789, precision=80))
-    except AttributeError:  #float96 does not exist on all platforms
-        pass
-
-    try:
+    #float128 does not exist on all platforms
+    if hasattr(np, 'float128'):
         assert equal(sympify(np.float128(1.123456789123)),
                     Float(1.123456789123, precision=80))
-    except AttributeError:  #float128 does not exist on all platforms
-        pass
 
 
 @XFAIL
@@ -611,3 +636,62 @@ def test_issue_13924():
     a = sympify(numpy.array([1]))
     assert isinstance(a, ImmutableDenseNDimArray)
     assert a[0] == 1
+
+def test_numpy_sympify_args():
+    # Issue 15098. Make sure sympify args work with numpy types (like numpy.str_)
+    if not numpy:
+        skip("numpy not installed.")
+
+    a = sympify(numpy.str_('a'))
+    assert type(a) is Symbol
+    assert a == Symbol('a')
+
+    class CustomSymbol(Symbol):
+        pass
+
+    a = sympify(numpy.str_('a'), {"Symbol": CustomSymbol})
+    assert isinstance(a, CustomSymbol)
+
+    a = sympify(numpy.str_('x^y'))
+    assert a == x**y
+    a = sympify(numpy.str_('x^y'), convert_xor=False)
+    assert a == Xor(x, y)
+
+    raises(SympifyError, lambda: sympify(numpy.str_('x'), strict=True))
+
+    a = sympify(numpy.str_('1.1'))
+    assert isinstance(a, Float)
+    assert a == 1.1
+
+    a = sympify(numpy.str_('1.1'), rational=True)
+    assert isinstance(a, Rational)
+    assert a == Rational(11, 10)
+
+    a = sympify(numpy.str_('x + x'))
+    assert isinstance(a, Mul)
+    assert a == 2*x
+
+    a = sympify(numpy.str_('x + x'), evaluate=False)
+    assert isinstance(a, Add)
+    assert a == Add(x, x, evaluate=False)
+
+
+def test_issue_5939():
+     a = Symbol('a')
+     b = Symbol('b')
+     assert sympify('''a+\nb''') == a + b
+
+
+def test_issue_16759():
+    d = sympify({.5: 1})
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
+    d = sympify(OrderedDict({.5: 1}))
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
+    d = sympify(defaultdict(int, {.5: 1}))
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One

@@ -1,15 +1,13 @@
 from __future__ import print_function, division
 
-from sympy.tensor.indexed import Idx
+from sympy.core.compatibility import range
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.core.exprtools import factor_terms
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
-from sympy.core.compatibility import range
 
 
 class Product(ExprWithIntLimits):
@@ -110,10 +108,10 @@ class Product(ExprWithIntLimits):
     pi**2*Product(1 - pi**2/(4*k**2), (k, 1, n))/2
     >>> Pe = P.doit()
     >>> Pe
-    pi**2*RisingFactorial(1 + pi/2, n)*RisingFactorial(-pi/2 + 1, n)/(2*factorial(n)**2)
+    pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(1 + pi/2, n)/(2*factorial(n)**2)
     >>> Pe = Pe.rewrite(gamma)
     >>> Pe
-    pi**2*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/(2*gamma(1 + pi/2)*gamma(-pi/2 + 1)*gamma(n + 1)**2)
+    pi**2*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/(2*gamma(1 - pi/2)*gamma(1 + pi/2)*gamma(n + 1)**2)
     >>> Pe = simplify(Pe)
     >>> Pe
     sin(pi**2/2)*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/gamma(n + 1)**2
@@ -183,8 +181,8 @@ class Product(ExprWithIntLimits):
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
            http://dl.acm.org/citation.cfm?doid=322248.322255
-    .. [2] http://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation
-    .. [3] http://en.wikipedia.org/wiki/Empty_product
+    .. [2] https://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation
+    .. [3] https://en.wikipedia.org/wiki/Empty_product
     """
 
     __slots__ = ['is_commutative']
@@ -193,7 +191,7 @@ class Product(ExprWithIntLimits):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
 
-    def _eval_rewrite_as_Sum(self, *args):
+    def _eval_rewrite_as_Sum(self, *args, **kwargs):
         from sympy.concrete.summations import Sum
         return exp(Sum(log(self.function), *self.limits))
 
@@ -318,9 +316,10 @@ class Product(ExprWithIntLimits):
             else:
                 return f
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import product_simplify
-        return product_simplify(self)
+        rv = product_simplify(self)
+        return rv.doit() if kwargs['doit'] else rv
 
     def _eval_transpose(self):
         if self.is_commutative:
@@ -353,11 +352,6 @@ class Product(ExprWithIntLimits):
 
         converges.
 
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Infinite_product
-
         Examples
         ========
 
@@ -371,6 +365,11 @@ class Product(ExprWithIntLimits):
         True
         >>> Product(exp(-n**2), (n, 1, oo)).is_convergent()
         False
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Infinite_product
         """
         from sympy.concrete.summations import Sum
 

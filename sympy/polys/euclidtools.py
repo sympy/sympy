@@ -2,17 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.densebasic import (
-    dup_strip, dmp_raise,
-    dmp_zero, dmp_one, dmp_ground,
-    dmp_one_p, dmp_zero_p,
-    dmp_zeros,
-    dup_degree, dmp_degree, dmp_degree_in,
-    dup_LC, dmp_LC, dmp_ground_LC,
-    dmp_multi_deflate, dmp_inflate,
-    dup_convert, dmp_convert,
-    dmp_apply_pairs)
-
+from sympy.core.compatibility import range
+from sympy.ntheory import nextprime
 from sympy.polys.densearith import (
     dup_sub_mul,
     dup_neg, dmp_neg,
@@ -28,7 +19,16 @@ from sympy.polys.densearith import (
     dmp_mul_term,
     dup_quo_ground, dmp_quo_ground,
     dup_max_norm, dmp_max_norm)
-
+from sympy.polys.densebasic import (
+    dup_strip, dmp_raise,
+    dmp_zero, dmp_one, dmp_ground,
+    dmp_one_p, dmp_zero_p,
+    dmp_zeros,
+    dup_degree, dmp_degree, dmp_degree_in,
+    dup_LC, dmp_LC, dmp_ground_LC,
+    dmp_multi_deflate, dmp_inflate,
+    dup_convert, dmp_convert,
+    dmp_apply_pairs)
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
     dup_diff, dmp_diff,
@@ -37,10 +37,9 @@ from sympy.polys.densetools import (
     dup_monic, dmp_ground_monic,
     dup_primitive, dmp_ground_primitive,
     dup_extract, dmp_ground_extract)
-
 from sympy.polys.galoistools import (
     gf_int, gf_crt)
-
+from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     HeuristicGCDFailed,
@@ -48,11 +47,7 @@ from sympy.polys.polyerrors import (
     NotInvertible,
     DomainError)
 
-from sympy.polys.polyconfig import query
 
-from sympy.ntheory import nextprime
-
-from sympy.core.compatibility import range
 
 
 def dup_half_gcdex(f, g, K):
@@ -337,8 +332,8 @@ def dup_inner_subresultants(f, g, K):
     References
     ==========
 
-    [1] W.S. Brown, The Subresultant PRS Algorithm.
-    ACM Transaction of Mathematical Software 4 (1978) 237-249
+    .. [1] W.S. Brown, The Subresultant PRS Algorithm.
+           ACM Transaction of Mathematical Software 4 (1978) 237-249
 
     """
     n = dup_degree(f)
@@ -1181,7 +1176,7 @@ def dup_zz_heu_gcd(f, g, K):
     References
     ==========
 
-    1. [Liao95]_
+    .. [1] [Liao95]_
 
     """
     result = _dup_rr_trivial_gcd(f, g, K)
@@ -1309,7 +1304,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
     References
     ==========
 
-    1. [Liao95]_
+    .. [1] [Liao95]_
 
     """
     if not u:

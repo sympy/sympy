@@ -26,10 +26,6 @@ if not sage:
     #bin/test will not execute any tests now
     disabled = True
 
-if sys.version_info[0] == 3:
-    # Sage does not support Python 3 currently
-    disabled = True
-
 import sympy
 
 from sympy.utilities.pytest import XFAIL
@@ -174,6 +170,7 @@ def test_functions():
     check_expression("atanh(x)", "x")
     check_expression("acoth(x)", "x")
     check_expression("exp(x)", "x")
+    check_expression("gamma(x)", "x")
     check_expression("log(x)", "x")
     check_expression("re(x)", "x")
     check_expression("im(x)", "x")
@@ -197,6 +194,7 @@ def test_functions():
     check_expression("loggamma(x)", "x")
     check_expression("Ynm(n,m,x,y)", "n, m, x, y")
     check_expression("hyper((n,m),(m,n),x)", "n, m, x")
+    check_expression("uppergamma(y, x)", "x, y")
 
 def test_issue_4023():
     sage.var("a x")

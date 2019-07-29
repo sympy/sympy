@@ -317,6 +317,7 @@ def deltasummation(f, limit, no_piecewise=False):
     if len(solns) == 0:
         return S.Zero
     elif len(solns) != 1:
+        from sympy.concrete.summations import Sum
         return Sum(f, limit)
     value = solns[0]
     if no_piecewise:

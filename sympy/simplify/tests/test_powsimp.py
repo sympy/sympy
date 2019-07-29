@@ -108,6 +108,10 @@ def test_powsimp():
     eq = sin(2*x)**2*sin(2.0*x)**2
     assert powsimp(eq) == eq
 
+    # issue 14615
+    assert powsimp(x**2*y**3*(x*y**2)**(S(3)/2)
+        ) == x*y*(x*y**2)**(S(5)/2)
+
 
 def test_powsimp_negated_base():
     assert powsimp((-x + y)/sqrt(x - y)) == -sqrt(x - y)
@@ -165,7 +169,6 @@ def test_powdenest():
     assert powdenest((x**(2*a/3))**(3*x)) == ((x**(2*a/3))**(3*x))
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p
-    i, j = symbols('i,j', integer=True)
     eq = p**(2*i)*q**(4*i)
     assert powdenest(eq) == (p*q**2)**(2*i)
     # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
@@ -219,7 +222,7 @@ def test_issue_9324_powsimp_on_matrix_symbol():
     M = MatrixSymbol('M', 10, 10)
     expr = powsimp(M, deep=True)
     assert expr == M
-    assert expr.args[0] == 'M'
+    assert expr.args[0] == Symbol('M')
 
 
 def test_issue_6367():
@@ -305,6 +308,10 @@ def test_issue_10195():
     assert powsimp(e_x) == (-1)**(n/2 - Rational(1, 2)) + (-1)**(3*n/2 +
             Rational(1,2))
     assert powsimp((-1)**(3*a/2)) == (-I)**a
+
+def test_issue_15709():
+    assert powsimp(2*3**x/3) == 2*3**(x-1)
+
 
 def test_issue_11981():
     x, y = symbols('x y', commutative=False)

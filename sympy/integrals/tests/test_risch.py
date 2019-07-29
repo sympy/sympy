@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
-    Symbol, Lambda, sin, Eq, Ne, Piecewise, factor, expand_log, cancel,
-    expand, diff, pi, atan)
+    Symbol, Lambda, sin, Ne, Piecewise, factor, expand_log, cancel,
+    diff, pi, atan)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -338,10 +338,10 @@ def test_integrate_hyperexponential_returns_piecewise():
         (exp(a*x)/a, Ne(a, 0)), (x, True)), 0, True)
     DE = DifferentialExtension(x*exp(a*x), x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
-        ((x*a**2 - a)*exp(a*x)/a**3, Ne(a**3, 0)), (x**2/2, True)), 0, True)
+        ((a*x - 1)*exp(a*x)/a**2, Ne(a**2, 0)), (x**2/2, True)), 0, True)
     DE = DifferentialExtension(x**2*exp(a*x), x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
-        ((x**2*a**5 - 2*x*a**4 + 2*a**3)*exp(a*x)/a**6, Ne(a**6, 0)),
+        ((x**2*a**2 - 2*a*x + 2)*exp(a*x)/a**3, Ne(a**3, 0)),
         (x**3/3, True)), 0, True)
     DE = DifferentialExtension(x**y + z, y)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
@@ -594,7 +594,7 @@ def test_DifferentialExtension_Rothstein():
         [None, 'exp', 'exp'], [None, x, 1/(t0 + 1) - 10*x])
 
 
-class TestingException(Exception):
+class _TestingException(Exception):
     """Dummy Exception class for testing."""
     pass
 
@@ -631,8 +631,8 @@ def test_DecrementLevel():
     # Test that __exit__ is called after an exception correctly
     try:
         with DecrementLevel(DE):
-            raise TestingException
-    except TestingException:
+            raise _TestingException
+    except _TestingException:
         pass
     else:
         raise AssertionError("Did not raise.")

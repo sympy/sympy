@@ -1,8 +1,11 @@
 from __future__ import print_function, division
-
-from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup
-from sympy.combinatorics.free_groups import FreeGroup, FreeGroupElement
+import itertools
+from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup, simplify_presentation
+from sympy.combinatorics.free_groups import FreeGroup
 from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.core.numbers import igcd
+from sympy.ntheory.factor_ import totient
+from sympy import S
 
 class GroupHomomorphism(object):
     '''
@@ -10,7 +13,8 @@ class GroupHomomorphism(object):
 
     References
     ==========
-    [1] Holt, D., Eick, B. and O'Brien, E. (2005). Handbook of computational group theory.
+
+    .. [1] Holt, D., Eick, B. and O'Brien, E. (2005). Handbook of computational group theory.
 
     '''
 
@@ -328,13 +332,13 @@ def _check_homomorphism(domain, codomain, images):
             # both indices
             while i < len(r):
                 power = r_arr[j][1]
-                if isinstance(domain, PermutationGroup):
+                if isinstance(domain, PermutationGroup) and r[i] in gens:
                     s = domain.generators[gens.index(r[i])]
                 else:
                     s = r[i]
                 if s in images:
                     w = w*images[s]**power
-                else:
+                elif s**-1 in images:
                     w = w*images[s**-1]**power
                 i += abs(power)
                 j += 1
@@ -349,7 +353,7 @@ def _check_homomorphism(domain, codomain, images):
                 # truth of equality otherwise
                 success = codomain.make_confluent()
                 s = codomain.equals(_image(r), identity)
-                if s in None and not success:
+                if s is None and not success:
                     raise RuntimeError("Can't determine if the images "
                         "define a homomorphism. Try increasing "
                         "the maximum number of rewriting rules "
@@ -417,3 +421,133 @@ def block_homomorphism(group, blocks):
     images = {g: Permutation([b[p[i]^g] for i in identity]) for g in group.generators}
     H = GroupHomomorphism(group, codomain, images)
     return H
+
+def group_isomorphism(G, H, isomorphism=True):
+    '''
+    Compute an isomorphism between 2 given groups.
+
+    Parameters
+    ==========
+
+        G (a finite `FpGroup` or a `PermutationGroup`) -- First group
+        H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
+        isomorphism (boolean) -- This is used to avoid the computation of homomorphism
+                                 when the user only wants to check if there exists
+                                 an isomorphism between the groups.
+
+    Returns
+    =======
+
+    If isomorphism = False -- Returns a boolean.
+    If isomorphism = True  -- Returns a boolean and an isomorphism between `G` and `H`.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
+    >>> from sympy.combinatorics.perm_groups import PermutationGroup
+    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics.fp_groups import FpGroup
+    >>> from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism
+    >>> from sympy.combinatorics.named_groups import DihedralGroup, AlternatingGroup
+
+    >>> D = DihedralGroup(8)
+    >>> p = Permutation(0, 1, 2, 3, 4, 5, 6, 7)
+    >>> P = PermutationGroup(p)
+    >>> group_isomorphism(D, P)
+    (False, None)
+
+    >>> F, a, b = free_group("a, b")
+    >>> G = FpGroup(F, [a**3, b**3, (a*b)**2])
+    >>> H = AlternatingGroup(4)
+    >>> (check, T) = group_isomorphism(G, H)
+    >>> check
+    True
+    >>> T(b*a*b**-1*a**-1*b**-1)
+    (0 2 3)
+
+    Notes
+    =====
+
+    Uses the approach suggested by Robert Tarjan to compute the isomorphism between two groups.
+    First, the generators of `G` are mapped to the elements of `H` and
+    we check if the mapping induces an isomorphism.
+
+    '''
+    if not isinstance(G, (PermutationGroup, FpGroup)):
+        raise TypeError("The group must be a PermutationGroup or an FpGroup")
+    if not isinstance(H, (PermutationGroup, FpGroup)):
+        raise TypeError("The group must be a PermutationGroup or an FpGroup")
+
+    if isinstance(G, FpGroup) and isinstance(H, FpGroup):
+        G = simplify_presentation(G)
+        H = simplify_presentation(H)
+        # Two infinite FpGroups with the same generators are isomorphic
+        # when the relators are same but are ordered differently.
+        if G.generators == H.generators and (G.relators).sort() == (H.relators).sort():
+            if not isomorphism:
+                return True
+            return (True, homomorphism(G, H, G.generators, H.generators))
+
+    #  `_H` is the permutation group isomorphic to `H`.
+    _H = H
+    g_order = G.order()
+    h_order = H.order()
+
+    if g_order == S.Infinity:
+        raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
+
+    if isinstance(H, FpGroup):
+        if h_order == S.Infinity:
+            raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
+        _H, h_isomorphism = H._to_perm_group()
+
+    if (g_order != h_order) or (G.is_abelian != H.is_abelian):
+        if not isomorphism:
+            return False
+        return (False, None)
+
+    if not isomorphism:
+        # Two groups of the same cyclic numbered order
+        # are isomorphic to each other.
+        n = g_order
+        if (igcd(n, totient(n))) == 1:
+            return True
+
+    # Match the generators of `G` with subsets of `_H`
+    gens = list(G.generators)
+    for subset in itertools.permutations(_H, len(gens)):
+        images = list(subset)
+        images.extend([_H.identity]*(len(G.generators)-len(images)))
+        _images = dict(zip(gens,images))
+        if _check_homomorphism(G, _H, _images):
+            if isinstance(H, FpGroup):
+                images = h_isomorphism.invert(images)
+            T =  homomorphism(G, H, G.generators, images, check=False)
+            if T.is_isomorphism():
+                # It is a valid isomorphism
+                if not isomorphism:
+                    return True
+                return (True, T)
+
+    if not isomorphism:
+        return False
+    return (False, None)
+
+def is_isomorphic(G, H):
+    '''
+    Check if the groups are isomorphic to each other
+
+    Parameters
+    ==========
+
+        G (a finite `FpGroup` or a `PermutationGroup`) -- First group
+        H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
+
+    Returns
+    =======
+
+    boolean
+    '''
+    return group_isomorphism(G, H, isomorphism=False)

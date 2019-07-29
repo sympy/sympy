@@ -5,17 +5,16 @@ Installation
 
 The SymPy CAS can be installed on virtually any computer with Python 2.7 or
 above. SymPy does require `mpmath`_ Python library to be installed first.  The
-current recommended method of installation is through Anaconda, which includes
-mpmath, as well as several other useful libraries.  Alternatively, executables
-are available for Windows, and some Linux distributions have SymPy packages
-available.
+recommended method of installation is through Anaconda, which includes
+mpmath, as well as several other useful libraries.  Alternatively, some Linux
+distributions have SymPy packages available.
 
-SymPy officially supports Python 2.7, 3.4, 3.5, 3.6 and PyPy.
+SymPy officially supports Python 2.7, 3.5, 3.6, 3.7, and PyPy.
 
 Anaconda
 ========
 
-`Anaconda <http://continuum.io/downloads>`_ is a free Python distribution from
+`Anaconda <https://www.anaconda.com/download/>`_ is a free Python distribution from
 Continuum Analytics that includes SymPy, Matplotlib, IPython, NumPy, and many
 more useful packages for scientific computing. This is recommended because
 many nice features of SymPy are only enabled when certain libraries are
@@ -35,7 +34,7 @@ If you wish to contribute to SymPy or like to get the latest updates as they
 come, install SymPy from git. To download the repository, execute the
 following from the command line::
 
-    git clone git://github.com/sympy/sympy.git
+    git clone https://github.com/sympy/sympy.git
 
 To update to the latest version, go into your repository and execute::
 
@@ -44,7 +43,7 @@ To update to the latest version, go into your repository and execute::
 If you want to install SymPy, but still want to use the git version, you can run
 from your repository::
 
-    setupegg.py develop
+    python setupegg.py develop
 
 This will cause the installed version to always point to the version in the git
 directory.
@@ -52,9 +51,14 @@ directory.
 Other Methods
 =============
 
-An installation executable (.exe) is available for Windows users at the
-`downloads site`_. In addition, various Linux distributions have SymPy
-available as a package. You may also install SymPy from source or using pip.
+You may also install SymPy using pip or from source. In addition, most Linux
+and Python distributions have some SymPy version available to install using
+their package manager. Here is a list of several such Python distributions:
+
+* `Anaconda <https://www.anaconda.com/download/>`_
+* `Enthought Canopy <https://www.enthought.com/product/canopy/>`_
+* `ActivePython <https://www.activestate.com/activepython>`_
+* `Spack <https://spack.io/>`_
 
 Run SymPy
 =========

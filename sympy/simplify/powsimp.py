@@ -282,7 +282,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 common_b[b] = e
             if b[1] != 1 and b[0].is_Mul:
                 bases.append(b)
-        c_powers = [(b, e) for b, e in common_b.items() if e]
         bases.sort(key=default_sort_key)  # this makes tie-breaking canonical
         bases.sort(key=measure, reverse=True)  # handle longest first
         for base in bases:
@@ -305,11 +304,11 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     ee.append([bie, common_b[bib]])
                     bb.append(bib)
                 if ee:
-                    # find the number of extractions possible
+                    # find the number of integral extractions possible
                     # e.g. [(1, 2), (2, 2)] -> min(2/1, 2/2) -> 1
-                    min1 = ee[0][1]/ee[0][0]
-                    for i in range(len(ee)):
-                        rat = ee[i][1]/ee[i][0]
+                    min1 = ee[0][1]//ee[0][0]
+                    for i in range(1, len(ee)):
+                        rat = ee[i][1]//ee[i][0]
                         if rat < 1:
                             break
                         min1 = min(min1, rat)

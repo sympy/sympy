@@ -2,9 +2,10 @@ from __future__ import print_function, division
 
 from sympy.core import Basic, Dict, sympify
 from sympy.core.compatibility import as_int, default_sort_key, range
+from sympy.core.sympify import _sympify
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
-from sympy.sets.sets import FiniteSet
+from sympy.sets.sets import FiniteSet, Union
 from sympy.utilities.iterables import has_dups, flatten, group
 
 from collections import defaultdict
@@ -36,6 +37,8 @@ class Partition(FiniteSet):
         Examples
         ========
 
+        Creating Partition from Python lists:
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([1, 2], [3])
         >>> a
@@ -47,20 +50,43 @@ class Partition(FiniteSet):
         >>> a.members
         (1, 2, 3)
 
+        Creating Partition from Python sets:
+
+        >>> Partition({1, 2, 3}, {4, 5})
+        {{4, 5}, {1, 2, 3}}
+
+        Creating Partition from SymPy finite sets:
+
+        >>> from sympy.sets.sets import FiniteSet
+        >>> a = FiniteSet(1, 2, 3)
+        >>> b = FiniteSet(4, 5)
+        >>> Partition(a, b)
+        {{4, 5}, {1, 2, 3}}
         """
-        args = partition
-        if not all(isinstance(part, (list, FiniteSet)) for part in args):
+        args = []
+        dups = False
+        for arg in partition:
+            if isinstance(arg, list):
+                as_set = set(arg)
+                if len(as_set) < len(arg):
+                    dups = True
+                    break  # error below
+                arg = as_set
+            args.append(_sympify(arg))
+
+        if not all(isinstance(part, FiniteSet) for part in args):
             raise ValueError(
-                "Each argument to Partition should be a list or a FiniteSet")
+                "Each argument to Partition should be " \
+                "a list, set, or a FiniteSet")
 
         # sort so we have a canonical reference for RGS
-        partition = sorted(sum(partition, []), key=default_sort_key)
-        if has_dups(partition):
-            raise ValueError("Partition contained duplicated elements.")
+        U = Union(*args)
+        if dups or len(U) < sum(len(arg) for arg in args):
+            raise ValueError("Partition contained duplicate elements.")
 
-        obj = FiniteSet.__new__(cls, *[FiniteSet(*x) for x in args])
-        obj.members = tuple(partition)
-        obj.size = len(partition)
+        obj = FiniteSet.__new__(cls, *args)
+        obj.members = tuple(U)
+        obj.size = len(U)
         return obj
 
     def sort_key(self, order=None):
@@ -88,7 +114,7 @@ class Partition(FiniteSet):
         else:
             members = tuple(sorted(self.members,
                              key=lambda w: default_sort_key(w, order)))
-        return list(map(default_sort_key, (self.size, members, self.rank)))
+        return tuple(map(default_sort_key, (self.size, members, self.rank)))
 
     @property
     def partition(self):
@@ -291,7 +317,7 @@ class IntegerPartition(Basic):
     sympy.utilities.iterables.partitions,
     sympy.utilities.iterables.multiset_partitions
 
-    Reference: http://en.wikipedia.org/wiki/Partition_%28number_theory%29
+    Reference: https://en.wikipedia.org/wiki/Partition_%28number_theory%29
     """
 
     _dict = None

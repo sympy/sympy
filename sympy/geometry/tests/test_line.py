@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import (Rational, Float, S, Symbol, cos, oo, pi, simplify,
     sin, sqrt, symbols, acos)
 from sympy.core.compatibility import range
@@ -10,10 +8,9 @@ from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises, slow, warns
 
 import traceback
-import warnings
 import sys
 
 x = Symbol('x', real=True)
@@ -27,15 +24,20 @@ a, b = symbols('a,b', real=True)
 m = symbols('m', real=True)
 
 
-# make warnings show tracebacks
-def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
-    traceback.print_stack()
-    log = file if hasattr(file, 'write') else sys.stderr
-    log.write(warnings.formatwarning(message, category, filename, lineno, line))
-
-
-warnings.showwarning = warn_with_traceback
-warnings.simplefilter('always', UserWarning)  # make sure to show warnings every time they occur
+def test_object_from_equation():
+    from sympy.abc import x, y, a, b
+    assert Line(3*x + y + 18) == Line2D(Point2D(0, -18), Point2D(1, -21))
+    assert Line(3*x + 5 * y + 1) == Line2D(Point2D(0, -S(1)/5), Point2D(1, -S(4)/5))
+    assert Line(3*a + b + 18, x='a', y='b') == Line2D(Point2D(0, -18), Point2D(1, -21))
+    assert Line(3*x + y) == Line2D(Point2D(0, 0), Point2D(1, -3))
+    assert Line(x + y) == Line2D(Point2D(0, 0), Point2D(1, -1))
+    raises(ValueError, lambda: Line(x))
+    raises(ValueError, lambda: Line(y))
+    raises(ValueError, lambda: Line(x/y))
+    raises(ValueError, lambda: Line(a/b, x='a', y='b'))
+    raises(ValueError, lambda: Line(y/x))
+    raises(ValueError, lambda: Line(b/a, x='a', y='b'))
+    raises(ValueError, lambda: Line((x + 1)**2 + y))
 
 
 def feq(a, b):
@@ -52,7 +54,7 @@ def test_angle_between():
                                   Line(Point(0, 0), Point(5, 0))).evalf(), pi.evalf() / 4)
     assert Line(a, o).angle_between(Line(b, o)) == pi / 2
     assert Line3D.angle_between(Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1)),
-                                Line3D(Point3D(0, 0, 0), Point3D(5, 0, 0))), acos(sqrt(3) / 3)
+                                Line3D(Point3D(0, 0, 0), Point3D(5, 0, 0))) == acos(sqrt(3) / 3)
 
 
 def test_closing_angle():
@@ -91,7 +93,7 @@ def test_are_concurrent_2d():
     assert Line.are_concurrent(l1, Line(Point(0, 0), Point(-x1, x1)), l2) is False
 
 
-def test_are_concurent_3d():
+def test_are_concurrent_3d():
     p1 = Point3D(0, 0, 0)
     l1 = Line(p1, Point3D(1, 1, 1))
     parallel_1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
@@ -280,13 +282,11 @@ def test_contains():
     assert r3.contains(Point3D(0, 0, 0)) is True
     assert Ray3D(Point3D(1, 1, 1), Point3D(1, 0, 0)).contains([]) is False
     assert Line3D((0, 0, 0), (x, y, z)).contains((2 * x, 2 * y, 2 * z))
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert Line3D(p1, Point3D(0, 1, 0)).contains(Point(1.0, 1.0)) is False
-        assert len(w) == 1
 
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert r3.contains(Point(1.0, 1.0)) is False
-        assert len(w) == 1
 
 
 def test_contains_nonreal_symbols():
@@ -326,9 +326,8 @@ def test_distance_2d():
 
 
 def test_dimension_normalization():
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert Ray((1, 1), (2, 1, 2)) == Ray((1, 1, 0), (2, 1, 2))
-        assert len(w) == 1
 
 
 def test_distance_3d():
@@ -336,7 +335,7 @@ def test_distance_3d():
     p3 = Point3D(Rational(3) / 2, Rational(3) / 2, Rational(3) / 2)
 
     s1 = Segment3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
-    s2 = Segment3D(Point3D(1 / 2, 1 / 2, 1 / 2), Point3D(1, 0, 1))
+    s2 = Segment3D(Point3D(S(1) / 2, S(1) / 2, S(1) / 2), Point3D(1, 0, 1))
 
     r = Ray3D(p1, p2)
 
@@ -391,8 +390,8 @@ def test_equals():
     assert Ray3D(p1, Point3D(0, 0, -1)).equals(Point(1.0, 1.0)) is False
     assert Ray3D(p1, Point3D(0, 0, -1)).equals(Ray3D(p1, Point3D(0, 0, -1))) is True
     assert Line3D((0, 0), (t, t)).perpendicular_line(Point(0, 1, 0)).equals(
-        Line3D(Point3D(0, 1, 0), Point3D(1 / 2, 1 / 2, 0)))
-    assert Line3D((0, 0), (t, t)).perpendicular_segment(Point(0, 1, 0)).equals(Segment3D((0, 1), (1 / 2, 1 / 2)))
+        Line3D(Point3D(0, 1, 0), Point3D(S(1) / 2, S(1) / 2, 0)))
+    assert Line3D((0, 0), (t, t)).perpendicular_segment(Point(0, 1, 0)).equals(Segment3D((0, 1), (S(1) / 2, S(1) / 2)))
     assert Line3D(p1, Point3D(0, 1, 0)).equals(Point(1.0, 1.0)) is False
 
 
@@ -495,6 +494,52 @@ def test_intersection_2d():
     assert s1.intersection(s2) == [s2]
     assert s2.intersection(s1) == [s2]
 
+    assert asa(120, 8, 52) == \
+           Triangle(
+               Point(0, 0),
+               Point(8, 0),
+               Point(-4 * cos(19 * pi / 90) / sin(2 * pi / 45),
+                     4 * sqrt(3) * cos(19 * pi / 90) / sin(2 * pi / 45)))
+    assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Ray((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Ray((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Ray((0, 0), (10, 10)).contains(Segment((1, 1), (2, 2))) is True
+    assert Segment((1, 1), (2, 2)) in Line((0, 0), (10, 10))
+    assert s1.intersection(Ray((1, 1), (4, 4))) == [Point(1, 1)]
+
+    # 16628 - this should be fast
+    p0 = Point2D(S(249)/5, S(497999)/10000)
+    p1 = Point2D((-58977084786*sqrt(405639795226) + 2030690077184193 +
+        20112207807*sqrt(630547164901) + 99600*sqrt(255775022850776494562626))
+        /(2000*sqrt(255775022850776494562626) + 1991998000*sqrt(405639795226)
+        + 1991998000*sqrt(630547164901) + 1622561172902000),
+        (-498000*sqrt(255775022850776494562626) - 995999*sqrt(630547164901) +
+        90004251917891999 +
+        496005510002*sqrt(405639795226))/(10000*sqrt(255775022850776494562626)
+        + 9959990000*sqrt(405639795226) + 9959990000*sqrt(630547164901) +
+        8112805864510000))
+    p2 = Point2D(S(497)/10, -S(497)/10)
+    p3 = Point2D(-S(497)/10, -S(497)/10)
+    l = Line(p0, p1)
+    s = Segment(p2, p3)
+    n = (-52673223862*sqrt(405639795226) - 15764156209307469 -
+        9803028531*sqrt(630547164901) +
+        33200*sqrt(255775022850776494562626))
+    d = sqrt(405639795226) + 315274080450 + 498000*sqrt(
+        630547164901) + sqrt(255775022850776494562626)
+    assert intersection(l, s) == [
+        Point2D(n/d*S(3)/2000, -S(497)/10)]
+
+
+def test_line_intersection():
+    # see also test_issue_11238 in test_matrices.py
+    x0 = tan(13*pi/45)
+    x1 = sqrt(3)
+    x2 = x0**2
+    x, y = [8*x0/(x0 + x1), (24*x0 - 8*x1*x2)/(x2 - 3)]
+    assert Line(Point(0, 0), Point(1, -sqrt(3))).contains(Point(x, y)) is True
+
 
 def test_intersection_3d():
     p1 = Point3D(0, 0, 0)
@@ -589,25 +634,6 @@ def test_is_similar():
     assert r1.is_similar(Line3D(Point3D(0, 0, 0), Point3D(0, 1, 0))) is False
 
 
-@slow
-def test_line_intersection():
-    assert asa(120, 8, 52) == \
-           Triangle(
-               Point(0, 0),
-               Point(8, 0),
-               Point(-4 * cos(19 * pi / 90) / sin(2 * pi / 45),
-                     4 * sqrt(3) * cos(19 * pi / 90) / sin(2 * pi / 45)))
-    assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == [Point(1, 1)]
-    assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == [Point(1, 1)]
-    assert Ray((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == [Point(1, 1)]
-    assert Ray((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == [Point(1, 1)]
-    assert Ray((0, 0), (10, 10)).contains(Segment((1, 1), (2, 2))) is True
-    assert Segment((1, 1), (2, 2)) in Line((0, 0), (10, 10))
-    x = 8 * tan(13 * pi / 45) / (tan(13 * pi / 45) + sqrt(3))
-    y = (-8 * sqrt(3) * tan(13 * pi / 45) ** 2 + 24 * tan(13 * pi / 45)) / (-3 + tan(13 * pi / 45) ** 2)
-    assert Line(Point(0, 0), Point(1, -sqrt(3))).contains(Point(x, y)) is True
-
-
 def test_length():
     s2 = Segment3D(Point3D(x1, x1, x1), Point3D(y1, y1, y1))
     assert Line(Point(0, 0), Point(1, 1)).length == oo
@@ -640,16 +666,16 @@ def test_projection():
     assert r1.projection(Ray(Point(0, 4), Point(-1, -5))) == Segment(Point(1, 1), Point(2, 2))
     assert r1.projection(Segment(Point(-1, 5), Point(-5, -10))) == Segment(Point(1, 1), Point(2, 2))
 
-    assert l3.projection(Ray3D(p2, Point3D(-1, 5, 0))) == Ray3D(Point3D(0, 0, 0), Point3D(4 / 3, 4 / 3, 4 / 3))
-    assert l3.projection(Ray3D(p2, Point3D(-1, 1, 1))) == Ray3D(Point3D(0, 0, 0), Point3D(1 / 3, 1 / 3, 1 / 3))
+    assert l3.projection(Ray3D(p2, Point3D(-1, 5, 0))) == Ray3D(Point3D(0, 0, 0), Point3D(S(4)/3, S(4)/3, S(4)/3))
+    assert l3.projection(Ray3D(p2, Point3D(-1, 1, 1))) == Ray3D(Point3D(0, 0, 0), Point3D(S(1)/3, S(1)/3, S(1)/3))
     assert l2.projection(Point3D(5, 5, 0)) == Point3D(5, 0)
     assert l2.projection(Line3D(Point3D(0, 1, 0), Point3D(1, 1, 0))).equals(l2)
 
 
 def test_perpendicular_bisector():
     s1 = Segment(Point(0, 0), Point(1, 1))
-    aline = Line(Point(1 / 2, 1 / 2), Point(3 / 2, -1 / 2))
-    on_line = Segment(Point(1 / 2, 1 / 2), Point(3 / 2, -1 / 2)).midpoint
+    aline = Line(Point(S(1)/2, S(1)/2), Point(S(3)/2, -S(1)/2))
+    on_line = Segment(Point(S(1)/2, S(1)/2), Point(S(3)/2, -S(1)/2)).midpoint
 
     assert s1.perpendicular_bisector().equals(aline)
     assert s1.perpendicular_bisector(on_line).equals(Segment(s1.midpoint, on_line))

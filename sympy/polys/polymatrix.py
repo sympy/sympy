@@ -10,6 +10,9 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
     """
     A mutable matrix of objects from poly module or to operate with them.
 
+    Examples
+    ========
+
     >>> from sympy.polys.polymatrix import PolyMatrix
     >>> from sympy import Symbol, Poly, ZZ
     >>> x = Symbol('x')
