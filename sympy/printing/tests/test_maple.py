@@ -155,41 +155,41 @@ def test_boolean():
 
 def test_Matrices():
     assert maple_code(Matrix(1, 1, [10])) == \
-        'Matrix([[10]], storage = rectangular)'
+           'Matrix([[10]], storage = rectangular)'
 
     A = Matrix([[1, sin(x / 2), abs(x)],
                 [0, 1, pi],
                 [0, exp(1), ceiling(x)]])
     expected = \
         'Matrix(' \
-            '[[1, sin((1/2)*x), abs(x)],' \
-            ' [0, 1, Pi],' \
-            ' [0, exp(1), ceil(x)]], ' \
-            'storage = rectangular)'
+        '[[1, sin((1/2)*x), abs(x)],' \
+        ' [0, 1, Pi],' \
+        ' [0, exp(1), ceil(x)]], ' \
+        'storage = rectangular)'
     assert maple_code(A) == expected
 
     # row and columns
     assert maple_code(A[:, 0]) == \
-        'Matrix([[1], [0], [0]], storage = rectangular)'
+           'Matrix([[1], [0], [0]], storage = rectangular)'
     assert maple_code(A[0, :]) == \
-        'Matrix([[1, sin((1/2)*x), abs(x)]], storage = rectangular)'
+           'Matrix([[1, sin((1/2)*x), abs(x)]], storage = rectangular)'
     assert maple_code(Matrix([[x, x - y, -y]])) == \
-        'Matrix([[x, x - y, -y]], storage = rectangular)'
+           'Matrix([[x, x - y, -y]], storage = rectangular)'
 
     # empty matrices
     assert maple_code(Matrix(0, 0, [])) == \
-        'Matrix([], storage = rectangular)'
+           'Matrix([], storage = rectangular)'
     assert maple_code(Matrix(0, 3, [])) == \
-        'Matrix([], storage = rectangular)'
+           'Matrix([], storage = rectangular)'
 
 
 def test_vector_entries_hadamard():
     # For a row or column, user might to use the other dimension
     A = Matrix([[1, sin(2 / x), 3 * pi / x / 5]])
     assert maple_code(A) == \
-        'Matrix([[1, sin(2/x), (3/5)*Pi/x]], storage = rectangular)'
+           'Matrix([[1, sin(2/x), (3/5)*Pi/x]], storage = rectangular)'
     assert maple_code(A.T) == \
-        'Matrix([[1], [sin(2/x)], [(3/5)*Pi/x]], storage = rectangular)'
+           'Matrix([[1], [sin(2/x)], [(3/5)*Pi/x]], storage = rectangular)'
 
 
 def test_Matrices_entries_not_hadamard():
@@ -318,6 +318,33 @@ def test_maple_not_supported():
     )
 
 
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert (maple_code(A[0, 0]) == "A[1,1]")
+    assert (maple_code(3 * A[0, 0]) == "3*A[1,1]")
+
+    F = C[0, 0].subs(C, A - B)
+    assert (maple_code(F) == "(A - B)[1,1]")
+
+
+def test_haramard():
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+    v = MatrixSymbol('v', 3, 1)
+    h = MatrixSymbol('h', 1, 3)
+    C = HadamardProduct(A, B)
+    assert maple_code(C) == "A*B"
+    assert maple_code(C * v) == "(A*B)*v"
+    assert maple_code(h * C * v) == "h*(A*B)*v"
+    assert maple_code(C * A) == "(A*B)*A"
+    # mixing Hadamard and scalar strange b/c we vectorize scalars
+    assert maple_code(C * x * y) == "(x*y)*(A*B)"
+
+
 r"""
  _____ _                     _       _         _
 |_   _| |_  ___   __ ___  __| |___  | |__  ___| |_____ __ __
@@ -372,13 +399,6 @@ def test_maple_piecewise_times_const():
     assert maple_code(pw / 3) == "((x < 1) ? (x) : (x.^2))/3"
 
 
-
-
-
-
-
-
-
 def test_trick_indent_with_end_else_words():
     # words starting with "end" or "else" do not confuse the indenter
     t1 = S('endless');
@@ -394,22 +414,6 @@ def test_trick_indent_with_end_else_words():
         "end")
 
 
-def test_haramard():
-    A = MatrixSymbol('A', 3, 3)
-    B = MatrixSymbol('B', 3, 3)
-    v = MatrixSymbol('v', 3, 1)
-    h = MatrixSymbol('h', 1, 3)
-    C = HadamardProduct(A, B)
-    assert maple_code(C) == "A*B"
-    assert maple_code(C * v) == "(A*B)*v"
-    assert maple_code(h * C * v) == "h*(A*B)*v"
-    assert maple_code(C * A) == "(A*B)*A"
-    # mixing Hadamard and scalar strange b/c we vectorize scalars
-    assert maple_code(C * x * y) == "(x*y)*(A*B)"
-
-
-
-
 def test_specfun():
     n = Symbol('n')
     for f in [besselj, bessely, besseli, besselk]:
@@ -420,16 +424,3 @@ def test_specfun():
     assert maple_code(hankel2(n, x)) == 'hankelh2(n, x)'
     assert maple_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1/x)*besselj(n + 1/2, x)/2'
     assert maple_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1/x)*bessely(n + 1/2, x)/2'
-
-
-def test_MatrixElement_printing():
-    # test cases for issue #11821
-    A = MatrixSymbol("A", 1, 3)
-    B = MatrixSymbol("B", 1, 3)
-    C = MatrixSymbol("C", 1, 3)
-
-    assert (maple_code(A[0, 0]) == "A[1,1]")
-    assert (maple_code(3 * A[0, 0]) == "3*A[1,1]")
-
-    F = C[0, 0].subs(C, A - B)
-    assert (maple_code(F) == "(A - B)[1,1]")
