@@ -602,9 +602,7 @@ class Range(Set):
         if not self:
             return self
         start, stop, step = self.start, self._stop, self.step
-        r1 = (Range(0, 0, 1), Le(ceiling((stop - start)/step), S.Zero))
-        r2 = (self.func(stop - step, start - step, -step), True)
-        return Piecewise(r1, r2)
+        return (self.func(stop - step, start - step, -step), True)
 
     def _contains(self, other):
         from sympy.functions.elementary.piecewise import Piecewise
