@@ -89,6 +89,12 @@ class MapleCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return lines
 
+    def _print_tuple(self, expr):
+        return self._print(list(expr))
+
+    def _print_Tuple(self, expr):
+        return self._print(list(expr))
+
     def _print_Assignment(self, expr):
         lhs = expr.lhs
         rhs = expr.rhs
