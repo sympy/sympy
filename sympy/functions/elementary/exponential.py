@@ -491,6 +491,25 @@ class exp(ExpBase):
                 return Pow(logs[0].args[0], arg.coeff(logs[0]))
 
 
+def _match_real_imag(expr):
+    """
+    Try to match expr with a + b*I for real a and b.
+
+    ``_match_real_imag`` returns a tuple containing the real and imaginary
+    parts of expr or (None, None) if direct matching is not possible. Contrary
+    to ``re()``, ``im()``, ``as_real_imag()``, this helper won't force things
+    by returning expressions themselves containing ``re()`` or ``im()`` and it
+    doesn't expand its argument either.
+
+    """
+    r_, i_ = expr.as_independent(S.ImaginaryUnit, as_Add=True)
+    i_ = i_.as_coefficient(S.ImaginaryUnit)
+    if i_ and i_.is_real and r_.is_real:
+        return (r_, i_)
+    else:
+        return (None, None) # simpler to check for than None
+
+
 class log(Function):
     r"""
     The natural logarithm function `\ln(x)` or `\log(x)`.
@@ -577,8 +596,16 @@ class log(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
+        I = S.ImaginaryUnit
         if isinstance(arg, exp) and arg.args[0].is_extended_real:
             return arg.args[0]
+        elif isinstance(arg, exp):
+            r_, i_ = _match_real_imag(arg.args[0])
+            if i_ and i_.is_comparable:
+                i_ %= 2*S.Pi
+                if i_ > S.Pi:
+                    i_ -= 2*S.Pi
+                return r_ + expand_mul(i_ * I, deep=False)
         elif isinstance(arg, exp_polar):
             return unpolarify(arg.exp)
         elif isinstance(arg, AccumBounds):
@@ -590,7 +617,6 @@ class log(Function):
             return arg._eval_func(cls)
 
         if arg.is_number:
-            I = S.ImaginaryUnit
             if arg.is_negative:
                 return S.Pi * I + cls(-arg)
             elif arg is S.ComplexInfinity:
@@ -600,7 +626,7 @@ class log(Function):
 
         # don't autoexpand Pow or Mul (see the issue 3351):
         if not arg.is_Add:
-            coeff = arg.as_coefficient(S.ImaginaryUnit)
+            coeff = arg.as_coefficient(I)
 
             if coeff is not None:
                 if coeff is S.Infinity:
@@ -609,12 +635,11 @@ class log(Function):
                     return S.Infinity
                 elif coeff.is_Rational:
                     if coeff.is_nonnegative:
-                        return S.Pi * S.ImaginaryUnit * S.Half + cls(coeff)
+                        return S.Pi * I * S.Half + cls(coeff)
                     else:
-                        return -S.Pi * S.ImaginaryUnit * S.Half + cls(-coeff)
+                        return -S.Pi * I * S.Half + cls(-coeff)
 
         if arg.is_number and arg.is_algebraic:
-            I = S.ImaginaryUnit
             # Match arg = coeff*(r_ + i_*I) with coeff>0, r_ and i_ real.
             coeff, arg_ = arg.as_independent(I, as_Add=False)
             if coeff.is_negative:
