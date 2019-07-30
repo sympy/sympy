@@ -1,3 +1,8 @@
+"""
+FIXME: set_add or set_sub (Interval, Infinity or NegativeInfinity) is firstly damaged.
+        It was fixed according incomplete evidence. Please be careful when using it.
+"""
+
 from sympy import symbols, S
 from sympy.core import Basic, Expr
 from sympy.core.numbers import Infinity, NegativeInfinity
@@ -30,15 +35,15 @@ def _set_add(x, y):
 @dispatch(Interval, Infinity)
 def _set_add(x, y):
     if x.start == S.NegativeInfinity:
-        return Interval(-oo, oo)
-    return FiniteSet({S.Infinity})
+        return Interval(S.NegativeInfinity, S.Infinity)
+    return FiniteSet(S.Infinity)
 
 
 @dispatch(Interval, NegativeInfinity)
 def _set_add(x, y):
     if x.end == S.Infinity:
-        return Interval(-oo, oo)
-    return FiniteSet({S.NegativeInfinity})
+        return Interval(S.NegativeInfinity, S.Infinity)
+    return FiniteSet(S.NegativeInfinity)
 
 
 @dispatch(Basic, Basic)
@@ -64,12 +69,12 @@ def _set_sub(x, y):
 @dispatch(Interval, Infinity)
 def _set_sub(x, y):
     if x.start is S.NegativeInfinity:
-        return Interval(-oo, oo)
-    return FiniteSet(-oo)
+        return Interval(S.NegativeInfinity, S.Infinity)
+    return FiniteSet(S.NegativeInfinity)
 
 
 @dispatch(Interval, NegativeInfinity)
 def _set_sub(x, y):
     if x.start is S.NegativeInfinity:
-        return Interval(-oo, oo)
-    return FiniteSet(oo)
+        return Interval(S.NegativeInfinity, S.Infinity)
+    return FiniteSet(S.Infinity)
