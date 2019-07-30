@@ -795,12 +795,12 @@ def test_solve_trig():
         Union(imageset(Lambda(n, 2*n*pi + pi*Rational(5, 3)), S.Integers),
               imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
 
-    # y, a = symbols('y,a')
-    # assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-    #     Union(ImageSet(Lambda(n, 2*n*pi), S.Integers),
-    #     Intersection(ImageSet(Lambda(n, -I*(I*(
-    #     2*n*pi + arg(-exp(-2*I*y))) +
-    #     2*im(y))), S.Integers), S.Reals))
+    y, a = symbols('y,a')
+    assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
+        Union(ImageSet(Lambda(n, 2*n*pi), S.Integers),
+        Intersection(ImageSet(Lambda(n, -I*(I*(
+        2*n*pi + arg(-exp(-2*I*y))) +
+        2*im(y))), S.Integers), S.Reals))
 
     assert solveset_real(sin(2*x)*cos(x) + cos(2*x)*sin(x)-1, x) == \
                             ImageSet(Lambda(n, n*pi*Rational(2, 3) + pi/6), S.Integers)
@@ -815,11 +815,11 @@ def test_solve_trig():
                   9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6))) +
                   2*pi), S.Integers))
 
-    # assert solveset_real(2*tan(x)*sin(x) + 1, x) == Union(
-    #     ImageSet(Lambda(n, 2*n*pi + atan(sqrt(2)*sqrt(-1 +sqrt(17))/
-    #         (1 - sqrt(17))) + pi), S.Integers),
-    #     ImageSet(Lambda(n, 2*n*pi - atan(sqrt(2)*sqrt(-1 + sqrt(17))/
-    #         (1 - sqrt(17))) + pi), S.Integers))
+    assert solveset_real(2*tan(x)*sin(x) + 1, x) == Union(
+        ImageSet(Lambda(n, 2*n*pi + atan(sqrt(2)*sqrt(-1 +sqrt(17))/
+            (1 - sqrt(17))) + pi), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi - atan(sqrt(2)*sqrt(-1 + sqrt(17))/
+            (1 - sqrt(17))) + pi), S.Integers))
 
     assert solveset_real(cos(2*x)*cos(4*x) - 1, x) == \
                             ImageSet(Lambda(n, n*pi), S.Integers)
@@ -830,7 +830,6 @@ def test_solve_invalid_sol():
     assert 0 not in solveset_complex((exp(x) - 1)/x, x)
 
 
-@XFAIL
 def test_solve_trig_simplified():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
@@ -1315,13 +1314,17 @@ def test_raise_exception_nonlinsolve():
     raises(NotImplementedError, lambda: nonlinsolve([(x+y)**2 - 9, x**2 - y**2 - 0.75], (x, y)))
 
 
+@XFAIL
+def test_trig_system_fail():
+    soln1 = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
+    soln = FiniteSet(soln1)
+    assert nonlinsolve([sin(x) - 1, cos(x)], x) == soln
+
+
 def test_trig_system():
     # TODO: add more simple testcases when solveset returns
     # simplified soln for Trig eq
     assert nonlinsolve([sin(x) - 1, cos(x) -1 ], x) == S.EmptySet
-    soln1 = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
-    soln = FiniteSet(soln1)
-    # assert nonlinsolve([sin(x) - 1, cos(x)], x) == soln
 
 
 @XFAIL
