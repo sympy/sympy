@@ -327,6 +327,9 @@ class BlockDiagMatrix(BlockMatrix):
     def _eval_inverse(self, expand='ignored'):
         return BlockDiagMatrix(*[mat.inverse() for mat in self.args])
 
+    def _eval_transpose(self):
+        return BlockDiagMatrix(*[mat.transpose() for mat in self.args])
+
     def _blockmul(self, other):
         if (isinstance(other, BlockDiagMatrix) and
                 self.colblocksizes == other.rowblocksizes):
