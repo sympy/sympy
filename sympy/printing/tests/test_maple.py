@@ -220,8 +220,7 @@ def test_MatrixSymbol():
 
 
 def test_special_matrices():
-    # FIXME: need more info about eye.
-    assert maple_code(6 * Identity(3)) == "6*eye(3)"
+    assert maple_code(6 * Identity(3)) == "6*Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = sparse)"
 
 
 def test_containers():

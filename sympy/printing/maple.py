@@ -16,6 +16,8 @@ from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
+import sympy
+
 _known_func_same_name = [
     'sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'sinh', 'cosh', 'tanh', 'sech',
     'csch', 'coth', 'exp', 'floor'
@@ -185,6 +187,9 @@ class MapleCodePrinter(CodePrinter):
     _print_MutableSparseMatrix = \
         _print_ImmutableSparseMatrix = \
         _print_SparseMatrix
+
+    def _print_Identity(self, expr):
+        return self._print(sympy.Matrix(expr))
 
     def _print_MatMul(self, expr):
         return ".".join(self._print(ms) for ms in expr.args)
