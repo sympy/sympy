@@ -366,15 +366,29 @@ def block_collapse(expr):
     >>> print(block_collapse(C*B))
     Matrix([[X, Z + Z*Y]])
     """
+    from sympy.strategies.util import expr_fns
+
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
-    rule = exhaust(
-        bottom_up(exhaust(condition(hasbm, typed(
+
+    conditioned_rl = condition(
+        hasbm,
+        typed(
             {MatAdd: do_one(bc_matadd, bc_block_plus_ident),
              MatMul: do_one(bc_matmul, bc_dist),
              MatPow: bc_matmul,
              Transpose: bc_transpose,
              Inverse: bc_inverse,
-             BlockMatrix: do_one(bc_unpack, deblock)})))))
+             BlockMatrix: do_one(bc_unpack, deblock)}
+        )
+    )
+
+    rule = exhaust(
+        bottom_up(
+            exhaust(conditioned_rl),
+            fns=expr_fns
+        )
+    )
+
     result = rule(expr)
     doit = getattr(result, 'doit', None)
     if doit is not None:
