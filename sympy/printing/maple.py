@@ -96,8 +96,8 @@ class MapleCodePrinter(CodePrinter):
         return self._print(list(expr))
 
     def _print_Assignment(self, expr):
-        lhs = expr.lhs
-        rhs = expr.rhs
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
         return "{lhs} := {rhs}".format(lhs=lhs, rhs=rhs)
 
     def _print_Pow(self, expr):
