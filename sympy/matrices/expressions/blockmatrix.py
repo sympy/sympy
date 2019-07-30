@@ -419,11 +419,19 @@ def bc_block_plus_ident(expr):
 def bc_dist(expr):
     """ Turn  a*[X, Y] into [a*X, a*Y] """
     factor, mat = expr.as_coeff_mmul()
-    if factor != 1 and isinstance(unpack(mat), BlockMatrix):
-        B = unpack(mat).blocks
-        return BlockMatrix([[factor * B[i, j] for j in range(B.cols)]
-                                              for i in range(B.rows)])
-    return expr
+    if factor == 1:
+        return expr
+
+    unpacked = unpack(mat)
+
+    if isinstance(unpacked, BlockDiagMatrix):
+        B = unpacked.diag
+        new_B = [factor * mat for mat in B]
+        return BlockDiagMatrix(*new_B)
+
+    B = unpacked.blocks
+    new_B = [[factor * B[i, j] for j in range(B.cols)] for i in range(B.rows)]
+    return BlockMatrix(new_B)
 
 
 def bc_matmul(expr):
