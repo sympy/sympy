@@ -189,7 +189,7 @@ def test_Interval_inf():
     set_if = SetExpr(Interval(-oo, 5))
     set_fi = SetExpr(Interval(0, oo))
     set_ii = SetExpr(Interval(-oo, oo))
-    fs_ni = SetExpr(FiniteSet(S.NetgativeInfinity))
+    fs_ni = SetExpr(FiniteSet(S.NegativeInfinity))
     fs_pi = SetExpr(FiniteSet(S.Infinity))
 
     assert set_ff + neinf == fs_ni
