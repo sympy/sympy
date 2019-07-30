@@ -198,7 +198,19 @@ class MapleCodePrinter(CodePrinter):
         return self._print(sympy.Matrix(expr))
 
     def _print_MatMul(self, expr):
-        return ".".join(self._print(ms) for ms in expr.args)
+        _fact_list = expr.args
+        _const = None
+        if not (
+            isinstance(_fact_list[0], sympy.MatrixBase) or isinstance(
+            _fact_list[0], sympy.MatrixExpr) or isinstance(
+            _fact_list[0], sympy.MatrixSlice) or isinstance(
+            _fact_list[0], sympy.MatrixSymbol)):
+            _const, _fact_list = _fact_list[0], _fact_list[1:]
+
+        if _const is None:
+            return '.'.join(_fact_list)
+        else:
+            return '{c}*{m}'.format(c=_const, m='*'.join(self._print(_m) for _m in _fact_list))
 
     def _print_MatPow(self, expr):
         # This function requires LinearAlgebra Function in Maple
