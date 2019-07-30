@@ -1142,7 +1142,7 @@ def test_Union_imageset_linear_expression():
 
     img1 = ImageSet(Lambda(n, 15*n + S(15/2)), S.Integers)
     img2 = ImageSet(Lambda(n, 15*n), S.Integers)
-    uni = ImageSet(Lambda(n, S(15/2)*n), S.Integers)
+    uni = ImageSet(Lambda(n, S(7.5)*n), S.Integers)
     assert Union(img1, img2) == uni
 
     img1 = ImageSet(Lambda(n, n + 5), S.Integers)
