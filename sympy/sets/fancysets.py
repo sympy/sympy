@@ -458,9 +458,11 @@ class ImageSet(Set):
             a, c = self_expr.coeff(self_sym), other_expr.coeff(other_sym)
             b, d = self_expr.subs(self_sym, 0), other_expr.subs(other_sym, 0)
 
+            if a is S.Zero or c is S.Zero:
+                return None
             # preprocessing expressions
-            b = b%a
-            d = d%c
+            b = b % a
+            d = d % c
             p = lcm(a, c)
 
             # check if both expressions are equal after preprocessing.
