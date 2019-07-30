@@ -11,6 +11,7 @@ from sympy.core.compatibility import as_int, range, iterable
 from sympy.core.function import expand_mul
 from sympy.core.numbers import pi, I
 from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.functions.elementary.exponential import exp
 from sympy.ntheory import isprime, primitive_root
 from sympy.utilities.iterables import ibin
 
@@ -21,7 +22,7 @@ from sympy.utilities.iterables import ibin
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _fourier_transform(seq, dps, inverse=False, fourier_params=(1, 1)):
+def _fourier_transform(seq, dps, fourier_params=(1, 1), expand=None):
     """Utility function for the Discrete Fourier Transform"""
 
     if not iterable(seq):
@@ -30,10 +31,19 @@ def _fourier_transform(seq, dps, inverse=False, fourier_params=(1, 1)):
 
     a = [sympify(arg) for arg in seq]
 
+    # Experimental keyword
+    if expand == None:
+        if all(arg.is_number for arg in a):
+            expand = True
+        else:
+            expand = False
+
     n = len(a)
     if n < 2:
         return a
 
+    # Current algorithm does not work with beta other than 1, -1 by
+    # experiments. Discover more generalized algorithm.
     (alpha, beta) = sympify(fourier_params)
 
     b = n.bit_length() - 1
@@ -47,30 +57,38 @@ def _fourier_transform(seq, dps, inverse=False, fourier_params=(1, 1)):
         if i < j:
             a[i], a[j] = a[j], a[i]
 
-    ang = -2*pi*beta/n if inverse else 2*pi*beta/n
+    ang = 2*pi*beta/n
 
     if dps is not None:
         ang = ang.evalf(dps + 2)
 
-    w = [cos(ang*i) + I*sin(ang*i) for i in range(n // 2)]
+    # Experimental keyword
+    if expand:
+        w = [cos(ang*i) + I*sin(ang*i) for i in range(n // 2)]
+    else:
+        w = [exp(ang*i*I) for i in range(n // 2)]
 
     h = 2
     while h <= n:
         hf, ut = h // 2, n // h
         for i in range(0, n, h):
             for j in range(hf):
-                u, v = a[i + j], expand_mul(a[i + j + hf]*w[ut * j])
+                u = a[i + j]
+                v = a[i + j + hf] * w[ut * j]
+                if expand:
+                    v = expand_mul(v)
+
                 a[i + j], a[i + j + hf] = u + v, u - v
         h *= 2
 
     n = sympify(n)
-    denom = n**((S(1)+alpha)/S(2)) if inverse else n**((S(1)-alpha)/S(2))
+    denom = n**((S(1)-alpha)/S(2))
+
     a = [(x/denom).evalf(dps) for x in a] if dps else [x/denom for x in a]
 
     return a
 
-
-def fft(seq, dps=None, fourier_params=(1, 1)):
+def fft(seq, dps=None, fourier_params=(1, 1), expand=None):
     r"""Performs the Fast Fourier Transform (**FFT**).
 
     The sequence is automatically padded to the right with zeros, as the
@@ -185,14 +203,27 @@ def fft(seq, dps=None, fourier_params=(1, 1)):
     .. [2] http://mathworld.wolfram.com/FastFourierTransform.html
 
     """
+    # The internal routine flattens the matrix.
+    # So properly handle matrix by applying the DFT for each columns,
+    # as normal matrix multiplication with DFT matrix.
+    from sympy.matrices import MatrixBase
+    if isinstance(seq, MatrixBase):
+        columns = [seq.col(i) for i in range(seq.cols)]
+        new_cols = [
+            col.__class__(
+                _fourier_transform(
+                    col, dps=dps, fourier_params=fourier_params, expand=expand
+                ))
+            for col in columns]
+        return seq.hstack(*new_cols)
 
-    return _fourier_transform(seq, dps=dps,
-        fourier_params=fourier_params)
+
+    return _fourier_transform(seq, dps=dps, fourier_params=fourier_params)
 
 
 def ifft(seq, dps=None, fourier_params=(1, 1)):
-    return _fourier_transform(seq, dps=dps, inverse=True,
-        fourier_params=fourier_params)
+    a, b = fourier_params
+    return fft(seq, dps=dps, fourier_params=(-a, -b))
 
 ifft.__doc__ = fft.__doc__
 
