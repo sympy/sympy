@@ -122,7 +122,9 @@ class MapleCodePrinter(CodePrinter):
                              "condition. Without one, the generated "
                              "expression may not evaluate to anything under "
                              "some condition.")
-        _coup_list = [("{c}, {e}".format(c=c, e=e) if c is not True else "{e}".format(e=e)) for e, c in expr.args]
+        _coup_list = [
+            ("{c}, {e}".format(c=self._print(c), e=self._print(e)) if c is not True else "{e}".format(e=self._print(e)))
+            for e, c in expr.args]
         _inbrace = ', '.join(_coup_list)
         return 'piecewise({_inbrace})'.format(_inbrace=_inbrace)
 
@@ -175,8 +177,8 @@ class MapleCodePrinter(CodePrinter):
     def _print_MatrixElement(self, expr):
         return "{parent}[{i_maple}, {j_maple}]".format(
             parent=self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True),
-            i_maple=expr.i + 1,
-            j_maple=expr.j + 1)
+            i_maple=self._print(expr.i + 1),
+            j_maple=self._print(expr.j + 1))
 
     def _print_MatrixBase(self, expr):
         return self._get_matrix(expr, sparse=False)

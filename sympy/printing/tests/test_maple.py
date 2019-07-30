@@ -230,7 +230,7 @@ def test_containers():
     # FIXME: need more info about tuple in maple
     assert maple_code((1, 2, (3, 4))) == "[1, 2, [3, 4]]"
     assert maple_code([1]) == "[1]"
-    assert maple_code((1,)) == "(1,)"
+    assert maple_code((1,)) == "[1]"
     assert maple_code(Tuple(*[1, 2, 3])) == "[1, 2, 3]"
     assert maple_code((1, x*y, (3, x ** 2))) == "[1, x*y, [3, x^2]]"
     # scalar, matrix, empty matrix and empty list
@@ -255,7 +255,7 @@ def test_maple_noninline():
 
 def test_maple_matrix_assign_to():
     A = Matrix([[1, 2, 3]])
-    assert maple_code(A, assign_to='a') == "a := Matrix([[1], [2], [3]], storage = rectangular)"
+    assert maple_code(A, assign_to='a') == "a := Matrix([[1, 2, 3]], storage = rectangular)"
     A = Matrix([[1, 2], [3, 4]])
     assert maple_code(A, assign_to='A') == "A := Matrix([[1, 2], [3, 4]], storage = rectangular)"
 
