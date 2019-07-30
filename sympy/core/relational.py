@@ -663,9 +663,20 @@ class Equality(Relational):
             return arg.func(self.lhs - arg.lhs, self.rhs - arg.rhs)
         raise NotImplementedError()
 
-    def multiply_sides(self, arg):
+    def multiply_sides(self, arg, conds='piecewise'):
         """Returns a new relational with ``arg`` multiplied to LHS and
         RHS
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+            If `arg` is a non-relational expression, it will be
+            multiplied with both sides.
+
+            If `arg` is a relational expression, both LHS and RHS will
+            be multiplied to respective part of the original expression
+            individually.
 
         Examples
         ========
