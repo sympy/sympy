@@ -48,6 +48,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         addpackages = '\\usepackage{euler}'
     else:
         addpackages = ''
+    if use_latex == "svg":
+        addpackages = addpackages + "\n\\special{color %s}" % forecolor
+
     preamble = preamble % (fontsize, addpackages)
 
     imagesize = 'tight'
@@ -56,7 +59,12 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     dvi = r"-T %s -D %d -bg %s -fg %s -O %s" % (
         imagesize, resolution, backcolor, forecolor, offset)
     dvioptions = dvi.split()
+
+    svg_scale = 2.1*scale
+    dvioptions_svg = ["--no-fonts", "--scale={}".format(svg_scale)]
+
     debug("init_printing: DVIOPTIONS:", dvioptions)
+    debug("init_printing: DVIOPTIONS_SVG:", dvioptions_svg)
     debug("init_printing: PREAMBLE:", preamble)
 
     latex = latex_printer or default_latex
@@ -80,6 +88,19 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                   repr(e))
             raise
         return exprbuffer.getvalue()
+
+    def _svg_wrapper(o):
+        exprbuffer = BytesIO()
+        try:
+            preview(o, output='svg', viewer='BytesIO',
+                    outputbuffer=exprbuffer, preamble=preamble,
+                    dvioptions=dvioptions_svg)
+        except Exception as e:
+            # IPython swallows exceptions
+            debug("svg printing:", "_preview_wrapper exception raised:",
+                  repr(e))
+            raise
+        return exprbuffer.getvalue().decode('utf-8')
 
     def _matplotlib_wrapper(o):
         # mathtext does not understand certain latex flags, so we try to
@@ -159,6 +180,21 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                     s = latex(o, mode='inline', **settings)
                 return _matplotlib_wrapper(s)
 
+    def _print_latex_svg(o):
+        """
+        A function that returns a svg rendered by an external latex
+        distribution, no fallback available.
+        """
+        if _can_print_latex(o):
+            s = latex(o, mode=latex_mode, **settings)
+            if latex_mode == 'plain':
+                s = '$\\displaystyle %s$' % s
+            try:
+                return _svg_wrapper(s)
+            except RuntimeError as e:
+                debug('preview failed with:', repr(e),
+                      ' No fallback available.')
+
     def _print_latex_matplotlib(o):
         """
         A function that returns a png rendered by mathtext
@@ -209,6 +245,19 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
         for cls in printable_types:
             plaintext_formatter.for_type(cls, _print_plain)
+
+        svg_formatter = ip.display_formatter.formatters['image/svg+xml']
+        if use_latex in ('svg', ):
+            debug("init_printing: using svg formatter")
+            for cls in printable_types:
+                svg_formatter.for_type(cls, _print_latex_svg)
+        else:
+            debug("init_printing: not using any svg formatter")
+            for cls in printable_types:
+                # Better way to set this, but currently does not work in IPython
+                #png_formatter.for_type(cls, None)
+                if cls in svg_formatter.type_printers:
+                    svg_formatter.type_printers.pop(cls)
 
         png_formatter = ip.display_formatter.formatters['image/png']
         if use_latex in (True, 'png'):
@@ -303,7 +352,9 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         falling back to matplotlib if external compilation fails;
         if 'matplotlib', enable latex rendering with matplotlib;
         if 'mathjax', enable latex text generation, for example MathJax
-        rendering in IPython notebook or text rendering in LaTeX documents
+        rendering in IPython notebook or text rendering in LaTeX documents;
+        if 'svg', enable latex rendering with an external latex compiler,
+        no fallback
     wrap_line: boolean
         If True, lines will wrap at the end; if False, they will not wrap
         but continue as one line. This is only relevant if ``pretty_print`` is
