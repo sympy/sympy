@@ -431,10 +431,12 @@ def bc_dist(expr):
         B = unpacked.diag
         new_B = [factor * mat for mat in B]
         return BlockDiagMatrix(*new_B)
-
-    B = unpacked.blocks
-    new_B = [[factor * B[i, j] for j in range(B.cols)] for i in range(B.rows)]
-    return BlockMatrix(new_B)
+    elif isinstance(unpacked, BlockMatrix):
+        B = unpacked.blocks
+        new_B = [
+            [factor * B[i, j] for j in range(B.cols)] for i in range(B.rows)]
+        return BlockMatrix(new_B)
+    return unpacked
 
 
 def bc_matmul(expr):
