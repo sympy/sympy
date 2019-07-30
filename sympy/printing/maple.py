@@ -195,7 +195,7 @@ class MapleCodePrinter(CodePrinter):
         _print_SparseMatrix
 
     def _print_Identity(self, expr):
-        return self._print(sympy.Matrix(expr))
+        return self._print(sympy.SparseMatrix(expr))
 
     def _print_MatMul(self, expr):
         _fact_list = list(expr.args)
@@ -210,7 +210,7 @@ class MapleCodePrinter(CodePrinter):
         if _const is None:
             return '.'.join(self._print(_m) for _m in _fact_list)
         else:
-            return '{c}*{m}'.format(c=_const, m='*'.join(self._print(_m) for _m in _fact_list))
+            return '{c}*{m}'.format(c=_const, m='.'.join(self._print(_m) for _m in _fact_list))
 
     def _print_MatPow(self, expr):
         # This function requires LinearAlgebra Function in Maple
