@@ -156,7 +156,7 @@ class MapleCodePrinter(CodePrinter):
 
     def _get_matrix(self, expr, sparse=False):
         if expr.cols == 0 or expr.rows == 0:
-            _strM = 'Matrix([], storage = {storage}})'.format(
+            _strM = 'Matrix([], storage = {storage})'.format(
                 storage='sparse' if sparse else 'rectangular')
         else:
             _strM = 'Matrix({list}, storage = {storage})'.format(
