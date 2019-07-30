@@ -656,6 +656,17 @@ def test_latex_derivatives():
     assert latex(diff(f(x), (x, n))) == \
         r"\frac{d^{n}}{d x^{n}} f{\left(x \right)}"
 
+    x1 = Symbol('x1')
+    x2 = Symbol('x2')
+    assert latex(diff(f(x1, x2), x1)) == r'\frac{\partial}{\partial x_{1}} f{\left(x_{1},x_{2} \right)}'
+
+    n1 = Symbol('n1')
+    assert latex(diff(f(x), (x, n1))) ==  r'\frac{d^{n_{1}}}{d x^{n_{1}}} f{\left(x \right)}'
+
+    n2 = Symbol('n2')
+    assert latex(diff(f(x), (x, Max(n1, n2)))) == \
+        r'\frac{d^{\max\left(n_{1}, n_{2}\right)}}{d x^{\max\left(n_{1}, n_{2}\right)}} f{\left(x \right)}'
+
 
 def test_latex_subs():
     assert latex(Subs(x*y, (

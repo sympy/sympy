@@ -685,12 +685,12 @@ class LatexPrinter(Printer):
             else:
                 tex += r"%s %s^{%s}" % (diff_symbol,
                                         self.parenthesize_super(self._print(x)),
-                                        num)
+                                        self._print(num))
 
         if dim == 1:
             tex = r"\frac{%s}{%s}" % (diff_symbol, tex)
         else:
-            tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, dim, tex)
+            tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
