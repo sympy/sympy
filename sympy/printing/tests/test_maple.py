@@ -212,8 +212,7 @@ def test_MatrixSymbol():
     assert maple_code(2*A*B) == "2*A.B"
     assert maple_code(B*2*A) == "2*B.A"
 
-    # FIXME: need more info about eye.
-    assert maple_code(A*(B + 3*Identity(n))) == "A*(3*eye(n) + B)"
+    assert maple_code(A*(B + 3*Identity(n))) == "A*(3*Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = sparse) + B)"
     assert maple_code(A ** (x ** 2)) == "A^(x^2)"
     assert maple_code(A ** 3) == "A^3"
     assert maple_code(A ** (S.Half)) == "A^(1/2)"
@@ -235,7 +234,7 @@ def test_containers():
     assert maple_code((1, x*y, (3, x ** 2))) == "[1, x*y, [3, x^2]]"
     # scalar, matrix, empty matrix and empty list
     assert maple_code((1, eye(3), Matrix(0, 0, []), [])) == \
-           "[1, Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = rectangular), zeros(0, 0), Matrix([], storage = rectangular)]"
+           "[1, Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = sparse), zeros(0, 0), Matrix([], storage = rectangular)]"
 
     print("Need more info about tuple in maple.")
 

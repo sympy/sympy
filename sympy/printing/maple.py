@@ -110,8 +110,8 @@ class MapleCodePrinter(CodePrinter):
             return '1/sqrt(%s)' % self._print(expr.base)
         else:
             return '%s^%s' % (
-                self.parenthesize(expr.base, PREC),
-                self.parenthesize(expr.exp, PREC))
+                self.parenthesize(expr.base, PREC, strict=True),
+                self.parenthesize(expr.exp, PREC, strict=True))
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
@@ -130,7 +130,7 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        return '%d/%d' % (p, q)
+        return "{p}/{q}".format(p=str(p), q=str(q))
 
     def _print_Relational(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -138,7 +138,7 @@ class MapleCodePrinter(CodePrinter):
         op = expr.rel_op
         if op in spec_relational_ops:
             op = spec_relational_ops[op]
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{lhs} {rel_op} {rhs}".format(lhs=lhs_code, rel_op=op, rhs=rhs_code)
 
     def _print_NumberSymbol(self, expr):
         return number_symbols[expr]
@@ -221,6 +221,11 @@ class MapleCodePrinter(CodePrinter):
     def _print_HadamardProduct(self, expr):
         _fact_list = list(expr.args)
         return '*'.join(self._print(_m) for _m in _fact_list)
+
+    def _print_Function(self, expr):
+        _arg_list = list(expr.args)
+        return '{f}({arg_cont})'.format(f=str(expr.__class__),
+                                        arg_cont=', '.join(self._print(_arg) for _arg in _arg_list))
 
 
 def maple_code(expr, assign_to=None, **settings):
