@@ -463,7 +463,8 @@ def bc_matmul(expr):
     return MatMul(factor, *matrices).doit()
 
 def bc_transpose(expr):
-    return BlockMatrix(block_collapse(expr.arg).blocks.applyfunc(transpose).T)
+    collapse = block_collapse(expr.arg)
+    return collapse._eval_transpose()
 
 
 def bc_inverse(expr):
