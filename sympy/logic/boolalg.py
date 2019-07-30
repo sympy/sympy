@@ -934,6 +934,9 @@ class Not(BooleanFunction):
             a, b, c = args
             return And._to_nnf(Or(a, ~c), Or(~a, ~b), simplify=simplify)
 
+        if isinstance(expr, BooleanFunction):
+            return ~expr.to_nnf(simplify)
+
         raise ValueError("Illegal operator %s in expression" % func)
 
 
@@ -1534,6 +1537,7 @@ def to_nnf(expr, simplify=True):
     (A | ~B | (A & ~B)) & (B | ~A | (B & ~A))
 
     """
+    expr = sympify(expr)
     if is_nnf(expr, simplify):
         return expr
     return expr.to_nnf(simplify)
@@ -1630,7 +1634,6 @@ def is_nnf(expr, simplified=True):
 
     """
 
-    expr = sympify(expr)
     if is_literal(expr):
         return True
 
@@ -1789,9 +1792,8 @@ def is_literal(expr):
 
     """
     if isinstance(expr, Not):
-        return not isinstance(expr.args[0], BooleanFunction)
-    else:
-        return not isinstance(expr, BooleanFunction)
+        expr = expr.args[0]
+    return not isinstance(expr, BooleanFunction)
 
 
 def to_int_repr(clauses, symbols):

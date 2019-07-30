@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.assumptions.ask_generated import get_known_facts_cnf
-from sympy.assumptions.assume import global_assumptions, AppliedPredicate
+from sympy.assumptions.assume import global_assumptions, AppliedAssumptionsPredicate
 from sympy.assumptions.sathandlers import fact_registry
 from sympy.core import oo, Tuple
 from sympy.logic.inference import satisfiable
@@ -40,11 +40,11 @@ def get_relevant_facts(proposition, assumptions=(True,),
 
     newexprs = set()
     if not exprs:
-        keys = proposition.atoms(AppliedPredicate)
+        keys = proposition.atoms(AppliedAssumptionsPredicate)
         # XXX: We need this since True/False are not Basic
-        keys |= Tuple(*assumptions).atoms(AppliedPredicate)
+        keys |= Tuple(*assumptions).atoms(AppliedAssumptionsPredicate)
         if context:
-            keys |= And(*context).atoms(AppliedPredicate)
+            keys |= And(*context).atoms(AppliedAssumptionsPredicate)
 
         exprs = {key.args[0] for key in keys}
 
@@ -60,7 +60,7 @@ def get_relevant_facts(proposition, assumptions=(True,),
             newfact = fact.rcall(expr)
             relevant_facts.add(newfact)
             newexprs |= set([key.args[0] for key in
-                newfact.atoms(AppliedPredicate)])
+                newfact.atoms(AppliedAssumptionsPredicate)])
 
     return relevant_facts, newexprs - exprs
 

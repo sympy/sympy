@@ -80,15 +80,15 @@ def _test_args(obj):
     return all(isinstance(arg, Basic) for arg in obj.args)
 
 
-def test_sympy__assumptions__assume__AppliedPredicate():
-    from sympy.assumptions.assume import AppliedPredicate, Predicate
+def test_sympy__assumptions__assume__AppliedAssumptionsPredicate():
+    from sympy.assumptions.assume import AppliedAssumptionsPredicate, AssumptionsPredicate
     from sympy import Q
-    assert _test_args(AppliedPredicate(Predicate("test"), 2))
+    assert _test_args(AppliedAssumptionsPredicate(AssumptionsPredicate("test"), 2))
     assert _test_args(Q.is_true(True))
 
-def test_sympy__assumptions__assume__Predicate():
-    from sympy.assumptions.assume import Predicate
-    assert _test_args(Predicate("test"))
+def test_sympy__assumptions__assume__AssumptionsPredicate():
+    from sympy.assumptions.assume import AssumptionsPredicate
+    assert _test_args(AssumptionsPredicate("test"))
 
 def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
     from sympy.assumptions.sathandlers import UnevaluatedOnFree
@@ -2719,6 +2719,55 @@ def test_sympy__logic__boolalg__Xor():
 def test_sympy__logic__boolalg__Xnor():
     from sympy.logic.boolalg import Xnor
     assert _test_args(Xnor(x, y, 2))
+
+
+@SKIP("abstract class")
+def test_sympy__logic__FOL__FOL():
+    pass
+
+
+def test_sympy__logic__FOL__Predicate():
+    from sympy.logic.FOL import Predicate
+    assert _test_args(Predicate('P'))
+
+
+def test_sympy__logic__FOL__AppliedPredicate():
+    from sympy.logic.FOL import Predicate
+    P = Predicate('P')
+    assert _test_args(P(x, y))
+
+
+def test_sympy__logic__FOL__FOLFunction():
+    pass
+
+
+def test_sympy__logic__FOL__AppliedFOLFunction():
+    from sympy.logic.FOL import FOLFunction
+    f = FOLFunction('f')
+    assert _test_args(f(x, y))
+
+
+def test_sympy__logic__FOL__Constant():
+    from sympy.logic.FOL import Constant
+
+
+@SKIP("abstract class")
+def test_sympy__logic__FOL__Quantifier():
+    pass
+
+
+def test_sympy__logic__FOL__ForAll():
+    from sympy.logic.FOL import ForAll, Predicate
+    P = Predicate('P')
+    Q = Predicate('Q')
+    assert _test_args(ForAll(x, ForAll(y, P(x, y) >> Q(x, y))))
+
+
+def test_sympy__logic__FOL__Exists():
+    from sympy.logic.FOL import Exists, Predicate
+    P = Predicate('P')
+    Q = Predicate('Q')
+    assert _test_args(Exists(x, Exists(y, P(x, y) >> Q(x, y))))
 
 
 def test_sympy__matrices__matrices__DeferredVector():
