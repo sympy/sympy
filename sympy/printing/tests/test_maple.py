@@ -121,7 +121,7 @@ def test_imag():
     I = S('I')
     assert maple_code(I) == "I"
     assert maple_code(5*I) == "5*I"
-    assert maple_code((S(3)/2)*I) == "3*I/2"
+    assert maple_code((S(3)/2)*I) == "3/2*I"
     assert maple_code(3 + 4*I) == "3 + 4*I"
 
 
