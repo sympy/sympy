@@ -208,7 +208,7 @@ class MapleCodePrinter(CodePrinter):
             _const, _fact_list = _fact_list[0], _fact_list[1:]
 
         if _const is None:
-            return '.'.join(_fact_list)
+            return '.'.join(self._print(_m) for _m in _fact_list)
         else:
             return '{c}*{m}'.format(c=_const, m='*'.join(self._print(_m) for _m in _fact_list))
 
