@@ -1145,3 +1145,24 @@ def test_issue_16878b():
     # that handles the base_set of S.Reals like there is
     # for Integers
     assert imageset(x, (x, x), S.Reals).is_subset(S.Reals**2) is True
+
+
+def test_issue_17274():
+    neinf = S.NegativeInfinity
+    poinf = S.Infinity
+    set_ff = Interval(0, 5)
+    set_if = Interval(-oo, 5)
+    set_fi = Interval(0, oo)
+    set_ii = Interval(-oo, oo)
+    fs_ni = FiniteSet(S.NegativeInfinity)
+    fs_pi = FiniteSet(S.Infinity)
+
+    assert set_ff + neinf == fs_ni
+    assert set_ff + poinf == fs_pi
+    assert set_fi + neinf == set_ii
+    assert set_if + poinf == set_ii
+
+    assert set_ff - poinf == fs_ni
+    assert set_ff - neinf == fs_pi
+    assert set_if - neinf == set_ii
+    assert set_fi - poinf == set_ii

@@ -182,25 +182,7 @@ def test_Interval_arithmetic():
     assert n23cc/i12cc == SetExpr(Interval(-2, 3))
 
 
-def test_Interval_inf():
-    neinf = SetExpr(-oo)
-    poinf = SetExpr(oo)
-    set_ff = SetExpr(Interval(0, 5))
-    set_if = SetExpr(Interval(-oo, 5))
-    set_fi = SetExpr(Interval(0, oo))
-    set_ii = SetExpr(Interval(-oo, oo))
-    fs_ni = SetExpr(FiniteSet(S.NegativeInfinity))
-    fs_pi = SetExpr(FiniteSet(S.Infinity))
 
-    assert set_ff + neinf == fs_ni
-    assert set_ff + poinf == fs_pi
-    assert set_fi + neinf == set_ii
-    assert set_if + poinf == set_ii
-
-    assert set_ff - poinf == fs_ni
-    assert set_ff - neinf == fs_pi
-    assert set_if - neinf == set_ii
-    assert set_fi - poinf == set_ii
 
 
 def test_SetExpr_Intersection():
