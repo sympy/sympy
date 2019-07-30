@@ -222,10 +222,6 @@ class MapleCodePrinter(CodePrinter):
         _fact_list = list(expr.args)
         return '*'.join(self._print(_m) for _m in _fact_list)
 
-    def _print_Function(self, expr):
-        _arg_list = list(expr.args)
-        return '{f}({arg_cont})'.format(f=str(expr.__class__),
-                                        arg_cont=', '.join(self._print(_arg) for _arg in _arg_list))
 
 
 def maple_code(expr, assign_to=None, **settings):
