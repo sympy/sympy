@@ -1641,7 +1641,11 @@ class Derivative(Expr):
 
     @property
     def free_symbols(self):
-        return self.expr.free_symbols
+        ret = self.expr.free_symbols
+        # Add symbolic counts to free_symbols
+        for var, count in self.variable_count:
+            ret.update(count.free_symbols)
+        return ret
 
     def _eval_subs(self, old, new):
         # The substitution (old, new) cannot be done inside
