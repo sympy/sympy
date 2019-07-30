@@ -468,7 +468,7 @@ def bc_transpose(expr):
 
 
 def bc_inverse(expr):
-    if isinstance(expr, BlockDiagMatrix):
+    if isinstance(expr.arg, BlockDiagMatrix):
         return expr._eval_inverse()
 
     expr2 = blockinverse_1x1(expr)
