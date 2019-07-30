@@ -228,13 +228,14 @@ def test_containers():
            "Any[1, 2, 3, [4, 5, [6, 7]], 8, [9, 10], 11]"
 
     # FIXME: need more info about tuple in maple
-    # assert maple_code((1, 2, (3, 4))) == "(1, 2, (3, 4))"
+    assert maple_code((1, 2, (3, 4))) == "[1, 2, [3, 4]]"
     assert maple_code([1]) == "[1]"
-    # assert maple_code((1,)) == "(1,)"
-    # assert maple_code(Tuple(*[1, 2, 3])) == "(1, 2, 3)"
-    # assert maple_code((1, x * y, (3, x ** 2))) == "(1, x*y, (3, x.^2))"
+    assert maple_code((1,)) == "(1,)"
+    assert maple_code(Tuple(*[1, 2, 3])) == "[1, 2, 3]"
+    assert maple_code((1, x * y, (3, x ** 2))) == "[1, x*y, [3, x^2]]"
     # scalar, matrix, empty matrix and empty list
-    # assert maple_code((1, eye(3), Matrix(0, 0, []), [])) == "(1, [1 0 0;\n0 1 0;\n0 0 1], zeros(0, 0), Any[])"
+    assert maple_code((1, eye(3), Matrix(0, 0, []), [])) == \
+           "[1, Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = rectangular), zeros(0, 0), Matrix([], storage = rectangular)]"
 
     print("Need more info about tuple in maple.")
 
