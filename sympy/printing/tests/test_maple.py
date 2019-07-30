@@ -225,7 +225,7 @@ def test_special_matrices():
 
 def test_containers():
     assert maple_code([1, 2, 3, [4, 5, [6, 7]], 8, [9, 10], 11]) == \
-           "Any[1, 2, 3, [4, 5, [6, 7]], 8, [9, 10], 11]"
+           "[1, 2, 3, [4, 5, [6, 7]], 8, [9, 10], 11]"
 
     # FIXME: need more info about tuple in maple
     assert maple_code((1, 2, (3, 4))) == "[1, 2, [3, 4]]"
@@ -330,14 +330,14 @@ def test_MatrixElement_printing():
     B = MatrixSymbol("B", 1, 3)
     C = MatrixSymbol("C", 1, 3)
 
-    assert (maple_code(A[0, 0]) == "A[1,1]")
-    assert (maple_code(3*A[0, 0]) == "3*A[1,1]")
+    assert (maple_code(A[0, 0]) == "A[1, 1]")
+    assert (maple_code(3*A[0, 0]) == "3*A[1, 1]")
 
     F = C[0, 0].subs(C, A - B)
-    assert (maple_code(F) == "(A - B)[1,1]")
+    assert (maple_code(F) == "(A - B)[1, 1]")
 
 
-def test_haramard():
+def test_hadamard():
     A = MatrixSymbol('A', 3, 3)
     B = MatrixSymbol('B', 3, 3)
     v = MatrixSymbol('v', 3, 1)

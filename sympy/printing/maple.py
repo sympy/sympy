@@ -124,7 +124,7 @@ class MapleCodePrinter(CodePrinter):
                              "some condition.")
         _coup_list = [("{c}, {e}".format(c=c, e=e) if c is not True else "{e}".format(e=e)) for e, c in expr.args]
         _inbrace = ', '.join(_coup_list)
-        return 'piecewise({_inbrace})'.join(_inbrace)
+        return 'piecewise({_inbrace})'.format(_inbrace=_inbrace)
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
@@ -198,7 +198,7 @@ class MapleCodePrinter(CodePrinter):
         return self._print(sympy.Matrix(expr))
 
     def _print_MatMul(self, expr):
-        _fact_list = expr.args
+        _fact_list = list(expr.args)
         _const = None
         if not (
             isinstance(_fact_list[0], sympy.MatrixBase) or isinstance(
@@ -215,6 +215,10 @@ class MapleCodePrinter(CodePrinter):
     def _print_MatPow(self, expr):
         # This function requires LinearAlgebra Function in Maple
         return 'MatrixPower({A}, {n})'.format(A=expr.base, n=expr.exp)
+
+    def _print_HadamardProduct(self, expr):
+        _fact_list = list(expr.args)
+        return '*'.join(self._print(_m) for _m in _fact_list)
 
 
 def maple_code(expr, assign_to=None, **settings):
