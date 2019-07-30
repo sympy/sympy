@@ -54,7 +54,7 @@ def test_Pow():
     # FIXME: not done yet.
     g = implemented_function('g', Lambda(x, 2 * x))
     assert maple_code(1 / (g(x) * 3.5) ** (x - y ** x) / (x ** 2 + y)) == \
-           "(3.5*2*x).^(-x + y.^x)/(x.^2 + y)"
+           "(3.5*2*x)^(-x + y^x)/(x^2 + y)"
     # For issue 14160
     assert maple_code(Mul(-2, x, Pow(Mul(y, y, evaluate=False), -1, evaluate=False),
                           evaluate=False)) == '-2*x/(y.*y)'
