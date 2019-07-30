@@ -569,6 +569,84 @@ class MatrixExpr(Expr):
         else:
             return remove_matelement(retexpr, first_index, last_index)
 
+    def as_indexed(self):
+        from sympy import Idx, IndexedBase
+
+        def nth_varname(n):
+            start = ord('i')
+            step = ord('z') - ord('i') + 1
+            if n + start <= ord('z'):
+                return chr(n + start)
+            else:
+                total = []
+                while n > 0:
+                    total.insert(0, chr(n % step + start))
+                    n = n // step - 1
+                if len(total) <= 1:
+                    total.insert(0, 'i')
+                return ''.join(total)
+
+        def varname_generator(names):
+            counter = 0
+            while True:
+                varname = nth_varname(counter)
+                if varname not in names:
+                    yield varname
+                counter += 1
+
+        def as_indexed_helper(expr, generator, row_idx=None, col_idx=None):
+
+            if isinstance(expr, MatrixSymbol):
+                rows, cols = self.shape
+                if not row_idx:
+                    row_idx = Idx(next(generator), range=rows)
+                if not col_idx:
+                    col_idx = Idx(next(generator), range=cols)
+                base = IndexedBase(expr.name)
+                return base[row_idx, col_idx]
+
+            elif isinstance(expr, MatMul):
+                result = []
+                args_c, args_nc = expr.args_cnc()
+                first_nc = args_nc.pop(0)
+                first_indexed = as_indexed_helper(first_nc, generator)
+                row_idx, col_idx = first_indexed.indices
+
+                result.append(first_indexed)
+
+                for arg in args_nc:
+                    row_idx = col_idx
+                    cols = arg.shape[1]
+                    col_idx = Idx(next(generator), range=cols)
+                    arg_indexed = as_indexed_helper(arg, generator, row_idx,
+                                                    col_idx)
+                    result.append(arg_indexed)
+
+                return Mul(*args_c, *result)
+
+            elif isinstance(expr, MatAdd):
+                # TODO: DRY
+                rows, cols = self.shape
+                if not row_idx:
+                    row_idx = Idx(next(generator), range=rows)
+                if not col_idx:
+                    col_idx = Idx(next(generator), range=cols)
+
+                result = []
+                for arg in expr.args:
+                    indexed = as_indexed_helper(arg, generator, row_idx,
+                                                col_idx)
+                    result.append(indexed)
+
+                return Add(*result)
+
+            else:
+                raise NotImplementedError
+
+        names = [e.name for e in self.free_symbols]
+        generator = varname_generator(names)
+        return as_indexed_helper(self, generator)
+
     def applyfunc(self, func):
         from .applyfunc import ElementwiseApplyFunction
         return ElementwiseApplyFunction(func, self)
