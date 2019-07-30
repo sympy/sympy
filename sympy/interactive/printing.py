@@ -346,24 +346,26 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     Parameters
     ==========
 
-    pretty_print : boolean
+    pretty_print : boolean, default=True
         If True, use pretty_print to stringify or the provided pretty
         printer; if False, use sstrrepr to stringify or the provided string
         printer.
-    order : string or None
+    order : string or None, default='lex'
         There are a few different settings for this parameter:
         lex (default), which is lexographic order;
         grlex, which is graded lexographic order;
         grevlex, which is reversed graded lexographic order;
         old, which is used for compatibility reasons and for long expressions;
         None, which sets it to lex.
-    use_unicode : boolean or None
+    use_unicode : boolean or None, default=None
         If True, use unicode characters;
-        if False, do not use unicode characters.
-    use_latex : string, boolean, or None
+        if False, do not use unicode characters;
+        if None, make a guess based on the environment.
+    use_latex : string, boolean, or None, default=None
         If True, use default LaTeX rendering in GUI interfaces (png and
         mathjax);
         if False, do not use LaTeX rendering;
+        if None, make a guess based on the environment;
         if 'png', enable latex rendering with an external latex compiler,
         falling back to matplotlib if external compilation fails;
         if 'matplotlib', enable LaTeX rendering with matplotlib;
@@ -375,11 +377,11 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         If True, lines will wrap at the end; if False, they will not wrap
         but continue as one line. This is only relevant if ``pretty_print`` is
         True.
-    num_columns : int or None
+    num_columns : int or None, default=None
         If int, number of columns before wrapping is set to num_columns; if
         None, number of columns before wrapping is set to terminal width.
         This is only relevant if ``pretty_print`` is True.
-    no_global : boolean
+    no_global : boolean, default=False
         If True, the settings become system wide;
         if False, use just for this console/session.
     ip : An interactive console
@@ -396,12 +398,13 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         DVI setting for background color. See notes.
     fontsize : string, optional, default='10pt'
         A font size to pass to the LaTeX documentclass function in the
-        preamble.
+        preamble. Note that the options are limited by the documentclass.
+        Consider using scale instead.
     latex_mode : string, optional, default='plain'
         The mode used in the LaTeX printer. Can be one of:
         {'inline'|'plain'|'equation'|'equation*'}.
     print_builtin : boolean, optional, default=True
-        If true then floats and integers will be printed. If False the
+        If ``True`` then floats and integers will be printed. If ``False`` the
         printer will only print SymPy types.
     str_printer : function, optional, default=None
         A custom string printer function. This should mimic
@@ -415,7 +418,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         Useful for high dpi screens.
     settings :
         Any additional settings for the ``latex`` and ``pretty`` commands can
-        be passed.
+        be used to fine-tune the output.
 
     Examples
     ========
@@ -461,11 +464,11 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     executed, the LaTeX rendering is handled by the IPython console and not SymPy.
 
     The colors can be selected among the 68 standard colors known to ``dvips``,
-    for a list see _[dvicolornames]. In addition, the background color can be
+    for a list see [1]_. In addition, the background color can be
     set to  'Transparent' (which is the default value).
 
     When using the 'Auto' foreground color, the guess is based on the
-    ``colors`` variable in the IPython console, see _[ipythoncolors]. Hence, if
+    ``colors`` variable in the IPython console, see [2]_. Hence, if
     that variable is set correctly in your IPython console, there is a high
     chance that the output will be readable, although manual settings may be
     needed.
@@ -474,9 +477,15 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     References
     ==========
 
-    .. [dvicolornames] https://en.wikibooks.org/wiki/LaTeX/Colors#The_68_standard_colors_known_to_dvips
+    .. [1] https://en.wikibooks.org/wiki/LaTeX/Colors#The_68_standard_colors_known_to_dvips
 
-    .. [ipythoncolors] https://ipython.readthedocs.io/en/stable/config/details.html#terminal-colors
+    .. [2] https://ipython.readthedocs.io/en/stable/config/details.html#terminal-colors
+
+    See Also
+    ========
+
+    sympy.printing.latex
+    sympy.printing.pretty
 
     """
     import sys
