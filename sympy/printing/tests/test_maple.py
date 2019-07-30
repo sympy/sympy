@@ -47,7 +47,7 @@ def test_Function():
 
 def test_Pow():
     assert maple_code(x ** 3) == "x^3"
-    assert maple_code(x ** (y ** 3)) == "x^(y^3)"
+    assert maple_code(x ** (y ** 3)) == "x^(y^3)"  # PROBLEM
     assert maple_code((x ** 3) ** y) == "(x^3)^y"
     assert maple_code(x ** Rational(2, 3)) == 'x^(2/3)'
 
@@ -111,7 +111,7 @@ def test_mix_number_mult_symbols():
 def test_mix_number_pow_symbols():
     assert maple_code(pi ** 3) == 'Pi^3'
     assert maple_code(x ** 2) == 'x^2'
-    assert maple_code(x ** (pi ** 3)) == 'x^(Pi^3)'
+    assert maple_code(x ** (pi ** 3)) == 'x^(Pi^3)'  # PROBLEM
     assert maple_code(x ** y) == 'x^y'
     assert maple_code(x ** (y ** z)) == 'x^(y^z)'
     assert maple_code((x ** y) ** z) == '(x^y)^z'
@@ -121,7 +121,7 @@ def test_imag():
     I = S('I')
     assert maple_code(I) == "I"
     assert maple_code(5*I) == "5*I"
-    assert maple_code((S(3)/2)*I) == "3/2*I"
+    assert maple_code((S(3)/2)*I) == "3/2*I"  # PROBLEM
     assert maple_code(3 + 4*I) == "3 + 4*I"
 
 
@@ -136,7 +136,6 @@ def test_constants():
 
 
 def test_constants_other():
-    # FIXME: need more info.
     assert maple_code(2*GoldenRatio) == '2*(1/2 + (1/2)*sqrt(5))'
     assert maple_code(2*Catalan) == '2*Catalan'
     assert maple_code(2*EulerGamma) == "2*gamma"
@@ -213,7 +212,7 @@ def test_MatrixSymbol():
     assert maple_code(B*2*A) == "2*B.A"
 
     assert maple_code(A*(B + 3*Identity(n))) == "A*(3*Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = sparse) + B)"
-    assert maple_code(A ** (x ** 2)) == "A^(x^2)"
+    assert maple_code(A ** (x ** 2)) == "A^(x^2)" # PROBLEM
     assert maple_code(A ** 3) == "A^3"
     assert maple_code(A ** (S.Half)) == "A^(1/2)"
 
@@ -235,7 +234,7 @@ def test_containers():
     # scalar, matrix, empty matrix and empty list
     assert maple_code((1, eye(3), Matrix(0, 0, []), [])) == \
            "[1, Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = sparse), zeros(0, 0), Matrix([], storage = rectangular)]"
-
+    # PROBLEM
     print("Need more info about tuple in maple.")
 
 
@@ -276,7 +275,7 @@ def test_maple_matrix_1x1():
 
 def test_maple_matrix_elements():
     A = Matrix([[x, 2, x*y]])
-    assert maple_code(A[0, 0] ** 2 + A[0, 1] + A[0, 2]) == "x^2 + 2 + x*y"
+    assert maple_code(A[0, 0] ** 2 + A[0, 1] + A[0, 2]) == "x^2 + 2 + x*y"  # PROBLEM
     AA = MatrixSymbol('AA', 1, 3)
     assert maple_code(AA) == "AA"
 
@@ -333,7 +332,7 @@ def test_MatrixElement_printing():
     assert (maple_code(3*A[0, 0]) == "3*A[1, 1]")
 
     F = C[0, 0].subs(C, A - B)
-    assert (maple_code(F) == "(A - B)[1, 1]")
+    assert (maple_code(F) == "(A - B)[1, 1]")  # PROBLEM
 
 
 def test_hadamard():
@@ -343,7 +342,7 @@ def test_hadamard():
     h = MatrixSymbol('h', 1, 3)
     C = HadamardProduct(A, B)
     assert maple_code(C) == "A*B"
-    assert maple_code(C*v) == "(A*B)*v"
+    assert maple_code(C*v) == "(A*B)*v"  # PROBLEM
     assert maple_code(h*C*v) == "h*(A*B)*v"
     assert maple_code(C*A) == "(A*B)*A"
     # mixing Hadamard and scalar strange b/c we vectorize scalars
@@ -352,7 +351,7 @@ def test_hadamard():
 
 def test_maple_piecewise():
     expr = Piecewise((x, x < 1), (x ** 2, True))
-    assert maple_code(expr) == "piecewise(x < 1, x, x^2)"
+    assert maple_code(expr) == "piecewise(x < 1, x, x^2)"  # PROBLEM
     assert maple_code(expr, assign_to="r") == (
         "r := piecewise(x < 1, x, x^2)")
 
@@ -368,7 +367,7 @@ def test_maple_piecewise():
 
 def test_maple_piecewise_times_const():
     pw = Piecewise((x, x < 1), (x ** 2, True))
-    assert maple_code(2*pw) == "2*piecewise(x < 1, x, x^2)"
+    assert maple_code(2*pw) == "2*piecewise(x < 1, x, x^2)"  # PROBLEM
     assert maple_code(pw/x) == "piecewise(x < 1, x, x^2)/x"
     assert maple_code(pw/(x*y)) == "piecewise(x < 1, x, x^2)/(x*y)"
     assert maple_code(pw/3) == "piecewise(x < 1, x, x^2)/3"
@@ -378,7 +377,7 @@ def test_specfun():
     # FIXME: don't know if maple support these feature.
     n = Symbol('n')
     for f in [besselj, bessely, besseli, besselk]:
-        assert maple_code(f(n, x)) == f.__name__ + '(n, x)'
+        assert maple_code(f(n, x)) == f.__name__ + '(n, x)'  # PROBLEM
     for f in [airyai, airyaiprime, airybi, airybiprime]:
         assert maple_code(f(x)) == f.__name__ + '(x)'
     assert maple_code(hankel1(n, x)) == 'hankelh1(n, x)'
