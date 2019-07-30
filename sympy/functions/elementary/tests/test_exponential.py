@@ -315,6 +315,21 @@ def test_log_symbolic():
     assert log(-p).func is log and log(-p).args[0] == -p
 
 
+def test_log_exp():
+    assert log(exp(4*I*pi)) == 0     # exp evaluates
+    assert log(exp(-5*I*pi)) == I*pi # exp evaluates
+    assert log(exp(19*I*pi/4)) == 3*I*pi/4
+    assert log(exp(25*I*pi/7)) == -3*I*pi/7
+    assert log(exp(-5*I)) == -5*I + 2*I*pi
+    r = Symbol('r', real=True)
+    i = Symbol('i', imaginary=True)
+    assert log(exp(r - 8*I)) == r - 8*I + 2*I*pi
+    assert unchanged(log, exp(i))
+    assert unchanged(log, exp(r*I))
+    assert unchanged(log, exp(i + I*pi/5))
+    assert log(exp((r + 50*I*pi)/7 + 3*I)) == r/7 - 6*I*pi/7 + 3*I
+
+
 def test_exp_assumptions():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
