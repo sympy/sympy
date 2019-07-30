@@ -1232,13 +1232,6 @@ def test_raise_exception_nonlinsolve():
     raises(NotImplementedError, lambda: nonlinsolve([(x+y)**2 - 9, x**2 - y**2 - 0.75], (x, y)))
 
 
-@XFAIL
-def test_trig_system_fail():
-    soln1 = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
-    soln = FiniteSet(soln1)
-    assert nonlinsolve([sin(x) - 1, cos(x)], x) == soln
-
-
 def test_trig_system():
     # TODO: add more simple testcases when solveset returns
     # simplified soln for Trig eq
@@ -1247,6 +1240,9 @@ def test_trig_system():
 
 @XFAIL
 def test_trig_system_fail():
+    soln1 = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
+    soln = FiniteSet(soln1)
+    assert nonlinsolve([sin(x) - 1, cos(x)], x) == soln
     # fails because solveset trig solver is not much smart.
     sys = [x + y - pi/2, sin(x) + sin(y) - 1]
     # solveset returns conditonset for sin(x) + sin(y) - 1
