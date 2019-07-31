@@ -521,12 +521,12 @@ def test_fps__product():
     assert isinstance(fprod, FormalPowerSeriesProduct)
     assert fprod.f == sin(x)
     assert fprod.g == exp(x)
+    assert fprod.function == sin(x) * exp(x)
     assert fprod._eval_terms(4) == x + x**2 + x**3/3
     assert fprod.truncate(4) == x + x**2 + x**3/3 + O(x**4)
     assert fprod.polynomial(4) == x + x**2 + x**3/3
 
     raises(NotImplementedError, lambda: fprod._eval_term(5))
-    raises(NotImplementedError, lambda: fprod.function)
     raises(NotImplementedError, lambda: fprod.infinite)
     raises(NotImplementedError, lambda: fprod._eval_derivative(x))
     raises(NotImplementedError, lambda: fprod.integrate(x))
@@ -548,14 +548,14 @@ def test_fps__compose():
 
     fcomp = f1.compose(f2, x)
     assert isinstance(fcomp, FormalPowerSeriesCompose)
-    assert fcomp.outer_func == exp(x)
-    assert fcomp.inner_func == sin(x)
+    assert fcomp.f == exp(x)
+    assert fcomp.g == sin(x)
+    assert fcomp.function == exp(sin(x))
     assert fcomp._eval_terms(6) == 1 + x + x**2/2 - x**4/8 - x**5/15
     assert fcomp.truncate() == 1 + x + x**2/2 - x**4/8 - x**5/15 + O(x**6)
     assert fcomp.truncate(5) == 1 + x + x**2/2 - x**4/8 + O(x**5)
 
     raises(NotImplementedError, lambda: fcomp._eval_term(5))
-    raises(NotImplementedError, lambda: fcomp.function)
     raises(NotImplementedError, lambda: fcomp.infinite)
     raises(NotImplementedError, lambda: fcomp._eval_derivative(x))
     raises(NotImplementedError, lambda: fcomp.integrate(x))
@@ -578,12 +578,14 @@ def test_fps__inverse():
 
     finv = f2.inverse(x)
     assert isinstance(finv, FormalPowerSeriesInverse)
+    assert finv.f == exp(x)
     assert finv.function == exp(-x)
     assert finv._eval_terms(5) == 1 - x + x**2/2 - x**3/6 + x**4/24
     assert finv.truncate() == 1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + O(x**6)
     assert finv.truncate(5) == 1 - x + x**2/2 - x**3/6 + x**4/24 + O(x**5)
 
     raises(NotImplementedError, lambda: finv._eval_term(5))
+    raises(ValueError, lambda: finv.g)
     raises(NotImplementedError, lambda: finv.infinite)
     raises(NotImplementedError, lambda: finv._eval_derivative(x))
     raises(NotImplementedError, lambda: finv.integrate(x))
