@@ -52,9 +52,9 @@ class DenseNDimArray(NDimArray):
         if syindex is not None:
             return syindex
 
-        if isinstance(index, (SYMPY_INTS, Integer)):
+        if isinstance(index, (SYMPY_INTS, Integer, slice)):
             index = (index, )
-        if not isinstance(index, slice) and len(index) < self.rank():
+        if len(index) < self.rank():
             index = tuple([i for i in index] + \
                           [slice(None) for i in range(len(index), self.rank())])
 
@@ -64,13 +64,13 @@ class DenseNDimArray(NDimArray):
             nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
             return type(self)(array, nshape)
         else:
-            if isinstance(index, slice):
-                return self._array[index]
-            else:
-                if self.shape == ():
-                    index = ()
-                index = self._parse_index(index)
-                return self._array[index]
+            # if isinstance(index, slice):
+                # return self._array[index]
+            # else:
+            if self.shape == ():
+                index = ()
+            index = self._parse_index(index)
+            return self._array[index]
 
     @classmethod
     def zeros(cls, *shape):
@@ -102,9 +102,16 @@ class DenseNDimArray(NDimArray):
         return Matrix(self.shape[0], self.shape[1], self._array)
 
     def __iter__(self):
+        # def iterator():
+            # for i in range(self._loop_size):
+                # yield self[self._get_tuple_index(i)]
+        # return iterator()
         def iterator():
-            for i in range(self._loop_size):
-                yield self[self._get_tuple_index(i)]
+            if self._shape:
+                for i in range(self._shape[0]):
+                    yield self[i]
+            else:
+                return self[()]
         return iterator()
 
     def reshape(self, *newshape):
@@ -148,11 +155,12 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
     @classmethod
     def _new(cls, iterable, shape, **kwargs):
         from sympy.utilities.iterables import flatten
+        from sympy.tensor.array.nditer import nditer
 
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
         cls._check_special_bounds(flat_list, shape)
-        flat_list = flatten(flat_list)
+        flat_list = flatten(nditer(flat_list))
         flat_list = Tuple(*flat_list)
         self = Basic.__new__(cls, flat_list, shape, **kwargs)
         self._shape = shape
@@ -176,9 +184,10 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
     @classmethod
     def _new(cls, iterable, shape, **kwargs):
         from sympy.utilities.iterables import flatten
+        from sympy.tensor.array.nditer import nditer
 
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
-        flat_list = flatten(flat_list)
+        flat_list = flatten(nditer(flat_list))
         self = object.__new__(cls)
         self._shape = shape
         self._array = list(flat_list)

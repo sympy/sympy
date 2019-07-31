@@ -5,6 +5,7 @@ from sympy import S, Tuple, diff
 from sympy.core.compatibility import Iterable
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
+from sympy.tensor.array.nditer import nditer
 
 def _arrayfy(a):
     from sympy.matrices import MatrixBase
@@ -62,10 +63,7 @@ def tensorproduct(*args):
         new_array = {k1*lp + k2: v1*v2 for k1, v1 in a._sparse_array.items() for k2, v2 in b._sparse_array.items()}
         return ImmutableSparseNDimArray(new_array, a.shape + b.shape)
 
-    al = list(a)
-    bl = list(b)
-
-    product_list = [i*j for i in al for j in bl]
+    product_list = [i*j for i in nditer(a) for j in nditer(b)]
     return ImmutableDenseNDimArray(product_list, a.shape + b.shape)
 
 
@@ -198,6 +196,7 @@ def derive_by_array(expr, dx):
     from sympy.matrices import MatrixBase
     from sympy.tensor.array import SparseNDimArray
     array_types = (Iterable, MatrixBase, NDimArray)
+    from sympy.tensor.array.nditer import nditer
 
     if isinstance(dx, array_types):
         dx = ImmutableDenseNDimArray(dx)
@@ -215,16 +214,16 @@ def derive_by_array(expr, dx):
             if isinstance(expr, SparseNDimArray):
                 lp = len(expr)
                 new_array = {k + i*lp: v
-                             for i, x in enumerate(dx)
+                             for i, x in enumerate(nditer(dx))
                              for k, v in expr.diff(x)._sparse_array.items()}
             else:
-                new_array = [[y.diff(x) for y in expr] for x in dx]
+                new_array = [[y.diff(x) for y in nditer(expr)] for x in nditer(dx)]
             return type(expr)(new_array, dx.shape + expr.shape)
         else:
             return expr.diff(dx)
     else:
         if isinstance(dx, array_types):
-            return ImmutableDenseNDimArray([expr.diff(i) for i in dx], dx.shape)
+            return ImmutableDenseNDimArray([expr.diff(i) for i in nditer(dx)], dx.shape)
         else:
             return diff(expr, dx)
 
