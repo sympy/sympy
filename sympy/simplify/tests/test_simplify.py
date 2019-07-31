@@ -297,6 +297,15 @@ def test_separatevars():
     eq = x*(1 + hyper((), (), y*z))
     assert separatevars(eq) == eq
 
+    s = separatevars(abs(x*y))
+    assert s == abs(x)*abs(y) and s.is_Mul
+    z = cos(1)**2 + sin(1)**2 - 1
+    a = abs(x*z)
+    s = separatevars(a)
+    assert not a.is_Mul and s.is_Mul and s == abs(x)*abs(z)
+    s = separatevars(abs(x*y*z))
+    assert s == abs(x)*abs(y)*abs(z)
+
 
 def test_separatevars_advanced_factor():
     x, y, z = symbols('x,y,z')

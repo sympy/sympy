@@ -107,8 +107,16 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 
 
 def _separatevars(expr, force):
-    if len(expr.free_symbols) == 1:
+    from sympy.functions.elementary.complexes import Abs
+    if isinstance(expr, Abs):
+        arg = expr.args[0]
+        if arg.is_Mul and not arg.is_number:
+            s = separatevars(arg, dict=True, force=force)
+            return Mul(*map(expr.func, s.values()))
+
+    if len(expr.free_symbols) < 2:
         return expr
+
     # don't destroy a Mul since much of the work may already be done
     if expr.is_Mul:
         args = list(expr.args)
