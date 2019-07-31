@@ -90,8 +90,10 @@ def test_heaviside():
     assert Heaviside(0, nan) == nan
     assert Heaviside(x, None) == Heaviside(x)
     assert Heaviside(0, None) == Heaviside(0)
-    # we do not want None in the args:
-    assert None not in Heaviside(x, None).args
+
+    # we do not want None and Heaviside(0) in the args:
+    assert Heaviside(x, H0=None).args == (x,)
+    assert Heaviside(x, H0=Heaviside(0)).args == (x,)
 
     assert adjoint(Heaviside(x)) == Heaviside(x)
     assert adjoint(Heaviside(x - y)) == Heaviside(x - y)
