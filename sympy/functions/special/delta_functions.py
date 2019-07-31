@@ -581,7 +581,7 @@ class Heaviside(Function):
 
         """
         if arg.is_extended_real:
-            if H0 is None or H0 == S.Half:
+            if H0 == S.Half:
                 return (sign(arg)+1)/2
 
     def _eval_rewrite_as_SingularityFunction(self, args, **kwargs):
