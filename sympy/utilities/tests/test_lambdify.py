@@ -1040,7 +1040,7 @@ def test_scipy_polys():
     for sympy_fn, num_params in polys:
         args = params[:num_params] + (x,)
         f = lambdify(args, sympy_fn(*args))
-        for i in range(10):
+        for i in range(100):
             tn = numpy.random.randint(3, 10)
             tparams = tuple(numpy.random.uniform(0, 5, size=num_params-1))
             tv = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
