@@ -3049,6 +3049,11 @@ class Expr(Basic, EvalfMixin):
 
         om, exps = mrv(self, x)
 
+        """
+        We move one level up by replacing `x` by `exp(x)`, and then
+        computing the asymptotic series for f(exp(x)). Then asymptotic series
+        can be obtained by moving one-step back, by replacing x by ln(x).
+        """
         if x in om:
             s = self.subs(x, exp(x)).aseries(x, n, bound, hir).subs(x, log(x))
             if s.getO():
@@ -3056,6 +3061,7 @@ class Expr(Basic, EvalfMixin):
             return s
 
         k = Dummy('k', positive=True)
+        """f is rewritten in terms of omega."""
         func, logw = rewrite(exps, om, x, k)
 
         if self in om:
@@ -3072,10 +3078,6 @@ class Expr(Basic, EvalfMixin):
 
         # Hierarchical series
         if hir:
-            ord_term = s.getO()
-            '''
-            s = s.removeO()
-            '''
             return s.subs(k, exp(logw))
 
         o = s.getO()
@@ -3083,9 +3085,12 @@ class Expr(Basic, EvalfMixin):
         s = S.Zero
         has_ord = False
 
+        """Then we recursively expand these coefficients one by one into
+        their asymptotic series in terms of their most rapidly varying subexpressions."""
         for t in terms:
             coeff, expo = t.as_coeff_exponent(k)
             if coeff.has(x):
+                """Recursive step."""
                 snew = coeff.aseries(x, n, bound=bound-1)
                 if has_ord and snew.getO():
                     break
