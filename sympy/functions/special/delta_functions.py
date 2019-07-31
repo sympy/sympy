@@ -4,7 +4,7 @@ from sympy.core import S, sympify, diff
 from sympy.core.decorators import deprecated
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys.polyerrors import PolynomialError
@@ -581,8 +581,13 @@ class Heaviside(Function):
 
         """
         if arg.is_extended_real:
-            if H0 == S.Half:
-                return (sign(arg)+1)/2
+            pw1 = Piecewise(
+                ((sign(arg) + 1)/2, Ne(arg, 0)),
+                (Heaviside(0, H0=H0), True))
+            pw2 = Piecewise(
+                ((sign(arg) + 1)/2, Eq(Heaviside(0, H0=H0), S(1)/2)),
+                (pw1, True))
+            return pw2
 
     def _eval_rewrite_as_SingularityFunction(self, args, **kwargs):
         """
