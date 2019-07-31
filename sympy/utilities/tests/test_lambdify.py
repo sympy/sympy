@@ -1067,6 +1067,7 @@ def test_scipy_polys():
                     "SciPy result {scipy_result} had failed to "
                     "converge within the tolerance {tol}"
                     .format(
+                        func=repr(sympy_fn),
                         args=repr(vals),
                         sympy_result=repr(sympy_result),
                         scipy_result=repr(scipy_result),
