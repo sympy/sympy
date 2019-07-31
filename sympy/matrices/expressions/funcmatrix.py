@@ -1,7 +1,9 @@
 from __future__ import print_function, division
 
 from .matexpr import MatrixExpr
-from sympy import Basic, sympify
+from sympy.core.basic import Basic
+from sympy.core.function import Lambda
+from sympy.core.sympify import _sympify
 from sympy.matrices import Matrix
 from sympy.functions.elementary.complexes import re, im
 
@@ -29,8 +31,16 @@ class FunctionMatrix(MatrixExpr):
     342923500
     """
     def __new__(cls, rows, cols, lamda):
-        rows, cols = sympify(rows), sympify(cols)
-        return Basic.__new__(cls, rows, cols, lamda)
+        rows, cols = _sympify(rows), _sympify(cols)
+        cls._check_dim(rows)
+        cls._check_dim(cols)
+
+        lamda = _sympify(lamda)
+        if not isinstance(lamda, Lambda):
+            raise ValueError(
+                "{} should be a SymPy Lambda instance".format(lamda))
+
+        return super(FunctionMatrix, cls).__new__(cls, rows, cols, lamda)
 
     @property
     def shape(self):
