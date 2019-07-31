@@ -1,6 +1,6 @@
 from sympy import (
     adjoint, conjugate, DiracDelta, Heaviside, nan, pi, sign, sqrt,
-    symbols, transpose, Symbol, Piecewise, I, S, Eq, oo,
+    symbols, transpose, Symbol, Piecewise, I, S, Eq, Ne, oo,
     SingularityFunction, signsimp
 )
 
@@ -122,10 +122,20 @@ def test_rewrite():
     assert Heaviside(x, 1).rewrite(Piecewise) == (
         Piecewise((0, x < 0), (1, x >= 0)))
 
-    assert Heaviside(x).rewrite(sign) == Heaviside(x)
+    assert Heaviside(x).rewrite(sign) == \
+        Piecewise(
+            (sign(x)/2 + S(1)/2, Eq(Heaviside(0), S(1)/2)),
+            (Piecewise(
+                (sign(x)/2 + S(1)/2, Ne(x, 0)), (Heaviside(0), True)), True)
+        )
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
     assert Heaviside(x, S.Half).rewrite(sign) == (sign(x)+1)/2
-    assert Heaviside(x, y).rewrite(sign) == Heaviside(x, y)
+    assert Heaviside(x, y).rewrite(sign) == \
+        Piecewise(
+            (sign(x)/2 + S(1)/2, Eq(y, S(1)/2)),
+            (Piecewise(
+                (sign(x)/2 + S(1)/2, Ne(x, 0)), (y, True)), True)
+        )
 
     assert DiracDelta(y).rewrite(Piecewise) == Piecewise((DiracDelta(0), Eq(y, 0)), (0, True))
     assert DiracDelta(y, 1).rewrite(Piecewise) == DiracDelta(y, 1)
