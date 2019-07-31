@@ -503,6 +503,8 @@ def _match_real_imag(expr):
 
     """
     r_, i_ = expr.as_independent(S.ImaginaryUnit, as_Add=True)
+    if i_ == 0 and r_.is_real:
+        return (r_, i_)
     i_ = i_.as_coefficient(S.ImaginaryUnit)
     if i_ and i_.is_real and r_.is_real:
         return (r_, i_)
@@ -599,7 +601,7 @@ class log(Function):
         I = S.ImaginaryUnit
         if isinstance(arg, exp) and arg.args[0].is_extended_real:
             return arg.args[0]
-        elif isinstance(arg, exp):
+        elif isinstance(arg, exp) and arg.args[0].is_number:
             r_, i_ = _match_real_imag(arg.args[0])
             if i_ and i_.is_comparable:
                 i_ %= 2*S.Pi
