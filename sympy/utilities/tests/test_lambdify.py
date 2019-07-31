@@ -1051,9 +1051,27 @@ def test_scipy_polys():
             if sympy_fn == assoc_legendre:
                 tv = numpy.random.uniform(-1, 1)
                 tparams = tuple(numpy.random.randint(1, tn, size=1))
+
             vals = (tn,) + tparams + (tv,)
+            scipy_result = f(*vals)
             sympy_result = sympy_fn(*vals).evalf()
-            assert abs(f(*vals) - sympy_result) < 1e-13*(1 + abs(sympy_result))
+            atol = 1e-13*(1 + abs(sympy_result))
+
+            try:
+                assert abs(scipy_result - sympy_result) < atol
+            except:
+                raise AssertionError(
+                    "The random test with arguments {args} had failed "
+                    "because the SymPy result ({sympy_result}) and "
+                    "SciPy result ({scipy_result}) had failed to "
+                    "converge within the tolerance ({tol})"
+                    .format(
+                        args=repr(vals),
+                        sympy_result=repr(sympy_result),
+                        scipy_result=repr(scipy_result),
+                        tol=atol)
+                    )
+
 
 
 def test_lambdify_inspect():
