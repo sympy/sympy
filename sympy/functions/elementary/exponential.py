@@ -520,6 +520,11 @@ class log(Function):
     a logarithm of a different base ``b``, use ``log(x, b)``,
     which is essentially short-hand for ``log(x)/log(b)``.
 
+    ``log`` represents the principal branch of the natural
+    logarithm. As such it has a branch cut along the negative
+    real axis and returns values having a complex argument in
+    `(-\pi, \pi]`.
+
     Examples
     ========
 
