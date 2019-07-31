@@ -1,10 +1,12 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
-                   gamma, Product, Dummy, Sum, Abs, IndexedBase)
+                   gamma, Product, Dummy, Sum, Abs, IndexedBase, Matrix)
 from sympy.core.sympify import _sympify
 from sympy.multipledispatch import dispatch
-from sympy.stats.rv import _symbol_converter, Density, RandomMatrixSymbol
+from sympy.stats.rv import (_symbol_converter, Density, RandomMatrixSymbol,
+                            RandomSymbol)
+from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.random_matrix import RandomMatrixPSpace
 from sympy.tensor.array import ArrayComprehension
 
@@ -211,6 +213,45 @@ def joint_eigen_distribution(mat):
     Lambda((l[1], l[2]), exp(-l[1]**2 - l[2]**2)*Product(Abs(l[_i] - l[_j])**2, (_j, _i + 1, 2), (_i, 1, 1))/pi)
     """
     return mat.pspace.model.joint_eigen_distribution()
+
+@dispatch(Matrix)
+def joint_eigen_distribution(mat):
+    """
+    Creates joint distribution of eigen values of matrices with random
+    expressions.
+
+    Parameters
+    ==========
+
+    mat: Matrix
+        The matrix under consideration
+
+    Returns
+    =======
+
+    JointDistributionHandmade
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Normal, joint_eigen_distribution
+    >>> from sympy import Matrix
+    >>> A = [[Normal('A00', 0, 1), Normal('A01', 0, 1)],
+    ... [Normal('A10', 0, 1), Normal('A11', 0, 1)]]
+    >>> joint_eigen_distribution(Matrix(A))
+    JointDistributionHandmade(-sqrt(A00**2 - 2*A00*A11 + 4*A01*A10 + A11**2)/2
+    + A00/2 + A11/2, sqrt(A00**2 - 2*A00*A11 + 4*A01*A10 + A11**2)/2 + A00/2 + A11/2)
+
+    """
+    eigenvals, counts = mat.eigenvals().keys(), mat.eigenvals().values()
+    if any(not eigenval.has(RandomSymbol) for eigenval in eigenvals):
+        raise ValueError("Eigen values don't have any random expression, "
+                         "joint distribution cannot be generated.")
+    expanded = []
+    for eigenval, count in zip(eigenvals, counts):
+        l = [eigenval]*count
+        expanded.extend(l)
+    return JointDistributionHandmade(*expanded)
 
 def level_spacing_distribution(mat):
     """
