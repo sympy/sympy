@@ -1061,7 +1061,8 @@ def test_scipy_polys():
                 assert abs(scipy_result - sympy_result) < atol
             except:
                 raise AssertionError(
-                    "The random test with arguments {args} had failed "
+                    "The random test of the function {func} with the "
+                    "arguments {args} had failed "
                     "because the SymPy result {sympy_result} and "
                     "SciPy result {scipy_result} had failed to "
                     "converge within the tolerance {tol}"
