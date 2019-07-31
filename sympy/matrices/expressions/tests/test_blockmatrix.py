@@ -1,6 +1,7 @@
-from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
-        bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd,
-        bc_transpose, blockcut, reblock_2x2, deblock)
+from sympy.matrices.expressions.blockmatrix import (
+    block_collapse, bc_matmul, bc_block_plus_ident, BlockDiagMatrix,
+    BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
+    blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (MatrixSymbol, Identity,
         Inverse, trace, Transpose, det)
 from sympy.matrices import (
@@ -210,3 +211,14 @@ def test_deblock():
                     for i in range(4)])
 
     assert deblock(reblock_2x2(B)) == B
+
+def test_block_collapse_type():
+    bm1 = BlockDiagMatrix(ImmutableMatrix([1]), ImmutableMatrix([2]))
+    bm2 = BlockDiagMatrix(ImmutableMatrix([3]), ImmutableMatrix([4]))
+
+    assert bm1.T.__class__ == BlockDiagMatrix
+    assert block_collapse(bm1 - bm2).__class__ == BlockDiagMatrix
+    assert block_collapse(Inverse(bm1)).__class__ == BlockDiagMatrix
+    assert block_collapse(Transpose(bm1)).__class__ == BlockDiagMatrix
+    assert bc_transpose(Transpose(bm1)).__class__ == BlockDiagMatrix
+    assert bc_inverse(Inverse(bm1)).__class__ == BlockDiagMatrix
