@@ -558,7 +558,7 @@ class Heaviside(Function):
         sign(x)/2 + 1/2
 
         >>> Heaviside(x, 0).rewrite(sign)
-        Heaviside(x, 0)
+        Piecewise((sign(x)/2 + 1/2, Ne(x, 0)), (0, True))
 
         >>> Heaviside(x - 2, H0=S.Half).rewrite(sign)
         sign(x - 2)/2 + 1/2
