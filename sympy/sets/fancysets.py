@@ -451,7 +451,35 @@ class ImageSet(Set):
         if other is S.EmptySet:
             return self
 
-        def unify_img(base, self_expr, other_expr, self_sym, other_sym):
+        def _unify_img_linear(base, self_expr, other_expr, self_sym, other_sym):
+            """
+            Helper function to return Union of two linear expressions if
+            possible.
+
+            Union of a*n + b and c*n + d = e*n + f (if possible)
+
+            Parameters
+            ==========
+
+            self_expr, other_expr : Expr
+                Two expressions self -> a*n + b, other -> c*n + d to be unified.
+
+            self_sym, other_sym : Symbol
+                Two symbols concerned with two expressions respectively.
+
+            base : Set
+                Base domain set of both expressions.
+
+            Returns
+            =======
+            Unified expression of the given both expression if possible.
+
+            * Philosophy behind this function
+
+            This function collects all points of both the expressions for
+            shortest cycle of unified expression which is of length lcm(a, c).
+            And then checks if these points follow a linear relation e*n + f.
+            """
             sym = Dummy('n')
 
             # self_expr = a*n + b, other_expr = c*n + d
@@ -516,7 +544,7 @@ class ImageSet(Set):
             except PolynomialError:
                 return None
 
-            result = unify_img(base, self_expr, other_expr, self_sym, other_sym)
+            result = _unify_img_linear(base, self_expr, other_expr, self_sym, other_sym)
 
             return result
         else:
