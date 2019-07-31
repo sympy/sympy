@@ -38,7 +38,10 @@ class FunctionMatrix(MatrixExpr):
         lamda = _sympify(lamda)
         if not isinstance(lamda, Lambda):
             raise ValueError(
-                "{} should be a SymPy Lambda instance".format(lamda))
+                "{} should be a SymPy Lambda instance.".format(lamda))
+        if len(lamda.variables) != 2:
+            raise ValueError(
+                "{} should be a function of two variables.".format(lamda))
 
         return super(FunctionMatrix, cls).__new__(cls, rows, cols, lamda)
 
