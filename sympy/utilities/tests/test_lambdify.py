@@ -1062,9 +1062,9 @@ def test_scipy_polys():
             except:
                 raise AssertionError(
                     "The random test with arguments {args} had failed "
-                    "because the SymPy result ({sympy_result}) and "
-                    "SciPy result ({scipy_result}) had failed to "
-                    "converge within the tolerance ({tol})"
+                    "because the SymPy result {sympy_result} and "
+                    "SciPy result {scipy_result} had failed to "
+                    "converge within the tolerance {tol}"
                     .format(
                         args=repr(vals),
                         sympy_result=repr(sympy_result),
