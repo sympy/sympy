@@ -7,7 +7,7 @@ import mpmath
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
-    Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
+    Float, Matrix, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
     digamma, RisingFactorial, besselj, bessely, besseli, besselk, S,
@@ -1159,3 +1159,7 @@ def test_issue_16930():
     f = lambda x:  S.GoldenRatio * x**2
     f_ = lambdify(x, f(x), modules='scipy')
     assert f_(1) == scipy.constants.golden_ratio
+
+def test_single_e():
+    f = lambdify(x, E)
+    assert f(23) == exp(1.0)
