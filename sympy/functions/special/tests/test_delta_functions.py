@@ -125,11 +125,13 @@ def test_rewrite():
         Piecewise((0, x < 0), (1, x >= 0)))
 
     assert Heaviside(x).rewrite(sign) == \
+        Heaviside(x, H0=Heaviside(0)).rewrite(sign) == \
         Piecewise(
             (sign(x)/2 + S(1)/2, Eq(Heaviside(0), S(1)/2)),
             (Piecewise(
                 (sign(x)/2 + S(1)/2, Ne(x, 0)), (Heaviside(0), True)), True)
         )
+
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
     assert Heaviside(x, S.Half).rewrite(sign) == (sign(x)+1)/2
     assert Heaviside(x, y).rewrite(sign) == \
