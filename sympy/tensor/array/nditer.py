@@ -2,9 +2,6 @@ from sympy.tensor.array.dense_ndim_array import DenseNDimArray
 from sympy.tensor.array.sparse_ndim_array import SparseNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
 from sympy.core.compatibility import Iterable
-from sympy.core.compatibility import SYMPY_INTS
-from sympy.core.numbers import Integer
-
 
 class nditer(object):
 
@@ -24,11 +21,7 @@ class nditer(object):
 
         try:
             if isinstance(self._iter, list):
-                temp = self._iter[self._idx]
-                if hasattr(temp, '__len__') and len(temp) > 1:
-                    result = next(nditer(temp))
-                else:
-                    result = temp
+                result = self._iter[self._idx]
 
             elif isinstance(self._iter, DenseNDimArray):
                 result = self._iter._array[self._idx]
