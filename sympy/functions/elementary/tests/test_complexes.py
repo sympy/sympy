@@ -299,7 +299,7 @@ def test_sign():
     assert sign(x).rewrite(Piecewise) == \
         Piecewise((1, x > 0), (-1, x < 0), (0, True))
     assert sign(y).rewrite(Piecewise) == sign(y)
-    assert sign(x).rewrite(Heaviside) == 2*Heaviside(x)-1
+    assert sign(x).rewrite(Heaviside) == 2*Heaviside(x, H0=S(1)/2) - 1
     assert sign(y).rewrite(Heaviside) == sign(y)
 
     # evaluate what can be evaluated
