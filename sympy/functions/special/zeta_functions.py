@@ -1,7 +1,7 @@
 """ Riemann zeta and related function. """
 from __future__ import print_function, division
 
-from sympy.core import Function, S, sympify, pi, I
+from sympy.core import Add, Function, S, sympify, pi, I
 from sympy.core.compatibility import range
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
@@ -197,6 +197,15 @@ class lerchphi(Function):
 
     def _eval_rewrite_as_polylog(self, z, s, a, **kwargs):
         return self._eval_rewrite_helper(z, s, a, polylog)
+
+    def _eval_nseries(self, x, n, logx):
+        z, s, a = self.args
+        p = []
+        for k in range(0, n):
+            q = [(-1)**i * binomial(k, i) * (a + i)**(-s) for i in range(0, k)]
+            t = (-z/(1-z))**k * Add(*q)
+            p.append(t)
+        return Add(*p)
 
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
@@ -501,6 +510,18 @@ class zeta(Function):
             return -s*zeta(s + 1, a)
         else:
             raise ArgumentIndexError
+
+    def _eval_nseries(self, x, n, logx):
+        if len(self.args) == 2:
+            s, a = self.args
+            if a != 1:
+                return super(zeta, self)._eval_nseries(x, n, logx)
+        p = []
+        for k in range(0, n):
+            q = [(-1)**i * C.binomial(k, i) / (i+1)**(x) for i in range(0, k)]
+            t = S.Half**(k+1) * Add(*q)
+            p.append(t)
+        return 1/(1 - 2**(1-x)) * Add(*p)
 
 
 class dirichlet_eta(Function):

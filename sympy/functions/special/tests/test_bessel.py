@@ -31,6 +31,12 @@ def test_bessel_twoinputs():
         raises(TypeError, lambda: f(1))
         raises(TypeError, lambda: f(1, 2, 3))
 
+def test_bessel_series():
+    from sympy import EulerGamma
+    assert besselj(n, x).series(x) == (x/2)**n*(1/(factorial(n)) - x**2/(4*factorial(n + 1)) + x**4/(32*factorial(n + 2)) + O(x**6))
+    assert besselj(0, x).series(x) == 1 - x**2/4 + x**4/64 + O(x**6)
+    assert bessely(0, x).series(x) == 2*((log(x/2) + EulerGamma)*besselj(0, x) + x**2/4 - 3*x**4/128 + O(x**6))/pi
+
 
 def test_diff():
     assert besselj(n, z).diff(z) == besselj(n - 1, z)/2 - besselj(n + 1, z)/2
