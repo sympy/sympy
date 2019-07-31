@@ -451,10 +451,12 @@ class Heaviside(Function):
             raise ArgumentIndexError(self, argindex)
 
     def __new__(cls, arg, H0=None, **options):
+        if isinstance(H0, Heaviside) and len(H0.args) == 1:
+            H0 = None
+
         if H0 is None:
             return super(cls, cls).__new__(cls, arg, **options)
-        else:
-            return super(cls, cls).__new__(cls, arg, H0, **options)
+        return super(cls, cls).__new__(cls, arg, H0, **options)
 
     @classmethod
     def eval(cls, arg, H0=None):
