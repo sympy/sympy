@@ -54,7 +54,7 @@ def dispatch(*types, **kwargs):
 
     types = tuple(types)
 
-    def _(func):
+    def _df(func):
         name = func.__name__
 
         if ismethod(func):
@@ -68,7 +68,7 @@ def dispatch(*types, **kwargs):
 
         dispatcher.add(types, func, on_ambiguity=on_ambiguity)
         return dispatcher
-    return _
+    return _df
 
 
 def ismethod(func):
