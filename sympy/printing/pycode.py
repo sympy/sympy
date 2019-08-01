@@ -816,7 +816,8 @@ _known_functions_scipy_special = {
 _known_constants_scipy_constants = {
     'GoldenRatio': 'golden_ratio',
     'Pi': 'pi',
-    'E': 'e'
+    'E': 'e',
+    'Exp1': 'e'
 }
 
 class SciPyPrinter(NumPyPrinter):
