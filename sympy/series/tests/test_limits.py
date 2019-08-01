@@ -551,3 +551,10 @@ def test_issue_13575():
 
     assert abs(re) < 1e-12
     assert abs(im - 1.08633774961570) < 1e-12
+
+
+def test_issue_17325():
+    assert Limit(sin(x)/x, x, 0, dir="+-").doit() == 1
+    assert Limit(x**2, x, 0, dir="+-").doit() == 0
+    assert Limit(1/x**2, x, 0, dir="+-").doit() == oo
+    raises(ValueError, lambda: Limit(1/x, x, 0, dir="+-").doit())
