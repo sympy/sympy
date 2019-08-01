@@ -3,6 +3,7 @@ from sympy import (
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
     AccumBounds, MatrixSymbol, Pow, gcd)
+from sympy.functions.elementary.exponential import _match_real_imag
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -217,6 +218,21 @@ def test_log_values():
     assert log(2*3**2).func is log
 
 
+def test_match_real_imag():
+    x, y = symbols('x,y', real=True)
+    i = Symbol('i', imaginary=True)
+    assert _match_real_imag(S.One) == (1, 0)
+    assert _match_real_imag(I) == (0, 1)
+    assert _match_real_imag(3 - 5*I) == (3, -5)
+    assert _match_real_imag(-sqrt(3) + S.Half*I) == (-sqrt(3), S.Half)
+    assert _match_real_imag(x + y*I) == (x, y)
+    assert _match_real_imag(x*I + y*I) == (0, x + y)
+    assert _match_real_imag((x + y)*I) == (0, x + y)
+    assert _match_real_imag(-S(2)/3*i*I) == (None, None)
+    assert _match_real_imag(1 - 2*i) == (None, None)
+    assert _match_real_imag(sqrt(2)*(3 - 5*I)) == (None, None)
+
+
 def test_log_exact():
     # check for pi/2, pi/3, pi/4, pi/6, pi/8, pi/12; pi/5, pi/10:
     for n in range(-23, 24):
@@ -313,6 +329,14 @@ def test_log_symbolic():
     assert (log(p**-5)**-1).expand() == -1/log(p)/5
     assert log(-x).func is log and log(-x).args[0] == -x
     assert log(-p).func is log and log(-p).args[0] == -p
+
+
+def test_log_exp():
+    assert log(exp(4*I*pi)) == 0     # exp evaluates
+    assert log(exp(-5*I*pi)) == I*pi # exp evaluates
+    assert log(exp(19*I*pi/4)) == 3*I*pi/4
+    assert log(exp(25*I*pi/7)) == -3*I*pi/7
+    assert log(exp(-5*I)) == -5*I + 2*I*pi
 
 
 def test_exp_assumptions():
