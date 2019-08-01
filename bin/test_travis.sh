@@ -179,8 +179,9 @@ doctest_list = [
     # ipython
     '*ipython*',
 
-    # antlr, lfortran
-    'sympy/parsing/',
+    # antlr
+    'sympy/parsing/autolev',
+    'sympy/parsing/latex',
 
     # matchpy
     '*rubi*',
