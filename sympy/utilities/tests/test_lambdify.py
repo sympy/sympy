@@ -1040,7 +1040,7 @@ def test_scipy_polys():
     for sympy_fn, num_params in polys:
         args = params[:num_params] + (x,)
         f = lambdify(args, sympy_fn(*args))
-        for i in range(100):
+        for i in range(10):
             tn = numpy.random.randint(3, 10)
             tparams = tuple(numpy.random.uniform(0, 5, size=num_params-1))
             tv = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
@@ -1055,7 +1055,7 @@ def test_scipy_polys():
             vals = (tn,) + tparams + (tv,)
             scipy_result = f(*vals)
             sympy_result = sympy_fn(*vals).evalf()
-            atol = 1e-13*(1 + abs(sympy_result))
+            atol = 1e-6*(1 + abs(sympy_result))
 
             try:
                 assert abs(scipy_result - sympy_result) < atol
