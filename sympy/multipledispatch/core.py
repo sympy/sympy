@@ -81,5 +81,5 @@ def ismethod(func):
         signature = inspect.signature(func)
         return signature.parameters.get('self', None) is not None
     else:
-        spec = inspect.getargspec(func)
+        spec = inspect.getfullargspec(func)
         return spec and spec.args and spec.args[0] == 'self'
