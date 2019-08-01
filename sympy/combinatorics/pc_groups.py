@@ -488,3 +488,68 @@ class Collector(DefaultPrinting):
         if depth != len(self.pcgs)+1:
             return exp_vector[depth-1]
         return None
+
+    def _sift(self, z, g):
+        h = g
+        d = self.depth(h)
+        while d < len(self.pcgs) and z[d-1] != 1:
+            k = z[d-1]
+            e = self.leading_exponent(h)*self.leading_exponent(k**-1)
+            e = e % self.relative_order[d-1]
+            h = k**-e*h
+            d = self.depth(h)
+        return h
+
+    def induced_pcgs(self, gens):
+        """
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S = SymmetricGroup(8)
+        >>> G = S.sylow_subgroup(2)
+        >>> PcGroup = G.polycyclic_group()
+        >>> collector = PcGroup.collector
+        >>> gens = [G[0], G[1]]
+        >>> ipcgs = collector.induced_pcgs(gens)
+        >>> [gen.order() for gen in ipcgs]
+        [2, 2, 2]
+        >>> G = S.sylow_subgroup(2)
+        >>> PcGroup = G.polycyclic_group()
+        >>> collector = PcGroup.collector
+        >>> ipcgs = collector.induced_pcgs(gens)
+        >>> [gen.order() for gen in ipcgs]
+        [3]
+
+        """
+        z = [1]*len(self.pcgs)
+        G = gens
+        while G:
+            g = G.pop(0)
+            h = self._sift(z, g)
+            d = self.depth(h)
+            if d < len(self.pcgs):
+                for gen in z:
+                    if gen != 1:
+                        G.append(h**-1*gen**-1*h*gen)
+                z[d-1] = h;
+        z = [gen for gen in z if gen != 1]
+        return z
+
+    def constructive_membership_test(self, ipcgs, g):
+        """
+        Return the exponent vector for induced pcgs.
+        """
+        e = [0]*len(ipcgs)
+        h = g
+        d = self.depth(h)
+        for i, gen in enumerate(ipcgs):
+            while self.depth(gen) == d:
+                f = self.leading_exponent(h)*self.leading_exponent(gen)
+                f = f % self.relative_order[d-1]
+                h = gen**(-f)*h
+                e[i] = f
+                d = self.depth(h)
+        if h == 1:
+            return e
+        return False
