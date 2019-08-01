@@ -68,7 +68,7 @@ def _set_sub(x, y):
 
 @dispatch(Interval, Infinity)
 def _set_sub(x, y):
-    if x.start is S.NegativeInfinity:
+    if x.end is S.Infinity:
         return Interval(S.NegativeInfinity, S.Infinity)
     return FiniteSet(S.NegativeInfinity)
 

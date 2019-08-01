@@ -288,3 +288,27 @@ def test_SetExpr_Interval_pow():
     assert SetExpr(Interval(2, 3))**(-oo) == SetExpr(FiniteSet(0))
     assert SetExpr(Interval(0, 2))**(-oo) == SetExpr(Interval(0, oo))
     assert (SetExpr(Interval(-1, 2))**(-oo)).dummy_eq(SetExpr(ImageSet(Lambda(_d, _d**(-oo)), Interval(-1, 2))))
+
+
+def test_issue_17274():
+    neinf = SetExpr(S.NegativeInfinity)
+    poinf = SetExpr(S.Infinity)
+    set_ff = SetExpr(Interval(0, 5))
+    set_if = SetExpr(Interval(-oo, 5))
+    set_fi = SetExpr(Interval(0, oo))
+    set_ii = SetExpr(Interval(-oo, oo))
+    fs_ni = SetExpr(FiniteSet(S.NegativeInfinity))
+    fs_pi = SetExpr(FiniteSet(S.Infinity))
+
+    assert set_ff + neinf == fs_ni
+    assert set_ff + poinf == fs_pi
+    assert set_fi + neinf == set_ii
+    assert set_if + poinf == set_ii
+
+    assert set_ff - poinf == fs_ni
+    assert set_ff - neinf == fs_pi
+    assert set_if - neinf == set_ii
+
+    print(set_fi - poinf)
+    print(set_ii)
+    assert set_fi - poinf == set_ii

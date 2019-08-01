@@ -99,10 +99,10 @@ class Dispatcher(object):
         >>> f([1, 2, 3])
         [3, 2, 1]
         """
-        def _(func):
+        def _df(func):
             self.add(types, func, **kwargs)
             return func
-        return _
+        return _df
 
     @classmethod
     def get_func_params(cls, func):
