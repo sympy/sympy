@@ -1,21 +1,29 @@
-from sympy import (symbols, FunctionMatrix, MatrixExpr, Lambda, Matrix)
+from sympy import symbols, FunctionMatrix, MatrixExpr, Lambda, Matrix
+from sympy.utilities.pytest import raises
 
 
-def test_dft_creation():
+def test_funcmatrix_creation():
     i, j = symbols('i j')
-    assert FunctionMatrix(2, 2, Lambda((i, j), i - j))
-    assert FunctionMatrix(0, 0)
+    assert FunctionMatrix(2, 2, Lambda((i, j), 0))
+    assert FunctionMatrix(0, 0, Lambda((i, j), 0))
 
-    raises(ValueError, lambda: DFT(-1))
-    raises(ValueError, lambda: DFT(2.0))
-    raises(ValueError, lambda: DFT(2 + 1j))
+    raises(ValueError, lambda: FunctionMatrix(-1, 0, Lambda((i, j), 0)))
+    raises(ValueError, lambda: FunctionMatrix(2.0, 0, Lambda((i, j), 0)))
+    raises(ValueError, lambda: FunctionMatrix(2j, 0, Lambda((i, j), 0)))
+    raises(ValueError, lambda: FunctionMatrix(0, -1, Lambda((i, j), 0)))
+    raises(ValueError, lambda: FunctionMatrix(0, 2.0, Lambda((i, j), 0)))
+    raises(ValueError, lambda: FunctionMatrix(0, 2j, Lambda((i, j), 0)))
 
     n = symbols('n')
-    assert DFT(n)
+    assert FunctionMatrix(n, n, Lambda((i, j), 0))
     n = symbols('n', integer=False)
-    raises(ValueError, lambda: DFT(n))
+    raises(ValueError, lambda: FunctionMatrix(n, n, Lambda((i, j), 0)))
     n = symbols('n', negative=True)
-    raises(ValueError, lambda: DFT(n))
+    raises(ValueError, lambda: FunctionMatrix(n, n, Lambda((i, j), 0)))
+
+    raises(ValueError, lambda: FunctionMatrix(-1, 0, Lambda(i, 0)))
+    # XXX Support python function or lambda expression?
+    raises(ValueError, lambda: FunctionMatrix(-1, 0, lambda i: 0))
 
 
 def test_funcmatrix():
