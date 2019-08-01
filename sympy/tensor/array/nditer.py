@@ -10,6 +10,11 @@ class nditer(object):
 
         if not isinstance(iterable, (Iterable, MatrixBase)):
             raise NotImplementedError("Data type not yet supported")
+        if isinstance(iterable, list) and isinstance(iterable[0], NDimArray):
+            temp = []
+            for i in range(len(iterable)):
+                temp += iterable[0].tolist()
+            iterable = temp
         self._iter = iterable
         self._idx = 0
 
