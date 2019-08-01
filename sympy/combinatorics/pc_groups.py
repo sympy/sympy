@@ -514,9 +514,10 @@ class Collector(DefaultPrinting):
         >>> ipcgs = collector.induced_pcgs(gens)
         >>> [gen.order() for gen in ipcgs]
         [2, 2, 2]
-        >>> G = S.sylow_subgroup(2)
+        >>> G = S.sylow_subgroup(3)
         >>> PcGroup = G.polycyclic_group()
         >>> collector = PcGroup.collector
+        >>> gens = [G[0], G[1]]
         >>> ipcgs = collector.induced_pcgs(gens)
         >>> [gen.order() for gen in ipcgs]
         [3]
