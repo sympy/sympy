@@ -1146,5 +1146,3 @@ def test_issue_16878b():
     # for Integers
     assert imageset(x, (x, x), S.Reals).is_subset(S.Reals**2) is True
 
-
-
