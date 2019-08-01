@@ -603,13 +603,15 @@ def convert_c_file(filename):
     The Parser and it's API are currently under development and the API and the supported features can be changed while in development.
 
     """
-    res_src = []
     converter = CCodeConverter('output')
-    p = converter.parse(filename, flags = [])
-    for i in p:
-        if not isinstance(i, FunctionPrototype):
-            #Ignoring Function prototype
-            res_src.append(pycode(i))
-        if isinstance(i, FunctionDefinition):
-            res_src.append(pycode(i))
-    return res_src
+    expr = converter.parse(filename, flags = [])
+    return expr
+
+def convert_c_code(source):
+    filename = "srccode.h"
+    file = open(filename, 'w')
+    file.write(source)
+    file.close()
+    expr = convert_c_file(str(filename))
+    os.remove(filename)
+    return expr
