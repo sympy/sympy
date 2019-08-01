@@ -82,8 +82,8 @@ if lfortran:
                 if source_code:
                     if mode.lower() == 'f':
                         self._expr = src_to_sympy(source_code)
-                    #elif mode.lower() == 'c':
-                    #    self._expr = src_to_c(source_code)
+                    elif mode.lower() == 'c':
+                        self._expr = parsing_c(source_code)
                     else:
                         raise NotImplementedError(
                             'Parser for specified language is not implemented'
@@ -137,8 +137,8 @@ if lfortran:
             if src_code:
                 if mode.lower() == 'f':
                     self._expr = src_to_sympy(src_code)
-                #elif mode.lower() == 'c':
-                #    self._expr = src_to_c(src_code)
+                elif mode.lower() == 'c':
+                    self._expr = parsing_c(src_code)
                 else:
                     raise NotImplementedError(
                         "Parser for specified language has not been implemented"

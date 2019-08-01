@@ -615,3 +615,10 @@ def convert_c_code(source):
     expr = convert_c_file(str(filename))
     os.remove(filename)
     return expr
+
+def parse_c(source):
+    if os.path.exists(source):
+        src = convert_c_file(os.path.abspath(source))
+    else:
+        src = convert_c_code(source)
+    return src
