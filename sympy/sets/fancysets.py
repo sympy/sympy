@@ -574,12 +574,7 @@ class Range(Set):
         else:
             end = stop
 
-        if (end > stop) == True and (stop > start) == True:
-            end_arg = stop
-        else:
-            end_arg = end
-        obj = Basic.__new__(cls, start, end_arg, step)
-        obj._stop = end
+        obj = Basic.__new__(cls, start, end, step)
         return obj
 
     start = property(lambda self: self.args[0])
@@ -601,8 +596,8 @@ class Range(Set):
         """
         if not self:
             return self
-        start, stop, step = self.start, self._stop, self.step
-        return (self.func(stop - step, start - step, -step), True)
+        start, stop, step = self.start, self.stop, self.step
+        return self.func(stop - step, start - step, -step)
 
     def _contains(self, other):
         from sympy.functions.elementary.piecewise import Piecewise
@@ -614,7 +609,7 @@ class Range(Set):
             return S.false
         if not other.is_integer:
             return other.is_integer
-        ref = self.start if self.start.is_finite else self._stop
+        ref = self.start if self.start.is_finite else self.stop
         start, stop, step = self.start, self.stop, self.step
         inf = Piecewise((start, Ge(step, S.Zero)), (stop - step, True))
         sup = Piecewise((stop - step, Ge(step, S.Zero)), (start, True))
@@ -632,8 +627,8 @@ class Range(Set):
             i = self.start
             step = self.step
 
-            while And(Or(Le(step, 0), And(Le(self.start, i), Lt(i, self._stop))),
-                     Or(Ge(step, 0), And(Lt(self._stop, i), Le(i, self.start)))) != False:
+            while And(Or(Le(step, 0), And(Le(self.start, i), Lt(i, self.stop))),
+                     Or(Ge(step, 0), And(Lt(self.stop, i), Le(i, self.start)))) != False:
                 yield i
                 i += step
 
@@ -650,7 +645,7 @@ class Range(Set):
         from sympy.functions.elementary.piecewise import Piecewise
         if not self:
             return S.Zero
-        start, stop, step = self.start, self._stop, self.step
+        start, stop, step = self.start, self.stop, self.step
         dif = stop - start
         if dif.is_infinite:
             return S.Infinity
@@ -659,7 +654,7 @@ class Range(Set):
                          (S.Zero, True))
 
     def __nonzero__(self):
-        return self.start != self._stop
+        return self.start != self.stop
 
     __bool__ = __nonzero__
 
@@ -695,14 +690,14 @@ class Range(Set):
             start = self[0] if (istart == None) else self[istart]
             step = self.step if (istep == None) else istep * self.step
             if istop is None:
-                stop = self._stop
+                stop = self.stop
             else:
                 bound_check = Or(And(Lt(istop, self.size), Ge(istop, S.Zero)),
                                 And(Ge(istop, -self.size), Le(istop, -1)))
                 if bound_check == False:
-                    stop = self._stop
+                    stop = self.stop
                 else:
-                    stop = Piecewise((self[istop], bound_check), (self._stop, True))
+                    stop = Piecewise((self[istop], bound_check), (self.stop, True))
             return Range(start, stop, step)
         else:
             i = _sympify(i)
@@ -712,7 +707,7 @@ class Range(Set):
                 return Piecewise((self._inf, Gt(self.step, 0)), (self._sup, True))
             if i == -S(1) or i is S.Infinity:
                 return Piecewise((self._sup, Gt(self.step, 0)), (self._inf, True))
-            start, stop, step = self.start, self._stop, self.step
+            start, stop, step = self.start, self.stop, self.step
             rvstop, rvstart = (stop + i*step, start + i*step)
             rv = Piecewise((rvstop, Lt(i, 0)), (rvstart, True))
             bound = Or(And(Or(Lt(rvstop, self._inf), Gt(rvstop, self._sup)), Lt(i, 0)),
@@ -727,7 +722,7 @@ class Range(Set):
         from sympy.functions.elementary.integers import ceiling
         if not self:
             raise NotImplementedError
-        start, stop, step = self.start, self._stop, self.step
+        start, stop, step = self.start, self.stop, self.step
         return Piecewise((S.NaN, Le(ceiling((stop - start)/step), S.Zero)),
                         (start, Ge(step, S.Zero)),
                         (stop - step, True))
@@ -738,7 +733,7 @@ class Range(Set):
         from sympy.functions.elementary.integers import ceiling
         if not self:
             raise NotImplementedError
-        start, stop, step = self.start, self._stop, self.step
+        start, stop, step = self.start, self.stop, self.step
         return Piecewise((S.NaN, Le(ceiling((stop - start)/step), S.Zero)),
                         (stop - step, Ge(step, S.Zero)),
                         (start, True))
