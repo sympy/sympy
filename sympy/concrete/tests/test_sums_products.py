@@ -573,9 +573,9 @@ def test_Sum_doit():
     assert 0 == (s.doit() - n*(n+1)*(n-1)).factor()
 
     # Integer assumes finite
-    # assert Sum(KroneckerDelta(m, n), (m, -oo, oo)).doit() == Piecewise((1, And(-oo < n, n < oo)), (0, True))
+    assert Sum(KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((1, And(-oo <= y, y < oo)), (0, True))
     assert Sum(KroneckerDelta(m, n), (m, -oo, oo)).doit() == 1
-    # assert Sum(x*KroneckerDelta(m, n), (m, -oo, oo)).doit() == Piecewise((x, And(-oo < n, n < oo)), (0, True))
+    assert Sum(m*KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((m, And(-oo <= y, y < oo)), (0, True))
     assert Sum(x*KroneckerDelta(m, n), (m, -oo, oo)).doit() == x
     assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
     assert Sum(Sum(KroneckerDelta(k, m), (m, 1, 3)), (n, 1, 3)).doit() == \
