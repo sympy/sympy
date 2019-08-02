@@ -582,7 +582,8 @@ def _periodicity(args, symbol):
     if len(periods) > 1:
         return lcim(periods)
 
-    return periods[0]
+    if periods:
+        return periods[0]
 
 
 def lcim(numbers):

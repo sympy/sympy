@@ -1,7 +1,7 @@
 from sympy import (
     Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
     FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
-    Interval, InverseCosineTransform, InverseFourierTransform,
+    Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
@@ -10,13 +10,14 @@ from sympy import (
     assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
-    hyper, im, jacobi, laguerre, legendre, lerchphi, log,
+    hyper, im, jacobi, laguerre, legendre, lerchphi, log, frac,
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
+    stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
     UnevaluatedExpr, Quaternion, I, KroneckerProduct, Intersection, LambertW)
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -137,6 +138,7 @@ def test_latex_basic():
     assert latex(~(x >> ~y)) == r"x \not\Rightarrow \neg y"
     assert latex(Implies(Or(x,y), z)) == r"\left(x \vee y\right) \Rightarrow z"
     assert latex(Implies(z, Or(x,y))) == r"z \Rightarrow \left(x \vee y\right)"
+    assert latex(~(x & y)) == r"\neg \left(x \wedge y\right)"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
     assert latex(x & y, symbol_names={x: "x_i", y: "y_i"}) == \
@@ -370,8 +372,11 @@ def test_latex_functions():
 
     assert latex(floor(x)) == r"\left\lfloor{x}\right\rfloor"
     assert latex(ceiling(x)) == r"\left\lceil{x}\right\rceil"
+    assert latex(frac(x)) == r"\operatorname{frac}{\left(x\right)}"
     assert latex(floor(x)**2) == r"\left\lfloor{x}\right\rfloor^{2}"
     assert latex(ceiling(x)**2) == r"\left\lceil{x}\right\rceil^{2}"
+    assert latex(frac(x)**2) == r"\operatorname{frac}{\left(x\right)}^{2}"
+
     assert latex(Min(x, 2, x**3)) == r"\min\left(2, x, x^{3}\right)"
     assert latex(Min(x, y)**2) == r"\min\left(x, y\right)^{2}"
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
@@ -411,7 +416,6 @@ def test_latex_functions():
     assert latex(im(x)) == r'\operatorname{im}{\left(x\right)}'
     assert latex(root(x, y)) == r'x^{\frac{1}{y}}'
     assert latex(arg(x)) == r'\arg{\left(x \right)}'
-    assert latex(zeta(x)) == r'\zeta\left(x\right)'
 
     assert latex(zeta(x)) == r"\zeta\left(x\right)"
     assert latex(zeta(x)**2) == r"\zeta^{2}\left(x\right)"
@@ -424,6 +428,10 @@ def test_latex_functions():
         polylog(x, y)**2) == r"\operatorname{Li}_{x}^{2}\left(y\right)"
     assert latex(lerchphi(x, y, n)) == r"\Phi\left(x, y, n\right)"
     assert latex(lerchphi(x, y, n)**2) == r"\Phi^{2}\left(x, y, n\right)"
+    assert latex(stieltjes(x)) == r"\gamma_{x}"
+    assert latex(stieltjes(x)**2) == r"\gamma_{x}^{2}"
+    assert latex(stieltjes(x, y)) == r"\gamma_{x}\left(y\right)"
+    assert latex(stieltjes(x, y)**2) == r"\gamma_{x}\left(y\right)^{2}"
 
     assert latex(elliptic_k(z)) == r"K\left(z\right)"
     assert latex(elliptic_k(z)**2) == r"K^{2}\left(z\right)"
@@ -647,6 +655,17 @@ def test_latex_derivatives():
 
     assert latex(diff(f(x), (x, n))) == \
         r"\frac{d^{n}}{d x^{n}} f{\left(x \right)}"
+
+    x1 = Symbol('x1')
+    x2 = Symbol('x2')
+    assert latex(diff(f(x1, x2), x1)) == r'\frac{\partial}{\partial x_{1}} f{\left(x_{1},x_{2} \right)}'
+
+    n1 = Symbol('n1')
+    assert latex(diff(f(x), (x, n1))) ==  r'\frac{d^{n_{1}}}{d x^{n_{1}}} f{\left(x \right)}'
+
+    n2 = Symbol('n2')
+    assert latex(diff(f(x), (x, Max(n1, n2)))) == \
+        r'\frac{d^{\max\left(n_{1}, n_{2}\right)}}{d x^{\max\left(n_{1}, n_{2}\right)}} f{\left(x \right)}'
 
 
 def test_latex_subs():
@@ -1053,6 +1072,16 @@ def test_mode():
     raises(ValueError, lambda: latex(expr, mode='foo'))
 
 
+def test_latex_mathieu():
+    assert latex(mathieuc(x, y, z)) == r"C\left(x, y, z\right)"
+    assert latex(mathieus(x, y, z)) == r"S\left(x, y, z\right)"
+    assert latex(mathieuc(x, y, z)**2) == r"C\left(x, y, z\right)^{2}"
+    assert latex(mathieus(x, y, z)**2) == r"S\left(x, y, z\right)^{2}"
+    assert latex(mathieucprime(x, y, z)) == r"C^{\prime}\left(x, y, z\right)"
+    assert latex(mathieusprime(x, y, z)) == r"S^{\prime}\left(x, y, z\right)"
+    assert latex(mathieucprime(x, y, z)**2) == r"C^{\prime}\left(x, y, z\right)^{2}"
+    assert latex(mathieusprime(x, y, z)**2) == r"S^{\prime}\left(x, y, z\right)^{2}"
+
 def test_latex_Piecewise():
     p = Piecewise((x, x < 1), (x**2, True))
     assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 1 \\\\x^{2} &" \
@@ -1342,6 +1371,7 @@ def test_latex_numbers():
     assert latex(tribonacci(n, x)) == r"T_{n}\left(x\right)"
     assert latex(tribonacci(n)**2) == r"T_{n}^{2}"
     assert latex(tribonacci(n, x)**2) == r"T_{n}^{2}\left(x\right)"
+
 
 def test_latex_euler():
     assert latex(euler(n)) == r"E_{n}"
@@ -2286,10 +2316,16 @@ def test_DiffGeomMethods():
         r'\operatorname{d}\left(g{\left(\mathbf{x},\mathbf{y} \right)}\right)'
 
 
-def test_unit_ptinting():
+def test_unit_printing():
     assert latex(5*meter) == r'5 \text{m}'
     assert latex(3*gibibyte) == r'3 \text{gibibyte}'
     assert latex(4*microgram/second) == r'\frac{4 \mu\text{g}}{\text{s}}'
+
+
+def test_issue_17092():
+    x_star = Symbol('x^*')
+    assert latex(Derivative(x_star, x_star,2)) == r'\frac{d^{2}}{d \left(x^{*}\right)^{2}} x^{*}'
+
 
 def test_latex_decimal_separator():
 

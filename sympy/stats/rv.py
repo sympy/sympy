@@ -17,9 +17,10 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, Function)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
 from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
+from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
@@ -289,6 +290,16 @@ class RandomIndexedSymbol(RandomSymbol):
         elif isinstance(self.symbol, Function):
             return self.symbol.args[0]
 
+class RandomMatrixSymbol(MatrixSymbol):
+    def __new__(cls, symbol, n, m, pspace=None):
+        from sympy.stats.random_matrix import RandomMatrixPSpace
+        n, m = _sympify(n), _sympify(m)
+        symbol = _symbol_converter(symbol)
+        return Basic.__new__(cls, symbol, n, m, pspace)
+
+    symbol = property(lambda self: self.args[0])
+    pspace = property(lambda self: self.args[3])
+
 class ProductPSpace(PSpace):
     """
     Abstract class for representing probability spaces with multiple random
@@ -545,6 +556,10 @@ def pspace(expr):
     expr = sympify(expr)
     if isinstance(expr, RandomSymbol) and expr.pspace is not None:
         return expr.pspace
+    if expr.has(RandomMatrixSymbol):
+        rm = list(expr.atoms(RandomMatrixSymbol))[0]
+        return rm.pspace
+
     rvs = random_symbols(expr)
     if not rvs:
         raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
@@ -803,7 +818,10 @@ class Density(Basic):
     def doit(self, evaluate=True, **kwargs):
         from sympy.stats.joint_rv import JointPSpace
         from sympy.stats.frv import SingleFiniteDistribution
+        from sympy.stats.random_matrix_models import RandomMatrixPSpace
         expr, condition = self.expr, self.condition
+        if _sympify(expr).has(RandomMatrixSymbol):
+            return pspace(expr).compute_density(expr)
         if isinstance(expr, SingleFiniteDistribution):
             return expr.dict
         if condition is not None:

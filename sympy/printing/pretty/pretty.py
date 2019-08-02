@@ -1365,6 +1365,18 @@ class PrettyPrinter(Printer):
         # XXX works only for applied functions
         return self._helper_print_function(e.func, e.args, sort=sort, func_name=func_name)
 
+    def _print_mathieuc(self, e):
+        return self._print_Function(e, func_name='C')
+
+    def _print_mathieus(self, e):
+        return self._print_Function(e, func_name='S')
+
+    def _print_mathieucprime(self, e):
+        return self._print_Function(e, func_name="C'")
+
+    def _print_mathieusprime(self, e):
+        return self._print_Function(e, func_name="S'")
+
     def _helper_print_function(self, func, args, sort=False, func_name=None, delimiter=', '):
         if sort:
             args = sorted(args, key=default_sort_key)
@@ -2297,8 +2309,10 @@ class PrettyPrinter(Printer):
         pform.baseline = b
         return pform
 
-    def _print_euler(self, e):
-        pform = prettyForm("E")
+    def _print_number_function(self, e, name):
+        # Print name_arg[0] for one argument or name_arg[0](arg[1])
+        # for more than one argument
+        pform = prettyForm(name)
         arg = self._print(e.args[0])
         pform_arg = prettyForm(" "*arg.width())
         pform_arg = prettyForm(*pform_arg.below(arg))
@@ -2315,47 +2329,31 @@ class PrettyPrinter(Printer):
         pform.prettyArgs = prettyArgs
         return pform
 
+    def _print_euler(self, e):
+        return self._print_number_function(e, "E")
+
     def _print_catalan(self, e):
-        pform = prettyForm("C")
-        arg = self._print(e.args[0])
-        pform_arg = prettyForm(" "*arg.width())
-        pform_arg = prettyForm(*pform_arg.below(arg))
-        pform = prettyForm(*pform.right(pform_arg))
-        return pform
+        return self._print_number_function(e, "C")
 
     def _print_bernoulli(self, e):
-        pform = prettyForm("B")
-        arg = self._print(e.args[0])
-        pform_arg = prettyForm(" "*arg.width())
-        pform_arg = prettyForm(*pform_arg.below(arg))
-        pform = prettyForm(*pform.right(pform_arg))
-        return pform
+        return self._print_number_function(e, "B")
 
     _print_bell = _print_bernoulli
 
     def _print_lucas(self, e):
-        pform = prettyForm("L")
-        arg = self._print(e.args[0])
-        pform_arg = prettyForm(" "*arg.width())
-        pform_arg = prettyForm(*pform_arg.below(arg))
-        pform = prettyForm(*pform.right(pform_arg))
-        return pform
+        return self._print_number_function(e, "L")
 
     def _print_fibonacci(self, e):
-        pform = prettyForm("F")
-        arg = self._print(e.args[0])
-        pform_arg = prettyForm(" "*arg.width())
-        pform_arg = prettyForm(*pform_arg.below(arg))
-        pform = prettyForm(*pform.right(pform_arg))
-        return pform
+        return self._print_number_function(e, "F")
 
     def _print_tribonacci(self, e):
-        pform = prettyForm("T")
-        arg = self._print(e.args[0])
-        pform_arg = prettyForm(" "*arg.width())
-        pform_arg = prettyForm(*pform_arg.below(arg))
-        pform = prettyForm(*pform.right(pform_arg))
-        return pform
+        return self._print_number_function(e, "T")
+
+    def _print_stieltjes(self, e):
+        if self._use_unicode:
+            return self._print_number_function(e, u'\N{GREEK SMALL LETTER GAMMA}')
+        else:
+            return self._print_number_function(e, "stieltjes")
 
     def _print_KroneckerDelta(self, e):
         pform = self._print(e.args[0])
