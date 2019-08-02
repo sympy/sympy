@@ -626,10 +626,32 @@ class Equality(Relational):
                     enew = e.func(m * x, -b)
                 measure = kwargs['measure']
                 if measure(enew) <= kwargs['ratio'] * measure(e):
-                    e = enew
+                    e = enew.canonical
             except ValueError:
                 pass
-        return e.canonical
+
+        # Simplify expressions of the type Eq(x, Min/Max(..., x, ...))
+        from sympy.functions.elementary.miscellaneous import Min, Max
+        if self.has(Min, Max):
+            minmax, constant = None, None
+            if isinstance(e.rhs, (Min, Max)) and not e.lhs.has(Min, Max):
+                minmax, constant = e.rhs, e.lhs
+            elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
+                minmax, constant = e.lhs, e.rhs
+            if minmax:
+                constantpart, remaining = sift(minmax.args, lambda x: x == constant, binary=True)
+                if constantpart:
+                    if minmax.func == Min:
+                        enew = Le(constant, Min(*remaining))
+                        # enew = Le(constant, minmax._new_rawargs(*remaining))
+                    else:
+                        enew = Ge(constant, Max(*remaining))
+                        # enew = Ge(constant, minmax._new_rawargs(*remaining))
+                    measure = kwargs['measure']
+                    if measure(enew) <= kwargs['ratio']*measure(e):
+                        e = enew.canonical
+
+        return e
 
     def integrate(self, *args, **kwargs):
         """See the integrate function in sympy.integrals"""
@@ -1047,6 +1069,44 @@ class GreaterThan(_Greater):
     def strict(self):
         return Gt(*self.args)
 
+    def _eval_simplify(self, **kwargs):
+        # standard simplify
+        eundo = e = super(GreaterThan, self)._eval_simplify(**kwargs)
+        if not isinstance(e, GreaterThan):
+            if isinstance(e, LessThan):
+                e = e.reversed
+            else:
+                return e
+
+        # Simplify expressions of the type Ge(x, Min/Max(..., x, ...))
+        from sympy.functions.elementary.miscellaneous import Min, Max
+        if self.has(Min, Max):
+            enew = None
+            if isinstance(e.rhs, (Min, Max)) and not e.lhs.has(Min, Max):
+                # c >= Min/Max
+                constantpart, remaining = sift(e.rhs.args, lambda x: x == e.lhs, binary=True)
+                if constantpart:
+                    if e.rhs.func == Min:
+                        enew = S.true
+                    else:
+                        enew = GreaterThan(e.lhs, Max(*remaining))
+                        # e = GreaterThan(e.lhs, e.rhs._new_rawargs(*remaining)).canonical
+            elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
+                # Min/Max >= c
+                constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
+                if constantpart:
+                    if e.lhs.func == Max:
+                        enew = S.true
+                    else:
+                        enew = GreaterThan(Min(*remaining), e.rhs)
+                        # e = GreaterThan(e.lhs._new_rawargs(*remaining), e.rhs).canonical
+            if enew is not None:
+                measure = kwargs['measure']
+                if measure(enew) <= kwargs['ratio']*measure(eundo):
+                    eundo = enew.canonical
+
+        return eundo
+
 Ge = GreaterThan
 
 
@@ -1063,6 +1123,15 @@ class LessThan(_Less):
     @property
     def strict(self):
         return Lt(*self.args)
+
+    def _eval_simplify(self, **kwargs):
+        # simplify as a StrictGreaterThan
+        gt = StrictGreaterThan(*self.args)._eval_simplify(**kwargs)
+        if isinstance(gt, StrictGreaterThan):
+            # send back LessThan with the new args
+            return self.func(*gt.args)
+        else:
+            return gt.negated  # result of LessThan is the negated gt
 
 Le = LessThan
 
@@ -1081,6 +1150,43 @@ class StrictGreaterThan(_Greater):
     def weak(self):
         return Ge(*self.args)
 
+    def _eval_simplify(self, **kwargs):
+        # standard simplify
+        eundo = e = super(StrictGreaterThan, self)._eval_simplify(**kwargs)
+        if not isinstance(e, StrictGreaterThan):
+            if isinstance(e, StrictLessThan):
+                e = e.reversed
+            else:
+                return e
+
+        # Simplify expressions of the type Gt(x, Min/Max(..., x, ...))
+        from sympy.functions.elementary.miscellaneous import Min, Max
+        if self.has(Min, Max):
+            enew = None
+            if isinstance(e.rhs, (Min, Max)) and not e.lhs.has(Min, Max):
+                # c > Min/Max
+                constantpart, remaining = sift(e.rhs.args, lambda x: x == e.lhs, binary=True)
+                if constantpart:
+                    if e.rhs.func == Max:
+                        enew = S.false
+                    else:
+                        enew = StrictGreaterThan(e.lhs, Min(*remaining))
+                        # e = StrictGreaterThan(e.lhs, e.rhs._new_rawargs(*remaining)).canonical
+            elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
+                # Min/Max > c
+                constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
+                if constantpart:
+                    if e.lhs.func == Max:
+                        enew = StrictGreaterThan(Min(*remaining), e.rhs)
+                    else:
+                        enew = S.false
+            if enew is not None:
+                measure = kwargs['measure']
+                if measure(enew) <= kwargs['ratio']*measure(eundo):
+                    eundo = enew.canonical
+
+        return eundo
+
 
 Gt = StrictGreaterThan
 
@@ -1098,6 +1204,15 @@ class StrictLessThan(_Less):
     @property
     def weak(self):
         return Le(*self.args)
+
+    def _eval_simplify(self, **kwargs):
+        # simplify as a GreaterThan
+        ge = GreaterThan(*self.args)._eval_simplify(**kwargs)
+        if isinstance(ge, GreaterThan):
+            # send back StrictLessThan with the new args
+            return self.func(*ge.args)
+        else:
+            return ge.negated  # result of StrictLessThan is the negated gt
 
 Lt = StrictLessThan
 

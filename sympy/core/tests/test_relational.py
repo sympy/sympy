@@ -14,7 +14,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.logic.boolalg import (And, Implies, Not, Or, Xor)
 from sympy.sets import Reals
@@ -25,6 +25,7 @@ from sympy.core.relational import (Relational, Equality, Unequality,
                                    StrictLessThan, Rel, Eq, Lt, Le,
                                    Gt, Ge, Ne, is_le, is_gt, is_ge, is_lt, is_eq, is_neq)
 from sympy.sets.sets import Interval, FiniteSet
+from sympy.testing.pytest import slow
 
 from itertools import combinations
 
@@ -1250,3 +1251,31 @@ def test_weak_strict():
     eq = Le(x, 1)
     assert eq.strict == Lt(x, 1)
     assert eq.weak == eq
+
+
+def test_minmax_simplification():
+    x, y, z = symbols('x y z')
+    assert (Min(x, y, z) >= z).simplify() == (z <= Min(x, y))
+    assert (Max(x, y, z) >= z).simplify() is S.true
+    assert (Eq(Min(x, y, z), z)).simplify() == (z <= Min(x, y))
+    assert (Ne(Max(x, y, z), z)).simplify() == (z < Max(x, y))
+
+
+@slow
+def test_minmax_simplification_slow():
+    # Test min/max simplification systematically
+    x, y = symbols('x y')
+    for v1 in [-2, -1, 0, 1, 2]:
+        for v2 in [-2, -1, 0, 1, 2]:
+            for rel in [Eq, Ne, Ge, Gt, Le, Lt]:
+                for minmax in [Min, Max]:
+                    f = rel(minmax(x, y), x)
+                    f2 = f.simplify()
+                    if isinstance(f2, Relational):
+                        f2 = f2.subs([(x, v1), (y, v2)])
+                    assert f2 == f.subs([(x, v1), (y, v2)])
+                    f = rel(x, minmax(y, x))
+                    f2 = f.simplify()
+                    if isinstance(f2, Relational):
+                        f2 = f2.subs([(x, v1), (y, v2)])
+                    assert f2 == f.subs([(x, v1), (y, v2)])
