@@ -788,6 +788,22 @@ class Polygon(GeometrySet):
         Returns a tuple of two polygon segments that lie above and below
         the intersecting line respectively.
 
+        Parameters
+        ==========
+
+        line: Line object pf geometry module
+            line which cuts the Polygon. The part of the Polygon that lies
+            above or below this line is returned.
+
+        Returns
+        =======
+
+        upper_polygon, lower_polygon: Polygon objects or None
+            upper_polygon is the polygon that lies above the given line.
+            lower_polygon is the polygon that lies below the given line.
+            upper_polgon and lower polygon are ``None`` when no polygon
+            exists above the line or below the line.
+
         References
         ==========
 
@@ -838,7 +854,7 @@ class Polygon(GeometrySet):
                     else (eq.subs(x, point.x))/a
 
             # if point lies above line
-            if compare >= 0:
+            if compare > 0:
                 if not prev:
                     # if previous point lies below the line, the intersection
                     # point of the polygon egde and the line has to be included
@@ -857,11 +873,15 @@ class Polygon(GeometrySet):
                     lower_vertices.append(new_point[0])
                 lower_vertices.append(point)
                 prev = False
-
-
             prev_point = point
 
-        return Polygon(*upper_vertices), Polygon(*lower_vertices)
+        upper_polygon, lower_polygon = None, None
+        if upper_vertices and isinstance(Polygon(*upper_vertices), Polygon):
+            upper_polygon = Polygon(*upper_vertices)
+        if lower_vertices and isinstance(Polygon(*lower_vertices), Polygon):
+            lower_polygon = Polygon(*lower_vertices)
+
+        return upper_polygon, lower_polygon
 
 
     def distance(self, o):
