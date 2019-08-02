@@ -622,7 +622,7 @@ class MatrixExpr(Expr):
                                                     col_idx)
                     result.append(arg_indexed)
 
-                return Mul(*args_c, *result)
+                return Mul.fromiter(args_c + result)
 
             elif isinstance(expr, MatAdd):
                 # TODO: DRY
@@ -638,7 +638,7 @@ class MatrixExpr(Expr):
                                                 col_idx)
                     result.append(indexed)
 
-                return Add(*result)
+                return Add.fromiter(result)
 
             else:
                 raise NotImplementedError
