@@ -151,10 +151,11 @@ def test_legendre():
         -sqrt(Rational(3, 7) + Rational(2, 35)*sqrt(30)): 1,
     }
 
-    n = Symbol("n", integer=True)
+    n = Symbol("n")
 
     X = legendre(n, x)
     assert isinstance(X, legendre)
+    assert unchanged(legendre, n, x)
 
     assert legendre(n, 0) == sqrt(pi)/(gamma(S(1)/2 - n/2)*gamma(n/2 + 1))
     assert legendre(n, 1) == 1
@@ -243,9 +244,10 @@ def test_chebyshev():
             assert chebyshevu(n, z) == 0
         raises(ValueError, lambda: chebyshevu_root(n, n))
 
-    n = Symbol("n", integer=True)
+    n = Symbol("n")
     X = chebyshevt(n, x)
     assert isinstance(X, chebyshevt)
+    assert unchanged(chebyshevt, n, x)
     assert chebyshevt(n, -x) == (-1)**n*chebyshevt(n, x)
     assert chebyshevt(-n, x) == chebyshevt(n, x)
 
@@ -260,7 +262,7 @@ def test_chebyshev():
     X = chebyshevu(n, x)
     assert isinstance(X, chebyshevu)
 
-    y = Symbol('y', integer=True)
+    y = Symbol('y')
     assert chebyshevu(n, -x) == (-1)**n*chebyshevu(n, x)
     assert chebyshevu(-n, x) == -chebyshevu(n - 2, x)
     assert unchanged(chebyshevu, -n + y, x)
