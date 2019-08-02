@@ -1,5 +1,4 @@
 from sympy.core.compatibility import range, PY3
-from sympy.core.expr import unchanged
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
@@ -7,7 +6,7 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
-                   Dummy, floor, And, Eq, ceiling, Piecewise, Ne, Mod, ITE)
+                   Dummy, floor, And, Eq)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, t
@@ -227,37 +226,37 @@ def test_Range_set():
     assert Range(1, 10, 1)[-1] == 9
     assert Range(1, 10, 3)[-1] == 7
     raises(ValueError, lambda: Range(oo,0,-1)[1:3:0])
-    assert Range(oo,0,-1)[:1] == Range(0, 0, 1)
-    assert Range(1, oo)[-2] == oo
-    assert Range(-oo, 1)[2] == -oo
+    raises(ValueError, lambda: Range(oo,0,-1)[:1])
+    raises(ValueError, lambda: Range(1, oo)[-2])
+    raises(ValueError, lambda: Range(-oo, 1)[2])
     raises(IndexError, lambda: Range(10)[-20])
     raises(IndexError, lambda: Range(10)[20])
     raises(ValueError, lambda: Range(2, -oo, -2)[2:2:0])
     assert Range(2, -oo, -2)[2:2:2] == empty
     assert Range(2, -oo, -2)[:2:2] == Range(2, -2, -4)
-    assert Range(-oo, 4, 2)[:2:2] == empty
+    raises(ValueError, lambda: Range(-oo, 4, 2)[:2:2])
     assert Range(-oo, 4, 2)[::-2] == Range(2, -oo, -4)
-    assert Range(-oo, 4, 2)[::2] == Range(-oo, 4, 4)
+    raises(ValueError, lambda: Range(-oo, 4, 2)[::2])
     assert Range(oo, 2, -2)[::] == Range(oo, 2, -2)
     assert Range(-oo, 4, 2)[:-2:-2] == Range(2, 0, -4)
     assert Range(-oo, 4, 2)[:-2:2] == Range(-oo, 0, 4)
-    assert Range(-oo, 4, 2)[:0:-2] == Range(2, -oo, -4)
-    assert Range(-oo, 4, 2)[:2:-2] == Range(2, -oo, -4)
+    raises(ValueError, lambda: Range(-oo, 4, 2)[:0:-2])
+    raises(ValueError, lambda: Range(-oo, 4, 2)[:2:-2])
     assert Range(-oo, 4, 2)[-2::-2] == Range(0, -oo, -4)
-    assert Range(-oo, 4, 2)[-2:0:-2] == Range(0, -oo, -4)
-    assert Range(-oo, 4, 2)[0::2] == Range(-oo, 4, 4)
+    raises(ValueError, lambda: Range(-oo, 4, 2)[-2:0:-2])
+    raises(ValueError, lambda: Range(-oo, 4, 2)[0::2])
     assert Range(oo, 2, -2)[0::] == Range(oo, 2, -2)
-    assert Range(-oo, 4, 2)[0:-2:2] == Range(-oo, 0, 4)
+    raises(ValueError, lambda: Range(-oo, 4, 2)[0:-2:2])
     assert Range(oo, 2, -2)[0:-2:] == Range(oo, 6, -2)
-    assert Range(oo, 2, -2)[0:2:] == empty
-    assert Range(-oo, 4, 2)[2::-1] == empty
+    raises(ValueError, lambda: Range(oo, 2, -2)[0:2:])
+    raises(ValueError, lambda: Range(-oo, 4, 2)[2::-1])
     assert Range(-oo, 4, 2)[-2::2] == Range(0, 4, 4)
     assert Range(oo, 0, -2)[-10:0:2] == empty
-    assert Range(oo, 0, -2)[-10:10:2] == empty
-    assert Range(oo, 0, -2)[0::-2] == empty
+    raises(ValueError, lambda: Range(oo, 0, -2)[-10:10:2])
+    raises(ValueError, lambda: Range(oo, 0, -2)[0::-2])
     assert Range(oo, 0, -2)[0:-4:-2] == empty
     assert Range(oo, 0, -2)[:0:2] == empty
-    assert Range(oo, 0, -2)[:1:-1] == Range(2, oo, 2)
+    raises(ValueError, lambda: Range(oo, 0, -2)[:1:-1])
 
     # test empty Range
     assert empty.reversed == empty
