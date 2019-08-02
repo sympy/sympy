@@ -1,17 +1,20 @@
-from sympy.multipledispatch.conflict import (supercedes, ordering, ambiguities,
+from multipledispatch.conflict import (supercedes, ordering, ambiguities,
         ambiguous, super_signature, consistent)
+from multipledispatch.dispatcher import Variadic
 
 
 class A(object): pass
 class B(A): pass
 class C(object): pass
 
+def _test_supercedes(a, b):
+    assert supercedes(a, b)
+    assert not supercedes(b, a)
+
 
 def test_supercedes():
-    assert supercedes([B], [A])
-    assert supercedes([B, A], [A, A])
-    assert not supercedes([B, A], [A, B])
-    assert not supercedes([A], [B])
+    _test_supercedes([B], [A])
+    _test_supercedes([B, A], [A, A])
 
 
 def test_consistent():
@@ -60,3 +63,39 @@ def test_ordering():
 
 def test_type_mro():
     assert super_signature([[object], [type]]) == [type]
+
+
+def test_supercedes_variadic():
+    _test_supercedes((Variadic[B],), (Variadic[A],))
+    _test_supercedes((B, Variadic[A]), (Variadic[A],))
+    _test_supercedes((Variadic[A],), (Variadic[(A, C)],))
+    _test_supercedes((A, B, Variadic[C]), (Variadic[object],))
+    _test_supercedes((A, Variadic[B]), (Variadic[A],))
+    _test_supercedes(tuple([]), (Variadic[A],))
+    _test_supercedes((A, A, A), (A, Variadic[A]))
+
+
+def test_consistent_variadic():
+    # basic check
+    assert consistent((Variadic[A],), (Variadic[A],))
+    assert consistent((Variadic[B],), (Variadic[B],))
+    assert not consistent((Variadic[C],), (Variadic[A],))
+
+    # union types
+    assert consistent((Variadic[(A, C)],), (Variadic[A],))
+    assert consistent((Variadic[(A, C)],), (Variadic[(C, A)],))
+    assert consistent((Variadic[(A, B, C)],), (Variadic[(C, B, A)],))
+    assert consistent((A, B, C), (Variadic[(A, B, C)],))
+    assert consistent((A, B, C), (A, Variadic[(B, C)]))
+
+    # more complex examples
+    assert consistent(tuple([]), (Variadic[object],))
+    assert consistent((A, A, B), (A, A, Variadic[B]))
+    assert consistent((A, A, B), (A, A, Variadic[A]))
+    assert consistent((A, B, Variadic[C]), (B, A, Variadic[C]))
+    assert consistent((A, B, Variadic[C]), (B, A, Variadic[(C, B)]))
+
+    # not consistent
+    assert not consistent((C,), (Variadic[A],))
+    assert not consistent((A, A, Variadic[C]), (A, Variadic[C]))
+    assert not consistent((A, B, Variadic[C]), (C, B, Variadic[C]))

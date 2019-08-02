@@ -1,4 +1,5 @@
 import inspect
+import sys
 
 from .dispatcher import Dispatcher, MethodDispatcher, ambiguity_warn
 
@@ -18,7 +19,6 @@ def dispatch(*types, **kwargs):
     Examples
     --------
 
-    >>> from sympy.multipledispatch import dispatch
     >>> @dispatch(int)
     ... def f(x):
     ...     return x + 1
@@ -50,7 +50,6 @@ def dispatch(*types, **kwargs):
     ...         self.data = [datum]
     """
     namespace = kwargs.get('namespace', global_namespace)
-    on_ambiguity = kwargs.get('on_ambiguity', ambiguity_warn)
 
     types = tuple(types)
 
@@ -60,13 +59,14 @@ def dispatch(*types, **kwargs):
         if ismethod(func):
             dispatcher = inspect.currentframe().f_back.f_locals.get(
                 name,
-                MethodDispatcher(name))
+                MethodDispatcher(name),
+            )
         else:
             if name not in namespace:
                 namespace[name] = Dispatcher(name)
             dispatcher = namespace[name]
 
-        dispatcher.add(types, func, on_ambiguity=on_ambiguity)
+        dispatcher.add(types, func)
         return dispatcher
     return _df
 
@@ -81,5 +81,8 @@ def ismethod(func):
         signature = inspect.signature(func)
         return signature.parameters.get('self', None) is not None
     else:
-        spec = inspect.getfullargspec(func)
+        if sys.version_info.major < 3:
+            spec = inspect.getargspec(func)
+        else:
+            spec = inspect.getfullargspec(func)
         return spec and spec.args and spec.args[0] == 'self'

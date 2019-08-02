@@ -1,6 +1,5 @@
-from sympy.multipledispatch import dispatch
-from sympy.multipledispatch.conflict import AmbiguityWarning
-from sympy.utilities.pytest import raises, XFAIL, warns
+from multipledispatch import dispatch
+from multipledispatch.utils import raises
 from functools import partial
 
 test_namespace = dict()
@@ -9,7 +8,6 @@ orig_dispatch = dispatch
 dispatch = partial(dispatch, namespace=test_namespace)
 
 
-@XFAIL
 def test_singledispatch():
     @dispatch(int)
     def f(x):
@@ -30,7 +28,7 @@ def test_singledispatch():
     assert raises(NotImplementedError, lambda: f('hello'))
 
 
-def test_multipledispatch():
+def test_multipledispatch(benchmark):
     @dispatch(int, int)
     def f(x, y):
         return x + y
@@ -64,7 +62,6 @@ def test_inheritance():
     assert f(C()) == 'a'
 
 
-@XFAIL
 def test_inheritance_and_multiple_dispatch():
     @dispatch(A, A)
     def f(x, y):
@@ -106,17 +103,13 @@ def test_competing_multiple():
 
 
 def test_competing_ambiguous():
-    test_namespace = dict()
-    dispatch = partial(orig_dispatch, namespace=test_namespace)
-
     @dispatch(A, C)
     def f(x, y):
         return 2
 
-    with warns(AmbiguityWarning):
-        @dispatch(C, A)
-        def f(x, y):
-            return 2
+    @dispatch(C, A)
+    def f(x, y):
+        return 2
 
     assert f(A(), C()) == f(C(), A()) == 2
     # assert raises(Warning, lambda : f(C(), C()))

@@ -1,6 +1,17 @@
+from collections import OrderedDict
+
+
+def raises(err, lamda):
+    try:
+        lamda()
+        return False
+    except err:
+        return True
+
+
 def expand_tuples(L):
     """
-    >>> from sympy.multipledispatch.utils import expand_tuples
+
     >>> expand_tuples([1, (2, 3)])
     [(1, 2), (1, 3)]
 
@@ -27,7 +38,6 @@ def _toposort(edges):
     outputs:
         L - an ordered list of nodes that satisfy the dependencies of edges
 
-    >>> from sympy.multipledispatch.utils import _toposort
     >>> _toposort({1: (2, 3), 2: (3, )})
     [1, 2, 3]
 
@@ -35,21 +45,22 @@ def _toposort(edges):
 
     [1] Kahn, Arthur B. (1962), "Topological sorting of large networks",
     Communications of the ACM
-    [2] https://en.wikipedia.org/wiki/Toposort#Algorithms
+    [2] http://en.wikipedia.org/wiki/Toposort#Algorithms
     """
     incoming_edges = reverse_dict(edges)
-    incoming_edges = dict((k, set(val)) for k, val in incoming_edges.items())
-    S = set((v for v in edges if v not in incoming_edges))
+    incoming_edges = OrderedDict((k, set(val))
+                                 for k, val in incoming_edges.items())
+    S = OrderedDict.fromkeys(v for v in edges if v not in incoming_edges)
     L = []
 
     while S:
-        n = S.pop()
+        n, _ = S.popitem()
         L.append(n)
         for m in edges.get(n, ()):
             assert n in incoming_edges[m]
             incoming_edges[m].remove(n)
             if not incoming_edges[m]:
-                S.add(m)
+                S[m] = None
     if any(incoming_edges.get(v, None) for v in edges):
         raise ValueError("Input has cycles")
     return L
@@ -68,7 +79,7 @@ def reverse_dict(d):
         as undeterministic.
 
     """
-    result = {}
+    result = OrderedDict()
     for key in d:
         for val in d[key]:
             result[val] = result.get(val, tuple()) + (key, )
@@ -80,7 +91,6 @@ def reverse_dict(d):
 def groupby(func, seq):
     """ Group a collection by a key function
 
-    >>> from sympy.multipledispatch.utils import groupby
     >>> names = ['Alice', 'Bob', 'Charlie', 'Dan', 'Edith', 'Frank']
     >>> groupby(len, names)  # doctest: +SKIP
     {3: ['Bob', 'Dan'], 5: ['Alice', 'Edith', 'Frank'], 7: ['Charlie']}
@@ -93,10 +103,37 @@ def groupby(func, seq):
         ``countby``
     """
 
-    d = dict()
+    d = OrderedDict()
     for item in seq:
         key = func(item)
         if key not in d:
             d[key] = list()
         d[key].append(item)
     return d
+
+
+def typename(type):
+    """Get the name of `type`.
+
+    Parameters
+    ----------
+    type : Union[Type, Tuple[Type]]
+
+    Returns
+    -------
+    str
+        The name of `type` or a tuple of the names of the types in `type`.
+
+    Examples
+    --------
+    >>> typename(int)
+    'int'
+    >>> typename((int, float))
+    '(int, float)'
+    """
+    try:
+        return type.__name__
+    except AttributeError:
+        if len(type) == 1:
+            return typename(*type)
+        return '(%s)' % ', '.join(map(typename, type))
