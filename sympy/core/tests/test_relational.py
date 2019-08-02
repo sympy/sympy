@@ -1279,3 +1279,8 @@ def test_minmax_simplification_slow():
                     if isinstance(f2, Relational):
                         f2 = f2.subs([(x, v1), (y, v2)])
                     assert f2 == f.subs([(x, v1), (y, v2)])
+
+
+def test_issue_13605():
+    a = Symbol('a', positive=True)
+    assert simplify(1 > Max(0, 1 - a)) == S.true

@@ -639,14 +639,38 @@ class Equality(Relational):
             elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
                 minmax, constant = e.lhs, e.rhs
             if minmax:
-                constantpart, remaining = sift(minmax.args, lambda x: x == constant, binary=True)
-                if constantpart:
-                    if minmax.func == Min:
-                        enew = Le(constant, Min(*remaining))
-                        # enew = Le(constant, minmax._new_rawargs(*remaining))
-                    else:
-                        enew = Ge(constant, Max(*remaining))
-                        # enew = Ge(constant, minmax._new_rawargs(*remaining))
+                from sympy.utilities.iterables import sift
+                enew = None
+                if constant.is_number:
+                    numberpart, remaining = sift(minmax.args, lambda x: x.is_number, binary=True)
+                    if numberpart:
+                        f = minmax.func
+                        if minmax.func == Min:
+                            if Min(*numberpart) < constant:
+                                enew = S.false
+                            elif constant in numberpart:
+                                enew = Le(constant, Min(*remaining))
+                            else:
+                                enew = Eq(constant, Min(*remaining))
+                        else:
+                            if Max(*numberpart) > constant:
+                                enew = S.false
+                            elif constant in numberpart:
+                                enew = Ge(constant, Max(*remaining))
+                            else:
+                                enew = Eq(constant, Max(*remaining))
+                else:
+                    from sympy.utilities.iterables import sift
+                    constantpart, remaining = sift(minmax.args, lambda x: x == constant, binary=True)
+                    if constantpart:
+                        f = minmax.func
+                        if minmax.func == Min:
+                            enew = Le(constant, Min(*remaining))
+                            # enew = Le(constant, minmax._new_rawargs(*remaining))
+                        else:
+                            enew = Ge(constant, Max(*remaining))
+                            # enew = Ge(constant, minmax._new_rawargs(*remaining))
+                if enew is not None:
                     measure = kwargs['measure']
                     if measure(enew) <= kwargs['ratio']*measure(e):
                         e = enew.canonical
@@ -1083,24 +1107,33 @@ class GreaterThan(_Greater):
         if self.has(Min, Max):
             enew = None
             if isinstance(e.rhs, (Min, Max)) and not e.lhs.has(Min, Max):
-                # c >= Min/Max
-                constantpart, remaining = sift(e.rhs.args, lambda x: x == e.lhs, binary=True)
-                if constantpart:
-                    if e.rhs.func == Min:
-                        enew = S.true
-                    else:
-                        enew = GreaterThan(e.lhs, Max(*remaining))
-                        # e = GreaterThan(e.lhs, e.rhs._new_rawargs(*remaining)).canonical
+                # c >= Min/Max, reverse
+                enew = e.reversed
             elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
                 # Min/Max >= c
-                constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
-                if constantpart:
-                    if e.lhs.func == Max:
-                        enew = S.true
-                    else:
-                        enew = GreaterThan(Min(*remaining), e.rhs)
-                        # e = GreaterThan(e.lhs._new_rawargs(*remaining), e.rhs).canonical
+                enew = e
             if enew is not None:
+                if e.rhs.is_number:
+                    numberpart, remaining = sift(e.lhs.args, lambda x: x.is_number, binary=True)
+                    if numberpart:
+                        if e.lhs.func == Max:
+                            if Max(*numberpart) >= e.rhs:
+                                enew = S.true
+                            else:
+                                enew = GreaterThan(Max(*remaining), e.rhs)
+                        else:
+                            if Min(*numberpart) < e.rhs:
+                                enew = S.false
+                            else:
+                                enew = GreaterThan(Min(*remaining), e.rhs)
+                else:
+                    constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
+                    if constantpart:
+                        if e.lhs.func == Max:
+                            enew = S.true
+                        else:
+                            enew = GreaterThan(Min(*remaining), e.rhs)
+                            # e = GreaterThan(e.lhs._new_rawargs(*remaining), e.rhs).canonical
                 measure = kwargs['measure']
                 if measure(enew) <= kwargs['ratio']*measure(eundo):
                     eundo = enew.canonical
@@ -1164,23 +1197,33 @@ class StrictGreaterThan(_Greater):
         if self.has(Min, Max):
             enew = None
             if isinstance(e.rhs, (Min, Max)) and not e.lhs.has(Min, Max):
-                # c > Min/Max
-                constantpart, remaining = sift(e.rhs.args, lambda x: x == e.lhs, binary=True)
-                if constantpart:
-                    if e.rhs.func == Max:
-                        enew = S.false
-                    else:
-                        enew = StrictGreaterThan(e.lhs, Min(*remaining))
-                        # e = StrictGreaterThan(e.lhs, e.rhs._new_rawargs(*remaining)).canonical
+                # c > Min/Max, reverse
+                enew = e.reversed
             elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
                 # Min/Max > c
-                constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
-                if constantpart:
-                    if e.lhs.func == Max:
-                        enew = StrictGreaterThan(Min(*remaining), e.rhs)
-                    else:
-                        enew = S.false
+                enew = e
             if enew is not None:
+                if e.rhs.is_number:
+                    numberpart, remaining = sift(e.lhs.args, lambda x: x.is_number, binary=True)
+                    if numberpart:
+                        if e.lhs.func == Max:
+                            if Max(*numberpart) > e.rhs:
+                                enew = S.true
+                            else:
+                                enew = StrictGreaterThan(Max(*remaining), e.rhs)
+                        else:
+                            if Min(*numberpart) <= e.rhs:
+                                enew = S.false
+                            else:
+                                enew = StrictGreaterThan(Min(*remaining), e.rhs)
+                else:
+                    constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
+                    if constantpart:
+                        if e.lhs.func == Max:
+                            enew = S.true
+                        else:
+                            enew = GreaterThan(Min(*remaining), e.rhs)
+                            # e = GreaterThan(e.lhs._new_rawargs(*remaining), e.rhs).canonical
                 measure = kwargs['measure']
                 if measure(enew) <= kwargs['ratio']*measure(eundo):
                     eundo = enew.canonical
