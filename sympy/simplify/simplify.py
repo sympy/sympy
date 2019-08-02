@@ -564,9 +564,13 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         if not expr.args:  # simplified to atomic
             return expr
 
-    if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
-        return done(
-            expr.func(*[simplify(x, **kwargs) for x in expr.args]))
+    # do deep simplification
+    handled = Add, Mul, Pow, ExpBase
+    expr = expr.replace(
+        lambda x: not isinstance(x, handled) and x.args,
+        lambda x: x.func(*[simplify(i, **kwargs) for i in x.args]))
+    if not isinstance(expr, handled):
+        return done(expr)
 
     if not expr.is_commutative:
         expr = nc_simplify(expr)
