@@ -220,19 +220,12 @@ class Column(object):
         # differnetial equation of Column buckling
         eq = E*I*y(x).diff(x, 2) + self._moment
 
-        defl_sol = dsolve(Eq(eq, 0), y(x)).args[1]
-        slope_sol = defl_sol.diff(x)
-
-        constants = list(linsolve([defl_sol.subs(x, 0), slope_sol.subs(x, 0)], C1, C2).args[0])
-
-        self._deflection = defl_sol.subs({C1: constants[0], C2:constants[1]})
-        self._slope = slope_sol.subs({C1: constants[0], C2:constants[1]})
+        self._deflection = dsolve(Eq(eq, 0), y(x), ics={y(0): 0, y(x).diff(x).subs(x, 0): 0}).args[1]
 
         # if deflection is zero, no buckling occurs, which is not the case,
         # so trying to solve for the constants differently
         if self._deflection == 0:
-            self._deflection = defl_sol
-            self._slope = slope_sol
+            self._deflection = dsolve(Eq(eq, 0), y(x)).args[1]
 
             defl_eqs = []
             # taking last two bounndary conditions which are actually
@@ -251,12 +244,12 @@ class Column(object):
             # the deflection and slope equation
             if C1 in solns[0].keys():
                 self._deflection = self._deflection.subs(C1, solns[0][C1])
-                self._slope = self._slope.subs(C1, solns[0][C1])
             if C2 in solns[0].keys():
                 self._deflection = self._deflection.subs(C2, solns[0][C2])
-                self._slope = self._slope.subs(C2, solns[0][C2])
             if P in solns[0].keys():
                 self._critical_load = solns[0][P]
+
+        self._slope = self._deflection.diff(x)
 
 
     def critical_load(self):
