@@ -16,6 +16,7 @@ __all__ = [
     'GaussianOrthogonalEnsemble',
     'GaussianSymplecticEnsemble',
     'joint_eigen_distribution',
+    'JointEigenDistribution',
     'level_spacing_distribution'
 ]
 
@@ -186,7 +187,6 @@ class GaussianSymplecticEnsemble(GaussianEnsemble):
         f = ((S(2)**18)/((S(3)**6)*(pi**3)))*(s**4)*exp((-64/(9*pi))*s**2)
         return Lambda(s, f)
 
-@dispatch(RandomMatrixSymbol)
 def joint_eigen_distribution(mat):
     """
     For obtaining joint probability distribution
@@ -209,13 +209,14 @@ def joint_eigen_distribution(mat):
     >>> from sympy.stats import GaussianUnitaryEnsemble as GUE
     >>> from sympy.stats import joint_eigen_distribution
     >>> U = GUE('U', 2)
-    >>> joint_eigen_dsitribution(U)
+    >>> joint_eigen_distribution(U)
     Lambda((l[1], l[2]), exp(-l[1]**2 - l[2]**2)*Product(Abs(l[_i] - l[_j])**2, (_j, _i + 1, 2), (_i, 1, 1))/pi)
     """
+    if not isinstance(mat, RandomMatrixSymbol):
+        raise ValueError("%s is not of type, RandomMatrixSymbol.")
     return mat.pspace.model.joint_eigen_distribution()
 
-@dispatch(Matrix)
-def joint_eigen_distribution(mat):
+def JointEigenDistribution(mat):
     """
     Creates joint distribution of eigen values of matrices with random
     expressions.
@@ -234,11 +235,11 @@ def joint_eigen_distribution(mat):
     Examples
     ========
 
-    >>> from sympy.stats import Normal, joint_eigen_distribution
+    >>> from sympy.stats import Normal, JointEigenDistribution
     >>> from sympy import Matrix
     >>> A = [[Normal('A00', 0, 1), Normal('A01', 0, 1)],
     ... [Normal('A10', 0, 1), Normal('A11', 0, 1)]]
-    >>> joint_eigen_distribution(Matrix(A))
+    >>> JointEigenDistribution(Matrix(A))
     JointDistributionHandmade(-sqrt(A00**2 - 2*A00*A11 + 4*A01*A10 + A11**2)/2
     + A00/2 + A11/2, sqrt(A00**2 - 2*A00*A11 + 4*A01*A10 + A11**2)/2 + A00/2 + A11/2)
 
@@ -247,11 +248,7 @@ def joint_eigen_distribution(mat):
     if any(not eigenval.has(RandomSymbol) for eigenval in eigenvals):
         raise ValueError("Eigen values don't have any random expression, "
                          "joint distribution cannot be generated.")
-    expanded = []
-    for eigenval, count in zip(eigenvals, counts):
-        l = [eigenval]*count
-        expanded.extend(l)
-    return JointDistributionHandmade(*expanded)
+    return JointDistributionHandmade(*[e for ev, cnt in zip(eigenvals, counts) for e in [ev]*cnt])
 
 def level_spacing_distribution(mat):
     """

@@ -100,6 +100,7 @@ from .random_matrix_models import (
     GaussianUnitaryEnsemble,
     GaussianOrthogonalEnsemble,
     GaussianSymplecticEnsemble,
+    JointEigenDistribution,
     joint_eigen_distribution,
     level_spacing_distribution
 )
