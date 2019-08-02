@@ -105,8 +105,6 @@ class MultivariateNormalDistribution(JointDistribution):
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
         _mu, _sigma = self.mu, self.sigma
         k = self.mu.shape[0]
-        if not isinstance(k, int):
-            raise ValueError('k must be of type int.')
         for i in range(k):
             if i not in indices:
                 _mu = _mu.row_del(i)
