@@ -20,7 +20,7 @@ import sympy
 
 _known_func_same_name = [
     'sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'sinh', 'cosh', 'tanh', 'sech',
-    'csch', 'coth', 'exp', 'floor'
+    'csch', 'coth', 'exp', 'floor', 'factorial'
 ]
 
 known_functions = {
@@ -60,6 +60,9 @@ spec_relational_ops = {
     '!=': '<>'
 }
 
+not_supported_symbol = [
+    S.ComplexInfinity
+]
 
 class MapleCodePrinter(CodePrinter):
     """
@@ -100,7 +103,7 @@ class MapleCodePrinter(CodePrinter):
         rhs = self._print(expr.rhs)
         return "{lhs} := {rhs}".format(lhs=lhs, rhs=rhs)
 
-    def _print_Pow(self, expr):
+    def _print_Pow(self, expr, **kwargs):
         PREC = precedence(expr)
         if expr.exp == -1:
             return '1/%s' % (self.parenthesize(expr.base, PREC))
@@ -114,7 +117,7 @@ class MapleCodePrinter(CodePrinter):
                 self.parenthesize(expr.exp, PREC, strict=True))
 
     def _print_Piecewise(self, expr):
-        if expr.args[-1].cond != True:
+        if expr.args[-1].cond is not True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
             raise ValueError("All Piecewise expressions must contain an "
@@ -123,7 +126,9 @@ class MapleCodePrinter(CodePrinter):
                              "expression may not evaluate to anything under "
                              "some condition.")
         _coup_list = [
-            ("{c}, {e}".format(c=self._print(c), e=self._print(e)) if c is not True else "{e}".format(e=self._print(e)))
+            ("{c}, {e}".format(c=self._print(c),
+                               e=self._print(e)) if c is not True and c is not S.BooleanTrue else "{e}".format(
+                e=self._print(e)))
             for e, c in expr.args]
         _inbrace = ', '.join(_coup_list)
         return 'piecewise({_inbrace})'.format(_inbrace=_inbrace)
@@ -159,7 +164,7 @@ class MapleCodePrinter(CodePrinter):
         return "false"
 
     def _print_bool(self, expr):
-        return str(expr).lower()
+        return 'true' if expr else 'false'
 
     def _print_NaN(self, expr):
         return 'undefined'
@@ -221,6 +226,12 @@ class MapleCodePrinter(CodePrinter):
     def _print_HadamardProduct(self, expr):
         _fact_list = list(expr.args)
         return '*'.join(self._print(_m) for _m in _fact_list)
+
+    def _print_Derivative(self, expr):
+        _f, (_var, _order) = expr.args
+        _second_arg = '{var}${order}'.format(var=self._print(_var),
+                                             order=self._print(_order)) if _order != 1 else self._print(_var)
+        return 'diff({func_expr}, {sec_arg})'.format(func_expr=self._print(_f), sec_arg=_second_arg)
 
 
 
