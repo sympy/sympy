@@ -1,13 +1,10 @@
 from sympy.printing import pycode, ccode, fcode
 from sympy.external import import_module
-from sympy.utilities.decorator import doctest_depends_on
-
 lfortran = import_module('lfortran')
 
 if lfortran:
     from sympy.parsing.fortran.fortran_parser import src_to_sympy
 
-    @doctest_depends_on(modules=('lfortran',))
     class SymPyExpression(object):
         """Class to store and handle SymPy expressions
 
