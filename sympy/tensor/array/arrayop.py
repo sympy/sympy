@@ -5,7 +5,9 @@ from sympy import S, Tuple, diff
 from sympy.core.compatibility import Iterable
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
-from sympy.tensor.array.nditer import nditer
+from sympy.tensor.array.dense_ndim_array import DenseNDimArray
+from sympy.tensor.array.sparse_ndim_array import SparseNDimArray
+
 
 def _arrayfy(a):
     from sympy.matrices import MatrixBase
@@ -63,7 +65,7 @@ def tensorproduct(*args):
         new_array = {k1*lp + k2: v1*v2 for k1, v1 in a._sparse_array.items() for k2, v2 in b._sparse_array.items()}
         return ImmutableSparseNDimArray(new_array, a.shape + b.shape)
 
-    product_list = [i*j for i in nditer(a) for j in nditer(b)]
+    product_list = [i*j for i in Flatten(a) for j in Flatten(b)]
     return ImmutableDenseNDimArray(product_list, a.shape + b.shape)
 
 
@@ -196,7 +198,6 @@ def derive_by_array(expr, dx):
     from sympy.matrices import MatrixBase
     from sympy.tensor.array import SparseNDimArray
     array_types = (Iterable, MatrixBase, NDimArray)
-    from sympy.tensor.array.nditer import nditer
 
     if isinstance(dx, array_types):
         dx = ImmutableDenseNDimArray(dx)
@@ -214,16 +215,16 @@ def derive_by_array(expr, dx):
             if isinstance(expr, SparseNDimArray):
                 lp = len(expr)
                 new_array = {k + i*lp: v
-                             for i, x in enumerate(nditer(dx))
+                             for i, x in enumerate(Flatten(dx))
                              for k, v in expr.diff(x)._sparse_array.items()}
             else:
-                new_array = [[y.diff(x) for y in nditer(expr)] for x in nditer(dx)]
+                new_array = [[y.diff(x) for y in Flatten(expr)] for x in Flatten(dx)]
             return type(expr)(new_array, dx.shape + expr.shape)
         else:
             return expr.diff(dx)
     else:
         if isinstance(dx, array_types):
-            return ImmutableDenseNDimArray([expr.diff(i) for i in nditer(dx)], dx.shape)
+            return ImmutableDenseNDimArray([expr.diff(i) for i in Flatten(dx)], dx.shape)
         else:
             return diff(expr, dx)
 
@@ -295,3 +296,57 @@ def permutedims(expr, perm):
         new_array[i] = expr[t]
 
     return type(expr)(new_array, new_shape)
+
+
+class Flatten(object):
+
+    def __init__(self, iterable):
+        from sympy.matrices.matrices import MatrixBase
+
+        if not isinstance(iterable, (Iterable, MatrixBase)):
+            raise NotImplementedError("Data type not yet supported")
+        if isinstance(iterable, list) and len(iterable)>0 and isinstance(iterable[0], NDimArray):
+            temp = []
+            for i in range(len(iterable)):
+                temp += iterable[0].tolist()
+            iterable = temp
+        self._iter = iterable
+        self._idx = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        from sympy.matrices.matrices import MatrixBase
+
+        try:
+            if isinstance(self._iter, list):
+                result = self._iter[self._idx]
+
+            elif isinstance(self._iter, DenseNDimArray):
+                result = self._iter._array[self._idx]
+
+            elif isinstance(self._iter, SparseNDimArray):
+                if self._idx >= len(self._iter):
+                    raise StopIteration
+
+                if self._idx in self._iter._sparse_array:
+                    result = self._iter._sparse_array[self._idx]
+                else:
+                    result = 0
+
+            elif isinstance(self._iter, MatrixBase):
+                result = self._iter[self._idx]
+
+            elif hasattr(self._iter, '__next__'):
+                result = next(self._iter)
+
+            else:
+                result = self._iter[self._idx]
+
+
+        except IndexError:
+            raise StopIteration
+
+        self._idx += 1
+        return result

@@ -517,7 +517,7 @@ class _TensorDataLazyEvaluator(CantSympify):
 
     def _check_permutations_on_data(self, tens, data):
         from .array import permutedims
-        from .array.nditer import nditer 
+        from .array.arrayop import Flatten
 
         if isinstance(tens, TensorHead):
             rank = tens.rank
@@ -542,7 +542,7 @@ class _TensorDataLazyEvaluator(CantSympify):
             for i in range(gener.order()-1):
                 data_swapped = permutedims(data_swapped, permute_axes)
                 # if any value in the difference array is non-zero, raise an error:
-                if any(nditer(last_data - sign_change*data_swapped)):
+                if any(Flatten(last_data - sign_change*data_swapped)):
                     raise ValueError("Component data symmetry structure error")
                 last_data = data_swapped
 

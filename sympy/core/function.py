@@ -1208,7 +1208,7 @@ class Derivative(Expr):
         from sympy import Integer, MatrixExpr
         from sympy.tensor.array import Array, NDimArray, derive_by_array
         from sympy.utilities.misc import filldedent
-        from sympy.tensor.array.nditer import nditer
+        from sympy.tensor.array.arrayop import Flatten
 
         expr = sympify(expr)
         symbols_or_none = getattr(expr, "free_symbols", None)
@@ -1246,7 +1246,7 @@ class Derivative(Expr):
         variable_count = []
         array_likes = (tuple, list, Tuple)
 
-        for i, v in enumerate(nditer(variables)):
+        for i, v in enumerate(Flatten(variables)):
             if isinstance(v, Integer):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
@@ -1382,7 +1382,7 @@ class Derivative(Expr):
         # -------------------------------------------------------------
         nderivs = 0  # how many derivatives were performed
         unhandled = []
-        for i, (v, count) in enumerate(nditer(variable_count)):
+        for i, (v, count) in enumerate(Flatten(variable_count)):
 
             old_expr = expr
             old_v = None

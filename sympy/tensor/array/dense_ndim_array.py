@@ -155,12 +155,12 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
     @classmethod
     def _new(cls, iterable, shape, **kwargs):
         from sympy.utilities.iterables import flatten
-        from sympy.tensor.array.nditer import nditer
+        from sympy.tensor.array.arrayop import Flatten
 
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
         cls._check_special_bounds(flat_list, shape)
-        flat_list = flatten(nditer(flat_list))
+        flat_list = flatten(Flatten(flat_list))
         flat_list = Tuple(*flat_list)
         self = Basic.__new__(cls, flat_list, shape, **kwargs)
         self._shape = shape
@@ -184,10 +184,10 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
     @classmethod
     def _new(cls, iterable, shape, **kwargs):
         from sympy.utilities.iterables import flatten
-        from sympy.tensor.array.nditer import nditer
+        from sympy.tensor.array.arrayop import Flatten
 
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
-        flat_list = flatten(nditer(flat_list))
+        flat_list = flatten(Flatten(flat_list))
         self = object.__new__(cls)
         self._shape = shape
         self._array = list(flat_list)
