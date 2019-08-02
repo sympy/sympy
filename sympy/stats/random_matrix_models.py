@@ -244,11 +244,13 @@ def JointEigenDistribution(mat):
     + A00/2 + A11/2, sqrt(A00**2 - 2*A00*A11 + 4*A01*A10 + A11**2)/2 + A00/2 + A11/2)
 
     """
-    eigenvals, counts = mat.eigenvals().keys(), mat.eigenvals().values()
+    eigen_dict = mat.eigenvals()
+    eigenvals = eigen_dict.keys()
+    sorted(eigenvals, key=lambda val: eigen_dict[val])
     if any(not eigenval.has(RandomSymbol) for eigenval in eigenvals):
         raise ValueError("Eigen values don't have any random expression, "
                          "joint distribution cannot be generated.")
-    return JointDistributionHandmade(*[e for ev, cnt in zip(eigenvals, counts) for e in [ev]*cnt])
+    return JointDistributionHandmade(*[e for ev in eigenvals for e in [ev]*eigen_dict[ev]])
 
 def level_spacing_distribution(mat):
     """
