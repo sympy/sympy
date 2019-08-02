@@ -388,7 +388,7 @@ def test_vararg_no_args_failure():
     assert raises(NotImplementedError, f)
 
 
-def test_vararg_no_args_failure():
+def test_vararg_no_args_failure_2():
     f = Dispatcher('f')
 
     @f.register([str])
