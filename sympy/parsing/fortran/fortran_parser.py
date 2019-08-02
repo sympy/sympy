@@ -298,51 +298,54 @@ if lfortran:
         def ret_ast(self):
             """Returns the AST nodes"""
             return self._py_ast
+else:
+    class ASR2PyVisitor():
+        def __init__(self, *args, **kwargs):
+            raise ImportError('lfortran not available')
+
+def call_visitor(fort_node):
+    """Calls the AST Visitor on the Module
+
+    This function is used to call the AST visitor for a program or module
+    It imports all the required modules and calls the visit() function
+    on the given node
+
+    Parameters
+    ==========
+
+    fort_node : LFortran ASR object
+        Node for the operation for which the NodeVisitor is called
+
+    Returns
+    =======
+
+    res_ast : list
+        list of sympy AST Nodes
+
+    """
+    v = ASR2PyVisitor()
+    v.visit(fort_node)
+    res_ast = v.ret_ast()
+    return res_ast
 
 
-    def call_visitor(fort_node):
-        """Calls the AST Visitor on the Module
+def src_to_sympy(src):
+    """Wrapper function to convert the given Fortran source code to SymPy Expressions
 
-        This function is used to call the AST visitor for a program or module
-        It imports all the required modules and calls the visit() function
-        on the given node
+    Parameters
+    ==========
 
-        Parameters
-        ==========
+    src : string
+        A string with the Fortran source code
 
-        fort_node : LFortran ASR object
-            Node for the operation for which the NodeVisitor is called
+    Returns
+    =======
 
-        Returns
-        =======
+    py_src : string
+        A string with the python source code compatible with SymPy
 
-        res_ast : list
-            list of sympy AST Nodes
-
-        """
-        v = ASR2PyVisitor()
-        v.visit(fort_node)
-        res_ast = v.ret_ast()
-        return res_ast
-
-
-    def src_to_sympy(src):
-        """Wrapper function to convert the given Fortran source code to SymPy Expressions
-
-        Parameters
-        ==========
-
-        src : string
-            A string with the Fortran source code
-
-        Returns
-        =======
-
-        py_src : string
-            A string with the python source code compatible with SymPy
-
-        """
-        a_ast = src_to_ast(src,translation_unit=False)
-        a = ast_to_asr(a_ast)
-        py_src = call_visitor(a)
-        return py_src
+    """
+    a_ast = src_to_ast(src,translation_unit=False)
+    a = ast_to_asr(a_ast)
+    py_src = call_visitor(a)
+    return py_src

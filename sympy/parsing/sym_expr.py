@@ -251,3 +251,10 @@ if lfortran:
 
             """
             return self._expr
+else:
+    class SymPyExpression(object):
+        def __init__(self, *args, **kwargs):
+            raise ImportError('lfortran not available.')
+
+        def convert_to_expr(self, *args, **kwargs):
+            raise ImportError('lfortran not available')
