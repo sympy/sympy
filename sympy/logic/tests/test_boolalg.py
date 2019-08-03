@@ -1095,18 +1095,26 @@ def test_relational_simplification():
         (Eq(x, y) & (x >= 1) & (y >= 5) & (y > z))
     assert Or(Eq(x, y), x >= y, w < y, z < y).simplify() == \
         (x >= y) | (y > z) | (w < y)
-    assert Or(Eq(x, y), x >= y, w < y, z < y).simplify(relational_minmax=True) == \
-        Or(x >= y, y > Min(w, z))
     assert And(Eq(x, y), x >= y, w < y, y >= z, z < y).simplify() == \
         Eq(x, y) & (y > z) & (w < y)
     assert And(Eq(x, y), x >= y, w < y, y >= z, z < y).simplify(relational_minmax=True) == \
        And(Eq(x, y), y > Max(w, z))
     assert Or(Eq(x, y), x >= 1, 2 < y, y >= 5, z < y).simplify(relational_minmax=True) == \
        (Eq(x, y) | (x >= 1) | (y > Min(2, z)))
+    assert And(Eq(x, y), x >= 1, 2 < y, y >= 5, z < y).simplify() == \
+        (Eq(x, y) & (x >= 1) & (y >= 5) & (y > z))
     assert (Eq(x, y) & Eq(d, e) & (x >= y) & (d >= e)).simplify() == \
         (Eq(x, y) & Eq(d, e) & (d >= e))
     assert And(Eq(x, y), Eq(x, -y)).simplify() == And(Eq(x, 0), Eq(y, 0))
     assert Xor(x >= y, x <= y).simplify() == Ne(x, y)
+
+
+def test_issue_8373():
+    x = symbols('x', real=True)
+    assert Or(x < 1, x > -1).simplify() == S.true
+    assert Or(x < 1, x >= 1).simplify() == S.true
+    assert And(x < 1, x >= 1).simplify() == S.false
+    assert Or(x <= 1, x >= 1).simplify() == S.true
 
 
 @slow

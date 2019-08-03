@@ -3234,7 +3234,7 @@ def simplify_patterns_and():
                      (Tuple(Eq(a, b), Ge(a, b)), Eq(a, b)),
                      (Tuple(Eq(a, b), Le(a, b)), Eq(a, b)),
                      (Tuple(Ge(a, b), Gt(a, b)), Gt(a, b)),
-                     (Tuple(Ge(a, b), Le(a, b)), Eq(a, b)),
+                     # (Tuple(Ge(a, b), Le(a, b)), Eq(a, b)),
                      (Tuple(Ge(a, b), Ne(a, b)), Gt(a, b)),
                      (Tuple(Gt(a, b), Ne(a, b)), Gt(a, b)),
                      (Tuple(Le(a, b), Lt(a, b)), Lt(a, b)),
@@ -3249,6 +3249,10 @@ def simplify_patterns_and():
                      (Tuple(Le(a, b), Le(a, c)), Le(a, Min(b, c))),
                      (Tuple(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
                      (Tuple(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
+                     (Tuple(Le(a, b), Ge(a, c)), ITE(Eq(b, c), Eq(a, b), ITE(b < c, S.false, And(Le(a, b), Ge(a, c))))),
+                     (Tuple(Lt(a, b), Gt(a, c)), ITE(b < c, S.false, And(Lt(a, b), Gt(a, c)))),
+                     (Tuple(Le(a, b), Gt(a, c)), ITE(b <= c, S.false, And(Le(a, b), Gt(a, c)))),
+                     (Tuple(Lt(a, b), Ge(a, c)), ITE(b <= c, S.false, And(Lt(a, b), Ge(a, c)))),
                      )
     return _matchers_and
 
@@ -3321,6 +3325,10 @@ def simplify_patterns_or():
                     (Tuple(Le(a, b), Lt(a, c)), ITE(b >= c, Le(a, b), Lt(a, c))),
                     (Tuple(Lt(a, b), Lt(a, c)), Lt(a, Max(b, c))),
 #                    (Tuple(Lt(b, a), Lt(c, a)), Lt(Max(b, c), a)),
+                    (Tuple(Le(a, b), Ge(a, c)), ITE(b >= c, S.true, Or(Le(a, b), Ge(a, c)))),
+                    (Tuple(Lt(a, b), Gt(a, c)), ITE(b > c, S.true, Or(Lt(a, b), Gt(a, c)))),
+                    (Tuple(Le(a, b), Gt(a, c)), ITE(b >= c, S.true, Or(Le(a, b), Gt(a, c)))),
+                    (Tuple(Lt(a, b), Ge(a, c)), ITE(b >= c, S.true, Or(Lt(a, b), Ge(a, c)))),
                     )
     return _matchers_or
 
