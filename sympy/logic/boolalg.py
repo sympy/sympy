@@ -3253,6 +3253,7 @@ def simplify_patterns_and():
                      (Tuple(Lt(a, b), Gt(a, c)), ITE(b < c, S.false, And(Lt(a, b), Gt(a, c)))),
                      (Tuple(Le(a, b), Gt(a, c)), ITE(b <= c, S.false, And(Le(a, b), Gt(a, c)))),
                      (Tuple(Lt(a, b), Ge(a, c)), ITE(b <= c, S.false, And(Lt(a, b), Ge(a, c)))),
+                     (Tuple(Eq(a, b), Eq(a, c)), ITE(Eq(b, c), Eq(a, b), S.false)),
                      )
     return _matchers_and
 

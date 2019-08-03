@@ -1117,6 +1117,11 @@ def test_issue_8373():
     assert Or(x <= 1, x >= 1).simplify() == S.true
 
 
+def test_issue_7950():
+    x = symbols('x', real=True)
+    assert And(Eq(x, 1), Eq(x, 2)).simplify() == S.false
+
+
 @slow
 def test_relational_simplification_numerically():
     def test_simplification_numerically_function(original, simplified):
