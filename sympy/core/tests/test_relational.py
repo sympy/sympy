@@ -1261,24 +1261,62 @@ def test_minmax_simplification():
     assert (Ne(Max(x, y, z), z)).simplify() == (z < Max(x, y))
 
 
-@slow
-def test_minmax_simplification_slow():
+def test_minmax_simplification_systematic_numerically():
     # Test min/max simplification systematically
     x, y = symbols('x y')
-    for v1 in [-2, -1, 0, 1, 2]:
-        for v2 in [-2, -1, 0, 1, 2]:
-            for rel in [Eq, Ne, Ge, Gt, Le, Lt]:
-                for minmax in [Min, Max]:
-                    f = rel(minmax(x, y), x)
-                    f2 = f.simplify()
+    var = [x, y]
+    valuelist = list(set(list(combinations(list(range(-2, 3))*3, 2))))
+    # Skip combinations of +/-2 and 0, except for all 0
+    valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
+    err = "{} and {} did not evalute to the same value for {}."
+    for rel in [Eq, Ne, Ge, Gt, Le, Lt]:
+        for minmax in [Min, Max]:
+            f = rel(minmax(x, y), x)
+            fs = f.simplify()
+            for val in valuelist:
+                f2 = fs
+                repl = dict(zip(var, val))
+                if isinstance(f2, Relational):
+                    f2 = f2.xreplace(repl)
+                assert f2 == f.xreplace(repl), err.format(f, fs, repl)
+            f = rel(x, minmax(y, x))
+            fs = f.simplify()
+            for val in valuelist:
+                f2 = fs
+                repl = dict(zip(var, val))
+                if isinstance(f2, Relational):
+                    f2 = f2.xreplace(repl)
+                assert f2 == f.xreplace(repl), err.format(f, fs, repl)
+
+
+@slow
+def test_minmax_simplification_systematic_numerically_slow():
+    # Test min/max simplification systematically with a constant involved
+    x, y = symbols('x y')
+    var = [x, y]
+    valuelist = list(set(list(combinations(list(range(-2, 3))*3, 2))))
+    err = "{} and {} did not evalute to the same value for {}."
+    # Skip combinations of +/-2 and 0, except for all 0
+    valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
+    for const in [-2, -1, 0, 1, 2]:
+        for rel in [Eq, Ne, Ge, Gt, Le, Lt]:
+            for minmax in [Min, Max]:
+                f = rel(minmax(x, y, const), x)
+                fs = f.simplify()
+                for val in valuelist:
+                    f2 = fs
+                    repl = dict(zip(var, val))
                     if isinstance(f2, Relational):
-                        f2 = f2.subs([(x, v1), (y, v2)])
-                    assert f2 == f.subs([(x, v1), (y, v2)])
-                    f = rel(x, minmax(y, x))
-                    f2 = f.simplify()
+                        f2 = f2.xreplace(repl)
+                    assert f2 == f.xreplace(repl), err.format(f, fs, repl)
+                f = rel(x, minmax(y, x, const))
+                fs = f.simplify()
+                for val in valuelist:
+                    f2 = fs
+                    repl = dict(zip(var, val))
                     if isinstance(f2, Relational):
-                        f2 = f2.subs([(x, v1), (y, v2)])
-                    assert f2 == f.subs([(x, v1), (y, v2)])
+                        f2 = f2.xreplace(repl)
+                    assert f2 == f.xreplace(repl), err.format(f, fs, repl)
 
 
 def test_issue_13605():

@@ -1212,18 +1212,14 @@ class StrictGreaterThan(_Greater):
                             else:
                                 enew = StrictGreaterThan(Max(*remaining), e.rhs)
                         else:
-                            if Min(*numberpart) <= e.rhs:
-                                enew = S.false
-                            else:
-                                enew = StrictGreaterThan(Min(*remaining), e.rhs)
+                            enew = S.false
                 else:
                     constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
                     if constantpart:
                         if e.lhs.func == Max:
-                            enew = S.true
+                            enew = StrictGreaterThan(Max(*remaining), e.rhs)
                         else:
-                            enew = GreaterThan(Min(*remaining), e.rhs)
-                            # e = GreaterThan(e.lhs._new_rawargs(*remaining), e.rhs).canonical
+                            enew = S.false
                 measure = kwargs['measure']
                 if measure(enew) <= kwargs['ratio']*measure(eundo):
                     eundo = enew.canonical

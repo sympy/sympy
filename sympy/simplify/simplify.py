@@ -586,11 +586,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     expr = sympify(expr, rational=rational)
     kwargs = dict(
-        ratio=kwargs.get('ratio', ratio),
-        measure=kwargs.get('measure', measure),
-        rational=kwargs.get('rational', rational),
-        inverse=kwargs.get('inverse', inverse),
-        doit=kwargs.get('doit', doit))
+        ratio=kwargs.pop('ratio', ratio),
+        measure=kwargs.pop('measure', measure),
+        rational=kwargs.pop('rational', rational),
+        inverse=kwargs.pop('inverse', inverse),
+        doit=kwargs.pop('doit', doit),
+        **kwargs)
     # no routine for Expr needs to check for is_zero
     if isinstance(expr, Expr) and expr.is_zero:
         return S.Zero
