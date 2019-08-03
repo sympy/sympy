@@ -19,11 +19,7 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy import lambdify
 from sympy.core.compatibility import iterable
 
-matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
 numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
-
-__doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
-
 
 class Beam(object):
     """
@@ -1529,29 +1525,26 @@ class Beam(object):
 
 
     def draw(self):
-        if matplotlib is None:
-            raise ImportError('Install matplotlib to use this method.')
-
-        if numpy is None:
-            raise ImportError('Install numpy to use this method.')
-
-
+        x = self.variable
         length = self.length
         height = 0.08
+        p = Plot()
+        backend = p.backend(p)
+        fig = backend.fig
+        ax = backend.ax
 
-        fig = matplotlib.pyplot.figure()
-        ax = fig.add_subplot(111, xbound=(0, 50), ybound=(0,1))
-        rect = matplotlib.patches.Rectangle((0, 0), length, height, facecolor="brown")
+        rect = backend.matplotlib.patches.Rectangle((0, 0), length, height, facecolor="brown")
         ax.add_patch(rect)
 
-        self._draw_load_arrows(ax)
-        self._draw_supports(ax)
-        matplotlib.pyplot.axis("off") # to turn off axis
+        self._draw_load_arrows(ax, backend)
+        self._draw_supports(ax, backend)
+
+        backend.plt.axis("off") # to turn off axis
         ax.set_ylim(-0.5, 0.5)
-        matplotlib.pyplot.show()
+        backend.plt.show()
+        return ax
 
-
-    def _draw_load_arrows(self, ax):
+    def _draw_load_arrows(self, ax, backend):
         loads = list(set(self.applied_loads) - set(self._support_as_loads))
         height = 0.08
         length = self.length
@@ -1562,6 +1555,7 @@ class Beam(object):
                     ax.annotate('', xy=(load[1], height), xytext=(load[1], height*3), arrowprops=dict(width= 1.5, headlength=5, headwidth=5, facecolor='black'))
                 else:
                     ax.annotate('', xy=(load[1], 0), xytext=(load[1], height - 4*height), arrowprops=dict(width= 1.5, headlength=5, headwidth=5, facecolor='black'))
+
             elif load[2] == -2:
                 if load[0].is_negative:
                     ax.plot([load[1]],[height/2], marker=r'$\circlearrowleft$', markersize=15)
@@ -1575,7 +1569,7 @@ class Beam(object):
                 n = int((end - start)/length/0.06)
                 x_pos = numpy.linspace(start, end, n)
 
-                line = matplotlib.lines.Line2D([x_pos[0], x_pos[-1]], [3*height, 3*height], color="black")
+                line = backend.matplotlib.lines.Line2D([x_pos[0], x_pos[-1]], [3*height, 3*height], color="black")
                 ax.add_line(line)
 
                 for i in range(0, n):
@@ -1589,16 +1583,18 @@ class Beam(object):
                 x_pos = numpy.linspace(start, end, n)
                 y_pos = numpy.linspace(height, height*3, n)
 
-                line = matplotlib.lines.Line2D([x_pos[0], x_pos[-1]], [y_pos[0], y_pos[-1]], color="black")
+                line = backend.matplotlib.lines.Line2D([x_pos[0], x_pos[-1]], [y_pos[0], y_pos[-1]], color="black")
                 ax.add_line(line)
 
                 for i in range(1, n):
                     ax.annotate('', xy=(x_pos[i], height), xytext=(x_pos[i], y_pos[i]), arrowprops=dict(width= 1.5, headlength=4, headwidth=4, facecolor='black'))
 
 
-    def _draw_supports(self, ax):
+    def _draw_supports(self, ax, backend):
         height = 0.08
+
         for support in self._applied_supports:
+            print(support[1])
             if support[1] == "pin":
                 ax.plot([support[0]], [0], marker=6, markersize=10, color="black")
 
@@ -1607,11 +1603,10 @@ class Beam(object):
 
             elif support[1] == "fixed":
                 if support[0] == 0:
-                    clamp = matplotlib.patches.Rectangle((0, -0.2), -self.length/30, 0.4 + height, fill=False, hatch='/////')
+                    clamp = backend.matplotlib.patches.Rectangle((0, -0.2), -self.length/30, 0.4 + height, fill=False, hatch='/////')
                 else:
-                    clamp = matplotlib.patches.Rectangle((self.length, -0.2), self.length/30, 0.4 + height, fill=False, hatch='/////')
+                    clamp = backend.matplotlib.patches.Rectangle((self.length, -0.2), self.length/30, 0.4 + height, fill=False, hatch='/////')
                 ax.add_patch(clamp)
-
 
 class Beam3D(Beam):
     """
