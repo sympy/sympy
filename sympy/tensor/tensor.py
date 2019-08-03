@@ -55,18 +55,6 @@ def deprecate_data():
     pass
 
 
-@deprecated(useinstead="TensorSymmetry constructor and methods", issue=17108,
-            deprecated_since_version="1.5")
-def deprecate_tensorsymmetry():
-    pass
-
-
-@deprecated(useinstead="TensorHead constructor or tensor_heads()", issue=17108,
-            deprecated_since_version="1.5")
-def deprecate_tensorhead():
-    pass
-
-
 @deprecated(useinstead="tensor_heads()", issue=17108,
             deprecated_since_version="1.5")
 def deprecate_TensorType():
@@ -1344,8 +1332,8 @@ class TensorSymmetry(Basic):
     @classmethod
     def fully_symmetric(cls, rank):
         """
-        Returns a fully symmetric (antisymmetric if `rank`<0)
-        TensorSymmetry object for `|rank|` indices.
+        Returns a fully symmetric (antisymmetric if ``rank``<0)
+        TensorSymmetry object for ``abs(rank)`` indices.
         """
         if rank > 0:
             bsgs = get_symmetric_group_sgs(rank, False)
@@ -1393,7 +1381,7 @@ class TensorSymmetry(Basic):
     @classmethod
     def no_symmetry(cls, rank):
         """
-        TensorSymmetry object for 'rank' indices with no symmetry
+        TensorSymmetry object for ``rank`` indices with no symmetry
         """
         return TensorSymmetry([], [Permutation(rank+1)])
 
@@ -1410,10 +1398,12 @@ class TensorSymmetry(Basic):
         return self.args[1][0].size - 2
 
 
+@deprecated(useinstead="TensorSymmetry class constructor and methods", issue=17108,
+            deprecated_since_version="1.5")
 def tensorsymmetry(*args):
     """
     Returns a ``TensorSymmetry`` object. This method is deprecated, use
-    TensorSymmetry.direct_product() or .riemann() instead.
+    ``TensorSymmetry.direct_product()`` or ``.riemann()`` instead.
 
     One can represent a tensor with any monoterm slot symmetry group
     using a BSGS.
@@ -1461,7 +1451,6 @@ def tensorsymmetry(*args):
                 raise NotImplementedError
         return bsgs
 
-    deprecate_tensorsymmetry()
     if not args:
         return TensorSymmetry(Tuple(), Tuple(Permutation(1)))
 
@@ -1533,6 +1522,8 @@ class TensorType(Basic):
             return [TensorHead(name, self.index_types, self.symmetry, comm) for name in names]
 
 
+@deprecated(useinstead="TensorHead class constructor or tensor_heads()",
+            issue=17108, deprecated_since_version="1.5")
 def tensorhead(name, typ, sym=None, comm=0):
     """
     Function generating tensorhead(s). This method is deprecated,
@@ -1550,7 +1541,6 @@ def tensorhead(name, typ, sym=None, comm=0):
     comm : commutation group number
     see ``_TensorManager.set_comm``
     """
-    deprecate_tensorhead()
     if sym is None:
         sym = [[1] for i in range(len(typ))]
     sym = tensorsymmetry(*sym)
