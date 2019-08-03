@@ -328,7 +328,7 @@ by going through an identical procedure. ::
   >> from sympy import symbols
   >> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, outer
   >> from sympy.physics.mechanics import RigidBody, Particle, mechanics_printing
-  >> from symp.physics.mechanics import kinetic_energy, potential_energy, Point
+  >> from sympy.physics.mechanics import kinetic_energy, potential_energy, Point
   >> mechanics_printing()
   >> m, M, l1, g, h, H = symbols('m M l1 g h H')
   >> omega = dynamicsymbols('omega')
