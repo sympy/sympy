@@ -590,8 +590,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         measure=kwargs.pop('measure', measure),
         rational=kwargs.pop('rational', rational),
         inverse=kwargs.pop('inverse', inverse),
-        doit=kwargs.pop('doit', doit),
-        **kwargs)
+        doit=kwargs.pop('doit', doit))
     # no routine for Expr needs to check for is_zero
     if isinstance(expr, Expr) and expr.is_zero:
         return S.Zero

@@ -1668,3 +1668,26 @@ def is_eq(lhs, rhs, assumptions=None):
             rv = False
         if rv is not None:
             return rv
+
+
+def expand_minmax(expr):
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.logic.boolalg import And, Or, BooleanFunction
+    if not expr.has(Min, Max) or not expr.has(Relational):
+        return expr
+    if expr.has(Eq, Ne):
+        expr = expr.simplify()
+    if isinstance(expr, (BooleanFunction)):
+        return expr.func(*[expand_minmax(e) for e in expr.args])
+    elif isinstance(expr, (Le, Lt, Ge, Gt)):
+        if isinstance(expr, (Le, Lt)):
+            expr = expr.reversed
+        if isinstance(expr.lhs, Min):
+            return expand_minmax(And(*[expr.func(a, expr.rhs) for a in expr.lhs.args]))
+        elif isinstance(expr.lhs, Max):
+            return expand_minmax(Or(*[expr.func(a, expr.rhs) for a in expr.lhs.args]))
+        elif isinstance(expr.rhs, Min):
+            return expand_minmax(Or(*[expr.func(expr.lhs, a) for a in expr.rhs.args]))
+        elif isinstance(expr.rhs, Max):
+            return expand_minmax(And(*[expr.func(expr.lhs, a) for a in expr.rhs.args]))
+    return expr
