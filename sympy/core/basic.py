@@ -1511,6 +1511,19 @@ class Basic(with_metaclass(ManagedProperties)):
         mapping = {}  # changes that took place
         mask = []  # the dummies that were used as change placeholders
 
+        def cloak(new):
+            from .expr import Expr
+            # return expr so it won't be recognized
+            if not isinstance(new, Basic):
+                return new
+            elif isinstance(new, Expr):
+                com = new.is_commutative
+                if com is None:
+                    com = True
+                return Dummy('rec_replace', commutative=com)
+            else:
+                return new.func(*[cloak(a) for a in new.args])
+
         def rec_replace(expr):
             result = _query(expr)
             if result or result == {}:
@@ -1518,11 +1531,8 @@ class Basic(with_metaclass(ManagedProperties)):
                 if new is not None and new != expr:
                     mapping[expr] = new
                     if simultaneous:
-                        # don't let this expression be changed during rebuilding
-                        com = getattr(new, 'is_commutative', True)
-                        if com is None:
-                            com = True
-                        d = Dummy(commutative=com)
+                        # don't let this object be changed during rebuilding
+                        d = cloak(new)
                         mask.append((d, new))
                         expr = d
                     else:
