@@ -2011,7 +2011,6 @@ def test_composite_assumptions():
     assert ask(Q.positive(x), Q.real(x) >> Q.positive(y)) is None
     assert ask(Q.real(x), ~(Q.real(x) >> Q.real(y))) is True
 
-
 def test_incompatible_resolutors():
     class Prime2AskHandler(AskHandler):
         @staticmethod
