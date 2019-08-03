@@ -791,9 +791,9 @@ class Polygon(GeometrySet):
         Parameters
         ==========
 
-        line: Line object pf geometry module
+        line: Line object of geometry module
             line which cuts the Polygon. The part of the Polygon that lies
-            above or below this line is returned.
+            above and below this line is returned.
 
         Returns
         =======
@@ -801,7 +801,7 @@ class Polygon(GeometrySet):
         upper_polygon, lower_polygon: Polygon objects or None
             upper_polygon is the polygon that lies above the given line.
             lower_polygon is the polygon that lies below the given line.
-            upper_polgon and lower polygon are ``None`` when no polygon
+            upper_polygon and lower polygon are ``None`` when no polygon
             exists above the line or below the line.
 
         References
@@ -850,8 +850,8 @@ class Polygon(GeometrySet):
         for point in points:
             # when coefficient of y is 0, right side of the line is
             # considered
-            compare = (eq.evalf(subs={x: point.x, y: point.y}))/b if b \
-                    else (eq.subs(x, point.x))/a
+            compare = eq.subs({x: point.x, y: point.y})/b if b \
+                    else eq.subs(x, point.x)/a
 
             # if point lies above line
             if compare > 0:

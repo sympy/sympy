@@ -551,7 +551,7 @@ def test_cut_section():
     t1, t2, t3, t4 = [(0, b), (0, 0), (a, 0), (a, b)]
     p = Polygon(t1, t2, t3, t4)
     p1, p2 = p.cut_section(Line((0, b), slope=0))
-    assert print(p1) == None
+    assert p1 == None
     assert p2 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
 
     p3, p4 = p.cut_section(Line((0, 0), slope=0))
