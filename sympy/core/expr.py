@@ -9,6 +9,7 @@ from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, range, Iterable
 from sympy.utilities.misc import func_name
 from mpmath.libmp import mpf_log, prec_to_dps
+
 from collections import defaultdict
 
 class Expr(Basic, EvalfMixin):
@@ -3047,11 +3048,10 @@ class Expr(Basic, EvalfMixin):
 
         om, exps = mrv(self, x)
 
-        """
-        We move one level up by replacing `x` by `exp(x)`, and then
-        computing the asymptotic series for f(exp(x)). Then asymptotic series
-        can be obtained by moving one-step back, by replacing x by ln(x).
-        """
+        # We move one level up by replacing `x` by `exp(x)`, and then
+        # computing the asymptotic series for f(exp(x)). Then asymptotic series
+        # can be obtained by moving one-step back, by replacing x by ln(x).
+
         if x in om:
             s = self.subs(x, exp(x)).aseries(x, n, bound, hir).subs(x, log(x))
             if s.getO():
@@ -3059,7 +3059,7 @@ class Expr(Basic, EvalfMixin):
             return s
 
         k = Dummy('k', positive=True)
-        """f is rewritten in terms of omega."""
+        # f is rewritten in terms of omega
         func, logw = rewrite(exps, om, x, k)
 
         if self in om:
@@ -3083,12 +3083,12 @@ class Expr(Basic, EvalfMixin):
         s = S.Zero
         has_ord = False
 
-        """Then we recursively expand these coefficients one by one into
-        their asymptotic series in terms of their most rapidly varying subexpressions."""
+        # Then we recursively expand these coefficients one by one into
+        # their asymptotic series in terms of their most rapidly varying subexpressions.
         for t in terms:
             coeff, expo = t.as_coeff_exponent(k)
             if coeff.has(x):
-                """Recursive step."""
+                # Recursive step
                 snew = coeff.aseries(x, n, bound=bound-1)
                 if has_ord and snew.getO():
                     break
