@@ -1254,11 +1254,15 @@ def test_weak_strict():
 
 
 def test_minmax_simplification():
-    x, y, z = symbols('x y z')
+    x, y, z = symbols('x y z', real=True)
     assert (Min(x, y, z) >= z).simplify() == (z <= Min(x, y))
     assert (Max(x, y, z) >= z).simplify() is S.true
     assert (Eq(Min(x, y, z), z)).simplify() == (z <= Min(x, y))
     assert (Ne(Max(x, y, z), z)).simplify() == (z < Max(x, y))
+    assert (Max(x, y, 2) >= 1).simplify() is S.true
+    assert (Max(x, y, 0) >= 1).simplify() == (Max(x, y) >= 1)
+    assert (Min(x, y, 0) >= 1).simplify() is S.false
+    assert (Min(x, y, 2) >= 1).simplify() == (Min(x, y) >= 1)
 
 
 def test_minmax_simplification_systematic_numerically():

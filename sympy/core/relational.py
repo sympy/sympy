@@ -639,32 +639,39 @@ class Equality(Relational):
             elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
                 minmax, constant = e.lhs, e.rhs
             if minmax:
+                # There is a Min or Max for one of the arguments
                 from sympy.utilities.iterables import sift
                 enew = None
                 if constant.is_number:
+                    # The other side is a number, get rid of any numbers in Min/Max
                     numberpart, remaining = sift(minmax.args, lambda x: x.is_number, binary=True)
                     if numberpart:
-                        f = minmax.func
-                        if minmax.func == Min:
+                        if isinstance(minmax, Min):
                             if Min(*numberpart) < constant:
+                                # Smallest number in Min is smaller than other side
                                 enew = S.false
                             elif constant in numberpart:
+                                # Constant is in the Min, rewrite
                                 enew = Le(constant, Min(*remaining))
                             else:
+                                # Remove all numbers
                                 enew = Eq(constant, Min(*remaining))
                         else:
                             if Max(*numberpart) > constant:
+                                # Largest number in Max is larger than other side
                                 enew = S.false
                             elif constant in numberpart:
+                                # Constant in the Max, rewrite
                                 enew = Ge(constant, Max(*remaining))
                             else:
+                                # Remove all numbers
                                 enew = Eq(constant, Max(*remaining))
                 else:
                     from sympy.utilities.iterables import sift
                     constantpart, remaining = sift(minmax.args, lambda x: x == constant, binary=True)
                     if constantpart:
-                        f = minmax.func
-                        if minmax.func == Min:
+                        # Constant in the Min/Max, rewrite
+                        if isinstance(minmax, Min):
                             enew = Le(constant, Min(*remaining))
                             # enew = Le(constant, minmax._new_rawargs(*remaining))
                         else:
@@ -1116,7 +1123,7 @@ class GreaterThan(_Greater):
                 if e.rhs.is_number:
                     numberpart, remaining = sift(e.lhs.args, lambda x: x.is_number, binary=True)
                     if numberpart:
-                        if e.lhs.func == Max:
+                        if isinstance(e.lhs, Max):
                             if Max(*numberpart) >= e.rhs:
                                 enew = S.true
                             else:
@@ -1129,7 +1136,7 @@ class GreaterThan(_Greater):
                 else:
                     constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
                     if constantpart:
-                        if e.lhs.func == Max:
+                        if isinstance(e.lhs, Max):
                             enew = S.true
                         else:
                             enew = GreaterThan(Min(*remaining), e.rhs)
@@ -1204,9 +1211,10 @@ class StrictGreaterThan(_Greater):
                 enew = e
             if enew is not None:
                 if e.rhs.is_number:
+                    # Other side is number, evaluate cases
                     numberpart, remaining = sift(e.lhs.args, lambda x: x.is_number, binary=True)
                     if numberpart:
-                        if e.lhs.func == Max:
+                        if isinstance(e.lhs, Max):
                             if Max(*numberpart) > e.rhs:
                                 enew = S.true
                             else:
@@ -1214,9 +1222,10 @@ class StrictGreaterThan(_Greater):
                         else:
                             enew = S.false
                 else:
+                    # Other part is Symbol/expression, evaluate cases
                     constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
                     if constantpart:
-                        if e.lhs.func == Max:
+                        if isinstance(e.lhs, Max):
                             enew = StrictGreaterThan(Max(*remaining), e.rhs)
                         else:
                             enew = S.false

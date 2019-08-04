@@ -865,3 +865,46 @@ class Min(MinMaxBase, Application):
 
     def _eval_is_negative(self):
         return fuzzy_or(a.is_negative for a in self.args)
+
+
+def expand_minmax(expr):
+    """
+    Function to rewrite expressions with Min and Max in relations, to try to
+    remove the Min and Max functions.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.elementary.miscellaneous import expand_minmax
+    >>> from sympy import symbols, Eq, Min, Max
+    >>> x, y, z = symbols('x y z')
+    >>> expand_minmax(Eq(x, Min(x, y, z)))
+    (y >= x) & (z >= x)
+    >>> expand_minmax(x <= Max(y, z))
+    (y >= x) | (z >= x)
+
+    """
+    from sympy.core.relational import Eq, Ne, Le, Lt, Ge, Gt, Relational
+    from sympy.logic.boolalg import And, Or, BooleanFunction
+    if not expr.has(Min, Max) or not expr.has(Relational):
+        return expr
+    if expr.has(Eq, Ne):
+        expr = expr.simplify()
+    if isinstance(expr, (BooleanFunction)):
+        return expr.func(*[expand_minmax(e) for e in expr.args])
+    elif isinstance(expr, (Le, Lt, Ge, Gt)):
+        if isinstance(expr, (Le, Lt)):
+            expr = expr.reversed
+        if isinstance(expr.lhs, Min):
+            return expand_minmax(And(*[expr.func(a, expr.rhs)
+                                       for a in expr.lhs.args]))
+        elif isinstance(expr.lhs, Max):
+            return expand_minmax(Or(*[expr.func(a, expr.rhs)
+                                      for a in expr.lhs.args]))
+        elif isinstance(expr.rhs, Min):
+            return expand_minmax(Or(*[expr.func(expr.lhs, a)
+                                      for a in expr.rhs.args]))
+        elif isinstance(expr.rhs, Max):
+            return expand_minmax(And(*[expr.func(expr.lhs, a)
+                                       for a in expr.rhs.args]))
+    return expr
