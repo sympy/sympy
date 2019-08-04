@@ -258,13 +258,13 @@ from sympy.matrices import wronskian, Matrix, eye, zeros
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm, roots)
 from sympy.polys.polyroots import roots_quartic
-from sympy.polys.polytools import cancel, degree, div
+from sympy.polys.polytools import cancel, degree, div, factor
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, posify, cse
 from sympy.simplify.powsimp import powdenest
-from sympy.simplify.radsimp import collect_const
+from sympy.simplify.radsimp import collect_const, fraction
 from sympy.solvers import solve
 from sympy.solvers.pde import pdsolve
 
@@ -632,6 +632,25 @@ def dsolve(eq, func=None, hint="default", simplify=True,
                 return [sol.subs(solved_constants) for sol in sols]
             return sols
     else:
+        if func is None and eq.has(Derivative):
+            eq, func = _preprocess(eq)
+
+        if isinstance(eq, Equality):
+            eq = eq.rhs-eq.lhs
+        eqs = factor(eq)
+        eqs = fraction(eqs)[0] # p/q = 0, So we need only p
+        if (isinstance(eqs, Mul) and eqs.has(func)) and eqs.has(Derivative):
+            fac = eqs.args
+            eqs = []
+            for i in fac:
+                if i.has(func) and i.has(Derivative):
+                    eqs.append(i)
+            if len(eqs) == 1:
+                return dsolve(eqs[0], func, hint, simplify,
+                       ics, xi, eta, x0, n, **kwargs)
+            else:
+                return [dsolve(eq, func, hint, simplify,
+                       ics, xi, eta, x0, n, **kwargs) for eq in eqs]
         given_hint = hint  # hint given by the user
 
         # See the docstring of _desolve for more details.
@@ -5765,6 +5784,8 @@ def ode_lie_group(eq, func, order, match):
 
     """
 
+    if not match:
+        match = {'xi': None, 'eta': None}
     heuristics = lie_heuristics
     inf = {}
     f = func.func
@@ -5783,6 +5804,8 @@ def ode_lie_group(eq, func, order, match):
             sol = solve(eq, df)
             if sol == []:
                 raise NotImplementedError
+            elif len(sol)>1:
+                return [ode_lie_group(Eq(df, i), func, order, match) for i in sol]
         except NotImplementedError:
             raise NotImplementedError("Unable to solve the differential equation " +
                 str(eq) + " by the lie group method")
@@ -5833,6 +5856,8 @@ def ode_lie_group(eq, func, order, match):
                 scoord = newcoord[-1]
                 try:
                     sol = solve([r - rcoord, s - scoord], x, y, dict=True)
+                    if sol == []:
+                        raise NotImplementedError
                 except NotImplementedError:
                     continue
                 else:
