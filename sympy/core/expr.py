@@ -2849,10 +2849,11 @@ class Expr(Basic, EvalfMixin):
             raise ValueError("Dir must be '+' or '-'")
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
-            s = self.aseries(x, n)
-            if x0 is S.NegativeInfinity:
-                return s.subs(x, -x)
-            return s
+            sgn = 1 if x0 is S.Infinity else -1
+            s = self.subs(x, sgn/x).series(x, n=n, dir='+')
+            if n is None:
+                return (si.subs(x, sgn/x) for si in s)
+            return s.subs(x, sgn/x)
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
