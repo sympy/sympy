@@ -299,7 +299,52 @@ def test_Range_set():
         assert r.step == -rev.step
 
     # test symbolic Range
-    # TODO: Write symbolic tests in a systematic manner
+    a, b, c = symbols('a, b, c', integer=True)
+    r = Range(a, b, c)
+    rrev = r.reversed
+    avs, bvs = ([0, 1, -1, 2, -2], )*2
+    cvs = [1, -1, 2, -2]
+    check = lambda rabc, rabcr: (rabcr.inf == rabc.inf and
+                                 rabcr.sup == rabc.sup and
+                                 rabcr.step == -rabc.step)
+    for av in avs:
+        for bv in bvs:
+            for cv in cvs:
+                rabc = r.subs({a: av, b: bv, c: cv})
+                rabcr = rrev.subs({a: av, b: bv, c: cv})
+                if not rabc:
+                    assert (not rabcr)
+                else:
+                    assert check(rabc, rabcr)
+    for bv in bvs:
+        for cv in cvs:
+            rabc = r.subs({b: bv, c: cv}).subs(a, oo)
+            rabcr = rrev.subs({b: bv, c: cv}).subs(a, oo)
+            if not rabc:
+                assert (not rabc)
+            else:
+                assert check(rabc, rabcr)
+            rabc = r.subs({b: bv, c: cv}).subs(a, -oo)
+            rabcr = rrev.subs({b: bv, c: cv}).subs(a, -oo)
+            if not rabc:
+                assert (not rabc)
+            else:
+                assert check(rabc, rabcr)
+    for av in avs:
+        for cv in cvs:
+            rabc = r.subs({a: av, c: cv}).subs(b, oo)
+            rabcr = rrev.subs({a: av, c: cv}).subs(b, oo)
+            if not rabc:
+                assert (not rabc)
+            else:
+                assert check(rabc, rabcr)
+            rabc = r.subs({a: av, c: cv}).subs(b, -oo)
+            rabcr = rrev.subs({a: av, c: cv}).subs(b, -oo)
+            if not rabc:
+                assert (not rabc)
+            else:
+                assert check(rabc, rabcr)
+
 
     assert Range(range(10)) == Range(10)
     assert Range(range(1, 10)) == Range(1, 10)

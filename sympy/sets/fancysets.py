@@ -535,7 +535,7 @@ class Range(Set):
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
         params = []
         for w in (start, stop, step):
-            if (w in [S.NegativeInfinity, S.Infinity]) or (sympify(w).is_integer == True):
+            if (w in [S.NegativeInfinity, S.Infinity]) or (sympify(w).is_integer != False):
                 params.append(sympify(w))
             else:
                 raise ValueError(filldedent('''
@@ -556,23 +556,20 @@ class Range(Set):
                 raise ValueError(filldedent('''
     Either the start or end value of the Range must be finite.'''))
 
-        if not step.is_Symbol:
-            if start.is_infinite:
-                if step*(stop - start) < 0:
-                    start = stop = S.One
-                else:
-                    end = stop
-            if not start.is_infinite:
-                ref = start if start.is_finite else stop
-                n = ceiling((stop - ref)/step)
-                if (n <= 0) == True:
-                    # null Range
-                    start = end = S.Zero
-                    step = S.One
-                else:
-                    end = ref + n*step
-        else:
-            end = stop
+        if start.is_infinite:
+            if Lt(step*(stop - start), 0) == True:
+                start = stop = S.One
+            else:
+                end = stop
+        if not start.is_infinite:
+            ref = start if start.is_finite else stop
+            n = ceiling((stop - ref)/step)
+            if (n <= 0) == True:
+                # null Range
+                start = end = S.Zero
+                step = S.One
+            else:
+                end = ref + n*step
 
         obj = Basic.__new__(cls, start, end, step)
         return obj
