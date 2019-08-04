@@ -567,8 +567,15 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # do deep simplification
     handled = Add, Mul, Pow, ExpBase
     expr = expr.replace(
-        lambda x: not isinstance(x, handled) and x.args,
-        lambda x: x.func(*[simplify(i, **kwargs) for i in x.args]))
+        # here, checking for x.args is not enough because Basic has
+        # args but Basic does not always play well with replace, e.g.
+        # when simultaneous is True found expressions will be masked
+        # off with a Dummy but not all Basic objects in an expression
+        # can be replaced with a Dummy
+        lambda x: isinstance(x, Expr) and x.args and not isinstance(
+            x, handled),
+        lambda x: x.func(*[simplify(i, **kwargs) for i in x.args]),
+        simultaneous=False)
     if not isinstance(expr, handled):
         return done(expr)
 
