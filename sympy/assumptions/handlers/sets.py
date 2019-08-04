@@ -7,7 +7,8 @@ from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy.core.numbers import pi
 from sympy.functions.elementary.exponential import exp, log
-from sympy import I
+from sympy.logic.boolalg import Boolean
+from sympy import I, Eq, conjugate, S
 
 
 class AskIntegerHandler(CommonHandler):
@@ -388,6 +389,18 @@ class AskHermitianHandler(AskRealHandler):
 
     cos, exp = [sin]*2
 
+    @staticmethod
+    def DenseMatrix(mat, assumptions):
+        ret_val = True
+        rows, cols = mat.shape
+        for i in range(rows):
+            for j in range(i, cols):
+                cond = Eq(mat[i, j], conjugate(mat[j, i]))
+                if cond not in (True, False, None):
+                    ret_val = ret_val & cond
+                if cond == False:
+                    return False
+        return ret_val
 
 class AskComplexHandler(CommonHandler):
     """

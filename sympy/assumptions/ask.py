@@ -1326,7 +1326,9 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
     if res is not None:
-        return bool(res)
+        if isinstance(res, BooleanAtom):
+            return bool(res)
+        return res
 
     # using satask (still costly)
     res = satask(proposition, assumptions=assumptions, context=context)
