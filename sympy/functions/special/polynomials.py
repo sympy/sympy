@@ -783,7 +783,7 @@ class legendre(OrthogonalPolynomial):
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * legendre(n, -x)
             # L_{-n}(x)  --->  L_{n-1}(x)
-            if n.could_extract_minus_sign() and not(-n - S.One).could_extract_minus_sign():
+            if n.could_extract_minus_sign() and not(-n - 1).could_extract_minus_sign():
                 return legendre(-n - S.One, x)
             # We can evaluate for some special values of x
             if x == S.Zero:
@@ -1094,8 +1094,8 @@ class laguerre(OrthogonalPolynomial):
             # Symbolic result L_n(x)
             # L_{n}(-x)  --->  exp(-x) * L_{-n-1}(x)
             # L_{-n}(x)  --->  exp(x) * L_{n-1}(-x)
-            if n.could_extract_minus_sign() and not(-n - S.One).could_extract_minus_sign():
-                return exp(x)*laguerre(-n - S.One, -x)
+            if n.could_extract_minus_sign() and not(-n - 1).could_extract_minus_sign():
+                return exp(x)*laguerre(-n - 1, -x)
             # We can evaluate for some special values of x
             if x == S.Zero:
                 return S.One

@@ -347,7 +347,7 @@ def test_laguerre():
     assert diff(laguerre(n, x), x) == -assoc_laguerre(n - 1, 1, x)
 
     k = Symbol('k')
-    assert laguerre(-n, x) == exp(x)*laguerre(n-1, -x)
+    assert laguerre(-n, x) == exp(x)*laguerre(n - 1, -x)
     assert laguerre(-3, x) == exp(x)*laguerre(2, -x)
     assert unchanged(laguerre, -n + k, x)
 
