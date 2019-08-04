@@ -337,3 +337,24 @@ code{
     border-radius: 3px;
     padding: 2px;
 }
+
+/*
+Temporary workaround for field list styles. Remove this after field list
+rendering problem is fixed in the upstream
+https://github.com/sphinx-doc/sphinx/issues/6604
+*/
+
+dl.field-list > dt {
+    width: 100px;
+    flex: inherit;
+    color: black;
+    padding: 1px 8px 1px 5px;
+    background-color: #EEDDEE;
+}
+
+dl.field-list > dd {
+    width: 600px;
+    margin: 1px 8px 1px 5px;
+    background-color: white;
+    padding: 0;
+}
