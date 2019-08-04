@@ -5,11 +5,13 @@ from sympy.tensor.array.sparse_ndim_array import SparseNDimArray
 from sympy.tensor.array.dense_ndim_array import DenseNDimArray
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import Iterable
+from sympy.core.numbers import Integer
+from sympy.core.compatibility import SYMPY_INTS
 
 import functools
 
 
-class SparseArrayFormat(SparseNDimArray, ImmutableNDimArray):
+class SparseArrayFormat(SparseNDimArray):
     """
     A base class for all sparse array formats. It is supposed to be Immutable.
     """
@@ -77,7 +79,7 @@ class LilSparseArray(SparseArrayFormat):
     1
     >>> sp_A_lil[0, 1] = 3
     >>> sp_A_lil.tolist()
-    [[1, 3, 0], [0, 2, 0], [0, 0, 3]]
+    [[1, 0, 0], [0, 2, 0], [0, 0, 3]]
     """
     def __new__(cls, iterable=None, shape=None, **kwargs):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
@@ -91,7 +93,7 @@ class LilSparseArray(SparseArrayFormat):
         data = cls._empty(shape)
         rows = cls._empty(shape)
 
-        self = Basic.__new__(cls, data, rows, shape, **kwargs)
+        self = object.__new__(cls)
         self._shape = shape
         self._rank = len(shape)
         self._loop_size = loop_size
@@ -185,6 +187,28 @@ class LilSparseArray(SparseArrayFormat):
             row_indices.append(index[-1])
 
     # TODO: convert to other formats
+    def tocsr(self):
+        _data = []
+        _col_ind = []
+        _row_ptr = []
+
+        def loop(data, rows):
+            if len(data) > 0 and not isinstance(data[0], (Integer, SYMPY_INTS)):
+                for i in range(len(data)):
+                    loop(data[i], rows[i])
+            elif len(data) == 0:
+                last_ptr = _row_ptr[-1] if len(_row_ptr) > 0 else 0
+                _row_ptr.append(last_ptr)
+            else:
+                _row_ptr.append(len(_data))
+                for j in range(len(data)):
+                    _data.append(data[j])
+                    _col_ind.append(rows[j])
+
+        loop(self._data, self._rows)
+        _row_ptr.append(self._loop_size + 1)
+
+        return CsrSparseArray((_data, _col_ind, _row_ptr), self._shape)
 
 
 class CooSparseArray(SparseArrayFormat):
@@ -221,7 +245,7 @@ class CooSparseArray(SparseArrayFormat):
         data = []
         coor = [[] for i in range(len(shape))]
 
-        self = Basic.__new__(cls, data, coor, shape, **kwargs)
+        self = object.__new__(cls)
         self._data = data
         self._coor = coor
         self._shape = shape
@@ -306,7 +330,7 @@ class CsrSparseArray(SparseArrayFormat):
 
     In this case, we have:
     >>> from sympy.tensor.array.sp_utils import CsrSparseArray
-    >>> A = [[1, 0, 0,], [0, 2, 0], [0, 0, 3]]
+    >>> A = [[1, 0, 0], [0, 2, 0], [0, 0, 3]]
     >>> sp_A_csr = CsrSparseArray(A)
     >>> sp_A_csr._data
     [1, 2, 3]
@@ -331,7 +355,7 @@ class CsrSparseArray(SparseArrayFormat):
         col_ind = []
         row_ptr = []
 
-        self = Basic.__new__(cls, data, col_ind, row_ptr, **kwargs)
+        self = object.__new__(cls)
         self._data = data
         self._col_ind = col_ind
         self._row_ptr = row_ptr
@@ -360,7 +384,7 @@ class CsrSparseArray(SparseArrayFormat):
                     self._row_ptr.append(i)
                     current_row += 1
                 elif row > current_row:
-                    last_value = self._row_ptr[-1]
+                    last_value = self._row_ptr[-1] if len(self._row_ptr)>0 else 0
                     self._row_ptr += [last_value for j in range(current_row, row)]
                     self._row_ptr.append(i)
                     current_row = row + 1

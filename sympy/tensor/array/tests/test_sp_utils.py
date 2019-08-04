@@ -22,6 +22,10 @@ def test_lil_format():
     B = LilSparseArray(([[1, 1], [1], [1, 1], [1]], [[0, 2], [3], [0, 3], [2]]), (4, 4))
     assert A.tolist() == B.tolist()
 
+    C = B.tocsr()
+    C.tolist() == CsrSparseArray(a).tolist()
+    
+
 def test_coo_format():
     A = CooSparseArray(a)
     assert A._data == [1, 1, 1, 1, 1, 1]
@@ -31,6 +35,7 @@ def test_coo_format():
 
     C = B.tocsr()
     C.tolist() == CsrSparseArray(a).tolist()
+
 
 def test_csr_format():
     A = CsrSparseArray(a)
