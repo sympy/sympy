@@ -297,6 +297,15 @@ def test_separatevars():
     eq = x*(1 + hyper((), (), y*z))
     assert separatevars(eq) == eq
 
+    s = separatevars(abs(x*y))
+    assert s == abs(x)*abs(y) and s.is_Mul
+    z = cos(1)**2 + sin(1)**2 - 1
+    a = abs(x*z)
+    s = separatevars(a)
+    assert not a.is_Mul and s.is_Mul and s == abs(x)*abs(z)
+    s = separatevars(abs(x*y*z))
+    assert s == abs(x)*abs(y)*abs(z)
+
 
 def test_separatevars_advanced_factor():
     x, y, z = symbols('x,y,z')
@@ -861,3 +870,9 @@ def test_simplify_kroneckerdelta():
                                      [0, K(0, n), 0, K(1, n)],
                                      [0, 0, K(0, n), 0],
                                      [0, 0, 0, K(0, n)]])
+
+
+def test_issue_17292():
+    assert simplify(abs(x)/abs(x**2)) == 1/abs(x)
+    # this is bigger than the issue: check that deep processing works
+    assert simplify(5*abs((x**2 - 1)/(x - 1))) == 5*Abs(x + 1)

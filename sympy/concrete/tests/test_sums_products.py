@@ -284,7 +284,7 @@ def test_geometric_sums():
     assert Sum(1.0**n, (n, 1, oo)).doit() == oo
     assert Sum(2.43**n, (n, 1, oo)).doit() == oo
 
-    # Issue 13979:
+    # Issue 13979
     i, k, q = symbols('i k q', integer=True)
     result = summation(
         exp(-2*I*pi*k*i/n) * exp(2*I*pi*q*i/n) / n, (i, 0, n - 1)

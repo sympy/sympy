@@ -446,6 +446,19 @@ def test_Abs():
     arg = sqrt(acos(1 - I)*acos(1 + I))
     assert abs(arg) == arg
 
+    # special handling to put Abs in denom
+    assert abs(1/x) == 1/Abs(x)
+    e = abs(2/x**2)
+    assert e.is_Mul and e == 2/Abs(x**2)
+    assert unchanged(Abs, y/x)
+    assert unchanged(Abs, x/(x + 1))
+    assert unchanged(Abs, x*y)
+    p = Symbol('p', positive=True)
+    assert abs(x/p) == abs(x)/p
+
+    # coverage
+    assert unchanged(Abs, Symbol('x', real=True)**y)
+
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)

@@ -1121,7 +1121,7 @@ def test_solve_ics():
         [Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)]
 
     K, r, f0 = symbols('K r f0')
-    sol = Eq(f(x), -K*f0*exp(r*x)/((K - f0)*(-f0*exp(r*x)/(K - f0) - 1)))
+    sol = Eq(f(x), K*f0*exp(r*x)/((-K + f0)*(f0*exp(r*x)/(-K + f0) - 1)))
     assert (dsolve(Eq(f(x).diff(x), r * f(x) * (1 - f(x) / K)), f(x), ics={f(0): f0})) == sol
 
 
@@ -1161,6 +1161,7 @@ def test_solve_ics():
         C2: 0,
         C3: L**2*q/(4*EI),
         C4: -L*q/(6*EI)}
+
 
 def test_ode_order():
     f = Function('f')
