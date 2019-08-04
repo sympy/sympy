@@ -519,6 +519,8 @@ def test_fps__product():
 
     fprod = f1.product(f2, x)
     assert isinstance(fprod, FormalPowerSeriesProduct)
+    assert isinstance(fprod.ffps, FormalPowerSeries)
+    assert isinstance(fprod.gfps, FormalPowerSeries)
     assert fprod.f == sin(x)
     assert fprod.g == exp(x)
     assert fprod.function == sin(x) * exp(x)
@@ -548,6 +550,8 @@ def test_fps__compose():
 
     fcomp = f1.compose(f2, x)
     assert isinstance(fcomp, FormalPowerSeriesCompose)
+    assert isinstance(fcomp.ffps, FormalPowerSeries)
+    assert isinstance(fcomp.gfps, FormalPowerSeries)
     assert fcomp.f == exp(x)
     assert fcomp.g == sin(x)
     assert fcomp.function == exp(sin(x))
@@ -578,6 +582,9 @@ def test_fps__inverse():
 
     finv = f2.inverse(x)
     assert isinstance(finv, FormalPowerSeriesInverse)
+    assert isinstance(finv.ffps, FormalPowerSeries)
+    raises(ValueError, lambda: finv.gfps)
+
     assert finv.f == exp(x)
     assert finv.function == exp(-x)
     assert finv._eval_terms(5) == 1 - x + x**2/2 - x**3/6 + x**4/24
