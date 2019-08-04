@@ -1162,6 +1162,7 @@ def test_solve_ics():
         C3: L**2*q/(4*EI),
         C4: -L*q/(6*EI)}
 
+
 def test_ode_order():
     f = Function('f')
     g = Function('g')

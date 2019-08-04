@@ -262,28 +262,24 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     """
-    try:
-        if a in sympy_classes:
-            return a
-    except TypeError: # Type of a is unhashable
-        pass
-    cls = getattr(a, "__class__", None)
-    if cls is None:
-        cls = type(a) # Probably an old-style class
-    if cls in sympy_classes:
+    is_sympy = getattr(a, '__sympy__', None)
+    if is_sympy is not None:
         return a
 
     if isinstance(a, CantSympify):
         raise SympifyError(a)
+    cls = getattr(a, "__class__", None)
+    if cls is None:
+        cls = type(a)  # Probably an old-style class
+    conv = converter.get(cls, None)
+    if conv is not None:
+        return conv(a)
 
-    try:
-        return converter[cls](a)
-    except KeyError:
-        for superclass in getmro(cls):
-            try:
-                return converter[superclass](a)
-            except KeyError:
-                continue
+    for superclass in getmro(cls):
+        try:
+            return converter[superclass](a)
+        except KeyError:
+            continue
 
     if cls is type(None):
         if strict:
