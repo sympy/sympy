@@ -2959,7 +2959,7 @@ def test_lie_group():
     assert checkodesol(eq, sol)[0]
 
     eq = diff(f(x),x) + f(x)*cos(x) - exp(2*x)
-    sol = Eq(f(x), exp(-sin(x))*(C1 + integrate(exp(2*x)*exp(sin(x)), x)))
+    sol = Eq(f(x), exp(-sin(x))*(C1 + Integral(exp(2*x)*exp(sin(x)), x)))
     assert sol == dsolve(eq, hint='lie_group')
     assert checkodesol(eq, sol)[0]
 
