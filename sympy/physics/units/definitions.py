@@ -321,6 +321,7 @@ year = years = tropical_year
 #### CONSTANTS ####
 
 # Newton constant
+# REF: NIST SP 959 (June 2019)
 G = gravitational_constant = Quantity("gravitational_constant", abbrev="G")
 gravitational_constant.set_dimension(length**3*mass**-1*time**-2)
 gravitational_constant.set_scale_factor(6.67430e-11*m**3/(kg*s**2))
@@ -330,26 +331,35 @@ c = speed_of_light = Quantity("speed_of_light", abbrev="c")
 speed_of_light.set_dimension(velocity)
 speed_of_light.set_scale_factor(299792458*meter/second)
 
+# elementary charge
+# REF: NIST SP 959 (June 2019)
+elementary_charge = Quantity("elementary_charge", abbrev="e")
+elementary_charge.set_dimension(charge)
+elementary_charge.set_scale_factor(1.602176634e-19*coulomb)
+
+# Planck constant
+# REF: NIST SP 959 (June 2019)
+planck = Quantity("planck", abbrev="h")
+planck.set_dimension(action)
+planck.set_scale_factor(6.62607015e-34*joule*second)
+
 # Reduced Planck constant
 # REF: NIST SP 959 (June 2019)
 hbar = Quantity("hbar", abbrev="hbar")
 hbar.set_dimension(action)
-hbar.set_scale_factor(1.054571817e-34*joule*second)
-
-# Planck constant
-planck = Quantity("planck", abbrev="h")
-planck.set_dimension(action)
-planck.set_scale_factor(2*pi*hbar)
+hbar.set_scale_factor(planck / (2 * pi))
 
 # Electronvolt
+# REF: NIST SP 959 (June 2019)
 eV = electronvolt = electronvolts = Quantity("electronvolt", abbrev="eV")
 electronvolt.set_dimension(energy)
 electronvolt.set_scale_factor(1.602176634e-19*joule)
 
 # Avogadro number
+# REF: NIST SP 959 (June 2019)
 avogadro_number = Quantity("avogadro_number")
 avogadro_number.set_dimension(One)
-avogadro_number.set_scale_factor(6.022140857e23)
+avogadro_number.set_scale_factor(6.02214076e23)
 
 # Avogadro constant
 avogadro = avogadro_constant = Quantity("avogadro_constant")
@@ -357,39 +367,43 @@ avogadro_constant.set_dimension(amount_of_substance**-1)
 avogadro_constant.set_scale_factor(avogadro_number / mol)
 
 # Boltzmann constant
+# REF: NIST SP 959 (June 2019)
 boltzmann = boltzmann_constant = Quantity("boltzmann_constant")
 boltzmann_constant.set_dimension(energy/temperature)
 boltzmann_constant.set_scale_factor(1.380649e-23*joule/kelvin)
 
 # Stefan-Boltzmann constant
+# REF: NIST SP 959 (June 2019)
 stefan = stefan_boltzmann_constant = Quantity("stefan_boltzmann_constant")
 stefan_boltzmann_constant.set_dimension(energy*time**-1*length**-2*temperature**-4)
-stefan_boltzmann_constant.set_scale_factor(5.670367e-8*joule/(s*m**2*kelvin**4))
+stefan_boltzmann_constant.set_scale_factor(pi**2 * boltzmann_constant**4 / (60 * hbar**3 * speed_of_light ** 2))
 
 # Atomic mass
+# REF: NIST SP 959 (June 2019)
 amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
 atomic_mass_constant.set_dimension(mass)
 atomic_mass_constant.set_scale_factor(1.66053906660e-24*gram)
 
 # Molar gas constant
+# REF: NIST SP 959 (June 2019)
 R = molar_gas_constant = Quantity("molar_gas_constant", abbrev="R")
 molar_gas_constant.set_dimension(energy/(temperature * amount_of_substance))
-molar_gas_constant.set_scale_factor(8.3144598*joule/kelvin/mol)
+molar_gas_constant.set_scale_factor(boltzmann_constant * avogadro_constant)
 
 # Faraday constant
 faraday_constant = Quantity("faraday_constant")
 faraday_constant.set_dimension(charge/amount_of_substance)
-faraday_constant.set_scale_factor(96485.33289*C/mol)
+faraday_constant.set_scale_factor(elementary_charge * avogadro_constant)
 
 # Josephson constant
 josephson_constant = Quantity("josephson_constant", abbrev="K_j")
 josephson_constant.set_dimension(frequency/voltage)
-josephson_constant.set_scale_factor(483597.8525e9*hertz/V)
+josephson_constant.set_scale_factor(0.5 * planck / elementary_charge)
 
 # Von Klitzing constant
 von_klitzing_constant = Quantity("von_klitzing_constant", abbrev="R_k")
 von_klitzing_constant.set_dimension(voltage/current)
-von_klitzing_constant.set_scale_factor(25812.8074555*ohm)
+von_klitzing_constant.set_scale_factor(hbar / elementary_charge ** 2)
 
 # Acceleration due to gravity (on the Earth surface)
 gee = gees = acceleration_due_to_gravity = Quantity("acceleration_due_to_gravity", abbrev="g")
