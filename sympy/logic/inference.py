@@ -77,7 +77,6 @@ def satisfiable(expr, algorithm="dpll2", all_models=False):
     UNSAT
 
     """
-    expr = to_cnf(expr)
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
         return dpll_satisfiable(expr)
