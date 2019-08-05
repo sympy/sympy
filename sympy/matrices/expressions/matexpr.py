@@ -1027,6 +1027,31 @@ class OneMatrix(MatrixExpr):
 
 
 class MatrixWild(MatrixSymbol, Wild):
+    """A wildcard for matrix expressions based on ``Wild``.
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> from sympy.matrices.expressions.matexpr import MatrixWild
+    >>> A, B = MatrixSymbol('A', 3, 3), MatrixSymbol('B', 3, 3)
+    >>> W = MatrixWild('W', 3, 3)
+    >>> (A*B).match(W)
+    {W_: A*B}
+    >>> (A*B).match(A*W)
+    {W_: B}
+    >>> (A**2).match(A*W)
+    {W_: A}
+
+    Note that ``W`` matched with ``A*B`` only because the expression had the
+    same shape as the matrix wildcard ``W``. If more flexibility is required, a
+    dimension of the matrix wildcard may itself be a wildcard.
+
+    >>> x = Wild('x')
+    >>> W = MatrixWild('W', x, 3)
+    >>> (A*B).match(W)
+    {x_: 3, W_: A*B}
+    """
 
     def __new__(cls, name, n, m, exclude=(), properties=()):
         obj = MatrixSymbol.__new__(cls, name, n, m)
