@@ -16,7 +16,7 @@ from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
-from sympy import lambdify
+from sympy import lambdify, Add
 from sympy.core.compatibility import iterable
 
 matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
@@ -1519,6 +1519,30 @@ class Beam(object):
                    line_color='r', show=False)
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
+
+
+    def draw(self):
+        x = self.variable
+        length = self.length
+        height = 1
+
+        y =Symbol('y')
+        # drawing a rectangle for beam
+        p1 = plot_implicit(y, (x, 0, length), (y, -1, length), show=False)
+        p2 = plot_implicit(x, (x, -1, length+1),(y, 0, height), show=False)
+        p3 = plot_implicit(x-length, (x, -1, length+1),(y, 0, height), show=False)
+        p4 = plot_implicit(y-height, (x, 0, length), (y, -length, length), show=False, axis=False)
+        p4.append(p3[0])
+        p4.append(p1[0])
+        p4.append(p2[0])
+
+        # drawing load (currently excluding moment and point loads)
+        l = [i for i in self.load.args if i.args[1].args[2]>=0]
+        l = Add(*l)
+        sing_plot = plot(height+l, show=False)
+        p4.append(sing_plot[0])
+
+        return p4
 
 
 class Beam3D(Beam):
