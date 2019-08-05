@@ -968,7 +968,6 @@ class Permutation(Atom):
         Permutation([2, 1, 3, 0])
 
         """
-        from sympy.core.containers import Tuple
         p = super(Permutation, cls).__new__(cls)
         p._array_form = perm
         p._size = len(perm)
