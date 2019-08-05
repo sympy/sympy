@@ -189,7 +189,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
-            if dif.is_integer and (dif < 0) == True:
+            if dif.is_integer and dif.is_negative:
                 a, b = b + 1, a - 1
                 f = -f
 
