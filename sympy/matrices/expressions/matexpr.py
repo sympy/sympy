@@ -230,7 +230,9 @@ class MatrixExpr(Expr):
     @classmethod
     def _check_dim(cls, dim):
         """Helper function to check invalid matrix dimensions"""
-        if dim.is_negative or dim.is_integer == False:
+        from sympy.solvers.solvers import check_assumptions
+        ok = check_assumptions(dim, integer=True, nonnegative=True)
+        if ok is False:
             raise ValueError(
                 "The dimension specification {} should be "
                 "a nonnegative integer.".format(dim))
