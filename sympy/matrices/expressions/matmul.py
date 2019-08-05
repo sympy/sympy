@@ -175,6 +175,27 @@ class MatMul(MatrixExpr, Mul):
         coeff_nc = [x for x in self.args if not x.is_commutative]
         return [coeff_c, coeff_nc]
 
+    # XXX: This is needed because MatPow doesn't inherit from Pow so powers
+    # aren't expanded to multiplications during matching. Maybe there's a
+    # better way to do this?
+    def matches(self, expr, repl_dict={}, old=False):
+        from sympy.core.basic import preorder_traversal
+
+        def flip_matpow_isPower(expr):
+            for e in preorder_traversal(expr):
+                if isinstance(e, MatPow):
+                    e.is_Pow = not e.is_Pow
+
+        flip_matpow_isPower(self)
+        flip_matpow_isPower(expr)
+
+        result = super(MatMul, self).matches(expr)
+
+        flip_matpow_isPower(self)
+        flip_matpow_isPower(expr)
+
+        return result
+
     def _eval_derivative_matrix_lines(self, x):
         from .transpose import Transpose
         with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
