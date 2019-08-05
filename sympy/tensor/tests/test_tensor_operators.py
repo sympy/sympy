@@ -1,5 +1,6 @@
 from sympy.tensor.toperators import PartialDerivative
-from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, \
+    tensor_heads
 from sympy import symbols, diag
 from sympy import Array
 
@@ -9,9 +10,9 @@ i, j, k = tensor_indices("i j k", L)
 i0 = tensor_indices("i0", L)
 L_0 = tensor_indices("L_0", L)
 
-A, B, C, D = tensorhead("A B C D", [L], [[1]])
+A, B, C, D = tensor_heads("A B C D", [L])
 
-H = tensorhead("H", [L, L], [[1], [1]])
+H = TensorHead("H", [L, L])
 
 
 def test_tensor_partial_deriv():
