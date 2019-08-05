@@ -1,6 +1,6 @@
 import itertools
 
-from sympy import S, Tuple, diff
+from sympy import S, Tuple, diff, Basic
 
 from sympy.core.compatibility import Iterable
 from sympy.tensor.array import ImmutableDenseNDimArray
@@ -298,7 +298,7 @@ def permutedims(expr, perm):
     return type(expr)(new_array, new_shape)
 
 
-class Flatten(object):
+class Flatten(Basic):
 
     def __init__(self, iterable):
         from sympy.matrices.matrices import MatrixBase
