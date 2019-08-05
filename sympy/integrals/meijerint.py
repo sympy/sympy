@@ -1681,7 +1681,7 @@ def _meijerint_indefinite_1(f, x):
         # The antiderivative is most often expected to be defined
         # in the neighborhood of  x = 0.
         place = 0
-        if b < 0 or f.subs(x, 0).has(nan, zoo):
+        if not b.is_extended_nonnegative or f.subs(x, 0).has(nan, zoo):
             place = None
         r = hyperexpand(r.subs(t, a*x**b), place=place)
 

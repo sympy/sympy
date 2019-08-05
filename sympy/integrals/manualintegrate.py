@@ -175,6 +175,8 @@ def find_substitutions(integrand, symbol, u_var):
     results = []
 
     def test_subterm(u, u_diff):
+        if u_diff == 0:
+            return False
         substituted = integrand / u_diff
         if symbol not in substituted.free_symbols:
             # replaced everything already
