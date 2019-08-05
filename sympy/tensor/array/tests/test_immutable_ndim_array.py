@@ -26,7 +26,7 @@ def test_ndim_array_initiation():
     assert arr_with_one_element[0] == 23
     assert arr_with_one_element[:] == ImmutableDenseNDimArray([23])
     assert arr_with_one_element.rank() == 1
-    
+
     arr_with_symbol_element = ImmutableDenseNDimArray([Symbol('x')])
     assert len(arr_with_symbol_element) == 1
     assert arr_with_symbol_element[0] == Symbol('x')

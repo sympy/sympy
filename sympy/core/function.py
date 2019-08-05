@@ -1246,7 +1246,7 @@ class Derivative(Expr):
         variable_count = []
         array_likes = (tuple, list, Tuple)
 
-        for i, v in enumerate(Flatten(variables)):
+        for i, v in enumerate(variables):
             if isinstance(v, Integer):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)

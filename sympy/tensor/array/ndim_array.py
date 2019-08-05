@@ -286,11 +286,12 @@ class NDimArray(object):
         [[0, 2], [4, 6]]
         """
         from sympy.tensor.array import SparseNDimArray
+        from sympy.tensor.array.arrayop import Flatten
 
         if isinstance(self, SparseNDimArray) and f(S.Zero) == 0:
             return type(self)({k: f(v) for k, v in self._sparse_array.items() if f(v) != 0}, self.shape)
 
-        return type(self)(map(f, self), self.shape)
+        return type(self)(map(f, Flatten(self)), self.shape)
 
     def __str__(self):
         """Returns string, allows to use standard functions print() and str().
