@@ -541,7 +541,7 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         from sympy.combinatorics import Permutation
         expr = _sympify(expr)
         permutation = Permutation(permutation)
-        plist = permutation.args[0]
+        plist = permutation.array_form
         if plist == sorted(plist):
             return expr
         obj = Basic.__new__(cls, expr, permutation)
@@ -1336,7 +1336,7 @@ def _recognize_matrix_expression(expr):
     elif isinstance(expr, (MatrixSymbol, IndexedBase)):
         return expr
     elif isinstance(expr, CodegenArrayPermuteDims):
-        if expr.permutation.args[0] == [1, 0]:
+        if expr.permutation.array_form == [1, 0]:
             return _RecognizeMatOp(Transpose, [_recognize_matrix_expression(expr.expr)])
         elif isinstance(expr.expr, CodegenArrayTensorProduct):
             ranks = expr.expr.subranks
