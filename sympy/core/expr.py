@@ -123,22 +123,22 @@ class Expr(Basic, EvalfMixin):
         try:
             other = sympify(other)
             if not isinstance(other, Expr):
-                return False
+                return S.false
         except (SympifyError, SyntaxError):
-            return False
+            return S.false
         # check for pure number expr
         if  not (self.is_Number and other.is_Number) and (
                 type(self) != type(other)):
-            return False
+            return S.false
         a, b = self._hashable_content(), other._hashable_content()
         if a != b:
-            return False
+            return S.false
         # check number *in* an expression
         for a, b in zip(a, b):
             if not isinstance(a, Expr):
                 continue
             if a.is_Number and type(a) != type(b):
-                return False
+                return S.false
         return True
 
     # ***************

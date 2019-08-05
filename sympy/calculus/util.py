@@ -1373,7 +1373,7 @@ class AccumulationBounds(AtomicExpr):
             if self.max < other.min:
                 return True
             if self.min >= other.max:
-                return False
+                return S.false
         elif not other.is_extended_real:
             raise TypeError(
                 "Invalid comparison of %s %s" %
@@ -1382,7 +1382,7 @@ class AccumulationBounds(AtomicExpr):
             if self.max < other:
                 return True
             if self.min >= other:
-                return False
+                return S.false
         return super(AccumulationBounds, self).__lt__(other)
 
     def __le__(self, other):
@@ -1410,7 +1410,7 @@ class AccumulationBounds(AtomicExpr):
             if self.max <= other.min:
                 return True
             if self.min > other.max:
-                return False
+                return S.false
         elif not other.is_extended_real:
             raise TypeError(
                 "Invalid comparison of %s %s" %
@@ -1419,7 +1419,7 @@ class AccumulationBounds(AtomicExpr):
             if self.max <= other:
                 return True
             if self.min > other:
-                return False
+                return S.false
         return super(AccumulationBounds, self).__le__(other)
 
     def __gt__(self, other):
@@ -1447,7 +1447,7 @@ class AccumulationBounds(AtomicExpr):
             if self.min > other.max:
                 return True
             if self.max <= other.min:
-                return False
+                return S.false
         elif not other.is_extended_real:
             raise TypeError(
                 "Invalid comparison of %s %s" %
@@ -1456,7 +1456,7 @@ class AccumulationBounds(AtomicExpr):
             if self.min > other:
                 return True
             if self.max <= other:
-                return False
+                return S.false
         return super(AccumulationBounds, self).__gt__(other)
 
     def __ge__(self, other):
@@ -1484,7 +1484,7 @@ class AccumulationBounds(AtomicExpr):
             if self.min >= other.max:
                 return True
             if self.max < other.min:
-                return False
+                return S.false
         elif not other.is_extended_real:
             raise TypeError(
                 "Invalid comparison of %s %s" %
@@ -1493,7 +1493,7 @@ class AccumulationBounds(AtomicExpr):
             if self.min >= other:
                 return True
             if self.max < other:
-                return False
+                return S.false
         return super(AccumulationBounds, self).__ge__(other)
 
     def __contains__(self, other):

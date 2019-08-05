@@ -1939,9 +1939,9 @@ class Lambda(Expr):
 
     def __eq__(self, other):
         if not isinstance(other, Lambda):
-            return False
+            return S.false
         if self.nargs != other.nargs:
-            return False
+            return S.false
 
         selfexpr = self.args[1]
         otherexpr = other.args[1]
@@ -2198,7 +2198,7 @@ class Subs(Expr):
 
     def __eq__(self, other):
         if not isinstance(other, Subs):
-            return False
+            return S.false
         return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):

@@ -336,9 +336,9 @@ class Basic(with_metaclass(ManagedProperties)):
             # types in Python 2 directly if they actually have __ne__.
             if PY3 or type(tself).__ne__ is not type.__ne__:
                 if tself != tother:
-                    return False
+                    return S.false
             elif tself is not tother:
-                return False
+                return S.false
 
         return self._hashable_content() == other._hashable_content()
 

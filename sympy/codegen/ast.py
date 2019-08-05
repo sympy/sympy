@@ -245,10 +245,10 @@ class Token(Basic):
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
-            return False
+            return S.false
         for attr in self.__slots__:
             if getattr(self, attr) != getattr(other, attr):
-                return False
+                return S.false
         return True
 
     def _hashable_content(self):

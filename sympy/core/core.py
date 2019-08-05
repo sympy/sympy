@@ -97,9 +97,9 @@ class BasicMeta(type):
     def __lt__(cls, other):
         if cls.__cmp__(other) == -1:
             return True
-        return False
+        return S.false
 
     def __gt__(cls, other):
         if cls.__cmp__(other) == 1:
             return True
-        return False
+        return S.false

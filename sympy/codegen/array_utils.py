@@ -1143,11 +1143,11 @@ class _RecognizeMatOp(object):
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
-            return False
+            return S.false
         if self.operator != other.operator:
-            return False
+            return S.false
         if self.args != other.args:
-            return False
+            return S.false
         return True
 
     def __iter__(self):
