@@ -658,7 +658,7 @@ class Range(Set):
     def __getitem__(self, i):
         from sympy.functions.elementary.integers import ceiling
         from sympy.functions.elementary.piecewise import Piecewise
-        ooslice = "cannot slice from the end with an infinite value"
+        ooslice = "cannot slice/iterate from the end with an infinite value"
         if isinstance(i, slice):
             if self.size.has(Symbol):
                 raise NotImplementedError("Cannot slice Range of symbolic sizes.")
@@ -707,6 +707,8 @@ class Range(Set):
             start, stop, step = self.start, self.stop, self.step
             rvstop, rvstart = (stop + i*step, start + i*step)
             rv = Piecewise((rvstop, Lt(i, 0)), (rvstart, True))
+            if rv.is_infinite == True:
+                raise ValueError(ooslice)
             bound = Or(And(Or(Lt(rvstop, self._inf), Gt(rvstop, self._sup)), Lt(i, 0)),
                   And(Or(Lt(rvstart, self._inf), Gt(rvstart, self._sup)), Ge(i, 0)))
             if bound == True:

@@ -226,40 +226,37 @@ def test_Range_set():
     assert Range(1, 10, 1)[-1] == 9
     assert Range(1, 10, 3)[-1] == 7
     raises(ValueError, lambda: Range(oo,0,-1)[1:3:0])
-    assert Range(oo,0,-1)[:1] == empty
-    assert Range(1, oo)[-2] == oo
-    assert Range(-oo, 1)[2] == -oo
+    raises(ValueError, lambda: Range(oo,0,-1)[:1])
+    raises(ValueError, lambda: Range(1, oo)[-2])
+    raises(ValueError, lambda: Range(-oo, 1)[2])
     raises(IndexError, lambda: Range(10)[-20])
     raises(IndexError, lambda: Range(10)[20])
     raises(ValueError, lambda: Range(2, -oo, -2)[2:2:0])
     assert Range(2, -oo, -2)[2:2:2] == empty
     assert Range(2, -oo, -2)[:2:2] == Range(2, -2, -4)
-    assert Range(-oo, 4, 2)[:2:2] == empty
+    raises(ValueError, lambda: Range(-oo, 4, 2)[:2:2])
     assert Range(-oo, 4, 2)[::-2] == Range(2, -oo, -4)
     assert Range(-oo, 4, 2)[::2] == Range(-oo, 4, 4)
     assert Range(oo, 2, -2)[::] == Range(oo, 2, -2)
-    # TODO: correct code for the following test
-    # assert Range(-oo, 4, 2)[:-2:-2] == Range(2, 0, -4)
+    assert Range(-oo, 4, 2)[:-2:-2] == Range(2, -2, -4)
     assert Range(-oo, 4, 2)[:-2:2] == Range(-oo, 0, 4)
     assert Range(-oo, 4, 2)[:0:-2] == Range(2, -oo, -4)
-    assert Range(-oo, 4, 2)[:2:-2] == Range(2, -oo, -4)
+    raises(ValueError, lambda: Range(-oo, 4, 2)[:2:-2])
     assert Range(-oo, 4, 2)[-2::-2] == Range(0, -oo, -4)
     assert Range(-oo, 4, 2)[-2:0:-2] == Range(0, -oo, -4)
     assert Range(-oo, 4, 2)[0::2] == Range(-oo, 4, 4)
     assert Range(oo, 2, -2)[0::] == Range(oo, 2, -2)
     assert Range(-oo, 4, 2)[0:-2:2] == Range(-oo, 0, 4)
     assert Range(oo, 2, -2)[0:-2:] == Range(oo, 6, -2)
-    assert Range(oo, 2, -2)[0:2:] == empty
-    assert Range(-oo, 4, 2)[2::-1] == empty
+    raises(ValueError, lambda: Range(oo, 2, -2)[0:2:])
+    raises(ValueError, lambda: Range(-oo, 4, 2)[2::-1])
     assert Range(-oo, 4, 2)[-2::2] == Range(0, 4, 4)
     assert Range(oo, 0, -2)[-10:0:2] == empty
-    # TODO: correct code for the following test
-    # raises(ValueError, lambda: Range(oo, 0, -2)[-10:10:2])
+    raises(ValueError, lambda: Range(oo, 0, -2)[-10:10:2])
     assert Range(oo, 0, -2)[0::-2] == empty
-    # TODO: correct code for the following test
-    # assert Range(oo, 0, -2)[0:-4:-2] == empty
+    assert Range(oo, 0, -2)[0:-4:-2] == empty
     assert Range(oo, 0, -2)[:0:2] == empty
-    assert Range(oo, 0, -2)[:1:-1] == Range(2, oo, 2)
+    raises(ValueError, lambda: Range(oo, 0, -2)[:1:-1])
 
     # test empty Range
     assert empty.reversed == empty
@@ -316,20 +313,6 @@ def test_Range_set():
                     assert (not rabcr)
                 else:
                     assert check(rabc, rabcr)
-    for bv in bvs:
-        for cv in cvs:
-            rabc = r.subs({b: bv, c: cv}).subs(a, oo)
-            rabcr = rrev.subs({b: bv, c: cv}).subs(a, oo)
-            if not rabc:
-                assert (not rabc)
-            else:
-                assert check(rabc, rabcr)
-            rabc = r.subs({b: bv, c: cv}).subs(a, -oo)
-            rabcr = rrev.subs({b: bv, c: cv}).subs(a, -oo)
-            if not rabc:
-                assert (not rabc)
-            else:
-                assert check(rabc, rabcr)
     for av in avs:
         for cv in cvs:
             rabc = r.subs({a: av, c: cv}).subs(b, oo)
@@ -344,7 +327,6 @@ def test_Range_set():
                 assert (not rabc)
             else:
                 assert check(rabc, rabcr)
-
 
     assert Range(range(10)) == Range(10)
     assert Range(range(1, 10)) == Range(1, 10)
