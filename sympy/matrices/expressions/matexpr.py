@@ -1048,9 +1048,9 @@ class MatrixWild(MatrixSymbol, Wild):
     dimension of the matrix wildcard may itself be a wildcard.
 
     >>> x = Wild('x')
-    >>> W = MatrixWild('W', x, 3)
-    >>> (A*B).match(W)
-    {x_: 3, W_: A*B}
+    >>> Y = MatrixWild('Y', x, 3)
+    >>> (A*B).match(Y)
+    {x_: 3, Y_: A*B}
     """
 
     def __new__(cls, name, n, m, exclude=(), properties=()):
