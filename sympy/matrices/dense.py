@@ -228,7 +228,7 @@ class DenseMatrix(MatrixBase):
                 for j,a,b in zip(range(self_cols), row_indices, col_indices):
                     c = mat[a]*other_mat[b]
                     _expand = expand and getattr(c, 'expand', None)
-                    vec[j] = _expand(power_exp=False, log=False, basic=False) if _expand else c
+                    vec[j] = _expand(power_exp=False, log=False, multinomial=False, basic=False) if _expand else c
 
                 try:
                     e = Add(*vec)
