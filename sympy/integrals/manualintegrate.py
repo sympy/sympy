@@ -733,7 +733,7 @@ def quadratic_denom_rule(integral):
     a = sympy.Wild('a', exclude=[symbol])
     b = sympy.Wild('b', exclude=[symbol])
     c = sympy.Wild('c', exclude=[symbol])
-    
+
     match = integrand.match(a / (b * symbol ** 2 + c))
 
     if match:
@@ -745,7 +745,7 @@ def quadratic_denom_rule(integral):
             ], integrand, symbol)
         else:
             return ArctanRule(a, b, c, integrand, symbol)
-    
+
     d = sympy.Wild('d', exclude=[symbol])
     match2 = integrand.match(a / (b * symbol ** 2 + c * symbol + d))
     if match2:
@@ -765,25 +765,25 @@ def quadratic_denom_rule(integral):
         numer1 =  (2*c*symbol+d)
         numer2 = - const*d + b
         u = sympy.Dummy('u')
-        step1 = URule(u, 
-                      denominator, 
-                      const, 
-                      integral_steps(u**(-1), u), 
-                      integrand, 
+        step1 = URule(u,
+                      denominator,
+                      const,
+                      integral_steps(u**(-1), u),
+                      integrand,
                       symbol)
         if const != 1:
-            step1 = ConstantTimesRule(const, 
-                                      numer1/denominator, 
-                                      step1, 
-                                      const*numer1/denominator, 
-                                      symbol)  
+            step1 = ConstantTimesRule(const,
+                                      numer1/denominator,
+                                      step1,
+                                      const*numer1/denominator,
+                                      symbol)
         if numer2.is_zero:
             return step1
         step2 = integral_steps(numer2/denominator, symbol)
         substeps = AddRule([step1, step2], integrand, symbol)
         rewriten = const*numer1/denominator+numer2/denominator
         return RewriteRule(rewriten, substeps, integrand, symbol)
-    
+
     return
 
 def root_mul_rule(integral):
