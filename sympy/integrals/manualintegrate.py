@@ -750,6 +750,8 @@ def quadratic_denom_rule(integral):
     match2 = integrand.match(a / (b * symbol ** 2 + c * symbol + d))
     if match2:
         b, c =  match2[b], match2[c]
+        if b.is_zero:
+            return
         u = sympy.Dummy('u')
         u_func = symbol + c/(2*b)
         integrand2 = integrand.subs(symbol, u - c / (2*b))
@@ -760,6 +762,8 @@ def quadratic_denom_rule(integral):
     match3 = integrand.match((a* symbol + b) / (c * symbol ** 2 + d * symbol + e))
     if match3:
         a, b, c, d, e = match3[a], match3[b], match3[c], match3[d], match3[e]
+        if c.is_zero:
+            return
         denominator = c * symbol**2 + d * symbol + e
         const =  a/(2*c)
         numer1 =  (2*c*symbol+d)
