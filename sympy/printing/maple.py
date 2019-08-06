@@ -12,6 +12,7 @@ from __future__ import print_function, division
 
 from sympy.codegen.ast import Assignment
 from sympy.core import S
+from sympy.core.basic import Atom
 from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -112,12 +113,12 @@ class MapleCodePrinter(CodePrinter):
         elif expr.exp == -0.5 or expr.exp == -S(1) / 2:
             return '1/sqrt(%s)' % self._print(expr.base)
         else:
-            return '%s^%s' % (
-                self.parenthesize(expr.base, PREC, strict=True),
-                self.parenthesize(expr.exp, PREC, strict=True))
+            return '{base}^{exp}'.format(
+                base=self.parenthesize(expr.base, PREC, strict=True),
+                exp=self.parenthesize(expr.exp, PREC, strict=True))
 
     def _print_Piecewise(self, expr):
-        if expr.args[-1].cond is not True:
+        if (expr.args[-1].cond is not True) and (expr.args[-1].cond != S.BooleanTrue):
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
             raise ValueError("All Piecewise expressions must contain an "
