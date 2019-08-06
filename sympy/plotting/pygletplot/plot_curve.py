@@ -28,10 +28,15 @@ class PlotCurve(PlotModeBase):
                 _e = evaluate(t)    # calculate vertex
             except (NameError, ZeroDivisionError):
                 _e = None
-            if _e is not None:      # update bounding box
-                for axis in range(3):
-                    b[axis][0] = min([b[axis][0], _e[axis]])
-                    b[axis][1] = max([b[axis][1], _e[axis]])
+            _e = S(_e)
+            if _e is not None:
+                if S.NaN in _e:
+                    _e = None
+                else:
+                    # update bounding box
+                    for axis in range(3):
+                        b[axis][0] = min([b[axis][0], _e[axis]])
+                        b[axis][1] = max([b[axis][1], _e[axis]])
             self.verts.append(_e)
             self._calculating_verts_pos += 1.0
 
