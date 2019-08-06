@@ -603,14 +603,16 @@ class MatrixExpr(Expr):
                 if not col_idx:
                     col_idx = Idx(next(generator), range=cols)
                 base = IndexedBase(expr.name)
-                return base[row_idx, col_idx]
+                return base[row_idx, col_idx], row_idx, col_idx
 
             elif isinstance(expr, MatMul):
                 result = []
                 args_c, args_nc = expr.args_cnc()
                 first_nc = args_nc.pop(0)
-                first_indexed = as_indexed_helper(first_nc, generator)
-                row_idx, col_idx = first_indexed.indices
+                first_indexed, row_idx, col_idx = as_indexed_helper(first_nc,
+                                                                      generator)
+                # Save for the return value
+                first_row_idx = row_idx
 
                 result.append(first_indexed)
 
@@ -618,11 +620,11 @@ class MatrixExpr(Expr):
                     row_idx = col_idx
                     cols = arg.shape[1]
                     col_idx = Idx(next(generator), range=cols)
-                    arg_indexed = as_indexed_helper(arg, generator, row_idx,
-                                                    col_idx)
+                    arg_indexed, _row, _col = as_indexed_helper(arg, generator,
+                                                                row_idx, col_idx)
                     result.append(arg_indexed)
 
-                return Mul.fromiter(args_c + result)
+                return Mul.fromiter(args_c + result), first_row_idx, col_idx
 
             elif isinstance(expr, MatAdd):
                 # TODO: DRY
@@ -634,18 +636,19 @@ class MatrixExpr(Expr):
 
                 result = []
                 for arg in expr.args:
-                    indexed = as_indexed_helper(arg, generator, row_idx,
-                                                col_idx)
+                    indexed, _row, _col = as_indexed_helper(arg, generator,
+                                                            row_idx, col_idx)
                     result.append(indexed)
 
-                return Add.fromiter(result)
+                return Add.fromiter(result), row_idx, col_idx
 
             else:
                 raise NotImplementedError
 
         names = [e.name for e in self.free_symbols]
         generator = varname_generator(names)
-        return as_indexed_helper(self, generator)
+        result, row, col = as_indexed_helper(self, generator)
+        return result
 
     def applyfunc(self, func):
         from .applyfunc import ElementwiseApplyFunction
