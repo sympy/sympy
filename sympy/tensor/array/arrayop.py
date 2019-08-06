@@ -299,17 +299,37 @@ def permutedims(expr, perm):
 
 
 class Flatten(Basic):
+    '''
+    Flatten an iterable object to a list in a lazy-evaluation way.
 
+    Notes
+    =====
+
+    This class is an iterator with which the memory cost can be economised.
+    Optimisation has been considered to ameliorate the performance for some
+    specific data types like DenseNDimArray and SparseNDimArray.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.array.arrayop import Flatten
+    >>> from sympy.tensor.array import Array
+    >>> A = Array(range(6)).reshape(2, 3)
+    >>> Flatten(A)
+    Flatten([[0, 1, 2], [3, 4, 5]])
+    >>> [*Flatten(A)]
+    [0, 1, 2, 3, 4, 5]
+    '''
     def __init__(self, iterable):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import NDimArray
 
         if not isinstance(iterable, (Iterable, MatrixBase)):
             raise NotImplementedError("Data type not yet supported")
-        if isinstance(iterable, list) and len(iterable)>0 and isinstance(iterable[0], NDimArray):
-            temp = []
-            for i in range(len(iterable)):
-                temp += iterable[0].tolist()
-            iterable = temp
+
+        if isinstance(iterable, list):
+            iterable = NDimArray(iterable)
+
         self._iter = iterable
         self._idx = 0
 
@@ -320,10 +340,7 @@ class Flatten(Basic):
         from sympy.matrices.matrices import MatrixBase
 
         try:
-            if isinstance(self._iter, list):
-                result = self._iter[self._idx]
-
-            elif isinstance(self._iter, DenseNDimArray):
+            if isinstance(self._iter, DenseNDimArray):
                 result = self._iter._array[self._idx]
 
             elif isinstance(self._iter, SparseNDimArray):
