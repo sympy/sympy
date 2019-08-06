@@ -733,19 +733,58 @@ def quadratic_denom_rule(integral):
     a = sympy.Wild('a', exclude=[symbol])
     b = sympy.Wild('b', exclude=[symbol])
     c = sympy.Wild('c', exclude=[symbol])
+    
     match = integrand.match(a / (b * symbol ** 2 + c))
 
-    if not match:
-        return
-
-    a, b, c = match[a], match[b], match[c]
-    if b.is_extended_real and c.is_extended_real:
-        return PiecewiseRule([(ArctanRule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
-                              (ArccothRule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
-                              (ArctanhRule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
-        ], integrand, symbol)
-    else:
-        return ArctanRule(a, b, c, integrand, symbol)
+    if match:
+        a, b, c = match[a], match[b], match[c]
+        if b.is_extended_real and c.is_extended_real:
+            return PiecewiseRule([(ArctanRule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
+                                (ArccothRule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+                                (ArctanhRule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+            ], integrand, symbol)
+        else:
+            return ArctanRule(a, b, c, integrand, symbol)
+    
+    d = sympy.Wild('d', exclude=[symbol])
+    match2 = integrand.match(a / (b * symbol ** 2 + c * symbol + d))
+    if match2:
+        b, c =  match2[b], match2[c]
+        u = sympy.Dummy('u')
+        u_func = symbol + c/(2*b)
+        integrand2 = integrand.subs(symbol, u - c / (2*b))
+        next_step = integral_steps(integrand2, u)
+        if next_step:
+            return URule(u, u_func, None, next_step, integrand2, symbol)
+    e = sympy.Wild('e', exclude=[symbol])
+    match3 = integrand.match((a* symbol + b) / (c * symbol ** 2 + d * symbol + e))
+    if match3:
+        a, b, c, d, e = match3[a], match3[b], match3[c], match3[d], match3[e]
+        denominator = c * symbol**2 + d * symbol + e
+        const =  a/(2*c)
+        numer1 =  (2*c*symbol+d)
+        numer2 = - const*d + b
+        u = sympy.Dummy('u')
+        step1 = URule(u, 
+                      denominator, 
+                      const, 
+                      integral_steps(u**(-1), u), 
+                      integrand, 
+                      symbol)
+        if const != 1:
+            step1 = ConstantTimesRule(const, 
+                                      numer1/denominator, 
+                                      step1, 
+                                      const*numer1/denominator, 
+                                      symbol)  
+        if numer2.is_zero:
+            return step1
+        step2 = integral_steps(numer2/denominator, symbol)
+        substeps = AddRule([step1, step2], integrand, symbol)
+        rewriten = const*numer1/denominator+numer2/denominator
+        return RewriteRule(rewriten, substeps, integrand, symbol)
+    
+    return
 
 def root_mul_rule(integral):
     integrand, symbol = integral
