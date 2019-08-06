@@ -349,6 +349,9 @@ def test_Range_set():
                 check = r.subs({a: av, c: cv}).subs(b, -oo)._contains(cont)
                 assert (scheck == check)
 
+    raises(ValueError, lambda : [i for i in iter(r)])
+    assert [i for i in iter(r.subs({a: d, b: d + 6, c: 1}))] == [d, d + 1, d + 2, d + 3, d + 4, d + 5]
+
     assert Range(range(10)) == Range(10)
     assert Range(range(1, 10)) == Range(1, 10)
     assert Range(range(1, 10, 2)) == Range(1, 10, 2)
