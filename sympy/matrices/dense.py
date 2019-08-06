@@ -17,6 +17,7 @@ from sympy.matrices.common import \
 from sympy.matrices.matrices import MatrixBase
 from sympy.polys import cancel
 from sympy.simplify import simplify as _simplify
+from sympy.simplify.fastalgsimp import fastalgsimp
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
@@ -226,13 +227,15 @@ class DenseMatrix(MatrixBase):
 
                 vec = [None]*self_cols
                 for j,a,b in zip(range(self_cols), row_indices, col_indices):
-                    c = mat[a]*other_mat[b]
-                    _expand = expand and getattr(c, 'expand', None)
-                    vec[j] = _expand(power_exp=False, log=False, multinomial=False, basic=False) if _expand else c
+                    # c = mat[a]*other_mat[b]
+                    # _expand = expand and getattr(c, 'expand', None)
+                    # vec[j] = _expand(power_exp=False, log=False, multinomial=False, basic=False) if _expand else c
+                    vec[j] = mat[a]*other_mat[b]
 
                 try:
                     e = Add(*vec)
-                    new_mat[i] = self._mulsimp(e) if simplify else e
+                    # new_mat[i] = self._mulsimp(e) if simplify else e
+                    new_mat[i] = fastalgsimp(e) # self._mulsimp(e) if simplify else e
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
