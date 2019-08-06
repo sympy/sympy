@@ -597,7 +597,7 @@ class MatrixExpr(Expr):
         def as_indexed_helper(expr, generator, row_idx=None, col_idx=None):
 
             if isinstance(expr, MatrixSymbol):
-                rows, cols = self.shape
+                rows, cols = expr.shape
                 if not row_idx:
                     row_idx = Idx(next(generator), range=rows)
                 if not col_idx:
@@ -626,7 +626,7 @@ class MatrixExpr(Expr):
 
             elif isinstance(expr, MatAdd):
                 # TODO: DRY
-                rows, cols = self.shape
+                rows, cols = expr.shape
                 if not row_idx:
                     row_idx = Idx(next(generator), range=rows)
                 if not col_idx:
