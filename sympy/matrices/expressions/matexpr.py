@@ -569,7 +569,7 @@ class MatrixExpr(Expr):
         else:
             return remove_matelement(retexpr, first_index, last_index)
 
-    def as_indexed(self):
+    def _eval_rewrite_as_Indexed(self, *args, **kwargs):
         from sympy import Idx, IndexedBase
 
         def nth_varname(n):
