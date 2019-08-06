@@ -296,7 +296,7 @@ def test_Range_set():
         assert r.step == -rev.step
 
     # test symbolic Range
-    a, b, c = symbols('a, b, c', integer=True)
+    a, b, c, d = symbols('a, b, c, d', integer=True)
     r = Range(a, b, c)
     rrev = r.reversed
     avs, bvs = ([0, 1, -1, 2, -2], )*2
@@ -327,6 +327,27 @@ def test_Range_set():
                 assert (not rabc)
             else:
                 assert check(rabc, rabcr)
+
+    avs, bvs = ([0, 1, -2], )*2
+    cvs = [1, -2]
+    conts = [0, 3, -10]
+    r = Range(a, b, c)
+    for av in avs:
+        for bv in bvs:
+            for cv in cvs:
+                for cont in conts:
+                    scheck = r._contains(d).subs({a: av, b: bv, c: cv, d: cont})
+                    check = r.subs({a: av, b: bv, c: cv})._contains(cont)
+                    assert (scheck == check)
+    for av in avs:
+        for cv in cvs:
+            for cont in conts:
+                scheck = r._contains(d).subs({a: av, c: cv, d: cont}).subs(b, oo)
+                check = r.subs({a: av, c: cv}).subs(b, oo)._contains(cont)
+                assert (scheck == check)
+                scheck = r._contains(d).subs({a: av, c: cv, d: cont}).subs(b, -oo)
+                check = r.subs({a: av, c: cv}).subs(b, -oo)._contains(cont)
+                assert (scheck == check)
 
     assert Range(range(10)) == Range(10)
     assert Range(range(1, 10)) == Range(1, 10)
