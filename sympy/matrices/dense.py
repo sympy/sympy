@@ -17,7 +17,6 @@ from sympy.matrices.common import \
 from sympy.matrices.matrices import MatrixBase
 from sympy.polys import cancel
 from sympy.simplify import simplify as _simplify
-from sympy.simplify.fastalgsimp import fastalgsimp
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
@@ -183,7 +182,7 @@ class DenseMatrix(MatrixBase):
 
         from sympy.core import Add, Mul, Pow, factor_terms
         from sympy.functions.elementary.exponential import ExpBase
-        from sympy.polys import together
+        from sympy.polys import together, factor
         from sympy.simplify.radsimp import radsimp, fraction, _mexpand
         from sympy.simplify.powsimp import powsimp
         from sympy.simplify.simplify import signsimp, bottom_up
@@ -204,6 +203,8 @@ class DenseMatrix(MatrixBase):
 
     def _eval_matrix_mul(self, other, expand=True, simplify=True):
         from sympy import Add
+        from sympy.simplify.fastalgsimp import fastalgsimp
+
         # cache attributes for faster access
         self_rows, self_cols = self.rows, self.cols
         other_rows, other_cols = other.rows, other.cols
@@ -227,15 +228,15 @@ class DenseMatrix(MatrixBase):
 
                 vec = [None]*self_cols
                 for j,a,b in zip(range(self_cols), row_indices, col_indices):
-                    # c = mat[a]*other_mat[b]
-                    # _expand = expand and getattr(c, 'expand', None)
-                    # vec[j] = _expand(power_exp=False, log=False, multinomial=False, basic=False) if _expand else c
                     vec[j] = mat[a]*other_mat[b]
 
                 try:
                     e = Add(*vec)
-                    # new_mat[i] = self._mulsimp(e) if simplify else e
-                    new_mat[i] = fastalgsimp(e) # self._mulsimp(e) if simplify else e
+                    try:
+                        # new_mat[i] = e.expand(power_exp=False, log=False, multinomial=False, basic=False)
+                        new_mat[i] = fastalgsimp(e)
+                    except NotImplementedError: # MatMul noncommutative scalars in MatMul are not supported.
+                        new_mat[i] = e
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
