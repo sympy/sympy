@@ -1060,6 +1060,8 @@ class MatrixWild(MatrixSymbol, Wild):
         return obj
 
     def matches(self, expr, repl_dict={}, old=False):
+        if not isinstance(expr, MatrixExpr):
+            return None
         if any(expr.has(x) for x in self.exclude):
             return None
         if any(not f(expr) for f in self.properties):
@@ -1071,6 +1073,10 @@ class MatrixWild(MatrixSymbol, Wild):
             matches = selfdim.matches(exprdim)
             if matches is not None:
                 for match in matches:
+                    # Make sure already existing matches are equal
+                    if (match in repl_dict and
+                            repl_dict[match] != matches[match]):
+                        return None
                     repl_dict[match] = matches[match]
             elif selfdim != exprdim:
                 return None
