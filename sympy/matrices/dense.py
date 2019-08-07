@@ -42,7 +42,6 @@ def _mulsimp(expr):
 
     from sympy.polys import cancel, together
     from sympy.simplify.simplify import count_ops
-    from sympy.utilities.iterables import has_variety
 
     exprops  = count_ops(expr)
     expr2    = together(expr, deep=True)
@@ -51,14 +50,12 @@ def _mulsimp(expr):
     if exprops < 6: # empirically tested cutoff for expensive simplification
         return expr if exprops <= expr2ops else expr2
 
-    expr3    = cancel(expr)
+    expr3    = cancel(expr) # this is the expensive part
     expr3ops = count_ops(expr3)
     expr4    = together(expr3, deep=True)
     expr4ops = count_ops(expr4)
 
-    expr5    = min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3), (expr4ops, expr4))[1]
-
-    return expr5
+    return min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3), (expr4ops, expr4))[1]
 
 
 class DenseMatrix(MatrixBase):
