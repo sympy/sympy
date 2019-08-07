@@ -124,15 +124,15 @@ def fastalgsimp(expr):
 
     expr     = expr.expand(power_exp=False, log=False, multinomial=False, basic=False)
     exprops  = count_ops(expr)
-    expr3    = together(expr, deep=True)
-    expr3ops = count_ops(expr3)
-
-    if exprops < 7:
-        return expr if exprops <= expr3ops else expr3
-
-    expr2    = cancel(expr)
+    expr2    = together(expr, deep=True)
     expr2ops = count_ops(expr2)
-    expr4    = together(expr2, deep=True)
+
+    if exprops < 6: # empirically tested cutoff for expensive simplification
+        return expr if exprops <= expr2ops else expr2
+
+    expr3    = cancel(expr)
+    expr3ops = count_ops(expr3)
+    expr4    = together(expr3, deep=True)
     expr4ops = count_ops(expr4)
 
     expr5    = min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3), (expr4ops, expr4)) [1]
