@@ -758,6 +758,8 @@ def quadratic_denom_rule(integral):
         next_step = integral_steps(integrand2, u)
         if next_step:
             return URule(u, u_func, None, next_step, integrand2, symbol)
+        else:
+            return
     e = sympy.Wild('e', exclude=[symbol])
     match3 = integrand.match((a* symbol + b) / (c * symbol ** 2 + d * symbol + e))
     if match3:
