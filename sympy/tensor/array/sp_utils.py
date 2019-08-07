@@ -77,7 +77,6 @@ class LilSparseArray(SparseArrayFormat):
     [[0], [1], [2]]
     >>> sp_A_lil[0, 0]
     1
-    >>> sp_A_lil[0, 1] = 3
     >>> sp_A_lil.tolist()
     [[1, 0, 0], [0, 2, 0], [0, 0, 3]]
     """
@@ -268,7 +267,6 @@ class CooSparseArray(SparseArrayFormat):
                 for i in range(len(shape)):
                     coor[i].append(idx[i])
 
-
         return self
 
     def __getitem__(self, index):
@@ -305,7 +303,6 @@ class CooSparseArray(SparseArrayFormat):
         row_ptr.append(len(self._data) + 1)
         return CsrSparseArray((self._data, self._coor[len(self._shape)-1], row_ptr),
                                self._shape)
-
 
 
 class CsrSparseArray(SparseArrayFormat):
