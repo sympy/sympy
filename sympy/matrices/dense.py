@@ -231,10 +231,11 @@ class DenseMatrix(MatrixBase):
                     vec[j] = mat[a]*other_mat[b]
                 try:
                     e = Add(*vec)
-                    try:
-                        new_mat[i] = _mulsimp(e)
-                    except:
-                        new_mat[i] = e
+                    new_mat[i] = _mulsimp(e)
+                    # try:
+                    #     new_mat[i] = _mulsimp(e)
+                    # except NotImplementedError:
+                    #     new_mat[i] = e
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
