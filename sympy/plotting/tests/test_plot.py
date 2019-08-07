@@ -504,3 +504,21 @@ def test_issue_15265():
 
     raises(ValueError,
         lambda: plot(eqn, xlim=(-1, 1), ylim=(-1, S.Infinity)))
+
+
+def test_empty_Plot():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    from sympy.plotting.plot import Plot
+    p = Plot()
+    # No exception showing an empty plot
+    p.show()
+
+
+def test_empty_plot():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    # No exception showing an empty plot
+    plot()
