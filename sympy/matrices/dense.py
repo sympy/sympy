@@ -37,6 +37,14 @@ def _compare_sequence(a, b):
     return tuple(a) == tuple(b)
 
 
+def _hasadd(expr):
+    if expr.is_Add:
+        return True
+
+    for arg in expr.args:
+        if _hasadd(arg):
+            return True
+
 def _mulsimp(expr):
     """'Fast' algebraic simplification to reduce matrix mul intermediate products."""
 
@@ -73,19 +81,30 @@ def _mulsimp(expr):
     from sympy.polys import cancel, together
     from sympy.simplify.simplify import count_ops
 
+    # if not _hasadd(expr):
+    #     return expr
+
     exprops  = count_ops(expr)
 
     if exprops < 6: # empirically tested cutoff for expensive simplification
         return expr
 
-    expr3    = cancel(expr) # this is the expensive part
-    expr3ops = count_ops(expr3)
-    expr2    = _mexpand(expr3).cancel()
-    expr2ops = count_ops(expr2)
-    expr4    = together(expr3, deep=True)
-    expr4ops = count_ops(expr4)
+    # if not _hasadd(expr):
+    #     expr2    = together(expr, deep=True)
+    #     expr2ops = count_ops(expr2)
 
-    return min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3), (expr4ops, expr4))[1]
+    #     return expr if exprops <= expr2ops else expr2
+
+    expr2    = cancel(expr) # this is the expensive part
+    expr2ops = count_ops(expr2)
+    expr3    = _mexpand(expr2).cancel()
+    expr3ops = count_ops(expr3)
+    expr4    = together(expr2, deep=True)
+    expr4ops = count_ops(expr4)
+    expr5    = together(expr3, deep=True)
+    expr5ops = count_ops(expr5)
+
+    return min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3), (expr4ops, expr5), (expr4ops, expr5))[1]
 
 
 class DenseMatrix(MatrixBase):
