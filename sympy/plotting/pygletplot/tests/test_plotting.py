@@ -3,9 +3,13 @@ from sympy.external.importtools import import_module
 disabled = False
 
 # if pyglet.gl fails to import, e.g. opengl is missing, we disable the tests
-pyglet_gl = import_module("pyglet.gl", catch=(OSError,))
-pyglet_window = import_module("pyglet.window", catch=(OSError,))
-if not pyglet_gl or not pyglet_window:
+pyglet = import_module("pyglet", catch=(OSError,))
+if pyglet:
+    pyglet_gl = import_module("pyglet.gl", catch=(OSError, pyglet.canvas.xlib.NoSuchDisplayException))
+    pyglet_window = import_module("pyglet.window", catch=(OSError, pyglet.canvas.xlib.NoSuchDisplayException))
+    if not pyglet_gl or not pyglet_window:
+        disabled = True
+else:
     disabled = True
 
 
