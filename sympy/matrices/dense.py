@@ -101,10 +101,8 @@ def _mulsimp(expr):
     expr3ops = count_ops(expr3)
     expr4    = together(expr2, deep=True)
     expr4ops = count_ops(expr4)
-    expr5    = together(expr3, deep=True)
-    expr5ops = count_ops(expr5)
 
-    return min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3), (expr4ops, expr5), (expr4ops, expr5))[1]
+    return min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3), (expr4ops, expr4))[1]
 
 
 class DenseMatrix(MatrixBase):
