@@ -58,10 +58,21 @@ def _mulsimp(expr):
 
     expr2    = cancel(expr) # this is the expensive part
     expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
+
     expr3    = together(expr2, deep=True)
     expr3ops = count_ops(expr3)
 
-    return min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3))[1]
+    if expr3ops < exprops:
+        expr    = expr3
+        exprops = expr3ops
+
+    return expr
+
+    # return min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3))[1]
 
 
     # expr4ops, expr4 = min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3))
