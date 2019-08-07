@@ -52,20 +52,18 @@ def _mulsimp(expr):
 
     expr2    = cancel(expr) # this is the expensive part
     expr2ops = count_ops(expr2)
-    # expr3    = _mexpand(expr2).cancel()
-    # expr3ops = count_ops(expr3)
-    expr4    = together(expr2, deep=True)
-    expr4ops = count_ops(expr4)
+    expr3    = together(expr2, deep=True)
+    expr3ops = count_ops(expr3)
 
-    return min ((exprops, expr), (expr2ops, expr2), (expr4ops, expr4))[1]
+    return min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3))[1]
 
     # ret = min ((exprops, expr, 1), (expr2ops, expr2, 2), (expr3ops, expr3, 3), (expr4ops, expr4, 4))
-    # ret = min ((exprops, expr, 1), (expr2ops, expr2, 2), (expr4ops, expr4, 4))
+    # ret = min ((exprops, expr, 1), (expr2ops, expr2, 2), (expr3ops, expr3, 3))
 
     # _DONE.add (ret [2])
-    # print (_DONE)
+    # print (ret [2], '-', _DONE)
 
-    return ret [1]
+    # return ret [1]
 
 
 class DenseMatrix(MatrixBase):
@@ -236,7 +234,7 @@ class DenseMatrix(MatrixBase):
                 for j,a,b in zip(range(self_cols), row_indices, col_indices):
                     c = mat[a]*other_mat[b]
                     _expand = getattr(c, 'expand', None)
-                    vec[j] = _expand(power_exp=False, log=False, multinomial=False, basic=False) if _expand else c
+                    vec[j] = _expand(power_base=False, power_exp=False, log=False, multinomial=False, basic=False) if _expand else c
                 try:
                     e = Add(*vec)
                     new_mat[i] = _mulsimp(e)
