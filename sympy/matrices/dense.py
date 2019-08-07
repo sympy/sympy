@@ -63,13 +63,18 @@ def _mulsimp(expr):
 
     return min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3))[1]
 
-    # ret = min ((exprops, expr, 1), (expr2ops, expr2, 2), (expr3ops, expr3, 3), (expr4ops, expr4, 4))
-    # ret = min ((exprops, expr, 1), (expr2ops, expr2, 2), (expr3ops, expr3, 3))
 
-    # _DONE.add (ret [2])
-    # print (ret [2], '-', _DONE)
+    # expr4ops, expr4 = min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3))
 
-    # return ret [1]
+    # expr5    = expr4.expand(power_base=False, power_exp=False, log=False, multinomial=False, basic=False)
+    # expr5ops = count_ops(expr5)
+
+    # return expr4 if expr4ops <= expr5ops else expr5
+
+
+    # expr4 = expr4.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
+
+    # return expr4
 
 
 class DenseMatrix(MatrixBase):
