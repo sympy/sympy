@@ -514,12 +514,17 @@ class Range(Set):
 
     _basic_version = 2
 
+    def __new__(cls, *args):
+        if len(args) == 1:
+            if isinstance(args[0], Range):
+                return args[0]
+            if isinstance(args[0], range):
+                return S(args[0])
+        return Basic.__new__(cls, *args)
+
     @classmethod
     def _eval_validate(cls, *args):
         from sympy.functions.elementary.integers import ceiling
-        if len(args) == 1:
-            if isinstance(args[0], range):
-                args = args[0].__reduce__()[1]  # use pickle method
 
         # expand range
         slc = slice(*args)
@@ -809,9 +814,9 @@ class Range(Set):
 
 
 if PY3:
-    converter[range] = Range
+    converter[range] = lambda r: Range(*r.__reduce__()[1])
 else:
-    converter[xrange] = Range
+    converter[xrange] = lambda r: Range(*r.__reduce__()[1])
 
 def normalize_theta_set(theta):
     """
