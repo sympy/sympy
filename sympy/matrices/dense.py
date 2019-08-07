@@ -60,10 +60,10 @@ def _mulsimp(expr):
     # expr  = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
 
 
-    from sympy.core import Mul
+    # from sympy.core import Mul
     from sympy.simplify.radsimp import _mexpand
-    from sympy.simplify.powsimp import powsimp
-    from sympy.simplify.simplify import bottom_up
+    # from sympy.simplify.powsimp import powsimp
+    # from sympy.simplify.simplify import bottom_up
 
     # expr  = bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
     # expr  = Mul(*powsimp(expr).as_content_primitive())
@@ -75,20 +75,13 @@ def _mulsimp(expr):
 
     exprops  = count_ops(expr)
 
-    if exprops < 6:
+    if exprops < 6: # empirically tested cutoff for expensive simplification
         return expr
-    # expr2    = together(expr, deep=True)
-    # expr2ops = count_ops(expr2)
-
-    # if exprops < 6: # empirically tested cutoff for expensive simplification
-    #     return expr if exprops <= expr2ops else expr2
 
     expr3    = cancel(expr) # this is the expensive part
     expr3ops = count_ops(expr3)
-
     expr2    = _mexpand(expr3).cancel()
     expr2ops = count_ops(expr2)
-
     expr4    = together(expr3, deep=True)
     expr4ops = count_ops(expr4)
 
