@@ -17,17 +17,18 @@ and the Diffie-Hellman key exchange.
 from __future__ import print_function
 
 from string import whitespace, ascii_uppercase as uppercase, printable
+from functools import reduce
 
 from sympy import nextprime
 from sympy.core import Rational, Symbol
 from sympy.core.numbers import igcdex, mod_inverse
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
-from sympy.ntheory import isprime, primitive_root
+from sympy.ntheory import isprime, primitive_root, totient, factorint
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import uniq, multiset
 from sympy.utilities.randtest import _randrange, _randint
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -1384,7 +1385,49 @@ def bifid6_square(key=None):
 #################### RSA  #############################
 
 
-def rsa_public_key(p, q, e):
+def _rsa_key(*args, public=True, private=True):
+    """A private subroutine to generate RSA key
+
+    Parameters
+    ==========
+
+    public, private : bool, optional
+        Flag to generate either a public key, a private key, or both.
+    """
+    if len(args) < 2:
+        return False
+
+    primes, e = args[:-1], args[-1]
+
+    if all(isprime(p) for p in primes):
+        n = reduce(lambda i, j: i*j, primes)
+
+        tally = multiset(primes)
+        if all(v == 1 for v in tally.values()):
+            phi = reduce(lambda i, j: i * (j-1), primes, 1)
+        else:
+            phi = totient(n)
+
+        if gcd(e, phi) == 1:
+            if public and not private:
+                return n, e
+
+            if private:
+                d = mod_inverse(e, phi)
+                if not public:
+                    return n, d
+                return n, e, d
+
+        return False
+
+    new_primes = []
+    for i in primes:
+        new_primes.extend(factorint(i, multiple=True))
+
+    return rsa_public_key(*new_primes, e)
+
+
+def rsa_public_key(*args):
     r"""
     Return the RSA *public key* pair, `(n, e)`, where `n`
     is a product of two primes and `e` is relatively
@@ -1414,23 +1457,10 @@ def rsa_public_key(p, q, e):
     .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
 
     """
-    n = p*q
-    if isprime(p) and isprime(q):
-        if p == q:
-            SymPyDeprecationWarning(
-                feature="Using non-distinct primes for rsa_public_key",
-                useinstead="distinct primes",
-                issue=16162,
-                deprecated_since_version="1.4").warn()
-            phi = p * (p - 1)
-        else:
-            phi = (p - 1) * (q - 1)
-        if gcd(e, phi) == 1:
-            return n, e
-    return False
+    return _rsa_key(*args, public=True, private=False)
 
 
-def rsa_private_key(p, q, e):
+def rsa_private_key(*args):
     r"""
     Return the RSA *private key*, `(n,d)`, where `n`
     is a product of two primes and `d` is the inverse of
@@ -1448,21 +1478,7 @@ def rsa_private_key(p, q, e):
     False
 
     """
-    n = p*q
-    if isprime(p) and isprime(q):
-        if p == q:
-            SymPyDeprecationWarning(
-                feature="Using non-distinct primes for rsa_public_key",
-                useinstead="distinct primes",
-                issue=16162,
-                deprecated_since_version="1.4").warn()
-            phi = p * (p - 1)
-        else:
-            phi = (p - 1) * (q - 1)
-        if gcd(e, phi) == 1:
-            d = mod_inverse(e, phi)
-            return n, d
-    return False
+    return _rsa_key(*args, public=False, private=True)
 
 
 def encipher_rsa(i, key):
