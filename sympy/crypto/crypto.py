@@ -1619,15 +1619,20 @@ def encipher_rsa(i, key):
 
     Examples
     ========
-    *Public Key Encryption*
-    >>> from sympy.crypto.crypto import encipher_rsa, rsa_public_key
+
+    >>> from sympy.crypto.crypto import encipher_rsa
+    >>> from sympy.crypto.crypto import rsa_public_key, rsa_private_key
+
+    Public Key Encryption:
+
     >>> p, q, e = 3, 5, 7
     >>> puk = rsa_public_key(p, q, e)
     >>> msg = 12
     >>> encipher_rsa(msg, puk)
     3
-    *Private Key Encryption*
-    >>> from sympy.crypto.crypto import encipher_rsa, rsa_private_key
+
+    Private Key Encryption:
+
     >>> p, q, e = 3, 5, 7
     >>> prk = rsa_private_key(p, q, e)
     >>> msg = 12
@@ -1646,7 +1651,12 @@ def decipher_rsa(i, key):
 
     Examples
     ========
-    >>> from sympy.crypto.crypto import decipher_rsa, rsa_private_key
+
+    >>> from sympy.crypto.crypto import decipher_rsa, encipher_rsa
+    >>> from sympy.crypto.crypto import rsa_public_key, rsa_private_key
+
+    Public Key Encryption and Decryption:
+
     >>> p, q, e = 3, 5, 7
     >>> prk = rsa_private_key(p, q, e)
     >>> puk = rsa_public_key(p, q, e)
@@ -1656,6 +1666,19 @@ def decipher_rsa(i, key):
     3
     >>> decipher_rsa(new_msg, puk)
     12
+
+    Private Key Encryption and Decryption:
+
+    >>> p, q, e = 3, 5, 7
+    >>> prk = rsa_private_key(p, q, e)
+    >>> puk = rsa_public_key(p, q, e)
+    >>> msg = 12
+    >>> new_msg = encipher_rsa(msg, puk)
+    >>> new_msg
+    3
+    >>> decipher_rsa(new_msg, prk)
+    12
+
     """
     n, d = key
     return pow(i, d, n)
