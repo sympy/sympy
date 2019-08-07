@@ -3552,11 +3552,11 @@ def ode_Bernoulli(eq, func, order, match):
     ... hint='separable_Integral'))
      f(x)
        /
-      |                /
-      |  1            |
-      |  - dy = C1 +  | (-P(x) + Q(x)) dx
-      |  y            |
-      |              /
+      |                   /
+      |  -1              |
+      |  --- dy = C1 +   | (P(x) - Q(x)) dx
+      |   y              |
+      |                 /
      /
 
 
@@ -4195,7 +4195,7 @@ def ode_nth_algebraic(eq, func, order, match):
     >>> eq = Eq(f(x) * (f(x).diff(x)**2 - 1), 0)
     >>> dsolve(eq, f(x), hint='nth_algebraic')
     ... # doctest: +NORMALIZE_WHITESPACE
-    [Eq(f(x), 0), Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
+    [Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
 
     Note that this solver can return algebraic solutions that do not have any
     integration constants (f(x) = 0 in the above example).
@@ -5618,13 +5618,13 @@ def ode_separable(eq, func, order, match):
                      dx
         >>> pprint(dsolve(genform, f(x), hint='separable_Integral'))
              f(x)
-           /                  /
-          |                  |
-          |  b(y)            | c(x)
-          |  ---- dy = C1 +  | ---- dx
-          |  d(y)            | a(x)
-          |                  |
-         /                  /
+           /                     /
+          |                     |
+          |  -b(y)              | -c(x)
+          |  ------ dy = C1 +   | ------ dx
+          |   d(y)              |  a(x)
+          |                     |
+         /                     /
 
     Examples
     ========
@@ -5634,10 +5634,10 @@ def ode_separable(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
     ... hint='separable', simplify=False))
-       /   2       \         2
-    log\3*f (x) - 1/        x
-    ---------------- = C1 + --
-           6                2
+        /   2       \          2
+    -log\3*f (x) - 1/         x
+    ------------------ = C1 - --
+           6                  2
 
     References
     ==========
