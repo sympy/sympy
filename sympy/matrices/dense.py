@@ -48,57 +48,18 @@ def _hasadd(expr):
 def _mulsimp(expr):
     """'Fast' algebraic simplification to reduce matrix mul intermediate products."""
 
-    # from sympy.core import Add, Mul, Pow, factor_terms
-    # from sympy.functions.elementary.exponential import ExpBase
-    # from sympy.polys import together, factor
-    # from sympy.simplify.radsimp import radsimp, fraction, _mexpand
-    # from sympy.simplify.powsimp import powsimp
-    # from sympy.simplify.simplify import signsimp, bottom_up
-    # from sympy.utilities.iterables import has_variety
-
-    # def shorter(*choices):
-    #     return choices[0] if not has_variety(choices) else min(choices, key=count_ops)
-
-    # expr  = bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
-    # expr  = Mul(*powsimp(expr).as_content_primitive())
-    # _e    = cancel(expr)
-    # expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
-    # expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
-    # expr  = shorter(expr2, expr1, expr)
-    # expr  = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
-
-
-    # from sympy.core import Mul
-    from sympy.simplify.radsimp import _mexpand
-    # from sympy.simplify.powsimp import powsimp
-    # from sympy.simplify.simplify import bottom_up
-
-    # expr  = bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
-    # expr  = Mul(*powsimp(expr).as_content_primitive())
-
-
-
     from sympy.polys import cancel, together
+    from sympy.simplify.radsimp import _mexpand
     from sympy.simplify.simplify import count_ops
-
-    # if not _hasadd(expr):
-    #     return expr
 
     exprops  = count_ops(expr)
 
     if exprops < 6: # empirically tested cutoff for expensive simplification
         return expr
 
-    # if not _hasadd(expr):
-    #     expr2    = together(expr, deep=True)
-    #     expr2ops = count_ops(expr2)
-
-    #     return expr if exprops <= expr2ops else expr2
-
     expr2    = cancel(expr) # this is the expensive part
     expr2ops = count_ops(expr2)
-    # expr3    = _mexpand(expr2).cancel()
-    expr3    = expr2.expand(power_exp=False, log=False, multinomial=True, basic=False).cancel()
+    expr3    = _mexpand(expr2).cancel()
     expr3ops = count_ops(expr3)
     expr4    = together(expr2, deep=True)
     expr4ops = count_ops(expr4)
