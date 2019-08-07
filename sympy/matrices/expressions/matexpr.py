@@ -1047,6 +1047,7 @@ class MatrixWild(MatrixSymbol, Wild):
     same shape as the matrix wildcard ``W``. If more flexibility is required, a
     dimension of the matrix wildcard may itself be a wildcard.
 
+    >>> from sympy.core.symbol import Wild
     >>> x = Wild('x')
     >>> Y = MatrixWild('Y', x, 3)
     >>> (A*B).match(Y)
