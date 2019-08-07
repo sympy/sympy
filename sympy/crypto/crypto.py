@@ -18,6 +18,7 @@ from __future__ import print_function
 
 from string import whitespace, ascii_uppercase as uppercase, printable
 from functools import reduce
+import warnings
 
 from sympy import nextprime
 from sympy.core import Rational, Symbol
@@ -30,7 +31,18 @@ from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 from sympy.utilities.randtest import _randrange, _randint
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+
+class NonInvertibleCipherWarning(RuntimeWarning):
+    """A warning raised if the cipher is not invertible."""
+    def __init__(self, msg):
+        self.fullMessage = msg
+
+    def __str__(self):
+        return '\n\t' + self.fullMessage
+
+    def warn(self, stacklevel=2):
+        warnings.warn(self, stacklevel=stacklevel)
 
 
 def AZ(s=None):
@@ -1406,6 +1418,10 @@ def _rsa_key(*args, public=True, private=True):
         if all(v == 1 for v in tally.values()):
             phi = reduce(lambda i, j: i * (j-1), primes, 1)
         else:
+            NonInvertibleCipherWarning(
+                'Non-distinctive primes found in the factors of {}.'
+                'The cipher may not be decryptable for some numbers.'
+                .format(primes)).warn()
             phi = totient(n)
 
         if gcd(e, phi) == 1:

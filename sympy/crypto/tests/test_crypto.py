@@ -15,12 +15,12 @@ from sympy.crypto.crypto import (cycle_list,
       decipher_bifid, bifid_square, padded_key, uniq, decipher_gm,
       encipher_gm, gm_public_key, gm_private_key, encipher_bg, decipher_bg,
       bg_private_key, bg_public_key, encipher_rot13, decipher_rot13,
-      encipher_atbash, decipher_atbash)
+      encipher_atbash, decipher_atbash, NonInvertibleCipherWarning)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
-from sympy.utilities.pytest import raises, slow, warns_deprecated_sympy
+from sympy.utilities.pytest import raises, slow, warns
 
 from random import randrange
 
@@ -161,20 +161,20 @@ def test_bifid6_square():
 def test_rsa_public_key():
     assert rsa_public_key(2, 3, 1) == (6, 1)
     assert rsa_public_key(5, 3, 3) == (15, 3)
-    assert rsa_public_key(8, 8, 8) is False
 
-    with warns_deprecated_sympy():
+    with warns(NonInvertibleCipherWarning):
         assert rsa_public_key(2, 2, 1) == (4, 1)
+        assert rsa_public_key(8, 8, 8) is False
 
 
 def test_rsa_private_key():
     assert rsa_private_key(2, 3, 1) == (6, 1)
     assert rsa_private_key(5, 3, 3) == (15, 3)
     assert rsa_private_key(23,29,5) == (667,493)
-    assert rsa_private_key(8, 8, 8) is False
 
-    with warns_deprecated_sympy():
+    with warns(NonInvertibleCipherWarning):
         assert rsa_private_key(2, 2, 1) == (4, 1)
+        assert rsa_private_key(8, 8, 8) is False
 
 
 def test_rsa_large_key():
@@ -198,7 +198,7 @@ def test_encipher_rsa():
     puk = rsa_public_key(5, 3, 3)
     assert encipher_rsa(2, puk) == 8
 
-    with warns_deprecated_sympy():
+    with warns(NonInvertibleCipherWarning):
         puk = rsa_public_key(2, 2, 1)
         assert encipher_rsa(2, puk) == 2
 
@@ -209,7 +209,7 @@ def test_decipher_rsa():
     prk = rsa_private_key(5, 3, 3)
     assert decipher_rsa(8, prk) == 2
 
-    with warns_deprecated_sympy():
+    with warns(NonInvertibleCipherWarning):
         prk = rsa_private_key(2, 2, 1)
         assert decipher_rsa(2, prk) == 2
 
