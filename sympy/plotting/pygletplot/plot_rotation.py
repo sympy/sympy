@@ -48,7 +48,7 @@ def get_sphere_mapping(x, y, width, height):
 rad2deg = 180.0 / 3.141592
 
 
-@deprecated(useinstead="get_spherical_rotatation", deprecated_since_version="1.5")
+@deprecated(useinstead="get_spherical_rotation", deprecated_since_version="1.5")
 def get_spherical_rotatation(p1, p2, width, height, theta_multiplier):
     return get_spherical_rotation(p1, p2, width, height, theta_multiplier)
 
