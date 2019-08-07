@@ -44,7 +44,7 @@ def _mulsimp(expr):
     from sympy.simplify.simplify import count_ops
     from sympy.utilities.iterables import has_variety
 
-    expr     = expr.expand(power_exp=False, log=False, multinomial=False, basic=False)
+    # expr     = expr.expand(power_exp=False, log=False, multinomial=False, basic=False)
     exprops  = count_ops(expr)
     expr2    = together(expr, deep=True)
     expr2ops = count_ops(expr2)
@@ -229,13 +229,13 @@ class DenseMatrix(MatrixBase):
                 vec = [None]*self_cols
                 for j,a,b in zip(range(self_cols), row_indices, col_indices):
                     vec[j] = mat[a]*other_mat[b]
+                    # vec[j] = (mat[a]*other_mat[b]).expand(power_exp=False, log=False, multinomial=False, basic=False)
+                    c = mat[a]*other_mat[b]
+                    _expand = getattr(c, 'expand', None)
+                    vec[j] = _expand(power_exp=False, log=False, multinomial=False, basic=False) if _expand else c
                 try:
                     e = Add(*vec)
                     new_mat[i] = _mulsimp(e)
-                    # try:
-                    #     new_mat[i] = _mulsimp(e)
-                    # except NotImplementedError:
-                    #     new_mat[i] = e
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
