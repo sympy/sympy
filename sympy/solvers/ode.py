@@ -636,21 +636,43 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             eq, func = _preprocess(eq)
 
         if isinstance(eq, Equality):
-            eq = eq.rhs-eq.lhs
+            eq = eq.lhs-eq.rhs
         eqs = factor(eq)
         eqs = fraction(eqs)[0] # p/q = 0, So we need only p
-        if (isinstance(eqs, Mul) and eqs.has(func)) and eqs.has(Derivative):
+        if (isinstance(eqs, Mul) and eqs.has(func)):
             fac = eqs.args
-            eqs = []
+            eqs_diff = []
+            eqs_algebraic = []
             for i in fac:
                 if i.has(func) and i.has(Derivative):
-                    eqs.append(i)
-            if len(eqs) == 1:
-                return dsolve(eqs[0], func, hint, simplify,
-                       ics, xi, eta, x0, n, **kwargs)
+                    eqs_diff.append(i)
+                elif i.has(func):
+                    eqs_algebraic.append(i)
+            sols = []
+            for eq_alg in eqs_algebraic:
+                try:
+                    sol = solve(eq_alg, func)
+                    if sol == []:
+                        continue
+                    for i in sol:
+                        sols.append(Eq(func, i))
+                except NotImplementedError:
+                    continue
+
+            sols = sols + [dsolve(eq, func, hint, simplify, ics, xi, eta, x0, n, **kwargs)
+                           for eq in eqs_diff]
+
+            sols = _nth_algebraic_remove_redundant_solutions(eq, sols, ode_order(eq, func), func.args[0])
+            if len(sols)==1:
+                return sols[0]
             else:
-                return [dsolve(eq, func, hint, simplify,
-                       ics, xi, eta, x0, n, **kwargs) for eq in eqs]
+                return sols
+        elif isinstance(eqs, Pow):
+            eqs_args = eqs.args # if f(x)**p=0 then f(x)=0 (p>0)
+            if eqs_args[1]>0:
+                eq = eqs_args[0]
+                dsolve(eq, func, hint, simplify, ics, xi, eta, x0, n, **kwargs)
+
         given_hint = hint  # hint given by the user
 
         # See the docstring of _desolve for more details.
@@ -3552,11 +3574,11 @@ def ode_Bernoulli(eq, func, order, match):
     ... hint='separable_Integral'))
      f(x)
        /
-      |                   /
-      |  -1              |
-      |  --- dy = C1 +   | (P(x) - Q(x)) dx
-      |   y              |
-      |                 /
+      |                /
+      |  1            |
+      |  - dy = C1 +  | (-P(x) + Q(x)) dx
+      |  y            |
+      |              /
      /
 
 
@@ -4195,7 +4217,7 @@ def ode_nth_algebraic(eq, func, order, match):
     >>> eq = Eq(f(x) * (f(x).diff(x)**2 - 1), 0)
     >>> dsolve(eq, f(x), hint='nth_algebraic')
     ... # doctest: +NORMALIZE_WHITESPACE
-    [Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
+    [Eq(f(x), 0), Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
 
     Note that this solver can return algebraic solutions that do not have any
     integration constants (f(x) = 0 in the above example).
@@ -5618,13 +5640,13 @@ def ode_separable(eq, func, order, match):
                      dx
         >>> pprint(dsolve(genform, f(x), hint='separable_Integral'))
              f(x)
-           /                     /
-          |                     |
-          |  -b(y)              | -c(x)
-          |  ------ dy = C1 +   | ------ dx
-          |   d(y)              |  a(x)
-          |                     |
-         /                     /
+           /                  /
+          |                  |
+          |  b(y)            | c(x)
+          |  ---- dy = C1 +  | ---- dx
+          |  d(y)            | a(x)
+          |                  |
+         /                  /
 
     Examples
     ========
@@ -5634,10 +5656,10 @@ def ode_separable(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
     ... hint='separable', simplify=False))
-        /   2       \          2
-    -log\3*f (x) - 1/         x
-    ------------------ = C1 - --
-           6                  2
+       /   2       \         2
+    log\3*f (x) - 1/        x
+    ---------------- = C1 + --
+           6                2
 
     References
     ==========

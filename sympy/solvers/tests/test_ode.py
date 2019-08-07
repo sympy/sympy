@@ -1121,7 +1121,7 @@ def test_solve_ics():
         set([Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)])
 
     K, r, f0 = symbols('K r f0')
-    sol = Eq(f(x), K/(1 - (-K + f0)*exp(-r*x)/f0))
+    sol = sol = Eq(f(x), K*f0*exp(r*x)/((-K + f0)*(f0*exp(r*x)/(-K + f0) - 1)))
     assert (dsolve(Eq(f(x).diff(x), r * f(x) * (1 - f(x) / K)), f(x), ics={f(0): f0})) == sol
 
 
@@ -2573,7 +2573,7 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
 
 def test_issue_5095():
     f = Function('f')
-    raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'separable'))
+    #raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'separable'))
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
 
 
@@ -3298,21 +3298,21 @@ def test_nth_algebraic():
     eqn = f(x) * f(x).diff(x) * f(x).diff(x, x)
     sol = Eq(f(x), C1 + C2*x)
     assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
-    #assert set(sol) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
-    #assert set(sol) == set(dsolve(eqn, f(x)))
+    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
 
     eqn = f(x) * f(x).diff(x) * f(x).diff(x, x) * (f(x) - 1)
     sol = Eq(f(x), C1 + C2*x)
     assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
-    #assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
-    #assert sol == dsolve(eqn, f(x))
+    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
 
     eqn = f(x) * f(x).diff(x) * f(x).diff(x, x) * (f(x) - 1) * (f(x).diff(x) - x)
     solns = [Eq(f(x), C1 + x**2/2), Eq(f(x), C1 + C2*x)]
     assert checkodesol(eqn, solns[0], order=2, solve_for_func=False)[0]
     assert checkodesol(eqn, solns[1], order=2, solve_for_func=False)[0]
-    #assert set(solns) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
-    #assert set(solns) == set(dsolve(eqn, f(x)))
+    assert set(solns) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
+    assert set(solns) == set(dsolve(eqn, f(x)))
 
 
 def test_nth_algebraic_issue15999():
