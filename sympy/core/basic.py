@@ -93,7 +93,36 @@ class Basic(with_metaclass(ManagedProperties)):
     is_MatAdd = False
     is_MatMul = False
 
-    def __new__(cls, *args):
+    # To be overridden by subclasses
+    _basic_version = 1
+    _basic_sympifyargs = True
+    _basic_autodoit = True
+
+    def __new__(cls, *args, evaluate=None, **kwargs):
+        #
+        # Need to support _basic_version 1 and 2 so here we check. If the
+        # _basic_version is 1 then Basic.__new__ is essentially a no-op: just
+        # store the args and the hash. Any preprocessing already took place in
+        # Subclass.__new__. If _basic_version is 2 then Basic.__new__ is
+        # called first (the subclass does not define __new__). Initialisation
+        # occurs in cls._eval_new which is called from here. These two mode
+        # involve Basic.__new__ being called either first or last in the chain
+        # so we need an explicit check to support both cases.
+        #
+        if cls._basic_version == 2:
+            if cls._basic_sympifyargs:
+                args = tuple(map(S, args))
+
+            cls._eval_validate(*args, **kwargs) # Possibly raises
+
+            # Now evaluate to something else
+            if evaluate is None:
+                evaluate = cls._basic_autodoit
+            if evaluate:
+                newobj = cls._eval_new(*args, **kwargs)
+                if newobj is not None:
+                    return newobj
+
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
         obj._mhash = None  # will be set by __hash__ method.

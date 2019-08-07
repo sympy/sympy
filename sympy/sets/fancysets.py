@@ -301,19 +301,24 @@ class ImageSet(Set):
 
     sympy.sets.sets.imageset
     """
-    def __new__(cls, flambda, *sets):
+    _basic_version = 2
+
+    @classmethod
+    def _eval_validate(cls, flambda, *sets):
         if not isinstance(flambda, Lambda):
             raise ValueError('first argument must be a Lambda')
 
         if flambda is S.IdentityFunction:
             if len(sets) != 1:
                 raise ValueError('identify function requires a single set')
+
+    @classmethod
+    def _eval_new(cls, flambda, *sets):
+        if flambda is S.IdentityFunction:
             return sets[0]
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
             return FiniteSet(flambda.expr)
-
-        return Basic.__new__(cls, flambda, *sets)
 
     lamda = property(lambda self: self.args[0])
     base_set = property(lambda self: ProductSet(self.args[1:]))
@@ -507,10 +512,13 @@ class Range(Set):
 
     is_iterable = True
 
-    def __new__(cls, *args):
+    _basic_version = 2
+
+    @classmethod
+    def _eval_validate(cls, *args):
         from sympy.functions.elementary.integers import ceiling
         if len(args) == 1:
-            if isinstance(args[0], range if PY3 else xrange):
+            if isinstance(args[0], range):
                 args = args[0].__reduce__()[1]  # use pickle method
 
         # expand range
@@ -543,6 +551,29 @@ class Range(Set):
                 raise ValueError(filldedent('''
     Either the start or end value of the Range must be finite.'''))
 
+    @classmethod
+    def _eval_new(cls, *args):
+        from sympy.functions.elementary.integers import ceiling
+        if len(args) == 1:
+            if isinstance(args[0], range):
+                args = args[0].__reduce__()[1]  # use pickle method
+
+        # expand range
+        slc = slice(*args)
+
+        start, stop, step = slc.start or 0, slc.stop, slc.step or 1
+        start, stop, step = [
+            w if w in [S.NegativeInfinity, S.Infinity]
+            else sympify(as_int(w))
+            for w in (start, stop, step)]
+        if all(i.is_infinite for i in  (start, stop)):
+            if start == stop:
+                # canonical null handled below
+                start = stop = S.One
+            else:
+                raise ValueError(filldedent('''
+    Either the start or end value of the Range must be finite.'''))
+
         if start.is_infinite:
             if step*(stop - start) < 0:
                 start = stop = S.One
@@ -557,7 +588,8 @@ class Range(Set):
                 step = S.One
             else:
                 end = ref + n*step
-        return Basic.__new__(cls, start, end, step)
+        if (start, end, step) != args:
+            return Range(start, end, step)
 
     start = property(lambda self: self.args[0])
     stop = property(lambda self: self.args[1])

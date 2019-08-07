@@ -7,7 +7,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_bool
 from sympy.core.symbol import Symbol, Dummy
-from sympy.logic.boolalg import And, as_Boolean
+from sympy.logic.boolalg import And, Boolean
 from sympy.sets.contains import Contains
 from sympy.sets.sets import Set, EmptySet, Union, FiniteSet
 from sympy.utilities.iterables import sift
@@ -110,19 +110,19 @@ class ConditionSet(Set):
     >>> _.subs(_.sym, Symbol('_x'))
     ConditionSet(_x, (_x < y) & (_x + x < 2), Integers)
     """
-    def __new__(cls, sym, condition, base_set=S.UniversalSet):
+    _basic_version = 2
+
+    @classmethod
+    def _eval_new(cls, sym, condition, base_set=S.UniversalSet):
+        # Store these to check if the args have changed. Otherwise we get
+        # infinite recursion...
+        orig = (cls, sym, condition, base_set)
+
         # nonlinsolve uses ConditionSet to return an unsolved system
         # of equations (see _return_conditionset in solveset) so until
         # that is changed we do minimal checking of the args
-        if isinstance(sym, (Tuple, tuple)):  # unsolved eqns syntax
-            sym = Tuple(*sym)
-            condition = FiniteSet(*condition)
-            return Basic.__new__(cls, sym, condition, base_set)
-        condition = as_Boolean(condition)
-        if isinstance(base_set, set):
-            base_set = FiniteSet(*base_set)
-        elif not isinstance(base_set, Set):
-            raise TypeError('expecting set for base_set')
+        if isinstance(sym, Tuple):  # unsolved eqns syntax
+            return None
         if condition is S.false:
             return S.EmptySet
         if condition is S.true:
@@ -163,8 +163,22 @@ class ConditionSet(Set):
             if s not in condition.xreplace({sym: s}).free_symbols:
                 raise ValueError(
                     'non-symbol dummy not recognized in condition')
-        rv = Basic.__new__(cls, sym, condition, base_set)
-        return rv if know is None else Union(know, rv)
+        if (cls, sym, condition, base_set) != orig:
+            rv = ConditionSet(sym, condition, base_set)
+            return rv if know is None else Union(know, rv)
+
+    @classmethod
+    def _eval_validate(cls, sym, condition, base_set=S.UniversalSet):
+        # nonlinsolve uses ConditionSet to return an unsolved system
+        # of equations (see _return_conditionset in solveset) so until
+        # that is changed we do minimal checking of the args
+        if isinstance(sym, Tuple):  # unsolved eqns syntax
+            if not isinstance(condition, Set):
+                raise TypeError('Tuple of syms means a set of conditions ZZZ...')
+        if not isinstance(condition, (Boolean, Set)):
+            raise TypeError('Boolean exoected...')
+        if not isinstance(base_set, Set):
+            raise TypeError('expecting set for base_set')
 
     sym = property(lambda self: self.args[0])
     condition = property(lambda self: self.args[1])
