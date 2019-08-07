@@ -98,7 +98,7 @@ def _mulsimp(expr):
     expr2    = cancel(expr) # this is the expensive part
     expr2ops = count_ops(expr2)
     # expr3    = _mexpand(expr2).cancel()
-    expr3    = expr2.expand(power_exp=False, log=False, multinomial=False, basic=False).cancel()
+    expr3    = expr2.expand(power_exp=False, log=False, multinomial=True, basic=False).cancel()
     expr3ops = count_ops(expr3)
     expr4    = together(expr2, deep=True)
     expr4ops = count_ops(expr4)
