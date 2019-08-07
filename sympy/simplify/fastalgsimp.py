@@ -6,6 +6,60 @@ from sympy.core import E, S, Mul, Pow, Add, factor_terms
 from sympy.functions import exp
 
 
+from sympy.polys import factor
+
+
+def _mycancel (expr):
+    p, q = expr.as_numer_denom()
+
+    if q is S.One:
+        return p
+
+    p = factor (p) # factor_terms (p)
+    q = factor (q) # factor_terms (q)
+
+    p = set (p.args) if p.is_Mul else {p}
+    q = set (q.args) if q.is_Mul else {q}
+
+    r = p.intersection (q)
+
+    p.difference_update (r)
+    q.difference_update (r)
+
+    if not p:
+        p = (1,)
+    if not q:
+        q = (1,)
+
+    return (Mul (Pow (Mul (*q), S.NegativeOne), *p))
+
+def _mycancel2 (expr):
+    p, q = expr.as_numer_denom()
+
+    if q is S.One:
+        return p
+
+    qf = q.factor ()
+
+    if qf.is_Add:
+        return expr
+
+    qbs  = _basess_from_expr (qf).pop ()
+    pbss = _basess_from_expr (p.factor ())
+
+    _bases_mul_exp (qbs, S.NegativeOne)
+
+    for bases in pbss:
+        for base, exp_ in qbs.items ():
+            bases.setdefault (base, []).extend (exp_)
+
+    expanded = True
+
+    while expanded:
+        pbss, expanded = _basess_expand_adds (pbss)
+
+    return _expr_from_basess (pbss)
+
 
 def _mulsimp(expr):
     """A simple simplify function to prevent expression blowup during multiplication."""
@@ -25,7 +79,8 @@ def _mulsimp(expr):
 
     # return together(cancel(expr), deep=True)
 
-    expr2 = cancel(expr)
+    # expr2 = cancel(expr)
+    expr2 = _mycancel2(expr)
     expr3 = together(expr, deep=True)
     expr4 = together(expr2, deep=True)
     expr5 = shorter(expr, expr2, expr3, expr4)
@@ -51,23 +106,25 @@ def fastalgsimp(expr):
     expr = expr.expand(power_exp=False, log=False, multinomial=False, basic=False)
     return _mulsimp(expr)
 
-def fastalgsimp(expr):
+# def fastalgsimp(expr):
+#     basess   = _basess_from_expr(expr)
+#     expanded = True
+
+#     while expanded:
+#         basess, expanded = _basess_expand_adds (basess)
+
+#     return _mulsimp(_expr_from_basess(basess))
+
+
+def _basess_from_expr(expr):
     if expr.is_Add:
-        basess = _basess_from_add(expr)
+        return _basess_from_add(expr)
     elif expr.is_Mul:
-        basess = [_bases_from_mul(expr)]
+        return [_bases_from_mul(expr)]
     elif expr.is_Pow or isinstance(expr, exp):
-        basess = [_bases_from_pow(expr)]
+        return [_bases_from_pow(expr)]
     else:
-        return expr
-
-    expanded = True
-
-    while expanded:
-        basess, expanded = _basess_expand_adds (basess)
-
-    return _mulsimp(expr_from_basess(basess))
-
+        return [{expr: [S.One]}]
 
 def _basess_from_add(expr): # -> [{base: [exp, + exp, + ...], * ...}, + bases, + ...]
     stack  = list(expr.args)
@@ -150,14 +207,7 @@ def _bases_from_pow(expr):
     if base.is_Mul:
         bases = _bases_from_mul(base)
 
-        for exps in bases.values():
-            if len(exps) == 1:
-                exps[0] = Mul(exp_, exps[0])
-
-            else:
-                prod = Mul(exp_, Add(*exps))
-                del exps[1:]
-                exps[0] = prod
+        _bases_mul_exp(bases, exp_)
 
         return bases
 
@@ -178,15 +228,15 @@ def _basess_mul(basess1, basess2): # product(a+b)(c+d) ->(ac+bc+ad+bd), modifies
                 basess1[l1*i+j].setdefault(base, []).extend(exps)
 
 
-# def _bases_mul_exp(bases, exp_): # multiply exponent of each base by exp_, modifies bases in place
-#     for exps in bases.values():
-#         if len(exps) == 1:
-#             exps[0] = Mul(exp_, exps[0])
+def _bases_mul_exp(bases, exp_): # multiply exponent of each base by exp_, modifies bases in place
+    for exps in bases.values():
+        if len(exps) == 1:
+            exps[0] = Mul(exp_, exps[0])
 
-#         else:
-#             prod = Mul(exp_, Add(*exps))
-#             del exps[1:]
-#             exps[0] = prod
+        else:
+            prod = Mul(exp_, Add(*exps))
+            del exps[1:]
+            exps[0] = prod
 
 
 def _basess_expand_adds(basess):
@@ -218,7 +268,7 @@ def _basess_expand_adds(basess):
     return basess2, expanded
 
 
-def expr_from_basess(basess):
+def _expr_from_basess(basess):
     prods = []
 
     for bases in basess:
@@ -262,9 +312,10 @@ if __name__ == '__main__': # DEBUG!
     # expr = S('exp(3)*exp(-2)', evaluate=False)
     # expr = S('(exp(3)*exp(-5))**3', evaluate=False)
 
-    expr = S('(2*a*(x+y)) / (a*(x+y))', evaluate=False)
+    # expr = S('(2*a*(x+y)) / (a*(x+y))', evaluate=False)
     # expr = S('(2*a*(x+y)) / (x+y)', evaluate=False)
     # expr = S('(2*a*(x+y)) / (x+z)', evaluate=False)
+    expr = S('(2*a*(x+y)**2) / (a*(x+y))', evaluate=False)
 
     print(fastalgsimp(expr))
     # print(type (expr))
