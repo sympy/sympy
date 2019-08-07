@@ -127,7 +127,7 @@ def fastalgsimp(expr):
     expr3    = together(expr, deep=True)
     expr3ops = count_ops(expr3)
 
-    if exprops < 6:
+    if exprops < 7:
         return expr if exprops <= expr3ops else expr3
 
     expr2    = cancel(expr)
