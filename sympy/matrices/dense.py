@@ -36,6 +36,32 @@ def _compare_sequence(a, b):
     # tuple
     return tuple(a) == tuple(b)
 
+
+def _mulsimp(expr):
+    """'Fast' algebraic simplification to reduce matrix mul intermediate products."""
+
+    from sympy.polys import cancel, together
+    from sympy.simplify.simplify import count_ops
+    from sympy.utilities.iterables import has_variety
+
+    expr     = expr.expand(power_exp=False, log=False, multinomial=False, basic=False)
+    exprops  = count_ops(expr)
+    expr2    = together(expr, deep=True)
+    expr2ops = count_ops(expr2)
+
+    if exprops < 6: # empirically tested cutoff for expensive simplification
+        return expr if exprops <= expr2ops else expr2
+
+    expr3    = cancel(expr)
+    expr3ops = count_ops(expr3)
+    expr4    = together(expr3, deep=True)
+    expr4ops = count_ops(expr4)
+
+    expr5    = min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3), (expr4ops, expr4))[1]
+
+    return expr5
+
+
 class DenseMatrix(MatrixBase):
 
     is_MatrixExpr = False
@@ -177,34 +203,8 @@ class DenseMatrix(MatrixBase):
         return self._new(len(rowsList), len(colsList),
                          list(mat[i] for i in indices), copy=False)
 
-    def _mulsimp(self, expr):
-        """A simple simplify function to prevent expression blowup during multiplication."""
-
-        from sympy.core import Add, Mul, Pow, factor_terms
-        from sympy.functions.elementary.exponential import ExpBase
-        from sympy.polys import together, factor
-        from sympy.simplify.radsimp import radsimp, fraction, _mexpand
-        from sympy.simplify.powsimp import powsimp
-        from sympy.simplify.simplify import signsimp, bottom_up
-        from sympy.utilities.iterables import has_variety
-
-        def shorter(*choices):
-            return choices[0] if not has_variety(choices) else min(choices, key=count_ops)
-
-        expr  = bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
-        expr  = Mul(*powsimp(expr).as_content_primitive())
-        _e    = cancel(expr)
-        expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
-        expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
-        expr  = shorter(expr2, expr1, expr)
-        expr  = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
-
-        return expr
-
-    def _eval_matrix_mul(self, other, expand=True, simplify=True):
+    def _eval_matrix_mul(self, other, simplify=True):
         from sympy import Add
-        from sympy.simplify.fastalgsimp import fastalgsimp
-
         # cache attributes for faster access
         self_rows, self_cols = self.rows, self.cols
         other_rows, other_cols = other.rows, other.cols
@@ -229,13 +229,11 @@ class DenseMatrix(MatrixBase):
                 vec = [None]*self_cols
                 for j,a,b in zip(range(self_cols), row_indices, col_indices):
                     vec[j] = mat[a]*other_mat[b]
-
                 try:
                     e = Add(*vec)
                     try:
-                        # new_mat[i] = e.expand(power_exp=False, log=False, multinomial=False, basic=False)
-                        new_mat[i] = fastalgsimp(e)
-                    except NotImplementedError: # MatMul noncommutative scalars in MatMul are not supported.
+                        new_mat[i] = _mulsimp(e)
+                    except:
                         new_mat[i] = e
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)

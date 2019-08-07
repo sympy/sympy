@@ -90,5 +90,5 @@ class NewMatrix(MutableDenseMatrix):
         else:
             return sol, tau
 
-    def _eval_matrix_mul(self, other, expand=False, simplify=False):
-        return MutableDenseMatrix._eval_matrix_mul(self, other, expand=expand, simplify=simplify)
+    def _eval_matrix_mul(self, other, simplify=False):
+        return MutableDenseMatrix._eval_matrix_mul(self, other, simplify=simplify)
