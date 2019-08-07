@@ -608,23 +608,31 @@ class MatrixExpr(Expr):
             elif isinstance(expr, MatMul):
                 result = []
                 args_c, args_nc = expr.args_cnc()
-                first_nc = args_nc.pop(0)
-                first_indexed, row_idx, col_idx = as_indexed_helper(first_nc,
-                                                                      generator)
-                # Save for the return value
-                first_row_idx = row_idx
+                if len(args_nc) == 1:
+                    indexed, first_row, last_col =\
+                        as_indexed_helper(expr, generator, row_idx, col_idx)
+                    result = [indexed]
+                else:
+                    # The column of this element becomes the row of the next
+                    indexed, first_row, row =\
+                        as_indexed_helper(args_nc[0], generator, row_idx)
 
-                result.append(first_indexed)
+                    result.append(indexed)
 
-                for arg in args_nc:
-                    row_idx = col_idx
-                    cols = arg.shape[1]
-                    col_idx = Idx(next(generator), range=cols)
-                    arg_indexed, _row, _col = as_indexed_helper(arg, generator,
-                                                                row_idx, col_idx)
-                    result.append(arg_indexed)
+                    for arg in args_nc[1:-1]:
+                        indexed, _realrow, row =\
+                            as_indexed_helper(arg, generator, row)
+                        result.append(indexed)
 
-                return Mul.fromiter(args_c + result), first_row_idx, col_idx
+                    # For the last element, use the row that was computed
+                    # previously like before while also using the
+                    # argument-supplied column
+                    indexed, _realrow, last_col =\
+                        as_indexed_helper(args_nc[-1], generator, row, col_idx)
+
+                    result.append(indexed)
+
+                return Mul.fromiter(args_c + result), first_row, last_col
 
             elif isinstance(expr, MatAdd):
                 # TODO: DRY
