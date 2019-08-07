@@ -36,7 +36,7 @@ def pprint_nodes(subtrees):
     return f
 
 
-def print_node(node):
+def print_node(node, assumptions=True):
     """
     Returns information about the "node".
 
@@ -53,11 +53,23 @@ def print_node(node):
     return s
 
 
-def tree(node):
+def tree(node, assumptions=True):
     """
     Returns a tree representation of "node" as a string.
 
     It uses print_node() together with pprint_nodes() on node.args recursively.
+
+    Parameters
+    ==========
+
+    asssumptions : bool
+        The flag to decide whether to print out all the assumption data
+        (such as ``is_integer`, ``is_real``) associated with the
+        expression or not.
+
+        Enabling the flag makes the result verbose, and the printed
+        result may not be determinisitic because of the randomness used
+        in backtracing the assumptions.
 
     See Also
     ========
@@ -67,7 +79,7 @@ def tree(node):
     """
     subtrees = []
     for arg in node.args:
-        subtrees.append(tree(arg))
+        subtrees.append(tree(arg, assumptions=assumptions))
     s = print_node(node) + pprint_nodes(subtrees)
     return s
 
