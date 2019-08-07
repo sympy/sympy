@@ -3,8 +3,8 @@ from sympy import (
     collect,cos, cosh, cot, coth, count_ops, csch, Derivative, diff, E,
     Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
     factorial, Float, fraction, Function, gamma, GoldenRatio, hyper,
-    hypersimp, I, Integral, integrate, log, logcombine, Lt, Matrix,
-    MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
+    hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
+    Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
     Rational, root, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
     zoo)
@@ -296,6 +296,15 @@ def test_separatevars():
     # a noncommutable object present
     eq = x*(1 + hyper((), (), y*z))
     assert separatevars(eq) == eq
+
+    s = separatevars(abs(x*y))
+    assert s == abs(x)*abs(y) and s.is_Mul
+    z = cos(1)**2 + sin(1)**2 - 1
+    a = abs(x*z)
+    s = separatevars(a)
+    assert not a.is_Mul and s.is_Mul and s == abs(x)*abs(z)
+    s = separatevars(abs(x*y*z))
+    assert s == abs(x)*abs(y)*abs(z)
 
 
 def test_separatevars_advanced_factor():
@@ -837,3 +846,33 @@ def test_issue_17141():
         raises(RecursionError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
     else:
         raises(RuntimeError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
+
+
+def test_simplify_kroneckerdelta():
+    i, j = symbols("i j")
+    K = KroneckerDelta
+
+    assert simplify(K(i, j)) == K(i, j)
+    assert simplify(K(0, j)) == K(0, j)
+    assert simplify(K(i, 0)) == K(i, 0)
+
+    assert simplify(K(0, j).rewrite(Piecewise) * K(1, j)) == 0
+    assert simplify(K(1, i) + Piecewise((1, Eq(j, 2)), (0, True))) == K(1, i) + K(2, j)
+
+    # issue 17214
+    assert simplify(K(0, j) * K(1, j)) == 0
+
+    n = Symbol('n', integer=True)
+    assert simplify(K(0, n) * K(1, n)) == 0
+
+    M = Matrix(4, 4, lambda i, j: K(j - i, n) if i <= j else 0)
+    assert simplify(M**2) == Matrix([[K(0, n), 0, K(1, n), 0],
+                                     [0, K(0, n), 0, K(1, n)],
+                                     [0, 0, K(0, n), 0],
+                                     [0, 0, 0, K(0, n)]])
+
+
+def test_issue_17292():
+    assert simplify(abs(x)/abs(x**2)) == 1/abs(x)
+    # this is bigger than the issue: check that deep processing works
+    assert simplify(5*abs((x**2 - 1)/(x - 1))) == 5*Abs(x + 1)

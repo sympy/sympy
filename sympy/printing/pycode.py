@@ -777,7 +777,7 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s, %s)" % (
             self._module_format("numpy.transpose"),
             self._print(expr.expr),
-            self._print(expr.permutation.args[0]),
+            self._print(expr.permutation.array_form),
         )
 
     def _print_CodegenArrayElementwiseAdd(self, expr):
@@ -816,7 +816,8 @@ _known_functions_scipy_special = {
 _known_constants_scipy_constants = {
     'GoldenRatio': 'golden_ratio',
     'Pi': 'pi',
-    'E': 'e'
+    'E': 'e',
+    'Exp1': 'e'
 }
 
 class SciPyPrinter(NumPyPrinter):

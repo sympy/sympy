@@ -158,12 +158,6 @@ class DenseMatrix(MatrixBase):
                     sum(L[i, k]**2 for k in range(i)))
         return self._new(L)
 
-    def _diagonal_solve(self, rhs):
-        """Helper function of function diagonal_solve,
-        without the error checks, to be used privately.
-        """
-        return self._new(rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
-
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
         # sparse matrices have a higher priority

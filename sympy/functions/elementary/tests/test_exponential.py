@@ -1,8 +1,9 @@
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
-    sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
-    AccumBounds, MatrixSymbol, Pow)
+    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
+    AccumBounds, MatrixSymbol, Pow, gcd)
+from sympy.functions.elementary.exponential import _match_real_imag
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -217,6 +218,63 @@ def test_log_values():
     assert log(2*3**2).func is log
 
 
+def test_match_real_imag():
+    x, y = symbols('x,y', real=True)
+    i = Symbol('i', imaginary=True)
+    assert _match_real_imag(S.One) == (1, 0)
+    assert _match_real_imag(I) == (0, 1)
+    assert _match_real_imag(3 - 5*I) == (3, -5)
+    assert _match_real_imag(-sqrt(3) + S.Half*I) == (-sqrt(3), S.Half)
+    assert _match_real_imag(x + y*I) == (x, y)
+    assert _match_real_imag(x*I + y*I) == (0, x + y)
+    assert _match_real_imag((x + y)*I) == (0, x + y)
+    assert _match_real_imag(-S(2)/3*i*I) == (None, None)
+    assert _match_real_imag(1 - 2*i) == (None, None)
+    assert _match_real_imag(sqrt(2)*(3 - 5*I)) == (None, None)
+
+
+def test_log_exact():
+    # check for pi/2, pi/3, pi/4, pi/6, pi/8, pi/12; pi/5, pi/10:
+    for n in range(-23, 24):
+        if gcd(n, 24) != 1:
+            assert log(exp(n*I*pi/24).rewrite(sqrt)) == n*I*pi/24
+        for n in range(-9, 10):
+            assert log(exp(n*I*pi/10).rewrite(sqrt)) == n*I*pi/10
+
+    assert log(S.Half - I*sqrt(3)/2) == -I*pi/3
+    assert log(-S.Half + I*sqrt(3)/2) == I*2*pi/3
+    assert log(-sqrt(2)/2 - I*sqrt(2)/2) == -I*3*pi/4
+    assert log(-sqrt(3)/2 - I*S.Half) == -I*5*pi/6
+
+    assert log(-S(1)/4 + sqrt(5)/4 - I*sqrt(sqrt(5)/8 + S(5)/8)) == -I*2*pi/5
+    assert log(sqrt(S(5)/8 - sqrt(5)/8) + I*(S(1)/4 + sqrt(5)/4)) == I*3*pi/10
+    assert log(-sqrt(sqrt(2)/4 + S(1)/2) + I*sqrt(S(1)/2 - sqrt(2)/4)) == I*7*pi/8
+    assert log(-sqrt(6)/4 - sqrt(2)/4 + I*(-sqrt(6)/4 + sqrt(2)/4)) == -I*11*pi/12
+
+    assert log(-1 + I*sqrt(3)) == log(2) + I*2*pi/3
+    assert log(5 + 5*I) == log(5*sqrt(2)) + I*pi/4
+    assert log(sqrt(-12)) == log(2*sqrt(3)) + I*pi/2
+    assert log(-sqrt(6) + sqrt(2) - I*sqrt(6) - I*sqrt(2)) == log(4) - I*7*pi/12
+    assert log(-sqrt(6-3*sqrt(2)) - I*sqrt(6+3*sqrt(2))) == log(2*sqrt(3)) - 5*I*pi/8
+    assert log(1 + I*sqrt(2-sqrt(2))/sqrt(2+sqrt(2))) == log(2/sqrt(sqrt(2) + 2)) + I*pi/8
+    assert log(cos(7*pi/12) + I*sin(7*pi/12)) == 7*I*pi/12
+    assert log(cos(6*pi/5) + I*sin(6*pi/5)) == -4*I*pi/5
+
+    assert log(5*(1 + I)/sqrt(2)) == log(5) + I*pi/4
+    assert log(sqrt(2)*(-sqrt(3) + 1 - sqrt(3)*I - I)) == log(4) - I*7*pi/12
+    assert log(-sqrt(2)*(1 - I*sqrt(3))) == log(2*sqrt(2)) + 2*I*pi/3
+    assert log(sqrt(3)*I*(-sqrt(6 - 3*sqrt(2)) - I*sqrt(3*sqrt(2) + 6))) == log(6) - I*pi/8
+
+    zero = (1 + sqrt(2))**2 - 3 - 2*sqrt(2)
+    assert log(zero - I*sqrt(3)) == log(sqrt(3)) - I*pi/2
+    assert unchanged(log, zero + I*zero) or log(zero + zero*I) == zoo
+
+    # bail quickly if no obvious simplification is possible:
+    assert unchanged(log, (sqrt(2)-1/sqrt(sqrt(3)+I))**1000)
+    # beware of non-real coefficients
+    assert unchanged(log, sqrt(2-sqrt(5))*(1 + I))
+
+
 def test_log_base():
     assert log(1, 2) == 0
     assert log(2, 2) == 1
@@ -271,6 +329,14 @@ def test_log_symbolic():
     assert (log(p**-5)**-1).expand() == -1/log(p)/5
     assert log(-x).func is log and log(-x).args[0] == -x
     assert log(-p).func is log and log(-p).args[0] == -p
+
+
+def test_log_exp():
+    assert log(exp(4*I*pi)) == 0     # exp evaluates
+    assert log(exp(-5*I*pi)) == I*pi # exp evaluates
+    assert log(exp(19*I*pi/4)) == 3*I*pi/4
+    assert log(exp(25*I*pi/7)) == -3*I*pi/7
+    assert log(exp(-5*I)) == -5*I + 2*I*pi
 
 
 def test_exp_assumptions():

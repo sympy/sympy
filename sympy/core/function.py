@@ -1821,6 +1821,14 @@ class Derivative(Expr):
         >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
         2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/...
 
+        To approximate ``Derivative`` around ``x0`` using a non-equidistant
+        spacing step, the algorithm supports assignment of undefined
+        functions to ``points``:
+
+        >>> dx = Function('dx')
+        >>> f(x).diff(x).as_finite_difference(points=dx(x), x0=x-h)
+        -f(-h + x - dx(-h + x)/2)/dx(-h + x) + f(-h + x + dx(-h + x)/2)/dx(-h + x)
+
         Partial derivatives are also supported:
 
         >>> y = Symbol('y')

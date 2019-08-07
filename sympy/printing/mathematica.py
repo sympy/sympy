@@ -205,7 +205,9 @@ class MCodePrinter(CodePrinter):
         return 'GoldenRatio'
 
     def _print_TribonacciConstant(self, expr):
-        return self.doprint(expr._eval_expand_func())
+        expanded = expr.expand(func=True)
+        PREC = precedence(expr)
+        return self.parenthesize(expanded, PREC)
 
     def _print_EulerGamma(self, expr):
         return 'EulerGamma'
