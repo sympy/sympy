@@ -45,8 +45,13 @@ def _mulsimp(expr):
     from sympy.simplify.radsimp import _mexpand
     from sympy.simplify.simplify import count_ops
 
-    # expr     = expr.expand(power_base=False, power_exp=False, log=False, multinomial=False, basic=False)
     exprops  = count_ops(expr)
+    expr2    = expr.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
+    expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
 
     if exprops < 6: # empirically tested cutoff for expensive simplification
         return expr
