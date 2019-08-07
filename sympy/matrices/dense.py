@@ -37,14 +37,7 @@ def _compare_sequence(a, b):
     return tuple(a) == tuple(b)
 
 
-def _hasadd(expr):
-    if expr.is_Add:
-        return True
-
-    for arg in expr.args:
-        if _hasadd(arg):
-            return True
-
+_DONE = set()
 def _mulsimp(expr):
     """'Fast' algebraic simplification to reduce matrix mul intermediate products."""
 
@@ -59,12 +52,20 @@ def _mulsimp(expr):
 
     expr2    = cancel(expr) # this is the expensive part
     expr2ops = count_ops(expr2)
-    expr3    = _mexpand(expr2).cancel()
-    expr3ops = count_ops(expr3)
+    # expr3    = _mexpand(expr2).cancel()
+    # expr3ops = count_ops(expr3)
     expr4    = together(expr2, deep=True)
     expr4ops = count_ops(expr4)
 
-    return min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3), (expr4ops, expr4))[1]
+    return min ((exprops, expr), (expr2ops, expr2), (expr4ops, expr4))[1]
+
+    # ret = min ((exprops, expr, 1), (expr2ops, expr2, 2), (expr3ops, expr3, 3), (expr4ops, expr4, 4))
+    # ret = min ((exprops, expr, 1), (expr2ops, expr2, 2), (expr4ops, expr4, 4))
+
+    # _DONE.add (ret [2])
+    # print (_DONE)
+
+    return ret [1]
 
 
 class DenseMatrix(MatrixBase):
