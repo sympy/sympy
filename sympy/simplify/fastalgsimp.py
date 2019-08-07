@@ -26,7 +26,11 @@ def _mulsimp(expr):
     # return together(cancel(expr), deep=True)
 
     expr2 = cancel(expr)
-    return shorter(expr, expr2, together(expr, deep=True), together(expr2, deep=True))
+    expr3 = together(expr, deep=True)
+    expr4 = together(expr2, deep=True)
+    expr5 = shorter(expr, expr2, expr3, expr4)
+    # print (1 if expr5 is expr else 2 if expr5 is expr2 else 3 if expr5 is expr3 else 4)
+    return expr5
 
     expr2 = cancel(expr)
     expr3 = shorter(together(expr, deep=True), together(expr2, deep=True))
@@ -43,11 +47,11 @@ def _mulsimp(expr):
 
     return expr
 
-
 def fastalgsimp(expr):
     expr = expr.expand(power_exp=False, log=False, multinomial=False, basic=False)
     return _mulsimp(expr)
 
+def fastalgsimp(expr):
     if expr.is_Add:
         basess = _basess_from_add(expr)
     elif expr.is_Mul:
@@ -56,11 +60,6 @@ def fastalgsimp(expr):
         basess = [_bases_from_pow(expr)]
     else:
         return expr
-
-    # for bases in basess:
-    #     print ('+')
-    #     for base, exps in bases.items ():
-    #         print (f'  ({base})^{exps}')
 
     expanded = True
 
