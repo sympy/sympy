@@ -1,14 +1,14 @@
 from sympy import (KroneckerDelta, diff, Piecewise, Sum, Dummy, factor,
                    expand, zeros, gcd_terms, Eq, Symbol)
 
-from sympy.core import S, symbols, Add, Mul, SympifyError
+from sympy.core import S, symbols, Add, Mul, SympifyError, Wild
 from sympy.core.compatibility import long
 from sympy.functions import transpose, sin, cos, sqrt, cbrt, exp
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         SparseMatrix, Transpose, Adjoint)
-from sympy.matrices.expressions.matexpr import (MatrixElement,
+from sympy.matrices.expressions.matexpr import (MatrixElement, MatrixWild,
                                                 GenericZeroMatrix, GenericIdentity, OneMatrix)
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -74,6 +74,27 @@ def test_ZeroMatrix_doit():
     assert isinstance(Znn.rows, Add)
     assert Znn.doit() == ZeroMatrix(2*n, n)
     assert isinstance(Znn.doit().rows, Mul)
+
+
+def test_MatrixWild():
+    w1, w2 = symbols('w1, w2', cls=Wild, integer=True)
+
+    W = MatrixWild('W', n, m)
+    X = MatrixWild('X', n, n)
+    Y = MatrixWild('Y', w1, w1)
+    Z = MatrixWild('Z', w1, w2)
+
+    assert A.match(W) == {W: A}
+    assert A.match(X) is None
+    assert D.match(W) is None
+    assert D.match(X) == {X: D}
+
+    assert D.match(Y) == {Y: D, w1: n}
+    assert A.match(Y) is None  # Wildcard dim specifies square, but A is n by m
+    assert A.match(Z) == {Z: A, w1: n, w2: m}
+
+    # Different types
+    assert Z.matches(n) is None
 
 
 def test_OneMatrix():
