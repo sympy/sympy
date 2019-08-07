@@ -37,7 +37,6 @@ def _compare_sequence(a, b):
     return tuple(a) == tuple(b)
 
 
-_DONE = set()
 def _mulsimp(expr):
     """'Fast' algebraic simplification to reduce matrix mul intermediate products."""
 
@@ -67,25 +66,9 @@ def _mulsimp(expr):
     expr3ops = count_ops(expr3)
 
     if expr3ops < exprops:
-        expr    = expr3
-        exprops = expr3ops
+        expr = expr3
 
     return expr
-
-    # return min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3))[1]
-
-
-    # expr4ops, expr4 = min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3))
-
-    # expr5    = expr4.expand(power_base=False, power_exp=False, log=False, multinomial=False, basic=False)
-    # expr5ops = count_ops(expr5)
-
-    # return expr4 if expr4ops <= expr5ops else expr5
-
-
-    # expr4 = expr4.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
-
-    # return expr4
 
 
 class DenseMatrix(MatrixBase):
@@ -259,7 +242,7 @@ class DenseMatrix(MatrixBase):
                     vec[j] = _expand(power_base=False, power_exp=False, log=False, multinomial=False, basic=False) if _expand else c
                 try:
                     e = Add(*vec)
-                    new_mat[i] = _mulsimp(e)
+                    new_mat[i] = _mulsimp(e) if simplify else e
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
