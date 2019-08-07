@@ -1520,22 +1520,93 @@ def rsa_public_key(*args):
 
 
 def rsa_private_key(*args):
-    r"""
-    Return the RSA *private key*, `(n,d)`, where `n`
-    is a product of two primes and `d` is the inverse of
-    `e` (mod `\phi(n)`). False is returned if any assumption
-    is violated.
+    r"""Return the RSA *private key* pair, `(n, d)`
+
+    Parameters
+    ==========
+
+    args : naturals
+        The last argument should be specified as `e`, which becomes the
+        exponent parameter of the private key pair, and any other natural
+        numbers before should be given to specify `n`, the modulus
+        parameter of the private key pair.
+
+        `p, q, e where `p` and `q` are distinct primes, would be
+        one of the most common and recommended key specification, which
+        forms a two-prime RSA cryptosystem.
+
+        It is possible to create a multi-prime RSA cryptosystem by
+        specifying more than two primes, such as `p, q, r, e`
+
+        Trivially, one-prime RSA like `p, e` can also be a valid cipher,
+        as long as the mapping is bijective, even though the
+        cryptosystem may not have any practical safety.
+
+        If `p, q` or any numbers (that are supposed to be prime) are
+        given as non-prime numbers, those numbers can be prime factored
+        and the cryptosystem can be dispatched as an another multiprime
+        RSA cryptosystem in a canonical form.
+        For example `p=15, q=77` specification can be dispatched as a
+        four-prime RSA of `p=3, q=5, r=7, s=11`.
+        However, this feature is only available for an easy usage and
+        you may not expect practically sized composite numbers can be
+        easily factored even by modern computers.
+
+        If `p, q` are same primes, the cipher may not be valid because
+        the mapping is not bijective, and some numbers may not be able
+        to be decrypted after encrypted.
+        This problem may also be extended for the cases if not every
+        primes are distinct for a multiprime RSA.
+
+    Returns
+    =======
+
+    (n, d) : int, int
+        `n` is a product of any arbitrary number of primes given as
+        the argument.
+
+        `d` is the inverse of `e` (mod `\phi(n)`) where `e` is the
+        exponent given, and `\phi` is a Euler totient.
+
+    False
+        Returned if less than two arguments are given, or `e` is
+        not relatively prime to the modulus.
 
     Examples
     ========
 
     >>> from sympy.crypto.crypto import rsa_private_key
+
+    A private key of a two-prime RSA:
     >>> p, q, e = 3, 5, 7
     >>> rsa_private_key(p, q, e)
     (15, 7)
     >>> rsa_private_key(p, q, 30)
     False
 
+    A private key of a multiprime RSA:
+    >>> primes = [2, 3, 5, 7, 11, 13]
+    >>> e = 7
+    >>> rsa_private_key(*primes, e)
+    (30030, 823)
+
+    See Also
+    ========
+
+    rsa_public_key
+    encipher_rsa
+    decipher_rsa
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
+
+    .. [2] Multiprime RSA
+        https://iopscience.iop.org/article/10.1088/1742-6596/995/1/012030
+
+    .. [3] An another article of multiprime RSA
+        https://www.scirp.org/journal/paperabs.aspx?paperid=83244
     """
     return _rsa_key(*args, public=False, private=True)
 
