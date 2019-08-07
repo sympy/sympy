@@ -117,6 +117,28 @@ def fastalgsimp(expr):
 
     return expr5
 
+def fastalgsimp(expr):
+    from sympy.polys import cancel, together
+    from sympy.simplify.simplify import count_ops
+    from sympy.utilities.iterables import has_variety
+
+    expr     = expr.expand(power_exp=False, log=False, multinomial=False, basic=False)
+    exprops  = count_ops(expr)
+    expr3    = together(expr, deep=True)
+    expr3ops = count_ops(expr3)
+
+    if exprops < 4:
+        return expr if exprops <= expr3ops else expr3
+
+    expr2    = cancel(expr)
+    expr2ops = count_ops(expr2)
+    expr4    = together(expr2, deep=True)
+    expr4ops = count_ops(expr4)
+
+    expr5    = min ((exprops, expr), (expr2ops, expr2), (expr3ops, expr3), (expr4ops, expr4)) [1]
+
+    return expr5
+
 # def fastalgsimp(expr):
 #     basess   = _basess_from_expr(expr)
 #     expanded = True
