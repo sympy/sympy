@@ -8,7 +8,6 @@ from sympy.functions import exp
 
 from sympy.polys import factor
 
-
 def _mycancel (expr):
     p, q = expr.as_numer_denom()
 
@@ -103,8 +102,20 @@ def _mulsimp(expr):
     return expr
 
 def fastalgsimp(expr):
-    expr = expr.expand(power_exp=False, log=False, multinomial=False, basic=False)
-    return _mulsimp(expr)
+    from sympy.polys import cancel, together
+    from sympy.simplify.simplify import count_ops
+    from sympy.utilities.iterables import has_variety
+
+    def shorter(*choices):
+        return choices[0] if not has_variety(choices) else min(choices, key=count_ops)
+
+    expr  = expr.expand(power_exp=False, log=False, multinomial=False, basic=False)
+    expr2 = cancel(expr)
+    expr3 = together(expr, deep=True)
+    expr4 = together(expr2, deep=True)
+    expr5 = shorter(expr, expr2, expr3, expr4)
+
+    return expr5
 
 # def fastalgsimp(expr):
 #     basess   = _basess_from_expr(expr)
