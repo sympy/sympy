@@ -7,7 +7,7 @@ except ImportError:
 
 import pyglet.gl as pgl
 from math import sqrt as _sqrt, acos as _acos
-
+from sympy.core.decorators import deprecated
 
 def cross(a, b):
     return (a[1] * b[2] - a[2] * b[1],
@@ -48,7 +48,11 @@ def get_sphere_mapping(x, y, width, height):
 rad2deg = 180.0 / 3.141592
 
 
+@deprecated(useinstead="get_spherical_rotatation", deprecated_since_version="1.5")
 def get_spherical_rotatation(p1, p2, width, height, theta_multiplier):
+    return get_spherical_rotation(p1, p2, width, height, theta_multiplier)
+
+def get_spherical_rotation(p1, p2, width, height, theta_multiplier):
     v1 = get_sphere_mapping(p1[0], p1[1], width, height)
     v2 = get_sphere_mapping(p2[0], p2[1], width, height)
 

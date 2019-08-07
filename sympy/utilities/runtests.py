@@ -695,7 +695,7 @@ def _get_doctest_blacklist():
             import matplotlib
             matplotlib.use('Agg')
 
-    if import_module('pyglet') is None:
+    if ON_TRAVIS or import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
     if import_module('theano') is None:
