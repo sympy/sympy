@@ -367,6 +367,8 @@ def test_Range_set():
             rabcsize = r.subs({a: av, c: cv}).subs(b, -oo).size
             assert rsize == rabcsize
 
+    raises(ValueError, lambda: len(r))
+
     assert Range(range(10)) == Range(10)
     assert Range(range(1, 10)) == Range(1, 10)
     assert Range(range(1, 10, 2)) == Range(1, 10, 2)
