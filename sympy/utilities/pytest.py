@@ -199,15 +199,7 @@ if not USE_PYTEST:
 else:
     XFAIL = py.test.mark.xfail
     slow = py.test.mark.slow
-
-    def SKIP(reason):
-        def skipping(func):
-            @functools.wraps(func)
-            def inner(*args, **kwargs):
-                skip(reason)
-            return inner
-
-        return skipping
+    SKIP = py.test.mark.skip
 
 
 @contextlib.contextmanager
