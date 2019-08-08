@@ -25,7 +25,7 @@ from sympy.core import Rational, Symbol
 from sympy.core.numbers import igcdex, mod_inverse
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
-from sympy.ntheory import isprime, primitive_root, totient, factorint
+from sympy.ntheory import isprime, primitive_root, factorint
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
@@ -1397,7 +1397,32 @@ def bifid6_square(key=None):
 #################### RSA  #############################
 
 
-def _rsa_key(*args, public=True, private=True):
+def _rsa_private_key_crt(p, q, d):
+    """Subroutine to generate additional private keys from the already
+    computed `d` of the private key and `p, q`, to use in chinese
+    remainder theorem algorithms.
+    """
+    dp = d % (p-1)
+    dq = d % (q-1)
+    return p, q, dp, dq
+
+
+def _decipher_rsa_crt(i, p, q, dp, dq):
+    """Decipher RSA using chinese remainder theorem.
+
+    The keys given would be different.
+    """
+    from sympy.ntheory.modular import crt
+    mp = pow(i, dp, p)
+    mq = pow(i, dq, q)
+
+    result = crt([p, q], [mp, mq])
+    if not result:
+        raise ValueError("CRT failed")
+    return result[0]
+
+
+def _rsa_key(*args, public=True, private=True, totient='Euler'):
     """A private subroutine to generate RSA key
 
     Parameters
@@ -1405,6 +1430,12 @@ def _rsa_key(*args, public=True, private=True):
 
     public, private : bool, optional
         Flag to generate either a public key, a private key
+
+    totient : bool, optional
+        If ``'Euler'``, it uses Euler's totient (`totient` in SymPy).
+
+        If ``'Carmichael'``, it uses Carmichael's totient
+        (`reduced_totient` in SymPy).
     """
     if len(args) < 2:
         return False
@@ -1417,7 +1448,14 @@ def _rsa_key(*args, public=True, private=True):
         tally = multiset(primes)
         if all(v == 1 for v in tally.values()):
             multiple = list(tally.keys())
-            phi = totient._from_distinct_primes(*multiple)
+
+            if totient == 'Euler':
+                from sympy.ntheory import totient as totfunc
+                phi = totfunc._from_distinct_primes(*multiple)
+
+            elif totient == 'Carmichael':
+                from sympy.ntheory import reduced_totient as totfunc
+                phi = totfunc(n)
         else:
             NonInvertibleCipherWarning(
                 'Non-distinctive primes found in the factors of {}.'
@@ -1439,10 +1477,11 @@ def _rsa_key(*args, public=True, private=True):
     for i in primes:
         new_primes.extend(factorint(i, multiple=True))
 
-    return _rsa_key(*new_primes, e, public=public, private=private)
+    return _rsa_key(
+        *new_primes, e, public=public, private=private, totient=totient)
 
 
-def rsa_public_key(*args):
+def rsa_public_key(*args, totient='Euler'):
     r"""Return the RSA *public key* pair, `(n, e)`
 
     Parameters
@@ -1528,10 +1567,10 @@ def rsa_public_key(*args):
     .. [3] An another article of multiprime RSA
         https://www.scirp.org/journal/paperabs.aspx?paperid=83244
     """
-    return _rsa_key(*args, public=True, private=False)
+    return _rsa_key(*args, public=True, private=False, totient=totient)
 
 
-def rsa_private_key(*args):
+def rsa_private_key(*args, totient='Euler'):
     r"""Return the RSA *private key* pair, `(n, d)`
 
     Parameters
@@ -1617,7 +1656,7 @@ def rsa_private_key(*args):
     .. [3] An another article of multiprime RSA
         https://www.scirp.org/journal/paperabs.aspx?paperid=83244
     """
-    return _rsa_key(*args, public=False, private=True)
+    return _rsa_key(*args, public=False, private=True, totient=totient)
 
 
 def encipher_rsa(i, key):
