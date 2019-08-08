@@ -352,6 +352,21 @@ def test_Range_set():
     raises(ValueError, lambda : [i for i in iter(r)])
     assert [i for i in iter(r.subs({a: d, b: d + 6, c: 1}))] == [d, d + 1, d + 2, d + 3, d + 4, d + 5]
 
+    for av in avs:
+        for bv in bvs:
+            for cv in cvs:
+                rsize = r.size.subs({a: av, b: bv, c: cv})
+                rabcsize = r.subs({a: av, b: bv, c: cv}).size
+                assert rsize == rabcsize
+    for av in avs:
+        for cv in cvs:
+            rsize = r.size.subs({a: av, c: cv}).subs(b, oo)
+            rabcsize = r.subs({a: av, c: cv}).subs(b, oo).size
+            assert rsize == rabcsize
+            rsize = r.size.subs({a: av, c: cv}).subs(b, -oo)
+            rabcsize = r.subs({a: av, c: cv}).subs(b, -oo).size
+            assert rsize == rabcsize
+
     assert Range(range(10)) == Range(10)
     assert Range(range(1, 10)) == Range(1, 10)
     assert Range(range(1, 10, 2)) == Range(1, 10, 2)
