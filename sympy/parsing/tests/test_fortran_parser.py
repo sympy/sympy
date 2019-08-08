@@ -1,5 +1,3 @@
-import re
-
 from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
                                Return, FunctionDefinition, Assignment,
                                Declaration, CodeBlock)

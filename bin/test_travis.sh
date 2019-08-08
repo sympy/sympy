@@ -137,7 +137,7 @@ test_list = [
     # ipython
     '*ipython*',
 
-    # antlr, lfortran
+    # antlr, lfortran, clang
     'sympy/parsing/',
 
     # matchpy
@@ -179,7 +179,7 @@ doctest_list = [
     # ipython
     '*ipython*',
 
-    # antlr, lfortran
+    # antlr, lfortran, clang
     'sympy/parsing/',
 
     # matchpy

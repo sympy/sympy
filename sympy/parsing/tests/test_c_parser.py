@@ -1,5 +1,17 @@
-from sympy.parsing.c.c_parser import convert_c_file
-import os
+from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
+                               Return, FunctionDefinition, Integer, Float,
+                               Declaration, CodeBlock, FunctionPrototype,
+                               FunctionCall, NoneToken)
+from sympy.core.containers import Tuple
+from sympy import Symbol
+
+from sympy.external import import_module
+cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
+if cin:
+    from sympy.parsing.sym_expr import SymPyExpression
+else:
+    #bin/test will not execute any tests now
+    disabled = True
 
 def test_variable():
     c_src1 = (
@@ -7,41 +19,74 @@ def test_variable():
         'int b;' + '\n'
     )
     c_src2 = (
-        'float a;' + '\n' +
-        'float b;' + '\n'
+        'float a;' + '\n'
+        + 'float b;' + '\n'
     )
     c_src3 = (
         'int a;' + '\n' +
         'float b;' + '\n' +
         'int c;'
     )
-    file1 = open('..test1.h','w')
-    file2 = open('..test2.h', 'w')
-    file3 = open('..test3.h', 'w')
 
-    file1.write(c_src1)
-    file2.write(c_src2)
-    file3.write(c_src3)
+    res1 = SymPyExpression(c_src1, 'c').return_expr()
+    res2 = SymPyExpression(c_src2, 'c').return_expr()
+    res3 = SymPyExpression(c_src3, 'c').return_expr()
 
-    file1.close()
-    file2.close()
-    file3.close()
+    assert res1[0] == Declaration(
+        Variable(
+            Symbol('a'),
+            type=IntBaseType(String('integer')),
+            value=Integer(0)
+        )
+    )
+    assert res1[1] == Declaration(
+        Variable(
+            Symbol('b'),
+            type=IntBaseType(String('integer')),
+            value=Integer(0)
+        )
+    )
 
-    res1 = convert_c_file('..test1.h')
-    res2 = convert_c_file('..test2.h')
-    res3 = convert_c_file('..test3.h')
+    assert res2[0] == Declaration(
+        Variable(
+            Symbol('a'),
+            type=FloatBaseType(String('real')),
+            value=Float('0.0', precision=53)
+        )
+    )
+    assert res2[1] == Declaration(
+        Variable(
+            Symbol('b'),
+            type=FloatBaseType(String('real')),
+            value=Float('0.0', precision=53)
+        )
+    )
 
-    cmp1 = ['a = 0', 'b = 0']
-    cmp2 = ['a = 0.0', 'b = 0.0']
-    cmp3 = ['a = 0', 'b = 0.0', 'c = 0']
+    assert res3[0] == Declaration(
+        Variable(
+            Symbol('a'),
+            type=IntBaseType(String('integer')),
+            value=Integer(0)
+        )
+    )
 
-    assert res1 == cmp1
-    assert res2 == cmp2
-    assert res3 == cmp3
+    assert res3[1] == Declaration(
+        Variable(
+            Symbol('b'),
+            type=FloatBaseType(String('real')),
+            value=Float('0.0', precision=53)
+        )
+    )
 
-    os.remove('..test1.h')
-    os.remove('..test2.h')
-    os.remove('..test3.h')
+    assert res3[2] == Declaration(
+        Variable(
+            Symbol('c'),
+            type=IntBaseType(String('integer')),
+            value=Integer(0)
+        )
+    )
+
+
 
 def test_int():
     c_src1 = 'int a = 1;'
@@ -49,26 +94,34 @@ def test_int():
         'int a = 1;' + '\n' +
         'int b = 2;' + '\n'
     )
-    file1 = open('..test1.h','w')
-    file2 = open('..test2.h', 'w')
 
-    file1.write(c_src1)
-    file2.write(c_src2)
+    res1 = SymPyExpression(c_src1, 'c').return_expr()
+    res2 = SymPyExpression(c_src2, 'c').return_expr()
 
-    file1.close()
-    file2.close()
 
-    res1 = convert_c_file('..test1.h')
-    res2 = convert_c_file('..test2.h')
+    assert res1[0] == Declaration(
+        Variable(
+            Symbol('a'),
+            type=IntBaseType(String('integer')),
+            value=Integer(1)
+        )
+    )
 
-    cmp1 = ['a = 1']
-    cmp2 = ['a = 1', 'b = 2']
+    assert res2[0] == Declaration(
+        Variable(
+            Symbol('a'),
+            type=IntBaseType(String('integer')),
+            value=Integer(1)
+        )
+    )
 
-    assert res1 == cmp1
-    assert res2 == cmp2
-
-    os.remove('..test1.h')
-    os.remove('..test2.h')
+    assert res2[1] == Declaration(
+        Variable(
+            Symbol('b'),
+            type=IntBaseType(String('integer')),
+            value=Integer(2)
+        )
+    )
 
 def test_float():
     c_src1 = 'float a = 1.0;'
@@ -76,26 +129,33 @@ def test_float():
         'float a = 1.25;' + '\n' +
         'float b = 2.39;' + '\n'
     )
-    file1 = open('..test1.h','w')
-    file2 = open('..test2.h', 'w')
 
-    file1.write(c_src1)
-    file2.write(c_src2)
+    res1 = SymPyExpression(c_src1, 'c').return_expr()
+    res2 = SymPyExpression(c_src2, 'c').return_expr()
 
-    file1.close()
-    file2.close()
+    assert res1[0] == Declaration(
+        Variable(
+            Symbol('a'),
+            type=FloatBaseType(String('real')),
+            value=Float('1.0', precision=53)
+            )
+        )
 
-    res1 = convert_c_file('..test1.h')
-    res2 = convert_c_file('..test2.h')
+    assert res2[0] == Declaration(
+        Variable(
+            Symbol('a'),
+            type=FloatBaseType(String('real')),
+            value=Float('1.25', precision=53)
+        )
+    )
 
-    cmp1 = ['a = 1.0']
-    cmp2 = ['a = 1.25', 'b = 2.39']
-
-    assert res1 == cmp1
-    assert res2 == cmp2
-
-    os.remove('..test1.h')
-    os.remove('..test2.h')
+    assert res2[1] == Declaration(
+        Variable(
+            Symbol('b'),
+            type=FloatBaseType(String('real')),
+            value=Float('2.3900000000000001', precision=53)
+        )
+    )
 
 
 def test_function():
@@ -119,49 +179,68 @@ def test_function():
         'return b;' + '\n' +
         '}'
     )
-    file1 = open('..test1.h','w')
-    file2 = open('..test2.h', 'w')
-    file3 = open('..test3.h', 'w')
-
-    file1.write(c_src1)
-    file2.write(c_src2)
-    file3.write(c_src3)
-
-    file1.close()
-    file2.close()
-    file3.close()
-
-    res1 = convert_c_file('..test1.h')
-    res2 = convert_c_file('..test2.h')
-    res3 = convert_c_file('..test3.h')
-
-    str1 = (
-        'def fun1():' + '\n' +
-        '    ' + 'a = 0'
+    c_src4 = (
+        'float fun4()' + '\n' +
+        '{}'
     )
 
-    str2 = (
-        'def fun2():' + '\n' +
-        '    ' + 'a = 0' + '\n' +
-        '    ' + 'return a'
+    res1 = SymPyExpression(c_src1, 'c').return_expr()
+    res2 = SymPyExpression(c_src2, 'c').return_expr()
+    res3 = SymPyExpression(c_src3, 'c').return_expr()
+    res4 = SymPyExpression(c_src4, 'c').return_expr()
+
+    assert res1[0] == FunctionDefinition(
+        NoneToken(),
+        name=String('fun1'),
+        parameters=(),
+        body=CodeBlock(
+            Declaration(
+                Variable(
+                    Symbol('a'),
+                    type=IntBaseType(String('integer')),
+                    value=Integer(0)
+                )
+            )
+        )
     )
 
-    str3 = (
-        'def fun3():' + '\n' +
-        '    ' + 'b = 0.0' +'\n' +
-        '    ' + 'return b'
+    assert res2[0] == FunctionDefinition(
+        IntBaseType(String('integer')),
+        name=String('fun2'),
+        parameters=(),
+        body=CodeBlock(
+            Declaration(
+                Variable(
+                    Symbol('a'),
+                    type=IntBaseType(String('integer')),
+                    value=Integer(0)
+                )
+            ),
+            Return('a')
+        )
     )
-    cmp1 = [str1]
-    cmp2 = [str2]
-    cmp3 = [str3]
 
-    assert res1 == cmp1
-    assert res2 == cmp2
-    assert res3 == cmp3
+    assert res3[0] == FunctionDefinition(
+        FloatBaseType(String('real')),
+        name=String('fun3'),
+        parameters=(),
+        body=CodeBlock(
+            Declaration(
+                Variable(
+                    Symbol('b'),
+                    type=FloatBaseType(String('real')),
+                    value=Float('0.0', precision=53)
+                )
+            ),
+            Return('b')
+        )
+    )
 
-    os.remove('..test1.h')
-    os.remove('..test2.h')
-    os.remove('..test3.h')
+    assert res4[0] == FunctionPrototype(
+        FloatBaseType(String('real')),
+        name=String('fun4'),
+        parameters=()
+    )
 
 def test_parameters():
     c_src1 = (
@@ -184,49 +263,89 @@ def test_parameters():
         'return b;' + '\n' +
         '}'
     )
-    file1 = open('..test1.h','w')
-    file2 = open('..test2.h', 'w')
-    file3 = open('..test3.h', 'w')
 
-    file1.write(c_src1)
-    file2.write(c_src2)
-    file3.write(c_src3)
+    res1 = SymPyExpression(c_src1, 'c').return_expr()
+    res2 = SymPyExpression(c_src2, 'c').return_expr()
+    res3 = SymPyExpression(c_src3, 'c').return_expr()
 
-    file1.close()
-    file2.close()
-    file3.close()
-
-    res1 = convert_c_file('..test1.h')
-    res2 = convert_c_file('..test2.h')
-    res3 = convert_c_file('..test3.h')
-
-    str1 = (
-        'def fun1(a):' + '\n' +
-        '    ' + 'i = 0'
+    assert res1[0] == FunctionDefinition(
+        NoneToken(),
+        name=String('fun1'),
+        parameters=(
+            Variable(
+                Symbol('a'),
+                type=IntBaseType(String('integer')),
+                value=Integer(0)
+            ),
+        ),
+        body=CodeBlock(
+            Declaration(
+                Variable(
+                    Symbol('i'),
+                    type=IntBaseType(String('integer')),
+                    value=Integer(0)
+                )
+            )
+        )
     )
 
-    str2 = (
-        'def fun2(x, y):' + '\n' +
-        '    ' + 'a = 0' + '\n' +
-        '    ' + 'return a'
+    assert res2[0] == FunctionDefinition(
+        IntBaseType(String('integer')),
+        name=String('fun2'),
+        parameters=(
+            Variable(
+                Symbol('x'),
+                type=FloatBaseType(String('real')),
+                value=Float('0.0', precision=53)
+            ),
+            Variable(
+                Symbol('y'),
+                type=FloatBaseType(String('real')),
+                value=Float('0.0', precision=53)
+            )
+        ),
+        body=CodeBlock(
+            Declaration(
+                Variable(
+                    Symbol('a'),
+                    type=IntBaseType(String('integer')),
+                    value=Integer(0)
+                )
+            ),
+            Return('a')
+        )
     )
 
-    str3 = (
-        'def fun3(p, q, r):' + '\n' +
-        '    ' + 'b = 0.0' +'\n' +
-        '    ' + 'return b'
+    assert res3[0] == FunctionDefinition(
+        FloatBaseType(String('real')), name=String('fun3'),
+        parameters=(
+            Variable(
+                Symbol('p'),
+                type=IntBaseType(String('integer')),
+                value=Integer(0)
+            ),
+            Variable(
+                Symbol('q'),
+                type=FloatBaseType(String('real')),
+                value=Float('0.0', precision=53)
+            ),
+            Variable(
+                Symbol('r'),
+                type=IntBaseType(String('integer')),
+                value=Integer(0)
+            )
+        ),
+        body=CodeBlock(
+            Declaration(
+                Variable(
+                    Symbol('b'),
+                    type=FloatBaseType(String('real')),
+                    value=Float('0.0', precision=53)
+                )
+            ),
+            Return('b')
+        )
     )
-    cmp1 = [str1]
-    cmp2 = [str2]
-    cmp3 = [str3]
-
-    assert res1 == cmp1
-    assert res2 == cmp2
-    assert res3 == cmp3
-
-    os.remove('..test1.h')
-    os.remove('..test2.h')
-    os.remove('..test3.h')
 
 def test_function_call():
     c_src1 = 'x = fun1(2);'
@@ -240,44 +359,96 @@ def test_function_call():
         'int z;' + '\n' +
         'i = fun4(x, y, z)'
     )
-    file1 = open('..test1.h','w')
-    file2 = open('..test2.h', 'w')
-    file3 = open('..test3.h', 'w')
-    file4 = open('..test4.h','w')
 
-    file1.write(c_src1)
-    file2.write(c_src2)
-    file3.write(c_src3)
-    file4.write(c_src4)
+    res1 = SymPyExpression(c_src1, 'c').return_expr()
+    res2 = SymPyExpression(c_src2, 'c').return_expr()
+    res3 = SymPyExpression(c_src3, 'c').return_expr()
+    res4 = SymPyExpression(c_src4, 'c').return_expr()
 
-    file1.close()
-    file2.close()
-    file3.close()
-    file4.close()
+    assert res1[0] == Declaration(
+        Variable(
+            Symbol('x'),
+            value=FunctionCall(
+                String('fun1'),
+                function_args=([2, ])
+            )
+        )
+    )
 
-    res1 = convert_c_file('..test1.h')
-    res2 = convert_c_file('..test2.h')
-    res3 = convert_c_file('..test3.h')
-    res4 = convert_c_file('..test4.h')
+    assert res2[0] == Declaration(
+        Variable(
+            Symbol('y'),
+            value=FunctionCall(
+                String('fun2'),
+                function_args=([2, 3, 4])
+            )
+        )
+    )
 
-    cmp1 = ['x = fun1(2)']
-    cmp2 = ['y = fun2(2, 3, 4)']
-    cmp3 = ['p = 0', 'q = 0', 'r = 0', 'z = fun3(p, q, r)']
-    cmp4 = ['x = 0.0', 'y = 0.0', 'z = 0', 'i = fun4(x, y, z)']
+    assert res3[0] == Declaration(
+        Variable(
+            Symbol('p'),
+            type=IntBaseType(String('integer')),
+            value=Integer(0)
+        )
+    )
 
-    assert res1 == cmp1
-    assert res2 == cmp2
-    assert res3 == cmp3
-    assert res4 == cmp4
+    assert res3[1] == Declaration(
+        Variable(
+            Symbol('q'),
+            type=IntBaseType(String('integer')),
+            value=Integer(0)
+        )
+    )
 
-    os.remove('..test1.h')
-    os.remove('..test2.h')
-    os.remove('..test3.h')
-    os.remove('..test4.h')
+    assert res3[2] == Declaration(
+        Variable(
+            Symbol('r'),
+            type=IntBaseType(String('integer')),
+            value=Integer(0)
+        )
+    )
 
-test_variable()
-test_int()
-test_float()
-test_function()
-test_parameters()
-test_function_call()
+    assert res3[3] == Declaration(
+        Variable(
+            Symbol('z'),
+            value=FunctionCall(
+                String('fun3'),
+                function_args=([Symbol('p'), Symbol('q'), Symbol('r')])
+            )
+        )
+    )
+
+    assert res4[0] == Declaration(
+        Variable(
+            Symbol('x'),
+            type=FloatBaseType(String('real')),
+            value=Float('0.0', precision=53)
+        )
+    )
+
+    assert res4[1] == Declaration(
+        Variable(
+            Symbol('y'),
+            type=FloatBaseType(String('real')),
+            value=Float('0.0', precision=53)
+        )
+    )
+
+    assert res4[2] == Declaration(
+        Variable(
+            Symbol('z'),
+            type=IntBaseType(String('integer')),
+            value=Integer(0)
+        )
+    )
+
+    assert res4[3] == Declaration(
+        Variable(
+            Symbol('i'),
+            value=FunctionCall(
+                String('fun4'),
+                function_args=([Symbol('x'), Symbol('y'), Symbol('z')])
+            )
+        )
+    )
