@@ -214,6 +214,21 @@ def test_decipher_rsa():
         assert decipher_rsa(2, prk) == 2
 
 
+def test_rsa_full_example():
+    # Test example from
+    # https://iopscience.iop.org/article/10.1088/1742-6596/995/1/012030
+    puk = rsa_public_key(2, 3, 5, 7, 11, 13, 7)
+    prk = rsa_private_key(2, 3, 5, 7, 11, 13, 7)
+    assert puk == (30030, 7)
+    assert prk == (30030, 823)
+
+    msg = 10
+    encrypted = encipher_rsa(2 * msg - 15, puk)
+    assert encrypted == 18065
+    decrypted = (decipher_rsa(encrypted, prk) + 15) / 2
+    assert decrypted == msg
+
+
 def test_kid_rsa_public_key():
     assert kid_rsa_public_key(1, 2, 1, 1) == (5, 2)
     assert kid_rsa_public_key(1, 2, 2, 1) == (8, 3)
