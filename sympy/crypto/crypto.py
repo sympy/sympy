@@ -1457,11 +1457,13 @@ def _rsa_key(*args, public=True, private=True, totient='Euler'):
                 from sympy.ntheory import reduced_totient as totfunc
                 phi = totfunc(n)
         else:
+            # XXX WIP for carmichael totient
             NonInvertibleCipherWarning(
                 'Non-distinctive primes found in the factors of {}.'
                 'The cipher may not be decryptable for some numbers.'
                 .format(primes)).warn()
-            phi = totient._from_factors(tally)
+            from sympy.ntheory import totient as totfunc
+            phi = totfunc._from_factors(tally)
 
         if gcd(e, phi) == 1:
             if public and not private:
