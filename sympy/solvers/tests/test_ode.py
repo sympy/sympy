@@ -3082,7 +3082,7 @@ def test_2nd_linear_bessel_equation():
     assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
     assert dsolve(eq, f(x)) in (sol, sols)
     assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
-    # FIXME: assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+    checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2)*f(x)
     sol = Eq(f(x), C1*besselj(0, x) + C2*bessely(0, x))
@@ -3098,7 +3098,7 @@ def test_2nd_linear_bessel_equation():
     assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
     assert dsolve(eq, f(x)) in (sol, sols)
     assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
-    # FIXME: assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+    checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**4 - 4)*f(x)
     sol = Eq(f(x), C1*besselj(1, x**2/2) + C2*bessely(1, x**2/2))
@@ -3114,7 +3114,23 @@ def test_2nd_linear_bessel_equation():
     assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
     assert dsolve(eq, f(x)) in (sol, sols)
     assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
-    # FIXME: assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - S(1)/4)*f(x)
+    sol = Eq(f(x), C1*besselj(S(1)/2, x) + C2*bessely(S(1)/2, x))
+    sols = constant_renumber(sol)
+    assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x)
+    sol = Eq(f(x), x**2*(C1*besselj(0, 4*sqrt(x)) + C2*bessely(0, 4*sqrt(x))))
+    sols = constant_renumber(sol)
+    assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
 def test_issue_7093():
     x = Symbol("x") # assuming x is real leads to an error

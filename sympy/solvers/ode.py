@@ -4063,7 +4063,7 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     c4 = match['c4']
     d4 = match['d4']
     n = sqrt(n**2 + Rational(1, 4)*(c4 - 1)**2)
-    return (Eq(f(x), (x**(Rational(1-c4,2)))*(C0*besselj(S(n)/d4,x**d4/S(d4)) + C1*bessely(S(n)/d4,x**d4/S(d4))).subs(x,a4*x)))
+    return Eq(f(x), (x**(Rational(1-c4,2)))*(C0*besselj(S(n)/d4,a4*x**d4/S(d4)) + C1*bessely(S(n)/d4,a4*x**d4/S(d4))))
 
 def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     r"""
