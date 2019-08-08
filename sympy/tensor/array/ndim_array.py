@@ -456,7 +456,6 @@ class NDimArray(object):
                     yield self[i]
             else:
                 yield self[()]
-                return
 
         return iterator()
 
