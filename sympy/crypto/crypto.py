@@ -1768,16 +1768,17 @@ def _encipher_decipher_rsa(i, key, factors=None):
     if not factors:
         return pow(i, d, n)
 
+    def _is_coprime_set(l):
+        is_coprime_set = True
+        for i in range(len(l)):
+            for j in range(i+1, len(l)):
+                if gcd(l[i], l[j]) != 1:
+                    is_coprime_set = False
+                    break
+        return is_coprime_set
+
     prod = reduce(lambda i, j: i*j, factors)
-
-    is_coprime_set = None
-    for i in range(len(factors)):
-        for j in range(i+1, len(factors)):
-            if gcd(factors[i], factors[j]) != 1:
-                is_coprime_set = False
-                break
-
-    if prod == n and is_coprime_set:
+    if prod == n and _is_coprime_set(factors):
         return _decipher_rsa_crt(i, d, factors)
     return _encipher_decipher_rsa(i, key, factors=None)
 
@@ -1830,6 +1831,11 @@ def encipher_rsa(i, key, factors=None):
     >>> prk = rsa_private_key(p, q, e)
     >>> msg = 12
     >>> encipher_rsa(msg, prk)
+    3
+
+    Encryption using chinese remainder theorem:
+
+    >>> encipher_rsa(msg, prk, factors=[p, q])
     3
     """
     return _encipher_decipher_rsa(i, key, factors=factors)
@@ -1891,6 +1897,11 @@ def decipher_rsa(i, key, factors=None):
     >>> new_msg
     3
     >>> decipher_rsa(new_msg, prk)
+    12
+
+    Decryption using chinese remainder theorem:
+
+    >>> decipher_rsa(new_msg, prk, factors=[p, q])
     12
     """
     return _encipher_decipher_rsa(i, key, factors=factors)
