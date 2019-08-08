@@ -1640,38 +1640,8 @@ def rsa_private_key(*args, totient='Euler', multipower=None):
     ==========
 
     args : naturals
-        If specified as `p, q, e` where `p` and `q` are distinct primes
-        and `e` is a desired public exponent of the RSA, `n = p q` and
-        `e` will be verified against the totient
-        `\phi(n)` (Euler totient) or `\lambda(n)` (Carmichael totient)
-        to be `\gcd(e, \phi(n)) = 1` or `\gcd(e, \lambda(n)) = 1`.
-
-        If specified as `p_1, p_2, ..., p_n, e` where
-        `p_1, p_2, ..., p_n` are specified as primes,
-        and `e` is specified as a desired public exponent of the RSA,
-        it will be able to form a multi-prime RSA, which is a more
-        generalized form of the popular 2-prime RSA.
-
-        It can also be possible to form a single-prime RSA by specifying
-        the argument as `p, e`, which can be considered a trivial case
-        of a multiprime RSA.
-
-        Furthermore, it can be possible to form a multi-power RSA by
-        specifying two or more pairs of the primes to be same.
-        However, unlike the two-distinct prime RSA or multi-prime
-        RSA, not every numbers in the complete residue system
-        (`\mathbb{Z}_n`) will be decryptable since the mapping will not
-        be bijective.
-        However, the RSA can still be decryptable for the numbers in the
-        reduced residue system (`\mathbb{Z}_n^{\times}`), and can have
-        limited application.
-
-        If you pass a non-prime integer to the arguments
-        `p_1, p_2, ..., p_n`, the particular number will be
-        prime-factored and it will become either a multi-prime RSA or a
-        multi-power RSA in its canonical form, depending on whether the
-        product equals its radical or not.
-        `p_1 p_2 ... p_n = \text{rad}(p_1 p_2 ... p_n)`
+        The keyword is identical to the ``args`` in
+        :meth:`rsa_public_key`.
 
     totient : bool, optional
         If ``'Euler'``, it uses Euler's totient `\phi(n)` which is
