@@ -1404,7 +1404,7 @@ def _rsa_key(*args, public=True, private=True):
     ==========
 
     public, private : bool, optional
-        Flag to generate either a public key, a private key, or both.
+        Flag to generate either a public key, a private key
     """
     if len(args) < 2:
         return False
@@ -1429,11 +1429,9 @@ def _rsa_key(*args, public=True, private=True):
             if public and not private:
                 return n, e
 
-            if private:
+            if private and not public:
                 d = mod_inverse(e, phi)
-                if not public:
-                    return n, d
-                return n, e, d
+                return n, d
 
         return False
 
