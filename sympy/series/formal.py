@@ -1207,15 +1207,7 @@ class FormalPowerSeries(SeriesBase):
         elif self.x != other.x:
             raise ValueError("Both series should have the same symbol.")
 
-        k = self.ak.variables[0]
-        coeff1 = sequence(self.ak.formula, (k, 0, oo))
-
-        k = other.ak.variables[0]
-        coeff2 = sequence(other.ak.formula, (k, 0, oo))
-
-        f, g = self.function, other.function
-
-        return FormalPowerSeriesProduct((self, other), self.x, self.x0, self.dir, ((coeff1, coeff2), self.xk, self.ind))
+        return FormalPowerSeriesProduct(self, other)
 
     def coeff_bell(self, n):
         r"""
@@ -1315,13 +1307,11 @@ class FormalPowerSeries(SeriesBase):
         elif self.x != other.x:
             raise ValueError("Both series should have the same symbol.")
 
-        f, g = self.function, other.function
-        funct = (f, g)
         if other._eval_term(0).as_coeff_mul(other.x)[0] is not S.Zero:
             raise ValueError("The formal power series of the inner function should not have any "
                 "constant coefficient term.")
 
-        return FormalPowerSeriesCompose((self, other), self.x, self.x0, self.dir, ((self.bell_coeff_seq,), self.xk, self.ind))
+        return FormalPowerSeriesCompose(self, other)
 
     def inverse(self, x=None, n=6):
         r"""
@@ -1375,18 +1365,11 @@ class FormalPowerSeries(SeriesBase):
         if n is None:
             return iter(self)
 
-        f = self.function
         if self._eval_term(0) is S.Zero:
             raise ValueError("Constant coefficient should exist for an inverse of a formal"
                 " power series to exist.")
-        inv = self._eval_term(0)
 
-        k = Dummy('k')
-        aks = [inv]
-        inv_seq = sequence(inv ** (-(k + 1)), (k, 1, oo))
-        aux_seq = self.sign_seq * self.fact_seq * inv_seq
-
-        return FormalPowerSeriesInverse((self,), self.x, self.x0, self.dir, ((aux_seq,), self.xk, self.ind))
+        return FormalPowerSeriesInverse(self)
 
     def __add__(self, other):
         other = sympify(other)
@@ -1463,11 +1446,11 @@ class FiniteFormalPowerSeries(FormalPowerSeries):
 
     @property
     def ffps(self):
-        return self.args[0][0]
+        return self.args[0]
 
     @property
     def gfps(self):
-        return self.args[0][1]
+        return self.args[1]
 
     @property
     def f(self):
@@ -1491,6 +1474,13 @@ class FiniteFormalPowerSeries(FormalPowerSeries):
 
     def polynomial(self, n):
         return self._eval_terms(n)
+
+    def truncate(self, n=6):
+        ffps = self.ffps
+        pt_xk = ffps.xk.coeff(n)
+        x, x0 = ffps.x, ffps.x0
+
+        return self.polynomial(n) + Order(pt_xk, (x, x0))
 
     def _eval_derivative(self, x):
         raise NotImplementedError
@@ -1517,6 +1507,15 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
     sympy.series.formal.FiniteFormalPowerSeries
 
     """
+
+    def __init__(self, *args):
+        ffps, gfps = self.ffps, self.gfps
+
+        k = ffps.ak.variables[0]
+        self.coeff1 = sequence(ffps.ak.formula, (k, 0, oo))
+
+        k = gfps.ak.variables[0]
+        self.coeff2 = sequence(gfps.ak.formula, (k, 0, oo))
 
     @property
     def function(self):
@@ -1546,13 +1545,13 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
         sympy.series.formal.FormalPowerSeries.product
 
         """
-        coeff1, coeff2 = self.ak
+        coeff1, coeff2 = self.coeff1, self.coeff2
 
         aks = convolution(coeff1[:n], coeff2[:n])
 
         terms = []
         for i in range(0, n):
-            terms.append(aks[i] * self.xk.coeff(i))
+            terms.append(aks[i] * self.ffps.xk.coeff(i))
 
         return Add(*terms)
 
@@ -1577,14 +1576,11 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
     sympy.series.formal.FiniteFormalPowerSeries
 
     """
-    def __init__(self, *args):
-        k = self.xk.variables[0]
-        self.fact_seq = sequence(factorial(k), (k, 1, oo))
 
     @property
     def function(self):
         """Function for the composed formal power series."""
-        f, g, x = self.f, self.g, self.x
+        f, g, x = self.f, self.g, self.ffps.x
         return f.subs(x, g)
 
     def _eval_terms(self, n):
@@ -1621,12 +1617,12 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
         f, g = self.f, self.g
 
         ffps, gfps = self.ffps, self.gfps
-        terms = [ffps._eval_term(0)]
+        terms = [ffps.zero_coeff()]
 
         for i in range(1, n):
             bell_seq = gfps.coeff_bell(i)
-            seq = (self.ak[0] * bell_seq)
-            terms.append(Add(*(seq[:i])) / self.fact_seq[i-1] * self.xk.coeff(i))
+            seq = (ffps.bell_coeff_seq * bell_seq)
+            terms.append(Add(*(seq[:i])) / ffps.fact_seq[i-1] * ffps.xk.coeff(i))
 
         return Add(*terms)
 
@@ -1650,8 +1646,12 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
 
     """
     def __init__(self, *args):
-        k = self.xk.variables[0]
-        self.fact_seq = sequence(factorial(k), (k, 1, oo))
+        ffps = self.ffps
+        k = ffps.xk.variables[0]
+
+        inv = ffps.zero_coeff()
+        inv_seq = sequence(inv ** (-(k + 1)), (k, 1, oo))
+        self.aux_seq = ffps.sign_seq * ffps.fact_seq * inv_seq
 
     @property
     def function(self):
@@ -1702,12 +1702,12 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
         """
         f = self.f
         ffps = self.ffps
-        terms = [ffps._eval_term(0)]
+        terms = [ffps.zero_coeff()]
 
         for i in range(1, n):
             bell_seq = ffps.coeff_bell(i)
-            seq = (self.ak[0] * bell_seq)
-            terms.append(Add(*(seq[:i])) / self.fact_seq[i-1] * self.xk.coeff(i))
+            seq = (self.aux_seq * bell_seq)
+            terms.append(Add(*(seq[:i])) / ffps.fact_seq[i-1] * ffps.xk.coeff(i))
 
         return Add(*terms)
 
