@@ -7,16 +7,18 @@ class OmegaPower(Basic):
     building blocks of the Ordinal class.
     In OmegaPower(a, b) a represents exponent and b represents multiplicity.
     """
-    def __new__(cls, a, b):
-        if isinstance(b, int):
-            b = Integer(b)
-        if not isinstance(b, Integer) or b <= 0:
+
+    _basic_version = 2
+
+    @classmethod
+    def _eval_args(cls, a, b):
+        if not (b.is_Integer and b > 0):
             raise TypeError("multiplicity must be a positive integer")
 
         if not isinstance(a, Ordinal):
             a = Ordinal.convert(a)
 
-        return Basic.__new__(cls, a, b)
+        return a, b
 
     @property
     def exp(self):
