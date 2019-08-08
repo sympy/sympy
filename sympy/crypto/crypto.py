@@ -1397,12 +1397,13 @@ def bifid6_square(key=None):
 #################### RSA  #############################
 
 
-def _rsa_private_key_crt(*primes, d):
+def _rsa_private_key_crt(*args):
     """Subroutine to generate additional private keys from the already
     computed `d` of the private key and `p, q`, to use in chinese
     remainder theorem algorithms.
     """
-    additional_exponents = (d % (p-1) for p in primes)
+    primes, d = args[:-1], args[-1]
+    additional_exponents = [d % (p-1) for p in primes]
     return additional_exponents
 
 
@@ -1414,7 +1415,7 @@ def _decipher_rsa_crt(i, primes, exponents):
     The keys given would be different.
     """
     from sympy.ntheory.modular import crt
-    moduluses = [pow(i, dp, p) for dp, p in zip(primes, exponents)]
+    moduluses = [pow(i, p, dp) for dp, p in zip(primes, exponents)]
 
     result = crt(primes, moduluses)
     if not result:
