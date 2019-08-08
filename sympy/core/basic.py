@@ -98,30 +98,64 @@ class Basic(with_metaclass(ManagedProperties)):
     _basic_sympifyargs = True
     _basic_autodoit = True
 
-    def __new__(cls, *args, evaluate=None, **kwargs):
+    def __new__(cls, *args, **kwargs):
+
+        # PY2 does not support keyword-only parameters
+        evaluate = kwargs.pop('evaluate', None)
+
         #
         # Need to support _basic_version 1 and 2 so here we check. If the
         # _basic_version is 1 then Basic.__new__ is essentially a no-op: just
         # store the args and the hash. Any preprocessing already took place in
         # Subclass.__new__. If _basic_version is 2 then Basic.__new__ is
         # called first (the subclass does not define __new__). Initialisation
-        # occurs in cls._eval_new which is called from here. These two mode
-        # involve Basic.__new__ being called either first or last in the chain
-        # so we need an explicit check to support both cases.
+        # occurs in cls._eval_args and cls._eval_doit which are called from
+        # here. These two modes involve Basic.__new__ being called either
+        # first or last in the chain so we need an explicit check to support
+        # both cases. Basic defines _basic_version=1 so the check below will
+        # be false for any subclass that has not explicitly opted in to the
+        # new interface.
         #
         if cls._basic_version == 2:
+            # We sympify here and then again after _eval_args.
+            # The second sympify would not be needed if we could trust every
+            # author of an _eval_args method to only return sympified
+            # values. On the other hand we could *only* sympify here and
+            # not above. That would mean that _eval_args couldn't count on
+            # getting sympified args - it would also make it possible for
+            # _eval_args to translate unsympifiable args.
             if cls._basic_sympifyargs:
                 args = tuple(map(S, args))
+                # Sometimes e.g. Interval(a, b, right_open=True) args are
+                # provided as kwargs. That means we have to sympify any kwargs
+                # here as well. We could skip this step if we didn't sympify
+                # before calling _eval_args...
+                kwargs = {k: S(v) for k, v in kwargs.items()}
 
-            cls._eval_validate(*args, **kwargs) # Possibly raises
+            # Handles default arguments and simple validation.
+            newargs = cls._eval_args(*args, **kwargs)
+
+            # If _eval_args returns None we reuse args. This means that we
+            # can optimise to avoid double sympification by returning None
+            # from _eval_args where possible.
+            if newargs is not None:
+                args = tuple(map(S, newargs))
 
             # Now evaluate to something else
             if evaluate is None:
                 evaluate = cls._basic_autodoit
             if evaluate:
-                newobj = cls._eval_new(*args, **kwargs)
+                newobj = cls._eval_doit(*args)
                 if newobj is not None:
                     return newobj
+
+        # Create the object and store the args. We get here either because:
+        # 1. The class uses _basic_version=1
+        # 2. The instance was created with evaluate=False
+        # 3. The object was unable to evaluate (_eval_doit returned None).
+        #
+        # For classes having _basic_version=1 the lines below are the whole of
+        # the Basic.__new__ method.
 
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
@@ -131,28 +165,65 @@ class Basic(with_metaclass(ManagedProperties)):
         return obj
 
     @classmethod
-    def _eval_validate(cls, *args, **kwargs):
-        '''Basic._eval_validate raises if the args are invalid.
+    def _eval_args(cls, *args):
+        '''Handle optional/keyword arguments and validation for Basic.
 
-        This method should be overridden by subclasses to validate args.
-        Invalid args should raise. When using _basic_version=2 this method
-        will be called by Basic.__new__ even if evaluate=False. It shoul
-        perform cheap validation of the arguments (e.g. checking types, number
-        of arguments). It should raise if anything is incorrect but otherwise
-        does not return anything.
+        This method performs the map
+
+            (*args, **kwargs) -> args
+
+        Where *args and **kwargs are the literal arguments passed when
+        creating the instance and args is a valid args tuple for the class.
+        Basic.__new__ will remove any evaluate= keyword argument but otherwise
+        pass everything through. If evaluate=False then the instance is
+        created with this args tuple so this method should raise if that will
+        not create a coherent object. When evaluate=True the args tuple will
+        be passed to _eval_doit which is responsible for evaluation and might
+        return an object with different args or of a different type.
+
+        This class method should be overridden by subclasses of Basic that use
+        _basic_version=2 to implement any logic for optional and keyword
+        arguments. The overridden implementation should:
+
+        - Return None if the args tuple is fine as it is.
+        - Return a new args tuple if necessary (because of e.g. optional
+          arguments).
+        - Raise TypeError/ValueError if the resulting args tuple will not
+          create a valid object.
+
+        The Basic._eval_args method does not accept any keyword arguments so
+        subclasses need to override this if they want to support that. The
+        method should then raise if any unrecognised keyword arguments are
+        found. After calling _eval_args Basic.__new__ will discard the
+        **kwargs that were passed so they can only have any effect if it
+        happens here.
+
+        Both *args and the values of **kwargs will have already been sympified
+        before _eval_args is called. The returned tuple will be resympified as
+        well. Return None to avoid double sympification when the args tuple is
+        unchanged.
         '''
         pass
 
     @classmethod
-    def _eval_new(cls, *args, **kwargs):
-        '''Basic._eval_new
+    def _eval_doit(cls, *args):
+        '''Evaluate the Basic instance.
 
-        This method should be overridden by subclasses to "evaluate" the
-        instance. Any automatic evaluation to create a different object with
-        different args or of a different type should happen here and should be
-        returned from this method. If this method returns None then the
-        instance will be initialised normally and its args stored in
-        Basic.__new__ afterwards.
+        This method should be overridden by subclasses using _basic_version=2
+        to "evaluate" the instance. This method receives the args tuple
+        returned by _eval_args and can either:
+
+        - Return a new object having different args/type.
+        - Return None to allow the object to be created with the args tuple as
+          provided here.
+
+        Subclasses using this should not assume that this method will be
+        called since it will not if evaluate=False. The _eval_args method is
+        responsible for raising if the unevaluated args tuple will create an
+        incoherent object.
+
+        The args tuple provided here will have been already sympified and
+        should have been already validated by _eval_args.
         '''
         pass
 

@@ -308,16 +308,18 @@ class ImageSet(Set):
     _basic_version = 2
 
     @classmethod
-    def _eval_validate(cls, flambda, *sets):
+    def _eval_args(cls, flambda, *sets):
         if not isinstance(flambda, Lambda):
             raise ValueError('first argument must be a Lambda')
 
+        # A better check than the one below would be that the number of
+        # arguments to the function matches the number of sets.
         if flambda is S.IdentityFunction:
             if len(sets) != 1:
                 raise ValueError('identify function requires a single set')
 
     @classmethod
-    def _eval_new(cls, flambda, *sets):
+    def _eval_doit(cls, flambda, *sets):
         if flambda is S.IdentityFunction:
             return sets[0]
 
@@ -518,14 +520,18 @@ class Range(Set):
 
     _basic_version = 2
 
-    # XXX: The code below shows a good example of why we should probably allow
-    # _eval_validate to return changed args. There isn't any other sensible
-    # way of handling the default arguments for Range which are quite
-    # complicated. Also in the _basic_version=2 scheme this is the natural
-    # place to specify argument defaults. Otherwise evaluate=False here will
-    # lead to a Range that has invalid args.
+    # FIXME: I'm fairly sure that the logic below in _eval_args and _eval_doit
+    # can be simplified substantially.
+    #
+    # Range is a good example of why _eval_args needs to handle default
+    # arguments and modify the args tuple even when no evaluation takes place.
+    # If we do Range(3,evaluate=False) we still want to end up with
+    # Range(0,3,1). Storing (3,) as the args tuple would create an incoherent
+    # object. OTOH canonicalisation like Range(0,3,2) -> Range(0,4,2) can be
+    # safely disabled when evaluate=False.
+
     @classmethod
-    def _eval_validate(cls, *args):
+    def _eval_args(cls, *args):
         from sympy.functions.elementary.integers import ceiling
 
         # expand range
@@ -558,8 +564,10 @@ class Range(Set):
                 raise ValueError(filldedent('''
     Either the start or end value of the Range must be finite.'''))
 
+        return (start, stop, step)
+
     @classmethod
-    def _eval_new(cls, *args):
+    def _eval_doit(cls, *args):
         from sympy.functions.elementary.integers import ceiling
 
         # expand range

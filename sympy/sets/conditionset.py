@@ -113,7 +113,7 @@ class ConditionSet(Set):
     _basic_version = 2
 
     @classmethod
-    def _eval_new(cls, sym, condition, base_set=S.UniversalSet):
+    def _eval_doit(cls, sym, condition, base_set):
         # Store these to check if the args have changed. Otherwise we get
         # infinite recursion...
         orig = (cls, sym, condition, base_set)
@@ -163,12 +163,18 @@ class ConditionSet(Set):
             if s not in condition.xreplace({sym: s}).free_symbols:
                 raise ValueError(
                     'non-symbol dummy not recognized in condition')
+        #
+        # FIXME: This is an awkward construction to prevent an infinite
+        # recursion. The problem here is that the original implementation
+        # called Basic.__new__ and then afterwards possibly still returns a
+        # different object.
+        #
         if (cls, sym, condition, base_set) != orig:
             rv = ConditionSet(sym, condition, base_set)
             return rv if know is None else Union(know, rv)
 
     @classmethod
-    def _eval_validate(cls, sym, condition, base_set=S.UniversalSet):
+    def _eval_args(cls, sym, condition, base_set=None):
         # nonlinsolve uses ConditionSet to return an unsolved system
         # of equations (see _return_conditionset in solveset) so until
         # that is changed we do minimal checking of the args
@@ -179,6 +185,10 @@ class ConditionSet(Set):
             raise TypeError('Boolean exoected...')
         if not isinstance(base_set, Set):
             raise TypeError('expecting set for base_set')
+
+        if base_set is None:
+            base_set = S.UniversalSet
+            return (sym, condition, base_set)
 
     sym = property(lambda self: self.args[0])
     condition = property(lambda self: self.args[1])
