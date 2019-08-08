@@ -12,7 +12,7 @@ from sympy.functions import SingularityFunction, Piecewise, factorial
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
-from sympy.plotting import plot, PlotGrid
+from sympy.plotting import plot, PlotGrid, plot_implicit
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
@@ -123,6 +123,8 @@ class Beam(object):
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
+        self._applied_supports = []
+        self._support_as_loads = []
         self._applied_loads = []
         self._reaction_loads = {}
         self._composite_type = None
@@ -366,6 +368,8 @@ class Beam(object):
         (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
         """
+        loc = sympify(loc)
+        self._applied_supports.append((loc, type))
         if type == "pin" or type == "roller":
             reaction_load = Symbol('R_'+str(loc))
             self.apply_load(reaction_load, loc, -1)
@@ -377,6 +381,9 @@ class Beam(object):
             self.apply_load(reaction_moment, loc, -2)
             self.bc_deflection.append((loc, 0))
             self.bc_slope.append((loc, 0))
+            self._support_as_loads.append((reaction_moment, loc, -2, None))
+
+        self._support_as_loads.append((reaction_load, loc, -1, None))
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -1524,25 +1531,69 @@ class Beam(object):
     def draw(self):
         x = self.variable
         length = self.length
-        height = 1
+        height = 2
 
-        y =Symbol('y')
-        # drawing a rectangle for beam
-        p1 = plot_implicit(y, (x, 0, length), (y, -1, length), show=False)
-        p2 = plot_implicit(x, (x, -1, length+1),(y, 0, height), show=False)
-        p3 = plot_implicit(x-length, (x, -1, length+1),(y, 0, height), show=False)
-        p4 = plot_implicit(y-height, (x, 0, length), (y, -length, length), show=False, axis=False)
-        p4.append(p3[0])
-        p4.append(p1[0])
-        p4.append(p2[0])
+        rectangles = []
+        rectangles.append({'xy':(0, 0), 'width':length, 'height': height, 'facecolor':"brown"})
+        annotations, markers, load_eq = self._draw_load()
+        support_markers, support_rectangles = self._draw_supports()
 
-        # drawing load (currently excluding moment and point loads)
-        l = [i for i in self.load.args if i.args[1].args[2]>=0]
-        l = Add(*l)
-        sing_plot = plot(height+l, show=False)
-        p4.append(sing_plot[0])
+        rectangles += support_rectangles
+        markers += support_markers
 
-        return p4
+        sing_plot = plot(height + load_eq, (x, -1, length),
+         xlim=(-1, length+1), ylim=(-30, 30), annotations=annotations,
+          markers=markers, rectangles=rectangles, axis=False, show=False)
+
+        return sing_plot
+
+
+    def _draw_load(self):
+        from sympy import Add
+        loads = list(set(self.applied_loads) - set(self._support_as_loads))
+        height = 2
+        length = self.length
+        x = self.variable
+
+        annotations = []
+        markers = []
+        for load in loads:
+            if load[2] == -1:
+                if load[0].is_positive:
+                    annotations.append({'s':'', 'xy':(load[1], height),  'xytext':(load[1], height*3), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
+                else:
+                    annotations.append({'s':'', 'xy':(load[1], 0), 'xytext':(load[1], height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
+            elif load[2] == -2:
+                if load[0].is_negative:
+                    markers.append({'args':[[load[1]], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
+                else:
+                    markers.append({'args':[[load[1]], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
+            elif load[2] >= 0:
+                load_eq = [i for i in self.load.args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
+                load_eq = Add(*load_eq)
+
+        return annotations, markers, load_eq
+
+
+    def _draw_supports(self):
+        height = 2
+
+        support_markers = []
+        support_rectangles = []
+        for support in self._applied_supports:
+            if support[1] == "pin":
+                support_markers.append({'args':[[support[0]], [0]], 'marker':6, 'markersize':10, 'color':"black"})
+
+            elif support[1] == "roller":
+                support_markers.append({'args':[support[0], [-0.8]], 'marker':'o', 'markersize':10, 'color':"black"})
+
+            elif support[1] == "fixed":
+                if support[0] == 0:
+                    support_rectangles.append({'xy':(0, -2), 'width':-self.length/30, 'height':4 + height, 'fill':False, 'hatch':'/////'})
+                else:
+                    support_rectangles.append({'xy':(self.length, -2), 'width':self.length/30, 'height': 4 + height, 'fill':False, 'hatch':'/////'})
+
+        return support_markers, support_rectangles
 
 
 class Beam3D(Beam):

@@ -162,6 +162,9 @@ class Plot(object):
         self.legend = False
         self.autoscale = True
         self.margin = 0
+        self.annotations = None
+        self.markers = None
+        self.rectangles = None
 
         # Contains the data objects to be plotted. The backend should be smart
         # enough to iterate over this list.
@@ -1147,34 +1150,6 @@ class MatplotlibBackend(BaseBackend):
             ax.set_xscale(parent.xscale)
         if parent.yscale and not isinstance(ax, Axes3D):
             ax.set_yscale(parent.yscale)
-        if parent.xlim:
-            from sympy.core.basic import Basic
-            xlim = parent.xlim
-            if any(isinstance(i, Basic) and not i.is_real for i in xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be real".format(xlim))
-            if any(isinstance(i, Basic) and not i.is_finite for i in xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be finite".format(xlim))
-            xlim = (float(i) for i in xlim)
-            ax.set_xlim(xlim)
-        else:
-            if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
-                starts = [s.start for s in parent._series]
-                ends = [s.end for s in parent._series]
-                ax.set_xlim(min(starts), max(ends))
-
-        if parent.ylim:
-            from sympy.core.basic import Basic
-            ylim = parent.ylim
-            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be real".format(ylim))
-            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be finite".format(ylim))
-            ylim = (float(i) for i in ylim)
-            ax.set_ylim(ylim)
         if not isinstance(ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
             ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
@@ -1208,6 +1183,49 @@ class MatplotlibBackend(BaseBackend):
             ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
             ax.set_ylabel(parent.ylabel, position=(0, 1))
+        if parent.annotations:
+            for a in parent.annotations:
+                ax.annotate(**a)
+        if parent.markers:
+            for m in parent.markers:
+                args = m.pop('args')
+                ax.plot(*args, **m)
+        if parent.rectangles:
+            for r in parent.rectangles:
+                rect = self.matplotlib.patches.Rectangle(**r)
+                ax.add_patch(rect)
+
+        # xlim and ylim shoulld always be set at last so that plot limits
+        # doesn't get altered during the process.
+        if parent.xlim:
+            from sympy.core.basic import Basic
+            xlim = parent.xlim
+            if any(isinstance(i, Basic) and not i.is_real for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be real".format(xlim))
+            if any(isinstance(i, Basic) and not i.is_finite for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be finite".format(xlim))
+            xlim = (float(i) for i in xlim)
+            ax.set_xlim(xlim)
+        else:
+            if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
+                starts = [s.start for s in parent._series]
+                ends = [s.end for s in parent._series]
+                ax.set_xlim(min(starts), max(ends))
+
+        if parent.ylim:
+            from sympy.core.basic import Basic
+            ylim = parent.ylim
+            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be real".format(ylim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be finite".format(ylim))
+            ylim = (float(i) for i in ylim)
+            ax.set_ylim(ylim)
+
 
     def process_series(self):
         """
