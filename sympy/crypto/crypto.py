@@ -1398,21 +1398,32 @@ def bifid6_square(key=None):
 
 def _decipher_rsa_crt(i, d, factors):
     """Decipher RSA using chinese remainder theorem from the information
-    of factors of the original rsa
+    of the relatively-prime factors of the modulus.
+
+    Parameters
+    ==========
+
+    i : integer
+        Ciphertext
+
+    d : integer
+        The exponent component
+
+    factors : list of relatively-prime integers
+        The integers given must be coprime and the product must equal
+        the modulus component of the original RSA key.
 
     Examples
     ========
 
-    How to use generate additional private keys for use in CRT:
+    How to decrypt RSA with CRT:
 
     >>> from sympy.crypto.crypto import rsa_public_key, rsa_private_key
     >>> primes = [61, 53]
     >>> e = 17
     >>> args = primes + [e]
-    >>> puk = rsa_public_key(*args, totient='Carmichael')
-    >>> prk = rsa_private_key(*args, totient='Carmichael')
-
-    Hot to decrypt RSA using CRT:
+    >>> puk = rsa_public_key(*args)
+    >>> prk = rsa_private_key(*args)
 
     >>> from sympy.crypto.crypto import encipher_rsa, _decipher_rsa_crt
     >>> msg = 65
