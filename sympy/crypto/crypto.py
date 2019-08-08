@@ -1620,6 +1620,20 @@ def rsa_private_key(*args, totient='Euler'):
         If ``'Carmichael'``, it uses Carmichael's totient
         (`reduced_totient` in SymPy).
 
+        There can be some differences as below
+
+        Example using Euler's totient:
+
+        >>> from sympy.crypto.crypto import rsa_private_key
+        >>> rsa_private_key(61, 53, 17, totient='Euler')
+        (3233, 2753)
+
+        Example using Carmichael's totient:
+
+        >>> from sympy.crypto.crypto import rsa_private_key
+        >>> rsa_private_key(61, 53, 17, totient='Carmichael')
+        (3233, 413)
+
     Returns
     =======
 
