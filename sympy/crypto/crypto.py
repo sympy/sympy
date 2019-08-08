@@ -1483,45 +1483,43 @@ def _rsa_key(*args, public=True, private=True, totient='Euler'):
 
     primes, e = args[:-1], args[-1]
 
-    if all(isprime(p) for p in primes):
-        n = reduce(lambda i, j: i*j, primes)
+    if any(not isprime(p) for p in primes):
+        new_primes = []
+        for i in primes:
+            new_primes.extend(factorint(i, multiple=True))
+        primes = new_primes
 
-        tally = multiset(primes)
-        if all(v == 1 for v in tally.values()):
-            multiple = list(tally.keys())
+    n = reduce(lambda i, j: i*j, primes)
 
-            if totient == 'Euler':
-                from sympy.ntheory import totient as totfunc
-                phi = totfunc._from_distinct_primes(*multiple)
+    tally = multiset(primes)
+    if all(v == 1 for v in tally.values()):
+        multiple = list(tally.keys())
 
-            elif totient == 'Carmichael':
-                from sympy.ntheory import reduced_totient as totfunc
-                phi = totfunc(n)
-        else:
-            # XXX WIP for carmichael totient
-            NonInvertibleCipherWarning(
-                'Non-distinctive primes found in the factors of {}.'
-                'The cipher may not be decryptable for some numbers.'
-                .format(primes)).warn()
+        if totient == 'Euler':
             from sympy.ntheory import totient as totfunc
-            phi = totfunc._from_factors(tally)
+            phi = totfunc._from_distinct_primes(*multiple)
 
-        if gcd(e, phi) == 1:
-            if public and not private:
-                return n, e
+        elif totient == 'Carmichael':
+            from sympy.ntheory import reduced_totient as totfunc
+            phi = totfunc(n)
+    else:
+        # XXX WIP for carmichael totient
+        NonInvertibleCipherWarning(
+            'Non-distinctive primes found in the factors of {}.'
+            'The cipher may not be decryptable for some numbers.'
+            .format(primes)).warn()
+        from sympy.ntheory import totient as totfunc
+        phi = totfunc._from_factors(tally)
 
-            if private and not public:
-                d = mod_inverse(e, phi)
-                return n, d
+    if gcd(e, phi) == 1:
+        if public and not private:
+            return n, e
 
-        return False
+        if private and not public:
+            d = mod_inverse(e, phi)
+            return n, d
 
-    new_primes = []
-    for i in primes:
-        new_primes.extend(factorint(i, multiple=True))
-
-    return _rsa_key(
-        *new_primes, e, public=public, private=private, totient=totient)
+    return False
 
 
 def rsa_public_key(*args, totient='Euler'):
