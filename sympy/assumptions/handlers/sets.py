@@ -342,7 +342,7 @@ class AskHermitianHandler(AskRealHandler):
     def Expr(expr, assumptions):
         if isinstance(expr, MatrixBase):
             return None
-        return super(AskRealHandler, AskRealHandler).Expr(expr, assumptions)
+        return AskRealHandler.Expr(expr, assumptions)
 
     @staticmethod
     def Add(expr, assumptions):
