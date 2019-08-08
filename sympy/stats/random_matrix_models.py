@@ -213,7 +213,7 @@ def joint_eigen_distribution(mat):
     Lambda((l[1], l[2]), exp(-l[1]**2 - l[2]**2)*Product(Abs(l[_i] - l[_j])**2, (_j, _i + 1, 2), (_i, 1, 1))/pi)
     """
     if not isinstance(mat, RandomMatrixSymbol):
-        raise ValueError("%s is not of type, RandomMatrixSymbol.")
+        raise ValueError("%s is not of type, RandomMatrixSymbol."%(mat))
     return mat.pspace.model.joint_eigen_distribution()
 
 def JointEigenDistribution(mat):
