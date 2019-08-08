@@ -1,13 +1,12 @@
-from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
-                               Return, FunctionDefinition, Assignment,
-                               Declaration, CodeBlock)
-from sympy.core import Integer, Float, Add
-from sympy import Symbol
-
-
 from sympy.external import import_module
 lfortran = import_module('lfortran')
+
 if lfortran:
+    from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
+                                   Return, FunctionDefinition, Assignment,
+                                   Declaration, CodeBlock)
+    from sympy.core import Integer, Float, Add
+    from sympy import Symbol
     from sympy.parsing.sym_expr import SymPyExpression
 
     expr1 = SymPyExpression()

@@ -3,15 +3,15 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
 lfortran = import_module('lfortran')
-cin = import_module('clang.cindex', __import__kwargs = {'fromlist':['cindex']})
+cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
 
 if not lfortran and not cin:
     class SymPyExpression(object):
         def __init__(self, *args, **kwargs):
-            raise ImportError('lfortran not available.')
+            raise ImportError('Module not available.')
 
         def convert_to_expr(self, *args, **kwargs):
-            raise ImportError('lfortran not available')
+            raise ImportError('Module not available')
 
 else:
     if lfortran:
@@ -19,7 +19,7 @@ else:
     if cin:
         from sympy.parsing.c.c_parser import parse_c
 
-    @doctest_depends_on(modules=['lfortran','cin'])
+    @doctest_depends_on(modules=['lfortran', 'cin'])
     class SymPyExpression(object):
         """Class to store and handle SymPy expressions
 
@@ -36,17 +36,27 @@ else:
         The module and its API are currently under development and experimental
         and can be changed during development.
 
-        It currently only supports conversion from Fortran. The support for
-        other
-        languages is under development. The Fortran parser does not support
-        numeric
-        assignments, so all the variables have been Initialized to zero.
+        The Fortran parser does not support numeric assignments, so all the
+        variables have been Initialized to zero.
 
-        The module also depends on an external dependeny, LFortran which is
-        required to use the Fortran parser
+        The module also depends on external dependencies:
+
+        - LFortran which is required to use the Fortran parser
+        - Clang which is required for the C parser
 
         Examples
         ========
+
+        Example of parsing C code:
+
+        >>> src = '''
+        ... int a,b;
+        ... float c = 2, d =4;
+        ... '''
+        >>> a = SymPyExpression(src, 'c')
+        >>> a.return_expr()
+        [Declaration(Variable(Symbol('a'), type=IntBaseType(String('integer')), value=Integer(0))), Declaration(Variable(Symbol('b'), type=IntBaseType(String('integer')), value=Integer(0))), Declaration(Variable(Symbol('c'), type=IntBaseType(String('integer')), value=Integer(2))), Declaration(Variable(Symbol('d'),     type=IntBaseType(String('integer')), value=Integer(4)))]
+
 
         An example of variable definiton:
 
@@ -261,7 +271,6 @@ else:
             Assignment(Variable(f), Variable(r)),
             Return(Variable(f))
             ))]
-
 
             """
             return self._expr

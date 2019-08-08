@@ -8,24 +8,21 @@ from sympy.codegen.ast import (
 from sympy.external import import_module
 import os
 import sys
+import tempfile
 
 cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
 
 """
 This module contains all the necessary Classes and Function used to Parse C and
 C++ code into SymPy expression
-The module and its API are currently under development and experimental.
+The module serves as a ackend for SymPyExpression to parse C code
 It is also dependent on Clang's AST adn Sympy's Cdegen AST that is converted to
-SymPy syntax
-which might also bbe missing some features.
+SymPy syntax which might also be missing some features.
 The module only supports the features currently supported by the Clang and
-codegen AST
-which will be updated as the development of codegen AST and this module
-progresses.
+codegen AST which will be updated as the development of codegen AST and this
+module progresses.
 You might find unexpected bugs and exceptions while using the module, feel free
 to report them to the SymPy Issue Tracker
-The API for the module might also change while in development if better and more
-effective ways are discovered for the process
 
 Features Supported
 ==================
@@ -82,7 +79,8 @@ if cin:
     class CCodeConverter(BaseParser):
         """The Code Convereter for Clang AST
 
-
+        The converter object takes the C source code or file as input and
+        converts them to SymPy Expressions.
         """
 
         def __init__(self, name):
@@ -121,6 +119,49 @@ if cin:
                 args=flags,
                 options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
             )
+            for child in self.tu.cursor.get_children():
+                if child.kind == cin.CursorKind.VAR_DECL:
+                    self._py_nodes.append(self.transform(child))
+                elif (child.kind == cin.CursorKind.FUNCTION_DECL):
+                    self._py_nodes.append(self.transform(child))
+                else:
+                    pass
+            return self._py_nodes
+
+        def parse_str(self, source, flags):
+            """Function to parse a string with C source code
+
+            It takes the source code as an attribute, stores it in a temporary
+            file and creates a Clang AST Translation Unit parsing the file.
+            Then the transformation function is called on the transaltion unit,
+            whose reults are collected into a list which is returned by the
+            function.
+
+            Parameters
+            ==========
+
+            source : string
+                Path to the C file to be parsed
+
+            flags: list
+                Arguments to be passed to Clang while parsing the C code
+
+            Returns
+            =======
+
+            py_nodes: list
+                A list of sympy AST nodes
+
+            """
+            file = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.h')
+            file.write(source)
+            file.seek(0)
+            self.tu = self.index.parse(
+                file.name,
+                args=flags,
+                options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
+            )
+            file.close()
             for child in self.tu.cursor.get_children():
                 if child.kind == cin.CursorKind.VAR_DECL:
                     self._py_nodes.append(self.transform(child))
@@ -336,14 +377,7 @@ if cin:
                 children = node.get_children()
                 child = next(children)
 
-                # If there are any children, this will be a parameter
-                # with a default value. The children will be the reference
-                # to the default value.
-                # If the default value is a non-primitive type, there will
-                # be NAMESPACE_REF and TYPE_REF nodes; all but the last one
-                # can be ignored.
-
-                # Any namespace nodes can be stripped
+                # Any namespace nodes can be ignored
                 while child.kind in [cin.CursorKind.NAMESPACE_REF,
                                      cin.CursorKind.TYPE_REF,
                                      cin.CursorKind.TEMPLATE_REF]:
@@ -602,8 +636,8 @@ else:
             raise ImportError("Module not Installed")
 
 
-def convert_c_file(filename):
-    """Function for converting a C source file
+def parse_c(source):
+    """Function for converting a C source code
 
     The function reads the source code present in the given file and parses it
     to give out SymPy Expressions
@@ -611,41 +645,13 @@ def convert_c_file(filename):
     Returns
     =======
 
-    expr : list
+    src : list
         List of Python expression strings
 
     """
     converter = CCodeConverter('output')
-    expr = converter.parse(filename, flags = [])
-    return expr
-
-
-def convert_c_code(source):
-    """Function for converting a C source file
-
-    The function reads the provided source code string and parses it to give
-    out SymPy Expressions
-
-    Returns
-    =======
-
-    expr : list
-        List of Python expression strings
-
-    """
-    filename = "srccode.h"
-    file = open(filename, 'w')
-    file.write(source)
-    file.close()
-    expr = convert_c_file(str(filename))
-    os.remove(filename)
-    return expr
-
-
-def parse_c(source):
-    """Wrapper function to call appropriate function to parse C source code"""
     if os.path.exists(source):
-        src = convert_c_file(os.path.abspath(source))
+        src = converter.parse(source, flags = [])
     else:
-        src = convert_c_code(source)
+        src = converter.parse_str(source, flags = [])
     return src

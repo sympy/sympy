@@ -1,14 +1,13 @@
-from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
-                               Return, FunctionDefinition, Integer, Float,
-                               Declaration, CodeBlock, FunctionPrototype,
-                               FunctionCall, NoneToken)
-from sympy.core.containers import Tuple
-from sympy import Symbol
-
 from sympy.external import import_module
 cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
+
 if cin:
     from sympy.parsing.sym_expr import SymPyExpression
+    from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
+                                   Return, FunctionDefinition, Integer, Float,
+                                   Declaration, CodeBlock, FunctionPrototype,
+                                   FunctionCall, NoneToken)
+    from sympy import Symbol
 else:
     #bin/test will not execute any tests now
     disabled = True
