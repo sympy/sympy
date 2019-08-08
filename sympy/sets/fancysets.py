@@ -238,8 +238,16 @@ class Reals(with_metaclass(Singleton, Interval)):
     end = _sup = right = S.Infinity
     left_open = right_open = True
 
-    def __new__(cls):
-        return Basic.__new__(cls)
+    # Override Interval._eval_args and _eval_doit since we don't take the same
+    # args here.
+
+    @classmethod
+    def _eval_args(cls):
+        pass
+
+    @classmethod
+    def _eval_doit(cls):
+        pass
 
     def __eq__(self, other):
         return other == Interval(-S.Infinity, S.Infinity)

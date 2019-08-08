@@ -806,15 +806,17 @@ class Interval(Set, EvalfMixin):
     """
     is_Interval = True
 
-    def __new__(cls, start, end, left_open=False, right_open=False):
+    _basic_version = 2
 
-        start = _sympify(start)
-        end = _sympify(end)
-        left_open = _sympify(left_open)
-        right_open = _sympify(right_open)
+    @classmethod
+    def _eval_args(cls, start, end, left_open=false, right_open=false):
 
-        if not all(isinstance(a, (type(true), type(false)))
-            for a in [left_open, right_open]):
+        # FIXME: (remove this comment later) left_open and right_open will
+        # have been sympified by Basic.__new__ even if provided as keyword
+        # arguments.
+        bools = (true, false)
+        if left_open not in bools or right_open not in bools:
+            # FIXME: This should be TypeError:
             raise NotImplementedError(
                 "left_open and right_open can have only true/false values, "
                 "got %s and %s" % (left_open, right_open))
@@ -824,9 +826,22 @@ class Interval(Set, EvalfMixin):
         if not all(i.is_extended_real is not False or i in inftys for i in (start, end)):
             raise ValueError("Non-real intervals are not supported")
 
+        # Make sure infinite interval end points are open.
+        if start == S.NegativeInfinity:
+            left_open = true
+        if end == S.Infinity:
+            right_open = true
+
+        # FIXME: (remove this comment later) left_open or right_open may have
+        # changed so we return the possibly new args tuple here.
+        return (start, end, left_open, right_open)
+
+    @classmethod
+    def _eval_doit(cls, start, end, left_open, right_open):
         # evaluate if possible
         if (end < start) == True:
             return S.EmptySet
+        # FIXME: The two lines below should not be needed
         elif (end - start).is_negative:
             return S.EmptySet
 
@@ -836,14 +851,6 @@ class Interval(Set, EvalfMixin):
             if start == S.Infinity or start == S.NegativeInfinity:
                 return S.EmptySet
             return FiniteSet(end)
-
-        # Make sure infinite interval end points are open.
-        if start == S.NegativeInfinity:
-            left_open = true
-        if end == S.Infinity:
-            right_open = true
-
-        return Basic.__new__(cls, start, end, left_open, right_open)
 
     @property
     def start(self):
