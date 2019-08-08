@@ -1443,7 +1443,7 @@ def _decipher_rsa_crt(i, primes, exponents):
     65
     """
     from sympy.ntheory.modular import crt
-    moduluses = [pow(i, p, dp) for dp, p in zip(primes, exponents)]
+    moduluses = [pow(i, dp, p) for dp, p in zip(exponents, primes)]
 
     result = crt(primes, moduluses)
     if not result:

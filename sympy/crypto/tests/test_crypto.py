@@ -271,6 +271,31 @@ def test_rsa_crt_exhaustive():
                 )
 
 
+def test_rsa_crt_multiprime_exhanstive():
+    from sympy.crypto.crypto import _rsa_private_key_crt, _decipher_rsa_crt
+    primes = [2, 3, 5, 7]
+    e = 7
+    puk = rsa_public_key(*primes, e, totient='Carmichael')
+    prk = rsa_private_key(*primes, e, totient='Carmichael')
+
+    additional_exponents = _rsa_private_key_crt(*primes, prk[1])
+
+    # Run exhaustive test for every possible numbers
+    for msg in range(puk[0]):
+        encrypted = encipher_rsa(msg, puk)
+        decrypted = _decipher_rsa_crt(
+            encrypted, primes, additional_exponents)
+        try:
+            assert decrypted == msg
+        except AssertionError:
+            raise AssertionError(
+                "The RSA is not correctly decrypted " \
+                "(Original : {}, Encrypted : {}, Decrypted : {})" \
+                .format(msg, encrypted, decrypted)
+                )
+
+
+
 def test_kid_rsa_public_key():
     assert kid_rsa_public_key(1, 2, 1, 1) == (5, 2)
     assert kid_rsa_public_key(1, 2, 2, 1) == (8, 3)
