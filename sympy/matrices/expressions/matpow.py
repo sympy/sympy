@@ -2,12 +2,13 @@ from __future__ import print_function, division
 
 from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core import S
+from sympy.core.power import Pow
 from sympy.core.compatibility import range
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
 
 
-class MatPow(MatrixExpr):
+class MatPow(MatrixExpr, Pow):
 
     def __new__(cls, base, exp):
         base = _sympify(base)
