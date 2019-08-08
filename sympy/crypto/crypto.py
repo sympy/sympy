@@ -1580,24 +1580,15 @@ def rsa_public_key(*args, totient='Euler'):
         `p_1 p_2 ... p_n = \text{rad}(p_1 p_2 ... p_n)`
 
     totient : bool, optional
-        If ``'Euler'``, it uses Euler's totient (`totient` in SymPy).
+        If ``'Euler'``, it uses Euler's totient `\phi(n)` which is
+        :meth:`sympy.ntheory.factor_.totient` in SymPy.
 
-        If ``'Carmichael'``, it uses Carmichael's totient
-        (`reduced_totient` in SymPy).
+        If ``'Carmichael'``, it uses Carmichael's totient `\lambda(n)`
+        which is :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
 
-        There can be some differences as below
-
-        Example using Euler's totient:
-
-        >>> from sympy.crypto.crypto import rsa_private_key
-        >>> rsa_private_key(61, 53, 17, totient='Euler')
-        (3233, 2753)
-
-        Example using Carmichael's totient:
-
-        >>> from sympy.crypto.crypto import rsa_private_key
-        >>> rsa_private_key(61, 53, 17, totient='Carmichael')
-        (3233, 413)
+        Unlike private key generation, this is a trivial keyword for
+        public keys because
+        `\gcd(e, \phi(n)) = 1 \iff \gcd(e, \lambda(n)) = 1`
 
     Returns
     =======
@@ -1619,6 +1610,7 @@ def rsa_public_key(*args, totient='Euler'):
     >>> from sympy.crypto.crypto import rsa_public_key
 
     A public key of a two-prime RSA:
+
     >>> p, q, e = 3, 5, 7
     >>> rsa_public_key(p, q, e)
     (15, 7)
@@ -1626,6 +1618,7 @@ def rsa_public_key(*args, totient='Euler'):
     False
 
     A public key of a multiprime RSA:
+
     >>> primes = [2, 3, 5, 7, 11, 13]
     >>> e = 7
     >>> rsa_public_key(*primes, e)
@@ -1693,12 +1686,14 @@ def rsa_private_key(*args, totient='Euler'):
         `p_1 p_2 ... p_n = \text{rad}(p_1 p_2 ... p_n)`
 
     totient : bool, optional
-        If ``'Euler'``, it uses Euler's totient (`totient` in SymPy).
+        If ``'Euler'``, it uses Euler's totient `\phi(n)` which is
+        :meth:`sympy.ntheory.factor_.totient` in SymPy.
 
-        If ``'Carmichael'``, it uses Carmichael's totient
-        (`reduced_totient` in SymPy).
+        If ``'Carmichael'``, it uses Carmichael's totient `\lambda(n)`
+        which is :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
 
-        There can be some differences as below
+        There can be some output differences for private key generation
+        as examples below.
 
         Example using Euler's totient:
 
@@ -1732,6 +1727,7 @@ def rsa_private_key(*args, totient='Euler'):
     >>> from sympy.crypto.crypto import rsa_private_key
 
     A private key of a two-prime RSA:
+
     >>> p, q, e = 3, 5, 7
     >>> rsa_private_key(p, q, e)
     (15, 7)
@@ -1739,6 +1735,7 @@ def rsa_private_key(*args, totient='Euler'):
     False
 
     A private key of a multiprime RSA:
+
     >>> primes = [2, 3, 5, 7, 11, 13]
     >>> e = 7
     >>> rsa_private_key(*primes, e)
@@ -1766,10 +1763,22 @@ def rsa_private_key(*args, totient='Euler'):
 
 
 def encipher_rsa(i, key):
-    """
-    Return encryption of "i" by computing 'i^e' (mod 'n'),
-    where "key" is the key '(n, e)'. "key" may be a public
-    key or a private key.
+    r"""Encrypt the plaintext with RSA.
+
+    Parameters
+    ==========
+
+    i : integer
+        The plaintext to be encrypted for.
+
+    key : (n, e) where n, e are integers
+        `n` is the modulus of the key and `e` is the exponent of the
+        key. The encryption is computed by `i^e \mod n`.
+
+        The key can either be a public key or a private key, however,
+        the message encrypted by a public key can only be decrypted by
+        a private key, and vice versa, as RSA is an asymmetric
+        cryptography system.
 
     Examples
     ========
@@ -1798,10 +1807,22 @@ def encipher_rsa(i, key):
 
 
 def decipher_rsa(i, key):
-    """
-    Return decyption of "i" by computing 'i^d' (mod 'n'),
-    where "key" is the key '(n, d)'. "key" may be a public
-    key or a private key.
+    r"""Decrypt the ciphertext with RSA.
+
+    Parameters
+    ==========
+
+    i : integer
+        The ciphertext to be decrypted for.
+
+    key : (n, d) where n, d are integers
+        `n` is the modulus of the key and `d` is the exponent of the
+        key. The decryption is computed by `i^d \mod n`.
+
+        The key can either be a public key or a private key, however,
+        the message encrypted by a public key can only be decrypted by
+        a private key, and vice versa, as RSA is an asymmetric
+        cryptography system.
 
     Examples
     ========
