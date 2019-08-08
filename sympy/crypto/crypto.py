@@ -1624,11 +1624,9 @@ def rsa_public_key(*args, totient='Euler', multipower=None):
 
     .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
 
-    .. [2] Multiprime RSA
-        https://iopscience.iop.org/article/10.1088/1742-6596/995/1/012030
+    .. [2] https://iopscience.iop.org/article/10.1088/1742-6596/995/1/012030
 
-    .. [3] An another article of multiprime RSA
-        https://www.scirp.org/journal/paperabs.aspx?paperid=83244
+    .. [3] https://www.scirp.org/journal/paperabs.aspx?paperid=83244
     """
     return _rsa_key(
         *args,
@@ -1752,11 +1750,9 @@ def rsa_private_key(*args, totient='Euler', multipower=None):
 
     .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
 
-    .. [2] Multiprime RSA
-        https://iopscience.iop.org/article/10.1088/1742-6596/995/1/012030
+    .. [2] https://iopscience.iop.org/article/10.1088/1742-6596/995/1/012030
 
-    .. [3] An another article of multiprime RSA
-        https://www.scirp.org/journal/paperabs.aspx?paperid=83244
+    .. [3] https://www.scirp.org/journal/paperabs.aspx?paperid=83244
     """
     return _rsa_key(
         *args,
