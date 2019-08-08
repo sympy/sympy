@@ -130,6 +130,32 @@ class Basic(with_metaclass(ManagedProperties)):
         obj._args = args  # all items in args must be Basic objects
         return obj
 
+    @classmethod
+    def _eval_validate(cls, *args, **kwargs):
+        '''Basic._eval_validate raises if the args are invalid.
+
+        This method should be overridden by subclasses to validate args.
+        Invalid args should raise. When using _basic_version=2 this method
+        will be called by Basic.__new__ even if evaluate=False. It shoul
+        perform cheap validation of the arguments (e.g. checking types, number
+        of arguments). It should raise if anything is incorrect but otherwise
+        does not return anything.
+        '''
+        pass
+
+    @classmethod
+    def _eval_new(cls, *args, **kwargs):
+        '''Basic._eval_new
+
+        This method should be overridden by subclasses to "evaluate" the
+        instance. Any automatic evaluation to create a different object with
+        different args or of a different type should happen here and should be
+        returned from this method. If this method returns None then the
+        instance will be initialised normally and its args stored in
+        Basic.__new__ afterwards.
+        '''
+        pass
+
     def copy(self):
         return self.func(*self.args)
 
