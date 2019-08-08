@@ -247,6 +247,30 @@ def test_mutltiprime_rsa_full_example():
     assert decrypted == msg
 
 
+def test_rsa_crt_exhaustive():
+    from sympy.crypto.crypto import _rsa_private_key_crt, _decipher_rsa_crt
+    p, q = 61, 53
+    e = 17
+    puk = rsa_public_key(p, q, e, totient='Carmichael')
+    prk = rsa_private_key(p, q, e, totient='Carmichael')
+
+    additional_exponents = _rsa_private_key_crt(p, q, prk[1])
+
+    # Run exhaustive test for every possible numbers
+    for msg in range(puk[0]):
+        encrypted = encipher_rsa(msg, puk)
+        decrypted = _decipher_rsa_crt(
+            encrypted, [p, q], additional_exponents)
+        try:
+            assert decrypted == msg
+        except AssertionError:
+            raise AssertionError(
+                "The RSA is not correctly decrypted " \
+                "(Original : {}, Encrypted : {}, Decrypted : {})" \
+                .format(msg, encrypted, decrypted)
+                )
+
+
 def test_kid_rsa_public_key():
     assert kid_rsa_public_key(1, 2, 1, 1) == (5, 2)
     assert kid_rsa_public_key(1, 2, 2, 1) == (8, 3)
