@@ -1441,7 +1441,7 @@ def _rsa_key(*args, public=True, private=True):
     for i in primes:
         new_primes.extend(factorint(i, multiple=True))
 
-    return rsa_public_key(*new_primes, e)
+    return _rsa_key(*new_primes, e, public=public, private=private)
 
 
 def rsa_public_key(*args):
