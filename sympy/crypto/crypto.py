@@ -1515,7 +1515,7 @@ def _rsa_key(
                 'in the complete residue system Z[{}], but the cipher '
                 'can still be valid if you restrict the domain to be '
                 'the reduced residue system Z*[{}]. You can pass '
-                'the flag multiprime=True if you want to suppress this '
+                'the flag multipower=True if you want to suppress this '
                 'warning.'
                 .format(primes, n, n)
                 ).warn()
