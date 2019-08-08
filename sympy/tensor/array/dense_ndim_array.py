@@ -65,8 +65,6 @@ class DenseNDimArray(NDimArray):
             nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
             return type(self)(array, nshape)
         else:
-            if self.shape == ():
-                index = ()
             index = self._parse_index(index)
             return self._array[index]
 
