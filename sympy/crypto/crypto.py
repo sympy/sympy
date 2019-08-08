@@ -1517,6 +1517,12 @@ def rsa_public_key(*args, totient='Euler'):
         This problem may also be extended for the cases if not every
         primes are distinct for a multiprime RSA.
 
+    totient : bool, optional
+        If ``'Euler'``, it uses Euler's totient (`totient` in SymPy).
+
+        If ``'Carmichael'``, it uses Carmichael's totient
+        (`reduced_totient` in SymPy).
+
     Returns
     =======
 
@@ -1605,6 +1611,12 @@ def rsa_private_key(*args, totient='Euler'):
         to be decrypted after encrypted.
         This problem may also be extended for the cases if not every
         primes are distinct for a multiprime RSA.
+
+    totient : bool, optional
+        If ``'Euler'``, it uses Euler's totient (`totient` in SymPy).
+
+        If ``'Carmichael'``, it uses Carmichael's totient
+        (`reduced_totient` in SymPy).
 
     Returns
     =======
