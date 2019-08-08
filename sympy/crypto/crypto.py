@@ -1546,40 +1546,58 @@ def rsa_public_key(*args, totient='Euler'):
     ==========
 
     args : naturals
-        The last argument should be specified as `e`, which becomes the
-        exponent parameter of the public key pair, and any other natural
-        numbers before should be given to specify `n`, the modulus
-        parameter of the public key pair.
+        If specified as `p, q, e` where `p` and `q` are distinct primes
+        and `e` is a desired public exponent of the RSA, `n = p q` and
+        `e` will be verified against the totient
+        `\phi(n)` (Euler totient) or `\lambda(n)` (Carmichael totient)
+        to be `\gcd(e, \phi(n)) = 1` or `\gcd(e, \lambda(n)) = 1`.
 
-        `p, q, e where `p` and `q` are distinct primes, would be
-        one of the most common and recommended key specification, which
-        forms a two-prime RSA cryptosystem.
+        If specified as `p_1, p_2, ..., p_n, e` where
+        `p_1, p_2, ..., p_n` are specified as primes,
+        and `e` is specified as a desired public exponent of the RSA,
+        it will be able to form a multi-prime RSA, which is a more
+        generalized form of the popular 2-prime RSA.
 
-        It is possible to create a multi-prime RSA cryptosystem by
-        specifying more than two primes, such as `p, q, r, e`
+        It can also be possible to form a single-prime RSA by specifying
+        the argument as `p, e`, which can be considered a trivial case
+        of a multiprime RSA.
 
-        Trivially, one-prime RSA like `p, e` can also be a valid cipher,
-        as long as the mapping is bijective, even though the
-        cryptosystem may not have any practical security.
+        Furthermore, it can be possible to form a multi-power RSA by
+        specifying two or more pairs of the primes to be same.
+        However, unlike the two-distinct prime RSA or multi-prime
+        RSA, not every numbers in the complete residue system
+        (`\mathbb{Z}_n`) will be decryptable since the mapping will not
+        be bijective.
+        However, the RSA can still be decryptable for the numbers in the
+        reduced residue system (`\mathbb{Z}_n^{\times}`), and can have
+        limited application.
 
-        If `p, q` or any numbers (that are supposed to be prime) are
-        given as non-prime numbers, those numbers can be prime factored
-        and the cryptosystem can be dispatched as an another multiprime
-        RSA cryptosystem in a canonical form.
-        For example `p=15, q=77` specification can be dispatched as a
-        four-prime RSA of `p=3, q=5, r=7, s=11`.
-
-        If `p, q` are same primes, the cipher may not be valid because
-        the mapping is not bijective, and some numbers may not be able
-        to be decrypted after encrypted.
-        This problem may also be extended for the cases if not every
-        primes are distinct for a multiprime RSA.
+        If you pass a non-prime integer to the arguments
+        `p_1, p_2, ..., p_n`, the particular number will be
+        prime-factored and it will become either a multi-prime RSA or a
+        multi-power RSA in its canonical form, depending on whether the
+        product equals its radical or not.
+        `p_1 p_2 ... p_n = \text{rad}(p_1 p_2 ... p_n)`
 
     totient : bool, optional
         If ``'Euler'``, it uses Euler's totient (`totient` in SymPy).
 
         If ``'Carmichael'``, it uses Carmichael's totient
         (`reduced_totient` in SymPy).
+
+        There can be some differences as below
+
+        Example using Euler's totient:
+
+        >>> from sympy.crypto.crypto import rsa_private_key
+        >>> rsa_private_key(61, 53, 17, totient='Euler')
+        (3233, 2753)
+
+        Example using Carmichael's totient:
+
+        >>> from sympy.crypto.crypto import rsa_private_key
+        >>> rsa_private_key(61, 53, 17, totient='Carmichael')
+        (3233, 413)
 
     Returns
     =======
@@ -1641,34 +1659,38 @@ def rsa_private_key(*args, totient='Euler'):
     ==========
 
     args : naturals
-        The last argument should be specified as `e`, which becomes the
-        exponent parameter of the private key pair, and any other natural
-        numbers before should be given to specify `n`, the modulus
-        parameter of the private key pair.
+        If specified as `p, q, e` where `p` and `q` are distinct primes
+        and `e` is a desired public exponent of the RSA, `n = p q` and
+        `e` will be verified against the totient
+        `\phi(n)` (Euler totient) or `\lambda(n)` (Carmichael totient)
+        to be `\gcd(e, \phi(n)) = 1` or `\gcd(e, \lambda(n)) = 1`.
 
-        `p, q, e where `p` and `q` are distinct primes, would be
-        one of the most common and recommended key specification, which
-        forms a two-prime RSA cryptosystem.
+        If specified as `p_1, p_2, ..., p_n, e` where
+        `p_1, p_2, ..., p_n` are specified as primes,
+        and `e` is specified as a desired public exponent of the RSA,
+        it will be able to form a multi-prime RSA, which is a more
+        generalized form of the popular 2-prime RSA.
 
-        It is possible to create a multi-prime RSA cryptosystem by
-        specifying more than two primes, such as `p, q, r, e`
+        It can also be possible to form a single-prime RSA by specifying
+        the argument as `p, e`, which can be considered a trivial case
+        of a multiprime RSA.
 
-        Trivially, one-prime RSA like `p, e` can also be a valid cipher,
-        as long as the mapping is bijective, even though the
-        cryptosystem may not have any practical security.
+        Furthermore, it can be possible to form a multi-power RSA by
+        specifying two or more pairs of the primes to be same.
+        However, unlike the two-distinct prime RSA or multi-prime
+        RSA, not every numbers in the complete residue system
+        (`\mathbb{Z}_n`) will be decryptable since the mapping will not
+        be bijective.
+        However, the RSA can still be decryptable for the numbers in the
+        reduced residue system (`\mathbb{Z}_n^{\times}`), and can have
+        limited application.
 
-        If `p, q` or any numbers (that are supposed to be prime) are
-        given as non-prime numbers, those numbers can be prime factored
-        and the cryptosystem can be dispatched as an another multiprime
-        RSA cryptosystem in a canonical form.
-        For example `p=15, q=77` specification can be dispatched as a
-        four-prime RSA of `p=3, q=5, r=7, s=11`.
-
-        If `p, q` are same primes, the cipher may not be valid because
-        the mapping is not bijective, and some numbers may not be able
-        to be decrypted after encrypted.
-        This problem may also be extended for the cases if not every
-        primes are distinct for a multiprime RSA.
+        If you pass a non-prime integer to the arguments
+        `p_1, p_2, ..., p_n`, the particular number will be
+        prime-factored and it will become either a multi-prime RSA or a
+        multi-power RSA in its canonical form, depending on whether the
+        product equals its radical or not.
+        `p_1 p_2 ... p_n = \text{rad}(p_1 p_2 ... p_n)`
 
     totient : bool, optional
         If ``'Euler'``, it uses Euler's totient (`totient` in SymPy).
