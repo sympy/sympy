@@ -1051,7 +1051,7 @@ class MatrixWild(MatrixSymbol, Wild):
     >>> x = Wild('x')
     >>> Y = MatrixWild('Y', x, 3)
     >>> (A*B).match(Y)
-    {x_: 3, Y_: A*B}
+    {Y_: A*B, x_: 3}
     """
 
     def __new__(cls, name, n, m, exclude=(), properties=()):
