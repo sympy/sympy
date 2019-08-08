@@ -6,9 +6,10 @@ from __future__ import print_function, division
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy.core.numbers import pi
+from sympy.core.logic import fuzzy_bool
 from sympy.functions.elementary.exponential import exp, log
 from sympy.logic.boolalg import Boolean
-from sympy import I, Eq, conjugate, S
+from sympy import I, Eq, conjugate, MatrixBase
 
 
 class AskIntegerHandler(CommonHandler):
@@ -338,6 +339,12 @@ class AskHermitianHandler(AskRealHandler):
     """
 
     @staticmethod
+    def Expr(expr, assumptions):
+        if isinstance(expr, MatrixBase):
+            return None
+        return super(AskRealHandler, AskRealHandler).Expr(expr, assumptions)
+
+    @staticmethod
     def Add(expr, assumptions):
         """
         Hermitian + Hermitian  -> Hermitian
@@ -390,17 +397,14 @@ class AskHermitianHandler(AskRealHandler):
     cos, exp = [sin]*2
 
     @staticmethod
-    def DenseMatrix(mat, assumptions):
-        ret_val = True
+    def MatrixBase(mat, assumptions):
         rows, cols = mat.shape
         for i in range(rows):
             for j in range(i, cols):
-                cond = Eq(mat[i, j], conjugate(mat[j, i]))
-                if cond not in (True, False, None):
-                    ret_val = ret_val & cond
+                cond = fuzzy_bool(Eq(mat[i, j], conjugate(mat[j, i])))
                 if cond == False:
                     return False
-        return ret_val
+        return cond
 
 class AskComplexHandler(CommonHandler):
     """

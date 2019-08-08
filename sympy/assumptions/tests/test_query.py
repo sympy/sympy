@@ -1917,7 +1917,7 @@ def test_matrix():
     assert ask(Q.hermitian(Matrix([[2, 2 + I, 4], [2 - I, 3, I], [4, -I, 1]]))) == True
     assert ask(Q.hermitian(Matrix([[2, 2 + I, 4], [2 + I, 3, I], [4, -I, 1]]))) == False
     z = symbols('z', complex=True)
-    assert ask(Q.hermitian(Matrix([[2, 2 + I, 4], [2 - I, 3, I], [4, -I, z]]))) == Eq(z, conjugate(z))
+    assert ask(Q.hermitian(Matrix([[2, 2 + I, 4], [2 - I, 3, I], [4, -I, z]]))) == None
 
 
 def test_algebraic():
