@@ -302,11 +302,11 @@ def test_Range_set():
     else:
         builtin_range = xrange
 
-    assert Range(builtin_range(10)) == Range(10)
-    assert Range(builtin_range(1, 10)) == Range(1, 10)
-    assert Range(builtin_range(1, 10, 2)) == Range(1, 10, 2)
+    assert S(builtin_range(10)) == Range(10)
+    assert S(builtin_range(1, 10)) == Range(1, 10)
+    assert S(builtin_range(1, 10, 2)) == Range(1, 10, 2)
     if PY3:
-        assert Range(builtin_range(1000000000000)) == \
+        assert S(builtin_range(1000000000000)) == \
             Range(1000000000000)
 
     # test Range.as_relational

@@ -514,14 +514,12 @@ class Range(Set):
 
     _basic_version = 2
 
-    def __new__(cls, *args):
-        if len(args) == 1:
-            if isinstance(args[0], Range):
-                return args[0]
-            if isinstance(args[0], range):
-                return S(args[0])
-        return Basic.__new__(cls, *args)
-
+    # XXX: The code below shows a good example of why we should probably allow
+    # _eval_validate to return changed args. There isn't any other sensible
+    # way of handling the default arguments for Range which are quite
+    # complicated. Also in the _basic_version=2 scheme this is the natural
+    # place to specify argument defaults. Otherwise evaluate=False here will
+    # lead to a Range that has invalid args.
     @classmethod
     def _eval_validate(cls, *args):
         from sympy.functions.elementary.integers import ceiling
@@ -559,9 +557,6 @@ class Range(Set):
     @classmethod
     def _eval_new(cls, *args):
         from sympy.functions.elementary.integers import ceiling
-        if len(args) == 1:
-            if isinstance(args[0], range):
-                args = args[0].__reduce__()[1]  # use pickle method
 
         # expand range
         slc = slice(*args)
@@ -813,10 +808,9 @@ class Range(Set):
             x <= self.sup if self.sup in self else x < self.sup)
 
 
-if PY3:
-    converter[range] = lambda r: Range(*r.__reduce__()[1])
-else:
-    converter[xrange] = lambda r: Range(*r.__reduce__()[1])
+# Sympify range -> Range
+converter[range] = lambda r: Range(*r.__reduce__()[1])
+
 
 def normalize_theta_set(theta):
     """
