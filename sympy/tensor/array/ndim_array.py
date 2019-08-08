@@ -455,7 +455,8 @@ class NDimArray(object):
                 for i in range(self._shape[0]):
                     yield self[i]
             else:
-                return self[()]
+                yield self[()]
+                return
 
         return iterator()
 
