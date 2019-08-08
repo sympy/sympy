@@ -1772,13 +1772,27 @@ class reduced_totient(Function):
             if n < 1:
                 raise ValueError("n must be a positive integer")
             factors = factorint(n)
-            t = 1
-            for p, k in factors.items():
-                if p == 2 and k > 2:
-                    t = ilcm(t, 2**(k - 2))
-                else:
-                    t = ilcm(t, (p - 1) * p**(k - 1))
-            return t
+            return cls._from_factors(factors)
+
+    @classmethod
+    def _from_factors(self, factors):
+        """Subroutine to compute totient from already-computed factors
+        """
+        t = 1
+        for p, k in factors.items():
+            if p == 2 and k > 2:
+                t = ilcm(t, 2**(k - 2))
+            else:
+                t = ilcm(t, (p - 1) * p**(k - 1))
+        return t
+
+    @classmethod
+    def _from_distinct_primes(self, *args):
+        """Subroutine to compute totient from the list of assumed
+        distinct primes
+        """
+        args = [p - 1 for p in args]
+        return ilcm(*args)
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])

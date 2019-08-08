@@ -1443,8 +1443,7 @@ def _decipher_rsa_crt(i, d, factors):
 
 
 def _rsa_key(
-    *args,
-    public=True, private=True, totient='Euler', multipower=None):
+    *args, public=True, private=True, totient='Euler', multipower=None):
     """A private subroutine to generate RSA key
 
     Parameters
@@ -1485,7 +1484,8 @@ def _rsa_key(
 
         elif totient == 'Carmichael':
             from sympy.ntheory import reduced_totient as totfunc
-            phi = totfunc(n)
+            phi = totfunc._from_distinct_primes(*multiple)
+
     else:
         if not multipower:
             NonInvertibleCipherWarning(
@@ -1505,7 +1505,7 @@ def _rsa_key(
 
         elif totient == 'Carmichael':
             from sympy.ntheory import reduced_totient as totfunc
-            phi = totfunc(n)
+            phi = totfunc._from_factors(tally)
 
     if gcd(e, phi) == 1:
         if public and not private:
