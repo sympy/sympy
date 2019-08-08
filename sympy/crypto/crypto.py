@@ -1481,6 +1481,9 @@ def _rsa_key(*args, public=True, private=True, totient='Euler'):
     if len(args) < 2:
         return False
 
+    if totient not in ('Euler', 'Carmichael'):
+        raise ValueError('Invalid argument totient={}.'.format(totient))
+
     primes, e = args[:-1], args[-1]
 
     if any(not isprime(p) for p in primes):
