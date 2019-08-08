@@ -1464,7 +1464,7 @@ def rsa_public_key(*args):
 
         Trivially, one-prime RSA like `p, e` can also be a valid cipher,
         as long as the mapping is bijective, even though the
-        cryptosystem may not have any practical safety.
+        cryptosystem may not have any practical security.
 
         If `p, q` or any numbers (that are supposed to be prime) are
         given as non-prime numbers, those numbers can be prime factored
@@ -1472,9 +1472,6 @@ def rsa_public_key(*args):
         RSA cryptosystem in a canonical form.
         For example `p=15, q=77` specification can be dispatched as a
         four-prime RSA of `p=3, q=5, r=7, s=11`.
-        However, this feature is only available for an easy usage and
-        you may not expect practically sized composite numbers can be
-        easily factored even by modern computers.
 
         If `p, q` are same primes, the cipher may not be valid because
         the mapping is not bijective, and some numbers may not be able
@@ -1556,7 +1553,7 @@ def rsa_private_key(*args):
 
         Trivially, one-prime RSA like `p, e` can also be a valid cipher,
         as long as the mapping is bijective, even though the
-        cryptosystem may not have any practical safety.
+        cryptosystem may not have any practical security.
 
         If `p, q` or any numbers (that are supposed to be prime) are
         given as non-prime numbers, those numbers can be prime factored
@@ -1564,9 +1561,6 @@ def rsa_private_key(*args):
         RSA cryptosystem in a canonical form.
         For example `p=15, q=77` specification can be dispatched as a
         four-prime RSA of `p=3, q=5, r=7, s=11`.
-        However, this feature is only available for an easy usage and
-        you may not expect practically sized composite numbers can be
-        easily factored even by modern computers.
 
         If `p, q` are same primes, the cipher may not be valid because
         the mapping is not bijective, and some numbers may not be able
