@@ -1763,7 +1763,26 @@ def rsa_private_key(*args, totient='Euler', multipower=None):
         public=False, private=True, totient=totient, multipower=multipower)
 
 
-def encipher_rsa(i, key):
+def _encipher_decipher_rsa(i, key, factors=None):
+    n, d = key
+    if not factors:
+        return pow(i, d, n)
+
+    prod = reduce(lambda i, j: i*j, factors)
+
+    is_coprime_set = None
+    for i in range(len(factors)):
+        for j in range(i+1, len(factors)):
+            if gcd(factors[i], factors[j]) != 1:
+                is_coprime_set = False
+                break
+
+    if prod == n and is_coprime_set:
+        return _decipher_rsa_crt(i, d, factors)
+    return _encipher_decipher_rsa(i, key, factors=None)
+
+
+def encipher_rsa(i, key, factors=None):
     r"""Encrypt the plaintext with RSA.
 
     Parameters
@@ -1780,6 +1799,16 @@ def encipher_rsa(i, key):
         the message encrypted by a public key can only be decrypted by
         a private key, and vice versa, as RSA is an asymmetric
         cryptography system.
+
+    factors : list of coprime integers
+        This must be given as a list of coprime integers whose product
+        equals the modulus parameter of the original key.
+
+        Then, it can be possible to use chinese remainder theorem to
+        compute the power-modulus in a more efficient way.
+
+        The raw primes used in generating the RSA key pair can be a good
+        option.
 
     Examples
     ========
@@ -1803,8 +1832,7 @@ def encipher_rsa(i, key):
     >>> encipher_rsa(msg, prk)
     3
     """
-    n, e = key
-    return pow(i, e, n)
+    return _encipher_decipher_rsa(i, key, factors=factors)
 
 
 def decipher_rsa(i, key, factors=None):
@@ -1824,6 +1852,16 @@ def decipher_rsa(i, key, factors=None):
         the message encrypted by a public key can only be decrypted by
         a private key, and vice versa, as RSA is an asymmetric
         cryptography system.
+
+    factors : list of coprime integers
+        This must be given as a list of coprime integers whose product
+        equals the modulus parameter of the original key.
+
+        Then, it can be possible to use chinese remainder theorem to
+        compute the power-modulus in a more efficient way.
+
+        The raw primes used in generating the RSA key pair can be a good
+        option.
 
     Examples
     ========
@@ -1854,11 +1892,8 @@ def decipher_rsa(i, key, factors=None):
     3
     >>> decipher_rsa(new_msg, prk)
     12
-
     """
-    n, d = key
-    return pow(i, d, n)
-
+    return _encipher_decipher_rsa(i, key, factors=factors)
 
 
 #################### kid krypto (kid RSA) #############################
