@@ -272,7 +272,6 @@ before_install:
         export LD_LIBRARY_PATH=$CONDA_PREFIX/lib;
         export SYMPY_STRICT_COMPILER_CHECKS=1;
         conda clean --all;
-        pip install clang;
         if [[ "$TEST_SAGE" == "true" ]]; then
             # Use a separate environment because sage downgrades matplotlib
             conda create -c conda-forge/label/cf201901 -n sage sagelib mpmath "ipython>=5.5.0,<6";
