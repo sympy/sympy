@@ -100,15 +100,6 @@ class SparseNDimArray(NDimArray):
 
         return SparseMatrix(self.shape[0], self.shape[1], mat_sparse)
 
-    def __iter__(self):
-        def iterator():
-            if self._shape:
-                for i in range(self._shape[0]):
-                    yield self[i]
-            else:
-                return self[()]
-        return iterator()
-
     def reshape(self, *newshape):
         new_total_size = functools.reduce(lambda x,y: x*y, newshape)
         if new_total_size != self._loop_size:

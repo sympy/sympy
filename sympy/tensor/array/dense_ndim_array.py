@@ -97,15 +97,6 @@ class DenseNDimArray(NDimArray):
 
         return Matrix(self.shape[0], self.shape[1], self._array)
 
-    def __iter__(self):
-        def iterator():
-            if self._shape:
-                for i in range(self._shape[0]):
-                    yield self[i]
-            else:
-                return self[()]
-        return iterator()
-
     def reshape(self, *newshape):
         """
         Returns MutableDenseNDimArray instance with new shape. Elements number

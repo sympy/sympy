@@ -361,7 +361,6 @@ class Flatten(Basic):
             else:
                 result = self._iter[self._idx]
 
-
         except IndexError:
             raise StopIteration
 

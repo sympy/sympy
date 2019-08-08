@@ -140,10 +140,7 @@ class NDimArray(object):
             # Construction of a sparse array from a sparse array
             elif isinstance(iterable, SparseNDimArray):
                 return iterable._shape, iterable._sparse_array
-            # Construction from another `NDimArray`:
-#            elif isinstance(iterable, NDimArray):
-#                shape = iterable.shape
-#                iterable = list(iterable)
+
             # Construct N-dim array from an iterable (numpy arrays included):
             elif isinstance(iterable, Iterable):
                 iterable, shape = cls._scan_iterable_shape(iterable)
@@ -452,6 +449,16 @@ class NDimArray(object):
         result_list = [-i for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
+    def __iter__(self):
+        def iterator():
+            if self._shape:
+                for i in range(self._shape[0]):
+                    yield self[i]
+            else:
+                return self[()]
+
+        return iterator()
+
     def __eq__(self, other):
         """
         NDimArray instances can be compared to each other.
@@ -502,6 +509,7 @@ class NDimArray(object):
 
     def _eval_conjugate(self):
         from sympy.tensor.array.arrayop import Flatten
+
         return self.func([i.conjugate() for i in Flatten(self)], self.shape)
 
     def conjugate(self):
