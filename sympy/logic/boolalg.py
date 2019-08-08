@@ -3039,14 +3039,14 @@ def simplify_logic(expr, form=None, deep=True, force=False):
             repl[var] = d
             nvar = ~var
             if nvar in variables:
-                undo[~d] = nvar
                 repl[nvar] = ~d
                 variables -= set([nvar])
+
     expr = expr.xreplace(repl)
     # Get new variables after replacing
     variables = _find_predicates(expr)
     if not force and len(variables) > 8:
-        return expr
+        return expr.xreplace(undo)
     # group into constants and variable values
     c, v = sift(ordered(variables), lambda x: x in (True, False), binary=True)
     variables = c + v
@@ -3219,9 +3219,10 @@ def bool_map(bool1, bool2):
 
 
 def simplify_patterns_and():
-    from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.miscellaneous import Min, Max
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
@@ -3254,12 +3255,16 @@ def simplify_patterns_and():
                      (Tuple(Le(a, b), Gt(a, c)), ITE(b <= c, S.false, And(Le(a, b), Gt(a, c)))),
                      (Tuple(Lt(a, b), Ge(a, c)), ITE(b <= c, S.false, And(Lt(a, b), Ge(a, c)))),
                      (Tuple(Eq(a, b), Eq(a, c)), ITE(Eq(b, c), Eq(a, b), S.false)),
+                     (Tuple(Lt(a, b), Gt(a, -b)), ITE(b > 0, Lt(Abs(a), b), S.false)),
+                     (Tuple(Le(a, b), Ge(a, -b)), ITE(b > 0, Le(Abs(a), b), S.false)),
                      )
     return _matchers_and
 
 def simplify_patterns_and3():
     from sympy.core import Wild
-    from sympy.core.relational import Eq, Ge, Gt
+    from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    from sympy.functions.elementary.miscellaneous import Min, Max
+
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
@@ -3295,9 +3300,10 @@ def simplify_patterns_and3():
 
 
 def simplify_patterns_or():
-    from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.miscellaneous import Min, Max
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
@@ -3330,6 +3336,8 @@ def simplify_patterns_or():
                     (Tuple(Lt(a, b), Gt(a, c)), ITE(b > c, S.true, Or(Lt(a, b), Gt(a, c)))),
                     (Tuple(Le(a, b), Gt(a, c)), ITE(b >= c, S.true, Or(Le(a, b), Gt(a, c)))),
                     (Tuple(Lt(a, b), Ge(a, c)), ITE(b >= c, S.true, Or(Lt(a, b), Ge(a, c)))),
+                    (Tuple(Gt(a, b), Lt(a, -b)), ITE(b > 0, Gt(Abs(a), b), S.true)),
+                    (Tuple(Ge(a, b), Le(a, -b)), ITE(b > 0, Ge(Abs(a), b), S.true)),
                     )
     return _matchers_or
 
