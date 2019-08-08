@@ -1416,13 +1416,14 @@ def _rsa_key(*args, public=True, private=True):
 
         tally = multiset(primes)
         if all(v == 1 for v in tally.values()):
-            phi = reduce(lambda i, j: i * (j-1), primes, 1)
+            multiple = list(tally.keys())
+            phi = totient._from_distinct_primes(*multiple)
         else:
             NonInvertibleCipherWarning(
                 'Non-distinctive primes found in the factors of {}.'
                 'The cipher may not be decryptable for some numbers.'
                 .format(primes)).warn()
-            phi = totient(n)
+            phi = totient._from_factors(tally)
 
         if gcd(e, phi) == 1:
             if public and not private:
