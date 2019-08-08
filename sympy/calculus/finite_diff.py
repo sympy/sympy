@@ -148,7 +148,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     derivative is wanted, weights for 0th, 1st and 2nd order are
     calculated "for free", so are formulae using subsets of ``x_list``.
     This is something one can take advantage of to save computational cost.
-    Be aware that one should define ``x_list`` from nearest to farest from
+    Be aware that one should define ``x_list`` from nearest to furthest from
     ``x0``. If not, subsets of ``x_list`` will yield poorer approximations,
     which might not grand an order of accuracy of ``len(x_list) - order``.
 
@@ -387,6 +387,8 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
         x0 = wrt
 
     if not iterable(points):
+        if getattr(points, 'is_Function', False) and wrt in points.args:
+            points = points.subs(wrt, x0)
         # points is simply the step-size, let's make it a
         # equidistant sequence centered around x0
         if order % 2 == 0:
@@ -412,6 +414,10 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
 as_finite_diff = deprecated(
     useinstead="Derivative.as_finite_difference",
     deprecated_since_version="1.1", issue=11410)(_as_finite_diff)
+
+as_finite_diff.__doc__ = """
+    Deprecated function. Use Diff.as_finite_difference instead.
+    """
 
 
 def differentiate_finite(expr, *symbols,

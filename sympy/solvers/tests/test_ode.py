@@ -1,7 +1,7 @@
-from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
+from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
-    Rational, rootof, S, simplify, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec, Ei, re, im)
+    Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
+    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect)
 from sympy.solvers.ode import (_undetermined_coefficients_match,
     checkodesol, classify_ode, classify_sysode, constant_renumber,
     constantsimp, homogeneous_order, infinitesimals, checkinfsol,
@@ -11,8 +11,8 @@ from sympy.functions import airyai, airybi, besselj, bessely
 
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
+from sympy.functions import besselj, bessely
 from sympy.utilities.misc import filldedent
-
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 u, x, y, z = symbols('u,x:z', real=True)
@@ -402,7 +402,7 @@ def test_linear_3eq_order1():
     sol6 = [Eq(x(t), C1*exp(2*t) + C2*(-sin(t)/5 + 3*cos(t)/5) + C3*(3*sin(t)/5 + cos(t)/5)),
             Eq(y(t), C2*(-sin(t)/5 + 3*cos(t)/5) + C3*(3*sin(t)/5 + cos(t)/5)),
             Eq(z(t), C1*exp(2*t) + C2*cos(t) + C3*sin(t))]
-    assert checksysodesol(eq5, sol5) == (True, [0, 0, 0])
+    assert checksysodesol(eq6, sol6) == (True, [0, 0, 0])
 
 
 def test_linear_3eq_order1_nonhomog():
@@ -679,6 +679,9 @@ def test_checkodesol():
     eqn = Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x))
     sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
     assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (2*x**2 +25)*f(x)
+    sol = Eq(f(x), C1*besselj(5*I, sqrt(2)*x) + C2*bessely(5*I, sqrt(2)*x))
+    assert checkodesol(eq, sol) == (True, 0)
 
 @slow
 def test_dsolve_options():
@@ -1132,7 +1135,7 @@ def test_solve_ics():
         [Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)]
 
     K, r, f0 = symbols('K r f0')
-    sol = Eq(f(x), -K*f0*exp(r*x)/((K - f0)*(-f0*exp(r*x)/(K - f0) - 1)))
+    sol = Eq(f(x), K*f0*exp(r*x)/((-K + f0)*(f0*exp(r*x)/(-K + f0) - 1)))
     assert (dsolve(Eq(f(x).diff(x), r * f(x) * (1 - f(x) / K)), f(x), ics={f(0): f0})) == sol
 
 
@@ -1172,6 +1175,7 @@ def test_solve_ics():
         C2: 0,
         C3: L**2*q/(4*EI),
         C4: -L*q/(6*EI)}
+
 
 def test_ode_order():
     f = Function('f')
@@ -2246,8 +2250,8 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol8 = Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)
     sol9 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
     sol10 = Eq(f(x), (C1 + x*(C2 + log(x)))*exp(-x))
-    sol11 = Eq(f(x), cos(x)*(C2 - Integral(1/cos(x), x)) + sin(x)*(C1 +
-        Integral(1/sin(x), x)))
+    sol11 = Eq(f(x), (C1 + log(sin(x) - 1)/2 - log(sin(x) + 1)/2
+        )*cos(x) + (C2 + log(cos(x) - 1)/2 - log(cos(x) + 1)/2)*sin(x))
     sol12 = Eq(f(x), C1 + C2*x + x**3*(C3 + log(x)/6) + C4*x**2)
     sol1s = constant_renumber(sol1)
     sol2s = constant_renumber(sol2)
@@ -2296,8 +2300,15 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     sol_simp = dsolve(eq, f(x), hint=our_hint, simplify=True)
     sol_nsimp = dsolve(eq, f(x), hint=our_hint, simplify=False)
     assert sol_simp != sol_nsimp
-    assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
+    # /----------
+    # eq.subs(*sol_simp.args) doesn't simplify to zero without help
+    zero = checkodesol(eq, sol_simp, order=5, solve_for_func=False)[1]
+    # if this fails because zero.is_zero, replace this block with
+    # assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
+    assert not zero.is_zero and zero.rewrite(exp).simplify() == 0
+    # \-----------
     assert checkodesol(eq, sol_nsimp, order=5, solve_for_func=False)[0]
+
 
 def test_Liouville_ODE():
     hint = 'Liouville'
@@ -2753,7 +2764,6 @@ def test_issue_6989():
 
 def test_heuristic1():
     y, a, b, c, a4, a3, a2, a1, a0 = symbols("y a b c a4 a3 a2 a1 a0")
-    y = Symbol('y')
     f = Function('f')
     xi = Function('xi')
     eta = Function('eta')
@@ -2803,7 +2813,6 @@ def test_issue_6247():
 
 
 def test_heuristic2():
-    y = Symbol('y')
     xi = Function('xi')
     eta = Function('eta')
     df = f(x).diff(x)
@@ -2818,7 +2827,6 @@ def test_heuristic2():
 
 @slow
 def test_heuristic3():
-    y = Symbol('y')
     xi = Function('xi')
     eta = Function('eta')
     a, b = symbols("a b")
@@ -2836,8 +2844,6 @@ def test_heuristic3():
 
 def test_heuristic_4():
     y, a = symbols("y a")
-    xi = Function('xi')
-    eta = Function('eta')
 
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     i = infinitesimals(eq, hint='chi')
@@ -2892,9 +2898,6 @@ def test_heuristic_abaco2_unique_unknown():
     assert checkinfsol(eq, i)[0]
 
 def test_heuristic_linear():
-    xi = Function('xi')
-    eta = Function('eta')
-    F = Function('F')
     a, b, m, n = symbols("a b m n")
 
     eq = x**(n*(m + 1) - m)*(f(x).diff(x)) - a*f(x)**n -b*x**(n*(m + 1))
@@ -3230,6 +3233,7 @@ def test_sysode_linear_neq_order1():
     assert checksysodesol(eq, sols_eq) == (True, [0, 0, 0, 0])
 
 
+@slow
 def test_nth_order_reducible():
     from sympy.solvers.ode import _nth_order_reducible_match
 

@@ -35,6 +35,7 @@ from collections import defaultdict
 import operator
 import itertools
 from sympy import Rational, prod, Integer
+from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
@@ -51,6 +52,12 @@ import warnings
 
 @deprecated(useinstead=".replace_with_arrays", issue=15276, deprecated_since_version="1.4")
 def deprecate_data():
+    pass
+
+
+@deprecated(useinstead="tensor_heads()", issue=17108,
+            deprecated_since_version="1.5")
+def deprecate_TensorType():
     pass
 
 
@@ -88,13 +95,8 @@ class _IndexStructure(CantSympify):
         >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
         >>> _IndexStructure.from_indices(m0, m1, -m1, m3)
         _IndexStructure([(m0, 0), (m3, 3)], [(1, 2)], [Lorentz, Lorentz, Lorentz, Lorentz])
-
-        In case of many components the same indices have slightly different
-        indexes:
-
-        >>> _IndexStructure.from_indices(m0, m1, -m1, m3)
-        _IndexStructure([(m0, 0), (m3, 3)], [(1, 2)], [Lorentz, Lorentz, Lorentz, Lorentz])
         """
+
         free, dum = _IndexStructure._free_dum_from_indices(*indices)
         index_types = [i.tensor_index_type for i in indices]
         indices = _IndexStructure._replace_dummy_names(indices, free, dum)
@@ -299,7 +301,7 @@ class _IndexStructure(CantSympify):
         """
         Returns ``(g, dummies, msym, v)``, the entries of ``canonicalize``
 
-        see ``canonicalize`` in ``tensor_can.py``
+        see ``canonicalize`` in ``tensor_can.py`` in combinatorics module
         """
         # to be called after sorted_components
         from sympy.combinatorics.permutations import _af_new
@@ -353,7 +355,7 @@ def components_canon_args(components):
             comm = h._comm
         else:
             comm = TensorManager.get_comm(h._comm, h._comm)
-        v.append((h._symmetry.base, h._symmetry.generators, n, comm))
+        v.append((h.symmetry.base, h.symmetry.generators, n, comm))
     return v
 
 
@@ -600,7 +602,7 @@ class _TensorDataLazyEvaluator(CantSympify):
         # inverse, this is not the case for other tensors.
         self._substitutions_dict_tensmul[metric, True, True] = data
         inverse_transpose = self.inverse_transpose_matrix(data)
-        # in symmetric spaces, the traspose is the same as the original matrix,
+        # in symmetric spaces, the transpose is the same as the original matrix,
         # the full covariant metric tensor is the inverse transpose, so this
         # code will be able to handle non-symmetric metrics.
         self._substitutions_dict_tensmul[metric, False, False] = inverse_transpose
@@ -819,12 +821,12 @@ class _TensorManager(object):
         ``G`` and ``GH`` do not commute with themselves and commute with
         each other; A is commuting.
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead, TensorManager
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, TensorManager, TensorSymmetry
         >>> Lorentz = TensorIndexType('Lorentz')
         >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
-        >>> A = tensorhead('A', [Lorentz], [[1]])
-        >>> G = tensorhead('G', [Lorentz], [[1]], 'Gcomm')
-        >>> GH = tensorhead('GH', [Lorentz], [[1]], 'GHcomm')
+        >>> A = TensorHead('A', [Lorentz])
+        >>> G = TensorHead('G', [Lorentz], TensorSymmetry.no_symmetry(1), 'Gcomm')
+        >>> GH = TensorHead('GH', [Lorentz], TensorSymmetry.no_symmetry(1), 'GHcomm')
         >>> TensorManager.set_comm('Gcomm', 'GHcomm', 0)
         >>> (GH(i1)*G(i0)).canon_bp()
         G(i0)*GH(i1)
@@ -896,7 +898,6 @@ class TensorIndexType(Basic):
 
     metric : metric symmetry or metric object or ``None``
 
-
     dim : dimension, it can be a symbol or an integer or ``None``
 
     eps_dim : dimension of the epsilon tensor
@@ -915,7 +916,7 @@ class TensorIndexType(Basic):
     ``dim``
     ``eps_dim``
     ``dummy_fmt``
-    ``data`` : a property to add ``ndarray`` values, to work in a specified basis.
+    ``data`` : (deprecated) a property to add ``ndarray`` values, to work in a specified basis.
 
     Notes
     =====
@@ -982,8 +983,7 @@ class TensorIndexType(Basic):
                 metric_name = metric.name
                 obj.metric_antisym = metric.antisym
             sym2 = TensorSymmetry(get_symmetric_group_sgs(2, obj.metric_antisym))
-            S2 = TensorType([obj]*2, sym2)
-            obj.metric = S2(metric_name)
+            obj.metric = TensorHead(metric_name, [obj]*2, sym2)
 
         obj._dim = dim
         obj._delta = obj.get_kronecker_delta()
@@ -1090,16 +1090,14 @@ class TensorIndexType(Basic):
 
     def get_kronecker_delta(self):
         sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
-        S2 = TensorType([self]*2, sym2)
-        delta = S2('KD')
+        delta = TensorHead('KD', [self]*2, sym2)
         return delta
 
     def get_epsilon(self):
         if not isinstance(self._eps_dim, (SYMPY_INTS, Integer)):
             return None
         sym = TensorSymmetry(get_symmetric_group_sgs(self._eps_dim, 1))
-        Sdim = TensorType([self]*self._eps_dim, sym)
-        epsilon = Sdim('Eps')
+        epsilon = TensorHead('Eps', [self]*self._eps_dim, sym)
         return epsilon
 
     def __lt__(self, other):
@@ -1141,14 +1139,14 @@ class TensorIndexType(Basic):
 
 class TensorIndex(Basic):
     """
-    Represents an abstract tensor index.
+    Represents a tensor index
 
     Parameters
     ==========
 
     name : name of the index, or ``True`` if you want it to be automatically assigned
     tensortype : ``TensorIndexType`` of the index
-    is_up :  flag for contravariant index
+    is_up :  flag for contravariant index (is_up=True by default)
 
     Attributes
     ==========
@@ -1163,39 +1161,30 @@ class TensorIndex(Basic):
     Tensor indices are contracted with the Einstein summation convention.
 
     An index can be in contravariant or in covariant form; in the latter
-    case it is represented prepending a ``-`` to the index name.
+    case it is represented prepending a ``-`` to the index name. Adding
+    ``-`` to a covariant (is_up=False) index makes it contravariant.
 
     Dummy indices have a name with head given by ``tensortype._dummy_fmt``
+
+    Similar to ``symbols`` multiple contravariant indices can be created
+    at once using ``tensor_indices(s, typ)``, where ``s`` is a string
+    of names.
 
 
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, TensorIndex, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorIndex, TensorHead, tensor_indices
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> i = TensorIndex('i', Lorentz); i
-    i
-    >>> sym1 = TensorSymmetry(*get_symmetric_group_sgs(1))
-    >>> S1 = TensorType([Lorentz], sym1)
-    >>> A, B = S1('A,B')
-    >>> A(i)*B(-i)
-    A(L_0)*B(-L_0)
-
-    If you want the index name to be automatically assigned, just put ``True``
-    in the ``name`` field, it will be generated using the reserved character
-    ``_`` in front of its name, in order to avoid conflicts with possible
-    existing indices:
-
-    >>> i0 = TensorIndex(True, Lorentz)
-    >>> i0
-    _i0
-    >>> i1 = TensorIndex(True, Lorentz)
-    >>> i1
-    _i1
-    >>> A(i0)*B(-i1)
-    A(_i0)*B(-_i1)
-    >>> A(i0)*B(-i0)
-    A(L_0)*B(-L_0)
+    >>> mu = TensorIndex('mu', Lorentz, is_up=False)
+    >>> nu, rho = tensor_indices('nu, rho', Lorentz)
+    >>> A = TensorHead('A', [Lorentz, Lorentz])
+    >>> A(mu, nu)
+    A(-mu, nu)
+    >>> A(-mu, -rho)
+    A(mu, -rho)
+    >>> A(mu, -mu)
+    A(-L_0, L_0)
     """
     def __new__(cls, name, tensortype, is_up=True):
         if isinstance(name, string_types):
@@ -1279,7 +1268,9 @@ def tensor_indices(s, typ):
 
 class TensorSymmetry(Basic):
     """
-    Monoterm symmetry of a tensor
+    Monoterm symmetry of a tensor (i.e. any symmetric or anti-symmetric
+    index permutation). For the relevant terminology see ``tensor_can.py``
+    section of the combinatorics module.
 
     Parameters
     ==========
@@ -1297,8 +1288,10 @@ class TensorSymmetry(Basic):
     =====
 
     A tensor can have an arbitrary monoterm symmetry provided by its BSGS.
-    Multiterm symmetries, like the cyclic symmetry of the Riemann tensor,
-    are not covered.
+    Multiterm symmetries, like the cyclic symmetry of the Riemann tensor
+    (i.e., Bianchi identity), are not covered. See combinatorics module for
+    information on how to generate BSGS for a general index permutation group.
+    Simple symmetries can be generated using built-in methods.
 
     See Also
     ========
@@ -1308,13 +1301,18 @@ class TensorSymmetry(Basic):
     Examples
     ========
 
-    Define a symmetric tensor
+    Define a symmetric tensor of rank 2
 
-    >>> from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, TensorHead
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
-    >>> S2 = TensorType([Lorentz]*2, sym2)
-    >>> V = S2('V')
+    >>> sym = TensorSymmetry(get_symmetric_group_sgs(2))
+    >>> T = TensorHead('T', [Lorentz]*2, sym)
+
+    Note, that the same can also be done using built-in TensorSymmetry methods
+
+    >>> sym2 = TensorSymmetry.fully_symmetric(2)
+    >>> sym == sym2
+    True
     """
     def __new__(cls, *args, **kw_args):
         if len(args) == 1:
@@ -1331,6 +1329,62 @@ class TensorSymmetry(Basic):
         obj = Basic.__new__(cls, base, generators, **kw_args)
         return obj
 
+    @classmethod
+    def fully_symmetric(cls, rank):
+        """
+        Returns a fully symmetric (antisymmetric if ``rank``<0)
+        TensorSymmetry object for ``abs(rank)`` indices.
+        """
+        if rank > 0:
+            bsgs = get_symmetric_group_sgs(rank, False)
+        elif rank < 0:
+            bsgs = get_symmetric_group_sgs(-rank, True)
+        elif rank == 0:
+            bsgs = ([], [Permutation(1)])
+        return TensorSymmetry(bsgs)
+
+    @classmethod
+    def direct_product(cls, *args):
+        """
+        Returns a TensorSymmetry object that is being a direct product of
+        fully (anti-)symmetric index permutation groups.
+
+        Notes
+        =====
+
+        Some examples for different values of ``(*args)``:
+        ``(1)``         vector, equivalent to ``TensorSymmetry.fully_symmetric(1)``
+        ``(2)``         tensor with 2 symmetric indices, equivalent to ``.fully_symmetric(2)``
+        ``(-2)``        tensor with 2 antisymmetric indices, equivalent to ``.fully_symmetric(-2)``
+        ``(2, -2)``     tensor with the first 2 indices commuting and the last 2 anticommuting
+        ``(1, 1, 1)``   tensor with 3 indices without any symmetry
+        """
+        base, sgs = [], [Permutation(1)]
+        for arg in args:
+            if arg > 0:
+                bsgs2 = get_symmetric_group_sgs(arg, False)
+            elif arg < 0:
+                bsgs2 = get_symmetric_group_sgs(-arg, True)
+            else:
+                continue
+            base, sgs = bsgs_direct_product(base, sgs, *bsgs2)
+
+        return TensorSymmetry(base, sgs)
+
+    @classmethod
+    def riemann(cls):
+        """
+        Returns a monotorem symmetry of the Riemann tensor
+        """
+        return TensorSymmetry(riemann_bsgs)
+
+    @classmethod
+    def no_symmetry(cls, rank):
+        """
+        TensorSymmetry object for ``rank`` indices with no symmetry
+        """
+        return TensorSymmetry([], [Permutation(rank+1)])
+
     @property
     def base(self):
         return self.args[0]
@@ -1344,9 +1398,12 @@ class TensorSymmetry(Basic):
         return self.args[1][0].size - 2
 
 
+@deprecated(useinstead="TensorSymmetry class constructor and methods", issue=17108,
+            deprecated_since_version="1.5")
 def tensorsymmetry(*args):
     """
-    Return a ``TensorSymmetry`` object.
+    Returns a ``TensorSymmetry`` object. This method is deprecated, use
+    ``TensorSymmetry.direct_product()`` or ``.riemann()`` instead.
 
     One can represent a tensor with any monoterm slot symmetry group
     using a BSGS.
@@ -1375,24 +1432,6 @@ def tensorsymmetry(*args):
     since the shape ``[2, 2]`` corresponds usually to the irreducible
     representation characterized by the monoterm symmetries and by the
     cyclic symmetry.
-
-    Examples
-    ========
-
-    Symmetric tensor using a Young tableau
-
-    >>> from sympy.tensor.tensor import TensorIndexType, TensorType, tensorsymmetry
-    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> sym2 = tensorsymmetry([1, 1])
-    >>> S2 = TensorType([Lorentz]*2, sym2)
-    >>> V = S2('V')
-
-    Symmetric tensor using a ``BSGS`` (base, strong generator set)
-
-    >>> from sympy.tensor.tensor import get_symmetric_group_sgs
-    >>> sym2 = tensorsymmetry(*get_symmetric_group_sgs(2))
-    >>> S2 = TensorType([Lorentz]*2, sym2)
-    >>> V = S2('V')
     """
     from sympy.combinatorics import Permutation
 
@@ -1426,7 +1465,7 @@ def tensorsymmetry(*args):
 
 class TensorType(Basic):
     """
-    Class of tensor types.
+    Class of tensor types. Deprecated, use tensor_heads() instead.
 
     Parameters
     ==========
@@ -1440,21 +1479,11 @@ class TensorType(Basic):
     ``index_types``
     ``symmetry``
     ``types`` : list of ``TensorIndexType`` without repetitions
-
-    Examples
-    ========
-
-    Define a symmetric tensor
-
-    >>> from sympy.tensor.tensor import TensorIndexType, tensorsymmetry, TensorType
-    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> sym2 = tensorsymmetry([1, 1])
-    >>> S2 = TensorType([Lorentz]*2, sym2)
-    >>> V = S2('V')
     """
     is_commutative = False
 
     def __new__(cls, index_types, symmetry, **kw_args):
+        deprecate_TensorType()
         assert symmetry.rank == len(index_types)
         obj = Basic.__new__(cls, Tuple(*index_types), symmetry, **kw_args)
         return obj
@@ -1482,44 +1511,28 @@ class TensorType(Basic):
 
         ``comm``: commutation group number
         see ``_TensorManager.set_comm``
-
-        Examples
-        ========
-
-        Define symmetric tensors ``V``, ``W`` and ``G``, respectively
-        commuting, anticommuting and with no commutation symmetry
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType, canon_bp
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> a, b = tensor_indices('a,b', Lorentz)
-        >>> sym2 = tensorsymmetry([1]*2)
-        >>> S2 = TensorType([Lorentz]*2, sym2)
-        >>> V = S2('V')
-        >>> W = S2('W', 1)
-        >>> G = S2('G', 2)
-        >>> canon_bp(V(a, b)*V(-b, -a))
-        V(L_0, L_1)*V(-L_0, -L_1)
-        >>> canon_bp(W(a, b)*W(-b, -a))
-        0
         """
         if isinstance(s, string_types):
             names = [x.name for x in symbols(s, seq=True)]
         else:
             raise ValueError('expecting a string')
         if len(names) == 1:
-            return TensorHead(names[0], self, comm)
+            return TensorHead(names[0], self.index_types, self.symmetry, comm)
         else:
-            return [TensorHead(name, self, comm) for name in names]
+            return [TensorHead(name, self.index_types, self.symmetry, comm) for name in names]
 
 
+@deprecated(useinstead="TensorHead class constructor or tensor_heads()",
+            issue=17108, deprecated_since_version="1.5")
 def tensorhead(name, typ, sym=None, comm=0):
     """
-    Function generating tensorhead(s).
+    Function generating tensorhead(s). This method is deprecated,
+    use TensorHead constructor or tensor_heads() instead.
 
     Parameters
     ==========
 
-    name : name or sequence of names (as in ``symbol``)
+    name : name or sequence of names (as in ``symbols``)
 
     typ :  index types
 
@@ -1527,45 +1540,23 @@ def tensorhead(name, typ, sym=None, comm=0):
 
     comm : commutation group number
     see ``_TensorManager.set_comm``
-
-
-    Examples
-    ========
-
-    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
-    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> a, b = tensor_indices('a,b', Lorentz)
-    >>> A = tensorhead('A', [Lorentz]*2, [[1]*2])
-    >>> A(a, -b)
-    A(a, -b)
-
-    If no symmetry parameter is provided, assume there are not index
-    symmetries:
-
-    >>> B = tensorhead('B', [Lorentz, Lorentz])
-    >>> B(a, -b)
-    B(a, -b)
-
     """
     if sym is None:
         sym = [[1] for i in range(len(typ))]
     sym = tensorsymmetry(*sym)
-    S = TensorType(typ, sym)
-    th = S(name, comm)
-    return th
+    return TensorHead(name, typ, sym, comm)
 
 
 class TensorHead(Basic):
-    r"""
+    """
     Tensor head of the tensor
 
     Parameters
     ==========
 
     name : name of the tensor
-
-    typ : list of TensorIndexType
-
+    index_types : list of TensorIndexType
+    symmetry : TensorSymmetry of the tensor
     comm : commutation group number
 
     Attributes
@@ -1573,13 +1564,17 @@ class TensorHead(Basic):
 
     ``name``
     ``index_types``
-    ``rank``
-    ``types``  :  equal to ``typ.types``
-    ``symmetry`` : equal to ``typ.symmetry``
+    ``rank`` : total number of indices
+    ``symmetry``
     ``comm`` : commutation group
 
     Notes
     =====
+
+    Similar to ``symbols`` multiple TensorHeads can be created using
+    ``tensorhead(s, typ, sym=None, comm=0)`` function, where ``s``
+    is the string of names and ``sym`` is the monoterm tensor symmetry
+    (see ``tensorsymmetry``).
 
     A ``TensorHead`` belongs to a commutation group, defined by a
     symbol on number ``comm`` (see ``_TensorManager.set_comm``);
@@ -1589,9 +1584,12 @@ class TensorHead(Basic):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensorhead, TensorType
+    Define a fully antisymmetric tensor of rank 2:
+
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorHead, TensorSymmetry
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> A = tensorhead('A', [Lorentz, Lorentz], [[1],[1]])
+    >>> asym2 = TensorSymmetry.fully_symmetric(-2)
+    >>> A = TensorHead('A', [Lorentz, Lorentz], asym2)
 
     Examples with ndarray values, the components data assigned to the
     ``TensorHead`` object are assumed to be in a fully-contravariant
@@ -1599,8 +1597,9 @@ class TensorHead(Basic):
     represents the values of a non-fully covariant tensor, see the other
     examples.
 
-    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
+    >>> from sympy.tensor.tensor import tensor_indices
     >>> from sympy import diag
+    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> i0, i1 = tensor_indices('i0:2', Lorentz)
 
     Specify a replacement dictionary to keep track of the arrays to use for
@@ -1616,11 +1615,9 @@ class TensorHead(Basic):
     >>> Ex, Ey, Ez, Bx, By, Bz = symbols('E_x E_y E_z B_x B_y B_z')
     >>> c = symbols('c', positive=True)
 
-    Let's define `F`, an antisymmetric tensor, we have to assign an
-    antisymmetric matrix to it, because `[[2]]` stands for the Young tableau
-    representation of an antisymmetric set of two elements:
+    Let's define `F`, an antisymmetric tensor:
 
-    >>> F = tensorhead('F', [Lorentz, Lorentz], [[2]])
+    >>> F = TensorHead('F', [Lorentz, Lorentz], asym2)
 
     Let's update the dictionary to contain the matrix to use in the
     replacements:
@@ -1645,7 +1642,7 @@ class TensorHead(Basic):
     Energy-momentum of a particle may be represented as:
 
     >>> from sympy import symbols
-    >>> P = tensorhead('P', [Lorentz], [[1]])
+    >>> P = TensorHead('P', [Lorentz], TensorSymmetry.no_symmetry(1))
     >>> E, px, py, pz = symbols('E p_x p_y p_z', positive=True)
     >>> repl.update({P(i0): [E, px, py, pz]})
 
@@ -1664,7 +1661,7 @@ class TensorHead(Basic):
     """
     is_commutative = False
 
-    def __new__(cls, name, typ, comm=0, **kw_args):
+    def __new__(cls, name, index_types, symmetry=None, comm=0):
         if isinstance(name, string_types):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
@@ -1672,43 +1669,36 @@ class TensorHead(Basic):
         else:
             raise ValueError("invalid name")
 
+        if symmetry is None:
+            symmetry = TensorSymmetry.no_symmetry(len(index_types))
+        else:
+            assert symmetry.rank == len(index_types)
+
         comm2i = TensorManager.comm_symbols2i(comm)
 
-        obj = Basic.__new__(cls, name_symbol, typ, **kw_args)
-
-        obj._name = obj.args[0].name
-        obj._rank = len(obj.index_types)
-        obj._symmetry = typ.symmetry
+        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry)
         obj._comm = comm2i
         return obj
 
     @property
     def name(self):
-        return self._name
+        return self.args[0].name
 
     @property
     def rank(self):
-        return self._rank
+        return len(self.args[1])
 
     @property
     def symmetry(self):
-        return self._symmetry
-
-    @property
-    def typ(self):
-        return self.args[1]
+        return self.args[2]
 
     @property
     def comm(self):
         return self._comm
 
     @property
-    def types(self):
-        return self.args[1].types[:]
-
-    @property
     def index_types(self):
-        return self.args[1].index_types[:]
+        return self.args[1]
 
     def __lt__(self, other):
         return (self.name, self.index_types) < (other.name, other.index_types)
@@ -1740,10 +1730,10 @@ class TensorHead(Basic):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorHead
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> a, b = tensor_indices('a,b', Lorentz)
-        >>> A = tensorhead('A', [Lorentz]*2, [[1]*2])
+        >>> A = TensorHead('A', [Lorentz]*2, TensorSymmetry.no_symmetry(2))
         >>> t = A(a, -b)
         >>> t
         A(a, -b)
@@ -1759,7 +1749,7 @@ class TensorHead(Basic):
                 raise ValueError("No power on abstract tensors.")
         deprecate_data()
         from .array import tensorproduct, tensorcontraction
-        metrics = [_.data for _ in self.args[1].args[0]]
+        metrics = [_.data for _ in self.index_types]
 
         marray = self.data
         marraydim = marray.rank()
@@ -1798,6 +1788,7 @@ class TensorHead(Basic):
         """
         # do not garbage collect Kronecker tensor (it should be done by
         # ``TensorIndexType`` garbage collection)
+        deprecate_data()
         if self.name == "KD":
             return
 
@@ -1808,10 +1799,19 @@ class TensorHead(Basic):
             del _tensor_data_substitution_dict[self]
 
 
-def _get_argtree_pos(expr, pos):
-    for p in pos:
-        expr = expr.args[p]
-    return expr
+def tensor_heads(s, index_types, symmetry=None, comm=0):
+    """
+    Returns a sequence of TensorHeads from a string `s`
+    """
+    if isinstance(s, string_types):
+        names = [x.name for x in symbols(s, seq=True)]
+    else:
+        raise ValueError('expecting a string')
+
+    thlist = [TensorHead(name, index_types, symmetry, comm) for name in names]
+    if len(thlist) == 1:
+        return thlist[0]
+    return thlist
 
 
 class TensExpr(Expr):
@@ -1825,9 +1825,6 @@ class TensExpr(Expr):
     currently the sums of tensors are distributed.
 
     A ``TensExpr`` can be a ``TensAdd`` or a ``TensMul``.
-
-    ``TensAdd`` objects are put in canonical form using the Butler-Portugal
-    algorithm for canonicalization under monoterm symmetries.
 
     ``TensMul`` objects are formed by products of component tensors,
     and include a coefficient, which is a SymPy expression.
@@ -1872,11 +1869,11 @@ class TensExpr(Expr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
         >>> g = Lorentz.metric
-        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
+        >>> p, q = tensor_heads('p,q', [Lorentz])
         >>> t1 = p(m0)
         >>> t2 = q(-m0)
         >>> t1*t2
@@ -1931,10 +1928,10 @@ class TensExpr(Expr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads, TensorSymmetry
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+        >>> A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
         >>> t = A(i, k)*B(-k, -j); t
         A(i, L_0)*B(-L_0, -j)
         >>> t.fun_eval((i, k),(-j, l))
@@ -2129,12 +2126,12 @@ class TensExpr(Expr):
         ========
 
         >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices
-        >>> from sympy.tensor.tensor import tensorhead
+        >>> from sympy.tensor.tensor import TensorHead
         >>> from sympy import symbols, diag
 
         >>> L = TensorIndexType("L")
         >>> i, j = tensor_indices("i j", L)
-        >>> A = tensorhead("A", [L], [[1]])
+        >>> A = TensorHead("A", [L])
         >>> A(i).replace_with_arrays({A(i): [1, 2]}, [i])
         [1, 2]
 
@@ -2157,7 +2154,7 @@ class TensExpr(Expr):
 
         Symmetrization of an array:
 
-        >>> H = tensorhead("H", [L, L], [[1], [1]])
+        >>> H = TensorHead("H", [L, L])
         >>> a, b, c, d = symbols("a b c d")
         >>> expr = H(i, j)/2 + H(j, i)/2
         >>> expr.replace_with_arrays({H(i, j): [[a, b], [c, d]]})
@@ -2233,18 +2230,13 @@ class TensAdd(TensExpr, AssocOp):
     ``rank`` : rank of the tensor
     ``free_args`` : list of the free indices in sorted order
 
-    Notes
-    =====
-
-    Sum of more than one tensor are put automatically in canonical form.
-
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensorhead, tensor_indices
+    >>> from sympy.tensor.tensor import TensorIndexType, tensor_heads, tensor_indices
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> a, b = tensor_indices('a,b', Lorentz)
-    >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
+    >>> p, q = tensor_heads('p,q', [Lorentz])
     >>> t = p(a) + q(a); t
     p(a) + q(a)
     >>> t(b)
@@ -2403,11 +2395,11 @@ class TensAdd(TensExpr, AssocOp):
         ========
 
         >>> from sympy import Symbol
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
         >>> D = Symbol('D')
         >>> Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
         >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
-        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
+        >>> p, q = tensor_heads('p,q', [Lorentz])
         >>> g = Lorentz.metric
         >>> t = p(i0)*p(i1) + g(i0,i1)*q(i2)*q(-i2)
         >>> t(i0,i2)
@@ -2429,7 +2421,7 @@ class TensAdd(TensExpr, AssocOp):
 
     def canon_bp(self):
         """
-        canonicalize using the Butler-Portugal algorithm for canonicalization
+        Canonicalize using the Butler-Portugal algorithm for canonicalization
         under monoterm symmetries.
         """
         expr = self.expand()
@@ -2500,10 +2492,10 @@ class TensAdd(TensExpr, AssocOp):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads, TensorSymmetry
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+        >>> A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
         >>> t = A(i, k)*B(-k, -j) + A(i, -j)
         >>> t.fun_eval((i, k),(-j, l))
         A(k, L_0)*B(-L_0, l) + A(k, l)
@@ -2527,10 +2519,10 @@ class TensAdd(TensExpr, AssocOp):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads, TensorSymmetry
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+        >>> A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
         >>> t = A(i, k)*B(-k, -j); t
         A(i, L_0)*B(-L_0, -j)
         >>> t.substitute_indices((i,j), (j, k))
@@ -2606,13 +2598,23 @@ class Tensor(TensExpr):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead
     >>> Lorentz = TensorIndexType("Lorentz", dummy_fmt="L")
     >>> mu, nu = tensor_indices('mu nu', Lorentz)
-    >>> A = tensorhead("A", [Lorentz, Lorentz], [[1], [1]])
+    >>> A = TensorHead("A", [Lorentz, Lorentz])
     >>> A(mu, -nu)
     A(mu, -nu)
     >>> A(mu, -mu)
+    A(L_0, -L_0)
+
+    It is also possible to use symbols instead of inidices (appropriate indices
+    are then generated automatically).
+
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> A(x, mu)
+    A(x, mu)
+    >>> A(x, -x)
     A(L_0, -L_0)
 
     """
@@ -2803,10 +2805,10 @@ class Tensor(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, TensorSymmetry
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
-        >>> A = tensorhead('A', [Lorentz]*5, [[1]*5])
+        >>> A = TensorHead('A', [Lorentz]*5, TensorSymmetry.fully_symmetric(5))
         >>> t = A(i2, i1, -i2, -i3, i4)
         >>> t
         A(L_0, i1, -L_0, -i3, i4)
@@ -3284,11 +3286,11 @@ class TensMul(TensExpr, AssocOp):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
         >>> g = Lorentz.metric
-        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
+        >>> p, q = tensor_heads('p,q', [Lorentz])
         >>> t = p(m1)*g(m0,m2)
         >>> t.get_indices()
         [m1, m0, m2]
@@ -3308,11 +3310,11 @@ class TensMul(TensExpr, AssocOp):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
         >>> g = Lorentz.metric
-        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
+        >>> p, q = tensor_heads('p,q', [Lorentz])
         >>> t = p(m1)*g(m0,m2)
         >>> t.get_free_indices()
         [m1, m0, m2]
@@ -3333,10 +3335,10 @@ class TensMul(TensExpr, AssocOp):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads, TensorSymmetry
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
-        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+        >>> A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
         >>> t = A(a,b)*B(-b,c)
         >>> t
         A(a, L_0)*B(-L_0, c)
@@ -3401,8 +3403,9 @@ class TensMul(TensExpr, AssocOp):
                 # if `c` is `None`, it does neither commute nor anticommute, skip:
                 if c not in [0, 1]:
                     continue
-                if (cv[j-1].component.types, cv[j-1].component.name) > \
-                        (cv[j].component.types, cv[j].component.name):
+                typ1 = sorted(set(cv[j-1].component.index_types), key=lambda x: x.name)
+                typ2 = sorted(set(cv[j].component.index_types), key=lambda x: x.name)
+                if (typ1, cv[j-1].component.name) > (typ2, cv[j].component.name):
                     cv[j-1], cv[j] = cv[j], cv[j-1]
                     # if `c` is 1, the anticommute, so change sign:
                     if c:
@@ -3435,10 +3438,10 @@ class TensMul(TensExpr, AssocOp):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, TensorSymmetry
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> A = tensorhead('A', [Lorentz]*2, [[2]])
+        >>> A = TensorHead('A', [Lorentz]*2, TensorSymmetry.fully_symmetric(-2))
         >>> t = A(m0,-m1)*A(m1,-m0)
         >>> t.canon_bp()
         -A(L_0, L_1)*A(-L_0, -L_1)
@@ -3498,11 +3501,11 @@ class TensMul(TensExpr, AssocOp):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
         >>> g = Lorentz.metric
-        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
+        >>> p, q = tensor_heads('p,q', [Lorentz])
         >>> t = p(m0)*q(m1)*g(-m0, -m1)
         >>> t.canon_bp()
         metric(L_0, L_1)*p(-L_0)*q(-L_1)
@@ -3677,12 +3680,12 @@ class TensMul(TensExpr, AssocOp):
         ========
 
         >>> from sympy import Symbol
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
         >>> D = Symbol('D')
         >>> Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
         >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
         >>> g = Lorentz.metric
-        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
+        >>> p, q = tensor_heads('p,q', [Lorentz])
         >>> t = p(i0)*q(i1)*q(-i1)
         >>> t(i1)
         p(i1)*q(L_0)*q(-L_0)
@@ -3748,11 +3751,11 @@ class TensorElement(TensExpr):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensorhead
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorHead, TensorSymmetry
     >>> from sympy import symbols
     >>> L = TensorIndexType("L")
     >>> i, j, k = symbols("i j k")
-    >>> A = tensorhead("A", [L, L], [[1], [1]])
+    >>> A = TensorHead("A", [L, L], TensorSymmetry.fully_symmetric(2))
     >>> A(i, j).get_free_indices()
     [i, j]
 
@@ -3821,7 +3824,8 @@ class TensorElement(TensExpr):
 
 def canon_bp(p):
     """
-    Butler-Portugal canonicalization
+    Butler-Portugal canonicalization. See ``tensor_can.py`` from the
+    combinatorics module for the details.
     """
     if isinstance(p, TensExpr):
         return p.canon_bp()
@@ -3864,10 +3868,10 @@ def riemann_cyclic(t2):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead, riemann_cyclic
+    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, riemann_cyclic, TensorSymmetry
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-    >>> R = tensorhead('R', [Lorentz]*4, [[2, 2]])
+    >>> R = TensorHead('R', [Lorentz]*4, TensorSymmetry.riemann())
     >>> t = R(i,j,k,l)*(R(-i,-j,-k,-l) - 2*R(-i,-k,-j,-l))
     >>> riemann_cyclic(t)
     0
@@ -4069,10 +4073,10 @@ def substitute_indices(t, *index_tuples):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads, TensorSymmetry
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-    >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+    >>> A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
     >>> t = A(i, k)*B(-k, -j); t
     A(i, L_0)*B(-L_0, -j)
     >>> t.substitute_indices((i,j), (j, k))

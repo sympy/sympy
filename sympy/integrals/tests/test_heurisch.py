@@ -1,6 +1,6 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     I, erf, tan, asin, asinh, acos, atan, Function, Derivative, diff, simplify, \
-    LambertW, Eq, Ne, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
+    LambertW, Ne, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
     besselj, besselk, bessely, jn, tanh
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
 from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS

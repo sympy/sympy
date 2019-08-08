@@ -20,7 +20,6 @@ def test_symmetrize():
 
     s1 = x + y + z
     s2 = x*y + x*z + y*z
-    s3 = x*y*z
 
     assert symmetrize(1) == (1, 0)
     assert symmetrize(1, formal=True) == (1, 0, [])

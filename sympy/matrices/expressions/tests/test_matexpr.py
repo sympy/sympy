@@ -222,13 +222,13 @@ def test_zero_matmul():
 def test_matadd_simplify():
     A = MatrixSymbol('A', 1, 1)
     assert simplify(MatAdd(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) == \
-        MatAdd(A, ImmutableMatrix([[1]]))
+        MatAdd(A, Matrix([[1]]))
 
 
 def test_matmul_simplify():
     A = MatrixSymbol('A', 1, 1)
     assert simplify(MatMul(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) == \
-        MatMul(A, ImmutableMatrix([[1]]))
+        MatMul(A, Matrix([[1]]))
 
 
 def test_invariants():

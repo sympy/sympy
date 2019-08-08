@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
-from sympy import Basic, Symbol
-from sympy.core.compatibility import string_types
+from sympy import Basic
+from sympy.stats.joint_rv import ProductPSpace
 from sympy.stats.rv import ProductDomain, _symbol_converter
-from sympy.stats.joint_rv import ProductPSpace, JointRandomSymbol
+
 
 class StochasticPSpace(ProductPSpace):
     """

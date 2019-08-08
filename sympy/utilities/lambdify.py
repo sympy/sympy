@@ -100,7 +100,7 @@ MODULES = {
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
-    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
+    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("from tensorflow import *",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -485,10 +485,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     But if we try to pass in a SymPy expression, it fails
 
-    >>> g(x + 1)
+    >>> try:
+    ...     g(x + 1)
+    ... # NumPy release after 1.17 raises TypeError instead of
+    ... # AttributeError
+    ... except (AttributeError, TypeError):
+    ...     raise AttributeError() # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
-    AttributeError: 'Add' object has no attribute 'sin'
+    AttributeError:
 
     Now, let's look at what happened. The reason this fails is that ``g``
     calls ``numpy.sin`` on the input expression, and ``numpy.sin`` does not

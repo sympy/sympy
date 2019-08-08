@@ -1,15 +1,19 @@
-from sympy import S, Sum, I, lambdify, re, im, log, simplify, zeta, pi
-from sympy.abc import x
+from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
+                   zeta, pi, besseli)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
 from sympy.sets.fancysets import Range
-from sympy.stats import (P, E, variance, density, characteristic_function,
-        where, moment_generating_function)
+from sympy.stats import (P, E, variance, density, characteristic_function, cdf,
+                         where, moment_generating_function, skewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
-        Poisson, Geometric, Logarithmic, NegativeBinomial, YuleSimon, Zeta)
+                                   Poisson, Geometric, Logarithmic, NegativeBinomial, Skellam,
+                                   YuleSimon, Zeta)
 from sympy.stats.rv import sample
-from sympy.utilities.pytest import slow
+from sympy.utilities.pytest import slow, raises
+
+x = Symbol('x')
+
 
 def test_PoissonDistribution():
     l = 3
@@ -17,6 +21,7 @@ def test_PoissonDistribution():
     assert abs(p.cdf(10).evalf() - 1) < .001
     assert p.expectation(x, x) == l
     assert p.expectation(x**2, x) - p.expectation(x, x)**2 == l
+
 
 def test_Poisson():
     l = 3
@@ -27,12 +32,14 @@ def test_Poisson():
     assert isinstance(E(x, evaluate=False), Sum)
     assert isinstance(E(2*x, evaluate=False), Sum)
 
+
 def test_GeometricDistribution():
     p = S.One / 5
     d = GeometricDistribution(p)
     assert d.expectation(x, x) == 1/p
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
+
 
 def test_Logarithmic():
     p = S.One / 2
@@ -41,6 +48,7 @@ def test_Logarithmic():
     assert variance(x) == -1/log(2)**2 + 2/log(2)
     assert E(2*x**2 + 3*x + 4) == 4 + 7 / log(2)
     assert isinstance(E(x, evaluate=False), Sum)
+
 
 def test_negative_binomial():
     r = 5
@@ -51,6 +59,25 @@ def test_negative_binomial():
     assert E(x**5 + 2*x + 3) == S(9207)/4
     assert isinstance(E(x, evaluate=False), Sum)
 
+
+def test_skellam():
+    mu1 = Symbol('mu1')
+    mu2 = Symbol('mu2')
+    z = Symbol('z')
+    X = Skellam('x', mu1, mu2)
+
+    assert density(X)(z) == (mu1/mu2)**(z/2) * \
+        exp(-mu1 - mu2)*besseli(z, 2*sqrt(mu1*mu2))
+    assert skewness(X).expand() == mu1/(mu1*sqrt(mu1 + mu2) + mu2 *
+                sqrt(mu1 + mu2)) - mu2/(mu1*sqrt(mu1 + mu2) + mu2*sqrt(mu1 + mu2))
+    assert variance(X).expand() == mu1 + mu2
+    assert E(X) == mu1 - mu2
+    assert characteristic_function(X)(z) == exp(
+        mu1*exp(I*z) - mu1 - mu2 + mu2*exp(-I*z))
+    assert moment_generating_function(X)(z) == exp(
+        mu1*exp(z) - mu1 - mu2 + mu2*exp(-z))
+
+
 def test_yule_simon():
     rho = S(3)
     x = YuleSimon('x', rho)
@@ -58,11 +85,13 @@ def test_yule_simon():
     assert simplify(variance(x)) == rho**2 / ((rho - 1)**2 * (rho - 2))
     assert isinstance(E(x, evaluate=False), Sum)
 
+
 def test_zeta():
     s = S(5)
     x = Zeta('x', s)
     assert E(x) == zeta(s-1) / zeta(s)
-    assert simplify(variance(x)) == (zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
+    assert simplify(variance(x)) == (
+        zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
 
 
 @slow
@@ -73,6 +102,7 @@ def test_sample_discrete():
     assert sample(Y) in Y.pspace.domain.set
     assert sample(Z) in Z.pspace.domain.set
     assert sample(W) in W.pspace.domain.set
+
 
 def test_discrete_probability():
     X = Geometric('X', S(1)/5)
@@ -96,6 +126,7 @@ def test_discrete_probability():
     assert P(G < 3) == x*(-x + 1) + x
     assert P(Eq(G, 3)) == x*(-x + 1)**2
 
+
 def test_precomputed_characteristic_functions():
     import mpmath
 
@@ -109,7 +140,8 @@ def test_precomputed_characteristic_functions():
 
         # second function is the Fourier transform of the density function
         f = lambdify([x, t], pdf(x)*exp(I*x*t), 'mpmath')
-        cf2 = lambda t: mpmath.nsum(lambda x: f(x, t), [support_lower_limit, support_upper_limit], maxdegree=10)
+        cf2 = lambda t: mpmath.nsum(lambda x: f(x, t), [
+            support_lower_limit, support_upper_limit], maxdegree=10)
 
         # compare the two functions at various points
         for test_point in [2, 5, 8, 11]:
@@ -126,6 +158,7 @@ def test_precomputed_characteristic_functions():
     test_cf(YuleSimon('y', 5), 1, mpmath.inf)
     test_cf(Zeta('z', 5), 1, mpmath.inf)
 
+
 def test_moment_generating_functions():
     t = S('t')
 
@@ -135,11 +168,16 @@ def test_moment_generating_functions():
     logarithmic_mgf = moment_generating_function(Logarithmic('l', S(1)/2))(t)
     assert logarithmic_mgf.diff(t).subs(t, 0) == 1/log(2)
 
-    negative_binomial_mgf = moment_generating_function(NegativeBinomial('n', 5, S(1)/3))(t)
+    negative_binomial_mgf = moment_generating_function(
+        NegativeBinomial('n', 5, S(1)/3))(t)
     assert negative_binomial_mgf.diff(t).subs(t, 0) == S(5)/2
 
     poisson_mgf = moment_generating_function(Poisson('p', 5))(t)
     assert poisson_mgf.diff(t).subs(t, 0) == 5
+
+    skellam_mgf = moment_generating_function(Skellam('s', 1, 1))(t)
+    assert skellam_mgf.diff(t).subs(
+        t, 2) == (-exp(-2) + exp(2))*exp(-2 + exp(-2) + exp(2))
 
     yule_simon_mgf = moment_generating_function(YuleSimon('y', 3))(t)
     assert simplify(yule_simon_mgf.diff(t).subs(t, 0)) == S(3)/2
@@ -147,11 +185,13 @@ def test_moment_generating_functions():
     zeta_mgf = moment_generating_function(Zeta('z', 5))(t)
     assert zeta_mgf.diff(t).subs(t, 0) == pi**4/(90*zeta(5))
 
+
 def test_Or():
     X = Geometric('X', S(1)/2)
     P(Or(X < 3, X > 4)) == S(13)/16
     P(Or(X > 2, X > 1)) == P(X > 1)
     P(Or(X >= 3, X < 3)) == 1
+
 
 def test_where():
     X = Geometric('X', S(1)/5)
@@ -160,6 +200,7 @@ def test_where():
     assert where(X**2 >= 4).set == Range(2, S.Infinity, 1)
     assert where(Y**2 < 9).set == Range(0, 3, 1)
     assert where(Y**2 <= 9).set == Range(0, 4, 1)
+
 
 def test_conditional():
     X = Geometric('X', S(2)/3)
@@ -172,12 +213,13 @@ def test_conditional():
     assert P(X < 2, Eq(X, 2)) == 0
     assert P(X > 2, Eq(X, 3)) == 1
 
+
 def test_product_spaces():
     X1 = Geometric('X1', S(1)/2)
     X2 = Geometric('X2', S(1)/3)
     assert str(P(X1 + X2 < 3, evaluate=False)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """\
-    + """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1))"""
+        + """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1))"""
     assert str(P(X1 + X2 > 3)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """ +\
         """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, 1, oo))"""
     assert str(P(Eq(X1 + X2, 3))) == """Sum(Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, """ +\
-    """X2 <= 2), (0, True)), (X2, 1, oo))"""
+        """X2 <= 2), (0, True)), (X2, 1, oo))"""

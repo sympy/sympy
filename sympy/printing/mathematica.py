@@ -75,6 +75,39 @@ known_functions = {
     "chebyshevu": [(lambda *x: True, "ChebyshevU")],
     "legendre": [(lambda *x: True, "LegendreP")],
     "assoc_legendre": [(lambda *x: True, "LegendreP")],
+    "mathieuc": [(lambda *x: True, "MathieuC")],
+    "mathieus": [(lambda *x: True, "MathieuS")],
+    "mathieucprime": [(lambda *x: True, "MathieuCPrime")],
+    "mathieusprime": [(lambda *x: True, "MathieuSPrime")],
+    "stieltjes": [(lambda x: True, "StieltjesGamma")],
+    "elliptic_e": [(lambda *x: True, "EllipticE")],
+    "elliptic_f": [(lambda *x: True, "EllipticE")],
+    "elliptic_k": [(lambda x: True, "EllipticK")],
+    "elliptic_pi": [(lambda *x: True, "EllipticPi")],
+    "zeta": [(lambda *x: True, "Zeta")],
+    "besseli": [(lambda *x: True, "BesselI")],
+    "besselj": [(lambda *x: True, "BesselJ")],
+    "besselk": [(lambda *x: True, "BesselK")],
+    "bessely": [(lambda *x: True, "BesselY")],
+    "hankel1": [(lambda *x: True, "HankelH1")],
+    "hankel2": [(lambda *x: True, "HankelH2")],
+    "airyai": [(lambda x: True, "AiryAi")],
+    "airybi": [(lambda x: True, "AiryBi")],
+    "airyaiprime": [(lambda x: True, "AiryAiPrime")],
+    "airybiprime": [(lambda x: True, "AiryBiPrime")],
+    "polylog": [(lambda *x: True, "PolyLog")],
+    "lerchphi": [(lambda *x: True, "LerchPhi")],
+    "gcd": [(lambda *x: True, "GCD")],
+    "lcm": [(lambda *x: True, "LCM")],
+    "jn": [(lambda *x: True, "SphericalBesselJ")],
+    "yn": [(lambda *x: True, "SphericalBesselY")],
+    "hyper": [(lambda *x: True, "HypergeometricPFQ")],
+    "meijerg": [(lambda *x: True, "MeijerG")],
+    "appellf1": [(lambda *x: True, "AppellF1")],
+    "DiracDelta": [(lambda x: True, "DiracDelta")],
+    "Heaviside": [(lambda x: True, "HeavisideTheta")],
+    "KroneckerDelta": [(lambda *x: True, "KroneckerDelta")],
+    "LambertW": [(lambda x: True, "ProductLog")],
 }
 
 
@@ -124,6 +157,11 @@ class MCodePrinter(CodePrinter):
             res += '**'.join(self.parenthesize(a, PREC) for a in nc)
         return res
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     # Primitive numbers
     def _print_Zero(self, expr):
@@ -167,7 +205,9 @@ class MCodePrinter(CodePrinter):
         return 'GoldenRatio'
 
     def _print_TribonacciConstant(self, expr):
-        return self.doprint(expr._eval_expand_func())
+        expanded = expr.expand(func=True)
+        PREC = precedence(expr)
+        return self.parenthesize(expanded, PREC)
 
     def _print_EulerGamma(self, expr):
         return 'EulerGamma'
@@ -257,6 +297,10 @@ class MCodePrinter(CodePrinter):
             for cond, mfunc in cond_mfunc:
                 if cond(*expr.args):
                     return "%s[%s]" % (mfunc, self.stringify(expr.args, ", "))
+        elif (expr.func.__name__ in self._rewriteable_functions and
+              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+            # Simple rewrite to supported function possible
+            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
         return expr.func.__name__ + "[%s]" % self.stringify(expr.args, ", ")
 
     _print_MinMaxBase = _print_Function

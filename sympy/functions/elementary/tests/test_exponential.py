@@ -2,11 +2,12 @@ from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
-    AccumBounds, MatrixSymbol, Pow)
+    AccumBounds, MatrixSymbol, Pow, gcd)
+from sympy.functions.elementary.exponential import _match_real_imag
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 
 def test_exp_values():
@@ -46,6 +47,25 @@ def test_exp_values():
 
     assert exp(-oo, evaluate=False).is_finite is True
     assert exp(oo, evaluate=False).is_finite is False
+
+
+def test_exp_period():
+    assert exp(9*I*pi/4) == exp(I*pi/4)
+    assert exp(46*I*pi/18) == exp(5*I*pi/9)
+    assert exp(25*I*pi/7) == exp(-3*I*pi/7)
+    assert exp(-19*I*pi/3) == exp(-I*pi/3)
+    assert exp(37*I*pi/8) - exp(-11*I*pi/8) == 0
+    assert exp(-5*I*pi/3) / exp(11*I*pi/5) * exp(148*I*pi/15) == 1
+
+    assert exp(2 - 17*I*pi/5) == exp(2 + 3*I*pi/5)
+    assert exp(log(3) + 29*I*pi/9) == 3 * exp(-7*I*pi/9)
+
+    n = Symbol('n', integer=True)
+    e = Symbol('e', even=True)
+    assert exp(e*I*pi) == 1
+    assert exp((e + 1)*I*pi) == -1
+    assert exp((1 + 4*n)*I*pi/2) == I
+    assert exp((-1 + 4*n)*I*pi/2) == -I
 
 
 def test_exp_log():
@@ -198,6 +218,63 @@ def test_log_values():
     assert log(2*3**2).func is log
 
 
+def test_match_real_imag():
+    x, y = symbols('x,y', real=True)
+    i = Symbol('i', imaginary=True)
+    assert _match_real_imag(S.One) == (1, 0)
+    assert _match_real_imag(I) == (0, 1)
+    assert _match_real_imag(3 - 5*I) == (3, -5)
+    assert _match_real_imag(-sqrt(3) + S.Half*I) == (-sqrt(3), S.Half)
+    assert _match_real_imag(x + y*I) == (x, y)
+    assert _match_real_imag(x*I + y*I) == (0, x + y)
+    assert _match_real_imag((x + y)*I) == (0, x + y)
+    assert _match_real_imag(-S(2)/3*i*I) == (None, None)
+    assert _match_real_imag(1 - 2*i) == (None, None)
+    assert _match_real_imag(sqrt(2)*(3 - 5*I)) == (None, None)
+
+
+def test_log_exact():
+    # check for pi/2, pi/3, pi/4, pi/6, pi/8, pi/12; pi/5, pi/10:
+    for n in range(-23, 24):
+        if gcd(n, 24) != 1:
+            assert log(exp(n*I*pi/24).rewrite(sqrt)) == n*I*pi/24
+        for n in range(-9, 10):
+            assert log(exp(n*I*pi/10).rewrite(sqrt)) == n*I*pi/10
+
+    assert log(S.Half - I*sqrt(3)/2) == -I*pi/3
+    assert log(-S.Half + I*sqrt(3)/2) == I*2*pi/3
+    assert log(-sqrt(2)/2 - I*sqrt(2)/2) == -I*3*pi/4
+    assert log(-sqrt(3)/2 - I*S.Half) == -I*5*pi/6
+
+    assert log(-S(1)/4 + sqrt(5)/4 - I*sqrt(sqrt(5)/8 + S(5)/8)) == -I*2*pi/5
+    assert log(sqrt(S(5)/8 - sqrt(5)/8) + I*(S(1)/4 + sqrt(5)/4)) == I*3*pi/10
+    assert log(-sqrt(sqrt(2)/4 + S(1)/2) + I*sqrt(S(1)/2 - sqrt(2)/4)) == I*7*pi/8
+    assert log(-sqrt(6)/4 - sqrt(2)/4 + I*(-sqrt(6)/4 + sqrt(2)/4)) == -I*11*pi/12
+
+    assert log(-1 + I*sqrt(3)) == log(2) + I*2*pi/3
+    assert log(5 + 5*I) == log(5*sqrt(2)) + I*pi/4
+    assert log(sqrt(-12)) == log(2*sqrt(3)) + I*pi/2
+    assert log(-sqrt(6) + sqrt(2) - I*sqrt(6) - I*sqrt(2)) == log(4) - I*7*pi/12
+    assert log(-sqrt(6-3*sqrt(2)) - I*sqrt(6+3*sqrt(2))) == log(2*sqrt(3)) - 5*I*pi/8
+    assert log(1 + I*sqrt(2-sqrt(2))/sqrt(2+sqrt(2))) == log(2/sqrt(sqrt(2) + 2)) + I*pi/8
+    assert log(cos(7*pi/12) + I*sin(7*pi/12)) == 7*I*pi/12
+    assert log(cos(6*pi/5) + I*sin(6*pi/5)) == -4*I*pi/5
+
+    assert log(5*(1 + I)/sqrt(2)) == log(5) + I*pi/4
+    assert log(sqrt(2)*(-sqrt(3) + 1 - sqrt(3)*I - I)) == log(4) - I*7*pi/12
+    assert log(-sqrt(2)*(1 - I*sqrt(3))) == log(2*sqrt(2)) + 2*I*pi/3
+    assert log(sqrt(3)*I*(-sqrt(6 - 3*sqrt(2)) - I*sqrt(3*sqrt(2) + 6))) == log(6) - I*pi/8
+
+    zero = (1 + sqrt(2))**2 - 3 - 2*sqrt(2)
+    assert log(zero - I*sqrt(3)) == log(sqrt(3)) - I*pi/2
+    assert unchanged(log, zero + I*zero) or log(zero + zero*I) == zoo
+
+    # bail quickly if no obvious simplification is possible:
+    assert unchanged(log, (sqrt(2)-1/sqrt(sqrt(3)+I))**1000)
+    # beware of non-real coefficients
+    assert unchanged(log, sqrt(2-sqrt(5))*(1 + I))
+
+
 def test_log_base():
     assert log(1, 2) == 0
     assert log(2, 2) == 1
@@ -212,6 +289,8 @@ def test_log_base():
     assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
     assert log(Rational(2, 3), Rational(2, 5)) == \
         log(S(2)/3)/log(S(2)/5)
+    # issue 17148
+    assert log(S(8)/3, 2) == -log(3)/log(2) + 3
 
 
 def test_log_symbolic():
@@ -250,6 +329,14 @@ def test_log_symbolic():
     assert (log(p**-5)**-1).expand() == -1/log(p)/5
     assert log(-x).func is log and log(-x).args[0] == -x
     assert log(-p).func is log and log(-p).args[0] == -p
+
+
+def test_log_exp():
+    assert log(exp(4*I*pi)) == 0     # exp evaluates
+    assert log(exp(-5*I*pi)) == I*pi # exp evaluates
+    assert log(exp(19*I*pi/4)) == 3*I*pi/4
+    assert log(exp(25*I*pi/7)) == -3*I*pi/7
+    assert log(exp(-5*I)) == -5*I + 2*I*pi
 
 
 def test_exp_assumptions():
@@ -345,8 +432,6 @@ def test_log_expand():
         log((log(y) + log(z))*log(x)) + log(2)]
     assert log(x**log(x**2)).expand(deep=False) == log(x)*log(x**2)
     assert log(x**log(x**2)).expand() == 2*log(x)**2
-    assert (log(x*(y + z))*(x + y)), expand(mul=True, log=True) == y*log(
-        x) + y*log(y + z) + z*log(x) + z*log(y + z)
     x, y = symbols('x,y')
     assert log(x*y).expand(force=True) == log(x) + log(y)
     assert log(x**y).expand(force=True) == y*log(x)
@@ -356,6 +441,13 @@ def test_log_expand():
     # factoring and if simplification is sought, it's cheaper to put
     # logs together than it is to take them apart.
     assert log(2*3**2).expand() != 2*log(3) + log(2)
+
+
+@XFAIL
+def test_log_expand_fail():
+    x, y, z = symbols('x,y,z', positive=True)
+    assert (log(x*(y + z))*(x + y)).expand(mul=True, log=True) == y*log(
+        x) + y*log(y + z) + z*log(x) + z*log(y + z)
 
 
 def test_log_simplify():
@@ -418,7 +510,7 @@ def test_issue_5673():
     assert e.is_comparable is False
     assert e.is_positive is not True
     e2 = 1 - 1/(1 - exp(-1000))
-    assert e.is_positive is not True
+    assert e2.is_positive is not True
     e3 = -2 + exp(exp(LambertW(log(2)))*LambertW(log(2)))
     assert e3.is_nonzero is not True
 
@@ -482,14 +574,24 @@ def test_log_product():
     from sympy.abc import n, m
     i, j = symbols('i,j', positive=True, integer=True)
     x, y = symbols('x,y', positive=True)
-    from sympy.concrete import Product, Sum
-    f, g = Function('f'), Function('g')
-    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
+    from sympy.concrete import Product
+    assert simplify(log(Product(x**i, (i, 1, n)))) == log(Product(x**i, (i, 1, n)))
     assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
             log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))
 
     expr = log(Product(-2, (n, 0, 4)))
     assert simplify(expr) == expr
+
+
+@XFAIL
+def test_log_product_simplify_to_sum():
+    from sympy.abc import n, m
+    i, j = symbols('i,j', positive=True, integer=True)
+    x, y = symbols('x,y', positive=True)
+    from sympy.concrete import Product, Sum
+    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
+    assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
+            Sum(i*log(x) + j*log(y), (i, 1, n), (j, 1, m))
 
 
 def test_issue_8866():

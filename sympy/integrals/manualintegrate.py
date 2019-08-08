@@ -22,7 +22,7 @@ from collections import namedtuple, defaultdict
 
 import sympy
 
-from sympy.core.compatibility import reduce, Mapping
+from sympy.core.compatibility import reduce, Mapping, iterable
 from sympy.core.containers import Dict
 from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -739,10 +739,13 @@ def quadratic_denom_rule(integral):
         return
 
     a, b, c = match[a], match[b], match[c]
-    return PiecewiseRule([(ArctanRule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
-                          (ArccothRule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
-                          (ArctanhRule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
-    ], integrand, symbol)
+    if b.is_extended_real and c.is_extended_real:
+        return PiecewiseRule([(ArctanRule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
+                              (ArccothRule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+                              (ArctanhRule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+        ], integrand, symbol)
+    else:
+        return ArctanRule(a, b, c, integrand, symbol)
 
 def root_mul_rule(integral):
     integrand, symbol = integral
@@ -1480,11 +1483,15 @@ def eval_shi(a, b, integrand, symbol):
 
 @evaluates(ErfRule)
 def eval_erf(a, b, c, integrand, symbol):
-    return Piecewise(
-        (sympy.sqrt(sympy.pi/(-a))/2 * sympy.exp(c - b**2/(4*a)) *
-            sympy.erf((-2*a*symbol - b)/(2*sympy.sqrt(-a))), a < 0),
-        (sympy.sqrt(sympy.pi/a)/2 * sympy.exp(c - b**2/(4*a)) *
-            sympy.erfi((2*a*symbol + b)/(2*sympy.sqrt(a))), True))
+    if a.is_extended_real:
+        return Piecewise(
+            (sympy.sqrt(sympy.pi/(-a))/2 * sympy.exp(c - b**2/(4*a)) *
+                sympy.erf((-2*a*symbol - b)/(2*sympy.sqrt(-a))), a < 0),
+            (sympy.sqrt(sympy.pi/a)/2 * sympy.exp(c - b**2/(4*a)) *
+                sympy.erfi((2*a*symbol + b)/(2*sympy.sqrt(a))), True))
+    else:
+        return sympy.sqrt(sympy.pi/a)/2 * sympy.exp(c - b**2/(4*a)) * \
+                sympy.erfi((2*a*symbol + b)/(2*sympy.sqrt(a)))
 
 @evaluates(FresnelCRule)
 def eval_fresnelc(a, b, c, integrand, symbol):

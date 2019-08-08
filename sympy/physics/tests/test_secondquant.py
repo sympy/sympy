@@ -135,6 +135,7 @@ def test_basic_state():
     assert s.up(0) == BosonState([n + 1, m])
 
 
+# 2019-07-24: No method move in the whole of SymPy
 @XFAIL
 def test_move1():
     i, j = symbols('i,j')
@@ -144,6 +145,7 @@ def test_move1():
     assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
 
 
+# 2019-07-24: No method move in the whole of SymPy
 @XFAIL
 def test_move2():
     i, j = symbols('i,j')
@@ -666,7 +668,7 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1():
         # dummy order.  That is because the proximity to external indices
         # has higher influence on the canonical dummy ordering than the
         # position of a dummy on the factors.  In fact, the terms here are
-        # similar in structure as the result of the dummy substitions above.
+        # similar in structure as the result of the dummy substitutions above.
         v(k, l, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
         v(l, k, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
         v(k, l, d, c)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
@@ -828,7 +830,7 @@ def test_equivalent_internal_lines_VT2():
         #
         # This test show that the dummy order may not be sensitive to all
         # index permutations.  The following expressions have identical
-        # structure as the resulting terms from of the dummy subsitutions
+        # structure as the resulting terms from of the dummy substitutions
         # in the test above.  Here, all expressions have the same dummy
         # order, so they cannot be simplified by means of dummy
         # substitution.  In order to simplify further, it is necessary to

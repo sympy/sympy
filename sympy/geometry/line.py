@@ -458,7 +458,7 @@ class LinearEntity(GeometrySet):
                 return [seg]
             elif st1 >= 0: # st2 < 0:
                 return [Segment(ray.p1, seg.p1)]
-            elif st2 > 0: # st1 <= 0
+            elif st2 >= 0: # st1 < 0:
                 return [Segment(ray.p1, seg.p2)]
 
         def intersect_parallel_segments(seg1, seg2):

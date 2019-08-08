@@ -475,7 +475,6 @@ def test_sympy__combinatorics__subsets__Subset():
     assert _test_args(Subset(['c', 'd'], ['a', 'b', 'c', 'd']))
 
 
-@XFAIL
 def test_sympy__combinatorics__permutations__Permutation():
     from sympy.combinatorics.permutations import Permutation
     assert _test_args(Permutation([0, 1, 2, 3]))
@@ -1328,9 +1327,19 @@ def test_sympy__stats__crv_types__DagumDistribution():
     assert _test_args(DagumDistribution(1, 1, 1))
 
 
+def test_sympy__stats__crv_types__ExGaussianDistribution():
+    from sympy.stats.crv_types import ExGaussianDistribution
+    assert _test_args(ExGaussianDistribution(1, 1, 1))
+
+
 def test_sympy__stats__crv_types__ExponentialDistribution():
     from sympy.stats.crv_types import ExponentialDistribution
     assert _test_args(ExponentialDistribution(1))
+
+
+def test_sympy__stats__crv_types__ExponentialPowerDistribution():
+    from sympy.stats.crv_types import ExponentialPowerDistribution
+    assert _test_args(ExponentialPowerDistribution(0, 1, 1))
 
 
 def test_sympy__stats__crv_types__FDistributionDistribution():
@@ -1486,6 +1495,11 @@ def test_sympy__stats__drv_types__PoissonDistribution():
     assert _test_args(PoissonDistribution(1))
 
 
+def test_sympy__stats__drv_types__SkellamDistribution():
+    from sympy.stats.drv_types import SkellamDistribution
+    assert _test_args(SkellamDistribution(1, 1))
+
+
 def test_sympy__stats__drv_types__YuleSimonDistribution():
     from sympy.stats.drv_types import YuleSimonDistribution
     assert _test_args(YuleSimonDistribution(.5))
@@ -1548,6 +1562,12 @@ def test_sympy__stats__rv__RandomIndexedSymbol():
     X = DiscreteMarkovChain("X")
     assert _test_args(RandomIndexedSymbol(X[0].symbol, pspace(X[0])))
 
+def test_sympy__stats__rv__RandomMatrixSymbol():
+    from sympy.stats.rv import RandomMatrixSymbol
+    from sympy.stats.random_matrix import RandomMatrixPSpace
+    pspace = RandomMatrixPSpace('P')
+    assert _test_args(RandomMatrixSymbol('M', 3, 3, pspace))
+
 def test_sympy__stats__stochastic_process__StochasticPSpace():
     from sympy.stats.stochastic_process import StochasticPSpace
     from sympy.stats.stochastic_process_types import StochasticProcess
@@ -1558,15 +1578,29 @@ def test_sympy__stats__stochastic_process_types__StochasticProcess():
     from sympy.stats.stochastic_process_types import StochasticProcess
     assert _test_args(StochasticProcess("Y", [1, 2, 3]))
 
+def test_sympy__stats__stochastic_process_types__MarkovProcess():
+    from sympy.stats.stochastic_process_types import MarkovProcess
+    assert _test_args(MarkovProcess("Y", [1, 2, 3]))
+
 def test_sympy__stats__stochastic_process_types__DiscreteTimeStochasticProcess():
     from sympy.stats.stochastic_process_types import DiscreteTimeStochasticProcess
     assert _test_args(DiscreteTimeStochasticProcess("Y", [1, 2, 3]))
+
+def test_sympy__stats__stochastic_process_types__ContinuousTimeStochasticProcess():
+    from sympy.stats.stochastic_process_types import ContinuousTimeStochasticProcess
+    assert _test_args(ContinuousTimeStochasticProcess("Y", [1, 2, 3]))
 
 def test_sympy__stats__stochastic_process_types__TransitionMatrixOf():
     from sympy.stats.stochastic_process_types import TransitionMatrixOf, DiscreteMarkovChain
     from sympy import MatrixSymbol
     DMC = DiscreteMarkovChain("Y")
     assert _test_args(TransitionMatrixOf(DMC, MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__stochastic_process_types__GeneratorMatrixOf():
+    from sympy.stats.stochastic_process_types import GeneratorMatrixOf, ContinuousMarkovChain
+    from sympy import MatrixSymbol
+    DMC = ContinuousMarkovChain("Y")
+    assert _test_args(GeneratorMatrixOf(DMC, MatrixSymbol('T', 3, 3)))
 
 def test_sympy__stats__stochastic_process_types__StochasticStateSpaceOf():
     from sympy.stats.stochastic_process_types import StochasticStateSpaceOf, DiscreteMarkovChain
@@ -1578,6 +1612,36 @@ def test_sympy__stats__stochastic_process_types__DiscreteMarkovChain():
     from sympy.stats.stochastic_process_types import DiscreteMarkovChain
     from sympy import MatrixSymbol
     assert _test_args(DiscreteMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__stochastic_process_types__ContinuousMarkovChain():
+    from sympy.stats.stochastic_process_types import ContinuousMarkovChain
+    from sympy import MatrixSymbol
+    assert _test_args(ContinuousMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__random_matrix__RandomMatrixPSpace():
+    from sympy.stats.random_matrix import RandomMatrixPSpace
+    from sympy.stats.random_matrix_models import RandomMatrixEnsemble
+    assert _test_args(RandomMatrixPSpace('P', RandomMatrixEnsemble()))
+
+def test_sympy__stats__random_matrix_models__RandomMatrixEnsemble():
+    from sympy.stats.random_matrix_models import RandomMatrixEnsemble
+    assert _test_args(RandomMatrixEnsemble())
+
+def test_sympy__stats__random_matrix_models__GaussianEnsemble():
+    from sympy.stats.random_matrix_models import GaussianEnsemble
+    assert _test_args(GaussianEnsemble('G', 3))
+
+def test_sympy__stats__random_matrix_models__GaussianUnitaryEnsemble():
+    from sympy.stats import GaussianUnitaryEnsemble
+    assert _test_args(GaussianUnitaryEnsemble('U', 3))
+
+def test_sympy__stats__random_matrix_models__GaussianOrthogonalEnsemble():
+    from sympy.stats import GaussianOrthogonalEnsemble
+    assert _test_args(GaussianOrthogonalEnsemble('U', 3))
+
+def test_sympy__stats__random_matrix_models__GaussianSymplecticEnsemble():
+    from sympy.stats import GaussianSymplecticEnsemble
+    assert _test_args(GaussianSymplecticEnsemble('U', 3))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
@@ -2217,6 +2281,10 @@ def test_sympy__functions__special__gamma_functions__polygamma():
 def test_sympy__functions__special__gamma_functions__uppergamma():
     from sympy.functions.special.gamma_functions import uppergamma
     assert _test_args(uppergamma(x, 2))
+
+def test_sympy__functions__special__gamma_functions__multigamma():
+    from sympy.functions.special.gamma_functions import multigamma
+    assert _test_args(multigamma(x, 1))
 
 
 def test_sympy__functions__special__beta_functions__beta():
@@ -3944,24 +4012,21 @@ def test_sympy__tensor__tensor__TensorIndexType():
     assert _test_args(TensorIndexType('Lorentz', metric=False))
 
 
+@SKIP("deprecated class")
+def test_sympy__tensor__tensor__TensorType():
+    pass
+
+
 def test_sympy__tensor__tensor__TensorSymmetry():
     from sympy.tensor.tensor import TensorSymmetry, get_symmetric_group_sgs
     assert _test_args(TensorSymmetry(get_symmetric_group_sgs(2)))
 
 
-def test_sympy__tensor__tensor__TensorType():
-    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, TensorType
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    sym = TensorSymmetry(get_symmetric_group_sgs(1))
-    assert _test_args(TensorType([Lorentz], sym))
-
-
 def test_sympy__tensor__tensor__TensorHead():
-    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, TensorHead
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, TensorHead
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
-    S1 = TensorType([Lorentz], sym)
-    assert _test_args(TensorHead('p', S1, 0))
+    assert _test_args(TensorHead('p', [Lorentz], sym, 0))
 
 
 def test_sympy__tensor__tensor__TensorIndex():
@@ -3974,54 +4039,48 @@ def test_sympy__tensor__tensor__TensExpr():
     pass
 
 def test_sympy__tensor__tensor__TensAdd():
-    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensAdd
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, TensAdd, tensor_heads
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
-    S1 = TensorType([Lorentz], sym)
-    p, q = S1('p,q')
+    p, q = tensor_heads('p,q', [Lorentz], sym)
     t1 = p(a)
     t2 = q(a)
     assert _test_args(TensAdd(t1, t2))
 
 
 def test_sympy__tensor__tensor__Tensor():
-    from sympy.core import S
-    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, TensorHead
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
-    S1 = TensorType([Lorentz], sym)
-    p = S1('p')
+    p = TensorHead('p', [Lorentz], sym)
     assert _test_args(p(a))
 
 
 def test_sympy__tensor__tensor__TensMul():
-    from sympy.core import S
-    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, tensor_heads
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
-    S1 = TensorType([Lorentz], sym)
-    p = S1('p')
-    q = S1('q')
+    p, q = tensor_heads('p, q', [Lorentz], sym)
     assert _test_args(3*p(a)*q(b))
 
 
 def test_sympy__tensor__tensor__TensorElement():
-    from sympy.tensor.tensor import TensorIndexType, tensorhead, TensorElement
+    from sympy.tensor.tensor import TensorIndexType, TensorHead, TensorElement
     L = TensorIndexType("L")
-    A = tensorhead("A", [L, L], [[1], [1]])
+    A = TensorHead("A", [L, L])
     telem = TensorElement(A(x, y), {x: 1})
     assert _test_args(telem)
 
 
 def test_sympy__tensor__toperators__PartialDerivative():
-    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead
     from sympy.tensor.toperators import PartialDerivative
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
-    A = tensorhead("A", [Lorentz], [[1]])
+    A = TensorHead("A", [Lorentz])
     assert _test_args(PartialDerivative(A(a), A(b)))
 
 
@@ -4501,6 +4560,14 @@ def test_sympy__codegen__fnodes__literal_sp():
 def test_sympy__codegen__fnodes__literal_dp():
     from sympy.codegen.fnodes import literal_dp
     assert _test_args(literal_dp(1))
+
+
+def test_sympy__codegen__matrix_nodes__MatrixSolve():
+    from sympy.matrices import MatrixSymbol
+    from sympy.codegen.matrix_nodes import MatrixSolve
+    A = MatrixSymbol('A', 3, 3)
+    v = MatrixSymbol('x', 3, 1)
+    assert _test_args(MatrixSolve(A, v))
 
 
 def test_sympy__vector__coordsysrect__CoordSys3D():

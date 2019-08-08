@@ -3,15 +3,16 @@ from sympy import (
     collect,cos, cosh, cot, coth, count_ops, csch, Derivative, diff, E,
     Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
     factorial, Float, fraction, Function, gamma, GoldenRatio, hyper,
-    hypersimp, I, Integral, integrate, log, logcombine, Lt, Matrix,
-    MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
+    hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
+    Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
     Rational, root, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
     zoo)
 from sympy.core.mul import _keep_coeff
+from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
-from sympy.utilities.pytest import XFAIL, slow
-from sympy.core.compatibility import range
+from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.core.compatibility import range, PY3
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -295,6 +296,15 @@ def test_separatevars():
     # a noncommutable object present
     eq = x*(1 + hyper((), (), y*z))
     assert separatevars(eq) == eq
+
+    s = separatevars(abs(x*y))
+    assert s == abs(x)*abs(y) and s.is_Mul
+    z = cos(1)**2 + sin(1)**2 - 1
+    a = abs(x*z)
+    s = separatevars(a)
+    assert not a.is_Mul and s.is_Mul and s == abs(x)*abs(z)
+    s = separatevars(abs(x*y*z))
+    assert s == abs(x)*abs(y)*abs(z)
 
 
 def test_separatevars_advanced_factor():
@@ -591,7 +601,7 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, exp_polar, cosh, cosine_transform
+    from sympy import besselj, besseli, exp_polar, cosh, cosine_transform, bessely
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
@@ -607,6 +617,23 @@ def test_besselsimp():
     assert cosine_transform(1/t*sin(a/t), t, y) == \
         sqrt(2)*sqrt(pi)*besselj(0, 2*sqrt(a)*sqrt(y))/2
 
+    assert besselsimp(x**2*(a*(-2*besselj(5*I, x) + besselj(-2 + 5*I, x) +
+    besselj(2 + 5*I, x)) + b*(-2*bessely(5*I, x) + bessely(-2 + 5*I, x) +
+    bessely(2 + 5*I, x)))/4 + x*(a*(besselj(-1 + 5*I, x)/2 - besselj(1 + 5*I, x)/2)
+    + b*(bessely(-1 + 5*I, x)/2 - bessely(1 + 5*I, x)/2)) + (x**2 + 25)*(a*besselj(5*I, x)
+    + b*bessely(5*I, x))) == 0
+
+    assert besselsimp(81*x**2*(a*(besselj(-S(5)/3, 9*x) - 2*besselj(S(1)/3, 9*x) + besselj(S(7)/3, 9*x))
+    + b*(bessely(-S(5)/3, 9*x) - 2*bessely(S(1)/3, 9*x) + bessely(S(7)/3, 9*x)))/4 + x*(a*(9*besselj(-S(2)/3, 9*x)/2
+    - 9*besselj(S(4)/3, 9*x)/2) + b*(9*bessely(-S(2)/3, 9*x)/2 - 9*bessely(S(4)/3, 9*x)/2)) +
+    (81*x**2 - S(1)/9)*(a*besselj(S(1)/3, 9*x) + b*bessely(S(1)/3, 9*x))) == 0
+
+    assert besselsimp(besselj(a-1,x) + besselj(a+1, x) - 2*a*besselj(a, x)/x) == 0
+
+    assert besselsimp(besselj(a-1,x) + besselj(a+1, x) + besselj(a, x)) == (2*a + x)*besselj(a, x)/x
+
+    assert besselsimp(x**2* besselj(a,x) + x**3*besselj(a+1, x) + besselj(a+2, x)) == \
+    2*a*x*besselj(a + 1, x) + x**3*besselj(a + 1, x) - x**2*besselj(a + 2, x) + 2*x*besselj(a + 1, x) + besselj(a + 2, x)
 
 def test_Piecewise():
     e1 = x*(x + y) - y*(x + y)
@@ -622,7 +649,7 @@ def test_Piecewise():
 def test_polymorphism():
     class A(Basic):
         def _eval_simplify(x, **kwargs):
-            return 1
+            return S.One
 
     a = A(5, 2)
     assert simplify(a) == 1
@@ -724,6 +751,8 @@ def test_simplify_function_inverse():
     assert simplify(f(g(x)), inverse=True) == x
     assert simplify(f(g(sin(x)**2 + cos(x)**2)), inverse=True) == 1
     assert simplify(f(g(x, y)), inverse=True) == f(g(x, y))
+    assert unchanged(asin, sin(x))
+    assert simplify(asin(sin(x))) == asin(sin(x))
     assert simplify(2*asin(sin(3*x)), inverse=True) == 6*x
     assert simplify(log(exp(x))) == log(exp(x))
     assert simplify(log(exp(x)), inverse=True) == x
@@ -802,7 +831,65 @@ def test_issue_15965():
     A = Sum(z*x**y, (x, 1, a))
     anew = z*Sum(x**y, (x, 1, a))
     B = Integral(x*y, x)
-    bnew = y*Integral(x, x)
-    assert simplify(A + B) == anew + bnew
+    bdo = x**2*y/2
+    assert simplify(A + B) == anew + bdo
     assert simplify(A) == anew
-    assert simplify(B) == bnew
+    assert simplify(B) == bdo
+    assert simplify(B, doit=False) == y*Integral(x, x)
+
+
+def test_issue_17137():
+    assert simplify(cos(x)**I) == cos(x)**I
+    assert simplify(cos(x)**(2 + 3*I)) == cos(x)**(2 + 3*I)
+
+
+def test_issue_7971():
+    z = Integral(x, (x, 1, 1))
+    assert z != 0
+    assert simplify(z) is S.Zero
+
+
+def test_issue_17141():
+    # Check that there is no RecursionError
+    assert simplify(x**(1 / acos(I))) == x**(2/(pi - 2*I*log(1 + sqrt(2))))
+    assert simplify(acos(-I)**2*acos(I)**2) == \
+           log(1 + sqrt(2))**4 + pi**2*log(1 + sqrt(2))**2/2 + pi**4/16
+    assert simplify(2**acos(I)**2) == 2**((pi - 2*I*log(1 + sqrt(2)))**2/4)
+    p = 2**acos(I+1)**2
+    assert simplify(p) == p
+
+    # However, for a complex number it still happens
+    if PY3:
+        raises(RecursionError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
+    else:
+        raises(RuntimeError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
+
+
+def test_simplify_kroneckerdelta():
+    i, j = symbols("i j")
+    K = KroneckerDelta
+
+    assert simplify(K(i, j)) == K(i, j)
+    assert simplify(K(0, j)) == K(0, j)
+    assert simplify(K(i, 0)) == K(i, 0)
+
+    assert simplify(K(0, j).rewrite(Piecewise) * K(1, j)) == 0
+    assert simplify(K(1, i) + Piecewise((1, Eq(j, 2)), (0, True))) == K(1, i) + K(2, j)
+
+    # issue 17214
+    assert simplify(K(0, j) * K(1, j)) == 0
+
+    n = Symbol('n', integer=True)
+    assert simplify(K(0, n) * K(1, n)) == 0
+
+    M = Matrix(4, 4, lambda i, j: K(j - i, n) if i <= j else 0)
+    assert simplify(M**2) == Matrix([[K(0, n), 0, K(1, n), 0],
+                                     [0, K(0, n), 0, K(1, n)],
+                                     [0, 0, K(0, n), 0],
+                                     [0, 0, 0, K(0, n)]])
+
+
+def test_issue_17292():
+    assert simplify(abs(x)/abs(x**2)) == 1/abs(x)
+    # this is bigger than the issue: check that deep processing works
+    assert simplify(5*abs((x**2 - 1)/(x - 1))) == 5*Abs(x + 1)

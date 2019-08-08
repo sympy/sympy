@@ -1,9 +1,10 @@
 from sympy import (
-    Abs, adjoint, arg, atan, atan2, conjugate, cos, DiracDelta, E, exp, expand,
-    Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
-    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
-    Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
-    ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda, Derivative)
+    Abs, acos, adjoint, arg, atan, atan2, conjugate, cos, DiracDelta,
+    E, exp, expand, Expr, Function, Heaviside, I, im, log, nan, oo,
+    pi, Rational, re, S, sign, sin, sqrt, Symbol, symbols, transpose,
+    zoo, exp_polar, Piecewise, Interval, comp, Integral, Matrix,
+    ImmutableMatrix, SparseMatrix, ImmutableSparseMatrix, MatrixSymbol,
+    FunctionMatrix, Lambda, Derivative)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import XFAIL, raises
@@ -440,6 +441,24 @@ def test_Abs():
     assert re(t).is_algebraic is False
     assert Abs(x).fdiff() == sign(x)
     raises(ArgumentIndexError, lambda: Abs(x).fdiff(2))
+
+    # doesn't have recursion error
+    arg = sqrt(acos(1 - I)*acos(1 + I))
+    assert abs(arg) == arg
+
+    # special handling to put Abs in denom
+    assert abs(1/x) == 1/Abs(x)
+    e = abs(2/x**2)
+    assert e.is_Mul and e == 2/Abs(x**2)
+    assert unchanged(Abs, y/x)
+    assert unchanged(Abs, x/(x + 1))
+    assert unchanged(Abs, x*y)
+    p = Symbol('p', positive=True)
+    assert abs(x/p) == abs(x)/p
+
+    # coverage
+    assert unchanged(Abs, Symbol('x', real=True)**y)
+
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
