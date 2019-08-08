@@ -1463,7 +1463,9 @@ def _decipher_rsa_crt(i, primes, exponents):
     return result[0]
 
 
-def _rsa_key(*args, public=True, private=True, totient='Euler'):
+def _rsa_key(
+    *args,
+    public=True, private=True, totient='Euler', multipower=False):
     """A private subroutine to generate RSA key
 
     Parameters
@@ -1506,10 +1508,17 @@ def _rsa_key(*args, public=True, private=True, totient='Euler'):
             from sympy.ntheory import reduced_totient as totfunc
             phi = totfunc(n)
     else:
-        NonInvertibleCipherWarning(
-            'Non-distinctive primes found in the factors of {}.'
-            'The cipher may not be decryptable for some numbers.'
-            .format(primes)).warn()
+        if not multipower:
+            NonInvertibleCipherWarning(
+                'Non-distinctive primes found in the factors {}. '
+                'The cipher may not be decryptable for some numbers '
+                'in the complete residue system Z[{}], but the cipher '
+                'can still be valid if you restrict the domain to be '
+                'the reduced residue system Z*[{}]. You can pass '
+                'the flag multiprime=True if you want to suppress this '
+                'warning.'
+                .format(primes, n, n)
+                ).warn()
 
         if totient == 'Euler':
             from sympy.ntheory import totient as totfunc
