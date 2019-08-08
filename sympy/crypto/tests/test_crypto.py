@@ -273,7 +273,7 @@ def test_rsa_crt_exhaustive():
 
 def test_rsa_crt_multiprime_exhanstive():
     from sympy.crypto.crypto import _rsa_private_key_crt, _decipher_rsa_crt
-    primes = [2, 3, 5, 7]
+    primes = [3, 5, 7, 11]
     e = 7
     puk = rsa_public_key(*primes, e, totient='Carmichael')
     prk = rsa_private_key(*primes, e, totient='Carmichael')

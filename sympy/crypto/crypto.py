@@ -1403,8 +1403,20 @@ def _rsa_private_key_crt(*args):
     remainder theorem algorithms.
 
     See docs for ``_decipher_rsa_crt`` to learn how to use.
+
+    Raises
+    ======
+
+    ValueError
+        If one of the given prime is `2`, the algorithm may not work.
     """
     primes, d = args[:-1], args[-1]
+
+    if 2 in primes:
+        raise ValueError(
+            'The chinese remainder theorem algorithm for computing RSA'
+            'May not work if one of the given prime is 2')
+
     additional_exponents = [d % (p-1) for p in primes]
     return additional_exponents
 
