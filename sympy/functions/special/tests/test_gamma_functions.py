@@ -394,7 +394,7 @@ def test_loggamma():
     assert conjugate(loggamma(1)) == loggamma(conjugate(1))
     assert conjugate(loggamma(-oo)) == conjugate(zoo)
     assert loggamma(x).is_real is None
-    y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
+    y, z = Symbol('y', real=True, positive=True), Symbol('z', imaginary=True)
     assert loggamma(y).is_real
     assert loggamma(z).is_real is False
 
@@ -406,6 +406,11 @@ def test_loggamma():
     tN(3, 3)
     tN(4, 5)
     tN(5, 5)
+
+    assert loggamma(-S(1)/2).is_real == False
+    assert loggamma(0).is_real == False
+    assert loggamma(S(1)/2).is_real == True
+    assert loggamma(1 + I).is_real == False
 
 
 def test_polygamma_expansion():
