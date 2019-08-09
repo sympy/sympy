@@ -105,10 +105,13 @@ class SparseMatrix(MatrixBase):
 
     def __new__(cls, *args, **kwargs):
         self = object.__new__(cls)
+        self.simplified = kwargs.get('simplified', None)
         if len(args) == 1 and isinstance(args[0], SparseMatrix):
             self.rows = args[0].rows
             self.cols = args[0].cols
             self._smat = dict(args[0]._smat)
+            if self.simplified == None:
+                self.simplified = getattr(args[0], 'simplified', None)
             return self
 
         self._smat = {}

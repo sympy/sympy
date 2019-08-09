@@ -37,7 +37,7 @@ def _compare_sequence(a, b):
     return tuple(a) == tuple(b)
 
 
-def _mulsimp(expr):
+def _simplified(expr):
     """'Fast' algebraic simplification to reduce matrix mul intermediate products."""
 
     from sympy.polys import cancel, together
@@ -206,14 +206,24 @@ class DenseMatrix(MatrixBase):
         return self._new(len(rowsList), len(colsList),
                          list(mat[i] for i in indices), copy=False)
 
-    def _eval_matrix_mul(self, other, simplify=True):
+    def _eval_matrix_mul(self, other, simplified=True):
         from sympy import Add
+
         # cache attributes for faster access
         self_rows, self_cols = self.rows, self.cols
         other_rows, other_cols = other.rows, other.cols
         other_len = other_rows * other_cols
         new_mat_rows = self.rows
         new_mat_cols = other.cols
+
+        # figure out if simplification is to be done or not
+
+        if simplified is None:
+            simplified = getattr(self, 'simplified', None)
+            if simplified is not False:
+                simplified2 = getattr(other, 'simplified', None)
+                simplified  = not (simplified2 is False or \
+                        (simplified2 is None and simplified is None))
 
         # preallocate the array
         new_mat = [self.zero]*new_mat_rows*new_mat_cols
@@ -232,11 +242,11 @@ class DenseMatrix(MatrixBase):
                 vec = [None]*self_cols
                 for j,a,b in zip(range(self_cols), row_indices, col_indices):
                     c = mat[a]*other_mat[b]
-                    _expand = simplify and getattr(c, 'expand', None)
+                    _expand = simplified and getattr(c, 'expand', None)
                     vec[j] = _expand(power_base=False, power_exp=False, log=False, multinomial=False, basic=False) if _expand else c
                 try:
                     e = Add(*vec)
-                    new_mat[i] = _mulsimp(e) if simplify else e
+                    new_mat[i] = _simplified(e) if simplified else e
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
@@ -403,7 +413,7 @@ class DenseMatrix(MatrixBase):
         [1, 2],
         [3, 5]])
         """
-        return Matrix(self)
+        return Matrix(self, simplified=getattr(self, 'simplified', None))
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
@@ -485,6 +495,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         self.rows = rows
         self.cols = cols
         self._mat = flat_list
+        self.simplified = kwargs.get('simplified', None)
         return self
 
     def __setitem__(self, key, value):

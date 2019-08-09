@@ -59,7 +59,9 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
         if not isinstance(flat_list, Tuple):
             flat_list = Tuple(*flat_list)
 
-        return Basic.__new__(cls, rows, cols, flat_list)
+        obj = Basic.__new__(cls, rows, cols, flat_list)
+        obj.simplified = kwargs.get('simplified', None)
+        return obj
 
     @property
     def _mat(self):
@@ -165,6 +167,7 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
         obj.rows = s.rows
         obj.cols = s.cols
         obj._smat = s._smat
+        obj.simplified = kwargs.get('simplified', None)
         return obj
 
     def __new__(cls, *args, **kwargs):
