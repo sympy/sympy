@@ -1549,11 +1549,14 @@ def rsa_public_key(*args, **kwargs):
         specifying two or more pairs of the primes to be same.
         However, unlike the two-distinct prime RSA or multi-prime
         RSA, not every numbers in the complete residue system
-        (`\mathbb{Z}_n`) will be decryptable since the mapping will not
-        be bijective.
+        (`\mathbb{Z}_n`) will be decryptable since the mapping
+        `\mathbb{Z}_{n} \rightarrow \mathbb{Z}_{n}`
+        will not be bijective.
         However, the RSA can still be decryptable for the numbers in the
-        reduced residue system (`\mathbb{Z}_n^{\times}`), and can have
-        limited application.
+        reduced residue system (`\mathbb{Z}_n^{\times}`), since the
+        mapping
+        `\mathbb{Z}_{n}^{\times} \rightarrow \mathbb{Z}_{n}^{\times}`
+        can still be bijective.
 
         If you pass a non-prime integer to the arguments
         `p_1, p_2, ..., p_n`, the particular number will be
@@ -1632,6 +1635,8 @@ def rsa_public_key(*args, **kwargs):
     .. [2] http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
 
     .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
+
+    .. [4] http://www.itiis.org/digital-library/manuscript/1381
     """
     return _rsa_key(*args, public=True, private=False, **kwargs)
 
@@ -1669,13 +1674,8 @@ def rsa_private_key(*args, **kwargs):
         (3233, 413)
 
     multipower : bool, optional
-        Any pair of non-distinct primes found in the RSA specification
-        will restrict the domain of the cryptosystem, as noted in the
-        explaination of the parameter ``args``.
-
-        SymPy RSA key generator may give a warning before dispatching it
-        as a multi-power RSA, however, you can disable the warning if
-        you pass ``True`` to this keyword.
+        The keyword is identical to the ``multipower`` in
+        :meth:`rsa_public_key`.
 
     Returns
     =======
@@ -1727,6 +1727,8 @@ def rsa_private_key(*args, **kwargs):
     .. [2] http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
 
     .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
+
+    .. [4] http://www.itiis.org/digital-library/manuscript/1381
     """
     return _rsa_key(*args, public=False, private=True, **kwargs)
 
