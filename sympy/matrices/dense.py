@@ -15,10 +15,10 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
 from sympy.matrices.matrices import MatrixBase
-from sympy.polys import cancel
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
+
 
 def _iszero(x):
     """Returns True if x is zero."""
@@ -192,12 +192,6 @@ class DenseMatrix(MatrixBase):
                 L[i, i] = sqrt(self[i, i] -
                     sum(L[i, k]**2 for k in range(i)))
         return self._new(L)
-
-    def _diagonal_solve(self, rhs):
-        """Helper function of function diagonal_solve,
-        without the error checks, to be used privately.
-        """
-        return self._new(rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
 
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since

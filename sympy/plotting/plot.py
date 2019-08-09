@@ -1159,7 +1159,7 @@ class MatplotlibBackend(BaseBackend):
             xlim = (float(i) for i in xlim)
             ax.set_xlim(xlim)
         else:
-            if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
+            if parent._series and all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
                 starts = [s.start for s in parent._series]
                 ends = [s.end for s in parent._series]
                 ax.set_xlim(min(starts), max(ends))
@@ -2122,6 +2122,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
        >>> check_arguments([x, x**2], 1, 1)
            [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
     """
+    if not args:
+        return []
     if expr_len > 1 and isinstance(args[0], Expr):
         # Multiple expressions same range.
         # The arguments are tuples when the expression length is

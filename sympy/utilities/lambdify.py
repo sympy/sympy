@@ -485,10 +485,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     But if we try to pass in a SymPy expression, it fails
 
-    >>> g(x + 1)
+    >>> try:
+    ...     g(x + 1)
+    ... # NumPy release after 1.17 raises TypeError instead of
+    ... # AttributeError
+    ... except (AttributeError, TypeError):
+    ...     raise AttributeError() # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
-    AttributeError: 'Add' object has no attribute 'sin'
+    AttributeError:
 
     Now, let's look at what happened. The reason this fails is that ``g``
     calls ``numpy.sin`` on the input expression, and ``numpy.sin`` does not

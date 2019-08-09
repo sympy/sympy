@@ -1,6 +1,6 @@
 from sympy.tensor.array.array_comprehension import ArrayComprehension
 from sympy.tensor.array import ImmutableDenseNDimArray
-from sympy.abc import i, j, k, l, n
+from sympy.abc import i, j, k, l
 from sympy.utilities.pytest import raises
 from sympy.matrices import Matrix
 

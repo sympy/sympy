@@ -74,6 +74,14 @@ def test_ndim_array_initiation():
     assert vector_with_long_shape.rank() == 1
     raises(ValueError, lambda: vector_with_long_shape[long(5)])
 
+    from sympy.abc import x
+    for ArrayType in [MutableDenseNDimArray, MutableSparseNDimArray]:
+        rank_zero_array = ArrayType(x)
+        assert len(rank_zero_array) == 1
+        assert rank_zero_array.shape == ()
+        assert rank_zero_array.rank() == 0
+        assert rank_zero_array[()] == x
+        raises(ValueError, lambda: rank_zero_array[0])
 
 def test_sympify():
     from sympy.abc import x, y, z, t
@@ -106,6 +114,23 @@ def test_iterator():
     for i in array:
         assert i == j
         j += 1
+
+
+def test_getitem():
+    for ArrayType in [MutableDenseNDimArray, MutableSparseNDimArray]:
+        array = ArrayType(range(24)).reshape(2, 3, 4)
+        assert array.tolist() == [[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]], [[12, 13, 14, 15], [16, 17, 18, 19], [20, 21, 22, 23]]]
+        assert array[0] == ArrayType([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]])
+        assert array[0, 0] == ArrayType([0, 1, 2, 3])
+        value = 0
+        for i in range(2):
+            for j in range(3):
+                for k in range(4):
+                    assert array[i, j, k] == value
+                    value += 1
+
+    raises(ValueError, lambda: array[3, 4, 5])
+    raises(ValueError, lambda: array[3, 4, 5, 6])
 
 
 def test_sparse():
@@ -184,7 +209,7 @@ def test_ndim_array_converting():
     assert (isinstance(matrix, Matrix))
 
     for i in range(len(dense_array)):
-        assert dense_array[i] == matrix[i]
+        assert dense_array[dense_array._get_tuple_index(i)] == matrix[i]
     assert matrix.shape == dense_array.shape
 
     assert MutableDenseNDimArray(matrix) == dense_array
@@ -200,7 +225,7 @@ def test_ndim_array_converting():
     assert(isinstance(matrix, SparseMatrix))
 
     for i in range(len(sparse_array)):
-        assert sparse_array[i] == matrix[i]
+        assert sparse_array[sparse_array._get_tuple_index(i)] == matrix[i]
     assert matrix.shape == sparse_array.shape
 
     assert MutableSparseNDimArray(matrix) == sparse_array
