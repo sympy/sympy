@@ -319,8 +319,9 @@ def test_rsa_exhaustive():
 def test_rsa_multiprime_exhanstive():
     primes = [3, 5, 7, 11]
     e = 7
-    puk = rsa_public_key(*primes, e, totient='Carmichael')
-    prk = rsa_private_key(*primes, e, totient='Carmichael')
+    args = primes + [e]
+    puk = rsa_public_key(*args, e, totient='Carmichael')
+    prk = rsa_private_key(*args, e, totient='Carmichael')
     n = puk[0]
 
     for msg in range(n):
@@ -340,8 +341,9 @@ def test_rsa_multipower_exhanstive():
     from sympy.core.numbers import igcd
     primes = [5, 5, 7]
     e = 7
-    puk = rsa_public_key(*primes, e, multipower=True)
-    prk = rsa_private_key(*primes, e, multipower=True)
+    args = primes + [e]
+    puk = rsa_public_key(*args, multipower=True)
+    prk = rsa_private_key(*args, multipower=True)
     n = puk[0]
 
     for msg in range(n):
