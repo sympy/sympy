@@ -22,7 +22,7 @@ import warnings
 
 from sympy import nextprime
 from sympy.core import Rational, Symbol
-from sympy.core.numbers import igcdex, mod_inverse
+from sympy.core.numbers import igcdex, mod_inverse, igcd
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
@@ -1507,7 +1507,7 @@ def _rsa_key(
             from sympy.ntheory import reduced_totient as totfunc
             phi = totfunc._from_factors(tally)
 
-    if gcd(e, phi) == 1:
+    if igcd(e, phi) == 1:
         if public and not private:
             return n, e
 
@@ -1738,7 +1738,7 @@ def _encipher_decipher_rsa(i, key, factors=None):
         is_coprime_set = True
         for i in range(len(l)):
             for j in range(i+1, len(l)):
-                if gcd(l[i], l[j]) != 1:
+                if igcd(l[i], l[j]) != 1:
                     is_coprime_set = False
                     break
         return is_coprime_set
@@ -1760,7 +1760,7 @@ def encipher_rsa(i, key, factors=None):
 
     key : (n, e) where n, e are integers
         `n` is the modulus of the key and `e` is the exponent of the
-        key. The encryption is computed by `i^e \mod n`.
+        key. The encryption is computed by `i^e \bmod n`.
 
         The key can either be a public key or a private key, however,
         the message encrypted by a public key can only be decrypted by
@@ -1768,14 +1768,8 @@ def encipher_rsa(i, key, factors=None):
         cryptography system.
 
     factors : list of coprime integers
-        This must be given as a list of coprime integers whose product
-        equals the modulus parameter of the original key.
-
-        Then, it can be possible to use chinese remainder theorem to
-        compute the power-modulus in a more efficient way.
-
-        The raw primes used in generating the RSA key pair can be a good
-        option.
+        This is identical to the keyword ``factors`` in
+        :meth:`decipher_rsa`
 
     Examples
     ========
@@ -1818,7 +1812,7 @@ def decipher_rsa(i, key, factors=None):
 
     key : (n, d) where n, d are integers
         `n` is the modulus of the key and `d` is the exponent of the
-        key. The decryption is computed by `i^d \mod n`.
+        key. The decryption is computed by `i^d \bmod n`.
 
         The key can either be a public key or a private key, however,
         the message encrypted by a public key can only be decrypted by
@@ -1826,14 +1820,36 @@ def decipher_rsa(i, key, factors=None):
         cryptography system.
 
     factors : list of coprime integers
-        This must be given as a list of coprime integers whose product
-        equals the modulus parameter of the original key.
+        As the modulus `n` created from RSA key generation is composed
+        of arbitrary prime factors
+        `n = {p_1}^{k_1}{p_2}^{k_2}...{p_n}^{k_n}` where
+        `p_1, p_2, ..., p_n` are distinct primes and
+        `k_1, k_2, ..., k_n` are positive integers, chinese remainder
+        theorem can be used to compute `i^d \bmod n` from the
+        modulo operation like
 
-        Then, it can be possible to use chinese remainder theorem to
-        compute the power-modulus in a more efficient way.
+        .. math::
+            i^d \bmod {p_1}^{k_1}, i^d \bmod {p_2}^{k_2}, ... ,
+            i^d \bmod {p_n}^{k_n}
+
+        or like
+
+        .. math::
+            i^d \bmod {p_1}^{k_1}{p_2}^{k_2},
+            i^d \bmod {p_3}^{k_3}, ... ,
+            i^d \bmod {p_n}^{k_n}
+
+        as long as every moduli does not share any common divisor each
+        other.
 
         The raw primes used in generating the RSA key pair can be a good
         option.
+
+        Note that the speed advantage of using this is only viable for
+        very large cases (Like 2048-bit RSA keys) since the
+        overhead of using pure python implementation of
+        :meth:`sympy.ntheory.modular.crt` may overcompensate the
+        theoritical speed advantage.
 
     Examples
     ========
