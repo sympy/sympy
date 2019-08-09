@@ -3413,7 +3413,7 @@ class MatrixBase(MatrixDeprecated,
         K_adj = self.adjugate()
         K_inv = self.__class__(N, N,
                                [det_inv * K_adj[i, j] % m for i in range(N) for
-                                j in range(N)])
+                                j in range(N)], simplified=simplifiedbool(self))
         return K_inv
 
     def inverse_ADJ(self, iszerofunc=_iszero):
@@ -4059,9 +4059,10 @@ class MatrixBase(MatrixDeprecated,
         zeros = SparseMatrix.zeros
         eye = SparseMatrix.eye
 
+        rsimplified = simplifiedbool(self)
         n, m = self.rows, self.cols
-        U, L, P = self.as_mutable(), eye(n), eye(n)
-        DD = zeros(n, n)
+        U, L, P = self.as_mutable(), eye(n, simplified=rsimplified), eye(n, simplified=rsimplified)
+        DD = zeros(n, n, simplified=rsimplified)
         oldpivot = 1
 
         for k in range(n - 1):
@@ -4139,7 +4140,7 @@ class MatrixBase(MatrixDeprecated,
                 b.zip_row_op(i, j, lambda x, y: x - y * scale)
             scale = A[i, i]
             b.row_op(i, lambda x, _: x / scale)
-        return rhs.__class__(b)
+        return rhs.__class__(b, simplified=simplifiedbool(self))
 
     def multiply(self, b):
         """Returns ``self*b``

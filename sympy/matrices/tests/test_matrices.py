@@ -345,7 +345,41 @@ def test_issue_17247_expression_blowup():
     assert (T**2).simplified == True
     assert (T**S.Half).simplified == True
     assert (T**-1).simplified == True
+
+    assert F._matrix_pow_by_jordan_blocks(2).simplified == False
+    assert F._eval_pow_by_recursion(2).simplified == False
+    P, J = F.jordan_form ()
+    assert P.simplified == J.simplified == False
+    P, D = F.diagonalize ()
+    assert P.simplified == D.simplified == False
+    assert exp(F).simplified == False
+    assert F[:,:].simplified == False
+    assert F.reshape(1,4).simplified == False
+    assert F.expand().simplified == False
+    assert F.refine().simplified == False
+    assert randMatrix(3, 3, simplified=True).simplified == True
+    L, U, p = F.LUdecomposition()
+    assert L.simplified == U.simplified == False
+    P, L, Dee, U = F.LUdecompositionFF()
+    assert P.simplified == L.simplified == Dee.simplified == U.simplified == False
+    assert F.LUdecomposition_Simple()[0].simplified == False
+    w = Matrix(2, 1, [3, 7])
+    b = F*w
+    assert F.LUsolve(w).simplified == False
+    assert F.QRsolve(w).simplified == False
     assert (T.inv()).simplified == True
+    assert (T.inv(method="LU")).simplified == True
+    assert (T.inv(method="ADJ")).simplified == True
+    assert T.inv_mod(7).simplified == True
+    assert F.cofactor_matrix().simplified == False
+    assert F.T.simplified == False
+    assert F.transpose().simplified == False
+    assert F.conjugate().simplified == False
+
+    assert ones(3, simplified=True).simplified == True
+    assert zeros(3, simplified=True).simplified == True
+    assert diag(1, 2, 3, simplified=True).simplified == True
+    assert eye(3, simplified=True).simplified == True
 
 
 def test_creation():

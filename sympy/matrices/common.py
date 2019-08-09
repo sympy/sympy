@@ -20,10 +20,13 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
+from sympy.polys import cancel, together
 from sympy.simplify import simplify as _simplify
+from sympy.simplify.simplify import count_ops
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
+
 
 
 class MatrixError(Exception):
@@ -2561,11 +2564,8 @@ def classof(A, B):
 
 
 def fastalgsimp(expr):
-    """'Fast' algebraic simplification to reduce matrix mul intermediate products."""
-
-    from sympy.polys import cancel, together
-    from sympy.simplify.radsimp import _mexpand
-    from sympy.simplify.simplify import count_ops
+    """'Fast' (in air quotes) algebraic simplification to reduce matrix
+    multiplication intermediate products."""
 
     exprops  = count_ops(expr)
     expr2    = expr.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
@@ -2589,13 +2589,15 @@ def fastalgsimp(expr):
     expr3ops = count_ops(expr3)
 
     if expr3ops < exprops:
-        expr = expr3
+        return expr3
 
     return expr
 
 
 def simplifiedbool(simp1, simp2=None):
-    """Logic for determining the 'simplified' status of a child of two matrices."""
+    """Logic for determining the 'simplified' status of a child of two matrices
+    or just returning the 'simplified' status of a single matrix."""
+
     if simp1 is not None and not isinstance(simp1, bool):
         simp1 = getattr(simp1, 'simplified', None)
     if simp2 is not None and not isinstance(simp2, bool):
