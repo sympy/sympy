@@ -2067,11 +2067,11 @@ def test_jordan_form_issue_15858():
         [0, 0, -1, -1],
         [0, 0, 2, 1]])
     (P, J) = A.jordan_form()
-    assert simplify(P) == simplify(Matrix([ # can't just set it, evaluates
+    assert simplify(P) == Matrix([
         [-I, -I/2, I, I/2],
         [-1 + I, 0, -1 - I, 0],
-        [0, (-1 - I)/2, 0, I*(1 + I)/2],
-        [0, 1, 0, 1]]))
+        [0, I*(-1 + I)/2, 0, I*(1 + I)/2],
+        [0, 1, 0, 1]])
     assert J == Matrix([
         [-I, 1, 0, 0],
         [0, -I, 0, 0],
@@ -2117,9 +2117,9 @@ def test_exp_jordan_block():
 
 def test_exp():
     m = Matrix([[3, 4], [0, -2]])
-    m_exp = simplify(Matrix([[exp(3), -4*exp(-2)/5 + 4*exp(3)/5], [0, exp(-2)]]))
-    assert simplify(m.exp()) == m_exp
-    assert simplify(exp(m)) == m_exp
+    m_exp = Matrix([[exp(3), -4*exp(-2)/5 + 4*exp(3)/5], [0, exp(-2)]])
+    assert m.exp() == m_exp
+    assert exp(m) == m_exp
 
     m = Matrix([[1, 0], [0, 1]])
     assert m.exp() == Matrix([[E, 0], [0, E]])
@@ -3143,26 +3143,24 @@ def test_pinv():
         A_pinv = simplify(A.pinv(method="ED"))
         AAp = A * A_pinv
         ApA = A_pinv * A
-        assert N(AAp * A) == A # XXX Expression numerically correct but too convoluted.
-        #assert N(ApA * A_pinv) == N(A_pinv) # XXX Expression numerically correct but too convoluted and not exact.
-        # assert AAp.H == AAp # XXX Numerically correct but same as above.
-        # assert ApA.H == ApA # XXX Numerically correct but same as above.
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
 
     # XXX Computing pinv using diagonalization makes an expression that
     # is too complicated to simplify.
     # A1 = Matrix([[a, b], [c, d]])
     # assert simplify(A1.pinv(method="ED")) == simplify(A1.inv())
     # so this is tested numerically at a fixed random point
-
-    # XXX This gets horribly complicated and goes on forever
-    # from sympy.core.numbers import comp
-    # q = A1.pinv(method="ED")
-    # w = A1.inv()
-    # reps = {a: -73633, b: 11362, c: 55486, d: 62570}
-    # assert all(
-    #     comp(i.n(), j.n())
-    #     for i, j in zip(q.subs(reps), w.subs(reps))
-    #     )
+    from sympy.core.numbers import comp
+    q = A1.pinv(method="ED")
+    w = A1.inv()
+    reps = {a: -73633, b: 11362, c: 55486, d: 62570}
+    assert all(
+        comp(i.n(), j.n())
+        for i, j in zip(q.subs(reps), w.subs(reps))
+        )
 
 def test_pinv_solve():
     # Fully determined system (unique result, identical to other solvers).
@@ -3186,7 +3184,7 @@ def test_pinv_solve():
     for s in solution.atoms(Symbol):
         # Extract dummy symbols used in the solution.
         w[s.name] = s
-    assert solution.expand() == Matrix([[w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 1],
+    assert solution == Matrix([[w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 1],
                                [w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 3],
                                [-w['w0_0']/3 - w['w1_0']/3 + w['w2_0']/3 + 4]])
     assert A * A.pinv() * B == B

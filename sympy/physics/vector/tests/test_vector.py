@@ -32,15 +32,15 @@ def test_Vector():
 
     assert isinstance(v3, Vector)
     # We probably shouldn't be using simplify in dot...
-    assert dot(v3, A.x).expand() == x**2 + x
-    assert dot(v3, A.y).expand() == y**2 + y
-    assert dot(v3, A.z).expand() == z**2 + z
+    assert dot(v3, A.x) == x**2 + x
+    assert dot(v3, A.y) == y**2 + y
+    assert dot(v3, A.z) == z**2 + z
 
     assert isinstance(v4, Vector)
     # We probably shouldn't be using simplify in dot...
-    assert dot(v4, A.x).expand() == x - x**2
-    assert dot(v4, A.y).expand() == y - y**2
-    assert dot(v4, A.z).expand() == z - z**2
+    assert dot(v4, A.x) == x - x**2
+    assert dot(v4, A.y) == y - y**2
+    assert dot(v4, A.z) == z - z**2
 
     assert v1.to_matrix(A) == Matrix([[x], [y], [z]])
     q = symbols('q')
@@ -154,7 +154,7 @@ def test_vector_simplify():
     N = ReferenceFrame('N')
 
     test1 = (1 / x + 1 / y) * N.x
-    assert (test1 & N.x).expand() != (x + y) / (x * y)
+    assert (test1 & N.x) != (x + y) / (x * y)
     test1 = test1.simplify()
     assert (test1 & N.x) == (x + y) / (x * y)
 

@@ -21,7 +21,7 @@ b1 = BlockMatrix([[G, H]])
 b2 = BlockMatrix([[G], [H]])
 
 def test_bc_matmul():
-    assert bc_matmul(H*b1*b2*G) == BlockMatrix([[H*G*G*G + H*H*H*G]])
+    assert bc_matmul(H*b1*b2*G) == BlockMatrix([[(H*G*G + H*H*H)*G]])
 
 def test_bc_matadd():
     assert bc_matadd(BlockMatrix([[G, H]]) + BlockMatrix([[H, H]])) == \

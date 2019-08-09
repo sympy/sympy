@@ -1722,8 +1722,7 @@ def test_issue_5114_6611():
     ans = solve(list(eqs), list(v), simplify=False)
     # If time is taken to simplify then then 2617 below becomes
     # 1168 and the time is about 50 seconds instead of 2.
-    # 2617 -> 3093, this changed when matrix multiplication was optimized
-    assert sum([s.count_ops() for s in ans.values()]) <= 3093
+    assert sum([s.count_ops() for s in ans.values()]) <= 2617
 
 
 def test_det_quick():

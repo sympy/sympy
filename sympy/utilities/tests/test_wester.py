@@ -1365,8 +1365,8 @@ def test_P7():
         z*Matrix([[1, 3, 5],
                   [2, 4, 6]]) + Matrix([[7, -9, 11],
                                         [-8, 10, -12]]))
-    assert M == Matrix([[x*z + 7*x + 2*y*z - 8*y, 3*x*z - 9*x + 4*y*z + 10*y,
-                5*x*z + 11*x + 6*y*z - 12*y]])
+    assert M == Matrix([[x*(z + 7) + y*(2*z - 8), x*(3*z - 9) + y*(4*z + 10),
+                         x*(5*z + 11) + y*(6*z - 12)]])
 
 
 def test_P8():
@@ -1654,11 +1654,13 @@ def test_P33():
                 [0,    0,      0, 2*w],
                 [0,    0,      0,   1],
                 [0, -2*w, 3*w**2,   0]])
-    assert exp(M*t).rewrite(cos).simplify() == Matrix([
-        [1, -3*t + 4*sin(t*w)/w, 6*t*w - 6*sin(t*w), (2 - 2*cos(t*w))/w],
-        [0,      4*cos(t*w) - 3, 6*w*(1 - cos(t*w)),         2*sin(t*w)],
-        [0,  (2*cos(t*w) - 2)/w,     4 - 3*cos(t*w),         sin(t*w)/w],
-        [0,         -2*sin(t*w),       3*w*sin(t*w),           cos(t*w)]])
+    assert exp(M*t).rewrite(cos).expand() == Matrix([
+        [1, -3*t + 4*sin(t*w)/w,  6*t*w - 6*sin(t*w), -2*cos(t*w)/w + 2/w],
+        [0,      4*cos(t*w) - 3, -6*w*cos(t*w) + 6*w,          2*sin(t*w)],
+        [0,  2*cos(t*w)/w - 2/w,     -3*cos(t*w) + 4,          sin(t*w)/w],
+        [0,         -2*sin(t*w),        3*w*sin(t*w),            cos(t*w)]])
+
+
 @XFAIL
 def test_P34():
     a, b, c = symbols('a b c', real=True)

@@ -11,7 +11,6 @@ from sympy.physics.mechanics.functions import gravity, center_of_mass
 from sympy.physics.vector.vector import Vector
 from sympy.utilities.pytest import raises
 
-_OLD_Vector_simp = Vector.simp
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 N = ReferenceFrame('N')
@@ -251,9 +250,3 @@ def test_center_of_mass():
     point_o.set_pos(p1.point, center_of_mass(p1.point, p1, p2, p3, p4, b))
     expr = 5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
     assert point_o.pos_from(p1.point)-expr == 0
-
-# This is not a test but rather resets Vector.simp to its value before
-# importing this module as it was causing the subsequent tests to fail.
-# MUST BE LAST!
-def test_reset_vector_simp():
-    Vector.simp = _OLD_Vector_simp

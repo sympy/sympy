@@ -422,8 +422,8 @@ def test_meijerg_lookup():
     assert can_do_meijer([a], [], [b - 2, a], [])
 
     assert hyperexpand(meijerg([a], [], [a, a, a - S(1)/2], [], z)) == \
-        (sqrt(pi)*z**(a - S(1)/2)*(2*sin(2*sqrt(z))*Ci(2*sqrt(z)) - \
-        2*cos(2*sqrt(z))*Si(2*sqrt(z)) + pi*cos(2*sqrt(z)))) == \
+        -sqrt(pi)*z**(a - S(1)/2)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
+                                   - 2*sin(2*sqrt(z))*Ci(2*sqrt(z))) == \
         hyperexpand(meijerg([a], [], [a, a - S(1)/2, a], [], z)) == \
         hyperexpand(meijerg([a], [], [a - S(1)/2, a, a], [], z))
     assert can_do_meijer([a - 1], [], [a + 2, a - S(3)/2, a + 1], [])

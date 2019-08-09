@@ -24,7 +24,7 @@ def test_as_explicit_symbol():
     X = MatrixSymbol('X', 2, 2)
     assert MatPow(X, 0).as_explicit() == ImmutableMatrix(Identity(2))
     assert MatPow(X, 1).as_explicit() == X.as_explicit()
-    assert MatPow(X, 2).as_explicit() == ((X.as_explicit())**2).expand()
+    assert MatPow(X, 2).as_explicit() == (X.as_explicit())**2
 
 
 def test_as_explicit_nonsquare_symbol():

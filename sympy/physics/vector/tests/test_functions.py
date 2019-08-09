@@ -440,8 +440,7 @@ def test_kin_eqs():
     ke = kinematic_equations([u1,u2,u3], [q1,q2,q3], 'body', 313)
     assert ke == kinematic_equations([u1,u2,u3], [q1,q2,q3], 'body', '313')
     kds = kinematic_equations([u1, u2, u3], [q0, q1, q2, q3], 'quaternion')
-    assert [k.expand() for k in kds] == \
-            [-0.5 * q0 * u1 - 0.5 * q2 * u3 + 0.5 * q3 * u2 + q1d,
+    assert kds == [-0.5 * q0 * u1 - 0.5 * q2 * u3 + 0.5 * q3 * u2 + q1d,
             -0.5 * q0 * u2 + 0.5 * q1 * u3 - 0.5 * q3 * u1 + q2d,
             -0.5 * q0 * u3 - 0.5 * q1 * u2 + 0.5 * q2 * u1 + q3d,
             0.5 * q1 * u1 + 0.5 * q2 * u2 + 0.5 * q3 * u3 + q0d]

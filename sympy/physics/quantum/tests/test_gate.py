@@ -144,7 +144,7 @@ def test_UGate_OneQubitGate_combo():
     cMat2_1 = Matrix([[Rational(1,2) + I/2, Rational(1, 2) - I/2], [Rational(1, 2) - I/2, Rational(1, 2) + I/2]])
     cMat2_2 = Matrix([[1, 0], [0, I]])
     u2 = UGate(0, uMat2)
-    assert represent(H(0)*u2, nqubits=1).expand() == cMat2_1
+    assert represent(H(0)*u2, nqubits=1) == cMat2_1
     assert represent(u2*H(0), nqubits=1) == cMat2_2
 
 def test_represent_hadamard():
@@ -152,7 +152,7 @@ def test_represent_hadamard():
     circuit = HadamardGate(0)*Qubit('00')
     answer = represent(circuit, nqubits=2)
     # Check that the answers are same to within an epsilon.
-    assert answer == Matrix([sqrt(2)/2, sqrt(2)/2, 0, 0])
+    assert answer == Matrix([sqrt2_inv, sqrt2_inv, 0, 0])
 
 
 def test_represent_xgate():
