@@ -31,7 +31,7 @@ from sympy.utilities.misc import filldedent
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError, NonPositiveDefiniteMatrixError)
+    ShapeError, NonPositiveDefiniteMatrixError, fastalgsimp, simplifiedlogic)
 
 
 def _iszero(x):

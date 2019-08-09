@@ -13,7 +13,8 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
+    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, fastalgsimp, \
+    simplifiedlogic
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -35,40 +36,6 @@ def _compare_sequence(a, b):
     # there is no overhead for calling `tuple` on a
     # tuple
     return tuple(a) == tuple(b)
-
-
-def _simplified(expr):
-    """'Fast' algebraic simplification to reduce matrix mul intermediate products."""
-
-    from sympy.polys import cancel, together
-    from sympy.simplify.radsimp import _mexpand
-    from sympy.simplify.simplify import count_ops
-
-    exprops  = count_ops(expr)
-    expr2    = expr.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
-    expr2ops = count_ops(expr2)
-
-    if expr2ops < exprops:
-        expr    = expr2
-        exprops = expr2ops
-
-    if exprops < 6: # empirically tested cutoff for expensive simplification
-        return expr
-
-    expr2    = cancel(expr) # this is the expensive part
-    expr2ops = count_ops(expr2)
-
-    if expr2ops < exprops:
-        expr    = expr2
-        exprops = expr2ops
-
-    expr3    = together(expr2, deep=True)
-    expr3ops = count_ops(expr3)
-
-    if expr3ops < exprops:
-        expr = expr3
-
-    return expr
 
 
 class DenseMatrix(MatrixBase):
@@ -191,20 +158,22 @@ class DenseMatrix(MatrixBase):
                         sum(L[i, k]*L[j, k] for k in range(j)))
                 L[i, i] = sqrt(self[i, i] -
                     sum(L[i, k]**2 for k in range(i)))
-        return self._new(L)
+        return self._new(L, simplified=simplifiedlogic(self))
 
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
         # sparse matrices have a higher priority
         mat = [a + b for a,b in zip(self._mat, other._mat)]
-        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
+        return classof(self, other)._new(self.rows, self.cols, mat, copy=False,
+                simplified=simplifiedlogic(self, other))
 
     def _eval_extract(self, rowsList, colsList):
         mat = self._mat
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),
-                         list(mat[i] for i in indices), copy=False)
+                         list(mat[i] for i in indices), copy=False,
+                         simplified=simplifiedlogic(self))
 
     def _eval_matrix_mul(self, other, simplified=True):
         from sympy import Add
@@ -217,13 +186,9 @@ class DenseMatrix(MatrixBase):
         new_mat_cols = other.cols
 
         # figure out if simplification is to be done or not
-
+        rsimplified = simplifiedlogic(self, other)
         if simplified is None:
-            simplified = getattr(self, 'simplified', None)
-            if simplified is not False:
-                simplified2 = getattr(other, 'simplified', None)
-                simplified  = not (simplified2 is False or \
-                        (simplified2 is None and simplified is None))
+            simplified = rsimplified
 
         # preallocate the array
         new_mat = [self.zero]*new_mat_rows*new_mat_cols
@@ -243,10 +208,11 @@ class DenseMatrix(MatrixBase):
                 for j,a,b in zip(range(self_cols), row_indices, col_indices):
                     c = mat[a]*other_mat[b]
                     _expand = simplified and getattr(c, 'expand', None)
-                    vec[j] = _expand(power_base=False, power_exp=False, log=False, multinomial=False, basic=False) if _expand else c
+                    vec[j] = _expand(power_base=False, power_exp=False, log=False, \
+                            multinomial=False, basic=False) if _expand else c
                 try:
                     e = Add(*vec)
-                    new_mat[i] = _simplified(e) if simplified else e
+                    new_mat[i] = fastalgsimp(e) if simplified else e
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
@@ -254,11 +220,13 @@ class DenseMatrix(MatrixBase):
                     # a matrix, which raises a TypeError. Fall back to a
                     # block-matrix-safe way to multiply if the `sum` fails.
                     new_mat[i] = reduce(lambda a,b: a + b, vec)
-        return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
+        return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, \
+                copy=False, simplified=rsimplified)
 
     def _eval_matrix_mul_elementwise(self, other):
         mat = [a*b for a,b in zip(self._mat, other._mat)]
-        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
+        return classof(self, other)._new(self.rows, self.cols, mat, copy=False,
+                simplified=simplifiedlogic(self, other))
 
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using the method indicated (default
@@ -303,12 +271,13 @@ class DenseMatrix(MatrixBase):
 
         method = kwargs.get('method', 'GE')
         iszerofunc = kwargs.get('iszerofunc', _iszero)
+        rsimplified = simplifiedlogic(self)
         if kwargs.get('try_block_diag', False):
             blocks = self.get_diag_blocks()
             r = []
             for block in blocks:
                 r.append(block.inv(method=method, iszerofunc=iszerofunc))
-            return diag(*r)
+            return diag(*r, simplified=rsimplified)
 
         M = self.as_mutable()
         if method == "GE":
@@ -321,15 +290,17 @@ class DenseMatrix(MatrixBase):
             # make sure to add an invertibility check (as in inverse_LU)
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
-        return self._new(rv)
+        return self._new(rv, simplified=rsimplified)
 
     def _eval_scalar_mul(self, other):
         mat = [other*a for a in self._mat]
-        return self._new(self.rows, self.cols, mat, copy=False)
+        return self._new(self.rows, self.cols, mat, copy=False,
+                simplified=simplifiedlogic(self, other))
 
     def _eval_scalar_rmul(self, other):
         mat = [a*other for a in self._mat]
-        return self._new(self.rows, self.cols, mat, copy=False)
+        return self._new(self.rows, self.cols, mat, copy=False,
+                simplified=simplifiedlogic(self, other))
 
     def _eval_tolist(self):
         mat = list(self._mat)
@@ -344,6 +315,7 @@ class DenseMatrix(MatrixBase):
         or L*D*L.T == self if hermitian is False.
         """
         # https://en.wikipedia.org/wiki/Cholesky_decomposition#LDL_decomposition_2
+        rsimplified = simplifiedlogic(self)
         D = zeros(self.rows, self.rows)
         L = eye(self.rows)
         if hermitian:
@@ -362,7 +334,7 @@ class DenseMatrix(MatrixBase):
                     L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
                         L[i, k]*L[j, k]*D[k, k] for k in range(j)))
                 D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i))
-        return self._new(L), self._new(D)
+        return self._new(L, simplified=rsimplified), self._new(D, simplified=rsimplified)
 
     def _lower_triangular_solve(self, rhs):
         """Helper function of function lower_triangular_solve.
@@ -376,7 +348,7 @@ class DenseMatrix(MatrixBase):
                     raise TypeError("Matrix must be non-singular.")
                 X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
                                            for k in range(i))) / self[i, i]
-        return self._new(X)
+        return self._new(X, simplified=simplifiedlogic(self))
 
     def _upper_triangular_solve(self, rhs):
         """Helper function of function upper_triangular_solve.
@@ -388,7 +360,7 @@ class DenseMatrix(MatrixBase):
                     raise ValueError("Matrix must be non-singular.")
                 X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
                                            for k in range(i + 1, self.rows))) / self[i, i]
-        return self._new(X)
+        return self._new(X, simplified=simplifiedlogic(self))
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
@@ -396,7 +368,7 @@ class DenseMatrix(MatrixBase):
         from .immutable import ImmutableDenseMatrix as cls
         if self.rows and self.cols:
             return cls._new(self.tolist())
-        return cls._new(self.rows, self.cols, [])
+        return cls._new(self.rows, self.cols, [], simplified=simplifiedlogic(self))
 
     def as_mutable(self):
         """Returns a mutable version of this matrix
@@ -413,7 +385,7 @@ class DenseMatrix(MatrixBase):
         [1, 2],
         [3, 5]])
         """
-        return Matrix(self, simplified=getattr(self, 'simplified', None))
+        return Matrix(self, simplified=simplifiedlogic(self))
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,

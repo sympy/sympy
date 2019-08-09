@@ -10,7 +10,7 @@ from collections import defaultdict
 from inspect import isfunction
 
 from sympy.assumptions.refine import refine
-from sympy.core.basic import Atom
+from sympy.core.basic import Atom, Basic
 from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
@@ -2540,3 +2540,50 @@ def classof(A, B):
             return A.__class__
 
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
+
+
+def fastalgsimp(expr):
+    """'Fast' algebraic simplification to reduce matrix mul intermediate products."""
+
+    from sympy.polys import cancel, together
+    from sympy.simplify.radsimp import _mexpand
+    from sympy.simplify.simplify import count_ops
+
+    exprops  = count_ops(expr)
+    expr2    = expr.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
+    expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
+
+    if exprops < 6: # empirically tested cutoff for expensive simplification
+        return expr
+
+    expr2    = cancel(expr) # this is the expensive part
+    expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
+
+    expr3    = together(expr2, deep=True)
+    expr3ops = count_ops(expr3)
+
+    if expr3ops < exprops:
+        expr = expr3
+
+    return expr
+
+
+def simplifiedlogic(simp1, simp2=None):
+    """Logic for determining the 'simplified' status of a child of two matrices."""
+    if isinstance(simp1, Basic):
+        simp1 = getattr(simp1, 'simplified', None)
+    if isinstance(simp2, Basic):
+        simp2 = getattr(simp2, 'simplified', None)
+    if simp1 is False or simp2 is False:
+        return False
+    if simp1 is True or simp2 is True:
+        return True
+    return None
