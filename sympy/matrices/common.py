@@ -2463,8 +2463,10 @@ class _MinimalMatrix(object):
         return self.rows*self.cols
 
     def __repr__(self):
-        return "_MinimalMatrix({}, {}, {})".format(self.rows, self.cols,
-                                                   self.mat)
+        simplified = getattr(self, 'simplified', None)
+        ssimplified = '' if simplified is None else ', simplified=%s' % simplified
+        return "_MinimalMatrix({}, {}, {}{})".format(self.rows, self.cols,
+                                                     self.mat, ssimplified)
 
     @property
     def shape(self):

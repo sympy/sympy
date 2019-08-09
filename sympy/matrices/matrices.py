@@ -2407,20 +2407,24 @@ class MatrixBase(MatrixDeprecated,
         return sstr(self)
 
     def __str__(self):
+        simplified = getattr(self, 'simplified', None)
+        ssimplified = '' if simplified is None else ', simplified=%s' % simplified
         if self.rows == 0 or self.cols == 0:
-            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
-        return "Matrix(%s)" % str(self.tolist())
+            return 'Matrix(%s, %s, []%s)' % (self.rows, self.cols, ssimplified)
+        return "Matrix(%s%s)" % (str(self.tolist()), ssimplified)
 
     def _format_str(self, printer=None):
+        simplified = getattr(self, 'simplified', None)
+        ssimplified = '' if simplified is None else ', simplified=%s' % simplified
         if not printer:
             from sympy.printing.str import StrPrinter
             printer = StrPrinter()
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
-            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+            return 'Matrix(%s, %s, []%s)' % (self.rows, self.cols, ssimplified)
         if self.rows == 1:
-            return "Matrix([%s])" % self.table(printer, rowsep=',\n')
-        return "Matrix([\n%s])" % self.table(printer, rowsep=',\n')
+            return "Matrix([%s]%s)" % (self.table(printer, rowsep=',\n'), ssimplified)
+        return "Matrix([\n%s]%s)" % (self.table(printer, rowsep=',\n'), ssimplified)
 
     @classmethod
     def irregular(cls, ntop, *matrices, **kwargs):
