@@ -2,7 +2,7 @@ from sympy import (
     Symbol, Dummy, gamma, I, oo, nan, zoo, factorial, sqrt, Rational,
     multigamma, log, polygamma, EulerGamma, pi, uppergamma, S, expand_func,
     loggamma, sin, cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic,
-    zeta, conjugate)
+    zeta, conjugate, im, re, tanh, Abs)
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -274,6 +274,38 @@ def test_polygamma():
 
     # Test a bug
     assert polygamma(0, -x).expand(func=True) == polygamma(0, -x)
+
+    assert polygamma(2, 2.5).is_positive == False
+    assert polygamma(2, -2.5).is_positive == False
+    assert polygamma(3, 2.5).is_positive == True
+    assert polygamma(3, -2.5).is_positive is None
+    assert polygamma(-2, -2.5).is_positive is None
+    assert polygamma(-3, -2.5).is_positive is None
+
+    assert polygamma(2, 2.5).is_negative == True
+    assert polygamma(3, 2.5).is_negative == False
+    assert polygamma(3, -2.5).is_negative == False
+    assert polygamma(2, -2.5).is_negative is None
+    assert polygamma(-2, -2.5).is_negative is None
+    assert polygamma(-3, -2.5).is_negative is None
+
+    assert polygamma(I, 2).is_positive is None
+    assert polygamma(I, 3).is_negative is None
+
+    # issue 17350
+    assert polygamma(pi, 3).evalf() == polygamma(pi, 3)
+    assert (I*polygamma(I, pi)).as_real_imag() == \
+           (-im(polygamma(I, pi)), re(polygamma(I, pi)))
+    assert (tanh(polygamma(I, 1))).rewrite(exp) == \
+           (exp(polygamma(I, 1)) - exp(-polygamma(I, 1)))/(exp(polygamma(I, 1)) + exp(-polygamma(I, 1)))
+    assert (I / polygamma(I, 4)).rewrite(exp) == \
+           I*sqrt(re(polygamma(I, 4))**2 + im(polygamma(I, 4))**2)\
+           /((re(polygamma(I, 4)) + I*im(polygamma(I, 4)))*Abs(polygamma(I, 4)))
+    assert unchanged(polygamma, 2.3, 1.0)
+
+    # issue 12569
+    assert unchanged(im, polygamma(0, I))
+    assert polygamma(0, I).is_real is None
 
 
 def test_polygamma_expand_func():

@@ -583,6 +583,12 @@ class polygamma(Function):
     .. [4] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
 
+    def _eval_evalf(self, prec):
+        n = self.args[0]
+        # the mpmath polygamma implementation valid only for nonnegative integers
+        if n.is_real and n.is_number:
+            if (n.is_integer or n == int(n)) and n.is_nonnegative:
+                return super(polygamma, self)._eval_evalf(prec)
 
     def fdiff(self, argindex=2):
         if argindex == 2:
@@ -592,15 +598,12 @@ class polygamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_is_positive(self):
-        if self.args[1].is_positive and (self.args[0] > 0) == True:
+        if self.args[0].is_positive and self.args[1].is_positive:
             return self.args[0].is_odd
 
     def _eval_is_negative(self):
-        if self.args[1].is_positive and (self.args[0] > 0) == True:
+        if self.args[0].is_positive and self.args[1].is_positive:
             return self.args[0].is_even
-
-    def _eval_is_real(self):
-        return self.args[0].is_real
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
