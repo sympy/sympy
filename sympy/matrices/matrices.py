@@ -11,7 +11,7 @@ from sympy.core.compatibility import (
     reduce, string_types)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
-from sympy.core.function import expand_mul, count_ops
+from sympy.core.function import expand_mul
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float, Integer, mod_inverse
 from sympy.core.power import Pow
@@ -26,7 +26,7 @@ from sympy.printing import sstr
 from sympy.simplify import nsimplify
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import flatten, numbered_symbols, has_variety
+from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.misc import filldedent
 
 from .common import (
@@ -3532,7 +3532,6 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError()
         if method is not None:
             kwargs['method'] = method
-
         return self._eval_inverse(**kwargs)
 
     def is_nilpotent(self):
