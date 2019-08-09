@@ -165,6 +165,7 @@ class Plot(object):
         self.annotations = None
         self.markers = None
         self.rectangles = None
+        self.fill = None
 
         # Contains the data objects to be plotted. The backend should be smart
         # enough to iterate over this list.
@@ -1194,6 +1195,8 @@ class MatplotlibBackend(BaseBackend):
             for r in parent.rectangles:
                 rect = self.matplotlib.patches.Rectangle(**r)
                 ax.add_patch(rect)
+        if parent.fill:
+            ax.fill_between(**parent.fill)
 
         # xlim and ylim shoulld always be set at last so that plot limits
         # doesn't get altered during the process.

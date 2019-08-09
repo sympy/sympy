@@ -1535,7 +1535,7 @@ class Beam(object):
 
         rectangles = []
         rectangles.append({'xy':(0, 0), 'width':length, 'height': height, 'facecolor':"brown"})
-        annotations, markers, load_eq = self._draw_load()
+        annotations, markers, load_eq, fill = self._draw_load()
         support_markers, support_rectangles = self._draw_supports()
 
         rectangles += support_rectangles
@@ -1543,7 +1543,7 @@ class Beam(object):
 
         sing_plot = plot(height + load_eq, (x, -1, length),
          xlim=(-1, length+1), ylim=(-30, 30), annotations=annotations,
-          markers=markers, rectangles=rectangles, axis=False, show=False)
+          markers=markers, rectangles=rectangles, fill=fill, axis=False, show=False)
 
         return sing_plot
 
@@ -1572,7 +1572,14 @@ class Beam(object):
                 load_eq = [i for i in self.load.args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
                 load_eq = Add(*load_eq)
 
-        return annotations, markers, load_eq
+        # filling higher order loads with colour
+        y = numpy.arange(0, float(length), 0.1)
+        expr = height + load_eq.rewrite(Piecewise)
+        y1 = lambdify(x, expr, 'numpy')
+        y2 = float(height)
+        fill = {'x': y, 'y1': y1(y), 'y2': y2, 'color':'darkkhaki'}
+
+        return annotations, markers, load_eq, fill
 
 
     def _draw_supports(self):
