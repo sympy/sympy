@@ -297,16 +297,15 @@ def test_rsa_crt_extreme():
         decipher_rsa(ciphertext_1, prk, [p, q, r, s, t])
 
 
-def test_rsa_crt_exhaustive():
+def test_rsa_exhaustive():
     p, q = 61, 53
     e = 17
     puk = rsa_public_key(p, q, e, totient='Carmichael')
     prk = rsa_private_key(p, q, e, totient='Carmichael')
 
-    # Run exhaustive test for every possible numbers
     for msg in range(puk[0]):
         encrypted = encipher_rsa(msg, puk)
-        decrypted = decipher_rsa(encrypted, prk, [p, q])
+        decrypted = decipher_rsa(encrypted, prk)
         try:
             assert decrypted == msg
         except AssertionError:
@@ -317,17 +316,16 @@ def test_rsa_crt_exhaustive():
                 )
 
 
-def test_rsa_crt_multiprime_exhanstive():
-    from sympy.crypto.crypto import _decipher_rsa_crt
+def test_rsa_multiprime_exhanstive():
     primes = [3, 5, 7, 11]
     e = 7
     puk = rsa_public_key(*primes, e, totient='Carmichael')
     prk = rsa_private_key(*primes, e, totient='Carmichael')
+    n = puk[0]
 
-    # Run exhaustive test for every possible numbers
-    for msg in range(puk[0]):
+    for msg in range(n):
         encrypted = encipher_rsa(msg, puk)
-        decrypted = decipher_rsa(encrypted, prk, primes)
+        decrypted = decipher_rsa(encrypted, prk)
         try:
             assert decrypted == msg
         except AssertionError:
@@ -337,6 +335,29 @@ def test_rsa_crt_multiprime_exhanstive():
                 .format(msg, encrypted, decrypted)
                 )
 
+
+def test_rsa_multipower_exhanstive():
+    from sympy.core.numbers import igcd
+    primes = [5, 5, 7]
+    e = 7
+    puk = rsa_public_key(*primes, e, multipower=True)
+    prk = rsa_private_key(*primes, e, multipower=True)
+    n = puk[0]
+
+    for msg in range(n):
+        if igcd(msg, n) != 1:
+            continue
+
+        encrypted = encipher_rsa(msg, puk)
+        decrypted = decipher_rsa(encrypted, prk)
+        try:
+            assert decrypted == msg
+        except AssertionError:
+            raise AssertionError(
+                "The RSA is not correctly decrypted " \
+                "(Original : {}, Encrypted : {}, Decrypted : {})" \
+                .format(msg, encrypted, decrypted)
+                )
 
 
 def test_kid_rsa_public_key():
