@@ -248,7 +248,6 @@ def test_mutltiprime_rsa_full_example():
 
 
 def test_rsa_crt_exhaustive():
-    from sympy.crypto.crypto import _decipher_rsa_crt
     p, q = 61, 53
     e = 17
     puk = rsa_public_key(p, q, e, totient='Carmichael')
@@ -257,7 +256,7 @@ def test_rsa_crt_exhaustive():
     # Run exhaustive test for every possible numbers
     for msg in range(puk[0]):
         encrypted = encipher_rsa(msg, puk)
-        decrypted = _decipher_rsa_crt(encrypted, prk[1], [p, q])
+        decrypted = decipher_rsa(encrypted, prk, [p, q])
         try:
             assert decrypted == msg
         except AssertionError:
@@ -278,7 +277,7 @@ def test_rsa_crt_multiprime_exhanstive():
     # Run exhaustive test for every possible numbers
     for msg in range(puk[0]):
         encrypted = encipher_rsa(msg, puk)
-        decrypted = _decipher_rsa_crt(encrypted, prk[1], primes)
+        decrypted = decipher_rsa(encrypted, prk, primes)
         try:
             assert decrypted == msg
         except AssertionError:
