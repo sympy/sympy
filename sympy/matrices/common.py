@@ -52,6 +52,11 @@ class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
     pass
 
 
+class MatrixSimplifiedDefault:
+    """Default value for 'simplified' attribute on matrix creation."""
+    value = None
+
+
 class MatrixRequired(object):
     """All subclasses of matrix objects must implement the
     required matrix properties listed here."""
@@ -2410,7 +2415,7 @@ class _MinimalMatrix(object):
             pass
         self.mat = tuple(self._sympify(x) for x in mat)
         self.rows, self.cols = rows, cols
-        self.simplified = kwargs.get('simplified', None)
+        self.simplified = kwargs.get('simplified', MatrixSimplifiedDefault.value)
         if self.rows is None or self.cols is None:
             raise NotImplementedError("Cannot initialize matrix with given parameters")
 
@@ -2606,4 +2611,5 @@ def simplifiedbool(simp1, simp2=None):
         return False
     if simp1 is True or simp2 is True:
         return True
+
     return None

@@ -14,7 +14,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, fastalgsimp, \
-    simplifiedbool
+    simplifiedbool, MatrixSimplifiedDefault
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -468,7 +468,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         self.rows = rows
         self.cols = cols
         self._mat = flat_list
-        self.simplified = kwargs.get('simplified', None)
+        self.simplified = kwargs.get('simplified', MatrixSimplifiedDefault.value)
         return self
 
     def __setitem__(self, key, value):

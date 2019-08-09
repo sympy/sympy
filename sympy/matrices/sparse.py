@@ -13,7 +13,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 
-from .common import a2idx, fastalgsimp, simplifiedbool
+from .common import a2idx, fastalgsimp, simplifiedbool, MatrixSimplifiedDefault
 from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
 
@@ -106,13 +106,12 @@ class SparseMatrix(MatrixBase):
 
     def __new__(cls, *args, **kwargs):
         self = object.__new__(cls)
-        self.simplified = kwargs.get('simplified', None)
+        self.simplified = kwargs.get('simplified', MatrixSimplifiedDefault.value)
         if len(args) == 1 and isinstance(args[0], SparseMatrix):
             self.rows = args[0].rows
             self.cols = args[0].cols
             self._smat = dict(args[0]._smat)
-            if self.simplified == None:
-                self.simplified = getattr(args[0], 'simplified', None)
+            self.simplified = simplifiedbool(self, args[0])
             return self
 
         self._smat = {}

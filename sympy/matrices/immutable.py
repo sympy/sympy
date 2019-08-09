@@ -3,7 +3,7 @@ from __future__ import division, print_function
 from sympy.core import Basic, Dict, Integer, S, Tuple, sympify
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter
-from sympy.matrices.common import simplifiedbool
+from sympy.matrices.common import simplifiedbool, MatrixSimplifiedDefault
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
@@ -60,7 +60,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
             flat_list = Tuple(*flat_list)
 
         obj = Basic.__new__(cls, rows, cols, flat_list)
-        obj.simplified = kwargs.get('simplified', None)
+        obj.simplified = kwargs.get('simplified', MatrixSimplifiedDefault.value)
         return obj
 
     @property
@@ -168,7 +168,7 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
         obj.rows = s.rows
         obj.cols = s.cols
         obj._smat = s._smat
-        obj.simplified = kwargs.get('simplified', None)
+        obj.simplified = kwargs.get('simplified', MatrixSimplifiedDefault.value)
         return obj
 
     def __new__(cls, *args, **kwargs):
