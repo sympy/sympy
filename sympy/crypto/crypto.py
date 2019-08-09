@@ -1442,8 +1442,7 @@ def _decipher_rsa_crt(i, d, factors):
     return result[0]
 
 
-def _rsa_key(
-    *args, public=True, private=True, totient='Euler', multipower=None):
+def _rsa_key(*args, **kwargs):
     """A private subroutine to generate RSA key
 
     Parameters
@@ -1458,6 +1457,11 @@ def _rsa_key(
     multipower : bool, optional
         Flag to bypass warning for multipower RSA.
     """
+    public = kwargs.pop('public', True)
+    private = kwargs.pop('private', True)
+    totient = kwargs.pop('totient', 'Euler')
+    multipower = kwargs.pop('multipower', None)
+
     if len(args) < 2:
         return False
 
@@ -1518,7 +1522,7 @@ def _rsa_key(
     return False
 
 
-def rsa_public_key(*args, totient='Euler', multipower=None):
+def rsa_public_key(*args, **kwargs):
     r"""Return the RSA *public key* pair, `(n, e)`
 
     Parameters
@@ -1609,7 +1613,8 @@ def rsa_public_key(*args, totient='Euler', multipower=None):
 
     >>> primes = [2, 3, 5, 7, 11, 13]
     >>> e = 7
-    >>> rsa_public_key(*primes, e)
+    >>> args = primes + [e]
+    >>> rsa_public_key(*args)
     (30030, 7)
 
     See Also
@@ -1628,12 +1633,10 @@ def rsa_public_key(*args, totient='Euler', multipower=None):
 
     .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
     """
-    return _rsa_key(
-        *args,
-        public=True, private=False, totient=totient, multipower=multipower)
+    return _rsa_key(*args, public=True, private=False, **kwargs)
 
 
-def rsa_private_key(*args, totient='Euler', multipower=None):
+def rsa_private_key(*args, **kwargs):
     r"""Return the RSA *private key* pair, `(n, d)`
 
     Parameters
@@ -1705,7 +1708,8 @@ def rsa_private_key(*args, totient='Euler', multipower=None):
 
     >>> primes = [2, 3, 5, 7, 11, 13]
     >>> e = 7
-    >>> rsa_private_key(*primes, e)
+    >>> args = primes + [e]
+    >>> rsa_private_key(*args)
     (30030, 823)
 
     See Also
@@ -1724,9 +1728,7 @@ def rsa_private_key(*args, totient='Euler', multipower=None):
 
     .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
     """
-    return _rsa_key(
-        *args,
-        public=False, private=True, totient=totient, multipower=multipower)
+    return _rsa_key(*args, public=False, private=True, **kwargs)
 
 
 def _encipher_decipher_rsa(i, key, factors=None):
