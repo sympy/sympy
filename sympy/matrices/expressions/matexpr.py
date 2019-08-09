@@ -13,6 +13,7 @@ from sympy.matrices import ShapeError
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 
+from sympy.matrices.common import simplifiedbool
 
 def _sympifyit(arg, retval=None):
     # This version of _sympifyit sympifies MutableMatrix objects
@@ -1001,7 +1002,7 @@ class OneMatrix(MatrixExpr):
 
     def as_explicit(self):
         from sympy import ImmutableDenseMatrix
-        return ImmutableDenseMatrix.ones(*self.shape)
+        return ImmutableDenseMatrix.ones(*self.shape, simplified=simplifiedbool(self))
 
     def _eval_transpose(self):
         return OneMatrix(self.cols, self.rows)

@@ -85,7 +85,7 @@ class MatrixShaping(MatrixRequired):
     def _eval_col_del(self, col):
         def entry(i, j):
             return self[i, j] if j < col else self[i, j + 1]
-        return self._new(self.rows, self.cols - 1, entry)
+        return self._new(self.rows, self.cols - 1, entry, simplified=simplifiedbool(self))
 
     def _eval_col_insert(self, pos, other):
         cols = self.cols
@@ -98,7 +98,7 @@ class MatrixShaping(MatrixRequired):
             return self[i, j - other.cols]
 
         return self._new(self.rows, self.cols + other.cols,
-                         lambda i, j: entry(i, j))
+                         lambda i, j: entry(i, j), simplified=simplifiedbool(self))
 
     def _eval_col_join(self, other):
         rows = self.rows
@@ -109,14 +109,14 @@ class MatrixShaping(MatrixRequired):
             return other[i - rows, j]
 
         return classof(self, other)._new(self.rows + other.rows, self.cols,
-                                         lambda i, j: entry(i, j))
+                                         lambda i, j: entry(i, j), simplified=simplifiedbool(self))
 
     def _eval_extract(self, rowsList, colsList):
         mat = list(self)
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),
-                         list(mat[i] for i in indices))
+                         list(mat[i] for i in indices), simplified=simplifiedbool(self))
 
     def _eval_get_diag_blocks(self):
         sub_blocks = []
@@ -147,13 +147,13 @@ class MatrixShaping(MatrixRequired):
     def _eval_row_del(self, row):
         def entry(i, j):
             return self[i, j] if i < row else self[i + 1, j]
-        return self._new(self.rows - 1, self.cols, entry)
+        return self._new(self.rows - 1, self.cols, entry, simplified=simplifiedbool(self))
 
     def _eval_row_insert(self, pos, other):
         entries = list(self)
         insert_pos = pos * self.cols
         entries[insert_pos:insert_pos] = list(other)
-        return self._new(self.rows + other.rows, self.cols, entries)
+        return self._new(self.rows + other.rows, self.cols, entries, simplified=simplifiedbool(self))
 
     def _eval_row_join(self, other):
         cols = self.cols
@@ -164,7 +164,8 @@ class MatrixShaping(MatrixRequired):
             return other[i, j - cols]
 
         return classof(self, other)._new(self.rows, self.cols + other.cols,
-                                         lambda i, j: entry(i, j))
+                                         lambda i, j: entry(i, j),
+                                         simplified=simplifiedbool(self, other))
 
     def _eval_tolist(self):
         return [list(self[i,:]) for i in range(self.rows)]
@@ -178,7 +179,7 @@ class MatrixShaping(MatrixRequired):
             i = n - j * rows
             return self[i, j]
 
-        return self._new(len(self), 1, entry)
+        return self._new(len(self), 1, entry, simplified=simplifiedbool(self))
 
     def col_del(self, col):
         """Delete the specified column."""
@@ -211,7 +212,7 @@ class MatrixShaping(MatrixRequired):
         """
         # Allows you to build a matrix even if it is null matrix
         if not self:
-            return type(self)(other)
+            return type(self)(other, simplified=simplifiedbool(self))
 
         pos = as_int(pos)
 
@@ -252,7 +253,7 @@ class MatrixShaping(MatrixRequired):
         """
         # A null matrix can always be stacked (see  #10770)
         if self.rows == 0 and self.cols != other.cols:
-            return self._new(0, other.cols, []).col_join(other)
+            return self._new(0, other.cols, [], simplified=simplifiedbool(self, other)).col_join(other)
 
         if self.cols != other.cols:
             raise ShapeError(
@@ -372,7 +373,7 @@ class MatrixShaping(MatrixRequired):
         return self._eval_get_diag_blocks()
 
     @classmethod
-    def hstack(cls, *args):
+    def hstack(cls, *args, **kwargs):
         """Return a matrix formed by joining args horizontally (i.e.
         by repeated application of row_join).
 
@@ -386,7 +387,7 @@ class MatrixShaping(MatrixRequired):
         [0, 1, 0, 2]])
         """
         if len(args) == 0:
-            return cls._new()
+            return cls._new(**kwargs)
 
         kls = type(args[0])
         return reduce(kls.row_join, args)
@@ -414,7 +415,7 @@ class MatrixShaping(MatrixRequired):
         """
         if self.rows * self.cols != rows * cols:
             raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
-        return self._new(rows, cols, lambda i, j: self[i * cols + j])
+        return self._new(rows, cols, lambda i, j: self[i * cols + j], simplified=simplifiedbool(self))
 
     def row_del(self, row):
         """Delete the specified row."""
@@ -449,7 +450,7 @@ class MatrixShaping(MatrixRequired):
         """
         # Allows you to build a matrix even if it is null matrix
         if not self:
-            return self._new(other)
+            return self._new(other, simplified=simplifiedbool(self, other))
 
         pos = as_int(pos)
 
@@ -489,7 +490,7 @@ class MatrixShaping(MatrixRequired):
         """
         # A null matrix can always be stacked (see  #10770)
         if self.cols == 0 and self.rows != other.rows:
-            return self._new(other.rows, 0, []).row_join(other)
+            return self._new(other.rows, 0, [], simplified=simplifiedbool(self, other)).row_join(other)
 
         if self.rows != other.rows:
             raise ShapeError(
@@ -543,7 +544,7 @@ class MatrixShaping(MatrixRequired):
             raise ValueError(filldedent('''
             The %s diagonal is out of range [%s, %s]''' % (
             k, 1 - self.rows, self.cols - 1)))
-        return self._new(1, len(rv), rv)
+        return self._new(1, len(rv), rv, simplified=simplifiedbool(self))
 
     def row(self, i):
         """Elementary row selector.
@@ -643,7 +644,7 @@ class MatrixShaping(MatrixRequired):
         return self._eval_vec()
 
     @classmethod
-    def vstack(cls, *args):
+    def vstack(cls, *args, **kwargs):
         """Return a matrix formed by joining args vertically (i.e.
         by repeated application of col_join).
 
@@ -659,7 +660,7 @@ class MatrixShaping(MatrixRequired):
         [0, 2]])
         """
         if len(args) == 0:
-            return cls._new()
+            return cls._new(**kwargs)
 
         kls = type(args[0])
         return reduce(kls.col_join, args)
@@ -669,21 +670,21 @@ class MatrixSpecial(MatrixRequired):
     """Construction of special matrices"""
 
     @classmethod
-    def _eval_diag(cls, rows, cols, diag_dict):
+    def _eval_diag(cls, rows, cols, diag_dict, **kwargs):
         """diag_dict is a defaultdict containing
         all the entries of the diagonal matrix."""
         def entry(i, j):
             return diag_dict[(i, j)]
-        return cls._new(rows, cols, entry)
+        return cls._new(rows, cols, entry, **kwargs)
 
     @classmethod
-    def _eval_eye(cls, rows, cols):
+    def _eval_eye(cls, rows, cols, **kwargs):
         def entry(i, j):
             return cls.one if i == j else cls.zero
-        return cls._new(rows, cols, entry)
+        return cls._new(rows, cols, entry, **kwargs)
 
     @classmethod
-    def _eval_jordan_block(cls, rows, cols, eigenvalue, band='upper'):
+    def _eval_jordan_block(cls, rows, cols, eigenvalue, band='upper', **kwargs):
         if band == 'lower':
             def entry(i, j):
                 if i == j:
@@ -698,19 +699,19 @@ class MatrixSpecial(MatrixRequired):
                 elif i + 1 == j:
                     return cls.one
                 return cls.zero
-        return cls._new(rows, cols, entry)
+        return cls._new(rows, cols, entry, **kwargs)
 
     @classmethod
-    def _eval_ones(cls, rows, cols):
+    def _eval_ones(cls, rows, cols, **kwargs):
         def entry(i, j):
             return cls.one
-        return cls._new(rows, cols, entry)
+        return cls._new(rows, cols, entry, **kwargs)
 
     @classmethod
-    def _eval_zeros(cls, rows, cols):
+    def _eval_zeros(cls, rows, cols, **kwargs):
         def entry(i, j):
             return cls.zero
-        return cls._new(rows, cols, entry)
+        return cls._new(rows, cols, entry, **kwargs)
 
     @classmethod
     def diag(kls, *args, **kwargs):
@@ -809,6 +810,7 @@ class MatrixSpecial(MatrixRequired):
         klass = kwargs.get('cls', kls)
         strict = kwargs.get('strict', False) # lists -> Matrices
         unpack = kwargs.get('unpack', True)  # unpack single sequence
+        rsimplified = kwargs.get('simplified', None)
         if unpack and len(args) == 1 and is_sequence(args[0]) and \
                 not isinstance(args[0], MatrixBase):
             args = args[0]
@@ -856,7 +858,7 @@ class MatrixSpecial(MatrixRequired):
             raise ValueError(filldedent('''
                 The constructed matrix is {} x {} but a size of {} x {}
                 was specified.'''.format(rmax, cmax, rows, cols)))
-        return klass._eval_diag(rows, cols, diag_entries)
+        return klass._eval_diag(rows, cols, diag_entries, simplified=rsimplified)
 
     @classmethod
     def eye(kls, rows, cols=None, **kwargs):
@@ -875,9 +877,10 @@ class MatrixSpecial(MatrixRequired):
         if cols is None:
             cols = rows
         klass = kwargs.get('cls', kls)
+        rsimplified = kwargs.get('simplified', None)
         rows, cols = as_int(rows), as_int(cols)
 
-        return klass._eval_eye(rows, cols)
+        return klass._eval_eye(rows, cols, simplified=rsimplified)
 
     @classmethod
     def jordan_block(kls, size=None, eigenvalue=None, **kwargs):
@@ -1009,6 +1012,7 @@ class MatrixSpecial(MatrixRequired):
         band = kwargs.pop('band', 'upper')
         rows = kwargs.pop('rows', None)
         cols = kwargs.pop('cols', None)
+        rsimplified = kwargs.get('simplified', None)
 
         eigenval = kwargs.get('eigenval', None)
         if eigenvalue is None and eigenval is None:
@@ -1033,7 +1037,7 @@ class MatrixSpecial(MatrixRequired):
 
         rows, cols = as_int(rows), as_int(cols)
 
-        return klass._eval_jordan_block(rows, cols, eigenvalue, band)
+        return klass._eval_jordan_block(rows, cols, eigenvalue, band, simplified=rsimplified)
 
     @classmethod
     def ones(kls, rows, cols=None, **kwargs):
@@ -1053,8 +1057,9 @@ class MatrixSpecial(MatrixRequired):
             cols = rows
         klass = kwargs.get('cls', kls)
         rows, cols = as_int(rows), as_int(cols)
+        rsimplified = kwargs.get('simplified', None)
 
-        return klass._eval_ones(rows, cols)
+        return klass._eval_ones(rows, cols, simplified=rsimplified)
 
     @classmethod
     def zeros(kls, rows, cols=None, **kwargs):
@@ -1074,8 +1079,9 @@ class MatrixSpecial(MatrixRequired):
             cols = rows
         klass = kwargs.get('cls', kls)
         rows, cols = as_int(rows), as_int(cols)
+        rsimplified = kwargs.get('simplified', None)
 
-        return klass._eval_zeros(rows, cols)
+        return klass._eval_zeros(rows, cols, simplified=rsimplified)
 
 
 class MatrixProperties(MatrixRequired):
@@ -1109,7 +1115,7 @@ class MatrixProperties(MatrixRequired):
     # routines and has a different *args signature.  Make
     # sure the names don't clash by adding `_matrix_` in name.
     def _eval_is_matrix_hermitian(self, simpfunc):
-        mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()))
+        mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()), simplified=simplifiedbool(self))
         return mat.is_zero
 
     def _eval_is_Identity(self):
@@ -1135,7 +1141,7 @@ class MatrixProperties(MatrixRequired):
         return self.has(Symbol)
 
     def _eval_is_symmetric(self, simpfunc):
-        mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i]))
+        mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i]), simplified=simplifiedbool(self))
         return mat.is_zero
 
     def _eval_is_zero(self):
@@ -1665,7 +1671,7 @@ class MatrixOperations(MatrixRequired):
         return self.transpose().conjugate()
 
     def _eval_applyfunc(self, f):
-        out = self._new(self.rows, self.cols, [f(x) for x in self])
+        out = self._new(self.rows, self.cols, [f(x) for x in self], simplified=simplifiedbool(self))
         return out
 
     def _eval_as_real_imag(self):
@@ -1683,7 +1689,7 @@ class MatrixOperations(MatrixRequired):
         def entry(i, j):
             return self[i, mapping[j]]
 
-        return self._new(self.rows, self.cols, entry)
+        return self._new(self.rows, self.cols, entry, simplified=simplifiedbool(self))
 
     def _eval_permute_rows(self, perm):
         # apply the permutation to a list
@@ -1692,13 +1698,13 @@ class MatrixOperations(MatrixRequired):
         def entry(i, j):
             return self[mapping[i], j]
 
-        return self._new(self.rows, self.cols, entry)
+        return self._new(self.rows, self.cols, entry, simplified=simplifiedbool(self))
 
     def _eval_trace(self):
         return sum(self[i, i] for i in range(self.rows))
 
     def _eval_transpose(self):
-        return self._new(self.cols, self.rows, lambda i, j: self[j, i])
+        return self._new(self.cols, self.rows, lambda i, j: self[j, i], simplified=simplifiedbool(self))
 
     def adjoint(self):
         """Conjugate transpose or Hermitian conjugation."""
@@ -2074,11 +2080,13 @@ class MatrixArithmetic(MatrixRequired):
     _op_priority = 10.01
 
     def _eval_Abs(self):
-        return self._new(self.rows, self.cols, lambda i, j: Abs(self[i, j]))
+        return self._new(self.rows, self.cols, lambda i, j: Abs(self[i, j]),
+                simplified=simplifiedbool(self))
 
     def _eval_add(self, other):
         return self._new(self.rows, self.cols,
-                         lambda i, j: self[i, j] + other[i, j])
+                         lambda i, j: self[i, j] + other[i, j],
+                         simplified=simplifiedbool(self, other))
 
     def _eval_matrix_mul(self, other):
         def entry(i, j):
@@ -2095,15 +2103,16 @@ class MatrixArithmetic(MatrixRequired):
                     ret += self[i, k]*other[k, j]
                 return ret
 
-        return self._new(self.rows, other.cols, entry)
+        return self._new(self.rows, other.cols, entry, simplified=simplifiedbool(self, other))
 
     def _eval_matrix_mul_elementwise(self, other):
-        return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other[i,j])
+        return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other[i,j],
+                simplified=simplifiedbool(self, other))
 
     def _eval_matrix_rmul(self, other):
         def entry(i, j):
             return sum(other[i,k]*self[k,j] for k in range(other.cols))
-        return self._new(other.rows, self.cols, entry)
+        return self._new(other.rows, self.cols, entry, simplified=simplifiedbool(self, other))
 
     def _eval_pow_by_recursion(self, num):
         if num == 1:
@@ -2114,14 +2123,17 @@ class MatrixArithmetic(MatrixRequired):
         return ret * ret
 
     def _eval_scalar_mul(self, other):
-        return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other)
+        return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other,
+                simplified=simplifiedbool(self))
 
     def _eval_scalar_rmul(self, other):
-        return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
+        return self._new(self.rows, self.cols, lambda i, j: other*self[i,j],
+                simplified=simplifiedbool(self))
 
     def _eval_Mod(self, other):
         from sympy import Mod
-        return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
+        return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other),
+                simplified=simplifiedbool(self))
 
     # python arithmetic functions
     def __abs__(self):
@@ -2231,17 +2243,19 @@ class MatrixArithmetic(MatrixRequired):
         exp = sympify(exp)
 
         if exp.is_zero:
-            return a._new(a.rows, a.cols, lambda i, j: int(i == j))
+            return a._new(a.rows, a.cols, lambda i, j: int(i == j),
+                    simplified=simplifiedbool(self))
         if exp == 1:
             return a
 
         diagonal = getattr(a, 'is_diagonal', None)
         if diagonal is not None and diagonal():
-            return a._new(a.rows, a.cols, lambda i, j: a[i,j]**exp if i == j else 0)
+            return a._new(a.rows, a.cols, lambda i, j: a[i,j]**exp if i == j else 0,
+                    simplified=simplifiedbool(self))
 
         if exp.is_Number and exp % 1 == 0:
             if a.rows == 1:
-                return a._new([[a[0]**exp]])
+                return a._new([[a[0]**exp]], simplified=simplifiedbool(self))
             if exp < 0:
                 exp = -exp
                 a = a.inv()
@@ -2292,7 +2306,7 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return other._new(other.as_mutable() * self)
+            return other._new(other.as_mutable() * self, simplified=simplifiedbool(self, other))
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_rmul(self, other)
@@ -2375,7 +2389,7 @@ class _MinimalMatrix(object):
     def _new(cls, *args, **kwargs):
         return cls(*args, **kwargs)
 
-    def __init__(self, rows, cols=None, mat=None):
+    def __init__(self, rows, cols=None, mat=None, **kwargs):
         if isfunction(mat):
             # if we passed in a function, use that to populate the indices
             mat = list(mat(i, j) for i in range(rows) for j in range(cols))
@@ -2393,6 +2407,7 @@ class _MinimalMatrix(object):
             pass
         self.mat = tuple(self._sympify(x) for x in mat)
         self.rows, self.cols = rows, cols
+        self.simplified = kwargs.get('simplified', None)
         if self.rows is None or self.cols is None:
             raise NotImplementedError("Cannot initialize matrix with given parameters")
 
@@ -2428,7 +2443,8 @@ class _MinimalMatrix(object):
                 indices = (i * self.cols + j for i in rowsList for j in
                            colsList)
                 return self._new(len(rowsList), len(colsList),
-                                 list(self.mat[i] for i in indices))
+                                 list(self.mat[i] for i in indices),
+                                 simplified=simplifiedbool(self))
 
             # if the key is a tuple of ints, change
             # it to an array index
@@ -2576,11 +2592,11 @@ def fastalgsimp(expr):
     return expr
 
 
-def simplifiedlogic(simp1, simp2=None):
+def simplifiedbool(simp1, simp2=None):
     """Logic for determining the 'simplified' status of a child of two matrices."""
-    if isinstance(simp1, Basic):
+    if simp1 is not None and not isinstance(simp1, bool):
         simp1 = getattr(simp1, 'simplified', None)
-    if isinstance(simp2, Basic):
+    if simp2 is not None and not isinstance(simp2, bool):
         simp2 = getattr(simp2, 'simplified', None)
     if simp1 is False or simp2 is False:
         return False

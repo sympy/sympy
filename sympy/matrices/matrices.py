@@ -31,7 +31,7 @@ from sympy.utilities.misc import filldedent
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError, NonPositiveDefiniteMatrixError, fastalgsimp, simplifiedlogic)
+    ShapeError, NonPositiveDefiniteMatrixError, simplifiedbool)
 
 
 def _iszero(x):
@@ -86,7 +86,7 @@ class MatrixDeterminant(MatrixCommon):
 
         # the 0 x 0 case is trivial
         if self.rows == 0 and self.cols == 0:
-            return self._new(1,1, [self.one])
+            return self._new(1,1, [self.one], simplified=simplifiedbool(self))
 
         #
         # Partition self = [ a_11  R ]
@@ -121,7 +121,7 @@ class MatrixDeterminant(MatrixCommon):
                 return self.zero
             return diags[i - j]
 
-        toeplitz = self._new(self.cols + 1, self.rows, entry)
+        toeplitz = self._new(self.cols + 1, self.rows, entry, simplified=simplifiedbool(self))
         return (A, toeplitz)
 
     def _eval_berkowitz_vector(self):
@@ -161,9 +161,9 @@ class MatrixDeterminant(MatrixCommon):
 
         # handle the trivial cases
         if self.rows == 0 and self.cols == 0:
-            return self._new(1, 1, [self.one])
+            return self._new(1, 1, [self.one], simplified=simplifiedbool(self))
         elif self.rows == 1 and self.cols == 1:
-            return self._new(2, 1, [self.one, -self[0,0]])
+            return self._new(2, 1, [self.one, -self[0,0]], simplified=simplifiedbool(self))
 
         submat, toeplitz = self._eval_berkowitz_toeplitz_matrix()
         return toeplitz * submat._eval_berkowitz_vector()
@@ -212,7 +212,8 @@ class MatrixDeterminant(MatrixCommon):
                     return cancel(ret)
                 return ret
 
-            return sign*bareiss(self._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
+            return sign*bareiss(self._new(mat.rows - 1, mat.cols - 1, entry,
+                    simplified=simplifiedbool(self)), pivot_val)
 
         return cancel(bareiss(self))
 
@@ -379,7 +380,8 @@ class MatrixDeterminant(MatrixCommon):
             raise NonSquareMatrixError()
 
         return self._new(self.rows, self.cols,
-                         lambda i, j: self.cofactor(i, j, method))
+                         lambda i, j: self.cofactor(i, j, method),
+                         simplified=simplifiedbool(self))
 
     def det(self, method="bareiss", iszerofunc=None):
         """Computes the determinant of a matrix.
@@ -533,21 +535,21 @@ class MatrixReductions(MatrixDeterminant):
             elif j == col2:
                 return self[i, col1]
             return self[i, j]
-        return self._new(self.rows, self.cols, entry)
+        return self._new(self.rows, self.cols, entry, simplified=simplifiedbool(self))
 
     def _eval_col_op_multiply_col_by_const(self, col, k):
         def entry(i, j):
             if j == col:
                 return k * self[i, j]
             return self[i, j]
-        return self._new(self.rows, self.cols, entry)
+        return self._new(self.rows, self.cols, entry, simplified=simplifiedbool(self))
 
     def _eval_col_op_add_multiple_to_other_col(self, col, k, col2):
         def entry(i, j):
             if j == col:
                 return self[i, j] + k * self[i, col2]
             return self[i, j]
-        return self._new(self.rows, self.cols, entry)
+        return self._new(self.rows, self.cols, entry, simplified=simplifiedbool(self))
 
     def _eval_row_op_swap(self, row1, row2):
         def entry(i, j):
@@ -556,21 +558,21 @@ class MatrixReductions(MatrixDeterminant):
             elif i == row2:
                 return self[row1, j]
             return self[i, j]
-        return self._new(self.rows, self.cols, entry)
+        return self._new(self.rows, self.cols, entry, simplified=simplifiedbool(self))
 
     def _eval_row_op_multiply_row_by_const(self, row, k):
         def entry(i, j):
             if i == row:
                 return k * self[i, j]
             return self[i, j]
-        return self._new(self.rows, self.cols, entry)
+        return self._new(self.rows, self.cols, entry, simplified=simplifiedbool(self))
 
     def _eval_row_op_add_multiple_to_other_row(self, row, k, row2):
         def entry(i, j):
             if i == row:
                 return self[i, j] + k * self[row2, j]
             return self[i, j]
-        return self._new(self.rows, self.cols, entry)
+        return self._new(self.rows, self.cols, entry, simplified=simplifiedbool(self))
 
     def _eval_echelon_form(self, iszerofunc, simpfunc):
         """Returns (mat, swaps) where ``mat`` is a row-equivalent matrix
@@ -759,7 +761,8 @@ class MatrixReductions(MatrixDeterminant):
                 for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
                     mat[p] = mat[p] / pivot_val
 
-        return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
+        return self._new(self.rows, self.cols, mat, simplified=simplifiedbool(self)), \
+                tuple(pivot_cols), tuple(swaps)
 
     def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
         """Returns a matrix row-equivalent to ``self`` that is
@@ -1019,7 +1022,7 @@ class MatrixSubspaces(MatrixReductions):
                 vec[piv_col] -= reduced[piv_row, free_var]
             basis.append(vec)
 
-        return [self._new(self.cols, 1, b) for b in basis]
+        return [self._new(self.cols, 1, b, simplified=simplifiedbool(self)) for b in basis]
 
     def rowspace(self, simplify=False):
         """Returns a list of vectors that span the row space of ``self``."""
@@ -1176,7 +1179,8 @@ class MatrixEigen(MatrixSubspaces):
         if normalize:
             p_cols = [v / v.norm() for v in p_cols]
 
-        return self.hstack(*p_cols), self.diag(*diag)
+        rsimplified=simplifiedbool(self)
+        return self.hstack(*p_cols, simplified=rsimplified), self.diag(*diag, simplified=rsimplified)
 
     def eigenvals(self, error_when_incomplete=True, **flags):
         r"""Return eigenvalues using the Berkowitz agorithm to compute
@@ -1369,7 +1373,7 @@ class MatrixEigen(MatrixSubspaces):
 
         def eigenspace(eigenval):
             """Get a basis for the eigenspace for a particular eigenvalue"""
-            m = mat - self.eye(mat.rows) * eigenval
+            m = mat - self.eye(mat.rows, simplified=simplifiedbool(self)) * eigenval
             ret = m.nullspace(iszerofunc=iszerofunc)
             # the nullspace for a real eigenvalue should be
             # non-trivial.  If we didn't find an eigenvector, try once
@@ -1732,7 +1736,7 @@ class MatrixEigen(MatrixSubspaces):
             if (val, pow - 1) in mat_cache:
                 mat_cache[(val, pow)] = mat_cache[(val, pow - 1)] * mat_cache[(val, 1)]
             else:
-                mat_cache[(val, pow)] = (mat - val*self.eye(self.rows))**pow
+                mat_cache[(val, pow)] = (mat - val*self.eye(self.rows, simplified=simplifiedbool(self)))**pow
             return mat_cache[(val, pow)]
 
         # helper functions
@@ -1798,16 +1802,18 @@ class MatrixEigen(MatrixSubspaces):
         if sum(m for m in eigs.values()) != mat.cols:
             raise MatrixError("Could not compute eigenvalues for {}".format(mat))
 
+        rsimplified = simplifiedbool(self)
+
         # most matrices have distinct eigenvalues
         # and so are diagonalizable.  In this case, don't
         # do extra work!
         if len(eigs.keys()) == mat.cols:
             blocks = list(sorted(eigs.keys(), key=default_sort_key))
-            jordan_mat = mat.diag(*blocks)
+            jordan_mat = mat.diag(*blocks, simplified=rsimplified)
             if not calc_transform:
                 return restore_floats(jordan_mat)
             jordan_basis = [eig_mat(eig, 1).nullspace()[0] for eig in blocks]
-            basis_mat = mat.hstack(*jordan_basis)
+            basis_mat = mat.hstack(*jordan_basis, simplified=rsimplified)
             return restore_floats(basis_mat, jordan_mat)
 
         block_structure = []
@@ -1834,7 +1840,7 @@ class MatrixEigen(MatrixSubspaces):
                 "computing Jordan block. : {}".format(self))
 
         blocks = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
-        jordan_mat = mat.diag(*blocks)
+        jordan_mat = mat.diag(*blocks, simplified=rsimplified)
 
         if not calc_transform:
             return restore_floats(jordan_mat)
@@ -1868,7 +1874,7 @@ class MatrixEigen(MatrixSubspaces):
                 eig_basis.extend(new_vecs)
                 jordan_basis.extend(reversed(new_vecs))
 
-        basis_mat = mat.hstack(*jordan_basis)
+        basis_mat = mat.hstack(*jordan_basis, simplified=rsimplified)
 
         return restore_floats(basis_mat, jordan_mat)
 
@@ -2075,7 +2081,7 @@ class MatrixCalculus(MatrixCommon):
 
         # m is the number of functions and n is the number of variables
         # computing the Jacobian is now easy:
-        return self._new(m, n, lambda j, i: self[j].diff(X[i]))
+        return self._new(m, n, lambda j, i: self[j].diff(X[i]), simplified=simplifiedbool(self))
 
     def limit(self, *args):
         """Calculate the limit of each element in the matrix.
@@ -2210,7 +2216,7 @@ class MatrixDeprecated(MatrixCommon):
 
             transforms[k - 1] = T
 
-        polys = [self._new([self.one, -A[0, 0]])]
+        polys = [self._new([self.one, -A[0, 0]], simplified=simplifiedbool(self))]
 
         for i, T in enumerate(transforms):
             polys.append(T * polys[i])
@@ -2362,7 +2368,7 @@ class MatrixBase(MatrixDeprecated,
         checks, to be used privately.
         """
         return self._new(
-            rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
+            rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i], simplified=simplifiedbool(self))
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
@@ -2395,7 +2401,7 @@ class MatrixBase(MatrixDeprecated,
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
-        return self._new(P*diag(*jordan_cells)*P.inv())
+        return self._new(P*diag(*jordan_cells)*P.inv(), simplified=simplifiedbool(self))
 
     def __repr__(self):
         return sstr(self)
@@ -2457,7 +2463,7 @@ class MatrixBase(MatrixDeprecated,
                 Matrices provided do not appear to fill
                 the space completely.'''))
           rows.append(r)
-      return cls._new(rows)
+      return cls._new(rows, **kwargs)
 
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
@@ -2893,7 +2899,7 @@ class MatrixBase(MatrixDeprecated,
         [3, 4]])
 
         """
-        return self._new(self.rows, self.cols, self._mat)
+        return self._new(self.rows, self.cols, self._mat, simplified=simplifiedbool(self))
 
     def cross(self, b):
         r"""
@@ -2925,7 +2931,7 @@ class MatrixBase(MatrixDeprecated,
             return self._new(self.rows, self.cols, (
                 (self[1] * b[2] - self[2] * b[1]),
                 (self[2] * b[0] - self[0] * b[2]),
-                (self[0] * b[1] - self[1] * b[0])))
+                (self[0] * b[1] - self[1] * b[0])), simplified=simplifiedbool(self))
 
     @property
     def D(self):
@@ -3203,9 +3209,9 @@ class MatrixBase(MatrixDeprecated,
         # n = self.rows
         ret = P * eJ * P.inv()
         if all(value.is_real for value in self.values()):
-            return type(self)(re(ret))
+            return type(self)(re(ret), simplified=simplifiedbool(self))
         else:
-            return type(self)(ret)
+            return type(self)(ret, simplified=simplifiedbool(self))
 
     def gauss_jordan_solve(self, B, freevar=False):
         """
@@ -3311,7 +3317,7 @@ class MatrixBase(MatrixDeprecated,
         """
         from sympy.matrices import Matrix, zeros
 
-        aug = self.hstack(self.copy(), B.copy())
+        aug = self.hstack(self.copy(), B.copy(), simplified=simplifiedbool(self))
         B_cols = B.cols
         row, col = aug[:, :-B_cols].shape
 
@@ -3444,12 +3450,13 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
-        big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
+        rsimplified=simplifiedbool(self)
+        big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows, simplified=rsimplified))
         red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-        return self._new(red[:, big.rows:])
+        return self._new(red[:, big.rows:], simplified=rsimplified)
 
     def inverse_LU(self, iszerofunc=_iszero):
         """Calculates the inverse using LU decomposition.
@@ -3468,7 +3475,7 @@ class MatrixBase(MatrixDeprecated,
         if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-        return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
+        return self.LUsolve(self.eye(self.rows, simplified=simplifiedbool(self)), iszerofunc=_iszero)
 
     def inv(self, method=None, **kwargs):
         """
@@ -3812,8 +3819,9 @@ class MatrixBase(MatrixDeprecated,
         def entry_U(i, j):
             return self.zero if i > j else combined[i, j]
 
-        L = self._new(combined.rows, combined.rows, entry_L)
-        U = self._new(combined.rows, combined.cols, entry_U)
+        rsimplified = simplifiedbool(self)
+        L = self._new(combined.rows, combined.rows, entry_L, simplified=rsimplified)
+        U = self._new(combined.rows, combined.cols, entry_U, simplified=rsimplified)
 
         return L, U, p
 
@@ -3908,7 +3916,7 @@ class MatrixBase(MatrixDeprecated,
         if self.rows == 0 or self.cols == 0:
             # Define LU decomposition of a matrix with no entries as a matrix
             # of the same dimensions with all zero entries.
-            return self.zeros(self.rows, self.cols), []
+            return self.zeros(self.rows, self.cols, simplified=simplifiedbool(self)), []
 
         lu = self.as_mutable()
         row_swaps = []
@@ -4175,7 +4183,7 @@ class MatrixBase(MatrixDeprecated,
             raise ShapeError("A Matrix must be a vector to normalize.")
         norm = self.norm()
         if iszerofunc(norm):
-            out = self.zeros(self.rows, self.cols)
+            out = self.zeros(self.rows, self.cols, simplified=simplifiedbool(self))
         else:
             out = self.applyfunc(lambda i: i / norm)
         return out
@@ -4599,11 +4607,12 @@ class MatrixBase(MatrixDeprecated,
         if n < m:
             nOrig = n
             n = m
-            mat = mat.col_join(mat.zeros(n - nOrig, m))
+            mat = mat.col_join(mat.zeros(n - nOrig, m, simplified=simplifiedbool(self)))
         else:
             nOrig = n
 
-        Q, R = mat.zeros(n, m), mat.zeros(m)
+        rsimplified = simplifiedbool(self)
+        Q, R = mat.zeros(n, m, simplified=rsimplified), mat.zeros(m, simplified=rsimplified)
         for j in range(m):  # for each column vector
             tmp = mat[:, j]  # take original v
             for i in range(j):
@@ -4676,7 +4685,7 @@ class MatrixBase(MatrixDeprecated,
             for k in range(j + 1, n):
                 tmp -= R[j, k] * x[n - 1 - k]
             x.append(tmp / R[j, j])
-        return self._new([row._mat for row in reversed(x)])
+        return self._new([row._mat for row in reversed(x)], simplified=simplifiedbool(self))
 
     def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
         r"""Returns a pair of matrices (`C`, `F`) with matching rank
@@ -4914,7 +4923,7 @@ class MatrixBase(MatrixDeprecated,
                     "Try ``self.gauss_jordan_solve(rhs)`` to obtain a parametric solution.")
             except ValueError:
                 # raise same error as in inv:
-                self.zeros(1).inv()
+                self.zeros(1, simplified=simplifiedbool(self)).inv()
             return soln
         elif method == 'LU':
             return self.LUsolve(rhs)

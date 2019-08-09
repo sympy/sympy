@@ -3,11 +3,11 @@ from __future__ import division, print_function
 from sympy.core import Basic, Dict, Integer, S, Tuple, sympify
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter
+from sympy.matrices.common import simplifiedbool
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
-
 
 def sympify_matrix(arg):
     return arg.as_immutable()
@@ -101,7 +101,8 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),
-                         Tuple(*(mat[i] for i in indices), sympify=False), copy=False)
+                         Tuple(*(mat[i] for i in indices), sympify=False), copy=False,
+                         simplified=simplifiedbool(self))
 
     @property
     def cols(self):
