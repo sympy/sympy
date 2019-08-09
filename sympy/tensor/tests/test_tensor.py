@@ -13,7 +13,7 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensor_heads, \
     TensorManager, TensExpr, TensorHead, canon_bp, \
     tensorhead, tensorsymmetry, TensorType
-from sympy.utilities.pytest import raises, XFAIL, ignore_warnings
+from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy, ignore_warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import range
 from sympy.matrices import diag
@@ -1966,14 +1966,14 @@ def test_rewrite_tensor_to_Indexed():
 
 
 def test_tensorsymmetry():
-    with raises(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         tensorsymmetry([1]*2)
 
 def test_tensorhead():
-    with raises(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         tensorhead('A', [])
 
 def test_TensorType():
-    with raises(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         sym = TensorSymmetry.no_symmetry(1)
         TensorType(sym, 2)
