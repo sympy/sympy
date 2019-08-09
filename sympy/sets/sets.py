@@ -1430,11 +1430,11 @@ class Complement(Set, EvalfMixin):
 
     is_Complement = True
 
-    def __new__(cls, a, b, evaluate=True):
-        if evaluate:
-            return Complement.reduce(a, b)
+    _basic_version = 2
 
-        return Basic.__new__(cls, a, b)
+    @classmethod
+    def _eval_doit(cls, a, b):
+        return Complement.reduce(a, b)
 
     @staticmethod
     def reduce(A, B):
@@ -1597,19 +1597,16 @@ class FiniteSet(Set, EvalfMixin):
     is_FiniteSet = True
     is_iterable = True
 
-    def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
-        if evaluate:
-            args = list(map(sympify, args))
+    _basic_version = 2
 
-            if len(args) == 0:
-                return EmptySet()
-        else:
-            args = list(map(sympify, args))
+    @classmethod
+    def _eval_args(cls, *args, **kwargs):
+        return tuple(ordered(set(args), Set._infimum_key))
 
-        args = list(ordered(set(args), Set._infimum_key))
-        obj = Basic.__new__(cls, *args)
-        return obj
+    @classmethod
+    def _eval_doit(cls, *args, **kwargs):
+        if len(args) == 0:
+            return EmptySet()
 
     def _eval_Eq(self, other):
         if not isinstance(other, FiniteSet):
