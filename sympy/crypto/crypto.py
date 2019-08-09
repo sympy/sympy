@@ -1624,9 +1624,9 @@ def rsa_public_key(*args, totient='Euler', multipower=None):
 
     .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
 
-    .. [2] https://iopscience.iop.org/article/10.1088/1742-6596/995/1/012030
+    .. [2] http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
 
-    .. [3] https://www.scirp.org/journal/paperabs.aspx?paperid=83244
+    .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
     """
     return _rsa_key(
         *args,
@@ -1720,9 +1720,9 @@ def rsa_private_key(*args, totient='Euler', multipower=None):
 
     .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
 
-    .. [2] https://iopscience.iop.org/article/10.1088/1742-6596/995/1/012030
+    .. [2] http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
 
-    .. [3] https://www.scirp.org/journal/paperabs.aspx?paperid=83244
+    .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
     """
     return _rsa_key(
         *args,
