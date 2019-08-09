@@ -1775,14 +1775,14 @@ class SymmetricDifference(Set):
 
     is_SymmetricDifference = True
 
-    def __new__(cls, a, b, evaluate=True):
-        if evaluate:
-            return SymmetricDifference.reduce(a, b)
+    _basic_version = 2
 
-        return Basic.__new__(cls, a, b)
+    @classmethod
+    def _eval_doit(cls, a, b):
+        return SymmetricDifference.reduce(a, b)
 
-    @staticmethod
-    def reduce(A, B):
+    @classmethod
+    def reduce(cls, A, B):
         result = B._symmetric_difference(A)
         if result is not None:
             return result
