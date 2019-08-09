@@ -644,7 +644,17 @@ class ProductSet(Set):
     """
     is_ProductSet = True
 
-    def __new__(cls, *sets, **assumptions):
+    _basic_version = 2
+
+    # FIXME: We turn off sympification here so that we can support generators
+    # being passed as arguments e.g. ProductSet(f(i) for i in range(10)). We
+    # raise anyway if something is not Set or iterable of Set. This otherwise
+    # fails because a generator expression is not sympifiable but should it be
+    # permitted to have unsympifiable arguments to Basic?
+    _basic_sympifyargs = False
+
+    @classmethod
+    def _eval_args(cls, *sets, **assumptions):
         def flatten(arg):
             if isinstance(arg, Set):
                 if arg.is_ProductSet:
@@ -655,14 +665,16 @@ class ProductSet(Set):
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         sets = flatten(list(sets))
+        return tuple(sets)
+
+    @classmethod
+    def _eval_doit(cls, *sets):
 
         if EmptySet() in sets or len(sets) == 0:
             return EmptySet()
 
         if len(sets) == 1:
             return sets[0]
-
-        return Basic.__new__(cls, *sets, **assumptions)
 
     def _eval_Eq(self, other):
         if not other.is_ProductSet:

@@ -139,7 +139,9 @@ class Basic(with_metaclass(ManagedProperties)):
             # can optimise to avoid double sympification by returning None
             # from _eval_args where possible.
             if newargs is not None:
-                args = tuple(map(S, newargs))
+                if cls._basic_sympifyargs:
+                    newargs = tuple(map(S, newargs))
+                args = newargs
 
             # Now evaluate to something else
             if evaluate is None:
