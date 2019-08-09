@@ -282,7 +282,7 @@ before_install:
         fi
         if [[ "$TEST_OPT_DEPENDENCY" == "clang" ]]; then
             pip install clang;
-        fin
+        fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list | grep "numpy" && pip uninstall -y numpy;
     fi
