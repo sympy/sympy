@@ -399,12 +399,15 @@ class AskHermitianHandler(AskRealHandler):
     @staticmethod
     def MatrixBase(mat, assumptions):
         rows, cols = mat.shape
+        ret_val = True
         for i in range(rows):
             for j in range(i, cols):
                 cond = fuzzy_bool(Eq(mat[i, j], conjugate(mat[j, i])))
+                if cond == None:
+                    ret_val = None
                 if cond == False:
                     return False
-        return cond
+        return ret_val
 
 class AskComplexHandler(CommonHandler):
     """
