@@ -1528,39 +1528,39 @@ class Beam(object):
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
 
-    def draw(self):
+    def draw(self, pictorial=False):
         x = self.variable
         length = self.length
-        height = 2
+        height = length/10
 
         rectangles = []
         rectangles.append({'xy':(0, 0), 'width':length, 'height': height, 'facecolor':"brown"})
-        annotations, markers, load_eq, fill = self._draw_load()
+        annotations, markers, load_eq, fill = self._draw_load(pictorial)
         support_markers, support_rectangles = self._draw_supports()
 
         rectangles += support_rectangles
         markers += support_markers
 
-        sing_plot = plot(height + load_eq, (x, -1, length),
-         xlim=(-1, length+1), ylim=(-30, 30), annotations=annotations,
+        sing_plot = plot(height + load_eq, (x, 0, length),
+         xlim=(-2, length + 2), ylim=(-length, length), annotations=annotations,
           markers=markers, rectangles=rectangles, fill=fill, axis=False, show=False)
 
         return sing_plot
 
 
-    def _draw_load(self):
-        from sympy import Add
+    def _draw_load(self, pictorial):
         loads = list(set(self.applied_loads) - set(self._support_as_loads))
-        height = 2
         length = self.length
+        height = length/10
         x = self.variable
 
         annotations = []
         markers = []
+        scaled_load = 0
         for load in loads:
             if load[2] == -1:
                 if load[0].is_positive:
-                    annotations.append({'s':'', 'xy':(load[1], height),  'xytext':(load[1], height*3), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
+                    annotations.append({'s':'', 'xy':(load[1], height),  'xytext':(load[1], height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
                 else:
                     annotations.append({'s':'', 'xy':(load[1], 0), 'xytext':(load[1], height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
             elif load[2] == -2:
@@ -1569,7 +1569,19 @@ class Beam(object):
                 else:
                     markers.append({'args':[[load[1]], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
             elif load[2] >= 0:
-                load_eq = [i for i in self.load.args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
+                if pictorial:
+                    value, start, order, end = load
+                    value = 1 if order > 0 else length/2
+                    scaled_load += value*SingularityFunction(x, start, order)
+                    f2 = 1*x**order if order > 0 else length/2*x**order
+                    for i in range(0, order + 1):
+                        scaled_load -= (f2.diff(x, i).subs(x, end - start) *
+                                       SingularityFunction(x, end, i) / factorial(i))
+                    load_args = scaled_load.args
+                else:
+                    load_args = self.load.args
+
+                load_eq = [i for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
                 load_eq = Add(*load_eq)
 
         # filling higher order loads with colour
@@ -1583,22 +1595,23 @@ class Beam(object):
 
 
     def _draw_supports(self):
-        height = 2
+        length = self.length
+        height = length/10
 
         support_markers = []
         support_rectangles = []
         for support in self._applied_supports:
             if support[1] == "pin":
-                support_markers.append({'args':[[support[0]], [0]], 'marker':6, 'markersize':10, 'color':"black"})
+                support_markers.append({'args':[support[0], [0]], 'marker':6, 'markersize':15, 'color':"black"})
 
             elif support[1] == "roller":
-                support_markers.append({'args':[support[0], [-0.8]], 'marker':'o', 'markersize':10, 'color':"black"})
+                support_markers.append({'args':[support[0], [-height/2]], 'marker':'o', 'markersize':15, 'color':"black"})
 
             elif support[1] == "fixed":
                 if support[0] == 0:
-                    support_rectangles.append({'xy':(0, -2), 'width':-self.length/30, 'height':4 + height, 'fill':False, 'hatch':'/////'})
+                    support_rectangles.append({'xy':(0, -3*height), 'width':-self.length/10, 'height':6*height + height, 'fill':False, 'hatch':'/////'})
                 else:
-                    support_rectangles.append({'xy':(self.length, -2), 'width':self.length/30, 'height': 4 + height, 'fill':False, 'hatch':'/////'})
+                    support_rectangles.append({'xy':(self.length, -3*height), 'width':self.length/10, 'height': 6*height + height, 'fill':False, 'hatch':'/////'})
 
         return support_markers, support_rectangles
 

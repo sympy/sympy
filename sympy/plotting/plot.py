@@ -1188,7 +1188,10 @@ class MatplotlibBackend(BaseBackend):
             for a in parent.annotations:
                 ax.annotate(**a)
         if parent.markers:
-            for m in parent.markers:
+            for marker in parent.markers:
+                # make a copy of the marker dictionary
+                # so that it doesn't get altered
+                m = marker.copy()
                 args = m.pop('args')
                 ax.plot(*args, **m)
         if parent.rectangles:
