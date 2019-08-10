@@ -457,6 +457,22 @@ class IndependentProductPSpace(ProductPSpace):
 
         return space(domain, density)
 
+class DependentPSpace:
+
+    @staticmethod
+    def _create_MutlivariateNormalDistribution(syms, assumps):
+        xrep_dict = {(eq.lhs, eq.rhs) for eq in assumps.args}
+        mu = [sym.pspace.distribution.args[0] for sym in syms]
+        sigma = ImmutableMatrix(
+                [[Covariance(s1, s2).doit() for s2 in syms] for s1 in syms]
+                ).xreplace(xrep_dict)
+        return Normal('Z', mu, sigma)
+
+
+    @staticmethod
+    def compute_density(expr, assumps):
+        pass
+
 class ProductDomain(RandomDomain):
     """
     A domain resulting from the merger of two independent domains
