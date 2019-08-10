@@ -323,7 +323,7 @@ def test_maple_not_supported():
     assert maple_code(S.ComplexInfinity) == (
         "# Not supported in maple:\n"
         "# ComplexInfinity\n"
-        "zoo"
+        "ComplexInfinity"
     )
 
 
