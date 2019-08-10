@@ -48,7 +48,9 @@ known_functions = {
     'besselk': 'BesselK',
     'bessely': 'BesselY',
     'hankelh1': 'HankelH1',
-    'hankelh2': 'HankelH2'
+    'hankelh2': 'HankelH2',
+    'airyai': 'AiryAi',
+    'airybi': 'AiryBi'
 }
 for _func in _known_func_same_name:
     known_functions[_func] = _func
