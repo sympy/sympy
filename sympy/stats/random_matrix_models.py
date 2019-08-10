@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
-                   gamma, Product, Dummy, Sum, Abs, IndexedBase, Matrix)
+                   gamma, Product, Dummy, Sum, Abs, IndexedBase, Matrix, I)
 from sympy.core.sympify import _sympify
 from sympy.multipledispatch import dispatch
 from sympy.stats.rv import (_symbol_converter, Density, RandomMatrixSymbol,

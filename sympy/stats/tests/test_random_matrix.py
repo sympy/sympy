@@ -1,5 +1,5 @@
 from sympy import (sqrt, exp, Trace, pi, S, Integral, MatrixSymbol, Lambda,
-                    Dummy, Product, Sum, Abs, IndexedBase, Matrix)
+                    Dummy, Product, Sum, Abs, IndexedBase, Matrix, I)
 from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
                          GaussianOrthogonalEnsemble as GOE,
                          GaussianSymplecticEnsemble as GSE,
