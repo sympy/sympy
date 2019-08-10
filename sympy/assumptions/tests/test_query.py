@@ -1920,7 +1920,7 @@ def test_matrix():
     assert ask(Q.hermitian(Matrix([[2, 2 + I, z], [2 - I, 3, I], [4, -I, 1]]))) == None
     assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11))))) == True
     assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, I, 0), (-5, 0, 11))))) == False
-    assert ask(Q.hermitian(SparseMatrix(((25, z, -5), (15, 18, 0), (-5, 0, 11))))) == None
+    assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, z, 0), (-5, 0, 11))))) == None
 
 
 def test_algebraic():
