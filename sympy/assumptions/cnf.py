@@ -104,8 +104,6 @@ def to_NNF(expr):
     Generates the Negation Normal Form of any boolean expression in terms
     of AND, OR, and Literal objects.
     """
-    if not isinstance(expr, BooleanFunction):
-        return Literal(expr)
 
     if isinstance(expr, Not):
         arg = expr.args[0]
@@ -163,7 +161,7 @@ def to_NNF(expr):
         return AND(OR(~L, M), OR(L, R))
 
     else:
-        raise NotImplementedError('NNF conversion not implemented for %s class' % type(expr).__name__)
+        return Literal(expr)
 
 
 def distribute_AND_over_OR(expr):
@@ -261,6 +259,31 @@ class CNF(object):
                 p.add(frozenset((~x,)))
             ll = ll._or(CNF(p))
         return ll
+
+    def rcall(self, expr):
+        from sympy.assumptions.sathandlers import UnevaluatedOnFree, CustomLambda
+        from sympy.assumptions.ask import Predicate
+        clause_list = list()
+        for clause in self.clauses:
+            lits = list()
+            for arg in clause:
+                if isinstance(arg.lit, Predicate):
+                    lits.append(Literal(arg.lit(expr), arg.is_Not))
+                elif isinstance(arg.lit, UnevaluatedOnFree):
+                    lits.append(arg.lit.apply(expr, arg.is_Not))
+                elif isinstance(arg.lit, CustomLambda):
+                    new_arg = arg.lit.rcall(expr)
+                    res = to_NNF(new_arg)
+                    if arg.is_Not:
+                        res = ~res
+                    lits.append(res)
+                else:
+                    raise NotImplementedError
+            clause_list.append(OR(*lits))
+        expr = AND(*clause_list)
+        return distribute_AND_over_OR(expr)
+
+
 
     @classmethod
     def all_or(cls, *cnfs):
