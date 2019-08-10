@@ -257,6 +257,27 @@ class MathMLContentPrinter(MathMLPrinterBase):
             x.appendChild(plusNodes.pop(0))
         return x
 
+    def _print_Piecewise(self, expr):
+        if expr.args[-1].cond != True:
+            # We need the last conditional to be a True, otherwise the resulting
+            # function may not return a result.
+            raise ValueError("All Piecewise expressions must contain an "
+                             "(expr, True) statement to be used as a default "
+                             "condition. Without one, the generated "
+                             "expression may not evaluate to anything under "
+                             "some condition.")
+        root = self.dom.createElement('piecewise')
+        for i, (e, c) in enumerate(expr.args):
+            if i == len(expr.args) - 1 and c == True:
+                piece = self.dom.createElement('otherwise')
+                piece.appendChild(self._print(e))
+            else:
+                piece = self.dom.createElement('piece')
+                piece.appendChild(self._print(e))
+                piece.appendChild(self._print(c))
+            root.appendChild(piece)
+        return root
+
     def _print_MatrixBase(self, m):
         x = self.dom.createElement('matrix')
         for i in range(m.rows):

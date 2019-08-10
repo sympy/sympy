@@ -1,5 +1,5 @@
 from sympy import (sqrt, exp, Trace, pi, S, Integral, MatrixSymbol, Lambda,
-                    Dummy, Product, Sum, Abs, IndexedBase, I)
+                    Dummy, Product, Sum, Abs, IndexedBase, Matrix)
 from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
                          GaussianOrthogonalEnsemble as GOE,
                          GaussianSymplecticEnsemble as GSE,
@@ -7,7 +7,11 @@ from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
                          level_spacing_distribution,
                          CircularUnitaryEnsemble as CUE,
                          CircularOrthogonalEnsemble as COE,
-                         CircularSymplecticEnsemble as CSE)
+                         CircularSymplecticEnsemble as CSE,
+                         JointEigenDistribution,
+                         level_spacing_distribution,
+                         Normal, Beta)
+from sympy.stats.joint_rv import JointDistributionHandmade
 from sympy.stats.rv import RandomMatrixSymbol, Density
 from sympy.stats.random_matrix_models import GaussianEnsemble
 from sympy.utilities.pytest import raises
@@ -94,3 +98,11 @@ def test_CircularSymplecticEnsemble():
             Product(Abs(exp(I*t[j]) - exp(I*t[k]))**4,
             (j, k + 1, 3), (k, 1, 2))/(720*pi**3))
     )
+
+def test_JointEigenDistribution():
+    A = Matrix([[Normal('A00', 0, 1), Normal('A01', 1, 1)],
+                [Beta('A10', 1, 1), Beta('A11', 1, 1)]])
+    JointEigenDistribution(A) == \
+    JointDistributionHandmade(-sqrt(A[0, 0]**2 - 2*A[0, 0]*A[1, 1] + 4*A[0, 1]*A[1, 0] + A[1, 1]**2)/2 +
+    A[0, 0]/2 + A[1, 1]/2, sqrt(A[0, 0]**2 - 2*A[0, 0]*A[1, 1] + 4*A[0, 1]*A[1, 0] + A[1, 1]**2)/2 + A[0, 0]/2 + A[1, 1]/2)
+    raises(ValueError, lambda: JointEigenDistribution(Matrix([[1, 0], [2, 1]])))
