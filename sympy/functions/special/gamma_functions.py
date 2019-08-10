@@ -342,27 +342,10 @@ class lowergamma(Function):
 
 
 class uppergamma(Function):
-    r"""
-    The upper incomplete gamma function.
-
-    It can be defined as the meromorphic continuation of
-
-    .. math::
-        \Gamma(s, x) := \int_x^\infty t^{s-1} e^{-t} \mathrm{d}t = \Gamma(s) - \gamma(s, x).
-
-    where `\gamma(s, x)` is the lower incomplete gamma function,
-    :class:`lowergamma`. This can be shown to be the same as
-
-    .. math::
-        \Gamma(s, x) = \Gamma(s) - \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
-
-    where :math:`{}_1F_1` is the (confluent) hypergeometric function.
-
-    The upper incomplete gamma function is also essentially equivalent to the
-    generalized exponential integral:
-
-    .. math::
-        \operatorname{E}_{n}(x) = \int_{1}^{\infty}{\frac{e^{-xt}}{t^n} \, dt} = x^{n-1}\Gamma(1-n,x).
+    r"""Class that represents the unevaluated upper incomplete gamma function
+    [1]_. Evaluation of the upper gamma function Γ(s, z) requires two
+    arguments, where s is the exponent of the integrand and x is the lower
+    limit of the integral. See the notes below for mathematical definitions.
 
     Examples
     ========
@@ -389,16 +372,46 @@ class uppergamma(Function):
     trigamma: Trigamma function.
     sympy.functions.special.beta_functions.beta: Euler Beta function.
 
+    Notes
+    =====
+
+    The upper incomplete gamma function can be defined as the meromorphic
+    continuation of
+
+    .. math::
+        \Gamma(s, x) := \int_x^\infty t^{s-1} e^{-t} \mathrm{d}t =
+          \Gamma(s) - \gamma(s, x)\textrm{.}
+
+    where `\gamma(s, x)` is the lower incomplete gamma function,
+    :class:`lowergamma`. This can be shown to be the same as
+
+    .. math::
+        \Gamma(s, x) = \Gamma(s) -
+          \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right)\textrm{,}
+
+    where :math:`{}_1F_1` is the (confluent) hypergeometric function.
+
+    The upper incomplete gamma function is also essentially equivalent to the
+    generalized exponential integral:
+
+    .. math::
+        \operatorname{E}_{n}(x) = \int_{1}^{\infty}{\frac{e^{-xt}}{t^n} \, dt} =
+          x^{n-1}\Gamma(1-n,x)\textrm{.}
+
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Upper_incomplete_Gamma_function
-    .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
-           Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical Tables
+    .. [1] Wikipedia contributors. (2019, June 11). Incomplete gamma function.
+       In Wikipedia, The Free Encyclopedia. Retrieved 15:31, August 10, 2019,
+       from https://en.wikipedia.org/w/index.php?title=Incomplete_gamma_function&oldid=901406420
+    .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6,
+       Section 5, Handbook of Mathematical Functions with Formulas, Graphs, and
+       Mathematical Tables
     .. [3] http://dlmf.nist.gov/8
     .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma2/
     .. [5] http://functions.wolfram.com/GammaBetaErf/Gamma3/
     .. [6] https://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
+
     """
 
 
