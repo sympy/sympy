@@ -503,3 +503,10 @@ def test_issue_15471():
     f = log(x)*cos(log(x))/x**(S(3)/4)
     F = -128*x**(S(1)/4)*sin(log(x))/289 + 240*x**(S(1)/4)*cos(log(x))/289 + (16*x**(S(1)/4)*sin(log(x))/17 + 4*x**(S(1)/4)*cos(log(x))/17)*log(x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+
+def test_quadratic_denom():
+    f = (5*x + 2)/(3*x**2 - 2*x + 8)
+    assert manualintegrate(f, x) == 5*log(3*x**2 - 2*x + 8)/6 + 11*sqrt(23)*atan(3*sqrt(23)*(x - S(1)/3)/23)/69
+    g = 3/(2*x**2 + 3*x + 1)
+    assert manualintegrate(g, x) == 3*log(4*x + 2) - 3*log(4*x + 4)
+
