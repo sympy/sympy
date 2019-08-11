@@ -4006,6 +4006,12 @@ def test_sympy__tensor__array__array_comprehension__ArrayComprehension():
     arrcom = ArrayComprehension(x, (x, 1, 5))
     assert _test_args(arrcom)
 
+def test_sympy__tensor__array__arrayop__Flatten():
+    from sympy.tensor.array.arrayop import Flatten
+    from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+    fla = Flatten(ImmutableDenseNDimArray(range(24)).reshape(2, 3, 4))
+    assert _test_args(fla)
+
 
 def test_sympy__tensor__functions__TensorProduct():
     from sympy.tensor.functions import TensorProduct
