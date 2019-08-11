@@ -751,7 +751,7 @@ def test_classify_ode():
         'nth_algebraic_Integral',
         'Liouville_Integral',
         )
-    assert classify_ode(f(x), f(x)) == ()
+    assert classify_ode(f(x), f(x)) == ('nth_algebraic',)
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == (
         'nth_algebraic',
         'separable',
@@ -784,7 +784,7 @@ def test_classify_ode():
         'Bernoulli_Integral',
         'almost_linear_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
-    assert b == c != ()
+    assert b != c != ()
     assert classify_ode(
         2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
     ) == ('Bernoulli', 'almost_linear', 'lie_group',
@@ -824,13 +824,16 @@ def test_classify_ode():
                         prep=True) == ans
 
     assert classify_ode(Eq(2*x**3*f(x).diff(x), 0), f(x)) == \
-        ('nth_algebraic', 'separable', '1st_linear', '1st_power_series',
-         'lie_group', 'nth_linear_euler_eq_homogeneous',
-         'nth_algebraic_Integral', 'separable_Integral',
-         '1st_linear_Integral')
+        ('nth_algebraic', 'separable', '1st_linear', '1st_homogeneous_coeff_best',
+         '1st_homogeneous_coeff_subs_indep_div_dep', '1st_homogeneous_coeff_subs_dep_div_indep',
+         '1st_power_series', 'lie_group', 'nth_linear_constant_coeff_homogeneous',
+         'nth_linear_euler_eq_homogeneous', 'nth_algebraic_Integral', 'separable_Integral',
+         '1st_linear_Integral', '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
+          '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
+
 
     assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
-        ('nth_algebraic', 'separable', '1st_power_series', 'lie_group',
+        ('factorable', 'nth_algebraic', 'separable', '1st_power_series', 'lie_group',
                 'nth_algebraic_Integral', 'separable_Integral')
     # test issue 13864
     assert classify_ode(Eq(diff(f(x), x) - f(x)**x, 0), f(x)) == \
@@ -1121,7 +1124,7 @@ def test_solve_ics():
         set([Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)])
 
     K, r, f0 = symbols('K r f0')
-    sol = sol = Eq(f(x), K*f0*exp(r*x)/((-K + f0)*(f0*exp(r*x)/(-K + f0) - 1)))
+    sol = Eq(f(x), K*f0*exp(r*x)/((-K + f0)*(f0*exp(r*x)/(-K + f0) - 1)))
     assert (dsolve(Eq(f(x).diff(x), r * f(x) * (1 - f(x) / K)), f(x), ics={f(0): f0})) == sol
 
 
@@ -2375,11 +2378,11 @@ def test_issue_4785():
 def test_issue_4825():
     raises(ValueError, lambda: dsolve(f(x, y).diff(x) - y*f(x, y), f(x)))
     assert classify_ode(f(x, y).diff(x) - y*f(x, y), f(x), dict=True) == \
-        {'default': None, 'order': 0}
+        {'order': 0, 'default': None, 'ordered_hints': ()}
     # See also issue 3793, test Z13.
     raises(ValueError, lambda: dsolve(f(x).diff(x), f(y)))
     assert classify_ode(f(x).diff(x), f(y), dict=True) == \
-        {'default': None, 'order': 0}
+        {'order': 0, 'default': None, 'ordered_hints': ()}
 
 
 def test_constant_renumber_order_issue_5308():

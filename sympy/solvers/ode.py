@@ -286,6 +286,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: ``best``, and ``all_Integral`` meta-hints should not be included in this
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
+    "factorable",
     "nth_algebraic",
     "separable",
     "1st_exact",
@@ -632,47 +633,6 @@ def dsolve(eq, func=None, hint="default", simplify=True,
                 return [sol.subs(solved_constants) for sol in sols]
             return sols
     else:
-        if func is None and eq.has(Derivative):
-            eq, func = _preprocess(eq)
-
-        if isinstance(eq, Equality):
-            eq = eq.lhs-eq.rhs
-        eqs = factor(eq)
-        eqs = fraction(eqs)[0] # p/q = 0, So we need only p
-        if (isinstance(eqs, Mul) and eqs.has(func)):
-            fac = eqs.args
-            eqs_diff = []
-            eqs_algebraic = []
-            for i in fac:
-                if i.has(func) and i.has(Derivative):
-                    eqs_diff.append(i)
-                elif i.has(func):
-                    eqs_algebraic.append(i)
-            sols = []
-            for eq_alg in eqs_algebraic:
-                try:
-                    sol = solve(eq_alg, func)
-                    if sol == []:
-                        continue
-                    for i in sol:
-                        sols.append(Eq(func, i))
-                except NotImplementedError:
-                    continue
-
-            sols = sols + [dsolve(eq, func, hint, simplify, ics, xi, eta, x0, n, **kwargs)
-                           for eq in eqs_diff]
-
-            sols = _nth_algebraic_remove_redundant_solutions(eq, sols, ode_order(eq, func), func.args[0])
-            if len(sols)==1:
-                return sols[0]
-            else:
-                return sols
-        elif isinstance(eqs, Pow):
-            eqs_args = eqs.args # if f(x)**p=0 then f(x)=0 (p>0)
-            if eqs_args[1]>0:
-                eq = eqs_args[0]
-                dsolve(eq, func, hint, simplify, ics, xi, eta, x0, n, **kwargs)
-
         given_hint = hint  # hint given by the user
 
         # See the docstring of _desolve for more details.
@@ -1016,13 +976,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     # Also will contain "default":<default hint> and "order":order items.
     matching_hints = {"order": order}
 
-    if not order:
-        if dict:
-            matching_hints["default"] = None
-            return matching_hints
-        else:
-            return ()
-
     df = f(x).diff(x)
     a = Wild('a', exclude=[f(x)])
     b = Wild('b', exclude=[f(x)])
@@ -1042,7 +995,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     r3 = {'xi': xi, 'eta': eta}  # Used for the lie_group hint
     boundary = {}  # Used to extract initial conditions
     C1 = Symbol("C1")
-    eq = expand(eq)
 
     # Preprocessing to get the initial conditions out
     if ics is not None:
@@ -1085,6 +1037,47 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point}: value, f(x).diff(x, order).subs(x, point): value}")
 
+
+    # Precondition to try remove unnecessary factor and power from equation
+    eqs = eq
+    if isinstance(eqs, Pow):
+        eqs_args = eqs.args # if f(x)**p=0 then f(x)=0 (p>0)
+        if eqs_args[1]>0:
+            eqs = eqs_args[0]
+
+    # I will try not to change the structure of equation may be user wants to solve the ode by some particular classifier
+    def _finding_algebraic_ode_factor(eqs, func, frac, hard_factor=False):
+
+        from sympy.core.exprtools import factor_terms
+        from sympy.polys.polytools import factor
+
+        if hard_factor:
+            eqs = factor(eqs)
+        eqs = factor_terms(eq, clear=False, fraction=frac)
+        eqs = fraction(eqs)[0] # p/q =0, So we need to solve only p=0
+        eqs_diff = [] # factor containing differential
+        eqs_algebraic = [] # factor containing only algebraic
+        if isinstance(eqs, Mul) and eqs.has(func):
+            fac = eqs.args
+            for i in fac:
+                if i.has(func) and i.has(Derivative):
+                    eqs_diff.append(i)
+                elif i.has(func):
+                    eqs_algebraic.append(i)
+        return eqs_diff, eqs_algebraic
+
+    eqs_diff, eqs_algebraic = _finding_algebraic_ode_factor(eqs, func, frac=True, hard_factor=True) # for factorable type classifier only
+    if len(eqs_diff)+len(eqs_algebraic)>1:
+        r = {'eqs_diff' : eqs_diff,
+            'eqs_algebraic' : eqs_algebraic}
+        matching_hints["factorable"] = r
+
+    eqs_diff, eqs_algebraic = _finding_algebraic_ode_factor(eqs, func, frac=False) # structure of equation will not change
+    if eqs_diff:
+        eq = expand(Mul(*(eqs_diff+eqs_algebraic), evaluate=False))
+    else:
+        eq=expand(eq)
+
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
     if eq.is_Add:
@@ -1096,6 +1089,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 reduced_eq = Add(*[arg/den for arg in eq.args])
     if not reduced_eq:
         reduced_eq = eq
+    if order == 0:
+        r = _nth_algebraic_match(reduced_eq, func)
+        if r['solutions']:
+            matching_hints['nth_algebraic'] = r
 
     if order == 1:
 
@@ -5614,6 +5611,67 @@ def _solve_variation_of_parameters(eq, func, order, match):
         psol = trigsimp(psol, deep=True)
     return Eq(f(x), gsol.rhs + psol)
 
+def ode_factorable(eq, func, order, match):
+    r"""
+    Solves equations having a solvable factor.
+
+    This function is used to solve the equation having factors. Factors may be of type algebraic or ode. It
+    will try to solve each factor independently. ODE type of factors will be solved by calling dsolve and algebraic type
+    of factors will be solved by calling solve. We will return the list of solutions.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq, pprint, Derivative
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = x**3*f(x)**2 + x**3*f(x)*Derivative(f(x), (x, 2)) + x**2*f(x)*Derivative(f(x), x) - 4*x*f(x)**2
+    >>> pprint(dsolve(eq, f(x)))
+                  /     2\
+                2 |    x |    / 6\
+    [f(x) = C1*x *|1 - --| + O\x /, f(x) = 0]
+                  \    12/
+
+    """
+    x = func.args[0]
+    sols_diff = []
+    sols_algebraic = []
+    for i in match['eqs_diff']:
+        sols=dsolve(i, func)
+        if isinstance(sols, list):
+            for sol in sols:
+                sols_diff.append(sol)
+        else:
+            sols_diff.append(sols)
+
+    # We are solving algebraic equation by calling solve and If We will get any error
+    # from solve We will ignore it(We are here to solve differential equation).
+    for i in match['eqs_algebraic']:
+        try:
+            sols = solve(i, func)
+            for sol in sols:
+                sols_algebraic+=[Eq(func, sol)]
+        except Exception:
+            continue
+
+    # I am removing the series solution from the solution because We can't check redundant of a solution in series solution.
+    new_sols = []
+    for i in range(len(sols_diff)):
+        if isinstance(sols_diff[i], Eq):
+            if sols_diff[i].has(Order):
+                new_sols.append(sols_diff[i])
+                del sols_diff[i]
+
+    # I am using already implemented function to remove reduntant solution if ODE solution exits
+    if len(sols_diff):
+        new_sols += _nth_algebraic_remove_redundant_solutions(eq, sols_diff+sols_algebraic, order, x)
+    else:
+        new_sols += sols_algebraic
+
+    if len(new_sols)==1:
+        return new_sols[0]
+    else:
+        return new_sols
 
 def ode_separable(eq, func, order, match):
     r"""

@@ -221,16 +221,15 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
                            {'default': hint,
                             hint: kwargs['match'],
                             'order': kwargs['order']})
-    if hints['order'] == 0:
-        raise ValueError(
-            str(eq) + " is not a differential equation in " + str(func))
-
     if not hints['default']:
         # classify_ode will set hints['default'] to None if no hints match.
         if hint not in allhints and hint != 'default':
             raise ValueError("Hint not recognized: " + hint)
         elif hint not in hints['ordered_hints'] and hint != 'default':
             raise ValueError(string + str(eq) + " does not match hint " + hint)
+        elif hints['order'] == 0:
+            raise ValueError(
+                str(eq) + " is not a solvable differential equation in " + str(func))
         else:
             raise NotImplementedError(dummy + "solve" + ": Cannot solve " + str(eq))
     if hint == 'default':
