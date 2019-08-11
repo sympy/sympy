@@ -28,6 +28,9 @@ class Literal(object):
     def arg(self):
         return self.lit
 
+    def rcall(self,expr):
+        return type(self)(self.lit(expr), self.is_Not)
+
     def __invert__(self):
         is_Not = not self.is_Not
         return Literal(self.lit, is_Not)
@@ -55,6 +58,11 @@ class OR(object):
     @property
     def args(self):
         return sorted(self._args, key=str)
+
+    def rcall(self, expr):
+        return type(self)(*[arg.rcall(expr)
+                            for arg in self._args
+                            ])
 
     def __invert__(self):
         return AND(*[~arg for arg in self._args])
@@ -85,6 +93,11 @@ class AND(object):
     @property
     def args(self):
         return sorted(self._args, key=str)
+
+    def rcall(self, expr):
+        return type(self)(*[arg.rcall(expr)
+                            for arg in self._args
+                            ])
 
     def __hash__(self):
         return hash((type(self).__name__,) + tuple(self.args))

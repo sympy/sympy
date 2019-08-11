@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
-from sympy.assumptions.cnf import AND, Literal, OR
+from sympy.assumptions.cnf import AND, Literal, OR, to_NNF
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
 from sympy.core.compatibility import MutableMapping
 from sympy.core.numbers import ImaginaryUnit
@@ -101,7 +101,8 @@ class AllArgs(UnevaluatedOnFree):
     """
 
     def apply(self, expr=None, is_Not=False):
-        res = AND(*[Literal(self.pred.rcall(arg)) for arg in expr.args])
+        pred = to_NNF(self.pred)
+        res = AND(*[pred.rcall(arg) for arg in expr.args])
         return ~res if is_Not else res
 
 
@@ -129,7 +130,8 @@ class AnyArgs(UnevaluatedOnFree):
     """
 
     def apply(self, expr=None, is_Not=False):
-        res = OR(*[Literal(self.pred.rcall(arg)) for arg in expr.args])
+        pred = to_NNF(self.pred)
+        res = OR(*[pred.rcall(arg) for arg in expr.args])
         return ~res if is_Not else res
 
 
@@ -157,14 +159,15 @@ class ExactlyOneArg(UnevaluatedOnFree):
     (Q.positive(x) & ~Q.positive(y)) | (Q.positive(y) & ~Q.positive(x))
     """
     def apply(self, expr=None, is_Not=False):
-        pred = self.pred
-        pred_args = [Literal(pred.rcall(arg)) for arg in expr.args]
+        pred = to_NNF(self.pred)
+        pred_args = [pred.rcall(arg) for arg in expr.args]
         # Technically this is xor, but if one term in the disjunction is true,
         # it is not possible for the remainder to be true, so regular or is
         # fine in this case.
         res = OR(*[AND(pred_args[i], *[~lit for lit in pred_args[:i] +
             pred_args[i+1:]]) for i in range(len(pred_args))])
-        return ~res if is_Not else res
+        res = ~res if is_Not else res
+        return res
         # Note: this is the equivalent cnf form. The above is more efficient
         # as the first argument of an implication, since p >> q is the same as
         # q | ~p, so the the ~ will convert the Or to and, and one just needs
@@ -229,25 +232,19 @@ def evaluate_old_assump(pred):
 
 class CheckOldAssump(UnevaluatedOnFree):
     def apply(self, expr=None, is_Not=False):
-        new_assump = Literal(self.args[0])
-        old_assump = Literal(evaluate_old_assump(self.args[0]))
-        res = AND(
-            OR(new_assump, ~old_assump),
-            OR(~new_assump, old_assump)
-        )
-        return ~res if is_Not else res
+        res = Equivalent(self.args[0](expr), evaluate_old_assump(self.args[0](expr)))
+        res = ~res if is_Not else res
+        res = to_NNF(res)
+        return res
 
 
 class CheckIsPrime(UnevaluatedOnFree):
     def apply(self, expr=None, is_Not=False):
         from sympy import isprime
-        new_assump = Literal(self.args[0])
-        old_assump = Literal(isprime(self.args[0]))
-        res = AND(
-            OR(new_assump, ~old_assump),
-            OR(~new_assump, old_assump)
-        )
-        return ~res if is_Not else res
+        res = Equivalent(self.args[0](expr), isprime(expr))
+        res = ~res if is_Not else res
+        res = to_NNF(res)
+        return res
 
 class CustomLambda(object):
     """
