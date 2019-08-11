@@ -1252,6 +1252,15 @@ def test_union_imageset():
     assert Union(img1, img2) == uni1
     assert Union(img3, img4) == uni2
 
+    # testing for larger input
+    img1 = ImageSet(Lambda(n, 10000000000 * n * pi + 20000000000 * pi / 3), \
+            S.Integers)
+    img2 = ImageSet(Lambda(n, 10000000000 * n * pi + 10000000000 * pi / 6), \
+            S.Integers)
+    uni1 = ImageSet(Lambda(n, 5000000000 * pi * n + 5000000000 * pi / 3), \
+            S.Integers)
+    assert Union(img1, img2) == uni1
+
 
 def test_Union_contains():
     assert zoo not in Union(

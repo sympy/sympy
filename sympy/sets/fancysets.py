@@ -504,7 +504,7 @@ class ImageSet(Set):
             # collecting points
             f_n = lambda a, b, n: a*n + b
             from sympy.functions.elementary.integers import ceiling
-
+            # ceiling((p - b) / a) + 1) -> maximum value of n where p is lcm(a, c)
             points = []
             points.extend(f_n(a, b, n) for n in range(0, ceiling((p - b) / a) + 1))
             points.extend(f_n(c, d, n) for n in range(0, ceiling((p - d) / c) + 1))
@@ -514,13 +514,13 @@ class ImageSet(Set):
             # checking if points follow a linear relation
             e, f = points[1] - points[0], points[0]
 
-            flag = True
+            can_be_unified = True
             for n in range(0, len(points)):
                 if f_n(e, f, n) != points[n]:
-                    flag = False
+                    can_be_unified = False
                     break
             # if all points satisfy then e*n + f is the solution.
-            if flag:
+            if can_be_unified:
                 return ImageSet(Lambda(sym, e*sym + f), base)
             else:
                 return None
