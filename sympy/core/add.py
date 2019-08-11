@@ -862,10 +862,33 @@ class Add(Expr, AssocOp):
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        expr = expr.func(*[t.as_leading_term(x) for t in expr.args]).removeO()
-        if not expr:
-            # simple leading term analysis gave us 0 but we have to send
-            # back a term, so compute the leading term (via series)
+        compute = False
+        leading_terms = [t.as_leading_term(x) for t in expr.args]
+        new_expr = expr.func(*leading_terms).removeO()
+
+        if not new_expr:
+            compute = True
+        elif new_expr is not S.NaN:
+            if new_expr.is_Add:
+                final_leading_terms = [t for t in new_expr.args]
+            else:
+                final_leading_terms = [new_expr]
+
+            if len(expr.args) != len(final_leading_terms):
+                coeff_added_terms = [t for t in leading_terms
+                                    if t not in final_leading_terms]
+                leading_exprs = [t.as_coeff_Mul()[1] for t in final_leading_terms]
+                canceled_terms = [t for t in coeff_added_terms
+                                 if t.as_coeff_Mul()[1] not in leading_exprs]
+                expr_sum = expr.func(*canceled_terms)
+                if expr_sum == S(0) and canceled_terms:
+                    compute = True
+
+        expr = new_expr
+
+        if compute:
+            # simple leading term analysis gave us cancelled terms whose sum is 0
+            # so compute the leading term (via series)
             return old.compute_leading_term(x)
         elif expr is S.NaN:
             return old.func._from_args(infinite)
