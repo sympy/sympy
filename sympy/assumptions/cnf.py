@@ -29,7 +29,10 @@ class Literal(object):
         return self.lit
 
     def rcall(self,expr):
-        return type(self)(self.lit(expr), self.is_Not)
+        if callable(self.lit):
+            return type(self)(self.lit(expr), self.is_Not)
+        else:
+            return self
 
     def __invert__(self):
         is_Not = not self.is_Not

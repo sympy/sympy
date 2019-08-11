@@ -232,7 +232,8 @@ def evaluate_old_assump(pred):
 
 class CheckOldAssump(UnevaluatedOnFree):
     def apply(self, expr=None, is_Not=False):
-        res = Equivalent(self.args[0](expr), evaluate_old_assump(self.args[0](expr)))
+        arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
+        res = Equivalent(arg, evaluate_old_assump(arg))
         res = ~res if is_Not else res
         res = to_NNF(res)
         return res
@@ -241,7 +242,8 @@ class CheckOldAssump(UnevaluatedOnFree):
 class CheckIsPrime(UnevaluatedOnFree):
     def apply(self, expr=None, is_Not=False):
         from sympy import isprime
-        res = Equivalent(self.args[0](expr), isprime(expr))
+        arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
+        res = Equivalent(arg, isprime(expr))
         res = ~res if is_Not else res
         res = to_NNF(res)
         return res
