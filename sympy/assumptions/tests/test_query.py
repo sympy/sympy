@@ -20,6 +20,7 @@ from sympy.utilities.pytest import XFAIL, slow, raises, warns_deprecated_sympy
 from sympy.assumptions.assume import assuming
 import math
 
+
 def test_int_1():
     z = 1
     assert ask(Q.commutative(z)) is True
@@ -567,7 +568,8 @@ def test_I():
     assert ask(Q.real(z)) is True
 
 
-def test_bounded1():
+
+def test_bounded():
     x, y, z = symbols('x,y,z')
     assert ask(Q.finite(x)) is None
     assert ask(Q.finite(x), Q.finite(x)) is True
@@ -653,8 +655,6 @@ def test_bounded1():
     assert ask(Q.finite(a), ~Q.positive(x) & Q.positive(y)) is None
     assert ask(Q.finite(a), ~Q.positive(x) & ~Q.positive(y)) is None
 
-
-def test_bounded2a():
     x, y, z = symbols('x,y,z')
     a = x + y + z
     x, y, z = a.args
@@ -799,12 +799,6 @@ def test_bounded2a():
         Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.positive(z)) is None
     assert ask(Q.finite(a), Q.finite(x) & Q.positive(y) &
         ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-
-
-def test_bounded2b():
-    x, y, z = symbols('x,y,z')
-    a = x + y + z
-    x, y, z = a.args
     assert ask(Q.finite(a), Q.finite(x) &
         Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
     assert ask(
@@ -979,8 +973,6 @@ def test_bounded2b():
     assert ask(Q.finite(2*x)) is None
     assert ask(Q.finite(2*x), Q.finite(x)) is True
 
-
-def test_bounded3():
     x, y, z = symbols('x,y,z')
     a = x*y
     x, y = a.args
@@ -1837,6 +1829,7 @@ def test_real_basic():
     assert ask(Q.real(I*x), Q.imaginary(x)) is True
     assert ask(Q.real(I*x), Q.complex(x)) is None
 
+    
 def test_real_pow():
     assert ask(Q.real(x**2), Q.real(x)) is True
     assert ask(Q.real(sqrt(x)), Q.negative(x)) is False
@@ -1863,6 +1856,7 @@ def test_real_pow():
     assert ask(Q.real(i**i), Q.imaginary(i)) is None  # i might be 2*I
     assert ask(Q.real(x**i), Q.imaginary(i)) is None  # x could be 0
     assert ask(Q.real(x**(I*pi/log(x))), Q.real(x)) is True
+
 
 def test_real_functions():
     # trigonometric functions

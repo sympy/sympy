@@ -37,8 +37,8 @@ from sympy.sets.setexpr import SetExpr
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
 from sympy.tensor.functions import TensorProduct
-from sympy.tensor.tensor import (TensorIndexType, tensor_indices, tensorhead,
-        TensorElement)
+from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
+                                 TensorElement, tensor_heads)
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -6363,8 +6363,8 @@ def test_pretty_print_tensor_expr():
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
     i0 = tensor_indices("i_0", L)
-    A, B, C, D = tensorhead("A B C D", [L], [[1]])
-    H = tensorhead("H", [L, L], [[1], [1]])
+    A, B, C, D = tensor_heads("A B C D", [L])
+    H = TensorHead("H", [L, L])
 
     expr = -i
     ascii_str = \
@@ -6525,15 +6525,15 @@ A  + 3⋅B \n\
 
 def test_pretty_print_tensor_partial_deriv():
     from sympy.tensor.toperators import PartialDerivative
-    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensor_heads
 
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
     i0 = tensor_indices("i0", L)
 
-    A, B, C, D = tensorhead("A B C D", [L], [[1]])
+    A, B, C, D = tensor_heads("A B C D", [L])
 
-    H = tensorhead("H", [L, L], [[1], [1]])
+    H = TensorHead("H", [L, L])
 
     expr = PartialDerivative(A(i), A(j))
     ascii_str = \

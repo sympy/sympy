@@ -3,7 +3,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
         conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn,
-        AccumBounds, Interval, ImageSet, Lambda)
+        AccumBounds, Interval, ImageSet, Lambda, besselj)
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -1694,6 +1694,10 @@ def test_csc_rewrite():
     assert csc(x).rewrite(cos) == 1/cos(x - pi/2, evaluate=False)
     assert csc(x).rewrite(sec) == sec(-x + pi/2, evaluate=False)
 
+    # issue 17349
+    assert csc(1 - exp(-besselj(I, I))).rewrite(cos) == \
+           -1/cos(-pi/2 - 1 + cos(I*besselj(I, I)) +
+                  I*cos(-pi/2 + I*besselj(I, I), evaluate=False), evaluate=False)
 
 def test_issue_8653():
     n = Symbol('n', integer=True)
@@ -1704,7 +1708,7 @@ def test_issue_8653():
 
 def test_issue_9157():
     n = Symbol('n', integer=True, positive=True)
-    atan(n - 1).is_nonnegative is True
+    assert atan(n - 1).is_nonnegative is True
 
 
 def test_trig_period():

@@ -11,7 +11,7 @@ from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, n
 from sympy.core.numbers import Float, I, pi, Rational, Integer
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
-from sympy.functions import gamma, exp, sqrt, log, exp_polar, piecewise_fold
+from sympy.functions import gamma, exp, sqrt, log, exp_polar, piecewise_fold, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.exponential import ExpBase
@@ -1258,6 +1258,30 @@ def besselsimp(expr):
     expr = expr.replace(besseli, expander(besseli))
     expr = expr.replace(besselk, expander(besselk))
 
+    def _bessel_simp_recursion(expr):
+
+        def _use_recursion(bessel, expr):
+            while True:
+                bessels = expr.find(lambda x: isinstance(x, bessel))
+                try:
+                    for ba in sorted(bessels, key=lambda x: re(x.args[0])):
+                        a, x = ba.args
+                        bap1 = bessel(a+1, x)
+                        bap2 = bessel(a+2, x)
+                        if expr.has(bap1) and expr.has(bap2):
+                            expr = expr.subs(ba, 2*(a+1)/x*bap1 - bap2)
+                            break
+                    else:
+                        return expr
+                except (ValueError, TypeError):
+                    return expr
+        if expr.has(besselj):
+            expr = _use_recursion(besselj, expr)
+        if expr.has(bessely):
+            expr = _use_recursion(bessely, expr)
+        return expr
+
+    expr = _bessel_simp_recursion(expr)
     if expr != orig_expr:
         expr = expr.factor()
 
