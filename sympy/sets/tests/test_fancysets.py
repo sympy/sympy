@@ -369,6 +369,30 @@ def test_Range_set():
 
     raises(ValueError, lambda: len(r))
 
+    for av in avs:
+        for bv in bvs:
+            for cv in cvs:
+                rinf = r.inf.subs({a: av, b: bv, c: cv})
+                rabc = r.subs({a: av, b: bv, c: cv})
+                if (rinf is S.NaN):
+                    assert not rabc
+                    continue
+                assert rinf == rabc.inf
+    for av in avs:
+        for cv in cvs:
+            rinf = r.inf.subs({a: av, c: cv}).subs(b, oo)
+            rabc = r.subs({a: av, c: cv}).subs(b, oo)
+            if (rinf is S.NaN):
+                assert not rabc
+                continue
+            assert rinf == rabc.inf
+            rinf = r.inf.subs({a: av, c: cv}).subs(b, -oo)
+            rabc = r.subs({a: av, c: cv}).subs(b, -oo)
+            if (rinf is S.NaN):
+                assert not rabc
+                continue
+            assert rinf == rabc.inf
+
     assert Range(range(10)) == Range(10)
     assert Range(range(1, 10)) == Range(1, 10)
     assert Range(range(1, 10, 2)) == Range(1, 10, 2)
