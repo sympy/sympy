@@ -114,32 +114,35 @@ class ConditionSet(Set):
 
     @classmethod
     def _eval_doit(cls, sym, condition, base_set):
-        # Store these to check if the args have changed. Otherwise we get
-        # infinite recursion...
-        orig = (cls, sym, condition, base_set)
-
         # nonlinsolve uses ConditionSet to return an unsolved system
         # of equations (see _return_conditionset in solveset) so until
         # that is changed we do minimal checking of the args
         if isinstance(sym, Tuple):  # unsolved eqns syntax
             return None
+
+        # Straight-forward evaluation:
         if condition is S.false:
             return S.EmptySet
         if condition is S.true:
             return base_set
         if isinstance(base_set, EmptySet):
             return base_set
-        know = None
+
+        # FiniteSet: test the condition on each element
         if isinstance(base_set, FiniteSet):
             sifted = sift(
                 base_set, lambda _: fuzzy_bool(
                     condition.subs(sym, _)))
+            known = FiniteSet(*sifted[True])
             if sifted[None]:
-                know = FiniteSet(*sifted[True])
-                base_set = FiniteSet(*sifted[None])
+                unknown = FiniteSet(*sifted[None])
+                cs_unknown = ConditionSet(sym, condition, unknown, evaluate=False)
+                return Union(known, cs_unknown)
             else:
-                return FiniteSet(*sifted[True])
-        if isinstance(base_set, cls):
+                return known
+
+        # Another ConditionSet: combine the conditions with And
+        elif isinstance(base_set, cls):
             s, c, base_set = base_set.args
             if sym == s:
                 condition = And(condition, c)
@@ -158,20 +161,7 @@ class ConditionSet(Set):
                     condition.xreplace({sym: dum}),
                     c.xreplace({s: dum}))
                 sym = dum
-        if not isinstance(sym, Symbol):
-            s = Dummy('lambda')
-            if s not in condition.xreplace({sym: s}).free_symbols:
-                raise ValueError(
-                    'non-symbol dummy not recognized in condition')
-        #
-        # FIXME: This is an awkward construction to prevent an infinite
-        # recursion. The problem here is that the original implementation
-        # called Basic.__new__ and then afterwards possibly still returns a
-        # different object.
-        #
-        if (cls, sym, condition, base_set) != orig:
-            rv = ConditionSet(sym, condition, base_set)
-            return rv if know is None else Union(know, rv)
+            return ConditionSet(sym, condition, base_set, evaluate=False)
 
     @classmethod
     def _eval_args(cls, sym, condition, base_set=None):
@@ -183,12 +173,16 @@ class ConditionSet(Set):
                 raise TypeError('Tuple of syms means a set of conditions ZZZ...')
         if not isinstance(condition, (Boolean, Set)):
             raise TypeError('Boolean exoected...')
-        if not isinstance(base_set, Set):
-            raise TypeError('expecting set for base_set')
-
+        if not isinstance(sym, (Symbol, Tuple)):
+            s = Dummy('lambda')
+            if s not in condition.xreplace({sym: s}).free_symbols:
+                raise ValueError(
+                    'non-symbol dummy not recognized in condition')
         if base_set is None:
             base_set = S.UniversalSet
             return (sym, condition, base_set)
+        elif not isinstance(base_set, Set):
+            raise TypeError('expecting set for base_set')
 
     sym = property(lambda self: self.args[0])
     condition = property(lambda self: self.args[1])
