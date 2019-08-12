@@ -172,8 +172,8 @@ class ConditionSet(Set):
             if not isinstance(condition, Set):
                 raise TypeError('Tuple of syms means a set of conditions ZZZ...')
         if not isinstance(condition, (Boolean, Set)):
-            raise TypeError('Boolean exoected...')
-        if not isinstance(sym, (Symbol, Tuple)):
+            raise TypeError('Boolean expected...')
+        if not isinstance(sym, (Symbol, Tuple)) and condition not in (S.true, S.false):
             s = Dummy('lambda')
             if s not in condition.xreplace({sym: s}).free_symbols:
                 raise ValueError(
