@@ -59,6 +59,9 @@ class DenseNDimArray(NDimArray):
             index = tuple([i for i in index] + \
                           [slice(None) for i in range(len(index), self.rank())])
 
+        if len(index) > self.rank():
+            raise ValueError('Dimension of index greater than rank of array')
+
         if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
             sl_factors, eindices = self._get_slice_data_for_array_access(index)
             array = [self._array[self._parse_index(i)] for i in eindices]
