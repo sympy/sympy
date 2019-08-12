@@ -5,6 +5,8 @@ from __future__ import print_function, division
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
+from sympy.assumptions.handlers.order import AskPositiveHandler, \
+    AskNegativeHandler, AskNonPositiveHandler, AskNonNegativeHandler, AskNonZeroHandler
 from sympy.core.numbers import pi
 from sympy.functions.elementary.exponential import exp, log
 from sympy import I
@@ -325,7 +327,265 @@ class AskExtendedRealHandler(AskRealHandler):
     def Add(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.extended_real)
 
+    @staticmethod
+    def Mul(expr, assumptions):
+        if expr.is_number:
+            return AskPositiveHandler._number(expr, assumptions)
+        result = True
+        for arg in expr.args:
+            if ask(Q.positive(arg), assumptions):
+                continue
+            elif ask(Q.negative(arg), assumptions):
+                result = result ^ True
+            else:
+                return
+        return result
+
     Mul, Pow = [Add]*2
+
+    Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysTrue)]*2
+
+
+class AskExtendedPositiveHandler(AskPositiveHandler):
+    """
+    Handler for Q.extended_positive
+    Test that an expression belongs to the field of extended real numbers,
+    that is real numbers union {Infinity, -Infinity}
+    """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_extended_positive
+
+    @staticmethod
+    def Add(expr, assumptions):
+        if expr.is_number:
+            return AskPositiveHandler._number(expr, assumptions)
+
+        r = ask(Q.real(expr), assumptions)
+        if r is not True:
+            return r
+
+        nonneg = 0
+        for arg in expr.args:
+            if ask(Q.extended_positive(arg), assumptions) is not True:
+                if ask(Q.extended_negative(arg), assumptions) is False:
+                    nonneg += 1
+                else:
+                    break
+        else:
+            if nonneg < len(expr.args):
+                return True
+
+
+    Pow = [Add]
+
+    Infinity = staticmethod(CommonHandler.AlwaysTrue)
+    NegativeInfinity = staticmethod(CommonHandler.AlwaysFalse)
+
+
+class AskExtendedNegativeHandler(AskNegativeHandler):
+    """
+    Handler for Q.extended_positive
+    Test that an expression belongs to the field of extended real numbers,
+    that is real numbers union {Infinity, -Infinity}
+    """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_extended_negative
+
+    @staticmethod
+    def Add(expr, assumptions):
+        """
+        ExtendedPositive + ExtendedPositive -> ExtendedPositive,
+        ExtendedNegative + ExtendedNegative -> ExtendedNegative
+        """
+        if expr.is_number:
+            return AskExtendedNegativeHandler._number(expr, assumptions)
+
+        r = ask(Q.real(expr), assumptions)
+        if r is not True:
+            return r
+
+        print(expr.args)
+        print(assumptions)
+        nonpos = 0
+        for arg in expr.args:
+            if ask(Q.extended_negative(arg), assumptions) is not True:
+                if ask(Q.extended_positive(arg), assumptions) is False:
+                    nonpos += 1
+                else:
+                    break
+        else:
+            if nonpos < len(expr.args):
+                return True
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        if expr.is_number:
+            return AskExtendedNegativeHandler._number(expr, assumptions)
+        result = None
+        for arg in expr.args:
+            if result is None:
+                result = False
+            if ask(Q.extended_negative(arg), assumptions):
+                result = not result
+            elif ask(Q.extended_positive(arg), assumptions):
+                pass
+            else:
+                return
+        return result
+
+    Pow = Add
+
+    Infinity = staticmethod(CommonHandler.AlwaysFalse)
+    NegativeInfinity = staticmethod(CommonHandler.AlwaysTrue)
+
+
+class AskExtendedNonPositiveHandler(AskNonPositiveHandler):
+    """
+    Handler for Q.extended_nonpositive
+    Test that an expression belongs to the field of extended real numbers,
+    that is real numbers union {Infinity, -Infinity}
+    """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_extended_positive
+
+    @staticmethod
+    def Add(expr, assumptions):
+        if expr.is_number:
+            return AskPositiveHandler._number(expr, assumptions)
+
+        r = ask(Q.real(expr), assumptions)
+        if r is not True:
+            return r
+
+        nonneg = 0
+        for arg in expr.args:
+            if ask(Q.extended_positive(arg), assumptions) is not True:
+                if ask(Q.extended_negative(arg), assumptions) is False:
+                    nonneg += 1
+                else:
+                    break
+        else:
+            if nonneg < len(expr.args):
+                return True
+
+
+    Pow = [Add]
+
+    Infinity = staticmethod(CommonHandler.AlwaysTrue)
+    NegativeInfinity = staticmethod(CommonHandler.AlwaysFalse)
+
+
+class AskExtendedNonNegativeHandler(AskNonNegativeHandler):
+    """
+    Handler for Q.extended_positive
+    Test that an expression belongs to the field of extended real numbers,
+    that is real numbers union {Infinity, -Infinity}
+    """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_extended_nonnegative
+
+    @staticmethod
+    def Add(expr, assumptions):
+        """
+        ExtendedPositive + ExtendedPositive -> ExtendedPositive,
+        ExtendedNegative + ExtendedNegative -> ExtendedNegative
+        """
+        if expr.is_number:
+            return AskExtendedNonNegativeHandler._number(expr, assumptions)
+
+        r = ask(Q.real(expr), assumptions)
+        if r is not True:
+            return r
+
+        print(expr.args)
+        print(assumptions)
+        nonpos = 0
+        for arg in expr.args:
+            if ask(Q.extended_nonnegative(arg), assumptions) is not True:
+                if ask(Q.extended_nonpositive(arg), assumptions) is False:
+                    nonpos += 1
+                else:
+                    break
+        else:
+            if nonpos < len(expr.args):
+                return True
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        if expr.is_number:
+            return AskExtendedNegativeHandler._number(expr, assumptions)
+        result = None
+        for arg in expr.args:
+            if result is None:
+                result = False
+            if ask(Q.extended_negative(arg), assumptions):
+                result = not result
+            elif ask(Q.extended_positive(arg), assumptions):
+                pass
+            else:
+                return
+        return result
+
+    Pow = Add
+
+    Infinity = staticmethod(CommonHandler.AlwaysFalse)
+    NegativeInfinity = staticmethod(CommonHandler.AlwaysTrue)
+
+
+class AskExtendedNonZeroHandler(CommonHandler):
+    """
+    Handler for key 'zero'
+    Test that an expression is not identically zero
+    """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_extended_nonzero
+
+    @staticmethod
+    def Basic(expr, assumptions):
+        if ask(Q.real(expr)) is False:
+            return False
+        if expr.is_number:
+            # if there are no symbols just evalf
+            i = expr.evalf(2)
+            def nonz(i):
+                if i._prec != 1:
+                    return i != 0
+            return fuzzy_or(nonz(i) for i in i.as_real_imag())
+
+    @staticmethod
+    def Add(expr, assumptions):
+        if all(ask(Q.extended_positive(x), assumptions) for x in expr.args) \
+                or all(ask(Q.extended_negative(x), assumptions) for x in expr.args):
+            return True
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        for arg in expr.args:
+            result = ask(Q.extended_nonzero(arg), assumptions)
+            if result:
+                continue
+            return result
+        return True
+
+    @staticmethod
+    def Pow(expr, assumptions):
+        return ask(Q.extended_nonzero(expr.base), assumptions)
+
+    NaN = staticmethod(CommonHandler.AlwaysTrue)
+
+    @staticmethod
+    def Abs(expr, assumptions):
+        return ask(Q.nonzero(expr.args[0]), assumptions)
 
     Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
