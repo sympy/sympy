@@ -586,7 +586,7 @@ class polygamma(Function):
     def _eval_evalf(self, prec):
         n = self.args[0]
         # the mpmath polygamma implementation valid only for nonnegative integers
-        if n.is_real and n.is_number:
+        if n.is_number and n.is_real:
             if (n.is_integer or n == int(n)) and n.is_nonnegative:
                 return super(polygamma, self)._eval_evalf(prec)
 
