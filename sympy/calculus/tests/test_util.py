@@ -529,8 +529,3 @@ def test_issue_16469():
     x = Symbol("x", real=True)
     f = abs(x)
     assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)
-
-
-@XFAIL
-def test_issue_4173():
-    assert maximum(x**(1/x), x) == S.Exp1

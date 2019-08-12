@@ -558,7 +558,6 @@ def test_issue_17325():
     raises(ValueError, lambda: Limit(1/x, x, 0, dir="+-").doit())
 
 
-@XFAIL
 def test_issue_10978():
     assert LambertW(x).limit(x, 0) == 0
 
@@ -572,3 +571,8 @@ def test_issue_14313_comment():
 def test_issue_15323():
     d = ((1 - 1/x)**x).diff(x)
     assert limit(d, x, 1, dir='+') == 1
+
+
+@XFAIL
+def test_issue_12571():
+    assert limit(-LambertW(-log(x))/log(x), x, 1) == 1
