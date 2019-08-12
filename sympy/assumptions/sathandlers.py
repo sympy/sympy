@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
+from sympy import StrictLessThan, StrictGreaterThan, Xor
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
@@ -12,7 +13,7 @@ from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import Abs
 from sympy.logic.boolalg import (Equivalent, Implies, And, Or,
-    BooleanFunction, Not)
+                                 BooleanFunction, Not, Xnor)
 from sympy.matrices.expressions import MatMul
 
 # APIs here may be subject to change
@@ -129,6 +130,18 @@ class AnyArgs(UnevaluatedOnFree):
 
     def apply(self):
         return Or(*[self.pred.rcall(arg) for arg in self.expr.args])
+
+
+class OddNumberArgs(UnevaluatedOnFree):
+
+    def apply(self):
+        return Xor(*[self.pred.rcall(arg) for arg in self.expr.args])
+
+
+class EvenNumberArgs(UnevaluatedOnFree):
+
+    def apply(self):
+        return Xnor(*[self.pred.rcall(arg) for arg in self.pred.args])
 
 
 class ExactlyOneArg(UnevaluatedOnFree):
@@ -298,6 +311,8 @@ for klass, fact in [
     (Add, Implies(AllArgs(Q.positive), Q.positive)),
     (Add, Implies(AllArgs(Q.negative), Q.negative)),
     (Mul, Implies(AllArgs(Q.positive), Q.positive)),
+    (Mul, Implies(~AnyArgs(Q.zero) & OddNumberArgs(Q.negative), Q.negative)),
+    (Mul, Implies(EvenNumberArgs(Q.negative), Q.positive)),
     (Mul, Implies(AllArgs(Q.commutative), Q.commutative)),
     (Mul, Implies(AllArgs(Q.real), Q.commutative)),
 
@@ -374,7 +389,9 @@ for klass, fact in [
     (ImaginaryUnit, CheckOldAssump(Q.nonpositive)),
     (ImaginaryUnit, CheckOldAssump(Q.rational)),
     (ImaginaryUnit, CheckOldAssump(Q.irrational)),
-    (ImaginaryUnit, CheckOldAssump(Q.imaginary))
+    (ImaginaryUnit, CheckOldAssump(Q.imaginary)),
+    (StrictLessThan, CustomLambda(lambda expr: Equivalent(Q.is_true(expr), Q.positive(expr.rhs - expr.lhs)))),
+    (StrictGreaterThan, CustomLambda(lambda expr: Equivalent(Q.is_true(expr), Q.positive(expr.lhs - expr.rhs)))),
     ]:
 
     register_fact(klass, fact)
