@@ -14,7 +14,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, fastalgsimp, \
-    simplifiedbool, MatrixSimplifiedDefault
+    simplifiedbool, simplifiedcls
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -36,7 +36,6 @@ def _compare_sequence(a, b):
     # there is no overhead for calling `tuple` on a
     # tuple
     return tuple(a) == tuple(b)
-
 
 class DenseMatrix(MatrixBase):
 
@@ -158,22 +157,21 @@ class DenseMatrix(MatrixBase):
                         sum(L[i, k]*L[j, k] for k in range(j)))
                 L[i, i] = sqrt(self[i, i] -
                     sum(L[i, k]**2 for k in range(i)))
-        return self._new(L, simplified=simplifiedbool(self))
+        return self._new(L)
 
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
         # sparse matrices have a higher priority
         mat = [a + b for a,b in zip(self._mat, other._mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False,
-                simplified=simplifiedbool(self, other))
+            simplified=simplifiedbool(self, other))
 
     def _eval_extract(self, rowsList, colsList):
         mat = self._mat
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),
-                         list(mat[i] for i in indices), copy=False,
-                         simplified=simplifiedbool(self))
+                         list(mat[i] for i in indices), copy=False)
 
     def _eval_matrix_mul(self, other, simplified=None):
         from sympy import Add
@@ -220,13 +218,13 @@ class DenseMatrix(MatrixBase):
                     # a matrix, which raises a TypeError. Fall back to a
                     # block-matrix-safe way to multiply if the `sum` fails.
                     new_mat[i] = reduce(lambda a,b: a + b, vec)
-        return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, \
-                copy=False, simplified=rsimplified)
+        return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat,
+            copy=False, simplified=rsimplified)
 
     def _eval_matrix_mul_elementwise(self, other):
         mat = [a*b for a,b in zip(self._mat, other._mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False,
-                simplified=simplifiedbool(self, other))
+            simplified=simplifiedbool(self, other))
 
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using the method indicated (default
@@ -271,13 +269,12 @@ class DenseMatrix(MatrixBase):
 
         method = kwargs.get('method', 'GE')
         iszerofunc = kwargs.get('iszerofunc', _iszero)
-        rsimplified = simplifiedbool(self)
         if kwargs.get('try_block_diag', False):
             blocks = self.get_diag_blocks()
             r = []
             for block in blocks:
                 r.append(block.inv(method=method, iszerofunc=iszerofunc))
-            return diag(*r, simplified=rsimplified)
+            return diag(*r)
 
         M = self.as_mutable()
         if method == "GE":
@@ -290,17 +287,15 @@ class DenseMatrix(MatrixBase):
             # make sure to add an invertibility check (as in inverse_LU)
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
-        return self._new(rv, simplified=rsimplified)
+        return self._new(rv)
 
     def _eval_scalar_mul(self, other):
         mat = [other*a for a in self._mat]
-        return self._new(self.rows, self.cols, mat, copy=False,
-                simplified=simplifiedbool(self, other))
+        return self._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_scalar_rmul(self, other):
         mat = [a*other for a in self._mat]
-        return self._new(self.rows, self.cols, mat, copy=False,
-                simplified=simplifiedbool(self, other))
+        return self._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_tolist(self):
         mat = list(self._mat)
@@ -315,9 +310,8 @@ class DenseMatrix(MatrixBase):
         or L*D*L.T == self if hermitian is False.
         """
         # https://en.wikipedia.org/wiki/Cholesky_decomposition#LDL_decomposition_2
-        rsimplified = simplifiedbool(self)
-        D = zeros(self.rows, self.rows, simplified=rsimplified)
-        L = eye(self.rows, simplified=rsimplified)
+        D = zeros(self.rows, self.rows)
+        L = eye(self.rows)
         if hermitian:
             for i in range(self.rows):
                 for j in range(i):
@@ -334,7 +328,7 @@ class DenseMatrix(MatrixBase):
                     L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
                         L[i, k]*L[j, k]*D[k, k] for k in range(j)))
                 D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i))
-        return self._new(L, simplified=rsimplified), self._new(D, simplified=rsimplified)
+        return self._new(L), self._new(D)
 
     def _lower_triangular_solve(self, rhs):
         """Helper function of function lower_triangular_solve.
@@ -348,7 +342,7 @@ class DenseMatrix(MatrixBase):
                     raise TypeError("Matrix must be non-singular.")
                 X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
                                            for k in range(i))) / self[i, i]
-        return self._new(X, simplified=simplifiedbool(self))
+        return self._new(X)
 
     def _upper_triangular_solve(self, rhs):
         """Helper function of function upper_triangular_solve.
@@ -360,16 +354,15 @@ class DenseMatrix(MatrixBase):
                     raise ValueError("Matrix must be non-singular.")
                 X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
                                            for k in range(i + 1, self.rows))) / self[i, i]
-        return self._new(X, simplified=simplifiedbool(self))
+        return self._new(X)
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
         """
         from .immutable import ImmutableDenseMatrix as cls
-        rsimplified = simplifiedbool(self)
         if self.rows and self.cols:
-            return cls._new(self.tolist(), simplified=rsimplified)
-        return cls._new(self.rows, self.cols, [], simplified=rsimplified)
+            return cls._new(self.tolist(), simplified=simplifiedbool(self))
+        return cls._new(self.rows, self.cols, [], simplified=simplifiedbool(self))
 
     def as_mutable(self):
         """Returns a mutable version of this matrix
@@ -457,6 +450,9 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         # if the `copy` flag is set to False, the input
         # was rows, cols, [list].  It should be used directly
         # without creating a copy.
+        cls = simplifiedcls(cls, kwargs.get('simplified'), args)
+        if 'simplified' in kwargs:
+            del kwargs ['simplified']
         if kwargs.get('copy', True) is False:
             if len(args) != 3:
                 raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
@@ -468,7 +464,6 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         self.rows = rows
         self.cols = cols
         self._mat = flat_list
-        self.simplified = kwargs.get('simplified', MatrixSimplifiedDefault.value)
         return self
 
     def __setitem__(self, key, value):
@@ -1339,7 +1334,7 @@ def ones(*args, **kwargs):
 
 
 def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
-               percent=100, prng=None, **kwargs):
+               percent=100, prng=None, simplified=None):
     """Create random matrix with dimensions ``r`` x ``c``. If ``c`` is omitted
     the matrix will be square. If ``symmetric`` is True the matrix must be
     square. If ``percent`` is less than 100 then only approximately the given
@@ -1392,7 +1387,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     prng = prng or random.Random(seed)
 
     if not symmetric:
-        m = Matrix._new(r, c, lambda i, j: prng.randint(min, max), **kwargs)
+        m = Matrix._new(r, c, lambda i, j: prng.randint(min, max), simplified=simplified)
         if percent == 100:
             return m
         z = int(r*c*(100 - percent) // 100)
@@ -1404,7 +1399,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     # Symmetric case
     if r != c:
         raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
-    m = zeros(r)
+    m = zeros(r, simplified=simplified)
     ij = [(i, j) for i in range(r) for j in range(i, r)]
     if percent != 100:
         ij = prng.sample(ij, int(len(ij)*percent // 100))

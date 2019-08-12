@@ -10,10 +10,10 @@ from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices import ShapeError
+from sympy.matrices.common import simplifiedbool
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 
-from sympy.matrices.common import simplifiedbool
 
 def _sympifyit(arg, retval=None):
     # This version of _sympifyit sympifies MutableMatrix objects
@@ -327,7 +327,7 @@ class MatrixExpr(Expr):
         from sympy.matrices.immutable import ImmutableDenseMatrix
         return ImmutableDenseMatrix([[    self[i, j]
                             for j in range(self.cols)]
-                            for i in range(self.rows)])
+                            for i in range(self.rows)], simplified=simplifiedbool(self))
 
     def as_mutable(self):
         """

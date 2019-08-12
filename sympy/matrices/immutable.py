@@ -3,11 +3,12 @@ from __future__ import division, print_function
 from sympy.core import Basic, Dict, Integer, S, Tuple, sympify
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter
-from sympy.matrices.common import simplifiedbool, MatrixSimplifiedDefault
+from sympy.matrices.common import simplifiedcls
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
+
 
 def sympify_matrix(arg):
     return arg.as_immutable()
@@ -45,6 +46,9 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
 
     @classmethod
     def _new(cls, *args, **kwargs):
+        cls = simplifiedcls(cls, kwargs.get('simplified'), args)
+        if 'simplified' in kwargs:
+            del kwargs ['simplified']
         if len(args) == 1 and isinstance(args[0], ImmutableDenseMatrix):
             return args[0]
         if kwargs.get('copy', True) is False:
@@ -59,9 +63,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
         if not isinstance(flat_list, Tuple):
             flat_list = Tuple(*flat_list)
 
-        obj = Basic.__new__(cls, rows, cols, flat_list)
-        obj.simplified = kwargs.get('simplified', MatrixSimplifiedDefault.value)
-        return obj
+        return Basic.__new__(cls, rows, cols, flat_list)
 
     @property
     def _mat(self):
@@ -101,8 +103,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),
-                         Tuple(*(mat[i] for i in indices), sympify=False), copy=False,
-                         simplified=simplifiedbool(self))
+                         Tuple(*(mat[i] for i in indices), sympify=False), copy=False)
 
     @property
     def cols(self):
@@ -160,6 +161,7 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
 
     @classmethod
     def _new(cls, *args, **kwargs):
+        cls = simplifiedcls(cls, kwargs.get('simplified'), args)
         s = MutableSparseMatrix(*args)
         rows = Integer(s.rows)
         cols = Integer(s.cols)
@@ -168,7 +170,6 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
         obj.rows = s.rows
         obj.cols = s.cols
         obj._smat = s._smat
-        obj.simplified = kwargs.get('simplified', MatrixSimplifiedDefault.value)
         return obj
 
     def __new__(cls, *args, **kwargs):

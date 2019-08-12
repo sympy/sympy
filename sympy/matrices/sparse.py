@@ -3,8 +3,7 @@ from __future__ import division, print_function
 import copy
 from collections import defaultdict
 
-from sympy.core import SympifyError
-from sympy.core.compatibility import Callable, as_int, is_sequence, range, reduce
+from sympy.core.compatibility import Callable, as_int, is_sequence, range
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
@@ -13,7 +12,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 
-from .common import a2idx, fastalgsimp, simplifiedbool, MatrixSimplifiedDefault
+from .common import a2idx, simplifiedbool, simplifiedcls
 from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
 
@@ -106,12 +105,10 @@ class SparseMatrix(MatrixBase):
 
     def __new__(cls, *args, **kwargs):
         self = object.__new__(cls)
-        self.simplified = kwargs.get('simplified', MatrixSimplifiedDefault.value)
         if len(args) == 1 and isinstance(args[0], SparseMatrix):
             self.rows = args[0].rows
             self.cols = args[0].cols
             self._smat = dict(args[0]._smat)
-            self.simplified = simplifiedbool(self, args[0])
             return self
 
         self._smat = {}
@@ -287,7 +284,7 @@ class SparseMatrix(MatrixBase):
     def _cholesky_sparse(self):
         """Algorithm for numeric Cholesky factorization of a sparse matrix."""
         Crowstruc = self.row_structure_symbolic_cholesky()
-        C = self.zeros(self.rows, simplified=simplifiedbool(self))
+        C = self.zeros(self.rows)
         for i in range(len(Crowstruc)):
             for j in Crowstruc[i]:
                 if i != j:
@@ -348,10 +345,9 @@ class SparseMatrix(MatrixBase):
         [0, 0, 1]])
 
         """
-        rsimplified=simplifiedbool(self)
         sym = self.is_symmetric()
         M = self.as_mutable()
-        I = M.eye(M.rows, simplified=rsimplified)
+        I = M.eye(M.rows)
         if not sym:
             t = M.T
             r1 = M[0, :]
@@ -365,11 +361,11 @@ class SparseMatrix(MatrixBase):
         else:
             raise NotImplementedError(
                 'Method may be "CH" or "LDL", not %s.' % method)
-        rv = M.hstack(*[solve(I[:, i]) for i in range(I.cols)], simplified=rsimplified)
+        rv = M.hstack(*[solve(I[:, i]) for i in range(I.cols)])
         if not sym:
             scale = (r1*rv[:, 0])[0, 0]
             rv /= scale
-        return self._new(rv, simplified=rsimplified)
+        return self._new(rv)
 
     def _eval_Abs(self):
         return self.applyfunc(lambda x: Abs(x))
@@ -378,7 +374,7 @@ class SparseMatrix(MatrixBase):
         """If `other` is a SparseMatrix, add efficiently. Otherwise,
         do standard addition."""
         if not isinstance(other, SparseMatrix):
-            return self + self._new(other, simplified=simplifiedbool(other))
+            return self + self._new(other)
 
         smat = {}
         zero = self._sympify(0)
@@ -386,8 +382,7 @@ class SparseMatrix(MatrixBase):
             sum = self._smat.get(key, zero) + other._smat.get(key, zero)
             if sum != 0:
                 smat[key] = sum
-        return self._new(self.rows, self.cols, smat,
-                simplified=simplifiedbool(self, other))
+        return self._new(self.rows, self.cols, smat)
 
     def _eval_col_insert(self, icol, other):
         if not isinstance(other, SparseMatrix):
@@ -403,12 +398,11 @@ class SparseMatrix(MatrixBase):
         for key, val in other._smat.items():
             row, col = key
             new_smat[row, col + icol] = val
-        return self._new(self.rows, self.cols + other.cols, new_smat,
-                simplified=simplifiedbool(self, other))
+        return self._new(self.rows, self.cols + other.cols, new_smat)
 
     def _eval_conjugate(self):
         smat = {key: val.conjugate() for key,val in self._smat.items()}
-        return self._new(self.rows, self.cols, smat, simplified=simplifiedbool(self))
+        return self._new(self.rows, self.cols, smat)
 
     def _eval_extract(self, rowsList, colsList):
         urow = list(uniq(rowsList))
@@ -426,7 +420,7 @@ class SparseMatrix(MatrixBase):
                 if rk in urow and ck in ucol:
                     smat[urow.index(rk), ucol.index(ck)] = self._smat[rk, ck]
 
-        rv = self._new(len(urow), len(ucol), smat, simplified=simplifiedbool(self))
+        rv = self._new(len(urow), len(ucol), smat)
         # rv is nominally correct but there might be rows/cols
         # which require duplication
         if len(rowsList) != len(urow):
@@ -442,9 +436,9 @@ class SparseMatrix(MatrixBase):
         return rv
 
     @classmethod
-    def _eval_eye(cls, rows, cols, **kwargs):
+    def _eval_eye(cls, rows, cols, simplified=None):
         entries = {(i,i): S.One for i in range(min(rows, cols))}
-        return cls._new(rows, cols, entries, **kwargs)
+        return cls._new(rows, cols, entries, simplified=simplified)
 
     def _eval_has(self, *patterns):
         # if the matrix has any zeros, see if S.Zero
@@ -464,17 +458,10 @@ class SparseMatrix(MatrixBase):
         diff = (self - self.T).applyfunc(simpfunc)
         return len(diff.values()) == 0
 
-    def _eval_matrix_mul(self, other, simplified=None):
+    def _eval_matrix_mul(self, other):
         """Fast multiplication exploiting the sparsity of the matrix."""
-        from sympy import Add
-
         if not isinstance(other, SparseMatrix):
-            return self*self._new(other, simplified=simplifiedbool(other))
-
-        # figure out if simplification is to be done or not
-        rsimplified = simplifiedbool(self, other)
-        if simplified is None:
-            simplified = rsimplified
+            return self*self._new(other)
 
         # if we made it here, we're both sparse matrices
         # create quick lookups for rows and cols
@@ -492,24 +479,9 @@ class SparseMatrix(MatrixBase):
                 # these are the only things that need to be multiplied.
                 indices = set(col_lookup[col].keys()) & set(row_lookup[row].keys())
                 if indices:
-                    lenind = len (indices)
-                    vec = [None]*lenind
-                    for j, k in zip(range(lenind), indices):
-                        c = row_lookup[row][k]*col_lookup[col][k]
-                        _expand = simplified and getattr(c, 'expand', None)
-                        vec[j] = _expand(power_base=False, power_exp=False, log=False, \
-                                multinomial=False, basic=False) if _expand else c
-                    try:
-                        e = Add(*vec)
-                        smat[row, col] = fastalgsimp(e) if simplified else e
-                    except (TypeError, SympifyError):
-                        # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
-                        # They don't work with `sum` because `sum` tries to add `0`
-                        # initially, and for a matrix, that is a mix of a scalar and
-                        # a matrix, which raises a TypeError. Fall back to a
-                        # block-matrix-safe way to multiply if the `sum` fails.
-                        smat[row, col] = reduce(lambda a,b: a + b, vec)
-        return self._new(self.rows, other.cols, smat, simplified=simplifiedbool(self, other))
+                    val = sum(row_lookup[row][k]*col_lookup[col][k] for k in indices)
+                    smat[row, col] = val
+        return self._new(self.rows, other.cols, smat)
 
     def _eval_row_insert(self, irow, other):
         if not isinstance(other, SparseMatrix):
@@ -525,8 +497,7 @@ class SparseMatrix(MatrixBase):
         for key, val in other._smat.items():
             row, col = key
             new_smat[row + irow, col] = val
-        return self._new(self.rows + other.rows, self.cols, new_smat,
-                simplified=simplifiedbool(self, other))
+        return self._new(self.rows + other.rows, self.cols, new_smat)
 
     def _eval_scalar_mul(self, other):
         return self.applyfunc(lambda x: x*other)
@@ -552,14 +523,14 @@ class SparseMatrix(MatrixBase):
         [2, 4]])
         """
         smat = {(j,i): val for (i,j),val in self._smat.items()}
-        return self._new(self.cols, self.rows, smat, simplified=simplifiedbool(self))
+        return self._new(self.cols, self.rows, smat)
 
     def _eval_values(self):
         return [v for k,v in self._smat.items() if not v.is_zero]
 
     @classmethod
-    def _eval_zeros(cls, rows, cols, **kwargs):
-        return cls._new(rows, cols, {}, **kwargs)
+    def _eval_zeros(cls, rows, cols, simplified=None):
+        return cls._new(rows, cols, {}, simplified=simplified)
 
     def _LDL_solve(self, rhs):
         # for speed reasons, this is not uncommented, but if you are
@@ -575,10 +546,9 @@ class SparseMatrix(MatrixBase):
     def _LDL_sparse(self):
         """Algorithm for numeric LDL factorization, exploiting sparse structure.
         """
-        rsimplified = simplified=simplifiedbool(self)
         Lrowstruc = self.row_structure_symbolic_cholesky()
-        L = self.eye(self.rows, simplified=rsimplified)
-        D = self.zeros(self.rows, self.cols, simplified=rsimplified)
+        L = self.eye(self.rows)
+        D = self.zeros(self.rows, self.cols)
 
         for i in range(len(Lrowstruc)):
             for j in Lrowstruc[i]:
@@ -623,7 +593,7 @@ class SparseMatrix(MatrixBase):
                 for u, v in rows[i]:
                     X[i, j] -= v*X[u, j]
                 X[i, j] /= self[i, i]
-        return self._new(X, simplified=simplifiedbool(self))
+        return self._new(X)
 
     @property
     def _mat(self):
@@ -645,7 +615,7 @@ class SparseMatrix(MatrixBase):
                 for u, v in reversed(rows[i]):
                     X[i, j] -= v*X[u, j]
                 X[i, j] /= self[i, i]
-        return self._new(X, simplified=simplifiedbool(self))
+        return self._new(X)
 
 
     def applyfunc(self, f):
@@ -730,7 +700,7 @@ class SparseMatrix(MatrixBase):
         if M.has(nan) or M.has(oo):
             raise ValueError('Cholesky decomposition applies only to '
                 'positive-definite matrices')
-        return self._new(M, simplified=simplifiedbool(self))
+        return self._new(M)
 
     def col_list(self):
         """Returns a column-sorted list of non-zero elements of the matrix.
@@ -755,7 +725,7 @@ class SparseMatrix(MatrixBase):
         return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(reversed(k)))]
 
     def copy(self):
-        return self._new(self.rows, self.cols, self._smat, simplified=simplifiedbool(self))
+        return self._new(self.rows, self.cols, self._smat)
 
     def LDLdecomposition(self):
         """
@@ -795,8 +765,7 @@ class SparseMatrix(MatrixBase):
             raise ValueError('LDL decomposition applies only to '
                 'positive-definite matrices')
 
-        rsimplified = simplified=simplifiedbool(self)
-        return self._new(L, simplified=rsimplified), self._new(D, simplified=rsimplified)
+        return self._new(L), self._new(D)
 
     def liupc(self):
         """Liu's algorithm, for pre-determination of the Elimination Tree of
@@ -906,7 +875,7 @@ class SparseMatrix(MatrixBase):
 
     def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"
-        M = self.zeros(*self.shape, simplified=simplifiedbool(self))
+        M = self.zeros(*self.shape)
         if scalar:
             for i in self._smat:
                 v = scalar*self._smat[i]
@@ -995,7 +964,8 @@ class SparseMatrix(MatrixBase):
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod
     def _new(cls, *args, **kwargs):
-        return cls(*args, **kwargs)
+        cls = simplifiedcls(cls, kwargs.get('simplified'), args)
+        return cls(*args)
 
     def __setitem__(self, key, value):
         """Assign value to position designated by key.
@@ -1135,7 +1105,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         """
         # A null matrix can always be stacked (see  #10770)
         if self.rows == 0 and self.cols != other.cols:
-            return self._new(0, other.cols, [], simplified=simplifiedbool(self, other)).col_join(other)
+            return self._new(0, other.cols, []).col_join(other)
 
         A, B = self, other
         if not A.cols == B.cols:
@@ -1343,7 +1313,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         """
         # A null matrix can always be stacked (see  #10770)
         if self.cols == 0 and self.rows != other.rows:
-            return self._new(other.rows, 0, [], simplified=simplifiedbool(self, other)).row_join(other)
+            return self._new(other.rows, 0, []).row_join(other)
 
         A, B = self, other
         if not A.rows == B.rows:

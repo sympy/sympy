@@ -328,58 +328,65 @@ def test_issue_17247_expression_blowup():
         [  -11372085085966856112512708068045/18446744073709551616 - 15259552815760438013381078881887*I/4611686018427387904,       572747286592698184477600898948853/36893488147419103232 + 145899033534398581601015813545339*I/36893488147419103232,      -59816906231857253267406939558195/18446744073709551616 + 26806261212057665260335424205755*I/18446744073709551616,          27482695220466000100570445864277/18446744073709551616 - 1131194421088547549826194546426527*I/73786976294838206464,      167586733689142260555527070229021/73786976294838206464 + 124023054971857865426499477800413*I/36893488147419103232,       -2378689093613177132431003532863827/147573952589676412928 + 156007543974761115504567581446989*I/73786976294838206464,         43190533075519947326643598859275/18446744073709551616 - 204989464754232320329937018919109*I/73786976294838206464,        6504409974812396274260557003860513/1180591620717411303424 + 7811844834500142281240691326981633*I/590295810358705651712,        -231084510943900895363965455341323/73786976294838206464 - 69246256478016970529353520747145*I/73786976294838206464,      5177092243424279894235486619888327/590295810358705651712 - 10571417878627260469377062317143239*I/1180591620717411303424,          39176197988738517013050170249761/147573952589676412928 + 13181765545216762096037657217583*I/4611686018427387904,        -47559405005264341667153302175899927/4722366482869645213696 - 309455104948742657660300871660629*I/73786976294838206464]]'''))
 
     # test that the 'simplified' property propagates properly
-    T = Matrix([[1, 0], [0, 1]], simplified=True)
-    F = Matrix([[1, 2], [3, 4]], simplified=False)
-    N = Matrix([[4, 3], [2, 1]])
+    T  = Matrix([[1, 2], [3, 4]], simplified=True)
+    N  = Matrix([[1, 2], [3, 4]])
+    IM = ImmutableDenseMatrix(T)
 
-    assert (T+T).simplified == True
-    assert (T+F).simplified == False
-    assert (T+N).simplified == True
-    assert (F+F).simplified == False
-    assert (F+N).simplified == False
-    assert (N+N).simplified == None
+    assert T == N == IM
+    assert IM.func(*IM.args) == IM
+    assert IM.func(*IM.args)**2 == IM**2
+    assert M**2 != Matrix(M, simplified=False)**2
+    assert IM.is_Simplified is True
+    assert Matrix(T).is_Simplified is True
+    assert Matrix(T, simplified=False).is_Simplified is not True
+    assert ImmutableSparseMatrix(T).is_Simplified is True
+    assert ImmutableSparseMatrix(T).is_Simplified is True
 
-    assert (T-T).simplified == True
-    assert (T*T).simplified == True
-    assert (T/T).simplified == True
-    assert (T**2).simplified == True
-    assert (T**S.Half).simplified == True
-    assert (T**-1).simplified == True
+    assert (T*T).is_Simplified is True
+    assert (T*N).is_Simplified is True
+    assert (N*N).is_Simplified is None
 
-    assert F._matrix_pow_by_jordan_blocks(2).simplified == False
-    assert F._eval_pow_by_recursion(2).simplified == False
-    P, J = F.jordan_form ()
-    assert P.simplified == J.simplified == False
-    P, D = F.diagonalize ()
-    assert P.simplified == D.simplified == False
-    assert exp(F).simplified == False
-    assert F[:,:].simplified == False
-    assert F.reshape(1,4).simplified == False
-    assert F.expand().simplified == False
-    assert F.refine().simplified == False
-    assert randMatrix(3, 3, simplified=True).simplified == True
-    L, U, p = F.LUdecomposition()
-    assert L.simplified == U.simplified == False
-    P, L, Dee, U = F.LUdecompositionFF()
-    assert P.simplified == L.simplified == Dee.simplified == U.simplified == False
-    assert F.LUdecomposition_Simple()[0].simplified == False
+    assert (T-T).is_Simplified is True
+    assert (T*T).is_Simplified is True
+    assert (T/T).is_Simplified is True
+    assert (T**2).is_Simplified is True
+    assert (T**S.Half).is_Simplified is True
+    assert (T**-1).is_Simplified is True
+
+    assert T._matrix_pow_by_jordan_blocks(2).is_Simplified is True
+    assert T._eval_pow_by_recursion(2).is_Simplified is True
+    P, J = T.jordan_form ()
+    assert P.is_Simplified == J.is_Simplified is True
+    P, D = T.diagonalize ()
+    assert P.is_Simplified == D.is_Simplified is True
+    assert exp(T).is_Simplified is True
+    assert T[:,:].is_Simplified is True
+    assert T.reshape(1,4).is_Simplified is True
+    assert T.expand().is_Simplified is True
+    assert T.refine().is_Simplified is True
+    assert randMatrix(3, 3, simplified=True).is_Simplified is True
+    L, U, p = T.LUdecomposition()
+    assert L.is_Simplified == U.is_Simplified is True
+    P, L, Dee, U = T.LUdecompositionFF()
+    assert P.is_Simplified == L.is_Simplified == Dee.is_Simplified == U.is_Simplified is True
+    assert T.LUdecomposition_Simple()[0].is_Simplified is True
     w = Matrix(2, 1, [3, 7])
-    b = F*w
-    assert F.LUsolve(w).simplified == False
-    assert F.QRsolve(w).simplified == False
-    assert (T.inv()).simplified == True
-    assert (T.inv(method="LU")).simplified == True
-    assert (T.inv(method="ADJ")).simplified == True
-    assert T.inv_mod(7).simplified == True
-    assert F.cofactor_matrix().simplified == False
-    assert F.T.simplified == False
-    assert F.transpose().simplified == False
-    assert F.conjugate().simplified == False
+    b = T*w
+    assert T.LUsolve(w).is_Simplified is True
+    assert T.QRsolve(w).is_Simplified is True
+    assert (T.inv()).is_Simplified is True
+    assert (T.inv(method="LU")).is_Simplified is True
+    assert (T.inv(method="ADJ")).is_Simplified is True
+    assert T.inv_mod(7).is_Simplified is True
+    assert T.cofactor_matrix().is_Simplified is True
+    assert T.T.is_Simplified is True
+    assert T.transpose().is_Simplified is True
+    assert T.conjugate().is_Simplified is True
 
-    assert ones(3, simplified=True).simplified == True
-    assert zeros(3, simplified=True).simplified == True
-    assert diag(1, 2, 3, simplified=True).simplified == True
-    assert eye(3, simplified=True).simplified == True
+    assert ones(3, simplified=True).is_Simplified is True
+    assert zeros(3, simplified=True).is_Simplified is True
+    assert diag(1, 2, 3, simplified=True).is_Simplified is True
+    assert eye(3, simplified=True).is_Simplified is True
 
 
 def test_creation():
