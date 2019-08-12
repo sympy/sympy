@@ -127,7 +127,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         # render any LaTeX environments such as array or matrix. So here we
         # ensure that if mathtext fails to render, we return None.
         try:
-            return latex_to_png(o)
+            try:
+                return latex_to_png(o, color=forecolor, scale=scale)
+            except TypeError: #  Old IPython version without color and scale
+                return latex_to_png(o)
         except ValueError as e:
             debug('matplotlib exception caught:', repr(e))
             return None
