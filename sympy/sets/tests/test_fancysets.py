@@ -393,6 +393,30 @@ def test_Range_set():
                 continue
             assert rinf == rabc.inf
 
+    for av in avs:
+        for bv in bvs:
+            for cv in cvs:
+                rsup = r.sup.subs({a: av, b: bv, c: cv})
+                rabc = r.subs({a: av, b: bv, c: cv})
+                if (rsup is S.NaN):
+                    assert not rabc
+                    continue
+                assert rsup == rabc.sup
+    for av in avs:
+        for cv in cvs:
+            rsup = r.sup.subs({a: av, c: cv}).subs(b, oo)
+            rabc = r.subs({a: av, c: cv}).subs(b, oo)
+            if (rsup is S.NaN):
+                assert not rabc
+                continue
+            assert rsup == rabc.sup
+            rsup = r.sup.subs({a: av, c: cv}).subs(b, -oo)
+            rabc = r.subs({a: av, c: cv}).subs(b, -oo)
+            if (rsup is S.NaN):
+                assert not rabc
+                continue
+            assert rsup == rabc.sup
+
     assert Range(range(10)) == Range(10)
     assert Range(range(1, 10)) == Range(1, 10)
     assert Range(range(1, 10, 2)) == Range(1, 10, 2)
