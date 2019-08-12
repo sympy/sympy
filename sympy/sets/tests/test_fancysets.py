@@ -417,6 +417,35 @@ def test_Range_set():
                 continue
             assert rsup == rabc.sup
 
+    avs, bvs = ([0, 20, -30], )*2
+    cvs = [1, -2]
+    idxs = [0, 3, -10, oo, -1]
+
+    def check_gtm(rgtm, rabc, idx):
+        if not rabc:
+            raises(IndexError, lambda : rabc.__getitem__(idx))
+        elif rgtm in (S.Infinity, S.NegativeInfinity) and idx not in (oo, -1, 0):
+            raises(ValueError, lambda : rabc.__getitem__(idx))
+        else:
+            assert rgtm == rabc.__getitem__(idx)
+
+    for av in avs:
+        for bv in bvs:
+            for cv in cvs:
+                for idx in idxs:
+                    rgtm = r.__getitem__(idx).subs({a: av, b: bv, c: cv})
+                    rabc = r.subs({a: av, b: bv, c: cv})
+                    check_gtm(rgtm, rabc, idx)
+    for av in avs:
+        for cv in cvs:
+            for idx in idxs:
+                rgtm = r.__getitem__(idx).subs({a: av, c: cv}).subs(b, oo)
+                rabc = r.subs({a: av, c: cv}).subs(b, oo)
+                check_gtm(rgtm, rabc, idx)
+                rgtm = r.__getitem__(idx).subs({a: av, c: cv}).subs(b, -oo)
+                rabc = r.subs({a: av, c: cv}).subs(b, -oo)
+                check_gtm(rgtm, rabc, idx)
+
     assert Range(range(10)) == Range(10)
     assert Range(range(1, 10)) == Range(1, 10)
     assert Range(range(1, 10, 2)) == Range(1, 10, 2)
