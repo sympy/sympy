@@ -23,7 +23,7 @@ import warnings
 from sympy import nextprime
 from sympy.core import Rational, Symbol
 from sympy.core.numbers import igcdex, mod_inverse, igcd
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, as_int
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
 from sympy.polys.domains import FF
@@ -1443,7 +1443,7 @@ def _decipher_rsa_crt(i, d, factors):
 
 
 def _rsa_key(*args, **kwargs):
-    """A private subroutine to generate RSA key
+    r"""A private subroutine to generate RSA key
 
     Parameters
     ==========
@@ -1451,22 +1451,41 @@ def _rsa_key(*args, **kwargs):
     public, private : bool, optional
         Flag to generate either a public key, a private key
 
-    totient : bool, optional
-        Flag to control which totient to use
+    totient : 'Euler' or 'Carmichael'
+        Different notation used for totient.
 
     multipower : bool, optional
         Flag to bypass warning for multipower RSA.
     """
+    from sympy.ntheory import totient as _euler
+    from sympy.ntheory import reduced_totient as _carmichael
+
     public = kwargs.pop('public', True)
     private = kwargs.pop('private', True)
     totient = kwargs.pop('totient', 'Euler')
+    index = kwargs.pop('index', None)
     multipower = kwargs.pop('multipower', None)
 
     if len(args) < 2:
         return False
 
     if totient not in ('Euler', 'Carmichael'):
-        raise ValueError('Invalid argument totient={}.'.format(totient))
+        raise ValueError(
+            "The argument totient={} should either be " \
+            "'Euler', 'Carmichalel'." \
+            .format(totient))
+
+    if totient == 'Euler':
+        _totient = _euler
+    else:
+        _totient = _carmichael
+
+    if index is not None:
+        index = as_int(index)
+        if totient != 'Carmichael':
+            raise ValueError(
+                "Setting the 'index' keyword argument requires totient"
+                "notation to be specified as 'Carmichael'.")
 
     primes, e = args[:-1], args[-1]
 
@@ -1481,14 +1500,7 @@ def _rsa_key(*args, **kwargs):
     tally = multiset(primes)
     if all(v == 1 for v in tally.values()):
         multiple = list(tally.keys())
-
-        if totient == 'Euler':
-            from sympy.ntheory import totient as totfunc
-            phi = totfunc._from_distinct_primes(*multiple)
-
-        elif totient == 'Carmichael':
-            from sympy.ntheory import reduced_totient as totfunc
-            phi = totfunc._from_distinct_primes(*multiple)
+        phi = _totient._from_distinct_primes(*multiple)
 
     else:
         if not multipower:
@@ -1502,21 +1514,19 @@ def _rsa_key(*args, **kwargs):
                 'warning.'
                 .format(primes, n, n)
                 ).warn()
-
-        if totient == 'Euler':
-            from sympy.ntheory import totient as totfunc
-            phi = totfunc._from_factors(tally)
-
-        elif totient == 'Carmichael':
-            from sympy.ntheory import reduced_totient as totfunc
-            phi = totfunc._from_factors(tally)
+        phi = _totient._from_factors(tally)
 
     if igcd(e, phi) == 1:
         if public and not private:
+            if isinstance(index, int):
+                e = e % phi
+                e += index * phi
             return n, e
 
         if private and not public:
             d = mod_inverse(e, phi)
+            if isinstance(index, int):
+                d += index * phi
             return n, d
 
     return False
@@ -1552,6 +1562,15 @@ def rsa_public_key(*args, **kwargs):
         (`\mathbb{Z}_n`) will be decryptable since the mapping
         `\mathbb{Z}_{n} \rightarrow \mathbb{Z}_{n}`
         will not be bijective.
+        (Only except for the trivial case when
+        `e = 1`
+        or more generally,
+
+        .. math::
+            e \in \left \{ 1 + k \lambda(n)
+            \mid k \in \mathbb{Z} \land k \geq 0 \right \}
+
+        when RSA reduces to the identity.)
         However, the RSA can still be decryptable for the numbers in the
         reduced residue system (`\mathbb{Z}_n^{\times}`), since the
         mapping
@@ -1573,8 +1592,41 @@ def rsa_public_key(*args, **kwargs):
         which is :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
 
         Unlike private key generation, this is a trivial keyword for
-        public keys because
-        `\gcd(e, \phi(n)) = 1 \iff \gcd(e, \lambda(n)) = 1`
+        public key generation because
+        `\gcd(e, \phi(n)) = 1 \iff \gcd(e, \lambda(n)) = 1`.
+
+    index : nonnegative integer, optional
+        Returns an arbitrary solution of a RSA public key at the index
+        specified at `0, 1, 2, ...`. This parameter needs to be
+        specified along with ``totient='Carmichael'``.
+
+        Similarly to the non-uniquenss of a RSA private key as described
+        in the ``index`` parameter documentation in
+        :meth:`rsa_private_key`, RSA public key is also not unique and
+        there is an infinite number of RSA public exponents which
+        can behave in the same manner.
+
+        From any given RSA public exponent `e`, there are can be an
+        another RSA public exponent `e + k \lambda(n)` where `k` is an
+        integer, `\lambda` is a Carmichael's totient function.
+
+        However, considering only the positive cases, there can be
+        a principal solution of a RSA public exponent `e_0` in
+        `0 < e_0 < \lambda(n)`, and all the other solutions
+        can be canonicalzed in a form of `e_0 + k \lambda(n)`.
+
+        ``index`` specifies the `k` notation to yield any possible value
+        an RSA public key can have.
+
+        An example of computing any arbitrary RSA public key:
+
+        >>> from sympy.crypto.crypto import rsa_public_key
+        >>> rsa_public_key(61, 53, 17, totient='Carmichael', index=0)
+        (3233, 17)
+        >>> rsa_public_key(61, 53, 17, totient='Carmichael', index=1)
+        (3233, 797)
+        >>> rsa_public_key(61, 53, 17, totient='Carmichael', index=2)
+        (3233, 1577)
 
     multipower : bool, optional
         Any pair of non-distinct primes found in the RSA specification
@@ -1620,6 +1672,17 @@ def rsa_public_key(*args, **kwargs):
     >>> rsa_public_key(*args)
     (30030, 7)
 
+    Notes
+    =====
+
+    Although the RSA can be generalized over any modulus `n`, using
+    two large primes had became the most popular specification because a
+    product of two large primes is usually the hardest to factor
+    relatively to the digits of `n` can have.
+
+    However, it may need further understanding of the time complexities
+    of each prime-factoring algorithms to verify the claim.
+
     See Also
     ========
 
@@ -1652,11 +1715,12 @@ def rsa_private_key(*args, **kwargs):
         :meth:`rsa_public_key`.
 
     totient : bool, optional
-        If ``'Euler'``, it uses Euler's totient `\phi(n)` which is
-        :meth:`sympy.ntheory.factor_.totient` in SymPy.
+        If ``'Euler'``, it uses Euler's totient convention `\phi(n)`
+        which is :meth:`sympy.ntheory.factor_.totient` in SymPy.
 
-        If ``'Carmichael'``, it uses Carmichael's totient `\lambda(n)`
-        which is :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
+        If ``'Carmichael'``, it uses Carmichael's totient convention
+        `\lambda(n)` which is
+        :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
 
         There can be some output differences for private key generation
         as examples below.
@@ -1672,6 +1736,35 @@ def rsa_private_key(*args, **kwargs):
         >>> from sympy.crypto.crypto import rsa_private_key
         >>> rsa_private_key(61, 53, 17, totient='Carmichael')
         (3233, 413)
+
+    index : nonnegative integer, optional
+        Returns an arbitrary solution of a RSA private key at the index
+        specified at `0, 1, 2, ...`. This parameter needs to be
+        specified along with ``totient='Carmichael'``.
+
+        RSA private exponent is a non-unique solution of
+        `e d \mod \lambda(n) = 1` and it is possible in any form of
+        `d + k \lambda(n)`, where `d` is an another
+        already-computed private exponent, and `\lambda` is a
+        Carmichael's totient function, and `k` is any integer.
+
+        However, considering only the positive cases, there can be
+        a principal solution of a RSA private exponent `d_0` in
+        `0 < d_0 < \lambda(n)`, and all the other solutions
+        can be canonicalzed in a form of `d_0 + k \lambda(n)`.
+
+        ``index`` specifies the `k` notation to yield any possible value
+        an RSA private key can have.
+
+        An example of computing any arbitrary RSA private key:
+
+        >>> from sympy.crypto.crypto import rsa_private_key
+        >>> rsa_private_key(61, 53, 17, totient='Carmichael', index=0)
+        (3233, 413)
+        >>> rsa_private_key(61, 53, 17, totient='Carmichael', index=1)
+        (3233, 1193)
+        >>> rsa_private_key(61, 53, 17, totient='Carmichael', index=2)
+        (3233, 1973)
 
     multipower : bool, optional
         The keyword is identical to the ``multipower`` in
@@ -1689,7 +1782,7 @@ def rsa_private_key(*args, **kwargs):
 
     False
         Returned if less than two arguments are given, or `e` is
-        not relatively prime to the modulus.
+        not relatively prime to the totient of the modulus.
 
     Examples
     ========
@@ -1773,7 +1866,24 @@ def encipher_rsa(i, key, factors=None):
 
     factors : list of coprime integers
         This is identical to the keyword ``factors`` in
-        :meth:`decipher_rsa`
+        :meth:`decipher_rsa`.
+
+    Notes
+    =====
+
+    Some specifications may make the RSA not cryptographically
+    meaningful.
+
+    For example, `0`, `1` will remain always same after taking any
+    number of exponentiation, thus, should be avoided.
+
+    Furthermore, if `i^e < n`, `i` may easily be figured out by taking
+    `e` th root.
+
+    And also, specifying the exponent as `1` or in more generalized form
+    as `1 + k \lambda(n)` where `k` is an nonnegative integer,
+    `\lambda` is a carmichael totient, the RSA becomes an identity
+    mapping.
 
     Examples
     ========
@@ -1830,7 +1940,7 @@ def decipher_rsa(i, key, factors=None):
         `p_1, p_2, ..., p_n` are distinct primes and
         `k_1, k_2, ..., k_n` are positive integers, chinese remainder
         theorem can be used to compute `i^d \bmod n` from the
-        modulo operation like
+        fragmented modulo operations like
 
         .. math::
             i^d \bmod {p_1}^{k_1}, i^d \bmod {p_2}^{k_2}, ... ,
@@ -1854,6 +1964,12 @@ def decipher_rsa(i, key, factors=None):
         overhead of using pure python implementation of
         :meth:`sympy.ntheory.modular.crt` may overcompensate the
         theoritical speed advantage.
+
+    Notes
+    =====
+
+    See the ``Notes`` section in the documentation of
+    :meth:`encipher_rsa`
 
     Examples
     ========
