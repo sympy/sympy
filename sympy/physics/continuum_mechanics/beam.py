@@ -1529,6 +1529,40 @@ class Beam(object):
 
 
     def draw(self, pictorial=False):
+        """Returns a plot object representing the beam diagram of the beam.
+
+        Parameters
+        ==========
+
+        pictorial: Boolean (default=False)
+            Setting ``pictorial=True`` would simply create a picorial (scaled) view
+            of the beam diagram not according to the scale.
+            Although setting ``pictorial=False`` would create a beam diagram with
+            the exact dimensions on the plot
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> R1, R2 = symbols('R1, R2')
+        >>> E, I = symbols('E, I')
+        >>> b = Beam(50, 20, 30)
+        >>> b.apply_load(10, 2, -1)
+        >>> b.apply_load(R1, 10, -1)
+        >>> b.apply_load(R2, 30, -1)
+        >>> b.apply_load(90, 5, 0, 23)
+        >>> b.apply_load(10, 30, 1, 50)
+        >>> b.apply_support(50, "pin")
+        >>> b.apply_support(0, "fixed")
+        >>> b.apply_support(20, "roller")
+        >>> p = b.draw(pictorial=False)
+        >>> p.show()
+        Plot object containing:
+        [0]: cartesian line: 90*SingularityFunction(x, 5, 0)
+        - 90*SingularityFunction(x, 23, 0) + 10*SingularityFunction(x, 30, 1)
+        - 200*SingularityFunction(x, 50, 0) - 10*SingularityFunction(x, 50, 1)
+        + 5 for x over (0.0, 50.0)
+        """
         x = self.variable
         length = self.length
         height = length/10

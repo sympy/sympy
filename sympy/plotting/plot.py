@@ -1459,6 +1459,23 @@ def plot(*args, **kwargs):
 
     ``ylim`` : tuple of two floats, denoting the y-axis limits.
 
+    ``annotations``: list. A list of dictionaries specifying the type of
+    annotation required. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's annotate() function.
+
+    ``markers``: list. A list of dictionaries specifying the type the
+    markers required. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's plot() function along with the
+    marker related keyworded arguments.
+
+    ``rectangles``: list. A list of dictionaries specifying the dimensions
+    of the rectangles to be plotted. The keys in the dictionary should be
+    equivalent to the arguments of the matplotlib's patches.Rectangle class.
+
+    ``fill``: dict. A dictionary specifying the type of color filling
+    required in the plot. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's fill_between() function.
+
     Examples
     ========
 
