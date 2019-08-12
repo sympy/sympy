@@ -8,7 +8,8 @@ from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.utilities.pytest import XFAIL, raises, slow
-from sympy.matrices import Matrix
+from sympy.matrices import \
+    Matrix, SparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix
 from sympy.core.mod import Mod
 from sympy.core.compatibility import range
 
@@ -283,7 +284,7 @@ def test_geometric_sums():
     assert Sum(1.0**n, (n, 1, oo)).doit() == oo
     assert Sum(2.43**n, (n, 1, oo)).doit() == oo
 
-    # Issue 13979:
+    # Issue 13979
     i, k, q = symbols('i k q', integer=True)
     result = summation(
         exp(-2*I*pi*k*i/n) * exp(2*I*pi*q*i/n) / n, (i, 0, n - 1)
@@ -908,8 +909,25 @@ def test_issue_4668():
 
 
 def test_matrix_sum():
-    A = Matrix([[0,1],[n,0]])
-    assert Sum(A,(n,0,3)).doit() == Matrix([[0, 4], [6, 0]])
+    A = Matrix([[0, 1], [n, 0]])
+
+    result = Sum(A, (n, 0, 3)).doit()
+    assert result == Matrix([[0, 4], [6, 0]])
+    assert result.__class__ == ImmutableDenseMatrix
+
+    A = SparseMatrix([[0, 1], [n, 0]])
+
+    result = Sum(A, (n, 0, 3)).doit()
+    assert result.__class__ == ImmutableSparseMatrix
+
+
+@XFAIL
+def test_failing_matrix_sum():
+    n = Symbol('n', nonnegative=True)
+    # TODO Implement matrix geometric series summation.
+    A = Matrix([[0, 1, 0], [-1, 0, 0], [0, 0, 0]])
+    assert Sum(A ** n, (n, 1, 4)).doit() == \
+        Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
 
 
 def test_indexed_idx_sum():

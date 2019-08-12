@@ -20,7 +20,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
     residue, Derivative, logcombine, Symbol, Intersection, Union,
-    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max, MatMul)
+    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max, MatMul, conjugate)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -1008,20 +1008,17 @@ def test_M26():
     assert solve(sqrt(log(x)) - log(sqrt(x))) == [1, exp(4)]
 
 
-@XFAIL
 def test_M27():
     x = symbols('x', real=True)
     b = symbols('b', real=True)
     with assuming(Q.is_true(sin(cos(1/E**2) + 1) + b > 0)):
         # TODO: Replace solve with solveset
-        solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/e**2))**R(3/2), b + sin(1 + cos(1/e**2))**R(3/2)]
+        solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/E**2))**R(3/2), b + sin(1 + cos(1/E**2))**R(3/2)]
 
 
 @XFAIL
 def test_M28():
-    # TODO: Replace solve with solveset, as of now
-    # solveset doesn't supports assumptions
-    assert solve(5*x + exp((x - 5)/2) - 8*x**3, x, assume=Q.real(x)) == [-0.784966, -0.016291, 0.802557]
+    assert solveset_real(5*x + exp((x - 5)/2) - 8*x**3, x, assume=Q.real(x)) == [-0.784966, -0.016291, 0.802557]
 
 
 def test_M29():
@@ -2402,6 +2399,7 @@ def test_W2():
 
 
 @XFAIL
+@slow
 def test_W3():
     # integral is not  calculated
     # https://github.com/sympy/sympy/issues/7161
@@ -2409,12 +2407,14 @@ def test_W3():
 
 
 @XFAIL
+@slow
 def test_W4():
     # integral is not  calculated
     assert integrate(sqrt(x + 1/x - 2), (x, 1, 2)) == -2*sqrt(2)/3 + S(4)/3
 
 
 @XFAIL
+@slow
 def test_W5():
     # integral is not  calculated
     assert integrate(sqrt(x + 1/x - 2), (x, 0, 2)) == -2*sqrt(2)/3 + S(8)/3

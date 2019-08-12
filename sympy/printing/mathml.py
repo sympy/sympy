@@ -257,6 +257,27 @@ class MathMLContentPrinter(MathMLPrinterBase):
             x.appendChild(plusNodes.pop(0))
         return x
 
+    def _print_Piecewise(self, expr):
+        if expr.args[-1].cond != True:
+            # We need the last conditional to be a True, otherwise the resulting
+            # function may not return a result.
+            raise ValueError("All Piecewise expressions must contain an "
+                             "(expr, True) statement to be used as a default "
+                             "condition. Without one, the generated "
+                             "expression may not evaluate to anything under "
+                             "some condition.")
+        root = self.dom.createElement('piecewise')
+        for i, (e, c) in enumerate(expr.args):
+            if i == len(expr.args) - 1 and c == True:
+                piece = self.dom.createElement('otherwise')
+                piece.appendChild(self._print(e))
+            else:
+                piece = self.dom.createElement('piece')
+                piece.appendChild(self._print(e))
+                piece.appendChild(self._print(c))
+            root.appendChild(piece)
+        return root
+
     def _print_MatrixBase(self, m):
         x = self.dom.createElement('matrix')
         for i in range(m.rows):
@@ -577,6 +598,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'BooleanTrue': 'True',
             'BooleanFalse': 'False',
             'NoneType': 'None',
+            'mathieus': 'S',
+            'mathieuc': 'C',
+            'mathieusprime': 'S&#x2032;',
+            'mathieucprime': 'C&#x2032;',
         }
 
         def mul_symbol_selection():
@@ -1604,47 +1629,47 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('NaN'))
         return x
 
-    def _print_bernoulli(self, e):
+    def _print_number_function(self, e, name):
+        # Print name_arg[0] for one argument or name_arg[0](arg[1])
+        # for more than one argument
         sub = self.dom.createElement('msub')
         mi = self.dom.createElement('mi')
-        mi.appendChild(self.dom.createTextNode('B'))
+        mi.appendChild(self.dom.createTextNode(name))
         sub.appendChild(mi)
         sub.appendChild(self._print(e.args[0]))
-        return sub
+        if len(e.args) == 1:
+            return sub
+        # TODO: copy-pasted from _print_Function: can we do better?
+        mrow = self.dom.createElement('mrow')
+        y = self.dom.createElement('mfenced')
+        for arg in e.args[1:]:
+            y.appendChild(self._print(arg))
+        mrow.appendChild(sub)
+        mrow.appendChild(y)
+        return mrow
+
+    def _print_bernoulli(self, e):
+        return self._print_number_function(e, 'B')
 
     _print_bell = _print_bernoulli
 
     def _print_catalan(self, e):
-        sub = self.dom.createElement('msub')
-        mi = self.dom.createElement('mi')
-        mi.appendChild(self.dom.createTextNode('C'))
-        sub.appendChild(mi)
-        sub.appendChild(self._print(e.args[0]))
-        return sub
+        return self._print_number_function(e, 'C')
+
+    def _print_euler(self, e):
+        return self._print_number_function(e, 'E')
 
     def _print_fibonacci(self, e):
-        sub = self.dom.createElement('msub')
-        mi = self.dom.createElement('mi')
-        mi.appendChild(self.dom.createTextNode('F'))
-        sub.appendChild(mi)
-        sub.appendChild(self._print(e.args[0]))
-        return sub
+        return self._print_number_function(e, 'F')
 
     def _print_lucas(self, e):
-        sub = self.dom.createElement('msub')
-        mi = self.dom.createElement('mi')
-        mi.appendChild(self.dom.createTextNode('L'))
-        sub.appendChild(mi)
-        sub.appendChild(self._print(e.args[0]))
-        return sub
+        return self._print_number_function(e, 'L')
+
+    def _print_stieltjes(self, e):
+        return self._print_number_function(e, '&#x03B3;')
 
     def _print_tribonacci(self, e):
-        sub = self.dom.createElement('msub')
-        mi = self.dom.createElement('mi')
-        mi.appendChild(self.dom.createTextNode('T'))
-        sub.appendChild(mi)
-        sub.appendChild(self._print(e.args[0]))
-        return sub
+        return self._print_number_function(e, 'T')
 
     def _print_ComplexInfinity(self, e):
         x = self.dom.createElement('mover')

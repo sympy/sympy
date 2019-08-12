@@ -1,16 +1,15 @@
 import random
 
-import itertools
-
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
 from sympy.utilities.pytest import raises
 
 from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate, diff
-from sympy.tensor.array import Array, NDimArray, ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableSparseNDimArray
+from sympy.tensor.array import Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableSparseNDimArray
 
-from sympy.tensor.array import tensorproduct, tensorcontraction, derive_by_array, permutedims
-
+from sympy.tensor.array.arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims, Flatten
+# Test import although not used in file
+from sympy.tensor.array import NDimArray
 
 def test_tensorproduct():
     x,y,z,t = symbols('x y z t')
@@ -63,7 +62,7 @@ def test_tensorcontraction():
 
 
 def test_derivative_by_array():
-    from sympy.abc import a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z
+    from sympy.abc import i, j, t, x, y, z
 
     bexpr = x*y**2*exp(z)*log(t)
     sexpr = sin(bexpr)
@@ -286,3 +285,12 @@ def test_array_permutedims():
         assert permutedims(A, (1, 0, 2)) == SparseArrayType({1: 1, 100000000: 2}, (20000, 10000, 10000))
         B = SparseArrayType({1:1, 20000:2}, (10000, 20000))
         assert B.transpose() == SparseArrayType({10000: 1, 1: 2}, (20000, 10000))
+
+def test_flatten():
+    from sympy import Matrix
+    for ArrayType in [ImmutableDenseNDimArray, ImmutableSparseNDimArray, Matrix]:
+        A = ArrayType(range(24)).reshape(4, 6)
+        assert [i for i in Flatten(A)] == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+
+        for i, v in enumerate(Flatten(A)):
+            i == v

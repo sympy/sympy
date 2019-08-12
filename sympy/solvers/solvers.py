@@ -36,8 +36,9 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan
                              Abs, re, im, arg, sqrt, atan2)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify, denom, logcombine, sqrtdenest, fraction)
+from sympy.simplify import (simplify, collect, powsimp, posify,
+    powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
+    separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1
 from sympy.matrices import Matrix, zeros
@@ -694,7 +695,7 @@ def solve(f, *symbols, **flags):
             >>> solve(x**2 - y**2, x, y, dict=True)
             [{x: -y}, {x: y}]
             >>> solve(x**2 - y**2/exp(x), x, y, dict=True)
-            [{x: 2*LambertW(y/2)}]
+            [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
             >>> solve(x**2 - y**2/exp(x), y, x)
             [(-x*sqrt(exp(x)), x), (x*sqrt(exp(x)), x)]
 
@@ -1020,8 +1021,14 @@ def solve(f, *symbols, **flags):
     for i, fi in enumerate(f):
         # Abs
         reps = []
-        for a in fi.atoms(Abs):
+        _abs = fi.atoms(Abs)
+        while _abs:
+            a = _abs.pop()
             if not a.has(*symbols):
+                continue
+            newa = separatevars(a)
+            if not isinstance(newa, Abs):
+                _abs.update(newa.atoms(Abs))
                 continue
             if a.args[0].is_extended_real is None:
                 raise NotImplementedError('solving %s when the argument '
@@ -2738,11 +2745,6 @@ def _tsolve(eq, sym, **flags):
                         check.extend(_solve(b_l**(n) - rhs**(e_l*d), sym, **flags))
                 sol.extend(s for s in check if eq.subs(sym, s).equals(0))
                 return list(ordered(set(sol)))
-
-        elif lhs.is_Mul and rhs.is_positive:
-            llhs = expand_log(log(lhs))
-            if llhs.is_Add:
-                return _solve(llhs - log(rhs), sym, **flags)
 
         elif lhs.is_Function and len(lhs.args) == 1:
             if lhs.func in multi_inverses:

@@ -160,7 +160,11 @@ class Expr(Basic, EvalfMixin):
         return self
 
     def __neg__(self):
-        return Mul(S.NegativeOne, self)
+        # Mul has its own __neg__ routine, so we just
+        # create a 2-args Mul with the -1 in the canonical
+        # slot 0.
+        c = self.is_commutative
+        return Mul._from_args((S.NegativeOne, self), c)
 
     def __abs__(self):
         from sympy import Abs
@@ -2172,6 +2176,7 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
+        from .add import _unevaluated_Add
         c = sympify(c)
         if self is S.NaN:
             return None
@@ -2253,9 +2258,10 @@ class Expr(Basic, EvalfMixin):
                 if newarg is None:
                     return  # all or nothing
                 newargs.append(newarg)
-            # args should be in same order so use unevaluated return
             if cs is not S.One:
-                return Add._from_args([cs*t for t in newargs])
+                args = [cs*t for t in newargs]
+                # args may be in different order
+                return _unevaluated_Add(*args)
             else:
                 return Add._from_args(newargs)
         elif self.is_Mul:
@@ -2855,7 +2861,6 @@ class Expr(Basic, EvalfMixin):
                 return (si.subs(x, sgn/x) for si in s)
             return s.subs(x, sgn/x)
 
-
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
         if x0 or dir == '-':
@@ -2957,6 +2962,153 @@ class Expr(Basic, EvalfMixin):
                         yielded += do
 
             return yield_lseries(self.removeO()._eval_lseries(x, logx=logx))
+
+    def aseries(self, x=None, n=6, bound=0, hir=False):
+        """Asymptotic Series expansion of self.
+        This is equivalent to ``self.series(x, oo, n)``.
+
+        Parameters
+        ==========
+
+        self : Expression
+               The expression whose series is to be expanded.
+
+        x : Symbol
+            It is the variable of the expression to be calculated.
+
+        n : Value
+            The number of terms upto which the series is to be expanded.
+
+        hir : Boolean
+              Set this parameter to be True to produce hierarchical series.
+              It stops the recursion at an early level and may provide nicer
+              and more useful results.
+
+        bound : Value, Integer
+                Use the ``bound`` parameter to give limit on rewriting
+                coefficients in its normalised form.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, exp
+        >>> from sympy.abc import x, y
+
+        >>> e = sin(1/x + exp(-x)) - sin(1/x)
+
+        >>> e.aseries(x)
+        (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
+
+        >>> e.aseries(x, n=3, hir=True)
+        -exp(-2*x)*sin(1/x)/2 + exp(-x)*cos(1/x) + O(exp(-3*x), (x, oo))
+
+        >>> e = exp(exp(x)/(1 - 1/x))
+
+        >>> e.aseries(x)
+        exp(exp(x)/(1 - 1/x))
+
+        >>> e.aseries(x, bound=3)
+        exp(exp(x)/x**2)*exp(exp(x)/x)*exp(-exp(x) + exp(x)/(1 - 1/x) - exp(x)/x - exp(x)/x**2)*exp(exp(x))
+
+        Returns
+        =======
+
+        Expr
+            Asymptotic series expansion of the expression.
+
+        Notes
+        =====
+
+        This algorithm is directly induced from the limit computational algorithm provided by Gruntz.
+        It majorly uses the mrv and rewrite sub-routines. The overall idea of this algorithm is first
+        to look for the most rapidly varying subexpression w of a given expression f and then expands f
+        in a series in w. Then same thing is recursively done on the leading coefficient
+        till we get constant coefficients.
+
+        If the most rapidly varying subexpression of a given expression f is f itself,
+        the algorithm tries to find a normalised representation of the mrv set and rewrites f
+        using this normalised representation.
+
+        If the expansion contains an order term, it will be either ``O(x ** (-n))`` or ``O(w ** (-n))``
+        where ``w`` belongs to the most rapidly varying expression of ``self``.
+
+        References
+        ==========
+
+        .. [1] A New Algorithm for Computing Asymptotic Series - Dominik Gruntz
+        .. [2] Gruntz thesis - p90
+        .. [3] http://en.wikipedia.org/wiki/Asymptotic_expansion
+
+        See Also
+        ========
+
+        See the docstring of Expr.aseries() for complete details of this wrapper.
+        """
+
+        from sympy import Order, Dummy
+        from sympy.functions import exp, log
+        from sympy.series.gruntz import mrv, rewrite, mrv_leadterm
+
+        if x.is_positive is x.is_negative is None:
+            xpos = Dummy('x', positive=True)
+            return self.subs(x, xpos).aseries(xpos, n, bound, hir).subs(xpos, x)
+
+        om, exps = mrv(self, x)
+
+        # We move one level up by replacing `x` by `exp(x)`, and then
+        # computing the asymptotic series for f(exp(x)). Then asymptotic series
+        # can be obtained by moving one-step back, by replacing x by ln(x).
+
+        if x in om:
+            s = self.subs(x, exp(x)).aseries(x, n, bound, hir).subs(x, log(x))
+            if s.getO():
+                return s + Order(1/x**n, (x, S.Infinity))
+            return s
+
+        k = Dummy('k', positive=True)
+        # f is rewritten in terms of omega
+        func, logw = rewrite(exps, om, x, k)
+
+        if self in om:
+            if bound <= 0:
+                return self
+            s = (self.exp).aseries(x, n, bound=bound)
+            s = s.func(*[t.removeO() for t in s.args])
+            res = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
+
+            func = exp(self.args[0] - res.args[0]) / k
+            logw = log(1/res)
+
+        s = func.series(k, 0, n)
+
+        # Hierarchical series
+        if hir:
+            return s.subs(k, exp(logw))
+
+        o = s.getO()
+        terms = sorted(Add.make_args(s.removeO()), key=lambda i: int(i.as_coeff_exponent(k)[1]))
+        s = S.Zero
+        has_ord = False
+
+        # Then we recursively expand these coefficients one by one into
+        # their asymptotic series in terms of their most rapidly varying subexpressions.
+        for t in terms:
+            coeff, expo = t.as_coeff_exponent(k)
+            if coeff.has(x):
+                # Recursive step
+                snew = coeff.aseries(x, n, bound=bound-1)
+                if has_ord and snew.getO():
+                    break
+                elif snew.getO():
+                    has_ord = True
+                s += (snew * k**expo)
+            else:
+                s += t
+
+        if not o or has_ord:
+            return s.subs(k, exp(logw))
+        return (s + o).subs(k, exp(logw))
+
 
     def taylor_term(self, n, x, *previous_terms):
         """General method for the taylor term.
@@ -3113,17 +3265,21 @@ class Expr(Basic, EvalfMixin):
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
         """
-        from sympy import Dummy, log
+        from sympy import Dummy, log, Piecewise, piecewise_fold
         from sympy.series.gruntz import calculate_series
 
+        if self.has(Piecewise):
+            expr = piecewise_fold(self)
+        else:
+            expr = self
         if self.removeO() == 0:
             return self
 
         if logx is None:
             d = Dummy('logx')
-            s = calculate_series(self, x, d).subs(d, log(x))
+            s = calculate_series(expr, x, d).subs(d, log(x))
         else:
-            s = calculate_series(self, x, logx)
+            s = calculate_series(expr, x, logx)
 
         return s.as_leading_term(x)
 
@@ -3202,7 +3358,7 @@ class Expr(Basic, EvalfMixin):
             from sympy.utilities.misc import filldedent
             raise ValueError(filldedent("""
                 cannot compute leadterm(%s, %s). The coefficient
-                should have been free of x but got %s""" % (self, x, c)))
+                should have been free of %s but got %s""" % (self, x, x, c)))
         c = c.subs(d, log(x))
         return c, e
 

@@ -21,7 +21,7 @@ from sympy.ntheory.multinomial import (
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises
 
 from sympy.utilities.iterables import capture
 

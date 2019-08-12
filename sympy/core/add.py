@@ -5,6 +5,7 @@ from functools import cmp_to_key
 
 from .basic import Basic
 from .compatibility import reduce, is_sequence, range
+from .evaluate import global_distribute
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp
@@ -891,9 +892,6 @@ class Add(Expr, AssocOp):
     def _eval_transpose(self):
         return self.func(*[t.transpose() for t in self.args])
 
-    def __neg__(self):
-        return self*(-1)
-
     def _sage_(self):
         s = 0
         for x in self.args:
@@ -1076,6 +1074,12 @@ class Add(Expr, AssocOp):
             raise AttributeError("Cannot convert Add to mpc. Must be of the form Number + Number*I")
 
         return (Float(re_part)._mpf_, Float(im_part)._mpf_)
+
+    def __neg__(self):
+        if not global_distribute[0]:
+            return super(Add, self).__neg__()
+        return Add(*[-i for i in self.args])
+
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

@@ -1,6 +1,6 @@
 from sympy import (
     adjoint, conjugate, Dummy, Eijk, KroneckerDelta, LeviCivita, Symbol,
-    symbols, transpose,
+    symbols, transpose, Piecewise, Ne
 )
 from sympy.core.compatibility import range, long
 from sympy.physics.secondquant import evaluate_deltas, F
@@ -60,6 +60,8 @@ def test_kronecker_delta():
     assert transpose(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
     # to test if canonical
     assert (KroneckerDelta(i, j) == KroneckerDelta(j, i)) == True
+
+    assert KroneckerDelta(i, j).rewrite(Piecewise) == Piecewise((0, Ne(i, j)), (1, True))
 
 def test_kronecker_delta_secondquant():
     """secondquant-specific methods"""

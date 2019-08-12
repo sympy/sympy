@@ -714,6 +714,13 @@ class NumPyPrinter(PythonCodePrinter):
             func = self._module_format('numpy.array')
         return "%s(%s)" % (func, self._print(expr.tolist()))
 
+    def _print_Identity(self, expr):
+        shape = expr.shape
+        if all([dim.is_Integer for dim in shape]):
+            return "%s(%s)" % (self._module_format('numpy.eye'), self._print(expr.shape[0]))
+        else:
+            raise NotImplementedError("Symbolic matrix dimensions are not yet supported for identity matrices")
+
     def _print_BlockMatrix(self, expr):
         return '{0}({1})'.format(self._module_format('numpy.block'),
                                  self._print(expr.args[0].tolist()))
@@ -770,7 +777,7 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s, %s)" % (
             self._module_format("numpy.transpose"),
             self._print(expr.expr),
-            self._print(expr.permutation.args[0]),
+            self._print(expr.permutation.array_form),
         )
 
     def _print_CodegenArrayElementwiseAdd(self, expr):
@@ -809,7 +816,8 @@ _known_functions_scipy_special = {
 _known_constants_scipy_constants = {
     'GoldenRatio': 'golden_ratio',
     'Pi': 'pi',
-    'E': 'e'
+    'E': 'e',
+    'Exp1': 'e'
 }
 
 class SciPyPrinter(NumPyPrinter):

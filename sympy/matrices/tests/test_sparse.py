@@ -1,6 +1,7 @@
-from sympy import Abs, S, Symbol, I, Rational, PurePoly, Float
-from sympy.matrices import (Matrix, SparseMatrix, eye, ones, zeros,
-    ShapeError)
+from sympy import Abs, S, Symbol, symbols, I, Rational, PurePoly, Float
+from sympy.matrices import \
+    Matrix, MutableSparseMatrix, ImmutableSparseMatrix, SparseMatrix, eye, \
+    ones, zeros, ShapeError
 from sympy.utilities.pytest import raises
 
 def test_sparse_matrix():
@@ -604,6 +605,46 @@ def test_sparse_solve():
     assert A*s == A[:, 0]
     s = A.solve_least_squares(A[:, 0], 'LDL')
     assert A*s == A[:, 0]
+
+
+def test_lower_triangular_solve():
+    a, b, c, d = symbols('a:d')
+    u, v, w, x = symbols('u:x')
+
+    A = SparseMatrix([[a, 0], [c, d]])
+    B = MutableSparseMatrix([[u, v], [w, x]])
+    C = ImmutableSparseMatrix([[u, v], [w, x]])
+
+    sol = Matrix([[u/a, v/a], [(w - c*u/a)/d, (x - c*v/a)/d]])
+    assert A.lower_triangular_solve(B) == sol
+    assert A.lower_triangular_solve(C) == sol
+
+
+def test_upper_triangular_solve():
+    a, b, c, d = symbols('a:d')
+    u, v, w, x = symbols('u:x')
+
+    A = SparseMatrix([[a, b], [0, d]])
+    B = MutableSparseMatrix([[u, v], [w, x]])
+    C = ImmutableSparseMatrix([[u, v], [w, x]])
+
+    sol = Matrix([[(u - b*w/d)/a, (v - b*x/d)/a], [w/d, x/d]])
+    assert A.upper_triangular_solve(B) == sol
+    assert A.upper_triangular_solve(C) == sol
+
+
+def test_diagonal_solve():
+    a, d = symbols('a d')
+    u, v, w, x = symbols('u:x')
+
+    A = SparseMatrix([[a, 0], [0, d]])
+    B = MutableSparseMatrix([[u, v], [w, x]])
+    C = ImmutableSparseMatrix([[u, v], [w, x]])
+
+    sol = Matrix([[u/a, v/a], [w/d, x/d]])
+    assert A.diagonal_solve(B) == sol
+    assert A.diagonal_solve(C) == sol
+
 
 def test_hermitian():
     x = Symbol('x')

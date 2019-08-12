@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
-    Symbol, Lambda, sin, Eq, Ne, Piecewise, factor, expand_log, cancel,
-    expand, diff, pi, atan)
+    Symbol, Lambda, sin, Ne, Piecewise, factor, expand_log, cancel,
+    diff, pi, atan)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,

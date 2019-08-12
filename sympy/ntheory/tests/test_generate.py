@@ -7,8 +7,6 @@ from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
 from sympy.utilities.pytest import raises
 
-from array import array as _array
-
 def test_prime():
     assert prime(1) == 2
     assert prime(2) == 3
