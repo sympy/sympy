@@ -3,7 +3,8 @@ from sympy import (
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, oo, pi, Piecewise, Product, product, Rational, S, simplify,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range)
+    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, floor,
+    RisingFactorial)
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.concrete.expr_with_intlimits import ReorderError
@@ -1131,3 +1132,13 @@ def test_exceptions():
     raises(ReorderError, lambda: S.reorder_limit(0, 1))
     S = Sum(x*y, (x, a, b), (y, 1, 4))
     raises(NotImplementedError, lambda: S.is_convergent())
+
+
+@XFAIL
+def test_issue_14313():
+    assert Sum((S(1)/2)**floor(n/2), (n, 1, oo)).is_convergent()
+
+
+@XFAIL
+def test_issue_14871():
+    assert Sum((S(1)/10)**x*RisingFactorial(0, x)/factorial(x), (x, 0, oo)).rewrite(factorial).doit() == 1

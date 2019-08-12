@@ -1,13 +1,13 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc, Abs, symbols, I, re, Lambda, simplify,
-                   ImageSet, expint)
+                   cot, sec, csc, Abs, symbols, I, re, simplify,
+                   expint)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.abc import x
 
 a = Symbol('a', real=True)
@@ -523,3 +523,14 @@ def test_union_AccumBounds():
     assert AccumBounds(0, 3).union(AccumBounds(-1, 2)) == AccumBounds(-1, 3)
     assert AccumBounds(0, 3).union(AccumBounds(-1, 4)) == AccumBounds(-1, 4)
     raises(TypeError, lambda: AccumBounds(0, 3).union(1))
+
+
+def test_issue_16469():
+    x = Symbol("x", real=True)
+    f = abs(x)
+    assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)
+
+
+@XFAIL
+def test_issue_4173():
+    assert maximum(x**(1/x), x) == S.Exp1
