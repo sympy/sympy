@@ -311,8 +311,8 @@ for klass, fact in [
     (Add, Implies(AllArgs(Q.positive), Q.positive)),
     (Add, Implies(AllArgs(Q.negative), Q.negative)),
     (Mul, Implies(AllArgs(Q.positive), Q.positive)),
-    (Mul, Implies(~AnyArgs(Q.zero) & OddNumberArgs(Q.negative), Q.negative)),
-    (Mul, Implies(EvenNumberArgs(Q.negative), Q.positive)),
+    (Mul, Implies(AllArgs(~Q.zero) & OddNumberArgs(Q.negative), Q.negative)),
+    (Mul, Implies(AllArgs(~Q.zero) & AnyArgs(Q.negative) & EvenNumberArgs(Q.negative), Q.positive)),
     (Mul, Implies(AllArgs(Q.commutative), Q.commutative)),
     (Mul, Implies(AllArgs(Q.real), Q.commutative)),
 

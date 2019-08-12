@@ -213,7 +213,7 @@ class AssumptionKeys(object):
 
         ``Q.algebraic(x)`` is true iff ``x`` belongs to the set of
         algebraic numbers. ``x`` is algebraic if there is some polynomial
-        in ``p(x)\in \mathbb\{Q\}[x]`` such that ``p(x) = 0``.
+        in ``p(x) \in \mathbb\{Q\}[x]`` such that ``p(x) = 0``.
 
         Examples
         ========
@@ -1668,46 +1668,69 @@ def get_known_facts_keys():
 @cacheit
 def get_known_facts():
     return And(
-        Implies(Q.infinite, ~Q.finite),
-        Implies(Q.real, Q.finite),
-        Implies(Q.real, Q.complex),
-        Implies(Q.real, Q.hermitian),
-        Equivalent(Q.extended_real, Q.real | Q.infinite),
-        Equivalent(Q.even | Q.odd, Q.integer),
-        Implies(Q.even, ~Q.odd),
-        Implies(Q.prime, Q.integer & Q.positive & ~Q.composite),
         Implies(Q.integer, Q.rational),
+        Implies(Q.rational, Q.real),
         Implies(Q.rational, Q.algebraic),
-        Implies(Q.algebraic, Q.complex),
-        Implies(Q.algebraic, Q.finite),
-        Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),
-        Implies(Q.transcendental, ~Q.algebraic),
-        Implies(Q.transcendental, Q.finite),
-        Implies(Q.imaginary, Q.complex & ~Q.real),
+        Implies(Q.algebraic, Q.complex & Q.finite),
+        Equivalent(Q.transcendental, Q.complex & ~Q.algebraic & Q.finite),
+        Implies(Q.real, Q.hermitian),
+        Implies(Q.imaginary, Q.complex & Q.finite),
         Implies(Q.imaginary, Q.antihermitian),
-        Implies(Q.antihermitian, ~Q.hermitian),
-        Equivalent(Q.irrational | Q.rational, Q.real & Q.finite),
-        Implies(Q.irrational, ~Q.rational),
-        Implies(Q.zero, Q.even),
-        Equivalent(Q.extended_positive, Q.positive | Q.infinite),
-        Equivalent(Q.extended_negative, Q.negative | Q.infinite),
+        Implies(Q.extended_real, Q.commutative),
+        Implies(Q.complex, Q.commutative),
+        Implies(Q.complex, Q.infinite | Q.finite),
+
+        Equivalent(Q.odd, Q.integer & ~Q.even),
+        Equivalent(Q.even, Q.integer & ~Q.odd),
+
+        Implies(Q.real, Q.complex),
+        Implies(Q.extended_real, Q.real | Q.infinite),
+        Equivalent(Q.real, Q.extended_real & Q.finite),
+
+        Equivalent(Q.extended_real, Q.extended_negative | Q.zero | Q.extended_positive),
+        Equivalent(Q.extended_negative, Q.extended_nonpositive & Q.extended_nonzero),
+        Equivalent(Q.extended_positive, Q.extended_nonnegative & Q.extended_nonzero),
+        Equivalent(Q.extended_nonpositive, Q.extended_real & ~Q.extended_positive),
+        Equivalent(Q.extended_nonnegative, Q.extended_real & ~Q.extended_negative),
 
         Equivalent(Q.real, Q.negative | Q.zero | Q.positive),
-        Equivalent(Q.extended_real, Q.extended_negative | Q.zero | Q.extended_positive),
+        Equivalent(Q.negative, Q.nonpositive | Q.nonzero),
+        Equivalent(Q.positive, Q.nonnegative | Q.nonzero),
+
+        Equivalent(Q.nonpositive, Q.real & ~Q.positive),
+        Equivalent(Q.nonnegative, Q.real & ~Q.negative),
+
+        Equivalent(Q.positive, Q.extended_positive & Q.finite),
+        Equivalent(Q.negative, Q.extended_negative & Q.finite),
+        Equivalent(Q.nonpositive, Q.extended_nonpositive & Q.finite),
+        Equivalent(Q.nonnegative, Q.extended_nonnegative & Q.finite),
+        Equivalent(Q.nonzero, Q.extended_nonzero & Q.finite),
+
+        Implies(Q.zero, Q.even & Q.finite),
+        Equivalent(Q.zero, Q.extended_nonnegative & Q.extended_nonpositive),
+        Equivalent(Q.zero, Q.nonnegative & Q.nonpositive),
+        Implies(Q.zero, Q.real),
+
+        Implies(Q.prime, Q.integer & Q.positive),
+        Implies(Q.composite, Q.integer & Q.positive & ~Q.prime),
+
+        Equivalent(Q.irrational, Q.real & ~Q.rational),
+
+        Implies(Q.imaginary, Q.complex & ~Q.extended_real),
+
+        Implies(Q.infinite, ~Q.finite),
+
+        Equivalent(Q.extended_nonzero, Q.extended_real & ~Q.zero),
+
+        # Equivalent(Q.even | Q.odd, Q.integer),
+        Implies(Q.antihermitian, ~Q.hermitian),
+        # Implies(Q.extended_positive, Q.positive | Q.infinite),
+        # Implies(Q.extended_negative, Q.negative | Q.infinite),
+
         Implies(Q.zero, ~Q.negative & ~Q.positive),
         Implies(Q.zero, ~Q.extended_negative & ~Q.extended_positive),
         Implies(Q.negative, ~Q.positive),
         Implies(Q.extended_negative, ~Q.extended_positive),
-        Implies(Q.negative, Q.extended_negative),
-        Implies(Q.positive, Q.extended_positive),
-        Implies(Q.nonnegative, Q.extended_nonnegative),
-        Implies(Q.nonpositive, Q.extended_nonpositive),
-        Equivalent(Q.nonnegative, Q.zero | Q.positive),
-        Equivalent(Q.nonpositive, Q.zero | Q.negative),
-        Equivalent(Q.nonzero, Q.negative | Q.positive),
-        Equivalent(Q.extended_nonzero, Q.extended_negative | Q.extended_positive),
-        Equivalent(Q.extended_nonnegative, Q.zero | Q.extended_positive),
-        Equivalent(Q.extended_nonpositive, Q.zero | Q.extended_negative),
 
         Implies(Q.orthogonal, Q.positive_definite),
         Implies(Q.orthogonal, Q.unitary),

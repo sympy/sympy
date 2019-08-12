@@ -378,7 +378,7 @@ class AskExtendedPositiveHandler(AskPositiveHandler):
                 return True
 
 
-    Pow = [Add]
+    Pow = Add
 
     Infinity = staticmethod(CommonHandler.AlwaysTrue)
     NegativeInfinity = staticmethod(CommonHandler.AlwaysFalse)
