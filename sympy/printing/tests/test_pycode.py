@@ -161,3 +161,23 @@ def test_NumPyPrinter_print_seq():
     n = NumPyPrinter()
 
     assert n._print_seq(range(2)) == '(0, 1,)'
+
+
+def test_issue_16535_16536():
+    from sympy import lowergamma, uppergamma
+
+    a = symbols('a')
+    expr1 = lowergamma(a, x)
+    expr2 = uppergamma(a, x)
+
+    prntr = SciPyPrinter()
+    prntr.doprint(expr1) == 'scipy.special.gamma(a)*scipy.special.gammainc(a, x)'
+    prntr.doprint(expr2) == 'scipy.special.gamma(a)*scipy.special.gammaincc(a, x)'
+
+    prntr = NumPyPrinter()
+    prntr.doprint(expr1) == '  # Not supported in Python:\n  # lowergamma\nlowergamma(a, x)'
+    prntr.doprint(expr2) == '  # Not supported in Python:\n  # uppergamma\nuppergamma(a, x)'
+
+    prntr = PythonCodePrinter()
+    prntr.doprint(expr1) == '  # Not supported in Python:\n  # lowergamma\nlowergamma(a, x)'
+    prntr.doprint(expr2) == '  # Not supported in Python:\n  # uppergamma\nuppergamma(a, x)'

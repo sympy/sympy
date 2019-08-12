@@ -449,6 +449,9 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
     def _print_Half(self, expr):
         return self._print_Rational(expr)
 
+    _print_lowergamma = CodePrinter._print_not_supported
+    _print_uppergamma = CodePrinter._print_not_supported
+
 
 for k in PythonCodePrinter._kf:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
@@ -783,6 +786,9 @@ class NumPyPrinter(PythonCodePrinter):
     def _print_CodegenArrayElementwiseAdd(self, expr):
         return self._expand_fold_binary_op('numpy.add', expr.args)
 
+    _print_lowergamma = CodePrinter._print_not_supported
+    _print_uppergamma = CodePrinter._print_not_supported
+
 
 for k in NumPyPrinter._kf:
     setattr(NumPyPrinter, '_print_%s' % k, _print_known_func)
@@ -849,6 +855,20 @@ class SciPyPrinter(NumPyPrinter):
             self._print(expr.args[0]),
             self._print(expr.args[1]),
             self._print(expr.args[2]))
+
+    def _print_lowergamma(self, expr):
+        return "{0}({2})*{1}({2}, {3})".format(
+            self._module_format('scipy.special.gamma'),
+            self._module_format('scipy.special.gammainc'),
+            self._print(expr.args[0]),
+            self._print(expr.args[1]))
+
+    def _print_uppergamma(self, expr):
+        return "{0}({2})*{1}({2}, {3})".format(
+            self._module_format('scipy.special.gamma'),
+            self._module_format('scipy.special.gammaincc'),
+            self._print(expr.args[0]),
+            self._print(expr.args[1]))
 
 for k in SciPyPrinter._kf:
     setattr(SciPyPrinter, '_print_%s' % k, _print_known_func)
