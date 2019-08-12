@@ -716,7 +716,7 @@ class AssumptionKeys(object):
 
     @predicate_memo
     def extended_nonzero(self):
-        """
+        r"""
         Extended nonzero real number predicate.
 
         ``ask(Q.nonzero(x))`` is true iff ``x`` is real or `x \in \{-\infty,
