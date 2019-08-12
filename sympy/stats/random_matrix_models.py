@@ -77,7 +77,7 @@ class GaussianEnsemble(RandomMatrixEnsemble):
         term3 = (2*pi)**(n/2)
         return term1 * term2 * term3
 
-    def _compute_joint_eigen_dsitribution(self, beta):
+    def _compute_joint_eigen_distribution(self, beta):
         """
         Helper function for computing the joint
         probability distribution of eigen values
@@ -119,7 +119,7 @@ class GaussianUnitaryEnsemble(GaussianEnsemble):
         return Lambda(H, exp(-S(n)/2 * Trace(H**2))/ZGUE)
 
     def joint_eigen_distribution(self):
-        return self._compute_joint_eigen_dsitribution(S(2))
+        return self._compute_joint_eigen_distribution(S(2))
 
     def level_spacing_distribution(self):
         s = Dummy('s')
@@ -151,7 +151,7 @@ class GaussianOrthogonalEnsemble(GaussianEnsemble):
         return Lambda(H, exp(-S(n)/4 * Trace(H**2))/ZGOE)
 
     def joint_eigen_distribution(self):
-        return self._compute_joint_eigen_dsitribution(S(1))
+        return self._compute_joint_eigen_distribution(S(1))
 
     def level_spacing_distribution(self):
         s = Dummy('s')
@@ -183,7 +183,7 @@ class GaussianSymplecticEnsemble(GaussianEnsemble):
         return Lambda(H, exp(-S(n) * Trace(H**2))/ZGSE)
 
     def joint_eigen_distribution(self):
-        return self._compute_joint_eigen_dsitribution(S(4))
+        return self._compute_joint_eigen_distribution(S(4))
 
     def level_spacing_distribution(self):
         s = Dummy('s')
@@ -201,7 +201,7 @@ class CircularEnsemble(RandomMatrixEnsemble):
 
     .. [1] https://en.wikipedia.org/wiki/Circular_ensemble
     """
-    def _compute_joint_eigen_dsitribution(self, beta):
+    def _compute_joint_eigen_distribution(self, beta):
         """
         Helper function to compute the joint distribution of phases
         of the complex eigen values of matrices belonging to any
@@ -237,7 +237,7 @@ class CircularUnitaryEnsemble(CircularEnsemble):
     unitary group which is not unique.
     """
     def joint_eigen_distribution(self):
-        return self._compute_joint_eigen_dsitribution(S(2))
+        return self._compute_joint_eigen_distribution(S(2))
 
 class CircularOrthogonalEnsemble(CircularEnsemble):
     """
@@ -259,7 +259,7 @@ class CircularOrthogonalEnsemble(CircularEnsemble):
     unitary group which is not unique.
     """
     def joint_eigen_distribution(self):
-        return self._compute_joint_eigen_dsitribution(S(1))
+        return self._compute_joint_eigen_distribution(S(1))
 
 class CircularSymplecticEnsemble(CircularEnsemble):
     """
@@ -282,7 +282,7 @@ class CircularSymplecticEnsemble(CircularEnsemble):
     """
 
     def joint_eigen_distribution(self):
-        return self._compute_joint_eigen_dsitribution(S(4))
+        return self._compute_joint_eigen_distribution(S(4))
 
 @dispatch(RandomMatrixSymbol)
 def joint_eigen_distribution(mat):
