@@ -483,7 +483,7 @@ class DependentPSpace(PSpace):
         rv = Dummy('rv', real=True)
         expr = expr.subs({sym: sym.symbol for sym in syms})
         return Integral(z_pdf * DiracDelta(rv - expr), *[(subs_sym, S.NegativeInfinity, S.Infinity)
-                        for subs_sym in subs_syms])
+                        for subs_sym in subs_syms]).doit()
 
 class ProductDomain(RandomDomain):
     """
@@ -847,7 +847,15 @@ class Density(Basic):
         from sympy.stats.joint_rv import JointPSpace
         from sympy.stats.frv import SingleFiniteDistribution
         from sympy.stats.random_matrix_models import RandomMatrixPSpace
+        from sympy.stats.symbolic_probability import Covariance
         expr, condition = self.expr, self.condition
+        dependent_hints = [Covariance]
+        if condition is not None and _sympify(condition).atoms(*dependent_hints):
+            if isinstance(condition, Eq):
+                assumps = condition
+            else:
+                assumps = And.fromiter(cond for cond in condition.args if cond.has(*dependent_hints))
+            return DependentPSpace.compute_density(_sympify(expr), assumps)
         if _sympify(expr).has(RandomMatrixSymbol):
             return pspace(expr).compute_density(expr)
         if isinstance(expr, SingleFiniteDistribution):

@@ -1129,6 +1129,9 @@ def test_sympy__stats__rv__IndependentProductPSpace():
     B = SingleContinuousPSpace(y, nd)
     assert _test_args(IndependentProductPSpace(A, B))
 
+@SKIP("static Class")
+def test_sympy__stats__rv__DependentPSpace():
+    pass
 
 def test_sympy__stats__rv__ProductDomain():
     from sympy.stats.rv import ProductDomain, SingleDomain
