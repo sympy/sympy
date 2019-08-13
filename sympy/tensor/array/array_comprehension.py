@@ -9,6 +9,9 @@ from sympy import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Integer
 
+def isLambda(v):
+    LAMBDA = lambda:0
+    return isinstance(v, type(LAMBDA)) and v.__name__ == LAMBDA.__name__
 
 class ArrayComprehension(Basic):
     """
@@ -36,7 +39,7 @@ class ArrayComprehension(Basic):
         if any(len(l) != 3 or None for l in symbols):
             raise ValueError('ArrayComprehension requires values lower and upper bound'
                               ' for the expression')
-        arglist = [sympify(function)]
+        arglist = [sympify(function)] if not isLambda(function) else [function]
         arglist.extend(cls._check_limits_validity(function, symbols))
         obj = Basic.__new__(cls, *arglist, **assumptions)
         obj._limits = obj._args[1:]
@@ -270,7 +273,15 @@ class ArrayComprehension(Basic):
             list_gen = []
             for val in range(inf, sup+1):
                 if not isinstance(list_expr, Iterable):
-                    list_gen.append(list_expr.subs(var, val))
+                    if isLambda(list_expr):
+                        if list_expr.__code__.co_argcount == 0:
+                            list_gen.append(list_expr())
+                        elif list_expr.__code__.co_argcount == 1:
+                            list_gen.append(list_expr(val))
+                        else:
+                            raise ValueError("One argument at most is accepted")
+                    else:
+                        list_gen.append(list_expr.subs(var, val))
                 else:
                     list_gen.append(_array_subs(list_expr, var, val))
         return list_gen

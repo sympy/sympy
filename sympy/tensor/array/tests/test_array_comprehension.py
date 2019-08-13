@@ -49,3 +49,8 @@ def test_array_comprehension():
     raises(ValueError, lambda: b.tolist())
     raises(ValueError, lambda: b.tomatrix())
     raises(ValueError, lambda: c.tomatrix())
+
+    # tests about lambda expression
+    assert ArrayComprehension(lambda: 3, (i, 1, 5)).doit().tolist() == [3, 3, 3, 3, 3]
+    assert ArrayComprehension(lambda i: i+1, (i, 1, 5)).doit().tolist() == [2, 3, 4, 5, 6]
+    raises(ValueError, lambda: ArrayComprehension(lambda i, j: i+j, (i, 1, 5)).doit())
