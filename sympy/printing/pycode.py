@@ -511,6 +511,8 @@ class MpmathPrinter(PythonCodePrinter):
     """
     printmethod = "_mpmathcode"
 
+    language = "Python with mpmath"
+
     _kf = dict(chain(
         _known_functions.items(),
         [(k, 'mpmath.' + v) for k, v in _known_functions_mpmath.items()]
@@ -589,6 +591,7 @@ class NumPyPrinter(PythonCodePrinter):
     logical operators, etc.
     """
     printmethod = "_numpycode"
+    language = "Python with NumPy"
 
     _kf = dict(chain(
         PythonCodePrinter._kf.items(),
@@ -836,6 +839,8 @@ _known_constants_scipy_constants = {
 
 class SciPyPrinter(NumPyPrinter):
 
+    language = "Python with SciPy"
+
     _kf = dict(chain(
         NumPyPrinter._kf.items(),
         [(k, 'scipy.special.' + v) for k, v in _known_functions_scipy_special.items()]
@@ -897,6 +902,8 @@ for k in SciPyPrinter._kc:
 
 
 class SymPyPrinter(PythonCodePrinter):
+
+    language = "Python with SymPy"
 
     _kf = {k: 'sympy.' + v for k, v in chain(
         _known_functions.items(),

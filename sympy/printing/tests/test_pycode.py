@@ -174,8 +174,8 @@ def test_issue_16535_16536():
     assert prntr.doprint(expr2) == 'scipy.special.gamma(a)*scipy.special.gammaincc(a, x)'
 
     prntr = NumPyPrinter()
-    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # lowergamma\nlowergamma(a, x)'
-    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # uppergamma\nuppergamma(a, x)'
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # lowergamma\nlowergamma(a, x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # uppergamma\nuppergamma(a, x)'
 
     prntr = PythonCodePrinter()
     assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # lowergamma\nlowergamma(a, x)'
@@ -193,8 +193,8 @@ def test_fresnel_integrals():
     assert prntr.doprint(expr2) == 'scipy.special.fresnel(x)[0]'
 
     prntr = NumPyPrinter()
-    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # fresnelc\nfresnelc(x)'
-    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # fresnels\nfresnels(x)'
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # fresnelc\nfresnelc(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # fresnels\nfresnels(x)'
 
     prntr = PythonCodePrinter()
     assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # fresnelc\nfresnelc(x)'
