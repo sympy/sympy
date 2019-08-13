@@ -210,15 +210,15 @@ def run_in_subprocess_with_hash_randomization(
 
     # First check if the Python version supports hash randomization
     # If it doesn't have this support, it won't reconize the -R flag
-    p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
+    os.environ["PYTHONPATH"] = os.path.abspath(os.path.dirname(__file__))
+    p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=os.environ)
     p.communicate()
     if p.returncode != 0:
         return False
 
     hash_seed = os.getenv("PYTHONHASHSEED")
     if not hash_seed:
-        os.environ["PYTHONHASHSEED"] = str(random.randrange(2**32))
+        os.environ["PYTHONHASHSEED"] = str(random.randrange(2 ** 32))
     else:
         if not force:
             return False
@@ -231,8 +231,7 @@ def run_in_subprocess_with_hash_randomization(
                       repr(function_kwargs)))
 
     try:
-        subprocess_env = os.getenv("PYTHONPATH")
-        p = subprocess.Popen([command, "-R", "-c", commandstring], env=subprocess_env)
+        p = subprocess.Popen([command, "-R", "-c", commandstring], env=os.environ)
         p.communicate()
     except KeyboardInterrupt:
         p.wait()
