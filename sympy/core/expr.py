@@ -684,7 +684,9 @@ class Expr(Basic, EvalfMixin):
                     if b is S.NaN:
                         # evaluation may succeed when substitution fails
                         b = expr._random(None, 1, 0, 1, 0)
-                except ZeroDivisionError:
+                except (ZeroDivisionError, ValueError):
+                    # In case of (at least) a Relational, a division by zero
+                    # will show up here as a ValueError
                     b = None
                 if b is not None and b is not S.NaN and b.equals(a) is False:
                     return False

@@ -1888,3 +1888,8 @@ def test_ExprBuilder():
     eb = ExprBuilder(Mul)
     eb.args.extend([x, x])
     assert eb.build() == x**2
+
+
+def test_issue_17354():
+    # Check that there is no exception
+    assert Max(y/(x - 1), y/(x + 1)).equals(0) is False

@@ -7,7 +7,7 @@ from sympy import (
     Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
     Rational, root, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
-    zoo)
+    zoo, Max)
 from sympy.core.mul import _keep_coeff
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
@@ -893,3 +893,9 @@ def test_issue_17292():
     assert simplify(abs(x)/abs(x**2)) == 1/abs(x)
     # this is bigger than the issue: check that deep processing works
     assert simplify(5*abs((x**2 - 1)/(x - 1))) == 5*Abs(x + 1)
+
+
+def test_issue_17354():
+    # Check that there is no exception
+    assert (Max(y/(x - 1), y/(x + 1)) >= 0).simplify() == \
+        (Max(y/(x - 1), y/(x + 1)) >= 0)
