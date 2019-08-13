@@ -394,13 +394,20 @@ def test_loggamma():
     assert conjugate(loggamma(1)) == loggamma(conjugate(1))
     assert conjugate(loggamma(-oo)) == conjugate(zoo)
 
-    y, z = Symbol('y', positive=True), Symbol('z', imaginary=True)
-    assert loggamma(x).is_real is None
-    assert loggamma(z).is_real is None
-    assert loggamma(y).is_real is True
+    assert loggamma(Symbol('v', positive=True)).is_real is True
+    assert loggamma(Symbol('v', zero=True)).is_real is False
+    assert loggamma(Symbol('v', negative=True)).is_real is False
+    assert loggamma(Symbol('v', nonpositive=True)).is_real is False
+    assert loggamma(Symbol('v', nonnegative=True)).is_real is None
+    assert loggamma(Symbol('v', imaginary=True)).is_real is None
+    assert loggamma(Symbol('v', real=True)).is_real is None
+    assert loggamma(Symbol('v')).is_real is None
+
     assert loggamma(S(1) / 2).is_real is True
     assert loggamma(0).is_real is False
     assert loggamma(-S(1)/2).is_real is False
+    assert loggamma(I).is_real is None
+    assert loggamma(2 + 3*I).is_real is None
 
     def tN(N, M):
         assert loggamma(1/x)._eval_nseries(x, n=N).getn() == M
