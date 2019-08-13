@@ -10,16 +10,16 @@ from sympy import (
     Float, Matrix, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
-    digamma, RisingFactorial, besselj, bessely, besseli, besselk, S,
+    digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
     MatrixSymbol, chebyshevt, chebyshevu, legendre, hermite, laguerre,
-    gegenbauer, assoc_legendre, assoc_laguerre, jacobi)
+    gegenbauer, assoc_legendre, assoc_laguerre, jacobi, fresnelc, fresnels)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.pycode import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
-from sympy.functions.special.gamma_functions import uppergamma,lowergamma
+from sympy.functions.special.gamma_functions import uppergamma, lowergamma
 
 import sympy
 
@@ -1195,8 +1195,42 @@ def test_issue_16536():
     a = symbols('a')
     f1 = lowergamma(a, x)
     F = lambdify((a, x), f1, modules='scipy')
-    assert (abs(lowergamma(1, 3) - F(1, 3))) <= 1e-8
+    assert abs(lowergamma(1, 3) - F(1, 3)) <= 1e-10
 
     f2 = uppergamma(a, x)
     F = lambdify((a, x), f2, modules='scipy')
-    assert (abs(uppergamma(1, 3) - F(1, 3))) <= 1e-8
+    assert abs(uppergamma(1, 3) - F(1, 3)) <= 1e-10
+
+
+def test_fresnel_integrals_scipy():
+    if not scipy:
+        skip("scipy not installed")
+
+    f1 = fresnelc(x)
+    f2 = fresnels(x)
+    F1 = lambdify(x, f1, modules='scipy')
+    F2 = lambdify(x, f2, modules='scipy')
+
+    assert abs(fresnelc(1.3) - F1(1.3)) <= 1e-10
+    assert abs(fresnels(1.3) - F2(1.3)) <= 1e-10
+
+
+def test_beta_scipy():
+    if not scipy:
+        skip("scipy not installed")
+
+    f = beta(x, y)
+    F = lambdify((x, y), f, modules='scipy')
+
+    assert abs(beta(1.3, 2.3) - F(1.3, 2.3)) <= 1e-10
+
+
+@XFAIL
+def test_beta_math():
+    # Not clear why it is not working since pycode(beta(x, y))
+    # gives 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
+
+    f = beta(x, y)
+    F = lambdify((x, y), f, modules='math')
+
+    assert abs(beta(1.3, 2.3) - F(1.3, 2.3)) <= 1e-10

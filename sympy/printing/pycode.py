@@ -451,6 +451,8 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
 
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported
+    _print_fresnelc = CodePrinter._print_not_supported
+    _print_fresnels = CodePrinter._print_not_supported
 
 
 for k in PythonCodePrinter._kf:
@@ -493,6 +495,9 @@ def pycode(expr, **settings):
 _not_in_mpmath = 'log1p log2'.split()
 _in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
 _known_functions_mpmath = dict(_in_mpmath, **{
+    'beta': 'beta',
+    'fresnelc': 'fresnelc',
+    'fresnels': 'fresnels',
     'sign': 'sign',
 })
 _known_constants_mpmath = {
@@ -788,6 +793,8 @@ class NumPyPrinter(PythonCodePrinter):
 
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported
+    _print_fresnelc = CodePrinter._print_not_supported
+    _print_fresnels = CodePrinter._print_not_supported
 
 
 for k in NumPyPrinter._kf:
@@ -817,6 +824,7 @@ _known_functions_scipy_special = {
     'hermite': 'eval_hermite',
     'laguerre': 'eval_laguerre',
     'assoc_laguerre': 'eval_genlaguerre',
+    'beta': 'beta'
 }
 
 _known_constants_scipy_constants = {
@@ -869,6 +877,17 @@ class SciPyPrinter(NumPyPrinter):
             self._module_format('scipy.special.gammaincc'),
             self._print(expr.args[0]),
             self._print(expr.args[1]))
+
+    def _print_fresnels(self, expr):
+        return "{0}({1})[0]".format(
+                self._module_format("scipy.special.fresnel"),
+                self._print(expr.args[0]))
+
+    def _print_fresnelc(self, expr):
+        return "{0}({1})[1]".format(
+                self._module_format("scipy.special.fresnel"),
+                self._print(expr.args[0]))
+
 
 for k in SciPyPrinter._kf:
     setattr(SciPyPrinter, '_print_%s' % k, _print_known_func)
