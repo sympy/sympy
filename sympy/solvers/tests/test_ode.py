@@ -7,7 +7,7 @@ from sympy.solvers.ode import (_undetermined_coefficients_match,
     constantsimp, homogeneous_order, infinitesimals, checkinfsol,
     checksysodesol, solve_ics, dsolve, get_numbered_constants)
 from sympy.solvers.deutils import ode_order
-from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
+from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
 from sympy.utilities.misc import filldedent
 
 
@@ -2912,6 +2912,25 @@ def test_series():
     eq = f(x).diff(x) - sin(x*f(x))
     sol = Eq(f(x), (x - 2)**2*(1+ sin(4))*cos(4) + (x - 2)*sin(4) + 2 + O(x**3))
     assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == sol
+
+@XFAIL
+@SKIP
+def test_lie_group_issue17322():
+    eq=x*f(x).diff(x)*(f(x)+4) + (f(x)**2) -2*f(x)-2*x
+    sol = dsolve(eq, f(x))
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq=x*f(x).diff(x)*(f(x)+4) + (f(x)**2) -2*f(x)-2*x
+    sol = dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq=Eq(x**7*Derivative(f(x), x) + 5*x**3*f(x)**2 - (2*x**2 + 2)*f(x)**3, 0)
+    sol = dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq=f(x).diff(x) - (f(x) - x*log(x))**2/x**2 + log(x)
+    sol = dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
 
 
 @slow
