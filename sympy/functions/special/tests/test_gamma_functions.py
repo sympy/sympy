@@ -396,7 +396,7 @@ def test_loggamma():
     assert loggamma(x).is_real is None
     y, z = Symbol('y', positive=True), Symbol('z', imaginary=True)
     assert loggamma(y).is_real
-    assert loggamma(z).is_real is False
+    assert loggamma(z).is_real is None
     assert loggamma(0).is_real is False
     assert loggamma(-S(1)/2).is_real is False
     assert loggamma(S(1)/2).is_real is True
