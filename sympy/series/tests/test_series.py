@@ -213,3 +213,36 @@ def test_issue_15539():
         + O(x**(-6), (x, -oo)))
     assert series(atan(x), x, oo) == (-1/(5*x**5) + 1/(3*x**3) - 1/x + pi/2
         + O(x**(-6), (x, oo)))
+
+
+def test_lagrange_inversion_theorem():
+    from sympy.series.series import lagrange_inversion_theorem
+    from sympy.abc import x, y
+    from sympy import exp
+
+    eq = 2 * y
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
+
+    eq = 2
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
+
+    eq = x ** 2
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, y, 1, 1))
+    assert lagrange_inversion_theorem(eq, x, 1, 3) == x**2/2 - (x**2 - 1)**2/8 + 1/2
+    assert lagrange_inversion_theorem(eq, x, 1, 1) == 1
+    assert lagrange_inversion_theorem(eq, x, 1, 2) == x**2/2 + 1/2
+    assert lagrange_inversion_theorem(eq, x, 1, 4) == x**2/2 + (x**2 - 1)**3/16 - (x**2 - 1)**2/8 + 1/2
+
+    eq = (x ** 3) * exp(x)
+    assert lagrange_inversion_theorem(eq, x, 1, 2) == (x**3*exp(x) - E)*exp(-1)/4 + 1
+    assert lagrange_inversion_theorem(eq, x, 1, 3) == -13*(x**3*exp(x) - E)**2*exp(-2)/128 + (x**3*exp(x) - E)*exp(-1)/4\
+           + 1
+
+    eq = (x ** 3) * exp(x) * y
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
+
+    eq = sin(x)
+    assert lagrange_inversion_theorem(eq, x, 1, 2) == (sin(x) - sin(1))/cos(1) + 1
+
+    eq = cos(y)
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
