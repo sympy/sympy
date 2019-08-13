@@ -16,8 +16,9 @@ from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
 from sympy.functions import sqrt, erf, erfi, li, Ei
 from sympy.functions import besselj, bessely, besseli, besselk
 from sympy.functions import hankel1, hankel2, jn, yn
-from sympy.functions.elementary.complexes import Abs, re, im, sign
+from sympy.functions.elementary.complexes import Abs, re, im, sign, arg
 from sympy.functions.elementary.exponential import LambertW
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 
@@ -101,7 +102,7 @@ def _symbols(name, n):
 
 def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                      degree_offset=0, unnecessary_permutations=None,
-                     always_try_heurisch=None):
+                     _try_heurisch=None):
     """
     A wrapper around the heurisch integration algorithm.
 
@@ -132,7 +133,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         return f*x
 
     res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset,
-                   unnecessary_permutations, always_try_heurisch)
+                   unnecessary_permutations, _try_heurisch)
     if not isinstance(res, Basic):
         return res
     # We consider each denominator in the expression, and try to find
@@ -167,7 +168,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     for sub_dict in slns:
         expr = heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries,
                         degree_offset, unnecessary_permutations,
-                        always_try_heurisch)
+                        _try_heurisch)
         cond = And(*[Eq(key, value) for key, value in sub_dict.items()])
         generic = Or(*[Ne(key, value) for key, value in sub_dict.items()])
         pairs.append((expr, cond))
@@ -176,13 +177,13 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     if len(pairs) == 1:
         pairs = [(heurisch(f, x, rewrite, hints, mappings, retries,
                               degree_offset, unnecessary_permutations,
-                              always_try_heurisch),
+                              _try_heurisch),
                               generic),
                  (pairs[0][0], True)]
     else:
         pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
                               degree_offset, unnecessary_permutations,
-                              always_try_heurisch),
+                              _try_heurisch),
                               True))
     return Piecewise(*pairs)
 
@@ -275,7 +276,7 @@ class DiffCache(object):
 
 def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
              degree_offset=0, unnecessary_permutations=None,
-             always_try_heurisch=None):
+             _try_heurisch=None):
     """
     Compute indefinite integral using heuristic Risch algorithm.
 
@@ -354,9 +355,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     # There are some functions that Heurisch cannot currently handle,
     # so do not even try.
-    # Set always_try_heurisch=True to skip this check
-    if always_try_heurisch is not True:
-        if f.has(Abs, re, im, sign, Heaviside, DiracDelta):
+    # Set _try_heurisch=True to skip this check
+    if _try_heurisch is not True:
+        if f.has(Abs, re, im, sign, Heaviside, DiracDelta, floor, ceiling, arg):
             return
 
     if x not in f.free_symbols:
