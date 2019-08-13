@@ -2968,16 +2968,6 @@ def test_lie_group():
     assert sol == dsolve(eq, hint='lie_group')
     assert checkodesol(eq, sol) == (True, 0)
 
-    eq = diff(f(x),x) + f(x)*cos(x) - exp(-sin(x))
-    sol = Eq(f(x), (C1 + x)*exp(-sin(x)))
-    assert sol == dsolve(eq, hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = diff(f(x),x) + f(x)*tan(x) + sin(2*x)
-    sol = Eq(f(x), (C1 + 2*cos(x))*cos(x))
-    assert sol == dsolve(eq, hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
-
     eq = x*diff(f(x),x) + f(x) - x*sin(x)
     sol = Eq(f(x), (C1 - x*cos(x) + sin(x))/x)
     assert sol == dsolve(eq, hint='lie_group')
@@ -2985,11 +2975,6 @@ def test_lie_group():
 
     eq = x*diff(f(x),x) - f(x) - x/log(x)
     sol = Eq(f(x), x*(C1 + log(log(x))))
-    assert sol == dsolve(eq, hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = x*diff(f(x),x) - f(x) - x*cos(log(log(x)))/log(x)
-    sol = Eq(f(x), x*(C1 + sin(log(log(x)))))
     assert sol == dsolve(eq, hint='lie_group')
     assert checkodesol(eq, sol) == (True, 0)
 
