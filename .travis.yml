@@ -280,9 +280,6 @@ before_install:
         if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
             conda install matchpy;
         fi
-        if [[ "$TEST_OPT_DEPENDENCY" == "*clang*" ]]; then
-            pip install clang;
-        fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list | grep "numpy" && pip uninstall -y numpy;
     fi
