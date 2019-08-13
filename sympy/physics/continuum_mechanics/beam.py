@@ -12,18 +12,13 @@ from sympy.functions import SingularityFunction, Piecewise, factorial
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
-from sympy.plotting import plot, PlotGrid, plot_implicit
+from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
-from sympy.utilities.decorator import doctest_depends_on
 from sympy import lambdify, Add
 from sympy.core.compatibility import iterable
 
-matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
-numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
-
-__doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
-
+numpy = import_module('numpy', __import__kwargs={'fromlist':['arange']})
 
 class Beam(object):
     """
@@ -1548,25 +1543,25 @@ class Beam(object):
             :format: doctest
             :include-source: True
 
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
-        >>> R1, R2 = symbols('R1, R2')
-        >>> E, I = symbols('E, I')
-        >>> b = Beam(50, 20, 30)
-        >>> b.apply_load(10, 2, -1)
-        >>> b.apply_load(R1, 10, -1)
-        >>> b.apply_load(R2, 30, -1)
-        >>> b.apply_load(90, 5, 0, 23)
-        >>> b.apply_load(10, 30, 1, 50)
-        >>> b.apply_support(50, "pin")
-        >>> b.apply_support(0, "fixed")
-        >>> b.apply_support(20, "roller")
-        >>> b.draw(pictorial=True)
-        Plot object containing:
-        [0]: cartesian line: 25*SingularityFunction(x, 5, 0)
-        - 25*SingularityFunction(x, 23, 0) + SingularityFunction(x, 30, 1)
-        - 20*SingularityFunction(x, 50, 0) - SingularityFunction(x, 50, 1)
-        + 5 for x over (0.0, 50.0)
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> R1, R2 = symbols('R1, R2')
+            >>> E, I = symbols('E, I')
+            >>> b = Beam(50, 20, 30)
+            >>> b.apply_load(10, 2, -1)
+            >>> b.apply_load(R1, 10, -1)
+            >>> b.apply_load(R2, 30, -1)
+            >>> b.apply_load(90, 5, 0, 23)
+            >>> b.apply_load(10, 30, 1, 50)
+            >>> b.apply_support(50, "pin")
+            >>> b.apply_support(0, "fixed")
+            >>> b.apply_support(20, "roller")
+            >>> b.draw(pictorial=True)
+            Plot object containing:
+            [0]: cartesian line: 25*SingularityFunction(x, 5, 0)
+            - 25*SingularityFunction(x, 23, 0) + SingularityFunction(x, 30, 1)
+            - 20*SingularityFunction(x, 50, 0) - SingularityFunction(x, 50, 1)
+            + 5 for x over (0.0, 50.0)
         """
         x = self.variable
         length = self.length
