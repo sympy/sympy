@@ -946,7 +946,7 @@ class loggamma(Function):
         z = self.args[0]
         if z.is_positive:
             return True
-        elif z.is_real:
+        elif z.is_nonpositive:
             return False
 
     def _eval_conjugate(self):
