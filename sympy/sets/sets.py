@@ -655,26 +655,32 @@ class ProductSet(Set):
 
     @classmethod
     def _eval_args(cls, *sets, **assumptions):
-        def flatten(arg):
-            if isinstance(arg, Set):
-                if arg.is_ProductSet:
-                    return sum(map(flatten, arg.args), [])
-                else:
-                    return [arg]
-            elif iterable(arg):
-                return sum(map(flatten, arg), [])
+        if len(sets) == 1 and not isinstance(sets[0], Set):
+            sets = tuple(sets[0])
+        if not all(isinstance(s, Set) for s in sets):
             raise TypeError("Input must be Sets or iterables of Sets")
-        sets = flatten(list(sets))
-        return tuple(sets)
+        return sets
 
     @classmethod
     def _eval_doit(cls, *sets):
+        # Flatten ProductSets
+        unflattened_sets = sets
+        sets = []
+        for s in unflattened_sets:
+            if s.is_ProductSet:
+                sets.extend(s.sets)
+            else:
+                sets.append(s)
 
         if EmptySet() in sets or len(sets) == 0:
             return EmptySet()
 
         if len(sets) == 1:
             return sets[0]
+
+        if sets != unflattened_sets:
+            return cls(*sets, evaluate=False)
+
 
     def _eval_Eq(self, other):
         if not other.is_ProductSet:
