@@ -231,7 +231,8 @@ def run_in_subprocess_with_hash_randomization(
                       repr(function_kwargs)))
 
     try:
-        p = subprocess.Popen([command, "-R", "-c", commandstring])
+        subprocess_env = os.getenv("PYTHONPATH")
+        p = subprocess.Popen([command, "-R", "-c", commandstring], env=subprocess_env)
         p.communicate()
     except KeyboardInterrupt:
         p.wait()
