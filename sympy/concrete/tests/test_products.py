@@ -1,5 +1,6 @@
 from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
-                   Function, Product, Rational, Sum, oo, exp, log, S, pi)
+                   Function, Product, Rational, Sum, oo, exp, log, S, pi,
+                   KroneckerDelta)
 from sympy.utilities.pytest import raises
 from sympy import simplify
 
@@ -371,3 +372,8 @@ def test_issue_14036():
 def test_rewrite_Sum():
     assert Product(1 - S.Half**2/k**2, (k, 1, oo)).rewrite(Sum) == \
         exp(Sum(log(1 - 1/(4*k**2)), (k, 1, oo)))
+
+
+def test_KroneckerDelta_Product():
+    y = Symbol('y')
+    assert Product(x*KroneckerDelta(x, y), (x, 0, 1)).doit() == 0

@@ -253,15 +253,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if limits:  # f is the argument to a Sum
             f = self.func(f, *limits)
 
-        if len(limit) == 3:
-            _, a, b = limit
-            if x in a.free_symbols or x in b.free_symbols:
-                return None
-            df = Derivative(f, x, evaluate=True)
-            rv = self.func(df, limit)
-            return rv
-        else:
-            return NotImplementedError('Lower and upper bound expected.')
+        _, a, b = limit
+        if x in a.free_symbols or x in b.free_symbols:
+            return None
+        df = Derivative(f, x, evaluate=True)
+        rv = self.func(df, limit)
+        return rv
 
     def _eval_difference_delta(self, n, step):
         k, _, upper = self.args[-1]
@@ -309,9 +306,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         result = Add(sum_combine(s_t), *o_t)
 
         return factor_sum(result, limits=self.limits)
-
-    def _eval_summation(self, f, x):
-        return None
 
     def is_convergent(self):
         r"""Checks for the convergence of a Sum.
@@ -441,18 +435,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         order = O(sequence_term, (sym, S.Infinity))
 
         ### --------- p-series test (1/n**p) ---------- ###
-        p1_series_test = order.expr.match(sym**p)
-        if p1_series_test is not None:
-            if p1_series_test[p] < -1:
+        p_series_test = order.expr.match(sym**p)
+        if p_series_test is not None:
+            if p_series_test[p] < -1:
                 return S.true
-            if p1_series_test[p] >= -1:
-                return S.false
-
-        p2_series_test = order.expr.match((1/sym)**p)
-        if p2_series_test is not None:
-            if p2_series_test[p] > 1:
-                return S.true
-            if p2_series_test[p] <= 1:
+            if p_series_test[p] >= -1:
                 return S.false
 
         ### ------------- comparison test ------------- ###

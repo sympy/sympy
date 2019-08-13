@@ -523,15 +523,8 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*stringPict.next(l, op, r))
             return pform
 
-        if len(lim) == 3:
-            prettyUpper = self._print(lim[2])
-            prettyLower = print_start(lim[0], lim[1])
-        elif len(lim) == 2:
-            prettyUpper = self._print("")
-            prettyLower = print_start(lim[0], lim[1])
-        elif len(lim) == 1:
-            prettyUpper = self._print("")
-            prettyLower = self._print(lim[0])
+        prettyUpper = self._print(lim[2])
+        prettyLower = print_start(lim[0], lim[1])
         return prettyLower, prettyUpper
 
     def _print_Sum(self, expr):
