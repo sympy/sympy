@@ -225,6 +225,9 @@ def run_in_subprocess_with_hash_randomization(
 
     function_kwargs = function_kwargs or {}
 
+    # Add path to the git sympy directory to PYTHONPATH envirnoment variable
+    # before importing sympy
+    sys.path.insert(0, "../../.")
     # Now run the command
     commandstring = ("import sys; from %s import %s;sys.exit(%s(*%s, **%s))" %
                      (module, function, function, repr(function_args),
