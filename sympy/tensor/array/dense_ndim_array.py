@@ -52,15 +52,7 @@ class DenseNDimArray(NDimArray):
         if syindex is not None:
             return syindex
 
-        if isinstance(index, (SYMPY_INTS, Integer, slice)):
-            index = (index, )
-
-        if len(index) < self.rank():
-            index = tuple([i for i in index] + \
-                          [slice(None) for i in range(len(index), self.rank())])
-
-        if len(index) > self.rank():
-            raise ValueError('Dimension of index greater than rank of array')
+        index = self._check_index_for_getitem(index)
 
         if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
             sl_factors, eindices = self._get_slice_data_for_array_access(index)
