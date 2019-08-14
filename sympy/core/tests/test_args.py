@@ -94,43 +94,32 @@ def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
     from sympy.assumptions.sathandlers import UnevaluatedOnFree
     from sympy import Q
     assert _test_args(UnevaluatedOnFree(Q.positive))
-    assert _test_args(UnevaluatedOnFree(Q.positive(x)))
-    assert _test_args(UnevaluatedOnFree(Q.positive(x * y)))
 
 def test_sympy__assumptions__sathandlers__AllArgs():
     from sympy.assumptions.sathandlers import AllArgs
     from sympy import Q
     assert _test_args(AllArgs(Q.positive))
-    assert _test_args(AllArgs(Q.positive(x)))
-    assert _test_args(AllArgs(Q.positive(x*y)))
 
 def test_sympy__assumptions__sathandlers__AnyArgs():
     from sympy.assumptions.sathandlers import AnyArgs
     from sympy import Q
     assert _test_args(AnyArgs(Q.positive))
-    assert _test_args(AnyArgs(Q.positive(x)))
-    assert _test_args(AnyArgs(Q.positive(x*y)))
 
 def test_sympy__assumptions__sathandlers__ExactlyOneArg():
     from sympy.assumptions.sathandlers import ExactlyOneArg
     from sympy import Q
     assert _test_args(ExactlyOneArg(Q.positive))
-    assert _test_args(ExactlyOneArg(Q.positive(x)))
-    assert _test_args(ExactlyOneArg(Q.positive(x*y)))
 
 def test_sympy__assumptions__sathandlers__CheckOldAssump():
     from sympy.assumptions.sathandlers import CheckOldAssump
     from sympy import Q
     assert _test_args(CheckOldAssump(Q.positive))
-    assert _test_args(CheckOldAssump(Q.positive(x)))
-    assert _test_args(CheckOldAssump(Q.positive(x*y)))
 
 def test_sympy__assumptions__sathandlers__CheckIsPrime():
     from sympy.assumptions.sathandlers import CheckIsPrime
     from sympy import Q
     # Input must be a number
     assert _test_args(CheckIsPrime(Q.positive))
-    assert _test_args(CheckIsPrime(Q.positive(5)))
 
 
 @SKIP("abstract Class")
