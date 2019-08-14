@@ -335,7 +335,7 @@ class ImageSet(Set):
             return FiniteSet(flambda.expr)
 
     lamda = property(lambda self: self.args[0])
-    base_set = property(lambda self: ProductSet(self.args[1:]))
+    base_set = property(lambda self: ProductSet(*self.args[1:]))
 
     def __iter__(self):
         already_seen = set()

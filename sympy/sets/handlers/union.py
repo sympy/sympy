@@ -44,11 +44,11 @@ def union_sets(a, b):
     if len(b.args) != len(a.args):
         return None
     if a.args[0] == b.args[0]:
-        return a.args[0] * Union(ProductSet(a.args[1:]),
-                                    ProductSet(b.args[1:]))
+        return a.args[0] * Union(ProductSet(*a.args[1:]),
+                                    ProductSet(*b.args[1:]))
     if a.args[-1] == b.args[-1]:
-        return Union(ProductSet(a.args[:-1]),
-                     ProductSet(b.args[:-1])) * a.args[-1]
+        return Union(ProductSet(*a.args[:-1]),
+                     ProductSet(*b.args[:-1])) * a.args[-1]
     return None
 
 @dispatch(ProductSet, Set)

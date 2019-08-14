@@ -23,6 +23,7 @@ from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.sets.contains import Contains
 from sympy.utilities import subsets
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
 
@@ -179,8 +180,8 @@ class Set(Basic):
             # XXX: this doesn't work if the dimensions of the sets isn't same.
             # A - B is essentially same as A if B has a different
             # dimensionality than A
-            switch_sets = ProductSet(FiniteSet(o, o - s) for s, o in
-                                     zip(self.sets, other.sets))
+            switch_sets = ProductSet(*(FiniteSet(o, o - s) for s, o in
+                                     zip(self.sets, other.sets)))
             product_sets = (ProductSet(*set) for set in switch_sets)
             # Union of all combinations but this one
             return Union(*(p for p in product_sets if p != other))
@@ -589,7 +590,7 @@ class Set(Basic):
     def __pow__(self, exp):
         if not sympify(exp).is_Integer and exp >= 0:
             raise ValueError("%s: Exponent must be a positive Integer" % exp)
-        return ProductSet([self]*exp)
+        return ProductSet(*([self]*exp))
 
     def __sub__(self, other):
         return Complement(self, other)
@@ -657,6 +658,12 @@ class ProductSet(Set):
     def _eval_args(cls, *sets, **assumptions):
         if len(sets) == 1 and not isinstance(sets[0], Set):
             sets = tuple(sets[0])
+            SymPyDeprecationWarning(
+                feature='iterable arguments to ProductSet',
+                useinstead='argument unpacking: ProductSet(*arg)',
+                deprecated_since_version=1.5,
+                issue=17372,
+            ).warn()
         if not all(isinstance(s, Set) for s in sets):
             raise TypeError("Input must be Sets or iterables of Sets")
         return sets
@@ -729,8 +736,8 @@ class ProductSet(Set):
 
     @property
     def _boundary(self):
-        return Union(*(ProductSet(b + b.boundary if i != j else b.boundary
-                                for j, b in enumerate(self.sets))
+        return Union(*(ProductSet(*(b + b.boundary if i != j else b.boundary
+                                for j, b in enumerate(self.sets)))
                                 for i, a in enumerate(self.sets)))
 
     @property

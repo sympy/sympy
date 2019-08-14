@@ -351,8 +351,7 @@ def intersection_sets(self, other):
 def intersection_sets(a, b):
     if len(b.args) != len(a.args):
         return S.EmptySet
-    return ProductSet(i.intersect(j)
-            for i, j in zip(a.sets, b.sets))
+    return ProductSet(*(i.intersect(j) for i, j in zip(a.sets, b.sets)))
 
 @dispatch(Interval, Interval)
 def intersection_sets(a, b):
