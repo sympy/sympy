@@ -87,18 +87,8 @@ class AllArgs(UnevaluatedOnFree):
 
     The typical usage is to evaluate predicates with expressions using .rcall().
 
-    Example
-    =======
-
-    >>> from sympy.assumptions.sathandlers import AllArgs
-    >>> from sympy import symbols, Q
-    >>> x, y = symbols('x y')
-    >>> a = AllArgs(Q.positive | Q.negative)
-    >>> a
-    AllArgs(Q.negative | Q.positive)
-    >>> a.rcall(x*y)
-    (Q.negative(x) | Q.positive(x)) & (Q.negative(y) | Q.positive(y))
     """
+    # TODO: Add examples.
 
     def apply(self, expr=None, is_Not=False):
         pred = to_NNF(self.pred)
@@ -116,18 +106,8 @@ class AnyArgs(UnevaluatedOnFree):
 
     The typical usage is to evaluate predicates with expressions using .rcall().
 
-    Example
-    =======
-
-    >>> from sympy.assumptions.sathandlers import AnyArgs
-    >>> from sympy import symbols, Q
-    >>> x, y = symbols('x y')
-    >>> a = AnyArgs(Q.positive & Q.negative)
-    >>> a
-    AnyArgs(Q.negative & Q.positive)
-    >>> a.rcall(x*y)
-    (Q.negative(x) & Q.positive(x)) | (Q.negative(y) & Q.positive(y))
     """
+    # TODO: Add examples.
 
     def apply(self, expr=None, is_Not=False):
         pred = to_NNF(self.pred)
@@ -146,18 +126,9 @@ class ExactlyOneArg(UnevaluatedOnFree):
     The typical usage is to evaluate predicate with expressions using
     .rcall().
 
-    Example
-    =======
-
-    >>> from sympy.assumptions.sathandlers import ExactlyOneArg
-    >>> from sympy import symbols, Q
-    >>> x, y = symbols('x y')
-    >>> a = ExactlyOneArg(Q.positive)
-    >>> a
-    ExactlyOneArg(Q.positive)
-    >>> a.rcall(x*y)
-    (Q.positive(x) & ~Q.positive(y)) | (Q.positive(y) & ~Q.positive(x))
     """
+    # TODO: Add examples
+
     def apply(self, expr=None, is_Not=False):
         pred = to_NNF(self.pred)
         pred_args = [pred.rcall(arg) for arg in expr.args]
