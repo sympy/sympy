@@ -3463,12 +3463,10 @@ class MatrixBase(MatrixDeprecated,
         """
         if not self.is_square:
             raise NonSquareMatrixError()
-
-        ok = self.rref(simplify=True)[0]
-        if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
+        try:
+            return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
+        except NotImplementedError:
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
-
-        return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
 
     def inv(self, method=None, **kwargs):
         """
@@ -3900,10 +3898,10 @@ class MatrixBase(MatrixDeprecated,
         LUdecompositionFF
         LUsolve
         """
-
-        if rankcheck:
-            # https://github.com/sympy/sympy/issues/9796
-            pass
+        msg_rank_error = \
+            "Rank of matrix is strictly less than number of rows or " \
+            "columns. Pass keyword argument rankcheck=False to compute " \
+            "the LU decomposition of this matrix."
 
         if self.rows == 0 or self.cols == 0:
             # Define LU decomposition of a matrix with no entries as a matrix
@@ -3928,7 +3926,7 @@ class MatrixBase(MatrixDeprecated,
             iszeropivot = True
             while pivot_col != self.cols and iszeropivot:
                 sub_col = (lu[r, pivot_col] for r in range(pivot_row, self.rows))
-                pivot_row_offset, pivot_value, is_assumed_non_zero, ind_simplified_pairs =\
+                pivot_row_offset, pivot_value, _, ind_simplified_pairs =\
                     _find_reasonable_pivot_naive(sub_col, iszerofunc, simpfunc)
                 iszeropivot = pivot_value is None
                 if iszeropivot:
@@ -3942,11 +3940,7 @@ class MatrixBase(MatrixDeprecated,
                 # strictly less than min(num rows, num cols)
                 # Mimic behavior of previous implementation, by throwing a
                 # ValueError.
-                raise ValueError("Rank of matrix is strictly less than"
-                                 " number of rows or columns."
-                                 " Pass keyword argument"
-                                 " rankcheck=False to compute"
-                                 " the LU decomposition of this matrix.")
+                raise ValueError(msg_rank_error)
 
             candidate_pivot_row = None if pivot_row_offset is None else pivot_row + pivot_row_offset
 
@@ -4014,13 +4008,15 @@ class MatrixBase(MatrixDeprecated,
                 return lu, row_swaps
 
         if rankcheck:
-            if iszerofunc(
-            lu[Min(lu.rows, lu.cols) - 1, Min(lu.rows, lu.cols) - 1]):
-                raise ValueError("Rank of matrix is strictly less than"
-                                 " number of rows or columns."
-                                 " Pass keyword argument"
-                                 " rankcheck=False to compute"
-                                 " the LU decomposition of this matrix.")
+            i = Min(lu.rows, lu.cols) - 1
+            j = Min(lu.rows, lu.cols) - 1
+
+            is_zero = iszerofunc(lu[i, j])
+            if is_zero:
+                raise ValueError(msg_rank_error)
+            elif is_zero == None:
+                if lu[i, j].equals(0):
+                    raise ValueError(msg_rank_error)
 
         return lu, row_swaps
 
