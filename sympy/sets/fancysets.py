@@ -329,14 +329,20 @@ class ImageSet(Set):
 
     @classmethod
     def _eval_doit(cls, flambda, *sets):
+
+        # FIXME: Much of what should be here is in the imageset function. It
+        # should be moved here so that imageset is equivalent to
+        # ImageSet().doit()
+
         if flambda is S.IdentityFunction:
             return sets[0]
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
             return FiniteSet(flambda.expr)
 
-        from sympy.sets.setexpr import SetExpr
-        return SetExpr(*sets)._eval_func(flambda).set
+        if len(sets) == 1:
+            from sympy.sets.setexpr import SetExpr
+            return SetExpr(sets[0])._eval_func(flambda).set
 
     lamda = property(lambda self: self.args[0])
     base_set = property(lambda self: ProductSet(*self.args[1:]))

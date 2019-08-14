@@ -1841,6 +1841,10 @@ def imageset(*args):
     from sympy.sets.fancysets import ImageSet
     from sympy.sets.setexpr import set_function
 
+    # FIXME: This whole function should just be a wrapper for
+    # ImageSet().doit(). The non-trivial processing below does not belong
+    # here.
+
     if len(args) < 2:
         raise ValueError('imageset expects at least 2 args, got: %s' % len(args))
 
@@ -1913,9 +1917,9 @@ def imageset(*args):
                     set.base_set)
 
         if r is not None:
-            return r
+            return r.doit()
 
-    return ImageSet(f, *set_list)
+    return ImageSet(f, *set_list).doit()
 
 
 def is_function_invertible_in_set(func, setv):

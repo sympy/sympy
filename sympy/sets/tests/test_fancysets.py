@@ -76,9 +76,9 @@ def test_integers():
 
 def test_ImageSet():
     raises(ValueError, lambda: ImageSet(x, S.Integers))
-    assert ImageSet(Lambda(x, 1), S.Integers) == FiniteSet(1)
+    assert ImageSet(Lambda(x, 1), S.Integers).doit() == FiniteSet(1)
     assert ImageSet(Lambda(x, y), S.Integers
-        ) == {y}
+        ).doit() == {y}
     squares = ImageSet(Lambda(x, x**2), S.Naturals)
     assert 4 in squares
     assert 5 not in squares
@@ -827,7 +827,7 @@ def test_issue_9543():
 
 
 def test_issue_16871():
-    assert ImageSet(Lambda(x, x), FiniteSet(1)) == {1}
+    assert ImageSet(Lambda(x, x), FiniteSet(1)).doit() == {1}
     assert ImageSet(Lambda(x, x - 3), S.Integers
         ).intersection(S.Integers) is S.Integers
 
