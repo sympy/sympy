@@ -9,7 +9,7 @@ from sympy.core.relational import Eq, Ge, Le, Ne, Gt, Lt
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, converter
-from sympy.logic.boolalg import And, Not, Or
+from sympy.logic.boolalg import And, Not, Or, ITE
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
     ProductSet, Intersection)
 from sympy.sets.contains import Contains
@@ -561,7 +561,7 @@ class Range(Set):
     Either the start or end value of the Range must be finite.'''))
 
         if start.is_infinite:
-            if Lt(step*(stop - start), 0) == True:
+            if (step*(stop - start) < 0) == True:
                 start = end = S.Zero
                 step = S.One
             else:
@@ -615,10 +615,9 @@ class Range(Set):
         start, stop, step = self.start, self.stop, self.step
         inf = Piecewise((start, Ge(step, S.Zero)), (stop - step, True))
         sup = Piecewise((stop - step, Ge(step, S.Zero)), (start, True))
-        return Piecewise((False, Le(ceiling((stop - start)/step), S.Zero)),
-                         (False, Ne((ref - other) % self.step, S.Zero)),
-                         (True, Ge(other, inf) & Le(other, sup)),
-                         (False, True))
+        return ITE(Le(ceiling((stop - start)/step), S.Zero), False,
+                    ITE(Ne((ref - other) % self.step, S.Zero), False,
+                    ITE(Ge(other, inf) & Le(other, sup), True, False)))
 
     def __iter__(self):
         if self.start in [S.NegativeInfinity, S.Infinity]:
@@ -635,7 +634,7 @@ class Range(Set):
                 i += step
 
     def __len__(self):
-        size = _sympify(self.size)
+        size = self.size
         if size.has(Symbol) or size.is_infinite:
             raise ValueError(
                 "Use .size to get the length of an infinite and symbolic Range")
@@ -645,6 +644,7 @@ class Range(Set):
     def size(self):
         from sympy.functions.elementary.integers import floor, ceiling
         from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.functions.elementary.complexes import Abs
         if not self:
             return S.Zero
         start, stop, step = self.start, self.stop, self.step
@@ -652,7 +652,7 @@ class Range(Set):
         if dif.is_infinite:
             return S.Infinity
         null = ceiling(dif/step)
-        return Piecewise((abs(floor(dif/step)), Gt(null, S.Zero)),
+        return Piecewise((Abs(floor(dif/step)).doit(), Gt(null, S.Zero)),
                          (S.Zero, True))
 
     def __nonzero__(self):
