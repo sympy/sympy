@@ -3184,12 +3184,27 @@ def test_MatrixExpressions():
     expr = (X.T*X).applyfunc(sin)
 
     ascii_str = """\
-   / T     \\\n\
-sin\\X *X.../\
+    / T  \\\n\
+sin.\\X *X/\
 """
     ucode_str = u("""\
-   ⎛ T     ⎞\n\
-sin⎝X ⋅X...⎠\
+    ⎛ T  ⎞\n\
+sin∘⎝X ⋅X⎠\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    lamda = Lambda(x, 1/x)
+    expr = (n*X).applyfunc(lamda)
+    ascii_str = """\
+/     1\\      \n\
+|d -> -|.(n*X)\n\
+\\     d/      \
+"""
+    ucode_str = u("""\
+⎛    1⎞      \n\
+⎜d ↦ ─⎟∘(n⋅X)\n\
+⎝    d⎠      \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str

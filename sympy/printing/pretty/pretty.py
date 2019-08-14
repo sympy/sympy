@@ -1387,14 +1387,29 @@ class PrettyPrinter(Printer):
     def _print_mathieusprime(self, e):
         return self._print_Function(e, func_name="S'")
 
-    def _helper_print_function(self, func, args, sort=False, func_name=None, delimiter=', '):
+    def _helper_print_function(self, func, args, sort=False, func_name=None, delimiter=', ', elementwise=False):
         if sort:
             args = sorted(args, key=default_sort_key)
 
-        if not func_name:
+        if not func_name and hasattr(func, "__name__"):
             func_name = func.__name__
 
-        prettyFunc = self._print(Symbol(func_name))
+        if func_name:
+            prettyFunc = self._print(Symbol(func_name))
+        else:
+            prettyFunc = prettyForm(*self._print(func).parens())
+
+        if elementwise:
+            if self._use_unicode:
+                circ = pretty_atom('Ring')
+            else:
+                circ = '.'
+            circ = self._print(circ)
+            prettyFunc = prettyForm(
+                binding=prettyForm.LINE,
+                *stringPict.next(prettyFunc, circ)
+            )
+
         prettyArgs = prettyForm(*self._print_seq(args, delimiter=delimiter).parens())
 
         pform = prettyForm(
@@ -1409,8 +1424,8 @@ class PrettyPrinter(Printer):
     def _print_ElementwiseApplyFunction(self, e):
         func = e.function
         arg = e.expr
-        args = [arg, "..."]
-        return self._helper_print_function(func, args, delimiter="")
+        args = [arg]
+        return self._helper_print_function(func, args, delimiter="", elementwise=True)
 
     @property
     def _special_function_classes(self):
