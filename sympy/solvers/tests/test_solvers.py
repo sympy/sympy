@@ -1602,20 +1602,27 @@ def test_lambert_bivariate():
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
     # check collection
-    assert solve(3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5), x) == \
-        [log(-((b + 3)*LambertW(S(1)/(b + 3))/a**5)**(S(1)/3)*(1 - sqrt(3)*I)/2)/log(a), \
-        log(-((b + 3)*LambertW(S(1)/(b + 3))/a**5)**(S(1)/3)*(1 + sqrt(3)*I)/2)/log(a), \
-        log((b + 3)*LambertW(S(1)/(b + 3))/a**5)/(3*log(a))]
-
+    ax = a**(3*x + 5)
+    ans = solve(3*log(ax) + b*log(ax) + ax, x)
     x0 = 1/log(a)
+    x1 = sqrt(3)*I
+    x2 = b + 3
+    x3 = x2*LambertW(1/x2)/a**5
+    x4 = x3**(S(1)/3)/2
+    assert ans == [
+        x0*log(x4*(x1 - 1)),
+        x0*log(-x4*(x1 + 1)),
+        x0*log(x3)/3]
     x1 = LambertW(S(1)/3)
     x2 = a**(-5)
     x3 = 3**(S(1)/3)
     x4 = 3**(S(5)/6)*I
     x5 = x1**(S(1)/3)*x2**(S(1)/3)/2
-    ans = solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x)
+    ans = solve(3*log(ax) + ax, x)
     assert ans == [
-        x0*log(3*x1*x2)/3, x0*log(-x5*(x3 - x4)), x0*log(-x5*(x3 + x4))]
+        x0*log(3*x1*x2)/3,
+        x0*log(x5*(-x3 + x4)),
+        x0*log(-x5*(x3 + x4))]
     # coverage
     p = symbols('p', positive=True)
     eq = 4*2**(2*p + 3) - 2*p - 3
@@ -1628,10 +1635,14 @@ def test_lambert_bivariate():
         exp(-z + LambertW(2*z**4*exp(2*z))/2)/z]
     # cases when p != S.One
     # issue 4271
-    assert solve((a/x + exp(x/2)).diff(x, 2), x) == \
-                [6*LambertW((-a)**(S(1)/3)/3), \
-                6*LambertW((-a)**(S(1)/3)*(-1 - sqrt(3)*I)/6), \
-                6*LambertW((-a)**(S(1)/3)*(-1 + sqrt(3)*I)/6)]
+    ans = solve((a/x + exp(x/2)).diff(x, 2), x)
+    x0 = (-a)**(S(1)/3)
+    x1 = sqrt(3)*I
+    x2 = x0/6
+    assert ans == [
+        6*LambertW(x0/3),
+        6*LambertW(x2*(x1 - 1)),
+        6*LambertW(-x2*(x1 + 1))]
     assert solve((1/x + exp(x/2)).diff(x, 2), x) == \
                 [6*LambertW(-S(1)/3), 6*LambertW(S(1)/6 - sqrt(3)*I/6), \
                 6*LambertW(S(1)/6 + sqrt(3)*I/6), 6*LambertW(-S(1)/3, -1)]
@@ -2055,3 +2066,8 @@ def test_issue_15731():
 def test_issue_10933():
     assert solve(x**4 + y*(x + 0.1), x)  # doesn't fail
     assert solve(I*x**4 + x**3 + x**2 + 1.)  # doesn't fail
+
+
+def test_Abs_handling():
+    x = symbols('x', real=True)
+    assert solve(abs(x/y), x) == [0]

@@ -125,6 +125,8 @@ def test_issue_15925a():
 @XFAIL
 @slow
 def test_issue_15925b():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     assert not integrate(sqrt((-12*cos(x)**2*sin(x))**2+(12*cos(x)*sin(x)**2)**2),
                          (x, 0, pi/6)).has(Integral)
 
@@ -256,6 +258,6 @@ def test_integrate_Piecewise_rational_over_reals():
 
 
 @XFAIL
-@slow
 def test_issue_4311_slow():
+    # Not slow when bypassing heurish
     assert not integrate(x*abs(9-x**2), x).has(Integral)

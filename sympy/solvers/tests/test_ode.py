@@ -8,8 +8,8 @@ from sympy.solvers.ode import (_undetermined_coefficients_match,
     checksysodesol, solve_ics, dsolve, get_numbered_constants)
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
+from sympy.functions import besselj, bessely
 from sympy.utilities.misc import filldedent
-
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 u, x, y, z = symbols('u,x:z', real=True)
@@ -668,6 +668,9 @@ def test_checkodesol():
     eqn = Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x))
     sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
     assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (2*x**2 +25)*f(x)
+    sol = Eq(f(x), C1*besselj(5*I, sqrt(2)*x) + C2*bessely(5*I, sqrt(2)*x))
+    assert checkodesol(eq, sol) == (True, 0)
 
 @slow
 def test_dsolve_options():
@@ -1121,7 +1124,7 @@ def test_solve_ics():
         [Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)]
 
     K, r, f0 = symbols('K r f0')
-    sol = Eq(f(x), -K*f0*exp(r*x)/((K - f0)*(-f0*exp(r*x)/(K - f0) - 1)))
+    sol = Eq(f(x), K*f0*exp(r*x)/((-K + f0)*(f0*exp(r*x)/(-K + f0) - 1)))
     assert (dsolve(Eq(f(x).diff(x), r * f(x) * (1 - f(x) / K)), f(x), ics={f(0): f0})) == sol
 
 
@@ -1161,6 +1164,7 @@ def test_solve_ics():
         C2: 0,
         C3: L**2*q/(4*EI),
         C4: -L*q/(6*EI)}
+
 
 def test_ode_order():
     f = Function('f')

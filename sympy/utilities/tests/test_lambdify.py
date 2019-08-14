@@ -1037,10 +1037,17 @@ def test_scipy_polys():
         (jacobi, 3)
     ]
 
+    msg = \
+        "The random test of the function {func} with the arguments " \
+        "{args} had failed because the SymPy result {sympy_result} " \
+        "and SciPy result {scipy_result} had failed to converge " \
+        "within the tolerance {tol} " \
+        "(Actual absolute difference : {diff})"
+
     for sympy_fn, num_params in polys:
         args = params[:num_params] + (x,)
         f = lambdify(args, sympy_fn(*args))
-        for i in range(10):
+        for _ in range(10):
             tn = numpy.random.randint(3, 10)
             tparams = tuple(numpy.random.uniform(0, 5, size=num_params-1))
             tv = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
@@ -1051,9 +1058,25 @@ def test_scipy_polys():
             if sympy_fn == assoc_legendre:
                 tv = numpy.random.uniform(-1, 1)
                 tparams = tuple(numpy.random.randint(1, tn, size=1))
+
             vals = (tn,) + tparams + (tv,)
+            scipy_result = f(*vals)
             sympy_result = sympy_fn(*vals).evalf()
-            assert abs(f(*vals) - sympy_result) < 1e-13*(1 + abs(sympy_result))
+            atol = 1e-9*(1 + abs(sympy_result))
+            diff = abs(scipy_result - sympy_result)
+            try:
+                assert diff < atol
+            except:
+                raise AssertionError(
+                    msg.format(
+                        func=repr(sympy_fn),
+                        args=repr(vals),
+                        sympy_result=repr(sympy_result),
+                        scipy_result=repr(scipy_result),
+                        diff=diff,
+                        tol=atol)
+                    )
+
 
 
 def test_lambdify_inspect():
