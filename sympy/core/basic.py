@@ -1831,8 +1831,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         # This is Basic.doit when _basic_version=1
         if hints.get('deep', True):
-            terms = [term.doit(**hints) if isinstance(term, Basic) else term
-                                         for term in self.args]
+            terms = [term.doit(**hints) for term in self.args]
             return self.func(*terms)
         else:
             return self
