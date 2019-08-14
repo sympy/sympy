@@ -197,10 +197,6 @@ class MatrixExpr(Expr):
         from sympy.matrices.expressions.adjoint import Adjoint
         return Adjoint(self)
 
-    def _eval_derivative(self, x):
-        # x is a scalar:
-        return ZeroMatrix(self.shape[0], self.shape[1])
-
     def _eval_derivative_array(self, x):
         if isinstance(x, MatrixExpr):
             return _matrix_derivative(self, x)
@@ -225,7 +221,11 @@ class MatrixExpr(Expr):
             return Derivative(x, self)
 
     def _accept_eval_derivative(self, s):
-        return s._visit_eval_derivative_array(self)
+        from sympy import MatrixBase, NDimArray
+        if isinstance(s, (MatrixBase, NDimArray, MatrixExpr)):
+            return s._visit_eval_derivative_array(self)
+        else:
+            return s._visit_eval_derivative_scalar(self)
 
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
@@ -789,6 +789,10 @@ class MatrixSymbol(MatrixExpr):
 
     def _eval_simplify(self, **kwargs):
         return self
+
+    def _eval_derivative(self, x):
+        # x is a scalar:
+        return ZeroMatrix(self.shape[0], self.shape[1])
 
     def _eval_derivative_matrix_lines(self, x):
         if self != x:
