@@ -597,6 +597,10 @@ class polygamma(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_is_real(self):
+        if self.args[0].is_positive and self.args[1].is_positive:
+            return True
+
     def _eval_is_positive(self):
         if self.args[0].is_positive and self.args[1].is_positive:
             return self.args[0].is_odd
