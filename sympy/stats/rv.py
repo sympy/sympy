@@ -506,7 +506,7 @@ class ProductDomain(RandomDomain):
 
     @property
     def set(self):
-        return ProductSet(domain.set for domain in self.domains)
+        return ProductSet(*(domain.set for domain in self.domains))
 
     def __contains__(self, other):
         # Split event into each subdomain
