@@ -451,7 +451,7 @@ class Range(Set):
     `Range(stop)` is the same as `Range(0, stop, 1)` and the stop value
     (juse as for Python ranges) is not included in the Range values.
 
-        >>> from sympy import Range, oo
+        >>> from sympy import Range
         >>> list(Range(3))
         [0, 1, 2]
 
@@ -463,10 +463,8 @@ class Range(Set):
     The stop value is made canonical so equivalent ranges always
     have the same args:
 
-        >>> Range(1, -oo, 2)
-        Range(0, 0, 1)
-        >>> Range(1, -oo, 3)
-        Range(0, 0, 1)
+        >>> Range(0, 10, 3)
+        Range(0, 12, 3)
 
     Infinite ranges are allowed. ``oo`` and ``-oo`` are never included in the
     set (``Range`` is always a subset of ``Integers``). If the starting point
@@ -483,6 +481,12 @@ class Range(Set):
         ValueError: Cannot iterate over Range with infinite start
         >>> next(iter(r.reversed))
         0
+
+    A canonical empty Range will be produced when the Range contains
+    no values:
+
+        >>> Range(1, -oo, 2)
+        Range(0, 0, 1)
 
     Although Range is a set (and supports the normal set
     operations) it maintains the order of the elements and can
@@ -505,12 +509,11 @@ class Range(Set):
         >>> Range(3).intersect(Range(4, oo))
         EmptySet()
 
-    Range also supports symbolic start, stop and step provided they
-    satisfy, is_integer=True, i.e., all the paramters should be integer
-    symbols:
+    Range also supports symbolic start, stop and step as long as the
+    property ``is_integer`` is not False:
 
-        >>> from sympy import symbols
-        >>> n = symbols('n', integer=True)
+        >>> from sympy import Symbol
+        >>> n = Symbol('n', integer=True)
         >>> Range(n, 10, 1)
         Range(n, 10, 1)
         >>> list(Range(n, n + 6))
@@ -535,8 +538,9 @@ class Range(Set):
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
         params = []
         for w in (start, stop, step):
-            if (w in [S.NegativeInfinity, S.Infinity]) or (sympify(w).is_integer != False):
-                params.append(sympify(w))
+            w = sympify(w)
+            if (w in [S.NegativeInfinity, S.Infinity]) or w.is_integer:
+                params.append(w)
             else:
                 raise ValueError(filldedent('''
         Arguments to Range must be integers (or integer symbols); `imageset` can define
@@ -545,10 +549,10 @@ class Range(Set):
 
         start, stop, step = params
 
-        if not step.is_finite == True:
+        if step.is_finite == False:
             raise ValueError("step must be a finite integer symbol.")
 
-        if all(i.is_infinite for i in  (start, stop)):
+        if all(i.is_infinite for i in (start, stop)):
             if start == stop:
                 # canonical null handled below
                 start = stop = S.One
@@ -558,10 +562,11 @@ class Range(Set):
 
         if start.is_infinite:
             if Lt(step*(stop - start), 0) == True:
-                start = stop = S.One
+                start = end = S.Zero
+                step = S.One
             else:
                 end = stop
-        if not start.is_infinite:
+        else:
             ref = start if start.is_finite else stop
             n = ceiling((stop - ref)/step)
             if (n <= 0) == True:
