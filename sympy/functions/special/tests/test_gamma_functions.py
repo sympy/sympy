@@ -305,6 +305,7 @@ def test_polygamma():
 
     # issue 12569
     assert unchanged(im, polygamma(0, I))
+    assert polygamma(Symbol('a', positive=True), Symbol('b', positive=True)).is_real is True
     assert polygamma(0, I).is_real is None
 
 
