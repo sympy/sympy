@@ -108,12 +108,12 @@ class ExpBase(Function):
         return Pow._eval_power(Pow(b, e, evaluate=False), other)
 
     def _eval_expand_power_exp(self, **hints):
+        from sympy import Sum, Product
         arg = self.args[0]
         if arg.is_Add and arg.is_commutative:
-            expr = 1
-            for x in arg.args:
-                expr *= self.func(x)
-            return expr
+            return Mul.fromiter(self.func(x) for x in arg.args)
+        elif isinstance(arg, Sum) and arg.is_commutative:
+            return Product(exp(arg.function), *arg.limits)
         return self.func(arg)
 
 
@@ -768,7 +768,7 @@ class log(Function):
                 else:
                     return unpolarify(e) * a
         elif isinstance(arg, Product):
-            if arg.function.is_positive:
+            if force or arg.function.is_positive:
                 return Sum(log(arg.function), *arg.limits)
 
         return self.func(arg)
