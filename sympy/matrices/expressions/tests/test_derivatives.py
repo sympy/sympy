@@ -55,6 +55,7 @@ def test_matrix_derivative_by_scalar():
     assert hadamard_product(i*OneMatrix(k, 1), x, y).diff(i) == hadamard_product(x, y)
     assert (i*x).diff(i) == x
     assert (sin(i)*A*B*x).diff(i) == cos(i)*A*B*x
+    assert x.applyfunc(sin).diff(i) == ZeroMatrix(k, 1)
 
 
 def test_matrix_derivative_non_matrix_result():
@@ -337,6 +338,14 @@ def test_derivatives_elementwise_applyfunc():
     expr = x.applyfunc(tan)
     assert expr.diff(x) == DiagonalizeVector(x.applyfunc(lambda x: tan(x)**2 + 1))
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
+
+    expr = (i**2*x).applyfunc(sin)
+    assert expr.diff(i) == HadamardProduct((2*i)*x, (i**2*x).applyfunc(cos))
+    _check_derivative_with_explicit_matrix(expr, i, expr.diff(i))
+
+    expr = (log(i)*A*B).applyfunc(sin)
+    assert expr.diff(i) == HadamardProduct(A*B/i, (log(i)*A*B).applyfunc(cos))
+    _check_derivative_with_explicit_matrix(expr, i, expr.diff(i))
 
     expr = A*x.applyfunc(exp)
     assert expr.diff(x) == DiagonalizeVector(x.applyfunc(exp))*A.T
