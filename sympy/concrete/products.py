@@ -201,18 +201,23 @@ class Product(ExprWithIntLimits):
     function = term
 
     def _eval_is_zero(self):
-        # a Product is zero only if its term is zero.
-        return self.term.is_zero
+        if self.has_finite_limits:
+            # a Product is zero only if its term is zero.
+            return self.term.is_zero
 
     def _eval_is_extended_real(self):
         return self.function.is_extended_real
 
     def _eval_is_positive(self):
-        if self.function.is_positive:
+        if self.function.is_positive and self.has_finite_limits:
             return True
 
     def _eval_is_nonnegative(self):
-        if self.function.is_nonnegative:
+        if self.function.is_nonnegative and self.has_finite_limits:
+            return True
+
+    def _eval_is_extended_nonnegative(self):
+        if self.function.is_extended_nonnegative:
             return True
 
     def doit(self, **hints):

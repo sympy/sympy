@@ -178,16 +178,20 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         return self.function.is_extended_real
 
     def _eval_is_positive(self):
-        return self.function.is_positive
+        if self.has_finite_limits and self.has_reversed_limits is False:
+            return self.function.is_positive
 
     def _eval_is_nonnegative(self):
-        return self.function.is_nonnegative
+        if self.has_finite_limits and self.has_reversed_limits is False:
+            return self.function.is_nonnegative
 
     def _eval_is_negative(self):
-        return self.function.is_negative
+        if self.has_finite_limits and self.has_reversed_limits is False:
+            return self.function.is_negative
 
     def _eval_is_nonpositive(self):
-        return self.function.is_nonpositive
+        if self.has_finite_limits and self.has_reversed_limits is False:
+            return self.function.is_nonpositive
 
     def doit(self, **hints):
         if hints.get('deep', True):

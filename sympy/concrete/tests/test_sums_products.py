@@ -1177,6 +1177,16 @@ def test_sumproducts_assumptions():
     assert Product(m, (m, -M, 0)).is_negative is None
     assert Product(m, (m, -M, 0)).is_nonnegative is None
 
+    m = Symbol('m', integer=True)
+    assert Sum(2, (m, 0, oo)).is_positive is None
+    assert Sum(2, (m, 0, oo)).is_nonpositive is None
+    assert Sum(2, (m, 0, oo)).is_negative is None
+    assert Sum(2, (m, 0, oo)).is_nonnegative is None
+    assert Product(2, (m, 0, oo)).is_positive is None
+    assert Product(2, (m, 0, oo)).is_nonpositive is None
+    assert Product(2, (m, 0, oo)).is_negative is False
+    assert Product(2, (m, 0, oo)).is_nonnegative is None
+
 
 def test_expand_with_assumptions():
     M = Symbol('M', integer=True, positive=True)
@@ -1194,3 +1204,16 @@ def test_expand_with_assumptions():
     # that x**i*y**j is positive.
     assert log(Product(x**i*y**j, (i, 1, n), (j, 1, m))).rewrite(Sum).expand() \
         == Sum(i*log(x), (i, 1, n), (j, 1, m)) + Sum(j*log(y), (i, 1, n), (j, 1, m))
+
+
+def test_has_finite_limits():
+    x = Symbol('x')
+    assert Sum(1, (x, 1, 9)).has_finite_limits is True
+    assert Sum(1, (x, 1, oo)).has_finite_limits is False
+    M = Symbol('M')
+    assert Sum(1, (x, 1, M)).has_finite_limits is None
+    M = Symbol('M', positive=True)
+    assert Sum(1, (x, 1, M)).has_finite_limits is True
+    x = Symbol('x', positive=True)
+    M = Symbol('M')
+    assert Sum(1, (x, 1, M)).has_finite_limits is True
