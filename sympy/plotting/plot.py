@@ -658,7 +658,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
             f_start = f(self.start)
             f_end = f(self.end)
-            sample([self.start, f_start], [self.end, f_end], 0)
+            sample(np.array([self.start, f_start]),
+                   np.array([self.end, f_end]), 0)
 
             return list_segments
 
