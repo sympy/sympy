@@ -605,8 +605,8 @@ def test_log_product():
     assert expr.expand() == expr
     assert expr.expand(force=True) == Sum(w*i, (i, 0, n))
 
-    expr = log(Product(i**2*abs(j), (i, 0, n), (j, 0, m)))
-    assert expr.expand() == Sum(2*log(i) + log(j), (i, 0, n), (j, 0, m))
+    expr = log(Product(i**2*abs(j), (i, 1, n), (j, 1, m)))
+    assert expr.expand() == Sum(2*log(i) + log(j), (i, 1, n), (j, 1, m))
 
 
 @XFAIL

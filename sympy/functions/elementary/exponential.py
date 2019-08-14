@@ -113,7 +113,7 @@ class ExpBase(Function):
         if arg.is_Add and arg.is_commutative:
             return Mul.fromiter(self.func(x) for x in arg.args)
         elif isinstance(arg, Sum) and arg.is_commutative:
-            return Product(exp(arg.function), *arg.limits)
+            return Product(self.func(arg.function), *arg.limits)
         return self.func(arg)
 
 
