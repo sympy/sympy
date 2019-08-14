@@ -675,7 +675,7 @@ class Expr(Basic, EvalfMixin):
                 if a is S.NaN:
                     # evaluation may succeed when substitution fails
                     a = expr._random(None, 0, 0, 0, 0)
-            except ZeroDivisionError:
+            except (ZeroDivisionError, ValueError):
                 a = None
             if a is not None and a is not S.NaN:
                 try:
@@ -685,20 +685,36 @@ class Expr(Basic, EvalfMixin):
                         # evaluation may succeed when substitution fails
                         b = expr._random(None, 1, 0, 1, 0)
                 except (ZeroDivisionError, ValueError):
+                    # evaluation may succeed when substitution fails
+                    b = expr._random(None, 1, 0, 1, 0)
                     # In case of (at least) a Relational, a division by zero
                     # will show up here as a ValueError
                     b = None
-                if b is not None and b is not S.NaN and b.equals(a) is False:
-                    return False
+                if b is not None and b is not S.NaN:
+                    try:
+                        if b.equals(a) is False:
+                            return False
+                    except TypeError:
+                        pass
+
                 # try random real
                 b = expr._random(None, -1, 0, 1, 0)
-                if b is not None and b is not S.NaN and b.equals(a) is False:
-                    return False
+
+                if b is not None and b is not S.NaN:
+                    try:
+                        if b.equals(a) is False:
+                            return False
+                    except TypeError:
+                        pass
+
                 # try random complex
                 b = expr._random()
                 if b is not None and b is not S.NaN:
-                    if b.equals(a) is False:
-                        return False
+                    try:
+                        if b.equals(a) is False:
+                            return False
+                    except TypeError:
+                        pass
                     failing_number = a if a.is_number else b
 
         # now we will test each wrt symbol (or all free symbols) to see if the
@@ -2456,7 +2472,10 @@ class Expr(Basic, EvalfMixin):
                 return len(negative_args) % 2 == 1
 
             # As a last resort, we choose the one with greater value of .sort_key()
-            return bool(self.sort_key() < negative_self.sort_key())
+            try:
+                return bool(self.sort_key() < negative_self.sort_key())
+            except TypeError:
+                return False
 
     def extract_branch_factor(self, allow_half=False):
         """

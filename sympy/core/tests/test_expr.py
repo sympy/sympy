@@ -5,7 +5,7 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate, gammasimp, Gt)
+                   integrate, gammasimp, Gt, Min, euler, fresnelc)
 from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range, round, PY3
@@ -1893,3 +1893,8 @@ def test_ExprBuilder():
 def test_issue_17354():
     # Check that there is no exception
     assert Max(y/(x - 1), y/(x + 1)).equals(0) is False
+    assert Min(1/x, y).is_constant() in [None, False]
+    assert Integral(x, (x, 0, z/(y))).is_constant() in [None, False]
+    assert Integral(x, (x, 0, z/(y-1))).is_constant() in [None, False]
+    assert euler(y/z, x).is_constant() in [None, False]
+    assert fresnelc(x/y).is_constant() in [None, False]
