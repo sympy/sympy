@@ -1210,10 +1210,10 @@ def test__dummy_with_inherited_properties_concrete():
     d = _dummy_with_inherited_properties_concrete(Tuple(N, 2, 4))
     assert d is None
 
-    # Return None if no limits are given
-    N = Symbol('N', integer=True, positive=True)
-    d = _dummy_with_inherited_properties_concrete(Tuple(N))
-    assert d is None
+    from sympy.core.facts import InconsistentAssumptions
+    x = Symbol('x', negative=True)
+    raises(InconsistentAssumptions,
+           lambda: _dummy_with_inherited_properties_concrete(Tuple(x, 1, 5)))
 
 
 def test_matrixsymbol_summation_numerical_limits():

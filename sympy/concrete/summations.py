@@ -1308,12 +1308,9 @@ def _dummy_with_inherited_properties_concrete(limits):
     provided symbol and limits as possible.
 
     If the symbol already has all possible assumptions, return None.
-    Also returns None if no limits are provided.
     """
-    if len(limits) != 3:
-        return None
     x, a, b = limits
-    l = (a, b)
+    l = [a, b]
 
     assumptions_to_consider = ['extended_nonnegative', 'nonnegative',
                                'extended_nonpositive', 'nonpositive',
@@ -1328,7 +1325,7 @@ def _dummy_with_inherited_properties_concrete(limits):
         assum_true = x._assumptions.get(assum, None)
         if assum_true:
             assumptions_to_keep[assum] = True
-        elif all(i._assumptions.get(assum, None) for i in l):
+        elif all([getattr(i, 'is_' + assum) for i in l]):
             assumptions_to_add[assum] = True
     if assumptions_to_add:
         assumptions_to_keep.update(assumptions_to_add)
