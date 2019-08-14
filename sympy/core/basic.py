@@ -1814,6 +1814,22 @@ class Basic(with_metaclass(ManagedProperties)):
         2*Integral(x, x)
 
         """
+        if self._basic_version == 2:
+            args = self.args
+
+            # Evaluate args:
+            if hints.get('deep', True):
+                args = tuple(a.doit(**hints) for a in args)
+
+            # Evaluate self:
+            hints.pop('deep', None)
+            newobj = self._eval_doit(*args, **hints)
+            if newobj is not None:
+                return newobj
+
+            return self.func(*args)
+
+        # This is Basic.doit when _basic_version=1
         if hints.get('deep', True):
             terms = [term.doit(**hints) if isinstance(term, Basic) else term
                                          for term in self.args]

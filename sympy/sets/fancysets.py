@@ -314,6 +314,7 @@ class ImageSet(Set):
     sympy.sets.sets.imageset
     """
     _basic_version = 2
+    _basic_autodoit = False
 
     @classmethod
     def _eval_args(cls, flambda, *sets):
@@ -333,6 +334,9 @@ class ImageSet(Set):
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
             return FiniteSet(flambda.expr)
+
+        from sympy.sets.setexpr import SetExpr
+        return SetExpr(*sets)._eval_func(flambda).set
 
     lamda = property(lambda self: self.args[0])
     base_set = property(lambda self: ProductSet(*self.args[1:]))
@@ -453,12 +457,6 @@ class ImageSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
-
-    def doit(self, **kwargs):
-        from sympy.sets.setexpr import SetExpr
-        f = self.lamda
-        base_set = self.base_set
-        return SetExpr(base_set)._eval_func(f).set
 
 
 class Range(Set):
