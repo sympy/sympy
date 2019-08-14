@@ -393,7 +393,7 @@ class ExprWithLimits(Expr):
         >>> Sum(x, (x, 1, M)).has_finite_limits
 
         >>> N = Symbol('N', integer=True)
-        >>> Sum(x, (x, 1, M)).has_finite_limits
+        >>> Sum(x, (x, 1, N)).has_finite_limits
         True
 
         """

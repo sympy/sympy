@@ -201,9 +201,12 @@ class Product(ExprWithIntLimits):
     function = term
 
     def _eval_is_zero(self):
+        z = self.term.is_zero
+        if z is True:
+            return True
         if self.has_finite_limits:
             # a Product is zero only if its term is zero.
-            return self.term.is_zero
+            return z
 
     def _eval_is_extended_real(self):
         return self.function.is_extended_real
