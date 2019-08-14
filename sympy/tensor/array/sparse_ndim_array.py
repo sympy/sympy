@@ -50,9 +50,10 @@ class SparseNDimArray(NDimArray):
         if syindex is not None:
             return syindex
 
-        if isinstance(index, (SYMPY_INTS, Integer)):
+        if isinstance(index, (SYMPY_INTS, Integer, slice)):
             index = (index, )
-        if not isinstance(index, slice) and len(index) < self.rank():
+
+        if len(index) < self.rank():
             index = tuple([i for i in index] + \
                           [slice(None) for i in range(len(index), self.rank())])
 
@@ -63,15 +64,8 @@ class SparseNDimArray(NDimArray):
             nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
             return type(self)(array, nshape)
         else:
-            # `index` is a single slice:
-            if isinstance(index, slice):
-                start, stop, step = index.indices(self._loop_size)
-                retvec = [self._sparse_array.get(ind, S.Zero) for ind in range(start, stop, step)]
-                return retvec
-            # `index` is a number or a tuple without any slice:
-            else:
-                index = self._parse_index(index)
-                return self._sparse_array.get(index, S.Zero)
+            index = self._parse_index(index)
+            return self._sparse_array.get(index, S.Zero)
 
     @classmethod
     def zeros(cls, *shape):
@@ -105,12 +99,6 @@ class SparseNDimArray(NDimArray):
             mat_sparse[self._get_tuple_index(key)] = value
 
         return SparseMatrix(self.shape[0], self.shape[1], mat_sparse)
-
-    def __iter__(self):
-        def iterator():
-            for i in range(self._loop_size):
-                yield self[self._get_tuple_index(i)]
-        return iterator()
 
     def reshape(self, *newshape):
         new_total_size = functools.reduce(lambda x,y: x*y, newshape)

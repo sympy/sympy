@@ -36,8 +36,9 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan
                              Abs, re, im, arg, sqrt, atan2)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify, denom, logcombine, sqrtdenest, fraction)
+from sympy.simplify import (simplify, collect, powsimp, posify,
+    powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
+    separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1
 from sympy.matrices import Matrix, zeros
@@ -1020,8 +1021,14 @@ def solve(f, *symbols, **flags):
     for i, fi in enumerate(f):
         # Abs
         reps = []
-        for a in fi.atoms(Abs):
+        _abs = fi.atoms(Abs)
+        while _abs:
+            a = _abs.pop()
             if not a.has(*symbols):
+                continue
+            newa = separatevars(a)
+            if not isinstance(newa, Abs):
+                _abs.update(newa.atoms(Abs))
                 continue
             if a.args[0].is_extended_real is None:
                 raise NotImplementedError('solving %s when the argument '

@@ -286,8 +286,8 @@ def test_issue_5565():
 
 def test_find_unit():
     assert find_unit('coulomb') == ['coulomb', 'coulombs', 'coulomb_constant']
-    assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs', 'planck_charge']
-    assert find_unit(charge) == ['C', 'coulomb', 'coulombs', 'planck_charge']
+    assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
+    assert find_unit(charge) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     assert find_unit(inch) == [
         'm', 'au', 'cm', 'dm', 'ft', 'km', 'ly', 'mi', 'mm', 'nm', 'pm', 'um',
         'yd', 'nmi', 'feet', 'foot', 'inch', 'mile', 'yard', 'meter', 'miles',
