@@ -4,8 +4,8 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
-                  Derivative, sin, exp, cos, tan, log, Lambda, S, sqrt,
-                  hadamard_product, DiagonalizeVector)
+                   Derivative, sin, exp, cos, tan, log, Lambda, S, sqrt,
+                   hadamard_product, DiagonalizeVector, OneMatrix, HadamardProduct, HadamardPower)
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
 from sympy.matrices.expressions import hadamard_power
 
@@ -47,6 +47,14 @@ def test_matrix_derivative_by_scalar():
     assert (A*(X + B)*c).diff(i) == ZeroMatrix(k, 1)
     assert x.diff(i) == ZeroMatrix(k, 1)
     assert (x.T*y).diff(i) == ZeroMatrix(1, 1)
+    assert (x*x.T).diff(i) == ZeroMatrix(k, k)
+    assert (x + y).diff(i) == ZeroMatrix(k, 1)
+    assert hadamard_power(x, 2).diff(i) == ZeroMatrix(k, 1)
+    assert hadamard_power(x, i).diff(i) == HadamardProduct(x.applyfunc(log), HadamardPower(x, i))
+    assert hadamard_product(x, y).diff(i) == ZeroMatrix(k, 1)
+    assert hadamard_product(i*OneMatrix(k, 1), x, y).diff(i) == hadamard_product(x, y)
+    assert (i*x).diff(i) == x
+    assert (sin(i)*A*B*x).diff(i) == cos(i)*A*B*x
 
 
 def test_matrix_derivative_non_matrix_result():

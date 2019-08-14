@@ -1352,6 +1352,9 @@ class Derivative(Expr):
             if zero:
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
+                elif isinstance(expr, MatrixExpr):
+                    from sympy import ZeroMatrix
+                    return ZeroMatrix(*expr.shape)
                 elif expr.is_scalar:
                     return S.Zero
 
@@ -1367,7 +1370,7 @@ class Derivative(Expr):
 
         # we return here if evaluate is False or if there is no
         # _eval_derivative method
-        if not evaluate or not hasattr(expr, '_eval_derivative'):
+        if not evaluate or not hasattr(expr, '_eval_derivative_n_times'):
             # return an unevaluated Derivative
             if evaluate and variable_count == [(expr, 1)] and expr.is_scalar:
                 # special hack providing evaluation for classes
