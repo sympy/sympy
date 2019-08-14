@@ -1131,3 +1131,66 @@ def test_exceptions():
     raises(ReorderError, lambda: S.reorder_limit(0, 1))
     S = Sum(x*y, (x, a, b), (y, 1, 4))
     raises(NotImplementedError, lambda: S.is_convergent())
+
+
+def test_sumproducts_assumptions():
+    M = Symbol('M', integer=True, positive=True)
+
+    m = Symbol('m', integer=True)
+    for func in [Sum, Product]:
+        assert func(m, (m, -M, M)).is_positive is None
+        assert func(m, (m, -M, M)).is_nonpositive is None
+        assert func(m, (m, -M, M)).is_negative is None
+        assert func(m, (m, -M, M)).is_nonnegative is None
+
+    m = Symbol('m', integer=True, nonnegative=True)
+    for func in [Sum, Product]:
+        assert func(m, (m, 0, M)).is_positive is None
+        assert func(m, (m, 0, M)).is_nonpositive is None
+        assert func(m, (m, 0, M)).is_negative is False
+        assert func(m, (m, 0, M)).is_nonnegative is True
+
+    m = Symbol('m', integer=True, positive=True)
+    for func in [Sum, Product]:
+        assert func(m, (m, 1, M)).is_positive is True
+        assert func(m, (m, 1, M)).is_nonpositive is False
+        assert func(m, (m, 1, M)).is_negative is False
+        assert func(m, (m, 1, M)).is_nonnegative is True
+
+    m = Symbol('m', integer=True, negative=True)
+    assert Sum(m, (m, -M, -1)).is_positive is False
+    assert Sum(m, (m, -M, -1)).is_nonpositive is True
+    assert Sum(m, (m, -M, -1)).is_negative is True
+    assert Sum(m, (m, -M, -1)).is_nonnegative is False
+    assert Product(m, (m, -M, -1)).is_positive is None
+    assert Product(m, (m, -M, -1)).is_nonpositive is None
+    assert Product(m, (m, -M, -1)).is_negative is None
+    assert Product(m, (m, -M, -1)).is_nonnegative is None
+
+    m = Symbol('m', integer=True, nonpositive=True)
+    assert Sum(m, (m, -M, 0)).is_positive is False
+    assert Sum(m, (m, -M, 0)).is_nonpositive is True
+    assert Sum(m, (m, -M, 0)).is_negative is None
+    assert Sum(m, (m, -M, 0)).is_nonnegative is None
+    assert Product(m, (m, -M, 0)).is_positive is None
+    assert Product(m, (m, -M, 0)).is_nonpositive is None
+    assert Product(m, (m, -M, 0)).is_negative is None
+    assert Product(m, (m, -M, 0)).is_nonnegative is None
+
+
+def test_expand_with_assumptions():
+    M = Symbol('M', integer=True, positive=True)
+    x = Symbol('x', positive=True)
+    m = Symbol('m', nonnegative=True)
+    assert log(Product(x**m, (m, 0, M))).expand() == Sum(m*log(x), (m, 0, M))
+    assert log(Product(exp(x**m), (m, 0, M))).expand() == Sum(x**m, (m, 0, M))
+    assert log(Product(x**m, (m, 0, M))).rewrite(Sum).expand() == Sum(m*log(x), (m, 0, M))
+    assert log(Product(exp(x**m), (m, 0, M))).rewrite(Sum).expand() == Sum(x**m, (m, 0, M))
+
+    n = Symbol('n', nonnegative=True)
+    i, j = symbols('i,j', positive=True, integer=True)
+    x, y = symbols('x,y', positive=True)
+    # Here, it must be rewritten as the assumption system cannot figure out
+    # that x**i*y**j is positive.
+    assert log(Product(x**i*y**j, (i, 1, n), (j, 1, m))).rewrite(Sum).expand() \
+        == Sum(i*log(x), (i, 1, n), (j, 1, m)) + Sum(j*log(y), (i, 1, n), (j, 1, m))
