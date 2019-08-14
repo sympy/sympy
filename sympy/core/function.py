@@ -1352,6 +1352,9 @@ class Derivative(Expr):
             if zero:
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
+                elif isinstance(expr, MatrixExpr):
+                    from sympy import ZeroMatrix
+                    return ZeroMatrix(*expr.shape)
                 elif expr.is_scalar:
                     return S.Zero
 
