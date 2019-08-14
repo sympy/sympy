@@ -191,7 +191,7 @@ class MatrixExpr(Expr):
         if self.is_Atom:
             return self
         else:
-            return self.__class__(*[simplify(x, **kwargs) for x in self.args])
+            return self.func(*[simplify(x, **kwargs) for x in self.args])
 
     def _eval_adjoint(self):
         from sympy.matrices.expressions.adjoint import Adjoint
