@@ -1242,6 +1242,17 @@ def test_expand_with_assumptions():
         == Sum(i*log(x), (i, 1, n), (j, 1, m)) + Sum(j*log(y), (i, 1, n), (j, 1, m))
 
 
+@XFAIL
+def test_expand_with_assumptions_failing():
+    m, n = symbols('m,n', nonnegative=True)
+    i, j = symbols('i,j', positive=True, integer=True)
+    x, y = symbols('x,y', positive=True)
+    # Remove the rewrite and the comment in the corresponding test in
+    # test_expand_with_assumptions once this passes (and delete this)
+    assert log(Product(x**i*y**j, (i, 1, n), (j, 1, m))).expand() \
+        == Sum(i*log(x), (i, 1, n), (j, 1, m)) + Sum(j*log(y), (i, 1, n), (j, 1, m))
+
+
 def test_has_finite_limits():
     x = Symbol('x')
     assert Sum(1, (x, 1, 9)).has_finite_limits is True
