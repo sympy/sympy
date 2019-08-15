@@ -3,7 +3,7 @@ from sympy.utilities.pytest import raises
 
 
 def test_funcmatrix_creation():
-    i, j = symbols('i j')
+    i, j, k = symbols('i j k')
     assert FunctionMatrix(2, 2, Lambda((i, j), 0))
     assert FunctionMatrix(0, 0, Lambda((i, j), 0))
 
@@ -14,16 +14,19 @@ def test_funcmatrix_creation():
     raises(ValueError, lambda: FunctionMatrix(0, 2.0, Lambda((i, j), 0)))
     raises(ValueError, lambda: FunctionMatrix(0, 2j, Lambda((i, j), 0)))
 
+    raises(ValueError, lambda: FunctionMatrix(2, 2, Lambda(i, 0)))
+    raises(ValueError, lambda: FunctionMatrix(2, 2, lambda i, j: 0))
+    raises(ValueError, lambda: FunctionMatrix(2, 2, Lambda((i,), 0)))
+    raises(ValueError, lambda: FunctionMatrix(2, 2, Lambda((i, j, k), 0)))
+    assert FunctionMatrix(2, 2, "lambda i, j: 0") == \
+        FunctionMatrix(2, 2, Lambda((i, j), 0))
+
     n = symbols('n')
     assert FunctionMatrix(n, n, Lambda((i, j), 0))
     n = symbols('n', integer=False)
     raises(ValueError, lambda: FunctionMatrix(n, n, Lambda((i, j), 0)))
     n = symbols('n', negative=True)
     raises(ValueError, lambda: FunctionMatrix(n, n, Lambda((i, j), 0)))
-
-    raises(ValueError, lambda: FunctionMatrix(-1, 0, Lambda(i, 0)))
-    # XXX Support python function or lambda expression?
-    raises(ValueError, lambda: FunctionMatrix(-1, 0, lambda i: 0))
 
 
 def test_funcmatrix():
