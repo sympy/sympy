@@ -15,6 +15,7 @@ Goals:
 from __future__ import print_function, division
 
 import os
+from os.path import dirname
 import sys
 import platform
 import inspect
@@ -210,8 +211,9 @@ def run_in_subprocess_with_hash_randomization(
 
     # First check if the Python version supports hash randomization
     # If it doesn't have this support, it won't reconize the -R flag
-    os.environ["PYTHONPATH"] = dirname(dirname(dirname(__file__)))
-    p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=os.environ)
+    current_dir = dirname(dirname(os.path.dirname(__file__)))
+    p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT, cwd=current_dir)
     p.communicate()
     if p.returncode != 0:
         return False
@@ -231,7 +233,7 @@ def run_in_subprocess_with_hash_randomization(
                       repr(function_kwargs)))
 
     try:
-        p = subprocess.Popen([command, "-R", "-c", commandstring], env=os.environ)
+        p = subprocess.Popen([command, "-R", "-c", commandstring], cwd=current_dir)
         p.communicate()
     except KeyboardInterrupt:
         p.wait()
