@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy.concrete.expr_with_limits import ExprWithLimits
 from sympy.core.singleton import S
+from sympy.core.relational import Eq
 
 class ReorderError(NotImplementedError):
     """
@@ -283,3 +284,23 @@ class ExprWithIntLimits(ExprWithLimits):
             return type(expr)(expr.function, *limits)
         else:
             raise ReorderError(expr, "could not interchange the two limits specified")
+
+    @property
+    def is_empty_sequence(self):
+        """
+        Returns True if the Sum or Product is computed for an empty sequence.
+        """
+        ret_None = False
+        for lim in self.limits:
+            dif = lim[1] - lim[2]
+            eq = Eq(dif, 1)
+            if eq == True:
+                return True
+            elif eq == False:
+                continue
+            else:
+                ret_None = True
+
+        if ret_None:
+            return None
+        return False

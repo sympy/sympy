@@ -171,10 +171,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # cancel out. This only answers whether the summand is zero; if
         # not then None is returned since we don't analyze whether all
         # terms cancel out.
-        if self.function.is_zero:
+        if self.function.is_zero or self.is_empty_sequence:
             return True
 
     def _eval_is_extended_real(self):
+        if self.is_empty_sequence:
+            return True
         return self.function.is_extended_real
 
     def _eval_is_positive(self):
@@ -182,6 +184,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return self.function.is_positive
 
     def _eval_is_nonnegative(self):
+        if self.is_zero:
+            return True
         if self.has_finite_limits and self.has_reversed_limits is False:
             return self.function.is_nonnegative
 
@@ -190,8 +194,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return self.function.is_negative
 
     def _eval_is_nonpositive(self):
+        if self.is_zero:
+            return True
         if self.has_finite_limits and self.has_reversed_limits is False:
             return self.function.is_nonpositive
+
 
     def doit(self, **hints):
         if hints.get('deep', True):
