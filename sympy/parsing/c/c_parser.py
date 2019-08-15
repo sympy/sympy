@@ -1,23 +1,14 @@
 from __future__ import unicode_literals, print_function
-
-from sympy.codegen.ast import (
-    Variable, IntBaseType, FloatBaseType, String,
-    Integer, Float, FunctionPrototype, FunctionDefinition, FunctionCall,
-    none, Return
-    )
 from sympy.external import import_module
 import os
-import sys
-import tempfile
 
 cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
 
 """
 This module contains all the necessary Classes and Function used to Parse C and
 C++ code into SymPy expression
-The module serves as a ackend for SymPyExpression to parse C code
-It is also dependent on Clang's AST adn Sympy's Cdegen AST that is converted to
-SymPy syntax which might also be missing some features.
+The module serves as a backend for SymPyExpression to parse C code
+It is also dependent on Clang's AST and Sympy's Codegen AST.
 The module only supports the features currently supported by the Clang and
 codegen AST which will be updated as the development of codegen AST and this
 module progresses.
@@ -37,7 +28,7 @@ Notes
 =====
 
 The module is dependent on an external dependency which needs to be installed
-to use any features from the module.
+to use the features of this module.
 
 Clang: The C and C++ compiler which is used to extract an AST from the provided
 C source code.
@@ -52,11 +43,17 @@ Refrences
 """
 
 if cin:
+    from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
+        Integer, Float, FunctionPrototype, FunctionDefinition, FunctionCall,
+        none, Return)
+    import sys
+    import tempfile
+
     class BaseParser(object):
-        """Base Class for the C parser
-        """
+        """Base Class for the C parser"""
+
         def __init__(self):
-            """Initializes the Base C parser creating a Clang AST index"""
+            """Initializes the Base parser creating a Clang AST index"""
             self.index = cin.Index.create()
 
         def diagnostics(self, out):
@@ -317,7 +314,6 @@ if cin:
 
                 # Subsequent nodes will be the parameters for the function.
                 try:
-
                     while True:
                         decl = self.transform(child)
                         if (child.kind == cin.CursorKind.PARM_DECL):
@@ -330,7 +326,6 @@ if cin:
                         child = next(children)
                 except StopIteration:
                     pass
-
             except StopIteration:
                 pass
 

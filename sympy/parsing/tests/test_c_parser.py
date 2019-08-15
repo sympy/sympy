@@ -8,6 +8,7 @@ if cin:
                                    Declaration, CodeBlock, FunctionPrototype,
                                    FunctionCall, NoneToken)
     from sympy import Symbol
+    import os
 else:
     #bin/test will not execute any tests now
     disabled = True
@@ -86,7 +87,6 @@ def test_variable():
     )
 
 
-
 def test_int():
     c_src1 = 'int a = 1;'
     c_src2 = (
@@ -96,7 +96,6 @@ def test_int():
 
     res1 = SymPyExpression(c_src1, 'c').return_expr()
     res2 = SymPyExpression(c_src2, 'c').return_expr()
-
 
     assert res1[0] == Declaration(
         Variable(
@@ -121,6 +120,7 @@ def test_int():
             value=Integer(2)
         )
     )
+
 
 def test_float():
     c_src1 = 'float a = 1.0;'
@@ -241,6 +241,7 @@ def test_function():
         parameters=()
     )
 
+
 def test_parameters():
     c_src1 = (
         'void fun1( int a)' + '\n' +
@@ -346,6 +347,7 @@ def test_parameters():
         )
     )
 
+
 def test_function_call():
     c_src1 = 'x = fun1(2);'
     c_src2 = 'y = fun2(2, 3, 4);'
@@ -358,11 +360,13 @@ def test_function_call():
         'int z;' + '\n' +
         'i = fun4(x, y, z)'
     )
+    c_src5 = 'a = fun()'
 
     res1 = SymPyExpression(c_src1, 'c').return_expr()
     res2 = SymPyExpression(c_src2, 'c').return_expr()
     res3 = SymPyExpression(c_src3, 'c').return_expr()
     res4 = SymPyExpression(c_src4, 'c').return_expr()
+    res5 = SymPyExpression(c_src5, 'c').return_expr()
 
     assert res1[0] == Declaration(
         Variable(
@@ -448,6 +452,69 @@ def test_function_call():
             value=FunctionCall(
                 String('fun4'),
                 function_args=([Symbol('x'), Symbol('y'), Symbol('z')])
+            )
+        )
+    )
+    assert res5[0] == Declaration(
+        Variable(
+            Symbol('a'),
+            value=FunctionCall(String('fun'), function_args=())
+        )
+    )
+
+
+def test_parse():
+    c_src1 = (
+        'int a;' + '\n' +
+        'int b;' + '\n'
+    )
+    c_src2 = (
+        'void fun1()' + '\n' +
+        '{' + '\n' +
+        'int a;' + '\n' +
+        '}'
+    )
+
+    f1 = open('..a.h', 'w')
+    f2 = open('..b.h', 'w')
+
+    f1.write(c_src1)
+    f2. write(c_src2)
+
+    f1.close()
+    f2.close()
+
+    res1 = SymPyExpression('..a.h', 'c').return_expr()
+    res2 = SymPyExpression('..b.h', 'c').return_expr()
+
+    os.remove('..a.h')
+    os.remove('..b.h')
+
+    assert res1[0] == Declaration(
+        Variable(
+            Symbol('a'),
+            type=IntBaseType(String('integer')),
+            value=Integer(0)
+        )
+    )
+    assert res1[1] == Declaration(
+        Variable(
+            Symbol('b'),
+            type=IntBaseType(String('integer')),
+            value=Integer(0)
+        )
+    )
+    assert res2[0] == FunctionDefinition(
+        NoneToken(),
+        name=String('fun1'),
+        parameters=(),
+        body=CodeBlock(
+            Declaration(
+                Variable(
+                    Symbol('a'),
+                    type=IntBaseType(String('integer')),
+                    value=Integer(0)
+                )
             )
         )
     )

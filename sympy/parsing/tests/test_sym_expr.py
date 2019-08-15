@@ -1,4 +1,7 @@
+from sympy.parsing.sym_expr import SymPyExpression
+from sympy.utilities.pytest import raises
 from sympy.external import import_module
+
 lfortran = import_module('lfortran')
 cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
 
@@ -7,7 +10,6 @@ if lfortran and cin:
                                    Declaration,)
     from sympy.core import Integer, Float
     from sympy import Symbol
-    from sympy.parsing.sym_expr import SymPyExpression
 
     expr1 = SymPyExpression()
     src = """\
@@ -16,6 +18,7 @@ if lfortran and cin:
     """
 else:
     #bin/test will not execute any tests now
+    raises(ImportError, lambda: SymPyExpression())
     disabled = True
 
 
@@ -24,8 +27,8 @@ def test_c_parse():
     int a, b = 4;
     float c, d = 2.4;
     """
-    expr = SymPyExpression(src1, 'c')
-    ls = expr.return_expr()
+    expr1.convert_to_expr(src1, 'c')
+    ls = expr1.return_expr()
 
     assert ls[0] == Declaration(
         Variable(
@@ -190,3 +193,10 @@ def test_convert_c():
         'a = b + c;',
         's = p*q/r;'
     ]
+
+
+def test_exceptions():
+    src = 'int a;'
+    raises(ValueError, lambda: SymPyExpression(src))
+    raises(ValueError, lambda: SymPyExpression(mode = 'c'))
+    raises(NotImplementedError, lambda: SymPyExpression(src, mode = 'd'))

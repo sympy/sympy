@@ -158,17 +158,14 @@ else:
 
 
             """
-            if src_code:
-                if mode.lower() == 'f':
-                    self._expr = src_to_sympy(src_code)
-                elif mode.lower() == 'c':
-                    self._expr = parse_c(src_code)
-                else:
-                    raise NotImplementedError(
-                        "Parser for specified language has not been implemented"
-                    )
+            if mode.lower() == 'f':
+                self._expr = src_to_sympy(src_code)
+            elif mode.lower() == 'c':
+                self._expr = parse_c(src_code)
             else:
-                raise ValueError('Source code not present')
+                raise NotImplementedError(
+                    "Parser for specified language has not been implemented"
+                )
 
         def convert_to_python(self):
             """Returns a list with python code for the sympy expressions
