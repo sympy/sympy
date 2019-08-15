@@ -15,9 +15,9 @@ Goals:
 from __future__ import print_function, division
 
 import os
-from os.path import dirname
 import sys
 import platform
+from os.path import dirname
 import inspect
 import traceback
 import pdb
@@ -25,7 +25,6 @@ import re
 import linecache
 import time
 from fnmatch import fnmatch
-from os.path import dirname
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
@@ -34,6 +33,8 @@ import subprocess
 import signal
 import stat
 import tempfile
+import sympy
+
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import exec_, PY3, string_types, range, unwrap
 from sympy.utilities.misc import find_executable
@@ -67,8 +68,10 @@ SPLIT_DENSITY_SLOW = [0.1525, 0.0342, 0.0092, 0.0004, 0.0005, 0.0005, 0.0379, 0.
 class Skipped(Exception):
     pass
 
+
 class TimeOutError(Exception):
     pass
+
 
 class DependencyError(Exception):
     pass
@@ -90,10 +93,11 @@ def _indent(s, indent=4):
         if isinstance(s, unicode):
             s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
-    return re.sub('(?m)^(?!$)', indent*' ', s)
+    return re.sub('(?m)^(?!$)', indent * ' ', s)
 
 
 pdoctest._indent = _indent
+
 
 # override reporter to maintain windows and python3
 
@@ -156,9 +160,9 @@ def setup_pprint():
     return use_unicode_prev
 
 def run_in_subprocess_with_hash_randomization(
-        function, function_args=(),
-        function_kwargs=None, command=sys.executable,
-        module='sympy.utilities.runtests', force=False):
+    function, function_args=(),
+    function_kwargs=None, command=sys.executable,
+    module='sympy.utilities.runtests', force=False):
     """
     Run a function in a Python subprocess with hash randomization enabled.
 
@@ -211,9 +215,9 @@ def run_in_subprocess_with_hash_randomization(
 
     # First check if the Python version supports hash randomization
     # If it doesn't have this support, it won't reconize the -R flag
-    current_dir = dirname(dirname(os.path.dirname(__file__)))
+    sympy_root = dirname(dirname(sympy.__file__))
     p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT, cwd=current_dir)
+                         stderr=subprocess.STDOUT, cwd=sympy_root)
     p.communicate()
     if p.returncode != 0:
         return False
@@ -233,7 +237,7 @@ def run_in_subprocess_with_hash_randomization(
                       repr(function_kwargs)))
 
     try:
-        p = subprocess.Popen([command, "-R", "-c", commandstring], cwd=current_dir)
+        p = subprocess.Popen([command, "-R", "-c", commandstring], cwd=sympy_root)
         p.communicate()
     except KeyboardInterrupt:
         p.wait()
@@ -306,7 +310,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
                                stderr=dev_null) == 0:
                 if subprocess.call("sage -python bin/test "
                                    "sympy/external/tests/test_sage.py",
-                    shell=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) != 0:
+                                   shell=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) != 0:
                     tests_successful = False
 
         if tests_successful:
@@ -465,15 +469,15 @@ def test(*paths, **kwargs):
     subprocess = kwargs.pop("subprocess", True)
     rerun = kwargs.pop("rerun", 0)
     # count up from 0, do not print 0
-    print_counter = lambda i : (print("rerun %d" % (rerun-i))
-                                if rerun-i else None)
+    print_counter = lambda i: (print("rerun %d" % (rerun - i))
+                               if rerun - i else None)
 
     if subprocess:
         # loop backwards so last i is 0
         for i in range(rerun, -1, -1):
             print_counter(i)
             ret = run_in_subprocess_with_hash_randomization("_test",
-                        function_args=paths, function_kwargs=kwargs)
+                                                            function_args=paths, function_kwargs=kwargs)
             if ret is False:
                 break
             val = not bool(ret)
@@ -504,7 +508,7 @@ def _test(*paths, **kwargs):
     kw = kwargs.get("kw", None) or ()
     # ensure that kw is a tuple
     if isinstance(kw, string_types):
-        kw = (kw, )
+        kw = (kw,)
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
     force_colors = kwargs.get("force_colors", False)
@@ -530,7 +534,7 @@ def _test(*paths, **kwargs):
     fast_threshold = kwargs.get('fast_threshold', None)
     slow_threshold = kwargs.get('slow_threshold', None)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
-        force_colors=force_colors, split=split)
+                       force_colors=force_colors, split=split)
     t = SymPyTests(r, kw, post_mortem, seed,
                    fast_threshold=fast_threshold,
                    slow_threshold=slow_threshold)
@@ -570,7 +574,7 @@ def _test(*paths, **kwargs):
     t._testfiles.extend(matched)
 
     return int(not t.test(sort=sort, timeout=timeout, slow=slow,
-        enhance_asserts=enhance_asserts, fail_on_timeout=fail_on_timeout))
+                          enhance_asserts=enhance_asserts, fail_on_timeout=fail_on_timeout))
 
 
 def doctest(*paths, **kwargs):
@@ -624,15 +628,15 @@ def doctest(*paths, **kwargs):
     subprocess = kwargs.pop("subprocess", True)
     rerun = kwargs.pop("rerun", 0)
     # count up from 0, do not print 0
-    print_counter = lambda i : (print("rerun %d" % (rerun-i))
-                                if rerun-i else None)
+    print_counter = lambda i: (print("rerun %d" % (rerun - i))
+                               if rerun - i else None)
 
     if subprocess:
         # loop backwards so last i is 0
         for i in range(rerun, -1, -1):
             print_counter(i)
             ret = run_in_subprocess_with_hash_randomization("_doctest",
-                        function_args=paths, function_kwargs=kwargs)
+                                                            function_args=paths, function_kwargs=kwargs)
             if ret is False:
                 break
             val = not bool(ret)
@@ -655,23 +659,23 @@ def _get_doctest_blacklist():
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
-        "sympy/physics/gaussopt.py", # raises deprecation warning
-        "sympy/galgebra.py", # raises ImportError
-        "sympy/this.py", # Prints text to the terminal
-        "sympy/matrices/densearith.py", # raises deprecation warning
-        "sympy/matrices/densesolve.py", # raises deprecation warning
-        "sympy/matrices/densetools.py", # raises deprecation warning
-        "sympy/physics/unitsystems.py", # raises deprecation warning
-        "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
-        "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
-        "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
-        "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
-        "sympy/parsing/latex/_antlr/latexparser.py", # generated code
+        "sympy/physics/gaussopt.py",  # raises deprecation warning
+        "sympy/galgebra.py",  # raises ImportError
+        "sympy/this.py",  # Prints text to the terminal
+        "sympy/matrices/densearith.py",  # raises deprecation warning
+        "sympy/matrices/densesolve.py",  # raises deprecation warning
+        "sympy/matrices/densetools.py",  # raises deprecation warning
+        "sympy/physics/unitsystems.py",  # raises deprecation warning
+        "sympy/parsing/autolev/_antlr/autolevlexer.py",  # generated code
+        "sympy/parsing/autolev/_antlr/autolevparser.py",  # generated code
+        "sympy/parsing/autolev/_antlr/autolevlistener.py",  # generated code
+        "sympy/parsing/latex/_antlr/latexlexer.py",  # generated code
+        "sympy/parsing/latex/_antlr/latexparser.py",  # generated code
         "sympy/integrals/rubi/rubi.py"
     ])
     # autolev parser tests
     num = 12
-    for i in range (1, num+1):
+    for i in range(1, num + 1):
         blacklist.append("sympy/parsing/autolev/test-examples/ruletest" + str(i) + ".py")
     blacklist.extend(["sympy/parsing/autolev/test-examples/pydy-example-repo/mass_spring_damper.py",
                       "sympy/parsing/autolev/test-examples/pydy-example-repo/chaos_pendulum.py",
@@ -720,7 +724,7 @@ def _get_doctest_blacklist():
         "sympy/utilities/autowrap.py",
         "examples/advanced/autowrap_integrators.py",
         "examples/advanced/autowrap_ufuncify.py"
-        ])
+    ])
 
     # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
@@ -749,7 +753,7 @@ def _doctest(*paths, **kwargs):
     colors = kwargs.get("colors", True)
     force_colors = kwargs.get("force_colors", False)
     blacklist = kwargs.get("blacklist", [])
-    split  = kwargs.get('split', None)
+    split = kwargs.get('split', None)
 
     blacklist.extend(_get_doctest_blacklist())
 
@@ -772,7 +776,7 @@ def _doctest(*paths, **kwargs):
     warnings.simplefilter("error", SymPyDeprecationWarning)
     warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
-    r = PyTestReporter(verbose, split=split, colors=colors,\
+    r = PyTestReporter(verbose, split=split, colors=colors, \
                        force_colors=force_colors)
     t = SymPyDocTests(r, normal)
 
@@ -848,7 +852,7 @@ def _doctest(*paths, **kwargs):
             out = sympytestfile(
                 rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
-                pdoctest.IGNORE_EXCEPTION_DETAIL)
+                            pdoctest.IGNORE_EXCEPTION_DETAIL)
         finally:
             # make sure we return to the original displayhook in case some
             # doctest has changed that
@@ -873,12 +877,12 @@ def _doctest(*paths, **kwargs):
             # use as the id, everything past the first 'sympy'
             file_id = rst_file[rst_file.find('sympy') + len('sympy') + 1:]
             print(file_id, end=" ")
-                # get at least the name out so it is know who is being tested
+            # get at least the name out so it is know who is being tested
             wid = r.terminal_width - len(file_id) - 1  # update width
             test_file = '[%s]' % (tested)
             report = '[%s]' % (rstfailed or 'OK')
             print(''.join(
-                [test_file, ' '*(wid - len(test_file) - len(report)), report])
+                [test_file, ' ' * (wid - len(test_file) - len(report)), report])
             )
 
     # the doctests for *py will have printed this message already if there was
@@ -890,7 +894,9 @@ def _doctest(*paths, **kwargs):
 
     return int(failed)
 
+
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
+
 
 def split_list(l, split, density=None):
     """
@@ -921,7 +927,7 @@ def split_list(l, split, density=None):
     i, t = map(int, m.groups())
 
     if not density:
-        return l[(i - 1)*len(l)//t : i*len(l)//t]
+        return l[(i - 1) * len(l) // t: i * len(l) // t]
 
     # normalize density
     tot = sum(density)
@@ -947,17 +953,18 @@ def split_list(l, split, density=None):
 
     lower_frac = density_inv((i - 1) / t)
     higher_frac = density_inv(i / t)
-    return l[int(lower_frac*len(l)) : int(higher_frac*len(l))]
+    return l[int(lower_frac * len(l)): int(higher_frac * len(l))]
+
 
 from collections import namedtuple
+
 SymPyTestResults = namedtuple('TestResults', 'failed attempted')
 
 
 def sympytestfile(filename, module_relative=True, name=None, package=None,
-             globs=None, verbose=None, report=True, optionflags=0,
-             extraglobs=None, raise_on_error=False,
-             parser=pdoctest.DocTestParser(), encoding=None):
-
+                  globs=None, verbose=None, report=True, optionflags=0,
+                  extraglobs=None, raise_on_error=False,
+                  parser=pdoctest.DocTestParser(), encoding=None):
     """
     Test examples in the given file.  Return (#failures, #tests).
 
@@ -1111,7 +1118,7 @@ class SymPyTests(object):
             self._slow_threshold = 10
 
     def test(self, sort=False, timeout=False, slow=False,
-            enhance_asserts=False, fail_on_timeout=False):
+             enhance_asserts=False, fail_on_timeout=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
 
@@ -1128,7 +1135,7 @@ class SymPyTests(object):
         for f in self._testfiles:
             try:
                 self.test_file(f, sort, timeout, slow,
-                    enhance_asserts, fail_on_timeout)
+                               enhance_asserts, fail_on_timeout)
             except KeyboardInterrupt:
                 print(" interrupted by user")
                 self._reporter.finish()
@@ -1137,25 +1144,25 @@ class SymPyTests(object):
 
     def _enhance_asserts(self, source):
         from ast import (NodeTransformer, Compare, Name, Store, Load, Tuple,
-            Assign, BinOp, Str, Mod, Assert, parse, fix_missing_locations)
+                         Assign, BinOp, Str, Mod, Assert, parse, fix_missing_locations)
 
         ops = {"Eq": '==', "NotEq": '!=', "Lt": '<', "LtE": '<=',
-                "Gt": '>', "GtE": '>=', "Is": 'is', "IsNot": 'is not',
-                "In": 'in', "NotIn": 'not in'}
+               "Gt": '>', "GtE": '>=', "Is": 'is', "IsNot": 'is not',
+               "In": 'in', "NotIn": 'not in'}
 
         class Transform(NodeTransformer):
             def visit_Assert(self, stmt):
                 if isinstance(stmt.test, Compare):
                     compare = stmt.test
                     values = [compare.left] + compare.comparators
-                    names = [ "_%s" % i for i, _ in enumerate(values) ]
-                    names_store = [ Name(n, Store()) for n in names ]
-                    names_load = [ Name(n, Load()) for n in names ]
+                    names = ["_%s" % i for i, _ in enumerate(values)]
+                    names_store = [Name(n, Store()) for n in names]
+                    names_load = [Name(n, Load()) for n in names]
                     target = Tuple(names_store, Store())
                     value = Tuple(values, Load())
                     assign = Assign([target], value)
                     new_compare = Compare(names_load[0], compare.ops, names_load[1:])
-                    msg_format = "\n%s " + "\n%s ".join([ ops[op.__class__.__name__] for op in compare.ops ]) + "\n%s"
+                    msg_format = "\n%s " + "\n%s ".join([ops[op.__class__.__name__] for op in compare.ops]) + "\n%s"
                     msg = BinOp(Str(msg_format), Mod(), Tuple(names_load, Load()))
                     test = Assert(new_compare, msg, lineno=stmt.lineno, col_offset=stmt.col_offset)
                     return [assign, test]
@@ -1167,7 +1174,7 @@ class SymPyTests(object):
         return fix_missing_locations(new_tree)
 
     def test_file(self, filename, sort=True, timeout=False, slow=False,
-            enhance_asserts=False, fail_on_timeout=False):
+                  enhance_asserts=False, fail_on_timeout=False):
         reporter = self._reporter
         funcs = []
         try:
@@ -1215,7 +1222,7 @@ class SymPyTests(object):
                 funcs = []
                 for f in gl:
                     if (f.startswith("test_") and (inspect.isfunction(gl[f])
-                        or inspect.ismethod(gl[f]))):
+                                                   or inspect.ismethod(gl[f]))):
                         func = gl[f]
                         # Handle multiple decorators
                         while hasattr(func, '__wrapped__'):
@@ -1230,8 +1237,8 @@ class SymPyTests(object):
                 i = 0
                 while i < len(funcs):
                     if inspect.isgeneratorfunction(funcs[i]):
-                    # some tests can be generators, that return the actual
-                    # test functions. We unpack it below:
+                        # some tests can be generators, that return the actual
+                        # test functions. We unpack it below:
                         f = funcs.pop(i)
                         for fg in f():
                             func = fg[0]
@@ -1305,6 +1312,7 @@ class SymPyTests(object):
                 raise TimeOutError("Timed out after %d seconds" % timeout)
             else:
                 raise Skipped("Timeout")
+
         signal.signal(signal.SIGALRM, callback)
         signal.alarm(timeout)  # Set an alarm with a given timeout
         function()
@@ -1416,8 +1424,8 @@ class SymPyDocTests(object):
                     continue
 
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
-                    pdoctest.NORMALIZE_WHITESPACE |
-                    pdoctest.IGNORE_EXCEPTION_DETAIL)
+                                                    pdoctest.NORMALIZE_WHITESPACE |
+                                                    pdoctest.IGNORE_EXCEPTION_DETAIL)
             runner._checker = SymPyOutputChecker()
             old = sys.stdout
             new = StringIO()
@@ -1432,7 +1440,7 @@ class SymPyDocTests(object):
                 test.globs = {}
                 # if this is uncommented then all the test would get is what
                 # comes by default with a "from sympy import *"
-                #exec('from sympy import *') in test.globs
+                # exec('from sympy import *') in test.globs
             test.globs['print_function'] = print_function
 
             old_displayhook = sys.displayhook
@@ -1462,6 +1470,7 @@ class SymPyDocTests(object):
         only those that have an __init__.py in their parent directory
         and do not start with ``test_`` will be included.
         """
+
         def importable(x):
             """
             Checks if given pathname x is an importable module by checking for
@@ -1508,7 +1517,7 @@ class SymPyDocTests(object):
                 matplotlib = import_module(
                     'matplotlib',
                     __import__kwargs={'fromlist':
-                                      ['pyplot', 'cm', 'collections']},
+                                          ['pyplot', 'cm', 'collections']},
                     min_module_version='1.0.0', catch=(RuntimeError,))
                 if matplotlib is None:
                     raise DependencyError("Could not import matplotlib")
@@ -1524,7 +1533,7 @@ class SymPyDocTests(object):
                   'import sys\n'
                   'if len(sys.argv) <= 1:\n'
                   '    exit("wrong number of args")\n').format(
-                      'python3' if PY3 else 'python')
+                'python3' if PY3 else 'python')
 
             for viewer in disable_viewers:
                 with open(os.path.join(tempdir, viewer), 'w') as fh:
@@ -1641,7 +1650,6 @@ class SymPyDocTestFinder(DocTestFinder):
                 self._find(tests, val, valname, module, source_lines,
                            globs, seen)
 
-
         # Look for tests in a class's contained objects.
         if inspect.isclass(obj):
             for valname, val in obj.__dict__.items():
@@ -1651,11 +1659,10 @@ class SymPyDocTestFinder(DocTestFinder):
                 if isinstance(val, classmethod):
                     val = getattr(obj, valname).__func__
 
-
                 # Recurse to methods, properties, and nested classes.
                 if ((inspect.isfunction(unwrap(val)) or
-                        inspect.isclass(val) or
-                        isinstance(val, property)) and
+                     inspect.isclass(val) or
+                     isinstance(val, property)) and
                     self._from_module(module, val)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
@@ -1820,6 +1827,7 @@ class SymPyDocTestRunner(DocTestRunner):
             if clear_globs:
                 test.globs.clear()
 
+
 # We have to override the name mangled methods.
 SymPyDocTestRunner._SymPyDocTestRunner__patched_linecache_getlines = \
     DocTestRunner._DocTestRunner__patched_linecache_getlines
@@ -1849,11 +1857,11 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
 
         fbeg = r'^%s(?=%s|$)' % (got_floats, back_sep)
         fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, got_floats, back_sep)
-        self.num_got_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
+        self.num_got_rgx = re.compile(r'(%s|%s)' % (fbeg, fmidend))
 
         fbeg = r'^%s(?=%s|$)' % (want_floats, back_sep)
         fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, want_floats, back_sep)
-        self.num_want_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
+        self.num_want_rgx = re.compile(r'(%s|%s)' % (fbeg, fmidend))
 
     def check_output(self, want, got, optionflags):
         """
@@ -1874,14 +1882,14 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         # Parse floats and compare them. If some of the parsed floats contain
         # ellipses, skip the comparison.
         matches = self.num_got_rgx.finditer(got)
-        numbers_got = [match.group(1) for match in matches] # list of strs
+        numbers_got = [match.group(1) for match in matches]  # list of strs
         matches = self.num_want_rgx.finditer(want)
-        numbers_want = [match.group(1) for match in matches] # list of strs
+        numbers_want = [match.group(1) for match in matches]  # list of strs
         if len(numbers_got) != len(numbers_want):
             return False
 
         if len(numbers_got) > 0:
-            nw_  = []
+            nw_ = []
             for ng, nw in zip(numbers_got, numbers_want):
                 if '...' in nw:
                     nw_.append(ng)
@@ -1889,7 +1897,7 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
                 else:
                     nw_.append(nw)
 
-                if abs(float(ng)-float(nw)) > 1e-5:
+                if abs(float(ng) - float(nw)) > 1e-5:
                     return False
 
             got = self.num_got_rgx.sub(r'%s', got)
@@ -2000,8 +2008,8 @@ class PyTestReporter(Reporter):
 
             try:
                 process = subprocess.Popen(['stty', '-a'],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE)
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
                 if PY3:
                     stdout = stdout.decode("utf-8")
@@ -2088,10 +2096,10 @@ class PyTestReporter(Reporter):
             if self._write_pos + len(text) > width:
                 # we don't fit on the current line, create a new line
                 self.write("\n")
-            self.write(" "*(width - self._write_pos - len(text)))
+            self.write(" " * (width - self._write_pos - len(text)))
 
         if not self._force_colors and hasattr(sys.stdout, 'isatty') and not \
-                sys.stdout.isatty():
+            sys.stdout.isatty():
             # the stdout is not a terminal, this for example happens if the
             # output is piped to less, e.g. "bin/test | less". In this case,
             # the terminal control sequences would be printed verbatim, so
@@ -2112,13 +2120,13 @@ class PyTestReporter(Reporter):
             text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
         elif PY3 and not sys.stdout.encoding.lower().startswith('utf'):
             text = text.encode(sys.stdout.encoding, 'backslashreplace'
-                              ).decode(sys.stdout.encoding)
+                               ).decode(sys.stdout.encoding)
 
         if color == "":
             sys.stdout.write(text)
         else:
             sys.stdout.write("%s%s%s" %
-                (c_color % colors[color], text, c_normal))
+                             (c_color % colors[color], text, c_normal))
         sys.stdout.flush()
         l = text.rfind("\n")
         if l == -1:
@@ -2133,7 +2141,7 @@ class PyTestReporter(Reporter):
         if text != "":
             text = " %s " % text
         idx = (width - len(text)) // 2
-        t = delim*idx + text + delim*(width - idx - len(text))
+        t = delim * idx + text + delim * (width - idx - len(text))
         self.write(t + "\n")
 
     def write_exception(self, e, val, tb):
@@ -2151,14 +2159,14 @@ class PyTestReporter(Reporter):
         if implementation == 'PyPy':
             implementation += " %s.%s.%s-%s-%s" % sys.pypy_version_info
         self.write("executable:         %s  (%s) [%s]\n" %
-            (executable, python_version, implementation))
+                   (executable, python_version, implementation))
         from .misc import ARCH
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
         self.write("cache:              %s\n" % USE_CACHE)
         from sympy.core.compatibility import GROUND_TYPES, HAS_GMPY
         version = ''
-        if GROUND_TYPES =='gmpy':
+        if GROUND_TYPES == 'gmpy':
             if HAS_GMPY == 1:
                 import gmpy
             elif HAS_GMPY == 2:
@@ -2260,7 +2268,7 @@ class PyTestReporter(Reporter):
 
         self.write_center(text)
         ok = len(self._failed) == 0 and len(self._exceptions) == 0 and \
-            len(self._failed_doctest) == 0
+             len(self._failed_doctest) == 0
         if not ok:
             self.write("DO *NOT* COMMIT!\n")
         return ok
