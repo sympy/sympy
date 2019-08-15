@@ -24,6 +24,7 @@ import re
 import linecache
 import time
 from fnmatch import fnmatch
+from os.path import dirname
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
@@ -32,7 +33,6 @@ import subprocess
 import signal
 import stat
 import tempfile
-
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import exec_, PY3, string_types, range, unwrap
 from sympy.utilities.misc import find_executable
@@ -210,7 +210,7 @@ def run_in_subprocess_with_hash_randomization(
 
     # First check if the Python version supports hash randomization
     # If it doesn't have this support, it won't reconize the -R flag
-    os.environ["PYTHONPATH"] = os.path.abspath(os.path.dirname(__file__))
+    os.environ["PYTHONPATH"] = dirname(dirname(dirname(__file__)))
     p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=os.environ)
     p.communicate()
     if p.returncode != 0:
