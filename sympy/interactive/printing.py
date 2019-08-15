@@ -48,7 +48,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     #   'lightbg'. The default is neutral, which should be legible on either
     #   dark or light terminal backgrounds. linux is optimised for dark
     #   backgrounds and lightbg for light ones.
-    if forecolor.lower() == 'auto':
+    if forecolor is None:
         color = ip.colors.lower()
         if color == 'lightbg':
             forecolor = 'Black'
@@ -57,6 +57,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         else:
             # No idea, go with gray.
             forecolor = 'Gray'
+        debug("init_printing: Automatic foreground color:", forecolor)
 
     preamble = "\\documentclass[varwidth,%s]{standalone}\n" \
                "\\usepackage{amsmath,amsfonts}%s\\begin{document}"
@@ -338,7 +339,7 @@ NO_GLOBAL = False
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
-                  no_global=False, ip=None, euler=False, forecolor='Auto',
+                  no_global=False, ip=None, euler=False, forecolor=None,
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='plain', print_builtin=True,
                   str_printer=None, pretty_printer=None,
@@ -393,8 +394,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     euler : boolean, optional, default=False
         Loads the euler package in the LaTeX preamble for handwritten style
         fonts (http://www.ctan.org/pkg/euler).
-    forecolor : string, optional, default='Auto'
-        DVI setting for foreground color. 'Auto' means that either 'Black',
+    forecolor : string or None, optional, default=None
+        DVI setting for foreground color. None means that either 'Black',
         'White', or 'Gray' will be selected based on a guess of the IPython
         terminal color setting. See notes.
     backcolor : string, optional, default='Transparent'
