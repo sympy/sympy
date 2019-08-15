@@ -320,69 +320,7 @@ class Piecewise(Function):
         return self.func(*newargs)
 
     def _eval_simplify(self, **kwargs):
-        from sympy.simplify.simplify import simplify
-        args = [simplify(a, **kwargs) for a in self.args]
-        _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (
-            getattr(e.rhs, '_diff_wrt', None) or
-            isinstance(e.rhs, (Rational, NumberSymbol)))
-        for i, (expr, cond) in enumerate(args):
-            # try to simplify conditions and the expression for
-            # equalities that are part of the condition, e.g.
-            # Piecewise((n, And(Eq(n,0), Eq(n + m, 0))), (1, True))
-            # -> Piecewise((0, And(Eq(n, 0), Eq(m, 0))), (1, True))
-            if isinstance(cond, And):
-                eqs, other = sift(cond.args,
-                    lambda i: isinstance(i, Equality), binary=True)
-            elif isinstance(cond, Equality):
-                eqs, other = [cond], []
-            else:
-                eqs = other = []
-            if eqs:
-                eqs = list(ordered(eqs))
-                for j, e in enumerate(eqs):
-                    # these blessed lhs objects behave like Symbols
-                    # and the rhs are simple replacements for the "symbols"
-                    if _blessed(e):
-                        expr = expr.subs(*e.args)
-                        eqs[j + 1:] = [ei.subs(*e.args) for ei in eqs[j + 1:]]
-                        other = [ei.subs(*e.args) for ei in other]
-                cond = And(*(eqs + other))
-                args[i] = args[i].func(expr, cond)
-        # See if expressions valid for an Equal expression happens to evaluate
-        # to the same function as in the next piecewise segment, see:
-        # https://github.com/sympy/sympy/issues/8458
-        prevexpr = None
-        for i, (expr, cond) in reversed(list(enumerate(args))):
-            if prevexpr is not None:
-                if isinstance(cond, And):
-                    eqs, other = sift(cond.args,
-                        lambda i: isinstance(i, Equality), binary=True)
-                elif isinstance(cond, Equality):
-                    eqs, other = [cond], []
-                else:
-                    eqs = other = []
-                _prevexpr = prevexpr
-                _expr = expr
-                if eqs and not other:
-                    eqs = list(ordered(eqs))
-                    for e in eqs:
-                        # these blessed lhs objects behave like Symbols
-                        # and the rhs are simple replacements for the "symbols"
-                        if _blessed(e):
-                            _prevexpr = _prevexpr.subs(*e.args)
-                            _expr = _expr.subs(*e.args)
-                # Did it evaluate to the same?
-                if _prevexpr == _expr:
-                    # Set the expression for the Not equal section to the same
-                    # as the next. These will be merged when creating the new
-                    # Piecewise
-                    args[i] = args[i].func(args[i+1][0], cond)
-                else:
-                    # Update the expression that we compare against
-                    prevexpr = expr
-            else:
-                prevexpr = expr
-        return self.func(*args)
+        return piecewise_simplify(self, **kwargs)
 
     def _eval_as_leading_term(self, x):
         for e, c in self.args:
@@ -1230,3 +1168,87 @@ def _clip(A, B, k):
         pass
 
     return p
+
+
+def piecewise_simplify_arguments(expr, **kwargs):
+    from sympy import simplify
+    args = []
+    for e, c in expr.args:
+        if isinstance(e, Basic):
+            doit = kwargs.pop('doit', None)
+            # Skip doit to avoid growth at every call for some integrals
+            # and sums, see sympy/sympy#17165
+            newe = simplify(e, doit=False, **kwargs)
+            if newe != expr:
+                e = newe
+        if isinstance(c, Basic):
+            c = simplify(c, doit=doit, **kwargs)
+        args.append((e, c))
+    return Piecewise(*args)
+
+
+def piecewise_simplify(expr, **kwargs):
+    expr = piecewise_simplify_arguments(expr, **kwargs)
+    args = list(expr.args)
+
+    _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (
+        getattr(e.rhs, '_diff_wrt', None) or
+        isinstance(e.rhs, (Rational, NumberSymbol)))
+    for i, (expr, cond) in enumerate(args):
+        # try to simplify conditions and the expression for
+        # equalities that are part of the condition, e.g.
+        # Piecewise((n, And(Eq(n,0), Eq(n + m, 0))), (1, True))
+        # -> Piecewise((0, And(Eq(n, 0), Eq(m, 0))), (1, True))
+        if isinstance(cond, And):
+            eqs, other = sift(cond.args,
+                lambda i: isinstance(i, Equality), binary=True)
+        elif isinstance(cond, Equality):
+            eqs, other = [cond], []
+        else:
+            eqs = other = []
+        if eqs:
+            eqs = list(ordered(eqs))
+            for j, e in enumerate(eqs):
+                # these blessed lhs objects behave like Symbols
+                # and the rhs are simple replacements for the "symbols"
+                if _blessed(e):
+                    expr = expr.subs(*e.args)
+                    eqs[j + 1:] = [ei.subs(*e.args) for ei in eqs[j + 1:]]
+                    other = [ei.subs(*e.args) for ei in other]
+            cond = And(*(eqs + other))
+            args[i] = args[i].func(expr, cond)
+    # See if expressions valid for an Equal expression happens to evaluate
+    # to the same function as in the next piecewise segment, see:
+    # https://github.com/sympy/sympy/issues/8458
+    prevexpr = None
+    for i, (expr, cond) in reversed(list(enumerate(args))):
+        if prevexpr is not None:
+            if isinstance(cond, And):
+                eqs, other = sift(cond.args,
+                    lambda i: isinstance(i, Equality), binary=True)
+            elif isinstance(cond, Equality):
+                eqs, other = [cond], []
+            else:
+                eqs = other = []
+            _prevexpr = prevexpr
+            _expr = expr
+            if eqs and not other:
+                eqs = list(ordered(eqs))
+                for e in eqs:
+                    # these blessed lhs objects behave like Symbols
+                    # and the rhs are simple replacements for the "symbols"
+                    if _blessed(e):
+                        _prevexpr = _prevexpr.subs(*e.args)
+                        _expr = _expr.subs(*e.args)
+            # Did it evaluate to the same?
+            if _prevexpr == _expr:
+                # Set the expression for the Not equal section to the same
+                # as the next. These will be merged when creating the new
+                # Piecewise
+                args[i] = args[i].func(args[i+1][0], cond)
+            else:
+                # Update the expression that we compare against
+                prevexpr = expr
+        else:
+            prevexpr = expr
+    return Piecewise(*args)

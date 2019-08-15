@@ -2264,7 +2264,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     assert dsolve(eq8, hint=hint) in (sol8, sol8s)
     assert dsolve(eq9, hint=hint) in (sol9, sol9s)
     assert dsolve(eq10, hint=hint) in (sol10, sol10s)
-    assert dsolve(eq11, hint=hint + '_Integral') in (sol11, sol11s)
+    assert dsolve(eq11, hint=hint + '_Integral').doit() in (sol11, sol11s)
     assert dsolve(eq12, hint=hint) in (sol12, sol12s)
     assert checkodesol(eq1, sol1, order=3, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=3, solve_for_func=False)[0]
@@ -2291,13 +2291,17 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     assert sol_simp != sol_nsimp
     # /----------
     # eq.subs(*sol_simp.args) doesn't simplify to zero without help
-    zero = checkodesol(eq, sol_simp, order=5, solve_for_func=False)[1]
+    (t, zero) = checkodesol(eq, sol_simp, order=5, solve_for_func=False)
     # if this fails because zero.is_zero, replace this block with
     # assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
     assert not zero.is_zero and zero.rewrite(exp).simplify() == 0
     # \-----------
-    assert checkodesol(eq, sol_nsimp, order=5, solve_for_func=False)[0]
-
+    (t, zero) = checkodesol(eq, sol_nsimp, order=5, solve_for_func=False)
+    # if this fails because zero.is_zero, replace this block with
+    # assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
+    assert zero == 0
+    # \-----------
+    assert t
 
 def test_Liouville_ODE():
     hint = 'Liouville'
@@ -2736,19 +2740,21 @@ def test_issue_6989():
     k = Symbol('k')
 
     eq = f(x).diff(x) - x*exp(-k*x)
-    sol = Eq(f(x), C1 + Piecewise(
+    csol = Eq(f(x), C1 + Piecewise(
             ((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
             (x**2/2, True)
         ))
-    assert dsolve(eq, f(x)) == sol
+    sol = dsolve(eq, f(x))
+    assert sol == csol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = -f(x).diff(x) + x*exp(-k*x)
-    sol = Eq(f(x), C1 + Piecewise(
+    csol = Eq(f(x), C1 + Piecewise(
         ((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
-        (+x**2/2, True)
+        (x**2/2, True)
     ))
-    assert dsolve(eq, f(x)) == sol
+    sol = dsolve(eq, f(x))
+    assert sol == csol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 

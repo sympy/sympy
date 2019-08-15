@@ -260,6 +260,10 @@ def test_conjugate_transpose():
     assert p.conjugate().doit() == p.doit().conjugate()
     assert p.transpose().doit() == p.doit().transpose()
 
+    p = Product(B**k*A, (k, 1, 3))
+    assert p.adjoint().doit() == p.doit().adjoint()
+    assert p.conjugate().doit() == p.doit().conjugate()
+    assert p.transpose().doit() == p.doit().transpose()
 
 def test_simplify_prod():
     y, t, b, c = symbols('y, t, b, c', integer = True)
