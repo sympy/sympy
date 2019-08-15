@@ -499,6 +499,7 @@ _known_functions_mpmath = dict(_in_mpmath, **{
     'fresnelc': 'fresnelc',
     'fresnels': 'fresnels',
     'sign': 'sign',
+    'loggamma': 'loggamma'
 })
 _known_constants_mpmath = {
     'Pi': 'pi'
