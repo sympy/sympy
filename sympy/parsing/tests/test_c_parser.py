@@ -521,5 +521,5 @@ if cin:
 else:
     def test_raise():
         from sympy.parsing.c.c_parser import CCodeConverter
-        raises(ImportError, lambda: SymPyExpression())
         raises(ImportError, lambda: CCodeConverter())
+        raises(ImportError, lambda: SymPyExpression(' ', mode = 'c'))

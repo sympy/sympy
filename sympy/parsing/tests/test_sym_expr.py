@@ -196,6 +196,6 @@ if lfortran and cin:
         raises(ValueError, lambda: SymPyExpression(mode = 'c'))
         raises(NotImplementedError, lambda: SymPyExpression(src, mode = 'd'))
 
-else:
+elif not lfortran and not cin:
     def test_raise():
         raises(ImportError, lambda: SymPyExpression())

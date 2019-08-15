@@ -402,5 +402,5 @@ if lfortran:
 else:
     def test_raise():
         from sympy.parsing.fortran.fortran_parser import ASR2PyVisitor
-        raises(ImportError, lambda: SymPyExpression())
         raises(ImportError, lambda: ASR2PyVisitor())
+        raises(ImportError, lambda: SymPyExpression(' ', mode = 'f'))

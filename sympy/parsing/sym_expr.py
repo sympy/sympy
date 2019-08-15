@@ -10,9 +10,6 @@ if not lfortran and not cin:
         def __init__(self, *args, **kwargs):
             raise ImportError('Module not available.')
 
-        def convert_to_expr(self, *args, **kwargs):
-            raise ImportError('Module not available')
-
 else:
     if lfortran:
         from sympy.parsing.fortran.fortran_parser import src_to_sympy
@@ -105,9 +102,15 @@ else:
             elif mode:
                 if source_code:
                     if mode.lower() == 'f':
-                        self._expr = src_to_sympy(source_code)
+                        if lfortran:
+                            self._expr = src_to_sympy(source_code)
+                        else:
+                            raise ImportError("LFortran is not installed, cannot parse Fortran code")
                     elif mode.lower() == 'c':
-                        self._expr = parse_c(source_code)
+                        if cin:
+                            self._expr = parse_c(source_code)
+                        else:
+                            raise ImportError("Clang is not installed, cannot parse C code")
                     else:
                         raise NotImplementedError(
                             'Parser for specified language is not implemented'
@@ -159,9 +162,15 @@ else:
 
             """
             if mode.lower() == 'f':
-                self._expr = src_to_sympy(src_code)
+                if lfortran:
+                    self._expr = src_to_sympy(src_code)
+                else:
+                    raise ImportError("LFortran is not installed, cannot parse Fortran code")
             elif mode.lower() == 'c':
-                self._expr = parse_c(src_code)
+                if cin:
+                    self._expr = parse_c(src_code)
+                else:
+                    raise ImportError("Clang is not installed, cannot parse C code")
             else:
                 raise NotImplementedError(
                     "Parser for specified language has not been implemented"
