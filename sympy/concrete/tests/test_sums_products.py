@@ -1,11 +1,11 @@
 from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
-    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify,
+    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify, Identity,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range)
+    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, MatrixSymbol)
 from sympy.abc import a, b, c, d, k, m, x, y, z
-from sympy.concrete.summations import telescopic
+from sympy.concrete.summations import telescopic, _dummy_with_inherited_properties_concrete
 from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.matrices import \
@@ -290,7 +290,7 @@ def test_geometric_sums():
         exp(-2*I*pi*k*i/n) * exp(2*I*pi*q*i/n) / n, (i, 0, n - 1)
     )
     assert result.simplify() == Piecewise(
-            (1, Eq(exp(2*I*pi*(-k + q)/n), 1)), (0, True)
+            (1, Eq(exp(-2*I*pi*(k - q)/n), 1)), (0, True)
     )
 
 
@@ -315,13 +315,14 @@ def test_composite_sums():
 def test_hypergeometric_sums():
     assert summation(
         binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
+    assert summation(binomial(2*k, k)/5**k, (k, -oo, oo)) == sqrt(5)
 
 
 def test_other_sums():
     f = m**2 + m*exp(m)
     g = 3*exp(S(3)/2)/2 + exp(S(1)/2)/2 - exp(-S(1)/2)/2 - 3*exp(-S(3)/2)/2 + 5
 
-    assert summation(f, (m, -S(3)/2, S(3)/2)).expand() == g
+    assert summation(f, (m, -S(3)/2, S(3)/2)) == g
     assert summation(f, (m, -1.5, 1.5)).evalf().epsilon_eq(g.evalf(), 1e-10)
 
 fac = factorial
@@ -572,23 +573,24 @@ def test_Sum_doit():
     s = Sum( Sum( Sum(2,(z,1,n+1)), (y,x+1,n)), (x,1,n))
     assert 0 == (s.doit() - n*(n+1)*(n-1)).factor()
 
-    assert Sum(KroneckerDelta(m, n), (m, -oo, oo)).doit() == Piecewise((1, And(-oo < n, n < oo)), (0, True))
-    assert Sum(x*KroneckerDelta(m, n), (m, -oo, oo)).doit() == Piecewise((x, And(-oo < n, n < oo)), (0, True))
+    # Integer assumes finite
+    assert Sum(KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((1, And(-oo <= y, y < oo)), (0, True))
+    assert Sum(KroneckerDelta(m, n), (m, -oo, oo)).doit() == 1
+    assert Sum(m*KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((m, And(-oo <= y, y < oo)), (0, True))
+    assert Sum(x*KroneckerDelta(m, n), (m, -oo, oo)).doit() == x
     assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
     assert Sum(Sum(KroneckerDelta(k, m), (m, 1, 3)), (n, 1, 3)).doit() == \
            3 * Piecewise((1, And(S(1) <= k, k <= 3)), (0, True))
     assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
            f(1) + f(2) + f(3)
     assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
-           Sum(Piecewise((f(n), And(Le(0, n), n < oo)), (0, True)), (n, 1, oo))
-    l = Symbol('l', integer=True, positive=True)
-    assert Sum(f(l) * Sum(KroneckerDelta(m, l), (m, 0, oo)), (l, 1, oo)).doit() == \
-           Sum(f(l), (l, 1, oo))
+           Sum(f(n), (n, 1, oo))
 
     # issue 2597
     nmax = symbols('N', integer=True, positive=True)
     pw = Piecewise((1, And(S(1) <= n, n <= nmax)), (0, True))
-    assert Sum(pw, (n, 1, nmax)).doit() == Sum(pw, (n, 1, nmax))
+    assert Sum(pw, (n, 1, nmax)).doit() == Sum(Piecewise((1, nmax >= n),
+                    (0, True)), (n, 1, nmax))
 
     q, s = symbols('q, s')
     assert summation(1/n**(2*s), (n, 1, oo)) == Piecewise((zeta(2*s), 2*s > 1),
@@ -673,6 +675,9 @@ def test_is_zero():
         assert func(0, (x, 1, 1)).is_zero is True
         assert func(x, (x, 1, 1)).is_zero is None
 
+    assert Sum(0, (x, 1, 0)).is_zero is True
+    assert Product(0, (x, 1, 0)).is_zero is False
+
 
 def test_is_number():
     # is number should not rely on evaluation or assumptions,
@@ -722,6 +727,26 @@ def test_conjugate_transpose():
     assert p.adjoint().doit() == p.doit().adjoint()
     assert p.conjugate().doit() == p.doit().conjugate()
     assert p.transpose().doit() == p.doit().transpose()
+
+    p = Sum(B**n*A, (n, 1, 3))
+    assert p.adjoint().doit() == p.doit().adjoint()
+    assert p.conjugate().doit() == p.doit().conjugate()
+    assert p.transpose().doit() == p.doit().transpose()
+
+
+def test_noncommutativity_honoured():
+    A, B = symbols("A B", commutative=False)
+    M = symbols('M', integer=True, positive=True)
+    p = Sum(A*B**n, (n, 1, M))
+    assert p.doit() == A*Piecewise((M, Eq(B, 1)),
+                                   ((B - B**(M + 1))*(1 - B)**(-1), True))
+
+    p = Sum(B**n*A, (n, 1, M))
+    assert p.doit() == Piecewise((M, Eq(B, 1)),
+                                 ((B - B**(M + 1))*(1 - B)**(-1), True))*A
+
+    p = Sum(B**n*A*B**n, (n, 1, M))
+    assert p.doit() == p
 
 
 def test_issue_4171():
@@ -793,7 +818,7 @@ def test_simplify_sum():
 
 
 def test_change_index():
-    b, v = symbols('b, v', integer = True)
+    b, v, w = symbols('b, v, w', integer = True)
 
     assert Sum(x, (x, a, b)).change_index(x, x + 1, y) == \
         Sum(y - 1, (y, a + 1, b + 1))
@@ -809,6 +834,9 @@ def test_change_index():
         Sum(-v + x, (x, a + v, b + v))
     assert Sum(x, (x, a, b)).change_index( x, -x - v) == \
         Sum(-v - x, (x, -b - v, -a - v))
+    assert Sum(x, (x, a, b)).change_index(x, w*x, v) == \
+        Sum(v/w, (v, b*w, a*w))
+    raises(ValueError, lambda: Sum(x, (x, a, b)).change_index(x, 2*x))
 
 
 def test_reorder():
@@ -902,6 +930,9 @@ def test_issue_2787():
         (n*p, p/Abs(p - 1) <= 1),
         ((-p + 1)**n*Sum(k*p**k*(-p + 1)**(-k)*binomial(n, k), (k, 0, n)),
         True))
+    # Issue #17165: make sure that another simplify does not change/increase
+    # the result
+    assert res == res.simplify()
 
 
 def test_issue_4668():
@@ -921,13 +952,14 @@ def test_matrix_sum():
     assert result.__class__ == ImmutableSparseMatrix
 
 
-@XFAIL
 def test_failing_matrix_sum():
-    n = Symbol('n', nonnegative=True)
+    n = Symbol('n')
     # TODO Implement matrix geometric series summation.
     A = Matrix([[0, 1, 0], [-1, 0, 0], [0, 0, 0]])
     assert Sum(A ** n, (n, 1, 4)).doit() == \
         Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    # issue sympy/sympy#16989
+    assert summation(A**n, (n, 1, 1)) == A
 
 
 def test_indexed_idx_sum():
@@ -1002,6 +1034,7 @@ def test_is_convergent():
     f = Piecewise((n**(-2), n <= 1), (n**2, n > 1))
     assert Sum(f, (n, 1, oo)).is_convergent() is S.false
     assert Sum(f, (n, -oo, oo)).is_convergent() is S.false
+    assert Sum(f, (n, 1, 100)).is_convergent() is S.true
     #assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
 
     # integral test
@@ -1098,9 +1131,10 @@ def test_issue_14640():
 
 
 def test_issue_15943():
-    assert Sum(binomial(n, k)*factorial(n - k), (k, 0, n)).doit() == -E*(
-        n + 1)*gamma(n + 1)*lowergamma(n + 1, 1)/gamma(n + 2
+    s = Sum(binomial(n, k)*factorial(n - k), (k, 0, n)).doit().rewrite(gamma)
+    assert s == -E*(n + 1)*gamma(n + 1)*lowergamma(n + 1, 1)/gamma(n + 2
         ) + E*gamma(n + 1)
+    assert s.simplify() == E*(factorial(n) - lowergamma(n + 1, 1))
 
 
 def test_Sum_dummy_eq():
@@ -1187,6 +1221,8 @@ def test_sumproducts_assumptions():
     assert Product(2, (m, 0, oo)).is_negative is False
     assert Product(2, (m, 0, oo)).is_nonnegative is None
 
+    assert Product(0, (x, M, M-1)).is_positive is True
+
 
 def test_expand_with_assumptions():
     M = Symbol('M', integer=True, positive=True)
@@ -1217,3 +1253,117 @@ def test_has_finite_limits():
     x = Symbol('x', positive=True)
     M = Symbol('M')
     assert Sum(1, (x, 1, M)).has_finite_limits is True
+
+    assert Sum(1, (x, 1, M), (y, -oo, oo)).has_finite_limits is False
+
+def test_has_reversed_limits():
+    assert Sum(1, (x, 1, 1)).has_reversed_limits is False
+    assert Sum(1, (x, 1, 9)).has_reversed_limits is False
+    assert Sum(1, (x, 1, -9)).has_reversed_limits is True
+    assert Sum(1, (x, 1, 0)).has_reversed_limits is True
+    assert Sum(1, (x, 1, oo)).has_reversed_limits is False
+    M = Symbol('M')
+    assert Sum(1, (x, 1, M)).has_reversed_limits is None
+    M = Symbol('M', positive=True, integer=True)
+    assert Sum(1, (x, 1, M)).has_reversed_limits is False
+    assert Sum(1, (x, 1, M), (y, -oo, oo)).has_reversed_limits is False
+    M = Symbol('M', negative=True)
+    assert Sum(1, (x, 1, M)).has_reversed_limits is True
+
+    assert Sum(1, (x, 1, M), (y, -oo, oo)).has_reversed_limits is True
+
+
+def test_has_empty_sequence():
+    assert Sum(1, (x, 1, 1)).has_empty_sequence is False
+    assert Sum(1, (x, 1, 9)).has_empty_sequence is False
+    assert Sum(1, (x, 1, -9)).has_empty_sequence is False
+    assert Sum(1, (x, 1, 0)).has_empty_sequence is True
+    assert Sum(1, (x, y, y - 1)).has_empty_sequence is True
+    assert Sum(1, (x, 3, 2), (y, -oo, oo)).has_empty_sequence is True
+    assert Sum(1, (y, -oo, oo), (x, 3, 2)).has_empty_sequence is True
+
+def test_issue_17165():
+    n = symbols("n", integer=True)
+    x = symbols('x')
+    s = (x*Sum(x**n, (n, -1, oo)))
+    ssimp = s.doit().simplify()
+
+    assert ssimp == Piecewise((-1/(x - 1), Abs(x) < 1),
+                              (x*Sum(x**n, (n, -1, oo)), True))
+    assert ssimp == ssimp.simplify()
+
+
+def test__dummy_with_inherited_properties_concrete():
+    x = Symbol('x')
+
+    from sympy import Tuple
+    d = _dummy_with_inherited_properties_concrete(Tuple(x, 0, 5))
+    assert d.is_real
+    assert d.is_integer
+    assert d.is_nonnegative
+    assert d.is_extended_nonnegative
+
+    d = _dummy_with_inherited_properties_concrete(Tuple(x, 1, 9))
+    assert d.is_real
+    assert d.is_integer
+    assert d.is_positive
+    assert d.is_odd is None
+
+    d = _dummy_with_inherited_properties_concrete(Tuple(x, -5, 5))
+    assert d.is_real
+    assert d.is_integer
+    assert d.is_positive is None
+    assert d.is_extended_nonnegative is None
+    assert d.is_odd is None
+
+    d = _dummy_with_inherited_properties_concrete(Tuple(x, -1.5, 1.5))
+    assert d.is_real
+    assert d.is_integer is None
+    assert d.is_positive is None
+    assert d.is_extended_nonnegative is None
+
+    N = Symbol('N', integer=True, positive=True)
+    d = _dummy_with_inherited_properties_concrete(Tuple(x, 2, N))
+    assert d.is_real
+    assert d.is_positive
+    assert d.is_integer
+
+    # Return None if no assumptions are added
+    N = Symbol('N', integer=True, positive=True)
+    d = _dummy_with_inherited_properties_concrete(Tuple(N, 2, 4))
+    assert d is None
+
+    from sympy.core.facts import InconsistentAssumptions
+    x = Symbol('x', negative=True)
+    raises(InconsistentAssumptions,
+           lambda: _dummy_with_inherited_properties_concrete(Tuple(x, 1, 5)))
+
+
+def test_matrixsymbol_summation_numerical_limits():
+    A = MatrixSymbol('A', 3, 3)
+    n = Symbol('n', integer=True)
+
+    assert Sum(A**n, (n, 0, 2)).doit() == Identity(3) + A + A**2
+    assert Sum(A, (n, 0, 2)).doit() == 3*A
+    assert Sum(n*A, (n, 0, 2)).doit() == 3*A
+
+    B = Matrix([[0, n, 0], [-1, 0, 0], [0, 0, 2]])
+    ans = Matrix([[0, 6, 0], [-4, 0, 0], [0, 0, 8]]) + 4*A
+    assert Sum(A+B, (n, 0, 3)).doit() == ans
+    ans = A*Matrix([[0, 6, 0], [-4, 0, 0], [0, 0, 8]])
+    assert Sum(A*B, (n, 0, 3)).doit() == ans
+
+    ans = (A**2*Matrix([[-2, 0, 0], [0,-2, 0], [0, 0, 4]]) +
+           A**3*Matrix([[0, -9, 0], [3, 0, 0], [0, 0, 8]]) +
+           A*Matrix([[0, 1, 0], [-1, 0, 0], [0, 0, 2]]))
+    assert Sum(A**n*B**n, (n, 1, 3)).doit() == ans
+
+
+@XFAIL
+def test_matrixsymbol_summation_symbolic_limits():
+    N = Symbol('N', integer=True, positive=True)
+
+    A = MatrixSymbol('A', 3, 3)
+    n = Symbol('n', integer=True)
+    assert Sum(A, (n, 0, N)).doit() == (N+1)*A
+    assert Sum(n*A, (n, 0, N)).doit() == (N**2/2+N/2)*A
