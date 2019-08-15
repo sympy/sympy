@@ -1,4 +1,7 @@
-from sympy import symbols, FunctionMatrix, MatrixExpr, Lambda, Matrix
+from sympy.core import symbols, Lambda
+from sympy.functions import KroneckerDelta
+from sympy.matrices import Matrix
+from sympy.matrices.expressions import FunctionMatrix, MatrixExpr
 from sympy.utilities.pytest import raises
 
 
@@ -20,6 +23,10 @@ def test_funcmatrix_creation():
     raises(ValueError, lambda: FunctionMatrix(2, 2, Lambda((i, j, k), 0)))
     assert FunctionMatrix(2, 2, "lambda i, j: 0") == \
         FunctionMatrix(2, 2, Lambda((i, j), 0))
+
+    # XXX Possibly support symbolic functions other than Lambda?
+    raises(ValueError, lambda: FunctionMatrix(2, 2, KroneckerDelta))
+    assert FunctionMatrix(2, 2, Lambda((i, j), KroneckerDelta(i, j)))
 
     n = symbols('n')
     assert FunctionMatrix(n, n, Lambda((i, j), 0))
