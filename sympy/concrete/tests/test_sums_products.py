@@ -315,6 +315,7 @@ def test_composite_sums():
 def test_hypergeometric_sums():
     assert summation(
         binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
+    assert summation(binomial(2*k, k)/5**k, (k, -oo, oo)) == sqrt(5)
 
 
 def test_other_sums():
@@ -793,7 +794,7 @@ def test_simplify_sum():
 
 
 def test_change_index():
-    b, v = symbols('b, v', integer = True)
+    b, v, w = symbols('b, v, w', integer = True)
 
     assert Sum(x, (x, a, b)).change_index(x, x + 1, y) == \
         Sum(y - 1, (y, a + 1, b + 1))
@@ -809,6 +810,9 @@ def test_change_index():
         Sum(-v + x, (x, a + v, b + v))
     assert Sum(x, (x, a, b)).change_index( x, -x - v) == \
         Sum(-v - x, (x, -b - v, -a - v))
+    assert Sum(x, (x, a, b)).change_index(x, w*x, v) == \
+        Sum(v/w, (v, b*w, a*w))
+    raises(ValueError, lambda: Sum(x, (x, a, b)).change_index(x, 2*x))
 
 
 def test_reorder():
@@ -1002,6 +1006,7 @@ def test_is_convergent():
     f = Piecewise((n**(-2), n <= 1), (n**2, n > 1))
     assert Sum(f, (n, 1, oo)).is_convergent() is S.false
     assert Sum(f, (n, -oo, oo)).is_convergent() is S.false
+    assert Sum(f, (n, 1, 100)).is_convergent() is S.true
     #assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
 
     # integral test
