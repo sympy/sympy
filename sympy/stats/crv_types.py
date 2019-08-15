@@ -484,7 +484,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
 
     Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
     >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
-    exp(-1/2)*Integral(Sum(2**(-_k)*_x**_k/(beta(_k + 1, 1)*factorial(_k)), (_k, 0, oo)), (_x, 0, 2))
+    2*exp(1/2)
 
     The argument evaluate=False prevents an attempt at evaluation
     of the sum for general x, before the argument 2 is passed.

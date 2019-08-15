@@ -129,6 +129,7 @@ def test_getitem():
 
     raises(ValueError, lambda: array[3, 4, 5])
     raises(ValueError, lambda: array[3, 4, 5, 6])
+    raises(ValueError, lambda: array[3, 4, 5, 3:4])
 
 
 def test_sparse():
