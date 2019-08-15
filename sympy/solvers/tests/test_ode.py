@@ -7,7 +7,7 @@ from sympy.solvers.ode import (_undetermined_coefficients_match,
     constantsimp, homogeneous_order, infinitesimals, checkinfsol,
     checksysodesol, solve_ics, dsolve, get_numbered_constants)
 from sympy.solvers.deutils import ode_order
-from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
+from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
 from sympy.functions import besselj, bessely
 from sympy.utilities.misc import filldedent
 
@@ -2917,6 +2917,25 @@ def test_series():
     sol = Eq(f(x), (x - 2)**2*(1+ sin(4))*cos(4) + (x - 2)*sin(4) + 2 + O(x**3))
     assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == sol
 
+@XFAIL
+@SKIP
+def test_lie_group_issue17322():
+    eq=x*f(x).diff(x)*(f(x)+4) + (f(x)**2) -2*f(x)-2*x
+    sol = dsolve(eq, f(x))
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq=x*f(x).diff(x)*(f(x)+4) + (f(x)**2) -2*f(x)-2*x
+    sol = dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq=Eq(x**7*Derivative(f(x), x) + 5*x**3*f(x)**2 - (2*x**2 + 2)*f(x)**3, 0)
+    sol = dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq=f(x).diff(x) - (f(x) - x*log(x))**2/x**2 + log(x)
+    sol = dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
 
 @slow
 def test_lie_group():
@@ -2925,28 +2944,28 @@ def test_lie_group():
     a, b, c = symbols("a b c")
     eq = f(x).diff(x)**2
     sol = dsolve(eq, f(x), hint='lie_group')
-    assert checkodesol(eq, sol)[0]
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = Eq(f(x).diff(x), x**2*f(x))
     sol = dsolve(eq, f(x), hint='lie_group')
     assert sol == Eq(f(x), C1*exp(x**3)**(S(1)/3))
-    assert checkodesol(eq, sol)[0]
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x) + a*f(x) - c*exp(b*x)
     sol = dsolve(eq, f(x), hint='lie_group')
-    assert checkodesol(eq, sol)[0]
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x) + 2*x*f(x) - x*exp(-x**2)
     sol = dsolve(eq, f(x), hint='lie_group')
     actual_sol = Eq(f(x), (C1 + x**2/2)*exp(-x**2))
     errstr = str(eq)+' : '+str(sol)+' == '+str(actual_sol)
     assert sol == actual_sol, errstr
-    assert checkodesol(eq, sol)[0]
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = (1 + 2*x)*(f(x).diff(x)) + 2 - 4*exp(-f(x))
     sol = dsolve(eq, f(x), hint='lie_group')
     assert sol == Eq(f(x), log(C1/(2*x + 1) + 2))
-    assert checkodesol(eq, sol)[0]
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = x**2*(f(x).diff(x)) - f(x) + x**2*exp(x - (1/x))
     sol = dsolve(eq, f(x), hint='lie_group')
@@ -2955,7 +2974,32 @@ def test_lie_group():
     eq = x**2*f(x)**2 + x*Derivative(f(x), x)
     sol = dsolve(eq, f(x), hint='lie_group')
     assert sol == Eq(f(x), 2/(C1 + x**2))
-    assert checkodesol(eq, sol)[0]
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq=diff(f(x),x) + 2*x*f(x) - x*exp(-x**2)
+    sol = Eq(f(x), exp(-x**2)*(C1 + x**2/2))
+    assert sol == dsolve(eq, hint='lie_group')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = diff(f(x),x) + f(x)*cos(x) - exp(2*x)
+    sol = Eq(f(x), exp(-sin(x))*(C1 + Integral(exp(2*x)*exp(sin(x)), x)))
+    assert sol == dsolve(eq, hint='lie_group')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = diff(f(x),x) + f(x)*cos(x) - sin(2*x)/2
+    sol = Eq(f(x), C1*exp(-sin(x)) + sin(x) - 1)
+    assert sol == dsolve(eq, hint='lie_group')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*diff(f(x),x) + f(x) - x*sin(x)
+    sol = Eq(f(x), (C1 - x*cos(x) + sin(x))/x)
+    assert sol == dsolve(eq, hint='lie_group')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*diff(f(x),x) - f(x) - x/log(x)
+    sol = Eq(f(x), x*(C1 + log(log(x))))
+    assert sol == dsolve(eq, hint='lie_group')
+    assert checkodesol(eq, sol) == (True, 0)
 
 @XFAIL
 def test_lie_group_issue15219():
