@@ -491,6 +491,7 @@ _not_in_mpmath = 'log1p log2'.split()
 _in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
 _known_functions_mpmath = dict(_in_mpmath, **{
     'sign': 'sign',
+    'loggamma': 'loggamma'
 })
 _known_constants_mpmath = {
     'Pi': 'pi'
