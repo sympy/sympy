@@ -1020,22 +1020,10 @@ def solve(f, *symbols, **flags):
     piece = Lambda(w, Piecewise((w, Ge(w, 0)), (-w, True)))
     for i, fi in enumerate(f):
         # Abs
-        reps = []
-        _abs = fi.atoms(Abs)
-        while _abs:
-            a = _abs.pop()
-            if not a.has(*symbols):
-                continue
-            newa = separatevars(a)
-            if not isinstance(newa, Abs):
-                _abs.update(newa.atoms(Abs))
-                continue
-            if a.args[0].is_extended_real is None:
-                raise NotImplementedError('solving %s when the argument '
-                    'is not real or imaginary.' % a)
-            reps.append((a, piece(a.args[0]) if a.args[0].is_extended_real else \
-                piece(a.args[0]*S.ImaginaryUnit)))
-        fi = fi.subs(reps)
+        fi = fi.rewrite(Abs, Piecewise)
+        if fi.has(Abs):
+            raise NotImplementedError('solving %s when the argument '
+                'is not real or imaginary.' % fi)
 
         # arg
         _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
