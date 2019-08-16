@@ -1013,11 +1013,17 @@ class LambertW(Function):
             return s.is_algebraic
 
     def _eval_nseries(self, x, n, logx):
-        if len(self.args) == 1 and self.args[0] == x:
-            from sympy import Order
-            if n >= 1:
+        if len(self.args) == 1:
+            from sympy import Order, ceiling, expand_multinomial
+            arg = self.args[0].nseries(x, n=n, logx=logx)
+            lt = arg.compute_leading_term(x, logx=logx)
+            lte = 1
+            if lt.is_Pow:
+                lte = lt.exp
+            if ceiling(n/lte) >= 1:
                 s = Add(*[(-S.One)**(k - 1)*Integer(k)**(k - 2)/
-                          factorial(k - 1)*x**k for k in range(1, n)])
+                          factorial(k - 1)*arg**k for k in range(1, ceiling(n/lte))])
+                s = expand_multinomial(s)
             else:
                 s = S.Zero
 
