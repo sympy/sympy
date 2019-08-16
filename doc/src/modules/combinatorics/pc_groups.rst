@@ -184,19 +184,28 @@ To get a clear picture, start with an example of SymmetricGroup(4). For S(4) the
 generators in pcgs say [x0, x1, x2, x3] and the relative_order vector is [2, 3, 2, 2].
 Starting from bottom of this sequence the presentation is computed in order as below.
 
->>> x3**2               # ---|---> using only [x3] from pcgs and pc_series[4]
+using only `[x_3]` from `pcgs` and `pc\_series[4]` compute:
 
->>> x2**2               # ---|---> using only [x3] from pcgs and pc_series[3]
->>> x2**-1*x3*x2        # ---|
+* `x_3^2`
 
->>> x1**3               # ---|
->>> x1**-1*x3*x1        #    |---> using [x3, x2] from pcgs and pc_series[2] 
->>> x1**-1*x2*x1        # ---|
+using only `[x_3]` from `pcgs` and `pc\_series[3]` compute:
 
->>> x0**2               # ---|
->>> x0**-1*x3*x0        #    |---> using [x3, x2, x1] from pcgs and pc_series[1]
->>> x0**-1*x2*x0        #    |
->>> x0**-1*x1*x0        # ---|
+* `x_2^2`
+* `x_2^{-1}x_3x_2`
+
+using `[x_3, x_2]` from `pcgs` and `pc\_series[2]` compute:
+
+* `x_1^3`
+* `x_1^{-1}x_3x_1`
+* `x_1^{-1}x_2x_1`
+
+using `[x_3, x_2, x_1]` from `pcgs` and `pc\_series[1]` compute:
+
+* `x_0^2`
+* `x_0^{-1}x_3x_0`
+* `x_0^{-1}x_2x_0`
+* `x_0^{-1}x_1x_0`
+
 
 One thing to note is same group can have different pcgs due to variying derived_series which,
 results in different polycyclic presentations.
