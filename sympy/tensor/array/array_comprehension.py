@@ -342,7 +342,8 @@ class ArrayComprehensionMap(ArrayComprehension):
     =====
 
     Only the lambda function is considered.
-    At most one argument in lambda function is accepted in order to avoid ambiguity.
+    At most one argument in lambda function is accepted in order to avoid ambiguity
+    in value assignment.
 
     Examples
     ========
@@ -362,6 +363,9 @@ class ArrayComprehensionMap(ArrayComprehension):
         if any(len(l) != 3 or None for l in symbols):
             raise ValueError('ArrayComprehension requires values lower and upper bound'
                               ' for the expression')
+
+        if not isLambda(function):
+            raise ValueError('Data type not supported')
 
         arglist = cls._check_limits_validity(function, symbols)
         obj = Basic.__new__(cls, *arglist, **assumptions)

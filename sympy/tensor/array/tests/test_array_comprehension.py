@@ -66,3 +66,4 @@ def test_arraycomprehensionmap():
     assert ArrayComprehensionMap(lambda: 3, (i, 1, 5)).doit().tolist() == [3, 3, 3, 3, 3]
     assert ArrayComprehensionMap(lambda i: i+1, (i, 1, 5)).doit().tolist() == [2, 3, 4, 5, 6]
     raises(ValueError, lambda: ArrayComprehensionMap(lambda i, j: i+j, (i, 1, 5)).doit())
+    raises(ValueError, lambda: ArrayComprehensionMap(i*j, (i, 1, 3), (j, 2, 4)))
