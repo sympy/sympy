@@ -5,7 +5,8 @@ http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
                    Derivative, sin, exp, cos, tan, log, Lambda, S, sqrt,
-                   hadamard_product, DiagonalizeVector, OneMatrix, HadamardProduct, HadamardPower, KroneckerDelta, Sum)
+                   hadamard_product, DiagonalizeVector, OneMatrix, HadamardProduct, HadamardPower, KroneckerDelta, Sum,
+                   Dummy)
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
 from sympy.matrices.expressions import hadamard_power
 
@@ -60,6 +61,7 @@ def test_matrix_derivative_by_scalar():
     assert (i*x).diff(i) == x
     assert (sin(i)*A*B*x).diff(i) == cos(i)*A*B*x
     assert x.applyfunc(sin).diff(i) == ZeroMatrix(k, 1)
+    assert Trace(i**2*X).diff(i) == 2*i*Trace(X)
 
 
 def test_matrix_derivative_non_matrix_result():
@@ -144,7 +146,8 @@ def test_matrix_derivative_vectors_and_scalars():
     # Cookbook example 83:
     expr = (X*b + c).T*D*(X*b + c)
     assert expr.diff(X) == D*(X*b + c)*b.T + D.T*(X*b + c)*b.T
-    assert expr[0, 0].diff(X[m, n]).doit()
+    assert str(expr[0, 0].diff(X[m, n]).doit()) == \
+        'b[n, 0]*Sum((c[_i_1, 0] + Sum(X[_i_1, _i_3]*b[_i_3, 0], (_i_3, 0, k - 1)))*D[_i_1, m], (_i_1, 0, k - 1)) + Sum((c[_i_2, 0] + Sum(X[_i_2, _i_4]*b[_i_4, 0], (_i_4, 0, k - 1)))*D[m, _i_2]*b[n, 0], (_i_2, 0, k - 1))'
 
 
 def test_matrix_derivatives_of_traces():
