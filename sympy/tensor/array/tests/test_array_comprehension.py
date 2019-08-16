@@ -58,9 +58,10 @@ def test_arraycomprehensionmap():
     assert a.tolist() == [2, 3, 4, 5, 6]
     assert len(a) == 5
     assert isinstance(a.doit(), ImmutableDenseNDimArray)
+    expr = ArrayComprehensionMap(lambda i: i+1, (i, 1, k))
+    assert expr.doit() == expr
 
     # tests about lambda expression
     assert ArrayComprehensionMap(lambda: 3, (i, 1, 5)).doit().tolist() == [3, 3, 3, 3, 3]
     assert ArrayComprehensionMap(lambda i: i+1, (i, 1, 5)).doit().tolist() == [2, 3, 4, 5, 6]
     raises(ValueError, lambda: ArrayComprehensionMap(lambda i, j: i+j, (i, 1, 5)).doit())
-    raises(ValueError, lambda: ArrayComprehensionMap(lambda i: i+1, (i, 1, k)))

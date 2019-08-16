@@ -9,6 +9,7 @@ from sympy import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Integer
 
+
 class ArrayComprehension(Basic):
     """
     Generate a list comprehension
@@ -37,10 +38,6 @@ class ArrayComprehension(Basic):
                               ' for the expression')
         arglist = [sympify(function)]
         arglist.extend(cls._check_limits_validity(function, symbols))
-        return cls._new(arglist, **assumptions)
-
-    @classmethod
-    def _new(cls, arglist, **assumptions):
         obj = Basic.__new__(cls, *arglist, **assumptions)
         obj._limits = obj._args[1:]
         obj._shape = cls._calculate_shape_from_limits(obj._limits)
@@ -347,7 +344,6 @@ class ArrayComprehensionMap(ArrayComprehension):
 
     Only the lambda function is considered.
     At most one argument in lambda function is accepted in order to avoid ambiguity.
-    Function subs() is not supported, so all the bound should be numeric.
 
     Examples
     ========
@@ -368,13 +364,12 @@ class ArrayComprehensionMap(ArrayComprehension):
             raise ValueError('ArrayComprehension requires values lower and upper bound'
                               ' for the expression')
 
-        for _, inf, sup in symbols:
-            if Basic(inf, sup).atoms(Symbol):
-                raise ValueError('Only numeric bound is accepted')
-
-        arglist = [Expr('LAMBDA')]
-        arglist.extend(cls._check_limits_validity(function, symbols))
-        obj = cls._new(arglist, **assumptions)
+        arglist = cls._check_limits_validity(function, symbols)
+        obj = Basic.__new__(cls, *arglist, **assumptions)
+        obj._limits = obj._args
+        obj._shape = cls._calculate_shape_from_limits(obj._limits)
+        obj._rank = len(obj._shape)
+        obj._loop_size = cls._calculate_loop_size(obj._shape)
         obj._lambda = function
         return obj
 
@@ -397,3 +392,10 @@ class ArrayComprehensionMap(ArrayComprehension):
                 else:
                     list_gen.append(self._array_subs(list_expr, var, val))
         return list_gen
+
+    @property
+    def func(self):
+        class _(ArrayComprehensionMap):
+            def __new__(cls, *args, **kwargs):
+                return ArrayComprehensionMap(self._lambda, *args, **kwargs)
+        return _
