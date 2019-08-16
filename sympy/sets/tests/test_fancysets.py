@@ -152,8 +152,7 @@ def test_inf_Range_len():
     raises(ValueError, lambda: len(Range(0, oo, 2)))
     assert Range(0, oo, 2).size is S.Infinity
     assert Range(0, -oo, -2).size is S.Infinity
-    assert Range(oo, 0, -2).size is S.Infinity
-    assert Range(-oo, 0, 2).size is S.Infinity
+    raises(ValueError, lambda : Range(oo, 0, -2))
 
 
 def test_Range_set():
@@ -194,7 +193,6 @@ def test_Range_set():
     raises(ValueError, lambda: Range(1, 10, 0))
 
     assert 5 in Range(0, oo, 5)
-    assert -5 in Range(-oo, 0, 5)
     assert oo not in Range(0, oo)
     ni = symbols('ni', integer=False)
     assert ni not in Range(oo)
@@ -205,14 +203,9 @@ def test_Range_set():
     inf = symbols('inf', infinite=True)
     assert inf not in Range(oo)
     assert Range(0, oo, 2)[-1] == oo
-    assert Range(-oo, 1, 1)[-1] is S.Zero
-    assert Range(oo, 1, -1)[-1] == 2
     assert Range(0, -oo, -2)[-1] == -oo
     assert Range(1, 10, 1)[-1] == 9
     assert all(i.is_Integer for i in Range(0, -1, 1))
-
-    it = iter(Range(-oo, 0, 2))
-    raises(ValueError, lambda: next(it))
 
     assert empty.intersect(S.Integers) == empty
     assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)
@@ -225,8 +218,6 @@ def test_Range_set():
     assert Range(1, 12, 2)[5] == 11
     assert Range(1, 10, 1)[-1] == 9
     assert Range(1, 10, 3)[-1] == 7
-    raises(ValueError, lambda: Range(oo,0,-1)[1:3:0])
-    raises(ValueError, lambda: Range(oo,0,-1)[:1])
     raises(ValueError, lambda: Range(1, oo)[-2])
     raises(ValueError, lambda: Range(-oo, 1)[2])
     raises(IndexError, lambda: Range(10)[-20])
@@ -234,29 +225,6 @@ def test_Range_set():
     raises(ValueError, lambda: Range(2, -oo, -2)[2:2:0])
     assert Range(2, -oo, -2)[2:2:2] == empty
     assert Range(2, -oo, -2)[:2:2] == Range(2, -2, -4)
-    raises(ValueError, lambda: Range(-oo, 4, 2)[:2:2])
-    assert Range(-oo, 4, 2)[::-2] == Range(2, -oo, -4)
-    assert Range(-oo, 4, 2)[::2] == Range(-oo, 4, 4)
-    assert Range(oo, 2, -2)[::] == Range(oo, 2, -2)
-    assert Range(-oo, 4, 2)[:-2:-2] == Range(2, -2, -4)
-    assert Range(-oo, 4, 2)[:-2:2] == Range(-oo, 0, 4)
-    assert Range(-oo, 4, 2)[:0:-2] == Range(2, -oo, -4)
-    raises(ValueError, lambda: Range(-oo, 4, 2)[:2:-2])
-    assert Range(-oo, 4, 2)[-2::-2] == Range(0, -oo, -4)
-    assert Range(-oo, 4, 2)[-2:0:-2] == Range(0, -oo, -4)
-    assert Range(-oo, 4, 2)[0::2] == Range(-oo, 4, 4)
-    assert Range(oo, 2, -2)[0::] == Range(oo, 2, -2)
-    assert Range(-oo, 4, 2)[0:-2:2] == Range(-oo, 0, 4)
-    assert Range(oo, 2, -2)[0:-2:] == Range(oo, 6, -2)
-    raises(ValueError, lambda: Range(oo, 2, -2)[0:2:])
-    raises(ValueError, lambda: Range(-oo, 4, 2)[2::-1])
-    assert Range(-oo, 4, 2)[-2::2] == Range(0, 4, 4)
-    assert Range(oo, 0, -2)[-10:0:2] == empty
-    raises(ValueError, lambda: Range(oo, 0, -2)[-10:10:2])
-    assert Range(oo, 0, -2)[0::-2] == empty
-    assert Range(oo, 0, -2)[0:-4:-2] == empty
-    assert Range(oo, 0, -2)[:0:2] == empty
-    raises(ValueError, lambda: Range(oo, 0, -2)[:1:-1])
 
     # test empty Range
     assert empty.reversed == empty
@@ -290,10 +258,10 @@ def test_Range_set():
 
     assert Range(1, 10, 1).boundary == Range(1, 10, 1)
 
-    for r in (Range(1, 10, 2), Range(1, oo, 2)):
-        rev = r.reversed
-        assert r.inf == rev.inf and r.sup == rev.sup
-        assert r.step == -rev.step
+    r = Range(1, 10, 2)
+    rev = r.reversed
+    assert r.inf == rev.inf and r.sup == rev.sup
+    assert r.step == -rev.step
 
     # test symbolic Range
     a, b, c, d = symbols('a, b, c, d', integer=True)
@@ -315,20 +283,6 @@ def test_Range_set():
                     assert (not rabcr)
                 else:
                     assert check(rabc, rabcr)
-    for av in avs:
-        for cv in cvs:
-            rabc = r.subs({a: av, c: cv}).subs(b, oo)
-            rabcr = rrev.subs({a: av, c: cv}).subs(b, oo)
-            if not rabc:
-                assert (not rabc)
-            else:
-                assert check(rabc, rabcr)
-            rabc = r.subs({a: av, c: cv}).subs(b, -oo)
-            rabcr = rrev.subs({a: av, c: cv}).subs(b, -oo)
-            if not rabc:
-                assert (not rabc)
-            else:
-                assert check(rabc, rabcr)
 
     avs, bvs = ([0, 1, -2], )*2
     cvs = [1, -2]
@@ -463,7 +417,6 @@ def test_Range_set():
 
     # test Range.as_relational
     assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3) & Eq(x - 1, floor(x) - 1)
-    assert Range(oo, 1, -2).as_relational(x) == (x >= 3) & (x < oo) & Eq((3 - x)/2, floor((3 - x)/2))
 
 
 def test_range_range_intersection():
@@ -479,18 +432,23 @@ def test_range_range_intersection():
             (Range(2, oo, 2), Range(oo), Range(2, oo, 2)),
             (Range(0, oo, 2), Range(5, 6), S.EmptySet),
             (Range(2, 80, 1), Range(55, 71, 4), Range(55, 71, 4)),
-            (Range(0, 6, 3), Range(-oo, 5, 3), S.EmptySet),
             (Range(0, oo, 2), Range(5, oo, 3), Range(8, oo, 6)),
             (Range(4, 6, 2), Range(2, 16, 7), S.EmptySet),]:
         assert a.intersect(b) == r
-        assert a.intersect(b.reversed) == r
-        assert a.reversed.intersect(b) == r
-        assert a.reversed.intersect(b.reversed) == r
+        if (not a) or (a.sup is not oo):
+            assert a.reversed.intersect(b) == r
+        if (not b) or (b.sup is not oo):
+            assert a.intersect(b.reversed) == r
+        if ((not a) or (a.sup is not oo)) and ((not b) or (b.sup is not oo)):
+            assert a.reversed.intersect(b.reversed) == r
         a, b = b, a
         assert a.intersect(b) == r
-        assert a.intersect(b.reversed) == r
-        assert a.reversed.intersect(b) == r
-        assert a.reversed.intersect(b.reversed) == r
+        if (not a) or (a.sup is not oo):
+            assert a.reversed.intersect(b) == r
+        if (not b) or (b.sup is not oo):
+            assert a.intersect(b.reversed) == r
+        if ((not a) or (a.sup is not oo)) and ((not b) or (b.sup is not oo)):
+            assert a.reversed.intersect(b.reversed) == r
 
 
 def test_range_interval_intersection():

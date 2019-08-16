@@ -568,7 +568,9 @@ class Range(Set):
                 start = end = S.Zero
                 step = S.One
             else:
-                end = stop
+                raise ValueError("Non empty Range with infinite start is not allowed."
+                                 "Please manipulate your parameters so that the infinity"
+                                 " comes at the end.")
         else:
             ref = start if start.is_finite is not False else stop
             n = ceiling((stop - ref)/step)
