@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
                    gamma, Product, Dummy, Sum, Abs, IndexedBase, Matrix, I)
 from sympy.core.sympify import _sympify
-from sympy.multipledispatch import dispatch
 from sympy.stats.rv import (_symbol_converter, Density, RandomMatrixSymbol,
                             RandomSymbol)
 from sympy.stats.joint_rv_types import JointDistributionHandmade
@@ -201,6 +200,13 @@ class CircularEnsemble(RandomMatrixEnsemble):
 
     .. [1] https://en.wikipedia.org/wiki/Circular_ensemble
     """
+    def density(self, expr):
+        # TODO : Add support for Lie groups(as extensions of sympy.diffgeom)
+        #        and define measures on them
+        raise NotImplementedError("Support for Haar measure hasn't been "
+                                  "implemented yet, therefore the density of "
+                                  "%s cannot be computed."%(self))
+
     def _compute_joint_eigen_distribution(self, beta):
         """
         Helper function to compute the joint distribution of phases
@@ -225,9 +231,10 @@ class CircularUnitaryEnsemble(CircularEnsemble):
     ========
 
     >>> from sympy.stats import CircularUnitaryEnsemble as CUE, density
-    >>> C = CUE('U', 2)
-    >>> density(C)
-    Density(U)
+    >>> from sympy.stats import joint_eigen_distribution
+    >>> C = CUE('U', 1)
+    >>> joint_eigen_distribution(C)
+    Lambda(t[1], Product(Abs(exp(I*t[_j]) - exp(I*t[_k]))**2, (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
 
     Note
     ====
@@ -247,9 +254,10 @@ class CircularOrthogonalEnsemble(CircularEnsemble):
     ========
 
     >>> from sympy.stats import CircularOrthogonalEnsemble as COE, density
-    >>> C = COE('O', 2)
-    >>> density(C)
-    Density(O)
+    >>> from sympy.stats import joint_eigen_distribution
+    >>> C = COE('O', 1)
+    >>> joint_eigen_distribution(C)
+    Lambda(t[1], Product(Abs(exp(I*t[_j]) - exp(I*t[_k])), (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
 
     Note
     ====
@@ -269,9 +277,10 @@ class CircularSymplecticEnsemble(CircularEnsemble):
     ========
 
     >>> from sympy.stats import CircularSymplecticEnsemble as CSE, density
-    >>> C = CSE('S', 2)
-    >>> density(C)
-    Density(S)
+    >>> from sympy.stats import joint_eigen_distribution
+    >>> C = CSE('S', 1)
+    >>> joint_eigen_distribution(C)
+    Lambda(t[1], Product(Abs(exp(I*t[_j]) - exp(I*t[_k]))**4, (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
 
     Note
     ====
@@ -284,7 +293,6 @@ class CircularSymplecticEnsemble(CircularEnsemble):
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_distribution(S(4))
 
-@dispatch(RandomMatrixSymbol)
 def joint_eigen_distribution(mat):
     """
     For obtaining joint probability distribution
