@@ -90,7 +90,7 @@ few more attributes which are defined below:
 >>> Collector.free_group
 <free group on the generators (x0, x1)>
 >>> Collector.pc_presentation
-{x1**3: (), x0**2: (), x0**-1*x1*x0: x1**2}
+{x0**2: (), x1**3: (), x0**-1*x1*x0: x1**2}
 
 
 Computation of Minimal Uncollected Subword
@@ -184,16 +184,19 @@ To get a clear picture, start with an example of SymmetricGroup(4). For S(4) the
 generators in pcgs say [x0, x1, x2, x3] and the relative_order vector is [2, 3, 2, 2].
 Starting from bottom of this sequence the presentation is computed in order as below.
 
->>> x3^2	   	---|
->>> x2^2	      	   |---> using only [x3] from pcgs and pc_series[1]
->>> x2^{-1}x3x2		---|
->>> x1^3	   	---|	
->>> x1^{-1}x3x1		   |---> using [x3, x2] from pcgs and pc_series[2] 
->>> x1^{-1}x2x1		---|
->>> x0^2	   	---|
->>> x0^{-1}x3x0		   |---> using [x3, x2, x1] from pcgs and pc_series[3]
->>> x0^{-1}x2x0     	   |
->>> x0^{-1}x1x0		---|
+>>> x3^2               # ---|---> using only [x3] from pcgs and pc_series[4]
+
+>>> x2^2               # ---|---> using only [x3] from pcgs and pc_series[3]
+>>> x2^{-1}x3x2        # ---|
+
+>>> x1^3               # ---|
+>>> x1^{-1}x3x1        #    |---> using [x3, x2] from pcgs and pc_series[2] 
+>>> x1^{-1}x2x1        # ---|
+
+>>> x0^2               # ---|
+>>> x0^{-1}x3x0        #    |---> using [x3, x2, x1] from pcgs and pc_series[1]
+>>> x0^{-1}x2x0        #    |
+>>> x0^{-1}x1x0        # ---|
 
 One thing to note is same group can have different pcgs due to variying derived_series which,
 results in different polycyclic presentations.
