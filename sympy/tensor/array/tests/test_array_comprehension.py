@@ -1,4 +1,4 @@
-from sympy.tensor.array.array_comprehension import ArrayComprehension
+from sympy.tensor.array.array_comprehension import ArrayComprehension, ArrayComprehensionMap
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.abc import i, j, k, l
 from sympy.utilities.pytest import raises
@@ -50,7 +50,17 @@ def test_array_comprehension():
     raises(ValueError, lambda: b.tomatrix())
     raises(ValueError, lambda: c.tomatrix())
 
+def test_arraycomprehensionmap():
+    a = ArrayComprehensionMap(lambda i: i+1, (i, 1, 5))
+    assert a.doit().tolist() == [2, 3, 4, 5, 6]
+    assert a.shape == (5,)
+    assert a.is_shape_numeric
+    assert a.tolist() == [2, 3, 4, 5, 6]
+    assert len(a) == 5
+    assert isinstance(a.doit(), ImmutableDenseNDimArray)
+
     # tests about lambda expression
-    assert ArrayComprehension(lambda: 3, (i, 1, 5)).doit().tolist() == [3, 3, 3, 3, 3]
-    assert ArrayComprehension(lambda i: i+1, (i, 1, 5)).doit().tolist() == [2, 3, 4, 5, 6]
-    raises(ValueError, lambda: ArrayComprehension(lambda i, j: i+j, (i, 1, 5)).doit())
+    assert ArrayComprehensionMap(lambda: 3, (i, 1, 5)).doit().tolist() == [3, 3, 3, 3, 3]
+    assert ArrayComprehensionMap(lambda i: i+1, (i, 1, 5)).doit().tolist() == [2, 3, 4, 5, 6]
+    raises(ValueError, lambda: ArrayComprehensionMap(lambda i, j: i+j, (i, 1, 5)).doit())
+    raises(ValueError, lambda: ArrayComprehensionMap(lambda i: i+1, (i, 1, k)))

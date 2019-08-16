@@ -9,10 +9,6 @@ from sympy import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Integer
 
-def isLambda(v):
-    LAMBDA = lambda:0
-    return isinstance(v, type(LAMBDA)) and v.__name__ == LAMBDA.__name__
-
 class ArrayComprehension(Basic):
     """
     Generate a list comprehension
@@ -39,8 +35,12 @@ class ArrayComprehension(Basic):
         if any(len(l) != 3 or None for l in symbols):
             raise ValueError('ArrayComprehension requires values lower and upper bound'
                               ' for the expression')
-        arglist = [sympify(function)] if not isLambda(function) else [function]
+        arglist = [sympify(function)]
         arglist.extend(cls._check_limits_validity(function, symbols))
+        return cls._new(arglist, **assumptions)
+
+    @classmethod
+    def _new(cls, arglist, **assumptions):
         obj = Basic.__new__(cls, *arglist, **assumptions)
         obj._limits = obj._args[1:]
         obj._shape = cls._calculate_shape_from_limits(obj._limits)
@@ -258,32 +258,24 @@ class ArrayComprehension(Basic):
 
         return ImmutableDenseNDimArray(self._expand_array())
 
-    def _expand_array(self):
-        # To perform a subs at every element of the array.
-        def _array_subs(arr, var, val):
-            arr = MutableDenseNDimArray(arr)
-            for i in range(len(arr)):
-                index = arr._get_tuple_index(i)
-                arr[index] = arr[index].subs(var, val)
-            return arr.tolist()
+    # To perform a subs at every element of the array.
+    def _array_subs(self, arr, var, val):
+        arr = MutableDenseNDimArray(arr)
+        for i in range(len(arr)):
+            index = arr._get_tuple_index(i)
+            arr[index] = arr[index].subs(var, val)
+        return arr.tolist()
 
+    def _expand_array(self):
         list_gen = self.function
         for var, inf, sup in reversed(self._limits):
             list_expr = list_gen
             list_gen = []
             for val in range(inf, sup+1):
                 if not isinstance(list_expr, Iterable):
-                    if isLambda(list_expr):
-                        if list_expr.__code__.co_argcount == 0:
-                            list_gen.append(list_expr())
-                        elif list_expr.__code__.co_argcount == 1:
-                            list_gen.append(list_expr(val))
-                        else:
-                            raise ValueError("One argument at most is accepted")
-                    else:
-                        list_gen.append(list_expr.subs(var, val))
+                    list_gen.append(list_expr.subs(var, val))
                 else:
-                    list_gen.append(_array_subs(list_expr, var, val))
+                    list_gen.append(self._array_subs(list_expr, var, val))
         return list_gen
 
     def tolist(self):
@@ -340,3 +332,68 @@ class ArrayComprehension(Basic):
             raise ValueError('Dimensions must be of size of 2')
 
         return Matrix(self._expand_array())
+
+
+def isLambda(v):
+    LAMBDA = lambda: 0
+    return isinstance(v, type(LAMBDA)) and v.__name__ == LAMBDA.__name__
+
+class ArrayComprehensionMap(ArrayComprehension):
+    '''
+    A subclass of ArrayComprehension dedicated to map external function lambda.
+
+    Notes
+    =====
+
+    Only the lambda function is considered.
+    At most one argument in lambda function is accepted in order to avoid ambiguity.
+    Function subs() is not supported, so all the bound should be numeric.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.array import ArrayComprehensionMap
+    >>> from sympy import symbols
+    >>> i, j, k = symbols('i j k')
+    >>> a = ArrayComprehensionMap(lambda: 1, (i, 1, 4))
+    >>> a.doit()
+    [1, 1, 1, 1]
+    >>> b = ArrayComprehensionMap(lambda a: a+1, (j, 1, 4))
+    >>> b.doit()
+    [2, 3, 4, 5]
+
+    '''
+    def __new__(cls, function, *symbols, **assumptions):
+        if any(len(l) != 3 or None for l in symbols):
+            raise ValueError('ArrayComprehension requires values lower and upper bound'
+                              ' for the expression')
+
+        for _, inf, sup in symbols:
+            if Basic(inf, sup).atoms(Symbol):
+                raise ValueError('Only numeric bound is accepted')
+
+        arglist = [Expr('LAMBDA')]
+        arglist.extend(cls._check_limits_validity(function, symbols))
+        obj = cls._new(arglist, **assumptions)
+        obj._lambda = function
+        return obj
+
+    def _expand_array(self):
+        list_gen = self._lambda
+        for var, inf, sup in reversed(self._limits):
+            list_expr = list_gen
+            list_gen = []
+            for val in range(inf, sup+1):
+                if not isinstance(list_expr, Iterable):
+                    if isLambda(list_expr):
+                        if list_expr.__code__.co_argcount == 0:
+                            list_gen.append(list_expr())
+                        elif list_expr.__code__.co_argcount == 1:
+                            list_gen.append(list_expr(val))
+                        else:
+                            raise ValueError("One argument at most is accepted")
+                    else:
+                        list_gen.append(list_expr.subs(var, val))
+                else:
+                    list_gen.append(self._array_subs(list_expr, var, val))
+        return list_gen
