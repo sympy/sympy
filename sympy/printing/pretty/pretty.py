@@ -9,7 +9,6 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.relational import Equality
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import SympifyError
 from sympy.printing.conventions import requires_partial
@@ -331,7 +330,7 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_Derivative(self, deriv):
-        if requires_partial(deriv) and self._use_unicode:
+        if requires_partial(deriv.expr) and self._use_unicode:
             deriv_symbol = U('PARTIAL DIFFERENTIAL')
         else:
             deriv_symbol = r'd'
@@ -482,6 +481,8 @@ class PrettyPrinter(Printer):
         sign_height = 0
 
         for lim in expr.limits:
+            pretty_lower, pretty_upper = self.__print_SumProduct_Limits(lim)
+
             width = (func_height + 2) * 5 // 3 - 2
             sign_lines = [horizontal_chr + corner_chr + (horizontal_chr * (width-2)) + corner_chr + horizontal_chr]
             for _ in range(func_height + 1):
@@ -490,8 +491,6 @@ class PrettyPrinter(Printer):
             pretty_sign = stringPict('')
             pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
 
-            pretty_upper = self._print(lim[2])
-            pretty_lower = self._print(Equality(lim[0], lim[1]))
 
             max_upper = max(max_upper, pretty_upper.height())
 
@@ -515,6 +514,18 @@ class PrettyPrinter(Printer):
         pretty_func.baseline = max_upper + sign_height//2
         pretty_func.binding = prettyForm.MUL
         return pretty_func
+
+    def __print_SumProduct_Limits(self, lim):
+        def print_start(lhs, rhs):
+            op = prettyForm(' ' + xsym("==") + ' ')
+            l = self._print(lhs)
+            r = self._print(rhs)
+            pform = prettyForm(*stringPict.next(l, op, r))
+            return pform
+
+        prettyUpper = self._print(lim[2])
+        prettyLower = print_start(lim[0], lim[1])
+        return prettyLower, prettyUpper
 
     def _print_Sum(self, expr):
         ascii_mode = not self._use_unicode
@@ -576,15 +587,7 @@ class PrettyPrinter(Printer):
         sign_height = 0
 
         for lim in expr.limits:
-            if len(lim) == 3:
-                prettyUpper = self._print(lim[2])
-                prettyLower = self._print(Equality(lim[0], lim[1]))
-            elif len(lim) == 2:
-                prettyUpper = self._print("")
-                prettyLower = self._print(Equality(lim[0], lim[1]))
-            elif len(lim) == 1:
-                prettyUpper = self._print("")
-                prettyLower = self._print(lim[0])
+            prettyLower, prettyUpper = self.__print_SumProduct_Limits(lim)
 
             max_upper = max(max_upper, prettyUpper.height())
 
