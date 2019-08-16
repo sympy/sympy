@@ -194,8 +194,8 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy.series.limitseq import limit_seq
-        from sympy.functions import RisingFactorial
+        from sympy.functions import RisingFactorial, FallingFactorial
+        from sympy.simplify import gammasimp
 
         e, z, z0, dir = self.args
 
@@ -219,7 +219,10 @@ class Limit(Expr):
         # factorial is defined to be zero for negative inputs (which
         # differs from gamma) so only rewrite for positive z0.
         if z0.is_extended_positive:
-            e = e.rewrite([factorial, RisingFactorial], gamma)
+            e = e.rewrite([factorial, RisingFactorial, FallingFactorial], gamma)
+
+        if e.has(gamma):
+            e = gammasimp(e)
 
         if e.is_Mul:
             if abs(z0) is S.Infinity:

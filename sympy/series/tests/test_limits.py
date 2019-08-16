@@ -558,3 +558,15 @@ def test_issue_17325():
     assert Limit(x**2, x, 0, dir="+-").doit() == 0
     assert Limit(1/x**2, x, 0, dir="+-").doit() == oo
     raises(ValueError, lambda: Limit(1/x, x, 0, dir="+-").doit())
+
+
+def test_issue_17431():
+    from sympy import factorial
+    assert Limit((n + 2)**2*factorial(n)/((n + 1)*(n + 3)*factorial(n + 1)),
+                 n, oo).doit() == 0
+    assert Limit(n * factorial(n) / (n * factorial(n + 1)), n, oo).doit() == 0
+    assert Limit((n + 1) * factorial(n) / (n * factorial(n)), n, oo).doit() == 1
+    assert Limit((n + 1) * factorial(n) / (n * factorial(n + 1)), n, oo).doit() == 0
+    assert Limit((n + 2)**2*gamma(n)/((n + 1)*(n + 3)*gamma(n + 1)),
+                 n, oo).doit() == 0
+    assert Limit((n + 1) * gamma(n) / (n * gamma(n + 1)), n, oo).doit() == 0
