@@ -21,4 +21,3 @@ def test_smith_normal():
     setattr(m, 'ring', ZZ)
     smf = Matrix([[2, 0]])
     assert smith_normal_form(m) == smf
-    
