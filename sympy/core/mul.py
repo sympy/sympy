@@ -755,16 +755,11 @@ class Mul(Expr, AssocOp):
 
     @cacheit
     def as_coeff_mul(self, *deps, **kwargs):
-        rational = kwargs.pop('rational', True)
         if deps:
-            l1 = []
-            l2 = []
-            for f in self.args:
-                if f.has(*deps):
-                    l2.append(f)
-                else:
-                    l1.append(f)
-            return self._new_rawargs(*l1), tuple(l2)
+            from sympy.utilities.iterables import sift
+            l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
+            return self._new_rawargs(*l2), tuple(l1)
+        rational = kwargs.pop('rational', True)
         args = self.args
         if args[0].is_Number:
             if not rational or args[0].is_Rational:
@@ -774,7 +769,9 @@ class Mul(Expr, AssocOp):
         return S.One, args
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """
+        Efficiently extract the coefficient of a product.
+        """
         coeff, args = self.args[0], self.args[1:]
 
         if coeff.is_Number:

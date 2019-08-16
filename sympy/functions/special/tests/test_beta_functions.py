@@ -18,3 +18,5 @@ def test_beta():
     assert conjugate(beta(x, y)) == beta(conjugate(x), conjugate(y))
 
     raises(ArgumentIndexError, lambda: beta(x, y).fdiff(3))
+
+    assert beta(x, y).rewrite(gamma) == gamma(x)*gamma(y)/gamma(x + y)
