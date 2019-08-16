@@ -55,6 +55,7 @@ def flatten(iterable, levels=None, cls=None):
 
     adapted from https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
     """
+    from sympy.tensor.array import NDimArray
     if levels is not None:
         if not levels:
             return iterable
@@ -73,7 +74,7 @@ def flatten(iterable, levels=None, cls=None):
 
     for el in iterable:
         if reducible(el):
-            if hasattr(el, 'args'):
+            if hasattr(el, 'args') and not isinstance(el, NDimArray):
                 el = el.args
             result.extend(flatten(el, levels=levels, cls=cls))
         else:
@@ -686,7 +687,7 @@ def sift(seq, keyfunc, binary=False):
 
     If you need to sort the sifted items it might be better to use
     ``ordered`` which can economically apply multiple sort keys
-    to a squence while sorting.
+    to a sequence while sorting.
 
     See Also
     ========
@@ -1475,15 +1476,8 @@ def multiset_partitions(multiset, m=None):
     The number of partitions of length k from a set of size n is given by the
     Stirling Number of the 2nd kind:
 
-    >>> def S2(n, k):
-    ...     from sympy import Dummy, binomial, factorial, Sum
-    ...     if k > n:
-    ...         return 0
-    ...     j = Dummy()
-    ...     arg = (-1)**(k-j)*j**n*binomial(k,j)
-    ...     return 1/factorial(k)*Sum(arg,(j,0,k)).doit()
-    ...
-    >>> S2(5, 2) == len(list(multiset_partitions(5, 2))) == 15
+    >>> from sympy.functions.combinatorial.numbers import stirling
+    >>> stirling(5, 2) == len(list(multiset_partitions(5, 2))) == 15
     True
 
     These comments on counting apply to *sets*, not multisets.

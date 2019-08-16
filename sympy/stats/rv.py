@@ -16,10 +16,11 @@ sympy.stats.rv_interface
 from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-        Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta, Mul, Indexed)
+                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
 from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
+from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
@@ -275,13 +276,29 @@ class RandomSymbol(Expr):
 class RandomIndexedSymbol(RandomSymbol):
 
     def __new__(cls, idx_obj, pspace=None):
-        if not isinstance(idx_obj, Indexed):
-            raise TypeError("An indexed object is expected not %s"%(idx_obj))
+        if not isinstance(idx_obj, (Indexed, Function)):
+            raise TypeError("An Function or Indexed object is expected not %s"%(idx_obj))
         return Basic.__new__(cls, idx_obj, pspace)
 
     symbol = property(lambda self: self.args[0])
     name = property(lambda self: str(self.args[0]))
-    key = property(lambda self: self.symbol.args[1])
+
+    @property
+    def key(self):
+        if isinstance(self.symbol, Indexed):
+            return self.symbol.args[1]
+        elif isinstance(self.symbol, Function):
+            return self.symbol.args[0]
+
+class RandomMatrixSymbol(MatrixSymbol):
+    def __new__(cls, symbol, n, m, pspace=None):
+        from sympy.stats.random_matrix import RandomMatrixPSpace
+        n, m = _sympify(n), _sympify(m)
+        symbol = _symbol_converter(symbol)
+        return Basic.__new__(cls, symbol, n, m, pspace)
+
+    symbol = property(lambda self: self.args[0])
+    pspace = property(lambda self: self.args[3])
 
 class ProductPSpace(PSpace):
     """
@@ -539,6 +556,10 @@ def pspace(expr):
     expr = sympify(expr)
     if isinstance(expr, RandomSymbol) and expr.pspace is not None:
         return expr.pspace
+    if expr.has(RandomMatrixSymbol):
+        rm = list(expr.atoms(RandomMatrixSymbol))[0]
+        return rm.pspace
+
     rvs = random_symbols(expr)
     if not rvs:
         raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
@@ -796,7 +817,13 @@ class Density(Basic):
 
     def doit(self, evaluate=True, **kwargs):
         from sympy.stats.joint_rv import JointPSpace
+        from sympy.stats.frv import SingleFiniteDistribution
+        from sympy.stats.random_matrix_models import RandomMatrixPSpace
         expr, condition = self.expr, self.condition
+        if _sympify(expr).has(RandomMatrixSymbol):
+            return pspace(expr).compute_density(expr)
+        if isinstance(expr, SingleFiniteDistribution):
+            return expr.dict
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
@@ -1330,7 +1357,7 @@ def rv_subs(expr, symbols=None):
     if not symbols:
         return expr
     swapdict = {rv: rv.symbol for rv in symbols}
-    return expr.xreplace(swapdict)
+    return expr.subs(swapdict)
 
 class NamedArgsMixin(object):
     _argnames = ()

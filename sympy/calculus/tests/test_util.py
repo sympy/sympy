@@ -1,6 +1,6 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols, I, re, Lambda, simplify,
-                   ImageSet)
+                   ImageSet, expint)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
@@ -44,6 +44,8 @@ def test_function_range():
     assert function_range(cos(x), x, S.EmptySet) == S.EmptySet
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
+    raises(NotImplementedError, lambda : function_range(
+        sin(x) + x, x, S.Reals)) # issue 13273
     raises(NotImplementedError, lambda : function_range(
         log(x), x, S.Integers))
     raises(NotImplementedError, lambda : function_range(
@@ -160,6 +162,8 @@ def test_periodicity():
 
     assert periodicity((x**2 + 4)%2, x) is None
     assert periodicity((E**x)%3, x) is None
+
+    assert periodicity(sin(expint(1, x))/expint(1, x), x) is None
 
 
 def test_periodicity_check():

@@ -218,9 +218,9 @@ class Beam(object):
     def boundary_conditions(self):
         """
         Returns a dictionary of boundary conditions applied on the beam.
-        The dictionary has three kewwords namely moment, slope and deflection.
+        The dictionary has three keywords namely moment, slope and deflection.
         The value of each keyword is a list of tuple, where each tuple
-        contains loaction and value of a boundary condition in the format
+        contains location and value of a boundary condition in the format
         (location, value).
 
         Examples
@@ -1193,7 +1193,7 @@ class Beam(object):
 
     def max_deflection(self):
         """
-        Returns point of max deflection and its coresponding deflection value
+        Returns point of max deflection and its corresponding deflection value
         in a Beam object.
         """
         from sympy import solve, Piecewise
@@ -1556,8 +1556,8 @@ class Beam3D(Beam):
     >>> b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.solve_slope_deflection()
     >>> b.slope()
-    [0, 0, l*x*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
-        + x**2*(-3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - 3*m + q*x)/(6*E*I)]
+    [0, 0, x*(l*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/6
+        + q*x**2/6 + x*(-l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - m)/2)/(E*I)]
     >>> dx, dy, dz = b.deflection()
     >>> dy = collect(simplify(dy), x)
     >>> dx == dz == 0
@@ -1662,7 +1662,7 @@ class Beam3D(Beam):
         Returns a dictionary of boundary conditions applied on the beam.
         The dictionary has two keywords namely slope and deflection.
         The value of each keyword is a list of tuple, where each tuple
-        contains loaction and value of a boundary condition in the format
+        contains location and value of a boundary condition in the format
         (location, value). Further each value is a list corresponding to
         slope or deflection(s) values along three axes at that location.
 

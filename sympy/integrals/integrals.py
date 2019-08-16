@@ -60,7 +60,7 @@ class Integral(AddWithLimits):
             (x, a, b) - definite integral
 
         The ``as_dummy`` method can be used to see which symbols cannot be
-        targeted by subs: those with a preppended underscore cannot be
+        targeted by subs: those with a prepended underscore cannot be
         changed with ``subs``. (Also, the integration variables themselves --
         the first element of a limit -- can never be changed by subs.)
 
@@ -1133,12 +1133,11 @@ class Integral(AddWithLimits):
                 break
         return integrate(leading_term, *self.args[1:])
 
-    def _eval_simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
+    def _eval_simplify(self, **kwargs):
         from sympy.core.exprtools import factor_terms
         from sympy.simplify.simplify import simplify
 
         expr = factor_terms(self)
-        kwargs = dict(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
         if isinstance(expr, Integral):
             return expr.func(*[simplify(i, **kwargs) for i in expr.args])
         return expr.simplify(**kwargs)

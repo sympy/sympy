@@ -134,9 +134,14 @@ def test_issue_14522():
 
 
 def test_issue_15076():
-    sol = roots_quartic(Poly(t**4 -  6*t**2 + t/x - 3, t))
+    sol = roots_quartic(Poly(t**4 - 6*t**2 + t/x - 3, t))
     assert sol[0].has(x)
 
+
+def test_issue_16589():
+    eq = Poly(x**4 - 8*sqrt(2)*x**3 + 4*x**3 - 64*sqrt(2)*x**2 + 1024*x, x)
+    roots_eq = roots(eq)
+    assert 0 in roots_eq
 
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]

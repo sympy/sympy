@@ -9,7 +9,6 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.relational import Equality
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import SympifyError
 from sympy.printing.conventions import requires_partial
@@ -331,7 +330,7 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_Derivative(self, deriv):
-        if requires_partial(deriv) and self._use_unicode:
+        if requires_partial(deriv.expr) and self._use_unicode:
             deriv_symbol = U('PARTIAL DIFFERENTIAL')
         else:
             deriv_symbol = r'd'
@@ -482,6 +481,8 @@ class PrettyPrinter(Printer):
         sign_height = 0
 
         for lim in expr.limits:
+            pretty_lower, pretty_upper = self.__print_SumProduct_Limits(lim)
+
             width = (func_height + 2) * 5 // 3 - 2
             sign_lines = [horizontal_chr + corner_chr + (horizontal_chr * (width-2)) + corner_chr + horizontal_chr]
             for _ in range(func_height + 1):
@@ -490,8 +491,6 @@ class PrettyPrinter(Printer):
             pretty_sign = stringPict('')
             pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
 
-            pretty_upper = self._print(lim[2])
-            pretty_lower = self._print(Equality(lim[0], lim[1]))
 
             max_upper = max(max_upper, pretty_upper.height())
 
@@ -515,6 +514,18 @@ class PrettyPrinter(Printer):
         pretty_func.baseline = max_upper + sign_height//2
         pretty_func.binding = prettyForm.MUL
         return pretty_func
+
+    def __print_SumProduct_Limits(self, lim):
+        def print_start(lhs, rhs):
+            op = prettyForm(' ' + xsym("==") + ' ')
+            l = self._print(lhs)
+            r = self._print(rhs)
+            pform = prettyForm(*stringPict.next(l, op, r))
+            return pform
+
+        prettyUpper = self._print(lim[2])
+        prettyLower = print_start(lim[0], lim[1])
+        return prettyLower, prettyUpper
 
     def _print_Sum(self, expr):
         ascii_mode = not self._use_unicode
@@ -576,15 +587,7 @@ class PrettyPrinter(Printer):
         sign_height = 0
 
         for lim in expr.limits:
-            if len(lim) == 3:
-                prettyUpper = self._print(lim[2])
-                prettyLower = self._print(Equality(lim[0], lim[1]))
-            elif len(lim) == 2:
-                prettyUpper = self._print("")
-                prettyLower = self._print(Equality(lim[0], lim[1]))
-            elif len(lim) == 1:
-                prettyUpper = self._print("")
-                prettyLower = self._print(lim[0])
+            prettyLower, prettyUpper = self.__print_SumProduct_Limits(lim)
 
             max_upper = max(max_upper, prettyUpper.height())
 
@@ -1364,6 +1367,18 @@ class PrettyPrinter(Printer):
         # optional argument func_name for supplying custom names
         # XXX works only for applied functions
         return self._helper_print_function(e.func, e.args, sort=sort, func_name=func_name)
+
+    def _print_mathieuc(self, e):
+        return self._print_Function(e, func_name='C')
+
+    def _print_mathieus(self, e):
+        return self._print_Function(e, func_name='S')
+
+    def _print_mathieucprime(self, e):
+        return self._print_Function(e, func_name="C'")
+
+    def _print_mathieusprime(self, e):
+        return self._print_Function(e, func_name="S'")
 
     def _helper_print_function(self, func, args, sort=False, func_name=None, delimiter=', '):
         if sort:
@@ -2297,8 +2312,10 @@ class PrettyPrinter(Printer):
         pform.baseline = b
         return pform
 
-    def _print_euler(self, e):
-        pform = prettyForm("E")
+    def _print_number_function(self, e, name):
+        # Print name_arg[0] for one argument or name_arg[0](arg[1])
+        # for more than one argument
+        pform = prettyForm(name)
         arg = self._print(e.args[0])
         pform_arg = prettyForm(" "*arg.width())
         pform_arg = prettyForm(*pform_arg.below(arg))
@@ -2315,47 +2332,31 @@ class PrettyPrinter(Printer):
         pform.prettyArgs = prettyArgs
         return pform
 
+    def _print_euler(self, e):
+        return self._print_number_function(e, "E")
+
     def _print_catalan(self, e):
-        pform = prettyForm("C")
-        arg = self._print(e.args[0])
-        pform_arg = prettyForm(" "*arg.width())
-        pform_arg = prettyForm(*pform_arg.below(arg))
-        pform = prettyForm(*pform.right(pform_arg))
-        return pform
+        return self._print_number_function(e, "C")
 
     def _print_bernoulli(self, e):
-        pform = prettyForm("B")
-        arg = self._print(e.args[0])
-        pform_arg = prettyForm(" "*arg.width())
-        pform_arg = prettyForm(*pform_arg.below(arg))
-        pform = prettyForm(*pform.right(pform_arg))
-        return pform
+        return self._print_number_function(e, "B")
 
     _print_bell = _print_bernoulli
 
     def _print_lucas(self, e):
-        pform = prettyForm("L")
-        arg = self._print(e.args[0])
-        pform_arg = prettyForm(" "*arg.width())
-        pform_arg = prettyForm(*pform_arg.below(arg))
-        pform = prettyForm(*pform.right(pform_arg))
-        return pform
+        return self._print_number_function(e, "L")
 
     def _print_fibonacci(self, e):
-        pform = prettyForm("F")
-        arg = self._print(e.args[0])
-        pform_arg = prettyForm(" "*arg.width())
-        pform_arg = prettyForm(*pform_arg.below(arg))
-        pform = prettyForm(*pform.right(pform_arg))
-        return pform
+        return self._print_number_function(e, "F")
 
     def _print_tribonacci(self, e):
-        pform = prettyForm("T")
-        arg = self._print(e.args[0])
-        pform_arg = prettyForm(" "*arg.width())
-        pform_arg = prettyForm(*pform_arg.below(arg))
-        pform = prettyForm(*pform.right(pform_arg))
-        return pform
+        return self._print_number_function(e, "T")
+
+    def _print_stieltjes(self, e):
+        if self._use_unicode:
+            return self._print_number_function(e, u'\N{GREEK SMALL LETTER GAMMA}')
+        else:
+            return self._print_number_function(e, "stieltjes")
 
     def _print_KroneckerDelta(self, e):
         pform = self._print(e.args[0])

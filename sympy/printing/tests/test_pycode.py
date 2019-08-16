@@ -5,11 +5,10 @@ from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
-from sympy.core.singleton import S
 from sympy.core.numbers import pi
 from sympy.functions import acos, Piecewise, sign, sqrt
 from sympy.logic import And, Or
-from sympy.matrices import SparseMatrix, MatrixSymbol
+from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter,
     SymPyPrinter
@@ -72,6 +71,7 @@ def test_NumPyPrinter():
     A = MatrixSymbol("A", 2, 2)
     assert p.doprint(A**(-1)) == "numpy.linalg.inv(A)"
     assert p.doprint(A**5) == "numpy.linalg.matrix_power(A, 5)"
+    assert p.doprint(Identity(3)) == "numpy.eye(3)"
 
     u = MatrixSymbol('x', 2, 1)
     v = MatrixSymbol('y', 2, 1)
@@ -160,3 +160,64 @@ def test_NumPyPrinter_print_seq():
     n = NumPyPrinter()
 
     assert n._print_seq(range(2)) == '(0, 1,)'
+
+
+def test_issue_16535_16536():
+    from sympy import lowergamma, uppergamma
+
+    a = symbols('a')
+    expr1 = lowergamma(a, x)
+    expr2 = uppergamma(a, x)
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr1) == 'scipy.special.gamma(a)*scipy.special.gammainc(a, x)'
+    assert prntr.doprint(expr2) == 'scipy.special.gamma(a)*scipy.special.gammaincc(a, x)'
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # lowergamma\nlowergamma(a, x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # uppergamma\nuppergamma(a, x)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # lowergamma\nlowergamma(a, x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # uppergamma\nuppergamma(a, x)'
+
+
+def test_fresnel_integrals():
+    from sympy import fresnelc, fresnels
+
+    expr1 = fresnelc(x)
+    expr2 = fresnels(x)
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr1) == 'scipy.special.fresnel(x)[1]'
+    assert prntr.doprint(expr2) == 'scipy.special.fresnel(x)[0]'
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # fresnelc\nfresnelc(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # fresnels\nfresnels(x)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # fresnelc\nfresnelc(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # fresnels\nfresnels(x)'
+
+    prntr = MpmathPrinter()
+    assert prntr.doprint(expr1) == 'mpmath.fresnelc(x)'
+    assert prntr.doprint(expr2) == 'mpmath.fresnels(x)'
+
+
+def test_beta():
+    from sympy import beta
+
+    expr = beta(x, y)
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr) == 'scipy.special.beta(x, y)'
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr) == 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr) == 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
+
+    prntr = MpmathPrinter()
+    assert prntr.doprint(expr) ==  'mpmath.beta(x, y)'

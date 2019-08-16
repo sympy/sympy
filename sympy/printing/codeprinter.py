@@ -61,6 +61,7 @@ class CodePrinter(StrPrinter):
     _rewriteable_functions = {
             'erf2': 'erf',
             'Li': 'li',
+            'beta': 'gamma'
     }
 
     def __init__(self, settings=None):
@@ -532,3 +533,4 @@ class CodePrinter(StrPrinter):
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported
     _print_WildFunction = _print_not_supported
+    _print_Relational = _print_not_supported

@@ -1,7 +1,7 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func, Product, Mul, Piecewise,
-                   Mod, Eq, sqrt, Poly, Dummy)
+                   Mod, Eq, sqrt, Poly, Dummy, I)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.factorials import subfactorial
@@ -29,6 +29,14 @@ def test_rf_eval_apply():
 
     assert rf(oo, -6) == oo
     assert rf(-oo, -7) == oo
+
+    assert rf(-1, pi) == 0
+    assert rf(-5, 1 + I) == 0
+
+    assert unchanged(rf, -3, k)
+    assert unchanged(rf, x, Symbol('k', integer=False))
+    assert rf(-3, Symbol('k', integer=False)) == 0
+    assert rf(Symbol('x', negative=True, integer=True), Symbol('k', integer=False)) == 0
 
     assert rf(x, 0) == 1
     assert rf(x, 1) == x

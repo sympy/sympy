@@ -824,7 +824,7 @@ def NumericQ(u):
 
 def Length(expr):
     """
-    Returns number of elements in the experssion just as sympy's len.
+    Returns number of elements in the expression just as sympy's len.
 
     Examples
     ========

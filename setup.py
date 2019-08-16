@@ -34,7 +34,7 @@ import os
 import shutil
 import glob
 
-mpmath_version = '0.19'
+min_mpmath_version = '0.19'
 
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
@@ -58,11 +58,11 @@ except ImportError:
     from distutils.version import LooseVersion
     try:
         import mpmath
-        if mpmath.__version__ < LooseVersion(mpmath_version):
+        if mpmath.__version__ < LooseVersion(min_mpmath_version):
             raise ImportError
     except ImportError:
         print("Please install the mpmath package with a version >= %s"
-              % mpmath_version)
+              % min_mpmath_version)
         sys.exit(-1)
 
 PY3 = sys.version_info[0] > 2
@@ -122,6 +122,7 @@ modules = [
     'sympy.parsing.autolev._antlr',
     'sympy.parsing.autolev.test-examples',
     'sympy.parsing.autolev.test-examples.pydy-example-repo',
+    'sympy.parsing.fortran',
     'sympy.parsing.latex',
     'sympy.parsing.latex._antlr',
     'sympy.physics',
@@ -420,14 +421,15 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
+            'Programming Language :: Python :: 3.7',
+            'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',
             ],
           install_requires=[
-            'mpmath>=%s' % mpmath_version,
+            'mpmath>=%s' % min_mpmath_version,
             ],
           **extra_kwargs
           )

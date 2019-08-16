@@ -34,9 +34,6 @@ def test_pow1():
     assert refine(sqrt(1/x), Q.real(x)) != 1/sqrt(x)
     assert refine(sqrt(1/x), Q.positive(x)) == 1/sqrt(x)
 
-
-@slow
-def test_pow2():
     # powers of (-1)
     assert refine((-1)**(x + y), Q.even(x)) == (-1)**y
     assert refine((-1)**(x + y + z), Q.odd(x) & Q.odd(z)) == (-1)**y
@@ -44,9 +41,6 @@ def test_pow2():
     assert refine((-1)**(x + y + 2), Q.odd(x)) == (-1)**(y + 1)
     assert refine((-1)**(x + 3)) == (-1)**(x + 1)
 
-
-@slow
-def test_pow3():
     # continuation
     assert refine((-1)**((-1)**x/2 - S.Half), Q.integer(x)) == (-1)**x
     assert refine((-1)**((-1)**x/2 + S.Half), Q.integer(x)) == (-1)**(x + 1)
@@ -54,7 +48,7 @@ def test_pow3():
 
 
 @slow
-def test_pow4():
+def test_pow2():
     assert refine((-1)**((-1)**x/2 - 7*S.Half), Q.integer(x)) == (-1)**(x + 1)
     assert refine((-1)**((-1)**x/2 - 9*S.Half), Q.integer(x)) == (-1)**x
 

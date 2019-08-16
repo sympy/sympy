@@ -40,7 +40,7 @@ def _common_new(cls, function, *symbols, **assumptions):
         for i, li in enumerate(limits):
             if len(li) == 4:
                 function = function.subs(li[0], li[-1])
-                limits[i] = tuple(li[:-1])
+                limits[i] = Tuple(*li[:-1])
     else:
         # symbol not provided -- we can still try to compute a general form
         free = function.free_symbols
@@ -423,12 +423,13 @@ class AddWithLimits(ExprWithLimits):
         return self
 
     def _eval_expand_basic(self, **hints):
+        from sympy.matrices.matrices import MatrixBase
+
         summand = self.function.expand(**hints)
         if summand.is_Add and summand.is_commutative:
             return Add(*[self.func(i, *self.limits) for i in summand.args])
-        elif summand.is_Matrix:
-            return Matrix._new(summand.rows, summand.cols,
-                [self.func(i, *self.limits) for i in summand._mat])
+        elif isinstance(summand, MatrixBase):
+            return summand.applyfunc(lambda x: self.func(x, *self.limits))
         elif summand != self.function:
             return self.func(summand, *self.limits)
         return self

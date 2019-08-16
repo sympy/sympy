@@ -127,7 +127,7 @@ For easier use, there is a syntactic sugar for expressions.
 For example, ``cos(x) + 1`` is equal to ``cos(x).__add__(1)`` is equal to
 ``Add(cos(x), Integer(1))``
 
-This works becauses Python allows you to override the behavior of built-in
+This works because Python allows you to override the behavior of built-in
 operations ``+, *, -, /`` etc., by defining methods with names ``__add__``,
 ``__mul__`` etc., so ``cos(x) + 1`` is evaluated as ``cos(x).__add__(1)``.
 

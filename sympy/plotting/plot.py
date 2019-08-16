@@ -579,7 +579,6 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.depth = kwargs.get('depth', 12)
         self.line_color = kwargs.get('line_color', None)
         self.xscale = kwargs.get('xscale', 'linear')
-        self.flag = 0
 
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
@@ -623,13 +622,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 ynew = f(xnew)
                 new_point = np.array([xnew, ynew])
 
-                if self.flag == 1:
-                    return
                 # Maximum depth
                 if depth > self.depth:
-                    if p[1] is None or q[1] is None:
-                        self.flag = 1
-                        return
                     list_segments.append([p, q])
 
                 # Sample irrespective of whether the line is flat till the
@@ -664,7 +658,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
             f_start = f(self.start)
             f_end = f(self.end)
-            sample([self.start, f_start], [self.end, f_end], 0)
+            sample(np.array([self.start, f_start]),
+                   np.array([self.end, f_end]), 0)
 
             return list_segments
 
@@ -1159,7 +1154,7 @@ class MatplotlibBackend(BaseBackend):
             xlim = (float(i) for i in xlim)
             ax.set_xlim(xlim)
         else:
-            if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
+            if parent._series and all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
                 starts = [s.start for s in parent._series]
                 ends = [s.end for s in parent._series]
                 ax.set_xlim(min(starts), max(ends))
@@ -2122,6 +2117,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
        >>> check_arguments([x, x**2], 1, 1)
            [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
     """
+    if not args:
+        return []
     if expr_len > 1 and isinstance(args[0], Expr):
         # Multiple expressions same range.
         # The arguments are tuples when the expression length is

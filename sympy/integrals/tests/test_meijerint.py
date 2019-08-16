@@ -660,7 +660,7 @@ def test_issue_6122():
 def test_issue_6252():
     expr = 1/x/(a + b*x)**(S(1)/3)
     anti = integrate(expr, x, meijerg=True)
-    assert not expr.has(hyper)
+    assert not anti.has(hyper)
     # XXX the expression is a mess, but actually upon differentiation and
     # putting in numerical values seems to work...
 

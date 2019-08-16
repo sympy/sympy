@@ -1,14 +1,15 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
-                    Mul, Rational, Integral, factorial, gamma, Piecewise, Eq, Product,
-                    IndexedBase, RisingFactorial)
+                   Rational, factorial, gamma, Piecewise, Eq, Product,
+                   IndexedBase, RisingFactorial)
 from sympy.core.numbers import comp
-from sympy.stats import density
-from sympy.stats.joint_rv import marginal_distribution
-from sympy.stats.joint_rv_types import JointRV
-from sympy.stats.crv_types import Normal
-from sympy.utilities.pytest import raises, XFAIL
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix
+from sympy.stats import density
+from sympy.stats.crv_types import Normal
+from sympy.stats.joint_rv import marginal_distribution
+from sympy.stats.joint_rv_types import JointRV
+from sympy.utilities.pytest import raises, XFAIL
+
 x, y, z, a, b = symbols('x y z a b')
 
 def test_Normal():
@@ -59,7 +60,6 @@ def test_NormalGamma():
 def test_GeneralizedMultivariateLogGammaDistribution():
     from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO
     from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG
-    from sympy import gamma
     h = S.Half
     omega = Matrix([[1, h, h, h],
                      [h, 1, h, h],

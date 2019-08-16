@@ -14,7 +14,9 @@ ChiNoncentral
 ChiSquared
 Dagum
 Erlang
+ExGaussian
 Exponential
+ExponentialPower
 FDistribution
 FisherZ
 Frechet
@@ -47,21 +49,21 @@ WignerSemicircle
 
 from __future__ import print_function, division
 
-from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
-                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfi,  erfinv, I, hyper,
-                   uppergamma, sinh, atan, Ne, expint, Integral)
+import random
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
+from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
+                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
+                   Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I,
+                   hyper, uppergamma, sinh, Ne, expint)
 from sympy.external import import_module
 from sympy.matrices import MatrixBase
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
-        ContinuousDistributionHandmade)
+                             ContinuousDistributionHandmade)
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.joint_rv_types import multivariate_rv
 from sympy.stats.rv import _value_check, RandomSymbol
-import random
 
 oo = S.Infinity
 
@@ -77,7 +79,9 @@ __all__ = ['ContinuousRV',
 'ChiSquared',
 'Dagum',
 'Erlang',
+'ExGaussian',
 'Exponential',
+'ExponentialPower',
 'FDistribution',
 'FisherZ',
 'Frechet',
@@ -270,7 +274,7 @@ def Benini(name, alpha, beta, sigma):
                 -\beta\log^2\left[{\frac{x}{\sigma}}\right]}
                 \left(\frac{\alpha}{x}+\frac{2\beta\log{\frac{x}{\sigma}}}{x}\right)
 
-    This is a heavy-tailed distrubtion and is also known as the log-Rayleigh
+    This is a heavy-tailed distribution and is also known as the log-Rayleigh
     distribution.
 
     Parameters
@@ -480,7 +484,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
 
     Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
     >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
-    exp(-1/2)*Integral(Sum(2**(-_k)*_x**_k/(beta(_k + 1, 1)*factorial(_k)), (_k, 0, oo)), (_x, 0, 2))
+    2*exp(1/2)
 
     The argument evaluate=False prevents an attempt at evaluation
     of the sum for general x, before the argument 2 is passed.
@@ -1017,6 +1021,120 @@ def Erlang(name, k, l):
 
     return rv(name, GammaDistribution, (k, S.One/l))
 
+# -------------------------------------------------------------------------------
+# ExGaussian distribution -----------------------------------------------------
+
+
+class ExGaussianDistribution(SingleContinuousDistribution):
+    _argnames = ('mean', 'std', 'rate')
+
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(mean, std, rate):
+        _value_check(
+            std > 0, "Standard deviation of ExGaussian must be positive.")
+        _value_check(rate > 0, "Rate of ExGaussian must be positive.")
+
+    def pdf(self, x):
+        mean, std, rate = self.mean, self.std, self.rate
+        term1 = rate/2
+        term2 = exp(rate * (2 * mean + rate * std**2 - 2*x)/2)
+        term3 = erfc((mean + rate*std**2 - x)/(sqrt(2)*std))
+        return term1*term2*term3
+
+    def _cdf(self, x):
+        from sympy.stats import cdf
+        mean, std, rate = self.mean, self.std, self.rate
+        u = rate*(x - mean)
+        v = rate*std
+        GaussianCDF1 = cdf(Normal('x', 0, v))(u)
+        GaussianCDF2 = cdf(Normal('x', v**2, v))(u)
+
+        return GaussianCDF1 - exp(-u + (v**2/2) + log(GaussianCDF2))
+
+    def _characteristic_function(self, t):
+        mean, std, rate = self.mean, self.std, self.rate
+        term1 = (1 - I*t/rate)**(-1)
+        term2 = exp(I*mean*t - std**2*t**2/2)
+        return term1 * term2
+
+    def _moment_generating_function(self, t):
+        mean, std, rate = self.mean, self.std, self.rate
+        term1 = (1 - t/rate)**(-1)
+        term2 = exp(mean*t + std**2*t**2/2)
+        return term1*term2
+
+
+def ExGaussian(name, mean, std, rate):
+    r"""
+    Create a continuous random variable with an Exponentially modified
+    Gaussian (EMG) distribution.
+
+    The density of the exponentially modified Gaussian distribution is given by
+
+    .. math::
+        f(x) := \frac{\lambda}{2}e^{\frac{\lambda}{2}(2\mu+\lambda\sigma^2-2x)}
+            \text{erfc}(\frac{\mu + \lambda\sigma^2 - x}{\sqrt{2}\sigma})
+
+    with `x > 0`. Note that the expected value is `1/\lambda`.
+
+    Parameters
+    ==========
+
+    mu : A Real number, the mean of Gaussian component
+    std: A positive Real number,
+        :math: `\sigma^2 > 0` the variance of Gaussian component
+    lambda: A positive Real number,
+        :math: `\lambda > 0` the rate of Exponential component
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import ExGaussian, density, cdf, E
+    >>> from sympy.stats import variance, skewness
+    >>> from sympy import Symbol, pprint, simplify
+
+    >>> mean = Symbol("mu")
+    >>> std = Symbol("sigma", positive=True)
+    >>> rate = Symbol("lamda", positive=True)
+    >>> z = Symbol("z")
+    >>> X = ExGaussian("x", mean, std, rate)
+
+    >>> pprint(density(X)(z), use_unicode=False)
+                 /           2             \
+           lamda*\lamda*sigma  + 2*mu - 2*z/
+           ---------------------------------     /  ___ /           2         \\
+                           2                     |\/ 2 *\lamda*sigma  + mu - z/|
+    lamda*e                                 *erfc|-----------------------------|
+                                                 \           2*sigma           /
+    ----------------------------------------------------------------------------
+                                         2
+
+    >>> cdf(X)(z)
+    -(erf(sqrt(2)*(-lamda**2*sigma**2 + lamda*(-mu + z))/(2*lamda*sigma))/2 + 1/2)*exp(lamda**2*sigma**2/2 - lamda*(-mu + z)) + erf(sqrt(2)*(-mu + z)/(2*sigma))/2 + 1/2
+
+    >>> E(X)
+    (lamda*mu + 1)/lamda
+
+    >>> simplify(variance(X))
+    sigma**2 + lamda**(-2)
+
+    >>> simplify(skewness(X))
+    2/(lamda**2*sigma**2 + 1)**(3/2)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
+    """
+    return rv(name, ExGaussianDistribution, (mean, std, rate))
+
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
 
@@ -1124,6 +1242,92 @@ def Exponential(name, rate):
     """
 
     return rv(name, ExponentialDistribution, (rate, ))
+
+
+# -------------------------------------------------------------------------------
+# Exponential Power distribution -----------------------------------------------------
+
+class ExponentialPowerDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 'alpha', 'beta')
+
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(mu, alpha, beta):
+        _value_check(alpha > 0, "Scale parameter alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter beta must be positive.")
+
+    def pdf(self, x):
+        mu, alpha, beta = self.mu, self.alpha, self.beta
+        num = beta*exp(-(Abs(x - mu)/alpha)**beta)
+        den = 2*alpha*gamma(1/beta)
+        return num/den
+
+    def _cdf(self, x):
+        mu, alpha, beta = self.mu, self.alpha, self.beta
+        num = lowergamma(1/beta, (Abs(x - mu) / alpha)**beta)
+        den = 2*gamma(1/beta)
+        return sign(x - mu)*num/den + S.Half
+
+
+def ExponentialPower(name, mu, alpha, beta):
+    r"""
+    Create a Continuous Random Variable with Exponential Power distribution.
+    This distribution is known also as Generalized Normal
+    distribution version 1
+
+    The density of the Exponential Power distribution is given by
+
+    .. math::
+        f(x) := \frac{\beta}{2\alpha\Gamma(\frac{1}{\beta})}
+            e^{{-(\frac{|x - \mu|}{\alpha})^{\beta}}}
+
+    with :math:`x \in [ - \infty, \infty ]`.
+
+    Parameters
+    ==========
+
+    mu : Real number, 'mu' is a location
+    alpha : Real number, 'alpha > 0' is a scale
+    beta : Real number, 'beta > 0' is a shape
+
+    Returns
+    =======
+
+    A RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import ExponentialPower, density, E, variance, cdf
+    >>> from sympy import Symbol, simplify, pprint
+    >>> z = Symbol("z")
+    >>> mu = Symbol("mu")
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> beta = Symbol("beta", positive=True)
+    >>> X = ExponentialPower("x", mu, alpha, beta)
+    >>> pprint(density(X)(z), use_unicode=False)
+                     beta
+           /|mu - z|\
+          -|--------|
+           \ alpha  /
+    beta*e
+    ---------------------
+                  / 1  \
+     2*alpha*Gamma|----|
+                  \beta/
+    >>> cdf(X)(z)
+    1/2 + lowergamma(1/beta, (Abs(mu - z)/alpha)**beta)*sign(-mu + z)/(2*gamma(1/beta))
+
+    References
+    ==========
+
+    .. [1] https://reference.wolfram.com/language/ref/ExponentialPowerDistribution.html
+    .. [2] https://en.wikipedia.org/wiki/Generalized_normal_distribution#Version_1
+
+    """
+    return rv(name, ExponentialPowerDistribution, (mu, alpha, beta))
+
 
 #-------------------------------------------------------------------------------
 # F distribution ---------------------------------------------------------------
@@ -1561,6 +1765,7 @@ def GammaInverse(name, a, b):
     """
 
     return rv(name, GammaInverseDistribution, (a, b))
+
 
 #-------------------------------------------------------------------------------
 # Gumbel distribution (Maximum and Minimum) --------------------------------------------------------
@@ -2375,7 +2580,7 @@ def Normal(name, mean, std):
     ==========
 
     mu : Real number or a list representing the mean or the mean vector
-    sigma : Real number or a positive definite sqaure matrix,
+    sigma : Real number or a positive definite square matrix,
          :math:`\sigma^2 > 0` the variance
 
     Returns
