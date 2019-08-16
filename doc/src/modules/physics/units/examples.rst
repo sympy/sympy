@@ -108,9 +108,9 @@ the outcoming result):
 
     >>> from sympy.physics.units import convert_to
     >>> convert_to(q, day)
-    71.5123904642338*pi*day
+    71.5112118495813*pi*day
     >>> convert_to(q, day).n()
-    224.662800523082*day
+    224.659097795948*day
 
 We could also have the solar mass and the day as units coming from the
 astrophysical system, but we wanted to show how to create a unit that one needs.

@@ -90,6 +90,27 @@ change between releases, and become stricter, more relaxed, or some mix.
 
 .. autoclass:: sympy.parsing.latex.LaTeXParsingError
 
+
+SymPy Expression Reference
+--------------------------
+
+.. module:: sympy.parsing.sym_expr
+
+.. autoclass:: SymPyExpression
+  :members:
+
+`Fortran` Parsing Reference
+---------------------------------
+
+.. module:: sympy.parsing.fortran.fortran_parser
+
+.. autoclass:: ASR2PyVisitor
+  :members:
+
+.. autofunction:: call_visitor
+
+.. autofunction:: src_to_sympy
+
 Runtime Installation
 --------------------
 

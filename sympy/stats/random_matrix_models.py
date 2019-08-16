@@ -1,10 +1,12 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
-                   gamma, Product, Dummy, Sum, Abs, IndexedBase)
+                   gamma, Product, Dummy, Sum, Abs, IndexedBase, Matrix)
 from sympy.core.sympify import _sympify
 from sympy.multipledispatch import dispatch
-from sympy.stats.rv import _symbol_converter, Density, RandomMatrixSymbol
+from sympy.stats.rv import (_symbol_converter, Density, RandomMatrixSymbol,
+                            RandomSymbol)
+from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.random_matrix import RandomMatrixPSpace
 from sympy.tensor.array import ArrayComprehension
 
@@ -14,6 +16,7 @@ __all__ = [
     'GaussianOrthogonalEnsemble',
     'GaussianSymplecticEnsemble',
     'joint_eigen_distribution',
+    'JointEigenDistribution',
     'level_spacing_distribution'
 ]
 
@@ -184,7 +187,6 @@ class GaussianSymplecticEnsemble(GaussianEnsemble):
         f = ((S(2)**18)/((S(3)**6)*(pi**3)))*(s**4)*exp((-64/(9*pi))*s**2)
         return Lambda(s, f)
 
-@dispatch(RandomMatrixSymbol)
 def joint_eigen_distribution(mat):
     """
     For obtaining joint probability distribution
@@ -207,10 +209,46 @@ def joint_eigen_distribution(mat):
     >>> from sympy.stats import GaussianUnitaryEnsemble as GUE
     >>> from sympy.stats import joint_eigen_distribution
     >>> U = GUE('U', 2)
-    >>> joint_eigen_dsitribution(U)
+    >>> joint_eigen_distribution(U)
     Lambda((l[1], l[2]), exp(-l[1]**2 - l[2]**2)*Product(Abs(l[_i] - l[_j])**2, (_j, _i + 1, 2), (_i, 1, 1))/pi)
     """
+    if not isinstance(mat, RandomMatrixSymbol):
+        raise ValueError("%s is not of type, RandomMatrixSymbol."%(mat))
     return mat.pspace.model.joint_eigen_distribution()
+
+def JointEigenDistribution(mat):
+    """
+    Creates joint distribution of eigen values of matrices with random
+    expressions.
+
+    Parameters
+    ==========
+
+    mat: Matrix
+        The matrix under consideration
+
+    Returns
+    =======
+
+    JointDistributionHandmade
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Normal, JointEigenDistribution
+    >>> from sympy import Matrix
+    >>> A = [[Normal('A00', 0, 1), Normal('A01', 0, 1)],
+    ... [Normal('A10', 0, 1), Normal('A11', 0, 1)]]
+    >>> JointEigenDistribution(Matrix(A))
+    JointDistributionHandmade(-sqrt(A00**2 - 2*A00*A11 + 4*A01*A10 + A11**2)/2
+    + A00/2 + A11/2, sqrt(A00**2 - 2*A00*A11 + 4*A01*A10 + A11**2)/2 + A00/2 + A11/2)
+
+    """
+    eigenvals = mat.eigenvals(multiple=True)
+    if any(not eigenval.has(RandomSymbol) for eigenval in set(eigenvals)):
+        raise ValueError("Eigen values don't have any random expression, "
+                         "joint distribution cannot be generated.")
+    return JointDistributionHandmade(*eigenvals)
 
 def level_spacing_distribution(mat):
     """

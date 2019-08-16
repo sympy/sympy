@@ -1,10 +1,12 @@
 from sympy import (
     sqrt, Derivative, symbols, collect, Function, factor, Wild, S,
     collect_const, log, fraction, I, cos, Add, O,sin, rcollect,
-    Mul, radsimp, diff, root, Symbol, Rational, exp)
+    Mul, radsimp, diff, root, Symbol, Rational, exp, Abs)
 
+from sympy.core.expr import unchanged
 from sympy.core.mul import _unevaluated_Mul as umul
-from sympy.simplify.radsimp import _unevaluated_Add, collect_sqrt, fraction_expand
+from sympy.simplify.radsimp import (_unevaluated_Add,
+    collect_sqrt, fraction_expand, collect_abs)
 from sympy.utilities.pytest import XFAIL, raises
 
 from sympy.abc import x, y, z, a, b, c, d
@@ -423,3 +425,13 @@ def test_issue_14608():
     raises(AttributeError, lambda: collect(a*b + b*a, a))
     assert collect(x*y + y*(x+1), a) == x*y + y*(x+1)
     assert collect(x*y + y*(x+1) + a*b + b*a, y) == y*(2*x + 1) + a*b + b*a
+
+
+def test_collect_abs():
+    s = abs(x) + abs(y)
+    assert collect_abs(s) == s
+    assert unchanged(Mul, abs(x), abs(y))
+    ans = Abs(x*y)
+    assert isinstance(ans, Abs)
+    assert collect_abs(abs(x)*abs(y)) == ans
+    assert collect_abs(1 + exp(abs(x)*abs(y))) == 1 + exp(ans)

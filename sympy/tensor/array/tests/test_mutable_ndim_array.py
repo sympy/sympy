@@ -104,10 +104,8 @@ def test_reshape():
 
 def test_iterator():
     array = MutableDenseNDimArray(range(4), (2, 2))
-    j = 0
-    for i in array:
-        assert i == j
-        j += 1
+    array[0] == MutableDenseNDimArray([0, 1])
+    array[1] == MutableDenseNDimArray([2, 3])
 
     array = array.reshape(4)
     j = 0
@@ -131,6 +129,7 @@ def test_getitem():
 
     raises(ValueError, lambda: array[3, 4, 5])
     raises(ValueError, lambda: array[3, 4, 5, 6])
+    raises(ValueError, lambda: array[3, 4, 5, 3:4])
 
 
 def test_sparse():
@@ -139,10 +138,10 @@ def test_sparse():
     # dictionary where all data is, only non-zero entries are actually stored:
     assert len(sparse_array._sparse_array) == 1
 
-    assert list(sparse_array) == [0, 0, 0, 1]
+    assert sparse_array.tolist() == [[0, 0], [0, 1]]
 
-    for i, j in zip(sparse_array, [0, 0, 0, 1]):
-        assert i == j
+    for i, j in zip(sparse_array, [[0, 0], [0, 1]]):
+        assert i == MutableSparseNDimArray(j)
 
     sparse_array[0, 0] = 123
     assert len(sparse_array._sparse_array) == 2
@@ -186,14 +185,14 @@ def test_calculation():
 
     c = a + b
     for i in c:
-        assert i == 10
+        assert i == MutableDenseNDimArray([10, 10, 10])
 
     assert c == MutableDenseNDimArray([10]*9, (3, 3))
     assert c == MutableSparseNDimArray([10]*9, (3, 3))
 
     c = b - a
     for i in c:
-        assert i == 8
+        assert i == MutableSparseNDimArray([8, 8, 8])
 
     assert c == MutableDenseNDimArray([8]*9, (3, 3))
     assert c == MutableSparseNDimArray([8]*9, (3, 3))
@@ -329,7 +328,7 @@ def test_higher_dimenions():
 def test_slices():
     md = MutableDenseNDimArray(range(10, 34), (2, 3, 4))
 
-    assert md[:] == md._array
+    assert md[:] == MutableDenseNDimArray(range(10, 34), (2, 3, 4))
     assert md[:, :, 0].tomatrix() == Matrix([[10, 14, 18], [22, 26, 30]])
     assert md[0, 1:2, :].tomatrix() == Matrix([[14, 15, 16, 17]])
     assert md[0, 1:3, :].tomatrix() == Matrix([[14, 15, 16, 17], [18, 19, 20, 21]])
@@ -338,8 +337,7 @@ def test_slices():
     sd = MutableSparseNDimArray(range(10, 34), (2, 3, 4))
     assert sd == MutableSparseNDimArray(md)
 
-    assert sd[:] == md._array
-    assert sd[:] == list(sd)
+    assert sd[:] == MutableSparseNDimArray(range(10, 34), (2, 3, 4))
     assert sd[:, :, 0].tomatrix() == Matrix([[10, 14, 18], [22, 26, 30]])
     assert sd[0, 1:2, :].tomatrix() == Matrix([[14, 15, 16, 17]])
     assert sd[0, 1:3, :].tomatrix() == Matrix([[14, 15, 16, 17], [18, 19, 20, 21]])
