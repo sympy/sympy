@@ -419,7 +419,7 @@ def test_Range_set():
 
     avs, bvs = ([0, 20, -30], )*2
     cvs = [1, -2]
-    idxs = [0, 3, -10, oo, -1]
+    idxs = [0, 3, -10, -1]
 
     def check_gtm(rgtm, rabc, idx):
         if not rabc:
@@ -433,16 +433,16 @@ def test_Range_set():
         for bv in bvs:
             for cv in cvs:
                 for idx in idxs:
-                    rgtm = r.__getitem__(idx).subs({a: av, b: bv, c: cv})
+                    rgtm = r[idx].subs({a: av, b: bv, c: cv})
                     rabc = r.subs({a: av, b: bv, c: cv})
                     check_gtm(rgtm, rabc, idx)
     for av in avs:
         for cv in cvs:
             for idx in idxs:
-                rgtm = r.__getitem__(idx).subs({a: av, c: cv}).subs(b, oo)
+                rgtm = r[idx].subs({a: av, c: cv}).subs(b, oo)
                 rabc = r.subs({a: av, c: cv}).subs(b, oo)
                 check_gtm(rgtm, rabc, idx)
-                rgtm = r.__getitem__(idx).subs({a: av, c: cv}).subs(b, -oo)
+                rgtm = r[idx].subs({a: av, c: cv}).subs(b, -oo)
                 rabc = r.subs({a: av, c: cv}).subs(b, -oo)
                 check_gtm(rgtm, rabc, idx)
 

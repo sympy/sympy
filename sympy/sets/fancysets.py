@@ -525,6 +525,7 @@ class Range(Set):
 
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
+        from sympy.functions.elementary.piecewise import Piecewise
         if len(args) == 1:
             if isinstance(args[0], range):
                 args = args[0].__reduce__()[1]  # use pickle method
@@ -539,7 +540,8 @@ class Range(Set):
         params = []
         for w in (start, stop, step):
             w = sympify(w)
-            if (w in [S.NegativeInfinity, S.Infinity]) or w.is_integer:
+            if (w in [S.NegativeInfinity, S.Infinity] or
+                    w.is_integer is not False):
                 params.append(w)
             else:
                 raise ValueError(filldedent('''
@@ -561,13 +563,14 @@ class Range(Set):
     Either the start or end value of the Range must be finite.'''))
 
         if start.is_infinite:
+            # null Range
             if (step*(stop - start) < 0) == True:
                 start = end = S.Zero
                 step = S.One
             else:
                 end = stop
         else:
-            ref = start if start.is_finite else stop
+            ref = start if start.is_finite is not False else stop
             n = ceiling((stop - ref)/step)
             if (n <= 0) == True:
                 # null Range
@@ -576,7 +579,10 @@ class Range(Set):
             else:
                 end = ref + n*step
 
-        obj = Basic.__new__(cls, start, end, step)
+        isinf = Eq(1/start, 0)
+        last = Piecewise((end, Not(isinf)), (stop, True))
+        obj = Basic.__new__(cls, start, last, step)
+        obj._rawargs = start, stop, step
         return obj
 
     start = property(lambda self: self.args[0])
@@ -702,12 +708,11 @@ class Range(Set):
                     stop = Piecewise((self[istop], bound_check), (self.stop, True))
             return Range(start, stop, step)
         else:
-            i = _sympify(i)
-            if not self or ((i.is_integer == False) and (i.is_infinite == False)):
+            if not self:
                 raise IndexError('Range index out of range')
-            if i == S(0):
+            if i == 0:
                 return Piecewise((self._inf, Gt(self.step, 0)), (self._sup, True))
-            if i == -S(1) or i is S.Infinity:
+            if i == -1:
                 return Piecewise((self._sup, Gt(self.step, 0)), (self._inf, True))
             start, stop, step = self.start, self.stop, self.step
             rvstop, rvstart = (stop + i*step, start + i*step)
@@ -754,6 +759,12 @@ class Range(Set):
             Eq(i, floor(i)),
             x >= self.inf if self.inf in self else x > self.inf,
             x <= self.sup if self.sup in self else x < self.sup)
+
+    def _eval_subs(self, old, new):
+        args = [i.subs(old, new) for i in self._rawargs]
+        if any(i.is_integer is False and not i.is_infinite for i in args):
+            raise ValueError('args must be integers')
+        return self.func(*[i.subs(old, new) for i in self.args])
 
 converter[range] = Range
 
