@@ -265,7 +265,7 @@ from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, posify, cse
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const
-from sympy.solvers import solve
+from sympy.solvers import checksol, solve
 from sympy.solvers.pde import pdsolve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
@@ -4230,6 +4230,13 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     # Sometimes returns a dict and sometimes a list of dicts
     if isinstance(constant_solns, dict):
         constant_solns = [constant_solns]
+
+    # after solving the issue 17418, maybe we don't need the following checksol code.
+    for constant_soln in constant_solns:
+        for eq in eqns:
+            eq=eq.rhs-eq.lhs
+            if checksol(eq, constant_soln) is not True:
+                return False
 
     # If any solution gives all constants as expressions that don't depend on
     # x then there exists constants for soln2 that give soln1
@@ -8307,7 +8314,7 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     F = r1[f].subs(x(t), u).subs(y(t), v(u))
     G = r2[g].subs(x(t), u).subs(y(t), v(u))
     sol2r = dsolve(Eq(diff(v(u), u), G/F))
-    if not isinstance(sol2r, list):
+    if isinstance(sol2r, Expr):
         sol2r = [sol2r]
     for sol2s in sol2r:
         sol1 = solve(Integral(1/F.subs(v(u), sol2s.rhs), u).doit() - t - C2, u)
