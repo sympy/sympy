@@ -36,8 +36,8 @@ class Trace(Expr):
         return self
 
     def _eval_derivative(self, v):
-        from sympy.matrices.expressions.matexpr import _matrix_derivative
-        return _matrix_derivative(self, v)
+        from sympy import Sum
+        return self.rewrite(Sum).diff(v)
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
