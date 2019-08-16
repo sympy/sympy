@@ -281,7 +281,7 @@ class Piecewise(Function):
                     newargs[-1] = ExprCondPair(expr, orcond)
                     continue
                 elif newargs[-1].cond == cond:
-                    newargs[-1] == ExprCondPair(expr, cond)
+                    newargs[-1] = ExprCondPair(expr, cond)
                     continue
 
             newargs.append(ExprCondPair(expr, cond))
