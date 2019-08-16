@@ -416,7 +416,7 @@ def test_Range_set():
         Range(1000000000000)
 
     # test Range.as_relational
-    assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3) & Eq(x - 1, floor(x) - 1)
+    assert Range(a, b).as_relational(x).subs({a: 1, b: 4}) == (x >= 1) & (x <= 3) & Eq(x - 1, floor(x) - 1)
 
 
 def test_range_range_intersection():

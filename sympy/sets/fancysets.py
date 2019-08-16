@@ -752,11 +752,12 @@ class Range(Set):
     def as_relational(self, x):
         """Rewrite a Range in terms of equalities and logic operators. """
         from sympy.functions.elementary.integers import floor
-        i = (x - (self.inf if self.inf.is_finite else self.sup))/self.step
+        from sympy.functions.elementary.piecewise import Piecewise
+        i = (x - Piecewise((self.inf, self.inf.is_finite != False), (self.sup, True)))/self.step
         return And(
             Eq(i, floor(i)),
-            x >= self.inf if self.inf in self else x > self.inf,
-            x <= self.sup if self.sup in self else x < self.sup)
+            x >= self.inf,
+            x <= self.sup)
 
     def _eval_subs(self, old, new):
         args = [i.subs(old, new) for i in self._rawargs]
