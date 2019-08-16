@@ -630,7 +630,7 @@ class Range(Set):
     def __iter__(self):
         if self.start in [S.NegativeInfinity, S.Infinity]:
             raise ValueError("Cannot iterate over Range with infinite start")
-        if (self.size.is_Integer != True) and (self.size not in [S.Infinity, S.NegativeInfinity]):
+        if not self.size.is_Integer and not self.size.is_infinite:
             raise ValueError("Cannot iterate over symbolic sized range.")
         if self:
             i = self.start
