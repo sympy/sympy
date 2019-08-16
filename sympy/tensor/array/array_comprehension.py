@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-import functools
+import functools, itertools
 from sympy.core.sympify import sympify
 from sympy.core.expr import Expr
 from sympy.core import Basic
@@ -253,27 +253,26 @@ class ArrayComprehension(Basic):
         if not self.is_shape_numeric:
             return self
 
-        return ImmutableDenseNDimArray(self._expand_array())
-
-    # To perform a subs at every element of the array.
-    def _array_subs(self, arr, var, val):
-        arr = MutableDenseNDimArray(arr)
-        for i in range(len(arr)):
-            index = arr._get_tuple_index(i)
-            arr[index] = arr[index].subs(var, val)
-        return arr.tolist()
+        return self._expand_array()
 
     def _expand_array(self):
-        list_gen = self.function
-        for var, inf, sup in reversed(self._limits):
-            list_expr = list_gen
-            list_gen = []
-            for val in range(inf, sup+1):
-                if not isinstance(list_expr, Iterable):
-                    list_gen.append(list_expr.subs(var, val))
-                else:
-                    list_gen.append(self._array_subs(list_expr, var, val))
-        return list_gen
+        res = []
+        for values in itertools.product(*[range(inf, sup+1)
+                                        for var, inf, sup
+                                        in self._limits]):
+            if hasattr(self, '_lambda'):
+                temp = self._lambda
+                if self._lambda.__code__.co_argcount == 0:
+                    temp = temp()
+                elif self._lambda.__code__.co_argcount == 1:
+                    temp = temp(functools.reduce(lambda a, b: a*b, values))
+            else:
+                temp = self.function
+                for var, val in zip(self.variables, values):
+                    temp = temp.subs(var, val)
+            res.append(temp)
+
+        return ImmutableDenseNDimArray(res, self.shape)
 
     def tolist(self):
         """Transform the expanded array to a list
@@ -294,7 +293,7 @@ class ArrayComprehension(Basic):
         [[11, 12, 13], [21, 22, 23], [31, 32, 33], [41, 42, 43]]
         """
         if self.is_shape_numeric:
-            return self._expand_array()
+            return self._expand_array().tolist()
 
         raise ValueError("A symbolic array cannot be expanded to a list")
 
@@ -328,7 +327,7 @@ class ArrayComprehension(Basic):
         if self._rank != 2:
             raise ValueError('Dimensions must be of size of 2')
 
-        return Matrix(self._expand_array())
+        return Matrix(self._expand_array().tomatrix())
 
 
 def isLambda(v):
@@ -372,26 +371,6 @@ class ArrayComprehensionMap(ArrayComprehension):
         obj._loop_size = cls._calculate_loop_size(obj._shape)
         obj._lambda = function
         return obj
-
-    def _expand_array(self):
-        list_gen = self._lambda
-        for var, inf, sup in reversed(self._limits):
-            list_expr = list_gen
-            list_gen = []
-            for val in range(inf, sup+1):
-                if not isinstance(list_expr, Iterable):
-                    if isLambda(list_expr):
-                        if list_expr.__code__.co_argcount == 0:
-                            list_gen.append(list_expr())
-                        elif list_expr.__code__.co_argcount == 1:
-                            list_gen.append(list_expr(val))
-                        else:
-                            raise ValueError("One argument at most is accepted")
-                    else:
-                        list_gen.append(list_expr.subs(var, val))
-                else:
-                    list_gen.append(self._array_subs(list_expr, var, val))
-        return list_gen
 
     @property
     def func(self):

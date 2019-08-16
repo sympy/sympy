@@ -60,6 +60,7 @@ def test_arraycomprehensionmap():
     assert isinstance(a.doit(), ImmutableDenseNDimArray)
     expr = ArrayComprehensionMap(lambda i: i+1, (i, 1, k))
     assert expr.doit() == expr
+    assert expr.subs(k, 4) == ArrayComprehensionMap(lambda i: i+1, (i, 1, 4))
 
     # tests about lambda expression
     assert ArrayComprehensionMap(lambda: 3, (i, 1, 5)).doit().tolist() == [3, 3, 3, 3, 3]
