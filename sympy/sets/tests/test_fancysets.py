@@ -304,6 +304,8 @@ def test_Range_set():
     check = lambda rabc, rabcr: (rabcr.inf == rabc.inf and
                                  rabcr.sup == rabc.sup and
                                  rabcr.step == -rabc.step)
+
+    # reversed
     for av in avs:
         for bv in bvs:
             for cv in cvs:
@@ -332,6 +334,8 @@ def test_Range_set():
     cvs = [1, -2]
     conts = [0, 3, -10]
     r = Range(a, b, c)
+
+    # _contains
     for av in avs:
         for bv in bvs:
             for cv in cvs:
@@ -349,9 +353,11 @@ def test_Range_set():
                 check = r.subs({a: av, c: cv}).subs(b, -oo)._contains(cont)
                 assert (scheck == check)
 
+    # iter
     raises(ValueError, lambda : [i for i in iter(r)])
     assert [i for i in iter(r.subs({a: d, b: d + 6, c: 1}))] == [d, d + 1, d + 2, d + 3, d + 4, d + 5]
 
+    # size and len
     for av in avs:
         for bv in bvs:
             for cv in cvs:
@@ -369,6 +375,7 @@ def test_Range_set():
 
     raises(ValueError, lambda: len(r))
 
+    # inf
     for av in avs:
         for bv in bvs:
             for cv in cvs:
@@ -393,6 +400,7 @@ def test_Range_set():
                 continue
             assert rinf == rabc.inf
 
+    # sup
     for av in avs:
         for bv in bvs:
             for cv in cvs:
@@ -429,6 +437,7 @@ def test_Range_set():
         else:
             assert rgtm == rabc.__getitem__(idx)
 
+    # __getitem__
     for av in avs:
         for bv in bvs:
             for cv in cvs:
@@ -449,9 +458,8 @@ def test_Range_set():
     assert Range(range(10)) == Range(10)
     assert Range(range(1, 10)) == Range(1, 10)
     assert Range(range(1, 10, 2)) == Range(1, 10, 2)
-    if PY3:
-        assert Range(range(1000000000000)) == \
-            Range(1000000000000)
+    assert Range(range(1000000000000)) == \
+        Range(1000000000000)
 
     # test Range.as_relational
     assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3) & Eq(x - 1, floor(x) - 1)

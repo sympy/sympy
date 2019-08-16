@@ -633,11 +633,10 @@ class Range(Set):
         if self:
             i = self.start
             step = self.step
-
-            while And(Or(Le(step, 0), And(Le(self.start, i), Lt(i, self.stop))),
-                     Or(Ge(step, 0), And(Lt(self.stop, i), Le(i, self.start)))) != False:
-                yield i
-                i += step
+            n = 0
+            while (n < self.size) != False:
+                yield i + n * step
+                n += 1
 
     def __len__(self):
         size = self.size
@@ -651,15 +650,12 @@ class Range(Set):
         from sympy.functions.elementary.integers import floor, ceiling
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.functions.elementary.complexes import Abs
-        if not self:
-            return S.Zero
         start, stop, step = self.start, self.stop, self.step
         dif = stop - start
-        if dif.is_infinite:
-            return S.Infinity
         null = ceiling(dif/step)
-        return Piecewise((Abs(floor(dif/step)).doit(), Gt(null, S.Zero)),
-                         (S.Zero, True))
+        return Piecewise((S.Infinity, dif.is_infinite == True),
+                         (S.Zero, Le(null, S.Zero)),
+                         (Abs(floor(dif/step)).doit(), True))
 
     def __nonzero__(self):
         return self.start != self.stop
