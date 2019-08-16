@@ -212,7 +212,7 @@ def run_in_subprocess_with_hash_randomization(
 
     # First check if the Python version supports hash randomization
     # If it doesn't have this support, it won't reconize the -R flag
-    sympy_root = dirname(dirname(sympy.__file__))
+    sympy_root = dirname(dirname(os.path.abspath(sympy.__file__)))
     p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, cwd=sympy_root)
     p.communicate()
