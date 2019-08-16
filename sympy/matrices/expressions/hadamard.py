@@ -203,7 +203,8 @@ def canonicalize(x):
     >>> X
     A.*A.*A
     >>> canonicalize(X)
-    A.**3
+     .3
+    A
 
     Notes
     =====
