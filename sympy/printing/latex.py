@@ -844,7 +844,7 @@ class LatexPrinter(Printer):
         return self._hprint_Function(str(expr))
 
     def _print_ElementwiseApplyFunction(self, expr):
-        return r"%s\circ\left({%s}\right)" % (
+        return r"{%s}_{\circ}\left({%s}\right)" % (
             self._print(expr.function),
             self._print(expr.expr),
         )
