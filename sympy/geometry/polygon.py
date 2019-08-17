@@ -475,23 +475,28 @@ class Polygon(GeometrySet):
             A negetive sign indicates that the section modulus is
             determined for a section below (or left of) the centroidal axis
 
-        Example
-        =======
+        Raises
+        ======
 
-        >>> from sympy import point, polygon, symbol
+        ValueError: When the point does not lie inside the polygon
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Polygon, symbol
         >>> a, b = 50, 10
         >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
         >>> p = Polygon(p1, p2, p3, p4)
         >>> p.first_moment_of_area()
-        >>> (625, 3125)
+        (625, 3125)
         >>> p.first_moment_of_area(point=Point(30, 7))
-        >>> (525, 3000)
+        (525, 3000)
         """
-        if not point:
+        if point:
+            xc, yc = self.centroid
+        else:
             point = self.centroid
             xc, yc = point
-        else:
-            xc, yc = self.centroid
 
         h_line = Line(point, slope=0)
         v_line = Line(point, slope=S.Infinity)
@@ -510,8 +515,22 @@ class Polygon(GeometrySet):
         return Q_x, Q_y
 
 
-    def polar_modulus(self):
+    def polar_second_moment_of_area(self):
         """Returns the polar modulus of a two-dimensional polygon
+
+        It is a constituent of the second moment of area, linked through
+        the perpendicular axis theorem. While the planar second moment of
+        area describes an object's resistance to deflection (bending) when
+        subjected to a force applied to a plane parallel to the central
+        axis, the polar second moment of area describes an object's
+        resistance to deflection when subjected to a moment applied in a
+        plane perpendicular to the object's central axis (i.e. parallel to
+        the cross-section)
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Polar_moment_of_inertia
 
         Examples
         ========
@@ -519,7 +538,7 @@ class Polygon(GeometrySet):
         >>> from sympy import Polygon, symbols
         >>> a, b = symbols('a, b')
         >>> rectangle = Polygon((0, 0), (a, 0), (a, b), (0, b))
-        >>> rectangle.polar_modulus()
+        >>> rectangle.polar_second_moment_of_area()
         a**3*b/12 + a*b**3/12
         """
         second_moment = self.second_moment_of_area()
@@ -529,6 +548,15 @@ class Polygon(GeometrySet):
     def section_modulus(self, point=None):
         """Returns a tuple with the section modulus of a two-dimensional
         polygon.
+
+        Section modulus is a geometric property of a polygon defined as the
+        ratio of second moment of area to the distance of the extreme end of
+        the polygon from the centroidal axis.
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Section_modulus
 
         Parameters
         ==========
@@ -942,6 +970,11 @@ class Polygon(GeometrySet):
             upper_polygon and lower polygon are ``None`` when no polygon
             exists above the line or below the line.
 
+        Raises
+        ======
+
+        ValueError: When the line does not intersect the polygon
+
         References
         ==========
 
@@ -970,7 +1003,7 @@ class Polygon(GeometrySet):
         if not intersection_points:
             raise ValueError("This line does not intersect the polygon")
 
-        points = self.vertices
+        points = list(self.vertices)
         points.append(points[0])
 
         x, y = symbols('x, y', real=True, cls=Dummy)

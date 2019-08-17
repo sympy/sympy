@@ -451,26 +451,26 @@ def test_second_moment_of_area():
     assert I_xy == e.second_moment_of_area()[2]
 
 
-def test_section_and_polar_modulus():
+def test_section_modulus_and_polar_second_moment_of_area():
     d = Symbol('d', positive=True)
     c = Circle((3, 7), 8)
-    assert c.polar_modulus() == 2048*pi
+    assert c.polar_second_moment_of_area() == 2048*pi
     assert c.section_modulus() == (128*pi, 128*pi)
     c = Circle((2, 9), d/2)
-    assert c.polar_modulus() == pi*d**3*Abs(d)/64 + pi*d*Abs(d)**3/64
+    assert c.polar_second_moment_of_area() == pi*d**3*Abs(d)/64 + pi*d*Abs(d)**3/64
     assert c.section_modulus() == (pi*d**3/S(32), pi*d**3/S(32))
 
     a, b = symbols('a, b', positive=True)
     e = Ellipse((4, 6), a, b)
     assert e.section_modulus() == (pi*a*b**2/S(4), pi*a**2*b/S(4))
-    assert e.polar_modulus() == pi*a**3*b/S(4) + pi*a*b**3/S(4)
+    assert e.polar_second_moment_of_area() == pi*a**3*b/S(4) + pi*a*b**3/S(4)
     e = e.rotate(pi/2) # no change in polar and section modulus
     assert e.section_modulus() == (pi*a**2*b/S(4), pi*a*b**2/S(4))
-    assert e.polar_modulus() == pi*a**3*b/S(4) + pi*a*b**3/S(4)
+    assert e.polar_second_moment_of_area() == pi*a**3*b/S(4) + pi*a*b**3/S(4)
 
     e = Ellipse((a, b), 2, 6)
     assert e.section_modulus() == (18*pi, 6*pi)
-    assert e.polar_modulus() == 120*pi
+    assert e.polar_second_moment_of_area() == 120*pi
 
 
 def test_circumference():

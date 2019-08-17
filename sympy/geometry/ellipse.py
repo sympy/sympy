@@ -1386,19 +1386,33 @@ class Ellipse(GeometrySet):
         return I_xx, I_yy, I_xy
 
 
-    def polar_modulus(self):
-        """Returns the polar modulus of an Ellipse
+    def polar_second_moment_of_area(self):
+        """Returns the polar second moment of area of an Ellipse
+
+        It is a constituent of the second moment of area, linked through
+        the perpendicular axis theorem. While the planar second moment of
+        area describes an object's resistance to deflection (bending) when
+        subjected to a force applied to a plane parallel to the central
+        axis, the polar second moment of area describes an object's
+        resistance to deflection when subjected to a moment applied in a
+        plane perpendicular to the object's central axis (i.e. parallel to
+        the cross-section)
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Polar_moment_of_inertia
 
         Examples
         ========
 
         >>> from sympy import symbols, Circle, Ellipse
         >>> c = Circle((5, 5), 4)
-        >>> c.polar_modulus()
+        >>> c.polar_second_moment_of_area()
         128*pi
         >>> a, b = symbols('a, b')
         >>> e = Ellipse((0, 0), a, b)
-        >>> e.polar_modulus()
+        >>> e.polar_second_moment_of_area()
         pi*a**3*b/4 + pi*a*b**3/4
         """
         second_moment = self.second_moment_of_area()
@@ -1407,6 +1421,15 @@ class Ellipse(GeometrySet):
 
     def section_modulus(self, point=None):
         """Returns a tuple with the section modulus of an ellipse
+
+        Section modulus is a geometric property of a polygon defined as the
+        ratio of second moment of area to the distance of the extreme end of
+        the polygon from the centroidal axis.
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Section_modulus
 
         Parameters
         ==========
