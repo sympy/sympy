@@ -17,6 +17,7 @@ from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
 from sympy import lambdify, Add
 from sympy.core.compatibility import iterable
+from sympy.utilities.decorator import doctest_depends_on
 
 numpy = import_module('numpy', __import__kwargs={'fromlist':['arange']})
 
@@ -1523,6 +1524,7 @@ class Beam(object):
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
 
+    @doctest_depends_on(modules=('numpy',))
     def draw(self, pictorial=False):
         """Returns a plot object representing the beam diagram of the beam.
 
@@ -1556,7 +1558,7 @@ class Beam(object):
             >>> b.apply_support(50, "pin")
             >>> b.apply_support(0, "fixed")
             >>> b.apply_support(20, "roller")
-            >>> b.draw(pictorial=True) # doctest: +SKIP
+            >>> b.draw(pictorial=True)
             Plot object containing:
             [0]: cartesian line: 25*SingularityFunction(x, 5, 0)
             - 25*SingularityFunction(x, 23, 0) + SingularityFunction(x, 30, 1)
