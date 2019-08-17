@@ -260,19 +260,15 @@ class ArrayComprehension(Basic):
         for values in itertools.product(*[range(inf, sup+1)
                                         for var, inf, sup
                                         in self._limits]):
-            if hasattr(self, '_lambda'):
-                temp = self._lambda
-                if self._lambda.__code__.co_argcount == 0:
-                    temp = temp()
-                elif self._lambda.__code__.co_argcount == 1:
-                    temp = temp(functools.reduce(lambda a, b: a*b, values))
-            else:
-                temp = self.function
-                for var, val in zip(self.variables, values):
-                    temp = temp.subs(var, val)
-            res.append(temp)
+            res.append(self._get_element(values))
 
         return ImmutableDenseNDimArray(res, self.shape)
+
+    def _get_element(self, values):
+        temp = self.function
+        for var, val in zip(self.variables, values):
+            temp = temp.subs(var, val)
+        return temp
 
     def tolist(self):
         """Transform the expanded array to a list
@@ -382,3 +378,11 @@ class ArrayComprehensionMap(ArrayComprehension):
             def __new__(cls, *args, **kwargs):
                 return ArrayComprehensionMap(self._lambda, *args, **kwargs)
         return _
+
+    def _get_element(self, values):
+        temp = self._lambda
+        if self._lambda.__code__.co_argcount == 0:
+            temp = temp()
+        elif self._lambda.__code__.co_argcount == 1:
+            temp = temp(functools.reduce(lambda a, b: a*b, values))
+        return temp
