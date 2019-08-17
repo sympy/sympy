@@ -4225,7 +4225,10 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
         return False
     eqns = [eq for eq in eqns if not isinstance(eq, BooleanTrue)]
 
-    constant_solns = solve(eqns, constants2)
+    try:
+        constant_solns = solve(eqns, constants2)
+    except NotImplementedError:
+        return False
 
     # Sometimes returns a dict and sometimes a list of dicts
     if isinstance(constant_solns, dict):
