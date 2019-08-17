@@ -6,8 +6,11 @@ from sympy.codegen.ast import none
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
 from sympy.core.numbers import pi
-from sympy.functions import acos, Piecewise, sign, sqrt, loggamma, fresnels, fresnelc
+from sympy.functions import acos, erf, gamma,Piecewise , jacobi, loggamma, legendre, hermite, laguerre, digamma, besselk
+from sympy.functions import gegenbauer, chebyshevt, chebyshevu, RisingFactorial, besselj, factorial, bessely, besseli
+from sympy.functions import acosh, asin, asinh, atan, atanh, assoc_laguerre, sign, sqrt, beta, fresnels, fresnelc, erfc
 from sympy.logic import And, Or
+from sympy.codegen.cfunctions import exp2
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter,
@@ -71,6 +74,13 @@ def test_MpmathPrinter():
 def test_NumPyPrinter():
     p = NumPyPrinter()
     assert p.doprint(sign(x)) == 'numpy.sign(x)'
+    assert p.doprint(acos(x)) == 'numpy.arccos(x)'
+    assert p.doprint(acosh(x)) == 'numpy.arccosh(x)'
+    assert p.doprint(asin(x)) == 'numpy.arcsin(x)'
+    assert p.doprint(asinh(x)) == 'numpy.arcshinh(x)'
+    assert p.doprint(atan(x)) == 'numpy.arctan(x)'
+    assert p.doprint(atanh(x)) == 'numpy.arctanh(x)'
+    assert p.doprint(exp2(x)) == 'numpy.exp2(x)'
     A = MatrixSymbol("A", 2, 2)
     assert p.doprint(A**(-1)) == "numpy.linalg.inv(A)"
     assert p.doprint(A**5) == "numpy.linalg.matrix_power(A, 5)"
@@ -95,6 +105,26 @@ def test_SciPyPrinter():
     smat = SparseMatrix(2, 5, {(0, 1): 3})
     assert p.doprint(smat) == 'scipy.sparse.coo_matrix([3], ([0], [1]), shape=(2, 5))'
     assert 'scipy.sparse' in p.module_imports
+    assert p.doprint(erf(x)) == 'scipy.special.erf(x)'
+    assert p.doprint(erfc(x)) == 'scipy.special.erfc(x)'
+    assert p.doprint(besselj(x, y)) == 'scipy.special.jv(x, y)'
+    assert p.doprint(bessely(x, y)) == 'scipy.special.yv(x, y)'
+    assert p.doprint(besseli(x, y)) == 'scipy.special.iv(x, y)'
+    assert p.doprint(besselk(x, y)) == 'scipy.special.kv(x, y)'
+    assert p.doprint(factorial(x)) == 'scipy.special.factorial(x, exact=true)'
+    assert p.doprint(gamma(x)) == 'scipy.special.gamma(x)'
+    assert p.doprint(loggamma(x)) == 'scipy.special.gammaln(x)'
+    assert p.doprint(digamma(x)) == 'scipy.special.psi(x)'
+    assert p.doprint(RisingFactorial(x, y)) == 'scipy.special.poch(x, y)'
+    assert p.doprint(jacobi(1, x, y, z)) == 'scipy.special.eval_jacobi(1, x, y, z)'
+    assert p.doprint(gegenbauer(x, y, z)) == 'scipy.special.eval_gegenbauer(x, y, z)'
+    assert p.doprint(chebyshevt(x, y)) == 'scipy.special.eval_chebyt(x, y)'
+    assert p.doprint(chebyshevu(x, y)) == 'scipy.special.eval_chebyu(x, y)'
+    assert p.doprint(legendre(x, y)) == 'scipy.special.eval_legendre(x, y)'
+    assert p.doprint(hermite(x, y)) == 'scipy.special.eval_hermite(x, y)'
+    assert p.doprint(laguerre(x, 0, y)) == 'scipy.special.eval_laguerre(x, y)'
+    assert p.doprint(assoc_laguerre(x,y, z)) == 'scipy.special.eval_genlaguerre(x, y, z)'
+    assert p.doprint(beta(x, y)) == 'scipy.special.beta(x, y)'
 
 
 def test_pycode_reserved_words():
