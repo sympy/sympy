@@ -281,10 +281,7 @@ class Piecewise(Function):
                     newargs[-1] = ExprCondPair(expr, orcond)
                     continue
                 elif newargs[-1].cond == cond:
-                    orexpr = Or(expr, newargs[-1].expr)
-                    if isinstance(orexpr, (And, Or)):
-                        orexpr = distribute_and_over_or(orexpr)
-                    newargs[-1] == ExprCondPair(orexpr, cond)
+                    newargs[-1] = ExprCondPair(expr, cond)
                     continue
 
             newargs.append(ExprCondPair(expr, cond))
