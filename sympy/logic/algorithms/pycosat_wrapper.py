@@ -26,9 +26,7 @@ def pycosat_satisfiable(expr, all_models=False):
         result = (r != "UNSAT")
         if not result:
             return result
-        if expr:
-            return dict((expr.symbols[abs(lit) - 1], lit > 0) for lit in r)
-        return bool(expr)
+        return dict((expr.symbols[abs(lit) - 1], lit > 0) for lit in r)
     else:
         r = pycosat.itersolve(expr.data)
         result = (r != "UNSAT")
@@ -37,8 +35,14 @@ def pycosat_satisfiable(expr, all_models=False):
 
         # Make solutions sympy compatible by creating a generator
         def _gen(results):
-          return (dict((expr.symbols[abs(lit) - 1], lit > 0) for lit in sol) for sol in results)
+            satisfiable = False
+            try:
+                while True:
+                    sol = next(results)
+                    yield dict((expr.symbols[abs(lit) - 1], lit > 0) for lit in sol)
+                    satisfiable = True
+            except StopIteration:
+                if not satisfiable:
+                    yield False
 
-        if expr:
-            return _gen(r)
-        return (i for i in [bool(expr)])
+        return _gen(r)
