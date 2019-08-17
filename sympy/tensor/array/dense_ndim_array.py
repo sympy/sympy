@@ -52,11 +52,7 @@ class DenseNDimArray(NDimArray):
         if syindex is not None:
             return syindex
 
-        if isinstance(index, (SYMPY_INTS, Integer)):
-            index = (index, )
-        if not isinstance(index, slice) and len(index) < self.rank():
-            index = tuple([i for i in index] + \
-                          [slice(None) for i in range(len(index), self.rank())])
+        index = self._check_index_for_getitem(index)
 
         if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
             sl_factors, eindices = self._get_slice_data_for_array_access(index)
@@ -64,11 +60,8 @@ class DenseNDimArray(NDimArray):
             nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
             return type(self)(array, nshape)
         else:
-            if isinstance(index, slice):
-                return self._array[index]
-            else:
-                index = self._parse_index(index)
-                return self._array[index]
+            index = self._parse_index(index)
+            return self._array[index]
 
     @classmethod
     def zeros(cls, *shape):
@@ -98,12 +91,6 @@ class DenseNDimArray(NDimArray):
             raise ValueError('Dimensions must be of size of 2')
 
         return Matrix(self.shape[0], self.shape[1], self._array)
-
-    def __iter__(self):
-        def iterator():
-            for i in range(self._loop_size):
-                yield self[self._get_tuple_index(i)]
-        return iterator()
 
     def reshape(self, *newshape):
         """

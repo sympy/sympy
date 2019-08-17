@@ -37,8 +37,8 @@ from sympy.sets.setexpr import SetExpr
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
 from sympy.tensor.functions import TensorProduct
-from sympy.tensor.tensor import (TensorIndexType, tensor_indices, tensorhead,
-        TensorElement)
+from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
+                                 TensorElement, tensor_heads)
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -6363,8 +6363,8 @@ def test_pretty_print_tensor_expr():
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
     i0 = tensor_indices("i_0", L)
-    A, B, C, D = tensorhead("A B C D", [L], [[1]])
-    H = tensorhead("H", [L, L], [[1], [1]])
+    A, B, C, D = tensor_heads("A B C D", [L])
+    H = TensorHead("H", [L, L])
 
     expr = -i
     ascii_str = \
@@ -6525,15 +6525,15 @@ A  + 3⋅B \n\
 
 def test_pretty_print_tensor_partial_deriv():
     from sympy.tensor.toperators import PartialDerivative
-    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensor_heads
 
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
     i0 = tensor_indices("i0", L)
 
-    A, B, C, D = tensorhead("A B C D", [L], [[1]])
+    A, B, C, D = tensor_heads("A B C D", [L])
 
-    H = tensorhead("H", [L, L], [[1], [1]])
+    H = TensorHead("H", [L, L])
 
     expr = PartialDerivative(A(i), A(j))
     ascii_str = \
@@ -6795,3 +6795,26 @@ def test_pretty_misc_functions():
     assert upretty(Heaviside(x, y)) == u'θ(x, y)'
     assert pretty(dirichlet_eta(x)) == 'dirichlet_eta(x)'
     assert upretty(dirichlet_eta(x)) == u'η(x)'
+
+
+def test_issue_17258():
+    n = Symbol('n', integer=True)
+    assert pretty(Sum(n, (n, -oo, 1))) == \
+    '   1     \n'\
+    '  __     \n'\
+    '  \\ `    \n'\
+    '   )    n\n'\
+    '  /_,    \n'\
+    'n = -oo  '
+
+    assert upretty(Sum(n, (n, -oo, 1))) == \
+u("""\
+  1     \n\
+ ___    \n\
+ ╲      \n\
+  ╲     \n\
+  ╱    n\n\
+ ╱      \n\
+ ‾‾‾    \n\
+n = -∞  \
+""")

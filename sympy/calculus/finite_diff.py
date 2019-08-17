@@ -167,6 +167,9 @@ def finite_diff_weights(order, x_list, x0=S.One):
 
     """
     # The notation below closely corresponds to the one used in the paper.
+    order = S(order)
+    if not order.is_number:
+        raise ValueError("Cannot handle symbolic order.")
     if order < 0:
         raise ValueError("Negative derivative order illegal.")
     if int(order) != order:
