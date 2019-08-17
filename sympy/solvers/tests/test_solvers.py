@@ -2068,7 +2068,6 @@ def test_issue_10933():
     assert solve(I*x**4 + x**3 + x**2 + 1.)  # doesn't fail
 
 
-@XFAIL
 def test_Abs_handling():
     x = symbols('x', real=True)
     assert solve(abs(x/y), x) == [0]
