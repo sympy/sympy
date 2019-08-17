@@ -426,6 +426,10 @@ class PermutationGroup(Basic):
             parent = parents[temp]
         return rep
 
+    def _eval_rewrite_as_FiniteSet(self, *args, **kwargs):
+        from sympy.sets.sets import FiniteSet
+        return FiniteSet(*self.generate())
+
     @property
     def base(self):
         """Return a base from the Schreier-Sims algorithm.

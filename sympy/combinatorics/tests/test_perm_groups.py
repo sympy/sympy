@@ -9,6 +9,7 @@ from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
+from sympy.sets.sets import FiniteSet
 from sympy.utilities.pytest import raises, slow
 from sympy.combinatorics.homomorphisms import is_isomorphic
 
@@ -55,6 +56,23 @@ def test_generate():
     b = Permutation([2, 1, 3, 4, 5, 0])
     g = PermutationGroup([a, b]).generate(af=True)
     assert len(list(g)) == 360
+
+
+def test_rewrite_FiniteSet():
+    a = Permutation([2, 0, 1])
+    b = Permutation([2, 1, 0])
+    G = PermutationGroup([a, b])
+    g = G.rewrite(FiniteSet)
+
+    expected_members = [
+        Permutation([0, 1, 2]),
+        Permutation([0, 2, 1]),
+        Permutation([1, 0, 2]),
+        Permutation([1, 2, 0]),
+        Permutation([2, 0, 1]),
+        Permutation([2, 1, 0]),
+    ]
+    assert g == FiniteSet(*expected_members)
 
 
 def test_order():
