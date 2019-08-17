@@ -458,7 +458,6 @@ class Polygon(GeometrySet):
         https://skyciv.com/docs/tutorials/section-tutorials/calculating-the-statical-or-first-moment-of-area-of-beam-sections/?cc=BMD
         https://mechanicalc.com/reference/cross-sections
 
-
         Parameters
         ==========
 
@@ -474,11 +473,6 @@ class Polygon(GeometrySet):
             Q_y is the first moment of area about the y-axis
             A negetive sign indicates that the section modulus is
             determined for a section below (or left of) the centroidal axis
-
-        Raises
-        ======
-
-        ValueError: When the point does not lie inside the polygon
 
         Examples
         ========
