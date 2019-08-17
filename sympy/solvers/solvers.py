@@ -1028,7 +1028,7 @@ def solve(f, *symbols, **flags):
         for e in fi.find(Abs):
             if e.has(*symbols):
                 raise NotImplementedError('solving %s when the argument '
-                    'is not real or imaginary.' % fi)
+                    'is not real or imaginary.' % e)
 
         # arg
         _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
