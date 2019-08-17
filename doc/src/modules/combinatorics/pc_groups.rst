@@ -104,7 +104,7 @@ the following form:
 * `v = {x_{i+1}}^{a_j}{x_i}^{-1}`
 * `v = {x_i}^{a_j}`
 
-`a_j \notin \{0, \ldots relative\_order[j]-1\}`.
+`a_j \notin \{0, \ldots \text{relative_order}[j]-1\}`.
 
 >>> from sympy.combinatorics.named_groups import SymmetricGroup
 >>> from sympy.combinatorics.free_groups import free_group
