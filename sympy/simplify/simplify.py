@@ -673,7 +673,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
                 from sympy.functions.elementary.piecewise import piecewise_simplify
                 # Do not apply doit on the segments as it has already
                 # been done above, but simplify
-                expr = piecewise_simplify(expr, deep=True, doit=False)
+                expr = piecewise_simplify(expr, deep=True, doit=False,
+                                          measure=measure, ratio=ratio,
+                                          rational=rational, inverse=inverse)
                 # Still a Piecewise?
                 if expr.has(Piecewise):
                     # Try factor common terms

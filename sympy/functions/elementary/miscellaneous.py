@@ -383,7 +383,7 @@ class MinMaxBase(Expr, LatticeOp):
 
         # first standard filter, for cls.zero and cls.identity
         # also reshape Max(a, Max(b, c)) to Max(a, b, c)
-
+        # print(list(args))
         if evaluate:
             try:
                 args = frozenset(cls._new_args_filter(args))
@@ -558,7 +558,6 @@ class MinMaxBase(Expr, LatticeOp):
         and check arguments for comparability
         """
         for arg in arg_sequence:
-
             # pre-filter, checking comparability of arguments
             if not isinstance(arg, Expr) or arg.is_extended_real is False or (
                     arg.is_number and
