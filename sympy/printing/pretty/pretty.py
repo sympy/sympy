@@ -1401,7 +1401,6 @@ class PrettyPrinter(Printer):
 
         if elementwise:
             if self._use_unicode:
-                # circ = pretty_atom('Ring')
                 circ = pretty_atom('Modifier Letter Low Ring')
             else:
                 circ = '.'
