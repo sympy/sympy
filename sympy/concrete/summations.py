@@ -945,8 +945,13 @@ def eval_sum(f, limits):
                 newargs.append((newexpr, arg.cond))
             return f.func(*newargs)
 
-    if f.has(KroneckerDelta) and _has_simple_delta(f, limits[0]):
-        return deltasummation(f, limits)
+    if f.has(KroneckerDelta):
+        f = f.replace(
+            lambda x: isinstance(x, Sum),
+            lambda x: x.factor()
+        )
+        if _has_simple_delta(f, limits[0]):
+            return deltasummation(f, limits)
 
     dif = b - a
     definite = dif.is_Integer

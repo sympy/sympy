@@ -710,8 +710,11 @@ class MatrixElement(Expr):
 
         M = self.args[0]
 
+        m, n = self.parent.shape
+
         if M == v.args[0]:
-            return KroneckerDelta(self.args[1], v.args[1])*KroneckerDelta(self.args[2], v.args[2])
+            return KroneckerDelta(self.args[1], v.args[1], (0, m-1)) * \
+                   KroneckerDelta(self.args[2], v.args[2], (0, n-1))
 
         if isinstance(M, Inverse):
             i, j = self.args[1:]
@@ -861,10 +864,11 @@ class Identity(MatrixExpr):
             return S.One
         elif eq is S.false:
             return S.Zero
-        return KroneckerDelta(i, j)
+        return KroneckerDelta(i, j, (0, self.cols-1))
 
     def _eval_determinant(self):
         return S.One
+
 
 class GenericIdentity(Identity):
     """
