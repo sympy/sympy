@@ -4,13 +4,14 @@ from __future__ import print_function, division
 
 from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
 from sympy.core.function import Function, Derivative, ArgumentIndexError
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import reduce, range
+from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
-        sinh, cosh, asinh, acosh, atanh, acoth)
+        sinh, cosh, asinh, acosh, atanh, acoth, Abs)
+from sympy.utilities.iterables import default_sort_key
 
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
@@ -159,7 +160,7 @@ class hyper(TupleParametersBase):
 
     >>> from sympy.abc import a
     >>> hyperexpand(hyper([-a], [], x))
-    (-x + 1)**a
+    (1 - x)**a
 
     See Also
     ========
@@ -173,7 +174,7 @@ class hyper(TupleParametersBase):
 
     .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
            Volume 1
-    .. [2] http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
+    .. [2] https://en.wikipedia.org/wiki/Generalized_hypergeometric_function
     """
 
 
@@ -184,7 +185,7 @@ class hyper(TupleParametersBase):
     @classmethod
     def eval(cls, ap, bq, z):
         from sympy import unpolarify
-        if len(ap) <= len(bq):
+        if len(ap) <= len(bq) or (len(ap) == len(bq) + 1 and (Abs(z) <= 1) == True):
             nz = unpolarify(z)
             if z != nz:
                 return hyper(ap, bq, nz)
@@ -205,7 +206,7 @@ class hyper(TupleParametersBase):
             return gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
         return hyperexpand(self)
 
-    def _eval_rewrite_as_Sum(self, ap, bq, z):
+    def _eval_rewrite_as_Sum(self, ap, bq, z, **kwargs):
         from sympy.functions import factorial, RisingFactorial, Piecewise
         from sympy import Sum
         n = Dummy("n", integer=True)
@@ -301,7 +302,7 @@ class hyper(TupleParametersBase):
         c3 = And(re(e) >= 1, abs(z) < 1)
         return Or(c1, c2, c3)
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
 
@@ -436,7 +437,7 @@ class meijerg(TupleParametersBase):
 
     .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
            Volume 1
-    .. [2] http://en.wikipedia.org/wiki/Meijer_G-function
+    .. [2] https://en.wikipedia.org/wiki/Meijer_G-function
 
     """
 
@@ -620,7 +621,6 @@ class meijerg(TupleParametersBase):
         from sympy.functions import exp_polar, ceiling
         from sympy import Expr
         import mpmath
-        z = self.argument
         znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):
             znum, branch = znum.as_coeff_mul(exp_polar)
@@ -704,6 +704,11 @@ class meijerg(TupleParametersBase):
             c.f. references. """
         return len(self.bm) + len(self.an) - S(len(self.ap) + len(self.bq))/2
 
+    @property
+    def is_number(self):
+        """ Returns true if expression has numeric data only. """
+        return not self.free_symbols
+
 
 class HyperRep(Function):
     """
@@ -748,7 +753,7 @@ class HyperRep(Function):
         """ An expression for F(exp_polar(2*I*pi*n + pi*I)*x), |x| > 1. """
         raise NotImplementedError
 
-    def _eval_rewrite_as_nonrep(self, *args):
+    def _eval_rewrite_as_nonrep(self, *args, **kwargs):
         from sympy import Piecewise
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
         minus = False
@@ -768,7 +773,7 @@ class HyperRep(Function):
             return small
         return Piecewise((big, abs(x) > 1), (small, True))
 
-    def _eval_rewrite_as_nonrepsmall(self, *args):
+    def _eval_rewrite_as_nonrepsmall(self, *args, **kwargs):
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
         args = self.args[:-1] + (x,)
         if not n.is_Integer:
@@ -1038,3 +1043,42 @@ class HyperRep_sinasin(HyperRep):
     @classmethod
     def _expr_big_minus(cls, a, z, n):
         return -1/sqrt(1 + 1/z)*sinh(2*a*asinh(sqrt(z)) + 2*a*pi*I*n)
+
+class appellf1(Function):
+    r"""
+    This is the Appell hypergeometric function of two variables as:
+    .. math ::
+        F_1(a,b_1,b_2,c,x,y) = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
+        \frac{(a)_{m+n} (b_1)_m (b_2)_n}{(c)_{m+n}}
+        \frac{x^m y^n}{m! n!}.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Appell_series
+    .. [2] http://functions.wolfram.com/HypergeometricFunctions/AppellF1/
+
+    """
+
+    @classmethod
+    def eval(cls, a, b1, b2, c, x, y):
+        if default_sort_key(b1) > default_sort_key(b2):
+            b1, b2 = b2, b1
+            x, y = y, x
+            return cls(a, b1, b2, c, x, y)
+        elif b1 == b2 and default_sort_key(x) > default_sort_key(y):
+            x, y = y, x
+            return cls(a, b1, b2, c, x, y)
+        if x == 0 and y == 0:
+            return S.One
+
+    def fdiff(self, argindex=5):
+        a, b1, b2, c, x, y = self.args
+        if argindex == 5:
+            return (a*b1/c)*appellf1(a + 1, b1 + 1, b2, c + 1, x, y)
+        elif argindex == 6:
+            return (a*b2/c)*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)
+        elif argindex in (1, 2, 3, 4):
+            return Derivative(self, self.args[argindex-1])
+        else:
+            raise ArgumentIndexError(self, argindex)

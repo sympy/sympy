@@ -1,10 +1,10 @@
 from sympy import (
-    Add, Mul, S, Symbol, cos, cot, pi, I, sin, sqrt, tan, root,
-    powsimp, symbols, sinh, cosh, tanh, coth, Dummy)
+    Add, Mul, S, Symbol, cos, cot, pi, I, sin, sqrt, tan, root, csc, sec,
+    powsimp, symbols, sinh, cosh, tanh, coth, sech, csch, Dummy)
 from sympy.simplify.fu import (
     L, TR1, TR10, TR10i, TR11, TR12, TR12i, TR13, TR14, TR15, TR16,
     TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
-    hyper_as_trig, csc, fu, process_common_addends, sec, trig_split,
+    TRpower, hyper_as_trig, fu, process_common_addends, trig_split,
     as_f_sign_1)
 from sympy.utilities.randtest import verify_numerically
 from sympy.core.compatibility import range
@@ -75,6 +75,10 @@ def test__TR56():
     assert T(sin(x)**6, sin, cos, h, 6, False) == (-cos(x)**2 + 1)**3
     assert T(sin(x)**6, sin, cos, h, 6, True) == sin(x)**6
     assert T(sin(x)**8, sin, cos, h, 10, True) == (-cos(x)**2 + 1)**4
+
+    # issue 17137
+    assert T(sin(x)**I, sin, cos, h, 4, True) == sin(x)**I
+    assert T(sin(x)**(2*I + 1), sin, cos, h, 4, True) == sin(x)**(2*I + 1)
 
 
 def test_TR5():
@@ -333,6 +337,18 @@ def test_TRmorrie():
     assert TR8(TRmorrie(e)) == -S(1)/8
     e = Mul(*[cos(2**i*pi/17) for i in range(1, 17)])
     assert TR8(TR3(TRmorrie(e))) == S(1)/65536
+    # issue 17063
+    eq = cos(x)/cos(x/2)
+    assert TRmorrie(eq) == eq
+
+
+def test_TRpower():
+    assert TRpower(1/sin(x)**2) == 1/sin(x)**2
+    assert TRpower(cos(x)**3*sin(x/2)**4) == \
+        (3*cos(x)/4 + cos(3*x)/4)*(-cos(x)/2 + cos(2*x)/8 + S(3)/8)
+    for k in range(2, 8):
+        assert verify_numerically(sin(x)**k, TRpower(sin(x)**k))
+        assert verify_numerically(cos(x)**k, TRpower(cos(x)**k))
 
 
 def test_hyper_as_trig():
@@ -349,18 +365,20 @@ def test_hyper_as_trig():
     assert o(tanh(x), d) == I*tan(x*d)
     assert o(coth(x), d) == cot(x*d)/I
     assert o(cosh(x), d) == cos(x*d)
-    for func in (sinh, cosh, tanh, coth):
+    assert o(sech(x), d) == sec(x*d)
+    assert o(csch(x), d) == csc(x*d)/I
+    for func in (sinh, cosh, tanh, coth, sech, csch):
         h = func(pi)
         assert i(o(h, d), d) == h
     # /!\ the _osborne functions are not meant to work
     # in the o(i(trig, d), d) direction so we just check
     # that they work as they are supposed to work
-    assert i(cos(x*y), y) == cosh(x)
-    assert i(sin(x*y), y) == sinh(x)/I
-    assert i(tan(x*y), y) == tanh(x)/I
-    assert i(cot(x*y), y) == coth(x)*I
-    assert i(sec(x*y), y) == 1/cosh(x)
-    assert i(csc(x*y), y) == I/sinh(x)
+    assert i(cos(x*y + z), y) == cosh(x + z*I)
+    assert i(sin(x*y + z), y) == sinh(x + z*I)/I
+    assert i(tan(x*y + z), y) == tanh(x + z*I)/I
+    assert i(cot(x*y + z), y) == coth(x + z*I)*I
+    assert i(sec(x*y + z), y) == sech(x + z*I)
+    assert i(csc(x*y + z), y) == csch(x + z*I)*I
 
 
 def test_TR12i():

@@ -1,6 +1,9 @@
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
-                   exp_polar, polar_lift, O, stieltjes)
+                   exp_polar, polar_lift, O, stieltjes, Abs, Sum, oo)
+from sympy.core.function import ArgumentIndexError
+from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically as tn)
 
@@ -38,6 +41,8 @@ def test_zeta_eval():
     assert zeta(2, -2) == pi**2/6 + Rational(5, 4)
     assert zeta(4, -3) == pi**4/90 + Rational(1393, 1296)
     assert zeta(6, -4) == pi**6/945 + Rational(3037465, 2985984)
+
+    assert zeta(oo) == 1
 
     assert zeta(-1) == -Rational(1, 12)
     assert zeta(-2) == 0
@@ -80,6 +85,7 @@ def test_dirichlet_eta_eval():
 def test_rewriting():
     assert dirichlet_eta(x).rewrite(zeta) == (1 - 2**(1 - x))*zeta(x)
     assert zeta(x).rewrite(dirichlet_eta) == dirichlet_eta(x)/(1 - 2**(1 - x))
+    assert zeta(x).rewrite(dirichlet_eta, a=2) == zeta(x)
     assert tn(dirichlet_eta(x), dirichlet_eta(x).rewrite(zeta), x)
     assert tn(zeta(x), zeta(x).rewrite(dirichlet_eta), x)
 
@@ -105,6 +111,10 @@ def test_derivatives():
     assert td(polylog(b, z), z)
     assert td(lerchphi(c, b, x), x)
     assert td(lerchphi(x, b, c), x)
+    raises(ArgumentIndexError, lambda: lerchphi(c, b, x).fdiff(2))
+    raises(ArgumentIndexError, lambda: lerchphi(c, b, x).fdiff(4))
+    raises(ArgumentIndexError, lambda: polylog(b, z).fdiff(1))
+    raises(ArgumentIndexError, lambda: polylog(b, z).fdiff(3))
 
 
 def myexpand(func, target):
@@ -127,11 +137,35 @@ def test_polylog_expansion():
     assert polylog(s, 0) == 0
     assert polylog(s, 1) == zeta(s)
     assert polylog(s, -1) == -dirichlet_eta(s)
+    assert polylog(s, exp_polar(4*I*pi/3)) == polylog(s, exp(4*I*pi/3))
+    assert polylog(s, exp_polar(I*pi)/3) == polylog(s, exp(I*pi)/3)
 
-    assert myexpand(polylog(1, z), -log(1 + exp_polar(-I*pi)*z))
+    assert myexpand(polylog(1, z), -log(1 - z))
     assert myexpand(polylog(0, z), z/(1 - z))
-    assert myexpand(polylog(-1, z), z**2/(1 - z)**2 + z/(1 - z))
+    assert myexpand(polylog(-1, z), z/(1 - z)**2)
+    assert ((1-z)**3 * expand_func(polylog(-2, z))).simplify() == z*(1 + z)
     assert myexpand(polylog(-5, z), None)
+
+
+def test_issue_8404():
+    i = Symbol('i', integer=True)
+    assert Abs(Sum(1/(3*i + 1)**2, (i, 0, S.Infinity)).doit().n(4)
+        - 1.122) < 0.001
+
+
+def test_polylog_values():
+    from sympy.utilities.randtest import verify_numerically as tn
+    assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
+    assert polylog(2, S.Half) == pi**2/12 - log(2)**2/2
+    for z in [S.Half, 2, (sqrt(5)-1)/2, -(sqrt(5)-1)/2, -(sqrt(5)+1)/2, (3-sqrt(5))/2]:
+        assert Abs(polylog(2, z).evalf() - polylog(2, z, evaluate=False).evalf()) < 1e-15
+    z = Symbol("z")
+    for s in [-1, 0]:
+        for _ in range(10):
+            assert tn(polylog(s, z), polylog(s, z, evaluate=False), z,
+                a=-3, b=-2, c=S.Half, d=2)
+            assert tn(polylog(s, z), polylog(s, z, evaluate=False), z,
+                a=2, b=-2, c=5, d=2)
 
 
 def test_lerchphi_expansion():
@@ -198,3 +232,14 @@ def test_issue_10475():
     assert zeta(a + I).is_finite is True
     assert zeta(b + 1).is_finite is True
     assert zeta(s + 1).is_finite is True
+
+
+def test_issue_14177():
+    n = Symbol('n', positive=True, integer=True)
+
+    assert zeta(2*n) == (-1)**(n + 1)*2**(2*n - 1)*pi**(2*n)*bernoulli(2*n)/factorial(2*n)
+    assert zeta(-n) == (-1)**(-n)*bernoulli(n + 1)/(n + 1)
+
+    n = Symbol('n')
+
+    assert zeta(2*n) == zeta(2*n) # As sign of z (= 2*n) is not determined

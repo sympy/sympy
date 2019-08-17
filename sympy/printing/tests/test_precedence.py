@@ -73,7 +73,7 @@ def test_Symbol():
 
 
 def test_And_Or():
-    # precendence relations between logical operators, ...
+    # precedence relations between logical operators, ...
     assert precedence(x & y) > precedence(x | y)
     assert precedence(~y) > precedence(x & y)
     # ... and with other operators (cfr. other programming languages)

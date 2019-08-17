@@ -152,7 +152,7 @@ A linearizer object can be created using the ``to_linearizer`` class method.
 This coerces the representation found in the ``KanesMethod`` object into the
 generalized form described above. As the independent and dependent
 coordinates and speeds are specified upon creation of the KanesMethod object,
-there is no need to specifiy them here. ::
+there is no need to specify them here. ::
 
   >>> linearizer = KM.to_linearizer()
 
@@ -248,7 +248,7 @@ pendulum system: ::
   >>> vel_P = P.v2pt_theory(pN, N, A)
   >>> pP = Particle('pP', P, m)
 
-  >>> # Solve for eom with Lagranges method
+  >>> # Solve for eom with Lagrange's method
   >>> Lag = Lagrangian(N, pP)
   >>> LM = LagrangesMethod(Lag, [q1], forcelist=[(P, R)], frame=N)
   >>> lag_eqs = LM.form_lagranges_equations()

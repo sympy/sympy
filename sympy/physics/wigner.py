@@ -218,7 +218,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
     Calculates the Clebsch-Gordan coefficient
-    `\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle`.
+    `\left\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \right\rangle`.
 
     The reference for this function is [Edmonds74]_.
 
@@ -248,7 +248,7 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     .. math::
 
-        \langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle
+        \left\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \right\rangle
         =(-1)^{j_1-j_2+m_3} \sqrt{2j_3+1}
         \operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,-m_3)
 
@@ -513,6 +513,9 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     >>> wigner_9j(1,1,1, 1,1,1, 1,1,0 ,prec=64) # ==1/18
     0.05555555...
 
+    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1 ,prec=64) # ==1/6
+    0.1666666...
+
     It is an error to have arguments that are not integer or half
     integer values or do not fulfill the triangle relation::
 
@@ -533,15 +536,14 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
     """
-    imin = 0
-    imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
-
+    imax = int(min(j_1 + j_9, j_2 + j_6, j_4 + j_8) * 2)
+    imin = imax % 2
     sumres = 0
-    for kk in range(imin, int(imax) + 1):
-        sumres = sumres + (2 * kk + 1) * \
-            racah(j_1, j_2, j_9, j_6, j_3, kk, prec) * \
-            racah(j_4, j_6, j_8, j_2, j_5, kk, prec) * \
-            racah(j_1, j_4, j_9, j_8, j_7, kk, prec)
+    for kk in range(imin, int(imax) + 1, 2):
+        sumres = sumres + (kk + 1) * \
+            racah(j_1, j_2, j_9, j_6, j_3, kk / 2, prec) * \
+            racah(j_4, j_6, j_8, j_2, j_5, kk / 2, prec) * \
+            racah(j_1, j_4, j_9, j_8, j_7, kk / 2, prec)
     return sumres
 
 
@@ -694,7 +696,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
             _Factlist[ii + l_3 - l_2 + m_1] * _Factlist[l_1 + l_2 - l_3 - ii]
         sumres = sumres + Integer((-1) ** ii) / den
 
-    res = ressqrt * prefac * sumres * (-1) ** (bigL + l_3 + m_1 - m_2)
+    res = ressqrt * prefac * sumres * Integer((-1) ** (bigL + l_3 + m_1 - m_2))
     if prec is not None:
         res = res.n(prec)
     return res

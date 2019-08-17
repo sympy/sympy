@@ -10,7 +10,7 @@
  */
 
 @import url("basic.css");
-@import url(http://fonts.googleapis.com/css?family=Open+Sans);
+@import url(https://fonts.googleapis.com/css?family=Open+Sans);
 
 /* -- page layout ----------------------------------------------------------- */
 
@@ -290,6 +290,8 @@ p.admonition-title:after {
 }
 
 pre {
+    font-family: DejaVu Sans Mono, monospace;
+    font-size: 100%;
     padding: 5px;
     background-color: {{ theme_codebgcolor }};
     color: {{ theme_codetextcolor }};

@@ -1,5 +1,5 @@
-from sympy import Integer, S
-from sympy.core.operations import LatticeOp
+from sympy import Integer, S, symbols, Mul
+from sympy.core.operations import AssocOp, LatticeOp
 from sympy.utilities.pytest import raises
 from sympy.core.sympify import SympifyError
 from sympy.core.add import Add
@@ -39,3 +39,28 @@ def test_lattice_make_args():
     assert join.make_args(0) == {0}
     assert list(join.make_args(0))[0] is S.Zero
     assert Add.make_args(0)[0] is S.Zero
+
+
+def test_issue_14025():
+    a, b, c, d = symbols('a,b,c,d', commutative=False)
+    assert Mul(a, b, c).has(c*b) == False
+    assert Mul(a, b, c).has(b*c) == True
+    assert Mul(a, b, c, d).has(b*c*d) == True
+
+
+def test_AssocOp_flatten():
+    a, b, c, d = symbols('a,b,c,d')
+
+    class MyAssoc(AssocOp):
+        identity = S(1)
+
+    assert MyAssoc(a, MyAssoc(b, c)).args == \
+        MyAssoc(MyAssoc(a, b), c).args == \
+        MyAssoc(MyAssoc(a, b, c)).args == \
+        MyAssoc(a, b, c).args == \
+            (a, b, c)
+    u = MyAssoc(b, c)
+    v = MyAssoc(u, d, evaluate=False)
+    assert v.args == (u, d)
+    # like Add, any unevaluated outer call will flatten inner args
+    assert MyAssoc(a, v).args == (a, b, c, d)

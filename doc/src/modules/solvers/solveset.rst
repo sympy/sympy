@@ -1,3 +1,5 @@
+.. _solveset:
+
 Solveset
 ========
 
@@ -187,7 +189,7 @@ For example:
 
 Why not use dicts as output?
 
-  Dictionary are easy to deal with programatically but mathematically they are
+  Dictionary are easy to deal with programmatically but mathematically they are
   not very precise and use of them can quickly lead to inconsistency and a lot
   of confusion. For example:
 
@@ -293,7 +295,7 @@ What are the general methods employed by solveset to solve an equation?
 
 
  * The function is now checked if there is any instance of a ``Piecewise``
-   expression, if it is, then it's converted to explict expression and
+   expression, if it is, then it's converted to explicit expression and
    set pairs and then solved recursively.
 
 
@@ -308,7 +310,7 @@ What are the general methods employed by solveset to solve an equation?
 
  * After the invert, the equations are checked for radical or Abs (Modulus),
    then the method ``_solve_radical`` tries to simplify the radical, by
-   removing it using techniques like squarring, cubing etc, and ``_solve_abs``
+   removing it using techniques like squaring, cubing etc, and ``_solve_abs``
    solves nested Modulus by considering the positive and negative variants,
    iteratively.
 
@@ -398,7 +400,7 @@ How does ``solveset`` ensure that it is not returning any wrong solution?
     >>> from sympy import symbols, S, pprint, solveset
     >>> x, n = symbols('x, n')
     >>> pprint(solveset(abs(x) - n, x, domain=S.Reals), use_unicode=True)
-    ([0, ∞) ∩ {n}) ∪ ((-∞, 0] ∩ {-n})
+    {x | x ∊ {-n, n} ∧ (n ∈ [0, ∞))}
 
  Though, there still a lot of work needs to be done in this regard.
 
@@ -520,9 +522,9 @@ How are symbolic parameters handled in solveset?
     >>> from sympy import Symbol, FiniteSet, Interval, not_empty_in, sqrt, oo
     >>> from sympy.abc import x
     >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
-    [0, 2]
+    Interval(0, 2)
     >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
-    [-sqrt(2), -1] U [1, 2]
+    Union(Interval(-sqrt(2), -1), Interval(1, 2))
 
 
 References
@@ -589,6 +591,20 @@ nonlinsolve
 -----------
 
 .. autofunction:: sympy.solvers.solveset.nonlinsolve
+
+
+transolve
+---------
+
+.. autofunction:: sympy.solvers.solveset._transolve
+
+.. autofunction:: sympy.solvers.solveset._is_exponential
+
+.. autofunction:: sympy.solvers.solveset._solve_exponential
+
+.. autofunction:: sympy.solvers.solveset._solve_logarithm
+
+.. autofunction:: sympy.solvers.solveset._is_logarithmic
 
 
 Diophantine Equations (DEs)

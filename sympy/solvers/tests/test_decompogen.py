@@ -1,7 +1,6 @@
 from sympy.solvers.decompogen import decompogen, compogen
-from sympy import sin, cos, sqrt, Abs
-from sympy import symbols
-from sympy.utilities.pytest import XFAIL
+from sympy import sin, cos, sqrt, Abs, exp, symbols
+from sympy.utilities.pytest import XFAIL, raises
 
 x, y = symbols('x y')
 
@@ -14,6 +13,9 @@ def test_decompogen():
     assert decompogen(Abs(cos(x)**2 + 3*cos(x) - 4), x) == [Abs(x), x**2 + 3*x - 4, cos(x)]
     assert decompogen(sin(x)**2 + sin(x) - sqrt(3)/2, x) == [x**2 + x - sqrt(3)/2, sin(x)]
     assert decompogen(Abs(cos(y)**2 + 3*cos(x) - 4), x) == [Abs(x), 3*x + cos(y)**2 - 4, cos(x)]
+    assert decompogen(x, y) == [x]
+    assert decompogen(1, x) == [1]
+    raises(TypeError, lambda: decompogen(x < 5, x))
 
 
 def test_decompogen_poly():

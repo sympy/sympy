@@ -1,15 +1,14 @@
 from __future__ import print_function, division
-import inspect
-import sys
 
+from sympy.core.compatibility import range, is_sequence
 from sympy.external import import_module
-
 from sympy.printing.printer import Printer
-from sympy.core.compatibility import range
 import sympy
 from functools import partial
 
+
 theano = import_module('theano')
+
 if theano:
     ts = theano.scalar
     tt = theano.tensor
@@ -54,6 +53,8 @@ if theano:
             sympy.Or: tt.or_,
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
+            sympy.conjugate: tt.conj,
+            sympy.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
@@ -63,37 +64,90 @@ if theano:
             sympy.Transpose: tt.DimShuffle((False, False), [1, 0]),
     }
 
+
 class TheanoPrinter(Printer):
-    """ Code printer for Theano computations """
+    """ Code printer which creates Theano symbolic expression graphs.
+
+    Parameters
+    ==========
+    cache : dict
+        Cache dictionary to use (see :attr:`cache`). If None (default) will use
+        the global cache. To create a printer which does not depend on or alter
+        global state pass an empty dictionary. Note: the dictionary is not
+        copied on initialization of the printer and will be updated in-place,
+        so using the same dict object when creating multiple printers or making
+        multiple calls to :func:`.theano_code` or :func:`.theano_function` means
+        the cache is shared between all these applications.
+
+    Attributes
+    ==========
+
+    cache : dict
+        A cache of Theano variables which have been created for Sympy
+        symbol-like objects (e.g. :class:`sympy.core.symbol.Symbol` or
+        :class:`sympy.matrices.expressions.MatrixSymbol`). This is used to
+        ensure that all references to a given symbol in an expression (or
+        multiple expressions) are printed as the same Theano variable, which is
+        created only once. Symbols are differentiated only by name and type. The
+        format of the cache's contents should be considered opaque to the user.
+    """
     printmethod = "_theano"
 
     def __init__(self, *args, **kwargs):
         self.cache = kwargs.pop('cache', dict())
         super(TheanoPrinter, self).__init__(*args, **kwargs)
 
-    def _print_Symbol(self, s, dtypes={}, broadcastables={}):
-        dtype = dtypes.get(s, 'floatX')
-        broadcastable = broadcastables.get(s, ())
-        key = (s.name, dtype, broadcastable, type(s))
+    def _get_key(self, s, name=None, dtype=None, broadcastable=None):
+        """ Get the cache key for a Sympy object.
+
+        Parameters
+        ==========
+
+        s : sympy.core.basic.Basic
+            Sympy object to get key for.
+
+        name : str
+            Name of object, if it does not have a ``name`` attribute.
+        """
+
+        if name is None:
+            name = s.name
+
+        return (name, type(s), s.args, dtype, broadcastable)
+
+    def _get_or_create(self, s, name=None, dtype=None, broadcastable=None):
+        """
+        Get the Theano variable for a Sympy symbol from the cache, or create it
+        if it does not exist.
+        """
+
+        # Defaults
+        if name is None:
+            name = s.name
+        if dtype is None:
+            dtype = 'floatX'
+        if broadcastable is None:
+            broadcastable = ()
+
+        key = self._get_key(s, name, dtype=dtype, broadcastable=broadcastable)
+
         if key in self.cache:
             return self.cache[key]
-        else:
-            value = tt.tensor(name=s.name, dtype=dtype, broadcastable=broadcastable)
-            self.cache[key] = value
-            return value
 
-    def _print_AppliedUndef(self, s, dtypes={}, broadcastables={}):
-        dtype = dtypes.get(s, 'floatX')
-        broadcastable = broadcastables.get(s, ())
+        value = tt.tensor(name=name, dtype=dtype, broadcastable=broadcastable)
+        self.cache[key] = value
+        return value
+
+    def _print_Symbol(self, s, **kwargs):
+        dtype = kwargs.get('dtypes', {}).get(s)
+        bc = kwargs.get('broadcastables', {}).get(s)
+        return self._get_or_create(s, dtype=dtype, broadcastable=bc)
+
+    def _print_AppliedUndef(self, s, **kwargs):
         name = str(type(s)) + '_' + str(s.args[0])
-        key = (name, dtype, broadcastable, type(s), s.args)
-        if key in self.cache:
-            return self.cache[key]
-        else:
-            value = tt.tensor(name=name, dtype=dtype, broadcastable=broadcastable)
-            self.cache[key] = value
-            return value
-
+        dtype = kwargs.get('dtypes', {}).get(s)
+        bc = kwargs.get('broadcastables', {}).get(s)
+        return self._get_or_create(s, name=name, dtype=dtype, broadcastable=bc)
 
     def _print_Basic(self, expr, **kwargs):
         op = mapping[type(expr)]
@@ -101,34 +155,41 @@ class TheanoPrinter(Printer):
         return op(*children)
 
     def _print_Number(self, n, **kwargs):
-        return eval(str(n))
+        # Integers already taken care of below, interpret as float
+        return float(n.evalf())
 
-    def _print_MatrixSymbol(self, X, dtypes={}, **kwargs):
-        dtype = dtypes.get(X, 'floatX')
-        key = (X.name, dtype, type(X))
-        if key in self.cache:
-            return self.cache[key]
-        else:
-            value = tt.Tensor(dtype, (False, False))(X.name)
-            self.cache[key] = value
-            return value
+    def _print_MatrixSymbol(self, X, **kwargs):
+        dtype = kwargs.get('dtypes', {}).get(X)
+        return self._get_or_create(X, dtype=dtype, broadcastable=(None, None))
 
     def _print_DenseMatrix(self, X, **kwargs):
-        try:
-            tt.stacklists
-        except AttributeError:
+        if not hasattr(tt, 'stacklists'):
             raise NotImplementedError(
                "Matrix translation not yet supported in this version of Theano")
-        else:
-            return tt.stacklists([[self._print(arg, **kwargs) for arg in L]
-                                         for L in X.tolist()])
-    _print_ImmutableMatrix = _print_DenseMatrix
+
+        return tt.stacklists([
+            [self._print(arg, **kwargs) for arg in L]
+            for L in X.tolist()
+        ])
+
+    _print_ImmutableMatrix = _print_ImmutableDenseMatrix = _print_DenseMatrix
 
     def _print_MatMul(self, expr, **kwargs):
         children = [self._print(arg, **kwargs) for arg in expr.args]
         result = children[0]
         for child in children[1:]:
             result = tt.dot(result, child)
+        return result
+
+    def _print_MatPow(self, expr, **kwargs):
+        children = [self._print(arg, **kwargs) for arg in expr.args]
+        result = 1
+        if isinstance(children[1], int) and children[1] > 0:
+            for i in range(children[1]):
+                result = tt.dot(result, children[0])
+        else:
+            raise NotImplementedError('''Only non-negative integer
+           powers of matrices can be handled by Theano at the moment''')
         return result
 
     def _print_MatrixSlice(self, expr, **kwargs):
@@ -155,14 +216,20 @@ class TheanoPrinter(Printer):
 
     def _print_Piecewise(self, expr, **kwargs):
         import numpy as np
-        e, cond = expr.args[0].args
+        e, cond = expr.args[0].args  # First condition and corresponding value
+
+        # Print conditional expression and value for first condition
+        p_cond = self._print(cond, **kwargs)
+        p_e = self._print(e, **kwargs)
+
+        # One condition only
         if len(expr.args) == 1:
-            return tt.switch(self._print(cond, **kwargs),
-                             self._print(e, **kwargs),
-                             np.nan)
-        return tt.switch(self._print(cond, **kwargs),
-                         self._print(e, **kwargs),
-                         self._print(sympy.Piecewise(*expr.args[1:]), **kwargs))
+            # Return value if condition else NaN
+            return tt.switch(p_cond, p_e, np.nan)
+
+        # Return value_1 if condition_1 else evaluate remaining conditions
+        p_remaining = self._print(sympy.Piecewise(*expr.args[1:]), **kwargs)
+        return tt.switch(p_cond, p_e, p_remaining)
 
     def _print_Rational(self, expr, **kwargs):
         return tt.true_div(self._print(expr.p, **kwargs),
@@ -184,54 +251,277 @@ class TheanoPrinter(Printer):
     def emptyPrinter(self, expr):
         return expr
 
-    def doprint(self, expr, **kwargs):
-        """Returns printer's representation for expr (as a string)"""
-        return self._print(expr, **kwargs)
+    def doprint(self, expr, dtypes=None, broadcastables=None):
+        """ Convert a Sympy expression to a Theano graph variable.
+
+        The ``dtypes`` and ``broadcastables`` arguments are used to specify the
+        data type, dimension, and broadcasting behavior of the Theano variables
+        corresponding to the free symbols in ``expr``. Each is a mapping from
+        Sympy symbols to the value of the corresponding argument to
+        :func:`theano.tensor.Tensor`.
+
+        See the corresponding `documentation page`__ for more information on
+        broadcasting in Theano.
+
+        .. __: http://deeplearning.net/software/theano/tutorial/broadcasting.html
+
+        Parameters
+        ==========
+
+        expr : sympy.core.expr.Expr
+            Sympy expression to print.
+
+        dtypes : dict
+            Mapping from Sympy symbols to Theano datatypes to use when creating
+            new Theano variables for those symbols. Corresponds to the ``dtype``
+            argument to :func:`theano.tensor.Tensor`. Defaults to ``'floatX'``
+            for symbols not included in the mapping.
+
+        broadcastables : dict
+            Mapping from Sympy symbols to the value of the ``broadcastable``
+            argument to :func:`theano.tensor.Tensor` to use when creating Theano
+            variables for those symbols. Defaults to the empty tuple for symbols
+            not included in the mapping (resulting in a scalar).
+
+        Returns
+        =======
+
+        theano.gof.graph.Variable
+            A variable corresponding to the expression's value in a Theano
+            symbolic expression graph.
+
+        See Also
+        ========
+
+        theano.tensor.Tensor
+
+        """
+        if dtypes is None:
+            dtypes = {}
+        if broadcastables is None:
+            broadcastables = {}
+
+        return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
+
 
 global_cache = {}
 
-def theano_code(expr, cache=global_cache, **kwargs):
+
+def theano_code(expr, cache=None, **kwargs):
+    """ Convert a Sympy expression into a Theano graph variable.
+
+    Parameters
+    ==========
+
+    expr : sympy.core.expr.Expr
+        Sympy expression object to convert.
+
+    cache : dict
+       Cached Theano variables (see :attr:`.TheanoPrinter.cache`). Defaults to
+       the module-level global cache.
+
+    dtypes : dict
+        Passed to :meth:`.TheanoPrinter.doprint`.
+
+    broadcastables : dict
+        Passed to :meth:`.TheanoPrinter.doprint`.
+
+    Returns
+    =======
+
+    theano.gof.graph.Variable
+        A variable corresponding to the expression's value in a Theano symbolic
+        expression graph.
+    """
     if not theano:
         raise ImportError("theano is required for theano_code")
+
+    if cache is None:
+        cache = global_cache
+
     return TheanoPrinter(cache=cache, settings={}).doprint(expr, **kwargs)
 
 
-def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=(),
-        **kwargs):
-    """ Handle various input types for dimensions in tensor_wrap
-
-    See Also:
-        tensor_wrap
-        theano_funciton
+def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     """
-    if dim:
-        dims = dict(zip(inputs, [dim]*len(inputs)))
-    if dims:
+    Get value of ``broadcastables`` argument to :func:`.theano_code` from
+    keyword arguments to :func:`.theano_function`.
+
+    Included for backwards compatibility.
+
+    Parameters
+    ==========
+
+    inputs
+        Sequence of input symbols.
+
+    dim : int
+        Common number of dimensions for all inputs. Overrides other arguments
+        if given.
+
+    dims : dict
+        Mapping from input symbols to number of dimensions. Overrides
+        ``broadcastables`` argument if given.
+
+    broadcastables : dict
+        Explicit value of ``broadcastables`` argument to
+        :meth:`.TheanoPrinter.doprint`. If not None function will return this value unchanged.
+
+    Returns
+    =======
+    dict
+        Dictionary mapping elements of ``inputs`` to their "broadcastable"
+        values (tuple of ``bool``s).
+    """
+    if dim is not None:
+        return {s: (False,) * dim for s in inputs}
+
+    if dims is not None:
         maxdim = max(dims.values())
-        broadcastables = dict((i, (False,)*dims[i] + (True,)*(maxdim-dims[i]))
-                         for i in inputs)
-    return broadcastables
+        return {
+            s: (False,) * d + (True,) * (maxdim - d)
+            for s, d in dims.items()
+        }
+
+    if broadcastables is not None:
+        return broadcastables
+
+    return {}
 
 
-def theano_function(inputs, outputs, dtypes={}, cache=None, **kwargs):
-    """ Create Theano function from SymPy expressions """
+def theano_function(inputs, outputs, scalar=False, **kwargs):
+    """ Create a Theano function from SymPy expressions.
+
+    The inputs and outputs are converted to Theano variables using
+    :func:`.theano_code` and then passed to :func:`theano.function`.
+
+    Parameters
+    ==========
+
+    inputs
+        Sequence of symbols which constitute the inputs of the function.
+
+    outputs
+        Sequence of expressions which constitute the outputs(s) of the
+        function. The free symbols of each expression must be a subset of
+        ``inputs``.
+
+    scalar : bool
+        Convert 0-dimensional arrays in output to scalars. This will return a
+        Python wrapper function around the Theano function object.
+
+    cache : dict
+       Cached Theano variables (see :attr:`.TheanoPrinter.cache`). Defaults to
+       the module-level global cache.
+
+    dtypes : dict
+        Passed to :meth:`.TheanoPrinter.doprint`.
+
+    broadcastables : dict
+        Passed to :meth:`.TheanoPrinter.doprint`.
+
+    dims : dict
+        Alternative to ``broadcastables`` argument. Mapping from elements of
+        ``inputs`` to integers indicating the dimension of their associated
+        arrays/tensors. Overrides ``broadcastables`` argument if given.
+
+    dim : int
+        Another alternative to the ``broadcastables`` argument. Common number of
+        dimensions to use for all arrays/tensors.
+        ``theano_function([x, y], [...], dim=2)`` is equivalent to using
+        ``broadcastables={x: (False, False), y: (False, False)}``.
+
+    Returns
+    =======
+    callable
+        A callable object which takes values of ``inputs`` as positional
+        arguments and returns an output array for each of the expressions
+        in ``outputs``. If ``outputs`` is a single expression the function will
+        return a Numpy array, if it is a list of multiple expressions the
+        function will return a list of arrays. See description of the ``squeeze``
+        argument above for the behavior when a single output is passed in a list.
+        The returned object will either be an instance of
+        :class:`theano.compile.function_module.Function` or a Python wrapper
+        function around one. In both cases, the returned value will have a
+        ``theano_function`` attribute which points to the return value of
+        :func:`theano.function`.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.printing.theanocode import theano_function
+
+    A simple function with one input and one output:
+
+    >>> f1 = theano_function([x], [x**2 - 1], scalar=True)
+    >>> f1(3)
+    8.0
+
+    A function with multiple inputs and one output:
+
+    >>> f2 = theano_function([x, y, z], [(x**z + y**z)**(1/z)], scalar=True)
+    >>> f2(3, 4, 2)
+    5.0
+
+    A function with multiple inputs and multiple outputs:
+
+    >>> f3 = theano_function([x, y], [x**2 + y**2, x**2 - y**2], scalar=True)
+    >>> f3(2, 3)
+    [13.0, -5.0]
+
+    See also
+    ========
+    theano.function
+    dim_handling
+    """
     if not theano:
         raise ImportError("theano is required for theano_function")
-    cache = {} if cache == None else cache
-    broadcastables = dim_handling(inputs, **kwargs)
 
-    # Remove keyword arguments corresponding to dim_handling
-    if sys.version_info < (3,):
-        dim_names = inspect.getargspec(dim_handling)[0]
-    else:
-        param = inspect.signature(dim_handling).parameters.items()
-        dim_names = [n for n,p in param if p.kind == p.POSITIONAL_OR_KEYWORD]
-    theano_kwargs = dict((k, v) for k, v in kwargs.items()
-                                if k not in dim_names)
+    # Pop off non-theano keyword args
+    cache = kwargs.pop('cache', {})
+    dtypes = kwargs.pop('dtypes', {})
 
+    broadcastables = dim_handling(
+        inputs,
+        dim=kwargs.pop('dim', None),
+        dims=kwargs.pop('dims', None),
+        broadcastables=kwargs.pop('broadcastables', None),
+    )
+
+    # Print inputs/outputs
     code = partial(theano_code, cache=cache, dtypes=dtypes,
                    broadcastables=broadcastables)
-    tinputs  = list(map(code, inputs))
+    tinputs = list(map(code, inputs))
     toutputs = list(map(code, outputs))
-    toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
-    return theano.function(tinputs, toutputs, **theano_kwargs)
+
+    #fix constant expressions as variables
+    toutputs = [output if isinstance(output, theano.Variable) else tt.as_tensor_variable(output) for output in toutputs]
+
+    if len(toutputs) == 1:
+        toutputs = toutputs[0]
+
+    # Compile theano func
+    func = theano.function(tinputs, toutputs, **kwargs)
+
+    is_0d = [len(o.variable.broadcastable) == 0 for o in func.outputs]
+
+    # No wrapper required
+    if not scalar or not any(is_0d):
+        func.theano_function = func
+        return func
+
+    # Create wrapper to convert 0-dimensional outputs to scalars
+    def wrapper(*args):
+        out = func(*args)
+        # out can be array(1.0) or [array(1.0), array(2.0)]
+
+        if is_sequence(out):
+            return [o[()] if is_0d[i] else o for i, o in enumerate(out)]
+        else:
+            return out[()]
+
+    wrapper.__wrapped__ = func
+    wrapper.__doc__ = func.__doc__
+    wrapper.theano_function = func
+    return wrapper

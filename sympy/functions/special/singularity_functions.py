@@ -1,12 +1,12 @@
 from __future__ import print_function, division
 
-from sympy.core.function import Function, ArgumentIndexError
 from sympy.core import S, sympify, oo, diff
+from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq
 from sympy.functions.elementary.complexes import im
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.special.delta_functions import DiracDelta, Heaviside
+from sympy.functions.special.delta_functions import Heaviside
 
 ###############################################################################
 ############################# SINGULARITY FUNCTION ############################
@@ -158,17 +158,17 @@ class SingularityFunction(Function):
             return S.NaN
         if (n + 2).is_negative:
             raise ValueError("Singularity Functions are not defined for exponents less than -2.")
-        if shift.is_negative:
+        if shift.is_extended_negative:
             return S.Zero
-        if n.is_nonnegative and shift.is_nonnegative:
+        if n.is_nonnegative and shift.is_extended_nonnegative:
             return (x - a)**n
         if n == -1 or n == -2:
-            if shift.is_negative or shift.is_positive:
+            if shift.is_negative or shift.is_extended_positive:
                 return S.Zero
             if shift.is_zero:
                 return S.Infinity
 
-    def _eval_rewrite_as_Piecewise(self, *args):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         '''
         Converts a Singularity Function expression into its Piecewise form.
 
@@ -182,7 +182,7 @@ class SingularityFunction(Function):
         elif n.is_nonnegative:
             return Piecewise(((x - a)**n, (x - a) > 0), (0, True))
 
-    def _eval_rewrite_as_Heaviside(self, *args):
+    def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
         '''
         Rewrites a Singularity Function expression using Heavisides and DiracDeltas.
 

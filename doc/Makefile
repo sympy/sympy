@@ -17,9 +17,8 @@ ALLSPHINXOPTSapi = -d _build/doctrees-api $(SPHINXOPTS) api
 ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_paper_size=$(PAPER) \
                 $(SPHINXOPTS) src
 
-.PHONY: changes cheatsheet clean help html html-errors \
-        htmlapi htmlhelp info latex linkcheck livehtml \
-        texinfo web logo man
+.PHONY: changes cheatsheet clean help html htmlapi htmlhelp info latex \
+        linkcheck livehtml texinfo web logo man
 
 .SUFFIXES: .pdf .svg
 
@@ -29,7 +28,6 @@ help:
 	@echo "  cheatsheet  to make the Cheatsheet"
 	@echo "  clean       to remove generated files"
 	@echo "  html        to make standalone HTML files"
-	@echo "  html-errors to make the standalone HTML files, stopping on any errors or warnings"
 	@echo "  htmlapi     to make HTML API docs"
 	@echo "  htmlhelp    to make HTML files and a HTML help project"
 	@echo "  info        to make Texinfo files and run them through makeinfo"
@@ -46,6 +44,7 @@ clean:
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
 
+html: SPHINXOPTS += -W
 html: _build/logo/sympy-notailtext-favicon.ico
 	mkdir -p src/.static
 	mkdir -p _build/html
@@ -55,9 +54,6 @@ html: _build/logo/sympy-notailtext-favicon.ico
 	cp -r src/pics _build/html/
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
-
-html-errors: SPHINXOPTS += -W
-html-errors: html
 
 htmlapi:
 	mkdir -p api/.static
@@ -86,7 +82,8 @@ htmlhelp:
 latex: $(PDFFILES)
 	mkdir -p _build/latex _build/doctrees
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTSlatex) _build/latex
-	sed -i "s/pdflatex/xelatex/g" _build/latex/Makefile
+	sed -i'' -e "s/pdflatex/xelatex/g" _build/latex/Makefile
+	sed -i'' -e "s/latexmk/latexmk -xelatex/g" _build/latex/Makefile
 	@echo
 	@echo "Build finished; the LaTeX files are in _build/latex."
 	@echo "Run \`make all' in that directory to run these through xelatex."
@@ -117,7 +114,7 @@ _build/cheatsheet/cheatsheet.pdf: cheatsheet/cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
 
-_build/cheatsheet/cheatsheet.pdf: cheatsheet/combinatoric_cheatsheet.tex
+_build/cheatsheet/combinatoric_cheatsheet.pdf: cheatsheet/combinatoric_cheatsheet.tex
 	mkdir -p _build/cheatsheet
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex

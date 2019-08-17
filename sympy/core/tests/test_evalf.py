@@ -1,15 +1,17 @@
-from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp,
+from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
     integrate, log, Mul, N, oo, pi, Pow, product, Product,
-    Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
+    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
+from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
-    scaled_zero, get_integer_part, as_mpmath)
+    scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
 from sympy.core.compatibility import long, range
+from sympy.core.expr import unchanged
 from sympy.utilities.pytest import raises, XFAIL
-
 from sympy.abc import n, x, y
+
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
@@ -129,6 +131,7 @@ def test_evalf_logs():
     assert NS("log(pi*I)", 15) == '1.14472988584940 + 1.57079632679490*I'
     assert NS('log(-1 + 0.00001)', 2) == '-1.0e-5 + 3.1*I'
     assert NS('log(100, 10, evaluate=False)', 15) == '2.00000000000000'
+    assert NS('-2*I*log(-(-1)**(S(1)/9))', 15) == '-5.58505360638185'
 
 
 def test_evalf_trig():
@@ -173,7 +176,7 @@ def test_evalf_ramanujan():
 def test_evalf_bugs():
     assert NS(sin(1) + exp(-10**10), 10) == NS(sin(1), 10)
     assert NS(exp(10**10) + sin(1), 10) == NS(exp(10**10), 10)
-    assert NS('log(1+1/10**50)', 20) == '1.0000000000000000000e-50'
+    assert NS('expand_log(log(1+1/10**50))', 20) == '1.0000000000000000000e-50'
     assert NS('log(10**100,10)', 10) == '100.0000000'
     assert NS('log(2)', 10) == '0.6931471806'
     assert NS(
@@ -195,7 +198,7 @@ def test_evalf_bugs():
     assert NS(20 - 5008329267844*n**25 - 477638700*n**37 - 19*n,
               subs={n: .01}) == '19.8100000000000'
     assert NS(((x - 1)*((1 - x))**1000).n()
-              ) == '(-x + 1.00000000000000)**1000*(x - 1.00000000000000)'
+              ) == '(1.00000000000000 - x)**1000*(x - 1.00000000000000)'
     assert NS((-x).n()) == '-x'
     assert NS((-2*x).n()) == '-2.00000000000000*x'
     assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
@@ -226,6 +229,12 @@ def test_evalf_bugs():
     assert ((oo*I).n() == S.Infinity*I)
     assert ((oo+oo*I).n() == S.Infinity + S.Infinity*I)
 
+    #issue 11518
+    assert NS(2*x**2.5, 5) == '2.0000*x**2.5000'
+
+    #issue 13076
+    assert NS(Mul(Max(0, y), x, evaluate=False).evalf()) == 'x*Max(0, y)'
+
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
@@ -245,11 +254,14 @@ def test_evalf_integer_parts():
                .evalf(1000)) == fibonacci(1000)
 
     assert ceiling(x).evalf(subs={x: 3}) == 3
-    assert ceiling(x).evalf(subs={x: 3*I}) == 3*I
-    assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2 + 3*I
+    assert ceiling(x).evalf(subs={x: 3*I}) == 3.0*I
+    assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2.0 + 3.0*I
     assert ceiling(x).evalf(subs={x: 3.}) == 3
-    assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
-    assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
+    assert ceiling(x).evalf(subs={x: 3.*I}) == 3.0*I
+    assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2.0 + 3.0*I
+
+    assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
+    assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
 
 
 def test_evalf_trig_zero_detection():
@@ -290,7 +302,7 @@ def test_evalf_divergent_series():
 
 def test_evalf_product():
     assert Product(n, (n, 1, 10)).evalf() == 3628800.
-    assert Product(1 - S.Half**2/n**2, (n, 1, oo)).evalf(5)==0.63662
+    assert comp(Product(1 - S.Half**2/n**2, (n, 1, oo)).n(5), 0.63662)
     assert Product(n, (n, -1, 3)).evalf() == 0
 
 
@@ -325,6 +337,8 @@ def test_implemented_function_evalf():
     assert str(f(2)) == "f(2)"
     assert f(2).evalf() == 3
     assert f(x).evalf() == f(x)
+    f = implemented_function(Function('sin'), lambda x: x + 1)
+    assert f(2).evalf() != sin(2)
     del f._imp_     # XXX: due to caching _imp_ would influence all other tests
 
 
@@ -338,6 +352,12 @@ def test_evaluate_false():
 
 def test_evalf_relational():
     assert Eq(x/5, y/10).evalf() == Eq(0.2*x, 0.1*y)
+    # if this first assertion fails it should be replaced with
+    # one that doesn't
+    assert unchanged(Eq, (3 - I)**2/2 + I, 0)
+    assert Eq((3 - I)**2/2 + I, 0).n() is S.false
+    # note: these don't always evaluate to Boolean
+    assert nfloat(Eq((3 - I)**2 + I, 0)) == Eq((3.0 - I)**2 + I, 0)
 
 
 def test_issue_5486():
@@ -487,18 +507,21 @@ def test_issue_10323():
 
 
 def test_AssocOp_Function():
-    e = S('''
+    # the first arg of Min is not comparable in the imaginary part
+    raises(ValueError, lambda: S('''
     Min(-sqrt(3)*cos(pi/18)/6 + re(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3 + sin(pi/18)/2 + 2 + I*(-cos(pi/18)/2 -
     sqrt(3)*sin(pi/18)/6 + im(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3), re(1/((-1/2 + sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3 - sqrt(3)*cos(pi/18)/6 - sin(pi/18)/2 + 2 +
     I*(im(1/((-1/2 + sqrt(3)*I/2)*(1/6 + sqrt(3)*I/18)**(1/3)))/3 -
-    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))''')
-    # the following should not raise a recursion error; it
-    # should raise a value error because the first arg computes
-    # a non-comparable (prec=1) imaginary part
-    raises(ValueError, lambda: e._eval_evalf(2))
+    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))'''))
+    # if that is changed so a non-comparable number remains as
+    # an arg, then the Min/Max instantiation needs to be changed
+    # to watch out for non-comparable args when making simplifications
+    # and the following test should be added instead (with e being
+    # the sympified expression above):
+    # raises(ValueError, lambda: e._eval_evalf(2))
 
 
 def test_issue_10395():
@@ -507,3 +530,40 @@ def test_issue_10395():
     eq = x*Max(y, -1.1)
     assert nfloat(eq) == eq
     assert Max(y, 4).n() == Max(4.0, y)
+
+
+def test_issue_13098():
+    assert floor(log(S('9.'+'9'*20), 10)) == 0
+    assert ceiling(log(S('9.'+'9'*20), 10)) == 1
+    assert floor(log(20 - S('9.'+'9'*20), 10)) == 1
+    assert ceiling(log(20 - S('9.'+'9'*20), 10)) == 2
+
+
+def test_issue_14601():
+    e = 5*x*y/2 - y*(35*(x**3)/2 - 15*x/2)
+    subst = {x:0.0, y:0.0}
+    e2 = e.evalf(subs=subst)
+    assert float(e2) == 0.0
+    assert float((x + x*(x**2 + x)).evalf(subs={x: 0.0})) == 0.0
+
+
+def test_issue_11151():
+    z = S.Zero
+    e = Sum(z, (x, 1, 2))
+    assert e != z  # it shouldn't evaluate
+    # when it does evaluate, this is what it should give
+    assert evalf(e, 15, {}) == \
+        evalf(z, 15, {}) == (None, None, 15, None)
+    # so this shouldn't fail
+    assert (e/2).n() == 0
+    # this was where the issue appeared
+    expr0 = Sum(x**2 + x, (x, 1, 2))
+    expr1 = Sum(0, (x, 1, 2))
+    expr2 = expr1/expr0
+    assert simplify(factor(expr2) - expr2) == 0
+
+
+def test_issue_13425():
+    assert N('2**.5', 30) == N('sqrt(2)', 30)
+    assert N('x - x', 30) == 0
+    assert abs((N('pi*.1', 22)*10 - pi).n()) < 1e-22

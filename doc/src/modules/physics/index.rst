@@ -19,11 +19,11 @@ Contents
     sho.rst
     secondquant.rst
     wigner.rst
-    units.rst
+    units/index.rst
     hep/index.rst
     vector/index.rst
     mechanics/index.rst
     quantum/index.rst
     optics/index.rst
-    unitsystems/index.rst
+    units/index.rst
     continuum_mechanics/index.rst

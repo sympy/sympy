@@ -1,110 +1,219 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
-A tool to help keep .mailmap and AUTHORS up-to-date.
+A tool to help keep .mailmap up-to-date with the
+current git authors.
+
+See also bin/authors_update.py
 """
-# TODO:
-# - Check doc/src/aboutus.rst
-# - Make it easier to update .mailmap or AUTHORS with the correct entries.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-
-import os
+import codecs
 import sys
+import os
 
-from fabric.api import local, env
-from fabric.colors import yellow, blue, green, red
-from fabric.utils import error
 
+if sys.version_info < (3, 6):
+    sys.exit("This script requires Python 3.6 or newer")
+
+from subprocess import run, PIPE
+from distutils.version import LooseVersion
+from collections import defaultdict, OrderedDict
+
+def red(text):
+    return "\033[31m%s\033[0m" % text
+
+def yellow(text):
+    return "\033[33m%s\033[0m" % text
+
+def blue(text):
+    return "\033[34m%s\033[0m" % text
+
+# put sympy on the path
 mailmap_update_path = os.path.abspath(__file__)
 mailmap_update_dir = os.path.dirname(mailmap_update_path)
 sympy_top = os.path.split(mailmap_update_dir)[0]
 sympy_dir = os.path.join(sympy_top, 'sympy')
-
 if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
 
 from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import sift
 
-try:
-    # Only works in newer versions of fabric
-    env.colorize_errors = True
-except AttributeError:
-    pass
+# check git version
+minimal = '1.8.4.2'
+git_ver = run(['git', '--version'], stdout=PIPE, encoding='utf-8').stdout[12:]
+if LooseVersion(git_ver) < LooseVersion(minimal):
+    print(yellow("Please use a git version >= %s" % minimal))
 
-git_command = 'git log --format="%aN <%aE>" | sort -u'
+def author_name(line):
+    assert line.count("<") == line.count(">") == 1
+    assert line.endswith(">")
+    return line.split("<", 1)[0].strip()
 
-git_people = unicode(local(git_command, capture=True), 'utf-8').strip().split("\n")
+def author_email(line):
+    assert line.count("<") == line.count(">") == 1
+    assert line.endswith(">")
+    return line.split("<", 1)[1][:-1].strip()
 
-from distutils.version import LooseVersion
+sysexit = 0
+print(blue("checking git authors..."))
 
-git_ver = local('git --version', capture=True)[12:]
-if LooseVersion(git_ver) < LooseVersion('1.8.4.2'):
-    print(yellow("Please use a newer git version >= 1.8.4.2"))
+# read git authors
+git_command = ['git', 'log', '--format=%aN <%aE>']
+git_people = sorted(set(run(git_command, stdout=PIPE, encoding='utf-8').stdout.strip().split("\n")))
 
-with open(os.path.realpath(os.path.join(__file__, os.path.pardir,
-    os.path.pardir, "AUTHORS"))) as fd:
-    AUTHORS = unicode(fd.read(), 'utf-8')
+# check for ambiguous emails
 
-firstauthor = "Ondřej Čertík"
-
-authors = AUTHORS[AUTHORS.find(firstauthor):].strip().split('\n')
-
-# People who don't want to be listed in AUTHORS
-authors_skip = ["Kirill Smelkov <kirr@landau.phys.spbu.ru>", "Sergey B Kirpichev <skirpichev@gmail.com>"]
-
-predate_git = 0
-
-exit1 = False
-
-print(blue(filldedent("""Read the text at the top of AUTHORS and the text at
-the top of .mailmap for information on how to fix the below errors.  If
-someone is missing from AUTHORS, use the ./bin/update_authors.py script to add
-them.""")))
-
-print()
-print(yellow("People who are in AUTHORS but not in git:"))
-print()
-
-for name in sorted(set(authors) - set(git_people)):
-    if name.startswith("*"):
-        # People who are in AUTHORS but predate git
-        predate_git += 1
-        continue
-    exit1 = True
-    print(name)
-
-print()
-print(yellow("People who are in git but not in AUTHORS:"))
-print()
-
-for name in sorted(set(git_people) - set(authors) - set(authors_skip)):
-    exit1 = True
-    print(name)
-
-# + 1 because the last newline is stripped by strip()
-authors_count = AUTHORS[AUTHORS.find(firstauthor):].strip().count("\n") + 1
-adjusted_authors_count = (
-    authors_count
-    - predate_git
-    + len(authors_skip)
-    )
-git_count = len(git_people)
-
-print()
-print(yellow("There are {git_count} people in git, and {adjusted_authors_count} "
-    "(adjusted) people from AUTHORS".format(git_count=git_count,
-    adjusted_authors_count=adjusted_authors_count)))
-
-if git_count != adjusted_authors_count:
-    error("These two numbers are not the same!")
-else:
+dups = defaultdict(list)
+near_dups = defaultdict(list)
+for i in git_people:
+    k = i.split('<')[1]
+    dups[k].append(i)
+    near_dups[k.lower()].append((k, i))
+multi = [k for k in dups if len(dups[k]) > 1]
+if multi:
     print()
-    print(green(filldedent("""Congratulations. The AUTHORS and .mailmap files
-appear to be up to date. There are %s authors.""" % authors_count)))
+    print(red(filldedent("""
+        Ambiguous email address error: each address should refer to a
+        single author. Disambiguate the following in .mailmap.
+        Then re-run this script.""")))
+    for k in multi:
+        print()
+        for e in sorted(dups[k]):
+            print('\t%s' % e)
+    sysexit = 1
 
-if exit1:
+# warn for nearly ambiguous email addresses
+dups = near_dups
+# some may have been real dups, so disregard those
+# for which all email addresses were the same
+multi = [k for k in dups if len(dups[k]) > 1 and
+    len(set([i for i, _ in dups[k]])) > 1]
+if multi:
+    # not fatal but make it red
     print()
-    print(red("There were errors. Please fix them."))
-    sys.exit(1)
+    print(red(filldedent("""
+        Ambiguous email address warning: git treats the
+        following as distinct but .mailmap will treat them
+        the same. If these are not all the same person then,
+        when making an entry in .mailmap, be sure to include
+        both commit name and address (not just the address).""")))
+    for k in multi:
+        print()
+        for _, e in sorted(dups[k]):
+            print('\t%s' % e)
+
+# warn for ambiguous names
+dups = defaultdict(list)
+for i in git_people:
+    dups[author_name(i)].append(i)
+multi = [k for k in dups if len(dups[k]) > 1]
+if multi:
+    print()
+    print(yellow(filldedent("""
+        Ambiguous name warning: if a person uses more than
+        one email address, entries should be added to .mailmap
+        to merge them into a single canonical address.
+        Then re-run this script.
+        """)))
+    for k in multi:
+        print()
+        for e in sorted(dups[k]):
+            print('\t%s' % e)
+
+bad_names = []
+bad_emails = []
+for i in git_people:
+    name = author_name(i)
+    email = author_email(i)
+    if '@' in name:
+        bad_names.append(i)
+    elif '@' not in email:
+        bad_emails.append(i)
+if bad_names:
+    print()
+    print(yellow(filldedent("""
+        The following people appear to have an email address
+        listed for their name. Entries should be added to
+        .mailmap so that names are formatted like
+        "Name <email address>".
+        """)))
+    for i in bad_names:
+        print("\t%s" % i)
+
+# TODO: Should we check for bad emails as well? Some people have empty email
+# addresses. The above check seems to catch people who get the name and email
+# backwards, so let's leave this alone for now.
+
+# if bad_emails:
+#     print()
+#     print(yellow(filldedent("""
+#         The following names do not appear to have valid
+#         emails. Entries should be added to .mailmap that
+#         use a proper email address. If there is no email
+#         address for a person, use "none@example.com".
+#         """)))
+#     for i in bad_emails:
+#         print("\t%s" % i)
+
+print()
+print(blue("checking .mailmap..."))
+
+# put entries in order -- this will help the user
+# to see if there are already existing entries for an author
+file = codecs.open(os.path.realpath(os.path.join(
+        __file__, os.path.pardir, os.path.pardir, ".mailmap")),
+        "r", "utf-8").read()
+blankline = not file or file.endswith('\n')
+lines = file.splitlines()
+def key(line):
+    # return lower case first address on line or
+    # raise an error if not an entry
+    if '#' in line:
+        line = line.split('#')[0]
+    L, R = line.count("<"), line.count(">")
+    assert L == R and L in (1, 2)
+    return line.split(">", 1)[0].split("<")[1].lower()
+
+who = OrderedDict()
+for i, line in enumerate(lines):
+    try:
+        who.setdefault(key(line), []).append(line)
+    except AssertionError:
+        who[i] = [line]
+
+out = []
+for k in who:
+    # put long entries before short since if they match, the
+    # short entries will be ignored. The ORDER MATTERS
+    # so don't re-order the lines for a given address.
+    # Other tidying up could be done but we won't do that here.
+    def short_entry(line):
+        if line.count('<') == 2:
+            if line.split('>', 1)[1].split('<')[0].strip():
+                return False
+        return True
+    if len(who[k]) == 1:
+        line = who[k][0]
+        if not line.strip():
+            continue  # ignore blank lines
+        out.append(line)
+    else:
+        uniq = list(OrderedDict.fromkeys(who[k]))
+        short, long = sift(uniq, short_entry, binary=True)
+        out.extend(long)
+        out.extend(short)
+
+if out != lines or not blankline:
+    # write lines
+    with codecs.open(os.path.realpath(os.path.join(
+            __file__, os.path.pardir, os.path.pardir, ".mailmap")),
+            "w", "utf-8") as fd:
+        fd.write('\n'.join(out))
+        fd.write('\n')
+    print()
+    if out != lines:
+        print(yellow('.mailmap lines were re-ordered.'))
+    else:
+        print(yellow('blank line added to end of .mailmap'))
+
+sys.exit(sysexit)

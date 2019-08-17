@@ -1,20 +1,19 @@
 from __future__ import print_function, division
 
-from collections import MutableMapping, defaultdict
-
-from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
-from sympy.core.numbers import ImaginaryUnit
-from sympy.core.sympify import _sympify
-from sympy.core.rules import Transform
-from sympy.core.logic import fuzzy_or, fuzzy_and
-from sympy.matrices.expressions import MatMul
-
-from sympy.functions.elementary.complexes import Abs
+from collections import defaultdict
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
+from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
+from sympy.core.compatibility import MutableMapping
+from sympy.core.numbers import ImaginaryUnit
+from sympy.core.logic import fuzzy_or, fuzzy_and
+from sympy.core.rules import Transform
+from sympy.core.sympify import _sympify
+from sympy.functions.elementary.complexes import Abs
 from sympy.logic.boolalg import (Equivalent, Implies, And, Or,
     BooleanFunction, Not)
+from sympy.matrices.expressions import MatMul
 
 # APIs here may be subject to change
 
@@ -173,10 +172,6 @@ class ExactlyOneArg(UnevaluatedOnFree):
 
 
 def _old_assump_replacer(obj):
-    # Things to be careful of:
-    # - real means real or infinite in the old assumptions.
-    # - nonzero does not imply real in the old assumptions.
-    # - finite means finite and not zero in the old assumptions.
     if not isinstance(obj, AppliedPredicate):
         return obj
 
@@ -184,33 +179,34 @@ def _old_assump_replacer(obj):
     ret = None
 
     if obj.func == Q.positive:
-        ret = fuzzy_and([e.is_finite, e.is_positive])
-    if obj.func == Q.zero:
+        ret = e.is_positive
+    elif obj.func == Q.zero:
         ret = e.is_zero
-    if obj.func == Q.negative:
-        ret = fuzzy_and([e.is_finite, e.is_negative])
-    if obj.func == Q.nonpositive:
-        ret = fuzzy_and([e.is_finite, e.is_nonpositive])
-    if obj.func == Q.nonzero:
-        ret = fuzzy_and([e.is_nonzero, e.is_finite])
-    if obj.func == Q.nonnegative:
-        ret = fuzzy_and([fuzzy_or([e.is_zero, e.is_finite]),
-        e.is_nonnegative])
+    elif obj.func == Q.negative:
+        ret = e.is_negative
+    elif obj.func == Q.nonpositive:
+        ret = e.is_nonpositive
+    elif obj.func == Q.nonzero:
+        ret = e.is_nonzero
+    elif obj.func == Q.nonnegative:
+        ret = e.is_nonnegative
 
-    if obj.func == Q.rational:
+    elif obj.func == Q.rational:
         ret = e.is_rational
-    if obj.func == Q.irrational:
+    elif obj.func == Q.irrational:
         ret = e.is_irrational
 
-    if obj.func == Q.even:
+    elif obj.func == Q.even:
         ret = e.is_even
-    if obj.func == Q.odd:
+    elif obj.func == Q.odd:
         ret = e.is_odd
-    if obj.func == Q.integer:
+    elif obj.func == Q.integer:
         ret = e.is_integer
-    if obj.func == Q.imaginary:
+    elif obj.func == Q.composite:
+        ret = e.is_composite
+    elif obj.func == Q.imaginary:
         ret = e.is_imaginary
-    if obj.func == Q.commutative:
+    elif obj.func == Q.commutative:
         ret = e.is_commutative
 
     if ret is None:
@@ -314,6 +310,7 @@ for klass, fact in [
     # matching, so that we can just write Equivalent(Q.zero(x**y), Q.zero(x) & Q.positive(y))
     (Pow, CustomLambda(lambda power: Equivalent(Q.zero(power), Q.zero(power.base) & Q.positive(power.exp)))),
     (Integer, CheckIsPrime(Q.prime)),
+    (Integer, CheckOldAssump(Q.composite)),
     # Implicitly assumes Mul has more than one arg
     # Would be AllArgs(Q.prime | Q.composite) except 1 is composite
     (Mul, Implies(AllArgs(Q.prime), ~Q.prime)),

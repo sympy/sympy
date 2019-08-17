@@ -2,15 +2,14 @@
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range
+from sympy.polys.densearith import (
+    dup_neg, dup_rshift, dup_rem)
 from sympy.polys.densebasic import (
     dup_LC, dup_TC, dup_degree,
     dup_strip, dup_reverse,
     dup_convert,
     dup_terms_gcd)
-
-from sympy.polys.densearith import (
-    dup_neg, dup_rshift, dup_rem)
-
 from sympy.polys.densetools import (
     dup_clear_denoms,
     dup_mirror, dup_scale, dup_shift,
@@ -19,18 +18,13 @@ from sympy.polys.densetools import (
     dup_eval, dmp_eval_in,
     dup_sign_variations,
     dup_real_imag)
-
-from sympy.polys.sqfreetools import (
-    dup_sqf_part, dup_sqf_list)
-
 from sympy.polys.factortools import (
     dup_factor_list)
-
 from sympy.polys.polyerrors import (
     RefinementFailed,
     DomainError)
-
-from sympy.core.compatibility import range
+from sympy.polys.sqfreetools import (
+    dup_sqf_part, dup_sqf_list)
 
 
 def dup_sturm(f, K):
@@ -55,10 +49,10 @@ def dup_sturm(f, K):
     References
     ==========
 
-    1. [Davenport88]_
+    .. [1] [Davenport88]_
 
     """
-    if not K.has_Field:
+    if not K.is_Field:
         raise DomainError("can't compute Sturm sequence over %s" % K)
 
     f = dup_sqf_part(f, K)
@@ -75,11 +69,11 @@ def dup_root_upper_bound(f, K):
     """Compute the LMQ upper bound for the positive roots of `f`;
        LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
-       Reference:
-       ==========
-       Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
-           Values of the Positive Roots of Polynomials"
-           Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
+    References
+    ==========
+    .. [1] Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
+        Values of the Positive Roots of Polynomials"
+        Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
     n, P = len(f), []
     t = n * [K.one]
@@ -119,11 +113,11 @@ def dup_root_lower_bound(f, K):
     """Compute the LMQ lower bound for the positive roots of `f`;
        LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
-       Reference:
+       References
        ==========
-       Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
-           Values of the Positive Roots of Polynomials"
-           Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
+       .. [1] Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
+              Values of the Positive Roots of Polynomials"
+              Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
     bound = dup_root_upper_bound(dup_reverse(f), K)
 
@@ -290,8 +284,8 @@ def dup_refine_real_root(f, s, t, K, eps=None, steps=None, disjoint=None, fast=F
 def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
     """Internal function for isolation positive roots up to given precision.
 
-       References:
-       ===========
+       References
+       ==========
            1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root
            Isolation Methods . Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
            2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the
@@ -490,13 +484,16 @@ def _isolate_zero(f, K, inf, sup, basis=False, sqf=False):
 def dup_isolate_real_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False, blackbox=False):
     """Isolate real roots of a square-free polynomial using the Vincent-Akritas-Strzebonski (VAS) CF approach.
 
-       References:
-       ===========
-       1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root Isolation Methods.
-       Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
-       2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the Performance
-       of the Continued Fractions Method Using New Bounds of Positive Roots.
-       Nonlinear Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
+       References
+       ==========
+       .. [1] Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative
+              Study of Two Real Root Isolation Methods. Nonlinear Analysis:
+              Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
+       .. [2] Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S.
+              Vigklas: Improving the Performance of the Continued Fractions
+              Method Using New Bounds of Positive Roots. Nonlinear Analysis:
+              Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
+
     """
     if K.is_QQ:
         (_, f), K = dup_clear_denoms(f, K, convert=True), K.get_ring()
@@ -521,13 +518,17 @@ def dup_isolate_real_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False, b
 def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, basis=False, fast=False):
     """Isolate real roots using Vincent-Akritas-Strzebonski (VAS) continued fractions approach.
 
-       References:
-       ===========
-       1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root Isolation Methods.
-       Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
-       2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the Performance
-       of the Continued Fractions Method Using New Bounds of Positive Roots.
-       Nonlinear Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
+       References
+       ==========
+
+       .. [1] Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative
+              Study of Two Real Root Isolation Methods. Nonlinear Analysis:
+              Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
+       .. [2] Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S.
+              Vigklas: Improving the Performance of the Continued Fractions
+              Method Using New Bounds of Positive Roots.
+              Nonlinear Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
+
     """
     if K.is_QQ:
         (_, f), K = dup_clear_denoms(f, K, convert=True), K.get_ring()
@@ -558,14 +559,18 @@ def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, basis=False, fast
 def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, strict=False, basis=False, fast=False):
     """Isolate real roots of a list of square-free polynomial using Vincent-Akritas-Strzebonski (VAS) CF approach.
 
-       References:
-       ===========
-       1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root Isolation Methods.
-       Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
-       2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the Performance
-       of the Continued Fractions Method Using New Bounds of Positive Roots.
-       Nonlinear Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
-"""
+       References
+       ==========
+
+       .. [1] Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative
+              Study of Two Real Root Isolation Methods. Nonlinear Analysis:
+              Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
+       .. [2] Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S.
+              Vigklas: Improving the Performance of the Continued Fractions
+              Method Using New Bounds of Positive Roots.
+              Nonlinear Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
+
+    """
     if K.is_QQ:
         K, F, polys = K.get_ring(), K, polys[:]
 
@@ -702,7 +707,7 @@ def dup_count_real_roots(f, K, inf=None, sup=None):
     if dup_degree(f) <= 0:
         return 0
 
-    if not K.has_Field:
+    if not K.is_Field:
         R, K = K, K.get_field()
         f = dup_convert(f, R, K)
 
@@ -1208,7 +1213,7 @@ def dup_count_complex_roots(f, K, inf=None, sup=None, exclude=None):
     f = dup_convert(f, K, F)
 
     if inf is None or sup is None:
-        n, lc = dup_degree(f), abs(dup_LC(f, F))
+        _, lc = dup_degree(f), abs(dup_LC(f, F))
         B = 2*max([ F.quo(abs(c), lc) for c in f ])
 
     if inf is None:
@@ -1511,13 +1516,13 @@ def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None, blackbox=F
         return []
 
     if K.is_ZZ:
-        R, F = K, K.get_field()
+        F = K.get_field()
     else:
-        R, F = K.get_ring(), K
+        F = K
 
     f = dup_convert(f, K, F)
 
-    n, lc = dup_degree(f), abs(dup_LC(f, F))
+    lc = abs(dup_LC(f, F))
     B = 2*max([ F.quo(abs(c), lc) for c in f ])
 
     (u, v), (s, t) = (-B, F.zero), (B, B)
@@ -1682,6 +1687,20 @@ class RealInterval(object):
         self.f, self.dom = f, dom
 
     @property
+    def func(self):
+        return RealInterval
+
+    @property
+    def args(self):
+        i = self
+        return (i.mobius + (i.neg,), i.f, i.dom)
+
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        return self.args == other.args
+
+    @property
     def a(self):
         """Return the position of the left end. """
         field = self.dom.get_field()
@@ -1724,7 +1743,11 @@ class RealInterval(object):
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
-        return (self.b <= other.a or other.b <= self.a)
+        if isinstance(other, RealInterval):
+            return (self.b <= other.a or other.b <= self.a)
+        assert isinstance(other, ComplexInterval)
+        return (self.b <= other.ax or other.bx <= self.a
+            or other.ay*other.by > 0)
 
     def _inner_refine(self):
         """Internal one step real root refinement procedure. """
@@ -1764,14 +1787,147 @@ class RealInterval(object):
         """Perform one step of real root refinement algorithm. """
         return self._inner_refine()
 
+
 class ComplexInterval(object):
     """A fully qualified representation of a complex isolation interval.
-    The printed form is shown as (x1, y1) x (x2, y2): the southwest x northeast
-    coordinates of the interval's rectangle."""
+    The printed form is shown as (ax, bx) x (ay, by) where (ax, ay)
+    and (bx, by) are the coordinates of the southwest and northeast
+    corners of the interval's rectangle, respectively.
+
+    Examples
+    ========
+
+    >>> from sympy import CRootOf, Rational, S
+    >>> from sympy.abc import x
+    >>> CRootOf.clear_cache()  # for doctest reproducibility
+    >>> root = CRootOf(x**10 - 2*x + 3, 9)
+    >>> i = root._get_interval(); i
+    (3/64, 3/32) x (9/8, 75/64)
+
+    The real part of the root lies within the range [0, 3/4] while
+    the imaginary part lies within the range [9/8, 3/2]:
+
+    >>> root.n(3)
+    0.0766 + 1.14*I
+
+    The width of the ranges in the x and y directions on the complex
+    plane are:
+
+    >>> i.dx, i.dy
+    (3/64, 3/64)
+
+    The center of the range is
+
+    >>> i.center
+    (9/128, 147/128)
+
+    The northeast coordinate of the rectangle bounding the root in the
+    complex plane is given by attribute b and the x and y components
+    are accessed by bx and by:
+
+    >>> i.b, i.bx, i.by
+    ((3/32, 75/64), 3/32, 75/64)
+
+    The southwest coordinate is similarly given by i.a
+
+    >>> i.a, i.ax, i.ay
+    ((3/64, 9/8), 3/64, 9/8)
+
+    Although the interval prints to show only the real and imaginary
+    range of the root, all the information of the underlying root
+    is contained as properties of the interval.
+
+    For example, an interval with a nonpositive imaginary range is
+    considered to be the conjugate. Since the y values of y are in the
+    range [0, 1/4] it is not the conjugate:
+
+    >>> i.conj
+    False
+
+    The conjugate's interval is
+
+    >>> ic = i.conjugate(); ic
+    (3/64, 3/32) x (-75/64, -9/8)
+
+        NOTE: the values printed still represent the x and y range
+        in which the root -- conjugate, in this case -- is located,
+        but the underlying a and b values of a root and its conjugate
+        are the same:
+
+        >>> assert i.a == ic.a and i.b == ic.b
+
+        What changes are the reported coordinates of the bounding rectangle:
+
+        >>> (i.ax, i.ay), (i.bx, i.by)
+        ((3/64, 9/8), (3/32, 75/64))
+        >>> (ic.ax, ic.ay), (ic.bx, ic.by)
+        ((3/64, -75/64), (3/32, -9/8))
+
+    The interval can be refined once:
+
+    >>> i  # for reference, this is the current interval
+    (3/64, 3/32) x (9/8, 75/64)
+
+    >>> i.refine()
+    (3/64, 3/32) x (9/8, 147/128)
+
+    Several refinement steps can be taken:
+
+    >>> i.refine_step(2)  # 2 steps
+    (9/128, 3/32) x (9/8, 147/128)
+
+    It is also possible to refine to a given tolerance:
+
+    >>> tol = min(i.dx, i.dy)/2
+    >>> i.refine_size(tol)
+    (9/128, 21/256) x (9/8, 291/256)
+
+    A disjoint interval is one whose bounding rectangle does not
+    overlap with another. An interval, necessarily, is not disjoint with
+    itself, but any interval is disjoint with a conjugate since the
+    conjugate rectangle will always be in the lower half of the complex
+    plane and the non-conjugate in the upper half:
+
+    >>> i.is_disjoint(i), i.is_disjoint(i.conjugate())
+    (False, True)
+
+    The following interval j is not disjoint from i:
+
+    >>> close = CRootOf(x**10 - 2*x + 300/S(101), 9)
+    >>> j = close._get_interval(); j
+    (75/1616, 75/808) x (225/202, 1875/1616)
+    >>> i.is_disjoint(j)
+    False
+
+    The two can be made disjoint, however:
+
+    >>> newi, newj = i.refine_disjoint(j)
+    >>> newi
+    (39/512, 159/2048) x (2325/2048, 4653/4096)
+    >>> newj
+    (3975/51712, 2025/25856) x (29325/25856, 117375/103424)
+
+    Even though the real ranges overlap, the imaginary do not, so
+    the roots have been resolved as distinct. Intervals are disjoint
+    when either the real or imaginary component of the intervals is
+    distinct. In the case above, the real components have not been
+    resolved (so we don't know, yet, which root has the smaller real
+    part) but the imaginary part of ``close`` is larger than ``root``:
+
+    >>> close.n(3)
+    0.0771 + 1.13*I
+    >>> root.n(3)
+    0.0766 + 1.14*I
+    """
 
     def __init__(self, a, b, I, Q, F1, F2, f1, f2, dom, conj=False):
         """Initialize new complex interval with complete information. """
-        self.a, self.b = a, b  # the southwest and northeast corner: (x1, y1), (x2, y2)
+        # a and b are the SW and NE corner of the bounding interval,
+        # (ax, ay) and (bx, by), respectively, for the NON-CONJUGATE
+        # root (the one with the positive imaginary part); when working
+        # with the conjugate, the a and b value are still non-negative
+        # but the ay, by are reversed and have oppositite sign
+        self.a, self.b = a, b
         self.I, self.Q = I, Q
 
         self.f1, self.F1 = f1, F1
@@ -1779,6 +1935,20 @@ class ComplexInterval(object):
 
         self.dom = dom
         self.conj = conj
+
+    @property
+    def func(self):
+        return ComplexInterval
+
+    @property
+    def args(self):
+        i = self
+        return (i.a, i.b, i.I, i.Q, i.F1, i.F2, i.f1, i.f2, i.dom, i.conj)
+
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        return self.args == other.args
 
     @property
     def ax(self):
@@ -1822,7 +1992,8 @@ class ComplexInterval(object):
         return ((self.ax + self.bx)/2, (self.ay + self.by)/2)
 
     def as_tuple(self):
-        """Return tuple representation of complex isolating interval. """
+        """Return tuple representation of the complex isolating
+        interval's SW and NE corners, respectively. """
         return ((self.ax, self.ay), (self.bx, self.by))
 
     def __repr__(self):
@@ -1835,7 +2006,9 @@ class ComplexInterval(object):
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
-        if self.conj != other.conj:
+        if isinstance(other, RealInterval):
+            return other.is_disjoint(self)
+        if self.conj != other.conj:  # above and below real axis
             return True
         re_distinct = (self.bx <= other.ax or other.bx <= self.ax)
         if re_distinct:

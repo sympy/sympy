@@ -1,13 +1,17 @@
 """Tests for Gosper's algorithm for hypergeometric summation. """
 
-from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt, exp, log, Symbol, pi
+from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt, exp, \
+    log, Symbol, pi
 from sympy.abc import a, b, j, k, m, n, r, x
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 
 
 def test_gosper_normal():
-    assert gosper_normal(4*n + 5, 2*(4*n + 1)*(2*n + 3), n) == \
+    eq = 4*n + 5, 2*(4*n + 1)*(2*n + 3), n
+    assert gosper_normal(*eq) == \
         (Poly(S(1)/4, n), Poly(n + S(3)/2), Poly(n + S(1)/4))
+    assert gosper_normal(*eq, polys=False) == \
+        (S(1)/4, n + S(3)/2, n + S(1)/4)
 
 
 def test_gosper_term():
@@ -43,9 +47,9 @@ def test_gosper_sum():
     # issue 6033:
     assert gosper_sum(
         n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b)), \
-        (n, 0, m)) == -a*b*(exp(m*log(a))*exp(m*log(b))*factorial(a)* \
-        factorial(b) - factorial(a + m)*factorial(b + m))/(factorial(a)* \
-        factorial(b)*factorial(a + m)*factorial(b + m))
+        (n, 0, m)).simplify() == -exp(m*log(a) + m*log(b))*gamma(a + 1) \
+        *gamma(b + 1)/(gamma(a)*gamma(b)*gamma(a + m + 1)*gamma(b + m + 1)) \
+        + 1/(gamma(a)*gamma(b))
 
 
 def test_gosper_sum_indefinite():
@@ -53,7 +57,8 @@ def test_gosper_sum_indefinite():
     assert gosper_sum(k**2, k) == k*(k - 1)*(2*k - 1)/6
 
     assert gosper_sum(1/(k*(k + 1)), k) == -1/k
-    assert gosper_sum(-(27*k**4 + 158*k**3 + 430*k**2 + 678*k + 445)*gamma(2*k + 4)/(3*(3*k + 7)*gamma(3*k + 6)), k) == \
+    assert gosper_sum(-(27*k**4 + 158*k**3 + 430*k**2 + 678*k + 445)*gamma(2*k
+                      + 4)/(3*(3*k + 7)*gamma(3*k + 6)), k) == \
         (3*k + 5)*(k**2 + 2*k + 5)*gamma(2*k + 4)/gamma(3*k + 6)
 
 

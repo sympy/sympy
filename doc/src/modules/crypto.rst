@@ -1,6 +1,13 @@
 Basic Cryptography Module
 =========================
 
+.. warning::
+
+   This module is intended for educational purposes only. Do not use the
+   functions in this module for real cryptographic applications. If you wish
+   to encrypt real data, we recommend using something like the `cryptography
+   <https://cryptography.io/en/latest/>`_ module.
+
 Encryption is the process of hiding a message and a cipher is a
 means of doing so. Included in this module are both block and stream
 ciphers:
@@ -43,9 +50,17 @@ substitutions at different times in the message.
 
 .. autofunction:: decipher_shift
 
+.. autofunction:: encipher_rot13
+
+.. autofunction:: decipher_rot13
+
 .. autofunction:: encipher_affine
 
 .. autofunction:: decipher_affine
+
+.. autofunction:: encipher_atbash
+
+.. autofunction:: decipher_atbash
 
 .. autofunction:: encipher_substitution
 
@@ -118,3 +133,11 @@ substitutions at different times in the message.
 .. autofunction:: encipher_elgamal
 
 .. autofunction:: decipher_elgamal
+
+.. autofunction:: gm_public_key
+
+.. autofunction:: gm_private_key
+
+.. autofunction:: encipher_gm
+
+.. autofunction:: decipher_gm

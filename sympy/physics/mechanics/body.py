@@ -1,4 +1,4 @@
-from sympy import Symbol
+from sympy.core.backend import Symbol
 from sympy.physics.mechanics import (RigidBody, Particle, ReferenceFrame,
                                      inertia)
 from sympy.physics.vector import Point, Vector
@@ -10,7 +10,7 @@ class Body(RigidBody, Particle):
     """
     Body is a common representation of either a RigidBody or a Particle SymPy
     object depending on what is passed in during initialization. If a mass is
-    passed in and central_inertia is left as None, the a Particle object is
+    passed in and central_inertia is left as None, the Particle object is
     created. Otherwise a RigidBody object will be created.
 
     The attributes that Body possesses will be the same as a Particle instance
@@ -159,9 +159,9 @@ class Body(RigidBody, Particle):
             >>> body.apply_force(body.mass * g * body.frame.x)
 
         To apply force to any other point than center of mass, pass that point
-        as well. This example applies a gravitational force to a point a distance
-        l from the body's center of mass in the y direction. The force is again
-        applied in the x direction. ::
+        as well. This example applies a gravitational force to a point a
+        distance l from the body's center of mass in the y direction. The
+        force is again applied in the x direction. ::
 
             >>> from sympy import Symbol
             >>> from sympy.physics.mechanics import Body

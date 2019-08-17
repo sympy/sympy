@@ -274,9 +274,9 @@ def deltasummation(f, limit, no_piecewise=False):
     >>> deltasummation(KroneckerDelta(i, k), (k, -oo, oo))
     1
     >>> deltasummation(KroneckerDelta(i, k), (k, 0, oo))
-    Piecewise((1, 0 <= i), (0, True))
+    Piecewise((1, i >= 0), (0, True))
     >>> deltasummation(KroneckerDelta(i, k), (k, 1, 3))
-    Piecewise((1, (1 <= i) & (i <= 3)), (0, True))
+    Piecewise((1, (i >= 1) & (i <= 3)), (0, True))
     >>> deltasummation(k*KroneckerDelta(i, j)*KroneckerDelta(j, k), (k, -oo, oo))
     j*KroneckerDelta(i, j)
     >>> deltasummation(j*KroneckerDelta(i, j), (j, -oo, oo))
@@ -310,6 +310,11 @@ def deltasummation(f, limit, no_piecewise=False):
     # try to extract a simple KroneckerDelta term
     delta, expr = _extract_delta(g, x)
 
+    if (delta is not None) and (delta.delta_range is not None):
+        dinf, dsup = delta.delta_range
+        if (limit[1] - dinf <= 0) == True and (limit[2] - dsup >= 0) == True:
+            no_piecewise = True
+
     if not delta:
         return summation(f, limit)
 
@@ -317,6 +322,7 @@ def deltasummation(f, limit, no_piecewise=False):
     if len(solns) == 0:
         return S.Zero
     elif len(solns) != 1:
+        from sympy.concrete.summations import Sum
         return Sum(f, limit)
     value = solns[0]
     if no_piecewise:

@@ -14,68 +14,30 @@ from __future__ import division, print_function
 
 from sympy import Function, Symbol, solve
 from sympy.core.compatibility import (
-    is_sequence, range, string_types)
+    is_sequence, range, string_types, ordered)
+from sympy.core.containers import OrderedSet
 from .point import Point, Point2D
+
+
+def find(x, equation):
+    """
+    Checks whether the parameter 'x' is present in 'equation' or not.
+    If it is present then it returns the passed parameter 'x' as a free
+    symbol, else, it returns a ValueError.
+    """
+
+    free = equation.free_symbols
+    xs = [i for i in free if (i.name if isinstance(x, string_types) else i) == x]
+    if not xs:
+        raise ValueError('could not find %s' % x)
+    if len(xs) != 1:
+        raise ValueError('ambiguous %s' % x)
+    return xs[0]
 
 
 def _ordered_points(p):
     """Return the tuple of points sorted numerically according to args"""
     return tuple(sorted(p, key=lambda x: x.args))
-
-
-def _symbol(s, matching_symbol=None):
-    """Return s if s is a Symbol, else return either a new Symbol (real=True)
-    with the same name s or the matching_symbol if s is a string and it matches
-    the name of the matching_symbol.
-
-    >>> from sympy import Symbol
-    >>> from sympy.geometry.util import _symbol
-    >>> x = Symbol('x')
-    >>> _symbol('y')
-    y
-    >>> _.is_real
-    True
-    >>> _symbol(x)
-    x
-    >>> _.is_real is None
-    True
-    >>> arb = Symbol('foo')
-    >>> _symbol('arb', arb) # arb's name is foo so foo will not be returned
-    arb
-    >>> _symbol('foo', arb) # now it will
-    foo
-
-    NB: the symbol here may not be the same as a symbol with the same
-    name defined elsewhere as a result of different assumptions.
-
-    See Also
-    ========
-
-    sympy.core.symbol.Symbol
-
-    """
-    if isinstance(s, string_types):
-        if matching_symbol and matching_symbol.name == s:
-            return matching_symbol
-        return Symbol(s, real=True)
-    elif isinstance(s, Symbol):
-        return s
-    else:
-        raise ValueError('symbol must be string for symbol name or Symbol')
-
-
-def _uniquely_named_symbol(xname, *exprs):
-    """Return a symbol which, when printed, will have a name unique
-    from any other already in the expressions given. The name is made
-    unique by prepending underscores.
-    """
-    prefix = '%s'
-    x = prefix % xname
-    syms = set().union(*[e.free_symbols for e in exprs])
-    while any(x == str(s) for s in syms):
-        prefix = '_' + prefix
-        x = prefix % xname
-    return _symbol(x)
 
 
 def are_coplanar(*e):
@@ -141,7 +103,7 @@ def are_coplanar(*e):
                 pt3d.append(i)
             elif isinstance(i, LinearEntity3D):
                 pt3d.extend(i.args)
-            elif isinstance(i, GeometryEntity):  # XXX we should have a GeometryEntity3D class so we can tell the difference between 2D and 3D -- here we just want to deal with 2D objects; if new 3D objects are encountered that we didn't hanlde above, an error should be raised
+            elif isinstance(i, GeometryEntity):  # XXX we should have a GeometryEntity3D class so we can tell the difference between 2D and 3D -- here we just want to deal with 2D objects; if new 3D objects are encountered that we didn't handle above, an error should be raised
                 # all 2D objects have some Point that defines them; so convert those points to 3D pts by making z=0
                 for p in i.args:
                     if isinstance(p, Point):
@@ -199,16 +161,16 @@ def are_similar(e1, e2):
 
     if e1 == e2:
         return True
-    try:
-        return e1.is_similar(e2)
-    except AttributeError:
-        try:
-            return e2.is_similar(e1)
-        except AttributeError:
-            n1 = e1.__class__.__name__
-            n2 = e2.__class__.__name__
-            raise GeometryError(
-                "Cannot test similarity between %s and %s" % (n1, n2))
+    is_similar1 = getattr(e1, 'is_similar', None)
+    if is_similar1:
+        return is_similar1(e2)
+    is_similar2 = getattr(e2, 'is_similar', None)
+    if is_similar2:
+        return is_similar2(e1)
+    n1 = e1.__class__.__name__
+    n2 = e2.__class__.__name__
+    raise GeometryError(
+        "Cannot test similarity between %s and %s" % (n1, n2))
 
 
 def centroid(*args):
@@ -238,25 +200,25 @@ def centroid(*args):
     Point2D(20/3, 40/3)
     >>> p, q = Segment((0, 0), (2, 0)), Segment((0, 0), (2, 2))
     >>> centroid(p, q)
-    Point2D(1, -sqrt(2) + 2)
+    Point2D(1, 2 - sqrt(2))
     >>> centroid(Point(0, 0), Point(2, 0))
     Point2D(1, 0)
 
     Stacking 3 polygons on top of each other effectively triples the
     weight of that polygon:
 
-        >>> p = Polygon((0, 0), (1, 0), (1, 1), (0, 1))
-        >>> q = Polygon((1, 0), (3, 0), (3, 1), (1, 1))
-        >>> centroid(p, q)
-        Point2D(3/2, 1/2)
-        >>> centroid(p, p, p, q) # centroid x-coord shifts left
-        Point2D(11/10, 1/2)
+    >>> p = Polygon((0, 0), (1, 0), (1, 1), (0, 1))
+    >>> q = Polygon((1, 0), (3, 0), (3, 1), (1, 1))
+    >>> centroid(p, q)
+    Point2D(3/2, 1/2)
+    >>> centroid(p, p, p, q) # centroid x-coord shifts left
+    Point2D(11/10, 1/2)
 
     Stacking the squares vertically above and below p has the same
     effect:
 
-        >>> centroid(p, p.translate(0, 1), p.translate(0, -1), q)
-        Point2D(11/10, 1/2)
+    >>> centroid(p, p.translate(0, 1), p.translate(0, -1), q)
+    Point2D(11/10, 1/2)
 
     """
 
@@ -388,7 +350,7 @@ def convex_hull(*args, **kwargs):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Graham_scan
+    [1] https://en.wikipedia.org/wiki/Graham_scan
 
     [2] Andrew's Monotone Chain Algorithm
     (A.M. Andrew,
@@ -418,7 +380,7 @@ def convex_hull(*args, **kwargs):
     from .polygon import Polygon
 
     polygon = kwargs.get('polygon', True)
-    p = set()
+    p = OrderedSet()
     for e in args:
         if not isinstance(e, GeometryEntity):
             try:
@@ -608,12 +570,19 @@ def idiff(eq, y, x, n=1):
         y = y[0]
     elif isinstance(y, Symbol):
         dep = {y}
+    elif isinstance(y, Function):
+        pass
     else:
-        raise ValueError("expecting x-dependent symbol(s) but got: %s" % y)
+        raise ValueError("expecting x-dependent symbol(s) or function(s) but got: %s" % y)
 
-    f = dict([(s, Function(
-        s.name)(x)) for s in eq.free_symbols if s != x and s in dep])
-    dydx = Function(y.name)(x).diff(x)
+    f = {s: Function(s.name)(x) for s in eq.free_symbols
+        if s != x and s in dep}
+
+    if isinstance(y, Symbol):
+        dydx = Function(y.name)(x).diff(x)
+    else:
+        dydx = y.diff(x)
+
     eq = eq.subs(f)
     derivs = {}
     for i in range(n):
@@ -625,28 +594,25 @@ def idiff(eq, y, x, n=1):
         dydx = dydx.diff(x)
 
 
-def intersection(*entities):
+def intersection(*entities, **kwargs):
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters
     ==========
-
     entities : sequence of GeometryEntity
+    pairwise (keyword argument) : Can be either True or False
 
     Returns
     =======
-
     intersection : list of GeometryEntity
 
     Raises
     ======
-
     NotImplementedError
         When unable to calculate intersection.
 
     Notes
     =====
-
     The intersection of any geometrical entity with itself should return
     a list with one item: the entity in question.
     An intersection requires two or more entities. If only a single
@@ -657,6 +623,14 @@ def intersection(*entities):
     Reals should be converted to Rationals, e.g. Rational(str(real_num))
     or else failures due to floating point issues may result.
 
+    Case 1: When the keyword argument 'pairwise' is False (default value):
+    In this case, the function returns a list of intersections common to
+    all entities.
+
+    Case 2: When the keyword argument 'pairwise' is True:
+    In this case, the functions returns a list intersections that occur
+    between any pair of entities.
+
     See Also
     ========
 
@@ -665,25 +639,26 @@ def intersection(*entities):
     Examples
     ========
 
-    >>> from sympy.geometry import Point, Line, Circle, intersection
-    >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 5)
-    >>> l1, l2 = Line(p1, p2), Line(p3, p2)
-    >>> c = Circle(p2, 1)
-    >>> intersection(l1, p2)
-    [Point2D(1, 1)]
-    >>> intersection(l1, l2)
-    [Point2D(1, 1)]
-    >>> intersection(c, p2)
+    >>> from sympy.geometry import Ray, Circle, intersection
+    >>> c = Circle((0, 1), 1)
+    >>> intersection(c, c.center)
     []
-    >>> intersection(c, Point(1, 0))
-    [Point2D(1, 0)]
-    >>> intersection(c, l2)
-    [Point2D(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1),
-     Point2D(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
+    >>> right = Ray((0, 0), (1, 0))
+    >>> up = Ray((0, 0), (0, 1))
+    >>> intersection(c, right, up)
+    [Point2D(0, 0)]
+    >>> intersection(c, right, up, pairwise=True)
+    [Point2D(0, 0), Point2D(0, 2)]
+    >>> left = Ray((1, 0), (0, 0))
+    >>> intersection(right, left)
+    [Segment2D(Point2D(0, 0), Point2D(1, 0))]
 
     """
+
     from .entity import GeometryEntity
     from .point import Point
+
+    pairwise = kwargs.pop('pairwise', False)
 
     if len(entities) <= 1:
         return []
@@ -692,15 +667,21 @@ def intersection(*entities):
     entities = list(entities)
     for i, e in enumerate(entities):
         if not isinstance(e, GeometryEntity):
-            try:
-                entities[i] = Point(e)
-            except NotImplementedError:
-                raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
+            entities[i] = Point(e)
 
-    res = entities[0].intersection(entities[1])
-    for entity in entities[2:]:
-        newres = []
-        for x in res:
-            newres.extend(x.intersection(entity))
-        res = newres
-    return res
+    if not pairwise:
+        # find the intersection common to all objects
+        res = entities[0].intersection(entities[1])
+        for entity in entities[2:]:
+            newres = []
+            for x in res:
+                newres.extend(x.intersection(entity))
+            res = newres
+        return res
+
+    # find all pairwise intersections
+    ans = []
+    for j in range(0, len(entities)):
+        for k in range(j + 1, len(entities)):
+            ans.extend(intersection(entities[j], entities[k]))
+    return list(ordered(set(ans)))

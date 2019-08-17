@@ -126,24 +126,22 @@ class Dagger(Expr):
         The eval() method is called automatically.
 
         """
-        try:
-            d = arg._dagger_()
-        except AttributeError:
-            if isinstance(arg, Basic):
-                if arg.is_Add:
-                    return Add(*tuple(map(Dagger, arg.args)))
-                if arg.is_Mul:
-                    return Mul(*tuple(map(Dagger, reversed(arg.args))))
-                if arg.is_Number:
-                    return arg
-                if arg.is_Pow:
-                    return Pow(Dagger(arg.args[0]), arg.args[1])
-                if arg == I:
-                    return -arg
-            else:
-                return None
+        dagger = getattr(arg, '_dagger_', None)
+        if dagger is not None:
+            return dagger()
+        if isinstance(arg, Basic):
+            if arg.is_Add:
+                return Add(*tuple(map(Dagger, arg.args)))
+            if arg.is_Mul:
+                return Mul(*tuple(map(Dagger, reversed(arg.args))))
+            if arg.is_Number:
+                return arg
+            if arg.is_Pow:
+                return Pow(Dagger(arg.args[0]), arg.args[1])
+            if arg == I:
+                return -arg
         else:
-            return d
+            return None
 
     def _dagger_(self):
         return self.args[0]
@@ -205,20 +203,21 @@ class AntiSymmetricTensor(TensorSymbol):
         FIXME: This is a bottle-neck, can we do it faster?
         """
         h = hash(index)
+        label = str(index)
         if isinstance(index, Dummy):
             if index.assumptions0.get('above_fermi'):
-                return (20, h)
+                return (20, label, h)
             elif index.assumptions0.get('below_fermi'):
-                return (21, h)
+                return (21, label, h)
             else:
-                return (22, h)
+                return (22, label, h)
 
         if index.assumptions0.get('above_fermi'):
-            return (10, h)
+            return (10, label, h)
         elif index.assumptions0.get('below_fermi'):
-            return (11, h)
+            return (11, label, h)
         else:
-            return (12, h)
+            return (12, label, h)
 
     def _latex(self, printer):
         return "%s^{%s}_{%s}" % (
@@ -435,6 +434,9 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
     def __repr__(self):
         return "AnnihilateBoson(%s)" % self.state
 
+    def _latex(self, printer):
+        return "b_{%s}" % self.state.name
+
 
 class CreateBoson(BosonicOperator, Creator):
     """
@@ -470,6 +472,9 @@ class CreateBoson(BosonicOperator, Creator):
 
     def __repr__(self):
         return "CreateBoson(%s)" % self.state
+
+    def _latex(self, printer):
+        return "b^\\dagger_{%s}" % self.state.name
 
 B = AnnihilateBoson
 Bd = CreateBoson
@@ -2258,7 +2263,7 @@ def evaluate_deltas(e):
         return e.func(*[evaluate_deltas(arg) for arg in e.args])
 
     elif isinstance(e, Mul):
-        # find all occurences of delta function and count each index present in
+        # find all occurrences of delta function and count each index present in
         # expression.
         deltas = []
         indices = {}
@@ -2274,11 +2279,12 @@ def evaluate_deltas(e):
         for d in deltas:
             # If we do something, and there are more deltas, we should recurse
             # to treat the resulting expression properly
-            if indices[d.killable_index]:
+            if d.killable_index.is_Symbol and indices[d.killable_index]:
                 e = e.subs(d.killable_index, d.preferred_index)
                 if len(deltas) > 1:
                     return evaluate_deltas(e)
-            elif indices[d.preferred_index] and d.indices_contain_equal_information:
+            elif (d.preferred_index.is_Symbol and indices[d.preferred_index]
+                  and d.indices_contain_equal_information):
                 e = e.subs(d.preferred_index, d.killable_index)
                 if len(deltas) > 1:
                     return evaluate_deltas(e)
@@ -2302,7 +2308,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     the structure of the term.  For each term, we obtain a sequence of all
     dummy variables, where the order is determined by the index range, what
     factors the index belongs to and its position in each factor.  See
-    _get_ordered_dummies() for more inforation about the sorting of dummies.
+    _get_ordered_dummies() for more information about the sorting of dummies.
     The index sequence is then substituted consistently in each term.
 
     Examples
@@ -2327,7 +2333,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     Controlling output:
 
     By default the dummy symbols that are already present in the expression
-    will be reused in a different permuation.  However, if new_indices=True,
+    will be reused in a different permutation.  However, if new_indices=True,
     new dummies will be generated and inserted.  The keyword 'pretty_indices'
     can be used to control this generation of new symbols.
 
@@ -2638,8 +2644,8 @@ def _determine_ambiguous(term, ordered, ambiguous_groups):
         # handle this needs to be implemented.  In order to return something
         # useful nevertheless, we choose arbitrarily the first dummy and
         # determine the rest from this one.  This method is dependent on the
-        # actual dummy labels which violates an assumption for the canonization
-        # procedure.  A better implementation is needed.
+        # actual dummy labels which violates an assumption for the
+        # canonicalization procedure.  A better implementation is needed.
         group = [ d for d in ordered if d in ambiguous_groups[0] ]
         d = group[0]
         all_ordered.add(d)
@@ -2828,7 +2834,7 @@ def wicks(e, **kw_args):
     # For Mul-objects we can actually do something
     if isinstance(e, Mul):
 
-        # we dont want to mess around with commuting part of Mul
+        # we don't want to mess around with commuting part of Mul
         # so we factorize it out before starting recursion
         c_part = []
         string1 = []

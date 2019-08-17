@@ -6,8 +6,10 @@ from __future__ import print_function, division
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy.core.numbers import pi
+from sympy.core.logic import fuzzy_bool
 from sympy.functions.elementary.exponential import exp, log
-from sympy import I
+from sympy.logic.boolalg import Boolean
+from sympy import I, Eq, conjugate, MatrixBase
 
 
 class AskIntegerHandler(CommonHandler):
@@ -67,15 +69,15 @@ class AskIntegerHandler(CommonHandler):
                         return
                 else:
                     return
-        else:
-            return _output
+
+        return _output
 
     Pow = Add
 
     int, Integer = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
-    Pi, Exp1, GoldenRatio, Infinity, NegativeInfinity, ImaginaryUnit = \
-        [staticmethod(CommonHandler.AlwaysFalse)]*6
+    Pi, Exp1, GoldenRatio, TribonacciConstant, Infinity, NegativeInfinity, ImaginaryUnit = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*7
 
     @staticmethod
     def Rational(expr, assumptions):
@@ -132,11 +134,13 @@ class AskRationalHandler(CommonHandler):
             if ask(Q.prime(expr.base), assumptions):
                 return False
 
-    Rational, Float = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*2 # Float is finite-precision
 
-    ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio = \
-        [staticmethod(CommonHandler.AlwaysFalse)]*6
+    Rational = staticmethod(CommonHandler.AlwaysTrue)
+
+    Float = staticmethod(CommonHandler.AlwaysNone)
+
+    ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio, TribonacciConstant = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*7
 
     @staticmethod
     def exp(expr, assumptions):
@@ -284,8 +288,8 @@ class AskRealHandler(CommonHandler):
                 elif ask(Q.negative(expr.base), assumptions):
                     return False
 
-    Rational, Float, Pi, Exp1, GoldenRatio, Abs, re, im = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*8
+    Rational, Float, Pi, Exp1, GoldenRatio, TribonacciConstant, Abs, re, im = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*9
 
     ImaginaryUnit, Infinity, NegativeInfinity = \
         [staticmethod(CommonHandler.AlwaysFalse)]*3
@@ -333,6 +337,12 @@ class AskHermitianHandler(AskRealHandler):
     Handler for Q.hermitian
     Test that an expression belongs to the field of Hermitian operators
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        if isinstance(expr, MatrixBase):
+            return None
+        return AskRealHandler.Expr(expr, assumptions)
 
     @staticmethod
     def Add(expr, assumptions):
@@ -386,6 +396,18 @@ class AskHermitianHandler(AskRealHandler):
 
     cos, exp = [sin]*2
 
+    @staticmethod
+    def MatrixBase(mat, assumptions):
+        rows, cols = mat.shape
+        ret_val = True
+        for i in range(rows):
+            for j in range(i, cols):
+                cond = fuzzy_bool(Eq(mat[i, j], conjugate(mat[j, i])))
+                if cond == None:
+                    ret_val = None
+                if cond == False:
+                    return False
+        return ret_val
 
 class AskComplexHandler(CommonHandler):
     """
@@ -643,8 +665,8 @@ class AskAlgebraicHandler(CommonHandler):
     def Rational(expr, assumptions):
         return expr.q != 0
 
-    Float, GoldenRatio, ImaginaryUnit, AlgebraicNumber = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*4
+    Float, GoldenRatio, TribonacciConstant, ImaginaryUnit, AlgebraicNumber = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*5
 
     Infinity, NegativeInfinity, ComplexInfinity, Pi, Exp1 = \
         [staticmethod(CommonHandler.AlwaysFalse)]*5

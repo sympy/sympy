@@ -1,5 +1,6 @@
-"""Tools for arithmetic error propogation."""
+"""Tools for arithmetic error propagation."""
 from __future__ import print_function, division
+
 from itertools import repeat, combinations
 
 from sympy import S, Symbol, Add, Mul, simplify, Pow, exp
@@ -9,11 +10,12 @@ _arg0_or_var = lambda var: var.args[0] if len(var.args) > 0 else var
 
 
 def variance_prop(expr, consts=(), include_covar=False):
-    """Symbolically propagates variance (`\sigma^2`) for expressions.
+    r"""Symbolically propagates variance (`\sigma^2`) for expressions.
     This is computed as as seen in [1]_.
 
     Parameters
     ==========
+
     expr : Expr
         A sympy expression to compute the variance for.
     consts : sequence of Symbols, optional
@@ -25,6 +27,7 @@ def variance_prop(expr, consts=(), include_covar=False):
 
     Returns
     =======
+
     var_expr : Expr
         An expression for the total variance of the expr.
         The variance for the original symbols (e.g. x) are represented
@@ -48,6 +51,7 @@ def variance_prop(expr, consts=(), include_covar=False):
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/Propagation_of_uncertainty
 
     """

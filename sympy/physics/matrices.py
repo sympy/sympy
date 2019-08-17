@@ -13,7 +13,7 @@ def msigma(i):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Pauli_matrices
+    .. [1] https://en.wikipedia.org/wiki/Pauli_matrices
 
     Examples
     ========
@@ -89,7 +89,7 @@ def mgamma(mu, lower=False):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gamma_matrices
+    .. [1] https://en.wikipedia.org/wiki/Gamma_matrices
 
     Examples
     ========
@@ -171,8 +171,8 @@ def mdft(n):
     >>> mdft(3)
     Matrix([
     [sqrt(3)/3,                sqrt(3)/3,                sqrt(3)/3],
-    [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3, sqrt(3)*exp(-4*I*pi/3)/3],
-    [sqrt(3)/3, sqrt(3)*exp(-4*I*pi/3)/3, sqrt(3)*exp(-8*I*pi/3)/3]])
+    [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3,  sqrt(3)*exp(2*I*pi/3)/3],
+    [sqrt(3)/3,  sqrt(3)*exp(2*I*pi/3)/3, sqrt(3)*exp(-2*I*pi/3)/3]])
     """
     mat = [[None for x in range(n)] for y in range(n)]
     base = exp(-2*pi*I/n)

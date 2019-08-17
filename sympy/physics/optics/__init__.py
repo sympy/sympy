@@ -30,6 +30,7 @@ __all__.extend(medium.__all__)
 
 
 from . import utils
-from .utils import (refraction_angle, deviation, lens_makers_formula,
-    mirror_formula, lens_formula, hyperfocal_distance)
+from .utils import (refraction_angle, fresnel_coefficients,
+        deviation, brewster_angle, critical_angle, lens_makers_formula,
+    mirror_formula, lens_formula, hyperfocal_distance, transverse_magnification)
 __all__.extend(utils.__all__)

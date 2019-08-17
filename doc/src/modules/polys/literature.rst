@@ -122,3 +122,23 @@ a theoretical foundation for implementing polynomials manipulation module.
 .. [Man93] Yiu-Kwong Man, "On Computing Closed Forms for Indefinite Summations",
     Journal of Symbolic Computation, Volume 16, Issue 4, 1993, Pages 355-376
     http://www.sciencedirect.com/science/article/pii/S0747717183710539
+
+.. [Kapur1994] Deepak Kapur, Tushar Saxena, and Lu Yang. "Algebraic and
+    geometric reasoning using Dixon resultants", In Proceedings of the
+    international symposium on Symbolic and algebraic computation (ISSAC '94),
+    1994, pages 99-107.
+    https://www.researchgate.net/publication/2514261_Algebraic_and_Geometric_Reasoning_using_Dixon_Resultants
+
+.. [Palancz08] B Paláncz, P Zaletnyik, JL Awange, EW Grafarend. "Dixon resultant's
+    solution of systems of geodetic polynomial equations", Journal of Geodesy,
+    2008, Springer,
+    https://www.researchgate.net/publication/225607735_Dixon_resultant's_solution_of_systems_of_geodetic_polynomial_equations.
+
+.. [Bruce97] Bruce Randall Donald, Deepak Kapur, and Joseph L. Mundy (Eds.). 
+    "Symbolic and Numerical Computation for Artificial Intelligence",
+    Chapter 2, Academic Press, Inc., Orlando, FL, USA, 1997,
+    https://www2.cs.duke.edu/donaldlab/Books/SymbolicNumericalComputation/045-087.pdf.
+
+.. [Stiller96] P Stiller. "An introduction to the theory of resultants",
+    Mathematics and Computer Science, T&M University, 1996, Citeseer,
+    http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.590.2021&rep=rep1&type=pdf.

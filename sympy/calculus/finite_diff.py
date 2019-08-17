@@ -38,8 +38,8 @@ def finite_diff_weights(order, x_list, x0=S.One):
         0 corresponds to interpolation.
     x_list: sequence
         Sequence of (unique) values for the independent variable.
-        It is usefull (but not necessary) to order ``x_list`` from
-        nearest to farest from ``x0``; see examples below.
+        It is useful (but not necessary) to order ``x_list`` from
+        nearest to furthest from ``x0``; see examples below.
     x0: Number or Symbol
         Root or value of the independent variable for which the finite
         difference weights should be generated. Default is ``S.One``.
@@ -148,7 +148,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     derivative is wanted, weights for 0th, 1st and 2nd order are
     calculated "for free", so are formulae using subsets of ``x_list``.
     This is something one can take advantage of to save computational cost.
-    Be aware that one should define ``x_list`` from nearest to farest from
+    Be aware that one should define ``x_list`` from nearest to furthest from
     ``x0``. If not, subsets of ``x_list`` will yield poorer approximations,
     which might not grand an order of accuracy of ``len(x_list) - order``.
 
@@ -167,6 +167,9 @@ def finite_diff_weights(order, x_list, x0=S.One):
 
     """
     # The notation below closely corresponds to the one used in the paper.
+    order = S(order)
+    if not order.is_number:
+        raise ValueError("Cannot handle symbolic order.")
     if order < 0:
         raise ValueError("Negative derivative order illegal.")
     if int(order) != order:
@@ -387,6 +390,8 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
         x0 = wrt
 
     if not iterable(points):
+        if getattr(points, 'is_Function', False) and wrt in points.args:
+            points = points.subs(wrt, x0)
         # points is simply the step-size, let's make it a
         # equidistant sequence centered around x0
         if order % 2 == 0:
@@ -413,11 +418,15 @@ as_finite_diff = deprecated(
     useinstead="Derivative.as_finite_difference",
     deprecated_since_version="1.1", issue=11410)(_as_finite_diff)
 
+as_finite_diff.__doc__ = """
+    Deprecated function. Use Diff.as_finite_difference instead.
+    """
+
 
 def differentiate_finite(expr, *symbols,
                          # points=1, x0=None, wrt=None, evaluate=True, #Py2:
                          **kwargs):
-    """ Differentiate expr and replace Derivatives with finite differences.
+    r""" Differentiate expr and replace Derivatives with finite differences.
 
     Parameters
     ==========
@@ -430,8 +439,8 @@ def differentiate_finite(expr, *symbols,
     wrt: Symbol, optional
         see ``Derivative.as_finite_difference``
     evaluate : bool
-        kwarg passed on to ``diff`` (whether or not to
-        evaluate the Derivative intermediately).
+        kwarg passed on to ``diff``, whether or not to
+        evaluate the Derivative intermediately (default: ``False``).
 
 
     Examples
@@ -439,27 +448,33 @@ def differentiate_finite(expr, *symbols,
 
     >>> from sympy import cos, sin, Function, differentiate_finite
     >>> from sympy.abc import x, y, h
-    >>> f = Function('f')
-    >>> differentiate_finite(f(x) + sin(x), x, 2)
-    -2*f(x) + f(x - 1) + f(x + 1) - sin(x)
-    >>> differentiate_finite(f(x) + sin(x), x, 2, evaluate=False)
-    -2*f(x) + f(x - 1) + f(x + 1) - 2*sin(x) + sin(x - 1) + sin(x + 1)
-    >>> differentiate_finite(f(x, y), x, y)
-    f(x - 1/2, y - 1/2) - f(x - 1/2, y + 1/2) - f(x + 1/2, y - 1/2) + \
-f(x + 1/2, y + 1/2)
-    >>> g = Function('g')
-    >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h]).simplify()
-    -((f(-h + x) - f(h + x))*g(x) + (g(-h + x) - g(h + x))*f(x))/(2*h)
-    >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h], evaluate=False)
+    >>> f, g = Function('f'), Function('g')
+    >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h])
     -f(-h + x)*g(-h + x)/(2*h) + f(h + x)*g(h + x)/(2*h)
+
+    Note that the above form preserves the product rule in discrete form.
+    If we want we can pass ``evaluate=True`` to get another form (which is
+    usually not what we want):
+
+    >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h], evaluate=True).simplify()
+    -((f(-h + x) - f(h + x))*g(x) + (g(-h + x) - g(h + x))*f(x))/(2*h)
+
+    ``differentiate_finite`` works on any expression:
+
+    >>> differentiate_finite(f(x) + sin(x), x, 2)
+    -2*f(x) + f(x - 1) + f(x + 1) - 2*sin(x) + sin(x - 1) + sin(x + 1)
+    >>> differentiate_finite(f(x) + sin(x), x, 2, evaluate=True)
+    -2*f(x) + f(x - 1) + f(x + 1) - sin(x)
+    >>> differentiate_finite(f(x, y), x, y)
+    f(x - 1/2, y - 1/2) - f(x - 1/2, y + 1/2) - f(x + 1/2, y - 1/2) + f(x + 1/2, y + 1/2)
 
     """
     # Key-word only arguments only available in Python 3
     points = kwargs.pop('points', 1)
     x0 = kwargs.pop('x0', None)
     wrt = kwargs.pop('wrt', None)
-    evaluate = kwargs.pop('evaluate', True)
-    if kwargs != {}:
+    evaluate = kwargs.pop('evaluate', False)
+    if kwargs:
         raise ValueError("Unknown kwargs: %s" % kwargs)
 
     Dexpr = expr.diff(*symbols, evaluate=evaluate)

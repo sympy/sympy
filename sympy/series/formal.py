@@ -5,25 +5,28 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy import oo, zoo, nan
-from sympy.core.expr import Expr
 from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core.function import Derivative, Function
-from sympy.core.singleton import S
-from sympy.core.sympify import sympify
-from sympy.core.symbol import Wild, Dummy, symbols, Symbol
-from sympy.core.relational import Eq
-from sympy.core.numbers import Rational
 from sympy.core.compatibility import iterable
+from sympy.core.expr import Expr
+from sympy.core.function import Derivative, Function, expand
+from sympy.core.mul import Mul
+from sympy.core.numbers import Rational
+from sympy.core.relational import Eq
 from sympy.sets.sets import Interval
+from sympy.core.singleton import S
+from sympy.core.symbol import Wild, Dummy, symbols, Symbol
+from sympy.core.sympify import sympify
+from sympy.discrete.convolutions import convolution
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.combinatorial.numbers import bell
 from sympy.functions.elementary.integers import floor, frac, ceiling
 from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.series.sequences import sequence
-from sympy.series.series_class import SeriesBase
-from sympy.series.order import Order
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
+from sympy.series.order import Order
+from sympy.simplify.powsimp import powsimp
+from sympy.series.sequences import sequence, SeqMul
+from sympy.series.series_class import SeriesBase
 
 
 def rational_algorithm(f, x, k, order=4, full=False):
@@ -40,7 +43,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     instead.
 
     Looks for derivative of a function up to 4'th order (by default).
-    This can be overriden using order option.
+    This can be overridden using order option.
 
     Returns
     =======
@@ -70,7 +73,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
 
     By setting ``full=True``, range of admissible functions to be solved using
     ``rational_algorithm`` can be increased. This option should be used
-    carefully as it can signifcantly slow down the computation as ``doit`` is
+    carefully as it can significantly slow down the computation as ``doit`` is
     performed on the :class:`RootSum` object returned by the ``apart`` function.
     Use ``full=False`` whenever possible.
 
@@ -184,7 +187,7 @@ def rational_independent(terms, x):
 
 
 def simpleDE(f, x, g, order=4):
-    """Generates simple DE.
+    r"""Generates simple DE.
 
     DE is of the form
 
@@ -207,8 +210,6 @@ def simpleDE(f, x, g, order=4):
         eq = f.diff(x, k) + Add(*[a[i]*f.diff(x, i) for i in range(0, k)])
         DE = g(x).diff(x, k) + Add(*[a[i]*g(x).diff(x, i) for i in range(0, k)])
         return eq, DE
-
-    eq, DE = _makeDE(order)
 
     found = False
     for k in range(1, order + 1):
@@ -246,7 +247,7 @@ def exp_re(DE, r, k):
 
     >>> exp_re(-f(x) + Derivative(f(x)), r, k)
     -r(k) + r(k + 1)
-    >>> exp_re(Derivative(f(x), x) + Derivative(f(x), x, x), r, k)
+    >>> exp_re(Derivative(f(x), x) + Derivative(f(x), (x, 2)), r, k)
     r(k) + r(k + 1)
 
     See Also
@@ -262,7 +263,7 @@ def exp_re(DE, r, k):
     for t in Add.make_args(DE):
         coeff, d = t.as_independent(g)
         if isinstance(d, Derivative):
-            j = len(d.args) - 1
+            j = d.derivative_count
         else:
             j = 0
         if mini is None or j < mini:
@@ -293,7 +294,7 @@ def hyper_re(DE, r, k):
 
     >>> hyper_re(-f(x) + Derivative(f(x)), r, k)
     (k + 1)*r(k + 1) - r(k)
-    >>> hyper_re(-x*f(x) + Derivative(f(x), x, x), r, k)
+    >>> hyper_re(-x*f(x) + Derivative(f(x), (x, 2)), r, k)
     (k + 2)*(k + 3)*r(k + 3) - r(k)
 
     See Also
@@ -312,7 +313,7 @@ def hyper_re(DE, r, k):
         c, v = coeff.as_independent(x)
         l = v.as_coeff_exponent(x)[1]
         if isinstance(d, Derivative):
-            j = len(d.args[1:])
+            j = d.derivative_count
         else:
             j = 0
         RE += c * rf(k + 1 - l, j) * r(k + j - l)
@@ -366,6 +367,8 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
 
     sol = []
     for i in range(k_max + 1, k_max + m + 1):
+        if (i < 0) == True:
+            continue
         r = f.diff(x, i).limit(x, 0) / factorial(i)
         if r is S.Zero:
             continue
@@ -401,7 +404,7 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
     from sympy.polys import lcm, roots
     from sympy.integrals import integrate
 
-    # tranformation - c
+    # transformation - c
     proots, qroots = roots(P, k), roots(Q, k)
     all_roots = dict(proots)
     all_roots.update(qroots)
@@ -666,10 +669,11 @@ def solve_de(f, x, DE, order, g, k):
     Examples
     ========
 
-    >>> from sympy import Derivative as D
+    >>> from sympy import Derivative as D, Function
     >>> from sympy import exp, ln
     >>> from sympy.series.formal import solve_de
-    >>> from sympy.abc import x, k, f
+    >>> from sympy.abc import x, k
+    >>> f = Function('f')
 
     >>> solve_de(exp(x), x, D(f(x), x) - f(x), 1, f, k)
     (Piecewise((1/factorial(k), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
@@ -778,7 +782,11 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
                 result[2].subs(x, rep2 + rep2b))
 
     if f.is_polynomial(x):
-        return None
+        k = Dummy('k')
+        ak = sequence(Coeff(f, x, k), (k, 1, oo))
+        xk = sequence(x**k, (k, 0, oo))
+        ind = f.coeff(x, 0)
+        return ak, xk, ind
 
     #  Break instances of Add
     #  this allows application of different
@@ -809,6 +817,14 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
             return ak, xk, ind
         return None
 
+    # The symbolic term - symb, if present, is being separated from the function
+    # Otherwise symb is being set to S.One
+    syms = f.free_symbols.difference({x})
+    (f, symb) = expand(f).as_independent(*syms)
+    if symb is S.Zero:
+        symb = S.One
+    symb = powsimp(symb)
+
     result = None
 
     # from here on it's x0=0 and dir=1 handling
@@ -823,8 +839,9 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
         return None
 
     ak = sequence(result[0], (k, result[2], oo))
-    xk = sequence(x**k, (k, 0, oo))
-    ind = result[1]
+    xk_formula = powsimp(x**k * symb)
+    xk = sequence(xk_formula, (k, 0, oo))
+    ind = powsimp(result[1] * symb)
 
     return ak, xk, ind
 
@@ -837,7 +854,7 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
     (in order):
 
     * rational_algorithm
-    * Hypergeomitric algorithm
+    * Hypergeometric algorithm
 
     Parameters
     ==========
@@ -900,6 +917,16 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
     return _compute_fps(f, x, x0, dir, hyper, order, rational, full)
 
 
+class Coeff(Function):
+    """
+    Coeff(p, x, n) represents the nth coefficient of the polynomial p in x
+    """
+    @classmethod
+    def eval(cls, p, x, n):
+        if p.is_polynomial(x) and n.is_integer:
+            return p.coeff(x, n)
+
+
 class FormalPowerSeries(SeriesBase):
     """Represents Formal Power Series of a function.
 
@@ -916,6 +943,14 @@ class FormalPowerSeries(SeriesBase):
     def __new__(cls, *args):
         args = map(sympify, args)
         return Expr.__new__(cls, *args)
+
+    def __init__(self, *args):
+        ak = args[4][0]
+        k = ak.variables[0]
+        self.ak_seq = sequence(ak.formula, (k, 1, oo))
+        self.fact_seq = sequence(factorial(k), (k, 1, oo))
+        self.bell_coeff_seq = self.ak_seq * self.fact_seq
+        self.sign_seq = sequence((-1, 1), (k, 1, oo))
 
     @property
     def function(self):
@@ -981,12 +1016,15 @@ class FormalPowerSeries(SeriesBase):
     def polynomial(self, n=6):
         """Truncated series as polynomial.
 
-        Returns series sexpansion of ``f`` upto order ``O(x**n)``
+        Returns series expansion of ``f`` upto order ``O(x**n)``
         as a polynomial(without ``O`` term).
         """
         terms = []
+        sym = self.free_symbols
         for i, t in enumerate(self):
             xp = self._get_pow_x(t)
+            if xp.has(*sym):
+                xp = xp.as_coeff_add(*sym)[0]
             if xp >= n:
                 break
             elif xp.is_integer is True and i == n + 1:
@@ -1014,6 +1052,9 @@ class FormalPowerSeries(SeriesBase):
 
         return self.polynomial(n) + Order(pt_xk, (x, x0))
 
+    def zero_coeff(self):
+        return self._eval_term(0)
+
     def _eval_term(self, pt):
         try:
             pt_xk = self.xk.coeff(pt)
@@ -1025,8 +1066,11 @@ class FormalPowerSeries(SeriesBase):
 
         if self.ind:
             ind = S.Zero
+            sym = self.free_symbols
             for t in Add.make_args(self.ind):
                 pow_x = self._get_pow_x(t)
+                if pow_x.has(*sym):
+                    pow_x = pow_x.as_coeff_add(*sym)[0]
                 if pt == 0 and pow_x < 1:
                     ind += t
                 elif pow_x >= pt and pow_x < pt + 1:
@@ -1068,19 +1112,19 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
-    def integrate(self, x=None):
+    def integrate(self, x=None, **kwargs):
         """Integrate Formal Power Series.
 
         Examples
         ========
 
-        >>> from sympy import fps, sin
+        >>> from sympy import fps, sin, integrate
         >>> from sympy.abc import x
         >>> f = fps(sin(x))
         >>> f.integrate(x).truncate()
         -1 + x**2/2 - x**4/24 + O(x**6)
-        >>> f.integrate((x, 0, 1))
-        -cos(1) + 1
+        >>> integrate(f, (x, 0, 1))
+        1 - cos(1)
         """
         from sympy.integrals import integrate
 
@@ -1111,6 +1155,221 @@ class FormalPowerSeries(SeriesBase):
                           (k, ak.start + 1, ak.stop))
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
+
+    def product(self, other, x=None, n=6):
+        """Multiplies two Formal Power Series, using discrete convolution and
+        return the truncated terms upto specified order.
+
+        Parameters
+        ==========
+
+        n : Number, optional
+            Specifies the order of the term up to which the polynomial should
+            be truncated.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, sin, exp, convolution
+        >>> from sympy.abc import x
+        >>> f1 = fps(sin(x))
+        >>> f2 = fps(exp(x))
+
+        >>> f1.product(f2, x).truncate(4)
+        x + x**2 + x**3/3 + O(x**4)
+
+        See Also
+        ========
+
+        sympy.discrete.convolutions
+        sympy.series.formal.FormalPowerSeriesProduct
+
+        """
+
+        if x is None:
+            x = self.x
+        if n is None:
+            return iter(self)
+
+        other = sympify(other)
+
+        if not isinstance(other, FormalPowerSeries):
+            raise ValueError("Both series should be an instance of FormalPowerSeries"
+                             " class.")
+
+        if self.dir != other.dir:
+            raise ValueError("Both series should be calculated from the"
+                             " same direction.")
+        elif self.x0 != other.x0:
+            raise ValueError("Both series should be calculated about the"
+                             " same point.")
+
+        elif self.x != other.x:
+            raise ValueError("Both series should have the same symbol.")
+
+        return FormalPowerSeriesProduct(self, other)
+
+    def coeff_bell(self, n):
+        r"""
+        self.coeff_bell(n) returns a sequence of Bell polynomials of the second kind.
+        Note that ``n`` should be a integer.
+
+        The second kind of Bell polynomials (are sometimes called "partial" Bell
+        polynomials or incomplete Bell polynomials) are defined as
+
+        .. math:: B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
+                \sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}
+                    \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
+                    \left(\frac{x_1}{1!} \right)^{j_1}
+                    \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
+                    \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.
+
+        * ``bell(n, k, (x1, x2, ...))`` gives Bell polynomials of the second kind,
+          `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`.
+
+        See Also
+        ========
+
+        sympy.functions.combinatorial.numbers.bell
+
+        """
+
+        inner_coeffs = [bell(n, j, tuple(self.bell_coeff_seq[:n-j+1])) for j in range(1, n+1)]
+
+        k = Dummy('k')
+        return sequence(tuple(inner_coeffs), (k, 1, oo))
+
+    def compose(self, other, x=None, n=6):
+        r"""
+        Returns the truncated terms of the formal power series of the composed function,
+        up to specified `n`.
+
+        If `f` and `g` are two formal power series of two different functions,
+        then the coefficient sequence ``ak`` of the composed formal power series `fp`
+        will be as follows.
+
+        .. math::
+
+        \sum\limits_{k=0}^{n} b_k B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})
+
+        Parameters
+        ==========
+
+        n : Number, optional
+            Specifies the order of the term up to which the polynomial should
+            be truncated.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, sin, exp, bell
+        >>> from sympy.abc import x
+        >>> f1 = fps(exp(x))
+        >>> f2 = fps(sin(x))
+
+        >>> f1.compose(f2, x).truncate()
+        1 + x + x**2/2 - x**4/8 - x**5/15 + O(x**6)
+
+        >>> f1.compose(f2, x).truncate(8)
+        1 + x + x**2/2 - x**4/8 - x**5/15 - x**6/240 + x**7/90 + O(x**8)
+
+        See Also
+        ========
+
+        sympy.functions.combinatorial.numbers.bell
+        sympy.series.formal.FormalPowerSeriesCompose
+
+        References
+        ==========
+
+        .. [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
+
+        """
+
+        if x is None:
+            x = self.x
+        if n is None:
+            return iter(self)
+
+        other = sympify(other)
+
+        if not isinstance(other, FormalPowerSeries):
+            raise ValueError("Both series should be an instance of FormalPowerSeries"
+                             " class.")
+
+        if self.dir != other.dir:
+            raise ValueError("Both series should be calculated from the"
+                             " same direction.")
+        elif self.x0 != other.x0:
+            raise ValueError("Both series should be calculated about the"
+                             " same point.")
+
+        elif self.x != other.x:
+            raise ValueError("Both series should have the same symbol.")
+
+        if other._eval_term(0).as_coeff_mul(other.x)[0] is not S.Zero:
+            raise ValueError("The formal power series of the inner function should not have any "
+                "constant coefficient term.")
+
+        return FormalPowerSeriesCompose(self, other)
+
+    def inverse(self, x=None, n=6):
+        r"""
+        Returns the truncated terms of the inverse of the formal power series,
+        up to specified `n`.
+
+        If `f` and `g` are two formal power series of two different functions,
+        then the coefficient sequence ``ak`` of the composed formal power series `fp`
+        will be as follows.
+
+        .. math::
+
+        \sum\limits_{k=0}^{n} (-1)^{k} x_0^{-k-1} B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})
+
+        Parameters
+        ==========
+
+        n : Number, optional
+            Specifies the order of the term up to which the polynomial should
+            be truncated.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, exp, cos, bell
+        >>> from sympy.abc import x
+        >>> f1 = fps(exp(x))
+        >>> f2 = fps(cos(x))
+
+        >>> f1.inverse(x).truncate()
+        1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + O(x**6)
+
+        >>> f2.inverse(x).truncate(8)
+        1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + O(x**8)
+
+        See Also
+        ========
+
+        sympy.functions.combinatorial.numbers.bell
+        sympy.series.formal.FormalPowerSeriesInverse
+
+        References
+        ==========
+
+        .. [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
+
+        """
+
+        if x is None:
+            x = self.x
+        if n is None:
+            return iter(self)
+
+        if self._eval_term(0) is S.Zero:
+            raise ValueError("Constant coefficient should exist for an inverse of a formal"
+                " power series to exist.")
+
+        return FormalPowerSeriesInverse(self)
 
     def __add__(self, other):
         other = sympify(other)
@@ -1179,6 +1438,280 @@ class FormalPowerSeries(SeriesBase):
         return self.__mul__(other)
 
 
+class FiniteFormalPowerSeries(FormalPowerSeries):
+    """Base Class for Product, Compose and Inverse classes"""
+
+    def __init__(self, *args):
+        pass
+
+    @property
+    def ffps(self):
+        return self.args[0]
+
+    @property
+    def gfps(self):
+        return self.args[1]
+
+    @property
+    def f(self):
+        return self.ffps.function
+
+    @property
+    def g(self):
+        return self.gfps.function
+
+    @property
+    def infinite(self):
+        raise NotImplementedError("No infinite version for an object of"
+                     " FiniteFormalPowerSeries class.")
+
+    def _eval_terms(self, n):
+        raise NotImplementedError("(%s)._eval_terms()" % self)
+
+    def _eval_term(self, pt):
+        raise NotImplementedError("By the current logic, one can get terms"
+                                   "upto a certain order, instead of getting term by term.")
+
+    def polynomial(self, n):
+        return self._eval_terms(n)
+
+    def truncate(self, n=6):
+        ffps = self.ffps
+        pt_xk = ffps.xk.coeff(n)
+        x, x0 = ffps.x, ffps.x0
+
+        return self.polynomial(n) + Order(pt_xk, (x, x0))
+
+    def _eval_derivative(self, x):
+        raise NotImplementedError
+
+    def integrate(self, x):
+        raise NotImplementedError
+
+
+class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
+    """Represents the product of two formal power series of two functions.
+
+    No computation is performed. Terms are calculated using a term by term logic,
+    instead of a point by point logic.
+
+    There are two differences between a `FormalPowerSeries` object and a
+    `FormalPowerSeriesProduct` object. The first argument contains the two
+    functions involved in the product. Also, the coefficient sequence contains
+    both the coefficient sequence of the formal power series of the involved functions.
+
+    See Also
+    ========
+
+    sympy.series.formal.FormalPowerSeries
+    sympy.series.formal.FiniteFormalPowerSeries
+
+    """
+
+    def __init__(self, *args):
+        ffps, gfps = self.ffps, self.gfps
+
+        k = ffps.ak.variables[0]
+        self.coeff1 = sequence(ffps.ak.formula, (k, 0, oo))
+
+        k = gfps.ak.variables[0]
+        self.coeff2 = sequence(gfps.ak.formula, (k, 0, oo))
+
+    @property
+    def function(self):
+        """Function of the product of two formal power series."""
+        return self.f * self.g
+
+    def _eval_terms(self, n):
+        """
+        Returns the first `n` terms of the product formal power series.
+        Term by term logic is implemented here.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, sin, exp, convolution
+        >>> from sympy.abc import x
+        >>> f1 = fps(sin(x))
+        >>> f2 = fps(exp(x))
+        >>> fprod = f1.product(f2, x)
+
+        >>> fprod._eval_terms(4)
+        x**3/3 + x**2 + x
+
+        See Also
+        ========
+
+        sympy.series.formal.FormalPowerSeries.product
+
+        """
+        coeff1, coeff2 = self.coeff1, self.coeff2
+
+        aks = convolution(coeff1[:n], coeff2[:n])
+
+        terms = []
+        for i in range(0, n):
+            terms.append(aks[i] * self.ffps.xk.coeff(i))
+
+        return Add(*terms)
+
+
+class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
+    """Represents the composed formal power series of two functions.
+
+    No computation is performed. Terms are calculated using a term by term logic,
+    instead of a point by point logic.
+
+    There are two differences between a `FormalPowerSeries` object and a
+    `FormalPowerSeriesCompose` object. The first argument contains the outer
+    function and the inner function involved in the omposition. Also, the
+    coefficient sequence contains the generic sequence which is to be multiplied
+    by a custom `bell_seq` finite sequence. The finite terms will then be added up to
+    get the final terms.
+
+    See Also
+    ========
+
+    sympy.series.formal.FormalPowerSeries
+    sympy.series.formal.FiniteFormalPowerSeries
+
+    """
+
+    @property
+    def function(self):
+        """Function for the composed formal power series."""
+        f, g, x = self.f, self.g, self.ffps.x
+        return f.subs(x, g)
+
+    def _eval_terms(self, n):
+        """
+        Returns the first `n` terms of the composed formal power series.
+        Term by term logic is implemented here.
+
+        The coefficient sequence of the `FormalPowerSeriesCompose` object is the generic sequence.
+        It is multiplied by `bell_seq` to get a sequence, whose terms are added up to get
+        the final terms for the polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, sin, exp, bell
+        >>> from sympy.abc import x
+        >>> f1 = fps(exp(x))
+        >>> f2 = fps(sin(x))
+        >>> fcomp = f1.compose(f2, x)
+
+        >>> fcomp._eval_terms(6)
+        -x**5/15 - x**4/8 + x**2/2 + x + 1
+
+        >>> fcomp._eval_terms(8)
+        x**7/90 - x**6/240 - x**5/15 - x**4/8 + x**2/2 + x + 1
+
+        See Also
+        ========
+
+        sympy.series.formal.FormalPowerSeries.compose
+        sympy.series.formal.FormalPowerSeries.coeff_bell
+
+        """
+        f, g = self.f, self.g
+
+        ffps, gfps = self.ffps, self.gfps
+        terms = [ffps.zero_coeff()]
+
+        for i in range(1, n):
+            bell_seq = gfps.coeff_bell(i)
+            seq = (ffps.bell_coeff_seq * bell_seq)
+            terms.append(Add(*(seq[:i])) / ffps.fact_seq[i-1] * ffps.xk.coeff(i))
+
+        return Add(*terms)
+
+
+class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
+    """Represents the Inverse of a formal power series.
+
+    No computation is performed. Terms are calculated using a term by term logic,
+    instead of a point by point logic.
+
+    There is a single difference between a `FormalPowerSeries` object and a
+    `FormalPowerSeriesInverse` object. The coefficient sequence contains the
+    generic sequence which is to be multiplied by a custom `bell_seq` finite sequence.
+    The finite terms will then be added up to get the final terms.
+
+    See Also
+    ========
+
+    sympy.series.formal.FormalPowerSeries
+    sympy.series.formal.FiniteFormalPowerSeries
+
+    """
+    def __init__(self, *args):
+        ffps = self.ffps
+        k = ffps.xk.variables[0]
+
+        inv = ffps.zero_coeff()
+        inv_seq = sequence(inv ** (-(k + 1)), (k, 1, oo))
+        self.aux_seq = ffps.sign_seq * ffps.fact_seq * inv_seq
+
+    @property
+    def function(self):
+        """Function for the inverse of a formal power series."""
+        f = self.f
+        return 1 / f
+
+    @property
+    def g(self):
+        raise ValueError("Only one function is considered while performing"
+                        "inverse of a formal power series.")
+
+    @property
+    def gfps(self):
+        raise ValueError("Only one function is considered while performing"
+                        "inverse of a formal power series.")
+
+    def _eval_terms(self, n):
+        """
+        Returns the first `n` terms of the composed formal power series.
+        Term by term logic is implemented here.
+
+        The coefficient sequence of the `FormalPowerSeriesInverse` object is the generic sequence.
+        It is multiplied by `bell_seq` to get a sequence, whose terms are added up to get
+        the final terms for the polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, exp, cos, bell
+        >>> from sympy.abc import x
+        >>> f1 = fps(exp(x))
+        >>> f2 = fps(cos(x))
+        >>> finv1, finv2 = f1.inverse(), f2.inverse()
+
+        >>> finv1._eval_terms(6)
+        -x**5/120 + x**4/24 - x**3/6 + x**2/2 - x + 1
+
+        >>> finv2._eval_terms(8)
+        61*x**6/720 + 5*x**4/24 + x**2/2 + 1
+
+        See Also
+        ========
+
+        sympy.series.formal.FormalPowerSeries.inverse
+        sympy.series.formal.FormalPowerSeries.coeff_bell
+
+        """
+        f = self.f
+        ffps = self.ffps
+        terms = [ffps.zero_coeff()]
+
+        for i in range(1, n):
+            bell_seq = ffps.coeff_bell(i)
+            seq = (self.aux_seq * bell_seq)
+            terms.append(Add(*(seq[:i])) / ffps.fact_seq[i-1] * ffps.xk.coeff(i))
+
+        return Add(*terms)
+
+
 def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     """Generates Formal Power Series of f.
 
@@ -1219,8 +1752,8 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     Examples
     ========
 
-    >>> from sympy import fps, O, ln, atan
-    >>> from sympy.abc import x
+    >>> from sympy import fps, O, ln, atan, sin
+    >>> from sympy.abc import x, n
 
     Rational Functions
 
@@ -1229,6 +1762,11 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
 
     >>> fps(atan(x), full=True).truncate()
     x - x**3/3 + x**5/5 + O(x**6)
+
+    Symbolic Functions
+
+    >>> fps(x**n*sin(x**2), x).truncate(8)
+    -x**(n + 6)/6 + x**(n + 2) + O(x**(n + 8))
 
     See Also
     ========

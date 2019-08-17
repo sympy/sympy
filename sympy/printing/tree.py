@@ -27,7 +27,7 @@ def pprint_nodes(subtrees):
             else:
                 r += "  %s\n" % a
         return r
-    if len(subtrees) == 0:
+    if not subtrees:
         return ""
     f = ""
     for a in subtrees[:-1]:
@@ -36,41 +36,81 @@ def pprint_nodes(subtrees):
     return f
 
 
-def print_node(node):
+def print_node(node, assumptions=True):
     """
     Returns information about the "node".
 
     This includes class name, string representation and assumptions.
+
+    Parameters
+    ==========
+
+    assumptions : bool, optional
+        See the ``assumptions`` keyword in ``tree``
     """
     s = "%s: %s\n" % (node.__class__.__name__, str(node))
-    d = node._assumptions
-    if len(d) > 0:
+
+    if assumptions:
+        d = node._assumptions
+    else:
+        d = None
+
+    if d:
         for a in sorted(d):
             v = d[a]
             if v is None:
                 continue
             s += "%s: %s\n" % (a, v)
+
     return s
 
 
-def tree(node):
+def tree(node, assumptions=True):
     """
     Returns a tree representation of "node" as a string.
 
     It uses print_node() together with pprint_nodes() on node.args recursively.
 
-    See also: print_tree()
+    Parameters
+    ==========
+
+    asssumptions : bool, optional
+        The flag to decide whether to print out all the assumption data
+        (such as ``is_integer`, ``is_real``) associated with the
+        expression or not.
+
+        Enabling the flag makes the result verbose, and the printed
+        result may not be determinisitic because of the randomness used
+        in backtracing the assumptions.
+
+    See Also
+    ========
+
+    print_tree
+
     """
     subtrees = []
     for arg in node.args:
-        subtrees.append(tree(arg))
-    s = print_node(node) + pprint_nodes(subtrees)
+        subtrees.append(tree(arg, assumptions=assumptions))
+    s = print_node(node, assumptions=assumptions) + pprint_nodes(subtrees)
     return s
 
 
-def print_tree(node):
+def print_tree(node, assumptions=True):
     """
     Prints a tree representation of "node".
+
+    Parameters
+    ==========
+
+    asssumptions : bool, optional
+        The flag to decide whether to print out all the assumption data
+        (such as ``is_integer`, ``is_real``) associated with the
+        expression or not.
+
+        Enabling the flag makes the result verbose, and the printed
+        result may not be determinisitic because of the randomness used
+        in backtracing the assumptions.
 
     Examples
     ========
@@ -79,6 +119,9 @@ def print_tree(node):
     >>> from sympy import Symbol
     >>> x = Symbol('x', odd=True)
     >>> y = Symbol('y', even=True)
+
+    Printing with full assumptions information:
+
     >>> print_tree(y**x)
     Pow: y**x
     +-Symbol: y
@@ -86,8 +129,11 @@ def print_tree(node):
     | commutative: True
     | complex: True
     | even: True
+    | extended_real: True
+    | finite: True
     | hermitian: True
     | imaginary: False
+    | infinite: False
     | integer: True
     | irrational: False
     | noninteger: False
@@ -100,8 +146,12 @@ def print_tree(node):
       commutative: True
       complex: True
       even: False
+      extended_nonzero: True
+      extended_real: True
+      finite: True
       hermitian: True
       imaginary: False
+      infinite: False
       integer: True
       irrational: False
       noninteger: False
@@ -112,6 +162,17 @@ def print_tree(node):
       transcendental: False
       zero: False
 
-    See also: tree()
+    Hiding the assumptions:
+
+    >>> print_tree(y**x, assumptions=False)
+    Pow: y**x
+    +-Symbol: y
+    +-Symbol: x
+
+    See Also
+    ========
+
+    tree
+
     """
-    print(tree(node))
+    print(tree(node, assumptions=assumptions))

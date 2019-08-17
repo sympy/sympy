@@ -1,4 +1,4 @@
-from sympy.core import Eq, Rational, Symbol
+from sympy.core import Ne, Rational, Symbol
 from sympy.functions import sin, cos, tan, csc, sec, cot, log, Piecewise
 from sympy.integrals.trigonometry import trigintegrate
 
@@ -17,16 +17,16 @@ def test_trigintegrate_odd():
     assert trigintegrate(cos(3*x), x) == sin(3*x)/3
 
     y = Symbol('y')
-    assert trigintegrate(sin(y*x), x) == \
-        Piecewise((0, Eq(y, 0)), (-cos(y*x)/y, True))
-    assert trigintegrate(cos(y*x), x) == \
-        Piecewise((x, Eq(y, 0)), (sin(y*x)/y, True))
-    assert trigintegrate(sin(y*x)**2, x) == \
-        Piecewise((0, Eq(y, 0)), ((x*y/2 - sin(x*y)*cos(x*y)/2)/y, True))
-    assert trigintegrate(sin(y*x)*cos(y*x), x) == \
-        Piecewise((0, Eq(y, 0)), (sin(x*y)**2/(2*y), True))
-    assert trigintegrate(cos(y*x)**2, x) == \
-        Piecewise((x, Eq(y, 0)), ((x*y/2 + sin(x*y)*cos(x*y)/2)/y, True))
+    assert trigintegrate(sin(y*x), x) == Piecewise(
+        (-cos(y*x)/y, Ne(y, 0)), (0, True))
+    assert trigintegrate(cos(y*x), x) == Piecewise(
+        (sin(y*x)/y, Ne(y, 0)), (x, True))
+    assert trigintegrate(sin(y*x)**2, x) == Piecewise(
+        ((x*y/2 - sin(x*y)*cos(x*y)/2)/y, Ne(y, 0)), (0, True))
+    assert trigintegrate(sin(y*x)*cos(y*x), x) == Piecewise(
+        (sin(x*y)**2/(2*y), Ne(y, 0)), (0, True))
+    assert trigintegrate(cos(y*x)**2, x) == Piecewise(
+        ((x*y/2 + sin(x*y)*cos(x*y)/2)/y, Ne(y, 0)), (x, True))
 
     y = Symbol('y', positive=True)
     # TODO: remove conds='none' below. For this to work we would have to rule
@@ -48,6 +48,10 @@ def test_trigintegrate_odd():
         -sin(x)**10/10 + sin(x)**8/8
     assert trigintegrate(sin(x)**3 * cos(x)**7, x) == \
         cos(x)**10/10 - cos(x)**8/8
+
+    # both n, m are odd and -ve, and not necessarily equal
+    assert trigintegrate(sin(x)**-1*cos(x)**-1, x) == \
+        -log(sin(x)**2 - 1)/2 + log(sin(x))
 
 
 def test_trigintegrate_even():
@@ -75,15 +79,16 @@ def test_trigintegrate_even():
 
 
 def test_trigintegrate_mixed():
-    assert trigintegrate(sin(x)*sec(x), x) == -log(sin(x)**2 - 1)/2
+    assert trigintegrate(sin(x)*sec(x), x) == -log(cos(x))
     assert trigintegrate(sin(x)*csc(x), x) == x
     assert trigintegrate(sin(x)*cot(x), x) == sin(x)
 
     assert trigintegrate(cos(x)*sec(x), x) == x
-    assert trigintegrate(cos(x)*csc(x), x) == log(cos(x)**2 - 1)/2
+    assert trigintegrate(cos(x)*csc(x), x) == log(sin(x))
     assert trigintegrate(cos(x)*tan(x), x) == -cos(x)
     assert trigintegrate(cos(x)*cot(x), x) == log(cos(x) - 1)/2 \
         - log(cos(x) + 1)/2 + cos(x)
+    assert trigintegrate(cot(x)*cos(x)**2, x) == log(sin(x)) - sin(x)**2/2
 
 
 def test_trigintegrate_symbolic():

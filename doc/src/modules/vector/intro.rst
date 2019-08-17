@@ -73,7 +73,7 @@ of a coordinate system define the way different quantities will be expressed
 with respect to it.  Neither of the two properties can be measured on an
 absolute scale, but rather with respect to another coordinate system. The
 orientation of one system with respect to another is measured using the
-the rotation matrix, while the relative position can be quantified via
+rotation matrix, while the relative position can be quantified via
 the position vector of one system's origin with respect to the other.
 
 Fields

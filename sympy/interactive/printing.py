@@ -35,29 +35,36 @@ def _init_python_printing(stringify_func, **settings):
 
 def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                            backcolor, fontsize, latex_mode, print_builtin,
-                           latex_printer, **settings):
+                           latex_printer, scale, **settings):
     """Setup printing in IPython interactive session. """
     try:
         from IPython.lib.latextools import latex_to_png
     except ImportError:
         pass
 
-    preamble = "\\documentclass[%s]{article}\n" \
-               "\\pagestyle{empty}\n" \
+    preamble = "\\documentclass[varwidth,%s]{standalone}\n" \
                "\\usepackage{amsmath,amsfonts}%s\\begin{document}"
     if euler:
         addpackages = '\\usepackage{euler}'
     else:
         addpackages = ''
+    if use_latex == "svg":
+        addpackages = addpackages + "\n\\special{color %s}" % forecolor
+
     preamble = preamble % (fontsize, addpackages)
 
     imagesize = 'tight'
     offset = "0cm,0cm"
-    resolution = 150
+    resolution = round(150*scale)
     dvi = r"-T %s -D %d -bg %s -fg %s -O %s" % (
         imagesize, resolution, backcolor, forecolor, offset)
     dvioptions = dvi.split()
+
+    svg_scale = 2.1*scale
+    dvioptions_svg = ["--no-fonts", "--scale={}".format(svg_scale)]
+
     debug("init_printing: DVIOPTIONS:", dvioptions)
+    debug("init_printing: DVIOPTIONS_SVG:", dvioptions_svg)
     debug("init_printing: PREAMBLE:", preamble)
 
     latex = latex_printer or default_latex
@@ -82,6 +89,19 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             raise
         return exprbuffer.getvalue()
 
+    def _svg_wrapper(o):
+        exprbuffer = BytesIO()
+        try:
+            preview(o, output='svg', viewer='BytesIO',
+                    outputbuffer=exprbuffer, preamble=preamble,
+                    dvioptions=dvioptions_svg)
+        except Exception as e:
+            # IPython swallows exceptions
+            debug("svg printing:", "_preview_wrapper exception raised:",
+                  repr(e))
+            raise
+        return exprbuffer.getvalue().decode('utf-8')
+
     def _matplotlib_wrapper(o):
         # mathtext does not understand certain latex flags, so we try to
         # replace them with suitable subs
@@ -96,28 +116,51 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             debug('matplotlib exception caught:', repr(e))
             return None
 
+
+    from sympy import Basic
+    from sympy.matrices import MatrixBase
+    from sympy.physics.vector import Vector, Dyadic
+    from sympy.tensor.array import NDimArray
+
+    # These should all have _repr_latex_ and _repr_latex_orig. If you update
+    # this also update printable_types below.
+    sympy_latex_types = (Basic, MatrixBase, Vector, Dyadic, NDimArray)
+
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
 
         If o is a container type, this is True if and only if every element of
         o can be printed with LaTeX.
         """
-        from sympy import Basic
-        from sympy.matrices import MatrixBase
-        from sympy.physics.vector import Vector, Dyadic
-        if isinstance(o, (list, tuple, set, frozenset)):
-            return all(_can_print_latex(i) for i in o)
-        elif isinstance(o, dict):
-            return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
-        elif isinstance(o, bool):
+
+        try:
+            # If you're adding another type, make sure you add it to printable_types
+            # later in this file as well
+
+            builtin_types = (list, tuple, set, frozenset)
+            if isinstance(o, builtin_types):
+                # If the object is a custom subclass with a custom str or
+                # repr, use that instead.
+                if (type(o).__str__ not in (i.__str__ for i in builtin_types) or
+                    type(o).__repr__ not in (i.__repr__ for i in builtin_types)):
+                    return False
+                return all(_can_print_latex(i) for i in o)
+            elif isinstance(o, dict):
+                return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
+            elif isinstance(o, bool):
+                return False
+            # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
+            # to use here, than these explicit imports.
+            elif isinstance(o, sympy_latex_types):
+                return True
+            elif isinstance(o, (float, integer_types)) and print_builtin:
+                return True
             return False
-        # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
-        # to use here, than these explicit imports.
-        elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic)):
-            return True
-        elif isinstance(o, (float, integer_types)) and print_builtin:
-            return True
-        return False
+        except RuntimeError:
+            return False
+            # This is in case maximum recursion depth is reached.
+            # Since RecursionError is for versions of Python 3.5+
+            # so this is to guard against RecursionError for older versions.
 
     def _print_latex_png(o):
         """
@@ -126,6 +169,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         if _can_print_latex(o):
             s = latex(o, mode=latex_mode, **settings)
+            if latex_mode == 'plain':
+                s = '$\\displaystyle %s$' % s
             try:
                 return _preview_wrapper(s)
             except RuntimeError as e:
@@ -134,6 +179,21 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 if latex_mode != 'inline':
                     s = latex(o, mode='inline', **settings)
                 return _matplotlib_wrapper(s)
+
+    def _print_latex_svg(o):
+        """
+        A function that returns a svg rendered by an external latex
+        distribution, no fallback available.
+        """
+        if _can_print_latex(o):
+            s = latex(o, mode=latex_mode, **settings)
+            if latex_mode == 'plain':
+                s = '$\\displaystyle %s$' % s
+            try:
+                return _svg_wrapper(s)
+            except RuntimeError as e:
+                debug('preview failed with:', repr(e),
+                      ' No fallback available.')
 
     def _print_latex_matplotlib(o):
         """
@@ -148,10 +208,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function to generate the latex representation of sympy expressions.
         """
         if _can_print_latex(o):
-            s = latex(o, mode='plain', **settings)
-            s = s.replace(r'\dag', r'\dagger')
-            s = s.strip('$')
-            return '$$%s$$' % s
+            s = latex(o, mode=latex_mode, **settings)
+            if latex_mode == 'plain':
+                return '$\\displaystyle %s$' % s
+            return s
 
     def _result_display(self, arg):
         """IPython's pretty-printer display hook, for use in IPython 0.10
@@ -176,13 +236,28 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
         from sympy.physics.vector import Vector, Dyadic
+        from sympy.tensor.array import NDimArray
+
         printable_types = [Basic, MatrixBase, float, tuple, list, set,
-                frozenset, dict, Vector, Dyadic] + list(integer_types)
+                frozenset, dict, Vector, Dyadic, NDimArray] + list(integer_types)
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
         for cls in printable_types:
             plaintext_formatter.for_type(cls, _print_plain)
+
+        svg_formatter = ip.display_formatter.formatters['image/svg+xml']
+        if use_latex in ('svg', ):
+            debug("init_printing: using svg formatter")
+            for cls in printable_types:
+                svg_formatter.for_type(cls, _print_latex_svg)
+        else:
+            debug("init_printing: not using any svg formatter")
+            for cls in printable_types:
+                # Better way to set this, but currently does not work in IPython
+                #png_formatter.for_type(cls, None)
+                if cls in svg_formatter.type_printers:
+                    svg_formatter.type_printers.pop(cls)
 
         png_formatter = ip.display_formatter.formatters['image/png']
         if use_latex in (True, 'png'):
@@ -206,6 +281,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             debug("init_printing: using mathjax formatter")
             for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
+            for typ in sympy_latex_types:
+                typ._repr_latex_ = typ._repr_latex_orig
         else:
             debug("init_printing: not using text/latex formatter")
             for cls in printable_types:
@@ -213,6 +290,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 #latex_formatter.for_type(cls, None)
                 if cls in latex_formatter.type_printers:
                     latex_formatter.type_printers.pop(cls)
+
+            for typ in sympy_latex_types:
+                typ._repr_latex_ = None
 
     else:
         ip.set_hook('result_display', _result_display)
@@ -234,15 +314,17 @@ def _is_ipython(shell):
             return False
     return isinstance(shell, InteractiveShell)
 
+# Used by the doctester to override the default for no_global
+NO_GLOBAL = False
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
                   no_global=False, ip=None, euler=False, forecolor='Black',
                   backcolor='Transparent', fontsize='10pt',
-                  latex_mode='equation*', print_builtin=True,
+                  latex_mode='plain', print_builtin=True,
                   str_printer=None, pretty_printer=None,
-                  latex_printer=None, **settings):
-    """
+                  latex_printer=None, scale=1.0, **settings):
+    r"""
     Initializes pretty-printer depending on the environment.
 
     Parameters
@@ -270,15 +352,17 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         falling back to matplotlib if external compilation fails;
         if 'matplotlib', enable latex rendering with matplotlib;
         if 'mathjax', enable latex text generation, for example MathJax
-        rendering in IPython notebook or text rendering in LaTeX documents
+        rendering in IPython notebook or text rendering in LaTeX documents;
+        if 'svg', enable latex rendering with an external latex compiler,
+        no fallback
     wrap_line: boolean
         If True, lines will wrap at the end; if False, they will not wrap
-        but continue as one line. This is only relevant if `pretty_print` is
+        but continue as one line. This is only relevant if ``pretty_print`` is
         True.
     num_columns: int or None
         If int, number of columns before wrapping is set to num_columns; if
         None, number of columns before wrapping is set to terminal width.
-        This is only relevant if `pretty_print` is True.
+        This is only relevant if ``pretty_print`` is True.
     no_global: boolean
         If True, the settings become system wide;
         if False, use just for this console/session.
@@ -295,7 +379,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     fontsize: string, optional, default='10pt'
         A font size to pass to the LaTeX documentclass function in the
         preamble.
-    latex_mode: string, optional, default='equation*'
+    latex_mode: string, optional, default='plain'
         The mode used in the LaTeX printer. Can be one of:
         {'inline'|'plain'|'equation'|'equation*'}.
     print_builtin: boolean, optional, default=True
@@ -308,6 +392,9 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         A custom pretty printer. This should mimic sympy.printing.pretty().
     latex_printer: function, optional, default=None
         A custom LaTeX printer. This should mimic sympy.printing.latex().
+    scale: float, optional, default=1.0
+        Scale the LaTeX output when using the ``png`` backend. Useful for high
+        dpi screens.
 
     Examples
     ========
@@ -396,7 +483,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                     debug("init_printing: Setting use_latex to True")
                     use_latex = True
 
-    if not no_global:
+    if not NO_GLOBAL and not no_global:
         Printer.set_global_settings(order=order, use_unicode=use_unicode,
                                     wrap_line=wrap_line, num_columns=num_columns)
     else:
@@ -418,6 +505,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   "of IPython printing")
         _init_ipython_printing(ip, stringify_func, use_latex, euler,
                                forecolor, backcolor, fontsize, latex_mode,
-                               print_builtin, latex_printer, **settings)
+                               print_builtin, latex_printer, scale,
+                               **settings)
     else:
         _init_python_printing(stringify_func, **settings)

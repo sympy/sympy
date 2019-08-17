@@ -9,6 +9,7 @@ from sympy.polys.polyerrors import (ComputationFailed,
     PolificationFailed, CoercionFailed)
 from sympy.simplify import rcollect
 from sympy.utilities import default_sort_key, postfixes
+from sympy.utilities.misc import filldedent
 
 
 class SolveFailed(Exception):
@@ -37,10 +38,7 @@ def solve_poly_system(seq, *gens, **args):
     if len(polys) == len(opt.gens) == 2:
         f, g = polys
 
-        a, b = f.degree_list()
-        c, d = g.degree_list()
-
-        if a <= 2 and b <= 2 and c <= 2 and d <= 2:
+        if all(i <= 2 for i in f.degree_list() + g.degree_list()):
             try:
                 return solve_biquadratic(f, g, opt)
             except SolveFailed:
@@ -68,7 +66,7 @@ def solve_biquadratic(f, g, opt):
     >>> a = Poly(y + x**2 - 3, y, x, domain='ZZ')
     >>> b = Poly(-y + x - 4, y, x, domain='ZZ')
     >>> solve_biquadratic(a, b, NewOption)
-    [(-sqrt(29)/2 + 7/2, -sqrt(29)/2 - 1/2), (sqrt(29)/2 + 7/2, -1/2 + \
+    [(7/2 - sqrt(29)/2, -sqrt(29)/2 - 1/2), (sqrt(29)/2 + 7/2, -1/2 + \
       sqrt(29)/2)]
     """
     G = groebner([f, g])
@@ -79,13 +77,16 @@ def solve_biquadratic(f, g, opt):
     if len(G) != 2:
         raise SolveFailed
 
-    p, q = G
     x, y = opt.gens
+    p, q = G
+    if not p.gcd(q).is_ground:
+        # not 0-dimensional
+        raise SolveFailed
 
     p = Poly(p, x, expand=False)
-    q = q.ltrim(-1)
+    p_roots = [rcollect(expr, y) for expr in roots(p).keys()]
 
-    p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]
+    q = q.ltrim(-1)
     q_roots = list(roots(q).keys())
 
     solutions = []
@@ -161,7 +162,7 @@ def solve_generic(polys, opt):
     def _is_univariate(f):
         """Returns True if 'f' is univariate in its last variable. """
         for monom in f.monoms():
-            if any(m > 0 for m in monom[:-1]):
+            if any(monom[:-1]):
                 return False
 
         return True
@@ -179,7 +180,7 @@ def solve_generic(polys, opt):
         """Recursively solves reduced polynomial systems. """
         if len(system) == len(gens) == 1:
             zeros = list(roots(system[0], gens[-1]).keys())
-            return [ (zero,) for zero in zeros ]
+            return [(zero,) for zero in zeros]
 
         basis = groebner(system, gens, polys=True)
 
@@ -194,7 +195,10 @@ def solve_generic(polys, opt):
         if len(univariate) == 1:
             f = univariate.pop()
         else:
-            raise NotImplementedError("only zero-dimensional systems supported (finite number of solutions)")
+            raise NotImplementedError(filldedent('''
+                only zero-dimensional systems supported
+                (finite number of solutions)
+                '''))
 
         gens = f.gens
         gen = gens[-1]
@@ -205,7 +209,7 @@ def solve_generic(polys, opt):
             return []
 
         if len(basis) == 1:
-            return [ (zero,) for zero in zeros ]
+            return [(zero,) for zero in zeros]
 
         solutions = []
 
@@ -222,6 +226,11 @@ def solve_generic(polys, opt):
             for solution in _solve_reduced_system(new_system, new_gens):
                 solutions.append(solution + (zero,))
 
+        if solutions and len(solutions[0]) != len(gens):
+            raise NotImplementedError(filldedent('''
+                only zero-dimensional systems supported
+                (finite number of solutions)
+                '''))
         return solutions
 
     try:

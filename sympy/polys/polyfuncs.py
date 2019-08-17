@@ -2,23 +2,18 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.polytools import (
-    poly_from_expr, parallel_poly_from_expr, Poly)
-from sympy.polys.polyoptions import allowed_flags
-
-from sympy.polys.specialpolys import (
-    symmetric_poly, interpolating_poly)
-
+from sympy.core import S, Basic, Add, Mul, symbols
+from sympy.core.compatibility import range
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
     MultivariatePolynomialError, OptionError)
-
+from sympy.polys.polyoptions import allowed_flags
+from sympy.polys.polytools import (
+    poly_from_expr, parallel_poly_from_expr, Poly)
+from sympy.polys.specialpolys import (
+    symmetric_poly, interpolating_poly)
 from sympy.utilities import numbered_symbols, take, public
-
-from sympy.core import S, Basic, Add, Mul, symbols
-
-from sympy.core.compatibility import range
-
 
 @public
 def symmetrize(F, *gens, **args):
@@ -71,26 +66,26 @@ def symmetrize(F, *gens, **args):
                 result.append((expr, S.Zero))
             else:
                 raise ComputationFailed('symmetrize', len(F), exc)
-        else:
-            if not iterable:
-                result, = result
 
-            if not exc.opt.formal:
-                return result
+        if not iterable:
+            result, = result
+
+        if not exc.opt.formal:
+            return result
+        else:
+            if iterable:
+                return result, []
             else:
-                if iterable:
-                    return result, []
-                else:
-                    return result + ([],)
+                return result + ([],)
 
     polys, symbols = [], opt.symbols
     gens, dom = opt.gens, opt.domain
 
-    for i in range(0, len(gens)):
+    for i in range(len(gens)):
         poly = symmetric_poly(i + 1, gens, polys=True)
         polys.append((next(symbols), poly.set_domain(dom)))
 
-    indices = list(range(0, len(gens) - 1))
+    indices = list(range(len(gens) - 1))
     weights = list(range(len(gens), 0, -1))
 
     result = []
@@ -107,7 +102,7 @@ def symmetrize(F, *gens, **args):
 
             for i, (monom, coeff) in enumerate(f.terms()):
                 if all(monom[i] >= monom[i + 1] for i in indices):
-                    height = max([ n*m for n, m in zip(weights, monom) ])
+                    height = max([n*m for n, m in zip(weights, monom)])
 
                     if height > _height:
                         _height, _monom, _coeff = height, monom, coeff
@@ -122,8 +117,8 @@ def symmetrize(F, *gens, **args):
             for m1, m2 in zip(monom, monom[1:] + (0,)):
                 exponents.append(m1 - m2)
 
-            term = [ s**n for (s, _), n in zip(polys, exponents) ]
-            poly = [ p**n for (_, p), n in zip(polys, exponents) ]
+            term = [s**n for (s, _), n in zip(polys, exponents)]
+            poly = [p**n for (_, p), n in zip(polys, exponents)]
 
             symmetric.append(Mul(coeff, *term))
             product = poly[0].mul(coeff)
@@ -135,7 +130,7 @@ def symmetrize(F, *gens, **args):
 
         result.append((Add(*symmetric), f.as_expr()))
 
-    polys = [ (s, p.as_expr()) for s, p in polys ]
+    polys = [(s, p.as_expr()) for s, p in polys]
 
     if not opt.formal:
         for i, (sym, non_sym) in enumerate(result):
@@ -183,7 +178,7 @@ def horner(f, *gens, **args):
 
     References
     ==========
-    [1] - http://en.wikipedia.org/wiki/Horner_scheme
+    [1] - https://en.wikipedia.org/wiki/Horner_scheme
 
     """
     allowed_flags(args, [])
@@ -239,17 +234,26 @@ def interpolate(data, x):
 
     """
     n = len(data)
+    poly = None
 
     if isinstance(data, dict):
         X, Y = list(zip(*data.items()))
+        poly = interpolating_poly(n, x, X, Y)
     else:
         if isinstance(data[0], tuple):
             X, Y = list(zip(*data))
+            poly = interpolating_poly(n, x, X, Y)
         else:
-            X = list(range(1, n + 1))
             Y = list(data)
 
-    poly = interpolating_poly(n, x, X, Y)
+            numert = Mul(*[(x - i) for i in range(1, n + 1)])
+            denom = -factorial(n - 1) if n%2 == 0 else factorial(n - 1)
+            coeffs = []
+            for i in range(1, n + 1):
+                coeffs.append(numert/(x - i)/denom)
+                denom = denom/(i - n)*i
+
+            poly = Add(*[coeff*y for coeff, y in zip(coeffs, Y)])
 
     return poly.expand()
 
@@ -265,8 +269,9 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     function. Setting it too high will decrease the maximal degree in the
     denominator for the same amount of data.
 
-    Example:
+    Examples
     ========
+
     >>> from sympy.polys.polyfuncs import rational_interpolate
 
     >>> data = [(1, -210), (2, -35), (3, 105), (4, 231), (5, 350), (6, 465)]
@@ -289,8 +294,9 @@ def rational_interpolate(data, degnum, X=symbols('x')):
 
     References
     ==========
-    Algorithm is adapted from:
-        http://axiom-wiki.newsynthesis.org/RationalInterpolation
+
+    .. [1] Algorithm is adapted from:
+           http://axiom-wiki.newsynthesis.org/RationalInterpolation
 
     """
     from sympy.matrices.dense import ones
@@ -298,18 +304,18 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     xdata, ydata = list(zip(*data))
 
     k = len(xdata) - degnum - 1
-    if k<0:
+    if k < 0:
         raise OptionError("Too few values for the required degree.")
-    c = ones(degnum+k+1, degnum+k+2)
+    c = ones(degnum + k + 1, degnum + k + 2)
     for j in range(max(degnum, k)):
-        for i in range(degnum+k+1):
-            c[i, j+1] = c[i, j]*xdata[i]
-    for j in range(k+1):
-        for i in range(degnum+k+1):
-            c[i, degnum+k+1-j] = -c[i, k-j]*ydata[i]
+        for i in range(degnum + k + 1):
+            c[i, j + 1] = c[i, j]*xdata[i]
+    for j in range(k + 1):
+        for i in range(degnum + k + 1):
+            c[i, degnum + k + 1 - j] = -c[i, k - j]*ydata[i]
     r = c.nullspace()[0]
-    return (sum(r[i] * X**i for i in range(degnum+1))
-            / sum(r[i+degnum+1] * X**i for i in range(k+1)))
+    return (sum(r[i] * X**i for i in range(degnum + 1))
+            / sum(r[i + degnum + 1] * X**i for i in range(k + 1)))
 
 
 @public

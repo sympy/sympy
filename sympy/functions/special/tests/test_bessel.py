@@ -81,10 +81,11 @@ def test_rewrite():
     # complex-valued, whereas SBFs are defined only for integer orders)
     order = nu
     for f in (besselj, bessely):
-        assert yn(order, z) == yn(order, z).rewrite(f)
-        assert jn(order, z) == jn(order, z).rewrite(f)
         assert hn1(order, z) == hn1(order, z).rewrite(f)
         assert hn2(order, z) == hn2(order, z).rewrite(f)
+
+    assert jn(order, z).rewrite(besselj) == sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(order + S(1)/2, z)/2
+    assert jn(order, z).rewrite(bessely) == (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-order - S(1)/2, z)/2
 
     # for integral orders rewriting SBFs w.r.t bessel[jy] is allowed
     N = Symbol('n', integer=True)
@@ -191,14 +192,14 @@ def test_expand():
     i = Symbol('i', integer=True)
 
     for besselx in [besselj, bessely, besseli, besselk]:
-        assert besselx(i, p).is_real
-        assert besselx(i, x).is_real is None
-        assert besselx(x, z).is_real is None
+        assert besselx(i, p).is_extended_real is True
+        assert besselx(i, x).is_extended_real is None
+        assert besselx(x, z).is_extended_real is None
 
     for besselx in [besselj, besseli]:
-        assert besselx(i, r).is_real
+        assert besselx(i, r).is_extended_real is True
     for besselx in [bessely, besselk]:
-        assert besselx(i, r).is_real is None
+        assert besselx(i, r).is_extended_real is None
 
 
 def test_fn():
@@ -337,8 +338,11 @@ def test_bessel_nan():
 
 def test_conjugate():
     from sympy import conjugate, I, Symbol
-    n, z, x = Symbol('n'), Symbol('z', real=False), Symbol('x', real=True)
-    y, t = Symbol('y', real=True, positive=True), Symbol('t', negative=True)
+    n = Symbol('n')
+    z = Symbol('z', extended_real=False)
+    x = Symbol('x', extended_real=True)
+    y = Symbol('y', real=True, positive=True)
+    t = Symbol('t', negative=True)
 
     for f in [besseli, besselj, besselk, bessely, hankel1, hankel2]:
         assert f(n, -1).conjugate() != f(conjugate(n), -1)
@@ -406,7 +410,7 @@ def test_airy_base():
     y = Symbol('y', real=True)
 
     assert conjugate(airyai(z)) == airyai(conjugate(z))
-    assert airyai(x).is_real
+    assert airyai(x).is_extended_real
 
     assert airyai(x+I*y).as_real_imag() == (
         airyai(x - I*x*Abs(y)/Abs(x))/2 + airyai(x + I*x*Abs(y)/Abs(x))/2,

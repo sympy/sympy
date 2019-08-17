@@ -82,8 +82,8 @@ def test_invertible():
     A = MatrixSymbol('A', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     assert satask(Q.invertible(A*B), Q.invertible(A) & Q.invertible(B)) is True
-    assert satask(Q.invertible(A), Q.invertible(A*B))
-    assert satask(Q.invertible(A) & Q.invertible(B), Q.invertible(A*B))
+    assert satask(Q.invertible(A), Q.invertible(A*B)) is True
+    assert satask(Q.invertible(A) & Q.invertible(B), Q.invertible(A*B)) is True
 
 
 def test_prime():
@@ -164,7 +164,7 @@ def test_rational_irrational():
         Q.rational(z)) is True
 
 
-def test_even():
+def test_even_satask():
     assert satask(Q.even(2)) is True
     assert satask(Q.even(3)) is False
 
@@ -181,7 +181,7 @@ def test_even():
     assert satask(Q.even(x), Q.even(abs(x))) is None # x could be complex
 
 
-def test_odd():
+def test_odd_satask():
     assert satask(Q.odd(2)) is False
     assert satask(Q.odd(3)) is True
 
@@ -263,6 +263,7 @@ def test_pos_neg():
     assert satask(Q.positive(x + y), Q.negative(x) & Q.negative(y)) is False
     assert satask(Q.negative(x + y), Q.positive(x) & Q.positive(y)) is False
 
+
 def test_pow_pos_neg():
     assert satask(Q.nonnegative(x**2), Q.positive(x)) is True
     assert satask(Q.nonpositive(x**2), Q.positive(x)) is False
@@ -321,3 +322,16 @@ def test_pow_pos_neg():
 
     # We could deduce things for negative powers if x is nonzero, but it
     # isn't implemented yet.
+
+
+def test_prime_composite():
+    assert satask(Q.prime(x), Q.composite(x)) is False
+    assert satask(Q.composite(x), Q.prime(x)) is False
+    assert satask(Q.composite(x), ~Q.prime(x)) is None
+    assert satask(Q.prime(x), ~Q.composite(x)) is None
+    # since 1 is neither prime nor composite the following should hold
+    assert satask(Q.prime(x), Q.integer(x) & Q.positive(x) & ~Q.composite(x)) is None
+    assert satask(Q.prime(2)) is True
+    assert satask(Q.prime(4)) is False
+    assert satask(Q.prime(1)) is False
+    assert satask(Q.composite(1)) is False

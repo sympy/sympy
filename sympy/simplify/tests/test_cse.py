@@ -1,8 +1,13 @@
+from functools import reduce
 import itertools
+from operator import add
 
-from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-                   Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
-                   IndexedBase, Idx, Piecewise, O, Mul)
+from sympy import (
+    Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
+    Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
+    IndexedBase, Idx, Piecewise, O
+)
+from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
@@ -16,7 +21,7 @@ from sympy.core.compatibility import range
 
 
 w, x, y, z = symbols('w,x,y,z')
-x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18 = symbols('x:19')
+x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12 = symbols('x:13')
 
 
 def test_numbered_symbols():
@@ -67,6 +72,11 @@ def test_cse_single():
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
 
+    subst42, (red42,) = cse([42])  # issue_15082
+    assert len(subst42) == 0 and red42 == 42
+    subst_half, (red_half,) = cse([0.5])
+    assert len(subst_half) == 0 and red_half == 0.5
+
 
 def test_cse_single2():
     # Simple substitution, test for being able to pass the expression directly
@@ -77,6 +87,10 @@ def test_cse_single2():
     substs, reduced = cse(Matrix([[1]]))
     assert isinstance(reduced[0], Matrix)
 
+    subst42, (red42,) = cse(42)  # issue 15082
+    assert len(subst42) == 0 and red42 == 42
+    subst_half, (red_half,) = cse(0.5)  # issue 15082
+    assert len(subst_half) == 0 and red_half == 0.5
 
 def test_cse_not_possible():
     # No substitution possible.
@@ -175,6 +189,7 @@ def test_non_commutative_order():
     assert cse(l) == ([(x0, B+C)], [x0, A*x0])
 
 
+@XFAIL # Worked in gh-11232, but was reverted due to performance considerations
 def test_issue_10228():
     assert cse([x*y**2 + x*y]) == ([(x0, x*y)], [x0*y + x0])
     assert cse([x + y, 2*x + y]) == ([(x0, x + y)], [x0, x + x0])
@@ -185,7 +200,12 @@ def test_issue_10228():
     a, b, c, d, f, g, j, m = symbols('a, b, c, d, f, g, j, m')
     exprs = (d*g**2*j*m, 4*a*f*g*m, a*b*c*f**2)
     assert cse(exprs) == (
-        [(x0, g*m), (x1, a*f)], [d*g*j*x0, 4*x0*x1, b*c*f*x1])
+        [(x0, g*m), (x1, a*f)], [d*g*j*x0, 4*x0*x1, b*c*f*x1]
+)
+
+@XFAIL
+def test_powers():
+    assert cse(x*y**2 + x*y) == ([(x0, x*y)], [x0*y + x0])
 
 
 def test_issue_4498():
@@ -254,8 +274,8 @@ def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
     assert cse([eq, Eq(x, z + 1), z - 2, (z + 1)*(x + 1)],
         postprocess=cse_main.cse_separate) == \
-        [[(x1, y + 1), (x2, z + 1), (x, x2), (x0, x + 1)],
-        [x0 + exp(x0/x1) + cos(x1), z - 2, x0*x2]]
+        [[(x0, y + 1), (x2, z + 1), (x, x2), (x1, x + 1)],
+        [x1 + exp(x1/x0) + cos(x0), z - 2, x1*x2]]
 
 
 def test_issue_4499():
@@ -273,21 +293,12 @@ def test_issue_4499():
         sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S(1)/2, z/2, -b + 1, -2*a + b,
         -2*a))
     c = cse(t)
-    # check rebuild
-    r = c[0]
-    tt = list(c[1][0])
-    for i in range(len(tt)):
-        for re in reversed(r):
-            tt[i] = tt[i].subs(*re)
-        assert tt[i] == t[i]
-    # check answer
     ans = (
-        [(x0, 2*a), (x1, -b), (x2, x0 + x1 + 1), (x3, sqrt(z)), (x4,
-        B(x0 + x1, x3)), (x5, G(b)), (x6, G(x2)), (x7, -x0), (x8,
-        (x3/2)**(x7 + 1)), (x9, x5*x6*x8*B(b - 1, x3)), (x10,
-        x5*x6*x8*B(b, x3)), (x11, B(x2, x3))], [(a, a + 1/2, x0, b,
-        x2, x4*x9, x10*x3*x4, x11*x3*x9, x10*x11, 1, 0, 1/2, z/2, x1 +
-        1, b + x7, x7)])
+        [(x0, 2*a), (x1, -b), (x2, x0 + x1), (x3, x2 + 1), (x4, sqrt(z)), (x5,
+        B(b - 1, x4)), (x6, -x0), (x7, (x4/2)**(x6 + 1)*G(b)*G(x3)), (x8,
+        x7*B(x2, x4)), (x9, B(b, x4)), (x10, x7*B(x3, x4))],
+        [(a, a + S(1)/2, x0, b, x3, x5*x8, x4*x8*x9, x10*x4*x5, x10*x9,
+        1, 0, S(1)/2, z/2, x1 + 1, b + x6, x6)])
     assert ans == c
 
 
@@ -321,13 +332,12 @@ def test_cse_MatrixSymbol():
     B = MatrixSymbol("B", n, n)
     assert cse(B) == ([], [B])
 
-
 def test_cse_MatrixExpr():
     from sympy import MatrixSymbol
     A = MatrixSymbol('A', 3, 3)
     y = MatrixSymbol('y', 3, 1)
 
-    expr1 = 2*(A.T*A).I * A * y
+    expr1 = (A.T*A).I * A * y
     expr2 = (A.T*A) * A * y
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
@@ -338,11 +348,11 @@ def test_cse_MatrixExpr():
     replacements, reduced_exprs = cse([A**2, A + A**2])
     assert replacements
 
-
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
     ans = cse(f)
-    actual_ans = ([(x0, -z), (x1, x*y)], [Piecewise((x0+x1, Eq(y, 0)), (x0 - x1, True))])
+    actual_ans = ([(x0, -z), (x1, x*y)],
+        [Piecewise((x0 + x1, Eq(y, 0)), (x0 - x1, True))])
     assert ans == actual_ans
 
 
@@ -401,8 +411,8 @@ def test_issue_7840():
     expr = sympify(
         "Piecewise((Symbol('ON'), Equality(Symbol('mode'), Symbol('ON'))), \
         (Piecewise((Piecewise((Symbol('OFF'), StrictLessThan(Symbol('x'), \
-        Symbol('threshold'))), (Symbol('ON'), S.true)), Equality(Symbol('mode'), \
-        Symbol('AUTO'))), (Symbol('OFF'), S.true)), S.true))"
+        Symbol('threshold'))), (Symbol('ON'), true)), Equality(Symbol('mode'), \
+        Symbol('AUTO'))), (Symbol('OFF'), true)), true))"
     )
     substitutions, new_eqn = cse(expr)
     # this Piecewise should be exactly the same
@@ -422,6 +432,13 @@ def test_issue_8891():
 
 
 def test_issue_11230():
+    # a specific test that always failed
+    a, b, f, k, l, i = symbols('a b f k l i')
+    p = [a*b*f*k*l, a*i*k**2*l, f*i*k**2*l]
+    R, C = cse(p)
+    assert not any(i.is_Mul for a in C for i in a.args)
+
+    # random tests for the issue
     from random import choice
     from sympy.core.function import expand_mul
     s = symbols('a:m')
@@ -454,7 +471,6 @@ def test_issue_11230():
 @XFAIL
 def test_issue_11577():
     def check(eq):
-        from sympy.core.function import count_ops
         r, c = cse(eq)
         assert eq.count_ops() >= \
             len(r) + sum([i[1].count_ops() for i in r]) + \
@@ -487,3 +503,44 @@ def test_cse_ignore():
     subst2, red2 = cse(exprs, ignore=(y,))  # y is not allowed in substitutions
     assert not any(y in sub.free_symbols for _, sub in subst2), "Sub-expressions containing y must be ignored"
     assert any(sub - sqrt(x + 1) == 0 for _, sub in subst2), "cse failed to identify sqrt(x + 1) as sub-expression"
+
+def test_cse_ignore_issue_15002():
+    l = [
+        w*exp(x)*exp(-z),
+        exp(y)*exp(x)*exp(-z)
+    ]
+    substs, reduced = cse(l, ignore=(x,))
+    rl = [e.subs(reversed(substs)) for e in reduced]
+    assert rl == l
+
+def test_cse__performance():
+    import time
+    nexprs, nterms = 3, 20
+    x = symbols('x:%d' % nterms)
+    exprs = [
+        reduce(add, [x[j]*(-1)**(i+j) for j in range(nterms)])
+        for i in range(nexprs)
+    ]
+    assert (exprs[0] + exprs[1]).simplify() == 0
+    subst, red = cse(exprs)
+    assert len(subst) > 0, "exprs[0] == -exprs[2], i.e. a CSE"
+    for i, e in enumerate(red):
+        assert (e.subs(reversed(subst)) - exprs[i]).simplify() == 0
+
+
+def test_issue_12070():
+    exprs = [x + y, 2 + x + y, x + y + z, 3 + x + y + z]
+    subst, red = cse(exprs)
+    assert 6 >= (len(subst) + sum([v.count_ops() for k, v in subst]) +
+                 count_ops(red))
+
+
+def test_issue_13000():
+    eq = x/(-4*x**2 + y**2)
+    cse_eq = cse(eq)[1][0]
+    assert cse_eq == eq
+
+
+def test_unevaluated_mul():
+    eq = Mul(x + y, x + y, evaluate=False)
+    assert cse(eq) == ([(x0, x + y)], [x0**2])

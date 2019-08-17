@@ -78,7 +78,7 @@ class beta(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Beta_function
+    .. [1] https://en.wikipedia.org/wiki/Beta_function
     .. [2] http://mathworld.wolfram.com/BetaFunction.html
     .. [3] http://dlmf.nist.gov/5.12
     """
@@ -109,3 +109,6 @@ class beta(Function):
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate(), self.args[1].conjugate())
+
+    def _eval_rewrite_as_gamma(self, x, y, **kwargs):
+        return self._eval_expand_func(**kwargs)

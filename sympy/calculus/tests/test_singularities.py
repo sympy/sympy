@@ -8,11 +8,12 @@ from sympy.calculus.singularities import (
     is_monotonic
 )
 from sympy.sets import Interval, FiniteSet
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y
 
 
 def test_singularities():
+    x = Symbol('x')
     assert singularities(x**2, x) == S.EmptySet
     assert singularities(x/(x**2 + 3*x + 2), x) == FiniteSet(-2, -1)
     assert singularities(1/(x**2 + 1), x) == FiniteSet(I, -I)
@@ -21,13 +22,16 @@ def test_singularities():
     assert singularities(1/(y**2 + 2*I*y + 1), y) == \
         FiniteSet(-I + sqrt(2)*I, -I - sqrt(2)*I)
 
+    x = Symbol('x', real=True)
+    assert singularities(1/(x**2 + 1), x) == S.EmptySet
+
 
 @XFAIL
 def test_singularities_non_rational():
     x = Symbol('x', real=True)
 
-    assert singularities(exp(1/x), x) == (0)
-    assert singularities(log((x - 2)**2), x) == (2)
+    assert singularities(exp(1/x), x) == FiniteSet(0)
+    assert singularities(log((x - 2)**2), x) == FiniteSet(2)
 
 
 def test_is_increasing():
@@ -73,6 +77,7 @@ def test_is_strictly_decreasing():
         1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
     assert not is_strictly_decreasing(-x**2, Interval(-oo, 0))
     assert not is_strictly_decreasing(1)
+    assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
 
 
 def test_is_monotonic():
@@ -82,8 +87,4 @@ def test_is_monotonic():
     assert is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
     assert not is_monotonic(-x**2, S.Reals)
     assert is_monotonic(x**2 + y + 1, Interval(1, 2), x)
-
-
-@XFAIL
-def test_strictly_decreasing():
-    assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
+    raises(NotImplementedError, lambda: is_monotonic(x**2 + y + 1))

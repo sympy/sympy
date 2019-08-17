@@ -5,14 +5,19 @@ The dense matrix is stored as a list of lists.
 
 """
 
-from sympy.matrices.densetools import col, eye, augment
-from sympy.matrices.densetools import rowadd, rowmul, conjugate_transpose
-from sympy.core.symbol import symbols
-from sympy.core.compatibility import range
-from sympy.core.power import isqrt
-
 import copy
 
+from sympy.core.compatibility import range
+from sympy.core.power import isqrt
+from sympy.core.symbol import symbols
+from sympy.matrices.densetools import (
+    augment, col, conjugate_transpose, eye, rowadd, rowmul)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+SymPyDeprecationWarning(
+    feature="densesolve",
+    issue=12695,
+    deprecated_since_version="1.1").warn()
 
 
 def row_echelon(matlist, K):

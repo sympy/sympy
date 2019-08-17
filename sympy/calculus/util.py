@@ -1,36 +1,65 @@
-from sympy import Order, S, log, limit, lcm_list, pi
-from sympy.core.basic import Basic
+from sympy import Order, S, log, limit, lcm_list, Abs, im, re, Dummy
 from sympy.core import Add, Mul, Pow
-from sympy.logic.boolalg import And
+from sympy.core.basic import Basic
+from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
+from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.logic.boolalg import And
+from sympy.polys.rationaltools import together
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
-from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.sets.fancysets import ImageSet
+from sympy.simplify.radsimp import denom
+from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
-
 
 def continuous_domain(f, symbol, domain):
     """
-    Returns the intervals in the given domain for which the function is continuous.
+    Returns the intervals in the given domain for which the function
+    is continuous.
     This method is limited by the ability to determine the various
     singularities and discontinuities of the given function.
 
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for which the intervals are to be determined.
+    domain : Interval
+        The domain over which the continuity of the symbol has to be checked.
+
     Examples
     ========
+
     >>> from sympy import Symbol, S, tan, log, pi, sqrt
     >>> from sympy.sets import Interval
     >>> from sympy.calculus.util import continuous_domain
     >>> x = Symbol('x')
     >>> continuous_domain(1/x, x, S.Reals)
-    (-oo, 0) U (0, oo)
+    Union(Interval.open(-oo, 0), Interval.open(0, oo))
     >>> continuous_domain(tan(x), x, Interval(0, pi))
-    [0, pi/2) U (pi/2, pi]
+    Union(Interval.Ropen(0, pi/2), Interval.Lopen(pi/2, pi))
     >>> continuous_domain(sqrt(x - 2), x, Interval(-5, 5))
-    [2, 5]
+    Interval(2, 5)
     >>> continuous_domain(log(2*x - 1), x, S.Reals)
-    (1/2, oo)
+    Interval.open(1/2, oo)
+
+    Returns
+    =======
+
+    Interval
+        Union of all intervals where the function is continuous.
+
+    Raises
+    ======
+
+    NotImplementedError
+        If the method to determine continuity of such a function
+        has not yet been developed.
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
@@ -39,9 +68,8 @@ def continuous_domain(f, symbol, domain):
     if domain.is_subset(S.Reals):
         constrained_interval = domain
         for atom in f.atoms(Pow):
-            predicate, denom = _has_rational_power(atom, symbol)
-            constraint = S.EmptySet
-            if predicate and denom == 2:
+            predicate, denomin = _has_rational_power(atom, symbol)
+            if predicate and denomin == 2:
                 constraint = solve_univariate_inequality(atom.base >= 0,
                                                          symbol).as_set()
                 constrained_interval = Intersection(constraint,
@@ -56,18 +84,23 @@ def continuous_domain(f, symbol, domain):
         domain = constrained_interval
 
     try:
-        sings = S.EmptySet
-        for atom in f.atoms(Pow):
-            predicate, denom = _has_rational_power(atom, symbol)
-            if predicate and denom == 2:
-                sings = solveset(1/f, symbol, domain)
-                break
+        if f.has(Abs):
+            sings = solveset(1/f, symbol, domain) + \
+                solveset(denom(together(f)), symbol, domain)
         else:
-            sings = Intersection(solveset(1/f, symbol), domain)
+            for atom in f.atoms(Pow):
+                predicate, denomin = _has_rational_power(atom, symbol)
+                if predicate and denomin == 2:
+                    sings = solveset(1/f, symbol, domain) +\
+                        solveset(denom(together(f)), symbol, domain)
+                    break
+            else:
+                sings = Intersection(solveset(1/f, symbol), domain) + \
+                    solveset(denom(together(f)), symbol, domain)
 
-    except:
+    except NotImplementedError:
         raise NotImplementedError("Methods for determining the continuous domains"
-                                  " of this function has not been developed.")
+                                  " of this function have not been developed.")
 
     return domain - sings
 
@@ -78,6 +111,16 @@ def function_range(f, symbol, domain):
     This method is limited by the ability to determine the singularities and
     determine limits.
 
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for which the range of function is to be determined.
+    domain : Interval
+        The domain under which the range of the function has to be found.
+
     Examples
     ========
 
@@ -86,81 +129,129 @@ def function_range(f, symbol, domain):
     >>> from sympy.calculus.util import function_range
     >>> x = Symbol('x')
     >>> function_range(sin(x), x, Interval(0, 2*pi))
-    [-1, 1]
+    Interval(-1, 1)
     >>> function_range(tan(x), x, Interval(-pi/2, pi/2))
-    (-oo, oo)
+    Interval(-oo, oo)
     >>> function_range(1/x, x, S.Reals)
-    (-oo, oo)
+    Union(Interval.open(-oo, 0), Interval.open(0, oo))
     >>> function_range(exp(x), x, S.Reals)
-    (0, oo)
+    Interval.open(0, oo)
     >>> function_range(log(x), x, S.Reals)
-    (-oo, oo)
+    Interval(-oo, oo)
     >>> function_range(sqrt(x), x , Interval(-5, 9))
-    [0, 3]
+    Interval(0, 3)
 
+    Returns
+    =======
+
+    Interval
+        Union of all ranges for all intervals under domain where function is
+        continuous.
+
+    Raises
+    ======
+
+    NotImplementedError
+        If any of the intervals, in the given domain, for which function
+        is continuous are not finite or real,
+        OR if the critical points of the function on the domain can't be found.
     """
     from sympy.solvers.solveset import solveset
 
-    vals = S.EmptySet
+    if isinstance(domain, EmptySet):
+        return S.EmptySet
+
     period = periodicity(f, symbol)
-    if not any(period is i for i in (None, S.Zero)):
-        inf = domain.inf
-        inf_period = S.Zero if inf.is_infinite else inf
-        sup_period = inf_period + period
-        periodic_interval = Interval(inf_period, sup_period)
-        domain = domain.intersect(periodic_interval)
+    if period is S.Zero:
+        # the expression is constant wrt symbol
+        return FiniteSet(f.expand())
+
+    if period is not None:
+        if isinstance(domain, Interval):
+            if (domain.inf - domain.sup).is_infinite:
+                domain = Interval(0, period)
+        elif isinstance(domain, Union):
+            for sub_dom in domain.args:
+                if isinstance(sub_dom, Interval) and \
+                ((sub_dom.inf - sub_dom.sup).is_infinite):
+                    domain = Interval(0, period)
 
     intervals = continuous_domain(f, symbol, domain)
     range_int = S.EmptySet
-    if isinstance(intervals, Interval):
+    if isinstance(intervals,(Interval, FiniteSet)):
         interval_iter = (intervals,)
 
-    else:
+    elif isinstance(intervals, Union):
         interval_iter = intervals.args
 
+    else:
+            raise NotImplementedError(filldedent('''
+                Unable to find range for the given domain.
+                '''))
+
     for interval in interval_iter:
-        critical_points = S.EmptySet
-        critical_values = S.EmptySet
-        bounds = ((interval.left_open, interval.inf, '+'),
-                  (interval.right_open, interval.sup, '-'))
+        if isinstance(interval, FiniteSet):
+            for singleton in interval:
+                if singleton in domain:
+                    range_int += FiniteSet(f.subs(symbol, singleton))
+        elif isinstance(interval, Interval):
+            vals = S.EmptySet
+            critical_points = S.EmptySet
+            critical_values = S.EmptySet
+            bounds = ((interval.left_open, interval.inf, '+'),
+                   (interval.right_open, interval.sup, '-'))
 
-        for is_open, limit_point, direction in bounds:
-            if is_open:
-                critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
-                vals += critical_values
+            for is_open, limit_point, direction in bounds:
+                if is_open:
+                    critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
+                    vals += critical_values
 
-            else:
-                vals += FiniteSet(f.subs(symbol, limit_point))
+                else:
+                    vals += FiniteSet(f.subs(symbol, limit_point))
 
-        critical_points += solveset(f.diff(symbol), symbol, domain)
+            solution = solveset(f.diff(symbol), symbol, interval)
 
-        for critical_point in critical_points:
-            vals += FiniteSet(f.subs(symbol, critical_point))
+            if not iterable(solution):
+                raise NotImplementedError(
+                        'Unable to find critical points for {}'.format(f))
+            if isinstance(solution, ImageSet):
+                raise NotImplementedError(
+                        'Infinite number of critical points for {}'.format(f))
 
-        left_open, right_open = False, False
+            critical_points += solution
 
-        if critical_values is not S.EmptySet:
-            if critical_values.inf == vals.inf:
-                left_open = True
+            for critical_point in critical_points:
+                vals += FiniteSet(f.subs(symbol, critical_point))
 
-            if critical_values.sup == vals.sup:
-                right_open = True
+            left_open, right_open = False, False
 
-        range_int += Interval(vals.inf, vals.sup, left_open, right_open)
+            if critical_values is not S.EmptySet:
+                if critical_values.inf == vals.inf:
+                    left_open = True
+
+                if critical_values.sup == vals.sup:
+                    right_open = True
+
+            range_int += Interval(vals.inf, vals.sup, left_open, right_open)
+        else:
+            raise NotImplementedError(filldedent('''
+                Unable to find range for the given domain.
+                '''))
 
     return range_int
 
 
 def not_empty_in(finset_intersection, *syms):
-    """ Finds the domain of the functions in `finite_set` in which the
+    """
+    Finds the domain of the functions in `finite_set` in which the
     `finite_set` is not-empty
 
     Parameters
     ==========
 
-    finset_intersection: The unevaluated intersection of FiniteSet containing
+    finset_intersection : The unevaluated intersection of FiniteSet containing
                         real-valued functions with Union of Sets
-    syms: Tuple of symbols
+    syms : Tuple of symbols
             Symbol for which domain is to be found
 
     Raises
@@ -181,22 +272,21 @@ def not_empty_in(finset_intersection, *syms):
     >>> from sympy import FiniteSet, Interval, not_empty_in, oo
     >>> from sympy.abc import x
     >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
-    [0, 2]
+    Interval(0, 2)
     >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
-    [-sqrt(2), -1] U [1, 2]
+    Union(Interval(-sqrt(2), -1), Interval(1, 2))
     >>> not_empty_in(FiniteSet(x**2/(x + 2)).intersect(Interval(1, oo)), x)
-    (-2, -1] U [2, oo)
+    Union(Interval.Lopen(-2, -1), Interval(2, oo))
     """
 
     # TODO: handle piecewise defined functions
     # TODO: handle transcendental functions
     # TODO: handle multivariate functions
     if len(syms) == 0:
-        raise ValueError("A Symbol or a tuple of symbols must be given "
-                         "as the third parameter")
+        raise ValueError("One or more symbols must be given in syms.")
 
-    if finset_intersection.is_EmptySet:
-        return EmptySet()
+    if finset_intersection is S.EmptySet:
+        return S.EmptySet
 
     if isinstance(finset_intersection, Union):
         elm_in_sets = finset_intersection.args[0]
@@ -257,7 +347,7 @@ def not_empty_in(finset_intersection, *syms):
         _domain = S.EmptySet
         for intrvl in _sets.args:
             _domain_element = Union(*[elm_domain(element, intrvl)
-                                    for element in finite_set])
+                                      for element in finite_set])
             _domain = Union(_domain, _domain_element)
         return _domain
 
@@ -273,7 +363,7 @@ def periodicity(f, symbol, check=False):
         The concerned function.
     symbol : Symbol
         The variable for which the period is to be determined.
-    check : Boolean
+    check : Boolean, optional
         The flag to verify whether the value being returned is a period or not.
 
     Returns
@@ -295,8 +385,8 @@ def periodicity(f, symbol, check=False):
     =====
 
     Currently, we do not support functions with a complex period.
-    The period of functions having complex periodic values such as `exp`, `sinh`
-    is evaluated to `None`.
+    The period of functions having complex periodic values such
+    as `exp`, `sinh` is evaluated to `None`.
 
     The value returned might not be the "fundamental" period of the given
     function i.e. it may not be the smallest periodic value of the function.
@@ -320,17 +410,47 @@ def periodicity(f, symbol, check=False):
     >>> periodicity(sin(4*x)**cos(2*x), x)
     pi
     >>> periodicity(exp(x), x)
-
     """
-    from sympy import simplify, lcm_list
-    from sympy.functions.elementary.trigonometric import TrigonometricFunction
+    from sympy.core.function import diff
+    from sympy.core.mod import Mod
+    from sympy.core.relational import Relational
+    from sympy.functions.elementary.exponential import exp
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.trigonometric import (
+        TrigonometricFunction, sin, cos, csc, sec)
+    from sympy.simplify.simplify import simplify
     from sympy.solvers.decompogen import decompogen
+    from sympy.polys.polytools import degree, lcm_list
+
+    temp = Dummy('x', real=True)
+    f = f.subs(symbol, temp)
+    symbol = temp
+
+    def _check(orig_f, period):
+        '''Return the checked period or raise an error.'''
+        new_f = orig_f.subs(symbol, symbol + period)
+        if new_f.equals(orig_f):
+            return period
+        else:
+            raise NotImplementedError(filldedent('''
+                The period of the given function cannot be verified.
+                When `%s` was replaced with `%s + %s` in `%s`, the result
+                was `%s` which was not recognized as being the same as
+                the original function.
+                So either the period was wrong or the two forms were
+                not recognized as being equal.
+                Set check=False to obtain the value.''' %
+                (symbol, symbol, period, orig_f, new_f)))
 
     orig_f = f
-    f = simplify(orig_f)
     period = None
 
-    if not f.has(symbol):
+    if isinstance(f, Relational):
+        f = f.lhs - f.rhs
+
+    f = simplify(f)
+
+    if symbol not in f.free_symbols:
         return S.Zero
 
     if isinstance(f, TrigonometricFunction):
@@ -338,6 +458,35 @@ def periodicity(f, symbol, check=False):
             period = f.period(symbol)
         except NotImplementedError:
             pass
+
+    if isinstance(f, Abs):
+        arg = f.args[0]
+        if isinstance(arg, (sec, csc, cos)):
+            # all but tan and cot might have a
+            # a period that is half as large
+            # so recast as sin
+            arg = sin(arg.args[0])
+        period = periodicity(arg, symbol)
+        if period is not None and isinstance(arg, sin):
+            # the argument of Abs was a trigonometric other than
+            # cot or tan; test to see if the half-period
+            # is valid. Abs(arg) has behaviour equivalent to
+            # orig_f, so use that for test:
+            orig_f = Abs(arg)
+            try:
+                return _check(orig_f, period/2)
+            except NotImplementedError as err:
+                if check:
+                    raise NotImplementedError(err)
+            # else let new orig_f and period be
+            # checked below
+
+    if isinstance(f, exp):
+        if im(f) != 0:
+            period_real = periodicity(re(f), symbol)
+            period_imag = periodicity(im(f), symbol)
+            if period_real is not None and period_imag is not None:
+                period = lcim([period_real, period_imag])
 
     if f.is_Pow:
         base, expo = f.args
@@ -368,6 +517,18 @@ def periodicity(f, symbol, check=False):
 
         period = _periodicity(g.args, symbol)
 
+    elif isinstance(f, Mod):
+        a, n = f.args
+
+        if a == symbol:
+            period = n
+        elif isinstance(a, TrigonometricFunction):
+            period = periodicity(a, symbol)
+        #check if 'f' is linear in 'symbol'
+        elif (a.is_polynomial(symbol) and degree(a, symbol) == 1 and
+            symbol not in n.free_symbols):
+                period = Abs(n / a.diff(symbol))
+
     elif period is None:
         from sympy.solvers.decompogen import compogen
         g_s = decompogen(f, symbol)
@@ -376,33 +537,43 @@ def periodicity(f, symbol, check=False):
             for index, g in enumerate(reversed(g_s)):
                 start_index = num_of_gs - 1 - index
                 g = compogen(g_s[start_index:], symbol)
-                if g != f:
+                if g != orig_f and g != f: # Fix for issue 12620
                     period = periodicity(g, symbol)
-                    if period is None:
-                        continue
-
-                    else:
+                    if period is not None:
                         break
 
     if period is not None:
         if check:
-            if orig_f.subs(symbol, symbol + period) == orig_f:
-                return period
-
-            else:
-                raise NotImplementedError(filldedent('''
-                    The period of the given function cannot be verified.
-                    Set check=False to obtain the value.'''))
-
+            return _check(orig_f, period)
         return period
 
     return None
 
 
 def _periodicity(args, symbol):
-    """Helper for periodicity to find the period of a list of simpler
-    functions. It uses the `lcim` method to find the least common period of
+    """
+    Helper for `periodicity` to find the period of a list of simpler
+    functions.
+    It uses the `lcim` method to find the least common period of
     all the functions.
+
+    Parameters
+    ==========
+
+    args : Tuple of Symbol
+        All the symbols present in a function.
+
+    symbol : Symbol
+        The symbol over which the function is to be evaluated.
+
+    Returns
+    =======
+
+    period
+        The least common period of the function for all the symbols
+        of the function.
+        None if for at least one of the symbols the function is aperiodic
+
     """
     periods = []
     for f in args:
@@ -416,7 +587,8 @@ def _periodicity(args, symbol):
     if len(periods) > 1:
         return lcim(periods)
 
-    return periods[0]
+    if periods:
+        return periods[0]
 
 
 def lcim(numbers):
@@ -425,8 +597,21 @@ def lcim(numbers):
     The numbers can be rational or irrational or a mixture of both.
     `None` is returned for incommensurable numbers.
 
+    Parameters
+    ==========
+
+    numbers : list
+        Numbers (rational and/or irrational) for which lcim is to be found.
+
+    Returns
+    =======
+
+    number
+        lcim if it exists, otherwise `None` for incommensurable numbers.
+
     Examples
     ========
+
     >>> from sympy import S, pi
     >>> from sympy.calculus.util import lcim
     >>> lcim([S(1)/2, S(3)/4, S(5)/6])
@@ -438,12 +623,14 @@ def lcim(numbers):
     result = None
     if all(num.is_irrational for num in numbers):
         factorized_nums = list(map(lambda num: num.factor(), numbers))
-        factors_num = list(map(lambda num: num.as_coeff_Mul(), factorized_nums))
+        factors_num = list(
+            map(lambda num: num.as_coeff_Mul(),
+                factorized_nums))
         term = factors_num[0][1]
         if all(factor == term for coeff, factor in factors_num):
             common_term = term
             coeffs = [coeff for coeff, factor in factors_num]
-            result = lcm_list(coeffs)*common_term
+            result = lcm_list(coeffs) * common_term
 
     elif all(num.is_rational for num in numbers):
         result = lcm_list(numbers)
@@ -453,9 +640,215 @@ def lcim(numbers):
 
     return result
 
+def is_convex(f, *syms, **kwargs):
+    """Determines the  convexity of the function passed in the argument.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    syms : Tuple of symbols
+        The variables with respect to which the convexity is to be determined.
+    domain : Interval, optional
+        The domain over which the convexity of the function has to be checked.
+        If unspecified, S.Reals will be the default domain.
+
+    Returns
+    =======
+
+    Boolean
+        The method returns `True` if the function is convex otherwise it
+        returns `False`.
+
+    Raises
+    ======
+
+    NotImplementedError
+        The check for the convexity of multivariate functions is not implemented yet.
+
+    Notes
+    =====
+
+    To determine concavity of a function pass `-f` as the concerned function.
+    To determine logarithmic convexity of a function pass log(f) as
+    concerned function.
+    To determine logartihmic concavity of a function pass -log(f) as
+    concerned function.
+
+    Currently, convexity check of multivariate functions is not handled.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, exp, oo, Interval
+    >>> from sympy.calculus.util import is_convex
+    >>> x = symbols('x')
+    >>> is_convex(exp(x), x)
+    True
+    >>> is_convex(x**3, x, domain = Interval(-1, oo))
+    False
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Convex_function
+    .. [2] http://www.ifp.illinois.edu/~angelia/L3_convfunc.pdf
+    .. [3] https://en.wikipedia.org/wiki/Logarithmically_convex_function
+    .. [4] https://en.wikipedia.org/wiki/Logarithmically_concave_function
+    .. [5] https://en.wikipedia.org/wiki/Concave_function
+
+    """
+
+    if len(syms) > 1:
+        raise NotImplementedError(
+            "The check for the convexity of multivariate functions is not implemented yet.")
+
+    f = _sympify(f)
+    domain = kwargs.get('domain', S.Reals)
+    var = syms[0]
+    condition = f.diff(var, 2) < 0
+    if solve_univariate_inequality(condition, var, False, domain):
+        return False
+    return True
+
+
+def stationary_points(f, symbol, domain=S.Reals):
+    """
+    Returns the stationary points of a function (where derivative of the
+    function is 0) in the given domain.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for which the stationary points are to be determined.
+    domain : Interval
+        The domain over which the stationary points have to be checked.
+        If unspecified, S.Reals will be the default domain.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, S, sin, log, pi, pprint, stationary_points
+    >>> from sympy.sets import Interval
+    >>> x = Symbol('x')
+
+    >>> stationary_points(1/x, x, S.Reals)
+    EmptySet()
+
+    >>> pprint(stationary_points(sin(x), x), use_unicode=False)
+              pi                              3*pi
+    {2*n*pi + -- | n in Integers} U {2*n*pi + ---- | n in Integers}
+              2                                2
+
+    >>> stationary_points(sin(x),x, Interval(0, 4*pi))
+    {pi/2, 3*pi/2, 5*pi/2, 7*pi/2}
+
+    """
+    from sympy import solveset, diff
+
+    if isinstance(domain, EmptySet):
+        return S.EmptySet
+
+    domain = continuous_domain(f, symbol, domain)
+    set = solveset(diff(f, symbol), symbol, domain)
+
+    return set
+
+
+def maximum(f, symbol, domain=S.Reals):
+    """
+    Returns the maximum value of a function in the given domain.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for maximum value needs to be determined.
+    domain : Interval
+        The domain over which the maximum have to be checked.
+        If unspecified, then Global maximum is returned.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, S, sin, cos, pi, maximum
+    >>> from sympy.sets import Interval
+    >>> x = Symbol('x')
+
+    >>> f = -x**2 + 2*x + 5
+    >>> maximum(f, x, S.Reals)
+    6
+
+    >>> maximum(sin(x), x, Interval(-pi, pi/4))
+    sqrt(2)/2
+
+    >>> maximum(sin(x)*cos(x), x)
+    1/2
+
+    """
+    from sympy import Symbol
+
+    if isinstance(symbol, Symbol):
+        if isinstance(domain, EmptySet):
+            raise ValueError("Maximum value not defined for empty domain.")
+
+        return function_range(f, symbol, domain).sup
+    else:
+        raise ValueError("%s is not a valid symbol." % symbol)
+
+
+def minimum(f, symbol, domain=S.Reals):
+    """
+    Returns the minimum value of a function in the given domain.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for minimum value needs to be determined.
+    domain : Interval
+        The domain over which the minimum have to be checked.
+        If unspecified, then Global minimum is returned.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, S, sin, cos, minimum
+    >>> from sympy.sets import Interval
+    >>> x = Symbol('x')
+
+    >>> f = x**2 + 2*x + 5
+    >>> minimum(f, x, S.Reals)
+    4
+
+    >>> minimum(sin(x), x, Interval(2, 3))
+    sin(3)
+
+    >>> minimum(sin(x)*cos(x), x)
+    -1/2
+
+    """
+    from sympy import Symbol
+
+    if isinstance(symbol, Symbol):
+        if isinstance(domain, EmptySet):
+            raise ValueError("Minimum value not defined for empty domain.")
+
+        return function_range(f, symbol, domain).inf
+    else:
+        raise ValueError("%s is not a valid symbol." % symbol)
+
 
 class AccumulationBounds(AtomicExpr):
-    """
+    r"""
     # Note AccumulationBounds has an alias: AccumBounds
 
     AccumulationBounds represent an interval `[a, b]`, which is always closed
@@ -466,13 +859,13 @@ class AccumulationBounds(AtomicExpr):
 
     Let `a` and `b` be reals such that a <= b.
 
-    `\langle a, b\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
+    `\left\langle a, b\right\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
 
-    `\langle -\infty, b\rangle = \{x \in \mathbb{R} \mid x \le b\} \cup \{-\infty, \infty\}`
+    `\left\langle -\infty, b\right\rangle = \{x \in \mathbb{R} \mid x \le b\} \cup \{-\infty, \infty\}`
 
-    `\langle a, \infty \rangle = \{x \in \mathbb{R} \mid a \le x\} \cup \{-\infty, \infty\}`
+    `\left\langle a, \infty \right\rangle = \{x \in \mathbb{R} \mid a \le x\} \cup \{-\infty, \infty\}`
 
-    `\langle -\infty, \infty \rangle = \mathbb{R} \cup \{-\infty, \infty\}`
+    `\left\langle -\infty, \infty \right\rangle = \mathbb{R} \cup \{-\infty, \infty\}`
 
     `oo` and `-oo` are added to the second and third definition respectively,
     since if either `-oo` or `oo` is an argument, then the other one should
@@ -510,10 +903,11 @@ class AccumulationBounds(AtomicExpr):
     Note
     ====
 
-    The main focus in the interval arithmetic is on the simplest way to calculate
-    upper and lower endpoints for the range of values of a function in one or more
-    variables. These barriers are not necessarily the supremum or infimum, since
-    the precise calculation of those values can be difficult or impossible.
+    The main focus in the interval arithmetic is on the simplest way to
+    calculate upper and lower endpoints for the range of values of a
+    function in one or more variables. These barriers are not necessarily
+    the supremum or infimum, since the precise calculation of those values
+    can be difficult or impossible.
 
     Examples
     ========
@@ -522,16 +916,16 @@ class AccumulationBounds(AtomicExpr):
     >>> from sympy.abc import x
 
     >>> AccumBounds(0, 1) + AccumBounds(1, 2)
-    <1, 3>
+    AccumBounds(1, 3)
 
     >>> AccumBounds(0, 1) - AccumBounds(0, 2)
-    <-2, 1>
+    AccumBounds(-2, 1)
 
     >>> AccumBounds(-2, 3)*AccumBounds(-1, 1)
-    <-3, 3>
+    AccumBounds(-3, 3)
 
     >>> AccumBounds(1, 2)*AccumBounds(3, 5)
-    <3, 10>
+    AccumBounds(3, 10)
 
     The exponentiation of AccumulationBounds is defined
     as follows:
@@ -548,18 +942,18 @@ class AccumulationBounds(AtomicExpr):
     AccumulationBounds object is neglected.
 
     >>> AccumBounds(-1, 4)**(S(1)/2)
-    <0, 2>
+    AccumBounds(0, 2)
 
     >>> AccumBounds(1, 2)**2
-    <1, 4>
+    AccumBounds(1, 4)
 
     >>> AccumBounds(-1, oo)**(-1)
-    <-oo, oo>
+    AccumBounds(-oo, oo)
 
     Note: `<a, b>^2` is not same as `<a, b>*<a, b>`
 
     >>> AccumBounds(-1, 1)**2
-    <0, 1>
+    AccumBounds(0, 1)
 
     >>> AccumBounds(1, 3) < 4
     True
@@ -569,29 +963,29 @@ class AccumulationBounds(AtomicExpr):
 
     Some elementary functions can also take AccumulationBounds as input.
     A function `f` evaluated for some real AccumulationBounds `<a, b>`
-    is defined as `f(\langle a, b\rangle) = \{ f(x) \mid a \le x \le b \}`
+    is defined as `f(\left\langle a, b\right\rangle) = \{ f(x) \mid a \le x \le b \}`
 
     >>> sin(AccumBounds(pi/6, pi/3))
-    <1/2, sqrt(3)/2>
+    AccumBounds(1/2, sqrt(3)/2)
 
     >>> exp(AccumBounds(0, 1))
-    <1, E>
+    AccumBounds(1, E)
 
     >>> log(AccumBounds(1, E))
-    <0, 1>
+    AccumBounds(0, 1)
 
     Some symbol in an expression can be substituted for a AccumulationBounds
     object. But it doesn't necessarily evaluate the AccumulationBounds for
     that expression.
 
     Same expression can be evaluated to different values depending upon
-    the form it is used for substituion. For example:
+    the form it is used for substitution. For example:
 
     >>> (x**2 + 2*x + 1).subs(x, AccumBounds(-1, 1))
-    <-1, 4>
+    AccumBounds(-1, 4)
 
     >>> ((x + 1)**2).subs(x, AccumBounds(-1, 1))
-    <0, 4>
+    AccumBounds(0, 4)
 
     References
     ==========
@@ -607,23 +1001,22 @@ class AccumulationBounds(AtomicExpr):
     calculations, use ``mpmath.iv`` instead.
     """
 
-    is_real = True
+    is_extended_real = True
 
     def __new__(cls, min, max):
 
         min = _sympify(min)
         max = _sympify(max)
 
-        inftys = [S.Infinity, S.NegativeInfinity]
-        # Only allow real intervals (use symbols with 'is_real=True').
-        if not (min.is_real or min in inftys) \
-           or not (max.is_real or max in inftys):
+        # Only allow real intervals (use symbols with 'is_extended_real=True').
+        if not min.is_extended_real or not max.is_extended_real:
             raise ValueError("Only real AccumulationBounds are supported")
 
         # Make sure that the created AccumBounds object will be valid.
         if max.is_comparable and min.is_comparable:
             if max < min:
-                raise ValueError("Lower limit should be smaller than upper limit")
+                raise ValueError(
+                    "Lower limit should be smaller than upper limit")
 
         if max == min:
             return max
@@ -633,10 +1026,15 @@ class AccumulationBounds(AtomicExpr):
     # setting the operation priority
     _op_priority = 11.0
 
+    def _eval_is_real(self):
+        if self.min.is_real and self.max.is_real:
+            return True
+
     @property
     def min(self):
         """
-        Returns the minimum possible value attained by AccumulationBounds object.
+        Returns the minimum possible value attained by AccumulationBounds
+        object.
 
         Examples
         ========
@@ -651,7 +1049,8 @@ class AccumulationBounds(AtomicExpr):
     @property
     def max(self):
         """
-        Returns the maximum possible value attained by AccumulationBounds object.
+        Returns the maximum possible value attained by AccumulationBounds
+        object.
 
         Examples
         ========
@@ -666,8 +1065,9 @@ class AccumulationBounds(AtomicExpr):
     @property
     def delta(self):
         """
-        Returns the difference of maximum possible value attained by AccumulationBounds
-        object and minimum possible value attained by AccumulationBounds object.
+        Returns the difference of maximum possible value attained by
+        AccumulationBounds object and minimum possible value attained
+        by AccumulationBounds object.
 
         Examples
         ========
@@ -682,8 +1082,9 @@ class AccumulationBounds(AtomicExpr):
     @property
     def mid(self):
         """
-        Returns the mean of maximum possible value attained by AccumulationBounds
-        object and minimum possible value attained by AccumulationBounds object.
+        Returns the mean of maximum possible value attained by
+        AccumulationBounds object and minimum possible value
+        attained by AccumulationBounds object.
 
         Examples
         ========
@@ -693,7 +1094,7 @@ class AccumulationBounds(AtomicExpr):
         2
 
         """
-        return (self.min + self.max)/2
+        return (self.min + self.max) / 2
 
     @_sympifyit('other', NotImplemented)
     def _eval_power(self, other):
@@ -703,11 +1104,13 @@ class AccumulationBounds(AtomicExpr):
     def __add__(self, other):
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
-                return AccumBounds(Add(self.min, other.min), Add(self.max, other.max))
+                return AccumBounds(
+                    Add(self.min, other.min),
+                    Add(self.max, other.max))
             if other is S.Infinity and self.min is S.NegativeInfinity or \
                     other is S.NegativeInfinity and self.max is S.Infinity:
                 return AccumBounds(-oo, oo)
-            elif other.is_real:
+            elif other.is_extended_real:
                 return AccumBounds(Add(self.min, other), Add(self.max, other))
             return Add(self, other, evaluate=False)
         return NotImplemented
@@ -721,12 +1124,16 @@ class AccumulationBounds(AtomicExpr):
     def __sub__(self, other):
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
-                return AccumBounds(Add(self.min, -other.max), Add(self.max, -other.min))
+                return AccumBounds(
+                    Add(self.min, -other.max),
+                    Add(self.max, -other.min))
             if other is S.NegativeInfinity and self.min is S.NegativeInfinity or \
                     other is S.Infinity and self.max is S.Infinity:
                 return AccumBounds(-oo, oo)
-            elif other.is_real:
-                return AccumBounds(Add(self.min, -other), Add(self.max, - other))
+            elif other.is_extended_real:
+                return AccumBounds(
+                    Add(self.min, -other),
+                    Add(self.max, -other))
             return Add(self, -other, evaluate=False)
         return NotImplemented
 
@@ -739,13 +1146,13 @@ class AccumulationBounds(AtomicExpr):
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
                 return AccumBounds(Min(Mul(self.min, other.min),
-                            Mul(self.min, other.max),
-                            Mul(self.max, other.min),
-                            Mul(self.max, other.max)),
-                        Max(Mul(self.min, other.min),
-                            Mul(self.min, other.max),
-                            Mul(self.max, other.min),
-                            Mul(self.max, other.max)))
+                                       Mul(self.min, other.max),
+                                       Mul(self.max, other.min),
+                                       Mul(self.max, other.max)),
+                                   Max(Mul(self.min, other.min),
+                                       Mul(self.min, other.max),
+                                       Mul(self.max, other.min),
+                                       Mul(self.max, other.max)))
             if other is S.Infinity:
                 if self.min.is_zero:
                     return AccumBounds(0, oo)
@@ -756,7 +1163,7 @@ class AccumulationBounds(AtomicExpr):
                     return AccumBounds(-oo, 0)
                 if self.max.is_zero:
                     return AccumBounds(0, oo)
-            if other.is_real:
+            if other.is_extended_real:
                 if other.is_zero:
                     if self == AccumBounds(-oo, oo):
                         return AccumBounds(-oo, oo)
@@ -765,10 +1172,14 @@ class AccumulationBounds(AtomicExpr):
                     if self.min is S.NegativeInfinity:
                         return AccumBounds(-oo, 0)
                     return S.Zero
-                if other.is_positive:
-                    return AccumBounds(Mul(self.min, other), Mul(self.max, other))
-                elif other.is_negative:
-                    return AccumBounds(Mul(self.max, other), Mul(self.min, other))
+                if other.is_extended_positive:
+                    return AccumBounds(
+                        Mul(self.min, other),
+                        Mul(self.max, other))
+                elif other.is_extended_negative:
+                    return AccumBounds(
+                        Mul(self.max, other),
+                        Mul(self.min, other))
             if isinstance(other, Order):
                 return other
             return Mul(self, other, evaluate=False)
@@ -780,8 +1191,8 @@ class AccumulationBounds(AtomicExpr):
     def __div__(self, other):
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
-                if not S.Zero in other:
-                    return self*AccumBounds(1/other.max, 1/other.min)
+                if S.Zero not in other:
+                    return self * AccumBounds(1/other.max, 1/other.min)
 
                 if S.Zero in self and S.Zero in other:
                     if self.min.is_zero and other.min.is_zero:
@@ -790,33 +1201,33 @@ class AccumulationBounds(AtomicExpr):
                         return AccumBounds(-oo, 0)
                     return AccumBounds(-oo, oo)
 
-                if self.max.is_negative:
-                    if other.min.is_negative:
+                if self.max.is_extended_negative:
+                    if other.min.is_extended_negative:
                         if other.max.is_zero:
-                            return AccumBounds(self.max/other.min, oo)
-                        if other.max.is_positive:
+                            return AccumBounds(self.max / other.min, oo)
+                        if other.max.is_extended_positive:
                             # the actual answer is a Union of AccumBounds,
                             # Union(AccumBounds(-oo, self.max/other.max),
                             #       AccumBounds(self.max/other.min, oo))
                             return AccumBounds(-oo, oo)
 
-                    if other.min.is_zero and other.max.is_positive:
-                        return AccumBounds(-oo, self.max/other.max)
+                    if other.min.is_zero and other.max.is_extended_positive:
+                        return AccumBounds(-oo, self.max / other.max)
 
-                if self.min.is_positive:
-                    if other.min.is_negative:
+                if self.min.is_extended_positive:
+                    if other.min.is_extended_negative:
                         if other.max.is_zero:
-                            return AccumBounds(-oo, self.min/other.min)
-                        if other.max.is_positive:
+                            return AccumBounds(-oo, self.min / other.min)
+                        if other.max.is_extended_positive:
                             # the actual answer is a Union of AccumBounds,
                             # Union(AccumBounds(-oo, self.min/other.min),
                             #       AccumBounds(self.min/other.max, oo))
                             return AccumBounds(-oo, oo)
 
-                    if other.min.is_zero and other.max.is_positive:
-                        return AccumBounds(self.min/other.max, oo)
+                    if other.min.is_zero and other.max.is_extended_positive:
+                        return AccumBounds(self.min / other.max, oo)
 
-            elif other.is_real:
+            elif other.is_extended_real:
                 if other is S.Infinity or other is S.NegativeInfinity:
                     if self == AccumBounds(-oo, oo):
                         return AccumBounds(-oo, oo)
@@ -824,11 +1235,11 @@ class AccumulationBounds(AtomicExpr):
                         return AccumBounds(Min(0, other), Max(0, other))
                     if self.min is S.NegativeInfinity:
                         return AccumBounds(Min(0, -other), Max(0, -other))
-                if other.is_positive:
-                    return AccumBounds(self.min/other, self.max/other)
-                elif other.is_negative:
-                    return AccumBounds(self.max/other, self.min/other)
-            return Mul(self, 1/other, evaluate=False)
+                if other.is_extended_positive:
+                    return AccumBounds(self.min / other, self.max / other)
+                elif other.is_extended_negative:
+                    return AccumBounds(self.max / other, self.min / other)
+            return Mul(self, 1 / other, evaluate=False)
 
         return NotImplemented
 
@@ -837,25 +1248,25 @@ class AccumulationBounds(AtomicExpr):
     @_sympifyit('other', NotImplemented)
     def __rdiv__(self, other):
         if isinstance(other, Expr):
-            if other.is_real:
+            if other.is_extended_real:
                 if other.is_zero:
                     return S.Zero
                 if S.Zero in self:
                     if self.min == S.Zero:
-                        if other.is_positive:
-                            return AccumBounds(Mul(other, 1/self.max), oo)
-                        if other.is_negative:
-                            return AccumBounds(-oo, Mul(other, 1/self.max))
+                        if other.is_extended_positive:
+                            return AccumBounds(Mul(other, 1 / self.max), oo)
+                        if other.is_extended_negative:
+                            return AccumBounds(-oo, Mul(other, 1 / self.max))
                     if self.max == S.Zero:
-                        if other.is_positive:
-                            return AccumBounds(-oo, Mul(other, 1/self.min))
-                        if other.is_negative:
-                            return AccumBounds(Mul(other, 1/self.min), oo)
+                        if other.is_extended_positive:
+                            return AccumBounds(-oo, Mul(other, 1 / self.min))
+                        if other.is_extended_negative:
+                            return AccumBounds(Mul(other, 1 / self.min), oo)
                     return AccumBounds(-oo, oo)
                 else:
-                    return AccumBounds(Min(other/self.min, other/self.max),
-                            Max(other/self.min, other/self.max))
-            return Mul(other, 1/self, evaluate=False)
+                    return AccumBounds(Min(other / self.min, other / self.max),
+                                       Max(other / self.min, other / self.max))
+            return Mul(other, 1 / self, evaluate=False)
         else:
             return NotImplemented
 
@@ -866,13 +1277,13 @@ class AccumulationBounds(AtomicExpr):
         from sympy.functions.elementary.miscellaneous import real_root
         if isinstance(other, Expr):
             if other is S.Infinity:
-                if self.min.is_nonnegative:
+                if self.min.is_extended_nonnegative:
                     if self.max < 1:
                         return S.Zero
                     if self.min > 1:
                         return S.Infinity
                     return AccumBounds(0, oo)
-                elif self.max.is_negative:
+                elif self.max.is_extended_negative:
                     if self.min > -1:
                         return S.Zero
                     if self.max < -1:
@@ -886,31 +1297,33 @@ class AccumulationBounds(AtomicExpr):
                     return AccumBounds(-oo, oo)
 
             if other is S.NegativeInfinity:
-                return (1/self)**oo
+                return (1 / self)**oo
 
-            if other.is_real and other.is_number:
+            if other.is_extended_real and other.is_number:
                 if other.is_zero:
                     return S.One
 
                 if other.is_Integer:
-                    if self.min.is_positive:
-                        return AccumBounds(Min(self.min**other, self.max**other),
-                            Max(self.min**other, self.max**other))
-                    elif self.max.is_negative:
-                        return AccumBounds(Min(self.max**other, self.min**other),
-                                    Max(self.max**other, self.min**other))
+                    if self.min.is_extended_positive:
+                        return AccumBounds(
+                            Min(self.min ** other, self.max ** other),
+                            Max(self.min ** other, self.max ** other))
+                    elif self.max.is_extended_negative:
+                        return AccumBounds(
+                            Min(self.max ** other, self.min ** other),
+                            Max(self.max ** other, self.min ** other))
 
                     if other % 2 == 0:
-                        if other.is_negative:
+                        if other.is_extended_negative:
                             if self.min.is_zero:
                                 return AccumBounds(self.max**other, oo)
                             if self.max.is_zero:
                                 return AccumBounds(self.min**other, oo)
                             return AccumBounds(0, oo)
-                        return AccumBounds(S.Zero,
-                            Max(self.min**other, self.max**other))
+                        return AccumBounds(
+                            S.Zero, Max(self.min**other, self.max**other))
                     else:
-                        if other.is_negative:
+                        if other.is_extended_negative:
                             if self.min.is_zero:
                                 return AccumBounds(self.max**other, oo)
                             if self.max.is_zero:
@@ -922,20 +1335,20 @@ class AccumulationBounds(AtomicExpr):
                 if num == S(1):
                     if den % 2 == 0:
                         if S.Zero in self:
-                            if self.min.is_negative:
+                            if self.min.is_extended_negative:
                                 return AccumBounds(0, real_root(self.max, den))
                     return AccumBounds(real_root(self.min, den),
-                                    real_root(self.max, den))
+                                       real_root(self.max, den))
                 num_pow = self**num
-                return num_pow**(1/den)
+                return num_pow**(1 / den)
             return Pow(self, other, evaluate=False)
 
         return NotImplemented
 
     def __abs__(self):
-        if self.max.is_negative:
+        if self.max.is_extended_negative:
             return self.__neg__()
-        elif self.min.is_negative:
+        elif self.min.is_extended_negative:
             return AccumBounds(S.Zero, Max(abs(self.min), self.max))
         else:
             return self
@@ -943,10 +1356,10 @@ class AccumulationBounds(AtomicExpr):
     def __lt__(self, other):
         """
         Returns True if range of values attained by `self` AccumulationBounds
-        object is less than the range of values attained by `other`, where other
-        may be any value of type AccumulationBounds object or extended real
-        number value, False is returned if `other` satisfies the same property,
-        None if the values attained by AccumulationBounds object intersect.
+        object is less than the range of values attained by `other`, where
+        other may be any value of type AccumulationBounds object or extended
+        real number value, False if `other` satisfies the same property, else
+        an unevaluated Relational
 
         Examples
         ========
@@ -955,7 +1368,7 @@ class AccumulationBounds(AtomicExpr):
         >>> AccumBounds(1, 3) < AccumBounds(4, oo)
         True
         >>> AccumBounds(1, 4) < AccumBounds(3, 4)
-
+        AccumBounds(1, 4) < AccumBounds(3, 4)
         >>> AccumBounds(1, oo) < -1
         False
 
@@ -966,26 +1379,24 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.min >= other.max:
                 return False
-            return None
-
-        if not (other.is_real or other is S.Infinity or other is S.NegativeInfinity):
-            raise TypeError("Invalid comparison of %s %s" % (type(other), other))
-
-        if other.is_comparable:
+        elif not other.is_extended_real:
+            raise TypeError(
+                "Invalid comparison of %s %s" %
+                (type(other), other))
+        elif other.is_comparable:
             if self.max < other:
                 return True
             if self.min >= other:
                 return False
-        return None
+        return super(AccumulationBounds, self).__lt__(other)
 
     def __le__(self, other):
         """
         Returns True if range of values attained by `self` AccumulationBounds
-        object is less than or equal to the range of values attained by `other`,
-        where other may be any value of type AccumulationBounds object or extended
-        real number value, AccumulationBounds object, False is returned if `other`
-        satisfies the same property, None if the values attained by AccumulationBounds
-        object intersect.
+        object is less than or equal to the range of values attained by
+        `other`, where other may be any value of type AccumulationBounds
+        object or extended real number value, False if `other`
+        satisfies the same property, else an unevaluated Relational.
 
         Examples
         ========
@@ -994,9 +1405,9 @@ class AccumulationBounds(AtomicExpr):
         >>> AccumBounds(1, 3) <= AccumBounds(4, oo)
         True
         >>> AccumBounds(1, 4) <= AccumBounds(3, 4)
-
-        >>> AccumBounds(1, 3) <= 3
-        True
+        AccumBounds(1, 4) <= AccumBounds(3, 4)
+        >>> AccumBounds(1, 3) <= 0
+        False
 
         """
         other = _sympify(other)
@@ -1005,25 +1416,24 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.min > other.max:
                 return False
-            return None
-
-        if not (other.is_real or other is S.Infinity or other is S.NegativeInfinity):
-            raise TypeError("Invalid comparison of %s %s" % (type(other), other))
-
-        if other.is_comparable:
+        elif not other.is_extended_real:
+            raise TypeError(
+                "Invalid comparison of %s %s" %
+                (type(other), other))
+        elif other.is_comparable:
             if self.max <= other:
                 return True
             if self.min > other:
                 return False
-        return None
+        return super(AccumulationBounds, self).__le__(other)
 
     def __gt__(self, other):
         """
         Returns True if range of values attained by `self` AccumulationBounds
-        object is greater than the range of values attained by `other`, where other
-        may be any value of type AccumulationBounds object or extended real
-        number value, False is returned if `other` satisfies the same property,
-        None if the values attained by AccumulationBounds object intersect.
+        object is greater than the range of values attained by `other`,
+        where other may be any value of type AccumulationBounds object or
+        extended real number value, False if `other` satisfies
+        the same property, else an unevaluated Relational.
 
         Examples
         ========
@@ -1032,7 +1442,7 @@ class AccumulationBounds(AtomicExpr):
         >>> AccumBounds(1, 3) > AccumBounds(4, oo)
         False
         >>> AccumBounds(1, 4) > AccumBounds(3, 4)
-
+        AccumBounds(1, 4) > AccumBounds(3, 4)
         >>> AccumBounds(1, oo) > -1
         True
 
@@ -1043,25 +1453,24 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max <= other.min:
                 return False
-            return
-
-        if not (other.is_real or other is S.Infinity or other is S.NegativeInfinity):
-            raise TypeError("Invalid comparison of %s %s" % (type(other), other))
-
-        if other.is_comparable:
+        elif not other.is_extended_real:
+            raise TypeError(
+                "Invalid comparison of %s %s" %
+                (type(other), other))
+        elif other.is_comparable:
             if self.min > other:
                 return True
             if self.max <= other:
                 return False
-        return None
+        return super(AccumulationBounds, self).__gt__(other)
 
     def __ge__(self, other):
         """
         Returns True if range of values attained by `self` AccumulationBounds
-        object is less that the range of values attained by `other`, where other
-        may be any value of type AccumulationBounds object or extended real
-        number value, False is returned if `other` satisfies the same property,
-        None if the values attained by AccumulationBounds object intersect.
+        object is less that the range of values attained by `other`, where
+        other may be any value of type AccumulationBounds object or extended
+        real number value, False if `other` satisfies the same
+        property, else an unevaluated Relational.
 
         Examples
         ========
@@ -1070,7 +1479,7 @@ class AccumulationBounds(AtomicExpr):
         >>> AccumBounds(1, 3) >= AccumBounds(4, oo)
         False
         >>> AccumBounds(1, 4) >= AccumBounds(3, 4)
-
+        AccumBounds(1, 4) >= AccumBounds(3, 4)
         >>> AccumBounds(1, oo) >= 1
         True
 
@@ -1081,17 +1490,16 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max < other.min:
                 return False
-            return None
-
-        if not (other.is_real or other is S.Infinity or other is S.NegativeInfinity):
-            raise TypeError("Invalid comparison of %s %s" % (type(other), other))
-
-        if other.is_comparable:
+        elif not other.is_extended_real:
+            raise TypeError(
+                "Invalid comparison of %s %s" %
+                (type(other), other))
+        elif other.is_comparable:
             if self.min >= other:
                 return True
             if self.max < other:
                 return False
-        return None
+        return super(AccumulationBounds, self).__ge__(other)
 
     def __contains__(self, other):
         """
@@ -1116,15 +1524,16 @@ class AccumulationBounds(AtomicExpr):
 
         """
         other = _sympify(other)
-        if not (other.is_Symbol or other.is_number):
-            raise TypeError("Input of type real symbol or Number expected")
 
         if other is S.Infinity or other is S.NegativeInfinity:
             if self.min is S.NegativeInfinity or self.max is S.Infinity:
                 return True
             return False
 
-        return And(self.min <= other and self.max >= other)
+        rv = And(self.min <= other, self.max >= other)
+        if rv not in (True, False):
+            raise TypeError("input failed to evaluate")
+        return rv
 
     def intersection(self, other):
         """
@@ -1136,7 +1545,7 @@ class AccumulationBounds(AtomicExpr):
 
         >>> from sympy import AccumBounds, FiniteSet
         >>> AccumBounds(1, 3).intersection(AccumBounds(2, 4))
-        <2, 3>
+        AccumBounds(2, 3)
 
         >>> AccumBounds(1, 3).intersection(AccumBounds(4, 6))
         EmptySet()
@@ -1146,7 +1555,8 @@ class AccumulationBounds(AtomicExpr):
 
         """
         if not isinstance(other, (AccumBounds, FiniteSet)):
-            raise TypeError("Input must be AccumulationBounds or FiniteSet object")
+            raise TypeError(
+                "Input must be AccumulationBounds or FiniteSet object")
 
         if isinstance(other, FiniteSet):
             fin_set = S.EmptySet
@@ -1175,7 +1585,8 @@ class AccumulationBounds(AtomicExpr):
         # this method is not actually correct and
         # can be made better
         if not isinstance(other, AccumBounds):
-            raise TypeError("Input must be AccumulationBounds or FiniteSet object")
+            raise TypeError(
+                "Input must be AccumulationBounds or FiniteSet object")
 
         if self.min <= other.min and self.max >= other.min:
             return AccumBounds(self.min, Max(self.max, other.max))

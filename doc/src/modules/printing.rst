@@ -1,7 +1,7 @@
 Printing System
 ===============
 
-See the :ref:`tutorial-printing` section in Tutorial for introduction into
+See the :ref:`tutorial-printing` section in tutorial for introduction into
 printing.
 
 This guide documents the printing system in SymPy and how it works
@@ -13,8 +13,7 @@ Printer Class
 .. automodule:: sympy.printing.printer
 
 The main class responsible for printing is ``Printer`` (see also its
-`source code
-<https://github.com/sympy/sympy/blob/master/sympy/printing/printer.py>`_):
+`source code <https://github.com/sympy/sympy/blob/master/sympy/printing/printer.py>`_):
 
 .. autoclass:: Printer
     :members: doprint, _print, set_global_settings, order
@@ -49,37 +48,77 @@ when possible.
 .. autofunction:: pretty
 .. autofunction:: pretty_print
 
-CCodePrinter
-------------
+C code printers
+---------------
 
 .. module:: sympy.printing.ccode
 
-This class implements C code printing (i.e. it converts Python expressions
-to strings of C code).
+This class implements C code printing, i.e. it converts Python expressions
+to strings of C code (see also ``C89CodePrinter``).
 
 Usage::
 
     >>> from sympy.printing import print_ccode
-    >>> from sympy.functions import sin, cos, Abs
+    >>> from sympy.functions import sin, cos, Abs, gamma
     >>> from sympy.abc import x
-    >>> print_ccode(sin(x)**2 + cos(x)**2)
+    >>> print_ccode(sin(x)**2 + cos(x)**2, standard='C89')
     pow(sin(x), 2) + pow(cos(x), 2)
-    >>> print_ccode(2*x + cos(x), assign_to="result")
+    >>> print_ccode(2*x + cos(x), assign_to="result", standard='C89')
     result = 2*x + cos(x);
-    >>> print_ccode(Abs(x**2))
+    >>> print_ccode(Abs(x**2), standard='C89')
     fabs(pow(x, 2))
+    >>> print_ccode(gamma(x**2), standard='C99')
+    tgamma(pow(x, 2))
 
-.. autodata:: sympy.printing.ccode.known_functions
+.. autodata:: sympy.printing.ccode.known_functions_C89
+.. autodata:: sympy.printing.ccode.known_functions_C99
 
-.. autoclass:: sympy.printing.ccode.CCodePrinter
+.. autoclass:: sympy.printing.ccode.C89CodePrinter
    :members:
 
-   .. autoattribute:: CCodePrinter.printmethod
+   .. autoattribute:: C89CodePrinter.printmethod
+
+.. autoclass:: sympy.printing.ccode.C99CodePrinter
+   :members:
+
+   .. autoattribute:: C99CodePrinter.printmethod
 
 
 .. autofunction:: sympy.printing.ccode.ccode
 
 .. autofunction:: sympy.printing.ccode.print_ccode
+
+C++ code printers
+-----------------
+
+.. module:: sympy.printing.cxxcode
+
+This module contains printers for C++ code, i.e. functions to convert
+SymPy expressions to strings of C++ code.
+
+Usage::
+
+    >>> from sympy.printing.cxxcode import cxxcode
+    >>> from sympy.functions import Min, gamma
+    >>> from sympy.abc import x
+    >>> print(cxxcode(Min(gamma(x) - 1, x), standard='C++11'))
+    std::min(x, std::tgamma(x) - 1)
+
+.. autoclass:: sympy.printing.cxxcode.CXX98CodePrinter
+   :members:
+
+   .. autoattribute:: CXX98CodePrinter.printmethod
+
+
+.. autoclass:: sympy.printing.cxxcode.CXX11CodePrinter
+   :members:
+
+   .. autoattribute:: CXX11CodePrinter.printmethod
+
+
+.. autofunction:: sympy.printing.cxxcode.cxxcode
+
+
 
 RCodePrinter
 ------------
@@ -137,18 +176,18 @@ Two basic examples:
     >>> from sympy import *
     >>> x = symbols("x")
     >>> fcode(sqrt(1-x**2))
-    '      sqrt(-x**2 + 1)'
+    '      sqrt(1 - x**2)'
     >>> fcode((3 + 4*I)/(1 - conjugate(x)))
-    '      (cmplx(3,4))/(-conjg(x) + 1)'
+    '      (cmplx(3,4))/(1 - conjg(x))'
 
 An example where line wrapping is required:
 
     >>> expr = sqrt(1-x**2).series(x,n=20).removeO()
     >>> print(fcode(expr))
-          -715.0d0/65536.0d0*x**18 - 429.0d0/32768.0d0*x**16 - 33.0d0/
-         @ 2048.0d0*x**14 - 21.0d0/1024.0d0*x**12 - 7.0d0/256.0d0*x**10 -
-         @ 5.0d0/128.0d0*x**8 - 1.0d0/16.0d0*x**6 - 1.0d0/8.0d0*x**4 - 1.0d0
-         @ /2.0d0*x**2 + 1
+        -715.0d0/65536.0d0*x**18 - 429.0d0/32768.0d0*x**16 - 33.0d0/
+        @ 2048.0d0*x**14 - 21.0d0/1024.0d0*x**12 - 7.0d0/256.0d0*x**10 -
+        @ 5.0d0/128.0d0*x**8 - 1.0d0/16.0d0*x**6 - 1.0d0/8.0d0*x**4 - 1.0d0
+        @ /2.0d0*x**2 + 1
 
 In case of line wrapping, it is handy to include the assignment so that lines
 are wrapped properly when the assignment part is added.
@@ -203,8 +242,8 @@ precision argument. Parameter definitions are easily avoided using the ``N``
 function.
 
     >>> print(fcode(x - pi**2 - E))
-          parameter (E = 2.71828182845905d0)
-          parameter (pi = 3.14159265358979d0)
+          parameter (E = 2.7182818284590452d0)
+          parameter (pi = 3.1415926535897932d0)
           x - pi**2 - E
     >>> print(fcode(x - pi**2 - E, precision=25))
           parameter (E = 2.718281828459045235360287d0)
@@ -217,29 +256,35 @@ When some functions are not part of the Fortran standard, it might be desirable
 to introduce the names of user-defined functions in the Fortran expression.
 
     >>> print(fcode(1 - gamma(x)**2, user_functions={'gamma': 'mygamma'}))
-          -mygamma(x)**2 + 1
+          1 - mygamma(x)**2
 
-However, when the user_functions argument is not provided, ``fcode`` attempts to
-use a reasonable default and adds a comment to inform the user of the issue.
+However, when the user_functions argument is not provided, ``fcode`` will
+generate code which assumes that a function of the same name will be provided
+by the user.  A comment will be added to inform the user of the issue:
 
     >>> print(fcode(1 - gamma(x)**2))
     C     Not supported in Fortran:
     C     gamma
-          -gamma(x)**2 + 1
+          1 - gamma(x)**2
+
+The printer can be configured to omit these comments:
+
+    >>> print(fcode(1 - gamma(x)**2, allow_unknown_functions=True))
+          1 - gamma(x)**2
 
 By default the output is human readable code, ready for copy and paste. With the
 option ``human=False``, the return value is suitable for post-processing with
 source code generators that write routines with multiple instructions. The
 return value is a three-tuple containing: (i) a set of number symbols that must
-be defined as 'Fortran parameters', (ii) a list functions that can not be
+be defined as 'Fortran parameters', (ii) a list functions that cannot be
 translated in pure Fortran and (iii) a string of Fortran code. A few examples:
 
     >>> fcode(1 - gamma(x)**2, human=False)
-    (set(), {gamma(x)}, '      -gamma(x)**2 + 1')
+    (set(), {gamma(x)}, '      1 - gamma(x)**2')
     >>> fcode(1 - sin(x)**2, human=False)
-    (set(), set(), '      -sin(x)**2 + 1')
+    (set(), set(), '      1 - sin(x)**2')
     >>> fcode(x - pi**2, human=False)
-    ({(pi, '3.14159265358979d0')}, set(), '      x - pi**2')
+    ({(pi, '3.1415926535897932d0')}, set(), '      x - pi**2')
 
 Mathematica code printing
 -------------------------
@@ -301,6 +346,20 @@ Octave (and Matlab) Code printing
 
 .. autofunction:: sympy.printing.octave.octave_code
 
+Rust code printing
+------------------
+
+.. module:: sympy.printing.rust
+
+.. autodata:: sympy.printing.rust.known_functions
+
+.. autoclass:: sympy.printing.rust.RustCodePrinter
+   :members:
+
+   .. autoattribute:: RustCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.rust.rust_code
+
 Theano Code printing
 --------------------
 
@@ -310,6 +369,8 @@ Theano Code printing
    :members:
 
    .. autoattribute:: TheanoPrinter.printmethod
+
+.. autofunction:: sympy.printing.theanocode.theano_code
 
 .. autofunction:: sympy.printing.theanocode.theano_function
 
@@ -372,16 +433,29 @@ MathMLPrinter
 
 This class is responsible for MathML printing. See ``sympy.printing.mathml``.
 
-More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
+More info on mathml : http://www.w3.org/TR/MathML2
 
-.. autoclass:: MathMLPrinter
+.. autoclass:: MathMLPrinterBase
+
+.. autoclass:: MathMLContentPrinter
    :members:
 
-   .. autoattribute:: MathMLPrinter.printmethod
+   .. autoattribute:: MathMLContentPrinter.printmethod
+
+.. autoclass:: MathMLPresentationPrinter
+   :members:
+
+   .. autoattribute:: MathMLPresentationPrinter.printmethod
 
 .. autofunction:: mathml
 
 .. autofunction:: print_mathml
+
+PythonCodePrinter
+-----------------
+
+.. automodule:: sympy.printing.pycode
+    :members:
 
 PythonPrinter
 -------------

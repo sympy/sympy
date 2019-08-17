@@ -6,6 +6,7 @@ from __future__ import print_function, division
 
 import warnings
 
+from sympy.core.compatibility import string_types
 from sympy.utilities.misc import filldedent
 
 
@@ -20,69 +21,34 @@ class SymPyDeprecationWarning(DeprecationWarning):
     >>> warnings.simplefilter(
     ...     "always", SymPyDeprecationWarning)
     >>> warnings.warn(
-    ...     "Don't do this, it's deprecated",
-    ...     SymPyDeprecationWarning) #doctest:+SKIP
-    __main__:1: SymPyDeprecationWarning: "Don't do this, it's deprecated"
+    ...     SymPyDeprecationWarning(feature="Old deprecated thing",
+    ...     issue=1065, deprecated_since_version="1.0")) #doctest:+SKIP
+    __main__:3: SymPyDeprecationWarning:
 
-    The recommended way to use this class is, however, is by calling
-    the warn method after constructing the message:
+    Old deprecated thing has been deprecated since SymPy 1.0. See
+    https://github.com/sympy/sympy/issues/1065 for more info.
 
-        >>> SymPyDeprecationWarning("Don't do this, it's deprecated.").warn() #doctest:+SKIP
-        __main__:1: SymPyDeprecationWarning:
+    >>> SymPyDeprecationWarning(feature="Old deprecated thing",
+    ... issue=1065, deprecated_since_version="1.1").warn() #doctest:+SKIP
+    __main__:1: SymPyDeprecationWarning:
 
-        Don't do this, it's deprecated.
+    Old deprecated thing has been deprecated since SymPy 1.1.
+    See https://github.com/sympy/sympy/issues/1065 for more info.
 
-          warning (see_above, SymPyDeprecationWarning)
+    Three arguments to this class are required: ``feature``, ``issue`` and
+    ``deprecated_since_version``.
 
-    To provide additional information, create an instance of this
-    class in this way:
-
-    >>> SymPyDeprecationWarning(
-    ...     feature="Such and such",
-    ...     last_supported_version="1.2.3",
-    ...     useinstead="this other feature")
-    Such and such has been deprecated. It will be last supported in SymPy
-    version 1.2.3. Use this other feature instead.
-
-    Note that the text in ``feature`` begins a sentence, so if it begins with
-    a plain English word, the first letter of that word should be capitalized.
-
-    Either (or both) of the arguments ``last_supported_version`` and
-    ``useinstead`` can be omitted. In this case the corresponding sentence
-    will not be shown:
-
-    >>> SymPyDeprecationWarning(feature="Such and such",
-    ...     useinstead="this other feature")
-    Such and such has been deprecated. Use this other feature instead.
-
-    You can still provide the argument value.  If it is a string, it
-    will be appended to the end of the message:
-
-    >>> SymPyDeprecationWarning(
-    ...     feature="Such and such",
-    ...     useinstead="this other feature",
-    ...     value="Contact the developers for further information.")
-    Such and such has been deprecated. Use this other feature instead.
-    Contact the developers for further information.
-
-    If, however, the argument value does not hold a string, a string
-    representation of the object will be appended to the message:
-
-    >>> SymPyDeprecationWarning(
-    ...     feature="Such and such",
-    ...     useinstead="this other feature",
-    ...     value=[1,2,3])
-    Such and such has been deprecated. Use this other feature instead.
-    ([1, 2, 3])
-
-    To associate an issue with a deprecation, use the ``issue`` flag.
+    The ``issue`` flag should be an integer referencing for a "Deprecation
+    Removal" issue in the SymPy issue tracker. See
+    https://github.com/sympy/sympy/wiki/Deprecating-policy.
 
     >>> SymPyDeprecationWarning(
     ...    feature="Old feature",
     ...    useinstead="new feature",
-    ...    issue=5241)
-    Old feature has been deprecated. Use new feature instead. See
-    https://github.com/sympy/sympy/issues/5241 for more info.
+    ...    issue=5241,
+    ...    deprecated_since_version="1.1")
+    Old feature has been deprecated since SymPy 1.1. Use new feature
+    instead. See https://github.com/sympy/sympy/issues/5241 for more info.
 
     Every formal deprecation should have an associated issue in the GitHub
     issue tracker.  All such issues should have the DeprecationRemoval
@@ -95,9 +61,63 @@ class SymPyDeprecationWarning(DeprecationWarning):
     >>> SymPyDeprecationWarning(
     ...    feature="Old feature",
     ...    useinstead="new feature",
-    ...    deprecated_since_version="0.7.2")
+    ...    deprecated_since_version="0.7.2",
+    ...    issue=1065)
     Old feature has been deprecated since SymPy 0.7.2. Use new feature
-    instead.
+    instead. See https://github.com/sympy/sympy/issues/1065 for more info.
+
+    To provide additional information, create an instance of this
+    class in this way:
+
+    >>> SymPyDeprecationWarning(
+    ...     feature="Such and such",
+    ...     last_supported_version="1.2.3",
+    ...     useinstead="this other feature",
+    ...     issue=1065,
+    ...     deprecated_since_version="1.1")
+    Such and such has been deprecated since SymPy 1.1. It will be last
+    supported in SymPy version 1.2.3. Use this other feature instead. See
+    https://github.com/sympy/sympy/issues/1065 for more info.
+
+    Note that the text in ``feature`` begins a sentence, so if it begins with
+    a plain English word, the first letter of that word should be capitalized.
+
+    Either (or both) of the arguments ``last_supported_version`` and
+    ``useinstead`` can be omitted. In this case the corresponding sentence
+    will not be shown:
+
+    >>> SymPyDeprecationWarning(feature="Such and such",
+    ...     useinstead="this other feature", issue=1065,
+    ...     deprecated_since_version="1.1")
+    Such and such has been deprecated since SymPy 1.1. Use this other
+    feature instead. See https://github.com/sympy/sympy/issues/1065 for
+    more info.
+
+    You can still provide the argument value.  If it is a string, it
+    will be appended to the end of the message:
+
+    >>> SymPyDeprecationWarning(
+    ...     feature="Such and such",
+    ...     useinstead="this other feature",
+    ...     value="Contact the developers for further information.",
+    ...     issue=1065,
+    ...     deprecated_since_version="1.1")
+    Such and such has been deprecated since SymPy 1.1. Use this other
+    feature instead. See https://github.com/sympy/sympy/issues/1065 for
+    more info.  Contact the developers for further information.
+
+    If, however, the argument value does not hold a string, a string
+    representation of the object will be appended to the message:
+
+    >>> SymPyDeprecationWarning(
+    ...     feature="Such and such",
+    ...     useinstead="this other feature",
+    ...     value=[1,2,3],
+    ...     issue=1065,
+    ...     deprecated_since_version="1.1")
+    Such and such has been deprecated since SymPy 1.1. Use this other
+    feature instead. See https://github.com/sympy/sympy/issues/1065 for
+    more info.  ([1, 2, 3])
 
     Note that it may be necessary to go back through all the deprecations
     before a release to make sure that the version number is correct.  So just
@@ -115,27 +135,40 @@ class SymPyDeprecationWarning(DeprecationWarning):
 
     def __init__(self, value=None, feature=None, last_supported_version=None,
                  useinstead=None, issue=None, deprecated_since_version=None):
+
+        self.args = (value, feature, last_supported_version, useinstead,
+                issue, deprecated_since_version)
+
         self.fullMessage = ""
 
-        if feature:
-            if deprecated_since_version:
-                self.fullMessage = "%s has been deprecated since SymPy %s. " % \
+        if not feature:
+            raise ValueError("feature is required argument of SymPyDeprecationWarning")
+
+        if not deprecated_since_version:
+            raise ValueError("deprecated_since_version is a required argument of SymPyDeprecationWarning")
+
+        self.fullMessage = "%s has been deprecated since SymPy %s. " % \
                                    (feature, deprecated_since_version)
-            else:
-                self.fullMessage = "%s has been deprecated. " % feature
 
         if last_supported_version:
             self.fullMessage += ("It will be last supported in SymPy "
                 "version %s. ") % last_supported_version
         if useinstead:
             self.fullMessage += "Use %s instead. " % useinstead
-        if issue:
-            self.fullMessage += ("See "
-                "https://github.com/sympy/sympy/issues/%d for more "
-                "info. ") % issue
+
+        if not issue:
+            raise ValueError("""\
+The issue argument of SymPyDeprecationWarning is required.
+This should be a separate issue with the "Deprecation Removal" label. See
+https://github.com/sympy/sympy/wiki/Deprecating-policy.\
+""")
+
+        self.fullMessage += ("See "
+            "https://github.com/sympy/sympy/issues/%d for more "
+            "info. ") % issue
 
         if value:
-            if not isinstance(value, str):
+            if not isinstance(value, string_types):
                 value = "(%s)" % repr(value)
             value = " " + value
         else:
@@ -147,11 +180,10 @@ class SymPyDeprecationWarning(DeprecationWarning):
         return '\n%s\n' % filldedent(self.fullMessage)
 
     def warn(self, stacklevel=2):
-        see_above = self.fullMessage
         # the next line is what the user would see after the error is printed
-        # if stacklevel was set to 1. If you are writting a wrapper around this,
+        # if stacklevel was set to 1. If you are writing a wrapper around this,
         # increase the stacklevel accordingly.
-        warnings.warn(see_above, SymPyDeprecationWarning, stacklevel=stacklevel)
+        warnings.warn(self, stacklevel=stacklevel)
 
 # Python by default hides DeprecationWarnings, which we do not want.
 warnings.simplefilter("once", SymPyDeprecationWarning)

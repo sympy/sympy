@@ -6,15 +6,15 @@ Contains
 """
 
 from __future__ import division, print_function
-
 from sympy.core import S
-from sympy.core.numbers import oo
-
+from sympy.core.compatibility import ordered
+from sympy.core.symbol import _symbol
+from sympy import symbols, simplify, solve
 from sympy.geometry.entity import GeometryEntity, GeometrySet
-from sympy.geometry.point import Point
-from sympy.geometry.line import Line
-from sympy.geometry.util import _symbol
-
+from sympy.geometry.point import Point, Point2D
+from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
+from sympy.geometry.ellipse import Ellipse
+from sympy.functions import sign
 
 class Parabola(GeometrySet):
     """A parabolic GeometryEntity.
@@ -80,6 +80,23 @@ class Parabola(GeometrySet):
 
     @property
     def ambient_dimension(self):
+        """Returns the ambient dimension of parabola.
+
+        Returns
+        =======
+
+        ambient_dimension : integer
+
+        Examples
+        ========
+
+        >>> from sympy import Parabola, Point, Line
+        >>> f1 = Point(0, 0)
+        >>> p1 = Parabola(f1, Line(Point(5, 8), Point(7, 8)))
+        >>> p1.ambient_dimension
+        2
+
+        """
         return S(2)
 
     @property
@@ -195,8 +212,8 @@ class Parabola(GeometrySet):
         -x**2 - 16*z + 64
 
         """
-        x = _symbol(x)
-        y = _symbol(y)
+        x = _symbol(x, real=True)
+        y = _symbol(y, real=True)
 
         if (self.axis_of_symmetry.slope == 0):
             t1 = 4 * (self.p_parameter) * (x - self.vertex.x)
@@ -268,6 +285,56 @@ class Parabola(GeometrySet):
         """
         return self.args[0]
 
+    def intersection(self, o):
+        """The intersection of the parabola and another geometrical entity `o`.
+
+        Parameters
+        ==========
+
+        o : GeometryEntity, LinearEntity
+
+        Returns
+        =======
+
+        intersection : list of GeometryEntity objects
+
+        Examples
+        ========
+
+        >>> from sympy import Parabola, Point, Ellipse, Line, Segment
+        >>> p1 = Point(0,0)
+        >>> l1 = Line(Point(1, -2), Point(-1,-2))
+        >>> parabola1 = Parabola(p1, l1)
+        >>> parabola1.intersection(Ellipse(Point(0, 0), 2, 5))
+        [Point2D(-2, 0), Point2D(2, 0)]
+        >>> parabola1.intersection(Line(Point(-7, 3), Point(12, 3)))
+        [Point2D(-4, 3), Point2D(4, 3)]
+        >>> parabola1.intersection(Segment((-12, -65), (14, -68)))
+        []
+
+        """
+        x, y = symbols('x y', real=True)
+        parabola_eq = self.equation()
+        if isinstance(o, Parabola):
+            if o in self:
+                return [o]
+            else:
+                return list(ordered([Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
+        elif isinstance(o, Point2D):
+            if simplify(parabola_eq.subs(([(x, o._args[0]), (y, o._args[1])]))) == 0:
+                return [o]
+            else:
+                return []
+        elif isinstance(o, (Segment2D, Ray2D)):
+            result = solve([parabola_eq, Line2D(o.points[0], o.points[1]).equation()], [x, y])
+            return list(ordered([Point2D(i) for i in result if i in o]))
+        elif isinstance(o, (Line2D, Ellipse)):
+            return list(ordered([Point2D(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
+        elif isinstance(o, LinearEntity3D):
+            raise TypeError('Entity must be two dimensional, not three dimensional')
+        else:
+            raise TypeError('Wrong type of argument were put')
+
     @property
     def p_parameter(self):
         """P is a parameter of parabola.
@@ -301,20 +368,13 @@ class Parabola(GeometrySet):
         -4
 
         """
-        if (self.axis_of_symmetry.slope == 0):
-            x = -(self.directrix.coefficients[2])
-            if (x < self.focus.args[0]):
-                p = self.focal_length
-            else:
-                p = -self.focal_length
+        if self.axis_of_symmetry.slope == 0:
+            x = self.directrix.coefficients[2]
+            p = sign(self.focus.args[0] + x)
         else:
-            y = -(self.directrix.coefficients[2])
-            if (y > self.focus.args[1]):
-                p = -self.focal_length
-            else:
-                p = self.focal_length
-
-        return p
+            y = self.directrix.coefficients[2]
+            p = sign(self.focus.args[1] + y)
+        return p * self.focal_length
 
     @property
     def vertex(self):

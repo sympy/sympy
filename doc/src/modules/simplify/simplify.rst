@@ -15,6 +15,10 @@ nthroot
 -------
 .. autofunction:: nthroot
 
+kroneckersimp
+-------------
+.. autofunction:: kroneckersimp
+
 besselsimp
 ----------
 .. autofunction:: besselsimp
@@ -97,24 +101,24 @@ powdenest
 ^^^^^^^^^
 .. autofunction:: powdenest
 
-Combinatrial simplification
----------------------------
+Combinatorial simplification
+----------------------------
 .. module:: sympy.simplify.combsimp
 
 combsimp
 ^^^^^^^^
 .. autofunction:: combsimp
 
-Square Root Denest
-------------------
+Square Root Denesting
+---------------------
 .. module:: sympy.simplify.sqrtdenest
 
 sqrtdenest
 ^^^^^^^^^^
 .. autofunction:: sqrtdenest
 
-Common Subexpresion Elimination
--------------------------------
+Common Subexpression Elimination
+--------------------------------
 .. module:: sympy.simplify.cse_main
 
 cse

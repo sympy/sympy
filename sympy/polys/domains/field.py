@@ -10,7 +10,8 @@ from sympy.utilities import public
 class Field(Ring):
     """Represents a field domain. """
 
-    has_Field = True
+    is_Field = True
+    is_PID = True
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
@@ -42,6 +43,9 @@ class Field(Ring):
 
         This definition of GCD over fields allows to clear denominators
         in `primitive()`.
+
+        Examples
+        ========
 
         >>> from sympy.polys.domains import QQ
         >>> from sympy import S, gcd, primitive

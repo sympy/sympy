@@ -4,32 +4,28 @@ from __future__ import print_function, division
 
 import math
 
-from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
-from sympy.core.compatibility import ordered
+from sympy.core.compatibility import ordered, range, reduce
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import _mexpand
+from sympy.core.logic import fuzzy_not
 from sympy.core.mul import expand_2arg, Mul
+from sympy.core.numbers import Rational, igcd, comp
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
+from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, igcd, comp
-from sympy.core.exprtools import factor_terms
-from sympy.core.logic import fuzzy_not
-
-from sympy.ntheory import divisors, isprime, nextprime
 from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
 from sympy.functions.elementary.miscellaneous import root
-
-from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
-from sympy.polys.specialpolys import cyclotomic_poly
+from sympy.ntheory import divisors, isprime, nextprime
 from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
     DomainError)
 from sympy.polys.polyquinticconst import PolyQuintic
+from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.rationaltools import together
-
+from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.simplify import simplify, powsimp
 from sympy.utilities import public
-
-from sympy.core.compatibility import reduce, range
 
 
 def roots_linear(f):
@@ -227,10 +223,10 @@ def _roots_quartic_euler(p, q, r, a):
     -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
     """
     # solve the resolvent equation
-    x = Symbol('x')
+    x = Dummy('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
     xsols = list(roots(Poly(eq, x), cubics=False).keys())
-    xsols = [sol for sol in xsols if sol.is_rational]
+    xsols = [sol for sol in xsols if sol.is_rational and sol.is_nonzero]
     if not xsols:
         return None
     R = max(xsols)
@@ -282,7 +278,7 @@ def roots_quartic(f):
     ==========
 
     1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
-    2. http://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
+    2. https://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
     3. http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
     4. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
     5. http://www.albmath.org/files/Math_5713.pdf
@@ -310,8 +306,8 @@ def roots_quartic(f):
     else:
         a2 = a**2
         e = b - 3*a2/8
-        f = c + a*(a2/8 - b/2)
-        g = d - a*(a*(3*a2/256 - b/16) + c/4)
+        f = _mexpand(c + a*(a2/8 - b/2))
+        g = _mexpand(d - a*(a*(3*a2/256 - b/16) + c/4))
         aon4 = a/4
 
         if f is S.Zero:
@@ -501,7 +497,7 @@ def roots_cyclotomic(f, factor=False):
 
 def roots_quintic(f):
     """
-    Calulate exact roots of a solvable quintic
+    Calculate exact roots of a solvable quintic
     """
     result = []
     coeff_5, coeff_4, p, q, r, s = f.all_coeffs()
@@ -569,7 +565,7 @@ def roots_quintic(f):
     Res_n = [None, [None]*5, [None]*5, [None]*5, [None]*5]
     sol = Symbol('sol')
 
-    # Simplifying improves performace a lot for exact expressions
+    # Simplifying improves performance a lot for exact expressions
     R1 = _quintic_simplify(R1)
     R2 = _quintic_simplify(R2)
     R3 = _quintic_simplify(R3)
@@ -587,11 +583,11 @@ def roots_quintic(f):
     R3 = R3.as_real_imag()
     R4 = R4.as_real_imag()
 
-    for i, root in enumerate(_sol):
-        Res[1][i] = _quintic_simplify(root.subs({ a: R1[0], b: R1[1] }))
-        Res[2][i] = _quintic_simplify(root.subs({ a: R2[0], b: R2[1] }))
-        Res[3][i] = _quintic_simplify(root.subs({ a: R3[0], b: R3[1] }))
-        Res[4][i] = _quintic_simplify(root.subs({ a: R4[0], b: R4[1] }))
+    for i, currentroot in enumerate(_sol):
+        Res[1][i] = _quintic_simplify(currentroot.subs({ a: R1[0], b: R1[1] }))
+        Res[2][i] = _quintic_simplify(currentroot.subs({ a: R2[0], b: R2[1] }))
+        Res[3][i] = _quintic_simplify(currentroot.subs({ a: R3[0], b: R3[1] }))
+        Res[4][i] = _quintic_simplify(currentroot.subs({ a: R4[0], b: R4[1] }))
 
     for i in range(1, 5):
         for j in range(5):
@@ -604,9 +600,6 @@ def roots_quintic(f):
         if comp(im(r1_n*Res_n[4][i]), 0, tol):
             r4 = Res[4][i]
             break
-
-    u, v = quintic.uv(theta, d)
-    sqrt5 = math.sqrt(5)
 
     # Now we have various Res values. Each will be a list of five
     # values. We have to pick one r value from those five for each Res
@@ -721,6 +714,7 @@ def preprocess_roots(poly):
     """Try to get rid of symbolic coefficients from ``poly``. """
     coeff = S.One
 
+    poly_func = poly.func
     try:
         _, poly = poly.clear_denoms(convert=True)
     except DomainError:
@@ -784,6 +778,8 @@ def preprocess_roots(poly):
             poly = poly.termwise(func)
             coeff *= basis
 
+    if not isinstance(poly, poly_func):
+        poly = poly_func(poly)
     return coeff, poly
 
 
@@ -845,7 +841,7 @@ def roots(f, *gens, **flags):
     References
     ==========
 
-    1. http://en.wikipedia.org/wiki/Cubic_function#Trigonometric_.28and_hyperbolic.29_method
+    .. [1] https://en.wikipedia.org/wiki/Cubic_function#Trigonometric_.28and_hyperbolic.29_method
 
     """
     from sympy.polys.polytools import to_rational_coeffs
@@ -879,13 +875,14 @@ def roots(f, *gens, **flags):
                 # check for foo**n factors in the constant
                 n = f.degree()
                 npow_bases = []
+                others = []
                 expr = f.as_expr()
                 con = expr.as_independent(*gens)[0]
                 for p in Mul.make_args(con):
                     if p.is_Pow and not p.exp % n:
                         npow_bases.append(p.base**(p.exp/n))
                     else:
-                        other.append(p)
+                        others.append(p)
                     if npow_bases:
                         b = Mul(*npow_bases)
                         B = Dummy()
@@ -905,27 +902,27 @@ def roots(f, *gens, **flags):
         if f.is_multivariate:
             raise PolynomialError('multivariate polynomials are not supported')
 
-    def _update_dict(result, root, k):
-        if root in result:
-            result[root] += k
+    def _update_dict(result, currentroot, k):
+        if currentroot in result:
+            result[currentroot] += k
         else:
-            result[root] = k
+            result[currentroot] = k
 
     def _try_decompose(f):
         """Find roots using functional decomposition. """
         factors, roots = f.decompose(), []
 
-        for root in _try_heuristics(factors[0]):
-            roots.append(root)
+        for currentroot in _try_heuristics(factors[0]):
+            roots.append(currentroot)
 
-        for factor in factors[1:]:
+        for currentfactor in factors[1:]:
             previous, roots = list(roots), []
 
-            for root in previous:
-                g = factor - Poly(root, f.gen)
+            for currentroot in previous:
+                g = currentfactor - Poly(currentroot, f.gen)
 
-                for root in _try_heuristics(g):
-                    roots.append(root)
+                for currentroot in _try_heuristics(g):
+                    roots.append(currentroot)
 
         return roots
 
@@ -976,7 +973,7 @@ def roots(f, *gens, **flags):
 
     coeff, f = preprocess_roots(f)
 
-    if auto and f.get_domain().has_Ring:
+    if auto and f.get_domain().is_Ring:
         f = f.to_field()
 
     rescale_x = None
@@ -985,7 +982,8 @@ def roots(f, *gens, **flags):
     result = {}
 
     if not f.is_ground:
-        if not f.get_domain().is_Exact:
+        dom = f.get_domain()
+        if not dom.is_Exact and dom.is_Numerical:
             for r in f.nroots():
                 _update_dict(result, r, 1)
         elif f.degree() == 1:
@@ -1010,29 +1008,30 @@ def roots(f, *gens, **flags):
                                 rescale_x, f = res[1], res[-1]
                             result = roots(f)
                             if not result:
-                                for root in _try_decompose(f):
-                                    _update_dict(result, root, 1)
+                                for currentroot in _try_decompose(f):
+                                    _update_dict(result, currentroot, 1)
+                        else:
+                            for r in _try_heuristics(f):
+                                _update_dict(result, r, 1)
                     else:
-                        for root in _try_decompose(f):
-                            _update_dict(result, root, 1)
+                        for currentroot in _try_decompose(f):
+                            _update_dict(result, currentroot, 1)
                 else:
-                    for factor, k in factors:
-                        for r in _try_heuristics(Poly(factor, f.gen, field=True)):
+                    for currentfactor, k in factors:
+                        for r in _try_heuristics(Poly(currentfactor, f.gen, field=True)):
                             _update_dict(result, r, k)
 
     if coeff is not S.One:
         _result, result, = result, {}
 
-        for root, k in _result.items():
-            result[coeff*root] = k
-
-    result.update(zeros)
+        for currentroot, k in _result.items():
+            result[coeff*currentroot] = k
 
     if filter not in [None, 'C']:
         handlers = {
             'Z': lambda r: r.is_Integer,
             'Q': lambda r: r.is_Rational,
-            'R': lambda r: r.is_real,
+            'R': lambda r: r.is_extended_real,
             'I': lambda r: r.is_imaginary,
         }
 
@@ -1059,6 +1058,9 @@ def roots(f, *gens, **flags):
         for k, v in result.items():
             result1[k + translate_x] = v
         result = result1
+
+    # adding zero roots after non-trivial roots have been translated
+    result.update(zeros)
 
     if not multiple:
         return result

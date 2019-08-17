@@ -5,7 +5,12 @@ The dense matrix is stored as a list of lists
 """
 
 from sympy.core.compatibility import range
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+SymPyDeprecationWarning(
+    feature="densetools",
+    issue=12695,
+    deprecated_since_version="1.1").warn()
 
 def trace(matlist, K):
     """
@@ -92,10 +97,13 @@ def conjugate_row(row, K):
     """
     result = []
     for r in row:
-        try:
-            result.append(r.conjugate())
-        except AttributeError:
-            result.append(r)
+        conj = getattr(r, 'conjugate', None)
+        if conj is not None:
+            conjrow = conj()
+        else:
+            conjrow = r
+        result.append(conjrow)
+
     return result
 
 

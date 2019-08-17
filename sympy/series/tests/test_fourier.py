@@ -1,16 +1,23 @@
 from sympy import (symbols, pi, Piecewise, sin, cos, sinc, Rational,
-                   oo, fourier_series, Add)
+                   oo, fourier_series, Add, log, exp, tan)
 from sympy.series.fourier import FourierSeries
 from sympy.utilities.pytest import raises
+from sympy.core.cache import lru_cache
 
 x, y, z = symbols('x y z')
 
-fo = fourier_series(x, (x, -pi, pi))
-fe = fourier_series(x**2, (-pi, pi))
-fp = fourier_series(Piecewise((0, x < 0), (pi, True)), (x, -pi, pi))
+# Don't declare these during import because they are slow
+@lru_cache()
+def _get_examples():
+    fo = fourier_series(x, (x, -pi, pi))
+    fe = fourier_series(x**2, (-pi, pi))
+    fp = fourier_series(Piecewise((0, x < 0), (pi, True)), (x, -pi, pi))
+    return fo, fe, fp
 
 
 def test_FourierSeries():
+    fo, fe, fp = _get_examples()
+
     assert fourier_series(1, (-pi, pi)) == 1
     assert (Piecewise((0, x < 0), (pi, True)).
             fourier_series((x, -pi, pi)).truncate()) == fp.truncate()
@@ -77,6 +84,8 @@ def test_fourier_series_square_wave():
 
 
 def test_FourierSeries__operations():
+    fo, fe, fp = _get_examples()
+
     fes = fe.scale(-1).shift(pi**2)
     assert fes.truncate() == 4*cos(x) - cos(2*x) + 2*pi**2 / 3
 
@@ -100,11 +109,15 @@ def test_FourierSeries__operations():
 
 
 def test_FourierSeries__neg():
+    fo, fe, fp = _get_examples()
+
     assert (-fo).truncate() == -2*sin(x) + sin(2*x) - (2*sin(3*x) / 3)
     assert (-fe).truncate() == +4*cos(x) - cos(2*x) - pi**2 / 3
 
 
 def test_FourierSeries__add__sub():
+    fo, fe, fp = _get_examples()
+
     assert fo + fo == fo.scale(2)
     assert fo - fo == 0
     assert -fe - fe == fe.scale(-2)
@@ -117,3 +130,21 @@ def test_FourierSeries__add__sub():
     assert isinstance(fo + 1, Add)
 
     raises(ValueError, lambda: fo + fourier_series(x, (x, 0, 2)))
+
+
+def test_FourierSeries_finite():
+
+    assert fourier_series(sin(x)).truncate(1) == sin(x)
+    # assert type(fourier_series(sin(x)*log(x))).truncate() == FourierSeries
+    # assert type(fourier_series(sin(x**2+6))).truncate() == FourierSeries
+    assert fourier_series(sin(x)*log(y)*exp(z),(x,pi,-pi)).truncate() == sin(x)*log(y)*exp(z)
+    assert fourier_series(sin(x)**6).truncate(oo) == -15*cos(2*x)/32 + 3*cos(4*x)/16 - cos(6*x)/32 \
+           + Rational(5, 16)
+    assert fourier_series(sin(x) ** 6).truncate() == -15 * cos(2 * x) / 32 + 3 * cos(4 * x) / 16 \
+           + Rational(5, 16)
+    assert fourier_series(sin(4*x+3) + cos(3*x+4)).truncate(oo) ==  -sin(4)*sin(3*x) + sin(4*x)*cos(3) \
+           + cos(4)*cos(3*x) + sin(3)*cos(4*x)
+    assert fourier_series(sin(x)+cos(x)*tan(x)).truncate(oo) == 2*sin(x)
+    assert fourier_series(cos(pi*x), (x, -1, 1)).truncate(oo) == cos(pi*x)
+    assert fourier_series(cos(3*pi*x + 4) - sin(4*pi*x)*log(pi*y) , (x, -1, 1)).truncate(oo) == -log(pi*y)*sin(4*pi*x)\
+           - sin(4)*sin(3*pi*x) + cos(4)*cos(3*pi*x)

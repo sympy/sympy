@@ -1,9 +1,15 @@
-from sympy.tensor.tensor import tensor_indices, tensorhead, get_lines, TensExpr
-from sympy import simplify
-from sympy.physics.hep.gamma_matrices import GammaMatrix as G, GammaMatrixHead, DiracSpinorIndex
-from sympy.utilities.pytest import raises
+from sympy import Matrix
+
+from sympy.tensor.tensor import tensor_indices, TensorHead, tensor_heads, \
+    TensExpr, canon_bp
+from sympy import eye
+from sympy.physics.hep.gamma_matrices import GammaMatrix as G, LorentzIndex, \
+    kahane_simplify, gamma_trace, _simplify_single_line, simplify_gamma_expression
+
 
 def _is_tensor_eq(arg1, arg2):
+    arg1 = canon_bp(arg1)
+    arg2 = canon_bp(arg2)
     if isinstance(arg1, TensExpr):
         return arg1.equals(arg2)
     elif isinstance(arg2, TensExpr):
@@ -22,11 +28,11 @@ def execute_gamma_simplify_tests_for_function(tfunc, D):
 
     """
 
-    mu, nu, rho, sigma = tensor_indices("mu, nu, rho, sigma", G.LorentzIndex)
-    a1, a2, a3, a4, a5, a6 = tensor_indices("a1:7", G.LorentzIndex)
-    mu11, mu12, mu21, mu31, mu32, mu41, mu51, mu52 = tensor_indices("mu11, mu12, mu21, mu31, mu32, mu41, mu51, mu52", G.LorentzIndex)
-    mu61, mu71, mu72 = tensor_indices("mu61, mu71, mu72", G.LorentzIndex)
-    m0, m1, m2, m3, m4, m5, m6 = tensor_indices("m0:7", G.LorentzIndex)
+    mu, nu, rho, sigma = tensor_indices("mu, nu, rho, sigma", LorentzIndex)
+    a1, a2, a3, a4, a5, a6 = tensor_indices("a1:7", LorentzIndex)
+    mu11, mu12, mu21, mu31, mu32, mu41, mu51, mu52 = tensor_indices("mu11, mu12, mu21, mu31, mu32, mu41, mu51, mu52", LorentzIndex)
+    mu61, mu71, mu72 = tensor_indices("mu61, mu71, mu72", LorentzIndex)
+    m0, m1, m2, m3, m4, m5, m6 = tensor_indices("m0:7", LorentzIndex)
 
     def g(xx, yy):
         return (G(xx)*G(yy) + G(yy)*G(xx))/2
@@ -47,10 +53,10 @@ def execute_gamma_simplify_tests_for_function(tfunc, D):
         assert _is_tensor_eq(tfunc(t), \
             16*G(mu31)*G(mu32)*G(mu72)*G(mu71)*G(mu11)*G(mu52)*G(mu51)*G(mu12)*G(mu61)*G(mu21)*G(mu41) + 16*G(mu31)*G(mu32)*G(mu72)*G(mu71)*G(mu12)*G(mu51)*G(mu52)*G(mu11)*G(mu61)*G(mu21)*G(mu41) + 16*G(mu71)*G(mu72)*G(mu32)*G(mu31)*G(mu11)*G(mu52)*G(mu51)*G(mu12)*G(mu61)*G(mu21)*G(mu41) + 16*G(mu71)*G(mu72)*G(mu32)*G(mu31)*G(mu12)*G(mu51)*G(mu52)*G(mu11)*G(mu61)*G(mu21)*G(mu41))
 
-    # Fully G.Lorentz-contracted expressions, these return scalars:
+    # Fully Lorentz-contracted expressions, these return scalars:
 
     def add_delta(ne):
-        return ne * DiracSpinorIndex.delta(DiracSpinorIndex.auto_left, -DiracSpinorIndex.auto_right)
+        return ne * eye(4)  # DiracSpinorIndex.delta(DiracSpinorIndex.auto_left, -DiracSpinorIndex.auto_right)
 
     t = (G(mu)*G(-mu))
     ts = add_delta(D)
@@ -183,107 +189,107 @@ def test_kahane_algorithm():
     # Wrap this function to convert to and from TIDS:
 
     def tfunc(e):
-        return GammaMatrixHead._simplify_single_line(e)
+        return _simplify_single_line(e)
 
     execute_gamma_simplify_tests_for_function(tfunc, D=4)
 
+
 def test_kahane_simplify1():
-    i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15 = tensor_indices('i0:16', G.LorentzIndex)
-    mu, nu, rho, sigma = tensor_indices("mu, nu, rho, sigma", G.LorentzIndex)
-    KD = DiracSpinorIndex.delta
-    sl = DiracSpinorIndex.auto_left
-    sr = DiracSpinorIndex.auto_right
+    i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15 = tensor_indices('i0:16', LorentzIndex)
+    mu, nu, rho, sigma = tensor_indices("mu, nu, rho, sigma", LorentzIndex)
     D = 4
-    s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16 = \
-                   tensor_indices('s0:17', DiracSpinorIndex)
-    t = DiracSpinorIndex.delta(s0,s1)
     t = G(i0)*G(i1)
-    r = G._kahane_simplify(t.coeff, t._tids)
+    r = kahane_simplify(t)
     assert r.equals(t)
 
     t = G(i0)*G(i1)*G(-i0)
-    r = G._kahane_simplify(t.coeff, t._tids)
+    r = kahane_simplify(t)
     assert r.equals(-2*G(i1))
-    t = G(i0,s0,-s1)*G(i1,s1,-s2)*G(-i0,s2,-s3)
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals(-2*G(i1, s0, -s3))
+    t = G(i0)*G(i1)*G(-i0)
+    r = kahane_simplify(t)
+    assert r.equals(-2*G(i1))
 
-    t = G(i0, s0, -s1)*G(i1, s1, -s2)
-    r = G._kahane_simplify(t.coeff, t._tids)
+    t = G(i0)*G(i1)
+    r = kahane_simplify(t)
     assert r.equals(t)
-    t = G(i0, s0, -s1)*G(i1, s1, -s0)
-    r = G._kahane_simplify(t.coeff, t._tids)
+    t = G(i0)*G(i1)
+    r = kahane_simplify(t)
     assert r.equals(t)
     t = G(i0)*G(-i0)
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals(4*KD(sl, -sr))
-    t = G(i0,s0,-s1)*G(-i0,s1,-s2)
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals(4*KD(s0, -s2))
-    t = G(i0,s0,-s1)*G(-i0,s1,-s0)
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals(16)
+    r = kahane_simplify(t)
+    assert r.equals(4*eye(4))
+    t = G(i0)*G(-i0)
+    r = kahane_simplify(t)
+    assert r.equals(4*eye(4))
+    t = G(i0)*G(-i0)
+    r = kahane_simplify(t)
+    assert r.equals(4*eye(4))
     t = G(i0)*G(i1)*G(-i0)
-    r = G._kahane_simplify(t.coeff, t._tids)
+    r = kahane_simplify(t)
     assert r.equals(-2*G(i1))
     t = G(i0)*G(i1)*G(-i0)*G(-i1)
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals((2*D - D**2)*KD(sl, -sr))
-    t = G(i0,s0,-s1)*G(i1,s1,-s2)*G(-i0,s2,-s3)*G(-i1,s3,-s0)
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals(4*(2*D - D**2))
-    t = G(i0,s0,-s1)*G(-i0,s2,-s3)*G(i1,s1,-s2)*G(-i1,s3,-s0)
-    raises(ValueError, lambda: G._kahane_simplify(t.coeff, t._tids))
+    r = kahane_simplify(t)
+    assert r.equals((2*D - D**2)*eye(4))
+    t = G(i0)*G(i1)*G(-i0)*G(-i1)
+    r = kahane_simplify(t)
+    assert r.equals((2*D - D**2)*eye(4))
+    t = G(i0)*G(-i0)*G(i1)*G(-i1)
+    r = kahane_simplify(t)
+    assert r.equals(16*eye(4))
     t = (G(mu)*G(nu)*G(-nu)*G(-mu))
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals(D**2*KD(sl, -sr))
-    t = (G(mu,s0,-s1)*G(nu,s1,-s2)*G(-nu,s2,-s3)*G(-mu,s3,-s4))
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals(D**2*KD(s0, -s4))
-    t = (G(mu,s0,-s1)*G(nu,s1,-s2)*G(-nu,s2,-s3)*G(-mu,s3,-s0))
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals(4*D**2)
+    r = kahane_simplify(t)
+    assert r.equals(D**2*eye(4))
+    t = (G(mu)*G(nu)*G(-nu)*G(-mu))
+    r = kahane_simplify(t)
+    assert r.equals(D**2*eye(4))
+    t = (G(mu)*G(nu)*G(-nu)*G(-mu))
+    r = kahane_simplify(t)
+    assert r.equals(D**2*eye(4))
     t = (G(mu)*G(nu)*G(-rho)*G(-nu)*G(-mu)*G(rho))
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals((4*D - 4*D**2 + D**3)*KD(sl, -sr))
+    r = kahane_simplify(t)
+    assert r.equals((4*D - 4*D**2 + D**3)*eye(4))
     t = (G(-mu)*G(-nu)*G(-rho)*G(-sigma)*G(nu)*G(mu)*G(sigma)*G(rho))
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals((-16*D + 24*D**2 - 8*D**3 + D**4)*KD(sl, -sr))
+    r = kahane_simplify(t)
+    assert r.equals((-16*D + 24*D**2 - 8*D**3 + D**4)*eye(4))
     t = (G(-mu)*G(nu)*G(-rho)*G(sigma)*G(rho)*G(-nu)*G(mu)*G(-sigma))
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals((8*D - 12*D**2 + 6*D**3 - D**4)*KD(sl, -sr))
+    r = kahane_simplify(t)
+    assert r.equals((8*D - 12*D**2 + 6*D**3 - D**4)*eye(4))
 
     # Expressions with free indices:
     t = (G(mu)*G(nu)*G(rho)*G(sigma)*G(-mu))
-    r = G._kahane_simplify(t.coeff, t._tids)
+    r = kahane_simplify(t)
     assert r.equals(-2*G(sigma)*G(rho)*G(nu))
-    t = (G(mu,s0,-s1)*G(nu,s1,-s2)*G(rho,s2,-s3)*G(sigma,s3,-s4)*G(-mu,s4,-s5))
-    r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals(-2*G(sigma,s0,-s1)*G(rho,s1,-s2)*G(nu,s2,-s5))
+    t = (G(mu)*G(nu)*G(rho)*G(sigma)*G(-mu))
+    r = kahane_simplify(t)
+    assert r.equals(-2*G(sigma)*G(rho)*G(nu))
 
 
 def test_gamma_matrix_class():
-    i, j, k = tensor_indices('i,j,k', G.LorentzIndex)
+    i, j, k = tensor_indices('i,j,k', LorentzIndex)
 
     # define another type of TensorHead to see if exprs are correctly handled:
-    A = tensorhead('A', [G.LorentzIndex], [[1]])
+    A = TensorHead('A', [LorentzIndex])
 
     t = A(k)*G(i)*G(-i)
-    ts = simplify(t)
-    assert _is_tensor_eq(ts, 4*A(k)*DiracSpinorIndex.delta(DiracSpinorIndex.auto_left, -DiracSpinorIndex.auto_right))
+    ts = simplify_gamma_expression(t)
+    assert _is_tensor_eq(ts, Matrix([
+        [4, 0, 0, 0],
+        [0, 4, 0, 0],
+        [0, 0, 4, 0],
+        [0, 0, 0, 4]])*A(k))
 
     t = G(i)*A(k)*G(j)
-    ts = simplify(t)
+    ts = simplify_gamma_expression(t)
     assert _is_tensor_eq(ts, A(k)*G(i)*G(j))
 
-    execute_gamma_simplify_tests_for_function(simplify, D=4)
+    execute_gamma_simplify_tests_for_function(simplify_gamma_expression, D=4)
+
 
 def test_gamma_matrix_trace():
-    gamma_trace = G.gamma_trace
-    g = G.LorentzIndex.metric
+    g = LorentzIndex.metric
 
-    m0, m1, m2, m3, m4, m5, m6 = tensor_indices('m0:7', G.LorentzIndex)
-    n0, n1, n2, n3, n4, n5 = tensor_indices('n0:6', G.LorentzIndex)
+    m0, m1, m2, m3, m4, m5, m6 = tensor_indices('m0:7', LorentzIndex)
+    n0, n1, n2, n3, n4, n5 = tensor_indices('n0:6', LorentzIndex)
 
     # working in D=4 dimensions
     D = 4
@@ -335,13 +341,13 @@ def test_gamma_matrix_trace():
     t1 = gamma_trace(t)
     t2 = (-4*D)*g(m1, m3)*g(m2, m4) + (4*D)*g(m1, m2)*g(m3, m4) + \
                  (4*D)*g(m1, m4)*g(m2, m3)
-    assert t1.equals(t2)
+    assert _is_tensor_eq(t1, t2)
 
     t = G(-m5)*G(m0)*G(m1)*G(m2)*G(m3)*G(m4)*G(-m0)*G(m5)
     t1 = gamma_trace(t)
     t2 = (32*D + 4*(-D + 4)**2 - 64)*(g(m1, m2)*g(m3, m4) - \
             g(m1, m3)*g(m2, m4) + g(m1, m4)*g(m2, m3))
-    assert t1.equals(t2)
+    assert _is_tensor_eq(t1, t2)
 
     t = G(m0)*G(m1)*G(-m0)*G(m3)
     t1 = gamma_trace(t)
@@ -375,7 +381,7 @@ def test_gamma_matrix_trace():
     assert _is_tensor_eq(t1, c1*g(n1, n4)*g(n2, n3) + c2*g(n1, n2)*g(n3, n4) + \
             (-c1)*g(n1, n3)*g(n2, n4))
 
-    p, q = tensorhead('p,q', [G.LorentzIndex], [[1]])
+    p, q = tensor_heads('p,q', [LorentzIndex])
     ps = p(m0)*G(-m0)
     qs = q(m0)*G(-m0)
     p2 = p(m0)*p(-m0)
@@ -386,90 +392,13 @@ def test_gamma_matrix_trace():
     assert _is_tensor_eq(r, 8*pq*pq - 4*p2*q2)
     t = ps*qs*ps*qs*ps*qs
     r = gamma_trace(t)
-    assert r.equals(-12*p2*pq*q2 + 16*pq*pq*pq)
+    assert _is_tensor_eq(r, -12*p2*pq*q2 + 16*pq*pq*pq)
     t = ps*qs*ps*qs*ps*qs*ps*qs
     r = gamma_trace(t)
-    assert r.equals(-32*pq*pq*p2*q2 + 32*pq*pq*pq*pq + 4*p2*p2*q2*q2)
+    assert _is_tensor_eq(r, -32*pq*pq*p2*q2 + 32*pq*pq*pq*pq + 4*p2*p2*q2*q2)
 
     t = 4*p(m1)*p(m0)*p(-m0)*q(-m1)*q(m2)*q(-m2)
     assert _is_tensor_eq(gamma_trace(t), t)
     t = ps*ps*ps*ps*ps*ps*ps*ps
     r = gamma_trace(t)
     assert r.equals(4*p2*p2*p2*p2)
-
-def test_simple_trace_cases_symbolic_dim():
-    from sympy import symbols
-    D = symbols('D')
-    G = GammaMatrixHead(dim=D)
-
-    m0, m1, m2, m3 = tensor_indices('m0:4', G.LorentzIndex)
-    g = G.LorentzIndex.metric
-
-    t = G(m0)*G(m1)
-    t1 = G._trace_single_line(t)
-    assert _is_tensor_eq(t1, 4 * G.LorentzIndex.metric(m0, m1))
-
-    t = G(m0)*G(m1)*G(m2)*G(m3)
-    t1 = G._trace_single_line(t)
-    t2 = -4*g(m0, m2)*g(m1, m3) + 4*g(m0, m1)*g(m2, m3) + 4*g(m0, m3)*g(m1, m2)
-    assert _is_tensor_eq(t1, t2)
-
-def test_get_lines():
-    i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13 = \
-       tensor_indices('i0:14', G.LorentzIndex)
-    s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16 = \
-       tensor_indices('s0:17', DiracSpinorIndex)
-    t = G(i1,s1,-s2)*G(i2,s3,-s4)*G(i4,s2,-s6)*G(i3,s4,-s3)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[0, 2]], [[1, 3]], [])
-    t = G(i1,s1,-s2)*G(i2,s2,-s3)*G(i3,s3,-s4)*G(i4,s4,-s5)*\
-        G(i5,s6,-s7)*G(i6,s7,-s8)*G(i7,s8,-s9)*G(i8,s9,-s6)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[0, 1, 2, 3]], [[4, 5, 6, 7]], [])
-    t = G(i1,s1,-s2)*G(i0,s0,-s10)*G(i2,s2,-s3)*G(i3,s3,-s4)*\
-    G(i4,s4,-s5)*G(i5,s6,-s7)*G(i6,s7,-s8)*G(i7,s8,-s9)*\
-    G(i8,s9,-s6)*G(i9,s10,-s0)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[0, 2, 3, 4]], [[5, 6, 7, 8], [1, 9]], [])
-    t = G(i1,s1,-s2)*G(i11,s12,-s13)*G(i0,s0,-s10)*G(i2,s2,-s3)*G(i3,s3,-s4)*\
-        G(i4,s4,-s5)*G(i5,s6,-s7)*G(i10,s11,-s12)*G(i6,s7,-s8)*G(i7,s8,-s9)*\
-        G(i8,s9,-s6)*G(i9,s10,-s0)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[7, 1], [0, 3, 4, 5]], [[6, 8, 9, 10], [2, 11]], [])
-    t = G(i4,s4,-s5)*G(i5,s6,-s7)*G(i10,s11,-s12)*G(i6,s7,-s8)*G(i7,s8,-s9)*\
-        G(i8,s9,-s6)*G(i9,s10,-s0)*\
-        G(i1,s1,-s2)*G(i11,s12,-s13)*G(i0,s0,-s10)*G(i2,s2,-s3)*G(i3,s3,-s4)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[7, 10, 11, 0], [2, 8]], [[1, 3, 4, 5], [6, 9]], [])
-    t = G(i8,s9,-s6)*G(i9,s10,-s0)*G(i4,s4,-s5)*G(i13,s14,-s15)*\
-        G(i10,s11,-s12)*G(i1,s1,-s2)*G(i11,s12,-s13)*\
-        G(i0,s0,-s10)*G(i6,s7,-s8)*G(i7,s8,-s9)*\
-        G(i2,s2,-s3)*G(i12,s13,-s14)*G(i3,s3,-s4)*G(i5,s6,-s7)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[5, 10, 12, 2], [4, 6, 11, 3]], [[1, 7], [0, 13, 8, 9]], [])
-
-def test_simplify_lines():
-    i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12 = tensor_indices('i0:13', G.LorentzIndex)
-    s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16 = \
-       tensor_indices('s0:17', DiracSpinorIndex)
-
-    g = G.LorentzIndex.metric
-    Sdelta = DiracSpinorIndex.delta
-    t = G(i1,s1,-s2)*G(i2,s2,-s1)*G(i3,s4,-s5)*G(i4,s5,-s6)*G(i5,s7,-s8)
-    r = G.simplify_lines(t)
-    assert r.equals(4*G(i5, s7, -s8)*G(i3, s4, -s0)*G(i4, s0, -s6)*g(i1, i2))
-
-    t = G(i1,s1,-s2)*G(i2,s2,-s1)*G(i3,s4,-s5)*G(-i3,s5,-s6)*G(i5,s7,-s8)
-    r = G.simplify_lines(t)
-    assert r.equals(16*G(i5, s7, -s8)*Sdelta(s4, -s6)*g(i1, i2))
-    t = G(i1,s1,-s2)*G(i2,s2,-s1)*G(i3,s4,-s5)*G(i4,s5,-s6)*G(i5,s7,-s8)
-    r = G.simplify_lines(t)
-    assert r.equals(4*G(i5, s7, -s8)*G(i3, s4, s0)*G(i4, -s0, -s6)*g(i1, i2))
-    t = G(i5,s7,-s8)*G(i6,s9,-s10)*G(i1,s1,-s2)*G(i3,s4,-s5)*G(i2,s2,-s1)*G(i4,s5,-s6)*G(-i6,s10,-s9)
-    r = G.simplify_lines(t)
-    assert r.equals(64*G(i5, s7, -s8)*G(i3, s4, s0)*G(i4, -s0, -s6)*g(i1, i2))
-    t = G(i5,s7,-s8)*G(i6,s9,-s10)*G(i1,s1,-s2)*G(i7,s12,-s11)*G(i3,s4,-s5)*\
-        G(i2,s2,-s1)*G(i4,s5,-s6)*G(-i6,s10,-s9)*G(-i7,s11,-s13)
-    r = G.simplify_lines(t)
-    assert r.equals(256*G(i5, s7, -s8)*G(i3, s4, s0)*G(i4, -s0, -s6)*\
-           g(i1, i2)*Sdelta(s12,-s13))

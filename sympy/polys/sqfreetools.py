@@ -2,6 +2,12 @@
 
 from __future__ import print_function, division
 
+from sympy.polys.densearith import (
+    dup_neg, dmp_neg,
+    dup_sub, dmp_sub,
+    dup_mul,
+    dup_quo, dmp_quo,
+    dup_mul_ground, dmp_mul_ground)
 from sympy.polys.densebasic import (
     dup_strip,
     dup_LC, dmp_ground_LC,
@@ -10,28 +16,17 @@ from sympy.polys.densebasic import (
     dup_degree, dmp_degree,
     dmp_raise, dmp_inject,
     dup_convert)
-
-from sympy.polys.densearith import (
-    dup_neg, dmp_neg,
-    dup_sub, dmp_sub,
-    dup_mul,
-    dup_quo, dmp_quo,
-    dup_mul_ground, dmp_mul_ground)
-
 from sympy.polys.densetools import (
     dup_diff, dmp_diff,
     dup_shift, dmp_compose,
     dup_monic, dmp_ground_monic,
     dup_primitive, dmp_ground_primitive)
-
 from sympy.polys.euclidtools import (
     dup_inner_gcd, dmp_inner_gcd,
     dup_gcd, dmp_gcd,
     dmp_resultant)
-
 from sympy.polys.galoistools import (
     gf_sqf_list, gf_sqf_part)
-
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError)
@@ -174,6 +169,19 @@ def dmp_sqf_norm(f, u, K):
     return s, f, r
 
 
+def dmp_norm(f, u, K):
+    """
+    Norm of ``f`` in ``K[X1, ..., Xn]``, often not square-free.
+    """
+    if not K.is_Algebraic:
+        raise DomainError("ground domain must be algebraic")
+
+    g = dmp_raise(K.mod.rep, u + 1, 0, K.dom)
+    h, _ = dmp_inject(f, u, K, front=True)
+
+    return dmp_resultant(g, h, u + 1, K.dom)
+
+
 def dup_gf_sqf_part(f, K):
     """Compute square-free part of ``f`` in ``GF(p)[x]``. """
     f = dup_convert(f, K, K.dom)
@@ -181,7 +189,7 @@ def dup_gf_sqf_part(f, K):
     return dup_convert(g, K.dom, K)
 
 
-def dmp_gf_sqf_part(f, K):
+def dmp_gf_sqf_part(f, u, K):
     """Compute square-free part of ``f`` in ``GF(p)[X]``. """
     raise NotImplementedError('multivariate polynomials over finite fields')
 
@@ -212,7 +220,7 @@ def dup_sqf_part(f, K):
     gcd = dup_gcd(f, dup_diff(f, 1, K), K)
     sqf = dup_quo(f, gcd, K)
 
-    if K.has_Field:
+    if K.is_Field:
         return dup_monic(sqf, K)
     else:
         return dup_primitive(sqf, K)[1]
@@ -247,7 +255,7 @@ def dmp_sqf_part(f, u, K):
     gcd = dmp_gcd(f, dmp_diff(f, 1, u, K), u, K)
     sqf = dmp_quo(f, gcd, u, K)
 
-    if K.has_Field:
+    if K.is_Field:
         return dmp_ground_monic(sqf, u, K)
     else:
         return dmp_ground_primitive(sqf, u, K)[1]
@@ -291,7 +299,7 @@ def dup_sqf_list(f, K, all=False):
     if K.is_FiniteField:
         return dup_gf_sqf_list(f, K, all=all)
 
-    if K.has_Field:
+    if K.is_Field:
         coeff = dup_LC(f, K)
         f = dup_monic(f, K)
     else:
@@ -379,7 +387,7 @@ def dmp_sqf_list(f, u, K, all=False):
     if K.is_FiniteField:
         return dmp_gf_sqf_list(f, u, K, all=all)
 
-    if K.has_Field:
+    if K.is_Field:
         coeff = dmp_ground_LC(f, u, K)
         f = dmp_ground_monic(f, u, K)
     else:

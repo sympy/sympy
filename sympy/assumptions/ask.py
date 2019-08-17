@@ -1,16 +1,17 @@
 """Module for querying SymPy objects about assumptions."""
 from __future__ import print_function, division
 
-from sympy.core import sympify
-from sympy.core.cache import cacheit
-from sympy.core.relational import Relational
-from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
-    BooleanFunction, BooleanAtom)
-from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
+from sympy.core import sympify
+from sympy.core.cache import cacheit
 from sympy.core.decorators import deprecated
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
+                                 BooleanFunction, BooleanAtom)
+from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
+from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 
 # Deprecated predicates should be added to this list
@@ -228,7 +229,7 @@ class AssumptionKeys(object):
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Algebraic_number
+        .. [1] https://en.wikipedia.org/wiki/Algebraic_number
         """
         return Predicate('algebraic')
 
@@ -553,6 +554,7 @@ class AssumptionKeys(object):
         ========
 
         >>> from sympy import Q, ask, I
+
         >>> ask(Q.nonpositive(-1))
         True
         >>> ask(Q.nonpositive(0))
@@ -1207,8 +1209,30 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
         args = [x for x in args if x is not None]
         if args:
             return expr.func(*args)
-    if args and all(x != None for x in args):
+    if args and all(x is not None for x in args):
         return expr.func(*args)
+
+
+def _extract_all_facts(expr, symbol):
+    facts = set()
+    if isinstance(symbol, Relational):
+        symbols = (symbol, symbol.reversed)
+    else:
+        symbols = (symbol,)
+    for clause in expr.clauses:
+        args = []
+        for literal in clause:
+            if isinstance(literal.lit, AppliedPredicate):
+                if literal.lit.arg in symbols:
+                    # Add literal if it has 'symbol' in it
+                    args.append(Literal(literal.lit.func, literal.is_Not))
+                else:
+                    # If any of the literals doesn't have 'symbol' don't add the whole clause.
+                    break
+        else:
+            if args:
+                facts.add(frozenset(args))
+    return CNF(facts)
 
 
 def ask(proposition, assumptions=True, context=global_assumptions):
@@ -1257,54 +1281,54 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     else:
         key, expr = Q.is_true, sympify(proposition)
 
-    assumptions = And(assumptions, And(*context))
-    assumptions = to_cnf(assumptions)
+    assump = CNF.from_prop(assumptions)
+    assump.extend(context)
 
-    local_facts = _extract_facts(assumptions, expr)
+    local_facts = _extract_all_facts(assump, expr)
 
-    known_facts_cnf = get_known_facts_cnf()
+    known_facts_cnf = get_all_known_facts()
     known_facts_dict = get_known_facts_dict()
 
-    if local_facts and satisfiable(And(local_facts, known_facts_cnf)) is False:
+    enc_cnf = EncodedCNF()
+    enc_cnf.from_cnf(CNF(known_facts_cnf))
+    enc_cnf.add_from_cnf(local_facts)
+
+    if local_facts.clauses and satisfiable(enc_cnf) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
+
+    if local_facts.clauses:
+        local_facts_ = CNF.CNF_to_cnf(local_facts)
+
+        # See if there's a straight-forward conclusion we can make for the inference
+        if local_facts_.is_Atom:
+            if key in known_facts_dict[local_facts_]:
+                return True
+            if Not(key) in known_facts_dict[local_facts_]:
+                return False
+        elif (isinstance(local_facts_, And) and
+              all(k in known_facts_dict for k in local_facts_.args)):
+            for assum in local_facts_.args:
+                if assum.is_Atom:
+                    if key in known_facts_dict[assum]:
+                        return True
+                    if Not(key) in known_facts_dict[assum]:
+                        return False
+                elif isinstance(assum, Not) and assum.args[0].is_Atom:
+                    if key in known_facts_dict[assum]:
+                        return False
+                    if Not(key) in known_facts_dict[assum]:
+                        return True
+        elif (isinstance(key, Predicate) and
+              isinstance(local_facts_, Not) and local_facts_.args[0].is_Atom):
+            if local_facts_.args[0] in known_facts_dict[key]:
+                return False
 
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
-
-    if local_facts is None:
-        return satask(proposition, assumptions=assumptions, context=context)
-
-
-    # See if there's a straight-forward conclusion we can make for the inference
-    if local_facts.is_Atom:
-        if key in known_facts_dict[local_facts]:
-            return True
-        if Not(key) in known_facts_dict[local_facts]:
-            return False
-    elif (local_facts.func is And and
-            all(k in known_facts_dict for k in local_facts.args)):
-        for assum in local_facts.args:
-            if assum.is_Atom:
-                if key in known_facts_dict[assum]:
-                    return True
-                if Not(key) in known_facts_dict[assum]:
-                    return False
-            elif assum.func is Not and assum.args[0].is_Atom:
-                if key in known_facts_dict[assum]:
-                    return False
-                if Not(key) in known_facts_dict[assum]:
-                    return True
-    elif (isinstance(key, Predicate) and
-            local_facts.func is Not and local_facts.args[0].is_Atom):
-        if local_facts.args[0] in known_facts_dict[key]:
-            return False
-
-    # Failing all else, we do a full logical inference
-    res = ask_full_inference(key, local_facts, known_facts_cnf)
-    if res is None:
-        return satask(proposition, assumptions=assumptions, context=context)
+    # using satask (still costly)
+    res = satask(proposition, assumptions=assumptions, context=context)
     return res
 
 
@@ -1328,7 +1352,7 @@ def register_handler(key, handler):
         >>> from sympy.assumptions import register_handler, ask, Q
         >>> from sympy.assumptions.handlers import AskHandler
         >>> class MersenneHandler(AskHandler):
-        ...     # Mersenne numbers are in the form 2**n + 1, n integer
+        ...     # Mersenne numbers are in the form 2**n - 1, n integer
         ...     @staticmethod
         ...     def Integer(expr, assumptions):
         ...         from sympy import log
@@ -1340,9 +1364,10 @@ def register_handler(key, handler):
     """
     if type(key) is Predicate:
         key = key.name
-    try:
-        getattr(Q, key).add_handler(handler)
-    except AttributeError:
+    Qkey = getattr(Q, key, None)
+    if Qkey is not None:
+        Qkey.add_handler(handler)
+    else:
         setattr(Q, key, Predicate(key, handlers=[handler]))
 
 
@@ -1385,8 +1410,16 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
 
     from sympy.core.cache import cacheit
-    from sympy.logic.boolalg import And, Not, Or
+    from sympy.logic.boolalg import And
+    from sympy.assumptions.cnf import Literal
     from sympy.assumptions.ask import Q
+
+    # -{ Known facts as a set }-
+    @cacheit
+    def get_all_known_facts():
+        return {
+            %s
+        }
 
     # -{ Known facts in Conjunctive Normal Form }-
     @cacheit
@@ -1406,7 +1439,10 @@ def compute_known_facts(known_facts, known_facts_keys):
     LINE = ",\n        "
     HANG = ' '*8
     cnf = to_cnf(known_facts)
+    cnf_ = CNF.to_CNF(known_facts)
     c = LINE.join([str(a) for a in cnf.args])
+
+    p = LINE.join(sorted(['frozenset((' + ', '.join(str(lit) for lit in sorted(clause, key=str)) +'))' for clause in cnf_.clauses]))
     mapping = single_fact_lookup(known_facts_keys, cnf)
     items = sorted(mapping.items(), key=str)
     keys = [str(i[0]) for i in items]
@@ -1416,7 +1452,7 @@ def compute_known_facts(known_facts, known_facts_keys):
             subsequent_indent=HANG,
             break_long_words=False))
         for k, v in zip(keys, values)]) + ','
-    return fact_string % (c, m)
+    return fact_string % (p, c, m)
 
 # handlers tells us what ask handler we should use
 # for a particular key
@@ -1480,16 +1516,18 @@ def get_known_facts():
         Equivalent(Q.extended_real, Q.real | Q.infinite),
         Equivalent(Q.even | Q.odd, Q.integer),
         Implies(Q.even, ~Q.odd),
-        Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
+        Implies(Q.prime, Q.integer & Q.positive & ~Q.composite),
         Implies(Q.integer, Q.rational),
         Implies(Q.rational, Q.algebraic),
         Implies(Q.algebraic, Q.complex),
-        Equivalent(Q.transcendental | Q.algebraic, Q.complex),
+        Implies(Q.algebraic, Q.finite),
+        Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),
         Implies(Q.transcendental, ~Q.algebraic),
+        Implies(Q.transcendental, Q.finite),
         Implies(Q.imaginary, Q.complex & ~Q.real),
         Implies(Q.imaginary, Q.antihermitian),
         Implies(Q.antihermitian, ~Q.hermitian),
-        Equivalent(Q.irrational | Q.rational, Q.real),
+        Equivalent(Q.irrational | Q.rational, Q.real & Q.finite),
         Implies(Q.irrational, ~Q.rational),
         Implies(Q.zero, Q.even),
 
@@ -1526,4 +1564,4 @@ def get_known_facts():
     )
 
 from sympy.assumptions.ask_generated import (
-    get_known_facts_dict, get_known_facts_cnf)
+    get_known_facts_dict, get_known_facts_cnf, get_all_known_facts)

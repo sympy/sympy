@@ -49,7 +49,7 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
-from sympy.core.compatibility import as_int, range
+from sympy.core.compatibility import as_int, range, string_types
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from mpmath.libmp.libintmath import giant_steps
 import math
@@ -170,7 +170,7 @@ def rs_puiseux(f, p, x, prec):
             num, den = power.as_numer_denom()
             n = int(n*den // igcd(n, den))
         elif power != int(power):
-            num, den = power.numerator, power.denominator
+            den = power.denominator
             n = int(n*den // igcd(n, den))
     if n != 1:
         p1 = pow_xin(p, index, n)
@@ -198,7 +198,7 @@ def rs_puiseux2(f, p, q, x, prec):
             num, den = power.as_numer_denom()
             n = n*den // igcd(n, den)
         elif power != int(power):
-            num, den = power.numerator, power.denominator
+            den = power.denominator
             n = n*den // igcd(n, den)
     if n != 1:
         p1 = pow_xin(p, index, n)
@@ -316,7 +316,6 @@ def rs_pow(p1, n, x, prec):
     6*x**2 + 4*x + 1
     """
     R = p1.ring
-    p = R.zero
     if isinstance(n, Rational):
         np = int(n.p)
         nq = int(n.q)
@@ -457,7 +456,6 @@ def _get_constant_term(p, x):
     generators.
     """
     R = p.ring
-    zm = R.zero_monom
     i = R.gens.index(x)
     zm = R.zero_monom
     a = [0]*R.ngens
@@ -562,7 +560,7 @@ def rs_series_inversion(p, x, prec):
     return r
 
 def _coefficient_t(p, t):
-    """Coefficient of `x\_i**j` in p, where ``t`` = (i, j)"""
+    r"""Coefficient of `x\_i**j` in p, where ``t`` = (i, j)"""
     i, j = t
     R = p.ring
     expv1 = [0]*R.ngens
@@ -575,7 +573,7 @@ def _coefficient_t(p, t):
     return p1
 
 def rs_series_reversion(p, x, n, y):
-    """
+    r"""
     Reversion of a series.
 
     ``p`` is a series with ``O(x**n)`` of the form `p = a*x + f(x)`
@@ -686,7 +684,6 @@ def rs_series_from_list(p, c, x, prec, concur=1):
     if r:
         K += 1
     ax = [R(1)]
-    b = 1
     q = R(1)
     if len(p) < 20:
         for i in range(1, J):
@@ -730,7 +727,8 @@ def rs_diff(p, x):
     Return partial derivative of ``p`` with respect to ``x``.
 
     Parameters
-    ----------
+    ==========
+
     x : :class:`PolyElement` with respect to which ``p`` is differentiated.
 
     Examples
@@ -753,7 +751,7 @@ def rs_diff(p, x):
     for expv in p:
         if expv[n]:
             e = monomial_ldiv(expv, mn)
-            p1[e] = p[expv]*expv[n]
+            p1[e] = R.domain_new(p[expv]*expv[n])
     return p1
 
 def rs_integrate(p, x):
@@ -761,7 +759,8 @@ def rs_integrate(p, x):
     Integrate ``p`` with respect to ``x``.
 
     Parameters
-    ----------
+    ==========
+
     x : :class:`PolyElement` with respect to which ``p`` is integrated.
 
     Examples
@@ -784,11 +783,11 @@ def rs_integrate(p, x):
 
     for expv in p:
         e = monomial_mul(expv, mn)
-        p1[e] = p[expv]/(expv[n] + 1)
+        p1[e] = R.domain_new(p[expv]/(expv[n] + 1))
     return p1
 
 def rs_fun(p, f, *args):
-    """
+    r"""
     Function of a multivariate series computed by substitution.
 
     The case with f method name is used to compute `rs\_tan` and `rs\_nth\_root`
@@ -801,7 +800,8 @@ def rs_fun(p, f, *args):
         desired series
 
     Parameters
-    ----------
+    ==========
+
     p : :class:`PolyElement` The multivariate series to be expanded.
     f : `ring\_series` function to be applied on `p`.
     args[-2] : :class:`PolyElement` with respect to which, the series is to be expanded.
@@ -831,7 +831,7 @@ def rs_fun(p, f, *args):
     else:
         x1 = _x
         p1 = p
-    if isinstance(f, str):
+    if isinstance(f, string_types):
         q = getattr(x1, f)(*args1)
     else:
         q = f(x1, *args1)
@@ -843,7 +843,7 @@ def rs_fun(p, f, *args):
     return p1
 
 def mul_xin(p, i, n):
-    """
+    r"""
     Return `p*x_i**n`.
 
     `x\_i` is the ith variable in ``p``.
@@ -915,10 +915,15 @@ def rs_nth_root(p, n, x, prec):
     Multivariate series expansion of the nth root of ``p``.
 
     Parameters
-    ----------
-    n : `p**(1/n)` is returned.
+    ==========
+
+    p : Expr
+        The polynomial to computer the root of.
+    n : integer
+        The order of the root to be computed.
     x : :class:`PolyElement`
-    prec : Order of the expanded series.
+    prec : integer
+        Order of the expanded series.
 
     Notes
     =====
@@ -951,7 +956,6 @@ def rs_nth_root(p, n, x, prec):
     if n == 1:
         return rs_trunc(p, x, prec)
     R = p.ring
-    zm = R.zero_monom
     index = R.gens.index(x)
     m = min(p, key=lambda k: k[index])[index]
     p = mul_xin(p, index, -m)
@@ -1010,10 +1014,9 @@ def rs_log(p, x, prec):
     R = p.ring
     if p == 1:
         return R.zero
-    if _has_constant_term(p, x):
+    c = _get_constant_term(p, x)
+    if c:
         const = 0
-        zm = R.zero_monom
-        c = p[zm]
         if c == 1:
             pass
         else:
@@ -1024,8 +1027,11 @@ def rs_log(p, x, prec):
                 try:
                     const = R(log(c_expr))
                 except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                        "this domain.")
+                    R = R.add_gens([log(c_expr)])
+                    p = p.set_ring(R)
+                    x = x.set_ring(R)
+                    c = c.set_ring(R)
+                    const = R(log(c_expr))
             else:
                 try:
                     const = R(log(c))
@@ -1079,7 +1085,7 @@ def rs_LambertW(p, x, prec):
         raise NotImplementedError
 
 def _exp1(p, x, prec):
-    """Helper function for `rs\_exp`. """
+    r"""Helper function for `rs\_exp`. """
     R = p.ring
     p1 = R(1)
     for precx in _giant_steps(prec):
@@ -1128,7 +1134,7 @@ def rs_exp(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy fuctions to evaluate the values of the cos/sin
+    # Makes use of sympy functions to evaluate the values of the cos/sin
     # of the constant term.
         return const*rs_exp(p1, x, prec)
 
@@ -1136,7 +1142,6 @@ def rs_exp(p, x, prec):
         return _exp1(p, x, prec)
     one = R(1)
     n = 1
-    k = 1
     c = []
     for k in range(prec):
         c.append(one/n)
@@ -1262,7 +1267,7 @@ def rs_asin(p, x, prec):
         raise NotImplementedError
 
 def _tan1(p, x, prec):
-    """
+    r"""
     Helper function of `rs\_tan`.
 
     Return the series expansion of tan of a univariate series using Newton's
@@ -1331,7 +1336,7 @@ def rs_tan(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy fuctions to evaluate the values of the cos/sin
+    # Makes use of sympy functions to evaluate the values of the cos/sin
     # of the constant term.
         t2 = rs_tan(p1, x, prec)
         t = rs_series_inversion(1 - const*t2, x, prec)
@@ -1429,7 +1434,7 @@ def rs_sin(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy cos, sin fuctions to evaluate the values of the
+    # Makes use of sympy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
         return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
 
@@ -1478,11 +1483,11 @@ def rs_cos(p, x, prec):
     if c:
         if R.domain is EX:
             c_expr = c.as_expr()
-            t1, t2 = sin(c_expr), cos(c_expr)
+            _, _ = sin(c_expr), cos(c_expr)
         elif isinstance(c, PolyElement):
             try:
                 c_expr = c.as_expr()
-                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+                _, _ = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
                 R = R.add_gens([sin(c_expr), cos(c_expr)])
                 p = p.set_ring(R)
@@ -1490,13 +1495,13 @@ def rs_cos(p, x, prec):
                 c = c.set_ring(R)
         else:
             try:
-                t1, t2 = R(sin(c)), R(cos(c))
+                _, _ = R(sin(c)), R(cos(c))
             except ValueError:
                 raise DomainError("The given series can't be expanded in "
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy cos, sin fuctions to evaluate the values of the
+    # Makes use of sympy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
         p_cos = rs_cos(p1, x, prec)
         p_sin = rs_sin(p1, x, prec)
@@ -1522,7 +1527,7 @@ def rs_cos(p, x, prec):
     return rs_series_from_list(p, c, x, prec)
 
 def rs_cos_sin(p, x, prec):
-    """
+    r"""
     Return the tuple `(rs\_cos(p, x, prec)`, `rs\_sin(p, x, prec))`.
 
     Is faster than calling rs_cos and rs_sin separately
@@ -1659,7 +1664,7 @@ def rs_cosh(p, x, prec):
     return (t + t1)/2
 
 def _tanh(p, x, prec):
-    """
+    r"""
     Helper function of `rs\_tanh`
 
     Return the series expansion of tanh of a univariate series using Newton's
@@ -1804,10 +1809,10 @@ def rs_compose_add(p1, p2):
     References
     ==========
 
-    A. Bostan, P. Flajolet, B. Salvy and E. Schost
-    "Fast Computation with Two Algebraic Numbers",
-    (2002) Research Report 4579, Institut
-    National de Recherche en Informatique et en Automatique
+    .. [1] A. Bostan, P. Flajolet, B. Salvy and E. Schost
+           "Fast Computation with Two Algebraic Numbers",
+           (2002) Research Report 4579, Institut
+           National de Recherche en Informatique et en Automatique
     """
     R = p1.ring
     x = R.gens[0]
@@ -1840,7 +1845,8 @@ _convert_func = {
         'sin': 'rs_sin',
         'cos': 'rs_cos',
         'exp': 'rs_exp',
-        'tan': 'rs_tan'
+        'tan': 'rs_tan',
+        'log': 'rs_log'
         }
 
 def rs_min_pow(expr, series_rs, a):
@@ -1945,7 +1951,8 @@ def rs_series(expr, a, prec):
     """Return the series expansion of an expression about 0.
 
     Parameters
-    ----------
+    ==========
+
     expr : :class:`Expr`
     a : :class:`Symbol` with respect to which expr is to be expanded
     prec : order of the series expansion

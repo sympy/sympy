@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.ntheory import isprime
 from sympy.combinatorics.permutations import Permutation, _af_invert, _af_rmul
 from sympy.core.compatibility import range
+from sympy.ntheory import isprime
 
 rmul = Permutation.rmul
 _af_new = Permutation._af_new
@@ -54,8 +54,8 @@ def _base_ordering(base, degree):
     References
     ==========
 
-    [1] Holt, D., Eick, B., O'Brien, E.
-    "Handbook of computational group theory"
+    .. [1] Holt, D., Eick, B., O'Brien, E.
+           "Handbook of computational group theory"
 
     """
     base_len = len(base)
@@ -105,7 +105,7 @@ def _check_cycles_alt_sym(perm):
             current_len = 1
             used.add(i)
             j = i
-            while(af[j] != i):
+            while af[j] != i:
                 current_len += 1
                 j = af[j]
                 used.add(j)
@@ -116,7 +116,7 @@ def _check_cycles_alt_sym(perm):
 
 
 def _distribute_gens_by_base(base, gens):
-    """
+    r"""
     Distribute the group elements ``gens`` by membership in basic stabilizers.
 
     Notice that for a base `(b_1, b_2, ..., b_k)`, the basic stabilizers
@@ -246,7 +246,7 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
 
 
 def _orbits_transversals_from_bsgs(base, strong_gens_distr,
-                                   transversals_only=False):
+                                   transversals_only=False, slp=False):
     """
     Compute basic orbits and transversals from a base and strong generating set.
 
@@ -262,6 +262,10 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     stabilizers
     ``transversals_only`` - a flag switching between returning only the
     transversals/ both orbits and transversals
+    ``slp`` - if ``True``, return a list of dictionaries containing the
+              generator presentations of the elements of the transversals,
+              i.e. the list of indices of generators from `strong_gens_distr[i]`
+              such that their product is the relevant transversal element
 
     Examples
     ========
@@ -288,17 +292,21 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     base_len = len(base)
     degree = strong_gens_distr[0][0].size
     transversals = [None]*base_len
+    slps = [None]*base_len
     if transversals_only is False:
         basic_orbits = [None]*base_len
     for i in range(base_len):
-        transversals[i] = dict(_orbit_transversal(degree, strong_gens_distr[i],
-                                 base[i], pairs=True))
+        transversals[i], slps[i] = _orbit_transversal(degree, strong_gens_distr[i],
+                                 base[i], pairs=True, slp=True)
+        transversals[i] = dict(transversals[i])
         if transversals_only is False:
             basic_orbits[i] = list(transversals[i].keys())
     if transversals_only:
         return transversals
     else:
-        return basic_orbits, transversals
+        if not slp:
+            return basic_orbits, transversals
+        return basic_orbits, transversals, slps
 
 
 def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
@@ -343,8 +351,8 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     References
     ==========
 
-    [1] Holt, D., Eick, B., O'Brien, E.
-    "Handbook of computational group theory"
+    .. [1] Holt, D., Eick, B., O'Brien, E.
+           "Handbook of computational group theory"
 
     """
     from sympy.combinatorics.perm_groups import _orbit
@@ -352,7 +360,6 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     degree = strong_gens[0].size
     if strong_gens_distr is None:
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-    temp = strong_gens_distr[:]
     if basic_orbits is None:
         basic_orbits = []
         for i in range(base_len):
@@ -453,7 +460,7 @@ def _strip(g, base, orbits, transversals):
     return _af_new(h), base_len + 1
 
 
-def _strip_af(h, base, orbits, transversals, j):
+def _strip_af(h, base, orbits, transversals, j, slp=[], slps={}):
     """
     optimized _strip, with h, transversals and result in array form
     if the stripped elements is the identity, it returns False, base_len + 1
@@ -466,12 +473,23 @@ def _strip_af(h, base, orbits, transversals, j):
         if beta == base[i]:
             continue
         if beta not in orbits[i]:
-            return h, i + 1
+            if not slp:
+                return h, i + 1
+            return h, i + 1, slp
         u = transversals[i][beta]
         if h == u:
-            return False, base_len + 1
+            if not slp:
+                return False, base_len + 1
+            return False, base_len + 1, slp
         h = _af_rmul(_af_invert(u), h)
-    return h, base_len + 1
+        if slp:
+            u_slp = slps[i][beta][:]
+            u_slp.reverse()
+            u_slp = [(i, (g,)) for g in u_slp]
+            slp = u_slp + slp
+    if not slp:
+        return h, base_len + 1
+    return h, base_len + 1, slp
 
 
 def _strong_gens_from_distr(strong_gens_distr):

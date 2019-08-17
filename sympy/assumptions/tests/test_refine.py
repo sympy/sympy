@@ -1,8 +1,9 @@
 from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
-                   atan, atan2, nan, Symbol)
-from sympy.abc import x, y, z
+                   atan, atan2, nan, Symbol, re, im)
+from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.utilities.pytest import slow
 
 
 def test_Abs():
@@ -15,7 +16,7 @@ def test_Abs():
     assert refine(Abs(x**2), Q.real(x)) == x**2
 
 
-def test_pow():
+def test_pow1():
     assert refine((-1)**x, Q.even(x)) == 1
     assert refine((-1)**x, Q.odd(x)) == -1
     assert refine((-2)**x, Q.even(x)) == 2**x
@@ -40,9 +41,14 @@ def test_pow():
     assert refine((-1)**(x + y + 2), Q.odd(x)) == (-1)**(y + 1)
     assert refine((-1)**(x + 3)) == (-1)**(x + 1)
 
+    # continuation
     assert refine((-1)**((-1)**x/2 - S.Half), Q.integer(x)) == (-1)**x
     assert refine((-1)**((-1)**x/2 + S.Half), Q.integer(x)) == (-1)**(x + 1)
     assert refine((-1)**((-1)**x/2 + 5*S.Half), Q.integer(x)) == (-1)**(x + 1)
+
+
+@slow
+def test_pow2():
     assert refine((-1)**((-1)**x/2 - 7*S.Half), Q.integer(x)) == (-1)**(x + 1)
     assert refine((-1)**((-1)**x/2 - 9*S.Half), Q.integer(x)) == (-1)**x
 
@@ -133,6 +139,39 @@ def test_atan2():
     assert refine(atan2(y, x), Q.zero(y) & Q.zero(x)) == nan
 
 
+def test_re():
+    assert refine(re(x), Q.real(x)) == x
+    assert refine(re(x), Q.imaginary(x)) == 0
+    assert refine(re(x+y), Q.real(x) & Q.real(y)) == x + y
+    assert refine(re(x+y), Q.real(x) & Q.imaginary(y)) == x
+    assert refine(re(x*y), Q.real(x) & Q.real(y)) == x * y
+    assert refine(re(x*y), Q.real(x) & Q.imaginary(y)) == 0
+    assert refine(re(x*y*z), Q.real(x) & Q.real(y) & Q.real(z)) == x * y * z
+
+
+def test_im():
+    assert refine(im(x), Q.imaginary(x)) == -I*x
+    assert refine(im(x), Q.real(x)) == 0
+    assert refine(im(x+y), Q.imaginary(x) & Q.imaginary(y)) == -I*x - I*y
+    assert refine(im(x+y), Q.real(x) & Q.imaginary(y)) == -I*y
+    assert refine(im(x*y), Q.imaginary(x) & Q.real(y)) == -I*x*y
+    assert refine(im(x*y), Q.imaginary(x) & Q.imaginary(y)) == 0
+    assert refine(im(1/x), Q.imaginary(x)) == -I/x
+    assert refine(im(x*y*z), Q.imaginary(x) & Q.imaginary(y)
+        & Q.imaginary(z)) == -I*x*y*z
+
+
+def test_complex():
+    assert refine(re(1/(x + I*y)), Q.real(x) & Q.real(y)) == \
+        x/(x**2 + y**2)
+    assert refine(im(1/(x + I*y)), Q.real(x) & Q.real(y)) == \
+        -y/(x**2 + y**2)
+    assert refine(re((w + I*x) * (y + I*z)), Q.real(w) & Q.real(x) & Q.real(y)
+        & Q.real(z)) == w*y - x*z
+    assert refine(im((w + I*x) * (y + I*z)), Q.real(w) & Q.real(x) & Q.real(y)
+        & Q.real(z)) == w*z + x*y
+
+
 def test_func_args():
     class MyClass(Expr):
         # A class with nontrivial .func
@@ -161,3 +200,12 @@ def test_eval_refine():
 
     mock_obj = MockExpr()
     assert refine(mock_obj)
+
+def test_refine_issue_12724():
+    expr1 = refine(Abs(x * y), Q.positive(x))
+    expr2 = refine(Abs(x * y * z), Q.positive(x))
+    assert expr1 == x * Abs(y)
+    assert expr2 == x * Abs(y * z)
+    y1 = Symbol('y1', real = True)
+    expr3 = refine(Abs(x * y1**2 * z), Q.positive(x))
+    assert expr3 == x * y1**2 * Abs(z)

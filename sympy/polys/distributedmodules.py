@@ -76,7 +76,7 @@ def sdm_monomial_deg(M):
 
 
 def sdm_monomial_lcm(A, B):
-    """
+    r"""
     Return the "least common multiple" of ``A`` and ``B``.
 
     IF `A = M e_j` and `B = N e_j`, where `M` and `N` are polynomial monomials,
@@ -84,6 +84,9 @@ def sdm_monomial_lcm(A, B):
     monomials.
 
     Otherwise the result is undefined.
+
+    Examples
+    ========
 
     >>> from sympy.polys.distributedmodules import sdm_monomial_lcm
     >>> sdm_monomial_lcm((1, 2, 3), (1, 0, 5))
@@ -164,6 +167,9 @@ def sdm_from_dict(d, O):
     Create an sdm from a dictionary.
 
     Here ``O`` is the monomial order to use.
+
+    Examples
+    ========
 
     >>> from sympy.polys.distributedmodules import sdm_from_dict
     >>> from sympy.polys import QQ, lex
@@ -706,7 +712,7 @@ def sdm_groebner(G, NF, O, K, extended=False):
     # Now carry out the buchberger algorithm.
     while P:
         i, j, s, t = P.pop()
-        f, sf, g, sg = S[i], Sugars[i], S[j], Sugars[j]
+        f, g = S[i], S[j]
         if extended:
             sp, coeff = sdm_spoly(f, g, O, K,
                                   phantom=(coefficients[i], coefficients[j]))

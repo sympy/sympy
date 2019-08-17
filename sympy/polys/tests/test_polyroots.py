@@ -2,7 +2,7 @@
 
 from sympy import (S, symbols, Symbol, Wild, Rational, sqrt,
     powsimp, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise,
-    acos, root)
+    acos, root, conjugate)
 
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
@@ -23,6 +23,20 @@ import mpmath
 a, b, c, d, e, q, t, x, y, z = symbols('a,b,c,d,e,q,t,x,y,z')
 
 
+def _check(roots):
+    # this is the desired invariant for roots returned
+    # by all_roots. It is trivially true for linear
+    # polynomials.
+    nreal = sum([1 if i.is_real else 0 for i in roots])
+    assert list(sorted(roots[:nreal])) == list(roots[:nreal])
+    for ix in range(nreal, len(roots), 2):
+        if not (
+                roots[ix + 1] == roots[ix] or
+                roots[ix + 1] == conjugate(roots[ix])):
+            return False
+    return True
+
+
 def test_roots_linear():
     assert roots_linear(Poly(2*x + 1, x)) == [-Rational(1, 2)]
 
@@ -32,6 +46,7 @@ def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2 + 3*x, x)) == [-Rational(3, 2), 0]
     assert roots_quadratic(Poly(2*x**2 + 3, x)) == [-I*sqrt(6)/2, I*sqrt(6)/2]
     assert roots_quadratic(Poly(2*x**2 + 4*x + 3, x)) == [-1 - I*sqrt(2)/2, -1 + I*sqrt(2)/2]
+    _check(Poly(2*x**2 + 4*x + 3, x).all_roots())
 
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
     assert roots_quadratic(Poly(f, x)) == \
@@ -72,30 +87,61 @@ def test_issue_8438():
 
 def test_issue_8285():
     roots = (Poly(4*x**8 - 1, x)*Poly(x**2 + 1)).all_roots()
-    assert roots == _nsort(roots)
+    assert _check(roots)
     f = Poly(x**4 + 5*x**2 + 6, x)
     ro = [rootof(f, i) for i in range(4)]
     roots = Poly(x**4 + 5*x**2 + 6, x).all_roots()
     assert roots == ro
-    assert roots == _nsort(roots)
+    assert _check(roots)
     # more than 2 complex roots from which to identify the
     # imaginary ones
     roots = Poly(2*x**8 - 1).all_roots()
-    assert roots == _nsort(roots)
+    assert _check(roots)
     assert len(Poly(2*x**10 - 1).all_roots()) == 10  # doesn't fail
 
 
 def test_issue_8289():
     roots = (Poly(x**2 + 2)*Poly(x**4 + 2)).all_roots()
-    assert roots == _nsort(roots)
+    assert _check(roots)
     roots = Poly(x**6 + 3*x**3 + 2, x).all_roots()
-    assert roots == _nsort(roots)
+    assert _check(roots)
     roots = Poly(x**6 - x + 1).all_roots()
-    assert roots == _nsort(roots)
-    # all imaginary roots
+    assert _check(roots)
+    # all imaginary roots with multiplicity of 2
     roots = Poly(x**4 + 4*x**2 + 4, x).all_roots()
-    assert roots == _nsort(roots)
+    assert _check(roots)
 
+
+def test_issue_14291():
+    assert Poly(((x - 1)**2 + 1)*((x - 1)**2 + 2)*(x - 1)
+        ).all_roots() == [1, 1 - I, 1 + I, 1 - sqrt(2)*I, 1 + sqrt(2)*I]
+    p = x**4 + 10*x**2 + 1
+    ans = [rootof(p, i) for i in range(4)]
+    assert Poly(p).all_roots() == ans
+    _check(ans)
+
+
+def test_issue_13340():
+    eq = Poly(y**3 + exp(x)*y + x, y, domain='EX')
+    roots_d = roots(eq)
+    assert len(roots_d) == 3
+
+
+def test_issue_14522():
+    eq = Poly(x**4 + x**3*(16 + 32*I) + x**2*(-285 + 386*I) + x*(-2824 - 448*I) - 2058 - 6053*I, x)
+    roots_eq = roots(eq)
+    assert all(eq(r) == 0 for r in roots_eq)
+
+
+def test_issue_15076():
+    sol = roots_quartic(Poly(t**4 - 6*t**2 + t/x - 3, t))
+    assert sol[0].has(x)
+
+
+def test_issue_16589():
+    eq = Poly(x**4 - 8*sqrt(2)*x**3 + 4*x**3 - 64*sqrt(2)*x**2 + 1024*x, x)
+    roots_eq = roots(eq)
+    assert 0 in roots_eq
 
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
@@ -229,6 +275,7 @@ def test_roots_binomial():
 
     assert roots_binomial(Poly(5*x**4 + 2, x)) == \
         [-A - A*I, -A + A*I, A - A*I, A + A*I]
+    _check(roots_binomial(Poly(x**8 - 2)))
 
     a1 = Symbol('a1', nonnegative=True)
     b1 = Symbol('b1', nonnegative=True)

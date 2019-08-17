@@ -7,8 +7,8 @@ Special - gamma, zeta,spherical harmonics...
 
 from sympy.functions.combinatorial.factorials import (factorial, factorial2,
         rf, ff, binomial, RisingFactorial, FallingFactorial, subfactorial)
-from sympy.functions.combinatorial.numbers import (fibonacci, lucas, harmonic,
-        bernoulli, bell, euler, catalan, genocchi)
+from sympy.functions.combinatorial.numbers import (carmichael, fibonacci, lucas, tribonacci,
+        harmonic, bernoulli, bell, euler, catalan, genocchi, partition)
 from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
         Id, real_root, cbrt)
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
@@ -26,17 +26,17 @@ from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,
         erfinv, erfcinv, erf2inv, Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
         fresnels, fresnelc)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma,
-        uppergamma, polygamma, loggamma, digamma, trigamma)
+        uppergamma, polygamma, loggamma, digamma, trigamma, multigamma)
 from sympy.functions.special.zeta_functions import (dirichlet_eta, zeta,
         lerchphi, polylog, stieltjes)
 from sympy.functions.special.tensor_functions import (Eijk, LeviCivita,
         KroneckerDelta)
 from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
-from sympy.functions.special.bsplines import bspline_basis, bspline_basis_set
+from sympy.functions.special.bsplines import bspline_basis, bspline_basis_set, interpolating_spline
 from sympy.functions.special.bessel import (besselj, bessely, besseli, besselk,
         hankel1, hankel2, jn, yn, jn_zeros, hn1, hn2, airyai, airybi, airyaiprime, airybiprime)
-from sympy.functions.special.hyper import hyper, meijerg
+from sympy.functions.special.hyper import hyper, meijerg, appellf1
 from sympy.functions.special.polynomials import (legendre, assoc_legendre,
         hermite, chebyshevt, chebyshevu, chebyshevu_root, chebyshevt_root,
         laguerre, assoc_laguerre, gegenbauer, jacobi, jacobi_normalized)

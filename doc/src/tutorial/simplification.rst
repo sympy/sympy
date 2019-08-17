@@ -28,7 +28,7 @@ way to arrive at the simplest form of an expression.  Here are some examples
     (x - 2)⋅(x - 1)
 
 Here, ``gamma(x)`` is `\Gamma(x)`, the `gamma function
-<http://en.wikipedia.org/wiki/Gamma_function>`_.  We see that ``simplify()``
+<https://en.wikipedia.org/wiki/Gamma_function>`_.  We see that ``simplify()``
 is capable of handling a large class of expressions.
 
 But ``simplify()`` has a pitfall.  It just applies all the major
@@ -140,13 +140,13 @@ collect
     >>> collected_expr = collect(expr, x)
     >>> collected_expr
      3    2
-    x  + x ⋅(-z + 2) + x⋅(y + 1) - 3
+    x  + x ⋅(2 - z) + x⋅(y + 1) - 3
 
 ``collect()`` is particularly useful in conjunction with the ``.coeff()``
 method.  ``expr.coeff(x, n)`` gives the coefficient of ``x**n`` in ``expr``:
 
     >>> collected_expr.coeff(x, 2)
-    -z + 2
+    2 - z
 
 .. TODO: Discuss coeff method in more detail in some other section (maybe
    basic expression manipulation tools)
@@ -207,7 +207,7 @@ apart
 -----
 
 ``apart()`` performs a `partial fraction decomposition
-<http://en.wikipedia.org/wiki/Partial_fraction_decomposition>`_ on a rational
+<https://en.wikipedia.org/wiki/Partial_fraction_decomposition>`_ on a rational
 function.
 
     >>> expr = (4*x**3 + 21*x**2 + 10*x + 12)/(x**4 + 5*x**3 + 5*x**2 + 4*x)
@@ -278,10 +278,10 @@ identities, use ``expand_trig()``.
     >>> expand_trig(sin(x + y))
     sin(x)⋅cos(y) + sin(y)⋅cos(x)
     >>> expand_trig(tan(2*x))
-       2⋅tan(x)
-    ─────────────
-         2
-    - tan (x) + 1
+      2⋅tan(x)
+    ───────────
+           2
+    1 - tan (x)
 
 Because ``expand_trig()`` tends to make trigonometric expressions larger, and
 ``trigsimp()`` tends to make them smaller, these identities can be applied in
@@ -315,7 +315,7 @@ under other conditions as well).  A common consequence of the failure of
 identity 2 is that `\sqrt{x}\sqrt{y} \neq \sqrt{xy}`.
 
 Identity 3 is not always true.  For example, if `x = -1`, `a = 2`, and `b =
-\frac{1}{2}`, then `(x^a)^b = {\left ((-1)^2\right )}^{1/2} = \sqrt{1} = 1`
+\frac{1}{2}`, then `(x^a)^b = {\left((-1)^2\right)}^{1/2} = \sqrt{1} = 1`
 and `x^{ab} = (-1)^{2\cdot1/2} = (-1)^1 = -1`.  However, identity 3 is true
 when `b` is an integer (again, it may also hold in other cases as well).  Two
 common consequences of the failure of identity 3 are that `\sqrt{x^2}\neq x`
@@ -330,7 +330,7 @@ To summarize
 +-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
 |2. `x^ay^a = (xy)^a`   |`x, y \geq 0` and `a \in \mathbb{R}`|`(-1)^{1/2}(-1)^{1/2} \neq (-1\cdot-1)^{1/2}`       |`\sqrt{x}\sqrt{y} \neq \sqrt{xy}` in general                                 |
 +-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
-|3. `(x^a)^b = x^{ab}`  |`b \in \mathbb{Z}`                  |`{\left((-1)^2\right )}^{1/2} \neq (-1)^{2\cdot1/2}`|`\sqrt{x^2}\neq x` and `\sqrt{\frac{1}{x}}\neq\frac{1}{\sqrt{x}}` in general |
+|3. `(x^a)^b = x^{ab}`  |`b \in \mathbb{Z}`                  |`{\left((-1)^2\right)}^{1/2} \neq (-1)^{2\cdot1/2}` |`\sqrt{x^2}\neq x` and `\sqrt{\frac{1}{x}}\neq\frac{1}{\sqrt{x}}` in general |
 +-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
 
 
@@ -499,16 +499,16 @@ is real.
 
 As before, ``z`` and ``t`` will be Symbols with no additional assumptions.
 
-Note that the identity `\log{\left (\frac{x}{y}\right )} = \log(x) - \log(y)`
-is a special case of identities 1 and 2 by `\log{\left (\frac{x}{y}\right )}
-=` `\log{\left (x\cdot\frac{1}{y}\right )} =` `\log(x) + \log{\left(
-y^{-1}\right )} =` `\log(x) - \log(y)`, and thus it also holds if `x` and `y`
+Note that the identity `\log{\left(\frac{x}{y}\right)} = \log(x) - \log(y)`
+is a special case of identities 1 and 2 by `\log{\left(\frac{x}{y}\right)}
+=` `\log{\left(x\cdot\frac{1}{y}\right)} =` `\log(x) + \log{\left(
+y^{-1}\right)} =` `\log(x) - \log(y)`, and thus it also holds if `x` and `y`
 are positive, but may not hold in general.
 
-We also see that `\log{\left( e^x \right)} = x` comes from `\log{\left ( e^x
+We also see that `\log{\left( e^x \right)} = x` comes from `\log{\left( e^x
 \right)} = x\log(e) = x`, and thus holds when `x` is real (and it can be
 verified that it does not hold in general for arbitrary complex `x`, for
-example, `\log{\left (e^{x + 2\pi i}\right)} = \log{\left (e^x\right )} = x
+example, `\log{\left(e^{x + 2\pi i}\right)} = \log{\left(e^x\right)} = x
 \neq x + 2\pi i`).
 
 expand_log
@@ -576,7 +576,7 @@ assumptions we put on them in the previous section.  We will also define ``k``,
     >>> x, y, z = symbols('x y z')
     >>> k, m, n = symbols('k m n')
 
-The `factorial <http://en.wikipedia.org/wiki/Factorial>`_ function is
+The `factorial <https://en.wikipedia.org/wiki/Factorial>`_ function is
 ``factorial``.  ``factorial(n)`` represents `n!= 1\cdot2\cdots(n - 1)\cdot
 n`. `n!` represents the number of permutations of `n` distinct items.
 
@@ -584,7 +584,7 @@ n`. `n!` represents the number of permutations of `n` distinct items.
     n!
 
 The `binomial coefficient
-<http://en.wikipedia.org/wiki/Binomial_coefficient>`_ function is
+<https://en.wikipedia.org/wiki/Binomial_coefficient>`_ function is
 ``binomial``.  ``binomial(n, k)`` represents `\binom{n}{k}`, the number of
 ways to choose `k` items from a set of `n` distinct items.  It is also often
 written as `nCk`, and is pronounced "`n` choose `k`".
@@ -595,7 +595,7 @@ written as `nCk`, and is pronounced "`n` choose `k`".
     ⎝k⎠
 
 The factorial function is closely related to the `gamma function
-<http://en.wikipedia.org/wiki/Gamma_function>`_, ``gamma``.  ``gamma(z)``
+<https://en.wikipedia.org/wiki/Gamma_function>`_, ``gamma``.  ``gamma(z)``
 represents `\Gamma(z) = \int_0^\infty t^{z - 1}e^{-t}\,dt`, which for positive integer
 `z` is the same as `(z - 1)!`.
 
@@ -603,12 +603,12 @@ represents `\Gamma(z) = \int_0^\infty t^{z - 1}e^{-t}\,dt`, which for positive i
     Γ(z)
 
 The `generalized hypergeometric function
-<http://en.wikipedia.org/wiki/Generalized_hypergeometric_function>`_ is
+<https://en.wikipedia.org/wiki/Generalized_hypergeometric_function>`_ is
 ``hyper``.  ``hyper([a_1, ..., a_p], [b_1, ..., b_q], z)`` represents
 `{}_pF_q\left(\begin{matrix} a_1, \cdots, a_p \\ b_1, \cdots, b_q \end{matrix}
 \middle| z \right)`.  The most common case is `{}_2F_1`, which is often
 referred to as the `ordinary hypergeometric function
-<http://en.wikipedia.org/wiki/Hypergeometric_function>`_.
+<https://en.wikipedia.org/wiki/Hypergeometric_function>`_.
 
     >>> hyper([1, 2], [3], z)
      ┌─  ⎛1, 2 │  ⎞
@@ -650,8 +650,8 @@ To rewrite ``hyper`` in terms of more standard functions, use
 ``hyperexpand()``.
 
     >>> hyperexpand(hyper([1, 1], [2], z))
-    -log(-z + 1)
-    ─────────────
+    -log(1 - z)
+    ────────────
          z
 
 ``hyperexpand()`` also works on the more general Meijer G-function (see
@@ -674,6 +674,7 @@ combsimp
 
 To simplify combinatorial expressions, use ``combsimp()``.
 
+    >>> n, k = symbols('n k', integer = True)
     >>> combsimp(factorial(n)/factorial(n - 3))
     n⋅(n - 2)⋅(n - 1)
     >>> combsimp(binomial(n+1, k+1)/binomial(n, k))
@@ -681,9 +682,13 @@ To simplify combinatorial expressions, use ``combsimp()``.
     ─────
     k + 1
 
-``combsimp()`` also simplifies expressions with ``gamma``.
+gammasimp
+---------
 
-    >>> combsimp(gamma(x)*gamma(1 - x))
+To simplify expressions with gamma functions or combinatorial functions with
+non-integer argument, use ``gammasimp()``.
+
+    >>> gammasimp(gamma(x)*gamma(1 - x))
        π
     ────────
     sin(π⋅x)
@@ -692,7 +697,7 @@ Example: Continued Fractions
 ============================
 
 Let's use SymPy to explore continued fractions.  A `continued fraction
-<http://en.wikipedia.org/wiki/Continued_fraction>`_ is an expression of the
+<https://en.wikipedia.org/wiki/Continued_fraction>`_ is an expression of the
 form
 
 .. math::
@@ -737,7 +742,7 @@ Every finite continued fraction is a rational number, but we are interested in
 symbolics here, so let's create a symbolic continued fraction.  The
 ``symbols()`` function that we have been using has a shortcut to create
 numbered symbols.  ``symbols('a0:5')`` will create the symbols ``a0``, ``a1``,
-..., ``a5``.
+..., ``a4``.
 
     >>> syms = symbols('a0:5')
     >>> syms

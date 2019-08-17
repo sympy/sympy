@@ -1,7 +1,8 @@
 from copy import copy
 
 from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
-from sympy import Symbol, Rational, SparseMatrix, diff
+from sympy import Symbol, Rational, SparseMatrix, diff, sympify, S
+from sympy.core.compatibility import long
 from sympy.matrices import Matrix
 from sympy.tensor.array.sparse_ndim_array import MutableSparseNDimArray
 from sympy.utilities.pytest import raises
@@ -60,6 +61,35 @@ def test_ndim_array_initiation():
     assert array_with_many_args[0, 0] == 0
     assert array_with_many_args.rank() == 2
 
+    shape = (long(3), long(3))
+    array_with_long_shape = MutableSparseNDimArray.zeros(*shape)
+    assert len(array_with_long_shape) == 3 * 3
+    assert array_with_long_shape.shape == shape
+    assert array_with_long_shape[long(0), long(0)] == 0
+    assert array_with_long_shape.rank() == 2
+
+    vector_with_long_shape = MutableDenseNDimArray(range(5), long(5))
+    assert len(vector_with_long_shape) == 5
+    assert vector_with_long_shape.shape == (long(5),)
+    assert vector_with_long_shape.rank() == 1
+    raises(ValueError, lambda: vector_with_long_shape[long(5)])
+
+    from sympy.abc import x
+    for ArrayType in [MutableDenseNDimArray, MutableSparseNDimArray]:
+        rank_zero_array = ArrayType(x)
+        assert len(rank_zero_array) == 1
+        assert rank_zero_array.shape == ()
+        assert rank_zero_array.rank() == 0
+        assert rank_zero_array[()] == x
+        raises(ValueError, lambda: rank_zero_array[0])
+
+def test_sympify():
+    from sympy.abc import x, y, z, t
+    arr = MutableDenseNDimArray([[x, y], [1, z*t]])
+    arr_other = sympify(arr)
+    assert arr_other.shape == (2, 2)
+    assert arr_other == arr
+
 
 def test_reshape():
     array = MutableDenseNDimArray(range(50), 50)
@@ -74,10 +104,8 @@ def test_reshape():
 
 def test_iterator():
     array = MutableDenseNDimArray(range(4), (2, 2))
-    j = 0
-    for i in array:
-        assert i == j
-        j += 1
+    array[0] == MutableDenseNDimArray([0, 1])
+    array[1] == MutableDenseNDimArray([2, 3])
 
     array = array.reshape(4)
     j = 0
@@ -86,20 +114,39 @@ def test_iterator():
         j += 1
 
 
+def test_getitem():
+    for ArrayType in [MutableDenseNDimArray, MutableSparseNDimArray]:
+        array = ArrayType(range(24)).reshape(2, 3, 4)
+        assert array.tolist() == [[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]], [[12, 13, 14, 15], [16, 17, 18, 19], [20, 21, 22, 23]]]
+        assert array[0] == ArrayType([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]])
+        assert array[0, 0] == ArrayType([0, 1, 2, 3])
+        value = 0
+        for i in range(2):
+            for j in range(3):
+                for k in range(4):
+                    assert array[i, j, k] == value
+                    value += 1
+
+    raises(ValueError, lambda: array[3, 4, 5])
+    raises(ValueError, lambda: array[3, 4, 5, 6])
+    raises(ValueError, lambda: array[3, 4, 5, 3:4])
+
+
 def test_sparse():
     sparse_array = MutableSparseNDimArray([0, 0, 0, 1], (2, 2))
     assert len(sparse_array) == 2 * 2
     # dictionary where all data is, only non-zero entries are actually stored:
     assert len(sparse_array._sparse_array) == 1
 
-    assert list(sparse_array) == [0, 0, 0, 1]
+    assert sparse_array.tolist() == [[0, 0], [0, 1]]
 
-    for i, j in zip(sparse_array, [0, 0, 0, 1]):
-        assert i == j
+    for i, j in zip(sparse_array, [[0, 0], [0, 1]]):
+        assert i == MutableSparseNDimArray(j)
 
     sparse_array[0, 0] = 123
     assert len(sparse_array._sparse_array) == 2
     assert sparse_array[0, 0] == 123
+    assert sparse_array/0 == MutableSparseNDimArray([[S.ComplexInfinity, S.NaN], [S.NaN, S.ComplexInfinity]], (2, 2))
 
     # when element in sparse array become zero it will disappear from
     # dictionary
@@ -109,6 +156,27 @@ def test_sparse():
     assert len(sparse_array._sparse_array) == 0
     assert sparse_array[0, 0] == 0
 
+    # test for large scale sparse array
+    # equality test
+    a = MutableSparseNDimArray.zeros(100000, 200000)
+    b = MutableSparseNDimArray.zeros(100000, 200000)
+    assert a == b
+    a[1, 1] = 1
+    b[1, 1] = 2
+    assert a != b
+
+    # __mul__ and __rmul__
+    assert a * 3 == MutableSparseNDimArray({200001: 3}, (100000, 200000))
+    assert 3 * a == MutableSparseNDimArray({200001: 3}, (100000, 200000))
+    assert a * 0 == MutableSparseNDimArray({}, (100000, 200000))
+    assert 0 * a == MutableSparseNDimArray({}, (100000, 200000))
+
+    # __div__
+    assert a/3 == MutableSparseNDimArray({200001: S.One/3}, (100000, 200000))
+
+    # __neg__
+    assert -a == MutableSparseNDimArray({200001: -1}, (100000, 200000))
+
 
 def test_calculation():
 
@@ -117,14 +185,14 @@ def test_calculation():
 
     c = a + b
     for i in c:
-        assert i == 10
+        assert i == MutableDenseNDimArray([10, 10, 10])
 
     assert c == MutableDenseNDimArray([10]*9, (3, 3))
     assert c == MutableSparseNDimArray([10]*9, (3, 3))
 
     c = b - a
     for i in c:
-        assert i == 8
+        assert i == MutableSparseNDimArray([8, 8, 8])
 
     assert c == MutableDenseNDimArray([8]*9, (3, 3))
     assert c == MutableSparseNDimArray([8]*9, (3, 3))
@@ -140,7 +208,7 @@ def test_ndim_array_converting():
     assert (isinstance(matrix, Matrix))
 
     for i in range(len(dense_array)):
-        assert dense_array[i] == matrix[i]
+        assert dense_array[dense_array._get_tuple_index(i)] == matrix[i]
     assert matrix.shape == dense_array.shape
 
     assert MutableDenseNDimArray(matrix) == dense_array
@@ -156,7 +224,7 @@ def test_ndim_array_converting():
     assert(isinstance(matrix, SparseMatrix))
 
     for i in range(len(sparse_array)):
-        assert sparse_array[i] == matrix[i]
+        assert sparse_array[sparse_array._get_tuple_index(i)] == matrix[i]
     assert matrix.shape == sparse_array.shape
 
     assert MutableSparseNDimArray(matrix) == sparse_array
@@ -227,6 +295,9 @@ def test_arithmetic():
     assert type(a) == type(b) == type(c1) == type(c2) == type(d1) == type(d2) \
         == type(e1) == type(e2) == type(e3) == type(f1)
 
+    z0 = -a
+    assert z0 == MutableDenseNDimArray([-3 for i in range(9)], (3, 3))
+
 
 def test_higher_dimenions():
     m3 = MutableDenseNDimArray(range(10, 34), (2, 3, 4))
@@ -257,7 +328,7 @@ def test_higher_dimenions():
 def test_slices():
     md = MutableDenseNDimArray(range(10, 34), (2, 3, 4))
 
-    assert md[:] == md._array
+    assert md[:] == MutableDenseNDimArray(range(10, 34), (2, 3, 4))
     assert md[:, :, 0].tomatrix() == Matrix([[10, 14, 18], [22, 26, 30]])
     assert md[0, 1:2, :].tomatrix() == Matrix([[14, 15, 16, 17]])
     assert md[0, 1:3, :].tomatrix() == Matrix([[14, 15, 16, 17], [18, 19, 20, 21]])
@@ -266,12 +337,25 @@ def test_slices():
     sd = MutableSparseNDimArray(range(10, 34), (2, 3, 4))
     assert sd == MutableSparseNDimArray(md)
 
-    assert sd[:] == md._array
-    assert sd[:] == list(sd)
+    assert sd[:] == MutableSparseNDimArray(range(10, 34), (2, 3, 4))
     assert sd[:, :, 0].tomatrix() == Matrix([[10, 14, 18], [22, 26, 30]])
     assert sd[0, 1:2, :].tomatrix() == Matrix([[14, 15, 16, 17]])
     assert sd[0, 1:3, :].tomatrix() == Matrix([[14, 15, 16, 17], [18, 19, 20, 21]])
     assert sd[:, :, :] == sd
+
+
+def test_slices_assign():
+    a = MutableDenseNDimArray(range(12), shape=(4, 3))
+    b = MutableSparseNDimArray(range(12), shape=(4, 3))
+
+    for i in [a, b]:
+        assert i.tolist() == [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11]]
+        i[0, :] = [2, 2, 2]
+        assert i.tolist() == [[2, 2, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11]]
+        i[0, 1:] = [8, 8]
+        assert i.tolist() == [[2, 8, 8], [3, 4, 5], [6, 7, 8], [9, 10, 11]]
+        i[1:3, 1] = [20, 44]
+        assert i.tolist() == [[2, 8, 8], [3, 20, 5], [6, 44, 8], [9, 10, 11]]
 
 
 def test_diff():

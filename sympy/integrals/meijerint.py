@@ -36,12 +36,14 @@ from sympy.core.compatibility import range
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest, collect
+from sympy.simplify.fu import sincos_to_sum
 from sympy.logic.boolalg import And, Or, BooleanAtom
-from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.hyperbolic import \
     _rewrite_hyperbolics_as_exp, HyperbolicFunction
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.hyper import meijerg
 from sympy.utilities.iterables import multiset_partitions, ordered
 from sympy.utilities.misc import debug as _debug
@@ -593,7 +595,7 @@ def _condsimp(cond):
     """
     from sympy import (
         symbols, Wild, Eq, unbranched_argument, exp_polar, pi, I,
-        periodic_argument, oo, polar_lift)
+        arg, periodic_argument, oo, polar_lift)
     from sympy.logic.boolalg import BooleanFunction
     if not isinstance(cond, BooleanFunction):
         return cond
@@ -604,6 +606,10 @@ def _condsimp(cond):
         (Or(p < q, Eq(p, q)), p <= q),
         # The next two obviously are instances of a general pattern, but it is
         # easier to spell out the few cases we care about.
+        (And(abs(arg(p)) <= pi, abs(arg(p) - 2*pi) <= pi),
+         Eq(arg(p) - pi, 0)),
+        (And(abs(2*arg(p) + pi) <= pi, abs(2*arg(p) - pi) <= pi),
+         Eq(arg(p), 0)),
         (And(abs(unbranched_argument(p)) <= pi,
            abs(unbranched_argument(exp_polar(-2*pi*I)*p)) <= pi),
        Eq(unbranched_argument(exp_polar(-I*pi)*p), 0)),
@@ -617,13 +623,13 @@ def _condsimp(cond):
         for fro, to in rules:
             if fro.func != cond.func:
                 continue
-            for n, arg in enumerate(cond.args):
+            for n, arg1 in enumerate(cond.args):
                 if r in fro.args[0].free_symbols:
-                    m = arg.match(fro.args[1])
+                    m = arg1.match(fro.args[1])
                     num = 1
                 else:
                     num = 0
-                    m = arg.match(fro.args[0])
+                    m = arg1.match(fro.args[0])
                 if not m:
                     continue
                 otherargs = [x.subs(m) for x in fro.args[:num] + fro.args[num + 1:]]
@@ -635,17 +641,17 @@ def _condsimp(cond):
                         if arg2 == arg3:
                             otherlist += [k]
                             break
-                        if arg3.func is And and arg2.args[1] == r and \
-                                arg2.func is And and arg2.args[0] in arg3.args:
+                        if isinstance(arg3, And) and arg2.args[1] == r and \
+                                isinstance(arg2, And) and arg2.args[0] in arg3.args:
                             otherlist += [k]
                             break
-                        if arg3.func is And and arg2.args[0] == r and \
-                                arg2.func is And and arg2.args[1] in arg3.args:
+                        if isinstance(arg3, And) and arg2.args[0] == r and \
+                                isinstance(arg2, And) and arg2.args[1] in arg3.args:
                             otherlist += [k]
                             break
                 if len(otherlist) != len(otherargs) + 1:
                     continue
-                newargs = [arg for (k, arg) in enumerate(cond.args)
+                newargs = [arg_ for (k, arg_) in enumerate(cond.args)
                            if k not in otherlist] + [to.subs(m)]
                 cond = cond.func(*newargs)
                 change = True
@@ -659,9 +665,11 @@ def _condsimp(cond):
             expr = orig.lhs
         else:
             return orig
-        m = expr.match(unbranched_argument(polar_lift(p)**q))
+        m = expr.match(arg(p)**q)
         if not m:
-            if expr.func is periodic_argument and not expr.args[0].is_polar \
+            m = expr.match(unbranched_argument(polar_lift(p)**q))
+        if not m:
+            if isinstance(expr, periodic_argument) and not expr.args[0].is_polar \
                     and expr.args[1] == oo:
                 return (expr.args[0] > 0)
             return orig
@@ -717,7 +725,7 @@ def _rewrite_saxena_1(fac, po, g, x):
 
 
 def _check_antecedents_1(g, x, helper=False):
-    """
+    r"""
     Return a condition under which the mellin transform of g exists.
     Any power of x has already been absorbed into the G function,
     so this is just int_0^\infty g dx.
@@ -834,7 +842,7 @@ def _check_antecedents_1(g, x, helper=False):
 
 
 def _int0oo_1(g, x):
-    """
+    r"""
     Evaluate int_0^\infty g dx using G functions,
     assuming the necessary conditions are fulfilled.
 
@@ -845,7 +853,7 @@ def _int0oo_1(g, x):
     gamma(-a)*gamma(c + 1)/(y*gamma(-d)*gamma(b + 1))
     """
     # See [L, section 5.6.1]. Note that s=1.
-    from sympy import gamma, combsimp, unpolarify
+    from sympy import gamma, gammasimp, unpolarify
     eta, _ = _get_coeff_exp(g.argument, x)
     res = 1/eta
     # XXX TODO we should reduce order first
@@ -857,7 +865,7 @@ def _int0oo_1(g, x):
         res /= gamma(1 - b - 1)
     for a in g.aother:
         res /= gamma(a + 1)
-    return combsimp(unpolarify(res))
+    return gammasimp(unpolarify(res))
 
 
 def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
@@ -1005,23 +1013,24 @@ def _check_antecedents(g1, g2, x):
                   Or(Ne(zos, 1), re(mu + rho + v - u) < 1,
                      re(mu + rho + q - p) < 1))
     else:
-        c14 = And(Eq(phi, 0), bstar - 1 + cstar <= 0,
-                  Or(And(Ne(zos, 1), abs(arg_(1 - zos)) < pi),
-                     And(re(mu + rho + v - u) < 1, Eq(zos, 1))))
+        def _cond(z):
+            '''Returns True if abs(arg(1-z)) < pi, avoiding arg(0).
 
-        def _cond():
-            '''
-            Note: if `zso` is 1 then tmp will be NaN.  This raises a
-            TypeError on `NaN < pi`.  Previously this gave `False` so
+            Note: if `z` is 1 then arg is NaN. This raises a
+            TypeError on `NaN < pi`. Previously this gave `False` so
             this behavior has been hardcoded here but someone should
             check if this NaN is more serious! This NaN is triggered by
             test_meijerint() in test_meijerint.py:
             `meijerint_definite(exp(x), x, 0, I)`
             '''
-            tmp = abs(arg_(1 - zso))
-            return False if tmp is S.NaN else tmp < pi
+            return z != 1 and abs(arg_(1 - z)) < pi
+
+        c14 = And(Eq(phi, 0), bstar - 1 + cstar <= 0,
+                  Or(And(Ne(zos, 1), _cond(zos)),
+                     And(re(mu + rho + v - u) < 1, Eq(zos, 1))))
+
         c14_alt = And(Eq(phi, 0), cstar - 1 + bstar <= 0,
-                  Or(And(Ne(zso, 1), _cond()),
+                  Or(And(Ne(zso, 1), _cond(zso)),
                      And(re(mu + rho + q - p) < 1, Eq(zso, 1))))
 
         # Since r=k=l=1, in our case there is c14_alt which is the same as calling
@@ -1346,7 +1355,7 @@ def _check_antecedents_inversion(g, x):
         return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def E(z):
-        return And(*[statement(a - 1, 0, z) for a in g.an])
+        return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def H(z):
         return statement(theta, -sigma, 1/sigma, z)
@@ -1359,23 +1368,23 @@ def _check_antecedents_inversion(g, x):
 
     # [L], section 5.10
     conds = []
-    # Theorem 1
-    conds += [And(1 <= n, p < q, 1 <= m, rho*pi - delta >= pi/2, delta > 0,
+    # Theorem 1 -- p < q from test above
+    conds += [And(1 <= n, 1 <= m, rho*pi - delta >= pi/2, delta > 0,
                   E(z*exp(I*pi*(nu + 1))))]
     # Theorem 2, statements (2) and (3)
     conds += [And(p + 1 <= m, m + 1 <= q, delta > 0, delta < pi/2, n == 0,
                   (m - p + 1)*pi - delta >= pi/2,
                   Hp(z*exp(I*pi*(q - m))), Hm(z*exp(-I*pi*(q - m))))]
-    # Theorem 2, statement (5)
-    conds += [And(p < q, m == q, n == 0, delta > 0,
+    # Theorem 2, statement (5)  -- p < q from test above
+    conds += [And(m == q, n == 0, delta > 0,
                   (sigma + epsilon)*pi - delta >= pi/2, H(z))]
     # Theorem 3, statements (6) and (7)
     conds += [And(Or(And(p <= q - 2, 1 <= tau, tau <= sigma/2),
                      And(p + 1 <= m + n, m + n <= (p + q)/2)),
                   delta > 0, delta < pi/2, (tau + 1)*pi - delta >= pi/2,
                   Hp(z*exp(I*pi*nu)), Hm(z*exp(-I*pi*nu)))]
-    # Theorem 4, statements (10) and (11)
-    conds += [And(p < q, 1 <= m, rho > 0, delta > 0, delta + rho*pi < pi/2,
+    # Theorem 4, statements (10) and (11)  -- p < q from test above
+    conds += [And(1 <= m, rho > 0, delta > 0, delta + rho*pi < pi/2,
                   (tau + epsilon)*pi - delta >= pi/2,
                   Hp(z*exp(I*pi*nu)), Hm(z*exp(-I*pi*nu)))]
     # Trivial case
@@ -1779,7 +1788,7 @@ def meijerint_definite(f, x, a, b):
         _debug('  Sensible splitting points:', innermost)
         for c in sorted(innermost, key=default_sort_key, reverse=True) + [S(0)]:
             _debug('  Trying to split at', c)
-            if not c.is_real:
+            if not c.is_extended_real:
                 _debug('  Non-real splitting point.')
                 continue
             res1 = _meijerint_definite_2(f.subs(x, x + c), x)
@@ -1800,7 +1809,8 @@ def meijerint_definite(f, x, a, b):
             return res, cond
 
     elif a == oo:
-        return -meijerint_definite(f, x, b, oo)
+        res = meijerint_definite(f, x, b, oo)
+        return -res[0], res[1]
 
     elif (a, b) == (0, oo):
         # This is a common case - try it directly first.
@@ -1879,18 +1889,24 @@ def _guess_expansion(f, x):
             res += [(expanded, 'expand_trig, expand_mul')]
             saw.add(expanded)
 
+    if orig.has(cos, sin):
+        reduced = sincos_to_sum(orig)
+        if reduced not in saw:
+            res += [(reduced, 'trig power reduction')]
+            saw.add(reduced)
+
     return res
 
 
 def _meijerint_definite_2(f, x):
     """
-    Try to integrate f dx from zero to infinty.
+    Try to integrate f dx from zero to infinity.
 
     The body of this function computes various 'simplifications'
     f1, f2, ... of f (e.g. by calling expand_mul(), trigexpand()
     - see _guess_expansion) and calls _meijerint_definite_3 with each of
     these in succession.
-    If _meijerint_definite_3 succeedes with any of the simplified functions,
+    If _meijerint_definite_3 succeeds with any of the simplified functions,
     returns this result.
     """
     # This function does preparation for (2), calls
@@ -2010,7 +2026,7 @@ def _meijerint_definite_4(f, x, only_double=False):
 
 
 def meijerint_inversion(f, x, t):
-    """
+    r"""
     Compute the inverse laplace transform
     :math:\int_{c+i\infty}^{c-i\infty} f(x) e^{tx) dx,
     for real c larger than the real part of all singularities of f.
@@ -2031,16 +2047,23 @@ def meijerint_inversion(f, x, t):
     t_ = t
     t = Dummy('t', polar=True)  # We don't want sqrt(t**2) = abs(t) etc
     f = f.subs(t_, t)
-    c = Dummy('c')
     _debug('Laplace-inverting', f)
     if not _is_analytic(f, x):
         _debug('But expression is not analytic.')
         return None
-    # We filter out exponentials here. If we are given an Add this will not
+    # Exponentials correspond to shifts; we filter them out and then
+    # shift the result later.  If we are given an Add this will not
     # work, but the calling code will take care of that.
-    shift = 0
+    shift = S.Zero
+
     if f.is_Mul:
         args = list(f.args)
+    elif isinstance(f, exp):
+        args = [f]
+    else:
+        args = None
+
+    if args:
         newargs = []
         exponentials = []
         while args:
@@ -2076,6 +2099,18 @@ def meijerint_inversion(f, x, t):
         shift = Add(*exponentials)
         f = Mul(*newargs)
 
+    if x not in f.free_symbols:
+        _debug('Expression consists of constant and exp shift:', f, shift)
+        from sympy import Eq, im
+        cond = Eq(im(shift), 0)
+        if cond == False:
+            _debug('but shift is nonreal, cannot be a Laplace transform')
+            return None
+        res = f*DiracDelta(t + shift)
+        _debug('Result is a delta function, possibly conditional:', res, cond)
+        # cond is True or Eq
+        return Piecewise((res.subs(t, t_), cond))
+
     gs = _rewrite1(f, x)
     if gs is not None:
         fac, po, g, cond = gs
@@ -2098,5 +2133,6 @@ def meijerint_inversion(f, x, t):
             res = res.subs(t, t + shift)
             if not isinstance(cond, bool):
                 cond = cond.subs(t, t + shift)
+            from sympy import InverseLaplaceTransform
             return Piecewise((res.subs(t, t_), cond),
-                             (Integral(f_*exp(x*t), (x, c - oo*I, c + oo*I)).subs(t, t_), True))
+                             (InverseLaplaceTransform(f_.subs(t, t_), x, t_, None), True))

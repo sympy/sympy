@@ -1,7 +1,7 @@
 from sympy.core.compatibility import range
 from sympy.core.basic import Basic
 from sympy.vector.vector import Vector
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.functions import _path
 from sympy import Symbol
 from sympy.core.cache import cacheit
@@ -46,12 +46,12 @@ class Point(Basic):
     def position_wrt(self, other):
         """
         Returns the position vector of this Point with respect to
-        another Point/CoordSysCartesian.
+        another Point/CoordSys3D.
 
         Parameters
         ==========
 
-        other : Point/CoordSysCartesian
+        other : Point/CoordSys3D
             If other is a Point, the position of this Point wrt it is
             returned. If its an instance of CoordSyRect, the position
             wrt its origin is returned.
@@ -59,8 +59,8 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import Point, CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> N.origin.position_wrt(p1)
         (-10)*N.i
@@ -68,10 +68,10 @@ class Point(Basic):
         """
 
         if (not isinstance(other, Point) and
-                not isinstance(other, CoordSysCartesian)):
+                not isinstance(other, CoordSys3D)):
             raise TypeError(str(other) +
-                            "is not a Point or CoordSysCartesian")
-        if isinstance(other, CoordSysCartesian):
+                            "is not a Point or CoordSys3D")
+        if isinstance(other, CoordSys3D):
             other = other.origin
         # Handle special cases
         if other == self:
@@ -111,8 +111,8 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import Point, CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> p1.position_wrt(N.origin)
         10*N.i
@@ -123,20 +123,20 @@ class Point(Basic):
     def express_coordinates(self, coordinate_system):
         """
         Returns the Cartesian/rectangular coordinates of this point
-        wrt the origin of the given CoordSysCartesian instance.
+        wrt the origin of the given CoordSys3D instance.
 
         Parameters
         ==========
 
-        coordinate_system : CoordSysCartesian
+        coordinate_system : CoordSys3D
             The coordinate system to express the coordinates of this
             Point in.
 
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import Point, CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> p2 = p1.locate_new('p2', 5 * N.j)
         >>> p2.express_coordinates(N)

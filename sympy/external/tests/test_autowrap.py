@@ -1,7 +1,7 @@
 import sympy
 import tempfile
 import os
-from sympy import symbols, Eq
+from sympy import symbols, Eq, Mod
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
@@ -105,7 +105,8 @@ def runtest_ufuncify(language, backend):
 def runtest_issue_10274(language, backend):
     expr = (a - b + c)**(13)
     tmp = tempfile.mkdtemp()
-    f = autowrap(expr, language, backend, tempdir=tmp, helpers=('helper', a - b + c, (a, b, c)))
+    f = autowrap(expr, language, backend, tempdir=tmp,
+                 helpers=('helper', a - b + c, (a, b, c)))
     assert f(1, 1, 1) == 1
 
     for file in os.listdir(tmp):
@@ -140,6 +141,42 @@ def runtest_issue_10274(language, backend):
                 "}\n",
                 ]
 
+
+def runtest_issue_15337(language, backend):
+    has_module('numpy')
+    # NOTE : autowrap was originally designed to only accept an iterable for
+    # the kwarg "helpers", but in issue 10274 the user mistakenly thought that
+    # if there was only a single helper it did not need to be passed via an
+    # iterable that wrapped the helper tuple. There were no tests for this
+    # behavior so when the code was changed to accept a single tuple it broke
+    # the original behavior. These tests below ensure that both now work.
+    a, b, c, d, e = symbols('a, b, c, d, e')
+    expr = (a - b + c - d + e)**13
+    exp_res = (1. - 2. + 3. - 4. + 5.)**13
+
+    f = autowrap(expr, language, backend, args=(a, b, c, d, e),
+                 helpers=('f1', a - b + c, (a, b, c)))
+    numpy.testing.assert_allclose(f(1, 2, 3, 4, 5), exp_res)
+
+    f = autowrap(expr, language, backend, args=(a, b, c, d, e),
+                 helpers=(('f1', a - b, (a, b)), ('f2', c - d, (c, d))))
+    numpy.testing.assert_allclose(f(1, 2, 3, 4, 5), exp_res)
+
+
+def test_issue_15230():
+    has_module('f2py')
+
+    x, y = symbols('x, y')
+    expr = Mod(x, 3.0) - Mod(y, -2.0)
+    f = autowrap(expr, args=[x, y], language='F95')
+    exp_res = float(expr.xreplace({x: 3.5, y: 2.7}).evalf())
+    assert abs(f(3.5, 2.7) - exp_res) < 1e-14
+
+    x, y = symbols('x, y', integer=True)
+    expr = Mod(x, 3) - Mod(y, -2)
+    f = autowrap(expr, args=[x, y], language='F95')
+    assert f(3, 2) == expr.xreplace({x: 3, y: 2})
+
 #
 # tests of language-backend combinations
 #
@@ -172,7 +209,12 @@ def test_ufuncify_f95_f2py():
     runtest_ufuncify('f95', 'f2py')
 
 
+def test_issue_15337_f95_f2py():
+    has_module('f2py')
+    runtest_issue_15337('f95', 'f2py')
+
 # Cython
+
 
 def test_wrap_twice_c_cython():
     has_module('Cython')
@@ -181,26 +223,82 @@ def test_wrap_twice_c_cython():
 
 def test_autowrap_trace_C_Cython():
     has_module('Cython')
-    runtest_autowrap_trace('C', 'cython')
+    runtest_autowrap_trace('C99', 'cython')
 
 
 def test_autowrap_matrix_vector_C_cython():
     has_module('Cython')
-    runtest_autowrap_matrix_vector('C', 'cython')
+    runtest_autowrap_matrix_vector('C99', 'cython')
 
 
 def test_autowrap_matrix_matrix_C_cython():
     has_module('Cython')
-    runtest_autowrap_matrix_matrix('C', 'cython')
+    runtest_autowrap_matrix_matrix('C99', 'cython')
 
 
 def test_ufuncify_C_Cython():
     has_module('Cython')
-    runtest_ufuncify('C', 'cython')
+    runtest_ufuncify('C99', 'cython')
+
 
 def test_issue_10274_C_cython():
     has_module('Cython')
-    runtest_issue_10274('C', 'cython')
+    runtest_issue_10274('C89', 'cython')
+
+
+def test_issue_15337_C_cython():
+    has_module('Cython')
+    runtest_issue_15337('C89', 'cython')
+
+
+def test_autowrap_custom_printer():
+    has_module('Cython')
+
+    from sympy import pi
+    from sympy.utilities.codegen import C99CodeGen
+    from sympy.printing.ccode import C99CodePrinter
+    from sympy.functions.elementary.exponential import exp
+
+    class PiPrinter(C99CodePrinter):
+        def _print_Pi(self, expr):
+            return "S_PI"
+
+    printer = PiPrinter()
+    gen = C99CodeGen(printer=printer)
+    gen.preprocessor_statements.append('#include "shortpi.h"')
+
+    expr = pi * a
+
+    expected = (
+        '#include "%s"\n'
+        '#include <math.h>\n'
+        '#include "shortpi.h"\n'
+        '\n'
+        'double autofunc(double a) {\n'
+        '\n'
+        '   double autofunc_result;\n'
+        '   autofunc_result = S_PI*a;\n'
+        '   return autofunc_result;\n'
+        '\n'
+        '}\n'
+    )
+
+    tmpdir = tempfile.mkdtemp()
+    # write a trivial header file to use in the generated code
+    open(os.path.join(tmpdir, 'shortpi.h'), 'w').write('#define S_PI 3.14')
+
+    func = autowrap(expr, backend='cython', tempdir=tmpdir, code_gen=gen)
+
+    assert func(4.2) == 3.14 * 4.2
+
+    # check that the generated code is correct
+    for filename in os.listdir(tmpdir):
+        if filename.startswith('wrapped_code') and filename.endswith('.c'):
+            with open(os.path.join(tmpdir, filename)) as f:
+                lines = f.readlines()
+                expected = expected % filename.replace('.c', '.h')
+                assert ''.join(lines[7:]) == expected
+
 
 # Numpy
 
@@ -208,4 +306,4 @@ def test_ufuncify_numpy():
     # This test doesn't use Cython, but if Cython works, then there is a valid
     # C compiler, which is needed.
     has_module('Cython')
-    runtest_ufuncify('C', 'numpy')
+    runtest_ufuncify('C99', 'numpy')

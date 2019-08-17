@@ -61,7 +61,7 @@ use ``rewrite()`` to do specific type of rewrite::
 Common Subexpression Detection and Collection
 ---------------------------------------------
 
-.. module:: sympy.simplify.cse_main
+.. currentmodule:: sympy.simplify.cse_main
 
 Before evaluating a large expression, it is often useful to identify common
 subexpressions, collect them and evaluate them at once. This is implemented
@@ -74,11 +74,16 @@ in the ``cse`` function. Examples::
     ⎛    ⎡  ________⎤⎞
     ⎝[], ⎣╲╱ sin(x) ⎦⎠
 
-    >>> pprint(cse(sqrt(sin(x) + 4)*sqrt(sin(x) + 5)), use_unicode=True)
-    ⎛               ⎡   ________   ________⎤⎞
+    >>> pprint(cse(sqrt(sin(x)+5)*sqrt(sin(x)+4)), use_unicode=True)
+    ⎛                ⎡  ________   ________⎤⎞
     ⎝[(x₀, sin(x))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
 
-    >>> pprint(cse((x - y)*(z - y) + sqrt((x - y)*(z - y))), use_unicode=True)
+    >>> pprint(cse(sqrt(sin(x+1) + 5 + cos(y))*sqrt(sin(x+1) + 4 + cos(y))),
+    ...     use_unicode=True)
+    ⎛                             ⎡  ________   ________⎤⎞
+    ⎝[(x₀, sin(x + 1) + cos(y))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
+
+    >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y))), use_unicode=True)
     ⎛                                     ⎡  ____     ⎤⎞
     ⎝[(x₀, -y), (x₁, (x + x₀)⋅(x₀ + z))], ⎣╲╱ x₁  + x₁⎦⎠
 
@@ -87,7 +92,7 @@ elimination can be passed in the``optimizations`` optional argument. A set of
 predefined basic optimizations can be applied by passing
 ``optimizations='basic'``::
 
-    >>> pprint(cse((x - y)*(z - y) + sqrt((x - y)*(z - y)), optimizations='basic'),
+    >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y)), optimizations='basic'),
     ...     use_unicode=True)
     ⎛                          ⎡  ____     ⎤⎞
     ⎝[(x₀, -(x - y)⋅(y - z))], ⎣╲╱ x₀  + x₀⎦⎠
@@ -99,4 +104,5 @@ will be greatly improved.
 
 More information:
 
-.. autofunction:noindex: cse
+.. autofunction:: cse
+   :noindex:

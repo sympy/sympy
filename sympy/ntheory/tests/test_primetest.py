@@ -1,10 +1,29 @@
 from sympy.core.compatibility import range
 from sympy.ntheory.generate import Sieve, sieve
 from sympy.ntheory.primetest import (mr, is_lucas_prp, is_square,
-    is_strong_lucas_prp, is_extra_strong_lucas_prp, isprime)
+                                     is_strong_lucas_prp, is_extra_strong_lucas_prp, isprime, is_euler_pseudoprime)
 
 from sympy.utilities.pytest import slow
 
+
+def test_euler_pseudoprimes():
+    assert is_euler_pseudoprime(9, 1) == True
+    assert is_euler_pseudoprime(341, 2) == False
+    assert is_euler_pseudoprime(121, 3) == True
+    assert is_euler_pseudoprime(341, 4) == True
+    assert is_euler_pseudoprime(217, 5) == False
+    assert is_euler_pseudoprime(185, 6) == False
+    assert is_euler_pseudoprime(55, 111) == True
+    assert is_euler_pseudoprime(115, 114) == True
+    assert is_euler_pseudoprime(49, 117) == True
+    assert is_euler_pseudoprime(85, 84) == True
+    assert is_euler_pseudoprime(87, 88) == True
+    assert is_euler_pseudoprime(49, 128) == True
+    assert is_euler_pseudoprime(39, 77) == True
+    assert is_euler_pseudoprime(9881, 30) == True
+    assert is_euler_pseudoprime(8841, 29) == False
+    assert is_euler_pseudoprime(8421, 29) == False
+    assert is_euler_pseudoprime(9997, 19) == True
 
 
 @slow
@@ -113,7 +132,15 @@ def test_isprime():
     sieve.extend(3000)
     assert isprime(2819)
     assert not isprime(2931)
+    assert not isprime(2.0)
 
 
 def test_is_square():
     assert [i for i in range(25) if is_square(i)] == [0, 1, 4, 9, 16]
+
+    # issue #17044
+    assert not is_square(60 ** 3)
+    assert not is_square(60 ** 5)
+    assert not is_square(84 ** 7)
+    assert not is_square(105 ** 9)
+    assert not is_square(120 ** 3)
