@@ -6,7 +6,7 @@ from sympy.codegen.ast import none
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
 from sympy.core.numbers import pi
-from sympy.functions import acos, Piecewise, sign, sqrt
+from sympy.functions import acos, Piecewise, sign, sqrt, loggamma, fresnels, fresnelc
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
@@ -64,6 +64,9 @@ def test_MpmathPrinter():
     p = MpmathPrinter()
     assert p.doprint(sign(x)) == 'mpmath.sign(x)'
     assert p.doprint(Rational(1, 2)) == 'mpmath.mpf(1)/mpmath.mpf(2)'
+    assert p.doprint(loggamma(x)) == 'mpmath.loggamma(x)'
+    assert p.doprint(fresnels(x)) == 'mpmath.fresnels(x)'
+    assert p.doprint(fresnelc(x)) == 'mpmath.fresnelc(x)'
 
 def test_NumPyPrinter():
     p = NumPyPrinter()
