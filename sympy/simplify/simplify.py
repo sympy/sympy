@@ -116,7 +116,7 @@ def _separatevars(expr, force):
 
     if len(expr.free_symbols) < 2:
         return expr
-      
+
     expr = factor(expr)
     # don't destroy a Mul since much of the work may already be done
     if expr.is_Mul:

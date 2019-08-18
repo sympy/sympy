@@ -9,7 +9,7 @@ from sympy import (
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
     zoo)
 from sympy.core.mul import _keep_coeff
-from sympy.simplify.hyperexpand import hyperexpand 
+from sympy.simplify.hyperexpand import hyperexpand
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
 from sympy.utilities.pytest import XFAIL, slow, raises
