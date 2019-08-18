@@ -467,19 +467,18 @@ class Range(Set):
         Range(0, 12, 3)
 
     Infinite ranges are allowed. ``oo`` and ``-oo`` are never included in the
-    set (``Range`` is always a subset of ``Integers``). If the starting point
-    is infinite, then the final value is ``stop - step``. To iterate such a
-    range, it needs to be reversed:
+    set (``Range`` is always a subset of ``Integers``). Note that a Range with
+    infinite start is not allowed.
 
         >>> from sympy import oo
         >>> r = Range(-oo, 1)
-        >>> r[-1]
-        0
-        >>> next(iter(r))
         Traceback (most recent call last):
         ...
-        ValueError: Cannot iterate over Range with infinite start
-        >>> next(iter(r.reversed))
+        ValueError: Range must start with a finite value or symbol.
+        >>> r = Range(0, oo)
+        >>> r[0]
+        0
+        >>> next(iter(r))
         0
 
     A canonical empty Range will be produced when the Range contains
@@ -519,7 +518,7 @@ class Range(Set):
         >>> list(Range(n, n + 6))
         [n, n + 1, n + 2, n + 3, n + 4, n + 5]
         >>> Range(1, n, 1).size
-        Piecewise((Abs(n - 1), n - 1 > 0), (0, True))
+        Piecewise((0, n - 1 <= 0), (Abs(n - 1), True))
     """
     is_iterable = True
 
@@ -568,9 +567,7 @@ class Range(Set):
                 start = end = S.Zero
                 step = S.One
             else:
-                raise ValueError("Non empty Range with infinite start is not allowed."
-                                 "Please manipulate your parameters so that the infinity"
-                                 " comes at the end.")
+                raise ValueError("Range must start with a finite value or symbol.")
         else:
             ref = start if start.is_finite is not False else stop
             n = ceiling((stop - ref)/step)
@@ -757,7 +754,7 @@ class Range(Set):
         return And(
             Eq(i, floor(i)),
             x >= self.inf,
-            x <= self.sup)
+            x<self.sup if self.sup.is_infinite else x<=self.sup)
 
     def _eval_subs(self, old, new):
         args = [i.subs(old, new) for i in self._rawargs]
