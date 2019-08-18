@@ -12,7 +12,8 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBi
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, skip
+
 
 oo = S.Infinity
 
