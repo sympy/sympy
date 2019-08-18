@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from functools import wraps, reduce
 import collections
 
-from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq, Mul, Add
+from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq, Mul, Add, Wild
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key, string_types
 from sympy.core.sympify import SympifyError, _sympify
@@ -1032,6 +1032,66 @@ class OneMatrix(MatrixExpr):
 
     def _entry(self, i, j, **kwargs):
         return S.One
+
+
+class MatrixWild(MatrixSymbol, Wild):
+    """A wildcard for matrix expressions based on ``Wild``.
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> from sympy.matrices.expressions.matexpr import MatrixWild
+    >>> A, B = MatrixSymbol('A', 3, 3), MatrixSymbol('B', 3, 3)
+    >>> W = MatrixWild('W', 3, 3)
+    >>> (A*B).match(W)
+    {W_: A*B}
+    >>> (A*B).match(A*W)
+    {W_: B}
+    >>> (A**2).match(A*W)
+    {W_: A}
+
+    Note that ``W`` matched with ``A*B`` only because the expression had the
+    same shape as the matrix wildcard ``W``. If more flexibility is required, a
+    dimension of the matrix wildcard may itself be a wildcard.
+
+    >>> from sympy.core.symbol import Wild
+    >>> x = Wild('x')
+    >>> Y = MatrixWild('Y', x, 3)
+    >>> (A*B).match(Y)
+    {Y_: A*B, x_: 3}
+    """
+
+    def __new__(cls, name, n, m, exclude=(), properties=()):
+        obj = MatrixSymbol.__new__(cls, name, n, m)
+        obj.exclude = tuple([_sympify(x) for x in exclude])
+        obj.properties = tuple(properties)
+        return obj
+
+    def matches(self, expr, repl_dict={}, old=False):
+        if not isinstance(expr, MatrixExpr):
+            return None
+        if any(expr.has(x) for x in self.exclude):
+            return None
+        if any(not f(expr) for f in self.properties):
+            return None
+        repl_dict = repl_dict.copy()
+
+        # Make sure dimensions match
+        for selfdim, exprdim in zip(self.shape, expr.shape):
+            matches = selfdim.matches(exprdim)
+            if matches is not None:
+                for match in matches:
+                    # Make sure already existing matches are equal
+                    if (match in repl_dict and
+                            repl_dict[match] != matches[match]):
+                        return None
+                    repl_dict[match] = matches[match]
+            elif selfdim != exprdim:
+                return None
+
+        repl_dict[self] = expr
+        return repl_dict
 
 
 def matrix_symbols(expr):
