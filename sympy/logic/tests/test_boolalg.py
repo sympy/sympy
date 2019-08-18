@@ -16,6 +16,7 @@ from sympy.logic.boolalg import (
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean)
+from sympy.assumptions.cnf import CNF
 
 from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.utilities import cartes
@@ -107,6 +108,26 @@ def test_Xor():
     assert Xor(A < 1, A >= 1, B) == Xor(0, 1, B) == Xor(1, 0, B)
     e = A > 1
     assert Xor(e, e.canonical) == Xor(0, 0) == Xor(1, 1)
+
+
+def test_rewrite_as_And():
+    expr = x ^ y
+    assert expr.rewrite(And) == (x | y) & (~x | ~y)
+
+
+def test_rewrite_as_Or():
+    expr = x ^ y
+    assert expr.rewrite(Or) == (x & ~y) | (y & ~x)
+
+
+def test_rewrite_as_Nand():
+    expr = (y & z) | (z & ~w)
+    assert expr.rewrite(Nand) == ~(~(y & z) & ~(z & ~w))
+
+
+def test_rewrite_as_Nor():
+    expr = z & (y | ~w)
+    assert expr.rewrite(Nor) == ~(~z | ~(y | ~w))
 
 
 def test_Not():
@@ -341,6 +362,10 @@ def test_bool_map():
     assert bool_map(Xor(x, y), ~Xor(x, y)) == False
     assert bool_map(And(x, y), Or(x, y)) is None
     assert bool_map(And(x, y), And(x, y, z)) is None
+    # issue 16179
+    assert bool_map(Xor(x, y, z), ~Xor(x, y, z)) == False
+    assert bool_map(Xor(a, x, y, z), ~Xor(a, x, y, z)) == False
+
 
 def test_bool_symbol():
     """Test that mixing symbols with boolean values
@@ -477,6 +502,15 @@ def test_to_cnf():
     assert to_cnf(Equivalent(A, B | C), True) == \
         And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
     assert to_cnf(A + 1) == A + 1
+
+def test_to_CNF():
+    assert CNF.CNF_to_cnf(CNF.to_CNF(~(B | C))) == to_cnf(~(B | C))
+    assert CNF.CNF_to_cnf(CNF.to_CNF((A & B) | C)) == to_cnf((A & B) | C)
+    assert CNF.CNF_to_cnf(CNF.to_CNF(A >> B)) == to_cnf(A >> B)
+    assert CNF.CNF_to_cnf(CNF.to_CNF(A >> (B & C))) == to_cnf(A >> (B & C))
+    assert CNF.CNF_to_cnf(CNF.to_CNF(A & (B | C) | ~A & (B | C))) == to_cnf(A & (B | C) | ~A & (B | C))
+    assert CNF.CNF_to_cnf(CNF.to_CNF(A & B)) == to_cnf(A & B)
+
 
 
 def test_to_dnf():

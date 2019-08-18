@@ -5,6 +5,7 @@ from functools import cmp_to_key
 
 from .basic import Basic
 from .compatibility import reduce, is_sequence, range
+from .evaluate import global_distribute
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp
@@ -338,21 +339,18 @@ class Add(Expr, AssocOp):
         (0, (7*x,))
         """
         if deps:
-            l1 = []
-            l2 = []
-            for f in self.args:
-                if f.has(*deps):
-                    l2.append(f)
-                else:
-                    l1.append(f)
-            return self._new_rawargs(*l1), tuple(l2)
+            from sympy.utilities.iterables import sift
+            l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
+            return self._new_rawargs(*l2), tuple(l1)
         coeff, notrat = self.args[0].as_coeff_add()
         if coeff is not S.Zero:
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
-    def as_coeff_Add(self, rational=False):
-        """Efficiently extract the coefficient of a summation. """
+    def as_coeff_Add(self, rational=False, deps=None):
+        """
+        Efficiently extract the coefficient of a summation.
+        """
         coeff, args = self.args[0], self.args[1:]
 
         if coeff.is_Number and not rational or coeff.is_Rational:
@@ -386,6 +384,20 @@ class Add(Expr, AssocOp):
                     return _unevaluated_Mul(
                         r - i*S.ImaginaryUnit,
                         1/(r**2 + i**2))
+        elif e.is_Number and abs(e) != 1:
+            # handle the Float case: (2.0 + 4*x)**e -> 2.**e*(1 + 2.0*x)**e
+            c, m = zip(*[i.as_coeff_Mul() for i in self.args])
+            big = 0
+            float = False
+            for i in c:
+                float = float or i.is_Float
+                if abs(i) > big:
+                    big = 1.0*abs(i)
+                    s = -1 if i < 0 else 1
+            if float and big and big != 1:
+                addpow = Add(*[(s if abs(c[i]) == big else c[i]/big)*m[i]
+                             for i in range(len(c))])**e
+                return big**e*addpow
 
     @cacheit
     def _eval_derivative(self, s):
@@ -877,9 +889,6 @@ class Add(Expr, AssocOp):
     def _eval_transpose(self):
         return self.func(*[t.transpose() for t in self.args])
 
-    def __neg__(self):
-        return self*(-1)
-
     def _sage_(self):
         s = 0
         for x in self.args:
@@ -1062,6 +1071,12 @@ class Add(Expr, AssocOp):
             raise AttributeError("Cannot convert Add to mpc. Must be of the form Number + Number*I")
 
         return (Float(re_part)._mpf_, Float(im_part)._mpf_)
+
+    def __neg__(self):
+        if not global_distribute[0]:
+            return super(Add, self).__neg__()
+        return Add(*[-i for i in self.args])
+
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

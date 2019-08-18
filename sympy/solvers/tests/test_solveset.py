@@ -1247,7 +1247,7 @@ def test_trig_system():
 def test_trig_system_fail():
     # fails because solveset trig solver is not much smart.
     sys = [x + y - pi/2, sin(x) + sin(y) - 1]
-    # solveset returns conditonset for sin(x) + sin(y) - 1
+    # solveset returns conditionset for sin(x) + sin(y) - 1
     soln_1 = (ImageSet(Lambda(n, n*pi + pi/2), S.Integers),
         ImageSet(Lambda(n, n*pi)), S.Integers)
     soln_1 = FiniteSet(soln_1)
@@ -1905,7 +1905,9 @@ def test_exponential_symbols():
     f2 = (x/y)**w - 2
     ans1 = solveset(f1, w, S.Reals)
     ans2 = solveset(f2, w, S.Reals)
-    assert ans1 == simplify(ans2)
+    assert len(ans1) == len(ans2) == 1
+    a1, a2 = [list(i)[0] for i in (ans1, ans2)]
+    assert a1.equals(a2)
 
     assert solveset(x**x, x, S.Reals) == S.EmptySet
     assert solveset(x**y - 1, y, S.Reals) == FiniteSet(0)

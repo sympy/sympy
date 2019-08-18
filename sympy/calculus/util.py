@@ -10,6 +10,7 @@ from sympy.logic.boolalg import And
 from sympy.polys.rationaltools import together
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
+from sympy.sets.fancysets import ImageSet
 from sympy.simplify.radsimp import denom
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -211,7 +212,11 @@ def function_range(f, symbol, domain):
             solution = solveset(f.diff(symbol), symbol, interval)
 
             if not iterable(solution):
-                raise NotImplementedError('Unable to find critical points for {}'.format(f))
+                raise NotImplementedError(
+                        'Unable to find critical points for {}'.format(f))
+            if isinstance(solution, ImageSet):
+                raise NotImplementedError(
+                        'Infinite number of critical points for {}'.format(f))
 
             critical_points += solution
 
@@ -582,7 +587,8 @@ def _periodicity(args, symbol):
     if len(periods) > 1:
         return lcim(periods)
 
-    return periods[0]
+    if periods:
+        return periods[0]
 
 
 def lcim(numbers):

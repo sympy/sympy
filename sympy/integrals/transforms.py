@@ -955,6 +955,8 @@ def _simplifyconds(expr, s, a):
         if ex == True or ex == False:
             return bool(ex)
         return ex.replace(*args)
+    from sympy.simplify.radsimp import collect_abs
+    expr = collect_abs(expr)
     expr = repl(expr, StrictLessThan, replie)
     expr = repl(expr, StrictGreaterThan, lambda x, y: replie(y, x))
     expr = repl(expr, Unequality, replue)

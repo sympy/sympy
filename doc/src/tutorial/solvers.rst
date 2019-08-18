@@ -142,9 +142,9 @@ In the ``solveset`` module, the non linear system of equations is solved using
    ``solve`` can be used for such cases:
 
    >>> solve([x**2 - y**2/exp(x)], [x, y], dict=True)
-   ⎡⎧             ⎛y⎞⎫⎤
-   ⎢⎨x: 2⋅LambertW⎜─⎟⎬⎥
-   ⎣⎩             ⎝2⎠⎭⎦
+   ⎡⎧      ⎛-y ⎞⎫  ⎧      ⎛y⎞⎫⎤
+   ⎢⎨x: 2⋅W⎜───⎟⎬, ⎨x: 2⋅W⎜─⎟⎬⎥
+   ⎣⎩      ⎝ 2 ⎠⎭  ⎩      ⎝2⎠⎭⎦
 
    3. Currently ``nonlinsolve`` is not properly capable of solving the system of equations
    having trigonometric functions.
@@ -179,7 +179,7 @@ multiplicity 1 and ``3`` is a root of multiplicity 2.
    ``solve`` can be used for such cases:
 
    >>> solve(x*exp(x) - 1, x )
-   [LambertW(1)]
+   [W(1)]
 
 
 .. _tutorial-dsolve:

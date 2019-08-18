@@ -21,7 +21,7 @@ from sympy.ntheory.multinomial import (
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises
 
 from sympy.utilities.iterables import capture
 
@@ -146,6 +146,12 @@ def test_perfect_power():
     assert perfect_power(2**3*5**5) is False
     assert perfect_power(2*13**4) is False
     assert perfect_power(2**5*3**3) is False
+    t = 2**24
+    for d in divisors(24):
+        m = perfect_power(t*3**d)
+        assert m and m[1] == d or d == 1
+        m = perfect_power(t*3**d, big=False)
+        assert m and m[1] == 2 or d == 1 or d == 3, (d, m)
 
 
 def test_factorint():

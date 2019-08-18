@@ -71,7 +71,7 @@ class MatPow(MatrixExpr):
             raise ValueError("Matrix determinant is 0, not invertible.")
         elif isinstance(base, (Identity, ZeroMatrix)):
             return base
-        elif isinstance(base, MatrixBase) and exp.is_number:
+        elif isinstance(base, MatrixBase):
             if exp is S.One:
                 return base
             return base**exp
@@ -86,6 +86,10 @@ class MatPow(MatrixExpr):
     def _eval_transpose(self):
         base, exp = self.args
         return MatPow(base.T, exp)
+
+    def _eval_derivative(self, x):
+        from sympy import Pow
+        return Pow._eval_derivative(self, x)
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.core.expr import ExprBuilder

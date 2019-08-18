@@ -65,11 +65,16 @@ def _sorted_tuple(*i):
 def _remove_gcd(*x):
     try:
         g = igcd(*x)
-        return tuple([i//g for i in x])
     except ValueError:
-        return x
+        fx = list(filter(None, x))
+        if len(fx) < 2:
+            return x
+        g = igcd(*[i.as_content_primitive()[0] for i in fx])
     except TypeError:
         raise TypeError('_remove_gcd(a,b,c) or _remove_gcd(*container)')
+    if g == 1:
+        return x
+    return tuple([i//g for i in x])
 
 
 def _rational_pq(a, b):
@@ -102,7 +107,10 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     For example, when solving, `x^2 - y^2 = 0` this is treated as
     `(x + y)(x - y) = 0` and `x + y = 0` and `x - y = 0` are solved
     independently and combined. Each term is solved by calling
-    ``diop_solve()``.
+    ``diop_solve()``. (Although it is possible to call ``diop_solve()``
+    directly, one must be careful to pass an equation in the correct
+    form and to interpret the output correctly; ``diophantine()`` is
+    the public-facing function to use in general.)
 
     Output of ``diophantine()`` is a set of tuples. The elements of the
     tuple are the solutions for each variable in the equation and
@@ -382,6 +390,10 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     Unlike ``diophantine()``, factoring of ``eq`` is not attempted. Uses
     ``classify_diop()`` to determine the type of the equation and calls
     the appropriate solver function.
+
+    Use of ``diophantine()`` is recommended over other helper functions.
+    ``diop_solve()`` can return either a set or a tuple depending on the
+    nature of the equation.
 
     Usage
     =====
@@ -1976,17 +1988,18 @@ def _diop_ternary_quadratic(_var, coeff):
             min_sum = abs(s[0]) + abs(s[1])
 
             for r in sols:
-                if abs(r[0]) + abs(r[1]) < min_sum:
+                m = abs(r[0]) + abs(r[1])
+                if m < min_sum:
                     s = r
-                    min_sum = abs(s[0]) + abs(s[1])
+                    min_sum = m
 
-                x_0, y_0, z_0 = s[0], -coeff[x*z], s[1]
+            x_0, y_0, z_0 = _remove_gcd(s[0], -coeff[x*z], s[1])
 
         else:
             var[0], var[1] = _var[1], _var[0]
             y_0, x_0, z_0 = _diop_ternary_quadratic(var, coeff)
 
-        return _remove_gcd(x_0, y_0, z_0)
+        return x_0, y_0, z_0
 
     if coeff[x**2] == 0:
         # If the coefficient of x is zero change the variables
@@ -2162,17 +2175,43 @@ def parametrize_ternary_quadratic(eq):
     Examples
     ========
 
+    >>> from sympy import Tuple, ordered
     >>> from sympy.abc import x, y, z
     >>> from sympy.solvers.diophantine import parametrize_ternary_quadratic
-    >>> parametrize_ternary_quadratic(x**2 + y**2 - z**2)
-    (2*p*q, p**2 - q**2, p**2 + q**2)
 
-    Here `p` and `q` are two co-prime integers.
+    The parametrized solution may be returned with three parameters:
 
-    >>> parametrize_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z)
-    (2*p**2 - 2*p*q - q**2, 2*p**2 + 2*p*q - q**2, 2*p**2 - 2*p*q + 3*q**2)
-    >>> parametrize_ternary_quadratic(124*x**2 - 30*y**2 - 7729*z**2)
-    (-1410*p**2 - 363263*q**2, 2700*p**2 + 30916*p*q - 695610*q**2, -60*p**2 + 5400*p*q + 15458*q**2)
+    >>> parametrize_ternary_quadratic(2*x**2 + y**2 - 2*z**2)
+    (p**2 - 2*q**2, -2*p**2 + 4*p*q - 4*p*r - 4*q**2, p**2 - 4*p*q + 2*q**2 - 4*q*r)
+
+    There might also be only two parameters:
+
+    >>> parametrize_ternary_quadratic(4*x**2 + 2*y**2 - 3*z**2)
+    (2*p**2 - 3*q**2, -4*p**2 + 12*p*q - 6*q**2, 4*p**2 - 8*p*q + 6*q**2)
+
+    Notes
+    =====
+
+    Consider ``p`` and ``q`` in the previous 2-parameter
+    solution and observe that more than one solution can be represented
+    by a given pair of parameters. If `p` and ``q`` are not coprime, this is
+    trivially true since the common factor will also be a common factor of the
+    solution values. But it may also be true even when ``p`` and
+    ``q`` are coprime:
+
+    >>> sol = Tuple(*_)
+    >>> p, q = ordered(sol.free_symbols)
+    >>> sol.subs([(p, 3), (q, 2)])
+    (6, 12, 12)
+    >>> sol.subs([(q, 1), (p, 1)])
+    (-1, 2, 2)
+    >>> sol.subs([(q, 0), (p, 1)])
+    (2, -4, 4)
+    >>> sol.subs([(q, 1), (p, 0)])
+    (-3, -6, 6)
+
+    Except for sign and a common factor, these are equivalent to
+    the solution of (1, 2, 2).
 
     References
     ==========
@@ -2229,7 +2268,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
     y = (A*y_0 - _mexpand(B/r*p))
     z = (A*z_0 - _mexpand(B/r*q))
 
-    return x, y, z
+    return _remove_gcd(x, y, z)
 
 
 def diop_ternary_quadratic_normal(eq):

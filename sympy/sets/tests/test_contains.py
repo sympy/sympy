@@ -36,5 +36,7 @@ def test_binary_symbols():
 def test_as_set():
     x = Symbol('x')
     y = Symbol('y')
-    assert Contains(x, FiniteSet(y)
-        ).as_set() == Contains(x, FiniteSet(y))
+    # Contains is a BooleanFunction whose value depends on an arg's
+    # containment in a Set -- rewriting as a Set is not yet implemented
+    raises(NotImplementedError, lambda:
+           Contains(x, FiniteSet(y)).as_set())

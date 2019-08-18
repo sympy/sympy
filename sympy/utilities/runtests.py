@@ -713,6 +713,12 @@ def _get_doctest_blacklist():
             "sympy/parsing/latex/_parse_latex_antlr.py",
         ])
 
+    if import_module('lfortran') is None:
+        #throws ImportError when lfortran not installed
+        blacklist.extend([
+            "sympy/parsing/sym_expr.py",
+        ])
+
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
         "sympy/utilities/autowrap.py",
@@ -1088,7 +1094,7 @@ class SymPyTests(object):
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
-        self._root_dir = sympy_dir
+        self._root_dir = get_sympy_dir()
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._testfiles = []
@@ -1339,7 +1345,7 @@ class SymPyDocTests(object):
 
     def __init__(self, reporter, normal):
         self._count = 0
-        self._root_dir = sympy_dir
+        self._root_dir = get_sympy_dir()
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._normal = normal
@@ -2347,5 +2353,3 @@ class PyTestReporter(Reporter):
         self.write(" ")
         self.write("[FAIL]", "Red", align="right")
         self.write("\n")
-
-sympy_dir = get_sympy_dir()

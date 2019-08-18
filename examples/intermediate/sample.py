@@ -21,7 +21,7 @@ def sample2d(f, x_args):
     try:
         f = sympify(f)
     except SympifyError:
-        raise ValueError("f could not be interpretted as a SymPy function")
+        raise ValueError("f could not be interpreted as a SymPy function")
     try:
         x, x_min, x_max, x_n = x_args
     except (TypeError, IndexError):

@@ -1166,7 +1166,7 @@ def modified_coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
     r"""
     Introduce a new set of symbols y \in Y that correspond to the
     generators of the subgroup. Store the elements of Y as a
-    word P[\alpha, x] and compute the coset table simlar to that of
+    word P[\alpha, x] and compute the coset table similar to that of
     the regular coset enumeration methods.
 
     Examples
