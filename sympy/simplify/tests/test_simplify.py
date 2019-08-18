@@ -9,6 +9,7 @@ from sympy import (
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
     zoo)
 from sympy.core.mul import _keep_coeff
+from sympy.simplify.hyperexpand import hyperexpand 
 from sympy.simplify.simplify import nthroot, inversecombine
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.core.compatibility import range
@@ -270,16 +271,16 @@ def test_separatevars():
     # issue 4957
     # any type sequence for symbols is fine
     assert separatevars(((2*x + 2)*y), dict=True, symbols=()) == \
-        {'coeff': 1, x: 2*x + 2, y: y}
+        {'coeff': 2, x: x + 1, y: y}
     # separable
     assert separatevars(((2*x + 2)*y), dict=True, symbols=[x]) == \
-        {'coeff': y, x: 2*x + 2}
+        {'coeff': 2*y, x: x + 1}
     assert separatevars(((2*x + 2)*y), dict=True, symbols=[]) == \
-        {'coeff': 1, x: 2*x + 2, y: y}
+        {'coeff': 2, x: x + 1, y: y}
     assert separatevars(((2*x + 2)*y), dict=True) == \
-        {'coeff': 1, x: 2*x + 2, y: y}
+        {'coeff': 2, x: x + 1, y: y}
     assert separatevars(((2*x + 2)*y), dict=True, symbols=None) == \
-        {'coeff': y*(2*x + 2)}
+        {'coeff': 2*y*(x + 1)}
     # not separable
     assert separatevars(3, dict=True) is None
     assert separatevars(2*x + y, dict=True, symbols=()) is None
@@ -294,7 +295,20 @@ def test_separatevars():
     assert separatevars(f(x) + x*f(x)) == f(x) + x*f(x)
     # a noncommutable object present
     eq = x*(1 + hyper((), (), y*z))
-    assert separatevars(eq) == eq
+    assert separatevars(eq) == hyperexpand(eq)
+
+    eq = exp(x**2 + y**2)*(cos(x-y) + cos(x+y))
+    assert separatevars(eq, dict=True) == \
+        {x: exp(x**2)*cos(x), y: exp(y**2)*cos(y), 'coeff': 2}
+
+    r, s=symbols('r s')
+    eq=(r*log(r**2*exp(-s*exp(-r))) + r*log(exp(s*exp(-r))) + 2)*exp(r)/r
+    separatevars(eq, dict=True) is None
+
+    r, s=symbols('r s', positive=True)
+    eq=(r*log(r**2*exp(-s*exp(-r))) + r*log(exp(s*exp(-r))) + 2)*exp(r)/r
+    assert separatevars(eq, dict=True) == \
+        {r: (r*log(r) + 1)*exp(r)/r, 'coeff': 2}
 
 
 def test_separatevars_advanced_factor():

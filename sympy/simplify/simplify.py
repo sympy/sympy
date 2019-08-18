@@ -107,12 +107,13 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 def _separatevars(expr, force):
     if len(expr.free_symbols) == 1:
         return expr
+    expr = factor(expr)
     # don't destroy a Mul since much of the work may already be done
     if expr.is_Mul:
         args = list(expr.args)
         changed = False
         for i, a in enumerate(args):
-            args[i] = separatevars(a, force)
+            args[i] = separatevars(simplify(a), force=force)
             changed = changed or args[i] != a
         if changed:
             expr = expr.func(*args)
