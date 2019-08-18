@@ -2,6 +2,7 @@ from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta,
                    symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
                    cancel, exp, I, Piecewise, Sum, Dummy)
 from sympy.core.compatibility import range
+from sympy.external import import_module
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
                          Hypergeometric, Rademacher, P, E, variance, covariance, skewness,
@@ -416,3 +417,33 @@ def test_symbolic_conditions():
     assert Z == \
     Piecewise((S(1)/4, n < 1), (0, True)) + Piecewise((S(1)/2, n < 2), (0, True)) + \
     Piecewise((S(3)/4, n < 3), (0, True)) + Piecewise((S(1), n < 4), (0, True))
+
+
+def test_sampling_methods():
+    distribs_random = [DiscreteUniform("D", list(range(5)))]
+    distribs_scipy = [Hypergeometric("H", 1, 1, 1)]
+    distribs_pymc3 = [BetaBinomial("B", 1, 1, 1)]
+
+    size = 5
+
+    for X in distribs_random:
+        sam = X.pspace.distribution._sample_random(size)
+        for i in range(size):
+            assert sam[i] in X.pspace.domain.set
+
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for _sample_scipy.')
+    else:
+        for X in distribs_scipy:
+            sam = X.pspace.distribution._sample_scipy(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 not installed. Abort tests for _sample_pymc3.')
+    else:
+        for X in distribs_pymc3:
+            sam = X.pspace.distribution._sample_pymc3(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
