@@ -4013,6 +4013,24 @@ def test_sympy__tensor__array__arrayop__Flatten():
     assert _test_args(fla)
 
 
+def test_sympy__tensor__array__sp_utils__LilSparseArray():
+    from sympy.tensor.array.sp_utils import LilSparseArray
+    lil = LilSparseArray([[1, 0, 0], [0, 1, 0]])
+    assert _test_args(lil)
+
+
+def test_sympy__tensor__array__sp_utils__CooSparseArray():
+    from sympy.tensor.array.sp_utils import CooSparseArray
+    coo = CooSparseArray([[1, 0, 0], [0, 1, 0]])
+    assert _test_args(coo)
+
+
+def test_sympy__tensor__array__sp_utils__CsrSparseArray():
+    from sympy.tensor.array.sp_utils import CsrSparseArray
+    csr = CsrSparseArray([[1, 0, 0], [0, 1, 0]])
+    assert _test_args(csr)
+
+
 def test_sympy__tensor__functions__TensorProduct():
     from sympy.tensor.functions import TensorProduct
     tp = TensorProduct(3, 4, evaluate=False)
