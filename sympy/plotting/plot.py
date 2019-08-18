@@ -1215,7 +1215,7 @@ class MatplotlibBackend(BaseBackend):
             xlim = (float(i) for i in xlim)
             ax.set_xlim(xlim)
         else:
-            if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
+            if parent._series and all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
                 starts = [s.start for s in parent._series]
                 ends = [s.end for s in parent._series]
                 ax.set_xlim(min(starts), max(ends))
