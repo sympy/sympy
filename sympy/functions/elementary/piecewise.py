@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+from collections import defaultdict
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Symbol
 from sympy.core.basic import as_Basic
 from sympy.core.compatibility import range
@@ -1196,7 +1198,6 @@ def _piecewise_collapse_arguments(args):
             if cond.negated.canonical in current_cond:
                 cond = S.true
 
-        current_cond.add(cond)
 
         # collect successive e,c pairs when exprs or cond match
         if newargs:
@@ -1206,10 +1207,11 @@ def _piecewise_collapse_arguments(args):
                     orcond = distribute_and_over_or(orcond)
                 newargs[-1] = ExprCondPair(expr, orcond)
                 continue
-            elif newargs[-1].cond == cond:
-                newargs[-1] = ExprCondPair(expr, cond)
+            elif cond in current_cond:
+                # Do not add since it will never be active
                 continue
 
+        current_cond.add(cond)
         newargs.append(ExprCondPair(expr, cond))
     return newargs
 
@@ -1390,6 +1392,59 @@ def _piecewise_simplify_ne(args):
     return args
 
 
+def _piecewise_simplify_identical_expressions(args):
+    d = defaultdict(list)
+    for n, (expr, cond) in enumerate(args):
+        d[expr].append(n)
+    candidates = dict()
+    for key in d.keys():
+        if len(d[key]) >= 2:
+            candidates[key] = d[key]
+    if candidates:
+        c0 = c1 = minstep = len(args)
+        for k in candidates.keys():
+            p = -len(args)
+            for v in candidates[k]:
+                if v:
+                    newstep = v - p
+                    if minstep > newstep:
+                        minstep = newstep
+                        c0 = p
+                        c1 = v
+                p = v
+        cumcond = S.true
+        for k in range(c0 + 1, c1):
+            cumcond = cumcond & args[k][1]
+        if c1 == len(args) - 1 and args[-1][1] == True:
+            args[c0] = (args[c0][0], (~cumcond).simplify())
+            del args[c1]
+            args[-1] = (args[-1][0], S.true)
+        else:
+            args[c0] = (args[c0][0], (args[c0][1] |
+                        (~cumcond & args[c1][1])).simplify())
+            del args[c1]
+        return _piecewise_simplify_identical_expressions(args)
+    return args
+
+
+def _piecewise_simplify_conditions(args):
+    def shorter(exp1, exp2):
+        return exp1 if exp1.count_ops() < exp2.count_ops() else exp2
+
+    cummulatedcond = S.false
+    newargs = []
+    prevcond = S.false
+    prevnewcond = S.false
+    for expr, cond in args:
+        newcond = (cond & ~cummulatedcond).simplify()
+        shortcond = shorter(cond, newcond)
+        if shortcond != False and shortcond not in [prevcond, prevnewcond]:
+            newargs.append((expr, shortcond))
+        cummulatedcond = (cummulatedcond | shortcond).simplify()
+        prevcond, prevnewcond = cond, newcond
+    return newargs
+
+
 def piecewise_simplify(expr, **kwargs):
     expr = piecewise_simplify_arguments(expr, **kwargs)
     if not isinstance(expr, Piecewise):
@@ -1403,5 +1458,7 @@ def piecewise_simplify(expr, **kwargs):
     args = _piecewise_simplify_or_and_eq(args, measure, ratio)
     args = _piecewise_simplify_ne(args)
     args = _piecewise_collapse_arguments(args)
+    args = _piecewise_simplify_conditions(args)
+    args = _piecewise_simplify_identical_expressions(args)
 
     return Piecewise(*args)

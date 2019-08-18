@@ -1384,11 +1384,7 @@ def test_piecewise_simplify2():
                                                           (x*y, True))
 
     p = Piecewise((x**2, And(Ne(x, 2), Ne(x, y))), (2*x, Ne(x, 4)), (x*y, True))
-    ps = p.simplify()
-    assert ps == Piecewise((x**2, (Ne(x, 2) | Ne(x, 4)) & (Ne(x, 4) | Ne(x, y))),
-                           (x*y, True))
-    # Currently, the segment expressions must be simplified twice
-    assert ps.simplify() == Piecewise((x**2, Ne(x, 4) | (Ne(x, 2) & Ne(x, y))),
+    assert p.simplify() == Piecewise((x**2, Ne(x, 4) | (Ne(x, 2) & Ne(x, y))),
                                       (x*y, True))
 
     # From example in #15705
@@ -1399,3 +1395,35 @@ def test_piecewise_simplify2():
     assert pf.simplify() == 0
     # It actually works when simplifying the joint Piecewise as well
     assert p.simplify() == 0
+
+
+def test_piecewise_simplify3():
+    # See 6951
+    # p = piecewise_fold(integrate(y*cos(x*y), x, y))
+    x, y = symbols("x y")
+    p = Piecewise((-cos(x*y)/x, (y < 0) & Ne(x, 0)),
+                  (0, y < 0),
+                  (-cos(x*y)/x, (x > -oo) & (x < oo) & Ne(x, 0)),
+                  (-1/x, Ne(x, 0)),
+                  (0, True))
+    assert p.simplify() == Piecewise((-cos(x*y)/x, Ne(x, 0) & ((x > -oo) | (y < 0)) & ((x < oo) | (y < 0))),
+                                     (0, Eq(x, 0)),
+                                     (-1/x, True))
+    x, y = symbols("x y", real=True)
+    # p = piecewise_fold(integrate(y*cos(x*y), x, y))
+    p = Piecewise((-cos(x*y)/x, (y < 0) & Ne(x, 0)),
+                  (0, y < 0),
+                  (-cos(x*y)/x, Ne(x, 0)),
+                  (0, True))
+    assert p.simplify() == Piecewise((-cos(x*y)/x, Ne(x, 0)),
+                                     (0, True))
+
+    C, u, x = symbols('C u x', real=True)
+    p = Piecewise((0, Ne(u, 1)), (C*(2*x + 1)*exp(2*x), Eq(u, 0)), (0, True))
+    assert p.simplify() == 0
+
+
+def test_issue_17283():
+    x = Symbol('x', extended_real=True)
+    eq = Piecewise((0, x <= 1), (1, Eq(x, -oo)), (2, True))
+    assert eq.simplify() == Piecewise((0, x <= 1), (2, True))
