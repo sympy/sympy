@@ -45,7 +45,7 @@ Attributes of PolycyclicGroup
   permutation group.
 
 * ``pc_series`` : Polycyclic series is formed by adding all the missing generators
-  of ``der[i+1]`` in ``der[i]``, where `der` represents derived series.
+  of ``der[i+1]`` in ``der[i]``, where ``der`` represents derived series.
 
 * ``relative_order`` : A list, computed by the ratio of adjacent groups in pc_series.
 
@@ -96,8 +96,8 @@ few more attributes which are defined below:
 Computation of Minimal Uncollected Subword
 ``````````````````````````````````````````
 
-A word `V` defined on generators in the free_group of pc_group is a minimal
-uncollected subword of the word `W` if `V` is a subword of `W` and it has one of
+A word ``V`` defined on generators in the free_group of pc_group is a minimal
+uncollected subword of the word ``W`` if ``V`` is a subword of ``W`` and it has one of
 the following form:
 
 * `v = {x_{i+1}}^{a_j}x_i`
@@ -141,7 +141,7 @@ starting and ending index of the subword in the word.
 Computation of Collected Word
 `````````````````````````````
 
-A word `W` is called collected, if `W = {x_{i_1}}^{a_1} \ldots {x_{i_r}}^{a_r}`
+A word ``W`` is called collected, if ``W`` `= {x_{i_1}}^{a_1} \ldots {x_{i_r}}^{a_r}`
 with `i_1 < i_2< \ldots < i_r` and `a_j` is in `\{1 \ldots s_{j-1}\}`, where `s_j`
 represents the respective relative order.
 
@@ -181,25 +181,25 @@ as the generator which acts as a conjugator and conjugates all the previous
 generators in the list.
 
 To get a clear picture, start with an example of SymmetricGroup(4). For S(4) there are 4
-generators in pcgs say [x0, x1, x2, x3] and the relative_order vector is [2, 3, 2, 2].
+generators in pcgs say `[x_0, x_1, x_2, x_3]` and the relative_order vector is [2, 3, 2, 2].
 Starting from bottom of this sequence the presentation is computed in order as below.
 
-using only `[x_3]` from `pcgs` and `pc\_series[4]` compute:
+using only `[x_3]` from ``pcgs`` and ``pc_series[4]`` compute:
 
 * `x_3^2`
 
-using only `[x_3]` from `pcgs` and `pc\_series[3]` compute:
+using only `[x_3]` from ``pcgs`` and ``pc_series[3]`` compute:
 
 * `x_2^2`
 * `x_2^{-1}x_3x_2`
 
-using `[x_3, x_2]` from `pcgs` and `pc\_series[2]` compute:
+using `[x_3, x_2]` from ``pcgs`` and ``pc_series[2]`` compute:
 
 * `x_1^3`
 * `x_1^{-1}x_3x_1`
 * `x_1^{-1}x_2x_1`
 
-using `[x_3, x_2, x_1]` from `pcgs` and `pc\_series[1]` compute:
+using `[x_3, x_2, x_1]` from ``pcgs`` and ``pc_series[1]`` compute:
 
 * `x_0^2`
 * `x_0^{-1}x_3x_0`
@@ -250,9 +250,9 @@ Any generator of the polycyclic group can be represented with the help of it's
 polycyclic generating sequence. Hence, the length of exponent vector is equal to
 the length of the pcgs.
 
-A given generator `g` of the polycyclic group, can be represented as
+A given generator ``g`` of the polycyclic group, can be represented as
 `g = x_1^{e_1} \ldots x_n^{e_n}`, where `x_i` represents polycyclic generators 
-and `n` is the number of generators in the free_group equal to the length of pcgs.
+and ``n`` is the number of generators in the free_group equal to the length of pcgs.
 
 >>> from sympy.combinatorics.named_groups import SymmetricGroup
 >>> from sympy.combinatorics.permutations import Permutation
