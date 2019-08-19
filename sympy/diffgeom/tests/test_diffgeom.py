@@ -234,19 +234,6 @@ def test_expand_tensor():
     metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
     assert(expand_tensor(metric) == metric)
 
-
-def test_covD():
-    M = Manifold('Reisner-Nordstrom', 4)
-    p = Patch('origin', M)
-    cs = CoordSystem('spherical', p, ['t', 'r', 'theta', 'phi'])
-    t, r, theta, phi = cs.coord_functions()
-    dt, dr, dtheta, dphi = cs.base_oneforms()
-    f=Function('f')
-    metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
-    ch_2nd = metric_to_Christoffel_2nd(metric)
-    G=TensorArray(metric)
-    assert(G.covD(ch_2nd).to_tensor() == 0)
-
 def test_scalar():
     M = Manifold('Reisner-Nordstrom', 4)
     p = Patch('origin', M)
@@ -256,29 +243,3 @@ def test_scalar():
     assert(TensorArray(1,coordinate_system=cs).to_tensor() == 1)
     assert(TensorArray(f(r)).to_tensor() == f(r))
 
-def test_curvature():
-    M = Manifold('Reisner-Nordstrom', 4)
-    p = Patch('origin', M)
-    cs = CoordSystem('spherical', p, ['t', 'r', 'theta', 'phi'])
-    t, r, theta, phi = cs.coord_functions()
-    dt, dr, dtheta, dphi = cs.base_oneforms()
-    f=Function('f')
-    metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
-    ch_2nd = metric_to_Christoffel_2nd(metric)
-    G=TensorArray(metric)
-    rm = TensorArray(components=metric_to_Riemann_components(metric), variance=[-1,1,1,1],coordinate_system=cs)
-    v=[Function(f) for f in ['v0', 'v1', 'v2', 'v3']]
-    V = TensorArray(components=[f(t,r,theta,phi) for f in v], variance=[-1],coordinate_system=cs)
-    dV=V.covD(ch_2nd)
-    ddV=dV.covD(ch_2nd)
-    D2V=ddV-ddV.braid(0,1)
-    rm = TensorArray(components=metric_to_Riemann_components(metric), variance=[-1,1,1,1],coordinate_system=cs)
-    rmv=rm.TensorProduct(V).contract(1,4).braid(0,1).braid(1,2)
-    rmvtensor=[(k,simplify(v)) for (k,v) in rmv.tensor.items()]
-    rmvtensor=[(k,v) for (k,v) in rmvtensor if v!=0]
-    rmvtensor.sort()
-    D2Vtensor=[(k,simplify(v)) for (k,v) in D2V.tensor.items() if v != 0]
-    D2Vtensor=[(k,v) for (k,v) in D2Vtensor if v!=0]
-    D2Vtensor.sort()
-    for (a,b) in zip(rmvtensor,D2Vtensor):
-        assert(a==b)
