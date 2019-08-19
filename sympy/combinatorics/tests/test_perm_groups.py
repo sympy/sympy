@@ -62,7 +62,7 @@ def test_rewrite_FiniteSet():
     a = Permutation([2, 0, 1])
     b = Permutation([2, 1, 0])
     G = PermutationGroup([a, b])
-    g = G.rewrite(FiniteSet)
+    g = G.as_finite_set()
 
     expected_members = [
         Permutation([0, 1, 2]),

@@ -426,7 +426,18 @@ class PermutationGroup(Basic):
             parent = parents[temp]
         return rep
 
-    def _eval_rewrite_as_FiniteSet(self, *args, **kwargs):
+    def as_finite_set(self):
+        """Rewrite a group as a finite set object containing all its
+        members.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup
+        >>> g = AlternatingGroup(3)
+        >>> g.as_finite_set()
+        {(0 1 2), (0 2 1), (2)}
+        """
         from sympy.sets.sets import FiniteSet
         return FiniteSet(*self.generate())
 
