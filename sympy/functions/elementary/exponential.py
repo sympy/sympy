@@ -456,12 +456,12 @@ class exp(ExpBase):
         arg = self.args[0]
         if arg.is_Add:
             return Mul(*[exp(f).as_leading_term(x) for f in arg.args])
+        arg = arg.as_leading_term(x)
+        if Order(x, x).contains(arg):
+            return S.One
         if Order(1, x).contains(arg):
-            arg = arg.as_leading_term(x)
-            if x in arg.free_symbols:
-                return S(1)
             return exp(arg)
-        return exp(arg)
+        return None
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
         from sympy import sin
