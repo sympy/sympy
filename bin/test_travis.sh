@@ -150,6 +150,9 @@ test_list = [
 
     # cloudpickle
     'pickling',
+
+    # pyglet
+    '*pyglet*',
 ]
 
 blacklist = [
