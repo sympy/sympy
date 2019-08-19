@@ -19,7 +19,7 @@ from sympy.solvers import solve
 # TODO too often one needs to call doit or simplify on the output, check the
 # tests and find out why
 from sympy.tensor.array import ImmutableDenseNDimArray
-
+from sympy.tensor.array import MutableSparseNDimArray
 
 class Manifold(Basic):
     """Object representing a mathematical manifold.
@@ -1094,14 +1094,31 @@ class TensorArray:
     """
     Object representing a tensor as a multidimensional sparse symbolic array.
 
-    Examples
-    ========
+    Example 1: Basic usage to expand tensors
+    ========================================
 
     >>> from sympy.diffgeom import WedgeProduct, TensorArray, Differential
     >>> from sympy.diffgeom.rn import R2_r
     >>> wp=WedgeProduct(Differential(R2_r.x),Differential(R2_r.y))
     >>> TensorArray(wp).to_tensor()
     TensorProduct(dx, dy) - TensorProduct(dy, dx)
+
+
+    Example 2: Converting the Riemann components (an array) to a proper tensor
+    ==========================================================================
+
+    >>> from sympy.diffgeom import *
+    >>> from sympy import Function
+    >>> from sympy.functions import sin
+    >>> M = Manifold('Reisner-Nordstrom', 4)
+    >>> p = Patch('origin', M)
+    >>> cs = CoordSystem('spherical', p, ['t', 'r', 'theta', 'phi'])
+    >>> t, r, theta, phi = cs.coord_functions()
+    >>> dt, dr, dtheta, dphi = cs.base_oneforms()
+    >>> f=Function('f')
+    >>> TP=TensorProduct
+    >>> metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
+    >>> rm = TensorArray(components=metric_to_Riemann_components(metric), variance=[-1,1,1,1],coordinate_system=cs)  #Note the variance!
     """
     def _contravariant_slots(self,T):
         slots=[]
@@ -1113,7 +1130,7 @@ class TensorArray:
             except:
                 slots.append(k)
         return slots
-    def init_from_tensor(self,T, kwargs):
+    def _init_from_tensor(self,T, kwargs):
         try:
             self.CoordSystem = kwargs['coordinate_system']
         except KeyError:
@@ -1154,7 +1171,31 @@ class TensorArray:
                 else:
                     indices.remove(p)
         self.tensor = dict(zip(indices,coeffs))
-    def init_from_array(self,component_array,variance,coordinate_system):
+    def to_NDimArray(self):
+        """
+        Converts from internal sparse dict representation to sympy.tensor.MutableSparseNDimArray
+
+        Example
+        =======
+        >>> from sympy.diffgeom import *
+        >>> from sympy import Function
+        >>> from sympy.functions import sin
+        >>> M = Manifold('Reisner-Nordstrom', 4)
+        >>> p = Patch('origin', M)
+        >>> cs = CoordSystem('spherical', p, ['t', 'r', 'theta', 'phi'])
+        >>> t, r, theta, phi = cs.coord_functions()
+        >>> dt, dr, dtheta, dphi = cs.base_oneforms()
+        >>> f=Function('f')
+        >>> TP=TensorProduct
+        >>> metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
+        >>> TensorArray(metric).to_NDimArray()
+        [[f(r)**2, 0, 0, 0], [0, -1/f(r)**2, 0, 0], [0, 0, -r**2, 0], [0, 0, 0, -r**2*sin(theta)**2]]
+        """
+        a = MutableSparseNDimArray.zeros(*tuple(self.n for _ in range(self.order)))
+        for (index,coeffs) in list(self.tensor.items()):
+            a[index] = coeffs
+        return a
+    def _init_from_array(self,component_array,variance,coordinate_system):
         self.CoordSystem = coordinate_system
         self.coords = self.CoordSystem.coord_functions()
         self.base_oneforms = self.CoordSystem.base_oneforms()
@@ -1172,9 +1213,9 @@ class TensorArray:
             if len(args) != 1:
                 raise ValueError("Constructor takes exactly one argument.")
             (T,) = args
-            self.init_from_tensor(T,kwargs)
+            self._init_from_tensor(T,kwargs)
         else:
-            self.init_from_array(kwargs['components'],kwargs['variance'],kwargs['coordinate_system'])
+            self._init_from_array(kwargs['components'],kwargs['variance'],kwargs['coordinate_system'])
     def to_tensor(self):
         def dualbasishelper(p,k):
             if self.contravariant_slots.count(k) == 0:
@@ -1373,6 +1414,10 @@ class TensorArray:
         res.order = res.covariant_order+res.contravariant_order
         return res
     def covD(self,ch2):
+        """ 
+        Covariant derivative as a tensor, given the Christoffel symbols of
+        the 2nd kind as argument.
+        """
         ch2_tensor = TensorArray(components=ch2,variance=[-1,1,1],coordinate_system=self.CoordSystem)
         ch2Xself = ch2_tensor.TensorProduct(self)
         contractions = self.zero([k+1 for k in self.contravariant_slots],[0]+[k+1 for k in self.covariant_slots])
