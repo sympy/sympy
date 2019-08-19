@@ -883,13 +883,29 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_HadamardProduct(self, expr):
-        from sympy import MatAdd, MatMul
+        from sympy import MatAdd, MatMul, HadamardProduct
         if self._use_unicode:
             delim = pretty_atom('Ring')
         else:
             delim = '.*'
         return self._print_seq(expr.args, None, None, delim,
-                parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
+                parenthesize=lambda x: isinstance(x, (MatAdd, MatMul, HadamardProduct)))
+
+    def _print_HadamardPower(self, expr):
+        # from sympy import MatAdd, MatMul
+        if self._use_unicode:
+            circ = pretty_atom('Ring')
+        else:
+            circ = self._print('.')
+        pretty_base = self._print(expr.base)
+        pretty_exp = self._print(expr.exp)
+        if precedence(expr.exp) < PRECEDENCE["Mul"]:
+            pretty_exp = prettyForm(*pretty_exp.parens())
+        pretty_circ_exp = prettyForm(
+            binding=prettyForm.LINE,
+            *stringPict.next(circ, pretty_exp)
+        )
+        return pretty_base**pretty_circ_exp
 
     def _print_KroneckerProduct(self, expr):
         from sympy import MatAdd, MatMul

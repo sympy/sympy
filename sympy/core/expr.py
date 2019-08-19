@@ -578,7 +578,7 @@ class Expr(Basic, EvalfMixin):
         If an expression has no free symbols then it is a constant. If
         there are free symbols it is possible that the expression is a
         constant, perhaps (but not necessarily) zero. To test such
-        expressions, two strategies are tried:
+        expressions, a few strategies are tried:
 
         1) numerical evaluation at two random points. If two such evaluations
         give two different values and the values have a precision greater than
@@ -592,6 +592,10 @@ class Expr(Basic, EvalfMixin):
         expression is constant (see added test in test_expr.py). If
         all derivatives are zero then self is constant with respect to the
         given symbols.
+
+        3) finding out zeros of denominator expression with free_symbols.
+        It won't be constant if there are zeros. It gives more negative
+        answers for expression that are not constant.
 
         If neither evaluation nor differentiation can prove the expression is
         constant, None is returned unless two numerical values happened to be
@@ -638,6 +642,20 @@ class Expr(Basic, EvalfMixin):
         >>> ((one - 1)**(x + 1)).is_constant() in (True, False) # could be 0 or 1
         True
         """
+
+        def check_denominator_zeros(expression):
+            from sympy.solvers.solvers import denoms
+
+            retNone = False
+            for den in denoms(expression):
+                z = den.is_zero
+                if z is True:
+                    return True
+                if z is None:
+                    retNone = True
+            if retNone:
+                return None
+            return False
 
         simplify = flags.get('simplify', True)
 
@@ -715,6 +733,11 @@ class Expr(Basic, EvalfMixin):
                         # dead line provided _random returns None in such cases
                         return None
                 return False
+        cd = check_denominator_zeros(self)
+        if cd is True:
+            return False
+        elif cd is None:
+            return None
         return True
 
     def equals(self, other, failing_expression=False):
