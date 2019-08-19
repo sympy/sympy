@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from .matexpr import MatrixExpr
 from sympy.core.basic import Basic
-from sympy.core.function import Lambda
+from sympy.core.function import FunctionClass, Lambda
 from sympy.core.sympify import _sympify, sympify
 from sympy.matrices import Matrix
 from sympy.functions.elementary.complexes import re, im
@@ -19,9 +19,10 @@ class FunctionMatrix(MatrixExpr):
 
     cols : nonnegative integer
 
-    lamda : Lambda or str
-        If it is a SymPy ``Lambda`` instance, it should have two
-        arguments which represents the coordinate of the matrix.
+    lamda : Function, Lambda or str
+        If it is a SymPy ``Function`` or ``Lambda`` instance,
+        it should be able to accept two arguments which represents the
+        matrix coordinates.
 
         If it is a pure string containing python ``lambda`` semantics,
         it is interpreted by the SymPy parser and casted into a SymPy
@@ -35,21 +36,39 @@ class FunctionMatrix(MatrixExpr):
     >>> from sympy import FunctionMatrix, symbols, Lambda, MatPow, Matrix
     >>> i, j = symbols('i,j')
     >>> X = FunctionMatrix(3, 3, Lambda((i, j), i + j))
-
-    Creating an explicit matrix from the ``FunctionMatrix``:
-
     >>> Matrix(X)
     Matrix([
     [0, 1, 2],
     [1, 2, 3],
     [2, 3, 4]])
 
+    Creating a ``FunctionMatrix`` from a sympy function:
+
+    >>> from sympy.functions import KroneckerDelta
+    >>> X = FunctionMatrix(3, 3, KroneckerDelta)
+    >>> X.as_explicit()
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+
+    Creating a ``FunctionMatrix`` from a sympy undefined function:
+
+    >>> from sympy.core.function import Function
+    >>> f = Function('f')
+    >>> X = FunctionMatrix(3, 3, f)
+    >>> X.as_explicit()
+    Matrix([
+    [f(0, 0), f(0, 1), f(0, 2)],
+    [f(1, 0), f(1, 1), f(1, 2)],
+    [f(2, 0), f(2, 1), f(2, 2)]])
+
     Creating a ``FunctionMatrix`` from python ``lambda``:
 
     >>> FunctionMatrix(3, 3, 'lambda i, j: i + j')
     FunctionMatrix(3, 3, Lambda((i, j), i + j))
 
-    Example of lazy evaluation using the symbolic representation:
+    Example of lazy evaluation of matrix product:
 
     >>> Y = FunctionMatrix(1000, 1000, Lambda((i, j), i + j))
     >>> isinstance(Y*Y, MatPow) # this is an expression object
@@ -70,12 +89,14 @@ class FunctionMatrix(MatrixExpr):
         cls._check_dim(cols)
 
         lamda = sympify(lamda)
-        if not isinstance(lamda, Lambda):
+        if not isinstance(lamda, (FunctionClass, Lambda)):
             raise ValueError(
-                "{} should be a SymPy Lambda instance.".format(lamda))
-        if len(lamda.variables) != 2:
+                "{} should be compatible with SymPy function classes."
+                .format(lamda))
+
+        if 2 not in lamda.nargs:
             raise ValueError(
-                "{} should be a function of two variables.".format(lamda))
+                '{} should be able to accept 2 arguments.'.format(lamda))
 
         return super(FunctionMatrix, cls).__new__(cls, rows, cols, lamda)
 
