@@ -2,10 +2,10 @@ from itertools import product as cartes
 
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-    atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
+    atan, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
-    acos, erfi)
+    acos, erfi, LambertW)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -13,8 +13,6 @@ from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.core.numbers import GoldenRatio
-from sympy.functions.combinatorial.numbers import fibonacci
 
 from sympy.abc import x, y, z, k
 n = Symbol('n', integer=True, positive=True)
@@ -558,3 +556,22 @@ def test_issue_17325():
     assert Limit(x**2, x, 0, dir="+-").doit() == 0
     assert Limit(1/x**2, x, 0, dir="+-").doit() == oo
     raises(ValueError, lambda: Limit(1/x, x, 0, dir="+-").doit())
+
+
+def test_issue_10978():
+    assert LambertW(x).limit(x, 0) == 0
+
+
+@XFAIL
+def test_issue_14313_comment():
+    assert limit(floor(n/2), n, oo) == oo
+
+
+@XFAIL
+def test_issue_15323():
+    d = ((1 - 1/x)**x).diff(x)
+    assert limit(d, x, 1, dir='+') == 1
+
+
+def test_issue_12571():
+    assert limit(-LambertW(-log(x))/log(x), x, 1) == 1

@@ -191,15 +191,11 @@ class MatrixExpr(Expr):
         if self.is_Atom:
             return self
         else:
-            return self.__class__(*[simplify(x, **kwargs) for x in self.args])
+            return self.func(*[simplify(x, **kwargs) for x in self.args])
 
     def _eval_adjoint(self):
         from sympy.matrices.expressions.adjoint import Adjoint
         return Adjoint(self)
-
-    def _eval_derivative(self, x):
-        # x is a scalar:
-        return ZeroMatrix(self.shape[0], self.shape[1])
 
     def _eval_derivative_array(self, x):
         if isinstance(x, MatrixExpr):
@@ -225,7 +221,22 @@ class MatrixExpr(Expr):
             return Derivative(x, self)
 
     def _accept_eval_derivative(self, s):
-        return s._visit_eval_derivative_array(self)
+        from sympy import MatrixBase, NDimArray
+        if isinstance(s, (MatrixBase, NDimArray, MatrixExpr)):
+            return s._visit_eval_derivative_array(self)
+        else:
+            return s._visit_eval_derivative_scalar(self)
+
+    @classmethod
+    def _check_dim(cls, dim):
+        """Helper function to check invalid matrix dimensions"""
+        from sympy.solvers.solvers import check_assumptions
+        ok = check_assumptions(dim, integer=True, nonnegative=True)
+        if ok is False:
+            raise ValueError(
+                "The dimension specification {} should be "
+                "a nonnegative integer.".format(dim))
+
 
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
@@ -582,6 +593,7 @@ class MatrixExpr(Expr):
             return True
         return Eq(self, other, evaluate=False)
 
+
 def get_postprocessor(cls):
     def _postprocessor(expr):
         # To avoid circular imports, we can't have MatMul/MatAdd on the top level
@@ -710,8 +722,11 @@ class MatrixElement(Expr):
 
         M = self.args[0]
 
+        m, n = self.parent.shape
+
         if M == v.args[0]:
-            return KroneckerDelta(self.args[1], v.args[1])*KroneckerDelta(self.args[2], v.args[2])
+            return KroneckerDelta(self.args[1], v.args[1], (0, m-1)) * \
+                   KroneckerDelta(self.args[2], v.args[2], (0, n-1))
 
         if isinstance(M, Inverse):
             i, j = self.args[1:]
@@ -749,6 +764,10 @@ class MatrixSymbol(MatrixExpr):
 
     def __new__(cls, name, n, m):
         n, m = _sympify(n), _sympify(m)
+
+        cls._check_dim(m)
+        cls._check_dim(n)
+
         if isinstance(name, string_types):
             name = Symbol(name)
         obj = Basic.__new__(cls, name, n, m)
@@ -790,6 +809,10 @@ class MatrixSymbol(MatrixExpr):
     def _eval_simplify(self, **kwargs):
         return self
 
+    def _eval_derivative(self, x):
+        # x is a scalar:
+        return ZeroMatrix(self.shape[0], self.shape[1])
+
     def _eval_derivative_matrix_lines(self, x):
         if self != x:
             first = ZeroMatrix(x.shape[0], self.shape[0]) if self.shape[0] != 1 else S.Zero
@@ -821,7 +844,10 @@ class Identity(MatrixExpr):
     is_Identity = True
 
     def __new__(cls, n):
-        return super(Identity, cls).__new__(cls, _sympify(n))
+        n = _sympify(n)
+        cls._check_dim(n)
+
+        return super(Identity, cls).__new__(cls, n)
 
     @property
     def rows(self):
@@ -857,10 +883,11 @@ class Identity(MatrixExpr):
             return S.One
         elif eq is S.false:
             return S.Zero
-        return KroneckerDelta(i, j)
+        return KroneckerDelta(i, j, (0, self.cols-1))
 
     def _eval_determinant(self):
         return S.One
+
 
 class GenericIdentity(Identity):
     """
@@ -914,6 +941,10 @@ class ZeroMatrix(MatrixExpr):
     is_ZeroMatrix = True
 
     def __new__(cls, m, n):
+        m, n = _sympify(m), _sympify(n)
+        cls._check_dim(m)
+        cls._check_dim(n)
+
         return super(ZeroMatrix, cls).__new__(cls, m, n)
 
     @property
@@ -992,6 +1023,10 @@ class OneMatrix(MatrixExpr):
     Matrix whose all entries are ones.
     """
     def __new__(cls, m, n):
+        m, n = _sympify(m), _sympify(n)
+        cls._check_dim(m)
+        cls._check_dim(n)
+
         obj = super(OneMatrix, cls).__new__(cls, m, n)
         return obj
 

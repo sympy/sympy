@@ -87,6 +87,10 @@ class MatPow(MatrixExpr):
         base, exp = self.args
         return MatPow(base.T, exp)
 
+    def _eval_derivative(self, x):
+        from sympy import Pow
+        return Pow._eval_derivative(self, x)
+
     def _eval_derivative_matrix_lines(self, x):
         from sympy.core.expr import ExprBuilder
         from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct

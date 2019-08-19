@@ -36,8 +36,15 @@ class Trace(Expr):
         return self
 
     def _eval_derivative(self, v):
-        from sympy.matrices.expressions.matexpr import _matrix_derivative
-        return _matrix_derivative(self, v)
+        from sympy import Sum
+        from .matexpr import MatrixElement
+        if isinstance(v, MatrixElement):
+            return self.rewrite(Sum).diff(v)
+        expr = self.doit()
+        if isinstance(expr, Trace):
+            # Avoid looping infinitely:
+            raise NotImplementedError
+        return expr._eval_derivative(v)
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
