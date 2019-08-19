@@ -403,6 +403,16 @@ class OctaveCodePrinter(CodePrinter):
         return "double(%s == %s)" % tuple(self.parenthesize(x, prec)
                                           for x in expr.args)
 
+    def _print_HadamardProduct(self, expr):
+        return '.*'.join([self.parenthesize(arg, precedence(expr))
+                          for arg in expr.args])
+
+    def _print_HadamardPower(self, expr):
+        PREC = precedence(expr)
+        return '.**'.join([
+            self.parenthesize(expr.base, PREC),
+            self.parenthesize(expr.exp, PREC)
+            ])
 
     def _print_Identity(self, expr):
         shape = expr.shape

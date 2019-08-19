@@ -22,7 +22,7 @@ def hadamard_product(*matrices):
     >>> hadamard_product(A)
     A
     >>> hadamard_product(A, B)
-    A.*B
+    HadamardProduct(A, B)
     >>> hadamard_product(A, B)[0, 1]
     A[0, 1]*B[0, 1]
     """
@@ -153,6 +153,8 @@ def canonicalize(x):
     >>> from sympy.matrices.expressions import MatrixSymbol, HadamardProduct
     >>> from sympy.matrices.expressions import OneMatrix, ZeroMatrix
     >>> from sympy.matrices.expressions.hadamard import canonicalize
+    >>> from sympy import init_printing
+    >>> init_printing(use_unicode=False)
 
     >>> A = MatrixSymbol('A', 2, 2)
     >>> B = MatrixSymbol('B', 2, 2)
@@ -201,7 +203,8 @@ def canonicalize(x):
     >>> X
     A.*A.*A
     >>> canonicalize(X)
-    A.**3
+     .3
+    A
 
     Notes
     =====
