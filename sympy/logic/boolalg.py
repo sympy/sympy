@@ -619,7 +619,6 @@ class BooleanFunction(Application, Boolean):
                         res.append((tmpres, oldexpr))
 
                     if res:
-                        from sympy.functions.elementary.miscellaneous import Min, Max
                         for tmpres, oldexpr in res:
                             # we have a matching, compute replacement
                             np = simp.subs(tmpres)

@@ -732,4 +732,4 @@ def test_issue_17354():
     from sympy import symbols, Wild
     x, y = symbols("x y", real=True)
     a, b = symbols("a b", cls=Wild)
-    assert ((0 <= x).reversed | (y <= x)).match((1/a <= b) | (a <= b)) in None
+    assert ((0 <= x).reversed | (y <= x)).match((1/a <= b) | (a <= b)) is None

@@ -7,7 +7,7 @@ from sympy import (
     Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, Poly, posify, rad,
     Rational, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
-    zoo, And, Gt, Ge, Le, Or, Max)
+    zoo, And, Gt, Ge, Le, Or)
 from sympy.core.mul import _keep_coeff
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
@@ -1007,9 +1007,3 @@ def test_issue_19484():
 def test_issue_19161():
     polynomial = Poly('x**2').simplify()
     assert (polynomial-x**2).simplify() == 0
-
-
-def test_issue_17354():
-    # Check that there is no exception
-    assert (Max(y/(x - 1), y/(x + 1)) >= 0).simplify() == \
-           (Max(y/(x - 1), y/(x + 1)) >= 0)

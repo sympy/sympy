@@ -2,7 +2,6 @@ from __future__ import print_function, division
 from collections import defaultdict
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Symbol
 from sympy.core.basic import as_Basic
-from sympy.core.compatibility import range
 from sympy.core.function import UndefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.relational import (Equality, Unequality, Relational,
@@ -1438,7 +1437,6 @@ def _piecewise_simplify_identical_expressions(args):
     return args
 
 def _piecewise_replace_equal_expressions(args):
-    d = defaultdict(list)
     newargs = []
     uniqueexpr = []
     for expr, cond in args:

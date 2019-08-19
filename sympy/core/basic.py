@@ -1558,7 +1558,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                 except TypeError:
                     d = None
             else:
-                d = arg.xreplace(d).matches(other_arg, d, old=old)
+                    d = arg.xreplace(d).matches(other_arg, d, old=old)
             if d is None:
                 return None
         return d
