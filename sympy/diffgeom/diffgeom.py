@@ -1177,7 +1177,7 @@ class TensorArray:
 
         Example
         =======
-        >>> from sympy.diffgeom import *
+        >>> from sympy.diffgeom import TensorProduct, Manifold, Patch, CoordSystem, TensorArray
         >>> from sympy import Function
         >>> from sympy.functions import sin
         >>> M = Manifold('Reisner-Nordstrom', 4)
