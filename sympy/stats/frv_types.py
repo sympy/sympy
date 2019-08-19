@@ -24,6 +24,7 @@ from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
 from sympy import beta as beta_fn
 from sympy.external import import_module
 from sympy.core.compatibility import range
+from sympy.tensor.array import ArrayComprehensionMap
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
 from sympy.stats.rv import _value_check, Density, RandomSymbol
@@ -110,7 +111,8 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
             return S.Zero
 
     def _sample_random(self, size):
-        return [self.args[random.randint(0, len(self.args)-1)] for _ in range(size)]
+        x = Symbol('x')
+        return ArrayComprehensionMap(lambda: self.args[random.randint(0, len(self.args)-1)], (x, 0, size)).doit()
 
 
 
