@@ -24,7 +24,6 @@ import re
 import linecache
 import time
 from fnmatch import fnmatch
-from os.path import dirname
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
@@ -207,14 +206,14 @@ def run_in_subprocess_with_hash_randomization(
     # randomization.
 
     """
+    cwd = get_sympy_dir()
     # Note, we must return False everywhere, not None, as subprocess.call will
     # sometimes return None.
 
     # First check if the Python version supports hash randomization
-    # If it doesn't have this support, it won't reconize the -R flag
-    sympy_root = dirname(dirname(os.path.abspath(sympy.__file__)))
+    # If it doesn't have this support, it won't recognize the -R flag
     p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT, cwd=sympy_root)
+                         stderr=subprocess.STDOUT, cwd=cwd)
     p.communicate()
     if p.returncode != 0:
         return False
@@ -234,7 +233,7 @@ def run_in_subprocess_with_hash_randomization(
                       repr(function_kwargs)))
 
     try:
-        p = subprocess.Popen([command, "-R", "-c", commandstring], cwd=sympy_root)
+        p = subprocess.Popen([command, "-R", "-c", commandstring], cwd=cwd)
         p.communicate()
     except KeyboardInterrupt:
         p.wait()
@@ -271,6 +270,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
     ... test_kwargs={"colors:False"}) # doctest: +SKIP
 
     """
+    cwd = get_sympy_dir()
     tests_successful = True
 
     test_kwargs = test_kwargs or {}
@@ -307,7 +307,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
                                stderr=dev_null) == 0:
                 if subprocess.call("sage -python bin/test "
                                    "sympy/external/tests/test_sage.py",
-                    shell=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) != 0:
+                    shell=True, cwd=cwd) != 0:
                     tests_successful = False
 
         if tests_successful:
