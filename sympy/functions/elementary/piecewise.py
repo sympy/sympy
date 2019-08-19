@@ -1113,15 +1113,21 @@ def _clip(A, B, k):
 
 
 def piecewise_simplify_arguments(expr, **kwargs):
+    """
+    Simplify expressions and conditions separately.
+    """
+    if not isinstance(expr, Piecewise):
+        return expr
+
     from sympy import simplify
     args = []
+    doit = kwargs.pop('doit', None)
     for e, c in expr.args:
         if isinstance(e, Basic):
-            doit = kwargs.pop('doit', None)
             # Skip doit to avoid growth at every call for some integrals
             # and sums, see sympy/sympy#17165
             newe = simplify(e, doit=False, **kwargs)
-            if newe != expr:
+            if newe != expr and not newe.has(Piecewise):
                 e = newe
         if isinstance(c, Basic):
             c = simplify(c, doit=doit, **kwargs)
@@ -1298,7 +1304,7 @@ def _piecewise_simplify_or_and_eq(args, measure, ratio):
     Check if any of the Or-terms can be moved to the next segment.
     This may or may not be a good idea, so we check the consequences here.
     """
-    newargs = args.copy()
+    newargs = args[:]
     prevexpr = None
     anythingchanged = False
     for i, (expr, cond) in reversed(list(enumerate(newargs))):
@@ -1393,43 +1399,66 @@ def _piecewise_simplify_ne(args):
 
 
 def _piecewise_simplify_identical_expressions(args):
+    """
+    Make sure every expression only appears once in the Piecewise.
+    """
     d = defaultdict(list)
+    # Add appearences of expressions to dict.
     for n, (expr, cond) in enumerate(args):
         d[expr].append(n)
-    candidates = dict()
-    for key in d.keys():
-        if len(d[key]) >= 2:
-            candidates[key] = d[key]
-    if candidates:
-        c0 = c1 = minstep = len(args)
-        for k in candidates.keys():
-            p = -len(args)
-            for v in candidates[k]:
-                if v:
+    # Filter out expressions appearing more than once.
+    candidates = {k: v for (k, v) in d.items() if len(v) >= 2}
+    if candidates:  # Any expression appearing more than once?
+        # Find the two instances with the smallest number of
+        # expressions between them (as this probably will give the smallest
+        # logic expressions).
+        c0 = c1 = minstep = len(args)  # Initialize
+        for k, pos in candidates.items():
+            p = -len(args)  # Store previous index, first time there is no previous index.
+            for v in pos:
+                if v:  # If zero => first item, no previous for sure
                     newstep = v - p
-                    if minstep > newstep:
+                    if minstep > newstep:  # Smaller than earlier best?
                         minstep = newstep
                         c0 = p
                         c1 = v
                 p = v
-        cumcond = S.true
-        for k in range(c0 + 1, c1):
-            cumcond = cumcond & args[k][1]
-        if c1 == len(args) - 1 and args[-1][1] == True:
-            args[c0] = (args[c0][0], (~cumcond).simplify())
-            del args[c1]
+        # Compute cummulative condition for bypassing intermediate expressions
+        cumcond = And(*[args[k][1] for k in range(c0 + 1, c1)])
+        lasttrue = (args[-1][1] == S.true)  # Remember if last condition is True
+        # Update condition
+        args[c0] = (args[c0][0],
+                    (args[c0][1] | (~cumcond & args[c1][1])).simplify())
+        del args[c1]
+        # Set final condition to true
+        if lasttrue:
             args[-1] = (args[-1][0], S.true)
-        else:
-            args[c0] = (args[c0][0], (args[c0][1] |
-                        (~cumcond & args[c1][1])).simplify())
-            del args[c1]
+        # Go again
         return _piecewise_simplify_identical_expressions(args)
     return args
 
+def _piecewise_replace_equal_expressions(args):
+    d = defaultdict(list)
+    newargs = []
+    uniqueexpr = []
+    for expr, cond in args:
+        unique = True
+        for uexpr in uniqueexpr:
+            if uexpr.equals(expr):
+                unique = False
+                newargs.append((expr, cond))
+                break
+        if unique:
+            newargs.append((expr, cond))
+    return newargs
 
-def _piecewise_simplify_conditions(args):
-    def shorter(exp1, exp2):
-        return exp1 if exp1.count_ops() < exp2.count_ops() else exp2
+
+def _piecewise_simplify_conditions(args, measure, ratio):
+    """
+    Propagate earlier conditions to latter to see if they simplify.
+    """
+    def shorter(newcond, oldcond):
+        return newcond if measure(newcond) < ratio*measure(oldcond) else oldcond
 
     cummulatedcond = S.false
     newargs = []
@@ -1437,7 +1466,7 @@ def _piecewise_simplify_conditions(args):
     prevnewcond = S.false
     for expr, cond in args:
         newcond = (cond & ~cummulatedcond).simplify()
-        shortcond = shorter(cond, newcond)
+        shortcond = shorter(newcond, cond)
         if shortcond != False and shortcond not in [prevcond, prevnewcond]:
             newargs.append((expr, shortcond))
         cummulatedcond = (cummulatedcond | shortcond).simplify()
@@ -1446,6 +1475,13 @@ def _piecewise_simplify_conditions(args):
 
 
 def piecewise_simplify(expr, **kwargs):
+    """
+    Simplify a Piecewise expression
+    """
+
+    if not isinstance(expr, Piecewise):
+        return expr
+
     expr = piecewise_simplify_arguments(expr, **kwargs)
     if not isinstance(expr, Piecewise):
         return expr
@@ -1458,7 +1494,8 @@ def piecewise_simplify(expr, **kwargs):
     args = _piecewise_simplify_or_and_eq(args, measure, ratio)
     args = _piecewise_simplify_ne(args)
     args = _piecewise_collapse_arguments(args)
-    args = _piecewise_simplify_conditions(args)
+    args = _piecewise_simplify_conditions(args, measure, ratio)
+    args = _piecewise_replace_equal_expressions(args)
     args = _piecewise_simplify_identical_expressions(args)
 
     return Piecewise(*args)

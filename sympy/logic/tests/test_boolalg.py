@@ -5,6 +5,7 @@ from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.trigonometric import sin
 from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
@@ -1093,12 +1094,19 @@ def test_relational_simplification():
     assert And(x >= y, x < y).simplify() == S.false
     assert Or(x >= y, Eq(y, x)).simplify() == (x >= y)
     assert And(x >= y, Eq(y, x)).simplify() == Eq(x, y)
+    assert Or(Eq(x, y), x >= y, 3 < y, 5 < y).simplify() == \
+        Or(x >= y, y > 3)
+    assert And(Eq(x, y), x >= y, w < y, y >= z, z < y).simplify() == \
+        And(Eq(x, y), y > z, w < y)
+    assert Or(Eq(x, y), x >= 1, 2 < y, y >= 5, z < y).simplify() == \
+        (Eq(x, y) | (x >= 1) | (y > 2) | (y > z))
     assert And(Eq(x, y), x >= 1, 2 < y, y >= 5, z < y).simplify() == \
         (Eq(x, y) & (x >= 1) & (y >= 5) & (y > z))
     assert (Eq(x, y) & Eq(d, e) & (x >= y) & (d >= e)).simplify() == \
         (Eq(x, y) & Eq(d, e) & (d >= e))
     assert And(Eq(x, y), Eq(x, -y)).simplify() == And(Eq(x, 0), Eq(y, 0))
     assert Xor(x >= y, x <= y).simplify() == Ne(x, y)
+    assert Or(1/Abs(x) <= 2, Abs(x) <= 2).simplify() == S.true
 
 
 @slow
@@ -1149,11 +1157,20 @@ def test_relational_simplification_patterns_numerically():
             valuelist = list(set(list(combinations(list(range(-2, 2))*3, 3))))
             for values in valuelist:
                 sublist = dict(zip(symb, values))
-                originalvalue = original.subs(sublist)
+                if values[0] == 0:
+                    # There are a few patterns with divisions which will
+                    # throw an exception here if the first argument is zero
+                    try:
+                        originalvalue = original.subs(sublist)
+                    except TypeError:
+                        continue
+                else:
+                    originalvalue = original.subs(sublist)
                 simplifiedvalue = simplified.subs(sublist)
                 assert originalvalue == simplifiedvalue, "Original: {}\nand"\
-                    " simplified: {}\ndo not evaluate to the same value for"\
-                    "{}".format(original, simplified, sublist)
+                    " simplified: {}\ndo not evaluate to the same value ({}"\
+                    " vs {}) for {}".format(original, simplified, originalvalue,
+                                           simplifiedvalue, sublist)
 
 
 def test_issue_16803():

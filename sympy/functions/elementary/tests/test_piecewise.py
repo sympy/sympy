@@ -1367,7 +1367,7 @@ def test_issue_20360():
 def test_piecewise_simplify2():
     assert Piecewise((2+y, And(Eq(x, 2), Eq(y, 0))), (x, True)).simplify() == x
     assert Piecewise((2+y, Or(Eq(x, 4), And(Eq(x, 2), Eq(y, 0)))),
-                     (x, True)).simplify() == Piecewise((2 + y, Or(Eq(x, 4))),
+                     (x, True)).simplify() == Piecewise((2 + y, Eq(x, 4)),
                                                         (x, True))
     assert Piecewise((1, Eq(x, 0)), (sin(x)/x, True)).simplify() == \
         Piecewise((1, Eq(x, 0)), (sin(x)/x, True))
@@ -1407,7 +1407,7 @@ def test_piecewise_simplify3():
                   (-1/x, Ne(x, 0)),
                   (0, True))
     assert p.simplify() == Piecewise((-cos(x*y)/x, Ne(x, 0) & ((x > -oo) | (y < 0)) & ((x < oo) | (y < 0))),
-                                     (0, Eq(x, 0)),
+                                     (0, Eq(x, 0) | (y < 0)),
                                      (-1/x, True))
     x, y = symbols("x y", real=True)
     # p = piecewise_fold(integrate(y*cos(x*y), x, y))
@@ -1421,6 +1421,17 @@ def test_piecewise_simplify3():
     C, u, x = symbols('C u x', real=True)
     p = Piecewise((0, Ne(u, 1)), (C*(2*x + 1)*exp(2*x), Eq(u, 0)), (0, True))
     assert p.simplify() == 0
+
+
+def test_piecewise_simplify4():
+    x, y = symbols("x y", real=True)
+    p = Piecewise((1, (x >= y) & (y >= 0)), (0, (x >= y)), (1, S.true))
+    assert p.simplify() == Piecewise((1, ((x >= y) & (y >= 0)) | (x < y)),
+                                     (0, S.true))
+    p = Piecewise((1, (x >= y) & (y >= 0)), (0, (x >= y)), (1, x >= 0))
+    assert p.simplify() == Piecewise(
+            (1, ((x >= 0) | (x >= y)) & ((x >= 0) | (y >= 0)) & ((y >= 0) | (x < y))),
+            (0, x >= y))
 
 
 def test_issue_17283():
