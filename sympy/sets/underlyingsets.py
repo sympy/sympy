@@ -37,3 +37,4 @@ class UnderlyingSetOf(Set):
 
         if isinstance(parent, PermutationGroup):
             return parent.contains(other, **kwargs)
+        raise NotImplementedError()
