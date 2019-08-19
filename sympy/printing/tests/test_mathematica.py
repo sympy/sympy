@@ -79,6 +79,8 @@ def test_Function():
     assert mcode(harmonic(x, y)) == "HarmonicNumber[x, y]"
     assert mcode(Li(x)) == "LogIntegral[x] - LogIntegral[2]"
     assert mcode(LambertW(x)) == "ProductLog[x]"
+    assert mcode(LambertW(x, -1)) == "ProductLog[-1, x]"
+    assert mcode(LambertW(x, y)) == "ProductLog[y, x]"
 
 
 def test_special_polynomials():
@@ -127,8 +129,11 @@ def test_constants():
     assert mcode(pi) == "Pi"
     assert mcode(S.GoldenRatio) == "GoldenRatio"
     assert mcode(S.TribonacciConstant) == \
-        "1/3 + (1/3)*(19 - 3*33^(1/2))^(1/3) + " \
-        "(1/3)*(3*33^(1/2) + 19)^(1/3)"
+        "(1/3 + (1/3)*(19 - 3*33^(1/2))^(1/3) + " \
+        "(1/3)*(3*33^(1/2) + 19)^(1/3))"
+    assert mcode(2*S.TribonacciConstant) == \
+        "2*(1/3 + (1/3)*(19 - 3*33^(1/2))^(1/3) + " \
+        "(1/3)*(3*33^(1/2) + 19)^(1/3))"
     assert mcode(S.EulerGamma) == "EulerGamma"
     assert mcode(S.Catalan) == "Catalan"
 

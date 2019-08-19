@@ -22,7 +22,8 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
     meijerg, sin, sqrt, subfactorial, tan, uppergamma, lerchphi,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta, bell,
-    bernoulli, fibonacci, tribonacci, lucas)
+    bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
+    mathieusprime, mathieucprime)
 
 from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerProduct
 
@@ -36,8 +37,8 @@ from sympy.sets.setexpr import SetExpr
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
 from sympy.tensor.functions import TensorProduct
-from sympy.tensor.tensor import (TensorIndexType, tensor_indices, tensorhead,
-        TensorElement)
+from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
+                                 TensorElement, tensor_heads)
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -1343,14 +1344,14 @@ u("""\
     expr = Abs(1 / (y - Abs(x)))
     ascii_str = \
 """\
-|   1   |\n\
-|-------|\n\
+    1    \n\
+---------\n\
 |y - |x||\
 """
     ucode_str = \
 u("""\
-│   1   │\n\
-│───────│\n\
+    1    \n\
+─────────\n\
 │y - │x││\
 """)
     assert pretty(expr) == ascii_str
@@ -1605,6 +1606,20 @@ B \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = bernoulli(n, x)
+    ascii_str = \
+"""\
+B (x)\n\
+ n   \
+"""
+    ucode_str = \
+u("""\
+B (x)\n\
+ n   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
     expr = fibonacci(n)
     ascii_str = \
 """\
@@ -1644,6 +1659,58 @@ u("""\
 T \n\
  n\
 """)
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = stieltjes(n)
+    ascii_str = \
+"""\
+stieltjes \n\
+         n\
+"""
+    ucode_str = \
+u("""\
+γ \n\
+ n\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = stieltjes(n, x)
+    ascii_str = \
+"""\
+stieltjes (x)\n\
+         n   \
+"""
+    ucode_str = \
+u("""\
+γ (x)\n\
+ n   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = mathieuc(x, y, z)
+    ascii_str = 'C(x, y, z)'
+    ucode_str = u('C(x, y, z)')
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = mathieus(x, y, z)
+    ascii_str = 'S(x, y, z)'
+    ucode_str = u('S(x, y, z)')
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = mathieucprime(x, y, z)
+    ascii_str = "C'(x, y, z)"
+    ucode_str = u("C'(x, y, z)")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = mathieusprime(x, y, z)
+    ascii_str = "S'(x, y, z)"
+    ucode_str = u("S'(x, y, z)")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -3112,17 +3179,32 @@ def test_MatrixExpressions():
     assert pretty(Z) == ascii_str
     assert upretty(Z) == ucode_str
 
-    # Apply function elementwise:
+    # Apply function elementwise (`ElementwiseApplyFunc`):
 
     expr = (X.T*X).applyfunc(sin)
 
     ascii_str = """\
-   / T     \\\n\
-sin\\X *X.../\
+    / T  \\\n\
+sin.\\X *X/\
 """
     ucode_str = u("""\
-   ⎛ T     ⎞\n\
-sin⎝X ⋅X...⎠\
+    ⎛ T  ⎞\n\
+sin˳⎝X ⋅X⎠\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    lamda = Lambda(x, 1/x)
+    expr = (n*X).applyfunc(lamda)
+    ascii_str = """\
+/     1\\      \n\
+|d -> -|.(n*X)\n\
+\\     d/      \
+"""
+    ucode_str = u("""\
+⎛    1⎞      \n\
+⎜d ↦ ─⎟˳(n⋅X)\n\
+⎝    d⎠      \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3320,8 +3402,8 @@ u("""\
         ()), ((), (1, 0)), 1/y), True))
     ascii_str = \
 """\
-/                                |1|    \n\
-|            0               for |-| < 1\n\
+/                                 1     \n\
+|            0               for --- < 1\n\
 |                                |y|    \n\
 |                                       \n\
 <            1               for |y| < 1\n\
@@ -3332,8 +3414,8 @@ u("""\
 """
     ucode_str = \
 u("""\
-⎧                                │1│    \n\
-⎪            0               for │─│ < 1\n\
+⎧                                 1     \n\
+⎪            0               for ─── < 1\n\
 ⎪                                │y│    \n\
 ⎪                                       \n\
 ⎨            1               for │y│ < 1\n\
@@ -6296,8 +6378,8 @@ def test_pretty_print_tensor_expr():
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
     i0 = tensor_indices("i_0", L)
-    A, B, C, D = tensorhead("A B C D", [L], [[1]])
-    H = tensorhead("H", [L, L], [[1], [1]])
+    A, B, C, D = tensor_heads("A B C D", [L])
+    H = TensorHead("H", [L, L])
 
     expr = -i
     ascii_str = \
@@ -6458,15 +6540,15 @@ A  + 3⋅B \n\
 
 def test_pretty_print_tensor_partial_deriv():
     from sympy.tensor.toperators import PartialDerivative
-    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensor_heads
 
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
     i0 = tensor_indices("i0", L)
 
-    A, B, C, D = tensorhead("A B C D", [L], [[1]])
+    A, B, C, D = tensor_heads("A B C D", [L])
 
-    H = tensorhead("H", [L, L], [[1], [1]])
+    H = TensorHead("H", [L, L])
 
     expr = PartialDerivative(A(i), A(j))
     ascii_str = \
@@ -6728,3 +6810,26 @@ def test_pretty_misc_functions():
     assert upretty(Heaviside(x, y)) == u'θ(x, y)'
     assert pretty(dirichlet_eta(x)) == 'dirichlet_eta(x)'
     assert upretty(dirichlet_eta(x)) == u'η(x)'
+
+
+def test_issue_17258():
+    n = Symbol('n', integer=True)
+    assert pretty(Sum(n, (n, -oo, 1))) == \
+    '   1     \n'\
+    '  __     \n'\
+    '  \\ `    \n'\
+    '   )    n\n'\
+    '  /_,    \n'\
+    'n = -oo  '
+
+    assert upretty(Sum(n, (n, -oo, 1))) == \
+u("""\
+  1     \n\
+ ___    \n\
+ ╲      \n\
+  ╲     \n\
+  ╱    n\n\
+ ╱      \n\
+ ‾‾‾    \n\
+n = -∞  \
+""")

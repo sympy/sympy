@@ -223,40 +223,42 @@ The following example shows how to use the momenta functions in
 One begins by creating the requisite symbols to describe the system. Then
 the reference frame is created and the kinematics are done. ::
 
-  >> from sympy import symbols
-  >> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
-  >> from sympy.physics.mechanics import RigidBody, Particle, Point, outer
-  >> from sympy.physics.mechanics import linear_momentum, angular_momentum
-  >> m, M, l1 = symbols('m M l1')
-  >> q1d = dynamicsymbols('q1d')
-  >> N = ReferenceFrame('N')
-  >> O = Point('O')
-  >> O.set_vel(N, 0 * N.x)
-  >> Ac = O.locatenew('Ac', l1 * N.x)
-  >> P = Ac.locatenew('P', l1 * N.x)
-  >> a = ReferenceFrame('a')
-  >> a.set_ang_vel(N, q1d * N.z)
-  >> Ac.v2pt_theory(O, N, a)
-  >> P.v2pt_theory(O, N, a)
+  >>> from sympy import symbols
+  >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+  >>> from sympy.physics.mechanics import RigidBody, Particle, Point, outer
+  >>> from sympy.physics.mechanics import linear_momentum, angular_momentum
+  >>> m, M, l1 = symbols('m M l1')
+  >>> q1d = dynamicsymbols('q1d')
+  >>> N = ReferenceFrame('N')
+  >>> O = Point('O')
+  >>> O.set_vel(N, 0 * N.x)
+  >>> Ac = O.locatenew('Ac', l1 * N.x)
+  >>> P = Ac.locatenew('P', l1 * N.x)
+  >>> a = ReferenceFrame('a')
+  >>> a.set_ang_vel(N, q1d * N.z)
+  >>> Ac.v2pt_theory(O, N, a)
+  l1*q1d*N.y
+  >>> P.v2pt_theory(O, N, a)
+  2*l1*q1d*N.y
 
 Finally, the bodies that make up the system are created. In this case the
 system consists of a particle Pa and a RigidBody A. ::
 
-  >> Pa = Particle('Pa', P, m)
-  >> I = outer(N.z, N.z)
-  >> A = RigidBody('A', Ac, a, M, (I, Ac))
+  >>> Pa = Particle('Pa', P, m)
+  >>> I = outer(N.z, N.z)
+  >>> A = RigidBody('A', Ac, a, M, (I, Ac))
 
 Then one can either choose to evaluate the momenta of individual components
 of the system or of the entire system itself. ::
 
-  >> linear_momentum(N,A)
+  >>> linear_momentum(N,A)
   M*l1*q1d*N.y
-  >> angular_momentum(O, N, Pa)
+  >>> angular_momentum(O, N, Pa)
   4*l1**2*m*q1d*N.z
-  >> linear_momentum(N, A, Pa)
+  >>> linear_momentum(N, A, Pa)
   (M*l1*q1d + 2*l1*m*q1d)*N.y
-  >> angular_momentum(O, N, A, Pa)
-  (4*l1**2*m*q1d + q1d)*N.z
+  >>> angular_momentum(O, N, A, Pa)
+  (M*l1**2*q1d + 4*l1**2*m*q1d + q1d)*N.z
 
 It should be noted that the user can determine either momenta in any frame
 in :mod:`mechanics` as the user is allowed to specify the reference frame when
@@ -325,33 +327,34 @@ The following example shows how to use the energy functions in
 As was discussed above in the momenta functions, one first creates the system
 by going through an identical procedure. ::
 
-  >> from sympy import symbols
-  >> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, outer
-  >> from sympy.physics.mechanics import RigidBody, Particle, mechanics_printing
-  >> from symp.physics.mechanics import kinetic_energy, potential_energy, Point
-  >> mechanics_printing()
-  >> m, M, l1, g, h, H = symbols('m M l1 g h H')
-  >> omega = dynamicsymbols('omega')
-  >> N = ReferenceFrame('N')
-  >> O = Point('O')
-  >> O.set_vel(N, 0 * N.x)
-  >> Ac = O.locatenew('Ac', l1 * N.x)
-  >> P = Ac.locatenew('P', l1 * N.x)
-  >> a = ReferenceFrame('a')
-  >> a.set_ang_vel(N, omega * N.z)
-  >> Ac.v2pt_theory(O, N, a)
-  >> P.v2pt_theory(O, N, a)
-  >> Pa = Particle('Pa', P, m)
-  >> I = outer(N.z, N.z)
-  >> A = RigidBody('A', Ac, a, M, (I, Ac))
+  >>> from sympy import symbols
+  >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, outer
+  >>> from sympy.physics.mechanics import RigidBody, Particle
+  >>> from sympy.physics.mechanics import kinetic_energy, potential_energy, Point
+  >>> m, M, l1, g, h, H = symbols('m M l1 g h H')
+  >>> omega = dynamicsymbols('omega')
+  >>> N = ReferenceFrame('N')
+  >>> O = Point('O')
+  >>> O.set_vel(N, 0 * N.x)
+  >>> Ac = O.locatenew('Ac', l1 * N.x)
+  >>> P = Ac.locatenew('P', l1 * N.x)
+  >>> a = ReferenceFrame('a')
+  >>> a.set_ang_vel(N, omega * N.z)
+  >>> Ac.v2pt_theory(O, N, a)
+  l1*omega*N.y
+  >>> P.v2pt_theory(O, N, a)
+  2*l1*omega*N.y
+  >>> Pa = Particle('Pa', P, m)
+  >>> I = outer(N.z, N.z)
+  >>> A = RigidBody('A', Ac, a, M, (I, Ac))
 
 The user can then determine the kinetic energy of any number of entities of the
 system: ::
 
-  >> kinetic_energy(N, Pa)
-  2*l1**2*m*q1d**2
-  >> kinetic_energy(N, Pa, A)
-  M*l1**2*q1d**2/2 + 2*l1**2*m*q1d**2 + q1d**2/2
+  >>> kinetic_energy(N, Pa)
+  2*l1**2*m*omega(t)**2
+  >>> kinetic_energy(N, Pa, A)
+  M*l1**2*omega(t)**2/2 + 2*l1**2*m*omega(t)**2 + omega(t)**2/2
 
 It should be noted that the user can determine either kinetic energy relative
 to any frame in :mod:`mechanics` as the user is allowed to specify the
@@ -363,14 +366,15 @@ every entity of the system using the :mod:`potential_energy` property. The
 potential energy of any number of entities comprising the system can then be
 determined: ::
 
-  >> Pa.potential_energy = m * g * h
-  >> A.potential_energy = M * g * H
-  >> potential_energy(A, Pa)
+  >>> Pa.potential_energy = m * g * h
+  >>> A.potential_energy = M * g * H
+  >>> potential_energy(A, Pa)
   H*M*g + g*h*m
 
 One can also determine the Lagrangian for this system: ::
 
-  >> Lagrangian(Pa, A)
-  -H*M*g + M*l1**2*q1d**2/2 - g*h*m + 2*l1**2*m*q1d**2 + q1d**2/2
+  >>> from sympy.physics.mechanics import Lagrangian
+  >>> Lagrangian(N, Pa, A)
+  -H*M*g + M*l1**2*omega(t)**2/2 - g*h*m + 2*l1**2*m*omega(t)**2 + omega(t)**2/2
 
 Please refer to the docstrings to learn more about each function.

@@ -133,7 +133,7 @@ class KroneckerDelta(Function):
     is_integer = True
 
     @classmethod
-    def eval(cls, i, j):
+    def eval(cls, i, j, delta_range=None):
         """
         Evaluates the discrete delta function.
 
@@ -155,6 +155,18 @@ class KroneckerDelta(Function):
         # indirect doctest
 
         """
+
+        if delta_range is not None:
+            dinf, dsup = delta_range
+            if (dinf - i > 0) == True:
+                return S.Zero
+            if (dinf - j > 0) == True:
+                return S.Zero
+            if (dsup - i < 0) == True:
+                return S.Zero
+            if (dsup - j < 0) == True:
+                return S.Zero
+
         diff = i - j
         if diff.is_zero:
             return S.One
@@ -171,7 +183,15 @@ class KroneckerDelta(Function):
         # following lines will check if inputs are in order
         # if not, will return KroneckerDelta with correct order
         if i is not min(i, j, key=default_sort_key):
-            return cls(j, i)
+            if delta_range:
+                return cls(j, i, delta_range)
+            else:
+                return cls(j, i)
+
+    @property
+    def delta_range(self):
+        if len(self.args) > 2:
+            return self.args[2]
 
     def _eval_power(self, expt):
         if expt.is_positive:
@@ -444,3 +464,9 @@ class KroneckerDelta(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.kronecker_delta(self.args[0]._sage_(), self.args[1]._sage_())
+
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.core.relational import Ne
+        i, j = args
+        return Piecewise((0, Ne(i, j)), (1, True))

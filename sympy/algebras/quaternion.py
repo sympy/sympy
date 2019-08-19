@@ -10,9 +10,7 @@ from sympy import trigsimp
 from sympy import integrate
 from sympy import Matrix, Add, Mul
 from sympy import sympify
-from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.expr import Expr
-from sympy.core.numbers import Integer
 
 
 class Quaternion(Expr):
@@ -321,14 +319,14 @@ class Quaternion(Expr):
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> from sympy import symbols
+        >>> from sympy import Symbol
         >>> q1 = Quaternion(1, 2, 3, 4)
         >>> q2 = Quaternion(5, 6, 7, 8)
         >>> Quaternion._generic_mul(q1, q2)
         (-60) + 12*i + 30*j + 24*k
         >>> Quaternion._generic_mul(q1, 2)
         2 + 4*i + 6*j + 8*k
-        >>> x = symbols('x', real = True)
+        >>> x = Symbol('x', real = True)
         >>> Quaternion._generic_mul(q1, x)
         x + 2*x*i + 3*x*j + 4*x*k
 
@@ -421,22 +419,23 @@ class Quaternion(Expr):
         >>> q.pow(4)
         668 + (-224)*i + (-336)*j + (-448)*k
         """
+        p = sympify(p)
         q = self
         if p == -1:
             return q.inverse()
         res = 1
 
+        if not p.is_Integer:
+            return NotImplemented
+
         if p < 0:
             q, p = q.inverse(), -p
 
-        if not (isinstance(p, (Integer, SYMPY_INTS))):
-            return NotImplemented
-
         while p > 0:
-            if p & 1:
+            if p % 2 == 1:
                 res = q * res
 
-            p = p >> 1
+            p = p//2
             q = q * q
 
         return res
@@ -597,14 +596,8 @@ class Quaternion(Expr):
         2*pi/3
         """
         q = self
-        try:
-            # Skips it if it doesn't know whether q.a is negative
-            if q.a < 0:
-                # avoid error with acos
-                # axis and angle of rotation of q and q*-1 will be the same
-                q = q * -1
-        except BaseException:
-            pass
+        if q.a.is_negative:
+            q = q * -1
 
         q = q.normalize()
         angle = trigsimp(2 * acos(q.a))

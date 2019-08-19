@@ -1352,6 +1352,9 @@ class Derivative(Expr):
             if zero:
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
+                elif isinstance(expr, MatrixExpr):
+                    from sympy import ZeroMatrix
+                    return ZeroMatrix(*expr.shape)
                 elif expr.is_scalar:
                     return S.Zero
 
@@ -1641,7 +1644,11 @@ class Derivative(Expr):
 
     @property
     def free_symbols(self):
-        return self.expr.free_symbols
+        ret = self.expr.free_symbols
+        # Add symbolic counts to free_symbols
+        for var, count in self.variable_count:
+            ret.update(count.free_symbols)
+        return ret
 
     def _eval_subs(self, old, new):
         # The substitution (old, new) cannot be done inside
@@ -1820,6 +1827,14 @@ class Derivative(Expr):
         >>> xl = [x-h, x+h, x+e*h]
         >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
         2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/...
+
+        To approximate ``Derivative`` around ``x0`` using a non-equidistant
+        spacing step, the algorithm supports assignment of undefined
+        functions to ``points``:
+
+        >>> dx = Function('dx')
+        >>> f(x).diff(x).as_finite_difference(points=dx(x), x0=x-h)
+        -f(-h + x - dx(-h + x)/2)/dx(-h + x) + f(-h + x + dx(-h + x)/2)/dx(-h + x)
 
         Partial derivatives are also supported:
 

@@ -16,6 +16,7 @@ from sympy.logic.boolalg import (
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean)
+from sympy.assumptions.cnf import CNF
 
 from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.utilities import cartes
@@ -501,6 +502,15 @@ def test_to_cnf():
     assert to_cnf(Equivalent(A, B | C), True) == \
         And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
     assert to_cnf(A + 1) == A + 1
+
+def test_to_CNF():
+    assert CNF.CNF_to_cnf(CNF.to_CNF(~(B | C))) == to_cnf(~(B | C))
+    assert CNF.CNF_to_cnf(CNF.to_CNF((A & B) | C)) == to_cnf((A & B) | C)
+    assert CNF.CNF_to_cnf(CNF.to_CNF(A >> B)) == to_cnf(A >> B)
+    assert CNF.CNF_to_cnf(CNF.to_CNF(A >> (B & C))) == to_cnf(A >> (B & C))
+    assert CNF.CNF_to_cnf(CNF.to_CNF(A & (B | C) | ~A & (B | C))) == to_cnf(A & (B | C) | ~A & (B | C))
+    assert CNF.CNF_to_cnf(CNF.to_CNF(A & B)) == to_cnf(A & B)
+
 
 
 def test_to_dnf():
@@ -1062,3 +1072,10 @@ def test_relational_simplification_patterns_numerically():
                 assert originalvalue == simplifiedvalue, "Original: {}\nand"\
                     " simplified: {}\ndo not evaluate to the same value for"\
                     "{}".format(original, simplified, sublist)
+
+
+def test_issue_16803():
+    n = symbols('n')
+    # No simplification done, but should not raise an exception
+    assert ((n > 3) | (n < 0) | ((n > 0) & (n < 3))).simplify() == \
+        ((n > 3) | (n < 0) | ((n > 0) & (n < 3)))

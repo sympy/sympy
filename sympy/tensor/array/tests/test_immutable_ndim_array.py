@@ -24,13 +24,13 @@ def test_ndim_array_initiation():
     arr_with_one_element = ImmutableDenseNDimArray([23])
     assert len(arr_with_one_element) == 1
     assert arr_with_one_element[0] == 23
-    assert arr_with_one_element[:] == [23]
+    assert arr_with_one_element[:] == ImmutableDenseNDimArray([23])
     assert arr_with_one_element.rank() == 1
 
     arr_with_symbol_element = ImmutableDenseNDimArray([Symbol('x')])
     assert len(arr_with_symbol_element) == 1
     assert arr_with_symbol_element[0] == Symbol('x')
-    assert arr_with_symbol_element[:] == [Symbol('x')]
+    assert arr_with_symbol_element[:] == ImmutableDenseNDimArray([Symbol('x')])
     assert arr_with_symbol_element.rank() == 1
 
     number5 = 5
@@ -84,12 +84,13 @@ def test_ndim_array_initiation():
     raises(ValueError, lambda: vector_with_long_shape[long(5)])
 
     from sympy.abc import x
-    rank_zero_array = ImmutableDenseNDimArray(x)
-    assert len(rank_zero_array) == 1
-    assert rank_zero_array.shape == ()
-    assert rank_zero_array.rank() == 0
-    assert rank_zero_array[()] == x
-    assert rank_zero_array[0] == x
+    for ArrayType in [ImmutableDenseNDimArray, ImmutableSparseNDimArray]:
+        rank_zero_array = ArrayType(x)
+        assert len(rank_zero_array) == 1
+        assert rank_zero_array.shape == ()
+        assert rank_zero_array.rank() == 0
+        assert rank_zero_array[()] == x
+        raises(ValueError, lambda: rank_zero_array[0])
 
 
 def test_reshape():
@@ -118,14 +119,13 @@ def test_getitem():
 
     raises(ValueError, lambda: array[3, 4, 5])
     raises(ValueError, lambda: array[3, 4, 5, 6])
+    raises(ValueError, lambda: array[3, 4, 5, 3:4])
 
 
 def test_iterator():
     array = ImmutableDenseNDimArray(range(4), (2, 2))
-    j = 0
-    for i in array:
-        assert i == j
-        j += 1
+    array[0] == ImmutableDenseNDimArray([0, 1])
+    array[1] == ImmutableDenseNDimArray([2, 3])
 
     array = array.reshape(4)
     j = 0
@@ -140,10 +140,10 @@ def test_sparse():
     # dictionary where all data is, only non-zero entries are actually stored:
     assert len(sparse_array._sparse_array) == 1
 
-    assert list(sparse_array) == [0, 0, 0, 1]
+    assert sparse_array.tolist() == [[0, 0], [0, 1]]
 
-    for i, j in zip(sparse_array, [0, 0, 0, 1]):
-        assert i == j
+    for i, j in zip(sparse_array, [[0, 0], [0, 1]]):
+        assert i == ImmutableSparseNDimArray(j)
 
     def sparse_assignment():
         sparse_array[0, 0] = 123
@@ -179,14 +179,14 @@ def test_calculation():
 
     c = a + b
     for i in c:
-        assert i == 10
+        assert i == ImmutableDenseNDimArray([10, 10, 10])
 
     assert c == ImmutableDenseNDimArray([10]*9, (3, 3))
     assert c == ImmutableSparseNDimArray([10]*9, (3, 3))
 
     c = b - a
     for i in c:
-        assert i == 8
+        assert i == ImmutableDenseNDimArray([8, 8, 8])
 
     assert c == ImmutableDenseNDimArray([8]*9, (3, 3))
     assert c == ImmutableSparseNDimArray([8]*9, (3, 3))
@@ -332,7 +332,7 @@ def test_rebuild_immutable_arrays():
 def test_slices():
     md = ImmutableDenseNDimArray(range(10, 34), (2, 3, 4))
 
-    assert md[:] == md._array
+    assert md[:] == ImmutableDenseNDimArray(range(10, 34), (2, 3, 4))
     assert md[:, :, 0].tomatrix() == Matrix([[10, 14, 18], [22, 26, 30]])
     assert md[0, 1:2, :].tomatrix() == Matrix([[14, 15, 16, 17]])
     assert md[0, 1:3, :].tomatrix() == Matrix([[14, 15, 16, 17], [18, 19, 20, 21]])
@@ -341,8 +341,7 @@ def test_slices():
     sd = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
     assert sd == ImmutableSparseNDimArray(md)
 
-    assert sd[:] == md._array
-    assert sd[:] == list(sd)
+    assert sd[:] == ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
     assert sd[:, :, 0].tomatrix() == Matrix([[10, 14, 18], [22, 26, 30]])
     assert sd[0, 1:2, :].tomatrix() == Matrix([[14, 15, 16, 17]])
     assert sd[0, 1:3, :].tomatrix() == Matrix([[14, 15, 16, 17], [18, 19, 20, 21]])

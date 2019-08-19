@@ -1,12 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic
+from sympy.core import Basic, Expr
 from sympy.core.sympify import _sympify
 from sympy.matrices.expressions.transpose import transpose
-from sympy.matrices.expressions.matexpr import MatrixExpr
 
 
-class DotProduct(MatrixExpr):
+class DotProduct(Expr):
     """
     Dot product of vector matrices
 

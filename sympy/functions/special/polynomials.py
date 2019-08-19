@@ -601,7 +601,7 @@ class chebyshevu(OrthogonalPolynomial):
                 if n == S.NegativeOne:
                     # n can not be -1 here
                     return S.Zero
-                else:
+                elif not (-n - 2).could_extract_minus_sign():
                     return -chebyshevu(-n - 2, x)
             # We can evaluate for some special values of x
             if x == S.Zero:
@@ -783,7 +783,7 @@ class legendre(OrthogonalPolynomial):
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * legendre(n, -x)
             # L_{-n}(x)  --->  L_{n-1}(x)
-            if n.could_extract_minus_sign():
+            if n.could_extract_minus_sign() and not(-n - 1).could_extract_minus_sign():
                 return legendre(-n - S.One, x)
             # We can evaluate for some special values of x
             if x == S.Zero:
@@ -1088,12 +1088,14 @@ class laguerre(OrthogonalPolynomial):
 
     @classmethod
     def eval(cls, n, x):
+        if n.is_integer is False:
+            raise ValueError("Error: n should be an integer.")
         if not n.is_Number:
             # Symbolic result L_n(x)
             # L_{n}(-x)  --->  exp(-x) * L_{-n-1}(x)
             # L_{-n}(x)  --->  exp(x) * L_{n-1}(-x)
-            if n.could_extract_minus_sign():
-                return exp(x) * laguerre(n - 1, -x)
+            if n.could_extract_minus_sign() and not(-n - 1).could_extract_minus_sign():
+                return exp(x)*laguerre(-n - 1, -x)
             # We can evaluate for some special values of x
             if x == S.Zero:
                 return S.One
@@ -1102,10 +1104,8 @@ class laguerre(OrthogonalPolynomial):
             elif x == S.Infinity:
                 return S.NegativeOne**n * S.Infinity
         else:
-            # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
-                raise ValueError(
-                    "The index n must be nonnegative integer (got %r)" % n)
+                return exp(x)*laguerre(-n - 1, -x)
             else:
                 return cls._eval_at_order(n, x)
 
@@ -1123,8 +1123,10 @@ class laguerre(OrthogonalPolynomial):
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
         from sympy import Sum
         # Make sure n \in N_0
-        if n.is_negative or n.is_integer is False:
-            raise ValueError("Error: n should be a non-negative integer.")
+        if n.is_negative:
+            return exp(x) * self._eval_rewrite_as_polynomial(-n - 1, -x, **kwargs)
+        if n.is_integer is False:
+            raise ValueError("Error: n should be an integer.")
         k = Dummy("k")
         kern = RisingFactorial(-n, k) / factorial(k)**2 * x**k
         return Sum(kern, (k, 0, n))
@@ -1193,7 +1195,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Laguerre_polynomial#Assoc_laguerre_polynomials
+    .. [1] https://en.wikipedia.org/wiki/Laguerre_polynomial#Generalized_Laguerre_polynomials
     .. [2] http://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/

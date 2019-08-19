@@ -206,6 +206,18 @@ class LatexPrinter(Printer):
         else:
             return self._print(item)
 
+    def parenthesize_super(self, s):
+        """ Parenthesize s if there is a superscript in s"""
+        if "^" in s:
+            return r"\left({}\right)".format(s)
+        return s
+
+    def embed_super(self, s):
+        """ Embed s in {} if there is a superscript in s"""
+        if "^" in s:
+            return "{{{}}}".format(s)
+        return s
+
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
 
@@ -659,7 +671,7 @@ class LatexPrinter(Printer):
         return self._print(expr.label)
 
     def _print_Derivative(self, expr):
-        if requires_partial(expr):
+        if requires_partial(expr.expr):
             diff_symbol = r'\partial'
         else:
             diff_symbol = r'd'
@@ -671,12 +683,14 @@ class LatexPrinter(Printer):
             if num == 1:
                 tex += r"%s %s" % (diff_symbol, self._print(x))
             else:
-                tex += r"%s %s^{%s}" % (diff_symbol, self._print(x), num)
+                tex += r"%s %s^{%s}" % (diff_symbol,
+                                        self.parenthesize_super(self._print(x)),
+                                        self._print(num))
 
         if dim == 1:
             tex = r"\frac{%s}{%s}" % (diff_symbol, tex)
         else:
-            tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, dim, tex)
+            tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
@@ -830,7 +844,7 @@ class LatexPrinter(Printer):
         return self._hprint_Function(str(expr))
 
     def _print_ElementwiseApplyFunction(self, expr):
-        return r"%s\left({%s}\ldots\right)" % (
+        return r"{%s}_{\circ}\left({%s}\right)" % (
             self._print(expr.function),
             self._print(expr.expr),
         )
@@ -938,7 +952,7 @@ class LatexPrinter(Printer):
         if isinstance(e.args[0], Implies):
             return self._print_Implies(e.args[0], r"\not\Rightarrow")
         if (e.args[0].is_Boolean):
-            return r"\neg (%s)" % self._print(e.args[0])
+            return r"\neg \left(%s\right)" % self._print(e.args[0])
         else:
             return r"\neg %s" % self._print(e.args[0])
 
@@ -1280,6 +1294,15 @@ class LatexPrinter(Printer):
             return r"\zeta^{%s}%s" % (self._print(exp), tex)
         return r"\zeta%s" % tex
 
+    def _print_stieltjes(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"_{%s}\left(%s\right)" % tuple(map(self._print, expr.args))
+        else:
+            tex = r"_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            return r"\gamma%s^{%s}" % (tex, self._print(exp))
+        return r"\gamma%s" % tex
+
     def _print_lerchphi(self, expr, exp=None):
         tex = r"\left(%s, %s, %s\right)" % tuple(map(self._print, expr.args))
         if exp is None:
@@ -1369,6 +1392,24 @@ class LatexPrinter(Printer):
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
         return tex
+
+    def __print_mathieu_functions(self, character, args, prime=False, exp=None):
+        a, q, z = map(self._print, args)
+        sup = r"^{\prime}" if prime else ""
+        exp = "" if not exp else "^{%s}" % self._print(exp)
+        return r"%s%s\left(%s, %s, %s\right)%s" % (character, sup, a, q, z, exp)
+
+    def _print_mathieuc(self, expr, exp=None):
+        return self.__print_mathieu_functions("C", expr.args, exp=exp)
+
+    def _print_mathieus(self, expr, exp=None):
+        return self.__print_mathieu_functions("S", expr.args, exp=exp)
+
+    def _print_mathieucprime(self, expr, exp=None):
+        return self.__print_mathieu_functions("C", expr.args, prime=True, exp=exp)
+
+    def _print_mathieusprime(self, expr, exp=None):
+        return self.__print_mathieu_functions("S", expr.args, prime=True, exp=exp)
 
     def _print_Rational(self, expr):
         if expr.q != 1:
@@ -1575,7 +1616,10 @@ class LatexPrinter(Printer):
             map(lambda arg: parens(arg, prec, strict=True), args))
 
     def _print_HadamardPower(self, expr):
-        template = r"%s^{\circ {%s}}"
+        if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
+            template = r"%s^{\circ \left({%s}\right)}"
+        else:
+            template = r"%s^{\circ {%s}}"
         return self._helper_print_standard_power(expr, template)
 
     def _print_KroneckerProduct(self, expr):
@@ -1732,6 +1776,13 @@ class LatexPrinter(Printer):
 
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
+
+    def _print_frac(self, expr, exp=None):
+        if exp is None:
+            return r"\operatorname{frac}{\left(%s\right)}" % self._print(expr.args[0])
+        else:
+            return r"\operatorname{frac}{\left(%s\right)}^{%s}" % (
+                    self._print(expr.args[0]), self._print(exp))
 
     def _print_tuple(self, expr):
         if self._settings['decimal_separator'] =='comma':
@@ -2221,7 +2272,10 @@ class LatexPrinter(Printer):
         return self._print(Symbol(object.name))
 
     def _print_LambertW(self, expr):
-        return r"W\left(%s\right)" % self._print(expr.args[0])
+        if len(expr.args) == 1:
+            return r"W\left(%s\right)" % self._print(expr.args[0])
+        return r"W_{%s}\left(%s\right)" % \
+            (self._print(expr.args[1]), self._print(expr.args[0]))
 
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)

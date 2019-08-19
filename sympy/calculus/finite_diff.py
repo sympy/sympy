@@ -167,6 +167,9 @@ def finite_diff_weights(order, x_list, x0=S.One):
 
     """
     # The notation below closely corresponds to the one used in the paper.
+    order = S(order)
+    if not order.is_number:
+        raise ValueError("Cannot handle symbolic order.")
     if order < 0:
         raise ValueError("Negative derivative order illegal.")
     if int(order) != order:
@@ -387,6 +390,8 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
         x0 = wrt
 
     if not iterable(points):
+        if getattr(points, 'is_Function', False) and wrt in points.args:
+            points = points.subs(wrt, x0)
         # points is simply the step-size, let's make it a
         # equidistant sequence centered around x0
         if order % 2 == 0:
@@ -412,6 +417,10 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
 as_finite_diff = deprecated(
     useinstead="Derivative.as_finite_difference",
     deprecated_since_version="1.1", issue=11410)(_as_finite_diff)
+
+as_finite_diff.__doc__ = """
+    Deprecated function. Use Diff.as_finite_difference instead.
+    """
 
 
 def differentiate_finite(expr, *symbols,
