@@ -12,6 +12,10 @@ def test_PermutationGroup():
     g = G.underlying_set()
     assert g == UnderlyingSetOf(G)
 
+    assert a in g
+    assert b in g
+    assert a*b in g
+
     g = g.rewrite(FiniteSet)
     expected_members = [
         Permutation([0, 1, 2]),
