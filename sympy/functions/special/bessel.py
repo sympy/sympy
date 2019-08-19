@@ -1662,7 +1662,7 @@ class airybiprime(AiryBase):
                     return S.Half * (sqrt(3)*(pf - S.One)*airyaiprime(newarg) + (pf + S.One)*airybiprime(newarg))
 
 
-class marcum_q(Function):
+class marcumq(Function):
     r"""
     The Marcum Q-function
 
@@ -1674,30 +1674,30 @@ class marcum_q(Function):
     Examples
     ========
 
-    >>> from sympy import marcum_q
+    >>> from sympy import marcumq
     >>> from sympy.abc import m, a, b, x
-    >>> marcum_q(m, a, b)
-    marcum_q(m, a, b)
+    >>> marcumq(m, a, b)
+    marcumq(m, a, b)
 
     Special values:
 
-    >>> marcum_q(m, 0, b)
+    >>> marcumq(m, 0, b)
     uppergamma(m, b**2/2)/gamma(m)
-    >>> marcum_q(0, 0, 0)
+    >>> marcumq(0, 0, 0)
     0
-    >>> marcum_q(0, a, 0)
+    >>> marcumq(0, a, 0)
     1 - exp(-a**2/2)
-    >>> marcum_q(1, a, a)
+    >>> marcumq(1, a, a)
     1/2 + exp(-a**2)*besseli(0, a**2)/2
-    >>> marcum_q(2, a, a)
+    >>> marcumq(2, a, a)
     1/2 + exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2)
 
     Differentiation with respect to a and b is supported:
 
     >>> from sympy import diff
-    >>> diff(marcum_q(m, a, b), a)
-    a*(-marcum_q(m, a, b) + marcum_q(m + 1, a, b))
-    >>> diff(marcum_q(m, a, b), b)
+    >>> diff(marcumq(m, a, b), a)
+    a*(-marcumq(m, a, b) + marcumq(m + 1, a, b))
+    >>> diff(marcumq(m, a, b), b)
     -a**(1 - m)*b**m*exp(-a**2/2 - b**2/2)*besseli(m - 1, a*b)
 
     References
@@ -1728,7 +1728,7 @@ class marcum_q(Function):
         from sympy import exp
         m, a, b = self.args
         if argindex == 2:
-            return a * (-marcum_q(m, a, b) + marcum_q(1+m, a, b))
+            return a * (-marcumq(m, a, b) + marcumq(1+m, a, b))
         elif argindex == 3:
             return (-b**m / a**(m-1)) * exp(-(a**2 + b**2)/2) * besseli(m-1, a*b)
         else:

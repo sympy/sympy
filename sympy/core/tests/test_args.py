@@ -2064,9 +2064,9 @@ def test_sympy__functions__special__bessel__airybiprime():
     assert _test_args(airybiprime(2))
 
 
-def test_sympy__functions__special__bessel__marcum_q():
-    from sympy.functions.special.bessel import marcum_q
-    assert _test_args(marcum_q(x, y, z))
+def test_sympy__functions__special__bessel__marcumq():
+    from sympy.functions.special.bessel import marcumq
+    assert _test_args(marcumq(x, y, z))
 
 
 def test_sympy__functions__special__elliptic_integrals__elliptic_k():
