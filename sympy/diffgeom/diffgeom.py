@@ -1120,6 +1120,7 @@ class TensorArray:
     >>> metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
     >>> rm = TensorArray(components=metric_to_Riemann_components(metric), variance=[-1,1,1,1],coordinate_system=cs)  #Note the variance!
     """
+
     def _contravariant_slots(self,T):
         slots=[]
         for k in range(self.order):
@@ -1130,6 +1131,7 @@ class TensorArray:
             except:
                 slots.append(k)
         return slots
+
     def _init_from_tensor(self,T, kwargs):
         try:
             self.CoordSystem = kwargs['coordinate_system']
@@ -1171,6 +1173,7 @@ class TensorArray:
                 else:
                     indices.remove(p)
         self.tensor = dict(zip(indices,coeffs))
+
     def to_NDimArray(self):
         """
         Converts from internal sparse dict representation to sympy.tensor.MutableSparseNDimArray
@@ -1195,6 +1198,7 @@ class TensorArray:
         for (index,coeffs) in list(self.tensor.items()):
             a[index] = coeffs
         return a
+
     def _init_from_array(self,component_array,variance,coordinate_system):
         self.CoordSystem = coordinate_system
         self.coords = self.CoordSystem.coord_functions()
@@ -1208,6 +1212,7 @@ class TensorArray:
         self.contravariant_order = len(self.contravariant_slots)
         indices = list(itertools.product(range(self.n),repeat=self.order))
         self.tensor = dict(zip(indices,component_array))
+
     def __init__(self, *args, **kwargs):
         if args != ():
             if len(args) != 1:
@@ -1216,6 +1221,7 @@ class TensorArray:
             self._init_from_tensor(T,kwargs)
         else:
             self._init_from_array(kwargs['components'],kwargs['variance'],kwargs['coordinate_system'])
+
     def to_tensor(self):
         def dualbasishelper(p,k):
             if self.contravariant_slots.count(k) == 0:
@@ -1226,16 +1232,19 @@ class TensorArray:
             [dualbasishelper(I,k) for k in range(self.order)] for I in self.indices()
         ]
         return sum([TensorProduct(*dxI) * TI for (dxI,TI) in zip(Tbasesdual,self.components())])
+
     def indices(self):
         """
         Indices with nonzero components
         """
         return list(self.tensor.keys())
+
     def components(self):
         """
         Nonzero components
         """
         return list(self.tensor.values())
+
     def variance(self,index):
         if self.contravariant_slots.count(index) > 0:
             return 'contravariant'
@@ -1243,6 +1252,7 @@ class TensorArray:
             return 'covariant'
         else:
             raise IndexError
+
     def _TensorProduct(self,other): #destructive tensor product
         if self.CoordSystem != other.CoordSystem:
             raise ValueError("Indexed tensors must come from the same coordinate system")
@@ -1254,10 +1264,12 @@ class TensorArray:
         self.covariant_order += other.covariant_order
         self.contravariant_order += other.contravariant_order
         self.order += other.order
+
     def TensorProduct(self,other):
         new = copy.copy(self) #shallow copy
         new._TensorProduct(other)
         return(new)
+
     def _contract(self,a,b):  #destructive contraction
         if self.variance(a) == self.variance(b):
             raise ValueError("Incompatible variance in contraction.")
@@ -1287,6 +1299,7 @@ class TensorArray:
         ]
         self.covariant_slots=list(range(self.order))
         [self.covariant_slots.remove(i) for i in self.contravariant_slots]
+
     def contract(self,a,b):
         """
         Create a new tensor obtained by contracting on indices a and b.
@@ -1303,6 +1316,7 @@ class TensorArray:
         new = copy.copy(self)
         new._contract(a,b)
         return new
+
     def _braid(self,a,b):  #Destructive braid
         if self.covariant_slots.count(a)!=self.covariant_slots.count(b):
             if self.covariant_slots.count(a)==1:
@@ -1337,6 +1351,7 @@ class TensorArray:
                 self.tensor[key_swapped]=t
             else:
                 self.tensor[key_swapped]=t
+
     def braid(self,a,b):  #Non-destructive braid
         """
         Create a new tensor obtained by swapping indices a and b.
@@ -1353,6 +1368,7 @@ class TensorArray:
         res.tensor = copy.deepcopy(self.tensor)
         res._braid(a,b)
         return res
+
     def _move_index(self,source,target):  #Destructive index move
         if source < target:
             for i in range(source,target):
@@ -1360,6 +1376,7 @@ class TensorArray:
         else:
             for i in range(source,target,-1):
                 self._braid(i,i-1)
+
     def __add__(self,other):
         if self.CoordSystem != other.CoordSystem:
             raise NotImplemented
@@ -1379,12 +1396,14 @@ class TensorArray:
             except KeyError:
                 sum.tensor[k] = v
         return sum
+
     def __mul__(self,c):
         prod = copy.copy(self)
         prod.tensor = {}
         for k, v in self.tensor.items():
             prod.tensor[k] = c*v
         return prod
+
     def __sub__(self,other):
         if self.CoordSystem != other.CoordSystem:
             raise NotImplemented
@@ -1404,6 +1423,7 @@ class TensorArray:
             except KeyError:
                 diff.tensor[k] = -v
         return diff
+
     def zero(self,contraslots,coslots):
         res = copy.copy(self)
         res.tensor={}
@@ -1413,6 +1433,7 @@ class TensorArray:
         res.contravariant_order=len(contraslots)
         res.order = res.covariant_order+res.contravariant_order
         return res
+
     def covD(self,ch2):
         """
         Covariant derivative as a tensor, given the Christoffel symbols of
