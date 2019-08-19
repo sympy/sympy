@@ -18,7 +18,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol, symbols
 from sympy.core.sympify import sympify
-from sympy.functions import exp, factorial
+from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import PurePoly, cancel, roots
@@ -31,7 +31,7 @@ from sympy.utilities.misc import filldedent
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError, NonPositiveDefiniteMatrixError, simplifiedbool)
+    ShapeError, NonPositiveDefiniteMatrixError)
 
 
 def _iszero(x):
@@ -2401,22 +2401,20 @@ class MatrixBase(MatrixDeprecated,
         return sstr(self)
 
     def __str__(self):
-        ssimplified = ', simplified=True' if simplifiedbool(self) else ''
         if self.rows == 0 or self.cols == 0:
-            return 'Matrix(%s, %s, []%s)' % (self.rows, self.cols, ssimplified)
-        return "Matrix(%s%s)" % (str(self.tolist()), ssimplified)
+            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+        return "Matrix(%s)" % str(self.tolist())
 
     def _format_str(self, printer=None):
-        ssimplified = ', simplified=True' if simplifiedbool(self) else ''
         if not printer:
             from sympy.printing.str import StrPrinter
             printer = StrPrinter()
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
-            return 'Matrix(%s, %s, []%s)' % (self.rows, self.cols, ssimplified)
+            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
         if self.rows == 1:
-            return "Matrix([%s]%s)" % (self.table(printer, rowsep=',\n'), ssimplified)
-        return "Matrix([\n%s]%s)" % (self.table(printer, rowsep=',\n'), ssimplified)
+            return "Matrix([%s])" % self.table(printer, rowsep=',\n')
+        return "Matrix([\n%s])" % self.table(printer, rowsep=',\n')
 
     @classmethod
     def irregular(cls, ntop, *matrices, **kwargs):
@@ -3187,7 +3185,20 @@ class MatrixBase(MatrixDeprecated,
         return self.__class__(banded(size, bands))
 
     def exp(self):
-        """Return the exponentiation of a square matrix."""
+        """Return the exponential of a square matrix
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix
+
+        >>> t = Symbol('t')
+        >>> m = Matrix([[0, 1], [-1, 0]]) * t
+        >>> m.exp()
+        Matrix([
+        [    exp(I*t)/2 + exp(-I*t)/2, -I*exp(I*t)/2 + I*exp(-I*t)/2],
+        [I*exp(I*t)/2 - I*exp(-I*t)/2,      exp(I*t)/2 + exp(-I*t)/2]])
+        """
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Exponentiation is valid only for square matrices")
@@ -3208,6 +3219,127 @@ class MatrixBase(MatrixDeprecated,
             return type(self)(re(ret))
         else:
             return type(self)(ret)
+
+    def _eval_matrix_log_jblock(self):
+        """Helper function to compute logarithm of a jordan block.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix
+        >>> l = Symbol('lamda')
+
+        A trivial example of 1*1 Jordan block:
+
+        >>> m = Matrix.jordan_block(1, l)
+        >>> m._eval_matrix_log_jblock()
+        Matrix([[log(lamda)]])
+
+        An example of 3*3 Jordan block:
+
+        >>> m = Matrix.jordan_block(3, l)
+        >>> m._eval_matrix_log_jblock()
+        Matrix([
+        [log(lamda),    1/lamda, -1/(2*lamda**2)],
+        [         0, log(lamda),         1/lamda],
+        [         0,          0,      log(lamda)]])
+        """
+        size = self.rows
+        l = self[0, 0]
+
+        if l.is_zero:
+            raise MatrixError(
+                'Could not take logarithm or reciprocal for the given '
+                'eigenvalue {}'.format(l))
+
+        bands = {0: log(l)}
+        for i in range(1, size):
+            bands[i] = -((-l) ** -i) / i
+
+        from .sparsetools import banded
+        return self.__class__(banded(size, bands))
+
+    def log(self, simplify=cancel):
+        """Return the logarithm of a square matrix
+
+        Parameters
+        ==========
+
+        simplify : function, bool
+            The function to simplify the result with.
+
+            Default is ``cancel``, which is effective to reduce the
+            expression growing for taking reciprocals and inverses for
+            symbolic matrices.
+
+        Examples
+        ========
+
+        >>> from sympy import S, Matrix
+
+        Examples for positive-definite matrices:
+
+        >>> m = Matrix([[1, 1], [0, 1]])
+        >>> m.log()
+        Matrix([
+        [0, 1],
+        [0, 0]])
+
+        >>> m = Matrix([[S(5)/4, S(3)/4], [S(3)/4, S(5)/4]])
+        >>> m.log()
+        Matrix([
+        [     0, log(2)],
+        [log(2),      0]])
+
+        Examples for non positive-definite matrices:
+
+        >>> m = Matrix([[S(3)/4, S(5)/4], [S(5)/4, S(3)/4]])
+        >>> m.log()
+        Matrix([
+        [         I*pi/2, log(2) - I*pi/2],
+        [log(2) - I*pi/2,          I*pi/2]])
+
+        >>> m = Matrix(
+        ...     [[0, 0, 0, 1],
+        ...      [0, 0, 1, 0],
+        ...      [0, 1, 0, 0],
+        ...      [1, 0, 0, 0]])
+        >>> m.log()
+        Matrix([
+        [ I*pi/2,       0,       0, -I*pi/2],
+        [      0,  I*pi/2, -I*pi/2,       0],
+        [      0, -I*pi/2,  I*pi/2,       0],
+        [-I*pi/2,       0,       0,  I*pi/2]])
+        """
+        if not self.is_square:
+            raise NonSquareMatrixError(
+                "Logarithm is valid only for square matrices")
+
+        try:
+            if simplify:
+                P, J = simplify(self).jordan_form()
+            else:
+                P, J = self.jordan_form()
+
+            cells = J.get_diag_blocks()
+        except MatrixError:
+            raise NotImplementedError(
+                "Logarithm is implemented only for matrices for which "
+                "the Jordan normal form can be computed")
+
+        blocks = [
+            cell._eval_matrix_log_jblock()
+            for cell in cells]
+        from sympy.matrices import diag
+        eJ = diag(*blocks)
+
+        if simplify:
+            ret = simplify(P * eJ * simplify(P.inv()))
+            ret = self.__class__(ret)
+        else:
+            ret = P * eJ * P.inv()
+
+        return ret
 
     def gauss_jordan_solve(self, B, freevar=False):
         """
@@ -4049,10 +4181,9 @@ class MatrixBase(MatrixDeprecated,
         zeros = SparseMatrix.zeros
         eye = SparseMatrix.eye
 
-        rsimplified = simplifiedbool(self)
         n, m = self.rows, self.cols
-        U, L, P = self.as_mutable(), eye(n, simplified=rsimplified), eye(n, simplified=rsimplified)
-        DD = zeros(n, n, simplified=rsimplified)
+        U, L, P = self.as_mutable(), eye(n), eye(n)
+        DD = zeros(n, n)
         oldpivot = 1
 
         for k in range(n - 1):
@@ -4130,7 +4261,7 @@ class MatrixBase(MatrixDeprecated,
                 b.zip_row_op(i, j, lambda x, y: x - y * scale)
             scale = A[i, i]
             b.row_op(i, lambda x, _: x / scale)
-        return rhs.__class__(b, simplified=simplifiedbool(self))
+        return rhs.__class__(b)
 
     def multiply(self, b):
         """Returns ``self*b``

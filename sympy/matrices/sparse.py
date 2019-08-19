@@ -12,7 +12,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 
-from .common import a2idx, simplifiedbool, simplifiedcls
+from .common import a2idx
 from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
 
@@ -436,9 +436,9 @@ class SparseMatrix(MatrixBase):
         return rv
 
     @classmethod
-    def _eval_eye(cls, rows, cols, simplified=None):
+    def _eval_eye(cls, rows, cols):
         entries = {(i,i): S.One for i in range(min(rows, cols))}
-        return cls._new(rows, cols, entries, simplified=simplified)
+        return cls._new(rows, cols, entries)
 
     def _eval_has(self, *patterns):
         # if the matrix has any zeros, see if S.Zero
@@ -529,8 +529,8 @@ class SparseMatrix(MatrixBase):
         return [v for k,v in self._smat.items() if not v.is_zero]
 
     @classmethod
-    def _eval_zeros(cls, rows, cols, simplified=None):
-        return cls._new(rows, cols, {}, simplified=simplified)
+    def _eval_zeros(cls, rows, cols):
+        return cls._new(rows, cols, {})
 
     def _LDL_solve(self, rhs):
         # for speed reasons, this is not uncommented, but if you are
@@ -651,7 +651,7 @@ class SparseMatrix(MatrixBase):
     def as_immutable(self):
         """Returns an Immutable version of this Matrix."""
         from .immutable import ImmutableSparseMatrix
-        return ImmutableSparseMatrix(self, simplified=simplifiedbool(self))
+        return ImmutableSparseMatrix(self)
 
     def as_mutable(self):
         """Returns a mutable version of this matrix.
@@ -668,7 +668,7 @@ class SparseMatrix(MatrixBase):
         [1, 2],
         [3, 5]])
         """
-        return MutableSparseMatrix(self, simplified=simplifiedbool(self))
+        return MutableSparseMatrix(self)
 
     def cholesky(self):
         """
@@ -964,7 +964,6 @@ class SparseMatrix(MatrixBase):
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod
     def _new(cls, *args, **kwargs):
-        cls = simplifiedcls(cls, kwargs.get('simplified'), args)
         return cls(*args)
 
     def __setitem__(self, key, value):

@@ -1,5 +1,6 @@
 from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
-                   Function, Product, Rational, Sum, oo, exp, log, S, pi)
+                   Function, Product, Rational, Sum, oo, exp, log, S, pi,
+                   KroneckerDelta)
 from sympy.utilities.pytest import raises
 from sympy import simplify
 
@@ -234,6 +235,12 @@ def test__eval_product():
     assert product(2*a(i), (i, 1, n)) == 2**n * Product(a(i), (i, 1, n))
     # issue 4810
     assert product(2**i, (i, 1, n)) == 2**(n/2 + n**2/2)
+    k, m = symbols('k m', integer=True)
+    assert product(2**i, (i, k, m)) == 2**(-k**2/2 + k/2 + m**2/2 + m/2)
+    n = Symbol('n', negative=True, integer=True)
+    p = Symbol('p', positive=True, integer=True)
+    assert product(2**i, (i, n, p)) == 2**(-n**2/2 + n/2 + p**2/2 + p/2)
+    assert product(2**i, (i, p, n)) == 2**(n**2/2 + n/2 - p**2/2 + p/2)
 
 
 def test_product_pow():
@@ -259,6 +266,10 @@ def test_conjugate_transpose():
     assert p.conjugate().doit() == p.doit().conjugate()
     assert p.transpose().doit() == p.doit().transpose()
 
+    p = Product(B**k*A, (k, 1, 3))
+    assert p.adjoint().doit() == p.doit().adjoint()
+    assert p.conjugate().doit() == p.doit().conjugate()
+    assert p.transpose().doit() == p.doit().transpose()
 
 def test_simplify_prod():
     y, t, b, c = symbols('y, t, b, c', integer = True)
@@ -371,3 +382,8 @@ def test_issue_14036():
 def test_rewrite_Sum():
     assert Product(1 - S.Half**2/k**2, (k, 1, oo)).rewrite(Sum) == \
         exp(Sum(log(1 - 1/(4*k**2)), (k, 1, oo)))
+
+
+def test_KroneckerDelta_Product():
+    y = Symbol('y')
+    assert Product(x*KroneckerDelta(x, y), (x, 0, 1)).doit() == 0

@@ -1302,3 +1302,13 @@ def test_eval_rewrite_as_KroneckerDelta():
 
     p22 = Piecewise((0, ~((Eq(y, -1) | Ne(x, 0)) & (Ne(x, 1) | Ne(y, -1)))), (1, True))
     assert f(p22) == K(-1, y)*K(0, x) - K(-1, y)*K(1, x) - K(0, x) + 1
+
+
+@slow
+def test_identical_conds_issue():
+    from sympy.stats import Uniform, density
+    u1 = Uniform('u1', 0, 1)
+    u2 = Uniform('u2', 0, 1)
+    # Result is quite big, so not really important here (and should ideally be
+    # simpler). Should not give an exception though.
+    density(u1 + u2)

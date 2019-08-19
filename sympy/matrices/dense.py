@@ -13,8 +13,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, fastalgsimp, \
-    simplifiedbool, simplifiedcls
+    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -163,8 +162,7 @@ class DenseMatrix(MatrixBase):
         # we assume both arguments are dense matrices since
         # sparse matrices have a higher priority
         mat = [a + b for a,b in zip(self._mat, other._mat)]
-        return classof(self, other)._new(self.rows, self.cols, mat, copy=False,
-            simplified=simplifiedbool(self, other))
+        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_extract(self, rowsList, colsList):
         mat = self._mat
@@ -173,20 +171,14 @@ class DenseMatrix(MatrixBase):
         return self._new(len(rowsList), len(colsList),
                          list(mat[i] for i in indices), copy=False)
 
-    def _eval_matrix_mul(self, other, simplified=None):
+    def _eval_matrix_mul(self, other):
         from sympy import Add
-
         # cache attributes for faster access
         self_rows, self_cols = self.rows, self.cols
         other_rows, other_cols = other.rows, other.cols
         other_len = other_rows * other_cols
         new_mat_rows = self.rows
         new_mat_cols = other.cols
-
-        # figure out if simplification is to be done or not
-        rsimplified = simplifiedbool(self, other)
-        if simplified is None:
-            simplified = rsimplified
 
         # preallocate the array
         new_mat = [self.zero]*new_mat_rows*new_mat_cols
@@ -201,30 +193,22 @@ class DenseMatrix(MatrixBase):
                 row, col = i // new_mat_cols, i % new_mat_cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
                 col_indices = range(col, other_len, other_cols)
-
-                vec = [None]*self_cols
-                for j,a,b in zip(range(self_cols), row_indices, col_indices):
-                    c = mat[a]*other_mat[b]
-                    _expand = simplified and getattr(c, 'expand', None)
-                    vec[j] = _expand(power_base=False, power_exp=False, log=False, \
-                            multinomial=False, basic=False) if _expand else c
+                vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
                 try:
-                    e = Add(*vec)
-                    new_mat[i] = fastalgsimp(e) if simplified else e
+                    new_mat[i] = Add(*vec)
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
                     # initially, and for a matrix, that is a mix of a scalar and
                     # a matrix, which raises a TypeError. Fall back to a
                     # block-matrix-safe way to multiply if the `sum` fails.
+                    vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
                     new_mat[i] = reduce(lambda a,b: a + b, vec)
-        return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat,
-            copy=False, simplified=rsimplified)
+        return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):
         mat = [a*b for a,b in zip(self._mat, other._mat)]
-        return classof(self, other)._new(self.rows, self.cols, mat, copy=False,
-            simplified=simplifiedbool(self, other))
+        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using the method indicated (default
@@ -361,8 +345,8 @@ class DenseMatrix(MatrixBase):
         """
         from .immutable import ImmutableDenseMatrix as cls
         if self.rows and self.cols:
-            return cls._new(self.tolist(), simplified=simplifiedbool(self))
-        return cls._new(self.rows, self.cols, [], simplified=simplifiedbool(self))
+            return cls._new(self.tolist())
+        return cls._new(self.rows, self.cols, [])
 
     def as_mutable(self):
         """Returns a mutable version of this matrix
@@ -379,7 +363,7 @@ class DenseMatrix(MatrixBase):
         [1, 2],
         [3, 5]])
         """
-        return Matrix(self, simplified=simplifiedbool(self))
+        return Matrix(self)
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
@@ -450,9 +434,6 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         # if the `copy` flag is set to False, the input
         # was rows, cols, [list].  It should be used directly
         # without creating a copy.
-        cls = simplifiedcls(cls, kwargs.get('simplified'), args)
-        if 'simplified' in kwargs:
-            del kwargs ['simplified']
         if kwargs.get('copy', True) is False:
             if len(args) != 3:
                 raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
@@ -1334,7 +1315,7 @@ def ones(*args, **kwargs):
 
 
 def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
-               percent=100, prng=None, simplified=None):
+               percent=100, prng=None):
     """Create random matrix with dimensions ``r`` x ``c``. If ``c`` is omitted
     the matrix will be square. If ``symmetric`` is True the matrix must be
     square. If ``percent`` is less than 100 then only approximately the given
@@ -1387,7 +1368,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     prng = prng or random.Random(seed)
 
     if not symmetric:
-        m = Matrix._new(r, c, lambda i, j: prng.randint(min, max), simplified=simplified)
+        m = Matrix._new(r, c, lambda i, j: prng.randint(min, max))
         if percent == 100:
             return m
         z = int(r*c*(100 - percent) // 100)
@@ -1399,7 +1380,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     # Symmetric case
     if r != c:
         raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
-    m = zeros(r, simplified=simplified)
+    m = zeros(r)
     ij = [(i, j) for i in range(r) for j in range(i, r)]
     if percent != 100:
         ij = prng.sample(ij, int(len(ij)*percent // 100))

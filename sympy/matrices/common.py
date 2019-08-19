@@ -20,9 +20,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
-from sympy.polys import cancel, together
 from sympy.simplify import simplify as _simplify
-from sympy.simplify.simplify import count_ops
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -58,7 +56,6 @@ class MatrixRequired(object):
     cols = None
     shape = None
     _simplify = None
-    is_Simplified = None
 
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -112,8 +109,7 @@ class MatrixShaping(MatrixRequired):
             return other[i - rows, j]
 
         return classof(self, other)._new(self.rows + other.rows, self.cols,
-                                         lambda i, j: entry(i, j),
-                                         simplified=simplifiedbool(self, other))
+                                         lambda i, j: entry(i, j))
 
     def _eval_extract(self, rowsList, colsList):
         mat = list(self)
@@ -168,8 +164,7 @@ class MatrixShaping(MatrixRequired):
             return other[i, j - cols]
 
         return classof(self, other)._new(self.rows, self.cols + other.cols,
-                                         lambda i, j: entry(i, j),
-                                         simplified=simplifiedbool(self, other))
+                                         lambda i, j: entry(i, j))
 
     def _eval_tolist(self):
         return [list(self[i,:]) for i in range(self.rows)]
@@ -674,18 +669,18 @@ class MatrixSpecial(MatrixRequired):
     """Construction of special matrices"""
 
     @classmethod
-    def _eval_diag(cls, rows, cols, diag_dict, simplified=None):
+    def _eval_diag(cls, rows, cols, diag_dict):
         """diag_dict is a defaultdict containing
         all the entries of the diagonal matrix."""
         def entry(i, j):
             return diag_dict[(i, j)]
-        return cls._new(rows, cols, entry, simplified=simplified)
+        return cls._new(rows, cols, entry)
 
     @classmethod
-    def _eval_eye(cls, rows, cols, simplified=None):
+    def _eval_eye(cls, rows, cols):
         def entry(i, j):
             return cls.one if i == j else cls.zero
-        return cls._new(rows, cols, entry, simplified=simplified)
+        return cls._new(rows, cols, entry)
 
     @classmethod
     def _eval_jordan_block(cls, rows, cols, eigenvalue, band='upper'):
@@ -706,16 +701,16 @@ class MatrixSpecial(MatrixRequired):
         return cls._new(rows, cols, entry)
 
     @classmethod
-    def _eval_ones(cls, rows, cols, simplified=None):
+    def _eval_ones(cls, rows, cols):
         def entry(i, j):
             return cls.one
-        return cls._new(rows, cols, entry, simplified=simplified)
+        return cls._new(rows, cols, entry)
 
     @classmethod
-    def _eval_zeros(cls, rows, cols, simplified=None):
+    def _eval_zeros(cls, rows, cols):
         def entry(i, j):
             return cls.zero
-        return cls._new(rows, cols, entry, simplified=simplified)
+        return cls._new(rows, cols, entry)
 
     @classmethod
     def diag(kls, *args, **kwargs):
@@ -814,7 +809,6 @@ class MatrixSpecial(MatrixRequired):
         klass = kwargs.get('cls', kls)
         strict = kwargs.get('strict', False) # lists -> Matrices
         unpack = kwargs.get('unpack', True)  # unpack single sequence
-        rsimplified = kwargs.get('simplified')
         if unpack and len(args) == 1 and is_sequence(args[0]) and \
                 not isinstance(args[0], MatrixBase):
             args = args[0]
@@ -830,7 +824,7 @@ class MatrixSpecial(MatrixRequired):
                     r, c = _.shape
                     m = _.tolist()
                 else:
-                    m = SparseMatrix(m, simplified=rsimplified)
+                    m = SparseMatrix(m)
                     for (i, j), _ in m._smat.items():
                         diag_entries[(i + rmax, j + cmax)] = _
                     r, c = m.shape
@@ -862,7 +856,7 @@ class MatrixSpecial(MatrixRequired):
             raise ValueError(filldedent('''
                 The constructed matrix is {} x {} but a size of {} x {}
                 was specified.'''.format(rmax, cmax, rows, cols)))
-        return klass._eval_diag(rows, cols, diag_entries, simplified=rsimplified)
+        return klass._eval_diag(rows, cols, diag_entries)
 
     @classmethod
     def eye(kls, rows, cols=None, **kwargs):
@@ -883,7 +877,7 @@ class MatrixSpecial(MatrixRequired):
         klass = kwargs.get('cls', kls)
         rows, cols = as_int(rows), as_int(cols)
 
-        return klass._eval_eye(rows, cols, simplified=kwargs.get('simplified'))
+        return klass._eval_eye(rows, cols)
 
     @classmethod
     def jordan_block(kls, size=None, eigenvalue=None, **kwargs):
@@ -1060,7 +1054,7 @@ class MatrixSpecial(MatrixRequired):
         klass = kwargs.get('cls', kls)
         rows, cols = as_int(rows), as_int(cols)
 
-        return klass._eval_ones(rows, cols, simplified=kwargs.get('simplified'))
+        return klass._eval_ones(rows, cols)
 
     @classmethod
     def zeros(kls, rows, cols=None, **kwargs):
@@ -1081,7 +1075,7 @@ class MatrixSpecial(MatrixRequired):
         klass = kwargs.get('cls', kls)
         rows, cols = as_int(rows), as_int(cols)
 
-        return klass._eval_zeros(rows, cols, simplified=kwargs.get('simplified'))
+        return klass._eval_zeros(rows, cols)
 
 
 class MatrixProperties(MatrixRequired):
@@ -2298,7 +2292,7 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return other._new(other.as_mutable() * self, simplified=simplifiedbool(self, other))
+            return other._new(other.as_mutable() * self)
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_rmul(self, other)
@@ -2376,13 +2370,9 @@ class _MinimalMatrix(object):
 
     is_Matrix = True
     is_MatrixExpr = False
-    is_Simplified = None
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        cls = simplifiedcls(cls, kwargs.get('simplified'), args)
-        if 'simplified' in kwargs:
-            del kwargs ['simplified']
         return cls(*args, **kwargs)
 
     def __init__(self, rows, cols=None, mat=None):
@@ -2550,80 +2540,3 @@ def classof(A, B):
             return A.__class__
 
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
-
-
-def fastalgsimp(expr):
-    """'Fast' (in air quotes) algebraic simplification to reduce matrix
-    multiplication intermediate products."""
-
-    exprops  = count_ops(expr)
-    expr2    = expr.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
-    expr2ops = count_ops(expr2)
-
-    if expr2ops < exprops:
-        expr    = expr2
-        exprops = expr2ops
-
-    if exprops < 6: # empirically tested cutoff for expensive simplification
-        return expr
-
-    expr2    = cancel(expr) # this is the expensive part
-    expr2ops = count_ops(expr2)
-
-    if expr2ops < exprops:
-        expr    = expr2
-        exprops = expr2ops
-
-    expr3    = together(expr2, deep=True)
-    expr3ops = count_ops(expr3)
-
-    if expr3ops < exprops:
-        return expr3
-
-    return expr
-
-
-def simplifiedbool(simplified1, simplified2=None):
-    """Logic for determining the 'simplified' status of a child of two matrices
-    or just returning the 'simplified' status of a single matrix."""
-
-    if simplified1 is not None and simplified1 is not True and simplified1 is not False:
-        simplified1 = getattr(simplified1, 'is_Simplified', None)
-    if simplified2 is not None and simplified2 is not True and simplified2 is not False:
-        simplified2 = getattr(simplified2, 'is_Simplified', None)
-    if simplified1 is False or simplified2 is False:
-        return False
-    if simplified1 is True or simplified2 is True:
-        return True
-
-    return None
-
-
-_simplifiedclss = {} # dynamically created *MatrixSimplified subclass registry
-
-def simplifiedcls(cls, simplified, args = None):
-    """For _new(): Return class dependant on requested simplification and possible
-    source class."""
-
-    if args:
-        simplified = simplifiedbool (simplified, args [0])
-
-    if getattr(cls, 'is_Simplified', None):
-        if simplified is not False:
-            return cls
-
-        return cls.mro()[1]
-
-    else:
-        if not simplified:
-            return cls
-
-        clss = _simplifiedclss.get(cls)
-
-        if clss:
-            return clss
-
-        clss = type(cls.__name__ + 'Simplified', (cls,), {'is_Simplified': True})
-        _simplifiedclss[cls] = clss
-
-        return clss

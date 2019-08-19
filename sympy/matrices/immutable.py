@@ -3,7 +3,6 @@ from __future__ import division, print_function
 from sympy.core import Basic, Dict, Integer, S, Tuple, sympify
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter
-from sympy.matrices.common import simplifiedcls
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
@@ -46,9 +45,6 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        cls = simplifiedcls(cls, kwargs.get('simplified'), args)
-        if 'simplified' in kwargs:
-            del kwargs ['simplified']
         if len(args) == 1 and isinstance(args[0], ImmutableDenseMatrix):
             return args[0]
         if kwargs.get('copy', True) is False:
@@ -161,7 +157,6 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        cls = simplifiedcls(cls, kwargs.get('simplified'), args)
         s = MutableSparseMatrix(*args)
         rows = Integer(s.rows)
         cols = Integer(s.cols)

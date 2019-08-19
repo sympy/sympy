@@ -1,9 +1,8 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
-                   gamma, Product, Dummy, Sum, Abs, IndexedBase, Matrix)
+                   gamma, Product, Dummy, Sum, Abs, IndexedBase, Matrix, I)
 from sympy.core.sympify import _sympify
-from sympy.multipledispatch import dispatch
 from sympy.stats.rv import (_symbol_converter, Density, RandomMatrixSymbol,
                             RandomSymbol)
 from sympy.stats.joint_rv_types import JointDistributionHandmade
@@ -11,6 +10,10 @@ from sympy.stats.random_matrix import RandomMatrixPSpace
 from sympy.tensor.array import ArrayComprehension
 
 __all__ = [
+    'CircularEnsemble',
+    'CircularUnitaryEnsemble',
+    'CircularOrthogonalEnsemble',
+    'CircularSymplecticEnsemble',
     'GaussianEnsemble',
     'GaussianUnitaryEnsemble',
     'GaussianOrthogonalEnsemble',
@@ -22,23 +25,10 @@ __all__ = [
 
 class RandomMatrixEnsemble(Basic):
     """
-    Abstract class for random matrix ensembles.
-    It acts as an umbrella for all the ensembles
+    Base class for random matrix ensembles.
+    It acts as an umbrella and contains
+    the methods common to all the ensembles
     defined in sympy.stats.random_matrix_models.
-    """
-    pass
-
-class GaussianEnsemble(RandomMatrixEnsemble):
-    """
-    Abstract class for Gaussian ensembles.
-    Contains the properties common to all the
-    gaussian ensembles.
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Random_matrix#Gaussian_ensembles
-    .. [2] https://arxiv.org/pdf/1712.07903.pdf
     """
     def __new__(cls, sym, dim=None):
         sym, dim = _symbol_converter(sym), _sympify(dim)
@@ -55,6 +45,18 @@ class GaussianEnsemble(RandomMatrixEnsemble):
     def density(self, expr):
         return Density(expr)
 
+class GaussianEnsemble(RandomMatrixEnsemble):
+    """
+    Abstract class for Gaussian ensembles.
+    Contains the properties common to all the
+    gaussian ensembles.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Random_matrix#Gaussian_ensembles
+    .. [2] https://arxiv.org/pdf/1712.07903.pdf
+    """
     def _compute_normalization_constant(self, beta, n):
         """
         Helper function for computing normalization
@@ -74,7 +76,7 @@ class GaussianEnsemble(RandomMatrixEnsemble):
         term3 = (2*pi)**(n/2)
         return term1 * term2 * term3
 
-    def _compute_joint_eigen_dsitribution(self, beta):
+    def _compute_joint_eigen_distribution(self, beta):
         """
         Helper function for computing the joint
         probability distribution of eigen values
@@ -116,7 +118,7 @@ class GaussianUnitaryEnsemble(GaussianEnsemble):
         return Lambda(H, exp(-S(n)/2 * Trace(H**2))/ZGUE)
 
     def joint_eigen_distribution(self):
-        return self._compute_joint_eigen_dsitribution(2)
+        return self._compute_joint_eigen_distribution(S(2))
 
     def level_spacing_distribution(self):
         s = Dummy('s')
@@ -148,7 +150,7 @@ class GaussianOrthogonalEnsemble(GaussianEnsemble):
         return Lambda(H, exp(-S(n)/4 * Trace(H**2))/ZGOE)
 
     def joint_eigen_distribution(self):
-        return self._compute_joint_eigen_dsitribution(1)
+        return self._compute_joint_eigen_distribution(S(1))
 
     def level_spacing_distribution(self):
         s = Dummy('s')
@@ -180,12 +182,116 @@ class GaussianSymplecticEnsemble(GaussianEnsemble):
         return Lambda(H, exp(-S(n) * Trace(H**2))/ZGSE)
 
     def joint_eigen_distribution(self):
-        return self._compute_joint_eigen_dsitribution(4)
+        return self._compute_joint_eigen_distribution(S(4))
 
     def level_spacing_distribution(self):
         s = Dummy('s')
         f = ((S(2)**18)/((S(3)**6)*(pi**3)))*(s**4)*exp((-64/(9*pi))*s**2)
         return Lambda(s, f)
+
+class CircularEnsemble(RandomMatrixEnsemble):
+    """
+    Abstract class for Circular ensembles.
+    Contains the properties and methods
+    common to all the circular ensembles.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Circular_ensemble
+    """
+    def density(self, expr):
+        # TODO : Add support for Lie groups(as extensions of sympy.diffgeom)
+        #        and define measures on them
+        raise NotImplementedError("Support for Haar measure hasn't been "
+                                  "implemented yet, therefore the density of "
+                                  "%s cannot be computed."%(self))
+
+    def _compute_joint_eigen_distribution(self, beta):
+        """
+        Helper function to compute the joint distribution of phases
+        of the complex eigen values of matrices belonging to any
+        circular ensembles.
+        """
+        n = self.dimension
+        Zbn = ((2*pi)**n)*(gamma(beta*n/2 + 1)/S((gamma(beta/2 + 1)))**n)
+        t = IndexedBase('t')
+        i, j, k = (Dummy('i', integer=True), Dummy('j', integer=True),
+                   Dummy('k', integer=True))
+        syms = ArrayComprehension(t[i], (i, 1, n)).doit()
+        f = Product(Product(Abs(exp(I*t[k]) - exp(I*t[j]))**beta, (j, k + 1, n)).doit(),
+                    (k, 1, n - 1)).doit()
+        return Lambda(syms, f/Zbn)
+
+class CircularUnitaryEnsemble(CircularEnsemble):
+    """
+    Represents Cicular Unitary Ensembles.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import CircularUnitaryEnsemble as CUE, density
+    >>> from sympy.stats import joint_eigen_distribution
+    >>> C = CUE('U', 1)
+    >>> joint_eigen_distribution(C)
+    Lambda(t[1], Product(Abs(exp(I*t[_j]) - exp(I*t[_k]))**2, (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
+
+    Note
+    ====
+
+    As can be seen above in the example, density of CiruclarUnitaryEnsemble
+    is not evaluated becuase the exact definition is based on haar measure of
+    unitary group which is not unique.
+    """
+    def joint_eigen_distribution(self):
+        return self._compute_joint_eigen_distribution(S(2))
+
+class CircularOrthogonalEnsemble(CircularEnsemble):
+    """
+    Represents Cicular Orthogonal Ensembles.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import CircularOrthogonalEnsemble as COE, density
+    >>> from sympy.stats import joint_eigen_distribution
+    >>> C = COE('O', 1)
+    >>> joint_eigen_distribution(C)
+    Lambda(t[1], Product(Abs(exp(I*t[_j]) - exp(I*t[_k])), (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
+
+    Note
+    ====
+
+    As can be seen above in the example, density of CiruclarOrthogonalEnsemble
+    is not evaluated becuase the exact definition is based on haar measure of
+    unitary group which is not unique.
+    """
+    def joint_eigen_distribution(self):
+        return self._compute_joint_eigen_distribution(S(1))
+
+class CircularSymplecticEnsemble(CircularEnsemble):
+    """
+    Represents Cicular Symplectic Ensembles.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import CircularSymplecticEnsemble as CSE, density
+    >>> from sympy.stats import joint_eigen_distribution
+    >>> C = CSE('S', 1)
+    >>> joint_eigen_distribution(C)
+    Lambda(t[1], Product(Abs(exp(I*t[_j]) - exp(I*t[_k]))**4, (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
+
+    Note
+    ====
+
+    As can be seen above in the example, density of CiruclarSymplecticEnsemble
+    is not evaluated becuase the exact definition is based on haar measure of
+    unitary group which is not unique.
+    """
+
+    def joint_eigen_distribution(self):
+        return self._compute_joint_eigen_distribution(S(4))
 
 def joint_eigen_distribution(mat):
     """
