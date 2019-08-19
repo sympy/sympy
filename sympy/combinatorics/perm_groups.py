@@ -16,6 +16,7 @@ from sympy.core import Basic
 from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import sieve
+from sympy.sets.underlyingsets import UnderlyingSetOf
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
 from sympy.utilities.randtest import _randrange
 from itertools import islice
@@ -178,6 +179,35 @@ class PermutationGroup(Basic):
         # finite presentation of the group as an instance of `FpGroup`
         obj._fp_presentation = None
         return obj
+
+    def underlying_set(self):
+        """Returns the underlying set of the permutation group.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import CyclicGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+
+        Getting the symbolic underlying set of a cyclic group:
+
+        >>> g = CyclicGroup(3).underlying_set()
+        >>> g
+        UnderlyingSetOf(PermutationGroup([
+            (0 1 2)]))
+
+        The notation retains some behaviors of sets (Not every behavior):
+
+        >>> g.contains(Permutation(0, 1, 2))
+        True
+
+        Rewriting to a finite set:
+
+        >>> from sympy.sets.sets import FiniteSet
+        >>> g.rewrite(FiniteSet)
+        {(0 1 2), (0 2 1), (2)}
+        """
+        return UnderlyingSetOf(self)
 
     def __getitem__(self, i):
         return self._generators[i]
@@ -425,21 +455,6 @@ class PermutationGroup(Basic):
             temp = parent
             parent = parents[temp]
         return rep
-
-    def as_finite_set(self):
-        """Rewrite a group as a finite set object containing all its
-        members.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.named_groups import AlternatingGroup
-        >>> g = AlternatingGroup(3)
-        >>> g.as_finite_set()
-        {(0 1 2), (0 2 1), (2)}
-        """
-        from sympy.sets.sets import FiniteSet
-        return FiniteSet(*self.generate())
 
     @property
     def base(self):
