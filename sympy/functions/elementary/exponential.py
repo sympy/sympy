@@ -491,11 +491,11 @@ class exp(ExpBase):
                 return Pow(logs[0].args[0], arg.coeff(logs[0]))
 
 
-def _match_real_imag(expr):
+def match_real_imag(expr):
     """
     Try to match expr with a + b*I for real a and b.
 
-    ``_match_real_imag`` returns a tuple containing the real and imaginary
+    ``match_real_imag`` returns a tuple containing the real and imaginary
     parts of expr or (None, None) if direct matching is not possible. Contrary
     to ``re()``, ``im()``, ``as_real_imag()``, this helper won't force things
     by returning expressions themselves containing ``re()`` or ``im()`` and it
@@ -607,7 +607,7 @@ class log(Function):
         if isinstance(arg, exp) and arg.args[0].is_extended_real:
             return arg.args[0]
         elif isinstance(arg, exp) and arg.args[0].is_number:
-            r_, i_ = _match_real_imag(arg.args[0])
+            r_, i_ = match_real_imag(arg.args[0])
             if i_ and i_.is_comparable:
                 i_ %= 2*S.Pi
                 if i_ > S.Pi:

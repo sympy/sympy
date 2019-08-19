@@ -1,11 +1,12 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, cacheit
+from sympy.core import S, sympify, cacheit, pi, I
 from sympy.core.add import Add
 from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
-from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.exponential import exp, log, match_real_imag
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.integers import floor
 
 
 def _rewrite_hyperbolics_as_exp(expr):
@@ -926,6 +927,20 @@ class asinh(InverseHyperbolicFunction):
                 if _coeff_isneg(arg):
                     return -cls(-arg)
 
+        if isinstance(arg, sinh) and arg.args[0].is_number:
+            z = arg.args[0]
+            if z.is_real:
+                return z
+            r, i = match_real_imag(z)
+            if r is not None and i is not None:
+                f = floor((i + pi/2)/pi)
+                m = z - I*pi*f
+                even = f.is_even
+                if even is True:
+                    return m
+                elif even is False:
+                    return -m
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -1033,6 +1048,28 @@ class acosh(InverseHyperbolicFunction):
         if arg == -S.ImaginaryUnit*S.Infinity:
             return S.Infinity - S.ImaginaryUnit*S.Pi/2
 
+        if isinstance(arg, cosh) and arg.args[0].is_number:
+            z = arg.args[0]
+            if z.is_real:
+                from sympy.functions.elementary.complexes import Abs
+                return Abs(z)
+            r, i = match_real_imag(z)
+            if r is not None and i is not None:
+                f = floor(i/pi)
+                m = z - I*pi*f
+                even = f.is_even
+                if even is True:
+                    if r.is_nonnegative:
+                        return m
+                    elif r.is_negative:
+                        return -m
+                elif even is False:
+                    m -= I*pi
+                    if r.is_nonpositive:
+                        return -m
+                    elif r.is_positive:
+                        return m
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -1120,6 +1157,20 @@ class atanh(InverseHyperbolicFunction):
             else:
                 if _coeff_isneg(arg):
                     return -cls(-arg)
+
+        if isinstance(arg, tanh) and arg.args[0].is_number:
+            z = arg.args[0]
+            if z.is_real:
+                return z
+            r, i = match_real_imag(z)
+            if r is not None and i is not None:
+                f = floor(2*i/pi)
+                even = f.is_even
+                m = z - I*f*pi/2
+                if even is True:
+                    return m
+                elif even is False:
+                    return m - I*pi/2
 
     @staticmethod
     @cacheit

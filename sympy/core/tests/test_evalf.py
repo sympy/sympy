@@ -1,7 +1,7 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
     integrate, log, Mul, N, oo, pi, Pow, product, Product,
-    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
+    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
@@ -567,3 +567,7 @@ def test_issue_13425():
     assert N('2**.5', 30) == N('sqrt(2)', 30)
     assert N('x - x', 30) == 0
     assert abs((N('pi*.1', 22)*10 - pi).n()) < 1e-22
+
+
+def test_issue_17421():
+    assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I
