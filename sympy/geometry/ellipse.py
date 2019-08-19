@@ -1422,9 +1422,9 @@ class Ellipse(GeometrySet):
     def section_modulus(self, point=None):
         """Returns a tuple with the section modulus of an ellipse
 
-        Section modulus is a geometric property of a polygon defined as the
+        Section modulus is a geometric property of an ellipse defined as the
         ratio of second moment of area to the distance of the extreme end of
-        the polygon from the centroidal axis.
+        the ellipse from the centroidal axis.
 
         References
         ==========
@@ -1443,8 +1443,8 @@ class Ellipse(GeometrySet):
         =======
 
         S_x, S_y: numbers or SymPy expressions
-                  S_x is the section modulus wrt the x-axis
-                  S_y is the section modulus wrt the y-axis
+                  S_x is the section modulus with respect to the x-axis
+                  S_y is the section modulus with respect to the y-axis
                   A negetive sign indicates that the section modulus is
                   determined for a point below the centroidal axis.
 
