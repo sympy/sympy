@@ -710,6 +710,12 @@ def _get_doctest_blacklist():
             "sympy/parsing/latex/_parse_latex_antlr.py",
         ])
 
+    if import_module('lfortran') is None:
+        #throws ImportError when lfortran not installed
+        blacklist.extend([
+            "sympy/parsing/sym_expr.py",
+        ])
+
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
         "sympy/utilities/autowrap.py",

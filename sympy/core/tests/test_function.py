@@ -1260,3 +1260,9 @@ def test_Subs_Derivative():
 def test_issue_15360():
     f = Function('f')
     assert f.name == 'f'
+
+
+def test_Derivative_free_symbols():
+    f = Function('f')
+    n = Symbol('n', integer=True, positive=True)
+    assert diff(f(x), (x, n)).free_symbols == {n, x}

@@ -96,10 +96,15 @@ __all__.extend(stochastic_process_types.__all__)
 
 from . import random_matrix_models
 from .random_matrix_models import (
+    CircularEnsemble,
+    CircularUnitaryEnsemble,
+    CircularOrthogonalEnsemble,
+    CircularSymplecticEnsemble,
     GaussianEnsemble,
     GaussianUnitaryEnsemble,
     GaussianOrthogonalEnsemble,
     GaussianSymplecticEnsemble,
+    JointEigenDistribution,
     joint_eigen_distribution,
     level_spacing_distribution
 )
