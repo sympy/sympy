@@ -927,20 +927,19 @@ class asinh(InverseHyperbolicFunction):
                 if _coeff_isneg(arg):
                     return -cls(-arg)
 
-        if isinstance(arg, sinh):
-            x = arg.args[0]
-            if x.is_number:
-                if x.is_real:
-                    return x
-                r, i = match_real_imag(x)
-                if r is not None and i is not None:
-                    f = floor((i + pi/2)/pi)
-                    if f.is_number and f.is_integer:
-                        m = r + I*i - I*pi*f
-                        if f % 2 == 0:
-                            return m
-                        else:
-                            return -m
+        if isinstance(arg, sinh) and arg.args[0].is_number:
+            z = arg.args[0]
+            if z.is_real:
+                return z
+            r, i = match_real_imag(z)
+            if r is not None and i is not None:
+                f = floor((i + pi/2)/pi)
+                m = z - I*pi*f
+                even = f.is_even
+                if even is True:
+                    return m
+                elif even is False:
+                    return -m
 
     @staticmethod
     @cacheit
@@ -1049,28 +1048,27 @@ class acosh(InverseHyperbolicFunction):
         if arg == -S.ImaginaryUnit*S.Infinity:
             return S.Infinity - S.ImaginaryUnit*S.Pi/2
 
-        if isinstance(arg, cosh):
-            x = arg.args[0]
-            if x.is_number:
-                if x.is_real:
-                    from sympy.functions.elementary.complexes import Abs
-                    return Abs(x)
-                r, i = match_real_imag(x)
-                if r is not None and i is not None:
-                    f = floor(i/pi)
-                    if f.is_number and f.is_integer:
-                        m = r + I*i - I*pi*f
-                        if f % 2 == 0:
-                            if r.is_nonnegative:
-                                return m
-                            elif r.is_negative:
-                                return -m
-                        else:
-                            m -= I*pi
-                            if r.is_nonpositive:
-                                return -m
-                            elif r.is_positive:
-                                return m
+        if isinstance(arg, cosh) and arg.args[0].is_number:
+            z = arg.args[0]
+            if z.is_real:
+                from sympy.functions.elementary.complexes import Abs
+                return Abs(z)
+            r, i = match_real_imag(z)
+            if r is not None and i is not None:
+                f = floor(i/pi)
+                m = z - I*pi*f
+                even = f.is_even
+                if even is True:
+                    if r.is_nonnegative:
+                        return m
+                    elif r.is_negative:
+                        return -m
+                elif even is False:
+                    m -= I*pi
+                    if r.is_nonpositive:
+                        return -m
+                    elif r.is_positive:
+                        return m
 
     @staticmethod
     @cacheit
@@ -1160,19 +1158,19 @@ class atanh(InverseHyperbolicFunction):
                 if _coeff_isneg(arg):
                     return -cls(-arg)
 
-        if isinstance(arg, tanh):
-            x = arg.args[0]
-            if x.is_number:
-                if x.is_real:
-                    return x
-                r, i = match_real_imag(x)
-                if r is not None and i is not None:
-                    f = floor(2*i/pi)
-                    if f.is_number and f.is_integer:
-                        if f % 2 == 0:
-                            return r + I*i - I*f*pi/2
-                        else:
-                            return r + I*i - I*(f + 1)*pi/2
+        if isinstance(arg, tanh) and arg.args[0].is_number:
+            z = arg.args[0]
+            if z.is_real:
+                return z
+            r, i = match_real_imag(z)
+            if r is not None and i is not None:
+                f = floor(2*i/pi)
+                even = f.is_even
+                m = z - I*f*pi/2
+                if even is True:
+                    return m
+                elif even is False:
+                    return m - I*pi/2
 
     @staticmethod
     @cacheit
