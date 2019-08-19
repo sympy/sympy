@@ -1107,7 +1107,7 @@ class TensorArray:
     Example 2: Converting the Riemann components (an array) to a proper tensor
     ==========================================================================
 
-    >>> from sympy.diffgeom import *
+    >>> from sympy.diffgeom import CoordSystem, Patch, TensorArray, TensorProduct, Manifold, metric_to_Riemann_components
     >>> from sympy import Function
     >>> from sympy.functions import sin
     >>> M = Manifold('Reisner-Nordstrom', 4)
@@ -1414,7 +1414,7 @@ class TensorArray:
         res.order = res.covariant_order+res.contravariant_order
         return res
     def covD(self,ch2):
-        """ 
+        """
         Covariant derivative as a tensor, given the Christoffel symbols of
         the 2nd kind as argument.
         """
