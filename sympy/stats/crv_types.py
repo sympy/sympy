@@ -58,7 +58,7 @@ from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I,
                    hyper, uppergamma, sinh, Ne, expint)
 from sympy.external import import_module
-from sympy.matrices import MatrixBase
+from sympy.matrices import MatrixBase, MatrixExpr
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
                              ContinuousDistributionHandmade)
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
@@ -2651,8 +2651,8 @@ def Normal(name, mean, std):
 
     """
 
-    if isinstance(mean, (list, MatrixBase)) and\
-        isinstance(std, (list, MatrixBase)):
+    if isinstance(mean, (list, MatrixBase, MatrixExpr)) and\
+        isinstance(std, (list, MatrixBase, MatrixExpr)):
         from sympy.stats.joint_rv_types import MultivariateNormalDistribution
         return multivariate_rv(
             MultivariateNormalDistribution, name, mean, std)
