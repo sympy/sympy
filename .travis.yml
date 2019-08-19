@@ -321,9 +321,10 @@ script:
   # Don't run doctr if the build fails
   - set -e
   - if [[ "${USE_XVFB}"]] == "true" ]]; then
-        xvfb-run;
+        xvfb-run bin/test_travis.sh;
+    else
+        bin/test_travis.sh;
     fi
-  - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
     fi
