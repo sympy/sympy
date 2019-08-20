@@ -310,6 +310,11 @@ def deltasummation(f, limit, no_piecewise=False):
     # try to extract a simple KroneckerDelta term
     delta, expr = _extract_delta(g, x)
 
+    if (delta is not None) and (delta.delta_range is not None):
+        dinf, dsup = delta.delta_range
+        if (limit[1] - dinf <= 0) == True and (limit[2] - dsup >= 0) == True:
+            no_piecewise = True
+
     if not delta:
         return summation(f, limit)
 

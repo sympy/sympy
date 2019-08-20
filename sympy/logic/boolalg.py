@@ -555,7 +555,7 @@ class BooleanFunction(Application, Boolean):
                            binary=True)
         if len(Rel) <= 1:
             return rv
-        Rel, nonRealRel = sift(rv.args, lambda i: all(s.is_real is not False
+        Rel, nonRealRel = sift(Rel, lambda i: all(s.is_real is not False
                                                       for s in i.free_symbols),
                                binary=True)
         Rel = [i.canonical for i in Rel]

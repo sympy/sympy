@@ -11,13 +11,13 @@ from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, n
 from sympy.core.numbers import Float, I, pi, Rational, Integer
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
-from sympy.functions import gamma, exp, sqrt, log, exp_polar, piecewise_fold
+from sympy.functions import gamma, exp, sqrt, log, exp_polar, piecewise_fold, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -524,9 +524,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     expression. You can avoid this behavior by passing ``doit=False`` as
     an argument.
     """
+
     def shorter(*choices):
-        '''Return the choice that has the fewest ops. In case of a tie,
-        the expression listed first is selected.'''
+        """
+        Return the choice that has the fewest ops. In case of a tie,
+        the expression listed first is selected.
+        """
         if not has_variety(choices):
             return choices[0]
         return min(choices, key=measure)
@@ -551,10 +554,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         return _eval_simplify(**kwargs)
 
     original_expr = expr = collect_abs(signsimp(expr))
-
-    from sympy.simplify.hyperexpand import hyperexpand
-    from sympy.functions.special.bessel import BesselBase
-    from sympy import Sum, Product, Integral
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
@@ -586,6 +585,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
 
+
     # rationalize Floats
     floats = False
     if rational is not False and expr.has(Float):
@@ -607,10 +607,40 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     expr = factor_terms(expr, sign=False)
 
+    from sympy.simplify.hyperexpand import hyperexpand
+    from sympy.functions.special.bessel import BesselBase
+    from sympy import Sum, Product, Integral
+
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
 
-    expr = piecewise_fold(expr)
+    # Deal with Piecewise separately to avoid recursive growth of expressions
+    if expr.has(Piecewise):
+        # Fold into a single Piecewise
+        expr = piecewise_fold(expr)
+        # Apply doit, if doit=True
+        expr = done(expr)
+        # Still a Piecewise?
+        if expr.has(Piecewise):
+            # Fold into a single Piecewise, in case doit lead to some
+            # expressions being Piecewise
+            expr = piecewise_fold(expr)
+            # kroneckersimp also affects Piecewise
+            if expr.has(KroneckerDelta):
+                expr = kroneckersimp(expr)
+            # Still a Piecewise?
+            if expr.has(Piecewise):
+                from sympy.functions.elementary.piecewise import piecewise_simplify
+                # Do not apply doit on the segments as it has already
+                # been done above, but simplify
+                expr = piecewise_simplify(expr, deep=True, doit=False)
+                # Still a Piecewise?
+                if expr.has(Piecewise):
+                    # Try factor common terms
+                    expr = shorter(expr, factor_terms(expr))
+                    # As all expressions have been simplified above with the
+                    # complete simplify, nothing more needs to be done here
+                    return expr
 
     if expr.has(KroneckerDelta):
         expr = kroneckersimp(expr)
@@ -1258,6 +1288,30 @@ def besselsimp(expr):
     expr = expr.replace(besseli, expander(besseli))
     expr = expr.replace(besselk, expander(besselk))
 
+    def _bessel_simp_recursion(expr):
+
+        def _use_recursion(bessel, expr):
+            while True:
+                bessels = expr.find(lambda x: isinstance(x, bessel))
+                try:
+                    for ba in sorted(bessels, key=lambda x: re(x.args[0])):
+                        a, x = ba.args
+                        bap1 = bessel(a+1, x)
+                        bap2 = bessel(a+2, x)
+                        if expr.has(bap1) and expr.has(bap2):
+                            expr = expr.subs(ba, 2*(a+1)/x*bap1 - bap2)
+                            break
+                    else:
+                        return expr
+                except (ValueError, TypeError):
+                    return expr
+        if expr.has(besselj):
+            expr = _use_recursion(besselj, expr)
+        if expr.has(bessely):
+            expr = _use_recursion(bessely, expr)
+        return expr
+
+    expr = _bessel_simp_recursion(expr)
     if expr != orig_expr:
         expr = expr.factor()
 

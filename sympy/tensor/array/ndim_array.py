@@ -140,10 +140,7 @@ class NDimArray(object):
             # Construction of a sparse array from a sparse array
             elif isinstance(iterable, SparseNDimArray):
                 return iterable._shape, iterable._sparse_array
-            # Construction from another `NDimArray`:
-            elif isinstance(iterable, NDimArray):
-                shape = iterable.shape
-                iterable = list(iterable)
+
             # Construct N-dim array from an iterable (numpy arrays included):
             elif isinstance(iterable, Iterable):
                 iterable, shape = cls._scan_iterable_shape(iterable)
@@ -286,11 +283,12 @@ class NDimArray(object):
         [[0, 2], [4, 6]]
         """
         from sympy.tensor.array import SparseNDimArray
+        from sympy.tensor.array.arrayop import Flatten
 
         if isinstance(self, SparseNDimArray) and f(S.Zero) == 0:
             return type(self)({k: f(v) for k, v in self._sparse_array.items() if f(v) != 0}, self.shape)
 
-        return type(self)(map(f, self), self.shape)
+        return type(self)(map(f, Flatten(self)), self.shape)
 
     def __str__(self):
         """Returns string, allows to use standard functions print() and str().
@@ -366,28 +364,33 @@ class NDimArray(object):
         return f(self._loop_size, self.shape, 0, self._loop_size)
 
     def __add__(self, other):
+        from sympy.tensor.array.arrayop import Flatten
+
         if not isinstance(other, NDimArray):
             raise TypeError(str(other))
 
         if self.shape != other.shape:
             raise ValueError("array shape mismatch")
-        result_list = [i+j for i,j in zip(self, other)]
+        result_list = [i+j for i,j in zip(Flatten(self), Flatten(other))]
 
         return type(self)(result_list, self.shape)
 
     def __sub__(self, other):
+        from sympy.tensor.array.arrayop import Flatten
+
         if not isinstance(other, NDimArray):
             raise TypeError(str(other))
 
         if self.shape != other.shape:
             raise ValueError("array shape mismatch")
-        result_list = [i-j for i,j in zip(self, other)]
+        result_list = [i-j for i,j in zip(Flatten(self), Flatten(other))]
 
         return type(self)(result_list, self.shape)
 
     def __mul__(self, other):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import SparseNDimArray
+        from sympy.tensor.array.arrayop import Flatten
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
@@ -398,12 +401,13 @@ class NDimArray(object):
                 return type(self)({}, self.shape)
             return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
 
-        result_list = [i*other for i in self]
+        result_list = [i*other for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import SparseNDimArray
+        from sympy.tensor.array.arrayop import Flatten
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
@@ -414,12 +418,13 @@ class NDimArray(object):
                 return type(self)({}, self.shape)
             return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
 
-        result_list = [other*i for i in self]
+        result_list = [other*i for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
     def __div__(self, other):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import SparseNDimArray
+        from sympy.tensor.array.arrayop import Flatten
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected")
@@ -428,7 +433,7 @@ class NDimArray(object):
         if isinstance(self, SparseNDimArray) and other != S.Zero:
             return type(self)({k: v/other for (k, v) in self._sparse_array.items()}, self.shape)
 
-        result_list = [i/other for i in self]
+        result_list = [i/other for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
     def __rdiv__(self, other):
@@ -436,12 +441,23 @@ class NDimArray(object):
 
     def __neg__(self):
         from sympy.tensor.array import SparseNDimArray
+        from sympy.tensor.array.arrayop import Flatten
 
         if isinstance(self, SparseNDimArray):
             return type(self)({k: -v for (k, v) in self._sparse_array.items()}, self.shape)
 
-        result_list = [-i for i in self]
+        result_list = [-i for i in Flatten(self)]
         return type(self)(result_list, self.shape)
+
+    def __iter__(self):
+        def iterator():
+            if self._shape:
+                for i in range(self._shape[0]):
+                    yield self[i]
+            else:
+                yield self[()]
+
+        return iterator()
 
     def __eq__(self, other):
         """
@@ -492,7 +508,9 @@ class NDimArray(object):
         return self._eval_transpose()
 
     def _eval_conjugate(self):
-        return self.func([i.conjugate() for i in self], self.shape)
+        from sympy.tensor.array.arrayop import Flatten
+
+        return self.func([i.conjugate() for i in Flatten(self)], self.shape)
 
     def conjugate(self):
         return self._eval_conjugate()
@@ -528,6 +546,19 @@ class NDimArray(object):
             raise ValueError("arrays without shape need one scalar value")
         if shape == (0,) and len(flat_list) > 0:
             raise ValueError("if array shape is (0,) there cannot be elements")
+
+    def _check_index_for_getitem(self, index):
+        if isinstance(index, (SYMPY_INTS, Integer, slice)):
+            index = (index, )
+
+        if len(index) < self.rank():
+            index = tuple([i for i in index] + \
+                          [slice(None) for i in range(len(index), self.rank())])
+
+        if len(index) > self.rank():
+            raise ValueError('Dimension of index greater than rank of array')
+
+        return index
 
 
 class ImmutableNDimArray(NDimArray, Basic):

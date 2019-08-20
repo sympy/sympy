@@ -504,3 +504,46 @@ def test_issue_15265():
 
     raises(ValueError,
         lambda: plot(eqn, xlim=(-1, 1), ylim=(-1, S.Infinity)))
+
+
+def test_empty_Plot():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    from sympy.plotting.plot import Plot
+    p = Plot()
+    # No exception showing an empty plot
+    p.show()
+
+
+def test_empty_plot():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    # No exception showing an empty plot
+    plot()
+
+
+def test_issue_17405():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    x = Symbol('x')
+    f = x**0.3 - 10*x**3 + x**2
+    p = plot(f, (x, -10, 10), show=False)
+    # Random number of segments, probably more than 100, but we want to see
+    # that there are segments generated, as opposed to when the bug was present
+    assert len(p[0].get_segments()) >= 30
+
+
+def test_logplot_PR_16796():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    x = Symbol('x')
+    p = plot(x, (x, .001, 100), xscale='log', show=False)
+    # Random number of segments, probably more than 100, but we want to see
+    # that there are segments generated, as opposed to when the bug was present
+    assert len(p[0].get_segments()) >= 30
+    assert p[0].end == 100.0
+    assert p[0].start == .001
