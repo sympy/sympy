@@ -456,9 +456,20 @@ class exp(ExpBase):
         arg = self.args[0]
         if arg.is_Add:
             return Mul(*[exp(f).as_leading_term(x) for f in arg.args])
-        arg = self.args[0].as_leading_term(x)
-        if Order(1, x).contains(arg):
+        arg_1 = arg.as_leading_term(x)
+        if Order(x, x).contains(arg_1):
             return S.One
+        if Order(1, x).contains(arg_1):
+            return exp(arg_1)
+        ####################################################
+        # The correct result here should be 'None'.        #
+        # Indeed arg in not bounded as x tends to 0.       #
+        # Consequently the series expansion does not admit #
+        # the leading term.                                #
+        # For compatibility reasons, the return value here #
+        # is the original function, i.e. exp(arg),         #
+        # instead of None.                                 #
+        ####################################################
         return exp(arg)
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):

@@ -156,8 +156,15 @@ def test_exp_rewrite():
 
 def test_exp_leading_term():
     assert exp(x).as_leading_term(x) == 1
-    assert exp(1/x).as_leading_term(x) == exp(1/x)
     assert exp(2 + x).as_leading_term(x) == exp(2)
+    assert exp((2*x + 3) / (x+1)).as_leading_term(x) == exp(3)
+    # The following tests are commented, since now SymPy returns the
+    # original function when the leading term in the series expansion does
+    # not exist.
+    # raises(NotImplementedError, lambda: exp(1/x).as_leading_term(x))
+    # raises(NotImplementedError, lambda: exp((x + 1) / x**2).as_leading_term(x))
+    # raises(NotImplementedError, lambda: exp(x + 1/x).as_leading_term(x))
+
 
 def test_exp_taylor_term():
     x = symbols('x')
