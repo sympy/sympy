@@ -1060,14 +1060,14 @@ class MatrixWild(MatrixSymbol, Wild):
         obj.properties = tuple(properties)
         return obj
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         if not isinstance(expr, MatrixExpr):
             return None
         if any(expr.has(x) for x in self.exclude):
             return None
         if any(not f(expr) for f in self.properties):
             return None
-        repl_dict = repl_dict.copy()
+        repl_dict = repl_dict.copy() if repl_dict else {}
 
         # Make sure dimensions match
         for selfdim, exprdim in zip(self.shape, expr.shape):
