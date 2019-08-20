@@ -2,7 +2,7 @@ from sympy import (
     Symbol, Dummy, gamma, I, oo, nan, zoo, factorial, sqrt, Rational,
     multigamma, log, polygamma, EulerGamma, pi, uppergamma, S, expand_func,
     loggamma, sin, cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic,
-    zeta, conjugate)
+    zeta, conjugate, Ei)
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -163,6 +163,9 @@ def test_uppergamma():
         uppergamma(x, y)*log(y) + meijerg([], [1, 1], [0, 0, x], [], y)
     assert td(uppergamma(x, randcplx()), x)
 
+    p = Symbol('p', positive=True)
+    assert uppergamma(0, p) == -Ei(-p)
+    assert uppergamma(p, 0) == gamma(p)
     assert uppergamma(S.Half, x) == sqrt(pi)*erfc(sqrt(x))
     assert not uppergamma(S.Half - 3, x).has(uppergamma)
     assert not uppergamma(S.Half + 3, x).has(uppergamma)
@@ -173,6 +176,7 @@ def test_uppergamma():
               uppergamma(S.Half - 3, x), x)
 
     assert unchanged(uppergamma, x, -oo)
+    assert unchanged(uppergamma, x, 0)
 
     assert tn_branch(-3, uppergamma)
     assert tn_branch(-4, uppergamma)
@@ -188,7 +192,6 @@ def test_uppergamma():
     assert uppergamma(-2, x) == expint(3, x)/x**2
 
     assert conjugate(uppergamma(x, y)) == uppergamma(conjugate(x), conjugate(y))
-    assert conjugate(uppergamma(x, 0)) == gamma(conjugate(x))
     assert unchanged(conjugate, uppergamma(x, -oo))
 
     assert uppergamma(x, y).rewrite(expint) == y**x*expint(-x + 1, y)
@@ -393,10 +396,21 @@ def test_loggamma():
     assert conjugate(loggamma(0)) == oo
     assert conjugate(loggamma(1)) == loggamma(conjugate(1))
     assert conjugate(loggamma(-oo)) == conjugate(zoo)
-    assert loggamma(x).is_real is None
-    y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
-    assert loggamma(y).is_real
-    assert loggamma(z).is_real is False
+
+    assert loggamma(Symbol('v', positive=True)).is_real is True
+    assert loggamma(Symbol('v', zero=True)).is_real is False
+    assert loggamma(Symbol('v', negative=True)).is_real is False
+    assert loggamma(Symbol('v', nonpositive=True)).is_real is False
+    assert loggamma(Symbol('v', nonnegative=True)).is_real is None
+    assert loggamma(Symbol('v', imaginary=True)).is_real is None
+    assert loggamma(Symbol('v', real=True)).is_real is None
+    assert loggamma(Symbol('v')).is_real is None
+
+    assert loggamma(S(1) / 2).is_real is True
+    assert loggamma(0).is_real is False
+    assert loggamma(-S(1)/2).is_real is False
+    assert loggamma(I).is_real is None
+    assert loggamma(2 + 3*I).is_real is None
 
     def tN(N, M):
         assert loggamma(1/x)._eval_nseries(x, n=N).getn() == M

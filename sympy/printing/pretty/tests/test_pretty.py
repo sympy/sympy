@@ -26,6 +26,7 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     mathieusprime, mathieucprime)
 
 from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerProduct
+from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
 from sympy.physics.units import joule, degree
@@ -3179,17 +3180,32 @@ def test_MatrixExpressions():
     assert pretty(Z) == ascii_str
     assert upretty(Z) == ucode_str
 
-    # Apply function elementwise:
+    # Apply function elementwise (`ElementwiseApplyFunc`):
 
     expr = (X.T*X).applyfunc(sin)
 
     ascii_str = """\
-   / T     \\\n\
-sin\\X *X.../\
+    / T  \\\n\
+sin.\\X *X/\
 """
     ucode_str = u("""\
-   ⎛ T     ⎞\n\
-sin⎝X ⋅X...⎠\
+    ⎛ T  ⎞\n\
+sin˳⎝X ⋅X⎠\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    lamda = Lambda(x, 1/x)
+    expr = (n*X).applyfunc(lamda)
+    ascii_str = """\
+/     1\\      \n\
+|d -> -|.(n*X)\n\
+\\     d/      \
+"""
+    ucode_str = u("""\
+⎛    1⎞      \n\
+⎜d ↦ ─⎟˳(n⋅X)\n\
+⎝    d⎠      \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -6795,6 +6811,58 @@ def test_pretty_misc_functions():
     assert upretty(Heaviside(x, y)) == u'θ(x, y)'
     assert pretty(dirichlet_eta(x)) == 'dirichlet_eta(x)'
     assert upretty(dirichlet_eta(x)) == u'η(x)'
+
+
+def test_hadamard_power():
+    m, n, p = symbols('m, n, p', integer=True)
+    A = MatrixSymbol('A', m, n)
+    B = MatrixSymbol('B', m, n)
+    C = MatrixSymbol('C', m, p)
+
+    # Testing printer:
+    expr = hadamard_power(A, n)
+    ascii_str = \
+"""\
+ .n\n\
+A  \
+"""
+    ucode_str = \
+u("""\
+ ∘n\n\
+A  \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = hadamard_power(A, 1+n)
+    ascii_str = \
+"""\
+ .(n + 1)\n\
+A        \
+"""
+    ucode_str = \
+u("""\
+ ∘(n + 1)\n\
+A        \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = hadamard_power(A*B.T, 1+n)
+    ascii_str = \
+"""\
+      .(n + 1)\n\
+/   T\\        \n\
+\\A*B /        \
+"""
+    ucode_str = \
+u("""\
+      ∘(n + 1)\n\
+⎛   T⎞        \n\
+⎝A⋅B ⎠        \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 
 def test_issue_17258():

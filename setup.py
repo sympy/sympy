@@ -122,6 +122,7 @@ modules = [
     'sympy.parsing.autolev._antlr',
     'sympy.parsing.autolev.test-examples',
     'sympy.parsing.autolev.test-examples.pydy-example-repo',
+    'sympy.parsing.c',
     'sympy.parsing.fortran',
     'sympy.parsing.latex',
     'sympy.parsing.latex._antlr',

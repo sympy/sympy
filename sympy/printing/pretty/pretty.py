@@ -330,7 +330,7 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_Derivative(self, deriv):
-        if requires_partial(deriv) and self._use_unicode:
+        if requires_partial(deriv.expr) and self._use_unicode:
             deriv_symbol = U('PARTIAL DIFFERENTIAL')
         else:
             deriv_symbol = r'd'
@@ -523,15 +523,8 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*stringPict.next(l, op, r))
             return pform
 
-        if len(lim) == 3:
-            prettyUpper = self._print(lim[2])
-            prettyLower = print_start(lim[0], lim[1])
-        elif len(lim) == 2:
-            prettyUpper = self._print("")
-            prettyLower = print_start(lim[0], lim[1])
-        elif len(lim) == 1:
-            prettyUpper = self._print("")
-            prettyLower = self._print(lim[0])
+        prettyUpper = self._print(lim[2])
+        prettyLower = print_start(lim[0], lim[1])
         return prettyLower, prettyUpper
 
     def _print_Sum(self, expr):
@@ -890,13 +883,29 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_HadamardProduct(self, expr):
-        from sympy import MatAdd, MatMul
+        from sympy import MatAdd, MatMul, HadamardProduct
         if self._use_unicode:
             delim = pretty_atom('Ring')
         else:
             delim = '.*'
         return self._print_seq(expr.args, None, None, delim,
-                parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
+                parenthesize=lambda x: isinstance(x, (MatAdd, MatMul, HadamardProduct)))
+
+    def _print_HadamardPower(self, expr):
+        # from sympy import MatAdd, MatMul
+        if self._use_unicode:
+            circ = pretty_atom('Ring')
+        else:
+            circ = self._print('.')
+        pretty_base = self._print(expr.base)
+        pretty_exp = self._print(expr.exp)
+        if precedence(expr.exp) < PRECEDENCE["Mul"]:
+            pretty_exp = prettyForm(*pretty_exp.parens())
+        pretty_circ_exp = prettyForm(
+            binding=prettyForm.LINE,
+            *stringPict.next(circ, pretty_exp)
+        )
+        return pretty_base**pretty_circ_exp
 
     def _print_KroneckerProduct(self, expr):
         from sympy import MatAdd, MatMul
@@ -1387,14 +1396,29 @@ class PrettyPrinter(Printer):
     def _print_mathieusprime(self, e):
         return self._print_Function(e, func_name="S'")
 
-    def _helper_print_function(self, func, args, sort=False, func_name=None, delimiter=', '):
+    def _helper_print_function(self, func, args, sort=False, func_name=None, delimiter=', ', elementwise=False):
         if sort:
             args = sorted(args, key=default_sort_key)
 
-        if not func_name:
+        if not func_name and hasattr(func, "__name__"):
             func_name = func.__name__
 
-        prettyFunc = self._print(Symbol(func_name))
+        if func_name:
+            prettyFunc = self._print(Symbol(func_name))
+        else:
+            prettyFunc = prettyForm(*self._print(func).parens())
+
+        if elementwise:
+            if self._use_unicode:
+                circ = pretty_atom('Modifier Letter Low Ring')
+            else:
+                circ = '.'
+            circ = self._print(circ)
+            prettyFunc = prettyForm(
+                binding=prettyForm.LINE,
+                *stringPict.next(prettyFunc, circ)
+            )
+
         prettyArgs = prettyForm(*self._print_seq(args, delimiter=delimiter).parens())
 
         pform = prettyForm(
@@ -1409,8 +1433,8 @@ class PrettyPrinter(Printer):
     def _print_ElementwiseApplyFunction(self, e):
         func = e.function
         arg = e.expr
-        args = [arg, "..."]
-        return self._helper_print_function(func, args, delimiter="")
+        args = [arg]
+        return self._helper_print_function(func, args, delimiter="", elementwise=True)
 
     @property
     def _special_function_classes(self):
