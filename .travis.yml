@@ -73,15 +73,15 @@ matrix:
             - libatlas-base-dev
             - liblapack-dev
             - gfortran
-    - python: 3.6
-      # This is actually 3.7 (once all the dependencies support it). We use
-      # python: 3.6 here because 3.7 requires the slower xenial/sudo: true container,
-      # and we aren't actually using the Travis Python anyway.
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      services: 
+        - xvfb
       env:
         - TEST_ASCII="true"
         - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet lfortran python-clang"
         - TEST_SAGE="true"
-        - USE_XVFB="true"
       addons:
         apt:
           packages:
@@ -321,7 +321,7 @@ script:
   # Don't run doctr if the build fails
   - set -e
   - if [[ "${USE_XVFB}"]] == "true" ]]; then
-        xvfb-run bin/test_travis.sh;
+        xvfb-run --server-args="-screen 0 1024x768x24" bin/test_travis.sh;
     else
         bin/test_travis.sh;
     fi
