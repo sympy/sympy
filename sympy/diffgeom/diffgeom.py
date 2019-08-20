@@ -19,7 +19,7 @@ from sympy.solvers import solve
 # TODO too often one needs to call doit or simplify on the output, check the
 # tests and find out why
 from sympy.tensor.array import ImmutableDenseNDimArray
-from sympy.tensor.array import MutableSparseNDimArray
+from sympy import MutableSparseNDimArray
 
 class Manifold(Basic):
     """Object representing a mathematical manifold.
@@ -1150,7 +1150,8 @@ class TensorArray:
         self.covariant_order=covariant_order(T)
         self.contravariant_order=contravariant_order(T)
         self.order = self.covariant_order+self.contravariant_order
-        indices = list(itertools.product(range(self.n),repeat=self.order))
+        self.shape = [self.n for _ in range(self.order)]
+        self.indices = list(itertools.product(range(self.n),repeat=self.order))
         self.contravariant_slots=self._contravariant_slots(T)
         self.covariant_slots=list(range(self.order))
         [self.covariant_slots.remove(i) for i in self.contravariant_slots]
@@ -1160,45 +1161,18 @@ class TensorArray:
             else:
                 return self.coords[p[k]]
         Tbases = [
-            (p,[basishelper(list(p),k) for k in range(self.order)]) for p in indices
+            (p,[basishelper(list(p),k) for k in range(self.order)]) for p in self.indices
         ]
         if self.order==0: #scalar case
-            coeffs = [T]
+            self.tensor = MutableSparseNDimArray(T)
         else:
-            coeffs = []
+            self.tensor = MutableSparseNDimArray.zeros(*self.shape)
             for (p,exI) in Tbases:
                 Tval = T.rcall(*exI)
                 if Tval != 0:
-                    coeffs.append(Tval)
+                    self.tensor[p]=Tval
                 else:
-                    indices.remove(p)
-        self.tensor = dict(zip(indices,coeffs))
-
-    def to_NDimArray(self):
-        """
-        Converts from internal sparse dict representation to sympy.tensor.MutableSparseNDimArray
-
-        Example
-        =======
-        >>> from sympy.diffgeom import TensorProduct, Manifold, Patch, CoordSystem, TensorArray
-        >>> from sympy import Function
-        >>> from sympy.functions import sin
-        >>> M = Manifold('Reisner-Nordstrom', 4)
-        >>> p = Patch('origin', M)
-        >>> cs = CoordSystem('spherical', p, ['t', 'r', 'theta', 'phi'])
-        >>> t, r, theta, phi = cs.coord_functions()
-        >>> dt, dr, dtheta, dphi = cs.base_oneforms()
-        >>> f=Function('f')
-        >>> TP=TensorProduct
-        >>> metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
-        >>> TensorArray(metric).to_NDimArray()
-        [[f(r)**2, 0, 0, 0], [0, -1/f(r)**2, 0, 0], [0, 0, -r**2, 0], [0, 0, 0, -r**2*sin(theta)**2]]
-        """
-        a = MutableSparseNDimArray.zeros(*tuple(self.n for _ in range(self.order)))
-        for (index,coeffs) in list(self.tensor.items()):
-            a[index] = coeffs
-        return a
-
+                    self.indices.remove(p)
     def _init_from_array(self,component_array,variance,coordinate_system):
         self.CoordSystem = coordinate_system
         self.coords = self.CoordSystem.coord_functions()
@@ -1206,13 +1180,19 @@ class TensorArray:
         self.base_vectors = self.CoordSystem.base_vectors()
         self.n = len(self.coords)
         self.order = len(variance)
+        self.shape = [self.n for _ in range(self.order)]
         self.covariant_slots=[k for k in range(self.order) if variance[k]==1]
         self.covariant_order = len(self.covariant_slots)
         self.contravariant_slots=[k for k in range(self.order) if variance[k]==-1]
         self.contravariant_order = len(self.contravariant_slots)
-        indices = list(itertools.product(range(self.n),repeat=self.order))
-        self.tensor = dict(zip(indices,component_array))
-
+        self.indices = list(itertools.product(range(self.n),repeat=self.order))
+        self.tensor = MutableSparseNDimArray.zeros(*self.shape)
+        component_array = MutableSparseNDimArray(component_array)
+        for index in self.indices:
+            if component_array[index]!=0:
+                self.tensor[index] = component_array[index]
+            else:
+                self.indices.remove(index)
     def __init__(self, *args, **kwargs):
         if args != ():
             if len(args) != 1:
@@ -1228,22 +1208,18 @@ class TensorArray:
                 return self.base_oneforms[p[k]]
             else:
                 return self.base_vectors[p[k]]
-        Tbasesdual = [
-            [dualbasishelper(I,k) for k in range(self.order)] for I in self.indices()
-        ]
-        return sum([TensorProduct(*dxI) * TI for (dxI,TI) in zip(Tbasesdual,self.components())])
+        Tbasesdual = {
+            I : TensorProduct(*[dualbasishelper(I,k) for k in range(self.order)])
+            for I in self.indices
+        }
+        return sum([Tbasesdual[I] * self.tensor[I] for I in self.indices])
 
-    def indices(self):
-        """
-        Indices with nonzero components
-        """
-        return list(self.tensor.keys())
 
     def components(self):
         """
         Nonzero components
         """
-        return list(self.tensor.values())
+        return [self.tensor[index] for index in self.indices]
 
     def variance(self,index):
         if self.contravariant_slots.count(index) > 0:
@@ -1258,12 +1234,15 @@ class TensorArray:
             raise ValueError("Indexed tensors must come from the same coordinate system")
         self.covariant_slots = self.covariant_slots + [i+self.order for i in other.covariant_slots]
         self.contravariant_slots = self.contravariant_slots + [i+self.order for i in other.contravariant_slots]
-        indices = [a+b for (a,b) in itertools.product(self.indices(), other.indices())]
         coeffs = [a * b for (a,b) in itertools.product(self.components(), other.components())]
-        self.tensor = dict(zip(indices,coeffs))
+        self.indices = [a+b for (a,b) in itertools.product(self.indices, other.indices)]
+        self.shape += other.shape
         self.covariant_order += other.covariant_order
         self.contravariant_order += other.contravariant_order
         self.order += other.order
+        self.tensor = MutableSparseNDimArray.zeros(*self.shape)
+        for (index,coeff) in zip(self.indices,coeffs):
+            self.tensor[index] = coeff
 
     def TensorProduct(self,other):
         new = copy.copy(self) #shallow copy
@@ -1273,20 +1252,24 @@ class TensorArray:
     def _contract(self,a,b):  #destructive contraction
         if self.variance(a) == self.variance(b):
             raise ValueError("Incompatible variance in contraction.")
-        indices=list(filter(lambda I: I[a]==I[b], self.indices()))
+        contractIndices=list(filter(lambda I: I[a]==I[b], self.indices))
         new_indices=[]
         new_coeffs=[]
-        while indices != []:
-            I=indices[0]
-            Islice = list(filter(lambda J: all([I[t]==J[t] for t in range(self.order) if t != a and t != b]), indices))
+        while contractIndices != []:
+            I=contractIndices[0]
+            Islice = list(filter(lambda J: all([I[t]==J[t] for t in range(self.order) if t != a and t != b]), contractIndices))
             for J in Islice:
-                indices.remove(J)
+                contractIndices.remove(J)
             new_coeffs.append(sum([self.tensor[J] for J in Islice]))
             I_ab = list(I)
             del I_ab[max(a,b)]
             del I_ab[min(a,b)]
             new_indices.append(tuple(I_ab))
-        self.tensor = dict(zip(new_indices,new_coeffs))
+        self.indices = new_indices
+        self.shape = self.shape[2:]
+        self.tensor = MutableSparseNDimArray.zeros(*self.shape)
+        for (index,coeff) in zip(new_indices,new_coeffs):
+            self.tensor[index] = coeff
         self.covariant_order -= 1
         self.contravariant_order -= 1
         self.order -= 2
@@ -1339,14 +1322,16 @@ class TensorArray:
             keylist[a] = keylist[b]
             keylist[b] = ka
             return(tuple(keylist))
-        keys = list(self.tensor.keys())
+        keys = self.indices.copy()
         while keys != []:
             key = keys.pop()
-            t = self.tensor.pop(key)
+            t = self.tensor[key]
+            self.tensor[key] = 0
             key_swapped = swapab(key)
             if keys.count(key_swapped) > 0:
                 keys.remove(key_swapped)
-                t_swapped = self.tensor.pop(key_swapped)
+                t_swapped = self.tensor[key_swapped]
+                self.tensor[key_swapped] = 0
                 self.tensor[key]=t_swapped
                 self.tensor[key_swapped]=t
             else:
@@ -1387,22 +1372,12 @@ class TensorArray:
         if self.covariant_slots != other.covariant_slots:
             raise ValueError("Tensors have incompatible variance.")
         sum = copy.copy(self)
-        sum.tensor = {}
-        for k, v in self.tensor.items():
-            sum.tensor[k] = v
-        for k, v in other.tensor.items():
-            try:
-                sum.tensor[k] += v
-            except KeyError:
-                sum.tensor[k] = v
+        sum.tensor = self.tensor + other.tensor
         return sum
 
     def __mul__(self,c):
         prod = copy.copy(self)
-        prod.tensor = {}
-        for k, v in self.tensor.items():
-            prod.tensor[k] = c*v
-        return prod
+        prod.tensor = c*self.tensor
 
     def __sub__(self,other):
         if self.CoordSystem != other.CoordSystem:
@@ -1414,19 +1389,16 @@ class TensorArray:
         if self.covariant_slots != other.covariant_slots:
             raise ValueError("Tensors have incompatible variance.")
         diff = copy.copy(self)
-        diff.tensor = {}
-        for k, v in self.tensor.items():
-            diff.tensor[k] = v
-        for k, v in other.tensor.items():
-            try:
-                diff.tensor[k] -= v
-            except KeyError:
-                diff.tensor[k] = -v
+        diff.tensor = self.tensor - other.tensor
         return diff
+
+
 
     def zero(self,contraslots,coslots):
         res = copy.copy(self)
-        res.tensor={}
+        res.indices = []
+        res.shape = [res.n for _ in (coslots + contraslots)]
+        res.tensor=MutableSparseNDimArray.zeros(*res.shape)
         res.contravariant_slots=contraslots
         res.covariant_slots=coslots
         res.covariant_order=len(coslots)
@@ -1446,6 +1418,7 @@ class TensorArray:
             newcontraction = ch2Xself.contract(0,k+3)
             newcontraction._move_index(1,k+1)
             assert(newcontraction.covariant_slots == contractions.covariant_slots)
+            assert(newcontraction.tensor.shape == contractions.tensor.shape)
             contractions = contractions - newcontraction
         for k in self.contravariant_slots:
             newcontraction = ch2Xself.contract(1,k+3)
@@ -1453,9 +1426,9 @@ class TensorArray:
             assert(newcontraction.covariant_slots == contractions.covariant_slots)
             contractions = contractions + newcontraction
         coord_derivative = self.zero([k+1 for k in self.contravariant_slots],[0]+[k+1 for k in self.covariant_slots])
-        for key,coef in self.tensor.items():
+        for index in self.indices:
             for k in range(self.n):
-                coord_derivative.tensor[(k,)+key] = self.base_vectors[k](coef)
+                coord_derivative.tensor[(k,)+index] = self.base_vectors[k](self.tensor[index])
         return contractions + coord_derivative
 
 ###############################################################################
