@@ -242,4 +242,3 @@ def test_scalar():
     f=Function('f')
     assert(TensorArray(1,coordinate_system=cs).to_tensor() == 1)
     assert(TensorArray(f(r)).to_tensor() == f(r))
-
