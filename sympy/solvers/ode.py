@@ -4188,31 +4188,32 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     True if soln1 is found to be a special case of soln2 wrt some value of the
     constants that appear in soln2. False otherwise.
     """
-    # The solutions returned by dsolve should be given explicitly as in
-    # Eq(f(x), expr). We will equate the RHSs of the two solutions giving an
-    # equation f1(x) = f2(x).
+    # The solutions returned by dsolve may be given explicitly or implicitly.
+    # We will equate the sol1=(soln1.rhs - soln1.lhs), sol2=(soln2.rhs - soln2.lhs)
+    # of the two solutions.
     #
-    # Since this is supposed to hold for all x it also holds for derivatives
-    # f1'(x) and f2'(x). For an order n ode we should be able to differentiate
+    # Since this is supposed to hold for all x it also holds for derivatives.
+    # For an order n ode we should be able to differentiate
     # each solution n times to get n+1 equations.
     #
     # We then try to solve those n+1 equations for the integrations constants
-    # in f2(x). If we can find a solution that doesn't depend on x then it
-    # means that some value of the constants in f1(x) is a special case of
-    # f2(x) corresponding to a paritcular choice of the integration constants.
+    # in sol2. If we can find a solution that doesn't depend on x then it
+    # means that some value of the constants in sol1 is a special case of
+    # sol2 corresponding to a paritcular choice of the integration constants.
 
     constants1 = soln1.free_symbols.difference(eq.free_symbols)
     constants2 = soln2.free_symbols.difference(eq.free_symbols)
 
-    constants1_new = get_numbered_constants(soln1.rhs - soln2.rhs, len(constants1))
+    constants1_new = get_numbered_constants((soln1.rhs-soln1.lhs) - (soln2.rhs-soln2.lhs),
+                     len(constants1))
     if len(constants1) == 1:
         constants1_new = {constants1_new}
     for c_old, c_new in zip(constants1, constants1_new):
         soln1 = soln1.subs(c_old, c_new)
 
-    # n equations for f1(x)=f2(x), f1'(x)=f2'(x), ...
-    lhs = soln1.rhs.doit()
-    rhs = soln2.rhs.doit()
+    # n equations for sol1 = sol2, sol1'=sol2', ...
+    lhs = (soln1.rhs-soln1.lhs).doit()
+    rhs = (soln2.rhs-soln2.lhs).doit()
     eqns = [Eq(lhs, rhs)]
     for n in range(1, order):
         lhs = lhs.diff(var)
