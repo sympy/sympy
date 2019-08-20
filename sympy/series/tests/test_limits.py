@@ -558,3 +558,7 @@ def test_issue_17325():
     assert Limit(x**2, x, 0, dir="+-").doit() == 0
     assert Limit(1/x**2, x, 0, dir="+-").doit() == oo
     raises(ValueError, lambda: Limit(1/x, x, 0, dir="+-").doit())
+
+
+def test_issue_14590():
+    assert limit((x**3*((x + 1)/x)**x)/((x + 1)*(x + 2)*(x + 3)), x, oo) == exp(1)
