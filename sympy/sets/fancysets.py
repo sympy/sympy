@@ -323,9 +323,8 @@ class ImageSet(Set):
 
         # A better check than the one below would be that the number of
         # arguments to the function matches the number of sets.
-        if flambda is S.IdentityFunction:
-            if len(sets) != 1:
-                raise ValueError('identify function requires a single set')
+        if len(sets) not in flambda.nargs:
+            raise ValueError('Number of arguments does not match numbers of sets')
 
     @classmethod
     def _eval_doit(cls, flambda, *sets):
@@ -377,53 +376,22 @@ class ImageSet(Set):
                 # XXX this is a bad idea -- make the user
                 # remap self to desired form
                 return other.as_numer_denom() in self.func(
-                    Lambda(L.variables, L.expr.as_numer_denom()), self.base_set)
-            eqs = [expr - val for val, expr in zip(other, L.expr)]
+                    Lambda(L.variables, L.expr.as_numer_denom()), *self.base_set.args)
+
             variables = L.variables
-            free = set(variables)
-            if all(i.is_number for i in list(Matrix(eqs).jacobian(variables))):
-                solns = list(linsolve([e - val for e, val in
-                zip(L.expr, other)], variables))
+            vars_set = set(variables)
+            vars_seen = set()
+            for expr in L.expr:
+                vars_seen |= expr.free_symbols & vars_set
+
+            eqs = [expr - val for val, expr in zip(other, L.expr)]
+            solns = solve(eqs, vars_seen, dict=True)
+            for soln in solns:
+                ivs = ((i, v) for i, v in enumerate(variables) if v in vars_seen)
+                if all(v not in soln or soln[v] in self.base_set.args[i] for i, v in ivs):
+                    return True
             else:
-                try:
-                    syms = [e.free_symbols & free for e in eqs]
-                    solns = {}
-                    for i, (e, s, v) in enumerate(zip(eqs, syms, other)):
-                        if not s:
-                            if e != v:
-                                return S.false
-                            solns[vars[i]] = [v]
-                            continue
-                        elif len(s) == 1:
-                            sy = s.pop()
-                            sol = solveset(e, sy)
-                            if sol is S.EmptySet:
-                                return S.false
-                            elif isinstance(sol, FiniteSet):
-                                solns[sy] = list(sol)
-                            else:
-                                raise NotImplementedError
-                        else:
-                            # if there is more than 1 symbol from
-                            # variables in expr than this is a
-                            # coupled system
-                            raise NotImplementedError
-                    solns = cartes(*[solns[s] for s in variables])
-                except NotImplementedError:
-                    solns = solve([e - val for e, val in
-                        zip(L.expr, other)], variables, set=True)
-                    if solns:
-                        _v, solns = solns
-                        # watch for infinite solutions like solving
-                        # for x, y and getting (x, 0), (0, y), (0, 0)
-                        solns = [i for i in solns if not any(
-                            s in i for s in variables)]
-                        if not solns:
-                            return False
-                    else:
-                        # not sure if [] means no solution or
-                        # couldn't find one
-                        return
+                return False
         else:
             x = L.variables[0]
             if isinstance(L.expr, Expr):
@@ -457,7 +425,7 @@ class ImageSet(Set):
                 if soln in self.base_set:
                     return True
             except TypeError:
-                return
+                continue
         return S.false
 
     @property

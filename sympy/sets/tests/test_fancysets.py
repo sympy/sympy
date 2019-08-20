@@ -103,17 +103,17 @@ def test_ImageSet():
 
     assert ImageSet(Lambda(x, x**2), Interval(0, 2)).doit() == Interval(0, 4)
 
-    c = ComplexRegion(Interval(1, 3)*Interval(1, 3))
-    assert Tuple(2, 6) in ImageSet(Lambda((x, y), (x, 2*y)), c)
-    assert Tuple(2, S.Half) in ImageSet(Lambda((x, y), (x, 1/y)), c)
-    assert Tuple(2, -2) not in ImageSet(Lambda((x, y), (x, y**2)), c)
-    assert Tuple(2, -2) in ImageSet(Lambda((x, y), (x, -2)), c)
-    c3 = Interval(3, 7)*Interval(8, 11)*Interval(5, 9)
-    assert Tuple(8, 3, 9) in ImageSet(Lambda((t, y, x), (y, t, x)), c3)
-    assert Tuple(S(1)/8, 3, 9) in ImageSet(Lambda((t, y, x), (1/y, t, x)), c3)
-    assert 2/pi not in ImageSet(Lambda((x, y), 2/x), c)
-    assert 2/S(100) not in ImageSet(Lambda((x, y), 2/x), c)
-    assert 2/S(3) in ImageSet(Lambda((x, y), 2/x), c)
+    c = (Interval(1, 3), Interval(1, 3))
+    assert Tuple(2, 6) in ImageSet(Lambda((x, y), (x, 2*y)), *c)
+    assert Tuple(2, S.Half) in ImageSet(Lambda((x, y), (x, 1/y)), *c)
+    assert Tuple(2, -2) not in ImageSet(Lambda((x, y), (x, y**2)), *c)
+    assert Tuple(2, -2) in ImageSet(Lambda((x, y), (x, -2)), *c)
+    c3 = (Interval(3, 7), Interval(8, 11), Interval(5, 9))
+    assert Tuple(8, 3, 9) in ImageSet(Lambda((t, y, x), (y, t, x)), *c3)
+    assert Tuple(S(1)/8, 3, 9) in ImageSet(Lambda((t, y, x), (1/y, t, x)), *c3)
+    assert 2/pi not in ImageSet(Lambda((x, y), 2/x), *c)
+    assert 2/S(100) not in ImageSet(Lambda((x, y), 2/x), *c)
+    assert 2/S(3) in ImageSet(Lambda((x, y), 2/x), *c)
 
     assert imageset(lambda x, y: x + y, S.Integers, S.Naturals
         ).base_set == ProductSet(S.Integers, S.Naturals)
@@ -129,7 +129,7 @@ def test_halfcircle():
     # I believe the code within fancysets is correct
     r, th = symbols('r, theta', real=True)
     L = Lambda((r, th), (r*cos(th), r*sin(th)))
-    halfcircle = ImageSet(L, Interval(0, 1)*Interval(0, pi))
+    halfcircle = ImageSet(L, Interval(0, 1), Interval(0, pi))
 
     assert (r, 0) in halfcircle
     assert (1, 0) in halfcircle
