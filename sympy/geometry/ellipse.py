@@ -1336,6 +1336,7 @@ class Ellipse(GeometrySet):
         """
         return self.args[2]
 
+
     def second_moment_of_area(self, point=None):
         """Returns the second moment and product moment area of an ellipse.
 
@@ -1383,6 +1384,98 @@ class Ellipse(GeometrySet):
         I_xy = I_xy + self.area*(point[0] - self.center.x)*(point[1] - self.center.y)
 
         return I_xx, I_yy, I_xy
+
+
+    def polar_second_moment_of_area(self):
+        """Returns the polar second moment of area of an Ellipse
+
+        It is a constituent of the second moment of area, linked through
+        the perpendicular axis theorem. While the planar second moment of
+        area describes an object's resistance to deflection (bending) when
+        subjected to a force applied to a plane parallel to the central
+        axis, the polar second moment of area describes an object's
+        resistance to deflection when subjected to a moment applied in a
+        plane perpendicular to the object's central axis (i.e. parallel to
+        the cross-section)
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Polar_moment_of_inertia
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Circle, Ellipse
+        >>> c = Circle((5, 5), 4)
+        >>> c.polar_second_moment_of_area()
+        128*pi
+        >>> a, b = symbols('a, b')
+        >>> e = Ellipse((0, 0), a, b)
+        >>> e.polar_second_moment_of_area()
+        pi*a**3*b/4 + pi*a*b**3/4
+        """
+        second_moment = self.second_moment_of_area()
+        return second_moment[0] + second_moment[1]
+
+
+    def section_modulus(self, point=None):
+        """Returns a tuple with the section modulus of an ellipse
+
+        Section modulus is a geometric property of an ellipse defined as the
+        ratio of second moment of area to the distance of the extreme end of
+        the ellipse from the centroidal axis.
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Section_modulus
+
+        Parameters
+        ==========
+
+        point : Point, two-tuple of sympifyable objects, or None(default=None)
+            point is the point at which section modulus is to be found.
+            If "point=None" section modulus will be calculated for the
+            point farthest from the centroidal axis of the ellipse.
+
+        Returns
+        =======
+
+        S_x, S_y: numbers or SymPy expressions
+                  S_x is the section modulus with respect to the x-axis
+                  S_y is the section modulus with respect to the y-axis
+                  A negetive sign indicates that the section modulus is
+                  determined for a point below the centroidal axis.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Ellipse, Circle, Point2D
+        >>> d = Symbol('d', positive=True)
+        >>> c = Circle((0, 0), d/2)
+        >>> c.section_modulus()
+        (pi*d**3/32, pi*d**3/32)
+        >>> e = Ellipse(Point2D(0, 0), 2, 4)
+        >>> e.section_modulus()
+        (8*pi, 4*pi)
+        """
+        x_c, y_c = self.center
+        if point is None:
+            # taking x and y as maximum distances from centroid
+            x_min, y_min, x_max, y_max = self.bounds
+            y = max(y_c - y_min, y_max - y_c)
+            x = max(x_c - x_min, x_max - x_c)
+        else:
+            # taking x and y as distances of the given point from the center
+            y = point.y - y_c
+            x = point.x - x_c
+
+        second_moment = self.second_moment_of_area()
+        S_x = second_moment[0]/y
+        S_y = second_moment[1]/x
+
+        return S_x, S_y
 
 
 class Circle(Ellipse):
