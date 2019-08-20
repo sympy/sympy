@@ -13,7 +13,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
+    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, fastalgsimp
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -172,38 +172,46 @@ class DenseMatrix(MatrixBase):
                          list(mat[i] for i in indices), copy=False)
 
     def _eval_matrix_mul(self, other):
-        from sympy import Add
         # cache attributes for faster access
-        self_rows, self_cols = self.rows, self.cols
+        self_rows, self_cols   = self.rows, self.cols
         other_rows, other_cols = other.rows, other.cols
-        other_len = other_rows * other_cols
-        new_mat_rows = self.rows
-        new_mat_cols = other.cols
+        other_len              = other_rows * other_cols
+        new_mat_rows           = self_rows
+        new_mat_cols           = other_cols
+        self_mat               = self._mat
+        other_mat              = other._mat
+        mulsimp                = self._threadlcl.mulsimp
 
-        # preallocate the array
+        # preallocate the arrays
         new_mat = [self.zero]*new_mat_rows*new_mat_cols
+        vec     = [None]*self_cols
+
+        # get multiplication simplification setting
 
         # if we multiply an n x 0 with a 0 x m, the
         # expected behavior is to produce an n x m matrix of zeros
         if self.cols != 0 and other.rows != 0:
             # cache self._mat and other._mat for performance
-            mat = self._mat
-            other_mat = other._mat
             for i in range(len(new_mat)):
-                row, col = i // new_mat_cols, i % new_mat_cols
+                row, col    = i // new_mat_cols, i % new_mat_cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
                 col_indices = range(col, other_len, other_cols)
-                vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
+
+                for j,a,b in zip(range(self_cols), row_indices, col_indices):
+                    c       = self_mat[a]*other_mat[b]
+                    _expand = mulsimp and getattr(c, 'expand', None)
+                    vec[j]  = _expand(power_base=False, power_exp=False, log=False, \
+                            multinomial=False, basic=False) if _expand else c
                 try:
-                    new_mat[i] = Add(*vec)
+                    e = sum(vec)
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
                     # initially, and for a matrix, that is a mix of a scalar and
                     # a matrix, which raises a TypeError. Fall back to a
                     # block-matrix-safe way to multiply if the `sum` fails.
-                    vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
-                    new_mat[i] = reduce(lambda a,b: a + b, vec)
+                    e = reduce(lambda a,b: a + b, vec)
+                new_mat[i] = fastalgsimp(e) if mulsimp else e
         return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):

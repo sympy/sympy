@@ -8,6 +8,7 @@ from __future__ import division, print_function
 
 from collections import defaultdict
 from inspect import isfunction
+import threading
 
 from sympy.assumptions.refine import refine
 from sympy.core.basic import Atom
@@ -20,7 +21,9 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
+from sympy.polys import cancel, together
 from sympy.simplify import simplify as _simplify
+from sympy.simplify.simplify import count_ops
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -2167,6 +2170,14 @@ class MatrixArithmetic(MatrixRequired):
     def __mod__(self, other):
         return self.applyfunc(lambda x: x % other)
 
+    def mul(self, exp, simplify=True):
+        oldmulsimp              = self._threadlcl.mulsimp
+        self._threadlcl.mulsimp = simplify
+        ret                     = self.__mul__(exp)
+        self._threadlcl.mulsimp = oldmulsimp
+
+        return ret
+
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
         """Return self*other where other is either a scalar or a matrix
@@ -2221,6 +2232,14 @@ class MatrixArithmetic(MatrixRequired):
 
     def __neg__(self):
         return self._eval_scalar_mul(-1)
+
+    def pow(self, exp, simplify=True):
+        oldmulsimp              = self._threadlcl.mulsimp
+        self._threadlcl.mulsimp = simplify
+        ret                     = self.__pow__(exp)
+        self._threadlcl.mulsimp = oldmulsimp
+
+        return ret
 
     @call_highest_priority('__rpow__')
     def __pow__(self, exp):
@@ -2345,11 +2364,17 @@ class MatrixArithmetic(MatrixRequired):
         return self._eval_matrix_mul_elementwise(other)
 
 
+class MatrixCommonThreadLocal(threading.local):
+    def __init__(self):
+        self.mulsimp = None
+
+
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
     _diff_wrt = True
+    _threadlcl = MatrixCommonThreadLocal()
 
 
 class _MinimalMatrix(object):
@@ -2540,3 +2565,34 @@ def classof(A, B):
             return A.__class__
 
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
+
+
+def fastalgsimp(expr):
+    """'Fast' (in air quotes) algebraic simplification to reduce matrix
+    multiplication intermediate products."""
+
+    exprops  = count_ops(expr)
+    expr2    = expr.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
+    expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
+
+    if exprops < 6: # empirically tested cutoff for expensive simplification
+        return expr
+
+    expr2    = cancel(expr) # this is the expensive part
+    expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
+
+    expr3    = together(expr2, deep=True)
+    expr3ops = count_ops(expr3)
+
+    if expr3ops < exprops:
+        return expr3
+
+    return expr
