@@ -203,16 +203,27 @@ fi
 if [[ "${TEST_OPT_DEPENDENCY}" == *"matplotlib"* ]]; then
     cat << EOF | python
 print('Testing MATPLOTLIB')
-# Set matplotlib so that it works correctly in headless Travis. We have to do
-# this here because it doesn't work after the sympy plotting module is
-# imported.
 import matplotlib
-matplotlib.use("Agg")
 import sympy
 # Unfortunately, we have to use subprocess=False so that the above will be
 # applied, so no hash randomization here.
 if not (sympy.test('sympy/plotting', 'sympy/physics/quantum/tests/test_circuitplot.py',
     subprocess=False) and sympy.doctest('sympy/plotting', subprocess=False)):
+    raise Exception('Tests failed')
+EOF
+fi
+
+if [[ "${TEST_OPT_DEPENDENCY}" == *"pyglet"* ]]; then
+    python -m pyglet.info
+    cat << EOF | python
+print('Testing PYGLETPLOT')
+# Set matplotlib so that it works correctly in headless Travis. We have to do
+# this here because it doesn't work after the sympy plotting module is
+# imported.
+import sympy
+# Unfortunately, we have to use subprocess=False so that the above will be
+# applied, so no hash randomization here.
+if not (sympy.test('sympy/plotting/pygletplot')):
     raise Exception('Tests failed')
 EOF
 fi
