@@ -14,7 +14,6 @@ try:
         See examples/advanced/pyglet_plotting.py for many more examples.
 
         >>> from sympy.plotting.pygletplot import PygletPlot as Plot
-        >>> from sympy import symbols
         >>> from sympy.abc import x, y, z
 
         >>> Plot(x*y**3-y*x**3)
@@ -76,7 +75,7 @@ try:
         1: parametric, cartesian, polar
         2: parametric, cartesian, cylindrical = polar, spherical
 
-        >>> Plot(1, mode='spherical')
+        >>> p = Plot(1, mode='spherical')
 
 
         Calculator-like Interface

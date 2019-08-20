@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 import pyglet.gl as pgl
-from pyglet import font
+from pyglet import font, text
 
 from sympy.core import S
 from sympy.core.compatibility import is_sequence
@@ -139,19 +139,19 @@ class PlotAxesBase(PlotObject):
     def draw_axis(self, axis, color):
         raise NotImplementedError()
 
-    def draw_text(self, text, position, color, scale=1.0):
+    def draw_text(self, txt, position, color, scale=1.0):
         if len(color) == 3:
-            color = (color[0], color[1], color[2], 1.0)
+            color = (round(255*color[0]), round(255*color[1]), round(color[2]), 255)
 
         if self._p.label_font is None:
             self._p.label_font = font.load(self._p.font_face,
                                            self._p.font_size,
                                            bold=True, italic=False)
 
-        label = font.Text(self._p.label_font, text,
-                          color=color,
-                          valign=font.Text.BASELINE,
-                          halign=font.Text.CENTER)
+        label = text.Label(txt, font_name=self._p.font_face,
+                          color=color, bold=True, italic=False,
+                          x=round(position[0]), y=round(position[1]),
+                          anchor_x='center', anchor_y='center')
 
         pgl.glPushMatrix()
         pgl.glTranslatef(*position)
@@ -235,7 +235,7 @@ class PlotAxesOrdinate(PlotAxesBase):
         tick_label_vector[axis] = tick
         tick_label_vector[{0: 1, 1: 0, 2: 1}[axis]] = [-1, 1, 1][
             axis] * radius * 3.5
-        self.draw_text(str(tick), tick_label_vector, color, scale=0.5)
+        self.draw_text('{:g}'.format(float(tick)), tick_label_vector, color, scale=0.5)
 
 
 class PlotAxesFrame(PlotAxesBase):

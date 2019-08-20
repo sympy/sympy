@@ -89,6 +89,7 @@ if PY3:
     from functools import reduce
     from io import StringIO
     cStringIO = StringIO
+    from time import perf_counter as clock
 
     exec_ = getattr(builtins, "exec")
 
@@ -130,6 +131,7 @@ else:
     reduce = reduce
     from StringIO import StringIO
     from cStringIO import StringIO as cStringIO
+    from time import clock
 
     def exec_(_code_, _globs_=None, _locs_=None):
         """Execute code in a namespace."""
@@ -954,8 +956,3 @@ try:
 except ImportError:  # Python 2.7
     def filterfalse(pred, itr):
         return filter(lambda x: not pred(x), itr)
-
-try:
-    from time import clock
-except ImportError: # Python 3.8+
-    from time import perf_counter as clock

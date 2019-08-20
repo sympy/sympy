@@ -143,7 +143,7 @@ def main():
     def gradient_vectors():
         def gradient_vectors_inner(f, i):
             from sympy import lambdify
-            from sympy.plotting.plot_interval import PlotInterval
+            from sympy.plotting.pygletplot.plot_interval import PlotInterval
             from pyglet.gl import glBegin, glColor3f
             from pyglet.gl import glVertex3f, glEnd, GL_LINES
 
@@ -215,7 +215,7 @@ def main():
             print("Not a valid example.\n")
         print(p)
 
-    example(0)  # 0 - 15 are defined above
+    example(15)  # 0 - 15 are defined above
     print(help_str())
 
 if __name__ == "__main__":

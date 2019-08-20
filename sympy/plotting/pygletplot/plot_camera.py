@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 import pyglet.gl as pgl
-from sympy.plotting.pygletplot.plot_rotation import get_spherical_rotatation
+from sympy.plotting.pygletplot.plot_rotation import get_spherical_rotation
 from sympy.plotting.pygletplot.util import get_model_matrix, model_to_screen, \
                                             screen_to_model, vec_subs
 
@@ -92,8 +92,8 @@ class PlotCamera(object):
         pgl.glScalef(*self._get_scale())
 
     def spherical_rotate(self, p1, p2, sensitivity=1.0):
-        mat = get_spherical_rotatation(p1, p2, self.window.width,
-                                       self.window.height, sensitivity)
+        mat = get_spherical_rotation(p1, p2, self.window.width,
+                                     self.window.height, sensitivity)
         if mat is not None:
             self.mult_rot_matrix(mat)
 
