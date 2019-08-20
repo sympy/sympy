@@ -240,3 +240,8 @@ fi
 if [[ "${TEST_COVERAGE}" == "true" ]]; then
     unset COVERAGE_PROCESS_START
 fi
+
+if [[ "${TEST_EXAMPLES}" == "true" ]]; then
+    cd ..
+    examples/all.py -q
+fi

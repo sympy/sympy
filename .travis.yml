@@ -161,6 +161,15 @@ matrix:
         - TEST_SYMPY="true"
         - TEST_COVERAGE="true"
         - SPLIT="4/4"
+    # Testing examples
+    - python: 2.7
+      env:
+        - TEST_EXAMPLES="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_EXAMPLES="true"
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
