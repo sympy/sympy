@@ -1490,18 +1490,21 @@ def _solve(f, *symbols, **flags):
                     continue
                 try:
                     v = cond.subs(symbol, candidate)
-                    _eval_simpify = getattr(v, '_eval_simpify', None)
-                    if _eval_simpify is not None:
+                    _eval_simplify = getattr(v, '_eval_simplify', None)
+                    if _eval_simplify is not None:
                         # unconditionally take the simpification of v
-                        v = _eval_simpify(ratio=2, measure=lambda x: 1)
+                        v = _eval_simplify(ratio=2, measure=lambda x: 1)
                 except TypeError:
                     # incompatible type with condition(s)
                     continue
                 if v == False:
                     continue
-                result.add(Piecewise(
-                    (candidate, v),
-                    (S.NaN, True)))
+                if v == True:
+                    result.add(candidate)
+                else:
+                    result.add(Piecewise(
+                        (candidate, v),
+                        (S.NaN, True)))
         # set flags for quick exit at end; solutions for each
         # piece were already checked and simplified
         check = False
