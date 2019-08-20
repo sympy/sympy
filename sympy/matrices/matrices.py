@@ -2396,7 +2396,7 @@ class MatrixBase(MatrixDeprecated,
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
-        return self._new(P*diag(*jordan_cells)*P.inv())
+        return self._new(P.mul(diag(*jordan_cells), mulsimp=mulsimp).mul(P.inv(), mulsimp=mulsimp))
 
     def __repr__(self):
         return sstr(self)
