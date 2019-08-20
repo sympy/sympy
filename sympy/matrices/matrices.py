@@ -80,7 +80,7 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations.
     Should not be instantiated directly."""
 
-    def _eval_berkowitz_toeplitz_matrix(self):
+    def _eval_berkowitz_toeplitz_matrix(self, mulsimp=None):
         """Return (A,T) where T the Toeplitz matrix used in the Berkowitz algorithm
         corresponding to ``self`` and A is the first principal submatrix."""
 
@@ -113,7 +113,7 @@ class MatrixDeterminant(MatrixCommon):
         diags = [C]
         for i in range(self.rows - 2):
             diags.append(A * diags[i])
-        diags = [(-R*d)[0, 0] for d in diags]
+        diags = [((-R).mul(d, mulsimp=mulsimp))[0, 0] for d in diags]
         diags = [self.one, -a] + diags
 
         def entry(i,j):
@@ -124,7 +124,7 @@ class MatrixDeterminant(MatrixCommon):
         toeplitz = self._new(self.cols + 1, self.rows, entry)
         return (A, toeplitz)
 
-    def _eval_berkowitz_vector(self):
+    def _eval_berkowitz_vector(self, mulsimp=None):
         """ Run the Berkowitz algorithm and return a vector whose entries
             are the coefficients of the characteristic polynomial of ``self``.
 
@@ -165,8 +165,8 @@ class MatrixDeterminant(MatrixCommon):
         elif self.rows == 1 and self.cols == 1:
             return self._new(2, 1, [self.one, -self[0,0]])
 
-        submat, toeplitz = self._eval_berkowitz_toeplitz_matrix()
-        return toeplitz * submat._eval_berkowitz_vector()
+        submat, toeplitz = self._eval_berkowitz_toeplitz_matrix(mulsimp=mulsimp)
+        return toeplitz * submat._eval_berkowitz_vector(mulsimp=mulsimp)
 
     def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul):
         """Compute matrix determinant using Bareiss' fraction-free
@@ -288,7 +288,7 @@ class MatrixDeterminant(MatrixCommon):
         """
         return self.cofactor_matrix(method).transpose()
 
-    def charpoly(self, x='lambda', simplify=_simplify):
+    def charpoly(self, x='lambda', simplify=_simplify, mulsimp=None):
         """Computes characteristic polynomial det(x*I - self) where I is
         the identity matrix.
 
@@ -343,7 +343,7 @@ class MatrixDeterminant(MatrixCommon):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        berk_vector = self._eval_berkowitz_vector()
+        berk_vector = self._eval_berkowitz_vector(mulsimp=mulsimp)
         x = _uniquely_named_symbol(x, berk_vector)
         return PurePoly([simplify(a) for a in berk_vector], x)
 
@@ -1244,6 +1244,7 @@ class MatrixEigen(MatrixSubspaces):
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
         rational = flags.pop('rational', True)
+        mulsimp  = flags.pop('mulsimp', None)
 
         mat = self
         if not mat:
@@ -1270,9 +1271,9 @@ class MatrixEigen(MatrixSubspaces):
         else:
             flags.pop('simplify', None)  # pop unsupported flag
             if isinstance(simplify, FunctionType):
-                eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify), **flags)
+                eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify, mulsimp=mulsimp), **flags)
             else:
-                eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
+                eigs = roots(mat.charpoly(x=Dummy('x'), mulsimp=mulsimp), **flags)
 
         # make sure the algebraic multiplicity sums to the
         # size of the matrix
@@ -1659,7 +1660,7 @@ class MatrixEigen(MatrixSubspaces):
     is_indefinite = \
         property(fget=is_indefinite, doc=_doc_positive_definite)
 
-    def jordan_form(self, calc_transform=True, **kwargs):
+    def jordan_form(self, calc_transform=True, mulsimp=None, **kwargs):
         """Return ``(P, J)`` where `J` is a Jordan block
         matrix and `P` is a matrix such that
 
@@ -1791,7 +1792,7 @@ class MatrixEigen(MatrixSubspaces):
             mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
         # first calculate the jordan block structure
-        eigs = mat.eigenvals()
+        eigs = mat.eigenvals(mulsimp=mulsimp)
 
         # make sure that we found all the roots by counting
         # the algebraic multiplicity
@@ -2364,7 +2365,7 @@ class MatrixBase(MatrixDeprecated,
         return self._new(
             rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
 
-    def _matrix_pow_by_jordan_blocks(self, num):
+    def _matrix_pow_by_jordan_blocks(self, num, mulsimp=None):
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
 
@@ -2389,7 +2390,7 @@ class MatrixBase(MatrixDeprecated,
                 for j in range(1, N-i):
                     jc[j,i+j] = jc [j-1,i+j-1]
 
-        P, J = self.jordan_form()
+        P, J = self.jordan_form(mulsimp=mulsimp)
         jordan_cells = J.get_diag_blocks()
         # Make sure jordan_cells matrices are mutable:
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]

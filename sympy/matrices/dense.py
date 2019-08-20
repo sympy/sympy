@@ -171,7 +171,7 @@ class DenseMatrix(MatrixBase):
         return self._new(len(rowsList), len(colsList),
                          list(mat[i] for i in indices), copy=False)
 
-    def _eval_matrix_mul(self, other):
+    def _eval_matrix_mul(self, other, mulsimp=None):
         # cache attributes for faster access
         self_rows, self_cols   = self.rows, self.cols
         other_rows, other_cols = other.rows, other.cols
@@ -180,7 +180,6 @@ class DenseMatrix(MatrixBase):
         new_mat_cols           = other_cols
         self_mat               = self._mat
         other_mat              = other._mat
-        mulsimp                = self._threadlcl.mulsimp
 
         # preallocate the arrays
         new_mat = [self.zero]*new_mat_rows*new_mat_cols
@@ -191,7 +190,6 @@ class DenseMatrix(MatrixBase):
         # if we multiply an n x 0 with a 0 x m, the
         # expected behavior is to produce an n x m matrix of zeros
         if self.cols != 0 and other.rows != 0:
-            # cache self._mat and other._mat for performance
             for i in range(len(new_mat)):
                 row, col    = i // new_mat_cols, i % new_mat_cols
                 row_indices = range(self_cols*row, self_cols*(row+1))

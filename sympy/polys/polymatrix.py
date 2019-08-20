@@ -55,7 +55,7 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
                 ring = ring.unify(domain[i])
         self.ring = ring
 
-    def _eval_matrix_mul(self, other):
+    def _eval_matrix_mul(self, other, mulsimp=None):
         self_rows, self_cols = self.rows, self.cols
         other_rows, other_cols = other.rows, other.cols
         other_len = other_rows * other_cols

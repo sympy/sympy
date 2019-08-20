@@ -288,6 +288,8 @@ def test_power():
 def test_issue_17247_expression_blowup():
     M = Matrix([[1+x, 1-x], [1-x, 1+x]])
 
+    assert M.mul(M) == Matrix([[2*x**2 + 2, 2 - 2*x**2], [2 - 2*x**2, 2*x**2 + 2]])
+
     # assert exp(M).expand() == Matrix([
     #     [ (exp(2*x) + exp(2))/2, (-exp(2*x) + exp(2))/2],
     #     [(-exp(2*x) + exp(2))/2,  (exp(2*x) + exp(2))/2]])

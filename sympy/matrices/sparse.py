@@ -458,7 +458,7 @@ class SparseMatrix(MatrixBase):
         diff = (self - self.T).applyfunc(simpfunc)
         return len(diff.values()) == 0
 
-    def _eval_matrix_mul(self, other):
+    def _eval_matrix_mul(self, other, mulsimp=None):
         """Fast multiplication exploiting the sparsity of the matrix."""
         if not isinstance(other, SparseMatrix):
             return self*self._new(other)

@@ -8,7 +8,6 @@ from __future__ import division, print_function
 
 from collections import defaultdict
 from inspect import isfunction
-import threading
 
 from sympy.assumptions.refine import refine
 from sympy.core.basic import Atom
@@ -2083,7 +2082,7 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, self.cols,
                          lambda i, j: self[i, j] + other[i, j])
 
-    def _eval_matrix_mul(self, other):
+    def _eval_matrix_mul(self, other, mulsimp=None):
         def entry(i, j):
             try:
                 return sum(self[i,k]*other[k,j] for k in range(self.cols))
@@ -2108,13 +2107,13 @@ class MatrixArithmetic(MatrixRequired):
             return sum(other[i,k]*self[k,j] for k in range(other.cols))
         return self._new(other.rows, self.cols, entry)
 
-    def _eval_pow_by_recursion(self, num):
+    def _eval_pow_by_recursion(self, num, mulsimp=None):
         if num == 1:
             return self
         if num % 2 == 1:
-            return self * self._eval_pow_by_recursion(num - 1)
-        ret = self._eval_pow_by_recursion(num // 2)
-        return ret * ret
+            return self * self._eval_pow_by_recursion(num - 1, mulsimp=mulsimp)
+        ret = self._eval_pow_by_recursion(num // 2, mulsimp=mulsimp)
+        return ret.mul(ret, mulsimp=mulsimp)
 
     def _eval_scalar_mul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other)
@@ -2170,16 +2169,11 @@ class MatrixArithmetic(MatrixRequired):
     def __mod__(self, other):
         return self.applyfunc(lambda x: x % other)
 
-    def mul(self, exp, simplify=True):
-        oldmulsimp              = self._threadlcl.mulsimp
-        self._threadlcl.mulsimp = simplify
-        ret                     = self.__mul__(exp)
-        self._threadlcl.mulsimp = oldmulsimp
-
-        return ret
-
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
+        return self.mul (other, mulsimp=False)
+
+    def mul(self, other, mulsimp=True):
         """Return self*other where other is either a scalar or a matrix
         of compatible dimensions.
 
@@ -2216,10 +2210,10 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return self._eval_matrix_mul(other)
+            return self._eval_matrix_mul(other, mulsimp=mulsimp)
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
-            return MatrixArithmetic._eval_matrix_mul(self, other)
+            return MatrixArithmetic._eval_matrix_mul(self, other, mulsimp=mulsimp)
 
         # if 'other' is not iterable then scalar multiplication.
         if not isinstance(other, Iterable):
@@ -2233,16 +2227,11 @@ class MatrixArithmetic(MatrixRequired):
     def __neg__(self):
         return self._eval_scalar_mul(-1)
 
-    def pow(self, exp, simplify=True):
-        oldmulsimp              = self._threadlcl.mulsimp
-        self._threadlcl.mulsimp = simplify
-        ret                     = self.__pow__(exp)
-        self._threadlcl.mulsimp = oldmulsimp
-
-        return ret
-
     @call_highest_priority('__rpow__')
     def __pow__(self, exp):
+        return self.pow(exp, mulsimp=False)
+
+    def pow(self, exp, mulsimp=True):
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
@@ -2269,14 +2258,14 @@ class MatrixArithmetic(MatrixRequired):
             # computation by recursion.
             elif a.rows == 2 and exp > 100000 and jordan_pow is not None:
                 try:
-                    return jordan_pow(exp)
+                    return jordan_pow(exp, mulsimp=mulsimp)
                 except MatrixError:
                     pass
-            return a._eval_pow_by_recursion(exp)
+            return a._eval_pow_by_recursion(exp, mulsimp=mulsimp)
 
         if jordan_pow:
             try:
-                return jordan_pow(exp)
+                return jordan_pow(exp, mulsimp=mulsimp)
             except NonInvertibleMatrixError:
                 # Raised by jordan_pow on zero determinant matrix unless exp is
                 # definitely known to be a non-negative integer.
@@ -2302,6 +2291,9 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        return self.rmul (other, mulsimp=False)
+
+    def rmul(self, other, mulsimp=True):
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
         # our first sanity check.
@@ -2311,10 +2303,10 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return other._new(other.as_mutable() * self)
+            return other._new(other.as_mutable().mul(self, mulsimp=mulsimp))
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
-            return MatrixArithmetic._eval_matrix_rmul(self, other)
+            return MatrixArithmetic._eval_matrix_rmul(self, other, mulsimp=mulsimp)
 
         # if 'other' is not iterable then scalar multiplication.
         if not isinstance(other, Iterable):
@@ -2364,17 +2356,11 @@ class MatrixArithmetic(MatrixRequired):
         return self._eval_matrix_mul_elementwise(other)
 
 
-class MatrixCommonThreadLocal(threading.local):
-    def __init__(self):
-        self.mulsimp = None
-
-
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
     _diff_wrt = True
-    _threadlcl = MatrixCommonThreadLocal()
 
 
 class _MinimalMatrix(object):
