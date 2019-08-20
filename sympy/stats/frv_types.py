@@ -110,9 +110,11 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
         else:
             return S.Zero
 
-    def _sample_random(self, size):
+    def _sample_python(self, size):
         x = Symbol('x')
-        return ArrayComprehensionMap(lambda: self.args[random.randint(0, len(self.args)-1)], (x, 0, size)).doit()
+        if isinstance(size, int):
+            return ArrayComprehensionMap(lambda: self.args[random.randint(0, len(self.args) - 1)], (x, 0, size)).doit()
+        return ArrayComprehensionMap(lambda: self.args[random.randint(0, len(self.args)-1)], *[(x, 0, i) for i in size]).doit()
 
 
 

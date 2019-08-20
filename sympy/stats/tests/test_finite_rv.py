@@ -421,14 +421,14 @@ def test_symbolic_conditions():
 
 
 def test_sampling_methods():
-    distribs_random = [DiscreteUniform("D", list(range(5)))]
+    distribs_python = [DiscreteUniform("D", list(range(5)))]
     distribs_scipy = [Hypergeometric("H", 1, 1, 1)]
     distribs_pymc3 = [BetaBinomial("B", 1, 1, 1)]
 
     size = 5
 
-    for X in distribs_random:
-        sam = X.pspace.distribution._sample_random(size)
+    for X in distribs_python:
+        sam = X.pspace.distribution._sample_python(size)
         for i in range(size):
             assert sam[i] in X.pspace.domain.set
 

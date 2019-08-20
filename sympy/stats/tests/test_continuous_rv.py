@@ -1255,21 +1255,65 @@ def test_conditional_eq():
 
 
 def test_sampling_methods():
-    distribs = [
+    distribs_python = [
         Beta("B", 1, 1),
         Normal("N", 0, 1),
         Gamma("G", 2, 7),
         Exponential("E", 2),
         LogNormal("LN", 0, 1),
         Pareto("P", 1, 1),
-        ChiSquared("CS", 2)
+        Uniform("U", 0, 1),
+        Weibull("W", 1, 1)
     ]
+    distribs_numpy = [
+        Beta("B", 1, 1),
+        Normal("N", 0, 1),
+        Gamma("G", 2, 7),
+        Exponential("E", 2),
+        LogNormal("LN", 0, 1),
+        Pareto("P", 1, 1),
+        ChiSquared("CS", 2),
+        Uniform("U", 0, 1)
+    ]
+    distribs_scipy = [
+        Beta("B", 1, 1),
+        BetaPrime("BP", 1, 1),
+        Cauchy("C", 1, 1),
+        Chi("C", 1),
+        Normal("N", 0, 1),
+        Gamma("G", 2, 7),
+        GammaInverse("GI", 1, 1),
+        GaussianInverse("GI", 1, 1),
+        Exponential("E", 2),
+        LogNormal("LN", 0, 1),
+        Pareto("P", 1, 1),
+        ChiSquared("CS", 2),
+        Uniform("U", 0, 1)
+    ]
+    distribs_pymc3 = [
+        Beta("B", 1, 1),
+        Cauchy("C", 1, 1),
+        Normal("N", 0, 1),
+        Gamma("G", 2, 7),
+        GaussianInverse("GI", 1, 1),
+        Exponential("E", 2),
+        LogNormal("LN", 0, 1),
+        Pareto("P", 1, 1),
+        ChiSquared("CS", 2),
+        Uniform("U", 0, 1)
+    ]
+
     size = 5
+
+    for X in distribs_python:
+        sam = X.pspace.distribution._sample_python(size)
+        for i in range(size):
+            assert sam[i] in X.pspace.domain.set
     numpy = import_module('numpy')
     if not numpy:
         skip('Numpy not installed. Abort tests for _sample_numpy.')
     else:
-        for X in distribs:
+        for X in distribs_numpy:
             sam = X.pspace.distribution._sample_numpy(size)
             for i in range(size):
                 assert sam[i] in X.pspace.domain.set
@@ -1277,7 +1321,7 @@ def test_sampling_methods():
     if not scipy:
         skip('Scipy not installed. Abort tests for _sample_scipy.')
     else:
-        for X in distribs:
+        for X in distribs_scipy:
             sam = X.pspace.distribution._sample_scipy(size)
             for i in range(size):
                 assert sam[i] in X.pspace.domain.set
@@ -1285,7 +1329,7 @@ def test_sampling_methods():
     if not pymc3:
         skip('PyMC3 not installed. Abort tests for _sample_pymc3.')
     else:
-        for X in distribs:
+        for X in distribs_pymc3:
             sam = X.pspace.distribution._sample_pymc3(size)
             for i in range(size):
                 assert sam[i] in X.pspace.domain.set

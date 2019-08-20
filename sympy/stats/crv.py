@@ -12,10 +12,11 @@ from __future__ import print_function, division
 
 import random
 
-from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
+from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan, Symbol,
                    Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
                    Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
 from sympy.external import import_module
+from sympy.tensor.array import ArrayComprehensionMap
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.inequalities import reduce_rational_inequalities
@@ -173,7 +174,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     def sample(self, size=()):
         """ A random realization from the distribution """
-        return self._sample_python(size)
+        return self._sample_scipy(size)
 
     @cacheit
     def _inverse_cdf_expression(self):
@@ -337,8 +338,12 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
         return scipy_rv.rvs(size=size)
 
     def _sample_python(self, size):
+        x = Symbol('x')
         icdf = self._inverse_cdf_expression()
-        return [icdf(random.uniform(0, 1)) for i in range(size)]
+        if isinstance(size, int):
+            return ArrayComprehensionMap(lambda: icdf(random.uniform(0, 1)), (x, 0, size)).doit()
+        return ArrayComprehensionMap(lambda: icdf(random.uniform(0, 1)),
+                                     *[(x, 0, i) for i in size]).doit()
 
     def __new__(cls, pdf, set=Interval(-oo, oo)):
         return Basic.__new__(cls, pdf, set)
