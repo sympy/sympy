@@ -1095,6 +1095,16 @@ def test_unrad1():
         165240*x + 61484) + 810]))
 
     assert solve(eq) == [] # not other code errors
+    eq = root(x, 3) - root(y, 3) + root(x, 5)
+    assert check(unrad(eq),
+           (s**15 + 3*s**13 + 3*s**11 + s**9 - y, [s, s**15 - x]))
+    eq = root(x, 3) + root(y, 3) + root(x*y, 4)
+    assert check(unrad(eq),
+                 (s*y*(-s**12 - 3*s**11*y - 3*s**10*y**2 - s**9*y**3 -
+                       3*s**8*y**2 + 21*s**7*y**3 - 3*s**6*y**4 - 3*s**4*y**4 -
+                       3*s**3*y**5 - y**6), [s, s**4 - x*y]))
+    raises(NotImplementedError,
+           lambda: unrad(root(x, 3) + root(y, 3) + root(x*y, 5)))
 
 
 @slow
@@ -2071,3 +2081,8 @@ def test_issue_10933():
 def test_Abs_handling():
     x = symbols('x', real=True)
     assert solve(abs(x/y), x) == [0]
+
+
+def test_issue_14645():
+    x, y = symbols('x y')
+    assert solve([x*y - x - y, x*y - x - y], [x, y]) == [(y/(y - 1), y)]
