@@ -2737,12 +2737,12 @@ def _tsolve(eq, sym, **flags):
                                 check.extend(_solve(lhs.exp - e, sym, **flags))
                 elif rhs.is_irrational:
                     b_l, e_l = lhs.base.as_base_exp()
-                    n, d = e_l*lhs.exp.as_numer_denom()
+                    n, d = (e_l*lhs.exp).as_numer_denom()
                     b, e = sqrtdenest(rhs).as_base_exp()
                     check = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, **flags))]
                     check.extend([sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))])
-                    if (e_l*d) !=1 :
-                        check.extend(_solve(b_l**(n) - rhs**(e_l*d), sym, **flags))
+                    if e_l*d != 1:
+                        check.extend(_solve(b_l**n - rhs**(e_l*d), sym, **flags))
                 sol.extend(s for s in check if eq.subs(sym, s).equals(0))
                 return list(ordered(set(sol)))
 
