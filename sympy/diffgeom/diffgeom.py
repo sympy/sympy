@@ -1286,6 +1286,9 @@ class TensorArray:
             new_indices.append(tuple(I_ab))
         self.indices = new_indices
         self.shape = self.shape[2:]
+        if self.shape == []:
+            self.tensor = MutableSparseNDimArray(new_coeffs[0])
+            return
         self.tensor = MutableSparseNDimArray.zeros(*self.shape)
         for (index,coeff) in zip(new_indices,new_coeffs):
             self.tensor[index] = coeff
