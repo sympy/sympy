@@ -1811,13 +1811,3 @@ def test_issue_14543():
     assert sec(pi/2 + x) == -csc(x)
     assert sec(3*pi/2 + x) == csc(x)
     assert sec(3*pi/2 - x) == -csc(x)
-
-
-def test_issue_17461():
-    class A(Symbol):
-        def _eval_evalf(self, prec):
-            return Float(5.0)
-
-    x = A('X')
-    y = A('Y')
-    assert abs(atan2(x, y).evalf() - 0.785398163397448) <= 1e-10
