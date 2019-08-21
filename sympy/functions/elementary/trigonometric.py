@@ -3078,4 +3078,4 @@ class atan2(InverseTrigonometricFunction):
     def _eval_evalf(self, prec):
         y, x = self.args
         if x.is_extended_real and y.is_extended_real:
-            super(atan2, self)._eval_evalf(prec)
+            return super(atan2, self)._eval_evalf(prec)
