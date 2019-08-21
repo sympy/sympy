@@ -149,16 +149,18 @@ def test_ImageSet_iterator_not_injective():
 
 
 def test_inf_Range_len():
-    raises(ValueError, lambda: len(Range(0, oo, 2)))
     assert Range(0, oo, 2).size is S.Infinity
     assert Range(0, -oo, -2).size is S.Infinity
-    raises(ValueError, lambda : Range(oo, 0, -2))
+    raises(ValueError, lambda: len(Range(0, oo, 2)))
+    raises(ValueError, lambda : len(Range(oo, 0, -2)))
 
 
 def test_Range_set():
     empty = Range(0)
 
     assert Range(5) == Range(0, 5) == Range(0, 5, 1)
+    assert Range(0, 10, oo) == Range(1)
+    assert Range(0, -10, -oo) == Range(0, -1, -1)
 
     r = Range(10, 20, 2)
     assert 12 in r
@@ -185,12 +187,11 @@ def test_Range_set():
     assert Range(-oo, 1, -1) == empty
     assert Range(1, oo, -1) == empty
     assert Range(1, -oo, 1) == empty
-    raises(ValueError, lambda: Range(1, 4, oo))
-    raises(ValueError, lambda: Range(-oo, oo))
-    raises(ValueError, lambda: Range(oo, -oo, -1))
-    raises(ValueError, lambda: Range(-oo, oo, 2))
-    raises(ValueError, lambda: Range(0, pi, 1))
-    raises(ValueError, lambda: Range(1, 10, 0))
+    assert Range(-oo, oo).inf == Range(oo, -oo, -1).inf == -oo
+    assert Range(1, 4, oo) == Range(1, 2, 1)
+    raises(ValueError, lambda: Range(-oo, oo, x))
+    raises(ValueError, lambda: Range(x, pi, y))
+    raises(ValueError, lambda: Range(x, y, 0))
 
     assert 5 in Range(0, oo, 5)
     assert oo not in Range(0, oo)
@@ -202,8 +203,8 @@ def test_Range_set():
     assert inf not in Range(oo)
     inf = symbols('inf', infinite=True)
     assert inf not in Range(oo)
-    assert Range(0, oo, 2)[-1] == oo
-    assert Range(0, -oo, -2)[-1] == -oo
+    assert Range(0, oo, 2)[-1] is S.NaN
+    assert Range(0, -oo, -2)[-1] is S.NaN
     assert Range(1, 10, 1)[-1] == 9
     assert all(i.is_Integer for i in Range(0, -1, 1))
 
@@ -239,22 +240,23 @@ def test_Range_set():
     raises(NotImplementedError, lambda: empty.inf)
     raises(NotImplementedError, lambda: empty.sup)
 
-    AB = [None] + list(range(12))
+    AB = [None] + list(range(5))
     for R in [
-            Range(1, 10),
-            Range(1, 10, 2),
+            Range(1, 4),
+            Range(1, 8, 2),
         ]:
         r = list(R)
         for a, b, c in cartes(AB, AB, [-3, -1, None, 1, 3]):
-            for reverse in range(2):
-                r = list(reversed(r))
-                R = R.reversed
+            for _ in range(2):
                 result = list(R[a:b:c])
                 ans = r[a:b:c]
                 txt = ('\n%s[%s:%s:%s] = %s -> %s' % (
                 R, a, b, c, result, ans))
                 check = ans == result
                 assert check, txt
+                # now check reversed
+                r = list(reversed(r))
+                R = R.reversed
 
     assert Range(1, 10, 1).boundary == Range(1, 10, 1)
 
@@ -289,22 +291,23 @@ def test_Range_set():
     conts = [0, 3, -10]
     r = Range(a, b, c)
 
-    # _contains
+    # contains
     for av in avs:
         for bv in bvs:
             for cv in cvs:
                 for cont in conts:
-                    scheck = r._contains(d).subs({a: av, b: bv, c: cv, d: cont})
-                    check = r.subs({a: av, b: bv, c: cv})._contains(cont)
+                    scheck = r.contains(d).subs({a: av, b: bv, c: cv, d: cont})
+                    check = r.subs({a: av, b: bv, c: cv}).contains(cont)
                     assert (scheck == check)
     for av in avs:
         for cv in cvs:
             for cont in conts:
-                scheck = r._contains(d).subs({a: av, c: cv, d: cont}).subs(b, oo)
-                check = r.subs({a: av, c: cv}).subs(b, oo)._contains(cont)
+                s = {a: av, c: cv, d: cont}
+                scheck = r.contains(d).subs(s).subs(b, oo)
+                check = r.subs({a: av, c: cv}).subs(b, oo).contains(cont)
                 assert (scheck == check)
-                scheck = r._contains(d).subs({a: av, c: cv, d: cont}).subs(b, -oo)
-                check = r.subs({a: av, c: cv}).subs(b, -oo)._contains(cont)
+                scheck = r.contains(d).subs(s).subs(b, -oo)
+                check = r.subs({a: av, c: cv}).subs(b, -oo).contains(cont)
                 assert (scheck == check)
 
     # iter
@@ -381,15 +384,15 @@ def test_Range_set():
 
     avs, bvs = ([0, 20, -30], )*2
     cvs = [1, -2]
-    idxs = [0, 3, -10, -1]
+    idxs = Tuple(0, 3, -10, -1)
 
     def check_gtm(rgtm, rabc, idx):
         if not rabc:
-            raises(IndexError, lambda : rabc.__getitem__(idx))
-        elif rgtm in (S.Infinity, S.NegativeInfinity) and idx not in (oo, -1, 0):
-            raises(ValueError, lambda : rabc.__getitem__(idx))
+            raises(IndexError, lambda : rabc[idx])
+        elif rgtm in (S.Infinity, S.NegativeInfinity):
+            raises(ValueError, lambda : rabc[idx])
         else:
-            assert rgtm == rabc.__getitem__(idx)
+            assert rgtm == rabc[idx]
 
     # __getitem__
     for av in avs:

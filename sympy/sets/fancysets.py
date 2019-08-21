@@ -467,19 +467,18 @@ class Range(Set):
         Range(0, 12, 3)
 
     Infinite ranges are allowed. ``oo`` and ``-oo`` are never included in the
-    set (``Range`` is always a subset of ``Integers``). Note that a Range with
-    infinite start is not allowed.
+    set (``Range`` is always a subset of ``Integers``).
 
         >>> from sympy import oo
-        >>> r = Range(-oo, 1)
-        Traceback (most recent call last):
-        ...
-        ValueError: Range must start with a finite value or symbol.
         >>> r = Range(0, oo)
         >>> r[0]
         0
         >>> next(iter(r))
         0
+        >>> next(Range(-oo, 1))
+        Traceback (most recent call last):
+        ...
+        TypeError: 'Range' object is not an iterator
 
     A canonical empty Range will be produced when the Range contains
     no values:
@@ -518,7 +517,7 @@ class Range(Set):
         >>> list(Range(n, n + 6))
         [n, n + 1, n + 2, n + 3, n + 4, n + 5]
         >>> Range(1, n, 1).size
-        Piecewise((0, n - 1 <= 0), (Abs(n - 1), True))
+        Piecewise((0, n - 1 <= 0), (n - 1, True))
     """
     is_iterable = True
 
@@ -549,37 +548,43 @@ class Range(Set):
         [0, 1/10, 1/5].'''))
 
         start, stop, step = params
-
-        if step.is_finite == False:
-            raise ValueError("step must be a finite integer symbol.")
-
-        if all(i.is_infinite for i in (start, stop)):
-            if start == stop:
-                # canonical null handled below
-                start = stop = S.One
+        null = True if start == stop else None
+        if not null and start.is_infinite and stop.is_infinite:
+            if abs(step).is_infinite or abs(step) != 1:
+                raise ValueError('step can only be +/-1 for infinite start and stop')
+            if (stop - start)*step < 0:
+                null = True
             else:
-                raise ValueError(filldedent('''
-    Either the start or end value of the Range must be finite.'''))
-
-        if start.is_infinite:
-            # null Range
-            if (step*(stop - start) < 0) == True:
-                start = end = S.Zero
-                step = S.One
-            else:
-                raise ValueError("Range must start with a finite value or symbol.")
+                end = stop
         else:
-            ref = start if start.is_finite is not False else stop
-            n = ceiling((stop - ref)/step)
-            if (n <= 0) == True:
-                # null Range
-                start = end = S.Zero
-                step = S.One
-            else:
-                end = ref + n*step
+            try:
+                misorient = step*(stop - start) <= 0
+                if misorient == True:
+                    null = True
+                elif not misorient:
+                    ref = start if start.is_finite is not False else stop
+                    n = ceiling((stop - ref)/step)
+                    if n is S.NaN or (
+                            (n <= 0) == True and
+                            not start.is_infinite and
+                            not step.is_infinite):
+                        null = True
+                    else:
+                        if step in (S.Infinity, S.NegativeInfinity):
+                            step = 1 if step > 0 else -1
+                            end = start + step
+                        else:
+                            end = ref + n*step
+                else:
+                    end  = stop
+            except TypeError:
+                end = stop
 
-        isinf = Eq(1/start, 0)
-        last = Piecewise((end, Not(isinf)), (stop, True))
+        if null:
+            last = start = S.Zero
+            step = S.One
+        else:
+            last = end
         obj = Basic.__new__(cls, start, last, step)
         obj._rawargs = start, stop, step
         return obj
@@ -587,6 +592,54 @@ class Range(Set):
     start = property(lambda self: self.args[0])
     stop = property(lambda self: self.args[1])
     step = property(lambda self: self.args[2])
+
+    @property
+    def _inf(self):
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.functions.elementary.integers import ceiling
+        if not self:
+            raise NotImplementedError
+        start, stop, step = self.start, self.stop, self.step
+        if start.is_infinite and stop.is_infinite:
+            return start if step > 0 else stop
+        isinf = start.is_infinite
+        if isinf is None:
+            notinf = Ne(start, 1 + start, evaluate=False)
+        else:
+            notinf =  not isinf
+        ref = start if start.is_finite is not False else stop
+        n = ceiling((stop - ref)/step)
+        if n is S.NaN or ((n <= 0) == True and not start.is_infinite):
+            # null Range
+            return S.NaN
+        end = ref + n*step
+        last = Piecewise((end, notinf), (stop, True))
+        return Piecewise((S.NaN, ceiling((stop - start)/step) <= 0),
+                        (start, step > 0),
+                        (last - step, True))
+
+    @property
+    def _sup(self):
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.functions.elementary.integers import ceiling
+        if not self:
+            raise NotImplementedError
+        start, stop, step = self.start, self.stop, self.step
+        isinf = start.is_infinite
+        if isinf is None:
+            notinf = Ne(start, 1 + start, evaluate=False)
+        else:
+            notinf = not isinf
+        ref = start if start.is_finite is not False else stop
+        n = ceiling((stop - ref)/step)
+        if n is S.NaN or ((n <= 0) == True and not start.is_infinite):
+            # null Range
+            return S.NaN
+        end = ref + n*step
+        last = Piecewise((end, notinf), (stop, True))
+        return Piecewise((S.NaN, ceiling((stop - start)/step) <= 0),
+                        (start, step < 0),
+                        (last - step, True))
 
     @property
     def reversed(self):
@@ -604,7 +657,9 @@ class Range(Set):
         if not self:
             return self
         start, stop, step = self.start, self.stop, self.step
-        return self.func(stop - step, start - step, -step)
+        return Piecewise(
+            (self.func(self.sup, self.inf - 1, -step), step > 0),
+            (self.func(self.inf, self.sup + 1, -step), True))
 
     def _contains(self, other):
         from sympy.functions.elementary.piecewise import Piecewise
@@ -647,14 +702,19 @@ class Range(Set):
     @property
     def size(self):
         from sympy.functions.elementary.integers import floor, ceiling
-        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.functions.elementary.piecewise import (
+            Piecewise, piecewise_fold)
         from sympy.functions.elementary.complexes import Abs
         start, stop, step = self.start, self.stop, self.step
         dif = stop - start
         null = ceiling(dif/step)
-        return Piecewise((S.Infinity, dif.is_infinite == True),
-                         (S.Zero, Le(null, S.Zero)),
-                         (Abs(floor(dif/step)).doit(), True))
+        if (null <= 0) == True:
+            return S.Zero
+        p = Piecewise((S.Infinity, dif.is_infinite == True),
+                         (S.Zero, Le(null, 0)),
+                         ((self.sup - self.inf)/Abs(self.step) + 1,
+                             True))
+        return piecewise_fold(p)
 
     def __nonzero__(self):
         return self.start != self.stop
@@ -706,9 +766,18 @@ class Range(Set):
             if not self:
                 raise IndexError('Range index out of range')
             if i == 0:
-                return Piecewise((self._inf, Gt(self.step, 0)), (self._sup, True))
+                return Piecewise(
+                    (S.NaN, Eq(1/self.start, 0)),
+                    (self._inf, Gt(self.step, 0)),
+                    (self._sup, True))
             if i == -1:
-                return Piecewise((self._sup, Gt(self.step, 0)), (self._inf, True))
+                isinf = self.stop.is_infinite
+                if isinf is None or isinf is False and self.stop.free_symbols:
+                    isinf = Eq(self.stop, 1 + self.stop, evaluate=False)
+                return Piecewise(
+                    (S.NaN, isinf),
+                    (self._sup, Gt(self.step, 0)),
+                    (self._inf, True))
             start, stop, step = self.start, self.stop, self.step
             rvstop, rvstart = (stop + i*step, start + i*step)
             rv = Piecewise((rvstop, Lt(i, 0)), (rvstart, True))
@@ -719,28 +788,6 @@ class Range(Set):
             if bound == True:
                 raise IndexError("Range index out of range")
             return rv
-
-    @property
-    def _inf(self):
-        from sympy.functions.elementary.piecewise import Piecewise
-        from sympy.functions.elementary.integers import ceiling
-        if not self:
-            raise NotImplementedError
-        start, stop, step = self.start, self.stop, self.step
-        return Piecewise((S.NaN, Le(ceiling((stop - start)/step), S.Zero)),
-                        (start, Ge(step, S.Zero)),
-                        (stop - step, True))
-
-    @property
-    def _sup(self):
-        from sympy.functions.elementary.piecewise import Piecewise
-        from sympy.functions.elementary.integers import ceiling
-        if not self:
-            raise NotImplementedError
-        start, stop, step = self.start, self.stop, self.step
-        return Piecewise((S.NaN, Le(ceiling((stop - start)/step), S.Zero)),
-                        (stop - step, Ge(step, S.Zero)),
-                        (start, True))
 
     @property
     def _boundary(self):
