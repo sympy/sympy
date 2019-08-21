@@ -547,11 +547,13 @@ def _solve_trig(f, symbol, domain):
 
 
 def _solve_trig1(f, symbol, domain):
-    """Primary Helper to solve trigonometric equations """
+    """Primary helper to solve trigonometric and hyperbolic equations"""
     if _is_function_class_equation(HyperbolicFunction, f, symbol):
         cov = exp(symbol)
+        inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
     else:
         cov = exp(I*symbol)
+        inverter = invert_complex
     f = trigsimp(f)
     f_original = f
     f = f.rewrite(exp)
@@ -561,7 +563,7 @@ def _solve_trig1(f, symbol, domain):
     g, h = g.expand(), h.expand()
     g, h = g.subs(cov, y), h.subs(cov, y)
     if g.has(symbol) or h.has(symbol):
-        return ConditionSet(symbol, Eq(f, 0), S.Reals)
+        return ConditionSet(symbol, Eq(f, 0), domain)
 
     solns = solveset_complex(g, y) - solveset_complex(h, y)
     if isinstance(solns, ConditionSet):
@@ -570,13 +572,16 @@ def _solve_trig1(f, symbol, domain):
     if isinstance(solns, FiniteSet):
         if any(isinstance(s, RootOf) for s in solns):
             raise NotImplementedError
-        result = Union(*[invert_complex(cov, s, symbol)[1]
-                       for s in solns])
-        return Intersection(result, domain)
+        result = Union(*[inverter(cov, s, symbol)[1] for s in solns])
+        # avoid spurious intersections with C in solution set
+        if domain is S.Complexes:
+            return result
+        else:
+            return Intersection(result, domain)
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
-        return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
+        return ConditionSet(symbol, Eq(f_original, 0), domain)
 
 
 def _solve_trig2(f, symbol, domain):
