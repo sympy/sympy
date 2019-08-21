@@ -5,7 +5,7 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
 )
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
@@ -1595,3 +1595,19 @@ def test_issue_15494():
 
     integrand = (exp(s/2) - 2*exp(S(8)/5*s) + exp(s))*exp(s)
     assert integrate(integrand, s) == -10*exp(13*s/5)/13 + 2*exp(3*s/2)/3 + exp(2*s)/2
+
+
+def test_li_integral():
+    y = Symbol('y')
+    assert Integral(li(y*x**2), x).doit() == Piecewise(
+            (x*li(x**2*y) - x*Ei(3*log(x) + 3*log(y)/2)/(sqrt(y)*sqrt(x**2)), Ne(y, 0)),
+            (0, True))
+
+
+def test_issue_17473():
+    x = Symbol('x')
+    n = Symbol('n')
+    assert integrate(sin(x**n), x) == \
+        x*x**n*gamma(S(1)/2 + 1/(2*n))*hyper((S(1)/2 + 1/(2*n),),
+                     (S(3)/2, S(3)/2 + 1/(2*n)),
+                     -x**(2*n)/4)/(2*n*gamma(S(3)/2 + 1/(2*n)))

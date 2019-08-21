@@ -1,10 +1,13 @@
 import itertools
 
-from sympy import S, Tuple, diff
+from sympy import S, Tuple, diff, Basic
 
 from sympy.core.compatibility import Iterable
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
+from sympy.tensor.array.dense_ndim_array import DenseNDimArray
+from sympy.tensor.array.sparse_ndim_array import SparseNDimArray
+
 
 def _arrayfy(a):
     from sympy.matrices import MatrixBase
@@ -62,10 +65,7 @@ def tensorproduct(*args):
         new_array = {k1*lp + k2: v1*v2 for k1, v1 in a._sparse_array.items() for k2, v2 in b._sparse_array.items()}
         return ImmutableSparseNDimArray(new_array, a.shape + b.shape)
 
-    al = list(a)
-    bl = list(b)
-
-    product_list = [i*j for i in al for j in bl]
+    product_list = [i*j for i in Flatten(a) for j in Flatten(b)]
     return ImmutableDenseNDimArray(product_list, a.shape + b.shape)
 
 
@@ -215,16 +215,16 @@ def derive_by_array(expr, dx):
             if isinstance(expr, SparseNDimArray):
                 lp = len(expr)
                 new_array = {k + i*lp: v
-                             for i, x in enumerate(dx)
+                             for i, x in enumerate(Flatten(dx))
                              for k, v in expr.diff(x)._sparse_array.items()}
             else:
-                new_array = [[y.diff(x) for y in expr] for x in dx]
+                new_array = [[y.diff(x) for y in Flatten(expr)] for x in Flatten(dx)]
             return type(expr)(new_array, dx.shape + expr.shape)
         else:
             return expr.diff(dx)
     else:
         if isinstance(dx, array_types):
-            return ImmutableDenseNDimArray([expr.diff(i) for i in dx], dx.shape)
+            return ImmutableDenseNDimArray([expr.diff(i) for i in Flatten(dx)], dx.shape)
         else:
             return diff(expr, dx)
 
@@ -296,3 +296,73 @@ def permutedims(expr, perm):
         new_array[i] = expr[t]
 
     return type(expr)(new_array, new_shape)
+
+
+class Flatten(Basic):
+    '''
+    Flatten an iterable object to a list in a lazy-evaluation way.
+
+    Notes
+    =====
+
+    This class is an iterator with which the memory cost can be economised.
+    Optimisation has been considered to ameliorate the performance for some
+    specific data types like DenseNDimArray and SparseNDimArray.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.array.arrayop import Flatten
+    >>> from sympy.tensor.array import Array
+    >>> A = Array(range(6)).reshape(2, 3)
+    >>> Flatten(A)
+    Flatten([[0, 1, 2], [3, 4, 5]])
+    >>> [i for i in Flatten(A)]
+    [0, 1, 2, 3, 4, 5]
+    '''
+    def __init__(self, iterable):
+        from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import NDimArray
+
+        if not isinstance(iterable, (Iterable, MatrixBase)):
+            raise NotImplementedError("Data type not yet supported")
+
+        if isinstance(iterable, list):
+            iterable = NDimArray(iterable)
+
+        self._iter = iterable
+        self._idx = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        from sympy.matrices.matrices import MatrixBase
+
+        if len(self._iter) > self._idx:
+            if isinstance(self._iter, DenseNDimArray):
+                result = self._iter._array[self._idx]
+
+            elif isinstance(self._iter, SparseNDimArray):
+                if self._idx in self._iter._sparse_array:
+                    result = self._iter._sparse_array[self._idx]
+                else:
+                    result = 0
+
+            elif isinstance(self._iter, MatrixBase):
+                result = self._iter[self._idx]
+
+            elif hasattr(self._iter, '__next__'):
+                result = next(self._iter)
+
+            else:
+                result = self._iter[self._idx]
+
+        else:
+            raise StopIteration
+
+        self._idx += 1
+        return result
+
+    def next(self):
+        return self.__next__()

@@ -5,7 +5,7 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate, gammasimp, Gt)
+                   integrate, gammasimp, Gt, cot)
 from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range, round, PY3
@@ -1855,6 +1855,19 @@ def test_issue_11122():
 
     x = Symbol('x', positive=False, real=True)
     assert (x > 0) is S.false
+
+
+def test_issue_10651():
+    x = Symbol('x', real=True)
+    e1 = (-1 + x)/(1 - x)
+    e3 = (4*x**2 - 4)/((1 - x)*(1 + x))
+    e4 = 1/(cos(x)**2) - (tan(x))**2
+    x = Symbol('x', positive=True)
+    e5 = (1 + x)/x
+    assert e1.is_constant() is None
+    assert e3.is_constant() is None
+    assert e4.is_constant() is None
+    assert e5.is_constant() is False
 
 
 def test_issue_10161():
