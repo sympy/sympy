@@ -818,6 +818,7 @@ _known_functions_scipy_special = {
     'factorial': 'factorial',
     'gamma': 'gamma',
     'loggamma': 'gammaln',
+    'polygamma': 'polygamma',
     'digamma': 'psi',
     'RisingFactorial': 'poch',
     'jacobi': 'eval_jacobi',

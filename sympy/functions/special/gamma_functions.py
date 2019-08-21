@@ -965,7 +965,7 @@ class loggamma(Function):
         return sage.log_gamma(self.args[0]._sage_())
 
 
-def digamma(x):
+class digamma(Function):
     r"""
     The digamma function is the first derivative of the loggamma function i.e,
 
@@ -993,7 +993,10 @@ def digamma(x):
     .. [2] http://mathworld.wolfram.com/DigammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
-    return polygamma(0, x)
+    def __new__(cls, x, evaluate=True):
+        if evaluate:
+            return polygamma(0, x, evaluate=evaluate)
+        return super(digamma, cls).__new__(cls, x, evaluate=False)
 
 
 def trigamma(x):
