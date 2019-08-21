@@ -354,7 +354,7 @@ class ImageSet(Set):
                 # XXX this is a bad idea -- make the user
                 # remap self to desired form
                 return other.as_numer_denom() in self.func(
-                    Lambda(L.variables, L.expr.as_numer_denom()), self.base_set)
+                    Lambda(L.signature, L.expr.as_numer_denom()), self.base_set)
             eqs = [expr - val for val, expr in zip(other, L.expr)]
             variables = L.variables
             free = set(variables)
