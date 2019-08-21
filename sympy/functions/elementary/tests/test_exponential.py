@@ -3,7 +3,7 @@ from sympy import (
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
     AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product)
-from sympy.functions.elementary.exponential import _match_real_imag
+from sympy.functions.elementary.exponential import match_real_imag
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -156,8 +156,15 @@ def test_exp_rewrite():
 
 def test_exp_leading_term():
     assert exp(x).as_leading_term(x) == 1
-    assert exp(1/x).as_leading_term(x) == exp(1/x)
     assert exp(2 + x).as_leading_term(x) == exp(2)
+    assert exp((2*x + 3) / (x+1)).as_leading_term(x) == exp(3)
+    # The following tests are commented, since now SymPy returns the
+    # original function when the leading term in the series expansion does
+    # not exist.
+    # raises(NotImplementedError, lambda: exp(1/x).as_leading_term(x))
+    # raises(NotImplementedError, lambda: exp((x + 1) / x**2).as_leading_term(x))
+    # raises(NotImplementedError, lambda: exp(x + 1/x).as_leading_term(x))
+
 
 def test_exp_taylor_term():
     x = symbols('x')
@@ -221,16 +228,16 @@ def test_log_values():
 def test_match_real_imag():
     x, y = symbols('x,y', real=True)
     i = Symbol('i', imaginary=True)
-    assert _match_real_imag(S.One) == (1, 0)
-    assert _match_real_imag(I) == (0, 1)
-    assert _match_real_imag(3 - 5*I) == (3, -5)
-    assert _match_real_imag(-sqrt(3) + S.Half*I) == (-sqrt(3), S.Half)
-    assert _match_real_imag(x + y*I) == (x, y)
-    assert _match_real_imag(x*I + y*I) == (0, x + y)
-    assert _match_real_imag((x + y)*I) == (0, x + y)
-    assert _match_real_imag(-S(2)/3*i*I) == (None, None)
-    assert _match_real_imag(1 - 2*i) == (None, None)
-    assert _match_real_imag(sqrt(2)*(3 - 5*I)) == (None, None)
+    assert match_real_imag(S.One) == (1, 0)
+    assert match_real_imag(I) == (0, 1)
+    assert match_real_imag(3 - 5*I) == (3, -5)
+    assert match_real_imag(-sqrt(3) + S.Half*I) == (-sqrt(3), S.Half)
+    assert match_real_imag(x + y*I) == (x, y)
+    assert match_real_imag(x*I + y*I) == (0, x + y)
+    assert match_real_imag((x + y)*I) == (0, x + y)
+    assert match_real_imag(-S(2)/3*i*I) == (None, None)
+    assert match_real_imag(1 - 2*i) == (None, None)
+    assert match_real_imag(sqrt(2)*(3 - 5*I)) == (None, None)
 
 
 def test_log_exact():
@@ -481,6 +488,9 @@ def test_lambertw():
     assert LambertW(-pi/2, -1) == -I*pi/2
     assert LambertW(-1/E, -1) == -1
     assert LambertW(-2*exp(-2), -1) == -2
+    assert LambertW(2*log(2)) == log(2)
+    assert LambertW(-pi/2) == I*pi/2
+    assert LambertW(exp(1 + E)) == E
 
     assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1 + LambertW(x**2))
     assert LambertW(x, k).diff(x) == LambertW(x, k)/x/(1 + LambertW(x, k))

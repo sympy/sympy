@@ -306,6 +306,10 @@ def test_separatevars():
     s = separatevars(abs(x*y*z))
     assert s == abs(x)*abs(y)*abs(z)
 
+    # abs(x+y)/abs(z) would be better but we test this here to
+    # see that it doesn't raise
+    assert separatevars(abs((x+y)/z)) == abs((x+y)/z)
+
 
 def test_separatevars_advanced_factor():
     x, y, z = symbols('x,y,z')

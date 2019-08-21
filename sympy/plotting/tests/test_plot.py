@@ -1,5 +1,6 @@
-from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log,
-                   oo, LambertW, I, meijerg, exp_polar, Max, Piecewise, And)
+from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log, exp, Ne,
+                   oo, LambertW, I, meijerg, exp_polar, Max, Piecewise, And,
+                   real_root)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
 from sympy.plotting.plot import unset_show, plot_contour, PlotGrid
@@ -547,3 +548,39 @@ def test_logplot_PR_16796():
     assert len(p[0].get_segments()) >= 30
     assert p[0].end == 100.0
     assert p[0].start == .001
+
+
+def test_issue_16572():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    x = Symbol('x')
+    p = plot(LambertW(x), show=False)
+    # Random number of segments, probably more than 50, but we want to see
+    # that there are segments generated, as opposed to when the bug was present
+    assert len(p[0].get_segments()) >= 30
+
+
+def test_issue_11865():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    k = Symbol('k', integer=True)
+    f = Piecewise((-I*exp(I*pi*k)/k + I*exp(-I*pi*k)/k, Ne(k, 0)), (2*pi, True))
+    p = plot(f, show=False)
+    # Random number of segments, probably more than 100, but we want to see
+    # that there are segments generated, as opposed to when the bug was present
+    # and that there are no exceptions.
+    assert len(p[0].get_segments()) >= 30
+
+
+def test_issue_11461():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    x = Symbol('x')
+    p = plot(real_root((log(x/(x-2))), 3), show=False)
+    # Random number of segments, probably more than 100, but we want to see
+    # that there are segments generated, as opposed to when the bug was present
+    # and that there are no exceptions.
+    assert len(p[0].get_segments()) >= 30

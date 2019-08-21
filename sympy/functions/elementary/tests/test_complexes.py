@@ -474,6 +474,9 @@ def test_Abs_rewrite():
     assert Abs(y).rewrite(Piecewise) == Abs(y)
     assert Abs(y).rewrite(sign) == y/sign(y)
 
+    i = Symbol('i', imaginary=True)
+    assert abs(i).rewrite(Piecewise) == Piecewise((I*i, I*i >= 0), (-I*i, True))
+
 
 def test_Abs_real():
     # test some properties of abs that only apply

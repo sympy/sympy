@@ -2,6 +2,7 @@ from sympy import (KroneckerDelta, diff, Piecewise, Sum, Dummy, factor,
                    expand, zeros, gcd_terms, Eq, Symbol)
 
 from sympy.core import S, symbols, Add, Mul, SympifyError
+from sympy.core.expr import unchanged
 from sympy.core.compatibility import long
 from sympy.functions import transpose, sin, cos, sqrt, cbrt, exp
 from sympy.simplify import simplify
@@ -21,6 +22,75 @@ C = MatrixSymbol('C', n, n)
 D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
 w = MatrixSymbol('w', n, 1)
+
+
+def test_matrix_symbol_creation():
+    assert MatrixSymbol('A', 2, 2)
+    assert MatrixSymbol('A', 0, 0)
+    raises(ValueError, lambda: MatrixSymbol('A', -1, 2))
+    raises(ValueError, lambda: MatrixSymbol('A', 2.0, 2))
+    raises(ValueError, lambda: MatrixSymbol('A', 2j, 2))
+    raises(ValueError, lambda: MatrixSymbol('A', 2, -1))
+    raises(ValueError, lambda: MatrixSymbol('A', 2, 2.0))
+    raises(ValueError, lambda: MatrixSymbol('A', 2, 2j))
+
+    n = symbols('n')
+    assert MatrixSymbol('A', n, n)
+    n = symbols('n', integer=False)
+    raises(ValueError, lambda: MatrixSymbol('A', n, n))
+    n = symbols('n', negative=True)
+    raises(ValueError, lambda: MatrixSymbol('A', n, n))
+
+
+def test_zero_matrix_creation():
+    assert unchanged(ZeroMatrix, 2, 2)
+    assert unchanged(ZeroMatrix, 0, 0)
+    raises(ValueError, lambda: ZeroMatrix(-1, 2))
+    raises(ValueError, lambda: ZeroMatrix(2.0, 2))
+    raises(ValueError, lambda: ZeroMatrix(2j, 2))
+    raises(ValueError, lambda: ZeroMatrix(2, -1))
+    raises(ValueError, lambda: ZeroMatrix(2, 2.0))
+    raises(ValueError, lambda: ZeroMatrix(2, 2j))
+
+    n = symbols('n')
+    assert unchanged(ZeroMatrix, n, n)
+    n = symbols('n', integer=False)
+    raises(ValueError, lambda: ZeroMatrix(n, n))
+    n = symbols('n', negative=True)
+    raises(ValueError, lambda: ZeroMatrix(n, n))
+
+
+def test_one_matrix_creation():
+    assert OneMatrix(2, 2)
+    assert OneMatrix(0, 0)
+    raises(ValueError, lambda: OneMatrix(-1, 2))
+    raises(ValueError, lambda: OneMatrix(2.0, 2))
+    raises(ValueError, lambda: OneMatrix(2j, 2))
+    raises(ValueError, lambda: OneMatrix(2, -1))
+    raises(ValueError, lambda: OneMatrix(2, 2.0))
+    raises(ValueError, lambda: OneMatrix(2, 2j))
+
+    n = symbols('n')
+    assert OneMatrix(n, n)
+    n = symbols('n', integer=False)
+    raises(ValueError, lambda: OneMatrix(n, n))
+    n = symbols('n', negative=True)
+    raises(ValueError, lambda: OneMatrix(n, n))
+
+
+def test_identity_matrix_creation():
+    assert Identity(2)
+    assert Identity(0)
+    raises(ValueError, lambda: Identity(-1))
+    raises(ValueError, lambda: Identity(2.0))
+    raises(ValueError, lambda: Identity(2j))
+
+    n = symbols('n')
+    assert Identity(n)
+    n = symbols('n', integer=False)
+    raises(ValueError, lambda: Identity(n))
+    n = symbols('n', negative=True)
+    raises(ValueError, lambda: Identity(n))
 
 
 def test_shape():
