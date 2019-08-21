@@ -7,7 +7,8 @@ from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.functions.special.zeta_functions import zeta
-from sympy.functions.special.error_functions import erf, erfc
+from sympy.functions.special.error_functions import erf, erfc, Ei
+from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -433,16 +434,16 @@ class uppergamma(Function):
             elif z is S.Infinity:
                 return S.Zero
             elif z is S.Zero:
-                # TODO: Holds only for Re(a) > 0:
-                return gamma(a)
+                if re(a).is_positive:
+                    return gamma(a)
 
         # We extract branching information here. C/f lowergamma.
         nx, n = z.extract_branch_factor()
-        if a.is_integer and (a > 0) == True:
+        if a.is_integer and a.is_positive:
             nx = unpolarify(z)
             if z != nx:
                 return uppergamma(a, nx)
-        elif a.is_integer and (a <= 0) == True:
+        elif a.is_integer and a.is_nonpositive:
             if n != 0:
                 return -2*pi*I*n*(-1)**(-a)/factorial(-a) + uppergamma(a, nx)
         elif n != 0:
@@ -450,7 +451,9 @@ class uppergamma(Function):
 
         # Special values.
         if a.is_Number:
-            if a is S.One:
+            if a is S.Zero and z.is_positive:
+                return -Ei(-z)
+            elif a is S.One:
                 return exp(-z)
             elif a is S.Half:
                 return sqrt(pi)*erfc(sqrt(z))

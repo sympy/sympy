@@ -1672,7 +1672,9 @@ def test_ElementwiseApplyFunction():
     from sympy.matrices import MatrixSymbol
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
-    assert latex(expr) == r"\sin\left({X^{T} X}\ldots\right)"
+    assert latex(expr) == r"{\sin}_{\circ}\left({X^{T} X}\right)"
+    expr = X.applyfunc(Lambda(x, 1/x))
+    assert latex(expr) == r'{\left( d \mapsto \frac{1}{d} \right)}_{\circ}\left({X}\right)'
 
 
 def test_ZeroMatrix():

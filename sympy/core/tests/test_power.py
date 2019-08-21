@@ -5,6 +5,7 @@ from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
     sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
 from sympy.series.order import O
@@ -469,3 +470,11 @@ def test_issue_2993():
     eq = (2.3*x + 4)
     assert eq**2 == 16.0*(0.575*x + 1)**2
     assert (1/eq).args == (eq, -1)  # don't change trivial power
+
+
+def test_issue_17450():
+    assert (erf(cosh(1)**7)**I).is_real is None
+    assert (erf(cosh(1)**7)**I).is_imaginary is False
+    assert (Pow(exp(1+sqrt(2)), ((1-sqrt(2))*I*pi), evaluate=False)).is_real is None
+    assert ((-10)**(10*I*pi/3)).is_real is False
+    assert ((-5)**(4*I*pi)).is_real is False

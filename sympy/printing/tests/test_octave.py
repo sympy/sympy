@@ -14,7 +14,7 @@ from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
-                            HadamardProduct, SparseMatrix)
+                            HadamardProduct, SparseMatrix, HadamardPower)
 from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
                                             besselk, hankel1, hankel2, airyai,
                                             airybi, airyaiprime, airybiprime)
@@ -429,18 +429,24 @@ def test_trick_indent_with_end_else_words():
         "end")
 
 
-def test_haramard():
+def test_hadamard():
     A = MatrixSymbol('A', 3, 3)
     B = MatrixSymbol('B', 3, 3)
     v = MatrixSymbol('v', 3, 1)
     h = MatrixSymbol('h', 1, 3)
     C = HadamardProduct(A, B)
+    n = Symbol('n')
     assert mcode(C) == "A.*B"
     assert mcode(C*v) == "(A.*B)*v"
     assert mcode(h*C*v) == "h*(A.*B)*v"
     assert mcode(C*A) == "(A.*B)*A"
     # mixing Hadamard and scalar strange b/c we vectorize scalars
     assert mcode(C*x*y) == "(x.*y)*(A.*B)"
+
+    # Testing HadamardPower:
+    assert mcode(HadamardPower(A, n)) == "A.**n"
+    assert mcode(HadamardPower(A, 1+n)) == "A.**(n + 1)"
+    assert mcode(HadamardPower(A*B.T, 1+n)) == "(A*B.T).**(n + 1)"
 
 
 def test_sparse():
