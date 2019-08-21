@@ -151,9 +151,6 @@ test_list = [
     # cloudpickle
     'pickling',
 
-    # pycosat
-    'sympy/logic/',
-    'sympy/assumptions',
 ]
 
 blacklist = [
@@ -192,8 +189,6 @@ doctest_list = [
     # codegen
     'sympy/codegen/',
 
-    # pycosat
-    'sympy/logic',
 ]
 
 if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
