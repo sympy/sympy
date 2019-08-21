@@ -2011,7 +2011,10 @@ class Lambda(Expr):
         if self.nargs != other.nargs:
             return False
 
-        d = self._match_signature(other.signature, self.signature)
+        try:
+            d = self._match_signature(other.signature, self.signature)
+        except BadArgumentsError:
+            return False
         return self.args == other.xreplace(d).args
 
     def __hash__(self):
