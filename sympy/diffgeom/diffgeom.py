@@ -1134,7 +1134,7 @@ class TensorArray:
     >>> metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
     >>> ch_2nd = metric_to_Christoffel_2nd(metric)
     >>> G=TensorArray(metric)
-    >>> assert(G.covD(ch_2nd).to_tensor() == 0)  #the covariant derivative as a (3,0) tensor!    
+    >>> assert(G.covD(ch_2nd).to_tensor() == 0)  #the covariant derivative as a (3,0) tensor!
     """
 
     def _contravariant_slots(self,T):
