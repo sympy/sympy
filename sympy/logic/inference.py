@@ -83,6 +83,8 @@ def satisfiable(expr, algorithm=None, all_models=False):
         if pycosat is not None:
             algorithm = "pycosat"
         else:
+            if algorithm == "pycosat":
+                raise ImportError("pycosat module is not present")
             # Silently fall back to dpll2 if pycosat
             # is not installed
             algorithm = "dpll2"
