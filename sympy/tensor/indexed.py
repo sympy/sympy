@@ -422,6 +422,7 @@ class IndexedBase(Expr, NotIterable):
     """
     is_commutative = True
     is_symbol = True
+    is_Symbol = True
     is_Atom = True
 
     @staticmethod
