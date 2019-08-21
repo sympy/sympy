@@ -1,5 +1,4 @@
 from __future__ import print_function, division
-
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
@@ -782,7 +781,25 @@ class Range(Set):
                   And(Or(Lt(rvstart, self._inf), Gt(rvstart, self._sup)), Ge(i, 0)))
             if bound == True:
                 raise IndexError("Range index out of range")
-            return rv
+            if rv.is_Number:
+                return rv
+            # the following passes current tests if the is_Number case is
+            # removed but if we have a Number then this Piecewise
+            # is not necessary
+            j = i if i >= 0 else i + 1
+            v = Piecewise(
+                (Piecewise((self.sup, i < 0), (self.inf, True)) + j*self.step, self.step > 0),
+                (Piecewise((self.inf, i < 0), (self.sup, True)) + j*self.step, True))
+            return Piecewise(
+                (S.NaN, Or(
+                    Eq(self.step, 0),  # 0 step
+                    Ne(ceiling(self.start), self.start),  # non-int
+                    Ne(ceiling(self.stop), self.stop),
+                    Ne(ceiling(self.step), self.step),
+                    Eq(self.stop - self.start, S.NaN),  # infinite cae
+                    self.step*(self.stop - self.start) <= 0,  # non-infinite case
+                    j + 1 > self.size)),  # out of range
+                (v, True))
 
     @property
     def _boundary(self):
