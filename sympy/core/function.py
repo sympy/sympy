@@ -1954,7 +1954,7 @@ class Lambda(Expr):
                         yield a
             else:
                 yield args
-        return list(_variables(self.signature))
+        return tuple(_variables(self.signature))
 
     @property
     def nargs(self):
@@ -2011,9 +2011,8 @@ class Lambda(Expr):
         if self.nargs != other.nargs:
             return False
 
-        canonical = lambda f: f.xreplace(f.canonical_variables)
-
-        return canonical(self).args == canonical(other).args
+        d = self._match_signature(other.signature, self.signature)
+        return self.args == other.xreplace(d).args
 
     def __hash__(self):
         return super(Lambda, self).__hash__()
