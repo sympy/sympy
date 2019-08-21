@@ -103,7 +103,12 @@ class ArgumentIndexError(ValueError):
 
 
 class BadSignatureError(TypeError):
-    '''Raised when a Lambda is created with an invalid signtuare'''
+    '''Raised when a Lambda is created with an invalid signature'''
+    pass
+
+
+class BadArgumentsError(TypeError):
+    '''Raised when a Lambda is called with an incorrect number of arguments'''
     pass
 
 
@@ -1920,7 +1925,7 @@ class Lambda(Expr):
                         raise BadSignatureError("Duplicate symbol %s" % a)
                     syms.add(a)
                 elif isinstance(a, Tuple):
-                    rcall(a)
+                    rcheck(a)
                 else:
                     raise BadSignatureError("Lambda signature should be only tuples"
                         " and symbols, not %s" % a)
@@ -1973,7 +1978,7 @@ class Lambda(Expr):
             ## XXX does this apply to Lambda? If not, remove this comment.
             temp = ('%(name)s takes exactly %(args)s '
                    'argument%(plural)s (%(given)s given)')
-            raise TypeError(temp % {
+            raise BadArgumentsError(temp % {
                 'name': self,
                 'args': list(self.nargs)[0],
                 'plural': 's'*(list(self.nargs)[0] != 1),
@@ -1993,7 +1998,7 @@ class Lambda(Expr):
                     symargmap[par] = arg
                 elif isinstance(par, Tuple):
                     if not isinstance(arg, (tuple, Tuple)) or len(args) != len(pars):
-                        raise TypeError("Can't match %s and %s" % (args, pars))
+                        raise BadArgumentsError("Can't match %s and %s" % (args, pars))
                     rmatch(par, arg)
 
         rmatch(sig, args)
