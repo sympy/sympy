@@ -2015,6 +2015,9 @@ class Lambda(Expr):
 
         return canonical(self).args == canonical(other).args
 
+    def __hash__(self):
+        return super(Lambda, self).__hash__()
+
     def _hashable_content(self):
         return (self.expr.xreplace(self.canonical_variables),)
 

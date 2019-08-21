@@ -234,6 +234,10 @@ def test_Lambda():
     assert issubclass(BadSignatureError, TypeError)
     assert issubclass(BadArgumentsError, TypeError)
 
+    # These are tested to see they don't raise:
+    hash(Lambda(x, 2*x))
+    hash(Lambda(x, x))  # IdentityFunction subclass
+
 
 def test_IdentityFunction():
     assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
