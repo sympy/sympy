@@ -1338,12 +1338,14 @@ class TensorArray:
             keylist[a] = keylist[b]
             keylist[b] = ka
             return(tuple(keylist))
-        keys = self.indices
+        keys = copy.copy(self.indices)
+        self.indices = []
         while keys != []:
             key = keys.pop()
             t = self.tensor[key]
             self.tensor[key] = 0
             key_swapped = swapab(key)
+            self.indices.append(key_swapped)
             if keys.count(key_swapped) > 0:
                 keys.remove(key_swapped)
                 t_swapped = self.tensor[key_swapped]
