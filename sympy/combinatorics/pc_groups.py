@@ -10,6 +10,27 @@ class PolycyclicGroup(DefaultPrinting):
     is_solvable = True
 
     def __init__(self, pc_sequence, pc_series, relative_order, collector=None):
+        """
+
+        Parameters
+        ==========
+
+        pc_sequence
+                Polycyclic sequence is formed by collecting all the
+                missing generators between the adjacent groups in
+                the derived series of given permutation group.
+        pc_series
+                Polycyclic series is formed by adding all the missing
+                generators of ``der[i+1]`` in ``der[i]``, where
+                ``der`` represents the derived series.
+        relative_order
+                A list, computed by the ratio of adjacent groups in
+                pc_series.
+        collector
+                By default, it is None. Collector class provides the
+                polycyclic presentation with various other functionalities.
+
+        """
         self.pcgs = pc_sequence
         self.pc_series = pc_series
         self.relative_order = relative_order
@@ -33,11 +54,27 @@ class Collector(DefaultPrinting):
            Section 8.1.3
     """
 
-    def __init__(self, pcgs, pc_series, relative_order, group=None, pc_presentation=None):
+    def __init__(self, pcgs, pc_series, relative_order, FreeGroup=None, pc_presentation=None):
+        """
+
+        Most of the Parameters of Class Collector is same as PolycyclicGroup.
+        Others are described below.
+
+        Parameters
+        ==========
+
+        FreeGroup
+                FreeGroup provides the mapping of polycyclic generating
+                sequence with the free group elements.
+        pc_presentation
+                Provides the presentation of polycyclic groups with the
+                help of power and conjugate relators.
+
+        """
         self.pcgs = pcgs
         self.pc_series = pc_series
         self.relative_order = relative_order
-        self.free_group = free_group('x:{0}'.format(len(pcgs)))[0] if not group else group
+        self.free_group = free_group('x:{0}'.format(len(pcgs)))[0] if not FreeGroup else FreeGroup
         self.index = {s: i for i, s in enumerate(self.free_group.symbols)}
         self.pc_presentation = self.pc_relators()
 
@@ -45,16 +82,17 @@ class Collector(DefaultPrinting):
         """
         Returns the minimal uncollected subwords.
 
-        A word `v` defined on generators in `X` is a minimal
-        uncollected subword of the word `w` if `v` is a subword
-        of `w` and it has one of the following form
+        A word ``v`` defined on generators in ``X`` is a minimal
+        uncollected subword of the word ``w`` if ``v`` is a subword
+        of ``w`` and it has one of the following form
 
-        i) `v = x[i+1]**a_j*x[i]`
+        * `v = {x_{i+1}}^{a_j}x_i`
 
-        ii) `v = x[i+1]**a_j*x[i]**-1`
+        * `v = {x_{i+1}}^{a_j}{x_i}^{-1}`
 
-        iii) `v = x[i]**a_j` for relative_order of `x[i] != infinity`
-        and `a_j` is not in `{1, ..., s-1}`. Where, s is the power
+        * `v = {x_i}^{a_j}`
+
+        for `a_j` not in `\{1, \ldots, s-1\}`. Where, ``s`` is the power
         exponent of the corresponding generator.
 
         Examples
@@ -99,6 +137,12 @@ class Collector(DefaultPrinting):
         Separates the given relators of pc presentation in power and
         conjugate relations.
 
+        Returns
+        =======
+
+        (power_rel, conj_rel)
+                Separates pc presentation into power and conjugate relations.
+
         Examples
         ========
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
@@ -110,6 +154,11 @@ class Collector(DefaultPrinting):
         {x0**2: (), x1**3: ()}
         >>> conj_rel
         {x0**-1*x1*x0: x1**2}
+
+        See Also
+        ========
+
+        pc_relators
 
         """
         power_relators = {}
@@ -125,6 +174,23 @@ class Collector(DefaultPrinting):
         """
         Returns the start and ending index of a given
         subword in a word.
+
+        Parameters
+        ==========
+
+        word
+            word defined on free group elements for a
+            polycyclic group.
+        w
+            subword of a given word, whose starting and
+            ending index to be computed.
+
+        Returns
+        =======
+
+        (i, j)
+            A tuple containing starting and ending index of ``w``
+            in the given word.
 
         Examples
         ========
@@ -174,6 +240,11 @@ class Collector(DefaultPrinting):
         >>> collector.map_relation(w)
         x1**2
 
+        See Also
+        ========
+
+        pc_presentation
+
         """
         array = w.array_form
         s1 = array[0][0]
@@ -187,10 +258,25 @@ class Collector(DefaultPrinting):
         """
         Return the collected form of a word.
 
-        A word `w` is called collected, if `w = x{i_1}**a_1*...*x{i_r}**a_r`
-        with `i_1 < i_2< ... < i_r` and `a_j` is in `{1, ..., s_j-1}`
-        if `s_j != infinity`.
+        A word ``w`` is called collected, if `w = {x_{i_1}}^{a_1} * \ldots *
+        {x_{i_r}}^{a_r}` with `i_1 < i_2< \ldots < i_r` and `a_j` is in
+        `\{1, \ldots, {s_j}-1\}`.
+
         Otherwise w is uncollected.
+
+        Parameters
+        ==========
+
+        word
+            An uncollected word.
+
+        Returns
+        =======
+
+        word
+            A collected word of form `w = {x_{i_1}}^{a_1}, \ldots,
+            {x_{i_r}}^{a_r}` with `i_1, i_2, \ldots, i_r` and `a_j \in
+            \{1, \ldots, {s_j}-1\}`.
 
         Examples
         ========
@@ -219,6 +305,11 @@ class Collector(DefaultPrinting):
         ...     G2 = PermutationGroup([perm] + G2.generators)
         >>> G1 == G2
         True
+
+        See Also
+        ========
+
+        minimal_uncollected_subword
 
         """
         free_group = self.free_group
@@ -277,12 +368,24 @@ class Collector(DefaultPrinting):
 
         There are two types of relations used in polycyclic
         presentation.
-        i) Power relations of the form `x{i}^re{i} = R{i}{i}`,
-        `for 0 <= i < length(pcgs)` where `x` represents polycyclic
-        generator and `re` is the corresponding relative order.
 
-        ii) Conjugate relations of the form `x{j}^-1*x{i}*x{j}`,
-        `for 0 <= j < i <= length(pcgs)`.
+        * ``Power relations`` : Power relators are of the form `x_i^{re_i}`,
+          where `i \in \{0, \ldots, \mathrm{len(pcgs)}\}`, ``x`` represents polycyclic
+          generator and ``re`` is the corresponding relative order.
+
+        * ``Conjugate relations`` : Conjugate relators are of the form `x_j^-1x_ix_j`,
+          where `j < i \in \{0, \ldots, \mathrm{len(pcgs)}\}`.
+
+        Returns
+        =======
+
+        A dictionary with power and conjugate relations as key and
+        their collected form as corresponding values.
+
+        Notes
+        =====
+
+        Identity Permutation is mapped with empty ``()``.
 
         Examples
         ========
@@ -381,11 +484,17 @@ class Collector(DefaultPrinting):
         Return the exponent vector of length equal to the
         length of polycyclic generating sequence.
 
-        For a given generator/element `g` of the polycyclic group,
-        it can be represented as `g = x{1}**e{1}....x{n}**e{n}`,
-        where `x{i}` represents polycyclic generators and `n` is
+        For a given generator/element ``g`` of the polycyclic group,
+        it can be represented as `g = {x_1}^{e_1}, \ldots, {x_n}^{e_n}`,
+        where `x_i` represents polycyclic generators and ``n`` is
         the number of generators in the free_group equal to the length
         of pcgs.
+
+        Parameters
+        ==========
+
+        element
+            Generator of a polycyclic group.
 
         Examples
         ========
@@ -440,9 +549,9 @@ class Collector(DefaultPrinting):
         """
         Return the depth of a given element.
 
-        The depth of a given element `g` is defined by
-        `dep{g} = i if e{1} = e{2} = ... = e{i-1} = 0`
-        and `e{i} != 0`, where `e` represents the exponent-vector.
+        The depth of a given element ``g`` is defined by
+        `\mathrm{dep}[g] = i` if `e_1 = e_2 = \ldots = e_{i-1} = 0`
+        and `e_i != 0`, where ``e`` represents the exponent-vector.
 
         Examples
         ========
@@ -471,7 +580,7 @@ class Collector(DefaultPrinting):
         Return the leading non-zero exponent.
 
         The leading exponent for a given element `g` is defined
-        by `leading_exponent{g} = e{i}`, if `depth{g} = i`.
+        by `\mathrm{leading\_exponent}[g]` `= e_i`, if `\mathrm{depth}[g] = i`.
 
         Examples
         ========
@@ -502,6 +611,13 @@ class Collector(DefaultPrinting):
 
     def induced_pcgs(self, gens):
         """
+
+        Parameters
+        ==========
+
+        gens
+            A list of generators on which polycyclic subgroup
+            is to be defined.
 
         Examples
         ========
