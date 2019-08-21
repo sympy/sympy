@@ -96,6 +96,15 @@ def test_MatrixWild():
     # Different types
     assert Z.matches(n) is None
 
+    # Test for exclusion
+    W = MatrixWild('W', n, n, exclude=[C])
+    assert (C*D).match(W) is None
+    assert D.match(W) == {W: D}
+
+    # Test for properties
+    W = MatrixWild('W', n, n, properties=[lambda x: x.is_MatMul])
+    assert (C*D).match(W) == {W: C*D}
+    assert C.match(W) is None
 
 def test_OneMatrix():
     A = MatrixSymbol('A', n, m)
