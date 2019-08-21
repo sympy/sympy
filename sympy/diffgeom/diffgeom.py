@@ -1219,6 +1219,8 @@ class TensorArray:
             self._init_from_array(kwargs['components'],kwargs['variance'],kwargs['coordinate_system'])
 
     def to_tensor(self):
+        if self.shape == []:
+            return self.tensor
         def dualbasishelper(p,k):
             if self.contravariant_slots.count(k) == 0:
                 return self.base_oneforms[p[k]]
