@@ -150,6 +150,10 @@ test_list = [
 
     # cloudpickle
     'pickling',
+
+    # pycosat
+    'sympy/logic/',
+    'sympy/assumptions',
 ]
 
 blacklist = [
@@ -187,6 +191,9 @@ doctest_list = [
 
     # codegen
     'sympy/codegen/',
+
+    # pycosat
+    'sympy/logic',
 ]
 
 if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
@@ -225,6 +232,15 @@ if not sympy.test('sympy/liealgebras'):
     raise Exception('Tests failed')
 EOF
     unset USE_SYMENGINE
+fi
+
+if [[ "${TEST_OPT_DEPENDENCY}" == *"pycosat"* ]]; then
+    cat << EOF | python
+print('Testing PYCOSAT')
+import sympy
+if not (sympy.test('sympy/logic', 'sympy/assumptions') and sympy.doctest('sympy/logic'):
+    raise Exception('Tests failed')
+EOF
 fi
 
 if [[ "${TEST_SYMPY}" == "true" ]]; then
