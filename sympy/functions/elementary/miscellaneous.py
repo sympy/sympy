@@ -671,7 +671,7 @@ class Max(MinMaxBase, Application):
     ========
 
     >>> from sympy import Max, Symbol, oo
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x, y, z
     >>> p = Symbol('p', positive=True)
     >>> n = Symbol('n', negative=True)
 
