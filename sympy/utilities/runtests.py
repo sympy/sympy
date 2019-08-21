@@ -657,6 +657,11 @@ def _get_doctest_blacklist():
         "doc/src/modules/plotting.rst",  # generates live plots
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
         "sympy/galgebra.py", # no longer part of SymPy
+        "sympy/this.py",
+        "sympy/physics/gaussopt.py", # raises deprecation warning
+        "sympy/matrices/densearith.py", # raises deprecation warning
+        "sympy/matrices/densesolve.py", # raises deprecation warning
+        "sympy/matrices/densetools.py", # raises deprecation warning
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code

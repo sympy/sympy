@@ -3511,20 +3511,20 @@ def ode_Bernoulli(eq, func, order, match):
                     d                n
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
-        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral')) #doctest: +SKIP
-                                                                                       1
-                                                                                      ----
-                                                                                     1 - n
-               //                /                            \                     \
-               ||               |                             |                     |
-               ||               |                  /          |             /       |
-               ||               |                 |           |            |        |
-               ||               |        (1 - n)* | P(x) dx   |  (-1 + n)* | P(x) dx|
-               ||               |                 |           |            |        |
-               ||               |                /            |           /         |
-        f(x) = ||C1 + (-1 + n)* | -Q(x)*e                   dx|*e                   |
-               ||               |                             |                     |
-               \\               /                            /                     /
+        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=100)
+                                                                                      1
+                                                                                    -----
+                                                                                    1 - n
+               //               /                            \                     \
+               ||              |                             |                     |
+               ||              |                  /          |             /       |
+               ||              |                 |           |            |        |
+               ||              |        (1 - n)* | P(x) dx   |  -(1 - n)* | P(x) dx|
+               ||              |                 |           |            |        |
+               ||              |                /            |           /         |
+        f(x) = ||C1 + (n - 1)* | -Q(x)*e                   dx|*e                   |
+               ||              |                             |                     |
+               \\              /                            /                     /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
