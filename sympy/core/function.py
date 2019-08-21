@@ -1900,24 +1900,20 @@ class Lambda(Expr):
     is_Function = True
 
     def __new__(cls, signature, expr):
-        from sympy.sets.sets import FiniteSet
-        sig = signature if iterable(signature) else [signature]
+        sig = signature if iterable(signature) else (signature,)
         sig = sympify(sig)
-
         cls._check_signature(sig)
 
         if len(sig) == 1 and sig[0] == expr:
             return S.IdentityFunction
 
-        obj = Expr.__new__(cls, Tuple(*sig), sympify(expr))
-        obj.nargs = FiniteSet(len(sig))
-        return obj
+        return Expr.__new__(cls, sig, sympify(expr))
 
     @classmethod
     def _check_signature(cls, sig):
         syms = set()
 
-        def rcall(args):
+        def rcheck(args):
             for a in args:
                 if a.is_Symbol:
                     if a in syms:
@@ -1929,12 +1925,20 @@ class Lambda(Expr):
                     raise BadSignatureError("Lambda signature should be only tuples"
                         " and symbols, not %s" % a)
 
-        rcall(sig)
+        if not isinstance(sig, Tuple):
+            raise BadSignatureError("Lambda signature should be a tuple not %s" % sig)
+        # Recurse through the signature:
+        rcheck(sig)
 
     @property
     def signature(self):
         """The variables used in the internal representation of the function"""
         return self._args[0]
+
+    @property
+    def expr(self):
+        """The return value of the function"""
+        return self._args[1]
 
     @property
     def variables(self):
@@ -1947,12 +1951,12 @@ class Lambda(Expr):
                 yield args
         return list(_variables(self.signature))
 
-    bound_symbols = variables
-
     @property
-    def expr(self):
-        """The return value of the function"""
-        return self._args[1]
+    def nargs(self):
+        from sympy.sets.sets import FiniteSet
+        return FiniteSet(len(self.signature))
+
+    bound_symbols = variables
 
     @property
     def free_symbols(self):
@@ -1987,7 +1991,7 @@ class Lambda(Expr):
             for par, arg in zip(pars, args):
                 if par.is_Symbol:
                     symargmap[par] = arg
-                elif isinstance(par, (tuple, Tuple)):
+                elif isinstance(par, Tuple):
                     if not isinstance(arg, (tuple, Tuple)) or len(args) != len(pars):
                         raise TypeError("Can't match %s and %s" % (args, pars))
                     rmatch(par, arg)
@@ -2006,22 +2010,13 @@ class Lambda(Expr):
 
         return canonical(self).args == canonical(other).args
 
-    def __ne__(self, other):
-        return not(self == other)
-
-    def __hash__(self):
-        return super(Lambda, self).__hash__()
-
     def _hashable_content(self):
         return (self.expr.xreplace(self.canonical_variables),)
 
     @property
     def is_identity(self):
         """Return ``True`` if this ``Lambda`` is an identity function. """
-        if len(self.args) == 2:
-            return self.args[0] == self.args[1]
-        else:
-            return None
+        return self.signature == self.expr
 
 
 class Subs(Expr):
