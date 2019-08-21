@@ -102,6 +102,11 @@ class ArgumentIndexError(ValueError):
                (self.args[1], self.args[0]))
 
 
+class BadSignatureError(TypeError):
+    '''Raised when a Lambda is created with an invalid signtuare'''
+    pass
+
+
 # Python 2/3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
@@ -1894,26 +1899,53 @@ class Lambda(Expr):
     """
     is_Function = True
 
-    def __new__(cls, variables, expr):
+    def __new__(cls, signature, expr):
         from sympy.sets.sets import FiniteSet
-        v = list(variables) if iterable(variables) else [variables]
-        for i in v:
-            if not getattr(i, 'is_symbol', False):
-                raise TypeError('variable is not a symbol: %s' % i)
-        if len(v) != len(set(v)):
-            x = [i for i in v if v.count(i) > 1][0]
-            raise SyntaxError("duplicate argument '%s' in Lambda args" % x)
-        if len(v) == 1 and v[0] == expr:
+        sig = signature if iterable(signature) else [signature]
+        sig = sympify(sig)
+
+        cls._check_signature(sig)
+
+        if len(sig) == 1 and sig[0] == expr:
             return S.IdentityFunction
 
-        obj = Expr.__new__(cls, Tuple(*v), sympify(expr))
-        obj.nargs = FiniteSet(len(v))
+        obj = Expr.__new__(cls, Tuple(*sig), sympify(expr))
+        obj.nargs = FiniteSet(len(sig))
         return obj
+
+    @classmethod
+    def _check_signature(cls, sig):
+        syms = set()
+
+        def rcall(args):
+            for a in args:
+                if a.is_Symbol:
+                    if a in syms:
+                        raise BadSignatureError("Duplicate symbol %s" % a)
+                    syms.add(a)
+                elif isinstance(a, Tuple):
+                    rcall(a)
+                else:
+                    raise BadSignatureError("Lambda signature should be only tuples"
+                        " and symbols, not %s" % a)
+
+        rcall(sig)
+
+    @property
+    def signature(self):
+        """The variables used in the internal representation of the function"""
+        return self._args[0]
 
     @property
     def variables(self):
-        """The variables used in the internal representation of the function"""
-        return self._args[0]
+        def _variables(args):
+            if isinstance(args, Tuple):
+                for arg in args:
+                    for a in _variables(arg):
+                        yield a
+            else:
+                yield args
+        return list(_variables(self.signature))
 
     bound_symbols = variables
 
@@ -1942,7 +1974,27 @@ class Lambda(Expr):
                 'args': list(self.nargs)[0],
                 'plural': 's'*(list(self.nargs)[0] != 1),
                 'given': n})
-        return self.expr.xreplace(dict(list(zip(self.variables, args))))
+
+        d = self._match_signature(self.signature, args)
+
+        return self.expr.xreplace(d)
+
+    def _match_signature(self, sig, args):
+
+        symargmap = {}
+
+        def rmatch(pars, args):
+            for par, arg in zip(pars, args):
+                if par.is_Symbol:
+                    symargmap[par] = arg
+                elif isinstance(par, (tuple, Tuple)):
+                    if not isinstance(arg, (tuple, Tuple)) or len(args) != len(pars):
+                        raise TypeError("Can't match %s and %s" % (args, pars))
+                    rmatch(par, arg)
+
+        rmatch(sig, args)
+
+        return symargmap
 
     def __eq__(self, other):
         if not isinstance(other, Lambda):
@@ -1950,10 +2002,9 @@ class Lambda(Expr):
         if self.nargs != other.nargs:
             return False
 
-        selfexpr = self.args[1]
-        otherexpr = other.args[1]
-        otherexpr = otherexpr.xreplace(dict(list(zip(other.args[0], self.args[0]))))
-        return selfexpr == otherexpr
+        canonical = lambda f: f.xreplace(f.canonical_variables)
+
+        return canonical(self).args == canonical(other).args
 
     def __ne__(self, other):
         return not(self == other)

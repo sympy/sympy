@@ -8,7 +8,7 @@ from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
-from sympy.core.function import PoleError, _mexpand, arity
+from sympy.core.function import PoleError, _mexpand, arity, BadSignatureError
 from sympy.core.sympify import sympify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
@@ -209,7 +209,7 @@ def test_Lambda():
     raises(TypeError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
 
-    raises(SyntaxError, lambda: Lambda((x, x), x + 2))
+    raises(BadSignatureError, lambda: Lambda((x, x), x + 2))
 
 
 
