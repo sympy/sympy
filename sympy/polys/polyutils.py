@@ -6,6 +6,7 @@ from sympy.core import (S, Add, Mul, Pow, Expr,
     expand_mul, expand_multinomial)
 from sympy.core.compatibility import range
 from sympy.core.exprtools import decompose_power, decompose_power_rat
+from sympy.core.numbers import Float
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
@@ -167,10 +168,15 @@ def _sort_factors(factors, **args):
     else:
         return sorted(factors, key=order_no_multiple_key)
 
-
+illegal = [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]
+finf = [float(i) for i in illegal[1:3]]
 def _not_a_coeff(expr):
     """Do not treat NaN and infinities as valid polynomial coefficients. """
-    return expr in [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]
+    if expr in illegal or expr in finf:
+        return True
+    if type(expr) is float and float(expr) != expr:
+        return True  # nan
+    return  # could be
 
 
 def _parallel_dict_from_expr_if_gens(exprs, opt):

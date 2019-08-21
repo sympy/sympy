@@ -1,8 +1,7 @@
 from sympy.sets.setexpr import SetExpr
-from sympy.utilities.pytest import XFAIL
 from sympy.sets import Interval, FiniteSet, Intersection, ImageSet, Union
-from sympy import (Expr, Set, exp, log, sin, cos, Symbol, Min, Max, S, oo,
-        symbols, Lambda, sqrt, Pow, Dummy, tan, pi, Mul)
+from sympy import (Expr, Set, exp, log, cos, Symbol, Min, Max, S, oo,
+        symbols, Lambda, Dummy)
 
 I = Interval(0, 2)
 a, x = symbols("a, x")

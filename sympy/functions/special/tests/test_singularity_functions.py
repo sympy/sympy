@@ -1,10 +1,10 @@
 from sympy import (
-    adjoint, conjugate, nan, pi, symbols, transpose, DiracDelta, Symbol, diff,
+    nan, pi, symbols, DiracDelta, Symbol, diff,
     Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside,
-    Derivative, Float
+    Float
 )
 
-
+from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 
@@ -37,7 +37,7 @@ def test_fdiff():
 
 def test_eval():
     assert SingularityFunction(x, a, n).func == SingularityFunction
-    assert SingularityFunction(x, 5, n) == SingularityFunction(x, 5, n)
+    assert unchanged(SingularityFunction, x, 5, n)
     assert SingularityFunction(5, 3, 2) == 4
     assert SingularityFunction(3, 5, 1) == 0
     assert SingularityFunction(3, 3, 0) == 1

@@ -1,16 +1,11 @@
-import os
-import glob
-import tempfile
-import shutil
-import difflib
-
+# Testing import
 from sympy.parsing.latex._build_latex_antlr import (
     build_parser,
     check_antlr_version,
     dir_latex_antlr
 )
 
-from sympy.utilities.pytest import raises, skip, XFAIL
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.external import import_module
 
 from sympy import (

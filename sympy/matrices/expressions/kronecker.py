@@ -126,7 +126,7 @@ class KroneckerProduct(MatrixExpr):
             cols *= mat.cols
         return (rows, cols)
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         result = 1
         for mat in reversed(self.args):
             i, m = divmod(i, mat.rows)
@@ -427,7 +427,8 @@ def combine_kronecker(expr):
              MatMul: kronecker_mat_mul,
              MatPow: kronecker_mat_pow})))))
     result = rule(expr)
-    try:
-        return result.doit()
-    except AttributeError:
+    doit = getattr(result, 'doit', None)
+    if doit is not None:
+        return doit()
+    else:
         return result

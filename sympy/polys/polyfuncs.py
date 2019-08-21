@@ -66,17 +66,17 @@ def symmetrize(F, *gens, **args):
                 result.append((expr, S.Zero))
             else:
                 raise ComputationFailed('symmetrize', len(F), exc)
-        else:
-            if not iterable:
-                result, = result
 
-            if not exc.opt.formal:
-                return result
+        if not iterable:
+            result, = result
+
+        if not exc.opt.formal:
+            return result
+        else:
+            if iterable:
+                return result, []
             else:
-                if iterable:
-                    return result, []
-                else:
-                    return result + ([],)
+                return result + ([],)
 
     polys, symbols = [], opt.symbols
     gens, dom = opt.gens, opt.domain

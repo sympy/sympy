@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from sympy import (Abs, Add, Basic, Function, Number, Rational, S, Symbol,
     diff, exp, integrate, log, sin, sqrt, symbols)
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
@@ -186,6 +184,7 @@ def test_check_unit_consistency():
     raises(ValueError, lambda: check_unit_consistency(u - w))
     raises(ValueError, lambda: check_unit_consistency(u + 1))
     raises(ValueError, lambda: check_unit_consistency(u - 1))
+    raises(ValueError, lambda: check_unit_consistency(1 - exp(u / w)))
 
 
 def test_mul_div():
@@ -287,8 +286,8 @@ def test_issue_5565():
 
 def test_find_unit():
     assert find_unit('coulomb') == ['coulomb', 'coulombs', 'coulomb_constant']
-    assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs', 'planck_charge']
-    assert find_unit(charge) == ['C', 'coulomb', 'coulombs', 'planck_charge']
+    assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
+    assert find_unit(charge) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     assert find_unit(inch) == [
         'm', 'au', 'cm', 'dm', 'ft', 'km', 'ly', 'mi', 'mm', 'nm', 'pm', 'um',
         'yd', 'nmi', 'feet', 'foot', 'inch', 'mile', 'yard', 'meter', 'miles',

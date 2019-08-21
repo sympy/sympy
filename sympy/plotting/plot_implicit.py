@@ -79,6 +79,9 @@ class ImplicitSeries(BaseSeries):
         try:
             temp = func(xinterval, yinterval)
         except AttributeError:
+            # XXX: AttributeError("'list' object has no attribute 'is_real'")
+            # That needs fixing somehow - we shouldn't be catching
+            # AttributeError here.
             if self.use_interval_math:
                 warnings.warn("Adaptive meshing could not be applied to the"
                             " expression. Using uniform meshing.")

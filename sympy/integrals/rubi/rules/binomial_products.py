@@ -10,7 +10,7 @@ from sympy.utilities.decorator import doctest_depends_on
 if matchpy:
     from matchpy import Pattern, ReplacementRule, CustomConstraint, is_match
     from sympy.integrals.rubi.utility_function import (
-        sympy_op_factory, Int, Sum, Set, With, Module, Scan, MapAnd, FalseQ,
+        Int, Sum, Set, With, Module, Scan, MapAnd, FalseQ,
         ZeroQ, NegativeQ, NonzeroQ, FreeQ, NFreeQ, List, Log, PositiveQ,
         PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ,
         ComplexNumberQ, PureComplexNumberQ, RealNumericQ, PositiveOrZeroQ,
@@ -116,7 +116,7 @@ if matchpy:
         TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist, Sum_doit, PolynomialQuotient, Floor,
         PolynomialRemainder, Factor, PolyLog, CosIntegral, SinIntegral, LogIntegral, SinhIntegral,
         CoshIntegral, Rule, Erf, PolyGamma, ExpIntegralEi, ExpIntegralE, LogGamma , UtilityOperator, Factorial,
-        Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, exp, log, Discriminant,
+        Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, rubi_exp as exp, rubi_log as log, Discriminant,
         Negative, Quotient
     )
     from sympy import (Integral, S, sqrt, And, Or, Integer, Float, Mod, I, Abs, simplify, Mul,
@@ -206,7 +206,7 @@ def binomial_products(rubi):
         u = Symbol('u')
         u = Int((r - s*x*cos(Pi*(S(2)*k + S(-1))/n))/(r**S(2) - S(2)*r*s*x*cos(Pi*(S(2)*k + S(-1))/n) + s**S(2)*x**S(2)), x)
         u = Int((r - s*x*cos(Pi*(2*k - 1)/n))/(r**2 - 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return Simp(Dist(2*r/(a*n), Sum_doit(u, List(k, 1, n/2 - 1/2)), x) + r*Int(1/(r + s*x), x)/(a*n), x)
+        return Simp(Dist(2*r/(a*n), Sum_doit(u, List(k, 1, n/2 - S.Half)), x) + r*Int(1/(r + s*x), x)/(a*n), x)
     pattern701 = Pattern(Integral(S(1)/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons467, cons468)
     rule701 = ReplacementRule(pattern701, With701)
     def With702(x, a, n, b):
@@ -216,7 +216,7 @@ def binomial_products(rubi):
         u = Symbol('u')
         u = Int((r + s*x*cos(Pi*(S(2)*k + S(-1))/n))/(r**S(2) + S(2)*r*s*x*cos(Pi*(S(2)*k + S(-1))/n) + s**S(2)*x**S(2)), x)
         u = Int((r + s*x*cos(Pi*(2*k - 1)/n))/(r**2 + 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return Simp(Dist(2*r/(a*n), Sum_doit(u, List(k, 1, n/2 - 1/2)), x) + r*Int(1/(r - s*x), x)/(a*n), x)
+        return Simp(Dist(2*r/(a*n), Sum_doit(u, List(k, 1, n/2 - S.Half)), x) + r*Int(1/(r - s*x), x)/(a*n), x)
     pattern702 = Pattern(Integral(S(1)/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons467, cons469)
     rule702 = ReplacementRule(pattern702, With702)
     pattern703 = Pattern(Integral(S(1)/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons468, cons470)
@@ -257,7 +257,7 @@ def binomial_products(rubi):
         v = Symbol('v')
         u = Int((r - s*x*cos(Pi*(S(2)*k + S(-1))/n))/(r**S(2) - S(2)*r*s*x*cos(Pi*(S(2)*k + S(-1))/n) + s**S(2)*x**S(2)), x) + Int((r + s*x*cos(Pi*(S(2)*k + S(-1))/n))/(r**S(2) + S(2)*r*s*x*cos(Pi*(S(2)*k + S(-1))/n) + s**S(2)*x**S(2)), x)
         u = Int((r - s*x*cos(Pi*(2*k - 1)/n))/(r**2 - 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x) + Int((r + s*x*cos(Pi*(2*k - 1)/n))/(r**2 + 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return Simp(Dist(2*r/(a*n), Sum_doit(u, List(k, 1, n/4 - 1/2)), x) + 2*r**2*Int(1/(r**2 + s**2*x**2), x)/(a*n), x)
+        return Simp(Dist(2*r/(a*n), Sum_doit(u, List(k, 1, n/4 - S.Half)), x) + 2*r**2*Int(1/(r**2 + s**2*x**2), x)/(a*n), x)
     pattern709 = Pattern(Integral(S(1)/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons474, cons468)
     rule709 = ReplacementRule(pattern709, With709)
     def With710(x, a, n, b):
@@ -267,7 +267,7 @@ def binomial_products(rubi):
         u = Symbol('u')
         u = Int((r - s*x*cos(S(2)*Pi*k/n))/(r**S(2) - S(2)*r*s*x*cos(S(2)*Pi*k/n) + s**S(2)*x**S(2)), x) + Int((r + s*x*cos(S(2)*Pi*k/n))/(r**S(2) + S(2)*r*s*x*cos(S(2)*Pi*k/n) + s**S(2)*x**S(2)), x)
         u = Int((r - s*x*cos(2*Pi*k/n))/(r**2 - 2*r*s*x*cos(2*Pi*k/n) + s**2*x**2), x) + Int((r + s*x*cos(2*Pi*k/n))/(r**2 + 2*r*s*x*cos(2*Pi*k/n) + s**2*x**2), x)
-        return Simp(Dist(2*r/(a*n), Sum_doit(u, List(k, 1, n/4 - 1/2)), x) + 2*r**2*Int(1/(r**2 - s**2*x**2), x)/(a*n), x)
+        return Simp(Dist(2*r/(a*n), Sum_doit(u, List(k, 1, n/4 - S.Half)), x) + 2*r**2*Int(1/(r**2 - s**2*x**2), x)/(a*n), x)
     pattern710 = Pattern(Integral(S(1)/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons474, cons469)
     rule710 = ReplacementRule(pattern710, With710)
     def With711(x, a, b):
@@ -687,7 +687,7 @@ def binomial_products(rubi):
         u = Symbol('u')
         u = Int((r*cos(Pi*m*(S(2)*k + S(-1))/n) - s*x*cos(Pi*(S(2)*k + S(-1))*(m + S(1))/n))/(r**S(2) - S(2)*r*s*x*cos(Pi*(S(2)*k + S(-1))/n) + s**S(2)*x**S(2)), x)
         u = Int((r*cos(Pi*m*(2*k - 1)/n) - s*x*cos(Pi*(2*k - 1)*(m + 1)/n))/(r**2 - 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return Simp(Dist(2*r**(m + 1)*s**(-m)/(a*n), Sum_doit(u, List(k, 1, n/2 - 1/2)), x) - s**(-m)*(-r)**(m + 1)*Int(1/(r + s*x), x)/(a*n), x)
+        return Simp(Dist(2*r**(m + 1)*s**(-m)/(a*n), Sum_doit(u, List(k, 1, n/2 - S.Half)), x) - s**(-m)*(-r)**(m + 1)*Int(1/(r + s*x), x)/(a*n), x)
     pattern784 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons521, cons62, cons522, cons468)
     rule784 = ReplacementRule(pattern784, With784)
     def With785(m, b, a, n, x):
@@ -697,7 +697,7 @@ def binomial_products(rubi):
         u = Symbol('u')
         u = Int((r*cos(Pi*m*(S(2)*k + S(-1))/n) + s*x*cos(Pi*(S(2)*k + S(-1))*(m + S(1))/n))/(r**S(2) + S(2)*r*s*x*cos(Pi*(S(2)*k + S(-1))/n) + s**S(2)*x**S(2)), x)
         u = Int((r*cos(Pi*m*(2*k - 1)/n) + s*x*cos(Pi*(2*k - 1)*(m + 1)/n))/(r**2 + 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return Simp(-Dist(2*s**(-m)*(-r)**(m + 1)/(a*n), Sum_doit(u, List(k, 1, n/2 - 1/2)), x) + r**(m + 1)*s**(-m)*Int(1/(r - s*x), x)/(a*n), x)
+        return Simp(-Dist(2*s**(-m)*(-r)**(m + 1)/(a*n), Sum_doit(u, List(k, 1, n/2 - S.Half)), x) + r**(m + 1)*s**(-m)*Int(1/(r - s*x), x)/(a*n), x)
     pattern785 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons523, cons62, cons522, cons469)
     rule785 = ReplacementRule(pattern785, With785)
     def With786(m, b, a, n, x):
@@ -707,7 +707,7 @@ def binomial_products(rubi):
         u = Symbol('u')
         u = Int((r*cos(Pi*m*(S(2)*k + S(-1))/n) - s*x*cos(Pi*(S(2)*k + S(-1))*(m + S(1))/n))/(r**S(2) - S(2)*r*s*x*cos(Pi*(S(2)*k + S(-1))/n) + s**S(2)*x**S(2)), x) + Int((r*cos(Pi*m*(S(2)*k + S(-1))/n) + s*x*cos(Pi*(S(2)*k + S(-1))*(m + S(1))/n))/(r**S(2) + S(2)*r*s*x*cos(Pi*(S(2)*k + S(-1))/n) + s**S(2)*x**S(2)), x)
         u = Int((r*cos(Pi*m*(2*k - 1)/n) - s*x*cos(Pi*(2*k - 1)*(m + 1)/n))/(r**2 - 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x) + Int((r*cos(Pi*m*(2*k - 1)/n) + s*x*cos(Pi*(2*k - 1)*(m + 1)/n))/(r**2 + 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return Simp(2*(-1)**(m/2)*r**(m + 2)*s**(-m)*Int(1/(r**2 + s**2*x**2), x)/(a*n) + Dist(2*r**(m + 1)*s**(-m)/(a*n), Sum_doit(u, List(k, 1, n/4 - 1/2)), x), x)
+        return Simp(2*(-1)**(m/2)*r**(m + 2)*s**(-m)*Int(1/(r**2 + s**2*x**2), x)/(a*n) + Dist(2*r**(m + 1)*s**(-m)/(a*n), Sum_doit(u, List(k, 1, n/4 - S.Half)), x), x)
     pattern786 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons524, cons62, cons522, cons468)
     rule786 = ReplacementRule(pattern786, With786)
     def With787(m, b, a, n, x):
@@ -717,7 +717,7 @@ def binomial_products(rubi):
         u = Symbol('u')
         u = Int((r*cos(S(2)*Pi*k*m/n) - s*x*cos(S(2)*Pi*k*(m + S(1))/n))/(r**S(2) - S(2)*r*s*x*cos(S(2)*Pi*k/n) + s**S(2)*x**S(2)), x) + Int((r*cos(S(2)*Pi*k*m/n) + s*x*cos(S(2)*Pi*k*(m + S(1))/n))/(r**S(2) + S(2)*r*s*x*cos(S(2)*Pi*k/n) + s**S(2)*x**S(2)), x)
         u = Int((r*cos(2*Pi*k*m/n) - s*x*cos(2*Pi*k*(m + 1)/n))/(r**2 - 2*r*s*x*cos(2*Pi*k/n) + s**2*x**2), x) + Int((r*cos(2*Pi*k*m/n) + s*x*cos(2*Pi*k*(m + 1)/n))/(r**2 + 2*r*s*x*cos(2*Pi*k/n) + s**2*x**2), x)
-        return Simp(Dist(2*r**(m + 1)*s**(-m)/(a*n), Sum_doit(u, List(k, 1, n/4 - 1/2)), x) + 2*r**(m + 2)*s**(-m)*Int(1/(r**2 - s**2*x**2), x)/(a*n), x)
+        return Simp(Dist(2*r**(m + 1)*s**(-m)/(a*n), Sum_doit(u, List(k, 1, n/4 - S.Half)), x) + 2*r**(m + 2)*s**(-m)*Int(1/(r**2 - s**2*x**2), x)/(a*n), x)
     pattern787 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons524, cons62, cons522, cons469)
     rule787 = ReplacementRule(pattern787, With787)
     def With788(x, a, b):

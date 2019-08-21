@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Several methods to simplify expressions involving unit objects.
 """
@@ -8,11 +6,11 @@ from __future__ import division
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy import Add, Function, Mul, Pow, Rational, Tuple, sympify
+from sympy import Add, Mul, Pow, Tuple, sympify
 from sympy.core.compatibility import reduce, Iterable, ordered
 from sympy.physics.units.dimensions import Dimension, dimsys_default
-from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.prefixes import Prefix
+from sympy.physics.units.quantities import Quantity
 from sympy.utilities.iterables import sift
 
 
@@ -72,6 +70,7 @@ def convert_to(expr, target_units):
     >>> from sympy.physics.units import speed_of_light, meter, gram, second, day
     >>> from sympy.physics.units import mile, newton, kilogram, atomic_mass_constant
     >>> from sympy.physics.units import kilometer, centimeter
+    >>> from sympy.physics.units import gravitational_constant, hbar
     >>> from sympy.physics.units import convert_to
     >>> convert_to(mile, kilometer)
     25146*kilometer/15625
@@ -86,7 +85,7 @@ def convert_to(expr, target_units):
     >>> convert_to(3*newton, kilogram*meter/second**2)
     3*kilogram*meter/second**2
     >>> convert_to(atomic_mass_constant, gram)
-    1.66053904e-24*gram
+    1.660539060e-24*gram
 
     Conversion to multiple units:
 
@@ -99,7 +98,7 @@ def convert_to(expr, target_units):
 
     >>> from sympy.physics.units import gravitational_constant, hbar
     >>> convert_to(atomic_mass_constant, [gravitational_constant, speed_of_light, hbar]).n()
-    7.62950196312651e-20*gravitational_constant**(-0.5)*hbar**0.5*speed_of_light**0.5
+    7.62963085040767e-20*gravitational_constant**(-0.5)*hbar**0.5*speed_of_light**0.5
 
     """
     if not isinstance(target_units, (Iterable, Tuple)):

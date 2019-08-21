@@ -773,7 +773,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     # see Hackman "Elementary Number Theory" (2009), page 76
     if not is_nthpow_residue(a, n, p):
         return None
-    if primitive_root(p) == None:
+    if primitive_root(p) is None:
         raise NotImplementedError("Not Implemented for m without primitive root")
 
     if (p - 1) % n == 0:

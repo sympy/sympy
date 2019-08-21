@@ -5,7 +5,7 @@
 Demonstrates various ways to solve partial differential equations
 """
 
-from sympy import symbols, Eq, Function, pde_separate, pprint, sin, cos, latex
+from sympy import symbols, Eq, Function, pde_separate, pprint, sin, cos
 from sympy import Derivative as D
 
 

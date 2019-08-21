@@ -31,7 +31,7 @@ class Ynm(Function):
     Examples
     ========
 
-    >>> from sympy import Ynm, Symbol
+    >>> from sympy import Ynm, Symbol, simplify
     >>> from sympy.abc import n,m
     >>> theta = Symbol("theta")
     >>> phi = Symbol("phi")
@@ -41,20 +41,10 @@ class Ynm(Function):
 
     Several symmetries are known, for the order
 
-    >>> from sympy import Ynm, Symbol
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
-
     >>> Ynm(n, -m, theta, phi)
     (-1)**m*exp(-2*I*m*phi)*Ynm(n, m, theta, phi)
 
     as well as for the angles
-
-    >>> from sympy import Ynm, Symbol, simplify
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
 
     >>> Ynm(n, m, -theta, phi)
     Ynm(n, m, theta, phi)

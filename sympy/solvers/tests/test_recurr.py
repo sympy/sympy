@@ -1,8 +1,8 @@
 from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols, I, expand_func, binomial, gamma
 from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.core.compatibility import range
-from sympy.abc import a, b, c
+from sympy.abc import a, b
 
 y = Function('y')
 n, k = symbols('n,k', integer=True)
@@ -204,6 +204,7 @@ def test_issue_6844():
     assert rsolve(f, y(n), {y(0): 0, y(1): 1}) == 2*2**(-n)*n
 
 
+@slow
 def test_issue_15751():
     f = y(n) + 21*y(n + 1) - 273*y(n + 2) - 1092*y(n + 3) + 1820*y(n + 4) + 1092*y(n + 5) - 273*y(n + 6) - 21*y(n + 7) + y(n + 8)
     assert rsolve(f, y(n)) is not None

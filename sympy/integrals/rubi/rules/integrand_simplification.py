@@ -10,7 +10,7 @@ from sympy.utilities.decorator import doctest_depends_on
 if matchpy:
     from matchpy import Pattern, ReplacementRule, CustomConstraint, is_match
     from sympy.integrals.rubi.utility_function import (
-        sympy_op_factory, Int, Sum, Set, With, Module, Scan, MapAnd, FalseQ,
+        Int, Sum, Set, With, Module, Scan, MapAnd, FalseQ,
         ZeroQ, NegativeQ, NonzeroQ, FreeQ, NFreeQ, List, Log, PositiveQ,
         PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ,
         ComplexNumberQ, PureComplexNumberQ, RealNumericQ, PositiveOrZeroQ,
@@ -116,7 +116,7 @@ if matchpy:
         TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist, Sum_doit, PolynomialQuotient, Floor,
         PolynomialRemainder, Factor, PolyLog, CosIntegral, SinIntegral, LogIntegral, SinhIntegral,
         CoshIntegral, Rule, Erf, PolyGamma, ExpIntegralEi, ExpIntegralE, LogGamma , UtilityOperator, Factorial,
-        Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, exp, log, Discriminant,
+        Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, rubi_exp as exp, rubi_log as log, Discriminant,
         Negative, Quotient
     )
     from sympy import (Integral, S, sqrt, And, Or, Integer, Float, Mod, I, Abs, simplify, Mul,
@@ -287,7 +287,7 @@ def integrand_simplification(rubi):
     pattern30 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons21, cons4, cons53)
     def replacement30(m, b, a, n, x):
         rubi.append(30)
-        return Simp(log(RemoveContent(a + b*x**n, x))/(b*n), x)
+        return Simp(rubi_log(RemoveContent(a + b*x**n, x))/(b*n), x)
     rule30 = ReplacementRule(pattern30, replacement30)
     pattern31 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons21, cons4, cons5, cons53, cons54)
     def replacement31(p, m, b, a, n, x):

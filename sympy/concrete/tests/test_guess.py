@@ -3,14 +3,17 @@ from sympy.concrete.guess import (
             find_simple_recurrence,
             rationalize,
             guess_generating_function_rational,
-            guess_generating_function
+            guess_generating_function,
+            guess
         )
-from sympy import (Function, Symbol, sympify, Rational,
-                   fibonacci, factorial, exp)
+from sympy import (Function, Symbol, sympify, Rational, symbols, S,
+                   fibonacci, factorial, exp, Product, RisingFactorial)
+
 
 def test_find_simple_recurrence_vector():
     assert find_simple_recurrence_vector(
             [fibonacci(k) for k in range(12)]) == [1, -1, -1]
+
 
 def test_find_simple_recurrence():
     a = Function('a')
@@ -56,3 +59,17 @@ def test_guess_generating_function():
        types=['egf'])['egf'] == 1/(-x + 1)
     assert guess_generating_function([k+1 for k in range(12)],
        types=['egf']) == {'egf': (x + 1)*exp(x), 'lgdegf': (x + 2)/(x + 1)}
+
+
+def test_guess():
+    i0, i1 = symbols('i0 i1')
+    assert guess([1, 2, 6, 24, 120], evaluate=False) == [Product(i1 + 1, (i1, 1, i0 - 1))]
+    assert guess([1, 2, 6, 24, 120]) == [RisingFactorial(2, i0 - 1)]
+    assert guess([1, 2, 7, 42, 429, 7436, 218348, 10850216], niter=4) == [
+        2**(i0 - 1)*(S(27)/16)**(i0**2/2 - 3*i0/2 +
+        1)*Product(RisingFactorial(S(5)/3, i1 - 1)*RisingFactorial(S(7)/3, i1
+        - 1)/(RisingFactorial(S(3)/2, i1 - 1)*RisingFactorial(S(5)/2, i1 -
+        1)), (i1, 1, i0 - 1))]
+    assert guess([1, 0, 2]) == []
+    x, y = symbols('x y')
+    guess([1, 2, 6, 24, 120], variables=[x, y]) == [RisingFactorial(2, x - 1)]

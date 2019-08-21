@@ -10,7 +10,7 @@ from sympy.utilities.decorator import doctest_depends_on
 if matchpy:
     from matchpy import Pattern, ReplacementRule, CustomConstraint, is_match
     from sympy.integrals.rubi.utility_function import (
-        sympy_op_factory, Int, Sum, Set, With, Module, Scan, MapAnd, FalseQ,
+        Int, Sum, Set, With, Module, Scan, MapAnd, FalseQ,
         ZeroQ, NegativeQ, NonzeroQ, FreeQ, NFreeQ, List, Log, PositiveQ,
         PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ,
         ComplexNumberQ, PureComplexNumberQ, RealNumericQ, PositiveOrZeroQ,
@@ -116,7 +116,7 @@ if matchpy:
         TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist, Sum_doit, PolynomialQuotient, Floor,
         PolynomialRemainder, Factor, PolyLog, CosIntegral, SinIntegral, LogIntegral, SinhIntegral,
         CoshIntegral, Rule, Erf, PolyGamma, ExpIntegralEi, ExpIntegralE, LogGamma , UtilityOperator, Factorial,
-        Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, exp, log, Discriminant,
+        Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, rubi_exp as exp, rubi_log as log, Discriminant,
         Negative, Quotient
     )
     from sympy import (Integral, S, sqrt, And, Or, Integer, Float, Mod, I, Abs, simplify, Mul,
@@ -1346,7 +1346,7 @@ def miscellaneous_algebraic(rubi):
         q = Expon(Pq, x)
         Pqq = Coeff(Pq, x, q)
         rubi.append(1661)
-        return Dist(1/2, Int((a + b*x + c*x**2)**p*ExpandToSum(2*Pq - Pqq*c**p*(b + 2*c*x)*(a + b*x + c*x**2)**(-p - 1), x), x), x) + Simp(Pqq*c**p*log(a + b*x + c*x**2)/2, x)
+        return Dist(S.Half, Int((a + b*x + c*x**2)**p*ExpandToSum(2*Pq - Pqq*c**p*(b + 2*c*x)*(a + b*x + c*x**2)**(-p - 1), x), x), x) + Simp(Pqq*c**p*log(a + b*x + c*x**2)/2, x)
     rule1661 = ReplacementRule(pattern1661, replacement1661)
     def With1662(p, b, Pq, c, a, x):
         if isinstance(x, (int, Integer, float, Float)):
@@ -1362,7 +1362,7 @@ def miscellaneous_algebraic(rubi):
         q = Expon(Pq, x)
         Pqq = Coeff(Pq, x, q)
         rubi.append(1662)
-        return Int((a + b*x + c*x**2)**p*ExpandToSum(Pq - Pqq*c**(p + 1/2)*(a + b*x + c*x**2)**(-p - 1/2), x), x) + Simp(Pqq*c**p*atanh((b + 2*c*x)/(2*sqrt(a + b*x + c*x**2)*Rt(c, 2))), x)
+        return Int((a + b*x + c*x**2)**p*ExpandToSum(Pq - Pqq*c**(p + S.Half)*(a + b*x + c*x**2)**(-p - S.Half), x), x) + Simp(Pqq*c**p*atanh((b + 2*c*x)/(2*sqrt(a + b*x + c*x**2)*Rt(c, 2))), x)
     rule1662 = ReplacementRule(pattern1662, replacement1662)
     def With1663(p, b, Pq, c, a, x):
         if isinstance(x, (int, Integer, float, Float)):
@@ -1378,7 +1378,7 @@ def miscellaneous_algebraic(rubi):
         q = Expon(Pq, x)
         Pqq = Coeff(Pq, x, q)
         rubi.append(1663)
-        return Int((a + b*x + c*x**2)**p*ExpandToSum(Pq - Pqq*(-c)**(p + 1/2)*(a + b*x + c*x**2)**(-p - 1/2), x), x) - Simp(Pqq*(-c)**p*ArcTan((b + 2*c*x)/(2*sqrt(a + b*x + c*x**2)*Rt(-c, 2))), x)
+        return Int((a + b*x + c*x**2)**p*ExpandToSum(Pq - Pqq*(-c)**(p + S.Half)*(a + b*x + c*x**2)**(-p - S.Half), x), x) - Simp(Pqq*(-c)**p*ArcTan((b + 2*c*x)/(2*sqrt(a + b*x + c*x**2)*Rt(-c, 2))), x)
     rule1663 = ReplacementRule(pattern1663, replacement1663)
     def With1664(p, m, b, n2, Pq, d, c, n, a, x):
         if isinstance(x, (int, Integer, float, Float)):

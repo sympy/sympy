@@ -50,9 +50,17 @@ substitutions at different times in the message.
 
 .. autofunction:: decipher_shift
 
+.. autofunction:: encipher_rot13
+
+.. autofunction:: decipher_rot13
+
 .. autofunction:: encipher_affine
 
 .. autofunction:: decipher_affine
+
+.. autofunction:: encipher_atbash
+
+.. autofunction:: decipher_atbash
 
 .. autofunction:: encipher_substitution
 

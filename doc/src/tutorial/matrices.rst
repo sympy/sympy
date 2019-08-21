@@ -151,7 +151,7 @@ raise it to the ``-1`` power.
     >>> N**-1
     Traceback (most recent call last):
     ...
-    ValueError: Matrix det == 0; not invertible.
+    NonInvertibleMatrixError: Matrix det == 0; not invertible.
 
 To take the transpose of a Matrix, use ``T``.
 
@@ -427,7 +427,7 @@ guaranteed to be accurate in some limited domain of numerics and symbols,
 and any complicated expressions beyond its decidability are treated as ``None``,
 which behaves similarly to logical ``False``.
 
-The list of methods using zero testing procedures are as followings.
+The list of methods using zero testing procedures are as follows:
 
 ``echelon_form`` , ``is_echelon`` , ``rank`` , ``rref`` , ``nullspace`` ,
 ``eigenvects`` , ``inverse_ADJ`` , ``inverse_GE`` , ``inverse_LU`` ,

@@ -1,4 +1,4 @@
-"""Implementaton of :class:`GMPYRationalField` class. """
+"""Implementation of :class:`GMPYRationalField` class. """
 
 from __future__ import print_function, division
 

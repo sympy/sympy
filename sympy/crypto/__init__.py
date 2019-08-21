@@ -11,4 +11,5 @@ from sympy.crypto.crypto import (cycle_list,
         encipher_elgamal, dh_private_key, dh_public_key, dh_shared_key,
         padded_key, encipher_bifid, decipher_bifid, bifid_square, bifid5,
         bifid6, bifid10, decipher_gm, encipher_gm, gm_public_key,
-        gm_private_key, bg_private_key, bg_public_key, encipher_bg, decipher_bg)
+        gm_private_key, bg_private_key, bg_public_key, encipher_bg, decipher_bg,
+        encipher_rot13, decipher_rot13, encipher_atbash, decipher_atbash)

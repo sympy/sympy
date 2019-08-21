@@ -130,10 +130,11 @@ from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.compatibility import string_types
 from sympy.core.expr import Expr
-from sympy.core.numbers import Float, Integer
+from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Lt, Le, Ge, Gt
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import iterable
+
 
 
 def _mk_Tuple(args):
@@ -188,7 +189,7 @@ class Token(Basic):
     @classmethod
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
-        if arg == None:
+        if arg == None: # Must be "== None", cannot be "is None"
             return cls.defaults.get(attr, none)
         else:
             if isinstance(arg, Dummy):  # sympy's replace uses Dummy instances
@@ -265,7 +266,7 @@ class Token(Basic):
             if isinstance(arg, Token):
                 return printer._print(arg, *args, joiner=self._joiner(k, il), **kwargs)
             else:
-                return printer._print(v, *args, **kwargs)
+                return printer._print(arg, *args, **kwargs)
 
         if isinstance(v, Tuple):
             joined = self._joiner(k, il).join([_print(arg) for arg in v.args])
@@ -383,7 +384,7 @@ class NoneToken(Token):
         return ()
 
     def __hash__(self):
-        return super(Token, self).__hash__()
+        return super(NoneToken, self).__hash__()
 
 
 none = NoneToken()
@@ -1249,6 +1250,10 @@ class FloatType(FloatBaseType):
 
     def cast_nocheck(self, value):
         """ Casts without checking if out of bounds or subnormal. """
+        if value == oo:  # float(oo) or oo
+            return float(oo)
+        elif value == -oo:  # float(-oo) or -oo
+            return float(-oo)
         return Float(str(sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
 
     def _check(self, value):
@@ -1506,7 +1511,7 @@ class Pointer(Variable):
     >>> i = Symbol('i', integer=True)
     >>> p = Pointer('x')
     >>> p[i+1]
-    Element(x, indices=((i + 1,),))
+    Element(x, indices=(i + 1,))
 
     """
 
@@ -1577,7 +1582,7 @@ class While(Token):
     Parameters
     ==========
 
-    condition : expression convertable to Boolean
+    condition : expression convertible to Boolean
     body : CodeBlock or iterable
         When passed an iterable it is used to instantiate a CodeBlock.
 

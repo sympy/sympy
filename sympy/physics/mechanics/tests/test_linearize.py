@@ -1,4 +1,4 @@
-from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt
+from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, S
 from sympy import solve, simplify
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
@@ -117,7 +117,7 @@ def test_linearize_rolling_disc_kane():
                     [0, 0, 0, 0, 0, 0, 1, 0],
                     [sin(q1)*q3d, 0, 0, 0, 0, -sin(q1), -cos(q1), 0],
                     [-cos(q1)*q3d, 0, 0, 0, 0, cos(q1), -sin(q1), 0],
-                    [0, 4/5, 0, 0, 0, 0, 0, 6*q3d/5],
+                    [0, S(4)/5, 0, 0, 0, 0, 0, 6*q3d/5],
                     [0, 0, 0, 0, 0, 0, 0, 0],
                     [0, 0, 0, 0, 0, -2*q3d, 0, 0]])
     B_sol = Matrix([])

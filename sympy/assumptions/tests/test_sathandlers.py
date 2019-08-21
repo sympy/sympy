@@ -1,4 +1,4 @@
-from sympy import Mul, Basic, Q, Expr, And, symbols, Equivalent, Implies, Or
+from sympy import Mul, Basic, Q, Expr, And, symbols, Equivalent, Or
 
 from sympy.assumptions.sathandlers import (ClassFactRegistry, AllArgs,
     UnevaluatedOnFree, AnyArgs, CheckOldAssump, ExactlyOneArg)
@@ -71,17 +71,17 @@ def test_CheckOldAssump():
     # TODO: Make these tests more complete
 
     class Test1(Expr):
-        def _eval_is_positive(self):
+        def _eval_is_extended_positive(self):
             return True
-        def _eval_is_negative(self):
+        def _eval_is_extended_negative(self):
             return False
 
     class Test2(Expr):
         def _eval_is_finite(self):
             return True
-        def _eval_is_positive(self):
+        def _eval_is_extended_positive(self):
             return True
-        def _eval_is_negative(self):
+        def _eval_is_extended_negative(self):
             return False
 
     t1 = Test1()

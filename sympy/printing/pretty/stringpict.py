@@ -333,7 +333,7 @@ class stringPict(object):
         return ncols
 
     def __eq__(self, o):
-        if isinstance(o, str):
+        if isinstance(o, string_types):
             return '\n'.join(self.picture) == o
         elif isinstance(o, stringPict):
             return o.picture == self.picture

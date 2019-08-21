@@ -1,11 +1,10 @@
 from __future__ import print_function, division
 
 from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
-from .transpose import Transpose
-from sympy.core.sympify import _sympify
+from sympy.core import S
 from sympy.core.compatibility import range
+from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
-from sympy.core import S, Basic
 
 
 class MatPow(MatrixExpr):
@@ -72,7 +71,7 @@ class MatPow(MatrixExpr):
             raise ValueError("Matrix determinant is 0, not invertible.")
         elif isinstance(base, (Identity, ZeroMatrix)):
             return base
-        elif isinstance(base, MatrixBase) and exp.is_number:
+        elif isinstance(base, MatrixBase):
             if exp is S.One:
                 return base
             return base**exp
@@ -88,9 +87,42 @@ class MatPow(MatrixExpr):
         base, exp = self.args
         return MatPow(base.T, exp)
 
+    def _eval_derivative(self, x):
+        from sympy import Pow
+        return Pow._eval_derivative(self, x)
+
     def _eval_derivative_matrix_lines(self, x):
+        from sympy.core.expr import ExprBuilder
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
         from .matmul import MatMul
+        from .inverse import Inverse
         exp = self.exp
+        if self.base.shape == (1, 1) and not exp.has(x):
+            lr = self.base._eval_derivative_matrix_lines(x)
+            for i in lr:
+                subexpr = ExprBuilder(
+                    CodegenArrayContraction,
+                    [
+                        ExprBuilder(
+                            CodegenArrayTensorProduct,
+                            [
+                                Identity(1),
+                                i._lines[0],
+                                exp*self.base**(exp-1),
+                                i._lines[1],
+                                Identity(1),
+                            ]
+                        ),
+                        (0, 3, 4), (5, 7, 8)
+                    ],
+                    validator=CodegenArrayContraction._validate
+                )
+                i._first_pointer_parent = subexpr.args[0].args
+                i._first_pointer_index = 0
+                i._second_pointer_parent = subexpr.args[0].args
+                i._second_pointer_index = 4
+                i._lines = [subexpr]
+            return lr
         if (exp > 0) == True:
             newexpr = MatMul.fromiter([self.base for i in range(exp)])
         elif (exp == -1) == True:

@@ -15,6 +15,10 @@ nthroot
 -------
 .. autofunction:: nthroot
 
+kroneckersimp
+-------------
+.. autofunction:: kroneckersimp
+
 besselsimp
 ----------
 .. autofunction:: besselsimp

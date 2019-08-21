@@ -601,8 +601,6 @@ def roots_quintic(f):
             r4 = Res[4][i]
             break
 
-    u, v = quintic.uv(theta, d)
-
     # Now we have various Res values. Each will be a list of five
     # values. We have to pick one r value from those five for each Res
     u, v = quintic.uv(theta, d)
@@ -984,7 +982,8 @@ def roots(f, *gens, **flags):
     result = {}
 
     if not f.is_ground:
-        if not f.get_domain().is_Exact:
+        dom = f.get_domain()
+        if not dom.is_Exact and dom.is_Numerical:
             for r in f.nroots():
                 _update_dict(result, r, 1)
         elif f.degree() == 1:
@@ -1028,13 +1027,11 @@ def roots(f, *gens, **flags):
         for currentroot, k in _result.items():
             result[coeff*currentroot] = k
 
-    result.update(zeros)
-
     if filter not in [None, 'C']:
         handlers = {
             'Z': lambda r: r.is_Integer,
             'Q': lambda r: r.is_Rational,
-            'R': lambda r: r.is_real,
+            'R': lambda r: r.is_extended_real,
             'I': lambda r: r.is_imaginary,
         }
 
@@ -1061,6 +1058,9 @@ def roots(f, *gens, **flags):
         for k, v in result.items():
             result1[k + translate_x] = v
         result = result1
+
+    # adding zero roots after non-trivial roots have been translated
+    result.update(zeros)
 
     if not multiple:
         return result

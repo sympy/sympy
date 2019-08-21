@@ -103,7 +103,7 @@ def test_point():
 
     a, b = Rational(1, 2), Rational(1, 3)
     assert Point(a, b).evalf(2) == \
-        Point(a.n(2), b.n(2))
+        Point(a.n(2), b.n(2), evaluate=False)
     raises(ValueError, lambda: Point(1, 2) + 1)
 
     # test transformations
@@ -179,10 +179,10 @@ def test_point3D():
     assert Point3D(x*(x - 1), y, 2) - Point3D(x**2 - x, y + 1, 1) == \
         Point3D(0, -1, 1)
 
-    a, b = Rational(1, 2), Rational(1, 3)
-    assert Point(a, b).evalf(2) == \
-        Point(a.n(2), b.n(2))
-    raises(ValueError, lambda: Point(1, 2) + 1)
+    a, b, c = Rational(1, 2), Rational(1, 3), Rational(1, 4)
+    assert Point3D(a, b, c).evalf(2) == \
+        Point(a.n(2), b.n(2), c.n(2), evaluate=False)
+    raises(ValueError, lambda: Point3D(1, 2, 3) + 1)
 
     # test transformations
     p = Point3D(1, 1, 1)
@@ -194,7 +194,6 @@ def test_point3D():
 
     # Test __new__
     assert Point3D(0.1, 0.2, evaluate=False, on_morph='ignore').args[0].is_Float
-
 
     # Test length property returns correctly
     assert p.length == 0
@@ -351,11 +350,11 @@ def test_arguments():
     # test evaluate=False for ops
     x = Symbol('x')
     a = Point(0, 1)
-    assert a + (0.1, x) == Point(0.1, 1 + x)
+    assert a + (0.1, x) == Point(0.1, 1 + x, evaluate=False)
     a = Point(0, 1)
-    assert a/10.0 == Point(0.0, 0.1)
+    assert a/10.0 == Point(0, 0.1, evaluate=False)
     a = Point(0, 1)
-    assert a*10.0 == Point(0.0, 10.0)
+    assert a*10.0 == Point(0.0, 10.0, evaluate=False)
 
     # test evaluate=False when changing dimensions
     u = Point(.1, .2, evaluate=False)

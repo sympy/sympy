@@ -2,9 +2,10 @@ from itertools import product as cartes
 
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-    atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
+    atan, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels)
+    binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
+    acos, erfi, LambertW)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -12,8 +13,6 @@ from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.core.numbers import GoldenRatio
-from sympy.functions.combinatorial.numbers import fibonacci
 
 from sympy.abc import x, y, z, k
 n = Symbol('n', integer=True, positive=True)
@@ -305,7 +304,7 @@ def test_issue_5184():
     assert limit(cos(x)/x, x, oo) == 0
     assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
 
-    r = Symbol('r', real=True, finite=True)
+    r = Symbol('r', real=True)
     assert limit(r*sin(1/r), r, 0) == 0
 
 
@@ -369,7 +368,7 @@ def test_extended_real_line():
 
 @XFAIL
 def test_order_oo():
-    x = Symbol('x', positive=True, finite=True)
+    x = Symbol('x', positive=True)
     assert Order(x)*oo != Order(1, x)
     assert limit(oo/(x**2 - 4), x, oo) == oo
 
@@ -536,3 +535,47 @@ def test_issue_10102():
 
 def test_issue_14377():
     raises(NotImplementedError, lambda: limit(exp(I*x)*sin(pi*x), x, oo))
+
+
+def test_issue_15984():
+    assert limit((-x + log(exp(x) + 1))/x, x, oo, dir='-').doit() == 0
+
+
+def test_issue_13575():
+    result = limit(acos(erfi(x)), x, 1)
+    assert isinstance(result, Add)
+
+    re, im = result.evalf().as_real_imag()
+
+    assert abs(re) < 1e-12
+    assert abs(im - 1.08633774961570) < 1e-12
+
+
+def test_issue_17325():
+    assert Limit(sin(x)/x, x, 0, dir="+-").doit() == 1
+    assert Limit(x**2, x, 0, dir="+-").doit() == 0
+    assert Limit(1/x**2, x, 0, dir="+-").doit() == oo
+    raises(ValueError, lambda: Limit(1/x, x, 0, dir="+-").doit())
+
+
+def test_issue_10978():
+    assert LambertW(x).limit(x, 0) == 0
+
+
+@XFAIL
+def test_issue_14313_comment():
+    assert limit(floor(n/2), n, oo) == oo
+
+
+@XFAIL
+def test_issue_15323():
+    d = ((1 - 1/x)**x).diff(x)
+    assert limit(d, x, 1, dir='+') == 1
+
+
+def test_issue_12571():
+    assert limit(-LambertW(-log(x))/log(x), x, 1) == 1
+
+
+def test_issue_14590():
+    assert limit((x**3*((x + 1)/x)**x)/((x + 1)*(x + 2)*(x + 3)), x, oo) == exp(1)

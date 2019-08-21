@@ -169,7 +169,7 @@ def test_subrange():
     ub = 2
     subrange_exercise(mult, lb, ub)
 
-@slow
+
 def test_subrange_large():
     # takes a second or so, depending on cpu, Python version, etc.
     mult = [6,3,2,1]

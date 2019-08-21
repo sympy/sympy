@@ -1,9 +1,8 @@
-from sympy import (Interval, Intersection, Set, EmptySet,
-        FiniteSet, Union, ComplexRegion, ProductSet)
-from sympy.sets.fancysets import Integers, Naturals, Reals
-from sympy.sets.sets import UniversalSet
-from sympy import S, sympify
+from sympy import (Interval, Intersection, Set, EmptySet, S, sympify,
+                   FiniteSet, Union, ComplexRegion, ProductSet)
 from sympy.multipledispatch import dispatch
+from sympy.sets.fancysets import Integers
+from sympy.sets.sets import UniversalSet
 
 
 @dispatch(Integers, Set)
@@ -110,7 +109,7 @@ def union_sets(a, b):
     # If `b` set contains one of my elements, remove it from `a`
     if any(b.contains(x) == True for x in a):
         return set((
-            FiniteSet(*[x for x in a if b.contains(x) != True]), b))
+            FiniteSet(*[x for x in a if not b.contains(x)]), b))
     return None
 
 @dispatch(Set, Set)

@@ -1,16 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """
 Physical quantities.
 """
 
 from __future__ import division
 
-from sympy import (Abs, Add, AtomicExpr, Basic, Derivative, Function, Mul,
+from sympy import (Abs, Add, AtomicExpr, Derivative, Function, Mul,
     Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
-from sympy.physics.units.dimensions import dimsys_default, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -26,7 +23,10 @@ class Quantity(AtomicExpr):
     is_nonzero = True
     _diff_wrt = True
 
-    def __new__(cls, name, abbrev=None, dimension=None, scale_factor=None, **assumptions):
+    def __new__(cls, name, abbrev=None, dimension=None, scale_factor=None,
+                latex_repr=None, pretty_unicode_repr=None,
+                pretty_ascii_repr=None, mathml_presentation_repr=None,
+                **assumptions):
 
         if not isinstance(name, Symbol):
             name = Symbol(name)
@@ -61,6 +61,10 @@ class Quantity(AtomicExpr):
         obj = AtomicExpr.__new__(cls, name, abbrev)
         obj._name = name
         obj._abbrev = abbrev
+        obj._latex_repr = latex_repr
+        obj._unicode_repr = pretty_unicode_repr
+        obj._ascii_repr = pretty_ascii_repr
+        obj._mathml_repr = mathml_presentation_repr
 
         if dimension is not None:
             # TODO: remove after deprecation:
@@ -203,7 +207,7 @@ class Quantity(AtomicExpr):
                     raise ValueError(
                         'Dimension of "{0}" is {1}, '
                         'but it should be {2}'.format(
-                            addend, addend_dim.name, dim.name))
+                            addend, addend_dim, dim))
                 factor += addend_factor
             return factor, dim
         elif isinstance(expr, Derivative):
@@ -222,6 +226,13 @@ class Quantity(AtomicExpr):
             return 1, expr
         else:
             return expr, Dimension(1)
+
+    def _latex(self, printer):
+        if self._latex_repr:
+            return self._latex_repr
+        else:
+            return r'\text{{{}}}'.format(self.args[1] \
+                          if len(self.args) >= 2 else self.args[0])
 
     def convert_to(self, other):
         """

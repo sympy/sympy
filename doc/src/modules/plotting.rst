@@ -45,6 +45,12 @@ Plotting Function Reference
 
 .. autofunction:: sympy.plotting.plot_implicit.plot_implicit
 
+PlotGrid Class
+--------------
+
+.. autoclass:: sympy.plotting.plot.PlotGrid
+   :members:
+
 Series Classes
 --------------
 

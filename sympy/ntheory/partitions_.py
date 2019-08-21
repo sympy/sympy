@@ -1,9 +1,7 @@
 from __future__ import print_function, division
-from mpmath.libmp import (fzero,
-    from_man_exp, from_int, from_rational,
+from mpmath.libmp import (fzero, from_int, from_rational,
     fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
-    mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, pi_fixed, mpf_cos,
-    mpf_sin)
+    mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)
 from sympy.core.numbers import igcd
 from sympy.core.compatibility import range
 from .residue_ntheory import (_sqrt_mod_prime_power,

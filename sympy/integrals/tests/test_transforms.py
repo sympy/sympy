@@ -9,10 +9,10 @@ from sympy.integrals.transforms import (mellin_transform,
     InverseSineTransform, InverseCosineTransform, IntegralTransformError)
 from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi, arg,
-    cos, S, Abs, And, Or, sin, sqrt, I, log, tan, hyperexpand, meijerg,
+    cos, S, Abs, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
-    exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
-    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2, Abs)
+    exp_polar, unpolarify, Function, expint, expand_mul,
+    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
 from sympy.utilities.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
@@ -99,10 +99,10 @@ def test_mellin_transform():
         (1/(nu + s), (-re(nu), oo), True)
 
     assert MT((1 - x)**(beta - 1)*Heaviside(1 - x), x, s) == \
-        (gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), -re(beta) < 0)
+        (gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), re(beta) > 0)
     assert MT((x - 1)**(beta - 1)*Heaviside(x - 1), x, s) == \
         (gamma(beta)*gamma(1 - beta - s)/gamma(1 - s),
-            (-oo, -re(beta) + 1), -re(beta) < 0)
+            (-oo, -re(beta) + 1), re(beta) > 0)
 
     assert MT((1 + x)**(-rho), x, s) == \
         (gamma(s)*gamma(rho - s)/gamma(rho), (0, re(rho)), True)
@@ -116,7 +116,7 @@ def test_mellin_transform():
         (0, re(rho)), And(re(rho) - 1 < 0, re(rho) < 1))
     mt = MT((1 - x)**(beta - 1)*Heaviside(1 - x)
             + a*(x - 1)**(beta - 1)*Heaviside(x - 1), x, s)
-    assert mt[1], mt[2] == ((0, -re(beta) + 1), -re(beta) < 0)
+    assert mt[1], mt[2] == ((0, -re(beta) + 1), re(beta) > 0)
 
     assert MT((x**a - b**a)/(x - b), x, s)[0] == \
         pi*b**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s)))
@@ -299,7 +299,7 @@ def test_expint():
     # TODO LT of Si, Shi, Chi is a mess ...
     assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s, 0, True)
     assert laplace_transform(expint(a, x), x, s) == \
-        (lerchphi(s*exp_polar(I*pi), 1, a), 0, S(0) < re(a))
+        (lerchphi(s*exp_polar(I*pi), 1, a), 0, re(a) > S(0))
     assert laplace_transform(expint(1, x), x, s) == (log(s + 1)/s, 0, True)
     assert laplace_transform(expint(2, x), x, s) == \
         ((s - log(s + 1))/s**2, 0, True)
@@ -350,7 +350,7 @@ def test_inverse_mellin_transform():
     # Now test the inverses of all direct transforms tested above
 
     # Section 8.4.2
-    nu = symbols('nu', real=True, finite=True)
+    nu = symbols('nu', real=True)
     assert IMT(-1/(nu + s), s, x, (-oo, None)) == x**nu*Heaviside(x - 1)
     assert IMT(1/(nu + s), s, x, (None, oo)) == x**nu*Heaviside(1 - x)
     assert simp_pows(IMT(gamma(beta)*gamma(s)/gamma(s + beta), s, x, (0, oo))) \
@@ -538,7 +538,7 @@ def test_issue_8368_7173():
 def test_inverse_laplace_transform():
     from sympy import sinh, cosh, besselj, besseli, simplify, factor_terms
     ILT = inverse_laplace_transform
-    a, b, c, = symbols('a b c', positive=True, finite=True)
+    a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
 
     def simp_hyp(expr):
@@ -607,7 +607,7 @@ def test_inverse_laplace_transform_delta_cond():
     assert ILT(exp(z*s), s, t, noconds=False) == \
         (DiracDelta(t + z), Eq(im(z), 0))
     # inversion does not exist: verify it doesn't evaluate to DiracDelta
-    for z in (Symbol('z', real=False),
+    for z in (Symbol('z', extended_real=False),
               Symbol('z', imaginary=True, zero=False)):
         f = ILT(exp(z*s), s, t, noconds=False)
         f = f[0] if isinstance(f, tuple) else f
@@ -808,14 +808,14 @@ def test_issue_7173():
     ans = laplace_transform(sinh(a*x)*cosh(a*x), x, s)
     r, e = cse(ans)
     assert r == [
-        (x0, pi/2),
-        (x1, arg(a)),
-        (x2, Abs(x1)),
-        (x3, Abs(x1 + pi))]
+        (x0, arg(a)),
+        (x1, Abs(x0)),
+        (x2, pi/2),
+        (x3, Abs(x0 + pi))]
     assert e == [
         a/(-4*a**2 + s**2),
         0,
-        ((x0 >= x2) | (x2 < x0)) & ((x0 >= x3) | (x3 < x0))]
+        ((x1 <= x2) | (x1 < x2)) & ((x3 <= x2) | (x3 < x2))]
 
 
 def test_issue_8514():

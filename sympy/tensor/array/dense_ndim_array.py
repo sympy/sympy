@@ -1,13 +1,13 @@
 from __future__ import print_function, division
 import functools
 
-import itertools
-
-from sympy.core.sympify import _sympify
-
 from sympy import Basic, Tuple, S
+from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
+from sympy.core.compatibility import SYMPY_INTS
+from sympy.core.numbers import Integer
+
 
 
 class DenseNDimArray(NDimArray):
@@ -30,6 +30,11 @@ class DenseNDimArray(NDimArray):
         0
         >>> a[1, 1]
         3
+        >>> a[0]
+        [0, 1]
+        >>> a[1]
+        [2, 3]
+
 
         Symbolic index:
 
@@ -47,17 +52,16 @@ class DenseNDimArray(NDimArray):
         if syindex is not None:
             return syindex
 
+        index = self._check_index_for_getitem(index)
+
         if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
             sl_factors, eindices = self._get_slice_data_for_array_access(index)
             array = [self._array[self._parse_index(i)] for i in eindices]
             nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
             return type(self)(array, nshape)
         else:
-            if isinstance(index, slice):
-                return self._array[index]
-            else:
-                index = self._parse_index(index)
-                return self._array[index]
+            index = self._parse_index(index)
+            return self._array[index]
 
     @classmethod
     def zeros(cls, *shape):
@@ -87,9 +91,6 @@ class DenseNDimArray(NDimArray):
             raise ValueError('Dimensions must be of size of 2')
 
         return Matrix(self.shape[0], self.shape[1], self._array)
-
-    def __iter__(self):
-        return self._array.__iter__()
 
     def reshape(self, *newshape):
         """
@@ -167,7 +168,7 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         self._shape = shape
         self._array = list(flat_list)
         self._rank = len(shape)
-        self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else 0
+        self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
         return self
 
     def __setitem__(self, index, value):

@@ -52,7 +52,7 @@ def test_Tuple_concatenation():
 
 
 def test_Tuple_equality():
-    assert Tuple(1, 2) is not (1, 2)
+    assert not isinstance(Tuple(1, 2), tuple)
     assert (Tuple(1, 2) == (1, 2)) is True
     assert (Tuple(1, 2) != (1, 2)) is False
     assert (Tuple(1, 2) == (1, 3)) is False

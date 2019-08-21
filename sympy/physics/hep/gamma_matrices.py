@@ -27,7 +27,7 @@
 """
 from sympy import S, Mul, eye, trace
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
-    TensMul, TensAdd, tensor_mul, Tensor, tensorhead
+    TensMul, TensAdd, tensor_mul, Tensor, TensorHead, TensorSymmetry
 from sympy.core.compatibility import range
 
 
@@ -37,7 +37,8 @@ from sympy.core.compatibility import range
 LorentzIndex = TensorIndexType('LorentzIndex', dim=4, dummy_fmt="L")
 
 
-GammaMatrix = tensorhead("GammaMatrix", [LorentzIndex], [[1]], comm=None)
+GammaMatrix = TensorHead("GammaMatrix", [LorentzIndex],
+                         TensorSymmetry.no_symmetry(1), comm=None)
 
 
 def extract_type_tens(expression, component):
@@ -84,8 +85,8 @@ def simplify_gpgp(ex, sort=True):
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, \
         LorentzIndex, simplify_gpgp
-    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-    >>> p, q = tensorhead('p, q', [LorentzIndex], [[1]])
+    >>> from sympy.tensor.tensor import tensor_indices, tensor_heads
+    >>> p, q = tensor_heads('p, q', [LorentzIndex])
     >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', LorentzIndex)
     >>> ps = p(i0)*G(-i0)
     >>> qs = q(i0)*G(-i0)
@@ -173,8 +174,8 @@ def gamma_trace(t):
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, \
         gamma_trace, LorentzIndex
-    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-    >>> p, q = tensorhead('p, q', [LorentzIndex], [[1]])
+    >>> from sympy.tensor.tensor import tensor_indices, tensor_heads
+    >>> p, q = tensor_heads('p, q', [LorentzIndex])
     >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', LorentzIndex)
     >>> ps = p(i0)*G(-i0)
     >>> qs = q(i0)*G(-i0)
@@ -203,8 +204,8 @@ def _simplify_single_line(expression):
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, \
         LorentzIndex, _simplify_single_line
-    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-    >>> p = tensorhead('p', [LorentzIndex], [[1]])
+    >>> from sympy.tensor.tensor import tensor_indices, TensorHead
+    >>> p = TensorHead('p', [LorentzIndex])
     >>> i0,i1 = tensor_indices('i0:2', LorentzIndex)
     >>> _simplify_single_line(G(i0)*G(i1)*p(-i1)*G(-i0)) + 2*G(i0)*p(-i0)
     0
@@ -233,8 +234,8 @@ def _trace_single_line(t):
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, \
         LorentzIndex, _trace_single_line
-    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-    >>> p = tensorhead('p', [LorentzIndex], [[1]])
+    >>> from sympy.tensor.tensor import tensor_indices, TensorHead
+    >>> p = TensorHead('p', [LorentzIndex])
     >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', LorentzIndex)
     >>> _trace_single_line(G(i0)*G(i1))
     4*metric(i0, i1)

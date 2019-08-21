@@ -127,6 +127,10 @@ def test_Factors():
     assert Factors(n).div(x**(y + 4)) == \
         (Factors({x: x}), Factors({x: y + 1}))
 
+    assert Factors(3 * x / 2) == Factors({3: 1, 2: -1, x: 1})
+    assert Factors(x * x / y) == Factors({x: 2, y: -1})
+    assert Factors(27 * x / y**9) == Factors({27: 1, x: 1, y: -9})
+
 
 def test_Term():
     a = Term(4*x*y**2/z/t**3)
@@ -288,10 +292,11 @@ def test_factor_terms():
     assert factor_terms(e, sign=False) == e
     assert factor_terms(exp(-4*x - 2) - x) == -x + exp(Mul(-2, 2*x + 1, evaluate=False))
 
-    # sum tests
-    assert factor_terms(Sum(x, (y, 1, 10))) == x * Sum(1, (y, 1, 10))
-    assert factor_terms(Sum(x, (y, 1, 10)) + x) == x * (1 + Sum(1, (y, 1, 10)))
-    assert factor_terms(Sum(x*y + x*y**2, (y, 1, 10))) == x*Sum(y*(y + 1), (y, 1, 10))
+    # sum/integral tests
+    for F in (Sum, Integral):
+        assert factor_terms(F(x, (y, 1, 10))) == x * F(1, (y, 1, 10))
+        assert factor_terms(F(x, (y, 1, 10)) + x) == x * (1 + F(1, (y, 1, 10)))
+        assert factor_terms(F(x*y + x*y**2, (y, 1, 10))) == x*F(y*(y + 1), (y, 1, 10))
 
 
 def test_xreplace():
@@ -437,3 +442,20 @@ def test_monotonic_sign():
 
     assert F((p - 1)*q + 1).is_positive
     assert F(-(p - 1)*q - 1).is_negative
+
+def test_issue_17256():
+    from sympy import Symbol, Range, Sum
+    x = Symbol('x')
+    s1 = Sum(x + 1, (x, 1, 9))
+    s2 = Sum(x + 1, (x, Range(1, 10)))
+    a = Symbol('a')
+    r1 = s1.xreplace({x:a})
+    r2 = s2.xreplace({x:a})
+
+    r1.doit() == r2.doit()
+    s1 = Sum(x + 1, (x, 0, 9))
+    s2 = Sum(x + 1, (x, Range(10)))
+    a = Symbol('a')
+    r1 = s1.xreplace({x:a})
+    r2 = s2.xreplace({x:a})
+    assert r1 == r2

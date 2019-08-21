@@ -373,9 +373,8 @@ def gravity(acceleration, *bodies):
         raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
 
     for e in bodies:
-        try:
-            point = e.masscenter
-        except AttributeError:
+        point = getattr(e, 'masscenter', None)
+        if point is None:
             point = e.point
 
         gravity_force.append((point, e.mass*acceleration))
@@ -422,10 +421,12 @@ def center_of_mass(point, *bodies):
     vec = Vector(0)
     for i in bodies:
         total_mass += i.mass
-        try:
-            vec += i.mass*i.masscenter.pos_from(point)
-        except AttributeError:
-            vec += i.mass*i.point.pos_from(point)
+
+        masscenter = getattr(i, 'masscenter', None)
+        if masscenter is None:
+            masscenter = i.point
+        vec += i.mass*masscenter.pos_from(point)
+
     return vec/total_mass
 
 

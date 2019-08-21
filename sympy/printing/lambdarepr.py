@@ -54,6 +54,11 @@ class LambdaPrinter(PythonCodePrinter):
     def _print_NumberSymbol(self, expr):
         return str(expr)
 
+    def _print_Pow(self, expr, **kwargs):
+        # XXX Temporary workaround. Should python math printer be
+        # isolated from PythonCodePrinter?
+        return super(PythonCodePrinter, self)._print_Pow(expr, **kwargs)
+
 
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...
