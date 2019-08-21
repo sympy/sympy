@@ -488,7 +488,7 @@ def assemble_partfrac_list(partial_list):
             ad, de = df.variables, df.expr
             # Hack to make dummies equal because Lambda created new Dummies
             de = de.subs(ad[0], an[0])
-            func = Lambda(an, nu/de**ex)
+            func = Lambda(tuple(an), nu/de**ex)
             pfd += RootSum(r, func, auto=False, quadratic=False)
         else:
             # Assemble in case the roots are given explicitly by a list of algebraic numbers
