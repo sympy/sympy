@@ -526,15 +526,14 @@ class Range(Set):
         from sympy.functions.elementary.piecewise import Piecewise
         if len(args) == 1:
             if isinstance(args[0], range):
-                args = args[0].__reduce__()[1]  # use pickle method
+                raise TypeError('use sympify(%s)' % args[0])
 
         # expand range
         slc = slice(*args)
 
-        if slc.step == 0:
-            raise ValueError("step cannot be 0")
-
-        start, stop, step = slc.start or 0, slc.stop, slc.step or 1
+        start = slc.start or 0
+        stop = slc.stop
+        step = 1 if slc.step is None else slc.step
         params = []
         for w in (start, stop, step):
             w = sympify(w)
@@ -543,42 +542,44 @@ class Range(Set):
                 params.append(w)
             else:
                 raise ValueError(filldedent('''
-        Arguments to Range must be integers (or integer symbols); `imageset` can define
+        Arguments to Range must be integers symbols;
+        `imageset` can define
         other cases, e.g. use `imageset(i, i/10, Range(3))` to give
         [0, 1/10, 1/5].'''))
-
         start, stop, step = params
+
+        if step.is_zero:
+            raise ValueError("step cannot be 0")
+
+        if any(i.is_infinite and i.is_positive is None for i in
+                (start, stop, step)):
+            raise ValueError('unsigned infinite symbols not allowed')
+
         null = True if start == stop else None
-        if not null and start.is_infinite and stop.is_infinite:
-            if abs(step).is_infinite or abs(step) != 1:
-                raise ValueError('step can only be +/-1 for infinite start and stop')
-            if (stop - start)*step < 0:
-                null = True
+        if not null:
+            if start.is_infinite and stop.is_infinite:
+                if abs(step).is_infinite or abs(step) != 1:
+                    raise ValueError(filldedent('''
+                        step can only be +/-1 for infinite
+                        start and stop'''))
+                if (stop - start)*step < 0:
+                    null = True
+                else:
+                    end = stop
             else:
-                end = stop
-        else:
-            try:
                 misorient = step*(stop - start) <= 0
                 if misorient == True:
                     null = True
-                elif not misorient:
-                    ref = start if start.is_finite is not False else stop
-                    n = ceiling((stop - ref)/step)
-                    if n is S.NaN or (
-                            (n <= 0) == True and
-                            not start.is_infinite and
-                            not step.is_infinite):
-                        null = True
+                elif misorient == False and not any(
+                        i.is_infinite for i in (start, stop)):
+                    if step.is_infinite:
+                        step = 1 if step > 0 else -1
+                        end = start + step
                     else:
-                        if step in (S.Infinity, S.NegativeInfinity):
-                            step = 1 if step > 0 else -1
-                            end = start + step
-                        else:
-                            end = ref + n*step
+                        n = ceiling((stop - start)/step)
+                        end = start + n*step
                 else:
                     end  = stop
-            except TypeError:
-                end = stop
 
         if null:
             last = start = S.Zero
@@ -609,9 +610,6 @@ class Range(Set):
             notinf =  not isinf
         ref = start if start.is_finite is not False else stop
         n = ceiling((stop - ref)/step)
-        if n is S.NaN or ((n <= 0) == True and not start.is_infinite):
-            # null Range
-            return S.NaN
         end = ref + n*step
         last = Piecewise((end, notinf), (stop, True))
         return Piecewise((S.NaN, ceiling((stop - start)/step) <= 0),
@@ -632,9 +630,6 @@ class Range(Set):
             notinf = not isinf
         ref = start if start.is_finite is not False else stop
         n = ceiling((stop - ref)/step)
-        if n is S.NaN or ((n <= 0) == True and not start.is_infinite):
-            # null Range
-            return S.NaN
         end = ref + n*step
         last = Piecewise((end, notinf), (stop, True))
         return Piecewise((S.NaN, ceiling((stop - start)/step) <= 0),
@@ -809,7 +804,7 @@ class Range(Set):
             raise ValueError('args must be integers')
         return self.func(*[i.subs(old, new) for i in self.args])
 
-converter[range] = Range
+converter[range] = lambda r: Range(r.start, r.stop, r.step)
 
 def normalize_theta_set(theta):
     """

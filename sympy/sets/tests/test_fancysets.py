@@ -192,6 +192,11 @@ def test_Range_set():
     raises(ValueError, lambda: Range(-oo, oo, x))
     raises(ValueError, lambda: Range(x, pi, y))
     raises(ValueError, lambda: Range(x, y, 0))
+    raises(ValueError, lambda: Range(x, y, Dummy(zero=True)))
+    inf = Dummy(infinite=True)
+    raises(ValueError, lambda: Range(inf, x, y))
+    raises(ValueError, lambda: Range(x, inf, y))
+    raises(ValueError, lambda: Range(x, y, inf))
 
     assert 5 in Range(0, oo, 5)
     assert oo not in Range(0, oo)
@@ -226,6 +231,8 @@ def test_Range_set():
     raises(ValueError, lambda: Range(2, -oo, -2)[2:2:0])
     assert Range(2, -oo, -2)[2:2:2] == empty
     assert Range(2, -oo, -2)[:2:2] == Range(2, -2, -4)
+    assert Range(oo, -oo) == empty
+    assert Range(-oo, oo, -1) == empty
 
     # test empty Range
     assert empty.reversed == empty
@@ -265,161 +272,165 @@ def test_Range_set():
     assert r.inf == rev.inf and r.sup == rev.sup
     assert r.step == -rev.step
 
+    raises(TypeError, lambda: Range(range(1)))
+    raises(ValueError, lambda: next(iter(Range(-oo, 1))))
+
     # test symbolic Range
-    a, b, c, d = symbols('a, b, c, d', integer=True)
-    r = Range(a, b, c)
-    rrev = r.reversed
-    avs, bvs = ([0, 1, -1, 2, -2], )*2
-    cvs = [1, -1, 2, -2]
-    check = lambda rabc, rabcr: (rabcr.inf == rabc.inf and
-                                 rabcr.sup == rabc.sup and
-                                 rabcr.step == -rabc.step)
+    for B in (None, True):
+        a, b, c, d = symbols('a, b, c, d', integer=B)
+        r = Range(a, b, c)
 
-    # reversed
-    for av in avs:
-        for bv in bvs:
-            for cv in cvs:
-                rabc = r.subs({a: av, b: bv, c: cv})
-                rabcr = rrev.subs({a: av, b: bv, c: cv})
-                if not rabc:
-                    assert (not rabcr)
-                else:
-                    assert check(rabc, rabcr)
+        # test Range.as_relational
+        assert Range(a, b).as_relational(x).subs({a: 1, b: 4}
+            ) == (x >= 1) & (x <= 3) & Eq(x - 1, floor(x) - 1)
 
-    avs, bvs = ([0, 1, -2], )*2
-    cvs = [1, -2]
-    conts = [0, 3, -10]
-    r = Range(a, b, c)
+        # subs
+        raises(ValueError, lambda: r.subs(a, .5))
+        raises(ValueError, lambda: r.subs(b, .5))
+        raises(ValueError, lambda: r.subs(c, .5))
 
-    # contains
-    for av in avs:
-        for bv in bvs:
+        # reversed
+        rrev = r.reversed
+        avs, bvs = ([0, 1, -1, 2, -2], )*2
+        cvs = [1, -1, 2, -2]
+        check = lambda rabc, rabcr: (rabcr.inf == rabc.inf and
+                                     rabcr.sup == rabc.sup and
+                                     rabcr.step == -rabc.step)
+        for av in avs:
+            for bv in bvs:
+                for cv in cvs:
+                    rabc = r.subs({a: av, b: bv, c: cv})
+                    rabcr = rrev.subs({a: av, b: bv, c: cv})
+                    if not rabc:
+                        assert (not rabcr)
+                    else:
+                        assert check(rabc, rabcr)
+
+        # contains
+        avs, bvs = ([0, 1, -2], )*2
+        cvs = [1, -2]
+        conts = [0, 3, -10]
+
+        for av in avs:
+            for bv in bvs:
+                for cv in cvs:
+                    for cont in conts:
+                        scheck = r.contains(d).subs({a: av, b: bv, c: cv, d: cont})
+                        check = r.subs({a: av, b: bv, c: cv}).contains(cont)
+                        assert (scheck == check)
+        for av in avs:
             for cv in cvs:
                 for cont in conts:
-                    scheck = r.contains(d).subs({a: av, b: bv, c: cv, d: cont})
-                    check = r.subs({a: av, b: bv, c: cv}).contains(cont)
+                    s = {a: av, c: cv, d: cont}
+                    scheck = r.contains(d).subs(s).subs(b, oo)
+                    check = r.subs({a: av, c: cv}).subs(b, oo).contains(cont)
                     assert (scheck == check)
-    for av in avs:
-        for cv in cvs:
-            for cont in conts:
-                s = {a: av, c: cv, d: cont}
-                scheck = r.contains(d).subs(s).subs(b, oo)
-                check = r.subs({a: av, c: cv}).subs(b, oo).contains(cont)
-                assert (scheck == check)
-                scheck = r.contains(d).subs(s).subs(b, -oo)
-                check = r.subs({a: av, c: cv}).subs(b, -oo).contains(cont)
-                assert (scheck == check)
+                    scheck = r.contains(d).subs(s).subs(b, -oo)
+                    check = r.subs({a: av, c: cv}).subs(b, -oo).contains(cont)
+                    assert (scheck == check)
 
-    # iter
-    raises(ValueError, lambda : [i for i in iter(r)])
-    assert [i for i in iter(r.subs({a: d, b: d + 6, c: 1}))] == [d, d + 1, d + 2, d + 3, d + 4, d + 5]
+        # iter
+        raises(ValueError, lambda : [i for i in iter(r)])
+        assert [i for i in iter(r.subs({a: d, b: d + 6, c: 1}))
+            ] == [d, d + 1, d + 2, d + 3, d + 4, d + 5]
 
-    # size and len
-    for av in avs:
-        for bv in bvs:
+        # size and len
+        for av in avs:
+            for bv in bvs:
+                for cv in cvs:
+                    rsize = r.size.subs({a: av, b: bv, c: cv})
+                    rabcsize = r.subs({a: av, b: bv, c: cv}).size
+                    assert rsize == rabcsize
+        for av in avs:
             for cv in cvs:
-                rsize = r.size.subs({a: av, b: bv, c: cv})
-                rabcsize = r.subs({a: av, b: bv, c: cv}).size
+                rsize = r.size.subs({a: av, c: cv}).subs(b, oo)
+                rabcsize = r.subs({a: av, c: cv}).subs(b, oo).size
                 assert rsize == rabcsize
-    for av in avs:
-        for cv in cvs:
-            rsize = r.size.subs({a: av, c: cv}).subs(b, oo)
-            rabcsize = r.subs({a: av, c: cv}).subs(b, oo).size
-            assert rsize == rabcsize
-            rsize = r.size.subs({a: av, c: cv}).subs(b, -oo)
-            rabcsize = r.subs({a: av, c: cv}).subs(b, -oo).size
-            assert rsize == rabcsize
+                rsize = r.size.subs({a: av, c: cv}).subs(b, -oo)
+                rabcsize = r.subs({a: av, c: cv}).subs(b, -oo).size
+                assert rsize == rabcsize
 
-    raises(ValueError, lambda: len(r))
+        raises(ValueError, lambda: len(r))
 
-    # inf
-    for av in avs:
-        for bv in bvs:
+        # inf
+        for av in avs:
+            for bv in bvs:
+                for cv in cvs:
+                    rinf = r.inf.subs({a: av, b: bv, c: cv})
+                    rabc = r.subs({a: av, b: bv, c: cv})
+                    if (rinf is S.NaN):
+                        assert not rabc
+                        continue
+                    assert rinf == rabc.inf
+        for av in avs:
             for cv in cvs:
-                rinf = r.inf.subs({a: av, b: bv, c: cv})
-                rabc = r.subs({a: av, b: bv, c: cv})
+                rinf = r.inf.subs({a: av, c: cv}).subs(b, oo)
+                rabc = r.subs({a: av, c: cv}).subs(b, oo)
                 if (rinf is S.NaN):
                     assert not rabc
                     continue
                 assert rinf == rabc.inf
-    for av in avs:
-        for cv in cvs:
-            rinf = r.inf.subs({a: av, c: cv}).subs(b, oo)
-            rabc = r.subs({a: av, c: cv}).subs(b, oo)
-            if (rinf is S.NaN):
-                assert not rabc
-                continue
-            assert rinf == rabc.inf
-            rinf = r.inf.subs({a: av, c: cv}).subs(b, -oo)
-            rabc = r.subs({a: av, c: cv}).subs(b, -oo)
-            if (rinf is S.NaN):
-                assert not rabc
-                continue
-            assert rinf == rabc.inf
+                rinf = r.inf.subs({a: av, c: cv}).subs(b, -oo)
+                rabc = r.subs({a: av, c: cv}).subs(b, -oo)
+                if (rinf is S.NaN):
+                    assert not rabc
+                    continue
+                assert rinf == rabc.inf
 
-    # sup
-    for av in avs:
-        for bv in bvs:
+        # sup
+        for av in avs:
+            for bv in bvs:
+                for cv in cvs:
+                    rsup = r.sup.subs({a: av, b: bv, c: cv})
+                    rabc = r.subs({a: av, b: bv, c: cv})
+                    if (rsup is S.NaN):
+                        assert not rabc
+                        continue
+                    assert rsup == rabc.sup
+        for av in avs:
             for cv in cvs:
-                rsup = r.sup.subs({a: av, b: bv, c: cv})
-                rabc = r.subs({a: av, b: bv, c: cv})
+                rsup = r.sup.subs({a: av, c: cv}).subs(b, oo)
+                rabc = r.subs({a: av, c: cv}).subs(b, oo)
                 if (rsup is S.NaN):
                     assert not rabc
                     continue
                 assert rsup == rabc.sup
-    for av in avs:
-        for cv in cvs:
-            rsup = r.sup.subs({a: av, c: cv}).subs(b, oo)
-            rabc = r.subs({a: av, c: cv}).subs(b, oo)
-            if (rsup is S.NaN):
-                assert not rabc
-                continue
-            assert rsup == rabc.sup
-            rsup = r.sup.subs({a: av, c: cv}).subs(b, -oo)
-            rabc = r.subs({a: av, c: cv}).subs(b, -oo)
-            if (rsup is S.NaN):
-                assert not rabc
-                continue
-            assert rsup == rabc.sup
+                rsup = r.sup.subs({a: av, c: cv}).subs(b, -oo)
+                rabc = r.subs({a: av, c: cv}).subs(b, -oo)
+                if (rsup is S.NaN):
+                    assert not rabc
+                    continue
+                assert rsup == rabc.sup
 
-    avs, bvs = ([0, 20, -30], )*2
-    cvs = [1, -2]
-    idxs = Tuple(0, 3, -10, -1)
+        # __getitem__
+        avs, bvs = ([0, 20, -30], )*2
+        cvs = [1, -2]
+        idxs = Tuple(0, 3, -10, -1)
 
-    def check_gtm(rgtm, rabc, idx):
-        if not rabc:
-            raises(IndexError, lambda : rabc[idx])
-        elif rgtm in (S.Infinity, S.NegativeInfinity):
-            raises(ValueError, lambda : rabc[idx])
-        else:
-            assert rgtm == rabc[idx]
+        def check_gtm(rgtm, rabc, idx):
+            if not rabc:
+                raises(IndexError, lambda : rabc[idx])
+            elif rgtm in (S.Infinity, S.NegativeInfinity):
+                raises(ValueError, lambda : rabc[idx])
+            else:
+                assert rgtm == rabc[idx]
 
-    # __getitem__
-    for av in avs:
-        for bv in bvs:
+        for av in avs:
+            for bv in bvs:
+                for cv in cvs:
+                    for idx in idxs:
+                        rgtm = r[idx].subs({a: av, b: bv, c: cv})
+                        rabc = r.subs({a: av, b: bv, c: cv})
+                        check_gtm(rgtm, rabc, idx)
+        for av in avs:
             for cv in cvs:
                 for idx in idxs:
-                    rgtm = r[idx].subs({a: av, b: bv, c: cv})
-                    rabc = r.subs({a: av, b: bv, c: cv})
+                    rgtm = r[idx].subs({a: av, c: cv}).subs(b, oo)
+                    rabc = r.subs({a: av, c: cv}).subs(b, oo)
                     check_gtm(rgtm, rabc, idx)
-    for av in avs:
-        for cv in cvs:
-            for idx in idxs:
-                rgtm = r[idx].subs({a: av, c: cv}).subs(b, oo)
-                rabc = r.subs({a: av, c: cv}).subs(b, oo)
-                check_gtm(rgtm, rabc, idx)
-                rgtm = r[idx].subs({a: av, c: cv}).subs(b, -oo)
-                rabc = r.subs({a: av, c: cv}).subs(b, -oo)
-                check_gtm(rgtm, rabc, idx)
-
-    assert Range(range(10)) == Range(10)
-    assert Range(range(1, 10)) == Range(1, 10)
-    assert Range(range(1, 10, 2)) == Range(1, 10, 2)
-    assert Range(range(1000000000000)) == \
-        Range(1000000000000)
-
-    # test Range.as_relational
-    assert Range(a, b).as_relational(x).subs({a: 1, b: 4}) == (x >= 1) & (x <= 3) & Eq(x - 1, floor(x) - 1)
+                    rgtm = r[idx].subs({a: av, c: cv}).subs(b, -oo)
+                    rabc = r.subs({a: av, c: cv}).subs(b, -oo)
+                    check_gtm(rgtm, rabc, idx)
 
 
 def test_range_range_intersection():
