@@ -1220,7 +1220,8 @@ class TensorArray:
 
     def to_tensor(self):
         if self.shape == []:
-            return self.tensor
+            #Sympy's tensor classes are broken
+            return self.tensor._sparse_array[0]
         def dualbasishelper(p,k):
             if self.contravariant_slots.count(k) == 0:
                 return self.base_oneforms[p[k]]
