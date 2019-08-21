@@ -1119,6 +1119,22 @@ class TensorArray:
     >>> TP=TensorProduct
     >>> metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
     >>> rm = TensorArray(components=metric_to_Riemann_components(metric), variance=[-1,1,1,1],coordinate_system=cs)  #Note the variance!
+
+    Example 3: Covariant derivative as a tensor
+    ===========================================
+    >>> from sympy.diffgeom import (Manifold, Patch, CoordSystem, TensorProduct, metric_to_Christoffel_2nd, TensorArray)
+    >>> from sympy import (Function, sin)
+    >>> TP = TensorProduct
+    >>> M = Manifold('Reisner-Nordstrom', 4)
+    >>> p = Patch('origin', M)
+    >>> cs = CoordSystem('spherical', p, ['t', 'r', 'theta', 'phi'])
+    >>> t, r, theta, phi = cs.coord_functions()
+    >>> dt, dr, dtheta, dphi = cs.base_oneforms()
+    >>> f=Function('f')
+    >>> metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
+    >>> ch_2nd = metric_to_Christoffel_2nd(metric)
+    >>> G=TensorArray(metric)
+    >>> assert(G.covD(ch_2nd).to_tensor() == 0)  #the covariant derivative as a (3,0) tensor!    
     """
 
     def _contravariant_slots(self,T):
@@ -1322,7 +1338,7 @@ class TensorArray:
             keylist[a] = keylist[b]
             keylist[b] = ka
             return(tuple(keylist))
-        keys = self.indices.copy()
+        keys = self.indices
         while keys != []:
             key = keys.pop()
             t = self.tensor[key]
