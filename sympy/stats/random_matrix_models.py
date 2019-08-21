@@ -221,7 +221,7 @@ class CircularEnsemble(RandomMatrixEnsemble):
         syms = ArrayComprehension(t[i], (i, 1, n)).doit()
         f = Product(Product(Abs(exp(I*t[k]) - exp(I*t[j]))**beta, (j, k + 1, n)).doit(),
                     (k, 1, n - 1)).doit()
-        return Lambda(syms, f/Zbn)
+        return Lambda(tuple(syms), f/Zbn)
 
 class CircularUnitaryEnsemble(CircularEnsemble):
     """
