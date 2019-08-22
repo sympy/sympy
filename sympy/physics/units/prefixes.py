@@ -128,8 +128,8 @@ def prefix_unit(unit, prefixes):
         >>> from sympy.physics.units.systems import MKS
         >>> from sympy.physics.units import m
         >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
-        >>> prefix_unit(m, pref)  #doctest: +SKIP
-        [cm, dm, mm]
+        >>> prefix_unit(m, pref)  # doctest: +SKIP
+        [millimeter, centimeter, decimeter]
     """
 
     from sympy.physics.units.quantities import Quantity

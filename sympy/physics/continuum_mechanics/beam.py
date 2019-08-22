@@ -15,8 +15,6 @@ from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
-from sympy.utilities.decorator import doctest_depends_on
-from sympy import lambdify
 from sympy.core.compatibility import iterable
 
 matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
