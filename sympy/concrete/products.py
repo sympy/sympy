@@ -239,6 +239,10 @@ class Product(ExprWithIntLimits):
         if self.has_empty_sequence:
             return True
 
+    def _eval_is_finite(self):
+        if self.has_finite_limits and self.function.is_finite:
+            return True
+
     def doit(self, **hints):
         # first make sure any definite limits have product
         # variables with matching assumptions

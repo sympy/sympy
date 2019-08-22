@@ -463,9 +463,9 @@ class ExprWithLimits(Expr):
             if len(lim) == 3:
                 var, a, b = lim
                 dif = b - a
-                if (dif >= 0) == False:
+                if dif.is_extended_negative:
                     return True
-                elif (dif >= 0) == True:
+                elif dif.is_extended_nonnegative:
                     continue
                 else:
                     ret_None = True

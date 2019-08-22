@@ -183,22 +183,13 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if self.has_finite_limits and self.has_reversed_limits is False:
             return self.function.is_positive
 
-    def _eval_is_nonnegative(self):
-        if self.is_zero:
-            return True
-        if self.has_finite_limits and self.has_reversed_limits is False:
-            return self.function.is_nonnegative
-
     def _eval_is_negative(self):
         if self.has_finite_limits and self.has_reversed_limits is False:
             return self.function.is_negative
 
-    def _eval_is_nonpositive(self):
-        if self.is_zero:
+    def _eval_is_finite(self):
+        if self.has_finite_limits and self.function.is_finite:
             return True
-        if self.has_finite_limits and self.has_reversed_limits is False:
-            return self.function.is_nonpositive
-
 
     def doit(self, **hints):
         if hints.get('deep', True):
@@ -234,6 +225,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
+            if dif == -1:
+                # Any summation over an empty set is zero
+                return S.Zero
             if dif.is_integer and dif.is_negative:
                 a, b = b + 1, a - 1
                 f = -f
