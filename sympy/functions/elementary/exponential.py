@@ -456,9 +456,20 @@ class exp(ExpBase):
         arg = self.args[0]
         if arg.is_Add:
             return Mul(*[exp(f).as_leading_term(x) for f in arg.args])
-        arg = self.args[0].as_leading_term(x)
-        if Order(1, x).contains(arg):
+        arg_1 = arg.as_leading_term(x)
+        if Order(x, x).contains(arg_1):
             return S.One
+        if Order(1, x).contains(arg_1):
+            return exp(arg_1)
+        ####################################################
+        # The correct result here should be 'None'.        #
+        # Indeed arg in not bounded as x tends to 0.       #
+        # Consequently the series expansion does not admit #
+        # the leading term.                                #
+        # For compatibility reasons, the return value here #
+        # is the original function, i.e. exp(arg),         #
+        # instead of None.                                 #
+        ####################################################
         return exp(arg)
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
@@ -491,11 +502,11 @@ class exp(ExpBase):
                 return Pow(logs[0].args[0], arg.coeff(logs[0]))
 
 
-def _match_real_imag(expr):
+def match_real_imag(expr):
     """
     Try to match expr with a + b*I for real a and b.
 
-    ``_match_real_imag`` returns a tuple containing the real and imaginary
+    ``match_real_imag`` returns a tuple containing the real and imaginary
     parts of expr or (None, None) if direct matching is not possible. Contrary
     to ``re()``, ``im()``, ``as_real_imag()``, this helper won't force things
     by returning expressions themselves containing ``re()`` or ``im()`` and it
@@ -607,7 +618,7 @@ class log(Function):
         if isinstance(arg, exp) and arg.args[0].is_extended_real:
             return arg.args[0]
         elif isinstance(arg, exp) and arg.args[0].is_number:
-            r_, i_ = _match_real_imag(arg.args[0])
+            r_, i_ = match_real_imag(arg.args[0])
             if i_ and i_.is_comparable:
                 i_ %= 2*S.Pi
                 if i_ > S.Pi:
@@ -945,6 +956,12 @@ class LambertW(Function):
                 return S.NegativeOne
             if x == -log(2)/2:
                 return -log(2)
+            if x == 2*log(2):
+                return log(2)
+            if x == -S.Pi/2:
+                return S.ImaginaryUnit*S.Pi/2
+            if x == exp(1 + S.Exp1):
+                return S.Exp1
             if x is S.Infinity:
                 return S.Infinity
 
@@ -1005,3 +1022,21 @@ class LambertW(Function):
                 return False
         else:
             return s.is_algebraic
+
+    def _eval_nseries(self, x, n, logx):
+        if len(self.args) == 1:
+            from sympy import Order, ceiling, expand_multinomial
+            arg = self.args[0].nseries(x, n=n, logx=logx)
+            lt = arg.compute_leading_term(x, logx=logx)
+            lte = 1
+            if lt.is_Pow:
+                lte = lt.exp
+            if ceiling(n/lte) >= 1:
+                s = Add(*[(-S.One)**(k - 1)*Integer(k)**(k - 2)/
+                          factorial(k - 1)*arg**k for k in range(1, ceiling(n/lte))])
+                s = expand_multinomial(s)
+            else:
+                s = S.Zero
+
+            return s + Order(x**n, x)
+        return super(LambertW, self)._eval_nseries(x, n, logx)

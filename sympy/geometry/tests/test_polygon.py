@@ -524,6 +524,45 @@ def test_second_moment_of_area():
     assert (I_xy - rectangle.second_moment_of_area(p)[2]) == 0
 
 
+    r = RegularPolygon(Point(0, 0), 5, 3)
+    assert r.second_moment_of_area() == (1875*sqrt(3)/S(32), 1875*sqrt(3)/S(32), 0)
+
+
+def test_first_moment():
+    a, b  = symbols('a, b', positive=True)
+    # rectangle
+    p1 = Polygon((0, 0), (a, 0), (a, b), (0, b))
+    assert p1.first_moment_of_area() == (a*b**2/8, a**2*b/8)
+    assert p1.first_moment_of_area((a/3, b/4)) == (-3*a*b**2/32, -a**2*b/9)
+
+    p1 = Polygon((0, 0), (40, 0), (40, 30), (0, 30))
+    assert p1.first_moment_of_area() == (4500, 6000)
+
+    # triangle
+    p2 = Polygon((0, 0), (a, 0), (a/2, b))
+    assert p2.first_moment_of_area() == (4*a*b**2/81, a**2*b/24)
+    assert p2.first_moment_of_area((a/8, b/6)) == (-25*a*b**2/648, -5*a**2*b/768)
+
+    p2 = Polygon((0, 0), (12, 0), (12, 30))
+    p2.first_moment_of_area() == (1600/3, -640/3)
+
+
+def test_section_modulus_and_polar_second_moment_of_area():
+    a, b = symbols('a, b', positive=True)
+    x, y = symbols('x, y')
+    rectangle = Polygon((0, b), (0, 0), (a, 0), (a, b))
+    assert rectangle.section_modulus(Point(x, y)) == (a*b**3/12/(-b/2 + y), a**3*b/12/(-a/2 + x))
+    assert rectangle.polar_second_moment_of_area() == a**3*b/12 + a*b**3/12
+
+    convex = RegularPolygon((0, 0), 1, 6)
+    assert convex.section_modulus() == (5/S(8), 5*sqrt(3)/S(16))
+    assert convex.polar_second_moment_of_area() == 5*sqrt(3)/S(8)
+
+    concave = Polygon((0, 0), (1, 8), (3, 4), (4, 6), (7, 1))
+    assert concave.section_modulus() == (-6371/S(429), -9778/S(519))
+    assert concave.polar_second_moment_of_area() == -38669/S(252)
+
+
 def test_cut_section():
     # concave polygon
     p = Polygon((-1, -1), (1, S(5)/2), (2, 1), (3, S(5)/2), (4, 2), (5, 3), (-1, 3))
