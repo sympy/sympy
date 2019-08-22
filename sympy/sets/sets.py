@@ -55,10 +55,11 @@ class Set(Basic):
     is_ProductSet = False
     is_Union = False
     is_Intersection = None
-    is_EmptySet = None
     is_UniversalSet = None
     is_Complement = None
     is_ComplexRegion = False
+
+    is_empty = None
 
     @staticmethod
     def _infimum_key(expr):
@@ -932,6 +933,19 @@ class Interval(Set, EvalfMixin):
         """
         return self._args[3]
 
+    @property
+    def is_empty(self):
+        if self.start == S.NegativeInfinity or self.end == S.Infinity:
+            return False
+        elif (self.end - self.start).is_extended_positive:
+            return False
+        elif self.left_open is False and self.right_open is False and \
+                self.start.is_finite and self.end.is_finite:
+            # separate check for compact intervals (account for
+            # [a, a] = FiniteSet(a) => not empty)
+            if (self.end - self.start).is_extended_nonnegative:
+                return False
+
     def _complement(self, other):
         if other == S.Reals:
             a = Interval(S.NegativeInfinity, self.start,
@@ -1101,6 +1115,11 @@ class Union(Set, LatticeOp, EvalfMixin):
         # end points.
         from sympy.functions.elementary.miscellaneous import Max
         return Max(*[set.sup for set in self.args])
+
+    @property
+    def is_empty(self):
+        if any(set.is_empty == False for set in self.args):
+            return False
 
     @property
     def _measure(self):
@@ -1466,7 +1485,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
 
     .. [1] https://en.wikipedia.org/wiki/Empty_set
     """
-    is_EmptySet = True
+    is_empty = True
     is_FiniteSet = True
 
     @property
@@ -1577,6 +1596,7 @@ class FiniteSet(Set, EvalfMixin):
     """
     is_FiniteSet = True
     is_iterable = True
+    is_empty = False
 
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])

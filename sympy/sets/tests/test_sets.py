@@ -47,6 +47,11 @@ def test_imageset():
         ImageSet(Lambda((x1, x2), x1+x2), Interval(1,2), Interval(2,3))
 
 
+def test_is_empty():
+    for s in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals]:
+        assert s.is_empty == False
+
+
 def test_interval_arguments():
     assert Interval(0, oo) == Interval(0, oo, False, True)
     assert Interval(0, oo).right_open is true
@@ -85,6 +90,33 @@ def test_interval_symbolic_end_points():
     assert Union(Interval(a, 0), Interval(-3, 0)).inf == Min(-3, a)
 
     assert Interval(0, a).contains(1) == LessThan(1, a)
+
+
+def test_interval_is_empty():
+    x, y = symbols('x, y')
+    r = Symbol('r', real=True)
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    nn = Symbol('nn', nonnegative=True)
+    assert Interval(1, 2).is_empty == False
+    assert Interval(3, 3).is_empty == False  # FiniteSet
+    assert Interval(r, r).is_empty == False  # FiniteSet
+    assert Interval(x, x).is_empty == False
+    assert Interval(1, oo).is_empty == False
+    assert Interval(-oo, oo).is_empty == False
+    assert Interval(-oo, 1).is_empty == False
+    assert Interval(x, y).is_empty == None
+    assert Interval(r, oo).is_empty == False  # real implies finite
+    assert Interval(x, oo).is_empty == False
+    assert Interval(n, 0).is_empty == False
+    assert Interval(n, 0, left_open=True).is_empty == False
+    assert Interval(p, 0).is_empty == True  # EmptySet
+    assert Interval(nn, 0).is_empty == None
+    assert Interval(n, p).is_empty == False
+    assert Interval(0, p, left_open=True).is_empty == False
+    assert Interval(0, p, right_open=True).is_empty == False
+    assert Interval(0, nn, left_open=True).is_empty == None
+    assert Interval(0, nn, right_open=True).is_empty == None
 
 
 def test_union():
@@ -161,6 +193,11 @@ def test_union_iter():
 
     # Round robin
     assert list(u) == [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+
+
+def test_union_is_empty():
+    assert (Interval(x, y) + FiniteSet(1)).is_empty == False
+    assert (Interval(x, y) + Interval(-x, y)).is_empty == None
 
 
 def test_difference():

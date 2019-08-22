@@ -34,6 +34,7 @@ class Rationals(with_metaclass(Singleton, Set)):
     is_iterable = True
     _inf = S.NegativeInfinity
     _sup = S.Infinity
+    is_empty = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -94,6 +95,7 @@ class Naturals(with_metaclass(Singleton, Set)):
     is_iterable = True
     _inf = S.One
     _sup = S.Infinity
+    is_empty = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -129,6 +131,7 @@ class Naturals0(Naturals):
     Integers : also includes the negative integers
     """
     _inf = S.Zero
+    is_empty = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -171,6 +174,7 @@ class Integers(with_metaclass(Singleton, Set)):
     """
 
     is_iterable = True
+    is_empty = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
