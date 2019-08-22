@@ -1,9 +1,13 @@
 from sympy import (sqrt, exp, Trace, pi, S, Integral, MatrixSymbol, Lambda,
-                    Dummy, Product, Sum, Abs, IndexedBase, Matrix)
+                    Dummy, Product, Sum, Abs, IndexedBase, Matrix, I)
 from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
                          GaussianOrthogonalEnsemble as GOE,
                          GaussianSymplecticEnsemble as GSE,
                          joint_eigen_distribution,
+                         level_spacing_distribution,
+                         CircularUnitaryEnsemble as CUE,
+                         CircularOrthogonalEnsemble as COE,
+                         CircularSymplecticEnsemble as CSE,
                          JointEigenDistribution,
                          level_spacing_distribution,
                          Normal, Beta)
@@ -61,6 +65,39 @@ def test_GaussianSymplecticEnsemble():
             Product(Abs(l[i] - l[j])**4, (j, i + 1, 3), (i, 1, 2))/(5*pi**(S(3)/2))))
     s = Dummy('s')
     assert level_spacing_distribution(G).dummy_eq(Lambda(s, S(262144)*s**4*exp(-64*s**2/(9*pi))/(729*pi**3)))
+
+def test_CircularUnitaryEnsemble():
+    CU = CUE('U', 3)
+    j, k = (Dummy('j', integer=True, positive=True),
+            Dummy('k', integer=True, positive=True))
+    t = IndexedBase('t')
+    assert joint_eigen_distribution(CU).dummy_eq(
+            Lambda((t[1], t[2], t[3]),
+            Product(Abs(exp(I*t[j]) - exp(I*t[k]))**2,
+            (j, k + 1, 3), (k, 1, 2))/(48*pi**3))
+    )
+
+def test_CircularOrthogonalEnsemble():
+    CO = COE('U', 3)
+    j, k = (Dummy('j', integer=True, positive=True),
+            Dummy('k', integer=True, positive=True))
+    t = IndexedBase('t')
+    assert joint_eigen_distribution(CO).dummy_eq(
+            Lambda((t[1], t[2], t[3]),
+            Product(Abs(exp(I*t[j]) - exp(I*t[k])),
+            (j, k + 1, 3), (k, 1, 2))/(48*pi**2))
+    )
+
+def test_CircularSymplecticEnsemble():
+    CS = CSE('U', 3)
+    j, k = (Dummy('j', integer=True, positive=True),
+            Dummy('k', integer=True, positive=True))
+    t = IndexedBase('t')
+    assert joint_eigen_distribution(CS).dummy_eq(
+            Lambda((t[1], t[2], t[3]),
+            Product(Abs(exp(I*t[j]) - exp(I*t[k]))**4,
+            (j, k + 1, 3), (k, 1, 2))/(720*pi**3))
+    )
 
 def test_JointEigenDistribution():
     A = Matrix([[Normal('A00', 0, 1), Normal('A01', 1, 1)],

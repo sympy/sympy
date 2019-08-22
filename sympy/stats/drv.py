@@ -59,9 +59,8 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
         Used by sample
         """
-        x = symbols('x', positive=True,
-         integer=True, cls=Dummy)
-        z = symbols('z', positive=True, cls=Dummy)
+        x = Dummy('x', positive=True, integer=True)
+        z = Dummy('z', positive=True)
         cdf_temp = self.cdf(x)
         # Invert CDF
         try:
@@ -78,7 +77,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x, z = symbols('x, z', integer=True, finite=True, cls=Dummy)
+        x, z = symbols('x, z', integer=True, cls=Dummy)
         left_bound = self.set.inf
 
         # CDF is integral of PDF from left bound to z
@@ -105,7 +104,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
+        x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
         cf = summation(exp(I*t*x)*pdf, (x, self.set.inf, self.set.sup))
         return Lambda(t, cf)
@@ -123,7 +122,8 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_moment_generating_function(self, **kwargs):
-        x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
+        t = Dummy('t', real=True)
+        x = Dummy('x', integer=True)
         pdf = self.pdf(x)
         mgf = summation(exp(t*x)*pdf, (x, self.set.inf, self.set.sup))
         return Lambda(t, mgf)
@@ -144,8 +144,8 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x = symbols('x', integer=True, finite=True, cls=Dummy)
-        p = symbols('p', real=True, finite=True, cls=Dummy)
+        x = Dummy('x', integer=True)
+        p = Dummy('p', real=True)
         left_bound = self.set.inf
         pdf = self.pdf(x)
         cdf = summation(pdf, (x, left_bound, x), **kwargs)
@@ -268,7 +268,7 @@ class DiscretePSpace(PSpace):
             dens = density(expr)
             if not isinstance(dens, DiscreteDistribution):
                 dens = DiscreteDistributionHandmade(dens)
-            z = Dummy('z', real = True)
+            z = Dummy('z', real=True)
             space = SingleDiscretePSpace(z, dens)
             prob = space.probability(condition.__class__(space.value, 0))
         if prob is None:
@@ -278,7 +278,7 @@ class DiscretePSpace(PSpace):
     def eval_prob(self, _domain):
         sym = list(self.symbols)[0]
         if isinstance(_domain, Range):
-            n = symbols('n', integer=True, finite=True)
+            n = symbols('n', integer=True)
             inf, sup, step = (r for r in _domain.args)
             summand = ((self.pdf).replace(
               sym, n*step))
@@ -340,7 +340,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:
-            x = symbols("x", real=True, cls=Dummy)
+            x = Dummy("x", real=True)
             return Lambda(x, self.distribution.cdf(x, **kwargs))
         else:
             raise NotImplementedError()
@@ -352,21 +352,21 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
 
     def compute_characteristic_function(self, expr, **kwargs):
         if expr == self.value:
-            t = symbols("t", real=True, cls=Dummy)
+            t = Dummy("t", real=True)
             return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
         else:
             raise NotImplementedError()
 
     def compute_moment_generating_function(self, expr, **kwargs):
         if expr == self.value:
-            t = symbols("t", real=True, cls=Dummy)
+            t = Dummy("t", real=True)
             return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))
         else:
             raise NotImplementedError()
 
     def compute_quantile(self, expr, **kwargs):
         if expr == self.value:
-            p = symbols("p", real=True, finite=True, cls=Dummy)
+            p = Dummy("p", real=True)
             return Lambda(p, self.distribution.quantile(p, **kwargs))
         else:
             raise NotImplementedError()

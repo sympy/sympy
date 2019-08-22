@@ -3,7 +3,8 @@ from sympy import (
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, oo, pi, Piecewise, Product, product, Rational, S, simplify, Identity,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, MatrixSymbol)
+    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, floor,
+    RisingFactorial, MatrixSymbol)
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic, _dummy_with_inherited_properties_concrete
 from sympy.concrete.expr_with_intlimits import ReorderError
@@ -1292,6 +1293,17 @@ def test_has_empty_sequence():
     assert Sum(1, (x, y, y - 1)).has_empty_sequence is True
     assert Sum(1, (x, 3, 2), (y, -oo, oo)).has_empty_sequence is True
     assert Sum(1, (y, -oo, oo), (x, 3, 2)).has_empty_sequence is True
+
+
+@XFAIL
+def test_issue_14313():
+    assert Sum((S(1)/2)**floor(n/2), (n, 1, oo)).is_convergent()
+
+
+@XFAIL
+def test_issue_14871():
+    assert Sum((S(1)/10)**x*RisingFactorial(0, x)/factorial(x), (x, 0, oo)).rewrite(factorial).doit() == 1
+
 
 def test_issue_17165():
     n = symbols("n", integer=True)
