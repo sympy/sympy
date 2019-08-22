@@ -74,7 +74,14 @@ class UnevaluatedOnFree(BooleanFunction):
         return applied
 
     def apply(self, expr=None, is_Not=False):
-        return
+        if expr is None:
+            return
+        pred = to_NNF(self.pred)
+        res = self._eval_apply(expr, pred)
+        return ~res if is_Not else res
+
+    def _eval_apply(self, expr, pred):
+        return None
 
 
 class AllArgs(UnevaluatedOnFree):
@@ -87,13 +94,22 @@ class AllArgs(UnevaluatedOnFree):
 
     The typical usage is to evaluate predicates with expressions using .rcall().
 
-    """
-    # TODO: Add examples.
+    Example
+    =======
+    >>> from sympy.assumptions.sathandlers import AllArgs
+    >>> from sympy import symbols, Q
+    >>> x, y = symbols('x y')
+    >>> a = AllArgs(Q.positive | Q.negative)
+    >>> a
+    AllArgs(Q.negative | Q.positive)
+    >>> a.rcall(x*y)
+    ((Literal(Q.negative(x), False) | Literal(Q.positive(x), False)) & (Literal(Q.negative(y), False) | \
+    Literal(Q.positive(y), False)))
 
-    def apply(self, expr=None, is_Not=False):
-        pred = to_NNF(self.pred)
-        res = AND(*[pred.rcall(arg) for arg in expr.args])
-        return ~res if is_Not else res
+    """
+
+    def _eval_apply(self, expr, pred):
+        return AND(*[pred.rcall(arg) for arg in expr.args])
 
 
 class AnyArgs(UnevaluatedOnFree):
@@ -106,13 +122,22 @@ class AnyArgs(UnevaluatedOnFree):
 
     The typical usage is to evaluate predicates with expressions using .rcall().
 
-    """
-    # TODO: Add examples.
+    Example
+    =======
+    >>> from sympy.assumptions.sathandlers import AnyArgs
+    >>> from sympy import symbols, Q
+    >>> x, y = symbols('x y')
+    >>> a = AnyArgs(Q.positive & Q.negative)
+    >>> a
+    AnyArgs(Q.negative & Q.positive)
+    >>> a.rcall(x*y)
+    ((Literal(Q.negative(x), False) & Literal(Q.positive(x), False)) | (Literal(Q.negative(y), False) & \
+    Literal(Q.positive(y), False)))
 
-    def apply(self, expr=None, is_Not=False):
-        pred = to_NNF(self.pred)
-        res = OR(*[pred.rcall(arg) for arg in expr.args])
-        return ~res if is_Not else res
+    """
+
+    def _eval_apply(self, expr, pred):
+        return OR(*[pred.rcall(arg) for arg in expr.args])
 
 
 class ExactlyOneArg(UnevaluatedOnFree):
@@ -126,18 +151,27 @@ class ExactlyOneArg(UnevaluatedOnFree):
     The typical usage is to evaluate predicate with expressions using
     .rcall().
 
-    """
-    # TODO: Add examples
+    Example
+    =======
+    >>> from sympy.assumptions.sathandlers import ExactlyOneArg
+    >>> from sympy import symbols, Q
+    >>> x, y = symbols('x y')
+    >>> a = ExactlyOneArg(Q.positive)
+    >>> a
+    ExactlyOneArg(Q.positive)
+    >>> a.rcall(x*y)
+    ((Literal(Q.positive(x), False) & Literal(Q.positive(y), True)) | (Literal(Q.positive(x), True) & \
+    Literal(Q.positive(y), False)))
 
-    def apply(self, expr=None, is_Not=False):
-        pred = to_NNF(self.pred)
+    """
+
+    def _eval_apply(self, expr, pred):
         pred_args = [pred.rcall(arg) for arg in expr.args]
         # Technically this is xor, but if one term in the disjunction is true,
         # it is not possible for the remainder to be true, so regular or is
         # fine in this case.
         res = OR(*[AND(pred_args[i], *[~lit for lit in pred_args[:i] +
             pred_args[i+1:]]) for i in range(len(pred_args))])
-        res = ~res if is_Not else res
         return res
         # Note: this is the equivalent cnf form. The above is more efficient
         # as the first argument of an implication, since p >> q is the same as
@@ -205,9 +239,7 @@ class CheckOldAssump(UnevaluatedOnFree):
     def apply(self, expr=None, is_Not=False):
         arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
         res = Equivalent(arg, evaluate_old_assump(arg))
-        res = ~res if is_Not else res
-        res = to_NNF(res)
-        return res
+        return to_NNF(res)
 
 
 class CheckIsPrime(UnevaluatedOnFree):
@@ -215,9 +247,7 @@ class CheckIsPrime(UnevaluatedOnFree):
         from sympy import isprime
         arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
         res = Equivalent(arg, isprime(expr))
-        res = ~res if is_Not else res
-        res = to_NNF(res)
-        return res
+        return to_NNF(res)
 
 class CustomLambda(object):
     """
