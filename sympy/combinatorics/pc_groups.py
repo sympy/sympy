@@ -15,18 +15,14 @@ class PolycyclicGroup(DefaultPrinting):
         Parameters
         ==========
 
-        pc_sequence
-                Polycyclic sequence is formed by collecting all the
-                missing generators between the adjacent groups in
-                the derived series of given permutation group.
-        pc_series
-                Polycyclic series is formed by adding all the missing
-                generators of ``der[i+1]`` in ``der[i]``, where
-                ``der`` represents the derived series.
-        relative_order
-                A list, computed by the ratio of adjacent groups in
-                pc_series.
-        collector
+        pc_sequence : list
+                A sequence of elements whose classes generate the cyclic factor
+                groups of pc_series.
+        pc_series : list
+                A subnormal sequence of subgroups where each factor group is cyclic.
+        relative_order : list
+                The orders of factor groups of pc_series.
+        collector : Collector
                 By default, it is None. Collector class provides the
                 polycyclic presentation with various other functionalities.
 
@@ -63,10 +59,10 @@ class Collector(DefaultPrinting):
         Parameters
         ==========
 
-        FreeGroup
+        FreeGroup : tuple
                 FreeGroup provides the mapping of polycyclic generating
                 sequence with the free group elements.
-        pc_presentation
+        pc_presentation : dict
                 Provides the presentation of polycyclic groups with the
                 help of power and conjugate relators.
 
@@ -178,10 +174,10 @@ class Collector(DefaultPrinting):
         Parameters
         ==========
 
-        word
+        word : FreeGroupElement
             word defined on free group elements for a
             polycyclic group.
-        w
+        w : FreeGroupElement
             subword of a given word, whose starting and
             ending index to be computed.
 
@@ -267,7 +263,7 @@ class Collector(DefaultPrinting):
         Parameters
         ==========
 
-        word
+        word : FreeGroupElement
             An uncollected word.
 
         Returns
@@ -493,7 +489,7 @@ class Collector(DefaultPrinting):
         Parameters
         ==========
 
-        element
+        element : Permutation
             Generator of a polycyclic group.
 
         Examples
@@ -615,7 +611,7 @@ class Collector(DefaultPrinting):
         Parameters
         ==========
 
-        gens
+        gens : list
             A list of generators on which polycyclic subgroup
             is to be defined.
 
