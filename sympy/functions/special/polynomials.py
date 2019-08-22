@@ -71,7 +71,7 @@ class jacobi(OrthogonalPolynomial):
     1
     >>> jacobi(1, a, b, x)
     a/2 - b/2 + x*(a/2 + b/2 + 1)
-    >>> jacobi(2, a, b, x)   # doctest:+SKIP
+    >>> jacobi(2, a, b, x)
     a**2/8 - a*b/4 - a/8 + b**2/8 - b/8 + x**2*(a**2/8 + a*b/4 + 7*a/8 + b**2/8 + 7*b/8 + 3/2) + x*(a**2/4 + 3*a/4 - b**2/4 - 3*b/4) - 1/2
 
     >>> jacobi(n, a, b, x)

@@ -657,7 +657,6 @@ def _get_doctest_blacklist():
         "doc/src/modules/plotting.rst",  # generates live plots
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
         "sympy/galgebra.py", # no longer part of SymPy
-        "sympy/conftest.py", # Python 2.7 issues
         "sympy/this.py", # prints text
         "sympy/physics/gaussopt.py", # raises deprecation warning
         "sympy/matrices/densearith.py", # raises deprecation warning
@@ -731,6 +730,7 @@ def _get_doctest_blacklist():
 
     # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
+        "sympy/conftest.py", # Python 2.7 issues
         "sympy/utilities/benchmarking.py"
     ])
 
