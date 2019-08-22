@@ -8,14 +8,16 @@ from sympy.core.add import Add
 from sympy.core.numbers import (I, Integer, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
+from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.elementary.complexes import (Abs, im, re, sign)
+from sympy.functions.elementary.complexes import (Abs, im, re, sign, conjugate)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
+from sympy.matrices import Matrix, SparseMatrix
 from sympy.utilities.pytest import XFAIL, slow, raises, warns_deprecated_sympy
 from sympy.assumptions.assume import assuming
 import math
@@ -1889,6 +1891,18 @@ def test_real_functions():
     # Q.complexes
     assert ask(Q.real(re(x))) is True
     assert ask(Q.real(im(x))) is True
+
+
+def test_matrix():
+
+    # hermitian
+    assert ask(Q.hermitian(Matrix([[2, 2 + I, 4], [2 - I, 3, I], [4, -I, 1]]))) == True
+    assert ask(Q.hermitian(Matrix([[2, 2 + I, 4], [2 + I, 3, I], [4, -I, 1]]))) == False
+    z = symbols('z', complex=True)
+    assert ask(Q.hermitian(Matrix([[2, 2 + I, z], [2 - I, 3, I], [4, -I, 1]]))) == None
+    assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11))))) == True
+    assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, I, 0), (-5, 0, 11))))) == False
+    assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, z, 0), (-5, 0, 11))))) == None
 
 
 def test_algebraic():

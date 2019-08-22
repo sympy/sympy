@@ -1621,11 +1621,11 @@ def test_sympy__stats__stochastic_process_types__ContinuousMarkovChain():
 def test_sympy__stats__random_matrix__RandomMatrixPSpace():
     from sympy.stats.random_matrix import RandomMatrixPSpace
     from sympy.stats.random_matrix_models import RandomMatrixEnsemble
-    assert _test_args(RandomMatrixPSpace('P', RandomMatrixEnsemble()))
+    assert _test_args(RandomMatrixPSpace('P', RandomMatrixEnsemble('R', 3)))
 
 def test_sympy__stats__random_matrix_models__RandomMatrixEnsemble():
     from sympy.stats.random_matrix_models import RandomMatrixEnsemble
-    assert _test_args(RandomMatrixEnsemble())
+    assert _test_args(RandomMatrixEnsemble('R', 3))
 
 def test_sympy__stats__random_matrix_models__GaussianEnsemble():
     from sympy.stats.random_matrix_models import GaussianEnsemble
@@ -1642,6 +1642,22 @@ def test_sympy__stats__random_matrix_models__GaussianOrthogonalEnsemble():
 def test_sympy__stats__random_matrix_models__GaussianSymplecticEnsemble():
     from sympy.stats import GaussianSymplecticEnsemble
     assert _test_args(GaussianSymplecticEnsemble('U', 3))
+
+def test_sympy__stats__random_matrix_models__CircularEnsemble():
+    from sympy.stats import CircularEnsemble
+    assert _test_args(CircularEnsemble('C', 3))
+
+def test_sympy__stats__random_matrix_models__CircularUnitaryEnsemble():
+    from sympy.stats import CircularUnitaryEnsemble
+    assert _test_args(CircularUnitaryEnsemble('U', 3))
+
+def test_sympy__stats__random_matrix_models__CircularOrthogonalEnsemble():
+    from sympy.stats import CircularOrthogonalEnsemble
+    assert _test_args(CircularOrthogonalEnsemble('O', 3))
+
+def test_sympy__stats__random_matrix_models__CircularSymplecticEnsemble():
+    from sympy.stats import CircularSymplecticEnsemble
+    assert _test_args(CircularSymplecticEnsemble('S', 3))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
@@ -4005,6 +4021,17 @@ def test_sympy__tensor__array__array_comprehension__ArrayComprehension():
     from sympy.tensor.array.array_comprehension import ArrayComprehension
     arrcom = ArrayComprehension(x, (x, 1, 5))
     assert _test_args(arrcom)
+
+def test_sympy__tensor__array__array_comprehension__ArrayComprehensionMap():
+    from sympy.tensor.array.array_comprehension import ArrayComprehensionMap
+    arrcomma = ArrayComprehensionMap(lambda: 0, (x, 1, 5))
+    assert _test_args(arrcomma)
+
+def test_sympy__tensor__array__arrayop__Flatten():
+    from sympy.tensor.array.arrayop import Flatten
+    from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+    fla = Flatten(ImmutableDenseNDimArray(range(24)).reshape(2, 3, 4))
+    assert _test_args(fla)
 
 
 def test_sympy__tensor__functions__TensorProduct():

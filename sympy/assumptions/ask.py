@@ -1327,7 +1327,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     res = key(expr)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
-
     # using satask (still costly)
     res = satask(proposition, assumptions=assumptions, context=context)
     return res

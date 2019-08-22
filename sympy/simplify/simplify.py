@@ -17,7 +17,7 @@ from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -524,9 +524,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     expression. You can avoid this behavior by passing ``doit=False`` as
     an argument.
     """
+
     def shorter(*choices):
-        '''Return the choice that has the fewest ops. In case of a tie,
-        the expression listed first is selected.'''
+        """
+        Return the choice that has the fewest ops. In case of a tie,
+        the expression listed first is selected.
+        """
         if not has_variety(choices):
             return choices[0]
         return min(choices, key=measure)
@@ -551,10 +554,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         return _eval_simplify(**kwargs)
 
     original_expr = expr = collect_abs(signsimp(expr))
-
-    from sympy.simplify.hyperexpand import hyperexpand
-    from sympy.functions.special.bessel import BesselBase
-    from sympy import Sum, Product, Integral
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
@@ -586,6 +585,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
 
+
     # rationalize Floats
     floats = False
     if rational is not False and expr.has(Float):
@@ -607,10 +607,40 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     expr = factor_terms(expr, sign=False)
 
+    from sympy.simplify.hyperexpand import hyperexpand
+    from sympy.functions.special.bessel import BesselBase
+    from sympy import Sum, Product, Integral
+
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
 
-    expr = piecewise_fold(expr)
+    # Deal with Piecewise separately to avoid recursive growth of expressions
+    if expr.has(Piecewise):
+        # Fold into a single Piecewise
+        expr = piecewise_fold(expr)
+        # Apply doit, if doit=True
+        expr = done(expr)
+        # Still a Piecewise?
+        if expr.has(Piecewise):
+            # Fold into a single Piecewise, in case doit lead to some
+            # expressions being Piecewise
+            expr = piecewise_fold(expr)
+            # kroneckersimp also affects Piecewise
+            if expr.has(KroneckerDelta):
+                expr = kroneckersimp(expr)
+            # Still a Piecewise?
+            if expr.has(Piecewise):
+                from sympy.functions.elementary.piecewise import piecewise_simplify
+                # Do not apply doit on the segments as it has already
+                # been done above, but simplify
+                expr = piecewise_simplify(expr, deep=True, doit=False)
+                # Still a Piecewise?
+                if expr.has(Piecewise):
+                    # Try factor common terms
+                    expr = shorter(expr, factor_terms(expr))
+                    # As all expressions have been simplified above with the
+                    # complete simplify, nothing more needs to be done here
+                    return expr
 
     if expr.has(KroneckerDelta):
         expr = kroneckersimp(expr)
