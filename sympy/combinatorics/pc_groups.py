@@ -79,7 +79,7 @@ class Collector(DefaultPrinting):
         self.pc_presentation = self.pc_relators()
 
     def minimal_uncollected_subword(self, word):
-        """
+        r"""
         Returns the minimal uncollected subwords.
 
         A word ``v`` defined on generators in ``X`` is a minimal
@@ -255,7 +255,7 @@ class Collector(DefaultPrinting):
 
 
     def collected_word(self, word):
-        """
+        r"""
         Return the collected form of a word.
 
         A word ``w`` is called collected, if `w = {x_{i_1}}^{a_1} * \ldots *
@@ -363,7 +363,7 @@ class Collector(DefaultPrinting):
 
 
     def pc_relators(self):
-        """
+        r"""
         Return the polycyclic presentation.
 
         There are two types of relations used in polycyclic
@@ -480,7 +480,7 @@ class Collector(DefaultPrinting):
         return pc_relators
 
     def exponent_vector(self, element):
-        """
+        r"""
         Return the exponent vector of length equal to the
         length of polycyclic generating sequence.
 
@@ -546,7 +546,7 @@ class Collector(DefaultPrinting):
         return exp_vector
 
     def depth(self, element):
-        """
+        r"""
         Return the depth of a given element.
 
         The depth of a given element ``g`` is defined by
@@ -576,7 +576,7 @@ class Collector(DefaultPrinting):
         return next((i+1 for i, x in enumerate(exp_vector) if x), len(self.pcgs)+1)
 
     def leading_exponent(self, element):
-        """
+        r"""
         Return the leading non-zero exponent.
 
         The leading exponent for a given element `g` is defined
