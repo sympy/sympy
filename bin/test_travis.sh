@@ -137,9 +137,8 @@ test_list = [
     # ipython
     '*ipython*',
 
-    # antlr
-    'sympy/parsing/tests/test_autolev',
-    'sympy/parsing/tests/test_latex',
+    # antlr, lfortran, clang
+    'sympy/parsing/',
 
     # matchpy
     '*rubi*',
@@ -180,9 +179,8 @@ doctest_list = [
     # ipython
     '*ipython*',
 
-    # antlr
-    'sympy/parsing/autolev',
-    'sympy/parsing/latex',
+    # antlr, lfortran, clang
+    'sympy/parsing/',
 
     # matchpy
     '*rubi*',

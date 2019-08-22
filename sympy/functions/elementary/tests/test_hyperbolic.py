@@ -1,7 +1,7 @@
 from sympy import (symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log,
     sqrt, coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth,
     Integer, O, exp, sech, sec, csch, asech, acsch, acos, asin, expand_mul,
-    AccumBounds, im, re)
+    AccumBounds, im, re, Abs)
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -508,6 +508,20 @@ def test_asinh():
     # Symmetry
     assert asinh(-S.Half) == -asinh(S.Half)
 
+    # inverse composition
+    assert unchanged(asinh, sinh(Symbol('v1')))
+
+    assert asinh(sinh(0, evaluate=False)) == 0
+    assert asinh(sinh(-3, evaluate=False)) == -3
+    assert asinh(sinh(2, evaluate=False)) == 2
+    assert asinh(sinh(I, evaluate=False)) == I
+    assert asinh(sinh(-I, evaluate=False)) == -I
+    assert asinh(sinh(5*I, evaluate=False)) == -2*I*pi + 5*I
+    assert asinh(sinh(15 + 11*I)) == 15 - 4*I*pi + 11*I
+    assert asinh(sinh(-73 + 97*I)) == 73 - 97*I + 31*I*pi
+    assert asinh(sinh(-7 - 23*I)) == 7 - 7*I*pi + 23*I
+    assert asinh(sinh(13 - 3*I)) == -13 - I*pi + 3*I
+
 
 def test_asinh_rewrite():
     x = Symbol('x')
@@ -569,6 +583,22 @@ def test_acosh():
 
     assert str(acosh(5*I).n(6)) == '2.31244 + 1.5708*I'
     assert str(acosh(-5*I).n(6)) == '2.31244 - 1.5708*I'
+
+    # inverse composition
+    assert unchanged(acosh, Symbol('v1'))
+
+    assert acosh(cosh(-3, evaluate=False)) == 3
+    assert acosh(cosh(3, evaluate=False)) == 3
+    assert acosh(cosh(0, evaluate=False)) == 0
+    assert acosh(cosh(I, evaluate=False)) == I
+    assert acosh(cosh(-I, evaluate=False)) == I
+    assert acosh(cosh(7*I, evaluate=False)) == -2*I*pi + 7*I
+    assert acosh(cosh(1 + I)) == 1 + I
+    assert acosh(cosh(3 - 3*I)) == 3 - 3*I
+    assert acosh(cosh(-3 + 2*I)) == 3 - 2*I
+    assert acosh(cosh(-5 - 17*I)) == 5 - 6*I*pi + 17*I
+    assert acosh(cosh(-21 + 11*I)) == 21 - 11*I + 4*I*pi
+    assert acosh(cosh(cosh(1) + I)) == cosh(1) + I
 
 
 def test_acosh_rewrite():
@@ -779,6 +809,24 @@ def test_atanh():
 
     # Symmetry
     assert atanh(-S.Half) == -atanh(S.Half)
+
+    # inverse composition
+    assert unchanged(atanh, tanh(Symbol('v1')))
+
+    assert atanh(tanh(-5, evaluate=False)) == -5
+    assert atanh(tanh(0, evaluate=False)) == 0
+    assert atanh(tanh(7, evaluate=False)) == 7
+    assert atanh(tanh(I, evaluate=False)) == I
+    assert atanh(tanh(-I, evaluate=False)) == -I
+    assert atanh(tanh(-11*I, evaluate=False)) == -11*I + 4*I*pi
+    assert atanh(tanh(3 + I)) == 3 + I
+    assert atanh(tanh(4 + 5*I)) == 4 - 2*I*pi + 5*I
+    assert atanh(tanh(pi/2)) == pi/2
+    assert atanh(tanh(pi)) == pi
+    assert atanh(tanh(-3 + 7*I)) == -3 - 2*I*pi + 7*I
+    assert atanh(tanh(9 - 2*I/3)) == 9 - 2*I/3
+    assert atanh(tanh(-32 - 123*I)) == -32 - 123*I + 39*I*pi
+
 
 def test_atanh_rewrite():
     x = Symbol('x')

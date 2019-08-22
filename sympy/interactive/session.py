@@ -162,7 +162,7 @@ def enable_automatic_int_sympification(shell):
 
 
 def enable_automatic_symbols(shell):
-    """Allow IPython to automatially create symbols (``isympy -a``). """
+    """Allow IPython to automatically create symbols (``isympy -a``). """
     # XXX: This should perhaps use tokenize, like int_to_Integer() above.
     # This would avoid re-executing the code, which can lead to subtle
     # issues.  For example:

@@ -21,6 +21,9 @@ __pycache__/
 # VSCode settings file
 .vscode/
 
+# PyCharm settings file
+/.idea/
+
 # Generated files from Jython
 *$py.class
 

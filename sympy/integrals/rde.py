@@ -30,8 +30,10 @@ from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
 
+from sympy import sqrt, re, im
+
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    splitfactor, NonElementaryIntegralException, DecrementLevel)
+    splitfactor, NonElementaryIntegralException, DecrementLevel, recognize_log_derivative)
 
 # TODO: Add messages to NonElementaryIntegralException errors
 

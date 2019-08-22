@@ -585,7 +585,10 @@ class Pow(Expr):
                 return True
             c = self.exp.coeff(S.ImaginaryUnit)
             if c:
-                ok = (c*log(self.base)/S.Pi).is_Integer
+                if self.base.is_rational and c.is_rational:
+                    if self.base.is_nonzero and (self.base - 1).is_nonzero and c.is_nonzero:
+                        return False
+                ok = (c*log(self.base)/S.Pi).is_integer
                 if ok is not None:
                     return ok
 

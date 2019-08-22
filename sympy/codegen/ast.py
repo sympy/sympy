@@ -266,7 +266,7 @@ class Token(Basic):
             if isinstance(arg, Token):
                 return printer._print(arg, *args, joiner=self._joiner(k, il), **kwargs)
             else:
-                return printer._print(v, *args, **kwargs)
+                return printer._print(arg, *args, **kwargs)
 
         if isinstance(v, Tuple):
             joined = self._joiner(k, il).join([_print(arg) for arg in v.args])
@@ -1511,7 +1511,7 @@ class Pointer(Variable):
     >>> i = Symbol('i', integer=True)
     >>> p = Pointer('x')
     >>> p[i+1]
-    Element(x, indices=((i + 1,),))
+    Element(x, indices=(i + 1,))
 
     """
 
@@ -1582,7 +1582,7 @@ class While(Token):
     Parameters
     ==========
 
-    condition : expression convertable to Boolean
+    condition : expression convertible to Boolean
     body : CodeBlock or iterable
         When passed an iterable it is used to instantiate a CodeBlock.
 

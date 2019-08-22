@@ -1,13 +1,13 @@
 from __future__ import print_function, division
+
+from sympy import sqrt, Symbol, log, exp, FallingFactorial
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
-        characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
-        sampling_density, moment_generating_function, _value_check, quantile)
-from sympy import Piecewise, sqrt, solveset, Symbol, S, log, Eq, Lambda, exp
-from sympy.solvers.inequalities import reduce_inequalities
+                 characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
+                 sampling_density, moment_generating_function, quantile)
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'kurtosis', 'covariance',
-        'dependent', 'independent', 'random_symbols', 'correlation',
+        'dependent', 'independent', 'random_symbols', 'correlation', 'factorial_moment',
         'moment', 'cmoment', 'sampling_density', 'moment_generating_function', 'quantile']
 
 
@@ -90,7 +90,7 @@ def entropy(expr, condition=None, **kwargs):
     b: base of the logarithm, optional
        By default, it is taken as Euler's number
 
-    Retruns
+    Returns
     =======
 
     result : Entropy of the expression, a constant
@@ -116,8 +116,8 @@ def entropy(expr, condition=None, **kwargs):
     """
     pdf = density(expr, condition, **kwargs)
     base = kwargs.get('b', exp(1))
-    if isinstance(pdf, dict):
-            return sum([-prob*log(prob, base) for prob in pdf.values()])
+    if hasattr(pdf, 'dict'):
+            return sum([-prob*log(prob, base) for prob in pdf.dict.values()])
     return expectation(-log(pdf(expr), base))
 
 def covariance(X, Y, condition=None, **kwargs):
@@ -292,12 +292,50 @@ def kurtosis(X, condition=None, **kwargs):
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/Kurtosis
     .. [2] http://mathworld.wolfram.com/Kurtosis.html
     """
     return smoment(X, 4, condition=condition, **kwargs)
 
 
+def factorial_moment(X, n, condition=None, **kwargs):
+    """
+    The factorial moment is a mathematical quantity defined as the expectation
+    or average of the falling factorial of a random variable.
+
+    factorial_moment(X, n) = E(X*(X - 1)*(X - 2)*...*(X - n + 1))
+
+    Parameters
+    ==========
+
+    n: A natural number, n-th factorial moment.
+
+    condition : Expr containing RandomSymbols
+            A conditional expression.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import factorial_moment, Poisson, Binomial
+    >>> from sympy import Symbol, S
+    >>> lamda = Symbol('lamda')
+    >>> X = Poisson('X', lamda)
+    >>> factorial_moment(X, 2)
+    lamda**2
+    >>> Y = Binomial('Y', 2, S.Half)
+    >>> factorial_moment(Y, 2)
+    1/2
+    >>> factorial_moment(Y, 2, Y > 1) # find factorial moment for Y > 1
+    2
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Factorial_moment
+    .. [2] http://mathworld.wolfram.com/FactorialMoment.html
+    """
+    return expectation(FallingFactorial(X, n), condition=condition, **kwargs)
 
 
 P = probability

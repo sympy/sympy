@@ -72,7 +72,7 @@ class BasisDependent(Expr):
 
     n = evalf
 
-    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+    def simplify(self, **kwargs):
         """
         Implements the SymPy simplify routine for this quantity.
 
@@ -80,8 +80,7 @@ class BasisDependent(Expr):
         ========================
 
         """
-        simp_components = [simp(v, ratio=ratio, measure=measure,
-                           rational=rational, inverse=inverse) * k for
+        simp_components = [simp(v, **kwargs) * k for
                            k, v in self.components.items()]
         return self._add_func(*simp_components)
 
@@ -101,8 +100,8 @@ class BasisDependent(Expr):
 
     trigsimp.__doc__ += tsimp.__doc__
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
-        return self.simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
+    def _eval_simplify(self, **kwargs):
+        return self.simplify(**kwargs)
 
     def _eval_trigsimp(self, **opts):
         return self.trigsimp(**opts)

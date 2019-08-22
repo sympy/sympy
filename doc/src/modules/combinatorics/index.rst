@@ -23,3 +23,4 @@ Contents
    testutil.rst
    tensor_can.rst
    fp_groups.rst
+   pc_groups.rst

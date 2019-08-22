@@ -14,7 +14,6 @@ from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-from sympy.external import import_module
 
 import mpmath
 from collections import defaultdict, OrderedDict
@@ -542,9 +541,10 @@ def test_issue_10295():
 
     B = numpy.array([-7, x, 3*y**2])
     sB = S(B)
-    assert B[0] == -7
-    assert B[1] == x
-    assert B[2] == 3*y**2
+    assert sB.shape == (3,)
+    assert B[0] == sB[0] == -7
+    assert B[1] == sB[1] == x
+    assert B[2] == sB[2] == 3*y**2
 
     C = numpy.arange(0, 24)
     C.resize(2,3,4)

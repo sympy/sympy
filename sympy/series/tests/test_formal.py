@@ -3,8 +3,9 @@ from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    airyai, acos, acosh, gamma, erf, asech, Add, Integral, Mul,
                    integrate)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
-                                 rational_independent, simpleDE, exp_re,
-                                 hyper_re)
+                                 FormalPowerSeriesProduct, FormalPowerSeriesCompose,
+                                 FormalPowerSeriesInverse, simpleDE,
+                                 rational_independent, exp_re, hyper_re)
 from sympy.utilities.pytest import raises, XFAIL, slow
 
 x, y, z = symbols('x y z')
@@ -507,3 +508,97 @@ def test_fps__operations():
     fi = f2.integrate(x)
     assert fi.function == sin(x)
     assert fi.truncate() == x - x**3/6 + x**5/120 + O(x**6)
+
+def test_fps__product():
+    f1, f2, f3 = fps(sin(x)), fps(exp(x)), fps(cos(x))
+
+    raises(ValueError, lambda: f1.product(exp(x), x))
+    raises(ValueError, lambda: f1.product(fps(exp(x), dir=-1), x, 4))
+    raises(ValueError, lambda: f1.product(fps(exp(x), x0=1), x, 4))
+    raises(ValueError, lambda: f1.product(fps(exp(y)), x, 4))
+
+    fprod = f1.product(f2, x)
+    assert isinstance(fprod, FormalPowerSeriesProduct)
+    assert isinstance(fprod.ffps, FormalPowerSeries)
+    assert isinstance(fprod.gfps, FormalPowerSeries)
+    assert fprod.f == sin(x)
+    assert fprod.g == exp(x)
+    assert fprod.function == sin(x) * exp(x)
+    assert fprod._eval_terms(4) == x + x**2 + x**3/3
+    assert fprod.truncate(4) == x + x**2 + x**3/3 + O(x**4)
+    assert fprod.polynomial(4) == x + x**2 + x**3/3
+
+    raises(NotImplementedError, lambda: fprod._eval_term(5))
+    raises(NotImplementedError, lambda: fprod.infinite)
+    raises(NotImplementedError, lambda: fprod._eval_derivative(x))
+    raises(NotImplementedError, lambda: fprod.integrate(x))
+
+    assert f1.product(f3, x)._eval_terms(4) == x - 2*x**3/3
+    assert f1.product(f3, x).truncate(4) == x - 2*x**3/3 + O(x**4)
+
+
+def test_fps__compose():
+    f1, f2, f3 = fps(exp(x)), fps(sin(x)), fps(cos(x))
+
+    raises(ValueError, lambda: f1.compose(sin(x), x))
+    raises(ValueError, lambda: f1.compose(fps(sin(x), dir=-1), x, 4))
+    raises(ValueError, lambda: f1.compose(fps(sin(x), x0=1), x, 4))
+    raises(ValueError, lambda: f1.compose(fps(sin(y)), x, 4))
+
+    raises(ValueError, lambda: f1.compose(f3, x))
+    raises(ValueError, lambda: f2.compose(f3, x))
+
+    fcomp = f1.compose(f2, x)
+    assert isinstance(fcomp, FormalPowerSeriesCompose)
+    assert isinstance(fcomp.ffps, FormalPowerSeries)
+    assert isinstance(fcomp.gfps, FormalPowerSeries)
+    assert fcomp.f == exp(x)
+    assert fcomp.g == sin(x)
+    assert fcomp.function == exp(sin(x))
+    assert fcomp._eval_terms(6) == 1 + x + x**2/2 - x**4/8 - x**5/15
+    assert fcomp.truncate() == 1 + x + x**2/2 - x**4/8 - x**5/15 + O(x**6)
+    assert fcomp.truncate(5) == 1 + x + x**2/2 - x**4/8 + O(x**5)
+
+    raises(NotImplementedError, lambda: fcomp._eval_term(5))
+    raises(NotImplementedError, lambda: fcomp.infinite)
+    raises(NotImplementedError, lambda: fcomp._eval_derivative(x))
+    raises(NotImplementedError, lambda: fcomp.integrate(x))
+
+    assert f1.compose(f2, x).truncate(4) == 1 + x + x**2/2 + O(x**4)
+    assert f1.compose(f2, x).truncate(8) == \
+        1 + x + x**2/2 - x**4/8 - x**5/15 - x**6/240 + x**7/90 + O(x**8)
+    assert f1.compose(f2, x).truncate(6) == \
+        1 + x + x**2/2 - x**4/8 - x**5/15 + O(x**6)
+
+    assert f2.compose(f2, x).truncate(4) == x - x**3/3 + O(x**4)
+    assert f2.compose(f2, x).truncate(8) == x - x**3/3 + x**5/10 - 8*x**7/315 + O(x**8)
+    assert f2.compose(f2, x).truncate(6) == x - x**3/3 + x**5/10 + O(x**6)
+
+
+def test_fps__inverse():
+    f1, f2, f3 = fps(sin(x)), fps(exp(x)), fps(cos(x))
+
+    raises(ValueError, lambda: f1.inverse(x))
+
+    finv = f2.inverse(x)
+    assert isinstance(finv, FormalPowerSeriesInverse)
+    assert isinstance(finv.ffps, FormalPowerSeries)
+    raises(ValueError, lambda: finv.gfps)
+
+    assert finv.f == exp(x)
+    assert finv.function == exp(-x)
+    assert finv._eval_terms(5) == 1 - x + x**2/2 - x**3/6 + x**4/24
+    assert finv.truncate() == 1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + O(x**6)
+    assert finv.truncate(5) == 1 - x + x**2/2 - x**3/6 + x**4/24 + O(x**5)
+
+    raises(NotImplementedError, lambda: finv._eval_term(5))
+    raises(ValueError, lambda: finv.g)
+    raises(NotImplementedError, lambda: finv.infinite)
+    raises(NotImplementedError, lambda: finv._eval_derivative(x))
+    raises(NotImplementedError, lambda: finv.integrate(x))
+
+    assert f2.inverse(x).truncate(8) == \
+        1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + x**6/720 - x**7/5040 + O(x**8)
+
+    assert f3.inverse(x).truncate() == 1 + x**2/2 + 5*x**4/24 + O(x**6)
+    assert f3.inverse(x).truncate(8) == 1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + O(x**8)

@@ -1,5 +1,6 @@
 from sympy import AccumBounds, Symbol, floor, nan, oo, zoo, E, symbols, \
-        ceiling, pi, Rational, Float, I, sin, exp, log, factorial, frac, Eq
+        ceiling, pi, Rational, Float, I, sin, exp, log, factorial, frac, Eq, \
+        Le, Ge, Gt, Lt, Ne, sqrt
 
 from sympy.core.expr import unchanged
 from sympy.utilities.pytest import XFAIL
@@ -107,12 +108,18 @@ def test_floor():
     assert floor(factorial(50)/exp(1)) == \
         11188719610782480504630258070757734324011354208865721592720336800
 
+    assert (floor(y) < y) == False
     assert (floor(y) <= y) == True
     assert (floor(y) > y) == False
+    assert (floor(y) >= y) == False
     assert (floor(x) <= x).is_Relational  # x could be non-real
     assert (floor(x) > x).is_Relational
     assert (floor(x) <= y).is_Relational  # arg is not same as rhs
     assert (floor(x) > y).is_Relational
+    assert (floor(y) <= oo) == True
+    assert (floor(y) < oo) == True
+    assert (floor(y) >= -oo) == True
+    assert (floor(y) > -oo) == True
 
     assert floor(y).rewrite(frac) == y - frac(y)
     assert floor(y).rewrite(ceiling) == -ceiling(-y)
@@ -123,6 +130,70 @@ def test_floor():
 
     assert Eq(floor(y), y - frac(y))
     assert Eq(floor(y), -ceiling(-y))
+
+    neg = Symbol('neg', negative=True)
+    nn = Symbol('nn', nonnegative=True)
+    pos = Symbol('pos', positive=True)
+    np = Symbol('np', nonpositive=True)
+
+    assert (floor(neg) < 0) == True
+    assert (floor(neg) <= 0) == True
+    assert (floor(neg) > 0) == False
+    assert (floor(neg) >= 0) == False
+    assert (floor(neg) <= -1) == True
+    assert (floor(neg) >= -3) == (neg >= -3)
+    assert (floor(neg) < 5) == (neg < 5)
+
+    assert (floor(nn) < 0) == False
+    assert (floor(nn) >= 0) == True
+
+    assert (floor(pos) < 0) == False
+    assert (floor(pos) <= 0) == (pos < 1)
+    assert (floor(pos) > 0) == (pos >= 1)
+    assert (floor(pos) >= 0) == True
+    assert (floor(pos) >= 3) == (pos >= 3)
+
+    assert (floor(np) <= 0) == True
+    assert (floor(np) > 0) == False
+
+    assert floor(neg).is_negative == True
+    assert floor(neg).is_nonnegative == False
+    assert floor(nn).is_negative == False
+    assert floor(nn).is_nonnegative == True
+    assert floor(pos).is_negative == False
+    assert floor(pos).is_nonnegative == True
+    assert floor(np).is_negative is None
+    assert floor(np).is_nonnegative is None
+
+    assert (floor(7, evaluate=False) >= 7) == True
+    assert (floor(7, evaluate=False) > 7) == False
+    assert (floor(7, evaluate=False) <= 7) == True
+    assert (floor(7, evaluate=False) < 7) == False
+
+    assert (floor(7, evaluate=False) >= 6) == True
+    assert (floor(7, evaluate=False) > 6) == True
+    assert (floor(7, evaluate=False) <= 6) == False
+    assert (floor(7, evaluate=False) < 6) == False
+
+    assert (floor(7, evaluate=False) >= 8) == False
+    assert (floor(7, evaluate=False) > 8) == False
+    assert (floor(7, evaluate=False) <= 8) == True
+    assert (floor(7, evaluate=False) < 8) == True
+
+    assert (floor(x) <= 5.5) == Le(floor(x), 5.5, evaluate=False)
+    assert (floor(x) >= -3.2) == Ge(floor(x), -3.2, evaluate=False)
+    assert (floor(x) < 2.9) == Lt(floor(x), 2.9, evaluate=False)
+    assert (floor(x) > -1.7) == Gt(floor(x), -1.7, evaluate=False)
+
+    assert (floor(y) <= 5.5) == (y < 6)
+    assert (floor(y) >= -3.2) == (y >= -3)
+    assert (floor(y) < 2.9) == (y < 3)
+    assert (floor(y) > -1.7) == (y >= -1)
+
+    assert (floor(y) <= n) == (y < n + 1)
+    assert (floor(y) >= n) == (y >= n)
+    assert (floor(y) < n) == (y < n)
+    assert (floor(y) > n) == (y >= n + 1)
 
 
 def test_ceiling():
@@ -223,11 +294,17 @@ def test_ceiling():
         11188719610782480504630258070757734324011354208865721592720336801
 
     assert (ceiling(y) >= y) == True
+    assert (ceiling(y) > y) == False
     assert (ceiling(y) < y) == False
+    assert (ceiling(y) <= y) == False
     assert (ceiling(x) >= x).is_Relational  # x could be non-real
     assert (ceiling(x) < x).is_Relational
     assert (ceiling(x) >= y).is_Relational  # arg is not same as rhs
     assert (ceiling(x) < y).is_Relational
+    assert (ceiling(y) >= -oo) == True
+    assert (ceiling(y) > -oo) == True
+    assert (ceiling(y) <= oo) == True
+    assert (ceiling(y) < oo) == True
 
     assert ceiling(y).rewrite(floor) == -floor(-y)
     assert ceiling(y).rewrite(frac) == y + frac(-y)
@@ -239,11 +316,76 @@ def test_ceiling():
     assert Eq(ceiling(y), y + frac(-y))
     assert Eq(ceiling(y), -floor(-y))
 
+    neg = Symbol('neg', negative=True)
+    nn = Symbol('nn', nonnegative=True)
+    pos = Symbol('pos', positive=True)
+    np = Symbol('np', nonpositive=True)
+
+    assert (ceiling(neg) <= 0) == True
+    assert (ceiling(neg) < 0) == (neg <= -1)
+    assert (ceiling(neg) > 0) == False
+    assert (ceiling(neg) >= 0) == (neg > -1)
+    assert (ceiling(neg) > -3) == (neg > -3)
+    assert (ceiling(neg) <= 10) == (neg <= 10)
+
+    assert (ceiling(nn) < 0) == False
+    assert (ceiling(nn) >= 0) == True
+
+    assert (ceiling(pos) < 0) == False
+    assert (ceiling(pos) <= 0) == False
+    assert (ceiling(pos) > 0) == True
+    assert (ceiling(pos) >= 0) == True
+    assert (ceiling(pos) >= 1) == True
+    assert (ceiling(pos) > 5) == (pos > 5)
+
+    assert (ceiling(np) <= 0) == True
+    assert (ceiling(np) > 0) == False
+
+    assert ceiling(neg).is_positive == False
+    assert ceiling(neg).is_nonpositive == True
+    assert ceiling(nn).is_positive is None
+    assert ceiling(nn).is_nonpositive is None
+    assert ceiling(pos).is_positive == True
+    assert ceiling(pos).is_nonpositive == False
+    assert ceiling(np).is_positive == False
+    assert ceiling(np).is_nonpositive == True
+
+    assert (ceiling(7, evaluate=False) >= 7) == True
+    assert (ceiling(7, evaluate=False) > 7) == False
+    assert (ceiling(7, evaluate=False) <= 7) == True
+    assert (ceiling(7, evaluate=False) < 7) == False
+
+    assert (ceiling(7, evaluate=False) >= 6) == True
+    assert (ceiling(7, evaluate=False) > 6) == True
+    assert (ceiling(7, evaluate=False) <= 6) == False
+    assert (ceiling(7, evaluate=False) < 6) == False
+
+    assert (ceiling(7, evaluate=False) >= 8) == False
+    assert (ceiling(7, evaluate=False) > 8) == False
+    assert (ceiling(7, evaluate=False) <= 8) == True
+    assert (ceiling(7, evaluate=False) < 8) == True
+
+    assert (ceiling(x) <= 5.5) == Le(ceiling(x), 5.5, evaluate=False)
+    assert (ceiling(x) >= -3.2) == Ge(ceiling(x), -3.2, evaluate=False)
+    assert (ceiling(x) < 2.9) == Lt(ceiling(x), 2.9, evaluate=False)
+    assert (ceiling(x) > -1.7) == Gt(ceiling(x), -1.7, evaluate=False)
+
+    assert (ceiling(y) <= 5.5) == (y <= 5)
+    assert (ceiling(y) >= -3.2) == (y > -4)
+    assert (ceiling(y) < 2.9) == (y <= 2)
+    assert (ceiling(y) > -1.7) == (y > -2)
+
+    assert (ceiling(y) <= n) == (y <= n)
+    assert (ceiling(y) >= n) == (y > n - 1)
+    assert (ceiling(y) < n) == (y <= n - 1)
+    assert (ceiling(y) > n) == (y > n)
+
 
 def test_frac():
     assert isinstance(frac(x), frac)
     assert frac(oo) == AccumBounds(0, 1)
     assert frac(-oo) == AccumBounds(0, 1)
+    assert frac(zoo) is nan
 
     assert frac(n) == 0
     assert frac(nan) == nan
@@ -268,6 +410,121 @@ def test_frac():
 
     assert Eq(frac(y), y - floor(y))
     assert Eq(frac(y), y + ceiling(-y))
+
+    r = Symbol('r', real=True)
+    p_i = Symbol('p_i', integer=True, positive=True)
+    n_i = Symbol('p_i', integer=True, negative=True)
+    np_i = Symbol('np_i', integer=True, nonpositive=True)
+    nn_i = Symbol('nn_i', integer=True, nonnegative=True)
+    p_r = Symbol('p_r', real=True, positive=True)
+    n_r = Symbol('n_r', real=True, negative=True)
+    np_r = Symbol('np_r', real=True, nonpositive=True)
+    nn_r = Symbol('nn_r', real=True, nonnegative=True)
+
+    # Real frac argument, integer rhs
+    assert frac(r) <= p_i
+    assert not frac(r) <= n_i
+    assert (frac(r) <= np_i).has(Le)
+    assert (frac(r) <= nn_i).has(Le)
+    assert frac(r) < p_i
+    assert not frac(r) < n_i
+    assert not frac(r) < np_i
+    assert (frac(r) < nn_i).has(Lt)
+    assert not frac(r) >= p_i
+    assert frac(r) >= n_i
+    assert frac(r) >= np_i
+    assert (frac(r) >= nn_i).has(Ge)
+    assert not frac(r) > p_i
+    assert frac(r) > n_i
+    assert (frac(r) > np_i).has(Gt)
+    assert (frac(r) > nn_i).has(Gt)
+
+    assert not Eq(frac(r), p_i)
+    assert not Eq(frac(r), n_i)
+    assert Eq(frac(r), np_i).has(Eq)
+    assert Eq(frac(r), nn_i).has(Eq)
+
+    assert Ne(frac(r), p_i)
+    assert Ne(frac(r), n_i)
+    assert Ne(frac(r), np_i).has(Ne)
+    assert Ne(frac(r), nn_i).has(Ne)
+
+
+    # Real frac argument, real rhs
+    assert (frac(r) <= p_r).has(Le)
+    assert not frac(r) <= n_r
+    assert (frac(r) <= np_r).has(Le)
+    assert (frac(r) <= nn_r).has(Le)
+    assert (frac(r) < p_r).has(Lt)
+    assert not frac(r) < n_r
+    assert not frac(r) < np_r
+    assert (frac(r) < nn_r).has(Lt)
+    assert (frac(r) >= p_r).has(Ge)
+    assert frac(r) >= n_r
+    assert frac(r) >= np_r
+    assert (frac(r) >= nn_r).has(Ge)
+    assert (frac(r) > p_r).has(Gt)
+    assert frac(r) > n_r
+    assert (frac(r) > np_r).has(Gt)
+    assert (frac(r) > nn_r).has(Gt)
+
+    assert not Eq(frac(r), n_r)
+    assert Eq(frac(r), p_r).has(Eq)
+    assert Eq(frac(r), np_r).has(Eq)
+    assert Eq(frac(r), nn_r).has(Eq)
+
+    assert Ne(frac(r), p_r).has(Ne)
+    assert Ne(frac(r), n_r)
+    assert Ne(frac(r), np_r).has(Ne)
+    assert Ne(frac(r), nn_r).has(Ne)
+
+    # Real frac argument, +/- oo rhs
+    assert frac(r) < oo
+    assert frac(r) <= oo
+    assert not frac(r) > oo
+    assert not frac(r) >= oo
+
+    assert not frac(r) < -oo
+    assert not frac(r) <= -oo
+    assert frac(r) > -oo
+    assert frac(r) >= -oo
+
+    assert frac(r) < 1
+    assert frac(r) <= 1
+    assert not frac(r) > 1
+    assert not frac(r) >= 1
+
+    assert not frac(r) < 0
+    assert (frac(r) <= 0).has(Le)
+    assert (frac(r) > 0).has(Gt)
+    assert frac(r) >= 0
+
+    # Some test for numbers
+    assert frac(r) <= sqrt(2)
+    assert (frac(r) <= sqrt(3) - sqrt(2)).has(Le)
+    assert not frac(r) <= sqrt(2) - sqrt(3)
+    assert not frac(r) >= sqrt(2)
+    assert (frac(r) >= sqrt(3) - sqrt(2)).has(Ge)
+    assert frac(r) >= sqrt(2) - sqrt(3)
+
+    assert not Eq(frac(r), sqrt(2))
+    assert Eq(frac(r), sqrt(3) - sqrt(2)).has(Eq)
+    assert not Eq(frac(r), sqrt(2) - sqrt(3))
+    assert Ne(frac(r), sqrt(2))
+    assert Ne(frac(r), sqrt(3) - sqrt(2)).has(Ne)
+    assert Ne(frac(r), sqrt(2) - sqrt(3))
+
+    assert frac(p_i, evaluate=False).is_zero
+    assert frac(p_i, evaluate=False).is_finite
+    assert frac(p_i, evaluate=False).is_integer
+    assert frac(p_i, evaluate=False).is_real
+    assert frac(r).is_finite
+    assert frac(r).is_real
+    assert frac(r).is_zero is None
+    assert frac(r).is_integer is None
+
+    assert frac(oo).is_finite
+    assert frac(oo).is_real
 
 
 def test_series():

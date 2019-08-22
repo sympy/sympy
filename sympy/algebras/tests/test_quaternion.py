@@ -71,6 +71,7 @@ def test_quaternion_functions():
     assert q1.pow(-2) == Quaternion(-S(7)/225, -S(1)/225, -S(1)/150, -S(2)/225)
     assert q1**(-2) == Quaternion(-S(7)/225, -S(1)/225, -S(1)/150, -S(2)/225)
     assert q1.pow(-0.5) == NotImplemented
+    raises(TypeError, lambda: q1**(-0.5))
 
     assert q1.exp() == \
     Quaternion(E * cos(sqrt(29)),
@@ -95,6 +96,10 @@ def test_quaternion_functions():
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
 
     assert Quaternion.rotate_point((1, 1, 1), q1) == (S(1) / 5, 1, S(7) / 5)
+    n = Symbol('n')
+    raises(TypeError, lambda: q1**n)
+    n = Symbol('n', integer=True)
+    raises(TypeError, lambda: q1**n)
 
 
 def test_quaternion_conversions():
