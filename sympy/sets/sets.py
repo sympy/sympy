@@ -842,7 +842,7 @@ class Interval(Set, EvalfMixin):
             left_open = true
         if end == S.Infinity:
             right_open = true
-        if start == S.Infinity and end != S.Infinity:
+        if start == S.Infinity or end == S.NegativeInfinity:
             return S.EmptySet
 
         return Basic.__new__(cls, start, end, left_open, right_open)
