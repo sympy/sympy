@@ -248,6 +248,17 @@ def test_polygamma():
     assert polygamma(0, x).rewrite(zeta) == polygamma(0, x)
     assert polygamma(1, x).rewrite(zeta) == zeta(2, x)
     assert polygamma(2, x).rewrite(zeta) == -2*zeta(3, x)
+    assert polygamma(I, 2).rewrite(zeta) == polygamma(I, 2)
+    n1 = Symbol('n1')
+    n2 = Symbol('n2', real=True)
+    n3 = Symbol('n3', integer=True)
+    n4 = Symbol('n4', positive=True)
+    n5 = Symbol('n5', positive=True, integer=True)
+    assert polygamma(n1, x).rewrite(zeta) == polygamma(n1, x)
+    assert polygamma(n2, x).rewrite(zeta) == polygamma(n2, x)
+    assert polygamma(n3, x).rewrite(zeta) == polygamma(n3, x)
+    assert polygamma(n4, x).rewrite(zeta) == polygamma(n4, x)
+    assert polygamma(n5, x).rewrite(zeta) == (-1)**(n5 + 1) * factorial(n5) * zeta(n5 + 1, x)
 
     assert polygamma(3, 7*x).diff(x) == 7*polygamma(4, 7*x)
 
