@@ -1042,6 +1042,8 @@ class MatrixWild(MatrixSymbol, Wild):
     {W_: B}
     >>> (A**2).match(A*W)
     {W_: A}
+    >>> print(A.match(A*W))
+    None
 
     Note that ``W`` matched with ``A*B`` only because the expression had the
     same shape as the matrix wildcard ``W``. If more flexibility is required, a
@@ -1052,6 +1054,20 @@ class MatrixWild(MatrixSymbol, Wild):
     >>> Y = MatrixWild('Y', x, 3)
     >>> (A*B).match(Y)
     {Y_: A*B, x_: 3}
+
+    The ``properties`` and ``exclude`` parameters inherited from :class:`Wild`
+    are also supported.
+
+    >>> W = MatrixWild('W', 3, 3, properties=[lambda x: x.is_MatMul])
+    >>> (A*B).match(W)
+    {W_: A*B}
+    >>> print(A.match(W))
+    None
+    >>> Y = MatrixWild('Y', 3, 3, exclude=[A])
+    >>> print(A.match(Y))
+    None
+    >>> B.match(Y)
+    {Y_: B}
     """
 
     def __new__(cls, name, n, m, exclude=(), properties=()):
