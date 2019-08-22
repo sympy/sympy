@@ -13,6 +13,7 @@ from sympy.core.function import _mexpand
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul
 from sympy.core.numbers import Rational
 from sympy.functions import exp, sqrt, log
+from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
 
@@ -532,6 +533,56 @@ def collect_sqrt(expr, evaluate=None):
     return coeff*d
 
 
+def collect_abs(expr):
+    """Return ``expr`` with arguments of multiple Abs in a term collected
+    under a single instance.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.radsimp import collect_abs
+    >>> from sympy.abc import x
+    >>> collect_abs(abs(x + 1)/abs(x**2 - 1))
+    Abs((x + 1)/(x**2 - 1))
+    >>> collect_abs(abs(1/x))
+    Abs(1/x)
+    """
+    def _abs(mul):
+      from sympy.core.mul import _mulsort
+      c, nc = mul.args_cnc()
+      a = []
+      o = []
+      for i in c:
+          if isinstance(i, Abs):
+              a.append(i.args[0])
+          elif isinstance(i, Pow) and isinstance(i.base, Abs) and i.exp.is_real:
+              a.append(i.base.args[0]**i.exp)
+          else:
+              o.append(i)
+      if len(a) < 2 and not any(i.exp.is_negative for i in a if isinstance(i, Pow)):
+          return mul
+      absarg = Mul(*a)
+      A = Abs(absarg)
+      args = [A]
+      args.extend(o)
+      if not A.has(Abs):
+          args.extend(nc)
+          return Mul(*args)
+      if not isinstance(A, Abs):
+          # reevaluate and make it unevaluated
+          A = Abs(absarg, evaluate=False)
+      args[0] = A
+      _mulsort(args)
+      args.extend(nc)  # nc always go last
+      return Mul._from_args(args, is_commutative=bool(nc))
+
+    return expr.replace(
+        lambda x: isinstance(x, Mul),
+        lambda x: _abs(x)).replace(
+            lambda x: isinstance(x, Pow),
+            lambda x: _abs(x))
+
+
 def collect_const(expr, *vars, **kwargs):
     """A non-greedy collection of terms with similar number coefficients in
     an Add expr. If ``vars`` is given then only those constants will be
@@ -920,7 +971,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
 def rad_rationalize(num, den):
     """
     Rationalize num/den by removing square roots in the denominator;
-    num and den are sum of terms whose squares are rationals
+    num and den are sum of terms whose squares are positive rationals.
 
     Examples
     ========
@@ -1061,9 +1112,9 @@ expand_fraction = fraction_expand
 
 def split_surds(expr):
     """
-    split an expression with terms whose squares are rationals
+    Split an expression with terms whose squares are positive rationals
     into a sum of terms whose surds squared have gcd equal to g
-    and a sum of terms with surds squared prime with g
+    and a sum of terms with surds squared prime with g.
 
     Examples
     ========

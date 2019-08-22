@@ -10,8 +10,8 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 
-from sympy import Poly, S, symbols, integrate, log, I, pi, exp
-from sympy.abc import x, t, n, y
+from sympy import Poly, S, symbols
+from sympy.abc import x, t, n
 
 t0, t1, t2, t3, k = symbols('t:4 k')
 

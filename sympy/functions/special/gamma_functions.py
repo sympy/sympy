@@ -1,12 +1,14 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
+from sympy.core import Add, S, sympify, oo, pi, Symbol, Dummy, expand_func
 from sympy.core.compatibility import range, as_int
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from .zeta_functions import zeta
-from .error_functions import erf, erfc
+from sympy.core.logic import fuzzy_and, fuzzy_not
+from sympy.functions.special.zeta_functions import zeta
+from sympy.functions.special.error_functions import erf, erfc, Ei
+from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -165,6 +167,10 @@ class gamma(Function):
 
     def _eval_is_real(self):
         x = self.args[0]
+        if x.is_nonpositive and x.is_integer:
+            return False
+        if intlike(x) and x <= 0:
+            return False
         if x.is_positive or x.is_noninteger:
             return True
 
@@ -428,16 +434,16 @@ class uppergamma(Function):
             elif z is S.Infinity:
                 return S.Zero
             elif z is S.Zero:
-                # TODO: Holds only for Re(a) > 0:
-                return gamma(a)
+                if re(a).is_positive:
+                    return gamma(a)
 
         # We extract branching information here. C/f lowergamma.
         nx, n = z.extract_branch_factor()
-        if a.is_integer and (a > 0) == True:
+        if a.is_integer and a.is_positive:
             nx = unpolarify(z)
             if z != nx:
                 return uppergamma(a, nx)
-        elif a.is_integer and (a <= 0) == True:
+        elif a.is_integer and a.is_nonpositive:
             if n != 0:
                 return -2*pi*I*n*(-1)**(-a)/factorial(-a) + uppergamma(a, nx)
         elif n != 0:
@@ -445,7 +451,9 @@ class uppergamma(Function):
 
         # Special values.
         if a.is_Number:
-            if a is S.One:
+            if a is S.Zero and z.is_positive:
+                return -Ei(-z)
+            elif a is S.One:
                 return exp(-z)
             elif a is S.Half:
                 return sqrt(pi)*erfc(sqrt(z))
@@ -640,7 +648,7 @@ class polygamma(Function):
 
     @classmethod
     def eval(cls, n, z):
-        n, z = list(map(sympify, (n, z)))
+        n, z = map(sympify, (n, z))
         from sympy import unpolarify
 
         if n.is_integer:
@@ -938,7 +946,11 @@ class loggamma(Function):
         return log(gamma(z))
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        z = self.args[0]
+        if z.is_positive:
+            return True
+        elif z.is_nonpositive:
+            return False
 
     def _eval_conjugate(self):
         z = self.args[0]
@@ -1015,3 +1027,97 @@ def trigamma(x):
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
     return polygamma(1, x)
+
+###############################################################################
+##################### COMPLETE MULTIVARIATE GAMMA FUNCTION ####################
+###############################################################################
+
+
+class multigamma(Function):
+    r"""
+    The multivariate gamma function is a generalization of the gamma function i.e,
+
+    .. math::
+        \Gamma_p(z) = \pi^{p(p-1)/4}\prod_{k=1}^p \Gamma[z + (1 - k)/2].
+
+    Special case, multigamma(x, 1) = gamma(x)
+
+    Parameters
+    ==========
+
+    p: order or dimension of the multivariate gamma function
+
+    Examples
+    ========
+
+    >>> from sympy import S, I, pi, oo, gamma, multigamma
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> p = Symbol('p', positive=True, integer=True)
+
+    >>> multigamma(x, p)
+    pi**(p*(p - 1)/4)*Product(gamma(-_k/2 + x + 1/2), (_k, 1, p))
+
+    Several special values are known:
+    >>> multigamma(1, 1)
+    1
+    >>> multigamma(4, 1)
+    6
+    >>> multigamma(S(3)/2, 1)
+    sqrt(pi)/2
+
+    Writing multigamma in terms of gamma function
+    >>> multigamma(x, 1)
+    gamma(x)
+
+    >>> multigamma(x, 2)
+    sqrt(pi)*gamma(x)*gamma(x - 1/2)
+
+    >>> multigamma(x, 3)
+    pi**(3/2)*gamma(x)*gamma(x - 1)*gamma(x - 1/2)
+
+    See Also
+    ========
+
+    gamma, lowergamma, uppergamma, polygamma, loggamma, digamma, trigamma
+    sympy.functions.special.beta_functions.beta
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Multivariate_gamma_function
+    """
+    unbranched = True
+
+    def fdiff(self, argindex=2):
+        from sympy import Sum
+        if argindex == 2:
+            x, p = self.args
+            k = Dummy("k")
+            return self.func(x, p)*Sum(polygamma(0, x + (1 - k)/2), (k, 1, p))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, x, p):
+        from sympy import Product
+        x, p = map(sympify, (x, p))
+        if p.is_positive is False or p.is_integer is False:
+            raise ValueError('Order parameter p must be positive integer.')
+        k = Dummy("k")
+        return (pi**(p*(p - 1)/4)*Product(gamma(x + (1 - k)/2),
+                                          (k, 1, p))).doit()
+
+    def _eval_conjugate(self):
+        x, p = self.args
+        return self.func(x.conjugate(), p)
+
+    def _eval_is_real(self):
+        x, p = self.args
+        y = 2*x
+        if y.is_integer and (y <= (p - 1)) is True:
+            return False
+        if intlike(y) and (y <= (p - 1)):
+            return False
+        if y > (p - 1) or y.is_noninteger:
+            return True

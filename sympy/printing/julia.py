@@ -190,6 +190,11 @@ class JuliaCodePrinter(CodePrinter):
             return (sign + multjoin(a, a_str) +
                     divsym + "(%s)" % multjoin(b, b_str))
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     def _print_Pow(self, expr):
         powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'
@@ -402,6 +407,16 @@ class JuliaCodePrinter(CodePrinter):
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
 
+    def _print_HadamardProduct(self, expr):
+        return '.*'.join([self.parenthesize(arg, precedence(expr))
+                          for arg in expr.args])
+
+    def _print_HadamardPower(self, expr):
+        PREC = precedence(expr)
+        return '.**'.join([
+            self.parenthesize(expr.base, PREC),
+            self.parenthesize(expr.exp, PREC)
+            ])
 
     # Note: as of 2015, Julia doesn't have spherical Bessel functions
     def _print_jn(self, expr):

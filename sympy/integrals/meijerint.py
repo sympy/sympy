@@ -1900,7 +1900,7 @@ def _guess_expansion(f, x):
 
 def _meijerint_definite_2(f, x):
     """
-    Try to integrate f dx from zero to infinty.
+    Try to integrate f dx from zero to infinity.
 
     The body of this function computes various 'simplifications'
     f1, f2, ... of f (e.g. by calling expand_mul(), trigexpand()

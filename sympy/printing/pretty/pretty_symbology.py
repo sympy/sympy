@@ -507,7 +507,8 @@ atoms_table = {
     'Union':                   U('UNION'),
     'SymmetricDifference':     U('INCREMENT'),
     'Intersection':            U('INTERSECTION'),
-    'Ring':                    U('RING OPERATOR')
+    'Ring':                    U('RING OPERATOR'),
+    'Modifier Letter Low Ring':U('Modifier Letter Low Ring'),
 }
 
 

@@ -331,17 +331,6 @@ class StrPrinter(Printer):
             [self.parenthesize(arg, precedence(expr)) for arg in expr.args]
         )
 
-    def _print_HadamardProduct(self, expr):
-        return '.*'.join([self.parenthesize(arg, precedence(expr))
-            for arg in expr.args])
-
-    def _print_HadamardPower(self, expr):
-        PREC = precedence(expr)
-        return '.**'.join([
-            self.parenthesize(expr.base, PREC),
-            self.parenthesize(expr.exp, PREC)
-        ])
-
     def _print_ElementwiseApplyFunction(self, expr):
         return "{0}({1}...)".format(
             expr.function,
@@ -518,9 +507,6 @@ class StrPrinter(Printer):
 
         return format % (' '.join(terms), ', '.join(gens))
 
-    def _print_ProductSet(self, p):
-        return ' x '.join(self._print(set) for set in p.sets)
-
     def _print_UniversalSet(self, p):
         return 'UniversalSet'
 
@@ -531,6 +517,44 @@ class StrPrinter(Printer):
             return self._print(expr.as_expr())
 
     def _print_Pow(self, expr, rational=False):
+        """Printing helper function for ``Pow``
+
+        Parameters
+        ==========
+
+        rational : bool, optional
+            If ``True``, it will not attempt printing ``sqrt(x)`` or
+            ``x**S.Half`` as ``sqrt``, and will use ``x**(1/2)``
+            instead.
+
+            See examples for additional details
+
+        Examples
+        ========
+
+        >>> from sympy.functions import sqrt
+        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy.abc import x
+
+        How ``rational`` keyword works with ``sqrt``:
+
+        >>> printer = StrPrinter()
+        >>> printer._print_Pow(sqrt(x), rational=True)
+        'x**(1/2)'
+        >>> printer._print_Pow(sqrt(x), rational=False)
+        'sqrt(x)'
+        >>> printer._print_Pow(1/sqrt(x), rational=True)
+        'x**(-1/2)'
+        >>> printer._print_Pow(1/sqrt(x), rational=False)
+        '1/sqrt(x)'
+
+        Notes
+        =====
+
+        ``sqrt(x)`` is canonicalized as ``Pow(x, S.Half)`` in SymPy,
+        so there is no need of defining a separate printer for ``sqrt``.
+        Instead, it should be handled here as well.
+        """
         PREC = precedence(expr)
 
         if expr.exp is S.Half and not rational:
@@ -749,12 +773,6 @@ class StrPrinter(Printer):
 
     def _print_Uniform(self, expr):
         return "Uniform(%s, %s)" % (self._print(expr.a), self._print(expr.b))
-
-    def _print_Union(self, expr):
-        return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
-
-    def _print_Complement(self, expr):
-        return r' \ '.join(self._print(set_) for set_ in expr.args)
 
     def _print_Quantity(self, expr):
         if self._settings.get("abbrev", False):

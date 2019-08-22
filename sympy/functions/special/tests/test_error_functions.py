@@ -75,6 +75,8 @@ def test_erf():
 
     assert erf(w).as_real_imag() == (erf(w), 0)
     assert erf(w).as_real_imag(deep=False) == (erf(w), 0)
+    # issue 13575
+    assert erf(I).as_real_imag() == (0, -I*erf(I))
 
     raises(ArgumentIndexError, lambda: erf(x).fdiff(2))
 

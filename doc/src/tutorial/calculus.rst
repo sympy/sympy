@@ -196,11 +196,11 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⎮ sin⎝x ⎠ dx
     ⌡
     >>> integ.doit()
-                    ⎛√2⋅x⎞
-    3⋅√2⋅√π⋅fresnels⎜────⎟⋅Γ(3/4)
-                    ⎝ √π ⎠
-    ─────────────────────────────
-               8⋅Γ(7/4)
+             ⎛√2⋅x⎞
+    3⋅√2⋅√π⋅S⎜────⎟⋅Γ(3/4)
+             ⎝ √π ⎠
+    ──────────────────────
+           8⋅Γ(7/4)
 
     >>> integ = Integral(x**y*exp(-x), (x, 0, oo))
     >>> integ
@@ -321,6 +321,8 @@ The ``O`` notation supports arbitrary limit points (other than 0):
          (x - 6)    (x - 6)    (x - 6)    (x - 6)         ⎛       6       ⎞
     -5 + ──────── + ──────── + ──────── + ──────── + x + O⎝(x - 6) ; x → 6⎠
             2          6          24        120
+
+.. _calculus-finite-differences:
 
 Finite differences
 ==================
