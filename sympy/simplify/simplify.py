@@ -112,7 +112,10 @@ def _separatevars(expr, force):
         arg = expr.args[0]
         if arg.is_Mul and not arg.is_number:
             s = separatevars(arg, dict=True, force=force)
-            return Mul(*map(expr.func, s.values()))
+            if s is not None:
+                return Mul(*map(expr.func, s.values()))
+            else:
+                return expr
 
     if len(expr.free_symbols) < 2:
         return expr

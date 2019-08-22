@@ -11,9 +11,6 @@ from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Not, Or, ITE
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
     ProductSet, Intersection)
-from sympy.sets.contains import Contains
-from sympy.sets.conditionset import ConditionSet
-from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 
 
@@ -938,7 +935,7 @@ class ComplexRegion(Set):
     >>> c = Interval(1, 8)
     >>> c1 = ComplexRegion(a*b)  # Rectangular Form
     >>> c1
-    ComplexRegion(Interval(2, 3) x Interval(4, 6), False)
+    ComplexRegion(ProductSet(Interval(2, 3), Interval(4, 6)), False)
 
     * c1 represents the rectangular region in complex plane
       surrounded by the coordinates (2, 4), (3, 4), (3, 6) and
@@ -946,7 +943,7 @@ class ComplexRegion(Set):
 
     >>> c2 = ComplexRegion(Union(a*b, b*c))
     >>> c2
-    ComplexRegion(Union(Interval(2, 3) x Interval(4, 6), Interval(4, 6) x Interval(1, 8)), False)
+    ComplexRegion(Union(ProductSet(Interval(2, 3), Interval(4, 6)), ProductSet(Interval(4, 6), Interval(1, 8))), False)
 
     * c2 represents the Union of two rectangular regions in complex
       plane. One of them surrounded by the coordinates of c1 and
@@ -962,7 +959,7 @@ class ComplexRegion(Set):
     >>> theta = Interval(0, 2*S.Pi)
     >>> c2 = ComplexRegion(r*theta, polar=True)  # Polar Form
     >>> c2  # unit Disk
-    ComplexRegion(Interval(0, 1) x Interval.Ropen(0, 2*pi), True)
+    ComplexRegion(ProductSet(Interval(0, 1), Interval.Ropen(0, 2*pi)), True)
 
     * c2 represents the region in complex plane inside the
       Unit Disk centered at the origin.
@@ -976,7 +973,7 @@ class ComplexRegion(Set):
     >>> upper_half_unit_disk = ComplexRegion(Interval(0, 1)*Interval(0, S.Pi), polar=True)
     >>> intersection = unit_disk.intersect(upper_half_unit_disk)
     >>> intersection
-    ComplexRegion(Interval(0, 1) x Interval(0, pi), True)
+    ComplexRegion(ProductSet(Interval(0, 1), Interval(0, pi)), True)
     >>> intersection == upper_half_unit_disk
     True
 
@@ -1054,10 +1051,10 @@ class ComplexRegion(Set):
         >>> c = Interval(1, 7)
         >>> C1 = ComplexRegion(a*b)
         >>> C1.sets
-        Interval(2, 3) x Interval(4, 5)
+        ProductSet(Interval(2, 3), Interval(4, 5))
         >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.sets
-        Union(Interval(2, 3) x Interval(4, 5), Interval(4, 5) x Interval(1, 7))
+        Union(ProductSet(Interval(2, 3), Interval(4, 5)), ProductSet(Interval(4, 5), Interval(1, 7)))
 
         """
         return self._sets
@@ -1088,10 +1085,10 @@ class ComplexRegion(Set):
         >>> c = Interval(1, 7)
         >>> C1 = ComplexRegion(a*b)
         >>> C1.psets
-        (Interval(2, 3) x Interval(4, 5),)
+        (ProductSet(Interval(2, 3), Interval(4, 5)),)
         >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.psets
-        (Interval(2, 3) x Interval(4, 5), Interval(4, 5) x Interval(1, 7))
+        (ProductSet(Interval(2, 3), Interval(4, 5)), ProductSet(Interval(4, 5), Interval(1, 7)))
 
         """
         if self.sets.is_ProductSet:
@@ -1212,7 +1209,7 @@ class ComplexRegion(Set):
         >>> from sympy import Interval, ComplexRegion
         >>> unit = Interval(0,1)
         >>> ComplexRegion.from_real(unit)
-        ComplexRegion(Interval(0, 1) x {0}, False)
+        ComplexRegion(ProductSet(Interval(0, 1), {0}), False)
 
         """
         if not sets.is_subset(S.Reals):
