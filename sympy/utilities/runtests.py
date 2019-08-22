@@ -53,7 +53,8 @@ ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 # This list can be generated with the code:
 #     from time import time
 #     import sympy
-#
+#     import os
+#     os.environ["TRAVIS_BUILD_NUMBER"] = '2' # Mock travis to get more correct densities
 #     delays, num_splits = [], 30
 #     for i in range(1, num_splits + 1):
 #         tic = time()
@@ -62,7 +63,7 @@ ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 #     tot = sum(delays)
 #     print([round(x / tot, 4) for x in delays])
 SPLIT_DENSITY = [0.0801, 0.0099, 0.0429, 0.0103, 0.0122, 0.0055, 0.0533, 0.0191, 0.0977, 0.0878, 0.0026, 0.0028, 0.0147, 0.0118, 0.0358, 0.0063, 0.0026, 0.0351, 0.0084, 0.0027, 0.0158, 0.0156, 0.0024, 0.0416, 0.0566, 0.0425, 0.2123, 0.0042, 0.0099, 0.0576]
-SPLIT_DENSITY_SLOW = [0.1525, 0.0342, 0.0092, 0.0004, 0.0005, 0.0005, 0.0379, 0.0353, 0.0637, 0.0801, 0.0005, 0.0004, 0.0133, 0.0021, 0.0098, 0.0108, 0.0005, 0.0076, 0.0005, 0.0004, 0.0056, 0.0093, 0.0005, 0.0264, 0.0051, 0.0956, 0.2983, 0.0005, 0.0005, 0.0981]
+SPLIT_DENSITY_SLOW = [0.0096, 0.0544, 0.0032, 0.0012, 0.0617, 0.1422, 0.0948, 0.0058, 0.0024, 0.0051, 0.0102, 0.0082, 0.0006, 0.0047, 0.0086, 0.0301, 0.1082, 0.3428, 0.0004, 0.1061]
 
 class Skipped(Exception):
     pass
@@ -1110,7 +1111,7 @@ class SymPyTests(object):
         if fast_threshold:
             self._fast_threshold = float(fast_threshold)
         else:
-            self._fast_threshold = 5
+            self._fast_threshold = 8
         if slow_threshold:
             self._slow_threshold = float(slow_threshold)
         else:
