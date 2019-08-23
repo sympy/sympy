@@ -132,7 +132,7 @@ class AssumptionKeys(object):
         Extended real predicate.
 
         ``Q.extended_real(x)`` is true iff ``x`` is a real number or
-        `\{-\infty, \infty\}`.
+        `x \in \{-\infty, \infty\}`.
 
         See documentation of ``Q.real`` for more information about related facts.
 
@@ -213,7 +213,7 @@ class AssumptionKeys(object):
 
         ``Q.algebraic(x)`` is true iff ``x`` belongs to the set of
         algebraic numbers. ``x`` is algebraic if there is some polynomial
-        in ``p(x)\in \mathbb\{Q\}[x]`` such that ``p(x) = 0``.
+        in ``p(x) \in \mathbb\{Q\}[x]`` such that ``p(x) = 0``.
 
         Examples
         ========
@@ -601,6 +601,158 @@ class AssumptionKeys(object):
 
         """
         return Predicate('nonnegative')
+
+    @predicate_memo
+    def extended_positive(self):
+        r"""
+        Extended positive predicate.
+
+        ``Q.extended_positive(x)`` is true iff ``x`` is a real number and
+        `x > 0` or `x = \infty`.
+
+        See documentation of ``Q.positive`` for more information about related facts.
+
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, oo, I
+        >>> ask(Q.extended_positive(1))
+        True
+        >>> ask(Q.extended_positive(I))
+        False
+        >>> ask(Q.extended_positive(0))
+        False
+        >>> ask(Q.extended_positive(-1))
+        False
+        >>> ask(Q.extended_positive(oo))
+        True
+
+        """
+        return Predicate('extended_positive')
+
+    @predicate_memo
+    def extended_negative(self):
+        r"""
+        Extended negative predicate.
+
+        ``Q.extended_negative(x)`` is true iff ``x`` is a real number and
+        `x < 0` or `x = -\infty`.
+
+        See documentation of ``Q.negative`` for more information about related facts.
+
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, oo, I
+        >>> ask(Q.extended_negative(-1))
+        True
+        >>> ask(Q.extended_negative(I))
+        False
+        >>> ask(Q.extended_negative(0))
+        False
+        >>> ask(Q.extended_negative(1))
+        False
+        >>> ask(Q.extended_negative(-oo))
+        True
+
+        """
+        return Predicate('extended_negative')
+
+    @predicate_memo
+    def extended_nonpositive(self):
+        r"""
+        Extended nonpositive predicate.
+
+        ``Q.extended_nonpositive(x)`` is true iff ``x`` is a real number and
+        `x \le 0` or `x = -\infty`.
+
+        See documentation of ``Q.nonpositive`` for more information about related facts.
+
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, oo, I
+        >>> ask(Q.extended_positive(1))
+        True
+        >>> ask(Q.extended_positive(I))
+        False
+        >>> ask(Q.extended_positive(0))
+        False
+        >>> ask(Q.extended_positive(-1))
+        False
+        >>> ask(Q.extended_positive(oo))
+        True
+
+        """
+        return Predicate('extended_nonpositive')
+
+    @predicate_memo
+    def extended_nonnegative(self):
+        r"""
+        Extended nonnegative predicate.
+
+        ``Q.extended_nonnegative(x)`` is true iff ``x`` is a real number and
+        `x \ge 0` or `x = \infty`.
+
+        See documentation of ``Q.nonnegative`` for more information about related facts.
+
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, oo, I
+        >>> ask(Q.extended_nonnegative(-1))
+        False
+        >>> ask(Q.extended_nonnegative(I))
+        False
+        >>> ask(Q.extended_nonnegative(0))
+        True
+        >>> ask(Q.extended_nonnegative(1))
+        True
+        >>> ask(Q.extended_nonnegative(-oo))
+        False
+
+        """
+        return Predicate('extended_nonnegative')
+
+    @predicate_memo
+    def extended_nonzero(self):
+        r"""
+        Extended nonzero real number predicate.
+
+        ``ask(Q.nonzero(x))`` is true iff ``x`` is real or `x \in \{-\infty,
+        \infty\}`and ``x`` is not zero. Use ``~Q.zero(x)`` if you want the
+        negation of being zero without any real assumptions.
+
+        A few important facts about nonzero numbers:
+
+        - ``Q.extended_nonzero`` is logically equivalent to
+        ``Q.extended_positive | Q.extended_negative``.
+
+        - See the documentation of ``Q.extended_real`` for more information
+          about related facts.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, symbols, I, oo
+        >>> x = symbols('x')
+        >>> print(ask(Q.extended_nonzero(x), ~Q.zero(x)))
+        None
+        >>> ask(Q.extended_nonzero(x), Q.extended_positive(x))
+        True
+        >>> ask(Q.extended_nonzero(x), Q.positive(x))
+        True
+        >>> ask(Q.extended_nonzero(x), Q.zero(x))
+        False
+        >>> ask(Q.extended_nonzero(0))
+        False
+        >>> ask(Q.extended_nonzero(I))
+        False
+        >>> ask(Q.extended_nonzero(oo))
+        True
+
+        """
+        return Predicate('extended_nonzero')
 
     @predicate_memo
     def even(self):
@@ -1476,6 +1628,11 @@ _handlers = [
     ("nonnegative",       "order.AskNonNegativeHandler"),
     ("zero",              "order.AskZeroHandler"),
     ("positive",          "order.AskPositiveHandler"),
+    ("extended_positive", "sets.AskExtendedPositiveHandler"),
+    ("extended_negative", "sets.AskExtendedNegativeHandler"),
+    ("extended_nonpositive", "sets.AskExtendedNonPositiveHandler"),
+    ("extended_nonnegative", "sets.AskExtendedNonNegativeHandler"),
+    ("extended_nonzero",  "sets.AskExtendedNonZeroHandler"),
     ("prime",             "ntheory.AskPrimeHandler"),
     ("real",              "sets.AskRealHandler"),
     ("odd",               "ntheory.AskOddHandler"),
@@ -1510,33 +1667,69 @@ def get_known_facts_keys():
 @cacheit
 def get_known_facts():
     return And(
-        Implies(Q.infinite, ~Q.finite),
-        Implies(Q.real, Q.complex),
-        Implies(Q.real, Q.hermitian),
-        Equivalent(Q.extended_real, Q.real | Q.infinite),
-        Equivalent(Q.even | Q.odd, Q.integer),
-        Implies(Q.even, ~Q.odd),
-        Implies(Q.prime, Q.integer & Q.positive & ~Q.composite),
         Implies(Q.integer, Q.rational),
+        Implies(Q.rational, Q.real),
         Implies(Q.rational, Q.algebraic),
-        Implies(Q.algebraic, Q.complex),
-        Implies(Q.algebraic, Q.finite),
-        Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),
-        Implies(Q.transcendental, ~Q.algebraic),
-        Implies(Q.transcendental, Q.finite),
-        Implies(Q.imaginary, Q.complex & ~Q.real),
+        Implies(Q.algebraic, Q.complex & Q.finite),
+        Equivalent(Q.transcendental, Q.complex & ~Q.algebraic & Q.finite),
+        Implies(Q.real, Q.hermitian),
+        Implies(Q.imaginary, Q.complex & Q.finite),
         Implies(Q.imaginary, Q.antihermitian),
-        Implies(Q.antihermitian, ~Q.hermitian),
-        Equivalent(Q.irrational | Q.rational, Q.real & Q.finite),
-        Implies(Q.irrational, ~Q.rational),
-        Implies(Q.zero, Q.even),
+        Implies(Q.extended_real, Q.commutative),
+        Implies(Q.complex, Q.commutative),
+        Implies(Q.complex, Q.infinite | Q.finite),
+
+        Equivalent(Q.odd, Q.integer & ~Q.even),
+        Equivalent(Q.even, Q.integer & ~Q.odd),
+
+        Implies(Q.real, Q.complex),
+        Implies(Q.extended_real, Q.real | Q.infinite),
+        Equivalent(Q.real, Q.extended_real & Q.finite),
+
+        Equivalent(Q.extended_real, Q.extended_negative | Q.zero | Q.extended_positive),
+        Equivalent(Q.extended_negative, Q.extended_nonpositive & Q.extended_nonzero),
+        Equivalent(Q.extended_positive, Q.extended_nonnegative & Q.extended_nonzero),
+        Equivalent(Q.extended_nonpositive, Q.extended_real & ~Q.extended_positive),
+        Equivalent(Q.extended_nonnegative, Q.extended_real & ~Q.extended_negative),
 
         Equivalent(Q.real, Q.negative | Q.zero | Q.positive),
+        Equivalent(Q.negative, Q.nonpositive | Q.nonzero),
+        Equivalent(Q.positive, Q.nonnegative | Q.nonzero),
+
+        Equivalent(Q.nonpositive, Q.real & ~Q.positive),
+        Equivalent(Q.nonnegative, Q.real & ~Q.negative),
+
+        Equivalent(Q.positive, Q.extended_positive & Q.finite),
+        Equivalent(Q.negative, Q.extended_negative & Q.finite),
+        Equivalent(Q.nonpositive, Q.extended_nonpositive & Q.finite),
+        Equivalent(Q.nonnegative, Q.extended_nonnegative & Q.finite),
+        Equivalent(Q.nonzero, Q.extended_nonzero & Q.finite),
+
+        Implies(Q.zero, Q.even & Q.finite),
+        Equivalent(Q.zero, Q.extended_nonnegative & Q.extended_nonpositive),
+        Equivalent(Q.zero, Q.nonnegative & Q.nonpositive),
+        Implies(Q.zero, Q.real),
+
+        Implies(Q.prime, Q.integer & Q.positive),
+        Implies(Q.composite, Q.integer & Q.positive & ~Q.prime),
+
+        Equivalent(Q.irrational, Q.real & ~Q.rational),
+
+        Implies(Q.imaginary, Q.complex & ~Q.extended_real),
+
+        Implies(Q.infinite, ~Q.finite),
+
+        Equivalent(Q.extended_nonzero, Q.extended_real & ~Q.zero),
+
+        # Equivalent(Q.even | Q.odd, Q.integer),
+        Implies(Q.antihermitian, ~Q.hermitian),
+        # Implies(Q.extended_positive, Q.positive | Q.infinite),
+        # Implies(Q.extended_negative, Q.negative | Q.infinite),
+
         Implies(Q.zero, ~Q.negative & ~Q.positive),
+        Implies(Q.zero, ~Q.extended_negative & ~Q.extended_positive),
         Implies(Q.negative, ~Q.positive),
-        Equivalent(Q.nonnegative, Q.zero | Q.positive),
-        Equivalent(Q.nonpositive, Q.zero | Q.negative),
-        Equivalent(Q.nonzero, Q.negative | Q.positive),
+        Implies(Q.extended_negative, ~Q.extended_positive),
 
         Implies(Q.orthogonal, Q.positive_definite),
         Implies(Q.orthogonal, Q.unitary),

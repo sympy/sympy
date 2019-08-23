@@ -41,6 +41,10 @@ def test_int_1():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.nonpositive(z)) is False
+    assert ask(Q.nonnegative(z)) is True
+    assert ask(Q.extended_positive(z)) is True
+    assert ask(Q.extended_negative(z)) is False
 
 
 def test_int_11():
@@ -61,6 +65,10 @@ def test_int_11():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.nonpositive(z)) is False
+    assert ask(Q.nonnegative(z)) is True
+    assert ask(Q.extended_positive(z)) is True
+    assert ask(Q.extended_negative(z)) is False
 
 
 def test_int_12():
@@ -81,6 +89,10 @@ def test_int_12():
     assert ask(Q.composite(z)) is True
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.nonpositive(z)) is False
+    assert ask(Q.nonnegative(z)) is True
+    assert ask(Q.extended_positive(z)) is True
+    assert ask(Q.extended_negative(z)) is False
 
 
 def test_float_1():
@@ -101,6 +113,10 @@ def test_float_1():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.nonpositive(z)) is False
+    assert ask(Q.nonnegative(z)) is True
+    assert ask(Q.extended_positive(z)) is True
+    assert ask(Q.extended_negative(z)) is False
 
     z = 7.2123
     assert ask(Q.commutative(z)) is True
@@ -119,6 +135,10 @@ def test_float_1():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.nonpositive(z)) is False
+    assert ask(Q.nonnegative(z)) is True
+    assert ask(Q.extended_positive(z)) is True
+    assert ask(Q.extended_negative(z)) is False
 
     # test for issue #12168
     assert ask(Q.rational(math.pi)) is None
@@ -143,6 +163,10 @@ def test_zero_0():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.nonpositive(z)) is True
+    assert ask(Q.nonnegative(z)) is True
+    assert ask(Q.extended_positive(z)) is True
+    assert ask(Q.extended_negative(z)) is False
 
 
 def test_negativeone():
@@ -165,6 +189,11 @@ def test_negativeone():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.nonpositive(z)) is True
+    assert ask(Q.nonnegative(z)) is False
+    assert ask(Q.extended_positive(z)) is False
+    assert ask(Q.extended_negative(z)) is True
+
 
 
 def test_infinity():
@@ -178,7 +207,6 @@ def test_infinity():
     assert ask(Q.irrational(oo)) is False
     assert ask(Q.imaginary(oo)) is False
     assert ask(Q.positive(oo)) is False
-    #assert ask(Q.extended_positive(oo)) is True
     assert ask(Q.negative(oo)) is False
     assert ask(Q.even(oo)) is False
     assert ask(Q.odd(oo)) is False
@@ -187,6 +215,10 @@ def test_infinity():
     assert ask(Q.composite(oo)) is False
     assert ask(Q.hermitian(oo)) is False
     assert ask(Q.antihermitian(oo)) is False
+    assert ask(Q.nonpositive(z)) is False
+    assert ask(Q.nonnegative(z)) is False
+    assert ask(Q.extended_positive(z)) is True
+    assert ask(Q.extended_negative(z)) is False
 
 
 def test_neg_infinity():
@@ -210,6 +242,10 @@ def test_neg_infinity():
     assert ask(Q.composite(mm)) is False
     assert ask(Q.hermitian(mm)) is False
     assert ask(Q.antihermitian(mm)) is False
+    assert ask(Q.nonpositive(z)) is False
+    assert ask(Q.nonnegative(z)) is False
+    assert ask(Q.extended_positive(z)) is False
+    assert ask(Q.extended_negative(z)) is True
 
 
 def test_nan():
@@ -233,6 +269,10 @@ def test_nan():
     assert ask(Q.composite(nan)) is False
     assert ask(Q.hermitian(nan)) is False
     assert ask(Q.antihermitian(nan)) is False
+    assert ask(Q.nonpositive(z)) is False
+    assert ask(Q.nonnegative(z)) is False
+    assert ask(Q.extended_positive(z)) is False
+    assert ask(Q.extended_negative(z)) is False
 
 
 def test_Rational_number():
@@ -253,6 +293,10 @@ def test_Rational_number():
     assert ask(Q.composite(r)) is False
     assert ask(Q.hermitian(r)) is True
     assert ask(Q.antihermitian(r)) is False
+    assert ask(Q.nonpositive(z)) is False
+    assert ask(Q.nonnegative(z)) is True
+    assert ask(Q.extended_positive(z)) is True
+    assert ask(Q.extended_negative(z)) is False
 
     r = Rational(1, 4)
     assert ask(Q.positive(r)) is True
@@ -301,6 +345,10 @@ def test_sqrt_2():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.nonpositive(z)) is False
+    assert ask(Q.nonnegative(z)) is True
+    assert ask(Q.extended_positive(z)) is True
+    assert ask(Q.extended_negative(z)) is False
 
 
 def test_pi():
@@ -322,6 +370,10 @@ def test_pi():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.nonpositive(z)) is False
+    assert ask(Q.nonnegative(z)) is True
+    assert ask(Q.extended_positive(z)) is True
+    assert ask(Q.extended_negative(z)) is False
 
     z = S.Pi + 1
     assert ask(Q.commutative(z)) is True
@@ -574,6 +626,7 @@ def test_bounded():
     x, y, z = symbols('x,y,z')
     assert ask(Q.finite(x)) is None
     assert ask(Q.finite(x), Q.finite(x)) is True
+    assert ask(Q.finite(x), Q.real(x)) is True
     assert ask(Q.finite(x), Q.finite(y)) is None
     assert ask(Q.finite(x), Q.complex(x)) is None
 
