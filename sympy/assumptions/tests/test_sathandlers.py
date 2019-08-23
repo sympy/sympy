@@ -40,7 +40,7 @@ def test_UnevaluatedOnFree():
         Q.negative(y)))
 
     class MyUnevaluatedOnFree(UnevaluatedOnFree):
-        def apply(self, expr=None, is_Not=False):
+        def apply(self, expr=None):
             return self.args[0]
 
     a = MyUnevaluatedOnFree(Q.positive)

@@ -16,10 +16,12 @@ class Literal(object):
     """
 
     def __new__(cls, lit, is_Not=False):
-        obj = super(Literal, cls).__new__(cls)
         if isinstance(lit, Not):
             lit = lit.args[0]
             is_Not = True
+        elif isinstance(lit, (AND, OR, Literal)):
+            return ~lit if is_Not else lit
+        obj = super(Literal, cls).__new__(cls)
         obj.lit = lit
         obj.is_Not = is_Not
         return obj
@@ -28,11 +30,15 @@ class Literal(object):
     def arg(self):
         return self.lit
 
-    def rcall(self,expr):
+    def rcall(self, expr):
         if callable(self.lit):
-            return type(self)(self.lit(expr), self.is_Not)
+            lit = self.lit(expr)
         else:
-            return self
+            try:
+                lit = self.lit.apply(expr)
+            except AttributeError:
+                lit = self.lit.rcall(expr)
+        return type(self)(lit, self.is_Not)
 
     def __invert__(self):
         is_Not = not self.is_Not
@@ -277,24 +283,9 @@ class CNF(object):
         return ll
 
     def rcall(self, expr):
-        from sympy.assumptions.sathandlers import UnevaluatedOnFree, CustomLambda
-        from sympy.assumptions.ask import Predicate
         clause_list = list()
         for clause in self.clauses:
-            lits = list()
-            for arg in clause:
-                if isinstance(arg.lit, Predicate):
-                    lits.append(Literal(arg.lit(expr), arg.is_Not))
-                elif isinstance(arg.lit, UnevaluatedOnFree):
-                    lits.append(arg.lit.apply(expr, arg.is_Not))
-                elif isinstance(arg.lit, CustomLambda):
-                    new_arg = arg.lit.rcall(expr)
-                    res = to_NNF(new_arg)
-                    if arg.is_Not:
-                        res = ~res
-                    lits.append(res)
-                else:
-                    raise NotImplementedError
+            lits = [arg.rcall(expr) for arg in clause]
             clause_list.append(OR(*lits))
         expr = AND(*clause_list)
         return distribute_AND_over_OR(expr)

@@ -4,20 +4,19 @@ from collections import defaultdict
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
-from sympy.assumptions.cnf import AND, Literal, OR, to_NNF
+from sympy.assumptions.cnf import AND, OR, to_NNF
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
 from sympy.core.compatibility import MutableMapping
 from sympy.core.numbers import ImaginaryUnit
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import Abs
-from sympy.logic.boolalg import (Equivalent, Implies, And, Or,
-    BooleanFunction, Not)
+from sympy.logic.boolalg import (Equivalent, Implies, BooleanFunction)
 from sympy.matrices.expressions import MatMul
 
 # APIs here may be subject to change
 
-# XXX: Better name?
+
 class UnevaluatedOnFree(BooleanFunction):
     """
     Represents a Boolean function that remains unevaluated on free predicates
@@ -73,12 +72,11 @@ class UnevaluatedOnFree(BooleanFunction):
             return obj
         return applied
 
-    def apply(self, expr=None, is_Not=False):
+    def apply(self, expr=None):
         if expr is None:
             return
         pred = to_NNF(self.pred)
-        res = self._eval_apply(expr, pred)
-        return ~res if is_Not else res
+        return self._eval_apply(expr, pred)
 
     def _eval_apply(self, expr, pred):
         return None
@@ -258,8 +256,8 @@ class CustomLambda(object):
     def __init__(self, lamda):
         self.lamda = lamda
 
-    def rcall(self, *args):
-        return self.lamda(*args)
+    def apply(self, *args):
+        return to_NNF(self.lamda(*args))
 
 
 class ClassFactRegistry(MutableMapping):
