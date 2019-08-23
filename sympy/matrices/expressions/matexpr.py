@@ -760,7 +760,6 @@ class MatrixSymbol(MatrixExpr):
     """
     is_commutative = False
     is_symbol = True
-    is_Symbol = True
     _diff_wrt = True
 
     def __new__(cls, name, n, m):
@@ -799,10 +798,6 @@ class MatrixSymbol(MatrixExpr):
     @property
     def free_symbols(self):
         return set((self,))
-
-    @property
-    def binary_symbols(self):
-        return set()
 
     def doit(self, **hints):
         if hints.get('deep', True):

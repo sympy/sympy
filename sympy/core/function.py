@@ -1920,7 +1920,7 @@ class Lambda(Expr):
 
         def rcheck(args):
             for a in args:
-                if a.is_Symbol:
+                if a.is_symbol:
                     if a in syms:
                         raise BadSignatureError("Duplicate symbol %s" % a)
                     syms.add(a)
@@ -1994,7 +1994,7 @@ class Lambda(Expr):
 
         def rmatch(pars, args):
             for par, arg in zip(pars, args):
-                if par.is_Symbol:
+                if par.is_symbol:
                     symargmap[par] = arg
                 elif isinstance(par, Tuple):
                     if not isinstance(arg, (tuple, Tuple)) or len(args) != len(pars):
