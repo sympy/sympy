@@ -15,12 +15,12 @@ from sympy.crypto.crypto import (cycle_list,
       decipher_bifid, bifid_square, padded_key, uniq, decipher_gm,
       encipher_gm, gm_public_key, gm_private_key, encipher_bg, decipher_bg,
       bg_private_key, bg_public_key, encipher_rot13, decipher_rot13,
-      encipher_atbash, decipher_atbash)
+      encipher_atbash, decipher_atbash, NonInvertibleCipherWarning)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
-from sympy.utilities.pytest import raises, slow, warns_deprecated_sympy
+from sympy.utilities.pytest import raises, slow, warns
 
 from random import randrange
 
@@ -161,20 +161,20 @@ def test_bifid6_square():
 def test_rsa_public_key():
     assert rsa_public_key(2, 3, 1) == (6, 1)
     assert rsa_public_key(5, 3, 3) == (15, 3)
-    assert rsa_public_key(8, 8, 8) is False
 
-    with warns_deprecated_sympy():
+    with warns(NonInvertibleCipherWarning):
         assert rsa_public_key(2, 2, 1) == (4, 1)
+        assert rsa_public_key(8, 8, 8) is False
 
 
 def test_rsa_private_key():
     assert rsa_private_key(2, 3, 1) == (6, 1)
     assert rsa_private_key(5, 3, 3) == (15, 3)
     assert rsa_private_key(23,29,5) == (667,493)
-    assert rsa_private_key(8, 8, 8) is False
 
-    with warns_deprecated_sympy():
+    with warns(NonInvertibleCipherWarning):
         assert rsa_private_key(2, 2, 1) == (4, 1)
+        assert rsa_private_key(8, 8, 8) is False
 
 
 def test_rsa_large_key():
@@ -198,7 +198,7 @@ def test_encipher_rsa():
     puk = rsa_public_key(5, 3, 3)
     assert encipher_rsa(2, puk) == 8
 
-    with warns_deprecated_sympy():
+    with warns(NonInvertibleCipherWarning):
         puk = rsa_public_key(2, 2, 1)
         assert encipher_rsa(2, puk) == 2
 
@@ -209,9 +209,157 @@ def test_decipher_rsa():
     prk = rsa_private_key(5, 3, 3)
     assert decipher_rsa(8, prk) == 2
 
-    with warns_deprecated_sympy():
+    with warns(NonInvertibleCipherWarning):
         prk = rsa_private_key(2, 2, 1)
         assert decipher_rsa(2, prk) == 2
+
+
+def test_mutltiprime_rsa_full_example():
+    # Test example from
+    # https://iopscience.iop.org/article/10.1088/1742-6596/995/1/012030
+    puk = rsa_public_key(2, 3, 5, 7, 11, 13, 7)
+    prk = rsa_private_key(2, 3, 5, 7, 11, 13, 7)
+    assert puk == (30030, 7)
+    assert prk == (30030, 823)
+
+    msg = 10
+    encrypted = encipher_rsa(2 * msg - 15, puk)
+    assert encrypted == 18065
+    decrypted = (decipher_rsa(encrypted, prk) + 15) / 2
+    assert decrypted == msg
+
+    # Test example from
+    # https://www.scirp.org/pdf/JCC_2018032215502008.pdf
+    puk1 = rsa_public_key(53, 41, 43, 47, 41)
+    prk1 = rsa_private_key(53, 41, 43, 47, 41)
+    puk2 = rsa_public_key(53, 41, 43, 47, 97)
+    prk2 = rsa_private_key(53, 41, 43, 47, 97)
+
+    assert puk1 == (4391633, 41)
+    assert prk1 == (4391633, 294041)
+    assert puk2 == (4391633, 97)
+    assert prk2 == (4391633, 455713)
+
+    msg = 12321
+    encrypted = encipher_rsa(encipher_rsa(msg, puk1), puk2)
+    assert encrypted == 1081588
+    decrypted = decipher_rsa(decipher_rsa(encrypted, prk2), prk1)
+    assert decrypted == msg
+
+
+def test_rsa_crt_extreme():
+    p = int(
+        '10177157607154245068023861503693082120906487143725062283406501' \
+        '54082258226204046999838297167140821364638180697194879500245557' \
+        '65445186962893346463841419427008800341257468600224049986260471' \
+        '92257248163014468841725476918639415726709736077813632961290911' \
+        '0256421232977833028677441206049309220354796014376698325101693')
+
+    q = int(
+        '28752342353095132872290181526607275886182793241660805077850801' \
+        '75689512797754286972952273553128181861830576836289738668745250' \
+        '34028199691128870676414118458442900035778874482624765513861643' \
+        '27966696316822188398336199002306588703902894100476186823849595' \
+        '103239410527279605442148285816149368667083114802852804976893')
+
+    r = int(
+        '17698229259868825776879500736350186838850961935956310134378261' \
+        '89771862186717463067541369694816245225291921138038800171125596' \
+        '07315449521981157084370187887650624061033066022458512942411841' \
+        '18747893789972315277160085086164119879536041875335384844820566' \
+        '0287479617671726408053319619892052000850883994343378882717849')
+
+    s = int(
+        '68925428438585431029269182233502611027091755064643742383515623' \
+        '64321310582896893395529367074942808353187138794422745718419645' \
+        '28291231865157212604266903677599180789896916456120289112752835' \
+        '98502265889669730331688206825220074713977607415178738015831030' \
+        '364290585369150502819743827343552098197095520550865360159439'
+    )
+
+    t = int(
+        '69035483433453632820551311892368908779778144568711455301541094' \
+        '31487047642322695357696860925747923189635033183069823820910521' \
+        '71172909106797748883261493224162414050106920442445896819806600' \
+        '15448444826108008217972129130625571421904893252804729877353352' \
+        '739420480574842850202181462656251626522910618936534699566291'
+    )
+
+    e = 65537
+    puk = rsa_public_key(p, q, r, s, t, e)
+    prk = rsa_private_key(p, q, r, s, t, e)
+
+    plaintext = 1000
+    ciphertext_1 = encipher_rsa(plaintext, puk)
+    ciphertext_2 = encipher_rsa(plaintext, puk, [p, q, r, s, t])
+    assert ciphertext_1 == ciphertext_2
+    assert decipher_rsa(ciphertext_1, prk) == \
+        decipher_rsa(ciphertext_1, prk, [p, q, r, s, t])
+
+
+def test_rsa_exhaustive():
+    p, q = 61, 53
+    e = 17
+    puk = rsa_public_key(p, q, e, totient='Carmichael')
+    prk = rsa_private_key(p, q, e, totient='Carmichael')
+
+    for msg in range(puk[0]):
+        encrypted = encipher_rsa(msg, puk)
+        decrypted = decipher_rsa(encrypted, prk)
+        try:
+            assert decrypted == msg
+        except AssertionError:
+            raise AssertionError(
+                "The RSA is not correctly decrypted " \
+                "(Original : {}, Encrypted : {}, Decrypted : {})" \
+                .format(msg, encrypted, decrypted)
+                )
+
+
+def test_rsa_multiprime_exhanstive():
+    primes = [3, 5, 7, 11]
+    e = 7
+    args = primes + [e]
+    puk = rsa_public_key(*args, totient='Carmichael')
+    prk = rsa_private_key(*args, totient='Carmichael')
+    n = puk[0]
+
+    for msg in range(n):
+        encrypted = encipher_rsa(msg, puk)
+        decrypted = decipher_rsa(encrypted, prk)
+        try:
+            assert decrypted == msg
+        except AssertionError:
+            raise AssertionError(
+                "The RSA is not correctly decrypted " \
+                "(Original : {}, Encrypted : {}, Decrypted : {})" \
+                .format(msg, encrypted, decrypted)
+                )
+
+
+def test_rsa_multipower_exhanstive():
+    from sympy.core.numbers import igcd
+    primes = [5, 5, 7]
+    e = 7
+    args = primes + [e]
+    puk = rsa_public_key(*args, multipower=True)
+    prk = rsa_private_key(*args, multipower=True)
+    n = puk[0]
+
+    for msg in range(n):
+        if igcd(msg, n) != 1:
+            continue
+
+        encrypted = encipher_rsa(msg, puk)
+        decrypted = decipher_rsa(encrypted, prk)
+        try:
+            assert decrypted == msg
+        except AssertionError:
+            raise AssertionError(
+                "The RSA is not correctly decrypted " \
+                "(Original : {}, Encrypted : {}, Decrypted : {})" \
+                .format(msg, encrypted, decrypted)
+                )
 
 
 def test_kid_rsa_public_key():

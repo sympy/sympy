@@ -22,7 +22,7 @@ def hadamard_product(*matrices):
     >>> hadamard_product(A)
     A
     >>> hadamard_product(A, B)
-    A.*B
+    HadamardProduct(A, B)
     >>> hadamard_product(A, B)[0, 1]
     A[0, 1]*B[0, 1]
     """
@@ -81,6 +81,15 @@ class HadamardProduct(MatrixExpr):
 
     def doit(self, **ignored):
         return canonicalize(self)
+
+    def _eval_derivative(self, x):
+        from sympy import Add
+        terms = []
+        args = list(self.args)
+        for i in range(len(args)):
+            factors = args[:i] + [args[i].diff(x)] + args[i+1:]
+            terms.append(hadamard_product(*factors))
+        return Add.fromiter(terms)
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.core.expr import ExprBuilder
@@ -144,6 +153,8 @@ def canonicalize(x):
     >>> from sympy.matrices.expressions import MatrixSymbol, HadamardProduct
     >>> from sympy.matrices.expressions import OneMatrix, ZeroMatrix
     >>> from sympy.matrices.expressions.hadamard import canonicalize
+    >>> from sympy import init_printing
+    >>> init_printing(use_unicode=False)
 
     >>> A = MatrixSymbol('A', 2, 2)
     >>> B = MatrixSymbol('B', 2, 2)
@@ -192,7 +203,8 @@ def canonicalize(x):
     >>> X
     A.*A.*A
     >>> canonicalize(X)
-    A.**3
+     .3
+    A
 
     Notes
     =====
@@ -310,6 +322,16 @@ class HadamardPower(MatrixExpr):
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose
         return HadamardPower(transpose(self.base), self.exp)
+
+    def _eval_derivative(self, x):
+        from sympy import log
+        dexp = self.exp.diff(x)
+        logbase = self.base.applyfunc(log)
+        dlbase = logbase.diff(x)
+        return hadamard_product(
+            dexp*logbase + self.exp*dlbase,
+            self
+        )
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.codegen.array_utils import CodegenArrayTensorProduct

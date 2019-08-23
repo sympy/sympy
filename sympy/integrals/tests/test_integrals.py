@@ -5,7 +5,7 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li
 )
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
@@ -1573,3 +1573,10 @@ def test_issue_14709b():
     h = Symbol('h', positive=True)
     i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
     assert i == 5*h**2*pi/16
+
+
+def test_li_integral():
+    y = Symbol('y')
+    assert Integral(li(y*x**2), x).doit() == Piecewise(
+            (x*li(x**2*y) - x*Ei(3*log(x) + 3*log(y)/2)/(sqrt(y)*sqrt(x**2)), Ne(y, 0)),
+            (0, True))

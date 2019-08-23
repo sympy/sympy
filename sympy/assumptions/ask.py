@@ -529,7 +529,7 @@ class AssumptionKeys(object):
         False
         >>> ask(~Q.zero(I))
         True
-        >>> ask(Q.nonzero(oo))  #doctest: +SKIP
+        >>> ask(Q.nonzero(oo))
         False
 
         """
@@ -1263,7 +1263,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
 
-        >>> ask(Q.positive(x), Q.is_true(x > 0)) # doctest: +SKIP
+        >>> ask(Q.positive(x), Q.is_true(x > 0))
 
         It is however a work in progress.
 
@@ -1327,7 +1327,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     res = key(expr)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
-
     # using satask (still costly)
     res = satask(proposition, assumptions=assumptions, context=context)
     return res

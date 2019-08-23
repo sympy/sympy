@@ -525,6 +525,8 @@ def test_latex_functions():
         r'\left(\Omega\left(n\right)\right)^{2}'
 
     assert latex(LambertW(n)) == r'W\left(n\right)'
+    assert latex(LambertW(n, -1)) == r'W_{-1}\left(n\right)'
+    assert latex(LambertW(n, k)) == r'W_{k}\left(n\right)'
 
     assert latex(Mod(x, 7)) == r'x\bmod{7}'
     assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'
@@ -1651,23 +1653,28 @@ def test_Hadamard():
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
 
     assert latex(HadamardPower(X, 2)) == r'X^{\circ {2}}'
-    assert latex(HadamardPower(X, -1)) == r'X^{\circ {-1}}'
+    assert latex(HadamardPower(X, -1)) == r'X^{\circ \left({-1}\right)}'
     assert latex(HadamardPower(MatAdd(X, Y), 2)) == \
         r'\left(X + Y\right)^{\circ {2}}'
     assert latex(HadamardPower(MatMul(X, Y), 2)) == \
         r'\left(X Y\right)^{\circ {2}}'
 
     assert latex(HadamardPower(MatPow(X, -1), -1)) == \
-        r'\left(X^{-1}\right)^{\circ {-1}}'
+        r'\left(X^{-1}\right)^{\circ \left({-1}\right)}'
     assert latex(MatPow(HadamardPower(X, -1), -1)) == \
-        r'\left(X^{\circ {-1}}\right)^{-1}'
+        r'\left(X^{\circ \left({-1}\right)}\right)^{-1}'
+
+    assert latex(HadamardPower(X, n+1)) == \
+        r'X^{\circ \left({n + 1}\right)}'
 
 
 def test_ElementwiseApplyFunction():
     from sympy.matrices import MatrixSymbol
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
-    assert latex(expr) == r"\sin\left({X^{T} X}\ldots\right)"
+    assert latex(expr) == r"{\sin}_{\circ}\left({X^{T} X}\right)"
+    expr = X.applyfunc(Lambda(x, 1/x))
+    assert latex(expr) == r'{\left( d \mapsto \frac{1}{d} \right)}_{\circ}\left({X}\right)'
 
 
 def test_ZeroMatrix():

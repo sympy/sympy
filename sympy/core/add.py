@@ -339,21 +339,18 @@ class Add(Expr, AssocOp):
         (0, (7*x,))
         """
         if deps:
-            l1 = []
-            l2 = []
-            for f in self.args:
-                if f.has(*deps):
-                    l2.append(f)
-                else:
-                    l1.append(f)
-            return self._new_rawargs(*l1), tuple(l2)
+            from sympy.utilities.iterables import sift
+            l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
+            return self._new_rawargs(*l2), tuple(l1)
         coeff, notrat = self.args[0].as_coeff_add()
         if coeff is not S.Zero:
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
-    def as_coeff_Add(self, rational=False):
-        """Efficiently extract the coefficient of a summation. """
+    def as_coeff_Add(self, rational=False, deps=None):
+        """
+        Efficiently extract the coefficient of a summation.
+        """
         coeff, args = self.args[0], self.args[1:]
 
         if coeff.is_Number and not rational or coeff.is_Rational:

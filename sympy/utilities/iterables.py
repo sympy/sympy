@@ -55,6 +55,7 @@ def flatten(iterable, levels=None, cls=None):
 
     adapted from https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
     """
+    from sympy.tensor.array import NDimArray
     if levels is not None:
         if not levels:
             return iterable
@@ -73,7 +74,7 @@ def flatten(iterable, levels=None, cls=None):
 
     for el in iterable:
         if reducible(el):
-            if hasattr(el, 'args'):
+            if hasattr(el, 'args') and not isinstance(el, NDimArray):
                 el = el.args
             result.extend(flatten(el, levels=levels, cls=cls))
         else:
