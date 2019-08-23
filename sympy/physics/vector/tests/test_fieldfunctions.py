@@ -26,8 +26,8 @@ def test_curl():
 
 
 def test_divergence():
-    assert divergence(Vector(0), R) == S.Zero
-    assert divergence(R.x, R) == S.Zero
+    assert divergence(Vector(0), R) is S.Zero
+    assert divergence(R.x, R) is S.Zero
     assert divergence(R[0]**2*R.x, R) == 2*R[0]
     assert divergence(R[0]*R[1]*R[2] * (R.x+R.y+R.z), R) == \
            R[0]*R[1] + R[0]*R[2] + R[1]*R[2]

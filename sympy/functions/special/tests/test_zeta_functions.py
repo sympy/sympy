@@ -23,10 +23,10 @@ def test_zeta_eval():
     assert zeta(0, x) == Rational(1, 2) - x
     assert zeta(0, b) == Rational(1, 2) - b
 
-    assert zeta(1) == zoo
-    assert zeta(1, 2) == zoo
-    assert zeta(1, -7) == zoo
-    assert zeta(1, x) == zoo
+    assert zeta(1) is zoo
+    assert zeta(1, 2) is zoo
+    assert zeta(1, -7) is zoo
+    assert zeta(1, x) is zoo
 
     assert zeta(2, 1) == pi**2/6
 
@@ -204,10 +204,10 @@ def test_stieltjes():
     # Not defined
     assert stieltjes(nan) == nan
     assert stieltjes(0, nan) == nan
-    assert stieltjes(-1) == S.ComplexInfinity
-    assert stieltjes(1.5) == S.ComplexInfinity
-    assert stieltjes(z, 0) == S.ComplexInfinity
-    assert stieltjes(z, -1) == S.ComplexInfinity
+    assert stieltjes(-1) is S.ComplexInfinity
+    assert stieltjes(1.5) is S.ComplexInfinity
+    assert stieltjes(z, 0) is S.ComplexInfinity
+    assert stieltjes(z, -1) is S.ComplexInfinity
 
 
 def test_stieltjes_evalf():

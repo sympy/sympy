@@ -322,9 +322,9 @@ def test_subs_noncommutative():
     for p in range(1, 5):
         for k in range(10):
             assert (y * x**k).subs(x**p, L) == y * L**(k//p) * x**(k % p)
-    assert (x**(S(3)/2)).subs(x**(S.Half), L) == x**(S(3)/2)
-    assert (x**(S.Half)).subs(x**(S.Half), L) == L
-    assert (x**(-S.Half)).subs(x**(S.Half), L) == x**(-S.Half)
+    assert (x**(S(3)/2)).subs(x**S.Half, L) == x**(S(3)/2)
+    assert (x**S.Half).subs(x**S.Half, L) == L
+    assert (x**(-S.Half)).subs(x**S.Half, L) == x**(-S.Half)
     assert (x**(-S.Half)).subs(x**(-S.Half), L) == L
 
     assert (x**(2*someint)).subs(x**someint, L) == L**2

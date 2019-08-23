@@ -626,15 +626,15 @@ def test_special_eq_ne():
     assert p(i) != A(a, b)
     assert A(a, -a) != A(a, b)
     assert 0*(A(a, b) + B(a, b)) == 0
-    assert 0*(A(a, b) + B(a, b)) == S.Zero
+    assert 0*(A(a, b) + B(a, b)) is S.Zero
 
-    assert 3*(A(a, b) - A(a, b)) == S.Zero
+    assert 3*(A(a, b) - A(a, b)) is S.Zero
 
     assert p(i) + q(i) != A(a, b)
     assert p(i) + q(i) != A(a, b) + B(a, b)
 
     assert p(i) - p(i) == 0
-    assert p(i) - p(i) == S.Zero
+    assert p(i) - p(i) is S.Zero
 
     assert _is_equal(A(a, b), A(b, a))
 

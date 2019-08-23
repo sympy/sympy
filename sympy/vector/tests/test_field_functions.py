@@ -43,10 +43,10 @@ def test_del_operator():
             curl(2*x**2*j))
 
     #Tests for divergence
-    assert delop & Vector.zero == S.Zero == divergence(Vector.zero)
-    assert (delop & Vector.zero).doit() == S.Zero
+    assert delop & Vector.zero is S.Zero == divergence(Vector.zero)
+    assert (delop & Vector.zero).doit() is S.Zero
     assert delop.dot(Vector.zero) == delop & Vector.zero
-    assert (delop & i).doit() == S.Zero
+    assert (delop & i).doit() is S.Zero
     assert (delop & x**2*i).doit() == 2*x == divergence(x**2*i)
     assert (delop.dot(v, doit=True) == x*y + y*z + z*x ==
             divergence(v))
@@ -81,10 +81,10 @@ def test_del_operator():
             -a*sin(y)/x**2 * i + a*cos(y)/x * j)
 
     #Tests for directional derivative
-    assert (Vector.zero & delop)(a) == S.Zero
-    assert ((Vector.zero & delop)(a)).doit() == S.Zero
+    assert (Vector.zero & delop)(a) is S.Zero
+    assert ((Vector.zero & delop)(a)).doit() is S.Zero
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
-    assert ((v & delop)(S.Zero)).doit() == S.Zero
+    assert ((v & delop)(S.Zero)).doit() is S.Zero
     assert ((i & delop)(x)).doit() == 1
     assert ((j & delop)(y)).doit() == 1
     assert ((k & delop)(z)).doit() == 1
@@ -100,7 +100,7 @@ def test_del_operator():
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
 
     # Tests for laplacian on scalar fields
-    assert laplacian(x*y*z) == S.Zero
+    assert laplacian(x*y*z) is S.Zero
     assert laplacian(x**2) == S(2)
     assert laplacian(x**2*y**2*z**2) == \
                     2*y**2*z**2 + 2*x**2*z**2 + 2*x**2*y**2
@@ -205,7 +205,7 @@ def test_solenoidal():
 def test_directional_derivative():
     assert directional_derivative(C.x*C.y*C.z, 3*C.i + 4*C.j + C.k) == C.x*C.y + 4*C.x*C.z + 3*C.y*C.z
     assert directional_derivative(5*C.x**2*C.z, 3*C.i + 4*C.j + C.k) == 5*C.x**2 + 30*C.x*C.z
-    assert directional_derivative(5*C.x**2*C.z, 4*C.j) == S.Zero
+    assert directional_derivative(5*C.x**2*C.z, 4*C.j) is S.Zero
 
     D = CoordSys3D("D", "spherical", variable_names=["r", "theta", "phi"],
                    vector_names=["e_r", "e_theta", "e_phi"])

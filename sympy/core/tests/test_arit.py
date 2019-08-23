@@ -1539,7 +1539,7 @@ def test_issue_5919():
 
 def test_Mod():
     assert Mod(x, 1).func is Mod
-    assert pi % pi == S.Zero
+    assert pi % pi is S.Zero
     assert Mod(5, 3) == 2
     assert Mod(-5, 3) == 1
     assert Mod(5, -3) == -1
@@ -1844,8 +1844,8 @@ def test_mul_flatten_oo():
     n, m = symbols('n,m', negative=True)
     x_im = symbols('x_im', imaginary=True)
     assert n*oo == -oo
-    assert n*m*oo == oo
-    assert p*oo == oo
+    assert n*m*oo is oo
+    assert p*oo is oo
     assert x_im*oo != I*oo  # i could be +/- 3*I -> +/-oo
 
 

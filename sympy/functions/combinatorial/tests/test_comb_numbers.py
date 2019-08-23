@@ -85,8 +85,8 @@ def test_fibonacci():
 
     # issue #8800
     n = Dummy('n')
-    assert fibonacci(n).limit(n, S.Infinity) == S.Infinity
-    assert lucas(n).limit(n, S.Infinity) == S.Infinity
+    assert fibonacci(n).limit(n, S.Infinity) is S.Infinity
+    assert lucas(n).limit(n, S.Infinity) is S.Infinity
 
     assert fibonacci(n).rewrite(sqrt) == \
         2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
@@ -111,7 +111,7 @@ def test_tribonacci():
     assert tribonacci(5, x) == x**8 + 3*x**5 + 3*x**2
 
     n = Dummy('n')
-    assert tribonacci(n).limit(n, S.Infinity) == S.Infinity
+    assert tribonacci(n).limit(n, S.Infinity) is S.Infinity
 
     w = (-1 + S.ImaginaryUnit * sqrt(3)) / 2
     a = (1 + cbrt(19 + 3*sqrt(33)) + cbrt(19 - 3*sqrt(33))) / 3
@@ -138,7 +138,7 @@ def test_bell():
     assert bell(1, x) == x
     assert bell(2, x) == x**2 + x
     assert bell(5, x) == x**5 + 10*x**4 + 25*x**3 + 15*x**2 + x
-    assert bell(oo) == S.Infinity
+    assert bell(oo) is S.Infinity
     raises(ValueError, lambda: bell(oo, x))
 
     raises(ValueError, lambda: bell(-1))
@@ -174,7 +174,7 @@ def test_bell():
     assert bell(n, m).rewrite(Sum) == bell(n, m)
     # issue 9184
     n = Dummy('n')
-    assert bell(n).limit(n, S.Infinity) == S.Infinity
+    assert bell(n).limit(n, S.Infinity) is S.Infinity
 
 
 def test_harmonic():
@@ -202,7 +202,7 @@ def test_harmonic():
     assert harmonic(3, 3) == Rational(251, 216)
     assert harmonic(4, 3) == Rational(2035, 1728)
 
-    assert harmonic(oo, -1) == S.NaN
+    assert harmonic(oo, -1) is S.NaN
     assert harmonic(oo, 0) == oo
     assert harmonic(oo, S.Half) == oo
     assert harmonic(oo, 1) == oo
@@ -646,8 +646,8 @@ def test_issue_8496():
 def test_issue_8601():
     n = Symbol('n', integer=True, negative=True)
 
-    assert catalan(n - 1) == S.Zero
-    assert catalan(-S.Half) == S.ComplexInfinity
+    assert catalan(n - 1) is S.Zero
+    assert catalan(-S.Half) is S.ComplexInfinity
     assert catalan(-S.One) == -S.Half
     c1 = catalan(-5.6).evalf()
     assert str(c1) == '6.93334070531408e-5'

@@ -348,7 +348,7 @@ def test_appellf1():
     a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
     assert appellf1(a, b2, b1, c, y, x) == appellf1(a, b1, b2, c, x, y)
     assert appellf1(a, b1, b1, c, y, x) == appellf1(a, b1, b1, c, x, y)
-    assert appellf1(a, b1, b2, c, S.Zero, S.Zero) == S.One
+    assert appellf1(a, b1, b2, c, S.Zero, S.Zero) is S.One
 
 def test_derivative_appellf1():
     from sympy import diff

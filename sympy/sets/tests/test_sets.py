@@ -956,7 +956,7 @@ def test_universalset():
     assert U.union(Interval(2, 4)) == U
 
     assert U.intersect(Interval(2, 4)) == Interval(2, 4)
-    assert U.measure == S.Infinity
+    assert U.measure is S.Infinity
     assert U.boundary == S.EmptySet
     assert U.contains(0) is S.true
 

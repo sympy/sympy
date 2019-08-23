@@ -1965,7 +1965,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     premult must be a*z**prem for some a independent of z.
     """
 
-    if z is S.Zero:
+    if z.is_zero:
         return S.One
 
     z = polarify(z, subs=False)

@@ -1115,7 +1115,7 @@ class airyai(AiryBase):
                 return S.Zero
             elif arg is S.NegativeInfinity:
                 return S.Zero
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
 
     def fdiff(self, argindex=1):
@@ -1283,7 +1283,7 @@ class airybi(AiryBase):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Zero
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
 
     def fdiff(self, argindex=1):
@@ -1440,7 +1440,7 @@ class airyaiprime(AiryBase):
                 return S.NaN
             elif arg is S.Infinity:
                 return S.Zero
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return -S.One / (3**Rational(1, 3) * gamma(Rational(1, 3)))
 
     def fdiff(self, argindex=1):
@@ -1596,7 +1596,7 @@ class airybiprime(AiryBase):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Zero
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return 3**Rational(1, 6) / gamma(Rational(1, 3))
 
     def fdiff(self, argindex=1):

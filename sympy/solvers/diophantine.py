@@ -328,7 +328,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         sols.remove(())
     null = tuple([0]*len(var))
     # if there is no solution, return trivial solution
-    if not sols and eq.subs(zip(var, null)) is S.Zero:
+    if not sols and eq.subs(zip(var, null)).is_zero:
         sols.add(null)
     final_soln = set([])
     for sol in sols:

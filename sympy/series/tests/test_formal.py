@@ -447,7 +447,7 @@ def test_fps__operations():
     assert (f1 + x) == Add(f1, x)
 
     assert -f2.truncate() == -1 + x**2/2 - x**4/24 + O(x**6)
-    assert (f1 - f1) == S.Zero
+    assert (f1 - f1) is S.Zero
 
     fsub = f1 - f2
     assert fsub.function == sin(x) - cos(x)

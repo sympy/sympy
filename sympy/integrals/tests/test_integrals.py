@@ -97,7 +97,7 @@ def test_basics():
     assert Integral(0, x) != 0
     assert Integral(x, (x, 1, 1)) != 0
     assert Integral(oo, x) != oo
-    assert Integral(S.NaN, x) == S.NaN
+    assert Integral(S.NaN, x) is S.NaN
 
     assert diff(Integral(y, y), x) == 0
     assert diff(Integral(x, (x, 0, 1)), x) == 0
@@ -529,7 +529,7 @@ def test_double_previously_failing_integrals():
     # Symbolic test
     assert res == -S(4)/3 + 8*sqrt(2)/3
     # double integral + zero detection
-    assert integrate(sin(x + x*y), (x, -1, 1), (y, -1, 1)) == S.Zero
+    assert integrate(sin(x + x*y), (x, -1, 1), (y, -1, 1)) is S.Zero
 
 
 def test_integrate_SingularityFunction():
@@ -1411,12 +1411,12 @@ def test_issue_14027():
 
 
 def test_issue_8170():
-    assert integrate(tan(x), (x, 0, pi/2)) == S.Infinity
+    assert integrate(tan(x), (x, 0, pi/2)) is S.Infinity
 
 
 def test_issue_8440_14040():
-    assert integrate(1/x, (x, -1, 1)) == S.NaN
-    assert integrate(1/(x + 1), (x, -2, 3)) == S.NaN
+    assert integrate(1/x, (x, -1, 1)) is S.NaN
+    assert integrate(1/(x + 1), (x, -2, 3)) is S.NaN
 
 
 def test_issue_14096():

@@ -451,7 +451,7 @@ class uppergamma(Function):
                 return S.NaN
             elif z is S.Infinity:
                 return S.Zero
-            elif z is S.Zero:
+            elif z.is_zero:
                 if re(a).is_positive:
                     return gamma(a)
 
@@ -690,7 +690,7 @@ class polygamma(Function):
                         return S.NaN
                     elif z is S.Infinity:
                         if n.is_Number:
-                            if n is S.Zero:
+                            if n.is_zero:
                                 return S.Infinity
                             else:
                                 return S.Zero
@@ -698,7 +698,7 @@ class polygamma(Function):
                         if z.is_nonpositive:
                             return S.ComplexInfinity
                         else:
-                            if n is S.Zero:
+                            if n.is_zero:
                                 return -S.EulerGamma + harmonic(z - 1, 1)
                             elif n.is_odd:
                                 return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
@@ -776,7 +776,7 @@ class polygamma(Function):
 
     def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
         if n.is_integer:
-            if n == S.Zero:
+            if n.is_zero:
                 return harmonic(z - 1) - S.EulerGamma
             else:
                 return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
@@ -945,7 +945,7 @@ class loggamma(Function):
 
     def _eval_nseries(self, x, n, logx=None):
         x0 = self.args[0].limit(x, 0)
-        if x0 is S.Zero:
+        if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
             return f._eval_nseries(x, n, logx)
         return super(loggamma, self)._eval_nseries(x, n, logx)

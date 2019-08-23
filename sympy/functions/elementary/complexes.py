@@ -629,7 +629,7 @@ class Abs(Function):
         return arg/sign(arg)
 
     def _eval_rewrite_as_conjugate(self, arg, **kwargs):
-        return (arg*conjugate(arg))**(S.Half)
+        return (arg*conjugate(arg))**S.Half
 
 
 class arg(Function):

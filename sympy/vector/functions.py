@@ -268,7 +268,7 @@ def is_solenoidal(field):
         raise TypeError("field should be a Vector")
     if field == Vector.zero:
         return True
-    return divergence(field).simplify() == S.Zero
+    return divergence(field).simplify() is S.Zero
 
 
 def scalar_potential(field, coord_sys):

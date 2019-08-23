@@ -481,7 +481,7 @@ class bernoulli(Function):
     def eval(cls, n, sym=None):
         if n.is_Number:
             if n.is_Integer and n.is_nonnegative:
-                if n is S.Zero:
+                if n.is_zero:
                     return S.One
                 elif n is S.One:
                     if sym is None:

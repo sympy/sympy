@@ -129,9 +129,9 @@ class MatrixExpr(Expr):
             raise ShapeError("Power of non-square matrix %s" % self)
         elif self.is_Identity:
             return self
-        elif other is S.Zero:
+        elif other == S.Zero:
             return Identity(self.rows)
-        elif other is S.One:
+        elif other == S.One:
             return self
         return MatPow(self, other).doit(deep=False)
 

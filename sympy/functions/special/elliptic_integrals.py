@@ -55,7 +55,7 @@ class elliptic_k(Function):
 
     @classmethod
     def eval(cls, m):
-        if m is S.Zero:
+        if m.is_zero:
             return pi/2
         elif m is S.Half:
             return 8*pi**(S(3)/2)/gamma(-S.One/4)**2
@@ -320,7 +320,7 @@ class elliptic_pi(Function):
         if z is not None:
             n, z, m = n, m, z
             k = 2*z/pi
-            if n == S.Zero:
+            if n.is_zero:
                 return elliptic_f(z, m)
             elif n == S.One:
                 return (elliptic_f(z, m) +
@@ -328,7 +328,7 @@ class elliptic_pi(Function):
                          elliptic_e(z, m))/(1 - m))
             elif k.is_integer:
                 return k*elliptic_pi(n, m)
-            elif m == S.Zero:
+            elif m.is_zero:
                 return atanh(sqrt(n - 1)*tan(z))/sqrt(n - 1)
             elif n == m:
                 return (elliptic_f(z, n) - elliptic_pi(1, z, n) +
@@ -340,11 +340,11 @@ class elliptic_pi(Function):
             elif z.could_extract_minus_sign():
                 return -elliptic_pi(n, -z, m)
         else:
-            if n == S.Zero:
+            if n.is_zero:
                 return elliptic_k(m)
             elif n == S.One:
                 return S.ComplexInfinity
-            elif m == S.Zero:
+            elif m.is_zero:
                 return pi/(2*sqrt(1 - n))
             elif m == S.One:
                 return S.NegativeInfinity/sign(n - 1)

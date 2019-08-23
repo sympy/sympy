@@ -136,7 +136,7 @@ class erf(Function):
                 return S.One
             elif arg is S.NegativeInfinity:
                 return S.NegativeOne
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Zero
 
         if isinstance(arg, erfinv):
@@ -146,7 +146,7 @@ class erf(Function):
             return S.One - arg.args[0]
 
         # Only happens with unevaluated erf2inv
-        if isinstance(arg, erf2inv) and arg.args[0] is S.Zero:
+        if isinstance(arg, erf2inv) and arg.args[0].is_zero:
             return arg.args[1]
 
         # Try to pull out factors of I
@@ -317,7 +317,7 @@ class erfc(Function):
                 return S.NaN
             elif arg is S.Infinity:
                 return S.Zero
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.One
 
         if isinstance(arg, erfinv):
@@ -482,7 +482,7 @@ class erfi(Function):
         if z.is_Number:
             if z is S.NaN:
                 return S.NaN
-            elif z is S.Zero:
+            elif z.is_zero:
                 return S.Zero
             elif z is S.Infinity:
                 return S.Infinity
@@ -501,7 +501,7 @@ class erfi(Function):
             if isinstance(nz, erfcinv):
                 return I*(S.One - nz.args[0])
             # Only happens with unevaluated erf2inv
-            if isinstance(nz, erf2inv) and nz.args[0] is S.Zero:
+            if isinstance(nz, erf2inv) and nz.args[0].is_zero:
                 return I*nz.args[1]
 
     @staticmethod
@@ -762,7 +762,7 @@ class erfinv(Function):
             return S.NaN
         elif z is S.NegativeOne:
             return S.NegativeInfinity
-        elif z is S.Zero:
+        elif z.is_zero:
             return S.Zero
         elif z is S.One:
             return S.Infinity
@@ -839,7 +839,7 @@ class erfcinv (Function):
     def eval(cls, z):
         if z is S.NaN:
             return S.NaN
-        elif z is S.Zero:
+        elif z.is_zero:
             return S.Infinity
         elif z is S.One:
             return S.Zero
@@ -914,17 +914,17 @@ class erf2inv(Function):
     def eval(cls, x, y):
         if x is S.NaN or y is S.NaN:
             return S.NaN
-        elif x is S.Zero and y is S.Zero:
+        elif x.is_zero and y.is_zero:
             return S.Zero
-        elif x is S.Zero and y is S.One:
+        elif x.is_zero and y is S.One:
             return S.Infinity
-        elif x is S.One and y is S.Zero:
+        elif x is S.One and y.is_zero:
             return S.One
-        elif x is S.Zero:
+        elif x.is_zero:
             return erfinv(y)
         elif x is S.Infinity:
             return erfcinv(-y)
-        elif y is S.Zero:
+        elif y.is_zero:
             return x
         elif y is S.Infinity:
             return erfinv(x)
@@ -1021,7 +1021,7 @@ class Ei(Function):
 
     @classmethod
     def eval(cls, z):
-        if z is S.Zero:
+        if z.is_zero:
             return S.NegativeInfinity
         elif z is S.Infinity:
             return S.Infinity
@@ -1074,7 +1074,7 @@ class Ei(Function):
 
     def _eval_nseries(self, x, n, logx):
         x0 = self.args[0].limit(x, 0)
-        if x0 is S.Zero:
+        if x0.is_zero:
             f = self._eval_rewrite_as_Si(*self.args)
             return f._eval_nseries(x, n, logx)
         return super(Ei, self)._eval_nseries(x, n, logx)
@@ -1371,7 +1371,7 @@ class li(Function):
 
     @classmethod
     def eval(cls, z):
-        if z is S.Zero:
+        if z.is_zero:
             return S.Zero
         elif z is S.One:
             return S.NegativeInfinity
@@ -1979,7 +1979,7 @@ class FresnelIntegral(Function):
     @classmethod
     def eval(cls, z):
         # Value at zero
-        if z is S.Zero:
+        if z.is_zero:
             return S.Zero
 
         # Try to pull out factors of -1 and I
@@ -2380,7 +2380,7 @@ class _eis(Function):
 
     def _eval_nseries(self, x, n, logx):
         x0 = self.args[0].limit(x, 0)
-        if x0 is S.Zero:
+        if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
             return f._eval_nseries(x, n, logx)
         return super(_eis, self)._eval_nseries(x, n, logx)

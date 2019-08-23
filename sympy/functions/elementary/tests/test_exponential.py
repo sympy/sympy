@@ -171,7 +171,7 @@ def test_exp_taylor_term():
     assert exp(x).taylor_term(1, x) == x
     assert exp(x).taylor_term(3, x) == x**3/6
     assert exp(x).taylor_term(4, x) == x**4/24
-    assert exp(x).taylor_term(-1, x) == S.Zero
+    assert exp(x).taylor_term(-1, x) is S.Zero
 
 
 def test_exp_MatrixSymbol():
@@ -535,7 +535,7 @@ def test_log_taylor_term():
     assert log(x).taylor_term(0, x) == x
     assert log(x).taylor_term(1, x) == -x**2/2
     assert log(x).taylor_term(4, x) == x**5/5
-    assert log(x).taylor_term(-1, x) == S.Zero
+    assert log(x).taylor_term(-1, x) is S.Zero
 
 
 def test_exp_expand_NC():

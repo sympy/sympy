@@ -162,7 +162,7 @@ def function_range(f, symbol, domain):
         return S.EmptySet
 
     period = periodicity(f, symbol)
-    if period is S.Zero:
+    if period == S.Zero:
         # the expression is constant wrt symbol
         return FiniteSet(f.expand())
 
@@ -1251,12 +1251,12 @@ class AccumulationBounds(AtomicExpr):
                 if other.is_zero:
                     return S.Zero
                 if S.Zero in self:
-                    if self.min == S.Zero:
+                    if self.min.is_zero:
                         if other.is_extended_positive:
                             return AccumBounds(Mul(other, 1 / self.max), oo)
                         if other.is_extended_negative:
                             return AccumBounds(-oo, Mul(other, 1 / self.max))
-                    if self.max == S.Zero:
+                    if self.max.is_zero:
                         if other.is_extended_positive:
                             return AccumBounds(-oo, Mul(other, 1 / self.min))
                         if other.is_extended_negative:

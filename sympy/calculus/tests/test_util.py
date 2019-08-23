@@ -129,10 +129,10 @@ def test_periodicity():
     assert periodicity(sin(x)%4, x) == 2*pi
     assert periodicity(tan((3*x-2)%4), x) == S(4)/3
     assert periodicity((sqrt(2)*(x+1)+x) % 3, x) == 3 / (sqrt(2)+1)
-    assert periodicity((x**2+1) % x, x) == None
+    assert periodicity((x**2+1) % x, x) is None
     assert periodicity(sin(re(x)), x) == 2*pi
-    assert periodicity(sin(x)**2 + cos(x)**2, x) == S.Zero
-    assert periodicity(tan(x), y) == S.Zero
+    assert periodicity(sin(x)**2 + cos(x)**2, x) is S.Zero
+    assert periodicity(tan(x), y) is S.Zero
     assert periodicity(sin(x) + I*cos(x), x) == 2*pi
     assert periodicity(x - sin(2*y), y) == pi
 
@@ -233,22 +233,22 @@ def test_stationary_points():
 
 def test_maximum():
     x, y = symbols('x y')
-    assert maximum(sin(x), x) == S.One
+    assert maximum(sin(x), x) is S.One
     assert maximum(sin(x), x, Interval(0, 1)) == sin(1)
-    assert maximum(tan(x), x) == oo
-    assert maximum(tan(x), x, Interval(-pi/4, pi/4)) == S.One
+    assert maximum(tan(x), x) is oo
+    assert maximum(tan(x), x, Interval(-pi/4, pi/4)) is S.One
     assert maximum(sin(x)*cos(x), x, S.Reals) == S.Half
     assert simplify(maximum(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
         ) == sqrt(2)/4
-    assert maximum((x+3)*(x-2), x) == oo
+    assert maximum((x+3)*(x-2), x) is oo
     assert maximum((x+3)*(x-2), x, Interval(-5, 0)) == S(14)
     assert maximum((x+3)/(x-2), x, Interval(-5, 0)) == S(2)/7
     assert simplify(maximum(-x**4-x**3+x**2+10, x)
         ) == 41*sqrt(41)/512 + S(5419)/512
     assert maximum(exp(x), x, Interval(-oo, 2)) == exp(2)
-    assert maximum(log(x) - x, x, S.Reals) == -S.One
+    assert maximum(log(x) - x, x, S.Reals) is S.NegativeOne
     assert maximum(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
-        ) == S.One
+        ) is S.One
     assert maximum(cos(x)-sin(x), x, S.Reals) == sqrt(2)
     assert maximum(y, x, S.Reals) == y
 
@@ -263,10 +263,10 @@ def test_maximum():
 def test_minimum():
     x, y = symbols('x y')
 
-    assert minimum(sin(x), x) == -S.One
+    assert minimum(sin(x), x) is S.NegativeOne
     assert minimum(sin(x), x, Interval(1, 4)) == sin(4)
     assert minimum(tan(x), x) == -oo
-    assert minimum(tan(x), x, Interval(-pi/4, pi/4)) == -S.One
+    assert minimum(tan(x), x, Interval(-pi/4, pi/4)) is S.NegativeOne
     assert minimum(sin(x)*cos(x), x, S.Reals) == -S.Half
     assert simplify(minimum(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
         ) == -sqrt(2)/4
@@ -276,7 +276,7 @@ def test_minimum():
     assert minimum(exp(x), x, Interval(-2, oo)) == exp(-2)
     assert minimum(log(x) - x, x, S.Reals) == -oo
     assert minimum(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
-        ) == -S.One
+        ) is S.NegativeOne
     assert minimum(cos(x)-sin(x), x, S.Reals) == -sqrt(2)
     assert minimum(y, x, S.Reals) == y
 
@@ -290,11 +290,11 @@ def test_minimum():
 
 def test_AccumBounds():
     assert AccumBounds(1, 2).args == (1, 2)
-    assert AccumBounds(1, 2).delta == S.One
+    assert AccumBounds(1, 2).delta is S.One
     assert AccumBounds(1, 2).mid == S(3)/2
     assert AccumBounds(1, 3).is_real == True
 
-    assert AccumBounds(1, 1) == S.One
+    assert AccumBounds(1, 1) is S.One
 
     assert AccumBounds(1, 2) + 1 == AccumBounds(2, 3)
     assert 1 + AccumBounds(1, 2) == AccumBounds(2, 3)
@@ -311,7 +311,7 @@ def test_AccumBounds():
     assert AccumBounds(1, 2) - x == Add(AccumBounds(1, 2), -x)
 
     assert AccumBounds(-oo, 1) + oo == AccumBounds(-oo, oo)
-    assert AccumBounds(1, oo) + oo == oo
+    assert AccumBounds(1, oo) + oo is oo
     assert AccumBounds(1, oo) - oo == AccumBounds(-oo, oo)
     assert (-oo - AccumBounds(-1, oo)) == -oo
     assert AccumBounds(-oo, 1) - oo == -oo
@@ -412,12 +412,12 @@ def test_AccumBounds_pow():
 
     assert AccumBounds(1, 2)**(S(5)/2) == AccumBounds(1, 4*sqrt(2))
     assert AccumBounds(-1, 2)**(S.One/3) == AccumBounds(-1, 2**(S.One/3))
-    assert AccumBounds(0, 2)**(S.Half) == AccumBounds(0, sqrt(2))
+    assert AccumBounds(0, 2)**S.Half == AccumBounds(0, sqrt(2))
 
     assert AccumBounds(-4, 2)**(S(2)/3) == AccumBounds(0, 2*2**(S.One/3))
 
-    assert AccumBounds(-1, 5)**(S.Half) == AccumBounds(0, sqrt(5))
-    assert AccumBounds(-oo, 2)**(S.Half) == AccumBounds(0, sqrt(2))
+    assert AccumBounds(-1, 5)**S.Half == AccumBounds(0, sqrt(5))
+    assert AccumBounds(-oo, 2)**S.Half == AccumBounds(0, sqrt(2))
     assert AccumBounds(-2, 3)**(S.NegativeOne/4) == AccumBounds(0, oo)
 
     assert AccumBounds(1, 5)**(-2) == AccumBounds(S.One/25, 1)
@@ -426,25 +426,25 @@ def test_AccumBounds_pow():
     assert AccumBounds(-1, 2)**(-3) == AccumBounds(-oo, oo)
     assert AccumBounds(-3, -2)**(-3) == AccumBounds(S.NegativeOne/8, -S.One/27)
     assert AccumBounds(-3, -2)**(-2) == AccumBounds(S.One/9, S.One/4)
-    assert AccumBounds(0, oo)**(S.Half) == AccumBounds(0, oo)
+    assert AccumBounds(0, oo)**S.Half == AccumBounds(0, oo)
     assert AccumBounds(-oo, -1)**(S.One/3) == AccumBounds(-oo, -1)
     assert AccumBounds(-2, 3)**(-S.One/3) == AccumBounds(-oo, oo)
     assert AccumBounds(-oo, 0)**(-2) == AccumBounds(0, oo)
     assert AccumBounds(-2, 0)**(-2) == AccumBounds(S.One/4, oo)
 
-    assert AccumBounds(S.One/3, S.Half)**oo == S.Zero
-    assert AccumBounds(0, S.Half)**oo == S.Zero
+    assert AccumBounds(S.One/3, S.Half)**oo is S.Zero
+    assert AccumBounds(0, S.Half)**oo is S.Zero
     assert AccumBounds(S.Half, 1)**oo == AccumBounds(0, oo)
     assert AccumBounds(0, 1)**oo == AccumBounds(0, oo)
-    assert AccumBounds(2, 3)**oo == oo
+    assert AccumBounds(2, 3)**oo is oo
     assert AccumBounds(1, 2)**oo == AccumBounds(0, oo)
     assert AccumBounds(S.Half, 3)**oo == AccumBounds(0, oo)
-    assert AccumBounds(-S.One/3, -S.One/4)**oo == S.Zero
+    assert AccumBounds(-S.One/3, -S.One/4)**oo is S.Zero
     assert AccumBounds(-1, -S.Half)**oo == AccumBounds(-oo, oo)
     assert AccumBounds(-3, -2)**oo == FiniteSet(-oo, oo)
     assert AccumBounds(-2, -1)**oo == AccumBounds(-oo, oo)
     assert AccumBounds(-2, -S.Half)**oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-S.Half, S.Half)**oo == S.Zero
+    assert AccumBounds(-S.Half, S.Half)**oo is S.Zero
     assert AccumBounds(-S.Half, 1)**oo == AccumBounds(0, oo)
     assert AccumBounds(-S(2)/3, 2)**oo == AccumBounds(0, oo)
     assert AccumBounds(-1, 1)**oo == AccumBounds(-oo, oo)
@@ -454,7 +454,7 @@ def test_AccumBounds_pow():
 
     assert AccumBounds(1, 2)**x == Pow(AccumBounds(1, 2), x, evaluate=False)
 
-    assert AccumBounds(2, 3)**(-oo) == S.Zero
+    assert AccumBounds(2, 3)**(-oo) is S.Zero
     assert AccumBounds(0, 2)**(-oo) == AccumBounds(0, oo)
     assert AccumBounds(-1, 2)**(-oo) == AccumBounds(-oo, oo)
 

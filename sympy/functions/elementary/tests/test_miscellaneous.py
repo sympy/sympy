@@ -86,7 +86,7 @@ def test_Min():
     assert Min(p, p_).func is Min
 
     # lists
-    assert Min() == S.Infinity
+    assert Min() is S.Infinity
     assert Min(x) == x
     assert Min(x, y) == Min(y, x)
     assert Min(x, y, z) == Min(z, y, x)
@@ -156,7 +156,7 @@ def test_Max():
 
     # lists
 
-    assert Max() == S.NegativeInfinity
+    assert Max() is S.NegativeInfinity
     assert Max(x) == x
     assert Max(x, y) == Max(y, x)
     assert Max(x, y, z) == Max(z, y, x)

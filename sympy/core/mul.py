@@ -273,7 +273,7 @@ class Mul(Expr, AssocOp):
 
             # 3
             elif o.is_Number:
-                if o is S.NaN or coeff is S.ComplexInfinity and o is S.Zero:
+                if o is S.NaN or coeff is S.ComplexInfinity and o.is_zero:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 elif coeff.is_Number or isinstance(coeff, AccumBounds):  # it could be zoo
@@ -600,7 +600,7 @@ class Mul(Expr, AssocOp):
                                                   c.is_extended_real is not None)]
 
         # 0
-        elif coeff is S.Zero:
+        elif coeff.is_zero:
             # we know for sure the result will be 0 except the multiplicand
             # is infinity or a matrix
             if any(isinstance(c, MatrixExpr) for c in nc_part):
@@ -823,7 +823,7 @@ class Mul(Expr, AssocOp):
         r, i = (reco*re(m), reco*im(m))
         if addterms == 1:
             if m == 1:
-                if imco is S.Zero:
+                if imco.is_zero:
                     return (reco, S.Zero)
                 else:
                     return (S.Zero, reco*imco)

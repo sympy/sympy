@@ -473,10 +473,10 @@ def test__combine_inverse():
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
     assert Mul._combine_inverse(oo*y, -oo) == -y
     assert Mul._combine_inverse(-oo*y, oo) == -y
-    assert Add._combine_inverse(oo, oo) == S.Zero
-    assert Add._combine_inverse(oo*I, oo*I) == S.Zero
-    assert Add._combine_inverse(x*oo, x*oo) == S.Zero
-    assert Add._combine_inverse(-x*oo, -x*oo) == S.Zero
+    assert Add._combine_inverse(oo, oo) is S.Zero
+    assert Add._combine_inverse(oo*I, oo*I) is S.Zero
+    assert Add._combine_inverse(x*oo, x*oo) is S.Zero
+    assert Add._combine_inverse(-x*oo, -x*oo) is S.Zero
     assert Add._combine_inverse((x - oo)*(x + oo), -oo)
 
 

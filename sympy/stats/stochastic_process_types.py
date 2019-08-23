@@ -662,7 +662,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         trans_probs = self.transition_probabilities
         if isinstance(trans_probs, ImmutableMatrix) and \
             state < trans_probs.shape[0]:
-            return S(trans_probs[state, state]) == S.One
+            return S(trans_probs[state, state]) is S.One
 
     def is_absorbing_chain(self):
         trans_probs = self.transition_probabilities

@@ -719,7 +719,7 @@ def _has_rational_power(expr, symbol):
     """
     a, p, q = Wild('a'), Wild('p'), Wild('q')
     pattern_match = expr.match(a*p**q) or {}
-    if pattern_match.get(a, S.Zero) is S.Zero:
+    if pattern_match.get(a, S.Zero).is_zero:
         return (False, S.One)
     elif p not in pattern_match.keys():
         return (False, S.One)

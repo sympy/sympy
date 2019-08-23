@@ -211,7 +211,7 @@ def test_arithmetic_sums():
     assert summation(cos(n), (n, -2, 1)) == cos(-2) + cos(-1) + cos(0) + cos(1)
     assert summation(cos(n), (n, x, x + 2)) == cos(x) + cos(x + 1) + cos(x + 2)
     assert isinstance(summation(cos(n), (n, x, x + S.Half)), Sum)
-    assert summation(k, (k, 0, oo)) == oo
+    assert summation(k, (k, 0, oo)) is oo
     assert summation(k, (k, Range(1, 11))) == 55
 
 
@@ -232,7 +232,7 @@ def test_geometric_sums():
     assert summation(2 * 3**n, (n, 0, b)) == 3**(b + 1) - 1
     assert summation(Rational(1, 2)**n, (n, 1, oo)) == 1
     assert summation(2**n, (n, 0, b)) == 2**(b + 1) - 1
-    assert summation(2**n, (n, 1, oo)) == oo
+    assert summation(2**n, (n, 1, oo)) is oo
     assert summation(2**(-n), (n, 1, oo)) == 1
     assert summation(3**(-n), (n, 4, oo)) == Rational(1, 54)
     assert summation(2**(-4*n + 3), (n, 1, oo)) == Rational(8, 15)
@@ -256,7 +256,7 @@ def test_geometric_sums():
                     ((-(-2)**(y*(n + 1)) + 1)/(-(-2)**y + 1), True))
 
     # issue 8251:
-    assert summation((1/(n + 1)**2)*n**2, (n, 0, oo)) == oo
+    assert summation((1/(n + 1)**2)*n**2, (n, 0, oo)) is oo
 
     #issue 9908:
     assert Sum(1/(n**3 - 1), (n, -oo, -2)).doit() == summation(1/(n**3 - 1), (n, -oo, -2))
@@ -282,8 +282,8 @@ def test_geometric_sums():
     assert result == S(3)/2
     assert not result.is_Float
 
-    assert Sum(1.0**n, (n, 1, oo)).doit() == oo
-    assert Sum(2.43**n, (n, 1, oo)).doit() == oo
+    assert Sum(1.0**n, (n, 1, oo)).doit() is oo
+    assert Sum(2.43**n, (n, 1, oo)).doit() is oo
 
     # Issue 13979
     i, k, q = symbols('i k q', integer=True)
@@ -751,8 +751,8 @@ def test_noncommutativity_honoured():
 
 
 def test_issue_4171():
-    assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo
-    assert summation(2*k + 1, (k, 0, oo)) == oo
+    assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) is oo
+    assert summation(2*k + 1, (k, 0, oo)) is oo
 
 
 def test_issue_6273():
@@ -937,7 +937,7 @@ def test_issue_2787():
 
 
 def test_issue_4668():
-    assert summation(1/n, (n, 2, oo)) == oo
+    assert summation(1/n, (n, 2, oo)) is oo
 
 
 def test_matrix_sum():
@@ -1048,7 +1048,7 @@ def test_is_convergent():
     assert Sum(eq, (x, 1, oo)).is_convergent() is S.true
     assert Sum(eq, (x, 1, 2)).is_convergent() is S.true
     assert Sum(1/(x**3), (x, 1, oo)).is_convergent() is S.true
-    assert Sum(1/(x**(S.Half)), (x, 1, oo)).is_convergent() is S.false
+    assert Sum(1/(x**S.Half), (x, 1, oo)).is_convergent() is S.false
 
 
 def test_is_absolutely_convergent():
@@ -1312,7 +1312,7 @@ def test_issue_8016():
 
 @XFAIL
 def test_issue_14313():
-    assert Sum((S.Half)**floor(n/2), (n, 1, oo)).is_convergent()
+    assert Sum(S.Half**floor(n/2), (n, 1, oo)).is_convergent()
 
 
 @XFAIL

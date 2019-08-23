@@ -64,7 +64,7 @@ def test_dice():
     assert variance(X + X) == 4 * variance(X) == cmoment(X + X, 2)
     assert cmoment(X, 0) == 1
     assert cmoment(4*X, 3) == 64*cmoment(X, 3)
-    assert covariance(X, Y) == S.Zero
+    assert covariance(X, Y) is S.Zero
     assert covariance(X, X + Y) == variance(X)
     assert density(Eq(cos(X*S.Pi), 1))[True] == S.Half
     assert correlation(X, Y) == 0
@@ -86,8 +86,8 @@ def test_dice():
         (S.One, p <= S.One/6), (S(2), p <= S.One/3), (S(3), p <= S.Half),\
         (S(4), p <= S(2)/3), (S(5), p <= S(5)/6), (S(6), p <= 1))
 
-    assert P(X > 3, X > 3) == S.One
-    assert P(X > Y, Eq(Y, 6)) == S.Zero
+    assert P(X > 3, X > 3) is S.One
+    assert P(X > Y, Eq(Y, 6)) is S.Zero
     assert P(Eq(X + Y, 12)) == S.One/36
     assert P(Eq(X + Y, 12), Eq(X, 6)) == S.One/6
 
@@ -393,7 +393,7 @@ def test_density_call():
 def test_DieDistribution():
     from sympy.abc import x
     X = DieDistribution(6)
-    assert X.pmf(S.Half) == S.Zero
+    assert X.pmf(S.Half) is S.Zero
     assert X.pmf(x).subs({x: 1}).doit() == S.One/6
     assert X.pmf(x).subs({x: 7}).doit() == 0
     assert X.pmf(x).subs({x: -1}).doit() == 0

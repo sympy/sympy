@@ -82,7 +82,7 @@ def test_re():
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
 
-    assert re(S.ComplexInfinity) == S.NaN
+    assert re(S.ComplexInfinity) is S.NaN
 
     n, m, l = symbols('n m l')
     A = MatrixSymbol('A',n,m)
@@ -179,7 +179,7 @@ def test_im():
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
 
-    assert im(S.ComplexInfinity) == S.NaN
+    assert im(S.ComplexInfinity) is S.NaN
 
     n, m, l = symbols('n m l')
     A = MatrixSymbol('A',n,m)

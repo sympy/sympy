@@ -125,7 +125,7 @@ def test_erfc():
 
     assert conjugate(erfc(z)) == erfc(conjugate(z))
 
-    assert erfc(x).as_leading_term(x) == S.One
+    assert erfc(x).as_leading_term(x) is S.One
     assert erfc(1/x).as_leading_term(x) == erfc(1/x)
 
     assert erfc(z).rewrite('erf') == 1 - erf(z)
@@ -139,7 +139,7 @@ def test_erfc():
     assert erfc(z).rewrite('uppergamma') == 1 - sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erfc(z).rewrite('expint') == S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
     assert erfc(z).rewrite('tractable') == _erfs(z)*exp(-z**2)
-    assert expand_func(erf(x) + erfc(x)) == S.One
+    assert expand_func(erf(x) + erfc(x)) is S.One
 
     assert erfc(x).as_real_imag() == \
         (erfc(re(x) - I*im(x))/2 + erfc(re(x) + I*im(x))/2,
@@ -168,10 +168,10 @@ def test_erfc_evalf():
 def test_erfi():
     assert erfi(nan) == nan
 
-    assert erfi(oo) == S.Infinity
-    assert erfi(-oo) == S.NegativeInfinity
+    assert erfi(oo) is S.Infinity
+    assert erfi(-oo) is S.NegativeInfinity
 
-    assert erfi(0) == S.Zero
+    assert erfi(0) is S.Zero
 
     assert erfi(I*oo) == I
     assert erfi(-I*oo) == -I
@@ -226,8 +226,8 @@ def test_erfi_evalf():
 
 def test_erf2():
 
-    assert erf2(0, 0) == S.Zero
-    assert erf2(x, x) == S.Zero
+    assert erf2(0, 0) is S.Zero
+    assert erf2(x, x) is S.Zero
     assert erf2(nan, 0) == nan
 
     assert erf2(-oo,  y) ==  erf(y) + 1
@@ -270,9 +270,9 @@ def test_erf2():
 
 def test_erfinv():
     assert erfinv(0) == 0
-    assert erfinv(1) == S.Infinity
-    assert erfinv(nan) == S.NaN
-    assert erfinv(-1) == S.NegativeInfinity
+    assert erfinv(1) is S.Infinity
+    assert erfinv(nan) is S.NaN
+    assert erfinv(-1) is S.NegativeInfinity
 
     assert erfinv(erf(w)) == w
     assert erfinv(erf(-w)) == -w
@@ -290,8 +290,8 @@ def test_erfinv_evalf():
 
 def test_erfcinv():
     assert erfcinv(1) == 0
-    assert erfcinv(0) == S.Infinity
-    assert erfcinv(nan) == S.NaN
+    assert erfcinv(0) is S.Infinity
+    assert erfcinv(nan) is S.NaN
 
     assert erfcinv(x).diff() == -sqrt(pi)*exp(erfcinv(x)**2)/2
     raises(ArgumentIndexError, lambda: erfcinv(x).fdiff(2))
@@ -301,9 +301,9 @@ def test_erfcinv():
 
 
 def test_erf2inv():
-    assert erf2inv(0, 0) == S.Zero
-    assert erf2inv(0, 1) == S.Infinity
-    assert erf2inv(1, 0) == S.One
+    assert erf2inv(0, 0) is S.Zero
+    assert erf2inv(0, 1) is S.Infinity
+    assert erf2inv(1, 0) is S.One
     assert erf2inv(0, y) == erfinv(y)
     assert erf2inv(oo, y) == erfcinv(-y)
     assert erf2inv(x, 0) == x
@@ -356,9 +356,9 @@ def tn_branch(func, s=None):
 
 
 def test_ei():
-    assert Ei(0) == S.NegativeInfinity
-    assert Ei(oo) == S.Infinity
-    assert Ei(-oo) == S.Zero
+    assert Ei(0) is S.NegativeInfinity
+    assert Ei(oo) is S.Infinity
+    assert Ei(-oo) is S.Zero
 
     assert tn_branch(Ei)
     assert mytd(Ei(x), exp(x)/x, x)
@@ -735,8 +735,8 @@ def test_fresnel():
     raises(ArgumentIndexError, lambda: fresnels(z).fdiff(2))
     raises(ArgumentIndexError, lambda: fresnelc(z).fdiff(2))
 
-    assert fresnels(x).taylor_term(-1, x) == S.Zero
-    assert fresnelc(x).taylor_term(-1, x) == S.Zero
+    assert fresnels(x).taylor_term(-1, x) is S.Zero
+    assert fresnelc(x).taylor_term(-1, x) is S.Zero
     assert fresnelc(x).taylor_term(1, x) == -pi**2*x**5/40
 
 

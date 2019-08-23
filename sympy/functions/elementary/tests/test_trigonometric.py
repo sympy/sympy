@@ -41,8 +41,8 @@ def test_sin():
     assert sin(oo) - sin(oo) == AccumBounds(-2, 2)
     assert sin(oo*I) == oo*I
     assert sin(-oo*I) == -oo*I
-    assert 0*sin(oo) == S.Zero
-    assert 0/sin(oo) == S.Zero
+    assert 0*sin(oo) is S.Zero
+    assert 0/sin(oo) is S.Zero
     assert 0 + sin(oo) == AccumBounds(-1, 1)
     assert 5 + sin(oo) == AccumBounds(4, 6)
 
@@ -460,10 +460,10 @@ def test_tan():
     assert tan(pi/3) == sqrt(3)
     assert tan(-2*pi/3) == sqrt(3)
 
-    assert tan(pi/4) == S.One
-    assert tan(-pi/4) == -S.One
-    assert tan(17*pi/4) == S.One
-    assert tan(-3*pi/4) == S.One
+    assert tan(pi/4) is S.One
+    assert tan(-pi/4) is S.NegativeOne
+    assert tan(17*pi/4) is S.One
+    assert tan(-3*pi/4) is S.One
 
     assert tan(pi/5) == sqrt(5 - 2*sqrt(5))
     assert tan(2*pi/5) == sqrt(5 + 2*sqrt(5))
@@ -626,10 +626,10 @@ def test_cot():
     assert cot(pi/3) == 1/sqrt(3)
     assert cot(-2*pi/3) == 1/sqrt(3)
 
-    assert cot(pi/4) == S.One
-    assert cot(-pi/4) == -S.One
-    assert cot(17*pi/4) == S.One
-    assert cot(-3*pi/4) == S.One
+    assert cot(pi/4) is S.One
+    assert cot(-pi/4) is S.NegativeOne
+    assert cot(17*pi/4) is S.One
+    assert cot(-3*pi/4) is S.One
 
     assert cot(pi/6) == sqrt(3)
     assert cot(-pi/6) == -sqrt(3)
@@ -697,7 +697,7 @@ def test_cot_series():
         x**(-4) - 1/x**3 + x**(-2) - 1/x + 1 + O(x)
     assert cot(pi*(1-x)).series(x, 0, 3) == -1/(pi*x) + pi*x/3 + O(x**3)
     assert cot(x).taylor_term(0, x) == 1/x
-    assert cot(x).taylor_term(2, x) == S.Zero
+    assert cot(x).taylor_term(2, x) is S.Zero
     assert cot(x).taylor_term(3, x) == -x**3/45
 
 
@@ -765,15 +765,15 @@ def test_sinc():
     assert isinstance(sinc(x), sinc)
 
     s = Symbol('s', zero=True)
-    assert sinc(s) == S.One
-    assert sinc(S.Infinity) == S.Zero
-    assert sinc(S.NegativeInfinity) == S.Zero
-    assert sinc(S.NaN) == S.NaN
-    assert sinc(S.ComplexInfinity) == S.NaN
+    assert sinc(s) is S.One
+    assert sinc(S.Infinity) is S.Zero
+    assert sinc(S.NegativeInfinity) is S.Zero
+    assert sinc(S.NaN) is S.NaN
+    assert sinc(S.ComplexInfinity) is S.NaN
 
     n = Symbol('n', integer=True, nonzero=True)
-    assert sinc(n*pi) == S.Zero
-    assert sinc(-n*pi) == S.Zero
+    assert sinc(n*pi) is S.Zero
+    assert sinc(-n*pi) is S.Zero
     assert sinc(pi/2) == 2 / pi
     assert sinc(-pi/2) == 2 / pi
     assert sinc(5*pi/2) == 2 / (5*pi)
@@ -912,7 +912,7 @@ def test_acos_series():
     assert t5 == -3*x**5/40
     assert acos(x).taylor_term(7, x, t5, 0) == -5*x**7/112
     assert acos(x).taylor_term(0, x) == pi/2
-    assert acos(x).taylor_term(2, x) == S.Zero
+    assert acos(x).taylor_term(2, x) is S.Zero
 
 
 def test_acos_rewrite():
@@ -1006,7 +1006,7 @@ def test_atan_fdiff():
 
 def test_atan2():
     assert atan2.nargs == FiniteSet(2)
-    assert atan2(0, 0) == S.NaN
+    assert atan2(0, 0) is S.NaN
     assert atan2(0, 1) == 0
     assert atan2(1, 1) == pi/4
     assert atan2(1, 0) == pi/2
@@ -1039,7 +1039,7 @@ def test_atan2():
     assert atan2(y, -oo)==  2*pi*Heaviside(re(y)) - pi
 
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
-    assert atan2(0, 0) == S.NaN
+    assert atan2(0, 0) is S.NaN
 
     ex = atan2(y, x) - arg(x + I*y)
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0
@@ -1376,8 +1376,8 @@ def test_real_imag():
 def test_sin_cos_with_infinity():
     # Test for issue 5196
     # https://github.com/sympy/sympy/issues/5196
-    assert sin(oo) == S.NaN
-    assert cos(oo) == S.NaN
+    assert sin(oo) is S.NaN
+    assert cos(oo) is S.NaN
 
 
 @slow
@@ -1745,7 +1745,7 @@ def test_trig_period():
     assert cos((-3)*x).period() == 2*pi/3
     assert cos(x*y).period(x) == 2*pi/abs(y)
     assert sin(3*x*y + 2*pi).period(y) == 2*pi/abs(3*x)
-    assert tan(3*x).period(y) == S.Zero
+    assert tan(3*x).period(y) is S.Zero
     raises(NotImplementedError, lambda: sin(x**2).period(x))
 
 

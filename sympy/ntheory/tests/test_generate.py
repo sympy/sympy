@@ -51,7 +51,7 @@ def test_primepi():
     r = Symbol('r', real=True)
     assert primepi(r).subs(r, 2) == 1
 
-    assert primepi(S.Infinity) == S.Infinity
+    assert primepi(S.Infinity) is S.Infinity
     assert primepi(S.NegativeInfinity) == 0
 
     assert limit(primepi(n), n, 100) == 25

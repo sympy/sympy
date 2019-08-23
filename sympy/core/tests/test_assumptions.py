@@ -1094,9 +1094,9 @@ def test_issue_9115_9150():
 def test_issue_9165():
     z = Symbol('z', zero=True)
     f = Symbol('f', finite=False)
-    assert 0/z == S.NaN
-    assert 0*(1/z) == S.NaN
-    assert 0*f == S.NaN
+    assert 0/z is S.NaN
+    assert 0*(1/z) is S.NaN
+    assert 0*f is S.NaN
 
 def test_issue_10024():
     x = Dummy('x')

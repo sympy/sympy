@@ -912,7 +912,7 @@ class Expr(Basic, EvalfMixin):
                 return None
             if getattr(n2, '_prec', 1) == 1:  # no significance
                 return None
-            if n2 == S.NaN:
+            if n2 is S.NaN:
                 return None
 
             r, i = self.evalf(2).as_real_imag()
@@ -947,7 +947,7 @@ class Expr(Basic, EvalfMixin):
                 return None
             if getattr(n2, '_prec', 1) == 1:  # no significance
                 return None
-            if n2 == S.NaN:
+            if n2 is S.NaN:
                 return None
 
             r, i = self.evalf(2).as_real_imag()
@@ -2341,11 +2341,11 @@ class Expr(Basic, EvalfMixin):
         c = sympify(c)
         if self is S.NaN:
             return None
-        if c is S.Zero:
+        if c.is_zero:
             return self
         elif c == self:
             return S.Zero
-        elif self is S.Zero:
+        elif self == S.Zero:
             return None
 
         if self.is_Number:

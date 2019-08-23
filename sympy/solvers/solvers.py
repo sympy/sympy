@@ -1504,7 +1504,7 @@ def _solve(f, *symbols, **flags):
         # first see if it really depends on symbol and whether there
         # is only a linear solution
         f_num, sol = solve_linear(f, symbols=symbols)
-        if f_num is S.Zero or sol is S.NaN:
+        if f_num.is_zero or sol is S.NaN:
             return []
         elif f_num.is_Symbol:
             # no need to check but simplify if desired
@@ -2580,7 +2580,7 @@ def inv_quick(M):
         return M.inv()
     n = M.rows
     d = det(M)
-    if d is S.Zero:
+    if d == S.Zero:
         raise ValueError("Matrix det == 0; not invertible.")
     ret = zeros(n)
     s1 = -1
@@ -3110,7 +3110,7 @@ def _invert(eq, *symbols, **kwargs):
             # dep + indep == rhs
             if lhs.is_Add:
                 # this indicates we have done it all
-                if indep is S.Zero:
+                if indep.is_zero:
                     break
 
                 lhs = dep

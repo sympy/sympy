@@ -334,7 +334,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
             def eval(cls, arg):
                 if arg is S.NaN:
                     return S.NaN
-                if arg is S.Zero: return S.Zero
+                if arg.is_zero: return S.Zero
                 if arg.is_positive: return S.One
                 if arg.is_negative: return S.NegativeOne
                 if isinstance(arg, Mul):
@@ -410,7 +410,7 @@ class Function(Application, Expr):
     ...     @classmethod
     ...     def eval(cls, x):
     ...         if x.is_Number:
-    ...             if x is S.Zero:
+    ...             if x.is_zero:
     ...                 return S.One
     ...             elif x is S.Infinity:
     ...                 return S.Zero
@@ -609,7 +609,7 @@ class Function(Application, Expr):
         for a in self.args:
             i += 1
             da = a.diff(s)
-            if da is S.Zero:
+            if da.is_zero:
                 continue
             try:
                 df = self.fdiff(i)

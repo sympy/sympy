@@ -242,7 +242,7 @@ def test_basic_properties_3d():
 
     assert s1.midpoint == Point3D(Rational(1, 2), Rational(1, 2), Rational(1, 2))
     # Test zdirection
-    assert Ray3D(p1, Point3D(0, 0, -1)).zdirection == S.NegativeInfinity
+    assert Ray3D(p1, Point3D(0, 0, -1)).zdirection is S.NegativeInfinity
 
 
 def test_contains():

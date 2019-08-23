@@ -264,7 +264,7 @@ class Pow(Expr):
         if evaluate:
             if e is S.ComplexInfinity:
                 return S.NaN
-            if e is S.Zero:
+            if e.is_zero:
                 return S.One
             elif e is S.One:
                 return b
@@ -1591,7 +1591,7 @@ class Pow(Expr):
         o2 = order*(b0**-e)
         z = (b/b0 - 1)
         o = O(z, x)
-        if o is S.Zero or o2 is S.Zero:
+        if o.is_zero or o2.is_zero:
             infinite = True
         else:
             if o.expr.is_number:

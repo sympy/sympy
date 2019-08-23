@@ -328,7 +328,7 @@ def test_differentiation():
     expr = S(2) * hi
     assert expr.diff(hj) == S(2) * KroneckerDelta(i, j)
     assert expr.diff(hi) == S(2) * KroneckerDelta(i, i)
-    assert expr.diff(a) == S.Zero
+    assert expr.diff(a) is S.Zero
 
     assert Sum(expr, (i, -oo, oo)).diff(hj) == Sum(2*KroneckerDelta(i, j), (i, -oo, oo))
     assert Sum(expr.diff(hj), (i, -oo, oo)) == Sum(2*KroneckerDelta(i, j), (i, -oo, oo))
@@ -340,7 +340,7 @@ def test_differentiation():
     expr = a * hj * hj / S(2)
     assert expr.diff(hi) == a * h[j] * KroneckerDelta(i, j)
     assert expr.diff(a) == hj * hj / S(2)
-    assert expr.diff(a, 2) == S.Zero
+    assert expr.diff(a, 2) is S.Zero
 
     assert Sum(expr, (i, -oo, oo)).diff(hi) == Sum(a*KroneckerDelta(i, j)*h[j], (i, -oo, oo))
     assert Sum(expr.diff(hi), (i, -oo, oo)) == Sum(a*KroneckerDelta(i, j)*h[j], (i, -oo, oo))

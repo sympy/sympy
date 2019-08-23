@@ -566,7 +566,7 @@ def test_exponential():
     assert kurtosis(X) == smoment(X, 4)
     assert smoment(2*X, 4) == smoment(X, 4)
     assert moment(X, 3) == 3*2*1/rate**3
-    assert P(X > 0) == S.One
+    assert P(X > 0) is S.One
     assert P(X > 1) == exp(-rate)
     assert P(X > 10) == exp(-10*rate)
     assert quantile(X)(p) == -log(1-p)/rate
@@ -1124,8 +1124,8 @@ def test_difficult_univariate():
 def test_issue_10003():
     X = Exponential('x', 3)
     G = Gamma('g', 1, 2)
-    assert P(X < -1) == S.Zero
-    assert P(G < -1) == S.Zero
+    assert P(X < -1) is S.Zero
+    assert P(G < -1) is S.Zero
 
 
 @slow

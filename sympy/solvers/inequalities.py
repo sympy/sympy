@@ -487,7 +487,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     else:
         e = expr.lhs - expr.rhs
         period = periodicity(e, gen)
-        if period is S.Zero:
+        if period == S.Zero:
             e = expand_mul(e)
             const = expr.func(e, 0)
             if const is S.true:

@@ -458,7 +458,7 @@ class zeta(Function):
                 return S.NaN
             elif z is S.Infinity:
                 return S.One
-            elif z is S.Zero:
+            elif z.is_zero:
                 return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity

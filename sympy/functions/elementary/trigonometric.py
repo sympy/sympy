@@ -262,7 +262,7 @@ class sin(TrigonometricFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Zero
             elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return AccumBounds(-1, 1)
@@ -538,7 +538,7 @@ class cos(TrigonometricFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.One
             elif arg is S.Infinity or arg is S.NegativeInfinity:
                 # In this case it is better to return AccumBounds(-1, 1)
@@ -964,7 +964,7 @@ class tan(TrigonometricFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Zero
             elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return AccumBounds(S.NegativeInfinity, S.Infinity)
@@ -1282,7 +1282,7 @@ class cot(TrigonometricFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            if arg is S.Zero:
+            if arg.is_zero:
                 return S.ComplexInfinity
 
         if arg is S.ComplexInfinity:
@@ -2037,7 +2037,7 @@ class asin(InverseTrigonometricFunction):
                 return S.NegativeInfinity * S.ImaginaryUnit
             elif arg is S.NegativeInfinity:
                 return S.Infinity * S.ImaginaryUnit
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Zero
             elif arg is S.One:
                 return S.Pi / 2
@@ -2200,7 +2200,7 @@ class acos(InverseTrigonometricFunction):
                 return S.Infinity * S.ImaginaryUnit
             elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity * S.ImaginaryUnit
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Pi / 2
             elif arg is S.One:
                 return S.Zero
@@ -2380,7 +2380,7 @@ class atan(InverseTrigonometricFunction):
                 return S.Pi / 2
             elif arg is S.NegativeInfinity:
                 return -S.Pi / 2
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Zero
             elif arg is S.One:
                 return S.Pi / 4
@@ -2443,9 +2443,9 @@ class atan(InverseTrigonometricFunction):
             - log(S.One + S.ImaginaryUnit * x))
 
     def _eval_aseries(self, n, args0, x, logx):
-        if args0[0] == S.Infinity:
+        if args0[0] is S.Infinity:
             return (S.Pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx)
-        elif args0[0] == S.NegativeInfinity:
+        elif args0[0] is S.NegativeInfinity:
             return (-S.Pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx)
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
@@ -2547,7 +2547,7 @@ class acot(InverseTrigonometricFunction):
                 return S.Zero
             elif arg is S.NegativeInfinity:
                 return S.Zero
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Pi/ 2
             elif arg is S.One:
                 return S.Pi / 4
@@ -2609,9 +2609,9 @@ class acot(InverseTrigonometricFunction):
             return self.func(arg)
 
     def _eval_aseries(self, n, args0, x, logx):
-        if args0[0] == S.Infinity:
+        if args0[0] is S.Infinity:
             return (S.Pi/2 - acot(1/self.args[0]))._eval_nseries(x, n, logx)
-        elif args0[0] == S.NegativeInfinity:
+        elif args0[0] is S.NegativeInfinity:
             return (3*S.Pi/2 - acot(1/self.args[0]))._eval_nseries(x, n, logx)
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)

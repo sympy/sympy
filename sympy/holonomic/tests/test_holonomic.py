@@ -507,7 +507,7 @@ def test_expr_to_holonomic():
     p = p.to_expr()
     q = log(x)/2 - Ci(2*x)/2 + Ci(2)/2
     assert p == q
-    p = expr_to_holonomic(x**(S.Half), x0=1)
+    p = expr_to_holonomic(x**S.Half, x0=1)
     q = HolonomicFunction(x*Dx - S.Half, x, 1, [1])
     assert p == q
     p = expr_to_holonomic(sqrt(1 + x**2))

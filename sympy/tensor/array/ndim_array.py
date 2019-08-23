@@ -397,7 +397,7 @@ class NDimArray(object):
 
         other = sympify(other)
         if isinstance(self, SparseNDimArray):
-            if(other == S.Zero):
+            if other.is_zero:
                 return type(self)({}, self.shape)
             return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
 
@@ -414,7 +414,7 @@ class NDimArray(object):
 
         other = sympify(other)
         if isinstance(self, SparseNDimArray):
-            if(other == S.Zero):
+            if other.is_zero:
                 return type(self)({}, self.shape)
             return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
 

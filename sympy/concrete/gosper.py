@@ -150,7 +150,7 @@ def gosper_term(f, n):
         if coeff not in solution:
             x = x.subs(coeff, 0)
 
-    if x is S.Zero:
+    if x.is_zero:
         return None    # 'f(n)' is *not* Gosper-summable
     else:
         return B.as_expr()*x/C.as_expr()

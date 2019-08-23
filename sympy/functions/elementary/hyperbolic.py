@@ -106,7 +106,7 @@ class sinh(HyperbolicFunction):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
@@ -274,7 +274,7 @@ class cosh(HyperbolicFunction):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Infinity
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.One
             elif arg.is_negative:
                 return cls(-arg)
@@ -433,7 +433,7 @@ class tanh(HyperbolicFunction):
                 return S.One
             elif arg is S.NegativeInfinity:
                 return S.NegativeOne
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
@@ -583,7 +583,7 @@ class coth(HyperbolicFunction):
                 return S.One
             elif arg is S.NegativeInfinity:
                 return S.NegativeOne
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.ComplexInfinity
             elif arg.is_negative:
                 return -cls(-arg)
@@ -907,7 +907,7 @@ class asinh(InverseHyperbolicFunction):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Zero
             elif arg is S.One:
                 return log(sqrt(2) + 1)
@@ -1005,7 +1005,7 @@ class acosh(InverseHyperbolicFunction):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Infinity
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Pi*S.ImaginaryUnit / 2
             elif arg is S.One:
                 return S.Zero
@@ -1133,7 +1133,7 @@ class atanh(InverseHyperbolicFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Zero
             elif arg is S.One:
                 return S.Infinity
@@ -1225,7 +1225,7 @@ class acoth(InverseHyperbolicFunction):
                 return S.Zero
             elif arg is S.NegativeInfinity:
                 return S.Zero
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Pi*S.ImaginaryUnit / 2
             elif arg is S.One:
                 return S.Infinity
@@ -1331,7 +1331,7 @@ class asech(InverseHyperbolicFunction):
                 return S.Pi*S.ImaginaryUnit / 2
             elif arg is S.NegativeInfinity:
                 return S.Pi*S.ImaginaryUnit / 2
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.Infinity
             elif arg is S.One:
                 return S.Zero
@@ -1454,7 +1454,7 @@ class acsch(InverseHyperbolicFunction):
                 return S.Zero
             elif arg is S.NegativeInfinity:
                 return S.Zero
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.ComplexInfinity
             elif arg is S.One:
                 return log(1 + sqrt(2))

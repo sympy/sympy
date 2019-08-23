@@ -155,7 +155,7 @@ def test_order():
     assert f.order() == 8
 
     f = FpGroup(F, [x*y*x**-1*y**-1, y**2])
-    assert f.order() == S.Infinity
+    assert f.order() is S.Infinity
 
     F, a, b, c = free_group("a, b, c")
     f = FpGroup(F, [a**250, b**2, c*b*c**-1*b, c**4, c**-1*a**-1*c*a, a**-1*b**-1*a*b])
@@ -163,7 +163,7 @@ def test_order():
 
     F, x = free_group("x")
     f = FpGroup(F, [])
-    assert f.order() == S.Infinity
+    assert f.order() is S.Infinity
 
     f = FpGroup(free_group('')[0], [])
     assert f.order() == 1

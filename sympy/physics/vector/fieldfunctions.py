@@ -194,7 +194,7 @@ def is_solenoidal(field):
     if field == Vector(0):
         return True
     frame = list(field.separate())[0]
-    return divergence(field, frame).simplify() == S.Zero
+    return divergence(field, frame).simplify() is S.Zero
 
 
 def scalar_potential(field, frame):

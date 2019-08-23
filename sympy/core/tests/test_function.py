@@ -1085,7 +1085,7 @@ def test_issue_12005():
     e3 = Subs(Derivative(f(x) + y**2 - y, y), y, y**2)
     assert e3.diff(y) == 4*y
     e4 = Subs(Derivative(f(x + y), y), y, (x**2))
-    assert e4.diff(y) == S.Zero
+    assert e4.diff(y) is S.Zero
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
     assert f(g(x)).diff(g(x), g(x)) == Derivative(f(g(x)), g(x), g(x))
@@ -1106,8 +1106,8 @@ def test_order_could_be_zero():
     n = symbols('n', integer=True, nonnegative=True)
     m = symbols('m', integer=True, positive=True)
     assert diff(y, (x, n)) == Piecewise((y, Eq(n, 0)), (0, True))
-    assert diff(y, (x, n + 1)) == S.Zero
-    assert diff(y, (x, m)) == S.Zero
+    assert diff(y, (x, n + 1)) is S.Zero
+    assert diff(y, (x, m)) is S.Zero
 
 
 def test_undefined_function_eq():

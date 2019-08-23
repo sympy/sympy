@@ -383,7 +383,7 @@ class FpGroup(DefaultPrinting):
         '''
         from sympy.combinatorics import Permutation, PermutationGroup
         from sympy.combinatorics.homomorphisms import homomorphism
-        if self.order() == S.Infinity:
+        if self.order() is S.Infinity:
             raise NotImplementedError("Permutation presentation of infinite "
                                                   "groups is not implemented")
         if self._perm_isomorphism:

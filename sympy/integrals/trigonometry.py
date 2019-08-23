@@ -65,9 +65,9 @@ def trigintegrate(f, x, conds='piecewise'):
         return
 
     n, m = M[n], M[m]
-    if n is S.Zero and m is S.Zero:
+    if n.is_zero and m.is_zero:
         return x
-    zz = x if n is S.Zero else S.Zero
+    zz = x if n.is_zero else S.Zero
 
     a = M[a]
 

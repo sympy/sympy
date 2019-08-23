@@ -267,7 +267,7 @@ def test_as_leading_term():
     assert (x + 1).as_leading_term(x) == 1
     assert (x + x**2).as_leading_term(x) == x
     assert (x**2).as_leading_term(x) == x**2
-    assert (x + oo).as_leading_term(x) == oo
+    assert (x + oo).as_leading_term(x) is oo
 
     raises(ValueError, lambda: (x + 1).as_leading_term(1))
 
@@ -1052,7 +1052,7 @@ def test_extractions():
     assert (-4*y**2*x).extract_multiplicatively(-3*y) is None
     assert (2*x).extract_multiplicatively(1) == 2*x
     assert (-oo).extract_multiplicatively(5) == -oo
-    assert (oo).extract_multiplicatively(5) == oo
+    assert (oo).extract_multiplicatively(5) is oo
 
     assert ((x*y)**3).extract_additively(1) is None
     assert (x + 1).extract_additively(x) == 1
@@ -1067,7 +1067,7 @@ def test_extractions():
     assert (2*x + 3).extract_additively(2*x) == 3
     assert x.extract_additively(0) == x
     assert S(2).extract_additively(x) is None
-    assert S(2.).extract_additively(2) == S.Zero
+    assert S(2.).extract_additively(2) is S.Zero
     assert S(2*x + 3).extract_additively(x + 1) == x + 2
     assert S(2*x + 3).extract_additively(y + 1) is None
     assert S(2*x - 3).extract_additively(x + 1) is None
@@ -1756,10 +1756,10 @@ def test_round():
     assert str(S(0.00106).round(4)) == '0.0011'
 
     # issue 8147
-    assert S.NaN.round() == S.NaN
-    assert S.Infinity.round() == S.Infinity
-    assert S.NegativeInfinity.round() == S.NegativeInfinity
-    assert S.ComplexInfinity.round() == S.ComplexInfinity
+    assert S.NaN.round() is S.NaN
+    assert S.Infinity.round() is S.Infinity
+    assert S.NegativeInfinity.round() is S.NegativeInfinity
+    assert S.ComplexInfinity.round() is S.ComplexInfinity
 
     # check that types match
     for i in range(2):

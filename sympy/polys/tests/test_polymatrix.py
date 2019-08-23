@@ -30,9 +30,9 @@ def test_polymatrix():
     assert pm2*m2 == C
 
     pm3 = PolyMatrix([[Poly(x**2, x), S.One]], ring='ZZ[x]')
-    v3 = (S.Half)*pm3
+    v3 = S.Half*pm3
     assert v3 == PolyMatrix([[Poly(S.Half*x**2, x, domain='QQ'), S.Half]], ring='EX')
-    assert pm3*(S.Half) == v3
+    assert pm3*S.Half == v3
     assert v3.ring == EX
 
     pm4 = PolyMatrix([[Poly(x**2, x, domain='ZZ'), Poly(-x**2, x, domain='ZZ')]])

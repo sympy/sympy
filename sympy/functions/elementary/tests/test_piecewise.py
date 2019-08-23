@@ -840,7 +840,7 @@ def test_issue_11045():
 
     # And with Eq arg handling
     assert Piecewise((1, x < 1), (2, And(Eq(x, 3), x > 1))
-        ).integrate((x, 0, 3)) == S.NaN
+        ).integrate((x, 0, 3)) is S.NaN
     assert Piecewise((1, x < 1), (2, And(Eq(x, 3), x > 1)), (3, True)
         ).integrate((x, 0, 3)) == 7
     assert Piecewise((1, x < 0), (2, And(Eq(x, 3), x < 1)), (3, True)
@@ -999,7 +999,7 @@ def test_issue_6900():
 
 def test_issue_10122():
     assert solve(abs(x) + abs(x - 1) - 1 > 0, x
-        ) == Or(And(-oo < x, x < 0), And(1 < x, x < oo))
+        ) == Or(And(-oo < x, x < S.Zero), And(S.One < x, x < oo))
 
 
 def test_issue_4313():

@@ -36,7 +36,7 @@ def test_seterr():
     seterr(divide=True)
     raises(ValueError, lambda: S.Zero/S.Zero)
     seterr(divide=False)
-    assert S.Zero / S.Zero == S.NaN
+    assert S.Zero / S.Zero is S.NaN
 
 
 def test_mod():
@@ -62,10 +62,10 @@ def test_mod():
 
     p = Symbol('p', infinite=True)
 
-    assert oo % oo == nan
-    assert zoo % oo == nan
-    assert 5 % oo == nan
-    assert p % 5 == nan
+    assert oo % oo is nan
+    assert zoo % oo is nan
+    assert 5 % oo is nan
+    assert p % 5 is nan
 
     # In these two tests, if the precision of m does
     # not match the precision of the ans, then it is
@@ -327,8 +327,8 @@ def test_Rational_new():
     assert Rational('1e2/1e-2') == Rational(10000)
     assert Rational('1 234') == Rational(1234)
     assert Rational('1/1 234') == Rational(1, 1234)
-    assert Rational(-1, 0) == S.ComplexInfinity
-    assert Rational(1, 0) == S.ComplexInfinity
+    assert Rational(-1, 0) is S.ComplexInfinity
+    assert Rational(1, 0) is S.ComplexInfinity
     # Make sure Rational doesn't lose precision on Floats
     assert Rational(pi.evalf(100)).evalf(100) == pi.evalf(100)
     raises(TypeError, lambda: Rational('3**3'))
@@ -543,9 +543,9 @@ def test_Float():
     assert Float(S.One) == Float(1.0)
 
     assert Float(decimal.Decimal('0.1'), 3) == Float('.1', 3)
-    assert Float(decimal.Decimal('nan')) == S.NaN
-    assert Float(decimal.Decimal('Infinity')) == S.Infinity
-    assert Float(decimal.Decimal('-Infinity')) == S.NegativeInfinity
+    assert Float(decimal.Decimal('nan')) is S.NaN
+    assert Float(decimal.Decimal('Infinity')) is S.Infinity
+    assert Float(decimal.Decimal('-Infinity')) is S.NegativeInfinity
 
     assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
     assert '{0:.35f}'.format(Float(pi.n(40), 40)) == \
@@ -645,82 +645,82 @@ def test_Float_from_tuple():
 
 def test_Infinity():
     assert oo != 1
-    assert 1*oo == oo
+    assert 1*oo is oo
     assert 1 != oo
     assert oo != -oo
     assert oo != Symbol("x")**3
-    assert oo + 1 == oo
-    assert 2 + oo == oo
-    assert 3*oo + 2 == oo
+    assert oo + 1 is oo
+    assert 2 + oo is oo
+    assert 3*oo + 2 is oo
     assert S.Half**oo == 0
-    assert S.Half**(-oo) == oo
-    assert -oo*3 == -oo
-    assert oo + oo == oo
-    assert -oo + oo*(-5) == -oo
+    assert S.Half**(-oo) is oo
+    assert -oo*3 is -oo
+    assert oo + oo is oo
+    assert -oo + oo*(-5) is -oo
     assert 1/oo == 0
     assert 1/(-oo) == 0
     assert 8/oo == 0
-    assert oo % 2 == nan
-    assert 2 % oo == nan
-    assert oo/oo == nan
-    assert oo/-oo == nan
-    assert -oo/oo == nan
-    assert -oo/-oo == nan
-    assert oo - oo == nan
-    assert oo - -oo == oo
-    assert -oo - oo == -oo
-    assert -oo - -oo == nan
-    assert oo + -oo == nan
-    assert -oo + oo == nan
-    assert oo + oo == oo
-    assert -oo + oo == nan
-    assert oo + -oo == nan
-    assert -oo + -oo == -oo
-    assert oo*oo == oo
-    assert -oo*oo == -oo
-    assert oo*-oo == -oo
-    assert -oo*-oo == oo
-    assert oo/0 == oo
-    assert -oo/0 == -oo
+    assert oo % 2 is nan
+    assert 2 % oo is nan
+    assert oo/oo is nan
+    assert oo/-oo is nan
+    assert -oo/oo is nan
+    assert -oo/-oo is nan
+    assert oo - oo is nan
+    assert oo - -oo is oo
+    assert -oo - oo is -oo
+    assert -oo - -oo is nan
+    assert oo + -oo is nan
+    assert -oo + oo is nan
+    assert oo + oo is oo
+    assert -oo + oo is nan
+    assert oo + -oo is nan
+    assert -oo + -oo is -oo
+    assert oo*oo is oo
+    assert -oo*oo is -oo
+    assert oo*-oo is -oo
+    assert -oo*-oo is oo
+    assert oo/0 is oo
+    assert -oo/0 is -oo
     assert 0/oo == 0
     assert 0/-oo == 0
-    assert oo*0 == nan
-    assert -oo*0 == nan
-    assert 0*oo == nan
-    assert 0*-oo == nan
-    assert oo + 0 == oo
-    assert -oo + 0 == -oo
-    assert 0 + oo == oo
-    assert 0 + -oo == -oo
-    assert oo - 0 == oo
-    assert -oo - 0 == -oo
-    assert 0 - oo == -oo
-    assert 0 - -oo == oo
-    assert oo/2 == oo
-    assert -oo/2 == -oo
-    assert oo/-2 == -oo
-    assert -oo/-2 == oo
-    assert oo*2 == oo
-    assert -oo*2 == -oo
-    assert oo*-2 == -oo
+    assert oo*0 is nan
+    assert -oo*0 is nan
+    assert 0*oo is nan
+    assert 0*-oo is nan
+    assert oo + 0 is oo
+    assert -oo + 0 is -oo
+    assert 0 + oo is oo
+    assert 0 + -oo is -oo
+    assert oo - 0 is oo
+    assert -oo - 0 is -oo
+    assert 0 - oo is -oo
+    assert 0 - -oo is oo
+    assert oo/2 is oo
+    assert -oo/2 is -oo
+    assert oo/-2 is -oo
+    assert -oo/-2 is oo
+    assert oo*2 is oo
+    assert -oo*2 is -oo
+    assert oo*-2 is -oo
     assert 2/oo == 0
     assert 2/-oo == 0
     assert -2/oo == 0
     assert -2/-oo == 0
-    assert 2*oo == oo
-    assert 2*-oo == -oo
-    assert -2*oo == -oo
-    assert -2*-oo == oo
-    assert 2 + oo == oo
-    assert 2 - oo == -oo
-    assert -2 + oo == oo
-    assert -2 - oo == -oo
-    assert 2 + -oo == -oo
-    assert 2 - -oo == oo
-    assert -2 + -oo == -oo
-    assert -2 - -oo == oo
-    assert S(2) + oo == oo
-    assert S(2) - oo == -oo
+    assert 2*oo is oo
+    assert 2*-oo is -oo
+    assert -2*oo is -oo
+    assert -2*-oo is oo
+    assert 2 + oo is oo
+    assert 2 - oo is -oo
+    assert -2 + oo is oo
+    assert -2 - oo is -oo
+    assert 2 + -oo is -oo
+    assert 2 - -oo is oo
+    assert -2 + -oo is -oo
+    assert -2 - -oo is oo
+    assert S(2) + oo is oo
+    assert S(2) - oo is -oo
     assert oo/I == -oo*I
     assert -oo/I == oo*I
     assert oo*float(1) == _inf and (oo*float(1)) is oo
@@ -754,28 +754,28 @@ def test_Infinity():
     assert (-oo != float(-oo)) is False
     assert type(float(-oo)) is float
 
-    assert Float('nan') == nan
-    assert nan*1.0 == nan
-    assert -1.0*nan == nan
-    assert nan*oo == nan
-    assert nan*-oo == nan
-    assert nan/oo == nan
-    assert nan/-oo == nan
-    assert nan + oo == nan
-    assert nan + -oo == nan
-    assert nan - oo == nan
-    assert nan - -oo == nan
-    assert -oo * S.Zero == nan
+    assert Float('nan') is nan
+    assert nan*1.0 is nan
+    assert -1.0*nan is nan
+    assert nan*oo is nan
+    assert nan*-oo is nan
+    assert nan/oo is nan
+    assert nan/-oo is nan
+    assert nan + oo is nan
+    assert nan + -oo is nan
+    assert nan - oo is nan
+    assert nan - -oo is nan
+    assert -oo * S.Zero is nan
 
-    assert oo*nan == nan
-    assert -oo*nan == nan
-    assert oo/nan == nan
-    assert -oo/nan == nan
-    assert oo + nan == nan
-    assert -oo + nan == nan
-    assert oo - nan == nan
-    assert -oo - nan == nan
-    assert S.Zero * oo == nan
+    assert oo*nan is nan
+    assert -oo*nan is nan
+    assert oo/nan is nan
+    assert -oo/nan is nan
+    assert oo + nan is nan
+    assert -oo + nan is nan
+    assert oo - nan is nan
+    assert -oo - nan is nan
+    assert S.Zero * oo is nan
     assert oo.is_Rational is False
     assert isinstance(oo, Rational) is False
 
@@ -783,28 +783,28 @@ def test_Infinity():
     assert -S.One/oo == 0
     assert S.One/-oo == 0
     assert -S.One/-oo == 0
-    assert S.One*oo == oo
-    assert -S.One*oo == -oo
-    assert S.One*-oo == -oo
-    assert -S.One*-oo == oo
-    assert S.One/nan == nan
-    assert S.One - -oo == oo
-    assert S.One + nan == nan
-    assert S.One - nan == nan
-    assert nan - S.One == nan
-    assert nan/S.One == nan
-    assert -oo - S.One == -oo
+    assert S.One*oo is oo
+    assert -S.One*oo is -oo
+    assert S.One*-oo is -oo
+    assert -S.One*-oo is oo
+    assert S.One/nan is nan
+    assert S.One - -oo is oo
+    assert S.One + nan is nan
+    assert S.One - nan is nan
+    assert nan - S.One is nan
+    assert nan/S.One is nan
+    assert -oo - S.One is -oo
 
 
 def test_Infinity_2():
     x = Symbol('x')
     assert oo*x != oo
-    assert oo*(pi - 1) == oo
-    assert oo*(1 - pi) == -oo
+    assert oo*(pi - 1) is oo
+    assert oo*(1 - pi) is -oo
 
     assert (-oo)*x != -oo
-    assert (-oo)*(pi - 1) == -oo
-    assert (-oo)*(1 - pi) == oo
+    assert (-oo)*(pi - 1) is -oo
+    assert (-oo)*(1 - pi) is oo
 
     assert (-1)**S.NaN is S.NaN
     assert oo - _inf is S.NaN
@@ -820,33 +820,33 @@ def test_Infinity_2():
     assert -oo/_inf is S.NaN
     assert -oo/_ninf is S.NaN
     assert -oo/S.NaN is S.NaN
-    assert abs(-oo) == oo
+    assert abs(-oo) is oo
     assert all((-oo)**i is S.NaN for i in (oo, -oo, S.NaN))
-    assert (-oo)**3 == -oo
-    assert (-oo)**2 == oo
-    assert abs(S.ComplexInfinity) == oo
+    assert (-oo)**3 is -oo
+    assert (-oo)**2 is oo
+    assert abs(S.ComplexInfinity) is oo
 
 
 def test_Mul_Infinity_Zero():
-    assert Float(0)*_inf == nan
-    assert Float(0)*_ninf == nan
-    assert Float(0)*_inf == nan
-    assert Float(0)*_ninf == nan
-    assert _inf*Float(0) == nan
-    assert _ninf*Float(0) == nan
-    assert _inf*Float(0) == nan
-    assert _ninf*Float(0) == nan
+    assert Float(0)*_inf is nan
+    assert Float(0)*_ninf is nan
+    assert Float(0)*_inf is nan
+    assert Float(0)*_ninf is nan
+    assert _inf*Float(0) is nan
+    assert _ninf*Float(0) is nan
+    assert _inf*Float(0) is nan
+    assert _ninf*Float(0) is nan
 
 
 def test_Div_By_Zero():
-    assert 1/S.Zero == zoo
-    assert 1/Float(0) == zoo
-    assert 0/S.Zero == nan
-    assert 0/Float(0) == nan
-    assert S.Zero/0 == nan
-    assert Float(0)/0 == nan
-    assert -1/S.Zero == zoo
-    assert -1/Float(0) == zoo
+    assert 1/S.Zero is zoo
+    assert 1/Float(0) is zoo
+    assert 0/S.Zero is nan
+    assert 0/Float(0) is nan
+    assert S.Zero/0 is nan
+    assert Float(0)/0 is nan
+    assert -1/S.Zero is zoo
+    assert -1/Float(0) is zoo
 
 
 def test_Infinity_inequations():
@@ -1063,15 +1063,15 @@ def test_isqrt():
 def test_powers_Integer():
     """Test Integer._eval_power"""
     # check infinity
-    assert S.One ** S.Infinity == S.NaN
-    assert S.NegativeOne** S.Infinity == S.NaN
-    assert S(2) ** S.Infinity == S.Infinity
+    assert S.One ** S.Infinity is S.NaN
+    assert S.NegativeOne** S.Infinity is S.NaN
+    assert S(2) ** S.Infinity is S.Infinity
     assert S(-2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
-    assert S(0) ** S.Infinity == 0
+    assert S(0) ** S.Infinity is S.Zero
 
     # check Nan
-    assert S.One ** S.NaN == S.NaN
-    assert S.NegativeOne ** S.NaN == S.NaN
+    assert S.One ** S.NaN is S.NaN
+    assert S.NegativeOne ** S.NaN is S.NaN
 
     # check for exact roots
     assert S.NegativeOne ** Rational(6, 5) == - (-1)**(S.One/5)
@@ -1171,14 +1171,14 @@ def test_powers_Rational():
     """Test Rational._eval_power"""
     # check infinity
     assert Rational(1, 2) ** S.Infinity == 0
-    assert Rational(3, 2) ** S.Infinity == S.Infinity
+    assert Rational(3, 2) ** S.Infinity is S.Infinity
     assert Rational(-1, 2) ** S.Infinity == 0
     assert Rational(-3, 2) ** S.Infinity == \
         S.Infinity + S.Infinity * S.ImaginaryUnit
 
     # check Nan
-    assert Rational(3, 4) ** S.NaN == S.NaN
-    assert Rational(-2, 3) ** S.NaN == S.NaN
+    assert Rational(3, 4) ** S.NaN is S.NaN
+    assert Rational(-2, 3) ** S.NaN is S.NaN
 
     # exact roots on numerator
     assert sqrt(Rational(4, 3)) == 2 * sqrt(3) / 3
@@ -1434,22 +1434,22 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).cofactors(Integer(2)) == \
         (Integer(2), Integer(2), Integer(1))
 
-    assert Integer(4).gcd(Float(2.0)) == S.One
+    assert Integer(4).gcd(Float(2.0)) is S.One
     assert Integer(4).lcm(Float(2.0)) == Float(8.0)
     assert Integer(4).cofactors(Float(2.0)) == (S.One, Integer(4), Float(2.0))
 
-    assert Rational(1, 2).gcd(Float(2.0)) == S.One
+    assert Rational(1, 2).gcd(Float(2.0)) is S.One
     assert Rational(1, 2).lcm(Float(2.0)) == Float(1.0)
     assert Rational(1, 2).cofactors(Float(2.0)) == \
         (S.One, Rational(1, 2), Float(2.0))
 
 
 def test_Float_gcd_lcm_cofactors():
-    assert Float(2.0).gcd(Integer(4)) == S.One
+    assert Float(2.0).gcd(Integer(4)) is S.One
     assert Float(2.0).lcm(Integer(4)) == Float(8.0)
     assert Float(2.0).cofactors(Integer(4)) == (S.One, Float(2.0), Integer(4))
 
-    assert Float(2.0).gcd(Rational(1, 2)) == S.One
+    assert Float(2.0).gcd(Rational(1, 2)) is S.One
     assert Float(2.0).lcm(Rational(1, 2)) == Float(1.0)
     assert Float(2.0).cofactors(Rational(1, 2)) == \
         (S.One, Float(2.0), Rational(1, 2))
@@ -1586,31 +1586,31 @@ def test_zoo():
 
 def test_issue_4122():
     x = Symbol('x', nonpositive=True)
-    assert oo + x == oo
+    assert oo + x is oo
     x = Symbol('x', extended_nonpositive=True)
     assert (oo + x).is_Add
     x = Symbol('x', finite=True)
     assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', nonnegative=True)
-    assert oo + x == oo
+    assert oo + x is oo
     x = Symbol('x', extended_nonnegative=True)
-    assert oo + x == oo
+    assert oo + x is oo
     x = Symbol('x', finite=True, real=True)
-    assert oo + x == oo
+    assert oo + x is oo
 
     # similarly for negative infinity
     x = Symbol('x', nonnegative=True)
-    assert -oo + x == -oo
+    assert -oo + x is -oo
     x = Symbol('x', extended_nonnegative=True)
     assert (-oo + x).is_Add
     x = Symbol('x', finite=True)
     assert (-oo + x).is_Add
     x = Symbol('x', nonpositive=True)
-    assert -oo + x == -oo
+    assert -oo + x is -oo
     x = Symbol('x', extended_nonpositive=True)
-    assert -oo + x == -oo
+    assert -oo + x is -oo
     x = Symbol('x', finite=True, real=True)
-    assert -oo + x == -oo
+    assert -oo + x is -oo
 
 
 def test_GoldenRatio_expand():
@@ -1760,7 +1760,7 @@ def test_latex():
 
 
 def test_issue_7742():
-    assert -oo % 1 == nan
+    assert -oo % 1 is nan
 
 
 def test_simplify_AlgebraicNumber():
@@ -1825,7 +1825,7 @@ def test_comp1():
 
 
 def test_issue_9491():
-    assert oo**zoo == nan
+    assert oo**zoo is nan
 
 
 def test_issue_10063():
@@ -1989,29 +1989,29 @@ def test_numpy_to_float():
 def test_Integer_ceiling_floor():
     a = Integer(4)
 
-    assert(a.floor() == a)
-    assert(a.ceiling() == a)
+    assert a.floor() == a
+    assert a.ceiling() == a
 
 def test_ComplexInfinity():
-    assert((zoo).floor() == zoo)
-    assert((zoo).ceiling() == zoo)
-    assert(zoo**zoo == S.NaN)
+    assert zoo.floor() is zoo
+    assert zoo.ceiling() is zoo
+    assert zoo**zoo is S.NaN
 
 def test_Infinity_floor_ceiling_power():
-    assert((oo).floor() == oo)
-    assert((oo).ceiling() == oo)
-    assert((oo)**S.NaN == S.NaN)
-    assert((oo)**zoo == S.NaN)
+    assert oo.floor() is oo
+    assert oo.ceiling() is oo
+    assert oo**S.NaN is S.NaN
+    assert oo**zoo is S.NaN
 
 def test_One_power():
-    assert((S.One)**12 == S.One)
-    assert((S.NegativeOne)**S.NaN == S.NaN)
+    assert S.One**12 is S.One
+    assert S.NegativeOne**S.NaN is S.NaN
 
 def test_NegativeInfinity():
-    assert((-oo).floor() == -oo)
-    assert((-oo).ceiling() == -oo)
-    assert((-oo)**11 == -oo)
-    assert((-oo)**12 == oo)
+    assert (-oo).floor() is -oo
+    assert (-oo).ceiling() is -oo
+    assert (-oo)**11 is -oo
+    assert (-oo)**12 is oo
 
 def test_issue_6133():
     raises(TypeError, lambda: (-oo < None))

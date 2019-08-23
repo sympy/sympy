@@ -39,8 +39,8 @@ def test_basic1():
     assert limit(y/x/log(x), x, 0) == -oo*sign(y)
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
     assert limit(gamma(1/x + 3), x, oo) == 2
-    assert limit(S.NaN, x, -oo) == S.NaN
-    assert limit(Order(2)*x, x, S.NaN) == S.NaN
+    assert limit(S.NaN, x, -oo) is S.NaN
+    assert limit(Order(2)*x, x, S.NaN) is S.NaN
     assert limit(1/(x - 1), x, 1, dir="+") == oo
     assert limit(1/(x - 1), x, 1, dir="-") == -oo
     assert limit(1/(5 - x)**3, x, 5, dir="+") == -oo

@@ -210,17 +210,17 @@ def test_evalf_bugs():
     # >>> n = Some Number
     # n*nan, n/nan, n*inf, n/inf
     # n+nan, n-nan, n+inf, n-inf
-    assert (0*E**(oo)).n() == S.NaN
-    assert (0/E**(oo)).n() == S.Zero
+    assert (0*E**(oo)).n() is S.NaN
+    assert (0/E**(oo)).n() is S.Zero
 
-    assert (0+E**(oo)).n() == S.Infinity
-    assert (0-E**(oo)).n() == S.NegativeInfinity
+    assert (0+E**(oo)).n() is S.Infinity
+    assert (0-E**(oo)).n() is S.NegativeInfinity
 
-    assert (5*E**(oo)).n() == S.Infinity
-    assert (5/E**(oo)).n() == S.Zero
+    assert (5*E**(oo)).n() is S.Infinity
+    assert (5/E**(oo)).n() is S.Zero
 
-    assert (5+E**(oo)).n() == S.Infinity
-    assert (5-E**(oo)).n() == S.NegativeInfinity
+    assert (5+E**(oo)).n() is S.Infinity
+    assert (5-E**(oo)).n() is S.NegativeInfinity
 
     #issue 7416
     assert as_mpmath(0.0, 10, {'chop': True}) == 0

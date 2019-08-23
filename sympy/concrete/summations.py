@@ -261,7 +261,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         i, a, b = limits
         w, y, z = Wild('w', exclude=[i]), Wild('y', exclude=[i]), Wild('z', exclude=[i])
         result = f.match((w * i + y) ** (-z))
-        if result is not None and b == S.Infinity:
+        if result is not None and b is S.Infinity:
             coeff = 1 / result[w] ** result[z]
             s = result[z]
             q = result[y] / result[w] + a
@@ -946,7 +946,7 @@ def eval_sum(f, limits):
     from sympy.functions import KroneckerDelta
 
     (i, a, b) = limits
-    if f is S.Zero:
+    if f.is_zero:
         return S.Zero
     if i not in f.free_symbols:
         return f*(b - a + 1)
@@ -1257,7 +1257,7 @@ def eval_sum_hyper(f, i_a_b):
     old_sum = Sum(f, (i, a, b))
 
     if b != S.Infinity:
-        if a == S.NegativeInfinity:
+        if a is S.NegativeInfinity:
             res = _eval_sum_hyper(f.subs(i, -i), i, -b)
             if res is not None:
                 return Piecewise(res, (old_sum, True))
@@ -1272,7 +1272,7 @@ def eval_sum_hyper(f, i_a_b):
                 return None
             return Piecewise((res1 - res2, cond), (old_sum, True))
 
-    if a == S.NegativeInfinity:
+    if a is S.NegativeInfinity:
         res1 = _eval_sum_hyper(f.subs(i, -i), i, 1)
         res2 = _eval_sum_hyper(f, i, 0)
         if res1 is None or res2 is None:

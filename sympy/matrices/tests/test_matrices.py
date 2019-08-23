@@ -204,11 +204,11 @@ def test_power():
     assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
 
     A = Matrix([[33, 24], [48, 57]])
-    assert (A**(S.Half))[:] == [5, 2, 4, 7]
+    assert (A**S.Half)[:] == [5, 2, 4, 7]
     A = Matrix([[0, 4], [-1, 5]])
-    assert (A**(S.Half))**2 == A
+    assert (A**S.Half)**2 == A
 
-    assert Matrix([[1, 0], [1, 1]])**(S.Half) == Matrix([[1, 0], [S.Half, 1]])
+    assert Matrix([[1, 0], [1, 1]])**S.Half == Matrix([[1, 0], [S.Half, 1]])
     assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1.0, 0], [0.5, 1.0]])
     from sympy.abc import a, b, n
     assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
@@ -2619,7 +2619,7 @@ def test_matrix_norm():
     # Check non-square
     A = Matrix([[1, 2, -3], [4, 5, Rational(13, 2)]])
     assert A.norm(2) == sqrt(S(389)/8 + sqrt(78665)/8)
-    assert A.norm(-2) == S.Zero
+    assert A.norm(-2) is S.Zero
     assert A.norm('frobenius') == sqrt(389)/2
 
     # Test properties of matrix norms
@@ -2634,7 +2634,7 @@ def test_matrix_norm():
 
     for order in ['fro', 2, -2]:
         # Zero Check
-        assert zeros(3).norm(order) == S.Zero
+        assert zeros(3).norm(order) is S.Zero
         # Check Triangle Inequality for all Pairs of Matrices
         for X in L:
             for Y in L:
@@ -2661,7 +2661,7 @@ def test_matrix_norm():
     for order in [1, 2, -1, -2, S.Infinity, S.NegativeInfinity, pi]:
         # Zero Check
         if order > 0:
-            assert Matrix([0, 0, 0]).norm(order) == S.Zero
+            assert Matrix([0, 0, 0]).norm(order) is S.Zero
         # Triangle inequality on all pairs
         if order >= 1:  # Triangle InEq holds only for these norms
             for X in L:

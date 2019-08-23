@@ -235,7 +235,7 @@ def test_fidelity():
     assert abs(fidelity(updown_dm, down_dm) - (S.One/sqrt(2))) < 1e-3
 
     #check mixed states with density
-    updown2 = (sqrt(3)/2)*up + (S.Half)*down
+    updown2 = sqrt(3)/2*up + S.Half*down
     d1 = Density([updown, 0.25], [updown2, 0.75])
     d2 = Density([updown, 0.75], [updown2, 0.25])
     assert abs(fidelity(d1, d2) - 0.991) < 1e-3
@@ -244,8 +244,8 @@ def test_fidelity():
     #using qubits/density(pure states)
     state1 = Qubit('0')
     state2 = Qubit('1')
-    state3 = (S.One/sqrt(2))*state1 + (S.One/sqrt(2))*state2
-    state4 = (sqrt(S(2)/3))*state1 + (S.One/sqrt(3))*state2
+    state3 = S.One/sqrt(2)*state1 + S.One/sqrt(2)*state2
+    state4 = sqrt(S(2)/3)*state1 + S.One/sqrt(3)*state2
 
     state1_dm = Density([state1, 1])
     state2_dm = Density([state2, 1])

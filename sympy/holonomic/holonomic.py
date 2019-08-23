@@ -998,7 +998,7 @@ class HolonomicFunction(object):
 
             # reduce the terms to lower power using annihilators of f, g
             for i in range(a + 1):
-                if not coeff_mul[i][b] == S.Zero:
+                if not coeff_mul[i][b].is_zero:
                     for j in range(b):
                         coeff_mul[i][j] += other_red[j] * \
                             coeff_mul[i][b]

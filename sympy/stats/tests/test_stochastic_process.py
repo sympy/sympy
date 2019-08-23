@@ -42,7 +42,7 @@ def test_DiscreteMarkovChain():
     assert str(P(Eq(YS[3], 2), Eq(YS[1], 1))) == \
         "T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]"
     assert P(Eq(YS[1], 1), Eq(YS[2], 2)) == Probability(Eq(YS[1], 1))
-    assert P(Eq(YS[3], 3), Eq(YS[1], 1)) == S.Zero
+    assert P(Eq(YS[3], 3), Eq(YS[1], 1)) is S.Zero
     TO = Matrix([[0.25, 0.75, 0],[0, 0.25, 0.75],[0.75, 0, 0.25]])
     assert P(Eq(Y[3], 2), Eq(Y[1], 1) & TransitionMatrixOf(Y, TO)).round(3) == Float(0.375, 3)
     assert E(Y[3], evaluate=False) == Expectation(Y[3])
@@ -64,7 +64,7 @@ def test_DiscreteMarkovChain():
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) == S.One/4
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
-        StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) == S.Zero
+        StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), Eq(Y[1], 1)) == 0.1*Probability(Eq(Y[0], 0))
 
     # testing properties of Markov chain
@@ -99,7 +99,7 @@ def test_DiscreteMarkovChain():
     assert P(Eq(X[1], 2) & Eq(X[2], 1) & Eq(X[3], 0),
     Eq(P(Eq(X[1], 0)), S.One/4) & Eq(P(Eq(X[1], 1)), S.One/4)) == S.One/12
     assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == S(2)/3
-    assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) == S.Zero
+    assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) is S.Zero
     assert P(Ne(X[2], 2), Eq(X[1], 1)) == S.One/3
     assert E(X[1]**2, Eq(X[0], 1)) == S(8)/3
     assert variance(X[1], Eq(X[0], 1)) == S(8)/9
@@ -124,7 +124,7 @@ def test_ContinuousMarkovChain():
                 Eq(P(Eq(C2(1), 0)), S.Half)) == (S.One/4 - exp(-2)/4)*(exp(-2)/2 + S.Half)
     assert P(Not(Eq(C2(1), 0) & Eq(C2(2), 1) & Eq(C2(3), 2)) |
                 (Eq(C2(1), 0) & Eq(C2(2), 1) & Eq(C2(3), 2)),
-                Eq(P(Eq(C2(1), 0)), S.One/4) & Eq(P(Eq(C2(1), 1)), S.One/4)) == S.One
+                Eq(P(Eq(C2(1), 0)), S.One/4) & Eq(P(Eq(C2(1), 1)), S.One/4)) is S.One
     assert E(C2(S(3)/2), Eq(C2(0), 2)) == -exp(-3)/2 + 2*exp(-S(3)/2) + S.Half
     assert variance(C2(S(3)/2), Eq(C2(0), 1)) == ((S.Half - exp(-3)/2)**2*(exp(-3)/2 + S.Half)
                                                     + (-S.Half - exp(-3)/2)**2*(S.Half - exp(-3)/2))

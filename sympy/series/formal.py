@@ -135,7 +135,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
                     coeff += ak
 
             # Hacky, better way?
-            if coeff is S.Zero:
+            if coeff.is_zero:
                 return None
             if (coeff.has(x) or coeff.has(zoo) or coeff.has(oo) or
                     coeff.has(nan)):
@@ -370,7 +370,7 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
         if (i < 0) == True:
             continue
         r = f.diff(x, i).limit(x, 0) / factorial(i)
-        if r is S.Zero:
+        if r.is_zero:
             continue
 
         kterm = m*k + i
@@ -821,7 +821,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     # Otherwise symb is being set to S.One
     syms = f.free_symbols.difference({x})
     (f, symb) = expand(f).as_independent(*syms)
-    if symb is S.Zero:
+    if symb.is_zero:
         symb = S.One
     symb = powsimp(symb)
 
@@ -1365,7 +1365,7 @@ class FormalPowerSeries(SeriesBase):
         if n is None:
             return iter(self)
 
-        if self._eval_term(0) is S.Zero:
+        if self._eval_term(0).is_zero:
             raise ValueError("Constant coefficient should exist for an inverse of a formal"
                 " power series to exist.")
 

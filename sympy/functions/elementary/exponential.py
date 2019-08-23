@@ -91,9 +91,10 @@ class ExpBase(Function):
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if s.exp is S.Zero:
+            z = s.exp.is_zero
+            if z:
                 return True
-            elif s.exp.is_rational and fuzzy_not(s.exp.is_zero):
+            elif s.exp.is_rational and fuzzy_not(z):
                 return False
         else:
             return s.is_rational
@@ -234,7 +235,7 @@ class exp(ExpBase):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.One
             elif arg is S.One:
                 return S.Exp1
@@ -600,7 +601,7 @@ class log(Function):
                 return cls(arg)
 
         if arg.is_Number:
-            if arg is S.Zero:
+            if arg.is_zero:
                 return S.ComplexInfinity
             elif arg is S.One:
                 return S.Zero
@@ -939,13 +940,13 @@ class LambertW(Function):
 
     @classmethod
     def eval(cls, x, k=None):
-        if k is S.Zero:
+        if k == S.Zero:
             return cls(x)
         elif k is None:
             k = S.Zero
 
-        if k is S.Zero:
-            if x is S.Zero:
+        if k.is_zero:
+            if x.is_zero:
                 return S.Zero
             if x is S.Exp1:
                 return S.One
@@ -963,7 +964,7 @@ class LambertW(Function):
                 return S.Infinity
 
         if fuzzy_not(k.is_zero):
-            if x is S.Zero:
+            if x.is_zero:
                 return S.NegativeInfinity
         if k is S.NegativeOne:
             if x == -S.Pi/2:
