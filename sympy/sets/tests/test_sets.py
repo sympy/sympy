@@ -48,7 +48,8 @@ def test_imageset():
 
 
 def test_is_empty():
-    for s in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals]:
+    for s in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals,
+            S.UniversalSet]:
         assert s.is_empty == False
 
 
@@ -101,6 +102,7 @@ def test_interval_is_empty():
     assert Interval(1, 2).is_empty == False
     assert Interval(3, 3).is_empty == False  # FiniteSet
     assert Interval(r, r).is_empty == False  # FiniteSet
+    assert Interval(r, r + nn).is_empty == False  # tests compact case
     assert Interval(x, x).is_empty == False
     assert Interval(1, oo).is_empty == False
     assert Interval(-oo, oo).is_empty == False

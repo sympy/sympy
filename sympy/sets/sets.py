@@ -944,7 +944,7 @@ class Interval(Set, EvalfMixin):
             return False
         elif (self.end - self.start).is_extended_positive:
             return False
-        elif self.left_open is False and self.right_open is False and \
+        elif self.left_open == False and self.right_open == False and \
                 self.start.is_finite and self.end.is_finite:
             # separate check for compact intervals (account for
             # [a, a] = FiniteSet(a) => not empty)
@@ -1550,6 +1550,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     """
 
     is_UniversalSet = True
+    is_empty = False
 
     def _complement(self, other):
         return S.EmptySet
