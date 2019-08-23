@@ -262,7 +262,7 @@ def test_pow_as_base_exp():
     p = S.Half**x
     assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
     # issue 8344:
-    assert Pow(1, 2, evaluate=False).as_base_exp() == (S(1), S(2))
+    assert Pow(1, 2, evaluate=False).as_base_exp() == (S.One, S(2))
 
 
 def test_issue_6100_12942_4473():
@@ -348,9 +348,9 @@ def test_issue_7638():
     # if 1/3 -> 1.0/3 this should fail since it cannot be shown that the
     # sign will be +/-1; for the previous "small arg" case, it didn't matter
     # that this could not be proved
-    assert (1 + I)**(4*I*f) == ((1 + I)**(12*I*f))**(S(1)/3)
+    assert (1 + I)**(4*I*f) == ((1 + I)**(12*I*f))**(S.One/3)
 
-    assert (((1 + I)**(I*(1 + 7*f)))**(S(1)/3)).exp == S(1)/3
+    assert (((1 + I)**(I*(1 + 7*f)))**(S.One/3)).exp == S.One/3
     r = symbols('r', real=True)
     assert sqrt(r**2) == abs(r)
     assert cbrt(r**3) != r
@@ -467,7 +467,7 @@ def test_issue_2993():
     assert str((-2.3*x - 2)**0.3) == '1.28386201800527*(-x - 0.869565217391304)**0.3'
     assert str((-2.3*x + 2)**0.3) == '1.28386201800527*(0.869565217391304 - x)**0.3'
     assert str((2.3*x + 2)**0.3) == '1.28386201800527*(x + 0.869565217391304)**0.3'
-    assert str((2.3*x - 4)**(S(1)/3)) == '1.5874010519682*(0.575*x - 1)**(1/3)'
+    assert str((2.3*x - 4)**(S.One/3)) == '1.5874010519682*(0.575*x - 1)**(1/3)'
     eq = (2.3*x + 4)
     assert eq**2 == 16.0*(0.575*x + 1)**2
     assert (1/eq).args == (eq, -1)  # don't change trivial power

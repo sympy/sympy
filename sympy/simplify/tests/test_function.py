@@ -42,13 +42,13 @@ def test_gamma():
     assert Hyper_Function([-1, -p, 1], []).gamma == 2
 
 def test_suitable_origin():
-    assert Hyper_Function((S(1)/2,), (S(3)/2,))._is_suitable_origin() is True
-    assert Hyper_Function((S(1)/2,), (S(1)/2,))._is_suitable_origin() is False
-    assert Hyper_Function((S(1)/2,), (-S(1)/2,))._is_suitable_origin() is False
-    assert Hyper_Function((S(1)/2,), (0,))._is_suitable_origin() is False
-    assert Hyper_Function((S(1)/2,), (-1, 1,))._is_suitable_origin() is False
-    assert Hyper_Function((S(1)/2, 0), (1,))._is_suitable_origin() is False
-    assert Hyper_Function((S(1)/2, 1),
+    assert Hyper_Function((S.Half,), (S(3)/2,))._is_suitable_origin() is True
+    assert Hyper_Function((S.Half,), (S.Half,))._is_suitable_origin() is False
+    assert Hyper_Function((S.Half,), (-S.Half,))._is_suitable_origin() is False
+    assert Hyper_Function((S.Half,), (0,))._is_suitable_origin() is False
+    assert Hyper_Function((S.Half,), (-1, 1,))._is_suitable_origin() is False
+    assert Hyper_Function((S.Half, 0), (1,))._is_suitable_origin() is False
+    assert Hyper_Function((S.Half, 1),
             (2, -S(2)/3))._is_suitable_origin() is True
-    assert Hyper_Function((S(1)/2, 1),
+    assert Hyper_Function((S.Half, 1),
             (2, -S(2)/3, S(3)/2))._is_suitable_origin() is True

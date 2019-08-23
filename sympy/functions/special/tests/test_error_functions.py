@@ -433,7 +433,7 @@ def test_expint():
     assert E1(z).series(z) == -EulerGamma - log(z) + z - \
         z**2/4 + z**3/18 - z**4/96 + z**5/600 + O(z**6)
 
-    assert expint(4, z).series(z) == S(1)/3 - z/2 + z**2/2 + \
+    assert expint(4, z).series(z) == S.One/3 - z/2 + z**2/2 + \
         z**3*(log(z)/6 - S(11)/36 + EulerGamma/6) - z**4/24 + \
         z**5/240 + O(z**6)
     assert expint(z, y).series(z, 0, 2) == exp(-y)/y - z*meijerg(((), (1, 1)),
@@ -676,7 +676,7 @@ def test_fresnel():
 
     assert fresnels(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(9)/4) * \
         meijerg(((), (1,)), ((S(3)/4,),
-        (S(1)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(3)/4)*(z**2)**(S(3)/4))
+        (S.One/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(3)/4)*(z**2)**(S(3)/4))
 
     assert fresnelc(0) == 0
     assert fresnelc(oo) == S.Half
@@ -696,7 +696,7 @@ def test_fresnel():
         erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
 
     assert fresnelc(z).rewrite(hyper) == \
-        z * hyper([S.One/4], [S.One/2, S(5)/4], -pi**2*z**4/16)
+        z * hyper([S.One/4], [S.Half, S(5)/4], -pi**2*z**4/16)
 
     assert fresnelc(w).is_extended_real is True
 
@@ -717,8 +717,8 @@ def test_fresnel():
         z*fresnelc(z) - sin(pi*z**2/2)/pi
 
     assert fresnelc(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(3)/4) * \
-        meijerg(((), (1,)), ((S(1)/4,),
-        (S(3)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(1)/4)*(z**2)**(S(1)/4))
+        meijerg(((), (1,)), ((S.One/4,),
+        (S(3)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S.One/4)*(z**2)**(S.One/4))
 
     from sympy.utilities.randtest import verify_numerically
 

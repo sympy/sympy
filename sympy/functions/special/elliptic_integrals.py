@@ -58,11 +58,11 @@ class elliptic_k(Function):
         if m is S.Zero:
             return pi/2
         elif m is S.Half:
-            return 8*pi**(S(3)/2)/gamma(-S(1)/4)**2
+            return 8*pi**(S(3)/2)/gamma(-S.One/4)**2
         elif m is S.One:
             return S.ComplexInfinity
         elif m is S.NegativeOne:
-            return gamma(S(1)/4)**2/(4*sqrt(2*pi))
+            return gamma(S.One/4)**2/(4*sqrt(2*pi))
         elif m in (S.Infinity, S.NegativeInfinity, I*S.Infinity,
                    I*S.NegativeInfinity, S.ComplexInfinity):
             return S.Zero

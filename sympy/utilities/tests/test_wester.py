@@ -718,7 +718,7 @@ def test_J13():
 
 
 def test_J14():
-    p = hyper([S(1)/2, S(1)/2], [S(3)/2], z**2)
+    p = hyper([S.Half, S.Half], [S(3)/2], z**2)
     assert hyperexpand(p) == asin(z)/z
 
 
@@ -2490,7 +2490,7 @@ def test_W14():
 @XFAIL
 def test_W15():
     # integral not calculated
-    assert integrate(log(gamma(x))*cos(6*pi*x), (x, 0, 1)) == S(1)/12
+    assert integrate(log(gamma(x))*cos(6*pi*x), (x, 0, 1)) == S.One/12
 
 
 def test_W16():
@@ -2648,7 +2648,7 @@ def test_X7():
     #    = 1/x^2 - 1/(2 x) + 1/12 - x^2/720 + x^4/30240 + O(x^6)
     #    [Levinson and Redheffer, p. 173]
     assert (series(1/(x*(exp(x) - 1)), x, 0, 7) == x**(-2) - 1/(2*x) +
-            S(1)/12 - x**2/720 + x**4/30240 - x**6/1209600 + O(x**7))
+            S.One/12 - x**2/720 + x**4/30240 - x**6/1209600 + O(x**7))
 
 
 def test_X8():
@@ -2763,7 +2763,7 @@ def test_X18():
     #    k = 0
     k = Dummy('k')
     assert fps(exp(-x)*sin(x)) == \
-        Sum(2**(S(1)/2*k)*sin(S(3)/4*k*pi)*x**k/factorial(k), (k, 0, oo))
+        Sum(2**(S.Half*k)*sin(S(3)/4*k*pi)*x**k/factorial(k), (k, 0, oo))
 
 
 @XFAIL

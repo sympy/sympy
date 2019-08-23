@@ -3854,8 +3854,8 @@ def riemann_cyclic_replace(t_r):
     free = sorted(t_r.free, key=lambda x: x[1])
     m, n, p, q = [x[0] for x in free]
     t0 = S(2)/3*t_r
-    t1 = - S(1)/3*t_r.substitute_indices((m,m),(n,q),(p,n),(q,p))
-    t2 = S(1)/3*t_r.substitute_indices((m,m),(n,p),(p,n),(q,q))
+    t1 = - S.One/3*t_r.substitute_indices((m,m),(n,q),(p,n),(q,p))
+    t2 = S.One/3*t_r.substitute_indices((m,m),(n,p),(p,n),(q,q))
     t3 = t0 + t1 + t2
     return t3
 

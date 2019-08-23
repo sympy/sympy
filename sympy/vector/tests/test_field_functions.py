@@ -43,10 +43,10 @@ def test_del_operator():
             curl(2*x**2*j))
 
     #Tests for divergence
-    assert delop & Vector.zero == S(0) == divergence(Vector.zero)
-    assert (delop & Vector.zero).doit() == S(0)
+    assert delop & Vector.zero == S.Zero == divergence(Vector.zero)
+    assert (delop & Vector.zero).doit() == S.Zero
     assert delop.dot(Vector.zero) == delop & Vector.zero
-    assert (delop & i).doit() == S(0)
+    assert (delop & i).doit() == S.Zero
     assert (delop & x**2*i).doit() == 2*x == divergence(x**2*i)
     assert (delop.dot(v, doit=True) == x*y + y*z + z*x ==
             divergence(v))
@@ -64,7 +64,7 @@ def test_del_operator():
     assert (delop.gradient(0, doit=True) == Vector.zero ==
             gradient(0))
     assert delop.gradient(0) == delop(0)
-    assert (delop(S(0))).doit() == Vector.zero
+    assert (delop(S.Zero)).doit() == Vector.zero
     assert (delop(x) == (Derivative(C.x, C.x))*C.i +
             (Derivative(C.x, C.y))*C.j + (Derivative(C.x, C.z))*C.k)
     assert (delop(x)).doit() == i == gradient(x)
@@ -81,10 +81,10 @@ def test_del_operator():
             -a*sin(y)/x**2 * i + a*cos(y)/x * j)
 
     #Tests for directional derivative
-    assert (Vector.zero & delop)(a) == S(0)
-    assert ((Vector.zero & delop)(a)).doit() == S(0)
+    assert (Vector.zero & delop)(a) == S.Zero
+    assert ((Vector.zero & delop)(a)).doit() == S.Zero
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
-    assert ((v & delop)(S(0))).doit() == S(0)
+    assert ((v & delop)(S.Zero)).doit() == S.Zero
     assert ((i & delop)(x)).doit() == 1
     assert ((j & delop)(y)).doit() == 1
     assert ((k & delop)(z)).doit() == 1
@@ -232,7 +232,7 @@ def test_scalar_potential_difference():
     point2 = C.origin.locate_new('P2', 4*i + 5*j + 6*k)
     genericpointC = C.origin.locate_new('RP', x*i + y*j + z*k)
     genericpointP = P.origin.locate_new('PP', P.x*P.i + P.y*P.j + P.z*P.k)
-    assert scalar_potential_difference(S(0), C, point1, point2) == 0
+    assert scalar_potential_difference(S.Zero, C, point1, point2) == 0
     assert (scalar_potential_difference(scalar_field, C, C.origin,
                                         genericpointC) ==
             scalar_field)

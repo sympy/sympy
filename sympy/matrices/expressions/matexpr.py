@@ -173,7 +173,7 @@ class MatrixExpr(Expr):
 
     def as_real_imag(self):
         from sympy import I
-        real = (S(1)/2) * (self + self._eval_conjugate())
+        real = S.Half * (self + self._eval_conjugate())
         im = (self - self._eval_conjugate())/(2*I)
         return (real, im)
 

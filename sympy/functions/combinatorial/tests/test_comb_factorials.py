@@ -345,7 +345,7 @@ def test_factorial2_rewrite():
         2**(n/2)*Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2)/sqrt(pi), Eq(Mod(n, 2), 1)))*gamma(n/2 + 1)
     assert factorial2(2*n).rewrite(gamma) == 2**n*gamma(n + 1)
     assert factorial2(2*n + 1).rewrite(gamma) == \
-        sqrt(2)*2**(n + S(1)/2)*gamma(n + S(3)/2)/sqrt(pi)
+        sqrt(2)*2**(n + S.Half)*gamma(n + S(3)/2)/sqrt(pi)
 
 
 def test_binomial():
@@ -441,9 +441,9 @@ def test_binomial():
 
     assert binomial(nt, kt).func == binomial
     assert binomial(nt, S(15)/6) == 8*gamma(nt + 1)/(15*sqrt(pi)*gamma(nt - S(3)/2))
-    assert binomial(S(20)/3, S(-10)/8) == gamma(S(23)/3)/(gamma(S(-1)/4)*gamma(S(107)/12))
+    assert binomial(S(20)/3, S(-10)/8) == gamma(S(23)/3)/(gamma(S.NegativeOne/4)*gamma(S(107)/12))
     assert binomial(S(19)/2, S(-7)/2) == S(-1615)/8388608
-    assert binomial(S(-13)/5, S(-7)/8) == gamma(S(-8)/5)/(gamma(S(-29)/40)*gamma(S(1)/8))
+    assert binomial(S(-13)/5, S(-7)/8) == gamma(S(-8)/5)/(gamma(S(-29)/40)*gamma(S.One/8))
     assert binomial(S(-19)/8, S(-13)/5) == gamma(S(-11)/8)/(gamma(S(-8)/5)*gamma(S(49)/40))
 
     # binomial for complexes
@@ -453,7 +453,7 @@ def test_binomial():
     assert binomial(-7, I) == zoo
     assert binomial(-7/S(6), I) == gamma(-1/S(6))/(gamma(-1/S(6) - I)*gamma(1 + I))
     assert binomial((1+2*I), (1+3*I)) == gamma(2 + 2*I)/(gamma(1 - I)*gamma(2 + 3*I))
-    assert binomial(I, 5) == S(1)/3 - I/S(12)
+    assert binomial(I, 5) == S.One/3 - I/S(12)
     assert binomial((2*I + 3), 7) == -13*I/S(63)
     assert isinstance(binomial(I, n), binomial)
     assert expand_func(binomial(3, 2, evaluate=False)) == 3

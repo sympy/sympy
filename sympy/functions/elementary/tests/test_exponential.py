@@ -142,7 +142,7 @@ def test_exp_rewrite():
     assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
     assert exp(x).rewrite(tanh) == (1 + tanh(x/2))/(1 - tanh(x/2))
     assert exp(pi*I/4).rewrite(sqrt) == sqrt(2)/2 + sqrt(2)*I/2
-    assert exp(pi*I/3).rewrite(sqrt) == S(1)/2 + sqrt(3)*I/2
+    assert exp(pi*I/3).rewrite(sqrt) == S.Half + sqrt(3)*I/2
     assert exp(x*log(y)).rewrite(Pow) == y**x
     assert exp(log(x)*log(y)).rewrite(Pow) in [x**log(y), y**log(x)]
     assert exp(log(log(x))*y).rewrite(Pow) == log(x)**y
@@ -253,9 +253,9 @@ def test_log_exact():
     assert log(-sqrt(2)/2 - I*sqrt(2)/2) == -I*3*pi/4
     assert log(-sqrt(3)/2 - I*S.Half) == -I*5*pi/6
 
-    assert log(-S(1)/4 + sqrt(5)/4 - I*sqrt(sqrt(5)/8 + S(5)/8)) == -I*2*pi/5
-    assert log(sqrt(S(5)/8 - sqrt(5)/8) + I*(S(1)/4 + sqrt(5)/4)) == I*3*pi/10
-    assert log(-sqrt(sqrt(2)/4 + S(1)/2) + I*sqrt(S(1)/2 - sqrt(2)/4)) == I*7*pi/8
+    assert log(-S.One/4 + sqrt(5)/4 - I*sqrt(sqrt(5)/8 + S(5)/8)) == -I*2*pi/5
+    assert log(sqrt(S(5)/8 - sqrt(5)/8) + I*(S.One/4 + sqrt(5)/4)) == I*3*pi/10
+    assert log(-sqrt(sqrt(2)/4 + S.Half) + I*sqrt(S.Half - sqrt(2)/4)) == I*7*pi/8
     assert log(-sqrt(6)/4 - sqrt(2)/4 + I*(-sqrt(6)/4 + sqrt(2)/4)) == -I*11*pi/12
 
     assert log(-1 + I*sqrt(3)) == log(2) + I*2*pi/3

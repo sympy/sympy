@@ -171,7 +171,7 @@ def directional_derivative(field, direction_vector):
     elif isinstance(field, Vector):
         return Vector.zero
     else:
-        return S(0)
+        return S.Zero
 
 
 def laplacian(expr):
@@ -268,7 +268,7 @@ def is_solenoidal(field):
         raise TypeError("field should be a Vector")
     if field == Vector.zero:
         return True
-    return divergence(field).simplify() == S(0)
+    return divergence(field).simplify() == S.Zero
 
 
 def scalar_potential(field, coord_sys):
@@ -305,7 +305,7 @@ def scalar_potential(field, coord_sys):
     if not is_conservative(field):
         raise ValueError("Field is not conservative")
     if field == Vector.zero:
-        return S(0)
+        return S.Zero
     # Express the field exntirely in coord_sys
     # Substitute coordinate variables also
     if not isinstance(coord_sys, CoordSys3D):

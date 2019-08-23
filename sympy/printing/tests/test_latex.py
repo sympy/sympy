@@ -2034,7 +2034,7 @@ def test_Mul():
     assert latex(e) == r'- 2 \left(x + 1\right)'
     e = Mul(2, x + 1, evaluate=False)
     assert latex(e) == r'2 \left(x + 1\right)'
-    e = Mul(S.One/2, x + 1, evaluate=False)
+    e = Mul(S.Half, x + 1, evaluate=False)
     assert latex(e) == r'\frac{x + 1}{2}'
     e = Mul(y, x + 1, evaluate=False)
     assert latex(e) == r'y \left(x + 1\right)'

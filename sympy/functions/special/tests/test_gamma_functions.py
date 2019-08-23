@@ -128,7 +128,7 @@ def test_lowergamma():
 
     assert tn_branch(-3, lowergamma)
     assert tn_branch(-4, lowergamma)
-    assert tn_branch(S(1)/3, lowergamma)
+    assert tn_branch(S.One/3, lowergamma)
     assert tn_branch(pi, lowergamma)
     assert lowergamma(3, exp_polar(4*pi*I)*x) == lowergamma(3, x)
     assert lowergamma(y, exp_polar(5*pi*I)*x) == \
@@ -180,7 +180,7 @@ def test_uppergamma():
 
     assert tn_branch(-3, uppergamma)
     assert tn_branch(-4, uppergamma)
-    assert tn_branch(S(1)/3, uppergamma)
+    assert tn_branch(S.One/3, uppergamma)
     assert tn_branch(pi, uppergamma)
     assert uppergamma(3, exp_polar(4*pi*I)*x) == uppergamma(3, x)
     assert uppergamma(y, exp_polar(5*pi*I)*x) == \
@@ -395,7 +395,7 @@ def test_loggamma():
     assert loggamma(nan) == nan
 
     L = loggamma(S(16)/3)
-    E = -5*log(3) + loggamma(S(1)/3) + log(4) + log(7) + log(10) + log(13)
+    E = -5*log(3) + loggamma(S.One/3) + log(4) + log(7) + log(10) + log(13)
     assert expand_func(L).doit() == E
     assert L.n() == E.n()
 
@@ -425,7 +425,7 @@ def test_loggamma():
         log(x)*x**2/2
     assert (s1 - s2).expand(force=True).removeO() == 0
     s1 = loggamma(1/x).series(x)
-    s2 = (1/x - S(1)/2)*log(1/x) - 1/x + log(2*pi)/2 + \
+    s2 = (1/x - S.Half)*log(1/x) - 1/x + log(2*pi)/2 + \
         x/12 - x**3/360 + x**5/1260 + O(x**7)
     assert ((s1 - s2).expand(force=True)).removeO() == 0
 
@@ -450,9 +450,9 @@ def test_loggamma():
     assert loggamma(Symbol('v', real=True)).is_real is None
     assert loggamma(Symbol('v')).is_real is None
 
-    assert loggamma(S(1) / 2).is_real is True
+    assert loggamma(S.Half).is_real is True
     assert loggamma(0).is_real is False
-    assert loggamma(-S(1)/2).is_real is False
+    assert loggamma(-S.Half).is_real is False
     assert loggamma(I).is_real is None
     assert loggamma(2 + 3*I).is_real is None
 
@@ -550,16 +550,16 @@ def test_multigamma():
     assert multigamma(3, 3) == 3*pi**2/2
 
     assert multigamma(x, 1).diff(x) == gamma(x)*polygamma(0, x)
-    assert multigamma(x, 2).diff(x) == sqrt(pi)*gamma(x)*gamma(x - S(1)/2)*\
-        polygamma(0, x) + sqrt(pi)*gamma(x)*gamma(x - S(1)/2)*polygamma(0, x - S(1)/2)
+    assert multigamma(x, 2).diff(x) == sqrt(pi)*gamma(x)*gamma(x - S.Half)*\
+        polygamma(0, x) + sqrt(pi)*gamma(x)*gamma(x - S.Half)*polygamma(0, x - S.Half)
 
     assert multigamma(x - 1, 1).expand(func=True) == gamma(x)/(x - 1)
     assert multigamma(x + 2, 1).expand(func=True, mul=False) == x*(x + 1)*\
         gamma(x)
     assert multigamma(x - 1, 2).expand(func=True) == sqrt(pi)*gamma(x)*\
-        gamma(x + S(1)/2)/(x**3 - 3*x**2 + 11*x/4 - S(3)/4)
+        gamma(x + S.Half)/(x**3 - 3*x**2 + 11*x/4 - S(3)/4)
     assert multigamma(x - 1, 3).expand(func=True) == pi**(S(3)/2)*gamma(x)**2*\
-        gamma(x + S(1)/2)/(x**5 - 6*x**4 + 55*x**3/4 - 15*x**2 + 31*x/4 - S(3)/2)
+        gamma(x + S.Half)/(x**5 - 6*x**4 + 55*x**3/4 - 15*x**2 + 31*x/4 - S(3)/2)
 
     assert multigamma(n, 1).rewrite(factorial) == factorial(n - 1)
     assert multigamma(n, 2).rewrite(factorial) == sqrt(pi)*\
@@ -567,8 +567,8 @@ def test_multigamma():
     assert multigamma(n, 3).rewrite(factorial) == pi**(S(3)/2)*\
         factorial(n - 2)*factorial(n - S(3)/2)*factorial(n - 1)
 
-    assert multigamma(-S(1)/2, 3, evaluate=False).is_real == False
-    assert multigamma(S(1)/2, 3, evaluate=False).is_real == False
+    assert multigamma(-S.Half, 3, evaluate=False).is_real == False
+    assert multigamma(S.Half, 3, evaluate=False).is_real == False
     assert multigamma(0, 1, evaluate=False).is_real == False
     assert multigamma(1, 3, evaluate=False).is_real == False
     assert multigamma(-1.0, 3, evaluate=False).is_real == False

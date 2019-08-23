@@ -231,7 +231,7 @@ def test_issue_9324_powsimp_on_matrix_symbol():
 
 
 def test_issue_6367():
-    z = -5*sqrt(2)/(2*sqrt(2*sqrt(29) + 29)) + sqrt(-sqrt(29)/29 + S(1)/2)
+    z = -5*sqrt(2)/(2*sqrt(2*sqrt(29) + 29)) + sqrt(-sqrt(29)/29 + S.Half)
     assert Mul(*[powsimp(a) for a in Mul.make_args(z.normal())]) == 0
     assert powsimp(z.normal()) == 0
     assert simplify(z) == 0
@@ -298,8 +298,8 @@ def test_issue_from_PR1599():
     assert (powsimp(sqrt(n1)*sqrt(n2)*sqrt(n3)) ==
         -I*sqrt(-n1)*sqrt(-n2)*sqrt(-n3))
     assert (powsimp(root(n1, 3)*root(n2, 3)*root(n3, 3)*root(n4, 3)) ==
-        -(-1)**(S(1)/3)*
-        (-n1)**(S(1)/3)*(-n2)**(S(1)/3)*(-n3)**(S(1)/3)*(-n4)**(S(1)/3))
+        -(-1)**(S.One/3)*
+        (-n1)**(S.One/3)*(-n2)**(S.One/3)*(-n3)**(S.One/3)*(-n4)**(S.One/3))
 
 
 def test_issue_10195():

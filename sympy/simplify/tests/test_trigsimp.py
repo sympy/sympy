@@ -364,7 +364,7 @@ def test_issue_15129_trigsimp_methods():
     t3 = Matrix([cos(Rational(1, 25)), sin(Rational(1, 25)), 0])
     r1 = t1.dot(t2)
     r2 = t1.dot(t3)
-    assert trigsimp(r1) == cos(S(1)/50)
+    assert trigsimp(r1) == cos(S.One/50)
     assert trigsimp(r2) == sin(S(3)/50)
 
 def test_exptrigsimp():
@@ -418,7 +418,7 @@ def test_exptrigsimp_noncommutative():
     assert p == exptrigsimp(p) != 0
 
 def test_powsimp_on_numbers():
-    assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
+    assert 2**(S.One/3 - 2) == 2**(S.One/3)/4
 
 
 @XFAIL

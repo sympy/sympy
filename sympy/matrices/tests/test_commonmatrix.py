@@ -299,7 +299,7 @@ def test_vstack():
 # PropertiesOnlyMatrix tests
 def test_atoms():
     m = PropertiesOnlyMatrix(2, 2, [1, 2, x, 1 - 1/x])
-    assert m.atoms() == {S(1), S(2), S(-1), x}
+    assert m.atoms() == {S.One, S(2), S.NegativeOne, x}
     assert m.atoms(Symbol) == {x}
 
 
@@ -771,7 +771,7 @@ def test_sub():
 
 def test_div():
     n = ArithmeticOnlyMatrix(1, 2, [1, 2])
-    assert n/2 == ArithmeticOnlyMatrix(1, 2, [S(1)/2, S(2)/2])
+    assert n/2 == ArithmeticOnlyMatrix(1, 2, [S.Half, S(2)/2])
 
 
 # DeterminantOnlyMatrix tests
@@ -1021,7 +1021,7 @@ def test_echelon_form():
 
     a = ReductionsOnlyMatrix(3, 3, [2, 1, 3, 0, 0, 0, 2, 1, 3])
     nulls = [Matrix([
-             [-S(1)/2],
+             [-S.Half],
              [   1],
              [   0]]),
              Matrix([
@@ -1116,7 +1116,7 @@ def test_rref():
                      [0,  0, 0, 0, 0,  0,  0]])
     assert pivot_offsets == (0, 2, 3)
 
-    a = ReductionsOnlyMatrix([[S(1)/19,  S(1)/5,    2,    3],
+    a = ReductionsOnlyMatrix([[S.One/19,  S.One/5,    2,    3],
                         [   4,    5,    6,    7],
                         [   8,    9,   10,   11],
                         [  12,   13,   14,   15]])
@@ -1513,7 +1513,7 @@ def test_singular_values():
 
     A = EigenOnlyMatrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
     vals = [sv.trigsimp() for sv in A.singular_values()]
-    assert vals == [S(1), S(1)]
+    assert vals == [S.One, S.One]
 
     A = EigenOnlyMatrix([
         [2, 4],
@@ -1562,7 +1562,7 @@ def test_jacobian2():
 def test_limit():
     x, y = symbols('x y')
     m = CalculusOnlyMatrix(2, 1, [1/x, y])
-    assert m.limit(x, 5) == Matrix(2, 1, [S(1)/5, y])
+    assert m.limit(x, 5) == Matrix(2, 1, [S.One/5, y])
 
 
 def test_issue_13774():

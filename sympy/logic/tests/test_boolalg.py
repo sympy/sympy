@@ -198,7 +198,7 @@ def test_Implies():
     assert Implies(1, 0) is false
     assert A >> B == B << A
     assert (A < 1) >> (A >= 1) == (A >= 1)
-    assert (A < 1) >> (S(1) > A) is true
+    assert (A < 1) >> (S.One > A) is true
     assert A >> A is true
 
 
@@ -218,7 +218,7 @@ def test_Equivalent():
     assert Equivalent(A < 1, A >= 1) is false
     assert Equivalent(A < 1, A >= 1, 0) is false
     assert Equivalent(A < 1, A >= 1, 1) is false
-    assert Equivalent(A < 1, S(1) > A) == Equivalent(1, 1) == Equivalent(0, 0)
+    assert Equivalent(A < 1, S.One > A) == Equivalent(1, 1) == Equivalent(0, 0)
     assert Equivalent(Equality(A, B), Equality(B, A)) is true
 
 

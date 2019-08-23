@@ -244,7 +244,7 @@ def test_mul_div():
     u2.set_dimension(length**2)
     u3.set_dimension(length**-1)
     u2.set_scale_factor(S(100))
-    u3.set_scale_factor(S(1)/10)
+    u3.set_scale_factor(S.One/10)
 
     assert u ** 2 != u2
     assert u ** -1 != u3
@@ -363,7 +363,7 @@ def test_factor_and_dimension():
         Quantity._collect_factor_and_dimension(expr)
 
     expr = S(5)/2*second/meter*v_w1 - 3000
-    assert (-(2996 + S(1)/4), Dimension(1)) == \
+    assert (-(2996 + S.One/4), Dimension(1)) == \
         Quantity._collect_factor_and_dimension(expr)
 
     expr = v_w1**(v_w2/v_w1)

@@ -955,8 +955,8 @@ class loggamma(Function):
         if args0[0] != oo:
             return super(loggamma, self)._eval_aseries(n, args0, x, logx)
         z = self.args[0]
-        m = min(n, ceiling((n + S(1))/2))
-        r = log(z)*(z - S(1)/2) - z + log(2*pi)/2
+        m = min(n, ceiling((n + S.One)/2))
+        r = log(z)*(z - S.Half) - z + log(2*pi)/2
         l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, m)]
         o = None
         if m == 0:

@@ -1203,7 +1203,7 @@ def _eval_sum_hyper(f, i, a):
 
     if f.subs(i, 0) == 0:
         if simplify(f.subs(i, Dummy('i', integer=True, positive=True))) == 0:
-            return S(0), True
+            return S.Zero, True
         return _eval_sum_hyper(f.subs(i, i + 1), i, 0)
 
     hs = hypersimp(f, i)

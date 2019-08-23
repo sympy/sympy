@@ -152,7 +152,7 @@ def test_minimal_polynomial():
 
 
 def test_minimal_polynomial_hi_prec():
-    p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + S(1)/10**30)
+    p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + S.One/10**30)
     mp = minimal_polynomial(p, x)
     # checked with Wolfram Alpha
     assert mp.coeff(x**6) == -1232000000000000000000000000001223999999999999999999999999999987999999999999999999999999999996000000000000000000000000000000
@@ -374,8 +374,8 @@ def test_field_isomorphism():
     r = AlgebraicNumber( sqrt(2) - sqrt(3))
     s = AlgebraicNumber(-sqrt(2) - sqrt(3))
 
-    pos_coeffs = [ S(1)/2, S(0), -S(9)/2, S(0)]
-    neg_coeffs = [-S(1)/2, S(0), S(9)/2, S(0)]
+    pos_coeffs = [ S.Half, S.Zero, -S(9)/2, S.Zero]
+    neg_coeffs = [-S.Half, S.Zero, S(9)/2, S.Zero]
 
     a = AlgebraicNumber(sqrt(2))
 
@@ -411,8 +411,8 @@ def test_field_isomorphism():
     assert field_isomorphism(a, r, fast=False) == neg_coeffs
     assert field_isomorphism(a, s, fast=False) == pos_coeffs
 
-    pos_coeffs = [ S(1)/2, S(0), -S(11)/2, S(0)]
-    neg_coeffs = [-S(1)/2, S(0), S(11)/2, S(0)]
+    pos_coeffs = [ S.Half, S.Zero, -S(11)/2, S.Zero]
+    neg_coeffs = [-S.Half, S.Zero, S(11)/2, S.Zero]
 
     a = AlgebraicNumber(sqrt(3))
 
@@ -448,8 +448,8 @@ def test_field_isomorphism():
     assert field_isomorphism(a, r, fast=False) == neg_coeffs
     assert field_isomorphism(a, s, fast=False) == neg_coeffs
 
-    pos_coeffs = [ S(3)/2, S(0), -S(33)/2, -S(8)]
-    neg_coeffs = [-S(3)/2, S(0), S(33)/2, -S(8)]
+    pos_coeffs = [ S(3)/2, S.Zero, -S(33)/2, -S(8)]
+    neg_coeffs = [-S(3)/2, S.Zero, S(33)/2, -S(8)]
 
     a = AlgebraicNumber(3*sqrt(3) - 8)
 
@@ -470,10 +470,10 @@ def test_field_isomorphism():
 
     a = AlgebraicNumber(3*sqrt(2) + 2*sqrt(3) + 1)
 
-    pos_1_coeffs = [ S(1)/2, S(0), -S(5)/2, S(1)]
-    neg_5_coeffs = [-S(5)/2, S(0), S(49)/2, S(1)]
-    pos_5_coeffs = [ S(5)/2, S(0), -S(49)/2, S(1)]
-    neg_1_coeffs = [-S(1)/2, S(0), S(5)/2, S(1)]
+    pos_1_coeffs = [ S.Half, S.Zero, -S(5)/2, S.One]
+    neg_5_coeffs = [-S(5)/2, S.Zero, S(49)/2, S.One]
+    pos_5_coeffs = [ S(5)/2, S.Zero, -S(49)/2, S.One]
+    neg_1_coeffs = [-S.Half, S.Zero, S(5)/2, S.One]
 
     assert is_isomorphism_possible(a, p) is True
     assert is_isomorphism_possible(a, q) is True
@@ -511,7 +511,7 @@ def test_to_number_field():
     assert to_number_field(
         [sqrt(2), sqrt(3)]) == AlgebraicNumber(sqrt(2) + sqrt(3))
 
-    a = AlgebraicNumber(sqrt(2) + sqrt(3), [S(1)/2, S(0), -S(9)/2, S(0)])
+    a = AlgebraicNumber(sqrt(2) + sqrt(3), [S.Half, S.Zero, -S(9)/2, S.Zero])
 
     assert to_number_field(sqrt(2), sqrt(2) + sqrt(3)) == a
     assert to_number_field(sqrt(2), AlgebraicNumber(sqrt(2) + sqrt(3))) == a
@@ -532,7 +532,7 @@ def test_AlgebraicNumber():
 
     assert a.is_aliased is False
 
-    assert a.coeffs() == [S(1), S(0)]
+    assert a.coeffs() == [S.One, S.Zero]
     assert a.native_coeffs() == [QQ(1), QQ(0)]
 
     a = AlgebraicNumber(root, gen=x, alias='y')
@@ -578,7 +578,7 @@ def test_AlgebraicNumber():
 
     assert a.is_aliased is False
 
-    assert a.coeffs() == [S(1), S(2)]
+    assert a.coeffs() == [S.One, S(2)]
     assert a.native_coeffs() == [QQ(1), QQ(2)]
 
     a = AlgebraicNumber((minpoly, root), [1, 2])
@@ -691,13 +691,13 @@ def test_IntervalPrinter():
 
 def test_isolate():
     assert isolate(1) == (1, 1)
-    assert isolate(S(1)/2) == (S(1)/2, S(1)/2)
+    assert isolate(S.Half) == (S.Half, S.Half)
 
     assert isolate(sqrt(2)) == (1, 2)
     assert isolate(-sqrt(2)) == (-2, -1)
 
-    assert isolate(sqrt(2), eps=S(1)/100) == (S(24)/17, S(17)/12)
-    assert isolate(-sqrt(2), eps=S(1)/100) == (-S(17)/12, -S(24)/17)
+    assert isolate(sqrt(2), eps=S.One/100) == (S(24)/17, S(17)/12)
+    assert isolate(-sqrt(2), eps=S.One/100) == (-S(17)/12, -S(24)/17)
 
     raises(NotImplementedError, lambda: isolate(I))
 

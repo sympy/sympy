@@ -21,7 +21,7 @@ def test_decompose_power():
 
 
 def test_Factors():
-    assert Factors() == Factors({}) == Factors(S(1))
+    assert Factors() == Factors({}) == Factors(S.One)
     assert Factors().as_expr() == S.One
     assert Factors({x: 2, y: 3, sin(x): 4}).as_expr() == x**2*y**3*sin(x)**4
     assert Factors(S.Infinity) == Factors({oo: 1})
@@ -51,46 +51,46 @@ def test_Factors():
     assert Factors(sqrt(2)*x).as_expr() == sqrt(2)*x
 
     assert Factors(-I)*I == Factors()
-    assert Factors({S(-1): S(3)})*Factors({S(-1): S(1), I: S(5)}) == \
+    assert Factors({S.NegativeOne: S(3)})*Factors({S.NegativeOne: S.One, I: S(5)}) == \
         Factors(I)
 
     assert Factors(S(2)**x).div(S(3)**x) == \
         (Factors({S(2): x}), Factors({S(3): x}))
     assert Factors(2**(2*x + 2)).div(S(8)) == \
-        (Factors({S(2): 2*x + 2}), Factors({S(8): S(1)}))
+        (Factors({S(2): 2*x + 2}), Factors({S(8): S.One}))
 
     # coverage
     # /!\ things break if this is not True
-    assert Factors({S(-1): S(3)/2}) == Factors({I: S.One, S(-1): S.One})
-    assert Factors({I: S(1), S(-1): S(1)/3}).as_expr() == I*(-1)**(S(1)/3)
+    assert Factors({S.NegativeOne: S(3)/2}) == Factors({I: S.One, S.NegativeOne: S.One})
+    assert Factors({I: S.One, S.NegativeOne: S.One/3}).as_expr() == I*(-1)**(S.One/3)
 
-    assert Factors(-1.) == Factors({S(-1): S(1), S(1.): 1})
-    assert Factors(-2.) == Factors({S(-1): S(1), S(2.): 1})
+    assert Factors(-1.) == Factors({S.NegativeOne: S.One, S(1.): 1})
+    assert Factors(-2.) == Factors({S.NegativeOne: S.One, S(2.): 1})
     assert Factors((-2.)**x) == Factors({S(-2.): x})
-    assert Factors(S(-2)) == Factors({S(-1): S(1), S(2): 1})
+    assert Factors(S(-2)) == Factors({S.NegativeOne: S.One, S(2): 1})
     assert Factors(S.Half) == Factors({S(2): -S.One})
-    assert Factors(S(3)/2) == Factors({S(3): S.One, S(2): S(-1)})
-    assert Factors({I: S(1)}) == Factors(I)
+    assert Factors(S(3)/2) == Factors({S(3): S.One, S(2): S.NegativeOne})
+    assert Factors({I: S.One}) == Factors(I)
     assert Factors({-1.0: 2, I: 1}) == Factors({S(1.0): 1, I: 1})
     assert Factors({S.NegativeOne: -S(3)/2}).as_expr() == I
     A = symbols('A', commutative=False)
     assert Factors(2*A**2) == Factors({S(2): 1, A**2: 1})
     assert Factors(I) == Factors({I: S.One})
     assert Factors(x).normal(S(2)) == (Factors(x), Factors(S(2)))
-    assert Factors(x).normal(S(0)) == (Factors(), Factors(S(0)))
-    raises(ZeroDivisionError, lambda: Factors(x).div(S(0)))
+    assert Factors(x).normal(S.Zero) == (Factors(), Factors(S.Zero))
+    raises(ZeroDivisionError, lambda: Factors(x).div(S.Zero))
     assert Factors(x).mul(S(2)) == Factors(2*x)
-    assert Factors(x).mul(S(0)).is_zero
+    assert Factors(x).mul(S.Zero).is_zero
     assert Factors(x).mul(1/x).is_one
     assert Factors(x**sqrt(2)**3).as_expr() == x**(2*sqrt(2))
     assert Factors(x)**Factors(S(2)) == Factors(x**2)
-    assert Factors(x).gcd(S(0)) == Factors(x)
-    assert Factors(x).lcm(S(0)).is_zero
-    assert Factors(S(0)).div(x) == (Factors(S(0)), Factors())
+    assert Factors(x).gcd(S.Zero) == Factors(x)
+    assert Factors(x).lcm(S.Zero).is_zero
+    assert Factors(S.Zero).div(x) == (Factors(S.Zero), Factors())
     assert Factors(x).div(x) == (Factors(), Factors())
     assert Factors({x: .2})/Factors({x: .2}) == Factors()
     assert Factors(x) != Factors()
-    assert Factors(S(0)).normal(x) == (Factors(S(0)), Factors())
+    assert Factors(S.Zero).normal(x) == (Factors(S.Zero), Factors())
     n, d = x**(2 + y), x**2
     f = Factors(n)
     assert f.div(d) == f.normal(d) == (Factors(x**y), Factors())
@@ -143,8 +143,8 @@ def test_Term():
     assert b.as_expr() == 2*x**3*y**5/t**3
 
     assert a.inv() == \
-        Term(S(1)/4, Factors({z: 1, t: 3}), Factors({x: 1, y: 2}))
-    assert b.inv() == Term(S(1)/2, Factors({t: 3}), Factors({x: 3, y: 5}))
+        Term(S.One/4, Factors({z: 1, t: 3}), Factors({x: 1, y: 2}))
+    assert b.inv() == Term(S.Half, Factors({t: 3}), Factors({x: 3, y: 5}))
 
     assert a.mul(b) == a*b == \
         Term(8, Factors({x: 4, y: 7}), Factors({z: 1, t: 6}))
@@ -155,9 +155,9 @@ def test_Term():
     assert b.pow(3) == b**3 == Term(8, Factors({x: 9, y: 15}), Factors({t: 9}))
 
     assert a.pow(-3) == a**(-3) == \
-        Term(S(1)/64, Factors({z: 3, t: 9}), Factors({x: 3, y: 6}))
+        Term(S.One/64, Factors({z: 3, t: 9}), Factors({x: 3, y: 6}))
     assert b.pow(-3) == b**(-3) == \
-        Term(S(1)/8, Factors({t: 9}), Factors({x: 9, y: 15}))
+        Term(S.One/8, Factors({t: 9}), Factors({x: 9, y: 15}))
 
     assert a.gcd(b) == Term(2, Factors({x: 1, y: 2}), Factors({t: 3}))
     assert a.lcm(b) == Term(4, Factors({x: 3, y: 5}), Factors({z: 1, t: 3}))
@@ -262,7 +262,7 @@ def test_factor_terms():
     assert factor_terms(eq) == eq
     assert factor_terms(eq, radical=True) == sqrt(2)*(1 + sqrt(5))
     eq = root(-6, 3) + root(6, 3)
-    assert factor_terms(eq, radical=True) == 6**(S(1)/3)*(1 + (-1)**(S(1)/3))
+    assert factor_terms(eq, radical=True) == 6**(S.One/3)*(1 + (-1)**(S.One/3))
 
     eq = [x + x*y]
     ans = [x*(y + 1)]

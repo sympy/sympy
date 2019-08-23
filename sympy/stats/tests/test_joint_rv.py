@@ -64,7 +64,7 @@ def test_NormalGamma():
     raises(ValueError, lambda:NormalGamma('G', 1, 2, 3, -1))
     assert marginal_distribution(ng, 0)(1) == \
         3*sqrt(10)*gamma(S(7)/4)/(10*sqrt(pi)*gamma(S(5)/4))
-    assert marginal_distribution(ng, y)(1) == exp(-S(1)/4)/128
+    assert marginal_distribution(ng, y)(1) == exp(-S.One/4)/128
 
 def test_GeneralizedMultivariateLogGammaDistribution():
     from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO
@@ -202,7 +202,7 @@ def test_NegativeMultinomial():
     f = factorial
     assert simplify(density(N)(x1, x2, x3, x4) -
             p1**x1*p2**x2*p3**x3*p4**x4*(-p1 - p2 - p3 - p4 + 1)**4*g(x1 + x2 +
-            x3 + x4 + 4)/(6*f(x1)*f(x2)*f(x3)*f(x4))) == S(0)
+            x3 + x4 + 4)/(6*f(x1)*f(x2)*f(x3)*f(x4))) == S.Zero
     assert comp(marginal_distribution(C, C[0])(1).evalf(), 0.33, .01)
     raises(ValueError, lambda: NegativeMultinomial('b1', 5, [p1, p2, p3, p1_f]))
     raises(ValueError, lambda: NegativeMultinomial('b2', k0, 0.5, 0.4, 0.3, 0.4))
@@ -222,11 +222,11 @@ def test_JointPSpace_marginal_distribution():
 def test_JointRV():
     from sympy.stats.joint_rv import JointDistributionHandmade
     x1, x2 = (Indexed('x', i) for i in (1, 2))
-    pdf = exp(-x1**2/2 + x1 - x2**2/2 - S(1)/2)/(2*pi)
+    pdf = exp(-x1**2/2 + x1 - x2**2/2 - S.Half)/(2*pi)
     X = JointRV('x', pdf)
     assert density(X)(1, 2) == exp(-2)/(2*pi)
     assert isinstance(X.pspace.distribution, JointDistributionHandmade)
-    assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(-S(1)/2)/(2*sqrt(pi))
+    assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(-S.Half)/(2*sqrt(pi))
 
 def test_expectation():
     from sympy import simplify

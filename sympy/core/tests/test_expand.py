@@ -289,7 +289,7 @@ def test_issues_5919_6830():
         return verify_numerically(e, expand_multinomial(e))
 
     for a in [2, S.Half]:
-        for b in [3, S(1)/3]:
+        for b in [3, S.One/3]:
             for n in range(2, 6):
                 assert ok(a, b, n)
 

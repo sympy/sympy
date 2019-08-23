@@ -25,7 +25,7 @@ def test_jacobi_poly():
     assert jacobi_poly(0, a, b, x) == 1
     assert jacobi_poly(1, a, b, x) == a/2 - b/2 + x*(a/2 + b/2 + 1)
     assert jacobi_poly(2, a, b, x) == (a**2/8 - a*b/4 - a/8 + b**2/8 - b/8 + x**2*(a**2/8 + a*b/4 + 7*a/8 +
-                                       b**2/8 + 7*b/8 + S(3)/2) + x*(a**2/4 + 3*a/4 - b**2/4 - 3*b/4) - S(1)/2)
+                                       b**2/8 + 7*b/8 + S(3)/2) + x*(a**2/4 + 3*a/4 - b**2/4 - 3*b/4) - S.Half)
 
     assert jacobi_poly(1, a, b, polys=True) == Poly(
         (a/2 + b/2 + 1)*x + a/2 - b/2, x, domain='ZZ(a,b)')

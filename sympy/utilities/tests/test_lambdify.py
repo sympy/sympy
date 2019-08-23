@@ -449,9 +449,9 @@ def test_issue9474():
     if mpmath:
         mods.append('mpmath')
     for mod in mods:
-        f = lambdify(x, S(1)/x, modules=mod)
+        f = lambdify(x, S.One/x, modules=mod)
         assert f(2) == 0.5
-        f = lambdify(x, floor(S(1)/x), modules=mod)
+        f = lambdify(x, floor(S.One/x), modules=mod)
         assert f(2) == 0
 
     for absfunc, modules in product([Abs, abs], mods):
@@ -841,7 +841,7 @@ def test_special_printers():
     def intervalrepr(expr):
         return IntervalPrinter().doprint(expr)
 
-    expr = sqrt(sqrt(2) + sqrt(3)) + S(1)/2
+    expr = sqrt(sqrt(2) + sqrt(3)) + S.Half
 
     func0 = lambdify((), expr, modules="mpmath", printer=intervalrepr)
     func1 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter)

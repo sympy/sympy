@@ -490,7 +490,7 @@ def test_nan_equality_exceptions():
     assert Unequality(nan, nan) is S.true
 
     # See issue #7773
-    A = (x, S(0), S(1)/3, pi, oo, -oo)
+    A = (x, S.Zero, S.One/3, pi, oo, -oo)
     assert Equality(nan, random.choice(A)) is S.false
     assert Equality(random.choice(A), nan) is S.false
     assert Unequality(nan, random.choice(A)) is S.true
@@ -500,7 +500,7 @@ def test_nan_equality_exceptions():
 def test_nan_inequality_raise_errors():
     # See discussion in pull request #7776.  We test inequalities with
     # a set including examples of various classes.
-    for q in (x, S(0), S(10), S(1)/3, pi, S(1.3), oo, -oo, nan):
+    for q in (x, S.Zero, S(10), S.One/3, pi, S(1.3), oo, -oo, nan):
         assert_all_ineq_raise_TypeError(q, nan)
 
 
@@ -522,7 +522,7 @@ def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
     # We test all combinations from a set
     # FIXME: could replace with random selection after test passes
-    A = (x, y, S(0), S(1)/3, pi, oo, -oo)
+    A = (x, y, S.Zero, S.One/3, pi, oo, -oo)
     for a in A:
         for b in A:
             assert Gt(a, b) == (a > b)
@@ -530,13 +530,13 @@ def test_inequalities_symbol_name_same():
             assert Ge(a, b) == (a >= b)
             assert Le(a, b) == (a <= b)
 
-    for b in (y, S(0), S(1)/3, pi, oo, -oo):
+    for b in (y, S.Zero, S.One/3, pi, oo, -oo):
         assert Gt(x, b, evaluate=False) == (x > b)
         assert Lt(x, b, evaluate=False) == (x < b)
         assert Ge(x, b, evaluate=False) == (x >= b)
         assert Le(x, b, evaluate=False) == (x <= b)
 
-    for b in (y, S(0), S(1)/3, pi, oo, -oo):
+    for b in (y, S.Zero, S.One/3, pi, oo, -oo):
         assert Gt(b, x, evaluate=False) == (b > x)
         assert Lt(b, x, evaluate=False) == (b < x)
         assert Ge(b, x, evaluate=False) == (b >= x)
@@ -548,7 +548,7 @@ def test_inequalities_symbol_name_same_complex():
     With complex non-real numbers, both should raise errors.
     """
     # FIXME: could replace with random selection after test passes
-    for a in (x, S(0), S(1)/3, pi, oo):
+    for a in (x, S.Zero, S.One/3, pi, oo):
         raises(TypeError, lambda: Gt(a, I))
         raises(TypeError, lambda: a > I)
         raises(TypeError, lambda: Lt(a, I))
@@ -565,7 +565,7 @@ def test_inequalities_cant_sympify_other():
 
     bar = "foo"
 
-    for a in (x, S(0), S(1)/3, pi, I, zoo, oo, -oo, nan):
+    for a in (x, S.Zero, S.One/3, pi, I, zoo, oo, -oo, nan):
         for op in (lt, gt, le, ge):
             raises(TypeError, lambda: op(a, bar))
 
@@ -629,7 +629,7 @@ def test_simplify_relational():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
     assert simplify(x*(y + 1) - x*y - x - 1 < x) == (x > -1)
     assert simplify(x < x*(y + 1) - x*y - x + 1) == (x < 1)
-    r = S(1) < x
+    r = S.One < x
     # canonical operations are not the same as simplification,
     # so if there is no simplification, canonicalization will
     # be done unless the measure forbids it
@@ -876,7 +876,7 @@ def test_rel_args():
     # can be removed.
     for op in ['<', '<=', '>', '>=']:
         for b in (S.true, x < 1, And(x, y)):
-            for v in (0.1, 1, 2**32, t, S(1)):
+            for v in (0.1, 1, 2**32, t, S.One):
                 raises(TypeError, lambda: Relational(b, v, op))
 
 

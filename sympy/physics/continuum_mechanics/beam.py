@@ -680,10 +680,10 @@ class Beam(object):
         C2 = Symbol('C2')
         C3 = Symbol('C3')
         C4 = Symbol('C4')
-        slope_1 = S(1)/(E*I1)*(integrate(bending_1, x) + C1)
-        def_1 = S(1)/(E*I1)*(integrate((E*I)*slope_1, x) + C1*x + C2)
-        slope_2 = S(1)/(E*I2)*(integrate(integrate(integrate(load_2, x), x), x) + C3)
-        def_2 = S(1)/(E*I2)*(integrate((E*I)*slope_2, x) + C4)
+        slope_1 = S.One/(E*I1)*(integrate(bending_1, x) + C1)
+        def_1 = S.One/(E*I1)*(integrate((E*I)*slope_1, x) + C1*x + C2)
+        slope_2 = S.One/(E*I2)*(integrate(integrate(integrate(load_2, x), x), x) + C3)
+        def_2 = S.One/(E*I2)*(integrate((E*I)*slope_2, x) + C4)
 
         for position, value in self.bc_slope:
             if position<l:
@@ -1043,7 +1043,7 @@ class Beam(object):
             for i in range(len(args)):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
-                slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                 if i != len(args) - 1:
                     slope += (prev_slope + slope_value)*SingularityFunction(x, prev_end, 0) - \
                         (prev_slope + slope_value)*SingularityFunction(x, args[i][1].args[1], 0)
@@ -1053,7 +1053,7 @@ class Beam(object):
             return slope
 
         C3 = Symbol('C3')
-        slope_curve = integrate(S(1)/(E*I)*self.bending_moment(), x) + C3
+        slope_curve = integrate(S.One/(E*I)*self.bending_moment(), x) + C3
 
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
@@ -1110,7 +1110,7 @@ class Beam(object):
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1123,7 +1123,7 @@ class Beam(object):
                 return deflection
             base_char = self._base_char
             constants = symbols(base_char + '3:5')
-            return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
+            return S.One/(E*I)*integrate(integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
         elif not self._boundary_conditions['deflection']:
             base_char = self._base_char
             constant = symbols(base_char + '4')
@@ -1138,7 +1138,7 @@ class Beam(object):
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1159,7 +1159,7 @@ class Beam(object):
                 bc_eqs.append(eqs)
             constants = list(linsolve(bc_eqs, (C3, C4)))
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
-            return S(1)/(E*I)*deflection_curve
+            return S.One/(E*I)*deflection_curve
 
         if isinstance(I, Piecewise) and self._composite_type == "fixed":
             args = I.args
@@ -1170,7 +1170,7 @@ class Beam(object):
             for i in range(len(args)):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
-                slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                 recent_segment_slope = prev_slope + slope_value
                 deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                 if i != len(args) - 1:

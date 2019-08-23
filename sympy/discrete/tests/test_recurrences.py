@@ -23,7 +23,7 @@ def test_linrec():
     assert all(linrec(coeffs=[1, 1], init=[1, 1], n=n) == fibonacci(n + 1)
                                                     for n in range(595, 615))
 
-    a = [S(1)/2, S(3)/4, S(5)/6, 7, S(8)/9, S(3)/5]
+    a = [S.Half, S(3)/4, S(5)/6, 7, S(8)/9, S(3)/5]
     b = [1, 2, 8, S(5)/7, S(3)/7, S(2)/9, 6]
     x, y, z = symbols('x y z')
 

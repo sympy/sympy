@@ -516,7 +516,7 @@ def _rewrite_gamma(f, s, a, b):
         coeff, _ = arg.as_coeff_mul(s)
         s_multipliers += [coeff/pi]
     s_multipliers = [abs(x) if x.is_extended_real else x for x in s_multipliers]
-    common_coefficient = S(1)
+    common_coefficient = S.One
     for x in s_multipliers:
         if not x.is_Rational:
             common_coefficient = x
@@ -526,7 +526,7 @@ def _rewrite_gamma(f, s, a, b):
         not common_coefficient.is_extended_real):
         raise IntegralTransformError("Gamma", None, "Nonrational multiplier")
     s_multiplier = common_coefficient/reduce(ilcm, [S(x.q)
-                                             for x in s_multipliers], S(1))
+                                             for x in s_multipliers], S.One)
     if s_multiplier == common_coefficient:
         if len(s_multipliers) == 0:
             s_multiplier = common_coefficient
@@ -535,8 +535,8 @@ def _rewrite_gamma(f, s, a, b):
                 *reduce(igcd, [S(x.p) for x in s_multipliers])
 
     f = f.subs(s, s/s_multiplier)
-    fac = S(1)/s_multiplier
-    exponent = S(1)/s_multiplier
+    fac = S.One/s_multiplier
+    exponent = S.One/s_multiplier
     if a_ is not None:
         a_ *= s_multiplier
     if b_ is not None:
@@ -620,12 +620,12 @@ def _rewrite_gamma(f, s, a, b):
             c /= -a
             # Now need to convert s - c
             if left(c, is_numer):
-                ugammas += [(S(1), -c + 1)]
-                lgammas += [(S(1), -c)]
+                ugammas += [(S.One, -c + 1)]
+                lgammas += [(S.One, -c)]
             else:
                 ufacs += [-1]
-                ugammas += [(S(-1), c + 1)]
-                lgammas += [(S(-1), c)]
+                ugammas += [(S.NegativeOne, c + 1)]
+                lgammas += [(S.NegativeOne, c)]
         elif isinstance(fact, gamma):
             a, b = linear_arg(fact.args[0])
             if is_numer:
@@ -680,10 +680,10 @@ def _rewrite_gamma(f, s, a, b):
                 for k in range(p):
                     gammas += [(newa, newc + k/p)]
                 if is_numer:
-                    fac *= (2*pi)**((1 - p)/2) * p**(c - S(1)/2)
+                    fac *= (2*pi)**((1 - p)/2) * p**(c - S.Half)
                     exponentials += [p**a]
                 else:
-                    fac /= (2*pi)**((1 - p)/2) * p**(c - S(1)/2)
+                    fac /= (2*pi)**((1 - p)/2) * p**(c - S.Half)
                     exponentials += [p**(-a)]
                 continue
             if a == +1:

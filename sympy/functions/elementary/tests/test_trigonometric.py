@@ -104,7 +104,7 @@ def test_sin():
 
     assert sin(pi/8) == sqrt((2 - sqrt(2))/4)
 
-    assert sin(pi/10) == -S(1)/4 + sqrt(5)/4
+    assert sin(pi/10) == -S.One/4 + sqrt(5)/4
 
     assert sin(pi/12) == -sqrt(2)/4 + sqrt(6)/4
     assert sin(5*pi/12) == sqrt(2)/4 + sqrt(6)/4
@@ -560,7 +560,7 @@ def test_tan_rewrite():
     assert tan(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)/csc(x)
     assert tan(sin(x)).rewrite(Pow) == tan(sin(x))
     assert tan(2*pi/5, evaluate=False).rewrite(sqrt) == sqrt(sqrt(5)/8 +
-               S(5)/8)/(-S(1)/4 + sqrt(5)/4)
+               S(5)/8)/(-S.One/4 + sqrt(5)/4)
 
 
 def test_tan_subs():
@@ -727,7 +727,7 @@ def test_cot_rewrite():
     assert cot(x).rewrite(sec) == sec(x - pi / 2, evaluate=False) / sec(x)
     assert cot(x).rewrite(csc) == csc(x) / csc(- x + pi / 2, evaluate=False)
     assert cot(sin(x)).rewrite(Pow) == cot(sin(x))
-    assert cot(2*pi/5, evaluate=False).rewrite(sqrt) == (-S(1)/4 + sqrt(5)/4)/\
+    assert cot(2*pi/5, evaluate=False).rewrite(sqrt) == (-S.One/4 + sqrt(5)/4)/\
                                                         sqrt(sqrt(5)/8 + S(5)/8)
 
 
@@ -964,8 +964,8 @@ def test_atan():
 
     assert atan(-2*I) == -I*atanh(2)
     assert unchanged(atan, cot(x))
-    assert atan(cot(S(1)/4)) == -S(1)/4 + pi/2
-    assert acot(S(1)/4).is_rational is False
+    assert atan(cot(S.One/4)) == -S.One/4 + pi/2
+    assert acot(S.One/4).is_rational is False
 
     for s in (x, p, n, np, nn, nz, ep, en, enp, enn, enz):
         if s.is_real or s.is_extended_real is None:
@@ -1110,11 +1110,11 @@ def test_acot():
     assert acot(n).is_positive is False
     assert acot(p).is_positive is True
     assert acot(I).is_positive is False
-    assert acot(S(1)/4).is_rational is False
+    assert acot(S.One/4).is_rational is False
     assert unchanged(acot, cot(x))
     assert unchanged(acot, tan(x))
-    assert acot(cot(S(1)/4)) == S(1)/4
-    assert acot(tan(-S(1)/4)) == S(1)/4 - pi/2
+    assert acot(cot(S.One/4)) == S.One/4
+    assert acot(tan(-S.One/4)) == S.One/4 - pi/2
 
 
 def test_acot_rewrite():
@@ -1415,7 +1415,7 @@ def test_sincos_rewrite_sqrt():
         17)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) + 17)
         + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 - sqrt(-sqrt(17)
         + 17)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
-        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/128 - S(1)/32 +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/128 - S.One/32 +
         sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
         17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 +
         3*sqrt(2)*sqrt(sqrt(17) + 17)/128 + sqrt(34)*sqrt(-sqrt(17) + 17)/128
@@ -1657,7 +1657,7 @@ def test_asec():
 
 
 def test_asec_is_real():
-    assert asec(S(1)/2).is_real is False
+    assert asec(S.Half).is_real is False
     n = Symbol('n', positive=True, integer=True)
     assert asec(n).is_extended_real is True
     assert asec(x).is_real is None

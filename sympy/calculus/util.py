@@ -1331,7 +1331,7 @@ class AccumulationBounds(AtomicExpr):
                         return AccumBounds(self.min**other, self.max**other)
 
                 num, den = other.as_numer_denom()
-                if num == S(1):
+                if num == S.One:
                     if den % 2 == 0:
                         if S.Zero in self:
                             if self.min.is_extended_negative:

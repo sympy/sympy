@@ -113,7 +113,7 @@ def test_H():
     X = Normal('X', 0, 1)
     D = Die('D', sides = 4)
     G = Geometric('G', 0.5)
-    assert H(X, X > 0) == -log(2)/2 + S(1)/2 + log(pi)/2
+    assert H(X, X > 0) == -log(2)/2 + S.Half + log(pi)/2
     assert H(D, D > 2) == log(2)
     assert comp(H(G).evalf().round(2), 1.39)
 
@@ -157,8 +157,8 @@ def test_factorial_moment():
     Y = Binomial('Y', 2, S.Half)
     Z = Hypergeometric('Z', 4, 2, 2)
     assert factorial_moment(X, 2) == 4
-    assert factorial_moment(Y, 2) == S(1)/2
-    assert factorial_moment(Z, 2) == S(1)/3
+    assert factorial_moment(Y, 2) == S.Half
+    assert factorial_moment(Z, 2) == S.One/3
 
     x, y, z, l = symbols('x y z l')
     Y = Binomial('Y', 2, y)
@@ -262,5 +262,5 @@ def test_issue_12237():
     V = P(Y < 0, X)
     W = P(X + Y > 0, X)
     assert W == P(X + Y > 0, X)
-    assert U == BernoulliDistribution(S(1)/2, S(0), S(1))
-    assert V == S(1)/2
+    assert U == BernoulliDistribution(S.Half, S.Zero, S.One)
+    assert V == S.Half

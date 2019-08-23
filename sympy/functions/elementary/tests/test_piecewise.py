@@ -111,7 +111,7 @@ def test_piecewise1():
 
     # Test doit
     f_int = Piecewise((Integral(x, (x, 0, 1)), x < 1))
-    assert f_int.doit() == Piecewise( (S(1)/2, x < 1) )
+    assert f_int.doit() == Piecewise( (S.Half, x < 1) )
 
     # Test differentiation
     f = x
@@ -212,10 +212,10 @@ def test_piecewise_integrate1b():
         assert g.integrate((x, yy, 1)) == gy1.subs(y, yy)
         assert g.integrate((x, 1, yy)) == g1y.subs(y, yy)
     assert gy1 == Piecewise(
-        (-Min(1, Max(0, y))**2/2 + S(1)/2, y < 1),
+        (-Min(1, Max(0, y))**2/2 + S.Half, y < 1),
         (-y + 1, True))
     assert g1y == Piecewise(
-        (Min(1, Max(0, y))**2/2 - S(1)/2, y < 1),
+        (Min(1, Max(0, y))**2/2 - S.Half, y < 1),
         (y - 1, True))
 
 @slow
@@ -240,14 +240,14 @@ def test_piecewise_integrate1ca():
     assert piecewise_fold(gy1.rewrite(Piecewise)) == \
         Piecewise(
             (1, y <= -1),
-            (-y**2/2 - y + S(1)/2, y <= 0),
-            (y**2/2 - y + S(1)/2, y < 1),
+            (-y**2/2 - y + S.Half, y <= 0),
+            (y**2/2 - y + S.Half, y < 1),
             (0, True))
     assert piecewise_fold(g1y.rewrite(Piecewise)) == \
         Piecewise(
             (-1, y <= -1),
-            (y**2/2 + y - S(1)/2, y <= 0),
-            (-y**2/2 + y - S(1)/2, y < 1),
+            (y**2/2 + y - S.Half, y <= 0),
+            (-y**2/2 + y - S.Half, y < 1),
             (0, True))
 
     # g1y and gy1 should simplify if the condition that y < 1
@@ -256,13 +256,13 @@ def test_piecewise_integrate1ca():
     assert gy1.simplify() == Piecewise(
         (
             -Min(1, Max(-1, y))**2/2 - Min(1, Max(-1, y)) +
-            Min(1, Max(0, y))**2 + S(1)/2, y < 1),
+            Min(1, Max(0, y))**2 + S.Half, y < 1),
         (0, True)
         )
     assert g1y.simplify() == Piecewise(
         (
             Min(1, Max(-1, y))**2/2 + Min(1, Max(-1, y)) -
-            Min(1, Max(0, y))**2 - S(1)/2, y < 1),
+            Min(1, Max(0, y))**2 - S.Half, y < 1),
         (0, True))
 
 @slow
@@ -286,14 +286,14 @@ def test_piecewise_integrate1cb():
     assert piecewise_fold(gy1.rewrite(Piecewise)) == \
         Piecewise(
             (1, y <= -1),
-            (-y**2/2 - y + S(1)/2, y <= 0),
-            (y**2/2 - y + S(1)/2, y < 1),
+            (-y**2/2 - y + S.Half, y <= 0),
+            (y**2/2 - y + S.Half, y < 1),
             (0, True))
     assert piecewise_fold(g1y.rewrite(Piecewise)) == \
         Piecewise(
             (-1, y <= -1),
-            (y**2/2 + y - S(1)/2, y <= 0),
-            (-y**2/2 + y - S(1)/2, y < 1),
+            (y**2/2 + y - S.Half, y <= 0),
+            (-y**2/2 + y - S.Half, y < 1),
             (0, True))
 
     # g1y and gy1 should simplify if the condition that y < 1
@@ -301,13 +301,13 @@ def test_piecewise_integrate1cb():
     assert gy1 == Piecewise(
         (
             -Min(1, Max(-1, y))**2/2 - Min(1, Max(-1, y)) +
-            Min(1, Max(0, y))**2 + S(1)/2, y < 1),
+            Min(1, Max(0, y))**2 + S.Half, y < 1),
         (0, True)
         )
     assert g1y == Piecewise(
         (
             Min(1, Max(-1, y))**2/2 + Min(1, Max(-1, y)) -
-            Min(1, Max(0, y))**2 - S(1)/2, y < 1),
+            Min(1, Max(0, y))**2 - S.Half, y < 1),
         (0, True))
 
 
@@ -505,8 +505,8 @@ def test_piecewise_solve():
 
     # issue 6060
     absxm3 = Piecewise(
-        (x - 3, S(0) <= x - 3),
-        (3 - x, S(0) > x - 3)
+        (x - 3, S.Zero <= x - 3),
+        (3 - x, S.Zero > x - 3)
     )
     assert solve(absxm3 - y, x) == [
         Piecewise((-y + 3, -y < 0), (S.NaN, True)),
@@ -520,7 +520,7 @@ def test_piecewise_solve():
         [Piecewise((-1, x > 0), (0, True))]
 
     # issue 8587
-    f = Piecewise((2*x**2, And(S(0) < x, x < 1)), (2, True))
+    f = Piecewise((2*x**2, And(S.Zero < x, x < 1)), (2, True))
     assert solve(f - 1) == [1/sqrt(2)]
 
 
@@ -618,7 +618,7 @@ def test_piecewise_interval():
     assert integrate(p1, x) == Piecewise(
         (0, x <= 0),
         (x**2/2, x <= 1),
-        (S(1)/2, True))
+        (S.Half, True))
 
 
 def test_piecewise_collapse():
@@ -820,7 +820,7 @@ def test_issue_11045():
     i = p.integrate((x, 1, y))
     assert i == Piecewise(
         (y - 1, y < 1),
-        (Min(3, y)**2/2 - Min(3, y) + Min(4, y) - S(1)/2,
+        (Min(3, y)**2/2 - Min(3, y) + Min(4, y) - S.Half,
             y <= Min(4, y)),
         (nan, True))
     assert p.integrate((x, 1, -1)) == i.subs(y, -1)
@@ -1114,7 +1114,7 @@ def test_issue_8919():
     c = symbols('c:5')
     x = symbols("x")
     f1 = Piecewise((c[1], x < 1), (c[2], True))
-    f2 = Piecewise((c[3], x < S(1)/3), (c[4], True))
+    f2 = Piecewise((c[3], x < S.One/3), (c[4], True))
     assert integrate(f1*f2, (x, 0, 2)
         ) == c[1]*c[3]/3 + 2*c[1]*c[4]/3 + c[2]*c[4]
     f1 = Piecewise((0, x < 1), (2, True))

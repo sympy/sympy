@@ -662,7 +662,7 @@ class ChiDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         k = self.k
 
-        part_1 = hyper((k/2,), (S(1)/2,), -t**2/2)
+        part_1 = hyper((k/2,), (S.Half,), -t**2/2)
         part_2 = I*t*sqrt(2)*gamma((k+1)/2)/gamma(k/2)
         part_3 = hyper(((k+1)/2,), (S(3)/2,), -t**2/2)
         return part_1 + part_2*part_3
@@ -670,7 +670,7 @@ class ChiDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         k = self.k
 
-        part_1 = hyper((k / 2,), (S(1) / 2,), t ** 2 / 2)
+        part_1 = hyper((k / 2,), (S.Half,), t ** 2 / 2)
         part_2 = t * sqrt(2) * gamma((k + 1) / 2) / gamma(k / 2)
         part_3 = hyper(((k + 1) / 2,), (S(3) / 2,), t ** 2 / 2)
         return part_1 + part_2 * part_3
@@ -3190,7 +3190,7 @@ class StudentTDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         nu = self.nu
-        return 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
+        return 1/(sqrt(nu)*beta_fn(S.Half, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
 
     def _cdf(self, x):
         nu = self.nu

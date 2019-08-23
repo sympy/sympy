@@ -66,7 +66,7 @@ def test_count_ops_visual():
     assert count(-2*x**2) == POW + MUL + NEG
 
     assert count(x + pi/3) == ADD + DIV
-    assert count(x + S(1)/3) == ADD + DIV
+    assert count(x + S.One/3) == ADD + DIV
     assert count(x + y) == ADD
     assert count(x - y) == SUB
     assert count(y - x) == SUB

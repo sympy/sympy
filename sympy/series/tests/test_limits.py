@@ -49,8 +49,8 @@ def test_basic1():
     assert limit(1/sin(x), x, pi, dir="-") == oo
     assert limit(1/cos(x), x, pi/2, dir="+") == -oo
     assert limit(1/cos(x), x, pi/2, dir="-") == oo
-    assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="+") == oo
-    assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="-") == -oo
+    assert limit(1/tan(x**3), x, (2*pi)**(S.One/3), dir="+") == oo
+    assert limit(1/tan(x**3), x, (2*pi)**(S.One/3), dir="-") == -oo
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="+") == -oo
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="-") == oo
 
@@ -228,10 +228,10 @@ def test_AccumBounds():
     assert limit(sin(k) - sin(k)*cos(k), k, oo) == AccumBounds(-2, 2)
 
     # test for issue #9934
-    t1 = Mul(S(1)/2, 1/(-1 + cos(1)), Add(AccumBounds(-3, 1), cos(1)))
+    t1 = Mul(S.Half, 1/(-1 + cos(1)), Add(AccumBounds(-3, 1), cos(1)))
     assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t1
 
-    t2 = Mul(S(1)/2, Add(AccumBounds(-2, 2), sin(1)), 1/(-cos(1) + 1))
+    t2 = Mul(S.Half, Add(AccumBounds(-2, 2), sin(1)), 1/(-cos(1) + 1))
     assert limit(simplify(Sum(sin(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t2
 
     assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)
@@ -248,14 +248,14 @@ def test_doit2():
 
 
 def test_issue_3792():
-    assert limit((1 - cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
+    assert limit((1 - cos(x))/x**2, x, S.Half) == 4 - 4*cos(S.Half)
     assert limit(sin(sin(x + 1) + 1), x, 0) == sin(1 + sin(1))
     assert limit(abs(sin(x + 1) + 1), x, 0) == 1 + sin(1)
 
 
 def test_issue_4090():
-    assert limit(1/(x + 3), x, 2) == S(1)/5
-    assert limit(1/(x + pi), x, 2) == S(1)/(2 + pi)
+    assert limit(1/(x + 3), x, 2) == S.One/5
+    assert limit(1/(x + pi), x, 2) == S.One/(2 + pi)
     assert limit(log(x)/(x**2 + 3), x, 2) == log(2)/7
     assert limit(log(x)/(x**2 + pi), x, 2) == log(2)/(4 + pi)
 
@@ -417,7 +417,7 @@ def test_factorial():
 
 
 def test_issue_6560():
-    e = (5*x**3/4 - 3*x/4 + (y*(3*x**2/2 - S(1)/2) +
+    e = (5*x**3/4 - 3*x/4 + (y*(3*x**2/2 - S.Half) +
                              35*x**4/8 - 15*x**2/4 + S(3)/8)/(2*(y + 1)))
     assert limit(e, y, oo) == (5*x**3 + 3*x**2 - 3*x - 1)/4
 
@@ -490,7 +490,7 @@ def test_limit_with_Float():
 
 
 def test_issue_10610():
-    assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == S(1)/3
+    assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == S.One/3
 
 
 def test_issue_6599():

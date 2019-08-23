@@ -647,7 +647,7 @@ def test_add2():
     t2 = t1*A(-n, -p, -q)
     t2 = t2.canon_bp()
     assert t2 == 0
-    t1 = S(2)/3*R(m,n,p,q) - S(1)/3*R(m,q,n,p) + S(1)/3*R(m,p,n,q)
+    t1 = S(2)/3*R(m,n,p,q) - S.One/3*R(m,q,n,p) + S.One/3*R(m,p,n,q)
     t2 = t1*A(-n, -p, -q)
     t2 = t2.canon_bp()
     assert t2 == 0
@@ -778,7 +778,7 @@ def test_riemann_cyclic():
     assert t1 == 0
     t = R(i,j,k,l)
     t1 = riemann_cyclic(t)
-    assert t1 == -S(1)/3*R(i, l, j, k) + S(1)/3*R(i, k, j, l) + S(2)/3*R(i, j, k, l)
+    assert t1 == -S.One/3*R(i, l, j, k) + S.One/3*R(i, k, j, l) + S(2)/3*R(i, j, k, l)
 
     t = R(i,j,k,l)*R(-k,-l,m,n)*(R(-m,-n,-i,-j) + 2*R(-m,-j,-n,-i))
     t1 = riemann_cyclic(t)

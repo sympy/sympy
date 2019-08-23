@@ -12,9 +12,9 @@ j = Symbol('k', integer=True, positive=True)
 
 def test_K():
     assert K(0) == pi/2
-    assert K(S(1)/2) == 8*pi**(S(3)/2)/gamma(-S(1)/4)**2
+    assert K(S.Half) == 8*pi**(S(3)/2)/gamma(-S.One/4)**2
     assert K(1) == zoo
-    assert K(-1) == gamma(S(1)/4)**2/(4*sqrt(2*pi))
+    assert K(-1) == gamma(S.One/4)**2/(4*sqrt(2*pi))
     assert K(oo) == 0
     assert K(-oo) == 0
     assert K(I*oo) == 0

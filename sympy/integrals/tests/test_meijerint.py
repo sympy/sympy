@@ -49,8 +49,8 @@ def test_rewrite_single():
     #u(exp(x)*sin(x), x)
     assert _rewrite_single(exp(x)*sin(x), x) == \
         ([(-sqrt(2)/(2*sqrt(pi)), 0,
-           meijerg(((-S(1)/2, 0, S(1)/4, S(1)/2, S(3)/4), (1,)),
-                   ((), (-S(1)/2, 0)), 64*exp_polar(-4*I*pi)/x**4))], True)
+           meijerg(((-S.Half, 0, S.One/4, S.Half, S(3)/4), (1,)),
+                   ((), (-S.Half, 0)), 64*exp_polar(-4*I*pi)/x**4))], True)
 
 
 def test_rewrite1():
@@ -171,7 +171,7 @@ def test_meijerint():
     assert meijerint_definite(sinc(x)**2, x, -oo, oo) == (pi, True)
 
     # Test one of the extra conditions for 2 g-functinos
-    assert meijerint_definite(exp(-x)*sin(x), x, 0, oo) == (S(1)/2, True)
+    assert meijerint_definite(exp(-x)*sin(x), x, 0, oo) == (S.Half, True)
 
     # Test a bug
     def res(n):
@@ -202,7 +202,7 @@ def test_meijerint():
 
     # test better hyperexpand
     assert integrate(exp(-x**2)*log(x), (x, 0, oo), meijerg=True) == \
-        (sqrt(pi)*polygamma(0, S(1)/2)/4).expand()
+        (sqrt(pi)*polygamma(0, S.Half)/4).expand()
 
     # Test hyperexpand bug.
     from sympy import lowergamma
@@ -213,13 +213,13 @@ def test_meijerint():
     # Test a bug with argument 1/x
     alpha = symbols('alpha', positive=True)
     assert meijerint_definite((2 - x)**alpha*sin(alpha/x), x, 0, 2) == \
-        (sqrt(pi)*alpha*gamma(alpha + 1)*meijerg(((), (alpha/2 + S(1)/2,
-        alpha/2 + 1)), ((0, 0, S(1)/2), (-S(1)/2,)), alpha**S(2)/16)/4, True)
+        (sqrt(pi)*alpha*gamma(alpha + 1)*meijerg(((), (alpha/2 + S.Half,
+        alpha/2 + 1)), ((0, 0, S.Half), (-S.Half,)), alpha**S(2)/16)/4, True)
 
     # test a bug related to 3016
     a, s = symbols('a s', positive=True)
     assert simplify(integrate(x**s*exp(-a*x**2), (x, -oo, oo))) == \
-        a**(-s/2 - S(1)/2)*((-1)**s + 1)*gamma(s/2 + S(1)/2)/2
+        a**(-s/2 - S.Half)*((-1)**s + 1)*gamma(s/2 + S.Half)/2
 
 
 def test_bessel():
@@ -232,9 +232,9 @@ def test_bessel():
 
     # TODO more orthogonality integrals
 
-    assert simplify(integrate(sin(z*x)*(x**2 - 1)**(-(y + S(1)/2)),
+    assert simplify(integrate(sin(z*x)*(x**2 - 1)**(-(y + S.Half)),
                               (x, 1, oo), meijerg=True, conds='none')
-                    *2/((z/2)**y*sqrt(pi)*gamma(S(1)/2 - y))) == \
+                    *2/((z/2)**y*sqrt(pi)*gamma(S.Half - y))) == \
         besselj(y, z)
 
     # Werner Rosenheinrich
@@ -634,7 +634,7 @@ def test_messy():
 
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
-        (0, And(re(a/2) + S(1)/2 > S(0), re(a/2) + 1 > S(0)))
+        (0, And(re(a/2) + S.Half > S.Zero, re(a/2) + 1 > S.Zero))
 
     # NOTE s < 0 can be done, but argument reduction is not good enough yet
     assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \
@@ -646,7 +646,7 @@ def test_messy():
     assert integrate(E1(x)*besselj(0, x), (x, 0, oo), meijerg=True) == \
         log(1 + sqrt(2))
     assert integrate(E1(x)*besselj(1, x), (x, 0, oo), meijerg=True) == \
-        log(S(1)/2 + sqrt(2)/2)
+        log(S.Half + sqrt(2)/2)
 
     assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
         Piecewise((-acosh(1/x), abs(x**(-2)) > 1), (I*asin(1/x), True))
@@ -658,7 +658,7 @@ def test_issue_6122():
 
 
 def test_issue_6252():
-    expr = 1/x/(a + b*x)**(S(1)/3)
+    expr = 1/x/(a + b*x)**(S.One/3)
     anti = integrate(expr, x, meijerg=True)
     assert not anti.has(hyper)
     # XXX the expression is a mess, but actually upon differentiation and
@@ -684,7 +684,7 @@ def test_issue_6860():
 def test_issue_7337():
     f = meijerint_indefinite(x*sqrt(2*x + 3), x).together()
     assert f == sqrt(2*x + 3)*(2*x**2 + x - 3)/5
-    assert f._eval_interval(x, S(-1), S(1)) == S(2)/5
+    assert f._eval_interval(x, S.NegativeOne, S.One) == S(2)/5
 
 
 def test_issue_8368():

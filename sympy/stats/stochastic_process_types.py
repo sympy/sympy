@@ -409,12 +409,12 @@ class MarkovProcess(StochasticProcess):
                     prob[gstates] = gprob
                 elif len(gstates) == len(state_space) - 1:
                     gstate = list(state_space - gstates)[0]
-                    gprob = S(1) - sum(prob.values())
+                    gprob = S.One - sum(prob.values())
                     prob[state_space - gstates] = gprob
                 else:
                     raise ValueError("Conflicting information.")
             else:
-                gprob = S(1)
+                gprob = S.One
 
             if min_key_rv == rv:
                 return sum([prob[FiniteSet(state)] for state in states])
@@ -427,7 +427,7 @@ class MarkovProcess(StochasticProcess):
 
         if isinstance(condition, Not):
             expr = condition.args[0]
-            return S(1) - self.probability(expr, given_condition, evaluate, **kwargs)
+            return S.One - self.probability(expr, given_condition, evaluate, **kwargs)
 
         if isinstance(condition, And):
             compute_later, state2cond, conds = [], dict(), condition.args

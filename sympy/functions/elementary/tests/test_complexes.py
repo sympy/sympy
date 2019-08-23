@@ -86,7 +86,7 @@ def test_re():
 
     n, m, l = symbols('n m l')
     A = MatrixSymbol('A',n,m)
-    assert re(A) == (S(1)/2) * (A + conjugate(A))
+    assert re(A) == (S.Half) * (A + conjugate(A))
 
     A = Matrix([[1 + 4*I,2],[0, -3*I]])
     assert re(A) == Matrix([[1, 2],[0, 0]])
@@ -184,7 +184,7 @@ def test_im():
     n, m, l = symbols('n m l')
     A = MatrixSymbol('A',n,m)
 
-    assert im(A) == (S(1)/(2*I)) * (A - conjugate(A))
+    assert im(A) == (S.One/(2*I)) * (A - conjugate(A))
 
     A = Matrix([[1 + 4*I, 2],[0, -3*I]])
     assert im(A) == Matrix([[4, 0],[0, -3]])
@@ -328,8 +328,8 @@ def test_as_real_imag():
     # issue 6261
     x = Symbol('x')
     assert sqrt(x).as_real_imag() == \
-        ((re(x)**2 + im(x)**2)**(S(1)/4)*cos(atan2(im(x), re(x))/2),
-     (re(x)**2 + im(x)**2)**(S(1)/4)*sin(atan2(im(x), re(x))/2))
+        ((re(x)**2 + im(x)**2)**(S.One/4)*cos(atan2(im(x), re(x))/2),
+     (re(x)**2 + im(x)**2)**(S.One/4)*sin(atan2(im(x), re(x))/2))
 
     # issue 3853
     a, b = symbols('a,b', real=True)
@@ -931,7 +931,7 @@ def test_issue_6167_6151():
     e = big*one - big + eps
     from sympy import simplify
     assert sign(simplify(e)) == 1
-    for xi in (111, 11, 1, S(1)/10):
+    for xi in (111, 11, 1, S.One/10):
         assert sign(e.subs(x, xi)) == 1
 
 

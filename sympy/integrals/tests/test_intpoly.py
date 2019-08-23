@@ -66,7 +66,7 @@ def test_polytope_integrate():
                                       Point(4, 0)), 1, dims=(x, y)) == 4
     assert polytope_integrate(Polygon(Point(0, 0), Point(0, 1),
                                       Point(1, 1), Point(1, 0)), x * y) ==\
-                                      S(1)/4
+                                      S.One/4
     assert polytope_integrate(Polygon(Point(0, 3), Point(5, 3), Point(1, 1)),
                               6*x**2 - 40*y) == S(-935)/3
 
@@ -74,9 +74,9 @@ def test_polytope_integrate():
                                       Point(sqrt(3), sqrt(3)),
                                       Point(sqrt(3), 0)), 1) == 3
 
-    hexagon = Polygon(Point(0, 0), Point(-sqrt(3) / 2, S(1)/2),
+    hexagon = Polygon(Point(0, 0), Point(-sqrt(3) / 2, S.Half),
                       Point(-sqrt(3) / 2, S(3) / 2), Point(0, 2),
-                      Point(sqrt(3) / 2, S(3) / 2), Point(sqrt(3) / 2, S(1)/2))
+                      Point(sqrt(3) / 2, S(3) / 2), Point(sqrt(3) / 2, S.Half))
 
     assert polytope_integrate(hexagon, 1) == S(3*sqrt(3)) / 2
 
@@ -84,18 +84,18 @@ def test_polytope_integrate():
     assert polytope_integrate([((-1, 0), 0), ((1, 2), 4),
                                ((0, -1), 0)], 1, dims=(x, y)) == 4
     assert polytope_integrate([((-1, 0), 0), ((0, 1), 1),
-                               ((1, 0), 1), ((0, -1), 0)], x * y) == S(1)/4
+                               ((1, 0), 1), ((0, -1), 0)], x * y) == S.One/4
     assert polytope_integrate([((0, 1), 3), ((1, -2), -1),
                                ((-2, -1), -3)], 6*x**2 - 40*y) == S(-935)/3
     assert polytope_integrate([((-1, 0), 0), ((0, sqrt(3)), 3),
                                ((sqrt(3), 0), 3), ((0, -1), 0)], 1) == 3
 
-    hexagon = [((-S(1) / 2, -sqrt(3) / 2), 0),
+    hexagon = [((-S.Half, -sqrt(3) / 2), 0),
                ((-1, 0), sqrt(3) / 2),
-               ((-S(1) / 2, sqrt(3) / 2), sqrt(3)),
-               ((S(1) / 2, sqrt(3) / 2), sqrt(3)),
+               ((-S.Half, sqrt(3) / 2), sqrt(3)),
+               ((S.Half, sqrt(3) / 2), sqrt(3)),
                ((1, 0), sqrt(3) / 2),
-               ((S(1) / 2, -sqrt(3) / 2), 0)]
+               ((S.Half, -sqrt(3) / 2), 0)]
     assert polytope_integrate(hexagon, 1) == S(3*sqrt(3)) / 2
 
     #  Non-convex polytopes
@@ -155,20 +155,20 @@ def test_polytope_integrate():
     #  calculated.
     assert polytope_integrate(Polygon(Point(0, 0), Point(0, 1),
                                       Point(1, 1), Point(1, 0)),
-                              max_degree=4) == {0: 0, 1: 1, x: S(1) / 2,
-                                                x ** 2 * y ** 2: S(1) / 9,
-                                                x ** 4: S(1) / 5,
-                                                y ** 4: S(1) / 5,
-                                                y: S(1) / 2,
-                                                x * y ** 2: S(1) / 6,
-                                                y ** 2: S(1) / 3,
-                                                x ** 3: S(1) / 4,
-                                                x ** 2 * y: S(1) / 6,
-                                                x ** 3 * y: S(1) / 8,
-                                                x * y: S(1) / 4,
-                                                y ** 3: S(1) / 4,
-                                                x ** 2: S(1) / 3,
-                                                x * y ** 3: S(1) / 8}
+                              max_degree=4) == {0: 0, 1: 1, x: S.Half,
+                                                x ** 2 * y ** 2: S.One / 9,
+                                                x ** 4: S.One / 5,
+                                                y ** 4: S.One / 5,
+                                                y: S.Half,
+                                                x * y ** 2: S.One / 6,
+                                                y ** 2: S.One / 3,
+                                                x ** 3: S.One / 4,
+                                                x ** 2 * y: S.One / 6,
+                                                x ** 3 * y: S.One / 8,
+                                                x * y: S.One / 4,
+                                                y ** 3: S.One / 4,
+                                                x ** 2: S.One / 3,
+                                                x * y ** 3: S.One / 8}
 
     #  Tests for 3D polytopes
     cube1 = [[(0, 0, 0), (0, 6, 6), (6, 6, 6), (3, 6, 0),
@@ -190,7 +190,7 @@ def test_polytope_integrate():
              [10, 9, 3, 4], [9, 8, 2, 3], [8, 7, 1, 2], [7, 8, 9, 10, 11, 6]]
 
     cube4 = [[(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1),
-              (S(1) / 4, S(1) / 4, S(1) / 4)],
+              (S.One / 4, S.One / 4, S.One / 4)],
              [0, 2, 1], [1, 3, 0], [4, 2, 3], [4, 3, 1],
              [0, 1, 2], [2, 4, 1], [0, 3, 2]]
 
@@ -202,9 +202,9 @@ def test_polytope_integrate():
            S(37) / 960
 
     #  Test cases from Mathematica's PolyhedronData library
-    octahedron = [[(S(-1) / sqrt(2), 0, 0), (0, S(1) / sqrt(2), 0),
-                   (0, 0, S(-1) / sqrt(2)), (0, 0, S(1) / sqrt(2)),
-                   (0, S(-1) / sqrt(2), 0), (S(1) / sqrt(2), 0, 0)],
+    octahedron = [[(S.NegativeOne / sqrt(2), 0, 0), (0, S.One / sqrt(2), 0),
+                   (0, 0, S.NegativeOne / sqrt(2)), (0, 0, S.One / sqrt(2)),
+                   (0, S.NegativeOne / sqrt(2), 0), (S.One / sqrt(2), 0, 0)],
                   [3, 4, 5], [3, 5, 1], [3, 1, 0], [3, 0, 4], [4, 0, 2],
                   [4, 2, 5], [2, 0, 1], [5, 2, 1]]
 
@@ -501,8 +501,8 @@ def test_point_sort():
         [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
 
     fig6 = Polygon((0, 0), (1, 0), (1, 1))
-    assert polytope_integrate(fig6, x*y) == S(-1)/8
-    assert polytope_integrate(fig6, x*y, clockwise = True) == S(1)/8
+    assert polytope_integrate(fig6, x*y) == S.NegativeOne/8
+    assert polytope_integrate(fig6, x*y, clockwise = True) == S.One/8
 
 
 def test_polytopes_intersecting_sides():
@@ -524,7 +524,7 @@ def test_max_degree():
     polygon = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
     polys = [1, x, y, x*y, x**2*y, x*y**2]
     assert polytope_integrate(polygon, polys, max_degree=3) == \
-        {1: 1, x: S(1)/2, y: S(1)/2, x*y: S(1)/4, x**2*y: S(1)/6, x*y**2: S(1)/6}
+        {1: 1, x: S.Half, y: S.Half, x*y: S.One/4, x**2*y: S.One/6, x*y**2: S.One/6}
 
 
 def test_main_integrate3d():

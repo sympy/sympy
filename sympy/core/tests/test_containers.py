@@ -151,7 +151,7 @@ def test_Dict():
     raises(KeyError, lambda: d[2])
     assert len(d) == 3
     assert set(d.keys()) == set((x, y, z))
-    assert set(d.values()) == set((S(1), S(2), S(3)))
+    assert set(d.values()) == set((S.One, S(2), S(3)))
     assert d.get(5, 'default') == 'default'
     assert x in d and z in d and not 5 in d
     assert d.has(x) and d.has(1)  # SymPy Basic .has method
@@ -167,7 +167,7 @@ def test_Dict():
         d[5] = 6  # assert immutability
 
     assert set(
-        d.items()) == set((Tuple(x, S(1)), Tuple(y, S(2)), Tuple(z, S(3))))
+        d.items()) == set((Tuple(x, S.One), Tuple(y, S(2)), Tuple(z, S(3))))
     assert set(d) == {x, y, z}
     assert str(d) == '{x: 1, y: 2, z: 3}'
     assert d.__repr__() == '{x: 1, y: 2, z: 3}'
@@ -185,7 +185,7 @@ def test_Dict():
     d = Dict(d)
     assert len(d) == 3
     assert set(d.keys()) == set((x, y, z))
-    assert set(d.values()) == set((S(0), S(0), S(0)))
+    assert set(d.values()) == set((S.Zero, S.Zero, S.Zero))
 
 
 def test_issue_5788():

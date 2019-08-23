@@ -371,7 +371,7 @@ def test_triangle_kwargs():
 
 
 def test_transform():
-    pts = [Point(0, 0), Point(S(1)/2, S(1)/4), Point(1, 1)]
+    pts = [Point(0, 0), Point(S.Half, S.One/4), Point(1, 1)]
     pts_out = [Point(-4, -10), Point(-3, -S(37)/4), Point(-2, -7)]
     assert Triangle(*pts).scale(2, 3, (4, 5)) == Triangle(*pts_out)
     assert RegularPolygon((0, 0), 1, 4).scale(2, 3, (4, 5)) == \
@@ -422,19 +422,19 @@ def test_exradii():
 
 def test_medians():
     t = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
-    assert t.medians[Point(0, 0)] == Segment(Point(0, 0), Point(S(1)/2, S(1)/2))
+    assert t.medians[Point(0, 0)] == Segment(Point(0, 0), Point(S.Half, S.Half))
 
 def test_medial():
     assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).medial \
-        == Triangle(Point(S(1)/2, 0), Point(S(1)/2, S(1)/2), Point(0, S(1)/2))
+        == Triangle(Point(S.Half, 0), Point(S.Half, S.Half), Point(0, S.Half))
 
 def test_nine_point_circle():
     assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).nine_point_circle \
-        == Circle(Point2D(S(1)/4, S(1)/4), sqrt(2)/4)
+        == Circle(Point2D(S.One/4, S.One/4), sqrt(2)/4)
 
 def test_eulerline():
     assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).eulerline \
-        == Line(Point2D(0, 0), Point2D(S(1)/2, S(1)/2))
+        == Line(Point2D(0, 0), Point2D(S.Half, S.Half))
     assert Triangle(Point(0, 0), Point(10, 0), Point(5, 5*sqrt(3))).eulerline \
         == Point2D(5, 5*sqrt(3)/3)
     assert Triangle(Point(4, -6), Point(4, -1), Point(-3, 3)).eulerline \
@@ -443,19 +443,19 @@ def test_eulerline():
 def test_intersection():
     poly1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
     poly2 = Polygon(Point(0, 1), Point(-5, 0),
-                    Point(0, -4), Point(0, S(1)/5),
-                    Point(S(1)/2, -0.1), Point(1,0), Point(0, 1))
+                    Point(0, -4), Point(0, S.One/5),
+                    Point(S.Half, -0.1), Point(1,0), Point(0, 1))
 
-    assert poly1.intersection(poly2) == [Point2D(S(1)/3, 0),
-        Segment(Point(0, S(1)/5), Point(0, 0)),
+    assert poly1.intersection(poly2) == [Point2D(S.One/3, 0),
+        Segment(Point(0, S.One/5), Point(0, 0)),
         Segment(Point(1, 0), Point(0, 1))]
-    assert poly2.intersection(poly1) == [Point(S(1)/3, 0),
-        Segment(Point(0, 0), Point(0, S(1)/5)),
+    assert poly2.intersection(poly1) == [Point(S.One/3, 0),
+        Segment(Point(0, 0), Point(0, S.One/5)),
         Segment(Point(1, 0), Point(0, 1))]
     assert poly1.intersection(Point(0, 0)) == [Point(0, 0)]
     assert poly1.intersection(Point(-12,  -43)) == []
     assert poly2.intersection(Line((-12, 0), (12, 0))) == [Point(-5, 0),
-        Point(0, 0),Point(S(1)/3, 0), Point(1, 0)]
+        Point(0, 0),Point(S.One/3, 0), Point(1, 0)]
     assert poly2.intersection(Line((-12, 12), (12, 12))) == []
     assert poly2.intersection(Ray((-3,4), (1,0))) == [Segment(Point(1, 0),
         Point(0, 1))]
@@ -464,10 +464,10 @@ def test_intersection():
     assert poly1.intersection(poly1) == [Segment(Point(0, 0), Point(1, 0)),
         Segment(Point(0, 1), Point(0, 0)), Segment(Point(1, 0), Point(0, 1))]
     assert poly2.intersection(poly2) == [Segment(Point(-5, 0), Point(0, -4)),
-        Segment(Point(0, -4), Point(0, S(1)/5)),
-        Segment(Point(0, S(1)/5), Point(S(1)/2, -S(1)/10)),
+        Segment(Point(0, -4), Point(0, S.One/5)),
+        Segment(Point(0, S.One/5), Point(S.Half, -S.One/10)),
         Segment(Point(0, 1), Point(-5, 0)),
-        Segment(Point(S(1)/2, -S(1)/10), Point(1, 0)),
+        Segment(Point(S.Half, -S.One/10), Point(1, 0)),
         Segment(Point(1, 0), Point(0, 1))]
     assert poly2.intersection(Triangle(Point(0, 1), Point(1, 0), Point(-1, 1))) \
         == [Point(-S(5)/7, S(6)/7), Segment(Point2D(0, 1), Point(1, 0))]

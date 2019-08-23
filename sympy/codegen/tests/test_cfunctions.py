@@ -47,7 +47,7 @@ def test_log1p():
     assert abs(expand_log(log1p(1e-99)).evalf() - 1e-99) < 1e-100
 
     # Properties
-    assert log1p(-2**(-S(1)/2)).is_real
+    assert log1p(-2**(-S.Half)).is_real
 
     assert not log1p(-1).is_finite
     assert log1p(pi).is_finite

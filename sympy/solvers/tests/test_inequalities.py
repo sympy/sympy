@@ -117,7 +117,7 @@ def test_reduce_poly_inequalities_complex_relational():
         [[Ne(x**2, 0)]], x, relational=True) == \
         And(Gt(x, -oo), Lt(x, oo), Ne(x, 0))
 
-    for one in (S(1), S(1.0)):
+    for one in (S.One, S(1.0)):
         inf = one*oo
         assert reduce_rational_inequalities(
             [[Eq(x**2, one)]], x, relational=True) == \
@@ -187,9 +187,9 @@ def test_reduce_abs_inequalities():
         abs(2*x + 3) >= 8) == Or(And(Le(S(5)/2, x), Lt(x, oo)),
         And(Le(x, -S(11)/2), Lt(-oo, x)))
     assert reduce_inequalities(abs(x - 4) + abs(
-        3*x - 5) < 7) == And(Lt(S(1)/2, x), Lt(x, 4))
+        3*x - 5) < 7) == And(Lt(S.Half, x), Lt(x, 4))
     assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7) == \
-        Or(And(S(-2) < x, x < -1), And(S(1)/2 < x, x < 4))
+        Or(And(S(-2) < x, x < -1), And(S.Half < x, x < 4))
 
     nr = Symbol('nr', extended_real=False)
     raises(TypeError, lambda: reduce_inequalities(abs(nr - 5) < 3))
@@ -198,7 +198,7 @@ def test_reduce_abs_inequalities():
 
 def test_reduce_inequalities_general():
     assert reduce_inequalities(Ge(sqrt(2)*x, 1)) == And(sqrt(2)/2 <= x, x < oo)
-    assert reduce_inequalities(PurePoly(x + 1, x) > 0) == And(S(-1) < x, x < oo)
+    assert reduce_inequalities(PurePoly(x + 1, x) > 0) == And(S.NegativeOne < x, x < oo)
 
 
 def test_reduce_inequalities_boolean():
@@ -234,13 +234,13 @@ def test_issue_6343():
 
 def test_issue_8235():
     assert reduce_inequalities(x**2 - 1 < 0) == \
-        And(S(-1) < x, x < S(1))
+        And(S.NegativeOne < x, x < S.One)
     assert reduce_inequalities(x**2 - 1 <= 0) == \
-        And(S(-1) <= x, x <= 1)
+        And(S.NegativeOne <= x, x <= 1)
     assert reduce_inequalities(x**2 - 1 > 0) == \
-        Or(And(-oo < x, x < -1), And(x < oo, S(1) < x))
+        Or(And(-oo < x, x < -1), And(x < oo, S.One < x))
     assert reduce_inequalities(x**2 - 1 >= 0) == \
-        Or(And(-oo < x, x <= S(-1)), And(S(1) <= x, x < oo))
+        Or(And(-oo < x, x <= S.NegativeOne), And(S.One <= x, x < oo))
 
     eq = x**8 + x - 9  # we want CRootOf solns here
     sol = solve(eq >= 0)
@@ -248,16 +248,16 @@ def test_issue_8235():
     assert sol == tru
 
     # recast vanilla as real
-    assert solve(sqrt((-x + 1)**2) < 1) == And(S(0) < x, x < 2)
+    assert solve(sqrt((-x + 1)**2) < 1) == And(S.Zero < x, x < 2)
 
 
 def test_issue_5526():
-    assert reduce_inequalities(S(0) <=
+    assert reduce_inequalities(S.Zero <=
         x + Integral(y**2, (y, 1, 3)) - 1, [x]) == \
         (x >= -Integral(y**2, (y, 1, 3)) + 1)
     f = Function('f')
     e = Sum(f(x), (x, 1, 3))
-    assert reduce_inequalities(S(0) <= x + e + y**2, [x]) == \
+    assert reduce_inequalities(S.Zero <= x + e + y**2, [x]) == \
         (x >= -y**2 - Sum(f(x), (x, 1, 3)))
 
 
@@ -274,8 +274,8 @@ def test_solve_univariate_inequality():
         Or(Eq(x, 0), Eq(x, 3))
     # issue 2785:
     assert isolve(x**3 - 2*x - 1 > 0, x, relational=False) == \
-        Union(Interval(-1, -sqrt(5)/2 + S(1)/2, True, True),
-              Interval(S(1)/2 + sqrt(5)/2, oo, True, True))
+        Union(Interval(-1, -sqrt(5)/2 + S.Half, True, True),
+              Interval(S.Half + sqrt(5)/2, oo, True, True))
     # issue 2794:
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
@@ -295,7 +295,7 @@ def test_solve_univariate_inequality():
     assert isolve(1/(x - 2) > 0, x) == And(S(2) < x, x < oo)
     den = ((x - 1)*(x - 2)).expand()
     assert isolve((x - 1)/den <= 0, x) == \
-        Or(And(-oo < x, x < 1), And(S(1) < x, x < 2))
+        Or(And(-oo < x, x < 1), And(S.One < x, x < 2))
 
     n = Dummy('n')
     raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
@@ -338,12 +338,12 @@ def test_trig_inequalities():
         Union(Interval.Ropen(0, pi/4), Interval.Lopen(pi/2, pi))
 
     assert isolve(sin(x) <= S.Zero, x, relational=False) == \
-        Union(FiniteSet(S(0)), Interval(pi, 2*pi))
+        Union(FiniteSet(S.Zero), Interval(pi, 2*pi))
 
-    assert isolve(sin(x) <= S(1), x, relational=False) == S.Reals
+    assert isolve(sin(x) <= S.One, x, relational=False) == S.Reals
     assert isolve(cos(x) < S(-2), x, relational=False) == S.EmptySet
-    assert isolve(sin(x) >= S(-1), x, relational=False) == S.Reals
-    assert isolve(cos(x) > S(1), x, relational=False) == S.EmptySet
+    assert isolve(sin(x) >= S.NegativeOne, x, relational=False) == S.Reals
+    assert isolve(cos(x) > S.One, x, relational=False) == S.EmptySet
 
 
 def test_issue_9954():
@@ -357,7 +357,7 @@ def test_issue_9954():
 def test_slow_general_univariate():
     r = rootof(x**5 - x**2 + 1, 0)
     assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
-        Or(And(S(0) < x, x < r**6), And(r**6 < x, x < oo))
+        Or(And(S.Zero < x, x < r**6), And(r**6 < x, x < oo))
 
 
 def test_issue_8545():
@@ -376,12 +376,12 @@ def test_issue_8974():
 def test_issue_10198():
     assert reduce_inequalities(
         -1 + 1/abs(1/x - 1) < 0) == Or(
-        And(-oo < x, x < 0), And(S(0) < x, x < S(1)/2)
+        And(-oo < x, x < 0), And(S.Zero < x, x < S.Half)
         )
     assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
         Or(And(-oo < x, x < 0),
-        And(S(0) < x, x < S(3)/4), And(S(3)/2 < x, x < oo))
+        And(S.Zero < x, x < S(3)/4), And(S(3)/2 < x, x < oo))
     raises(ValueError,lambda: reduce_abs_inequality(-3 + 1/abs(
         1 - 1/sqrt(x)), '<', x))
 
@@ -396,7 +396,7 @@ def test_issue_10047():
 
 
 def test_issue_10268():
-    assert solve(log(x) < 1000) == And(S(0) < x, x < exp(1000))
+    assert solve(log(x) < 1000) == And(S.Zero < x, x < exp(1000))
 
 
 @XFAIL
@@ -445,11 +445,11 @@ def test__solve_inequality():
 def test__pt():
     from sympy.solvers.inequalities import _pt
     assert _pt(-oo, oo) == 0
-    assert _pt(S(1), S(3)) == 2
-    assert _pt(S(1), oo) == _pt(oo, S(1)) == 2
-    assert _pt(S(1), -oo) == _pt(-oo, S(1)) == S.Half
-    assert _pt(S(-1), oo) == _pt(oo, S(-1)) == -S.Half
-    assert _pt(S(-1), -oo) == _pt(-oo, S(-1)) == -2
+    assert _pt(S.One, S(3)) == 2
+    assert _pt(S.One, oo) == _pt(oo, S.One) == 2
+    assert _pt(S.One, -oo) == _pt(-oo, S.One) == S.Half
+    assert _pt(S.NegativeOne, oo) == _pt(oo, S.NegativeOne) == -S.Half
+    assert _pt(S.NegativeOne, -oo) == _pt(-oo, S.NegativeOne) == -2
     assert _pt(x, oo) == _pt(oo, x) == x + 1
     assert _pt(x, -oo) == _pt(-oo, x) == x - 1
-    raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S(1)))
+    raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))

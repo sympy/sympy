@@ -222,10 +222,10 @@ def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True)) == [1]
     assert roots_cyclotomic(cyclotomic_poly(2, x, polys=True)) == [-1]
     assert roots_cyclotomic(cyclotomic_poly(
-        3, x, polys=True)) == [-S(1)/2 - I*sqrt(3)/2, -S(1)/2 + I*sqrt(3)/2]
+        3, x, polys=True)) == [-S.Half - I*sqrt(3)/2, -S.Half + I*sqrt(3)/2]
     assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True)) == [-I, I]
     assert roots_cyclotomic(cyclotomic_poly(
-        6, x, polys=True)) == [S(1)/2 - I*sqrt(3)/2, S(1)/2 + I*sqrt(3)/2]
+        6, x, polys=True)) == [S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
 
     assert roots_cyclotomic(cyclotomic_poly(7, x, polys=True)) == [
         -cos(pi/7) - I*sin(pi/7),
@@ -294,9 +294,9 @@ def test_roots_binomial():
 
     # issue 8813
     assert roots(Poly(2*x**3 - 16*y**3, x)) == {
-        2*y*(-S(1)/2 - sqrt(3)*I/2): 1,
+        2*y*(-S.Half - sqrt(3)*I/2): 1,
         2*y: 1,
-        2*y*(-S(1)/2 + sqrt(3)*I/2): 1}
+        2*y*(-S.Half + sqrt(3)*I/2): 1}
 
 
 def test_roots_preprocessing():
@@ -403,7 +403,7 @@ def test_roots0():
     f = -2016*x**2 - 5616*x**3 - 2056*x**4 + 3324*x**5 + 2176*x**6 - \
         224*x**7 - 384*x**8 - 64*x**9
 
-    assert roots(f) == {S(0): 2, -S(2): 2, S(2): 1, -S(7)/2: 1, -S(3)/2: 1, -S(1)/2: 1, S(3)/2: 1}
+    assert roots(f) == {S.Zero: 2, -S(2): 2, S(2): 1, -S(7)/2: 1, -S(3)/2: 1, -S.Half: 1, S(3)/2: 1}
 
     assert roots((a + b + c)*x - (a + b + c + d), x) == {(a + b + c + d)/(a + b + c): 1}
 
@@ -416,7 +416,7 @@ def test_roots0():
     assert roots(x**3 + 2*x**2 + 4*x + 8, x, cubics=True) == \
         {-2*I: 1, 2*I: 1, -S(2): 1}
     assert roots((x**2 - x)*(x**3 + 2*x**2 + 4*x + 8), x ) == \
-        {S(1): 1, S(0): 1, -S(2): 1, -2*I: 1, 2*I: 1}
+        {S.One: 1, S.Zero: 1, -S(2): 1, -2*I: 1, 2*I: 1}
 
     r1_2, r1_3 = Rational(1, 2), Rational(1, 3)
 

@@ -493,7 +493,7 @@ def get_motion_params(frame, **kwargs):
             if i < 3:
                 kwargs[x] = Vector(0)
             else:
-                kwargs[x] = S(0)
+                kwargs[x] = S.Zero
         elif i < 3:
             _check_vector(kwargs[x])
         else:

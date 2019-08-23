@@ -2439,8 +2439,8 @@ class atan(InverseTrigonometricFunction):
             return self.func(arg)
 
     def _eval_rewrite_as_log(self, x, **kwargs):
-        return S.ImaginaryUnit/2 * (log(S(1) - S.ImaginaryUnit * x)
-            - log(S(1) + S.ImaginaryUnit * x))
+        return S.ImaginaryUnit/2 * (log(S.One - S.ImaginaryUnit * x)
+            - log(S.One + S.ImaginaryUnit * x))
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:

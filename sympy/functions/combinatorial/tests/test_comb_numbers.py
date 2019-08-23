@@ -125,9 +125,9 @@ def test_tribonacci():
     assert tribonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
         tribonacci(10)
     assert tribonacci(n).rewrite(TribonacciConstant) == floor(
-            3*TribonacciConstant**n*(102*sqrt(33) + 586)**(S(1)/3)/
-            (-2*(102*sqrt(33) + 586)**(S(1)/3) + 4 + (102*sqrt(33)
-            + 586)**(S(2)/3)) + S(1)/2)
+            3*TribonacciConstant**n*(102*sqrt(33) + 586)**(S.One/3)/
+            (-2*(102*sqrt(33) + 586)**(S.One/3) + 4 + (102*sqrt(33)
+            + 586)**(S(2)/3)) + S.Half)
     raises(ValueError, lambda: tribonacci(-1, x))
 
 
@@ -142,7 +142,7 @@ def test_bell():
     raises(ValueError, lambda: bell(oo, x))
 
     raises(ValueError, lambda: bell(-1))
-    raises(ValueError, lambda: bell(S(1)/2))
+    raises(ValueError, lambda: bell(S.Half))
 
     X = symbols('x:6')
     # X = (x0, x1, .. x5)

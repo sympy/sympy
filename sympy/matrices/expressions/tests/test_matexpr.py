@@ -237,7 +237,7 @@ def test_addition():
 
     assert A + ZeroMatrix(n, m) - A == ZeroMatrix(n, m)
     with raises(TypeError):
-        ZeroMatrix(n,m) + S(0)
+        ZeroMatrix(n,m) + S.Zero
 
 
 def test_multiplication():
@@ -283,7 +283,7 @@ def test_MatPow():
     assert (A**-1)**-1 == A
     assert (A**2)**3 == A**6
     assert A**S.Half == sqrt(A)
-    assert A**(S(1)/3) == cbrt(A)
+    assert A**(S.One/3) == cbrt(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
 
 

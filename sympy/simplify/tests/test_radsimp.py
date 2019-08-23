@@ -87,11 +87,11 @@ def test_radsimp():
     # issue 5994
     e = S('-(2 + 2*sqrt(2) + 4*2**(1/4))/'
         '(1 + 2**(3/4) + 3*2**(1/4) + 3*sqrt(2))')
-    assert radsimp(e).expand() == -2*2**(S(3)/4) - 2*2**(S(1)/4) + 2 + 2*sqrt(2)
+    assert radsimp(e).expand() == -2*2**(S(3)/4) - 2*2**(S.One/4) + 2 + 2*sqrt(2)
 
     # issue 5986 (modifications to radimp didn't initially recognize this so
     # the test is included here)
-    assert radsimp(1/(-sqrt(5)/2 - S(1)/2 + (-sqrt(5)/2 - S(1)/2)**2)) == 1
+    assert radsimp(1/(-sqrt(5)/2 - S.Half + (-sqrt(5)/2 - S.Half)**2)) == 1
 
     # from issue 5934
     eq = (
@@ -189,7 +189,7 @@ def test_collect_3():
     f = Function('f')
     x, y, z, n = symbols('x,y,z,n')
 
-    assert collect(-x/8 + x*y, -x) == x*(y - S(1)/8)
+    assert collect(-x/8 + x*y, -x) == x*(y - S.One/8)
 
     assert collect( 1 + x*(y**2), x*y ) == 1 + x*(y**2)
     assert collect( x*y + a*x*y, x*y) == x*y*(1 + a)
@@ -332,7 +332,7 @@ def test_collect_const():
     # issue 5290
     assert collect_const(2*x + 2*y + 1, 2) == \
         collect_const(2*x + 2*y + 1) == \
-        Add(S(1), Mul(2, x + y, evaluate=False), evaluate=False)
+        Add(S.One, Mul(2, x + y, evaluate=False), evaluate=False)
     assert collect_const(-y - z) == Mul(-1, y + z, evaluate=False)
     assert collect_const(2*x - 2*y - 2*z, 2) == \
         Mul(2, x - y - z, evaluate=False)

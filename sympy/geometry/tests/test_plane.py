@@ -46,11 +46,11 @@ def test_plane():
 
     assert pl3.projection(Point(0, 0)) == p1
     p = pl3.projection(Point3D(1, 1, 0))
-    assert p == Point3D(S(7)/6, S(2)/3, S(1)/6)
+    assert p == Point3D(S(7)/6, S(2)/3, S.One/6)
     assert p in pl3
 
     l = pl3.projection_line(Line(Point(0, 0), Point(1, 1)))
-    assert l == Line3D(Point3D(0, 0, 0), Point3D(S(7)/6, S(2)/3, S(1)/6))
+    assert l == Line3D(Point3D(0, 0, 0), Point3D(S(7)/6, S(2)/3, S.One/6))
     assert l in pl3
     # get a segment that does not intersect the plane which is also
     # parallel to pl3's normal veector
@@ -61,7 +61,7 @@ def test_plane():
     assert s.p1 not in pl3 and s.p2 not in pl3
     assert pl3.projection_line(s).equals(r)
     assert pl3.projection_line(Segment(Point(1, 0), Point(1, 1))) == \
-               Segment3D(Point3D(S(5)/6, S(1)/3, -S(1)/6), Point3D(S(7)/6, S(2)/3, S(1)/6))
+               Segment3D(Point3D(S(5)/6, S.One/3, -S.One/6), Point3D(S(7)/6, S(2)/3, S.One/6))
     assert pl6.projection_line(Ray(Point(1, 0), Point(1, 1))) == \
                Ray3D(Point3D(S(14)/3, S(11)/3, S(11)/3), Point3D(S(13)/3, S(13)/3, S(10)/3))
     assert pl3.perpendicular_line(r.args) == pl3.perpendicular_line(r)

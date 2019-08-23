@@ -867,8 +867,8 @@ class WignerD(Expr):
             for k in range(2*j + 1):
                 if k > j + mp or k > j - m or k < mp - m:
                     continue
-                r += (-S(1))**k * binomial(j + mp, k) * binomial(j - mp, k + m - mp)
-            r *= (-S(1))**(m - mp) / 2**j * sqrt(factorial(j + m) *
+                r += (S.NegativeOne)**k * binomial(j + mp, k) * binomial(j - mp, k + m - mp)
+            r *= (S.NegativeOne)**(m - mp) / 2**j * sqrt(factorial(j + m) *
                     factorial(j - m) / (factorial(j + mp) * factorial(j - mp)))
         else:
             # Varshalovich Equation(5), Section 4.7.2, page 87, where we set

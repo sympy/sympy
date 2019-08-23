@@ -248,7 +248,7 @@ def test_geometric_sums():
     # issue 6802:
     assert summation((-1)**(2*x + 2), (x, 0, n)) == n + 1
     assert summation((-2)**(2*x + 2), (x, 0, n)) == 4*4**(n + 1)/S(3) - S(4)/3
-    assert summation((-1)**x, (x, 0, n)) == -(-1)**(n + 1)/S(2) + S(1)/2
+    assert summation((-1)**x, (x, 0, n)) == -(-1)**(n + 1)/S(2) + S.Half
     assert summation(y**x, (x, a, b)) == \
         Piecewise((-a + b + 1, Eq(y, 1)), ((y**a - y**(b + 1))/(-y + 1), True))
     assert summation((-2)**(y*x + 2), (x, 0, n)) == \
@@ -321,7 +321,7 @@ def test_hypergeometric_sums():
 
 def test_other_sums():
     f = m**2 + m*exp(m)
-    g = 3*exp(S(3)/2)/2 + exp(S(1)/2)/2 - exp(-S(1)/2)/2 - 3*exp(-S(3)/2)/2 + 5
+    g = 3*exp(S(3)/2)/2 + exp(S.Half)/2 - exp(-S.Half)/2 - 3*exp(-S(3)/2)/2 + 5
 
     assert summation(f, (m, -S(3)/2, S(3)/2)) == g
     assert summation(f, (m, -1.5, 1.5)).evalf().epsilon_eq(g.evalf(), 1e-10)
@@ -490,7 +490,7 @@ def test_wallis_product():
     # can factor simple rational expressions
     A = Product(4*n**2 / (4*n**2 - 1), (n, 1, b))
     B = Product((2*n)*(2*n)/(2*n - 1)/(2*n + 1), (n, 1, b))
-    R = pi*gamma(b + 1)**2/(2*gamma(b + S(1)/2)*gamma(b + S(3)/2))
+    R = pi*gamma(b + 1)**2/(2*gamma(b + S.Half)*gamma(b + S(3)/2))
     assert simplify(A.doit()) == R
     assert simplify(B.doit()) == R
     # This one should eventually also be doable (Euler's product formula for sin)
@@ -581,7 +581,7 @@ def test_Sum_doit():
     assert Sum(x*KroneckerDelta(m, n), (m, -oo, oo)).doit() == x
     assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
     assert Sum(Sum(KroneckerDelta(k, m), (m, 1, 3)), (n, 1, 3)).doit() == \
-           3 * Piecewise((1, And(S(1) <= k, k <= 3)), (0, True))
+           3 * Piecewise((1, And(S.One <= k, k <= 3)), (0, True))
     assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
            f(1) + f(2) + f(3)
     assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
@@ -589,7 +589,7 @@ def test_Sum_doit():
 
     # issue 2597
     nmax = symbols('N', integer=True, positive=True)
-    pw = Piecewise((1, And(S(1) <= n, n <= nmax)), (0, True))
+    pw = Piecewise((1, And(S.One <= n, n <= nmax)), (0, True))
     assert Sum(pw, (n, 1, nmax)).doit() == Sum(Piecewise((1, nmax >= n),
                     (0, True)), (n, 1, nmax))
 
@@ -1048,7 +1048,7 @@ def test_is_convergent():
     assert Sum(eq, (x, 1, oo)).is_convergent() is S.true
     assert Sum(eq, (x, 1, 2)).is_convergent() is S.true
     assert Sum(1/(x**3), (x, 1, oo)).is_convergent() is S.true
-    assert Sum(1/(x**(S(1)/2)), (x, 1, oo)).is_convergent() is S.false
+    assert Sum(1/(x**(S.Half)), (x, 1, oo)).is_convergent() is S.false
 
 
 def test_is_absolutely_convergent():
@@ -1312,12 +1312,12 @@ def test_issue_8016():
 
 @XFAIL
 def test_issue_14313():
-    assert Sum((S(1)/2)**floor(n/2), (n, 1, oo)).is_convergent()
+    assert Sum((S.Half)**floor(n/2), (n, 1, oo)).is_convergent()
 
 
 @XFAIL
 def test_issue_14871():
-    assert Sum((S(1)/10)**x*RisingFactorial(0, x)/factorial(x), (x, 0, oo)).rewrite(factorial).doit() == 1
+    assert Sum((S.One/10)**x*RisingFactorial(0, x)/factorial(x), (x, 0, oo)).rewrite(factorial).doit() == 1
 
 
 def test_issue_17165():

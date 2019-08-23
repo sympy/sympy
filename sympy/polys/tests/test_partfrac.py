@@ -57,7 +57,7 @@ def test_apart_matrix():
 
     assert apart(M) == Matrix([
         [1/x - 1/(x + 1), (x + 1)**(-2)],
-        [1/(2*x) - (S(1)/2)/(x + 2), 1/(x + 1) - 1/(x + 2)],
+        [1/(2*x) - (S.Half)/(x + 2), 1/(x + 1) - 1/(x + 2)],
     ])
 
 
@@ -103,11 +103,11 @@ def test_apart_full():
     f = 1/(x**5 + 1)
 
     assert apart(f, full=False) == \
-        (-S(1)/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 -
-         x + 1)) + (S(1)/5)/(x + 1)
+        (-S.One/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 -
+         x + 1)) + (S.One/5)/(x + 1)
     assert apart(f, full=True) == \
         -RootSum(x**4 - x**3 + x**2 - x + 1,
-        Lambda(a, a/(x - a)), auto=False)/5 + (S(1)/5)/(x + 1)
+        Lambda(a, a/(x - a)), auto=False)/5 + (S.One/5)/(x + 1)
 
 
 def test_apart_undetermined_coeffs():

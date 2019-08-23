@@ -53,7 +53,7 @@ def test_gruntz_evaluation():
                   x, oo) == 0
     # 8.10
     assert gruntz((x*log(x)*(log(x*exp(x) - x**2))**2)
-                  / (log(log(x**2 + 2*exp(exp(3*x**3*log(x)))))), x, oo) == S(1)/3
+                  / (log(log(x**2 + 2*exp(exp(3*x**3*log(x)))))), x, oo) == S.One/3
     # 8.11
     assert gruntz((exp(x*exp(-x)/(exp(-x) + exp(-2*x**2/(x + 1)))) - exp(x))/x,
                   x, oo) == -exp(2)
@@ -104,21 +104,21 @@ def test_gruntz_eval_special():
     assert gruntz(exp(exp(x)) * (exp(sin(1/x + exp(-exp(x)))) - exp(sin(1/x))),
                   x, oo) == 1
     assert gruntz(exp(x)*(gamma(x + exp(-x)) - gamma(x)), x, oo) == oo
-    assert gruntz(exp(exp(digamma(digamma(x))))/x, x, oo) == exp(-S(1)/2)
-    assert gruntz(exp(exp(digamma(log(x))))/x, x, oo) == exp(-S(1)/2)
+    assert gruntz(exp(exp(digamma(digamma(x))))/x, x, oo) == exp(-S.Half)
+    assert gruntz(exp(exp(digamma(log(x))))/x, x, oo) == exp(-S.Half)
     assert gruntz(digamma(digamma(digamma(x))), x, oo) == oo
     assert gruntz(loggamma(loggamma(x)), x, oo) == oo
     assert gruntz(((gamma(x + 1/gamma(x)) - gamma(x))/log(x) - cos(1/x))
-                  * x*log(x), x, oo) == -S(1)/2
+                  * x*log(x), x, oo) == -S.Half
     assert gruntz(x * (gamma(x - 1/gamma(x)) - gamma(x) + log(x)), x, oo) \
-        == S(1)/2
+        == S.Half
     assert gruntz((gamma(x + 1/gamma(x)) - gamma(x)) / log(x), x, oo) == 1
 
 
 def test_gruntz_eval_special_slow():
     _sskip()
     assert gruntz(gamma(x + 1)/sqrt(2*pi)
-                  - exp(-x)*(x**(x + S(1)/2) + x**(x - S(1)/2)/12), x, oo) == oo
+                  - exp(-x)*(x**(x + S.Half) + x**(x - S.Half)/12), x, oo) == oo
     assert gruntz(exp(exp(exp(digamma(digamma(digamma(x))))))/x, x, oo) == 0
 
 
@@ -410,14 +410,14 @@ def test_intractable():
     assert gruntz(gamma(x)/loggamma(x), x, oo) == oo
     assert gruntz(exp(gamma(x))/gamma(x), x, oo) == oo
     assert gruntz(gamma(x), x, 3) == 2
-    assert gruntz(gamma(S(1)/7 + 1/x), x, oo) == gamma(S(1)/7)
+    assert gruntz(gamma(S.One/7 + 1/x), x, oo) == gamma(S.One/7)
     assert gruntz(log(x**x)/log(gamma(x)), x, oo) == 1
     assert gruntz(log(gamma(gamma(x)))/exp(x), x, oo) == oo
 
 
 def test_aseries_trig():
     assert cancel(gruntz(1/log(atan(x)), x, oo)
-           - 1/(log(pi) + log(S(1)/2))) == 0
+           - 1/(log(pi) + log(S.Half))) == 0
     assert gruntz(1/acot(x), x, -oo) == -oo
 
 

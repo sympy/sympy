@@ -55,11 +55,11 @@ def test_continued_fraction():
     assert list(cf_i(S(17)/12)) == [1, 2, 2, 2]
     assert list(cf_i(S(-17)/12)) == [-2, 1, 1, 2, 2]
 
-    assert list(cf_c([1, 6, 1, 8])) == [S(1), S(7)/6, S(8)/7, S(71)/62]
+    assert list(cf_c([1, 6, 1, 8])) == [S.One, S(7)/6, S(8)/7, S(71)/62]
     assert list(cf_c([2])) == [S(2)]
     assert list(cf_c([1, 1, 1, 1, 1, 1, 1])) == [S.One, S(2), S(3)/2, S(5)/3,
                                                  S(8)/5, S(13)/8, S(21)/13]
-    assert list(cf_c([1, 6, S(-1)/2, 4])) == [S.One, S(7)/6, S(5)/4, S(3)/2]
+    assert list(cf_c([1, 6, -S.Half, 4])) == [S.One, S(7)/6, S(5)/4, S(3)/2]
 
     assert cf_r([1, 6, 1, 8]) == S(71)/62
     assert cf_r([3]) == S(3)

@@ -110,9 +110,9 @@ def test_mod():
 def test_divmod():
     assert divmod(S(12), S(8)) == Tuple(1, 4)
     assert divmod(-S(12), S(8)) == Tuple(-2, 4)
-    assert divmod(S(0), S(1)) == Tuple(0, 0)
-    raises(ZeroDivisionError, lambda: divmod(S(0), S(0)))
-    raises(ZeroDivisionError, lambda: divmod(S(1), S(0)))
+    assert divmod(S.Zero, S.One) == Tuple(0, 0)
+    raises(ZeroDivisionError, lambda: divmod(S.Zero, S.Zero))
+    raises(ZeroDivisionError, lambda: divmod(S.One, S.Zero))
     assert divmod(S(12), 8) == Tuple(1, 4)
     assert divmod(12, S(8)) == Tuple(1, 4)
 
@@ -424,12 +424,12 @@ def test_Float():
         t = Float("1.0E-15")
         return (-t < a - b < t)
 
-    zeros = (0, S(0), 0., Float(0))
+    zeros = (0, S.Zero, 0., Float(0))
     for i, j in permutations(zeros, 2):
         assert i == j
     for z in zeros:
         assert z in zeros
-    assert S(0).is_zero
+    assert S.Zero.is_zero
 
     a = Float(2) ** Float(3)
     assert eq(a.evalf(), Float(8))
@@ -559,10 +559,10 @@ def test_Float():
 
     # binary precision
     # Decimal value 0.1 cannot be expressed precisely as a base 2 fraction
-    a = Float(S(1)/10, dps=15)
-    b = Float(S(1)/10, dps=16)
-    p = Float(S(1)/10, precision=53)
-    q = Float(S(1)/10, precision=54)
+    a = Float(S.One/10, dps=15)
+    b = Float(S.One/10, dps=16)
+    p = Float(S.One/10, precision=53)
+    q = Float(S.One/10, precision=54)
     assert a._mpf_ == p._mpf_
     assert not a._mpf_ == q._mpf_
     assert not b._mpf_ == q._mpf_
@@ -839,13 +839,13 @@ def test_Mul_Infinity_Zero():
 
 
 def test_Div_By_Zero():
-    assert 1/S(0) == zoo
+    assert 1/S.Zero == zoo
     assert 1/Float(0) == zoo
-    assert 0/S(0) == nan
+    assert 0/S.Zero == nan
     assert 0/Float(0) == nan
-    assert S(0)/0 == nan
+    assert S.Zero/0 == nan
     assert Float(0)/0 == nan
-    assert -1/S(0) == zoo
+    assert -1/S.Zero == zoo
     assert -1/Float(0) == zoo
 
 
@@ -1063,18 +1063,18 @@ def test_isqrt():
 def test_powers_Integer():
     """Test Integer._eval_power"""
     # check infinity
-    assert S(1) ** S.Infinity == S.NaN
-    assert S(-1)** S.Infinity == S.NaN
+    assert S.One ** S.Infinity == S.NaN
+    assert S.NegativeOne** S.Infinity == S.NaN
     assert S(2) ** S.Infinity == S.Infinity
     assert S(-2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
     assert S(0) ** S.Infinity == 0
 
     # check Nan
-    assert S(1) ** S.NaN == S.NaN
-    assert S(-1) ** S.NaN == S.NaN
+    assert S.One ** S.NaN == S.NaN
+    assert S.NegativeOne ** S.NaN == S.NaN
 
     # check for exact roots
-    assert S(-1) ** Rational(6, 5) == - (-1)**(S(1)/5)
+    assert S.NegativeOne ** Rational(6, 5) == - (-1)**(S.One/5)
     assert sqrt(S(4)) == 2
     assert sqrt(S(-4)) == I * 2
     assert S(16) ** Rational(1, 4) == 2
@@ -1082,7 +1082,7 @@ def test_powers_Integer():
     assert S(9) ** Rational(3, 2) == 27
     assert S(-9) ** Rational(3, 2) == -27*I
     assert S(27) ** Rational(2, 3) == 9
-    assert S(-27) ** Rational(2, 3) == 9 * (S(-1) ** Rational(2, 3))
+    assert S(-27) ** Rational(2, 3) == 9 * (S.NegativeOne ** Rational(2, 3))
     assert (-2) ** Rational(-2, 1) == Rational(1, 4)
 
     # not exact roots
@@ -1311,7 +1311,7 @@ def test_issue_3449():
 
 def test_issue_13890():
     x = Symbol("x")
-    e = (-x/4 - S(1)/12)**x - 1
+    e = (-x/4 - S.One/12)**x - 1
     f = simplify(e)
     a = S(9)/5
     assert abs(e.subs(x,a).evalf() - f.subs(x,a).evalf()) < 1e-15
@@ -1581,7 +1581,7 @@ def test_zoo():
     assert zoo**2 is zoo
     assert 1/zoo is S.Zero
 
-    assert Mul.flatten([S(-1), oo, S(0)]) == ([S.NaN], [], None)
+    assert Mul.flatten([S.NegativeOne, oo, S(0)]) == ([S.NaN], [], None)
 
 
 def test_issue_4122():
@@ -1680,8 +1680,8 @@ def test_bool_eq():
     assert S(0) == False
     assert S(0) != S.false
     assert 1 == True
-    assert S(1) == True
-    assert S(1) != S.true
+    assert S.One == True
+    assert S.One != S.true
 
 
 def test_Float_eq():
@@ -1714,8 +1714,8 @@ def test_Float_eq():
     assert Float(5/18) == 5/18
     # 4473
     assert Float(2.) != 3
-    assert Float((0,1,-3)) == S(1)/8
-    assert Float((0,1,-3)) != S(1)/9
+    assert Float((0,1,-3)) == S.One/8
+    assert Float((0,1,-3)) != S.One/9
     # 16196
     assert 2 == Float(2)  # as per Python
     # but in a computation...
@@ -1765,10 +1765,10 @@ def test_issue_7742():
 
 def test_simplify_AlgebraicNumber():
     A = AlgebraicNumber
-    e = 3**(S(1)/6)*(3 + (135 + 78*sqrt(3))**(S(2)/3))/(45 + 26*sqrt(3))**(S(1)/3)
+    e = 3**(S.One/6)*(3 + (135 + 78*sqrt(3))**(S(2)/3))/(45 + 26*sqrt(3))**(S.One/3)
     assert simplify(A(e)) == A(12)  # wester test_C20
 
-    e = (41 + 29*sqrt(2))**(S(1)/5)
+    e = (41 + 29*sqrt(2))**(S.One/5)
     assert simplify(A(e)) == A(1 + sqrt(2))  # wester test_C21
 
     e = (3 + 4*I)**(Rational(3, 2))

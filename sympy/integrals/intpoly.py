@@ -1014,7 +1014,7 @@ def point_sort(poly, normal=None, clockwise=True):
     if n < 2:
         return list(pts)
 
-    order = S(1) if clockwise else S(-1)
+    order = S.One if clockwise else S.NegativeOne
     dim = len(pts[0])
     if dim == 2:
         center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
@@ -1074,7 +1074,7 @@ def norm(point):
     >>> norm(Point(2, 7))
     sqrt(53)
     """
-    half = S(1)/2
+    half = S.Half
     if isinstance(point, (list, tuple)):
         return sum([coord ** 2 for coord in point]) ** half
     elif isinstance(point, Point):

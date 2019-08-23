@@ -34,14 +34,14 @@ def test_issue_4511():
     # If current answer is simplified, 1 - cos(x) + x is obtained.
     # The last one is what Maple gives.  It is also quite slow.
     assert integrate(cos(x)**2 / (1 - sin(x))) in [x - cos(x), 1 - cos(x) + x,
-            -2/(tan((S(1)/2)*x)**2 + 1) + x]
+            -2/(tan((S.Half)*x)**2 + 1) + x]
 
 
 @XFAIL
 def test_integrate_DiracDelta_fails():
     # issue 6427
     assert integrate(integrate(integrate(
-        DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == S(1)/2
+        DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == S.Half
 
 
 @XFAIL
@@ -217,7 +217,7 @@ def test_issue_11845b():
 
 @XFAIL
 def test_issue_11813():
-    assert not integrate((a - x)**(-S(1)/2)*x, (x, 0, a)).has(Integral)
+    assert not integrate((a - x)**(-S.Half)*x, (x, 0, a)).has(Integral)
 
 
 @XFAIL

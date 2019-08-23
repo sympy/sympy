@@ -97,8 +97,8 @@ class MultivariateNormalDistribution(JointDistribution):
         k = mu.shape[0]
         args = ImmutableMatrix(args)
         x = args - mu
-        return  S(1)/sqrt((2*pi)**(k)*det(sigma))*exp(
-            -S(1)/2*x.transpose()*(sigma.inv()*\
+        return  S.One/sqrt((2*pi)**(k)*det(sigma))*exp(
+            -S.Half*x.transpose()*(sigma.inv()*\
                 x))[0]
 
     def marginal_distribution(self, indices, sym):
@@ -111,7 +111,7 @@ class MultivariateNormalDistribution(JointDistribution):
                 _sigma = _sigma.col_del(i)
                 _sigma = _sigma.row_del(i)
         return Lambda(tuple(sym), S(1)/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
-            -S(1)/2*(_mu - sym).transpose()*(_sigma.inv()*\
+            -S.Half*(_mu - sym).transpose()*(_sigma.inv()*\
                 (_mu - sym)))[0])
 
 #-------------------------------------------------------------------------------
@@ -225,7 +225,7 @@ class NormalGammaDistribution(JointDistribution):
         mu = self.mu
 
         return beta**alpha*sqrt(lamda)/(gamma(alpha)*sqrt(2*pi))*\
-        tau**(alpha - S(1)/2)*exp(-1*beta*tau)*\
+        tau**(alpha - S.Half)*exp(-1*beta*tau)*\
         exp(-1*(lamda*tau*(x - mu)**2)/S(2))
 
     def marginal_distribution(self, indices, *sym):
@@ -235,7 +235,7 @@ class NormalGammaDistribution(JointDistribution):
             #For marginal over `x`, return non-standardized Student-T's
             #distribution
             x = sym[0]
-            v, mu, sigma = self.alpha - S(1)/2, self.mu, \
+            v, mu, sigma = self.alpha - S.Half, self.mu, \
                 S(self.beta)/(self.lamda * self.alpha)
             return Lambda(sym, gamma((v + 1)/2)/(gamma(v/2)*sqrt(pi*v)*sigma)*\
                 (1 + 1/v*((x - mu)/sigma)**2)**((-v -1)/2))

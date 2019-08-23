@@ -204,11 +204,11 @@ def test_power():
     assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
 
     A = Matrix([[33, 24], [48, 57]])
-    assert (A**(S(1)/2))[:] == [5, 2, 4, 7]
+    assert (A**(S.Half))[:] == [5, 2, 4, 7]
     A = Matrix([[0, 4], [-1, 5]])
-    assert (A**(S(1)/2))**2 == A
+    assert (A**(S.Half))**2 == A
 
-    assert Matrix([[1, 0], [1, 1]])**(S(1)/2) == Matrix([[1, 0], [S.Half, 1]])
+    assert Matrix([[1, 0], [1, 1]])**(S.Half) == Matrix([[1, 0], [S.Half, 1]])
     assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1.0, 0], [0.5, 1.0]])
     from sympy.abc import a, b, n
     assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
@@ -1216,7 +1216,7 @@ def test_eigen():
     assert max(i.q for i in M._eigenvects[0][2][0]) > 1
     M._eigenvects = M.eigenvects(simplify=True)
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
-    M = Matrix([[S(1)/4, 1], [1, 1]])
+    M = Matrix([[S.One/4, 1], [1, 1]])
     assert M.eigenvects(simplify=True) == [
         (S(5)/8 - sqrt(73)/8, 1, [Matrix([[-sqrt(73)/8 - S(3)/8], [1]])]),
         (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-S(3)/8 + sqrt(73)/8], [1]])])]
@@ -2454,13 +2454,13 @@ def test_LDLdecomposition():
     L, D = A.LDLdecomposition()
     assert L * D * L.T == A
     assert L.is_lower
-    assert L == Matrix([[1, 0, 0], [ S(3)/5, 1, 0], [S(-1)/5, S(1)/3, 1]])
+    assert L == Matrix([[1, 0, 0], [ S(3)/5, 1, 0], [S.NegativeOne/5, S.One/3, 1]])
     assert D.is_diagonal()
     assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])
     A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
     L, D = A.LDLdecomposition()
     assert expand_mul(L * D * L.H) == A
-    assert L == Matrix(((1, 0, 0), (I/2, 1, 0), (S(1)/2 - I/2, 0, 1)))
+    assert L == Matrix(((1, 0, 0), (I/2, 1, 0), (S.Half - I/2, 0, 1)))
     assert D == Matrix(((4, 0, 0), (0, 1, 0), (0, 0, 9)))
 
 
@@ -2594,11 +2594,11 @@ def test_matrix_norm():
     x = Symbol('x', real=True)
     v = Matrix([cos(x), sin(x)])
     assert trigsimp(v.norm(2)) == 1
-    assert v.norm(10) == Pow(cos(x)**10 + sin(x)**10, S(1)/10)
+    assert v.norm(10) == Pow(cos(x)**10 + sin(x)**10, S.One/10)
 
     # Test Rows
     A = Matrix([[5, Rational(3, 2)]])
-    assert A.norm() == Pow(25 + Rational(9, 4), S(1)/2)
+    assert A.norm() == Pow(25 + Rational(9, 4), S.Half)
     assert A.norm(oo) == max(A._mat)
     assert A.norm(-oo) == min(A._mat)
 
@@ -2612,14 +2612,14 @@ def test_matrix_norm():
     assert A.norm(oo) == 2
 
     # Test with Symbols and more complex entries
-    A = Matrix([[3, y, y], [x, S(1)/2, -pi]])
+    A = Matrix([[3, y, y], [x, S.Half, -pi]])
     assert (A.norm('fro')
            == sqrt(S(37)/4 + 2*abs(y)**2 + pi**2 + x**2))
 
     # Check non-square
     A = Matrix([[1, 2, -3], [4, 5, Rational(13, 2)]])
     assert A.norm(2) == sqrt(S(389)/8 + sqrt(78665)/8)
-    assert A.norm(-2) == S(0)
+    assert A.norm(-2) == S.Zero
     assert A.norm('frobenius') == sqrt(389)/2
 
     # Test properties of matrix norms
@@ -2634,7 +2634,7 @@ def test_matrix_norm():
 
     for order in ['fro', 2, -2]:
         # Zero Check
-        assert zeros(3).norm(order) == S(0)
+        assert zeros(3).norm(order) == S.Zero
         # Check Triangle Inequality for all Pairs of Matrices
         for X in L:
             for Y in L:
@@ -2651,7 +2651,7 @@ def test_matrix_norm():
     # https://en.wikipedia.org/wiki/Vector_norm
     # Two column vectors
     a = Matrix([1, 1 - 1*I, -3])
-    b = Matrix([S(1)/2, 1*I, 1])
+    b = Matrix([S.Half, 1*I, 1])
     c = Matrix([-1, -1, -1])
     d = Matrix([3, 2, I])
     e = Matrix([Integer(1e2), Rational(1, 1e2), 1])
@@ -2661,7 +2661,7 @@ def test_matrix_norm():
     for order in [1, 2, -1, -2, S.Infinity, S.NegativeInfinity, pi]:
         # Zero Check
         if order > 0:
-            assert Matrix([0, 0, 0]).norm(order) == S(0)
+            assert Matrix([0, 0, 0]).norm(order) == S.Zero
         # Triangle inequality on all pairs
         if order >= 1:  # Triangle InEq holds only for these norms
             for X in L:
@@ -2685,11 +2685,11 @@ def test_condition_number():
     x = Symbol('x', real=True)
     A = eye(3)
     A[0, 0] = 10
-    A[2, 2] = S(1)/10
+    A[2, 2] = S.One/10
     assert A.condition_number() == 100
 
     A[1, 1] = x
-    assert A.condition_number() == Max(10, Abs(x)) / Min(S(1)/10, Abs(x))
+    assert A.condition_number() == Max(10, Abs(x)) / Min(S.One/10, Abs(x))
 
     M = Matrix([[cos(x), sin(x)], [-sin(x), cos(x)]])
     Mc = M.condition_number()
@@ -3140,7 +3140,7 @@ def test_replace_map():
 
 def test_atoms():
     m = Matrix([[1, 2], [x, 1 - 1/x]])
-    assert m.atoms() == {S(1),S(2),S(-1), x}
+    assert m.atoms() == {S.One,S(2),S.NegativeOne, x}
     assert m.atoms(Symbol) == {x}
 
 
@@ -3371,14 +3371,14 @@ def test_gauss_jordan_solve():
     A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
     b = Matrix([0, 0, 1, 0])
     sol, params = A.gauss_jordan_solve(b)
-    assert sol == Matrix([[-S(1)/2], [0], [S(1)/6]])
+    assert sol == Matrix([[-S.Half], [0], [S.One/6]])
     assert params == Matrix(0, 1, [])
 
     # Rectangular, tall, full rank, unique solution, B has less columns than rows
     A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
     B = Matrix([[0,0], [0, 0], [1, 2], [0, 0]])
     sol, params = A.gauss_jordan_solve(B)
-    assert sol == Matrix([[-S(1)/2, -S(2)/2], [0, 0], [S(1)/6, S(2)/6]])
+    assert sol == Matrix([[-S.Half, -S(2)/2], [0, 0], [S.One/6, S(2)/6]])
     assert params == Matrix(0, 2, [])
 
     # Rectangular, tall, full rank, no solution

@@ -238,10 +238,10 @@ def test_nthroot():
 
 
 def test_nthroot1():
-    q = 1 + sqrt(2) + sqrt(3) + S(1)/10**20
+    q = 1 + sqrt(2) + sqrt(3) + S.One/10**20
     p = expand_multinomial(q**5)
     assert nthroot(p, 5) == q
-    q = 1 + sqrt(2) + sqrt(3) + S(1)/10**30
+    q = 1 + sqrt(2) + sqrt(3) + S.One/10**30
     p = expand_multinomial(q**5)
     assert nthroot(p, 5) == q
 
@@ -337,10 +337,10 @@ def test_hypersimp():
     assert hypersimp(binomial(n + 1, k), k) == (n - k + 1)/(k + 1)
 
     term = (4*k + 1)*factorial(k)/factorial(2*k + 1)
-    assert hypersimp(term, k) == (S(1)/2)*((4*k + 5)/(3 + 14*k + 8*k**2))
+    assert hypersimp(term, k) == (S.Half)*((4*k + 5)/(3 + 14*k + 8*k**2))
 
     term = 1/((2*k - 1)*factorial(2*k + 1))
-    assert hypersimp(term, k) == (k - S(1)/2)/((k + 1)*(2*k + 1)*(2*k + 3))
+    assert hypersimp(term, k) == (k - S.Half)/((k + 1)*(2*k + 1)*(2*k + 3))
 
     term = binomial(n, k)*(-1)**k/factorial(k)
     assert hypersimp(term, k) == (k - n)/(k + 1)**2
@@ -397,7 +397,7 @@ def test_nsimplify():
     assert nsimplify(.2222, tolerance=0) == S(1111)/5000
     assert nsimplify(-.2222, tolerance=0) == -S(1111)/5000
     # issue 7211, PR 4112
-    assert nsimplify(S(2e-8)) == S(1)/50000000
+    assert nsimplify(S(2e-8)) == S.One/50000000
     # issue 7322 direct test
     assert nsimplify(1e-42, rational=True) != 0
     # issue 10336
@@ -416,7 +416,7 @@ def test_nsimplify():
 
 def test_issue_9448():
     tmp = sympify("1/(1 - (-1)**(2/3) - (-1)**(1/3)) + 1/(1 + (-1)**(2/3) + (-1)**(1/3))")
-    assert nsimplify(tmp) == S(1)/2
+    assert nsimplify(tmp) == S.Half
 
 
 def test_extract_minus_sign():
@@ -580,20 +580,20 @@ def test_as_content_primitive():
     assert (S.Infinity).as_content_primitive() == (1, oo)
     eq = x**(2 + y)
     assert (eq).as_content_primitive() == (1, eq)
-    assert (S.Half**(2 + x)).as_content_primitive() == (S(1)/4, 2**-x)
+    assert (S.Half**(2 + x)).as_content_primitive() == (S.One/4, 2**-x)
     assert ((-S.Half)**(2 + x)).as_content_primitive() == \
-           (S(1)/4, (-S.Half)**x)
+           (S.One/4, (-S.Half)**x)
     assert ((-S.Half)**(2 + x)).as_content_primitive() == \
-           (S(1)/4, (-S.Half)**x)
+           (S.One/4, (-S.Half)**x)
     assert (4**((1 + y)/2)).as_content_primitive() == (2, 4**(y/2))
     assert (3**((1 + y)/2)).as_content_primitive() == \
-           (1, 3**(Mul(S(1)/2, 1 + y, evaluate=False)))
+           (1, 3**(Mul(S.Half, 1 + y, evaluate=False)))
     assert (5**(S(3)/4)).as_content_primitive() == (1, 5**(S(3)/4))
     assert (5**(S(7)/4)).as_content_primitive() == (5, 5**(S(3)/4))
     assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).as_content_primitive() == \
-              (S(1)/14, 7.0*x + 21*y + 10*z)
-    assert (2**(S(3)/4) + 2**(S(1)/4)*sqrt(3)).as_content_primitive(radical=True) == \
-           (1, 2**(S(1)/4)*(sqrt(2) + sqrt(3)))
+              (S.One/14, 7.0*x + 21*y + 10*z)
+    assert (2**(S(3)/4) + 2**(S.One/4)*sqrt(3)).as_content_primitive(radical=True) == \
+           (1, 2**(S.One/4)*(sqrt(2) + sqrt(3)))
 
 
 def test_signsimp():
@@ -610,11 +610,11 @@ def test_besselsimp():
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
         besselj(a, 2*sqrt(x))
-    assert besselsimp(sqrt(2)*sqrt(pi)*x**(S(1)/4)*exp(I*pi/4)*exp(-I*pi*a/2) *
-                      besseli(-S(1)/2, sqrt(x)*exp_polar(I*pi/2)) *
+    assert besselsimp(sqrt(2)*sqrt(pi)*x**(S.One/4)*exp(I*pi/4)*exp(-I*pi*a/2) *
+                      besseli(-S.Half, sqrt(x)*exp_polar(I*pi/2)) *
                       besseli(a, sqrt(x)*exp_polar(I*pi/2))/2) == \
         besselj(a, sqrt(x)) * cos(sqrt(x))
-    assert besselsimp(besseli(S(-1)/2, z)) == \
+    assert besselsimp(besseli(-S.Half, z)) == \
         sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(besseli(a, z*exp_polar(-I*pi/2))) == \
         exp(-I*pi*a/2)*besselj(a, z)
@@ -627,10 +627,10 @@ def test_besselsimp():
     + b*(bessely(-1 + 5*I, x)/2 - bessely(1 + 5*I, x)/2)) + (x**2 + 25)*(a*besselj(5*I, x)
     + b*bessely(5*I, x))) == 0
 
-    assert besselsimp(81*x**2*(a*(besselj(-S(5)/3, 9*x) - 2*besselj(S(1)/3, 9*x) + besselj(S(7)/3, 9*x))
-    + b*(bessely(-S(5)/3, 9*x) - 2*bessely(S(1)/3, 9*x) + bessely(S(7)/3, 9*x)))/4 + x*(a*(9*besselj(-S(2)/3, 9*x)/2
+    assert besselsimp(81*x**2*(a*(besselj(-S(5)/3, 9*x) - 2*besselj(S.One/3, 9*x) + besselj(S(7)/3, 9*x))
+    + b*(bessely(-S(5)/3, 9*x) - 2*bessely(S.One/3, 9*x) + bessely(S(7)/3, 9*x)))/4 + x*(a*(9*besselj(-S(2)/3, 9*x)/2
     - 9*besselj(S(4)/3, 9*x)/2) + b*(9*bessely(-S(2)/3, 9*x)/2 - 9*bessely(S(4)/3, 9*x)/2)) +
-    (81*x**2 - S(1)/9)*(a*besselj(S(1)/3, 9*x) + b*bessely(S(1)/3, 9*x))) == 0
+    (81*x**2 - S.One/9)*(a*besselj(S.One/3, 9*x) + b*bessely(S.One/3, 9*x))) == 0
 
     assert besselsimp(besselj(a-1,x) + besselj(a+1, x) - 2*a*besselj(a, x)/x) == 0
 
@@ -767,8 +767,8 @@ def test_simplify_function_inverse():
 def test_clear_coefficients():
     from sympy.simplify.simplify import clear_coefficients
     assert clear_coefficients(4*y*(6*x + 3)) == (y*(2*x + 1), 0)
-    assert clear_coefficients(4*y*(6*x + 3) - 2) == (y*(2*x + 1), S(1)/6)
-    assert clear_coefficients(4*y*(6*x + 3) - 2, x) == (y*(2*x + 1), x/12 + S(1)/6)
+    assert clear_coefficients(4*y*(6*x + 3) - 2) == (y*(2*x + 1), S.One/6)
+    assert clear_coefficients(4*y*(6*x + 3) - 2, x) == (y*(2*x + 1), x/12 + S.One/6)
     assert clear_coefficients(sqrt(2) - 2) == (sqrt(2), 2)
     assert clear_coefficients(4*sqrt(2) - 2) == (sqrt(2), S.Half)
     assert clear_coefficients(S(3), x) == (0, x - 3)

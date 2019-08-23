@@ -42,7 +42,7 @@ def test_GeometricDistribution():
 
 
 def test_Logarithmic():
-    p = S.One / 2
+    p = S.Half
     x = Logarithmic('x', p)
     assert E(x) == -p / ((1 - p) * log(1 - p))
     assert variance(x) == -1/log(2)**2 + 2/log(2)
@@ -52,7 +52,7 @@ def test_Logarithmic():
 
 def test_negative_binomial():
     r = 5
-    p = S(1) / 3
+    p = S.One / 3
     x = NegativeBinomial('x', r, p)
     assert E(x) == p*r / (1-p)
     assert variance(x) == p*r / (1-p)**2
@@ -96,8 +96,8 @@ def test_zeta():
 
 @slow
 def test_sample_discrete():
-    X, Y, Z = Geometric('X', S(1)/2), Poisson('Y', 4), Poisson('Z', 1000)
-    W = Poisson('W', S(1)/100)
+    X, Y, Z = Geometric('X', S.Half), Poisson('Y', 4), Poisson('Z', 1000)
+    W = Poisson('W', S.One/100)
     assert sample(X) in X.pspace.domain.set
     assert sample(Y) in Y.pspace.domain.set
     assert sample(Z) in Z.pspace.domain.set
@@ -105,7 +105,7 @@ def test_sample_discrete():
 
 
 def test_discrete_probability():
-    X = Geometric('X', S(1)/5)
+    X = Geometric('X', S.One/5)
     Y = Poisson('Y', 4)
     G = Geometric('e', x)
     assert P(Eq(X, 3)) == S(16)/125
@@ -151,9 +151,9 @@ def test_precomputed_characteristic_functions():
             assert abs(re(n1) - re(n2)) < 1e-12
             assert abs(im(n1) - im(n2)) < 1e-12
 
-    test_cf(Geometric('g', S(1)/3), 1, mpmath.inf)
-    test_cf(Logarithmic('l', S(1)/5), 1, mpmath.inf)
-    test_cf(NegativeBinomial('n', 5, S(1)/7), 0, mpmath.inf)
+    test_cf(Geometric('g', S.One/3), 1, mpmath.inf)
+    test_cf(Logarithmic('l', S.One/5), 1, mpmath.inf)
+    test_cf(NegativeBinomial('n', 5, S.One/7), 0, mpmath.inf)
     test_cf(Poisson('p', 5), 0, mpmath.inf)
     test_cf(YuleSimon('y', 5), 1, mpmath.inf)
     test_cf(Zeta('z', 5), 1, mpmath.inf)
@@ -162,14 +162,14 @@ def test_precomputed_characteristic_functions():
 def test_moment_generating_functions():
     t = S('t')
 
-    geometric_mgf = moment_generating_function(Geometric('g', S(1)/2))(t)
+    geometric_mgf = moment_generating_function(Geometric('g', S.Half))(t)
     assert geometric_mgf.diff(t).subs(t, 0) == 2
 
-    logarithmic_mgf = moment_generating_function(Logarithmic('l', S(1)/2))(t)
+    logarithmic_mgf = moment_generating_function(Logarithmic('l', S.Half))(t)
     assert logarithmic_mgf.diff(t).subs(t, 0) == 1/log(2)
 
     negative_binomial_mgf = moment_generating_function(
-        NegativeBinomial('n', 5, S(1)/3))(t)
+        NegativeBinomial('n', 5, S.One/3))(t)
     assert negative_binomial_mgf.diff(t).subs(t, 0) == S(5)/2
 
     poisson_mgf = moment_generating_function(Poisson('p', 5))(t)
@@ -187,14 +187,14 @@ def test_moment_generating_functions():
 
 
 def test_Or():
-    X = Geometric('X', S(1)/2)
+    X = Geometric('X', S.Half)
     P(Or(X < 3, X > 4)) == S(13)/16
     P(Or(X > 2, X > 1)) == P(X > 1)
     P(Or(X >= 3, X < 3)) == 1
 
 
 def test_where():
-    X = Geometric('X', S(1)/5)
+    X = Geometric('X', S.One/5)
     Y = Poisson('Y', 4)
     assert where(X**2 > 4).set == Range(3, S.Infinity, 1)
     assert where(X**2 >= 4).set == Range(2, S.Infinity, 1)
@@ -206,7 +206,7 @@ def test_conditional():
     X = Geometric('X', S(2)/3)
     Y = Poisson('Y', 3)
     assert P(X > 2, X > 3) == 1
-    assert P(X > 3, X > 2) == S(1)/3
+    assert P(X > 3, X > 2) == S.One/3
     assert P(Y > 2, Y < 2) == 0
     assert P(Eq(Y, 3), Y >= 0) == 9*exp(-3)/2
     assert P(Eq(Y, 3), Eq(Y, 2)) == 0
@@ -215,8 +215,8 @@ def test_conditional():
 
 
 def test_product_spaces():
-    X1 = Geometric('X1', S(1)/2)
-    X2 = Geometric('X2', S(1)/3)
+    X1 = Geometric('X1', S.Half)
+    X2 = Geometric('X2', S.One/3)
     #assert str(P(X1 + X2 < 3, evaluate=False)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """\
     #    + """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1))"""
     n = Dummy('n')
@@ -229,4 +229,4 @@ def test_product_spaces():
                                        (X2, 1, oo), (n, 1, oo)))
 #    assert str(P(Eq(X1 + X2, 3))) == """Sum(Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, """ +\
 #        """X2 <= 2), (0, True)), (X2, 1, oo))"""
-    assert P(Eq(X1 + X2, 3)) == S(1)/12
+    assert P(Eq(X1 + X2, 3)) == S.One/12

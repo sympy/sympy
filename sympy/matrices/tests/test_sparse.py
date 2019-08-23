@@ -589,9 +589,9 @@ def test_sparse_solve():
         [-1, 2, -1],
         [ 0, 0, 2]])
     ans = SparseMatrix([
-        [S(2)/3, S(1)/3, S(1)/6],
-        [S(1)/3, S(2)/3, S(1)/3],
-        [     0,      0, S(1)/2]])
+        [S(2)/3, S.One/3, S.One/6],
+        [S.One/3, S(2)/3, S.One/3],
+        [     0,      0, S.Half]])
     assert A.inv(method='CH') == ans
     assert A.inv(method='LDL') == ans
     assert A * ans == SparseMatrix(eye(3))

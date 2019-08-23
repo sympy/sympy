@@ -283,15 +283,15 @@ def test_Domain__contains__():
     assert (17 in QQ[x, y]) is True
     assert (17 in RR[x, y]) is True
 
-    assert (-S(1)/7 in EX) is True
-    assert (-S(1)/7 in ZZ) is False
-    assert (-S(1)/7 in QQ) is True
-    assert (-S(1)/7 in RR) is True
-    assert (-S(1)/7 in CC) is True
-    assert (-S(1)/7 in ALG) is True
-    assert (-S(1)/7 in ZZ[x, y]) is False
-    assert (-S(1)/7 in QQ[x, y]) is True
-    assert (-S(1)/7 in RR[x, y]) is True
+    assert (-S.One/7 in EX) is True
+    assert (-S.One/7 in ZZ) is False
+    assert (-S.One/7 in QQ) is True
+    assert (-S.One/7 in RR) is True
+    assert (-S.One/7 in CC) is True
+    assert (-S.One/7 in ALG) is True
+    assert (-S.One/7 in ZZ[x, y]) is False
+    assert (-S.One/7 in QQ[x, y]) is True
+    assert (-S.One/7 in RR[x, y]) is True
 
     assert (S(3)/5 in EX) is True
     assert (S(3)/5 in ZZ) is False
@@ -574,9 +574,9 @@ def test___eq__():
 
 
 def test_RealField_from_sympy():
-    assert RR.convert(S(0)) == RR.dtype(0)
+    assert RR.convert(S.Zero) == RR.dtype(0)
     assert RR.convert(S(0.0)) == RR.dtype(0.0)
-    assert RR.convert(S(1)) == RR.dtype(1)
+    assert RR.convert(S.One) == RR.dtype(1)
     assert RR.convert(S(1.0)) == RR.dtype(1.0)
     assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
 

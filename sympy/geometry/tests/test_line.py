@@ -25,7 +25,7 @@ m = symbols('m', real=True)
 def test_object_from_equation():
     from sympy.abc import x, y, a, b
     assert Line(3*x + y + 18) == Line2D(Point2D(0, -18), Point2D(1, -21))
-    assert Line(3*x + 5 * y + 1) == Line2D(Point2D(0, -S(1)/5), Point2D(1, -S(4)/5))
+    assert Line(3*x + 5 * y + 1) == Line2D(Point2D(0, S.NegativeOne/5), Point2D(1, -S(4)/5))
     assert Line(3*a + b + 18, x='a', y='b') == Line2D(Point2D(0, -18), Point2D(1, -21))
     assert Line(3*x + y) == Line2D(Point2D(0, 0), Point2D(1, -3))
     assert Line(x + y) == Line2D(Point2D(0, 0), Point2D(1, -1))
@@ -333,7 +333,7 @@ def test_distance_3d():
     p3 = Point3D(Rational(3) / 2, Rational(3) / 2, Rational(3) / 2)
 
     s1 = Segment3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
-    s2 = Segment3D(Point3D(S(1) / 2, S(1) / 2, S(1) / 2), Point3D(1, 0, 1))
+    s2 = Segment3D(Point3D(S.Half, S.Half, S.Half), Point3D(1, 0, 1))
 
     r = Ray3D(p1, p2)
 
@@ -388,8 +388,8 @@ def test_equals():
     assert Ray3D(p1, Point3D(0, 0, -1)).equals(Point(1.0, 1.0)) is False
     assert Ray3D(p1, Point3D(0, 0, -1)).equals(Ray3D(p1, Point3D(0, 0, -1))) is True
     assert Line3D((0, 0), (t, t)).perpendicular_line(Point(0, 1, 0)).equals(
-        Line3D(Point3D(0, 1, 0), Point3D(S(1) / 2, S(1) / 2, 0)))
-    assert Line3D((0, 0), (t, t)).perpendicular_segment(Point(0, 1, 0)).equals(Segment3D((0, 1), (S(1) / 2, S(1) / 2)))
+        Line3D(Point3D(0, 1, 0), Point3D(S.Half, S.Half, 0)))
+    assert Line3D((0, 0), (t, t)).perpendicular_segment(Point(0, 1, 0)).equals(Segment3D((0, 1), (S.Half, S.Half)))
     assert Line3D(p1, Point3D(0, 1, 0)).equals(Point(1.0, 1.0)) is False
 
 
@@ -665,15 +665,15 @@ def test_projection():
     assert r1.projection(Segment(Point(-1, 5), Point(-5, -10))) == Segment(Point(1, 1), Point(2, 2))
 
     assert l3.projection(Ray3D(p2, Point3D(-1, 5, 0))) == Ray3D(Point3D(0, 0, 0), Point3D(S(4)/3, S(4)/3, S(4)/3))
-    assert l3.projection(Ray3D(p2, Point3D(-1, 1, 1))) == Ray3D(Point3D(0, 0, 0), Point3D(S(1)/3, S(1)/3, S(1)/3))
+    assert l3.projection(Ray3D(p2, Point3D(-1, 1, 1))) == Ray3D(Point3D(0, 0, 0), Point3D(S.One/3, S.One/3, S.One/3))
     assert l2.projection(Point3D(5, 5, 0)) == Point3D(5, 0)
     assert l2.projection(Line3D(Point3D(0, 1, 0), Point3D(1, 1, 0))).equals(l2)
 
 
 def test_perpendicular_bisector():
     s1 = Segment(Point(0, 0), Point(1, 1))
-    aline = Line(Point(S(1)/2, S(1)/2), Point(S(3)/2, -S(1)/2))
-    on_line = Segment(Point(S(1)/2, S(1)/2), Point(S(3)/2, -S(1)/2)).midpoint
+    aline = Line(Point(S.Half, S.Half), Point(S(3)/2, -S.Half))
+    on_line = Segment(Point(S.Half, S.Half), Point(S(3)/2, -S.Half)).midpoint
 
     assert s1.perpendicular_bisector().equals(aline)
     assert s1.perpendicular_bisector(on_line).equals(Segment(s1.midpoint, on_line))

@@ -32,7 +32,7 @@ def test_exp2():
 
 def test_issue_5223():
     assert series(1, x) == 1
-    assert next(S(0).lseries(x)) == 0
+    assert next(S.Zero.lseries(x)) == 0
     assert cos(x).series() == cos(x).series(x)
     raises(ValueError, lambda: cos(x + y).series())
     raises(ValueError, lambda: x.series(dir=""))

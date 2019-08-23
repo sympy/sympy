@@ -60,7 +60,7 @@ def test_cyclic_convolution():
 
     assert convolution([1, 2, 3], [4, 5, 6], cycle=3) == [31, 31, 28]
 
-    a = [S(1)/3, S(7)/3, S(5)/9, S(2)/7, S(5)/8]
+    a = [S.One/3, S(7)/3, S(5)/9, S(2)/7, S(5)/8]
     b = [S(3)/5, S(4)/7, S(7)/8, S(8)/9]
 
     assert convolution(a, b, cycle=0) == \
@@ -154,10 +154,10 @@ def test_convolution_fft():
     assert convolution_fft([1 + 2*I, 3 + 4*I, 5 + S(3)/5*I], [S(2)/5 + S(4)/7*I]) == \
             [-S(26)/35 + 48*I/35, -S(38)/35 + 116*I/35, S(58)/35 + 542*I/175]
 
-    assert convolution_fft([S(3)/4, S(5)/6], [S(7)/8, S(1)/3, S(2)/5]) == \
-                                    [S(21)/32, S(47)/48, S(26)/45, S(1)/3]
+    assert convolution_fft([S(3)/4, S(5)/6], [S(7)/8, S.One/3, S(2)/5]) == \
+                                    [S(21)/32, S(47)/48, S(26)/45, S.One/3]
 
-    assert convolution_fft([S(1)/9, S(2)/3, S(3)/5], [S(2)/5, S(3)/7, S(4)/9]) == \
+    assert convolution_fft([S.One/9, S(2)/3, S(3)/5], [S(2)/5, S(3)/7, S(4)/9]) == \
                                 [S(2)/45, S(11)/35, S(8152)/14175, S(523)/945, S(4)/15]
 
     assert convolution_fft([pi, E, sqrt(2)], [sqrt(3), 1/pi, 1/E]) == \
@@ -245,7 +245,7 @@ def test_convolution_fwht():
 
 def test_convolution_subset():
     assert convolution_subset([], []) == []
-    assert convolution_subset([], [S(1)/3]) == []
+    assert convolution_subset([], [S.One/3]) == []
     assert convolution_subset([6 + 3*I/7], [S(2)/3]) == [4 + 2*I/7]
 
     a = [1, S(5)/3, sqrt(3), 4 + 5*I]
@@ -283,7 +283,7 @@ def test_convolution_subset():
 
 def test_covering_product():
     assert covering_product([], []) == []
-    assert covering_product([], [S(1)/3]) == []
+    assert covering_product([], [S.One/3]) == []
     assert covering_product([6 + 3*I/7], [S(2)/3]) == [4 + 2*I/7]
 
     a = [1, S(5)/8, sqrt(7), 4 + 9*I]
@@ -327,7 +327,7 @@ def test_covering_product():
 
 def test_intersecting_product():
     assert intersecting_product([], []) == []
-    assert intersecting_product([], [S(1)/3]) == []
+    assert intersecting_product([], [S.One/3]) == []
     assert intersecting_product([6 + 3*I/7], [S(2)/3]) == [4 + 2*I/7]
 
     a = [1, sqrt(5), S(3)/8 + 5*I, 4 + 7*I]

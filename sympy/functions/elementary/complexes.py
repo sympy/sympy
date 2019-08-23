@@ -955,7 +955,7 @@ class periodic_argument(Function):
         if period == oo:
             return unbranched
         if period != oo:
-            n = ceiling(unbranched/period - S(1)/2)*period
+            n = ceiling(unbranched/period - S.Half)*period
             if not n.has(ceiling):
                 return unbranched - n
 
@@ -967,7 +967,7 @@ class periodic_argument(Function):
                 return self
             return unbranched._eval_evalf(prec)
         ub = periodic_argument(z, oo)._eval_evalf(prec)
-        return (ub - ceiling(ub/period - S(1)/2)*period)._eval_evalf(prec)
+        return (ub - ceiling(ub/period - S.Half)*period)._eval_evalf(prec)
 
 
 def unbranched_argument(arg):

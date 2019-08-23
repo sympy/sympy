@@ -79,7 +79,7 @@ def test_limit_seq():
     assert limit_seq(e, n) == S(84375) / 83351
 
     e = Sum(harmonic(k)**2/k, (k, 1, 2*n)) / harmonic(n)**3
-    assert limit_seq(e, n) == S(1) / 3
+    assert limit_seq(e, n) == S.One / 3
 
     raises(ValueError, lambda: limit_seq(e * m))
 
@@ -90,8 +90,8 @@ def test_alternating_sign():
     assert limit_seq((2*n + (-1)**n)/(n + 1), n) == 2
     assert limit_seq(sin(pi*n), n) == 0
     assert limit_seq(cos(2*pi*n), n) == 1
-    assert limit_seq((S(-1)/5)**n, n) == 0
-    assert limit_seq((-S(1)/5)**n, n) == 0
+    assert limit_seq((S.NegativeOne/5)**n, n) == 0
+    assert limit_seq((-S.One/5)**n, n) == 0
     assert limit_seq((I/3)**n, n) == 0
     assert limit_seq(sqrt(n)*(I/2)**n, n) == 0
     assert limit_seq(n**7*(I/3)**n, n) == 0

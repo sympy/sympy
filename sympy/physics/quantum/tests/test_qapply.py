@@ -13,7 +13,6 @@ from sympy.physics.quantum.state import Ket
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.boson import BosonOp, BosonFockKet, BosonFockBra
-from sympy.physics.quantum.tensorproduct import TensorProduct
 
 
 j, jp, m, mp = symbols("j j' m m'")
@@ -121,7 +120,7 @@ def test_density():
 
 
 def test_issue3044():
-    expr1 = TensorProduct(Jz*JzKet(S(2),S(-1))/sqrt(2), Jz*JzKet(S(1)/2,S(1)/2))
-    result = Mul(S(-1), S(1)/4, (2**(S(1)/2)), hbar**2)
-    result *= TensorProduct(JzKet(2,-1), JzKet(S(1)/2,S(1)/2))
+    expr1 = TensorProduct(Jz*JzKet(S(2),S.NegativeOne)/sqrt(2), Jz*JzKet(S.Half,S.Half))
+    result = Mul(S.NegativeOne, S.One/4, (2**(S.Half)), hbar**2)
+    result *= TensorProduct(JzKet(2,-1), JzKet(S.Half,S.Half))
     assert qapply(expr1) == result

@@ -165,7 +165,7 @@ class DieDistribution(SingleFiniteDistribution):
 
     @property
     def low(self):
-        return S(1)
+        return S.One
 
     @property
     def set(self):
@@ -179,7 +179,7 @@ class DieDistribution(SingleFiniteDistribution):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
         cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
-        return Piecewise((S(1)/self.sides, cond), (S.Zero, True))
+        return Piecewise((S.One/self.sides, cond), (S.Zero, True))
 
 def Die(name, sides=6):
     """
@@ -311,7 +311,7 @@ class BinomialDistribution(SingleFiniteDistribution):
 
     @property
     def low(self):
-        return S(0)
+        return S.Zero
 
     @property
     def is_symbolic(self):
@@ -395,7 +395,7 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
 
     @property
     def low(self):
-        return S(0)
+        return S.Zero
 
     @property
     def is_symbolic(self):

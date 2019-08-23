@@ -43,7 +43,7 @@ def test_as_poly_1t():
         Poly(2/(exp(2) + 1)*z, t, z), Poly(2/(exp(2) + 1)*z, z, t)]
     assert as_poly_1t(2/((exp(2) + 1)*t) + t, t, z) in [
         Poly(t + 2/(exp(2) + 1)*z, t, z), Poly(t + 2/(exp(2) + 1)*z, z, t)]
-    assert as_poly_1t(S(0), t, z) == Poly(0, t, z)
+    assert as_poly_1t(S.Zero, t, z) == Poly(0, t, z)
 
 
 def test_derivation():
@@ -203,10 +203,10 @@ def test_residue_reduce():
     d = Poly(t**3 - x**2*t, t)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)], 'Tfuncs': [log]})
     assert residue_reduce(a, d, DE, z, invert=False) == \
-        ([(Poly(z**2 - S(1)/4, z), Poly((1 + 3*x*z - 6*z**2 -
+        ([(Poly(z**2 - S.One/4, z), Poly((1 + 3*x*z - 6*z**2 -
         2*x**2 + 4*x**2*z**2)*t - x*z + x**2 + 2*x**2*z**2 - 2*z*x**3, t))], False)
     assert residue_reduce(a, d, DE, z, invert=True) == \
-        ([(Poly(z**2 - S(1)/4, z), Poly(t + 2*x*z, t))], False)
+        ([(Poly(z**2 - S.One/4, z), Poly(t + 2*x*z, t))], False)
     assert residue_reduce(Poly(-2/x, t), Poly(t**2 - 1, t,), DE, z, invert=False) == \
         ([(Poly(z**2 - 1, z), Poly(-2*z*t/x - 2/x, t))], True)
     ans = residue_reduce(Poly(-2/x, t), Poly(t**2 - 1, t), DE, z, invert=True)
@@ -217,11 +217,11 @@ def test_residue_reduce():
     # TODO: Skip or make faster
     assert residue_reduce(Poly((-2*nu**2 - x**4)/(2*x**2)*t - (1 + x**2)/x, t),
     Poly(t**2 + 1 + x**2/2, t), DE, z) == \
-        ([(Poly(z + S(1)/2, z, domain='QQ'), Poly(t**2 + 1 + x**2/2, t, domain='EX'))], True)
+        ([(Poly(z + S.Half, z, domain='QQ'), Poly(t**2 + 1 + x**2/2, t, domain='EX'))], True)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t**2, t)]})
     assert residue_reduce(Poly(-2*x*t + 1 - x**2, t),
     Poly(t**2 + 2*x*t + 1 + x**2, t), DE, z) == \
-        ([(Poly(z**2 + S(1)/4, z), Poly(t + x + 2*z, t))], True)
+        ([(Poly(z**2 + S.One/4, z), Poly(t + x + 2*z, t))], True)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert residue_reduce(Poly(t, t), Poly(t + sqrt(2), t), DE, z) == \
         ([(Poly(z - 1, z), Poly(t + sqrt(2), t))], True)

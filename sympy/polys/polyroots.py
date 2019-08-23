@@ -159,7 +159,7 @@ def roots_cubic(f, trig=False):
 
     coeff = I*sqrt(3)/2
     if u1 is None:
-        u1 = S(1)
+        u1 = S.One
         u2 = -S.Half + coeff
         u3 = -S.Half - coeff
         a, b, c, d = S(1), a, b, c
@@ -931,7 +931,7 @@ def roots(f, *gens, **flags):
         if f.is_ground:
             return []
         if f.is_monomial:
-            return [S(0)]*f.degree()
+            return [S.Zero]*f.degree()
 
         if f.length() == 2:
             if f.degree() == 1:
@@ -969,7 +969,7 @@ def roots(f, *gens, **flags):
     if not k:
         zeros = {}
     else:
-        zeros = {S(0): k}
+        zeros = {S.Zero: k}
 
     coeff, f = preprocess_roots(f)
 

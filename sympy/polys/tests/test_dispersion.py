@@ -8,7 +8,7 @@ def test_dispersion():
     x = Symbol("x")
     a = Symbol("a")
 
-    fp = poly(S(0), x)
+    fp = poly(S.Zero, x)
     assert sorted(dispersionset(fp)) == [0]
 
     fp = poly(S(2), x)

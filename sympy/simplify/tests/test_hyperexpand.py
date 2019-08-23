@@ -20,10 +20,10 @@ from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
 
 
 def test_branch_bug():
-    assert hyperexpand(hyper((-S(1)/3, S(1)/2), (S(2)/3, S(3)/2), -z)) == \
+    assert hyperexpand(hyper((-S.One/3, S.Half), (S(2)/3, S(3)/2), -z)) == \
         -z**S('1/3')*lowergamma(exp_polar(I*pi)/3, z)/5 \
         + sqrt(pi)*erf(sqrt(z))/(5*sqrt(z))
-    assert hyperexpand(meijerg([S(7)/6, 1], [], [S(2)/3], [S(1)/6, 0], z)) == \
+    assert hyperexpand(meijerg([S(7)/6, 1], [], [S(2)/3], [S.One/6, 0], z)) == \
         2*z**S('2/3')*(2*sqrt(pi)*erf(sqrt(z))/sqrt(z) - 2*lowergamma(
                        S(2)/3, z)/z**S('2/3'))*gamma(S(2)/3)/gamma(S(5)/3)
 
@@ -68,22 +68,22 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
 def test_roach():
     # Kelly B. Roach.  Meijer G Function Representations.
     # Section "Gallery"
-    assert can_do([S(1)/2], [S(9)/2])
+    assert can_do([S.Half], [S(9)/2])
     assert can_do([], [1, S(5)/2, 4])
     assert can_do([-S.Half, 1, 2], [3, 4])
-    assert can_do([S(1)/3], [-S(2)/3, -S(1)/2, S(1)/2, 1])
-    assert can_do([-S(3)/2, -S(1)/2], [-S(5)/2, 1])
-    assert can_do([-S(3)/2, ], [-S(1)/2, S(1)/2])  # shine-integral
-    assert can_do([-S(3)/2, -S(1)/2], [2])  # elliptic integrals
+    assert can_do([S.One/3], [-S(2)/3, -S.Half, S.Half, 1])
+    assert can_do([-S(3)/2, -S.Half], [-S(5)/2, 1])
+    assert can_do([-S(3)/2, ], [-S.Half, S.Half])  # shine-integral
+    assert can_do([-S(3)/2, -S.Half], [2])  # elliptic integrals
 
 
 @XFAIL
 def test_roach_fail():
-    assert can_do([-S(1)/2, 1], [S(1)/4, S(1)/2, S(3)/4])  # PFDD
+    assert can_do([-S.Half, 1], [S.One/4, S.Half, S(3)/4])  # PFDD
     assert can_do([S(3)/2], [S(5)/2, 5])  # struve function
-    assert can_do([-S(1)/2, S(1)/2, 1], [S(3)/2, S(5)/2])  # polylog, pfdd
-    assert can_do([1, 2, 3], [S(1)/2, 4])  # XXX ?
-    assert can_do([S(1)/2], [-S(1)/3, -S(1)/2, -S(2)/3])  # PFDD ?
+    assert can_do([-S.Half, S.Half, 1], [S(3)/2, S(5)/2])  # polylog, pfdd
+    assert can_do([1, 2, 3], [S.Half, 4])  # XXX ?
+    assert can_do([S.Half], [-S.One/3, -S.Half, -S(2)/3])  # PFDD ?
 
 # For the long table tests, see end of file
 
@@ -105,7 +105,7 @@ def test_hyperexpand_bases():
     assert hyperexpand(hyper([1, 2], [3], z)) == -2/z - 2*log(-z + 1)/z**2
     assert hyperexpand(hyper([S.Half, 2], [S(3)/2], z)) == \
         -1/(2*z - 2) + atanh(sqrt(z))/sqrt(z)/2
-    assert hyperexpand(hyper([S(1)/2, S(1)/2], [S(5)/2], z)) == \
+    assert hyperexpand(hyper([S.Half, S.Half], [S(5)/2], z)) == \
         (-3*z + 3)/4/(z*sqrt(-z + 1)) \
         + (6*z - 3)*asin(sqrt(z))/(4*z**(S(3)/2))
     assert hyperexpand(hyper([1, 2], [S(3)/2], z)) == -1/(2*z - 2) \
@@ -114,20 +114,20 @@ def test_hyperexpand_bases():
         sqrt(z)*(6*z/7 - S(6)/5)*atanh(sqrt(z)) \
         + (-30*z**2 + 32*z - 6)/35/z - 6*log(-z + 1)/(35*z**2)
     assert hyperexpand(hyper([1 + S.Half, 1, 1], [2, 2], z)) == \
-        -4*log(sqrt(-z + 1)/2 + S(1)/2)/z
+        -4*log(sqrt(-z + 1)/2 + S.Half)/z
     # TODO hyperexpand(hyper([a], [2*a + 1], z))
     # TODO [S.Half, a], [S(3)/2, a+1]
     assert hyperexpand(hyper([2], [b, 1], z)) == \
-        z**(-b/2 + S(1)/2)*besseli(b - 1, 2*sqrt(z))*gamma(b) \
+        z**(-b/2 + S.Half)*besseli(b - 1, 2*sqrt(z))*gamma(b) \
         + z**(-b/2 + 1)*besseli(b, 2*sqrt(z))*gamma(b)
     # TODO [a], [a - S.Half, 2*a]
 
 
 def test_hyperexpand_parametric():
-    assert hyperexpand(hyper([a, S(1)/2 + a], [S(1)/2], z)) \
+    assert hyperexpand(hyper([a, S.Half + a], [S.Half], z)) \
         == (1 + sqrt(z))**(-2*a)/2 + (1 - sqrt(z))**(-2*a)/2
-    assert hyperexpand(hyper([a, -S(1)/2 + a], [2*a], z)) \
-        == 2**(2*a - 1)*((-z + 1)**(S(1)/2) + 1)**(-2*a + 1)
+    assert hyperexpand(hyper([a, -S.Half + a], [2*a], z)) \
+        == 2**(2*a - 1)*((-z + 1)**(S.Half) + 1)**(-2*a + 1)
 
 
 def test_shifted_sum():
@@ -355,9 +355,9 @@ def test_meijerg_expand():
         log(z + 1)
     assert hyperexpand(meijerg([[1, 1], []], [[1], [1]], z)) == \
         z/(z + 1)
-    assert hyperexpand(meijerg([[], []], [[S(1)/2], [0]], (z/2)**2)) \
+    assert hyperexpand(meijerg([[], []], [[S.Half], [0]], (z/2)**2)) \
         == sin(z)/sqrt(pi)
-    assert hyperexpand(meijerg([[], []], [[0], [S(1)/2]], (z/2)**2)) \
+    assert hyperexpand(meijerg([[], []], [[0], [S.Half]], (z/2)**2)) \
         == cos(z)/sqrt(pi)
     assert can_do_meijer([], [a], [a - 1, a - S.Half], [])
     assert can_do_meijer([], [], [a/2], [-a/2], False)  # branches...
@@ -398,7 +398,7 @@ def test_meijerg_expand():
 
     # Test that the simplest possible answer is returned:
     assert gammasimp(simplify(hyperexpand(
-        meijerg([1], [1 - a], [-a/2, -a/2 + S(1)/2], [], 1/z)))) == \
+        meijerg([1], [1 - a], [-a/2, -a/2 + S.Half], [], 1/z)))) == \
         -2*sqrt(pi)*(sqrt(z + 1) + 1)**a/a
 
     # Test that hyper is returned
@@ -406,7 +406,7 @@ def test_meijerg_expand():
         (a,), (a + 1, a + 1), z*exp_polar(I*pi))*z**a*gamma(a)/gamma(a + 1)**2
 
     # Test place option
-    f = meijerg(((0, 1), ()), ((S(1)/2,), (0,)), z**2)
+    f = meijerg(((0, 1), ()), ((S.Half,), (0,)), z**2)
     assert hyperexpand(f) == sqrt(pi)/sqrt(1 + z**(-2))
     assert hyperexpand(f, place=0) == sqrt(pi)*z/sqrt(z**2 + 1)
 
@@ -421,11 +421,11 @@ def test_meijerg_lookup():
     assert can_do_meijer([a], [], [b + 2, a], [])
     assert can_do_meijer([a], [], [b - 2, a], [])
 
-    assert hyperexpand(meijerg([a], [], [a, a, a - S(1)/2], [], z)) == \
-        -sqrt(pi)*z**(a - S(1)/2)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
+    assert hyperexpand(meijerg([a], [], [a, a, a - S.Half], [], z)) == \
+        -sqrt(pi)*z**(a - S.Half)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
                                    - 2*sin(2*sqrt(z))*Ci(2*sqrt(z))) == \
-        hyperexpand(meijerg([a], [], [a, a - S(1)/2, a], [], z)) == \
-        hyperexpand(meijerg([a], [], [a - S(1)/2, a, a], [], z))
+        hyperexpand(meijerg([a], [], [a, a - S.Half, a], [], z)) == \
+        hyperexpand(meijerg([a], [], [a - S.Half, a, a], [], z))
     assert can_do_meijer([a - 1], [], [a + 2, a - S(3)/2, a + 1], [])
 
 
@@ -439,8 +439,8 @@ def test_meijerg_expand_fail():
     assert can_do_meijer([], [], [0, S.Half], [a, -a])
     assert can_do_meijer([], [], [3*a - S.Half, a, -a - S.Half], [a - S.Half])
     assert can_do_meijer([], [], [0, a - S.Half, -a - S.Half], [S.Half])
-    assert can_do_meijer([], [], [a, b + S(1)/2, b], [2*b - a])
-    assert can_do_meijer([], [], [a, b + S(1)/2, b, 2*b - a])
+    assert can_do_meijer([], [], [a, b + S.Half, b], [2*b - a])
+    assert can_do_meijer([], [], [a, b + S.Half, b, 2*b - a])
     assert can_do_meijer([S.Half], [], [-a, a], [0])
 
 
@@ -536,12 +536,12 @@ def test_meijerg_confluence():
     assert t(meijerg(
         [], [3, 1], [0, 0], [], z), -z**2/4 + z - log(z)/2 - S(3)/4, 0)
     assert t(meijerg([], [3, 1], [-1, 0], [], z),
-             z**2/12 - z/2 + log(z)/2 + S(1)/4 + 1/(6*z), 0)
+             z**2/12 - z/2 + log(z)/2 + S.One/4 + 1/(6*z), 0)
     assert t(meijerg([], [1, 1, 1, 1], [0, 0, 0, 0], [], z), -log(z)**3/6, 0)
     assert t(meijerg([1, 1], [], [], [0, 0], z), 0, -log(1/z))
     assert t(meijerg([1, 1], [2, 2], [1, 1], [0, 0], z),
              -z*log(z) + 2*z, -log(1/z) + 2)
-    assert t(meijerg([S(1)/2], [1, 1], [0, 0], [S(3)/2], z), log(z)/2 - 1, 0)
+    assert t(meijerg([S.Half], [1, 1], [0, 0], [S(3)/2], z), log(z)/2 - 1, 0)
 
     def u(an, ap, bm, bq):
         m = meijerg(an, ap, bm, bq, z)
@@ -584,7 +584,7 @@ def test_lerchphi():
     assert hyperexpand(z*hyper([1, 1, 1], [2, 2], z)) == polylog(2, z)
     assert hyperexpand(z*hyper([1, 1, 1, 1], [2, 2, 2], z)) == polylog(3, z)
 
-    assert hyperexpand(hyper([1, a, 1 + S(1)/2], [a + 1, S(1)/2], z)) == \
+    assert hyperexpand(hyper([1, a, 1 + S.Half], [a + 1, S.Half], z)) == \
         -2*a/(z - 1) + (-2*a**2 + a)*lerchphi(z, 1, a)
 
     # Now numerical tests. These make sure reductions etc are carried out
@@ -604,9 +604,9 @@ def test_lerchphi():
 
     # test a bug
     from sympy import Abs
-    assert hyperexpand(hyper([S(1)/2, S(1)/2, S(1)/2, 1],
-                             [S(3)/2, S(3)/2, S(3)/2], S(1)/4)) == \
-        Abs(-polylog(3, exp_polar(I*pi)/2) + polylog(3, S(1)/2))
+    assert hyperexpand(hyper([S.Half, S.Half, S.Half, 1],
+                             [S(3)/2, S(3)/2, S(3)/2], S.One/4)) == \
+        Abs(-polylog(3, exp_polar(I*pi)/2) + polylog(3, S.Half))
 
 
 def test_partial_simp():
@@ -693,11 +693,11 @@ def test_prudnikov_1():
     assert can_do([a, 2 - a], [S.Half])
     assert can_do([a, 2 - a], [S(3)/2])
     assert can_do([a, 2 - a], [S(3)/2])
-    assert can_do([a, a + S(1)/2], [2*a - 1])
-    assert can_do([a, a + S(1)/2], [2*a])
-    assert can_do([a, a + S(1)/2], [2*a + 1])
-    assert can_do([a, a + S(1)/2], [S(1)/2])
-    assert can_do([a, a + S(1)/2], [S(3)/2])
+    assert can_do([a, a + S.Half], [2*a - 1])
+    assert can_do([a, a + S.Half], [2*a])
+    assert can_do([a, a + S.Half], [2*a + 1])
+    assert can_do([a, a + S.Half], [S.Half])
+    assert can_do([a, a + S.Half], [S(3)/2])
     assert can_do([a, a/2 + 1], [a/2])
     assert can_do([1, b], [2])
     assert can_do([1, b], [b + 1], numerical=False)  # Lerch Phi
@@ -733,9 +733,9 @@ def test_prudnikov_3():
         skip("Too slow for travis.")
 
     h = S.Half
-    assert can_do([S(1)/4, S(3)/4], [h])
-    assert can_do([S(1)/4, S(3)/4], [3*h])
-    assert can_do([S(1)/3, S(2)/3], [3*h])
+    assert can_do([S.One/4, S(3)/4], [h])
+    assert can_do([S.One/4, S(3)/4], [3*h])
+    assert can_do([S.One/3, S(2)/3], [3*h])
     assert can_do([S(3)/4, S(5)/4], [h])
     assert can_do([S(3)/4, S(5)/4], [3*h])
 
@@ -876,16 +876,16 @@ def test_prudnikov_10():
     for m in [h, 1, 2, 5*h, 3, 7*h, 4]:
         assert can_do([7*h], [5*h, m])
 
-    assert can_do([-S(1)/2], [S(1)/2, S(1)/2])  # shine-integral shi
+    assert can_do([-S.Half], [S.Half, S.Half])  # shine-integral shi
 
 
 def test_prudnikov_11():
     # 7.15
     assert can_do([a, a + S.Half], [2*a, b, 2*a - b])
-    assert can_do([a, a + S.Half], [S(3)/2, 2*a, 2*a - S(1)/2])
+    assert can_do([a, a + S.Half], [S(3)/2, 2*a, 2*a - S.Half])
 
-    assert can_do([S(1)/4, S(3)/4], [S(1)/2, S(1)/2, 1])
-    assert can_do([S(5)/4, S(3)/4], [S(3)/2, S(1)/2, 2])
+    assert can_do([S.One/4, S(3)/4], [S.Half, S.Half, 1])
+    assert can_do([S(5)/4, S(3)/4], [S(3)/2, S.Half, 2])
     assert can_do([S(5)/4, S(3)/4], [S(3)/2, S(3)/2, 1])
     assert can_do([S(5)/4, S(7)/4], [S(3)/2, S(5)/2, 2])
 
@@ -900,9 +900,9 @@ def test_prudnikov_12():
     assert can_do([], [S.Half, a, a + S.Half])
     assert can_do([], [S(3)/2, a, a + S.Half])
 
-    assert can_do([], [S(1)/4, S(1)/2, S(3)/4])
-    assert can_do([], [S(1)/2, S(1)/2, 1])
-    assert can_do([], [S(1)/2, S(3)/2, 1])
+    assert can_do([], [S.One/4, S.Half, S(3)/4])
+    assert can_do([], [S.Half, S.Half, 1])
+    assert can_do([], [S.Half, S(3)/2, 1])
     assert can_do([], [S(3)/4, S(3)/2, S(5)/4])
     assert can_do([], [1, 1, S(3)/2])
     assert can_do([], [1, 2, S(3)/2])
@@ -942,14 +942,14 @@ def test_prudnikov_fail_2F1():
     assert can_do([a, 1 - a], [c])
     assert can_do([a, 2 - a], [c])
     assert can_do([a, 3 - a], [c])
-    assert can_do([a, a + S(1)/2], [c])
+    assert can_do([a, a + S.Half], [c])
     assert can_do([1, b], [c])
     assert can_do([1, b], [S(3)/2])
 
-    assert can_do([S(1)/4, S(3)/4], [1])
+    assert can_do([S.One/4, S(3)/4], [1])
 
     # PFDD
-    o = S(1)
+    o = S.One
     assert can_do([o/8, 1], [o/8*9])
     assert can_do([o/6, 1], [o/6*7])
     assert can_do([o/6, 1], [o/6*13])
@@ -978,12 +978,12 @@ def test_prudnikov_fail_2F1():
 
 @XFAIL
 def test_prudnikov_fail_3F2():
-    assert can_do([a, a + S(1)/3, a + S(2)/3], [S(1)/3, S(2)/3])
-    assert can_do([a, a + S(1)/3, a + S(2)/3], [S(2)/3, S(4)/3])
-    assert can_do([a, a + S(1)/3, a + S(2)/3], [S(4)/3, S(5)/3])
+    assert can_do([a, a + S.One/3, a + S(2)/3], [S.One/3, S(2)/3])
+    assert can_do([a, a + S.One/3, a + S(2)/3], [S(2)/3, S(4)/3])
+    assert can_do([a, a + S.One/3, a + S(2)/3], [S(4)/3, S(5)/3])
 
     # page 421
-    assert can_do([a, a + S(1)/3, a + S(2)/3], [3*a/2, (3*a + 1)/2])
+    assert can_do([a, a + S.One/3, a + S(2)/3], [3*a/2, (3*a + 1)/2])
 
     # pages 422 ...
     assert can_do([-S.Half, S.Half, S.Half], [1, 1])  # elliptic integrals
@@ -991,13 +991,13 @@ def test_prudnikov_fail_3F2():
     # TODO LOTS more
 
     # PFDD
-    assert can_do([S(1)/8, S(3)/8, 1], [S(9)/8, S(11)/8])
-    assert can_do([S(1)/8, S(5)/8, 1], [S(9)/8, S(13)/8])
-    assert can_do([S(1)/8, S(7)/8, 1], [S(9)/8, S(15)/8])
-    assert can_do([S(1)/6, S(1)/3, 1], [S(7)/6, S(4)/3])
-    assert can_do([S(1)/6, S(2)/3, 1], [S(7)/6, S(5)/3])
-    assert can_do([S(1)/6, S(2)/3, 1], [S(5)/3, S(13)/6])
-    assert can_do([S.Half, 1, 1], [S(1)/4, S(3)/4])
+    assert can_do([S.One/8, S(3)/8, 1], [S(9)/8, S(11)/8])
+    assert can_do([S.One/8, S(5)/8, 1], [S(9)/8, S(13)/8])
+    assert can_do([S.One/8, S(7)/8, 1], [S(9)/8, S(15)/8])
+    assert can_do([S.One/6, S.One/3, 1], [S(7)/6, S(4)/3])
+    assert can_do([S.One/6, S(2)/3, 1], [S(7)/6, S(5)/3])
+    assert can_do([S.One/6, S(2)/3, 1], [S(5)/3, S(13)/6])
+    assert can_do([S.Half, 1, 1], [S.One/4, S(3)/4])
     # LOTS more
 
 
@@ -1009,21 +1009,21 @@ def test_prudnikov_fail_other():
     assert can_do([1, a], [b, 1 - 2*a + b])  # ???
 
     # 7.14.2
-    assert can_do([-S(1)/2], [S(1)/2, 1])  # struve
-    assert can_do([1], [S(1)/2, S(1)/2])  # struve
-    assert can_do([S(1)/4], [S(1)/2, S(5)/4])  # PFDD
+    assert can_do([-S.Half], [S.Half, 1])  # struve
+    assert can_do([1], [S.Half, S.Half])  # struve
+    assert can_do([S.One/4], [S.Half, S(5)/4])  # PFDD
     assert can_do([S(3)/4], [S(3)/2, S(7)/4])  # PFDD
-    assert can_do([1], [S(1)/4, S(3)/4])  # PFDD
+    assert can_do([1], [S.One/4, S(3)/4])  # PFDD
     assert can_do([1], [S(3)/4, S(5)/4])  # PFDD
     assert can_do([1], [S(5)/4, S(7)/4])  # PFDD
     # TODO LOTS more
 
     # 7.15.2
-    assert can_do([S(1)/2, 1], [S(3)/4, S(5)/4, S(3)/2])  # PFDD
-    assert can_do([S(1)/2, 1], [S(7)/4, S(5)/4, S(3)/2])  # PFDD
+    assert can_do([S.Half, 1], [S(3)/4, S(5)/4, S(3)/2])  # PFDD
+    assert can_do([S.Half, 1], [S(7)/4, S(5)/4, S(3)/2])  # PFDD
 
     # 7.16.1
-    assert can_do([], [S(1)/3, S(2/3)])  # PFDD
+    assert can_do([], [S.One/3, S(2/3)])  # PFDD
     assert can_do([], [S(2)/3, S(4/3)])  # PFDD
     assert can_do([], [S(5)/3, S(4/3)])  # PFDD
 

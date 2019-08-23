@@ -133,7 +133,7 @@ def test_FracElement_from_expr():
         FracElement)
     assert isinstance(ZZ[x**2].get_field().convert(x**(-6)),
         FracElement)
-    assert isinstance(ZZ[exp(S(1)/3)].get_field().convert(E),
+    assert isinstance(ZZ[exp(S.One/3)].get_field().convert(E),
         FracElement)
 
 

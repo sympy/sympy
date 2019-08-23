@@ -2511,8 +2511,8 @@ class Expr(Basic, EvalfMixin):
         (1, -1/2)
         """
         from sympy import exp_polar, pi, I, ceiling, Add
-        n = S(0)
-        res = S(1)
+        n = S.Zero
+        res = S.One
         args = Mul.make_args(self)
         exps = []
         for arg in args:
@@ -2520,7 +2520,7 @@ class Expr(Basic, EvalfMixin):
                 exps += [arg.exp]
             else:
                 res *= arg
-        piimult = S(0)
+        piimult = S.Zero
         extras = []
         while exps:
             exp = exps.pop()
@@ -2539,13 +2539,13 @@ class Expr(Basic, EvalfMixin):
         else:
             coeff, tail = piimult.as_coeff_add(*piimult.free_symbols)
         # round down to nearest multiple of 2
-        branchfact = ceiling(coeff/2 - S(1)/2)*2
+        branchfact = ceiling(coeff/2 - S.Half)*2
         n += branchfact/2
         c = coeff - branchfact
         if allow_half:
             nc = c.extract_additively(1)
             if nc is not None:
-                n += S(1)/2
+                n += S.Half
                 c = nc
         newexp = pi*I*Add(*((c, ) + tail)) + Add(*extras)
         if newexp != 0:

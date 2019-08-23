@@ -113,7 +113,7 @@ def test_ImageSet():
     assert Tuple(2, -2) in ImageSet(Lambda((x, y), (x, -2)), c)
     c3 = Interval(3, 7)*Interval(8, 11)*Interval(5, 9)
     assert Tuple(8, 3, 9) in ImageSet(Lambda((t, y, x), (y, t, x)), c3)
-    assert Tuple(S(1)/8, 3, 9) in ImageSet(Lambda((t, y, x), (1/y, t, x)), c3)
+    assert Tuple(S.One/8, 3, 9) in ImageSet(Lambda((t, y, x), (1/y, t, x)), c3)
     assert 2/pi not in ImageSet(Lambda((x, y), 2/x), c)
     assert 2/S(100) not in ImageSet(Lambda((x, y), 2/x), c)
     assert 2/S(3) in ImageSet(Lambda((x, y), 2/x), c)
@@ -512,7 +512,7 @@ def test_infinitely_indexed_set_1():
                 imageset(Lambda(n, 3*n), S.Integers)) == \
             ImageSet(Lambda(t, 6*t), S.Integers)
 
-    assert imageset(x, x/2 + S(1)/3, S.Integers).intersect(S.Integers) is S.EmptySet
+    assert imageset(x, x/2 + S.One/3, S.Integers).intersect(S.Integers) is S.EmptySet
     assert imageset(x, x/2 + S.Half, S.Integers).intersect(S.Integers) is S.Integers
 
 
@@ -910,8 +910,8 @@ def test_Rationals():
     assert S.Rationals.sup == oo
     it = iter(S.Rationals)
     assert [next(it) for i in range(12)] == [
-        0, 1, -1, S(1)/2, 2, -S(1)/2, -2,
-        S(1)/3, 3, -S(1)/3, -3, S(2)/3]
+        0, 1, -1, S.Half, 2, -S.Half, -2,
+        S.One/3, 3, -S.One/3, -3, S(2)/3]
     assert Basic() not in S.Rationals
     assert S.Half in S.Rationals
     assert 1.0 not in S.Rationals

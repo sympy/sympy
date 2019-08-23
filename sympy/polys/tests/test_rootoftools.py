@@ -289,8 +289,8 @@ def test_CRootOf_real_roots():
 def test_CRootOf_all_roots():
     assert Poly(x**5 + x + 1).all_roots() == [
         rootof(x**3 - x**2 + 1, 0),
-        -S(1)/2 - sqrt(3)*I/2,
-        -S(1)/2 + sqrt(3)*I/2,
+        -S.Half - sqrt(3)*I/2,
+        -S.Half + sqrt(3)*I/2,
         rootof(x**3 - x**2 + 1, 1),
         rootof(x**3 - x**2 + 1, 2),
     ]

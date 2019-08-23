@@ -9,10 +9,10 @@ nu = m * omega / hbar
 
 def test_wavefunction():
     Psi = {
-        0: (nu/pi)**(S(1)/4) * exp(-nu * x**2 /2),
-        1: (nu/pi)**(S(1)/4) * sqrt(2*nu) * x * exp(-nu * x**2 /2),
-        2: (nu/pi)**(S(1)/4) * (2 * nu * x**2 - 1)/sqrt(2) * exp(-nu * x**2 /2),
-        3: (nu/pi)**(S(1)/4) * sqrt(nu/3) * (2 * nu * x**3 - 3 * x) * exp(-nu * x**2 /2)
+        0: (nu/pi)**(S.One/4) * exp(-nu * x**2 /2),
+        1: (nu/pi)**(S.One/4) * sqrt(2*nu) * x * exp(-nu * x**2 /2),
+        2: (nu/pi)**(S.One/4) * (2 * nu * x**2 - 1)/sqrt(2) * exp(-nu * x**2 /2),
+        3: (nu/pi)**(S.One/4) * sqrt(nu/3) * (2 * nu * x**3 - 3 * x) * exp(-nu * x**2 /2)
     }
     for n in Psi:
         assert simplify(psi_n(n, x, m, omega) - Psi[n]) == 0

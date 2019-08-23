@@ -69,8 +69,8 @@ def test_fwht_ifwht():
     assert fwht(ls) == fls
     assert ifwht(fls) == ls + [S.Zero]*2
 
-    ls = [S(1)/2 + 2*I, S(3)/7 + 4*I, S(5)/6 + 6*I, S(7)/3, S(9)/4]
-    ifls = [S(533)/672 + 3*I/2, S(23)/224 + I/2, S(1)/672, S(107)/224 - I,
+    ls = [S.Half + 2*I, S(3)/7 + 4*I, S(5)/6 + 6*I, S(7)/3, S(9)/4]
+    ifls = [S(533)/672 + 3*I/2, S(23)/224 + I/2, S.One/672, S(107)/224 - I,
         S(155)/672 + 3*I/2, -S(103)/224 + I/2, -S(377)/672, -S(19)/224 - I]
 
     assert ifwht(ls) == ifls

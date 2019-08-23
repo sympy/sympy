@@ -25,10 +25,10 @@ class PolyQuintic(object):
     """Special functions for solvable quintics"""
     def __init__(self, poly):
         _, _, self.p, self.q, self.r, self.s = poly.all_coeffs()
-        self.zeta1 = S(-1)/4 + (sqrt(5)/4) + I*sqrt((sqrt(5)/8) + S(5)/8)
-        self.zeta2 = (-sqrt(5)/4) - S(1)/4 + I*sqrt((-sqrt(5)/8) + S(5)/8)
-        self.zeta3 = (-sqrt(5)/4) - S(1)/4 - I*sqrt((-sqrt(5)/8) + S(5)/8)
-        self.zeta4 = S(-1)/4 + (sqrt(5)/4) - I*sqrt((sqrt(5)/8) + S(5)/8)
+        self.zeta1 = S.NegativeOne/4 + (sqrt(5)/4) + I*sqrt((sqrt(5)/8) + S(5)/8)
+        self.zeta2 = (-sqrt(5)/4) - S.One/4 + I*sqrt((-sqrt(5)/8) + S(5)/8)
+        self.zeta3 = (-sqrt(5)/4) - S.One/4 - I*sqrt((-sqrt(5)/8) + S(5)/8)
+        self.zeta4 = S.NegativeOne/4 + (sqrt(5)/4) - I*sqrt((sqrt(5)/8) + S(5)/8)
 
     @property
     def f20(self):

@@ -125,14 +125,14 @@ def test_meijer():
     assert g.is_commutative is True
     assert g.is_number is False
     #issue 13071
-    assert meijerg([[],[]], [[S(1)/2],[0]], 1).is_number is True
+    assert meijerg([[],[]], [[S.Half],[0]], 1).is_number is True
 
-    assert meijerg([1, 2], [3], [4], [5], z).delta == S(1)/2
+    assert meijerg([1, 2], [3], [4], [5], z).delta == S.Half
 
     # just a few checks to make sure that all arguments go where they should
     assert tn(meijerg(Tuple(), Tuple(), Tuple(0), Tuple(), -z), exp(z), z)
     assert tn(sqrt(pi)*meijerg(Tuple(), Tuple(),
-                               Tuple(0), Tuple(S(1)/2), z**2/4), cos(z), z)
+                               Tuple(0), Tuple(S.Half), z**2/4), cos(z), z)
     assert tn(meijerg(Tuple(1, 1), Tuple(), Tuple(1), Tuple(0), z),
               log(1 + z), z)
 
@@ -197,9 +197,9 @@ def test_meijerg_period():
     assert meijerg([1], [], [], [0], x).get_period() == 2*pi
     assert meijerg([], [], [0], [], x).get_period() == 2*pi  # exp(x)
     assert meijerg(
-        [], [], [0], [S(1)/2], x).get_period() == 2*pi  # cos(sqrt(x))
+        [], [], [0], [S.Half], x).get_period() == 2*pi  # cos(sqrt(x))
     assert meijerg(
-        [], [], [S(1)/2], [0], x).get_period() == 4*pi  # sin(sqrt(x))
+        [], [], [S.Half], [0], x).get_period() == 4*pi  # sin(sqrt(x))
     assert meijerg([1, 1], [], [1], [0], x).get_period() == oo  # log(1 + x)
 
 
@@ -258,14 +258,14 @@ def test_hyperrep():
         """ Test that func is a valid representation of hyp. """
         # First test that func agrees with hyp for small z
         if not tn(func.rewrite('nonrepsmall'), hyp, z,
-                  a=S(-1)/2, b=S(-1)/2, c=S(1)/2, d=S(1)/2):
+                  a=-S.Half, b=-S.Half, c=S.Half, d=S.Half):
             return False
         # Next check that the two small representations agree.
         if not tn(
             func.rewrite('nonrepsmall').subs(
                 z, exp_polar(I*pi)*z).replace(exp_polar, exp),
             func.subs(z, exp_polar(I*pi)*z).rewrite('nonrepsmall'),
-                z, a=S(-1)/2, b=S(-1)/2, c=S(1)/2, d=S(1)/2):
+                z, a=-S.Half, b=-S.Half, c=S.Half, d=S.Half):
             return False
         # Next check continuity along exp_polar(I*pi)*t
         expr = func.subs(z, exp_polar(I*pi)*z).rewrite('nonrep')
@@ -288,18 +288,18 @@ def test_hyperrep():
         return True
 
     # Now test the various representatives.
-    a = S(1)/3
-    assert t(HyperRep_atanh(z), hyper([S(1)/2, 1], [S(3)/2], z), z)
+    a = S.One/3
+    assert t(HyperRep_atanh(z), hyper([S.Half, 1], [S(3)/2], z), z)
     assert t(HyperRep_power1(a, z), hyper([-a], [], z), z)
-    assert t(HyperRep_power2(a, z), hyper([a, a - S(1)/2], [2*a], z), z)
+    assert t(HyperRep_power2(a, z), hyper([a, a - S.Half], [2*a], z), z)
     assert t(HyperRep_log1(z), -z*hyper([1, 1], [2], z), z)
-    assert t(HyperRep_asin1(z), hyper([S(1)/2, S(1)/2], [S(3)/2], z), z)
+    assert t(HyperRep_asin1(z), hyper([S.Half, S.Half], [S(3)/2], z), z)
     assert t(HyperRep_asin2(z), hyper([1, 1], [S(3)/2], z), z)
-    assert t(HyperRep_sqrts1(a, z), hyper([-a, S(1)/2 - a], [S(1)/2], z), z)
+    assert t(HyperRep_sqrts1(a, z), hyper([-a, S.Half - a], [S.Half], z), z)
     assert t(HyperRep_sqrts2(a, z),
-             -2*z/(2*a + 1)*hyper([-a - S(1)/2, -a], [S(1)/2], z).diff(z), z)
+             -2*z/(2*a + 1)*hyper([-a - S.Half, -a], [S.Half], z).diff(z), z)
     assert t(HyperRep_log2(z), -z/4*hyper([S(3)/2, 1, 1], [2, 2], z), z)
-    assert t(HyperRep_cosasin(a, z), hyper([-a, a], [S(1)/2], z), z)
+    assert t(HyperRep_cosasin(a, z), hyper([-a, a], [S.Half], z), z)
     assert t(HyperRep_sinasin(a, z), 2*a*z*hyper([1 - a, 1 + a], [S(3)/2], z), z)
 
 
@@ -322,7 +322,7 @@ def test_meijerg_eval():
     eps = 1e-13
     expr2 = expr1.subs(k, l)
     for x_ in [0.5, 1.5]:
-        for k_ in [0.5, S(1)/3, 0.25, 0.75, S(2)/3, 1.0, 1.5]:
+        for k_ in [0.5, S.One/3, 0.25, 0.75, S(2)/3, 1.0, 1.5]:
             assert abs((expr1 - expr2).n(
                        subs={x: x_, k: k_ + eps, l: k_ - eps})) < 1e-10
             assert abs((expr1 - expr2).n(
@@ -348,7 +348,7 @@ def test_appellf1():
     a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
     assert appellf1(a, b2, b1, c, y, x) == appellf1(a, b1, b2, c, x, y)
     assert appellf1(a, b1, b1, c, y, x) == appellf1(a, b1, b1, c, x, y)
-    assert appellf1(a, b1, b2, c, S(0), S(0)) == S(1)
+    assert appellf1(a, b1, b2, c, S.Zero, S.Zero) == S.One
 
 def test_derivative_appellf1():
     from sympy import diff
