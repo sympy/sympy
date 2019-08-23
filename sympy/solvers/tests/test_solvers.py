@@ -569,7 +569,7 @@ def test_solve_undetermined_coeffs():
 
 def test_solve_inequalities():
     x = Symbol('x')
-    sol = And(S.Zero < x, x < oo)
+    sol = And(0 < x, x < oo)
     assert solve(x + 1 > 1) == sol
     assert solve([x + 1 > 1]) == sol
     assert solve([x + 1 > 1], x) == sol
@@ -591,9 +591,9 @@ def test_solve_inequalities():
 
     assert solve(sin(x) > S.Half) == And(pi/6 < x, x < 5*pi/6)
 
-    assert solve(Eq(False, x < 1)) == (S.One <= x) & (x < oo)
+    assert solve(Eq(False, x < 1)) == (1 <= x) & (x < oo)
     assert solve(Eq(True, x < 1)) == (-oo < x) & (x < 1)
-    assert solve(Eq(x < 1, False)) == (S.One <= x) & (x < oo)
+    assert solve(Eq(x < 1, False)) == (1 <= x) & (x < oo)
     assert solve(Eq(x < 1, True)) == (-oo < x) & (x < 1)
 
     assert solve(Eq(False, x)) == False

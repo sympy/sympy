@@ -664,8 +664,8 @@ def test_piecewise_solveset():
     assert set(solveset_real(eq, x)) == set(FiniteSet(-1, 5))
 
     absxm3 = Piecewise(
-        (x - 3, S.Zero <= x - 3),
-        (3 - x, S.Zero > x - 3))
+        (x - 3, 0 <= x - 3),
+        (3 - x, 0 > x - 3))
     y = Symbol('y', positive=True)
     assert solveset_real(absxm3 - y, x) == FiniteSet(-y + 3, y + 3)
 

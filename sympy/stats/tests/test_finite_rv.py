@@ -82,9 +82,9 @@ def test_dice():
     assert E(X + Y, Eq(X, Y)) == E(2*X)
     assert moment(X, 0) == 1
     assert moment(5*X, 2) == 25*moment(X, 2)
-    assert quantile(X)(p) == Piecewise((nan, (p > S.One) | (p < S.Zero)),\
+    assert quantile(X)(p) == Piecewise((nan, (p > 1) | (p < 0)),\
         (S.One, p <= S.One/6), (S(2), p <= S.One/3), (S(3), p <= S.Half),\
-        (S(4), p <= S(2)/3), (S(5), p <= S(5)/6), (S(6), p <= S.One))
+        (S(4), p <= S(2)/3), (S(5), p <= S(5)/6), (S(6), p <= 1))
 
     assert P(X > 3, X > 3) == S.One
     assert P(X > Y, Eq(Y, 6)) == S.Zero

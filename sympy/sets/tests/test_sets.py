@@ -689,9 +689,9 @@ def test_contains():
 
     # non-bool results
     assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \
-        Or(And(S.One <= x, x <= 2), And(S(3) <= x, x <= 4))
+        Or(And(1 <= x, x <= 2), And(3 <= x, x <= 4))
     assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
-        And(y <= 3, y <= x, S.One <= y, S(2) <= y)
+        And(y <= 3, y <= x, 1 <= y, 2 <= y)
 
     assert (S.Complexes).contains(S.ComplexInfinity) == S.false
 
@@ -699,10 +699,10 @@ def test_contains():
 def test_interval_symbolic():
     x = Symbol('x')
     e = Interval(0, 1)
-    assert e.contains(x) == And(S.Zero <= x, x <= 1)
+    assert e.contains(x) == And(0 <= x, x <= 1)
     raises(TypeError, lambda: x in e)
     e = Interval(0, 1, True, True)
-    assert e.contains(x) == And(S.Zero < x, x < 1)
+    assert e.contains(x) == And(0 < x, x < 1)
 
 
 def test_union_contains():
@@ -710,7 +710,7 @@ def test_union_contains():
     i1 = Interval(0, 1)
     i2 = Interval(2, 3)
     i3 = Union(i1, i2)
-    assert i3.as_relational(x) == Or(And(S.Zero <= x, x <= 1), And(S(2) <= x, x <= 3))
+    assert i3.as_relational(x) == Or(And(0 <= x, x <= 1), And(2 <= x, x <= 3))
     raises(TypeError, lambda: x in i3)
     e = i3.contains(x)
     assert e == i3.as_relational(x)

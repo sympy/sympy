@@ -1025,20 +1025,20 @@ def point_sort(poly, normal=None, clockwise=True):
                         sum(map(lambda vertex: vertex.z, pts)) / n)
 
     def compare(a, b):
-        if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
+        if a.x - center.x >= 0 and b.x - center.x < 0:
             return -order
-        elif a.x - center.x < S.Zero and b.x - center.x >= S.Zero:
+        elif a.x - center.x < 0 and b.x - center.x >= 0:
             return order
-        elif a.x - center.x == S.Zero and b.x - center.x == S.Zero:
-            if a.y - center.y >= S.Zero or b.y - center.y >= S.Zero:
+        elif a.x - center.x == 0 and b.x - center.x == 0:
+            if a.y - center.y >= 0 or b.y - center.y >= 0:
                 return -order if a.y > b.y else order
             return -order if b.y > a.y else order
 
         det = (a.x - center.x) * (b.y - center.y) -\
               (b.x - center.x) * (a.y - center.y)
-        if det < S.Zero:
+        if det < 0:
             return -order
-        elif det > S.Zero:
+        elif det > 0:
             return order
 
         first = (a.x - center.x) * (a.x - center.x) +\

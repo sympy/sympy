@@ -189,7 +189,7 @@ def test_reduce_abs_inequalities():
     assert reduce_inequalities(abs(x - 4) + abs(
         3*x - 5) < 7) == And(Lt(S.Half, x), Lt(x, 4))
     assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7) == \
-        Or(And(S(-2) < x, x < -1), And(S.Half < x, x < 4))
+        Or(And(-2 < x, x < -1), And(S.Half < x, x < 4))
 
     nr = Symbol('nr', extended_real=False)
     raises(TypeError, lambda: reduce_inequalities(abs(nr - 5) < 3))
@@ -198,7 +198,7 @@ def test_reduce_abs_inequalities():
 
 def test_reduce_inequalities_general():
     assert reduce_inequalities(Ge(sqrt(2)*x, 1)) == And(sqrt(2)/2 <= x, x < oo)
-    assert reduce_inequalities(PurePoly(x + 1, x) > 0) == And(S.NegativeOne < x, x < oo)
+    assert reduce_inequalities(PurePoly(x + 1, x) > 0) == And(-1 < x, x < oo)
 
 
 def test_reduce_inequalities_boolean():
@@ -234,13 +234,13 @@ def test_issue_6343():
 
 def test_issue_8235():
     assert reduce_inequalities(x**2 - 1 < 0) == \
-        And(S.NegativeOne < x, x < S.One)
+        And(-1 < x, x < 1)
     assert reduce_inequalities(x**2 - 1 <= 0) == \
-        And(S.NegativeOne <= x, x <= 1)
+        And(-1 <= x, x <= 1)
     assert reduce_inequalities(x**2 - 1 > 0) == \
-        Or(And(-oo < x, x < -1), And(x < oo, S.One < x))
+        Or(And(-oo < x, x < -1), And(x < oo, 1 < x))
     assert reduce_inequalities(x**2 - 1 >= 0) == \
-        Or(And(-oo < x, x <= S.NegativeOne), And(S.One <= x, x < oo))
+        Or(And(-oo < x, x <= -1), And(1 <= x, x < oo))
 
     eq = x**8 + x - 9  # we want CRootOf solns here
     sol = solve(eq >= 0)
@@ -252,12 +252,12 @@ def test_issue_8235():
 
 
 def test_issue_5526():
-    assert reduce_inequalities(S.Zero <=
+    assert reduce_inequalities(0 <=
         x + Integral(y**2, (y, 1, 3)) - 1, [x]) == \
         (x >= -Integral(y**2, (y, 1, 3)) + 1)
     f = Function('f')
     e = Sum(f(x), (x, 1, 3))
-    assert reduce_inequalities(S.Zero <= x + e + y**2, [x]) == \
+    assert reduce_inequalities(0 <= x + e + y**2, [x]) == \
         (x >= -y**2 - Sum(f(x), (x, 1, 3)))
 
 
@@ -357,7 +357,7 @@ def test_issue_9954():
 def test_slow_general_univariate():
     r = rootof(x**5 - x**2 + 1, 0)
     assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
-        Or(And(S.Zero < x, x < r**6), And(r**6 < x, x < oo))
+        Or(And(0 < x, x < r**6), And(r**6 < x, x < oo))
 
 
 def test_issue_8545():
@@ -376,7 +376,7 @@ def test_issue_8974():
 def test_issue_10198():
     assert reduce_inequalities(
         -1 + 1/abs(1/x - 1) < 0) == Or(
-        And(-oo < x, x < 0), And(S.Zero < x, x < S.Half)
+        And(-oo < x, x < 0), And(0 < x, x < S.Half)
         )
     assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
@@ -396,7 +396,7 @@ def test_issue_10047():
 
 
 def test_issue_10268():
-    assert solve(log(x) < 1000) == And(S.Zero < x, x < exp(1000))
+    assert solve(log(x) < 1000) == And(0 < x, x < exp(1000))
 
 
 @XFAIL
@@ -434,7 +434,7 @@ def test__solve_inequality():
     assert _solve_inequality(Eq(x*nz, 1), x) == Eq(x, 1/nz)
     assert _solve_inequality(x*nz < 1, x) == (x*nz < 1)
     a = Symbol('a', positive=True)
-    assert _solve_inequality(a/x > 1, x) == (S.Zero < x) & (x < a)
+    assert _solve_inequality(a/x > 1, x) == (0 < x) & (x < a)
     assert _solve_inequality(a/x > 1, x, linear=True) == (1/x > 1/a)
     # make sure to include conditions under which solution is valid
     e = Eq(1 - x, x*(1/x - 1))

@@ -505,8 +505,8 @@ def test_piecewise_solve():
 
     # issue 6060
     absxm3 = Piecewise(
-        (x - 3, S.Zero <= x - 3),
-        (3 - x, S.Zero > x - 3)
+        (x - 3, 0 <= x - 3),
+        (3 - x, 0 > x - 3)
     )
     assert solve(absxm3 - y, x) == [
         Piecewise((-y + 3, -y < 0), (S.NaN, True)),
@@ -520,7 +520,7 @@ def test_piecewise_solve():
         [Piecewise((-1, x > 0), (0, True))]
 
     # issue 8587
-    f = Piecewise((2*x**2, And(S.Zero < x, x < 1)), (2, True))
+    f = Piecewise((2*x**2, And(0 < x, x < 1)), (2, True))
     assert solve(f - 1) == [1/sqrt(2)]
 
 
@@ -999,7 +999,7 @@ def test_issue_6900():
 
 def test_issue_10122():
     assert solve(abs(x) + abs(x - 1) - 1 > 0, x
-        ) == Or(And(-oo < x, x < 0), And(S.One < x, x < oo))
+        ) == Or(And(-oo < x, x < 0), And(1 < x, x < oo))
 
 
 def test_issue_4313():

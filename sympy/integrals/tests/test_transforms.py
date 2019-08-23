@@ -514,7 +514,7 @@ def test_laplace_transform():
         + sqrt(2)*cos(s**2/(2*pi) + pi/4))/(2*s), 0, True))
 
     cond = Ne(1/s, 1) & (
-        S.Zero < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
+        0 < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
     assert LT(Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]]), t, s) ==\
         Matrix([
             [(1/(s - 1), 1, True), ((s + 1)**(-2), 0, True)],

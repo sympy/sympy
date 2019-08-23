@@ -581,7 +581,7 @@ def test_Sum_doit():
     assert Sum(x*KroneckerDelta(m, n), (m, -oo, oo)).doit() == x
     assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
     assert Sum(Sum(KroneckerDelta(k, m), (m, 1, 3)), (n, 1, 3)).doit() == \
-           3 * Piecewise((1, And(S.One <= k, k <= 3)), (0, True))
+           3 * Piecewise((1, And(1 <= k, k <= 3)), (0, True))
     assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
            f(1) + f(2) + f(3)
     assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
@@ -589,7 +589,7 @@ def test_Sum_doit():
 
     # issue 2597
     nmax = symbols('N', integer=True, positive=True)
-    pw = Piecewise((1, And(S.One <= n, n <= nmax)), (0, True))
+    pw = Piecewise((1, And(1 <= n, n <= nmax)), (0, True))
     assert Sum(pw, (n, 1, nmax)).doit() == Sum(Piecewise((1, nmax >= n),
                     (0, True)), (n, 1, nmax))
 

@@ -37,7 +37,7 @@ def test_naturals():
         assert s.intersection(S.Reals) is s
         assert s.is_subset(S.Reals)
 
-    assert N.as_relational(x) == And(Eq(floor(x), x), x >= S.One, x < oo)
+    assert N.as_relational(x) == And(Eq(floor(x), x), x >= 1, x < oo)
 
 
 def test_naturals0():
