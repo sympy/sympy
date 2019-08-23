@@ -8,7 +8,7 @@ env:
   matrix:
   - SPLIT="1/2" TEST_SYMPY="true"
   - SPLIT="2/2" TEST_SYMPY="true"
-  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
   global:
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
 dist: trusty
@@ -31,7 +31,7 @@ matrix:
       dist: xenial
       sudo: true
       env:
-        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
     - python: 3.7
       dist: xenial
       sudo: true
@@ -48,7 +48,7 @@ matrix:
       dist: xenial
       sudo: true
       env:
-        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
     - python: 3.8-dev
       dist: xenial
       sudo: true
@@ -166,7 +166,7 @@ matrix:
     # duplicated here and in that section below.
     - python: "pypy"
       env:
-        - TEST_DOCTESTS="true"
+        - TEST_DOCTESTS="true" TEST_EXAMPLES="true"
         - FASTCACHE="false"
       addons:
         apt:
