@@ -7,7 +7,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
 from mpmath import mpi
 
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
 
@@ -51,6 +51,11 @@ def test_is_empty():
     for s in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals,
             S.UniversalSet]:
         assert s.is_empty == False
+
+
+def test_deprecated_is_EmptySet():
+    with warns_deprecated_sympy():
+        S.EmptySet.is_EmptySet
 
 
 def test_interval_arguments():

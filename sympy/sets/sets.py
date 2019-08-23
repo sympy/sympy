@@ -8,6 +8,7 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import (iterable, with_metaclass,
     ordered, range, PY3, is_sequence)
 from sympy.core.cache import cacheit
+from sympy.core.decorators import deprecated
 from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
@@ -60,6 +61,11 @@ class Set(Basic):
     is_ComplexRegion = False
 
     is_empty = None
+
+    @property
+    @deprecated(useinstead="is_empty", issue=16946, deprecated_since_version="1.5")
+    def is_EmptySet(self):
+        return None
 
     @staticmethod
     def _infimum_key(expr):
@@ -1492,6 +1498,11 @@ class EmptySet(with_metaclass(Singleton, Set)):
     """
     is_empty = True
     is_FiniteSet = True
+
+    @property
+    @deprecated(useinstead="is_empty", issue=16946, deprecated_since_version="1.5")
+    def is_EmptySet(self):
+        return True
 
     @property
     def _measure(self):
