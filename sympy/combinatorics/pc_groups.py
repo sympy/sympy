@@ -68,9 +68,9 @@ class Collector(DefaultPrinting):
 
         See Also
         ========
-        
+
         PolycyclicGroup
-        
+
         """
         self.pcgs = pcgs
         self.pc_series = pc_series
