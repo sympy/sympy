@@ -586,6 +586,12 @@ class polygamma(Function):
     .. [4] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
 
+    def _eval_evalf(self, prec):
+        n = self.args[0]
+        # the mpmath polygamma implementation valid only for nonnegative integers
+        if n.is_number and n.is_real:
+            if (n.is_integer or n == int(n)) and n.is_nonnegative:
+                return super(polygamma, self)._eval_evalf(prec)
 
     def fdiff(self, argindex=2):
         if argindex == 2:
@@ -594,16 +600,17 @@ class polygamma(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_is_real(self):
+        if self.args[0].is_positive and self.args[1].is_positive:
+            return True
+
     def _eval_is_positive(self):
-        if self.args[1].is_positive and (self.args[0] > 0) == True:
+        if self.args[0].is_positive and self.args[1].is_positive:
             return self.args[0].is_odd
 
     def _eval_is_negative(self):
-        if self.args[1].is_positive and (self.args[0] > 0) == True:
+        if self.args[0].is_positive and self.args[1].is_positive:
             return self.args[0].is_even
-
-    def _eval_is_real(self):
-        return self.args[0].is_real
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
@@ -745,10 +752,9 @@ class polygamma(Function):
         return polygamma(n, z)
 
     def _eval_rewrite_as_zeta(self, n, z, **kwargs):
-        if n >= S.One:
-            return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
-        else:
-            return self
+        if n.is_integer:
+            if (n - S.One).is_nonnegative:
+                return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
 
     def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
         if n.is_integer:
