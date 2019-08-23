@@ -5,7 +5,7 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
 )
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
@@ -1575,8 +1575,39 @@ def test_issue_14709b():
     assert i == 5*h**2*pi/16
 
 
+def test_issue_8614():
+    x = Symbol('x')
+    t = Symbol('t')
+    assert integrate(exp(t)/t, (t, -oo, x)) == Ei(x)
+    assert integrate((exp(-x) - exp(-2*x))/x, (x, 0, oo)) == log(2)
+
+
+def test_issue_15494():
+    s = symbols('s', real=True, positive=True)
+
+    integrand = (exp(s/2) - 2*exp(1.6*s) + exp(s))*exp(s)
+    solution = integrate(integrand, s)
+    assert solution != S.NaN
+    # Not sure how to test this properly as it is a symbolic expression with floats
+    # assert str(solution) == '0.666666666666667*exp(1.5*s) + 0.5*exp(2.0*s) - 0.769230769230769*exp(2.6*s)'
+    # Maybe
+    assert abs(solution.subs(s, 1) - (-3.67440080236188)) <= 1e-8
+
+    integrand = (exp(s/2) - 2*exp(S(8)/5*s) + exp(s))*exp(s)
+    assert integrate(integrand, s) == -10*exp(13*s/5)/13 + 2*exp(3*s/2)/3 + exp(2*s)/2
+
+
 def test_li_integral():
     y = Symbol('y')
     assert Integral(li(y*x**2), x).doit() == Piecewise(
             (x*li(x**2*y) - x*Ei(3*log(x) + 3*log(y)/2)/(sqrt(y)*sqrt(x**2)), Ne(y, 0)),
             (0, True))
+
+
+def test_issue_17473():
+    x = Symbol('x')
+    n = Symbol('n')
+    assert integrate(sin(x**n), x) == \
+        x*x**n*gamma(S(1)/2 + 1/(2*n))*hyper((S(1)/2 + 1/(2*n),),
+                     (S(3)/2, S(3)/2 + 1/(2*n)),
+                     -x**(2*n)/4)/(2*n*gamma(S(3)/2 + 1/(2*n)))
