@@ -312,7 +312,10 @@ class ImageSet(Set):
             return sets[0]
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
-            return FiniteSet(flambda.expr)
+            if all(s.is_empty for s in sets):
+                return S.EmptySet
+            elif any(s.is_empty == False for s in sets):
+                return FiniteSet(flambda.expr)
 
         return Basic.__new__(cls, flambda, *sets)
 

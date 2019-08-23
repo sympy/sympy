@@ -77,8 +77,10 @@ def test_integers():
 def test_ImageSet():
     raises(ValueError, lambda: ImageSet(x, S.Integers))
     assert ImageSet(Lambda(x, 1), S.Integers) == FiniteSet(1)
-    assert ImageSet(Lambda(x, y), S.Integers
-        ) == {y}
+    assert ImageSet(Lambda(x, y), S.Integers) == {y}
+    assert ImageSet(Lambda(x, 1), S.EmptySet) == S.EmptySet
+    assert ImageSet(Lambda(x, 1), Intersection(FiniteSet(log(2)/pi),
+        S.Integers)) != FiniteSet(1)  # issue #17471
     squares = ImageSet(Lambda(x, x**2), S.Naturals)
     assert 4 in squares
     assert 5 not in squares

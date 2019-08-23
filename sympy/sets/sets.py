@@ -748,6 +748,11 @@ class ProductSet(Set):
             raise TypeError("Not all constituent sets are iterable")
 
     @property
+    def is_empty(self):
+        if all(s.is_empty == False for s in self.sets):
+            return False
+
+    @property
     def _measure(self):
         measure = 1
         for set in self.sets:

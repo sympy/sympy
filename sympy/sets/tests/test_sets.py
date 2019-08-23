@@ -403,6 +403,12 @@ def test_ProductSet_of_single_arg_is_arg():
     assert ProductSet(Interval(0, 1)) == Interval(0, 1)
 
 
+def test_ProductSet_is_empty():
+    assert ProductSet(S.Integers, S.Reals).is_empty == False
+    assert ProductSet(Intersection(FiniteSet(sin(2)/pi), S.Integers),
+        S.Reals).is_empty == None
+
+
 def test_interval_subs():
     a = Symbol('a', real=True)
 
