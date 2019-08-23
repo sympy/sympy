@@ -66,6 +66,11 @@ class Collector(DefaultPrinting):
                 Provides the presentation of polycyclic groups with the
                 help of power and conjugate relators.
 
+        See Also
+        ========
+        
+        PolycyclicGroup
+        
         """
         self.pcgs = pcgs
         self.pc_series = pc_series
