@@ -767,7 +767,7 @@ def test_sinc():
     s = Symbol('s', zero=True)
     assert sinc(s) == S.One
     assert sinc(S.Infinity) == S.Zero
-    assert sinc(-S.Infinity) == S.Zero
+    assert sinc(S.NegativeInfinity) == S.Zero
     assert sinc(S.NaN) == S.NaN
     assert sinc(S.ComplexInfinity) == S.NaN
 

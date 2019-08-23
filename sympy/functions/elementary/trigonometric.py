@@ -1857,7 +1857,7 @@ class sinc(Function):
         if arg.is_zero:
             return S.One
         if arg.is_Number:
-            if arg in [S.Infinity, -S.Infinity]:
+            if arg in [S.Infinity, S.NegativeInfinity]:
                 return S.Zero
             elif arg is S.NaN:
                 return S.NaN

@@ -437,7 +437,7 @@ def test_is_rational_function():
 
     assert (S.NaN).is_rational_function() is False
     assert (S.Infinity).is_rational_function() is False
-    assert (-S.Infinity).is_rational_function() is False
+    assert (S.NegativeInfinity).is_rational_function() is False
     assert (S.ComplexInfinity).is_rational_function() is False
 
 

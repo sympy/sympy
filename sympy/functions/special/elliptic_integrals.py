@@ -347,7 +347,7 @@ class elliptic_pi(Function):
             elif m == S.Zero:
                 return pi/(2*sqrt(1 - n))
             elif m == S.One:
-                return -S.Infinity/sign(n - 1)
+                return S.NegativeInfinity/sign(n - 1)
             elif n == m:
                 return elliptic_e(n)/(1 - n)
             elif n in (S.Infinity, S.NegativeInfinity):

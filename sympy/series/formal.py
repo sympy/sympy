@@ -758,7 +758,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
 
     See :func:`compute_fps` for details.
     """
-    if x0 in [S.Infinity, -S.Infinity]:
+    if x0 in [S.Infinity, S.NegativeInfinity]:
         dir = S.One if x0 is S.Infinity else -S.One
         temp = f.subs(x, 1/x)
         result = _compute_fps(temp, x, 0, dir, hyper, order, rational, full)

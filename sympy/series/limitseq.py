@@ -97,7 +97,7 @@ def dominant(expr, n):
             comp = [term0]
         elif l is None:
             return None
-        elif l not in [S.Infinity, -S.Infinity]:
+        elif l not in [S.Infinity, S.NegativeInfinity]:
             comp.append(t)
     if len(comp) > 1:
         return None

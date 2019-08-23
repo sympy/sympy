@@ -501,7 +501,7 @@ def test_issue_15265():
         lambda: plot(eqn, xlim=(-1, 1), ylim=(-1, S.ImaginaryUnit)))
 
     raises(ValueError,
-        lambda: plot(eqn, xlim=(-S.Infinity, 1), ylim=(-1, 1)))
+        lambda: plot(eqn, xlim=(S.NegativeInfinity, 1), ylim=(-1, 1)))
 
     raises(ValueError,
         lambda: plot(eqn, xlim=(-1, 1), ylim=(-1, S.Infinity)))
