@@ -53,7 +53,7 @@ class Collector(DefaultPrinting):
     def __init__(self, pcgs, pc_series, relative_order, FreeGroup=None, pc_presentation=None):
         """
 
-        Most of the Parameters of Class Collector is same as PolycyclicGroup.
+        Most of the parameters for the Collector class are the same as for PolycyclicGroup.
         Others are described below.
 
         Parameters
