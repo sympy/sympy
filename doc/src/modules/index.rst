@@ -16,47 +16,47 @@ access any SymPy module, or use the list below:
 .. toctree::
    :maxdepth: 2
 
-   core.rst
+   
+   algebras.rst
+   assumptions/index.rst
+   calculus/index.rst
+   categories.rst
+   codegen.rst
    combinatorics/index.rst
-   ntheory.rst
-   crypto.rst
    concrete.rst
+   core.rst
+   crypto.rst
+   diffgeom.rst
    discrete.rst
    evalf.rst
-   codegen.rst
-   numeric-computation.rst
    functions/index.rst
    geometry/index.rst
    holonomic/index.rst
-   integrals/integrals.rst
    liealgebras/index.rst
    logic.rst
    matrices/index.rst
+   ntheory.rst
+   numeric-computation.rst
+   parsing.rst
+   physics/index.rst
+   plotting.rst
    polys/index.rst
    printing.rst
-   plotting.rst
-   assumptions/index.rst
    rewriting.rst
    series/index.rst
    sets.rst
    simplify/simplify.rst
    simplify/hyperexpand.rst
-   stats.rst
    solvers/ode.rst
    solvers/pde.rst
    solvers/solvers.rst
    solvers/diophantine.rst
    solvers/inequalities.rst
    solvers/solveset.rst
+   stats.rst
    tensor/index.rst
    utilities/index.rst
-   parsing.rst
-   calculus/index.rst
-   physics/index.rst
-   categories.rst
-   diffgeom.rst
    vector/index.rst
-   algebras.rst
 
 Contributions to docs
 ---------------------
