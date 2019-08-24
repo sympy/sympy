@@ -1951,7 +1951,7 @@ class Lambda(Expr):
 
     @property
     def signature(self):
-        """The variables used in the internal representation of the function"""
+        """The expected form of the arguments to be unpacked into variables"""
         return self._args[0]
 
     @property
@@ -1961,6 +1961,7 @@ class Lambda(Expr):
 
     @property
     def variables(self):
+        """The variables used in the internal representation of the function"""
         def _variables(args):
             if isinstance(args, Tuple):
                 for arg in args:
