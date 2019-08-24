@@ -50,7 +50,7 @@ class Collector(DefaultPrinting):
            Section 8.1.3
     """
 
-    def __init__(self, pcgs, pc_series, relative_order, FreeGroup=None, pc_presentation=None):
+    def __init__(self, pcgs, pc_series, relative_order, free_group_=None, pc_presentation=None):
         """
 
         Most of the parameters for the Collector class are the same as for PolycyclicGroup.
@@ -59,7 +59,7 @@ class Collector(DefaultPrinting):
         Parameters
         ==========
 
-        FreeGroup : tuple
+        free_group_ : tuple
                 FreeGroup provides the mapping of polycyclic generating
                 sequence with the free group elements.
         pc_presentation : dict
@@ -75,7 +75,7 @@ class Collector(DefaultPrinting):
         self.pcgs = pcgs
         self.pc_series = pc_series
         self.relative_order = relative_order
-        self.free_group = free_group('x:{0}'.format(len(pcgs)))[0] if not FreeGroup else FreeGroup
+        self.free_group = free_group('x:{0}'.format(len(pcgs)))[0] if not free_group_ else free_group_
         self.index = {s: i for i, s in enumerate(self.free_group.symbols)}
         self.pc_presentation = self.pc_relators()
 
