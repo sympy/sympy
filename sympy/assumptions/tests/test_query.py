@@ -570,6 +570,7 @@ def test_I():
     assert ask(Q.real(z)) is True
 
 
+
 def test_bounded():
     x, y, z = symbols('x,y,z')
     assert ask(Q.finite(x)) is None
@@ -800,7 +801,6 @@ def test_bounded():
         Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.positive(z)) is None
     assert ask(Q.finite(a), Q.finite(x) & Q.positive(y) &
         ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-
     assert ask(Q.finite(a), Q.finite(x) &
         Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
     assert ask(

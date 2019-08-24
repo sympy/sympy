@@ -396,7 +396,7 @@ def Beta(name, alpha, beta):
     >>> simplify(E(X))
     alpha/(alpha + beta)
 
-    >>> factor(simplify(variance(X)))  #doctest: +SKIP
+    >>> factor(simplify(variance(X)))
     alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
 
     References
