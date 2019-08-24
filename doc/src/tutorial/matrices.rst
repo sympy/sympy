@@ -426,29 +426,38 @@ matrix multiplication to never end or may be impossible to simplify afterwards.
 For this reason two separate functions - ``mul`` and ``pow`` for multiplication
 and exponentiation have been added with a flag which allows you to specify that
 an optimized intermediate simplification is to be performed at each step of
-calculation. By default these functions have the flag ``mulsimp`` set to true.
-This simplification will leave the matrix in a relatively simplified state after
-the operation and permit calculations on some large matrices which were not
-possible or extremely slow previously.
+calculation. By default these functions have the flag ``mulsimp`` set to None
+which means that intermediate simplification is not done, set this to ``True``
+to use the simplification. This will leave the matrix in a relatively simplified
+state after the operation and permit calculations on some large matrices which
+were not possible or extremely slow previously.
 
     >>> x = Symbol('x')
     >>> M = Matrix([[1+x, 1-x], [1-x, 1+x]])
     >>> M*M
-    ⎡(1 - x)**2 + (x + 1)**2,       2*(1 - x)*(x + 1)⎤
-    ⎢                                                ⎥
-    ⎣      2*(1 - x)*(x + 1), (1 - x)**2 + (x + 1)**2⎦
-    >>> M.mul(M)
-    ⎡2*x**2 + 2, 2 - 2*x**2⎤
-    ⎢                      ⎥
-    ⎣2 - 2*x**2, 2*x**2 + 2⎦
+    ⎡       2          2                     ⎤
+    ⎢(1 - x)  + (x + 1)    2⋅(1 - x)⋅(x + 1) ⎥
+    ⎢                                        ⎥
+    ⎢                            2          2⎥
+    ⎣ 2⋅(1 - x)⋅(x + 1)   (1 - x)  + (x + 1) ⎦
+    >>> M.mul(M, mulsimp=True)
+    ⎡   2             2⎤
+    ⎢2⋅x  + 2  2 - 2⋅x ⎥
+    ⎢                  ⎥
+    ⎢       2     2    ⎥
+    ⎣2 - 2⋅x   2⋅x  + 2⎦
     >>> M**2
-    ⎡(1 - x)**2 + (x + 1)**2,       2*(1 - x)*(x + 1)⎤
-    ⎢                                                ⎥
-    ⎣      2*(1 - x)*(x + 1), (1 - x)**2 + (x + 1)**2⎦
-    >>> M.pow(8)
-    ⎡128*x**8 + 128, 128 - 128*x**8⎤
-    ⎢                              ⎥
-    ⎣128 - 128*x**8, 128*x**8 + 128⎦
+    ⎡       2          2                     ⎤
+    ⎢(1 - x)  + (x + 1)    2⋅(1 - x)⋅(x + 1) ⎥
+    ⎢                                        ⎥
+    ⎢                            2          2⎥
+    ⎣ 2⋅(1 - x)⋅(x + 1)   (1 - x)  + (x + 1) ⎦
+    >>> M.pow(8, mulsimp=True)
+    ⎡     8                   8⎤
+    ⎢128⋅x  + 128  128 - 128⋅x ⎥
+    ⎢                          ⎥
+    ⎢           8       8      ⎥
+    ⎣128 - 128⋅x   128⋅x  + 128⎦
 
 Zero Testing
 ------------

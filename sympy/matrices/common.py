@@ -2178,9 +2178,9 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return self.mul(other, mulsimp=False)
+        return self.mul(other)
 
-    def mul(self, other, mulsimp=True):
+    def mul(self, other, mulsimp=None):
         """Return self*other where other is either a scalar or a matrix
         of compatible dimensions.
 
@@ -2243,9 +2243,9 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rpow__')
     def __pow__(self, exp):
-        return self.pow(exp, mulsimp=False)
+        return self.pow(exp)
 
-    def pow(self, exp, mulsimp=True):
+    def pow(self, exp, mulsimp=None, jordan=None):
         """Return self**exp a scalar or symbol.
 
         Parameters
@@ -2280,7 +2280,8 @@ class MatrixArithmetic(MatrixRequired):
             # When certain conditions are met,
             # Jordan block algorithm is faster than
             # computation by recursion.
-            elif a.rows == 2 and exp > 100000 and jordan_pow is not None:
+            elif jordan_pow is not None and (jordan or \
+                    (jordan is not False and a.rows == 2 and exp > 100000)):
                 try:
                     return jordan_pow(exp)
                 except MatrixError:
