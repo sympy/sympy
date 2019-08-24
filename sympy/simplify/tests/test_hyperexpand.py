@@ -90,8 +90,8 @@ def test_roach_fail():
 
 def test_polynomial():
     from sympy import oo
-    assert hyperexpand(hyper([], [-1], z)) == oo
-    assert hyperexpand(hyper([-2], [-1], z)) == oo
+    assert hyperexpand(hyper([], [-1], z)) is oo
+    assert hyperexpand(hyper([-2], [-1], z)) is oo
     assert hyperexpand(hyper([0, 0], [-1], z)) == 1
     assert can_do([-5, -2, randcplx(), randcplx()], [-10, randcplx()])
     assert hyperexpand(hyper((-1, 1), (-2,), z)) == 1 + z/2

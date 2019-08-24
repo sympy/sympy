@@ -463,7 +463,7 @@ def test_airybi():
     assert isinstance(airybi(z), airybi)
 
     assert airybi(0) == 3**Rational(5, 6)/(3*gamma(Rational(2, 3)))
-    assert airybi(oo) == oo
+    assert airybi(oo) is oo
     assert airybi(-oo) == 0
 
     assert diff(airybi(z), z) == airybiprime(z)
@@ -533,7 +533,7 @@ def test_airybiprime():
     assert isinstance(airybiprime(z), airybiprime)
 
     assert airybiprime(0) == 3**Rational(1, 6)/gamma(Rational(1, 3))
-    assert airybiprime(oo) == oo
+    assert airybiprime(oo) is oo
     assert airybiprime(-oo) == 0
 
     assert diff(airybiprime(z), z) == z*airybi(z)

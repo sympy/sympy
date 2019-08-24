@@ -825,7 +825,7 @@ def test_issue_11045():
         (nan, True))
     assert p.integrate((x, 1, -1)) == i.subs(y, -1)
     assert p.integrate((x, 1, 4)) == 5
-    assert p.integrate((x, 1, 5)) == nan
+    assert p.integrate((x, 1, 5)) is nan
 
     # handle Not
     p = Piecewise((1, x > 1), (2, Not(And(x > 1, x< 3))), (3, True))
@@ -856,7 +856,7 @@ def test_holes():
         (x, x < 2), (nan, True))
     assert Piecewise((1, And(x > 1, x < 2))).integrate(x) == Piecewise(
         (nan, x < 1), (x - 1, x < 2), (nan, True))
-    assert Piecewise((1, And(x > 1, x < 2))).integrate((x, 0, 3)) == nan
+    assert Piecewise((1, And(x > 1, x < 2))).integrate((x, 0, 3)) is nan
     assert Piecewise((1, And(x > 0, x < 4))).integrate((x, 1, 3)) == 2
 
     # this also tests that the integrate method is used on non-Piecwise

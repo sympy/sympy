@@ -468,7 +468,7 @@ def test__combine_inverse():
     assert Mul._combine_inverse(x*I*y, x*I) == y
     assert Mul._combine_inverse(x*x**(1 + y), x**(1 + y)) == x
     assert Mul._combine_inverse(x*I*y, y*I) == x
-    assert Mul._combine_inverse(oo*I*y, y*I) == oo
+    assert Mul._combine_inverse(oo*I*y, y*I) is oo
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
     assert Mul._combine_inverse(oo*y, -oo) == -y

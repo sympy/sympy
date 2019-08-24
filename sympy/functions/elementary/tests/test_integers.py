@@ -13,11 +13,11 @@ k, n = symbols('k,n', integer=True)
 
 def test_floor():
 
-    assert floor(nan) == nan
+    assert floor(nan) is nan
 
-    assert floor(oo) == oo
-    assert floor(-oo) == -oo
-    assert floor(zoo) == zoo
+    assert floor(oo) is oo
+    assert floor(-oo) is -oo
+    assert floor(zoo) is zoo
 
     assert floor(0) == 0
 
@@ -199,11 +199,11 @@ def test_floor():
 
 def test_ceiling():
 
-    assert ceiling(nan) == nan
+    assert ceiling(nan) is nan
 
-    assert ceiling(oo) == oo
-    assert ceiling(-oo) == -oo
-    assert ceiling(zoo) == zoo
+    assert ceiling(oo) is oo
+    assert ceiling(-oo) is -oo
+    assert ceiling(zoo) is zoo
 
     assert ceiling(0) == 0
 
@@ -389,7 +389,7 @@ def test_frac():
     assert frac(zoo) is nan
 
     assert frac(n) == 0
-    assert frac(nan) == nan
+    assert frac(nan) is nan
     assert frac(Rational(4, 3)) == Rational(1, 3)
     assert frac(-Rational(4, 3)) == Rational(2, 3)
     assert frac(Rational(-4, 3)) == Rational(2, 3)

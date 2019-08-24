@@ -15,20 +15,20 @@ def test_rf_eval_apply():
     n, k = symbols('n k', integer=True)
     m = Symbol('m', integer=True, nonnegative=True)
 
-    assert rf(nan, y) == nan
-    assert rf(x, nan) == nan
+    assert rf(nan, y) is nan
+    assert rf(x, nan) is nan
 
     assert unchanged(rf, x, y)
 
     assert rf(oo, 0) == 1
     assert rf(-oo, 0) == 1
 
-    assert rf(oo, 6) == oo
-    assert rf(-oo, 7) == -oo
-    assert rf(-oo, 6) == oo
+    assert rf(oo, 6) is oo
+    assert rf(-oo, 7) is -oo
+    assert rf(-oo, 6) is oo
 
-    assert rf(oo, -6) == oo
-    assert rf(-oo, -7) == oo
+    assert rf(oo, -6) is oo
+    assert rf(-oo, -7) is oo
 
     assert rf(-1, pi) == 0
     assert rf(-5, 1 + I) == 0
@@ -87,20 +87,20 @@ def test_ff_eval_apply():
     n, k = symbols('n k', integer=True)
     m = Symbol('m', integer=True, nonnegative=True)
 
-    assert ff(nan, y) == nan
-    assert ff(x, nan) == nan
+    assert ff(nan, y) is nan
+    assert ff(x, nan) is nan
 
     assert unchanged(ff, x, y)
 
     assert ff(oo, 0) == 1
     assert ff(-oo, 0) == 1
 
-    assert ff(oo, 6) == oo
-    assert ff(-oo, 7) == -oo
-    assert ff(-oo, 6) == oo
+    assert ff(oo, 6) is oo
+    assert ff(-oo, 7) is -oo
+    assert ff(-oo, 6) is oo
 
-    assert ff(oo, -6) == oo
-    assert ff(-oo, -7) == oo
+    assert ff(oo, -6) is oo
+    assert ff(-oo, -7) is oo
 
     assert ff(x, 0) == 1
     assert ff(x, 1) == x
@@ -182,7 +182,7 @@ def test_factorial():
     t = Symbol('t', nonnegative=True)
     u = Symbol('u', noninteger=True)
 
-    assert factorial(-2) == zoo
+    assert factorial(-2) is zoo
     assert factorial(0) == 1
     assert factorial(7) == 5040
     assert factorial(19) == 121645100408832000
@@ -215,7 +215,7 @@ def test_factorial():
     assert factorial(t).is_composite is None
     assert factorial(u).is_composite is None
 
-    assert factorial(oo) == oo
+    assert factorial(oo) is oo
 
 
 def test_factorial_Mod():
@@ -436,8 +436,8 @@ def test_binomial():
 
     assert binomial(19, Rational(-7, 2)) == S(-68719476736)/(911337863661225*pi)
     assert binomial(0, Rational(3, 2)) == S(-2)/(3*pi)
-    assert binomial(-3, Rational(-7, 2)) == zoo
-    assert binomial(kn, kt) == zoo
+    assert binomial(-3, Rational(-7, 2)) is zoo
+    assert binomial(kn, kt) is zoo
 
     assert binomial(nt, kt).func == binomial
     assert binomial(nt, Rational(15, 6)) == 8*gamma(nt + 1)/(15*sqrt(pi)*gamma(nt - Rational(3, 2)))
@@ -450,7 +450,7 @@ def test_binomial():
     from sympy import I
     assert binomial(I, Rational(-89, 8)) == gamma(1 + I)/(gamma(Rational(-81, 8))*gamma(Rational(97, 8) + I))
     assert binomial(I, 2*I) == gamma(1 + I)/(gamma(1 - I)*gamma(1 + 2*I))
-    assert binomial(-7, I) == zoo
+    assert binomial(-7, I) is zoo
     assert binomial(Rational(-7, 6), I) == gamma(Rational(-1, 6))/(gamma(Rational(-1, 6) - I)*gamma(1 + I))
     assert binomial((1+2*I), (1+3*I)) == gamma(2 + 2*I)/(gamma(1 - I)*gamma(2 + 3*I))
     assert binomial(I, 5) == Rational(1, 3) - I/S(12)
@@ -548,8 +548,8 @@ def test_factorial_simplify_fail():
 def test_subfactorial():
     assert all(subfactorial(i) == ans for i, ans in enumerate(
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
-    assert subfactorial(oo) == oo
-    assert subfactorial(nan) == nan
+    assert subfactorial(oo) is oo
+    assert subfactorial(nan) is nan
     assert unchanged(subfactorial, 2.2)
 
     x = Symbol('x')

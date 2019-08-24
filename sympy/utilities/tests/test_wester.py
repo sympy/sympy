@@ -211,7 +211,7 @@ def test_C22():
 
 
 def test_C23():
-    assert 2 * oo - 3 == oo
+    assert 2 * oo - 3 is oo
 
 
 @XFAIL
@@ -637,7 +637,7 @@ def test_I9():
 
 
 def test_I10():
-    assert trigsimp((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1)) == nan
+    assert trigsimp((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1)) is nan
 
 
 @SKIP("hangs")
@@ -2395,7 +2395,7 @@ def test_W2():
     # Test case in Macsyma:
     # (c6) errcatch(integrate(1/(x - a)^2, x, a - 1, a + 1));
     # Integral is divergent
-    assert integrate(1/(x - y)**2, (x, y - 1, y + 1)) == zoo
+    assert integrate(1/(x - y)**2, (x, y - 1, y + 1)) is zoo
 
 
 @XFAIL

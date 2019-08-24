@@ -203,9 +203,9 @@ def test_harmonic():
     assert harmonic(4, 3) == Rational(2035, 1728)
 
     assert harmonic(oo, -1) is S.NaN
-    assert harmonic(oo, 0) == oo
-    assert harmonic(oo, S.Half) == oo
-    assert harmonic(oo, 1) == oo
+    assert harmonic(oo, 0) is oo
+    assert harmonic(oo, S.Half) is oo
+    assert harmonic(oo, 1) is oo
     assert harmonic(oo, 2) == (pi**2)/6
     assert harmonic(oo, 3) == zeta(3)
 

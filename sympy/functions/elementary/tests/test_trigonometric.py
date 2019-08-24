@@ -34,8 +34,8 @@ def test_sin():
     x, y = symbols('x y')
 
     assert sin.nargs == FiniteSet(1)
-    assert sin(nan) == nan
-    assert sin(zoo) == nan
+    assert sin(nan) is nan
+    assert sin(zoo) is nan
 
     assert sin(oo) == AccumBounds(-1, 1)
     assert sin(oo) - sin(oo) == AccumBounds(-2, 2)
@@ -260,13 +260,13 @@ def test_cos():
     x, y = symbols('x y')
 
     assert cos.nargs == FiniteSet(1)
-    assert cos(nan) == nan
+    assert cos(nan) is nan
 
     assert cos(oo) == AccumBounds(-1, 1)
     assert cos(oo) - cos(oo) == AccumBounds(-2, 2)
-    assert cos(oo*I) == oo
-    assert cos(-oo*I) == oo
-    assert cos(zoo) == nan
+    assert cos(oo*I) is oo
+    assert cos(-oo*I) is oo
+    assert cos(zoo) is nan
 
     assert cos(0) == 1
 
@@ -425,9 +425,9 @@ def test_cos_fdiff():
 
 
 def test_tan():
-    assert tan(nan) == nan
+    assert tan(nan) is nan
 
-    assert tan(zoo) == nan
+    assert tan(zoo) is nan
     assert tan(oo) == AccumBounds(-oo, oo)
     assert tan(oo) - tan(oo) == AccumBounds(-oo, oo)
     assert tan.nargs == FiniteSet(1)
@@ -454,8 +454,8 @@ def test_tan():
     assert tan(-2*pi) == 0
     assert tan(-3*10**73*pi) == 0
 
-    assert tan(pi/2) == zoo
-    assert tan(pi*Rational(3, 2)) == zoo
+    assert tan(pi/2) is zoo
+    assert tan(pi*Rational(3, 2)) is zoo
 
     assert tan(pi/3) == sqrt(3)
     assert tan(pi*Rational(-2, 3)) == sqrt(3)
@@ -566,8 +566,8 @@ def test_tan_rewrite():
 def test_tan_subs():
     assert tan(x).subs(tan(x), y) == y
     assert tan(x).subs(x, y) == tan(y)
-    assert tan(x).subs(x, S.Pi/2) == zoo
-    assert tan(x).subs(x, S.Pi*Rational(3, 2)) == zoo
+    assert tan(x).subs(x, S.Pi/2) is zoo
+    assert tan(x).subs(x, S.Pi*Rational(3, 2)) is zoo
 
 
 def test_tan_expansion():
@@ -593,15 +593,15 @@ def test_tan_fdiff():
 
 
 def test_cot():
-    assert cot(nan) == nan
+    assert cot(nan) is nan
 
     assert cot.nargs == FiniteSet(1)
     assert cot(oo*I) == -I
     assert cot(-oo*I) == I
-    assert cot(zoo) == nan
+    assert cot(zoo) is nan
 
-    assert cot(0) == zoo
-    assert cot(2*pi) == zoo
+    assert cot(0) is zoo
+    assert cot(2*pi) is zoo
 
     assert cot(acot(x)) == x
     assert cot(atan(x)) == 1 / x
@@ -676,7 +676,7 @@ def test_cot():
     i = Symbol('i', imaginary=True)
     assert cot(i).is_finite is True
 
-    assert cot(x).subs(x, 3*pi) == zoo
+    assert cot(x).subs(x, 3*pi) is zoo
 
 
 def test_tan_cot_sin_cos_evalf():
@@ -734,8 +734,8 @@ def test_cot_rewrite():
 def test_cot_subs():
     assert cot(x).subs(cot(x), y) == y
     assert cot(x).subs(x, y) == cot(y)
-    assert cot(x).subs(x, 0) == zoo
-    assert cot(x).subs(x, S.Pi) == zoo
+    assert cot(x).subs(x, 0) is zoo
+    assert cot(x).subs(x, S.Pi) is zoo
 
 
 def test_cot_expansion():
@@ -790,12 +790,12 @@ def test_sinc():
 
 
 def test_asin():
-    assert asin(nan) == nan
+    assert asin(nan) is nan
 
     assert asin.nargs == FiniteSet(1)
     assert asin(oo) == -I*oo
     assert asin(-oo) == I*oo
-    assert asin(zoo) == zoo
+    assert asin(zoo) is zoo
 
     # Note: asin(-x) = - asin(x)
     assert asin(0) == 0
@@ -861,8 +861,8 @@ def test_asin_fdiff():
 
 
 def test_acos():
-    assert acos(nan) == nan
-    assert acos(zoo) == zoo
+    assert acos(nan) is nan
+    assert acos(zoo) is zoo
 
     assert acos.nargs == FiniteSet(1)
     assert acos(oo) == I*oo
@@ -933,7 +933,7 @@ def test_acos_fdiff():
 
 
 def test_atan():
-    assert atan(nan) == nan
+    assert atan(nan) is nan
 
     assert atan.nargs == FiniteSet(1)
     assert atan(oo) == pi/2
@@ -1089,7 +1089,7 @@ def test_issue_17461():
     assert abs(atan2(x, y).evalf() - 0.785398163397448) <= 1e-10
 
 def test_acot():
-    assert acot(nan) == nan
+    assert acot(nan) is nan
 
     assert acot.nargs == FiniteSet(1)
     assert acot(-oo) == 0
@@ -1240,22 +1240,22 @@ def test_issue_4420():
     assert cos(4*i*pi) == 1
     assert sin(4*i*pi) == 0
     assert tan(4*i*pi) == 0
-    assert cot(4*i*pi) == zoo
+    assert cot(4*i*pi) is zoo
 
     assert cos(3*i*pi) == cos(pi*i)  # +/-1
     assert sin(3*i*pi) == 0
     assert tan(3*i*pi) == 0
-    assert cot(3*i*pi) == zoo
+    assert cot(3*i*pi) is zoo
 
     assert cos(4.0*i*pi) == 1
     assert sin(4.0*i*pi) == 0
     assert tan(4.0*i*pi) == 0
-    assert cot(4.0*i*pi) == zoo
+    assert cot(4.0*i*pi) is zoo
 
     assert cos(3.0*i*pi) == cos(pi*i)  # +/-1
     assert sin(3.0*i*pi) == 0
     assert tan(3.0*i*pi) == 0
-    assert cot(3.0*i*pi) == zoo
+    assert cot(3.0*i*pi) is zoo
 
     assert cos(4.5*i*pi) == cos(0.5*pi*i)
     assert sin(4.5*i*pi) == sin(0.5*pi*i)
@@ -1266,22 +1266,22 @@ def test_issue_4420():
     assert cos(4*e*pi) == 1
     assert sin(4*e*pi) == 0
     assert tan(4*e*pi) == 0
-    assert cot(4*e*pi) == zoo
+    assert cot(4*e*pi) is zoo
 
     assert cos(3*e*pi) == 1
     assert sin(3*e*pi) == 0
     assert tan(3*e*pi) == 0
-    assert cot(3*e*pi) == zoo
+    assert cot(3*e*pi) is zoo
 
     assert cos(4.0*e*pi) == 1
     assert sin(4.0*e*pi) == 0
     assert tan(4.0*e*pi) == 0
-    assert cot(4.0*e*pi) == zoo
+    assert cot(4.0*e*pi) is zoo
 
     assert cos(3.0*e*pi) == 1
     assert sin(3.0*e*pi) == 0
     assert tan(3.0*e*pi) == 0
-    assert cot(3.0*e*pi) == zoo
+    assert cot(3.0*e*pi) is zoo
 
     assert cos(4.5*e*pi) == cos(0.5*pi*e)
     assert sin(4.5*e*pi) == sin(0.5*pi*e)
@@ -1291,22 +1291,22 @@ def test_issue_4420():
     assert cos(4*o*pi) == 1
     assert sin(4*o*pi) == 0
     assert tan(4*o*pi) == 0
-    assert cot(4*o*pi) == zoo
+    assert cot(4*o*pi) is zoo
 
     assert cos(3*o*pi) == -1
     assert sin(3*o*pi) == 0
     assert tan(3*o*pi) == 0
-    assert cot(3*o*pi) == zoo
+    assert cot(3*o*pi) is zoo
 
     assert cos(4.0*o*pi) == 1
     assert sin(4.0*o*pi) == 0
     assert tan(4.0*o*pi) == 0
-    assert cot(4.0*o*pi) == zoo
+    assert cot(4.0*o*pi) is zoo
 
     assert cos(3.0*o*pi) == -1
     assert sin(3.0*o*pi) == 0
     assert tan(3.0*o*pi) == 0
-    assert cot(3.0*o*pi) == zoo
+    assert cot(3.0*o*pi) is zoo
 
     assert cos(4.5*o*pi) == cos(0.5*pi*o)
     assert sin(4.5*o*pi) == sin(0.5*pi*o)
@@ -1486,14 +1486,14 @@ def test_sec():
 
     assert sec.nargs == FiniteSet(1)
 
-    assert sec(zoo) == nan
+    assert sec(zoo) is nan
     assert sec(0) == 1
     assert sec(pi) == -1
-    assert sec(pi/2) == zoo
-    assert sec(-pi/2) == zoo
+    assert sec(pi/2) is zoo
+    assert sec(-pi/2) is zoo
     assert sec(pi/6) == 2*sqrt(3)/3
     assert sec(pi/3) == 2
-    assert sec(pi*Rational(5, 2)) == zoo
+    assert sec(pi*Rational(5, 2)) is zoo
     assert sec(pi*Rational(9, 7)) == -sec(pi*Rational(2, 7))
     assert sec(pi*Rational(3, 4)) == -sqrt(2)  # issue 8421
     assert sec(I) == 1/cosh(1)
@@ -1572,9 +1572,9 @@ def test_csc():
 
     assert csc.nargs == FiniteSet(1)
 
-    assert csc(0) == zoo
-    assert csc(pi) == zoo
-    assert csc(zoo) == nan
+    assert csc(0) is zoo
+    assert csc(pi) is zoo
+    assert csc(zoo) is nan
 
     assert csc(pi/2) == 1
     assert csc(-pi/2) == -1
@@ -1627,8 +1627,8 @@ def test_csc():
 
 def test_asec():
     z = Symbol('z', zero=True)
-    assert asec(z) == zoo
-    assert asec(nan) == nan
+    assert asec(z) is zoo
+    assert asec(nan) is nan
     assert asec(1) == 0
     assert asec(-1) == pi
     assert asec(oo) == pi/2
@@ -1667,13 +1667,13 @@ def test_asec_is_real():
 
 
 def test_acsc():
-    assert acsc(nan) == nan
+    assert acsc(nan) is nan
     assert acsc(1) == pi/2
     assert acsc(-1) == -pi/2
     assert acsc(oo) == 0
     assert acsc(-oo) == 0
     assert acsc(zoo) == 0
-    assert acsc(0) == zoo
+    assert acsc(0) is zoo
 
     assert acsc(csc(3)) == -3 + pi
     assert acsc(csc(4)) == -4 + pi

@@ -20,7 +20,7 @@ n = Symbol("n", integer=True)
 
 
 def test_erf():
-    assert erf(nan) == nan
+    assert erf(nan) is nan
 
     assert erf(oo) == 1
     assert erf(-oo) == -1
@@ -105,7 +105,7 @@ def test__erfs():
 
 
 def test_erfc():
-    assert erfc(nan) == nan
+    assert erfc(nan) is nan
 
     assert erfc(oo) == 0
     assert erfc(-oo) == 2
@@ -166,7 +166,7 @@ def test_erfc_evalf():
 
 
 def test_erfi():
-    assert erfi(nan) == nan
+    assert erfi(nan) is nan
 
     assert erfi(oo) is S.Infinity
     assert erfi(-oo) is S.NegativeInfinity
@@ -228,7 +228,7 @@ def test_erf2():
 
     assert erf2(0, 0) is S.Zero
     assert erf2(x, x) is S.Zero
-    assert erf2(nan, 0) == nan
+    assert erf2(nan, 0) is nan
 
     assert erf2(-oo,  y) ==  erf(y) + 1
     assert erf2( oo,  y) ==  erf(y) - 1
@@ -308,8 +308,8 @@ def test_erf2inv():
     assert erf2inv(oo, y) == erfcinv(-y)
     assert erf2inv(x, 0) == x
     assert erf2inv(x, oo) == erfinv(x)
-    assert erf2inv(nan, 0) == nan
-    assert erf2inv(0, nan) == nan
+    assert erf2inv(nan, 0) is nan
+    assert erf2inv(0, nan) is nan
 
     assert erf2inv(x, y).diff(x) == exp(-x**2 + erf2inv(x, y)**2)
     assert erf2inv(x, y).diff(y) == sqrt(pi)*exp(erf2inv(x, y)**2)/2
@@ -483,8 +483,8 @@ def test_li():
     zn = Symbol("z", negative=True)
 
     assert li(0) == 0
-    assert li(1) == -oo
-    assert li(oo) == oo
+    assert li(1) is -oo
+    assert li(oo) is oo
 
     assert isinstance(li(z), li)
     assert unchanged(li, -zp)
@@ -520,7 +520,7 @@ def test_li():
 
 def test_Li():
     assert Li(2) == 0
-    assert Li(oo) == oo
+    assert Li(oo) is oo
 
     assert isinstance(Li(z), Li)
 
@@ -545,8 +545,8 @@ def test_si():
 
     assert Si(oo) == pi/2
     assert Si(-oo) == -pi/2
-    assert Shi(oo) == oo
-    assert Shi(-oo) == -oo
+    assert Shi(oo) is oo
+    assert Shi(-oo) is -oo
 
     assert mytd(Si(x), sin(x)/x, x)
     assert mytd(Shi(x), sinh(x)/x, x)
@@ -598,8 +598,8 @@ def test_ci():
 
     assert Ci(oo) == 0
     assert Ci(-oo) == I*pi
-    assert Chi(oo) == oo
-    assert Chi(-oo) == oo
+    assert Chi(oo) is oo
+    assert Chi(-oo) is oo
 
     assert mytd(Ci(x), cos(x)/x, x)
     assert mytd(Chi(x), cosh(x)/x, x)

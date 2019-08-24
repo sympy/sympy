@@ -16,8 +16,8 @@ s = Symbol('s')
 
 def test_zeta_eval():
 
-    assert zeta(nan) == nan
-    assert zeta(x, nan) == nan
+    assert zeta(nan) is nan
+    assert zeta(x, nan) is nan
 
     assert zeta(0) == Rational(-1, 2)
     assert zeta(0, x) == S.Half - x
@@ -202,8 +202,8 @@ def test_stieltjes():
     assert stieltjes(0, 1) == S.EulerGamma
 
     # Not defined
-    assert stieltjes(nan) == nan
-    assert stieltjes(0, nan) == nan
+    assert stieltjes(nan) is nan
+    assert stieltjes(0, nan) is nan
     assert stieltjes(-1) is S.ComplexInfinity
     assert stieltjes(1.5) is S.ComplexInfinity
     assert stieltjes(z, 0) is S.ComplexInfinity

@@ -1028,7 +1028,7 @@ def point_sort(poly, normal=None, clockwise=True):
                         sum(map(lambda vertex: vertex.z, pts)) / n)
 
     def compare(a, b):
-        if a.x - center.x >= 0 and b.x - center.x < 0:
+        if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
             return -order
         elif a.x - center.x < 0 and b.x - center.x >= 0:
             return order

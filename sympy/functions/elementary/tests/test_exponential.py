@@ -13,9 +13,9 @@ from sympy.utilities.pytest import raises, XFAIL
 def test_exp_values():
     k = Symbol('k', integer=True)
 
-    assert exp(nan) == nan
+    assert exp(nan) is nan
 
-    assert exp(oo) == oo
+    assert exp(oo) is oo
     assert exp(-oo) == 0
 
     assert exp(0) == 1
@@ -104,10 +104,10 @@ def test_exp__as_base_exp():
 
 def test_exp_infinity():
     assert exp(I*y) != nan
-    assert refine(exp(I*oo)) == nan
-    assert refine(exp(-I*oo)) == nan
+    assert refine(exp(I*oo)) is nan
+    assert refine(exp(-I*oo)) is nan
     assert exp(y*I*oo) != nan
-    assert exp(zoo) == nan
+    assert exp(zoo) is nan
 
 
 def test_exp_subs():
@@ -185,15 +185,15 @@ def test_exp_fdiff():
 
 
 def test_log_values():
-    assert log(nan) == nan
+    assert log(nan) is nan
 
-    assert log(oo) == oo
-    assert log(-oo) == oo
+    assert log(oo) is oo
+    assert log(-oo) is oo
 
-    assert log(zoo) == zoo
-    assert log(-zoo) == zoo
+    assert log(zoo) is zoo
+    assert log(-zoo) is zoo
 
-    assert log(0) == zoo
+    assert log(0) is zoo
 
     assert log(1) == 0
     assert log(-1) == I*pi
@@ -213,10 +213,10 @@ def test_log_values():
     assert log(17*I) == I*pi/2 + log(17)
     assert log(-17*I).expand() == -I*pi/2 + log(17)
 
-    assert log(oo*I) == oo
-    assert log(-oo*I) == oo
-    assert log(0, 2) == zoo
-    assert log(0, 5) == zoo
+    assert log(oo*I) is oo
+    assert log(-oo*I) is oo
+    assert log(0, 2) is zoo
+    assert log(0, 5) is zoo
 
     assert exp(-log(3))**(-1) == 3
 
@@ -274,7 +274,7 @@ def test_log_exact():
 
     zero = (1 + sqrt(2))**2 - 3 - 2*sqrt(2)
     assert log(zero - I*sqrt(3)) == log(sqrt(3)) - I*pi/2
-    assert unchanged(log, zero + I*zero) or log(zero + zero*I) == zoo
+    assert unchanged(log, zero + I*zero) or log(zero + zero*I) is zoo
 
     # bail quickly if no obvious simplification is possible:
     assert unchanged(log, (sqrt(2)-1/sqrt(sqrt(3)+I))**1000)
@@ -290,8 +290,8 @@ def test_log_base():
     assert log(6, 3) == 1 + log(2)/log(3)
     assert log(2**3, 2) == 3
     assert log(3**3, 3) == 3
-    assert log(5, 1) == zoo
-    assert log(1, 1) == nan
+    assert log(5, 1) is zoo
+    assert log(1, 1) is nan
     assert log(Rational(2, 3), 10) == log(Rational(2, 3))/log(10)
     assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
     assert log(Rational(2, 3), Rational(2, 5)) == \
@@ -482,9 +482,9 @@ def test_lambertw():
     assert LambertW(E) == 1
     assert LambertW(-1/E) == -1
     assert LambertW(-log(2)/2) == -log(2)
-    assert LambertW(oo) == oo
-    assert LambertW(0, 1) == -oo
-    assert LambertW(0, 42) == -oo
+    assert LambertW(oo) is oo
+    assert LambertW(0, 1) is -oo
+    assert LambertW(0, 42) is -oo
     assert LambertW(-pi/2, -1) == -I*pi/2
     assert LambertW(-1/E, -1) == -1
     assert LambertW(-2*exp(-2), -1) == -2

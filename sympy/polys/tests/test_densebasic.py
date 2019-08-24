@@ -95,24 +95,24 @@ def test_dmp_true_LT():
 
 
 def test_dup_degree():
-    assert dup_degree([]) == -oo
+    assert dup_degree([]) is -oo
     assert dup_degree([1]) == 0
     assert dup_degree([1, 0]) == 1
     assert dup_degree([1, 0, 0, 0, 1]) == 4
 
 
 def test_dmp_degree():
-    assert dmp_degree([[]], 1) == -oo
-    assert dmp_degree([[[]]], 2) == -oo
+    assert dmp_degree([[]], 1) is -oo
+    assert dmp_degree([[[]]], 2) is -oo
 
     assert dmp_degree([[1]], 1) == 0
     assert dmp_degree([[2], [1]], 1) == 1
 
 
 def test_dmp_degree_in():
-    assert dmp_degree_in([[[]]], 0, 2) == -oo
-    assert dmp_degree_in([[[]]], 1, 2) == -oo
-    assert dmp_degree_in([[[]]], 2, 2) == -oo
+    assert dmp_degree_in([[[]]], 0, 2) is -oo
+    assert dmp_degree_in([[[]]], 1, 2) is -oo
+    assert dmp_degree_in([[[]]], 2, 2) is -oo
 
     assert dmp_degree_in([[[1]]], 0, 2) == 0
     assert dmp_degree_in([[[1]]], 1, 2) == 0

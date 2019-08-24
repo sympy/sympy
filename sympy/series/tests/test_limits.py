@@ -20,38 +20,38 @@ n = Symbol('n', integer=True, positive=True)
 
 def test_basic1():
     assert limit(x, x, oo) is oo
-    assert limit(x, x, -oo) == -oo
-    assert limit(-x, x, oo) == -oo
+    assert limit(x, x, -oo) is -oo
+    assert limit(-x, x, oo) is -oo
     assert limit(x**2, x, -oo) is oo
-    assert limit(-x**2, x, oo) == -oo
+    assert limit(-x**2, x, oo) is -oo
     assert limit(x*log(x), x, 0, dir="+") == 0
     assert limit(1/x, x, oo) == 0
     assert limit(exp(x), x, oo) is oo
-    assert limit(-exp(x), x, oo) == -oo
+    assert limit(-exp(x), x, oo) is -oo
     assert limit(exp(x)/x, x, oo) is oo
     assert limit(1/x - exp(-x), x, oo) == 0
     assert limit(x + 1/x, x, oo) is oo
-    assert limit(x - x**2, x, oo) == -oo
+    assert limit(x - x**2, x, oo) is -oo
     assert limit((1 + x)**(1 + sqrt(2)), x, 0) == 1
     assert limit((1 + x)**oo, x, 0) is oo
     assert limit((1 + x)**oo, x, 0, dir='-') == 0
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
-    assert limit(y/x/log(x), x, 0) == -oo*sign(y)
+    assert limit(y/x/log(x), x, 0) is -oo*sign(y)
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) is S.NaN
     assert limit(Order(2)*x, x, S.NaN) is S.NaN
     assert limit(1/(x - 1), x, 1, dir="+") is oo
-    assert limit(1/(x - 1), x, 1, dir="-") == -oo
-    assert limit(1/(5 - x)**3, x, 5, dir="+") == -oo
+    assert limit(1/(x - 1), x, 1, dir="-") is -oo
+    assert limit(1/(5 - x)**3, x, 5, dir="+") is -oo
     assert limit(1/(5 - x)**3, x, 5, dir="-") is oo
-    assert limit(1/sin(x), x, pi, dir="+") == -oo
+    assert limit(1/sin(x), x, pi, dir="+") is -oo
     assert limit(1/sin(x), x, pi, dir="-") is oo
-    assert limit(1/cos(x), x, pi/2, dir="+") == -oo
+    assert limit(1/cos(x), x, pi/2, dir="+") is -oo
     assert limit(1/cos(x), x, pi/2, dir="-") is oo
     assert limit(1/tan(x**3), x, (2*pi)**Rational(1, 3), dir="+") is oo
-    assert limit(1/tan(x**3), x, (2*pi)**Rational(1, 3), dir="-") == -oo
-    assert limit(1/cot(x)**3, x, (pi*Rational(3, 2)), dir="+") == -oo
+    assert limit(1/tan(x**3), x, (2*pi)**Rational(1, 3), dir="-") is -oo
+    assert limit(1/cot(x)**3, x, (pi*Rational(3, 2)), dir="+") is -oo
     assert limit(1/cot(x)**3, x, (pi*Rational(3, 2)), dir="-") is oo
 
     # test bi-directional limits
@@ -66,10 +66,10 @@ def test_basic1():
     assert limit(1 + 1/x, x, 0) is oo
     # from dir='-'
     # Add
-    assert limit(1 + 1/x, x, 0, dir='-') == -oo
+    assert limit(1 + 1/x, x, 0, dir='-') is -oo
     # Pow
     assert limit(x**(-2), x, 0, dir='-') is oo
-    assert limit(x**(-3), x, 0, dir='-') == -oo
+    assert limit(x**(-3), x, 0, dir='-') is -oo
     assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(sqrt(x), x, 0, dir='-') == 0
@@ -90,7 +90,7 @@ def test_basic2():
 
 def test_basic3():
     assert limit(1/x, x, 0, dir="+") is oo
-    assert limit(1/x, x, 0, dir="-") == -oo
+    assert limit(1/x, x, 0, dir="-") is -oo
 
 
 def test_basic4():
@@ -266,7 +266,7 @@ def test_issue_4547():
 
 
 def test_issue_5164():
-    assert limit(x**0.5, x, oo) == oo**0.5 == oo
+    assert limit(x**0.5, x, oo) == oo**0.5 is oo
     assert limit(x**0.5, x, 16) == S(16)**0.5
     assert limit(x**0.5, x, 0) == 0
     assert limit(x**(-0.5), x, oo) == 0
@@ -357,13 +357,13 @@ def test_newissue():
 
 
 def test_extended_real_line():
-    assert limit(x - oo, x, oo) == -oo
+    assert limit(x - oo, x, oo) is -oo
     assert limit(oo - x, x, -oo) is oo
-    assert limit(x**2/(x - 5) - oo, x, oo) == -oo
-    assert limit(1/(x + sin(x)) - oo, x, 0) == -oo
+    assert limit(x**2/(x - 5) - oo, x, oo) is -oo
+    assert limit(1/(x + sin(x)) - oo, x, 0) is -oo
     assert limit(oo/x, x, oo) is oo
-    assert limit(x - oo + 1/x, x, oo) == -oo
-    assert limit(x - oo + 1/x, x, 0) == -oo
+    assert limit(x - oo + 1/x, x, oo) is -oo
+    assert limit(x - oo + 1/x, x, 0) is -oo
 
 
 @XFAIL
@@ -517,7 +517,7 @@ def test_issue_14456():
 
 
 def test_issue_14411():
-    assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2)) == -oo
+    assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2)) is -oo
 
 
 def test_issue_14574():

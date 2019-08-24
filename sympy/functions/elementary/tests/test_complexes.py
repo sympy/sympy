@@ -22,10 +22,10 @@ def test_re():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
 
-    assert re(nan) == nan
+    assert re(nan) is nan
 
-    assert re(oo) == oo
-    assert re(-oo) == -oo
+    assert re(oo) is oo
+    assert re(-oo) is -oo
 
     assert re(0) == 0
 
@@ -118,10 +118,10 @@ def test_im():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
 
-    assert im(nan) == nan
+    assert im(nan) is nan
 
-    assert im(oo*I) == oo
-    assert im(-oo*I) == -oo
+    assert im(oo*I) is oo
+    assert im(-oo*I) is -oo
 
     assert im(0) == 0
 
@@ -206,7 +206,7 @@ def test_sign():
     assert sign(3*I) == I
     assert sign(-3*I) == -I
     assert sign(0) == 0
-    assert sign(nan) == nan
+    assert sign(nan) is nan
     assert sign(2 + 2*I).doit() == sqrt(2)*(2 + 2*I)/4
     assert sign(2 + 3*I).simplify() == sign(2 + 3*I)
     assert sign(2 + 2*I).simplify() == sign(1 + I)
@@ -372,8 +372,8 @@ def test_Abs():
     assert Abs(-1) == 1
     assert Abs(I) == 1
     assert Abs(-I) == 1
-    assert Abs(nan) == nan
-    assert Abs(zoo) == oo
+    assert Abs(nan) is nan
+    assert Abs(zoo) is oo
     assert Abs(I * pi) == pi
     assert Abs(-I * pi) == pi
     assert Abs(I * x) == Abs(x)
@@ -572,7 +572,7 @@ def test_abs():
 
 
 def test_arg():
-    assert arg(0) == nan
+    assert arg(0) is nan
     assert arg(1) == 0
     assert arg(-1) == pi
     assert arg(I) == pi/2

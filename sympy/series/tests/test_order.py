@@ -243,7 +243,7 @@ def test_order_symbols():
 
 
 def test_nan():
-    assert O(nan) == nan
+    assert O(nan) is nan
     assert not O(x).contains(nan)
 
 

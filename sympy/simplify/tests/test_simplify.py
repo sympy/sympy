@@ -429,7 +429,7 @@ def test_extract_minus_sign():
     assert simplify(x/y) == x/y
     assert simplify(x/-y) == -x/y
     assert simplify(-x/0) == zoo*x
-    assert simplify(Rational(-5, 0)) == zoo
+    assert simplify(Rational(-5, 0)) is zoo
     assert simplify(-a*x/(-y - b)) == a*x/(b + y)
 
 

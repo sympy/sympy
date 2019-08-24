@@ -31,10 +31,10 @@ def test_order_at():
     assert order_at(c, p2, t) == 6
     assert order_at(d, p1, t) == 10
     assert order_at(e, p2, t) == 100
-    assert order_at(Poly(0, t), Poly(t, t), t) == oo
+    assert order_at(Poly(0, t), Poly(t, t), t) is oo
     assert order_at_oo(Poly(t**2 - 1, t), Poly(t + 1), t) == \
         order_at_oo(Poly(t - 1, t), Poly(1, t), t) == -1
-    assert order_at_oo(Poly(0, t), Poly(1, t), t) == oo
+    assert order_at_oo(Poly(0, t), Poly(1, t), t) is oo
 
 def test_weak_normalizer():
     a = Poly((1 + x)*t**5 + 4*t**4 + (-1 - 3*x)*t**3 - 4*t**2 + (-2 + 2*x)*t, t)

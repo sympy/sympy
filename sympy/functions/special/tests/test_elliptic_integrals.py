@@ -13,7 +13,7 @@ j = Symbol('k', integer=True, positive=True)
 def test_K():
     assert K(0) == pi/2
     assert K(S.Half) == 8*pi**Rational(3, 2)/gamma(Rational(-1, 4))**2
-    assert K(1) == zoo
+    assert K(1) is zoo
     assert K(-1) == gamma(Rational(1, 4))**2/(4*sqrt(2*pi))
     assert K(oo) == 0
     assert K(-oo) == 0
@@ -69,13 +69,13 @@ def test_E():
     assert E(z, 0) == z
     assert E(0, m) == 0
     assert E(i*pi/2, m) == i*E(m)
-    assert E(z, oo) == zoo
-    assert E(z, -oo) == zoo
+    assert E(z, oo) is zoo
+    assert E(z, -oo) is zoo
     assert E(0) == pi/2
     assert E(1) == 1
     assert E(oo) == I*oo
-    assert E(-oo) == oo
-    assert E(zoo) == zoo
+    assert E(-oo) is oo
+    assert E(zoo) is zoo
 
     assert E(-z, m) == -E(z, m)
 
@@ -118,10 +118,10 @@ def test_P():
     assert P(n, z, oo) == 0
     assert P(n, z, -oo) == 0
     assert P(0, m) == K(m)
-    assert P(1, m) == zoo
+    assert P(1, m) is zoo
     assert P(n, 0) == pi/(2*sqrt(1 - n))
-    assert P(2, 1) == -oo
-    assert P(-1, 1) == oo
+    assert P(2, 1) is -oo
+    assert P(-1, 1) is oo
     assert P(n, n) == E(n)/(1 - n)
 
     assert P(n, -z, m) == -P(n, z, m)

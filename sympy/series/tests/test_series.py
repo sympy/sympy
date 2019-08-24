@@ -60,7 +60,7 @@ def test_issue_5223():
     assert (1 + x + O(x**2)).getn() == 2
     assert (1 + x).getn() is None
 
-    assert ((1/sin(x))**oo).series() == oo
+    assert ((1/sin(x))**oo).series() is oo
     logx = Symbol('logx')
     assert ((sin(x))**y).nseries(x, n=1, logx=logx) == \
         exp(y*logx) + O(x*exp(y*logx), x)

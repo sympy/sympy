@@ -88,7 +88,7 @@ def test_gruntz_evaluation_slow():
     _sskip()
     # 8.4
     assert gruntz(exp(exp(exp(x)/(1 - 1/x)))
-                  - exp(exp(exp(x)/(1 - 1/x - log(x)**(-log(x))))), x, oo) == -oo
+                  - exp(exp(exp(x)/(1 - 1/x - log(x)**(-log(x))))), x, oo) is -oo
     # 8.18
     assert gruntz((exp(exp(-x/(1 + exp(-x))))*exp(-x/(1 + exp(-x/(1 + exp(-x)))))
                    *exp(exp(-x + exp(-x/(1 + exp(-x))))))
@@ -146,7 +146,7 @@ def test_gruntz_hyperbolic():
     assert gruntz(cosh(x), x, oo) is oo
     assert gruntz(cosh(x), x, -oo) is oo
     assert gruntz(sinh(x), x, oo) is oo
-    assert gruntz(sinh(x), x, -oo) == -oo
+    assert gruntz(sinh(x), x, -oo) is -oo
     assert gruntz(2*cosh(x)*exp(x), x, oo) is oo
     assert gruntz(2*cosh(x)*exp(x), x, -oo) == 1
     assert gruntz(2*sinh(x)*exp(x), x, oo) is oo
@@ -343,14 +343,14 @@ def test_mrv_leadterm3():
 
 def test_limit1():
     assert gruntz(x, x, oo) is oo
-    assert gruntz(x, x, -oo) == -oo
-    assert gruntz(-x, x, oo) == -oo
+    assert gruntz(x, x, -oo) is -oo
+    assert gruntz(-x, x, oo) is -oo
     assert gruntz(x**2, x, -oo) is oo
-    assert gruntz(-x**2, x, oo) == -oo
+    assert gruntz(-x**2, x, oo) is -oo
     assert gruntz(x*log(x), x, 0, dir="+") == 0
     assert gruntz(1/x, x, oo) == 0
     assert gruntz(exp(x), x, oo) is oo
-    assert gruntz(-exp(x), x, oo) == -oo
+    assert gruntz(-exp(x), x, oo) is -oo
     assert gruntz(exp(x)/x, x, oo) is oo
     assert gruntz(1/x - exp(-x), x, oo) == 0
     assert gruntz(x + 1/x, x, oo) is oo
@@ -418,7 +418,7 @@ def test_intractable():
 def test_aseries_trig():
     assert cancel(gruntz(1/log(atan(x)), x, oo)
            - 1/(log(pi) + log(S.Half))) == 0
-    assert gruntz(1/acot(x), x, -oo) == -oo
+    assert gruntz(1/acot(x), x, -oo) is -oo
 
 
 def test_exp_log_series():

@@ -242,7 +242,7 @@ def test_geometric_sums():
     assert summation(x**n, (n, 0, oo)) == \
         Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**n, (n, 0, oo)), True))
 
-    assert summation(-2**n, (n, 0, oo)) == -oo
+    assert summation(-2**n, (n, 0, oo)) is -oo
     assert summation(I**n, (n, 0, oo)) == Sum(I**n, (n, 0, oo))
 
     # issue 6802:

@@ -163,7 +163,7 @@ def test_lens_formula():
     assert lens_formula(u=oo, v=oo) is oo
     assert lens_formula(focal_length=oo, u=u) == u
     assert lens_formula(u=u, v=oo) == -u
-    assert lens_formula(focal_length=oo, v=oo) == -oo
+    assert lens_formula(focal_length=oo, v=oo) is -oo
     assert lens_formula(focal_length=oo, v=v) == v
     assert lens_formula(focal_length=f, v=oo) == -f
     assert lens_formula(focal_length=oo, u=oo) is oo

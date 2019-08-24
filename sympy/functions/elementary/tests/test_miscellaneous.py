@@ -30,19 +30,19 @@ def test_Min():
     r = Symbol('r', real=True)
 
     assert Min(5, 4) == 4
-    assert Min(-oo, -oo) == -oo
-    assert Min(-oo, n) == -oo
-    assert Min(n, -oo) == -oo
-    assert Min(-oo, np) == -oo
-    assert Min(np, -oo) == -oo
-    assert Min(-oo, 0) == -oo
-    assert Min(0, -oo) == -oo
-    assert Min(-oo, nn) == -oo
-    assert Min(nn, -oo) == -oo
-    assert Min(-oo, p) == -oo
-    assert Min(p, -oo) == -oo
-    assert Min(-oo, oo) == -oo
-    assert Min(oo, -oo) == -oo
+    assert Min(-oo, -oo) is -oo
+    assert Min(-oo, n) is -oo
+    assert Min(n, -oo) is -oo
+    assert Min(-oo, np) is -oo
+    assert Min(np, -oo) is -oo
+    assert Min(-oo, 0) is -oo
+    assert Min(0, -oo) is -oo
+    assert Min(-oo, nn) is -oo
+    assert Min(nn, -oo) is -oo
+    assert Min(-oo, p) is -oo
+    assert Min(p, -oo) is -oo
+    assert Min(-oo, oo) is -oo
+    assert Min(oo, -oo) is -oo
     assert Min(n, n) == n
     assert unchanged(Min, n, np)
     assert Min(np, n) == Min(n, np)
@@ -78,7 +78,7 @@ def test_Min():
     assert Min(p, p) == p
     assert Min(p, oo) == p
     assert Min(oo, p) == p
-    assert Min(oo, oo) == oo
+    assert Min(oo, oo) is oo
 
     assert Min(n, n_).func is Min
     assert Min(nn, nn_).func is Min

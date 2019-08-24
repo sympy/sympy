@@ -557,8 +557,8 @@ def test_measure():
     assert (square - offsetsquare).measure == 75
     assert (square * FiniteSet(1, 2, 3)).measure == 0
     assert (square.intersect(band)).measure == 20
-    assert (square + band).measure == oo
-    assert (band * FiniteSet(1, 2, 3)).measure == nan
+    assert (square + band).measure is oo
+    assert (band * FiniteSet(1, 2, 3)).measure is nan
 
 
 def test_is_subset():

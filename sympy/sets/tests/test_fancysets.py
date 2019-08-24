@@ -31,7 +31,7 @@ def test_naturals():
     assert N.boundary == N
 
     assert N.inf == 1
-    assert N.sup == oo
+    assert N.sup is oo
     assert not N.contains(oo)
     for s in (S.Naturals0, S.Naturals):
         assert s.intersection(S.Reals) is s
@@ -67,8 +67,8 @@ def test_integers():
     assert Z.intersect(Interval(5, S.Infinity)) == Range(5, S.Infinity)
     assert Z.intersect(Interval.Lopen(5, S.Infinity)) == Range(6, S.Infinity)
 
-    assert Z.inf == -oo
-    assert Z.sup == oo
+    assert Z.inf is -oo
+    assert Z.sup is oo
 
     assert Z.boundary == Z
 
@@ -214,6 +214,11 @@ def test_Range_set():
     assert inf not in Range(-oo, oo)
     raises(ValueError, lambda: Range(0, oo, 2)[-1])
     raises(ValueError, lambda: Range(0, -oo, -2)[-1])
+    assert Range(-oo, 1, 1)[-1] is S.Zero
+    assert Range(oo, 1, -1)[-1] == 2
+    assert inf not in Range(oo)
+    inf = symbols('inf', infinite=True)
+    assert inf not in Range(oo)
     assert Range(-oo, 1, 1)[-1] is S.Zero
     assert Range(oo, 1, -1)[-1] == 2
     assert Range(1, 10, 1)[-1] == 9
@@ -906,8 +911,8 @@ def test_Rationals():
     assert S.Naturals.is_subset(S.Rationals)
     assert S.Naturals0.is_subset(S.Rationals)
     assert S.Rationals.is_subset(S.Reals)
-    assert S.Rationals.inf == -oo
-    assert S.Rationals.sup == oo
+    assert S.Rationals.inf is -oo
+    assert S.Rationals.sup is oo
     it = iter(S.Rationals)
     assert [next(it) for i in range(12)] == [
         0, 1, -1, S.Half, 2, Rational(-1, 2), -2,

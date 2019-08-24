@@ -13,11 +13,11 @@ def test_sinh():
 
     k = Symbol('k', integer=True)
 
-    assert sinh(nan) == nan
-    assert sinh(zoo) == nan
+    assert sinh(nan) is nan
+    assert sinh(zoo) is nan
 
-    assert sinh(oo) == oo
-    assert sinh(-oo) == -oo
+    assert sinh(oo) is oo
+    assert sinh(-oo) is -oo
 
     assert sinh(0) == 0
 
@@ -95,11 +95,11 @@ def test_cosh():
 
     k = Symbol('k', integer=True)
 
-    assert cosh(nan) == nan
-    assert cosh(zoo) == nan
+    assert cosh(nan) is nan
+    assert cosh(zoo) is nan
 
-    assert cosh(oo) == oo
-    assert cosh(-oo) == oo
+    assert cosh(oo) is oo
+    assert cosh(-oo) is oo
 
     assert cosh(0) == 1
 
@@ -175,8 +175,8 @@ def test_tanh():
 
     k = Symbol('k', integer=True)
 
-    assert tanh(nan) == nan
-    assert tanh(zoo) == nan
+    assert tanh(nan) is nan
+    assert tanh(zoo) is nan
 
     assert tanh(oo) == 1
     assert tanh(-oo) == -1
@@ -202,10 +202,10 @@ def test_tanh():
     assert tanh(-3*10**73*pi*I) == 0
     assert tanh(7*10**103*pi*I) == 0
 
-    assert tanh(pi*I/2) == zoo
-    assert tanh(-pi*I/2) == zoo
-    assert tanh(pi*I*Rational(5, 2)) == zoo
-    assert tanh(pi*I*Rational(7, 2)) == zoo
+    assert tanh(pi*I/2) is zoo
+    assert tanh(-pi*I/2) is zoo
+    assert tanh(pi*I*Rational(5, 2)) is zoo
+    assert tanh(pi*I*Rational(7, 2)) is zoo
 
     assert tanh(pi*I/3) == sqrt(3)*I
     assert tanh(pi*I*Rational(-2, 3)) == sqrt(3)*I
@@ -255,13 +255,13 @@ def test_coth():
 
     k = Symbol('k', integer=True)
 
-    assert coth(nan) == nan
-    assert coth(zoo) == nan
+    assert coth(nan) is nan
+    assert coth(zoo) is nan
 
     assert coth(oo) == 1
     assert coth(-oo) == -1
 
-    assert coth(0) == zoo
+    assert coth(0) is zoo
     assert unchanged(coth, 1)
     assert coth(-1) == -coth(1)
 
@@ -338,13 +338,13 @@ def test_csch():
     k = Symbol('k', integer=True)
     n = Symbol('n', positive=True)
 
-    assert csch(nan) == nan
-    assert csch(zoo) == nan
+    assert csch(nan) is nan
+    assert csch(zoo) is nan
 
     assert csch(oo) == 0
     assert csch(-oo) == 0
 
-    assert csch(0) == zoo
+    assert csch(0) is zoo
 
     assert csch(-1) == -csch(1)
 
@@ -352,12 +352,12 @@ def test_csch():
     assert csch(-pi) == -csch(pi)
     assert csch(-2**1024 * E) == -csch(2**1024 * E)
 
-    assert csch(pi*I) == zoo
-    assert csch(-pi*I) == zoo
-    assert csch(2*pi*I) == zoo
-    assert csch(-2*pi*I) == zoo
-    assert csch(-3*10**73*pi*I) == zoo
-    assert csch(7*10**103*pi*I) == zoo
+    assert csch(pi*I) is zoo
+    assert csch(-pi*I) is zoo
+    assert csch(2*pi*I) is zoo
+    assert csch(-2*pi*I) is zoo
+    assert csch(-3*10**73*pi*I) is zoo
+    assert csch(7*10**103*pi*I) is zoo
 
     assert csch(pi*I/2) == -I
     assert csch(-pi*I/2) == I
@@ -383,8 +383,8 @@ def test_csch():
 
     assert csch(x*I) == -1/sin(x)*I
 
-    assert csch(k*pi*I) == zoo
-    assert csch(17*k*pi*I) == zoo
+    assert csch(k*pi*I) is zoo
+    assert csch(17*k*pi*I) is zoo
 
     assert csch(k*pi*I/2) == -1/sin(k*pi/2)*I
 
@@ -409,8 +409,8 @@ def test_sech():
     k = Symbol('k', integer=True)
     n = Symbol('n', positive=True)
 
-    assert sech(nan) == nan
-    assert sech(zoo) == nan
+    assert sech(nan) is nan
+    assert sech(zoo) is nan
 
     assert sech(oo) == 0
     assert sech(-oo) == 0
@@ -425,10 +425,10 @@ def test_sech():
     assert sech(-pi*I) == sec(pi)
     assert sech(-2**1024 * E) == sech(2**1024 * E)
 
-    assert sech(pi*I/2) == zoo
-    assert sech(-pi*I/2) == zoo
-    assert sech((-3*10**73 + 1)*pi*I/2) == zoo
-    assert sech((7*10**103 + 1)*pi*I/2) == zoo
+    assert sech(pi*I/2) is zoo
+    assert sech(-pi*I/2) is zoo
+    assert sech((-3*10**73 + 1)*pi*I/2) is zoo
+    assert sech((7*10**103 + 1)*pi*I/2) is zoo
 
     assert sech(pi*I) == -1
     assert sech(-pi*I) == -1
@@ -476,7 +476,7 @@ def test_asinh():
     assert asinh(-x) == -asinh(x)
 
     #at specific points
-    assert asinh(nan) == nan
+    assert asinh(nan) is nan
     assert asinh( 0) == 0
     assert asinh(+1) == log(sqrt(2) + 1)
 
@@ -487,13 +487,13 @@ def test_asinh():
     assert asinh(-I/2) == -pi*I/6
 
     # at infinites
-    assert asinh(oo) == oo
-    assert asinh(-oo) == -oo
+    assert asinh(oo) is oo
+    assert asinh(-oo) is -oo
 
-    assert asinh(I*oo) == oo
-    assert asinh(-I *oo) == -oo
+    assert asinh(I*oo) is oo
+    assert asinh(-I *oo) is -oo
 
-    assert asinh(zoo) == zoo
+    assert asinh(zoo) is zoo
 
     #properties
     assert asinh(I *(sqrt(3) - 1)/(2**Rational(3, 2))) == pi*I/12
@@ -553,16 +553,16 @@ def test_acosh():
     assert acosh(0) == I*pi/2
     assert acosh(S.Half) == I*pi/3
     assert acosh(Rational(-1, 2)) == pi*I*Rational(2, 3)
-    assert acosh(nan) == nan
+    assert acosh(nan) is nan
 
     # at infinites
-    assert acosh(oo) == oo
-    assert acosh(-oo) == oo
+    assert acosh(oo) is oo
+    assert acosh(-oo) is oo
 
     assert acosh(I*oo) == oo + I*pi/2
     assert acosh(-I*oo) == oo - I*pi/2
 
-    assert acosh(zoo) == zoo
+    assert acosh(zoo) is zoo
 
     assert acosh(I) == log(I*(1 + sqrt(2)))
     assert acosh(-I) == log(-I*(1 + sqrt(2)))
@@ -628,10 +628,10 @@ def test_asech():
     # values at fixed points
     assert asech(1) == 0
     assert asech(-1) == pi*I
-    assert asech(0) == oo
+    assert asech(0) is oo
     assert asech(2) == I*pi/3
     assert asech(-2) == 2*I*pi / 3
-    assert asech(nan) == nan
+    assert asech(nan) is nan
 
     # at infinites
     assert asech(oo) == I*pi/2
@@ -704,7 +704,7 @@ def test_acsch():
     # values at fixed points
     assert acsch(1) == log(1 + sqrt(2))
     assert acsch(-1) == - log(1 + sqrt(2))
-    assert acsch(0) == zoo
+    assert acsch(0) is zoo
     assert acsch(2) == log((1+sqrt(5))/2)
     assert acsch(-2) == - log((1+sqrt(5))/2)
 
@@ -732,7 +732,7 @@ def test_acsch():
     assert acsch(I*sqrt(2 - 2/sqrt(5))) == -2*I*pi / 5
     assert acsch(-I*(sqrt(6) - sqrt(2))) == 5*I*pi / 12
     assert acsch(I*(sqrt(6) - sqrt(2))) == -5*I*pi / 12
-    assert acsch(nan) == nan
+    assert acsch(nan) is nan
 
     # properties
     # acsch(x) == asinh(1/x)
@@ -777,9 +777,9 @@ def test_atanh():
     assert atanh(0) == 0
     assert atanh(I) == I*pi/4
     assert atanh(-I) == -I*pi/4
-    assert atanh(1) == oo
-    assert atanh(-1) == -oo
-    assert atanh(nan) == nan
+    assert atanh(1) is oo
+    assert atanh(-1) is -oo
+    assert atanh(nan) is nan
 
     # at infinites
     assert atanh(oo) == -I*pi/2
@@ -851,9 +851,9 @@ def test_acoth():
     assert acoth(0) == I*pi/2
     assert acoth(I) == -I*pi/4
     assert acoth(-I) == I*pi/4
-    assert acoth(1) == oo
-    assert acoth(-1) == -oo
-    assert acoth(nan) == nan
+    assert acoth(1) is oo
+    assert acoth(-1) is -oo
+    assert acoth(nan) is nan
 
     # at infinites
     assert acoth(oo) == 0

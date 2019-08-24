@@ -265,7 +265,7 @@ def test_minimum():
 
     assert minimum(sin(x), x) is S.NegativeOne
     assert minimum(sin(x), x, Interval(1, 4)) == sin(4)
-    assert minimum(tan(x), x) == -oo
+    assert minimum(tan(x), x) is -oo
     assert minimum(tan(x), x, Interval(-pi/4, pi/4)) is S.NegativeOne
     assert minimum(sin(x)*cos(x), x, S.Reals) == Rational(-1, 2)
     assert simplify(minimum(sin(x)*cos(x), x, Interval(pi*Rational(3, 8), pi*Rational(5, 8)))
@@ -274,7 +274,7 @@ def test_minimum():
     assert minimum((x+3)/(x-2), x, Interval(-5, 0)) == Rational(-3, 2)
     assert minimum(x**4-x**3+x**2+10, x) == S(10)
     assert minimum(exp(x), x, Interval(-2, oo)) == exp(-2)
-    assert minimum(log(x) - x, x, S.Reals) == -oo
+    assert minimum(log(x) - x, x, S.Reals) is -oo
     assert minimum(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
         ) is S.NegativeOne
     assert minimum(cos(x)-sin(x), x, S.Reals) == -sqrt(2)
@@ -313,13 +313,13 @@ def test_AccumBounds():
     assert AccumBounds(-oo, 1) + oo == AccumBounds(-oo, oo)
     assert AccumBounds(1, oo) + oo is oo
     assert AccumBounds(1, oo) - oo == AccumBounds(-oo, oo)
-    assert (-oo - AccumBounds(-1, oo)) == -oo
-    assert AccumBounds(-oo, 1) - oo == -oo
+    assert (-oo - AccumBounds(-1, oo)) is -oo
+    assert AccumBounds(-oo, 1) - oo is -oo
 
     assert AccumBounds(1, oo) - oo == AccumBounds(-oo, oo)
     assert AccumBounds(-oo, 1) - (-oo) == AccumBounds(-oo, oo)
     assert (oo - AccumBounds(1, oo)) == AccumBounds(-oo, oo)
-    assert (-oo - AccumBounds(1, oo)) == -oo
+    assert (-oo - AccumBounds(1, oo)) is -oo
 
     assert AccumBounds(1, 2)/2 == AccumBounds(S.Half, 1)
     assert 2/AccumBounds(2, 3) == AccumBounds(Rational(2, 3), 1)

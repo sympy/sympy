@@ -41,13 +41,13 @@ def test_Idx_bounds():
     assert Idx(i, 5).lower == 0
     assert Idx(i, 5).upper == 4
     assert Idx(i, oo).lower == 0
-    assert Idx(i, oo).upper == oo
+    assert Idx(i, oo).upper is oo
     assert Idx(i, (a, b)).lower == a
     assert Idx(i, (a, b)).upper == b
     assert Idx(i, (1, 5)).lower == 1
     assert Idx(i, (1, 5)).upper == 5
-    assert Idx(i, (-oo, oo)).lower == -oo
-    assert Idx(i, (-oo, oo)).upper == oo
+    assert Idx(i, (-oo, oo)).lower is -oo
+    assert Idx(i, (-oo, oo)).upper is oo
 
 
 def test_Idx_fixed_bounds():
@@ -59,13 +59,13 @@ def test_Idx_fixed_bounds():
     assert Idx(x, 5).lower == 0
     assert Idx(x, 5).upper == 4
     assert Idx(x, oo).lower == 0
-    assert Idx(x, oo).upper == oo
+    assert Idx(x, oo).upper is oo
     assert Idx(x, (a, b)).lower == a
     assert Idx(x, (a, b)).upper == b
     assert Idx(x, (1, 5)).lower == 1
     assert Idx(x, (1, 5)).upper == 5
-    assert Idx(x, (-oo, oo)).lower == -oo
-    assert Idx(x, (-oo, oo)).upper == oo
+    assert Idx(x, (-oo, oo)).lower is -oo
+    assert Idx(x, (-oo, oo)).upper is oo
 
 
 def test_Idx_inequalities():
@@ -335,7 +335,7 @@ def test_differentiation():
     assert Sum(expr, (i, -oo, oo)).diff(hj).doit() == 2
 
     assert Sum(expr.diff(hi), (i, -oo, oo)).doit() == Sum(2, (i, -oo, oo)).doit()
-    assert Sum(expr, (i, -oo, oo)).diff(hi).doit() == oo
+    assert Sum(expr, (i, -oo, oo)).diff(hi).doit() is oo
 
     expr = a * hj * hj / S(2)
     assert expr.diff(hi) == a * h[j] * KroneckerDelta(i, j)

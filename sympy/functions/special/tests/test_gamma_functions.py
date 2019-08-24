@@ -17,12 +17,12 @@ n = Symbol('n', integer=True)
 w = Symbol('w', real=True)
 
 def test_gamma():
-    assert gamma(nan) == nan
-    assert gamma(oo) == oo
+    assert gamma(nan) is nan
+    assert gamma(oo) is oo
 
-    assert gamma(-100) == zoo
-    assert gamma(0) == zoo
-    assert gamma(-100.0) == zoo
+    assert gamma(-100) is zoo
+    assert gamma(0) is zoo
+    assert gamma(-100.0) is zoo
 
     assert gamma(1) == 1
     assert gamma(2) == 1
@@ -205,21 +205,21 @@ def test_uppergamma():
 def test_polygamma():
     from sympy import I
 
-    assert polygamma(n, nan) == nan
+    assert polygamma(n, nan) is nan
 
-    assert polygamma(0, oo) == oo
-    assert polygamma(0, -oo) == oo
-    assert polygamma(0, I*oo) == oo
-    assert polygamma(0, -I*oo) == oo
+    assert polygamma(0, oo) is oo
+    assert polygamma(0, -oo) is oo
+    assert polygamma(0, I*oo) is oo
+    assert polygamma(0, -I*oo) is oo
     assert polygamma(1, oo) == 0
     assert polygamma(5, oo) == 0
 
-    assert polygamma(0, -9) == zoo
+    assert polygamma(0, -9) is zoo
 
-    assert polygamma(0, -9) == zoo
-    assert polygamma(0, -1) == zoo
+    assert polygamma(0, -9) is zoo
+    assert polygamma(0, -1) is zoo
 
-    assert polygamma(0, 0) == zoo
+    assert polygamma(0, 0) is zoo
 
     assert polygamma(0, 1) == -EulerGamma
     assert polygamma(0, 7) == Rational(49, 20) - EulerGamma
@@ -372,9 +372,9 @@ def test_loggamma():
     raises(TypeError, lambda: loggamma(2, 3))
     raises(ArgumentIndexError, lambda: loggamma(x).fdiff(2))
 
-    assert loggamma(-1) == oo
-    assert loggamma(-2) == oo
-    assert loggamma(0) == oo
+    assert loggamma(-1) is oo
+    assert loggamma(-2) is oo
+    assert loggamma(0) is oo
     assert loggamma(1) == 0
     assert loggamma(2) == 0
     assert loggamma(3) == log(2)
@@ -382,17 +382,17 @@ def test_loggamma():
 
     n = Symbol("n", integer=True, positive=True)
     assert loggamma(n) == log(gamma(n))
-    assert loggamma(-n) == oo
+    assert loggamma(-n) is oo
     assert loggamma(n/2) == log(2**(-n + 1)*sqrt(pi)*gamma(n)/gamma(n/2 + S.Half))
 
     from sympy import I
 
-    assert loggamma(oo) == oo
-    assert loggamma(-oo) == zoo
-    assert loggamma(I*oo) == zoo
-    assert loggamma(-I*oo) == zoo
-    assert loggamma(zoo) == zoo
-    assert loggamma(nan) == nan
+    assert loggamma(oo) is oo
+    assert loggamma(-oo) is zoo
+    assert loggamma(I*oo) is zoo
+    assert loggamma(-I*oo) is zoo
+    assert loggamma(zoo) is zoo
+    assert loggamma(nan) is nan
 
     L = loggamma(Rational(16, 3))
     E = -5*log(3) + loggamma(Rational(1, 3)) + log(4) + log(7) + log(10) + log(13)
@@ -437,7 +437,7 @@ def test_loggamma():
     assert s1 == loggamma(x).rewrite('intractable').series(x)
 
     assert conjugate(loggamma(x)) == loggamma(conjugate(x))
-    assert conjugate(loggamma(0)) == oo
+    assert conjugate(loggamma(0)) is oo
     assert conjugate(loggamma(1)) == loggamma(conjugate(1))
     assert conjugate(loggamma(-oo)) == conjugate(zoo)
 
@@ -532,8 +532,8 @@ def test_multigamma():
     assert conjugate(multigamma(x, p)).dummy_eq(pi**((p - 1)*p/4)*\
         Product(gamma(conjugate(x) + (1-conjugate(_k))/2), (_k, 1, p)))
 
-    assert multigamma(nan, 1) == nan
-    assert multigamma(oo, 1).doit() == oo
+    assert multigamma(nan, 1) is nan
+    assert multigamma(oo, 1).doit() is oo
 
     assert multigamma(1, 1) == 1
     assert multigamma(2, 1) == 1
@@ -545,7 +545,7 @@ def test_multigamma():
     assert multigamma(1, 2) == pi
     assert multigamma(2, 2) == pi/2
 
-    assert multigamma(1, 3) == zoo
+    assert multigamma(1, 3) is zoo
     assert multigamma(2, 3) == pi**2/2
     assert multigamma(3, 3) == 3*pi**2/2
 

@@ -98,7 +98,7 @@ def test_gegenbauer():
         gamma(a + n/2)/(gamma(a)*gamma(-n/2 + S.Half)*gamma(n + 1))
     assert gegenbauer(n, a, 1) == gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
 
-    assert gegenbauer(n, Rational(3, 4), -1) == zoo
+    assert gegenbauer(n, Rational(3, 4), -1) is zoo
     assert gegenbauer(n, Rational(1, 4), -1) == (sqrt(2)*cos(pi*(n + S.One/4))*
                       gamma(n + S.Half)/(sqrt(pi)*gamma(n + 1)))
 

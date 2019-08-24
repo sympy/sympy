@@ -136,7 +136,7 @@ def test_atan2():
     assert refine(atan2(y, x), Q.zero(y) & Q.negative(x)) == pi
     assert refine(atan2(y, x), Q.positive(y) & Q.zero(x)) == pi/2
     assert refine(atan2(y, x), Q.negative(y) & Q.zero(x)) == -pi/2
-    assert refine(atan2(y, x), Q.zero(y) & Q.zero(x)) == nan
+    assert refine(atan2(y, x), Q.zero(y) & Q.zero(x)) is nan
 
 
 def test_re():
