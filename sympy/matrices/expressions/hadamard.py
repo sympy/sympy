@@ -307,7 +307,7 @@ class HadamardPower(MatrixExpr):
     Notes
     =====
 
-    There are four definitions for the hadamard power to be used
+    There are four definitions for the hadamard power which can be used.
     Let's consider `A, B` as `(m, n)` matrices, and `a, b` as scalars.
 
     Matrix raised to a scalar exponent:
