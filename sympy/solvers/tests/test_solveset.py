@@ -1318,6 +1318,11 @@ def test_trig_system():
     # TODO: add more simple testcases when solveset returns
     # simplified soln for Trig eq
     assert nonlinsolve([sin(x) - 1, cos(x) -1 ], x) == S.EmptySet
+    # test for nonlinsolve([sin(x) - 1, cos(x)], x) in @xfail
+    img1 = ImageSet(Lambda(n, 2 * n * pi + pi / 2), S.Integers)
+    img2 = ImageSet(Lambda(n, 2 * n * pi + 3 * pi / 2), S.Integers)
+    img3 = ImageSet(Lambda(n, n * pi + pi / 2), S.Integers)
+    assert Union(img1, img2) == img3
 
 
 @XFAIL
