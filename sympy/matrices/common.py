@@ -2195,6 +2195,13 @@ class MatrixArithmetic(MatrixRequired):
         ShapeError: Matrices size mismatch.
         >>>
 
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            to control expression blowup during multiplication.
+
         See Also
         ========
 
@@ -2232,6 +2239,16 @@ class MatrixArithmetic(MatrixRequired):
         return self.pow(exp, mulsimp=False)
 
     def pow(self, exp, mulsimp=True):
+        """Return self**exp a scalar or symbol.
+
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during recursive power evaluations to control expression blowup.
+        """
+
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self

@@ -412,6 +412,43 @@ expensive to calculate.
 Possible Issues
 ===============
 
+Controlling matrix expression blowup
+------------------------------------
+
+Normally a matrix ``*`` multiplication or ``**`` power will not simplify
+intermediate terms as they are calcualted to give the best general performance.
+Unfortunately this can lead to an explosion in the size and complexity of matrix
+element symbolic expressions (including complex number expressions), and even
+impair the ability of the calculation to finish, though in the majority of small
+matrices it is much faster. This can be a big problem and can cause larger
+matrix multiplication to never end or may be impossible to simplify afterwards.
+
+For this reason two separate functions - ``mul`` and ``pow`` for multiplication
+and exponentiation have been added with a flag which allows you to specify that
+an optimized intermediate simplification is to be performed at each step of
+calculation. By default these functions have the flag ``mulsimp`` set to true.
+This simplification will leave the matrix in a relatively simplified state after
+the operation and permit calculations on some large matrices which were not
+possible or extremely slow previously.
+
+    >>> M = Matrix([[1+x, 1-x], [1-x, 1+x]])
+    >>> M*M
+    ⎡(1 - x)**2 + (x + 1)**2,       2*(1 - x)*(x + 1)⎤
+    ⎢                                                ⎥
+    ⎣      2*(1 - x)*(x + 1), (1 - x)**2 + (x + 1)**2⎦
+    >>> M.mul(M)
+    ⎡2*x**2 + 2, 2 - 2*x**2⎤
+    ⎢                      ⎥
+    ⎣2 - 2*x**2, 2*x**2 + 2⎦
+    >>> M**2
+    ⎡(1 - x)**2 + (x + 1)**2,       2*(1 - x)*(x + 1)⎤
+    ⎢                                                ⎥
+    ⎣      2*(1 - x)*(x + 1), (1 - x)**2 + (x + 1)**2⎦
+    >>> M.pow(8)
+    ⎡128*x**8 + 128, 128 - 128*x**8⎤
+    ⎢                              ⎥
+    ⎣128 - 128*x**8, 128*x**8 + 128⎦
+
 Zero Testing
 ------------
 
