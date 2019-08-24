@@ -14,5 +14,5 @@ Contents
 	solveset.rst
 	ode.rst
 	pde.rst
-	inequalities.srt
-	diophantine.srt
+	inequalities.rst
+	diophantine.rst
