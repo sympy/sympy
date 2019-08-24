@@ -4212,8 +4212,8 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
         soln1 = soln1.subs(c_old, c_new)
 
     # n equations for sol1 = sol2, sol1'=sol2', ...
-    lhs = (soln1.rhs-soln1.lhs).doit()
-    rhs = (soln2.rhs-soln2.lhs).doit()
+    lhs = (soln1.rhs-soln1.lhs)
+    rhs = (soln2.rhs-soln2.lhs)
     eqns = [Eq(lhs, rhs)]
     for n in range(1, order):
         lhs = lhs.diff(var)
