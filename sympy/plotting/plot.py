@@ -583,7 +583,6 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.depth = kwargs.get('depth', 12)
         self.line_color = kwargs.get('line_color', None)
         self.xscale = kwargs.get('xscale', 'linear')
-        self.flag = 0
 
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
@@ -627,13 +626,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 ynew = f(xnew)
                 new_point = np.array([xnew, ynew])
 
-                if self.flag == 1:
-                    return
                 # Maximum depth
                 if depth > self.depth:
-                    if p[1] is None or q[1] is None:
-                        self.flag = 1
-                        return
                     list_segments.append([p, q])
 
                 # Sample irrespective of whether the line is flat till the
@@ -668,7 +662,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
             f_start = f(self.start)
             f_end = f(self.end)
-            sample([self.start, f_start], [self.end, f_end], 0)
+            sample(np.array([self.start, f_start]),
+                   np.array([self.end, f_end]), 0)
 
             return list_segments
 

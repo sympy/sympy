@@ -306,6 +306,10 @@ def test_separatevars():
     s = separatevars(abs(x*y*z))
     assert s == abs(x)*abs(y)*abs(z)
 
+    # abs(x+y)/abs(z) would be better but we test this here to
+    # see that it doesn't raise
+    assert separatevars(abs((x+y)/z)) == abs((x+y)/z)
+
 
 def test_separatevars_advanced_factor():
     x, y, z = symbols('x,y,z')
@@ -849,6 +853,13 @@ def test_issue_7971():
     assert simplify(z) is S.Zero
 
 
+@slow
+def test_issue_17141_slow():
+    # Should not give RecursionError
+    assert simplify((2**acos(I+1)**2).rewrite('log')) == 2**((pi + 2*I*log(-1 +
+                   sqrt(1 - 2*I) + I))**2/4)
+
+
 def test_issue_17141():
     # Check that there is no RecursionError
     assert simplify(x**(1 / acos(I))) == x**(2/(pi - 2*I*log(1 + sqrt(2))))
@@ -857,12 +868,6 @@ def test_issue_17141():
     assert simplify(2**acos(I)**2) == 2**((pi - 2*I*log(1 + sqrt(2)))**2/4)
     p = 2**acos(I+1)**2
     assert simplify(p) == p
-
-    # However, for a complex number it still happens
-    if PY3:
-        raises(RecursionError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
-    else:
-        raises(RuntimeError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
 
 
 def test_simplify_kroneckerdelta():

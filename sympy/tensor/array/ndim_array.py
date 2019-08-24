@@ -547,6 +547,19 @@ class NDimArray(object):
         if shape == (0,) and len(flat_list) > 0:
             raise ValueError("if array shape is (0,) there cannot be elements")
 
+    def _check_index_for_getitem(self, index):
+        if isinstance(index, (SYMPY_INTS, Integer, slice)):
+            index = (index, )
+
+        if len(index) < self.rank():
+            index = tuple([i for i in index] + \
+                          [slice(None) for i in range(len(index), self.rank())])
+
+        if len(index) > self.rank():
+            raise ValueError('Dimension of index greater than rank of array')
+
+        return index
+
 
 class ImmutableNDimArray(NDimArray, Basic):
     _op_priority = 11.0
