@@ -39,7 +39,7 @@ def test_basic_degree_2():
                    (Rational(-3, 2) + 3*x - x**2, Interval(1, 2).contains(x)),
                    (Rational(9, 2) - 3*x + x**2/2, Interval(2, 3).contains(x)),
                    (0, True))
-    b1 = Piecewise((Rational(1, 2) - x + x**2/2, Interval(1, 2).contains(x)),
+    b1 = Piecewise((S.Half - x + x**2/2, Interval(1, 2).contains(x)),
                    (Rational(-11, 2) + 5*x - x**2, Interval(2, 3).contains(x)),
                    (8 - 4*x + x**2/2, Interval(3, 4).contains(x)),
                    (0, True))

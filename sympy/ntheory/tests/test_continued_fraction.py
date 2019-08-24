@@ -59,7 +59,7 @@ def test_continued_fraction():
     assert list(cf_c([2])) == [S(2)]
     assert list(cf_c([1, 1, 1, 1, 1, 1, 1])) == [S.One, S(2), Rational(3, 2), Rational(5, 3),
                                                  Rational(8, 5), Rational(13, 8), Rational(21, 13)]
-    assert list(cf_c([1, 6, -S.Half, 4])) == [S.One, Rational(7, 6), Rational(5, 4), Rational(3, 2)]
+    assert list(cf_c([1, 6, Rational(-1, 2), 4])) == [S.One, Rational(7, 6), Rational(5, 4), Rational(3, 2)]
 
     assert cf_r([1, 6, 1, 8]) == Rational(71, 62)
     assert cf_r([3]) == S(3)

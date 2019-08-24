@@ -2807,7 +2807,7 @@ def test_heuristic1():
     eq1 = f(x).diff(x) + a*f(x) - c*exp(b*x)
     eq2 = f(x).diff(x) + 2*x*f(x) - x*exp(-x**2)
     eq3 = (1 + 2*x)*df + 2 - 4*exp(-f(x))
-    eq4 = f(x).diff(x) - (a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(-S.Half)
+    eq4 = f(x).diff(x) - (a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**Rational(-1, 2)
     eq5 = x**2*df - f(x) + x**2*exp(x - (1/x))
     eqlist = [eq, eq1, eq2, eq3, eq4, eq5]
 

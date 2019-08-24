@@ -70,7 +70,7 @@ def test_re():
     assert re(a * (2 + b*I)) == 2*a
 
     assert re((1 + sqrt(a + b*I))/2) == \
-        (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
+        (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + S.Half
 
     assert re(x).rewrite(im) == x - S.ImaginaryUnit*im(x)
     assert (x + re(y)).rewrite(re, im) == x + y - S.ImaginaryUnit*im(y)
@@ -336,7 +336,7 @@ def test_as_real_imag():
     assert ((1 + sqrt(a + b*I))/2).as_real_imag() == \
            (
                (a**2 + b**2)**Rational(
-                   1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2),
+                   1, 4)*cos(atan2(b, a)/2)/2 + S.Half,
                (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
 
     assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)

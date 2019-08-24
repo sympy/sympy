@@ -213,7 +213,7 @@ def test_from_meijerg():
     q = HolonomicFunction((x + S.Half)*Dx + x*Dx**2, x, 1, [sqrt(pi)*erf(1), exp(-1)])
     assert p == q
     p = from_meijerg(meijerg(([0], [1]), ([0], []), 2*x**2))
-    q = HolonomicFunction((3*x**2 - 1)*Dx + x**3*Dx**2, x, 1, [-exp(-S.Half) + 1, -exp(-S.Half)])
+    q = HolonomicFunction((3*x**2 - 1)*Dx + x**3*Dx**2, x, 1, [-exp(Rational(-1, 2)) + 1, -exp(Rational(-1, 2))])
     assert p == q
 
 
@@ -248,7 +248,7 @@ def test_to_Sequence_Initial_Coniditons():
     q = [(HolonomicSequence(1 + (n**2 + 3*n + 2)*Sn**2, [0, 1]), 0)]
     assert p == q
     p = HolonomicFunction(Dx**2 + 1 + x**3*Dx, x, 0, [2, 3]).to_sequence()
-    q = [(HolonomicSequence(n + Sn**2 + (n**2 + 7*n + 12)*Sn**4, [2, 3, -1, -S.Half, Rational(1, 12)]), 1)]
+    q = [(HolonomicSequence(n + Sn**2 + (n**2 + 7*n + 12)*Sn**4, [2, 3, -1, Rational(-1, 2), Rational(1, 12)]), 1)]
     assert p == q
     p = HolonomicFunction(x**3*Dx**5 + 1 + Dx, x).to_sequence()
     q = [(HolonomicSequence(1 + (n + 1)*Sn + (n**5 - 5*n**3 + 4*n)*Sn**2), 0, 3)]
@@ -716,7 +716,7 @@ def test_to_meijerg():
     assert hyperexpand(expr_to_holonomic(log(x)).to_meijerg()).simplify() == log(x)
     assert expr_to_holonomic(4*x**2/3 + 7).to_meijerg() == 4*x**2/3 + 7
     assert hyperexpand(expr_to_holonomic(besselj(2, x), lenics=3).to_meijerg()) == besselj(2, x)
-    p = hyper((-S.Half, -3), (), x)
+    p = hyper((Rational(-1, 2), -3), (), x)
     assert from_hyper(p).to_meijerg() == hyperexpand(p)
     p = hyper((S.One, S(3)), (S(2), ), x)
     assert (hyperexpand(from_hyper(p).to_meijerg()) - hyperexpand(p)).expand() == 0
@@ -730,8 +730,8 @@ def test_to_meijerg():
     assert (hyperexpand(p.to_meijerg()) - s).simplify() == 0
     p = expr_to_holonomic(besselj(S.Half, x), initcond=False)
     assert (p.to_expr() - (D_0*sin(x) + C_0*cos(x) + C_1*sin(x))/sqrt(x)).simplify() == 0
-    p = expr_to_holonomic(besselj(S.Half, x), y0={-S.Half: [sqrt(2)/sqrt(pi), sqrt(2)/sqrt(pi)]})
-    assert (p.to_expr() - besselj(S.Half, x) - besselj(-S.Half, x)).simplify() == 0
+    p = expr_to_holonomic(besselj(S.Half, x), y0={Rational(-1, 2): [sqrt(2)/sqrt(pi), sqrt(2)/sqrt(pi)]})
+    assert (p.to_expr() - besselj(S.Half, x) - besselj(Rational(-1, 2), x)).simplify() == 0
 
 
 def test_gaussian():

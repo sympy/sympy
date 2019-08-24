@@ -1,6 +1,6 @@
 from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta, Rational, symbols,
                    simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-                   cancel, exp, I, Piecewise, Sum, Dummy)
+                   cancel, exp, I, Piecewise, Sum, Dummy, oo)
 from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.matrices import Matrix
@@ -13,9 +13,6 @@ from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
 from sympy.utilities.pytest import raises, skip
-
-
-oo = S.Infinity
 
 
 def BayesTest(A, B):
@@ -373,9 +370,9 @@ def test_FiniteRV():
         *[Eq(F.symbol, i) for i in [1, 2, 3]])
 
     raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S.Half, 3: S.Half}))
-    raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: -S.Half, 3: S.One}))
+    raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: Rational(-1, 2), 3: S.One}))
     raises(ValueError, lambda: FiniteRV('F', {1: S.One, 2: Rational(3, 2), 3: S.Zero,\
-        4: -S.Half, 5: Rational(-3, 4), 6: Rational(-1, 4)}))
+        4: Rational(-1, 2), 5: Rational(-3, 4), 6: Rational(-1, 4)}))
 
 def test_density_call():
     from sympy.abc import p

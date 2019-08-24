@@ -20,8 +20,8 @@ def test_zeta_eval():
     assert zeta(x, nan) == nan
 
     assert zeta(0) == Rational(-1, 2)
-    assert zeta(0, x) == Rational(1, 2) - x
-    assert zeta(0, b) == Rational(1, 2) - b
+    assert zeta(0, x) == S.Half - x
+    assert zeta(0, b) == S.Half - b
 
     assert zeta(1) is zoo
     assert zeta(1, 2) is zoo
@@ -44,24 +44,24 @@ def test_zeta_eval():
 
     assert zeta(oo) == 1
 
-    assert zeta(-1) == -Rational(1, 12)
+    assert zeta(-1) == Rational(-1, 12)
     assert zeta(-2) == 0
     assert zeta(-3) == Rational(1, 120)
     assert zeta(-4) == 0
-    assert zeta(-5) == -Rational(1, 252)
+    assert zeta(-5) == Rational(-1, 252)
 
-    assert zeta(-1, 3) == -Rational(37, 12)
-    assert zeta(-1, 7) == -Rational(253, 12)
+    assert zeta(-1, 3) == Rational(-37, 12)
+    assert zeta(-1, 7) == Rational(-253, 12)
     assert zeta(-1, -4) == Rational(119, 12)
     assert zeta(-1, -9) == Rational(539, 12)
 
     assert zeta(-4, 3) == -17
     assert zeta(-4, -8) == 8772
 
-    assert zeta(0, 1) == -Rational(1, 2)
+    assert zeta(0, 1) == Rational(-1, 2)
     assert zeta(0, -1) == Rational(3, 2)
 
-    assert zeta(0, 2) == -Rational(3, 2)
+    assert zeta(0, 2) == Rational(-3, 2)
     assert zeta(0, -2) == Rational(5, 2)
 
     assert zeta(
@@ -75,7 +75,7 @@ def test_zeta_series():
 
 def test_dirichlet_eta_eval():
 
-    assert dirichlet_eta(0) == Rational(1, 2)
+    assert dirichlet_eta(0) == S.Half
     assert dirichlet_eta(-1) == Rational(1, 4)
     assert dirichlet_eta(1) == log(2)
     assert dirichlet_eta(2) == pi**2/12

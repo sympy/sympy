@@ -1,4 +1,4 @@
-from sympy import symbols, S, log
+from sympy import symbols, S, log, Rational
 from sympy.core.trace import Tr
 from sympy.external import import_module
 from sympy.physics.quantum.density import Density, entropy, fidelity
@@ -86,7 +86,7 @@ def test_doit():
     assert t.doit() == JzKet(1, 1) * Dagger(JzKet(1, 1))
 
     # with another spin state
-    tp2 = TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))
+    tp2 = TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))
     d = Density([tp2, 1])
 
     #full trace
@@ -95,7 +95,7 @@ def test_doit():
 
     #Partial trace on density operators with spin states
     t = Tr(d, [0])
-    assert t.doit() == JzKet(S.Half, -S.Half) * Dagger(JzKet(S.Half, -S.Half))
+    assert t.doit() == JzKet(S.Half, Rational(-1, 2)) * Dagger(JzKet(S.Half, Rational(-1, 2)))
     t = Tr(d, [1])
     assert t.doit() == JzKet(S.Half, S.Half) * Dagger(JzKet(S.Half, S.Half))
 
@@ -158,7 +158,7 @@ def test_get_prob():
 
 def test_entropy():
     up = JzKet(S.Half, S.Half)
-    down = JzKet(S.Half, -S.Half)
+    down = JzKet(S.Half, Rational(-1, 2))
     d = Density((up, S.Half), (down, S.Half))
 
     # test for density object
@@ -186,7 +186,7 @@ def test_entropy():
 
 def test_eval_trace():
     up = JzKet(S.Half, S.Half)
-    down = JzKet(S.Half, -S.Half)
+    down = JzKet(S.Half, Rational(-1, 2))
     d = Density((up, 0.5), (down, 0.5))
 
     t = Tr(d)
@@ -211,7 +211,7 @@ def test_eval_trace():
 def test_fidelity():
     #test with kets
     up = JzKet(S.Half, S.Half)
-    down = JzKet(S.Half, -S.Half)
+    down = JzKet(S.Half, Rational(-1, 2))
     updown = (S.One/sqrt(2))*up + (S.One/sqrt(2))*down
 
     #check with matrices

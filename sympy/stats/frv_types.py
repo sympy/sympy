@@ -59,7 +59,7 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
     def pmf(self, x):
         x = Symbol('x')
         return Lambda(x, Piecewise(*(
-            [(v, Eq(k, x)) for k, v in self.dict.items()] + [(0, True)])))
+            [(v, Eq(k, x)) for k, v in self.dict.items()] + [(S.Zero, True)])))
 
     @property
     def set(self):
@@ -225,7 +225,9 @@ class BernoulliDistribution(SingleFiniteDistribution):
         return set([self.succ, self.fail])
 
     def pmf(self, x):
-        return Piecewise((self.p, x == self.succ), (1 - self.p, x == self.fail), (0, True))
+        return Piecewise((self.p, x == self.succ),
+                         (1 - self.p, x == self.fail),
+                         (S.Zero, True))
 
 
 def Bernoulli(name, p, succ=1, fail=0):
@@ -518,7 +520,7 @@ class RademacherDistribution(SingleFiniteDistribution):
     @property
     def pmf(self):
         k = Dummy('k')
-        return Lambda(k, Piecewise((S.Half, Or(Eq(k, -1), Eq(k, 1))), (0, True)))
+        return Lambda(k, Piecewise((S.Half, Or(Eq(k, -1), Eq(k, 1))), (S.Zero, True)))
 
 def Rademacher(name):
     """

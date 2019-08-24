@@ -377,7 +377,7 @@ def test_fraction():
     x, y, z = map(Symbol, 'xyz')
     A = Symbol('A', commutative=False)
 
-    assert fraction(Rational(1, 2)) == (1, 2)
+    assert fraction(S.Half) == (1, 2)
 
     assert fraction(x) == (x, 1)
     assert fraction(1/x) == (1, x)

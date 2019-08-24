@@ -2200,10 +2200,10 @@ def test_find_reasonable_pivot_naive_finds_guaranteed_nonzero1():
     # Keyword argument: simpfunc=None indicates that no simplifications
     # should be performed during the search.
     x = Symbol('x')
-    column = Matrix(3, 1, [x, cos(x)**2 + sin(x)**2, Rational(1, 2)])
+    column = Matrix(3, 1, [x, cos(x)**2 + sin(x)**2, S.Half])
     pivot_offset, pivot_val, pivot_assumed_nonzero, simplified =\
         _find_reasonable_pivot_naive(column)
-    assert pivot_val == Rational(1, 2)
+    assert pivot_val == S.Half
 
 def test_find_reasonable_pivot_naive_finds_guaranteed_nonzero2():
     # Test if matrices._find_reasonable_pivot_naive()
@@ -2694,7 +2694,7 @@ def test_condition_number():
     M = Matrix([[cos(x), sin(x)], [-sin(x), cos(x)]])
     Mc = M.condition_number()
     assert all(Float(1.).epsilon_eq(Mc.subs(x, val).evalf()) for val in
-        [Rational(1, 5), Rational(1, 2), Rational(1, 10), pi/2, pi, pi*Rational(7, 4) ])
+        [Rational(1, 5), S.Half, Rational(1, 10), pi/2, pi, pi*Rational(7, 4) ])
 
     #issue 10782
     assert Matrix([]).condition_number() == 0
@@ -3371,14 +3371,14 @@ def test_gauss_jordan_solve():
     A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
     b = Matrix([0, 0, 1, 0])
     sol, params = A.gauss_jordan_solve(b)
-    assert sol == Matrix([[-S.Half], [0], [Rational(1, 6)]])
+    assert sol == Matrix([[Rational(-1, 2)], [0], [Rational(1, 6)]])
     assert params == Matrix(0, 1, [])
 
     # Rectangular, tall, full rank, unique solution, B has less columns than rows
     A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
     B = Matrix([[0,0], [0, 0], [1, 2], [0, 0]])
     sol, params = A.gauss_jordan_solve(B)
-    assert sol == Matrix([[-S.Half, Rational(-2, 2)], [0, 0], [Rational(1, 6), Rational(2, 6)]])
+    assert sol == Matrix([[Rational(-1, 2), Rational(-2, 2)], [0, 0], [Rational(1, 6), Rational(2, 6)]])
     assert params == Matrix(0, 2, [])
 
     # Rectangular, tall, full rank, no solution
@@ -3429,8 +3429,8 @@ def test_gauss_jordan_solve():
     w = {}
     for s in sol.atoms(Symbol):
         w[s.name] = s
-    assert sol == Matrix([[w['tau0'] + 2*w['tau1'] + 1/S(2)],
-                         [-2*w['tau0'] - 3*w['tau1'] - 1/S(4)],
+    assert sol == Matrix([[w['tau0'] + 2*w['tau1'] + S.Half],
+                         [-2*w['tau0'] - 3*w['tau1'] - Rational(1, 4)],
                          [w['tau0']], [w['tau1']]])
     assert params == Matrix([[w['tau0']], [w['tau1']]])
     # watch out for clashing symbols

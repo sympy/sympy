@@ -70,20 +70,20 @@ def test_roach():
     # Section "Gallery"
     assert can_do([S.Half], [Rational(9, 2)])
     assert can_do([], [1, Rational(5, 2), 4])
-    assert can_do([-S.Half, 1, 2], [3, 4])
-    assert can_do([Rational(1, 3)], [Rational(-2, 3), -S.Half, S.Half, 1])
-    assert can_do([Rational(-3, 2), -S.Half], [Rational(-5, 2), 1])
-    assert can_do([Rational(-3, 2), ], [-S.Half, S.Half])  # shine-integral
-    assert can_do([Rational(-3, 2), -S.Half], [2])  # elliptic integrals
+    assert can_do([Rational(-1, 2), 1, 2], [3, 4])
+    assert can_do([Rational(1, 3)], [Rational(-2, 3), Rational(-1, 2), S.Half, 1])
+    assert can_do([Rational(-3, 2), Rational(-1, 2)], [Rational(-5, 2), 1])
+    assert can_do([Rational(-3, 2), ], [Rational(-1, 2), S.Half])  # shine-integral
+    assert can_do([Rational(-3, 2), Rational(-1, 2)], [2])  # elliptic integrals
 
 
 @XFAIL
 def test_roach_fail():
-    assert can_do([-S.Half, 1], [Rational(1, 4), S.Half, Rational(3, 4)])  # PFDD
+    assert can_do([Rational(-1, 2), 1], [Rational(1, 4), S.Half, Rational(3, 4)])  # PFDD
     assert can_do([Rational(3, 2)], [Rational(5, 2), 5])  # struve function
-    assert can_do([-S.Half, S.Half, 1], [Rational(3, 2), Rational(5, 2)])  # polylog, pfdd
+    assert can_do([Rational(-1, 2), S.Half, 1], [Rational(3, 2), Rational(5, 2)])  # polylog, pfdd
     assert can_do([1, 2, 3], [S.Half, 4])  # XXX ?
-    assert can_do([S.Half], [Rational(-1, 3), -S.Half, Rational(-2, 3)])  # PFDD ?
+    assert can_do([S.Half], [Rational(-1, 3), Rational(-1, 2), Rational(-2, 3)])  # PFDD ?
 
 # For the long table tests, see end of file
 
@@ -101,7 +101,7 @@ def test_hyperexpand_bases():
     assert hyperexpand(hyper([2], [a], z)) == \
         a + z**(-a + 1)*(-a**2 + 3*a + z*(a - 1) - 2)*exp(z)* \
         lowergamma(a - 1, z) - 1
-    # TODO [a+1, a-S.Half], [2*a]
+    # TODO [a+1, aRational(-1, 2)], [2*a]
     assert hyperexpand(hyper([1, 2], [3], z)) == -2/z - 2*log(-z + 1)/z**2
     assert hyperexpand(hyper([S.Half, 2], [Rational(3, 2)], z)) == \
         -1/(2*z - 2) + atanh(sqrt(z))/sqrt(z)/2
@@ -110,7 +110,7 @@ def test_hyperexpand_bases():
         + (6*z - 3)*asin(sqrt(z))/(4*z**Rational(3, 2))
     assert hyperexpand(hyper([1, 2], [Rational(3, 2)], z)) == -1/(2*z - 2) \
         - asin(sqrt(z))/(sqrt(z)*(2*z - 2)*sqrt(-z + 1))
-    assert hyperexpand(hyper([-S.Half - 1, 1, 2], [S.Half, 3], z)) == \
+    assert hyperexpand(hyper([Rational(-1, 2) - 1, 1, 2], [S.Half, 3], z)) == \
         sqrt(z)*(z*Rational(6, 7) - Rational(6, 5))*atanh(sqrt(z)) \
         + (-30*z**2 + 32*z - 6)/35/z - 6*log(-z + 1)/(35*z**2)
     assert hyperexpand(hyper([1 + S.Half, 1, 1], [2, 2], z)) == \
@@ -126,7 +126,7 @@ def test_hyperexpand_bases():
 def test_hyperexpand_parametric():
     assert hyperexpand(hyper([a, S.Half + a], [S.Half], z)) \
         == (1 + sqrt(z))**(-2*a)/2 + (1 - sqrt(z))**(-2*a)/2
-    assert hyperexpand(hyper([a, -S.Half + a], [2*a], z)) \
+    assert hyperexpand(hyper([a, Rational(-1, 2) + a], [2*a], z)) \
         == 2**(2*a - 1)*((-z + 1)**S.Half + 1)**(-2*a + 1)
 
 
@@ -876,7 +876,7 @@ def test_prudnikov_10():
     for m in [h, 1, 2, 5*h, 3, 7*h, 4]:
         assert can_do([7*h], [5*h, m])
 
-    assert can_do([-S.Half], [S.Half, S.Half])  # shine-integral shi
+    assert can_do([Rational(-1, 2)], [S.Half, S.Half])  # shine-integral shi
 
 
 def test_prudnikov_11():
@@ -986,8 +986,8 @@ def test_prudnikov_fail_3F2():
     assert can_do([a, a + Rational(1, 3), a + Rational(2, 3)], [a*Rational(3, 2), (3*a + 1)/2])
 
     # pages 422 ...
-    assert can_do([-S.Half, S.Half, S.Half], [1, 1])  # elliptic integrals
-    assert can_do([-S.Half, S.Half, 1], [Rational(3, 2), Rational(3, 2)])
+    assert can_do([Rational(-1, 2), S.Half, S.Half], [1, 1])  # elliptic integrals
+    assert can_do([Rational(-1, 2), S.Half, 1], [Rational(3, 2), Rational(3, 2)])
     # TODO LOTS more
 
     # PFDD
@@ -1009,7 +1009,7 @@ def test_prudnikov_fail_other():
     assert can_do([1, a], [b, 1 - 2*a + b])  # ???
 
     # 7.14.2
-    assert can_do([-S.Half], [S.Half, 1])  # struve
+    assert can_do([Rational(-1, 2)], [S.Half, 1])  # struve
     assert can_do([1], [S.Half, S.Half])  # struve
     assert can_do([Rational(1, 4)], [S.Half, Rational(5, 4)])  # PFDD
     assert can_do([Rational(3, 4)], [Rational(3, 2), Rational(7, 4)])  # PFDD
@@ -1040,4 +1040,4 @@ def test_omgissue_203():
     h = hyper((-5, -3, -4), (-6, -6), 1)
     assert hyperexpand(h) == Rational(1, 30)
     h = hyper((-6, -7, -5), (-6, -6), 1)
-    assert hyperexpand(h) == -Rational(1, 6)
+    assert hyperexpand(h) == Rational(-1, 6)

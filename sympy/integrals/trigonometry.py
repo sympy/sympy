@@ -225,7 +225,7 @@ def trigintegrate(f, x, conds='piecewise'):
     else:
         if m == n:
             ##Substitute sin(2x)/2 for sin(x)cos(x) and then Integrate.
-            res = integrate((Rational(1, 2)*sin(2*x))**m, x)
+            res = integrate((sin(2*x)*S.Half)**m, x)
         elif (m == -n):
             if n < 0:
                 # Same as the scheme described above.

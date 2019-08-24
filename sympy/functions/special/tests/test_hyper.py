@@ -258,14 +258,14 @@ def test_hyperrep():
         """ Test that func is a valid representation of hyp. """
         # First test that func agrees with hyp for small z
         if not tn(func.rewrite('nonrepsmall'), hyp, z,
-                  a=-S.Half, b=-S.Half, c=S.Half, d=S.Half):
+                  a=Rational(-1, 2), b=Rational(-1, 2), c=S.Half, d=S.Half):
             return False
         # Next check that the two small representations agree.
         if not tn(
             func.rewrite('nonrepsmall').subs(
                 z, exp_polar(I*pi)*z).replace(exp_polar, exp),
             func.subs(z, exp_polar(I*pi)*z).rewrite('nonrepsmall'),
-                z, a=-S.Half, b=-S.Half, c=S.Half, d=S.Half):
+                z, a=Rational(-1, 2), b=Rational(-1, 2), c=S.Half, d=S.Half):
             return False
         # Next check continuity along exp_polar(I*pi)*t
         expr = func.subs(z, exp_polar(I*pi)*z).rewrite('nonrep')

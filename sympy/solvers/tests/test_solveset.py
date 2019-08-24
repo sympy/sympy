@@ -88,7 +88,7 @@ def test_invert_real():
     assert invert_real(2**exp(x), y, x) == (x, ireal(FiniteSet(log(log(y)/log(2)))))
 
     assert invert_real(x**2, y, x) == (x, FiniteSet(sqrt(y), -sqrt(y)))
-    assert invert_real(x**Rational(1, 2), y, x) == (x, FiniteSet(y**2))
+    assert invert_real(x**S.Half, y, x) == (x, FiniteSet(y**2))
 
     raises(ValueError, lambda: invert_real(x, x, x))
     raises(ValueError, lambda: invert_real(x**pi, y, x))
@@ -311,9 +311,9 @@ def test_solve_polynomial():
     a11, a12, a21, a22, b1, b2 = symbols('a11, a12, a21, a22, b1, b2')
 
     assert solveset_real(x**3 - 15*x - 4, x) == FiniteSet(
-        -2 + 3 ** Rational(1, 2),
+        -2 + 3 ** S.Half,
         S(4),
-        -2 - 3 ** Rational(1, 2))
+        -2 - 3 ** S.Half)
 
     assert solveset_real(sqrt(x) - 1, x) == FiniteSet(1)
     assert solveset_real(sqrt(x) - 2, x) == FiniteSet(4)
@@ -397,7 +397,7 @@ def test_solveset_sqrt_2():
         FiniteSet(3)
 
     eq = x + 1 - (x**4 + 4*x**3 - x)**Rational(1, 4)
-    assert solveset_real(eq, x) == FiniteSet(-S.Half, Rational(-1, 3))
+    assert solveset_real(eq, x) == FiniteSet(Rational(-1, 2), Rational(-1, 3))
 
     eq = sqrt(2*x + 9) - sqrt(x + 1) - sqrt(x + 4)
     assert solveset_real(eq, x) == FiniteSet(0)
@@ -424,7 +424,7 @@ def test_solveset_sqrt_2():
     assert solveset_real(eq, x) == FiniteSet(16)
 
     assert solveset_real(sqrt(x) + sqrt(sqrt(x)) - 4, x) == \
-        FiniteSet((-S.Half + sqrt(17)/2)**4)
+        FiniteSet((Rational(-1, 2) + sqrt(17)/2)**4)
 
     eq = sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))
     assert solveset_real(eq, x) == FiniteSet()
@@ -450,7 +450,7 @@ def test_solveset_sqrt_2():
 
     # issue 4497
     assert solveset_real(1/(5 + x)**Rational(1, 5) - 9, x) == \
-        FiniteSet(-295244/S(59049))
+        FiniteSet(Rational(-295244, 59049))
 
 
 @XFAIL
@@ -468,15 +468,15 @@ def test_solve_sqrt_3():
     sol = solveset_complex(eq, R)
     fset = [Rational(5, 3) + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,
             -sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 +
-            40*re(1/((-S.Half - sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 +
+            40*re(1/((Rational(-1, 2) - sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 +
             sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + Rational(5, 3) +
             I*(-sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3 -
                sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
-               40*im(1/((-S.Half - sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9)]
-    cset = [40*re(1/((-S.Half + sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 -
+               40*im(1/((Rational(-1, 2) - sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9)]
+    cset = [40*re(1/((Rational(-1, 2) + sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 -
             sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 - sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 +
             Rational(5, 3) +
-            I*(40*im(1/((-S.Half + sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 -
+            I*(40*im(1/((Rational(-1, 2) + sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 -
                sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
                sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3)]
 
@@ -576,7 +576,7 @@ def test_solveset_real_log():
 
 def test_poly_gens():
     assert solveset_real(4**(2*(x**2) + 2*x) - 8, x) == \
-        FiniteSet(-Rational(3, 2), S.Half)
+        FiniteSet(Rational(-3, 2), S.Half)
 
 
 def test_solve_abs():
@@ -627,8 +627,8 @@ def test_rewrite_trigh():
     # if this import passes then the test below should also pass
     from sympy import sech
     assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
-        2*atanh(-S.Half + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(-S.Half + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
+        2*atanh(Rational(-1, 2) + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
+        2*atanh(Rational(-1, 2) + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
         2*atanh(-sqrt(5)/2 - S.Half + sqrt(2 + 2*sqrt(5))/2),
         2*atanh(-sqrt(2 + 2*sqrt(5))/2 - sqrt(5)/2 - S.Half))
 
@@ -691,7 +691,7 @@ def test_solveset_complex_polynomial():
         (-x**Rational(1, 3))/2 - I*sqrt(3)*x**Rational(1, 3)/2)
 
     assert solveset_complex(x + 1/x - 1, x) == \
-        FiniteSet(Rational(1, 2) + I*sqrt(3)/2, Rational(1, 2) - I*sqrt(3)/2)
+        FiniteSet(S.Half + I*sqrt(3)/2, S.Half - I*sqrt(3)/2)
 
 
 def test_sol_zero_complex():
@@ -848,7 +848,7 @@ def test_solve_lambert():
 
     # issue 4739
     ans = solveset_real(3*x + 5 + 2**(-5*x + 3), x)
-    assert ans == FiniteSet(-Rational(5, 3) +
+    assert ans == FiniteSet(Rational(-5, 3) +
                             LambertW(-10240*2**Rational(1, 3)*log(2)/3)/(5*log(2)))
 
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
@@ -862,7 +862,7 @@ def test_solve_lambert():
         FiniteSet(Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7)
 
     assert solveset_real(2*x + 5 + log(3*x - 2), x) == \
-        FiniteSet(Rational(2, 3) + LambertW(2*exp(-Rational(19, 3))/3)/2)
+        FiniteSet(Rational(2, 3) + LambertW(2*exp(Rational(-19, 3))/3)/2)
 
     assert solveset_real(3*x + log(4*x), x) == \
         FiniteSet(LambertW(Rational(3, 4))/3)
@@ -1470,7 +1470,7 @@ def test_issue_2777():
     # the equations represent two circles
     x, y = symbols('x y', real=True)
     e1, e2 = sqrt(x**2 + y**2) - 10, sqrt(y**2 + (-x + 10)**2) - 3
-    a, b = 191/S(20), 3*sqrt(391)/20
+    a, b = Rational(191, 20), 3*sqrt(391)/20
     ans = {(a, -b), (a, b)}
     assert nonlinsolve((e1, e2), (x, y)) == ans
     assert nonlinsolve((e1, e2/(x - a)), (x, y)) == S.EmptySet
@@ -1612,7 +1612,7 @@ def test_issue_10214():
     ans = FiniteSet(-2**Rational(2, 3))
     assert solveset(x**(S(3)) + 4, x, S.Reals) == ans
     assert (x**(S(3)) + 4).subs(x,list(ans)[0]) == 0 # substituting ans and verifying the result.
-    assert (x**(S(3)) + 4).subs(x,-(-2)**(2/S(3))) == 0
+    assert (x**(S(3)) + 4).subs(x,-(-2)**Rational(2, 3)) == 0
 
 
 def test_issue_9849():
@@ -1766,11 +1766,11 @@ def test_issue_14223():
 def test_issue_10158():
     x = Symbol('x')
     dom = S.Reals
-    assert solveset(x*Max(x, 15) - 10, x, dom) == FiniteSet(2/S(3))
+    assert solveset(x*Max(x, 15) - 10, x, dom) == FiniteSet(Rational(2, 3))
     assert solveset(x*Min(x, 15) - 10, x, dom) == FiniteSet(-sqrt(10), sqrt(10))
     assert solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom) == FiniteSet(-1, 1)
     assert solveset(Abs(x - 1) - Abs(y), x, dom) == FiniteSet(-Abs(y) + 1, Abs(y) + 1)
-    assert solveset(Abs(x + 4*Abs(x + 1)), x, dom) == FiniteSet(-4/S(3), -4/S(5))
+    assert solveset(Abs(x + 4*Abs(x + 1)), x, dom) == FiniteSet(Rational(-4, 3), Rational(-4, 5))
     assert solveset(2*Abs(x + Abs(x + Max(3, x))) - 2, x, S.Reals) == FiniteSet(-1, -2)
     dom = S.Complexes
     raises(ValueError, lambda: solveset(x*Max(x, 15) - 10, x, dom))
@@ -1831,7 +1831,7 @@ def test_exponential_real():
 
     assert solveset(e1, x, S.Reals) == FiniteSet(
         -3*log(2)/(-2*log(3) + log(2)))
-    assert solveset(e2, x, S.Reals) == FiniteSet(4/S(15))
+    assert solveset(e2, x, S.Reals) == FiniteSet(Rational(4, 15))
     assert solveset(e3, x, S.Reals) == S.EmptySet
     assert solveset(e4, x, S.Reals) == FiniteSet(0)
     assert solveset(e5, x, S.Reals) == Intersection(
@@ -1969,7 +1969,7 @@ def test_solve_exponential():
     assert _solve_exponential(3**(2*x) - 2**(x + 3), 0, x, S.Reals) == \
         FiniteSet(-3*log(2)/(-2*log(3) + log(2)))
     assert _solve_exponential(2**y + 4**y, 1, y, S.Reals) == \
-        FiniteSet(log(-S.Half + sqrt(5)/2)/log(2))
+        FiniteSet(log(Rational(-1, 2) + sqrt(5)/2)/log(2))
     assert _solve_exponential(2**y + 4**y, 0, y, S.Reals) == \
         S.EmptySet
     assert _solve_exponential(2**x + 3**x - 5**x, 0, x, S.Reals) == \
@@ -1993,7 +1993,7 @@ def test_logarithmic():
             sqrt(y**2 - y*exp(z)))) - \
         Intersection(S.Reals, FiniteSet(-sqrt(y**2), sqrt(y**2)))
     assert solveset_real(
-        log(3*x) - log(-x + 1) - log(4*x + 1), x) == FiniteSet(-S.Half, S.Half)
+        log(3*x) - log(-x + 1) - log(4*x + 1), x) == FiniteSet(Rational(-1, 2), S.Half)
     assert solveset(log(x**y) - y*log(x), x, S.Reals) == S.Reals
 
 @XFAIL

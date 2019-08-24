@@ -1758,7 +1758,7 @@ class TensorHead(Basic):
             marray = tensorproduct(marray, metric, marray)
             marray = tensorcontraction(marray, (0, marraydim), (marraydim+1, marraydim+2))
 
-        return marray ** (Rational(1, 2) * other)
+        return marray ** (other * S.Half)
 
     @property
     def data(self):
@@ -1912,7 +1912,7 @@ class TensExpr(Expr):
                 marray),
                 (0, mdim), (mdim+1, mdim+2)
             )
-        return marray ** (Rational(1, 2) * other)
+        return marray ** (other * S.Half)
 
     def __rpow__(self, other):
         raise NotImplementedError

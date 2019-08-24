@@ -243,7 +243,7 @@ def test_integrate_poly_defined():
     assert Qx.gens == (y,)
     assert Qy.gens == (x,)
 
-    assert Qx.as_expr() == Rational(1, 2) + y/3 + y**3
+    assert Qx.as_expr() == S.Half + y/3 + y**3
     assert Qy.as_expr() == pi**4/4 + pi*x + pi**2*x**2/2
 
 
@@ -302,7 +302,7 @@ def test_issue_3664():
     n = Symbol('n', integer=True, nonzero=True)
     assert integrate(-1./2 * x * sin(n * pi * x/2), [x, -2, 0]) == \
         2.0*cos(pi*n)/(pi*n)
-    assert integrate(-Rational(1)/2 * x * sin(n * pi * x/2), [x, -2, 0]) == \
+    assert integrate(x * sin(n * pi * x/2) * Rational(-1, 2), [x, -2, 0]) == \
         2*cos(pi*n)/(pi*n)
 
 
@@ -355,7 +355,7 @@ def test_issue_4516():
 
 def test_issue_7450():
     ans = integrate(exp(-(1 + I)*x), (x, 0, oo))
-    assert re(ans) == S.Half and im(ans) == -S.Half
+    assert re(ans) == S.Half and im(ans) == Rational(-1, 2)
 
 
 def test_issue_8623():
@@ -1001,7 +1001,7 @@ def test_issue_5167():
 def test_issue_4890():
     z = Symbol('z', positive=True)
     assert integrate(exp(-log(x)**2), x) == \
-        sqrt(pi)*exp(Rational(1, 4))*erf(log(x)-S.Half)/2
+        sqrt(pi)*exp(Rational(1, 4))*erf(log(x) - S.Half)/2
     assert integrate(exp(log(x)**2), x) == \
         sqrt(pi)*exp(Rational(-1, 4))*erfi(log(x)+S.Half)/2
     assert integrate(exp(-z*log(x)**2), x) == \

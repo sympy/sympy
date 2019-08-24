@@ -196,7 +196,7 @@ class erf(Function):
         return (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], z**2)
+        return z/sqrt(pi)*meijerg([S.Half], [], [0], [Rational(-1, 2)], z**2)
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
         return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
@@ -374,7 +374,7 @@ class erfc(Function):
         return S.One - (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return S.One - z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], z**2)
+        return S.One - z/sqrt(pi)*meijerg([S.Half], [], [0], [Rational(-1, 2)], z**2)
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
         return S.One - 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
@@ -541,7 +541,7 @@ class erfi(Function):
         return (S.One - S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], -z**2)
+        return z/sqrt(pi)*meijerg([S.Half], [], [0], [Rational(-1, 2)], -z**2)
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
         return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], z**2)

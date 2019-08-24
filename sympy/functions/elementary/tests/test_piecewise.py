@@ -184,13 +184,13 @@ def test_piecewise_integrate1():
 
     g = Piecewise(((x - 5)**5, 2 <= x), (f, x < 2))
     assert integrate(g, (x, -2, 2)) == Rational(14, 3)
-    assert integrate(g, (x, -2, 5)) == -Rational(701, 6)
+    assert integrate(g, (x, -2, 5)) == Rational(-701, 6)
 
     assert g == Piecewise(((x - 5)**5, 2 <= x), (f, True))
 
     g = Piecewise(((x - 5)**5, 2 <= x), (2*f, True))
-    assert integrate(g, (x, -2, 2)) == 2 * Rational(14, 3)
-    assert integrate(g, (x, -2, 5)) == -Rational(673, 6)
+    assert integrate(g, (x, -2, 2)) == Rational(28, 3)
+    assert integrate(g, (x, -2, 5)) == Rational(-673, 6)
 
 
 def test_piecewise_integrate1b():

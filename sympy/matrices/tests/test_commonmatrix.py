@@ -1022,7 +1022,7 @@ def test_echelon_form():
 
     a = ReductionsOnlyMatrix(3, 3, [2, 1, 3, 0, 0, 0, 2, 1, 3])
     nulls = [Matrix([
-             [-S.Half],
+             [Rational(-1, 2)],
              [   1],
              [   0]]),
              Matrix([

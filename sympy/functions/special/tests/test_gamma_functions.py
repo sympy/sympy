@@ -30,17 +30,17 @@ def test_gamma():
 
     assert gamma(102) == factorial(101)
 
-    assert gamma(Rational(1, 2)) == sqrt(pi)
+    assert gamma(S.Half) == sqrt(pi)
 
-    assert gamma(Rational(3, 2)) == Rational(1, 2)*sqrt(pi)
-    assert gamma(Rational(5, 2)) == Rational(3, 4)*sqrt(pi)
-    assert gamma(Rational(7, 2)) == Rational(15, 8)*sqrt(pi)
+    assert gamma(Rational(3, 2)) == sqrt(pi)*S.Half
+    assert gamma(Rational(5, 2)) == sqrt(pi)*Rational(3, 4)
+    assert gamma(Rational(7, 2)) == sqrt(pi)*Rational(15, 8)
 
     assert gamma(Rational(-1, 2)) == -2*sqrt(pi)
-    assert gamma(Rational(-3, 2)) == Rational(4, 3)*sqrt(pi)
-    assert gamma(Rational(-5, 2)) == -Rational(8, 15)*sqrt(pi)
+    assert gamma(Rational(-3, 2)) == sqrt(pi)*Rational(4, 3)
+    assert gamma(Rational(-5, 2)) == sqrt(pi)*Rational(-8, 15)
 
-    assert gamma(Rational(-15, 2)) == Rational(256, 2027025)*sqrt(pi)
+    assert gamma(Rational(-15, 2)) == sqrt(pi)*Rational(256, 2027025)
 
     assert gamma(Rational(
         -11, 8)).expand(func=True) == Rational(64, 33)*gamma(Rational(5, 8))
@@ -61,10 +61,10 @@ def test_gamma():
     assert conjugate(gamma(x)) == gamma(conjugate(x))
 
     assert expand_func(gamma(x + Rational(3, 2))) == \
-        (x + Rational(1, 2))*gamma(x + Rational(1, 2))
+        (x + S.Half)*gamma(x + S.Half)
 
-    assert expand_func(gamma(x - Rational(1, 2))) == \
-        gamma(Rational(1, 2) + x)/(x - Rational(1, 2))
+    assert expand_func(gamma(x - S.Half)) == \
+        gamma(S.Half + x)/(x - S.Half)
 
     # Test a bug:
     assert expand_func(gamma(x + Rational(3, 4))) == gamma(x + Rational(3, 4))
@@ -326,9 +326,9 @@ def test_polygamma():
 def test_polygamma_expand_func():
     assert polygamma(0, x).expand(func=True) == polygamma(0, x)
     assert polygamma(0, 2*x).expand(func=True) == \
-        polygamma(0, x)/2 + polygamma(0, Rational(1, 2) + x)/2 + log(2)
+        polygamma(0, x)/2 + polygamma(0, S.Half + x)/2 + log(2)
     assert polygamma(1, 2*x).expand(func=True) == \
-        polygamma(1, x)/4 + polygamma(1, Rational(1, 2) + x)/4
+        polygamma(1, x)/4 + polygamma(1, S.Half + x)/4
     assert polygamma(2, x).expand(func=True) == \
         polygamma(2, x)
     assert polygamma(0, -1 + x).expand(func=True) == \
@@ -399,7 +399,7 @@ def test_loggamma():
     assert expand_func(L).doit() == E
     assert L.n() == E.n()
 
-    L = loggamma(19/S(4))
+    L = loggamma(Rational(19, 4))
     E = -4*log(4) + loggamma(Rational(3, 4)) + log(3) + log(7) + log(11) + log(15)
     assert expand_func(L).doit() == E
     assert L.n() == E.n()
@@ -409,12 +409,12 @@ def test_loggamma():
     assert expand_func(L).doit() == E
     assert L.n() == E.n()
 
-    L = loggamma(19/S(4)-7)
+    L = loggamma(Rational(19, 4) - 7)
     E = -log(9) - log(5) + loggamma(Rational(3, 4)) + 3*log(4) - 3*I*pi
     assert expand_func(L).doit() == E
     assert L.n() == E.n()
 
-    L = loggamma(23/S(7)-6)
+    L = loggamma(Rational(23, 7) - 6)
     E = -log(19) - log(12) - log(5) + loggamma(Rational(2, 7)) + 3*log(7) - 3*I*pi
     assert expand_func(L).doit() == E
     assert L.n() == E.n()
@@ -452,7 +452,7 @@ def test_loggamma():
 
     assert loggamma(S.Half).is_real is True
     assert loggamma(0).is_real is False
-    assert loggamma(-S.Half).is_real is False
+    assert loggamma(Rational(-1, 2)).is_real is False
     assert loggamma(I).is_real is None
     assert loggamma(2 + 3*I).is_real is None
 
@@ -540,7 +540,7 @@ def test_multigamma():
     assert multigamma(3, 1) == 2
 
     assert multigamma(102, 1) == factorial(101)
-    assert multigamma(Rational(1, 2), 1) == sqrt(pi)
+    assert multigamma(S.Half, 1) == sqrt(pi)
 
     assert multigamma(1, 2) == pi
     assert multigamma(2, 2) == pi/2
@@ -567,7 +567,7 @@ def test_multigamma():
     assert multigamma(n, 3).rewrite(factorial) == pi**Rational(3, 2)*\
         factorial(n - 2)*factorial(n - Rational(3, 2))*factorial(n - 1)
 
-    assert multigamma(-S.Half, 3, evaluate=False).is_real == False
+    assert multigamma(Rational(-1, 2), 3, evaluate=False).is_real == False
     assert multigamma(S.Half, 3, evaluate=False).is_real == False
     assert multigamma(0, 1, evaluate=False).is_real == False
     assert multigamma(1, 3, evaluate=False).is_real == False

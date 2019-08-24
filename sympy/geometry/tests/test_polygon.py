@@ -23,7 +23,7 @@ def test_polygon():
     v = Symbol('v', real=True)
     w = Symbol('w', real=True)
     x1 = Symbol('x1', real=True)
-    half = Rational(1, 2)
+    half = S.Half
     a, b, c = Point(0, 0), Point(2, 0), Point(3, 3)
     t = Triangle(a, b, c)
     assert Polygon(a, Point(1, 0), b, c) == t
@@ -555,12 +555,12 @@ def test_section_modulus_and_polar_second_moment_of_area():
     assert rectangle.polar_second_moment_of_area() == a**3*b/12 + a*b**3/12
 
     convex = RegularPolygon((0, 0), 1, 6)
-    assert convex.section_modulus() == (5/S(8), 5*sqrt(3)/S(16))
+    assert convex.section_modulus() == (Rational(5, 8), sqrt(3)*Rational(5, 16))
     assert convex.polar_second_moment_of_area() == 5*sqrt(3)/S(8)
 
     concave = Polygon((0, 0), (1, 8), (3, 4), (4, 6), (7, 1))
-    assert concave.section_modulus() == (-6371/S(429), -9778/S(519))
-    assert concave.polar_second_moment_of_area() == -38669/S(252)
+    assert concave.section_modulus() == (Rational(-6371, 429), Rational(-9778, 519))
+    assert concave.polar_second_moment_of_area() == Rational(-38669, 252)
 
 
 def test_cut_section():

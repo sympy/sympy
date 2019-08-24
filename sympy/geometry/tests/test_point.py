@@ -13,7 +13,7 @@ def test_point():
     x2 = Symbol('x2', real=True)
     y1 = Symbol('y1', real=True)
     y2 = Symbol('y2', real=True)
-    half = Rational(1, 2)
+    half = S.Half
     p1 = Point(x1, x2)
     p2 = Point(y1, y2)
     p3 = Point(0, 0)
@@ -98,7 +98,7 @@ def test_point():
     # Point differences should be simplified
     assert Point(x*(x - 1), y) - Point(x**2 - x, y + 1) == Point(0, -1)
 
-    a, b = Rational(1, 2), Rational(1, 3)
+    a, b = S.Half, Rational(1, 3)
     assert Point(a, b).evalf(2) == \
         Point(a.n(2), b.n(2), evaluate=False)
     raises(ValueError, lambda: Point(1, 2) + 1)
@@ -128,7 +128,7 @@ def test_point3D():
     y1 = Symbol('y1', real=True)
     y2 = Symbol('y2', real=True)
     y3 = Symbol('y3', real=True)
-    half = Rational(1, 2)
+    half = S.Half
     p1 = Point3D(x1, x2, x3)
     p2 = Point3D(y1, y2, y3)
     p3 = Point3D(0, 0, 0)
@@ -176,7 +176,7 @@ def test_point3D():
     assert Point3D(x*(x - 1), y, 2) - Point3D(x**2 - x, y + 1, 1) == \
         Point3D(0, -1, 1)
 
-    a, b, c = Rational(1, 2), Rational(1, 3), Rational(1, 4)
+    a, b, c = S.Half, Rational(1, 3), Rational(1, 4)
     assert Point3D(a, b, c).evalf(2) == \
         Point(a.n(2), b.n(2), c.n(2), evaluate=False)
     raises(ValueError, lambda: Point3D(1, 2, 3) + 1)

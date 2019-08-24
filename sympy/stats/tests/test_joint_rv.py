@@ -226,7 +226,7 @@ def test_JointRV():
     X = JointRV('x', pdf)
     assert density(X)(1, 2) == exp(-2)/(2*pi)
     assert isinstance(X.pspace.distribution, JointDistributionHandmade)
-    assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(-S.Half)/(2*sqrt(pi))
+    assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(Rational(-1, 2))/(2*sqrt(pi))
 
 def test_expectation():
     from sympy import simplify

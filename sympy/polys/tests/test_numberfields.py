@@ -375,7 +375,7 @@ def test_field_isomorphism():
     s = AlgebraicNumber(-sqrt(2) - sqrt(3))
 
     pos_coeffs = [ S.Half, S.Zero, Rational(-9, 2), S.Zero]
-    neg_coeffs = [-S.Half, S.Zero, Rational(9, 2), S.Zero]
+    neg_coeffs = [Rational(-1, 2), S.Zero, Rational(9, 2), S.Zero]
 
     a = AlgebraicNumber(sqrt(2))
 
@@ -412,7 +412,7 @@ def test_field_isomorphism():
     assert field_isomorphism(a, s, fast=False) == pos_coeffs
 
     pos_coeffs = [ S.Half, S.Zero, Rational(-11, 2), S.Zero]
-    neg_coeffs = [-S.Half, S.Zero, Rational(11, 2), S.Zero]
+    neg_coeffs = [Rational(-1, 2), S.Zero, Rational(11, 2), S.Zero]
 
     a = AlgebraicNumber(sqrt(3))
 
@@ -473,7 +473,7 @@ def test_field_isomorphism():
     pos_1_coeffs = [ S.Half, S.Zero, Rational(-5, 2), S.One]
     neg_5_coeffs = [Rational(-5, 2), S.Zero, Rational(49, 2), S.One]
     pos_5_coeffs = [ Rational(5, 2), S.Zero, Rational(-49, 2), S.One]
-    neg_1_coeffs = [-S.Half, S.Zero, Rational(5, 2), S.One]
+    neg_1_coeffs = [Rational(-1, 2), S.Zero, Rational(5, 2), S.One]
 
     assert is_isomorphism_possible(a, p) is True
     assert is_isomorphism_possible(a, q) is True

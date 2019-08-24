@@ -1,4 +1,4 @@
-from sympy import sqrt, exp, S, prod
+from sympy import sqrt, exp, prod, Rational
 from sympy.core.compatibility import range
 from sympy.physics.quantum import Dagger, Commutator, qapply
 from sympy.physics.quantum.boson import BosonOp
@@ -40,6 +40,6 @@ def test_boson_states():
     assert (BosonCoherentBra(alpha1) * BosonCoherentKet(alpha1)).doit() == 1
     assert (BosonCoherentBra(alpha2) * BosonCoherentKet(alpha2)).doit() == 1
     assert abs((BosonCoherentBra(alpha1) * BosonCoherentKet(alpha2)).doit() -
-               exp(-S.Half * (alpha1 - alpha2) ** 2)) < 1e-12
+               exp((alpha1 - alpha2) ** 2 * Rational(-1, 2))) < 1e-12
     assert qapply(a * BosonCoherentKet(alpha1)) == \
         alpha1 * BosonCoherentKet(alpha1)

@@ -83,7 +83,7 @@ def test_mellin_transform_fail():
     # Test exponent 1:
     assert MT(expr.subs({b: -bpos, a: 1}), x, s) == \
         (-bpos**(2*s + 1)*gamma(s)*gamma(-s - S.Half)/(2*sqrt(pi)),
-            (-1, -S.Half), True)
+            (-1, Rational(-1, 2)), True)
 
 
 def test_mellin_transform():
@@ -149,7 +149,7 @@ def test_mellin_transform():
 
     # 8.4.14
     assert MT(erf(sqrt(x)), x, s) == \
-        (-gamma(s + S.Half)/(sqrt(pi)*s), (-S.Half, 0), True)
+        (-gamma(s + S.Half)/(sqrt(pi)*s), (Rational(-1, 2), 0), True)
 
 
 @slow
@@ -383,7 +383,7 @@ def test_inverse_mellin_transform():
         log(x)**3*Heaviside(x - 1)
     assert IMT(pi/(s*sin(pi*s)), s, x, (-1, 0)) == log(x + 1)
     assert IMT(pi/(s*sin(pi*s/2)), s, x, (-2, 0)) == log(x**2 + 1)
-    assert IMT(pi/(s*sin(2*pi*s)), s, x, (-S.Half, 0)) == log(sqrt(x) + 1)
+    assert IMT(pi/(s*sin(2*pi*s)), s, x, (Rational(-1, 2), 0)) == log(sqrt(x) + 1)
     assert IMT(pi/(s*sin(pi*s)), s, x, (0, 1)) == log(1 + 1/x)
 
     # TODO
@@ -404,7 +404,7 @@ def test_inverse_mellin_transform():
         1)*Heaviside(-x + 1), ]
 
     # 8.4.14
-    assert IMT(-gamma(s + S.Half)/(sqrt(pi)*s), s, x, (-S.Half, 0)) == \
+    assert IMT(-gamma(s + S.Half)/(sqrt(pi)*s), s, x, (Rational(-1, 2), 0)) == \
         erf(sqrt(x))
 
     # 8.4.19

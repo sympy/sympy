@@ -23,7 +23,7 @@ def test_apply_finite_diff():
 def test_finite_diff_weights():
 
     d = finite_diff_weights(1, [5, 6, 7], 5)
-    assert d[1][2] == [Rational(-3, 2), 2, -S.Half]
+    assert d[1][2] == [Rational(-3, 2), 2, Rational(-1, 2)]
 
     # Table 1, p. 702 in doi:10.1090/S0025-5718-1988-0935077-0
     # --------------------------------------------------------
@@ -38,7 +38,7 @@ def test_finite_diff_weights():
 
     # First derivative
     assert d[1][0] == [S.Zero]*9
-    assert d[1][2] == [S.Zero, S.Half, -S.Half] + [S.Zero]*6
+    assert d[1][2] == [S.Zero, S.Half, Rational(-1, 2)] + [S.Zero]*6
     assert d[1][4] == [S.Zero, Rational(2, 3), Rational(-2, 3), Rational(-1, 12), Rational(1, 12)] + [S.Zero]*4
     assert d[1][6] == [S.Zero, Rational(3, 4), Rational(-3, 4), Rational(-3, 20), Rational(3, 20),
                        Rational(1, 60), Rational(-1, 60)] + [S.Zero]*2
@@ -58,7 +58,7 @@ def test_finite_diff_weights():
     # Third derivative
     for i in range(3):
         assert d[3][i] == [S.Zero]*9
-    assert d[3][4] == [S.Zero, -S.One, S.One, S.Half, -S.Half] + [S.Zero]*4
+    assert d[3][4] == [S.Zero, -S.One, S.One, S.Half, Rational(-1, 2)] + [S.Zero]*4
     assert d[3][6] == [S.Zero, Rational(-13, 8), Rational(13, 8), S.One, -S.One,
                        Rational(-1, 8), Rational(1, 8)] + [S.Zero]*2
     assert d[3][8] == [S.Zero, Rational(-61, 30), Rational(61, 30), Rational(169, 120), Rational(-169, 120),

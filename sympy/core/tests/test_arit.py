@@ -91,8 +91,8 @@ def test_arit0():
     assert e == 2**(a**2)
     e = -(1 + a)
     assert e == -1 - a
-    e = Rational(1, 2)*(1 + a)
-    assert e == Rational(1, 2) + a/2
+    e = S.Half*(1 + a)
+    assert e == S.Half + a/2
 
 
 def test_div():
@@ -144,7 +144,7 @@ def test_pow():
     e = a/b**2
     assert e == a*b**(-2)
 
-    assert sqrt(2*(1 + sqrt(2))) == (2*(1 + 2**Rational(1, 2)))**Rational(1, 2)
+    assert sqrt(2*(1 + sqrt(2))) == (2*(1 + 2**S.Half))**S.Half
 
     x = Symbol('x')
     y = Symbol('y')
@@ -154,8 +154,8 @@ def test_pow():
 
     assert (x**5*(3*x)**(3)).expand() == 27 * x**8
     assert (x**5*(-3*x)**(3)).expand() == -27 * x**8
-    assert (x**5*(3*x)**(-3)).expand() == Rational(1, 27) * x**2
-    assert (x**5*(-3*x)**(-3)).expand() == -Rational(1, 27) * x**2
+    assert (x**5*(3*x)**(-3)).expand() == x**2 * Rational(1, 27)
+    assert (x**5*(-3*x)**(-3)).expand() == x**2 * Rational(-1, 27)
 
     # expand_power_exp
     assert (x**(y**(x + exp(x + y)) + z)).expand(deep=False) == \

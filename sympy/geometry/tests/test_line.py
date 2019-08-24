@@ -74,7 +74,7 @@ def test_arbitrary_point():
     assert Ray3D((1, 1, 1), direction_ratio=[1, 2, 3]).arbitrary_point() == \
            Point3D(t + 1, 2 * t + 1, 3 * t + 1)
     assert Segment3D(Point3D(0, 0, 0), Point3D(1, 1, 1)).midpoint == \
-           Point3D(Rational(1, 2), Rational(1, 2), Rational(1, 2))
+           Point3D(S.Half, S.Half, S.Half)
     assert Segment3D(Point3D(x1, x1, x1), Point3D(y1, y1, y1)).length == sqrt(3) * sqrt((x1 - y1) ** 2)
     assert Segment3D((1, 1, 1), (2, 3, 4)).arbitrary_point() == \
            Point3D(t + 1, 2 * t + 1, 3 * t + 1)
@@ -87,7 +87,7 @@ def test_are_concurrent_2d():
     assert Line.are_concurrent(l1) is False
     assert Line.are_concurrent(l1, l2)
     assert Line.are_concurrent(l1, l1, l1, l2)
-    assert Line.are_concurrent(l1, l2, Line(Point(5, x1), Point(-Rational(3, 5), x1)))
+    assert Line.are_concurrent(l1, l2, Line(Point(5, x1), Point(Rational(-3, 5), x1)))
     assert Line.are_concurrent(l1, Line(Point(0, 0), Point(-x1, x1)), l2) is False
 
 
@@ -175,7 +175,7 @@ def test_basic_properties_2d():
     assert (r1 in s1) is False
     assert Segment(p1, p2) in s1
     assert Ray(Point(x1, x1), Point(x1, 1 + x1)) != Ray(p1, Point(-1, 5))
-    assert Segment(p1, p2).midpoint == Point(Rational(1, 2), Rational(1, 2))
+    assert Segment(p1, p2).midpoint == Point(S.Half, S.Half)
     assert Segment(p1, Point(-x1, x1)).length == sqrt(2 * (x1 ** 2))
 
     assert l1.slope == 1
@@ -240,7 +240,7 @@ def test_basic_properties_3d():
 
     assert l1.direction_ratio == [1, 1, 1]
 
-    assert s1.midpoint == Point3D(Rational(1, 2), Rational(1, 2), Rational(1, 2))
+    assert s1.midpoint == Point3D(S.Half, S.Half, S.Half)
     # Test zdirection
     assert Ray3D(p1, Point3D(0, 0, -1)).zdirection is S.NegativeInfinity
 
@@ -297,7 +297,7 @@ def test_contains_nonreal_symbols():
 def test_distance_2d():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
-    half = Rational(1, 2)
+    half = S.Half
 
     s1 = Segment(Point(0, 0), Point(1, 1))
     s2 = Segment(Point(half, half), Point(1, 0))
@@ -672,8 +672,8 @@ def test_projection():
 
 def test_perpendicular_bisector():
     s1 = Segment(Point(0, 0), Point(1, 1))
-    aline = Line(Point(S.Half, S.Half), Point(Rational(3, 2), -S.Half))
-    on_line = Segment(Point(S.Half, S.Half), Point(Rational(3, 2), -S.Half)).midpoint
+    aline = Line(Point(S.Half, S.Half), Point(Rational(3, 2), Rational(-1, 2)))
+    on_line = Segment(Point(S.Half, S.Half), Point(Rational(3, 2), Rational(-1, 2))).midpoint
 
     assert s1.perpendicular_bisector().equals(aline)
     assert s1.perpendicular_bisector(on_line).equals(Segment(s1.midpoint, on_line))

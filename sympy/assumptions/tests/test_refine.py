@@ -61,7 +61,7 @@ def test_pow2():
 def test_exp():
     x = Symbol('x', integer=True)
     assert refine(exp(pi*I*2*x)) == 1
-    assert refine(exp(pi*I*2*(x + Rational(1, 2)))) == -1
+    assert refine(exp(pi*I*2*(x + S.Half))) == -1
     assert refine(exp(pi*I*2*(x + Rational(1, 4)))) == I
     assert refine(exp(pi*I*2*(x + Rational(3, 4)))) == -I
 

@@ -485,7 +485,7 @@ class bernoulli(Function):
                     return S.One
                 elif n is S.One:
                     if sym is None:
-                        return -S.Half
+                        return Rational(-1, 2)
                     else:
                         return sym - S.Half
                 # Bernoulli numbers
@@ -1040,7 +1040,7 @@ class euler(Function):
             return Em
         if x:
             k = Dummy("k", integer=True)
-            return Sum(binomial(n, k)*euler(k)/2**k*(x-S.Half)**(n-k), (k, 0, n))
+            return Sum(binomial(n, k)*euler(k)/2**k*(x - S.Half)**(n - k), (k, 0, n))
 
     def _eval_evalf(self, prec):
         m, x = (self.args[0], None) if len(self.args) == 1 else self.args
@@ -1107,7 +1107,7 @@ class catalan(Function):
     For some non-integer values of n we can get closed form
     expressions by rewriting in terms of gamma functions:
 
-    >>> catalan(Rational(1,2)).rewrite(gamma)
+    >>> catalan(Rational(1, 2)).rewrite(gamma)
     8/(3*pi)
 
     We can differentiate the Catalan numbers C(n) interpreted as a
@@ -1159,12 +1159,12 @@ class catalan(Function):
             if (n + 1).is_negative:
                 return S.Zero
             if (n + 1).is_zero:
-                return -S.Half
+                return Rational(-1, 2)
 
     def fdiff(self, argindex=1):
         from sympy import polygamma, log
         n = self.args[0]
-        return catalan(n)*(polygamma(0, n + Rational(1, 2)) - polygamma(0, n + 2) + log(4))
+        return catalan(n)*(polygamma(0, n + S.Half) - polygamma(0, n + 2) + log(4))
 
     def _eval_rewrite_as_binomial(self, n, **kwargs):
         return binomial(2*n, n)/(n + 1)

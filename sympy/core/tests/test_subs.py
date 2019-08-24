@@ -324,8 +324,8 @@ def test_subs_noncommutative():
             assert (y * x**k).subs(x**p, L) == y * L**(k//p) * x**(k % p)
     assert (x**Rational(3, 2)).subs(x**S.Half, L) == x**Rational(3, 2)
     assert (x**S.Half).subs(x**S.Half, L) == L
-    assert (x**(-S.Half)).subs(x**S.Half, L) == x**(-S.Half)
-    assert (x**(-S.Half)).subs(x**(-S.Half), L) == L
+    assert (x**Rational(-1, 2)).subs(x**S.Half, L) == x**Rational(-1, 2)
+    assert (x**Rational(-1, 2)).subs(x**Rational(-1, 2), L) == L
 
     assert (x**(2*someint)).subs(x**someint, L) == L**2
     assert (x**(2*someint + 3)).subs(x**someint, L) == L**2*x**3
@@ -421,12 +421,12 @@ def test_division():
     assert (1/a).subs(a, c) == 1/c
     assert (1/a**2).subs(a, c) == 1/c**2
     assert (1/a**2).subs(a, -2) == Rational(1, 4)
-    assert (-(1/a**2)).subs(a, -2) == -Rational(1, 4)
+    assert (-(1/a**2)).subs(a, -2) == Rational(-1, 4)
 
     assert (1/x).subs(x, z) == 1/z
     assert (1/x**2).subs(x, z) == 1/z**2
     assert (1/x**2).subs(x, -2) == Rational(1, 4)
-    assert (-(1/x**2)).subs(x, -2) == -Rational(1, 4)
+    assert (-(1/x**2)).subs(x, -2) == Rational(-1, 4)
 
     #issue 5360
     assert (1/x).subs(x, 0) == 1/S.Zero

@@ -1017,7 +1017,7 @@ class acosh(InverseHyperbolicFunction):
                 S.ImaginaryUnit: log(S.ImaginaryUnit*(1 + sqrt(2))),
                 -S.ImaginaryUnit: log(-S.ImaginaryUnit*(1 + sqrt(2))),
                 S.Half: S.Pi/3,
-                -S.Half: S.Pi*Rational(2, 3),
+                Rational(-1, 2): S.Pi*Rational(2, 3),
                 sqrt(2)/2: S.Pi/4,
                 -sqrt(2)/2: S.Pi*Rational(3, 4),
                 1/sqrt(2): S.Pi/4,

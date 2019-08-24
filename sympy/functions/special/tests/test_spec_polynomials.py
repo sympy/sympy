@@ -31,7 +31,7 @@ def test_jacobi():
     assert jacobi(n, 0, 0, x) == legendre(n, x)
     assert jacobi(n, S.Half, S.Half, x) == RisingFactorial(
         Rational(3, 2), n)*chebyshevu(n, x)/factorial(n + 1)
-    assert jacobi(n, -S.Half, -S.Half, x) == RisingFactorial(
+    assert jacobi(n, Rational(-1, 2), Rational(-1, 2), x) == RisingFactorial(
         S.Half, n)*chebyshevt(n, x)/factorial(n)
 
     X = jacobi(n, a, b, x)

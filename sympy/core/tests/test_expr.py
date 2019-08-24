@@ -328,8 +328,8 @@ def test_atoms():
 
     assert (2*(x**(y**x))).atoms() == {S(2), x, y}
 
-    assert Rational(1, 2).atoms() == {S.Half}
-    assert Rational(1, 2).atoms(Symbol) == set([])
+    assert S.Half.atoms() == {S.Half}
+    assert S.Half.atoms(Symbol) == set([])
 
     assert sin(oo).atoms(oo) == set()
 
@@ -550,7 +550,7 @@ def test_as_numer_denom():
     assert (x/2).as_numer_denom() == (x, 2)
     assert (x*y/z).as_numer_denom() == (x*y, z)
     assert (x/(y*z)).as_numer_denom() == (x, y*z)
-    assert Rational(1, 2).as_numer_denom() == (1, 2)
+    assert S.Half.as_numer_denom() == (1, 2)
     assert (1/y**2).as_numer_denom() == (1, y**2)
     assert (x/y**2).as_numer_denom() == (x, y**2)
     assert ((x**2 + 1)/y).as_numer_denom() == (x**2 + 1, y)
@@ -1040,7 +1040,7 @@ def test_extractions():
     assert (2*x).extract_multiplicatively(2) == x
     assert (2*x).extract_multiplicatively(3) is None
     assert (2*x).extract_multiplicatively(-1) is None
-    assert (Rational(1, 2)*x).extract_multiplicatively(3) == x/6
+    assert (S.Half*x).extract_multiplicatively(3) == x/6
     assert (sqrt(x)).extract_multiplicatively(x) is None
     assert (sqrt(x)).extract_multiplicatively(1/x) is None
     assert x.extract_multiplicatively(-x) is None
@@ -1606,7 +1606,7 @@ def test_equals():
     ans = sqrt(2*x + 1)*(6*x**2 + x - 1)/15
     diff = i - ans
     assert diff.equals(0) is False
-    assert diff.subs(x, -S.Half/2) == 7*sqrt(2)/120
+    assert diff.subs(x, Rational(-1, 2)/2) == 7*sqrt(2)/120
     # there are regions for x for which the expression is True, for
     # example, when x < -1/2 or x > 0 the expression is zero
     p = Symbol('p', positive=True)
@@ -1883,7 +1883,7 @@ def test_issue_10755():
 
 def test_issue_11877():
     x = symbols('x')
-    assert integrate(log(S.Half - x), (x, 0, S.Half)) == -S.Half -log(2)/2
+    assert integrate(log(S.Half - x), (x, 0, S.Half)) == Rational(-1, 2) -log(2)/2
 
 
 def test_normal():

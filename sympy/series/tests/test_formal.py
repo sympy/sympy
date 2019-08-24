@@ -29,10 +29,10 @@ def test_rational_algorithm():
     f = x / (1 - x - x**2)
     assert rational_algorithm(f, x, k) is None
     assert rational_algorithm(f, x, k, full=True) == \
-        (((-Rational(1, 2) + sqrt(5)/2)**(-k - 1) *
-         (-sqrt(5)/10 + Rational(1, 2))) +
-         ((-sqrt(5)/2 - Rational(1, 2))**(-k - 1) *
-         (sqrt(5)/10 + Rational(1, 2))), 0, 0)
+        (((Rational(-1, 2) + sqrt(5)/2)**(-k - 1) *
+         (-sqrt(5)/10 + S.Half)) +
+         ((-sqrt(5)/2 - S.Half)**(-k - 1) *
+         (sqrt(5)/10 + S.Half)), 0, 0)
 
     f = 1 / (x**2 + 2*x + 2)
     assert rational_algorithm(f, x, k) is None
@@ -58,7 +58,7 @@ def test_rational_algorithm():
     assert rational_algorithm(f, x, k) is None
     assert rational_algorithm(f, x, k, full=True) == \
         ((-(-1)**(-k) / 2 - (I*I**(-k)) / 2 + (I*(-I)**(-k)) / 2 +
-          Rational(1, 2)) / k, 0, 1)
+          S.Half) / k, 0, 1)
 
     assert rational_algorithm(cos(x), x, k) is None
 
@@ -190,12 +190,12 @@ def test_fps__rational():
 
     f = 1 / ((x - 1)**2 * (x - 2))
     assert fps(f, x).truncate() == \
-        (-Rational(1, 2) - x*Rational(5, 4) - 17*x**2/8 - 49*x**3/16 - 129*x**4/32 -
+        (Rational(-1, 2) - x*Rational(5, 4) - 17*x**2/8 - 49*x**3/16 - 129*x**4/32 -
          321*x**5/64 + O(x**6))
 
     f = (1 + x + x**2 + x**3) / ((x - 1) * (x - 2))
     assert fps(f, x).truncate() == \
-        (Rational(1, 2) + x*Rational(5, 4) + 17*x**2/8 + 49*x**3/16 + 113*x**4/32 +
+        (S.Half + x*Rational(5, 4) + 17*x**2/8 + 49*x**3/16 + 113*x**4/32 +
          241*x**5/64 + O(x**6))
 
     f = x / (1 - x - x**2)
@@ -204,7 +204,7 @@ def test_fps__rational():
 
     f = 1 / (x**2 + 2*x + 2)
     assert fps(f, x, full=True).truncate() == \
-        Rational(1, 2) - x/2 + x**2/4 - x**4/8 + x**5/8 + O(x**6)
+        S.Half - x/2 + x**2/4 - x**4/8 + x**5/8 + O(x**6)
 
     f = log(1 + x)
     assert fps(f, x).truncate() == \
@@ -354,7 +354,7 @@ def test_fps__fractional():
 
     f = atan(sqrt(x)) / x**2
     assert fps(f, x).truncate() == \
-        (x**Rational(-3, 2) - x**Rational(-1, 2)/3 + x**Rational(1, 2)/5 -
+        (x**Rational(-3, 2) - x**Rational(-1, 2)/3 + x**S.Half/5 -
          x**Rational(3, 2)/7 + x**Rational(5, 2)/9 - x**Rational(7, 2)/11 +
          x**Rational(9, 2)/13 - x**Rational(11, 2)/15 + O(x**6))
 

@@ -1,6 +1,7 @@
 from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, Abs
 from sympy.core.compatibility import range
-from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
+from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point,
+                            Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
 from sympy.utilities.pytest import raises, slow
 from sympy import integrate
@@ -32,7 +33,7 @@ def test_object_from_equation():
     assert Circle(a**2 + b**2, x='a', y='b') == Circle(Point2D(0, 0), 0)
     assert Circle(x**2 + y**2 + 6*x + 8) == Circle(Point2D(-3, 0), 1)
     assert Circle(x**2 + y**2 + 6*y + 8) == Circle(Point2D(0, -3), 1)
-    assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(-S.Half, Rational(-2, 3)), 5*sqrt(37)/6)
+    assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(Rational(-1, 2), Rational(-2, 3)), 5*sqrt(37)/6)
     raises(GeometryError, lambda: Circle(x**2 + y**2 + 3*x + 4*y + 26))
     raises(GeometryError, lambda: Circle(x**2 + y**2 + 25))
     raises(GeometryError, lambda: Circle(a**2 + b**2 + 25, x='a', y='b'))
@@ -47,7 +48,7 @@ def test_ellipse_geom():
     y = Symbol('y', real=True)
     t = Symbol('t', real=True)
     y1 = Symbol('y1', real=True)
-    half = Rational(1, 2)
+    half = S.Half
     p1 = Point(0, 0)
     p2 = Point(1, 1)
     p4 = Point(0, 1)
@@ -175,7 +176,7 @@ def test_ellipse_geom():
     assert p in e
     assert line_list_close(e.normal_lines(p, 2), [
         Line(Point(Rational(-341, 171), Rational(-1, 13)), Point(Rational(-170, 171), Rational(5, 64))),
-        Line(Point(Rational(26, 15), -S.Half), Point(Rational(41, 15), Rational(-43, 26)))], 2)
+        Line(Point(Rational(26, 15), Rational(-1, 2)), Point(Rational(41, 15), Rational(-43, 26)))], 2)
     # be sure to use the slope that isn't undefined on boundary
     e = Ellipse((0, 0), 2, 2*sqrt(3)/3)
     assert line_list_close(e.normal_lines((1, 1), 2), [
@@ -232,7 +233,7 @@ def test_ellipse_geom():
     assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 0.999, 0.2)) == []
     assert Circle((0, 0), S.Half).intersection(
         Triangle((-1, 0), (1, 0), (0, 1))) == [
-        Point(-S.Half, 0), Point(S.Half, 0)]
+        Point(Rational(-1, 2), 0), Point(S.Half, 0)]
     raises(TypeError, lambda: intersection(e2, Line((0, 0, 0), (0, 0, 1))))
     raises(TypeError, lambda: intersection(e2, Rational(12)))
     # some special case intersections

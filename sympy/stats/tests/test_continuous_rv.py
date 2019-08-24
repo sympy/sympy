@@ -166,7 +166,7 @@ def test_characteristic_function():
     X = ExGaussian('x', 0, 1, 1)
     cf = characteristic_function(X)
     assert cf(0) == 1
-    assert cf(1) == (1 + I)*exp(-S.Half)/2
+    assert cf(1) == (1 + I)*exp(Rational(-1, 2))/2
 
 
 def test_moment_generating_function():
@@ -1210,8 +1210,8 @@ def test_long_precomputed_cdf():
 
 def test_issue_13324():
     X = Uniform('X', 0, 1)
-    assert E(X, X > Rational(1, 2)) == Rational(3, 4)
-    assert E(X, X > 0) == Rational(1, 2)
+    assert E(X, X > S.Half) == Rational(3, 4)
+    assert E(X, X > 0) == S.Half
 
 def test_FiniteSet_prob():
     x = symbols('x')

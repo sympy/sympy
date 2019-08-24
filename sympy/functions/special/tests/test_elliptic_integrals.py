@@ -94,8 +94,8 @@ def test_E():
     assert E(z, mr).conjugate() == E(z.conjugate(), mr)
     assert E(mr).conjugate() == E(mr)
 
-    assert E(z).rewrite(hyper) == (pi/2)*hyper((-S.Half, S.Half), (S.One,), z)
-    assert tn(E(z), (pi/2)*hyper((-S.Half, S.Half), (S.One,), z))
+    assert E(z).rewrite(hyper) == (pi/2)*hyper((Rational(-1, 2), S.Half), (S.One,), z)
+    assert tn(E(z), (pi/2)*hyper((Rational(-1, 2), S.Half), (S.One,), z))
     assert E(z).rewrite(meijerg) == \
         -meijerg(((S.Half, Rational(3, 2)), []), ((S.Zero,), (S.Zero,)), -z)/4
     assert tn(E(z), -meijerg(((S.Half, Rational(3, 2)), []), ((S.Zero,), (S.Zero,)), -z)/4)

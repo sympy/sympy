@@ -114,7 +114,7 @@ def test_expand():
     # XXX: teach sin/cos to work around arguments like
     # x*exp_polar(I*pi*n/2).  Then change besselsimp -> expand_func
     assert besselsimp(besselj(S.Half, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(besselj(-S.Half, z)) == sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besselj(Rational(-1, 2), z)) == sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(besselj(Rational(5, 2), z)) == \
         -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**Rational(5, 2))
     assert besselsimp(besselj(Rational(-5, 2), z)) == \
@@ -122,14 +122,14 @@ def test_expand():
 
     assert besselsimp(bessely(S.Half, z)) == \
         -(sqrt(2)*cos(z))/(sqrt(pi)*sqrt(z))
-    assert besselsimp(bessely(-S.Half, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(bessely(Rational(-1, 2), z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(bessely(Rational(5, 2), z)) == \
         sqrt(2)*(z**2*cos(z) - 3*z*sin(z) - 3*cos(z))/(sqrt(pi)*z**Rational(5, 2))
     assert besselsimp(bessely(Rational(-5, 2), z)) == \
         -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**Rational(5, 2))
 
     assert besselsimp(besseli(S.Half, z)) == sqrt(2)*sinh(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(besseli(-S.Half, z)) == \
+    assert besselsimp(besseli(Rational(-1, 2), z)) == \
         sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(besseli(Rational(5, 2), z)) == \
         sqrt(2)*(z**2*sinh(z) - 3*z*cosh(z) + 3*sinh(z))/(sqrt(pi)*z**Rational(5, 2))
@@ -137,7 +137,7 @@ def test_expand():
         sqrt(2)*(z**2*cosh(z) - 3*z*sinh(z) + 3*cosh(z))/(sqrt(pi)*z**Rational(5, 2))
 
     assert besselsimp(besselk(S.Half, z)) == \
-        besselsimp(besselk(-S.Half, z)) == sqrt(pi)*exp(-z)/(sqrt(2)*sqrt(z))
+        besselsimp(besselk(Rational(-1, 2), z)) == sqrt(pi)*exp(-z)/(sqrt(2)*sqrt(z))
     assert besselsimp(besselk(Rational(5, 2), z)) == \
         besselsimp(besselk(Rational(-5, 2), z)) == \
         sqrt(2)*sqrt(pi)*(z**2 + 3*z + 3)*exp(-z)/(2*z**Rational(5, 2))

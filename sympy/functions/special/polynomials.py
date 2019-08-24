@@ -133,7 +133,7 @@ class jacobi(OrthogonalPolynomial):
         # Simplify to other polynomials
         # P^{a, a}_n(x)
         if a == b:
-            if a == -S.Half:
+            if a == Rational(-1, 2):
                 return RisingFactorial(S.Half, n) / factorial(n) * chebyshevt(n, x)
             elif a.is_zero:
                 return legendre(n, x)

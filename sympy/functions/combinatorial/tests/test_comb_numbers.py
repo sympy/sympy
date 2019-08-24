@@ -50,7 +50,7 @@ def test_bernoulli():
     assert bernoulli(1000001) == 0
 
     assert bernoulli(0, x) == 1
-    assert bernoulli(1, x) == x - Rational(1, 2)
+    assert bernoulli(1, x) == x - S.Half
     assert bernoulli(2, x) == x**2 - x + Rational(1, 6)
     assert bernoulli(3, x) == x**3 - (3*x**2)/2 + x/2
 
@@ -221,52 +221,52 @@ def test_harmonic_rational():
     qo = S(13)
 
     Heee = harmonic(ne + pe/qe)
-    Aeee = (-log(10) + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
-             + pi*sqrt(2*sqrt(5)/5 + 1)/2 + 13944145/S(4720968))
+    Aeee = (-log(10) + 2*(Rational(-1, 4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 - Rational(1, 4))*log(sqrt(sqrt(5)/8 + Rational(5, 8)))
+             + pi*sqrt(2*sqrt(5)/5 + 1)/2 + Rational(13944145, 4720968))
 
     Heeo = harmonic(ne + pe/qo)
     Aeeo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(4, 13)) + 2*log(sin(pi*Rational(2, 13)))*cos(pi*Rational(32, 13))
              + 2*log(sin(pi*Rational(5, 13)))*cos(pi*Rational(80, 13)) - 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(5, 13))
              - 2*log(sin(pi*Rational(4, 13)))*cos(pi/13) + pi*cot(pi*Rational(5, 13))/2 - 2*log(sin(pi/13))*cos(pi*Rational(3, 13))
-             + 2422020029/S(702257080))
+             + Rational(2422020029, 702257080))
 
     Heoe = harmonic(ne + po/qe)
-    Aeoe = (-log(20) + 2*(1/S(4) + sqrt(5)/4)*log(-1/S(4) + sqrt(5)/4)
-             + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 11818877030/S(4286604231) + pi*sqrt(2*sqrt(5) + 5)/2)
+    Aeoe = (-log(20) + 2*(Rational(1, 4) + sqrt(5)/4)*log(Rational(-1, 4) + sqrt(5)/4)
+             + 2*(Rational(-1, 4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 - Rational(1, 4))*log(sqrt(sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 + Rational(1, 4))*log(Rational(1, 4) + sqrt(5)/4)
+             + Rational(11818877030, 4286604231) + pi*sqrt(2*sqrt(5) + 5)/2)
 
     Heoo = harmonic(ne + po/qo)
     Aeoo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(54, 13)) + 2*log(sin(pi*Rational(4, 13)))*cos(pi*Rational(6, 13))
              + 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(108, 13)) - 2*log(sin(pi*Rational(5, 13)))*cos(pi/13)
              - 2*log(sin(pi/13))*cos(pi*Rational(5, 13)) + pi*cot(pi*Rational(4, 13))/2
-             - 2*log(sin(pi*Rational(2, 13)))*cos(pi*Rational(3, 13)) + 11669332571/S(3628714320))
+             - 2*log(sin(pi*Rational(2, 13)))*cos(pi*Rational(3, 13)) + Rational(11669332571, 3628714320))
 
     Hoee = harmonic(no + pe/qe)
-    Aoee = (-log(10) + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
-             + pi*sqrt(2*sqrt(5)/5 + 1)/2 + 779405/S(277704))
+    Aoee = (-log(10) + 2*(Rational(-1, 4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 - Rational(1, 4))*log(sqrt(sqrt(5)/8 + Rational(5, 8)))
+             + pi*sqrt(2*sqrt(5)/5 + 1)/2 + Rational(779405, 277704))
 
     Hoeo = harmonic(no + pe/qo)
     Aoeo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(4, 13)) + 2*log(sin(pi*Rational(2, 13)))*cos(pi*Rational(32, 13))
              + 2*log(sin(pi*Rational(5, 13)))*cos(pi*Rational(80, 13)) - 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(5, 13))
              - 2*log(sin(pi*Rational(4, 13)))*cos(pi/13) + pi*cot(pi*Rational(5, 13))/2
-             - 2*log(sin(pi/13))*cos(pi*Rational(3, 13)) + 53857323/S(16331560))
+             - 2*log(sin(pi/13))*cos(pi*Rational(3, 13)) + Rational(53857323, 16331560))
 
     Hooe = harmonic(no + po/qe)
-    Aooe = (-log(20) + 2*(1/S(4) + sqrt(5)/4)*log(-1/S(4) + sqrt(5)/4)
-             + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
-             + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 486853480/S(186374097) + pi*sqrt(2*sqrt(5) + 5)/2)
+    Aooe = (-log(20) + 2*(Rational(1, 4) + sqrt(5)/4)*log(Rational(-1, 4) + sqrt(5)/4)
+             + 2*(Rational(-1, 4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 - Rational(1, 4))*log(sqrt(sqrt(5)/8 + Rational(5, 8)))
+             + 2*(-sqrt(5)/4 + Rational(1, 4))*log(Rational(1, 4) + sqrt(5)/4)
+             + Rational(486853480, 186374097) + pi*sqrt(2*sqrt(5) + 5)/2)
 
     Hooo = harmonic(no + po/qo)
     Aooo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(54, 13)) + 2*log(sin(pi*Rational(4, 13)))*cos(pi*Rational(6, 13))
              + 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(108, 13)) - 2*log(sin(pi*Rational(5, 13)))*cos(pi/13)
              - 2*log(sin(pi/13))*cos(pi*Rational(5, 13)) + pi*cot(pi*Rational(4, 13))/2
-             - 2*log(sin(pi*Rational(2, 13)))*cos(3*pi/13) + 383693479/S(125128080))
+             - 2*log(sin(pi*Rational(2, 13)))*cos(3*pi/13) + Rational(383693479, 125128080))
 
     H = [Heee, Heeo, Heoe, Heoo, Hoee, Hoeo, Hooe, Hooo]
     A = [Aeee, Aeeo, Aeoe, Aeoo, Aoee, Aoeo, Aooe, Aooo]
@@ -351,7 +351,7 @@ def test_euler_odd():
 
 def test_euler_polynomials():
     assert euler(0, x) == 1
-    assert euler(1, x) == x - Rational(1, 2)
+    assert euler(1, x) == x - S.Half
     assert euler(2, x) == x**2 - x
     assert euler(3, x) == x**3 - (3*x**2)/2 + Rational(1, 4)
     m = Symbol('m')
@@ -384,11 +384,11 @@ def test_catalan():
 
     assert unchanged(catalan, x)
     assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
-    assert catalan(Rational(1, 2)).rewrite(gamma) == 8/(3*pi)
-    assert catalan(Rational(1, 2)).rewrite(factorial).rewrite(gamma) ==\
+    assert catalan(S.Half).rewrite(gamma) == 8/(3*pi)
+    assert catalan(S.Half).rewrite(factorial).rewrite(gamma) ==\
         8 / (3 * pi)
     assert catalan(3*x).rewrite(gamma) == 4**(
-        3*x)*gamma(3*x + Rational(1, 2))/(sqrt(pi)*gamma(3*x + 2))
+        3*x)*gamma(3*x + S.Half)/(sqrt(pi)*gamma(3*x + 2))
     assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
 
     assert catalan(n).rewrite(factorial) == factorial(2*n) / (factorial(n + 1)
@@ -397,7 +397,7 @@ def test_catalan():
     assert isinstance(catalan(m).rewrite(Product), Product)
 
     assert diff(catalan(x), x) == (polygamma(
-        0, x + Rational(1, 2)) - polygamma(0, x + 2) + log(4))*catalan(x)
+        0, x + S.Half) - polygamma(0, x + 2) + log(4))*catalan(x)
 
     assert catalan(x).evalf() == catalan(x)
     c = catalan(S.Half).evalf()
@@ -647,8 +647,8 @@ def test_issue_8601():
     n = Symbol('n', integer=True, negative=True)
 
     assert catalan(n - 1) is S.Zero
-    assert catalan(-S.Half) is S.ComplexInfinity
-    assert catalan(-S.One) == -S.Half
+    assert catalan(Rational(-1, 2)) is S.ComplexInfinity
+    assert catalan(-S.One) == Rational(-1, 2)
     c1 = catalan(-5.6).evalf()
     assert str(c1) == '6.93334070531408e-5'
     c2 = catalan(-35.4).evalf()

@@ -201,9 +201,9 @@ def test_solve_polynomial1():
     assert solve((x - y, x + y), [x, y]) == solution
 
     assert set(solve(x**3 - 15*x - 4, x)) == set([
-        -2 + 3**Rational(1, 2),
+        -2 + 3**S.Half,
         S(4),
-        -2 - 3**Rational(1, 2)
+        -2 - 3**S.Half
     ])
 
     assert set(solve((x**2 - 1)**2 - a, x)) == \
@@ -238,8 +238,8 @@ def test_solve_polynomial_cv_2():
     multiplying both sides of the equation by x**m
     """
     assert solve(x + 1/x - 1, x) in \
-        [[ Rational(1, 2) + I*sqrt(3)/2, Rational(1, 2) - I*sqrt(3)/2],
-         [ Rational(1, 2) - I*sqrt(3)/2, Rational(1, 2) + I*sqrt(3)/2]]
+        [[ S.Half + I*sqrt(3)/2, S.Half - I*sqrt(3)/2],
+         [ S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]]
 
 
 def test_quintics_1():
@@ -302,7 +302,7 @@ def test_issue_8666():
 
 
 def test_issue_7228():
-    assert solve(4**(2*(x**2) + 2*x) - 8, x) == [-Rational(3, 2), S.Half]
+    assert solve(4**(2*(x**2) + 2*x) - 8, x) == [Rational(-3, 2), S.Half]
 
 
 def test_issue_7190():
@@ -375,7 +375,7 @@ def test_solve_transcendental():
     assert solve(3**(2 - x), x) == []
     assert solve(x + 2**x, x) == [-LambertW(log(2))/log(2)]
     assert solve(2*x + 5 + log(3*x - 2), x) == \
-        [Rational(2, 3) + LambertW(2*exp(-Rational(19, 3))/3)/2]
+        [Rational(2, 3) + LambertW(2*exp(Rational(-19, 3))/3)/2]
     assert solve(3*x + log(4*x), x) == [LambertW(Rational(3, 4))/3]
     assert set(solve((2*x + 8)*(8 + exp(x)), x)) == set([S(-4), log(8) + pi*I])
     eq = 2*exp(3*x + 4) - 3
@@ -642,9 +642,9 @@ def test_PR1964():
     f = Function('f')
     assert solve((3 - 5*x/f(x))*f(x), f(x)) == [x*Rational(5, 3)]
     # issue 4497
-    assert solve(1/root(5 + x, 5) - 9, x) == [-295244/S(59049)]
+    assert solve(1/root(5 + x, 5) - 9, x) == [Rational(-295244, 59049)]
 
-    assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [(-S.Half + sqrt(17)/2)**4]
+    assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [(Rational(-1, 2) + sqrt(17)/2)**4]
     assert set(solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4))) in \
         [
             set([log((-sqrt(3) + 2)**2), log((sqrt(3) + 2)**2)]),
@@ -654,7 +654,7 @@ def test_PR1964():
     assert set(solve(Poly(exp(x) + exp(-x) - 4))) == \
         set([log(-sqrt(3) + 2), log(sqrt(3) + 2)])
     assert set(solve(x**y + x**(2*y) - 1, x)) == \
-        set([(-S.Half + sqrt(5)/2)**(1/y), (-S.Half - sqrt(5)/2)**(1/y)])
+        set([(Rational(-1, 2) + sqrt(5)/2)**(1/y), (Rational(-1, 2) - sqrt(5)/2)**(1/y)])
 
     assert solve(exp(x/y)*exp(-z/y) - 2, y) == [(x - z)/log(2)]
     assert solve(
@@ -663,7 +663,7 @@ def test_PR1964():
     # will be missed, e.g. if exp(3*x) = exp(3) -> 3*x = 3
     E = S.Exp1
     assert solve(exp(3*x) - exp(3), x) in [
-        [1, log(E*(-S.Half - sqrt(3)*I/2)), log(E*(-S.Half + sqrt(3)*I/2))],
+        [1, log(E*(Rational(-1, 2) - sqrt(3)*I/2)), log(E*(Rational(-1, 2) + sqrt(3)*I/2))],
         [1, log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)],
         ]
 
@@ -909,7 +909,7 @@ def test_unrad1():
     # http://www.purplemath.com/modules/solverad.htm
     assert solve((2*x - 5)**Rational(1, 3) - 3) == [16]
     assert set(solve(x + 1 - root(x**4 + 4*x**3 - x, 4))) == \
-        set([-S.Half, Rational(-1, 3)])
+        set([Rational(-1, 2), Rational(-1, 3)])
     assert set(solve(sqrt(2*x**2 - 7) - (3 - x))) == set([-S(8), S(2)])
     assert solve(sqrt(2*x + 9) - sqrt(x + 1) - sqrt(x + 4)) == [0]
     assert solve(sqrt(x + 4) + sqrt(2*x - 1) - 3*sqrt(x - 1)) == [5]
@@ -1024,10 +1024,10 @@ def test_unrad1():
     # watch out for when the cov doesn't involve the symbol of interest
     eq = S('-x + (7*y/8 - (27*x/2 + 27*sqrt(x**2)/2)**(1/3)/3)**3 - 1')
     assert solve(eq, y) == [
-        4*2**Rational(2, 3)*(27*x + 27*sqrt(x**2))**Rational(1, 3)/21 - (-S.Half -
+        4*2**Rational(2, 3)*(27*x + 27*sqrt(x**2))**Rational(1, 3)/21 - (Rational(-1, 2) -
         sqrt(3)*I/2)*(x*Rational(-6912, 343) + sqrt((x*Rational(-13824, 343) - Rational(13824, 343))**2)/2 -
         Rational(6912, 343))**Rational(1, 3)/3, 4*2**Rational(2, 3)*(27*x + 27*sqrt(x**2))**Rational(1, 3)/21 -
-        (-S.Half + sqrt(3)*I/2)*(x*Rational(-6912, 343) + sqrt((x*Rational(-13824, 343) -
+        (Rational(-1, 2) + sqrt(3)*I/2)*(x*Rational(-6912, 343) + sqrt((x*Rational(-13824, 343) -
         Rational(13824, 343))**2)/2 - Rational(6912, 343))**Rational(1, 3)/3, 4*2**Rational(2, 3)*(27*x +
         27*sqrt(x**2))**Rational(1, 3)/21 - (x*Rational(-6912, 343) + sqrt((x*Rational(-13824, 343) -
         Rational(13824, 343))**2)/2 - Rational(6912, 343))**Rational(1, 3)/3]
@@ -1491,7 +1491,7 @@ def test_issues_6819_6820_6821_6248_8692():
 
     # issue 8692
     assert solve(Eq(Abs(x + 1) + Abs(x**2 - 7), 9), x) == [
-        -S.Half + sqrt(61)/2, -sqrt(69)/2 + S.Half]
+        Rational(-1, 2) + sqrt(61)/2, -sqrt(69)/2 + S.Half]
 
     # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
@@ -1590,11 +1590,11 @@ def test_other_lambert():
 def test_lambert_bivariate():
     # tests passing current implementation
     assert solve((x**2 + x)*exp((x**2 + x)) - 1) == [
-        -S.Half + sqrt(1 + 4*LambertW(1))/2,
-        -S.Half - sqrt(1 + 4*LambertW(1))/2]
+        Rational(-1, 2) + sqrt(1 + 4*LambertW(1))/2,
+        Rational(-1, 2) - sqrt(1 + 4*LambertW(1))/2]
     assert solve((x**2 + x)*exp((x**2 + x)*2) - 1) == [
-        -S.Half + sqrt(1 + 2*LambertW(2))/2,
-        -S.Half - sqrt(1 + 2*LambertW(2))/2]
+        Rational(-1, 2) + sqrt(1 + 2*LambertW(2))/2,
+        Rational(-1, 2) - sqrt(1 + 2*LambertW(2))/2]
     assert solve(a/x + exp(x/2), x) == [2*LambertW(-a/2)]
     assert solve((a/x + exp(x/2)).diff(x), x) == \
             [4*LambertW(-sqrt(2)*sqrt(a)/4), 4*LambertW(sqrt(2)*sqrt(a)/4)]
@@ -1608,7 +1608,7 @@ def test_lambert_bivariate():
     assert solve(x**2 - 2**x, x) == [2, 4, -2*LambertW(log(2)/2)/log(2)]
     ans = solve(3*x + 5 + 2**(-5*x + 3), x)
     assert len(ans) == 1 and ans[0].expand() == \
-        -Rational(5, 3) + LambertW(-10240*root(2, 3)*log(2)/3)/(5*log(2))
+        Rational(-5, 3) + LambertW(-10240*root(2, 3)*log(2)/3)/(5*log(2))
     assert solve(5*x - 1 + 3*exp(2 - 7*x), x) == \
         [Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
@@ -1668,7 +1668,7 @@ def test_lambert_bivariate():
 def test_rewrite_trig():
     assert solve(sin(x) + tan(x)) == [0, -pi, pi, 2*pi]
     assert solve(sin(x) + sec(x)) == [
-        -2*atan(-S.Half + sqrt(2)*sqrt(1 - sqrt(3)*I)/2 + sqrt(3)*I/2),
+        -2*atan(Rational(-1, 2) + sqrt(2)*sqrt(1 - sqrt(3)*I)/2 + sqrt(3)*I/2),
         2*atan(S.Half - sqrt(2)*sqrt(1 + sqrt(3)*I)/2 + sqrt(3)*I/2), 2*atan(S.Half
         + sqrt(2)*sqrt(1 + sqrt(3)*I)/2 + sqrt(3)*I/2), 2*atan(S.Half -
         sqrt(3)*I/2 + sqrt(2)*sqrt(1 - sqrt(3)*I)/2)]
@@ -1684,8 +1684,8 @@ def test_rewrite_trigh():
     # if this import passes then the test below should also pass
     from sympy import sech
     assert solve(sinh(x) + sech(x)) == [
-        2*atanh(-S.Half + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(-S.Half + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
+        2*atanh(Rational(-1, 2) + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
+        2*atanh(Rational(-1, 2) + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
         2*atanh(-sqrt(5)/2 - S.Half + sqrt(2 + 2*sqrt(5))/2),
         2*atanh(-sqrt(2 + 2*sqrt(5))/2 - sqrt(5)/2 - S.Half)]
 
@@ -1717,8 +1717,8 @@ def test_issue_2725():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
     sol = solve(eq, R, set=True)[1]
-    assert sol == set([(Rational(5, 3) + (-S.Half - sqrt(3)*I/2)*(Rational(251, 27) +
-        sqrt(111)*I/9)**Rational(1, 3) + 40/(9*((-S.Half - sqrt(3)*I/2)*(Rational(251, 27) +
+    assert sol == set([(Rational(5, 3) + (Rational(-1, 2) - sqrt(3)*I/2)*(Rational(251, 27) +
+        sqrt(111)*I/9)**Rational(1, 3) + 40/(9*((Rational(-1, 2) - sqrt(3)*I/2)*(Rational(251, 27) +
         sqrt(111)*I/9)**Rational(1, 3))),), (Rational(5, 3) + 40/(9*(Rational(251, 27) +
         sqrt(111)*I/9)**Rational(1, 3)) + (Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3),)])
 
@@ -1790,7 +1790,7 @@ def test_issue_2777():
     # the equations represent two circles
     x, y = symbols('x y', real=True)
     e1, e2 = sqrt(x**2 + y**2) - 10, sqrt(y**2 + (-x + 10)**2) - 3
-    a, b = 191/S(20), 3*sqrt(391)/20
+    a, b = Rational(191, 20), 3*sqrt(391)/20
     ans = [(a, -b), (a, b)]
     assert solve((e1, e2), (x, y)) == ans
     assert solve((e1, e2/(x - a)), (x, y)) == []
@@ -1990,7 +1990,7 @@ def test_issue_12476():
             -x1/3 - x2/3 + x3*x4 - x3/3, -x0/3 - 2*x2/3 + x4**2, -x1 + x4*x5, x0*x5 - x5,
             x1*x5 - x4, x2*x5 - x3, -x2 + x3*x5, -x1 + x4*x5, -x0 + x5**2, x0 - 1]
     sols = [{x0: 1, x3: Rational(1, 6), x2: Rational(1, 6), x4: Rational(-2, 3), x1: Rational(-2, 3), x5: 1},
-            {x0: 1, x3: S.Half, x2: -S.Half, x4: 0, x1: 0, x5: -1},
+            {x0: 1, x3: S.Half, x2: Rational(-1, 2), x4: 0, x1: 0, x5: -1},
             {x0: 1, x3: Rational(-1, 3), x2: Rational(-1, 3), x4: Rational(1, 3), x1: Rational(1, 3), x5: 1},
             {x0: 1, x3: 1, x2: 1, x4: 1, x1: 1, x5: 1},
             {x0: 1, x3: Rational(-1, 3), x2: Rational(1, 3), x4: sqrt(5)/3, x1: -sqrt(5)/3, x5: -1},

@@ -49,8 +49,8 @@ def test_rewrite_single():
     #u(exp(x)*sin(x), x)
     assert _rewrite_single(exp(x)*sin(x), x) == \
         ([(-sqrt(2)/(2*sqrt(pi)), 0,
-           meijerg(((-S.Half, 0, Rational(1, 4), S.Half, Rational(3, 4)), (1,)),
-                   ((), (-S.Half, 0)), 64*exp_polar(-4*I*pi)/x**4))], True)
+           meijerg(((Rational(-1, 2), 0, Rational(1, 4), S.Half, Rational(3, 4)), (1,)),
+                   ((), (Rational(-1, 2), 0)), 64*exp_polar(-4*I*pi)/x**4))], True)
 
 
 def test_rewrite1():
@@ -214,7 +214,7 @@ def test_meijerint():
     alpha = symbols('alpha', positive=True)
     assert meijerint_definite((2 - x)**alpha*sin(alpha/x), x, 0, 2) == \
         (sqrt(pi)*alpha*gamma(alpha + 1)*meijerg(((), (alpha/2 + S.Half,
-        alpha/2 + 1)), ((0, 0, S.Half), (-S.Half,)), alpha**Rational(2, 16))/4, True)
+        alpha/2 + 1)), ((0, 0, S.Half), (Rational(-1, 2),)), alpha**2/16)/4, True)
 
     # test a bug related to 3016
     a, s = symbols('a s', positive=True)

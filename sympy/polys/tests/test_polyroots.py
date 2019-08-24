@@ -38,12 +38,12 @@ def _check(roots):
 
 
 def test_roots_linear():
-    assert roots_linear(Poly(2*x + 1, x)) == [-Rational(1, 2)]
+    assert roots_linear(Poly(2*x + 1, x)) == [Rational(-1, 2)]
 
 
 def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2, x)) == [0, 0]
-    assert roots_quadratic(Poly(2*x**2 + 3*x, x)) == [-Rational(3, 2), 0]
+    assert roots_quadratic(Poly(2*x**2 + 3*x, x)) == [Rational(-3, 2), 0]
     assert roots_quadratic(Poly(2*x**2 + 3, x)) == [-I*sqrt(6)/2, I*sqrt(6)/2]
     assert roots_quadratic(Poly(2*x**2 + 4*x + 3, x)) == [-1 - I*sqrt(2)/2, -1 + I*sqrt(2)/2]
     _check(Poly(2*x**2 + 4*x + 3, x).all_roots())
@@ -191,7 +191,7 @@ def test_roots_quartic():
         if i == 2:
             c = -a*(a**2/S(8) - b/S(2))
         elif i == 3:
-            d = a*(a*(3*a**2/S(256) - b/S(16)) + c/S(4))
+            d = a*(a*(a**2*Rational(3, 256) - b/S(16)) + c/S(4))
         eq = x**4 + a*x**3 + b*x**2 + c*x + d
         ans = roots_quartic(Poly(eq, x))
         assert all(eq.subs(x, ai).n(chop=True) == 0 for ai in ans)
@@ -210,9 +210,9 @@ def test_roots_quartic():
     ans = roots_quartic(eq)
     assert all(type(i) == Piecewise for i in ans)
     reps = (
-        dict(y=-Rational(1, 3), z=-Rational(1, 4)),  # 4 real
-        dict(y=-Rational(1, 3), z=-Rational(1, 2)),  # 2 real
-        dict(y=-Rational(1, 3), z=-2))  # 0 real
+        dict(y=Rational(-1, 3), z=Rational(-1, 4)),  # 4 real
+        dict(y=Rational(-1, 3), z=Rational(-1, 2)),  # 2 real
+        dict(y=Rational(-1, 3), z=-2))  # 0 real
     for rep in reps:
         sol = roots_quartic(Poly(eq.subs(rep), x))
         assert all([verify_numerically(w.subs(rep) - s, 0) for w, s in zip(ans, sol)])
@@ -222,7 +222,7 @@ def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True)) == [1]
     assert roots_cyclotomic(cyclotomic_poly(2, x, polys=True)) == [-1]
     assert roots_cyclotomic(cyclotomic_poly(
-        3, x, polys=True)) == [-S.Half - I*sqrt(3)/2, -S.Half + I*sqrt(3)/2]
+        3, x, polys=True)) == [Rational(-1, 2) - I*sqrt(3)/2, Rational(-1, 2) + I*sqrt(3)/2]
     assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True)) == [-I, I]
     assert roots_cyclotomic(cyclotomic_poly(
         6, x, polys=True)) == [S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
@@ -269,7 +269,7 @@ def test_roots_cyclotomic():
 def test_roots_binomial():
     assert roots_binomial(Poly(5*x, x)) == [0]
     assert roots_binomial(Poly(5*x**4, x)) == [0, 0, 0, 0]
-    assert roots_binomial(Poly(5*x + 2, x)) == [-Rational(2, 5)]
+    assert roots_binomial(Poly(5*x + 2, x)) == [Rational(-2, 5)]
 
     A = 10**Rational(3, 4)/10
 
@@ -294,9 +294,9 @@ def test_roots_binomial():
 
     # issue 8813
     assert roots(Poly(2*x**3 - 16*y**3, x)) == {
-        2*y*(-S.Half - sqrt(3)*I/2): 1,
+        2*y*(Rational(-1, 2) - sqrt(3)*I/2): 1,
         2*y: 1,
-        2*y*(-S.Half + sqrt(3)*I/2): 1}
+        2*y*(Rational(-1, 2) + sqrt(3)*I/2): 1}
 
 
 def test_roots_preprocessing():
@@ -365,29 +365,29 @@ def test_roots0():
     assert roots(x**9, x) == {S.Zero: 9}
     assert roots(((x - 2)*(x + 3)*(x - 4)).expand(), x) == {-S(3): 1, S(2): 1, S(4): 1}
 
-    assert roots(2*x + 1, x) == {-S.Half: 1}
-    assert roots((2*x + 1)**2, x) == {-S.Half: 2}
-    assert roots((2*x + 1)**5, x) == {-S.Half: 5}
-    assert roots((2*x + 1)**10, x) == {-S.Half: 10}
+    assert roots(2*x + 1, x) == {Rational(-1, 2): 1}
+    assert roots((2*x + 1)**2, x) == {Rational(-1, 2): 2}
+    assert roots((2*x + 1)**5, x) == {Rational(-1, 2): 5}
+    assert roots((2*x + 1)**10, x) == {Rational(-1, 2): 10}
 
     assert roots(x**4 - 1, x) == {I: 1, S.One: 1, -S.One: 1, -I: 1}
     assert roots((x**4 - 1)**2, x) == {I: 2, S.One: 2, -S.One: 2, -I: 2}
 
-    assert roots(((2*x - 3)**2).expand(), x) == { Rational(3, 2): 2}
-    assert roots(((2*x + 3)**2).expand(), x) == {-Rational(3, 2): 2}
+    assert roots(((2*x - 3)**2).expand(), x) == {Rational( 3, 2): 2}
+    assert roots(((2*x + 3)**2).expand(), x) == {Rational(-3, 2): 2}
 
-    assert roots(((2*x - 3)**3).expand(), x) == { Rational(3, 2): 3}
-    assert roots(((2*x + 3)**3).expand(), x) == {-Rational(3, 2): 3}
+    assert roots(((2*x - 3)**3).expand(), x) == {Rational( 3, 2): 3}
+    assert roots(((2*x + 3)**3).expand(), x) == {Rational(-3, 2): 3}
 
-    assert roots(((2*x - 3)**5).expand(), x) == { Rational(3, 2): 5}
-    assert roots(((2*x + 3)**5).expand(), x) == {-Rational(3, 2): 5}
+    assert roots(((2*x - 3)**5).expand(), x) == {Rational( 3, 2): 5}
+    assert roots(((2*x + 3)**5).expand(), x) == {Rational(-3, 2): 5}
 
     assert roots(((a*x - b)**5).expand(), x) == { b/a: 5}
     assert roots(((a*x + b)**5).expand(), x) == {-b/a: 5}
 
     assert roots(x**2 + (-a - 1)*x + a, x) == {a: 1, S.One: 1}
 
-    assert roots(x**4 - 2*x**2 + 1, x) == {S.One: 2, -S.One: 2}
+    assert roots(x**4 - 2*x**2 + 1, x) == {S.One: 2, S.NegativeOne: 2}
 
     assert roots(x**6 - 4*x**4 + 4*x**3 - x**2, x) == \
         {S.One: 2, -1 - sqrt(2): 1, S.Zero: 2, -1 + sqrt(2): 1}
@@ -403,7 +403,8 @@ def test_roots0():
     f = -2016*x**2 - 5616*x**3 - 2056*x**4 + 3324*x**5 + 2176*x**6 - \
         224*x**7 - 384*x**8 - 64*x**9
 
-    assert roots(f) == {S.Zero: 2, -S(2): 2, S(2): 1, Rational(-7, 2): 1, Rational(-3, 2): 1, -S.Half: 1, Rational(3, 2): 1}
+    assert roots(f) == {S.Zero: 2, -S(2): 2, S(2): 1, Rational(-7, 2): 1,
+                Rational(-3, 2): 1, Rational(-1, 2): 1, Rational(3, 2): 1}
 
     assert roots((a + b + c)*x - (a + b + c + d), x) == {(a + b + c + d)/(a + b + c): 1}
 
@@ -418,7 +419,7 @@ def test_roots0():
     assert roots((x**2 - x)*(x**3 + 2*x**2 + 4*x + 8), x ) == \
         {S.One: 1, S.Zero: 1, -S(2): 1, -2*I: 1, 2*I: 1}
 
-    r1_2, r1_3 = Rational(1, 2), Rational(1, 3)
+    r1_2, r1_3 = S.Half, Rational(1, 3)
 
     x0 = (3*sqrt(33) + 19)**r1_3
     x1 = 4/x0/3

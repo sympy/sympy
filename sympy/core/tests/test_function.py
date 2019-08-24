@@ -1034,8 +1034,8 @@ def test_Derivative_as_finite_difference():
     d3fdx3 = f(x).diff(x, 3)
     # Central 3rd derivative at gridpoint
     assert (d3fdx3.as_finite_difference() -
-            (-f(x - 3/S(2)) + 3*f(x - 1/S(2)) -
-             3*f(x + 1/S(2)) + f(x + 3/S(2)))).simplify() == 0
+            (-f(x - Rational(3, 2)) + 3*f(x - S.Half) -
+             3*f(x + S.Half) + f(x + Rational(3, 2)))).simplify() == 0
 
     assert (d3fdx3.as_finite_difference(
         [x - 3*h, x - 2*h, x-h, x, x+h, x + 2*h, x + 3*h]) -

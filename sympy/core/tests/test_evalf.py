@@ -248,9 +248,9 @@ def test_evalf_integer_parts():
         long(11188719610782480504630258070757734324011354208865721592720336800)
     assert int(ceiling(factorial(50)/E, evaluate=False).evalf(70)) == \
         long(11188719610782480504630258070757734324011354208865721592720336801)
-    assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1, 2)))
+    assert int(floor((GoldenRatio**999 / sqrt(5) + S.Half))
                .evalf(1000)) == fibonacci(999)
-    assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1, 2)))
+    assert int(floor((GoldenRatio**1000 / sqrt(5) + S.Half))
                .evalf(1000)) == fibonacci(1000)
 
     assert ceiling(x).evalf(subs={x: 3}) == 3
@@ -490,8 +490,8 @@ def test_issue_8853():
 
     assert get_integer_part(S.Half, -1, {}, True) == (0, 0)
     assert get_integer_part(S.Half, 1, {}, True) == (1, 0)
-    assert get_integer_part(-S.Half, -1, {}, True) == (-1, 0)
-    assert get_integer_part(-S.Half, 1, {}, True) == (0, 0)
+    assert get_integer_part(Rational(-1, 2), -1, {}, True) == (-1, 0)
+    assert get_integer_part(Rational(-1, 2), 1, {}, True) == (0, 0)
 
 
 def test_issue_9326():

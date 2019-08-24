@@ -56,7 +56,7 @@ def test_erf():
     assert erf(z).rewrite('fresnelc') == (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
         I*fresnels(z*(1 - I)/sqrt(pi)))
     assert erf(z).rewrite('hyper') == 2*z*hyper([S.Half], [3*S.Half], -z**2)/sqrt(pi)
-    assert erf(z).rewrite('meijerg') == z*meijerg([S.Half], [], [0], [-S.Half], z**2)/sqrt(pi)
+    assert erf(z).rewrite('meijerg') == z*meijerg([S.Half], [], [0], [Rational(-1, 2)], z**2)/sqrt(pi)
     assert erf(z).rewrite('expint') == sqrt(z**2)/z - z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     assert limit(exp(x)*exp(x**2)*(erf(x + 1/exp(x)) - erf(x)), x, oo) == \
@@ -135,7 +135,7 @@ def test_erfc():
     assert erfc(z).rewrite('fresnelc') == 1 - (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
         I*fresnels(z*(1 - I)/sqrt(pi)))
     assert erfc(z).rewrite('hyper') == 1 - 2*z*hyper([S.Half], [3*S.Half], -z**2)/sqrt(pi)
-    assert erfc(z).rewrite('meijerg') == 1 - z*meijerg([S.Half], [], [0], [-S.Half], z**2)/sqrt(pi)
+    assert erfc(z).rewrite('meijerg') == 1 - z*meijerg([S.Half], [], [0], [Rational(-1, 2)], z**2)/sqrt(pi)
     assert erfc(z).rewrite('uppergamma') == 1 - sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erfc(z).rewrite('expint') == S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
     assert erfc(z).rewrite('tractable') == _erfs(z)*exp(-z**2)
@@ -195,7 +195,7 @@ def test_erfi():
     assert erfi(z).rewrite('fresnelc') == (1 - I)*(fresnelc(z*(1 + I)/sqrt(pi)) -
         I*fresnels(z*(1 + I)/sqrt(pi)))
     assert erfi(z).rewrite('hyper') == 2*z*hyper([S.Half], [3*S.Half], z**2)/sqrt(pi)
-    assert erfi(z).rewrite('meijerg') == z*meijerg([S.Half], [], [0], [-S.Half], -z**2)/sqrt(pi)
+    assert erfi(z).rewrite('meijerg') == z*meijerg([S.Half], [], [0], [Rational(-1, 2)], -z**2)/sqrt(pi)
     assert erfi(z).rewrite('uppergamma') == (sqrt(-z**2)/z*(uppergamma(S.Half,
         -z**2)/sqrt(S.Pi) - S.One))
     assert erfi(z).rewrite('expint') == sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
@@ -628,7 +628,7 @@ def test_ci():
 def test_fresnel():
     assert fresnels(0) == 0
     assert fresnels(oo) == S.Half
-    assert fresnels(-oo) == -S.Half
+    assert fresnels(-oo) == Rational(-1, 2)
     assert fresnels(I*oo) == -I*S.Half
 
     assert unchanged(fresnels, z)
@@ -680,7 +680,7 @@ def test_fresnel():
 
     assert fresnelc(0) == 0
     assert fresnelc(oo) == S.Half
-    assert fresnelc(-oo) == -S.Half
+    assert fresnelc(-oo) == Rational(-1, 2)
     assert fresnelc(I*oo) == I*S.Half
 
     assert unchanged(fresnelc, z)

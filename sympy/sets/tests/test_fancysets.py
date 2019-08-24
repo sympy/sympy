@@ -116,7 +116,7 @@ def test_ImageSet():
     assert Tuple(Rational(1, 8), 3, 9) in ImageSet(Lambda((t, y, x), (1/y, t, x)), c3)
     assert 2/pi not in ImageSet(Lambda((x, y), 2/x), c)
     assert 2/S(100) not in ImageSet(Lambda((x, y), 2/x), c)
-    assert 2/S(3) in ImageSet(Lambda((x, y), 2/x), c)
+    assert Rational(2, 3) in ImageSet(Lambda((x, y), 2/x), c)
 
     assert imageset(lambda x, y: x + y, S.Integers, S.Naturals
         ).base_set == ProductSet(S.Integers, S.Naturals)
@@ -910,7 +910,7 @@ def test_Rationals():
     assert S.Rationals.sup == oo
     it = iter(S.Rationals)
     assert [next(it) for i in range(12)] == [
-        0, 1, -1, S.Half, 2, -S.Half, -2,
+        0, 1, -1, S.Half, 2, Rational(-1, 2), -2,
         Rational(1, 3), 3, Rational(-1, 3), -3, Rational(2, 3)]
     assert Basic() not in S.Rationals
     assert S.Half in S.Rationals

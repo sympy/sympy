@@ -98,7 +98,7 @@ class MultivariateNormalDistribution(JointDistribution):
         args = ImmutableMatrix(args)
         x = args - mu
         return  S.One/sqrt((2*pi)**(k)*det(sigma))*exp(
-            -S.Half*x.transpose()*(sigma.inv()*\
+            Rational(-1, 2)*x.transpose()*(sigma.inv()*\
                 x))[0]
 
     def marginal_distribution(self, indices, sym):
@@ -110,8 +110,8 @@ class MultivariateNormalDistribution(JointDistribution):
                 _mu = _mu.row_del(i)
                 _sigma = _sigma.col_del(i)
                 _sigma = _sigma.row_del(i)
-        return Lambda(tuple(sym), S(1)/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
-            -S.Half*(_mu - sym).transpose()*(_sigma.inv()*\
+        return Lambda(tuple(sym), S.One/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
+            Rational(-1, 2)*(_mu - sym).transpose()*(_sigma.inv()*\
                 (_mu - sym)))[0])
 
 #-------------------------------------------------------------------------------

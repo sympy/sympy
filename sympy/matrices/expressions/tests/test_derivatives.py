@@ -341,7 +341,7 @@ def test_derivatives_matrix_norms():
     assert expr.diff(x) == y/(2*sqrt(x.T*y))
 
     expr = (x.T*x)**S.Half
-    assert expr.diff(x) == x*(x.T*x)**(-S.Half)
+    assert expr.diff(x) == x*(x.T*x)**Rational(-1, 2)
 
     expr = (c.T*a*x.T*b)**S.Half
     assert expr.diff(x) == b/(2*sqrt(c.T*a*x.T*b))*c.T*a
@@ -433,10 +433,10 @@ def test_derivatives_of_hadamard_expressions():
     assert expr.diff(x).doit() == 2*DiagonalizeVector(x)
 
     expr = hadamard_power(x, S.Half)
-    assert expr.diff(x) == S.Half*DiagonalizeVector(hadamard_power(x, -S.Half))
+    assert expr.diff(x) == S.Half*DiagonalizeVector(hadamard_power(x, Rational(-1, 2)))
 
     expr = hadamard_power(a.T*X*b, 2)
     assert expr.diff(X) == 2*a*a.T*X*b*b.T
 
     expr = hadamard_power(a.T*X*b, S.Half)
-    assert expr.diff(X) == a/2*hadamard_power(a.T*X*b, -S.Half)*b.T
+    assert expr.diff(X) == a/2*hadamard_power(a.T*X*b, Rational(-1, 2))*b.T

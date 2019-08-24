@@ -133,11 +133,11 @@ def add_formulae(formulae):
     addb((S.Half, 1), (S('3/2'), ),
          Matrix([HyperRep_atanh(z), 1]),
          Matrix([[1, 0]]),
-         Matrix([[-S.Half, 1/(1 - z)/2], [0, 0]]))
+         Matrix([[Rational(-1, 2), 1/(1 - z)/2], [0, 0]]))
     addb((S.Half, S.Half), (S('3/2'), ),
-         Matrix([HyperRep_asin1(z), HyperRep_power1(-S.Half, z)]),
+         Matrix([HyperRep_asin1(z), HyperRep_power1(Rational(-1, 2), z)]),
          Matrix([[1, 0]]),
-         Matrix([[-S.Half, S.Half], [0, z/(1 - z)/2]]))
+         Matrix([[Rational(-1, 2), S.Half], [0, z/(1 - z)/2]]))
     addb((a, S.Half + a), (S.Half, ),
          Matrix([HyperRep_sqrts1(-a, z), -HyperRep_sqrts2(-a - S.Half, z)]),
          Matrix([[1, 0]]),
@@ -159,23 +159,23 @@ def add_formulae(formulae):
     addb([S.Half, S.Half], [S.One],
          Matrix([elliptic_k(z), elliptic_e(z)]),
          Matrix([[2/pi, 0]]),
-         Matrix([[-S.Half, -1/(2*z-2)],
-                 [-S.Half, S.Half]]))
-    addb([-S.Half, S.Half], [S.One],
+         Matrix([[Rational(-1, 2), -1/(2*z-2)],
+                 [Rational(-1, 2), S.Half]]))
+    addb([Rational(-1, 2), S.Half], [S.One],
          Matrix([elliptic_k(z), elliptic_e(z)]),
          Matrix([[0, 2/pi]]),
-         Matrix([[-S.Half, -1/(2*z-2)],
-                 [-S.Half, S.Half]]))
+         Matrix([[Rational(-1, 2), -1/(2*z-2)],
+                 [Rational(-1, 2), S.Half]]))
 
     # 3F2
-    addb([-S.Half, 1, 1], [S.Half, 2],
+    addb([Rational(-1, 2), 1, 1], [S.Half, 2],
          Matrix([z*HyperRep_atanh(z), HyperRep_log1(z), 1]),
          Matrix([[Rational(-2, 3), -S.One/(3*z), Rational(2, 3)]]),
          Matrix([[S.Half, 0, z/(1 - z)/2],
                  [0, 0, z/(z - 1)],
                  [0, 0, 0]]))
     # actually the formula for 3/2 is much nicer ...
-    addb([-S.Half, 1, 1], [2, 2],
+    addb([Rational(-1, 2), 1, 1], [2, 2],
          Matrix([HyperRep_power1(S.Half, z), HyperRep_log2(z), 1]),
          Matrix([[Rational(4, 9) - 16/(9*z), 4/(3*z), 16/(9*z)]]),
          Matrix([[z/2/(z - 1), 0, 0], [1/(2*(z - 1)), 0, S.Half], [0, 0, 0]]))
@@ -196,7 +196,7 @@ def add_formulae(formulae):
          Matrix([[1, 0]]),
          Matrix([[-a, 1], [0, z]]))
     # This one is redundant.
-    add([-S.Half], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
+    add([Rational(-1, 2)], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
 
     # Added to get nice results for Laplace transform of Fresnel functions
     # http://functions.wolfram.com/07.22.03.6437.01
@@ -226,7 +226,7 @@ def add_formulae(formulae):
                  lowergamma(a, polar_lift(-1)*z),
                  a/(2*a - 1)*exp(z)]),
          Matrix([[1, -1, 0]]),
-         Matrix([[-S.Half, 0, 1], [0, -a, 1], [0, 0, z]]))
+         Matrix([[Rational(-1, 2), 0, 1], [0, -a, 1], [0, 0, z]]))
     # We make a "basis" of four functions instead of three, and give EulerGamma
     # an extra slot (it could just be a coefficient to 1). The advantage is
     # that this way Polys will not see multivariate polynomials (it treats
@@ -273,7 +273,7 @@ def add_formulae(formulae):
                        + besseli(2*a - 1, x)*besselj(2*a, x))]),
          Matrix([[1, 0, 0, 0]]),
          Matrix([[0, Rational(1, 4), 0, 0],
-                 [0, (1 - 2*a)/2, -S.Half, 0],
+                 [0, (1 - 2*a)/2, Rational(-1, 2), 0],
                  [0, 0, 1 - 2*a, Rational(1, 4)],
                  [-32*z, 0, 0, 1 - a]]))
 
@@ -301,7 +301,7 @@ def add_formulae(formulae):
          Matrix([Shi(2*sqrt(z))/2/sqrt(z), sinh(2*sqrt(z))/2/sqrt(z),
                  cosh(2*sqrt(z))]),
          Matrix([[1, 0, 0]]),
-         Matrix([[-S.Half, S.Half, 0], [0, -S.Half, S.Half], [0, 2*z, 0]]))
+         Matrix([[Rational(-1, 2), S.Half, 0], [0, Rational(-1, 2), S.Half], [0, 2*z, 0]]))
 
     # FresnelS
     # Basic rule
@@ -319,7 +319,7 @@ def add_formulae(formulae):
                cosh(2*sqrt(z)) ]),
          Matrix([[6, 0, 0]]),
          Matrix([[Rational(-3, 4),  Rational(1, 16), 0],
-                 [ 0,      -S.Half,  1],
+                 [ 0,      Rational(-1, 2),  1],
                  [ 0,       z,       0]]))
 
     # FresnelC
@@ -359,7 +359,7 @@ def add_formulae(formulae):
          Matrix([Chi(2*sqrt(z)) - log(2*sqrt(z)),
                  cosh(2*sqrt(z)), sqrt(z)*sinh(2*sqrt(z)), 1, EulerGamma]),
          Matrix([[1/z, 0, 0, 0, -1/z]]),
-         Matrix([[0, S.Half, 0, -S.Half, 0],
+         Matrix([[0, S.Half, 0, Rational(-1, 2), 0],
                  [0, 0, 1, 0, 0],
                  [0, z, S.Half, 0, 0],
                  [0, 0, 0, 0, 0],

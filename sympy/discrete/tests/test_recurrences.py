@@ -39,7 +39,7 @@ def test_linrec():
             814315512679031689453125)
 
     assert linrec(coeffs=[0]*60 + [Rational(2, 3), Rational(4, 5)], init=b, n=3000) == \
-        26777668739896791448594650497024/S(48084516708184142230517578125)
+        Rational(26777668739896791448594650497024, 48084516708184142230517578125)
 
     raises(TypeError, lambda: linrec(coeffs=[11, 13, 15, 17], init=[1, 2, 3, 4, 5], n=1))
     raises(TypeError, lambda: linrec(coeffs=a[:4], init=b[:5], n=10000))

@@ -88,7 +88,7 @@ class SpinOpBase(object):
         return r'%s_%s' % ((unicode(self.name), self._coord))
 
     def _represent_base(self, basis, **options):
-        j = options.get('j', Rational(1, 2))
+        j = options.get('j', S.Half)
         size, mvals = m_values(j)
         result = zeros(size, size)
         for p in range(size):
@@ -416,7 +416,7 @@ class J2Op(SpinOpBase, HermitianOperator):
     def _eval_rewrite_as_plusminus(self, *args, **kwargs):
         a = args[0]
         return JzOp(a)**2 + \
-            Rational(1, 2)*(JplusOp(a)*JminusOp(a) + JminusOp(a)*JplusOp(a))
+            S.Half*(JplusOp(a)*JminusOp(a) + JminusOp(a)*JplusOp(a))
 
 
 class Rotation(UnitaryOperator):
@@ -601,7 +601,7 @@ class Rotation(UnitaryOperator):
         return result
 
     def _represent_base(self, basis, **options):
-        j = sympify(options.get('j', Rational(1, 2)))
+        j = sympify(options.get('j', S.Half))
         # TODO: move evaluation up to represent function/implement elsewhere
         evaluate = sympify(options.get('doit'))
         size, mvals = m_values(j)

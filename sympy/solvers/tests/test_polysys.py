@@ -24,7 +24,7 @@ def test_solve_poly_system():
         [(0, 0), (2, -sqrt(2)), (2, sqrt(2))]
 
     assert solve_poly_system([y - x**2, y + x**2 + 1], x, y) == \
-        [(-I*sqrt(S.Half), -S.Half), (I*sqrt(S.Half), -S.Half)]
+        [(-I*sqrt(S.Half), Rational(-1, 2)), (I*sqrt(S.Half), Rational(-1, 2))]
 
     f_1 = x**2 + y + z - 1
     f_2 = x + y**2 + z - 1

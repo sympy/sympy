@@ -19,7 +19,7 @@ def test_rational():
     assert sqrt(a) == r
     assert 2*sqrt(a) == 2*r
 
-    r = a*a**Rational(1, 2)
+    r = a*a**S.Half
     assert a**Rational(3, 2) == r
     assert 2*a**Rational(3, 2) == 2*r
 
@@ -42,7 +42,7 @@ def test_negative_real():
 
 def test_expand():
     x = Symbol('x')
-    assert (2**(-1 - x)).expand() == Rational(1, 2)*2**(-x)
+    assert (2**(-1 - x)).expand() == S.Half*2**(-x)
 
 
 def test_issue_3449():
@@ -354,18 +354,18 @@ def test_issue_7638():
     r = symbols('r', real=True)
     assert sqrt(r**2) == abs(r)
     assert cbrt(r**3) != r
-    assert sqrt(Pow(2*I, 5*S.Half)) != (2*I)**(5/S(4))
+    assert sqrt(Pow(2*I, 5*S.Half)) != (2*I)**Rational(5, 4)
     p = symbols('p', positive=True)
-    assert cbrt(p**2) == p**(2/S(3))
+    assert cbrt(p**2) == p**Rational(2, 3)
     assert NS(((0.2 + 0.7*I)**(0.7 + 1.0*I))**(0.5 - 0.1*I), 1) == '0.4 + 0.2*I'
     assert sqrt(1/(1 + I)) == sqrt(1 - I)/sqrt(2)  # or 1/sqrt(1 + I)
     e = 1/(1 - sqrt(2))
     assert sqrt(e) == I/sqrt(-1 + sqrt(2))
-    assert e**-S.Half == -I*sqrt(-1 + sqrt(2))
+    assert e**Rational(-1, 2) == -I*sqrt(-1 + sqrt(2))
     assert sqrt((cos(1)**2 + sin(1)**2 - 1)**(3 + I)).exp in [S.Half,
                                                               Rational(3, 2) + I/2]
-    assert sqrt(r**(4/S(3))) != r**(2/S(3))
-    assert sqrt((p + I)**(4/S(3))) == (p + I)**(2/S(3))
+    assert sqrt(r**Rational(4, 3)) != r**Rational(2, 3)
+    assert sqrt((p + I)**Rational(4, 3)) == (p + I)**Rational(2, 3)
     assert sqrt((p - p**2*I)**2) == p - p**2*I
     assert sqrt((p + r*I)**2) != p + r*I
     e = (1 + I/5)

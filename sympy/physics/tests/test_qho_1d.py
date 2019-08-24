@@ -35,7 +35,7 @@ def test_orthogonality(n=1):
 def test_energies(n=1):
     # Maximum "n" which is tested:
     for i in range(n + 1):
-        assert E_n(i, omega) == hbar * omega * (i + Rational(1, 2))
+        assert E_n(i, omega) == hbar * omega * (i + S.Half)
 
 def test_coherent_state(n=10):
     # Maximum "n" which is tested:

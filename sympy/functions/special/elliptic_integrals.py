@@ -264,7 +264,7 @@ class elliptic_e(Function):
     def _eval_rewrite_as_hyper(self, *args, **kwargs):
         if len(args) == 1:
             m = args[0]
-            return (pi/2)*hyper((-S.Half, S.Half), (S.One,), m)
+            return (pi/2)*hyper((Rational(-1, 2), S.Half), (S.One,), m)
 
     def _eval_rewrite_as_meijerg(self, *args, **kwargs):
         if len(args) == 1:

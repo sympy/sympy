@@ -7,7 +7,7 @@ def test_cg_simp_add():
     j, m1, m1p, m2, m2p = symbols('j m1 m1p m2 m2p')
     # Test Varshalovich 8.7.1 Eq 1
     a = CG(S.Half, S.Half, 0, 0, S.Half, S.Half)
-    b = CG(S.Half, -S.Half, 0, 0, S.Half, -S.Half)
+    b = CG(S.Half, Rational(-1, 2), 0, 0, S.Half, Rational(-1, 2))
     c = CG(1, 1, 0, 0, 1, 1)
     d = CG(1, 0, 0, 0, 1, 0)
     e = CG(1, -1, 0, 0, 1, -1)
@@ -24,7 +24,7 @@ def test_cg_simp_add():
     assert cg_simp(-6*a - 6*b) == -12
     assert cg_simp(-4*c - 4*d - 4*e) == -12
     a = CG(S.Half, S.Half, j, 0, S.Half, S.Half)
-    b = CG(S.Half, -S.Half, j, 0, S.Half, -S.Half)
+    b = CG(S.Half, Rational(-1, 2), j, 0, S.Half, Rational(-1, 2))
     c = CG(1, 1, j, 0, 1, 1)
     d = CG(1, 0, j, 0, 1, 0)
     e = CG(1, -1, j, 0, 1, -1)
@@ -41,8 +41,8 @@ def test_cg_simp_add():
     assert cg_simp(-6*a - 6*b) == -12*KroneckerDelta(j, 0)
     assert cg_simp(-4*c - 4*d - 4*e) == -12*KroneckerDelta(j, 0)
     # Test Varshalovich 8.7.1 Eq 2
-    a = CG(S.Half, S.Half, S.Half, -S.Half, 0, 0)
-    b = CG(S.Half, -S.Half, S.Half, S.Half, 0, 0)
+    a = CG(S.Half, S.Half, S.Half, Rational(-1, 2), 0, 0)
+    b = CG(S.Half, Rational(-1, 2), S.Half, S.Half, 0, 0)
     c = CG(1, 1, 1, -1, 0, 0)
     d = CG(1, 0, 1, 0, 0, 0)
     e = CG(1, -1, 1, 1, 0, 0)
@@ -58,8 +58,8 @@ def test_cg_simp_add():
     assert cg_simp(-c + d - e) == -sqrt(3)
     assert cg_simp(-6*a + 6*b) == -6*sqrt(2)
     assert cg_simp(-4*c + 4*d - 4*e) == -4*sqrt(3)
-    a = CG(S.Half, S.Half, S.Half, -S.Half, j, 0)
-    b = CG(S.Half, -S.Half, S.Half, S.Half, j, 0)
+    a = CG(S.Half, S.Half, S.Half, Rational(-1, 2), j, 0)
+    b = CG(S.Half, Rational(-1, 2), S.Half, S.Half, j, 0)
     c = CG(1, 1, 1, -1, j, 0)
     d = CG(1, 0, 1, 0, j, 0)
     e = CG(1, -1, 1, 1, j, 0)
@@ -79,8 +79,8 @@ def test_cg_simp_add():
     # Test Varshalovich 8.7.2 Eq 9
     # alpha=alphap,beta=betap case
     # numerical
-    a = CG(S.Half, S.Half, S.Half, -S.Half, 1, 0)**2
-    b = CG(S.Half, S.Half, S.Half, -S.Half, 0, 0)**2
+    a = CG(S.Half, S.Half, S.Half, Rational(-1, 2), 1, 0)**2
+    b = CG(S.Half, S.Half, S.Half, Rational(-1, 2), 0, 0)**2
     c = CG(1, 0, 1, 1, 1, 1)**2
     d = CG(1, 0, 1, 1, 2, 1)**2
     assert cg_simp(a + b) == 1
@@ -117,9 +117,9 @@ def test_cg_simp_add():
     # alpha!=alphap or beta!=betap case
     # numerical
     a = CG(S.Half, S(
-        1)/2, S.Half, -S.Half, 1, 0)*CG(S.Half, -S.Half, S.Half, S.Half, 1, 0)
+        1)/2, S.Half, Rational(-1, 2), 1, 0)*CG(S.Half, Rational(-1, 2), S.Half, S.Half, 1, 0)
     b = CG(S.Half, S(
-        1)/2, S.Half, -S.Half, 0, 0)*CG(S.Half, -S.Half, S.Half, S.Half, 0, 0)
+        1)/2, S.Half, Rational(-1, 2), 0, 0)*CG(S.Half, Rational(-1, 2), S.Half, S.Half, 0, 0)
     c = CG(1, 1, 1, 0, 2, 1)*CG(1, 0, 1, 1, 2, 1)
     d = CG(1, 1, 1, 0, 1, 1)*CG(1, 0, 1, 1, 1, 1)
     assert cg_simp(a + b) == 0
@@ -166,9 +166,9 @@ def test_cg_simp_sum():
 
 
 def test_doit():
-    assert Wigner3j(S.Half, -S.Half, S.Half, S.Half, 0, 0).doit() == -sqrt(2)/2
+    assert Wigner3j(S.Half, Rational(-1, 2), S.Half, S.Half, 0, 0).doit() == -sqrt(2)/2
     assert Wigner6j(1, 2, 3, 2, 1, 2).doit() == sqrt(21)/105
     assert Wigner6j(3, 1, 2, 2, 2, 1).doit() == sqrt(21) / 105
     assert Wigner9j(
         2, 1, 1, Rational(3, 2), S.Half, 1, S.Half, S.Half, 0).doit() == sqrt(2)/12
-    assert CG(S.Half, S.Half, S.Half, -S.Half, 1, 0).doit() == sqrt(2)/2
+    assert CG(S.Half, S.Half, S.Half, Rational(-1, 2), 1, 0).doit() == sqrt(2)/2

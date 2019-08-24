@@ -65,7 +65,7 @@ def E_n(n, omega):
     hbar*omega*(x + 1/2)
     """
 
-    return hbar * omega*(n + Rational(1, 2))
+    return hbar * omega * (n + S.Half)
 
 
 def coherent_state(n, alpha):

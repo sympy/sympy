@@ -230,7 +230,7 @@ def test_polynomial_sums():
 def test_geometric_sums():
     assert summation(pi**n, (n, 0, b)) == (1 - pi**(b + 1)) / (1 - pi)
     assert summation(2 * 3**n, (n, 0, b)) == 3**(b + 1) - 1
-    assert summation(Rational(1, 2)**n, (n, 1, oo)) == 1
+    assert summation(S.Half**n, (n, 1, oo)) == 1
     assert summation(2**n, (n, 0, b)) == 2**(b + 1) - 1
     assert summation(2**n, (n, 1, oo)) is oo
     assert summation(2**(-n), (n, 1, oo)) == 1
@@ -274,7 +274,7 @@ def test_geometric_sums():
     assert result == 99999
     assert result.is_Float
 
-    result = Sum(Rational(1, 2)**n, (n, 1, oo)).doit()
+    result = Sum(S.Half**n, (n, 1, oo)).doit()
     assert result == 1
     assert not result.is_Float
 
@@ -303,7 +303,7 @@ def test_harmonic_sums():
 
 
 def test_composite_sums():
-    f = Rational(1, 2)*(7 - 6*n + Rational(1, 7)*n**3)
+    f = S.Half*(7 - 6*n + Rational(1, 7)*n**3)
     s = summation(f, (n, a, b))
     assert not isinstance(s, Sum)
     A = 0
@@ -321,7 +321,7 @@ def test_hypergeometric_sums():
 
 def test_other_sums():
     f = m**2 + m*exp(m)
-    g = 3*exp(Rational(3, 2))/2 + exp(S.Half)/2 - exp(-S.Half)/2 - 3*exp(Rational(-3, 2))/2 + 5
+    g = 3*exp(Rational(3, 2))/2 + exp(S.Half)/2 - exp(Rational(-1, 2))/2 - 3*exp(Rational(-3, 2))/2 + 5
 
     assert summation(f, (m, Rational(-3, 2), Rational(3, 2))) == g
     assert summation(f, (m, -1.5, 1.5)).evalf().epsilon_eq(g.evalf(), 1e-10)

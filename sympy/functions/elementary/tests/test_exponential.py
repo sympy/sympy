@@ -29,7 +29,7 @@ def test_exp_values():
     assert exp(2*pi*I) == 1
 
     assert refine(exp(pi*I*2*k)) == 1
-    assert refine(exp(pi*I*2*(k + Rational(1, 2)))) == -1
+    assert refine(exp(pi*I*2*(k + S.Half))) == -1
     assert refine(exp(pi*I*2*(k + Rational(1, 4)))) == I
     assert refine(exp(pi*I*2*(k + Rational(3, 4)))) == -I
 
@@ -115,7 +115,7 @@ def test_exp_subs():
     e = (exp(3*log(x), evaluate=False))  # evaluates to x**3
     assert e.subs(x**3, y**3) == e
     assert e.subs(x**2, 5) == e
-    assert (x**3).subs(x**2, y) != y**(3/S(2))
+    assert (x**3).subs(x**2, y) != y**Rational(3, 2)
     assert exp(exp(x) + exp(x**2)).subs(exp(exp(x)), y) == y * exp(exp(x**2))
     assert exp(x).subs(E, y) == y**x
     x = symbols('x', real=True)
@@ -249,7 +249,7 @@ def test_log_exact():
             assert log(exp(n*I*pi/10).rewrite(sqrt)) == n*I*pi/10
 
     assert log(S.Half - I*sqrt(3)/2) == -I*pi/3
-    assert log(-S.Half + I*sqrt(3)/2) == I*pi*Rational(2, 3)
+    assert log(Rational(-1, 2) + I*sqrt(3)/2) == I*pi*Rational(2, 3)
     assert log(-sqrt(2)/2 - I*sqrt(2)/2) == -I*pi*Rational(3, 4)
     assert log(-sqrt(3)/2 - I*S.Half) == -I*pi*Rational(5, 6)
 

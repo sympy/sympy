@@ -5,7 +5,7 @@ from sympy.sets import FiniteSet, Union, Intersection, EmptySet
 
 def test_booleans():
     """ test basic unions and intersections """
-    half = Rational(1, 2)
+    half = S.Half
 
     p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
     p5, p6, p7 = map(Point, [(3, 2), (1, -1), (0, 2)])

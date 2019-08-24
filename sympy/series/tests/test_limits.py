@@ -277,7 +277,7 @@ def test_issue_5183():
     # using list(...) so py.test can recalculate values
     tests = list(cartes([x, -x],
                         [-1, 1],
-                        [2, 3, Rational(1, 2), Rational(2, 3)],
+                        [2, 3, S.Half, Rational(2, 3)],
                         ['-', '+']))
     results = (oo, oo, -oo, oo, -oo*I, oo, -oo*(-1)**Rational(1, 3), oo,
                0, 0, 0, 0, 0, 0, 0, 0,
@@ -302,7 +302,7 @@ def test_issue_5184():
     assert limit(atan(x), x, oo) == pi/2
     assert limit(gamma(x), x, oo) is oo
     assert limit(cos(x)/x, x, oo) == 0
-    assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
+    assert limit(gamma(x), x, S.Half) == sqrt(pi)
 
     r = Symbol('r', real=True)
     assert limit(r*sin(1/r), r, 0) == 0
@@ -527,9 +527,9 @@ def test_issue_14574():
 def test_issue_10102():
     assert limit(fresnels(x), x, oo) == S.Half
     assert limit(3 + fresnels(x), x, oo) == 3 + S.Half
-    assert limit(5*fresnels(x), x, oo) == 5*S.Half
+    assert limit(5*fresnels(x), x, oo) == Rational(5, 2)
     assert limit(fresnelc(x), x, oo) == S.Half
-    assert limit(fresnels(x), x, -oo) == -S.Half
+    assert limit(fresnels(x), x, -oo) == Rational(-1, 2)
     assert limit(4*fresnelc(x), x, -oo) == -2
 
 

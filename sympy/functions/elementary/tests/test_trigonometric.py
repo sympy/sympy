@@ -81,17 +81,17 @@ def test_sin():
     assert sin(pi*k).subs(k, 3) == sin(pi*k/2).subs(k, 6)  # issue 8298
 
     assert sin(pi/3) == S.Half*sqrt(3)
-    assert sin(pi*Rational(-2, 3)) == -S.Half*sqrt(3)
+    assert sin(pi*Rational(-2, 3)) == Rational(-1, 2)*sqrt(3)
 
     assert sin(pi/4) == S.Half*sqrt(2)
-    assert sin(-pi/4) == -S.Half*sqrt(2)
+    assert sin(-pi/4) == Rational(-1, 2)*sqrt(2)
     assert sin(pi*Rational(17, 4)) == S.Half*sqrt(2)
-    assert sin(pi*Rational(-3, 4)) == -S.Half*sqrt(2)
+    assert sin(pi*Rational(-3, 4)) == Rational(-1, 2)*sqrt(2)
 
     assert sin(pi/6) == S.Half
-    assert sin(-pi/6) == -S.Half
-    assert sin(pi*Rational(7, 6)) == -S.Half
-    assert sin(pi*Rational(-5, 6)) == -S.Half
+    assert sin(-pi/6) == Rational(-1, 2)
+    assert sin(pi*Rational(7, 6)) == Rational(-1, 2)
+    assert sin(pi*Rational(-5, 6)) == Rational(-1, 2)
 
     assert sin(pi*Rational(1, 5)) == sqrt((5 - sqrt(5)) / 8)
     assert sin(pi*Rational(2, 5)) == sqrt((5 + sqrt(5)) / 8)
@@ -301,17 +301,17 @@ def test_cos():
     assert cos(8*pi) == 1
 
     assert cos(pi/3) == S.Half
-    assert cos(pi*Rational(-2, 3)) == -S.Half
+    assert cos(pi*Rational(-2, 3)) == Rational(-1, 2)
 
     assert cos(pi/4) == S.Half*sqrt(2)
     assert cos(-pi/4) == S.Half*sqrt(2)
-    assert cos(pi*Rational(11, 4)) == -S.Half*sqrt(2)
-    assert cos(pi*Rational(-3, 4)) == -S.Half*sqrt(2)
+    assert cos(pi*Rational(11, 4)) == Rational(-1, 2)*sqrt(2)
+    assert cos(pi*Rational(-3, 4)) == Rational(-1, 2)*sqrt(2)
 
     assert cos(pi/6) == S.Half*sqrt(3)
     assert cos(-pi/6) == S.Half*sqrt(3)
-    assert cos(pi*Rational(7, 6)) == -S.Half*sqrt(3)
-    assert cos(pi*Rational(-5, 6)) == -S.Half*sqrt(3)
+    assert cos(pi*Rational(7, 6)) == Rational(-1, 2)*sqrt(3)
+    assert cos(pi*Rational(-5, 6)) == Rational(-1, 2)*sqrt(3)
 
     assert cos(pi*Rational(1, 5)) == (sqrt(5) + 1)/4
     assert cos(pi*Rational(2, 5)) == (sqrt(5) - 1)/4
@@ -807,8 +807,8 @@ def test_asin():
     assert asin(-sqrt(2)/2) == -pi/4
     assert asin(sqrt((5 - sqrt(5))/8)) == pi/5
     assert asin(-sqrt((5 - sqrt(5))/8)) == -pi/5
-    assert asin(Rational(1, 2)) == pi/6
-    assert asin(-Rational(1, 2)) == -pi/6
+    assert asin(S.Half) == pi/6
+    assert asin(Rational(-1, 2)) == -pi/6
     assert asin((sqrt(2 - sqrt(2)))/2) == pi/8
     assert asin(-(sqrt(2 - sqrt(2)))/2) == -pi/8
     assert asin((sqrt(5) - 1)/4) == pi/10
@@ -870,8 +870,8 @@ def test_acos():
 
     # Note: acos(-x) = pi - acos(x)
     assert acos(0) == pi/2
-    assert acos(Rational(1, 2)) == pi/3
-    assert acos(-Rational(1, 2)) == pi*Rational(2, 3)
+    assert acos(S.Half) == pi/3
+    assert acos(Rational(-1, 2)) == pi*Rational(2, 3)
     assert acos(1) == 0
     assert acos(-1) == pi
     assert acos(sqrt(2)/2) == pi/4
@@ -1045,7 +1045,7 @@ def test_atan2():
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0
     assert ex.subs({x:2, y:3*I}).rewrite(arg) == -pi - I*log(sqrt(5)*I/5)
     assert ex.subs({x:2*I, y:3}).rewrite(arg) == -pi/2 - I*log(sqrt(5)*I)
-    assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == -pi + atan(2/S(3)) + atan(3/S(2))
+    assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == -pi + atan(Rational(2, 3)) + atan(Rational(3, 2))
     i = symbols('i', imaginary=True)
     r = symbols('r', real=True)
     e = atan2(i, r)

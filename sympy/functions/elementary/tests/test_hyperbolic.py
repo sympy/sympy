@@ -46,17 +46,17 @@ def test_sinh():
     assert sinh(pi*I*Rational(7, 2)) == -I
 
     assert sinh(pi*I/3) == S.Half*sqrt(3)*I
-    assert sinh(pi*I*Rational(-2, 3)) == -S.Half*sqrt(3)*I
+    assert sinh(pi*I*Rational(-2, 3)) == Rational(-1, 2)*sqrt(3)*I
 
     assert sinh(pi*I/4) == S.Half*sqrt(2)*I
-    assert sinh(-pi*I/4) == -S.Half*sqrt(2)*I
+    assert sinh(-pi*I/4) == Rational(-1, 2)*sqrt(2)*I
     assert sinh(pi*I*Rational(17, 4)) == S.Half*sqrt(2)*I
-    assert sinh(pi*I*Rational(-3, 4)) == -S.Half*sqrt(2)*I
+    assert sinh(pi*I*Rational(-3, 4)) == Rational(-1, 2)*sqrt(2)*I
 
     assert sinh(pi*I/6) == S.Half*I
-    assert sinh(-pi*I/6) == -S.Half*I
-    assert sinh(pi*I*Rational(7, 6)) == -S.Half*I
-    assert sinh(pi*I*Rational(-5, 6)) == -S.Half*I
+    assert sinh(-pi*I/6) == Rational(-1, 2)*I
+    assert sinh(pi*I*Rational(7, 6)) == Rational(-1, 2)*I
+    assert sinh(pi*I*Rational(-5, 6)) == Rational(-1, 2)*I
 
     assert sinh(pi*I/105) == sin(pi/105)*I
     assert sinh(-pi*I/105) == -sin(pi/105)*I
@@ -126,17 +126,17 @@ def test_cosh():
     assert cosh(8*pi*I) == 1
 
     assert cosh(pi*I/3) == S.Half
-    assert cosh(pi*I*Rational(-2, 3)) == -S.Half
+    assert cosh(pi*I*Rational(-2, 3)) == Rational(-1, 2)
 
     assert cosh(pi*I/4) == S.Half*sqrt(2)
     assert cosh(-pi*I/4) == S.Half*sqrt(2)
-    assert cosh(pi*I*Rational(11, 4)) == -S.Half*sqrt(2)
-    assert cosh(pi*I*Rational(-3, 4)) == -S.Half*sqrt(2)
+    assert cosh(pi*I*Rational(11, 4)) == Rational(-1, 2)*sqrt(2)
+    assert cosh(pi*I*Rational(-3, 4)) == Rational(-1, 2)*sqrt(2)
 
     assert cosh(pi*I/6) == S.Half*sqrt(3)
     assert cosh(-pi*I/6) == S.Half*sqrt(3)
-    assert cosh(pi*I*Rational(7, 6)) == -S.Half*sqrt(3)
-    assert cosh(pi*I*Rational(-5, 6)) == -S.Half*sqrt(3)
+    assert cosh(pi*I*Rational(7, 6)) == Rational(-1, 2)*sqrt(3)
+    assert cosh(pi*I*Rational(-5, 6)) == Rational(-1, 2)*sqrt(3)
 
     assert cosh(pi*I/105) == cos(pi/105)
     assert cosh(-pi*I/105) == cos(pi/105)
@@ -506,7 +506,7 @@ def test_asinh():
     assert asinh(-I*(sqrt(5) + 1)/4) == pi*I*Rational(-3, 10)
 
     # Symmetry
-    assert asinh(-S.Half) == -asinh(S.Half)
+    assert asinh(Rational(-1, 2)) == -asinh(S.Half)
 
     # inverse composition
     assert unchanged(asinh, sinh(Symbol('v1')))
@@ -551,7 +551,7 @@ def test_acosh():
     assert acosh(1) == 0
     assert acosh(-1) == pi*I
     assert acosh(0) == I*pi/2
-    assert acosh(Rational(1, 2)) == I*pi/3
+    assert acosh(S.Half) == I*pi/3
     assert acosh(Rational(-1, 2)) == pi*I*Rational(2, 3)
     assert acosh(nan) == nan
 
@@ -654,13 +654,13 @@ def test_asech():
     assert asech(sqrt(2)) == acosh(1/sqrt(2))
     assert asech(2/sqrt(3)) == acosh(sqrt(3)/2)
     assert asech(2/sqrt(2 + sqrt(2))) == acosh(sqrt(2 + sqrt(2))/2)
-    assert asech(S(2)) == acosh(1/S(2))
+    assert asech(2) == acosh(S.Half)
 
     # asech(x) == I*acos(1/x)
     # (Note: the exact formula is asech(x) == +/- I*acos(1/x))
     assert asech(-sqrt(2)) == I*acos(-1/sqrt(2))
     assert asech(-2/sqrt(3)) == I*acos(-sqrt(3)/2)
-    assert asech(-S(2)) == I*acos(-S.Half)
+    assert asech(-S(2)) == I*acos(Rational(-1, 2))
     assert asech(-2/sqrt(2)) == I*acos(-sqrt(2)/2)
 
     # sech(asech(x)) / x == 1
@@ -808,7 +808,7 @@ def test_atanh():
     assert atanh(oo) == -I*pi/2
 
     # Symmetry
-    assert atanh(-S.Half) == -atanh(S.Half)
+    assert atanh(Rational(-1, 2)) == -atanh(S.Half)
 
     # inverse composition
     assert unchanged(atanh, tanh(Symbol('v1')))
@@ -881,7 +881,7 @@ def test_acoth():
     assert acoth(I*(sqrt(3) - 2)) == pi*I*Rational(5, 12)
 
     # Symmetry
-    assert acoth(-S.Half) == -acoth(S.Half)
+    assert acoth(Rational(-1, 2)) == -acoth(S.Half)
 
 
 def test_acoth_rewrite():

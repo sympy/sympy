@@ -18,7 +18,7 @@ def test_parabola_geom():
     d5 = Line(Point(b, a), slope=oo)
     d6 = Line(Point(a, b), slope=0)
 
-    half = Rational(1, 2)
+    half = S.Half
 
     pa1 = Parabola(None, d2)
     pa2 = Parabola(directrix=d1)

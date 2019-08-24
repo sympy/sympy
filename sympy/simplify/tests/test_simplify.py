@@ -203,8 +203,8 @@ def test_simplify_rational():
 
 
 def test_simplify_issue_1308():
-    assert simplify(exp(-Rational(1, 2)) + exp(-Rational(3, 2))) == \
-        (1 + E)*exp(-Rational(3, 2))
+    assert simplify(exp(Rational(-1, 2)) + exp(Rational(-3, 2))) == \
+        (1 + E)*exp(Rational(-3, 2))
 
 
 def test_issue_5652():
@@ -369,7 +369,7 @@ def test_nsimplify():
     assert nsimplify(2.0**(1/3.), tolerance=0.001) == Rational(635, 504)
     assert nsimplify(2.0**(1/3.), tolerance=0.001, full=True) == \
         2**Rational(1, 3)
-    assert nsimplify(x + .5, rational=True) == Rational(1, 2) + x
+    assert nsimplify(x + .5, rational=True) == S.Half + x
     assert nsimplify(1/.3 + x, rational=True) == Rational(10, 3) + x
     assert nsimplify(log(3).n(), rational=True) == \
         sympify('109861228866811/100000000000000')
@@ -581,10 +581,10 @@ def test_as_content_primitive():
     eq = x**(2 + y)
     assert (eq).as_content_primitive() == (1, eq)
     assert (S.Half**(2 + x)).as_content_primitive() == (Rational(1, 4), 2**-x)
-    assert ((-S.Half)**(2 + x)).as_content_primitive() == \
-           (Rational(1, 4), (-S.Half)**x)
-    assert ((-S.Half)**(2 + x)).as_content_primitive() == \
-           (Rational(1, 4), (-S.Half)**x)
+    assert (Rational(-1, 2)**(2 + x)).as_content_primitive() == \
+           (Rational(1, 4), (Rational(-1, 2))**x)
+    assert (Rational(-1, 2)**(2 + x)).as_content_primitive() == \
+           (Rational(1, 4), Rational(-1, 2)**x)
     assert (4**((1 + y)/2)).as_content_primitive() == (2, 4**(y/2))
     assert (3**((1 + y)/2)).as_content_primitive() == \
            (1, 3**(Mul(S.Half, 1 + y, evaluate=False)))
@@ -611,10 +611,10 @@ def test_besselsimp():
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
         besselj(a, 2*sqrt(x))
     assert besselsimp(sqrt(2)*sqrt(pi)*x**Rational(1, 4)*exp(I*pi/4)*exp(-I*pi*a/2) *
-                      besseli(-S.Half, sqrt(x)*exp_polar(I*pi/2)) *
+                      besseli(Rational(-1, 2), sqrt(x)*exp_polar(I*pi/2)) *
                       besseli(a, sqrt(x)*exp_polar(I*pi/2))/2) == \
         besselj(a, sqrt(x)) * cos(sqrt(x))
-    assert besselsimp(besseli(-S.Half, z)) == \
+    assert besselsimp(besseli(Rational(-1, 2), z)) == \
         sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(besseli(a, z*exp_polar(-I*pi/2))) == \
         exp(-I*pi*a/2)*besselj(a, z)

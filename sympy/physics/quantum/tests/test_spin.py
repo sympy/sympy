@@ -35,21 +35,21 @@ def test_represent_spin_operators():
 def test_represent_spin_states():
     # Jx basis
     assert represent(JxKet(S.Half, S.Half), basis=Jx) == Matrix([1, 0])
-    assert represent(JxKet(S.Half, -S.Half), basis=Jx) == Matrix([0, 1])
+    assert represent(JxKet(S.Half, Rational(-1, 2)), basis=Jx) == Matrix([0, 1])
     assert represent(JxKet(1, 1), basis=Jx) == Matrix([1, 0, 0])
     assert represent(JxKet(1, 0), basis=Jx) == Matrix([0, 1, 0])
     assert represent(JxKet(1, -1), basis=Jx) == Matrix([0, 0, 1])
     assert represent(
         JyKet(S.Half, S.Half), basis=Jx) == Matrix([exp(-I*pi/4), 0])
     assert represent(
-        JyKet(S.Half, -S.Half), basis=Jx) == Matrix([0, exp(I*pi/4)])
+        JyKet(S.Half, Rational(-1, 2)), basis=Jx) == Matrix([0, exp(I*pi/4)])
     assert represent(JyKet(1, 1), basis=Jx) == Matrix([-I, 0, 0])
     assert represent(JyKet(1, 0), basis=Jx) == Matrix([0, 1, 0])
     assert represent(JyKet(1, -1), basis=Jx) == Matrix([0, 0, I])
     assert represent(
         JzKet(S.Half, S.Half), basis=Jx) == sqrt(2)*Matrix([-1, 1])/2
     assert represent(
-        JzKet(S.Half, -S.Half), basis=Jx) == sqrt(2)*Matrix([-1, -1])/2
+        JzKet(S.Half, Rational(-1, 2)), basis=Jx) == sqrt(2)*Matrix([-1, -1])/2
     assert represent(JzKet(1, 1), basis=Jx) == Matrix([1, -sqrt(2), 1])/2
     assert represent(JzKet(1, 0), basis=Jx) == sqrt(2)*Matrix([1, 0, -1])/2
     assert represent(JzKet(1, -1), basis=Jx) == Matrix([1, sqrt(2), 1])/2
@@ -57,19 +57,19 @@ def test_represent_spin_states():
     assert represent(
         JxKet(S.Half, S.Half), basis=Jy) == Matrix([exp(I*pi*Rational(-3, 4)), 0])
     assert represent(
-        JxKet(S.Half, -S.Half), basis=Jy) == Matrix([0, exp(I*pi*Rational(3, 4))])
+        JxKet(S.Half, Rational(-1, 2)), basis=Jy) == Matrix([0, exp(I*pi*Rational(3, 4))])
     assert represent(JxKet(1, 1), basis=Jy) == Matrix([I, 0, 0])
     assert represent(JxKet(1, 0), basis=Jy) == Matrix([0, 1, 0])
     assert represent(JxKet(1, -1), basis=Jy) == Matrix([0, 0, -I])
     assert represent(JyKet(S.Half, S.Half), basis=Jy) == Matrix([1, 0])
-    assert represent(JyKet(S.Half, -S.Half), basis=Jy) == Matrix([0, 1])
+    assert represent(JyKet(S.Half, Rational(-1, 2)), basis=Jy) == Matrix([0, 1])
     assert represent(JyKet(1, 1), basis=Jy) == Matrix([1, 0, 0])
     assert represent(JyKet(1, 0), basis=Jy) == Matrix([0, 1, 0])
     assert represent(JyKet(1, -1), basis=Jy) == Matrix([0, 0, 1])
     assert represent(
         JzKet(S.Half, S.Half), basis=Jy) == sqrt(2)*Matrix([-1, I])/2
     assert represent(
-        JzKet(S.Half, -S.Half), basis=Jy) == sqrt(2)*Matrix([I, -1])/2
+        JzKet(S.Half, Rational(-1, 2)), basis=Jy) == sqrt(2)*Matrix([I, -1])/2
     assert represent(JzKet(1, 1), basis=Jy) == Matrix([1, -I*sqrt(2), -1])/2
     assert represent(
         JzKet(1, 0), basis=Jy) == Matrix([-sqrt(2)*I, 0, -sqrt(2)*I])/2
@@ -78,19 +78,19 @@ def test_represent_spin_states():
     assert represent(
         JxKet(S.Half, S.Half), basis=Jz) == sqrt(2)*Matrix([1, 1])/2
     assert represent(
-        JxKet(S.Half, -S.Half), basis=Jz) == sqrt(2)*Matrix([-1, 1])/2
+        JxKet(S.Half, Rational(-1, 2)), basis=Jz) == sqrt(2)*Matrix([-1, 1])/2
     assert represent(JxKet(1, 1), basis=Jz) == Matrix([1, sqrt(2), 1])/2
     assert represent(JxKet(1, 0), basis=Jz) == sqrt(2)*Matrix([-1, 0, 1])/2
     assert represent(JxKet(1, -1), basis=Jz) == Matrix([1, -sqrt(2), 1])/2
     assert represent(
         JyKet(S.Half, S.Half), basis=Jz) == sqrt(2)*Matrix([-1, -I])/2
     assert represent(
-        JyKet(S.Half, -S.Half), basis=Jz) == sqrt(2)*Matrix([-I, -1])/2
+        JyKet(S.Half, Rational(-1, 2)), basis=Jz) == sqrt(2)*Matrix([-I, -1])/2
     assert represent(JyKet(1, 1), basis=Jz) == Matrix([1, sqrt(2)*I, -1])/2
     assert represent(JyKet(1, 0), basis=Jz) == sqrt(2)*Matrix([I, 0, I])/2
     assert represent(JyKet(1, -1), basis=Jz) == Matrix([-1, sqrt(2)*I, 1])/2
     assert represent(JzKet(S.Half, S.Half), basis=Jz) == Matrix([1, 0])
-    assert represent(JzKet(S.Half, -S.Half), basis=Jz) == Matrix([0, 1])
+    assert represent(JzKet(S.Half, Rational(-1, 2)), basis=Jz) == Matrix([0, 1])
     assert represent(JzKet(1, 1), basis=Jz) == Matrix([1, 0, 0])
     assert represent(JzKet(1, 0), basis=Jz) == Matrix([0, 1, 0])
     assert represent(JzKet(1, -1), basis=Jz) == Matrix([0, 0, 1])
@@ -100,77 +100,77 @@ def test_represent_uncoupled_states():
     # Jx basis
     assert represent(TensorProduct(JxKet(S.Half, S.Half), JxKet(S.Half, S.Half)), basis=Jx) == \
         Matrix([1, 0, 0, 0])
-    assert represent(TensorProduct(JxKet(S.Half, S.Half), JxKet(S.Half, -S.Half)), basis=Jx) == \
+    assert represent(TensorProduct(JxKet(S.Half, S.Half), JxKet(S.Half, Rational(-1, 2))), basis=Jx) == \
         Matrix([0, 1, 0, 0])
-    assert represent(TensorProduct(JxKet(S.Half, -S.Half), JxKet(S.Half, S.Half)), basis=Jx) == \
+    assert represent(TensorProduct(JxKet(S.Half, Rational(-1, 2)), JxKet(S.Half, S.Half)), basis=Jx) == \
         Matrix([0, 0, 1, 0])
-    assert represent(TensorProduct(JxKet(S.Half, -S.Half), JxKet(S.Half, -S.Half)), basis=Jx) == \
+    assert represent(TensorProduct(JxKet(S.Half, Rational(-1, 2)), JxKet(S.Half, Rational(-1, 2))), basis=Jx) == \
         Matrix([0, 0, 0, 1])
     assert represent(TensorProduct(JyKet(S.Half, S.Half), JyKet(S.Half, S.Half)), basis=Jx) == \
         Matrix([-I, 0, 0, 0])
-    assert represent(TensorProduct(JyKet(S.Half, S.Half), JyKet(S.Half, -S.Half)), basis=Jx) == \
+    assert represent(TensorProduct(JyKet(S.Half, S.Half), JyKet(S.Half, Rational(-1, 2))), basis=Jx) == \
         Matrix([0, 1, 0, 0])
-    assert represent(TensorProduct(JyKet(S.Half, -S.Half), JyKet(S.Half, S.Half)), basis=Jx) == \
+    assert represent(TensorProduct(JyKet(S.Half, Rational(-1, 2)), JyKet(S.Half, S.Half)), basis=Jx) == \
         Matrix([0, 0, 1, 0])
-    assert represent(TensorProduct(JyKet(S.Half, -S.Half), JyKet(S.Half, -S.Half)), basis=Jx) == \
+    assert represent(TensorProduct(JyKet(S.Half, Rational(-1, 2)), JyKet(S.Half, Rational(-1, 2))), basis=Jx) == \
         Matrix([0, 0, 0, I])
     assert represent(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), basis=Jx) == \
-        Matrix([S.Half, -S.Half, -S.Half, S.Half])
-    assert represent(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), basis=Jx) == \
-        Matrix([S.Half, S.Half, -S.Half, -S.Half])
-    assert represent(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), basis=Jx) == \
-        Matrix([S.Half, -S.Half, S.Half, -S.Half])
-    assert represent(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), basis=Jx) == \
+        Matrix([S.Half, Rational(-1, 2), Rational(-1, 2), S.Half])
+    assert represent(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), basis=Jx) == \
+        Matrix([S.Half, S.Half, Rational(-1, 2), Rational(-1, 2)])
+    assert represent(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), basis=Jx) == \
+        Matrix([S.Half, Rational(-1, 2), S.Half, Rational(-1, 2)])
+    assert represent(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), basis=Jx) == \
         Matrix([S.Half, S.Half, S.Half, S.Half])
     # Jy basis
     assert represent(TensorProduct(JxKet(S.Half, S.Half), JxKet(S.Half, S.Half)), basis=Jy) == \
         Matrix([I, 0, 0, 0])
-    assert represent(TensorProduct(JxKet(S.Half, S.Half), JxKet(S.Half, -S.Half)), basis=Jy) == \
+    assert represent(TensorProduct(JxKet(S.Half, S.Half), JxKet(S.Half, Rational(-1, 2))), basis=Jy) == \
         Matrix([0, 1, 0, 0])
-    assert represent(TensorProduct(JxKet(S.Half, -S.Half), JxKet(S.Half, S.Half)), basis=Jy) == \
+    assert represent(TensorProduct(JxKet(S.Half, Rational(-1, 2)), JxKet(S.Half, S.Half)), basis=Jy) == \
         Matrix([0, 0, 1, 0])
-    assert represent(TensorProduct(JxKet(S.Half, -S.Half), JxKet(S.Half, -S.Half)), basis=Jy) == \
+    assert represent(TensorProduct(JxKet(S.Half, Rational(-1, 2)), JxKet(S.Half, Rational(-1, 2))), basis=Jy) == \
         Matrix([0, 0, 0, -I])
     assert represent(TensorProduct(JyKet(S.Half, S.Half), JyKet(S.Half, S.Half)), basis=Jy) == \
         Matrix([1, 0, 0, 0])
-    assert represent(TensorProduct(JyKet(S.Half, S.Half), JyKet(S.Half, -S.Half)), basis=Jy) == \
+    assert represent(TensorProduct(JyKet(S.Half, S.Half), JyKet(S.Half, Rational(-1, 2))), basis=Jy) == \
         Matrix([0, 1, 0, 0])
-    assert represent(TensorProduct(JyKet(S.Half, -S.Half), JyKet(S.Half, S.Half)), basis=Jy) == \
+    assert represent(TensorProduct(JyKet(S.Half, Rational(-1, 2)), JyKet(S.Half, S.Half)), basis=Jy) == \
         Matrix([0, 0, 1, 0])
-    assert represent(TensorProduct(JyKet(S.Half, -S.Half), JyKet(S.Half, -S.Half)), basis=Jy) == \
+    assert represent(TensorProduct(JyKet(S.Half, Rational(-1, 2)), JyKet(S.Half, Rational(-1, 2))), basis=Jy) == \
         Matrix([0, 0, 0, 1])
     assert represent(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), basis=Jy) == \
-        Matrix([S.Half, -I/2, -I/2, -S.Half])
-    assert represent(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), basis=Jy) == \
-        Matrix([-I/2, S.Half, -S.Half, -I/2])
-    assert represent(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), basis=Jy) == \
-        Matrix([-I/2, -S.Half, S.Half, -I/2])
-    assert represent(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), basis=Jy) == \
-        Matrix([-S.Half, -I/2, -I/2, S.Half])
+        Matrix([S.Half, -I/2, -I/2, Rational(-1, 2)])
+    assert represent(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), basis=Jy) == \
+        Matrix([-I/2, S.Half, Rational(-1, 2), -I/2])
+    assert represent(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), basis=Jy) == \
+        Matrix([-I/2, Rational(-1, 2), S.Half, -I/2])
+    assert represent(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), basis=Jy) == \
+        Matrix([Rational(-1, 2), -I/2, -I/2, S.Half])
     # Jz basis
     assert represent(TensorProduct(JxKet(S.Half, S.Half), JxKet(S.Half, S.Half)), basis=Jz) == \
         Matrix([S.Half, S.Half, S.Half, S.Half])
-    assert represent(TensorProduct(JxKet(S.Half, S.Half), JxKet(S.Half, -S.Half)), basis=Jz) == \
-        Matrix([-S.Half, S.Half, -S.Half, S.Half])
-    assert represent(TensorProduct(JxKet(S.Half, -S.Half), JxKet(S.Half, S.Half)), basis=Jz) == \
-        Matrix([-S.Half, -S.Half, S.Half, S.Half])
-    assert represent(TensorProduct(JxKet(S.Half, -S.Half), JxKet(S.Half, -S.Half)), basis=Jz) == \
-        Matrix([S.Half, -S.Half, -S.Half, S.Half])
+    assert represent(TensorProduct(JxKet(S.Half, S.Half), JxKet(S.Half, Rational(-1, 2))), basis=Jz) == \
+        Matrix([Rational(-1, 2), S.Half, Rational(-1, 2), S.Half])
+    assert represent(TensorProduct(JxKet(S.Half, Rational(-1, 2)), JxKet(S.Half, S.Half)), basis=Jz) == \
+        Matrix([Rational(-1, 2), Rational(-1, 2), S.Half, S.Half])
+    assert represent(TensorProduct(JxKet(S.Half, Rational(-1, 2)), JxKet(S.Half, Rational(-1, 2))), basis=Jz) == \
+        Matrix([S.Half, Rational(-1, 2), Rational(-1, 2), S.Half])
     assert represent(TensorProduct(JyKet(S.Half, S.Half), JyKet(S.Half, S.Half)), basis=Jz) == \
-        Matrix([S.Half, I/2, I/2, -S.Half])
-    assert represent(TensorProduct(JyKet(S.Half, S.Half), JyKet(S.Half, -S.Half)), basis=Jz) == \
-        Matrix([I/2, S.Half, -S.Half, I/2])
-    assert represent(TensorProduct(JyKet(S.Half, -S.Half), JyKet(S.Half, S.Half)), basis=Jz) == \
-        Matrix([I/2, -S.Half, S.Half, I/2])
-    assert represent(TensorProduct(JyKet(S.Half, -S.Half), JyKet(S.Half, -S.Half)), basis=Jz) == \
-        Matrix([-S.Half, I/2, I/2, S.Half])
+        Matrix([S.Half, I/2, I/2, Rational(-1, 2)])
+    assert represent(TensorProduct(JyKet(S.Half, S.Half), JyKet(S.Half, Rational(-1, 2))), basis=Jz) == \
+        Matrix([I/2, S.Half, Rational(-1, 2), I/2])
+    assert represent(TensorProduct(JyKet(S.Half, Rational(-1, 2)), JyKet(S.Half, S.Half)), basis=Jz) == \
+        Matrix([I/2, Rational(-1, 2), S.Half, I/2])
+    assert represent(TensorProduct(JyKet(S.Half, Rational(-1, 2)), JyKet(S.Half, Rational(-1, 2))), basis=Jz) == \
+        Matrix([Rational(-1, 2), I/2, I/2, S.Half])
     assert represent(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), basis=Jz) == \
         Matrix([1, 0, 0, 0])
-    assert represent(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), basis=Jz) == \
+    assert represent(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), basis=Jz) == \
         Matrix([0, 1, 0, 0])
-    assert represent(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), basis=Jz) == \
+    assert represent(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), basis=Jz) == \
         Matrix([0, 0, 1, 0])
-    assert represent(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), basis=Jz) == \
+    assert represent(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), basis=Jz) == \
         Matrix([0, 0, 0, 1])
 
 
@@ -220,11 +220,11 @@ def test_represent_coupled_states():
     assert represent(JzKetCoupled(0, 0, (S.Half, S.Half)), basis=Jy) == \
         Matrix([1, 0, 0, 0])
     assert represent(JzKetCoupled(1, 1, (S.Half, S.Half)), basis=Jy) == \
-        Matrix([0, S.Half, -I*sqrt(2)/2, -S.Half])
+        Matrix([0, S.Half, -I*sqrt(2)/2, Rational(-1, 2)])
     assert represent(JzKetCoupled(1, 0, (S.Half, S.Half)), basis=Jy) == \
         Matrix([0, -I*sqrt(2)/2, 0, -I*sqrt(2)/2])
     assert represent(JzKetCoupled(1, -1, (S.Half, S.Half)), basis=Jy) == \
-        Matrix([0, -S.Half, -I*sqrt(2)/2, S.Half])
+        Matrix([0, Rational(-1, 2), -I*sqrt(2)/2, S.Half])
     # Jz basis
     assert represent(JxKetCoupled(0, 0, (S.Half, S.Half)), basis=Jz) == \
         Matrix([1, 0, 0, 0])
@@ -237,11 +237,11 @@ def test_represent_coupled_states():
     assert represent(JyKetCoupled(0, 0, (S.Half, S.Half)), basis=Jz) == \
         Matrix([1, 0, 0, 0])
     assert represent(JyKetCoupled(1, 1, (S.Half, S.Half)), basis=Jz) == \
-        Matrix([0, S.Half, I*sqrt(2)/2, -S.Half])
+        Matrix([0, S.Half, I*sqrt(2)/2, Rational(-1, 2)])
     assert represent(JyKetCoupled(1, 0, (S.Half, S.Half)), basis=Jz) == \
         Matrix([0, I*sqrt(2)/2, 0, I*sqrt(2)/2])
     assert represent(JyKetCoupled(1, -1, (S.Half, S.Half)), basis=Jz) == \
-        Matrix([0, -S.Half, I*sqrt(2)/2, S.Half])
+        Matrix([0, Rational(-1, 2), I*sqrt(2)/2, S.Half])
     assert represent(JzKetCoupled(0, 0, (S.Half, S.Half)), basis=Jz) == \
         Matrix([1, 0, 0, 0])
     assert represent(JzKetCoupled(1, 1, (S.Half, S.Half)), basis=Jz) == \
@@ -260,8 +260,8 @@ def test_represent_rotation():
                     1)/2, S(
                         1)/2, S(
                             1)/2, 0, pi/2, 0), WignerD(
-                                S.Half, S.Half, -S.Half, 0, pi/2, 0)],
-                [WignerD(S.Half, -S.Half, S.Half, 0, pi/2, 0), WignerD(S.Half, -S.Half, -S.Half, 0, pi/2, 0)]])
+                                S.Half, S.Half, Rational(-1, 2), 0, pi/2, 0)],
+                [WignerD(S.Half, Rational(-1, 2), S.Half, 0, pi/2, 0), WignerD(S.Half, Rational(-1, 2), Rational(-1, 2), 0, pi/2, 0)]])
     assert represent(Rotation(0, pi/2, 0), doit=True) == \
         Matrix([[sqrt(2)/2, -sqrt(2)/2],
                 [sqrt(2)/2, sqrt(2)/2]])
@@ -577,15 +577,15 @@ def test_uncouple_2_coupled_states():
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple(
             TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple(
-            TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
+            TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple(
-            TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
+            TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple(
-            TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) )))
+            TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) )))
     # j1=1/2, j2=1
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1)) == \
         expand(uncouple(
@@ -596,15 +596,15 @@ def test_uncouple_2_coupled_states():
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1)) == \
         expand(uncouple(
             couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1)) == \
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1)) == \
         expand(uncouple(
-            couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0)) == \
+            couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0)) == \
         expand(uncouple(
-            couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1)) == \
+            couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1)) == \
         expand(uncouple(
-            couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1)) )))
+            couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1)) )))
     # j1=1, j2=1
     assert TensorProduct(JzKet(1, 1), JzKet(1, 1)) == \
         expand(uncouple(couple( TensorProduct(JzKet(1, 1), JzKet(1, 1)) )))
@@ -632,127 +632,127 @@ def test_uncouple_3_coupled_states():
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(
             S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S(
-            1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
+            1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S(
-            1)/2, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
+            1)/2, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S(
-            1)/2, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
+            1)/2, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S(
-            1)/2, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
+            1)/2, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S(
-            1)/2, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
+            1)/2, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S(
-            1)/2, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
+            1)/2, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.NegativeOne/
-               2), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) )))
+               2), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) )))
     # j1=1/2, j2=1, j3=1/2
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(
             JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(
-            JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) )))
+            JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) )))
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(
             JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(
-            JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) )))
+            JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) )))
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(
             JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(
-            JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
+            JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(
-            JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
+            JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(
-            JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
+            JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(
-            JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
+            JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(
-            JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
+            JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(
-            JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
+            JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(
-            JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) )))
+            JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) )))
     # Coupling j1+j3=j13, j13+j2=j
     # j1=1/2, j2=1/2, j3=1/2
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(
             S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(
-            S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
+            S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(
-            S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
+            S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(
-            S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(
+            S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(
             S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(
-            S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(
-            S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(
-            S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(
+            S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(
+            S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(
+            S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) )))
     # j1=1/2, j2=1, j3=1/2
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S(
             1)/2), JzKet(1, 1), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S(
-            1)/2), JzKet(1, 1), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) )))
+            1)/2), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) )))
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S(
             1)/2), JzKet(1, 0), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S(
-            1)/2), JzKet(1, 0), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) )))
+            1)/2), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) )))
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S(
             1)/2), JzKet(1, -1), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S(
-            1)/2), JzKet(1, -1), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
+            1)/2), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S(
             -1)/2), JzKet(1, 1), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S(
-            -1)/2), JzKet(1, 1), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
+            -1)/2), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S(
             -1)/2), JzKet(1, 0), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S(
-            -1)/2), JzKet(1, 0), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
+            -1)/2), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S(
             -1)/2), JzKet(1, -1), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.NegativeOne/
-               2), JzKet(1, -1), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) )))
+               2), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) )))
 
 
 @slow
@@ -761,236 +761,236 @@ def test_uncouple_4_coupled_states():
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(
             S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S(
-            1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
+            1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S(
-            1)/2, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
+            1)/2, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S(
-            1)/2, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
+            1)/2, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S(
-            1)/2, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
+            1)/2, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S(
-            1)/2, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
+            1)/2, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S(
-            1)/2, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(
+            1)/2, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(
             S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S(
-            1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S(
-            1)/2, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S(
-            1)/2, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S(
-            1)/2, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S(
-            1)/2, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S(
-            1)/2, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S(
+            1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S(
+            1)/2, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S(
+            1)/2, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S(
+            1)/2, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S(
+            1)/2, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S(
+            1)/2, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) )))
     # j1=1/2, j2=1/2, j3=1, j4=1/2
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half),
                JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half),
-               JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) )))
+               JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) )))
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half),
                JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half),
-               JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) )))
+               JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) )))
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half),
                JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(
-            S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
+            S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half),
-               JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
+               JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(
-            S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
+            S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half),
-               JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
+               JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(
-            S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
+            S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(
-            S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
+            S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(
-            S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half),
+            S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)),
                JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half),
-               JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half),
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)),
+               JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)),
                JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half),
-               JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half),
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)),
+               JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)),
                JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(
-            S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half),
-               JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(
-            S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half),
-               JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(
-            S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(
-            S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(
-            S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(
+            S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)),
+               JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(
+            S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)),
+               JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(
+            S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(
+            S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, S.Half)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(
+            S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) )))
     # Couple j1+j3=j13, j2+j4=j24, j13+j24=j
     # j1=1/2, j2=1/2, j3=1/2, j4=1/2
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
     # j1=1/2, j2=1/2, j3=1, j4=1/2
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
     assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
         expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
-    assert TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(S.Half, -S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, S.Half)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, S.Half)), ((1, 3), (2, 4), (1, 2)) )))
+    assert TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (2, 4), (1, 2)) )))
 
 
 def test_uncouple_2_coupled_states_numerical():
     # j1=1/2, j2=1/2
     assert uncouple(JzKetCoupled(0, 0, (S.Half, S.Half))) == \
-        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))/2 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half))/2
+        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))/2 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half))/2
     assert uncouple(JzKetCoupled(1, 1, (S.Half, S.Half))) == \
         TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))
     assert uncouple(JzKetCoupled(1, 0, (S.Half, S.Half))) == \
-        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))/2 + \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half))/2
+        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))/2 + \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half))/2
     assert uncouple(JzKetCoupled(1, -1, (S.Half, S.Half))) == \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half))
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)))
     # j1=1, j2=1/2
     assert uncouple(JzKetCoupled(S.Half, S.Half, (1, S.Half))) == \
         -sqrt(3)*TensorProduct(JzKet(1, 0), JzKet(S.Half, S.Half))/3 + \
-        sqrt(6)*TensorProduct(JzKet(1, 1), JzKet(S.Half, -S.Half))/3
-    assert uncouple(JzKetCoupled(S.Half, -S.Half, (1, S.Half))) == \
-        sqrt(3)*TensorProduct(JzKet(1, 0), JzKet(S.Half, -S.Half))/3 - \
+        sqrt(6)*TensorProduct(JzKet(1, 1), JzKet(S.Half, Rational(-1, 2)))/3
+    assert uncouple(JzKetCoupled(S.Half, Rational(-1, 2), (1, S.Half))) == \
+        sqrt(3)*TensorProduct(JzKet(1, 0), JzKet(S.Half, Rational(-1, 2)))/3 - \
         sqrt(6)*TensorProduct(JzKet(1, -1), JzKet(S.Half, S.Half))/3
     assert uncouple(JzKetCoupled(Rational(3, 2), Rational(3, 2), (1, S.Half))) == \
         TensorProduct(JzKet(1, 1), JzKet(S.Half, S.Half))
     assert uncouple(JzKetCoupled(Rational(3, 2), S.Half, (1, S.Half))) == \
-        sqrt(3)*TensorProduct(JzKet(1, 1), JzKet(S.Half, -S.Half))/3 + \
+        sqrt(3)*TensorProduct(JzKet(1, 1), JzKet(S.Half, Rational(-1, 2)))/3 + \
         sqrt(6)*TensorProduct(JzKet(1, 0), JzKet(S.Half, S.Half))/3
-    assert uncouple(JzKetCoupled(Rational(3, 2), -S.Half, (1, S.Half))) == \
-        sqrt(6)*TensorProduct(JzKet(1, 0), JzKet(S.Half, -S.Half))/3 + \
+    assert uncouple(JzKetCoupled(Rational(3, 2), Rational(-1, 2), (1, S.Half))) == \
+        sqrt(6)*TensorProduct(JzKet(1, 0), JzKet(S.Half, Rational(-1, 2)))/3 + \
         sqrt(3)*TensorProduct(JzKet(1, -1), JzKet(S.Half, S.Half))/3
     assert uncouple(JzKetCoupled(Rational(3, 2), Rational(-3, 2), (1, S.Half))) == \
-        TensorProduct(JzKet(1, -1), JzKet(S.Half, -S.Half))
+        TensorProduct(JzKet(1, -1), JzKet(S.Half, Rational(-1, 2)))
     # j1=1, j2=1
     assert uncouple(JzKetCoupled(0, 0, (1, 1))) == \
         sqrt(3)*TensorProduct(JzKet(1, 1), JzKet(1, -1))/3 - \
@@ -1028,119 +1028,119 @@ def test_uncouple_3_coupled_states_numerical():
         TensorProduct(JzKet(
             S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))
     assert uncouple(JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half))) == \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))/3 + \
-        sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half))/3 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))/3 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half))/3 + \
         sqrt(3)*TensorProduct(JzKet(
-            S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))/3
-    assert uncouple(JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half))) == \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half))/3 + \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))/3 + \
+            S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))/3
+    assert uncouple(JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half))) == \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half))/3 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))/3 + \
         sqrt(3)*TensorProduct(JzKet(
-            S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half))/3
+            S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)))/3
     assert uncouple(JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half))) == \
         TensorProduct(JzKet(
-            S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half))
+            S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)))
     # j1=1/2, j2=1/2, j3=1
     assert uncouple(JzKetCoupled(2, 2, (S.Half, S.Half, 1))) == \
         TensorProduct(
             JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1))
     assert uncouple(JzKetCoupled(2, 1, (S.Half, S.Half, 1))) == \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1))/2 + \
-        TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1))/2 + \
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1))/2 + \
+        TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1))/2 + \
         sqrt(2)*TensorProduct(
             JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0))/2
     assert uncouple(JzKetCoupled(2, 0, (S.Half, S.Half, 1))) == \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1))/6 + \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0))/3 + \
-        sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0))/3 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1))/6 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0))/3 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0))/3 + \
         sqrt(6)*TensorProduct(
             JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1))/6
     assert uncouple(JzKetCoupled(2, -1, (S.Half, S.Half, 1))) == \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0))/2 + \
-        TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1))/2 + \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0))/2 + \
+        TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1))/2 + \
         TensorProduct(
-            JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1))/2
+            JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1))/2
     assert uncouple(JzKetCoupled(2, -2, (S.Half, S.Half, 1))) == \
         TensorProduct(
-            JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1))
+            JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1))
     assert uncouple(JzKetCoupled(1, 1, (S.Half, S.Half, 1))) == \
-        -TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1))/2 - \
-        TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1))/2 + \
+        -TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1))/2 - \
+        TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1))/2 + \
         sqrt(2)*TensorProduct(
             JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0))/2
     assert uncouple(JzKetCoupled(1, 0, (S.Half, S.Half, 1))) == \
-        -sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1))/2 + \
+        -sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1))/2 + \
         sqrt(2)*TensorProduct(
             JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1))/2
     assert uncouple(JzKetCoupled(1, -1, (S.Half, S.Half, 1))) == \
-        -sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0))/2 + \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1))/2 + \
+        -sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0))/2 + \
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1))/2 + \
         TensorProduct(
-            JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1))/2
+            JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1))/2
     # j1=1/2, j2=1, j3=1
     assert uncouple(JzKetCoupled(Rational(5, 2), Rational(5, 2), (S.Half, 1, 1))) == \
         TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))
     assert uncouple(JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, 1, 1))) == \
-        sqrt(5)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/5 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/5 + \
         sqrt(10)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/5 + \
         sqrt(10)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1),
              JzKet(1, 0))/5
     assert uncouple(JzKetCoupled(Rational(5, 2), S.Half, (S.Half, 1, 1))) == \
-        sqrt(5)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/5 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/5 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/5 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/5 + \
         sqrt(10)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/10 + \
         sqrt(10)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/5 + \
         sqrt(10)*TensorProduct(
             JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/10
-    assert uncouple(JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, 1, 1))) == \
-        sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/10 + \
-        sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/5 + \
-        sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/10 + \
+    assert uncouple(JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, 1, 1))) == \
+        sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/10 + \
+        sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/5 + \
+        sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/10 + \
         sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/5 + \
         sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0),
              JzKet(1, -1))/5
     assert uncouple(JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, 1, 1))) == \
-        sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/5 + \
-        sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/5 + \
+        sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/5 + \
+        sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/5 + \
         sqrt(5)*TensorProduct(
             JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))/5
     assert uncouple(JzKetCoupled(Rational(5, 2), Rational(-5, 2), (S.Half, 1, 1))) == \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, -1))
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, -1))
     assert uncouple(JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, 1, 1))) == \
-        -sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/15 - \
+        -sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/15 - \
         2*sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/15 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1),
              JzKet(1, 0))/5
     assert uncouple(JzKetCoupled(Rational(3, 2), S.Half, (S.Half, 1, 1))) == \
-        -4*sqrt(5)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/15 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/15 - \
+        -4*sqrt(5)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/15 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/15 - \
         2*sqrt(10)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/15 + \
         sqrt(10)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/15 + \
         sqrt(10)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1),
              JzKet(1, -1))/5
-    assert uncouple(JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1))) == \
-        -sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/5 - \
-        sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/15 + \
-        2*sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/15 - \
+    assert uncouple(JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1))) == \
+        -sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/5 - \
+        sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/15 + \
+        2*sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/15 - \
         sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/15 + \
         4*sqrt(5)*TensorProduct(
             JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/15
     assert uncouple(JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1))) == \
-        -sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/5 + \
-        2*sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/15 + \
+        -sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/5 + \
+        2*sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/15 + \
         sqrt(30)*TensorProduct(
             JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))/15
     assert uncouple(JzKetCoupled(S.Half, S.Half, (S.Half, 1, 1))) == \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/3 - \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/3 + \
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/3 - \
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/3 + \
         sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/6 - \
         sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/3 + \
         sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1),
              JzKet(1, -1))/2
-    assert uncouple(JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1))) == \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/2 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/3 + \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/6 - \
+    assert uncouple(JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1))) == \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/2 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/3 + \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/6 - \
         TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/3 + \
         TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/3
     # j1=1, j2=1, j3=1
@@ -1230,37 +1230,37 @@ def test_uncouple_3_coupled_states_numerical():
     # Defined j13
     # j1=1/2, j2=1/2, j3=1, j13=1/2
     assert uncouple(JzKetCoupled(1, 1, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 1)) )) == \
-        -sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1))/3 + \
+        -sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1))/3 + \
         sqrt(3)*TensorProduct(
             JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0))/3
     assert uncouple(JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 1)) )) == \
-        -sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1))/3 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0))/6 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0))/6 + \
+        -sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1))/3 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0))/6 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0))/6 + \
         sqrt(3)*TensorProduct(
             JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1))/3
     assert uncouple(JzKetCoupled(1, -1, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 1)) )) == \
-        -sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0))/3 + \
+        -sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0))/3 + \
         sqrt(6)*TensorProduct(
-            JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1))/3
+            JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1))/3
     # j1=1/2, j2=1, j3=1, j13=1/2
     assert uncouple(JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))))) == \
-        -sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/3 + \
+        -sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/3 + \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1),
              JzKet(1, 0))/3
     assert uncouple(JzKetCoupled(Rational(3, 2), S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))))) == \
-        -2*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/3 - \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/3 + \
+        -2*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/3 - \
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/3 + \
         sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/3 + \
         sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1),
              JzKet(1, -1))/3
-    assert uncouple(JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))))) == \
-        -sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/3 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/3 + \
+    assert uncouple(JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))))) == \
+        -sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/3 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/3 + \
         TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/3 + \
         2*TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/3
     assert uncouple(JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))))) == \
-        -sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/3 + \
+        -sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/3 + \
         sqrt(6)*TensorProduct(
             JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))/3
     # j1=1, j2=1, j3=1, j13=1
@@ -1310,122 +1310,122 @@ def test_uncouple_4_coupled_states_numerical():
         TensorProduct(JzKet(
             S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))
     assert uncouple(JzKetCoupled(3, 2, (S.Half, S.Half, 1, 1))) == \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))/6 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/6 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))/6 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/6 + \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/3 + \
         sqrt(3)*TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/3
     assert uncouple(JzKetCoupled(3, 1, (S.Half, S.Half, 1, 1))) == \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/15 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/15 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/15 + \
         2*sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/15 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, 1), JzKet(1, -1))/15
     assert uncouple(JzKetCoupled(3, 0, (S.Half, S.Half, 1, 1))) == \
-        sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/10 + \
-        sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/10 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/10 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/5 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/10 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/10 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/5 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/10 + \
+        sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/10 + \
+        sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/10 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/10 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/5 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/10 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/10 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/5 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/10 + \
         sqrt(10)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/10 + \
         sqrt(10)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, 0), JzKet(1, -1))/10
     assert uncouple(JzKetCoupled(3, -1, (S.Half, S.Half, 1, 1))) == \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/15 + \
-        2*sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/15 + \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/15 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/15 + \
+        2*sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/15 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/15 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, -1), JzKet(1, -1))/15
     assert uncouple(JzKetCoupled(3, -2, (S.Half, S.Half, 1, 1))) == \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/3 + \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/3 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))/6 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/3 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/3 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))/6 + \
         sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
-             -S.Half), JzKet(1, -1), JzKet(1, -1))/6
+             Rational(-1, 2)), JzKet(1, -1), JzKet(1, -1))/6
     assert uncouple(JzKetCoupled(3, -3, (S.Half, S.Half, 1, 1))) == \
         TensorProduct(JzKet(S.Half, -S(
-            1)/2), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, -1))
+            1)/2), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, -1))
     assert uncouple(JzKetCoupled(2, 2, (S.Half, S.Half, 1, 1))) == \
-        -sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))/6 - \
-        sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/6 - \
+        -sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))/6 - \
+        sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/6 - \
         sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/6 + \
         sqrt(6)*TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/3
     assert uncouple(JzKetCoupled(2, 1, (S.Half, S.Half, 1, 1))) == \
-        -sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/6 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/6 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/12 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/6 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/12 - \
+        -sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/6 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/6 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/12 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/6 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/12 - \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/6 + \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/6 + \
         sqrt(3)*TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/3
     assert uncouple(JzKetCoupled(2, 0, (S.Half, S.Half, 1, 1))) == \
-        -TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/2 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/4 + \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/4 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/4 + \
-        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/4 + \
+        -TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/2 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/4 + \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/4 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/4 + \
+        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/4 + \
         TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/2
     assert uncouple(JzKetCoupled(2, -1, (S.Half, S.Half, 1, 1))) == \
-        -sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/3 - \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/6 + \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/6 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/12 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/6 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/12 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/6 + \
+        -sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/3 - \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/6 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/6 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/12 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/6 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/12 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/6 + \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, -1), JzKet(1, -1))/6
     assert uncouple(JzKetCoupled(2, -2, (S.Half, S.Half, 1, 1))) == \
-        -sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/3 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/6 + \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))/6 + \
+        -sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/3 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/6 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))/6 + \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
-             -S.Half), JzKet(1, -1), JzKet(1, -1))/6
+             Rational(-1, 2)), JzKet(1, -1), JzKet(1, -1))/6
     assert uncouple(JzKetCoupled(1, 1, (S.Half, S.Half, 1, 1))) == \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/30 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/30 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/20 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/30 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/20 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/30 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/30 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/20 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/30 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/20 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/30 - \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/10 + \
         sqrt(15)*TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/5
     assert uncouple(JzKetCoupled(1, 0, (S.Half, S.Half, 1, 1))) == \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/10 - \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/20 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/20 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/20 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/20 - \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/10 - \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/20 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/20 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/20 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/20 - \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/15 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, 0), JzKet(1, -1))/10
     assert uncouple(JzKetCoupled(1, -1, (S.Half, S.Half, 1, 1))) == \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/5 - \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/10 + \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/30 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/20 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/30 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/20 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/30 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/5 - \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/10 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/30 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/20 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/30 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/20 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/30 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, -1), JzKet(1, -1))/30
     # j1=1/2, j2=1/2, j3=1, j4=1, j12=1, j34=1
@@ -1434,176 +1434,176 @@ def test_uncouple_4_coupled_states_numerical():
         sqrt(2)*TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/2
     assert uncouple(JzKetCoupled(2, 1, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 1), (1, 3, 2)))) == \
-        -sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/4 + \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/4 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/4 + \
-        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/4 - \
+        -sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/4 + \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/4 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/4 + \
+        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/4 - \
         TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/2 + \
         TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/2
     assert uncouple(JzKetCoupled(2, 0, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 1), (1, 3, 2)))) == \
-        -sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/6 + \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/6 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/6 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/6 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/6 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/6 - \
+        -sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/6 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/6 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/6 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/6 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/6 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/6 - \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/6 + \
         sqrt(3)*TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/6
     assert uncouple(JzKetCoupled(2, -1, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 1), (1, 3, 2)))) == \
-        -TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/2 + \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/2 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/4 + \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/4 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/4 + \
+        -TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/2 + \
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/2 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/4 + \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/4 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/4 + \
         sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
-             -S.Half), JzKet(1, 0), JzKet(1, -1))/4
+             Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/4
     assert uncouple(JzKetCoupled(2, -2, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 1), (1, 3, 2)))) == \
-        -sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/2 + \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half,
-             -S.Half), JzKet(1, 0), JzKet(1, -1))/2
+        -sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/2 + \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half,
+             Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/2
     assert uncouple(JzKetCoupled(1, 1, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 1), (1, 3, 1)))) == \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/4 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/4 + \
-        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/4 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/4 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/4 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/4 + \
+        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/4 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/4 - \
         TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/2 + \
         TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/2
     assert uncouple(JzKetCoupled(1, 0, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 1), (1, 3, 1)))) == \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/2 - \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/2 - \
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/2 - \
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/2 - \
         TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/2 + \
         TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/2
     assert uncouple(JzKetCoupled(1, -1, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 1), (1, 3, 1)))) == \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/2 - \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/2 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/4 + \
-        sqrt(2)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/4 - \
-        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/4 + \
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/2 - \
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/2 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/4 + \
+        sqrt(2)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/4 - \
+        sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/4 + \
         sqrt(2)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
-             -S.Half), JzKet(1, 0), JzKet(1, -1))/4
+             Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/4
     # j1=1/2, j2=1/2, j3=1, j4=1, j12=1, j34=2
     assert uncouple(JzKetCoupled(3, 3, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 3)))) == \
         TensorProduct(JzKet(
             S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))
     assert uncouple(JzKetCoupled(3, 2, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 3)))) == \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))/6 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/6 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))/6 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/6 + \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/3 + \
         sqrt(3)*TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/3
     assert uncouple(JzKetCoupled(3, 1, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 3)))) == \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/15 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/15 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/15 + \
         2*sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/15 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, 1), JzKet(1, -1))/15
     assert uncouple(JzKetCoupled(3, 0, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 3)))) == \
-        sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/10 + \
-        sqrt(10)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/10 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/10 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/5 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/10 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/10 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/5 + \
-        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/10 + \
+        sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/10 + \
+        sqrt(10)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/10 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/10 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/5 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/10 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/10 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/5 + \
+        sqrt(5)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/10 + \
         sqrt(10)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/10 + \
         sqrt(10)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, 0), JzKet(1, -1))/10
     assert uncouple(JzKetCoupled(3, -1, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 3)))) == \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/15 + \
-        2*sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/15 + \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/15 + \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/15 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/15 + \
+        2*sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/15 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/15 + \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/15 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, -1), JzKet(1, -1))/15
     assert uncouple(JzKetCoupled(3, -2, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 3)))) == \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/3 + \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/3 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))/6 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/3 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/3 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))/6 + \
         sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
-             -S.Half), JzKet(1, -1), JzKet(1, -1))/6
+             Rational(-1, 2)), JzKet(1, -1), JzKet(1, -1))/6
     assert uncouple(JzKetCoupled(3, -3, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 3)))) == \
         TensorProduct(JzKet(S.Half, -S(
-            1)/2), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, -1))
+            1)/2), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, -1))
     assert uncouple(JzKetCoupled(2, 2, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 2)))) == \
-        -sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))/3 - \
-        sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/3 + \
+        -sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))/3 - \
+        sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/3 + \
         sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/6 + \
         sqrt(6)*TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/6
     assert uncouple(JzKetCoupled(2, 1, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 2)))) == \
-        -sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/3 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/12 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/12 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/12 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/12 + \
+        -sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/3 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/12 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/12 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/12 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/12 + \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/6 + \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/3 + \
         sqrt(3)*TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/6
     assert uncouple(JzKetCoupled(2, 0, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 2)))) == \
-        -TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/2 - \
-        TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/2 + \
+        -TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/2 - \
+        TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/2 + \
         TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/2 + \
         TensorProduct(JzKet(S(
             1)/2, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/2
     assert uncouple(JzKetCoupled(2, -1, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 2)))) == \
-        -sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/6 - \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/3 - \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/6 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/12 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/12 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/12 + \
-        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/12 + \
+        -sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/6 - \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/3 - \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/6 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/12 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/12 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/12 + \
+        sqrt(6)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/12 + \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, -1), JzKet(1, -1))/3
     assert uncouple(JzKetCoupled(2, -2, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 2)))) == \
-        -sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/6 - \
-        sqrt(6)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/6 + \
-        sqrt(3)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))/3 + \
+        -sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/6 - \
+        sqrt(6)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/6 + \
+        sqrt(3)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))/3 + \
         sqrt(3)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
-             -S.Half), JzKet(1, -1), JzKet(1, -1))/3
+             Rational(-1, 2)), JzKet(1, -1), JzKet(1, -1))/3
     assert uncouple(JzKetCoupled(1, 1, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 1)))) == \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))/5 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/20 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/20 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/20 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/20 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))/5 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 1))/20 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 0))/20 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/20 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/20 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/30 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/15 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, 1), JzKet(1, -1))/30
     assert uncouple(JzKetCoupled(1, 0, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 1)))) == \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))/10 + \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))/10 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/30 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/15 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/30 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/30 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/15 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/30 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))/10 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))/10 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))/30 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, 0))/15 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, -1))/30 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/30 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/15 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/30 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/10 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, 0), JzKet(1, -1))/10
     assert uncouple(JzKetCoupled(1, -1, (S.Half, S.Half, 1, 1), ((1, 2, 1), (3, 4, 2), (1, 3, 1)))) == \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))/30 + \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))/15 + \
-        sqrt(15)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))/30 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/20 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/20 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))/20 - \
-        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))/20 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))/30 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))/15 + \
+        sqrt(15)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))/30 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))/20 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))/20 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))/20 - \
+        sqrt(30)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))/20 + \
         sqrt(15)*TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half,
              S.Half), JzKet(1, -1), JzKet(1, -1))/5
 
@@ -1646,14 +1646,14 @@ def test_couple_2_states():
     # j1=1, j2=1/2
     assert JzKetCoupled(S.Half, S.Half, (1, S.Half)) == \
         expand(couple(uncouple( JzKetCoupled(S.Half, S.Half, (1, S.Half)) )))
-    assert JzKetCoupled(S.Half, -S.Half, (1, S.Half)) == \
-        expand(couple(uncouple( JzKetCoupled(S.Half, -S.Half, (1, S.Half)) )))
+    assert JzKetCoupled(S.Half, Rational(-1, 2), (1, S.Half)) == \
+        expand(couple(uncouple( JzKetCoupled(S.Half, Rational(-1, 2), (1, S.Half)) )))
     assert JzKetCoupled(Rational(3, 2), Rational(3, 2), (1, S.Half)) == \
         expand(couple(uncouple( JzKetCoupled(Rational(3, 2), Rational(3, 2), (1, S.Half)) )))
     assert JzKetCoupled(Rational(3, 2), S.Half, (1, S.Half)) == \
         expand(couple(uncouple( JzKetCoupled(Rational(3, 2), S.Half, (1, S.Half)) )))
-    assert JzKetCoupled(Rational(3, 2), -S.Half, (1, S.Half)) == \
-        expand(couple(uncouple( JzKetCoupled(Rational(3, 2), -S.Half, (1, S.Half)) )))
+    assert JzKetCoupled(Rational(3, 2), Rational(-1, 2), (1, S.Half)) == \
+        expand(couple(uncouple( JzKetCoupled(Rational(3, 2), Rational(-1, 2), (1, S.Half)) )))
     assert JzKetCoupled(Rational(3, 2), Rational(-3, 2), (1, S.Half)) == \
         expand(couple(uncouple( JzKetCoupled(Rational(3, 2), Rational(-3, 2), (1, S.Half)) )))
     # j1=1, j2=1
@@ -1700,18 +1700,18 @@ def test_couple_3_states():
     assert JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half)) == \
         expand(couple(uncouple(
             JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half)) )))
-    assert JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half)) == \
+    assert JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half)) == \
         expand(couple(uncouple(
-            JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half)) )))
+            JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half)) )))
     assert JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half)) == \
         expand(couple(uncouple(
             JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half)) )))
     assert JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half)) == \
         expand(couple(uncouple(
             JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half)) )))
-    assert JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half)) == \
+    assert JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half)) == \
         expand(couple(uncouple(
-            JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half)) )))
+            JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half)) )))
     assert JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half)) == \
         expand(couple(uncouple(
             JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half)) )))
@@ -1739,15 +1739,15 @@ def test_couple_3_states():
     assert JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half), ((1, 3, 0), (1, 2, S.Half))) == \
         expand(couple(uncouple( JzKetCoupled(S.Half, S.Half, (S.Half, S(
             1)/2, S.Half), ((1, 3, 0), (1, 2, S.Half))) ), ((1, 3), (1, 2)) ))
-    assert JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half), ((1, 3, 0), (1, 2, S.Half))) == \
-        expand(couple(uncouple( JzKetCoupled(S.Half, -S.Half, (S.Half, S(
+    assert JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half), ((1, 3, 0), (1, 2, S.Half))) == \
+        expand(couple(uncouple( JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S(
             1)/2, S.Half), ((1, 3, 0), (1, 2, S.Half))) ), ((1, 3), (1, 2)) ))
     # j1=1, j2=1/2, j3=1, j13=1
     assert JzKetCoupled(S.Half, S.Half, (1, S.Half, 1), ((1, 3, 1), (1, 2, S.Half))) == \
         expand(couple(uncouple( JzKetCoupled(S.Half, S.Half, (
             1, S.Half, 1), ((1, 3, 1), (1, 2, S.Half))) ), ((1, 3), (1, 2)) ))
-    assert JzKetCoupled(S.Half, -S.Half, (1, S.Half, 1), ((1, 3, 1), (1, 2, S.Half))) == \
-        expand(couple(uncouple( JzKetCoupled(S.Half, -S.Half, (
+    assert JzKetCoupled(S.Half, Rational(-1, 2), (1, S.Half, 1), ((1, 3, 1), (1, 2, S.Half))) == \
+        expand(couple(uncouple( JzKetCoupled(S.Half, Rational(-1, 2), (
             1, S.Half, 1), ((1, 3, 1), (1, 2, S.Half))) ), ((1, 3), (1, 2)) ))
     assert JzKetCoupled(Rational(3, 2), Rational(3, 2), (1, S.Half, 1), ((1, 3, 1), (1, 2, Rational(3, 2)))) == \
         expand(couple(uncouple( JzKetCoupled(Rational(3, 2), Rational(3, 2), (
@@ -1755,8 +1755,8 @@ def test_couple_3_states():
     assert JzKetCoupled(Rational(3, 2), S.Half, (1, S.Half, 1), ((1, 3, 1), (1, 2, Rational(3, 2)))) == \
         expand(couple(uncouple( JzKetCoupled(Rational(3, 2), S.Half, (
             1, S.Half, 1), ((1, 3, 1), (1, 2, Rational(3, 2)))) ), ((1, 3), (1, 2)) ))
-    assert JzKetCoupled(Rational(3, 2), -S.Half, (1, S.Half, 1), ((1, 3, 1), (1, 2, Rational(3, 2)))) == \
-        expand(couple(uncouple( JzKetCoupled(Rational(3, 2), -S.Half, (
+    assert JzKetCoupled(Rational(3, 2), Rational(-1, 2), (1, S.Half, 1), ((1, 3, 1), (1, 2, Rational(3, 2)))) == \
+        expand(couple(uncouple( JzKetCoupled(Rational(3, 2), Rational(-1, 2), (
             1, S.Half, 1), ((1, 3, 1), (1, 2, Rational(3, 2)))) ), ((1, 3), (1, 2)) ))
     assert JzKetCoupled(Rational(3, 2), Rational(-3, 2), (1, S.Half, 1), ((1, 3, 1), (1, 2, Rational(3, 2)))) == \
         expand(couple(uncouple( JzKetCoupled(Rational(3, 2), Rational(-3, 2), (
@@ -1794,18 +1794,18 @@ def test_couple_4_states():
     assert JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1)) == \
         expand(couple(uncouple(
             JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1)) )))
-    assert JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1)) == \
+    assert JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1)) == \
         expand(couple(uncouple(
-            JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1)) )))
+            JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1)) )))
     assert JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1)) == \
         expand(couple(uncouple(
             JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1)) )))
     assert JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1)) == \
         expand(couple(uncouple(
             JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1)) )))
-    assert JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1)) == \
+    assert JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1)) == \
         expand(couple(uncouple(
-            JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1)) )))
+            JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1)) )))
     assert JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1)) == \
         expand(couple(uncouple(
             JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1)) )))
@@ -1818,9 +1818,9 @@ def test_couple_4_states():
     assert JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S.Half, S.Half, 1)) == \
         expand(couple(uncouple(
             JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S.Half, S.Half, 1)) )))
-    assert JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S.Half, S.Half, 1)) == \
+    assert JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1)) == \
         expand(couple(uncouple(
-            JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S.Half, S.Half, 1)) )))
+            JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1)) )))
     assert JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1)) == \
         expand(couple(uncouple(
             JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1)) )))
@@ -1838,14 +1838,14 @@ def test_couple_4_states():
     # j1=1/2, j2=1/2, j3=1/2, j4=1, j13=1, j24=1/2
     assert JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, S.Half)) ) == \
         expand(couple(uncouple( JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, S.Half)) )), ((1, 3), (2, 4), (1, 2)) ))
-    assert JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, S.Half)) ) == \
-        expand(couple(uncouple( JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, S.Half)) ) ), ((1, 3), (2, 4), (1, 2)) ))
+    assert JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, S.Half)) ) == \
+        expand(couple(uncouple( JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, S.Half)) ) ), ((1, 3), (2, 4), (1, 2)) ))
     assert JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, Rational(3, 2))) ) == \
         expand(couple(uncouple( JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, Rational(3, 2))) ) ), ((1, 3), (2, 4), (1, 2)) ))
     assert JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, Rational(3, 2))) ) == \
         expand(couple(uncouple( JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, Rational(3, 2))) ) ), ((1, 3), (2, 4), (1, 2)) ))
-    assert JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, Rational(3, 2))) ) == \
-        expand(couple(uncouple( JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, Rational(3, 2))) ) ), ((1, 3), (2, 4), (1, 2)) ))
+    assert JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, Rational(3, 2))) ) == \
+        expand(couple(uncouple( JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, Rational(3, 2))) ) ), ((1, 3), (2, 4), (1, 2)) ))
     assert JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, Rational(3, 2))) ) == \
         expand(couple(uncouple( JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 3, 1), (2, 4, S.Half), (1, 2, Rational(3, 2))) ) ), ((1, 3), (2, 4), (1, 2)) ))
     # j1=1/2, j2=1, j3=1/2, j4=1, j13=0, j24=1
@@ -1892,30 +1892,30 @@ def test_couple_2_states_numerical():
     # j1=1/2, j2=1/2
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))) == \
         JzKetCoupled(1, 1, (S.Half, S.Half))
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))) == \
         sqrt(2)*JzKetCoupled(0, 0, (S(
             1)/2, S.Half))/2 + sqrt(2)*JzKetCoupled(1, 0, (S.Half, S.Half))/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half))) == \
         -sqrt(2)*JzKetCoupled(0, 0, (S(
             1)/2, S.Half))/2 + sqrt(2)*JzKetCoupled(1, 0, (S.Half, S.Half))/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)))) == \
         JzKetCoupled(1, -1, (S.Half, S.Half))
     # j1=1, j2=1/2
     assert couple(TensorProduct(JzKet(1, 1), JzKet(S.Half, S.Half))) == \
         JzKetCoupled(Rational(3, 2), Rational(3, 2), (1, S.Half))
-    assert couple(TensorProduct(JzKet(1, 1), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(1, 1), JzKet(S.Half, Rational(-1, 2)))) == \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (1, S.Half))/3 + sqrt(
             3)*JzKetCoupled(Rational(3, 2), S.Half, (1, S.Half))/3
     assert couple(TensorProduct(JzKet(1, 0), JzKet(S.Half, S.Half))) == \
         -sqrt(3)*JzKetCoupled(S.Half, S.Half, (1, S.Half))/3 + \
         sqrt(6)*JzKetCoupled(Rational(3, 2), S.Half, (1, S.Half))/3
-    assert couple(TensorProduct(JzKet(1, 0), JzKet(S.Half, -S.Half))) == \
-        sqrt(3)*JzKetCoupled(S.Half, -S.Half, (1, S.Half))/3 + \
-        sqrt(6)*JzKetCoupled(Rational(3, 2), -S.Half, (1, S.Half))/3
+    assert couple(TensorProduct(JzKet(1, 0), JzKet(S.Half, Rational(-1, 2)))) == \
+        sqrt(3)*JzKetCoupled(S.Half, Rational(-1, 2), (1, S.Half))/3 + \
+        sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (1, S.Half))/3
     assert couple(TensorProduct(JzKet(1, -1), JzKet(S.Half, S.Half))) == \
-        -sqrt(6)*JzKetCoupled(S.Half, -S.Half, (1, S(
-            1)/2))/3 + sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (1, S.Half))/3
-    assert couple(TensorProduct(JzKet(1, -1), JzKet(S.Half, -S.Half))) == \
+        -sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (1, S(
+            1)/2))/3 + sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (1, S.Half))/3
+    assert couple(TensorProduct(JzKet(1, -1), JzKet(S.Half, Rational(-1, 2)))) == \
         JzKetCoupled(Rational(3, 2), Rational(-3, 2), (1, S.Half))
     # j1=1, j2=1
     assert couple(TensorProduct(JzKet(1, 1), JzKet(1, 1))) == \
@@ -1946,25 +1946,25 @@ def test_couple_2_states_numerical():
     # j1=3/2, j2=1/2
     assert couple(TensorProduct(JzKet(Rational(3, 2), Rational(3, 2)), JzKet(S.Half, S.Half))) == \
         JzKetCoupled(2, 2, (Rational(3, 2), S.Half))
-    assert couple(TensorProduct(JzKet(Rational(3, 2), Rational(3, 2)), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(Rational(3, 2), Rational(3, 2)), JzKet(S.Half, Rational(-1, 2)))) == \
         sqrt(3)*JzKetCoupled(
             1, 1, (Rational(3, 2), S.Half))/2 + JzKetCoupled(2, 1, (Rational(3, 2), S.Half))/2
     assert couple(TensorProduct(JzKet(Rational(3, 2), S.Half), JzKet(S.Half, S.Half))) == \
         -JzKetCoupled(1, 1, (S(
             3)/2, S.Half))/2 + sqrt(3)*JzKetCoupled(2, 1, (Rational(3, 2), S.Half))/2
-    assert couple(TensorProduct(JzKet(Rational(3, 2), S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(Rational(3, 2), S.Half), JzKet(S.Half, Rational(-1, 2)))) == \
         sqrt(2)*JzKetCoupled(1, 0, (S(
             3)/2, S.Half))/2 + sqrt(2)*JzKetCoupled(2, 0, (Rational(3, 2), S.Half))/2
-    assert couple(TensorProduct(JzKet(Rational(3, 2), -S.Half), JzKet(S.Half, S.Half))) == \
+    assert couple(TensorProduct(JzKet(Rational(3, 2), Rational(-1, 2)), JzKet(S.Half, S.Half))) == \
         -sqrt(2)*JzKetCoupled(1, 0, (S(
             3)/2, S.Half))/2 + sqrt(2)*JzKetCoupled(2, 0, (Rational(3, 2), S.Half))/2
-    assert couple(TensorProduct(JzKet(Rational(3, 2), -S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(Rational(3, 2), Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)))) == \
         JzKetCoupled(1, -1, (S(
             3)/2, S.Half))/2 + sqrt(3)*JzKetCoupled(2, -1, (Rational(3, 2), S.Half))/2
     assert couple(TensorProduct(JzKet(Rational(3, 2), Rational(-3, 2)), JzKet(S.Half, S.Half))) == \
         -sqrt(3)*JzKetCoupled(1, -1, (Rational(3, 2), S.Half))/2 + \
         JzKetCoupled(2, -1, (Rational(3, 2), S.Half))/2
-    assert couple(TensorProduct(JzKet(Rational(3, 2), Rational(-3, 2)), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(Rational(3, 2), Rational(-3, 2)), JzKet(S.Half, Rational(-1, 2)))) == \
         JzKetCoupled(2, -2, (Rational(3, 2), S.Half))
 
 
@@ -1974,35 +1974,35 @@ def test_couple_3_states_numerical():
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))) == \
         JzKetCoupled(Rational(3, 2), S(
             3)/2, (S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2))) )
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))) == \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half)) )/3 + \
         sqrt(3)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.One/
              2), ((1, 2, 1), (1, 3, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half))) == \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half)) )/2 - \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half)) )/6 + \
         sqrt(3)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.One/
              2), ((1, 2, 1), (1, 3, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half))) == \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half)) )/2 + \
-        sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half)) )/6 + \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.One
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)))) == \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half)) )/2 + \
+        sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half)) )/6 + \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.One
              /2), ((1, 2, 1), (1, 3, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))) == \
         -sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half)) )/2 - \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half)) )/6 + \
         sqrt(3)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.One/
              2), ((1, 2, 1), (1, 3, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))) == \
-        -sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half)) )/2 + \
-        sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half)) )/6 + \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.One
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))) == \
+        -sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half)) )/2 + \
+        sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half)) )/6 + \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.One
              /2), ((1, 2, 1), (1, 3, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half))) == \
-        -sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half)) )/3 + \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.One
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half))) == \
+        -sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half)) )/3 + \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.One
              /2), ((1, 2, 1), (1, 3, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)))) == \
         JzKetCoupled(Rational(3, 2), -S(
             3)/2, (S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2))) )
     # j1=S.Half, j2=S.Half, j3=1
@@ -2017,42 +2017,42 @@ def test_couple_3_states_numerical():
         sqrt(2)*JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 1)) )/2 + \
         sqrt(6)*JzKetCoupled(
             2, 0, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1))) == \
         sqrt(2)*JzKetCoupled(1, 1, (S.Half, S.Half, 1), ((1, 2, 0), (1, 3, 1)) )/2 - \
         JzKetCoupled(1, 1, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, 1, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0))) == \
         -sqrt(6)*JzKetCoupled(0, 0, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 0)) )/6 + \
         sqrt(2)*JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 2, 0), (1, 3, 1)) )/2 + \
         sqrt(3)*JzKetCoupled(
             2, 0, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 2)) )/3
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1))) == \
         sqrt(2)*JzKetCoupled(1, -1, (S.Half, S.Half, 1), ((1, 2, 0), (1, 3, 1)) )/2 + \
         JzKetCoupled(1, -1, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, -1, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1))) == \
         -sqrt(2)*JzKetCoupled(1, 1, (S.Half, S.Half, 1), ((1, 2, 0), (1, 3, 1)) )/2 - \
         JzKetCoupled(1, 1, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, 1, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0))) == \
         -sqrt(6)*JzKetCoupled(0, 0, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 0)) )/6 - \
         sqrt(2)*JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 2, 0), (1, 3, 1)) )/2 + \
         sqrt(3)*JzKetCoupled(
             2, 0, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 2)) )/3
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1))) == \
         -sqrt(2)*JzKetCoupled(1, -1, (S.Half, S.Half, 1), ((1, 2, 0), (1, 3, 1)) )/2 + \
         JzKetCoupled(1, -1, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, -1, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1))) == \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 0)) )/3 - \
         sqrt(2)*JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 1)) )/2 + \
         sqrt(6)*JzKetCoupled(
             2, 0, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0))) == \
         -sqrt(2)*JzKetCoupled(1, -1, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 1)) )/2 + \
         sqrt(2)*JzKetCoupled(
             2, -1, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1))) == \
         JzKetCoupled(2, -2, (S.Half, S.Half, 1), ((1, 2, 1), (1, 3, 2)) )
     # j1=S.Half, j2=1, j3=1
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1))) == \
@@ -2080,11 +2080,11 @@ def test_couple_3_states_numerical():
         sqrt(10)*JzKetCoupled(S(
             5)/2, S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1))) == \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, S.Half)) )/3 + \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/3 + \
-        JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 + \
-        4*sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
-        sqrt(5)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, 1, 1), ((1,
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, S.Half)) )/3 + \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/3 + \
+        JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 + \
+        4*sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
+        sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, 1, 1), ((1,
              2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1))) == \
         -2*JzKetCoupled(S.Half, S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, S.Half)) )/3 + \
@@ -2094,65 +2094,65 @@ def test_couple_3_states_numerical():
         sqrt(10)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, 1, 1), ((1,
              2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/10
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0))) == \
-        -sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, S.Half)) )/3 - \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/3 + \
-        2*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 - \
-        sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
-        sqrt(5)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, 1, 1), ((1,
+        -sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, S.Half)) )/3 - \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/3 + \
+        2*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 - \
+        sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
+        sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, 1, 1), ((1,
              2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1))) == \
         sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 + \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, 1, 1), ((1,
              2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1))) == \
         -sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(S(
             5)/2, Rational(3, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0))) == \
         -sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, S.Half)) )/3 - \
         JzKetCoupled(S.Half, S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/3 - \
         2*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 + \
         sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(S(
             5)/2, S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1))) == \
-        -2*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, S.Half)) )/3 + \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/6 - \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 + \
-        2*sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, 1, 1), ((1,
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1))) == \
+        -2*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, S.Half)) )/3 + \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/6 - \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 + \
+        2*sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, 1, 1), ((1,
              2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1))) == \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, S.Half)) )/3 + \
         JzKetCoupled(S.Half, S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/3 - \
         JzKetCoupled(Rational(3, 2), S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 - \
         4*sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(S(
             5)/2, S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0))) == \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, S.Half)) )/3 - \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/3 - \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 - \
-        sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, 1, 1), ((1,
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0))) == \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, S.Half)) )/3 - \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/3 - \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 - \
+        sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, 1, 1), ((1,
              2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1))) == \
         -sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1), ((1, 2, S.Half), (1, 3, Rational(3, 2))) )/3 + \
         2*sqrt(15)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, 1, 1), ((1,
              2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1))) == \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/2 - \
-        sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/5 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, 1, 1), ((1,
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1))) == \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, S.Half)) )/2 - \
+        sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/5 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, 1, 1), ((1,
              2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0))) == \
         -sqrt(15)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(3, 2))) )/5 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, 1, 1), ((1,
              2, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, -1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, -1))) == \
         JzKetCoupled(S(
             5)/2, Rational(-5, 2), (S.Half, 1, 1), ((1, 2, Rational(3, 2)), (1, 3, Rational(5, 2))) )
     #  j1=1, j2=1, j3=1
@@ -2304,75 +2304,75 @@ def test_couple_3_states_numerical():
         sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/5 + \
         sqrt(15)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S.Half, S(3)
              /2), ((1, 2, 1), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(-1, 2)))) == \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/6 + \
         2*sqrt(30)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(5, 2))) )/10
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(-3, 2)))) == \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/2 + \
-        sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/5 + \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/2 + \
+        sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/5 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), -S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), Rational(3, 2)))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(3, 2)))) == \
         sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 0), (1, 3, Rational(3, 2))) )/2 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/10 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S.Half, S(3)/
              2), ((1, 2, 1), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), S.Half))) == \
         -sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/6 + \
         sqrt(2)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 0), (1, 3, Rational(3, 2))) )/2 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/30 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), -S.Half))) == \
-        -sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/6 + \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 0), (1, 3, Rational(3, 2))) )/2 + \
-        sqrt(30)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/30 + \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(-1, 2)))) == \
+        -sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/6 + \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 0), (1, 3, Rational(3, 2))) )/2 + \
+        sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/30 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), -S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), Rational(-3, 2)))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(-3, 2)))) == \
         sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 0), (1, 3, Rational(3, 2))) )/2 + \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/10 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S.Half, S(3)
              /2), ((1, 2, 1), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(3, 2)))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(3, 2)))) == \
         -sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 0), (1, 3, Rational(3, 2))) )/2 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/10 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S.Half, S(3)/
              2), ((1, 2, 1), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), S.Half))) == \
         -sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/6 - \
         sqrt(2)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 0), (1, 3, Rational(3, 2))) )/2 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/30 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), -S.Half))) == \
-        -sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/6 - \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 0), (1, 3, Rational(3, 2))) )/2 + \
-        sqrt(30)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/30 + \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(-1, 2)))) == \
+        -sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/6 - \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 0), (1, 3, Rational(3, 2))) )/2 + \
+        sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/30 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), -S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(-3, 2)))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(-3, 2)))) == \
         -sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 0), (1, 3, Rational(3, 2))) )/2 + \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/10 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S.Half, S(3)
              /2), ((1, 2, 1), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), Rational(3, 2)))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(3, 2)))) == \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/2 - \
         sqrt(10)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/5 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), S.Half))) == \
-        sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/6 - \
-        2*sqrt(30)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/15 + \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), S.Half))) == \
+        sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, S.Half)) )/6 - \
+        2*sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), -S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(-1, 2)))) == \
         -sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(3, 2))) )/5 + \
         sqrt(15)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S.Half, S(
             3)/2), ((1, 2, 1), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), Rational(-3, 2)))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(-3, 2)))) == \
         JzKetCoupled(Rational(5, 2), -S(
             5)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 2, 1), (1, 3, Rational(5, 2))) )
     # Couple j1 to j3
@@ -2380,35 +2380,35 @@ def test_couple_3_states_numerical():
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) ) == \
         JzKetCoupled(Rational(3, 2), S(
             3)/2, (S.Half, S.Half, S.Half), ((1, 3, 1), (1, 2, Rational(3, 2))) )
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) ) == \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half), ((1, 3, 0), (1, 2, S.Half)) )/2 - \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half), ((1, 3, 1), (1, 2, S.Half)) )/6 + \
         sqrt(3)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.One/
              2), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) ) == \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half), ((1, 3, 1), (1, 2, S.Half)) )/3 + \
         sqrt(3)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.One/
              2), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) ) == \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half), ((1, 3, 0), (1, 2, S.Half)) )/2 + \
-        sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half), ((1, 3, 1), (1, 2, S.Half)) )/6 + \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.One
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) ) == \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half), ((1, 3, 0), (1, 2, S.Half)) )/2 + \
+        sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half), ((1, 3, 1), (1, 2, S.Half)) )/6 + \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.One
              /2), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) ) == \
         -sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half), ((1, 3, 0), (1, 2, S.Half)) )/2 - \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half), ((1, 3, 1), (1, 2, S.Half)) )/6 + \
         sqrt(3)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.One/
              2), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) ) == \
-        -sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half), ((1, 3, 1), (1, 2, S.Half)) )/3 + \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.One
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) ) == \
+        -sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half), ((1, 3, 1), (1, 2, S.Half)) )/3 + \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.One
              /2), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) ) == \
-        -sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half), ((1, 3, 0), (1, 2, S.Half)) )/2 + \
-        sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half), ((1, 3, 1), (1, 2, S.Half)) )/6 + \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.One
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 3), (1, 2)) ) == \
+        -sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half), ((1, 3, 0), (1, 2, S.Half)) )/2 + \
+        sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half), ((1, 3, 1), (1, 2, S.Half)) )/6 + \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.One
              /2), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 3), (1, 2)) ) == \
         JzKetCoupled(Rational(3, 2), -S(
             3)/2, (S.Half, S.Half, S.Half), ((1, 3, 1), (1, 2, Rational(3, 2))) )
     # j1=1/2, j2=1/2, j3=1
@@ -2425,46 +2425,46 @@ def test_couple_3_states_numerical():
         sqrt(6)*JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 1)) )/6 + \
         sqrt(6)*JzKetCoupled(
             2, 0, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
         sqrt(3)*JzKetCoupled(1, 1, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 1)) )/2 + \
         JzKetCoupled(2, 1, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
         sqrt(6)*JzKetCoupled(0, 0, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 0)) )/6 + \
         sqrt(6)*JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 1)) )/6 + \
         sqrt(3)*JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 1)) )/3 + \
         sqrt(3)*JzKetCoupled(
             2, 0, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 2)) )/3
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
         sqrt(6)*JzKetCoupled(1, -1, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 1)) )/3 + \
         sqrt(3)*JzKetCoupled(1, -1, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 1)) )/6 + \
         JzKetCoupled(
             2, -1, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
         -sqrt(6)*JzKetCoupled(1, 1, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 1)) )/3 - \
         sqrt(3)*JzKetCoupled(1, 1, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 1)) )/6 + \
         JzKetCoupled(2, 1, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
         sqrt(6)*JzKetCoupled(0, 0, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 0)) )/6 - \
         sqrt(6)*JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 1)) )/6 - \
         sqrt(3)*JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 1)) )/3 + \
         sqrt(3)*JzKetCoupled(
             2, 0, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 2)) )/3
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
         -sqrt(3)*JzKetCoupled(1, -1, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 1)) )/2 + \
         JzKetCoupled(
             2, -1, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
         -sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 0)) )/3 - \
         sqrt(3)*JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 1)) )/3 + \
         sqrt(6)*JzKetCoupled(1, 0, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 1)) )/6 + \
         sqrt(6)*JzKetCoupled(
             2, 0, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
         -sqrt(3)*JzKetCoupled(1, -1, (S.Half, S.Half, 1), ((1, 3, S.Half), (1, 2, 1)) )/3 + \
         sqrt(6)*JzKetCoupled(1, -1, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 1)) )/6 + \
         sqrt(2)*JzKetCoupled(
             2, -1, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
         JzKetCoupled(2, -2, (S.Half, S.Half, 1), ((1, 3, Rational(3, 2)), (1, 2, 2)) )
     # j 1=1/2, j 2=1, j 3=1
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 1), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
@@ -2494,11 +2494,11 @@ def test_couple_3_states_numerical():
         sqrt(10)*JzKetCoupled(S(
             5)/2, S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/5
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(1, 0), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
-        -sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, S.Half)) )/3 - \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/3 + \
-        2*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 - \
-        sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
-        sqrt(5)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, 1, 1), ((1,
+        -sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, S.Half)) )/3 - \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/3 + \
+        2*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 - \
+        sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
+        sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, 1, 1), ((1,
              3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/5
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/2 + \
@@ -2506,65 +2506,65 @@ def test_couple_3_states_numerical():
         sqrt(10)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, 1, 1), ((1,
              3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/10
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, S.Half)) )/3 + \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/3 + \
-        JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 + \
-        4*sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
-        sqrt(5)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, 1, 1), ((1,
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, S.Half)) )/3 + \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/3 + \
+        JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 + \
+        4*sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
+        sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, 1, 1), ((1,
              3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/5
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(1, -1), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
         sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 + \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, 1, 1), ((1,
              3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
         -sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(S(
             5)/2, Rational(3, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, S.Half)) )/3 + \
         JzKetCoupled(S.Half, S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/3 - \
         JzKetCoupled(Rational(3, 2), S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 - \
         4*sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(S(
             5)/2, S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 1), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/2 - \
-        sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/5 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, 1, 1), ((1,
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/2 - \
+        sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/5 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, 1, 1), ((1,
              3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
         -sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, S.Half)) )/3 - \
         JzKetCoupled(S.Half, S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/3 - \
         2*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 + \
         sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(S(
             5)/2, S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, S.Half)) )/3 - \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/3 - \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 - \
-        sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, 1, 1), ((1,
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, S.Half)) )/3 - \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/3 - \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 - \
+        sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, 1, 1), ((1,
              3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, 0), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
         -sqrt(15)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/5 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, 1, 1), ((1,
              3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
-        -2*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, S.Half)) )/3 + \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/6 - \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 + \
-        2*sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, 1, 1), ((1,
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 1)), ((1, 3), (1, 2)) ) == \
+        -2*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, S.Half)) )/3 + \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, S.Half)) )/6 - \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 + \
+        2*sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, 1, 1), ((1,
              3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, 0)), ((1, 3), (1, 2)) ) == \
         -sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1), ((1, 3, S.Half), (1, 2, Rational(3, 2))) )/3 + \
         2*sqrt(15)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(3, 2))) )/15 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, 1, 1), ((1,
              3, Rational(3, 2)), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(1, -1), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1), JzKet(1, -1)), ((1, 3), (1, 2)) ) == \
         JzKetCoupled(S(
             5)/2, Rational(-5, 2), (S.Half, 1, 1), ((1, 3, Rational(3, 2)), (1, 2, Rational(5, 2))) )
     # j1=1, 1, 1
@@ -2717,78 +2717,78 @@ def test_couple_3_states_numerical():
         sqrt(15)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/10 + \
         sqrt(15)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S.Half, S(3)
              /2), ((1, 3, 2), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), -S.Half)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(-1, 2))), ((1, 3), (1, 2)) ) == \
         -sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/6 + \
         sqrt(3)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3 - \
         sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/5 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(5, 2))) )/10
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(-3, 2))), ((1, 3), (1, 2)) ) == \
-        -sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/2 + \
-        JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/2 - \
-        sqrt(15)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/10 + \
+        -sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/2 + \
+        JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/2 - \
+        sqrt(15)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/10 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), -S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), Rational(3, 2))), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(3, 2))), ((1, 3), (1, 2)) ) == \
         2*sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/5 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S.Half, S(3)/
              2), ((1, 3, 2), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), S.Half)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), S.Half)), ((1, 3), (1, 2)) ) == \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/6 + \
         sqrt(3)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/6 + \
         3*sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/10 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), -S.Half)), ((1, 3), (1, 2)) ) == \
-        sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/6 + \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3 + \
-        sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/5 + \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(-1, 2))), ((1, 3), (1, 2)) ) == \
+        sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/6 + \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3 + \
+        sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/5 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), -S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), Rational(-3, 2))), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(-3, 2))), ((1, 3), (1, 2)) ) == \
         sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/2 + \
         sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/10 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S.Half, S(3)
              /2), ((1, 3, 2), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(3, 2))), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(3, 2))), ((1, 3), (1, 2)) ) == \
         -sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/2 - \
         sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/10 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S.Half, S(3)/
              2), ((1, 3, 2), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), S.Half)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), S.Half)), ((1, 3), (1, 2)) ) == \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/6 - \
         sqrt(3)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3 - \
         sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/5 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), -S.Half)), ((1, 3), (1, 2)) ) == \
-        sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/6 - \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/6 - \
-        3*sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/10 + \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(-1, 2))), ((1, 3), (1, 2)) ) == \
+        sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/6 - \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/6 - \
+        3*sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/10 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), -S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(-3, 2))), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(Rational(3, 2), Rational(-3, 2))), ((1, 3), (1, 2)) ) == \
         -2*sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/5 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S.Half, S(3)
              /2), ((1, 3, 2), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), Rational(3, 2))), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(3, 2))), ((1, 3), (1, 2)) ) == \
         -sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/2 - \
         JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/2 + \
         sqrt(15)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/10 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), S.Half)), ((1, 3), (1, 2)) ) == \
-        -sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/6 - \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3 + \
-        sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/5 + \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), S.Half)), ((1, 3), (1, 2)) ) == \
+        -sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, S.Half)) )/6 - \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/3 + \
+        sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/5 + \
         sqrt(30)*JzKetCoupled(Rational(5, 2), -S(
             1)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), -S.Half)), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(-1, 2))), ((1, 3), (1, 2)) ) == \
         -JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 1), (1, 2, Rational(3, 2))) )/2 + \
         sqrt(15)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(3, 2))) )/10 + \
         sqrt(15)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S.Half, S(
             3)/2), ((1, 3, 2), (1, 2, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(Rational(3, 2), Rational(-3, 2))), ((1, 3), (1, 2)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(Rational(3, 2), Rational(-3, 2))), ((1, 3), (1, 2)) ) == \
         JzKetCoupled(Rational(5, 2), -S(
             5)/2, (S.Half, S.Half, Rational(3, 2)), ((1, 3, 2), (1, 2, Rational(5, 2))) )
 
@@ -2799,29 +2799,29 @@ def test_couple_4_states_numerical():
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))) == \
         JzKetCoupled(2, 2, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))) == \
         sqrt(3)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/2 + \
         JzKetCoupled(2, 1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half))) == \
         sqrt(6)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 1)) )/3 - \
         sqrt(3)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/6 + \
         JzKetCoupled(2, 1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)))) == \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 0)) )/3 + \
         sqrt(3)*JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 1)) )/3 + \
         sqrt(6)*JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/6 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))) == \
         sqrt(2)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half), (1, 4, 1)) )/2 - \
         sqrt(6)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 1)) )/6 - \
         sqrt(3)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/6 + \
         JzKetCoupled(2, 1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half),
-                        JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)),
+                        JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))) == \
         JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half),
                 ((1, 2, 0), (1, 3, S.Half), (1, 4, 0)))/2 - \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half),
@@ -2834,7 +2834,7 @@ def test_couple_4_states_numerical():
                 ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)))/6 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S.Half, S.Half, S.Half),
                 ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)))/6
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half))) == \
         -JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half), (1, 4, 0)) )/2 - \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 0)) )/6 + \
         JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half), (1, 4, 1)) )/2 + \
@@ -2842,19 +2842,19 @@ def test_couple_4_states_numerical():
         sqrt(6)*JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/6 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)))) == \
         sqrt(2)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half), (1, 4, 1)) )/2 + \
         sqrt(6)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 1)) )/6 + \
         sqrt(3)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/6 + \
         JzKetCoupled(2, -1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))) == \
         -sqrt(2)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half), (1, 4, 1)) )/2 - \
         sqrt(6)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 1)) )/6 - \
         sqrt(3)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/6 + \
         JzKetCoupled(2, 1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))) == \
         -JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half), (1, 4, 0)) )/2 - \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 0)) )/6 - \
         JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half), (1, 4, 1)) )/2 - \
@@ -2862,7 +2862,7 @@ def test_couple_4_states_numerical():
         sqrt(6)*JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/6 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half))) == \
         JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half), (1, 4, 0)) )/2 - \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 0)) )/6 - \
         JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half), (1, 4, 1)) )/2 + \
@@ -2870,28 +2870,28 @@ def test_couple_4_states_numerical():
         sqrt(6)*JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/6 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)))) == \
         -sqrt(2)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (1, 3, S.Half), (1, 4, 1)) )/2 + \
         sqrt(6)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 1)) )/6 + \
         sqrt(3)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/6 + \
         JzKetCoupled(2, -1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half))) == \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 0)) )/3 - \
         sqrt(3)*JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 1)) )/3 - \
         sqrt(6)*JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/6 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))) == \
         -sqrt(6)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, S.Half), (1, 4, 1)) )/3 + \
         sqrt(3)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/6 + \
         JzKetCoupled(2, -1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half))) == \
         -sqrt(3)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 1)) )/2 + \
         JzKetCoupled(2, -1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)))) == \
         JzKetCoupled(2, -2, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, 2)) )
     # j1=S.Half, S.Half, S.Half, 1
@@ -2907,32 +2907,32 @@ def test_couple_4_states_numerical():
         sqrt(10)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/5 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1))) == \
         sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0))) == \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 - \
         JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/3 + \
         2*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 + \
         sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1))) == \
-        2*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 + \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/6 + \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 + \
-        2*sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1))) == \
+        2*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 + \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/6 + \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 + \
+        2*sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1))) == \
         sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/2 - \
         sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0))) == \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
         JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/3 + \
@@ -2941,16 +2941,16 @@ def test_couple_4_states_numerical():
         sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1))) == \
-        sqrt(3)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/3 - \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 + \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/6 + \
-        sqrt(6)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 - \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 + \
-        2*sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1))) == \
+        sqrt(3)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/3 - \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 + \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/6 + \
+        sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 - \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 + \
+        2*sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1))) == \
         -sqrt(3)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/3 - \
         JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 + \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/6 + \
@@ -2959,28 +2959,28 @@ def test_couple_4_states_numerical():
         2*sqrt(10)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0))) == \
-        -sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/3 + \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 + \
-        JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 - \
-        sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
-        sqrt(5)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0))) == \
+        -sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/3 + \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 + \
+        JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 - \
+        sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
+        sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1))) == \
         sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/2 + \
         sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 + \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1))) == \
         -sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/2 - \
         sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0))) == \
         -sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
         JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/3 - \
@@ -2989,16 +2989,16 @@ def test_couple_4_states_numerical():
         sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1))) == \
-        -sqrt(3)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/3 - \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 + \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/6 - \
-        sqrt(6)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 - \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 + \
-        2*sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1))) == \
+        -sqrt(3)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/3 - \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 + \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/6 - \
+        sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 - \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 + \
+        2*sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1))) == \
         sqrt(3)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/3 - \
         JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 + \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/6 - \
@@ -3007,50 +3007,50 @@ def test_couple_4_states_numerical():
         2*sqrt(10)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0))) == \
-        sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/3 - \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 + \
-        JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 - \
-        sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
-        sqrt(5)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0))) == \
+        sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/6 - \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/3 - \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 + \
+        JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 - \
+        sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
+        sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1))) == \
         -sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/2 + \
         sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/6 + \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1))) == \
         2*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 + \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/6 - \
         sqrt(2)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 - \
         2*sqrt(10)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0))) == \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 - \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/3 - \
-        2*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 - \
-        sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
-        sqrt(5)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0))) == \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, S.Half)) )/3 - \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/3 - \
+        2*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 - \
+        sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
+        sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1))) == \
         -sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, S.Half), (1, 4, Rational(3, 2))) )/3 + \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1))) == \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/2 - \
-        sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/5 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1))) == \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, S.Half)) )/2 - \
+        sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/5 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0))) == \
         -sqrt(15)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(3, 2))) )/5 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1))) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1))) == \
         JzKetCoupled(Rational(5, 2), Rational(-5, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (1, 3, Rational(3, 2)), (1, 4, Rational(5, 2))) )
     # Couple j1 to j2, j3 to j4
@@ -3058,85 +3058,85 @@ def test_couple_4_states_numerical():
     assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
         JzKetCoupled(2, 2, (S(
             1)/2, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(2)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 + \
         JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, 1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(2)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 + \
         JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, 1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/3 + \
         sqrt(2)*JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S.Half, S.Half, S.One/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(2)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 - \
         JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, 1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 2), (3, 4), (1, 3)) ) == \
         JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 0), (1, 3, 0)) )/2 - \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/6 + \
         JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S.Half, S.Half, S.One/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
         -JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 0), (1, 3, 0)) )/2 - \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/6 + \
         JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 - \
         JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S.Half, S.Half, S.One/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(2)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, -1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(2)*JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 - \
         JzKetCoupled(1, 1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, 1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 2), (3, 4), (1, 3)) ) == \
         -JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 0), (1, 3, 0)) )/2 - \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/6 - \
         JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S.Half, S.Half, S.One/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
         JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 0), (1, 3, 0)) )/2 - \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/6 - \
         JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 - \
         JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S.Half, S.Half, S.One/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(2)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, -1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(3)*JzKetCoupled(0, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/3 - \
         sqrt(2)*JzKetCoupled(1, 0, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
         sqrt(6)*JzKetCoupled(2, 0, (S.Half, S.Half, S.Half, S.One/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(2)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 - \
         JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, -1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(2)*JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 - \
         JzKetCoupled(1, -1, (S.Half, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(2, -1, (S.Half, S(
             1)/2, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/2
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2))), ((1, 2), (3, 4), (1, 3)) ) == \
         JzKetCoupled(2, -2, (S(
             1)/2, S.Half, S.Half, S.Half), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )
     # j1=S.Half, S.Half, S.Half, 1
@@ -3155,29 +3155,29 @@ def test_couple_4_states_numerical():
         2*sqrt(10)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 + \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/3 + \
         JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/3 - \
         JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 + \
         4*sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/2 + \
-        sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/5 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/2 + \
+        sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/5 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/2 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/10 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
         JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/3 + \
@@ -3186,16 +3186,16 @@ def test_couple_4_states_numerical():
         sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
-        sqrt(3)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/3 + \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/3 - \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/6 + \
-        sqrt(6)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/6 + \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 + \
-        sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/30 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
+        sqrt(3)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/3 + \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/3 - \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/6 + \
+        sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/6 + \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 + \
+        sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/30 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(3)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/3 + \
         JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/3 - \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/6 + \
@@ -3204,26 +3204,26 @@ def test_couple_4_states_numerical():
         sqrt(10)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/30 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
-        -sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/3 + \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/3 - \
-        JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 + \
-        sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
-        sqrt(5)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
+        -sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/3 + \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/3 - \
+        JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 + \
+        sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
+        sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/2 + \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/10 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/2 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/10 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(6)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
         JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/3 - \
@@ -3232,16 +3232,16 @@ def test_couple_4_states_numerical():
         sqrt(5)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
-        -sqrt(3)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/3 + \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/3 - \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/6 - \
-        sqrt(6)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/6 + \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 + \
-        sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/30 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, S.Half), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
+        -sqrt(3)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/3 + \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/3 - \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/6 - \
+        sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/6 + \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 + \
+        sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/30 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(3)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/3 + \
         JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/3 - \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/6 - \
@@ -3250,50 +3250,50 @@ def test_couple_4_states_numerical():
         sqrt(10)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/30 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
-        sqrt(6)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/3 - \
-        sqrt(3)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/3 - \
-        JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 + \
-        sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
-        sqrt(5)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
+        sqrt(6)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/6 - \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/3 - \
+        sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/3 - \
+        JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 + \
+        sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
+        sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 0), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/2 + \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/10 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(2)*JzKetCoupled(S.Half, S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/2 - \
         sqrt(10)*JzKetCoupled(Rational(3, 2), S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/5 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), S.Half, (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
-        -sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/3 + \
-        JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/3 + \
-        JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 - \
-        4*sqrt(5)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
-        sqrt(5)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
+        -sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/3 + \
+        JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/3 + \
+        JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 - \
+        4*sqrt(5)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
+        sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, S.Half), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, S.Half), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(6)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 - \
         sqrt(30)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(5)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
-        2*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/3 + \
-        sqrt(2)*JzKetCoupled(S.Half, -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/6 - \
-        sqrt(2)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 - \
-        2*sqrt(10)*JzKetCoupled(Rational(3, 2), -S.Half, (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
-        sqrt(10)*JzKetCoupled(Rational(5, 2), -S.Half, (S.Half, S(
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 1)), ((1, 2), (3, 4), (1, 3)) ) == \
+        2*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, S.Half)) )/3 + \
+        sqrt(2)*JzKetCoupled(S.Half, Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, S.Half)) )/6 - \
+        sqrt(2)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 - \
+        2*sqrt(10)*JzKetCoupled(Rational(3, 2), Rational(-1, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
+        sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-1, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/10
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, 0)), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(3)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, S.Half), (1, 3, Rational(3, 2))) )/3 - \
         2*sqrt(15)*JzKetCoupled(Rational(3, 2), Rational(-3, 2), (S.Half, S.Half, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(3, 2))) )/15 + \
         sqrt(10)*JzKetCoupled(Rational(5, 2), Rational(-3, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )/5
-    assert couple(TensorProduct(JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(S.Half, -S.Half), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
+    assert couple(TensorProduct(JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(S.Half, Rational(-1, 2)), JzKet(1, -1)), ((1, 2), (3, 4), (1, 3)) ) == \
         JzKetCoupled(Rational(5, 2), Rational(-5, 2), (S.Half, S(
             1)/2, S.Half, 1), ((1, 2, 1), (3, 4, Rational(3, 2)), (1, 3, Rational(5, 2))) )
 
@@ -3330,7 +3330,7 @@ def test_couple_symbolic():
 def test_innerproduct():
     assert InnerProduct(JzBra(1, 1), JzKet(1, 1)).doit() == 1
     assert InnerProduct(
-        JzBra(S.Half, S.Half), JzKet(S.Half, -S.Half)).doit() == 0
+        JzBra(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2))).doit() == 0
     assert InnerProduct(JzBra(j, m), JzKet(j, m)).doit() == 1
     assert InnerProduct(JzBra(1, 0), JyKet(1, 1)).doit() == I/sqrt(2)
     assert InnerProduct(
@@ -3343,9 +3343,9 @@ def test_rotation_small_d():
     # Symbolic tests
     # j = 1/2
     assert Rotation.d(S.Half, S.Half, S.Half, beta).doit() == cos(beta/2)
-    assert Rotation.d(S.Half, S.Half, -S.Half, beta).doit() == -sin(beta/2)
-    assert Rotation.d(S.Half, -S.Half, S.Half, beta).doit() == sin(beta/2)
-    assert Rotation.d(S.Half, -S.Half, -S.Half, beta).doit() == cos(beta/2)
+    assert Rotation.d(S.Half, S.Half, Rational(-1, 2), beta).doit() == -sin(beta/2)
+    assert Rotation.d(S.Half, Rational(-1, 2), S.Half, beta).doit() == sin(beta/2)
+    assert Rotation.d(S.Half, Rational(-1, 2), Rational(-1, 2), beta).doit() == cos(beta/2)
     # j = 1
     assert Rotation.d(1, 1, 1, beta).doit() == (1 + cos(beta))/2
     assert Rotation.d(1, 1, 0, beta).doit() == -sin(beta)/sqrt(2)
@@ -3362,7 +3362,7 @@ def test_rotation_small_d():
     assert Rotation.d(Rational(3, 2), S(
         3)/2, S.Half, beta).doit() == -sqrt(3)*(sin(beta/2) + sin(beta*Rational(3, 2)))/4
     assert Rotation.d(Rational(3, 2), S(
-        3)/2, -S.Half, beta).doit() == sqrt(3)*(cos(beta/2) - cos(beta*Rational(3, 2)))/4
+        3)/2, Rational(-1, 2), beta).doit() == sqrt(3)*(cos(beta/2) - cos(beta*Rational(3, 2)))/4
     assert Rotation.d(Rational(3, 2), S(
         3)/2, Rational(-3, 2), beta).doit() == (-3*sin(beta/2) + sin(beta*Rational(3, 2)))/4
     assert Rotation.d(Rational(3, 2), S(
@@ -3370,7 +3370,7 @@ def test_rotation_small_d():
     assert Rotation.d(S(
         3)/2, S.Half, S.Half, beta).doit() == (cos(beta/2) + 3*cos(beta*Rational(3, 2)))/4
     assert Rotation.d(S(
-        3)/2, S.Half, -S.Half, beta).doit() == (sin(beta/2) - 3*sin(beta*Rational(3, 2)))/4
+        3)/2, S.Half, Rational(-1, 2), beta).doit() == (sin(beta/2) - 3*sin(beta*Rational(3, 2)))/4
     assert Rotation.d(Rational(3, 2), S(
         1)/2, Rational(-3, 2), beta).doit() == sqrt(3)*(cos(beta/2) - cos(beta*Rational(3, 2)))/4
     assert Rotation.d(Rational(3, 2), -S(
@@ -3378,7 +3378,7 @@ def test_rotation_small_d():
     assert Rotation.d(Rational(3, 2), -S(
         1)/2, S.Half, beta).doit() == (-sin(beta/2) + 3*sin(beta*Rational(3, 2)))/4
     assert Rotation.d(Rational(3, 2), -S(
-        1)/2, -S.Half, beta).doit() == (cos(beta/2) + 3*cos(beta*Rational(3, 2)))/4
+        1)/2, Rational(-1, 2), beta).doit() == (cos(beta/2) + 3*cos(beta*Rational(3, 2)))/4
     assert Rotation.d(Rational(3, 2), -S(
         1)/2, Rational(-3, 2), beta).doit() == -sqrt(3)*(sin(beta/2) + sin(beta*Rational(3, 2)))/4
     assert Rotation.d(S(
@@ -3386,7 +3386,7 @@ def test_rotation_small_d():
     assert Rotation.d(Rational(3, 2), -S(
         3)/2, S.Half, beta).doit() == sqrt(3)*(cos(beta/2) - cos(beta*Rational(3, 2)))/4
     assert Rotation.d(Rational(3, 2), -S(
-        3)/2, -S.Half, beta).doit() == sqrt(3)*(sin(beta/2) + sin(beta*Rational(3, 2)))/4
+        3)/2, Rational(-1, 2), beta).doit() == sqrt(3)*(sin(beta/2) + sin(beta*Rational(3, 2)))/4
     assert Rotation.d(Rational(3, 2), -S(
         3)/2, Rational(-3, 2), beta).doit() == (3*cos(beta/2) + cos(beta*Rational(3, 2)))/4
     # j = 2
@@ -3418,9 +3418,9 @@ def test_rotation_small_d():
     # Numerical tests
     # j = 1/2
     assert Rotation.d(S.Half, S.Half, S.Half, pi/2).doit() == sqrt(2)/2
-    assert Rotation.d(S.Half, S.Half, -S.Half, pi/2).doit() == -sqrt(2)/2
-    assert Rotation.d(S.Half, -S.Half, S.Half, pi/2).doit() == sqrt(2)/2
-    assert Rotation.d(S.Half, -S.Half, -S.Half, pi/2).doit() == sqrt(2)/2
+    assert Rotation.d(S.Half, S.Half, Rational(-1, 2), pi/2).doit() == -sqrt(2)/2
+    assert Rotation.d(S.Half, Rational(-1, 2), S.Half, pi/2).doit() == sqrt(2)/2
+    assert Rotation.d(S.Half, Rational(-1, 2), Rational(-1, 2), pi/2).doit() == sqrt(2)/2
     # j = 1
     assert Rotation.d(1, 1, 1, pi/2).doit() == S.Half
     assert Rotation.d(1, 1, 0, pi/2).doit() == -sqrt(2)/2
@@ -3434,41 +3434,41 @@ def test_rotation_small_d():
     # j = 3/2
     assert Rotation.d(Rational(3, 2), Rational(3, 2), Rational(3, 2), pi/2).doit() == sqrt(2)/4
     assert Rotation.d(Rational(3, 2), Rational(3, 2), S.Half, pi/2).doit() == -sqrt(6)/4
-    assert Rotation.d(Rational(3, 2), Rational(3, 2), -S.Half, pi/2).doit() == sqrt(6)/4
+    assert Rotation.d(Rational(3, 2), Rational(3, 2), Rational(-1, 2), pi/2).doit() == sqrt(6)/4
     assert Rotation.d(Rational(3, 2), Rational(3, 2), Rational(-3, 2), pi/2).doit() == -sqrt(2)/4
     assert Rotation.d(Rational(3, 2), S.Half, Rational(3, 2), pi/2).doit() == sqrt(6)/4
     assert Rotation.d(Rational(3, 2), S.Half, S.Half, pi/2).doit() == -sqrt(2)/4
-    assert Rotation.d(Rational(3, 2), S.Half, -S.Half, pi/2).doit() == -sqrt(2)/4
+    assert Rotation.d(Rational(3, 2), S.Half, Rational(-1, 2), pi/2).doit() == -sqrt(2)/4
     assert Rotation.d(Rational(3, 2), S.Half, Rational(-3, 2), pi/2).doit() == sqrt(6)/4
-    assert Rotation.d(Rational(3, 2), -S.Half, Rational(3, 2), pi/2).doit() == sqrt(6)/4
-    assert Rotation.d(Rational(3, 2), -S.Half, S.Half, pi/2).doit() == sqrt(2)/4
-    assert Rotation.d(Rational(3, 2), -S.Half, -S.Half, pi/2).doit() == -sqrt(2)/4
-    assert Rotation.d(Rational(3, 2), -S.Half, Rational(-3, 2), pi/2).doit() == -sqrt(6)/4
+    assert Rotation.d(Rational(3, 2), Rational(-1, 2), Rational(3, 2), pi/2).doit() == sqrt(6)/4
+    assert Rotation.d(Rational(3, 2), Rational(-1, 2), S.Half, pi/2).doit() == sqrt(2)/4
+    assert Rotation.d(Rational(3, 2), Rational(-1, 2), Rational(-1, 2), pi/2).doit() == -sqrt(2)/4
+    assert Rotation.d(Rational(3, 2), Rational(-1, 2), Rational(-3, 2), pi/2).doit() == -sqrt(6)/4
     assert Rotation.d(Rational(3, 2), Rational(-3, 2), Rational(3, 2), pi/2).doit() == sqrt(2)/4
     assert Rotation.d(Rational(3, 2), Rational(-3, 2), S.Half, pi/2).doit() == sqrt(6)/4
-    assert Rotation.d(Rational(3, 2), Rational(-3, 2), -S.Half, pi/2).doit() == sqrt(6)/4
+    assert Rotation.d(Rational(3, 2), Rational(-3, 2), Rational(-1, 2), pi/2).doit() == sqrt(6)/4
     assert Rotation.d(Rational(3, 2), Rational(-3, 2), Rational(-3, 2), pi/2).doit() == sqrt(2)/4
     # j = 2
     assert Rotation.d(2, 2, 2, pi/2).doit() == Rational(1, 4)
-    assert Rotation.d(2, 2, 1, pi/2).doit() == -S.Half
+    assert Rotation.d(2, 2, 1, pi/2).doit() == Rational(-1, 2)
     assert Rotation.d(2, 2, 0, pi/2).doit() == sqrt(6)/4
-    assert Rotation.d(2, 2, -1, pi/2).doit() == -S.Half
+    assert Rotation.d(2, 2, -1, pi/2).doit() == Rational(-1, 2)
     assert Rotation.d(2, 2, -2, pi/2).doit() == Rational(1, 4)
     assert Rotation.d(2, 1, 2, pi/2).doit() == S.Half
-    assert Rotation.d(2, 1, 1, pi/2).doit() == -S.Half
+    assert Rotation.d(2, 1, 1, pi/2).doit() == Rational(-1, 2)
     assert Rotation.d(2, 1, 0, pi/2).doit() == 0
     assert Rotation.d(2, 1, -1, pi/2).doit() == S.Half
-    assert Rotation.d(2, 1, -2, pi/2).doit() == -S.Half
+    assert Rotation.d(2, 1, -2, pi/2).doit() == Rational(-1, 2)
     assert Rotation.d(2, 0, 2, pi/2).doit() == sqrt(6)/4
     assert Rotation.d(2, 0, 1, pi/2).doit() == 0
-    assert Rotation.d(2, 0, 0, pi/2).doit() == -S.Half
+    assert Rotation.d(2, 0, 0, pi/2).doit() == Rational(-1, 2)
     assert Rotation.d(2, 0, -1, pi/2).doit() == 0
     assert Rotation.d(2, 0, -2, pi/2).doit() == sqrt(6)/4
     assert Rotation.d(2, -1, 2, pi/2).doit() == S.Half
     assert Rotation.d(2, -1, 1, pi/2).doit() == S.Half
     assert Rotation.d(2, -1, 0, pi/2).doit() == 0
-    assert Rotation.d(2, -1, -1, pi/2).doit() == -S.Half
-    assert Rotation.d(2, -1, -2, pi/2).doit() == -S.Half
+    assert Rotation.d(2, -1, -1, pi/2).doit() == Rational(-1, 2)
+    assert Rotation.d(2, -1, -2, pi/2).doit() == Rational(-1, 2)
     assert Rotation.d(2, -2, 2, pi/2).doit() == Rational(1, 4)
     assert Rotation.d(2, -2, 1, pi/2).doit() == S.Half
     assert Rotation.d(2, -2, 0, pi/2).doit() == sqrt(6)/4
@@ -3481,11 +3481,11 @@ def test_rotation_d():
     # j = 1/2
     assert Rotation.D(S.Half, S.Half, S.Half, alpha, beta, gamma).doit() == \
         cos(beta/2)*exp(-I*alpha/2)*exp(-I*gamma/2)
-    assert Rotation.D(S.Half, S.Half, -S.Half, alpha, beta, gamma).doit() == \
+    assert Rotation.D(S.Half, S.Half, Rational(-1, 2), alpha, beta, gamma).doit() == \
         -sin(beta/2)*exp(-I*alpha/2)*exp(I*gamma/2)
-    assert Rotation.D(S.Half, -S.Half, S.Half, alpha, beta, gamma).doit() == \
+    assert Rotation.D(S.Half, Rational(-1, 2), S.Half, alpha, beta, gamma).doit() == \
         sin(beta/2)*exp(I*alpha/2)*exp(-I*gamma/2)
-    assert Rotation.D(S.Half, -S.Half, -S.Half, alpha, beta, gamma).doit() == \
+    assert Rotation.D(S.Half, Rational(-1, 2), Rational(-1, 2), alpha, beta, gamma).doit() == \
         cos(beta/2)*exp(I*alpha/2)*exp(I*gamma/2)
     # j = 1
     assert Rotation.D(1, 1, 1, alpha, beta, gamma).doit() == \
@@ -3510,7 +3510,7 @@ def test_rotation_d():
         (3*cos(beta/2) + cos(beta*Rational(3, 2)))/4*exp(I*alpha*Rational(-3, 2))*exp(I*gamma*Rational(-3, 2))
     assert Rotation.D(Rational(3, 2), Rational(3, 2), S.Half, alpha, beta, gamma).doit() == \
         -sqrt(3)*(sin(beta/2) + sin(beta*Rational(3, 2)))/4*exp(I*alpha*Rational(-3, 2))*exp(-I*gamma/2)
-    assert Rotation.D(Rational(3, 2), Rational(3, 2), -S.Half, alpha, beta, gamma).doit() == \
+    assert Rotation.D(Rational(3, 2), Rational(3, 2), Rational(-1, 2), alpha, beta, gamma).doit() == \
         sqrt(3)*(cos(beta/2) - cos(beta*Rational(3, 2)))/4*exp(I*alpha*Rational(-3, 2))*exp(I*gamma/2)
     assert Rotation.D(Rational(3, 2), Rational(3, 2), Rational(-3, 2), alpha, beta, gamma).doit() == \
         (-3*sin(beta/2) + sin(beta*Rational(3, 2)))/4*exp(I*alpha*Rational(-3, 2))*exp(I*gamma*Rational(3, 2))
@@ -3518,23 +3518,23 @@ def test_rotation_d():
         sqrt(3)*(sin(beta/2) + sin(beta*Rational(3, 2)))/4*exp(-I*alpha/2)*exp(I*gamma*Rational(-3, 2))
     assert Rotation.D(Rational(3, 2), S.Half, S.Half, alpha, beta, gamma).doit() == \
         (cos(beta/2) + 3*cos(beta*Rational(3, 2)))/4*exp(-I*alpha/2)*exp(-I*gamma/2)
-    assert Rotation.D(Rational(3, 2), S.Half, -S.Half, alpha, beta, gamma).doit() == \
+    assert Rotation.D(Rational(3, 2), S.Half, Rational(-1, 2), alpha, beta, gamma).doit() == \
         (sin(beta/2) - 3*sin(beta*Rational(3, 2)))/4*exp(-I*alpha/2)*exp(I*gamma/2)
     assert Rotation.D(Rational(3, 2), S.Half, Rational(-3, 2), alpha, beta, gamma).doit() == \
         sqrt(3)*(cos(beta/2) - cos(beta*Rational(3, 2)))/4*exp(-I*alpha/2)*exp(I*gamma*Rational(3, 2))
-    assert Rotation.D(Rational(3, 2), -S.Half, Rational(3, 2), alpha, beta, gamma).doit() == \
+    assert Rotation.D(Rational(3, 2), Rational(-1, 2), Rational(3, 2), alpha, beta, gamma).doit() == \
         sqrt(3)*(cos(beta/2) - cos(beta*Rational(3, 2)))/4*exp(I*alpha/2)*exp(I*gamma*Rational(-3, 2))
-    assert Rotation.D(Rational(3, 2), -S.Half, S.Half, alpha, beta, gamma).doit() == \
+    assert Rotation.D(Rational(3, 2), Rational(-1, 2), S.Half, alpha, beta, gamma).doit() == \
         (-sin(beta/2) + 3*sin(beta*Rational(3, 2)))/4*exp(I*alpha/2)*exp(-I*gamma/2)
-    assert Rotation.D(Rational(3, 2), -S.Half, -S.Half, alpha, beta, gamma).doit() == \
+    assert Rotation.D(Rational(3, 2), Rational(-1, 2), Rational(-1, 2), alpha, beta, gamma).doit() == \
         (cos(beta/2) + 3*cos(beta*Rational(3, 2)))/4*exp(I*alpha/2)*exp(I*gamma/2)
-    assert Rotation.D(Rational(3, 2), -S.Half, Rational(-3, 2), alpha, beta, gamma).doit() == \
+    assert Rotation.D(Rational(3, 2), Rational(-1, 2), Rational(-3, 2), alpha, beta, gamma).doit() == \
         -sqrt(3)*(sin(beta/2) + sin(beta*Rational(3, 2)))/4*exp(I*alpha/2)*exp(I*gamma*Rational(3, 2))
     assert Rotation.D(Rational(3, 2), Rational(-3, 2), Rational(3, 2), alpha, beta, gamma).doit() == \
         (3*sin(beta/2) - sin(beta*Rational(3, 2)))/4*exp(I*alpha*Rational(3, 2))*exp(I*gamma*Rational(-3, 2))
     assert Rotation.D(Rational(3, 2), Rational(-3, 2), S.Half, alpha, beta, gamma).doit() == \
         sqrt(3)*(cos(beta/2) - cos(beta*Rational(3, 2)))/4*exp(I*alpha*Rational(3, 2))*exp(-I*gamma/2)
-    assert Rotation.D(Rational(3, 2), Rational(-3, 2), -S.Half, alpha, beta, gamma).doit() == \
+    assert Rotation.D(Rational(3, 2), Rational(-3, 2), Rational(-1, 2), alpha, beta, gamma).doit() == \
         sqrt(3)*(sin(beta/2) + sin(beta*Rational(3, 2)))/4*exp(I*alpha*Rational(3, 2))*exp(I*gamma/2)
     assert Rotation.D(Rational(3, 2), Rational(-3, 2), Rational(-3, 2), alpha, beta, gamma).doit() == \
         (3*cos(beta/2) + cos(beta*Rational(3, 2)))/4*exp(I*alpha*Rational(3, 2))*exp(I*gamma*Rational(3, 2))
@@ -3594,13 +3594,13 @@ def test_rotation_d():
     assert Rotation.D(
         S.Half, S.Half, S.Half, pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/2
     assert Rotation.D(
-        S.Half, S.Half, -S.Half, pi/2, pi/2, pi/2).doit() == -sqrt(2)/2
+        S.Half, S.Half, Rational(-1, 2), pi/2, pi/2, pi/2).doit() == -sqrt(2)/2
     assert Rotation.D(
-        S.Half, -S.Half, S.Half, pi/2, pi/2, pi/2).doit() == sqrt(2)/2
+        S.Half, Rational(-1, 2), S.Half, pi/2, pi/2, pi/2).doit() == sqrt(2)/2
     assert Rotation.D(
-        S.Half, -S.Half, -S.Half, pi/2, pi/2, pi/2).doit() == I*sqrt(2)/2
+        S.Half, Rational(-1, 2), Rational(-1, 2), pi/2, pi/2, pi/2).doit() == I*sqrt(2)/2
     # j = 1
-    assert Rotation.D(1, 1, 1, pi/2, pi/2, pi/2).doit() == -S.Half
+    assert Rotation.D(1, 1, 1, pi/2, pi/2, pi/2).doit() == Rational(-1, 2)
     assert Rotation.D(1, 1, 0, pi/2, pi/2, pi/2).doit() == I*sqrt(2)/2
     assert Rotation.D(1, 1, -1, pi/2, pi/2, pi/2).doit() == S.Half
     assert Rotation.D(1, 0, 1, pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/2
@@ -3608,14 +3608,14 @@ def test_rotation_d():
     assert Rotation.D(1, 0, -1, pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/2
     assert Rotation.D(1, -1, 1, pi/2, pi/2, pi/2).doit() == S.Half
     assert Rotation.D(1, -1, 0, pi/2, pi/2, pi/2).doit() == I*sqrt(2)/2
-    assert Rotation.D(1, -1, -1, pi/2, pi/2, pi/2).doit() == -S.Half
+    assert Rotation.D(1, -1, -1, pi/2, pi/2, pi/2).doit() == Rational(-1, 2)
     # j = 3/2
     assert Rotation.D(
         Rational(3, 2), Rational(3, 2), Rational(3, 2), pi/2, pi/2, pi/2).doit() == I*sqrt(2)/4
     assert Rotation.D(
         Rational(3, 2), Rational(3, 2), S.Half, pi/2, pi/2, pi/2).doit() == sqrt(6)/4
     assert Rotation.D(
-        Rational(3, 2), Rational(3, 2), -S.Half, pi/2, pi/2, pi/2).doit() == -I*sqrt(6)/4
+        Rational(3, 2), Rational(3, 2), Rational(-1, 2), pi/2, pi/2, pi/2).doit() == -I*sqrt(6)/4
     assert Rotation.D(
         Rational(3, 2), Rational(3, 2), Rational(-3, 2), pi/2, pi/2, pi/2).doit() == -sqrt(2)/4
     assert Rotation.D(
@@ -3623,23 +3623,23 @@ def test_rotation_d():
     assert Rotation.D(
         Rational(3, 2), S.Half, S.Half, pi/2, pi/2, pi/2).doit() == I*sqrt(2)/4
     assert Rotation.D(
-        Rational(3, 2), S.Half, -S.Half, pi/2, pi/2, pi/2).doit() == -sqrt(2)/4
+        Rational(3, 2), S.Half, Rational(-1, 2), pi/2, pi/2, pi/2).doit() == -sqrt(2)/4
     assert Rotation.D(
         Rational(3, 2), S.Half, Rational(-3, 2), pi/2, pi/2, pi/2).doit() == I*sqrt(6)/4
     assert Rotation.D(
-        Rational(3, 2), -S.Half, Rational(3, 2), pi/2, pi/2, pi/2).doit() == -I*sqrt(6)/4
+        Rational(3, 2), Rational(-1, 2), Rational(3, 2), pi/2, pi/2, pi/2).doit() == -I*sqrt(6)/4
     assert Rotation.D(
-        Rational(3, 2), -S.Half, S.Half, pi/2, pi/2, pi/2).doit() == sqrt(2)/4
+        Rational(3, 2), Rational(-1, 2), S.Half, pi/2, pi/2, pi/2).doit() == sqrt(2)/4
     assert Rotation.D(
-        Rational(3, 2), -S.Half, -S.Half, pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/4
+        Rational(3, 2), Rational(-1, 2), Rational(-1, 2), pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/4
     assert Rotation.D(
-        Rational(3, 2), -S.Half, Rational(-3, 2), pi/2, pi/2, pi/2).doit() == sqrt(6)/4
+        Rational(3, 2), Rational(-1, 2), Rational(-3, 2), pi/2, pi/2, pi/2).doit() == sqrt(6)/4
     assert Rotation.D(
         Rational(3, 2), Rational(-3, 2), Rational(3, 2), pi/2, pi/2, pi/2).doit() == sqrt(2)/4
     assert Rotation.D(
         Rational(3, 2), Rational(-3, 2), S.Half, pi/2, pi/2, pi/2).doit() == I*sqrt(6)/4
     assert Rotation.D(
-        Rational(3, 2), Rational(-3, 2), -S.Half, pi/2, pi/2, pi/2).doit() == -sqrt(6)/4
+        Rational(3, 2), Rational(-3, 2), Rational(-1, 2), pi/2, pi/2, pi/2).doit() == -sqrt(6)/4
     assert Rotation.D(
         Rational(3, 2), Rational(-3, 2), Rational(-3, 2), pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/4
     # j = 2
@@ -3655,7 +3655,7 @@ def test_rotation_d():
     assert Rotation.D(2, 1, -2, pi/2, pi/2, pi/2).doit() == -I/2
     assert Rotation.D(2, 0, 2, pi/2, pi/2, pi/2).doit() == -sqrt(6)/4
     assert Rotation.D(2, 0, 1, pi/2, pi/2, pi/2).doit() == 0
-    assert Rotation.D(2, 0, 0, pi/2, pi/2, pi/2).doit() == -S.Half
+    assert Rotation.D(2, 0, 0, pi/2, pi/2, pi/2).doit() == Rational(-1, 2)
     assert Rotation.D(2, 0, -1, pi/2, pi/2, pi/2).doit() == 0
     assert Rotation.D(2, 0, -2, pi/2, pi/2, pi/2).doit() == -sqrt(6)/4
     assert Rotation.D(2, -1, 2, pi/2, pi/2, pi/2).doit() == -I/2

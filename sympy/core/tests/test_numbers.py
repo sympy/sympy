@@ -40,18 +40,18 @@ def test_seterr():
 
 
 def test_mod():
-    x = Rational(1, 2)
+    x = S.Half
     y = Rational(3, 4)
     z = Rational(5, 18043)
 
     assert x % x == 0
-    assert x % y == 1/S(2)
-    assert x % z == 3/S(36086)
-    assert y % x == 1/S(4)
+    assert x % y == S.Half
+    assert x % z == Rational(3, 36086)
+    assert y % x == Rational(1, 4)
     assert y % y == 0
-    assert y % z == 9/S(72172)
-    assert z % x == 5/S(18043)
-    assert z % y == 5/S(18043)
+    assert y % z == Rational(9, 72172)
+    assert z % x == Rational(5, 18043)
+    assert z % y == Rational(5, 18043)
     assert z % z == 0
 
     a = Float(2.6)
@@ -307,13 +307,13 @@ def test_Rational_new():
     """
     _test_rational_new(Rational)
 
-    n1 = Rational(1, 2)
+    n1 = S.Half
     assert n1 == Rational(Integer(1), 2)
     assert n1 == Rational(Integer(1), Integer(2))
     assert n1 == Rational(1, Integer(2))
-    assert n1 == Rational(Rational(1, 2))
+    assert n1 == Rational(S.Half)
     assert 1 == Rational(n1, n1)
-    assert Rational(3, 2) == Rational(Rational(1, 2), Rational(1, 3))
+    assert Rational(3, 2) == Rational(S.Half, Rational(1, 3))
     assert Rational(3, 1) == Rational(1, Rational(1, 3))
     n3_4 = Rational(3, 4)
     assert Rational('3/4') == n3_4
@@ -323,7 +323,7 @@ def test_Rational_new():
     assert Rational('19/25').limit_denominator(4) == n3_4
     assert Rational(1.0, 3) == Rational(1, 3)
     assert Rational(1, 3.0) == Rational(1, 3)
-    assert Rational(Float(0.5)) == Rational(1, 2)
+    assert Rational(Float(0.5)) == S.Half
     assert Rational('1e2/1e-2') == Rational(10000)
     assert Rational('1 234') == Rational(1234)
     assert Rational('1/1 234') == Rational(1, 1234)
@@ -337,7 +337,7 @@ def test_Rational_new():
     # handle fractions.Fraction instances
     try:
         import fractions
-        assert Rational(fractions.Fraction(1, 2)) == Rational(1, 2)
+        assert Rational(fractions.Fraction(1, 2)) == S.Half
     except ImportError:
         pass
 
@@ -1041,7 +1041,7 @@ def test_isqrt():
     # Other corner cases, especially involving non-integers.
     raises(ValueError, lambda: isqrt(-1))
     raises(ValueError, lambda: isqrt(-10**1000))
-    raises(ValueError, lambda: isqrt(-S.Half))
+    raises(ValueError, lambda: isqrt(Rational(-1, 2)))
 
     tiny = Rational(1, 10**1000)
     raises(ValueError, lambda: isqrt(-tiny))
@@ -1157,8 +1157,8 @@ def test_powers_Integer():
         2*2**Rational(5, 9)*3**Rational(8, 9)
     assert (-2)**Rational(2, S(3))*(-4)**Rational(1, S(3)) == -2*2**Rational(1, 3)
     assert 3*Pow(3, 2, evaluate=False) == 3**3
-    assert 3*Pow(3, -1/S(3), evaluate=False) == 3**(2/S(3))
-    assert (-2)**(1/S(3))*(-3)**(1/S(4))*(-5)**(5/S(6)) == \
+    assert 3*Pow(3, Rational(-1, 3), evaluate=False) == 3**Rational(2, 3)
+    assert (-2)**Rational(1, 3)*(-3)**Rational(1, 4)*(-5)**Rational(5, 6) == \
         -(-1)**Rational(5, 12)*2**Rational(1, 3)*3**Rational(1, 4) * \
         5**Rational(5, 6)
 
@@ -1170,7 +1170,7 @@ def test_powers_Integer():
 def test_powers_Rational():
     """Test Rational._eval_power"""
     # check infinity
-    assert Rational(1, 2) ** S.Infinity == 0
+    assert S.Half ** S.Infinity == 0
     assert Rational(3, 2) ** S.Infinity is S.Infinity
     assert Rational(-1, 2) ** S.Infinity == 0
     assert Rational(-3, 2) ** S.Infinity == \
@@ -1189,14 +1189,14 @@ def test_powers_Rational():
     assert Rational(5**3, 8**3) ** Rational(4, 3) == Rational(5**4, 8**4)
 
     # exact root on denominator
-    assert sqrt(Rational(1, 4)) == Rational(1, 2)
-    assert sqrt(Rational(1, -4)) == I * Rational(1, 2)
+    assert sqrt(Rational(1, 4)) == S.Half
+    assert sqrt(Rational(1, -4)) == I * S.Half
     assert sqrt(Rational(3, 4)) == sqrt(3) / 2
     assert sqrt(Rational(3, -4)) == I * sqrt(3) / 2
     assert Rational(5, 27) ** Rational(1, 3) == (5 ** Rational(1, 3)) / 3
 
     # not exact roots
-    assert sqrt(Rational(1, 2)) == sqrt(2) / 2
+    assert sqrt(S.Half) == sqrt(2) / 2
     assert sqrt(Rational(-4, 7)) == I * sqrt(Rational(4, 7))
     assert Rational(-3, 2)**Rational(-7, 3) == \
         -4*(-1)**Rational(2, 3)*2**Rational(1, 3)*3**Rational(2, 3)/27
@@ -1438,10 +1438,10 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).lcm(Float(2.0)) == Float(8.0)
     assert Integer(4).cofactors(Float(2.0)) == (S.One, Integer(4), Float(2.0))
 
-    assert Rational(1, 2).gcd(Float(2.0)) == S.One
-    assert Rational(1, 2).lcm(Float(2.0)) == Float(1.0)
-    assert Rational(1, 2).cofactors(Float(2.0)) == \
-        (S.One, Rational(1, 2), Float(2.0))
+    assert S.Half.gcd(Float(2.0)) == S.One
+    assert S.Half.lcm(Float(2.0)) == Float(1.0)
+    assert S.Half.cofactors(Float(2.0)) == \
+        (S.One, S.Half, Float(2.0))
 
 
 def test_Float_gcd_lcm_cofactors():
@@ -1449,10 +1449,10 @@ def test_Float_gcd_lcm_cofactors():
     assert Float(2.0).lcm(Integer(4)) == Float(8.0)
     assert Float(2.0).cofactors(Integer(4)) == (S.One, Float(2.0), Integer(4))
 
-    assert Float(2.0).gcd(Rational(1, 2)) == S.One
-    assert Float(2.0).lcm(Rational(1, 2)) == Float(1.0)
-    assert Float(2.0).cofactors(Rational(1, 2)) == \
-        (S.One, Float(2.0), Rational(1, 2))
+    assert Float(2.0).gcd(S.Half) == S.One
+    assert Float(2.0).lcm(S.Half) == Float(1.0)
+    assert Float(2.0).cofactors(S.Half) == \
+        (S.One, Float(2.0), S.Half)
 
 
 def test_issue_4611():
@@ -1475,7 +1475,7 @@ def test_issue_4611():
 @conserve_mpmath_dps
 def test_conversion_to_mpmath():
     assert mpmath.mpmathify(Integer(1)) == mpmath.mpf(1)
-    assert mpmath.mpmathify(Rational(1, 2)) == mpmath.mpf(0.5)
+    assert mpmath.mpmathify(S.Half) == mpmath.mpf(0.5)
     assert mpmath.mpmathify(Float('1.23', 15)) == mpmath.mpf('1.23')
 
     assert mpmath.mpmathify(I) == mpmath.mpc(1j)
@@ -1484,11 +1484,11 @@ def test_conversion_to_mpmath():
     assert mpmath.mpmathify(1.0 + 2*I) == mpmath.mpc(1 + 2j)
     assert mpmath.mpmathify(1 + 2.0*I) == mpmath.mpc(1 + 2j)
     assert mpmath.mpmathify(1.0 + 2.0*I) == mpmath.mpc(1 + 2j)
-    assert mpmath.mpmathify(Rational(1, 2) + Rational(1, 2)*I) == mpmath.mpc(0.5 + 0.5j)
+    assert mpmath.mpmathify(S.Half + S.Half*I) == mpmath.mpc(0.5 + 0.5j)
 
     assert mpmath.mpmathify(2*I) == mpmath.mpc(2j)
     assert mpmath.mpmathify(2.0*I) == mpmath.mpc(2j)
-    assert mpmath.mpmathify(Rational(1, 2)*I) == mpmath.mpc(0.5j)
+    assert mpmath.mpmathify(S.Half*I) == mpmath.mpc(0.5j)
 
     mpmath.mp.dps = 100
     assert mpmath.mpmathify(pi.evalf(100) + pi.evalf(100)*I) == mpmath.pi + mpmath.pi*mpmath.j
@@ -1519,8 +1519,8 @@ def test_Integer_as_index():
 
 def test_Rational_int():
     assert int( Rational(7, 5)) == 1
-    assert int( Rational(1, 2)) == 0
-    assert int(-Rational(1, 2)) == 0
+    assert int( S.Half) == 0
+    assert int(Rational(-1, 2)) == 0
     assert int(-Rational(7, 5)) == -1
 
 
@@ -1625,7 +1625,7 @@ def test_TribonacciConstant_expand():
 def test_as_content_primitive():
     assert S.Zero.as_content_primitive() == (1, 0)
     assert S.Half.as_content_primitive() == (S.Half, 1)
-    assert (-S.Half).as_content_primitive() == (S.Half, -1)
+    assert (Rational(-1, 2)).as_content_primitive() == (S.Half, -1)
     assert S(3).as_content_primitive() == (3, 1)
     assert S(3.1).as_content_primitive() == (1, 3.1)
 

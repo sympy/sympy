@@ -117,7 +117,7 @@ def _create_lookup_table(table):
 
     # 12
     def A1(r, sign, nu):
-        return pi**(-S.Half)*(-sign*nu/2)**(1 - 2*r)
+        return pi**Rational(-1, 2)*(-sign*nu/2)**(1 - 2*r)
 
     def tmpadd(r, sgn):
         # XXX the a**2 is bad for matching
@@ -155,7 +155,7 @@ def _create_lookup_table(table):
     add(cos(t), [], [], [0], [S.Half], t**2/4, sqrt(pi))
 
     # Section 8.4.6 (sinc function)
-    add(sinc(t), [], [], [0], [-S.Half], t**2/4, sqrt(pi)/2)
+    add(sinc(t), [], [], [0], [Rational(-1, 2)], t**2/4, sqrt(pi)/2)
 
     # Section 8.5.5
     def make_log1(subs):
@@ -201,7 +201,7 @@ def _create_lookup_table(table):
     add(Ci(t), [], [1], [0, 0], [S.Half], t**2/4, -sqrt(pi)/2)
 
     # Section 8.4.13
-    add(Shi(t), [S.Half], [], [0], [-S.Half, -S.Half], polar_lift(-1)*t**2/4,
+    add(Shi(t), [S.Half], [], [0], [Rational(-1, 2), Rational(-1, 2)], polar_lift(-1)*t**2/4,
         t*sqrt(pi)/4)
     add(Chi(t), [], [S.Half, 1], [0, 0], [S.Half, S.Half], t**2/4, -
         pi**S('3/2')/2)
@@ -215,7 +215,7 @@ def _create_lookup_table(table):
     add(erfc(t), [], [1], [0, S.Half], [], t**2, 1/sqrt(pi))
     # This formula for erfi(z) yields a wrong(?) minus sign
     #add(erfi(t), [1], [], [S.Half], [0], -t**2, I/sqrt(pi))
-    add(erfi(t), [S.Half], [], [0], [-S.Half], -t**2, t/sqrt(pi))
+    add(erfi(t), [S.Half], [], [0], [Rational(-1, 2)], -t**2, t/sqrt(pi))
 
     # Fresnel Integrals
     add(fresnels(t), [1], [], [Rational(3, 4)], [0, Rational(1, 4)], pi**2*t**4/16, S.Half)
@@ -274,7 +274,7 @@ def _create_lookup_table(table):
     # Complete elliptic integrals K(z) and E(z)
     from sympy import elliptic_k, elliptic_e
     add(elliptic_k(t), [S.Half, S.Half], [], [0], [0], -t, S.Half)
-    add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, -S.Half/2)
+    add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, Rational(-1, 2)/2)
 
 
 ####################################################################
@@ -541,7 +541,7 @@ def _inflate_fox_h(g, a):
     # theorem.
     D, g = _inflate_g(g, q)
     z = g.argument
-    D /= (2*pi)**((1 - p)/2)*p**(-S.Half)
+    D /= (2*pi)**((1 - p)/2)*p**Rational(-1, 2)
     z /= p**p
     bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)

@@ -3086,7 +3086,7 @@ def test_sympy__physics__quantum__cartesian__ZOp():
 def test_sympy__physics__quantum__cg__CG():
     from sympy.physics.quantum.cg import CG
     from sympy import S
-    assert _test_args(CG(Rational(3, 2), Rational(3, 2), S.Half, -S.Half, 1, 1))
+    assert _test_args(CG(Rational(3, 2), Rational(3, 2), S.Half, Rational(-1, 2), 1, 1))
 
 
 def test_sympy__physics__quantum__cg__Wigner3j():

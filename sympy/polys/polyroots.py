@@ -160,16 +160,16 @@ def roots_cubic(f, trig=False):
     coeff = I*sqrt(3)/2
     if u1 is None:
         u1 = S.One
-        u2 = -S.Half + coeff
-        u3 = -S.Half - coeff
+        u2 = Rational(-1, 2) + coeff
+        u3 = Rational(-1, 2) - coeff
         a, b, c, d = S(1), a, b, c
         D0 = b**2 - 3*a*c
         D1 = 2*b**3 - 9*a*b*c + 27*a**2*d
         C = root((D1 + sqrt(D1**2 - 4*D0**3))/2, 3)
         return [-(b + uk*C + D0/C/uk)/3/a for uk in [u1, u2, u3]]
 
-    u2 = u1*(-S.Half + coeff)
-    u3 = u1*(-S.Half - coeff)
+    u2 = u1*(Rational(-1, 2) + coeff)
+    u3 = u1*(Rational(-1, 2) - coeff)
 
     if p is S.Zero:
         return [u1 - aon3, u2 - aon3, u3 - aon3]

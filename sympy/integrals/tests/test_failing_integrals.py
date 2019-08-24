@@ -2,7 +2,7 @@
 
 from sympy import (
     integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
-    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, I
+    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, Rational
 )
 
 from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
@@ -217,7 +217,7 @@ def test_issue_11845b():
 
 @XFAIL
 def test_issue_11813():
-    assert not integrate((a - x)**(-S.Half)*x, (x, 0, a)).has(Integral)
+    assert not integrate((a - x)**Rational(-1, 2)*x, (x, 0, a)).has(Integral)
 
 
 @XFAIL

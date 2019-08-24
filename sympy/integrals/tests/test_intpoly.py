@@ -90,9 +90,9 @@ def test_polytope_integrate():
     assert polytope_integrate([((-1, 0), 0), ((0, sqrt(3)), 3),
                                ((sqrt(3), 0), 3), ((0, -1), 0)], 1) == 3
 
-    hexagon = [((-S.Half, -sqrt(3) / 2), 0),
+    hexagon = [((Rational(-1, 2), -sqrt(3) / 2), 0),
                ((-1, 0), sqrt(3) / 2),
-               ((-S.Half, sqrt(3) / 2), sqrt(3)),
+               ((Rational(-1, 2), sqrt(3) / 2), sqrt(3)),
                ((S.Half, sqrt(3) / 2), sqrt(3)),
                ((1, 0), sqrt(3) / 2),
                ((S.Half, -sqrt(3) / 2), 0)]
