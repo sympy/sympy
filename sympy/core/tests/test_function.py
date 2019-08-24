@@ -3,7 +3,6 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
         Matrix, Basic, Dict, oo, zoo, nan, Pow)
-from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import range
@@ -15,6 +14,7 @@ from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import subsets, variations
+from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
@@ -214,6 +214,9 @@ def test_Lambda():
     raises(BadSignatureError, lambda: Lambda(((x, x), y), x))
     raises(BadSignatureError, lambda: Lambda(((y, x), x), x))
     raises(BadSignatureError, lambda: Lambda(((y, 1), 2), x))
+
+    with warns_deprecated_sympy():
+        assert Lambda([x, y], x+y) == Lambda((x, y), x+y)
 
     flam = Lambda( ((x, y),) , x + y)
     assert flam((2, 3)) == 5

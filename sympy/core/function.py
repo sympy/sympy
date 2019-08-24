@@ -44,13 +44,14 @@ from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.core.containers import Tuple, Dict
-from sympy.core.logic import fuzzy_and
 from sympy.core.compatibility import string_types, with_metaclass, PY3, range
-from sympy.utilities import default_sort_key
-from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import has_dups, sift
+from sympy.core.containers import Tuple, Dict
 from sympy.core.evaluate import global_evaluate
+from sympy.core.logic import fuzzy_and
+from sympy.utilities import default_sort_key
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import has_dups, sift
+from sympy.utilities.misc import filldedent
 
 import mpmath
 import mpmath.libmp as mlib
@@ -1894,6 +1895,12 @@ class Lambda(Expr):
     >>> f2(1, 2, 3, 4)
     73
 
+    It is also possible to unpack tuple arguments:
+
+    >>> f = Lambda( ((x, y), z) , x + y + z)
+    >>> f((1, 2), 3)
+    6
+
     A handy shortcut for lots of arguments:
 
     >>> p = x, y, z
@@ -1905,6 +1912,13 @@ class Lambda(Expr):
     is_Function = True
 
     def __new__(cls, signature, expr):
+        if iterable(signature) and not isinstance(signature, (tuple, Tuple)):
+            SymPyDeprecationWarning(
+                feature="non tuple iterable of argument symbols to Lambda",
+                useinstead="tuple of argument symbols",
+                issue=17474,
+                deprecated_since_version="1.5").warn()
+            signature = tuple(signature)
         sig = signature if iterable(signature) else (signature,)
         sig = sympify(sig)
         cls._check_signature(sig)
