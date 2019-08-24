@@ -166,8 +166,10 @@ def test_core_undefinedfunctions_fail():
 
 
 def test_core_interval():
-    for c in (Interval, Interval(0, 2)):
-        check(c)
+    # Set.is_EmptySet is deprecated since 1.5
+    with ignore_warnings(SymPyDeprecationWarning):
+        for c in (Interval, Interval(0, 2)):
+            check(c)
 
 
 def test_core_multidimensional():

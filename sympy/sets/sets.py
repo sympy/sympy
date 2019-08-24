@@ -13,7 +13,7 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
 from sympy.core.function import FunctionClass
-from sympy.core.logic import fuzzy_bool, fuzzy_or
+from sympy.core.logic import fuzzy_bool, fuzzy_or, fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
@@ -755,8 +755,7 @@ class ProductSet(Set):
 
     @property
     def is_empty(self):
-        if all(s.is_empty == False for s in self.sets):
-            return False
+        return fuzzy_or(s.is_empty for s in self.sets)
 
     @property
     def _measure(self):
@@ -946,16 +945,11 @@ class Interval(Set, EvalfMixin):
 
     @property
     def is_empty(self):
-        if self.start == S.NegativeInfinity or self.end == S.Infinity:
-            return False
-        elif (self.end - self.start).is_extended_positive:
-            return False
-        elif self.left_open == False and self.right_open == False and \
-                self.start.is_finite and self.end.is_finite:
-            # separate check for compact intervals (account for
-            # [a, a] = FiniteSet(a) => not empty)
-            if (self.end - self.start).is_extended_nonnegative:
-                return False
+        if self.left_open or self.right_open:
+            cond = self.start >= self.end  # One/both bounds open
+        else:
+            cond = self.start > self.end  # Both bounds closed
+        return fuzzy_bool(cond)
 
     def _complement(self, other):
         if other == S.Reals:
@@ -1129,8 +1123,7 @@ class Union(Set, LatticeOp, EvalfMixin):
 
     @property
     def is_empty(self):
-        if any(set.is_empty == False for set in self.args):
-            return False
+        return fuzzy_and(set.is_empty for set in self.args)
 
     @property
     def _measure(self):

@@ -107,14 +107,13 @@ def test_interval_is_empty():
     assert Interval(1, 2).is_empty == False
     assert Interval(3, 3).is_empty == False  # FiniteSet
     assert Interval(r, r).is_empty == False  # FiniteSet
-    assert Interval(r, r + nn).is_empty == False  # tests compact case
+    assert Interval(r, r + nn).is_empty == False
     assert Interval(x, x).is_empty == False
     assert Interval(1, oo).is_empty == False
     assert Interval(-oo, oo).is_empty == False
     assert Interval(-oo, 1).is_empty == False
     assert Interval(x, y).is_empty == None
     assert Interval(r, oo).is_empty == False  # real implies finite
-    assert Interval(x, oo).is_empty == False
     assert Interval(n, 0).is_empty == False
     assert Interval(n, 0, left_open=True).is_empty == False
     assert Interval(p, 0).is_empty == True  # EmptySet
@@ -412,8 +411,9 @@ def test_ProductSet_of_single_arg_is_arg():
 
 def test_ProductSet_is_empty():
     assert ProductSet(S.Integers, S.Reals).is_empty == False
-    assert ProductSet(Intersection(FiniteSet(sin(2)/pi), S.Integers),
-        S.Reals).is_empty == None
+    empty = Intersection(FiniteSet(sin(2)/pi), S.Integers)
+    assert empty is not S.EmptySet and \
+            ProductSet(empty, S.Reals).is_empty == None
 
 
 def test_interval_subs():
