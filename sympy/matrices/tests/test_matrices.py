@@ -294,8 +294,9 @@ def test_issue_17247_expression_blowup():
     #     [ (exp(2*x) + exp(2))/2, (-exp(2*x) + exp(2))/2],
     #     [(-exp(2*x) + exp(2))/2,  (exp(2*x) + exp(2))/2]])
 
-    # P, J = M.jordan_form()
-    # assert P*J*P.inv() == M
+    P, J = M.jordan_form()
+    assert P*J*P.inv() != M
+    assert P.mul(J).mul(P.inv()) == M
 
     assert M.pow(100) == Matrix([
         [633825300114114700748351602688*x**100 + 633825300114114700748351602688, 633825300114114700748351602688 - 633825300114114700748351602688*x**100],
