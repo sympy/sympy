@@ -1,7 +1,7 @@
 .. _physics-docs:
 
 ==============
-Physics Module
+Physics
 ==============
 
 .. automodule:: sympy.physics

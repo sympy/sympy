@@ -1,7 +1,7 @@
 .. _series-docs:
 
 =============
-Series Module
+Series
 =============
 
 The series module implements series expansions as a function and many related

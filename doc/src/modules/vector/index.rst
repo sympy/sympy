@@ -1,5 +1,5 @@
 =============
-Vector Module
+Vector
 =============
 
 The vector module provides tools for basic vector math

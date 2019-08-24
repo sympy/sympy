@@ -1,4 +1,4 @@
-Basic Cryptography Module
+Cryptography
 =========================
 
 .. warning::

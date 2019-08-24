@@ -1,4 +1,4 @@
-Details on the Hypergeometric Function Expansion Module
+Hypergeometric Expansion
 #######################################################
 
 This page describes how the function :func:`hyperexpand` and related code

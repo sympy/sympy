@@ -1,5 +1,5 @@
 ==================
-Lie Algebra Module
+Lie Algebra
 ==================
 
 .. automodule:: sympy.liealgebras

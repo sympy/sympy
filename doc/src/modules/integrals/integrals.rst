@@ -1,4 +1,4 @@
-Symbolic Integrals
+Integrals
 ==================
 
 .. module:: sympy.integrals
@@ -129,7 +129,7 @@ any order and any precision:
 
 .. autofunction:: sympy.integrals.quadrature.gauss_lobatto
 
-Integration over Polytopes
+Integration Over Polytopes
 ==========================
 
 .. module:: sympy.integrals.intpoly

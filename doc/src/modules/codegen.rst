@@ -1,7 +1,7 @@
 .. _codegen_prose:
 
 ================================================
-Structural Details of Code Generation with SymPy
+Code Generation
 ================================================
 
 Several submodules in SymPy allow one to generate directly compilable and

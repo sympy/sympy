@@ -1,4 +1,4 @@
-Differential Geometry Module
+Differential Geometry
 ============================
 
 .. module:: sympy.diffgeom

@@ -1,7 +1,7 @@
 .. _assumptions_module:
 
 ==================
-Assumptions Module
+Assumptions
 ==================
 
 .. automodule:: sympy.assumptions

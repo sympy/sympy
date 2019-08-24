@@ -1,4 +1,4 @@
-Category Theory Module
+Category Theory
 ======================
 
 Introduction

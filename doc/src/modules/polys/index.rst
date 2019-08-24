@@ -1,7 +1,7 @@
 .. _polys-docs:
 
 ===============================
-Polynomials Manipulation Module
+Polynomials Manipulation
 ===============================
 
 Computations with polynomials are at the core of computer algebra and

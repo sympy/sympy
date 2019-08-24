@@ -1,5 +1,5 @@
 ===============
-Algebras Module
+Algebras
 ===============
 
 Introduction

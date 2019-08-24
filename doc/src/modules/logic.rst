@@ -1,4 +1,4 @@
-Logic Module
+Logic
 ============
 
 .. module:: sympy.logic
