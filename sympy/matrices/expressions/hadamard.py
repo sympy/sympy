@@ -347,7 +347,7 @@ class HadamardPower(MatrixExpr):
     Scalar raised to a scalar exponent:
 
     .. math::
-        a^{\circ B} = a^b
+        a^{\circ b} = a^b
     """
 
     def __new__(cls, base, exp):
