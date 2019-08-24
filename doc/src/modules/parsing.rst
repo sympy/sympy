@@ -1,5 +1,6 @@
+=======
 Parsing
-=============
+=======
 
 Parsing Functions Reference
 ---------------------------

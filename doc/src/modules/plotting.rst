@@ -1,5 +1,6 @@
+========
 Plotting
-===============
+========
 
 .. module:: sympy.plotting.plot
 

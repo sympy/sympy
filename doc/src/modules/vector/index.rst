@@ -1,6 +1,6 @@
-=============
+======
 Vector
-=============
+======
 
 The vector module provides tools for basic vector math
 and differential calculus with respect to 3D Cartesian coordinate

@@ -1,5 +1,6 @@
+=============
 Number Theory
-====================
+=============
 
 .. module:: sympy.ntheory.generate
 

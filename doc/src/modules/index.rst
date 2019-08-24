@@ -23,25 +23,20 @@ access any SymPy module, or use the list below:
    codegen.rst
    combinatorics/index.rst
    concrete.rst
-   core.rst
+   core/index.rst
    crypto.rst
    diffgeom.rst
-   solvers/diophantine.rst
    discrete.rst
    functions/index.rst
    geometry/index.rst
    holonomic/index.rst
    simplify/hyperexpand.rst
-   solvers/inequalities.rst
    integrals/integrals.rst
    liealgebras/index.rst
    logic.rst
    matrices/index.rst
    ntheory.rst
    numeric-computation.rst
-   evalf.rst
-   solvers/ode.rst
-   solvers/pde.rst
    parsing.rst
    physics/index.rst
    plotting.rst
@@ -50,11 +45,9 @@ access any SymPy module, or use the list below:
    series/index.rst
    sets.rst
    simplify/simplify.rst
-   solvers/solvers.rst
-   solvers/solveset.rst
+   solvers/index.rst
    stats.rst
    tensor/index.rst
-   rewriting.rst
    utilities/index.rst
    vector/index.rst
 

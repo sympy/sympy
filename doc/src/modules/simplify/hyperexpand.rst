@@ -1,11 +1,12 @@
+========================
 Hypergeometric Expansion
-#######################################################
+========================
 
 This page describes how the function :func:`hyperexpand` and related code
 work. For usage, see the documentation of the symplify module.
 
 Hypergeometric Function Expansion Algorithm
-*******************************************
+===========================================
 
 This section describes the algorithm used to expand hypergeometric functions.
 Most of it is based on the papers [Roach1996]_ and [Roach1997]_.

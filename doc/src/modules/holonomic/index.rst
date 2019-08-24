@@ -1,8 +1,8 @@
 .. _holonomic-docs:
 
-===================
+=========
 Holonomic
-===================
+=========
 
 .. automodule:: sympy.holonomic
 

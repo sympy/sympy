@@ -1,5 +1,6 @@
+=====
 Logic
-============
+=====
 
 .. module:: sympy.logic
 

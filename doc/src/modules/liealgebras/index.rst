@@ -1,6 +1,6 @@
-==================
+===========
 Lie Algebra
-==================
+===========
 
 .. automodule:: sympy.liealgebras
 

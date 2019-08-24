@@ -1,8 +1,8 @@
 .. _tensor_module:
 
-=============
+======
 Tensor
-=============
+======
 
 .. automodule:: sympy.tensor
 

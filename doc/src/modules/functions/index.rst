@@ -1,7 +1,8 @@
 .. _functions:
 
+=========
 Functions
-****************
+=========
 
 .. module:: sympy.functions
 

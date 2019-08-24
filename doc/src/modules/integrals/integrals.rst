@@ -1,5 +1,6 @@
+=========
 Integrals
-==================
+=========
 
 .. module:: sympy.integrals
 
@@ -129,7 +130,7 @@ any order and any precision:
 
 .. autofunction:: sympy.integrals.quadrature.gauss_lobatto
 
-Integration Over Polytopes
+Integration over Polytopes
 ==========================
 
 .. module:: sympy.integrals.intpoly
