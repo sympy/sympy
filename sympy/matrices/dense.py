@@ -185,11 +185,9 @@ class DenseMatrix(MatrixBase):
         new_mat = [self.zero]*new_mat_rows*new_mat_cols
         vec     = [None]*self_cols
 
-        # get multiplication simplification setting
-
         # if we multiply an n x 0 with a 0 x m, the
         # expected behavior is to produce an n x m matrix of zeros
-        if self.cols != 0 and other.rows != 0:
+        if self_cols != 0 and other_rows != 0:
             for i in range(len(new_mat)):
                 row, col    = i // new_mat_cols, i % new_mat_cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
