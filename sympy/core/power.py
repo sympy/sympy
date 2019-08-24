@@ -555,12 +555,12 @@ class Pow(Expr):
                 if self.exp.is_extended_nonnegative:
                     return True
             else:
-                if self.exp.is_integer:
+                if self.exp.is_integer and self.base.is_zero is not None:
                     return True
                 elif self.base.is_extended_negative:
                     if self.exp.is_Rational:
                         return False
-        if real_e and self.exp.is_extended_negative:
+        if real_e and self.exp.is_extended_negative and self.base.is_zero is not None:
             return Pow(self.base, -self.exp).is_extended_real
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary
@@ -621,7 +621,7 @@ class Pow(Expr):
                 rat = self.exp.is_rational
                 if not rat:
                     return rat
-                if self.exp.is_integer:
+                if self.exp.is_integer and self.base.is_zero is not None:
                     return False
                 else:
                     half = (2*self.exp).is_integer
@@ -1247,7 +1247,8 @@ class Pow(Expr):
         elif self.exp.is_rational:
             if self.base.is_algebraic is False:
                 return self.exp.is_zero
-            return self.base.is_algebraic
+            if self.exp.is_extended_negative and self.base.is_zero is False:
+                return self.base.is_algebraic
         elif self.base.is_algebraic and self.exp.is_algebraic:
             if ((fuzzy_not(self.base.is_zero)
                 and fuzzy_not(_is_one(self.base)))
