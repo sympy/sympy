@@ -41,12 +41,12 @@ def test_eval():
     assert SingularityFunction(5, 3, 2) == 4
     assert SingularityFunction(3, 5, 1) == 0
     assert SingularityFunction(3, 3, 0) == 1
-    assert SingularityFunction(4, 4, -1) == oo
+    assert SingularityFunction(4, 4, -1) is oo
     assert SingularityFunction(4, 2, -1) == 0
     assert SingularityFunction(4, 7, -1) == 0
     assert SingularityFunction(5, 6, -2) == 0
     assert SingularityFunction(4, 2, -2) == 0
-    assert SingularityFunction(4, 4, -2) == oo
+    assert SingularityFunction(4, 4, -2) is oo
     assert (SingularityFunction(6.1, 4, 5)).evalf(5) == Float('40.841', '5')
     assert SingularityFunction(6.1, pi, 2) == (-pi + 6.1)**2
     assert SingularityFunction(x, a, nan) == nan

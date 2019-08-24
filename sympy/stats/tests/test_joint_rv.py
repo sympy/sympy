@@ -63,8 +63,8 @@ def test_NormalGamma():
     assert density(ng)(1, 1) == 32*exp(-4)/sqrt(pi)
     raises(ValueError, lambda:NormalGamma('G', 1, 2, 3, -1))
     assert marginal_distribution(ng, 0)(1) == \
-        3*sqrt(10)*gamma(S(7)/4)/(10*sqrt(pi)*gamma(S(5)/4))
-    assert marginal_distribution(ng, y)(1) == exp(-S.One/4)/128
+        3*sqrt(10)*gamma(Rational(7, 4))/(10*sqrt(pi)*gamma(Rational(5, 4)))
+    assert marginal_distribution(ng, y)(1) == exp(Rational(-1, 4))/128
 
 def test_GeneralizedMultivariateLogGammaDistribution():
     from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO
@@ -213,7 +213,7 @@ def test_JointPSpace_marginal_distribution():
     from sympy import polar_lift
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
-        8*polar_lift(x**2/2 + 1)**(S(5)/2))
+        8*polar_lift(x**2/2 + 1)**Rational(5, 2))
     assert integrate(marginal_distribution(T, 1)(x), (x, -oo, oo)) == 1
     t = MultivariateT('T', [0, 0, 0], [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 3)
     assert comp(marginal_distribution(t, 0)(1).evalf(), 0.2, .01)

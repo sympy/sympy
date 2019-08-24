@@ -1,4 +1,5 @@
-from sympy import (Add, Matrix, Mul, S, symbols, Eq, pi, factorint, oo, powsimp)
+from sympy import (Add, Matrix, Mul, S, symbols, Eq, pi, factorint, oo,
+                   powsimp, Rational)
 from sympy.core.function import _mexpand
 from sympy.core.compatibility import range, ordered
 from sympy.functions.elementary.trigonometric import sin
@@ -492,7 +493,7 @@ def test_diophantine():
     complete_soln = set(signed_permutations(base_sol.pop()))
     assert diophantine(eq, permute=True) == complete_soln
 
-    assert diophantine(x**2 + 15*x/14 - 3) == set()
+    assert diophantine(x**2 + x*Rational(15, 14) - 3) == set()
     # test issue 11049
     eq = 92*x**2 - 99*y**2 - z**2
     coeff = eq.as_coefficients_dict()
@@ -747,8 +748,8 @@ def test_diopcoverage():
             2*m2*m3, m1**2 + m2**2 + m3**2)
 
     assert check_param(S(3) + x/3, S(4) + x/2, S(2), x) == (None, None)
-    assert check_param(S(3)/2, S(4) + x, S(2), x) == (None, None)
-    assert check_param(S(4) + x, S(3)/2, S(2), x) == (None, None)
+    assert check_param(Rational(3, 2), S(4) + x, S(2), x) == (None, None)
+    assert check_param(S(4) + x, Rational(3, 2), S(2), x) == (None, None)
 
     assert _nint_or_floor(16, 10) == 2
     assert _odd(1) == (not _even(1)) == True

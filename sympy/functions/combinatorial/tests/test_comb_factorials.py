@@ -1,7 +1,7 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func, Product, Mul, Piecewise,
-                   Mod, Eq, sqrt, Poly, Dummy, I)
+                   Mod, Eq, sqrt, Poly, Dummy, I, Rational)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.factorials import subfactorial
@@ -152,11 +152,11 @@ def test_ff_eval_apply():
 
 def test_rf_ff_eval_hiprec():
     maple = Float('6.9109401292234329956525265438452')
-    us = ff(18, S(2)/3).evalf(32)
+    us = ff(18, Rational(2, 3)).evalf(32)
     assert abs(us - maple)/us < 1e-31
 
     maple = Float('6.8261540131125511557924466355367')
-    us = rf(18, S(2)/3).evalf(32)
+    us = rf(18, Rational(2, 3)).evalf(32)
     assert abs(us - maple)/us < 1e-31
 
     maple = Float('34.007346127440197150854651814225')
@@ -286,7 +286,7 @@ def test_factorial2():
     z = Symbol('z', zero=True)
     #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
     raises(ValueError, lambda: factorial2(oo))
-    raises(ValueError, lambda: factorial2(S(5)/2))
+    raises(ValueError, lambda: factorial2(Rational(5, 2)))
     raises(ValueError, lambda: factorial2(-4))
     assert factorial2(n).is_integer is None
     assert factorial2(tt - 1).is_integer
@@ -345,7 +345,7 @@ def test_factorial2_rewrite():
         2**(n/2)*Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2)/sqrt(pi), Eq(Mod(n, 2), 1)))*gamma(n/2 + 1)
     assert factorial2(2*n).rewrite(gamma) == 2**n*gamma(n + 1)
     assert factorial2(2*n + 1).rewrite(gamma) == \
-        sqrt(2)*2**(n + S.Half)*gamma(n + S(3)/2)/sqrt(pi)
+        sqrt(2)*2**(n + S.Half)*gamma(n + Rational(3, 2))/sqrt(pi)
 
 
 def test_binomial():
@@ -431,29 +431,29 @@ def test_binomial():
     # issue #13980 and #13981
     assert binomial(-7, -5) == 0
     assert binomial(-23, -12) == 0
-    assert binomial(S(13)/2, -10) == 0
+    assert binomial(Rational(13, 2), -10) == 0
     assert binomial(-49, -51) == 0
 
-    assert binomial(19, S(-7)/2) == S(-68719476736)/(911337863661225*pi)
-    assert binomial(0, S(3)/2) == S(-2)/(3*pi)
-    assert binomial(-3, S(-7)/2) == zoo
+    assert binomial(19, Rational(-7, 2)) == S(-68719476736)/(911337863661225*pi)
+    assert binomial(0, Rational(3, 2)) == S(-2)/(3*pi)
+    assert binomial(-3, Rational(-7, 2)) == zoo
     assert binomial(kn, kt) == zoo
 
     assert binomial(nt, kt).func == binomial
-    assert binomial(nt, S(15)/6) == 8*gamma(nt + 1)/(15*sqrt(pi)*gamma(nt - S(3)/2))
-    assert binomial(S(20)/3, S(-10)/8) == gamma(S(23)/3)/(gamma(S.NegativeOne/4)*gamma(S(107)/12))
-    assert binomial(S(19)/2, S(-7)/2) == S(-1615)/8388608
-    assert binomial(S(-13)/5, S(-7)/8) == gamma(S(-8)/5)/(gamma(S(-29)/40)*gamma(S.One/8))
-    assert binomial(S(-19)/8, S(-13)/5) == gamma(S(-11)/8)/(gamma(S(-8)/5)*gamma(S(49)/40))
+    assert binomial(nt, Rational(15, 6)) == 8*gamma(nt + 1)/(15*sqrt(pi)*gamma(nt - Rational(3, 2)))
+    assert binomial(Rational(20, 3), Rational(-10, 8)) == gamma(Rational(23, 3))/(gamma(Rational(-1, 4))*gamma(Rational(107, 12)))
+    assert binomial(Rational(19, 2), Rational(-7, 2)) == Rational(-1615, 8388608)
+    assert binomial(Rational(-13, 5), Rational(-7, 8)) == gamma(Rational(-8, 5))/(gamma(Rational(-29, 40))*gamma(Rational(1, 8)))
+    assert binomial(Rational(-19, 8), Rational(-13, 5)) == gamma(Rational(-11, 8))/(gamma(Rational(-8, 5))*gamma(Rational(49, 40)))
 
     # binomial for complexes
     from sympy import I
-    assert binomial(I, S(-89)/8) == gamma(1 + I)/(gamma(S(-81)/8)*gamma(S(97)/8 + I))
+    assert binomial(I, Rational(-89, 8)) == gamma(1 + I)/(gamma(Rational(-81, 8))*gamma(Rational(97, 8) + I))
     assert binomial(I, 2*I) == gamma(1 + I)/(gamma(1 - I)*gamma(1 + 2*I))
     assert binomial(-7, I) == zoo
     assert binomial(-7/S(6), I) == gamma(-1/S(6))/(gamma(-1/S(6) - I)*gamma(1 + I))
     assert binomial((1+2*I), (1+3*I)) == gamma(2 + 2*I)/(gamma(1 - I)*gamma(2 + 3*I))
-    assert binomial(I, 5) == S.One/3 - I/S(12)
+    assert binomial(I, 5) == Rational(1, 3) - I/S(12)
     assert binomial((2*I + 3), 7) == -13*I/S(63)
     assert isinstance(binomial(I, n), binomial)
     assert expand_func(binomial(3, 2, evaluate=False)) == 3

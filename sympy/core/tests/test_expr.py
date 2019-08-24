@@ -1138,7 +1138,7 @@ def test_coeff():
     assert (3 + 2*x + 4*x**2).coeff(x**2) == 4
     assert (3 + 2*x + 4*x**2).coeff(x**3) == 0
 
-    assert (-x/8 + x*y).coeff(x) == -S.One/8 + y
+    assert (-x/8 + x*y).coeff(x) == Rational(-1, 8) + y
     assert (-x/8 + x*y).coeff(-x) == S.One/8
     assert (4*x).coeff(2*x) == 0
     assert (2*x).coeff(2*x) == 1
@@ -1639,7 +1639,7 @@ def test_equals():
     S(2197)/13824)**(S.One/3) - S(13)/12)/2 - sqrt((2*q -
     S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S.One/3) -
     S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S.One/3) -
-    S(13)/6)/2 - S.One/4)**2 - S.One/3)
+    S(13)/6)/2 - S.One/4)**2 - Rational(1, 3))
     assert z.equals(0)
 
 

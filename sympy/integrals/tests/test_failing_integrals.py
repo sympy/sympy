@@ -167,7 +167,7 @@ def test_issue_14716():
     # Mathematica can not solve it either, but
     # integrate(log(x + 5)*cos(pi*x),(x, S.Half, 1)).transform(x, y - 5).doit()
     # works
-    # assert i == -log(S(11)/2)/pi - Si(11*pi/2)/pi + Si(6*pi)/pi
+    # assert i == -log(Rational(11, 2))/pi - Si(pi*Rational(11, 2))/pi + Si(6*pi)/pi
 
 
 @XFAIL

@@ -237,7 +237,7 @@ def test_power():
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])  # Nilpotent jordan block size 3
     assert A**10.0 == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     raises(ValueError, lambda: A**2.1)
-    raises(ValueError, lambda: A**(S(3)/2))
+    raises(ValueError, lambda: A**Rational(3, 2))
     A = Matrix([[8, 1], [3, 2]])
     assert A**10.0 == Matrix([[1760744107, 272388050], [817164150, 126415807]])
     A = Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 1
@@ -254,7 +254,7 @@ def test_power():
         [                   0, KroneckerDelta(0, n),                         1 - KroneckerDelta(0, n)],
         [                   0,                    0,                                                1]])
     assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
-    raises(ValueError, lambda: A**(S(3)/2))
+    raises(ValueError, lambda: A**Rational(3, 2))
     A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
     assert A**5.0 == Matrix([[168,  72,  89], [291, 144, 161], [572, 267, 329]])
     assert A**5.0 == A**5
@@ -1216,18 +1216,18 @@ def test_eigen():
     assert max(i.q for i in M._eigenvects[0][2][0]) > 1
     M._eigenvects = M.eigenvects(simplify=True)
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
-    M = Matrix([[S.One/4, 1], [1, 1]])
+    M = Matrix([[Rational(1, 4), 1], [1, 1]])
     assert M.eigenvects(simplify=True) == [
-        (S(5)/8 - sqrt(73)/8, 1, [Matrix([[-sqrt(73)/8 - S(3)/8], [1]])]),
-        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-S(3)/8 + sqrt(73)/8], [1]])])]
+        (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-sqrt(73)/8 - Rational(3, 8)], [1]])]),
+        (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[Rational(-3, 8) + sqrt(73)/8], [1]])])]
     assert M.eigenvects(simplify=False) ==[
-        (S(5)/8 - sqrt(73)/8, 1, [Matrix([[-1/(-S(3)/8 + sqrt(73)/8)],
+        (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)],
                                           [                     1]])]),
-        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-1/(-sqrt(73)/8 - S(3)/8)],
+        (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[-1/(-sqrt(73)/8 - Rational(3, 8))],
                                           [                     1]])])]
 
     m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
-    evals = { S(5)/4 - sqrt(385)/20: 1, sqrt(385)/20 + S(5)/4: 1, S.Zero: 1}
+    evals = { Rational(5, 4) - sqrt(385)/20: 1, sqrt(385)/20 + Rational(5, 4): 1, S.Zero: 1}
     assert m.eigenvals() == evals
     nevals = list(sorted(m.eigenvals(rational=False).keys()))
     sevals = list(sorted(evals.keys()))
@@ -2454,7 +2454,7 @@ def test_LDLdecomposition():
     L, D = A.LDLdecomposition()
     assert L * D * L.T == A
     assert L.is_lower
-    assert L == Matrix([[1, 0, 0], [ S(3)/5, 1, 0], [S.NegativeOne/5, S.One/3, 1]])
+    assert L == Matrix([[1, 0, 0], [ Rational(3, 5), 1, 0], [Rational(-1, 5), Rational(1, 3), 1]])
     assert D.is_diagonal()
     assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])
     A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
@@ -2594,7 +2594,7 @@ def test_matrix_norm():
     x = Symbol('x', real=True)
     v = Matrix([cos(x), sin(x)])
     assert trigsimp(v.norm(2)) == 1
-    assert v.norm(10) == Pow(cos(x)**10 + sin(x)**10, S.One/10)
+    assert v.norm(10) == Pow(cos(x)**10 + sin(x)**10, Rational(1, 10))
 
     # Test Rows
     A = Matrix([[5, Rational(3, 2)]])
@@ -2614,11 +2614,11 @@ def test_matrix_norm():
     # Test with Symbols and more complex entries
     A = Matrix([[3, y, y], [x, S.Half, -pi]])
     assert (A.norm('fro')
-           == sqrt(S(37)/4 + 2*abs(y)**2 + pi**2 + x**2))
+           == sqrt(Rational(37, 4) + 2*abs(y)**2 + pi**2 + x**2))
 
     # Check non-square
     A = Matrix([[1, 2, -3], [4, 5, Rational(13, 2)]])
-    assert A.norm(2) == sqrt(S(389)/8 + sqrt(78665)/8)
+    assert A.norm(2) == sqrt(Rational(389, 8) + sqrt(78665)/8)
     assert A.norm(-2) is S.Zero
     assert A.norm('frobenius') == sqrt(389)/2
 
@@ -2685,16 +2685,16 @@ def test_condition_number():
     x = Symbol('x', real=True)
     A = eye(3)
     A[0, 0] = 10
-    A[2, 2] = S.One/10
+    A[2, 2] = Rational(1, 10)
     assert A.condition_number() == 100
 
     A[1, 1] = x
-    assert A.condition_number() == Max(10, Abs(x)) / Min(S.One/10, Abs(x))
+    assert A.condition_number() == Max(10, Abs(x)) / Min(Rational(1, 10), Abs(x))
 
     M = Matrix([[cos(x), sin(x)], [-sin(x), cos(x)]])
     Mc = M.condition_number()
     assert all(Float(1.).epsilon_eq(Mc.subs(x, val).evalf()) for val in
-        [Rational(1, 5), Rational(1, 2), Rational(1, 10), pi/2, pi, 7*pi/4 ])
+        [Rational(1, 5), Rational(1, 2), Rational(1, 10), pi/2, pi, pi*Rational(7, 4) ])
 
     #issue 10782
     assert Matrix([]).condition_number() == 0
@@ -3335,8 +3335,8 @@ def test_gauss_jordan_solve():
     for s in sol.atoms(Symbol):
         # Extract dummy symbols used in the solution.
         w[s.name] = s
-    assert sol == Matrix([[w['tau0'] - 1, w['tau1'] - S(4)/3],
-                          [-2*w['tau0'] + 2, -2*w['tau1'] + S(8)/3],
+    assert sol == Matrix([[w['tau0'] - 1, w['tau1'] - Rational(4, 3)],
+                          [-2*w['tau0'] + 2, -2*w['tau1'] + Rational(8, 3)],
                           [w['tau0'], w['tau1']],])
     assert params == Matrix([[w['tau0'], w['tau1']]])
     assert freevar == [2]
@@ -3371,14 +3371,14 @@ def test_gauss_jordan_solve():
     A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
     b = Matrix([0, 0, 1, 0])
     sol, params = A.gauss_jordan_solve(b)
-    assert sol == Matrix([[-S.Half], [0], [S.One/6]])
+    assert sol == Matrix([[-S.Half], [0], [Rational(1, 6)]])
     assert params == Matrix(0, 1, [])
 
     # Rectangular, tall, full rank, unique solution, B has less columns than rows
     A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
     B = Matrix([[0,0], [0, 0], [1, 2], [0, 0]])
     sol, params = A.gauss_jordan_solve(B)
-    assert sol == Matrix([[-S.Half, -S(2)/2], [0, 0], [S.One/6, S(2)/6]])
+    assert sol == Matrix([[-S.Half, Rational(-2, 2)], [0, 0], [Rational(1, 6), Rational(2, 6)]])
     assert params == Matrix(0, 2, [])
 
     # Rectangular, tall, full rank, no solution
@@ -3635,8 +3635,8 @@ def test_rank_decomposition():
 
 def test_issue_11238():
     from sympy import Point
-    xx = 8*tan(13*pi/45)/(tan(13*pi/45) + sqrt(3))
-    yy = (-8*sqrt(3)*tan(13*pi/45)**2 + 24*tan(13*pi/45))/(-3 + tan(13*pi/45)**2)
+    xx = 8*tan(pi*Rational(13, 45))/(tan(pi*Rational(13, 45)) + sqrt(3))
+    yy = (-8*sqrt(3)*tan(pi*Rational(13, 45))**2 + 24*tan(pi*Rational(13, 45)))/(-3 + tan(pi*Rational(13, 45))**2)
     p1 = Point(0, 0)
     p2 = Point(1, -sqrt(3))
     p0 = Point(xx,yy)

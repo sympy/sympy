@@ -1,6 +1,6 @@
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh, sinc,
                    hyperexpand, exp, simplify, sqrt, pi, erf, erfc, sin, cos,
-                   exp_polar, polygamma, hyper, log, expand_func)
+                   exp_polar, polygamma, hyper, log, expand_func, Rational)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
         meijerint_definite, meijerint_inversion)
@@ -49,7 +49,7 @@ def test_rewrite_single():
     #u(exp(x)*sin(x), x)
     assert _rewrite_single(exp(x)*sin(x), x) == \
         ([(-sqrt(2)/(2*sqrt(pi)), 0,
-           meijerg(((-S.Half, 0, S.One/4, S.Half, S(3)/4), (1,)),
+           meijerg(((-S.Half, 0, Rational(1, 4), S.Half, Rational(3, 4)), (1,)),
                    ((), (-S.Half, 0)), 64*exp_polar(-4*I*pi)/x**4))], True)
 
 
@@ -214,7 +214,7 @@ def test_meijerint():
     alpha = symbols('alpha', positive=True)
     assert meijerint_definite((2 - x)**alpha*sin(alpha/x), x, 0, 2) == \
         (sqrt(pi)*alpha*gamma(alpha + 1)*meijerg(((), (alpha/2 + S.Half,
-        alpha/2 + 1)), ((0, 0, S.Half), (-S.Half,)), alpha**S(2)/16)/4, True)
+        alpha/2 + 1)), ((0, 0, S.Half), (-S.Half,)), alpha**Rational(2, 16))/4, True)
 
     # test a bug related to 3016
     a, s = symbols('a s', positive=True)
@@ -357,10 +357,10 @@ def test_branch_bug():
     from sympy import powdenest, lowergamma
     # TODO gammasimp cannot prove that the factor is unity
     assert powdenest(integrate(erf(x**3), x, meijerg=True).diff(x),
-           polar=True) == 2*erf(x**3)*gamma(S(2)/3)/3/gamma(S(5)/3)
+           polar=True) == 2*erf(x**3)*gamma(Rational(2, 3))/3/gamma(Rational(5, 3))
     assert integrate(erf(x**3), x, meijerg=True) == \
-        2*x*erf(x**3)*gamma(S(2)/3)/(3*gamma(S(5)/3)) \
-        - 2*gamma(S(2)/3)*lowergamma(S(2)/3, x**6)/(3*sqrt(pi)*gamma(S(5)/3))
+        2*x*erf(x**3)*gamma(Rational(2, 3))/(3*gamma(Rational(5, 3))) \
+        - 2*gamma(Rational(2, 3))*lowergamma(Rational(2, 3), x**6)/(3*sqrt(pi)*gamma(Rational(5, 3)))
 
 
 def test_linear_subs():
@@ -506,7 +506,7 @@ def test_probability():
 
     # inverse gaussian
     lamda, mu = symbols('lamda mu', positive=True)
-    dist = sqrt(lamda/2/pi)*x**(-S(3)/2)*exp(-lamda*(x - mu)**2/x/2/mu**2)
+    dist = sqrt(lamda/2/pi)*x**(Rational(-3, 2))*exp(-lamda*(x - mu)**2/x/2/mu**2)
     mysimp = lambda expr: simplify(expr.rewrite(exp))
     assert mysimp(integrate(dist, (x, 0, oo))) == 1
     assert mysimp(integrate(x*dist, (x, 0, oo))) == mu
@@ -658,7 +658,7 @@ def test_issue_6122():
 
 
 def test_issue_6252():
-    expr = 1/x/(a + b*x)**(S.One/3)
+    expr = 1/x/(a + b*x)**Rational(1, 3)
     anti = integrate(expr, x, meijerg=True)
     assert not anti.has(hyper)
     # XXX the expression is a mess, but actually upon differentiation and
@@ -684,7 +684,7 @@ def test_issue_6860():
 def test_issue_7337():
     f = meijerint_indefinite(x*sqrt(2*x + 3), x).together()
     assert f == sqrt(2*x + 3)*(2*x**2 + x - 3)/5
-    assert f._eval_interval(x, S.NegativeOne, S.One) == S(2)/5
+    assert f._eval_interval(x, S.NegativeOne, S.One) == Rational(2, 5)
 
 
 def test_issue_8368():
@@ -708,7 +708,7 @@ def test_issue_10681():
     from sympy import RR
     from sympy.abc import R, r
     f = integrate(r**2*(R**2-r**2)**0.5, r, meijerg=True)
-    g = (1.0/3)*R**1.0*r**3*hyper((-0.5, S(3)/2), (S(5)/2,),
+    g = (1.0/3)*R**1.0*r**3*hyper((-0.5, Rational(3, 2)), (Rational(5, 2),),
                                   r**2*exp_polar(2*I*pi)/R**2)
     assert RR.almosteq((f/g).n(), 1.0, 1e-12)
 

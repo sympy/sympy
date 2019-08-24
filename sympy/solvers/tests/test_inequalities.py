@@ -2,7 +2,8 @@
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs, Piecewise)
+                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs,
+                   Piecewise, Rational)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
@@ -166,7 +167,7 @@ def test_reduce_rational_inequalities_real_relational():
 
     assert reduce_rational_inequalities([[(3*x + 1)/(x + 4) >= 1]], x,
         relational=False) == \
-        Union(Interval.open(-oo, -4), Interval.Ropen(S(3)/2, oo))
+        Union(Interval.open(-oo, -4), Interval.Ropen(Rational(3, 2), oo))
 
     assert reduce_rational_inequalities([[(x - 8)/x <= 3 - x]], x,
         relational=False) == \
@@ -184,12 +185,12 @@ def test_reduce_abs_inequalities():
     assert reduce_inequalities(e, x) == ans
     assert reduce_inequalities(abs(x - 5)) == Eq(x, 5)
     assert reduce_inequalities(
-        abs(2*x + 3) >= 8) == Or(And(Le(S(5)/2, x), Lt(x, oo)),
-        And(Le(x, -S(11)/2), Lt(-oo, x)))
+        abs(2*x + 3) >= 8) == Or(And(Le(Rational(5, 2), x), Lt(x, oo)),
+        And(Le(x, Rational(-11, 2)), Lt(-oo, x)))
     assert reduce_inequalities(abs(x - 4) + abs(
         3*x - 5) < 7) == And(Lt(S.Half, x), Lt(x, 4))
     assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7) == \
-        Or(And(-2 < x, x < -1), And(S.Half < x, x < 4))
+        Or(And(S(-2) < x, x < -1), And(S.Half < x, x < 4))
 
     nr = Symbol('nr', extended_real=False)
     raises(TypeError, lambda: reduce_inequalities(abs(nr - 5) < 3))
@@ -198,7 +199,7 @@ def test_reduce_abs_inequalities():
 
 def test_reduce_inequalities_general():
     assert reduce_inequalities(Ge(sqrt(2)*x, 1)) == And(sqrt(2)/2 <= x, x < oo)
-    assert reduce_inequalities(PurePoly(x + 1, x) > 0) == And(-1 < x, x < oo)
+    assert reduce_inequalities(PurePoly(x + 1, x) > 0) == And(S.NegativeOne < x, x < oo)
 
 
 def test_reduce_inequalities_boolean():
@@ -210,8 +211,8 @@ def test_reduce_inequalities_boolean():
 
 def test_reduce_inequalities_multivariate():
     assert reduce_inequalities([Ge(x**2, 1), Ge(y**2, 1)]) == And(
-        Or(And(Le(1, x), Lt(x, oo)), And(Le(x, -1), Lt(-oo, x))),
-        Or(And(Le(1, y), Lt(y, oo)), And(Le(y, -1), Lt(-oo, y))))
+        Or(And(Le(S.One, x), Lt(x, oo)), And(Le(x, -1), Lt(-oo, x))),
+        Or(And(Le(S.One, y), Lt(y, oo)), And(Le(y, -1), Lt(-oo, y))))
 
 
 def test_reduce_inequalities_errors():
@@ -227,20 +228,20 @@ def test__solve_inequalities():
 
 
 def test_issue_6343():
-    eq = -3*x**2/2 - 45*x/4 + S(33)/2 > 0
+    eq = -3*x**2/2 - x*Rational(45, 4) + Rational(33, 2) > 0
     assert reduce_inequalities(eq) == \
-        And(x < -S(15)/4 + sqrt(401)/4, -sqrt(401)/4 - S(15)/4 < x)
+        And(x < Rational(-15, 4) + sqrt(401)/4, -sqrt(401)/4 - Rational(15, 4) < x)
 
 
 def test_issue_8235():
     assert reduce_inequalities(x**2 - 1 < 0) == \
-        And(-1 < x, x < 1)
+        And(S.NegativeOne < x, x < 1)
     assert reduce_inequalities(x**2 - 1 <= 0) == \
-        And(-1 <= x, x <= 1)
+        And(S.NegativeOne <= x, x <= 1)
     assert reduce_inequalities(x**2 - 1 > 0) == \
-        Or(And(-oo < x, x < -1), And(x < oo, 1 < x))
+        Or(And(-oo < x, x < -1), And(x < oo, S.One < x))
     assert reduce_inequalities(x**2 - 1 >= 0) == \
-        Or(And(-oo < x, x <= -1), And(1 <= x, x < oo))
+        Or(And(-oo < x, x <= -1), And(S.One <= x, x < oo))
 
     eq = x**8 + x - 9  # we want CRootOf solns here
     sol = solve(eq >= 0)
@@ -326,13 +327,13 @@ def test_solve_univariate_inequality():
 def test_trig_inequalities():
     # all the inequalities are solved in a periodic interval.
     assert isolve(sin(x) < S.Half, x, relational=False) == \
-        Union(Interval(0, pi/6, False, True), Interval(5*pi/6, 2*pi, True, False))
+        Union(Interval(0, pi/6, False, True), Interval(pi*Rational(5, 6), 2*pi, True, False))
     assert isolve(sin(x) > S.Half, x, relational=False) == \
-        Interval(pi/6, 5*pi/6, True, True)
+        Interval(pi/6, pi*Rational(5, 6), True, True)
     assert isolve(cos(x) < S.Zero, x, relational=False) == \
-        Interval(pi/2, 3*pi/2, True, True)
+        Interval(pi/2, pi*Rational(3, 2), True, True)
     assert isolve(cos(x) >= S.Zero, x, relational=False) == \
-        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi))
+        Union(Interval(0, pi/2), Interval(pi*Rational(3, 2), 2*pi))
 
     assert isolve(tan(x) < S.One, x, relational=False) == \
         Union(Interval.Ropen(0, pi/4), Interval.Lopen(pi/2, pi))
@@ -376,12 +377,12 @@ def test_issue_8974():
 def test_issue_10198():
     assert reduce_inequalities(
         -1 + 1/abs(1/x - 1) < 0) == Or(
-        And(-oo < x, x < 0), And(0 < x, x < S.Half)
+        And(-oo < x, x < 0), And(S.Zero < x, x < S.Half)
         )
     assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
         Or(And(-oo < x, x < 0),
-        And(S.Zero < x, x < S(3)/4), And(S(3)/2 < x, x < oo))
+        And(S.Zero < x, x < Rational(3, 4)), And(Rational(3, 2) < x, x < oo))
     raises(ValueError,lambda: reduce_abs_inequality(-3 + 1/abs(
         1 - 1/sqrt(x)), '<', x))
 
@@ -396,7 +397,7 @@ def test_issue_10047():
 
 
 def test_issue_10268():
-    assert solve(log(x) < 1000) == And(0 < x, x < exp(1000))
+    assert solve(log(x) < 1000) == And(S.Zero < x, x < exp(1000))
 
 
 @XFAIL
@@ -434,7 +435,7 @@ def test__solve_inequality():
     assert _solve_inequality(Eq(x*nz, 1), x) == Eq(x, 1/nz)
     assert _solve_inequality(x*nz < 1, x) == (x*nz < 1)
     a = Symbol('a', positive=True)
-    assert _solve_inequality(a/x > 1, x) == (0 < x) & (x < a)
+    assert _solve_inequality(a/x > 1, x) == (S.Zero < x) & (x < a)
     assert _solve_inequality(a/x > 1, x, linear=True) == (1/x > 1/a)
     # make sure to include conditions under which solution is valid
     e = Eq(1 - x, x*(1/x - 1))

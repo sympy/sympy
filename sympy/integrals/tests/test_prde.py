@@ -10,7 +10,7 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 
-from sympy import Poly, S, symbols
+from sympy import Poly, S, symbols, Rational
 from sympy.abc import x, t, n
 
 t0, t1, t2, t3, k = symbols('t:4 k')
@@ -121,18 +121,18 @@ def test_prde_no_cancel():
     # (c1 = 4), with some of the ci for the original q equal to 0.
     G = [Poly(t**6, t), Poly(x*t**5, t), Poly(t**3, t), Poly(x*t**2, t), Poly(1 + x, t)]
     assert prde_no_cancel_b_small(Poly(x*t, t), G, 4, DE) == \
-        ([Poly(t**4/4 - x/12*t**3 + x**2/24*t**2 + (-S(11)/12 - x**3/24)*t + x/24, t),
-        Poly(x/3*t**3 - x**2/6*t**2 + (-S.One/3 + x**3/6)*t - x/6, t), Poly(t, t),
-        Poly(0, t), Poly(0, t)], Matrix([[1, 0,       -1, 0, 0,  0,  0,  0,  0,  0],
-                                         [0, 1, -S.One/4, 0, 0,  0,  0,  0,  0,  0],
-                                         [0, 0,        0, 0, 0,  0,  0,  0,  0,  0],
-                                         [0, 0,        0, 1, 0,  0,  0,  0,  0,  0],
-                                         [0, 0,        0, 0, 1,  0,  0,  0,  0,  0],
-                                         [1, 0,        0, 0, 0, -1,  0,  0,  0,  0],
-                                         [0, 1,        0, 0, 0,  0, -1,  0,  0,  0],
-                                         [0, 0,        1, 0, 0,  0,  0, -1,  0,  0],
-                                         [0, 0,        0, 1, 0,  0,  0,  0, -1,  0],
-                                         [0, 0,        0, 0, 1,  0,  0,  0,  0, -1]]))
+        ([Poly(t**4/4 - x/12*t**3 + x**2/24*t**2 + (Rational(-11, 12) - x**3/24)*t + x/24, t),
+        Poly(x/3*t**3 - x**2/6*t**2 + (Rational(-1, 3) + x**3/6)*t - x/6, t), Poly(t, t),
+        Poly(0, t), Poly(0, t)], Matrix([[1, 0,              -1, 0, 0,  0,  0,  0,  0,  0],
+                                         [0, 1, Rational(-1, 4), 0, 0,  0,  0,  0,  0,  0],
+                                         [0, 0,               0, 0, 0,  0,  0,  0,  0,  0],
+                                         [0, 0,               0, 1, 0,  0,  0,  0,  0,  0],
+                                         [0, 0,               0, 0, 1,  0,  0,  0,  0,  0],
+                                         [1, 0,               0, 0, 0, -1,  0,  0,  0,  0],
+                                         [0, 1,               0, 0, 0,  0, -1,  0,  0,  0],
+                                         [0, 0,               1, 0, 0,  0,  0, -1,  0,  0],
+                                         [0, 0,               0, 1, 0,  0,  0,  0, -1,  0],
+                                         [0, 0,               0, 0, 1,  0,  0,  0,  0, -1]]))
 
     # TODO: Add test for deg(b) <= 0 with b small
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t**2, t)]})

@@ -1,5 +1,6 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols, atan, LambertW
+    Function, log, sqrt, Symbol, Subs, pi, symbols, IndexedBase, atan, \
+    LambertW, Rational
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
@@ -167,13 +168,13 @@ def test_issue_4583():
 
 
 def test_issue_6318():
-    eq = (1/x)**(S(2)/3)
+    eq = (1/x)**Rational(2, 3)
     assert (eq + 1).as_leading_term(x) == eq
 
 
 def test_x_is_base_detection():
-    eq = (x**2)**(S(2)/3)
-    assert eq.series() == x**(S(4)/3)
+    eq = (x**2)**Rational(2, 3)
+    assert eq.series() == x**Rational(4, 3)
 
 
 def test_sin_power():
@@ -203,9 +204,9 @@ def test_issue_10761():
 
 
 def test_issue_14885():
-    assert series(x**(-S(3)/2)*exp(x), x, 0) == (x**(-S(3)/2) + 1/sqrt(x) +
-        sqrt(x)/2 + x**(S(3)/2)/6 + x**(S(5)/2)/24 + x**(S(7)/2)/120 +
-        x**(S(9)/2)/720 + x**(S(11)/2)/5040 + O(x**6))
+    assert series(x**Rational(-3, 2)*exp(x), x, 0) == (x**Rational(-3, 2) + 1/sqrt(x) +
+        sqrt(x)/2 + x**Rational(3, 2)/6 + x**Rational(5, 2)/24 + x**Rational(7, 2)/120 +
+        x**Rational(9, 2)/720 + x**Rational(11, 2)/5040 + O(x**6))
 
 
 def test_issue_15539():

@@ -1500,7 +1500,7 @@ def test_imaginary():
     assert ask(Q.imaginary(exp(pi*I/2, evaluate=False))) is True
 
     # issue 7886
-    assert ask(Q.imaginary(Pow(x, S.One/4)), Q.real(x) & Q.negative(x)) is False
+    assert ask(Q.imaginary(Pow(x, Rational(1, 4))), Q.real(x) & Q.negative(x)) is False
 
 
 def test_integer():
@@ -1918,7 +1918,7 @@ def test_algebraic():
     assert ask(Q.algebraic(I*sqrt(3))) is True
     assert ask(Q.algebraic(sqrt(1 + I*sqrt(3)))) is True
 
-    assert ask(Q.algebraic((1 + I*sqrt(3)**(S(17)/31)))) is True
+    assert ask(Q.algebraic((1 + I*sqrt(3)**Rational(17, 31)))) is True
     assert ask(Q.algebraic((1 + I*sqrt(3)**(S(17)/pi)))) is False
 
     for f in [exp, sin, tan, asin, atan, cos]:

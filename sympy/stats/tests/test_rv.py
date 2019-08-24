@@ -1,6 +1,6 @@
 from sympy import (S, Symbol, symbols, Interval, FallingFactorial,
                    Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-                   DiracDelta, log, pi)
+                   DiracDelta, log, pi, Rational)
 from sympy.core.compatibility import range
 from sympy.core.numbers import comp
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
@@ -158,7 +158,7 @@ def test_factorial_moment():
     Z = Hypergeometric('Z', 4, 2, 2)
     assert factorial_moment(X, 2) == 4
     assert factorial_moment(Y, 2) == S.Half
-    assert factorial_moment(Z, 2) == S.One/3
+    assert factorial_moment(Z, 2) == Rational(1, 3)
 
     x, y, z, l = symbols('x y z l')
     Y = Binomial('Y', 2, y)

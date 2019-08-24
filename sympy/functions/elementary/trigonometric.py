@@ -277,15 +277,15 @@ class sin(TrigonometricFunction):
                 min = min - d*2*S.Pi
             if max is not S.Infinity:
                 max = max - d*2*S.Pi
-            if AccumBounds(min, max).intersection(FiniteSet(S.Pi/2, 5*S.Pi/2)) \
+            if AccumBounds(min, max).intersection(FiniteSet(S.Pi/2, S.Pi*Rational(5, 2))) \
                     is not S.EmptySet and \
-                    AccumBounds(min, max).intersection(FiniteSet(3*S.Pi/2,
-                        7*S.Pi/2)) is not S.EmptySet:
+                    AccumBounds(min, max).intersection(FiniteSet(S.Pi*Rational(3, 2),
+                        S.Pi*Rational(7, 2))) is not S.EmptySet:
                 return AccumBounds(-1, 1)
-            elif AccumBounds(min, max).intersection(FiniteSet(S.Pi/2, 5*S.Pi/2)) \
+            elif AccumBounds(min, max).intersection(FiniteSet(S.Pi/2, S.Pi*Rational(5, 2))) \
                     is not S.EmptySet:
                 return AccumBounds(Min(sin(min), sin(max)), 1)
-            elif AccumBounds(min, max).intersection(FiniteSet(3*S.Pi/2, 8*S.Pi/2)) \
+            elif AccumBounds(min, max).intersection(FiniteSet(S.Pi*Rational(3, 2), S.Pi*Rational(8, 2))) \
                         is not S.EmptySet:
                 return AccumBounds(-1, Max(sin(min), sin(max)))
             else:
@@ -979,7 +979,7 @@ class tan(TrigonometricFunction):
                 min = min - d*S.Pi
             if max is not S.Infinity:
                 max = max - d*S.Pi
-            if AccumBounds(min, max).intersection(FiniteSet(S.Pi/2, 3*S.Pi/2)):
+            if AccumBounds(min, max).intersection(FiniteSet(S.Pi/2, S.Pi*Rational(3, 2))):
                 return AccumBounds(S.NegativeInfinity, S.Infinity)
             else:
                 return AccumBounds(tan(min), tan(max))
@@ -1906,22 +1906,22 @@ class InverseTrigonometricFunction(Function):
             1/sqrt(2): S.Pi/4,
             sqrt((5 - sqrt(5))/8): S.Pi/5,
             sqrt(2)*sqrt(5 - sqrt(5))/4: S.Pi/5,
-            sqrt((5 + sqrt(5))/8): 2*S.Pi/5,
-            sqrt(2)*sqrt(5 + sqrt(5))/4: 2*S.Pi/5,
+            sqrt((5 + sqrt(5))/8): S.Pi*Rational(2, 5),
+            sqrt(2)*sqrt(5 + sqrt(5))/4: S.Pi*Rational(2, 5),
             S.Half: S.Pi/6,
             sqrt(2 - sqrt(2))/2: S.Pi/8,
             sqrt(S.Half - sqrt(2)/4): S.Pi/8,
-            sqrt(2 + sqrt(2))/2: 3*S.Pi/8,
-            sqrt(S.Half + sqrt(2)/4): 3*S.Pi/8,
+            sqrt(2 + sqrt(2))/2: S.Pi*Rational(3, 8),
+            sqrt(S.Half + sqrt(2)/4): S.Pi*Rational(3, 8),
             (sqrt(5) - 1)/4: S.Pi/10,
             (1 - sqrt(5))/4: -S.Pi/10,
-            (sqrt(5) + 1)/4: 3*S.Pi/10,
+            (sqrt(5) + 1)/4: S.Pi*Rational(3, 10),
             sqrt(6)/4 - sqrt(2)/4: S.Pi/12,
             -sqrt(6)/4 + sqrt(2)/4: -S.Pi/12,
             (sqrt(3) - 1)/sqrt(8): S.Pi/12,
             (1 - sqrt(3))/sqrt(8): -S.Pi/12,
-            sqrt(6)/4 + sqrt(2)/4: 5*S.Pi/12,
-            (1 + sqrt(3))/sqrt(8): 5*S.Pi/12
+            sqrt(6)/4 + sqrt(2)/4: S.Pi*Rational(5, 12),
+            (1 + sqrt(3))/sqrt(8): S.Pi*Rational(5, 12)
         }
 
     @staticmethod
@@ -1934,14 +1934,14 @@ class InverseTrigonometricFunction(Function):
             sqrt(3): S.Pi/3,
             sqrt(2) - 1: S.Pi/8,
             1 - sqrt(2): -S.Pi/8,
-            1 + sqrt(2): 3*S.Pi/8,
+            1 + sqrt(2): S.Pi*Rational(3, 8),
             sqrt(5 - 2*sqrt(5)): S.Pi/5,
-            sqrt(5 + 2*sqrt(5)): 2*S.Pi/5,
+            sqrt(5 + 2*sqrt(5)): S.Pi*Rational(2, 5),
             sqrt(1 - 2*sqrt(5)/5): S.Pi/10,
-            sqrt(1 + 2*sqrt(5)/5): 3*S.Pi/10,
+            sqrt(1 + 2*sqrt(5)/5): S.Pi*Rational(3, 10),
             2 - sqrt(3): S.Pi/12,
             -2 + sqrt(3): -S.Pi/12,
-            2 + sqrt(3): 5*S.Pi/12
+            2 + sqrt(3): S.Pi*Rational(5, 12)
         }
 
     @staticmethod
@@ -1952,20 +1952,20 @@ class InverseTrigonometricFunction(Function):
             2*sqrt(3)/3: S.Pi/3,
             sqrt(2): S.Pi/4,
             sqrt(2 + 2*sqrt(5)/5): S.Pi/5,
-            1/sqrt(S(5)/8 - sqrt(5)/8): S.Pi/5,
-            sqrt(2 - 2*sqrt(5)/5): 2*S.Pi/5,
-            1/sqrt(S(5)/8 + sqrt(5)/8): 2*S.Pi/5,
+            1/sqrt(Rational(5, 8) - sqrt(5)/8): S.Pi/5,
+            sqrt(2 - 2*sqrt(5)/5): S.Pi*Rational(2, 5),
+            1/sqrt(Rational(5, 8) + sqrt(5)/8): S.Pi*Rational(2, 5),
             2: S.Pi/6,
             sqrt(4 + 2*sqrt(2)): S.Pi/8,
             2/sqrt(2 - sqrt(2)): S.Pi/8,
-            sqrt(4 - 2*sqrt(2)): 3*S.Pi/8,
-            2/sqrt(2 + sqrt(2)): 3*S.Pi/8,
+            sqrt(4 - 2*sqrt(2)): S.Pi*Rational(3, 8),
+            2/sqrt(2 + sqrt(2)): S.Pi*Rational(3, 8),
             1 + sqrt(5): S.Pi/10,
-            sqrt(5) - 1: 3*S.Pi/10,
-            -(sqrt(5) - 1): -3*S.Pi/10,
+            sqrt(5) - 1: S.Pi*Rational(3, 10),
+            -(sqrt(5) - 1): S.Pi*Rational(-3, 10),
             sqrt(6) + sqrt(2): S.Pi/12,
-            sqrt(6) - sqrt(2): 5*S.Pi/12,
-            -(sqrt(6) - sqrt(2)): -5*S.Pi/12
+            sqrt(6) - sqrt(2): S.Pi*Rational(5, 12),
+            -(sqrt(6) - sqrt(2)): S.Pi*Rational(-5, 12)
         }
 
 
@@ -2612,7 +2612,7 @@ class acot(InverseTrigonometricFunction):
         if args0[0] is S.Infinity:
             return (S.Pi/2 - acot(1/self.args[0]))._eval_nseries(x, n, logx)
         elif args0[0] is S.NegativeInfinity:
-            return (3*S.Pi/2 - acot(1/self.args[0]))._eval_nseries(x, n, logx)
+            return (S.Pi*Rational(3, 2) - acot(1/self.args[0]))._eval_nseries(x, n, logx)
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 

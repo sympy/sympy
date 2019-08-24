@@ -928,7 +928,7 @@ class Wavefunction(Function):
         """
         const = self.norm
 
-        if const == oo:
+        if const is oo:
             raise NotImplementedError("The function is not normalizable!")
         else:
             return Wavefunction((const)**(-1)*self.expr, *self.args[1:])

@@ -8,7 +8,7 @@ from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
         expand_mul)
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
@@ -682,21 +682,21 @@ class log(Function):
                         1: S.Pi/4,
                         sqrt(5 - 2*sqrt(5)): S.Pi/5,
                         sqrt(2)*sqrt(5 - sqrt(5))/(1 + sqrt(5)): S.Pi/5,
-                        sqrt(5 + 2*sqrt(5)): 2*S.Pi/5,
-                        sqrt(2)*sqrt(sqrt(5) + 5)/(-1 + sqrt(5)): 2*S.Pi/5,
+                        sqrt(5 + 2*sqrt(5)): S.Pi*Rational(2, 5),
+                        sqrt(2)*sqrt(sqrt(5) + 5)/(-1 + sqrt(5)): S.Pi*Rational(2, 5),
                         sqrt(3)/3: S.Pi/6,
                         sqrt(2) - 1: S.Pi/8,
                         sqrt(2 - sqrt(2))/sqrt(sqrt(2) + 2): S.Pi/8,
-                        sqrt(2) + 1: 3*S.Pi/8,
-                        sqrt(sqrt(2) + 2)/sqrt(2 - sqrt(2)): 3*S.Pi/8,
+                        sqrt(2) + 1: S.Pi*Rational(3, 8),
+                        sqrt(sqrt(2) + 2)/sqrt(2 - sqrt(2)): S.Pi*Rational(3, 8),
                         sqrt(1 - 2*sqrt(5)/5): S.Pi/10,
                         (-sqrt(2) + sqrt(10))/(2*sqrt(sqrt(5) + 5)): S.Pi/10,
-                        sqrt(1 + 2*sqrt(5)/5): 3*S.Pi/10,
-                        (sqrt(2) + sqrt(10))/(2*sqrt(5 - sqrt(5))): 3*S.Pi/10,
+                        sqrt(1 + 2*sqrt(5)/5): S.Pi*Rational(3, 10),
+                        (sqrt(2) + sqrt(10))/(2*sqrt(5 - sqrt(5))): S.Pi*Rational(3, 10),
                         2 - sqrt(3): S.Pi/12,
                         (-1 + sqrt(3))/(1 + sqrt(3)): S.Pi/12,
-                        2 + sqrt(3): 5*S.Pi/12,
-                        (1 + sqrt(3))/(-1 + sqrt(3)): 5*S.Pi/12
+                        2 + sqrt(3): S.Pi*Rational(5, 12),
+                        (1 + sqrt(3))/(-1 + sqrt(3)): S.Pi*Rational(5, 12)
                     }
                     if t in atan_table:
                         modulus = ratsimp(coeff * Abs(arg_))

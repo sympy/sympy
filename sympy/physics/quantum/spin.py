@@ -1090,7 +1090,7 @@ class JxKet(SpinState, Ket):
         return self._represent_base(**options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2, **options)
+        return self._represent_base(alpha=pi*Rational(3, 2), **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(beta=pi/2, **options)
@@ -1147,7 +1147,7 @@ class JyKet(SpinState, Ket):
         return self._represent_base(**options)
 
     def _represent_JzOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2, beta=-pi/2, gamma=pi/2, **options)
+        return self._represent_base(alpha=pi*Rational(3, 2), beta=-pi/2, gamma=pi/2, **options)
 
 
 class JyBra(SpinState, Bra):
@@ -1294,10 +1294,10 @@ class JzKet(SpinState, Ket):
         return self._represent_JzOp(None, **options)
 
     def _represent_JxOp(self, basis, **options):
-        return self._represent_base(beta=3*pi/2, **options)
+        return self._represent_base(beta=pi*Rational(3, 2), **options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2, beta=pi/2, gamma=pi/2, **options)
+        return self._represent_base(alpha=pi*Rational(3, 2), beta=pi/2, gamma=pi/2, **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(**options)
@@ -1538,7 +1538,7 @@ class JxKetCoupled(CoupledSpinState, Ket):
         return self._represent_coupled_base(**options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_coupled_base(alpha=3*pi/2, **options)
+        return self._represent_coupled_base(alpha=pi*Rational(3, 2), **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_coupled_base(beta=pi/2, **options)
@@ -1595,7 +1595,7 @@ class JyKetCoupled(CoupledSpinState, Ket):
         return self._represent_coupled_base(**options)
 
     def _represent_JzOp(self, basis, **options):
-        return self._represent_coupled_base(alpha=3*pi/2, beta=-pi/2, gamma=pi/2, **options)
+        return self._represent_coupled_base(alpha=pi*Rational(3, 2), beta=-pi/2, gamma=pi/2, **options)
 
 
 class JyBraCoupled(CoupledSpinState, Bra):
@@ -1748,10 +1748,10 @@ class JzKetCoupled(CoupledSpinState, Ket):
         return self._represent_JzOp(None, **options)
 
     def _represent_JxOp(self, basis, **options):
-        return self._represent_coupled_base(beta=3*pi/2, **options)
+        return self._represent_coupled_base(beta=pi*Rational(3, 2), **options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_coupled_base(alpha=3*pi/2, beta=pi/2, gamma=pi/2, **options)
+        return self._represent_coupled_base(alpha=pi*Rational(3, 2), beta=pi/2, gamma=pi/2, **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_coupled_base(**options)

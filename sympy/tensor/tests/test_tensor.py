@@ -647,7 +647,7 @@ def test_add2():
     t2 = t1*A(-n, -p, -q)
     t2 = t2.canon_bp()
     assert t2 == 0
-    t1 = S(2)/3*R(m,n,p,q) - S.One/3*R(m,q,n,p) + S.One/3*R(m,p,n,q)
+    t1 = Rational(2, 3)*R(m,n,p,q) - Rational(1, 3)*R(m,q,n,p) + Rational(1, 3)*R(m,p,n,q)
     t2 = t1*A(-n, -p, -q)
     t2 = t2.canon_bp()
     assert t2 == 0
@@ -761,7 +761,7 @@ def test_riemann_cyclic_replace():
     R = TensorHead('R', [Lorentz]*4, TensorSymmetry.riemann())
     t = R(m0, m2, m1, m3)
     t1 = riemann_cyclic_replace(t)
-    t1a = -S.One/3*R(m0, m3, m2, m1) + S.One/3*R(m0, m1, m2, m3) + Rational(2, 3)*R(m0, m2, m1, m3)
+    t1a = Rational(-1, 3)*R(m0, m3, m2, m1) + Rational(1, 3)*R(m0, m1, m2, m3) + Rational(2, 3)*R(m0, m2, m1, m3)
     assert t1 == t1a
 
 def test_riemann_cyclic():
@@ -778,7 +778,7 @@ def test_riemann_cyclic():
     assert t1 == 0
     t = R(i,j,k,l)
     t1 = riemann_cyclic(t)
-    assert t1 == -S.One/3*R(i, l, j, k) + S.One/3*R(i, k, j, l) + S(2)/3*R(i, j, k, l)
+    assert t1 == Rational(-1, 3)*R(i, l, j, k) + Rational(1, 3)*R(i, k, j, l) + Rational(2, 3)*R(i, j, k, l)
 
     t = R(i,j,k,l)*R(-k,-l,m,n)*(R(-m,-n,-i,-j) + 2*R(-m,-j,-n,-i))
     t1 = riemann_cyclic(t)

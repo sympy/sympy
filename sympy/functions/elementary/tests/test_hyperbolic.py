@@ -42,21 +42,21 @@ def test_sinh():
 
     assert sinh(pi*I/2) == I
     assert sinh(-pi*I/2) == -I
-    assert sinh(5*pi*I/2) == I
-    assert sinh(7*pi*I/2) == -I
+    assert sinh(pi*I*Rational(5, 2)) == I
+    assert sinh(pi*I*Rational(7, 2)) == -I
 
     assert sinh(pi*I/3) == S.Half*sqrt(3)*I
-    assert sinh(-2*pi*I/3) == -S.Half*sqrt(3)*I
+    assert sinh(pi*I*Rational(-2, 3)) == -S.Half*sqrt(3)*I
 
     assert sinh(pi*I/4) == S.Half*sqrt(2)*I
     assert sinh(-pi*I/4) == -S.Half*sqrt(2)*I
-    assert sinh(17*pi*I/4) == S.Half*sqrt(2)*I
-    assert sinh(-3*pi*I/4) == -S.Half*sqrt(2)*I
+    assert sinh(pi*I*Rational(17, 4)) == S.Half*sqrt(2)*I
+    assert sinh(pi*I*Rational(-3, 4)) == -S.Half*sqrt(2)*I
 
     assert sinh(pi*I/6) == S.Half*I
     assert sinh(-pi*I/6) == -S.Half*I
-    assert sinh(7*pi*I/6) == -S.Half*I
-    assert sinh(-5*pi*I/6) == -S.Half*I
+    assert sinh(pi*I*Rational(7, 6)) == -S.Half*I
+    assert sinh(pi*I*Rational(-5, 6)) == -S.Half*I
 
     assert sinh(pi*I/105) == sin(pi/105)*I
     assert sinh(-pi*I/105) == -sin(pi/105)*I
@@ -126,17 +126,17 @@ def test_cosh():
     assert cosh(8*pi*I) == 1
 
     assert cosh(pi*I/3) == S.Half
-    assert cosh(-2*pi*I/3) == -S.Half
+    assert cosh(pi*I*Rational(-2, 3)) == -S.Half
 
     assert cosh(pi*I/4) == S.Half*sqrt(2)
     assert cosh(-pi*I/4) == S.Half*sqrt(2)
-    assert cosh(11*pi*I/4) == -S.Half*sqrt(2)
-    assert cosh(-3*pi*I/4) == -S.Half*sqrt(2)
+    assert cosh(pi*I*Rational(11, 4)) == -S.Half*sqrt(2)
+    assert cosh(pi*I*Rational(-3, 4)) == -S.Half*sqrt(2)
 
     assert cosh(pi*I/6) == S.Half*sqrt(3)
     assert cosh(-pi*I/6) == S.Half*sqrt(3)
-    assert cosh(7*pi*I/6) == -S.Half*sqrt(3)
-    assert cosh(-5*pi*I/6) == -S.Half*sqrt(3)
+    assert cosh(pi*I*Rational(7, 6)) == -S.Half*sqrt(3)
+    assert cosh(pi*I*Rational(-5, 6)) == -S.Half*sqrt(3)
 
     assert cosh(pi*I/105) == cos(pi/105)
     assert cosh(-pi*I/105) == cos(pi/105)
@@ -204,21 +204,21 @@ def test_tanh():
 
     assert tanh(pi*I/2) == zoo
     assert tanh(-pi*I/2) == zoo
-    assert tanh(5*pi*I/2) == zoo
-    assert tanh(7*pi*I/2) == zoo
+    assert tanh(pi*I*Rational(5, 2)) == zoo
+    assert tanh(pi*I*Rational(7, 2)) == zoo
 
     assert tanh(pi*I/3) == sqrt(3)*I
-    assert tanh(-2*pi*I/3) == sqrt(3)*I
+    assert tanh(pi*I*Rational(-2, 3)) == sqrt(3)*I
 
     assert tanh(pi*I/4) == I
     assert tanh(-pi*I/4) == -I
-    assert tanh(17*pi*I/4) == I
-    assert tanh(-3*pi*I/4) == I
+    assert tanh(pi*I*Rational(17, 4)) == I
+    assert tanh(pi*I*Rational(-3, 4)) == I
 
     assert tanh(pi*I/6) == I/sqrt(3)
     assert tanh(-pi*I/6) == -I/sqrt(3)
-    assert tanh(7*pi*I/6) == I/sqrt(3)
-    assert tanh(-5*pi*I/6) == I/sqrt(3)
+    assert tanh(pi*I*Rational(7, 6)) == I/sqrt(3)
+    assert tanh(pi*I*Rational(-5, 6)) == I/sqrt(3)
 
     assert tanh(pi*I/105) == tan(pi/105)*I
     assert tanh(-pi*I/105) == -tan(pi/105)*I
@@ -283,21 +283,21 @@ def test_coth():
 
     assert coth(pi*I/2) == 0
     assert coth(-pi*I/2) == 0
-    assert coth(5*pi*I/2) == 0
-    assert coth(7*pi*I/2) == 0
+    assert coth(pi*I*Rational(5, 2)) == 0
+    assert coth(pi*I*Rational(7, 2)) == 0
 
     assert coth(pi*I/3) == -I/sqrt(3)
-    assert coth(-2*pi*I/3) == -I/sqrt(3)
+    assert coth(pi*I*Rational(-2, 3)) == -I/sqrt(3)
 
     assert coth(pi*I/4) == -I
     assert coth(-pi*I/4) == I
-    assert coth(17*pi*I/4) == -I
-    assert coth(-3*pi*I/4) == -I
+    assert coth(pi*I*Rational(17, 4)) == -I
+    assert coth(pi*I*Rational(-3, 4)) == -I
 
     assert coth(pi*I/6) == -sqrt(3)*I
     assert coth(-pi*I/6) == sqrt(3)*I
-    assert coth(7*pi*I/6) == -sqrt(3)*I
-    assert coth(-5*pi*I/6) == -sqrt(3)*I
+    assert coth(pi*I*Rational(7, 6)) == -sqrt(3)*I
+    assert coth(pi*I*Rational(-5, 6)) == -sqrt(3)*I
 
     assert coth(pi*I/105) == -cot(pi/105)*I
     assert coth(-pi*I/105) == cot(pi/105)*I
@@ -361,22 +361,22 @@ def test_csch():
 
     assert csch(pi*I/2) == -I
     assert csch(-pi*I/2) == I
-    assert csch(5*pi*I/2) == -I
-    assert csch(7*pi*I/2) == I
+    assert csch(pi*I*Rational(5, 2)) == -I
+    assert csch(pi*I*Rational(7, 2)) == I
 
     assert csch(pi*I/3) == -2/sqrt(3)*I
-    assert csch(-2*pi*I/3) == 2/sqrt(3)*I
+    assert csch(pi*I*Rational(-2, 3)) == 2/sqrt(3)*I
 
     assert csch(pi*I/4) == -sqrt(2)*I
     assert csch(-pi*I/4) == sqrt(2)*I
-    assert csch(7*pi*I/4) == sqrt(2)*I
-    assert csch(-3*pi*I/4) == sqrt(2)*I
+    assert csch(pi*I*Rational(7, 4)) == sqrt(2)*I
+    assert csch(pi*I*Rational(-3, 4)) == sqrt(2)*I
 
     assert csch(pi*I/6) == -2*I
     assert csch(-pi*I/6) == 2*I
-    assert csch(7*pi*I/6) == 2*I
-    assert csch(-7*pi*I/6) == -2*I
-    assert csch(-5*pi*I/6) == 2*I
+    assert csch(pi*I*Rational(7, 6)) == 2*I
+    assert csch(pi*I*Rational(-7, 6)) == -2*I
+    assert csch(pi*I*Rational(-5, 6)) == 2*I
 
     assert csch(pi*I/105) == -1/sin(pi/105)*I
     assert csch(-pi*I/105) == 1/sin(pi/105)*I
@@ -436,17 +436,17 @@ def test_sech():
     assert sech(8*pi*I) == 1
 
     assert sech(pi*I/3) == 2
-    assert sech(-2*pi*I/3) == -2
+    assert sech(pi*I*Rational(-2, 3)) == -2
 
     assert sech(pi*I/4) == sqrt(2)
     assert sech(-pi*I/4) == sqrt(2)
-    assert sech(5*pi*I/4) == -sqrt(2)
-    assert sech(-5*pi*I/4) == -sqrt(2)
+    assert sech(pi*I*Rational(5, 4)) == -sqrt(2)
+    assert sech(pi*I*Rational(-5, 4)) == -sqrt(2)
 
     assert sech(pi*I/6) == 2/sqrt(3)
     assert sech(-pi*I/6) == 2/sqrt(3)
-    assert sech(7*pi*I/6) == -2/sqrt(3)
-    assert sech(-5*pi*I/6) == -2/sqrt(3)
+    assert sech(pi*I*Rational(7, 6)) == -2/sqrt(3)
+    assert sech(pi*I*Rational(-5, 6)) == -2/sqrt(3)
 
     assert sech(pi*I/105) == 1/cos(pi/105)
     assert sech(-pi*I/105) == 1/cos(pi/105)
@@ -496,14 +496,14 @@ def test_asinh():
     assert asinh(zoo) == zoo
 
     #properties
-    assert asinh(I *(sqrt(3) - 1)/(2**(S(3)/2))) == pi*I/12
-    assert asinh(-I *(sqrt(3) - 1)/(2**(S(3)/2))) == -pi*I/12
+    assert asinh(I *(sqrt(3) - 1)/(2**Rational(3, 2))) == pi*I/12
+    assert asinh(-I *(sqrt(3) - 1)/(2**Rational(3, 2))) == -pi*I/12
 
     assert asinh(I*(sqrt(5) - 1)/4) == pi*I/10
     assert asinh(-I*(sqrt(5) - 1)/4) == -pi*I/10
 
-    assert asinh(I*(sqrt(5) + 1)/4) == 3*pi*I/10
-    assert asinh(-I*(sqrt(5) + 1)/4) == -3*pi*I/10
+    assert asinh(I*(sqrt(5) + 1)/4) == pi*I*Rational(3, 10)
+    assert asinh(-I*(sqrt(5) + 1)/4) == pi*I*Rational(-3, 10)
 
     # Symmetry
     assert asinh(-S.Half) == -asinh(S.Half)
@@ -552,7 +552,7 @@ def test_acosh():
     assert acosh(-1) == pi*I
     assert acosh(0) == I*pi/2
     assert acosh(Rational(1, 2)) == I*pi/3
-    assert acosh(Rational(-1, 2)) == 2*pi*I/3
+    assert acosh(Rational(-1, 2)) == pi*I*Rational(2, 3)
     assert acosh(nan) == nan
 
     # at infinites
@@ -566,20 +566,20 @@ def test_acosh():
 
     assert acosh(I) == log(I*(1 + sqrt(2)))
     assert acosh(-I) == log(-I*(1 + sqrt(2)))
-    assert acosh((sqrt(3) - 1)/(2*sqrt(2))) == 5*pi*I/12
-    assert acosh(-(sqrt(3) - 1)/(2*sqrt(2))) == 7*pi*I/12
+    assert acosh((sqrt(3) - 1)/(2*sqrt(2))) == pi*I*Rational(5, 12)
+    assert acosh(-(sqrt(3) - 1)/(2*sqrt(2))) == pi*I*Rational(7, 12)
     assert acosh(sqrt(2)/2) == I*pi/4
-    assert acosh(-sqrt(2)/2) == 3*I*pi/4
+    assert acosh(-sqrt(2)/2) == I*pi*Rational(3, 4)
     assert acosh(sqrt(3)/2) == I*pi/6
-    assert acosh(-sqrt(3)/2) == 5*I*pi/6
+    assert acosh(-sqrt(3)/2) == I*pi*Rational(5, 6)
     assert acosh(sqrt(2 + sqrt(2))/2) == I*pi/8
-    assert acosh(-sqrt(2 + sqrt(2))/2) == 7*I*pi/8
-    assert acosh(sqrt(2 - sqrt(2))/2) == 3*I*pi/8
-    assert acosh(-sqrt(2 - sqrt(2))/2) == 5*I*pi/8
+    assert acosh(-sqrt(2 + sqrt(2))/2) == I*pi*Rational(7, 8)
+    assert acosh(sqrt(2 - sqrt(2))/2) == I*pi*Rational(3, 8)
+    assert acosh(-sqrt(2 - sqrt(2))/2) == I*pi*Rational(5, 8)
     assert acosh((1 + sqrt(3))/(2*sqrt(2))) == I*pi/12
-    assert acosh(-(1 + sqrt(3))/(2*sqrt(2))) == 11*I*pi/12
+    assert acosh(-(1 + sqrt(3))/(2*sqrt(2))) == I*pi*Rational(11, 12)
     assert acosh((sqrt(5) + 1)/4) == I*pi/5
-    assert acosh(-(sqrt(5) + 1)/4) == 4*I*pi/5
+    assert acosh(-(sqrt(5) + 1)/4) == I*pi*Rational(4, 5)
 
     assert str(acosh(5*I).n(6)) == '2.31244 + 1.5708*I'
     assert str(acosh(-5*I).n(6)) == '2.31244 - 1.5708*I'
@@ -797,12 +797,12 @@ def test_atanh():
     assert atanh(-I/sqrt(3)) == -I*pi/6
     assert atanh(I*sqrt(3)) == I*pi/3
     assert atanh(-I*sqrt(3)) == -I*pi/3
-    assert atanh(I*(1 + sqrt(2))) == 3*pi*I/8
+    assert atanh(I*(1 + sqrt(2))) == pi*I*Rational(3, 8)
     assert atanh(I*(sqrt(2) - 1)) == pi*I/8
     assert atanh(I*(1 - sqrt(2))) == -pi*I/8
-    assert atanh(-I*(1 + sqrt(2))) == -3*pi*I/8
-    assert atanh(I*sqrt(5 + 2*sqrt(5))) == 2*I*pi/5
-    assert atanh(-I*sqrt(5 + 2*sqrt(5))) == -2*I*pi/5
+    assert atanh(-I*(1 + sqrt(2))) == pi*I*Rational(-3, 8)
+    assert atanh(I*sqrt(5 + 2*sqrt(5))) == I*pi*Rational(2, 5)
+    assert atanh(-I*sqrt(5 + 2*sqrt(5))) == I*pi*Rational(-2, 5)
     assert atanh(I*(2 - sqrt(3))) == pi*I/12
     assert atanh(I*(sqrt(3) - 2)) == -pi*I/12
     assert atanh(oo) == -I*pi/2
@@ -824,7 +824,7 @@ def test_atanh():
     assert atanh(tanh(pi/2)) == pi/2
     assert atanh(tanh(pi)) == pi
     assert atanh(tanh(-3 + 7*I)) == -3 - 2*I*pi + 7*I
-    assert atanh(tanh(9 - 2*I/3)) == 9 - 2*I/3
+    assert atanh(tanh(9 - I*Rational(2, 3))) == 9 - I*Rational(2, 3)
     assert atanh(tanh(-32 - 123*I)) == -32 - 123*I + 39*I*pi
 
 
@@ -871,14 +871,14 @@ def test_acoth():
     assert acoth(-I*sqrt(3)) == I*pi/6
     assert acoth(I*(1 + sqrt(2))) == -pi*I/8
     assert acoth(-I*(sqrt(2) + 1)) == pi*I/8
-    assert acoth(I*(1 - sqrt(2))) == 3*pi*I/8
-    assert acoth(I*(sqrt(2) - 1)) == -3*pi*I/8
+    assert acoth(I*(1 - sqrt(2))) == pi*I*Rational(3, 8)
+    assert acoth(I*(sqrt(2) - 1)) == pi*I*Rational(-3, 8)
     assert acoth(I*sqrt(5 + 2*sqrt(5))) == -I*pi/10
     assert acoth(-I*sqrt(5 + 2*sqrt(5))) == I*pi/10
     assert acoth(I*(2 + sqrt(3))) == -pi*I/12
     assert acoth(-I*(2 + sqrt(3))) == pi*I/12
-    assert acoth(I*(2 - sqrt(3))) == -5*pi*I/12
-    assert acoth(I*(sqrt(3) - 2)) == 5*pi*I/12
+    assert acoth(I*(2 - sqrt(3))) == pi*I*Rational(-5, 12)
+    assert acoth(I*(sqrt(3) - 2)) == pi*I*Rational(5, 12)
 
     # Symmetry
     assert acoth(-S.Half) == -acoth(S.Half)

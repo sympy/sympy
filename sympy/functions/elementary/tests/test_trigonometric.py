@@ -69,8 +69,8 @@ def test_sin():
 
     assert sin(pi/2) == 1
     assert sin(-pi/2) == -1
-    assert sin(5*pi/2) == 1
-    assert sin(7*pi/2) == -1
+    assert sin(pi*Rational(5, 2)) == 1
+    assert sin(pi*Rational(7, 2)) == -1
 
     ne = symbols('ne', integer=True, even=False)
     e = symbols('e', even=True)
@@ -81,41 +81,41 @@ def test_sin():
     assert sin(pi*k).subs(k, 3) == sin(pi*k/2).subs(k, 6)  # issue 8298
 
     assert sin(pi/3) == S.Half*sqrt(3)
-    assert sin(-2*pi/3) == -S.Half*sqrt(3)
+    assert sin(pi*Rational(-2, 3)) == -S.Half*sqrt(3)
 
     assert sin(pi/4) == S.Half*sqrt(2)
     assert sin(-pi/4) == -S.Half*sqrt(2)
-    assert sin(17*pi/4) == S.Half*sqrt(2)
-    assert sin(-3*pi/4) == -S.Half*sqrt(2)
+    assert sin(pi*Rational(17, 4)) == S.Half*sqrt(2)
+    assert sin(pi*Rational(-3, 4)) == -S.Half*sqrt(2)
 
     assert sin(pi/6) == S.Half
     assert sin(-pi/6) == -S.Half
-    assert sin(7*pi/6) == -S.Half
-    assert sin(-5*pi/6) == -S.Half
+    assert sin(pi*Rational(7, 6)) == -S.Half
+    assert sin(pi*Rational(-5, 6)) == -S.Half
 
-    assert sin(1*pi/5) == sqrt((5 - sqrt(5)) / 8)
-    assert sin(2*pi/5) == sqrt((5 + sqrt(5)) / 8)
-    assert sin(3*pi/5) == sin(2*pi/5)
-    assert sin(4*pi/5) == sin(1*pi/5)
-    assert sin(6*pi/5) == -sin(1*pi/5)
-    assert sin(8*pi/5) == -sin(2*pi/5)
+    assert sin(pi*Rational(1, 5)) == sqrt((5 - sqrt(5)) / 8)
+    assert sin(pi*Rational(2, 5)) == sqrt((5 + sqrt(5)) / 8)
+    assert sin(pi*Rational(3, 5)) == sin(pi*Rational(2, 5))
+    assert sin(pi*Rational(4, 5)) == sin(pi*Rational(1, 5))
+    assert sin(pi*Rational(6, 5)) == -sin(pi*Rational(1, 5))
+    assert sin(pi*Rational(8, 5)) == -sin(pi*Rational(2, 5))
 
-    assert sin(-1273*pi/5) == -sin(2*pi/5)
+    assert sin(pi*Rational(-1273, 5)) == -sin(pi*Rational(2, 5))
 
     assert sin(pi/8) == sqrt((2 - sqrt(2))/4)
 
-    assert sin(pi/10) == -S.One/4 + sqrt(5)/4
+    assert sin(pi/10) == Rational(-1, 4) + sqrt(5)/4
 
     assert sin(pi/12) == -sqrt(2)/4 + sqrt(6)/4
-    assert sin(5*pi/12) == sqrt(2)/4 + sqrt(6)/4
-    assert sin(-7*pi/12) == -sqrt(2)/4 - sqrt(6)/4
-    assert sin(-11*pi/12) == sqrt(2)/4 - sqrt(6)/4
+    assert sin(pi*Rational(5, 12)) == sqrt(2)/4 + sqrt(6)/4
+    assert sin(pi*Rational(-7, 12)) == -sqrt(2)/4 - sqrt(6)/4
+    assert sin(pi*Rational(-11, 12)) == sqrt(2)/4 - sqrt(6)/4
 
-    assert sin(104*pi/105) == sin(pi/105)
-    assert sin(106*pi/105) == -sin(pi/105)
+    assert sin(pi*Rational(104, 105)) == sin(pi/105)
+    assert sin(pi*Rational(106, 105)) == -sin(pi/105)
 
-    assert sin(-104*pi/105) == -sin(pi/105)
-    assert sin(-106*pi/105) == sin(pi/105)
+    assert sin(pi*Rational(-104, 105)) == -sin(pi/105)
+    assert sin(pi*Rational(-106, 105)) == sin(pi/105)
 
     assert sin(x*I) == sinh(x)*I
 
@@ -208,10 +208,10 @@ def test_sin_AccumBounds():
     assert sin(AccumBounds(0, oo)) == AccumBounds(-1, 1)
     assert sin(AccumBounds(-oo, 0)) == AccumBounds(-1, 1)
     assert sin(AccumBounds(0, 2*S.Pi)) == AccumBounds(-1, 1)
-    assert sin(AccumBounds(0, 3*S.Pi/4)) == AccumBounds(0, 1)
-    assert sin(AccumBounds(3*S.Pi/4, 7*S.Pi/4)) == AccumBounds(-1, sin(3*S.Pi/4))
+    assert sin(AccumBounds(0, S.Pi*Rational(3, 4))) == AccumBounds(0, 1)
+    assert sin(AccumBounds(S.Pi*Rational(3, 4), S.Pi*Rational(7, 4))) == AccumBounds(-1, sin(S.Pi*Rational(3, 4)))
     assert sin(AccumBounds(S.Pi/4, S.Pi/3)) == AccumBounds(sin(S.Pi/4), sin(S.Pi/3))
-    assert sin(AccumBounds(3*S.Pi/4, 5*S.Pi/6)) == AccumBounds(sin(5*S.Pi/6), sin(3*S.Pi/4))
+    assert sin(AccumBounds(S.Pi*Rational(3, 4), S.Pi*Rational(5, 6))) == AccumBounds(sin(S.Pi*Rational(5, 6)), sin(S.Pi*Rational(3, 4)))
 
 
 def test_sin_fdiff():
@@ -239,17 +239,17 @@ def test_trig_symmetry():
     assert cot(x + pi) == cot(x)
     assert cot(x - 3*pi) == cot(x)
     assert sin(pi/2 - x) == cos(x)
-    assert sin(3*pi/2 - x) == -cos(x)
-    assert sin(5*pi/2 - x) == cos(x)
+    assert sin(pi*Rational(3, 2) - x) == -cos(x)
+    assert sin(pi*Rational(5, 2) - x) == cos(x)
     assert cos(pi/2 - x) == sin(x)
-    assert cos(3*pi/2 - x) == -sin(x)
-    assert cos(5*pi/2 - x) == sin(x)
+    assert cos(pi*Rational(3, 2) - x) == -sin(x)
+    assert cos(pi*Rational(5, 2) - x) == sin(x)
     assert tan(pi/2 - x) == cot(x)
-    assert tan(3*pi/2 - x) == cot(x)
-    assert tan(5*pi/2 - x) == cot(x)
+    assert tan(pi*Rational(3, 2) - x) == cot(x)
+    assert tan(pi*Rational(5, 2) - x) == cot(x)
     assert cot(pi/2 - x) == tan(x)
-    assert cot(3*pi/2 - x) == tan(x)
-    assert cot(5*pi/2 - x) == tan(x)
+    assert cot(pi*Rational(3, 2) - x) == tan(x)
+    assert cot(pi*Rational(5, 2) - x) == tan(x)
     assert sin(pi/2 + x) == cos(x)
     assert cos(pi/2 + x) == -sin(x)
     assert tan(pi/2 + x) == -cot(x)
@@ -301,39 +301,39 @@ def test_cos():
     assert cos(8*pi) == 1
 
     assert cos(pi/3) == S.Half
-    assert cos(-2*pi/3) == -S.Half
+    assert cos(pi*Rational(-2, 3)) == -S.Half
 
     assert cos(pi/4) == S.Half*sqrt(2)
     assert cos(-pi/4) == S.Half*sqrt(2)
-    assert cos(11*pi/4) == -S.Half*sqrt(2)
-    assert cos(-3*pi/4) == -S.Half*sqrt(2)
+    assert cos(pi*Rational(11, 4)) == -S.Half*sqrt(2)
+    assert cos(pi*Rational(-3, 4)) == -S.Half*sqrt(2)
 
     assert cos(pi/6) == S.Half*sqrt(3)
     assert cos(-pi/6) == S.Half*sqrt(3)
-    assert cos(7*pi/6) == -S.Half*sqrt(3)
-    assert cos(-5*pi/6) == -S.Half*sqrt(3)
+    assert cos(pi*Rational(7, 6)) == -S.Half*sqrt(3)
+    assert cos(pi*Rational(-5, 6)) == -S.Half*sqrt(3)
 
-    assert cos(1*pi/5) == (sqrt(5) + 1)/4
-    assert cos(2*pi/5) == (sqrt(5) - 1)/4
-    assert cos(3*pi/5) == -cos(2*pi/5)
-    assert cos(4*pi/5) == -cos(1*pi/5)
-    assert cos(6*pi/5) == -cos(1*pi/5)
-    assert cos(8*pi/5) == cos(2*pi/5)
+    assert cos(pi*Rational(1, 5)) == (sqrt(5) + 1)/4
+    assert cos(pi*Rational(2, 5)) == (sqrt(5) - 1)/4
+    assert cos(pi*Rational(3, 5)) == -cos(pi*Rational(2, 5))
+    assert cos(pi*Rational(4, 5)) == -cos(pi*Rational(1, 5))
+    assert cos(pi*Rational(6, 5)) == -cos(pi*Rational(1, 5))
+    assert cos(pi*Rational(8, 5)) == cos(pi*Rational(2, 5))
 
-    assert cos(-1273*pi/5) == -cos(2*pi/5)
+    assert cos(pi*Rational(-1273, 5)) == -cos(pi*Rational(2, 5))
 
     assert cos(pi/8) == sqrt((2 + sqrt(2))/4)
 
     assert cos(pi/12) == sqrt(2)/4 + sqrt(6)/4
-    assert cos(5*pi/12) == -sqrt(2)/4 + sqrt(6)/4
-    assert cos(7*pi/12) == sqrt(2)/4 - sqrt(6)/4
-    assert cos(11*pi/12) == -sqrt(2)/4 - sqrt(6)/4
+    assert cos(pi*Rational(5, 12)) == -sqrt(2)/4 + sqrt(6)/4
+    assert cos(pi*Rational(7, 12)) == sqrt(2)/4 - sqrt(6)/4
+    assert cos(pi*Rational(11, 12)) == -sqrt(2)/4 - sqrt(6)/4
 
-    assert cos(104*pi/105) == -cos(pi/105)
-    assert cos(106*pi/105) == -cos(pi/105)
+    assert cos(pi*Rational(104, 105)) == -cos(pi/105)
+    assert cos(pi*Rational(106, 105)) == -cos(pi/105)
 
-    assert cos(-104*pi/105) == -cos(pi/105)
-    assert cos(-106*pi/105) == -cos(pi/105)
+    assert cos(pi*Rational(-104, 105)) == -cos(pi/105)
+    assert cos(pi*Rational(-106, 105)) == -cos(pi/105)
 
     assert cos(x*I) == cosh(x)
     assert cos(k*pi*I) == cosh(k*pi)
@@ -345,7 +345,7 @@ def test_cos():
     assert cos(na).is_algebraic is False
     q = Symbol('q', rational=True)
     assert cos(pi*q).is_algebraic
-    assert cos(2*pi/7).is_algebraic
+    assert cos(pi*Rational(2, 7)).is_algebraic
 
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
@@ -414,8 +414,8 @@ def test_cos_AccumBounds():
     assert cos(AccumBounds(-oo, 0)) == AccumBounds(-1, 1)
     assert cos(AccumBounds(0, 2*S.Pi)) == AccumBounds(-1, 1)
     assert cos(AccumBounds(-S.Pi/3, S.Pi/4)) == AccumBounds(cos(-S.Pi/3), 1)
-    assert cos(AccumBounds(3*S.Pi/4, 5*S.Pi/4)) == AccumBounds(-1, cos(3*S.Pi/4))
-    assert cos(AccumBounds(5*S.Pi/4, 4*S.Pi/3)) == AccumBounds(cos(5*S.Pi/4), cos(4*S.Pi/3))
+    assert cos(AccumBounds(S.Pi*Rational(3, 4), S.Pi*Rational(5, 4))) == AccumBounds(-1, cos(S.Pi*Rational(3, 4)))
+    assert cos(AccumBounds(S.Pi*Rational(5, 4), S.Pi*Rational(4, 3))) == AccumBounds(cos(S.Pi*Rational(5, 4)), cos(S.Pi*Rational(4, 3)))
     assert cos(AccumBounds(S.Pi/4, S.Pi/3)) == AccumBounds(cos(S.Pi/3), cos(S.Pi/4))
 
 
@@ -455,49 +455,49 @@ def test_tan():
     assert tan(-3*10**73*pi) == 0
 
     assert tan(pi/2) == zoo
-    assert tan(3*pi/2) == zoo
+    assert tan(pi*Rational(3, 2)) == zoo
 
     assert tan(pi/3) == sqrt(3)
-    assert tan(-2*pi/3) == sqrt(3)
+    assert tan(pi*Rational(-2, 3)) == sqrt(3)
 
     assert tan(pi/4) is S.One
     assert tan(-pi/4) is S.NegativeOne
-    assert tan(17*pi/4) is S.One
-    assert tan(-3*pi/4) is S.One
+    assert tan(pi*Rational(17, 4)) is S.One
+    assert tan(pi*Rational(-3, 4)) is S.One
 
     assert tan(pi/5) == sqrt(5 - 2*sqrt(5))
-    assert tan(2*pi/5) == sqrt(5 + 2*sqrt(5))
-    assert tan(18*pi/5) == -sqrt(5 + 2*sqrt(5))
-    assert tan(-16*pi/5) == -sqrt(5 - 2*sqrt(5))
+    assert tan(pi*Rational(2, 5)) == sqrt(5 + 2*sqrt(5))
+    assert tan(pi*Rational(18, 5)) == -sqrt(5 + 2*sqrt(5))
+    assert tan(pi*Rational(-16, 5)) == -sqrt(5 - 2*sqrt(5))
 
     assert tan(pi/6) == 1/sqrt(3)
     assert tan(-pi/6) == -1/sqrt(3)
-    assert tan(7*pi/6) == 1/sqrt(3)
-    assert tan(-5*pi/6) == 1/sqrt(3)
+    assert tan(pi*Rational(7, 6)) == 1/sqrt(3)
+    assert tan(pi*Rational(-5, 6)) == 1/sqrt(3)
 
     assert tan(pi/8) == -1 + sqrt(2)
-    assert tan(3*pi/8) == 1 + sqrt(2)  # issue 15959
-    assert tan(5*pi/8) == -1 - sqrt(2)
-    assert tan(7*pi/8) == 1 - sqrt(2)
+    assert tan(pi*Rational(3, 8)) == 1 + sqrt(2)  # issue 15959
+    assert tan(pi*Rational(5, 8)) == -1 - sqrt(2)
+    assert tan(pi*Rational(7, 8)) == 1 - sqrt(2)
 
     assert tan(pi/10) == sqrt(1 - 2*sqrt(5)/5)
-    assert tan(3*pi/10) == sqrt(1 + 2*sqrt(5)/5)
-    assert tan(17*pi/10) == -sqrt(1 + 2*sqrt(5)/5)
-    assert tan(-31*pi/10) == -sqrt(1 - 2*sqrt(5)/5)
+    assert tan(pi*Rational(3, 10)) == sqrt(1 + 2*sqrt(5)/5)
+    assert tan(pi*Rational(17, 10)) == -sqrt(1 + 2*sqrt(5)/5)
+    assert tan(pi*Rational(-31, 10)) == -sqrt(1 - 2*sqrt(5)/5)
 
     assert tan(pi/12) == -sqrt(3) + 2
-    assert tan(5*pi/12) == sqrt(3) + 2
-    assert tan(7*pi/12) == -sqrt(3) - 2
-    assert tan(11*pi/12) == sqrt(3) - 2
+    assert tan(pi*Rational(5, 12)) == sqrt(3) + 2
+    assert tan(pi*Rational(7, 12)) == -sqrt(3) - 2
+    assert tan(pi*Rational(11, 12)) == sqrt(3) - 2
 
     assert tan(pi/24).radsimp() == -2 - sqrt(3) + sqrt(2) + sqrt(6)
-    assert tan(5*pi/24).radsimp() == -2 + sqrt(3) - sqrt(2) + sqrt(6)
-    assert tan(7*pi/24).radsimp() == 2 - sqrt(3) - sqrt(2) + sqrt(6)
-    assert tan(11*pi/24).radsimp() == 2 + sqrt(3) + sqrt(2) + sqrt(6)
-    assert tan(13*pi/24).radsimp() == -2 - sqrt(3) - sqrt(2) - sqrt(6)
-    assert tan(17*pi/24).radsimp() == -2 + sqrt(3) + sqrt(2) - sqrt(6)
-    assert tan(19*pi/24).radsimp() == 2 - sqrt(3) + sqrt(2) - sqrt(6)
-    assert tan(23*pi/24).radsimp() == 2 + sqrt(3) - sqrt(2) - sqrt(6)
+    assert tan(pi*Rational(5, 24)).radsimp() == -2 + sqrt(3) - sqrt(2) + sqrt(6)
+    assert tan(pi*Rational(7, 24)).radsimp() == 2 - sqrt(3) - sqrt(2) + sqrt(6)
+    assert tan(pi*Rational(11, 24)).radsimp() == 2 + sqrt(3) + sqrt(2) + sqrt(6)
+    assert tan(pi*Rational(13, 24)).radsimp() == -2 - sqrt(3) - sqrt(2) - sqrt(6)
+    assert tan(pi*Rational(17, 24)).radsimp() == -2 + sqrt(3) + sqrt(2) - sqrt(6)
+    assert tan(pi*Rational(19, 24)).radsimp() == 2 - sqrt(3) + sqrt(2) - sqrt(6)
+    assert tan(pi*Rational(23, 24)).radsimp() == 2 + sqrt(3) - sqrt(2) - sqrt(6)
 
     assert tan(x*I) == tanh(x)*I
 
@@ -513,12 +513,12 @@ def test_tan():
     assert tan(a).is_algebraic is None
     assert tan(na).is_algebraic is False
 
-    assert tan(10*pi/7) == tan(3*pi/7)
-    assert tan(11*pi/7) == -tan(3*pi/7)
-    assert tan(-11*pi/7) == tan(3*pi/7)
+    assert tan(pi*Rational(10, 7)) == tan(pi*Rational(3, 7))
+    assert tan(pi*Rational(11, 7)) == -tan(pi*Rational(3, 7))
+    assert tan(pi*Rational(-11, 7)) == tan(pi*Rational(3, 7))
 
-    assert tan(15*pi/14) == tan(pi/14)
-    assert tan(-15*pi/14) == -tan(pi/14)
+    assert tan(pi*Rational(15, 14)) == tan(pi/14)
+    assert tan(pi*Rational(-15, 14)) == -tan(pi/14)
 
     assert tan(r).is_finite is None
     assert tan(I*r).is_finite is True
@@ -555,19 +555,19 @@ def test_tan_rewrite():
     assert 0 == (cos(pi/34)*tan(pi/34) - sin(pi/34)).rewrite(pow)
     assert 0 == (cos(pi/17)*tan(pi/17) - sin(pi/17)).rewrite(pow)
     assert tan(pi/19).rewrite(pow) == tan(pi/19)
-    assert tan(8*pi/19).rewrite(sqrt) == tan(8*pi/19)
+    assert tan(pi*Rational(8, 19)).rewrite(sqrt) == tan(pi*Rational(8, 19))
     assert tan(x).rewrite(sec) == sec(x)/sec(x - pi/2, evaluate=False)
     assert tan(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)/csc(x)
     assert tan(sin(x)).rewrite(Pow) == tan(sin(x))
-    assert tan(2*pi/5, evaluate=False).rewrite(sqrt) == sqrt(sqrt(5)/8 +
-               S(5)/8)/(-S.One/4 + sqrt(5)/4)
+    assert tan(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == sqrt(sqrt(5)/8 +
+               Rational(5, 8))/(Rational(-1, 4) + sqrt(5)/4)
 
 
 def test_tan_subs():
     assert tan(x).subs(tan(x), y) == y
     assert tan(x).subs(x, y) == tan(y)
     assert tan(x).subs(x, S.Pi/2) == zoo
-    assert tan(x).subs(x, 3*S.Pi/2) == zoo
+    assert tan(x).subs(x, S.Pi*Rational(3, 2)) == zoo
 
 
 def test_tan_expansion():
@@ -583,7 +583,7 @@ def test_tan_expansion():
 
 def test_tan_AccumBounds():
     assert tan(AccumBounds(-oo, oo)) == AccumBounds(-oo, oo)
-    assert tan(AccumBounds(S.Pi/3, 2*S.Pi/3)) == AccumBounds(-oo, oo)
+    assert tan(AccumBounds(S.Pi/3, S.Pi*Rational(2, 3))) == AccumBounds(-oo, oo)
     assert tan(AccumBounds(S.Pi/6, S.Pi/3)) == AccumBounds(tan(S.Pi/6), tan(S.Pi/3))
 
 
@@ -620,40 +620,40 @@ def test_cot():
 
     assert cot(pi/2) == 0
     assert cot(-pi/2) == 0
-    assert cot(5*pi/2) == 0
-    assert cot(7*pi/2) == 0
+    assert cot(pi*Rational(5, 2)) == 0
+    assert cot(pi*Rational(7, 2)) == 0
 
     assert cot(pi/3) == 1/sqrt(3)
-    assert cot(-2*pi/3) == 1/sqrt(3)
+    assert cot(pi*Rational(-2, 3)) == 1/sqrt(3)
 
     assert cot(pi/4) is S.One
     assert cot(-pi/4) is S.NegativeOne
-    assert cot(17*pi/4) is S.One
-    assert cot(-3*pi/4) is S.One
+    assert cot(pi*Rational(17, 4)) is S.One
+    assert cot(pi*Rational(-3, 4)) is S.One
 
     assert cot(pi/6) == sqrt(3)
     assert cot(-pi/6) == -sqrt(3)
-    assert cot(7*pi/6) == sqrt(3)
-    assert cot(-5*pi/6) == sqrt(3)
+    assert cot(pi*Rational(7, 6)) == sqrt(3)
+    assert cot(pi*Rational(-5, 6)) == sqrt(3)
 
     assert cot(pi/8) == 1 + sqrt(2)
-    assert cot(3*pi/8) == -1 + sqrt(2)
-    assert cot(5*pi/8) == 1 - sqrt(2)
-    assert cot(7*pi/8) == -1 - sqrt(2)
+    assert cot(pi*Rational(3, 8)) == -1 + sqrt(2)
+    assert cot(pi*Rational(5, 8)) == 1 - sqrt(2)
+    assert cot(pi*Rational(7, 8)) == -1 - sqrt(2)
 
     assert cot(pi/12) == sqrt(3) + 2
-    assert cot(5*pi/12) == -sqrt(3) + 2
-    assert cot(7*pi/12) == sqrt(3) - 2
-    assert cot(11*pi/12) == -sqrt(3) - 2
+    assert cot(pi*Rational(5, 12)) == -sqrt(3) + 2
+    assert cot(pi*Rational(7, 12)) == sqrt(3) - 2
+    assert cot(pi*Rational(11, 12)) == -sqrt(3) - 2
 
     assert cot(pi/24).radsimp() == sqrt(2) + sqrt(3) + 2 + sqrt(6)
-    assert cot(5*pi/24).radsimp() == -sqrt(2) - sqrt(3) + 2 + sqrt(6)
-    assert cot(7*pi/24).radsimp() == -sqrt(2) + sqrt(3) - 2 + sqrt(6)
-    assert cot(11*pi/24).radsimp() == sqrt(2) - sqrt(3) - 2 + sqrt(6)
-    assert cot(13*pi/24).radsimp() == -sqrt(2) + sqrt(3) + 2 - sqrt(6)
-    assert cot(17*pi/24).radsimp() == sqrt(2) - sqrt(3) + 2 - sqrt(6)
-    assert cot(19*pi/24).radsimp() == sqrt(2) + sqrt(3) - 2 - sqrt(6)
-    assert cot(23*pi/24).radsimp() == -sqrt(2) - sqrt(3) - 2 - sqrt(6)
+    assert cot(pi*Rational(5, 24)).radsimp() == -sqrt(2) - sqrt(3) + 2 + sqrt(6)
+    assert cot(pi*Rational(7, 24)).radsimp() == -sqrt(2) + sqrt(3) - 2 + sqrt(6)
+    assert cot(pi*Rational(11, 24)).radsimp() == sqrt(2) - sqrt(3) - 2 + sqrt(6)
+    assert cot(pi*Rational(13, 24)).radsimp() == -sqrt(2) + sqrt(3) + 2 - sqrt(6)
+    assert cot(pi*Rational(17, 24)).radsimp() == sqrt(2) - sqrt(3) + 2 - sqrt(6)
+    assert cot(pi*Rational(19, 24)).radsimp() == sqrt(2) + sqrt(3) - 2 - sqrt(6)
+    assert cot(pi*Rational(23, 24)).radsimp() == -sqrt(2) - sqrt(3) - 2 - sqrt(6)
 
     assert cot(x*I) == -coth(x)*I
     assert cot(k*pi*I) == -coth(k*pi)*I
@@ -664,12 +664,12 @@ def test_cot():
     assert cot(a).is_algebraic is None
     assert cot(na).is_algebraic is False
 
-    assert cot(10*pi/7) == cot(3*pi/7)
-    assert cot(11*pi/7) == -cot(3*pi/7)
-    assert cot(-11*pi/7) == cot(3*pi/7)
+    assert cot(pi*Rational(10, 7)) == cot(pi*Rational(3, 7))
+    assert cot(pi*Rational(11, 7)) == -cot(pi*Rational(3, 7))
+    assert cot(pi*Rational(-11, 7)) == cot(pi*Rational(3, 7))
 
-    assert cot(39*pi/34) == cot(5*pi/34)
-    assert cot(-41*pi/34) == -cot(7*pi/34)
+    assert cot(pi*Rational(39, 34)) == cot(pi*Rational(5, 34))
+    assert cot(pi*Rational(-41, 34)) == -cot(pi*Rational(7, 34))
 
     assert cot(x).is_finite is None
     assert cot(r).is_finite is None
@@ -680,13 +680,13 @@ def test_cot():
 
 
 def test_tan_cot_sin_cos_evalf():
-    assert abs((tan(8*pi/15)*cos(8*pi/15)/sin(8*pi/15) - 1).evalf()) < 1e-14
-    assert abs((cot(4*pi/15)*sin(4*pi/15)/cos(4*pi/15) - 1).evalf()) < 1e-14
+    assert abs((tan(pi*Rational(8, 15))*cos(pi*Rational(8, 15))/sin(pi*Rational(8, 15)) - 1).evalf()) < 1e-14
+    assert abs((cot(pi*Rational(4, 15))*sin(pi*Rational(4, 15))/cos(pi*Rational(4, 15)) - 1).evalf()) < 1e-14
 
 @XFAIL
 def test_tan_cot_sin_cos_ratsimp():
-    assert 1 == (tan(8*pi/15)*cos(8*pi/15)/sin(8*pi/15)).ratsimp()
-    assert 1 == (cot(4*pi/15)*sin(4*pi/15)/cos(4*pi/15)).ratsimp()
+    assert 1 == (tan(pi*Rational(8, 15))*cos(pi*Rational(8, 15))/sin(pi*Rational(8, 15))).ratsimp()
+    assert 1 == (cot(pi*Rational(4, 15))*sin(pi*Rational(4, 15))/cos(pi*Rational(4, 15))).ratsimp()
 
 
 def test_cot_series():
@@ -720,15 +720,15 @@ def test_cot_rewrite():
     assert cot(tan(x)).rewrite(
         exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tan(3)).n()
     assert cot(log(x)).rewrite(Pow) == -I*(x**-I + x**I)/(x**-I - x**I)
-    assert cot(4*pi/34).rewrite(pow).ratsimp() == (cos(4*pi/34)/sin(4*pi/34)).rewrite(pow).ratsimp()
-    assert cot(4*pi/17).rewrite(pow) == (cos(4*pi/17)/sin(4*pi/17)).rewrite(pow)
+    assert cot(pi*Rational(4, 34)).rewrite(pow).ratsimp() == (cos(pi*Rational(4, 34))/sin(pi*Rational(4, 34))).rewrite(pow).ratsimp()
+    assert cot(pi*Rational(4, 17)).rewrite(pow) == (cos(pi*Rational(4, 17))/sin(pi*Rational(4, 17))).rewrite(pow)
     assert cot(pi/19).rewrite(pow) == cot(pi/19)
     assert cot(pi/19).rewrite(sqrt) == cot(pi/19)
     assert cot(x).rewrite(sec) == sec(x - pi / 2, evaluate=False) / sec(x)
     assert cot(x).rewrite(csc) == csc(x) / csc(- x + pi / 2, evaluate=False)
     assert cot(sin(x)).rewrite(Pow) == cot(sin(x))
-    assert cot(2*pi/5, evaluate=False).rewrite(sqrt) == (-S.One/4 + sqrt(5)/4)/\
-                                                        sqrt(sqrt(5)/8 + S(5)/8)
+    assert cot(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == (Rational(-1, 4) + sqrt(5)/4)/\
+                                                        sqrt(sqrt(5)/8 + Rational(5, 8))
 
 
 def test_cot_subs():
@@ -776,8 +776,8 @@ def test_sinc():
     assert sinc(-n*pi) is S.Zero
     assert sinc(pi/2) == 2 / pi
     assert sinc(-pi/2) == 2 / pi
-    assert sinc(5*pi/2) == 2 / (5*pi)
-    assert sinc(7*pi/2) == -2 / (7*pi)
+    assert sinc(pi*Rational(5, 2)) == 2 / (5*pi)
+    assert sinc(pi*Rational(7, 2)) == -2 / (7*pi)
 
     assert sinc(-x) == sinc(x)
 
@@ -833,8 +833,8 @@ def test_asin():
     assert asin(Rational(1, 7), evaluate=False).is_positive is True
     assert asin(Rational(-1, 7), evaluate=False).is_positive is False
     assert asin(p).is_positive is None
-    assert asin(sin(S(7)/2)) == -S(7)/2 + pi
-    assert asin(sin(-S(7)/4)) == S(7)/4 - pi
+    assert asin(sin(Rational(7, 2))) == Rational(-7, 2) + pi
+    assert asin(sin(Rational(-7, 4))) == Rational(7, 4) - pi
     assert unchanged(asin, cos(x))
 
 
@@ -871,11 +871,11 @@ def test_acos():
     # Note: acos(-x) = pi - acos(x)
     assert acos(0) == pi/2
     assert acos(Rational(1, 2)) == pi/3
-    assert acos(-Rational(1, 2)) == (2*pi)/3
+    assert acos(-Rational(1, 2)) == pi*Rational(2, 3)
     assert acos(1) == 0
     assert acos(-1) == pi
     assert acos(sqrt(2)/2) == pi/4
-    assert acos(-sqrt(2)/2) == (3*pi)/4
+    assert acos(-sqrt(2)/2) == pi*Rational(3, 4)
 
     # check round-trip for exact values:
     for d in [5, 6, 8, 10, 12]:
@@ -898,8 +898,8 @@ def test_acos():
 
     assert acos(2 + p).conjugate() != acos(10 + p)
     assert acos(-3 + n).conjugate() != acos(-3 + n)
-    assert acos(S.One/3).conjugate() == acos(S.One/3)
-    assert acos(-S.One/3).conjugate() == acos(-S.One/3)
+    assert acos(Rational(1, 3)).conjugate() == acos(Rational(1, 3))
+    assert acos(Rational(-1, 3)).conjugate() == acos(Rational(-1, 3))
     assert acos(p + n*I).conjugate() == acos(p - n*I)
     assert acos(z).conjugate() != acos(conjugate(z))
 
@@ -943,13 +943,13 @@ def test_atan():
     assert atan(0) == 0
     assert atan(1) == pi/4
     assert atan(sqrt(3)) == pi/3
-    assert atan(-(1 + sqrt(2))) == -3*pi/8
+    assert atan(-(1 + sqrt(2))) == pi*Rational(-3, 8)
     assert atan(sqrt((5 - 2 * sqrt(5)))) == pi/5
     assert atan(-sqrt(1 - 2 * sqrt(5)/ 5)) == -pi/10
-    assert atan(sqrt(1 + 2 * sqrt(5) / 5)) == 3*pi/10
+    assert atan(sqrt(1 + 2 * sqrt(5) / 5)) == pi*Rational(3, 10)
     assert atan(-2 + sqrt(3)) == -pi/12
-    assert atan(2 + sqrt(3)) == 5*pi/12
-    assert atan(-2 - sqrt(3)) == -5*pi/12
+    assert atan(2 + sqrt(3)) == pi*Rational(5, 12)
+    assert atan(-2 - sqrt(3)) == pi*Rational(-5, 12)
 
     # check round-trip for exact values:
     for d in [5, 6, 8, 10, 12]:
@@ -964,8 +964,8 @@ def test_atan():
 
     assert atan(-2*I) == -I*atanh(2)
     assert unchanged(atan, cot(x))
-    assert atan(cot(S.One/4)) == -S.One/4 + pi/2
-    assert acot(S.One/4).is_rational is False
+    assert atan(cot(Rational(1, 4))) == Rational(-1, 4) + pi/2
+    assert acot(Rational(1, 4)).is_rational is False
 
     for s in (x, p, n, np, nn, nz, ep, en, enp, enn, enz):
         if s.is_real or s.is_extended_real is None:
@@ -1010,9 +1010,9 @@ def test_atan2():
     assert atan2(0, 1) == 0
     assert atan2(1, 1) == pi/4
     assert atan2(1, 0) == pi/2
-    assert atan2(1, -1) == 3*pi/4
+    assert atan2(1, -1) == pi*Rational(3, 4)
     assert atan2(0, -1) == pi
-    assert atan2(-1, -1) == -3*pi/4
+    assert atan2(-1, -1) == pi*Rational(-3, 4)
     assert atan2(-1, 0) == -pi/2
     assert atan2(-1, 1) == -pi/4
     i = symbols('i', imaginary=True)
@@ -1110,11 +1110,11 @@ def test_acot():
     assert acot(n).is_positive is False
     assert acot(p).is_positive is True
     assert acot(I).is_positive is False
-    assert acot(S.One/4).is_rational is False
+    assert acot(Rational(1, 4)).is_rational is False
     assert unchanged(acot, cot(x))
     assert unchanged(acot, tan(x))
-    assert acot(cot(S.One/4)) == S.One/4
-    assert acot(tan(-S.One/4)) == S.One/4 - pi/2
+    assert acot(cot(Rational(1, 4))) == Rational(1, 4)
+    assert acot(tan(Rational(-1, 4))) == Rational(1, 4) - pi/2
 
 
 def test_acot_rewrite():
@@ -1404,8 +1404,8 @@ def test_sincos_rewrite_sqrt():
                     assert 1e-3 > abs(cos(x.evalf(5)) - c1.evalf(2)), "fails for %d*pi/%d" % (i, n)
     assert cos(pi/14).rewrite(sqrt) == sqrt(cos(pi/7)/2 + S.Half)
     assert cos(pi/257).rewrite(sqrt).evalf(64) == cos(pi/257).evalf(64)
-    assert cos(-15*pi/2/11, evaluate=False).rewrite(
-        sqrt) == -sqrt(-cos(4*pi/11)/2 + S.Half)
+    assert cos(pi*Rational(-15, 2)/11, evaluate=False).rewrite(
+        sqrt) == -sqrt(-cos(pi*Rational(4, 11))/2 + S.Half)
     assert cos(Mul(2, pi, S.Half, evaluate=False), evaluate=False).rewrite(
         sqrt) == -1
     e = cos(pi/3/17)  # don't use pi/15 since that is caught at instantiation
@@ -1415,7 +1415,7 @@ def test_sincos_rewrite_sqrt():
         17)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) + 17)
         + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 - sqrt(-sqrt(17)
         + 17)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
-        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/128 - S.One/32 +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/128 - Rational(1, 32) +
         sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
         17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 +
         3*sqrt(2)*sqrt(sqrt(17) + 17)/128 + sqrt(34)*sqrt(-sqrt(17) + 17)/128
@@ -1425,40 +1425,40 @@ def test_sincos_rewrite_sqrt():
         + sqrt(3)*sqrt(-sqrt(2)*sqrt(sqrt(17) + 17)*sqrt(sqrt(17)/32 +
         sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
         sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
-        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + S(15)/32)/8 -
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + Rational(15, 32))/8 -
         5*sqrt(2)*sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
         sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
         17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 +
-        S(15)/32)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        Rational(15, 32))*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
         17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 -
         3*sqrt(2)*sqrt(-sqrt(17) + 17)*sqrt(sqrt(17)/32 +
         sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
         sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
-        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + S(15)/32)/32
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + Rational(15, 32))/32
         + sqrt(34)*sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
         sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
         17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 +
-        S(15)/32)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        Rational(15, 32))*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
         17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 +
         sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
         sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
-        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + S(15)/32)/2 +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + Rational(15, 32))/2 +
         S.Half + sqrt(-sqrt(17) + 17)*sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) +
         17)/32 + sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) -
         sqrt(2)*sqrt(-sqrt(17) + 17) + sqrt(34)*sqrt(-sqrt(17) + 17) +
-        6*sqrt(17) + 34)/32 + S(15)/32)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) -
+        6*sqrt(17) + 34)/32 + Rational(15, 32))*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) -
         sqrt(2)*sqrt(-sqrt(17) + 17) + sqrt(34)*sqrt(-sqrt(17) + 17) +
         6*sqrt(17) + 34)/32 + sqrt(34)*sqrt(-sqrt(17) + 17)*sqrt(sqrt(17)/32 +
         sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
         sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
         17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 +
-        S(15)/32)/32)/2)
+        Rational(15, 32))/32)/2)
     assert e.rewrite(sqrt) == a
     assert e.n() == a.n()
     # coverage of fermatCoords: multiplicity > 1; the following could be
     # different but that portion of the code should be tested in some way
     assert cos(pi/9/17).rewrite(sqrt) == \
-        sin(pi/9)*sin(2*pi/17) + cos(pi/9)*cos(2*pi/17)
+        sin(pi/9)*sin(pi*Rational(2, 17)) + cos(pi/9)*cos(pi*Rational(2, 17))
 
 
 @slow
@@ -1493,9 +1493,9 @@ def test_sec():
     assert sec(-pi/2) == zoo
     assert sec(pi/6) == 2*sqrt(3)/3
     assert sec(pi/3) == 2
-    assert sec(5*pi/2) == zoo
-    assert sec(9*pi/7) == -sec(2*pi/7)
-    assert sec(3*pi/4) == -sqrt(2)  # issue 8421
+    assert sec(pi*Rational(5, 2)) == zoo
+    assert sec(pi*Rational(9, 7)) == -sec(pi*Rational(2, 7))
+    assert sec(pi*Rational(3, 4)) == -sqrt(2)  # issue 8421
     assert sec(I) == 1/cosh(1)
     assert sec(x*I) == 1/cosh(x)
     assert sec(-x) == sec(x)
@@ -1532,8 +1532,8 @@ def test_sec():
 
     # https://github.com/sympy/sympy/issues/7167
     assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
-            1/sqrt(x - 3*pi/2) + (x - 3*pi/2)**(S(3)/2)/12 +
-            (x - 3*pi/2)**(S(7)/2)/160 + O((x - 3*pi/2)**4, (x, 3*pi/2)))
+            1/sqrt(x - pi*Rational(3, 2)) + (x - pi*Rational(3, 2))**Rational(3, 2)/12 +
+            (x - pi*Rational(3, 2))**Rational(7, 2)/160 + O((x - pi*Rational(3, 2))**4, (x, pi*Rational(3, 2))))
 
     assert sec(x).diff(x) == tan(x)*sec(x)
 
@@ -1580,9 +1580,9 @@ def test_csc():
     assert csc(-pi/2) == -1
     assert csc(pi/6) == 2
     assert csc(pi/3) == 2*sqrt(3)/3
-    assert csc(5*pi/2) == 1
-    assert csc(9*pi/7) == -csc(2*pi/7)
-    assert csc(3*pi/4) == sqrt(2)  # issue 8421
+    assert csc(pi*Rational(5, 2)) == 1
+    assert csc(pi*Rational(9, 7)) == -csc(pi*Rational(2, 7))
+    assert csc(pi*Rational(3, 4)) == sqrt(2)  # issue 8421
     assert csc(I) == -I/sinh(1)
     assert csc(x*I) == -I/sinh(x)
     assert csc(-x) == -csc(x)
@@ -1635,14 +1635,14 @@ def test_asec():
     assert asec(-oo) == pi/2
     assert asec(zoo) == pi/2
 
-    assert asec(sec(13*pi/4)) == 3*pi/4
-    assert asec(1 + sqrt(5)) == 2*pi/5
+    assert asec(sec(pi*Rational(13, 4))) == pi*Rational(3, 4)
+    assert asec(1 + sqrt(5)) == pi*Rational(2, 5)
     assert asec(2/sqrt(3)) == pi/6
     assert asec(sqrt(4 - 2*sqrt(2))) == pi/8
-    assert asec(-sqrt(4 + 2*sqrt(2))) == 5*pi/8
-    assert asec(sqrt(2 + 2*sqrt(5)/5)) == 3*pi/10
-    assert asec(-sqrt(2 + 2*sqrt(5)/5)) == 7*pi/10
-    assert asec(sqrt(2) - sqrt(6)) == 11*pi/12
+    assert asec(-sqrt(4 + 2*sqrt(2))) == pi*Rational(5, 8)
+    assert asec(sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(3, 10)
+    assert asec(-sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(7, 10)
+    assert asec(sqrt(2) - sqrt(6)) == pi*Rational(11, 12)
 
     assert asec(x).diff(x) == 1/(x**2*sqrt(1 - 1/x**2))
     assert asec(x).as_leading_term(x) == log(x)
@@ -1682,14 +1682,14 @@ def test_acsc():
     assert unchanged(acsc, sec(x))
 
     assert acsc(2/sqrt(3)) == pi/3
-    assert acsc(csc(13*pi/4)) == -pi/4
+    assert acsc(csc(pi*Rational(13, 4))) == -pi/4
     assert acsc(sqrt(2 + 2*sqrt(5)/5)) == pi/5
     assert acsc(-sqrt(2 + 2*sqrt(5)/5)) == -pi/5
     assert acsc(-2) == -pi/6
     assert acsc(-sqrt(4 + 2*sqrt(2))) == -pi/8
-    assert acsc(sqrt(4 - 2*sqrt(2))) == 3*pi/8
+    assert acsc(sqrt(4 - 2*sqrt(2))) == pi*Rational(3, 8)
     assert acsc(1 + sqrt(5)) == pi/10
-    assert acsc(sqrt(2) - sqrt(6)) == -5*pi/12
+    assert acsc(sqrt(2) - sqrt(6)) == pi*Rational(-5, 12)
 
     assert acsc(x).diff(x) == -1/(x**2*sqrt(1 - 1/x**2))
     assert acsc(x).as_leading_term(x) == log(x)
@@ -1742,7 +1742,7 @@ def test_trig_period():
     assert csc(x).period() == 2*pi
     assert sin(2*x).period() == pi
     assert cot(4*x - 6).period() == pi/4
-    assert cos((-3)*x).period() == 2*pi/3
+    assert cos((-3)*x).period() == pi*Rational(2, 3)
     assert cos(x*y).period(x) == 2*pi/abs(y)
     assert sin(3*x*y + 2*pi).period(y) == 2*pi/abs(3*x)
     assert tan(3*x).period(y) is S.Zero
@@ -1790,14 +1790,14 @@ def test_issue_14320():
 
     assert atan(tan(17)) == -5*pi + 17 and (-pi/2 < -5*pi + 17 < pi/2) and tan(17) == tan(-5*pi + 17)
     assert atan(tan(15)) == -5*pi + 15 and (-pi/2 < -5*pi + 15 < pi/2) and tan(15) == tan(-5*pi + 15)
-    assert atan(cot(12)) == -12 + 7*pi/2 and (-pi/2 < -12 + 7*pi/2 < pi/2) and cot(12) == tan(-12 + 7*pi/2)
+    assert atan(cot(12)) == -12 + pi*Rational(7, 2) and (-pi/2 < -12 + pi*Rational(7, 2) < pi/2) and cot(12) == tan(-12 + pi*Rational(7, 2))
     assert acot(cot(15)) == -5*pi + 15 and (-pi/2 < -5*pi + 15 <= pi/2) and cot(15) == cot(-5*pi + 15)
-    assert acot(tan(19)) == -19 + 13*pi/2 and (-pi/2 < -19 + 13*pi/2 <= pi/2) and tan(19) == cot(-19 + 13*pi/2)
+    assert acot(tan(19)) == -19 + pi*Rational(13, 2) and (-pi/2 < -19 + pi*Rational(13, 2) <= pi/2) and tan(19) == cot(-19 + pi*Rational(13, 2))
 
     assert asec(sec(11)) == -11 + 4*pi and (0 <= -11 + 4*pi <= pi) and cos(11) == cos(-11 + 4*pi)
-    assert asec(csc(13)) == -13 + 9*pi/2 and (0 <= -13 + 9*pi/2 <= pi) and sin(13) == cos(-13 + 9*pi/2)
+    assert asec(csc(13)) == -13 + pi*Rational(9, 2) and (0 <= -13 + pi*Rational(9, 2) <= pi) and sin(13) == cos(-13 + pi*Rational(9, 2))
     assert acsc(csc(14)) == -4*pi + 14 and (-pi/2 <= -4*pi + 14 <= pi/2) and sin(14) == sin(-4*pi + 14)
-    assert acsc(sec(10)) == -7*pi/2 + 10 and (-pi/2 <= -7*pi/2 + 10 <= pi/2) and cos(10) == sin(-7*pi/2 + 10)
+    assert acsc(sec(10)) == pi*Rational(-7, 2) + 10 and (-pi/2 <= pi*Rational(-7, 2) + 10 <= pi/2) and cos(10) == sin(pi*Rational(-7, 2) + 10)
 
 def test_issue_14543():
     assert sec(2*pi + 11) == sec(11)
@@ -1813,10 +1813,10 @@ def test_issue_14543():
     x = Symbol('x')
     assert csc(pi/2 + x) == sec(x)
     assert csc(pi/2 - x) == sec(x)
-    assert csc(3*pi/2 + x) == -sec(x)
-    assert csc(3*pi/2 - x) == -sec(x)
+    assert csc(pi*Rational(3, 2) + x) == -sec(x)
+    assert csc(pi*Rational(3, 2) - x) == -sec(x)
 
     assert sec(pi/2 - x) == csc(x)
     assert sec(pi/2 + x) == -csc(x)
-    assert sec(3*pi/2 + x) == csc(x)
-    assert sec(3*pi/2 - x) == -csc(x)
+    assert sec(pi*Rational(3, 2) + x) == csc(x)
+    assert sec(pi*Rational(3, 2) - x) == -csc(x)

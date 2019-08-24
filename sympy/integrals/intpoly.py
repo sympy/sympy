@@ -18,12 +18,12 @@ from __future__ import print_function, division
 
 from functools import cmp_to_key
 
-from sympy.core import S, diff, Expr, Symbol
-from sympy.simplify.simplify import nsimplify
-from sympy.geometry import Segment2D, Polygon, Point, Point2D
 from sympy.abc import x, y, z
-
+from sympy.core import S, diff, Expr, Symbol
+from sympy.core.sympify import _sympify
+from sympy.geometry import Segment2D, Polygon, Point, Point2D
 from sympy.polys.polytools import LC, gcd_list, degree_list
+from sympy.simplify.simplify import nsimplify
 
 
 def polytope_integrate(poly, expr=None, **kwargs):
@@ -115,6 +115,7 @@ def polytope_integrate(poly, expr=None, **kwargs):
             return result_dict
 
         for poly in expr:
+            poly = _sympify(poly)
             if poly not in result:
                 if poly.is_zero:
                     result[S.Zero] = S.Zero
@@ -406,6 +407,7 @@ def lineseg_integrate(polygon, index, line_seg, expr, degree):
     >>> lineseg_integrate(polygon, 0, line_seg, 1, 0)
     5
     """
+    expr = _sympify(expr)
     if expr.is_zero:
         return S.Zero
     result = S.Zero
@@ -457,6 +459,7 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     >>> integration_reduction(facets, 0, a, b, 1, (x, y), 0)
     5
     """
+    expr = _sympify(expr)
     if expr.is_zero:
         return expr
 
@@ -855,12 +858,12 @@ def best_origin(a, b, lineseg, expr):
     if len(gens) > 1:
         # Special case for vertical and horizontal lines
         if len(gens) == 2:
-            if a[0].is_zero:
+            if a[0] == 0:
                 if y_axis_cut(lineseg):
                     return S.Zero, b/a[1]
                 else:
                     return a1, b1
-            elif a[1].is_zero:
+            elif a[1] == 0:
                 if x_axis_cut(lineseg):
                     return b/a[0], S.Zero
                 else:

@@ -32,6 +32,7 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.core.numbers import Rational
 from sympy.core.compatibility import range
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
@@ -145,8 +146,8 @@ def _create_lookup_table(table):
 
     # TODO can do sin^n, sinh^n by expansion ... where?
     # 8.4.4 (hyperbolic functions)
-    add(sinh(t), [], [1], [S.Half], [1, 0], t**2/4, pi**(S(3)/2))
-    add(cosh(t), [], [S.Half], [0], [S.Half, S.Half], t**2/4, pi**(S(3)/2))
+    add(sinh(t), [], [1], [S.Half], [1, 0], t**2/4, pi**Rational(3, 2))
+    add(cosh(t), [], [S.Half], [0], [S.Half, S.Half], t**2/4, pi**Rational(3, 2))
 
     # Section 8.4.5
     # TODO can do t + a. but can also do by expansion... (XXX not really)
@@ -217,8 +218,8 @@ def _create_lookup_table(table):
     add(erfi(t), [S.Half], [], [0], [-S.Half], -t**2, t/sqrt(pi))
 
     # Fresnel Integrals
-    add(fresnels(t), [1], [], [S(3)/4], [0, S.One/4], pi**2*t**4/16, S.Half)
-    add(fresnelc(t), [1], [], [S.One/4], [0, S(3)/4], pi**2*t**4/16, S.Half)
+    add(fresnels(t), [1], [], [Rational(3, 4)], [0, Rational(1, 4)], pi**2*t**4/16, S.Half)
+    add(fresnelc(t), [1], [], [Rational(1, 4)], [0, Rational(3, 4)], pi**2*t**4/16, S.Half)
 
     ##### bessel-type functions #####
     from sympy import besselj, bessely, besseli, besselk
@@ -227,9 +228,9 @@ def _create_lookup_table(table):
     add(besselj(a, t), [], [], [a/2], [-a/2], t**2/4)
 
     # all of the following are derivable
-    #add(sin(t)*besselj(a, t), [S.One/4, S(3)/4], [], [(1+a)/2],
+    #add(sin(t)*besselj(a, t), [Rational(1, 4), Rational(3, 4)], [], [(1+a)/2],
     #    [-a/2, a/2, (1-a)/2], t**2, 1/sqrt(2))
-    #add(cos(t)*besselj(a, t), [S.One/4, S(3)/4], [], [a/2],
+    #add(cos(t)*besselj(a, t), [Rational(1, 4), Rational(3, 4)], [], [a/2],
     #    [-a/2, (1+a)/2, (1-a)/2], t**2, 1/sqrt(2))
     #add(besselj(a, t)**2, [S.Half], [], [a], [-a, 0], t**2, 1/sqrt(pi))
     #add(besselj(a, t)*besselj(b, t), [0, S.Half], [], [(a + b)/2],
@@ -239,10 +240,10 @@ def _create_lookup_table(table):
     add(bessely(a, t), [], [-(a + 1)/2], [a/2, -a/2], [-(a + 1)/2], t**2/4)
 
     # TODO all of the following should be derivable
-    #add(sin(t)*bessely(a, t), [S.One/4, S(3)/4], [(1 - a - 1)/2],
+    #add(sin(t)*bessely(a, t), [Rational(1, 4), Rational(3, 4)], [(1 - a - 1)/2],
     #    [(1 + a)/2, (1 - a)/2], [(1 - a - 1)/2, (1 - 1 - a)/2, (1 - 1 + a)/2],
     #    t**2, 1/sqrt(2))
-    #add(cos(t)*bessely(a, t), [S.One/4, S(3)/4], [(0 - a - 1)/2],
+    #add(cos(t)*bessely(a, t), [Rational(1, 4), Rational(3, 4)], [(0 - a - 1)/2],
     #    [(0 + a)/2, (0 - a)/2], [(0 - a - 1)/2, (1 - 0 - a)/2, (1 - 0 + a)/2],
     #    t**2, 1/sqrt(2))
     #add(besselj(a, t)*bessely(b, t), [0, S.Half], [(a - b - 1)/2],
@@ -670,7 +671,7 @@ def _condsimp(cond):
             m = expr.match(unbranched_argument(polar_lift(p)**q))
         if not m:
             if isinstance(expr, periodic_argument) and not expr.args[0].is_polar \
-                    and expr.args[1] == oo:
+                    and expr.args[1] is oo:
                 return (expr.args[0] > 0)
             return orig
         return (m[p] > 0)
@@ -980,10 +981,10 @@ def _check_antecedents(g1, g2, x):
     c1 = _c1()
     c2 = And(*[re(1 + i + j) > 0 for i in g1.bm for j in g2.bm])
     c3 = And(*[re(1 + i + j) < 1 + 1 for i in g1.an for j in g2.an])
-    c4 = And(*[(p - q)*re(1 + i - 1) - re(mu) > -S(3)/2 for i in g1.an])
-    c5 = And(*[(p - q)*re(1 + i) - re(mu) > -S(3)/2 for i in g1.bm])
-    c6 = And(*[(u - v)*re(1 + i - 1) - re(rho) > -S(3)/2 for i in g2.an])
-    c7 = And(*[(u - v)*re(1 + i) - re(rho) > -S(3)/2 for i in g2.bm])
+    c4 = And(*[(p - q)*re(1 + i - 1) - re(mu) > Rational(-3, 2) for i in g1.an])
+    c5 = And(*[(p - q)*re(1 + i) - re(mu) > Rational(-3, 2) for i in g1.bm])
+    c6 = And(*[(u - v)*re(1 + i - 1) - re(rho) > Rational(-3, 2) for i in g2.an])
+    c7 = And(*[(u - v)*re(1 + i) - re(rho) > Rational(-3, 2) for i in g2.bm])
     c8 = (abs(phi) + 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -
           1)*(v - u)) > 0)
     c9 = (abs(phi) - 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -
@@ -1246,7 +1247,7 @@ def _int0oo(g1, g2, x):
     >>> from sympy.integrals.meijerint import _int0oo
     >>> from sympy.abc import s, t, m
     >>> from sympy import meijerg, S
-    >>> g1 = meijerg([], [], [-S.Half, 0], [], s**2*t/4)
+    >>> g1 = meijerg([], [], [-S(1)/2, 0], [], s**2*t/4)
     >>> g2 = meijerg([], [], [m/2], [-m/2], t/4)
     >>> _int0oo(g1, g2, t)
     4*meijerg(((1/2, 0), ()), ((m/2,), (-m/2,)), s**(-2))/s**2
@@ -1778,10 +1779,10 @@ def meijerint_definite(f, x, a, b):
         return (S.Zero, True)
 
     results = []
-    if a == -oo and b != oo:
+    if a is -oo and b is not oo:
         return meijerint_definite(f.subs(x, -x), x, -b, -a)
 
-    elif a == -oo:
+    elif a is -oo:
         # Integrating -oo to oo. We need to find a place to split the integral.
         _debug('  Integrating -oo to +oo.')
         innermost = _find_splitting_points(f, x)
@@ -1808,7 +1809,7 @@ def meijerint_definite(f, x, a, b):
             res = res1 + res2
             return res, cond
 
-    elif a == oo:
+    elif a is oo:
         res = meijerint_definite(f, x, b, oo)
         return -res[0], res[1]
 
@@ -1822,7 +1823,7 @@ def meijerint_definite(f, x, a, b):
                 return res
 
     else:
-        if b == oo:
+        if b is oo:
             for split in _find_splitting_points(f, x):
                 if (a - split >= 0) == True:
                     _debug('Trying x -> x + %s' % split)

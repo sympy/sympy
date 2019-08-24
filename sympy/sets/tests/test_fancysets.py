@@ -113,7 +113,7 @@ def test_ImageSet():
     assert Tuple(2, -2) in ImageSet(Lambda((x, y), (x, -2)), c)
     c3 = Interval(3, 7)*Interval(8, 11)*Interval(5, 9)
     assert Tuple(8, 3, 9) in ImageSet(Lambda((t, y, x), (y, t, x)), c3)
-    assert Tuple(S.One/8, 3, 9) in ImageSet(Lambda((t, y, x), (1/y, t, x)), c3)
+    assert Tuple(Rational(1, 8), 3, 9) in ImageSet(Lambda((t, y, x), (1/y, t, x)), c3)
     assert 2/pi not in ImageSet(Lambda((x, y), 2/x), c)
     assert 2/S(100) not in ImageSet(Lambda((x, y), 2/x), c)
     assert 2/S(3) in ImageSet(Lambda((x, y), 2/x), c)
@@ -418,10 +418,10 @@ def test_range_interval_intersection():
 
 
 def test_Integers_eval_imageset():
-    ans = ImageSet(Lambda(x, 2*x + S(3)/7), S.Integers)
-    im = imageset(Lambda(x, -2*x + S(3)/7), S.Integers)
+    ans = ImageSet(Lambda(x, 2*x + Rational(3, 7)), S.Integers)
+    im = imageset(Lambda(x, -2*x + Rational(3, 7)), S.Integers)
     assert im == ans
-    im = imageset(Lambda(x, -2*x - S(11)/7), S.Integers)
+    im = imageset(Lambda(x, -2*x - Rational(11, 7)), S.Integers)
     assert im == ans
     y = Symbol('y')
     L = imageset(x, 2*x + y, S.Integers)
@@ -512,7 +512,7 @@ def test_infinitely_indexed_set_1():
                 imageset(Lambda(n, 3*n), S.Integers)) == \
             ImageSet(Lambda(t, 6*t), S.Integers)
 
-    assert imageset(x, x/2 + S.One/3, S.Integers).intersect(S.Integers) is S.EmptySet
+    assert imageset(x, x/2 + Rational(1, 3), S.Integers).intersect(S.Integers) is S.EmptySet
     assert imageset(x, x/2 + S.Half, S.Integers).intersect(S.Integers) is S.Integers
 
 
@@ -544,7 +544,7 @@ def test_imageset_intersect_real():
     # should be canonical
     assert s.intersect(S.Reals) == imageset(
         Lambda(n, 2*n*pi - pi/4), S.Integers) == ImageSet(
-        Lambda(n, 2*pi*n + 7*pi/4), S.Integers)
+        Lambda(n, 2*pi*n + pi*Rational(7, 4)), S.Integers)
 
 
 def test_imageset_intersect_interval():
@@ -565,7 +565,7 @@ def test_imageset_intersect_interval():
     assert f1.intersect(Interval(0, 2*pi, False, True)) == FiniteSet(0, pi)
     assert f2.intersect(Interval(1, 2)) == Interval(1, 2)
     assert f3.intersect(Interval(-1, 1)) == S.EmptySet
-    assert f3.intersect(Interval(-5, 5)) == FiniteSet(-3*pi/2, pi/2)
+    assert f3.intersect(Interval(-5, 5)) == FiniteSet(pi*Rational(-3, 2), pi/2)
     assert f4.intersect(Interval(-1, 1)) == FiniteSet(0)
     assert f4.intersect(Interval(1, 2)) == S.EmptySet
     assert f5.intersect(Interval(0, 1)) == S.EmptySet
@@ -630,8 +630,8 @@ def test_ComplexRegion_contains():
     r1 = Interval(0, 1)
     theta1 = Interval(0, 2*S.Pi)
     c3 = ComplexRegion(r1*theta1, polar=True)
-    assert (0.5 + 6*I/10) in c3
-    assert (S.Half + 6*I/10) in c3
+    assert (0.5 + I*Rational(6, 10)) in c3
+    assert (S.Half + I*Rational(6, 10)) in c3
     assert (S.Half + .6*I) in c3
     assert (0.5 + .6*I) in c3
     assert I in c3
@@ -743,43 +743,43 @@ def test_normalize_theta_set():
     # Interval
     assert normalize_theta_set(Interval(pi, 2*pi)) == \
         Union(FiniteSet(0), Interval.Ropen(pi, 2*pi))
-    assert normalize_theta_set(Interval(9*pi/2, 5*pi)) == Interval(pi/2, pi)
-    assert normalize_theta_set(Interval(-3*pi/2, pi/2)) == Interval.Ropen(0, 2*pi)
-    assert normalize_theta_set(Interval.open(-3*pi/2, pi/2)) == \
+    assert normalize_theta_set(Interval(pi*Rational(9, 2), 5*pi)) == Interval(pi/2, pi)
+    assert normalize_theta_set(Interval(pi*Rational(-3, 2), pi/2)) == Interval.Ropen(0, 2*pi)
+    assert normalize_theta_set(Interval.open(pi*Rational(-3, 2), pi/2)) == \
         Union(Interval.Ropen(0, pi/2), Interval.open(pi/2, 2*pi))
-    assert normalize_theta_set(Interval.open(-7*pi/2, -3*pi/2)) == \
+    assert normalize_theta_set(Interval.open(pi*Rational(-7, 2), pi*Rational(-3, 2))) == \
         Union(Interval.Ropen(0, pi/2), Interval.open(pi/2, 2*pi))
     assert normalize_theta_set(Interval(-pi/2, pi/2)) == \
-        Union(Interval(0, pi/2), Interval.Ropen(3*pi/2, 2*pi))
+        Union(Interval(0, pi/2), Interval.Ropen(pi*Rational(3, 2), 2*pi))
     assert normalize_theta_set(Interval.open(-pi/2, pi/2)) == \
-        Union(Interval.Ropen(0, pi/2), Interval.open(3*pi/2, 2*pi))
+        Union(Interval.Ropen(0, pi/2), Interval.open(pi*Rational(3, 2), 2*pi))
     assert normalize_theta_set(Interval(-4*pi, 3*pi)) == Interval.Ropen(0, 2*pi)
-    assert normalize_theta_set(Interval(-3*pi/2, -pi/2)) == Interval(pi/2, 3*pi/2)
+    assert normalize_theta_set(Interval(pi*Rational(-3, 2), -pi/2)) == Interval(pi/2, pi*Rational(3, 2))
     assert normalize_theta_set(Interval.open(0, 2*pi)) == Interval.open(0, 2*pi)
     assert normalize_theta_set(Interval.Ropen(-pi/2, pi/2)) == \
-        Union(Interval.Ropen(0, pi/2), Interval.Ropen(3*pi/2, 2*pi))
+        Union(Interval.Ropen(0, pi/2), Interval.Ropen(pi*Rational(3, 2), 2*pi))
     assert normalize_theta_set(Interval.Lopen(-pi/2, pi/2)) == \
-        Union(Interval(0, pi/2), Interval.open(3*pi/2, 2*pi))
+        Union(Interval(0, pi/2), Interval.open(pi*Rational(3, 2), 2*pi))
     assert normalize_theta_set(Interval(-pi/2, pi/2)) == \
-        Union(Interval(0, pi/2), Interval.Ropen(3*pi/2, 2*pi))
-    assert normalize_theta_set(Interval.open(4*pi, 9*pi/2)) == Interval.open(0, pi/2)
-    assert normalize_theta_set(Interval.Lopen(4*pi, 9*pi/2)) == Interval.Lopen(0, pi/2)
-    assert normalize_theta_set(Interval.Ropen(4*pi, 9*pi/2)) == Interval.Ropen(0, pi/2)
+        Union(Interval(0, pi/2), Interval.Ropen(pi*Rational(3, 2), 2*pi))
+    assert normalize_theta_set(Interval.open(4*pi, pi*Rational(9, 2))) == Interval.open(0, pi/2)
+    assert normalize_theta_set(Interval.Lopen(4*pi, pi*Rational(9, 2))) == Interval.Lopen(0, pi/2)
+    assert normalize_theta_set(Interval.Ropen(4*pi, pi*Rational(9, 2))) == Interval.Ropen(0, pi/2)
     assert normalize_theta_set(Interval.open(3*pi, 5*pi)) == \
         Union(Interval.Ropen(0, pi), Interval.open(pi, 2*pi))
 
     # FiniteSet
     assert normalize_theta_set(FiniteSet(0, pi, 3*pi)) == FiniteSet(0, pi)
     assert normalize_theta_set(FiniteSet(0, pi/2, pi, 2*pi)) == FiniteSet(0, pi/2, pi)
-    assert normalize_theta_set(FiniteSet(0, -pi/2, -pi, -2*pi)) == FiniteSet(0, pi, 3*pi/2)
-    assert normalize_theta_set(FiniteSet(-3*pi/2, pi/2)) == \
+    assert normalize_theta_set(FiniteSet(0, -pi/2, -pi, -2*pi)) == FiniteSet(0, pi, pi*Rational(3, 2))
+    assert normalize_theta_set(FiniteSet(pi*Rational(-3, 2), pi/2)) == \
         FiniteSet(pi/2)
     assert normalize_theta_set(FiniteSet(2*pi)) == FiniteSet(0)
 
     # Unions
     assert normalize_theta_set(Union(Interval(0, pi/3), Interval(pi/2, pi))) == \
         Union(Interval(0, pi/3), Interval(pi/2, pi))
-    assert normalize_theta_set(Union(Interval(0, pi), Interval(2*pi, 7*pi/3))) == \
+    assert normalize_theta_set(Union(Interval(0, pi), Interval(2*pi, pi*Rational(7, 3)))) == \
         Interval(0, pi)
 
     # ValueError for non-real sets
@@ -911,7 +911,7 @@ def test_Rationals():
     it = iter(S.Rationals)
     assert [next(it) for i in range(12)] == [
         0, 1, -1, S.Half, 2, -S.Half, -2,
-        S.One/3, 3, -S.One/3, -3, S(2)/3]
+        Rational(1, 3), 3, Rational(-1, 3), -3, Rational(2, 3)]
     assert Basic() not in S.Rationals
     assert S.Half in S.Rationals
     assert 1.0 not in S.Rationals
@@ -927,4 +927,4 @@ def test_imageset_intersection():
     s = ImageSet(Lambda(n, -I*(I*(2*pi*n - pi/4) +
         log(Abs(sqrt(-I))))), S.Integers)
     assert s.intersect(S.Reals) == ImageSet(
-        Lambda(n, 2*pi*n + 7*pi/4), S.Integers)
+        Lambda(n, 2*pi*n + pi*Rational(7, 4)), S.Integers)

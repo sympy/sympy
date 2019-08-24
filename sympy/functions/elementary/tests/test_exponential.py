@@ -25,7 +25,7 @@ def test_exp_values():
 
     assert exp(pi*I/2) == I
     assert exp(pi*I) == -1
-    assert exp(3*pi*I/2) == -I
+    assert exp(pi*I*Rational(3, 2)) == -I
     assert exp(2*pi*I) == 1
 
     assert refine(exp(pi*I*2*k)) == 1
@@ -50,15 +50,15 @@ def test_exp_values():
 
 
 def test_exp_period():
-    assert exp(9*I*pi/4) == exp(I*pi/4)
-    assert exp(46*I*pi/18) == exp(5*I*pi/9)
-    assert exp(25*I*pi/7) == exp(-3*I*pi/7)
-    assert exp(-19*I*pi/3) == exp(-I*pi/3)
-    assert exp(37*I*pi/8) - exp(-11*I*pi/8) == 0
-    assert exp(-5*I*pi/3) / exp(11*I*pi/5) * exp(148*I*pi/15) == 1
+    assert exp(I*pi*Rational(9, 4)) == exp(I*pi/4)
+    assert exp(I*pi*Rational(46, 18)) == exp(I*pi*Rational(5, 9))
+    assert exp(I*pi*Rational(25, 7)) == exp(I*pi*Rational(-3, 7))
+    assert exp(I*pi*Rational(-19, 3)) == exp(-I*pi/3)
+    assert exp(I*pi*Rational(37, 8)) - exp(I*pi*Rational(-11, 8)) == 0
+    assert exp(I*pi*Rational(-5, 3)) / exp(I*pi*Rational(11, 5)) * exp(I*pi*Rational(148, 15)) == 1
 
-    assert exp(2 - 17*I*pi/5) == exp(2 + 3*I*pi/5)
-    assert exp(log(3) + 29*I*pi/9) == 3 * exp(-7*I*pi/9)
+    assert exp(2 - I*pi*Rational(17, 5)) == exp(2 + I*pi*Rational(3, 5))
+    assert exp(log(3) + I*pi*Rational(29, 9)) == 3 * exp(I*pi*Rational(-7, 9))
 
     n = Symbol('n', integer=True)
     e = Symbol('e', even=True)
@@ -149,9 +149,9 @@ def test_exp_rewrite():
 
     n = Symbol('n', integer=True)
 
-    assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == S(4)/5 + 2*I/5
+    assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == Rational(4, 5) + I*Rational(2, 5)
     assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
-    assert Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(S(3)/4 - sqrt(3)*I/4)
+    assert Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(Rational(3, 4) - sqrt(3)*I/4)
 
 
 def test_exp_leading_term():
@@ -235,7 +235,7 @@ def test_match_real_imag():
     assert match_real_imag(x + y*I) == (x, y)
     assert match_real_imag(x*I + y*I) == (0, x + y)
     assert match_real_imag((x + y)*I) == (0, x + y)
-    assert match_real_imag(-S(2)/3*i*I) == (None, None)
+    assert match_real_imag(Rational(-2, 3)*i*I) == (None, None)
     assert match_real_imag(1 - 2*i) == (None, None)
     assert match_real_imag(sqrt(2)*(3 - 5*I)) == (None, None)
 
@@ -249,27 +249,27 @@ def test_log_exact():
             assert log(exp(n*I*pi/10).rewrite(sqrt)) == n*I*pi/10
 
     assert log(S.Half - I*sqrt(3)/2) == -I*pi/3
-    assert log(-S.Half + I*sqrt(3)/2) == I*2*pi/3
-    assert log(-sqrt(2)/2 - I*sqrt(2)/2) == -I*3*pi/4
-    assert log(-sqrt(3)/2 - I*S.Half) == -I*5*pi/6
+    assert log(-S.Half + I*sqrt(3)/2) == I*pi*Rational(2, 3)
+    assert log(-sqrt(2)/2 - I*sqrt(2)/2) == -I*pi*Rational(3, 4)
+    assert log(-sqrt(3)/2 - I*S.Half) == -I*pi*Rational(5, 6)
 
-    assert log(-S.One/4 + sqrt(5)/4 - I*sqrt(sqrt(5)/8 + S(5)/8)) == -I*2*pi/5
-    assert log(sqrt(S(5)/8 - sqrt(5)/8) + I*(S.One/4 + sqrt(5)/4)) == I*3*pi/10
-    assert log(-sqrt(sqrt(2)/4 + S.Half) + I*sqrt(S.Half - sqrt(2)/4)) == I*7*pi/8
-    assert log(-sqrt(6)/4 - sqrt(2)/4 + I*(-sqrt(6)/4 + sqrt(2)/4)) == -I*11*pi/12
+    assert log(Rational(-1, 4) + sqrt(5)/4 - I*sqrt(sqrt(5)/8 + Rational(5, 8))) == -I*pi*Rational(2, 5)
+    assert log(sqrt(Rational(5, 8) - sqrt(5)/8) + I*(Rational(1, 4) + sqrt(5)/4)) == I*pi*Rational(3, 10)
+    assert log(-sqrt(sqrt(2)/4 + S.Half) + I*sqrt(S.Half - sqrt(2)/4)) == I*pi*Rational(7, 8)
+    assert log(-sqrt(6)/4 - sqrt(2)/4 + I*(-sqrt(6)/4 + sqrt(2)/4)) == -I*pi*Rational(11, 12)
 
-    assert log(-1 + I*sqrt(3)) == log(2) + I*2*pi/3
+    assert log(-1 + I*sqrt(3)) == log(2) + I*pi*Rational(2, 3)
     assert log(5 + 5*I) == log(5*sqrt(2)) + I*pi/4
     assert log(sqrt(-12)) == log(2*sqrt(3)) + I*pi/2
-    assert log(-sqrt(6) + sqrt(2) - I*sqrt(6) - I*sqrt(2)) == log(4) - I*7*pi/12
-    assert log(-sqrt(6-3*sqrt(2)) - I*sqrt(6+3*sqrt(2))) == log(2*sqrt(3)) - 5*I*pi/8
+    assert log(-sqrt(6) + sqrt(2) - I*sqrt(6) - I*sqrt(2)) == log(4) - I*pi*Rational(7, 12)
+    assert log(-sqrt(6-3*sqrt(2)) - I*sqrt(6+3*sqrt(2))) == log(2*sqrt(3)) - I*pi*Rational(5, 8)
     assert log(1 + I*sqrt(2-sqrt(2))/sqrt(2+sqrt(2))) == log(2/sqrt(sqrt(2) + 2)) + I*pi/8
-    assert log(cos(7*pi/12) + I*sin(7*pi/12)) == 7*I*pi/12
-    assert log(cos(6*pi/5) + I*sin(6*pi/5)) == -4*I*pi/5
+    assert log(cos(pi*Rational(7, 12)) + I*sin(pi*Rational(7, 12))) == I*pi*Rational(7, 12)
+    assert log(cos(pi*Rational(6, 5)) + I*sin(pi*Rational(6, 5))) == I*pi*Rational(-4, 5)
 
     assert log(5*(1 + I)/sqrt(2)) == log(5) + I*pi/4
-    assert log(sqrt(2)*(-sqrt(3) + 1 - sqrt(3)*I - I)) == log(4) - I*7*pi/12
-    assert log(-sqrt(2)*(1 - I*sqrt(3))) == log(2*sqrt(2)) + 2*I*pi/3
+    assert log(sqrt(2)*(-sqrt(3) + 1 - sqrt(3)*I - I)) == log(4) - I*pi*Rational(7, 12)
+    assert log(-sqrt(2)*(1 - I*sqrt(3))) == log(2*sqrt(2)) + I*pi*Rational(2, 3)
     assert log(sqrt(3)*I*(-sqrt(6 - 3*sqrt(2)) - I*sqrt(3*sqrt(2) + 6))) == log(6) - I*pi/8
 
     zero = (1 + sqrt(2))**2 - 3 - 2*sqrt(2)
@@ -292,12 +292,12 @@ def test_log_base():
     assert log(3**3, 3) == 3
     assert log(5, 1) == zoo
     assert log(1, 1) == nan
-    assert log(Rational(2, 3), 10) == log(S(2)/3)/log(10)
+    assert log(Rational(2, 3), 10) == log(Rational(2, 3))/log(10)
     assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
     assert log(Rational(2, 3), Rational(2, 5)) == \
-        log(S(2)/3)/log(S(2)/5)
+        log(Rational(2, 3))/log(Rational(2, 5))
     # issue 17148
-    assert log(S(8)/3, 2) == -log(3)/log(2) + 3
+    assert log(Rational(8, 3), 2) == -log(3)/log(2) + 3
 
 
 def test_log_symbolic():
@@ -341,8 +341,8 @@ def test_log_symbolic():
 def test_log_exp():
     assert log(exp(4*I*pi)) == 0     # exp evaluates
     assert log(exp(-5*I*pi)) == I*pi # exp evaluates
-    assert log(exp(19*I*pi/4)) == 3*I*pi/4
-    assert log(exp(25*I*pi/7)) == -3*I*pi/7
+    assert log(exp(I*pi*Rational(19, 4))) == I*pi*Rational(3, 4)
+    assert log(exp(I*pi*Rational(25, 7))) == I*pi*Rational(-3, 7)
     assert log(exp(-5*I)) == -5*I + 2*I*pi
 
 
@@ -506,7 +506,7 @@ def test_lambertw():
     assert LambertW(p - 1, evaluate=False).is_real is None
     assert LambertW(-p - 2/S.Exp1, evaluate=False).is_real is False
     assert LambertW(S.Half, -1, evaluate=False).is_real is False
-    assert LambertW(-S.One/10, -1, evaluate=False).is_real
+    assert LambertW(Rational(-1, 10), -1, evaluate=False).is_real
     assert LambertW(-10, -1, evaluate=False).is_real is False
     assert LambertW(-2, 2, evaluate=False).is_real is False
 

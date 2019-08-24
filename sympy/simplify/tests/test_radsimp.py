@@ -87,7 +87,7 @@ def test_radsimp():
     # issue 5994
     e = S('-(2 + 2*sqrt(2) + 4*2**(1/4))/'
         '(1 + 2**(3/4) + 3*2**(1/4) + 3*sqrt(2))')
-    assert radsimp(e).expand() == -2*2**(S(3)/4) - 2*2**(S.One/4) + 2 + 2*sqrt(2)
+    assert radsimp(e).expand() == -2*2**Rational(3, 4) - 2*2**Rational(1, 4) + 2 + 2*sqrt(2)
 
     # issue 5986 (modifications to radimp didn't initially recognize this so
     # the test is included here)
@@ -189,7 +189,7 @@ def test_collect_3():
     f = Function('f')
     x, y, z, n = symbols('x,y,z,n')
 
-    assert collect(-x/8 + x*y, -x) == x*(y - S.One/8)
+    assert collect(-x/8 + x*y, -x) == x*(y - Rational(1, 8))
 
     assert collect( 1 + x*(y**2), x*y ) == 1 + x*(y**2)
     assert collect( x*y + a*x*y, x*y) == x*y*(1 + a)

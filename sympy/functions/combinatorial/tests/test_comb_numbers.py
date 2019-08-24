@@ -125,9 +125,9 @@ def test_tribonacci():
     assert tribonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
         tribonacci(10)
     assert tribonacci(n).rewrite(TribonacciConstant) == floor(
-            3*TribonacciConstant**n*(102*sqrt(33) + 586)**(S.One/3)/
-            (-2*(102*sqrt(33) + 586)**(S.One/3) + 4 + (102*sqrt(33)
-            + 586)**(S(2)/3)) + S.Half)
+            3*TribonacciConstant**n*(102*sqrt(33) + 586)**Rational(1, 3)/
+            (-2*(102*sqrt(33) + 586)**Rational(1, 3) + 4 + (102*sqrt(33)
+            + 586)**Rational(2, 3)) + S.Half)
     raises(ValueError, lambda: tribonacci(-1, x))
 
 
@@ -226,9 +226,9 @@ def test_harmonic_rational():
              + pi*sqrt(2*sqrt(5)/5 + 1)/2 + 13944145/S(4720968))
 
     Heeo = harmonic(ne + pe/qo)
-    Aeeo = (-log(26) + 2*log(sin(3*pi/13))*cos(4*pi/13) + 2*log(sin(2*pi/13))*cos(32*pi/13)
-             + 2*log(sin(5*pi/13))*cos(80*pi/13) - 2*log(sin(6*pi/13))*cos(5*pi/13)
-             - 2*log(sin(4*pi/13))*cos(pi/13) + pi*cot(5*pi/13)/2 - 2*log(sin(pi/13))*cos(3*pi/13)
+    Aeeo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(4, 13)) + 2*log(sin(pi*Rational(2, 13)))*cos(pi*Rational(32, 13))
+             + 2*log(sin(pi*Rational(5, 13)))*cos(pi*Rational(80, 13)) - 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(5, 13))
+             - 2*log(sin(pi*Rational(4, 13)))*cos(pi/13) + pi*cot(pi*Rational(5, 13))/2 - 2*log(sin(pi/13))*cos(pi*Rational(3, 13))
              + 2422020029/S(702257080))
 
     Heoe = harmonic(ne + po/qe)
@@ -239,10 +239,10 @@ def test_harmonic_rational():
              + 11818877030/S(4286604231) + pi*sqrt(2*sqrt(5) + 5)/2)
 
     Heoo = harmonic(ne + po/qo)
-    Aeoo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
-             + 2*log(sin(6*pi/13))*cos(108*pi/13) - 2*log(sin(5*pi/13))*cos(pi/13)
-             - 2*log(sin(pi/13))*cos(5*pi/13) + pi*cot(4*pi/13)/2
-             - 2*log(sin(2*pi/13))*cos(3*pi/13) + 11669332571/S(3628714320))
+    Aeoo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(54, 13)) + 2*log(sin(pi*Rational(4, 13)))*cos(pi*Rational(6, 13))
+             + 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(108, 13)) - 2*log(sin(pi*Rational(5, 13)))*cos(pi/13)
+             - 2*log(sin(pi/13))*cos(pi*Rational(5, 13)) + pi*cot(pi*Rational(4, 13))/2
+             - 2*log(sin(pi*Rational(2, 13)))*cos(pi*Rational(3, 13)) + 11669332571/S(3628714320))
 
     Hoee = harmonic(no + pe/qe)
     Aoee = (-log(10) + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
@@ -250,10 +250,10 @@ def test_harmonic_rational():
              + pi*sqrt(2*sqrt(5)/5 + 1)/2 + 779405/S(277704))
 
     Hoeo = harmonic(no + pe/qo)
-    Aoeo = (-log(26) + 2*log(sin(3*pi/13))*cos(4*pi/13) + 2*log(sin(2*pi/13))*cos(32*pi/13)
-             + 2*log(sin(5*pi/13))*cos(80*pi/13) - 2*log(sin(6*pi/13))*cos(5*pi/13)
-             - 2*log(sin(4*pi/13))*cos(pi/13) + pi*cot(5*pi/13)/2
-             - 2*log(sin(pi/13))*cos(3*pi/13) + 53857323/S(16331560))
+    Aoeo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(4, 13)) + 2*log(sin(pi*Rational(2, 13)))*cos(pi*Rational(32, 13))
+             + 2*log(sin(pi*Rational(5, 13)))*cos(pi*Rational(80, 13)) - 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(5, 13))
+             - 2*log(sin(pi*Rational(4, 13)))*cos(pi/13) + pi*cot(pi*Rational(5, 13))/2
+             - 2*log(sin(pi/13))*cos(pi*Rational(3, 13)) + 53857323/S(16331560))
 
     Hooe = harmonic(no + po/qe)
     Aooe = (-log(20) + 2*(1/S(4) + sqrt(5)/4)*log(-1/S(4) + sqrt(5)/4)
@@ -263,10 +263,10 @@ def test_harmonic_rational():
              + 486853480/S(186374097) + pi*sqrt(2*sqrt(5) + 5)/2)
 
     Hooo = harmonic(no + po/qo)
-    Aooo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
-             + 2*log(sin(6*pi/13))*cos(108*pi/13) - 2*log(sin(5*pi/13))*cos(pi/13)
-             - 2*log(sin(pi/13))*cos(5*pi/13) + pi*cot(4*pi/13)/2
-             - 2*log(sin(2*pi/13))*cos(3*pi/13) + 383693479/S(125128080))
+    Aooo = (-log(26) + 2*log(sin(pi*Rational(3, 13)))*cos(pi*Rational(54, 13)) + 2*log(sin(pi*Rational(4, 13)))*cos(pi*Rational(6, 13))
+             + 2*log(sin(pi*Rational(6, 13)))*cos(pi*Rational(108, 13)) - 2*log(sin(pi*Rational(5, 13)))*cos(pi/13)
+             - 2*log(sin(pi/13))*cos(pi*Rational(5, 13)) + pi*cot(pi*Rational(4, 13))/2
+             - 2*log(sin(pi*Rational(2, 13)))*cos(3*pi/13) + 383693479/S(125128080))
 
     H = [Heee, Heeo, Heoe, Heoo, Hoee, Hoeo, Hooe, Hooo]
     A = [Aeee, Aeeo, Aeoe, Aeoo, Aoee, Aoeo, Aooe, Aooo]
@@ -432,7 +432,7 @@ def test_genocchi():
     assert genocchi(4 * n + 2).is_negative
     assert genocchi(4 * n + 1).is_negative is False
     assert genocchi(4 * n - 2).is_negative
-    raises(ValueError, lambda: genocchi(S(5)/4))
+    raises(ValueError, lambda: genocchi(Rational(5, 4)))
     raises(ValueError, lambda: genocchi(-2))
 
 
@@ -453,7 +453,7 @@ def test_partition():
     assert partition(p).is_positive
     assert partition(x).subs(x, 7) == 15
     assert partition(y).subs(y, 8) == 22
-    raises(ValueError, lambda: partition(S(5)/4))
+    raises(ValueError, lambda: partition(Rational(5, 4)))
 
 
 def test__nT():

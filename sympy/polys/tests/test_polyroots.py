@@ -77,7 +77,7 @@ def test_roots_quadratic():
 def test_issue_8438():
     p = Poly([1, y, -2, -3], x).as_expr()
     roots = roots_cubic(Poly(p, x), x)
-    z = -S(3)/2 - 7*I/2  # this will fail in code given in commit msg
+    z = Rational(-3, 2) - I*Rational(7, 2)  # this will fail in code given in commit msg
     post = [r.subs(y, z) for r in roots]
     assert set(post) == \
     set(roots_cubic(Poly(p.subs(y, z), x)))
@@ -154,9 +154,9 @@ def test_roots_cubic():
     eq = -x**3 + 2*x**2 + 3*x - 2
     assert roots(eq, trig=True, multiple=True) == \
            roots_cubic(Poly(eq, x), trig=True) == [
-        S(2)/3 + 2*sqrt(13)*cos(acos(8*sqrt(13)/169)/3)/3,
-        -2*sqrt(13)*sin(-acos(8*sqrt(13)/169)/3 + pi/6)/3 + S(2)/3,
-        -2*sqrt(13)*cos(-acos(8*sqrt(13)/169)/3 + pi/3)/3 + S(2)/3,
+        Rational(2, 3) + 2*sqrt(13)*cos(acos(8*sqrt(13)/169)/3)/3,
+        -2*sqrt(13)*sin(-acos(8*sqrt(13)/169)/3 + pi/6)/3 + Rational(2, 3),
+        -2*sqrt(13)*cos(-acos(8*sqrt(13)/169)/3 + pi/3)/3 + Rational(2, 3),
         ]
 
 
@@ -230,10 +230,10 @@ def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(7, x, polys=True)) == [
         -cos(pi/7) - I*sin(pi/7),
         -cos(pi/7) + I*sin(pi/7),
-        -cos(3*pi/7) - I*sin(3*pi/7),
-        -cos(3*pi/7) + I*sin(3*pi/7),
-        cos(2*pi/7) - I*sin(2*pi/7),
-        cos(2*pi/7) + I*sin(2*pi/7),
+        -cos(pi*Rational(3, 7)) - I*sin(pi*Rational(3, 7)),
+        -cos(pi*Rational(3, 7)) + I*sin(pi*Rational(3, 7)),
+        cos(pi*Rational(2, 7)) - I*sin(pi*Rational(2, 7)),
+        cos(pi*Rational(2, 7)) + I*sin(pi*Rational(2, 7)),
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(8, x, polys=True)) == [
@@ -403,7 +403,7 @@ def test_roots0():
     f = -2016*x**2 - 5616*x**3 - 2056*x**4 + 3324*x**5 + 2176*x**6 - \
         224*x**7 - 384*x**8 - 64*x**9
 
-    assert roots(f) == {S.Zero: 2, -S(2): 2, S(2): 1, -S(7)/2: 1, -S(3)/2: 1, -S.Half: 1, S(3)/2: 1}
+    assert roots(f) == {S.Zero: 2, -S(2): 2, S(2): 1, Rational(-7, 2): 1, Rational(-3, 2): 1, -S.Half: 1, Rational(3, 2): 1}
 
     assert roots((a + b + c)*x - (a + b + c + d), x) == {(a + b + c + d)/(a + b + c): 1}
 
@@ -484,22 +484,22 @@ def test_roots0():
 
     assert roots(f) == {
         -I*sin(pi/7) + cos(pi/7): 1,
-        -I*sin(2*pi/7) - cos(2*pi/7): 1,
-        -I*sin(3*pi/7) + cos(3*pi/7): 1,
+        -I*sin(pi*Rational(2, 7)) - cos(pi*Rational(2, 7)): 1,
+        -I*sin(pi*Rational(3, 7)) + cos(pi*Rational(3, 7)): 1,
         I*sin(pi/7) + cos(pi/7): 1,
-        I*sin(2*pi/7) - cos(2*pi/7): 1,
-        I*sin(3*pi/7) + cos(3*pi/7): 1,
+        I*sin(pi*Rational(2, 7)) - cos(pi*Rational(2, 7)): 1,
+        I*sin(pi*Rational(3, 7)) + cos(pi*Rational(3, 7)): 1,
     }
 
     g = ((x**2 + 1)*f**2).expand()
 
     assert roots(g) == {
         -I*sin(pi/7) + cos(pi/7): 2,
-        -I*sin(2*pi/7) - cos(2*pi/7): 2,
-        -I*sin(3*pi/7) + cos(3*pi/7): 2,
+        -I*sin(pi*Rational(2, 7)) - cos(pi*Rational(2, 7)): 2,
+        -I*sin(pi*Rational(3, 7)) + cos(pi*Rational(3, 7)): 2,
         I*sin(pi/7) + cos(pi/7): 2,
-        I*sin(2*pi/7) - cos(2*pi/7): 2,
-        I*sin(3*pi/7) + cos(3*pi/7): 2,
+        I*sin(pi*Rational(2, 7)) - cos(pi*Rational(2, 7)): 2,
+        I*sin(pi*Rational(3, 7)) + cos(pi*Rational(3, 7)): 2,
         -I: 1, I: 1,
     }
 

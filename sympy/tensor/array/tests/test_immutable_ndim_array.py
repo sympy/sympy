@@ -166,7 +166,7 @@ def test_sparse():
     assert 0 * a == ImmutableSparseNDimArray({}, (100000, 200000))
 
     # __div__
-    assert a/3 == ImmutableSparseNDimArray({200001: S.One/3}, (100000, 200000))
+    assert a/3 == ImmutableSparseNDimArray({200001: Rational(1, 3)}, (100000, 200000))
 
     # __neg__
     assert -a == ImmutableSparseNDimArray({200001: -1}, (100000, 200000))

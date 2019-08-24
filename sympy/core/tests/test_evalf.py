@@ -2,7 +2,7 @@ from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
     integrate, log, Mul, N, oo, pi, Pow, product, Product,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
-from sympy.core.numbers import comp
+from sympy.core.numbers import comp, Rational
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf

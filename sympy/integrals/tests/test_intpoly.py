@@ -1,6 +1,6 @@
 from sympy import sqrt, Abs
 
-from sympy.core import S
+from sympy.core import S, Rational
 
 from sympy.integrals.intpoly import (decompose, best_origin, distance_to_side,
                                      polytope_integrate, point_sort,
@@ -66,9 +66,9 @@ def test_polytope_integrate():
                                       Point(4, 0)), 1, dims=(x, y)) == 4
     assert polytope_integrate(Polygon(Point(0, 0), Point(0, 1),
                                       Point(1, 1), Point(1, 0)), x * y) ==\
-                                      S.One/4
+                                      Rational(1, 4)
     assert polytope_integrate(Polygon(Point(0, 3), Point(5, 3), Point(1, 1)),
-                              6*x**2 - 40*y) == S(-935)/3
+                              6*x**2 - 40*y) == Rational(-935, 3)
 
     assert polytope_integrate(Polygon(Point(0, 0), Point(0, sqrt(3)),
                                       Point(sqrt(3), sqrt(3)),
@@ -84,9 +84,9 @@ def test_polytope_integrate():
     assert polytope_integrate([((-1, 0), 0), ((1, 2), 4),
                                ((0, -1), 0)], 1, dims=(x, y)) == 4
     assert polytope_integrate([((-1, 0), 0), ((0, 1), 1),
-                               ((1, 0), 1), ((0, -1), 0)], x * y) == S.One/4
+                               ((1, 0), 1), ((0, -1), 0)], x * y) == Rational(1, 4)
     assert polytope_integrate([((0, 1), 3), ((1, -2), -1),
-                               ((-2, -1), -3)], 6*x**2 - 40*y) == S(-935)/3
+                               ((-2, -1), -3)], 6*x**2 - 40*y) == Rational(-935, 3)
     assert polytope_integrate([((-1, 0), 0), ((0, sqrt(3)), 3),
                                ((sqrt(3), 0), 3), ((0, -1), 0)], 1) == 3
 
@@ -147,9 +147,9 @@ def test_polytope_integrate():
     expr3 = x**10 + x**9*y + x**8*y**2 + x**5*y**5
     polys.extend((expr1, expr2, expr3))
     result_dict = polytope_integrate(tri, polys, max_degree=10)
-    assert result_dict[expr1] == S(615780107)/594
-    assert result_dict[expr2] == S(13062161)/27
-    assert result_dict[expr3] == S(1946257153)/924
+    assert result_dict[expr1] == Rational(615780107, 594)
+    assert result_dict[expr2] == Rational(13062161, 27)
+    assert result_dict[expr3] == Rational(1946257153, 924)
 
     #  Tests when all integral of all monomials up to a max_degree is to be
     #  calculated.
@@ -195,7 +195,7 @@ def test_polytope_integrate():
              [0, 1, 2], [2, 4, 1], [0, 3, 2]]
 
     assert polytope_integrate(cube2, x ** 2 + y ** 2 + x * y + z ** 2) ==\
-           S(15625)/4
+           Rational(15625, 4)
     assert polytope_integrate(cube3, x ** 2 + y ** 2 + x * y + z ** 2) ==\
            S(33835) / 12
     assert polytope_integrate(cube4, x ** 2 + y ** 2 + x * y + z ** 2) ==\
@@ -501,8 +501,8 @@ def test_point_sort():
         [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
 
     fig6 = Polygon((0, 0), (1, 0), (1, 1))
-    assert polytope_integrate(fig6, x*y) == S.NegativeOne/8
-    assert polytope_integrate(fig6, x*y, clockwise = True) == S.One/8
+    assert polytope_integrate(fig6, x*y) == Rational(-1, 8)
+    assert polytope_integrate(fig6, x*y, clockwise = True) == Rational(1, 8)
 
 
 def test_polytopes_intersecting_sides():
@@ -524,7 +524,7 @@ def test_max_degree():
     polygon = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
     polys = [1, x, y, x*y, x**2*y, x*y**2]
     assert polytope_integrate(polygon, polys, max_degree=3) == \
-        {1: 1, x: S.Half, y: S.Half, x*y: S.One/4, x**2*y: S.One/6, x*y**2: S.One/6}
+        {1: 1, x: S.Half, y: S.Half, x*y: Rational(1, 4), x**2*y: Rational(1, 6), x*y**2: Rational(1, 6)}
 
 
 def test_main_integrate3d():
@@ -537,16 +537,16 @@ def test_main_integrate3d():
     hp_params = hyperplane_parameters(faces, vertices)
     assert main_integrate3d(1, faces, vertices, hp_params) == -125
     assert main_integrate3d(1, faces, vertices, hp_params, max_degree=1) == \
-        {1: -125, y: -S(625)/2, z: -S(625)/2, x: -S(625)/2}
+        {1: -125, y: Rational(-625, 2), z: Rational(-625, 2), x: Rational(-625, 2)}
 
 
 def test_main_integrate():
     triangle = Polygon((0, 3), (5, 3), (1, 1))
     facets = triangle.sides
     hp_params = hyperplane_parameters(triangle)
-    assert main_integrate(x**2 + y**2, facets, hp_params) == S(325)/6
+    assert main_integrate(x**2 + y**2, facets, hp_params) == Rational(325, 6)
     assert main_integrate(x**2 + y**2, facets, hp_params, max_degree=1) == \
-        {0: 0, 1: 5, y: S(35)/3, x: 10}
+        {0: 0, 1: 5, y: Rational(35, 3), x: 10}
 
 
 def test_polygon_integrate():
@@ -589,7 +589,7 @@ def test_integration_reduction_dynamic():
                        [y, 0, 1, 15], [x, 1, 0, None]]
 
     assert integration_reduction_dynamic(facets, 0, a, b, x, 1, (x, y), 1,\
-                                         0, 1, x0, monomial_values, 3) == S(25)/2
+                                         0, 1, x0, monomial_values, 3) == Rational(25, 2)
     assert integration_reduction_dynamic(facets, 0, a, b, 0, 1, (x, y), 1,\
                                          0, 1, x0, monomial_values, 3) == 0
 

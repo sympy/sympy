@@ -56,7 +56,7 @@ from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I,
-                   hyper, uppergamma, sinh, Ne, expint)
+                   hyper, uppergamma, sinh, Ne, expint, Rational)
 from sympy.external import import_module
 from sympy.matrices import MatrixBase, MatrixExpr
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
@@ -664,7 +664,7 @@ class ChiDistribution(SingleContinuousDistribution):
 
         part_1 = hyper((k/2,), (S.Half,), -t**2/2)
         part_2 = I*t*sqrt(2)*gamma((k+1)/2)/gamma(k/2)
-        part_3 = hyper(((k+1)/2,), (S(3)/2,), -t**2/2)
+        part_3 = hyper(((k+1)/2,), (Rational(3, 2),), -t**2/2)
         return part_1 + part_2*part_3
 
     def _moment_generating_function(self, t):
@@ -3195,7 +3195,7 @@ class StudentTDistribution(SingleContinuousDistribution):
     def _cdf(self, x):
         nu = self.nu
         return S.Half + x*gamma((nu+1)/2)*hyper((S.Half, (nu+1)/2),
-                                (S(3)/2,), -x**2/nu)/(sqrt(pi*nu)*gamma(nu/2))
+                                (Rational(3, 2),), -x**2/nu)/(sqrt(pi*nu)*gamma(nu/2))
 
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the Student-T distribution is undefined.')

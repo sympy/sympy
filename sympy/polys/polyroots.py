@@ -127,7 +127,7 @@ def roots_cubic(f, trig=False):
         if (D > 0) == True:
             rv = []
             for k in range(3):
-                rv.append(2*sqrt(-p/3)*cos(acos(3*q/2/p*sqrt(-3/p))/3 - k*2*pi/3))
+                rv.append(2*sqrt(-p/3)*cos(acos(q/p*sqrt(-3/p)*Rational(3, 2))/3 - k*pi*Rational(2, 3)))
             return [i - b/3/a for i in rv]
 
     _, a, b, c = f.monic().all_coeffs()
@@ -343,7 +343,7 @@ def roots_quartic(f):
                 return ans
 
             # p == 0 case
-            y1 = -5*e/6 - q**TH
+            y1 = e*Rational(-5, 6) - q**TH
             if p.is_zero:
                 return _ans(y1)
 
@@ -351,7 +351,7 @@ def roots_quartic(f):
             root = sqrt(q**2/4 + p**3/27)
             r = -q/2 + root  # or -q/2 - root
             u = r**TH  # primary root of solve(x**3 - r, x)
-            y2 = -5*e/6 + u - p/u/3
+            y2 = e*Rational(-5, 6) + u - p/u/3
             if fuzzy_not(p.is_zero):
                 return _ans(y2)
 

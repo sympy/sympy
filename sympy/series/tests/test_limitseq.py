@@ -1,5 +1,5 @@
 from sympy import (symbols, Symbol, oo, Sum, harmonic, Add, S, binomial,
-    factorial, log, fibonacci, sin, cos, pi, I, sqrt)
+    factorial, log, fibonacci, sin, cos, pi, I, sqrt, Rational)
 from sympy.series.limitseq import limit_seq
 from sympy.series.limitseq import difference_delta as dd
 from sympy.utilities.pytest import raises, XFAIL
@@ -91,7 +91,7 @@ def test_alternating_sign():
     assert limit_seq(sin(pi*n), n) == 0
     assert limit_seq(cos(2*pi*n), n) == 1
     assert limit_seq((S.NegativeOne/5)**n, n) == 0
-    assert limit_seq((-S.One/5)**n, n) == 0
+    assert limit_seq((Rational(-1, 5))**n, n) == 0
     assert limit_seq((I/3)**n, n) == 0
     assert limit_seq(sqrt(n)*(I/2)**n, n) == 0
     assert limit_seq(n**7*(I/3)**n, n) == 0

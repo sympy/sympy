@@ -1,6 +1,6 @@
 from itertools import product
 
-from sympy import S, symbols, Function, exp, diff
+from sympy import S, symbols, Function, exp, diff, Rational
 from sympy.calculus.finite_diff import (
     apply_finite_diff, differentiate_finite, finite_diff_weights,
     as_finite_diff
@@ -16,14 +16,14 @@ def test_apply_finite_diff():
             (f(x+h)-f(x-h))/(2*h)).simplify() == 0
 
     assert (apply_finite_diff(1, [5, 6, 7], [f(5), f(6), f(7)], 5) -
-            (-S(3)/2*f(5) + 2*f(6) - S.Half*f(7))).simplify() == 0
+            (Rational(-3, 2)*f(5) + 2*f(6) - S.Half*f(7))).simplify() == 0
     raises(ValueError, lambda: apply_finite_diff(1, [x, h], [f(x)]))
 
 
 def test_finite_diff_weights():
 
     d = finite_diff_weights(1, [5, 6, 7], 5)
-    assert d[1][2] == [-S(3)/2, 2, -S.Half]
+    assert d[1][2] == [Rational(-3, 2), 2, -S.Half]
 
     # Table 1, p. 702 in doi:10.1090/S0025-5718-1988-0935077-0
     # --------------------------------------------------------
@@ -39,39 +39,39 @@ def test_finite_diff_weights():
     # First derivative
     assert d[1][0] == [S.Zero]*9
     assert d[1][2] == [S.Zero, S.Half, -S.Half] + [S.Zero]*6
-    assert d[1][4] == [S.Zero, S(2)/3, -S(2)/3, -S.One/12, S.One/12] + [S.Zero]*4
-    assert d[1][6] == [S.Zero, S(3)/4, -S(3)/4, -S(3)/20, S(3)/20,
-                       S.One/60, -S.One/60] + [S.Zero]*2
-    assert d[1][8] == [S.Zero, S(4)/5, -S(4)/5, -S.One/5, S.One/5,
-                       S(4)/105, -S(4)/105, -S.One/280, S.One/280]
+    assert d[1][4] == [S.Zero, Rational(2, 3), Rational(-2, 3), Rational(-1, 12), Rational(1, 12)] + [S.Zero]*4
+    assert d[1][6] == [S.Zero, Rational(3, 4), Rational(-3, 4), Rational(-3, 20), Rational(3, 20),
+                       Rational(1, 60), Rational(-1, 60)] + [S.Zero]*2
+    assert d[1][8] == [S.Zero, Rational(4, 5), Rational(-4, 5), Rational(-1, 5), Rational(1, 5),
+                       Rational(4, 105), Rational(-4, 105), Rational(-1, 280), Rational(1, 280)]
 
     # Second derivative
     for i in range(2):
         assert d[2][i] == [S.Zero]*9
     assert d[2][2] == [-S(2), S.One, S.One] + [S.Zero]*6
-    assert d[2][4] == [-S(5)/2, S(4)/3, S(4)/3, -S.One/12, -S.One/12] + [S.Zero]*4
-    assert d[2][6] == [-S(49)/18, S(3)/2, S(3)/2, -S(3)/20, -S(3)/20,
-                       S.One/90, S.One/90] + [S.Zero]*2
-    assert d[2][8] == [-S(205)/72, S(8)/5, S(8)/5, -S.One/5, -S.One/5,
-                       S(8)/315, S(8)/315, -S.One/560, -S.One/560]
+    assert d[2][4] == [Rational(-5, 2), Rational(4, 3), Rational(4, 3), Rational(-1, 12), Rational(-1, 12)] + [S.Zero]*4
+    assert d[2][6] == [Rational(-49, 18), Rational(3, 2), Rational(3, 2), Rational(-3, 20), Rational(-3, 20),
+                       Rational(1, 90), Rational(1, 90)] + [S.Zero]*2
+    assert d[2][8] == [Rational(-205, 72), Rational(8, 5), Rational(8, 5), Rational(-1, 5), Rational(-1, 5),
+                       Rational(8, 315), Rational(8, 315), Rational(-1, 560), Rational(-1, 560)]
 
     # Third derivative
     for i in range(3):
         assert d[3][i] == [S.Zero]*9
     assert d[3][4] == [S.Zero, -S.One, S.One, S.Half, -S.Half] + [S.Zero]*4
-    assert d[3][6] == [S.Zero, -S(13)/8, S(13)/8, S.One, -S.One,
-                       -S.One/8, S.One/8] + [S.Zero]*2
-    assert d[3][8] == [S.Zero, -S(61)/30, S(61)/30, S(169)/120, -S(169)/120,
-                       -S(3)/10, S(3)/10, S(7)/240, -S(7)/240]
+    assert d[3][6] == [S.Zero, Rational(-13, 8), Rational(13, 8), S.One, -S.One,
+                       Rational(-1, 8), Rational(1, 8)] + [S.Zero]*2
+    assert d[3][8] == [S.Zero, Rational(-61, 30), Rational(61, 30), Rational(169, 120), Rational(-169, 120),
+                       Rational(-3, 10), Rational(3, 10), Rational(7, 240), Rational(-7, 240)]
 
     # Fourth derivative
     for i in range(4):
         assert d[4][i] == [S.Zero]*9
     assert d[4][4] == [S(6), -S(4), -S(4), S.One, S.One] + [S.Zero]*4
-    assert d[4][6] == [S(28)/3, -S(13)/2, -S(13)/2, S(2), S(2),
-                       -S.One/6, -S.One/6] + [S.Zero]*2
-    assert d[4][8] == [S(91)/8, -S(122)/15, -S(122)/15, S(169)/60, S(169)/60,
-                       -S(2)/5, -S(2)/5, S(7)/240, S(7)/240]
+    assert d[4][6] == [Rational(28, 3), Rational(-13, 2), Rational(-13, 2), S(2), S(2),
+                       Rational(-1, 6), Rational(-1, 6)] + [S.Zero]*2
+    assert d[4][8] == [Rational(91, 8), Rational(-122, 15), Rational(-122, 15), Rational(169, 60), Rational(169, 60),
+                       Rational(-2, 5), Rational(-2, 5), Rational(7, 240), Rational(7, 240)]
 
     # Table 2, p. 703 in doi:10.1090/S0025-5718-1988-0935077-0
     # --------------------------------------------------------
@@ -84,19 +84,21 @@ def test_finite_diff_weights():
 
     # Zeroth derivative
     assert d[0][0][1] == [S.Half, S.Half]
-    assert d[1][0][3] == [-S.One/16, S(9)/16, S(9)/16, -S.One/16]
-    assert d[2][0][5] == [S(3)/256, -S(25)/256, S(75)/128, S(75)/128,
-                          -S(25)/256, S(3)/256]
-    assert d[3][0][7] == [-S(5)/2048, S(49)/2048, -S(245)/2048, S(1225)/2048,
-                          S(1225)/2048, -S(245)/2048, S(49)/2048, -S(5)/2048]
+    assert d[1][0][3] == [Rational(-1, 16), Rational(9, 16), Rational(9, 16), Rational(-1, 16)]
+    assert d[2][0][5] == [Rational(3, 256), Rational(-25, 256), Rational(75, 128), Rational(75, 128),
+                          Rational(-25, 256), Rational(3, 256)]
+    assert d[3][0][7] == [Rational(-5, 2048), Rational(49, 2048), Rational(-245, 2048), Rational(1225, 2048),
+                          Rational(1225, 2048), Rational(-245, 2048), Rational(49, 2048), Rational(-5, 2048)]
 
     # First derivative
     assert d[0][1][1] == [-S.One, S.One]
-    assert d[1][1][3] == [S.One/24, -S(9)/8, S(9)/8, -S.One/24]
-    assert d[2][1][5] == [-S(3)/640, S(25)/384, -S(75)/64, S(75)/64,
-                          -S(25)/384, S(3)/640]
-    assert d[3][1][7] == [S(5)/7168, -S(49)/5120,  S(245)/3072, S(-1225)/1024,
-                          S(1225)/1024, -S(245)/3072, S(49)/5120, -S(5)/7168]
+    assert d[1][1][3] == [Rational(1, 24), Rational(-9, 8), Rational(9, 8), Rational(-1, 24)]
+    assert d[2][1][5] == [Rational(-3, 640), Rational(25, 384), Rational(-75, 64),
+                          Rational(75, 64), Rational(-25, 384), Rational(3, 640)]
+    assert d[3][1][7] == [Rational(5, 7168), Rational(-49, 5120),
+                          Rational(245, 3072), Rational(-1225, 1024),
+                          Rational(1225, 1024), Rational(-245, 3072),
+                          Rational(49, 5120), Rational(-5, 7168)]
 
     # Reasonably the rest of the table is also correct... (testing of that
     # deemed excessive at the moment)

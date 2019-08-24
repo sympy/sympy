@@ -3,7 +3,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Add, S, sympify, cacheit, pi, I
+from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
 from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Symbol
@@ -2126,11 +2126,11 @@ class fresnels(FresnelIntegral):
         return (S.One + I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) - I*erf((S.One - I)/2*sqrt(pi)*z))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        return pi*z**3/6 * hyper([S(3)/4], [S(3)/2, S(7)/4], -pi**2*z**4/16)
+        return pi*z**3/6 * hyper([Rational(3, 4)], [Rational(3, 2), Rational(7, 4)], -pi**2*z**4/16)
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return (pi*z**(S(9)/4) / (sqrt(2)*(z**2)**(S(3)/4)*(-z)**(S(3)/4))
-                * meijerg([], [1], [S(3)/4], [S.One/4, 0], -pi**2*z**4/16))
+        return (pi*z**Rational(9, 4) / (sqrt(2)*(z**2)**Rational(3, 4)*(-z)**Rational(3, 4))
+                * meijerg([], [1], [Rational(3, 4)], [Rational(1, 4), 0], -pi**2*z**4/16))
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
@@ -2263,11 +2263,11 @@ class fresnelc(FresnelIntegral):
         return (S.One - I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        return z * hyper([S.One/4], [S.Half, S(5)/4], -pi**2*z**4/16)
+        return z * hyper([Rational(1, 4)], [S.Half, Rational(5, 4)], -pi**2*z**4/16)
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return (pi*z**(S(3)/4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
-                * meijerg([], [1], [S.One/4], [S(3)/4, 0], -pi**2*z**4/16))
+        return (pi*z**Rational(3, 4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
+                * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order

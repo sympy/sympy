@@ -190,12 +190,12 @@ def test_fps__rational():
 
     f = 1 / ((x - 1)**2 * (x - 2))
     assert fps(f, x).truncate() == \
-        (-Rational(1, 2) - 5*x/4 - 17*x**2/8 - 49*x**3/16 - 129*x**4/32 -
+        (-Rational(1, 2) - x*Rational(5, 4) - 17*x**2/8 - 49*x**3/16 - 129*x**4/32 -
          321*x**5/64 + O(x**6))
 
     f = (1 + x + x**2 + x**3) / ((x - 1) * (x - 2))
     assert fps(f, x).truncate() == \
-        (Rational(1, 2) + 5*x/4 + 17*x**2/8 + 49*x**3/16 + 113*x**4/32 +
+        (Rational(1, 2) + x*Rational(5, 4) + 17*x**2/8 + 49*x**3/16 + 113*x**4/32 +
          241*x**5/64 + O(x**6))
 
     f = x / (1 - x - x**2)
@@ -286,7 +286,7 @@ def test_fps__hyper():
 def test_fps_shift():
     f = x**-5*sin(x)
     assert fps(f, x).truncate() == \
-        1/x**4 - 1/(6*x**2) + S.One/120 - x**2/5040 + x**4/362880 + O(x**6)
+        1/x**4 - 1/(6*x**2) + Rational(1, 120) - x**2/5040 + x**4/362880 + O(x**6)
 
     f = x**2*atan(x)
     assert fps(f, x, rational=False).truncate() == \
@@ -494,8 +494,8 @@ def test_fps__operations():
     fd = f3.diff()
     assert fd.truncate().expand() == \
         (1/(2*sqrt(x)) + S.Half + x/12 + x**2/240 + x**3/10080 + x**4/725760 +
-         x**5/79833600 + sqrt(x)/4 + x**(S(3)/2)/48 + x**(S(5)/2)/1440 +
-         x**(S(7)/2)/80640 + x**(S(9)/2)/7257600 + x**(S(11)/2)/958003200 +
+         x**5/79833600 + sqrt(x)/4 + x**Rational(3, 2)/48 + x**Rational(5, 2)/1440 +
+         x**Rational(7, 2)/80640 + x**Rational(9, 2)/7257600 + x**Rational(11, 2)/958003200 +
          O(x**6))
 
     assert f1.integrate((x, 0, 1)) == -cos(1) + 1

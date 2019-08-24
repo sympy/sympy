@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import S, pi, I
+from sympy.core import S, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.hyperbolic import atanh
@@ -58,11 +58,11 @@ class elliptic_k(Function):
         if m.is_zero:
             return pi/2
         elif m is S.Half:
-            return 8*pi**(S(3)/2)/gamma(-S.One/4)**2
+            return 8*pi**Rational(3, 2)/gamma(Rational(-1, 4))**2
         elif m is S.One:
             return S.ComplexInfinity
         elif m is S.NegativeOne:
-            return gamma(S.One/4)**2/(4*sqrt(2*pi))
+            return gamma(Rational(1, 4))**2/(4*sqrt(2*pi))
         elif m in (S.Infinity, S.NegativeInfinity, I*S.Infinity,
                    I*S.NegativeInfinity, S.ComplexInfinity):
             return S.Zero
@@ -269,7 +269,7 @@ class elliptic_e(Function):
     def _eval_rewrite_as_meijerg(self, *args, **kwargs):
         if len(args) == 1:
             m = args[0]
-            return -meijerg(((S.Half, S(3)/2), []), \
+            return -meijerg(((S.Half, Rational(3, 2)), []), \
                             ((S.Zero,), (S.Zero,)), -m)/4
 
 

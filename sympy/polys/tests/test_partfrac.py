@@ -98,16 +98,16 @@ def test_apart_full():
     assert apart(f, full=False) == f
     assert apart(f, full=True) == \
         RootSum(x**3 + x + 1,
-        Lambda(a, (6*a**2/31 - 9*a/31 + S(4)/31)/(x - a)), auto=False)
+        Lambda(a, (a**2*Rational(6, 31) - a*Rational(9, 31) + Rational(4, 31))/(x - a)), auto=False)
 
     f = 1/(x**5 + 1)
 
     assert apart(f, full=False) == \
-        (-S.One/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 -
-         x + 1)) + (S.One/5)/(x + 1)
+        (Rational(-1, 5))*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 -
+         x + 1)) + (Rational(1, 5))/(x + 1)
     assert apart(f, full=True) == \
         -RootSum(x**4 - x**3 + x**2 - x + 1,
-        Lambda(a, a/(x - a)), auto=False)/5 + (S.One/5)/(x + 1)
+        Lambda(a, a/(x - a)), auto=False)/5 + (Rational(1, 5))/(x + 1)
 
 
 def test_apart_undetermined_coeffs():
@@ -132,7 +132,7 @@ def test_apart_list():
 
     f = (-2*x - 2*x**2) / (3*x**2 - 6*x)
     assert apart_list(f, x, dummies=numbered_symbols("w")) == (-1,
-        Poly(S(2)/3, x, domain='QQ'),
+        Poly(Rational(2, 3), x, domain='QQ'),
         [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
 
     assert apart_list(2/(x**2-2), x, dummies=numbered_symbols("w")) == (1,

@@ -186,7 +186,7 @@ def test_wavefunction():
     lims = f.limits
 
     assert f.is_normalized is False
-    assert f.norm == oo
+    assert f.norm is oo
     assert f(10) == 100
     assert p(10) == 10000
     assert lims[x] == (-oo, oo)

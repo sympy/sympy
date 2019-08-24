@@ -586,6 +586,7 @@ def test_issue_4559():
     assert (3*x).match(w*y) == {w: 3, y: x}
     assert (x/3).match(y/w) == {w: 3, y: x}
     assert (3*x).match(y/w) == {w: S.One/3, y: x}
+    assert (3*x).match(y/w) == {w: Rational(1, 3), y: x}
 
     # these could be allowed to fail
 

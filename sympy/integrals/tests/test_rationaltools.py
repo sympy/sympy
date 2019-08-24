@@ -1,4 +1,4 @@
-from sympy import S, symbols, I, atan, log, Poly, sqrt, simplify, integrate
+from sympy import S, symbols, I, atan, log, Poly, sqrt, simplify, integrate, Rational
 
 from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan
 
@@ -51,7 +51,7 @@ def test_ratint():
     g = x**6 - 5*x**4 + 5*x**2 + 4
 
     assert ratint(f/g, x) == \
-        atan(x) + atan(x**3) + atan(x/2 - 3*x**S(3)/2 + S.Half*x**5)
+        atan(x) + atan(x**3) + atan(x/2 - Rational(3, 2)*x**3 + S.Half*x**5)
 
     f = x**7 - 24*x**4 - 4*x**2 + 8*x - 8
     g = x**8 + 6*x**6 + 12*x**4 + 8*x**2
@@ -68,7 +68,7 @@ def test_ratint():
 
     assert ratint(f/g, x) == \
         x + S.Half*x**2 + S.Half*log(2 - x + x**2) - (4*x - 9)/(14 - 7*x + 7*x**2) + \
-        13*sqrt(7)*atan(-S.One/7*sqrt(7) + 2*x*sqrt(7)/7)/49
+        13*sqrt(7)*atan(Rational(-1, 7)*sqrt(7) + 2*x*sqrt(7)/7)/49
 
     assert ratint(1/(x**2 + x + 1), x) == \
         2*sqrt(3)*atan(sqrt(3)/3 + 2*x*sqrt(3)/3)/3
@@ -82,8 +82,8 @@ def test_ratint():
         I*3**half*log(half + x + half*I*3**half)/3
 
     assert ratint(1/(x**3 + 1), x, real=False) == log(1 + x)/3 + \
-        (-S.One/6 + I*3**half/6)*log(-half + x + I*3**half/2) + \
-        (-S.One/6 - I*3**half/6)*log(-half + x - I*3**half/2)
+        (Rational(-1, 6) + I*3**half/6)*log(-half + x + I*3**half/2) + \
+        (Rational(-1, 6) - I*3**half/6)*log(-half + x - I*3**half/2)
 
     # issue 4991
     assert ratint(1/(x*(a + b*x)**3), x) == \

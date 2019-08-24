@@ -5,7 +5,9 @@ http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
                    Derivative, sin, exp, cos, tan, log, S, sqrt,
-                   hadamard_product, DiagonalizeVector, OneMatrix, HadamardProduct, HadamardPower, KroneckerDelta, Sum)
+                   hadamard_product, DiagonalizeVector, OneMatrix,
+                   HadamardProduct, HadamardPower, KroneckerDelta, Sum,
+                   Rational)
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
 from sympy.matrices.expressions import hadamard_power
 
@@ -344,8 +346,8 @@ def test_derivatives_matrix_norms():
     expr = (c.T*a*x.T*b)**S.Half
     assert expr.diff(x) == b/(2*sqrt(c.T*a*x.T*b))*c.T*a
 
-    expr = (c.T*a*x.T*b)**(S.One/3)
-    assert expr.diff(x) == b*(c.T*a*x.T*b)**(-2*S.One/3)*c.T*a/3
+    expr = (c.T*a*x.T*b)**Rational(1, 3)
+    assert expr.diff(x) == b*(c.T*a*x.T*b)**Rational(-2, 3)*c.T*a/3
 
     expr = (a.T*X*b)**S.Half
     assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T

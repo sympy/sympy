@@ -92,11 +92,11 @@ def dominant(expr, n):
     for t in terms[:-1]:
         e = (term0 / t).gammasimp()
         l = limit_seq(e, n)
-        if l.is_zero:
+        if l is None:
+            return None
+        elif l.is_zero:
             term0 = t
             comp = [term0]
-        elif l is None:
-            return None
         elif l not in [S.Infinity, S.NegativeInfinity]:
             comp.append(t)
     if len(comp) > 1:

@@ -247,7 +247,7 @@ def test_geometric_sums():
 
     # issue 6802:
     assert summation((-1)**(2*x + 2), (x, 0, n)) == n + 1
-    assert summation((-2)**(2*x + 2), (x, 0, n)) == 4*4**(n + 1)/S(3) - S(4)/3
+    assert summation((-2)**(2*x + 2), (x, 0, n)) == 4*4**(n + 1)/S(3) - Rational(4, 3)
     assert summation((-1)**x, (x, 0, n)) == -(-1)**(n + 1)/S(2) + S.Half
     assert summation(y**x, (x, a, b)) == \
         Piecewise((-a + b + 1, Eq(y, 1)), ((y**a - y**(b + 1))/(-y + 1), True))
@@ -279,7 +279,7 @@ def test_geometric_sums():
     assert not result.is_Float
 
     result = Sum(Rational(3, 5)**n, (n, 1, oo)).doit()
-    assert result == S(3)/2
+    assert result == Rational(3, 2)
     assert not result.is_Float
 
     assert Sum(1.0**n, (n, 1, oo)).doit() is oo
@@ -321,9 +321,9 @@ def test_hypergeometric_sums():
 
 def test_other_sums():
     f = m**2 + m*exp(m)
-    g = 3*exp(S(3)/2)/2 + exp(S.Half)/2 - exp(-S.Half)/2 - 3*exp(-S(3)/2)/2 + 5
+    g = 3*exp(Rational(3, 2))/2 + exp(S.Half)/2 - exp(-S.Half)/2 - 3*exp(Rational(-3, 2))/2 + 5
 
-    assert summation(f, (m, -S(3)/2, S(3)/2)) == g
+    assert summation(f, (m, Rational(-3, 2), Rational(3, 2))) == g
     assert summation(f, (m, -1.5, 1.5)).evalf().epsilon_eq(g.evalf(), 1e-10)
 
 fac = factorial
@@ -490,7 +490,7 @@ def test_wallis_product():
     # can factor simple rational expressions
     A = Product(4*n**2 / (4*n**2 - 1), (n, 1, b))
     B = Product((2*n)*(2*n)/(2*n - 1)/(2*n + 1), (n, 1, b))
-    R = pi*gamma(b + 1)**2/(2*gamma(b + S.Half)*gamma(b + S(3)/2))
+    R = pi*gamma(b + 1)**2/(2*gamma(b + S.Half)*gamma(b + Rational(3, 2)))
     assert simplify(A.doit()) == R
     assert simplify(B.doit()) == R
     # This one should eventually also be doable (Euler's product formula for sin)
@@ -644,7 +644,7 @@ def test_hypersum():
     assert simplify(summation((-1)**n*x**(2*n + 1) /
         factorial(2*n + 1), (n, 3, oo))) == -x + sin(x) + x**3/6 - x**5/120
 
-    assert summation(1/(n + 2)**3, (n, 1, oo)) == -S(9)/8 + zeta(3)
+    assert summation(1/(n + 2)**3, (n, 1, oo)) == Rational(-9, 8) + zeta(3)
     assert summation(1/n**4, (n, 1, oo)) == pi**4/90
 
     s = summation(x**n*n, (n, -oo, 0))
@@ -1003,7 +1003,7 @@ def test_is_convergent():
 
     # p-series test --
     assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() is S.true
-    assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(1/n**Rational(6, 5), (n, 1, oo)).is_convergent() is S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
     assert Sum(1/(sqrt(n)*sqrt(n)), (n, 2, oo)).is_convergent() is S.false
 
@@ -1317,7 +1317,7 @@ def test_issue_14313():
 
 @XFAIL
 def test_issue_14871():
-    assert Sum((S.One/10)**x*RisingFactorial(0, x)/factorial(x), (x, 0, oo)).rewrite(factorial).doit() == 1
+    assert Sum((Rational(1, 10))**x*RisingFactorial(0, x)/factorial(x), (x, 0, oo)).rewrite(factorial).doit() == 1
 
 
 def test_issue_17165():

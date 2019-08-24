@@ -594,7 +594,7 @@ def test_H33():
 # I. Trigonometry
 
 def test_I1():
-    assert tan(7*pi/10) == -sqrt(1 + 2/sqrt(5))
+    assert tan(pi*Rational(7, 10)) == -sqrt(1 + 2/sqrt(5))
 
 
 @XFAIL
@@ -718,7 +718,7 @@ def test_J13():
 
 
 def test_J14():
-    p = hyper([S.Half, S.Half], [S(3)/2], z**2)
+    p = hyper([S.Half, S.Half], [Rational(3, 2)], z**2)
     assert hyperexpand(p) == asin(z)/z
 
 
@@ -733,7 +733,7 @@ def test_J16():
 
 
 def test_J17():
-    assert integrate(f((x + 2)/5)*DiracDelta((x - 2)/3) - g(x)*diff(DiracDelta(x - 1), x), (x, 0, 3)) == 3*f(S(4)/5) + Subs(Derivative(g(x), x), x, 1)
+    assert integrate(f((x + 2)/5)*DiracDelta((x - 2)/3) - g(x)*diff(DiracDelta(x - 1), x), (x, 0, 3)) == 3*f(Rational(4, 5)) + Subs(Derivative(g(x), x), x, 1)
 
 
 @XFAIL
@@ -866,7 +866,7 @@ def test_M5():
 
 def test_M6():
     assert set(solveset(x**7 - 1, x)) == \
-        {cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)}
+        {cos(n*pi*Rational(2, 7)) + I*sin(n*pi*Rational(2, 7)) for n in range(0, 7)}
     # The paper asks for exp terms, but sin's and cos's may be acceptable;
     # if the results are simplified, exp terms appear for all but
     # -sin(pi/14) - I*cos(pi/14) and -sin(pi/14) + I*cos(pi/14) which
@@ -931,7 +931,7 @@ def test_M12():
 @XFAIL
 def test_M13():
     n = Dummy('n')
-    assert solveset_real(sin(x) - cos(x), x) == ImageSet(Lambda(n, n*pi - 7*pi/4), S.Integers)
+    assert solveset_real(sin(x) - cos(x), x) == ImageSet(Lambda(n, n*pi - pi*Rational(7, 4)), S.Integers)
 
 
 @XFAIL
@@ -944,8 +944,8 @@ def test_M15():
     if PY3:
         n = Dummy('n')
         assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
-                                               ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)),
-                                               Union(ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers),
+                                               ImageSet(Lambda(n, 2*n*pi + pi*Rational(5, 6)), S.Integers)),
+                                               Union(ImageSet(Lambda(n, 2*n*pi + pi*Rational(5, 6)), S.Integers),
                                                ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
 
 
@@ -1037,7 +1037,7 @@ def test_M31():
     # TODO: Replace solve with solveset, as of now
     # solveset doesn't supports assumptions
     # assert solve(1 - abs(x) - max(-x - 2, x - 2),x, assume=Q.real(x)) == [-3/2, 3/2]
-    assert solveset_real(1 - abs(x) - Max(-x - 2, x - 2), x) == FiniteSet(-S(3)/2, S(3)/2)
+    assert solveset_real(1 - abs(x) - Max(-x - 2, x - 2), x) == FiniteSet(Rational(-3, 2), Rational(3, 2))
 
 
 @XFAIL
@@ -1292,13 +1292,13 @@ def test_O10():
                               [3],
                               [5]]),
                               Matrix([
-                              [S(23)/19],
-                              [S(63)/19],
-                              [S(-47)/19]]),
+                              [Rational(23, 19)],
+                              [Rational(63, 19)],
+                              [Rational(-47, 19)]]),
                               Matrix([
-                              [S(1692)/353],
-                              [S(-1551)/706],
-                              [S(-423)/706]])]
+                              [Rational(1692, 353)],
+                              [Rational(-1551, 706)],
+                              [Rational(-423, 706)]])]
 
 
 def test_P1():
@@ -2292,7 +2292,7 @@ def test_V4():
 @XFAIL
 def test_V5():
     # Returns (-45*x**2 + 80*x - 41)/(5*sqrt(2*x - 1)*(4*x**2 - 4*x + 1))
-    assert (integrate((3*x - 5)**2/(2*x - 1)**(Rational(7, 2)), x).simplify() ==
+    assert (integrate((3*x - 5)**2/(2*x - 1)**Rational(7, 2), x).simplify() ==
             (-41 + 80*x - 45*x**2)/(5*(2*x - 1)**Rational(5, 2)))
 
 
@@ -2305,7 +2305,7 @@ def test_V6():
 
 def test_V7():
     r1 = integrate(sinh(x)**4/cosh(x)**2)
-    assert r1.simplify() == -3*x/2 + sinh(x)**3/(2*cosh(x)) + 3*tanh(x)/2
+    assert r1.simplify() == x*Rational(-3, 2) + sinh(x)**3/(2*cosh(x)) + 3*tanh(x)/2
 
 
 @XFAIL
@@ -2403,28 +2403,28 @@ def test_W2():
 def test_W3():
     # integral is not  calculated
     # https://github.com/sympy/sympy/issues/7161
-    assert integrate(sqrt(x + 1/x - 2), (x, 0, 1)) == S(4)/3
+    assert integrate(sqrt(x + 1/x - 2), (x, 0, 1)) == Rational(4, 3)
 
 
 @XFAIL
 @slow
 def test_W4():
     # integral is not  calculated
-    assert integrate(sqrt(x + 1/x - 2), (x, 1, 2)) == -2*sqrt(2)/3 + S(4)/3
+    assert integrate(sqrt(x + 1/x - 2), (x, 1, 2)) == -2*sqrt(2)/3 + Rational(4, 3)
 
 
 @XFAIL
 @slow
 def test_W5():
     # integral is not  calculated
-    assert integrate(sqrt(x + 1/x - 2), (x, 0, 2)) == -2*sqrt(2)/3 + S(8)/3
+    assert integrate(sqrt(x + 1/x - 2), (x, 0, 2)) == -2*sqrt(2)/3 + Rational(8, 3)
 
 
 @XFAIL
 @slow
 def test_W6():
     # integral is not  calculated
-    assert integrate(sqrt(2 - 2*cos(2*x))/2, (x, -3*pi/4, -pi/4)) == sqrt(2)
+    assert integrate(sqrt(2 - 2*cos(2*x))/2, (x, pi*Rational(-3, 4), -pi/4)) == sqrt(2)
 
 
 def test_W7():
@@ -2459,7 +2459,7 @@ def test_W10():
     # [Levinson and Redheffer, p. 255] => 2 pi/5 [1 + cos(pi/5)] csc(2 pi/5) */
     r1 = integrate(x/(1 + x + x**2 + x**4), (x, -oo, oo))
     r2 = r1.doit()
-    assert r2 == 2*pi*(sqrt(5)/4 + 5/4)*csc(2*pi/5)/5
+    assert r2 == 2*pi*(sqrt(5)/4 + 5/4)*csc(pi*Rational(2, 5))/5
 
 
 @XFAIL
@@ -2490,12 +2490,12 @@ def test_W14():
 @XFAIL
 def test_W15():
     # integral not calculated
-    assert integrate(log(gamma(x))*cos(6*pi*x), (x, 0, 1)) == S.One/12
+    assert integrate(log(gamma(x))*cos(6*pi*x), (x, 0, 1)) == Rational(1, 12)
 
 
 def test_W16():
     assert integrate((1 + x)**3*legendre_poly(1, x)*legendre_poly(2, x),
-                     (x, -1, 1)) == S(36)/35
+                     (x, -1, 1)) == Rational(36, 35)
 
 
 def test_W17():
@@ -2519,7 +2519,7 @@ def test_W19():
 def test_W20():
     # integral not calculated
     assert (integrate(x**2*polylog(3, 1/(x + 1)), (x, 0, 1)) ==
-            -pi**2/36 - S(17)/108 + zeta(3)/4 +
+            -pi**2/36 - Rational(17, 108) + zeta(3)/4 +
             (-pi**2/2 - 4*log(2) + log(2)**2 + 35/3)*log(2)/9)
 
 
@@ -2579,7 +2579,7 @@ def test_W25():
 def test_W26():
     x, y = symbols('x y', real=True)
     assert integrate(integrate(abs(y - x**2), (y, 0, 2)),
-                     (x, -1, 1)) == S(46)/15
+                     (x, -1, 1)) == Rational(46, 15)
 
 
 def test_W27():
@@ -2648,7 +2648,7 @@ def test_X7():
     #    = 1/x^2 - 1/(2 x) + 1/12 - x^2/720 + x^4/30240 + O(x^6)
     #    [Levinson and Redheffer, p. 173]
     assert (series(1/(x*(exp(x) - 1)), x, 0, 7) == x**(-2) - 1/(2*x) +
-            S.One/12 - x**2/720 + x**4/30240 - x**6/1209600 + O(x**7))
+            Rational(1, 12) - x**2/720 + x**4/30240 - x**6/1209600 + O(x**7))
 
 
 def test_X8():
@@ -2658,8 +2658,8 @@ def test_X8():
     # see issue 7167:
     x = symbols('x', real=True)
     assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
-            1/sqrt(x - 3*pi/2) + (x - 3*pi/2)**(S(3)/2)/12 +
-            (x - 3*pi/2)**(S(7)/2)/160 + O((x - 3*pi/2)**4, (x, 3*pi/2)))
+            1/sqrt(x - pi*Rational(3, 2)) + (x - pi*Rational(3, 2))**Rational(3, 2)/12 +
+            (x - pi*Rational(3, 2))**Rational(7, 2)/160 + O((x - pi*Rational(3, 2))**4, (x, pi*Rational(3, 2))))
 
 
 def test_X9():
@@ -2763,7 +2763,7 @@ def test_X18():
     #    k = 0
     k = Dummy('k')
     assert fps(exp(-x)*sin(x)) == \
-        Sum(2**(S.Half*k)*sin(S(3)/4*k*pi)*x**k/factorial(k), (k, 0, oo))
+        Sum(2**(S.Half*k)*sin(Rational(3, 4)*k*pi)*x**k/factorial(k), (k, 0, oo))
 
 
 @XFAIL

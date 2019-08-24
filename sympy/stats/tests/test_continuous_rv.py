@@ -156,7 +156,7 @@ def test_characteristic_function():
     Z = Exponential('z', 5)
     cf = characteristic_function(Z)
     assert cf(0) == 1
-    assert cf(1).expand() == S(25)/26 + 5*I/26
+    assert cf(1).expand() == Rational(25, 26) + I*Rational(5, 26)
 
     X = GaussianInverse('x', 1, 1)
     cf = characteristic_function(X)
@@ -180,7 +180,7 @@ def test_moment_generating_function():
 
     mgf = moment_generating_function(Chi('x', a))(t)
     assert mgf == sqrt(2)*t*gamma(a/2 + S.Half)*\
-        hyper((a/2 + S.Half,), (S(3)/2,), t**2/2)/gamma(a/2) +\
+        hyper((a/2 + S.Half,), (Rational(3, 2),), t**2/2)/gamma(a/2) +\
         hyper((a/2,), (S.Half,), t**2/2)
 
     mgf = moment_generating_function(ChiSquared('x', a))(t)
@@ -246,9 +246,9 @@ def test_moment_generating_function():
     assert mgf.diff(t).subs(t, 1) == hyper((2,), (3,), 1)/2
 
     mgf = moment_generating_function(Chi('x', 1))(t)
-    assert mgf.diff(t).subs(t, 1) == sqrt(2)*hyper((1,), (S(3)/2,), S.Half
-    )/sqrt(pi) + hyper((S(3)/2,), (S(3)/2,), S.Half) + 2*sqrt(2)*hyper((2,),
-    (S(5)/2,), S.Half)/(3*sqrt(pi))
+    assert mgf.diff(t).subs(t, 1) == sqrt(2)*hyper((1,), (Rational(3, 2),), S.Half
+    )/sqrt(pi) + hyper((Rational(3, 2),), (Rational(3, 2),), S.Half) + 2*sqrt(2)*hyper((2,),
+    (Rational(5, 2),), S.Half)/(3*sqrt(pi))
 
     mgf = moment_generating_function(ChiSquared('x', 1))(t)
     assert mgf.diff(t).subs(t, 1) == I
@@ -487,7 +487,7 @@ def test_chi_squared():
     assert variance(X) == 2*k
 
     X = ChiSquared('x', 15)
-    assert cdf(X)(3) == -14873*sqrt(6)*exp(-S(3)/2)/(5005*sqrt(pi)) + erf(sqrt(6)/2)
+    assert cdf(X)(3) == -14873*sqrt(6)*exp(Rational(-3, 2))/(5005*sqrt(pi)) + erf(sqrt(6)/2)
 
     k = Symbol("k", integer=True, positive=False)
     raises(ValueError, lambda: ChiSquared('x', k))
@@ -891,7 +891,7 @@ def test_studentt():
     X = StudentT('x', nu)
     assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - S.Half)/(sqrt(nu)*beta(S.Half, nu/2))
     assert cdf(X)(x) == S.Half + x*gamma(nu/2 + S.Half)*hyper((S.Half, nu/2 + S.Half),
-                                (S(3)/2,), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
+                                (Rational(3, 2),), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
 
 
 def test_trapezoidal():
@@ -907,9 +907,9 @@ def test_trapezoidal():
                                       (0, True))
 
     X = Trapezoidal('x', 0, 1, 2, 3)
-    assert E(X) == S(3)/2
-    assert variance(X) == S(5)/12
-    assert P(X < 2) == S(3)/4
+    assert E(X) == Rational(3, 2)
+    assert variance(X) == Rational(5, 12)
+    assert P(X < 2) == Rational(3, 4)
 
 def test_triangular():
     a = Symbol("a")
@@ -951,7 +951,7 @@ def test_uniform():
 
     c = cdf(X)
     assert c(2) == 0 and c(3) == 0
-    assert c(S(7)/2) == S.One/4
+    assert c(Rational(7, 2)) == Rational(1, 4)
     assert c(5) == 1 and c(6) == 1
 
 @XFAIL
@@ -997,14 +997,14 @@ def test_weibull():
 
     assert E(X).expand() == a * gamma(1 + 1/b)
     assert variance(X).expand() == (a**2 * gamma(1 + 2/b) - E(X)**2).expand()
-    assert simplify(skewness(X)) == (2*gamma(1 + 1/b)**3 - 3*gamma(1 + 1/b)*gamma(1 + 2/b) + gamma(1 + 3/b))/(-gamma(1 + 1/b)**2 + gamma(1 + 2/b))**(S(3)/2)
+    assert simplify(skewness(X)) == (2*gamma(1 + 1/b)**3 - 3*gamma(1 + 1/b)*gamma(1 + 2/b) + gamma(1 + 3/b))/(-gamma(1 + 1/b)**2 + gamma(1 + 2/b))**Rational(3, 2)
     assert simplify(kurtosis(X)) == (-3*gamma(1 + 1/b)**4 +\
         6*gamma(1 + 1/b)**2*gamma(1 + 2/b) - 4*gamma(1 + 1/b)*gamma(1 + 3/b) + gamma(1 + 4/b))/(gamma(1 + 1/b)**2 - gamma(1 + 2/b))**2
 
 def test_weibull_numeric():
     # Test for integers and rationals
     a = 1
-    bvals = [S.Half, 1, S(3)/2, 5]
+    bvals = [S.Half, 1, Rational(3, 2), 5]
     for b in bvals:
         X = Weibull('x', a, b)
         assert simplify(E(X)) == expand_func(a * gamma(1 + 1/S(b)))
@@ -1234,14 +1234,14 @@ def test_prob_neq():
 def test_union():
     N = Normal('N', 3, 2)
     assert simplify(P(N**2 - N > 2)) == \
-        -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + S(3)/2
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + Rational(3, 2)
     assert simplify(P(N**2 - 4 > 0)) == \
-        -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + S(3)/2
+        -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + Rational(3, 2)
 
 def test_Or():
     N = Normal('N', 0, 1)
     assert simplify(P(Or(N > 2, N < 1))) == \
-        -erf(sqrt(2))/2 - erfc(sqrt(2)/2)/2 + S(3)/2
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/2)/2 + Rational(3, 2)
     assert P(Or(N < 0, N < 1)) == P(N < 1)
     assert P(Or(N > 0, N < 0)) == 1
 

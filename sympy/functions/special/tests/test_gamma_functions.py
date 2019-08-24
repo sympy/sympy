@@ -128,7 +128,7 @@ def test_lowergamma():
 
     assert tn_branch(-3, lowergamma)
     assert tn_branch(-4, lowergamma)
-    assert tn_branch(S.One/3, lowergamma)
+    assert tn_branch(Rational(1, 3), lowergamma)
     assert tn_branch(pi, lowergamma)
     assert lowergamma(3, exp_polar(4*pi*I)*x) == lowergamma(3, x)
     assert lowergamma(y, exp_polar(5*pi*I)*x) == \
@@ -180,7 +180,7 @@ def test_uppergamma():
 
     assert tn_branch(-3, uppergamma)
     assert tn_branch(-4, uppergamma)
-    assert tn_branch(S.One/3, uppergamma)
+    assert tn_branch(Rational(1, 3), uppergamma)
     assert tn_branch(pi, uppergamma)
     assert uppergamma(3, exp_polar(4*pi*I)*x) == uppergamma(3, x)
     assert uppergamma(y, exp_polar(5*pi*I)*x) == \
@@ -362,9 +362,9 @@ def test_polygamma_expand_func():
         6/(1 + y + 4*x)**4 - 6/(2 + y + 4*x)**4
     assert polygamma(3, 4*x + y + 1).expand(func=True, multinomial=False) == \
         polygamma(3, y + 4*x) - 6/(y + 4*x)**4
-    e = polygamma(3, 4*x + y + S(3)/2)
+    e = polygamma(3, 4*x + y + Rational(3, 2))
     assert e.expand(func=True) == e
-    e = polygamma(3, x + y + S(3)/4)
+    e = polygamma(3, x + y + Rational(3, 4))
     assert e.expand(func=True, basic=False) == e
 
 
@@ -394,28 +394,28 @@ def test_loggamma():
     assert loggamma(zoo) == zoo
     assert loggamma(nan) == nan
 
-    L = loggamma(S(16)/3)
-    E = -5*log(3) + loggamma(S.One/3) + log(4) + log(7) + log(10) + log(13)
+    L = loggamma(Rational(16, 3))
+    E = -5*log(3) + loggamma(Rational(1, 3)) + log(4) + log(7) + log(10) + log(13)
     assert expand_func(L).doit() == E
     assert L.n() == E.n()
 
     L = loggamma(19/S(4))
-    E = -4*log(4) + loggamma(S(3)/4) + log(3) + log(7) + log(11) + log(15)
+    E = -4*log(4) + loggamma(Rational(3, 4)) + log(3) + log(7) + log(11) + log(15)
     assert expand_func(L).doit() == E
     assert L.n() == E.n()
 
-    L = loggamma(S(23)/7)
-    E = -3*log(7) + log(2) + loggamma(S(2)/7) + log(9) + log(16)
+    L = loggamma(Rational(23, 7))
+    E = -3*log(7) + log(2) + loggamma(Rational(2, 7)) + log(9) + log(16)
     assert expand_func(L).doit() == E
     assert L.n() == E.n()
 
     L = loggamma(19/S(4)-7)
-    E = -log(9) - log(5) + loggamma(S(3)/4) + 3*log(4) - 3*I*pi
+    E = -log(9) - log(5) + loggamma(Rational(3, 4)) + 3*log(4) - 3*I*pi
     assert expand_func(L).doit() == E
     assert L.n() == E.n()
 
     L = loggamma(23/S(7)-6)
-    E = -log(19) - log(12) - log(5) + loggamma(S(2)/7) + 3*log(7) - 3*I*pi
+    E = -log(19) - log(12) - log(5) + loggamma(Rational(2, 7)) + 3*log(7) - 3*I*pi
     assert expand_func(L).doit() == E
     assert L.n() == E.n()
 
@@ -506,11 +506,11 @@ def test_issue_8524():
     assert gamma(e - S.Half).is_positive is False
 
 def test_issue_14450():
-    assert uppergamma(S(3)/8, x).evalf() == uppergamma(S(3)/8, x)
-    assert lowergamma(x, S(3)/8).evalf() == lowergamma(x, S(3)/8)
+    assert uppergamma(Rational(3, 8), x).evalf() == uppergamma(Rational(3, 8), x)
+    assert lowergamma(x, Rational(3, 8)).evalf() == lowergamma(x, Rational(3, 8))
     # some values from Wolfram Alpha for comparison
-    assert abs(uppergamma(S(3)/8, 2).evalf() - 0.07105675881) < 1e-9
-    assert abs(lowergamma(S(3)/8, 2).evalf() - 2.2993794256) < 1e-9
+    assert abs(uppergamma(Rational(3, 8), 2).evalf() - 0.07105675881) < 1e-9
+    assert abs(lowergamma(Rational(3, 8), 2).evalf() - 2.2993794256) < 1e-9
 
 def test_issue_14528():
     k = Symbol('k', integer=True, nonpositive=True)
@@ -557,15 +557,15 @@ def test_multigamma():
     assert multigamma(x + 2, 1).expand(func=True, mul=False) == x*(x + 1)*\
         gamma(x)
     assert multigamma(x - 1, 2).expand(func=True) == sqrt(pi)*gamma(x)*\
-        gamma(x + S.Half)/(x**3 - 3*x**2 + 11*x/4 - S(3)/4)
-    assert multigamma(x - 1, 3).expand(func=True) == pi**(S(3)/2)*gamma(x)**2*\
-        gamma(x + S.Half)/(x**5 - 6*x**4 + 55*x**3/4 - 15*x**2 + 31*x/4 - S(3)/2)
+        gamma(x + S.Half)/(x**3 - 3*x**2 + x*Rational(11, 4) - Rational(3, 4))
+    assert multigamma(x - 1, 3).expand(func=True) == pi**Rational(3, 2)*gamma(x)**2*\
+        gamma(x + S.Half)/(x**5 - 6*x**4 + 55*x**3/4 - 15*x**2 + x*Rational(31, 4) - Rational(3, 2))
 
     assert multigamma(n, 1).rewrite(factorial) == factorial(n - 1)
     assert multigamma(n, 2).rewrite(factorial) == sqrt(pi)*\
-        factorial(n - S(3)/2)*factorial(n - 1)
-    assert multigamma(n, 3).rewrite(factorial) == pi**(S(3)/2)*\
-        factorial(n - 2)*factorial(n - S(3)/2)*factorial(n - 1)
+        factorial(n - Rational(3, 2))*factorial(n - 1)
+    assert multigamma(n, 3).rewrite(factorial) == pi**Rational(3, 2)*\
+        factorial(n - 2)*factorial(n - Rational(3, 2))*factorial(n - 1)
 
     assert multigamma(-S.Half, 3, evaluate=False).is_real == False
     assert multigamma(S.Half, 3, evaluate=False).is_real == False

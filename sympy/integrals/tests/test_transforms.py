@@ -11,7 +11,7 @@ from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi, arg,
     cos, S, Abs, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
-    exp_polar, unpolarify, Function, expint, expand_mul,
+    exp_polar, unpolarify, Function, expint, expand_mul, Rational,
     gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
 from sympy.utilities.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
@@ -176,15 +176,15 @@ def test_mellin_transform_bessel():
 
     # 8.4.19
     assert MT(besselj(a, 2*sqrt(x)), x, s) == \
-        (gamma(a/2 + s)/gamma(a/2 - s + 1), (-re(a)/2, S(3)/4), True)
+        (gamma(a/2 + s)/gamma(a/2 - s + 1), (-re(a)/2, Rational(3, 4)), True)
     assert MT(sin(sqrt(x))*besselj(a, sqrt(x)), x, s) == \
         (2**a*gamma(-2*s + S.Half)*gamma(a/2 + s + S.Half)/(
         gamma(-a/2 - s + 1)*gamma(a - 2*s + 1)), (
-        -re(a)/2 - S.Half, S.One/4), True)
+        -re(a)/2 - S.Half, Rational(1, 4)), True)
     assert MT(cos(sqrt(x))*besselj(a, sqrt(x)), x, s) == \
         (2**a*gamma(a/2 + s)*gamma(-2*s + S.Half)/(
         gamma(-a/2 - s + S.Half)*gamma(a - 2*s + 1)), (
-        -re(a)/2, S.One/4), True)
+        -re(a)/2, Rational(1, 4)), True)
     assert MT(besselj(a, sqrt(x))**2, x, s) == \
         (gamma(a + s)*gamma(S.Half - s)
          / (sqrt(pi)*gamma(1 - s)*gamma(1 + a - s)),
@@ -197,7 +197,7 @@ def test_mellin_transform_bessel():
     #       I can see this is wrong (since besselj(z) ~ 1/sqrt(z) for z large)
     assert MT(besselj(a - 1, sqrt(x))*besselj(a, sqrt(x)), x, s) == \
         (gamma(1 - s)*gamma(a + s - S.Half)
-         / (sqrt(pi)*gamma(S(3)/2 - s)*gamma(a - s + S.Half)),
+         / (sqrt(pi)*gamma(Rational(3, 2) - s)*gamma(a - s + S.Half)),
             (S.Half - re(a), S.Half), True)
     assert MT(besselj(a, sqrt(x))*besselj(b, sqrt(x)), x, s) == \
         (4**s*gamma(1 - 2*s)*gamma((a + b)/2 + s)
@@ -210,16 +210,16 @@ def test_mellin_transform_bessel():
     # Section 8.4.20
     assert MT(bessely(a, 2*sqrt(x)), x, s) == \
         (-cos(pi*(a/2 - s))*gamma(s - a/2)*gamma(s + a/2)/pi,
-            (Max(-re(a)/2, re(a)/2), S(3)/4), True)
+            (Max(-re(a)/2, re(a)/2), Rational(3, 4)), True)
     assert MT(sin(sqrt(x))*bessely(a, sqrt(x)), x, s) == \
         (-4**s*sin(pi*(a/2 - s))*gamma(S.Half - 2*s)
          * gamma((1 - a)/2 + s)*gamma((1 + a)/2 + s)
          / (sqrt(pi)*gamma(1 - s - a/2)*gamma(1 - s + a/2)),
-            (Max(-(re(a) + 1)/2, (re(a) - 1)/2), S.One/4), True)
+            (Max(-(re(a) + 1)/2, (re(a) - 1)/2), Rational(1, 4)), True)
     assert MT(cos(sqrt(x))*bessely(a, sqrt(x)), x, s) == \
         (-4**s*cos(pi*(a/2 - s))*gamma(s - a/2)*gamma(s + a/2)*gamma(S.Half - 2*s)
          / (sqrt(pi)*gamma(S.Half - s - a/2)*gamma(S.Half - s + a/2)),
-            (Max(-re(a)/2, re(a)/2), S.One/4), True)
+            (Max(-re(a)/2, re(a)/2), Rational(1, 4)), True)
     assert MT(besselj(a, sqrt(x))*bessely(a, sqrt(x)), x, s) == \
         (-cos(pi*s)*gamma(s)*gamma(a + s)*gamma(S.Half - s)
          / (pi**S('3/2')*gamma(1 + a - s)),
@@ -259,7 +259,7 @@ def test_mellin_transform_bessel():
 
     mt = MT(exp(-x/2)*besselk(a, x/2), x, s)
     mt0 = gammasimp((trigsimp(gammasimp(mt[0].expand(func=True)))))
-    assert mt0 == 2*pi**(S(3)/2)*cos(pi*s)*gamma(-s + S.Half)/(
+    assert mt0 == 2*pi**Rational(3, 2)*cos(pi*s)*gamma(-s + S.Half)/(
         (cos(2*pi*a) - cos(2*pi*s))*gamma(-a - s + 1)*gamma(a - s + 1))
     assert mt[1:] == ((Max(-re(a), re(a)), oo), True)
     # TODO exp(x/2)*besselk(a, x/2) [etc] cannot currently be done
@@ -408,15 +408,15 @@ def test_inverse_mellin_transform():
         erf(sqrt(x))
 
     # 8.4.19
-    assert simplify(IMT(gamma(a/2 + s)/gamma(a/2 - s + 1), s, x, (-re(a)/2, S(3)/4))) \
+    assert simplify(IMT(gamma(a/2 + s)/gamma(a/2 - s + 1), s, x, (-re(a)/2, Rational(3, 4)))) \
         == besselj(a, 2*sqrt(x))
     assert simplify(IMT(2**a*gamma(S.Half - 2*s)*gamma(s + (a + 1)/2)
                       / (gamma(1 - s - a/2)*gamma(1 - 2*s + a)),
-                      s, x, (-(re(a) + 1)/2, S.One/4))) == \
+                      s, x, (-(re(a) + 1)/2, Rational(1, 4)))) == \
         sin(sqrt(x))*besselj(a, sqrt(x))
     assert simplify(IMT(2**a*gamma(a/2 + s)*gamma(S.Half - 2*s)
                       / (gamma(S.Half - s - a/2)*gamma(1 - 2*s + a)),
-                      s, x, (-re(a)/2, S.One/4))) == \
+                      s, x, (-re(a)/2, Rational(1, 4)))) == \
         cos(sqrt(x))*besselj(a, sqrt(x))
     # TODO this comes out as an amazing mess, but simplifies nicely
     assert simplify(IMT(gamma(a + s)*gamma(S.Half - s)
@@ -704,9 +704,9 @@ def test_sine_transform():
         log(t)/t, t, w) == -sqrt(2)*sqrt(pi)*(log(w**2) + 2*EulerGamma)/4
 
     assert sine_transform(
-        t*exp(-a*t**2), t, w) == sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2))
+        t*exp(-a*t**2), t, w) == sqrt(2)*w*exp(-w**2/(4*a))/(4*a**Rational(3, 2))
     assert inverse_sine_transform(
-        sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2)), w, t) == t*exp(-a*t**2)
+        sqrt(2)*w*exp(-w**2/(4*a))/(4*a**Rational(3, 2)), w, t) == t*exp(-a*t**2)
 
 
 def test_cosine_transform():
@@ -739,7 +739,7 @@ def test_cosine_transform():
         sqrt(2)*a/(sqrt(pi)*(a**2 + w**2)), w, t) == exp(-a*t)
 
     assert cosine_transform(exp(-a*sqrt(t))*cos(a*sqrt(
-        t)), t, w) == a*exp(-a**2/(2*w))/(2*w**(S(3)/2))
+        t)), t, w) == a*exp(-a**2/(2*w))/(2*w**Rational(3, 2))
 
     assert cosine_transform(1/(a + t), t, w) == sqrt(2)*(
         (-2*Si(a*w) + pi)*sin(a*w)/2 - cos(a*w)*Ci(a*w))/sqrt(pi)
@@ -775,10 +775,10 @@ def test_hankel_transform():
 
     assert hankel_transform(r**nu*exp(-a*r), r, k, nu) == \
         2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - S(
-                                                     3)/2)*gamma(nu + S(3)/2)/sqrt(pi)
+                                                     3)/2)*gamma(nu + Rational(3, 2))/sqrt(pi)
     assert inverse_hankel_transform(
-        2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - S(3)/2)*gamma(
-        nu + S(3)/2)/sqrt(pi), k, r, nu) == r**nu*exp(-a*r)
+        2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - Rational(3, 2))*gamma(
+        nu + Rational(3, 2))/sqrt(pi), k, r, nu) == r**nu*exp(-a*r)
 
 
 def test_issue_7181():

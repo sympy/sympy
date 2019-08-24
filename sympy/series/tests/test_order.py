@@ -33,7 +33,7 @@ def test_simple_1():
     assert Order(exp(1/x)).expr == exp(1/x)
     assert Order(x*exp(1/x)).expr == x*exp(1/x)
     assert Order(x**(o/3)).expr == x**(o/3)
-    assert Order(x**(5*o/3)).expr == x**(5*o/3)
+    assert Order(x**(o*Rational(5, 3))).expr == x**(o*Rational(5, 3))
     assert Order(x**2 + x + y, x) == O(1, x)
     assert Order(x**2 + x + y, y) == O(1, y)
     raises(ValueError, lambda: Order(exp(x), x, x))
@@ -85,12 +85,10 @@ def test_simple_7():
 
 def test_simple_8():
     assert O(sqrt(-x)) == O(sqrt(x))
-    assert O(x**2*sqrt(x)) == O(x**(S(5)/2))
-    assert O(x**3*sqrt(-(-x)**3)) == O(x**(S(9)/2))
-    assert O(x**(S(3)/2)*sqrt((-x)**3)) == O(x**3)
-    # not sure why the first doesn't become the 3rd without
-    # iteration in the Order.__new__ routine.
-    assert O(x*(-2*x)**(I/2)) == O(x*(-x)**(I/2)) == O((-x)**(1 + I/2))
+    assert O(x**2*sqrt(x)) == O(x**Rational(5, 2))
+    assert O(x**3*sqrt(-(-x)**3)) == O(x**Rational(9, 2))
+    assert O(x**Rational(3, 2)*sqrt((-x)**3)) == O(x**3)
+    assert O(x*(-2*x)**(I/2)) == O(x*(-x)**(I/2))
 
 
 def test_as_expr_variables():

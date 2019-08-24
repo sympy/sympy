@@ -17,7 +17,7 @@ def test_solve_poly_system():
 
     assert solve_poly_system([y - x**2, y + x**2], x, y) == [(S.Zero, S.Zero)]
 
-    assert solve_poly_system([2*x - 3, 3*y/2 - 2*x, z - 5*y], x, y, z) == \
+    assert solve_poly_system([2*x - 3, y*Rational(3, 2) - 2*x, z - 5*y], x, y, z) == \
         [(Rational(3, 2), Integer(2), Integer(10))]
 
     assert solve_poly_system([x*y - 2*y, 2*y**2 - x**2], x, y) == \
@@ -64,8 +64,8 @@ def test_solve_biquadratic():
     f_2 = (x - 1)**2 + (y - 1)**2 - r**2
 
     assert solve_poly_system([f_1, f_2], x, y) == \
-        [(1 - sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2),
-         (1 + sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2)]
+        [(1 - sqrt(((2*r - 1)*(2*r + 1)))/2, Rational(3, 2)),
+         (1 + sqrt(((2*r - 1)*(2*r + 1)))/2, Rational(3, 2))]
 
     query = lambda expr: expr.is_Pow and expr.exp is S.Half
 
@@ -123,7 +123,7 @@ def test_solve_triangulated():
 
 
 def test_solve_issue_3686():
-    roots = solve_poly_system([((x - 5)**2/250000 + (y - S(5)/10)**2/250000) - 1, x], x, y)
+    roots = solve_poly_system([((x - 5)**2/250000 + (y - Rational(5, 10))**2/250000) - 1, x], x, y)
     assert roots == [(0, S.Half - 15*sqrt(1111)), (0, S.Half + 15*sqrt(1111))]
 
     roots = solve_poly_system([((x - 5)**2/250000 + (y - 5.0/10)**2/250000) - 1, x], x, y)

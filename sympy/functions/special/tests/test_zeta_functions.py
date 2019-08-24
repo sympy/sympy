@@ -137,7 +137,7 @@ def test_polylog_expansion():
     assert polylog(s, 0) == 0
     assert polylog(s, 1) == zeta(s)
     assert polylog(s, -1) == -dirichlet_eta(s)
-    assert polylog(s, exp_polar(4*I*pi/3)) == polylog(s, exp(4*I*pi/3))
+    assert polylog(s, exp_polar(I*pi*Rational(4, 3))) == polylog(s, exp(I*pi*Rational(4, 3)))
     assert polylog(s, exp_polar(I*pi)/3) == polylog(s, exp(I*pi)/3)
 
     assert myexpand(polylog(1, z), -log(1 - z))
@@ -180,17 +180,17 @@ def test_lerchphi_expansion():
                     2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z)
                               - polylog(s, polar_lift(-1)*sqrt(z))/sqrt(z)))
     assert myexpand(lerchphi(z, s, 2), -1/z + polylog(s, z)/z**2)
-    assert myexpand(lerchphi(z, s, S(3)/2), None)
-    assert myexpand(lerchphi(z, s, S(7)/3), None)
-    assert myexpand(lerchphi(z, s, -S.One/3), None)
-    assert myexpand(lerchphi(z, s, -S(5)/2), None)
+    assert myexpand(lerchphi(z, s, Rational(3, 2)), None)
+    assert myexpand(lerchphi(z, s, Rational(7, 3)), None)
+    assert myexpand(lerchphi(z, s, Rational(-1, 3)), None)
+    assert myexpand(lerchphi(z, s, Rational(-5, 2)), None)
 
     # hurwitz zeta reduction
     assert myexpand(lerchphi(-1, s, a),
                     2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, (a + 1)/2))
     assert myexpand(lerchphi(I, s, a), None)
     assert myexpand(lerchphi(-I, s, a), None)
-    assert myexpand(lerchphi(exp(2*I*pi/5), s, a), None)
+    assert myexpand(lerchphi(exp(I*pi*Rational(2, 5)), s, a), None)
 
 
 def test_stieltjes():

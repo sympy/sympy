@@ -9,7 +9,7 @@ import re
 import io
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
-                   Eq, log, Function)
+                   Eq, log, Function, Rational)
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
@@ -3086,7 +3086,7 @@ def test_sympy__physics__quantum__cartesian__ZOp():
 def test_sympy__physics__quantum__cg__CG():
     from sympy.physics.quantum.cg import CG
     from sympy import S
-    assert _test_args(CG(S(3)/2, S(3)/2, S.Half, -S.Half, 1, 1))
+    assert _test_args(CG(Rational(3, 2), Rational(3, 2), S.Half, -S.Half, 1, 1))
 
 
 def test_sympy__physics__quantum__cg__Wigner3j():
@@ -3101,7 +3101,7 @@ def test_sympy__physics__quantum__cg__Wigner6j():
 
 def test_sympy__physics__quantum__cg__Wigner9j():
     from sympy.physics.quantum.cg import Wigner9j
-    assert _test_args(Wigner9j(2, 1, 1, S(3)/2, S.Half, 1, S.Half, S.Half, 0))
+    assert _test_args(Wigner9j(2, 1, 1, Rational(3, 2), S.Half, 1, S.Half, S.Half, 0))
 
 def test_sympy__physics__quantum__circuitplot__Mz():
     from sympy.physics.quantum.circuitplot import Mz

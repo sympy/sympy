@@ -1087,14 +1087,14 @@ def test_powers_Integer():
 
     # not exact roots
     assert sqrt(-3) == I*sqrt(3)
-    assert (3) ** (S(3)/2) == 3 * sqrt(3)
-    assert (-3) ** (S(3)/2) == - 3 * sqrt(-3)
-    assert (-3) ** (S(5)/2) == 9 * I * sqrt(3)
-    assert (-3) ** (S(7)/2) == - I * 27 * sqrt(3)
-    assert (2) ** (S(3)/2) == 2 * sqrt(2)
-    assert (2) ** (S(-3)/2) == sqrt(2) / 4
-    assert (81) ** (S(2)/3) == 9 * (S(3) ** (S(2)/3))
-    assert (-81) ** (S(2)/3) == 9 * (S(-3) ** (S(2)/3))
+    assert (3) ** (Rational(3, 2)) == 3 * sqrt(3)
+    assert (-3) ** (Rational(3, 2)) == - 3 * sqrt(-3)
+    assert (-3) ** (Rational(5, 2)) == 9 * I * sqrt(3)
+    assert (-3) ** (Rational(7, 2)) == - I * 27 * sqrt(3)
+    assert (2) ** (Rational(3, 2)) == 2 * sqrt(2)
+    assert (2) ** (Rational(-3, 2)) == sqrt(2) / 4
+    assert (81) ** (Rational(2, 3)) == 9 * (S(3) ** (Rational(2, 3)))
+    assert (-81) ** (Rational(2, 3)) == 9 * (S(-3) ** (Rational(2, 3)))
     assert (-3) ** Rational(-7, 3) == \
         -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
     assert (-3) ** Rational(-2, 3) == \
@@ -1245,7 +1245,7 @@ def test_int():
     assert int(GoldenRatio) == 1
     assert int(TribonacciConstant) == 2
     # issue 10368
-    a = S(32442016954)/78058255275
+    a = Rational(32442016954, 78058255275)
     assert type(int(a)) is type(int(-a)) is int
 
 
@@ -1313,7 +1313,7 @@ def test_issue_13890():
     x = Symbol("x")
     e = (-x/4 - S.One/12)**x - 1
     f = simplify(e)
-    a = S(9)/5
+    a = Rational(9, 5)
     assert abs(e.subs(x,a).evalf() - f.subs(x,a).evalf()) < 1e-15
 
 
@@ -1434,22 +1434,22 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).cofactors(Integer(2)) == \
         (Integer(2), Integer(2), Integer(1))
 
-    assert Integer(4).gcd(Float(2.0)) is S.One
+    assert Integer(4).gcd(Float(2.0)) == S.One
     assert Integer(4).lcm(Float(2.0)) == Float(8.0)
     assert Integer(4).cofactors(Float(2.0)) == (S.One, Integer(4), Float(2.0))
 
-    assert Rational(1, 2).gcd(Float(2.0)) is S.One
+    assert Rational(1, 2).gcd(Float(2.0)) == S.One
     assert Rational(1, 2).lcm(Float(2.0)) == Float(1.0)
     assert Rational(1, 2).cofactors(Float(2.0)) == \
         (S.One, Rational(1, 2), Float(2.0))
 
 
 def test_Float_gcd_lcm_cofactors():
-    assert Float(2.0).gcd(Integer(4)) is S.One
+    assert Float(2.0).gcd(Integer(4)) == S.One
     assert Float(2.0).lcm(Integer(4)) == Float(8.0)
     assert Float(2.0).cofactors(Integer(4)) == (S.One, Float(2.0), Integer(4))
 
-    assert Float(2.0).gcd(Rational(1, 2)) is S.One
+    assert Float(2.0).gcd(Rational(1, 2)) == S.One
     assert Float(2.0).lcm(Rational(1, 2)) == Float(1.0)
     assert Float(2.0).cofactors(Rational(1, 2)) == \
         (S.One, Float(2.0), Rational(1, 2))
@@ -1710,7 +1710,7 @@ def test_Float_eq():
     assert not Float(2*3) == S.Half
     assert Float(2*3) == 6
     assert not Float(2*3) == 8
-    assert Float(.75) == S(3)/4
+    assert Float(.75) == Rational(3, 4)
     assert Float(5/18) == 5/18
     # 4473
     assert Float(2.) != 3
@@ -1765,13 +1765,13 @@ def test_issue_7742():
 
 def test_simplify_AlgebraicNumber():
     A = AlgebraicNumber
-    e = 3**(S.One/6)*(3 + (135 + 78*sqrt(3))**(S(2)/3))/(45 + 26*sqrt(3))**(S.One/3)
+    e = 3**(S.One/6)*(3 + (135 + 78*sqrt(3))**Rational(2, 3))/(45 + 26*sqrt(3))**(S.One/3)
     assert simplify(A(e)) == A(12)  # wester test_C20
 
     e = (41 + 29*sqrt(2))**(S.One/5)
     assert simplify(A(e)) == A(1 + sqrt(2))  # wester test_C21
 
-    e = (3 + 4*I)**(Rational(3, 2))
+    e = (3 + 4*I)**Rational(3, 2)
     assert simplify(A(e)) == A(2 + 11*I)  # issue 4401
 
 
@@ -1844,7 +1844,7 @@ def test_issue_10020():
 
 def test_invert_numbers():
     assert S(2).invert(5) == 3
-    assert S(2).invert(S(5)/2) == S.Half
+    assert S(2).invert(Rational(5, 2)) == S.Half
     assert S(2).invert(5.) == 0.5
     assert S(2).invert(S(5)) == 3
     assert S(2.).invert(5) == 0.5
@@ -1974,14 +1974,14 @@ def test_numpy_to_float():
         y = Float(ratval, precision=prec)
         assert abs((x - y)/y) < 2**(-(prec + 1))
 
-    check_prec_and_relerr(np.float16(2.0/3), S(2)/3)
-    check_prec_and_relerr(np.float32(2.0/3), S(2)/3)
-    check_prec_and_relerr(np.float64(2.0/3), S(2)/3)
+    check_prec_and_relerr(np.float16(2.0/3), Rational(2, 3))
+    check_prec_and_relerr(np.float32(2.0/3), Rational(2, 3))
+    check_prec_and_relerr(np.float64(2.0/3), Rational(2, 3))
     # extended precision, on some arch/compilers:
     x = np.longdouble(2)/3
-    check_prec_and_relerr(x, S(2)/3)
+    check_prec_and_relerr(x, Rational(2, 3))
     y = Float(x, precision=10)
-    assert same_and_same_prec(y, Float(S(2)/3, precision=10))
+    assert same_and_same_prec(y, Float(Rational(2, 3), precision=10))
 
     raises(TypeError, lambda: Float(np.complex64(1+2j)))
     raises(TypeError, lambda: Float(np.complex128(1+2j)))

@@ -1,4 +1,5 @@
-from sympy import exp, integrate, oo, S, simplify, sqrt, symbols, pi, sin, cos, I
+from sympy import exp, integrate, oo, S, simplify, sqrt, symbols, pi, sin, \
+    cos, I, Rational
 from sympy.core.compatibility import range
 from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac, Psi_nlm
 from sympy.utilities.pytest import raises
@@ -26,18 +27,18 @@ def test_wavefunction():
         (1, 0): 2*sqrt(1/a**3) * exp(-r/a),
         (2, 0): sqrt(1/(2*a**3)) * exp(-r/(2*a)) * (1 - r/(2*a)),
         (2, 1): S.Half * sqrt(1/(6*a**3)) * exp(-r/(2*a)) * r/a,
-        (3, 0): S(2)/3 * sqrt(1/(3*a**3)) * exp(-r/(3*a)) *
-        (1 - 2*r/(3*a) + S(2)/27 * (r/a)**2),
-        (3, 1): S(4)/27 * sqrt(2/(3*a**3)) * exp(-r/(3*a)) *
+        (3, 0): Rational(2, 3) * sqrt(1/(3*a**3)) * exp(-r/(3*a)) *
+        (1 - 2*r/(3*a) + Rational(2, 27) * (r/a)**2),
+        (3, 1): Rational(4, 27) * sqrt(2/(3*a**3)) * exp(-r/(3*a)) *
         (1 - r/(6*a)) * r/a,
-        (3, 2): S(2)/81 * sqrt(2/(15*a**3)) * exp(-r/(3*a)) * (r/a)**2,
-        (4, 0): S.One/4 * sqrt(1/a**3) * exp(-r/(4*a)) *
-        (1 - 3*r/(4*a) + S.One/8 * (r/a)**2 - S.One/192 * (r/a)**3),
-        (4, 1): S.One/16 * sqrt(5/(3*a**3)) * exp(-r/(4*a)) *
-        (1 - r/(4*a) + S.One/80 * (r/a)**2) * (r/a),
-        (4, 2): S.One/64 * sqrt(1/(5*a**3)) * exp(-r/(4*a)) *
+        (3, 2): Rational(2, 81) * sqrt(2/(15*a**3)) * exp(-r/(3*a)) * (r/a)**2,
+        (4, 0): Rational(1, 4) * sqrt(1/a**3) * exp(-r/(4*a)) *
+        (1 - 3*r/(4*a) + Rational(1, 8) * (r/a)**2 - Rational(1, 192) * (r/a)**3),
+        (4, 1): Rational(1, 16) * sqrt(5/(3*a**3)) * exp(-r/(4*a)) *
+        (1 - r/(4*a) + Rational(1, 80) * (r/a)**2) * (r/a),
+        (4, 2): Rational(1, 64) * sqrt(1/(5*a**3)) * exp(-r/(4*a)) *
         (1 - r/(12*a)) * (r/a)**2,
-        (4, 3): S.One/768 * sqrt(1/(35*a**3)) * exp(-r/(4*a)) * (r/a)**3,
+        (4, 3): Rational(1, 768) * sqrt(1/(35*a**3)) * exp(-r/(4*a)) * (r/a)**3,
     }
     for n, l in R:
         assert simplify(R_nl(n, l, r, Z) - R[(n, l)]) == 0

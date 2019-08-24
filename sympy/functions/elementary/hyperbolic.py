@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, cacheit, pi, I
+from sympy.core import S, sympify, cacheit, pi, I, Rational
 from sympy.core.add import Add
 from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
@@ -1017,23 +1017,23 @@ class acosh(InverseHyperbolicFunction):
                 S.ImaginaryUnit: log(S.ImaginaryUnit*(1 + sqrt(2))),
                 -S.ImaginaryUnit: log(-S.ImaginaryUnit*(1 + sqrt(2))),
                 S.Half: S.Pi/3,
-                -S.Half: 2*S.Pi/3,
+                -S.Half: S.Pi*Rational(2, 3),
                 sqrt(2)/2: S.Pi/4,
-                -sqrt(2)/2: 3*S.Pi/4,
+                -sqrt(2)/2: S.Pi*Rational(3, 4),
                 1/sqrt(2): S.Pi/4,
-                -1/sqrt(2): 3*S.Pi/4,
+                -1/sqrt(2): S.Pi*Rational(3, 4),
                 sqrt(3)/2: S.Pi/6,
-                -sqrt(3)/2: 5*S.Pi/6,
-                (sqrt(3) - 1)/sqrt(2**3): 5*S.Pi/12,
-                -(sqrt(3) - 1)/sqrt(2**3): 7*S.Pi/12,
+                -sqrt(3)/2: S.Pi*Rational(5, 6),
+                (sqrt(3) - 1)/sqrt(2**3): S.Pi*Rational(5, 12),
+                -(sqrt(3) - 1)/sqrt(2**3): S.Pi*Rational(7, 12),
                 sqrt(2 + sqrt(2))/2: S.Pi/8,
-                -sqrt(2 + sqrt(2))/2: 7*S.Pi/8,
-                sqrt(2 - sqrt(2))/2: 3*S.Pi/8,
-                -sqrt(2 - sqrt(2))/2: 5*S.Pi/8,
+                -sqrt(2 + sqrt(2))/2: S.Pi*Rational(7, 8),
+                sqrt(2 - sqrt(2))/2: S.Pi*Rational(3, 8),
+                -sqrt(2 - sqrt(2))/2: S.Pi*Rational(5, 8),
                 (1 + sqrt(3))/(2*sqrt(2)): S.Pi/12,
-                -(1 + sqrt(3))/(2*sqrt(2)): 11*S.Pi/12,
+                -(1 + sqrt(3))/(2*sqrt(2)): S.Pi*Rational(11, 12),
                 (sqrt(5) + 1)/4: S.Pi/5,
-                -(sqrt(5) + 1)/4: 4*S.Pi/5
+                -(sqrt(5) + 1)/4: S.Pi*Rational(4, 5)
             }
 
             if arg in cst_table:

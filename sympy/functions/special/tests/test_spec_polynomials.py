@@ -30,7 +30,7 @@ def test_jacobi():
                                    gamma(-b + n + 1)/gamma(n + 1))
     assert jacobi(n, 0, 0, x) == legendre(n, x)
     assert jacobi(n, S.Half, S.Half, x) == RisingFactorial(
-        S(3)/2, n)*chebyshevu(n, x)/factorial(n + 1)
+        Rational(3, 2), n)*chebyshevu(n, x)/factorial(n + 1)
     assert jacobi(n, -S.Half, -S.Half, x) == RisingFactorial(
         S.Half, n)*chebyshevt(n, x)/factorial(n)
 
@@ -83,7 +83,7 @@ def test_gegenbauer():
     assert gegenbauer(1, a, x) == 2*a*x
     assert gegenbauer(2, a, x) == -a + x**2*(2*a**2 + 2*a)
     assert gegenbauer(3, a, x) == \
-        x**3*(4*a**3/3 + 4*a**2 + 8*a/3) + x*(-2*a**2 - 2*a)
+        x**3*(4*a**3/3 + 4*a**2 + a*Rational(8, 3)) + x*(-2*a**2 - 2*a)
 
     assert gegenbauer(-1, a, x) == 0
     assert gegenbauer(n, S.Half, x) == legendre(n, x)
@@ -159,7 +159,7 @@ def test_legendre():
 
     assert legendre(n, 0) == sqrt(pi)/(gamma(S.Half - n/2)*gamma(n/2 + 1))
     assert legendre(n, 1) == 1
-    assert legendre(n, oo) == oo
+    assert legendre(n, oo) is oo
     assert legendre(-n, x) == legendre(n - 1, x)
     assert legendre(n, -x) == (-1)**n*legendre(n, x)
     assert unchanged(legendre, -n + k, x)
@@ -253,7 +253,7 @@ def test_chebyshev():
 
     assert chebyshevt(n, 0) == cos(pi*n/2)
     assert chebyshevt(n, 1) == 1
-    assert chebyshevt(n, oo) == oo
+    assert chebyshevt(n, oo) is oo
 
     assert conjugate(chebyshevt(n, x)) == chebyshevt(n, conjugate(x))
 
@@ -269,7 +269,7 @@ def test_chebyshev():
 
     assert chebyshevu(n, 0) == cos(pi*n/2)
     assert chebyshevu(n, 1) == n + 1
-    assert chebyshevu(n, oo) == oo
+    assert chebyshevu(n, oo) is oo
 
     assert conjugate(chebyshevu(n, x)) == chebyshevu(n, conjugate(x))
 
@@ -302,7 +302,7 @@ def test_hermite():
     assert unchanged(hermite, -n, x)
 
     assert hermite(n, 0) == 2**n*sqrt(pi)/gamma(S.Half - n/2)
-    assert hermite(n, oo) == oo
+    assert hermite(n, oo) is oo
 
     assert conjugate(hermite(n, x)) == hermite(n, conjugate(x))
 
@@ -332,7 +332,7 @@ def test_laguerre():
 
     assert laguerre(n, 0) == 1
     assert laguerre(n, oo) == (-1)**n*oo
-    assert laguerre(n, -oo) == oo
+    assert laguerre(n, -oo) is oo
 
     assert conjugate(laguerre(n, x)) == laguerre(n, conjugate(x))
 
@@ -382,7 +382,7 @@ def test_assoc_laguerre():
     assert assoc_laguerre(n, alpha, 0) == binomial(alpha + n, alpha)
     p = Symbol("p", positive=True)
     assert assoc_laguerre(p, alpha, oo) == (-1)**p*oo
-    assert assoc_laguerre(p, alpha, -oo) == oo
+    assert assoc_laguerre(p, alpha, -oo) is oo
 
     assert diff(assoc_laguerre(n, alpha, x), x) == \
         -assoc_laguerre(n - 1, alpha + 1, x)

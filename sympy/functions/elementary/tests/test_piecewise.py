@@ -151,11 +151,11 @@ def test_piecewise1():
     # Test integration
     assert p.integrate() == Piecewise(
         (-x, x < -1),
-        (x**3/3 + S(4)/3, x < 0),
-        (x*log(x) - x + S(4)/3, True))
+        (x**3/3 + Rational(4, 3), x < 0),
+        (x*log(x) - x + Rational(4, 3), True))
     p = Piecewise((x, x < 1), (x**2, -1 <= x), (x, 3 < x))
-    assert integrate(p, (x, -2, 2)) == S(5)/6
-    assert integrate(p, (x, 2, -2)) == -S(5)/6
+    assert integrate(p, (x, -2, 2)) == Rational(5, 6)
+    assert integrate(p, (x, 2, -2)) == Rational(-5, 6)
     p = Piecewise((0, x < 0), (1, x < 1), (0, x < 2), (1, x < 3), (0, True))
     assert integrate(p, (x, -oo, oo)) == 2
     p = Piecewise((x, x < -10), (x**2, x <= -1), (x, 1 < x))
@@ -1114,7 +1114,7 @@ def test_issue_8919():
     c = symbols('c:5')
     x = symbols("x")
     f1 = Piecewise((c[1], x < 1), (c[2], True))
-    f2 = Piecewise((c[3], x < S.One/3), (c[4], True))
+    f2 = Piecewise((c[3], x < Rational(1, 3)), (c[4], True))
     assert integrate(f1*f2, (x, 0, 2)
         ) == c[1]*c[3]/3 + 2*c[1]*c[4]/3 + c[2]*c[4]
     f1 = Piecewise((0, x < 1), (2, True))

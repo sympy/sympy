@@ -1,7 +1,7 @@
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.functions import express, matrix_to_vector, orthogonalize
-from sympy import symbols, S, sqrt, sin, cos, ImmutableMatrix as Matrix
+from sympy import symbols, S, sqrt, sin, cos, ImmutableMatrix as Matrix, Rational
 from sympy.utilities.pytest import raises
 
 N = CoordSys3D('N')
@@ -171,7 +171,7 @@ def test_orthogonalize():
     v5 = 2*i + 2*j
     v6 = a*i + b*j
     v7 = 4*a*i + 4*b*j
-    assert orthogonalize(v1, v2) == [C.i + 2*C.j, 2*C.i/5 + -C.j/5]
+    assert orthogonalize(v1, v2) == [C.i + 2*C.j, C.i*Rational(2, 5) + -C.j/5]
     # from wikipedia
     assert orthogonalize(v4, v5, orthonormal=True) == \
         [(3*sqrt(10))*C.i/10 + (sqrt(10))*C.j/10, (-sqrt(10))*C.i/10 + (3*sqrt(10))*C.j/10]

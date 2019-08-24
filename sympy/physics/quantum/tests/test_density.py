@@ -245,7 +245,7 @@ def test_fidelity():
     state1 = Qubit('0')
     state2 = Qubit('1')
     state3 = S.One/sqrt(2)*state1 + S.One/sqrt(2)*state2
-    state4 = sqrt(S(2)/3)*state1 + S.One/sqrt(3)*state2
+    state4 = sqrt(Rational(2, 3))*state1 + S.One/sqrt(3)*state2
 
     state1_dm = Density([state1, 1])
     state2_dm = Density([state2, 1])

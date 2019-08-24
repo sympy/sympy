@@ -548,7 +548,7 @@ def test_inequalities_symbol_name_same_complex():
     With complex non-real numbers, both should raise errors.
     """
     # FIXME: could replace with random selection after test passes
-    for a in (x, S.Zero, S.One/3, pi, oo):
+    for a in (x, S.Zero, S.One/3, pi, oo, Rational(1, 3)):
         raises(TypeError, lambda: Gt(a, I))
         raises(TypeError, lambda: a > I)
         raises(TypeError, lambda: Lt(a, I))
@@ -565,7 +565,7 @@ def test_inequalities_cant_sympify_other():
 
     bar = "foo"
 
-    for a in (x, S.Zero, S.One/3, pi, I, zoo, oo, -oo, nan):
+    for a in (x, S.Zero, S.One/3, pi, I, zoo, oo, -oo, nan, Rational(1, 3)):
         for op in (lt, gt, le, ge):
             raises(TypeError, lambda: op(a, bar))
 
@@ -639,9 +639,8 @@ def test_simplify_relational():
     # this will simplify to S.false and that is the
     # reason for the 'if r.is_Relational' in Relational's
     # _eval_simplify routine
-    assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
-        2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
-
+    assert simplify(-(2**(pi*Rational(3, 2)) + 6**pi)**(1/pi) +
+                    2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
     # canonical at least
     assert Eq(y, x).simplify() == Eq(x, y)
     assert Eq(x - 1, 0).simplify() == Eq(x, 1)
