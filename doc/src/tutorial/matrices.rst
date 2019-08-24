@@ -431,6 +431,7 @@ This simplification will leave the matrix in a relatively simplified state after
 the operation and permit calculations on some large matrices which were not
 possible or extremely slow previously.
 
+    >>> x = Symbol('x')
     >>> M = Matrix([[1+x, 1-x], [1-x, 1+x]])
     >>> M*M
     ⎡(1 - x)**2 + (x + 1)**2,       2*(1 - x)*(x + 1)⎤
