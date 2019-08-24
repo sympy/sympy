@@ -963,6 +963,13 @@ def test_sympy__sets__contains__Contains():
     assert _test_args(Contains(x, Range(0, 10, 2)))
 
 
+def test_sympy__sets__underlyingsets__UnderlyingSetOf():
+    from sympy.combinatorics.named_groups import AlternatingGroup
+    from sympy.sets.underlyingsets import UnderlyingSetOf
+    G = AlternatingGroup(3)
+    assert _test_args(UnderlyingSetOf(G))
+
+
 # STATS
 
 
