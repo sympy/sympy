@@ -60,7 +60,21 @@ class Set(Basic):
     is_Complement = None
     is_ComplexRegion = False
 
-    is_empty = None
+    @property
+    def is_empty(self):
+        """
+        Property method to check whether a set is empty.
+        Returns ``True``, ``False`` or ``None`` (if unknown).
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, var
+        >>> x = var('x', real=True)
+        >>> Interval(x, x + 1).is_empty
+        False
+        """
+        return None
 
     @property
     @deprecated(useinstead="is_empty", issue=16946, deprecated_since_version="1.5")
@@ -526,7 +540,7 @@ class Set(Basic):
     def is_closed(self):
         """
         A property method to check whether a set is closed. A set is closed
-        if it's complement is an open set.
+        if its complement is an open set.
 
         Examples
         ========
@@ -1411,7 +1425,7 @@ class Complement(Set, EvalfMixin):
     r"""Represents the set difference or relative complement of a set with
     another set.
 
-    `A - B = \{x \in A| x \\notin B\}`
+    `A - B = \{x \in A \mid x \notin B\}`
 
 
     Examples
@@ -1809,7 +1823,7 @@ def imageset(*args):
     unevaluated ImageSet object.
 
     .. math::
-        { f(x) | x \in self }
+        \{ f(x) \mid x \in \mathrm{self} \}
 
     Examples
     ========
