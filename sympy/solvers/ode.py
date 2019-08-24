@@ -4160,7 +4160,7 @@ def _remove_redundant_solutions(eq, solns, order, var):
     that the second solution is a special case of the first and we don't
     want to return it.
 
-    This does not always happen. if we have
+    This does not always happen. If we have
 
         eq = Eq((f(x)**2-4)*(f(x).diff(x)-4), 0)
 
@@ -4199,7 +4199,7 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     # We then try to solve those n+1 equations for the integrations constants
     # in sol2. If we can find a solution that doesn't depend on x then it
     # means that some value of the constants in sol1 is a special case of
-    # sol2 corresponding to a paritcular choice of the integration constants.
+    # sol2 corresponding to a particular choice of the integration constants.
 
     constants1 = soln1.free_symbols.difference(eq.free_symbols)
     constants2 = soln2.free_symbols.difference(eq.free_symbols)
