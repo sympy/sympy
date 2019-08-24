@@ -219,5 +219,8 @@ def test_beta():
     prntr = PythonCodePrinter()
     assert prntr.doprint(expr) == 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
 
+    prntr = PythonCodePrinter({'allow_unknown_functions': True})
+    assert prntr.doprint(expr) == 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
+
     prntr = MpmathPrinter()
     assert prntr.doprint(expr) ==  'mpmath.beta(x, y)'
