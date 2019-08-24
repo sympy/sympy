@@ -1262,6 +1262,12 @@ def test_issue_15360():
     assert f.name == 'f'
 
 
+def test_issue_15947():
+    assert f._diff_wrt is False
+    raises(ValueError, lambda: f(f))
+    raises(ValueError, lambda: f(x).diff(f))
+
+
 def test_Derivative_free_symbols():
     f = Function('f')
     n = Symbol('n', integer=True, positive=True)
