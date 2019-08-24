@@ -10,7 +10,7 @@ from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.matrices.common import fastalgsimp
+from sympy.matrices.common import fastalgsimp, matrix_mul_inner_loop
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 
@@ -481,24 +481,9 @@ class SparseMatrix(MatrixBase):
                 # these are the only things that need to be multiplied.
                 indices = set(col_lookup[col].keys()) & set(row_lookup[row].keys())
                 if indices:
-                    len_indices = len(indices)
-                    vec = [None]*len_indices
-                    for i, k in enumerate(indices):
-                        c       = row_lookup[row][k]*col_lookup[col][k]
-                        _expand = mulsimp and getattr(c, 'expand', None)
-                        vec[i]  = _expand(power_base=False, power_exp=False, log=False, \
-                                multinomial=False, basic=False) if _expand else c
-                    if len_indices != 1:
-                        try:
-                            c = sum(vec)
-                        except (TypeError, SympifyError):
-                            # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
-                            # They don't work with `sum` because `sum` tries to add `0`
-                            # initially, and for a matrix, that is a mix of a scalar and
-                            # a matrix, which raises a TypeError. Fall back to a
-                            # block-matrix-safe way to multiply if the `sum` fails.
-                            c = reduce(lambda a,b: a + b, vec)
-                    smat[row, col] = fastalgsimp(c) if mulsimp else c
+                    smat[row, col] = matrix_mul_inner_loop([None]*len(indices), \
+                            (row_lookup[row][k]*col_lookup[col][k] for i, k in enumerate(indices)), \
+                            mulsimp=mulsimp)
 
         return self._new(self.rows, other.cols, smat)
 

@@ -2088,21 +2088,8 @@ class MatrixArithmetic(MatrixRequired):
         vec       = [None]*self_cols
 
         def entry(i, j):
-            for k in range(self_cols):
-                c       = self[i,k]*other[k,j]
-                _expand = mulsimp and getattr(c, 'expand', None)
-                vec[k]  = _expand(power_base=False, power_exp=False, log=False, \
-                        multinomial=False, basic=False) if _expand else c
-            try:
-                e = sum(vec)
-            except (TypeError, SympifyError):
-                # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
-                # They don't work with `sum` because `sum` tries to add `0`
-                # initially, and for a matrix, that is a mix of a scalar and
-                # a matrix, which raises a TypeError. Fall back to a
-                # block-matrix-safe way to multiply if the `sum` fails.
-                e = reduce(lambda a,b: a + b, vec)
-            return fastalgsimp(e) if mulsimp else e
+            return matrix_mul_inner_loop(vec, (self[i,k]*other[k,j] for k in range(self_cols)), \
+                    mulsimp=mulsimp)
 
         return self._new(self.rows, other.cols, entry)
 
@@ -2604,3 +2591,24 @@ def fastalgsimp(expr):
         return expr3
 
     return expr
+
+
+def matrix_mul_inner_loop(vec, itr, mulsimp=None):
+    """Common MatrixArithmetic, MatrixDense and MatrixSparse inner loop to
+    centralize summing, simplifying and ISSUE #11599 in one place."""
+
+    for i, c in enumerate(itr):
+        _expand = mulsimp and getattr(c, 'expand', None)
+        vec[i]  = _expand(power_base=False, power_exp=False, log=False, \
+                multinomial=False, basic=False) if _expand else c
+    try:
+        e = sum(vec)
+    except (TypeError, SympifyError):
+        # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+        # They don't work with `sum` because `sum` tries to add `0`
+        # initially, and for a matrix, that is a mix of a scalar and
+        # a matrix, which raises a TypeError. Fall back to a
+        # block-matrix-safe way to multiply if the `sum` fails.
+        e = reduce(lambda a,b: a + b, vec)
+
+    return fastalgsimp(e) if mulsimp else e

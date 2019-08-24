@@ -13,7 +13,8 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, fastalgsimp
+    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, fastalgsimp, \
+    matrix_mul_inner_loop
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -192,22 +193,9 @@ class DenseMatrix(MatrixBase):
                 row, col    = i // new_mat_cols, i % new_mat_cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
                 col_indices = range(col, other_len, other_cols)
+                new_mat[i]  = matrix_mul_inner_loop(vec, (self_mat[a]*other_mat[b] \
+                        for a,b in zip(row_indices, col_indices)), mulsimp=mulsimp)
 
-                for j,a,b in zip(range(self_cols), row_indices, col_indices):
-                    c       = self_mat[a]*other_mat[b]
-                    _expand = mulsimp and getattr(c, 'expand', None)
-                    vec[j]  = _expand(power_base=False, power_exp=False, log=False, \
-                            multinomial=False, basic=False) if _expand else c
-                try:
-                    e = sum(vec)
-                except (TypeError, SympifyError):
-                    # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
-                    # They don't work with `sum` because `sum` tries to add `0`
-                    # initially, and for a matrix, that is a mix of a scalar and
-                    # a matrix, which raises a TypeError. Fall back to a
-                    # block-matrix-safe way to multiply if the `sum` fails.
-                    e = reduce(lambda a,b: a + b, vec)
-                new_mat[i] = fastalgsimp(e) if mulsimp else e
         return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):
