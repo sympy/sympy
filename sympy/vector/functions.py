@@ -7,6 +7,56 @@ from sympy import diff, integrate, S, simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
 
+def extended_express(expr,coordsys):
+   "allow transformation between cartesian and non-cartesian frames"
+   assert isinstance(coordsys,CoordSys3D) # check we are expressing in a frame
+
+   parts=expr.separate() # get different coordinate frames in vector, cry if more than one
+
+   if isinstance(parts,dict):
+       if(len(parts)==0): return Vector.zero # we have been given zero vector
+       if(len(parts)>1):  raise(ValueError," Doesn't support expressions containing multiple base coordinate frames ")
+
+       foundframe=tuple(parts.keys())[0]
+       foundvector=tuple(parts.values())[0]
+   else:
+       foundframe=parts.system
+       foundvector=parts
+
+   # we should now have found the only frame in the vector, and we now have to convert it to the given frame
+
+   from_frame=foundframe
+   to_frame=coordsys
+
+   from_coeffs1=from_frame.base_vectors()
+   from_coeffs2=from_frame.base_scalars()
+   to_coeffs=to_frame.base_vectors()    # output with vectors      
+
+   if from_frame._parent==to_frame: 
+         transform_function=from_frame._transformation_lambda
+   else: 
+         if to_frame._parent==from_frame: 
+              transform_function=to_frame._transformation_from_parent_lambda
+         else: 
+              raise(ValueError," Cannot link Coordinate frames")
+   args=[]
+
+   for i,j in zip(from_coeffs1,from_coeffs2): # could be expressed in either for inertial frame
+      coeff1=foundvector.coeff(i)  # understand both N.i and N.x (or C.r and C.i)
+      coeff2=foundvector.coeff(j)
+      if coeff1!=0 and coeff2!=0: raise(ValueError,"cannot express vector with both base vectors and base scalars - check your vector")
+      args.append(coeff1+coeff2) # only one can be non-zero
+
+   vals=transform_function(*args)
+
+   ans=Vector.zero
+
+   for v,c in zip(vals,to_coeffs):
+       if isnan(v):  # v is nan ie infinity from an arctan
+           v=0 # use to solve for cylindrical coords where theta is undefined
+       ans=ans+v*c
+   return ans
+
 
 def express(expr, system, system2=None, variables=False):
     """
