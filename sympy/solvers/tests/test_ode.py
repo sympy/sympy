@@ -2358,7 +2358,6 @@ def test_unexpanded_Liouville_ODE():
     assert dsolve(eq2) in (sol2, sol2s)
     assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
 
-
 def test_issue_4785():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
@@ -2596,8 +2595,11 @@ def test_almost_linear():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x*f(x)*d + 2*x*f(x)**2 + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol[0].rhs == -sqrt(C1 - 2*Ei(4*x))*exp(-2*x)
+    sol = [
+        Eq(f(x), -sqrt((C1 - 2*Ei(4*x))*exp(-4*x))),
+        Eq(f(x), sqrt((C1 - 2*Ei(4*x))*exp(-4*x)))
+    ]
+    assert set(dsolve(eq, f(x), hint = 'almost_linear')) == set(sol)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x*d + x*f(x) + 1
@@ -3380,17 +3382,17 @@ def test_nth_algebraic_redundant_solutions():
 
     # This one doesn't work with dsolve at the time of writing but the
     # redundancy checking code should not remove the algebraic solution.
-    from sympy.solvers.ode import _nth_algebraic_remove_redundant_solutions
+    from sympy.solvers.ode import _remove_redundant_solutions
     eqn = f(x) + f(x)*f(x).diff(x)
     solns = [Eq(f(x), 0),
              Eq(f(x), C1 - x)]
-    solns_final =  _nth_algebraic_remove_redundant_solutions(eqn, solns, 1, x)
+    solns_final =  _remove_redundant_solutions(eqn, solns, 1, x)
     assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
     assert set(solns) == set(solns_final)
 
     solns = [Eq(f(x), exp(x)),
              Eq(f(x), C1*exp(C2*x))]
-    solns_final =  _nth_algebraic_remove_redundant_solutions(eqn, solns, 2, x)
+    solns_final =  _remove_redundant_solutions(eqn, solns, 2, x)
     assert solns_final == [Eq(f(x), C1*exp(C2*x))]
 
     # This one needs a substitution f' = g.
@@ -3398,7 +3400,6 @@ def test_nth_algebraic_redundant_solutions():
     sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
     assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
     assert sol == dsolve(eqn, f(x))
-
 
 #
 # These tests can be combined with the above test if they get fixed
@@ -3494,3 +3495,17 @@ def test_issue_15913():
 def test_issue_16146():
     raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x), g(x), h(x)]))
     raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x)]))
+
+def test_dsolve_remove_redundant_solutions():
+
+    eq = (f(x)-2)*f(x).diff(x)
+    sol = Eq(f(x), C1)
+    assert dsolve(eq) == sol
+
+    eq = (f(x)-sin(x))*(f(x).diff(x, 2))
+    sol = {Eq(f(x), C1 + C2*x), Eq(f(x), sin(x))}
+    assert set(dsolve(eq)) == sol
+
+    eq = (f(x)**2-2*f(x)+1)*f(x).diff(x, 3)
+    sol = Eq(f(x), C1 + C2*x + C3*x**2)
+    assert dsolve(eq) == sol
