@@ -1,4 +1,4 @@
-from sympy import I, Rational, Symbol, pi, sqrt
+from sympy import I, Rational, Symbol, pi, sqrt, S
 from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.matrices import Matrix
@@ -19,7 +19,7 @@ def test_point():
     p3 = Point(0, 0)
     p4 = Point(1, 1)
     p5 = Point(0, 1)
-    line = Line(Point(1,0), slope = 1)
+    line = Line(Point(1, 0), slope=1)
 
     assert p1 in p1
     assert p1 not in p2

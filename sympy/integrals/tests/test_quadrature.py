@@ -1,4 +1,4 @@
-from sympy.core import S
+from sympy.core import S, Rational
 from sympy.integrals.quadrature import (gauss_legendre, gauss_laguerre,
                                         gauss_hermite, gauss_gen_laguerre,
                                         gauss_chebyshev_t, gauss_chebyshev_u,
