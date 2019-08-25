@@ -168,7 +168,7 @@ class elliptic_f(Function):
             return self.func(z.conjugate(), m.conjugate())
 
     def _eval_is_zero(self):
-        z, m = self.args[0]
+        z, m = self.args
         if z.is_zero:
             return True
         if m.is_extended_real and m.is_infinite:

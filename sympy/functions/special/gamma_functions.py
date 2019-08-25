@@ -351,7 +351,7 @@ class lowergamma(Function):
     def _eval_conjugate(self):
         x = self.args[1]
         if x not in (S.Zero, S.NegativeInfinity):
-            return self.func(self.args[0].conjugate(), z.conjugate())
+            return self.func(self.args[0].conjugate(), x.conjugate())
 
     def _eval_rewrite_as_uppergamma(self, s, x, **kwargs):
         return gamma(s) - uppergamma(s, x)

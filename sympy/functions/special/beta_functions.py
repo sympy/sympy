@@ -101,6 +101,8 @@ class beta(Function):
     def eval(cls, x, y):
         if y is S.One:
             return 1/x
+        if x is S.One:
+            return 1/y
 
     def _eval_expand_func(self, **hints):
         x, y = self.args
