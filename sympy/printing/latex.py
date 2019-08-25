@@ -671,7 +671,7 @@ class LatexPrinter(Printer):
         return self._print(expr.label)
 
     def _print_Derivative(self, expr):
-        if requires_partial(expr):
+        if requires_partial(expr.expr):
             diff_symbol = r'\partial'
         else:
             diff_symbol = r'd'
@@ -844,7 +844,7 @@ class LatexPrinter(Printer):
         return self._hprint_Function(str(expr))
 
     def _print_ElementwiseApplyFunction(self, expr):
-        return r"%s\left({%s}\ldots\right)" % (
+        return r"{%s}_{\circ}\left({%s}\right)" % (
             self._print(expr.function),
             self._print(expr.expr),
         )
@@ -1616,7 +1616,10 @@ class LatexPrinter(Printer):
             map(lambda arg: parens(arg, prec, strict=True), args))
 
     def _print_HadamardPower(self, expr):
-        template = r"%s^{\circ {%s}}"
+        if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
+            template = r"%s^{\circ \left({%s}\right)}"
+        else:
+            template = r"%s^{\circ {%s}}"
         return self._helper_print_standard_power(expr, template)
 
     def _print_KroneckerProduct(self, expr):
@@ -2269,7 +2272,10 @@ class LatexPrinter(Printer):
         return self._print(Symbol(object.name))
 
     def _print_LambertW(self, expr):
-        return r"W\left(%s\right)" % self._print(expr.args[0])
+        if len(expr.args) == 1:
+            return r"W\left(%s\right)" % self._print(expr.args[0])
+        return r"W_{%s}\left(%s\right)" % \
+            (self._print(expr.args[1]), self._print(expr.args[0]))
 
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)

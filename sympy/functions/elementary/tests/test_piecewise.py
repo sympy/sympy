@@ -1228,6 +1228,39 @@ def test_issue_8458():
     assert p3.simplify() == Piecewise((0, Eq(x, -1)), (sin(x), True))
 
 
+def test_issue_16417():
+    from sympy import im, re, Gt
+    z = Symbol('z')
+    assert unchanged(Piecewise, (1, Or(Eq(im(z), 0), Gt(re(z), 0))), (2, True))
+
+    x = Symbol('x')
+    assert unchanged(Piecewise, (S.Pi, re(x) < 0),
+                 (0, Or(re(x) > 0, Ne(im(x), 0))),
+                 (S.NaN, True))
+    r = Symbol('r', real=True)
+    p = Piecewise((S.Pi, re(r) < 0),
+                 (0, Or(re(r) > 0, Ne(im(r), 0))),
+                 (S.NaN, True))
+    assert p == Piecewise((S.Pi, r < 0),
+                 (0, r > 0),
+                 (S.NaN, True), evaluate=False)
+    # Does not work since imaginary != 0...
+    #i = Symbol('i', imaginary=True)
+    #p = Piecewise((S.Pi, re(i) < 0),
+    #              (0, Or(re(i) > 0, Ne(im(i), 0))),
+    #              (S.NaN, True))
+    #assert p == Piecewise((0, Ne(im(i), 0)),
+    #                      (S.NaN, True), evaluate=False)
+    i = I*r
+    p = Piecewise((S.Pi, re(i) < 0),
+                  (0, Or(re(i) > 0, Ne(im(i), 0))),
+                  (S.NaN, True))
+    assert p == Piecewise((0, Ne(im(i), 0)),
+                          (S.NaN, True), evaluate=False)
+    assert p == Piecewise((0, Ne(r, 0)),
+                          (S.NaN, True), evaluate=False)
+
+
 def test_eval_rewrite_as_KroneckerDelta():
     x, y, z, n, t, m = symbols('x y z n t m')
     K = KroneckerDelta
@@ -1302,3 +1335,13 @@ def test_eval_rewrite_as_KroneckerDelta():
 
     p22 = Piecewise((0, ~((Eq(y, -1) | Ne(x, 0)) & (Ne(x, 1) | Ne(y, -1)))), (1, True))
     assert f(p22) == K(-1, y)*K(0, x) - K(-1, y)*K(1, x) - K(0, x) + 1
+
+
+@slow
+def test_identical_conds_issue():
+    from sympy.stats import Uniform, density
+    u1 = Uniform('u1', 0, 1)
+    u2 = Uniform('u2', 0, 1)
+    # Result is quite big, so not really important here (and should ideally be
+    # simpler). Should not give an exception though.
+    density(u1 + u2)

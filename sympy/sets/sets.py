@@ -88,7 +88,7 @@ class Set(Basic):
         >>> Interval(0, 1) + Interval(2, 3)
         Union(Interval(0, 1), Interval(2, 3))
         >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
-        Union(Interval.Lopen(1, 2), {3})
+        Union({3}, Interval.Lopen(1, 2))
 
         Similarly it is possible to use the '-' operator for set differences:
 
@@ -162,7 +162,7 @@ class Set(Basic):
         Union(Interval.open(-oo, 0), Interval.open(1, oo))
 
         >>> Interval(0, 1).complement(S.UniversalSet)
-        UniversalSet \ Interval(0, 1)
+        Complement(UniversalSet, Interval(0, 1))
 
         """
         return Complement(universe, self)
@@ -618,13 +618,13 @@ class ProductSet(Set):
     >>> from sympy import Interval, FiniteSet, ProductSet
     >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
     >>> ProductSet(I, S)
-    Interval(0, 5) x {1, 2, 3}
+    ProductSet(Interval(0, 5), {1, 2, 3})
 
     >>> (2, 2) in ProductSet(I, S)
     True
 
     >>> Interval(0, 1) * Interval(0, 1) # The unit square
-    Interval(0, 1) x Interval(0, 1)
+    ProductSet(Interval(0, 1), Interval(0, 1))
 
     >>> coin = FiniteSet('H', 'T')
     >>> set(coin**2)

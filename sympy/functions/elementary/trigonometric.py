@@ -855,7 +855,7 @@ class cos(TrigonometricFunction):
         return 1/sec(arg)
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
-        return 1 / sec(arg)._eval_rewrite_as_csc(arg)
+        return 1 / sec(arg).rewrite(csc)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -1178,13 +1178,13 @@ class tan(TrigonometricFunction):
         return 1/cot(arg)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
-        sin_in_sec_form = sin(arg)._eval_rewrite_as_sec(arg)
-        cos_in_sec_form = cos(arg)._eval_rewrite_as_sec(arg)
+        sin_in_sec_form = sin(arg).rewrite(sec)
+        cos_in_sec_form = cos(arg).rewrite(sec)
         return sin_in_sec_form / cos_in_sec_form
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
-        sin_in_csc_form = sin(arg)._eval_rewrite_as_csc(arg)
-        cos_in_csc_form = cos(arg)._eval_rewrite_as_csc(arg)
+        sin_in_csc_form = sin(arg).rewrite(csc)
+        cos_in_csc_form = cos(arg).rewrite(csc)
         return sin_in_csc_form / cos_in_csc_form
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
@@ -1442,13 +1442,13 @@ class cot(TrigonometricFunction):
         return 1/tan(arg)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
-        cos_in_sec_form = cos(arg)._eval_rewrite_as_sec(arg)
-        sin_in_sec_form = sin(arg)._eval_rewrite_as_sec(arg)
+        cos_in_sec_form = cos(arg).rewrite(sec)
+        sin_in_sec_form = sin(arg).rewrite(sec)
         return cos_in_sec_form / sin_in_sec_form
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
-        cos_in_csc_form = cos(arg)._eval_rewrite_as_csc(arg)
-        sin_in_csc_form = sin(arg)._eval_rewrite_as_csc(arg)
+        cos_in_csc_form = cos(arg).rewrite(csc)
+        sin_in_csc_form = sin(arg).rewrite(csc)
         return cos_in_csc_form / sin_in_csc_form
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
@@ -1686,10 +1686,10 @@ class sec(ReciprocalTrigonometricFunction):
         return sin(arg)/(cos(arg)*sin(arg))
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
-        return (1 / cos(arg)._eval_rewrite_as_sin(arg))
+        return (1 / cos(arg).rewrite(sin))
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
-        return (1 / cos(arg)._eval_rewrite_as_tan(arg))
+        return (1 / cos(arg).rewrite(tan))
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return csc(pi / 2 - arg, evaluate=False)
@@ -1767,13 +1767,13 @@ class csc(ReciprocalTrigonometricFunction):
         return (1 + cot_half**2)/(2*cot_half)
 
     def _eval_rewrite_as_cos(self, arg, **kwargs):
-        return (1 / sin(arg)._eval_rewrite_as_cos(arg))
+        return 1 / sin(arg).rewrite(cos)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
         return sec(pi / 2 - arg, evaluate=False)
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
-        return (1 / sin(arg)._eval_rewrite_as_tan(arg))
+        return (1 / sin(arg).rewrite(tan))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -2981,7 +2981,7 @@ class atan2(InverseTrigonometricFunction):
 
     >>> from sympy import atan
     >>> atan2(y, x).rewrite(atan)
-    Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)), (pi, x < 0), (0, x > 0), (nan, True))
+    Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)), (pi, re(x) < 0), (0, Ne(x, 0)), (nan, True))
 
     but note that this form is undefined on the negative real axis.
 
@@ -3029,8 +3029,13 @@ class atan2(InverseTrigonometricFunction):
                     return -S.Pi/2
                 elif y.is_zero:
                     return S.NaN
-        if y.is_zero and x.is_extended_real and fuzzy_not(x.is_zero):
-            return S.Pi * (S.One - Heaviside(x))
+        if y.is_zero:
+            if x.is_extended_nonzero:
+                return S.Pi * (S.One - Heaviside(x))
+            if x.is_number:
+                return Piecewise((S.Pi, re(x) < 0),
+                                 (0, Ne(x, 0)),
+                                 (S.NaN, True))
         if x.is_number and y.is_number:
             return -S.ImaginaryUnit*log(
                 (x + S.ImaginaryUnit*y)/sqrt(x**2 + y**2))
@@ -3039,16 +3044,19 @@ class atan2(InverseTrigonometricFunction):
         return -S.ImaginaryUnit*log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
 
     def _eval_rewrite_as_atan(self, y, x, **kwargs):
-        return Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)), (pi, x < 0), (0, x > 0), (S.NaN, True))
+        from sympy import re
+        return Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)),
+                         (pi, re(x) < 0),
+                         (0, Ne(x, 0)),
+                         (S.NaN, True))
 
     def _eval_rewrite_as_arg(self, y, x, **kwargs):
         from sympy import arg
         if x.is_extended_real and y.is_extended_real:
             return arg(x + y*S.ImaginaryUnit)
-        I = S.ImaginaryUnit
-        n = x + I*y
+        n = x + S.ImaginaryUnit*y
         d = x**2 + y**2
-        return arg(n/sqrt(d)) - I*log(abs(n)/sqrt(abs(d)))
+        return arg(n/sqrt(d)) - S.ImaginaryUnit*log(abs(n)/sqrt(abs(d)))
 
     def _eval_is_extended_real(self):
         return self.args[0].is_extended_real and self.args[1].is_extended_real
@@ -3070,4 +3078,4 @@ class atan2(InverseTrigonometricFunction):
     def _eval_evalf(self, prec):
         y, x = self.args
         if x.is_extended_real and y.is_extended_real:
-            super(atan2, self)._eval_evalf(prec)
+            return super(atan2, self)._eval_evalf(prec)

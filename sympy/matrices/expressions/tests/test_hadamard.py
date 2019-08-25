@@ -75,8 +75,6 @@ def test_hadamard():
 def test_hadamard_power():
     m, n, p = symbols('m, n, p', integer=True)
     A = MatrixSymbol('A', m, n)
-    B = MatrixSymbol('B', m, n)
-    C = MatrixSymbol('C', m, p)
 
     assert hadamard_power(A, 1) == A
     assert isinstance(hadamard_power(A, 2), HadamardPower)
@@ -84,8 +82,3 @@ def test_hadamard_power():
     assert hadamard_power(A, n)[0, 0] == A[0, 0]**n
     assert hadamard_power(m, n) == m**n
     raises(ValueError, lambda: hadamard_power(A, A))
-
-    # Testing printer:
-    assert str(hadamard_power(A, n)) == "A.**n"
-    assert str(hadamard_power(A, 1+n)) == "A.**(n + 1)"
-    assert str(hadamard_power(A*B.T, 1+n)) == "(A*B.T).**(n + 1)"

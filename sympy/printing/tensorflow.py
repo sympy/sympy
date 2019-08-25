@@ -222,7 +222,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         return "%s(%s, %s)" % (
             self._module_format("tensorflow.transpose"),
             self._print(expr.expr),
-            self._print(expr.permutation.args[0]),
+            self._print(expr.permutation.array_form),
         )
 
     def _print_CodegenArrayElementwiseAdd(self, expr):

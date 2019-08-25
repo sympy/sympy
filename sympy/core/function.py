@@ -1352,6 +1352,9 @@ class Derivative(Expr):
             if zero:
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
+                elif isinstance(expr, MatrixExpr):
+                    from sympy import ZeroMatrix
+                    return ZeroMatrix(*expr.shape)
                 elif expr.is_scalar:
                     return S.Zero
 
@@ -1641,7 +1644,11 @@ class Derivative(Expr):
 
     @property
     def free_symbols(self):
-        return self.expr.free_symbols
+        ret = self.expr.free_symbols
+        # Add symbolic counts to free_symbols
+        for var, count in self.variable_count:
+            ret.update(count.free_symbols)
+        return ret
 
     def _eval_subs(self, old, new):
         # The substitution (old, new) cannot be done inside
