@@ -1,4 +1,5 @@
 .. _solvers-docs:
+
 =======
 Solvers
 =======
@@ -9,11 +10,11 @@ Contents
 ========
 
 .. toctree::
-  :maxdepth: 2
+	:maxdepth: 2
 
-  solvers.rst
-  solveset.rst
-  ode.rst
-  pde.rst
-  inequalities.rst
-  diophantine.rst
+   solvers.rst
+   solveset.rst
+   ode.rst
+   pde.rst
+   inequalities.rst
+   diophantine.rst
