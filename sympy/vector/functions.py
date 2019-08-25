@@ -7,7 +7,6 @@ from sympy import diff, integrate, S, simplify
 from sympy.core import sympify, nan
 from sympy.vector.dyadic import Dyadic
 
-
 def extended_express(expr,coordsys):
     """
     express for vectors allowing transformation between
@@ -119,6 +118,15 @@ def extended_express(expr,coordsys):
         ans += v*c
     return ans
 
+def is_non_cartesian_frame(system):
+    """
+    dummy function to detect if a frame is non cartesian
+    currently no solution found, as triggered by rotations
+    as well, corrupting express when working with these
+    """
+    if system._transformation_from_parent_lambda is not None: return True
+    return False
+
 
 def express(expr, system, system2=None, variables=False):
     """
@@ -189,10 +197,19 @@ def express(expr, system, system2=None, variables=False):
                     system_list.append(x.system)
             system_list = set(system_list)
             subs_dict = {}
+            found_transform = False
             for f in system_list:
                 subs_dict.update(f.scalar_map(system))
+                if is_non_cartesian_frame(f): found_transform=True
+                # catch transform from non-cartesian
             expr = expr.subs(subs_dict)
         # Re-express in this coordinate system
+
+        if is_non_cartesian_frame(system) or found_transform: 
+            return extended_express(expr,system)
+            # catch transform to non-cartesian, use that code instead
+            # edge cases of combined non-cartesian and rotation matrices
+            # or dyadics not currently supported
         outvec = Vector.zero
         parts = expr.separate()
         for x in parts:
