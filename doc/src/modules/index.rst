@@ -45,7 +45,7 @@ access any SymPy module, or use the list below:
    series/index.rst
    sets.rst
    simplify/simplify.rst
-   solvers/solvers.rst
+   solvers/index.rst
    stats.rst
    tensor/index.rst
    utilities/index.rst
