@@ -221,7 +221,7 @@ except:
         "Failed to get the git commit hash as the command " \
         "'git rev-parse HEAD' is not working. The commit hash will be " \
         "assumed as the SymPy master, but the lines may be misleading " \
-        "or nonexistant as it is not the correct branch the doc is " \
+        "or nonexistent as it is not the correct branch the doc is " \
         "built with. Check your installation of 'git' if you want to " \
         "resolve this warning.")
     commit_hash = 'master'
