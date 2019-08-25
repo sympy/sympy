@@ -28,16 +28,16 @@ def extended_express(expr,coordsys):
     >>> from sympy.vector import extended_express, CoordSys3D
     >>> from sympy import pi
     >>> N=CoordSys3D('N')
-    >>> C=N.create_new('C',transformation='cylindrical',base_vectors=('r','theta','z'))
+    >>> C=N.create_new('C',transformation='cylindrical',vector_names=('r','theta','z'))
     >>> extended_express(5*N.i,C)
     5*C.r
     >>> extended_express(5*N.j,C)
-    5*C.r+pi/2*C.theta
+    5*C.r + pi/2*C.theta
     >>> extended_express(10*N.k,C)
     10*C.z
     >>> extended_express(6*C.r,N)
     6*N.i
-    >>> extended_express(6*C.r+pi/2*C.theta)
+    >>> extended_express(6*C.r+pi/2*C.theta,N)
     6*N.j
 
     where a coordinate is undefined (eg theta with extended_express(N.k), it is mapped to zero
@@ -52,54 +52,55 @@ def extended_express(expr,coordsys):
 
     CoordSys3D.transformation_from_parent,CoordSys3D.transformation_to_parent
 
-"""
-   assert isinstance(coordsys,CoordSys3D) # check we are expressing in a frame
+    """
+    if not isinstance(coordsys, CoordSys3D):
+        raise TypeError("system should be a CoordSys3D instance") # check we are expressing in a frame
 
-   parts=expr.separate() # get different coordinate frames in vector, cry if more than one
+    parts=expr.separate() # get different coordinate frames in vector, cry if more than one
 
-   if isinstance(parts,dict):
-       if(len(parts)==0): return Vector.zero # we have been given zero vector
-       if(len(parts)>1):  raise(ValueError," Doesn't support expressions containing multiple base coordinate frames ")
+    if isinstance(parts,dict):
+        if(len(parts)==0): return Vector.zero # we have been given zero vector
+        if(len(parts)>1):  raise(ValueError," Doesn't support expressions containing multiple base coordinate frames ")
 
-       foundframe=tuple(parts.keys())[0]
-       foundvector=tuple(parts.values())[0]
-   else:
-       foundframe=parts.system
-       foundvector=parts
+        foundframe=tuple(parts.keys())[0]
+        foundvector=tuple(parts.values())[0]
+    else:
+        foundframe=parts.system
+        foundvector=parts
 
-   # we should now have found the only frame in the vector, and we now have to convert it to the given frame
+    # we should now have found the only frame in the vector, and we now have to convert it to the given frame
 
-   from_frame=foundframe
-   to_frame=coordsys
+    from_frame=foundframe
+    to_frame=coordsys
 
-   from_coeffs1=from_frame.base_vectors()
-   from_coeffs2=from_frame.base_scalars()
-   to_coeffs=to_frame.base_vectors()    # output with vectors      
+    from_coeffs1=from_frame.base_vectors()
+    from_coeffs2=from_frame.base_scalars()
+    to_coeffs=to_frame.base_vectors()    # output with vectors      
 
-   if from_frame._parent==to_frame: 
-         transform_function=from_frame._transformation_lambda
-   else: 
-         if to_frame._parent==from_frame: 
-              transform_function=to_frame._transformation_from_parent_lambda
-         else: 
-              raise(ValueError," Cannot link Coordinate frames")
-   args=[]
+    if from_frame._parent==to_frame: 
+        transform_function=from_frame._transformation_lambda
+    else: 
+        if to_frame._parent==from_frame: 
+            transform_function=to_frame._transformation_from_parent_lambda
+        else: 
+            raise(ValueError," Cannot link Coordinate frames")
+    args=[]
 
-   for i,j in zip(from_coeffs1,from_coeffs2): # could be expressed in either for inertial frame
-      coeff1=foundvector.coeff(i)  # understand both N.i and N.x (or C.r and C.i)
-      coeff2=foundvector.coeff(j)
-      if coeff1!=0 and coeff2!=0: raise(ValueError,"cannot express vector with both base vectors and base scalars - check your vector")
-      args.append(coeff1+coeff2) # only one can be non-zero
+    for i,j in zip(from_coeffs1,from_coeffs2): # could be expressed in either for inertial frame
+        coeff1=foundvector.coeff(i)  # understand both N.i and N.x (or C.r and C.i)
+        coeff2=foundvector.coeff(j)
+        if coeff1!=0 and coeff2!=0: raise(ValueError,"cannot express vector with both base vectors and base scalars - check your vector")
+        args.append(coeff1+coeff2) # only one can be non-zero
 
-   vals=transform_function(*args)
+    vals=transform_function(*args)
 
-   ans=Vector.zero
+    ans=Vector.zero
  
-   for v,c in zip(vals,to_coeffs):
-       if isnan(v):  # v is nan ie infinity from an arctan
-           v=0 # use to solve for cylindrical coords where theta is undefined
-       ans=ans+v*c
-   return ans
+    for v,c in zip(vals,to_coeffs):
+        if isnan(v):  # v is nan ie infinity from an arctan
+            v=0 # use to solve for cylindrical coords where theta is undefined
+        ans=ans+v*c
+    return ans
 
 
 def express(expr, system, system2=None, variables=False):
