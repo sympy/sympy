@@ -4,7 +4,7 @@ from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
 from sympy import diff, integrate, S, simplify
-from sympy.core import sympify,nan
+from sympy.core import sympify, nan
 from sympy.vector.dyadic import Dyadic
 
 

@@ -1,6 +1,6 @@
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.functions import extended_express,express, matrix_to_vector, orthogonalize
+from sympy.vector.functions import extended_express, express, matrix_to_vector, orthogonalize
 from sympy import symbols, S, sqrt, sin, cos, ImmutableMatrix as Matrix
 from sympy.utilities.pytest import raises
 
