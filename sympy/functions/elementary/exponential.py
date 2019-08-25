@@ -1049,6 +1049,9 @@ class LambertW(Function):
 
     def _eval_is_zero(self):
         x = self.args[0]
-        k = self.args[1]
+        if len(self.args) == 1:
+            k = S.Zero
+        else:
+            k = self.args[1]
         if x.is_zero and k.is_zero:
             return True

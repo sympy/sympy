@@ -91,7 +91,7 @@ class elliptic_k(Function):
 
     def _eval_is_zero(self):
         m = self.args[0]
-        if m.in_infinite:
+        if m.is_infinite:
             return True
 
     def _sage_(self):

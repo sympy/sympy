@@ -148,12 +148,9 @@ def test_sin():
             assert e < 1e-12
 
     assert sin(0, evaluate=False).is_zero is True
-    assert sin(k*pi, evaluate=False).is_zero is True
+    assert sin(k*pi, evaluate=False).is_zero is None
 
-
-@XFAIL
-def test_assumptions_failing():
-    assert sin(Add(1, -1, evaluate=False)).is_zero is not False
+    assert sin(Add(1, -1, evaluate=False), evaluate=False).is_zero is True
 
 
 def test_sin_cos():
