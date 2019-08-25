@@ -52,7 +52,7 @@ def extended_express(expr,coordsys):
    vals=transform_function(*args)
 
    ans=Vector.zero
-
+ 
    for v,c in zip(vals,to_coeffs):
        if isnan(v):  # v is nan ie infinity from an arctan
            v=0 # use to solve for cylindrical coords where theta is undefined
