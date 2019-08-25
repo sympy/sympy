@@ -1,4 +1,5 @@
 from sympy.core.compatibility import range, PY3
+from sympy.core.expr import unchanged
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
@@ -80,7 +81,7 @@ def test_ImageSet():
     assert ImageSet(Lambda(x, y), S.Integers) == {y}
     assert ImageSet(Lambda(x, 1), S.EmptySet) == S.EmptySet
     empty = Intersection(FiniteSet(log(2)/pi), S.Integers)
-    assert ImageSet(Lambda(x, 1), empty) != FiniteSet(1)  # issue #17471
+    assert unchanged(ImageSet, Lambda(x, 1), empty)  # issue #17471
     squares = ImageSet(Lambda(x, x**2), S.Naturals)
     assert 4 in squares
     assert 5 not in squares

@@ -7,6 +7,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
 from mpmath import mpi
 
 from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
@@ -411,9 +412,10 @@ def test_ProductSet_of_single_arg_is_arg():
 
 def test_ProductSet_is_empty():
     assert ProductSet(S.Integers, S.Reals).is_empty == False
-    empty = Intersection(FiniteSet(sin(2)/pi), S.Integers)
-    assert empty is not S.EmptySet and \
-            ProductSet(empty, S.Reals).is_empty == None
+
+    assert unchanged(Intersection, S.Integers, FiniteSet(sin(2)/pi))
+    empty = Intersection(S.Integers, FiniteSet(sin(2)/pi))
+    assert ProductSet(empty, S.Reals).is_empty == None
 
 
 def test_interval_subs():

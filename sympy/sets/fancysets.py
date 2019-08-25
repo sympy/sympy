@@ -4,6 +4,7 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
+from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
@@ -312,9 +313,10 @@ class ImageSet(Set):
             return sets[0]
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
-            if any(s.is_empty for s in sets):
+            emptyprod = fuzzy_or(s.is_empty for s in sets)
+            if emptyprod == True:
                 return S.EmptySet
-            elif all(s.is_empty == False for s in sets):
+            elif emptyprod == False:
                 return FiniteSet(flambda.expr)
 
         return Basic.__new__(cls, flambda, *sets)

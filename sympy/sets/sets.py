@@ -77,7 +77,8 @@ class Set(Basic):
         return None
 
     @property
-    @deprecated(useinstead="is_empty", issue=16946, deprecated_since_version="1.5")
+    @deprecated(useinstead="is S.EmptySet or is_empty",
+            issue=16946, deprecated_since_version="1.5")
     def is_EmptySet(self):
         return None
 
@@ -1507,7 +1508,8 @@ class EmptySet(with_metaclass(Singleton, Set)):
     is_FiniteSet = True
 
     @property
-    @deprecated(useinstead="is_empty", issue=16946, deprecated_since_version="1.5")
+    @deprecated(useinstead="is S.EmptySet or is_empty",
+            issue=16946, deprecated_since_version="1.5")
     def is_EmptySet(self):
         return True
 
