@@ -76,14 +76,15 @@ class Dagger(adjoint):
     .. [2] https://en.wikipedia.org/wiki/Hermitian_transpose
     """
 
-    def __new__(cls, arg):
+    @classmethod
+    def eval(cls, arg):
         if hasattr(arg, 'adjoint'):
             obj = arg.adjoint()
         elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose'):
             obj = arg.conjugate().transpose()
         if obj is not None:
             return obj
-        return Expr.__new__(cls, arg)
+
 
 adjoint.__name__ = "Dagger"
 adjoint._sympyrepr = lambda a, b: "Dagger(%s)" % b._print(a.args[0])

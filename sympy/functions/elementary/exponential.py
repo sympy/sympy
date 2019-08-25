@@ -319,6 +319,9 @@ class exp(ExpBase):
         elif isinstance(arg, MatrixBase):
             return arg.exp()
 
+        if arg.is_zero:
+            return S.One
+
     @property
     def base(self):
         """
@@ -642,6 +645,9 @@ class log(Function):
             elif arg is S.Exp1:
                 return S.One
 
+        if arg.is_zero:
+            return S.ComplexInfinity
+
         # don't autoexpand Pow or Mul (see the issue 3351):
         if not arg.is_Add:
             coeff = arg.as_coefficient(I)
@@ -962,6 +968,8 @@ class LambertW(Function):
                 return S.Exp1
             if x is S.Infinity:
                 return S.Infinity
+            if x.is_zero:
+                return S.Zero
 
         if fuzzy_not(k.is_zero):
             if x.is_zero:
@@ -1038,3 +1046,9 @@ class LambertW(Function):
 
             return s + Order(x**n, x)
         return super(LambertW, self)._eval_nseries(x, n, logx)
+
+    def _eval_is_zero(self):
+        x = self.args[0]
+        k = self.args[1]
+        if x.is_zero and k.is_zero:
+            return True
