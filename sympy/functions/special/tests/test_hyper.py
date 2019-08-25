@@ -1,7 +1,7 @@
 from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log, Rational,
                    cos, sqrt, symbols, oo, Derivative, gamma, O, appellf1)
-from sympy.series.limits import limit
 from sympy.abc import x, z, k
+from sympy.series.limits import limit
 from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import (
     random_complex_number as randcplx,
@@ -46,6 +46,10 @@ def test_hyper():
     from sympy import polar_lift
     assert hyper([polar_lift(z)], [polar_lift(k)], polar_lift(x)) == \
         hyper([z], [k], polar_lift(x))
+
+    # hyper does not automatically evaluate anyway, but the test is to make
+    # sure that the evaluate keyword is accepted
+    assert hyper((1, 2), (1,), z, evaluate=False).func is hyper
 
 
 def test_expand_func():
@@ -349,6 +353,11 @@ def test_appellf1():
     assert appellf1(a, b2, b1, c, y, x) == appellf1(a, b1, b2, c, x, y)
     assert appellf1(a, b1, b1, c, y, x) == appellf1(a, b1, b1, c, x, y)
     assert appellf1(a, b1, b2, c, S.Zero, S.Zero) is S.One
+
+    f = appellf1(a, b1, b2, c, S.Zero, S.Zero, evaluate=False)
+    assert f.func is appellf1
+    assert f.doit() is S.One
+
 
 def test_derivative_appellf1():
     from sympy import diff

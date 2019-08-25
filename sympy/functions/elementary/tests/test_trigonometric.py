@@ -3,7 +3,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
         conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn,
-        AccumBounds, Interval, ImageSet, Lambda, besselj)
+        AccumBounds, Interval, ImageSet, Lambda, besselj, Add)
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -146,6 +146,14 @@ def test_sin():
             x = n*pi/d
             e = abs( float(sin(x)) - sin(float(x)) )
             assert e < 1e-12
+
+    assert sin(0, evaluate=False).is_zero is True
+    assert sin(k*pi, evaluate=False).is_zero is True
+
+
+@XFAIL
+def test_assumptions_failing():
+    assert sin(Add(1, -1, evaluate=False)).is_zero is not False
 
 
 def test_sin_cos():
