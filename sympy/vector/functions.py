@@ -16,11 +16,12 @@ def extended_express(expr,coordsys):
     Parameters
     ==========
 
-    expr : Vector/Dyadic/scalar(sympyfiable)
-        The expression to re-express in CoordSys3D 'system'
+    expr : Vector
+        The expression to re-express in CoordSys3D 'coordsys'
 
     system: CoordSys3D
         The coordinate system the expr is to be expressed in
+
     Examples
     =========
 
