@@ -39,7 +39,7 @@ class PartialDerivative(TensorExpr):
 
         # TODO: check that all variables have rank 1.
 
-        args, indices, free, dum = TensorMul._tensMul_contract_indices([expr] +
+        args, indices, free, dum = TensorMul._contract_indices([expr] +
             list(variables), replace_indices=True)
 
         obj = TensorExpr.__new__(cls, *args)
@@ -50,7 +50,7 @@ class PartialDerivative(TensorExpr):
         return obj
 
     def doit(self):
-        args, indices, free, dum = TensorMul._tensMul_contract_indices(self.args)
+        args, indices, free, dum = TensorMul._contract_indices(self.args)
 
         obj = self.func(*args)
         obj._indices = indices

@@ -4079,8 +4079,18 @@ def test_sympy__tensor__tensor__TensorIndex():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     assert _test_args(TensorIndex('i', Lorentz))
 
+
+@SKIP("deprecated class")
+def test_sympy__tensor__tensor__TensExpr():
+    pass
+
 @SKIP("abstract class")
 def test_sympy__tensor__tensor__TensorExpr():
+    pass
+
+
+@SKIP("deprecated class")
+def test_sympy__tensor__tensor__TensAdd():
     pass
 
 def test_sympy__tensor__tensor__TensorAdd():
@@ -4102,6 +4112,10 @@ def test_sympy__tensor__tensor__Tensor():
     p = TensorHead('p', [Lorentz], sym)
     assert _test_args(p(a))
 
+
+@SKIP("deprecated class")
+def test_sympy__tensor__tensor__TensMul():
+    pass
 
 def test_sympy__tensor__tensor__TensorMul():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, tensor_heads

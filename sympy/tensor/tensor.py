@@ -1815,6 +1815,12 @@ def tensor_heads(s, index_types, symmetry=None, comm=0):
     return thlist
 
 
+class TensExpr(Expr):
+    @deprecated(useinstead="TensorExpr", issue=17509, deprecated_since_version="1.5")
+    def __new__(cls, *args, **kw_args):
+        return TensorExpr(*args, **kw_args)
+
+
 class TensorExpr(Expr):
     """
     Abstract base class for tensor expressions
@@ -2215,6 +2221,30 @@ class TensorExpr(Expr):
         return expr
 
 
+class TensAdd(TensorExpr, AssocOp):
+    @deprecated(useinstead="TensorAdd", issue=17509, deprecated_since_version="1.5")
+    def __new__(cls, *args, **kw_args):
+        return TensorAdd(*args, **kw_args)
+
+    @staticmethod
+    @deprecated(useinstead="TensorAdd._flatten_terms()", issue=17509,
+                deprecated_since_version="1.5")
+    def _tensAdd_flatten(args):
+        return TensorAdd._flatten_terms(args)
+
+    @staticmethod
+    @deprecated(useinstead="TensorAdd._check_indices()", issue=17509,
+                deprecated_since_version="1.5")
+    def _tensAdd_check(args):
+        return TensorAdd._check_indices(args)
+
+    @staticmethod
+    @deprecated(useinstead="TensorAdd._collect_terms()", issue=17509,
+                deprecated_since_version="1.5")
+    def _tensAdd_collect_terms(args):
+        return TensorAdd._collect_terms(args)
+
+
 class TensorAdd(TensorExpr, AssocOp):
     """
     Sum of tensors
@@ -2262,7 +2292,7 @@ class TensorAdd(TensorExpr, AssocOp):
     def __new__(cls, *args, **kw_args):
         args = [_sympify(x) for x in args if x]
 
-        args = TensorAdd._tensAdd_flatten(args)
+        args = TensorAdd._flatten_terms(args)
 
         obj = Basic.__new__(cls, *args, **kw_args)
         return obj
@@ -2281,7 +2311,7 @@ class TensorAdd(TensorExpr, AssocOp):
             return args[0]
 
         # now check that all addends have the same indices:
-        TensorAdd._tensAdd_check(args)
+        TensorAdd._check_indices(args)
 
         # if TensorAdd has only 1 element in its `args`:
         if len(args) == 1:  # and isinstance(args[0], TensorMul):
@@ -2299,7 +2329,7 @@ class TensorAdd(TensorExpr, AssocOp):
             return args[0]
 
         # Collect terms appearing more than once, differing by their coefficients:
-        args = TensorAdd._tensAdd_collect_terms(args)
+        args = TensorAdd._collect_terms(args)
 
         # collect canonicalized terms
         def sort_key(t):
@@ -2319,7 +2349,7 @@ class TensorAdd(TensorExpr, AssocOp):
         return obj
 
     @staticmethod
-    def _tensAdd_flatten(args):
+    def _flatten_terms(args):
         # flatten TensorAdd, coerce terms which are not tensors to tensors
         a = []
         for x in args:
@@ -2331,7 +2361,7 @@ class TensorAdd(TensorExpr, AssocOp):
         return args
 
     @staticmethod
-    def _tensAdd_check(args):
+    def _check_indices(args):
         # check that all addends have the same free indices
         indices0 = set([x[0] for x in get_index_structure(args[0]).free])
         list_indices = [set([y[0] for y in get_index_structure(x).free]) for x in args[1:]]
@@ -2339,7 +2369,7 @@ class TensorAdd(TensorExpr, AssocOp):
             raise ValueError('all tensors must have the same indices')
 
     @staticmethod
-    def _tensAdd_collect_terms(args):
+    def _collect_terms(args):
         # collect TensorMul terms differing at most by their coefficient
         terms_dict = defaultdict(list)
         scalars = S.Zero
@@ -2643,7 +2673,7 @@ class Tensor(TensorExpr):
         return index_map
 
     def doit(self, **kwargs):
-        args, indices, free, dum = TensorMul._tensMul_contract_indices([self])
+        args, indices, free, dum = TensorMul._contract_indices([self])
         return args[0]
 
     @staticmethod
@@ -2962,6 +2992,53 @@ class Tensor(TensorExpr):
         return self._check_add_Sum(expr, index_symbols)
 
 
+class TensMul(TensorExpr, AssocOp):
+    @deprecated(useinstead="TensorMul", issue=17509, deprecated_since_version="1.5")
+    def __new__(cls, *args, **kw_args):
+        return TensorMul(*args, **kw_args)
+
+    @staticmethod
+    @deprecated(useinstead="TensorMul", issue=17509, deprecated_since_version="1.5")
+    def _indices_to_free_dum(args_indices):
+        return TensorMul._indices_to_free_dum(args_indices)
+
+    @staticmethod
+    @deprecated(useinstead="TensorMul", issue=17509, deprecated_since_version="1.5")
+    def _dummy_data_to_dum(dummy_data):
+        return TensorMul._dummy_data_to_dum(dummy_data)
+
+    @staticmethod
+    @deprecated(useinstead="TensorMul._contract_indices()", issue=17509,
+                deprecated_since_version="1.5")
+    def _tensMul_contract_indices(args, replace_indices=True):
+        return TensorMul._contract_indices(args, replace_indices)
+
+    @staticmethod
+    @deprecated(useinstead="TensorMul", issue=17509, deprecated_since_version="1.5")
+    def _get_components_from_args(args):
+        return TensorMul._get_components_from_args(args)
+
+    @staticmethod
+    @deprecated(useinstead="TensorMul", issue=17509, deprecated_since_version="1.5")
+    def _rebuild_tensors_list(args, index_structure):
+        return TensorMul._rebuild_tensors_list(args, index_structure)
+
+    @staticmethod
+    @deprecated(useinstead="TensorMul", issue=17509, deprecated_since_version="1.5")
+    def from_data(coeff, components, free, dum, **kw_args):
+        return TensorMul.from_data(coeff, components, free, dum, **kw_args)
+
+    @staticmethod
+    @deprecated(useinstead="TensorMul", issue=17509, deprecated_since_version="1.5")
+    def _get_tensors_from_components_free_dum(components, free, dum):
+        return TensorMul._get_tensors_from_components_free_dum(components, free, dum)
+
+    @staticmethod
+    @deprecated(useinstead="TensorMul", issue=17509, deprecated_since_version="1.5")
+    def _index_replacement_for_contract_metric(args, free, dum):
+        return TensorMul._index_replacement_for_contract_metric(args, free, dum)
+
+
 class TensorMul(TensorExpr, AssocOp):
     """
     Product of tensors
@@ -3010,7 +3087,7 @@ class TensorMul(TensorExpr, AssocOp):
         # Flatten:
         args = [i for arg in args for i in (arg.args if isinstance(arg, (TensorMul, Mul)) else [arg])]
 
-        args, indices, free, dum = TensorMul._tensMul_contract_indices(args, replace_indices=False)
+        args, indices, free, dum = TensorMul._contract_indices(args, replace_indices=False)
 
         # Data for indices:
         index_types = [i.tensor_index_type for i in indices]
@@ -3077,7 +3154,7 @@ class TensorMul(TensorExpr, AssocOp):
         return [(p2a, p2b) for (i, p1a, p1b, p2a, p2b) in dummy_data]
 
     @staticmethod
-    def _tensMul_contract_indices(args, replace_indices=True):
+    def _contract_indices(args, replace_indices=True):
         replacements = [{} for _ in args]
 
         #_index_order = all([_has_index_order(arg) for arg in args])
@@ -3162,7 +3239,7 @@ class TensorMul(TensorExpr, AssocOp):
         if len(args) == 1:
             return args[0]
 
-        args, indices, free, dum = TensorMul._tensMul_contract_indices(args)
+        args, indices, free, dum = TensorMul._contract_indices(args)
 
         # Data for indices:
         index_types = [i.tensor_index_type for i in indices]
