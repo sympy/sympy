@@ -606,8 +606,6 @@ def test_add1():
     t2 = 1 + A(a, -a)
     assert t1 != t2
     assert t2 != TensMul.from_data(0, [], [], [])
-    t = p(i) + q(i)
-    raises(ValueError, lambda: t(i, j))
 
 
 def test_special_eq_ne():
@@ -701,7 +699,6 @@ def test_mul():
 
     t = A(-b, a)*B(-a, c)*A(-c, d)
     t1 = tensor_mul(*t.split())
-    assert t == t(-b, d)
     assert t == t1
     assert tensor_mul(*[]) == TensMul.from_data(S.One, [], [], [])
 
@@ -711,9 +708,8 @@ def test_mul():
     assert str(t) == '1'
     assert t == 1
     raises(ValueError, lambda: A(a, b)*A(a, c))
-    t = A(a, b)*A(-a, c)
-    raises(ValueError, lambda: t(a, b, c))
 
+@filter_warnings_decorator
 def test_substitute_indices():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     i, j, k, l, m, n, p, q = tensor_indices('i,j,k,l,m,n,p,q', Lorentz)
@@ -1089,6 +1085,7 @@ def test_contract_delta1():
     t1 = t.contract_delta(delta)
     assert t1.equals(n**2 - 1)
 
+@filter_warnings_decorator
 def test_fun():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
@@ -1100,7 +1097,7 @@ def test_fun():
     assert t(a,b,c) == t
     assert canon_bp(t - t(b,a,c) - q(c)*p(a)*q(b) + q(c)*p(b)*q(a)) == 0
     assert t(b,c,d) == q(d)*p(b)*q(c) + g(b,c)*g(d,e)*q(-e)
-    t1 = t.fun_eval((a,b),(b,a))
+    t1 = t.substitute_indices((a,b),(b,a))
     assert canon_bp(t1 - q(c)*p(b)*q(a) - g(a,b)*g(c,d)*q(-d)) == 0
 
     # check that g_{a b; c} = 0

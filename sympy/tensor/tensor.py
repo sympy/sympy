@@ -54,6 +54,10 @@ import warnings
 def deprecate_data():
     pass
 
+@deprecated(useinstead=".substitute_indices()", issue=17515,
+            deprecated_since_version="1.5")
+def deprecate_fun_eval():
+    pass
 
 @deprecated(useinstead="tensor_heads()", issue=17108,
             deprecated_since_version="1.5")
@@ -1921,28 +1925,8 @@ class TensExpr(Expr):
     __rtruediv__ = __rdiv__
 
     def fun_eval(self, *index_tuples):
-        """
-        Return a tensor with free indices substituted according to ``index_tuples``
-
-        ``index_types`` list of tuples ``(old_index, new_index)``
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads, TensorSymmetry
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
-        >>> t = A(i, k)*B(-k, -j); t
-        A(i, L_0)*B(-L_0, -j)
-        >>> t.fun_eval((i, k),(-j, l))
-        A(k, L_0)*B(-L_0, l)
-        """
-        expr = self.xreplace(dict(index_tuples))
-        expr = expr.replace(lambda x: isinstance(x, Tensor), lambda x: x.args[0](*x.args[1]))
-        # For some reason, `TensMul` gets replaced by `Mul`, correct it:
-        expr = expr.replace(lambda x: isinstance(x, (Mul, TensMul)), lambda x: TensMul(*x.args).doit())
-        return expr
+        deprecate_fun_eval()
+        return self.substitute_indices(*index_tuples)
 
     def get_matrix(self):
         """
@@ -2240,8 +2224,6 @@ class TensAdd(TensExpr, AssocOp):
     >>> p, q = tensor_heads('p,q', [Lorentz])
     >>> t = p(a) + q(a); t
     p(a) + q(a)
-    >>> t(b)
-    p(b) + q(b)
 
     Examples with components data added to the tensor expression:
 
@@ -2385,30 +2367,7 @@ class TensAdd(TensExpr, AssocOp):
         return TensAdd(*[_expand(i, **hints) for i in self.args])
 
     def __call__(self, *indices):
-        """Returns tensor with ordered free indices replaced by ``indices``
-
-        Parameters
-        ==========
-
-        indices
-
-        Examples
-        ========
-
-        >>> from sympy import Symbol
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
-        >>> D = Symbol('D')
-        >>> Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
-        >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
-        >>> p, q = tensor_heads('p,q', [Lorentz])
-        >>> g = Lorentz.metric
-        >>> t = p(i0)*p(i1) + g(i0,i1)*q(i2)*q(-i2)
-        >>> t(i0,i2)
-        metric(i0, i2)*q(L_0)*q(-L_0) + p(i0)*p(i2)
-        >>> from sympy.tensor.tensor import canon_bp
-        >>> canon_bp(t(i0,i1) - t(i1,i0))
-        0
-        """
+        deprecate_fun_eval()
         free_args = self.free_args
         indices = list(indices)
         if [x.tensor_index_type for x in indices] != [x.tensor_index_type for x in free_args]:
@@ -2416,7 +2375,7 @@ class TensAdd(TensExpr, AssocOp):
         if indices == free_args:
             return self
         index_tuples = list(zip(free_args, indices))
-        a = [x.func(*x.fun_eval(*index_tuples).args) for x in self.args]
+        a = [x.func(*x.substitute_indices(*index_tuples).args) for x in self.args]
         res = TensAdd(*a).doit()
         return res
 
@@ -2481,60 +2440,13 @@ class TensAdd(TensExpr, AssocOp):
         t = TensAdd(*args).doit()
         return canon_bp(t)
 
-    def fun_eval(self, *index_tuples):
-        """
-        Return a tensor with free indices substituted according to ``index_tuples``
-
-        Parameters
-        ==========
-
-        index_types : list of tuples ``(old_index, new_index)``
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads, TensorSymmetry
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
-        >>> t = A(i, k)*B(-k, -j) + A(i, -j)
-        >>> t.fun_eval((i, k),(-j, l))
-        A(k, L_0)*B(-L_0, l) + A(k, l)
-        """
-        args = self.args
-        args1 = []
-        for x in args:
-            y = x.fun_eval(*index_tuples)
-            args1.append(y)
-        return TensAdd(*args1).doit()
-
     def substitute_indices(self, *index_tuples):
-        """
-        Return a tensor with free indices substituted according to ``index_tuples``
-
-        Parameters
-        ==========
-
-        index_types : list of tuples ``(old_index, new_index)``
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads, TensorSymmetry
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
-        >>> t = A(i, k)*B(-k, -j); t
-        A(i, L_0)*B(-L_0, -j)
-        >>> t.substitute_indices((i,j), (j, k))
-        A(j, L_0)*B(-L_0, -k)
-        """
-        args = self.args
-        args1 = []
-        for x in args:
-            y = x.substitute_indices(*index_tuples)
-            args1.append(y)
-        return TensAdd(*args1).doit()
+        new_args = []
+        for arg in self.args:
+            if isinstance(arg, TensExpr):
+                arg = arg.substitute_indices(*index_tuples)
+            new_args.append(arg)
+        return TensAdd(*new_args).doit()
 
     def _print(self):
         a = []
@@ -2626,6 +2538,7 @@ class Tensor(TensExpr):
         is_canon_bp = kw_args.pop('is_canon_bp', False)
         indices = cls._parse_indices(tensor_head, indices)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
+        obj.head = tensor_head
         obj._index_structure = _IndexStructure.from_indices(*indices)
         obj._free_indices_set = set(obj._index_structure.get_free_indices())
         if tensor_head.rank != len(indices):
@@ -2798,32 +2711,46 @@ class Tensor(TensExpr):
         return self, S.One
 
     def substitute_indices(self, *index_tuples):
-        return substitute_indices(self, *index_tuples)
+        """
+        Return a tensor with free indices substituted according to ``index_tuples``
 
-    def __call__(self, *indices):
-        """Returns tensor with ordered free indices replaced by ``indices``
+        ``index_types`` list of tuples ``(old_index, new_index)``
 
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, TensorSymmetry
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads, TensorSymmetry
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
-        >>> A = TensorHead('A', [Lorentz]*5, TensorSymmetry.fully_symmetric(5))
-        >>> t = A(i2, i1, -i2, -i3, i4)
-        >>> t
-        A(L_0, i1, -L_0, -i3, i4)
-        >>> t(i1, i2, i3)
-        A(L_0, i1, -L_0, i2, i3)
+        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
+        >>> A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
+        >>> t = A(i, k)*B(-k, -j); t
+        A(i, L_0)*B(-L_0, -j)
+        >>> t.substitute_indices((i, k),(-j, l))
+        A(k, L_0)*B(-L_0, l)
         """
+        indices = []
+        for index in self.indices:
+            for ind_old, ind_new in index_tuples:
+                if (index.name == ind_old.name and index.tensor_index_type ==
+                                                   ind_old.tensor_index_type):
+                    if index.is_up == ind_old.is_up:
+                        indices.append(ind_new)
+                    else:
+                        indices.append(-ind_new)
+                    break
+            else:
+                indices.append(index)
+        return self.head(*indices)
 
+    def __call__(self, *indices):
+        deprecate_fun_eval()
         free_args = self.free_args
         indices = list(indices)
         if [x.tensor_index_type for x in indices] != [x.tensor_index_type for x in free_args]:
             raise ValueError('incompatible types')
         if indices == free_args:
             return self
-        t = self.fun_eval(*list(zip(free_args, indices)))
+        t = self.substitute_indices(*list(zip(free_args, indices)))
 
         # object is rebuilt in order to make sure that all contracted indices
         # get recognized as dummies, but only if there are contracted indices.
@@ -3672,32 +3599,22 @@ class TensMul(TensExpr, AssocOp):
             assert isinstance(arg, Tensor)
 
     def substitute_indices(self, *index_tuples):
-        return substitute_indices(self, *index_tuples)
+        new_args = []
+        for arg in self.args:
+            if isinstance(arg, TensExpr):
+                arg = arg.substitute_indices(*index_tuples)
+            new_args.append(arg)
+        return TensMul(*new_args).doit()
 
     def __call__(self, *indices):
-        """Returns tensor product with ordered free indices replaced by ``indices``
-
-        Examples
-        ========
-
-        >>> from sympy import Symbol
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
-        >>> D = Symbol('D')
-        >>> Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
-        >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
-        >>> g = Lorentz.metric
-        >>> p, q = tensor_heads('p,q', [Lorentz])
-        >>> t = p(i0)*q(i1)*q(-i1)
-        >>> t(i1)
-        p(i1)*q(L_0)*q(-L_0)
-        """
+        deprecate_fun_eval()
         free_args = self.free_args
         indices = list(indices)
         if [x.tensor_index_type for x in indices] != [x.tensor_index_type for x in free_args]:
             raise ValueError('incompatible types')
         if indices == free_args:
             return self
-        t = self.fun_eval(*list(zip(free_args, indices)))
+        t = self.substitute_indices(*list(zip(free_args, indices)))
 
         # object is rebuilt in order to make sure that all contracted indices
         # get recognized as dummies, but only if there are contracted indices.
@@ -4063,26 +3980,9 @@ def perm2tensor(t, g, is_canon_bp=False):
     raise NotImplementedError()
 
 
+@deprecated(useinstead=".substitute_indices() instance method", issue=15276,
+            deprecated_since_version="1.5")
 def substitute_indices(t, *index_tuples):
-    """
-    Return a tensor with free indices substituted according to ``index_tuples``
-
-    ``index_types`` list of tuples ``(old_index, new_index)``
-
-    Note: this method will neither raise or lower the indices, it will just replace their symbol.
-
-    Examples
-    ========
-
-    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads, TensorSymmetry
-    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-    >>> A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
-    >>> t = A(i, k)*B(-k, -j); t
-    A(i, L_0)*B(-L_0, -j)
-    >>> t.substitute_indices((i,j), (j, k))
-    A(j, L_0)*B(-L_0, -k)
-    """
     if not isinstance(t, TensExpr):
         return t
     free = t.free
