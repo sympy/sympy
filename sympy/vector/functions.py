@@ -6,6 +6,8 @@ from sympy.vector.operators import gradient, curl, divergence
 from sympy import diff, integrate, S, simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
+from math import isnan
+
 
 def extended_express(expr,coordsys):
    "allow transformation between cartesian and non-cartesian frames"
