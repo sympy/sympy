@@ -10,7 +10,7 @@ from sympy.vector.dyadic import Dyadic
 
 def extended_express(expr,coordsys):
     """
-    express for vectors allowing transformation between  
+    express for vectors allowing transformation between
     cartesian (x,y,z) and non-cartesian frames (eg cylindrical)
 
     Parameters
@@ -41,13 +41,13 @@ def extended_express(expr,coordsys):
     >>> extended_express(6*C.r + pi/2*C.theta,N)
     6*N.j
 
-    Where a coordinate is undefined (eg theta with 
+    Where a coordinate is undefined (eg theta with
     extended_express(N.k), it is mapped to zero.
-    The non-cartesian frame must be defined as a child of the 
+    The non-cartesian frame must be defined as a child of the
     cartesian frame as above.
 
-    The output is expressed in terms of the base vectors of the 
-    derived coordinate systems. Currently they default to i,j 
+    The output is expressed in terms of the base vectors of the
+    derived coordinate systems. Currently they default to i,j
     and k which are confusing for non-cartesian systems so it
     is recommended to explicitly name them as above.
 
@@ -59,14 +59,14 @@ def extended_express(expr,coordsys):
 
     """
     if not isinstance(coordsys, CoordSys3D):
-        raise TypeError("system should be a CoordSys3D instance") 
+        raise TypeError("system should be a CoordSys3D instance")
              # check we are expressing in a frame
 
-    parts=expr.separate() 
+    parts=expr.separate()
     # get different coordinate frames in vector, cry if more than one
 
     if isinstance(parts,dict):
-        if(len(parts) == 0): return Vector.zero 
+        if(len(parts) == 0): return Vector.zero
              # we have been given zero vector
         if(len(parts) > 1):  raise ValueError("Does not support \
             expressions containing multiple base coordinate frames")
@@ -77,7 +77,7 @@ def extended_express(expr,coordsys):
         foundframe = parts.system
         foundvector = parts
 
-    # we should now have found the only frame in the vector, 
+    # we should now have found the only frame in the vector,
     # and we now have to convert it to the given frame
 
     from_frame = foundframe
@@ -99,10 +99,10 @@ def extended_express(expr,coordsys):
 
     for i,j in zip(from_coeffs1,from_coeffs2):
            # could be expressed in either for inertial frame
-        coeff1 = foundvector.coeff(i)  
+        coeff1 = foundvector.coeff(i)
            # understand both N.i and N.x (or C.r and C.i)
         coeff2 = foundvector.coeff(j)
-        if coeff1 != 0 and coeff2 !=0 : 
+        if coeff1 != 0 and coeff2 !=0 :
             raise ValueError("Cannot express vector with both base \
                       vectors and base scalars - check your vector")
         args.append(coeff1 + coeff2) # only one can be non-zero
@@ -113,8 +113,8 @@ def extended_express(expr,coordsys):
 
     for v,c in zip(vals,to_coeffs):
         if v is nan:  # v is nan ie infinity from an arctan
-            v = 0 
-        # use to solve for cylindrical coords 
+            v = 0
+        # use to solve for cylindrical coords
         # where theta is undefined
         ans += v*c
     return ans
