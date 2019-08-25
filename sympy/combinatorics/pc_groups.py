@@ -60,7 +60,7 @@ class Collector(DefaultPrinting):
         ==========
 
         free_group_ : tuple
-                FreeGroup provides the mapping of polycyclic generating
+                free_group_ provides the mapping of polycyclic generating
                 sequence with the free group elements.
         pc_presentation : dict
                 Provides the presentation of polycyclic groups with the
