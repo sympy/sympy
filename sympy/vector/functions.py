@@ -10,7 +10,48 @@ from math import isnan
 
 
 def extended_express(expr,coordsys):
-   "allow transformation between cartesian and non-cartesian frames"
+    """
+    express for vectors allowing transformation between cartesian and non-cartesian frames
+
+    Parameters
+    ==========
+
+    expr : Vector/Dyadic/scalar(sympyfiable)
+        The expression to re-express in CoordSys3D 'system'
+
+    system: CoordSys3D
+        The coordinate system the expr is to be expressed in
+    Examples
+    =========
+
+    >>> from sympy.vector import extended_express, CoordSys3D
+    >>> from sympy import pi
+    >>> N=CoordSys3D('N')
+    >>> C=N.create_new('C',transformation='cylindrical',base_vectors=('r','theta','z'))
+    >>> extended_express(5*N.i,C)
+    5*C.r
+    >>> extended_express(5*N.j,C)
+    5*C.r+pi/2*C.theta
+    >>> extended_express(10*N.k,C)
+    10*C.z
+    >>> extended_express(6*C.r,N)
+    6*N.i
+    >>> extended_express(6*C.r+pi/2*C.theta)
+    6*N.j
+
+    where a coordinate is undefined (eg theta with extended_express(N.k), it is mapped to zero
+    The non-cartesian frame must be defined as a child of the cartesian frame as above.
+
+    the output is expressed in terms of the base vectors of the derived coordinate systems
+    currently they default to i,j and k which are confusing for non-cartesian systems so it
+    is recommended to explicitly name them as above.
+ 
+    See Also  
+    ========
+
+    CoordSys3D.transformation_from_parent,CoordSys3D.transformation_to_parent
+
+"""
    assert isinstance(coordsys,CoordSys3D) # check we are expressing in a frame
 
    parts=expr.separate() # get different coordinate frames in vector, cry if more than one
