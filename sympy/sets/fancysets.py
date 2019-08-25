@@ -818,7 +818,10 @@ class Range(Set):
             raise ValueError('args must be integers')
         return self.func(*[i.subs(old, new) for i in self.args])
 
-converter[range] = lambda r: Range(r.start, r.stop, r.step)
+if PY3:
+    converter[range] = lambda r: Range(r.start, r.stop, r.step)
+else:
+    converter[range] = lambda r: Range(*r.__reduce__()[1])
 
 def normalize_theta_set(theta):
     """
