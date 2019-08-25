@@ -27,9 +27,9 @@ def extended_express(expr,coordsys):
 
     >>> from sympy.vector import extended_express, CoordSys3D
     >>> from sympy import pi
-    >>> N=CoordSys3D('N')
-    >>> C=N.create_new('C',transformation='cylindrical', \
-        vector_names=('r','theta','z'))
+    >>> N = CoordSys3D('N')
+    >>> C = N.create_new('C', transformation='cylindrical',
+        vector_names = ('r', 'theta', 'z'))
     >>> extended_express(5*N.i,C)
     5*C.r
     >>> extended_express(5*N.j,C)
@@ -38,7 +38,7 @@ def extended_express(expr,coordsys):
     10*C.z
     >>> extended_express(6*C.r,N)
     6*N.i
-    >>> extended_express(6*C.r+pi/2*C.theta,N)
+    >>> extended_express(6*C.r + pi/2*C.theta,N)
     6*N.j
 
     Where a coordinate is undefined (eg theta with 
