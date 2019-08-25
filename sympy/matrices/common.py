@@ -2084,14 +2084,8 @@ class MatrixArithmetic(MatrixRequired):
                          lambda i, j: self[i, j] + other[i, j])
 
     def _eval_matrix_mul(self, other, mulsimp=None):
-        self_cols = self.cols
-        vec       = [None]*self_cols
-
-        def entry(i, j):
-            return matrix_mul_inner_loop(vec, (self[i,k]*other[k,j] for k in range(self_cols)), \
-                    mulsimp=mulsimp)
-
-        return self._new(self.rows, other.cols, entry)
+        return self._new(self.rows, other.cols, lambda i, j: \
+                sumprodsimp(self[i,:], other[:,j], simplify=mulsimp))
 
     def _eval_matrix_mul_elementwise(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other[i,j])
@@ -2562,10 +2556,61 @@ def classof(A, B):
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
 
 
-def fastalgsimp(expr):
-    """'Fast' (in air quotes) algebraic simplification to reduce matrix
-    multiplication intermediate products."""
+def sumprodsimp(a, b, simplify=True):
+    """Sum-of-products with optional intermediate product simplification
+    targeted at the kind of blowup that occurs during summation of products.
+    Intended to reduce expression blowup during matrix multiplication or other
+    similar operations.
 
+    Parameters
+    ==========
+
+    a, b : iterable
+        These will be multiplied then summed together either normally or
+        using simplification on the intermediate products and cancelling at
+        the end according to the 'simplify' flag. The elements must already be
+        sympyfied and the sequences need not be of the same length, the shorter
+        will be used.
+
+    simplify : bool
+        When set intermediate and final simplification will be used, not set
+        will indicate a normal sum of produces.
+    """
+
+    expr = S.Zero
+    itra = iter(a)
+    itrb = iter(b)
+
+    # simple non-simplified sum of products
+    if not simplify:
+        try:
+            expr = next(itra)*next(itrb)
+
+            for a in itra:
+                expr += a*next(itrb)
+
+        except StopIteration:
+            pass
+
+        return expr
+
+    # part 1, the expanded summation
+    try:
+        prod    = next(itra)*next(itrb)
+        _expand = getattr(prod, 'expand', None)
+        expr    = _expand(power_base=False, power_exp=False, log=False, \
+                multinomial=False, basic=False) if _expand else prod
+
+        for a in itra:
+            prod     = a*next(itrb)
+            _expand  = getattr(prod, 'expand', None)
+            expr    += _expand(power_base=False, power_exp=False, log=False, \
+                    multinomial=False, basic=False) if _expand else prod
+
+    except StopIteration:
+        pass
+
+    # part 2, the cancelation and grouping
     exprops  = count_ops(expr)
     expr2    = expr.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
     expr2ops = count_ops(expr2)
@@ -2577,7 +2622,7 @@ def fastalgsimp(expr):
     if exprops < 6: # empirically tested cutoff for expensive simplification
         return expr
 
-    expr2    = cancel(expr) # this is the expensive part
+    expr2    = cancel(expr)
     expr2ops = count_ops(expr2)
 
     if expr2ops < exprops:
@@ -2591,24 +2636,3 @@ def fastalgsimp(expr):
         return expr3
 
     return expr
-
-
-def matrix_mul_inner_loop(vec, itr, mulsimp=None):
-    """Common MatrixArithmetic, MatrixDense and MatrixSparse inner loop to
-    centralize summing, simplifying and ISSUE #11599 in one place."""
-
-    for i, c in enumerate(itr):
-        _expand = mulsimp and getattr(c, 'expand', None)
-        vec[i]  = _expand(power_base=False, power_exp=False, log=False, \
-                multinomial=False, basic=False) if _expand else c
-    try:
-        e = sum(vec)
-    except (TypeError, SympifyError):
-        # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
-        # They don't work with `sum` because `sum` tries to add `0`
-        # initially, and for a matrix, that is a mix of a scalar and
-        # a matrix, which raises a TypeError. Fall back to a
-        # block-matrix-safe way to multiply if the `sum` fails.
-        e = reduce(lambda a,b: a + b, vec)
-
-    return fastalgsimp(e) if mulsimp else e

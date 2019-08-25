@@ -13,8 +13,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, fastalgsimp, \
-    matrix_mul_inner_loop
+    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, sumprodsimp
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -181,10 +180,7 @@ class DenseMatrix(MatrixBase):
         new_mat_cols           = other_cols
         self_mat               = self._mat
         other_mat              = other._mat
-
-        # preallocate the arrays
-        new_mat = [self.zero]*new_mat_rows*new_mat_cols
-        vec     = [None]*self_cols
+        new_mat                = [self.zero]*new_mat_rows*new_mat_cols
 
         # if we multiply an n x 0 with a 0 x m, the
         # expected behavior is to produce an n x m matrix of zeros
@@ -193,8 +189,8 @@ class DenseMatrix(MatrixBase):
                 row, col    = i // new_mat_cols, i % new_mat_cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
                 col_indices = range(col, other_len, other_cols)
-                new_mat[i]  = matrix_mul_inner_loop(vec, (self_mat[a]*other_mat[b] \
-                        for a,b in zip(row_indices, col_indices)), mulsimp=mulsimp)
+                new_mat[i]  = sumprodsimp((self_mat[a] for a in row_indices), \
+                        (other_mat[b] for b in col_indices), simplify=mulsimp)
 
         return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
 
