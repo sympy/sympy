@@ -1,7 +1,7 @@
-from sympy.tensor.tensor import (TensExpr, TensMul)
+from sympy.tensor.tensor import (TensorExpr, TensorMul)
 
 
-class PartialDerivative(TensExpr):
+class PartialDerivative(TensorExpr):
     """
     Partial derivative for tensor expressions.
 
@@ -39,10 +39,10 @@ class PartialDerivative(TensExpr):
 
         # TODO: check that all variables have rank 1.
 
-        args, indices, free, dum = TensMul._tensMul_contract_indices([expr] +
+        args, indices, free, dum = TensorMul._tensMul_contract_indices([expr] +
             list(variables), replace_indices=True)
 
-        obj = TensExpr.__new__(cls, *args)
+        obj = TensorExpr.__new__(cls, *args)
 
         obj._indices = indices
         obj._free = free
@@ -50,7 +50,7 @@ class PartialDerivative(TensExpr):
         return obj
 
     def doit(self):
-        args, indices, free, dum = TensMul._tensMul_contract_indices(self.args)
+        args, indices, free, dum = TensorMul._tensMul_contract_indices(self.args)
 
         obj = self.func(*args)
         obj._indices = indices

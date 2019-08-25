@@ -41,9 +41,9 @@ PRECEDENCE_VALUES = {
     "MatAdd": PRECEDENCE["Add"],
     "MatPow": PRECEDENCE["Pow"],
     "MatrixSolve": PRECEDENCE["Mul"],
-    "TensAdd": PRECEDENCE["Add"],
-    # As soon as `TensMul` is a subclass of `Mul`, remove this:
-    "TensMul": PRECEDENCE["Mul"],
+    "TensorAdd": PRECEDENCE["Add"],
+    # As soon as `TensorMul` is a subclass of `Mul`, remove this:
+    "TensorMul": PRECEDENCE["Mul"],
     "HadamardProduct": PRECEDENCE["Mul"],
     "HadamardPower": PRECEDENCE["Pow"],
     "KroneckerProduct": PRECEDENCE["Mul"],

@@ -4080,18 +4080,18 @@ def test_sympy__tensor__tensor__TensorIndex():
     assert _test_args(TensorIndex('i', Lorentz))
 
 @SKIP("abstract class")
-def test_sympy__tensor__tensor__TensExpr():
+def test_sympy__tensor__tensor__TensorExpr():
     pass
 
-def test_sympy__tensor__tensor__TensAdd():
-    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, TensAdd, tensor_heads
+def test_sympy__tensor__tensor__TensorAdd():
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, TensorAdd, tensor_heads
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     p, q = tensor_heads('p,q', [Lorentz], sym)
     t1 = p(a)
     t2 = q(a)
-    assert _test_args(TensAdd(t1, t2))
+    assert _test_args(TensorAdd(t1, t2))
 
 
 def test_sympy__tensor__tensor__Tensor():
@@ -4103,7 +4103,7 @@ def test_sympy__tensor__tensor__Tensor():
     assert _test_args(p(a))
 
 
-def test_sympy__tensor__tensor__TensMul():
+def test_sympy__tensor__tensor__TensorMul():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, tensor_heads
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)

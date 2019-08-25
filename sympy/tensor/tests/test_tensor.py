@@ -9,9 +9,9 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.pretty.pretty import pretty
 from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
-    get_symmetric_group_sgs, TensorIndex, tensor_mul, TensAdd, \
-    riemann_cyclic_replace, riemann_cyclic, TensMul, tensor_heads, \
-    TensorManager, TensExpr, TensorHead, canon_bp, \
+    get_symmetric_group_sgs, TensorIndex, tensor_mul, TensorAdd, \
+    riemann_cyclic_replace, riemann_cyclic, TensorMul, tensor_heads, \
+    TensorManager, TensorExpr, TensorHead, canon_bp, \
     tensorhead, tensorsymmetry, TensorType
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy, ignore_warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -27,9 +27,9 @@ def filter_warnings_decorator(f):
     return wrapper
 
 def _is_equal(arg1, arg2):
-    if isinstance(arg1, TensExpr):
+    if isinstance(arg1, TensorExpr):
         return arg1.equals(arg2)
-    elif isinstance(arg2, TensExpr):
+    elif isinstance(arg2, TensorExpr):
         return arg2.equals(arg1)
     return arg1 == arg2
 
@@ -490,7 +490,7 @@ def test_TensorSymmetry():
     assert sym.base == Tuple(0, 1)
     assert sym.generators == Tuple(Permutation(0, 1)(3, 4), Permutation(1, 2)(3, 4))
 
-def test_TensExpr():
+def test_TensorExpr():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     g = Lorentz.metric
@@ -501,13 +501,13 @@ def test_TensExpr():
     raises(ValueError, lambda: S.One/(A(c, d) + g(c, d)))
     raises(ValueError, lambda: A(a, b) + A(a, c))
     t = A(a, b) + B(a, b)
-    #raises(NotImplementedError, lambda: TensExpr.__mul__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__add__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__radd__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__sub__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__rdiv__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensorExpr.__mul__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensorExpr.__add__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensorExpr.__radd__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensorExpr.__sub__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensorExpr.__rsub__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensorExpr.__div__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensorExpr.__rdiv__(t, 'a'))
     with ignore_warnings(SymPyDeprecationWarning):
         # DO NOT REMOVE THIS AFTER DEPRECATION REMOVED:
         raises(ValueError, lambda: A(a, b)**2)
@@ -525,15 +525,15 @@ def test_TensorHead():
     assert A.comm == 0
 
 def test_add1():
-    assert TensAdd().args == ()
-    assert TensAdd().doit() == 0
+    assert TensorAdd().args == ()
+    assert TensorAdd().doit() == 0
     # simple example of algebraic expression
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a,b,d0,d1,i,j,k = tensor_indices('a,b,d0,d1,i,j,k', Lorentz)
     # A, B symmetric
     A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
     t1 = A(b, -d0)*B(d0, a)
-    assert TensAdd(t1).equals(t1)
+    assert TensorAdd(t1).equals(t1)
     t2a = B(d0, a) + A(d0, a)
     t2 = A(b, -d0)*t2a
     assert str(t2) == 'A(b, -L_0)*(A(L_0, a) + B(L_0, a))'
@@ -605,7 +605,7 @@ def test_add1():
     assert (t + t1).expand().equals(2)
     t2 = 1 + A(a, -a)
     assert t1 != t2
-    assert t2 != TensMul.from_data(0, [], [], [])
+    assert t2 != TensorMul.from_data(0, [], [], [])
     t = p(i) + q(i)
     raises(ValueError, lambda: t(i, j))
 
@@ -678,7 +678,7 @@ def test_mul():
     from sympy.abc import x
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
-    t = TensMul.from_data(S.One, [], [], [])
+    t = TensorMul.from_data(S.One, [], [], [])
     assert str(t) == '1'
     A, B = tensor_heads('A B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
     t = (1 + x)*A(a, b)
@@ -703,9 +703,9 @@ def test_mul():
     t1 = tensor_mul(*t.split())
     assert t == t(-b, d)
     assert t == t1
-    assert tensor_mul(*[]) == TensMul.from_data(S.One, [], [], [])
+    assert tensor_mul(*[]) == TensorMul.from_data(S.One, [], [], [])
 
-    t = TensMul.from_data(1, [], [], [])
+    t = TensorMul.from_data(1, [], [], [])
     C = TensorHead('C', [])
     assert str(C()) == 'C'
     assert str(t) == '1'
@@ -1283,13 +1283,13 @@ def test_valued_tensor_iter():
     assert list(ba_matrix) == [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, -1, -2, -3, -4, -5, -6]
     assert list(BA) == list_BA
 
-    # iteration on VTensMul
+    # iteration on VTensorMul
     assert list(A(i1)) == [E, px, py, pz]
     assert list(BA(i1, i2)) == list_BA
     assert list(3 * BA(i1, i2)) == [3 * i for i in list_BA]
     assert list(-5 * BA(i1, i2)) == [-5 * i for i in list_BA]
 
-    # iteration on VTensAdd
+    # iteration on VTensorAdd
     # A(i1) + A(i1)
     assert list(A(i1) + A(i1)) == [2*E, 2*px, 2*py, 2*pz]
     assert BA(i1, i2) - BA(i1, i2) == 0
@@ -1600,7 +1600,7 @@ def test_valued_components_with_wrong_symmetry():
 
 
 @filter_warnings_decorator
-def test_issue_10972_TensMul_data():
+def test_issue_10972_TensorMul_data():
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
     Lorentz.data = [-1, 1]
 
@@ -1624,7 +1624,7 @@ def test_issue_10972_TensMul_data():
 
 
 @filter_warnings_decorator
-def test_TensMul_data():
+def test_TensorMul_data():
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='L', dim=4)
     Lorentz.data = [-1, 1, 1, 1]
 
@@ -1681,7 +1681,7 @@ def test_TensMul_data():
 
 
 @filter_warnings_decorator
-def test_issue_11020_TensAdd_data():
+def test_issue_11020_TensorAdd_data():
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
     Lorentz.data = [-1, 1]
 
@@ -1770,8 +1770,8 @@ def test_tensor_expand():
 
     A, B, C, D = tensor_heads("A B C D", [L])
 
-    assert isinstance(Add(A(i), B(i)), TensAdd)
-    assert isinstance(expand(A(i)+B(i)), TensAdd)
+    assert isinstance(Add(A(i), B(i)), TensorAdd)
+    assert isinstance(expand(A(i)+B(i)), TensorAdd)
 
     expr = A(i)*(A(-i)+B(-i))
     assert expr.args == (A(L_0), A(-L_0) + B(-L_0))
@@ -1798,8 +1798,8 @@ def test_tensor_expand():
     assert str(expr) == "A(i)*(B(j)*C(k) + C(j)*(A(k) + D(k)))"
     assert str(expr.expand()) == "A(i)*B(j)*C(k) + A(i)*C(j)*A(k) + A(i)*C(j)*D(k)"
 
-    assert isinstance(TensMul(3), TensMul)
-    tm = TensMul(3).doit()
+    assert isinstance(TensorMul(3), TensorMul)
+    tm = TensorMul(3).doit()
     assert tm == 3
     assert isinstance(tm, Integer)
 
@@ -1890,7 +1890,7 @@ def test_tensor_replacement():
     repl = {A(i): [[1, 2], [3, 4]]}
     raises(ValueError, lambda: expr._extract_data(repl))
 
-    # TensAdd:
+    # TensorAdd:
     expr = A(k)*H(i, j) + B(k)*H(i, j)
     repl = {A(k): [1], B(k): [1], H(i, j): [[1, 2],[3,4]], L:diag(1,1)}
     assert expr._extract_data(repl) == ([k, i, j], Array([[[2, 4], [6, 8]]]))

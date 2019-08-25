@@ -400,14 +400,14 @@ class StrPrinter(Printer):
     def _print_Tensor(self, expr):
         return expr._print()
 
-    def _print_TensMul(self, expr):
+    def _print_TensorMul(self, expr):
         # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
         sign, args = expr._get_args_for_traditional_printer()
         return sign + "*".join(
             [self.parenthesize(arg, precedence(expr)) for arg in args]
         )
 
-    def _print_TensAdd(self, expr):
+    def _print_TensorAdd(self, expr):
         return expr._print()
 
     def _print_PermutationGroup(self, expr):

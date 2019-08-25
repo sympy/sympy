@@ -14,13 +14,13 @@ Tensor
 .. autoclass:: TensorHead
    :members:
 
-.. autoclass:: TensExpr
+.. autoclass:: TensorExpr
    :members:
 
-.. autoclass:: TensAdd
+.. autoclass:: TensorAdd
    :members:
 
-.. autoclass:: TensMul
+.. autoclass:: TensorMul
    :members:
 
 .. autofunction:: canon_bp

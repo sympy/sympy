@@ -1105,7 +1105,7 @@ class PrettyPrinter(Printer):
         index_map = expr.index_map
         return self._printer_tensor_indices(name, indices, index_map)
 
-    def _print_TensMul(self, expr):
+    def _print_TensorMul(self, expr):
         sign, args = expr._get_args_for_traditional_printer()
         args = [
             prettyForm(*self._print(i).parens()) if
@@ -1118,7 +1118,7 @@ class PrettyPrinter(Printer):
         else:
             return pform
 
-    def _print_TensAdd(self, expr):
+    def _print_TensorAdd(self, expr):
         args = [
             prettyForm(*self._print(i).parens()) if
             precedence_traditional(i) < PRECEDENCE["Mul"] else self._print(i)

@@ -1,7 +1,7 @@
 from sympy import Matrix
 
 from sympy.tensor.tensor import tensor_indices, TensorHead, tensor_heads, \
-    TensExpr, canon_bp
+    TensorExpr, canon_bp
 from sympy import eye
 from sympy.physics.hep.gamma_matrices import GammaMatrix as G, LorentzIndex, \
     kahane_simplify, gamma_trace, _simplify_single_line, simplify_gamma_expression
@@ -10,9 +10,9 @@ from sympy.physics.hep.gamma_matrices import GammaMatrix as G, LorentzIndex, \
 def _is_tensor_eq(arg1, arg2):
     arg1 = canon_bp(arg1)
     arg2 = canon_bp(arg2)
-    if isinstance(arg1, TensExpr):
+    if isinstance(arg1, TensorExpr):
         return arg1.equals(arg2)
-    elif isinstance(arg2, TensExpr):
+    elif isinstance(arg2, TensorExpr):
         return arg2.equals(arg1)
     return arg1 == arg2
 

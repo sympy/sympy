@@ -27,7 +27,7 @@
 """
 from sympy import S, Mul, eye, trace
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
-    TensMul, TensAdd, tensor_mul, Tensor, TensorHead, TensorSymmetry
+    TensorMul, TensorAdd, tensor_mul, Tensor, TensorHead, TensorSymmetry
 from sympy.core.compatibility import range
 
 
@@ -43,7 +43,7 @@ GammaMatrix = TensorHead("GammaMatrix", [LorentzIndex],
 
 def extract_type_tens(expression, component):
     """
-    Extract from a ``TensExpr`` all tensors with `component`.
+    Extract from a ``TensorExpr`` all tensors with `component`.
 
     Returns two tensor expressions:
 
@@ -54,7 +54,7 @@ def extract_type_tens(expression, component):
     """
     if isinstance(expression, Tensor):
         sp = [expression]
-    elif isinstance(expression, TensMul):
+    elif isinstance(expression, TensorMul):
         sp = expression.args
     else:
         raise ValueError('wrong type')
@@ -187,8 +187,8 @@ def gamma_trace(t):
     0
 
     """
-    if isinstance(t, TensAdd):
-        res = TensAdd(*[_trace_single_line(x) for x in t.args])
+    if isinstance(t, TensorAdd):
+        res = TensorAdd(*[_trace_single_line(x) for x in t.args])
         return res
     t = _simplify_single_line(t)
     res = _trace_single_line(t)
@@ -220,7 +220,7 @@ def _simplify_single_line(expression):
 
 def _trace_single_line(t):
     """
-    Evaluate the trace of a single gamma matrix line inside a ``TensExpr``.
+    Evaluate the trace of a single gamma matrix line inside a ``TensorExpr``.
 
     Notes
     =====
@@ -265,7 +265,7 @@ def _trace_single_line(t):
             tcoeff = t.coeff
             return t.nocoeff if tcoeff else t
         if numG % 2 == 1:
-            return TensMul.from_data(S.Zero, [], [], [])
+            return TensorMul.from_data(S.Zero, [], [], [])
         elif numG > 4:
             # find the open matrix indices and connect them:
             a = t.split()
@@ -284,7 +284,7 @@ def _trace_single_line(t):
                 t2 = t2.contract_metric(g)
                 t2 = simplify_gpgp(t2, False)
                 args.append(t2)
-            t3 = TensAdd(*args)
+            t3 = TensorAdd(*args)
             t3 = _trace_single_line(t3)
             return t3
         else:
@@ -299,10 +299,10 @@ def _trace_single_line(t):
             return t3
 
     t = t.expand()
-    if isinstance(t, TensAdd):
+    if isinstance(t, TensorAdd):
         a = [_trace_single_line1(x)*x.coeff for x in t.args]
-        return TensAdd(*a)
-    elif isinstance(t, (Tensor, TensMul)):
+        return TensorAdd(*a)
+    elif isinstance(t, (Tensor, TensorMul)):
         r = t.coeff*_trace_single_line1(t)
         return r
     else:
@@ -316,7 +316,7 @@ def _gamma_trace1(*a):
         return gctr
     n = len(a)
     if n%2 == 1:
-        #return TensMul.from_data(S.Zero, [], [], [])
+        #return TensorMul.from_data(S.Zero, [], [], [])
         return S.Zero
     if n == 2:
         ind0 = a[0].get_indices()[0]
@@ -415,13 +415,13 @@ def kahane_simplify(expression):
 
     if isinstance(expression, Mul):
         return expression
-    if isinstance(expression, TensAdd):
-        return TensAdd(*[kahane_simplify(arg) for arg in expression.args])
+    if isinstance(expression, TensorAdd):
+        return TensorAdd(*[kahane_simplify(arg) for arg in expression.args])
 
     if isinstance(expression, Tensor):
         return expression
 
-    assert isinstance(expression, TensMul)
+    assert isinstance(expression, TensorMul)
 
     gammas = expression.args
 
@@ -706,9 +706,9 @@ def kahane_simplify(expression):
 
     t = resulting_coeff * resulting_expr
     t1 = None
-    if isinstance(t, TensAdd):
+    if isinstance(t, TensorAdd):
         t1 = t.args[0]
-    elif isinstance(t, TensMul):
+    elif isinstance(t, TensorMul):
         t1 = t
     if t1:
         pass
