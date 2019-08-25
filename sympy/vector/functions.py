@@ -28,7 +28,7 @@ def extended_express(expr,coordsys):
     >>> from sympy.vector import extended_express, CoordSys3D
     >>> from sympy import pi
     >>> N = CoordSys3D('N')
-    >>> C = N.create_new('C', transformation='cylindrical',
+    >>> C = N.create_new('C', transformation='cylindrical', \
         vector_names = ('r', 'theta', 'z'))
     >>> extended_express(5*N.i,C)
     5*C.r
