@@ -4,7 +4,7 @@ from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
 from sympy import diff, integrate, S, simplify
-from sympy.core import sympify
+from sympy.core import sympify,nan
 from sympy.vector.dyadic import Dyadic
 
 
@@ -112,7 +112,7 @@ def extended_express(expr,coordsys):
     ans=Vector.zero
 
     for v,c in zip(vals,to_coeffs):
-        if v is sympy.nan:  # v is nan ie infinity from an arctan
+        if v is nan:  # v is nan ie infinity from an arctan
             v = 0 
         # use to solve for cylindrical coords 
         # where theta is undefined
