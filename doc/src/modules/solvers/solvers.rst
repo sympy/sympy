@@ -91,16 +91,3 @@ Inequalities
 ------------
 
 See :ref:`inequality-docs`
-
-
-Contents
-========
-
-.. toctree::
-  :maxdepth: 2
-
-  solveset.rst
-  ode.rst
-  pde.rst
-  inequalities.rst
-  diophantine.rst
