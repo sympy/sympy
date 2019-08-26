@@ -1525,13 +1525,13 @@ class Beam(object):
 
 
     @doctest_depends_on(modules=('numpy',))
-    def draw(self, pictorial=False):
+    def draw(self, pictorial=True):
         """Returns a plot object representing the beam diagram of the beam.
 
         Parameters
         ==========
 
-        pictorial: Boolean (default=False)
+        pictorial: Boolean (default=True)
             Setting ``pictorial=True`` would simply create a pictorial (scaled) view
             of the beam diagram not according to the scale.
             Although setting ``pictorial=False`` would create a beam diagram with
@@ -1569,27 +1569,26 @@ class Beam(object):
             raise ImportError("To use this function numpy module is required")
 
         x = self.variable
-        length = self.length
+        length = 10 if isinstance(self.length, Symbol) else self.length
         height = length/10
 
         rectangles = []
         rectangles.append({'xy':(0, 0), 'width':length, 'height': height, 'facecolor':"brown"})
-        annotations, markers, load_eq, fill = self._draw_load(pictorial)
-        support_markers, support_rectangles = self._draw_supports()
+        annotations, markers, load_eq, fill = self._draw_load(pictorial, length)
+        support_markers, support_rectangles = self._draw_supports(length)
 
         rectangles += support_rectangles
         markers += support_markers
 
         sing_plot = plot(height + load_eq, (x, 0, length),
-         xlim=(-2, length + 2), ylim=(-length, length), annotations=annotations,
+         xlim=(-height, length + height), ylim=(-length, length), annotations=annotations,
           markers=markers, rectangles=rectangles, fill=fill, axis=False, show=False)
 
         return sing_plot
 
 
-    def _draw_load(self, pictorial):
+    def _draw_load(self, pictorial, length):
         loads = list(set(self.applied_loads) - set(self._support_as_loads))
-        length = self.length
         height = length/10
         x = self.variable
 
@@ -1618,6 +1617,8 @@ class Beam(object):
                                        SingularityFunction(x, end, i) / factorial(i))
                     load_args = scaled_load.args
                 else:
+                    if isinstance(load[0], Symbol):
+                        raise ValueError("Magnitude of load: {} should not be a Symbol".format(load))
                     load_args = self.load.args
 
                 load_eq = [i for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
@@ -1633,24 +1634,23 @@ class Beam(object):
         return annotations, markers, load_eq, fill
 
 
-    def _draw_supports(self):
-        length = self.length
+    def _draw_supports(self, length):
         height = length/10
 
         support_markers = []
         support_rectangles = []
         for support in self._applied_supports:
             if support[1] == "pin":
-                support_markers.append({'args':[support[0], [0]], 'marker':6, 'markersize':15, 'color':"black"})
+                support_markers.append({'args':[support[0], [0]], 'marker':6, 'markersize':13, 'color':"black"})
 
             elif support[1] == "roller":
-                support_markers.append({'args':[support[0], [-height/2]], 'marker':'o', 'markersize':15, 'color':"black"})
+                support_markers.append({'args':[support[0], [-height/2.5]], 'marker':'o', 'markersize':13, 'color':"black"})
 
             elif support[1] == "fixed":
                 if support[0] == 0:
-                    support_rectangles.append({'xy':(0, -3*height), 'width':-self.length/10, 'height':6*height + height, 'fill':False, 'hatch':'/////'})
+                    support_rectangles.append({'xy':(0, -3*height), 'width':-self.length/20, 'height':6*height + height, 'fill':False, 'hatch':'/////'})
                 else:
-                    support_rectangles.append({'xy':(self.length, -3*height), 'width':self.length/10, 'height': 6*height + height, 'fill':False, 'hatch':'/////'})
+                    support_rectangles.append({'xy':(self.length, -3*height), 'width':self.length/20, 'height': 6*height + height, 'fill':False, 'hatch':'/////'})
 
         return support_markers, support_rectangles
 
