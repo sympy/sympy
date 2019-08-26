@@ -89,7 +89,7 @@ Series Classes
 
 
 Pyglet Plotting
-======================
+---------------
 
 .. module:: sympy.plotting.pygletplot
 
