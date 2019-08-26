@@ -358,7 +358,7 @@ class elliptic_pi(Function):
                 return elliptic_f(z, m)
             if m.is_extended_real and m.is_infinite or \
                     n.is_extended_real and n.is_infinite:
-                return True
+                return S.Zero
         else:
             if n.is_zero:
                 return elliptic_k(m)
@@ -378,7 +378,7 @@ class elliptic_pi(Function):
                 return elliptic_k(m)
             if m.is_extended_real and m.is_infinite or \
                     n.is_extended_real and n.is_infinite:
-                return True
+                return S.Zero
 
     def _eval_conjugate(self):
         if len(self.args) == 3:

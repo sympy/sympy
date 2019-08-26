@@ -167,7 +167,6 @@ def test_operator_dagger():
     assert Dagger(A*B) == Dagger(B)*Dagger(A)
     assert Dagger(A + B) == Dagger(A) + Dagger(B)
     assert Dagger(A**2) == Dagger(A)**2
-    assert Dagger(A**2, evaluate=False).func is Dagger
 
 
 def test_differential_operator():
