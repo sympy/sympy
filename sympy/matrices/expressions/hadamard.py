@@ -317,7 +317,7 @@ class HadamardPower(MatrixExpr):
         A_{0, 0}^b   & A_{0, 1}^b   & \cdots & A_{0, n-1}^b   \\
         A_{1, 0}^b   & A_{1, 1}^b   & \cdots & A_{1, n-1}^b   \\
         \vdots       & \vdots       & \ddots & \vdots         \\
-        A_{m-1, 0}^b & A_{m-1, 1}^b & \hdots & A_{m-1, n-1}^b
+        A_{m-1, 0}^b & A_{m-1, 1}^b & \cdots & A_{m-1, n-1}^b
         \end{bmatrix}
 
     Scalar raised to a matrix exponent:
@@ -327,7 +327,7 @@ class HadamardPower(MatrixExpr):
         a^{B_{0, 0}}   & a^{B_{0, 1}}   & \cdots & a^{B_{0, n-1}}   \\
         a^{B_{1, 0}}   & a^{B_{1, 1}}   & \cdots & a^{B_{1, n-1}}   \\
         \vdots         & \vdots         & \ddots & \vdots           \\
-        a^{B_{m-1, 0}} & a^{B_{m-1, 1}} & \hdots & a^{B_{m-1, n-1}}
+        a^{B_{m-1, 0}} & a^{B_{m-1, 1}} & \cdots & a^{B_{m-1, n-1}}
         \end{bmatrix}
 
     Matrix raised to a matrix exponent:
@@ -341,7 +341,7 @@ class HadamardPower(MatrixExpr):
         \vdots                  & \vdots                  &
         \ddots & \vdots                      \\
         A_{m-1, 0}^{B_{m-1, 0}} & A_{m-1, 1}^{B_{m-1, 1}} &
-        \hdots & A_{m-1, n-1}^{B_{m-1, n-1}}
+        \cdots & A_{m-1, n-1}^{B_{m-1, n-1}}
         \end{bmatrix}
 
     Scalar raised to a scalar exponent:
