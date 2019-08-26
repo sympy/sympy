@@ -769,10 +769,21 @@ def test_classify_ode():
         '1st_linear_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
-    assert classify_ode(f(x).diff(x)**2, f(x)) == (
-        'nth_algebraic',
-        'lie_group',
-        'nth_algebraic_Integral')
+    assert classify_ode(f(x).diff(x)**2, f(x)) == ('nth_algebraic',
+         'separable',
+         '1st_linear',
+         '1st_homogeneous_coeff_best',
+         '1st_homogeneous_coeff_subs_indep_div_dep',
+         '1st_homogeneous_coeff_subs_dep_div_indep',
+         '1st_power_series',
+         'lie_group',
+         'nth_linear_constant_coeff_homogeneous',
+         'nth_linear_euler_eq_homogeneous',
+         'nth_algebraic_Integral',
+         'separable_Integral',
+         '1st_linear_Integral',
+         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
+         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     # issue 4749: f(x) should be cleared from highest derivative before classifying
     a = classify_ode(Eq(f(x).diff(x) + f(x), x), f(x))
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
@@ -787,7 +798,26 @@ def test_classify_ode():
         'Bernoulli_Integral',
         'almost_linear_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
-    assert b != c != ()
+    assert b == ('factorable',
+         '1st_linear',
+         'Bernoulli',
+         '1st_power_series',
+         'lie_group',
+         'nth_linear_constant_coeff_undetermined_coefficients',
+         'nth_linear_constant_coeff_variation_of_parameters',
+         '1st_linear_Integral',
+         'Bernoulli_Integral',
+         'nth_linear_constant_coeff_variation_of_parameters_Integral')
+    assert c == ('1st_linear',
+         'Bernoulli',
+         '1st_power_series',
+         'lie_group',
+         'nth_linear_constant_coeff_undetermined_coefficients',
+         'nth_linear_constant_coeff_variation_of_parameters',
+         '1st_linear_Integral',
+         'Bernoulli_Integral',
+         'nth_linear_constant_coeff_variation_of_parameters_Integral')
+
     assert classify_ode(
         2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
     ) == ('Bernoulli', 'almost_linear', 'lie_group',
@@ -827,12 +857,10 @@ def test_classify_ode():
                         prep=True) == ans
 
     assert classify_ode(Eq(2*x**3*f(x).diff(x), 0), f(x)) == \
-        ('nth_algebraic', 'separable', '1st_linear', '1st_homogeneous_coeff_best',
-         '1st_homogeneous_coeff_subs_indep_div_dep', '1st_homogeneous_coeff_subs_dep_div_indep',
-         '1st_power_series', 'lie_group', 'nth_linear_constant_coeff_homogeneous',
-         'nth_linear_euler_eq_homogeneous', 'nth_algebraic_Integral', 'separable_Integral',
-         '1st_linear_Integral', '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
-          '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
+        ('factorable', 'nth_algebraic', 'separable', '1st_linear', '1st_power_series',
+         'lie_group', 'nth_linear_euler_eq_homogeneous',
+         'nth_algebraic_Integral', 'separable_Integral',
+         '1st_linear_Integral')
 
 
     assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
@@ -1122,9 +1150,9 @@ def test_solve_ics():
     # Some more complicated tests Refer to PR #16098
 
     assert set(dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0, f(x).diff(x).subs(x, 1):0})) == \
-        set([Eq(f(x), 0), Eq(f(x), x ** 3 / 6 - x / 2)])
+        {Eq(f(x), 0), Eq(f(x), x ** 3 / 6 - x / 2)}
     assert set(dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0})) == \
-        set([Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)])
+        {Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)}
 
     K, r, f0 = symbols('K r f0')
     sol = Eq(f(x), K*f0*exp(r*x)/((-K + f0)*(f0*exp(r*x)/(-K + f0) - 1)))
@@ -1133,9 +1161,9 @@ def test_solve_ics():
 
     #Order dependent issues Refer to PR #16098
     assert set(dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(x).diff(x).subs(x,0):0, f(0):0})) == \
-        set([Eq(f(x), 0), Eq(f(x), x ** 3 / 6)])
+        {Eq(f(x), 0), Eq(f(x), x ** 3 / 6)}
     assert set(dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0, f(x).diff(x).subs(x,0):0})) == \
-        set([Eq(f(x), 0), Eq(f(x), x ** 3 / 6)])
+        {Eq(f(x), 0), Eq(f(x), x ** 3 / 6)}
 
     # XXX: Ought to be ValueError
     raises(ValueError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1, f(pi): 1}))
