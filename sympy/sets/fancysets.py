@@ -985,7 +985,7 @@ class ComplexRegion(Set):
     >>> c = Interval(1, 8)
     >>> c1 = ComplexRegion(a*b)  # Rectangular Form
     >>> c1
-    ComplexRegion(ProductSet(Interval(2, 3), Interval(4, 6)), False)
+    CartesianComplexRegion(ProductSet(Interval(2, 3), Interval(4, 6)))
 
     * c1 represents the rectangular region in complex plane
       surrounded by the coordinates (2, 4), (3, 4), (3, 6) and
@@ -993,7 +993,7 @@ class ComplexRegion(Set):
 
     >>> c2 = ComplexRegion(Union(a*b, b*c))
     >>> c2
-    ComplexRegion(Union(ProductSet(Interval(2, 3), Interval(4, 6)), ProductSet(Interval(4, 6), Interval(1, 8))), False)
+    CartesianComplexRegion(Union(ProductSet(Interval(2, 3), Interval(4, 6)), ProductSet(Interval(4, 6), Interval(1, 8))))
 
     * c2 represents the Union of two rectangular regions in complex
       plane. One of them surrounded by the coordinates of c1 and
@@ -1009,7 +1009,7 @@ class ComplexRegion(Set):
     >>> theta = Interval(0, 2*S.Pi)
     >>> c2 = ComplexRegion(r*theta, polar=True)  # Polar Form
     >>> c2  # unit Disk
-    ComplexRegion(ProductSet(Interval(0, 1), Interval.Ropen(0, 2*pi)), True)
+    PolarComplexRegion(ProductSet(Interval(0, 1), Interval.Ropen(0, 2*pi)))
 
     * c2 represents the region in complex plane inside the
       Unit Disk centered at the origin.
@@ -1023,69 +1023,27 @@ class ComplexRegion(Set):
     >>> upper_half_unit_disk = ComplexRegion(Interval(0, 1)*Interval(0, S.Pi), polar=True)
     >>> intersection = unit_disk.intersect(upper_half_unit_disk)
     >>> intersection
-    ComplexRegion(ProductSet(Interval(0, 1), Interval(0, pi)), True)
+    PolarComplexRegion(ProductSet(Interval(0, 1), Interval(0, pi)))
     >>> intersection == upper_half_unit_disk
     True
 
     See Also
     ========
 
-    Reals
+    CartesianComplexRegion
+    PolarComplexRegion
+    Complexes
 
     """
     is_ComplexRegion = True
 
     def __new__(cls, sets, polar=False):
-        from sympy import sin, cos
-
-        x, y, r, theta = symbols('x, y, r, theta', cls=Dummy)
-        I = S.ImaginaryUnit
-        polar = sympify(polar)
-
-        # Rectangular Form
-        if polar == False:
-            if all(_a.is_FiniteSet for _a in sets.args) and (len(sets.args) == 2):
-
-                # ** ProductSet of FiniteSets in the Complex Plane. **
-                # For Cases like ComplexRegion({2, 4}*{3}), It
-                # would return {2 + 3*I, 4 + 3*I}
-                complex_num = []
-                for x in sets.args[0]:
-                    for y in sets.args[1]:
-                        complex_num.append(x + I*y)
-                obj = FiniteSet(*complex_num)
-            else:
-                obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y), sets)
-            obj._variables = (x, y)
-            obj._expr = x + I*y
-
-        # Polar Form
-        elif polar == True:
-            new_sets = []
-            # sets is Union of ProductSets
-            if not sets.is_ProductSet:
-                for k in sets.args:
-                    new_sets.append(k)
-            # sets is ProductSets
-            else:
-                new_sets.append(sets)
-            # Normalize input theta
-            for k, v in enumerate(new_sets):
-                new_sets[k] = ProductSet(v.args[0],
-                                         normalize_theta_set(v.args[1]))
-            sets = Union(*new_sets)
-            obj = ImageSet.__new__(cls, Lambda((r, theta),
-                                   r*(cos(theta) + I*sin(theta))),
-                                   sets)
-            obj._variables = (r, theta)
-            obj._expr = r*(cos(theta) + I*sin(theta))
-
+        if polar is False:
+            return CartesianComplexRegion(sets)
+        elif polar is True:
+            return PolarComplexRegion(sets)
         else:
             raise ValueError("polar should be either True or False")
-
-        obj._sets = sets
-        obj._polar = polar
-        return obj
 
     @property
     def sets(self):
@@ -1107,19 +1065,7 @@ class ComplexRegion(Set):
         Union(ProductSet(Interval(2, 3), Interval(4, 5)), ProductSet(Interval(4, 5), Interval(1, 7)))
 
         """
-        return self._sets
-
-    @property
-    def args(self):
-        return (self._sets, self._polar)
-
-    @property
-    def variables(self):
-        return self._variables
-
-    @property
-    def expr(self):
-        return self._expr
+        return self.args[0]
 
     @property
     def psets(self):
@@ -1207,27 +1153,6 @@ class ComplexRegion(Set):
         return b_interval
 
     @property
-    def polar(self):
-        """
-        Returns True if self is in polar form.
-
-        Examples
-        ========
-
-        >>> from sympy import Interval, ComplexRegion, Union, S
-        >>> a = Interval(2, 3)
-        >>> b = Interval(4, 5)
-        >>> theta = Interval(0, 2*S.Pi)
-        >>> C1 = ComplexRegion(a*b)
-        >>> C1.polar
-        False
-        >>> C2 = ComplexRegion(a*theta, polar=True)
-        >>> C2.polar
-        True
-        """
-        return self._polar
-
-    @property
     def _measure(self):
         """
         The measure of self.sets.
@@ -1259,13 +1184,13 @@ class ComplexRegion(Set):
         >>> from sympy import Interval, ComplexRegion
         >>> unit = Interval(0,1)
         >>> ComplexRegion.from_real(unit)
-        ComplexRegion(ProductSet(Interval(0, 1), {0}), False)
+        CartesianComplexRegion(ProductSet(Interval(0, 1), {0}))
 
         """
         if not sets.is_subset(S.Reals):
             raise ValueError("sets must be a subset of the real line")
 
-        return cls(sets * FiniteSet(0))
+        return CartesianComplexRegion(sets * FiniteSet(0))
 
     def _contains(self, other):
         from sympy.functions import arg, Abs
@@ -1302,16 +1227,143 @@ class ComplexRegion(Set):
             return False
 
 
-class Complexes(with_metaclass(Singleton, ComplexRegion)):
+class CartesianComplexRegion(ComplexRegion):
+    """
+    Set representing a square region of the complex plane.
+
+    Z = {z in C | z = x + I*y, x in [Re(z)], y in [Im(z)]}
+
+    Examples
+    ========
+
+    >>> from sympy.sets.fancysets import ComplexRegion
+    >>> from sympy.sets.sets import Interval
+    >>> from sympy import I
+    >>> region = ComplexRegion(Interval(1, 3) * Interval(4, 6))
+    >>> 2 + 5*I in region
+    True
+    >>> 5*I in region
+    False
+
+    See also
+    ========
+
+    ComplexRegion
+    PolarComplexRegion
+    Complexes
+    """
+
+    polar = False
+    variables = symbols('x, y', cls=Dummy)
+
+    def __new__(cls, sets):
+
+        if sets == S.Reals*S.Reals:
+            return S.Complexes
+
+        if all(_a.is_FiniteSet for _a in sets.args) and (len(sets.args) == 2):
+
+            # ** ProductSet of FiniteSets in the Complex Plane. **
+            # For Cases like ComplexRegion({2, 4}*{3}), It
+            # would return {2 + 3*I, 4 + 3*I}
+
+            # FIXME: This should probably be handled with something like:
+            # return ImageSet(Lambda((x, y), x+I*y), sets).rewrite(FiniteSet)
+            complex_num = []
+            for x in sets.args[0]:
+                for y in sets.args[1]:
+                    complex_num.append(x + S.ImaginaryUnit*y)
+            return FiniteSet(*complex_num)
+        else:
+            return Set.__new__(cls, sets)
+
+    @property
+    def expr(self):
+        x, y = self.variables
+        return x + I*y
+
+
+class PolarComplexRegion(ComplexRegion):
+    """
+    Set representing a polar region of the complex plane.
+
+    Z = {z in C | z = r*[cos(theta) + I*sin(theta)], r in [r], theta in [theta]}
+
+    Examples
+    ========
+
+    >>> from sympy.sets.fancysets import ComplexRegion, Interval
+    >>> from sympy import oo, pi, I
+    >>> rset = Interval(0, oo)
+    >>> thetaset = Interval(0, pi)
+    >>> upper_half_plane = ComplexRegion(rset * thetaset, polar=True)
+    >>> 1 + I in upper_half_plane
+    True
+    >>> 1 - I in upper_half_plane
+    False
+
+    See also
+    ========
+
+    ComplexRegion
+    CartesianComplexRegion
+    Complexes
+
+    """
+
+    polar = True
+    variables = symbols('r, theta', cls=Dummy)
+
+    def __new__(cls, sets):
+
+        new_sets = []
+        # sets is Union of ProductSets
+        if not sets.is_ProductSet:
+            for k in sets.args:
+                new_sets.append(k)
+        # sets is ProductSets
+        else:
+            new_sets.append(sets)
+        # Normalize input theta
+        for k, v in enumerate(new_sets):
+            new_sets[k] = ProductSet(v.args[0],
+                                     normalize_theta_set(v.args[1]))
+        sets = Union(*new_sets)
+        return Set.__new__(cls, sets)
+
+    @property
+    def expr(self):
+        from sympy.functions.elementary.trigonometric import sin, cos
+        r, theta = self.variables
+        return r*(cos(theta) + S.ImaginaryUnit*sin(theta))
+
+
+class Complexes(with_metaclass(Singleton, CartesianComplexRegion)):
+    """
+    The Set of all complex numbers
+
+    Examples
+    ========
+
+    >>> from sympy import S, I
+    >>> S.Complexes
+    S.Complexes
+    >>> 1 + I in S.Complexes
+    True
+
+    See also
+    ========
+
+    Reals
+    ComplexRegion
+
+    """
+
+    # Override property from superclass since Complexes has no args
+    sets = ProductSet(S.Reals, S.Reals)
 
     def __new__(cls):
-        return ComplexRegion.__new__(cls, S.Reals*S.Reals)
-
-    def __eq__(self, other):
-        return other == ComplexRegion(S.Reals*S.Reals)
-
-    def __hash__(self):
-        return hash(ComplexRegion(S.Reals*S.Reals))
+        return Set.__new__(cls)
 
     def __str__(self):
         return "S.Complexes"
