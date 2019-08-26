@@ -7,7 +7,6 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
 from mpmath import mpi
 
 from sympy.core.compatibility import range
-from sympy.core.expr import unchanged
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
