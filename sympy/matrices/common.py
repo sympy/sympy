@@ -2085,7 +2085,8 @@ class MatrixArithmetic(MatrixRequired):
 
     def _eval_matrix_mul(self, other, mulsimp=None):
         return self._new(self.rows, other.cols, lambda i, j: \
-                dotprodsimp(self[i,:], other[:,j], simplify=mulsimp))
+                dotprodsimp((self[i,k] for k in range(self.cols)), \
+                            (other[k,j] for k in range(self.cols)), simplify=mulsimp))
 
     def _eval_matrix_mul_elementwise(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other[i,j])
@@ -2577,38 +2578,28 @@ def dotprodsimp(a, b, simplify=True):
         will indicate a normal sum of products.
     """
 
-    expr = S.Zero
     itra = iter(a)
     itrb = iter(b)
 
+    try: # check for zero length
+        prod = next(itra)*next(itrb)
+    except StopIteration:
+        return S.Zero
+
     # simple non-simplified sum of products
     if not simplify:
-        try:
-            expr = next(itra)*next(itrb)
-
-            for a in itra:
-                expr += a*next(itrb)
-
-        except StopIteration:
-            pass
-
-        return expr
+        return reduce (lambda e, z: e + z[0]*z[1], zip(itra, itrb), prod)
 
     # part 1, the expanded summation
-    try:
-        prod    = next(itra)*next(itrb)
-        _expand = getattr(prod, 'expand', None)
-        expr    = _expand(power_base=False, power_exp=False, log=False, \
+    _expand = getattr(prod, 'expand', None)
+    expr    = _expand(power_base=False, power_exp=False, log=False, \
+            multinomial=False, basic=False) if _expand else prod
+
+    for a, b in zip(itra, itrb):
+        prod     = a*b
+        _expand  = getattr(prod, 'expand', None)
+        expr    += _expand(power_base=False, power_exp=False, log=False, \
                 multinomial=False, basic=False) if _expand else prod
-
-        for a in itra:
-            prod     = a*next(itrb)
-            _expand  = getattr(prod, 'expand', None)
-            expr    += _expand(power_base=False, power_exp=False, log=False, \
-                    multinomial=False, basic=False) if _expand else prod
-
-    except StopIteration:
-        pass
 
     # part 2, the cancelation and grouping
     exprops  = count_ops(expr)
