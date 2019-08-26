@@ -3553,3 +3553,42 @@ def test_dsolve_remove_redundant_solutions():
     eq = (f(x)**2-2*f(x)+1)*f(x).diff(x, 3)
     sol = Eq(f(x), C1 + C2*x + C3*x**2)
     assert dsolve(eq) == sol
+
+def test_factorable():
+    eq = f(x) + f(x)*f(x).diff(x)
+    sols = [Eq(f(x), C1 - x), Eq(f(x), 0)]
+    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sols) == 2*[(True, 0)]
+
+    eq = f(x)*(f(x).diff(x)+f(x)*x+2)
+    sols = [Eq(f(x), (C1 - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2))
+            *exp(-x**2/2)), Eq(f(x), 0)]
+    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sols) == 2*[(True, 0)]
+
+    eq = (f(x).diff(x)+f(x)*x**2)*(f(x).diff(x, 2) + x*f(x))
+    sols = [Eq(f(x), C2*(1 - x**3/6) + C1*x*(1 - x**3/12) +
+            O(x**6)), Eq(f(x), C1*exp(-x**3/3))]
+    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sols[1]) == (True, 0)
+
+    eq = (f(x).diff(x)+f(x)*x**2)*(f(x).diff(x, 2) + f(x))
+    sols = [Eq(f(x), C1*exp(-x**3/3)), Eq(f(x), C1*sin(x) + C2*cos(x))]
+    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sols) == 2*[(True, 0)]
+
+@slow
+def test_factorable_series():
+    eq = x**4*f(x)**2 + 2*x**4*f(x)*Derivative(f(x), (x, 2)) + x**4*Derivative(f(x),
+         (x, 2))**2  + 2*x**3*f(x)*Derivative(f(x), x) + 2*x**3*Derivative(f(x),
+         x)*Derivative(f(x), (x, 2)) - 7*x**2*f(x)**2 - 7*x**2*f(x)*Derivative(f(x),
+         (x, 2)) + x**2*Derivative(f(x), x)**2 - 7*x*f(x)*Derivative(f(x), x) + 12*f(x)**2
+
+    sol = [Eq(f(x), C1*x**2*(1 - x**2/12) + O(x**6)), Eq(f(x), C2*x**(sqrt(3))*(-x**2/(-1 +
+          sqrt(3) + (1 + sqrt(3))*(sqrt(3) + 2)) + 1) + C1*x**(-sqrt(3))*(-x**6/((-sqrt(3) -
+          1 + (1 - sqrt(3))*(2 - sqrt(3)))*(-sqrt(3) + 1 + (3 - sqrt(3))*(4 - sqrt(3)))*
+          (-sqrt(3) + 3 + (5 - sqrt(3))*(6 - sqrt(3)))) + x**4/((-sqrt(3) - 1 + (1 - sqrt(3))
+          *(2 - sqrt(3)))*(-sqrt(3) + 1 + (3 - sqrt(3))*(4 - sqrt(3)))) - x**2/(-sqrt(3) - 1
+          + (1 - sqrt(3))*(2 - sqrt(3))) + 1) + O(x**6))]
+    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
+    #assert checkodesol(eq, sols) == 2*[(True, 0)]

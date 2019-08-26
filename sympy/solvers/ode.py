@@ -4238,16 +4238,6 @@ def _remove_redundant_solutions(eq, solns, order, var):
     def is_special_case_of(soln1, soln2):
         return _is_special_case_of(soln1, soln2, eq, order, var)
 
-    # We can't check the redundancy of the series type of solutions.
-    series_solns = []
-    non_series_solns = []
-    for sol in solns:
-        if sol.has(Order):
-            series_solns.append(sol)
-        else:
-            non_series_solns.append(sol)
-    solns = non_series_solns
-
     unique_solns = []
     for soln1 in solns:
         for soln2 in unique_solns[:]:
@@ -4258,7 +4248,7 @@ def _remove_redundant_solutions(eq, solns, order, var):
         else:
             unique_solns.append(soln1)
 
-    return unique_solns + series_solns
+    return unique_solns
 
 def _is_special_case_of(soln1, soln2, eq, order, var):
     r"""
@@ -4278,19 +4268,30 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     # means that some value of the constants in sol1 is a special case of
     # sol2 corresponding to a particular choice of the integration constants.
 
+    if isinstance(soln1, Eq):
+        soln1 = soln1.rhs - soln1.lhs
+    if isinstance(soln2, Eq):
+        soln2 = soln2.rhs - soln2.lhs
+
+    # Work for the series solution
+    if soln1.has(Order) and soln2.has(Order):
+        if soln1.getO() == soln2.getO():
+            return _is_special_case_of(soln1.removeO(), soln2.removeO(), eq, order, var)
+    elif soln1.has(Order) or soln2.has(Order):
+        return False
+
     constants1 = soln1.free_symbols.difference(eq.free_symbols)
     constants2 = soln2.free_symbols.difference(eq.free_symbols)
 
-    constants1_new = get_numbered_constants((soln1.rhs-soln1.lhs) - (soln2.rhs-soln2.lhs),
-                     len(constants1))
+    constants1_new = get_numbered_constants(soln1 - soln2, len(constants1))
     if len(constants1) == 1:
         constants1_new = {constants1_new}
     for c_old, c_new in zip(constants1, constants1_new):
         soln1 = soln1.subs(c_old, c_new)
 
     # n equations for sol1 = sol2, sol1'=sol2', ...
-    lhs = (soln1.rhs-soln1.lhs)
-    rhs = (soln2.rhs-soln2.lhs)
+    lhs = soln1
+    rhs = soln2
     eqns = [Eq(lhs, rhs)]
     for n in range(1, order):
         lhs = lhs.diff(var)
@@ -5824,8 +5825,6 @@ def ode_lie_group(eq, func, order, match):
 
     """
 
-    if not match:
-        match = {'xi': None, 'eta': None}
     heuristics = lie_heuristics
     inf = {}
     f = func.func
@@ -5844,8 +5843,6 @@ def ode_lie_group(eq, func, order, match):
             sol = solve(eq, df)
             if sol == []:
                 raise NotImplementedError
-            elif len(sol)>1:
-                return [ode_lie_group(Eq(df, i), func, order, match) for i in sol]
         except NotImplementedError:
             raise NotImplementedError("Unable to solve the differential equation " +
                 str(eq) + " by the lie group method")
@@ -5896,8 +5893,6 @@ def ode_lie_group(eq, func, order, match):
                 scoord = newcoord[-1]
                 try:
                     sol = solve([r - rcoord, s - scoord], x, y, dict=True)
-                    if sol == []:
-                        raise NotImplementedError
                 except NotImplementedError:
                     continue
                 else:
