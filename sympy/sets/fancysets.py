@@ -4,6 +4,7 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
+from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
@@ -34,6 +35,7 @@ class Rationals(with_metaclass(Singleton, Set)):
     is_iterable = True
     _inf = S.NegativeInfinity
     _sup = S.Infinity
+    is_empty = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -94,6 +96,7 @@ class Naturals(with_metaclass(Singleton, Set)):
     is_iterable = True
     _inf = S.One
     _sup = S.Infinity
+    is_empty = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -129,6 +132,7 @@ class Naturals0(Naturals):
     Integers : also includes the negative integers
     """
     _inf = S.Zero
+    is_empty = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -171,6 +175,7 @@ class Integers(with_metaclass(Singleton, Set)):
     """
 
     is_iterable = True
+    is_empty = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -308,7 +313,11 @@ class ImageSet(Set):
             return sets[0]
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
-            return FiniteSet(flambda.expr)
+            emptyprod = fuzzy_or(s.is_empty for s in sets)
+            if emptyprod == True:
+                return S.EmptySet
+            elif emptyprod == False:
+                return FiniteSet(flambda.expr)
 
         return Basic.__new__(cls, flambda, *sets)
 
