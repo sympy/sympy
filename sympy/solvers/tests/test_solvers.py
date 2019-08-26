@@ -5,7 +5,7 @@ from sympy import (
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise)
+    E, cbrt, denom, Add, Piecewise, sinc, zeta)
 
 from sympy.core.compatibility import range
 from sympy.core.function import nfloat
@@ -2111,3 +2111,23 @@ def test_issue_17452():
     assert solve((7**x)**x + pi, x) == [-sqrt(log(pi) + I*pi)/sqrt(log(7)),
                                         sqrt(log(pi) + I*pi)/sqrt(log(7))]
     assert solve(x**(x/11) + pi/11, x) == [exp(LambertW(-11*log(11) + 11*log(pi) + 11*I*pi))]
+
+
+def test_issue_17521():
+    assert solve(sinc(x), x) == [pi]
+    assert solve(sinc(x**2), x) == [-sqrt(pi), sqrt(pi)]
+    assert solve(sinc(x**3), x) == [pi**(S(1)/3),
+                                    pi**(S(1)/3)*(-1 + sqrt(3)*I)/2,
+                                    -pi**(S(1)/3)*(1 + sqrt(3)*I)/2]
+    assert solve(sinc(acos(x**E)), x) == [(-1)**exp(-1)]
+
+    raises(NotImplementedError, lambda: solve(zeta(x), x))
+    raises(NotImplementedError, lambda: solve(zeta(x**2), x))
+
+    xp = Symbol('xp', positive=True)
+    assert solve(sinc(xp), xp) == [pi]
+    assert solve(sinc(xp**2), xp) == [sqrt(pi)]
+    assert solve(sinc(xp**3), xp) == [pi**(S(1)/3)]
+
+    raises(NotImplementedError, lambda: solve(zeta(xp), xp))
+    raises(NotImplementedError, lambda: solve(zeta(xp ** 2), xp))

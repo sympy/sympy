@@ -5,7 +5,7 @@ from sympy.core.basic import sympify, cacheit
 from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not, fuzzy_or
-from sympy.core.numbers import igcdex, Rational, pi
+from sympy.core.numbers import igcdex, Rational, pi, I
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -1886,6 +1886,11 @@ class sinc(Function):
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
         return Piecewise((sin(arg)/arg, Ne(arg, 0)), (1, True))
+
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
+        a = arg.doit()
+        return Piecewise((-I*(exp(I*a) - exp(-I*a))/(2*a),
+                                              Ne(a, 0)), (1, True))
 
 
 ###############################################################################

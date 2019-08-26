@@ -787,6 +787,10 @@ def test_sinc():
 
     assert sinc(x).rewrite(jn) == jn(0, x)
     assert sinc(x).rewrite(sin) == Piecewise((sin(x)/x, Ne(x, 0)), (1, True))
+    assert sinc(x).rewrite(exp) == Piecewise((-I*(exp(I*x) - exp(-I*x))/(2*x),
+                                              Ne(x, 0)), (1, True))
+    assert sinc(x**2).rewrite(exp) == Piecewise((-I*(exp(I*x**2) - exp(-I*x**2))/(2*x**2),
+                                                 Ne(x**2, 0)), (1, True))
 
 
 def test_asin():
