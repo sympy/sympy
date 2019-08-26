@@ -9,7 +9,7 @@ from sympy.matrices.matrices import (ShapeError, MatrixError,
     _simplify)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
-    SparseMatrix, casoratian, diag, eye, hessian,
+    MutableSparseMatrix, SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
 from sympy.core.compatibility import long, iterable, range, Hashable
@@ -290,9 +290,9 @@ def test_issue_17247_expression_blowup():
 
     assert M.mul(M, mulsimp=True) == Matrix([[2*x**2 + 2, 2 - 2*x**2], [2 - 2*x**2, 2*x**2 + 2]])
 
-    # assert exp(M).expand() == Matrix([
-    #     [ (exp(2*x) + exp(2))/2, (-exp(2*x) + exp(2))/2],
-    #     [(-exp(2*x) + exp(2))/2,  (exp(2*x) + exp(2))/2]])
+    assert M.exp(mulsimp=True).expand() == Matrix([
+        [ (exp(2*x) + exp(2))/2, (-exp(2*x) + exp(2))/2],
+        [(-exp(2*x) + exp(2))/2,  (exp(2*x) + exp(2))/2]])
 
     P, J = M.jordan_form()
     assert P*J*P.inv() != M
@@ -334,7 +334,7 @@ def test_issue_17247_expression_blowup():
     res = M.mul(M, mulsimp=True)
     mdm = MutableDenseMatrix(M)
     idm = ImmutableDenseMatrix(M)
-    msm = SparseMatrix(M)
+    msm = MutableSparseMatrix(M)
     ism = ImmutableSparseMatrix(M)
 
     assert mdm.pow(2, mulsimp=True) == res

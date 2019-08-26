@@ -2085,7 +2085,7 @@ class MatrixArithmetic(MatrixRequired):
 
     def _eval_matrix_mul(self, other, mulsimp=None):
         return self._new(self.rows, other.cols, lambda i, j: \
-                sumprodsimp(self[i,:], other[:,j], simplify=mulsimp))
+                dotprodsimp(self[i,:], other[:,j], simplify=mulsimp))
 
     def _eval_matrix_mul_elementwise(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other[i,j])
@@ -2556,7 +2556,7 @@ def classof(A, B):
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
 
 
-def sumprodsimp(a, b, simplify=True):
+def dotprodsimp(a, b, simplify=True):
     """Sum-of-products with optional intermediate product simplification
     targeted at the kind of blowup that occurs during summation of products.
     Intended to reduce expression blowup during matrix multiplication or other
@@ -2574,7 +2574,7 @@ def sumprodsimp(a, b, simplify=True):
 
     simplify : bool
         When set intermediate and final simplification will be used, not set
-        will indicate a normal sum of produces.
+        will indicate a normal sum of products.
     """
 
     expr = S.Zero

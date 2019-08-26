@@ -13,7 +13,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, sumprodsimp
+    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, dotprodsimp
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -172,27 +172,23 @@ class DenseMatrix(MatrixBase):
                          list(mat[i] for i in indices), copy=False)
 
     def _eval_matrix_mul(self, other, mulsimp=None):
-        # cache attributes for faster access
-        self_rows, self_cols   = self.rows, self.cols
-        other_rows, other_cols = other.rows, other.cols
-        other_len              = other_rows * other_cols
-        new_mat_rows           = self_rows
-        new_mat_cols           = other_cols
-        self_mat               = self._mat
-        other_mat              = other._mat
-        new_mat                = [self.zero]*new_mat_rows*new_mat_cols
+        other_len = other.rows * other.cols
+        new_len = self.rows*other.cols
+        new_mat = [self.zero]*new_len
 
         # if we multiply an n x 0 with a 0 x m, the
         # expected behavior is to produce an n x m matrix of zeros
-        if self_cols != 0 and other_rows != 0:
-            for i in range(len(new_mat)):
-                row, col    = i // new_mat_cols, i % new_mat_cols
-                row_indices = range(self_cols*row, self_cols*(row+1))
-                col_indices = range(col, other_len, other_cols)
-                new_mat[i]  = sumprodsimp((self_mat[a] for a in row_indices), \
-                        (other_mat[b] for b in col_indices), simplify=mulsimp)
+        if self.cols != 0 and other.rows != 0:
+            for i in range(new_len):
+                row, col = i // other.cols, i % other.cols
+                row_indices = range(self.cols*row, self.cols*(row+1))
+                col_indices = range(col, other_len, other.cols)
+                new_mat[i] = dotprodsimp( \
+                        (self._mat[a] for a in row_indices), \
+                        (other._mat[b] for b in col_indices), \
+                        simplify=mulsimp)
 
-        return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
+        return classof(self, other)._new(self.rows, other.cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):
         mat = [a*b for a,b in zip(self._mat, other._mat)]

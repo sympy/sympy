@@ -3184,7 +3184,7 @@ class MatrixBase(MatrixDeprecated,
         from .sparsetools import banded
         return self.__class__(banded(size, bands))
 
-    def exp(self):
+    def exp(self, mulsimp=None):
         """Return the exponential of a square matrix
 
         Examples
@@ -3198,6 +3198,13 @@ class MatrixBase(MatrixDeprecated,
         Matrix([
         [    exp(I*t)/2 + exp(-I*t)/2, -I*exp(I*t)/2 + I*exp(-I*t)/2],
         [I*exp(I*t)/2 - I*exp(-I*t)/2,      exp(I*t)/2 + exp(-I*t)/2]])
+
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during recursive power evaluations to control expression blowup.
         """
         if not self.is_square:
             raise NonSquareMatrixError(
@@ -3214,7 +3221,7 @@ class MatrixBase(MatrixDeprecated,
         from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
-        ret = P * eJ * P.inv()
+        ret = P.mul(eJ, mulsimp=mulsimp).mul(P.inv(), mulsimp=mulsimp)
         if all(value.is_real for value in self.values()):
             return type(self)(re(ret))
         else:

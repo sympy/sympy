@@ -10,7 +10,7 @@ from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.matrices.common import sumprodsimp
+from sympy.matrices.common import dotprodsimp
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 
@@ -481,7 +481,7 @@ class SparseMatrix(MatrixBase):
                 # these are the only things that need to be multiplied.
                 indices = set(col_lookup[col].keys()) & set(row_lookup[row].keys())
                 if indices:
-                    smat[row, col] = sumprodsimp((row_lookup[row][k] for k in indices), \
+                    smat[row, col] = dotprodsimp((row_lookup[row][k] for k in indices), \
                             (col_lookup[col][k] for k in indices), simplify=mulsimp)
 
         return self._new(self.rows, other.cols, smat)
