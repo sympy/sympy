@@ -1225,11 +1225,7 @@ def test_beta_scipy():
     assert abs(beta(1.3, 2.3) - F(1.3, 2.3)) <= 1e-10
 
 
-@XFAIL
 def test_beta_math():
-    # Not clear why it is not working since pycode(beta(x, y))
-    # gives 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
-
     f = beta(x, y)
     F = lambdify((x, y), f, modules='math')
 
