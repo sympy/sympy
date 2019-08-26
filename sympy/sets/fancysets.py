@@ -1280,7 +1280,7 @@ class CartesianComplexRegion(ComplexRegion):
     @property
     def expr(self):
         x, y = self.variables
-        return x + I*y
+        return x + S.ImaginaryUnit*y
 
 
 class PolarComplexRegion(ComplexRegion):
@@ -1346,8 +1346,6 @@ class Complexes(with_metaclass(Singleton, CartesianComplexRegion)):
     ========
 
     >>> from sympy import S, I
-    >>> S.Complexes
-    S.Complexes
     >>> 1 + I in S.Complexes
     True
 
