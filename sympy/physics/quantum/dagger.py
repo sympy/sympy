@@ -76,7 +76,7 @@ class Dagger(adjoint):
     .. [2] https://en.wikipedia.org/wiki/Hermitian_transpose
     """
 
-    def __new(cls, arg):
+    def __new__(cls, arg):
         if hasattr(arg, 'adjoint'):
             obj = arg.adjoint()
         elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose'):
