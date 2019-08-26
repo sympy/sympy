@@ -412,10 +412,7 @@ def test_ProductSet_of_single_arg_is_arg():
 
 def test_ProductSet_is_empty():
     assert ProductSet(S.Integers, S.Reals).is_empty == False
-
-    assert unchanged(Intersection, S.Integers, FiniteSet(sin(2)/pi))
-    empty = Intersection(S.Integers, FiniteSet(sin(2)/pi))
-    assert ProductSet(empty, S.Reals).is_empty == None
+    assert ProductSet(Interval(x, 1), S.Reals).is_empty == None
 
 
 def test_interval_subs():
