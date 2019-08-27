@@ -1025,7 +1025,6 @@ def test_issue_9637():
     assert Complement(a, Interval(1, 3)) == Complement(a, Interval(1, 3), evaluate=False)
 
 
-@XFAIL
 def test_issue_9808():
     # See https://github.com/sympy/sympy/issues/16342
     assert Complement(FiniteSet(y), FiniteSet(1)) == Complement(FiniteSet(y), FiniteSet(1), evaluate=False)
