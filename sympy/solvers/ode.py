@@ -5769,7 +5769,8 @@ def ode_lie_group(eq, func, order, match):
       John Starrett, pp. 1 - pp. 14
 
     """
-
+    if not match:
+        match = {'xi': None, 'eta': None}
     heuristics = lie_heuristics
     inf = {}
     f = func.func
@@ -5788,6 +5789,8 @@ def ode_lie_group(eq, func, order, match):
             sol = solve(eq, df)
             if sol == []:
                 raise NotImplementedError
+            elif len(sol)>1:
+                return [ode_lie_group(Eq(df, i), func, order, match) for i in sol]
         except NotImplementedError:
             raise NotImplementedError("Unable to solve the differential equation " +
                 str(eq) + " by the lie group method")
@@ -5838,6 +5841,8 @@ def ode_lie_group(eq, func, order, match):
                 scoord = newcoord[-1]
                 try:
                     sol = solve([r - rcoord, s - scoord], x, y, dict=True)
+                    if sol == []:
+                        raise NotImplementedError
                 except NotImplementedError:
                     continue
                 else:
