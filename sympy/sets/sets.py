@@ -6,7 +6,7 @@ import inspect
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range, PY3, is_sequence)
+    ordered, range, PY3, is_sequence, reduce)
 from sympy.core.cache import cacheit
 from sympy.core.decorators import deprecated
 from sympy.core.evalf import EvalfMixin
@@ -1361,63 +1361,78 @@ class Intersection(Set, LatticeOp):
             binary=True)
         if not fs_args:
             return
-        fs_args.sort(key=len)
-        s = fs_args[0]
-        fs_args = fs_args[1:]
 
-        res = []
-        unk = []
-        for x in s:
-            c = fuzzy_and(fuzzy_bool(o.contains(x))
-                for o in fs_args + other)
-            if c:
-                res.append(x)
-            elif c is None:
-                unk.append(x)
+        # Convert to Python sets and build the set of all elements
+        fs_sets = [set(fs) for fs in fs_args]
+        all_elements = reduce(lambda a, b: a | b, fs_sets, set())
+
+        # Extract elements that are definitely in or definitely not in the
+        # intersection
+        definite = set()
+        for e in all_elements:
+            inall = fuzzy_and(s.contains(e) for s in args)
+            if inall is True:
+                definite.add(e)
+            if inall is not None:
+                for s in fs_sets:
+                    s.discard(e)
+
+        # At this point all elements in all of fs_sets are possibly in the
+        # intersection. In some cases this is because they are definitely in
+        # the intersection of the finite sets but it's not clear if they are
+        # members of other. We might have {m, n}, {m}, and Reals where we
+        # don't know if m or n is real. We want to remove n here but it is
+        # possibly in because it might be equal to m. So what we do now is
+        # extract the elements that are definitely in the remaining finite
+        # sets iteratively until none remain.
+        fs_elements = reduce(lambda a, b: a | b, fs_sets, set())
+        all_elements = fs_elements | definite # Used below
+        while fs_elements:
+            for e in fs_elements:
+                infs = fuzzy_and(FiniteSet(*s).contains(e) for s in fs_sets)
+                if infs is True:
+                    definite.add(e)
+                if infs is not None:
+                    for s in fs_sets:
+                        s.discard(e)
+                    fs_elements.remove(e)
+                    break
+            # If we completed the for loop without removing anything we are
+            # done so quit the outer while loop
             else:
-                pass  # drop arg
+                break
 
-        res = FiniteSet(
-            *res, evaluate=False) if res else S.EmptySet
-        if unk:
-            symbolic_s_list = [x for x in s if x.has(Symbol)]
-            non_symbolic_s = s - FiniteSet(
-                *symbolic_s_list, evaluate=False)
-            while fs_args:
-                v = fs_args.pop()
-                if all(i == j for i, j in zip_longest(
-                        symbolic_s_list,
-                        (x for x in v if x.has(Symbol)))):
-                    # all the symbolic elements of `v` are the same
-                    # as in `s` so remove the non-symbol containing
-                    # expressions from `unk`, since they cannot be
-                    # contained
-                    for x in non_symbolic_s:
-                        if x in unk:
-                            unk.remove(x)
-                else:
-                    # if only a subset of elements in `s` are
-                    # contained in `v` then remove them from `v`
-                    # and add this as a new arg
-                    contained = [x for x in symbolic_s_list
-                        if sympify(v.contains(x)) is S.true]
-                    if contained != symbolic_s_list:
-                        other.append(
-                            v - FiniteSet(
-                            *contained, evaluate=False))
-                    else:
-                        pass  # for coverage
+        # If any of the sets of remainder elements is empty then we discard
+        # all of them for the intersection.
+        if not all(fs_sets):
+            fs_sets = [set()]
 
-            other_sets = Intersection(*other)
-            if not other_sets:
-                return S.EmptySet  # b/c we use evaluate=False below
-            elif other_sets == S.UniversalSet:
-                res += FiniteSet(*unk)
+        if definite:
+            fs_sets = [fs | definite for fs in fs_sets]
+
+        if fs_sets == [set()]:
+            return S.EmptySet
+
+        sets = [FiniteSet(*s) for s in fs_sets]
+
+        # If all elements in the FiniteSets are in other then other isn't
+        # needed
+        allin = fuzzy_and(o.contains(e) for o in other for e in all_elements)
+        if allin is not True:
+            other = Intersection(*other)
+            if other is S.EmptySet:
+                return S.EmptySet
+            if other.is_Intersection:
+                sets.extend(other.args)
             else:
-                res += Intersection(
-                    FiniteSet(*unk),
-                    other_sets, evaluate=False)
-        return res
+                sets.append(other)
+
+        if len(sets) == 1:
+            return sets[0]
+        else:
+            return Intersection(*sets, evaluate=False)
+
+        return result
 
     def as_relational(self, symbol):
         """Rewrite an Intersection in terms of equalities and logic operators"""

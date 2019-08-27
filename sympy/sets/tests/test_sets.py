@@ -21,7 +21,7 @@ def test_imageset():
     assert imageset(x, abs(x), S.Integers) is S.Naturals0
     # issue 16878a
     r = symbols('r', real=True)
-    assert (1, r) in imageset(x, (x, x), S.Reals) != False
+    assert imageset(x, (x, x), S.Reals)._contains((1, r)) == None
     assert (r, r) in imageset(x, (x, x), S.Reals)
     assert 1 + I in imageset(x, x + I, S.Reals)
     assert {1} not in imageset(x, (x,), S.Reals)
@@ -342,7 +342,7 @@ def test_intersect1():
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(S.EmptySet) == \
         S.EmptySet
     assert Union(Interval(0, 5), FiniteSet('ham')).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
-        Union(FiniteSet(2, 3, 4, 5), Intersection(FiniteSet(6), Union(Interval(0, 5), FiniteSet('ham'))))
+        Intersection(FiniteSet(2, 3, 4, 5, 6), Union(FiniteSet('ham'), Interval(0, 5)))
 
     # issue 8217
     assert Intersection(FiniteSet(x), FiniteSet(y)) == \
@@ -1044,11 +1044,11 @@ def test_issue_Symbol_inter():
     assert Intersection(FiniteSet(1, m, n), FiniteSet(m, n, 2), i) == \
         Intersection(i, FiniteSet(m, n))
     assert Intersection(FiniteSet(m, n, x), FiniteSet(m, z), r) == \
-        Intersection(r, FiniteSet(m, z), FiniteSet(n, x))
+        Intersection(Intersection({m, z}, {m, n, x}), r)
     assert Intersection(FiniteSet(m, n, 3), FiniteSet(m, n, x), r) == \
-        Intersection(r, FiniteSet(3, m, n), evaluate=False)
+        Intersection(FiniteSet(3, m, n), FiniteSet(m, n, x), r, evaluate=False)
     assert Intersection(FiniteSet(m, n, 3), FiniteSet(m, n, 2, 3), r) == \
-        Union(FiniteSet(3), Intersection(r, FiniteSet(m, n)))
+        Intersection(FiniteSet(3, m, n), r)
     assert Intersection(r, FiniteSet(mat, 2, n), FiniteSet(0, mat, n)) == \
         Intersection(r, FiniteSet(n))
     assert Intersection(FiniteSet(sin(x), cos(x)), FiniteSet(sin(x), cos(x), 1), r) == \
@@ -1164,7 +1164,14 @@ def test_finite_set_intersection():
     assert Intersection._handle_finite_sets([FiniteSet(2, 3, x, y), FiniteSet(1, 2, x)]) == \
         Intersection._handle_finite_sets([FiniteSet(1, 2, x), FiniteSet(2, 3, x, y)]) == \
         Intersection(FiniteSet(1, 2, x), FiniteSet(2, 3, x, y)) == \
-        FiniteSet(1, 2, x)
+        Intersection(FiniteSet(1, 2, x), FiniteSet(2, x, y))
+
+    assert FiniteSet(1+x-y) & FiniteSet(1) == \
+        FiniteSet(1) & FiniteSet(1+x-y) == \
+        Intersection(FiniteSet(1+x-y), FiniteSet(1), evaluate=False)
+
+    assert FiniteSet(1) & FiniteSet(x) == FiniteSet(x) & FiniteSet(1) == \
+        Intersection(FiniteSet(1), FiniteSet(x), evaluate=False)
 
 
 def test_union_intersection_constructor():
