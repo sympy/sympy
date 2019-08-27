@@ -255,7 +255,7 @@ class Quaternion(Expr):
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
             if q1.real_field:
-                if q2.is_complex or q2.is_infinite:
+                if q2.is_complex:
                     return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
             elif q2.is_commutative:
                 return Quaternion(q1.a + q2, q1.b, q1.c, q1.d)
