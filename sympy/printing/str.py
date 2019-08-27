@@ -612,6 +612,9 @@ class StrPrinter(Printer):
     def _print_Reals(self, expr):
         return 'Reals'
 
+    def _print_Complexes(self, expr):
+        return 'Complexes'
+
     def _print_int(self, expr):
         return str(expr)
 

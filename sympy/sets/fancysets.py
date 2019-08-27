@@ -1346,6 +1346,8 @@ class Complexes(with_metaclass(Singleton, CartesianComplexRegion)):
     ========
 
     >>> from sympy import S, I
+    >>> S.Complexes
+    Complexes
     >>> 1 + I in S.Complexes
     True
 
