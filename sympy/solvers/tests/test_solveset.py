@@ -187,7 +187,15 @@ def test_issue_17479():
     fy = sb.diff(f, y)
     fz = sb.diff(f, z)
     sol = nonlinsolve([fx, fy, fz], [x, y, z])
-    assert len(sol) == 18
+    # FIXME: This previously gave 18 solutions and now gives 20 due to fixes
+    # in the handling of intersection of FiniteSets or possibly a small change
+    # to ImageSet._contains. However Using expand I can turn this into 16
+    # solutions either way:
+    #
+    #    >>> len(FiniteSet(*(Tuple(*(expand(w) for w in s)) for s in sol)))
+    #    16
+    #
+    assert len(sol) == 20
 
 
 def test_is_function_class_equation():
