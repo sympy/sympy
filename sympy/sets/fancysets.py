@@ -425,7 +425,7 @@ class ImageSet(Set):
                     msgset = dom
                     other = e - o
                     dom = dom.intersection(solveset(e - o, x, domain=dom))
-                    if not dom:
+                    if dom.is_empty:
                         # there is no solution in common
                         return False
                 return fuzzy_not(dom.is_empty)

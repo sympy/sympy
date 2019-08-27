@@ -1432,8 +1432,6 @@ class Intersection(Set, LatticeOp):
         else:
             return Intersection(*sets, evaluate=False)
 
-        return result
-
     def as_relational(self, symbol):
         """Rewrite an Intersection in terms of equalities and logic operators"""
         return And(*[set.as_relational(symbol) for set in self.args])

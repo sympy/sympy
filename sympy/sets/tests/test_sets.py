@@ -22,6 +22,7 @@ def test_imageset():
     # issue 16878a
     r = symbols('r', real=True)
     assert imageset(x, (x, x), S.Reals)._contains((1, r)) == None
+    assert imageset(x, (x, x), S.Reals)._contains((1, 2)) == False
     assert (r, r) in imageset(x, (x, x), S.Reals)
     assert 1 + I in imageset(x, x + I, S.Reals)
     assert {1} not in imageset(x, (x,), S.Reals)
@@ -343,6 +344,8 @@ def test_intersect1():
         S.EmptySet
     assert Union(Interval(0, 5), FiniteSet('ham')).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
         Intersection(FiniteSet(2, 3, 4, 5, 6), Union(FiniteSet('ham'), Interval(0, 5)))
+    assert Intersection(FiniteSet(1, 2, 3), Interval(2, x), Interval(3, y)) == \
+        Intersection(FiniteSet(3), Interval(2, x), Interval(3, y), evaluate=False)
 
     # issue 8217
     assert Intersection(FiniteSet(x), FiniteSet(y)) == \
