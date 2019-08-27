@@ -1142,4 +1142,3 @@ def test_issue_16579():
     c = Symbol('c', complex=True)
     assert c.is_finite
     raises(InconsistentAssumptions, lambda: Dummy(complex=True, finite=False))
-
