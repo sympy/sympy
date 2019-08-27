@@ -1900,8 +1900,8 @@ def test_mul_coeff():
 def test_mul_zero_detection():
     nz = Dummy(real=True, zero=False)
     r = Dummy(extended_real=True)
-    c = Dummy(extended_real=False, complex=True)
-    c2 = Dummy(extended_real=False, complex=True)
+    c = Dummy(real=False, complex=True)
+    c2 = Dummy(real=False, complex=True)
     i = Dummy(imaginary=True)
     e = nz*r*c
     assert e.is_imaginary is None

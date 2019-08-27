@@ -1132,10 +1132,14 @@ def test_issue_16313():
     assert (-x).is_positive is False
 
 def test_issue_16579():
-    # complex -> finite | infinite
-    # with work on PR 16603 it may be changed in future to complex -> finite
-    #x = Symbol('x', complex=True, finite=False)
-    y = Symbol('x', extended_real=True, infinite=False)
+    # extended_real -> finite | infinite
+    x = Symbol('x', extended_real=True, infinite=False)
+    y = Symbol('y', extended_real=True, finite=False)
+    assert x.is_finite
+    assert y.is_infinite
 
-    # assert x.is_infinite
-    assert y.is_finite
+    # With PR 16978, complex now implies finite
+    c = Symbol('c', complex=True)
+    assert c.is_finite
+    raises(InconsistentAssumptions, lambda: Dummy(complex=True, finite=False))
+
