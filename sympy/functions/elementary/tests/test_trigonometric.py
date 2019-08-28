@@ -781,7 +781,11 @@ def test_sinc():
 
     assert sinc(-x) == sinc(x)
 
-    assert sinc(x).diff() == (x*cos(x) - sin(x)) / x**2
+    assert sinc(x).diff() == Piecewise(((x*cos(x) - sin(x)) / x**2, Ne(x, 0)), (0, True))
+
+    assert sinc(x).diff(x).equals(sinc(x).rewrite(sin).diff(x))
+
+    assert sinc(x).diff().subs(x, 0) is S.Zero
 
     assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
 
@@ -1040,7 +1044,6 @@ def test_atan2():
 
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
     assert atan2(0, 0) == S.NaN
-    w = Symbol('w')
 
     ex = atan2(y, x) - arg(x + I*y)
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0
