@@ -1389,7 +1389,6 @@ class Intersection(Set, LatticeOp):
         # get any empty set all remaining elements are discarded.
 
         fs_elements = reduce(lambda a, b: a | b, fs_sets, set())
-        all_elements = fs_elements | definite # Used below
 
         # Need fuzzy containment testing
         fs_symsets = [FiniteSet(*s) for s in fs_sets]
@@ -1420,7 +1419,7 @@ class Intersection(Set, LatticeOp):
         # Here we fold back the definitely included elements into each fs.
         # Since they are definitely included they must have been members of
         # each FiniteSet to begin with. We could instead fold these in with a
-        # Union at the end to get e.g. {3}|({4}&{5}) rather than {3,4}&{3,5}.
+        # Union at the end to get e.g. {3}|({x}&{y}) rather than {3,x}&{3,y}.
         if definite:
             fs_sets = [fs | definite for fs in fs_sets]
 
@@ -1428,11 +1427,12 @@ class Intersection(Set, LatticeOp):
             return S.EmptySet
 
         sets = [FiniteSet(*s) for s in fs_sets]
+        all_elements = reduce(lambda a, b: a | b, fs_sets, set())
 
-        # If all elements in the FiniteSets are in others then others isn't
-        # needed
-        allin = fuzzy_and(o.contains(e) for o in others for e in all_elements)
-        if allin is not True:
+        # If all elements in the FiniteSets are definitely in others then
+        # others isn't needed
+        allin = all(fuzzy_bool(o.contains(e)) for o in others for e in all_elements)
+        if not allin:
             # XXX: Maybe this shortcut should be at the beginning. For large
             # FiniteSets it could much more efficient to process the other
             # sets first...

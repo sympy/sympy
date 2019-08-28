@@ -346,6 +346,11 @@ def test_intersect1():
         Intersection(FiniteSet(2, 3, 4, 5, 6), Union(FiniteSet('ham'), Interval(0, 5)))
     assert Intersection(FiniteSet(1, 2, 3), Interval(2, x), Interval(3, y)) == \
         Intersection(FiniteSet(3), Interval(2, x), Interval(3, y), evaluate=False)
+    # XXX: Is the real=True necessary here?
+    # https://github.com/sympy/sympy/issues/17532
+    m, n = symbols('m, n', real=True)
+    assert Intersection(FiniteSet(m), FiniteSet(m, n), Interval(m, m+1)) == \
+        FiniteSet(m)
 
     # issue 8217
     assert Intersection(FiniteSet(x), FiniteSet(y)) == \
