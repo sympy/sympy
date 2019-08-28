@@ -12,6 +12,22 @@ from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 
+
+class InvalidComparison(TypeError):
+    '''Raised by inequalities between uncomparable objects'''
+    pass
+
+
+class InvalidNanComparison(InvalidComparison):
+    '''Raised by inequalities with nans'''
+    pass
+
+
+class InvalidNonRealComparison(InvalidComparison):
+    '''Raised by inequalities between objects that are not real numbers'''
+    pass
+
+
 class Expr(Basic, EvalfMixin):
     """
     Base class for algebraic expressions.
@@ -337,9 +353,9 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+                raise InvalidNonRealComparison("Invalid comparison of complex %s" % me)
             if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
+                raise InvalidNanComparison("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 >= 0)
@@ -360,9 +376,9 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+                raise InvalidNonRealComparison("Invalid comparison of complex %s" % me)
             if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
+                raise InvalidNanComparison("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 <= 0)
@@ -383,9 +399,9 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+                raise InvalidNonRealComparison("Invalid comparison of complex %s" % me)
             if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
+                raise InvalidNanComparison("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 > 0)
@@ -407,9 +423,9 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+                raise InvalidNonRealComparison("Invalid comparison of complex %s" % me)
             if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
+                raise InvalidNanComparison("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 < 0)
