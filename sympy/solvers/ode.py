@@ -5790,7 +5790,18 @@ def ode_lie_group(eq, func, order, match):
             if sol == []:
                 raise NotImplementedError
             elif len(sol)>1:
-                return [ode_lie_group(Eq(df, i), func, order, match) for i in sol]
+                sols = []
+                for i in sol:
+                    try:
+                        soln = ode_lie_group(Eq(df, i), func, order, match)
+                        sols.append(soln)
+                    except (ValueError, NotImplementedError):
+                        pass
+                if sols == []:
+                    raise NotImplementedError("Unable to solve the differential equation " +
+                str(eq) + " by the lie group method")
+                return sols
+
         except NotImplementedError:
             raise NotImplementedError("Unable to solve the differential equation " +
                 str(eq) + " by the lie group method")
@@ -5842,7 +5853,7 @@ def ode_lie_group(eq, func, order, match):
                 try:
                     sol = solve([r - rcoord, s - scoord], x, y, dict=True)
                     if sol == []:
-                        raise NotImplementedError
+                        continue
                 except NotImplementedError:
                     continue
                 else:

@@ -3509,3 +3509,14 @@ def test_dsolve_remove_redundant_solutions():
     eq = (f(x)**2-2*f(x)+1)*f(x).diff(x, 3)
     sol = Eq(f(x), C1 + C2*x + C3*x**2)
     assert dsolve(eq) == sol
+
+def test_issue_17322():
+    eq = (f(x).diff(x)-f(x)) * (f(x).diff(x)+f(x))
+    sol = [Eq(f(x), C1*exp(-x)), Eq(f(x), C1*exp(x))]
+    assert str(sol) == str(dsolve(eq, hint='lie_group'))
+    assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+    eq = f(x).diff(x)*(f(x).diff(x)+f(x))
+    sol = [Eq(f(x), C1), Eq(f(x), C1*exp(-x))]
+    assert str(sol) == str(dsolve(eq, hint='lie_group'))
+    assert checkodesol(eq, sol) == 2*[(True, 0)]
