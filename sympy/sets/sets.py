@@ -1354,11 +1354,12 @@ class Intersection(Set, LatticeOp):
 
     @staticmethod
     def _handle_finite_sets(args):
-        from sympy.core.logic import fuzzy_and, fuzzy_bool
-        from sympy.core.compatibility import zip_longest
+        '''Simplify intersection of one or more FiniteSets and other sets'''
 
-        fs_args, other = sift(args, lambda x: x.is_FiniteSet,
-            binary=True)
+        # First separate the FiniteSets from the others
+        fs_args, others = sift(args, lambda x: x.is_FiniteSet, binary=True)
+
+        # Let the caller handle intersection of non-FiniteSets
         if not fs_args:
             return
 
@@ -1367,7 +1368,7 @@ class Intersection(Set, LatticeOp):
         all_elements = reduce(lambda a, b: a | b, fs_sets, set())
 
         # Extract elements that are definitely in or definitely not in the
-        # intersection
+        # intersection. Here we check contains for all of args.
         definite = set()
         for e in all_elements:
             inall = fuzzy_and(s.contains(e) for s in args)
@@ -1380,21 +1381,30 @@ class Intersection(Set, LatticeOp):
         # At this point all elements in all of fs_sets are possibly in the
         # intersection. In some cases this is because they are definitely in
         # the intersection of the finite sets but it's not clear if they are
-        # members of other. We might have {m, n}, {m}, and Reals where we
+        # members of others. We might have {m, n}, {m}, and Reals where we
         # don't know if m or n is real. We want to remove n here but it is
         # possibly in because it might be equal to m. So what we do now is
         # extract the elements that are definitely in the remaining finite
-        # sets iteratively until none remain.
+        # sets iteratively until we end up with {n}, {}. At that point if we
+        # get any empty set all remaining elements are discarded.
+
         fs_elements = reduce(lambda a, b: a | b, fs_sets, set())
         all_elements = fs_elements | definite # Used below
+
+        # Need fuzzy containment testing
+        fs_symsets = [FiniteSet(*s) for s in fs_sets]
+
         while fs_elements:
             for e in fs_elements:
-                infs = fuzzy_and(FiniteSet(*s).contains(e) for s in fs_sets)
+                infs = fuzzy_and(s.contains(e) for s in fs_symsets)
                 if infs is True:
                     definite.add(e)
                 if infs is not None:
-                    for s in fs_sets:
-                        s.discard(e)
+                    for n, s in enumerate(fs_sets):
+                        # Update Python set and FiniteSet
+                        if e in s:
+                            s.remove(e)
+                            fs_symsets[n] = FiniteSet(*s)
                     fs_elements.remove(e)
                     break
             # If we completed the for loop without removing anything we are
@@ -1407,6 +1417,10 @@ class Intersection(Set, LatticeOp):
         if not all(fs_sets):
             fs_sets = [set()]
 
+        # Here we fold back the definitely included elements into each fs.
+        # Since they are definitely included they must have been members of
+        # each FiniteSet to begin with. We could instead fold these in with a
+        # Union at the end to get e.g. {3}|({4}&{5}) rather than {3,4}&{3,5}.
         if definite:
             fs_sets = [fs | definite for fs in fs_sets]
 
@@ -1415,17 +1429,21 @@ class Intersection(Set, LatticeOp):
 
         sets = [FiniteSet(*s) for s in fs_sets]
 
-        # If all elements in the FiniteSets are in other then other isn't
+        # If all elements in the FiniteSets are in others then others isn't
         # needed
-        allin = fuzzy_and(o.contains(e) for o in other for e in all_elements)
+        allin = fuzzy_and(o.contains(e) for o in others for e in all_elements)
         if allin is not True:
-            other = Intersection(*other)
-            if other is S.EmptySet:
+            # XXX: Maybe this shortcut should be at the beginning. For large
+            # FiniteSets it could much more efficient to process the other
+            # sets first...
+            rest = Intersection(*others)
+            if rest is S.EmptySet:
                 return S.EmptySet
-            if other.is_Intersection:
-                sets.extend(other.args)
+            # Flatten the Intersection
+            if rest.is_Intersection:
+                sets.extend(rest.args)
             else:
-                sets.append(other)
+                sets.append(rest)
 
         if len(sets) == 1:
             return sets[0]
