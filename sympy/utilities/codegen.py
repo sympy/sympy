@@ -260,9 +260,9 @@ def get_default_datatype(expr, complex_allowed=None):
     else:
         final_dtype = "float"
     if expr.is_integer:
-        return default_datatypes["int"]
+        return "int"
     elif expr.is_real:
-        return default_datatypes["float"]
+        return "float"
     elif isinstance(expr, MatrixBase):
         #check all entries
         dt = "int"
@@ -270,10 +270,10 @@ def get_default_datatype(expr, complex_allowed=None):
             if dt == "int" and not element.is_integer:
                 dt = "float"
             if dt == "float" and not element.is_real:
-                return default_datatypes[final_dtype]
-        return default_datatypes[dt]
+                return final_dtype
+        return dt
     else:
-        return default_datatypes[final_dtype]
+        return final_dtype
 
 
 class Variable:
