@@ -1427,16 +1427,18 @@ class Intersection(Set, LatticeOp):
             return S.EmptySet
 
         sets = [FiniteSet(*s) for s in fs_sets]
-        all_elements = reduce(lambda a, b: a | b, fs_sets, set())
 
-        # If all elements in the FiniteSets are definitely in others then
-        # others isn't needed
-        allin = all(fuzzy_bool(o.contains(e)) for o in others for e in all_elements)
-        if not allin:
+        # Any set in others is redundant if it contains all the elements that
+        # are in the finite sets so we don't need it in the Intersection
+        all_elements = reduce(lambda a, b: a | b, fs_sets, set())
+        is_redundant = lambda o: all(fuzzy_bool(o.contains(e)) for e in all_elements)
+        others = [o for o in others if not is_redundant(o)]
+
+        if others:
+            rest = Intersection(*others)
             # XXX: Maybe this shortcut should be at the beginning. For large
             # FiniteSets it could much more efficient to process the other
             # sets first...
-            rest = Intersection(*others)
             if rest is S.EmptySet:
                 return S.EmptySet
             # Flatten the Intersection
