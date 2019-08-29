@@ -630,7 +630,7 @@ class Range(Set):
             try:
                 _ = self.size  # validate
             except ValueError:
-                return  # XXX is this what _contains should return?
+                return
         ref = self.start if self.start.is_finite else self.stop
         if (ref - other) % self.step:  # off sequence
             return S.false
@@ -656,7 +656,7 @@ class Range(Set):
         rv = self.size
         if rv is S.Infinity:
             raise ValueError('Use .size to get the length of an infinite Range')
-        return rv
+        return int(rv)
 
     @property
     def size(self):
