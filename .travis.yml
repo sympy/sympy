@@ -2,6 +2,7 @@ language: python
 sudo: false
 stages:
 - quality
+- flake8
 - baseline
 - test
 env:
