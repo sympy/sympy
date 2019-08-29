@@ -685,7 +685,8 @@ class And(LatticeOp, BooleanFunction):
         for i in self.args:
             try:
                 i = i.subs(old, new)
-            except:  # store any problem
+            except TypeError:
+                # store TypeError
                 if bad is None:
                     bad = i
                 continue
@@ -822,7 +823,8 @@ class Or(LatticeOp, BooleanFunction):
         for i in self.args:
             try:
                 i = i.subs(old, new)
-            except:  # store any problem
+            except TypeError:
+                # store TypeError
                 if bad is None:
                     bad = i
                 continue
