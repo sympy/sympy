@@ -549,6 +549,13 @@ def test_content_finite_sets():
         '<set><ci>c</ci><set><ci>a</ci><ci>b</ci></set></set>'
 
 
+def test_content_union():
+    A = FiniteSet(a)
+    B = FiniteSet(b)
+    assert mathml(Union(A, B, evaluate=False)) == \
+        '<apply><union/><set><ci>a</ci></set><set><ci>b</ci></set></apply>'
+
+
 def test_presentation_printmethod():
     assert mpp.doprint(1 + x) == '<mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow>'
     assert mpp.doprint(x**2) == '<msup><mi>x</mi><mn>2</mn></msup>'
