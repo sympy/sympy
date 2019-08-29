@@ -1678,16 +1678,22 @@ class FiniteSet(Set, EvalfMixin):
 
     def _eval_Eq(self, other):
         if not isinstance(other, FiniteSet):
+            # XXX: If Interval(x, x, evaluate=False) worked then the line
+            # below would mean that
+            #     FiniteSet(x) & Interval(x, x, evaluate=False) -> false
             if isinstance(other, Interval):
                 return false
             elif isinstance(other, Set):
                 return None
             return false
 
-        if len(self) != len(other):
-            return false
+        def all_in_both():
+            s_set = set(self.args)
+            o_set = set(other.args)
+            yield fuzzy_and(self._contains(e) for e in o_set - s_set)
+            yield fuzzy_and(other._contains(e) for e in s_set - o_set)
 
-        return And(*(Eq(x, y) for x, y in zip(self.args, other.args)))
+        return fuzzy_and(all_in_both())
 
     def __iter__(self):
         return iter(self.args)

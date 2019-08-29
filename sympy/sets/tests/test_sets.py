@@ -7,6 +7,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
 from mpmath import mpi
 
 from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
@@ -562,6 +563,12 @@ def test_contains():
     assert FiniteSet(1, 2, 3).contains(2) is S.true
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
 
+    assert FiniteSet(y)._contains(x) is None
+    raises(TypeError, lambda: x in FiniteSet(y))
+    assert FiniteSet({x, y})._contains({x}) is None
+    assert FiniteSet({x, y}).subs(y, x)._contains({x}) is True
+    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) is False
+
     # issue 8197
     from sympy.abc import a, b
     assert isinstance(FiniteSet(b).contains(-a), Contains)
@@ -1006,6 +1013,12 @@ def test_Eq():
     assert Eq(s1*s2, s1*s2)
     assert Eq(s1*s2, s2*s1) == False
 
+    assert unchanged(Eq, FiniteSet({x, y}), FiniteSet({x}))
+    assert Eq(FiniteSet({x, y}).subs(y, x), FiniteSet({x})) is True
+    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x) is True
+    assert Eq(FiniteSet({x, y}).subs(y, x+1), FiniteSet({x})) is False
+    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) is False
+
 
 def test_SymmetricDifference():
    assert SymmetricDifference(FiniteSet(0, 1, 2, 3, 4, 5), \
@@ -1187,6 +1200,9 @@ def test_finite_set_intersection():
 
     assert FiniteSet(1) & FiniteSet(x) == FiniteSet(x) & FiniteSet(1) == \
         Intersection(FiniteSet(1), FiniteSet(x), evaluate=False)
+
+    assert FiniteSet({x}) & FiniteSet({x, y}) == \
+        Intersection(FiniteSet({x}), FiniteSet({x, y}), evaluate=False)
 
 
 def test_union_intersection_constructor():
