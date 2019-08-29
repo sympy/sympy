@@ -26,6 +26,14 @@ matrix:
       script: bin/test quality
       env:
 
+    - stage: flake8
+      python: 3.7
+      dist: xenial
+      sudo: true
+      script: flake8 sympy
+      env:
+        - TEST_FLAKE8="true"
+
     - stage: baseline
       python: 3.7
       dist: xenial
@@ -243,6 +251,9 @@ before_install:
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
       pip install coverage;
       coverage debug sys;
+    fi
+  - if [[ "${TEST_FLAKE8}" == "true" ]]; then
+      pip install flake8;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.8-dev" ]; then
         pip uninstall -y Cython;
