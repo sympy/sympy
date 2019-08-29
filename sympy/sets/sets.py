@@ -370,9 +370,12 @@ class Set(Basic):
             s_o = self.intersect(other)
             if s_o == self:
                 return True
-            elif not isinstance(other, Intersection):
+            # This assumes that an unevaluated Intersection will always come
+            # back as an Intersection...
+            elif isinstance(s_o, Intersection):
+                return None
+            else:
                 return False
-            return s_o
         else:
             raise ValueError("Unknown argument '%s'" % other)
 

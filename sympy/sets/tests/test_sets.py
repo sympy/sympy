@@ -500,6 +500,10 @@ def test_is_subset():
     assert S.Naturals.is_subset(S.Integers)
     assert S.Naturals0.is_subset(S.Integers)
 
+    assert FiniteSet(x).is_subset(FiniteSet(y)) is None
+    assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x)) is True
+    assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x+1)) is False
+
 
 def test_is_proper_subset():
     assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True
