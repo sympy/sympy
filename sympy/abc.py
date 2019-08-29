@@ -97,15 +97,15 @@ exec_('from sympy import *', ns)
 _clash1 = {}
 _clash2 = {}
 while ns:
-    k, _ = ns.popitem()
-    if k in _greek:
-        _clash2[k] = Symbol(k)
-        _greek.remove(k)
-    elif k in _latin:
-        _clash1[k] = Symbol(k)
-        _latin.remove(k)
+    _k, _ = ns.popitem()
+    if _k in _greek:
+        _clash2[_k] = Symbol(_k)
+        _greek.remove(_k)
+    elif _k in _latin:
+        _clash1[_k] = Symbol(_k)
+        _latin.remove(_k)
 _clash = {}
 _clash.update(_clash1)
 _clash.update(_clash2)
 
-del _latin, _greek, Symbol
+del _latin, _greek, Symbol, _k
