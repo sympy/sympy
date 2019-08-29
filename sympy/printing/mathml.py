@@ -544,6 +544,12 @@ class MathMLContentPrinter(MathMLPrinterBase):
     _print_Not = _print_AssocOp
     _print_Xor = _print_AssocOp
 
+    def _print_FiniteSet(self, e):
+        x = self.dom.createElement('set')
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        return x
+
 
 class MathMLPresentationPrinter(MathMLPrinterBase):
     """Prints an expression to the Presentation MathML markup language.

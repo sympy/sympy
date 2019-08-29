@@ -542,6 +542,13 @@ def test_content_mathml_logic():
     assert mathml(Not(x)) == '<apply><not/><ci>x</ci></apply>'
 
 
+def test_content_finite_sets():
+    assert mathml(FiniteSet(a)) == '<set><ci>a</ci></set>'
+    assert mathml(FiniteSet(a, b)) == '<set><ci>a</ci><ci>b</ci></set>'
+    assert mathml(FiniteSet(FiniteSet(a, b), c)) == \
+        '<set><ci>c</ci><set><ci>a</ci><ci>b</ci></set></set>'
+
+
 def test_presentation_printmethod():
     assert mpp.doprint(1 + x) == '<mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow>'
     assert mpp.doprint(x**2) == '<msup><mi>x</mi><mn>2</mn></msup>'
