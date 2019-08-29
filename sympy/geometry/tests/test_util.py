@@ -1,6 +1,7 @@
 from sympy import Symbol, sqrt, Derivative, S, Function, exp
-from sympy.geometry import Point, Point2D, Line, Circle, Polygon, Segment, convex_hull, intersection, centroid
-from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points
+from sympy.geometry import Point, Point2D, Line, Circle, Polygon, Segment, convex_hull,\
+    intersection, centroid, Point3D, Line3D
+from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points, are_coplanar
 from sympy.solvers.solvers import solve
 from sympy.utilities.pytest import raises
 
@@ -130,3 +131,13 @@ def test_farthest_points_closest_points():
     assert farthest_points((1, 1), (0, 0)) == set(
         [(Point2D(0, 0), Point2D(1, 1))])
     raises(ValueError, lambda: farthest_points((1, 1)))
+
+
+def test_are_coplanar():
+    a = Line3D(Point3D(5, 0, 0), Point3D(1, -1, 1))
+    b = Line3D(Point3D(0, -2, 0), Point3D(3, 1, 1))
+    c = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
+    d = Line(Point2D(0, 3), Point2D(1, 5))
+
+    assert are_coplanar(a, b, c) == False
+    assert are_coplanar(a, d) == False
