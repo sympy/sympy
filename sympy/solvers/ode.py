@@ -5769,133 +5769,131 @@ def ode_lie_group(eq, func, order, match):
       John Starrett, pp. 1 - pp. 14
 
     """
-    if not match:
-        match = {'xi': None, 'eta': None}
-    heuristics = lie_heuristics
-    inf = {}
+
+    def _ode_lie_group( s, func, order, match):
+        heuristics = lie_heuristics
+        inf = {}
+        f = func.func
+        x = func.args[0]
+        df = func.diff(x)
+        xi = Function("xi")
+        eta = Function("eta")
+        xis = match['xi']
+        etas = match['eta']
+        y = match.pop('y', None)
+        if y:
+            h = -simplify(match[match['d']]/match[match['e']])
+            y = y
+        else:
+            y = Dummy("y")
+            h = s.subs(func, y)
+
+        if xis is not None and etas is not None:
+            inf = [{xi(x, f(x)): S(xis), eta(x, f(x)): S(etas)}]
+
+            if checkinfsol(Eq(df, s), inf, func=f(x), order=1)[0][0]:
+                heuristics = ["user_defined"] + list(heuristics)
+
+        match = {'h': h, 'y': y}
+
+        # This is done so that if:
+        # a] solve raises a NotImplementedError.
+        # b] any heuristic raises a ValueError
+        # another heuristic can be used.
+        tempsol = []  # Used by solve below
+        for heuristic in heuristics:
+            try:
+                if not inf:
+                    inf = infinitesimals(eq, hint=heuristic, func=func, order=1, match=match)
+            except ValueError:
+                continue
+            else:
+                for infsim in inf:
+                    xiinf = (infsim[xi(x, func)]).subs(func, y)
+                    etainf = (infsim[eta(x, func)]).subs(func, y)
+                    # This condition creates recursion while using pdsolve.
+                    # Since the first step while solving a PDE of form
+                    # a*(f(x, y).diff(x)) + b*(f(x, y).diff(y)) + c = 0
+                    # is to solve the ODE dy/dx = b/a
+                    if simplify(etainf/xiinf) == h:
+                        continue
+                    rpde = f(x, y).diff(x)*xiinf + f(x, y).diff(y)*etainf
+                    r = pdsolve(rpde, func=f(x, y)).rhs
+                    s = pdsolve(rpde - 1, func=f(x, y)).rhs
+                    newcoord = [_lie_group_remove(coord) for coord in [r, s]]
+                    r = Dummy("r")
+                    s = Dummy("s")
+                    C1 = Symbol("C1")
+                    rcoord = newcoord[0]
+                    scoord = newcoord[-1]
+                    try:
+                        sol = solve([r - rcoord, s - scoord], x, y, dict=True)
+                        if sol == []:
+                            continue
+                    except NotImplementedError:
+                        continue
+                    else:
+                        sol = sol[0]
+                        xsub = sol[x]
+                        ysub = sol[y]
+                        num = simplify(scoord.diff(x) + scoord.diff(y)*h)
+                        denom = simplify(rcoord.diff(x) + rcoord.diff(y)*h)
+                        if num and denom:
+                            diffeq = simplify((num/denom).subs([(x, xsub), (y, ysub)]))
+                            sep = separatevars(diffeq, symbols=[r, s], dict=True)
+                            if sep:
+                                # Trying to separate, r and s coordinates
+                                deq = integrate((1/sep[s]), s) + C1 - integrate(sep['coeff']*sep[r], r)
+                                # Substituting and reverting back to original coordinates
+                                deq = deq.subs([(r, rcoord), (s, scoord)])
+                                try:
+                                    sdeq = solve(deq, y)
+                                except NotImplementedError:
+                                    tempsol.append(deq)
+                                else:
+                                    if len(sdeq) == 1:
+                                        return Eq(f(x), sdeq.pop())
+                                    else:
+                                        return [Eq(f(x), sol) for sol in sdeq]
+
+
+                        elif denom: # (ds/dr) is zero which means s is constant
+                            return Eq(f(x), solve(scoord - C1, y)[0])
+
+                        elif num: # (dr/ds) is zero which means r is constant
+                            return Eq(f(x), solve(rcoord - C1, y)[0])
+
+        # If nothing works, return solution as it is, without solving for y
+        if tempsol:
+            if len(tempsol) == 1:
+                return Eq(tempsol.pop().subs(y, f(x)), 0)
+            else:
+                return [Eq(sol.subs(y, f(x)), 0) for sol in tempsol]
+
     f = func.func
     x = func.args[0]
     df = func.diff(x)
-    xi = Function("xi")
-    eta = Function("eta")
-    xis = match.pop('xi')
-    etas = match.pop('eta')
 
-    if match:
-        h = -simplify(match[match['d']]/match[match['e']])
-        y = match['y']
-    else:
+    try:
+        eqsol = solve(eq, df)
+    except NotImplementedError:
+        eqsol = []
+
+    desols = []
+    for s in eqsol:
         try:
-            sol = solve(eq, df)
-            if sol == []:
-                raise NotImplementedError
-            elif len(sol)>1:
-                sols = []
-                for i in sol:
-                    try:
-                        soln = ode_lie_group(Eq(df, i), func, order, match)
-                        sols.append(soln)
-                    except (ValueError, NotImplementedError):
-                        pass
-                if sols == []:
-                    raise NotImplementedError("Unable to solve the differential equation " +
-                str(eq) + " by the lie group method")
-                return sols
-
+            sol = _ode_lie_group(s, func, order, match=match)
+            if isinstance(sol, list):
+                desols.extend(sol)
+            else:
+                desols.append(sol)
         except NotImplementedError:
-            raise NotImplementedError("Unable to solve the differential equation " +
-                str(eq) + " by the lie group method")
-        else:
-            y = Dummy("y")
-            h = sol[0].subs(func, y)
+            pass
 
-    if xis is not None and etas is not None:
-        inf = [{xi(x, f(x)): S(xis), eta(x, f(x)): S(etas)}]
+    if desols == []:
+        raise NotImplementedError("Unable...")
 
-        if not checkinfsol(eq, inf, func=f(x), order=1)[0][0]:
-            raise ValueError("The given infinitesimals xi and eta"
-                " are not the infinitesimals to the given equation")
-        else:
-            heuristics = ["user_defined"]
-
-    match = {'h': h, 'y': y}
-
-    # This is done so that if:
-    # a] solve raises a NotImplementedError.
-    # b] any heuristic raises a ValueError
-    # another heuristic can be used.
-    tempsol = []  # Used by solve below
-    for heuristic in heuristics:
-        try:
-            if not inf:
-                inf = infinitesimals(eq, hint=heuristic, func=func, order=1, match=match)
-        except ValueError:
-            continue
-        else:
-            for infsim in inf:
-                xiinf = (infsim[xi(x, func)]).subs(func, y)
-                etainf = (infsim[eta(x, func)]).subs(func, y)
-                # This condition creates recursion while using pdsolve.
-                # Since the first step while solving a PDE of form
-                # a*(f(x, y).diff(x)) + b*(f(x, y).diff(y)) + c = 0
-                # is to solve the ODE dy/dx = b/a
-                if simplify(etainf/xiinf) == h:
-                    continue
-                rpde = f(x, y).diff(x)*xiinf + f(x, y).diff(y)*etainf
-                r = pdsolve(rpde, func=f(x, y)).rhs
-                s = pdsolve(rpde - 1, func=f(x, y)).rhs
-                newcoord = [_lie_group_remove(coord) for coord in [r, s]]
-                r = Dummy("r")
-                s = Dummy("s")
-                C1 = Symbol("C1")
-                rcoord = newcoord[0]
-                scoord = newcoord[-1]
-                try:
-                    sol = solve([r - rcoord, s - scoord], x, y, dict=True)
-                    if sol == []:
-                        continue
-                except NotImplementedError:
-                    continue
-                else:
-                    sol = sol[0]
-                    xsub = sol[x]
-                    ysub = sol[y]
-                    num = simplify(scoord.diff(x) + scoord.diff(y)*h)
-                    denom = simplify(rcoord.diff(x) + rcoord.diff(y)*h)
-                    if num and denom:
-                        diffeq = simplify((num/denom).subs([(x, xsub), (y, ysub)]))
-                        sep = separatevars(diffeq, symbols=[r, s], dict=True)
-                        if sep:
-                            # Trying to separate, r and s coordinates
-                            deq = integrate((1/sep[s]), s) + C1 - integrate(sep['coeff']*sep[r], r)
-                            # Substituting and reverting back to original coordinates
-                            deq = deq.subs([(r, rcoord), (s, scoord)])
-                            try:
-                                sdeq = solve(deq, y)
-                            except NotImplementedError:
-                                tempsol.append(deq)
-                            else:
-                                if len(sdeq) == 1:
-                                    return Eq(f(x), sdeq.pop())
-                                else:
-                                    return [Eq(f(x), sol) for sol in sdeq]
-
-
-                    elif denom: # (ds/dr) is zero which means s is constant
-                        return Eq(f(x), solve(scoord - C1, y)[0])
-
-                    elif num: # (dr/ds) is zero which means r is constant
-                        return Eq(f(x), solve(rcoord - C1, y)[0])
-
-    # If nothing works, return solution as it is, without solving for y
-    if tempsol:
-        if len(tempsol) == 1:
-            return Eq(tempsol.pop().subs(y, f(x)), 0)
-        else:
-            return [Eq(sol.subs(y, f(x)), 0) for sol in tempsol]
-
-    raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
-        + " the lie group method")
+    return desols
 
 
 def _lie_group_remove(coords):
