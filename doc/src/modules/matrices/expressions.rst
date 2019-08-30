@@ -34,6 +34,10 @@ Matrix Expressions Core Reference
    :members:
 .. autoclass:: MatPow
    :members:
+.. autoclass:: HadamardProduct
+   :members:
+.. autoclass:: HadamardPower
+   :members:
 .. autoclass:: Inverse
    :members:
 .. autoclass:: Transpose

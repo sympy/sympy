@@ -66,6 +66,10 @@ def test_interval_arguments():
     assert Interval(oo, -oo) == S.EmptySet
     assert Interval(oo, oo) == S.EmptySet
     assert Interval(-oo, -oo) == S.EmptySet
+    assert Interval(oo, x) == S.EmptySet
+    assert Interval(oo, oo) == S.EmptySet
+    assert Interval(x, -oo) == S.EmptySet
+    assert Interval(x, x) == {x}
 
     assert isinstance(Interval(1, 1), FiniteSet)
     e = Sum(x, (x, 1, 3))

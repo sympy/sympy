@@ -327,7 +327,7 @@ def interactive_traversal(expr):
             choices = '0-%d' % (n_args - 1)
 
         try:
-            choice = raw_input("Your choice [%s,f,l,r,d,?]: " % choices)
+            choice = input("Your choice [%s,f,l,r,d,?]: " % choices)
         except EOFError:
             result = expr
             print()

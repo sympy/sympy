@@ -2,7 +2,7 @@
 
 from sympy import (
     integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
-    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta
+    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, I
 )
 
 from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
