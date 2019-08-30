@@ -5734,7 +5734,10 @@ def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
     h = match['h']
     tempsol = []
     if not inf:
-        inf = infinitesimals(eq, hint=heuristic, func=func, order=1, match=match)
+        try:
+            inf = infinitesimals(eq, hint=heuristic, func=func, order=1, match=match)
+        except ValueError:
+            return None
     for infsim in inf:
         xiinf = (infsim[xi(x, func)]).subs(func, y)
         etainf = (infsim[eta(x, func)]).subs(func, y)
@@ -5790,6 +5793,7 @@ def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
     # If nothing works, return solution as it is, without solving for y
     if tempsol:
         return [Eq(sol.subs(y, f(x)), 0) for sol in tempsol]
+    return None
 
 def _ode_lie_group( s, func, order, match):
     heuristics = lie_heuristics
@@ -5822,11 +5826,9 @@ def _ode_lie_group( s, func, order, match):
     # b] any heuristic raises a ValueError
     # another heuristic can be used.
     for heuristic in heuristics:
-        try:
-            return _ode_lie_group_try_heuristic(Eq(df, s), heuristic, func, match, inf)
-        except ValueError:
-            continue
-    return []
+        sol = _ode_lie_group_try_heuristic(Eq(df, s), heuristic, func, match, inf)
+        if sol:
+            return sol
 
 def ode_lie_group(eq, func, order, match):
     r"""
@@ -5889,15 +5891,13 @@ def ode_lie_group(eq, func, order, match):
 
     desols = []
     for s in eqsol:
-        try:
-            sol = _ode_lie_group(s, func, order, match=match)
+        sol = _ode_lie_group(s, func, order, match=match)
+        if sol:
             desols.extend(sol)
-        except NotImplementedError:
-            pass
 
     if desols == []:
-        raise NotImplementedError("Unable...")
-
+        raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+            + " the lie group method")
     return desols
 
 def _lie_group_remove(coords):
