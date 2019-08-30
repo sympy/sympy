@@ -1090,14 +1090,9 @@ class CovarDerivativeOp(Expr):
 # Tensors as multidimensional arrays.
 ##########################################################################
 
-class TensorArray:
+class TensorArray(object):
     """
     Object representing a tensor as a multidimensional sparse symbolic array.
-
-    ``TensorArray(T)``: if T is a TensorProduct, or obtained by applying a CovD
-    or other tensor operation, this will represent T as an array internally,
-    allowing array operations (such as contractions and braiding) to be
-    performed on the tensor.
 
     ``TensorArray(components=..., variance=..., coordinate_system=...)``:
     initializes a tensor array from a given component array, with given
@@ -1105,18 +1100,11 @@ class TensorArray:
     be a list of +1 or -1.  Where +1 slots are covariant and -1 slots are
     contravariant.
 
-    Example 1: Basic usage to expand tensors
-    ========================================
+    For conversion between differential geometry objects and ``TensorArray``s,
+    see ``ToArray``.
 
-    >>> from sympy.diffgeom import WedgeProduct, TensorArray, Differential
-    >>> from sympy.diffgeom.rn import R2_r
-    >>> wp=WedgeProduct(Differential(R2_r.x),Differential(R2_r.y))
-    >>> TensorArray(wp).to_tensor()
-    TensorProduct(dx, dy) - TensorProduct(dy, dx)
-
-
-    Example 2: Converting the Riemann components (an array) to a proper tensor
-    ==========================================================================
+    Example: Converting the Riemann components (an array) to a proper tensor
+    ========================================================================
 
     >>> from sympy.diffgeom import CoordSystem, Patch, TensorArray, TensorProduct, Manifold, metric_to_Riemann_components
     >>> from sympy import Function
@@ -1131,23 +1119,7 @@ class TensorArray:
     >>> metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
     >>> rm = TensorArray(components=metric_to_Riemann_components(metric), variance=[-1,1,1,1],coordinate_system=cs)  #Note the variance!
 
-    Example 3: Covariant derivative as a tensor
-    ===========================================
-    >>> from sympy.diffgeom import (Manifold, Patch, CoordSystem, TensorProduct, metric_to_Christoffel_2nd, TensorArray)
-    >>> from sympy import (Function, sin)
-    >>> TP = TensorProduct
-    >>> M = Manifold('Reisner-Nordstrom', 4)
-    >>> p = Patch('origin', M)
-    >>> cs = CoordSystem('spherical', p, ['t', 'r', 'theta', 'phi'])
-    >>> t, r, theta, phi = cs.coord_functions()
-    >>> dt, dr, dtheta, dphi = cs.base_oneforms()
-    >>> f=Function('f')
-    >>> metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
-    >>> ch_2nd = metric_to_Christoffel_2nd(metric)
-    >>> G=TensorArray(metric)
-    >>> assert(G.covD(ch_2nd).to_tensor() == 0)  #the covariant derivative as a (3,0) tensor!
     """
-
     def _contravariant_slots(self,T):
         slots=[]
         for k in range(self.order):
@@ -1159,49 +1131,10 @@ class TensorArray:
                 slots.append(k)
         return slots
 
-    def _init_from_tensor(self,T, kwargs):
-        try:
-            self.CoordSystem = kwargs['coordinate_system']
-        except KeyError:
-            try:
-                systems = list(T.atoms(CoordSystem))
-                if len(systems) > 1:
-                    raise NotImplemented
-                self.CoordSystem = systems.pop()
-            except AttributeError: #Scalar case (probably)
-                raise NotImplementedError("Specify coordinate system with coordinate_system=...")
-        self.coords = self.CoordSystem.coord_functions()
-        self.base_oneforms = self.CoordSystem.base_oneforms()
-        self.base_vectors = self.CoordSystem.base_vectors()
-        self.n = len(self.coords)
-        self.covariant_order=covariant_order(T)
-        self.contravariant_order=contravariant_order(T)
-        self.order = self.covariant_order+self.contravariant_order
-        self.shape = [self.n for _ in range(self.order)]
-        self.indices = list(itertools.product(range(self.n),repeat=self.order))
-        self.contravariant_slots=self._contravariant_slots(T)
-        self.covariant_slots=list(range(self.order))
-        [self.covariant_slots.remove(i) for i in self.contravariant_slots]
-        def basishelper(p,k):
-            if self.contravariant_slots.count(k) == 0:
-                return self.base_vectors[p[k]]
-            else:
-                return self.coords[p[k]]
-        Tbases = [
-            (p,[basishelper(list(p),k) for k in range(self.order)]) for p in self.indices
-        ]
-        if self.order==0: #scalar case
-            self.tensor = MutableSparseNDimArray(T)
-        else:
-            self.tensor = MutableSparseNDimArray.zeros(*self.shape)
-            for (p,exI) in Tbases:
-                Tval = T.rcall(*exI)
-                if Tval != 0:
-                    self.tensor[p]=Tval
-                else:
-                    self.indices.remove(p)
-    def _init_from_array(self,component_array,variance,coordinate_system):
-        self.CoordSystem = coordinate_system
+    def __init__(self, **kwargs):
+        self.CoordSystem = kwargs['coordinate_system']
+        variance = kwargs['variance']
+        component_array=kwargs['components']
         self.coords = self.CoordSystem.coord_functions()
         self.base_oneforms = self.CoordSystem.base_oneforms()
         self.base_vectors = self.CoordSystem.base_vectors()
@@ -1212,22 +1145,19 @@ class TensorArray:
         self.covariant_order = len(self.covariant_slots)
         self.contravariant_slots=[k for k in range(self.order) if variance[k]==-1]
         self.contravariant_order = len(self.contravariant_slots)
-        self.indices = list(itertools.product(range(self.n),repeat=self.order))
-        self.tensor = MutableSparseNDimArray.zeros(*self.shape)
-        component_array = MutableSparseNDimArray(component_array)
-        for index in self.indices:
-            if component_array[index]!=0:
-                self.tensor[index] = component_array[index]
-            else:
-                self.indices.remove(index)
-    def __init__(self, *args, **kwargs):
-        if args != ():
-            if len(args) != 1:
-                raise ValueError("Constructor takes exactly one argument.")
-            (T,) = args
-            self._init_from_tensor(T,kwargs)
+        #Workaround for a bug in the NDimArray class:
+        if self.order == 0:
+            self.tensor = copy.copy(component_array)
+            self.indices = [0]
         else:
-            self._init_from_array(kwargs['components'],kwargs['variance'],kwargs['coordinate_system'])
+            self.indices = list(itertools.product(range(self.n),repeat=self.order))
+            self.tensor = MutableSparseNDimArray.zeros(*self.shape)
+            component_array = MutableSparseNDimArray(component_array)
+            for index in self.indices:
+                if component_array[index]!=0:
+                    self.tensor[index] = component_array[index]
+                else:
+                    self.indices.remove(index)
 
     def to_tensor(self):
         if self.shape == []:
@@ -1243,7 +1173,6 @@ class TensorArray:
             for I in self.indices
         }
         return sum([Tbasesdual[I] * self.tensor[I] for I in self.indices])
-
 
     def components(self):
         """
@@ -1322,10 +1251,10 @@ class TensorArray:
 
         Example
         =======
-        >>> from sympy.diffgeom import TensorProduct, TensorArray
+        >>> from sympy.diffgeom import TensorProduct, ToArray
         >>> from sympy.diffgeom.rn import R2_r
         >>> dxex=TensorProduct(R2_r.dx,R2_r.e_x)
-        >>> dxexa=TensorArray(dxex)
+        >>> dxexa=ToArray(dxex)
         >>> dxexa.contract(0,1).to_tensor()
         1
         """
@@ -1379,9 +1308,9 @@ class TensorArray:
         Example
         =======
 
-        >>> from sympy.diffgeom import TensorProduct, TensorArray
+        >>> from sympy.diffgeom import TensorProduct, ToArray
         >>> from sympy.diffgeom.rn import R2_r
-        >>> TensorArray(TensorProduct(R2_r.dx,R2_r.dy)).braid(0,1).to_tensor()
+        >>> ToArray(TensorProduct(R2_r.dx,R2_r.dy)).braid(0,1).to_tensor()
         TensorProduct(dy, dx)
         """
         res = copy.deepcopy(self)
@@ -1465,6 +1394,82 @@ class TensorArray:
             for k in range(self.n):
                 coord_derivative.tensor[(k,)+index] = self.base_vectors[k](self.tensor[index])
         return contractions + coord_derivative
+
+class ToArray(TensorArray):
+    """
+    ``ToArray(T)``: if T is a TensorProduct, or obtained by applying a CovD
+    or other tensor operation, this will represent T as a TensorArray,
+    allowing array operations (such as contractions and braiding) to be
+    performed on the tensor.  It can then be converted back into a tensor
+    product object with the TensorArray.to_tensor method.
+
+    Example 1: Basic usage to expand tensors
+    ========================================
+
+    >>> from sympy.diffgeom import WedgeProduct, ToArray, Differential
+    >>> from sympy.diffgeom.rn import R2_r
+    >>> wp=WedgeProduct(Differential(R2_r.x),Differential(R2_r.y))
+    >>> ToArray(wp).to_tensor()
+    TensorProduct(dx, dy) - TensorProduct(dy, dx)
+
+    Example 2: Covariant derivative as a tensor
+    ===========================================
+    >>> from sympy.diffgeom import (Manifold, Patch, CoordSystem, TensorProduct, metric_to_Christoffel_2nd, ToArray)
+    >>> from sympy import (Function, sin)
+    >>> TP = TensorProduct
+    >>> M = Manifold('Reisner-Nordstrom', 4)
+    >>> p = Patch('origin', M)
+    >>> cs = CoordSystem('spherical', p, ['t', 'r', 'theta', 'phi'])
+    >>> t, r, theta, phi = cs.coord_functions()
+    >>> dt, dr, dtheta, dphi = cs.base_oneforms()
+    >>> f=Function('f')
+    >>> metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
+    >>> ch_2nd = metric_to_Christoffel_2nd(metric)
+    >>> G=ToArray(metric)
+    >>> assert(G.covD(ch_2nd).to_tensor() == 0)  #the covariant derivative as a (3,0) tensor!
+    """
+    def __init__(self,T, **kwargs):
+        try:
+            self.CoordSystem = kwargs['coordinate_system']
+        except KeyError:
+            try:
+                systems = list(T.atoms(CoordSystem))
+                if len(systems) > 1:
+                    raise NotImplemented
+                self.CoordSystem = systems.pop()
+            except AttributeError: #Scalar case (probably)
+                raise NotImplementedError("Specify coordinate system with coordinate_system=...")
+        TensorArray.__init__(self,components = [0],variance = [], coordinate_system=self.CoordSystem)
+        self.coords = self.CoordSystem.coord_functions()
+        self.base_oneforms = self.CoordSystem.base_oneforms()
+        self.base_vectors = self.CoordSystem.base_vectors()
+        self.n = len(self.coords)
+        self.covariant_order=covariant_order(T)
+        self.contravariant_order=contravariant_order(T)
+        self.order = self.covariant_order+self.contravariant_order
+        self.shape = [self.n for _ in range(self.order)]
+        self.indices = list(itertools.product(range(self.n),repeat=self.order))
+        self.contravariant_slots=self._contravariant_slots(T)
+        self.covariant_slots=list(range(self.order))
+        [self.covariant_slots.remove(i) for i in self.contravariant_slots]
+        def basishelper(p,k):
+            if self.contravariant_slots.count(k) == 0:
+                return self.base_vectors[p[k]]
+            else:
+                return self.coords[p[k]]
+        Tbases = [
+            (p,[basishelper(list(p),k) for k in range(self.order)]) for p in self.indices
+        ]
+        if self.order==0: #scalar case
+            self.tensor = MutableSparseNDimArray(T)
+        else:
+            self.tensor = MutableSparseNDimArray.zeros(*self.shape)
+            for (p,exI) in Tbases:
+                Tval = T.rcall(*exI)
+                if Tval != 0:
+                    self.tensor[p]=Tval
+                else:
+                    self.indices.remove(p)
 
 ###############################################################################
 # Integral curves on vector fields
@@ -1783,7 +1788,7 @@ def expand_tensor(T):
     >>> expand_tensor(TensorProduct(R2_r.dx+2*R2_r.dy, R2_r.dy))
     TensorProduct(dx, dy) + 2*TensorProduct(dy, dy)
     """
-    return TensorArray(T).to_tensor()
+    return ToArray(T).to_tensor()
 
 ###############################################################################
 # Coordinate transformation functions
