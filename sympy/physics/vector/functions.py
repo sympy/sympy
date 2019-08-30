@@ -123,7 +123,7 @@ def express(expr, frame, frame2=None, variables=False):
             #Given expr is a scalar field
             frame_set = set([])
             expr = sympify(expr)
-            #Subsitute all the coordinate variables
+            #Substitute all the coordinate variables
             for x in expr.free_symbols:
                 if isinstance(x, CoordinateSym)and x.frame != frame:
                     frame_set.add(x.frame)

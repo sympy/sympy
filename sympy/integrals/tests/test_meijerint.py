@@ -660,7 +660,7 @@ def test_issue_6122():
 def test_issue_6252():
     expr = 1/x/(a + b*x)**(S(1)/3)
     anti = integrate(expr, x, meijerg=True)
-    assert not expr.has(hyper)
+    assert not anti.has(hyper)
     # XXX the expression is a mess, but actually upon differentiation and
     # putting in numerical values seems to work...
 
@@ -716,3 +716,13 @@ def test_issue_13536():
     from sympy import Symbol
     a = Symbol('a', real=True, positive=True)
     assert integrate(1/x**2, (x, oo, a)) == -1/a
+
+
+def test_issue_6462():
+    from sympy import Symbol
+    x = Symbol('x')
+    n = Symbol('n')
+    # Not the actual issue, still wrong answer for n = 1, but that there is no
+    # exception
+    assert integrate(cos(x**n)/x**n, x, meijerg=True).subs(n, 2).equals(
+            integrate(cos(x**2)/x**2, x, meijerg=True))

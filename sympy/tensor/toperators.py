@@ -8,11 +8,11 @@ class PartialDerivative(TensExpr):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensorhead
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorHead
     >>> from sympy.tensor.toperators import PartialDerivative
     >>> from sympy import symbols
     >>> L = TensorIndexType("L")
-    >>> A = tensorhead("A", [L], [[1]])
+    >>> A = TensorHead("A", [L])
     >>> i, j = symbols("i j")
 
     >>> expr = PartialDerivative(A(i), A(j))

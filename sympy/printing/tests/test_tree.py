@@ -1,8 +1,11 @@
 # coding=utf-8
 
 from sympy.printing.tree import tree
+from sympy.utilities.pytest import XFAIL
 
 
+# Remove this flag after making _assumptions cache deterministic.
+@XFAIL
 def test_print_tree_MatAdd():
     from sympy.matrices.expressions import MatrixSymbol, MatAdd
     A = MatrixSymbol('A', 3, 3)
@@ -69,6 +72,8 @@ def test_print_tree_MatAdd():
         '| | algebraic: True\n',
         '| | commutative: True\n',
         '| | complex: True\n',
+        '| | extended_negative: False\n',
+        '| | extended_nonnegative: True\n',
         '| | extended_real: True\n',
         '| | finite: True\n',
         '| | hermitian: True\n',
@@ -76,7 +81,9 @@ def test_print_tree_MatAdd():
         '| | infinite: False\n',
         '| | integer: True\n',
         '| | irrational: False\n',
+        '| | negative: False\n',
         '| | noninteger: False\n',
+        '| | nonnegative: True\n',
         '| | rational: True\n',
         '| | real: True\n',
         '| | transcendental: False\n',
@@ -84,6 +91,8 @@ def test_print_tree_MatAdd():
         '|   algebraic: True\n',
         '|   commutative: True\n',
         '|   complex: True\n',
+        '|   extended_negative: False\n',
+        '|   extended_nonnegative: True\n',
         '|   extended_real: True\n',
         '|   finite: True\n',
         '|   hermitian: True\n',
@@ -91,7 +100,9 @@ def test_print_tree_MatAdd():
         '|   infinite: False\n',
         '|   integer: True\n',
         '|   irrational: False\n',
+        '|   negative: False\n',
         '|   noninteger: False\n',
+        '|   nonnegative: True\n',
         '|   rational: True\n',
         '|   real: True\n',
         '|   transcendental: False\n',
@@ -128,6 +139,8 @@ def test_print_tree_MatAdd():
         '  | algebraic: True\n',
         '  | commutative: True\n',
         '  | complex: True\n',
+        '  | extended_negative: False\n',
+        '  | extended_nonnegative: True\n',
         '  | extended_real: True\n',
         '  | finite: True\n',
         '  | hermitian: True\n',
@@ -135,7 +148,9 @@ def test_print_tree_MatAdd():
         '  | infinite: False\n',
         '  | integer: True\n',
         '  | irrational: False\n',
+        '  | negative: False\n',
         '  | noninteger: False\n',
+        '  | nonnegative: True\n',
         '  | rational: True\n',
         '  | real: True\n',
         '  | transcendental: False\n',
@@ -143,6 +158,8 @@ def test_print_tree_MatAdd():
         '    algebraic: True\n',
         '    commutative: True\n',
         '    complex: True\n',
+        '    extended_negative: False\n',
+        '    extended_nonnegative: True\n',
         '    extended_real: True\n',
         '    finite: True\n',
         '    hermitian: True\n',
@@ -150,10 +167,32 @@ def test_print_tree_MatAdd():
         '    infinite: False\n',
         '    integer: True\n',
         '    irrational: False\n',
+        '    negative: False\n',
         '    noninteger: False\n',
+        '    nonnegative: True\n',
         '    rational: True\n',
         '    real: True\n',
         '    transcendental: False\n'
     ]
 
     assert tree(A + B) == "".join(test_str)
+
+
+def test_print_tree_MatAdd_noassumptions():
+    from sympy.matrices.expressions import MatrixSymbol, MatAdd
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+
+    test_str = \
+"""MatAdd: A + B
++-MatrixSymbol: A
+| +-Symbol: A
+| +-Integer: 3
+| +-Integer: 3
++-MatrixSymbol: B
+  +-Symbol: B
+  +-Integer: 3
+  +-Integer: 3
+"""
+
+    assert tree(A + B, assumptions=False) == test_str

@@ -66,6 +66,7 @@ def are_coplanar(*e):
 
     """
     from sympy.geometry.line import LinearEntity3D
+    from sympy.geometry.entity import GeometryEntity
     from sympy.geometry.point import Point3D
     from sympy.geometry.plane import Plane
     # XXX update tests for coverage
@@ -103,7 +104,7 @@ def are_coplanar(*e):
                 pt3d.append(i)
             elif isinstance(i, LinearEntity3D):
                 pt3d.extend(i.args)
-            elif isinstance(i, GeometryEntity):  # XXX we should have a GeometryEntity3D class so we can tell the difference between 2D and 3D -- here we just want to deal with 2D objects; if new 3D objects are encountered that we didn't hanlde above, an error should be raised
+            elif isinstance(i, GeometryEntity):  # XXX we should have a GeometryEntity3D class so we can tell the difference between 2D and 3D -- here we just want to deal with 2D objects; if new 3D objects are encountered that we didn't handle above, an error should be raised
                 # all 2D objects have some Point that defines them; so convert those points to 3D pts by making z=0
                 for p in i.args:
                     if isinstance(p, Point):

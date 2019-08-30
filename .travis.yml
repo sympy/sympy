@@ -8,7 +8,7 @@ env:
   matrix:
   - SPLIT="1/2" TEST_SYMPY="true"
   - SPLIT="2/2" TEST_SYMPY="true"
-  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
   global:
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
 dist: trusty
@@ -31,7 +31,7 @@ matrix:
       dist: xenial
       sudo: true
       env:
-        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
     - python: 3.7
       dist: xenial
       sudo: true
@@ -48,7 +48,7 @@ matrix:
       dist: xenial
       sudo: true
       env:
-        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
     - python: 3.8-dev
       dist: xenial
       sudo: true
@@ -63,7 +63,7 @@ matrix:
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7 pyglet"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7 pyglet pycosat python-clang"
       addons:
         apt:
           packages:
@@ -78,7 +78,7 @@ matrix:
       # and we aren't actually using the Travis Python anyway.
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang"
         - TEST_SAGE="true"
       addons:
         apt:
@@ -166,7 +166,7 @@ matrix:
     # duplicated here and in that section below.
     - python: "pypy"
       env:
-        - TEST_DOCTESTS="true"
+        - TEST_DOCTESTS="true" TEST_EXAMPLES="true"
         - FASTCACHE="false"
       addons:
         apt:

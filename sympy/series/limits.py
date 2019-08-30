@@ -68,18 +68,7 @@ def limit(e, z, z0, dir="+"):
      limit_seq : returns the limit of a sequence.
     """
 
-    if dir == "+-":
-        llim = Limit(e, z, z0, dir="-").doit(deep=False)
-        rlim = Limit(e, z, z0, dir="+").doit(deep=False)
-        if llim == rlim:
-            return rlim
-        else:
-            # TODO: choose a better error?
-            raise ValueError("The limit does not exist since "
-                    "left hand limit = %s and right hand limit = %s"
-                    % (llim, rlim))
-    else:
-        return Limit(e, z, z0, dir).doit(deep=False)
+    return Limit(e, z, z0, dir).doit(deep=False)
 
 
 def heuristics(e, z, z0, dir):
@@ -259,11 +248,23 @@ class Limit(Expr):
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
 
+        l = None
+
         try:
-            r = gruntz(e, z, z0, dir)
-            if r is S.NaN:
+            if str(dir) == '+-':
+                r = gruntz(e, z, z0, '+')
+                l = gruntz(e, z, z0, '-')
+                if l != r:
+                    raise ValueError("The limit does not exist since "
+                            "left hand limit = %s and right hand limit = %s"
+                            % (l, r))
+            else:
+                r = gruntz(e, z, z0, dir)
+            if r is S.NaN or l is S.NaN:
                 raise PoleError()
         except (PoleError, ValueError):
+            if l is not None:
+                raise
             r = heuristics(e, z, z0, dir)
             if r is None:
                 return self

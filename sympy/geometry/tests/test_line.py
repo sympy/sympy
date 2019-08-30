@@ -506,6 +506,7 @@ def test_intersection_2d():
     assert Ray((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == [Point(1, 1)]
     assert Ray((0, 0), (10, 10)).contains(Segment((1, 1), (2, 2))) is True
     assert Segment((1, 1), (2, 2)) in Line((0, 0), (10, 10))
+    assert s1.intersection(Ray((1, 1), (4, 4))) == [Point(1, 1)]
 
     # 16628 - this should be fast
     p0 = Point2D(S(249)/5, S(497999)/10000)

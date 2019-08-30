@@ -25,14 +25,18 @@ from sympy.core.multidimensional import vectorize
 
 from sympy.core.compatibility import HAS_GMPY
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.pytest import ignore_warnings
 
 from sympy import symbols, S
 
 from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
 
-excluded_attrs = set(['_assumptions', '_mhash', 'message'])
+excluded_attrs = set([
+    '_assumptions',  # This is a local cache that isn't automatically filled on creation
+    '_mhash',   # Cached after __hash__ is called but set to None after creation
+    'message',   # This is an exception attribute that is present but deprecated in Py2 (can be removed when Py2 support is dropped
+    'is_EmptySet',  # Deprecated from SymPy 1.5. This can be removed when is_EmptySet is removed.
+    ])
 
 
 def check(a, exclude=[], check_attr=True):

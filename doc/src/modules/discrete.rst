@@ -1,5 +1,6 @@
-Discrete Module
-===============
+========
+Discrete
+========
 
 The ``discrete`` module in SymPy implements methods to compute discrete
 transforms and convolutions of finite sequences.

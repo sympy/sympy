@@ -322,6 +322,8 @@ The ``O`` notation supports arbitrary limit points (other than 0):
     -5 + ──────── + ──────── + ──────── + ──────── + x + O⎝(x - 6) ; x → 6⎠
             2          6          24        120
 
+.. _calculus-finite-differences:
+
 Finite differences
 ==================
 

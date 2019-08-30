@@ -11,3 +11,4 @@ from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.graycode import GrayCode
 from sympy.combinatorics.named_groups import (SymmetricGroup, DihedralGroup,
     CyclicGroup, AlternatingGroup, AbelianGroup, RubikGroup)
+from sympy.combinatorics.pc_groups import PolycyclicGroup, Collector

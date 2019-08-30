@@ -771,7 +771,7 @@ def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
 
 def test_Complement():
-    assert str(Complement(S.Reals, S.Naturals)) == 'Reals \\ Naturals'
+    assert str(Complement(S.Reals, S.Naturals)) == 'Complement(Reals, Naturals)'
 
 def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2, 3), Interval(3, 4),evaluate=False)) == \
@@ -822,3 +822,7 @@ def test_str_special_matrices():
     assert str(Identity(4)) == 'I'
     assert str(ZeroMatrix(2, 2)) == '0'
     assert str(OneMatrix(2, 2)) == '1'
+
+
+def test_issue_14567():
+    assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error

@@ -71,6 +71,7 @@ def test_quaternion_functions():
     assert q1.pow(-2) == Quaternion(-S(7)/225, -S(1)/225, -S(1)/150, -S(2)/225)
     assert q1**(-2) == Quaternion(-S(7)/225, -S(1)/225, -S(1)/150, -S(2)/225)
     assert q1.pow(-0.5) == NotImplemented
+    raises(TypeError, lambda: q1**(-0.5))
 
     assert q1.exp() == \
     Quaternion(E * cos(sqrt(29)),
@@ -95,6 +96,10 @@ def test_quaternion_functions():
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
 
     assert Quaternion.rotate_point((1, 1, 1), q1) == (S(1) / 5, 1, S(7) / 5)
+    n = Symbol('n')
+    raises(TypeError, lambda: q1**n)
+    n = Symbol('n', integer=True)
+    raises(TypeError, lambda: q1**n)
 
 
 def test_quaternion_conversions():
@@ -148,7 +153,7 @@ def test_quaternion_rotation_iss1593():
                 [0, sin(x), cos(x)]]))
 
 
-def test_quaternion_nultiplication():
+def test_quaternion_multiplication():
     q1 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
     q2 = Quaternion(1, 2, 3, 5)
     q3 = Quaternion(1, 1, 1, y)
@@ -158,3 +163,10 @@ def test_quaternion_nultiplication():
     assert q2.mul(2) == Quaternion(2, 4, 6, 10)
     assert q2.mul(q3) == Quaternion(-5*y - 4, 3*y - 2, 9 - 2*y, y + 4)
     assert q2.mul(q3) == q2*q3
+
+    z = symbols('z', complex=True)
+    z_quat = Quaternion(re(z), im(z), 0, 0)
+    q = Quaternion(*symbols('q:4', real=True))
+
+    assert z * q == z_quat * q
+    assert q * z == q * z_quat

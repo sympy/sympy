@@ -252,7 +252,7 @@ default_datatypes = {
     "complex": DataType("double", "COMPLEX*16", "complex", "", "", "float") #FIXME:
        # complex is only supported in fortran, python, julia, and octave.
        # So to not break c or rust code generation, we stick with double or
-       # float, respecitvely (but actually should raise an exeption for
+       # float, respecitvely (but actually should raise an exception for
        # explicitly complex variables (x.is_complex==True))
 }
 

@@ -39,6 +39,11 @@ class NonSquareMatrixError(ShapeError):
     pass
 
 
+class NonInvertibleMatrixError(ValueError, MatrixError):
+    """The matrix in not invertible (division by multidimensional zero error)."""
+    pass
+
+
 class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
     """The matrix is not a positive-definite matrix."""
     pass
@@ -1946,7 +1951,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: x.replace(F, G, map))
 
-    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+    def simplify(self, **kwargs):
         """Apply simplify to each element of the matrix.
 
         Examples
@@ -1960,8 +1965,7 @@ class MatrixOperations(MatrixRequired):
         >>> _.simplify()
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.simplify(ratio=ratio, measure=measure,
-                                                   rational=rational, inverse=inverse))
+        return self.applyfunc(lambda x: x.simplify(**kwargs))
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
@@ -2219,37 +2223,51 @@ class MatrixArithmetic(MatrixRequired):
         return self._eval_scalar_mul(-1)
 
     @call_highest_priority('__rpow__')
-    def __pow__(self, num):
+    def __pow__(self, exp):
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
         jordan_pow = getattr(a, '_matrix_pow_by_jordan_blocks', None)
-        num = sympify(num)
-        if num.is_Number and num % 1 == 0:
+        exp = sympify(exp)
+
+        if exp.is_zero:
+            return a._new(a.rows, a.cols, lambda i, j: int(i == j))
+        if exp == 1:
+            return a
+
+        diagonal = getattr(a, 'is_diagonal', None)
+        if diagonal is not None and diagonal():
+            return a._new(a.rows, a.cols, lambda i, j: a[i,j]**exp if i == j else 0)
+
+        if exp.is_Number and exp % 1 == 0:
             if a.rows == 1:
-                return a._new([[a[0]**num]])
-            if num == 0:
-                return self._new(self.rows, self.cols, lambda i, j: int(i == j))
-            if num < 0:
-                num = -num
+                return a._new([[a[0]**exp]])
+            if exp < 0:
+                exp = -exp
                 a = a.inv()
             # When certain conditions are met,
             # Jordan block algorithm is faster than
             # computation by recursion.
-            elif a.rows == 2 and num > 100000 and jordan_pow is not None:
+            elif a.rows == 2 and exp > 100000 and jordan_pow is not None:
                 try:
-                    return jordan_pow(num)
+                    return jordan_pow(exp)
                 except MatrixError:
                     pass
-            return a._eval_pow_by_recursion(num)
-        elif not num.is_Number and num.is_negative is None and a.det() == 0:
-            from sympy.matrices.expressions import MatPow
-            return MatPow(a, num)
-        elif isinstance(num, (Expr, float)):
-            return jordan_pow(num)
-        else:
-            raise TypeError(
-                "Only SymPy expressions or integers are supported as exponent for matrices")
+            return a._eval_pow_by_recursion(exp)
+
+        if jordan_pow:
+            try:
+                return jordan_pow(exp)
+            except NonInvertibleMatrixError:
+                # Raised by jordan_pow on zero determinant matrix unless exp is
+                # definitely known to be a non-negative integer.
+                # Here we raise if n is definitely not a non-negative integer
+                # but otherwise we can leave this as an unevaluated MatPow.
+                if exp.is_integer is False or exp.is_nonnegative is False:
+                    raise
+
+        from sympy.matrices.expressions import MatPow
+        return MatPow(a, exp)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):

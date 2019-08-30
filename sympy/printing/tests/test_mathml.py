@@ -4,8 +4,9 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     S, MatrixSymbol, Function, Derivative, log, true, false, Range, Min, Max, \
     Lambda, IndexedBase, symbols, zoo, elliptic_f, elliptic_e, elliptic_pi, Ei, \
     expint, jacobi, gegenbauer, chebyshevt, chebyshevu, legendre, assoc_legendre, \
-    laguerre, assoc_laguerre, hermite, TribonacciConstant, Contains, \
-    LambertW
+    laguerre, assoc_laguerre, hermite, euler, stieltjes, mathieuc, mathieus, \
+    mathieucprime, mathieusprime, TribonacciConstant, Contains, LambertW, \
+    cot, coth, acot, acoth, csc, acsc, csch, acsch, sec, asec, sech, asech
 
 from sympy import elliptic_k, totient, reduced_totient, primenu, primeomega, \
     fresnelc, fresnels, Heaviside
@@ -218,6 +219,18 @@ def test_content_mathml_constants():
     mml = mathml(EulerGamma)
     assert mml == '<eulergamma/>'
 
+    mml = mathml(EmptySet())
+    assert mml == '<emptyset/>'
+
+    mml = mathml(S.true)
+    assert mml == '<true/>'
+
+    mml = mathml(S.false)
+    assert mml == '<false/>'
+
+    mml = mathml(S.NaN)
+    assert mml == '<notanumber/>'
+
 
 def test_content_mathml_trig():
     mml = mp._print(sin(x))
@@ -229,6 +242,15 @@ def test_content_mathml_trig():
     mml = mp._print(tan(x))
     assert mml.childNodes[0].nodeName == 'tan'
 
+    mml = mp._print(cot(x))
+    assert mml.childNodes[0].nodeName == 'cot'
+
+    mml = mp._print(csc(x))
+    assert mml.childNodes[0].nodeName == 'csc'
+
+    mml = mp._print(sec(x))
+    assert mml.childNodes[0].nodeName == 'sec'
+
     mml = mp._print(asin(x))
     assert mml.childNodes[0].nodeName == 'arcsin'
 
@@ -237,6 +259,15 @@ def test_content_mathml_trig():
 
     mml = mp._print(atan(x))
     assert mml.childNodes[0].nodeName == 'arctan'
+
+    mml = mp._print(acot(x))
+    assert mml.childNodes[0].nodeName == 'arccot'
+
+    mml = mp._print(acsc(x))
+    assert mml.childNodes[0].nodeName == 'arccsc'
+
+    mml = mp._print(asec(x))
+    assert mml.childNodes[0].nodeName == 'arcsec'
 
     mml = mp._print(sinh(x))
     assert mml.childNodes[0].nodeName == 'sinh'
@@ -247,6 +278,15 @@ def test_content_mathml_trig():
     mml = mp._print(tanh(x))
     assert mml.childNodes[0].nodeName == 'tanh'
 
+    mml = mp._print(coth(x))
+    assert mml.childNodes[0].nodeName == 'coth'
+
+    mml = mp._print(csch(x))
+    assert mml.childNodes[0].nodeName == 'csch'
+
+    mml = mp._print(sech(x))
+    assert mml.childNodes[0].nodeName == 'sech'
+
     mml = mp._print(asinh(x))
     assert mml.childNodes[0].nodeName == 'arcsinh'
 
@@ -255,6 +295,15 @@ def test_content_mathml_trig():
 
     mml = mp._print(acosh(x))
     assert mml.childNodes[0].nodeName == 'arccosh'
+
+    mml = mp._print(acoth(x))
+    assert mml.childNodes[0].nodeName == 'arccoth'
+
+    mml = mp._print(acsch(x))
+    assert mml.childNodes[0].nodeName == 'arccsch'
+
+    mml = mp._print(asech(x))
+    assert mml.childNodes[0].nodeName == 'arcsech'
 
 
 def test_content_mathml_relational():
@@ -483,6 +532,14 @@ def test_content_mathml_order():
 
 def test_content_settings():
     raises(TypeError, lambda: mathml(x, method="garbage"))
+
+
+def test_content_mathml_logic():
+    assert mathml(And(x, y)) == '<apply><and/><ci>x</ci><ci>y</ci></apply>'
+    assert mathml(Or(x, y)) == '<apply><or/><ci>x</ci><ci>y</ci></apply>'
+    assert mathml(Xor(x, y)) == '<apply><xor/><ci>x</ci><ci>y</ci></apply>'
+    assert mathml(Implies(x, y)) == '<apply><implies/><ci>x</ci><ci>y</ci></apply>'
+    assert mathml(Not(x)) == '<apply><not/><ci>x</ci></apply>'
 
 
 def test_presentation_printmethod():
@@ -1390,12 +1447,42 @@ def test_mathml_presentation_numbers():
         '<msub><mi>B</mi><mi>n</mi></msub>'
     assert mathml(bell(n), printer='presentation') == \
         '<msub><mi>B</mi><mi>n</mi></msub>'
+    assert mathml(euler(n), printer='presentation') == \
+        '<msub><mi>E</mi><mi>n</mi></msub>'
     assert mathml(fibonacci(n), printer='presentation') == \
         '<msub><mi>F</mi><mi>n</mi></msub>'
     assert mathml(lucas(n), printer='presentation') == \
         '<msub><mi>L</mi><mi>n</mi></msub>'
     assert mathml(tribonacci(n), printer='presentation') == \
         '<msub><mi>T</mi><mi>n</mi></msub>'
+    assert mathml(bernoulli(n, x), printer='presentation') == \
+        '<mrow><msub><mi>B</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(bell(n, x), printer='presentation') == \
+        '<mrow><msub><mi>B</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(euler(n, x), printer='presentation') == \
+        '<mrow><msub><mi>E</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(fibonacci(n, x), printer='presentation') == \
+        '<mrow><msub><mi>F</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(tribonacci(n, x), printer='presentation') == \
+        '<mrow><msub><mi>T</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+
+
+def test_mathml_presentation_mathieu():
+    assert mathml(mathieuc(x, y, z), printer='presentation') == \
+        '<mrow><mi>C</mi><mfenced><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow>'
+    assert mathml(mathieus(x, y, z), printer='presentation') == \
+        '<mrow><mi>S</mi><mfenced><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow>'
+    assert mathml(mathieucprime(x, y, z), printer='presentation') == \
+        '<mrow><mi>C&#x2032;</mi><mfenced><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow>'
+    assert mathml(mathieusprime(x, y, z), printer='presentation') == \
+        '<mrow><mi>S&#x2032;</mi><mfenced><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow>'
+
+
+def test_mathml_presentation_stieltjes():
+    assert mathml(stieltjes(n), printer='presentation') == \
+         '<msub><mi>&#x03B3;</mi><mi>n</mi></msub>'
+    assert mathml(stieltjes(n, x), printer='presentation') == \
+         '<mrow><msub><mi>&#x03B3;</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
 
 
 def test_print_matrix_symbol():
@@ -1763,3 +1850,11 @@ def test_mathml_special_matrices():
     assert mathml(Identity(4), printer='presentation') == '<mi>&#x1D540;</mi>'
     assert mathml(ZeroMatrix(2, 2), printer='presentation') == '<mn>&#x1D7D8</mn>'
     assert mathml(OneMatrix(2, 2), printer='presentation') == '<mn>&#x1D7D9</mn>'
+
+def test_mathml_piecewise():
+    from sympy import Piecewise
+    # Content MathML
+    assert mathml(Piecewise((x, x <= 1), (x**2, True))) == \
+        '<piecewise><piece><ci>x</ci><apply><leq/><ci>x</ci><cn>1</cn></apply></piece><otherwise><apply><power/><ci>x</ci><cn>2</cn></apply></otherwise></piecewise>'
+
+    raises(ValueError, lambda: mathml(Piecewise((x, x <= 1))))

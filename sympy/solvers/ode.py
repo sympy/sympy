@@ -251,7 +251,7 @@ from sympy.core.sympify import sympify
 from sympy.logic.boolalg import (BooleanAtom, And, Not, BooleanTrue,
                                 BooleanFalse)
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
-    atan2, conjugate, Piecewise
+    atan2, conjugate, Piecewise, besselj, bessely
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
@@ -262,10 +262,10 @@ from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, posify, cse
+    simplify, trigsimp, posify, cse, besselsimp
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const
-from sympy.solvers import solve
+from sympy.solvers import checksol, solve
 from sympy.solvers.pde import pdsolve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
@@ -706,6 +706,10 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         match['simplify'] = False  # Some hints can take advantage of this option
         rv = _handle_Integral(solvefunc(eq, func, order, match), func, hint)
 
+    if isinstance(rv, list):
+        rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
+        if len(rv) == 1:
+            rv = rv[0]
     if ics and not 'power_series' in hint:
         if isinstance(rv, Expr):
             solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
@@ -1421,7 +1425,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 return x == coeff
             return False
 
-        # Find coefficient for higest derivative, multiply coefficients to
+        # Find coefficient for highest derivative, multiply coefficients to
         # bring the equation into Euler form if possible
         r_rescaled = None
         if r is not None:
@@ -2432,6 +2436,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
             if sol.lhs == func:
                 s = sub_func_doit(ode_diff, func, sol.rhs)
+                s = besselsimp(s)
             else:
                 testnum += 1
                 continue
@@ -2931,7 +2936,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
         isconstant = lambda s: s.startswith('C') and s[1:].isdigit()
         constantsymbols = [sym for sym in expr.free_symbols if isconstant(sym.name)]
 
-    # Find new constants checking that they aren't alread in the ODE
+    # Find new constants checking that they aren't already in the ODE
     if newconstants is None:
         iter_constants = numbered_symbols(start=1, prefix='C', exclude=variables)
     else:
@@ -3510,20 +3515,20 @@ def ode_Bernoulli(eq, func, order, match):
                     d                n
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
-        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral')) #doctest: +SKIP
-                                                                                       1
-                                                                                      ----
-                                                                                     1 - n
-               //                /                            \                     \
-               ||               |                             |                     |
-               ||               |                  /          |             /       |
-               ||               |                 |           |            |        |
-               ||               |        (1 - n)* | P(x) dx   |  (-1 + n)* | P(x) dx|
-               ||               |                 |           |            |        |
-               ||               |                /            |           /         |
-        f(x) = ||C1 + (-1 + n)* | -Q(x)*e                   dx|*e                   |
-               ||               |                             |                     |
-               \\               /                            /                     /
+        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=100)
+                                                                                      1
+                                                                                    -----
+                                                                                    1 - n
+               //               /                            \                     \
+               ||              |                             |                     |
+               ||              |                  /          |             /       |
+               ||              |                 |           |            |        |
+               ||              |        (1 - n)* | P(x) dx   |  -(1 - n)* | P(x) dx|
+               ||              |                 |           |            |        |
+               ||              |                /            |           /         |
+        f(x) = ||C1 + (n - 1)* | -Q(x)*e                   dx|*e                   |
+               ||              |                             |                     |
+               \\              /                            /                     /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -3699,7 +3704,7 @@ def ode_Liouville(eq, func, order, match):
 def ode_2nd_power_series_ordinary(eq, func, order, match):
     r"""
     Gives a power series solution to a second order homogeneous differential
-    equation with polynomial coefficients at an ordinary point. A homogenous
+    equation with polynomial coefficients at an ordinary point. A homogeneous
     differential equation is of the form
 
     .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
@@ -3846,7 +3851,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     r"""
     Gives a power series solution to a second order homogeneous differential
     equation with polynomial coefficients at a regular point. A second order
-    homogenous differential equation is of the form
+    homogeneous differential equation is of the form
 
     .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
 
@@ -4184,45 +4189,34 @@ def ode_nth_algebraic(eq, func, order, match):
     # indirect doctest
 
     """
-    solns = match['solutions']
-    var = match['var']
-    solns = _nth_algebraic_remove_redundant_solutions(eq, solns, order, var)
-    if len(solns) == 1:
-        return solns[0]
-    else:
-        return solns
 
-# FIXME: Maybe something like this function should be applied to the solutions
-# returned by dsolve in general rather than just for nth_algebraic...
+    return match['solutions']
 
-def _nth_algebraic_remove_redundant_solutions(eq, solns, order, var):
+def _remove_redundant_solutions(eq, solns, order, var):
     r"""
-    Remove redundant solutions from the set of solutions returned by
-    nth_algebraic.
+    Remove redundant solutions from the set of solutions.
 
-    This function is needed because otherwise nth_algebraic can return
-    redundant solutions where both algebraic solutions and integral
-    solutions are found to the ODE. As an example consider:
+    This function is needed because otherwise dsolve can return
+    redundant solutions. As an example consider:
 
-        eq = Eq(f(x) * f(x).diff(x), 0)
+        eq = Eq((f(x).diff(x, 2))*f(x).diff(x), 0)
 
-    There are two ways to find solutions to eq. The first is the algebraic
-    solution f(x)=0. The second is to solve the equation f(x).diff(x) = 0
+    There are two ways to find solutions to eq. The first is to solve f(x).diff(x, 2) = 0
+    leading to solution f(x)=C1 + C2*x. The second is to solve the equation f(x).diff(x) = 0
     leading to the solution f(x) = C1. In this particular case we then see
-    that the first solution is a special case of the second and we don't
+    that the second solution is a special case of the first and we don't
     want to return it.
 
-    This does not always happen for algebraic solutions though since if we
-    have
+    This does not always happen. If we have
 
-        eq = Eq(f(x)*(1 + f(x).diff(x)), 0)
+        eq = Eq((f(x)**2-4)*(f(x).diff(x)-4), 0)
 
-    then we get the algebraic solution f(x) = 0 and the integral solution
-    f(x) = -x + C1 and in this case the two solutions are not equivalent wrt
+    then we get the algebraic solution f(x) = [-2, 2] and the integral solution
+    f(x) = x + C1 and in this case the two solutions are not equivalent wrt
     initial conditions so both should be returned.
     """
     def is_special_case_of(soln1, soln2):
-        return _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var)
+        return _is_special_case_of(soln1, soln2, eq, order, var)
 
     unique_solns = []
     for soln1 in solns:
@@ -4236,36 +4230,37 @@ def _nth_algebraic_remove_redundant_solutions(eq, solns, order, var):
 
     return unique_solns
 
-def _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var):
+def _is_special_case_of(soln1, soln2, eq, order, var):
     r"""
     True if soln1 is found to be a special case of soln2 wrt some value of the
     constants that appear in soln2. False otherwise.
     """
-    # The solutions returned by nth_algebraic should be given explicitly as in
-    # Eq(f(x), expr). We will equate the RHSs of the two solutions giving an
-    # equation f1(x) = f2(x).
+    # The solutions returned by dsolve may be given explicitly or implicitly.
+    # We will equate the sol1=(soln1.rhs - soln1.lhs), sol2=(soln2.rhs - soln2.lhs)
+    # of the two solutions.
     #
-    # Since this is supposed to hold for all x it also holds for derivatives
-    # f1'(x) and f2'(x). For an order n ode we should be able to differentiate
+    # Since this is supposed to hold for all x it also holds for derivatives.
+    # For an order n ode we should be able to differentiate
     # each solution n times to get n+1 equations.
     #
     # We then try to solve those n+1 equations for the integrations constants
-    # in f2(x). If we can find a solution that doesn't depend on x then it
-    # means that some value of the constants in f1(x) is a special case of
-    # f2(x) corresponding to a paritcular choice of the integration constants.
+    # in sol2. If we can find a solution that doesn't depend on x then it
+    # means that some value of the constants in sol1 is a special case of
+    # sol2 corresponding to a particular choice of the integration constants.
 
     constants1 = soln1.free_symbols.difference(eq.free_symbols)
     constants2 = soln2.free_symbols.difference(eq.free_symbols)
 
-    constants1_new = get_numbered_constants(soln1.rhs - soln2.rhs, len(constants1))
+    constants1_new = get_numbered_constants((soln1.rhs-soln1.lhs) - (soln2.rhs-soln2.lhs),
+                     len(constants1))
     if len(constants1) == 1:
         constants1_new = {constants1_new}
     for c_old, c_new in zip(constants1, constants1_new):
         soln1 = soln1.subs(c_old, c_new)
 
-    # n equations for f1(x)=f2(x), f1'(x)=f2'(x), ...
-    lhs = soln1.rhs.doit()
-    rhs = soln2.rhs.doit()
+    # n equations for sol1 = sol2, sol1'=sol2', ...
+    lhs = (soln1.rhs-soln1.lhs)
+    rhs = (soln2.rhs-soln2.lhs)
     eqns = [Eq(lhs, rhs)]
     for n in range(1, order):
         lhs = lhs.diff(var)
@@ -4278,11 +4273,21 @@ def _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var):
         return False
     eqns = [eq for eq in eqns if not isinstance(eq, BooleanTrue)]
 
-    constant_solns = solve(eqns, constants2)
+    try:
+        constant_solns = solve(eqns, constants2)
+    except NotImplementedError:
+        return False
 
     # Sometimes returns a dict and sometimes a list of dicts
     if isinstance(constant_solns, dict):
         constant_solns = [constant_solns]
+
+    # after solving the issue 17418, maybe we don't need the following checksol code.
+    for constant_soln in constant_solns:
+        for eq in eqns:
+            eq=eq.rhs-eq.lhs
+            if checksol(eq, constant_soln) is not True:
+                return False
 
     # If any solution gives all constants as expressions that don't depend on
     # x then there exists constants for soln2 that give soln1
@@ -5550,7 +5555,6 @@ def _solve_variation_of_parameters(eq, func, order, match):
     if r.get('simplify', True):
         wr = simplify(wr)  # We need much better simplification for
                            # some ODEs. See issue 4662, for example.
-
         # To reduce commonly occurring sin(x)**2 + cos(x)**2 to 1
         wr = trigsimp(wr, deep=True, recursive=True)
     if not wr:
@@ -7927,7 +7931,7 @@ def sysode_linear_3eq_order1(match_):
     for i in range(3):
         for j in Add.make_args(eq[i]):
             if not j.has(x(t), y(t), z(t)):
-                raise NotImplementedError("Only homogeneous problems are supported, non-homogenous are not supported currently.")
+                raise NotImplementedError("Only homogeneous problems are supported, non-homogeneous are not supported currently.")
     if match_['type_of_equation'] == 'type1':
         sol = _linear_3eq_order1_type1(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type2':
@@ -8360,6 +8364,8 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     F = r1[f].subs(x(t), u).subs(y(t), v(u))
     G = r2[g].subs(x(t), u).subs(y(t), v(u))
     sol2r = dsolve(Eq(diff(v(u), u), G/F))
+    if isinstance(sol2r, Expr):
+        sol2r = [sol2r]
     for sol2s in sol2r:
         sol1 = solve(Integral(1/F.subs(v(u), sol2s.rhs), u).doit() - t - C2, u)
     sol = []

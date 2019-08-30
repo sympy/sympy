@@ -1079,7 +1079,7 @@ class Derivative(Expr):
     derivatives wrt AppliedUndef and Derivatives are allowed.
     For example, in the Euler-Lagrange method one may write
     F(t, u, v) where u = f(t) and v = f'(t). These variables can be
-    written explicity as functions of time::
+    written explicitly as functions of time::
 
         >>> from sympy.abc import t
         >>> F = Function('F')
@@ -1352,6 +1352,9 @@ class Derivative(Expr):
             if zero:
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
+                elif isinstance(expr, MatrixExpr):
+                    from sympy import ZeroMatrix
+                    return ZeroMatrix(*expr.shape)
                 elif expr.is_scalar:
                     return S.Zero
 
@@ -1641,7 +1644,11 @@ class Derivative(Expr):
 
     @property
     def free_symbols(self):
-        return self.expr.free_symbols
+        ret = self.expr.free_symbols
+        # Add symbolic counts to free_symbols
+        for var, count in self.variable_count:
+            ret.update(count.free_symbols)
+        return ret
 
     def _eval_subs(self, old, new):
         # The substitution (old, new) cannot be done inside
@@ -1820,6 +1827,14 @@ class Derivative(Expr):
         >>> xl = [x-h, x+h, x+e*h]
         >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
         2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/...
+
+        To approximate ``Derivative`` around ``x0`` using a non-equidistant
+        spacing step, the algorithm supports assignment of undefined
+        functions to ``points``:
+
+        >>> dx = Function('dx')
+        >>> f(x).diff(x).as_finite_difference(points=dx(x), x0=x-h)
+        -f(-h + x - dx(-h + x)/2)/dx(-h + x) + f(-h + x + dx(-h + x)/2)/dx(-h + x)
 
         Partial derivatives are also supported:
 
@@ -2062,7 +2077,7 @@ class Subs(Expr):
         else:
             expr = sympify(expr)
 
-        # use symbols with names equal to the point value (with preppended _)
+        # use symbols with names equal to the point value (with prepended _)
         # to give a variable-independent expression
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
@@ -2077,7 +2092,7 @@ class Subs(Expr):
             s_pts = {p: Symbol(pre + mystr(p)) for p in pts}
             reps = [(v, s_pts[p])
                 for v, p in zip(variables, point)]
-            # if any underscore-preppended symbol is already a free symbol
+            # if any underscore-prepended symbol is already a free symbol
             # and is a variable with a different point value, then there
             # is a clash, e.g. _0 clashes in Subs(_0 + _1, (_0, _1), (1, 0))
             # because the new symbol that would be created is _1 but _1
@@ -2215,7 +2230,7 @@ class Subs(Expr):
                     i.has(new) for i in self.args):
                 # the substitution is neutral
                 return self.xreplace({old: new})
-            # any occurance of old before this point will get
+            # any occurrence of old before this point will get
             # handled by replacements from here on
             i = self.variables.index(old)
             for j in range(i, len(self.variables)):

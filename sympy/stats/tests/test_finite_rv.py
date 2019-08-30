@@ -1,18 +1,19 @@
 from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta,
-        symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        cancel, exp, I, Piecewise, Sum, Dummy)
+                   symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
+                   cancel, exp, I, Piecewise, Sum, Dummy)
 from sympy.core.compatibility import range
+from sympy.external import import_module
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
-    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, kurtosis,
-    sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
-    cmoment, smoment, characteristic_function, moment_generating_function,
-    quantile)
-from sympy.stats.rv import Density
+                         Hypergeometric, Rademacher, P, E, variance, covariance, skewness,
+                         sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
+                         cmoment, smoment, characteristic_function, moment_generating_function,
+                         quantile,  kurtosis)
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
-                                    HypergeometricDistribution
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.stats.symbolic_probability import Expectation, Probability
+    HypergeometricDistribution
+from sympy.stats.rv import Density
+from sympy.utilities.pytest import raises, skip
+
 
 oo = S.Infinity
 
@@ -121,7 +122,7 @@ def test_dice():
     assert set(dens.subs(n, 4).doit().values()) == set([S(1)/4])
     k = Dummy('k', integer=True)
     assert E(D).dummy_eq(
-        Sum(Piecewise((k/n, (k >= 1) & (k <= n)), (0, True)), (k, 1, n)))
+        Sum(Piecewise((k/n, k <= n), (0, True)), (k, 1, n)))
     assert variance(D).subs(n, 6).doit() == S(35)/12
 
     ki = Dummy('ki')
@@ -417,3 +418,33 @@ def test_symbolic_conditions():
     assert Z == \
     Piecewise((S(1)/4, n < 1), (0, True)) + Piecewise((S(1)/2, n < 2), (0, True)) + \
     Piecewise((S(3)/4, n < 3), (0, True)) + Piecewise((S(1), n < 4), (0, True))
+
+
+def test_sampling_methods():
+    distribs_random = [DiscreteUniform("D", list(range(5)))]
+    distribs_scipy = [Hypergeometric("H", 1, 1, 1)]
+    distribs_pymc3 = [BetaBinomial("B", 1, 1, 1)]
+
+    size = 5
+
+    for X in distribs_random:
+        sam = X.pspace.distribution._sample_random(size)
+        for i in range(size):
+            assert sam[i] in X.pspace.domain.set
+
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for _sample_scipy.')
+    else:
+        for X in distribs_scipy:
+            sam = X.pspace.distribution._sample_scipy(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 not installed. Abort tests for _sample_pymc3.')
+    else:
+        for X in distribs_pymc3:
+            sam = X.pspace.distribution._sample_pymc3(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set

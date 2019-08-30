@@ -26,7 +26,7 @@ from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,
         erfinv, erfcinv, erf2inv, Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
         fresnels, fresnelc)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma,
-        uppergamma, polygamma, loggamma, digamma, trigamma)
+        uppergamma, polygamma, loggamma, digamma, trigamma, multigamma)
 from sympy.functions.special.zeta_functions import (dirichlet_eta, zeta,
         lerchphi, polylog, stieltjes)
 from sympy.functions.special.tensor_functions import (Eijk, LeviCivita,
@@ -35,7 +35,7 @@ from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.bsplines import bspline_basis, bspline_basis_set, interpolating_spline
 from sympy.functions.special.bessel import (besselj, bessely, besseli, besselk,
-        hankel1, hankel2, jn, yn, jn_zeros, hn1, hn2, airyai, airybi, airyaiprime, airybiprime)
+        hankel1, hankel2, jn, yn, jn_zeros, hn1, hn2, airyai, airybi, airyaiprime, airybiprime, marcumq)
 from sympy.functions.special.hyper import hyper, meijerg, appellf1
 from sympy.functions.special.polynomials import (legendre, assoc_legendre,
         hermite, chebyshevt, chebyshevu, chebyshevu_root, chebyshevt_root,

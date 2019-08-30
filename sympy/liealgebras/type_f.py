@@ -59,7 +59,7 @@ class TypeF(Standard_Cartan):
         """
 
         if i < 3:
-            return basic_root(i-1, i)
+            return self.basic_root(i-1, i)
         if i == 3:
             root = [0]*4
             root[3] = 1
