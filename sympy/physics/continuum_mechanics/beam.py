@@ -1618,7 +1618,7 @@ class Beam(object):
                     load_args = scaled_load.args
                 else:
                     if isinstance(load[0], Symbol):
-                        raise ValueError("Magnitude of load: {} should not be a Symbol".format(load))
+                        raise ValueError("Magnitude of load: {} should not be a Symbol when pictorial is False. Try setting pictorial to True".format(load))
                     load_args = self.load.args
 
                 load_eq = [i for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
