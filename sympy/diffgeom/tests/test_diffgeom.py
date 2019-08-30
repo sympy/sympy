@@ -3,7 +3,7 @@ from sympy.diffgeom import (Commutator, Differential, TensorProduct,
         WedgeProduct, BaseCovarDerivativeOp, CovarDerivativeOp, LieDerivative,
         covariant_order, contravariant_order, twoform_to_matrix, metric_to_Christoffel_1st,
         metric_to_Christoffel_2nd, metric_to_Riemann_components,
-        metric_to_Ricci_components, intcurve_diffequ, intcurve_series, TensorArray,
+                            metric_to_Ricci_components, intcurve_diffequ, intcurve_series, TensorArray, ToArray,
         Manifold, Patch, CoordSystem, expand_tensor)
 from sympy.core import Symbol, symbols
 from sympy import Function
@@ -240,8 +240,8 @@ def test_scalar():
     cs = CoordSystem('spherical', p, ['t', 'r', 'theta', 'phi'])
     t, r, theta, phi = cs.coord_functions()
     f=Function('f')
-    assert(TensorArray(1,coordinate_system=cs).to_tensor() == 1)
-    assert(TensorArray(f(r)).to_tensor() == f(r))
+    assert(ToArray(1,coordinate_system=cs).to_tensor() == 1)
+    assert(ToArray(f(r)).to_tensor() == f(r))
 
 def test_covD():
     M = Manifold('Reisner-Nordstrom', 4)
@@ -252,7 +252,7 @@ def test_covD():
     f=Function('f')
     metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
     ch_2nd = metric_to_Christoffel_2nd(metric)
-    G=TensorArray(metric)
+    G=ToArray(metric)
     assert(G.covD(ch_2nd).to_tensor() == 0)
 
 def test_curvature():
@@ -265,7 +265,7 @@ def test_curvature():
     f=Function('f')
     metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
     ch_2nd = metric_to_Christoffel_2nd(metric)
-    G=TensorArray(metric)
+    G=ToArray(metric)
     rm = TensorArray(components=metric_to_Riemann_components(metric), variance=[-1,1,1,1],coordinate_system=cs)
     v=[Function(f) for f in ['v0', 'v1', 'v2', 'v3']]
     V = TensorArray(components=[f(t,r,theta,phi) for f in v], variance=[-1],coordinate_system=cs)
