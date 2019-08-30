@@ -464,7 +464,7 @@ def test_binomial():
 
 def test_binomial_Mod():
     p, q = 10**5 + 3, 10**9 + 33 # prime modulo
-    r, s = 10**7 + 5, 33333333 # composite modulo
+    r = 10**7 + 5 # composite modulo
 
     # A few tests to get coverage
     # Lucas Theorem

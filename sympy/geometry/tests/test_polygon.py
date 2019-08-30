@@ -390,7 +390,7 @@ def test_reflect():
     dr = l.perpendicular_segment(r).length
 
     assert verify_numerically(dp, dr)
-    t = Triangle((0, 0), (1, 0), (2, 3))
+
     assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=oo)) \
         == Triangle(Point(5, 0), Point(4, 0), Point(4, 2))
     assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((0, 3), slope=oo)) \

@@ -1016,7 +1016,6 @@ def solve(f, *symbols, **flags):
             return [], set()
         return []
 
-    w = Dummy('w')
     for i, fi in enumerate(f):
         # Abs
         fi = fi.replace(Abs, lambda arg:

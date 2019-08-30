@@ -817,7 +817,6 @@ def _simplify_variable_coeff(sol, syms, func, funcarg):
         final = sol.subs(sym, func(funcarg))
 
     else:
-        fname = func.__name__
         for key, sym in enumerate(syms):
             final = sol.subs(sym, func(funcarg))
 

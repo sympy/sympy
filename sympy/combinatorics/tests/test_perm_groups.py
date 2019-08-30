@@ -893,11 +893,9 @@ def test_presentation():
     assert _test(P)
 
     P = PermutationGroup([Permutation(0,3,1,2), Permutation(3)(0,1), Permutation(0,1)(2,3)])
-    G = P.strong_presentation()
     assert _strong_test(P)
 
     P = DihedralGroup(6)
-    G = P.strong_presentation()
     assert _strong_test(P)
 
     a = Permutation(0,1)(2,3)

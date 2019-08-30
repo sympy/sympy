@@ -7560,10 +7560,11 @@ def _linear_2eq_order2_type4(x, y, t, r, eq):
     w = cancel(ew3/I)
     # The particular solution is assumed to be (Ra+I*Ca)*exp(I*w*t) and
     # (Rb+I*Cb)*exp(I*w*t) for x(t) and y(t) respectively
-    peq1 = (-w**2+c1)*Ra - a1*w*Ca + d1*Rb - b1*w*Cb - k1
-    peq2 = a1*w*Ra + (-w**2+c1)*Ca + b1*w*Rb + d1*Cb
-    peq3 = c2*Ra - a2*w*Ca + (-w**2+d2)*Rb - b2*w*Cb - k2
-    peq4 = a2*w*Ra + c2*Ca + b2*w*Rb + (-w**2+d2)*Cb
+    # peq1, peq2, peq3, peq4 unused
+    # peq1 = (-w**2+c1)*Ra - a1*w*Ca + d1*Rb - b1*w*Cb - k1
+    # peq2 = a1*w*Ra + (-w**2+c1)*Ca + b1*w*Rb + d1*Cb
+    # peq3 = c2*Ra - a2*w*Ca + (-w**2+d2)*Rb - b2*w*Cb - k2
+    # peq4 = a2*w*Ra + c2*Ca + b2*w*Rb + (-w**2+d2)*Cb
     # FIXME: solve for what in what?  Ra, Rb, etc I guess
     # but then psol not used for anything?
     # psol = solve([peq1, peq2, peq3, peq4])
