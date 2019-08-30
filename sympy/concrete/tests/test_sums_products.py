@@ -1301,7 +1301,7 @@ def test_empty_sequence():
     assert Sum(x, (x, -oo, oo), (y, 1, 0)).doit() == 0
     assert Sum(x, (y, 1, 0), (x, -oo, oo)).doit() == 0
 
-    
+
 def test_issue_8016():
     k = Symbol('k', integer=True)
     n, m = symbols('n, m', integer=True, positive=True)
