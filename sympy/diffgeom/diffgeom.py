@@ -1094,6 +1094,17 @@ class TensorArray:
     """
     Object representing a tensor as a multidimensional sparse symbolic array.
 
+    ``TensorArray(T)``: if T is a TensorProduct, or obtained by applying a CovD
+    or other tensor operation, this will represent T as an array internally,
+    allowing array operations (such as contractions and braiding) to be
+    performed on the tensor.
+
+    ``TensorArray(components=..., variance=..., coordinate_system=...)``:
+    initializes a tensor array from a given component array, with given
+    variance and coordinate_system (see ``CoordSystem``).  The variance should
+    be a list of +1 or -1.  Where +1 slots are covariant and -1 slots are
+    contravariant.
+
     Example 1: Basic usage to expand tensors
     ========================================
 
