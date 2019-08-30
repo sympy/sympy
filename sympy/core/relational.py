@@ -456,9 +456,10 @@ class Equality(Relational):
     def __new__(cls, lhs, rhs=None, **options):
         from sympy.core.add import Add
         from sympy.core.containers import Tuple
-        from sympy.core.logic import fuzzy_bool
+        from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and
         from sympy.core.expr import _n2
         from sympy.simplify.simplify import clear_coefficients
+        from sympy.utilities.iterables import sift
 
         if rhs is None:
             SymPyDeprecationWarning(
@@ -494,16 +495,43 @@ class Equality(Relational):
                     isinstance(rhs, Boolean)):
                 return S.false  # only Booleans can equal Booleans
 
-            # check finiteness
-            fin = L, R = [i.is_finite for i in (lhs, rhs)]
-            if None not in fin:
-                if L != R:
-                    return S.false
-                if L is False:
-                    if lhs == -rhs:  # Eq(oo, -oo)
-                        return S.false
-                    return S.true
-            elif None in fin and False in fin:
+            # if anything is infinite in an expression, the finite
+            # terms will not matter because the result will be
+            # nan or infinite
+            def isinf(e):
+                s = sift(Add.make_args(e), lambda x: x.is_infinite)
+                for i in s:
+                    s[i] = Add(*s[i])
+                return {i:s.get(i, S.Zero) for i in (True, False, None)}
+            L = isinf(lhs)
+            R = isinf(rhs)
+            if L[1] or R[1]:  # there is an infinite value
+                if not L[None] and not R[None]:  # nothing is unknown
+                    inf = L[1], R[1]
+                    if fuzzy_xor(map(bool, inf)):
+                        return S.false  # one side is not infinite
+                    if L[1] == -R[1]:
+                        return S.false  # inf != -inf
+                    if S.ComplexInfinity in inf:
+                        return S.false  # zoo only equals zoo
+                    xreal = [i.is_extended_real for i in inf]
+                    xor = fuzzy_xor(xreal)
+                    if xor:
+                        return S.false  # one is real and the other not
+                    if xor is not None:
+                        # extended_real for both is True or False
+                        if xreal[0] is False:
+                            xreal = [(S.ImaginaryUnit*i).is_extended_real for i in inf]
+                        if fuzzy_and(xreal):  # both infinite parts same wrt real
+                            xpos = [i.is_extended_positive for i in inf]
+                            xor = fuzzy_xor(xpos)
+                            if xor:
+                                return S.false
+                            if xor is not None:
+                                # infinite parts match
+                                real = Eq(L[0], R[0])
+                                if real is not None:
+                                    return real
                 return Relational.__new__(cls, lhs, rhs, **options)
 
             if all(isinstance(i, Expr) for i in (lhs, rhs)):

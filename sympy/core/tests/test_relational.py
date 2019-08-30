@@ -786,6 +786,11 @@ def test_issue_10401():
     fin = symbols('inf', finite=True)
     inf = symbols('inf', infinite=True)
     inf2 = symbols('inf2', infinite=True)
+    infx = symbols('infx', infinite=True, extended_real=True)
+    infnx = symbols('inf~x', infinite=True, extended_real=False)
+    infp = symbols('infp', infinite=True, extended_positive=True)
+    infp1 = symbols('infp1', infinite=True, extended_positive=True)
+    infn = symbols('infn', infinite=True, extended_negative=True)
     zero = symbols('z', zero=True)
     nonzero = symbols('nz', zero=False, finite=True)
 
@@ -795,7 +800,19 @@ def test_issue_10401():
 
     T, F = S.true, S.false
     assert Eq(fin, inf) is F
-    assert Eq(inf, inf2) is T and inf != inf2
+    assert Eq(inf, inf2) not in (T, F) and inf != inf2
+    assert Eq(1 + inf, 2 + inf2) not in (T, F) and inf != inf2
+    assert Eq(infp, infp1) is T
+    assert Eq(infp, infn) is F
+    assert Eq(1 + I*oo, 2 + I*oo) is F
+    assert Eq(1 + I*oo, 2 + I*infx) is F
+    assert Eq(1 + I*oo, 2 + infx) is F
+    assert Eq(zoo, sqrt(2) + I*oo) is F
+    r = Symbol('r', real=True)
+    i = Symbol('i', imaginary=True)
+    assert Eq(i*I, r) not in (T, F)
+    assert Eq(infx, infnx) is F
+    assert Eq(zoo, oo) is F
     assert Eq(inf/inf2, 0) is F
     assert Eq(inf/fin, 0) is F
     assert Eq(fin/inf, 0) is T
