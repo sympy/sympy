@@ -5796,6 +5796,7 @@ def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
     return None
 
 def _ode_lie_group( s, func, order, match):
+
     heuristics = lie_heuristics
     inf = {}
     f = func.func
@@ -5822,13 +5823,14 @@ def _ode_lie_group( s, func, order, match):
     match = {'h': h, 'y': y}
 
     # This is done so that if:
-    # a] solve raises a NotImplementedError.
-    # b] any heuristic raises a ValueError
+    # a] any heuristic raises a ValueError
     # another heuristic can be used.
+    sol = None
     for heuristic in heuristics:
         sol = _ode_lie_group_try_heuristic(Eq(df, s), heuristic, func, match, inf)
         if sol:
             return sol
+    return sol
 
 def ode_lie_group(eq, func, order, match):
     r"""
