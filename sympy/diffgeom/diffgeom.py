@@ -1131,10 +1131,8 @@ class TensorArray(object):
                 slots.append(k)
         return slots
 
-    def __init__(self, **kwargs):
-        self.CoordSystem = kwargs['coordinate_system']
-        variance = kwargs['variance']
-        component_array=kwargs['components']
+    def __init__(self, components, variance, coordinate_system):
+        self.CoordSystem = coordinate_system
         self.coords = self.CoordSystem.coord_functions()
         self.base_oneforms = self.CoordSystem.base_oneforms()
         self.base_vectors = self.CoordSystem.base_vectors()
@@ -1147,15 +1145,15 @@ class TensorArray(object):
         self.contravariant_order = len(self.contravariant_slots)
         #Workaround for a bug in the NDimArray class:
         if self.order == 0:
-            self.tensor = copy.copy(component_array)
+            self.tensor = copy.copy(components)
             self.indices = [0]
         else:
             self.indices = list(itertools.product(range(self.n),repeat=self.order))
             self.tensor = MutableSparseNDimArray.zeros(*self.shape)
-            component_array = MutableSparseNDimArray(component_array)
+            components = MutableSparseNDimArray(components)
             for index in self.indices:
-                if component_array[index]!=0:
-                    self.tensor[index] = component_array[index]
+                if components[index]!=0:
+                    self.tensor[index] = components[index]
                 else:
                     self.indices.remove(index)
 
