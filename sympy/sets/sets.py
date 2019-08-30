@@ -8,11 +8,12 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import (iterable, with_metaclass,
     ordered, range, PY3, is_sequence)
 from sympy.core.cache import cacheit
+from sympy.core.decorators import deprecated
 from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
 from sympy.core.function import FunctionClass
-from sympy.core.logic import fuzzy_bool, fuzzy_or
+from sympy.core.logic import fuzzy_bool, fuzzy_or, fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
@@ -55,10 +56,31 @@ class Set(Basic):
     is_ProductSet = False
     is_Union = False
     is_Intersection = None
-    is_EmptySet = None
     is_UniversalSet = None
     is_Complement = None
     is_ComplexRegion = False
+
+    @property
+    def is_empty(self):
+        """
+        Property method to check whether a set is empty.
+        Returns ``True``, ``False`` or ``None`` (if unknown).
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, var
+        >>> x = var('x', real=True)
+        >>> Interval(x, x + 1).is_empty
+        False
+        """
+        return None
+
+    @property
+    @deprecated(useinstead="is S.EmptySet or is_empty",
+            issue=16946, deprecated_since_version="1.5")
+    def is_EmptySet(self):
+        return None
 
     @staticmethod
     def _infimum_key(expr):
@@ -519,7 +541,7 @@ class Set(Basic):
     def is_closed(self):
         """
         A property method to check whether a set is closed. A set is closed
-        if it's complement is an open set.
+        if its complement is an open set.
 
         Examples
         ========
@@ -747,6 +769,10 @@ class ProductSet(Set):
             raise TypeError("Not all constituent sets are iterable")
 
     @property
+    def is_empty(self):
+        return fuzzy_or(s.is_empty for s in self.sets)
+
+    @property
     def _measure(self):
         measure = 1
         for set in self.sets:
@@ -842,6 +868,8 @@ class Interval(Set, EvalfMixin):
             left_open = true
         if end == S.Infinity:
             right_open = true
+        if start == S.Infinity or end == S.NegativeInfinity:
+            return S.EmptySet
 
         return Basic.__new__(cls, start, end, left_open, right_open)
 
@@ -931,6 +959,14 @@ class Interval(Set, EvalfMixin):
 
         """
         return self._args[3]
+
+    @property
+    def is_empty(self):
+        if self.left_open or self.right_open:
+            cond = self.start >= self.end  # One/both bounds open
+        else:
+            cond = self.start > self.end  # Both bounds closed
+        return fuzzy_bool(cond)
 
     def _complement(self, other):
         if other == S.Reals:
@@ -1101,6 +1137,10 @@ class Union(Set, LatticeOp, EvalfMixin):
         # end points.
         from sympy.functions.elementary.miscellaneous import Max
         return Max(*[set.sup for set in self.args])
+
+    @property
+    def is_empty(self):
+        return fuzzy_and(set.is_empty for set in self.args)
 
     @property
     def _measure(self):
@@ -1388,7 +1428,7 @@ class Complement(Set, EvalfMixin):
     r"""Represents the set difference or relative complement of a set with
     another set.
 
-    `A - B = \{x \in A| x \\notin B\}`
+    `A - B = \{x \in A \mid x \notin B\}`
 
 
     Examples
@@ -1466,8 +1506,14 @@ class EmptySet(with_metaclass(Singleton, Set)):
 
     .. [1] https://en.wikipedia.org/wiki/Empty_set
     """
-    is_EmptySet = True
+    is_empty = True
     is_FiniteSet = True
+
+    @property
+    @deprecated(useinstead="is S.EmptySet or is_empty",
+            issue=16946, deprecated_since_version="1.5")
+    def is_EmptySet(self):
+        return True
 
     @property
     def _measure(self):
@@ -1526,6 +1572,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     """
 
     is_UniversalSet = True
+    is_empty = False
 
     def _complement(self, other):
         return S.EmptySet
@@ -1577,6 +1624,7 @@ class FiniteSet(Set, EvalfMixin):
     """
     is_FiniteSet = True
     is_iterable = True
+    is_empty = False
 
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
@@ -1779,7 +1827,7 @@ def imageset(*args):
     unevaluated ImageSet object.
 
     .. math::
-        { f(x) | x \in self }
+        \{ f(x) \mid x \in \mathrm{self} \}
 
     Examples
     ========

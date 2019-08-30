@@ -656,19 +656,18 @@ def _get_doctest_blacklist():
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
+        "sympy/galgebra.py", # no longer part of SymPy
+        "sympy/this.py", # prints text
         "sympy/physics/gaussopt.py", # raises deprecation warning
-        "sympy/galgebra.py", # raises ImportError
-        "sympy/this.py", # Prints text to the terminal
         "sympy/matrices/densearith.py", # raises deprecation warning
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
-        "sympy/physics/unitsystems.py", # raises deprecation warning
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
         "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
         "sympy/parsing/latex/_antlr/latexparser.py", # generated code
-        "sympy/integrals/rubi/rubi.py"
+        "sympy/integrals/rubi/rubi.py",
     ])
     # autolev parser tests
     num = 12
@@ -731,7 +730,7 @@ def _get_doctest_blacklist():
 
     # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
-        "sympy/conftest.py",
+        "sympy/conftest.py", # Python 2.7 issues
         "sympy/utilities/benchmarking.py"
     ])
 

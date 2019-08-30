@@ -2902,7 +2902,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             base = value_res.base_set
                             imgset_yes = (dummy_n, base)
                 # update eq with everything that is known so far
-                eq2 = eq.subs(res)
+                eq2 = eq.subs(res).expand()
                 unsolved_syms = _unsolved_syms(eq2, sort=True)
                 if not unsolved_syms:
                     if res:

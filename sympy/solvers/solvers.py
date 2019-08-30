@@ -2691,7 +2691,15 @@ def _tsolve(eq, sym, **flags):
 
                 # Check for duplicate solutions
                 def equal(expr1, expr2):
-                    return expr1.equals(expr2) or nsimplify(expr1) == nsimplify(expr2)
+                    _ = Dummy()
+                    eq = checksol(expr1 - _, _, expr2)
+                    if eq is None:
+                        if nsimplify(expr1) != nsimplify(expr2):
+                            return False
+                        # they might be coincidentally the same
+                        # so check more rigorously
+                        eq = expr1.equals(expr2)
+                    return eq
 
                 # Guess a rational exponent
                 e_rat = nsimplify(log(abs(rhs))/log(abs(lhs.base)))
@@ -2739,7 +2747,12 @@ def _tsolve(eq, sym, **flags):
                     check.extend([sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))])
                     if e_l*d != 1:
                         check.extend(_solve(b_l**n - rhs**(e_l*d), sym, **flags))
-                sol.extend(s for s in check if eq.subs(sym, s).equals(0))
+                for s in check:
+                    ok = checksol(eq, sym, s)
+                    if ok is None:
+                        ok = eq.subs(sym, s).equals(0)
+                    if ok:
+                        sol.append(s)
                 return list(ordered(set(sol)))
 
         elif lhs.is_Function and len(lhs.args) == 1:
@@ -2781,11 +2794,18 @@ def _tsolve(eq, sym, **flags):
             try:
                 poly = lhs.as_poly()
                 g = _filtered_gens(poly, sym)
-                sols = _solve_lambert(lhs - rhs, sym, g)
+                _eq = lhs - rhs
+                sols = _solve_lambert(_eq, sym, g)
+                # use a simplified form if it satisfies eq
+                # and has fewer operations
                 for n, s in enumerate(sols):
                     ns = nsimplify(s)
-                    if ns != s and eq.subs(sym, ns).equals(0):
-                        sols[n] = ns
+                    if ns != s and ns.count_ops() <= s.count_ops():
+                        ok = checksol(_eq, sym, ns)
+                        if ok is None:
+                            ok = _eq.subs(sym, ns).equals(0)
+                        if ok:
+                            sols[n] = ns
                 return sols
             except NotImplementedError:
                 # maybe it's a convoluted function

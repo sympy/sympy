@@ -4,20 +4,19 @@ from collections import defaultdict
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
+from sympy.assumptions.cnf import AND, OR, to_NNF
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
 from sympy.core.compatibility import MutableMapping
 from sympy.core.numbers import ImaginaryUnit
-from sympy.core.logic import fuzzy_or, fuzzy_and
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import Abs
-from sympy.logic.boolalg import (Equivalent, Implies, And, Or,
-    BooleanFunction, Not)
+from sympy.logic.boolalg import (Equivalent, Implies, BooleanFunction)
 from sympy.matrices.expressions import MatMul
 
 # APIs here may be subject to change
 
-# XXX: Better name?
+
 class UnevaluatedOnFree(BooleanFunction):
     """
     Represents a Boolean function that remains unevaluated on free predicates
@@ -68,13 +67,19 @@ class UnevaluatedOnFree(BooleanFunction):
         obj.expr = predicate_args.pop()
         obj.pred = arg.xreplace(Transform(lambda e: e.func, lambda e:
             isinstance(e, AppliedPredicate)))
-        applied = obj.apply()
+        applied = obj.apply(obj.expr)
         if applied is None:
             return obj
         return applied
 
-    def apply(self):
-        return
+    def apply(self, expr=None):
+        if expr is None:
+            return
+        pred = to_NNF(self.pred)
+        return self._eval_apply(expr, pred)
+
+    def _eval_apply(self, expr, pred):
+        return None
 
 
 class AllArgs(UnevaluatedOnFree):
@@ -89,7 +94,6 @@ class AllArgs(UnevaluatedOnFree):
 
     Example
     =======
-
     >>> from sympy.assumptions.sathandlers import AllArgs
     >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
@@ -97,11 +101,13 @@ class AllArgs(UnevaluatedOnFree):
     >>> a
     AllArgs(Q.negative | Q.positive)
     >>> a.rcall(x*y)
-    (Q.negative(x) | Q.positive(x)) & (Q.negative(y) | Q.positive(y))
+    ((Literal(Q.negative(x), False) | Literal(Q.positive(x), False)) & (Literal(Q.negative(y), False) | \
+    Literal(Q.positive(y), False)))
+
     """
 
-    def apply(self):
-        return And(*[self.pred.rcall(arg) for arg in self.expr.args])
+    def _eval_apply(self, expr, pred):
+        return AND(*[pred.rcall(arg) for arg in expr.args])
 
 
 class AnyArgs(UnevaluatedOnFree):
@@ -116,7 +122,6 @@ class AnyArgs(UnevaluatedOnFree):
 
     Example
     =======
-
     >>> from sympy.assumptions.sathandlers import AnyArgs
     >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
@@ -124,11 +129,13 @@ class AnyArgs(UnevaluatedOnFree):
     >>> a
     AnyArgs(Q.negative & Q.positive)
     >>> a.rcall(x*y)
-    (Q.negative(x) & Q.positive(x)) | (Q.negative(y) & Q.positive(y))
+    ((Literal(Q.negative(x), False) & Literal(Q.positive(x), False)) | (Literal(Q.negative(y), False) & \
+    Literal(Q.positive(y), False)))
+
     """
 
-    def apply(self):
-        return Or(*[self.pred.rcall(arg) for arg in self.expr.args])
+    def _eval_apply(self, expr, pred):
+        return OR(*[pred.rcall(arg) for arg in expr.args])
 
 
 class ExactlyOneArg(UnevaluatedOnFree):
@@ -144,7 +151,6 @@ class ExactlyOneArg(UnevaluatedOnFree):
 
     Example
     =======
-
     >>> from sympy.assumptions.sathandlers import ExactlyOneArg
     >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
@@ -152,17 +158,19 @@ class ExactlyOneArg(UnevaluatedOnFree):
     >>> a
     ExactlyOneArg(Q.positive)
     >>> a.rcall(x*y)
-    (Q.positive(x) & ~Q.positive(y)) | (Q.positive(y) & ~Q.positive(x))
+    ((Literal(Q.positive(x), False) & Literal(Q.positive(y), True)) | (Literal(Q.positive(x), True) & \
+    Literal(Q.positive(y), False)))
+
     """
-    def apply(self):
-        expr = self.expr
-        pred = self.pred
+
+    def _eval_apply(self, expr, pred):
         pred_args = [pred.rcall(arg) for arg in expr.args]
         # Technically this is xor, but if one term in the disjunction is true,
         # it is not possible for the remainder to be true, so regular or is
         # fine in this case.
-        return Or(*[And(pred_args[i], *map(Not, pred_args[:i] +
-            pred_args[i+1:])) for i in range(len(pred_args))])
+        res = OR(*[AND(pred_args[i], *[~lit for lit in pred_args[:i] +
+            pred_args[i+1:]]) for i in range(len(pred_args))])
+        return res
         # Note: this is the equivalent cnf form. The above is more efficient
         # as the first argument of an implication, since p >> q is the same as
         # q | ~p, so the the ~ will convert the Or to and, and one just needs
@@ -226,15 +234,18 @@ def evaluate_old_assump(pred):
 
 
 class CheckOldAssump(UnevaluatedOnFree):
-    def apply(self):
-        return Equivalent(self.args[0], evaluate_old_assump(self.args[0]))
+    def apply(self, expr=None, is_Not=False):
+        arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
+        res = Equivalent(arg, evaluate_old_assump(arg))
+        return to_NNF(res)
 
 
 class CheckIsPrime(UnevaluatedOnFree):
-    def apply(self):
+    def apply(self, expr=None, is_Not=False):
         from sympy import isprime
-        return Equivalent(self.args[0], isprime(self.expr))
-
+        arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
+        res = Equivalent(arg, isprime(expr))
+        return to_NNF(res)
 
 class CustomLambda(object):
     """
@@ -245,8 +256,8 @@ class CustomLambda(object):
     def __init__(self, lamda):
         self.lamda = lamda
 
-    def rcall(self, *args):
-        return self.lamda(*args)
+    def apply(self, *args):
+        return to_NNF(self.lamda(*args))
 
 
 class ClassFactRegistry(MutableMapping):

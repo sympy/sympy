@@ -1353,7 +1353,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     [29, 43, 57]
     >>> A = randMatrix(3, seed=1)
     >>> B = randMatrix(3, seed=2)
-    >>> A == B # doctest:+SKIP
+    >>> A == B
     False
     >>> A == randMatrix(3, seed=1)
     True

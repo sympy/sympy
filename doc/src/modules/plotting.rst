@@ -1,5 +1,6 @@
-Plotting Module
-===============
+========
+Plotting
+========
 
 .. module:: sympy.plotting.plot
 
@@ -87,8 +88,8 @@ Series Classes
 
 
 
-Pyglet Plotting Module
-======================
+Pyglet Plotting
+---------------
 
 .. module:: sympy.plotting.pygletplot
 

@@ -1,5 +1,6 @@
+========
 Simplify
-********
+========
 
 .. currentmodule:: sympy.simplify.simplify
 

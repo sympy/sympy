@@ -1573,9 +1573,9 @@ def test_lambert_multivariate():
     assert solve(eq) == [LambertW(3*exp(-LambertW(3)))]
     # coverage test
     raises(NotImplementedError, lambda: solve(x - sin(x)*log(y - x), x))
-    assert solve(x**3 - 3**x, x) == [3, -3*LambertW(-log(3)/3)/log(3)]
-    assert set(solve(3*log(x) - x*log(3))) == set(  # 2.478... and 3
-        [3, -3*LambertW(-log(3)/3)/log(3)])
+    ans = [3, -3*LambertW(-log(3)/3)/log(3)]  # 3 and 2.478...
+    assert solve(x**3 - 3**x, x) == ans
+    assert set(solve(3*log(x) - x*log(3))) == set(ans)
     assert solve(LambertW(2*x) - y, x) == [y*exp(y)/2]
 
 
@@ -1599,7 +1599,9 @@ def test_lambert_bivariate():
     assert solve((a/x + exp(x/2)).diff(x), x) == \
             [4*LambertW(-sqrt(2)*sqrt(a)/4), 4*LambertW(sqrt(2)*sqrt(a)/4)]
     assert solve((1/x + exp(x/2)).diff(x), x) == \
-    [4*LambertW(-sqrt(2)/4), 4*LambertW(sqrt(2)/4), 4*LambertW(-sqrt(2)/4, -1)]
+        [4*LambertW(-sqrt(2)/4),
+        4*LambertW(sqrt(2)/4),  # nsimplifies as 2*2**(141/299)*3**(206/299)*5**(205/299)*7**(37/299)/21
+        4*LambertW(-sqrt(2)/4, -1)]
     assert solve(x*log(x) + 3*x + 1, x) == \
             [exp(-3 + LambertW(-exp(3)))]
     assert solve(-x**2 + 2**x, x) == [2, 4, -2*LambertW(log(2)/2)/log(2)]
@@ -1658,6 +1660,9 @@ def test_lambert_bivariate():
                 6*LambertW(S(1)/6 + sqrt(3)*I/6), 6*LambertW(-S(1)/3, -1)]
     assert solve(x**2 - y**2/exp(x), x, y, dict=True) == \
                 [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
+    # this is slow but not exceedingly slow
+    assert solve((x**3)**(x/2) + pi/2, x) == [
+        exp(LambertW(-2*log(2)/3 + 2*log(pi)/3 + 2*I*pi/3))]
 
 
 def test_rewrite_trig():
@@ -2081,6 +2086,14 @@ def test_issue_10933():
 def test_Abs_handling():
     x = symbols('x', real=True)
     assert solve(abs(x/y), x) == [0]
+
+
+def test_issue_7982():
+    x = Symbol('x')
+    # Test that no exception happens
+    assert solve([2*x**2 + 5*x + 20 <= 0, x >= 1.5], x) is S.false
+    # From #8040
+    assert solve([x**3 - 8.08*x**2 - 56.48*x/5 - 106 >= 0, x - 1 <= 0], [x]) is S.false
 
 
 def test_issue_14645():

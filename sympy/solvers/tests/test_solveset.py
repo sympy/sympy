@@ -178,6 +178,18 @@ def test_issue_11536():
     assert solveset(0**x - 1, x, S.Reals) == FiniteSet(0)
 
 
+def test_issue_17479():
+    import sympy as sb
+    from sympy.solvers.solveset import nonlinsolve
+    x, y, z = sb.symbols("x, y, z")
+    f = (x**2 + y**2)**2 + (x**2 + z**2)**2 - 2*(2*x**2 + y**2 + z**2)
+    fx = sb.diff(f, x)
+    fy = sb.diff(f, y)
+    fz = sb.diff(f, z)
+    sol = nonlinsolve([fx, fy, fz], [x, y, z])
+    assert len(sol) == 18
+
+
 def test_is_function_class_equation():
     from sympy.abc import x, a
     assert _is_function_class_equation(TrigonometricFunction,
