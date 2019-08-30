@@ -579,7 +579,6 @@ class Integral(AddWithLimits):
                             continue
 
             if not isinstance(antideriv, Integral) and antideriv is not None:
-                sym = xab[0]
                 for atan_term in antideriv.atoms(atan):
                     atan_arg = atan_term.args[0]
                     # Checking `atan_arg` to be linear combination of `tan` or `cot`
@@ -1046,7 +1045,6 @@ class Integral(AddWithLimits):
                 except NotImplementedError:
                     from sympy.integrals.meijerint import _debug
                     _debug('NotImplementedError from meijerint_definite')
-                    res = None
                 if h is not None:
                     parts.append(coeff * h)
                     continue

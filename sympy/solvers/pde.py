@@ -163,8 +163,6 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
 
     """
 
-    given_hint = hint  # hint given by the user.
-
     if not solvefun:
         solvefun = Function('F')
 
@@ -821,7 +819,6 @@ def _simplify_variable_coeff(sol, syms, func, funcarg):
     else:
         fname = func.__name__
         for key, sym in enumerate(syms):
-            tempfun = Function(fname + str(key))
             final = sol.subs(sym, func(funcarg))
 
     return simplify(final.subs(eta, funcarg))

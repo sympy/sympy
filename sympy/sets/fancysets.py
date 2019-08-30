@@ -422,8 +422,6 @@ class ImageSet(Set):
                 # values are still in the set.
                 dom = self.base_set
                 for e, o in zip(L.expr, other):
-                    msgset = dom
-                    other = e - o
                     dom = dom.intersection(solveset(e - o, x, domain=dom))
                     if not dom:
                         # there is no solution in common

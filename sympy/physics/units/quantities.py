@@ -151,7 +151,6 @@ class Quantity(AtomicExpr):
         if scale_factor == self.scale_factor:
             return self
         return None
-        q = self.func(self.name, self.abbrev)
 
     def _eval_subs(self, old, new):
         if isinstance(new, Quantity) and self != old:

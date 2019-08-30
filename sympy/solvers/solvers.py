@@ -1017,7 +1017,6 @@ def solve(f, *symbols, **flags):
         return []
 
     w = Dummy('w')
-    piece = Lambda(w, Piecewise((w, Ge(w, 0)), (-w, True)))
     for i, fi in enumerate(f):
         # Abs
         fi = fi.replace(Abs, lambda arg:
@@ -2104,7 +2103,6 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     symbols = symbols.difference(exclude)
     if not symbols:
         return S.Zero, S.One
-    dfree = d.free_symbols
 
     # derivatives are easy to do but tricky to analyze to see if they
     # are going to disallow a linear solution, so for simplicity we
@@ -2785,7 +2783,6 @@ def _tsolve(eq, sym, **flags):
                 gisimp = powdenest(expand_power_exp(gi))
                 if gisimp.is_Pow and sym in gisimp.exp.free_symbols:
                     up_or_log.add(gi)
-        down = g.difference(up_or_log)
         eq_down = expand_log(expand_power_exp(eq)).subs(
             dict(list(zip(up_or_log, [0]*len(up_or_log)))))
         eq = expand_power_exp(factor(eq_down, deep=True) + (eq - eq_down))
@@ -3293,7 +3290,6 @@ def unrad(eq, *syms, **flags):
     (_p**3 + _p**2 - 2, [_p, _p**6 - x])
 
     """
-    _inv_error = 'cannot get an analytical solution for the inversion'
 
     uflags = dict(check=False, simplify=False)
 

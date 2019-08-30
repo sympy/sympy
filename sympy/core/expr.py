@@ -3734,7 +3734,7 @@ class Expr(Basic, EvalfMixin):
             return i*m
 
         digits_to_decimal = _mag(x)  # _mag(12) = 2, _mag(.012) = -1
-        allow = digits_needed = digits_to_decimal + p
+        allow = digits_to_decimal + p
         precs = [f._prec for f in x.atoms(Float)]
         dps = prec_to_dps(max(precs)) if precs else None
         if dps is None:

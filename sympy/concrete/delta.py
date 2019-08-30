@@ -220,8 +220,6 @@ def deltaproduct(f, limit):
                 return deltaproduct(g, limit)
         return product(f, limit)
 
-    from sympy import Eq
-    c = Eq(limit[2], limit[1] - 1)
     return _remove_multiple_delta(f.subs(limit[0], limit[1])*KroneckerDelta(limit[2], limit[1])) + \
         S.One*_simplify_delta(KroneckerDelta(limit[2], limit[1] - 1))
 

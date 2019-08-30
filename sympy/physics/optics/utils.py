@@ -117,12 +117,12 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     # check if an incidence angle was supplied instead of a ray
     try:
         angle_of_incidence = float(incident)
-    except TypeError as e:
+    except TypeError:
         angle_of_incidence = None
 
     try:
         critical_angle_ = critical_angle(medium1, medium2)
-    except (ValueError, TypeError) as e:
+    except (ValueError, TypeError):
         critical_angle_ = None
 
     if angle_of_incidence is not None:
@@ -339,7 +339,7 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
                                  plane=plane)
     try:
         angle_of_incidence = Float(incident)
-    except TypeError as e:
+    except TypeError:
         angle_of_incidence = None
 
     if angle_of_incidence is not None:

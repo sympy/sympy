@@ -262,7 +262,7 @@ def _walsh_hadamard_transform(seq, inverse=False):
     a += [S.Zero]*(n - len(a))
     h = 2
     while h <= n:
-        hf, ut = h // 2, n // h
+        hf = h // 2
         for i in range(0, n, h):
             for j in range(hf):
                 u, v = a[i + j], a[i + j + hf]
