@@ -2,13 +2,15 @@ from __future__ import print_function, division
 
 from functools import wraps
 
-from sympy import S, pi, I, Rational, Wild, cacheit, sympify
+from sympy import Add, S, pi, I, Rational, Wild, cacheit, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.power import Pow
 from sympy.core.compatibility import range
+from sympy.functions import Piecewise, arg
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import re, im
 from sympy.functions.special.gamma_functions import gamma
@@ -200,10 +202,28 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
+    def _eval_as_leading_term(self, x):
+        nu, z = self.args
+        arg = z.as_leading_term(x)
+        if x in arg.free_symbols:
+            return z**nu
+        else:
+            return self.func(*self.args)
+
     def _eval_is_extended_real(self):
         nu, z = self.args
         if nu.is_integer and z.is_extended_real:
             return True
+
+    def _eval_nseries(self, x, n, logx):
+        nu, z = self.args
+
+        if z.limit(x, 0) is S.Zero:
+            s = [(-1)**k * z**(2 * k) / (factorial(k) * factorial(nu + k) * 2**(2 * k))
+                for k in range(0, n)] + [Order(z**n)]
+            return (z/2)**nu * Add(*s)  # removeO fails
+
+        return super(besselj, self)._eval_nseries(x, n, logx)
 
     def _sage_(self):
         import sage.all as sage
@@ -283,6 +303,17 @@ class bessely(BesselBase):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
+
+    def _eval_nseries(self, x, n, logx):
+        z = self.argument
+        nu = self.order
+
+        if z.limit(x, 0) is S.Zero and nu == 0:
+            s = [(-1)**(k+1) * harmonic(k) * (z**2/4)**k / factorial(k)**2
+                    for k in range(0, n)] + [Order(z**n)]
+            return (2/pi) * ((log(z/2) + S.EulerGamma)*besselj(0, z) + Add(*s))
+
+        return super(bessely, self)._eval_nseries(x, n, logx)
 
     def _sage_(self):
         import sage.all as sage

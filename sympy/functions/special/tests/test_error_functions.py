@@ -87,6 +87,9 @@ def test_erf_series():
     assert erf(x).series(x, 0, 7) == 2*x/sqrt(pi) - \
         2*x**3/3/sqrt(pi) + x**5/5/sqrt(pi) + O(x**7)
 
+    assert erf(x).series(x, oo) == \
+        -(3/(4*x**5) - 1/(2*x**3) + 1/x + O(x**(-6), (x, oo)))*exp(-x**2)/sqrt(pi) + 1
+
 
 def test_erf_evalf():
     assert abs( erf(Float(2.0)) - 0.995322265 ) < 1E-8 # XXX
@@ -160,6 +163,9 @@ def test_erfc_series():
     assert erfc(x).series(x, 0, 7) == 1 - 2*x/sqrt(pi) + \
         2*x**3/3/sqrt(pi) - x**5/5/sqrt(pi) + O(x**7)
 
+    assert erfc(x).series(x, oo) == \
+        (3/(4*x**5) - 1/(2*x**3) + 1/x + O(x**(-6), (x, oo)))*exp(-x**2)/sqrt(pi)
+
 
 def test_erfc_evalf():
     assert abs( erfc(Float(2.0)) - 0.00467773 ) < 1E-8 # XXX
@@ -218,6 +224,9 @@ def test_erfi():
 def test_erfi_series():
     assert erfi(x).series(x, 0, 7) == 2*x/sqrt(pi) + \
         2*x**3/3/sqrt(pi) + x**5/5/sqrt(pi) + O(x**7)
+
+    assert erfi(x).series(x, oo) == \
+        (3/(4*x**5) + 1/(2*x**3) + 1/x + O(x**(-6), (x, oo)))*exp(x**2)/sqrt(pi) - I
 
 
 def test_erfi_evalf():
@@ -382,6 +391,8 @@ def test_ei():
     assert Ei(x).series(x) == EulerGamma + log(x) + x + x**2/4 + \
         x**3/18 + x**4/96 + x**5/600 + O(x**6)
     assert Ei(x).series(x, 1, 3) == Ei(1) + E*(x - 1) + O((x - 1)**3, (x, 1))
+    assert Ei(x).series(x, oo) == \
+        (120/x**5 + 24/x**4 + 6/x**3 + 2/x**2 + 1/x + 1 + O(x**(-6), (x, oo)))*exp(x)/x
 
     assert str(Ei(cos(2)).evalf(n=10)) == '-0.6760647401'
     raises(ArgumentIndexError, lambda: Ei(x).fdiff(2))
@@ -436,6 +447,10 @@ def test_expint():
     assert expint(4, z).series(z) == S(1)/3 - z/2 + z**2/2 + \
         z**3*(log(z)/6 - S(11)/36 + EulerGamma/6) - z**4/24 + \
         z**5/240 + O(z**6)
+
+    assert expint(n, x).series(x, oo, n=3) == \
+        (n*(n + 1)/x**2 - n/x + 1 + O(x**(-3), (x, oo)))*exp(-x)/x
+
     assert expint(z, y).series(z, 0, 2) == exp(-y)/y - z*meijerg(((), (1, 1)),
                                   ((0, 0, 1), ()), y)/y + O(z**2)
     raises(ArgumentIndexError, lambda: expint(x, y).fdiff(3))
@@ -515,6 +530,8 @@ def test_li():
                                       meijerg(((), (1,)), ((0, 0), ()), -log(z)))
 
     assert gruntz(1/li(z), z, oo) == 0
+    assert li(z).series(z) == log(z)**5/600 + log(z)**4/96 + log(z)**3/18 + log(z)**2/4 + \
+            log(z) + log(log(z)) + EulerGamma
     raises(ArgumentIndexError, lambda: li(z).fdiff(2))
 
 
@@ -528,6 +545,8 @@ def test_Li():
 
     assert gruntz(1/Li(z), z, oo) == 0
     assert Li(z).rewrite(li) == li(z) - li(2)
+    assert Li(z).series(z) == \
+        log(z)**5/600 + log(z)**4/96 + log(z)**3/18 + log(z)**2/4 + log(z) + log(log(z)) - li(2) + EulerGamma
     raises(ArgumentIndexError, lambda: Li(z).fdiff(2))
 
 
@@ -573,6 +592,9 @@ def test_si():
     assert Si(x).nseries(x, 1, n=3) == \
         Si(1) + (x - 1)*sin(1) + (x - 1)**2*(-sin(1)/2 + cos(1)/2) + O((x - 1)**3, (x, 1))
 
+    assert Si(x).series(x, oo) == pi/2 + (-(120/x**5 - 6/x**3 + 1/x + O(x**(-7), (x, oo)))*sin(x) -\
+                                (-720/x**6 + 24/x**4 - 2/x**2 + 1 + O(x**(-7), (x, oo)))*cos(x))/x
+
     t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
 
@@ -617,6 +639,9 @@ def test_ci():
         EulerGamma + log(x) - x**2/4 + x**4/96 + O(x**5)
     assert Chi(x).nseries(x, n=4) == \
         EulerGamma + log(x) + x**2/4 + x**4/96 + O(x**5)
+
+    assert Ci(x).series(x, oo) == (-(120/x**5 - 6/x**3 + 1/x + O(x**(-7), (x, oo)))*cos(x) +\
+                                (-720/x**6 + 24/x**4 - 2/x**2 + 1 + O(x**(-7), (x, oo)))*sin(x))/x
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
     assert Ci(x).rewrite(uppergamma) == -expint(1, x*exp_polar(-I*pi/2))/2 -\
                                         expint(1, x*exp_polar(I*pi/2))/2
