@@ -17,7 +17,8 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function,
+                   ImmutableMatrix, Integral)
 from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
@@ -459,6 +460,33 @@ class IndependentProductPSpace(ProductPSpace):
 
         return space(domain, density)
 
+class DependentPSpace(PSpace):
+
+    @staticmethod
+    def _create_MutlivariateNormalDistribution(syms, assumps):
+        from sympy.stats.symbolic_probability import Covariance, Variance
+        from sympy.stats.crv_types import Normal
+        assumps = assumps & And.fromiter([Eq(Variance(sym), sym.pspace.distribution.args[1])
+                                            for sym in syms])
+        xrep_dict = {eq.lhs: eq.rhs for eq in assumps.args}
+        mu = [sym.pspace.distribution.args[0] for sym in syms]
+        sigma = ImmutableMatrix(
+                [[Covariance(s1, s2).doit() for s2 in syms] for s1 in syms]
+                ).xreplace(xrep_dict)
+        return Normal('_', mu, sigma).pspace.distribution
+
+
+    @staticmethod
+    def compute_density(expr, assumps):
+        syms = list(expr.free_symbols)
+        z_dist = DependentPSpace._create_MutlivariateNormalDistribution(syms, assumps)
+        subs_syms = [sym.symbol for sym in syms]
+        z_pdf = z_dist.pdf(*subs_syms)
+        rv = Dummy('rv', real=True)
+        expr = expr.subs({sym: sym.symbol for sym in syms})
+        return Integral(z_pdf * DiracDelta(rv - expr), *[(subs_sym, S.NegativeInfinity, S.Infinity)
+                        for subs_sym in subs_syms]).doit()
+
 class ProductDomain(RandomDomain):
     """
     A domain resulting from the merger of two independent domains
@@ -821,7 +849,15 @@ class Density(Basic):
         from sympy.stats.joint_rv import JointPSpace
         from sympy.stats.frv import SingleFiniteDistribution
         from sympy.stats.random_matrix_models import RandomMatrixPSpace
+        from sympy.stats.symbolic_probability import Covariance
         expr, condition = self.expr, self.condition
+        dependent_hints = [Covariance]
+        if condition is not None and _sympify(condition).atoms(*dependent_hints):
+            if isinstance(condition, Eq):
+                assumps = condition
+            else:
+                assumps = And.fromiter(cond for cond in condition.args if cond.has(*dependent_hints))
+            return DependentPSpace.compute_density(_sympify(expr), assumps)
         if _sympify(expr).has(RandomMatrixSymbol):
             return pspace(expr).compute_density(expr)
         if isinstance(expr, SingleFiniteDistribution):

@@ -1,11 +1,12 @@
 from sympy import (S, Symbol, symbols, Interval, FallingFactorial,
                    Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-                   DiracDelta, log, pi)
+                   DiracDelta, log, pi, Dummy, erfc, sqrt, exp)
 from sympy.core.compatibility import range
 from sympy.core.numbers import comp
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
                          density, given, independent, dependent, where, pspace, factorial_moment,
-                         random_symbols, sample, Geometric, Binomial, Poisson, Hypergeometric)
+                         random_symbols, sample, Geometric, Binomial, Poisson, Hypergeometric,
+                         Covariance)
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
                             RandomSymbol, PSpace)
@@ -191,6 +192,15 @@ def test_dependent_finite():
 
     XX, YY = given(Tuple(X, Y), X + Y > 5)  # Create a dependency
     assert dependent(XX, YY)
+
+def test_dependent_pspace():
+    X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
+    assumps = Eq(Covariance(X, Y), S(1)/2)
+    rv = Dummy('rv', real=True)
+    assert density(X + Y, assumps).dummy_eq(
+        sqrt(6)*(2 - erfc(sqrt(2)*rv/2))*exp(-rv**2/6)/(12*sqrt(pi)) +
+        sqrt(6)*exp(-rv**2/6)*erfc(sqrt(2)*rv/2)/(12*sqrt(pi))
+    )
 
 
 def test_normality():
