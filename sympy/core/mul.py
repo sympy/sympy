@@ -1401,6 +1401,9 @@ class Mul(Expr, AssocOp):
                 saw_NON = True
             elif t.is_extended_nonnegative:
                 saw_NON = True
+            # FIXME: is_positive/is_negative is False doesn't take account of
+            # Symbol('x', infinite=True, extended_real=True) which has
+            # e.g. is_positive is False but has uncertain sign.
             elif t.is_positive is False:
                 sign = -sign
                 if saw_NOT:
