@@ -25,12 +25,17 @@ def test_quaternion_construction():
 def test_quaternion_complex_real_addition():
     a = symbols("a", complex=True)
     b = symbols("b", real=True)
+    # This symbol is not complex:
+    c = symbols("c", commutative=False)
 
     q = Quaternion(x, y, z, w)
     assert a + q == Quaternion(x + re(a), y + im(a), z, w)
     assert 1 + q == Quaternion(1 + x, y, z, w)
     assert I + q == Quaternion(x, 1 + y, z, w)
     assert b + q == Quaternion(x + b, y, z, w)
+    raises(ValueError, lambda: c + q)
+    raises(ValueError, lambda: q * c)
+    raises(ValueError, lambda: c * q)
 
     assert -q == Quaternion(-x, -y, -z, -w)
 
