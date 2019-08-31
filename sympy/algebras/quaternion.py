@@ -259,8 +259,7 @@ class Quaternion(Expr):
             elif q2.is_commutative:
                 return Quaternion(q1.a + q2, q1.b, q1.c, q1.d)
             else:
-                # q2 is something strange, do not evaluate:
-                return Add(q1, q2)
+                raise ValueError("Only commutative expressions can be added with a Quaternion.")
 
         return Quaternion(q1.a + q2.a, q1.b + q2.b, q1.c + q2.c, q1.d
                           + q2.d)
@@ -361,7 +360,7 @@ class Quaternion(Expr):
             elif q1.is_commutative:
                 return Quaternion(q1 * q2.a, q1 * q2.b, q1 * q2.c, q1 * q2.d)
             else:
-                return Mul(q1, q2)
+                raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
@@ -370,7 +369,7 @@ class Quaternion(Expr):
             elif q2.is_commutative:
                 return Quaternion(q2 * q1.a, q2 * q1.b, q2 * q1.c, q2 * q1.d)
             else:
-                return Mul(q1, q2)
+                raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
         return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
                           q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
