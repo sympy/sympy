@@ -672,8 +672,6 @@ class log(Function):
                         return S.Pi * I * S.Half + cls(coeff * i_)
                     elif i_.is_negative:
                         return -S.Pi * I * S.Half + cls(coeff * -i_)
-                    elif i_.is_zero:
-                        return zoo
                 else:
                     from sympy.simplify import ratsimp
                     # Check for arguments involving rational multiples of pi

@@ -349,7 +349,7 @@ class Quaternion(Expr):
         if not isinstance(q1, Quaternion):
             if q2.real_field:
                 if q1.is_complex:
-                    return q2 * Quaternion(re(q1), im(q1), 0, 0)
+                    return Quaternion(re(q1), im(q1), 0, 0) * q2
                 else:
                     return Mul(q1, q2)
             else:

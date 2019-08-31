@@ -676,6 +676,9 @@ def test_is_zero():
         assert func(0, (x, 1, 1)).is_zero is True
         assert func(x, (x, 1, 1)).is_zero is None
 
+    assert Sum(0, (x, 1, 0)).is_zero is True
+    assert Product(0, (x, 1, 0)).is_zero is False
+
 
 def test_is_number():
     # is number should not rely on evaluation or assumptions,
@@ -1163,6 +1166,140 @@ def test_exceptions():
     raises(ReorderError, lambda: S.reorder_limit(0, 1))
     S = Sum(x*y, (x, a, b), (y, 1, 4))
     raises(NotImplementedError, lambda: S.is_convergent())
+
+
+def test_sumproducts_assumptions():
+    M = Symbol('M', integer=True, positive=True)
+
+    m = Symbol('m', integer=True)
+    for func in [Sum, Product]:
+        assert func(m, (m, -M, M)).is_positive is None
+        assert func(m, (m, -M, M)).is_nonpositive is None
+        assert func(m, (m, -M, M)).is_negative is None
+        assert func(m, (m, -M, M)).is_nonnegative is None
+        assert func(m, (m, -M, M)).is_finite is True
+
+    m = Symbol('m', integer=True, nonnegative=True)
+    for func in [Sum, Product]:
+        assert func(m, (m, 0, M)).is_positive is None
+        assert func(m, (m, 0, M)).is_nonpositive is None
+        assert func(m, (m, 0, M)).is_negative is False
+        assert func(m, (m, 0, M)).is_nonnegative is True
+        assert func(m, (m, 0, M)).is_finite is True
+
+    m = Symbol('m', integer=True, positive=True)
+    for func in [Sum, Product]:
+        assert func(m, (m, 1, M)).is_positive is True
+        assert func(m, (m, 1, M)).is_nonpositive is False
+        assert func(m, (m, 1, M)).is_negative is False
+        assert func(m, (m, 1, M)).is_nonnegative is True
+        assert func(m, (m, 1, M)).is_finite is True
+
+    m = Symbol('m', integer=True, negative=True)
+    assert Sum(m, (m, -M, -1)).is_positive is False
+    assert Sum(m, (m, -M, -1)).is_nonpositive is True
+    assert Sum(m, (m, -M, -1)).is_negative is True
+    assert Sum(m, (m, -M, -1)).is_nonnegative is False
+    assert Sum(m, (m, -M, -1)).is_finite is True
+    assert Product(m, (m, -M, -1)).is_positive is None
+    assert Product(m, (m, -M, -1)).is_nonpositive is None
+    assert Product(m, (m, -M, -1)).is_negative is None
+    assert Product(m, (m, -M, -1)).is_nonnegative is None
+    assert Product(m, (m, -M, -1)).is_finite is True
+
+    m = Symbol('m', integer=True, nonpositive=True)
+    assert Sum(m, (m, -M, 0)).is_positive is False
+    assert Sum(m, (m, -M, 0)).is_nonpositive is True
+    assert Sum(m, (m, -M, 0)).is_negative is None
+    assert Sum(m, (m, -M, 0)).is_nonnegative is None
+    assert Sum(m, (m, -M, 0)).is_finite is True
+    assert Product(m, (m, -M, 0)).is_positive is None
+    assert Product(m, (m, -M, 0)).is_nonpositive is None
+    assert Product(m, (m, -M, 0)).is_negative is None
+    assert Product(m, (m, -M, 0)).is_nonnegative is None
+    assert Product(m, (m, -M, 0)).is_finite is True
+
+    m = Symbol('m', integer=True)
+    assert Sum(2, (m, 0, oo)).is_positive is None
+    assert Sum(2, (m, 0, oo)).is_nonpositive is None
+    assert Sum(2, (m, 0, oo)).is_negative is None
+    assert Sum(2, (m, 0, oo)).is_nonnegative is None
+    assert Sum(2, (m, 0, oo)).is_finite is None
+
+    assert Product(2, (m, 0, oo)).is_positive is None
+    assert Product(2, (m, 0, oo)).is_nonpositive is None
+    assert Product(2, (m, 0, oo)).is_negative is False
+    assert Product(2, (m, 0, oo)).is_nonnegative is None
+    assert Product(2, (m, 0, oo)).is_finite is None
+
+    assert Product(0, (x, M, M-1)).is_positive is True
+    assert Product(0, (x, M, M-1)).is_finite is True
+
+
+def test_expand_with_assumptions():
+    M = Symbol('M', integer=True, positive=True)
+    x = Symbol('x', positive=True)
+    m = Symbol('m', nonnegative=True)
+    assert log(Product(x**m, (m, 0, M))).expand() == Sum(m*log(x), (m, 0, M))
+    assert log(Product(exp(x**m), (m, 0, M))).expand() == Sum(x**m, (m, 0, M))
+    assert log(Product(x**m, (m, 0, M))).rewrite(Sum).expand() == Sum(m*log(x), (m, 0, M))
+    assert log(Product(exp(x**m), (m, 0, M))).rewrite(Sum).expand() == Sum(x**m, (m, 0, M))
+
+    n = Symbol('n', nonnegative=True)
+    i, j = symbols('i,j', positive=True, integer=True)
+    x, y = symbols('x,y', positive=True)
+    assert log(Product(x**i*y**j, (i, 1, n), (j, 1, m))).expand() \
+        == Sum(i*log(x) + j*log(y), (i, 1, n), (j, 1, m))
+
+
+def test_has_finite_limits():
+    x = Symbol('x')
+    assert Sum(1, (x, 1, 9)).has_finite_limits is True
+    assert Sum(1, (x, 1, oo)).has_finite_limits is False
+    M = Symbol('M')
+    assert Sum(1, (x, 1, M)).has_finite_limits is None
+    M = Symbol('M', positive=True)
+    assert Sum(1, (x, 1, M)).has_finite_limits is True
+    x = Symbol('x', positive=True)
+    M = Symbol('M')
+    assert Sum(1, (x, 1, M)).has_finite_limits is True
+
+    assert Sum(1, (x, 1, M), (y, -oo, oo)).has_finite_limits is False
+
+def test_has_reversed_limits():
+    assert Sum(1, (x, 1, 1)).has_reversed_limits is False
+    assert Sum(1, (x, 1, 9)).has_reversed_limits is False
+    assert Sum(1, (x, 1, -9)).has_reversed_limits is True
+    assert Sum(1, (x, 1, 0)).has_reversed_limits is True
+    assert Sum(1, (x, 1, oo)).has_reversed_limits is False
+    M = Symbol('M')
+    assert Sum(1, (x, 1, M)).has_reversed_limits is None
+    M = Symbol('M', positive=True, integer=True)
+    assert Sum(1, (x, 1, M)).has_reversed_limits is False
+    assert Sum(1, (x, 1, M), (y, -oo, oo)).has_reversed_limits is False
+    M = Symbol('M', negative=True)
+    assert Sum(1, (x, 1, M)).has_reversed_limits is True
+
+    assert Sum(1, (x, 1, M), (y, -oo, oo)).has_reversed_limits is True
+    assert Sum(1, (x, oo, oo)).has_reversed_limits is None
+
+
+def test_has_empty_sequence():
+    assert Sum(1, (x, 1, 1)).has_empty_sequence is False
+    assert Sum(1, (x, 1, 9)).has_empty_sequence is False
+    assert Sum(1, (x, 1, -9)).has_empty_sequence is False
+    assert Sum(1, (x, 1, 0)).has_empty_sequence is True
+    assert Sum(1, (x, y, y - 1)).has_empty_sequence is True
+    assert Sum(1, (x, 3, 2), (y, -oo, oo)).has_empty_sequence is True
+    assert Sum(1, (y, -oo, oo), (x, 3, 2)).has_empty_sequence is True
+    assert Sum(1, (x, oo, oo)).has_empty_sequence is False
+
+
+def test_empty_sequence():
+    assert Product(x*y, (x, -oo, oo), (y, 1, 0)).doit() == 1
+    assert Product(x*y, (y, 1, 0), (x, -oo, oo)).doit() == 1
+    assert Sum(x, (x, -oo, oo), (y, 1, 0)).doit() == 0
+    assert Sum(x, (y, 1, 0), (x, -oo, oo)).doit() == 0
 
 
 def test_issue_8016():

@@ -3066,9 +3066,6 @@ def test_user_infinitesimals():
     assert dsolve(eq, hint='lie_group', **infinitesimals) == sol
     assert checkodesol(eq, sol) == (True, 0)
 
-    raises(ValueError, lambda: dsolve(eq, hint='lie_group', xi=0, eta=f(x)))
-
-
 def test_issue_7081():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     s = Eq(f(x), -1/(-C1 + x**2)*(C1 + x**2))
@@ -3592,3 +3589,14 @@ def test_factorable_series():
           + (1 - sqrt(3))*(2 - sqrt(3))) + 1) + O(x**6))]
     assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
     #assert checkodesol(eq, sols) == 2*[(True, 0)]
+
+def test_issue_17322():
+    eq = (f(x).diff(x)-f(x)) * (f(x).diff(x)+f(x))
+    sol = [Eq(f(x), C1*exp(-x)), Eq(f(x), C1*exp(x))]
+    assert set(sol) == set(dsolve(eq, hint='lie_group'))
+    assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+    eq = f(x).diff(x)*(f(x).diff(x)+f(x))
+    sol = [Eq(f(x), C1), Eq(f(x), C1*exp(-x))]
+    assert set(sol) == set(dsolve(eq, hint='lie_group'))
+    assert checkodesol(eq, sol) == 2*[(True, 0)]
