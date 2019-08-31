@@ -524,6 +524,19 @@ class Add(Expr, AssocOp):
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
 
+    def _eval_is_infinite(self):
+        sawinf = False
+        for a in self.args:
+            ainf = a.is_infinite
+            if ainf is None:
+                return None
+            elif ainf is True:
+                # infinite+infinite might not be infinite
+                if sawinf is True:
+                    return None
+                sawinf = True
+        return sawinf
+
     def _eval_is_imaginary(self):
         nz = []
         im_I = []
