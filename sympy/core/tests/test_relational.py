@@ -787,6 +787,7 @@ def test_issue_10401():
     inf = symbols('inf', infinite=True)
     inf2 = symbols('inf2', infinite=True)
     infx = symbols('infx', infinite=True, extended_real=True)
+    infx2 = symbols('infx2', infinite=True, extended_real=True)
     infnx = symbols('inf~x', infinite=True, extended_real=False)
     infp = symbols('infp', infinite=True, extended_positive=True)
     infp1 = symbols('infp1', infinite=True, extended_positive=True)
@@ -804,10 +805,19 @@ def test_issue_10401():
     assert Eq(1 + inf, 2 + inf2) not in (T, F) and inf != inf2
     assert Eq(infp, infp1) is T
     assert Eq(infp, infn) is F
+    assert Eq(1 + I*oo, I*oo) is F
+    assert Eq(I*oo, 1 + I*oo) is F
     assert Eq(1 + I*oo, 2 + I*oo) is F
     assert Eq(1 + I*oo, 2 + I*infx) is F
     assert Eq(1 + I*oo, 2 + infx) is F
-    assert Eq(zoo, sqrt(2) + I*oo) is F
+    # FIXME: The test below fails because (-infx).is_extended_positive is True
+    # (should be None)
+    #assert Eq(1 + I*infx, 1 + I*infx2) not in (T, F) and infx != infx2
+    #
+    # Maybe the test below should work but it isn't clear what the
+    # relationship should be between zoo and any other complex infinity.
+    #assert Eq(zoo, sqrt(2) + I*oo) is F
+    assert Eq(zoo, oo) is F
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
     assert Eq(i*I, r) not in (T, F)
@@ -817,7 +827,9 @@ def test_issue_10401():
     assert Eq(inf/fin, 0) is F
     assert Eq(fin/inf, 0) is T
     assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
-    assert Eq(inf, -inf) is F
+    # The commented out test below is incorrect because:
+    assert zoo == -zoo
+    #assert Eq(inf, -inf) is F
 
     assert Eq(fin/(fin + 1), 1) is S.false
 
