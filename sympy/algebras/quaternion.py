@@ -194,6 +194,16 @@ class Quaternion(Expr):
     def __neg__(self):
         return Quaternion(-self._a, -self._b, -self._c, -self.d)
 
+    def __truediv__(self, other):
+        return self * sympify(other)**-1
+
+    __div__ = __truediv__
+
+    def __rtruediv__(self, other):
+        return sympify(other) * self**-1
+
+    __rdiv__ = __rtruediv__
+
     def _eval_Integral(self, *args):
         return self.integrate(*args)
 
@@ -244,14 +254,13 @@ class Quaternion(Expr):
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
-            if q1.real_field:
-                if q2.is_complex:
+            if q1.real_field and q2.is_complex:
                     return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
-                else:
-                    # q2 is something strange, do not evaluate:
-                    return Add(q1, q2)
-            else:
+            elif q2.is_commutative:
                 return Quaternion(q1.a + q2, q1.b, q1.c, q1.d)
+            else:
+                # q2 is something strange, do not evaluate:
+                return Add(q1, q2)
 
         return Quaternion(q1.a + q2.a, q1.b + q2.b, q1.c + q2.c, q1.d
                           + q2.d)
@@ -347,24 +356,21 @@ class Quaternion(Expr):
 
         # If q1 is a number or a sympy expression instead of a quaternion
         if not isinstance(q1, Quaternion):
-            if q2.real_field:
-                if q1.is_complex:
+            if q2.real_field and q1.is_complex:
                     return Quaternion(re(q1), im(q1), 0, 0) * q2
-                else:
-                    return Mul(q1, q2)
-            else:
+            elif q1.is_commutative:
                 return Quaternion(q1 * q2.a, q1 * q2.b, q1 * q2.c, q1 * q2.d)
-
+            else:
+                return Mul(q1, q2)
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
-            if q1.real_field:
-                if q2.is_complex:
+            if q1.real_field and q2.is_complex:
                     return q1 * Quaternion(re(q2), im(q2), 0, 0)
-                else:
-                    return Mul(q1, q2)
-            else:
+            elif q2.is_commutative:
                 return Quaternion(q2 * q1.a, q2 * q1.b, q2 * q1.c, q2 * q1.d)
+            else:
+                return Mul(q1, q2)
 
         return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
                           q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
