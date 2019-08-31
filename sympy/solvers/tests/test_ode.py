@@ -949,7 +949,7 @@ def test_classify_sysode():
     x, y, z = symbols('x, y, z', cls=Function)
     t = symbols('t')
     x1 = diff(x(t),t) ; y1 = diff(y(t),t) ; z1 = diff(z(t),t)
-    x2 = diff(x(t),t,t) ; y2 = diff(y(t),t,t) ; z2 = diff(z(t),t,t)
+    x2 = diff(x(t),t,t) ; y2 = diff(y(t),t,t)
 
     eq1 = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
     sol1 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): -5*t, (1, x(t), 1): 0, (0, x(t), 1): 1, \
@@ -2390,8 +2390,6 @@ def test_issue_4825():
 
 def test_constant_renumber_order_issue_5308():
     from sympy.utilities.iterables import variations
-
-    eq = f(x).diff(x) - y - x
 
     assert constant_renumber(C1*x + C2*y) == \
         constant_renumber(C1*y + C2*x) == \

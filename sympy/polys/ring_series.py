@@ -946,8 +946,6 @@ def rs_nth_root(p, n, x, prec):
     >>> rs_nth_root(3 + x + x*y, 3, x, 2)
     0.160249952256379*x*y + 0.160249952256379*x + 1.44224957030741
     """
-    p0 = p
-    n0 = n
     if n == 0:
         if p == 0:
             raise ValueError('0**0 expression')

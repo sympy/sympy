@@ -98,7 +98,6 @@ def test_invert_real():
     assert invert_real(x**31 + x, y, x) == (x**31 + x, FiniteSet(y))
 
     lhs = x**31 + x
-    conditions = Contains(y, Interval(0, oo), evaluate=False)
     base_values =  FiniteSet(y - 1, -y - 1)
     assert invert_real(Abs(x**31 + x + 1), y, x) == (lhs, base_values)
 

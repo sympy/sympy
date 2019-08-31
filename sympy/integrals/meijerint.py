@@ -740,7 +740,6 @@ def _check_antecedents_1(g, x, helper=False):
     delta = g.delta
     eta, _ = _get_coeff_exp(g.argument, x)
     m, n, p, q = S([len(g.bm), len(g.an), len(g.ap), len(g.bq)])
-    xi = m + n - p
 
     if p > q:
         def tr(l):

@@ -2,7 +2,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
-        Matrix, Basic, Dict, oo, zoo, nan)
+        Matrix, Basic, Dict, oo, zoo, nan, Pow)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
@@ -520,7 +520,7 @@ def test_issue_5399():
     for a in subsets(args):
         for v in variations(a, len(a)):
             if ok(v):
-                noraise = eq.diff(*v)
+                eq.diff(*v) # does not raise
             else:
                 raises(ValueError, lambda: eq.diff(*v))
 
@@ -932,7 +932,8 @@ def test_issue_8469():
 
     ws = symbols(['w%i'%i for i in range(N)])
     import functools
-    expr = functools.reduce(g,ws)
+    expr = functools.reduce(g, ws)
+    assert isinstance(expr, Pow)
 
 
 def test_issue_12996():

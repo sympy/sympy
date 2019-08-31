@@ -553,7 +553,7 @@ class Function(Application, Expr):
                 return None
             try:
                 return Float(imp(*[i.evalf(prec) for i in self.args]), prec)
-            except (TypeError, ValueError) as e:
+            except (TypeError, ValueError):
                 return None
 
         # Convert all args to mpf or mpc

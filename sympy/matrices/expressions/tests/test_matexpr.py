@@ -161,6 +161,8 @@ def test_OneMatrix():
         U ** 0
     with raises(ShapeError):
         U ** 2
+    with raises(ShapeError):
+        a + U
 
     U = OneMatrix(n, n)
     assert U[1, 2] == 1

@@ -128,9 +128,9 @@ def test_squareBlockMatrix():
 
     assert X.is_square
 
-    assert (block_collapse(X + Identity(m + n)) ==
-        BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
     Q = X + Identity(m + n)
+    assert (block_collapse(Q) ==
+        BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
 
     assert (X + MatrixSymbol('Q', n + m, n + m)).is_MatAdd
     assert (X * MatrixSymbol('Q', n + m, n + m)).is_MatMul
