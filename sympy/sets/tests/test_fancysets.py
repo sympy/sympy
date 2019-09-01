@@ -121,6 +121,9 @@ def test_ImageSet():
     assert imageset(lambda x, y: x + y, S.Integers, S.Naturals
         ).base_set == ProductSet(S.Integers, S.Naturals)
 
+    # Passing a set instead of a FiniteSet shouldn't raise
+    assert unchanged(ImageSet, Lambda(x, x**2), {1, 2, 3})
+
 
 def test_image_is_ImageSet():
     assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)

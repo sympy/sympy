@@ -307,13 +307,15 @@ class ImageSet(Set):
         if not isinstance(flambda, Lambda):
             raise ValueError('first argument must be a Lambda')
 
+        sets = [_sympify(s) for s in sets]
+
         if flambda is S.IdentityFunction:
             if len(sets) != 1:
-                raise ValueError('identify function requires a single set')
+                raise ValueError('identity function requires a single set')
             return sets[0]
 
         if not all(isinstance(s, Set) for s in sets):
-            raise TypeError("Set arguments to ProductSet should of type Set")
+            raise TypeError("Set arguments to ImageSet should of type Set")
 
         sets = [s.flatten() if s.is_ProductSet else s for s in sets]
 
