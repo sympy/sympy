@@ -839,6 +839,10 @@ class AppliedUndef(Function):
 
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
+        u = [a.name for a in args if isinstance(a, UndefinedFunction)]
+        if u:
+            raise TypeError('Invalid argument: expecting an expression, not UndefinedFunction%s: %s' % (
+                's'*(len(u) > 1), ', '.join(u)))
         obj = super(AppliedUndef, cls).__new__(cls, *args, **options)
         return obj
 
@@ -922,6 +926,10 @@ class UndefinedFunction(FunctionClass):
 
     def __ne__(self, other):
         return not self == other
+
+    @property
+    def _diff_wrt(self):
+        return False
 
 
 class WildFunction(Function, AtomicExpr):
@@ -1285,6 +1293,10 @@ class Derivative(Expr):
                         v, count = v
                     if count == 0:
                         continue
+                elif isinstance(v, UndefinedFunction):
+                    raise TypeError(
+                        "cannot differentiate wrt "
+                        "UndefinedFunction: %s" % v)
                 else:
                     count = 1
                 variable_count.append(Tuple(v, count))
