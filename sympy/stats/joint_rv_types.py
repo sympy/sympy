@@ -361,7 +361,7 @@ class MultivariateEwensDistribution(JointDistribution):
         prod_set = Range(0, self.n + 1)
         for i in range(2, self.n + 1):
             prod_set *= Range(0, self.n//i + 1)
-        return prod_set
+        return prod_set.flatten()
 
     def pdf(self, *syms):
         n, theta = self.n, self.theta

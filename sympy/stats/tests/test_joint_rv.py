@@ -157,10 +157,10 @@ def test_MultivariateEwens():
                                             factorial(a[0])*factorial(a[1])*
                                             factorial(a[2])), Eq(a[0] + 2*a[1] +
                                             3*a[2], 3)), (0, True))
-    #assert marginal_distribution(ed, ed[1])(a[1]) == Piecewise((6*2**(-a[1])*
-    #                                                theta**a[1]/((theta + 1)*
-    #                                                (theta + 2)*factorial(a[1])),
-    #                                                Eq(2*a[1] + 1, 3)), (0, True))
+    assert marginal_distribution(ed, ed[1])(a[1]) == Piecewise((6*2**(-a[1])*
+                                                    theta**a[1]/((theta + 1)*
+                                                    (theta + 2)*factorial(a[1])),
+                                                    Eq(2*a[1] + 1, 3)), (0, True))
     raises(ValueError, lambda: MultivariateEwens('e1', 5, theta_f))
 
     # tests for symbolic dimensions
