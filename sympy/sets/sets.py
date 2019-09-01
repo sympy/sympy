@@ -8,6 +8,7 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import (iterable, with_metaclass,
     ordered, range, PY3, is_sequence, reduce)
 from sympy.core.cache import cacheit
+from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
@@ -670,33 +671,43 @@ class ProductSet(Set):
     is_ProductSet = True
 
     def __new__(cls, *sets, **assumptions):
-        def flatten(arg):
-            if isinstance(arg, Set):
-                if arg.is_ProductSet:
-                    return sum(map(flatten, arg.args), [])
-                else:
-                    return [arg]
-            elif iterable(arg):
-                return sum(map(flatten, arg), [])
-            raise TypeError("Input must be Sets or iterables of Sets")
-        sets = flatten(list(sets))
+        if not all(isinstance(s, Set) for s in sets):
+            if len(sets) == 1 and iterable(sets[0]):
+                sets = tuple(sets[0])
+            else:
+                raise TypeError("Arguments to ProductSet should be of type Set")
 
-        if EmptySet() in sets or len(sets) == 0:
+        # Nullary product of sets is *not* the empty set
+        if len(sets) == 0:
+            return FiniteSet(())
+
+        if EmptySet() in sets:
             return EmptySet()
 
-        if len(sets) == 1:
-            return sets[0]
-
         return Basic.__new__(cls, *sets, **assumptions)
+
+    @property
+    def sets(self):
+        return self.args
+
+    def flatten(self):
+        def _flatten(sets):
+            for s in sets:
+                if s.is_ProductSet:
+                    for s2 in _flatten(s.sets):
+                        yield s2
+                else:
+                    yield s
+        return ProductSet(*_flatten(self.sets))
 
     def _eval_Eq(self, other):
         if not other.is_ProductSet:
             return
 
-        if len(self.args) != len(other.args):
+        if len(self.sets) != len(other.sets):
             return false
 
-        return And(*(Eq(x, y) for x, y in zip(self.args, other.args)))
+        return And(*(Eq(x, y) for x, y in zip(self.sets, other.sets)))
 
     def _contains(self, element):
         """
@@ -714,25 +725,17 @@ class ProductSet(Set):
 
         Passes operation on to constituent sets
         """
-        if is_sequence(element):
-            if len(element) != len(self.args):
-                return False
-        elif len(self.args) > 1:
+        if not isinstance(element, Tuple) or len(element) != len(self.sets):
             return False
-        d = [Dummy() for i in element]
-        reps = dict(zip(d, element))
-        return tfn[self.as_relational(*d).xreplace(reps)]
+
+        return fuzzy_and(s._contains(e) for s, e in zip(self.sets, element))
 
     def as_relational(self, *symbols):
-        if len(symbols) != len(self.args) or not all(
+        if len(symbols) != len(self.sets) or not all(
                 i.is_Symbol for i in symbols):
             raise ValueError(
                 'number of symbols must match the number of sets')
-        return And(*[s.contains(i) for s, i in zip(self.args, symbols)])
-
-    @property
-    def sets(self):
-        return self.args
+        return And(*[s.contains(i) for s, i in zip(self.sets, symbols)])
 
     @property
     def _boundary(self):
@@ -778,15 +781,15 @@ class ProductSet(Set):
     @property
     def _measure(self):
         measure = 1
-        for set in self.sets:
-            measure *= set.measure
+        for s in self.sets:
+            measure *= s.measure
         return measure
 
     def __len__(self):
-        return Mul(*[len(s) for s in self.args])
+        return Mul(*[len(s) for s in self.sets])
 
     def __bool__(self):
-        return all([bool(s) for s in self.args])
+        return all([bool(s) for s in self.sets])
 
     __nonzero__ = __bool__
 

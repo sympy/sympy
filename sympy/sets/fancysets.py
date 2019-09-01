@@ -312,6 +312,11 @@ class ImageSet(Set):
                 raise ValueError('identify function requires a single set')
             return sets[0]
 
+        if not all(isinstance(s, Set) for s in sets):
+            raise TypeError("Set arguments to ProductSet should of type Set")
+
+        sets = [s.flatten() if s.is_ProductSet else s for s in sets]
+
         if not set(flambda.variables) & flambda.expr.free_symbols:
             emptyprod = fuzzy_or(s.is_empty for s in sets)
             if emptyprod == True:
@@ -322,7 +327,14 @@ class ImageSet(Set):
         return Basic.__new__(cls, flambda, *sets)
 
     lamda = property(lambda self: self.args[0])
-    base_set = property(lambda self: ProductSet(self.args[1:]))
+
+    @property
+    def base_set(self):
+        sets = self.args[1:]
+        if len(sets) == 1:
+            return sets[0]
+        else:
+            return ProductSet(self.args[1:]).flatten()
 
     def __iter__(self):
         already_seen = set()

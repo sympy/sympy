@@ -423,7 +423,7 @@ def test_is_disjoint():
 
 
 def test_ProductSet_of_single_arg_is_arg():
-    assert ProductSet(Interval(0, 1)) == Interval(0, 1)
+    assert unchanged(ProductSet, Interval(0, 1))
 
 
 def test_ProductSet_is_empty():
@@ -773,8 +773,10 @@ def test_product_basic():
     assert (0, 0) in square
     assert 0 not in square
     assert (H, T) in coin ** 2
-    assert (.5, .5, .5) in square * unit_line
-    assert (H, 3, 3) in coin * d6* d6
+    assert (.5, .5, .5) in (square * unit_line).flatten()
+    assert ((.5, .5), .5) in square * unit_line
+    assert (H, 3, 3) in (coin * d6 * d6).flatten()
+    assert ((H, 3), 3) in coin * d6 * d6
     HH, TT = sympify(H), sympify(T)
     assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
 
