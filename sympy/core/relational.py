@@ -449,6 +449,7 @@ class Equality(Relational):
 
     def __new__(cls, lhs, rhs=None, **options):
         from sympy.core.add import Add
+        from sympy.core.containers import Tuple
         from sympy.core.logic import fuzzy_bool
         from sympy.core.expr import _n2
         from sympy.simplify.simplify import clear_coefficients
@@ -486,10 +487,12 @@ class Equality(Relational):
                     isinstance(lhs, Boolean) !=
                     isinstance(rhs, Boolean)):
                 return S.false  # only Booleans can equal Booleans
+            # FIXME: There should be a more generic test here than just if one
+            # object is a Tuple and the other is not.
             elif not (lhs.is_Symbol or rhs.is_Symbol) and (
-                    isinstance(lhs, Expr) !=
-                    isinstance(rhs, Expr)):
-                return S.false  # only Exprs can equal Exprs
+                    isinstance(lhs, Tuple) !=
+                    isinstance(rhs, Tuple)):
+                return S.false  # only Tuples can equal Tuples
 
             # check finiteness
             fin = L, R = [i.is_finite for i in (lhs, rhs)]
