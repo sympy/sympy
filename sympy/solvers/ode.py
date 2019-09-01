@@ -5624,7 +5624,7 @@ def ode_factorable(eq, func, order, match):
     >>> f = Function('f')
     >>> eq = (f(x)**2-4)*(f(x).diff(x)+f(x))
     >>> pprint(dsolve(eq, f(x)))
-                                 -x
+                                     -x
     [f(x) = 2, f(x) = -2, f(x) = C1*e  ]
 
 
