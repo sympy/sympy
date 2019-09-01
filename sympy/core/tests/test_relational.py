@@ -129,6 +129,9 @@ def test_Eq():
     # issue 13348
     assert Eq(True, 1) is S.false
 
+    assert Eq((), 1) is S.false
+
+
 def test_rel_Infinity():
     # NOTE: All of these are actually handled by sympy.core.Number, and do
     # not create Relational objects.

@@ -656,12 +656,17 @@ class ProductSet(Set):
     >>> set(coin**2)
     {(H, H), (H, T), (T, H), (T, T)}
 
+    The Cartesian product is not commutative or associative e.g.:
+
+    >>> I*S == S*I
+    False
+    >>> (I*I)*I == I*(I*I)
+    False
 
     Notes
     =====
 
     - Passes most operations down to the argument sets
-    - Flattens Products of ProductSets
 
     References
     ==========
@@ -1759,7 +1764,7 @@ class FiniteSet(Set, EvalfMixin):
         """
         # evaluate=True is needed to override evaluate=False context;
         # we need Eq to do the evaluation
-        return fuzzy_or([tfn[Eq(e, other, evaluate=True)] for e in self.args])
+        return fuzzy_or(fuzzy_bool(Eq(e, other, evaluate=True)) for e in self.args)
 
     @property
     def _boundary(self):

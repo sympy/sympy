@@ -422,8 +422,58 @@ def test_is_disjoint():
     assert Interval(0, 2).is_disjoint(Interval(3, 4)) == True
 
 
-def test_ProductSet_of_single_arg_is_arg():
+def test_ProductSet():
+    assert ProductSet(S.Reals) == S.Reals ** 1
+    assert ProductSet(S.Reals, S.Reals) == S.Reals ** 2
+    assert ProductSet(S.Reals, S.Reals, S.Reals) == S.Reals ** 3
+
+    assert ProductSet(S.Reals) != S.Reals
+    assert ProductSet(S.Reals, S.Reals) == S.Reals * S.Reals
+    assert ProductSet(S.Reals, S.Reals, S.Reals) != S.Reals * S.Reals * S.Reals
+
+    assert 1 not in ProductSet(S.Reals)
+    assert (1,) in ProductSet(S.Reals)
+
+    assert 1 not in ProductSet(S.Reals, S.Reals)
+    assert (1, 2) in ProductSet(S.Reals, S.Reals)
+    assert (1, I) not in ProductSet(S.Reals, S.Reals)
+
+    assert (1, 2, 3) in ProductSet(S.Reals, S.Reals, S.Reals)
+    assert (1, 2, 3) in S.Reals ** 3
+    assert (1, 2, 3) not in S.Reals * S.Reals * S.Reals
+    assert ((1, 2), 3) in S.Reals * S.Reals * S.Reals
+    assert (1, (2, 3)) not in S.Reals * S.Reals * S.Reals
+    assert (1, (2, 3)) in S.Reals * (S.Reals * S.Reals)
+
+    assert ProductSet() == FiniteSet(())
+    assert ProductSet(S.Reals, S.EmptySet) == S.EmptySet
+
+    # See GH-174598
+
+    for n in range(5):
+        Rn = ProductSet(*(S.Reals,) * n)
+        assert (1,) * n in Rn
+        assert 1 not in Rn
+
+    assert (S.Reals * S.Reals) * S.Reals != S.Reals * (S.Reals * S.Reals)
+
+    S1 = S.Reals
+    S2 = S.Integers
+    x1 = pi
+    x2 = 3
+    assert x1 in S1
+    assert x2 in S2
+    assert (x1, x2) in S1 * S2
+    S3 = S1 * S2
+    x3 = (x1, x2)
+    assert x3 in S3
+    assert (x3, x3) in S3 * S3
+    assert x3 + x3 not in S3 * S3
+
+
+def test_ProductSet_of_single_arg_is_not_arg():
     assert unchanged(ProductSet, Interval(0, 1))
+    assert ProductSet(Interval(0, 1)) != Interval(0, 1)
 
 
 def test_ProductSet_is_empty():

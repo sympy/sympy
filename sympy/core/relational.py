@@ -486,6 +486,10 @@ class Equality(Relational):
                     isinstance(lhs, Boolean) !=
                     isinstance(rhs, Boolean)):
                 return S.false  # only Booleans can equal Booleans
+            elif not (lhs.is_Symbol or rhs.is_Symbol) and (
+                    isinstance(lhs, Expr) !=
+                    isinstance(rhs, Expr)):
+                return S.false  # only Exprs can equal Exprs
 
             # check finiteness
             fin = L, R = [i.is_finite for i in (lhs, rhs)]
