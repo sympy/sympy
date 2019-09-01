@@ -830,7 +830,7 @@ class AppliedUndef(Function):
         args = list(map(sympify, args))
         u = [a.name for a in args if isinstance(a, UndefinedFunction)]
         if u:
-            raise ValueError('invalid argument%s: %s' % (
+            raise TypeError('Invalid argument: expecting an expression, not UndefinedFunction%s: %s' % (
                 's'*(len(u) > 1), ', '.join(u)))
         obj = super(AppliedUndef, cls).__new__(cls, *args, **options)
         return obj
