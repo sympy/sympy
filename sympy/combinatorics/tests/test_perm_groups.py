@@ -762,8 +762,12 @@ def test_make_perm():
 
 
 def test_elements():
+    from sympy.sets.sets import FiniteSet
+
     p = Permutation(2, 3)
     assert PermutationGroup(p).elements == {Permutation(3), Permutation(2, 3)}
+    assert FiniteSet(*PermutationGroup(p).elements) \
+        == FiniteSet(Permutation(2, 3), Permutation(3))
 
 
 def test_is_group():
@@ -889,11 +893,9 @@ def test_presentation():
     assert _test(P)
 
     P = PermutationGroup([Permutation(0,3,1,2), Permutation(3)(0,1), Permutation(0,1)(2,3)])
-    G = P.strong_presentation()
     assert _strong_test(P)
 
     P = DihedralGroup(6)
-    G = P.strong_presentation()
     assert _strong_test(P)
 
     a = Permutation(0,1)(2,3)

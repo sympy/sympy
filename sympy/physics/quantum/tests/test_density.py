@@ -208,7 +208,6 @@ def test_eval_trace():
     assert t.doit() == 1
 
 
-@slow
 def test_fidelity():
     #test with kets
     up = JzKet(S(1)/2, S(1)/2)

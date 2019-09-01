@@ -101,7 +101,6 @@ def comp(z1, z2, tol=None):
     False
     """
     if type(z2) is str:
-        z = sympify(z2)
         if not pure_complex(z1, or_real=True):
             raise ValueError('when z2 is a str z1 must be a Number')
         return str(z1) == z2

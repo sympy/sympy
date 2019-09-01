@@ -166,8 +166,6 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         raise ValueError("out of letters")
 
     def _print_CodegenArrayTensorProduct(self, expr):
-        array_list = [j for i, arg in enumerate(expr.args) for j in
-                (self._print(arg), "[%i, %i]" % (2*i, 2*i+1))]
         letters = self._get_letter_generator_for_einsum()
         contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.subranks])
         return '%s("%s", %s)' % (
@@ -222,7 +220,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         return "%s(%s, %s)" % (
             self._module_format("tensorflow.transpose"),
             self._print(expr.expr),
-            self._print(expr.permutation.args[0]),
+            self._print(expr.permutation.array_form),
         )
 
     def _print_CodegenArrayElementwiseAdd(self, expr):

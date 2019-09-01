@@ -639,7 +639,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
                 make_real = make_real.intersect(im_sol)
 
-            empty = sol_sets = [S.EmptySet]
+            sol_sets = [S.EmptySet]
 
             start = domain.inf
             if valid(start) and start.is_finite:

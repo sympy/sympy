@@ -1,5 +1,6 @@
-SymPy Core
-==========
+====
+Core
+====
 
 sympify
 -------

@@ -233,7 +233,6 @@ def rowadd(matlist, index1, index2 , k, K):
     """
     Adds the index1 row with index2 row which in turn is multiplied by k
     """
-    result = []
     for i in range(len(matlist[index1])):
         matlist[index1][i] = (matlist[index1][i] + k*matlist[index2][i])
     return matlist

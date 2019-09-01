@@ -102,6 +102,8 @@ def test_finite_diff_weights():
     # deemed excessive at the moment)
     raises(ValueError, lambda: finite_diff_weights(-1, [1, 2]))
     raises(ValueError, lambda: finite_diff_weights(1.2, [1, 2]))
+    x = symbols('x')
+    raises(ValueError, lambda: finite_diff_weights(x, [1, 2]))
 
 
 def test_as_finite_diff():

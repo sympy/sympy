@@ -1,5 +1,5 @@
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
-from sympy import (Matrix, Lambda, MatrixBase, MatrixSymbol, exp, symbols, MatMul, sin)
+from sympy import (Matrix, Lambda, MatrixBase, MatrixSymbol, exp, symbols, MatMul, sin, simplify)
 from sympy.utilities.pytest import raises
 from sympy.matrices.common import ShapeError
 
@@ -23,6 +23,7 @@ def test_applyfunc_matrix():
     assert expr.doit() == Xd.applyfunc(lambda x: x**2)
     assert expr.shape == (3, 3)
     assert expr.func(*expr.args) == expr
+    assert simplify(expr) == expr
     assert expr[0, 0] == double(Xd[0, 0])
 
     expr = ElementwiseApplyFunction(double, X)

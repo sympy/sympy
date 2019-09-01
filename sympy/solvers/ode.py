@@ -251,7 +251,7 @@ from sympy.core.sympify import sympify
 from sympy.logic.boolalg import (BooleanAtom, And, Not, BooleanTrue,
                                 BooleanFalse)
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
-    atan2, conjugate, Piecewise
+    atan2, conjugate, Piecewise, besselj, bessely
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
@@ -262,10 +262,10 @@ from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, posify, cse
+    simplify, trigsimp, posify, cse, besselsimp
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const
-from sympy.solvers import solve
+from sympy.solvers import checksol, solve
 from sympy.solvers.pde import pdsolve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
@@ -704,8 +704,16 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     else:
         # We still want to integrate (you can disable it separately with the hint)
         match['simplify'] = False  # Some hints can take advantage of this option
-        rv = _handle_Integral(solvefunc(eq, func, order, match), func, hint)
+        exprs = solvefunc(eq, func, order, match)
+        if isinstance(exprs, list):
+            rv = [_handle_Integral(expr, func, hint) for expr in exprs]
+        else:
+            rv = _handle_Integral(exprs, func, hint)
 
+    if isinstance(rv, list):
+        rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
+        if len(rv) == 1:
+            rv = rv[0]
     if ics and not 'power_series' in hint:
         if isinstance(rv, Expr):
             solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
@@ -2432,6 +2440,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
             if sol.lhs == func:
                 s = sub_func_doit(ode_diff, func, sol.rhs)
+                s = besselsimp(s)
             else:
                 testnum += 1
                 continue
@@ -3510,20 +3519,20 @@ def ode_Bernoulli(eq, func, order, match):
                     d                n
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
-        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral')) #doctest: +SKIP
-                                                                                       1
-                                                                                      ----
-                                                                                     1 - n
-               //                /                            \                     \
-               ||               |                             |                     |
-               ||               |                  /          |             /       |
-               ||               |                 |           |            |        |
-               ||               |        (1 - n)* | P(x) dx   |  (-1 + n)* | P(x) dx|
-               ||               |                 |           |            |        |
-               ||               |                /            |           /         |
-        f(x) = ||C1 + (-1 + n)* | -Q(x)*e                   dx|*e                   |
-               ||               |                             |                     |
-               \\               /                            /                     /
+        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=100)
+                                                                                      1
+                                                                                    -----
+                                                                                    1 - n
+               //               /                            \                     \
+               ||              |                             |                     |
+               ||              |                  /          |             /       |
+               ||              |                 |           |            |        |
+               ||              |        (1 - n)* | P(x) dx   |  -(1 - n)* | P(x) dx|
+               ||              |                 |           |            |        |
+               ||              |                /            |           /         |
+        f(x) = ||C1 + (n - 1)* | -Q(x)*e                   dx|*e                   |
+               ||              |                             |                     |
+               \\              /                            /                     /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -4184,45 +4193,34 @@ def ode_nth_algebraic(eq, func, order, match):
     # indirect doctest
 
     """
-    solns = match['solutions']
-    var = match['var']
-    solns = _nth_algebraic_remove_redundant_solutions(eq, solns, order, var)
-    if len(solns) == 1:
-        return solns[0]
-    else:
-        return solns
 
-# FIXME: Maybe something like this function should be applied to the solutions
-# returned by dsolve in general rather than just for nth_algebraic...
+    return match['solutions']
 
-def _nth_algebraic_remove_redundant_solutions(eq, solns, order, var):
+def _remove_redundant_solutions(eq, solns, order, var):
     r"""
-    Remove redundant solutions from the set of solutions returned by
-    nth_algebraic.
+    Remove redundant solutions from the set of solutions.
 
-    This function is needed because otherwise nth_algebraic can return
-    redundant solutions where both algebraic solutions and integral
-    solutions are found to the ODE. As an example consider:
+    This function is needed because otherwise dsolve can return
+    redundant solutions. As an example consider:
 
-        eq = Eq(f(x) * f(x).diff(x), 0)
+        eq = Eq((f(x).diff(x, 2))*f(x).diff(x), 0)
 
-    There are two ways to find solutions to eq. The first is the algebraic
-    solution f(x)=0. The second is to solve the equation f(x).diff(x) = 0
+    There are two ways to find solutions to eq. The first is to solve f(x).diff(x, 2) = 0
+    leading to solution f(x)=C1 + C2*x. The second is to solve the equation f(x).diff(x) = 0
     leading to the solution f(x) = C1. In this particular case we then see
-    that the first solution is a special case of the second and we don't
+    that the second solution is a special case of the first and we don't
     want to return it.
 
-    This does not always happen for algebraic solutions though since if we
-    have
+    This does not always happen. If we have
 
-        eq = Eq(f(x)*(1 + f(x).diff(x)), 0)
+        eq = Eq((f(x)**2-4)*(f(x).diff(x)-4), 0)
 
-    then we get the algebraic solution f(x) = 0 and the integral solution
-    f(x) = -x + C1 and in this case the two solutions are not equivalent wrt
+    then we get the algebraic solution f(x) = [-2, 2] and the integral solution
+    f(x) = x + C1 and in this case the two solutions are not equivalent wrt
     initial conditions so both should be returned.
     """
     def is_special_case_of(soln1, soln2):
-        return _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var)
+        return _is_special_case_of(soln1, soln2, eq, order, var)
 
     unique_solns = []
     for soln1 in solns:
@@ -4236,36 +4234,37 @@ def _nth_algebraic_remove_redundant_solutions(eq, solns, order, var):
 
     return unique_solns
 
-def _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var):
+def _is_special_case_of(soln1, soln2, eq, order, var):
     r"""
     True if soln1 is found to be a special case of soln2 wrt some value of the
     constants that appear in soln2. False otherwise.
     """
-    # The solutions returned by nth_algebraic should be given explicitly as in
-    # Eq(f(x), expr). We will equate the RHSs of the two solutions giving an
-    # equation f1(x) = f2(x).
+    # The solutions returned by dsolve may be given explicitly or implicitly.
+    # We will equate the sol1=(soln1.rhs - soln1.lhs), sol2=(soln2.rhs - soln2.lhs)
+    # of the two solutions.
     #
-    # Since this is supposed to hold for all x it also holds for derivatives
-    # f1'(x) and f2'(x). For an order n ode we should be able to differentiate
+    # Since this is supposed to hold for all x it also holds for derivatives.
+    # For an order n ode we should be able to differentiate
     # each solution n times to get n+1 equations.
     #
     # We then try to solve those n+1 equations for the integrations constants
-    # in f2(x). If we can find a solution that doesn't depend on x then it
-    # means that some value of the constants in f1(x) is a special case of
-    # f2(x) corresponding to a paritcular choice of the integration constants.
+    # in sol2. If we can find a solution that doesn't depend on x then it
+    # means that some value of the constants in sol1 is a special case of
+    # sol2 corresponding to a particular choice of the integration constants.
 
     constants1 = soln1.free_symbols.difference(eq.free_symbols)
     constants2 = soln2.free_symbols.difference(eq.free_symbols)
 
-    constants1_new = get_numbered_constants(soln1.rhs - soln2.rhs, len(constants1))
+    constants1_new = get_numbered_constants((soln1.rhs-soln1.lhs) - (soln2.rhs-soln2.lhs),
+                     len(constants1))
     if len(constants1) == 1:
         constants1_new = {constants1_new}
     for c_old, c_new in zip(constants1, constants1_new):
         soln1 = soln1.subs(c_old, c_new)
 
-    # n equations for f1(x)=f2(x), f1'(x)=f2'(x), ...
-    lhs = soln1.rhs.doit()
-    rhs = soln2.rhs.doit()
+    # n equations for sol1 = sol2, sol1'=sol2', ...
+    lhs = (soln1.rhs-soln1.lhs)
+    rhs = (soln2.rhs-soln2.lhs)
     eqns = [Eq(lhs, rhs)]
     for n in range(1, order):
         lhs = lhs.diff(var)
@@ -4278,11 +4277,21 @@ def _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var):
         return False
     eqns = [eq for eq in eqns if not isinstance(eq, BooleanTrue)]
 
-    constant_solns = solve(eqns, constants2)
+    try:
+        constant_solns = solve(eqns, constants2)
+    except NotImplementedError:
+        return False
 
     # Sometimes returns a dict and sometimes a list of dicts
     if isinstance(constant_solns, dict):
         constant_solns = [constant_solns]
+
+    # after solving the issue 17418, maybe we don't need the following checksol code.
+    for constant_soln in constant_solns:
+        for eq in eqns:
+            eq=eq.rhs-eq.lhs
+            if checksol(eq, constant_soln) is not True:
+                return False
 
     # If any solution gives all constants as expressions that don't depend on
     # x then there exists constants for soln2 that give soln1
@@ -5715,6 +5724,114 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
                     soltup.append((True, 0))
             return soltup
 
+def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
+
+    xi = Function("xi")
+    eta = Function("eta")
+    f = func.func
+    x = func.args[0]
+    y = match['y']
+    h = match['h']
+    tempsol = []
+    if not inf:
+        try:
+            inf = infinitesimals(eq, hint=heuristic, func=func, order=1, match=match)
+        except ValueError:
+            return None
+    for infsim in inf:
+        xiinf = (infsim[xi(x, func)]).subs(func, y)
+        etainf = (infsim[eta(x, func)]).subs(func, y)
+        # This condition creates recursion while using pdsolve.
+        # Since the first step while solving a PDE of form
+        # a*(f(x, y).diff(x)) + b*(f(x, y).diff(y)) + c = 0
+        # is to solve the ODE dy/dx = b/a
+        if simplify(etainf/xiinf) == h:
+            continue
+        rpde = f(x, y).diff(x)*xiinf + f(x, y).diff(y)*etainf
+        r = pdsolve(rpde, func=f(x, y)).rhs
+        s = pdsolve(rpde - 1, func=f(x, y)).rhs
+        newcoord = [_lie_group_remove(coord) for coord in [r, s]]
+        r = Dummy("r")
+        s = Dummy("s")
+        C1 = Symbol("C1")
+        rcoord = newcoord[0]
+        scoord = newcoord[-1]
+        try:
+            sol = solve([r - rcoord, s - scoord], x, y, dict=True)
+            if sol == []:
+                continue
+        except NotImplementedError:
+            continue
+        else:
+            sol = sol[0]
+            xsub = sol[x]
+            ysub = sol[y]
+            num = simplify(scoord.diff(x) + scoord.diff(y)*h)
+            denom = simplify(rcoord.diff(x) + rcoord.diff(y)*h)
+            if num and denom:
+                diffeq = simplify((num/denom).subs([(x, xsub), (y, ysub)]))
+                sep = separatevars(diffeq, symbols=[r, s], dict=True)
+                if sep:
+                    # Trying to separate, r and s coordinates
+                    deq = integrate((1/sep[s]), s) + C1 - integrate(sep['coeff']*sep[r], r)
+                    # Substituting and reverting back to original coordinates
+                    deq = deq.subs([(r, rcoord), (s, scoord)])
+                    try:
+                        sdeq = solve(deq, y)
+                    except NotImplementedError:
+                        tempsol.append(deq)
+                    else:
+                        return [Eq(f(x), sol) for sol in sdeq]
+
+
+            elif denom: # (ds/dr) is zero which means s is constant
+                return [Eq(f(x), solve(scoord - C1, y)[0])]
+
+            elif num: # (dr/ds) is zero which means r is constant
+                return [Eq(f(x), solve(rcoord - C1, y)[0])]
+
+    # If nothing works, return solution as it is, without solving for y
+    if tempsol:
+        return [Eq(sol.subs(y, f(x)), 0) for sol in tempsol]
+    return None
+
+def _ode_lie_group( s, func, order, match):
+
+    heuristics = lie_heuristics
+    inf = {}
+    f = func.func
+    x = func.args[0]
+    df = func.diff(x)
+    xi = Function("xi")
+    eta = Function("eta")
+    xis = match['xi']
+    etas = match['eta']
+    y = match.pop('y', None)
+    if y:
+        h = -simplify(match[match['d']]/match[match['e']])
+        y = y
+    else:
+        y = Dummy("y")
+        h = s.subs(func, y)
+
+    if xis is not None and etas is not None:
+        inf = [{xi(x, f(x)): S(xis), eta(x, f(x)): S(etas)}]
+
+        if checkinfsol(Eq(df, s), inf, func=f(x), order=1)[0][0]:
+            heuristics = ["user_defined"] + list(heuristics)
+
+    match = {'h': h, 'y': y}
+
+    # This is done so that if:
+    # a] any heuristic raises a ValueError
+    # another heuristic can be used.
+    sol = None
+    for heuristic in heuristics:
+        sol = _ode_lie_group_try_heuristic(Eq(df, s), heuristic, func, match, inf)
+        if sol:
+            return sol
+    return sol
+
 def ode_lie_group(eq, func, order, match):
     r"""
     This hint implements the Lie group method of solving first order differential
@@ -5765,117 +5882,25 @@ def ode_lie_group(eq, func, order, match):
 
     """
 
-    heuristics = lie_heuristics
-    inf = {}
     f = func.func
     x = func.args[0]
     df = func.diff(x)
-    xi = Function("xi")
-    eta = Function("eta")
-    xis = match.pop('xi')
-    etas = match.pop('eta')
 
-    if match:
-        h = -simplify(match[match['d']]/match[match['e']])
-        y = match['y']
-    else:
-        try:
-            sol = solve(eq, df)
-            if sol == []:
-                raise NotImplementedError
-        except NotImplementedError:
-            raise NotImplementedError("Unable to solve the differential equation " +
-                str(eq) + " by the lie group method")
-        else:
-            y = Dummy("y")
-            h = sol[0].subs(func, y)
+    try:
+        eqsol = solve(eq, df)
+    except NotImplementedError:
+        eqsol = []
 
-    if xis is not None and etas is not None:
-        inf = [{xi(x, f(x)): S(xis), eta(x, f(x)): S(etas)}]
+    desols = []
+    for s in eqsol:
+        sol = _ode_lie_group(s, func, order, match=match)
+        if sol:
+            desols.extend(sol)
 
-        if not checkinfsol(eq, inf, func=f(x), order=1)[0][0]:
-            raise ValueError("The given infinitesimals xi and eta"
-                " are not the infinitesimals to the given equation")
-        else:
-            heuristics = ["user_defined"]
-
-    match = {'h': h, 'y': y}
-
-    # This is done so that if:
-    # a] solve raises a NotImplementedError.
-    # b] any heuristic raises a ValueError
-    # another heuristic can be used.
-    tempsol = []  # Used by solve below
-    for heuristic in heuristics:
-        try:
-            if not inf:
-                inf = infinitesimals(eq, hint=heuristic, func=func, order=1, match=match)
-        except ValueError:
-            continue
-        else:
-            for infsim in inf:
-                xiinf = (infsim[xi(x, func)]).subs(func, y)
-                etainf = (infsim[eta(x, func)]).subs(func, y)
-                # This condition creates recursion while using pdsolve.
-                # Since the first step while solving a PDE of form
-                # a*(f(x, y).diff(x)) + b*(f(x, y).diff(y)) + c = 0
-                # is to solve the ODE dy/dx = b/a
-                if simplify(etainf/xiinf) == h:
-                    continue
-                rpde = f(x, y).diff(x)*xiinf + f(x, y).diff(y)*etainf
-                r = pdsolve(rpde, func=f(x, y)).rhs
-                s = pdsolve(rpde - 1, func=f(x, y)).rhs
-                newcoord = [_lie_group_remove(coord) for coord in [r, s]]
-                r = Dummy("r")
-                s = Dummy("s")
-                C1 = Symbol("C1")
-                rcoord = newcoord[0]
-                scoord = newcoord[-1]
-                try:
-                    sol = solve([r - rcoord, s - scoord], x, y, dict=True)
-                except NotImplementedError:
-                    continue
-                else:
-                    sol = sol[0]
-                    xsub = sol[x]
-                    ysub = sol[y]
-                    num = simplify(scoord.diff(x) + scoord.diff(y)*h)
-                    denom = simplify(rcoord.diff(x) + rcoord.diff(y)*h)
-                    if num and denom:
-                        diffeq = simplify((num/denom).subs([(x, xsub), (y, ysub)]))
-                        sep = separatevars(diffeq, symbols=[r, s], dict=True)
-                        if sep:
-                            # Trying to separate, r and s coordinates
-                            deq = integrate((1/sep[s]), s) + C1 - integrate(sep['coeff']*sep[r], r)
-                            # Substituting and reverting back to original coordinates
-                            deq = deq.subs([(r, rcoord), (s, scoord)])
-                            try:
-                                sdeq = solve(deq, y)
-                            except NotImplementedError:
-                                tempsol.append(deq)
-                            else:
-                                if len(sdeq) == 1:
-                                    return Eq(f(x), sdeq.pop())
-                                else:
-                                    return [Eq(f(x), sol) for sol in sdeq]
-
-
-                    elif denom: # (ds/dr) is zero which means s is constant
-                        return Eq(f(x), solve(scoord - C1, y)[0])
-
-                    elif num: # (dr/ds) is zero which means r is constant
-                        return Eq(f(x), solve(rcoord - C1, y)[0])
-
-    # If nothing works, return solution as it is, without solving for y
-    if tempsol:
-        if len(tempsol) == 1:
-            return Eq(tempsol.pop().subs(y, f(x)), 0)
-        else:
-            return [Eq(sol.subs(y, f(x)), 0) for sol in tempsol]
-
-    raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
-        + " the lie group method")
-
+    if desols == []:
+        raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+            + " the lie group method")
+    return desols
 
 def _lie_group_remove(coords):
     r"""
@@ -7555,13 +7580,14 @@ def _linear_2eq_order2_type4(x, y, t, r, eq):
     w = cancel(ew3/I)
     # The particular solution is assumed to be (Ra+I*Ca)*exp(I*w*t) and
     # (Rb+I*Cb)*exp(I*w*t) for x(t) and y(t) respectively
-    peq1 = (-w**2+c1)*Ra - a1*w*Ca + d1*Rb - b1*w*Cb - k1
-    peq2 = a1*w*Ra + (-w**2+c1)*Ca + b1*w*Rb + d1*Cb
-    peq3 = c2*Ra - a2*w*Ca + (-w**2+d2)*Rb - b2*w*Cb - k2
-    peq4 = a2*w*Ra + c2*Ca + b2*w*Rb + (-w**2+d2)*Cb
+    # peq1, peq2, peq3, peq4 unused
+    # peq1 = (-w**2+c1)*Ra - a1*w*Ca + d1*Rb - b1*w*Cb - k1
+    # peq2 = a1*w*Ra + (-w**2+c1)*Ca + b1*w*Rb + d1*Cb
+    # peq3 = c2*Ra - a2*w*Ca + (-w**2+d2)*Rb - b2*w*Cb - k2
+    # peq4 = a2*w*Ra + c2*Ca + b2*w*Rb + (-w**2+d2)*Cb
     # FIXME: solve for what in what?  Ra, Rb, etc I guess
     # but then psol not used for anything?
-    psol = solve([peq1, peq2, peq3, peq4])
+    # psol = solve([peq1, peq2, peq3, peq4])
 
     chareq = (k**2+a1*k+c1)*(k**2+b2*k+d2) - (b1*k+d1)*(a2*k+c2)
     [k1, k2, k3, k4] = roots_quartic(Poly(chareq))
@@ -8359,6 +8385,8 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     F = r1[f].subs(x(t), u).subs(y(t), v(u))
     G = r2[g].subs(x(t), u).subs(y(t), v(u))
     sol2r = dsolve(Eq(diff(v(u), u), G/F))
+    if isinstance(sol2r, Expr):
+        sol2r = [sol2r]
     for sol2s in sol2r:
         sol1 = solve(Integral(1/F.subs(v(u), sol2s.rhs), u).doit() - t - C2, u)
     sol = []

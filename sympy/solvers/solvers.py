@@ -1016,26 +1016,17 @@ def solve(f, *symbols, **flags):
             return [], set()
         return []
 
-    w = Dummy('w')
-    piece = Lambda(w, Piecewise((w, Ge(w, 0)), (-w, True)))
     for i, fi in enumerate(f):
         # Abs
-        reps = []
-        _abs = fi.atoms(Abs)
-        while _abs:
-            a = _abs.pop()
-            if not a.has(*symbols):
-                continue
-            newa = separatevars(a)
-            if not isinstance(newa, Abs):
-                _abs.update(newa.atoms(Abs))
-                continue
-            if a.args[0].is_extended_real is None:
+        fi = fi.replace(Abs, lambda arg:
+            separatevars(Abs(arg)) if arg.has(*symbols) else Abs(arg))
+        fi = fi.replace(Abs, lambda arg:
+            Abs(arg).rewrite(Piecewise) if arg.has(*symbols) else Abs(arg))
+
+        for e in fi.find(Abs):
+            if e.has(*symbols):
                 raise NotImplementedError('solving %s when the argument '
-                    'is not real or imaginary.' % a)
-            reps.append((a, piece(a.args[0]) if a.args[0].is_extended_real else \
-                piece(a.args[0]*S.ImaginaryUnit)))
-        fi = fi.subs(reps)
+                    'is not real or imaginary.' % e)
 
         # arg
         _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
@@ -1490,18 +1481,21 @@ def _solve(f, *symbols, **flags):
                     continue
                 try:
                     v = cond.subs(symbol, candidate)
-                    _eval_simpify = getattr(v, '_eval_simpify', None)
-                    if _eval_simpify is not None:
+                    _eval_simplify = getattr(v, '_eval_simplify', None)
+                    if _eval_simplify is not None:
                         # unconditionally take the simpification of v
-                        v = _eval_simpify(ratio=2, measure=lambda x: 1)
+                        v = _eval_simplify(ratio=2, measure=lambda x: 1)
                 except TypeError:
                     # incompatible type with condition(s)
                     continue
                 if v == False:
                     continue
-                result.add(Piecewise(
-                    (candidate, v),
-                    (S.NaN, True)))
+                if v == True:
+                    result.add(candidate)
+                else:
+                    result.add(Piecewise(
+                        (candidate, v),
+                        (S.NaN, True)))
         # set flags for quick exit at end; solutions for each
         # piece were already checked and simplified
         check = False
@@ -2108,7 +2102,6 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     symbols = symbols.difference(exclude)
     if not symbols:
         return S.Zero, S.One
-    dfree = d.free_symbols
 
     # derivatives are easy to do but tricky to analyze to see if they
     # are going to disallow a linear solution, so for simplicity we
@@ -2695,7 +2688,15 @@ def _tsolve(eq, sym, **flags):
 
                 # Check for duplicate solutions
                 def equal(expr1, expr2):
-                    return expr1.equals(expr2) or nsimplify(expr1) == nsimplify(expr2)
+                    _ = Dummy()
+                    eq = checksol(expr1 - _, _, expr2)
+                    if eq is None:
+                        if nsimplify(expr1) != nsimplify(expr2):
+                            return False
+                        # they might be coincidentally the same
+                        # so check more rigorously
+                        eq = expr1.equals(expr2)
+                    return eq
 
                 # Guess a rational exponent
                 e_rat = nsimplify(log(abs(rhs))/log(abs(lhs.base)))
@@ -2737,13 +2738,18 @@ def _tsolve(eq, sym, **flags):
                                 check.extend(_solve(lhs.exp - e, sym, **flags))
                 elif rhs.is_irrational:
                     b_l, e_l = lhs.base.as_base_exp()
-                    n, d = e_l*lhs.exp.as_numer_denom()
+                    n, d = (e_l*lhs.exp).as_numer_denom()
                     b, e = sqrtdenest(rhs).as_base_exp()
                     check = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, **flags))]
                     check.extend([sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))])
-                    if (e_l*d) !=1 :
-                        check.extend(_solve(b_l**(n) - rhs**(e_l*d), sym, **flags))
-                sol.extend(s for s in check if eq.subs(sym, s).equals(0))
+                    if e_l*d != 1:
+                        check.extend(_solve(b_l**n - rhs**(e_l*d), sym, **flags))
+                for s in check:
+                    ok = checksol(eq, sym, s)
+                    if ok is None:
+                        ok = eq.subs(sym, s).equals(0)
+                    if ok:
+                        sol.append(s)
                 return list(ordered(set(sol)))
 
         elif lhs.is_Function and len(lhs.args) == 1:
@@ -2776,7 +2782,6 @@ def _tsolve(eq, sym, **flags):
                 gisimp = powdenest(expand_power_exp(gi))
                 if gisimp.is_Pow and sym in gisimp.exp.free_symbols:
                     up_or_log.add(gi)
-        down = g.difference(up_or_log)
         eq_down = expand_log(expand_power_exp(eq)).subs(
             dict(list(zip(up_or_log, [0]*len(up_or_log)))))
         eq = expand_power_exp(factor(eq_down, deep=True) + (eq - eq_down))
@@ -2785,11 +2790,18 @@ def _tsolve(eq, sym, **flags):
             try:
                 poly = lhs.as_poly()
                 g = _filtered_gens(poly, sym)
-                sols = _solve_lambert(lhs - rhs, sym, g)
+                _eq = lhs - rhs
+                sols = _solve_lambert(_eq, sym, g)
+                # use a simplified form if it satisfies eq
+                # and has fewer operations
                 for n, s in enumerate(sols):
                     ns = nsimplify(s)
-                    if ns != s and eq.subs(sym, ns).equals(0):
-                        sols[n] = ns
+                    if ns != s and ns.count_ops() <= s.count_ops():
+                        ok = checksol(_eq, sym, ns)
+                        if ok is None:
+                            ok = _eq.subs(sym, ns).equals(0)
+                        if ok:
+                            sols[n] = ns
                 return sols
             except NotImplementedError:
                 # maybe it's a convoluted function
@@ -3277,7 +3289,6 @@ def unrad(eq, *syms, **flags):
     (_p**3 + _p**2 - 2, [_p, _p**6 - x])
 
     """
-    _inv_error = 'cannot get an analytical solution for the inversion'
 
     uflags = dict(check=False, simplify=False)
 

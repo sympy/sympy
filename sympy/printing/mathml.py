@@ -483,7 +483,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
     def _print_Derivative(self, e):
         x = self.dom.createElement('apply')
         diff_symbol = self.mathml_tag(e)
-        if requires_partial(e):
+        if requires_partial(e.expr):
             diff_symbol = 'partialdiff'
         x.appendChild(self.dom.createElement(diff_symbol))
         x_1 = self.dom.createElement('bvar')
@@ -1079,7 +1079,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_Derivative(self, e):
 
-        if requires_partial(e):
+        if requires_partial(e.expr):
             d = '&#x2202;'
         else:
             d = self.mathml_tag(e)

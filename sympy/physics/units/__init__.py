@@ -150,6 +150,7 @@ from .definitions import (
     year, years, tropical_year,
     G, gravitational_constant,
     c, speed_of_light,
+    elementary_charge,
     Z0,
     hbar,
     planck,
@@ -224,9 +225,9 @@ def find_unit(quantity):
 
     >>> from sympy.physics import units as u
     >>> u.find_unit('charge')
-    ['C', 'coulomb', 'coulombs', 'planck_charge']
+    ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit(u.charge)
-    ['C', 'coulomb', 'coulombs', 'planck_charge']
+    ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit("ampere")
     ['ampere', 'amperes']
     >>> u.find_unit('volt')

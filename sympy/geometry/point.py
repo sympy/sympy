@@ -999,7 +999,6 @@ class Point2D(Point):
             raise ValueError("matrix must be a 3x3 matrix")
 
         col, row = matrix.shape
-        valid_matrix = matrix.is_square and col == 3
         x, y = self.args
         return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
 
@@ -1278,7 +1277,6 @@ class Point3D(Point):
             raise ValueError("matrix must be a 4x4 matrix")
 
         col, row = matrix.shape
-        valid_matrix = matrix.is_square and col == 4
         from sympy.matrices.expressions import Transpose
         x, y, z = self.args
         m = Transpose(matrix)

@@ -213,44 +213,47 @@ class Order(Expr):
                 # expand()'ed expr (handled in "if expr.is_Add" branch below).
                 expr = expr.expand()
 
-            if expr.is_Add:
-                lst = expr.extract_leading_order(args)
-                expr = Add(*[f.expr for (e, f) in lst])
+            old_expr = None
+            while old_expr != expr:
+                old_expr = expr
+                if expr.is_Add:
+                    lst = expr.extract_leading_order(args)
+                    expr = Add(*[f.expr for (e, f) in lst])
 
-            elif expr:
-                expr = expr.as_leading_term(*args)
-                expr = expr.as_independent(*args, as_Add=False)[1]
+                elif expr:
+                    expr = expr.as_leading_term(*args)
+                    expr = expr.as_independent(*args, as_Add=False)[1]
 
-                expr = expand_power_base(expr)
-                expr = expand_log(expr)
+                    expr = expand_power_base(expr)
+                    expr = expand_log(expr)
 
-                if len(args) == 1:
-                    # The definition of O(f(x)) symbol explicitly stated that
-                    # the argument of f(x) is irrelevant.  That's why we can
-                    # combine some power exponents (only "on top" of the
-                    # expression tree for f(x)), e.g.:
-                    # x**p * (-x)**q -> x**(p+q) for real p, q.
-                    x = args[0]
-                    margs = list(Mul.make_args(
-                        expr.as_independent(x, as_Add=False)[1]))
+                    if len(args) == 1:
+                        # The definition of O(f(x)) symbol explicitly stated that
+                        # the argument of f(x) is irrelevant.  That's why we can
+                        # combine some power exponents (only "on top" of the
+                        # expression tree for f(x)), e.g.:
+                        # x**p * (-x)**q -> x**(p+q) for real p, q.
+                        x = args[0]
+                        margs = list(Mul.make_args(
+                            expr.as_independent(x, as_Add=False)[1]))
 
-                    for i, t in enumerate(margs):
-                        if t.is_Pow:
-                            b, q = t.args
-                            if b in (x, -x) and q.is_real and not q.has(x):
-                                margs[i] = x**q
-                            elif b.is_Pow and not b.exp.has(x):
-                                b, r = b.args
-                                if b in (x, -x) and r.is_real:
-                                    margs[i] = x**(r*q)
-                            elif b.is_Mul and b.args[0] is S.NegativeOne:
-                                b = -b
-                                if b.is_Pow and not b.exp.has(x):
+                        for i, t in enumerate(margs):
+                            if t.is_Pow:
+                                b, q = t.args
+                                if b in (x, -x) and q.is_real and not q.has(x):
+                                    margs[i] = x**q
+                                elif b.is_Pow and not b.exp.has(x):
                                     b, r = b.args
                                     if b in (x, -x) and r.is_real:
                                         margs[i] = x**(r*q)
+                                elif b.is_Mul and b.args[0] is S.NegativeOne:
+                                    b = -b
+                                    if b.is_Pow and not b.exp.has(x):
+                                        b, r = b.args
+                                        if b in (x, -x) and r.is_real:
+                                            margs[i] = x**(r*q)
 
-                    expr = Mul(*margs)
+                        expr = Mul(*margs)
 
             expr = expr.subs(rs)
 
