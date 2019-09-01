@@ -1283,7 +1283,7 @@ class Derivative(Expr):
                     if count == 0:
                         continue
                 elif isinstance(v, UndefinedFunction):
-                    raise ValueError(
+                    raise TypeError(
                         "cannot differentiate wrt "
                         "UndefinedFunction: %s" % v)
                 else:
