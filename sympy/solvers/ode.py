@@ -5618,8 +5618,8 @@ def ode_factorable(eq, func, order, match):
     Solves equations having a solvable factor.
 
     This function is used to solve the equation having factors. Factors may be of type algebraic or ode. It
-    will try to solve each factor independently. ODE type of factors will be solved by calling dsolve and algebraic type
-    of factors will be solved by calling solve. We will return the list of solutions.
+    will try to solve each factor independently. Factors will be solved by calling dsolve. We will return the
+    list of solutions.
 
     Examples
     ========
