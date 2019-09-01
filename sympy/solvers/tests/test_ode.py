@@ -754,7 +754,7 @@ def test_classify_ode():
         'nth_algebraic_Integral',
         'Liouville_Integral',
         )
-    assert classify_ode(f(x), f(x)) == ('nth_algebraic',)
+    assert classify_ode(f(x), f(x)) == ('nth_algebraic', 'nth_algebraic_Integral')
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == (
         'nth_algebraic',
         'separable',
@@ -3588,7 +3588,8 @@ def test_factorable_series():
           *(2 - sqrt(3)))*(-sqrt(3) + 1 + (3 - sqrt(3))*(4 - sqrt(3)))) - x**2/(-sqrt(3) - 1
           + (1 - sqrt(3))*(2 - sqrt(3))) + 1) + O(x**6))]
     assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
-    #assert checkodesol(eq, sols) == 2*[(True, 0)]
+    # checkodesol doesn't work with series solution.
+    # FIXME: assert checkodesol(eq, sols) == 2*[(True, 0)]
 
 def test_issue_17322():
     eq = (f(x).diff(x)-f(x)) * (f(x).diff(x)+f(x))

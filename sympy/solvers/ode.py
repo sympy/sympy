@@ -1045,26 +1045,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point}: value, f(x).diff(x, order).subs(x, point): value}")
 
-
-    # Precondition to try remove unnecessary factor and power from equation
-    if isinstance(eq, Pow):
-        eqs_args = eq.args # if f(x)**p=0 then f(x)=0 (p>0)
-        if S(eqs_args[1]).is_positive>0:
-            eq = eqs_args[0]
-
-    # I will try not to change the structure of equation may be user wants to solve the ode by some particular classifier
-    from sympy.polys.polytools import factor
-    eqs = factor(eq)
-    eqs = fraction(eqs)[0] # p/q =0, So we need to solve only p=0
-    eqns = []
-    if isinstance(eqs, Mul):
-        fac = eqs.args
-        for i in fac:
-            if i.has(func):
-                eqns.append(i)
-        if len(eqns)>0:
-            r = {'eqns' : eqns}
-            matching_hints["factorable"] = r
+    # Factorable method
+    r = _ode_factorable_match(eq, func)
+    if r:
+        matching_hints['factorable'] = r
 
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
@@ -1079,10 +1063,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     if not reduced_eq:
         reduced_eq = eq
 
-    if order == 0:
+    if order >= 0:
+        # Any ODE that can be solved with a combination of algebra and
+        # integrals e.g.:
+        # d^3/dx^3(x y) = F(x)
         r = _nth_algebraic_match(reduced_eq, func)
         if r['solutions']:
             matching_hints['nth_algebraic'] = r
+            matching_hints['nth_algebraic_Integral'] = r
 
     if order == 1:
 
@@ -1389,14 +1377,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         r = _nth_order_reducible_match(reduced_eq, func)
         if r:
             matching_hints['nth_order_reducible'] = r
-
-        # Any ODE that can be solved with a combination of algebra and
-        # integrals e.g.:
-        # d^3/dx^3(x y) = F(x)
-        r = _nth_algebraic_match(reduced_eq, func)
-        if r['solutions']:
-            matching_hints['nth_algebraic'] = r
-            matching_hints['nth_algebraic_Integral'] = r
 
         # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
@@ -3044,6 +3024,21 @@ def _handle_Integral(expr, func, hint):
         sol = expr
     return sol
 
+def _ode_factorable_match(eq, func):
+
+    from sympy.polys.polytools import factor
+    eqs = factor(eq)
+    eqs = fraction(eqs)[0] # p/q =0, So we need to solve only p=0
+    eqns = []
+    r = None
+    if isinstance(eqs, Mul):
+        fac = eqs.args
+        for i in fac:
+            if i.has(func):
+                eqns.append(i)
+        if len(eqns)>0:
+            r = {'eqns' : eqns}
+    return r
 
 # FIXME: replace the general solution in the docstring with
 # dsolve(equation, hint='1st_exact_Integral').  You will need to be able
@@ -5635,7 +5630,17 @@ def ode_factorable(eq, func, order, match):
 
     """
     eqns = match['eqns']
-    sols = [dsolve(eq, func) for eq in eqns]
+    sols = []
+    for eq in eqns:
+        try:
+            sol =dsolve(eq, func)
+            if isinstance(sol, list):
+                sols.extand(sol)
+            else:
+                sols.append(sol)
+        except NotImplementedError:
+            continue
+
     return sols
 
 def ode_separable(eq, func, order, match):
