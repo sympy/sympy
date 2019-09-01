@@ -336,7 +336,7 @@ class ImageSet(Set):
         if len(sets) == 1:
             return sets[0]
         else:
-            return ProductSet(self.args[1:]).flatten()
+            return ProductSet(*self.args[1:]).flatten()
 
     def __iter__(self):
         already_seen = set()
