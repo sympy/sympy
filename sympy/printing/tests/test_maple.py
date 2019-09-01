@@ -53,7 +53,6 @@ def test_Pow():
     assert maple_code((x ** 3) ** y) == "(x^3)^y"  # PROBLEM
     assert maple_code(x ** Rational(2, 3)) == 'x^(2/3)'
 
-    # FIXME: not done yet.
     g = implemented_function('g', Lambda(x, 2 * x))
     assert maple_code(1 / (g(x) * 3.5) ** (x - y ** x) / (x ** 2 + y)) == \
            "(3.5*2*x)^(-x + y^x)/(x^2 + y)"
@@ -114,12 +113,11 @@ def test_mix_number_pow_symbols():
     assert maple_code(pi ** 3) == 'Pi^3'
     assert maple_code(x ** 2) == 'x^2'
 
-    print(maple_code(x ** (pi ** 3)))
-    assert maple_code(x ** (pi ** 3)) == 'x^Pi^3'  # PROBLEM
+    assert maple_code(x ** (pi ** 3)) == 'x^Pi^3'
     assert maple_code(x ** y) == 'x^y'
 
     print(maple_code(x ** (y ** z)))
-    assert maple_code(x ** (y ** z)) == 'x^(y^z)'  # PROBLEM
+    assert maple_code(x ** (y ** z)) == 'x^y^z'
     assert maple_code((x ** y) ** z) == '(x^y)^z'
 
 
@@ -290,7 +288,6 @@ def test_maple_matrix_elements():
     AA = MatrixSymbol('AA', 1, 3)
     assert maple_code(AA) == "AA"
 
-    # FIXME
     assert maple_code(AA[0, 0] ** 2 + sin(AA[0, 1]) + AA[0, 2]) == \
            "sin(AA[1,2]) + AA[1,1]^2 + AA[1,3]"
     assert maple_code(sum(AA)) == "AA[1,1] + AA[1,2] + AA[1,3]"
@@ -324,7 +321,7 @@ def test_maple_not_supported():
         "# Not supported in maple:\n"
         "# ComplexInfinity\n"
         "ComplexInfinity"
-    )
+    )  # PROBLEM
 
 
 
@@ -363,7 +360,7 @@ def test_maple_piecewise():
     expr = Piecewise((x, x < 1), (x ** 2, True))
 
     print(maple_code(expr))
-    assert maple_code(expr) == "piecewise(x < 1, x, x^2)"  # PROBLEM
+    assert maple_code(expr) == "piecewise(x < 1, x, x^2)"
     assert maple_code(expr, assign_to="r") == (
         "r := piecewise(x < 1, x, x^2)")
 
@@ -392,7 +389,7 @@ def test_maple_derivatives():
 
     print(maple_code(f(x).diff(x)))
     print(maple_code(f(x).diff(x, 2)))
-    assert maple_code(f(x).diff(x)) == 'diff(f(x), x)'
+    assert maple_code(f(x).diff(x)) == 'diff(f(x), x)'  # PROBLEM
     assert maple_code(f(x).diff(x, 2)) == 'diff(f(x), x$2)'
 
 
