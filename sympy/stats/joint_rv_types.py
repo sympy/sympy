@@ -59,7 +59,7 @@ def JointRV(symbol, pdf, _set=None):
     symbol = sympify(symbol)
     syms = list(i for i in pdf.free_symbols if isinstance(i, Indexed)
         and i.base == IndexedBase(symbol))
-    syms.sort(key = lambda index: index.args[1])
+    syms = tuple(sorted(syms, key = lambda index: index.args[1]))
     _set = S.Reals**len(syms)
     pdf = Lambda(syms, pdf)
     dist = JointDistributionHandmade(pdf, _set)
@@ -110,7 +110,7 @@ class MultivariateNormalDistribution(JointDistribution):
                 _mu = _mu.row_del(i)
                 _sigma = _sigma.col_del(i)
                 _sigma = _sigma.row_del(i)
-        return Lambda(sym, S(1)/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
+        return Lambda(tuple(sym), S(1)/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
             -S(1)/2*(_mu - sym).transpose()*(_sigma.inv()*\
                 (_mu - sym)))[0])
 

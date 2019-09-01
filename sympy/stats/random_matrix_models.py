@@ -92,7 +92,7 @@ class GaussianEnsemble(RandomMatrixEnsemble):
         sub_term = Lambda(i, Product(Abs(l[j] - l[i])**beta, (j, i + 1, n)))
         term2 = Product(sub_term(i).doit(), (i, 1, n - 1)).doit()
         syms = ArrayComprehension(l[k], (k, 1, n)).doit()
-        return Lambda(syms, (term1 * term2)/Zbn)
+        return Lambda(tuple(syms), (term1 * term2)/Zbn)
 
 class GaussianUnitaryEnsemble(GaussianEnsemble):
     """
@@ -221,7 +221,7 @@ class CircularEnsemble(RandomMatrixEnsemble):
         syms = ArrayComprehension(t[i], (i, 1, n)).doit()
         f = Product(Product(Abs(exp(I*t[k]) - exp(I*t[j]))**beta, (j, k + 1, n)).doit(),
                     (k, 1, n - 1)).doit()
-        return Lambda(syms, f/Zbn)
+        return Lambda(tuple(syms), f/Zbn)
 
 class CircularUnitaryEnsemble(CircularEnsemble):
     """

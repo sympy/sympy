@@ -1900,7 +1900,7 @@ def imageset(*args):
             else:
                 s = inspect.getargspec(f).args
         dexpr = _sympify(f(*[Dummy() for i in s]))
-        var = [_uniquely_named_symbol(Symbol(i), dexpr) for i in s]
+        var = tuple(_uniquely_named_symbol(Symbol(i), dexpr) for i in s)
         expr = f(*var)
         f = Lambda(var, expr)
     else:

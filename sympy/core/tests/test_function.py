@@ -3,17 +3,18 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
         Matrix, Basic, Dict, oo, zoo, nan, Pow)
-from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
-from sympy.core.function import PoleError, _mexpand, arity
+from sympy.core.function import (PoleError, _mexpand, arity,
+        BadSignatureError, BadArgumentsError)
 from sympy.core.sympify import sympify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import subsets, variations
+from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
@@ -206,11 +207,39 @@ def test_Lambda():
 
     assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
-    raises(TypeError, lambda: Lambda(1, x))
+    raises(BadSignatureError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
 
-    raises(SyntaxError, lambda: Lambda((x, x), x + 2))
+    raises(BadSignatureError, lambda: Lambda((x, x), x + 2))
+    raises(BadSignatureError, lambda: Lambda(((x, x), y), x))
+    raises(BadSignatureError, lambda: Lambda(((y, x), x), x))
+    raises(BadSignatureError, lambda: Lambda(((y, 1), 2), x))
 
+    with warns_deprecated_sympy():
+        assert Lambda([x, y], x+y) == Lambda((x, y), x+y)
+
+    flam = Lambda( ((x, y),) , x + y)
+    assert flam((2, 3)) == 5
+    flam = Lambda( ((x, y), z) , x + y + z)
+    assert flam((2, 3), 1) == 6
+    flam = Lambda( (((x,y),z),) , x+y+z)
+    assert flam(    ((2,3),1) ) == 6
+    raises(BadArgumentsError, lambda: flam(1, 2, 3))
+    flam = Lambda( (x,), (x, x))
+    assert flam(1,) == (1, 1)
+    assert flam((1,)) == ((1,), (1,))
+    flam = Lambda( ((x,),) , (x, x))
+    raises(BadArgumentsError, lambda: flam(1))
+    assert flam((1,)) == (1, 1)
+
+    # Previously TypeError was raised so this is potentially needed for
+    # backwards compatibility.
+    assert issubclass(BadSignatureError, TypeError)
+    assert issubclass(BadArgumentsError, TypeError)
+
+    # These are tested to see they don't raise:
+    hash(Lambda(x, 2*x))
+    hash(Lambda(x, x))  # IdentityFunction subclass
 
 
 def test_IdentityFunction():
