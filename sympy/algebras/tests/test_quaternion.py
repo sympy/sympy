@@ -33,9 +33,9 @@ def test_quaternion_complex_real_addition():
     assert 1 + q == Quaternion(1 + x, y, z, w)
     assert I + q == Quaternion(x, 1 + y, z, w)
     assert b + q == Quaternion(x + b, y, z, w)
-    assert c + q == Add(c, Quaternion(x, y, z, w), evaluate=False)
-    assert q * c == Mul(Quaternion(x, y, z, w), c, evaluate=False)
-    assert c * q == Mul(c, Quaternion(x, y, z, w), evaluate=False)
+    raises(ValueError, lambda: c + q)
+    raises(ValueError, lambda: q * c)
+    raises(ValueError, lambda: c * q)
 
     assert -q == Quaternion(-x, -y, -z, -w)
 
