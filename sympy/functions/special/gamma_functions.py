@@ -203,7 +203,7 @@ class gamma(Function):
         arg = self.args[0]
         arg_1 = arg.as_leading_term(x)
         if Order(x, x).contains(arg_1):
-            return None
+            return S(1) / arg_1
         if Order(1, x).contains(arg_1):
             return self.func(arg_1)
         ####################################################
