@@ -505,16 +505,20 @@ class Equality(Relational):
                     return S(r)
 
                 # Try to split real/imaginary parts and equate them
+                I = S.ImaginaryUnit
+
                 def split_real_imag(expr):
-                    return sift(Add.make_args(expr), lambda a:a.is_extended_real)
+                    real_imag = lambda t: (
+                            'real' if t.is_extended_real else
+                            'imag' if (I*t).is_extended_real else None)
+                    return sift(Add.make_args(expr), real_imag)
 
                 lhs_ri = split_real_imag(lhs)
                 if not lhs_ri[None]:
                     rhs_ri = split_real_imag(rhs)
                     if not rhs_ri[None]:
-                        I = S.ImaginaryUnit
-                        eq_real = Eq(Add(*lhs_ri[True]), Add(*rhs_ri[True]))
-                        eq_imag = Eq(I*Add(*lhs_ri[False]), I*Add(*rhs_ri[False]))
+                        eq_real = Eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
+                        eq_imag = Eq(I*Add(*lhs_ri['imag']), I*Add(*rhs_ri['imag']))
                         res = fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
                         if res is not None:
                             return S(res)

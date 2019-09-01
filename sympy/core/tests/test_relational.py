@@ -789,6 +789,7 @@ def test_issue_10401():
     infx = symbols('infx', infinite=True, extended_real=True)
     infx2 = symbols('infx2', infinite=True, extended_real=True)
     infnx = symbols('inf~x', infinite=True, extended_real=False)
+    infnx2 = symbols('inf~x2', infinite=True, extended_real=False)
     infp = symbols('infp', infinite=True, extended_positive=True)
     infp1 = symbols('infp1', infinite=True, extended_positive=True)
     infn = symbols('infn', infinite=True, extended_negative=True)
@@ -822,6 +823,7 @@ def test_issue_10401():
     i = Symbol('i', imaginary=True)
     assert Eq(i*I, r) not in (T, F)
     assert Eq(infx, infnx) is F
+    assert Eq(infnx, infnx2) not in (T, F) and infnx != infnx2
     assert Eq(zoo, oo) is F
     assert Eq(inf/inf2, 0) is F
     assert Eq(inf/fin, 0) is F
