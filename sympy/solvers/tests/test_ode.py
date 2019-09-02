@@ -2924,12 +2924,14 @@ def test_heuristic_abaco2_unique_unknown():
     i = infinitesimals(eq, hint='abaco2_unique_unknown')
     assert checkinfsol(eq, i)[0]
 
+
 def test_heuristic_linear():
     a, b, m, n = symbols("a b m n")
 
     eq = x**(n*(m + 1) - m)*(f(x).diff(x)) - a*f(x)**n -b*x**(n*(m + 1))
     i = infinitesimals(eq, hint='linear')
     assert checkinfsol(eq, i)[0]
+
 
 @XFAIL
 def test_kamke():
@@ -2953,6 +2955,7 @@ def test_series():
     eq = f(x).diff(x) - sin(x*f(x))
     sol = Eq(f(x), (x - 2)**2*(1+ sin(4))*cos(4) + (x - 2)*sin(4) + 2 + O(x**3))
     assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == sol
+
 
 @XFAIL
 @SKIP
@@ -3056,6 +3059,7 @@ def test_lie_group_issue15219():
     eqn = exp(f(x).diff(x)-f(x))
     assert 'lie_group' not in classify_ode(eqn, f(x))
 
+
 def test_user_infinitesimals():
     x = Symbol("x") # assuming x is real generates an error
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
@@ -3063,6 +3067,7 @@ def test_user_infinitesimals():
     infinitesimals = {'xi':sqrt(f(x) - 1)/sqrt(f(x) + 1), 'eta':0}
     assert dsolve(eq, hint='lie_group', **infinitesimals) == sol
     assert checkodesol(eq, sol) == (True, 0)
+
 
 def test_issue_7081():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
@@ -3134,6 +3139,7 @@ def test_2nd_power_series_regular():
     eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
     assert dsolve(eq) == Eq(f(x), C2*(-x**4/2 + 1) + C1*x**2 + O(x**6))
 
+
 def test_issue_7093():
     x = Symbol("x") # assuming x is real leads to an error
     sol = [Eq(f(x), C1 - 2*x*sqrt(x**3)/5),
@@ -3142,12 +3148,14 @@ def test_issue_7093():
     assert set(dsolve(eq)) == set(sol)
     assert checkodesol(eq, sol) == [(True, 0)] * 2
 
+
 def test_dsolve_linsystem_symbol():
     eps = Symbol('epsilon', positive=True)
     eq1 = (Eq(diff(f(x), x), -eps*g(x)), Eq(diff(g(x), x), eps*f(x)))
     sol1 = [Eq(f(x), -C1*eps*cos(eps*x) - C2*eps*sin(eps*x)),
             Eq(g(x), -C1*eps*sin(eps*x) + C2*eps*cos(eps*x))]
     assert checksysodesol(eq1, sol1) == (True, [0, 0])
+
 
 def test_C1_function_9239():
     t = Symbol('t')
@@ -3159,6 +3167,7 @@ def test_C1_function_9239():
     sol = [Eq(C1(t), 9*C3*exp(6*sqrt(3)*t) + 9*C4*exp(-6*sqrt(3)*t)),
            Eq(C2(t), 6*sqrt(3)*C3*exp(6*sqrt(3)*t) - 6*sqrt(3)*C4*exp(-6*sqrt(3)*t))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
+
 
 def test_issue_15056():
     t = Symbol('t')
@@ -3513,6 +3522,7 @@ def test_issue_16146():
     raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x), g(x), h(x)]))
     raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x)]))
 
+
 def test_dsolve_remove_redundant_solutions():
 
     eq = (f(x)-2)*f(x).diff(x)
@@ -3526,6 +3536,7 @@ def test_dsolve_remove_redundant_solutions():
     eq = (f(x)**2-2*f(x)+1)*f(x).diff(x, 3)
     sol = Eq(f(x), C1 + C2*x + C3*x**2)
     assert dsolve(eq) == sol
+
 
 def test_factorable():
     eq = f(x) + f(x)*f(x).diff(x)
@@ -3568,6 +3579,8 @@ def test_factorable():
 
     eq = (f(x).diff(x, 2)-exp(f(x)))*(f(x).diff(x, 2)+exp(f(x)))
     raises(NotImplementedError, lambda: dsolve(eq, hint = 'factorable'))
+
+
 @slow
 def test_factorable_series():
     eq = x**4*f(x)**2 + 2*x**4*f(x)*Derivative(f(x), (x, 2)) + x**4*Derivative(f(x),
@@ -3584,6 +3597,7 @@ def test_factorable_series():
     assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
     # checkodesol doesn't work with series solution.
     # FIXME: assert checkodesol(eq, sols) == 2*[(True, 0)]
+
 
 def test_issue_17322():
     eq = (f(x).diff(x)-f(x)) * (f(x).diff(x)+f(x))
