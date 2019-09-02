@@ -4,8 +4,8 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
+from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import oo, Integer
-from sympy.core.logic import fuzzy_or
 from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
@@ -423,10 +423,10 @@ class ImageSet(Set):
                 dom = self.base_set
                 for e, o in zip(L.expr, other):
                     dom = dom.intersection(solveset(e - o, x, domain=dom))
-                    if not dom:
+                    if dom.is_empty:
                         # there is no solution in common
                         return False
-                return not isinstance(dom, Intersection)
+                return fuzzy_not(dom.is_empty)
         for soln in solns:
             try:
                 if soln in self.base_set:
