@@ -1063,14 +1063,13 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     if not reduced_eq:
         reduced_eq = eq
 
-    if order >= 0:
-        # Any ODE that can be solved with a combination of algebra and
-        # integrals e.g.:
-        # d^3/dx^3(x y) = F(x)
-        r = _nth_algebraic_match(reduced_eq, func)
-        if r['solutions']:
-            matching_hints['nth_algebraic'] = r
-            matching_hints['nth_algebraic_Integral'] = r
+    # Any ODE that can be solved with a combination of algebra and
+    # integrals e.g.:
+    # d^3/dx^3(x y) = F(x)
+    r = _nth_algebraic_match(reduced_eq, func)
+    if r['solutions']:
+        matching_hints['nth_algebraic'] = r
+        matching_hints['nth_algebraic_Integral'] = r
 
     if order == 1:
 
@@ -5633,13 +5632,15 @@ def ode_factorable(eq, func, order, match):
     sols = []
     for eq in eqns:
         try:
-            sol =dsolve(eq, func)
+            sol = dsolve(eq, func)
+        except NotImplementedError:
+            continue
+        else:
             if isinstance(sol, list):
                 sols.extend(sol)
             else:
                 sols.append(sol)
-        except NotImplementedError:
-            continue
+
     if sols == []:
        raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
             + " the factorable group method")

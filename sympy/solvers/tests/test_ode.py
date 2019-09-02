@@ -3578,6 +3578,17 @@ def test_factorable():
     assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
     assert checkodesol(eq, sols) == 4*[(True, 0)]
 
+    eq = (f(x).diff(x, 2)-exp(f(x)))*f(x).diff(x)
+    sol = Eq(f(x), C1)
+    assert sol == dsolve(eq, f(x), hint='factorable')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = (f(x).diff(x)**2-1)*(f(x)*f(x).diff(x)-1)
+    sol = [Eq(f(x), C1 - x), Eq(f(x), -sqrt(C1 + 2*x)),
+           Eq(f(x), sqrt(C1 + 2*x)), Eq(f(x), C1 + x)]
+    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sol) == 4*[(True, 0)]
+
     eq = (f(x).diff(x, 2)-exp(f(x)))*(f(x).diff(x, 2)+exp(f(x)))
     raises(NotImplementedError, lambda: dsolve(eq, hint = 'factorable'))
 @slow
