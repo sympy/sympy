@@ -1790,6 +1790,31 @@ class FiniteSet(Set, EvalfMixin):
     def _eval_evalf(self, prec):
         return FiniteSet(*[elem._eval_evalf(prec) for elem in self])
 
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
+        from sympy.functions.elementary.piecewise import Piecewise
+
+        args = self.args
+        if kwargs.get('deep', True):
+            args = [arg.rewrite(Piecewise, **kwargs) for arg in args]
+
+        def multi_ne(*args):
+            pairs = list(subsets(args, 2))
+            ne_pairs = [Ne(*pair) for pair in pairs]
+            return And(*ne_pairs)
+
+        expr_cond_pairs = []
+
+        l = len(self.args)
+        for i in range(l-1):
+            combinations = list(subsets(args, l-i))
+            for subset in combinations:
+                expr = FiniteSet(*subset)
+                cond = multi_ne(*subset)
+                expr_cond_pairs.append([expr, cond])
+        expr_cond_pairs.append([FiniteSet(args[0]), True])
+
+        return Piecewise(*expr_cond_pairs)
+
     @property
     def _sorted_args(self):
         return self.args

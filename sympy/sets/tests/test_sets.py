@@ -1,9 +1,11 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
+    Max, Min, Float, FiniteSet, Intersection, imageset, I, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
     Matrix, signsimp, Range, Add, symbols, zoo)
+from sympy.core.relational import \
+    Eq, Ne, Eq, Ge, Le, Gt, Lt, GreaterThan, LessThan
+from sympy.logic.boolalg import true, false, And, Or
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -1235,3 +1237,66 @@ def test_issue_16878b():
     # that handles the base_set of S.Reals like there is
     # for Integers
     assert imageset(x, (x, x), S.Reals).is_subset(S.Reals**2) is True
+
+
+def test_finiteset_rewrite_piecewise():
+    a, b, c, d = symbols('a:d')
+
+    assert FiniteSet(a, b).rewrite(Piecewise) == \
+        Piecewise(
+            ({a, b}, Ne(a, b)),
+            ({a}, True))
+
+    assert FiniteSet(a, b, c).rewrite(Piecewise) == \
+        Piecewise(
+            ({a, b, c}, Ne(a, b) & Ne(a, c) & Ne(b, c)),
+            ({a, b}, Ne(a, b)),
+            ({a, c}, Ne(a, c)),
+            ({b, c}, Ne(b, c)),
+            ({a}, True))
+
+    assert FiniteSet(a, b, c, d).rewrite(Piecewise) == \
+        Piecewise(
+            ({a, b, c, d},
+             Ne(a, b) & Ne(a, c) & Ne(a, d)
+             & Ne(b, c) & Ne(b, d) & Ne(c, d)),
+            ({a, b, c}, Ne(a, b) & Ne(a, c) & Ne(b, c)),
+            ({a, b, d}, Ne(a, b) & Ne(a, d) & Ne(b, d)),
+            ({a, c, d}, Ne(a, c) & Ne(a, d) & Ne(c, d)),
+            ({b, c, d}, Ne(b, c) & Ne(b, d) & Ne(c, d)),
+            ({a, b}, Ne(a, b)),
+            ({a, c}, Ne(a, c)),
+            ({a, d}, Ne(a, d)),
+            ({b, c}, Ne(b, c)),
+            ({b, d}, Ne(b, d)),
+            ({c, d}, Ne(c, d)),
+            ({a}, True))
+
+    assert FiniteSet(1, 2, 3).rewrite(Piecewise) == {1, 2, 3}
+
+    assert FiniteSet(1, a, b).rewrite(Piecewise) == \
+        Piecewise(
+            ({1, a, b}, Ne(a, 1) & Ne(a, b) & Ne(b, 1)),
+            ({1, a}, Ne(a, 1)),
+            ({1, b}, Ne(b, 1)),
+            ({a, b}, Ne(a, b)),
+            ({1}, True))
+
+
+@XFAIL
+def test_finiteset_rewrite_piecewise_wrong():
+    a = Symbol('a')
+
+    # XXX This is a wrong result since a can be non-real number.
+    assert FiniteSet(1, 2, a).rewrite(Piecewise) == \
+        Piecewise(
+            ({1, 2, a}, (a > 2) | (a < 1) | ((a > 1) & (a < 2))),
+            ({1, 2}, True))
+
+    # Expected output
+    assert FiniteSet(1, 2, a).rewrite(Piecewise) == \
+        Piecewise(
+            ({1, 2, a}, Ne(a, 1) & Ne(a, 2)),
+            ({1, 2}, True))
+
+    assert FiniteSet(1, 2, a).rewrite(Piecewise).subs(a, I) == {1, 2, I}
