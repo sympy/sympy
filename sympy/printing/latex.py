@@ -1688,6 +1688,10 @@ class LatexPrinter(Printer):
         return r"\mathbb{I}" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{I}"
 
+    def _print_PermutationMatrix(self, P):
+        perm_str = self._print(P.args[0])
+        return "P_{%s}" % perm_str
+
     def _print_NDimArray(self, expr):
 
         if expr.rank() == 0:

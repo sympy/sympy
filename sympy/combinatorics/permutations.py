@@ -1581,7 +1581,7 @@ class Permutation(Atom):
                 if i < 0 or i > self.size:
                     raise TypeError(
                         "{} should be an integer between 0 and {}"
-                        .format(i, n-1))
+                        .format(i, self.size-1))
                 return self._array_form[i]
             # P([a, b, c])
             if len(i) != self.size:
@@ -1613,7 +1613,7 @@ class Permutation(Atom):
         ==========
 
         i : Expr
-            It should be an integer between `0` and `n-1` where `n`
+            It should be an integer between $0$ and $n-1$ where $n$
             is the size of the permutation.
 
             If it is a symbol or a symbolic expression that can
@@ -1625,8 +1625,8 @@ class Permutation(Atom):
         =====
 
         Any permutation can be defined as a bijective function
-        `\sigma : \{ 0, 1, ..., n-1 \} \rightarrow \{ 0, 1, ..., n-1 \}`
-        where `n` denotes the size of the permutation.
+        $\sigma : \{ 0, 1, ..., n-1 \} \rightarrow \{ 0, 1, ..., n-1 \}$
+        where $n$ denotes the size of the permutation.
 
         The definition may even be extended for any set with distinctive
         elements, such that the permutation can even be applied for
@@ -2870,6 +2870,73 @@ class Permutation(Atom):
                     perm_array[j] += 1
             psize = new_psize
         return cls._af_new(perm_array)
+
+    def resize(self, n):
+        """Resize the permutation to the new size ``n``.
+
+        Parameters
+        ==========
+
+        n : int
+            The new size of the permutation.
+
+        Raises
+        ======
+
+        ValueError
+            If the permutation cannot be resized to the given size.
+            This may only happen when resized to a smaller size than
+            the original.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+
+        Increasing the size of a permutation:
+
+        >>> p = Permutation(0, 1, 2)
+        >>> p = p.resize(5)
+        >>> p
+        (4)(0 1 2)
+
+        Decreasing the size of the permutation:
+
+        >>> p = p.resize(4)
+        >>> p
+        (3)(0 1 2)
+
+        If resizing to the specific size breaks the cycles:
+
+        >>> p.resize(2)
+        Traceback (most recent call last):
+        ...
+        ValueError: The permutation can not be resized to 2 because the
+        cycle (0, 1, 2) may break.
+        """
+        aform = self.array_form
+        l = len(aform)
+        if n > l:
+            aform += list(range(l, n))
+            return Permutation._af_new(aform)
+
+        elif n < l:
+            cyclic_form = self.full_cyclic_form
+            new_cyclic_form = []
+            for cycle in cyclic_form:
+                cycle_min = min(cycle)
+                cycle_max = max(cycle)
+                if cycle_min <= n-1:
+                    if cycle_max > n-1:
+                        raise ValueError(
+                            "The permutation can not be resized to {} "
+                            "because the cycle {} may break."
+                            .format(n, tuple(cycle)))
+
+                    new_cyclic_form.append(cycle)
+            return Permutation(new_cyclic_form)
+
+        return self
 
     # XXX Deprecated flag
     print_cyclic = None

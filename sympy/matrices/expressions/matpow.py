@@ -6,6 +6,8 @@ from sympy.core.compatibility import range
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
 
+from .permutation import PermutationMatrix
+
 
 class MatPow(MatrixExpr):
 
@@ -71,6 +73,8 @@ class MatPow(MatrixExpr):
             raise ValueError("Matrix determinant is 0, not invertible.")
         elif isinstance(base, (Identity, ZeroMatrix)):
             return base
+        elif isinstance(base, PermutationMatrix):
+            return PermutationMatrix(base.args[0] ** exp).doit()
         elif isinstance(base, MatrixBase):
             if exp is S.One:
                 return base
