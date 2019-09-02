@@ -124,7 +124,7 @@ def test_ImageSet():
     # Passing a set instead of a FiniteSet shouldn't raise
     assert unchanged(ImageSet, Lambda(x, x**2), {1, 2, 3})
 
-    raises(TypeError, lambda: ImageSet(Lambda(x, x**2), None))
+    raises(TypeError, lambda: ImageSet(Lambda(x, x**2), 1))
 
 
 def test_image_is_ImageSet():
