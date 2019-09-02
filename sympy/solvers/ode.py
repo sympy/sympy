@@ -4266,10 +4266,9 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     # means that some value of the constants in sol1 is a special case of
     # sol2 corresponding to a particular choice of the integration constants.
 
-    if isinstance(soln1, Eq):
-        soln1 = soln1.rhs - soln1.lhs
-    if isinstance(soln2, Eq):
-        soln2 = soln2.rhs - soln2.lhs
+    # In case the solution is in implicit form we subtract the sides
+    soln1 = soln1.rhs - soln1.lhs
+    soln2 = soln2.rhs - soln2.lhs
 
     # Work for the series solution
     if soln1.has(Order) and soln2.has(Order):

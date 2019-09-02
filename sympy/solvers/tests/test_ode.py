@@ -1940,7 +1940,6 @@ def test_noncircularized_real_imaginary_parts():
     assert not (i.has(atan2) and r.has(atan2))
 
 
-@XFAIL
 def test_collect_respecting_exponentials():
     # If this test passes, lines 1306-1311 (at the time of this commit)
     # of sympy/solvers/ode.py should be removed.
@@ -3420,15 +3419,11 @@ def test_nth_algebraic_redundant_solutions():
     assert set(sol) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
     assert set(sol) == set(dsolve(eqn, f(x)))
 
-    # This one doesn't work with dsolve at the time of writing but the
-    # redundancy checking code should not remove the algebraic solution.
-    from sympy.solvers.ode import _remove_redundant_solutions
     eqn = f(x) + f(x)*f(x).diff(x)
     solns = [Eq(f(x), 0),
              Eq(f(x), C1 - x)]
-    solns_final =  _remove_redundant_solutions(eqn, solns, 1, x)
     assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
-    assert set(solns) == set(solns_final)
+    assert set(solns) == set(dsolve(eqn, f(x)))
 
     solns = [Eq(f(x), exp(x)),
              Eq(f(x), C1*exp(C2*x))]
@@ -3441,20 +3436,11 @@ def test_nth_algebraic_redundant_solutions():
     assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
     assert sol == dsolve(eqn, f(x))
 
+
 #
 # These tests can be combined with the above test if they get fixed
 # so that dsolve actually works in all these cases.
 #
-
-# Fails due to division by f(x) eliminating the solution before nth_algebraic
-# is called.
-@XFAIL
-def test_nth_algebraic_find_multiple1():
-    eqn = f(x) + f(x)*f(x).diff(x)
-    solns = [Eq(f(x), 0),
-             Eq(f(x), C1 - x)]
-    assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
-    assert set(solns) == set(dsolve(eqn, f(x)))
 
 
 # prep = True breaks this
