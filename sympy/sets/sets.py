@@ -614,7 +614,7 @@ class Set(Basic):
         return SymmetricDifference(self, other)
 
     def __pow__(self, exp):
-        if not sympify(exp).is_Integer and exp >= 0:
+        if not (sympify(exp).is_Integer and exp >= 0):
             raise ValueError("%s: Exponent must be a positive Integer" % exp)
         return ProductSet(*[self]*exp)
 
@@ -677,17 +677,19 @@ class ProductSet(Set):
     is_ProductSet = True
 
     def __new__(cls, *sets, **assumptions):
+        if len(sets) == 1 and iterable(sets[0]) and not isinstance(sets[0], (Set, set)):
+            SymPyDeprecationWarning(
+                feature="ProductSet(iterable)",
+                useinstead="ProductSet(*iterable)",
+                issue=17557,
+                deprecated_since_version="1.5"
+            ).warn()
+            sets = tuple(sets[0])
+
+        sets = [sympify(s) for s in sets]
+
         if not all(isinstance(s, Set) for s in sets):
-            if len(sets) == 1 and iterable(sets[0]):
-                SymPyDeprecationWarning(
-                    feature="ProductSet(iterable)",
-                    useinstead="ProductSet(*iterable)",
-                    issue=17557,
-                    deprecated_since_version="1.5"
-                ).warn()
-                sets = tuple(sets[0])
-            else:
-                raise TypeError("Arguments to ProductSet should be of type Set")
+            raise TypeError("Arguments to ProductSet should be of type Set")
 
         # Nullary product of sets is *not* the empty set
         if len(sets) == 0:

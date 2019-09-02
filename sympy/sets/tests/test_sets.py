@@ -470,6 +470,13 @@ def test_ProductSet():
     assert (x3, x3) in S3 * S3
     assert x3 + x3 not in S3 * S3
 
+    raises(ValueError, lambda: S.Reals**-1)
+    with warns_deprecated_sympy():
+        ProductSet(FiniteSet(s) for s in range(2))
+    raises(TypeError, lambda: ProductSet(None))
+
+    raises(ValueError, lambda: ProductSet(Interval(0, 1)).as_relational(x, y))
+
 
 def test_ProductSet_of_single_arg_is_not_arg():
     assert unchanged(ProductSet, Interval(0, 1))
@@ -1070,6 +1077,9 @@ def test_Eq():
     assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x) is True
     assert Eq(FiniteSet({x, y}).subs(y, x+1), FiniteSet({x})) is False
     assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) is False
+
+    assert Eq(ProductSet({1}, {2}), Interval(1, 2)) not in (S.true, S.false)
+    assert Eq(ProductSet({1}), ProductSet({1}, {2})) is S.false
 
 
 def test_SymmetricDifference():
