@@ -4274,7 +4274,10 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     # Work for the series solution
     if soln1.has(Order) and soln2.has(Order):
         if soln1.getO() == soln2.getO():
-            return _is_special_case_of(soln1.removeO(), soln2.removeO(), eq, order, var)
+            soln1 = soln1.removeO()
+            soln2 = soln2.removeO()
+        else:
+            return False
     elif soln1.has(Order) or soln2.has(Order):
         return False
 
