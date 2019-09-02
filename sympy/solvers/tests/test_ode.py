@@ -3425,6 +3425,7 @@ def test_nth_algebraic_redundant_solutions():
     assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
     assert set(solns) == set(dsolve(eqn, f(x)))
 
+    from sympy.solvers.ode import _remove_redundant_solutions
     solns = [Eq(f(x), exp(x)),
              Eq(f(x), C1*exp(C2*x))]
     solns_final =  _remove_redundant_solutions(eqn, solns, 2, x)

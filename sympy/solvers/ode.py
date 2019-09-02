@@ -963,6 +963,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only "
         "work with functions of one variable, not %s" % func)
+
+    # Some methods want the unprocessed equation
+    eq_orig = eq
+
     if prep or func is None:
         eq, func_ = _preprocess(eq, func)
         if func is None:
@@ -979,6 +983,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             return classify_ode(eq.lhs - eq.rhs, func, dict=dict, ics=ics, xi=xi,
                 n=terms, eta=eta, prep=False)
         eq = eq.lhs
+
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
     # Also will contain "default":<default hint> and "order":order items.
@@ -1050,6 +1055,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     if r:
         matching_hints['factorable'] = r
 
+    # Any ODE that can be solved with a combination of algebra and
+    # integrals e.g.:
+    # d^3/dx^3(x y) = F(x)
+    r = _nth_algebraic_match(eq_orig, func)
+    if r['solutions']:
+        matching_hints['nth_algebraic'] = r
+        matching_hints['nth_algebraic_Integral'] = r
+
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
@@ -1062,14 +1075,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 reduced_eq = Add(*[arg/den for arg in eq.args])
     if not reduced_eq:
         reduced_eq = eq
-
-    # Any ODE that can be solved with a combination of algebra and
-    # integrals e.g.:
-    # d^3/dx^3(x y) = F(x)
-    r = _nth_algebraic_match(reduced_eq, func)
-    if r['solutions']:
-        matching_hints['nth_algebraic'] = r
-        matching_hints['nth_algebraic_Integral'] = r
 
     if order == 1:
 
