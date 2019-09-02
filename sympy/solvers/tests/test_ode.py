@@ -3478,22 +3478,12 @@ def test_nth_algebraic_prep2():
     assert sol == dsolve(eqn, f(x))
 
 
-# This needs a combination of solutions from nth_algebraic and some other
-# method from dsolve
-@XFAIL
-def test_nth_algebraic_find_multiple2():
-    eqn = f(x)**2 + f(x)*f(x).diff(x)
-    solns = [Eq(f(x), 0),
-             Eq(f(x), C1*exp(-x))]
-    assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
-    assert set(solns) == dsolve(eqn, f(x))
-
-
 # Needs to be a way to know how to combine derivatives in the expression
-@XFAIL
 def test_factoring_ode():
+    from sympy import Mul
     eqn = Derivative(x*f(x), x, x, x) + Derivative(f(x), x, x, x)
-    soln = Eq(f(x), (C1*x**2/2 + C2*x + C3 - x)/(1 + x))
+    # 2-arg Mul!
+    soln = Eq(f(x), C1 + C2*x + C3/Mul(2, (x + 1), evaluate=False))
     assert checkodesol(eqn, soln, order=2, solve_for_func=False)[0]
     assert soln == dsolve(eqn, f(x))
 
