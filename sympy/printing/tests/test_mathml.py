@@ -1250,55 +1250,41 @@ def test_print_SetOp():
     '<mn>4</mn><mi>y</mi></mfenced></mrow>'
 
     A = FiniteSet(a)
-    B = FiniteSet(b)
     C = FiniteSet(c)
     D = FiniteSet(d)
 
-    U1 = Union(A, B, evaluate=False)
-    U2 = Union(C, D, evaluate=False)
-    I1 = Intersection(A, B, evaluate=False)
-    I2 = Intersection(C, D, evaluate=False)
-    C1 = Complement(A, B, evaluate=False)
-    C2 = Complement(C, D, evaluate=False)
-    D1 = SymmetricDifference(A, B, evaluate=False)
-    D2 = SymmetricDifference(C, D, evaluate=False)
+    U1 = Union(C, D, evaluate=False)
+    I1 = Intersection(C, D, evaluate=False)
+    C1 = Complement(C, D, evaluate=False)
+    D1 = SymmetricDifference(C, D, evaluate=False)
     # XXX ProductSet does not support evaluate keyword
-    P1 = ProductSet(A, B)
-    P2 = ProductSet(C, D)
+    P1 = ProductSet(C, D)
 
-    assert prntr(Intersection(A, U2, evaluate=False)) == \
+    assert prntr(Union(A, I1, evaluate=False)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x222A;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x2229;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(Intersection(A, C1, evaluate=False)) == \
         '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
         '<mo>&#x2229;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x2216;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(Complement(A, D1, evaluate=False)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x2216;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x2206;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(SymmetricDifference(A, P1, evaluate=False)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x2206;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x00d7;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(ProductSet(A, U1)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x00d7;</mo><mfenced><mrow><mfenced close="}" open="{">' \
         '<mi>c</mi></mfenced><mo>&#x222A;</mo><mfenced close="}" open="{">' \
         '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
-    assert prntr(Intersection(U1, U2, evaluate=False)) == \
-        '<mrow><mfenced><mrow><mfenced close="}" open="{"><mi>a</mi>' \
-        '</mfenced><mo>&#x222A;</mo><mfenced close="}" open="{"><mi>b</mi>' \
-        '</mfenced></mrow></mfenced><mo>&#x2229;</mo><mfenced><mrow>' \
-        '<mfenced close="}" open="{"><mi>c</mi></mfenced><mo>&#x222A;</mo>' \
-        '<mfenced close="}" open="{"><mi>d</mi></mfenced></mrow></mfenced>' \
-        '</mrow>'
-    assert prntr(Intersection(C1, C2, evaluate=False)) == \
-        '<mrow><mfenced><mrow><mfenced close="}" open="{"><mi>a</mi>' \
-        '</mfenced><mo>&#x2216;</mo><mfenced close="}" open="{"><mi>b</mi>' \
-        '</mfenced></mrow></mfenced><mo>&#x2229;</mo><mfenced><mrow>' \
-        '<mfenced close="}" open="{"><mi>c</mi></mfenced><mo>&#x2216;</mo>' \
-        '<mfenced close="}" open="{"><mi>d</mi></mfenced></mrow></mfenced>' \
-        '</mrow>'
-    assert prntr(Intersection(D1, D2, evaluate=False)) == \
-        '<mrow><mfenced><mrow><mfenced close="}" open="{"><mi>a</mi>' \
-        '</mfenced><mo>&#x2206;</mo><mfenced close="}" open="{"><mi>b</mi>' \
-        '</mfenced></mrow></mfenced><mo>&#x2229;</mo><mfenced><mrow>' \
-        '<mfenced close="}" open="{"><mi>c</mi></mfenced><mo>&#x2206;</mo>' \
-        '<mfenced close="}" open="{"><mi>d</mi></mfenced></mrow></mfenced>' \
-        '</mrow>'
-    assert prntr(Intersection(P1, P2, evaluate=False)) == \
-        '<mrow><mfenced><mrow><mfenced close="}" open="{"><mi>a</mi>' \
-        '</mfenced><mo>&#x00d7;</mo><mfenced close="}" open="{"><mi>b</mi>' \
-        '</mfenced></mrow></mfenced><mo>&#x2229;</mo><mfenced><mrow>' \
-        '<mfenced close="}" open="{"><mi>c</mi></mfenced><mo>&#x00d7;</mo>' \
-        '<mfenced close="}" open="{"><mi>d</mi></mfenced></mrow></mfenced>' \
-        '</mrow>'
 
 
 def test_print_logic():
