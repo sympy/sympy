@@ -5635,12 +5635,14 @@ def ode_factorable(eq, func, order, match):
         try:
             sol =dsolve(eq, func)
             if isinstance(sol, list):
-                sols.extand(sol)
+                sols.extend(sol)
             else:
                 sols.append(sol)
         except NotImplementedError:
             continue
-
+    if sols == []:
+       raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+            + " the factorable group method")
     return sols
 
 def ode_separable(eq, func, order, match):

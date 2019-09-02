@@ -2610,7 +2610,6 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
 
 def test_issue_5095():
     f = Function('f')
-    #raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'separable'))
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
 
 
@@ -3574,6 +3573,13 @@ def test_factorable():
     assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
     assert checkodesol(eq, sols) == 2*[(True, 0)]
 
+    eq = (f(x).diff(x)**2-1)*(f(x).diff(x)**2-4)
+    sols = [Eq(f(x), C1 - x), Eq(f(x), C1 + x), Eq(f(x), C1 + 2*x), Eq(f(x), C1 - 2*x)]
+    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sols) == 4*[(True, 0)]
+
+    eq = (f(x).diff(x, 2)-exp(f(x)))*(f(x).diff(x, 2)+exp(f(x)))
+    raises(NotImplementedError, lambda: dsolve(eq, hint = 'factorable'))
 @slow
 def test_factorable_series():
     eq = x**4*f(x)**2 + 2*x**4*f(x)*Derivative(f(x), (x, 2)) + x**4*Derivative(f(x),

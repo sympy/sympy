@@ -235,6 +235,8 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
             raise ValueError("Hint not recognized: " + hint)
         elif hint not in hints['ordered_hints'] and hint != 'default':
             raise ValueError(string + str(eq) + " does not match hint " + hint)
+        # If dsolve can't solve the purely algebraic equation then dsolve will raise
+        # ValueError
         elif hints['order'] == 0:
             raise ValueError(
                 str(eq) + " is not a solvable differential equation in " + str(func))
