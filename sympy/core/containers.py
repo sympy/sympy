@@ -148,6 +148,9 @@ class Tuple(Basic):
         from sympy.core.logic import fuzzy_and, fuzzy_bool
         from sympy.core.relational import Eq
 
+        if other.is_Symbol:
+            return None
+
         if not isinstance(other, Tuple) or len(self) != len(other):
             return S.false
 

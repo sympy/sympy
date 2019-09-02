@@ -77,6 +77,7 @@ def test_Tuple_Eq():
     assert Eq(Tuple(1, 2), Tuple(1, 2)) is S.true
     assert unchanged(Eq, Tuple(1, x), Tuple(1, 2))
     assert Eq(Tuple(1, x), Tuple(1, 2)).subs(x, 2) is S.true
+    assert unchanged(Eq, Tuple(1, 2), x)
 
 
 def test_Tuple_comparision():

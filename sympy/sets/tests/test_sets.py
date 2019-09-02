@@ -423,6 +423,7 @@ def test_is_disjoint():
 
 
 def test_ProductSet():
+    # ProductSet is always a set of Tuples
     assert ProductSet(S.Reals) == S.Reals ** 1
     assert ProductSet(S.Reals, S.Reals) == S.Reals ** 2
     assert ProductSet(S.Reals, S.Reals, S.Reals) == S.Reals ** 3
@@ -430,6 +431,7 @@ def test_ProductSet():
     assert ProductSet(S.Reals) != S.Reals
     assert ProductSet(S.Reals, S.Reals) == S.Reals * S.Reals
     assert ProductSet(S.Reals, S.Reals, S.Reals) != S.Reals * S.Reals * S.Reals
+    assert ProductSet(S.Reals, S.Reals, S.Reals) == (S.Reals * S.Reals * S.Reals).flatten()
 
     assert 1 not in ProductSet(S.Reals)
     assert (1,) in ProductSet(S.Reals)
@@ -448,7 +450,7 @@ def test_ProductSet():
     assert ProductSet() == FiniteSet(())
     assert ProductSet(S.Reals, S.EmptySet) == S.EmptySet
 
-    # See GH-174598
+    # See GH-17458
 
     for n in range(5):
         Rn = ProductSet(*(S.Reals,) * n)
@@ -475,8 +477,6 @@ def test_ProductSet():
         ProductSet(FiniteSet(s) for s in range(2))
     raises(TypeError, lambda: ProductSet(None))
 
-    raises(ValueError, lambda: ProductSet(Interval(0, 1)).as_relational(x, y))
-
     S1 = FiniteSet(1, 2)
     S2 = FiniteSet(3, 4)
     S3 = ProductSet(S1, S2)
@@ -485,6 +485,17 @@ def test_ProductSet():
             == And(Or(Eq(x, 1), Eq(x, 2)), Or(Eq(y, 3), Eq(y, 4))))
     raises(ValueError, lambda: S3.as_relational(x))
     raises(ValueError, lambda: S3.as_relational(x, 1))
+    raises(ValueError, lambda: ProductSet(Interval(0, 1)).as_relational(x, y))
+
+    Z2 = ProductSet(S.Integers, S.Integers)
+    assert Z2.contains((1, 2)) is S.true
+    assert Z2.contains((1,)) is S.false
+    assert Z2.contains(x) == Contains(x, Z2, evaluate=False)
+    assert Z2.contains(x).subs(x, 1) is S.false
+    assert Z2.contains((x, 1)).subs(x, 2) is S.true
+    assert Z2.contains((x, y)) == Contains((x, y), Z2, evaluate=False)
+    assert unchanged(Contains, (x, y), Z2)
+    assert Contains((1, 2), Z2) is S.true
 
 
 def test_ProductSet_of_single_arg_is_not_arg():

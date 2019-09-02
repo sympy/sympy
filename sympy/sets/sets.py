@@ -739,6 +739,9 @@ class ProductSet(Set):
 
         Passes operation on to constituent sets
         """
+        if element.is_Symbol:
+            return None
+
         if not isinstance(element, Tuple) or len(element) != len(self.sets):
             return False
 
