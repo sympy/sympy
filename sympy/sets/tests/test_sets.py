@@ -477,6 +477,15 @@ def test_ProductSet():
 
     raises(ValueError, lambda: ProductSet(Interval(0, 1)).as_relational(x, y))
 
+    S1 = FiniteSet(1, 2)
+    S2 = FiniteSet(3, 4)
+    S3 = ProductSet(S1, S2)
+    assert (S3.as_relational(x, y)
+            == And(S1.as_relational(x), S2.as_relational(y))
+            == And(Or(Eq(x, 1), Eq(x, 2)), Or(Eq(y, 3), Eq(y, 4))))
+    raises(ValueError, lambda: S3.as_relational(x))
+    raises(ValueError, lambda: S3.as_relational(x, 1))
+
 
 def test_ProductSet_of_single_arg_is_not_arg():
     assert unchanged(ProductSet, Interval(0, 1))
@@ -1073,13 +1082,16 @@ def test_Eq():
     assert Eq(s1*s2, s2*s1) == False
 
     assert unchanged(Eq, FiniteSet({x, y}), FiniteSet({x}))
-    assert Eq(FiniteSet({x, y}).subs(y, x), FiniteSet({x})) is True
-    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x) is True
-    assert Eq(FiniteSet({x, y}).subs(y, x+1), FiniteSet({x})) is False
-    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) is False
+    assert Eq(FiniteSet({x, y}).subs(y, x), FiniteSet({x})) is S.true
+    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x) is S.true
+    assert Eq(FiniteSet({x, y}).subs(y, x+1), FiniteSet({x})) is S.false
+    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) is S.false
 
     assert Eq(ProductSet({1}, {2}), Interval(1, 2)) not in (S.true, S.false)
     assert Eq(ProductSet({1}), ProductSet({1}, {2})) is S.false
+
+    assert Eq(FiniteSet(()), FiniteSet(1)) is S.false
+    assert Eq(ProductSet(), FiniteSet(1)) is S.false
 
 
 def test_SymmetricDifference():

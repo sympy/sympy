@@ -10,6 +10,7 @@ from __future__ import print_function, division
 
 from collections import OrderedDict, defaultdict
 
+from sympy.core import S
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, range, MutableSet
 from sympy.core.sympify import sympify, converter
@@ -142,6 +143,20 @@ class Tuple(Basic):
             return self.args.index(value, start)
         else:
             return self.args.index(value, start, stop)
+
+    def _eval_Eq(self, other):
+        from sympy.core.logic import fuzzy_and, fuzzy_bool
+        from sympy.core.relational import Eq
+
+        if not isinstance(other, Tuple) or len(self) != len(other):
+            return S.false
+
+        r = fuzzy_and(fuzzy_bool(Eq(s, o)) for s, o in zip(self, other))
+        if r is True:
+            return S.true
+        elif r is False:
+            return S.false
+
 
 converter[tuple] = lambda tup: Tuple(*tup)
 

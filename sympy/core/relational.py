@@ -487,12 +487,6 @@ class Equality(Relational):
                     isinstance(lhs, Boolean) !=
                     isinstance(rhs, Boolean)):
                 return S.false  # only Booleans can equal Booleans
-            # FIXME: There should be a more generic test here than just if one
-            # object is a Tuple and the other is not.
-            elif not (lhs.is_Symbol or rhs.is_Symbol) and (
-                    isinstance(lhs, Tuple) !=
-                    isinstance(rhs, Tuple)):
-                return S.false  # only Tuples can equal Tuples
 
             # check finiteness
             fin = L, R = [i.is_finite for i in (lhs, rhs)]

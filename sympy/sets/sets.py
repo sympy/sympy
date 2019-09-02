@@ -745,11 +745,12 @@ class ProductSet(Set):
         return fuzzy_and(s._contains(e) for s, e in zip(self.sets, element))
 
     def as_relational(self, *symbols):
+        symbols = [_sympify(s) for s in symbols]
         if len(symbols) != len(self.sets) or not all(
                 i.is_Symbol for i in symbols):
             raise ValueError(
                 'number of symbols must match the number of sets')
-        return And(*[s.contains(i) for s, i in zip(self.sets, symbols)])
+        return And(*[s.as_relational(i) for s, i in zip(self.sets, symbols)])
 
     @property
     def _boundary(self):
@@ -1710,7 +1711,7 @@ class FiniteSet(Set, EvalfMixin):
             yield fuzzy_and(self._contains(e) for e in o_set - s_set)
             yield fuzzy_and(other._contains(e) for e in s_set - o_set)
 
-        return fuzzy_and(all_in_both())
+        return tfn[fuzzy_and(all_in_both())]
 
     def __iter__(self):
         return iter(self.args)
