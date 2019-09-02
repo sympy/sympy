@@ -1952,7 +1952,11 @@ def imageset(*args):
         raise ValueError('imageset expects at least 2 args, got: %s' % len(args))
 
     if isinstance(args[0], (Symbol, tuple)) and len(args) > 2:
-        f = Lambda(args[0], args[1])
+        if isinstance(args[0], tuple):
+            sig = (args[0],)
+        else:
+            sig = args[0]
+        f = Lambda(sig, args[1])
         set_list = args[2:]
     else:
         f = args[0]
@@ -1983,7 +1987,7 @@ def imageset(*args):
         dexpr = _sympify(f(*[Dummy() for i in s]))
         var = tuple(_uniquely_named_symbol(Symbol(i), dexpr) for i in s)
         expr = f(*var)
-        f = Lambda(var, expr)
+        f = Lambda((var,), expr)
     else:
         raise TypeError(filldedent('''
             expecting lambda, Lambda, or FunctionClass,

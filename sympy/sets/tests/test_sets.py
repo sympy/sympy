@@ -48,8 +48,8 @@ def test_imageset():
     assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
     x1, x2 = symbols("x1, x2")
-    assert imageset(lambda x,y: Add(x,y), Interval(1,2), Interval(2, 3)) == \
-        ImageSet(Lambda((x1, x2), x1+x2), Interval(1,2), Interval(2,3))
+    assert imageset(lambda x, y: Add(x, y), Interval(1, 2)*Interval(2, 3)) == \
+        ImageSet(Lambda((x1, x2), x1+x2), Interval(1, 2)*Interval(2, 3))
 
 
 def test_is_empty():

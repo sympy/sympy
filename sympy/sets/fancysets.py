@@ -303,40 +303,36 @@ class ImageSet(Set):
 
     sympy.sets.sets.imageset
     """
-    def __new__(cls, flambda, *sets):
+    def __new__(cls, flambda, base_set, *sets):
+        if sets:
+            raise ValueError("Multiple set arguments to ImageSet")
+            base_set = ProductSet(*((base_set,) + sets)).flatten()
+
         if not isinstance(flambda, Lambda):
             raise ValueError('First argument must be a Lambda')
 
-        sets = [_sympify(s) for s in sets]
+        base_set = _sympify(base_set)
+        if not isinstance(base_set, Set):
+            raise TypeError("Set argument to ImageSet should of type Set")
 
         if flambda is S.IdentityFunction:
-            if len(sets) != 1:
-                raise ValueError('Identity function requires a single set')
-            return sets[0]
+            return base_set
 
-        if not all(isinstance(s, Set) for s in sets):
-            raise TypeError("Set arguments to ImageSet should of type Set")
-
-        sets = [s.flatten() if s.is_ProductSet else s for s in sets]
+        if 1 not in flambda.nargs:
+            # FIXME: Better checking is needed here for the signature...
+            raise ValueError("ImageSet should have a one argument Lambda")
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
-            emptyprod = fuzzy_or(s.is_empty for s in sets)
-            if emptyprod == True:
+            is_empty = base_set.is_empty
+            if is_empty == True:
                 return S.EmptySet
-            elif emptyprod == False:
+            elif is_empty == False:
                 return FiniteSet(flambda.expr)
 
-        return Basic.__new__(cls, flambda, *sets)
+        return Basic.__new__(cls, flambda, base_set)
 
     lamda = property(lambda self: self.args[0])
-
-    @property
-    def base_set(self):
-        sets = self.args[1:]
-        if len(sets) == 1:
-            return sets[0]
-        else:
-            return ProductSet(*self.args[1:]).flatten()
+    base_set = property(lambda self: self.args[1])
 
     def __iter__(self):
         already_seen = set()
