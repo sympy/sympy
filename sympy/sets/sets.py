@@ -1516,6 +1516,16 @@ class Complement(Set, EvalfMixin):
         B = self.args[1]
         return And(A.contains(other), Not(B.contains(other)))
 
+    def as_relational(self, symbol):
+        """Rewrite a complement in terms of equalities and logic
+        operators"""
+        A, B = self.args
+
+        A_rel = A.as_relational(symbol)
+        B_rel = Not(B.as_relational(symbol))
+
+        return And(A_rel, B_rel)
+
 
 class EmptySet(with_metaclass(Singleton, Set)):
     """
@@ -1859,6 +1869,18 @@ class SymmetricDifference(Set):
             return result
         else:
             return SymmetricDifference(A, B, evaluate=False)
+
+    def as_relational(self, symbol):
+        """Rewrite a symmetric_difference in terms of equalities and
+        logic operators"""
+        A, B = self.args
+
+        A_rel = A.as_relational(symbol)
+        B_rel = B.as_relational(symbol)
+        A_neg = Not(A_rel)
+        B_neg = Not(B_rel)
+
+        return Or(And(A_rel, B_neg), And(B_rel, A_neg))
 
 
 def imageset(*args):
