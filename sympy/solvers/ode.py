@@ -1342,6 +1342,12 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         r = collect(reduced_eq,
             [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
         ordinary = False
+        if r:
+            if not all([r[key].is_polynomial() for key in r]):
+                n, d = reduced_eq.as_numer_denom()
+                reduced_eq = expand(n)
+                r = collect(reduced_eq,
+                    [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
         if r and r[a3] != 0:
             p = cancel(r[b3]/r[a3])  # Used below
             q = cancel(r[c3]/r[a3])  # Used below
