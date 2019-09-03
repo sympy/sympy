@@ -2,7 +2,6 @@ language: python
 sudo: false
 stages:
 - quality
-- flake8
 - baseline
 - test
 env:
@@ -197,11 +196,7 @@ matrix:
             - pypy
           packages:
             - pypy
-    - stage: flake8
-      python: 3.7
-      dist: xenial
-      sudo: true
-      script: flake8 sympy
+    - python: 3.7
       env:
         - TEST_FLAKE8="true"
 
@@ -241,11 +236,7 @@ matrix:
             - pypy
           packages:
             - pypy
-    - stage: flake8
-      python: 3.7
-      dist: xenial
-      sudo: true
-      script: flake8 sympy
+    - python: 3.7
       env:
         - TEST_FLAKE8="true"
 
@@ -261,6 +252,7 @@ before_install:
     fi
   - if [[ "${TEST_FLAKE8}" == "true" ]]; then
       pip install flake8;
+      flake8 sympy;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.8-dev" ]; then
         pip uninstall -y Cython;
