@@ -911,7 +911,6 @@ def lru_cache(maxsize=100, typed=False):
                         # empty the oldest link and make it the new root
                         root = nonlocal_root[0] = oldroot[NEXT]
                         oldkey = root[KEY]
-                        oldvalue = root[RESULT]
                         root[KEY] = root[RESULT] = None
                         # now update the cache dictionary for the new links
                         del cache[oldkey]

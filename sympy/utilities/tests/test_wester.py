@@ -74,13 +74,13 @@ def test_B1():
 
 
 def test_B2():
-    a, b, c = FiniteSet(j), FiniteSet(m), FiniteSet(j, k)
-    d, e = FiniteSet(i), FiniteSet(j, k, l)
-
     assert (FiniteSet(i, j, j, k, k, k) & FiniteSet(l, k, j) &
-            FiniteSet(j, m, j)) == Union(a, Intersection(b, Union(c, Intersection(d, FiniteSet(l)))))
-    # {j} U Intersection({m}, {j, k} U Intersection({i}, {l}))
-
+            FiniteSet(j, m, j)) == Intersection({j, m}, {i, j, k}, {j, k, l})
+    # Previous output below. Not sure why that should be the expected output.
+    # There should probably be a way to rewrite Intersections that way but I
+    # don't see why an Intersection should evaluate like that:
+    #
+    # == Union({j}, Intersection({m}, Union({j, k}, Intersection({i}, {l}))))
 
 
 def test_B3():

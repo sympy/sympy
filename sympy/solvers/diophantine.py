@@ -981,7 +981,6 @@ def _diop_quadratic(var, coeff, t):
         else:
             g = sign(A)*igcd(A, C)
             a = A // g
-            b = B // g
             c = C // g
             e = sign(B/A)
 
@@ -1581,8 +1580,6 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     sol = []
     a = diop_DN(D, 1)
     u = a[0][0]
-    v = a[0][1]
-
 
     if abs(N) == 1:
         return diop_DN(D, N)

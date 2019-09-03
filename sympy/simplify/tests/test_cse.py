@@ -314,7 +314,6 @@ def test_cse_Indexed():
     len_y = 5
     y = IndexedBase('y', shape=(len_y,))
     x = IndexedBase('x', shape=(len_y,))
-    Dy = IndexedBase('Dy', shape=(len_y-1,))
     i = Idx('i', len_y-1)
 
     expr1 = (y[i+1]-y[i])/(x[i+1]-x[i])

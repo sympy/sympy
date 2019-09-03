@@ -1,5 +1,5 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
+    Max, Min, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
@@ -7,6 +7,10 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
 from mpmath import mpi
 
 from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
+from sympy.core.relational import \
+    Eq, Ne, Ge, Le, Gt, Lt, GreaterThan, LessThan
+from sympy.logic import And, Or, Not, Xor
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
@@ -21,7 +25,8 @@ def test_imageset():
     assert imageset(x, abs(x), S.Integers) is S.Naturals0
     # issue 16878a
     r = symbols('r', real=True)
-    assert (1, r) in imageset(x, (x, x), S.Reals) != False
+    assert imageset(x, (x, x), S.Reals)._contains((1, r)) == None
+    assert imageset(x, (x, x), S.Reals)._contains((1, 2)) == False
     assert (r, r) in imageset(x, (x, x), S.Reals)
     assert 1 + I in imageset(x, x + I, S.Reals)
     assert {1} not in imageset(x, (x,), S.Reals)
@@ -342,7 +347,18 @@ def test_intersect1():
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(S.EmptySet) == \
         S.EmptySet
     assert Union(Interval(0, 5), FiniteSet('ham')).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
-        Union(FiniteSet(2, 3, 4, 5), Intersection(FiniteSet(6), Union(Interval(0, 5), FiniteSet('ham'))))
+        Intersection(FiniteSet(2, 3, 4, 5, 6), Union(FiniteSet('ham'), Interval(0, 5)))
+    assert Intersection(FiniteSet(1, 2, 3), Interval(2, x), Interval(3, y)) == \
+        Intersection(FiniteSet(3), Interval(2, x), Interval(3, y), evaluate=False)
+    assert Intersection(FiniteSet(1, 2), Interval(0, 3), Interval(x, y)) == \
+        Intersection({1, 2}, Interval(x, y), evaluate=False)
+    assert Intersection(FiniteSet(1, 2, 4), Interval(0, 3), Interval(x, y)) == \
+        Intersection({1, 2}, Interval(x, y), evaluate=False)
+    # XXX: Is the real=True necessary here?
+    # https://github.com/sympy/sympy/issues/17532
+    m, n = symbols('m, n', real=True)
+    assert Intersection(FiniteSet(m), FiniteSet(m, n), Interval(m, m+1)) == \
+        FiniteSet(m)
 
     # issue 8217
     assert Intersection(FiniteSet(x), FiniteSet(y)) == \
@@ -488,6 +504,10 @@ def test_is_subset():
     assert S.Naturals.is_subset(S.Integers)
     assert S.Naturals0.is_subset(S.Integers)
 
+    assert FiniteSet(x).is_subset(FiniteSet(y)) is None
+    assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x)) is True
+    assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x+1)) is False
+
 
 def test_is_proper_subset():
     assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True
@@ -545,6 +565,12 @@ def test_contains():
 
     assert FiniteSet(1, 2, 3).contains(2) is S.true
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
+
+    assert FiniteSet(y)._contains(x) is None
+    raises(TypeError, lambda: x in FiniteSet(y))
+    assert FiniteSet({x, y})._contains({x}) is None
+    assert FiniteSet({x, y}).subs(y, x)._contains({x}) is True
+    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) is False
 
     # issue 8197
     from sympy.abc import a, b
@@ -676,6 +702,29 @@ def test_Intersection_as_relational():
     assert (Intersection(Interval(0, 1), FiniteSet(2),
             evaluate=False).as_relational(x)
             == And(And(Le(0, x), Le(x, 1)), Eq(x, 2)))
+
+
+def test_Complement_as_relational():
+    x = Symbol('x')
+    expr = Complement(Interval(0, 1), FiniteSet(2), evaluate=False)
+    assert expr.as_relational(x) == \
+        And(Le(0, x), Le(x, 1), Ne(x, 2))
+
+
+@XFAIL
+def test_Complement_as_relational_fail():
+    x = Symbol('x')
+    expr = Complement(Interval(0, 1), FiniteSet(2), evaluate=False)
+    # XXX This example fails because 0 <= x changes to x >= 0
+    # during the evaluation.
+    assert expr.as_relational(x) == \
+            (0 <= x) & (x <= 1) & Ne(x, 2)
+
+
+def test_SymmetricDifference_as_relational():
+    x = Symbol('x')
+    expr = SymmetricDifference(Interval(0, 1), FiniteSet(2), evaluate=False)
+    assert expr.as_relational(x) == Xor(Eq(x, 2), Le(0, x) & Le(x, 1))
 
 
 def test_EmptySet():
@@ -990,6 +1039,12 @@ def test_Eq():
     assert Eq(s1*s2, s1*s2)
     assert Eq(s1*s2, s2*s1) == False
 
+    assert unchanged(Eq, FiniteSet({x, y}), FiniteSet({x}))
+    assert Eq(FiniteSet({x, y}).subs(y, x), FiniteSet({x})) is True
+    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x) is True
+    assert Eq(FiniteSet({x, y}).subs(y, x+1), FiniteSet({x})) is False
+    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) is False
+
 
 def test_SymmetricDifference():
    assert SymmetricDifference(FiniteSet(0, 1, 2, 3, 4, 5), \
@@ -1022,7 +1077,6 @@ def test_issue_9637():
     assert Complement(a, Interval(1, 3)) == Complement(a, Interval(1, 3), evaluate=False)
 
 
-@XFAIL
 def test_issue_9808():
     # See https://github.com/sympy/sympy/issues/16342
     assert Complement(FiniteSet(y), FiniteSet(1)) == Complement(FiniteSet(y), FiniteSet(1), evaluate=False)
@@ -1044,11 +1098,11 @@ def test_issue_Symbol_inter():
     assert Intersection(FiniteSet(1, m, n), FiniteSet(m, n, 2), i) == \
         Intersection(i, FiniteSet(m, n))
     assert Intersection(FiniteSet(m, n, x), FiniteSet(m, z), r) == \
-        Intersection(r, FiniteSet(m, z), FiniteSet(n, x))
+        Intersection(Intersection({m, z}, {m, n, x}), r)
     assert Intersection(FiniteSet(m, n, 3), FiniteSet(m, n, x), r) == \
-        Intersection(r, FiniteSet(3, m, n), evaluate=False)
+        Intersection(FiniteSet(3, m, n), FiniteSet(m, n, x), r, evaluate=False)
     assert Intersection(FiniteSet(m, n, 3), FiniteSet(m, n, 2, 3), r) == \
-        Union(FiniteSet(3), Intersection(r, FiniteSet(m, n)))
+        Intersection(FiniteSet(3, m, n), r)
     assert Intersection(r, FiniteSet(mat, 2, n), FiniteSet(0, mat, n)) == \
         Intersection(r, FiniteSet(n))
     assert Intersection(FiniteSet(sin(x), cos(x)), FiniteSet(sin(x), cos(x), 1), r) == \
@@ -1164,7 +1218,17 @@ def test_finite_set_intersection():
     assert Intersection._handle_finite_sets([FiniteSet(2, 3, x, y), FiniteSet(1, 2, x)]) == \
         Intersection._handle_finite_sets([FiniteSet(1, 2, x), FiniteSet(2, 3, x, y)]) == \
         Intersection(FiniteSet(1, 2, x), FiniteSet(2, 3, x, y)) == \
-        FiniteSet(1, 2, x)
+        Intersection(FiniteSet(1, 2, x), FiniteSet(2, x, y))
+
+    assert FiniteSet(1+x-y) & FiniteSet(1) == \
+        FiniteSet(1) & FiniteSet(1+x-y) == \
+        Intersection(FiniteSet(1+x-y), FiniteSet(1), evaluate=False)
+
+    assert FiniteSet(1) & FiniteSet(x) == FiniteSet(x) & FiniteSet(1) == \
+        Intersection(FiniteSet(1), FiniteSet(x), evaluate=False)
+
+    assert FiniteSet({x}) & FiniteSet({x, y}) == \
+        Intersection(FiniteSet({x}), FiniteSet({x, y}), evaluate=False)
 
 
 def test_union_intersection_constructor():

@@ -536,7 +536,6 @@ class Collector(DefaultPrinting):
         for g in gens:
             w = w*perm_to_free[g]
 
-        pc_presentation = self.pc_presentation
         word = self.collected_word(w)
 
         index = self.index

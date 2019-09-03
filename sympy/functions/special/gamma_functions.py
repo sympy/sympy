@@ -198,6 +198,25 @@ class gamma(Function):
         import sage.all as sage
         return sage.gamma(self.args[0]._sage_())
 
+    def _eval_as_leading_term(self, x):
+        from sympy import Order
+        arg = self.args[0]
+        arg_1 = arg.as_leading_term(x)
+        if Order(x, x).contains(arg_1):
+            return S(1) / arg_1
+        if Order(1, x).contains(arg_1):
+            return self.func(arg_1)
+        ####################################################
+        # The correct result here should be 'None'.        #
+        # Indeed arg in not bounded as x tends to 0.       #
+        # Consequently the series expansion does not admit #
+        # the leading term.                                #
+        # For compatibility reasons, the return value here #
+        # is the original function, i.e. gamma(arg),       #
+        # instead of None.                                 #
+        ####################################################
+        return self.func(arg)
+
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################

@@ -1040,7 +1040,6 @@ def test_atan2():
 
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
     assert atan2(0, 0) == S.NaN
-    w = Symbol('w')
 
     ex = atan2(y, x) - arg(x + I*y)
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0

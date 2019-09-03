@@ -88,7 +88,6 @@ class MatrixShaping(MatrixRequired):
         return self._new(self.rows, self.cols - 1, entry)
 
     def _eval_col_insert(self, pos, other):
-        cols = self.cols
 
         def entry(i, j):
             if j < pos:

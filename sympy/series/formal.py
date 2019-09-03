@@ -1614,7 +1614,6 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
         sympy.series.formal.FormalPowerSeries.coeff_bell
 
         """
-        f, g = self.f, self.g
 
         ffps, gfps = self.ffps, self.gfps
         terms = [ffps.zero_coeff()]
@@ -1700,7 +1699,6 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
         sympy.series.formal.FormalPowerSeries.coeff_bell
 
         """
-        f = self.f
         ffps = self.ffps
         terms = [ffps.zero_coeff()]
 

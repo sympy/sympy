@@ -455,7 +455,9 @@ class IndependentProductPSpace(ProductPSpace):
             replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
             norm = domain.compute_expectation(self.pdf, **kwargs)
             pdf = self.pdf / norm.xreplace(replacement)
-            density = Lambda(domain.symbols, pdf)
+            # XXX: Converting symbols from set to tuple. The order matters to
+            # Lambda though so we shouldn't be starting with a set here...
+            density = Lambda(tuple(domain.symbols), pdf)
 
         return space(domain, density)
 

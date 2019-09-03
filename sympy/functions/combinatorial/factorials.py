@@ -266,6 +266,25 @@ class factorial(CombinatorialFunction):
         if x.is_nonnegative or x.is_noninteger:
             return True
 
+    def _eval_as_leading_term(self, x):
+        from sympy import Order
+        arg = self.args[0]
+        arg_1 = arg.as_leading_term(x)
+        if Order(x, x).contains(arg_1):
+            return S.One
+        if Order(1, x).contains(arg_1):
+            return self.func(arg_1)
+        ####################################################
+        # The correct result here should be 'None'.        #
+        # Indeed arg in not bounded as x tends to 0.       #
+        # Consequently the series expansion does not admit #
+        # the leading term.                                #
+        # For compatibility reasons, the return value here #
+        # is the original function, i.e. factorial(arg),   #
+        # instead of None.                                 #
+        ####################################################
+        return self.func(arg)
+
 class MultiFactorial(CombinatorialFunction):
     pass
 

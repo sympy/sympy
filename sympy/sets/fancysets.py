@@ -4,8 +4,8 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
+from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import oo, Integer
-from sympy.core.logic import fuzzy_or
 from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
@@ -354,7 +354,7 @@ class ImageSet(Set):
                 # XXX this is a bad idea -- make the user
                 # remap self to desired form
                 return other.as_numer_denom() in self.func(
-                    Lambda(L.variables, L.expr.as_numer_denom()), self.base_set)
+                    Lambda(L.signature, L.expr.as_numer_denom()), self.base_set)
             eqs = [expr - val for val, expr in zip(other, L.expr)]
             variables = L.variables
             free = set(variables)
@@ -422,13 +422,11 @@ class ImageSet(Set):
                 # values are still in the set.
                 dom = self.base_set
                 for e, o in zip(L.expr, other):
-                    msgset = dom
-                    other = e - o
                     dom = dom.intersection(solveset(e - o, x, domain=dom))
-                    if not dom:
+                    if dom.is_empty:
                         # there is no solution in common
                         return False
-                return not isinstance(dom, Intersection)
+                return fuzzy_not(dom.is_empty)
         for soln in solns:
             try:
                 if soln in self.base_set:

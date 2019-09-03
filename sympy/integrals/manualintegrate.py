@@ -489,7 +489,6 @@ def add_rule(integral):
 
 def mul_rule(integral):
     integrand, symbol = integral
-    args = integrand.args
 
     # Constant times function case
     coeff, f = integrand.as_independent(symbol)

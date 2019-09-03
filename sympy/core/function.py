@@ -44,13 +44,14 @@ from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.core.containers import Tuple, Dict
-from sympy.core.logic import fuzzy_and
 from sympy.core.compatibility import string_types, with_metaclass, PY3, range
-from sympy.utilities import default_sort_key
-from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import has_dups, sift
+from sympy.core.containers import Tuple, Dict
 from sympy.core.evaluate import global_evaluate
+from sympy.core.logic import fuzzy_and
+from sympy.utilities import default_sort_key
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import has_dups, sift
+from sympy.utilities.misc import filldedent
 
 import mpmath
 import mpmath.libmp as mlib
@@ -100,6 +101,16 @@ class ArgumentIndexError(ValueError):
     def __str__(self):
         return ("Invalid operation with argument number %s for Function %s" %
                (self.args[1], self.args[0]))
+
+
+class BadSignatureError(TypeError):
+    '''Raised when a Lambda is created with an invalid signature'''
+    pass
+
+
+class BadArgumentsError(TypeError):
+    '''Raised when a Lambda is called with an incorrect number of arguments'''
+    pass
 
 
 # Python 2/3 version that does not raise a Deprecation warning
@@ -553,7 +564,7 @@ class Function(Application, Expr):
                 return None
             try:
                 return Float(imp(*[i.evalf(prec) for i in self.args]), prec)
-            except (TypeError, ValueError) as e:
+            except (TypeError, ValueError):
                 return None
 
         # Convert all args to mpf or mpc
@@ -828,6 +839,10 @@ class AppliedUndef(Function):
 
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
+        u = [a.name for a in args if isinstance(a, UndefinedFunction)]
+        if u:
+            raise TypeError('Invalid argument: expecting an expression, not UndefinedFunction%s: %s' % (
+                's'*(len(u) > 1), ', '.join(u)))
         obj = super(AppliedUndef, cls).__new__(cls, *args, **options)
         return obj
 
@@ -911,6 +926,10 @@ class UndefinedFunction(FunctionClass):
 
     def __ne__(self, other):
         return not self == other
+
+    @property
+    def _diff_wrt(self):
+        return False
 
 
 class WildFunction(Function, AtomicExpr):
@@ -1274,6 +1293,10 @@ class Derivative(Expr):
                         v, count = v
                     if count == 0:
                         continue
+                elif isinstance(v, UndefinedFunction):
+                    raise TypeError(
+                        "cannot differentiate wrt "
+                        "UndefinedFunction: %s" % v)
                 else:
                     count = 1
                 variable_count.append(Tuple(v, count))
@@ -1884,6 +1907,12 @@ class Lambda(Expr):
     >>> f2(1, 2, 3, 4)
     73
 
+    It is also possible to unpack tuple arguments:
+
+    >>> f = Lambda( ((x, y), z) , x + y + z)
+    >>> f((1, 2), 3)
+    6
+
     A handy shortcut for lots of arguments:
 
     >>> p = x, y, z
@@ -1894,33 +1923,72 @@ class Lambda(Expr):
     """
     is_Function = True
 
-    def __new__(cls, variables, expr):
-        from sympy.sets.sets import FiniteSet
-        v = list(variables) if iterable(variables) else [variables]
-        for i in v:
-            if not getattr(i, 'is_symbol', False):
-                raise TypeError('variable is not a symbol: %s' % i)
-        if len(v) != len(set(v)):
-            x = [i for i in v if v.count(i) > 1][0]
-            raise SyntaxError("duplicate argument '%s' in Lambda args" % x)
-        if len(v) == 1 and v[0] == expr:
+    def __new__(cls, signature, expr):
+        if iterable(signature) and not isinstance(signature, (tuple, Tuple)):
+            SymPyDeprecationWarning(
+                feature="non tuple iterable of argument symbols to Lambda",
+                useinstead="tuple of argument symbols",
+                issue=17474,
+                deprecated_since_version="1.5").warn()
+            signature = tuple(signature)
+        sig = signature if iterable(signature) else (signature,)
+        sig = sympify(sig)
+        cls._check_signature(sig)
+
+        if len(sig) == 1 and sig[0] == expr:
             return S.IdentityFunction
 
-        obj = Expr.__new__(cls, Tuple(*v), sympify(expr))
-        obj.nargs = FiniteSet(len(v))
-        return obj
+        return Expr.__new__(cls, sig, sympify(expr))
+
+    @classmethod
+    def _check_signature(cls, sig):
+        syms = set()
+
+        def rcheck(args):
+            for a in args:
+                if a.is_symbol:
+                    if a in syms:
+                        raise BadSignatureError("Duplicate symbol %s" % a)
+                    syms.add(a)
+                elif isinstance(a, Tuple):
+                    rcheck(a)
+                else:
+                    raise BadSignatureError("Lambda signature should be only tuples"
+                        " and symbols, not %s" % a)
+
+        if not isinstance(sig, Tuple):
+            raise BadSignatureError("Lambda signature should be a tuple not %s" % sig)
+        # Recurse through the signature:
+        rcheck(sig)
 
     @property
-    def variables(self):
-        """The variables used in the internal representation of the function"""
+    def signature(self):
+        """The expected form of the arguments to be unpacked into variables"""
         return self._args[0]
-
-    bound_symbols = variables
 
     @property
     def expr(self):
         """The return value of the function"""
         return self._args[1]
+
+    @property
+    def variables(self):
+        """The variables used in the internal representation of the function"""
+        def _variables(args):
+            if isinstance(args, Tuple):
+                for arg in args:
+                    for a in _variables(arg):
+                        yield a
+            else:
+                yield args
+        return tuple(_variables(self.signature))
+
+    @property
+    def nargs(self):
+        from sympy.sets.sets import FiniteSet
+        return FiniteSet(len(self.signature))
+
+    bound_symbols = variables
 
     @property
     def free_symbols(self):
@@ -1937,12 +2005,32 @@ class Lambda(Expr):
             ## XXX does this apply to Lambda? If not, remove this comment.
             temp = ('%(name)s takes exactly %(args)s '
                    'argument%(plural)s (%(given)s given)')
-            raise TypeError(temp % {
+            raise BadArgumentsError(temp % {
                 'name': self,
                 'args': list(self.nargs)[0],
                 'plural': 's'*(list(self.nargs)[0] != 1),
                 'given': n})
-        return self.expr.xreplace(dict(list(zip(self.variables, args))))
+
+        d = self._match_signature(self.signature, args)
+
+        return self.expr.xreplace(d)
+
+    def _match_signature(self, sig, args):
+
+        symargmap = {}
+
+        def rmatch(pars, args):
+            for par, arg in zip(pars, args):
+                if par.is_symbol:
+                    symargmap[par] = arg
+                elif isinstance(par, Tuple):
+                    if not isinstance(arg, (tuple, Tuple)) or len(args) != len(pars):
+                        raise BadArgumentsError("Can't match %s and %s" % (args, pars))
+                    rmatch(par, arg)
+
+        rmatch(sig, args)
+
+        return symargmap
 
     def __eq__(self, other):
         if not isinstance(other, Lambda):
@@ -1950,13 +2038,11 @@ class Lambda(Expr):
         if self.nargs != other.nargs:
             return False
 
-        selfexpr = self.args[1]
-        otherexpr = other.args[1]
-        otherexpr = otherexpr.xreplace(dict(list(zip(other.args[0], self.args[0]))))
-        return selfexpr == otherexpr
-
-    def __ne__(self, other):
-        return not(self == other)
+        try:
+            d = self._match_signature(other.signature, self.signature)
+        except BadArgumentsError:
+            return False
+        return self.args == other.xreplace(d).args
 
     def __hash__(self):
         return super(Lambda, self).__hash__()
@@ -1967,10 +2053,7 @@ class Lambda(Expr):
     @property
     def is_identity(self):
         """Return ``True`` if this ``Lambda`` is an identity function. """
-        if len(self.args) == 2:
-            return self.args[0] == self.args[1]
-        else:
-            return None
+        return self.signature == self.expr
 
 
 class Subs(Expr):
