@@ -197,6 +197,8 @@ matrix:
           packages:
             - pypy
     - python: 3.7
+      dist: xenial
+      sudo: true
       env:
         - TEST_FLAKE8="true"
 
@@ -237,6 +239,8 @@ matrix:
           packages:
             - pypy
     - python: 3.7
+      dist: xenial
+      sudo: true
       env:
         - TEST_FLAKE8="true"
 
