@@ -216,19 +216,24 @@ class Relational(Boolean, Expr, EvalfMixin):
         elif tuple(ordered(args)) != args:
             r = r.reversed
 
+        LHS_CEMS = getattr(r.lhs, 'could_extract_minus_sign', None)
+        RHS_CEMS = getattr(r.rhs, 'could_extract_minus_sign', None)
+
         # Check if first value has negative sign
-        if not isinstance(r.lhs, BooleanAtom) and \
-                r.lhs.could_extract_minus_sign():
-            r = r.reversedsign
-        elif not isinstance(r.rhs, BooleanAtom) and not r.rhs.is_number and \
-                r.rhs.could_extract_minus_sign():
-            # Right hand side has a minus, but not lhs.
-            # How does the expression with reversed signs behave?
-            # This is so that expressions of the type Eq(x, -y) and Eq(-x, y)
-            # have the same canonical representation
-            expr1, _ = ordered([r.lhs, -r.rhs])
-            if expr1 != r.lhs:
-                r = r.reversed.reversedsign
+        if not isinstance(r.lhs, BooleanAtom) and LHS_CEMS:
+            if LHS_CEMS():
+                r = r.reversedsign
+        elif not isinstance(r.rhs, BooleanAtom) and RHS_CEMS and \
+            not r.rhs.is_number:
+            if RHS_CEMS():
+                # Right hand side has a minus, but not lhs.
+                # How does the expression with reversed signs behave?
+                # This is so that expressions of the type
+                # Eq(x, -y) and Eq(-x, y)
+                # have the same canonical representation
+                expr1, _ = ordered([r.lhs, -r.rhs])
+                if expr1 != r.lhs:
+                    r = r.reversed.reversedsign
         return r
 
     def equals(self, other, failing_expression=False):
