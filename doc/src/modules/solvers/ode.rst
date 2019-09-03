@@ -64,6 +64,10 @@ the various ODE solving methods. For this reason, they are documented here.
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_sol_simplicity
 
+:obj:`factorable`
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_factorable
+
 :obj:`1st_exact`
 ^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_1st_exact

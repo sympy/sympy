@@ -258,13 +258,13 @@ from sympy.matrices import wronskian, Matrix, eye, zeros
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm, roots)
 from sympy.polys.polyroots import roots_quartic
-from sympy.polys.polytools import cancel, degree, div
+from sympy.polys.polytools import cancel, degree, div, factor
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, posify, cse, besselsimp
 from sympy.simplify.powsimp import powdenest
-from sympy.simplify.radsimp import collect_const
+from sympy.simplify.radsimp import collect_const, fraction
 from sympy.solvers import checksol, solve
 from sympy.solvers.pde import pdsolve
 
@@ -286,6 +286,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: ``best``, and ``all_Integral`` meta-hints should not be included in this
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
+    "factorable",
     "nth_algebraic",
     "separable",
     "1st_exact",
@@ -962,6 +963,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only "
         "work with functions of one variable, not %s" % func)
+
+    # Some methods want the unprocessed equation
+    eq_orig = eq
+
     if prep or func is None:
         eq, func_ = _preprocess(eq, func)
         if func is None:
@@ -978,17 +983,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             return classify_ode(eq.lhs - eq.rhs, func, dict=dict, ics=ics, xi=xi,
                 n=terms, eta=eta, prep=False)
         eq = eq.lhs
+
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
     # Also will contain "default":<default hint> and "order":order items.
     matching_hints = {"order": order}
-
-    if not order:
-        if dict:
-            matching_hints["default"] = None
-            return matching_hints
-        else:
-            return ()
 
     df = f(x).diff(x)
     a = Wild('a', exclude=[f(x)])
@@ -1009,7 +1008,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     r3 = {'xi': xi, 'eta': eta}  # Used for the lie_group hint
     boundary = {}  # Used to extract initial conditions
     C1 = Symbol("C1")
-    eq = expand(eq)
 
     # Preprocessing to get the initial conditions out
     if ics is not None:
@@ -1052,6 +1050,20 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point}: value, f(x).diff(x, order).subs(x, point): value}")
 
+    # Factorable method
+    r = _ode_factorable_match(eq, func)
+    if r:
+        matching_hints['factorable'] = r
+
+    # Any ODE that can be solved with a combination of algebra and
+    # integrals e.g.:
+    # d^3/dx^3(x y) = F(x)
+    r = _nth_algebraic_match(eq_orig, func)
+    if r['solutions']:
+        matching_hints['nth_algebraic'] = r
+        matching_hints['nth_algebraic_Integral'] = r
+
+    eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
     if eq.is_Add:
@@ -1369,14 +1381,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         r = _nth_order_reducible_match(reduced_eq, func)
         if r:
             matching_hints['nth_order_reducible'] = r
-
-        # Any ODE that can be solved with a combination of algebra and
-        # integrals e.g.:
-        # d^3/dx^3(x y) = F(x)
-        r = _nth_algebraic_match(reduced_eq, func)
-        if r['solutions']:
-            matching_hints['nth_algebraic'] = r
-            matching_hints['nth_algebraic_Integral'] = r
 
         # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
@@ -3024,6 +3028,21 @@ def _handle_Integral(expr, func, hint):
         sol = expr
     return sol
 
+def _ode_factorable_match(eq, func):
+
+    from sympy.polys.polytools import factor
+    eqs = factor(eq)
+    eqs = fraction(eqs)[0] # p/q =0, So we need to solve only p=0
+    eqns = []
+    r = None
+    if isinstance(eqs, Mul):
+        fac = eqs.args
+        for i in fac:
+            if i.has(func):
+                eqns.append(i)
+        if len(eqns)>0:
+            r = {'eqns' : eqns}
+    return r
 
 # FIXME: replace the general solution in the docstring with
 # dsolve(equation, hint='1st_exact_Integral').  You will need to be able
@@ -4252,19 +4271,32 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     # means that some value of the constants in sol1 is a special case of
     # sol2 corresponding to a particular choice of the integration constants.
 
+    # In case the solution is in implicit form we subtract the sides
+    soln1 = soln1.rhs - soln1.lhs
+    soln2 = soln2.rhs - soln2.lhs
+
+    # Work for the series solution
+    if soln1.has(Order) and soln2.has(Order):
+        if soln1.getO() == soln2.getO():
+            soln1 = soln1.removeO()
+            soln2 = soln2.removeO()
+        else:
+            return False
+    elif soln1.has(Order) or soln2.has(Order):
+        return False
+
     constants1 = soln1.free_symbols.difference(eq.free_symbols)
     constants2 = soln2.free_symbols.difference(eq.free_symbols)
 
-    constants1_new = get_numbered_constants((soln1.rhs-soln1.lhs) - (soln2.rhs-soln2.lhs),
-                     len(constants1))
+    constants1_new = get_numbered_constants(soln1 - soln2, len(constants1))
     if len(constants1) == 1:
         constants1_new = {constants1_new}
     for c_old, c_new in zip(constants1, constants1_new):
         soln1 = soln1.subs(c_old, c_new)
 
     # n equations for sol1 = sol2, sol1'=sol2', ...
-    lhs = (soln1.rhs-soln1.lhs)
-    rhs = (soln2.rhs-soln2.lhs)
+    lhs = soln1
+    rhs = soln2
     eqns = [Eq(lhs, rhs)]
     for n in range(1, order):
         lhs = lhs.diff(var)
@@ -5582,6 +5614,44 @@ def _solve_variation_of_parameters(eq, func, order, match):
         psol = trigsimp(psol, deep=True)
     return Eq(f(x), gsol.rhs + psol)
 
+def ode_factorable(eq, func, order, match):
+    r"""
+    Solves equations having a solvable factor.
+
+    This function is used to solve the equation having factors. Factors may be of type algebraic or ode. It
+    will try to solve each factor independently. Factors will be solved by calling dsolve. We will return the
+    list of solutions.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq, pprint, Derivative
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = (f(x)**2-4)*(f(x).diff(x)+f(x))
+    >>> pprint(dsolve(eq, f(x)))
+                                     -x
+    [f(x) = 2, f(x) = -2, f(x) = C1*e  ]
+
+
+    """
+    eqns = match['eqns']
+    sols = []
+    for eq in eqns:
+        try:
+            sol = dsolve(eq, func)
+        except NotImplementedError:
+            continue
+        else:
+            if isinstance(sol, list):
+                sols.extend(sol)
+            else:
+                sols.append(sol)
+
+    if sols == []:
+       raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+            + " the factorable group method")
+    return sols
 
 def ode_separable(eq, func, order, match):
     r"""
