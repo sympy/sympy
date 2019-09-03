@@ -27,14 +27,6 @@ matrix:
       script: bin/test quality
       env:
 
-    - stage: flake8
-      python: 3.7
-      dist: xenial
-      sudo: true
-      script: flake8 sympy
-      env:
-        - TEST_FLAKE8="true"
-
     - stage: baseline
       python: 3.7
       dist: xenial
@@ -205,6 +197,13 @@ matrix:
             - pypy
           packages:
             - pypy
+    - stage: flake8
+      python: 3.7
+      dist: xenial
+      sudo: true
+      script: flake8 sympy
+      env:
+        - TEST_FLAKE8="true"
 
   fast_finish: true
 
@@ -242,6 +241,13 @@ matrix:
             - pypy
           packages:
             - pypy
+    - stage: flake8
+      python: 3.7
+      dist: xenial
+      sudo: true
+      script: flake8 sympy
+      env:
+        - TEST_FLAKE8="true"
 
 before_install:
   - set -e
