@@ -1,5 +1,5 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
+    Max, Min, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
@@ -8,6 +8,9 @@ from mpmath import mpi
 
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
+from sympy.core.relational import \
+    Eq, Ne, Ge, Le, Gt, Lt, GreaterThan, LessThan
+from sympy.logic import And, Or, Not, Xor
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
@@ -699,6 +702,29 @@ def test_Intersection_as_relational():
     assert (Intersection(Interval(0, 1), FiniteSet(2),
             evaluate=False).as_relational(x)
             == And(And(Le(0, x), Le(x, 1)), Eq(x, 2)))
+
+
+def test_Complement_as_relational():
+    x = Symbol('x')
+    expr = Complement(Interval(0, 1), FiniteSet(2), evaluate=False)
+    assert expr.as_relational(x) == \
+        And(Le(0, x), Le(x, 1), Ne(x, 2))
+
+
+@XFAIL
+def test_Complement_as_relational_fail():
+    x = Symbol('x')
+    expr = Complement(Interval(0, 1), FiniteSet(2), evaluate=False)
+    # XXX This example fails because 0 <= x changes to x >= 0
+    # during the evaluation.
+    assert expr.as_relational(x) == \
+            (0 <= x) & (x <= 1) & Ne(x, 2)
+
+
+def test_SymmetricDifference_as_relational():
+    x = Symbol('x')
+    expr = SymmetricDifference(Interval(0, 1), FiniteSet(2), evaluate=False)
+    assert expr.as_relational(x) == Xor(Eq(x, 2), Le(0, x) & Le(x, 1))
 
 
 def test_EmptySet():
