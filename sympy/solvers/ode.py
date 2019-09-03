@@ -1335,8 +1335,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 matching_hints["Liouville_Integral"] = r
 
         # Homogeneous second order differential equation of the form
-        # a3*f(x).diff(x, 2) + b3*f(x).diff(x) + c3, where
-        # for simplicity, a3, b3 and c3 are assumed to be polynomials.
+        # a3*f(x).diff(x, 2) + b3*f(x).diff(x) + c3
         # It has a definite power series solution at point x0 if, b3/a3 and c3/a3
         # are analytic at x0.
         deq = a3*(f(x).diff(x, 2)) + b3*df + c3*f(x)
@@ -1344,68 +1343,51 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
         ordinary = False
         if r and r[a3] != 0:
-            if all([r[key].is_polynomial() for key in r]):
-                p = cancel(r[b3]/r[a3])  # Used below
-                q = cancel(r[c3]/r[a3])  # Used below
-                point = kwargs.get('x0', 0)
+            p = cancel(r[b3]/r[a3])  # Used below
+            q = cancel(r[c3]/r[a3])  # Used below
+            point = kwargs.get('x0', 0)
+            check = p.subs(x, point)
+            if not check.has(oo) and not check.has(NaN) and \
+                not check.has(zoo) and not check.has(-oo):
+                check = q.subs(x, point)
+                if not check.has(oo) and not check.has(NaN) and \
+                    not check.has(zoo) and not check.has(-oo):
+                    ordinary = True
+                    r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point, 'terms': terms})
+                    matching_hints["2nd_power_series_ordinary"] = r
+
+            # Checking if the differential equation has a regular singular point
+            # at x0. It has a regular singular point at x0, if (b3/a3)*(x - x0)
+            # and (c3/a3)*((x - x0)**2) are analytic at x0.
+            if not ordinary:
+                p = cancel((x - point)*p)
                 check = p.subs(x, point)
                 if not check.has(oo) and not check.has(NaN) and \
                     not check.has(zoo) and not check.has(-oo):
+                    q = cancel(((x - point)**2)*q)
                     check = q.subs(x, point)
                     if not check.has(oo) and not check.has(NaN) and \
                         not check.has(zoo) and not check.has(-oo):
-                        ordinary = True
-                        r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point, 'terms': terms})
-                        matching_hints["2nd_power_series_ordinary"] = r
+                        coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
+                        matching_hints["2nd_power_series_regular"] = coeff_dict
+                        # If the ODE has regular singular point at x0 and is of the form
+                        # Eq((x)**2*Derivative(y(x), x, x) + x*Derivative(y(x), x) +
+                        # (a4**2*x**(2*p)-n**2)*y(x) thus Bessel's equation
+                        if (p.is_constant(x) and p != 0) and r[c3] != 0:
+                            rn = match_2nd_linear_bessel(r, f(x))
+                            if rn:
+                                matching_hints["2nd_linear_bessel"] = rn
 
-                # Checking if the differential equation has a regular singular point
-                # at x0. It has a regular singular point at x0, if (b3/a3)*(x - x0)
-                # and (c3/a3)*((x - x0)**2) are analytic at x0.
-                if not ordinary:
-                    p = cancel((x - point)*p)
-                    check = p.subs(x, point)
-                    if not check.has(oo) and not check.has(NaN) and \
-                        not check.has(zoo) and not check.has(-oo):
-                        q = cancel(((x - point)**2)*q)
-                        check = q.subs(x, point)
-                        if not check.has(oo) and not check.has(NaN) and \
-                            not check.has(zoo) and not check.has(-oo):
-                            coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
-                            matching_hints["2nd_power_series_regular"] = coeff_dict
-                            # If the ODE has regular singular point at x0 and is of the form
-                            # Eq((x)**2*Derivative(y(x),x,x)+x*Derivative(y(x),x)+(a4**2*x**2-n**2)*y(x) thus Bessel's equation
-                            if (p.is_constant(x) and p != 0) and r[c3] != 0:
-                                a4 = Wild('a4', exclude=[x,f(x),df])
-                                b4 = Wild('b4', exclude=[x,f(x),df])
-                                c4 = Wild('c4', exclude=[x,f(x),df])
-                                d4 = Wild('d4', exclude=[x,f(x),df])
-                                coeff = r[a3].match(a4*x**2)
-                                if coeff:
-                                    coeff = coeff[a4]
-                                    if not coeff.has(x):
-                                        r[c3] = r[c3]/coeff
-                                        r[b3] = r[b3]/coeff
-                                        r[a3] = r[a3]/coeff
-                                    rn = r[c3].match(a4*a4*x**(2*d4)-b4*b4)
-                                    if check==0: # if r[c3] becomes zero at x0
-                                        rn = r[c3].match(a4*a4*x**(2*d4))
-                                        if rn:
-                                            rn[b4] = 0
-                                    if rn and r[b3] != 0:
-                                        rn = {'n':rn[b4], 'a4':rn[a4], 'd4':rn[d4]}
-                                        rn['c4'] = r[b3].match(c4*x)[c4]
-                                        matching_hints["2nd_linear_bessel"] = rn
+            # If the ODE is ordinary and is of the form of Airy's Equation
+            # Eq(x**2*Derivative(y(x),x,x)-(ax+b)*y(x))
 
-                #If the ODE is ordinary and is of the form of Airy's Equation
-                #Eq(x**2*Derivative(y(x),x,x)-(ax+b)*y(x))
-
-                if p.is_zero:
-                    a4 = Wild('a4', exclude=[x,f(x),df])
-                    b4 = Wild('b4', exclude=[x,f(x),df])
-                    rn = q.match(a4+b4*x)
-                    if rn and rn[b4] != 0:
-                        rn = {'b':rn[a4],'m':rn[b4]}
-                        matching_hints["2nd_linear_airy"] = rn
+            if p.is_zero:
+                a4 = Wild('a4', exclude=[x,f(x),df])
+                b4 = Wild('b4', exclude=[x,f(x),df])
+                rn = q.match(a4+b4*x)
+                if rn and rn[b4] != 0:
+                    rn = {'b':rn[a4],'m':rn[b4]}
+                    matching_hints["2nd_linear_airy"] = rn
     if order > 0:
         # Any ODE that can be solved with a substitution and
         # repeated integration e.g.:
@@ -1498,6 +1480,54 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
+
+def match_2nd_linear_bessel(r, func):
+    # eq = a3*f(x).diff(x, 2) + b3*f(x).diff(x) + c3*f(x)
+    f = func
+    x = func.args[0]
+    df = f.diff(x)
+    a = Wild('a', exclude=[f,df])
+    b = Wild('b', exclude=[x, f,df])
+    a4 = Wild('a4', exclude=[x,f,df])
+    b4 = Wild('b4', exclude=[x,f,df])
+    c4 = Wild('c4', exclude=[x,f,df])
+    d4 = Wild('d4', exclude=[x,f,df])
+    a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
+    b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
+    c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
+    coeff = r[a3].match(a*(x-a4)**b4) # leading coeff of f(x).diff*x, 2)
+    # making a3 in the form of x**2
+    r[a3] = cancel(r[a3]/(coeff[a]*(x-coeff[a4])**(-2+coeff[b4])))
+    r[b3] = cancel(r[b3]/(coeff[a]*(x-coeff[a4])**(-2+coeff[b4])))
+    r[c3] = cancel(r[c3]/(coeff[a]*(x-coeff[a4])**(-2+coeff[b4])))
+    # checking if b3 is of fome c*(x-b)
+    coeff1 = r[b3].match(a4*(x-b4))
+    if coeff1 is None:
+        return None
+    # c3 maybe of very complex form so I am simply checking (a - b) form
+    # if yes later I will match with the standerd form of bessel in a and b
+    # a, b are wild variable defined above.
+    _coeff2 = r[c3].match(a - b)
+
+    if _coeff2 is None:
+        return None
+    # matching with standerd form for c3
+    coeff2 = _coeff2[a].match(c4**2*(x-b4)**(2*a4))
+    if coeff2 is None:
+        return None
+
+    if _coeff2[b] == 0:
+        coeff2[d4] = 0
+    else:
+         coeff2[d4] = _coeff2[b].match(d4**2)[d4]
+
+    if (coeff1[b4] != coeff2[b4]) or (coeff1[b4] != coeff[a4]):
+        return None
+
+    rn = {'n':coeff2[d4], 'a4':coeff2[c4], 'd4':coeff2[a4]}
+    rn['c4'] = coeff1[a4]
+    rn['b4'] = coeff1[b4]
+    return rn
 
 def classify_sysode(eq, funcs=None, **kwargs):
     r"""
@@ -3972,7 +4002,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     >>> from sympy.abc import x, y
     >>> f = Function("f")
     >>> eq = x*(f(x).diff(x, 2)) + 2*(f(x).diff(x)) + x*f(x)
-    >>> pprint(dsolve(eq))
+    >>> pprint(dsolve(eq, hint='2nd_power_series_regular'))
                                   /    6    4    2    \
                                   |   x    x    x     |
               /  4    2    \   C1*|- --- + -- - -- + 1|
@@ -4067,6 +4097,9 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     + C1*besselj(-n,x)) which can also transform into Eq(f(x), C0*besselj(n,x)
     + C1*bessely(n,x)).
 
+    Examples
+    ========
+
     >>> from sympy.abc import x, y, a
     >>> from sympy import Symbol
     >>> v = Symbol('v', positive=True)
@@ -4078,6 +4111,8 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     >>> dsolve(genform)
     Eq(f(x), C1*besselj(v, x) + C2*bessely(v, x))
 
+    References
+    ==========
 
     https://www.math24.net/bessel-differential-equation/
 
@@ -4089,8 +4124,9 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     a4 = match['a4']
     c4 = match['c4']
     d4 = match['d4']
+    b4 = match['b4']
     n = sqrt(n**2 + Rational(1, 4)*(c4 - 1)**2)
-    return Eq(f(x), (x**(Rational(1-c4,2)))*(C0*besselj(S(n)/d4,a4*x**d4/S(d4)) + C1*bessely(S(n)/d4,a4*x**d4/S(d4))))
+    return Eq(f(x), ((x**(Rational(1-c4,2)))*(C0*besselj(S(n)/d4,a4*x**d4/S(d4)) + C1*bessely(S(n)/d4,a4*x**d4/S(d4)))).subs(x, x-b4))
 
 def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     r"""

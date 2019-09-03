@@ -11,7 +11,6 @@ from sympy.functions import airyai, airybi, besselj, bessely
 
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
-from sympy.functions import besselj, bessely
 from sympy.utilities.misc import filldedent
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -3158,9 +3157,6 @@ def test_2nd_power_series_regular():
     assert dsolve(eq, hint='2nd_power_series_regular') == Eq(f(x), C1*(x**4/24 - x**2/2 + 1)/sqrt(x) +
         C2*sqrt(x)*(x**4/120 - x**2/6 + 1) + O(x**6))
 
-    eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
-    assert dsolve(eq) == Eq(f(x), C2*(-x**4/2 + 1) + C1*x**2 + O(x**6))
-
 def test_2nd_linear_bessel_equation():
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 4)*f(x)
     sol = Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))
@@ -3181,7 +3177,7 @@ def test_2nd_linear_bessel_equation():
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2)*f(x)
     sol = Eq(f(x), C1*besselj(0, x) + C2*bessely(0, x))
     sols = constant_renumber(sol)
-    assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
+    assert classify_ode(eq) == ('factorable', '2nd_linear_bessel', '2nd_power_series_regular')
     assert dsolve(eq, f(x)) in (sol, sols)
     assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
@@ -3220,6 +3216,14 @@ def test_2nd_linear_bessel_equation():
 
     eq = x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x)
     sol = Eq(f(x), x**2*(C1*besselj(0, 4*sqrt(x)) + C2*bessely(0, 4*sqrt(x))))
+    sols = constant_renumber(sol)
+    assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
+    sol = Eq(f(x), x*(C1*besselj(S(1)/2, x**2) + C2*bessely(S(1)/2, x**2)))
     sols = constant_renumber(sol)
     assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
     assert dsolve(eq, f(x)) in (sol, sols)
@@ -3637,8 +3641,8 @@ def test_factorable():
     assert checkodesol(eq, sols) == 2*[(True, 0)]
 
     eq = (f(x).diff(x)+f(x)*x**2)*(f(x).diff(x, 2) + x*f(x))
-    sols = [Eq(f(x), C2*(1 - x**3/6) + C1*x*(1 - x**3/12) +
-            O(x**6)), Eq(f(x), C1*exp(-x**3/3))]
+    sols = [Eq(f(x), C1*airyai(-x) + C2*airybi(-x)),
+            Eq(f(x), C1*exp(-x**3/3))]
     assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
     assert checkodesol(eq, sols[1]) == (True, 0)
 
