@@ -12,7 +12,7 @@ from __future__ import print_function, division
 import random
 from itertools import product
 
-from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul,
+from sympy import (Basic, Symbol, cacheit, sympify, Mul,
                    And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan,
                    Sum, Intersection)
 from sympy.core.containers import Dict

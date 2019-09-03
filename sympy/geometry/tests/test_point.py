@@ -5,9 +5,6 @@ from sympy.matrices import Matrix
 from sympy.utilities.iterables import subsets, permutations, cartes
 from sympy.utilities.pytest import raises, warns
 
-import traceback
-import sys
-
 
 def test_point():
     x = Symbol('x', real=True)

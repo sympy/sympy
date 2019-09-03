@@ -278,7 +278,6 @@ class Plane(GeometryEntity):
         0
 
         """
-        from sympy.geometry.line import LinearEntity3D
         if self.intersection(o) != []:
             return S.Zero
 
@@ -863,7 +862,6 @@ class Plane(GeometryEntity):
         {u: sqrt(10)/5, v: sqrt(10)/15}
         """
         from sympy.geometry.point import Point
-        from sympy.core.symbol import Dummy
         from sympy.solvers.solvers import solve
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)

@@ -1,11 +1,10 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, S, sympify, oo, pi, Symbol, Dummy, expand_func
+from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
 from sympy.core.compatibility import range, as_int
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.elementary.complexes import re

@@ -631,7 +631,6 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     diop_quadratic(), diop_ternary_quadratic(), diop_general_pythagorean(),
     diop_general_sum_of_squares()
     """
-    from sympy.core.function import count_ops
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type == "linear":

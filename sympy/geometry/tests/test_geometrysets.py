@@ -1,5 +1,5 @@
-from sympy import Rational, Symbol, S
-from sympy.geometry import Circle, Line, Point, Polygon, Segment, Parabola
+from sympy import Rational, S
+from sympy.geometry import Circle, Line, Point, Polygon, Segment
 from sympy.sets import FiniteSet, Union, Intersection, EmptySet
 
 

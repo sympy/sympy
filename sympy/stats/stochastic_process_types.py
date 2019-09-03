@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
-from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
-                   Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
-                   nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
-                   linsolve, Piecewise, eye, Or, Ne, Not, Intersection,
-                   Union, Expr, Function, sympify, Le, exp, cacheit, Gt,
+from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
+                   Set, And, Eq, FiniteSet, ImmutableMatrix,
+                   Lambda, Mul, Dummy, IndexedBase,
+                   linsolve, eye, Or, Not, Intersection,
+                   Union, Expr, Function, exp, cacheit,
                    Ge)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean

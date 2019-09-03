@@ -1,16 +1,16 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     Max, Min, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
+    FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, signsimp, Range, Add, symbols, zoo)
+    Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
+    Matrix, Range, Add, symbols, zoo)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.relational import \
-    Eq, Ne, Ge, Le, Gt, Lt, GreaterThan, LessThan
-from sympy.logic import And, Or, Not, Xor
+    Eq, Ne, Le, Lt, LessThan
+from sympy.logic import And, Or, Xor
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
