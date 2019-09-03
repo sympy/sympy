@@ -78,8 +78,6 @@ class BlockMatrix(MatrixExpr):
     """
     def __new__(cls, *args, **kwargs):
         from sympy.matrices.immutable import ImmutableDenseMatrix
-        from sympy.matrices import zeros
-        from sympy.matrices.matrices import MatrixBase
         from sympy.utilities.iterables import is_sequence
         isMat = lambda i: getattr(i, 'is_Matrix', False)
         if len(args) != 1 or \

@@ -1351,7 +1351,6 @@ class MatrixEigen(MatrixSubspaces):
         eigenvals
         MatrixSubspaces.nullspace
         """
-        from sympy.matrices import eye
 
         simplify = flags.get('simplify', True)
         if not isinstance(simplify, FunctionType):

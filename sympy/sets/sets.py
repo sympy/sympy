@@ -12,7 +12,6 @@ from sympy.core.decorators import deprecated
 from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
-from sympy.core.function import FunctionClass
 from sympy.core.logic import fuzzy_bool, fuzzy_or, fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float

@@ -411,7 +411,6 @@ def periodicity(f, symbol, check=False):
     pi
     >>> periodicity(exp(x), x)
     """
-    from sympy.core.function import diff
     from sympy.core.mod import Mod
     from sympy.core.relational import Relational
     from sympy.functions.elementary.exponential import exp
@@ -420,7 +419,7 @@ def periodicity(f, symbol, check=False):
         TrigonometricFunction, sin, cos, csc, sec)
     from sympy.simplify.simplify import simplify
     from sympy.solvers.decompogen import decompogen
-    from sympy.polys.polytools import degree, lcm_list
+    from sympy.polys.polytools import degree
 
     temp = Dummy('x', real=True)
     f = f.subs(symbol, temp)

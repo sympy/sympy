@@ -4,13 +4,13 @@ from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
 from sympy.sets.fancysets import Range
-from sympy.stats import (P, E, variance, density, characteristic_function, cdf,
+from sympy.stats import (P, E, variance, density, characteristic_function,
                          where, moment_generating_function, skewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    Poisson, Geometric, Logarithmic, NegativeBinomial, Skellam,
                                    YuleSimon, Zeta)
 from sympy.stats.rv import sample
-from sympy.utilities.pytest import slow, raises
+from sympy.utilities.pytest import slow
 
 x = Symbol('x')
 

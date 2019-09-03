@@ -1,5 +1,5 @@
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
-from sympy import (Matrix, Lambda, MatrixBase, MatrixSymbol, exp, symbols, MatMul, sin, simplify)
+from sympy import (Matrix, Lambda, MatrixSymbol, exp, symbols, MatMul, sin, simplify)
 from sympy.utilities.pytest import raises
 from sympy.matrices.common import ShapeError
 

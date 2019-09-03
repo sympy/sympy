@@ -1,8 +1,8 @@
-from sympy.core import Basic
-from sympy import isprime, symbols
+from sympy import isprime
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 from sympy.combinatorics.free_groups import free_group
+
 
 class PolycyclicGroup(DefaultPrinting):
 

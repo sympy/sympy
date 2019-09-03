@@ -8,7 +8,7 @@ from sympy import re, im, conjugate
 from sympy import sqrt, sin, cos, acos, exp, ln
 from sympy import trigsimp
 from sympy import integrate
-from sympy import Matrix, Add, Mul
+from sympy import Matrix
 from sympy import sympify
 from sympy.core.expr import Expr
 

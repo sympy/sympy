@@ -227,7 +227,6 @@ class exp(ExpBase):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.assumptions import ask, Q
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
@@ -574,7 +573,7 @@ class log(Function):
         from sympy import unpolarify
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
-        from sympy.functions.elementary.complexes import Abs, re, im
+        from sympy.functions.elementary.complexes import Abs
 
         arg = sympify(arg)
 

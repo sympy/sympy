@@ -2,7 +2,7 @@
 
 from __future__ import division, print_function
 
-from sympy.core import Add, Mul, Pow, prod, sympify
+from sympy.core import Mul, prod, sympify
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, Identity

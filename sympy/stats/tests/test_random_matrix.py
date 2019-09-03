@@ -1,10 +1,9 @@
 from sympy import (sqrt, exp, Trace, pi, S, Integral, MatrixSymbol, Lambda,
-                    Dummy, Product, Sum, Abs, IndexedBase, Matrix, I)
+                    Dummy, Product, Abs, IndexedBase, Matrix, I)
 from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
                          GaussianOrthogonalEnsemble as GOE,
                          GaussianSymplecticEnsemble as GSE,
                          joint_eigen_distribution,
-                         level_spacing_distribution,
                          CircularUnitaryEnsemble as CUE,
                          CircularOrthogonalEnsemble as COE,
                          CircularSymplecticEnsemble as CSE,
