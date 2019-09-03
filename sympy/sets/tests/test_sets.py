@@ -10,7 +10,7 @@ from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.relational import \
     Eq, Ne, Ge, Le, Gt, Lt, GreaterThan, LessThan
-from sympy.logic import And, Or, Not
+from sympy.logic import And, Or, Not, Xor
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
@@ -724,8 +724,7 @@ def test_Complement_as_relational_fail():
 def test_SymmetricDifference_as_relational():
     x = Symbol('x')
     expr = SymmetricDifference(Interval(0, 1), FiniteSet(2), evaluate=False)
-    assert expr.as_relational(x) == \
-        Eq(x, 2) & Not(Le(0, x) & Le(x, 1)) | Le(0, x) & Le(x, 1) & Ne(x, 2)
+    assert expr.as_relational(x) == Xor(Eq(x, 2), Le(0, x) & Le(x, 1))
 
 
 def test_EmptySet():

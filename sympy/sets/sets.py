@@ -21,7 +21,7 @@ from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
-from sympy.logic.boolalg import And, Or, Not, true, false
+from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
 from sympy.utilities import subsets
 from sympy.utilities.iterables import sift
@@ -1877,10 +1877,8 @@ class SymmetricDifference(Set):
 
         A_rel = A.as_relational(symbol)
         B_rel = B.as_relational(symbol)
-        A_neg = Not(A_rel)
-        B_neg = Not(B_rel)
 
-        return Or(And(A_rel, B_neg), And(B_rel, A_neg))
+        return Xor(A_rel, B_rel)
 
 
 def imageset(*args):
