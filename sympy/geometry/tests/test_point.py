@@ -333,7 +333,7 @@ def test_arguments():
         for p in singles3d:
             getattr(p3d, func)(p)
     for func in test_double:
-        for p in doubles2d:
+        for p in doubles3d:
             getattr(p3d, func)(*p)
 
     # test 4D

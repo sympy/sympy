@@ -137,7 +137,7 @@ test_list = [
     # ipython
     '*ipython*',
 
-    # antlr, lfortran
+    # antlr, lfortran, clang
     'sympy/parsing/',
 
     # matchpy
@@ -150,6 +150,11 @@ test_list = [
 
     # cloudpickle
     'pickling',
+
+    # pycosat
+    'sympy/logic',
+    'sympy/assumptions',
+
 ]
 
 blacklist = [
@@ -179,7 +184,7 @@ doctest_list = [
     # ipython
     '*ipython*',
 
-    # antlr, lfortran
+    # antlr, lfortran, clang
     'sympy/parsing/',
 
     # matchpy
@@ -187,6 +192,11 @@ doctest_list = [
 
     # codegen
     'sympy/codegen/',
+
+    # pycosat
+    'sympy/logic',
+    'sympy/assumptions',
+
 ]
 
 if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
@@ -239,4 +249,9 @@ EOF
 fi
 if [[ "${TEST_COVERAGE}" == "true" ]]; then
     unset COVERAGE_PROCESS_START
+fi
+
+if [[ "${TEST_EXAMPLES}" == "true" ]]; then
+    # No need to change directory if executed after the rst doctest
+    examples/all.py -q
 fi

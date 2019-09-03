@@ -671,7 +671,7 @@ class LatexPrinter(Printer):
         return self._print(expr.label)
 
     def _print_Derivative(self, expr):
-        if requires_partial(expr):
+        if requires_partial(expr.expr):
             diff_symbol = r'\partial'
         else:
             diff_symbol = r'd'
@@ -844,7 +844,7 @@ class LatexPrinter(Printer):
         return self._hprint_Function(str(expr))
 
     def _print_ElementwiseApplyFunction(self, expr):
-        return r"%s\left({%s}\ldots\right)" % (
+        return r"{%s}_{\circ}\left({%s}\right)" % (
             self._print(expr.function),
             self._print(expr.expr),
         )
@@ -1616,7 +1616,10 @@ class LatexPrinter(Printer):
             map(lambda arg: parens(arg, prec, strict=True), args))
 
     def _print_HadamardPower(self, expr):
-        template = r"%s^{\circ {%s}}"
+        if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
+            template = r"%s^{\circ \left({%s}\right)}"
+        else:
+            template = r"%s^{\circ {%s}}"
         return self._helper_print_standard_power(expr, template)
 
     def _print_KroneckerProduct(self, expr):
@@ -1869,12 +1872,6 @@ class LatexPrinter(Printer):
             tex = r'\left(%s\right)^{%s}' % (tex, exp)
         return tex
 
-    def _print_ProductSet(self, p):
-        if len(p.sets) > 1 and not has_variety(p.sets):
-            return self._print(p.sets[0]) + "^{%d}" % len(p.sets)
-        else:
-            return r" \times ".join(self._print(set) for set in p.sets)
-
     def _print_RandomDomain(self, d):
         if hasattr(d, 'as_boolean'):
             return '\\text{Domain: }' + self._print(d.as_boolean())
@@ -2013,16 +2010,31 @@ class LatexPrinter(Printer):
                 (self._print(i.min), self._print(i.max))
 
     def _print_Union(self, u):
-        return r" \cup ".join([self._print(i) for i in u.args])
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" \cup ".join(args_str)
 
     def _print_Complement(self, u):
-        return r" \setminus ".join([self._print(i) for i in u.args])
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" \setminus ".join(args_str)
 
     def _print_Intersection(self, u):
-        return r" \cap ".join([self._print(i) for i in u.args])
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" \cap ".join(args_str)
 
     def _print_SymmetricDifference(self, u):
-        return r" \triangle ".join([self._print(i) for i in u.args])
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" \triangle ".join(args_str)
+
+    def _print_ProductSet(self, p):
+        prec = precedence_traditional(p)
+        if len(p.sets) > 1 and not has_variety(p.sets):
+            return self.parenthesize(p.sets[0], prec) + "^{%d}" % len(p.sets)
+        return r" \times ".join(
+            self.parenthesize(set, prec) for set in p.sets)
 
     def _print_EmptySet(self, e):
         return r"\emptyset"
@@ -2269,7 +2281,10 @@ class LatexPrinter(Printer):
         return self._print(Symbol(object.name))
 
     def _print_LambertW(self, expr):
-        return r"W\left(%s\right)" % self._print(expr.args[0])
+        if len(expr.args) == 1:
+            return r"W\left(%s\right)" % self._print(expr.args[0])
+        return r"W_{%s}\left(%s\right)" % \
+            (self._print(expr.args[1]), self._print(expr.args[0]))
 
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)

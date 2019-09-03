@@ -293,7 +293,67 @@ class Relational(Boolean, Expr, EvalfMixin):
                 v = S.Zero
             if v is not None:
                 r = r.func._eval_relation(v, S.Zero)
+            r = r.canonical
+            # If there is only one symbol in the expression,
+            # try to write it on a simplified form
+            free = list(filter(lambda x: x.is_real is not False, r.free_symbols))
+            if len(free) == 1:
+                try:
+                    from sympy.solvers.solveset import linear_coeffs
+                    x = free.pop()
+                    dif = r.lhs - r.rhs
+                    m, b = linear_coeffs(dif, x)
+                    if m.is_zero is False:
+                        if m.is_negative:
+                            # Dividing with a negative number, so change order of arguments
+                            # canonical will put the symbol back on the lhs later
+                            r = r.func(-b/m, x)
+                        else:
+                            r = r.func(x, -b/m)
+                    else:
+                        r = r.func(b, S.zero)
+                except ValueError:
+                    # maybe not a linear function, try polynomial
+                    from sympy.polys import Poly, poly, PolynomialError, gcd
+                    try:
+                        p = poly(dif, x)
+                        c = p.all_coeffs()
+                        constant = c[-1]
+                        c[-1] = 0
+                        scale = gcd(c)
+                        c = [ctmp/scale for ctmp in c]
+                        r = r.func(Poly.from_list(c, x).as_expr(), -constant/scale)
+                    except PolynomialError:
+                        pass
+            elif len(free) >= 2:
+                try:
+                    from sympy.solvers.solveset import linear_coeffs
+                    from sympy.polys import gcd
+                    free = list(ordered(free))
+                    dif = r.lhs - r.rhs
+                    m = linear_coeffs(dif, *free)
+                    constant = m[-1]
+                    del m[-1]
+                    scale = gcd(m)
+                    m = [mtmp/scale for mtmp in m]
+                    nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
+                    if scale.is_zero is False:
+                        if constant != 0:
+                            # lhs: expression, rhs: constant
+                            newexpr = Add(*[i*j for i, j in nzm])
+                            r = r.func(newexpr, -constant/scale)
+                        else:
+                            # keep first term on lhs
+                            lhsterm = nzm[0][0]*nzm[0][1]
+                            del nzm[0]
+                            newexpr = Add(*[i*j for i, j in nzm])
+                            r = r.func(lhsterm, -newexpr)
 
+                    else:
+                        r = r.func(constant, S.zero)
+                except ValueError:
+                    pass
+        # Did we get a simplified result?
         r = r.canonical
         measure = kwargs['measure']
         if measure(r) < kwargs['ratio']*measure(self):
@@ -304,6 +364,7 @@ class Relational(Boolean, Expr, EvalfMixin):
     def _eval_trigsimp(self, **opts):
         from sympy.simplify import trigsimp
         return self.func(trigsimp(self.lhs, **opts), trigsimp(self.rhs, **opts))
+
 
     def __nonzero__(self):
         raise TypeError("cannot determine truth value of Relational")
@@ -656,7 +717,6 @@ class _Inequality(Relational):
 
         # make a "non-evaluated" Expr for the inequality
         return Relational.__new__(cls, lhs, rhs, **options)
-
 
 class _Greater(_Inequality):
     """Not intended for general use

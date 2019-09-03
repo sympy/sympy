@@ -555,7 +555,7 @@ class BooleanFunction(Application, Boolean):
                            binary=True)
         if len(Rel) <= 1:
             return rv
-        Rel, nonRealRel = sift(rv.args, lambda i: all(s.is_real is not False
+        Rel, nonRealRel = sift(Rel, lambda i: all(s.is_real is not False
                                                       for s in i.free_symbols),
                                binary=True)
         Rel = [i.canonical for i in Rel]
@@ -679,6 +679,26 @@ class And(LatticeOp, BooleanFunction):
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
+    def _eval_subs(self, old, new):
+        args = []
+        bad = None
+        for i in self.args:
+            try:
+                i = i.subs(old, new)
+            except TypeError:
+                # store TypeError
+                if bad is None:
+                    bad = i
+                continue
+            if i == False:
+                return S.false
+            elif i != True:
+                args.append(i)
+        if bad is not None:
+            # let it raise
+            bad.subs(old, new)
+        return self.func(*args)
+
     def _eval_simplify(self, **kwargs):
         from sympy.core.relational import Equality, Relational
         from sympy.solvers.solveset import linear_coeffs
@@ -796,6 +816,26 @@ class Or(LatticeOp, BooleanFunction):
                 rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
+
+    def _eval_subs(self, old, new):
+        args = []
+        bad = None
+        for i in self.args:
+            try:
+                i = i.subs(old, new)
+            except TypeError:
+                # store TypeError
+                if bad is None:
+                    bad = i
+                continue
+            if i == True:
+                return S.true
+            elif i != False:
+                args.append(i)
+        if bad is not None:
+            # let it raise
+            bad.subs(old, new)
+        return self.func(*args)
 
     def _eval_as_set(self):
         from sympy.sets.sets import Union

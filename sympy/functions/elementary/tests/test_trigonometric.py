@@ -1039,9 +1039,7 @@ def test_atan2():
     assert atan2(y, -oo)==  2*pi*Heaviside(re(y)) - pi
 
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
-    assert atan2(0, 0).rewrite(atan) == S.NaN
-    w = Symbol('w')
-    assert atan2(0, w).rewrite(atan) == Piecewise((pi, w < 0), (0, w > 0), (S.NaN, True))
+    assert atan2(0, 0) == S.NaN
 
     ex = atan2(y, x) - arg(x + I*y)
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0
@@ -1056,6 +1054,18 @@ def test_atan2():
     assert rewrite == -I*log(abs(I*i + r)/sqrt(abs(i**2 + r**2))) + arg((I*i + r)/sqrt(i**2 + r**2))
     assert (e - rewrite).subs(reps).equals(0)
 
+    assert atan2(0, x).rewrite(atan) == Piecewise((pi, re(x) < 0),
+                                            (0, Ne(x, 0)),
+                                            (nan, True))
+    assert atan2(0, r).rewrite(atan) == Piecewise((pi, r < 0), (0, Ne(r, 0)), (S.NaN, True))
+    assert atan2(0, i),rewrite(atan) == 0
+    assert atan2(0, r + i).rewrite(atan) == Piecewise((pi, r < 0), (0, True))
+
+    assert atan2(y, x).rewrite(atan) == Piecewise(
+            (2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)),
+            (pi, re(x) < 0),
+            (0, (re(x) > 0) | Ne(im(x), 0)),
+            (nan, True))
     assert conjugate(atan2(x, y)) == atan2(conjugate(x), conjugate(y))
 
     assert diff(atan2(y, x), x) == -y/(x**2 + y**2)
@@ -1067,6 +1077,16 @@ def test_atan2():
     assert str(atan2(1, 2).evalf(5)) == '0.46365'
     raises(ArgumentIndexError, lambda: atan2(x, y).fdiff(3))
 
+def test_issue_17461():
+    class A(Symbol):
+        is_extended_real = True
+
+        def _eval_evalf(self, prec):
+            return Float(5.0)
+
+    x = A('X')
+    y = A('Y')
+    assert abs(atan2(x, y).evalf() - 0.785398163397448) <= 1e-10
 
 def test_acot():
     assert acot(nan) == nan

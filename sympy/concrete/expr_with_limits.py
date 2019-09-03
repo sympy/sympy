@@ -40,7 +40,7 @@ def _common_new(cls, function, *symbols, **assumptions):
         for i, li in enumerate(limits):
             if len(li) == 4:
                 function = function.subs(li[0], li[-1])
-                limits[i] = tuple(li[:-1])
+                limits[i] = Tuple(*li[:-1])
     else:
         # symbol not provided -- we can still try to compute a general form
         free = function.free_symbols
@@ -369,6 +369,111 @@ class ExprWithLimits(Expr):
         limits.reverse()
 
         return self.func(func, *limits)
+
+    @property
+    def has_finite_limits(self):
+        """
+        Returns True if the limits are known to be finite, either by the
+        explicit bounds, assumptions on the bounds, or assumptions on the
+        variables.  False if known to be infinite, based on the bounds.
+        None if not enough information is available to determine.
+
+        Examples
+        ========
+
+        >>> from sympy import Sum, Integral, Product, oo, Symbol
+        >>> x = Symbol('x')
+        >>> Sum(x, (x, 1, 8)).has_finite_limits
+        True
+
+        >>> Integral(x, (x, 1, oo)).has_finite_limits
+        False
+
+        >>> M = Symbol('M')
+        >>> Sum(x, (x, 1, M)).has_finite_limits
+
+        >>> N = Symbol('N', integer=True)
+        >>> Product(x, (x, 1, N)).has_finite_limits
+        True
+
+        See Also
+        ========
+
+        has_reversed_limits
+
+        """
+
+        ret_None = False
+        for lim in self.limits:
+            if len(lim) == 3:
+                if any(l.is_infinite for l in lim[1:]):
+                    # Any of the bounds are +/-oo
+                    return False
+                elif any(l.is_infinite is None for l in lim[1:]):
+                    # Maybe there are assumptions on the variable?
+                    if lim[0].is_infinite is None:
+                        ret_None = True
+            else:
+                if lim[0].is_infinite is None:
+                    ret_None = True
+
+        if ret_None:
+            return None
+        return True
+
+    @property
+    def has_reversed_limits(self):
+        """
+        Returns True if the limits are known to be in reversed order, either
+        by the explicit bounds, assumptions on the bounds, or assumptions on the
+        variables.  False if known to be in normal order, based on the bounds.
+        None if not enough information is available to determine.
+
+        Examples
+        ========
+
+        >>> from sympy import Sum, Integral, Product, oo, Symbol
+        >>> x = Symbol('x')
+        >>> Sum(x, (x, 8, 1)).has_reversed_limits
+        True
+
+        >>> Sum(x, (x, 1, oo)).has_reversed_limits
+        False
+
+        >>> M = Symbol('M')
+        >>> Integral(x, (x, 1, M)).has_reversed_limits
+
+        >>> N = Symbol('N', integer=True, positive=True)
+        >>> Sum(x, (x, 1, N)).has_reversed_limits
+        False
+
+        >>> Product(x, (x, 2, N)).has_reversed_limits
+
+        >>> Product(x, (x, 2, N)).subs(N, N + 2).has_reversed_limits
+        False
+
+        See Also
+        ========
+
+        ExprWithIntLimits.has_empty_sequence
+
+        """
+        ret_None = False
+        for lim in self.limits:
+            if len(lim) == 3:
+                var, a, b = lim
+                dif = b - a
+                if dif.is_extended_negative:
+                    return True
+                elif dif.is_extended_nonnegative:
+                    continue
+                else:
+                    ret_None = True
+            else:
+                return None
+        if ret_None:
+            return None
+        return False
 
 
 class AddWithLimits(ExprWithLimits):

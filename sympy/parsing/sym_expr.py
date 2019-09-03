@@ -3,11 +3,20 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
 lfortran = import_module('lfortran')
+cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
 
-if lfortran:
-    from sympy.parsing.fortran.fortran_parser import src_to_sympy
+if not lfortran and not cin:
+    class SymPyExpression(object):
+        def __init__(self, *args, **kwargs):
+            raise ImportError('Module not available.')
 
-    @doctest_depends_on(modules=('lfortran',))
+else:
+    if lfortran:
+        from sympy.parsing.fortran.fortran_parser import src_to_sympy
+    if cin:
+        from sympy.parsing.c.c_parser import parse_c
+
+    @doctest_depends_on(modules=['lfortran', 'cin'])
     class SymPyExpression(object):
         """Class to store and handle SymPy expressions
 
@@ -24,15 +33,27 @@ if lfortran:
         The module and its API are currently under development and experimental
         and can be changed during development.
 
-        It currently only supports conversion from Fortran. The support for other
-        languages is under development. The Fortran parser does not support numeric
-        assignments, so all the variables have been Initialized to zero.
+        The Fortran parser does not support numeric assignments, so all the
+        variables have been Initialized to zero.
 
-        The module also depends on an external dependeny, LFortran which is
-        required to use the Fortran parser
+        The module also depends on external dependencies:
+
+        - LFortran which is required to use the Fortran parser
+        - Clang which is required for the C parser
 
         Examples
         ========
+
+        Example of parsing C code:
+
+        >>> src = '''
+        ... int a,b;
+        ... float c = 2, d =4;
+        ... '''
+        >>> a = SymPyExpression(src, 'c')
+        >>> a.return_expr()
+        [Declaration(Variable(Symbol('a'), type=IntBaseType(String('integer')), value=Integer(0))), Declaration(Variable(Symbol('b'), type=IntBaseType(String('integer')), value=Integer(0))), Declaration(Variable(Symbol('c'), type=IntBaseType(String('integer')), value=Integer(2))), Declaration(Variable(Symbol('d'),     type=IntBaseType(String('integer')), value=Integer(4)))]
+
 
         An example of variable definiton:
 
@@ -81,9 +102,15 @@ if lfortran:
             elif mode:
                 if source_code:
                     if mode.lower() == 'f':
-                        self._expr = src_to_sympy(source_code)
-                    #elif mode.lower() == 'c':
-                    #    self._expr = src_to_c(source_code)
+                        if lfortran:
+                            self._expr = src_to_sympy(source_code)
+                        else:
+                            raise ImportError("LFortran is not installed, cannot parse Fortran code")
+                    elif mode.lower() == 'c':
+                        if cin:
+                            self._expr = parse_c(source_code)
+                        else:
+                            raise ImportError("Clang is not installed, cannot parse C code")
                     else:
                         raise NotImplementedError(
                             'Parser for specified language is not implemented'
@@ -104,8 +131,8 @@ if lfortran:
                 converted
 
             mode: String
-                the mode to determine which parser is to be used according to the
-                language of the source code
+                the mode to determine which parser is to be used according to
+                the language of the source code
                 f or F for Fortran
                 c or C for C/C++
 
@@ -134,17 +161,20 @@ if lfortran:
 
 
             """
-            if src_code:
-                if mode.lower() == 'f':
+            if mode.lower() == 'f':
+                if lfortran:
                     self._expr = src_to_sympy(src_code)
-                #elif mode.lower() == 'c':
-                #    self._expr = src_to_c(src_code)
                 else:
-                    raise NotImplementedError(
-                        "Parser for specified language has not been implemented"
-                    )
+                    raise ImportError("LFortran is not installed, cannot parse Fortran code")
+            elif mode.lower() == 'c':
+                if cin:
+                    self._expr = parse_c(src_code)
+                else:
+                    raise ImportError("Clang is not installed, cannot parse C code")
             else:
-                raise ValueError('Source code not present')
+                raise NotImplementedError(
+                    "Parser for specified language has not been implemented"
+                )
 
         def convert_to_python(self):
             """Returns a list with python code for the sympy expressions
@@ -248,13 +278,5 @@ if lfortran:
             Return(Variable(f))
             ))]
 
-
             """
             return self._expr
-else:
-    class SymPyExpression(object):
-        def __init__(self, *args, **kwargs):
-            raise ImportError('lfortran not available.')
-
-        def convert_to_expr(self, *args, **kwargs):
-            raise ImportError('lfortran not available')

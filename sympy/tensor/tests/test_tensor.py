@@ -13,7 +13,7 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensor_heads, \
     TensorManager, TensExpr, TensorHead, canon_bp, \
     tensorhead, tensorsymmetry, TensorType
-from sympy.utilities.pytest import raises, XFAIL, ignore_warnings
+from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy, ignore_warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import range
 from sympy.matrices import diag
@@ -500,7 +500,8 @@ def test_TensExpr():
     raises(ValueError, lambda: (A(c, d) + g(c, d))/g(a, b))
     raises(ValueError, lambda: S.One/(A(c, d) + g(c, d)))
     raises(ValueError, lambda: A(a, b) + A(a, c))
-    t = A(a, b) + B(a, b)
+
+    A(a, b) + B(a, b) # assigned to t for below
     #raises(NotImplementedError, lambda: TensExpr.__mul__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__add__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__radd__(t, 'a'))
@@ -1151,6 +1152,7 @@ def test_TensorManager():
     assert TensorManager.comm == [{0:0, 1:0, 2:0}, {0:0, 1:1, 2:None}, {0:0, 1:None}]
     assert GHsymbol not in TensorManager._comm_symbols2i
     nh = TensorManager.comm_symbols2i(GHsymbol)
+    assert TensorManager.comm_i2symbol(nh) == GHsymbol
     assert GHsymbol in TensorManager._comm_symbols2i
 
 
@@ -1277,21 +1279,23 @@ def test_valued_tensor_iter():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
+    list_BA = [Array([1, 2, 3, 4]), Array([5, 6, 7, 8]), Array([9, 0, -1, -2]), Array([-3, -4, -5, -6])]
     # iteration on VTensorHead
     assert list(A) == [E, px, py, pz]
-    assert list(ba_matrix) == list(BA)
+    assert list(ba_matrix) == [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, -1, -2, -3, -4, -5, -6]
+    assert list(BA) == list_BA
 
     # iteration on VTensMul
     assert list(A(i1)) == [E, px, py, pz]
-    assert list(BA(i1, i2)) == list(ba_matrix)
-    assert list(3 * BA(i1, i2)) == [3 * i for i in list(ba_matrix)]
-    assert list(-5 * BA(i1, i2)) == [-5 * i for i in list(ba_matrix)]
+    assert list(BA(i1, i2)) == list_BA
+    assert list(3 * BA(i1, i2)) == [3 * i for i in list_BA]
+    assert list(-5 * BA(i1, i2)) == [-5 * i for i in list_BA]
 
     # iteration on VTensAdd
     # A(i1) + A(i1)
     assert list(A(i1) + A(i1)) == [2*E, 2*px, 2*py, 2*pz]
     assert BA(i1, i2) - BA(i1, i2) == 0
-    assert list(BA(i1, i2) - 2 * BA(i1, i2)) == [-i for i in list(ba_matrix)]
+    assert list(BA(i1, i2) - 2 * BA(i1, i2)) == [-i for i in list_BA]
 
 
 @filter_warnings_decorator
@@ -1804,6 +1808,7 @@ def test_tensor_expand():
     p1 = B(j)*B(-j) + B(j)*C(-j)
     p2 = C(-i)*p1
     p3 = A(i)*p2
+    assert p3.expand() == A(i)*C(-i)*B(j)*B(-j) + A(i)*C(-i)*B(j)*C(-j)
 
     expr = A(i)*(B(-i) + C(-i)*(B(j)*B(-j) + B(j)*C(-j)))
     assert expr.expand() == A(i)*B(-i) + A(i)*C(-i)*B(j)*B(-j) + A(i)*C(-i)*B(j)*C(-j)
@@ -1966,14 +1971,16 @@ def test_rewrite_tensor_to_Indexed():
 
 
 def test_tensorsymmetry():
-    with raises(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         tensorsymmetry([1]*2)
 
 def test_tensorhead():
-    with raises(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         tensorhead('A', [])
 
 def test_TensorType():
-    with raises(SymPyDeprecationWarning):
-        sym = TensorSymmetry.no_symmetry(1)
-        TensorType(sym, 2)
+    with warns_deprecated_sympy():
+        sym2 = TensorSymmetry.fully_symmetric(2)
+        Lorentz = TensorIndexType('Lorentz')
+        S2 = TensorType([Lorentz]*2, sym2)
+        assert isinstance(S2, TensorType)

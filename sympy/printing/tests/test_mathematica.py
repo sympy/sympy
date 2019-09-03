@@ -79,6 +79,8 @@ def test_Function():
     assert mcode(harmonic(x, y)) == "HarmonicNumber[x, y]"
     assert mcode(Li(x)) == "LogIntegral[x] - LogIntegral[2]"
     assert mcode(LambertW(x)) == "ProductLog[x]"
+    assert mcode(LambertW(x, -1)) == "ProductLog[-1, x]"
+    assert mcode(LambertW(x, y)) == "ProductLog[y, x]"
 
 
 def test_special_polynomials():

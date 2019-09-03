@@ -392,7 +392,7 @@ class sign(Function):
     def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         from sympy.functions.special.delta_functions import Heaviside
         if arg.is_extended_real:
-            return Heaviside(arg)*2 - 1
+            return Heaviside(arg, H0=S(1)/2) * 2 - 1
 
     def _eval_simplify(self, **kwargs):
         return self.func(self.args[0].factor())  # XXX include doit?
@@ -622,9 +622,14 @@ class Abs(Function):
     def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
         if arg.is_extended_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
+        elif arg.is_imaginary:
+            return Piecewise((I*arg, I*arg >= 0), (-I*arg, True))
 
     def _eval_rewrite_as_sign(self, arg, **kwargs):
         return arg/sign(arg)
+
+    def _eval_rewrite_as_conjugate(self, arg, **kwargs):
+        return (arg*conjugate(arg))**(S.Half)
 
 
 class arg(Function):

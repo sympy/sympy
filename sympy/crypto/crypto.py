@@ -17,19 +17,32 @@ and the Diffie-Hellman key exchange.
 from __future__ import print_function
 
 from string import whitespace, ascii_uppercase as uppercase, printable
+from functools import reduce
+import warnings
 
 from sympy import nextprime
 from sympy.core import Rational, Symbol
-from sympy.core.numbers import igcdex, mod_inverse
-from sympy.core.compatibility import range
+from sympy.core.numbers import igcdex, mod_inverse, igcd
+from sympy.core.compatibility import range, as_int
 from sympy.matrices import Matrix
-from sympy.ntheory import isprime, primitive_root
+from sympy.ntheory import isprime, primitive_root, factorint
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import uniq, multiset
 from sympy.utilities.randtest import _randrange, _randint
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+
+class NonInvertibleCipherWarning(RuntimeWarning):
+    """A warning raised if the cipher is not invertible."""
+    def __init__(self, msg):
+        self.fullMessage = msg
+
+    def __str__(self):
+        return '\n\t' + self.fullMessage
+
+    def warn(self, stacklevel=2):
+        warnings.warn(self, stacklevel=stacklevel)
 
 
 def AZ(s=None):
@@ -103,16 +116,19 @@ def padded_key(key, symbols, filter=True):
 
 def check_and_join(phrase, symbols=None, filter=None):
     """
-    Joins characters of `phrase` and if ``symbols`` is given, raises
+    Joins characters of ``phrase`` and if ``symbols`` is given, raises
     an error if any character in ``phrase`` is not in ``symbols``.
 
     Parameters
     ==========
 
-    phrase :    string or list of strings to be returned as a string
+    phrase
+        String or list of strings to be returned as a string.
 
-    symbols :   iterable of characters allowed in ``phrase``;
-                if ``symbols`` is None, no checking is performed
+    symbols
+        Iterable of characters allowed in ``phrase``.
+
+        If ``symbols`` is ``None``, no checking is performed.
 
     Examples
     ========
@@ -185,25 +201,17 @@ def encipher_shift(msg, key, symbols=None):
     Parameters
     ==========
 
-            key : an integer (the secret key)
+    key : int
+        The secret key.
 
-            msg : plaintext of upper-case letters
+    msg : str
+        Plaintext of upper-case letters.
 
     Returns
     =======
 
-            ct : ciphertext of upper-case letters
-
-    ALGORITHM:
-
-        STEPS:
-            0. Number the letters of the alphabet from 0, ..., N
-            1. Compute from the string ``msg`` a list ``L1`` of
-               corresponding integers.
-            2. Compute from the list ``L1`` a new list ``L2``, given by
-               adding ``(k mod 26)`` to each element in ``L1``.
-            3. Compute from the list ``L2`` a string ``ct`` of
-               corresponding letters.
+    str
+        Ciphertext of upper-case letters.
 
     Examples
     ========
@@ -226,6 +234,17 @@ def encipher_shift(msg, key, symbols=None):
 
     Notes
     =====
+
+    ALGORITHM:
+
+        STEPS:
+            0. Number the letters of the alphabet from 0, ..., N
+            1. Compute from the string ``msg`` a list ``L1`` of
+               corresponding integers.
+            2. Compute from the list ``L1`` a new list ``L2``, given by
+               adding ``(k mod 26)`` to each element in ``L1``.
+            3. Compute from the list ``L2`` a string ``ct`` of
+               corresponding letters.
 
     The shift cipher is also called the Caesar cipher, after
     Julius Caesar, who, according to Suetonius, used it with a
@@ -354,19 +373,26 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     Parameters
     ==========
 
-            msg : string of characters that appear in ``symbols``
+    msg : str
+        Characters that appear in ``symbols``.
 
-            a, b : a pair integers, with ``gcd(a, N) = 1``
-            (the secret key)
+    a, b : int, int
+        A pair integers, with ``gcd(a, N) = 1`` (the secret key).
 
-            symbols : string of characters (default = uppercase
-            letters). When no symbols are given, ``msg`` is converted
-            to upper case letters and all other characters are ignored.
+    symbols
+        String of characters (default = uppercase letters).
+
+        When no symbols are given, ``msg`` is converted to upper case
+        letters and all other characters are ignored.
 
     Returns
     =======
 
-            ct : string of characters (the ciphertext message)
+    ct
+        String of characters (the ciphertext message)
+
+    Notes
+    =====
 
     ALGORITHM:
 
@@ -379,9 +405,6 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
                ``x`` in ``L1``.
             3. Compute from the list ``L2`` a string ``ct`` of
                corresponding letters.
-
-    Notes
-    =====
 
     This is a straightforward generalization of the shift cipher with
     the added complexity of requiring 2 characters to be deciphered in
@@ -786,19 +809,25 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     Parameters
     ==========
 
-            msg : plaintext message of `n` upper-case letters
+    msg
+        Plaintext message of `n` upper-case letters.
 
-            key : a `k x k` invertible matrix `K`, all of whose
-            entries are in `Z_{26}` (or whatever number of symbols
-            are being used).
+    key
+        A `k \times k` invertible matrix `K`, all of whose entries are
+        in `Z_{26}` (or whatever number of symbols are being used).
 
-            pad : character (default "Q") to use to make length
-            of text be a multiple of ``k``
+    pad
+        Character (default "Q") to use to make length of text be a
+        multiple of ``k``.
 
     Returns
     =======
 
-            ct : ciphertext of upper-case letters
+    ct
+        Ciphertext of upper-case letters.
+
+    Notes
+    =====
 
     ALGORITHM:
 
@@ -932,19 +961,25 @@ def encipher_bifid(msg, key, symbols=None):
     Parameters
     ==========
 
-            msg : plaintext string
+    msg
+        Plaintext string.
 
-            key : short string for key; duplicate characters are
-            ignored and then it is padded with the characters in
-            ``symbols`` that were not in the short key
+    key
+        Short string for key.
 
-            symbols : `n \times n` characters defining the alphabet
-            (default is string.printable)
+        Duplicate characters are ignored and then it is padded with the
+        characters in ``symbols`` that were not in the short key.
+
+    symbols
+        `n \times n` characters defining the alphabet.
+
+        (default is string.printable)
 
     Returns
     =======
 
-            ciphertext (using Bifid5 cipher without spaces)
+    ciphertext
+        Ciphertext using Bifid5 cipher without spaces.
 
     See Also
     ========
@@ -988,19 +1023,25 @@ def decipher_bifid(msg, key, symbols=None):
     Parameters
     ==========
 
-            msg : ciphertext string
+    msg
+        Ciphertext string.
 
-            key : short string for key; duplicate characters are
-            ignored and then it is padded with the characters in
-            symbols that were not in the short key
+    key
+        Short string for key.
 
-            symbols : `n \times n` characters defining the alphabet
-            (default=string.printable, a `10 \times 10` matrix)
+        Duplicate characters are ignored and then it is padded with the
+        characters in symbols that were not in the short key.
+
+    symbols
+        `n \times n` characters defining the alphabet.
+
+        (default=string.printable, a `10 \times 10` matrix)
 
     Returns
     =======
 
-            deciphered text
+    deciphered
+        Deciphered text.
 
     Examples
     ========
@@ -1152,18 +1193,23 @@ def encipher_bifid5(msg, key):
     Parameters
     ==========
 
-            msg : plaintext string; converted to upper case and
-            filtered of anything but all letters except J.
+    msg : str
+        Plaintext string.
 
-            key : short string for key; non-alphabetic letters, J
-            and duplicated characters are ignored and then, if the
-            length is less than 25 characters, it is padded with other
-            letters of the alphabet (in alphabetical order).
+        Converted to upper case and filtered of anything but all letters
+        except J.
+
+    key
+        Short string for key; non-alphabetic letters, J and duplicated
+        characters are ignored and then, if the length is less than 25
+        characters, it is padded with other letters of the alphabet
+        (in alphabetical order).
 
     Returns
     =======
 
-            ct : ciphertext (all caps, no spaces)
+    ct
+        Ciphertext (all caps, no spaces).
 
     Examples
     ========
@@ -1222,17 +1268,20 @@ def decipher_bifid5(msg, key):
     Parameters
     ==========
 
-        msg : ciphertext string
+    msg
+        Ciphertext string.
 
-        key : short string for key; duplicated characters are
-        ignored and if the length is less then 25 characters, it
-        will be padded with other letters from the alphabet omitting
-        "J". Non-alphabetic characters are ignored.
+    key
+        Short string for key; duplicated characters are ignored and if
+        the length is less then 25 characters, it will be padded with
+        other letters from the alphabet omitting "J".
+        Non-alphabetic characters are ignored.
 
     Returns
     =======
 
-        plaintext from Bifid5 cipher (all caps, no spaces)
+    plaintext
+        Plaintext from Bifid5 cipher (all caps, no spaces).
 
     Examples
     ========
@@ -1290,16 +1339,20 @@ def encipher_bifid6(msg, key):
     Parameters
     ==========
 
-        msg : plaintext string (digits okay)
+    msg
+        Plaintext string (digits okay).
 
-        key : short string for key (digits okay). If ``key`` is
-        less than 36 characters long, the square will be filled with
-        letters A through Z and digits 0 through 9.
+    key
+        Short string for key (digits okay).
+
+        If ``key`` is less than 36 characters long, the square will be
+        filled with letters A through Z and digits 0 through 9.
 
     Returns
     =======
 
-        ciphertext from Bifid cipher (all caps, no spaces)
+    ciphertext
+        Ciphertext from Bifid cipher (all caps, no spaces).
 
     See Also
     ========
@@ -1323,17 +1376,21 @@ def decipher_bifid6(msg, key):
     Parameters
     ==========
 
-        msg : ciphertext string (digits okay); converted to upper case
+    msg
+        Ciphertext string (digits okay); converted to upper case
 
-        key : short string for key (digits okay). If ``key`` is
-        less than 36 characters long, the square will be filled with
-        letters A through Z and digits 0 through 9. All letters are
-        converted to uppercase.
+    key
+        Short string for key (digits okay).
+
+        If ``key`` is less than 36 characters long, the square will be
+        filled with letters A through Z and digits 0 through 9.
+        All letters are converted to uppercase.
 
     Returns
     =======
 
-        plaintext from Bifid cipher (all caps, no spaces)
+    plaintext
+        Plaintext from Bifid cipher (all caps, no spaces).
 
     Examples
     ========
@@ -1383,23 +1440,292 @@ def bifid6_square(key=None):
 
 #################### RSA  #############################
 
+def _decipher_rsa_crt(i, d, factors):
+    """Decipher RSA using chinese remainder theorem from the information
+    of the relatively-prime factors of the modulus.
 
-def rsa_public_key(p, q, e):
-    r"""
-    Return the RSA *public key* pair, `(n, e)`, where `n`
-    is a product of two primes and `e` is relatively
-    prime (coprime) to the Euler totient `\phi(n)`. False
-    is returned if any assumption is violated.
+    Parameters
+    ==========
+
+    i : integer
+        Ciphertext
+
+    d : integer
+        The exponent component
+
+    factors : list of relatively-prime integers
+        The integers given must be coprime and the product must equal
+        the modulus component of the original RSA key.
+
+    Examples
+    ========
+
+    How to decrypt RSA with CRT:
+
+    >>> from sympy.crypto.crypto import rsa_public_key, rsa_private_key
+    >>> primes = [61, 53]
+    >>> e = 17
+    >>> args = primes + [e]
+    >>> puk = rsa_public_key(*args)
+    >>> prk = rsa_private_key(*args)
+
+    >>> from sympy.crypto.crypto import encipher_rsa, _decipher_rsa_crt
+    >>> msg = 65
+    >>> crt_primes = primes
+    >>> encrypted = encipher_rsa(msg, puk)
+    >>> decrypted = _decipher_rsa_crt(encrypted, prk[1], primes)
+    >>> decrypted
+    65
+    """
+    from sympy.ntheory.modular import crt
+    moduluses = [pow(i, d, p) for p in factors]
+
+    result = crt(factors, moduluses)
+    if not result:
+        raise ValueError("CRT failed")
+    return result[0]
+
+
+def _rsa_key(*args, **kwargs):
+    r"""A private subroutine to generate RSA key
+
+    Parameters
+    ==========
+
+    public, private : bool, optional
+        Flag to generate either a public key, a private key
+
+    totient : 'Euler' or 'Carmichael'
+        Different notation used for totient.
+
+    multipower : bool, optional
+        Flag to bypass warning for multipower RSA.
+    """
+    from sympy.ntheory import totient as _euler
+    from sympy.ntheory import reduced_totient as _carmichael
+
+    public = kwargs.pop('public', True)
+    private = kwargs.pop('private', True)
+    totient = kwargs.pop('totient', 'Euler')
+    index = kwargs.pop('index', None)
+    multipower = kwargs.pop('multipower', None)
+
+    if len(args) < 2:
+        return False
+
+    if totient not in ('Euler', 'Carmichael'):
+        raise ValueError(
+            "The argument totient={} should either be " \
+            "'Euler', 'Carmichalel'." \
+            .format(totient))
+
+    if totient == 'Euler':
+        _totient = _euler
+    else:
+        _totient = _carmichael
+
+    if index is not None:
+        index = as_int(index)
+        if totient != 'Carmichael':
+            raise ValueError(
+                "Setting the 'index' keyword argument requires totient"
+                "notation to be specified as 'Carmichael'.")
+
+    primes, e = args[:-1], args[-1]
+
+    if any(not isprime(p) for p in primes):
+        new_primes = []
+        for i in primes:
+            new_primes.extend(factorint(i, multiple=True))
+        primes = new_primes
+
+    n = reduce(lambda i, j: i*j, primes)
+
+    tally = multiset(primes)
+    if all(v == 1 for v in tally.values()):
+        multiple = list(tally.keys())
+        phi = _totient._from_distinct_primes(*multiple)
+
+    else:
+        if not multipower:
+            NonInvertibleCipherWarning(
+                'Non-distinctive primes found in the factors {}. '
+                'The cipher may not be decryptable for some numbers '
+                'in the complete residue system Z[{}], but the cipher '
+                'can still be valid if you restrict the domain to be '
+                'the reduced residue system Z*[{}]. You can pass '
+                'the flag multipower=True if you want to suppress this '
+                'warning.'
+                .format(primes, n, n)
+                ).warn()
+        phi = _totient._from_factors(tally)
+
+    if igcd(e, phi) == 1:
+        if public and not private:
+            if isinstance(index, int):
+                e = e % phi
+                e += index * phi
+            return n, e
+
+        if private and not public:
+            d = mod_inverse(e, phi)
+            if isinstance(index, int):
+                d += index * phi
+            return n, d
+
+    return False
+
+
+def rsa_public_key(*args, **kwargs):
+    r"""Return the RSA *public key* pair, `(n, e)`
+
+    Parameters
+    ==========
+
+    args : naturals
+        If specified as `p, q, e` where `p` and `q` are distinct primes
+        and `e` is a desired public exponent of the RSA, `n = p q` and
+        `e` will be verified against the totient
+        `\phi(n)` (Euler totient) or `\lambda(n)` (Carmichael totient)
+        to be `\gcd(e, \phi(n)) = 1` or `\gcd(e, \lambda(n)) = 1`.
+
+        If specified as `p_1, p_2, ..., p_n, e` where
+        `p_1, p_2, ..., p_n` are specified as primes,
+        and `e` is specified as a desired public exponent of the RSA,
+        it will be able to form a multi-prime RSA, which is a more
+        generalized form of the popular 2-prime RSA.
+
+        It can also be possible to form a single-prime RSA by specifying
+        the argument as `p, e`, which can be considered a trivial case
+        of a multiprime RSA.
+
+        Furthermore, it can be possible to form a multi-power RSA by
+        specifying two or more pairs of the primes to be same.
+        However, unlike the two-distinct prime RSA or multi-prime
+        RSA, not every numbers in the complete residue system
+        (`\mathbb{Z}_n`) will be decryptable since the mapping
+        `\mathbb{Z}_{n} \rightarrow \mathbb{Z}_{n}`
+        will not be bijective.
+        (Only except for the trivial case when
+        `e = 1`
+        or more generally,
+
+        .. math::
+            e \in \left \{ 1 + k \lambda(n)
+            \mid k \in \mathbb{Z} \land k \geq 0 \right \}
+
+        when RSA reduces to the identity.)
+        However, the RSA can still be decryptable for the numbers in the
+        reduced residue system (`\mathbb{Z}_n^{\times}`), since the
+        mapping
+        `\mathbb{Z}_{n}^{\times} \rightarrow \mathbb{Z}_{n}^{\times}`
+        can still be bijective.
+
+        If you pass a non-prime integer to the arguments
+        `p_1, p_2, ..., p_n`, the particular number will be
+        prime-factored and it will become either a multi-prime RSA or a
+        multi-power RSA in its canonical form, depending on whether the
+        product equals its radical or not.
+        `p_1 p_2 ... p_n = \text{rad}(p_1 p_2 ... p_n)`
+
+    totient : bool, optional
+        If ``'Euler'``, it uses Euler's totient `\phi(n)` which is
+        :meth:`sympy.ntheory.factor_.totient` in SymPy.
+
+        If ``'Carmichael'``, it uses Carmichael's totient `\lambda(n)`
+        which is :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
+
+        Unlike private key generation, this is a trivial keyword for
+        public key generation because
+        `\gcd(e, \phi(n)) = 1 \iff \gcd(e, \lambda(n)) = 1`.
+
+    index : nonnegative integer, optional
+        Returns an arbitrary solution of a RSA public key at the index
+        specified at `0, 1, 2, ...`. This parameter needs to be
+        specified along with ``totient='Carmichael'``.
+
+        Similarly to the non-uniquenss of a RSA private key as described
+        in the ``index`` parameter documentation in
+        :meth:`rsa_private_key`, RSA public key is also not unique and
+        there is an infinite number of RSA public exponents which
+        can behave in the same manner.
+
+        From any given RSA public exponent `e`, there are can be an
+        another RSA public exponent `e + k \lambda(n)` where `k` is an
+        integer, `\lambda` is a Carmichael's totient function.
+
+        However, considering only the positive cases, there can be
+        a principal solution of a RSA public exponent `e_0` in
+        `0 < e_0 < \lambda(n)`, and all the other solutions
+        can be canonicalzed in a form of `e_0 + k \lambda(n)`.
+
+        ``index`` specifies the `k` notation to yield any possible value
+        an RSA public key can have.
+
+        An example of computing any arbitrary RSA public key:
+
+        >>> from sympy.crypto.crypto import rsa_public_key
+        >>> rsa_public_key(61, 53, 17, totient='Carmichael', index=0)
+        (3233, 17)
+        >>> rsa_public_key(61, 53, 17, totient='Carmichael', index=1)
+        (3233, 797)
+        >>> rsa_public_key(61, 53, 17, totient='Carmichael', index=2)
+        (3233, 1577)
+
+    multipower : bool, optional
+        Any pair of non-distinct primes found in the RSA specification
+        will restrict the domain of the cryptosystem, as noted in the
+        explaination of the parameter ``args``.
+
+        SymPy RSA key generator may give a warning before dispatching it
+        as a multi-power RSA, however, you can disable the warning if
+        you pass ``True`` to this keyword.
+
+    Returns
+    =======
+
+    (n, e) : int, int
+        `n` is a product of any arbitrary number of primes given as
+        the argument.
+
+        `e` is relatively prime (coprime) to the Euler totient
+        `\phi(n)`.
+
+    False
+        Returned if less than two arguments are given, or `e` is
+        not relatively prime to the modulus.
 
     Examples
     ========
 
     >>> from sympy.crypto.crypto import rsa_public_key
+
+    A public key of a two-prime RSA:
+
     >>> p, q, e = 3, 5, 7
     >>> rsa_public_key(p, q, e)
     (15, 7)
     >>> rsa_public_key(p, q, 30)
     False
+
+    A public key of a multiprime RSA:
+
+    >>> primes = [2, 3, 5, 7, 11, 13]
+    >>> e = 7
+    >>> args = primes + [e]
+    >>> rsa_public_key(*args)
+    (30030, 7)
+
+    Notes
+    =====
+
+    Although the RSA can be generalized over any modulus `n`, using
+    two large primes had became the most popular specification because a
+    product of two large primes is usually the hardest to factor
+    relatively to the digits of `n` can have.
+
+    However, it may need further understanding of the time complexities
+    of each prime-factoring algorithms to verify the claim.
 
     See Also
     ========
@@ -1413,96 +1739,318 @@ def rsa_public_key(p, q, e):
 
     .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
 
+    .. [2] http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
+
+    .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
+
+    .. [4] http://www.itiis.org/digital-library/manuscript/1381
     """
-    n = p*q
-    if isprime(p) and isprime(q):
-        if p == q:
-            SymPyDeprecationWarning(
-                feature="Using non-distinct primes for rsa_public_key",
-                useinstead="distinct primes",
-                issue=16162,
-                deprecated_since_version="1.4").warn()
-            phi = p * (p - 1)
-        else:
-            phi = (p - 1) * (q - 1)
-        if gcd(e, phi) == 1:
-            return n, e
-    return False
+    return _rsa_key(*args, public=True, private=False, **kwargs)
 
 
-def rsa_private_key(p, q, e):
-    r"""
-    Return the RSA *private key*, `(n,d)`, where `n`
-    is a product of two primes and `d` is the inverse of
-    `e` (mod `\phi(n)`). False is returned if any assumption
-    is violated.
+def rsa_private_key(*args, **kwargs):
+    r"""Return the RSA *private key* pair, `(n, d)`
+
+    Parameters
+    ==========
+
+    args : naturals
+        The keyword is identical to the ``args`` in
+        :meth:`rsa_public_key`.
+
+    totient : bool, optional
+        If ``'Euler'``, it uses Euler's totient convention `\phi(n)`
+        which is :meth:`sympy.ntheory.factor_.totient` in SymPy.
+
+        If ``'Carmichael'``, it uses Carmichael's totient convention
+        `\lambda(n)` which is
+        :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
+
+        There can be some output differences for private key generation
+        as examples below.
+
+        Example using Euler's totient:
+
+        >>> from sympy.crypto.crypto import rsa_private_key
+        >>> rsa_private_key(61, 53, 17, totient='Euler')
+        (3233, 2753)
+
+        Example using Carmichael's totient:
+
+        >>> from sympy.crypto.crypto import rsa_private_key
+        >>> rsa_private_key(61, 53, 17, totient='Carmichael')
+        (3233, 413)
+
+    index : nonnegative integer, optional
+        Returns an arbitrary solution of a RSA private key at the index
+        specified at `0, 1, 2, ...`. This parameter needs to be
+        specified along with ``totient='Carmichael'``.
+
+        RSA private exponent is a non-unique solution of
+        `e d \mod \lambda(n) = 1` and it is possible in any form of
+        `d + k \lambda(n)`, where `d` is an another
+        already-computed private exponent, and `\lambda` is a
+        Carmichael's totient function, and `k` is any integer.
+
+        However, considering only the positive cases, there can be
+        a principal solution of a RSA private exponent `d_0` in
+        `0 < d_0 < \lambda(n)`, and all the other solutions
+        can be canonicalzed in a form of `d_0 + k \lambda(n)`.
+
+        ``index`` specifies the `k` notation to yield any possible value
+        an RSA private key can have.
+
+        An example of computing any arbitrary RSA private key:
+
+        >>> from sympy.crypto.crypto import rsa_private_key
+        >>> rsa_private_key(61, 53, 17, totient='Carmichael', index=0)
+        (3233, 413)
+        >>> rsa_private_key(61, 53, 17, totient='Carmichael', index=1)
+        (3233, 1193)
+        >>> rsa_private_key(61, 53, 17, totient='Carmichael', index=2)
+        (3233, 1973)
+
+    multipower : bool, optional
+        The keyword is identical to the ``multipower`` in
+        :meth:`rsa_public_key`.
+
+    Returns
+    =======
+
+    (n, d) : int, int
+        `n` is a product of any arbitrary number of primes given as
+        the argument.
+
+        `d` is the inverse of `e` (mod `\phi(n)`) where `e` is the
+        exponent given, and `\phi` is a Euler totient.
+
+    False
+        Returned if less than two arguments are given, or `e` is
+        not relatively prime to the totient of the modulus.
 
     Examples
     ========
 
     >>> from sympy.crypto.crypto import rsa_private_key
+
+    A private key of a two-prime RSA:
+
     >>> p, q, e = 3, 5, 7
     >>> rsa_private_key(p, q, e)
     (15, 7)
     >>> rsa_private_key(p, q, 30)
     False
 
+    A private key of a multiprime RSA:
+
+    >>> primes = [2, 3, 5, 7, 11, 13]
+    >>> e = 7
+    >>> args = primes + [e]
+    >>> rsa_private_key(*args)
+    (30030, 823)
+
+    See Also
+    ========
+
+    rsa_public_key
+    encipher_rsa
+    decipher_rsa
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
+
+    .. [2] http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
+
+    .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
+
+    .. [4] http://www.itiis.org/digital-library/manuscript/1381
     """
-    n = p*q
-    if isprime(p) and isprime(q):
-        if p == q:
-            SymPyDeprecationWarning(
-                feature="Using non-distinct primes for rsa_public_key",
-                useinstead="distinct primes",
-                issue=16162,
-                deprecated_since_version="1.4").warn()
-            phi = p * (p - 1)
-        else:
-            phi = (p - 1) * (q - 1)
-        if gcd(e, phi) == 1:
-            d = mod_inverse(e, phi)
-            return n, d
-    return False
+    return _rsa_key(*args, public=False, private=True, **kwargs)
 
 
-def encipher_rsa(i, key):
-    """
-    Return encryption of ``i`` by computing `i^e` (mod `n`),
-    where ``key`` is the public key `(n, e)`.
+def _encipher_decipher_rsa(i, key, factors=None):
+    n, d = key
+    if not factors:
+        return pow(i, d, n)
+
+    def _is_coprime_set(l):
+        is_coprime_set = True
+        for i in range(len(l)):
+            for j in range(i+1, len(l)):
+                if igcd(l[i], l[j]) != 1:
+                    is_coprime_set = False
+                    break
+        return is_coprime_set
+
+    prod = reduce(lambda i, j: i*j, factors)
+    if prod == n and _is_coprime_set(factors):
+        return _decipher_rsa_crt(i, d, factors)
+    return _encipher_decipher_rsa(i, key, factors=None)
+
+
+def encipher_rsa(i, key, factors=None):
+    r"""Encrypt the plaintext with RSA.
+
+    Parameters
+    ==========
+
+    i : integer
+        The plaintext to be encrypted for.
+
+    key : (n, e) where n, e are integers
+        `n` is the modulus of the key and `e` is the exponent of the
+        key. The encryption is computed by `i^e \bmod n`.
+
+        The key can either be a public key or a private key, however,
+        the message encrypted by a public key can only be decrypted by
+        a private key, and vice versa, as RSA is an asymmetric
+        cryptography system.
+
+    factors : list of coprime integers
+        This is identical to the keyword ``factors`` in
+        :meth:`decipher_rsa`.
+
+    Notes
+    =====
+
+    Some specifications may make the RSA not cryptographically
+    meaningful.
+
+    For example, `0`, `1` will remain always same after taking any
+    number of exponentiation, thus, should be avoided.
+
+    Furthermore, if `i^e < n`, `i` may easily be figured out by taking
+    `e` th root.
+
+    And also, specifying the exponent as `1` or in more generalized form
+    as `1 + k \lambda(n)` where `k` is an nonnegative integer,
+    `\lambda` is a carmichael totient, the RSA becomes an identity
+    mapping.
 
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import encipher_rsa, rsa_public_key
+    >>> from sympy.crypto.crypto import encipher_rsa
+    >>> from sympy.crypto.crypto import rsa_public_key, rsa_private_key
+
+    Public Key Encryption:
+
     >>> p, q, e = 3, 5, 7
     >>> puk = rsa_public_key(p, q, e)
     >>> msg = 12
     >>> encipher_rsa(msg, puk)
     3
 
+    Private Key Encryption:
+
+    >>> p, q, e = 3, 5, 7
+    >>> prk = rsa_private_key(p, q, e)
+    >>> msg = 12
+    >>> encipher_rsa(msg, prk)
+    3
+
+    Encryption using chinese remainder theorem:
+
+    >>> encipher_rsa(msg, prk, factors=[p, q])
+    3
     """
-    n, e = key
-    return pow(i, e, n)
+    return _encipher_decipher_rsa(i, key, factors=factors)
 
 
-def decipher_rsa(i, key):
-    """
-    Return decyption of ``i`` by computing `i^d` (mod `n`),
-    where ``key`` is the private key `(n, d)`.
+def decipher_rsa(i, key, factors=None):
+    r"""Decrypt the ciphertext with RSA.
+
+    Parameters
+    ==========
+
+    i : integer
+        The ciphertext to be decrypted for.
+
+    key : (n, d) where n, d are integers
+        `n` is the modulus of the key and `d` is the exponent of the
+        key. The decryption is computed by `i^d \bmod n`.
+
+        The key can either be a public key or a private key, however,
+        the message encrypted by a public key can only be decrypted by
+        a private key, and vice versa, as RSA is an asymmetric
+        cryptography system.
+
+    factors : list of coprime integers
+        As the modulus `n` created from RSA key generation is composed
+        of arbitrary prime factors
+        `n = {p_1}^{k_1}{p_2}^{k_2}...{p_n}^{k_n}` where
+        `p_1, p_2, ..., p_n` are distinct primes and
+        `k_1, k_2, ..., k_n` are positive integers, chinese remainder
+        theorem can be used to compute `i^d \bmod n` from the
+        fragmented modulo operations like
+
+        .. math::
+            i^d \bmod {p_1}^{k_1}, i^d \bmod {p_2}^{k_2}, ... ,
+            i^d \bmod {p_n}^{k_n}
+
+        or like
+
+        .. math::
+            i^d \bmod {p_1}^{k_1}{p_2}^{k_2},
+            i^d \bmod {p_3}^{k_3}, ... ,
+            i^d \bmod {p_n}^{k_n}
+
+        as long as every moduli does not share any common divisor each
+        other.
+
+        The raw primes used in generating the RSA key pair can be a good
+        option.
+
+        Note that the speed advantage of using this is only viable for
+        very large cases (Like 2048-bit RSA keys) since the
+        overhead of using pure python implementation of
+        :meth:`sympy.ntheory.modular.crt` may overcompensate the
+        theoritical speed advantage.
+
+    Notes
+    =====
+
+    See the ``Notes`` section in the documentation of
+    :meth:`encipher_rsa`
 
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import decipher_rsa, rsa_private_key
+    >>> from sympy.crypto.crypto import decipher_rsa, encipher_rsa
+    >>> from sympy.crypto.crypto import rsa_public_key, rsa_private_key
+
+    Public Key Encryption and Decryption:
+
     >>> p, q, e = 3, 5, 7
     >>> prk = rsa_private_key(p, q, e)
-    >>> msg = 3
-    >>> decipher_rsa(msg, prk)
+    >>> puk = rsa_public_key(p, q, e)
+    >>> msg = 12
+    >>> new_msg = encipher_rsa(msg, prk)
+    >>> new_msg
+    3
+    >>> decipher_rsa(new_msg, puk)
     12
 
+    Private Key Encryption and Decryption:
+
+    >>> p, q, e = 3, 5, 7
+    >>> prk = rsa_private_key(p, q, e)
+    >>> puk = rsa_public_key(p, q, e)
+    >>> msg = 12
+    >>> new_msg = encipher_rsa(msg, puk)
+    >>> new_msg
+    3
+    >>> decipher_rsa(new_msg, prk)
+    12
+
+    Decryption using chinese remainder theorem:
+
+    >>> decipher_rsa(new_msg, prk, factors=[p, q])
+    12
     """
-    n, d = key
-    return pow(i, d, n)
+    return _encipher_decipher_rsa(i, key, factors=factors)
 
 
 #################### kid krypto (kid RSA) #############################
@@ -1733,18 +2281,20 @@ def lfsr_sequence(key, fill, n):
     Parameters
     ==========
 
-        key : a list of finite field elements,
-            `[c_0, c_1, \ldots, c_k].`
+    key : list
+        A list of finite field elements, `[c_0, c_1, \ldots, c_k].`
 
-        fill : the list of the initial terms of the LFSR
-            sequence, `[x_0, x_1, \ldots, x_k].`
+    fill : list
+        The list of the initial terms of the LFSR sequence,
+        `[x_0, x_1, \ldots, x_k].`
 
-        n : number of terms of the sequence that the
-            function returns.
+    n
+        Number of terms of the sequence that the function returns.
 
     Returns
     =======
 
+    L
         The LFSR sequence defined by
         `x_{n+1} = c_k x_n + \ldots + c_0 x_{n-k}`, for
         `n \leq k`.
@@ -1834,17 +2384,21 @@ def lfsr_autocorrelation(L, P, k):
     Parameters
     ==========
 
-        L : is a periodic sequence of elements of `GF(2)`.
+    L
+        A periodic sequence of elements of `GF(2)`.
         L must have length larger than P.
 
-        P : the period of L
+    P
+        The period of L.
 
-        k : an integer (`0 < k < P`)
+    k : int
+        An integer `k` (`0 < k < P`).
 
     Returns
     =======
 
-        The k-th value of the autocorrelation of the LFSR L
+    autocorrelation
+        The k-th value of the autocorrelation of the LFSR L.
 
     Examples
     ========
@@ -1880,17 +2434,18 @@ def lfsr_connection_polynomial(s):
     Parameters
     ==========
 
-        s : a sequence of elements of even length, with entries in
-        a finite field
+    s
+        A sequence of elements of even length, with entries in a finite
+        field.
 
     Returns
     =======
 
-        C(x) : the connection polynomial of a minimal LFSR yielding
-        s.
+    C(x)
+        The connection polynomial of a minimal LFSR yielding s.
 
-    This implements the algorithm in section 3 of J. L. Massey's
-    article [M]_.
+        This implements the algorithm in section 3 of J. L. Massey's
+        article [M]_.
 
     Examples
     ========
@@ -1988,12 +2543,18 @@ def elgamal_private_key(digit=10, seed=None):
     Parameters
     ==========
 
-    digit : minimum number of binary digits for key
+    digit : int
+        Minimum number of binary digits for key.
 
     Returns
     =======
 
-    (p, r, d) : p = prime number, r = primitive root, d = random number
+    tuple : (p, r, d)
+        p = prime number.
+
+        r = primitive root.
+
+        d = random number.
 
     Notes
     =====
@@ -2019,18 +2580,22 @@ def elgamal_private_key(digit=10, seed=None):
 
 
 def elgamal_public_key(key):
-    """
+    r"""
     Return three number tuple as public key.
 
     Parameters
     ==========
 
-    key : Tuple (p, r, e)  generated by ``elgamal_private_key``
+    key : (p, r, e)
+        Tuple generated by ``elgamal_private_key``.
 
     Returns
     =======
 
-    (p, r, e = r**d mod p) : d is a random number in private key.
+    tuple : (p, r, e)
+        `e = r**d \bmod p`
+
+        `d` is a random number in private key.
 
     Examples
     ========
@@ -2061,13 +2626,17 @@ def encipher_elgamal(i, key, seed=None):
     Parameters
     ==========
 
-    msg : int of encoded message
-    key : public key
+    msg
+        int of encoded message.
+
+    key
+        Public key.
 
     Returns
     =======
 
-    (c1, c2) : Encipher into two number
+    tuple : (c1, c2)
+        Encipher into two number.
 
     Notes
     =====
@@ -2161,13 +2730,18 @@ def dh_private_key(digit=10, seed=None):
     Parameters
     ==========
 
-    digit: minimum number of binary digits required in key
+    digit
+        Minimum number of binary digits required in key.
 
     Returns
     =======
 
-    (p, g, a) : p = prime number, g = primitive root of p,
-                a = random number from 2 through p - 1
+    tuple : (p, g, a)
+        p = prime number.
+
+        g = primitive root of p.
+
+        a = random number from 2 through p - 1.
 
     Notes
     =====
@@ -2200,7 +2774,7 @@ def dh_private_key(digit=10, seed=None):
 
 
 def dh_public_key(key):
-    """
+    r"""
     Return three number tuple as public key.
 
     This is the tuple that Alice sends to Bob.
@@ -2208,12 +2782,15 @@ def dh_public_key(key):
     Parameters
     ==========
 
-    key : Tuple (p, g, a) generated by ``dh_private_key``
+    key : (p, g, a)
+        A tuple generated by ``dh_private_key``.
 
     Returns
     =======
 
-    (p, g, g^a mod p) : p, g and a as in Parameters
+    tuple : int, int, int
+        A tuple of `(p, g, g^a \mod p)` with `p`, `g` and `a` given as
+        parameters.s
 
     Examples
     ========
@@ -2241,14 +2818,18 @@ def dh_shared_key(key, b):
     Parameters
     ==========
 
-    key : Tuple (p, g, x) generated by ``dh_public_key``
-    b : Random number in the range of 2 to p - 1
-       (Chosen by second key exchange member (Bob))
+    key : (p, g, x)
+        Tuple `(p, g, x)` generated by ``dh_public_key``.
+
+    b
+        Random number in the range of `2` to `p - 1`
+        (Chosen by second key exchange member (Bob)).
 
     Returns
     =======
 
-    shared key (int)
+    int
+        A shared key.
 
     Examples
     ========
@@ -2286,13 +2867,17 @@ def _legendre(a, p):
     Parameters
     ==========
 
-    a : int the number to test
-    p : the prime to test a against
+    a : int
+        The number to test.
+
+    p : prime
+        The prime to test ``a`` against.
 
     Returns
     =======
 
-    legendre symbol (a / p) (int)
+    int
+        Legendre symbol (a / p).
 
     """
     sig = pow(a, (p - 1)//2, p)
@@ -2351,17 +2936,20 @@ def gm_private_key(p, q, a=None):
     Parameters
     ==========
 
-    p, q, a : initialization variables
+    p, q, a
+        Initialization variables.
 
     Returns
     =======
 
-    p, q : the input value p and q
+    tuple : (p, q)
+        The input value ``p`` and ``q``.
 
     Raises
     ======
 
-    ValueError : if p and q are not distinct odd primes
+    ValueError
+        If ``p`` and ``q`` are not distinct odd primes.
 
     """
     if p == q:
@@ -2385,16 +2973,17 @@ def gm_public_key(p, q, a=None, seed=None):
     Parameters
     ==========
 
-    p, q, a : (int) initialization variables
+    p, q, a : int, int, int
+        Initialization variables.
 
     Returns
     =======
 
-    (a, N) : tuple[int]
-        a is the input a if it is not None otherwise
-        some random integer coprime to p and q.
+    tuple : (a, N)
+        ``a`` is the input ``a`` if it is not ``None`` otherwise
+        some random integer coprime to ``p`` and ``q``.
 
-        N is the product of p and q
+        ``N`` is the product of ``p`` and ``q``.
 
     """
 
@@ -2421,13 +3010,17 @@ def encipher_gm(i, key, seed=None):
     Parameters
     ==========
 
-    i : (int) the message to encrypt
-    key : Tuple (a, N) the public key
+    i : int
+        The message to encrypt.
+
+    key : (a, N)
+        The public key.
 
     Returns
     =======
 
-    List[int] : the randomized encrypted message.
+    list : list of int
+        The randomized encrypted message.
 
     """
     if i < 0:
@@ -2454,13 +3047,17 @@ def decipher_gm(message, key):
     Parameters
     ==========
 
-    List[int] : the randomized encrypted message.
-    key : Tuple (p, q) the private key
+    message : list of int
+        The randomized encrypted message.
+
+    key : (p, q)
+        The private key.
 
     Returns
     =======
 
-    i : (int) the encrypted message
+    int
+        The encrypted message.
 
     """
     p, q = key
@@ -2489,17 +3086,20 @@ def bg_private_key(p, q):
     Parameters
     ==========
 
-    p, q : the keys to be checked
+    p, q
+        The keys to be checked.
 
     Returns
     =======
 
-    p, q : input values
+    p, q
+        Input values.
 
     Raises
     ======
 
-    ValueError : if p and q do not pass the above conditions
+    ValueError
+        If p and q do not pass the above conditions.
 
     """
 
@@ -2525,12 +3125,14 @@ def bg_public_key(p, q):
     Parameters
     ==========
 
-    p, q : the private keys
+    p, q
+        The private keys.
 
     Returns
     =======
 
-    N : the public key
+    N
+        The public key.
 
     """
     p, q = bg_private_key(p, q)
@@ -2554,18 +3156,23 @@ def encipher_bg(i, key, seed=None):
     Parameters
     ==========
 
-    i : message, a non-negative integer
-    key : the public key
+    i
+        Message, a non-negative integer
+
+    key
+        The public key
 
     Returns
     =======
 
-    (encrypted_message, x_L) : Tuple
+    Tuple
+        (encrypted_message, x_L)
 
     Raises
     ======
 
-    ValueError : if i is negative
+    ValueError
+        If i is negative.
 
     """
 
@@ -2611,13 +3218,17 @@ def decipher_bg(message, key):
     Parameters
     ==========
 
-    message : Tuple of encrypted message and a non-negative integer.
-    key : Tuple of private keys
+    message
+        Tuple of encrypted message and a non-negative integer.
+
+    key
+        Tuple of private keys.
 
     Returns
     =======
 
-    orig_msg : The original message
+    orig_msg
+        The original message
 
     """
 

@@ -61,6 +61,7 @@ class CodePrinter(StrPrinter):
     _rewriteable_functions = {
             'erf2': 'erf',
             'Li': 'li',
+            'beta': 'gamma'
     }
 
     def __init__(self, settings=None):
@@ -385,12 +386,12 @@ class CodePrinter(StrPrinter):
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
-        elif expr.is_Function and self._settings.get('allow_unknown_functions', False):
-            return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         elif (expr.func.__name__ in self._rewriteable_functions and
               self._rewriteable_functions[expr.func.__name__] in self.known_functions):
             # Simple rewrite to supported function possible
             return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
+        elif expr.is_Function and self._settings.get('allow_unknown_functions', False):
+            return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
             return self._print_not_supported(expr)
 

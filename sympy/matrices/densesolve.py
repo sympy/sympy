@@ -398,7 +398,6 @@ def forward_substitution(lower_triangle, variable, constant, K):
     """
     copy_lower_triangle = copy.deepcopy(lower_triangle)
     nrow = len(copy_lower_triangle)
-    result = []
     for i in range(nrow):
         a = K.zero
         for j in range(i):
@@ -442,7 +441,6 @@ def backward_substitution(upper_triangle, variable, constant, K):
     """
     copy_upper_triangle = copy.deepcopy(upper_triangle)
     nrow = len(copy_upper_triangle)
-    result = []
     for i in reversed(range(nrow)):
         a = K.zero
         for j in reversed(range(i + 1, nrow)):
