@@ -4,7 +4,7 @@ from sympy import (
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
+    root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
     E, cbrt, denom, Add, Piecewise)
 
 from sympy.core.compatibility import range

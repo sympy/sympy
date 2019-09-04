@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from .matexpr import MatrixExpr
-from sympy.core.basic import Basic
 from sympy.core.function import FunctionClass, Lambda
 from sympy.core.sympify import _sympify, sympify
 from sympy.matrices import Matrix

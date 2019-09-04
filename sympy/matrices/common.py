@@ -14,8 +14,6 @@ from sympy.core.basic import Atom
 from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
-from sympy.core.expr import Expr
-from sympy.core.function import count_ops
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify

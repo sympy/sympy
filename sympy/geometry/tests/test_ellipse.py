@@ -1,4 +1,4 @@
-from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, I, Abs
+from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, Abs
 from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)

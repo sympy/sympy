@@ -5,7 +5,7 @@ from sympy import (
     atan, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
-    acos, erfi, LambertW)
+    acos, erfi, LambertW, factorial)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -579,3 +579,10 @@ def test_issue_12571():
 
 def test_issue_14590():
     assert limit((x**3*((x + 1)/x)**x)/((x + 1)*(x + 2)*(x + 3)), x, oo) == exp(1)
+
+def test_issue_17431():
+    assert limit(((n + 1) + 1) / (((n + 1) + 2) * factorial(n + 1)) *
+                 (n + 2) * factorial(n) / (n + 1), n, oo) == 0
+    assert limit((n + 2)**2*factorial(n)/((n + 1)*(n + 3)*factorial(n + 1))
+                 , n, oo) == 0
+    assert limit((n + 1) * factorial(n) / (n * factorial(n + 1)), n, oo) == 0

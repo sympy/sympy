@@ -1,6 +1,6 @@
-from sympy.combinatorics.pc_groups import PolycyclicGroup, Collector
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup
+
 
 def test_pc_presentation():
     Groups = [SymmetricGroup(3), SymmetricGroup(4), SymmetricGroup(9).sylow_subgroup(3),

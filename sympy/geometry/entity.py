@@ -567,7 +567,7 @@ def intersection_sets(self, o):
     """ Returns a sympy.sets.Set of intersection objects,
     if possible. """
 
-    from sympy.sets import Set, FiniteSet, Union
+    from sympy.sets import FiniteSet, Union
     from sympy.geometry import Point
 
     try:

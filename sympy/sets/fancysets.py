@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, with_metaclass, range, PY3
+from sympy.core.compatibility import with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or
@@ -12,7 +12,7 @@ from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
-    ProductSet, Intersection)
+    ProductSet)
 from sympy.utilities.misc import filldedent
 
 
@@ -341,7 +341,7 @@ class ImageSet(Set):
         from sympy.matrices import Matrix
         from sympy.solvers.solveset import solveset, linsolve
         from sympy.solvers.solvers import solve
-        from sympy.utilities.iterables import is_sequence, iterable, cartes
+        from sympy.utilities.iterables import is_sequence, cartes
         L = self.lamda
         if is_sequence(other) != is_sequence(L.expr):
             return False
