@@ -23,10 +23,10 @@ from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          Function, expand_power_exp, Lambda, _mexpand, expand)
+                          Function, expand_power_exp, _mexpand, expand)
 from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float, Rational
-from sympy.core.relational import Relational, Ge
+from sympy.core.relational import Relational
 from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.core.power import integer_log
 from sympy.logic.boolalg import And, Or, BooleanAtom

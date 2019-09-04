@@ -578,7 +578,7 @@ def _solve_trig1(f, symbol, domain):
 def _solve_trig2(f, symbol, domain):
     """Secondary helper to solve trigonometric equations,
     called when first helper fails """
-    from sympy import ilcm, expand_trig, degree, simplify
+    from sympy import ilcm, expand_trig, degree
     f = trigsimp(f)
     f_original = f
     trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
@@ -3298,7 +3298,6 @@ def nonlinsolve(system, *symbols):
 
     """
     from sympy.polys.polytools import is_zero_dimensional
-    from sympy.polys import RR
 
     if not system:
         return S.EmptySet

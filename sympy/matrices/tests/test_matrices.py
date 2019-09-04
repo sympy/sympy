@@ -16,7 +16,7 @@ from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
+from sympy.utilities.pytest import raises, XFAIL, skip, warns_deprecated_sympy
 from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array

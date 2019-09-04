@@ -6,7 +6,7 @@ from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, range, reduce
 from sympy.core.expr import Expr
-from sympy.core.function import count_ops, expand_mul
+from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify

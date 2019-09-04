@@ -2,10 +2,10 @@ from __future__ import print_function, division
 
 from sympy.core import Mul, sympify
 from sympy.matrices.expressions.matexpr import (
-    MatrixExpr, ShapeError, Identity, OneMatrix, ZeroMatrix
+    MatrixExpr, ShapeError, OneMatrix, ZeroMatrix
 )
 from sympy.strategies import (
-    unpack, flatten, condition, exhaust, do_one, rm_id, sort
+    unpack, flatten, condition, exhaust, rm_id, sort
 )
 
 
@@ -418,7 +418,7 @@ class HadamardPower(MatrixExpr):
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.codegen.array_utils import CodegenArrayTensorProduct
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayDiagonal
+        from sympy.codegen.array_utils import CodegenArrayDiagonal
         from sympy.core.expr import ExprBuilder
         from sympy.matrices.expressions.matexpr import _make_matrix
 

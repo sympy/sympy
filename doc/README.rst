@@ -46,7 +46,30 @@ If you get **matplotlib** error, install python3-matplotlib package::
 And view it at::
 
     _build/html/index.html
+    
+Mac
+---
 
+- Install MacTex: http://www.tug.org/mactex/
+- Install homebrew: https://brew.sh/
+
+Install these packages with homebrew:
+
+```bash
+brew install imagemagick graphviz docbook librsvg
+```
+
+Install these packages with either pip or conda:
+
+```bash
+pip install mpmath matplotlib sphinx
+```
+
+or
+
+```bash
+conda install mpmpath matplotlib sphinx
+```
 Windows 10
 ----------
 

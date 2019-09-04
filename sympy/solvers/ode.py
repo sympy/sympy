@@ -258,7 +258,7 @@ from sympy.matrices import wronskian, Matrix, eye, zeros
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm, roots)
 from sympy.polys.polyroots import roots_quartic
-from sympy.polys.polytools import cancel, degree, div, factor
+from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \

@@ -1,25 +1,18 @@
-from sympy import (Sieve, binomial_coefficients, binomial_coefficients_list,
-    Mul, S, Pow, sieve, Symbol, summation, Dummy, Dict,
+from sympy import (Mul, S, Pow, Symbol, summation, Dict,
     factorial as fac)
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 from sympy.core.compatibility import long, range
 
-from sympy.ntheory import (isprime, n_order, is_primitive_root,
-    is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient,
-    factorint, primefactors, divisors, randprime, nextprime, prevprime,
-    primerange, primepi, prime, pollard_rho, perfect_power, multiplicity,
+from sympy.ntheory import (totient,
+    factorint, primefactors, divisors, nextprime,
+    primerange, pollard_rho, perfect_power, multiplicity,
     trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
     udivisor_count, primenu, primeomega, small_trailing, mersenne_prime_exponent,
     is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable)
-from sympy.ntheory.generate import cycle_length
-from sympy.ntheory.multinomial import (
-    multinomial_coefficients, multinomial_coefficients_iterator)
-from sympy.ntheory.bbp_pi import pi_hex_digits
-from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 
 from sympy.utilities.pytest import raises
 

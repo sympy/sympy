@@ -12,7 +12,6 @@ from sympy.core.decorators import deprecated
 from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
-from sympy.core.function import FunctionClass
 from sympy.core.logic import fuzzy_bool, fuzzy_or, fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float
@@ -21,7 +20,7 @@ from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
-from sympy.logic.boolalg import And, Or, Not, true, false
+from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
 from sympy.utilities import subsets
 from sympy.utilities.iterables import sift
@@ -1516,6 +1515,16 @@ class Complement(Set, EvalfMixin):
         B = self.args[1]
         return And(A.contains(other), Not(B.contains(other)))
 
+    def as_relational(self, symbol):
+        """Rewrite a complement in terms of equalities and logic
+        operators"""
+        A, B = self.args
+
+        A_rel = A.as_relational(symbol)
+        B_rel = Not(B.as_relational(symbol))
+
+        return And(A_rel, B_rel)
+
 
 class EmptySet(with_metaclass(Singleton, Set)):
     """
@@ -1859,6 +1868,16 @@ class SymmetricDifference(Set):
             return result
         else:
             return SymmetricDifference(A, B, evaluate=False)
+
+    def as_relational(self, symbol):
+        """Rewrite a symmetric_difference in terms of equalities and
+        logic operators"""
+        A, B = self.args
+
+        A_rel = A.as_relational(symbol)
+        B_rel = B.as_relational(symbol)
+
+        return Xor(A_rel, B_rel)
 
 
 def imageset(*args):

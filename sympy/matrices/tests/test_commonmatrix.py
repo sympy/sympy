@@ -1,20 +1,14 @@
-import collections
-import random
-
 from sympy.assumptions import Q
 from sympy.core.add import Add
 from sympy.core.compatibility import range
-from sympy.core.function import (Function, diff)
-from sympy.core.numbers import (E, Float, I, Integer, oo, pi)
-from sympy.core.relational import (Eq, Lt)
+from sympy.core.function import Function
+from sympy.core.numbers import (Float, I, Integer, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
-from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, sin, tan)
-from sympy.logic.boolalg import (And, Or)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import (ShapeError, MatrixError, NonSquareMatrixError,
     _MinimalMatrix, MatrixShaping, MatrixProperties, MatrixOperations, MatrixArithmetic,
     MatrixSpecial)
@@ -24,12 +18,10 @@ from sympy.matrices import (Matrix, diag, eye,
     matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded)
 from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
-from sympy.simplify.trigsimp import trigsimp
 from sympy.utilities.iterables import flatten
-from sympy.utilities.pytest import (raises, XFAIL, slow, skip,
-    warns_deprecated_sympy)
+from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
-from sympy.abc import a, b, c, d, x, y, z
+from sympy.abc import x, y, z
 
 # classes to test the basic matrix classes
 class ShapingOnlyMatrix(_MinimalMatrix, MatrixShaping):

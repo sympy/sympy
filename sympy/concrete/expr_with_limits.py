@@ -12,7 +12,6 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
 from sympy.logic.boolalg import BooleanFunction
-from sympy.matrices import Matrix
 from sympy.tensor.indexed import Idx
 from sympy.sets.sets import Interval
 from sympy.sets.fancysets import Range

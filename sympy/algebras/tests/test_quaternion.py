@@ -1,4 +1,4 @@
-from sympy import symbols, re, im, Add, Mul, I, Abs, Symbol, \
+from sympy import symbols, re, im, I, Abs, Symbol, \
      cos, sin, sqrt, conjugate, log, acos, E, pi, \
      Matrix, diff, integrate, trigsimp, S, Rational
 from sympy.algebras.quaternion import Quaternion

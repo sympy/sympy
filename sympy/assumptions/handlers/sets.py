@@ -8,7 +8,6 @@ from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy.core.numbers import pi
 from sympy.core.logic import fuzzy_bool
 from sympy.functions.elementary.exponential import exp, log
-from sympy.logic.boolalg import Boolean
 from sympy import I, Eq, conjugate, MatrixBase
 
 

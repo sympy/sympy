@@ -8,7 +8,6 @@ from sympy.utilities.pytest import raises, warns_deprecated_sympy
 
 from sympy.core.function import ArgumentIndexError
 
-from sympy.utilities.misc import filldedent
 
 x, y = symbols('x y')
 i = symbols('t', nonzero=True)

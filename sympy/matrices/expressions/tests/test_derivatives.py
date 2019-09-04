@@ -4,9 +4,8 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
-                   Derivative, sin, exp, cos, tan, log, Lambda, S, sqrt,
-                   hadamard_product, DiagonalizeVector, OneMatrix, HadamardProduct, HadamardPower, KroneckerDelta, Sum,
-                   Dummy)
+                   Derivative, sin, exp, cos, tan, log, S, sqrt,
+                   hadamard_product, DiagonalizeVector, OneMatrix, HadamardProduct, HadamardPower, KroneckerDelta, Sum)
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
 from sympy.matrices.expressions import hadamard_power
 
