@@ -33,6 +33,7 @@ import sys
 import os
 import shutil
 import glob
+import subprocess
 
 min_mpmath_version = '0.19'
 
@@ -384,6 +385,22 @@ with open(os.path.join(dir_setup, 'sympy', '__init__.py')) as f:
     long_description = f.read().split('"""')[1]
 
 if __name__ == '__main__':
+    # Fetch git commit hash and write down to commit_hash.txt before
+    # shipped in tarball.
+    commit_hash = None
+    commit_hash_filepath = 'doc/commit_hash.txt'
+    try:
+        commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+        commit_hash = commit_hash.decode('ascii')
+        commit_hash = commit_hash.rstrip()
+    except:
+        pass
+
+    if commit_hash:
+        with open(commit_hash_filepath, 'w') as f:
+            f.write(commit_hash)
+
+
     setup(name='sympy',
           version=__version__,
           description='Computer algebra system (CAS) in Python',

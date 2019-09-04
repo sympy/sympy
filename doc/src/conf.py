@@ -211,20 +211,29 @@ graphviz_output_format = 'svg'
 
 
 # Requried for linkcode extension.
-try:
-    commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
-    commit_hash = commit_hash.decode('ascii')
-    commit_hash = commit_hash.rstrip()
-except:
-    import warnings
-    warnings.warn(
-        "Failed to get the git commit hash as the command " \
-        "'git rev-parse HEAD' is not working. The commit hash will be " \
-        "assumed as the SymPy master, but the lines may be misleading " \
-        "or nonexistent as it is not the correct branch the doc is " \
-        "built with. Check your installation of 'git' if you want to " \
-        "resolve this warning.")
-    commit_hash = 'master'
+# Get commit hash from the external file.
+commit_hash_filepath = '../commit_hash.txt'
+commit_hash = None
+if os.path.isfile(commit_hash_filepath):
+    with open(commit_hash_filepath, 'r') as f:
+        commit_hash = f.readline()
+
+# Get commit hash from the external file.
+if not commit_hash:
+    try:
+        commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+        commit_hash = commit_hash.decode('ascii')
+        commit_hash = commit_hash.rstrip()
+    except:
+        import warnings
+        warnings.warn(
+            "Failed to get the git commit hash as the command " \
+            "'git rev-parse HEAD' is not working. The commit hash will be " \
+            "assumed as the SymPy master, but the lines may be misleading " \
+            "or nonexistent as it is not the correct branch the doc is " \
+            "built with. Check your installation of 'git' if you want to " \
+            "resolve this warning.")
+        commit_hash = 'master'
 
 fork = 'sympy'
 blobpath = \
