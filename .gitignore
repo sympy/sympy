@@ -82,4 +82,5 @@ sample.tex
 # pytest related data file for slow tests
 .ci/durations.log
 
+# Explicit commit hash specification for doc build with linkcode.
 doc/commit_hash.txt
