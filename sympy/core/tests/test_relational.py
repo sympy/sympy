@@ -966,8 +966,8 @@ def test_set_equality_canonical():
     A = Eq(FiniteSet(a, b, c), FiniteSet(1, 2, 3))
     B = Ne(FiniteSet(a, b, c), FiniteSet(4, 5, 6))
 
-    assert A.canonical == A
-    assert B.canonical == B
+    assert A.canonical == A.reversed
+    assert B.canonical == B.reversed
 
 
 def test_trigsimp():
