@@ -4,11 +4,11 @@ from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, In
 from sympy.core.compatibility import is_sequence, iterable, range
 from sympy.core.containers import tuple_wrapper
 from sympy.core.expr import unchanged
-from sympy.core.function import Function
+from sympy.core.function import Function, Lambda
 from sympy.core.relational import Eq
 from sympy.utilities.pytest import raises
 
-from sympy.abc import x
+from sympy.abc import x, y
 
 
 def test_Tuple():
