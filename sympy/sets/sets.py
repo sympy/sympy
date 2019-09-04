@@ -721,7 +721,8 @@ class ProductSet(Set):
         if len(self.sets) != len(other.sets):
             return false
 
-        return And(*(Eq(x, y) for x, y in zip(self.sets, other.sets)))
+        eqs = (Eq(x, y) for x, y in zip(self.sets, other.sets))
+        return tfn[fuzzy_and(map(fuzzy_bool, eqs))]
 
     def _contains(self, element):
         """

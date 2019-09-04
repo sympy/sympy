@@ -1104,6 +1104,10 @@ def test_Eq():
     assert Eq(FiniteSet(()), FiniteSet(1)) is S.false
     assert Eq(ProductSet(), FiniteSet(1)) is S.false
 
+    i1 = Interval(0, 1)
+    i2 = Interval(x, y)
+    assert unchanged(Eq, ProductSet(i1, i1), ProductSet(i2, i2))
+
 
 def test_SymmetricDifference():
    assert SymmetricDifference(FiniteSet(0, 1, 2, 3, 4, 5), \
