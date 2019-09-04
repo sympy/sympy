@@ -145,10 +145,11 @@ class Tuple(Basic):
             return self.args.index(value, start, stop)
 
     def _eval_Eq(self, other):
+        from sympy.core.function import AppliedUndef
         from sympy.core.logic import fuzzy_and, fuzzy_bool
         from sympy.core.relational import Eq
 
-        if other.is_Symbol:
+        if other.is_Symbol or isinstance(other, AppliedUndef):
             return None
 
         if not isinstance(other, Tuple) or len(self) != len(other):

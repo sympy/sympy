@@ -4,6 +4,7 @@ from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, In
 from sympy.core.compatibility import is_sequence, iterable, range
 from sympy.core.containers import tuple_wrapper
 from sympy.core.expr import unchanged
+from sympy.core.function import Function
 from sympy.core.relational import Eq
 from sympy.utilities.pytest import raises
 
@@ -78,6 +79,9 @@ def test_Tuple_Eq():
     assert unchanged(Eq, Tuple(1, x), Tuple(1, 2))
     assert Eq(Tuple(1, x), Tuple(1, 2)).subs(x, 2) is S.true
     assert unchanged(Eq, Tuple(1, 2), x)
+    f = Function('f')
+    assert unchanged(Eq, Tuple(1), f(x))
+    assert Eq(Tuple(1), f(x)).subs(x, 1).subs(f, Lambda(y, (y,))) is S.true
 
 
 def test_Tuple_comparision():
