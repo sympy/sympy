@@ -1380,7 +1380,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                         # Eq((x)**2*Derivative(y(x), x, x) + x*Derivative(y(x), x) +
                         # (a4**2*x**(2*p)-n**2)*y(x) thus Bessel's equation
                         if (p.is_constant(x) and p != 0) and r[c3] != 0:
-                            rn = match_2nd_linear_bessel(r, f(x))
+                            rn = match_2nd_linear_bessel(r, f(x), point)
                             if rn:
                                 matching_hints["2nd_linear_bessel"] = rn
 
@@ -1487,7 +1487,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     else:
         return tuple(retlist)
 
-def match_2nd_linear_bessel(r, func):
+def match_2nd_linear_bessel(r, func, point):
+
     # eq = a3*f(x).diff(x, 2) + b3*f(x).diff(x) + c3*f(x)
     f = func
     x = func.args[0]
@@ -1501,13 +1502,18 @@ def match_2nd_linear_bessel(r, func):
     a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
     b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
     c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
-    coeff = r[a3].match(a*(x-a4)**b4) # leading coeff of f(x).diff*x, 2)
+    if point:
+        r[a3] = simplify(r[a3].subs(x, x+point))
+        r[b3] = simplify(r[b3].subs(x, x+point))
+        r[c3] = simplify(r[c3].subs(x, x+point))
+
+    coeff = r[a3].match(a*(x)**b4) # leading coeff of f(x).diff(x, 2)
     # making a3 in the form of x**2
-    r[a3] = cancel(r[a3]/(coeff[a]*(x-coeff[a4])**(-2+coeff[b4])))
-    r[b3] = cancel(r[b3]/(coeff[a]*(x-coeff[a4])**(-2+coeff[b4])))
-    r[c3] = cancel(r[c3]/(coeff[a]*(x-coeff[a4])**(-2+coeff[b4])))
+    r[a3] = cancel(r[a3]/(coeff[a]*(x)**(-2+coeff[b4])))
+    r[b3] = cancel(r[b3]/(coeff[a]*(x)**(-2+coeff[b4])))
+    r[c3] = cancel(r[c3]/(coeff[a]*(x)**(-2+coeff[b4])))
     # checking if b3 is of fome c*(x-b)
-    coeff1 = r[b3].match(a4*(x-b4))
+    coeff1 = r[b3].match(a4*(x))
     if coeff1 is None:
         return None
     # c3 maybe of very complex form so I am simply checking (a - b) form
@@ -1518,7 +1524,7 @@ def match_2nd_linear_bessel(r, func):
     if _coeff2 is None:
         return None
     # matching with standerd form for c3
-    coeff2 = _coeff2[a].match(c4**2*(x-b4)**(2*a4))
+    coeff2 = _coeff2[a].match(c4**2*(x)**(2*a4))
     if coeff2 is None:
         return None
 
@@ -1527,12 +1533,9 @@ def match_2nd_linear_bessel(r, func):
     else:
          coeff2[d4] = _coeff2[b].match(d4**2)[d4]
 
-    if (coeff1[b4] != coeff2[b4]) or (coeff1[b4] != coeff[a4]):
-        return None
-
     rn = {'n':coeff2[d4], 'a4':coeff2[c4], 'd4':coeff2[a4]}
     rn['c4'] = coeff1[a4]
-    rn['b4'] = coeff1[b4]
+    rn['b4'] = point
     return rn
 
 def classify_sysode(eq, funcs=None, **kwargs):
