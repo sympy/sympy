@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import Number
+from sympy import Number, S
 from sympy.core import Mul, Basic, sympify
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
