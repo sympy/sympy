@@ -448,7 +448,7 @@ class Set(Basic):
             raise ValueError("Unknown argument '%s'" % other)
 
     def _eval_powerset(self):
-        raise NotImplementedError('Power set not defined for: %s' % self.func)
+        return None
 
     def powerset(self):
         """
