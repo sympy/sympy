@@ -823,6 +823,13 @@ def test_sympy__sets__ordinals__OrdinalZero():
     from sympy.sets.ordinals import OrdinalZero
     assert _test_args(OrdinalZero())
 
+
+def test_sympy__sets__powerset__PowerSet():
+    from sympy.sets.powerset import PowerSet
+    from sympy.core.singleton import S
+    assert _test_args(PowerSet(S.EmptySet))
+
+
 def test_sympy__sets__sets__EmptySet():
     from sympy.sets.sets import EmptySet
     assert _test_args(EmptySet())

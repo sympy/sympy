@@ -2,6 +2,9 @@
 Sets
 ====
 
+Basic Sets
+----------
+
 .. automodule:: sympy.sets.sets
 
 Set
@@ -24,8 +27,20 @@ FiniteSet
 .. autoclass:: FiniteSet
    :members:
 
+ConditionSet
+^^^^^^^^^^^^
+.. module:: sympy.sets.conditionset
+    :noindex:
+
+.. autoclass:: ConditionSet
+    :members:
+
 Compound Sets
 -------------
+
+.. module:: sympy.sets.sets
+    :noindex:
+
 Union
 ^^^^^
 .. autoclass:: Union
@@ -44,6 +59,11 @@ ProductSet
 Complement
 ^^^^^^^^^^
 .. autoclass:: Complement
+   :members:
+
+SymmetricDifference
+^^^^^^^^^^^^^^^^^^^
+.. autoclass:: SymmetricDifference
    :members:
 
 Singleton Sets
@@ -94,6 +114,16 @@ ComplexRegion
    :members:
 
 .. autofunction:: normalize_theta_set
+
+Power sets
+----------
+
+.. automodule:: sympy.sets.powerset
+
+PowerSet
+^^^^^^^^
+.. autoclass:: PowerSet
+   :members:
 
 Iteration over sets
 ^^^^^^^^^^^^^^^^^^^

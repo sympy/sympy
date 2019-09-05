@@ -30,28 +30,40 @@ def test_powerset__contains__():
         for j in range(l):
             try:
                 if i <= j:
-                    assert subset_series[i] in PowerSet(subset_series[j])
+                    assert subset_series[i] in \
+                        PowerSet(subset_series[j], evaluate=False)
                 else:
-                    assert subset_series[i] not in PowerSet(subset_series[j])
+                    assert subset_series[i] not in \
+                        PowerSet(subset_series[j], evaluate=False)
             except:
                 raise AssertionError(
                     'Powerset membership test failed between '
                     '{} and {}.'.format(subset_series[i], subset_series[j]))
 
 
-def test_powerset_contains():
-    subset_series = [
-        S.EmptySet,
-        FiniteSet(1, 2),
-        S.Naturals,
-        S.Naturals0,
-        S.Integers,
-        S.Rationals,
-        S.Reals,
-        S.Complexes]
+@XFAIL
+def test_failing_powerset__contains__():
+    assert FiniteSet(1, 2) not in PowerSet(S.EmptySet)
+    assert S.Naturals not in PowerSet(S.EmptySet)
+    assert S.Naturals not in PowerSet(FiniteSet(1, 2))
+    assert S.Naturals0 not in PowerSet(S.EmptySet)
+    assert S.Naturals0 not in PowerSet(FiniteSet(1, 2))
+    assert S.Integers not in PowerSet(S.EmptySet)
+    assert S.Integers not in PowerSet(FiniteSet(1, 2))
+    assert S.Rationals not in PowerSet(S.EmptySet)
+    assert S.Rationals not in PowerSet(FiniteSet(1, 2))
+    assert S.Reals not in PowerSet(S.EmptySet)
+    assert S.Reals not in PowerSet(FiniteSet(1, 2))
+    assert S.Complexes not in PowerSet(S.EmptySet)
+    assert S.Complexes not in PowerSet(FiniteSet(1, 2))
 
-    l = len(subset_series)
-    for i in range(l):
-        for j in range(l):
-            if i <= j:
-                subset_series[i] in PowerSet(subset_series[j])
+
+def test_powerset__len__():
+    A = PowerSet(S.EmptySet, evaluate=False)
+    assert len(A) == 1
+    A = PowerSet(A, evaluate=False)
+    assert len(A) == 2
+    A = PowerSet(A, evaluate=False)
+    assert len(A) == 4
+    A = PowerSet(A, evaluate=False)
+    assert len(A) == 16
