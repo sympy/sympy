@@ -3103,10 +3103,14 @@ def _ode_factorable_match(eq, func):
     eqns = []
     r = None
     if isinstance(eqs, Pow):
-        r = _ode_factorable_match(eqs.base, func)
-        if r is None:
-            r = {'eqns' : [eqs.base]}
-        return r
+        eq, _ = _preprocess(eqs, func)
+        if isinstance(eq, Pow):
+            return None
+        else:
+            r = _ode_factorable_match(eq, func)
+            if r is None:
+                r = {'eqns' : [eq]}
+            return r
 
     if isinstance(eqs, Mul):
         fac = eqs.args
