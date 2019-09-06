@@ -262,7 +262,10 @@ def test_Complement():
     B = FiniteSet(*symbols('d:f'))
     assert unchanged(Complement, ProductSet(A, A), B)
 
-    raises(ValueError, lambda: Complement(ProductSet(A, A), ProductSet(B, B, B)))
+    A2 = ProductSet(A, A)
+    B3 = ProductSet(B, B, B)
+    assert A2 - B3 == A2
+    assert B3 - A2 == B3
 
 
 def test_complement():

@@ -194,12 +194,12 @@ class Set(Basic):
     def _complement(self, other):
         # this behaves as other - self
         if isinstance(self, ProductSet) and isinstance(other, ProductSet):
+            # If self and other are disjoint then other - self == self
+            if len(self.sets) != len(other.sets):
+                return other
+
             # There can be other ways to represent this but this gives:
             # (A x B) - (C x D) = ((A - C) x B) U (A x (B - D))
-
-            if len(self.sets) != len(other.sets):
-                raise ValueError("A is not a subset of B")
-
             overlaps = []
             pairs = list(zip(self.sets, other.sets))
             for n in range(len(pairs)):
