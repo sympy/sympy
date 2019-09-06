@@ -236,6 +236,19 @@ def test_difference():
 
 
 def test_Complement():
+    A = FiniteSet(1, 3, 4)
+    B = FiniteSet(3, 4)
+    C = Interval(1, 3)
+    D = Interval(1, 2)
+
+    assert Complement(A, B, evaluate=False).is_iterable is True
+    assert Complement(A, C, evaluate=False).is_iterable is True
+    assert Complement(C, D, evaluate=False).is_iterable is None
+
+    assert [*Complement(A, B, evaluate=False)] == [1]
+    assert [*Complement(A, C, evaluate=False)] == [4]
+    raises(TypeError, lambda: [*Complement(C, A, evaluate=False)])
+
     assert Complement(Interval(1, 3), Interval(1, 2)) == Interval(2, 3, True)
     assert Complement(FiniteSet(1, 3, 4), FiniteSet(3, 4)) == FiniteSet(1)
     assert Complement(Union(Interval(0, 2), FiniteSet(2, 3, 4)),
@@ -432,6 +445,15 @@ def test_issue_9623():
 def test_is_disjoint():
     assert Interval(0, 2).is_disjoint(Interval(1, 2)) == False
     assert Interval(0, 2).is_disjoint(Interval(3, 4)) == True
+
+
+def test_ProductSet__len__():
+    A = FiniteSet(1, 2)
+    B = FiniteSet(1, 2, 3)
+    assert ProductSet(A).__len__() == 2
+    assert ProductSet(A).__len__() is not S(2)
+    assert ProductSet(A, B).__len__() == 6
+    assert ProductSet(A, B).__len__() is not S(6)
 
 
 def test_ProductSet():
@@ -1145,16 +1167,26 @@ def test_Eq():
 
 
 def test_SymmetricDifference():
-   assert SymmetricDifference(FiniteSet(0, 1, 2, 3, 4, 5), \
-          FiniteSet(2, 4, 6, 8, 10)) == FiniteSet(0, 1, 3, 5, 6, 8, 10)
-   assert SymmetricDifference(FiniteSet(2, 3, 4), FiniteSet(2, 3 ,4 ,5 )) \
-          == FiniteSet(5)
-   assert FiniteSet(1, 2, 3, 4, 5) ^ FiniteSet(1, 2, 5, 6) == \
-          FiniteSet(3, 4, 6)
-   assert Set(1, 2 ,3) ^ Set(2, 3, 4) == Union(Set(1, 2, 3) - Set(2, 3, 4), \
-          Set(2, 3, 4) - Set(1, 2, 3))
-   assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
-          Interval(2, 5), Interval(2, 5) - Interval(0, 4))
+    A = FiniteSet(0, 1, 2, 3, 4, 5)
+    B = FiniteSet(2, 4, 6, 8, 10)
+    C = Interval(8, 10)
+
+    assert SymmetricDifference(A, B, evaluate=False).is_iterable is True
+    assert SymmetricDifference(A, C, evaluate=False).is_iterable is None
+    assert FiniteSet(*SymmetricDifference(A, B, evaluate=False)) == \
+        FiniteSet(0, 1, 3, 5, 6, 8, 10)
+    raises(TypeError, lambda: [*SymmetricDifference(A, C, evaluate=False)])
+
+    assert SymmetricDifference(FiniteSet(0, 1, 2, 3, 4, 5), \
+            FiniteSet(2, 4, 6, 8, 10)) == FiniteSet(0, 1, 3, 5, 6, 8, 10)
+    assert SymmetricDifference(FiniteSet(2, 3, 4), FiniteSet(2, 3 ,4 ,5 )) \
+            == FiniteSet(5)
+    assert FiniteSet(1, 2, 3, 4, 5) ^ FiniteSet(1, 2, 5, 6) == \
+            FiniteSet(3, 4, 6)
+    assert Set(1, 2 ,3) ^ Set(2, 3, 4) == Union(Set(1, 2, 3) - Set(2, 3, 4), \
+            Set(2, 3, 4) - Set(1, 2, 3))
+    assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
+            Interval(2, 5), Interval(2, 5) - Interval(0, 4))
 
 
 def test_issue_9536():
