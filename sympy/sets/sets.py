@@ -193,21 +193,19 @@ class Set(Basic):
 
     def _complement(self, other):
         # this behaves as other - self
-        if isinstance(other, ProductSet):
-            # For each set consider it or it's complement
-            # We need at least one of the sets to be complemented
-            # Consider all 2^n combinations.
-            # We can conveniently represent these options easily using a
-            # ProductSet
+        if isinstance(self, ProductSet) and isinstance(other, ProductSet):
+            # There can be other ways to represent this but this gives:
+            # (A x B) - (C x D) = ((A - C) x B) U (A x (B - D))
 
-            # XXX: this doesn't work if the dimensions of the sets isn't same.
-            # A - B is essentially same as A if B has a different
-            # dimensionality than A
-            switch_sets = ProductSet(*(FiniteSet(o, o - s) for s, o in
-                                     zip(self.sets, other.sets)))
-            product_sets = (ProductSet(*set) for set in switch_sets)
-            # Union of all combinations but this one
-            return Union(*(p for p in product_sets if p != other))
+            if len(self.sets) != len(other.sets):
+                raise ValueError("A is not a subset of B")
+
+            overlaps = []
+            pairs = list(zip(self.sets, other.sets))
+            for n in range(len(pairs)):
+                sets = (o if i != n else o-s for i, (s, o) in enumerate(pairs))
+                overlaps.append(ProductSet(*sets))
+            return Union(*overlaps)
 
         elif isinstance(other, Interval):
             if isinstance(self, Interval) or isinstance(self, FiniteSet):

@@ -258,6 +258,12 @@ def test_Complement():
     assert Complement(FiniteSet(x, y, 2), Interval(-10, 10)) == \
             Complement(FiniteSet(x, y), Interval(-10, 10))
 
+    A = FiniteSet(*symbols('a:c'))
+    B = FiniteSet(*symbols('d:f'))
+    assert unchanged(Complement, ProductSet(A, A), B)
+
+    raises(ValueError, lambda: Complement(ProductSet(A, A), ProductSet(B, B, B)))
+
 
 def test_complement():
     assert Interval(0, 1).complement(S.Reals) == \
