@@ -1353,11 +1353,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             q = cancel(r[c3]/r[a3])  # Used below
             point = kwargs.get('x0', 0)
             check = p.subs(x, point)
-            if not check.has(oo) and not check.has(NaN) and \
-                not check.has(zoo) and not check.has(-oo):
+            if not check.has(oo, NaN, zoo, -oo):
                 check = q.subs(x, point)
-                if not check.has(oo) and not check.has(NaN) and \
-                    not check.has(zoo) and not check.has(-oo):
+                if not check.has(oo, NaN, zoo, -oo):
                     ordinary = True
                     r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point, 'terms': terms})
                     matching_hints["2nd_power_series_ordinary"] = r
@@ -1368,12 +1366,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             if not ordinary:
                 p = cancel((x - point)*p)
                 check = p.subs(x, point)
-                if not check.has(oo) and not check.has(NaN) and \
-                    not check.has(zoo) and not check.has(-oo):
+                if not check.has(oo, NaN, zoo, -oo):
                     q = cancel(((x - point)**2)*q)
                     check = q.subs(x, point)
-                    if not check.has(oo) and not check.has(NaN) and \
-                        not check.has(zoo) and not check.has(-oo):
+                    if not check.has(oo, NaN, zoo, -oo):
                         coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                         matching_hints["2nd_power_series_regular"] = coeff_dict
                         # If the ODE has regular singular point at x0 and is of the form
@@ -1512,7 +1508,7 @@ def match_2nd_linear_bessel(r, func, point):
     r[a3] = cancel(r[a3]/(coeff[a]*(x)**(-2+coeff[b4])))
     r[b3] = cancel(r[b3]/(coeff[a]*(x)**(-2+coeff[b4])))
     r[c3] = cancel(r[c3]/(coeff[a]*(x)**(-2+coeff[b4])))
-    # checking if b3 is of fome c*(x-b)
+    # checking if b3 is of form c*(x-b)
     coeff1 = r[b3].match(a4*(x))
     if coeff1 is None:
         return None
@@ -3106,6 +3102,12 @@ def _ode_factorable_match(eq, func):
     eqs = fraction(eqs)[0] # p/q =0, So we need to solve only p=0
     eqns = []
     r = None
+    if isinstance(eqs, Pow):
+        r = _ode_factorable_match(eqs.base, func)
+        if r is None:
+            r = {'eqns' : [eqs.base]}
+        return r
+
     if isinstance(eqs, Mul):
         fac = eqs.args
         for i in fac:
@@ -4135,7 +4137,8 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     d4 = match['d4']
     b4 = match['b4']
     n = sqrt(n**2 + Rational(1, 4)*(c4 - 1)**2)
-    return Eq(f(x), ((x**(Rational(1-c4,2)))*(C0*besselj(S(n)/d4,a4*x**d4/S(d4)) + C1*bessely(S(n)/d4,a4*x**d4/S(d4)))).subs(x, x-b4))
+    return Eq(f(x), ((x**(Rational(1-c4,2)))*(C0*besselj(S(n)/d4,a4*x**d4/S(d4))
+           + C1*bessely(S(n)/d4,a4*x**d4/S(d4)))).subs(x, x-b4))
 
 def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     r"""
