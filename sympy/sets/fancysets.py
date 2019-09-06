@@ -305,13 +305,13 @@ class ImageSet(Set):
     """
     def __new__(cls, flambda, *sets):
         if not isinstance(flambda, Lambda):
-            raise ValueError('first argument must be a Lambda')
+            raise ValueError('First argument must be a Lambda')
 
         sets = [_sympify(s) for s in sets]
 
         if flambda is S.IdentityFunction:
             if len(sets) != 1:
-                raise ValueError('identity function requires a single set')
+                raise ValueError('Identity function requires a single set')
             return sets[0]
 
         if not all(isinstance(s, Set) for s in sets):
