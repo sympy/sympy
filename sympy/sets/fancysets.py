@@ -652,7 +652,7 @@ class Range(Set):
         if self.has(Symbol):
             _ = self.size  # validate
         if self.start in [S.NegativeInfinity, S.Infinity]:
-            raise ValueError("Cannot iterate over Range with infinite start")
+            raise TypeError("Cannot iterate over Range with infinite start")
         elif self:
             i = self.start
             step = self.step

@@ -417,7 +417,7 @@ def test_intersection():
     i = Intersection(line**2, line**3, evaluate=False)
     assert (2, 2) not in i
     assert (2, 2, 2) not in i
-    raises(ValueError, lambda: list(i))
+    raises(TypeError, lambda: list(i))
 
     a = Intersection(Intersection(S.Integers, S.Naturals, evaluate=False), S.Reals, evaluate=False)
     assert a._argset == frozenset([Intersection(S.Naturals, S.Integers, evaluate=False), S.Reals])
@@ -1255,7 +1255,7 @@ def test_issue_10113():
 
 def test_issue_10248():
     raises(
-        ValueError, lambda: list(Intersection(S.Reals, FiniteSet(x)))
+        TypeError, lambda: list(Intersection(S.Reals, FiniteSet(x)))
     )
     A = Symbol('A', real=True)
     assert list(Intersection(S.Reals, FiniteSet(A))) == [A]

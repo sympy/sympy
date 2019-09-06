@@ -1354,8 +1354,8 @@ class Intersection(Set, LatticeOp):
 
         if not completed:
             if not candidates:
-                raise ValueError("None of the constituent sets are iterable")
-            raise ValueError(
+                raise TypeError("None of the constituent sets are iterable")
+            raise TypeError(
                 "The computation had not completed because of the "
                 "undecidable set membership is found in every candidates.")
 
