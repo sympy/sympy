@@ -245,9 +245,9 @@ def test_Complement():
     assert Complement(A, C, evaluate=False).is_iterable is True
     assert Complement(C, D, evaluate=False).is_iterable is None
 
-    assert [*Complement(A, B, evaluate=False)] == [1]
-    assert [*Complement(A, C, evaluate=False)] == [4]
-    raises(TypeError, lambda: [*Complement(C, A, evaluate=False)])
+    assert FiniteSet(*Complement(A, B, evaluate=False)) == FiniteSet(1)
+    assert FiniteSet(*Complement(A, C, evaluate=False)) == FiniteSet(4)
+    raises(TypeError, lambda: FiniteSet(*Complement(C, A, evaluate=False)))
 
     assert Complement(Interval(1, 3), Interval(1, 2)) == Interval(2, 3, True)
     assert Complement(FiniteSet(1, 3, 4), FiniteSet(3, 4)) == FiniteSet(1)
@@ -1175,7 +1175,8 @@ def test_SymmetricDifference():
     assert SymmetricDifference(A, C, evaluate=False).is_iterable is None
     assert FiniteSet(*SymmetricDifference(A, B, evaluate=False)) == \
         FiniteSet(0, 1, 3, 5, 6, 8, 10)
-    raises(TypeError, lambda: [*SymmetricDifference(A, C, evaluate=False)])
+    raises(TypeError,
+        lambda: FiniteSet(*SymmetricDifference(A, C, evaluate=False)))
 
     assert SymmetricDifference(FiniteSet(0, 1, 2, 3, 4, 5), \
             FiniteSet(2, 4, 6, 8, 10)) == FiniteSet(0, 1, 3, 5, 6, 8, 10)

@@ -785,10 +785,7 @@ class ProductSet(Set):
         If self.is_iterable returns True (both constituent sets are iterable),
         then return the Cartesian Product. Otherwise, raise TypeError.
         """
-        if self.is_iterable:
-            return product(*self.sets)
-        else:
-            raise TypeError("Not all constituent sets are iterable")
+        return product(*self.sets)
 
     @property
     def is_empty(self):
@@ -1260,9 +1257,7 @@ class Union(Set, LatticeOp, EvalfMixin):
                    sys.exc_info()[2])
 
     def __iter__(self):
-        if self.is_iterable:
-            return roundrobin(*(iter(arg) for arg in self.args))
-        raise TypeError("Not all constituent sets are iterable")
+        return roundrobin(*(iter(arg) for arg in self.args))
 
 
 class Intersection(Set, LatticeOp):
@@ -1341,7 +1336,7 @@ class Intersection(Set, LatticeOp):
     def __iter__(self):
         no_iter = True
         for s in self.args:
-            if s.is_iterable:
+            if not s.is_iterable is False:
                 no_iter = False
                 other_sets = set(self.args) - set((s,))
                 other = Intersection(*other_sets, evaluate=False)
@@ -1534,8 +1529,6 @@ class Complement(Set, EvalfMixin):
             return True
 
     def __iter__(self):
-        if not self.is_iterable:
-            raise TypeError("{} is not iterable".format(self))
         A, B = self.args
         for a in A:
             if a not in B:
@@ -1903,8 +1896,6 @@ class SymmetricDifference(Set):
             return True
 
     def __iter__(self):
-        if not self.is_iterable:
-            raise TypeError("{} is not iterable".format(self))
 
         args = self.args
         union = roundrobin(*(iter(arg) for arg in args))
