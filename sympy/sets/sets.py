@@ -1349,6 +1349,8 @@ class Intersection(Set, LatticeOp):
                         yield x
                 except TypeError:
                     completed = False
+            if completed:
+                raise StopIteration()
 
         if not completed:
             if not candidates:
