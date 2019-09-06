@@ -90,7 +90,7 @@ class PowerSet(Set):
     @_sympifyit('other', NotImplemented)
     def _contains(self, other):
         if not isinstance(other, Set):
-            raise ValueError('{} must be a set.'.format(other))
+            return None
 
         arg = self.arg
         ret = fuzzy_bool(arg.is_superset(other))
