@@ -1254,8 +1254,11 @@ def test_issue_10113():
 
 
 def test_issue_10248():
-    assert list(Intersection(S.Reals, FiniteSet(x))) == [
-        (-oo < x) & (x < oo)]
+    raises(
+        ValueError, lambda: list(Intersection(S.Reals, FiniteSet(x)))
+    )
+    A = Symbol('A', real=True)
+    assert list(Intersection(S.Reals, FiniteSet(A))) == [A]
 
 
 def test_issue_9447():

@@ -1334,23 +1334,28 @@ class Intersection(Set, LatticeOp):
         return And(*[set.contains(other) for set in self.args])
 
     def __iter__(self):
-        no_iter = True
-        for s in self.args:
-            if not s.is_iterable is False:
-                no_iter = False
-                other_sets = set(self.args) - set((s,))
-                other = Intersection(*other_sets, evaluate=False)
-                for x in s:
-                    c = sympify(other.contains(x))
-                    if c is S.true:
-                        yield x
-                    elif c is S.false:
-                        pass
-                    else:
-                        yield c
+        sets_sift = sift(self.args, lambda x: x.is_iterable)
 
-        if no_iter:
-            raise ValueError("None of the constituent sets are iterable")
+        completed = False
+        candidates = sets_sift[True] + sets_sift[None]
+
+        for s in candidates:
+            other_sets = set(self.args) - set((s,))
+            other = Intersection(*other_sets, evaluate=False)
+            completed = True
+            for x in s:
+                try:
+                    if x in other:
+                        yield x
+                except TypeError:
+                    completed = False
+
+        if not completed:
+            if not candidates:
+                raise ValueError("None of the constituent sets are iterable")
+            raise ValueError(
+                "The computation had not completed because of the "
+                "undecidable set membership is found in every candidates.")
 
     @staticmethod
     def _handle_finite_sets(args):
