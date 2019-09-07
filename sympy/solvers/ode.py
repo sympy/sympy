@@ -1051,7 +1051,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 raise ValueError("Enter boundary conditions of the form ics={f(point}: value, f(x).diff(x, order).subs(x, point): value}")
 
     # Factorable method
-    r = _ode_factorable_match(eq, func)
+    r = _ode_factorable_match(eq, func, kwargs.get('x0', 0))
     if r:
         matching_hints['factorable'] = r
 
@@ -3028,20 +3028,29 @@ def _handle_Integral(expr, func, hint):
         sol = expr
     return sol
 
-def _ode_factorable_match(eq, func):
+def _ode_factorable_match(eq, func, x0):
 
     from sympy.polys.polytools import factor
     eqs = factor(eq)
     eqs = fraction(eqs)[0] # p/q =0, So we need to solve only p=0
     eqns = []
     r = None
+    if isinstance(eqs, Pow):
+        eq, _ = _preprocess(eqs, func)
+        if isinstance(eq, Pow):
+            return None
+        else:
+            r = _ode_factorable_match(eq, func, x0)
+            if r is None:
+                r = {'eqns' : [eq], 'x0': x0}
+            return r
     if isinstance(eqs, Mul):
         fac = eqs.args
         for i in fac:
             if i.has(func):
                 eqns.append(i)
         if len(eqns)>0:
-            r = {'eqns' : eqns}
+            r = {'eqns' : eqns, 'x0' : x0}
     return r
 
 # FIXME: replace the general solution in the docstring with
@@ -5636,10 +5645,11 @@ def ode_factorable(eq, func, order, match):
 
     """
     eqns = match['eqns']
+    x0 = match['x0']
     sols = []
     for eq in eqns:
         try:
-            sol = dsolve(eq, func)
+            sol = dsolve(eq, func, x0=x0)
         except NotImplementedError:
             continue
         else:
