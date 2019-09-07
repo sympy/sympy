@@ -2511,9 +2511,30 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             return checkodesol(ode, eqs, order=order,
                 solve_for_func=False)
 
+    x = func.args[0]
+
+    # Handle series solutions here
+    if sol.has(Order):
+        assert sol.lhs == func
+        Oterm = sol.rhs.getO()
+        solrhs = sol.rhs.removeO()
+
+        Oexpr = Oterm.expr
+        assert isinstance(Oexpr, Pow)
+        sorder = Oexpr.exp
+        assert Oterm == Order(x**sorder)
+
+        odesubs = (ode.lhs-ode.rhs).subs(func, solrhs).doit().expand()
+
+        neworder = Order(x**(sorder - order))
+        odesubs = odesubs + neworder
+        assert odesubs.getO() == neworder
+        residual = odesubs.removeO()
+
+        return (residual == 0, residual)
+
     s = True
     testnum = 0
-    x = func.args[0]
     while s:
         if testnum == 0:
             # First pass, try substituting a solved solution directly into the
