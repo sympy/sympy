@@ -1569,88 +1569,117 @@ class Beam(object):
             raise ImportError("To use this function numpy module is required")
 
         x = self.variable
-        length = 10 if isinstance(self.length, Symbol) else self.length
+
+        # checking whether length is an expression in terms of any Symbol.
+        from sympy import Expr
+        if isinstance(self.length, Expr):
+            l = list(self.length.atoms(Symbol))
+            # assigning every Symbol a default value of 10
+            l = {i:10 for i in l}
+            length = self.length.subs(l)
+        else:
+            l = {}
+            length = self.length
         height = length/10
 
         rectangles = []
         rectangles.append({'xy':(0, 0), 'width':length, 'height': height, 'facecolor':"brown"})
-        annotations, markers, load_eq, fill = self._draw_load(pictorial, length)
-        support_markers, support_rectangles = self._draw_supports(length)
+        annotations, markers, load_eq, fill = self._draw_load(pictorial, length, l)
+        support_markers, support_rectangles = self._draw_supports(length, l)
 
         rectangles += support_rectangles
         markers += support_markers
 
         sing_plot = plot(height + load_eq, (x, 0, length),
-         xlim=(-height, length + height), ylim=(-length, length), annotations=annotations,
+         xlim=(-height, length + height), ylim=(-length, 1.25*length), annotations=annotations,
           markers=markers, rectangles=rectangles, fill=fill, axis=False, show=False)
 
         return sing_plot
 
 
-    def _draw_load(self, pictorial, length):
+    def _draw_load(self, pictorial, length, l):
         loads = list(set(self.applied_loads) - set(self._support_as_loads))
         height = length/10
         x = self.variable
 
         annotations = []
         markers = []
+        load_args = []
         scaled_load = 0
+        load_eq = 0
+        higher_order = False
+        fill = None
+
         for load in loads:
+            # check if the position of load is in terms of the beam length.
+            if l:
+                pos =  load[1].subs(l)
+            else:
+                pos = load[1]
+
+            # point loads
             if load[2] == -1:
-                if load[0].is_positive:
-                    annotations.append({'s':'', 'xy':(load[1], height),  'xytext':(load[1], height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
+                if isinstance(load[0], Symbol) or load[0].is_negative:
+                    annotations.append({'s':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
                 else:
-                    annotations.append({'s':'', 'xy':(load[1], 0), 'xytext':(load[1], height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
+                    annotations.append({'s':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
+            # moment loads
             elif load[2] == -2:
                 if load[0].is_negative:
-                    markers.append({'args':[[load[1]], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
+                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
                 else:
-                    markers.append({'args':[[load[1]], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
+                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
+            # higher order loads
             elif load[2] >= 0:
+                higher_order = True
                 if pictorial:
                     value, start, order, end = load
                     value = 1 if order > 0 else length/2
+
                     scaled_load += value*SingularityFunction(x, start, order)
                     f2 = 1*x**order if order > 0 else length/2*x**order
                     for i in range(0, order + 1):
                         scaled_load -= (f2.diff(x, i).subs(x, end - start) *
                                        SingularityFunction(x, end, i) / factorial(i))
-                    load_args = scaled_load.args
-                else:
-                    if isinstance(load[0], Symbol):
-                        raise ValueError("Magnitude of load: {} should not be a Symbol when pictorial is False. Try setting pictorial to True".format(load))
-                    load_args = self.load.args
 
-                load_eq = [i for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
-                load_eq = Add(*load_eq)
+        if higher_order:
+            load_args = scaled_load.args if pictorial else self.load.args
 
-        # filling higher order loads with colour
-        y = numpy.arange(0, float(length), 0.1)
-        expr = height + load_eq.rewrite(Piecewise)
-        y1 = lambdify(x, expr, 'numpy')
-        y2 = float(height)
-        fill = {'x': y, 'y1': y1(y), 'y2': y2, 'color':'darkkhaki'}
+            load_eq = [i.subs(l) for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
+            load_eq = Add(*load_eq)
+
+            # filling higher order loads with colour
+            y = numpy.arange(0, float(length), 0.001)
+            expr = height + load_eq.rewrite(Piecewise)
+            y1 = lambdify(x, expr, 'numpy')
+            y2 = float(height)
+            fill = {'x': y, 'y1': y1(y), 'y2': y2, 'color':'darkkhaki'}
 
         return annotations, markers, load_eq, fill
 
 
-    def _draw_supports(self, length):
-        height = length/10
+    def _draw_supports(self, length, l):
+        height = float(length/10)
 
         support_markers = []
         support_rectangles = []
         for support in self._applied_supports:
+            if l:
+                pos =  support[0].subs(l)
+            else:
+                pos = support[0]
+
             if support[1] == "pin":
-                support_markers.append({'args':[support[0], [0]], 'marker':6, 'markersize':13, 'color':"black"})
+                support_markers.append({'args':[pos, [0]], 'marker':6, 'markersize':13, 'color':"black"})
 
             elif support[1] == "roller":
-                support_markers.append({'args':[support[0], [-height/2.5]], 'marker':'o', 'markersize':13, 'color':"black"})
+                support_markers.append({'args':[pos, [-height/2.5]], 'marker':'o', 'markersize':11, 'color':"black"})
 
             elif support[1] == "fixed":
-                if support[0] == 0:
-                    support_rectangles.append({'xy':(0, -3*height), 'width':-self.length/20, 'height':6*height + height, 'fill':False, 'hatch':'/////'})
+                if pos == 0:
+                    support_rectangles.append({'xy':(0, -3*height), 'width':-length/20, 'height':6*height + height, 'fill':False, 'hatch':'/////'})
                 else:
-                    support_rectangles.append({'xy':(self.length, -3*height), 'width':self.length/20, 'height': 6*height + height, 'fill':False, 'hatch':'/////'})
+                    support_rectangles.append({'xy':(length, -3*height), 'width':length/20, 'height': 6*height + height, 'fill':False, 'hatch':'/////'})
 
         return support_markers, support_rectangles
 
