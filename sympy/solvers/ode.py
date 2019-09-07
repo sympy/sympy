@@ -3036,7 +3036,9 @@ def _ode_factorable_match(eq, func, x0):
     eqns = []
     r = None
     if isinstance(eqs, Pow):
-        eq, _ = _preprocess(eqs, func)
+        # if f(x)**p=0 then f(x)=0 (p>0)
+        if (expr.exp).is_positive:
+            eq = expr.base
         if isinstance(eq, Pow):
             return None
         else:

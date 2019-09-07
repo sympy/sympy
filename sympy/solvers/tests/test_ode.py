@@ -3577,13 +3577,27 @@ def test_factorable():
     assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
     assert checkodesol(eq, sol) == 4*[(True, 0)]
 
+    eq = Derivative(f(x), x)**4 - 2*Derivative(f(x), x)**2 + 1
+    sol = [Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
+    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+    eq = f(x)**2*Derivative(f(x), x)**6 - 2*f(x)**2*Derivative(f(x),
+         x)**4 + f(x)**2*Derivative(f(x), x)**2 - 2*f(x)*Derivative(f(x),
+         x)**5 + 4*f(x)*Derivative(f(x), x)**3 - 2*f(x)*Derivative(f(x),
+         x) + Derivative(f(x), x)**4 - 2*Derivative(f(x), x)**2 + 1
+    sol = [Eq(f(x), C1 - x), Eq(f(x), -sqrt(C1 + 2*x)),
+           Eq(f(x), sqrt(C1 + 2*x)), Eq(f(x), C1 + x)]
+    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sol) == 4*[(True, 0)]
+
     eq = (f(x).diff(x, 2)-exp(f(x)))*(f(x).diff(x, 2)+exp(f(x)))
     raises(NotImplementedError, lambda: dsolve(eq, hint = 'factorable'))
 
 
 @slow
 def test_factorable_series():
-    # checkodesol doesn't work with series solution.
+
     eq = x**4*f(x)**2 + 2*x**4*f(x)*Derivative(f(x), (x, 2)) + x**4*Derivative(f(x),
          (x, 2))**2  + 2*x**3*f(x)*Derivative(f(x), x) + 2*x**3*Derivative(f(x),
          x)*Derivative(f(x), (x, 2)) - 7*x**2*f(x)**2 - 7*x**2*f(x)*Derivative(f(x),
@@ -3596,16 +3610,8 @@ def test_factorable_series():
           *(2 - sqrt(3)))*(-sqrt(3) + 1 + (3 - sqrt(3))*(4 - sqrt(3)))) - x**2/(-sqrt(3) - 1
           + (1 - sqrt(3))*(2 - sqrt(3))) + 1) + O(x**6))]
     assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
+    # checkodesol doesn't work with series solution.
     # FIXME: assert checkodesol(eq, sols) == 2*[(True, 0)]
-
-    eq = x**2*f(x)**2 - 2*x*f(x)*Derivative(f(x), (x, 2)) + Derivative(f(x), (x, 2))**2
-    sol = Eq(f(x), C2*(x**3/6 + 1) + C1*x*(x**3/12 + 1) + O(x**6))
-    assert sol == dsolve(eq, f(x), hint='factorable')
-    # FIXME: assert checkodesol(eq, sol) == (True, 0)
-    sol = Eq(f(x), C2*((x - 2)**4/6 + (x - 2)**3/6 + (x - 2)**2 + 1)
-          + C1*(x + (x - 2)**4/12 + (x - 2)**3/3 - 2) + O(x**6))
-    assert sol == dsolve(eq, f(x), hint='factorable', x0=2)
-    # FIXME: assert checkodesol(eq, sol) == (True, 0)
 
 
 def test_issue_17322():
