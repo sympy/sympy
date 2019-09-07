@@ -815,9 +815,7 @@ def test_issue_10401():
     # (should be None)
     #assert Eq(1 + I*infx, 1 + I*infx2) not in (T, F) and infx != infx2
     #
-    # Maybe the test below should work but it isn't clear what the
-    # relationship should be between zoo and any other complex infinity.
-    #assert Eq(zoo, sqrt(2) + I*oo) is F
+    assert Eq(zoo, sqrt(2) + I*oo) is F
     assert Eq(zoo, oo) is F
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
@@ -831,7 +829,9 @@ def test_issue_10401():
     assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
     # The commented out test below is incorrect because:
     assert zoo == -zoo
-    #assert Eq(inf, -inf) is F
+    assert Eq(zoo, -zoo) is T
+    assert Eq(oo, -oo) is F
+    assert Eq(inf, -inf) not in (T, F)
 
     assert Eq(fin/(fin + 1), 1) is S.false
 

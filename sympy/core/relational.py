@@ -458,6 +458,7 @@ class Equality(Relational):
         from sympy.core.containers import Tuple
         from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
         from sympy.core.expr import _n2
+        from sympy.functions.elementary.complexes import arg
         from sympy.simplify.simplify import clear_coefficients
         from sympy.utilities.iterables import sift
 
@@ -522,6 +523,15 @@ class Equality(Relational):
                         res = fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
                         if res is not None:
                             return S(res)
+
+                # Compare e.g. zoo with 1+I*oo by comparing args
+                arglhs = arg(lhs)
+                argrhs = arg(rhs)
+                # Guard against Eq(nan, nan) -> False
+                if not (arglhs == S.NaN and argrhs == S.NaN):
+                    res = fuzzy_bool(Eq(arglhs, argrhs))
+                    if res is not None:
+                        return S(res)
 
                 return Relational.__new__(cls, lhs, rhs, **options)
 
