@@ -84,7 +84,7 @@ class ElementwiseApplyFunction(MatrixExpr):
         if deep:
             expr = expr.doit(**kwargs)
         function = self.function
-        if isinstance(function, Lambda) and function.args[0] == (function.args[1],):
+        if isinstance(function, Lambda) and function.is_identity:
             # This is a Lambda containing the identity function.
             return expr
         if isinstance(expr, MatrixBase):
