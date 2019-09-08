@@ -3114,7 +3114,7 @@ def _ode_factorable_match(eq, func, x0):
     eqns = []
     r = None
     if isinstance(eqs, Pow):
-      # if f(x)**p=0 then f(x)=0 (p>0)
+        # if f(x)**p=0 then f(x)=0 (p>0)
         if (expr.exp).is_positive:
             eq = expr.base
         if isinstance(eq, Pow):
@@ -4117,13 +4117,13 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     r"""
     Gives solution of the Bessel differential equation
 
-    .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) + (x**2-n**2)*y(x)
+    .. math :: x^2 \frac{d^2y}{dx^2} + x \frac{dy}{dx} y(x) + (x^2-n^2) y(x)
 
-    if n is integer then the solution is of the form Eq(f(x), C0*besselj(n,x)
-    + C1*bessely(n,x)) as both the solutions are linearly independent else if
-    n is a fraction then the solution is of the form Eq(f(x), C0*besselj(n,x)
-    + C1*besselj(-n,x)) which can also transform into Eq(f(x), C0*besselj(n,x)
-    + C1*bessely(n,x)).
+    if n is integer then the solution is of the form Eq(f(x), C0 besselj(n,x)
+    + C1 bessely(n,x)) as both the solutions are linearly independent else if
+    n is a fraction then the solution is of the form Eq(f(x), C0 besselj(n,x)
+    + C1 besselj(-n,x)) which can also transform into Eq(f(x), C0 besselj(n,x)
+    + C1 bessely(n,x)).
 
     Examples
     ========
