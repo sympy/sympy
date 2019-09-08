@@ -3230,6 +3230,14 @@ def test_2nd_linear_bessel_equation():
     assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
+    eq = (x-2)**2*(f(x).diff(x, 2)) - (x-2)*f(x).diff(x) + 4*(x-2)**2*f(x)
+    sol = Eq(f(x), (x - 2)*(C1*besselj(1, 2*x - 4) + C2*bessely(1, 2*x - 4)))
+    sols = constant_renumber(sol)
+    assert classify_ode(eq) == ('factorable', '2nd_linear_bessel', '2nd_power_series_ordinary')
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
 def test_issue_7093():
     x = Symbol("x") # assuming x is real leads to an error
     sol = [Eq(f(x), C1 - 2*x*sqrt(x**3)/5),

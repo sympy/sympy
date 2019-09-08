@@ -1372,13 +1372,12 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     if not check.has(oo, NaN, zoo, -oo):
                         coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                         matching_hints["2nd_power_series_regular"] = coeff_dict
-                        # If the ODE has regular singular point at x0 and is of the form
-                        # Eq((x)**2*Derivative(y(x), x, x) + x*Derivative(y(x), x) +
-                        # (a4**2*x**(2*p)-n**2)*y(x) thus Bessel's equation
-                        if (p.is_constant(x) and p != 0) and r[c3] != 0:
-                            rn = match_2nd_linear_bessel(r, f(x), point)
-                            if rn:
-                                matching_hints["2nd_linear_bessel"] = rn
+            # If the ODE has regular singular point at x0 and is of the form
+            # Eq((x)**2*Derivative(y(x), x, x) + x*Derivative(y(x), x) +
+            # (a4**2*x**(2*p)-n**2)*y(x) thus Bessel's equation
+            rn = match_2nd_linear_bessel(r, f(x))
+            if rn:
+                matching_hints["2nd_linear_bessel"] = rn
 
             # If the ODE is ordinary and is of the form of Airy's Equation
             # Eq(x**2*Derivative(y(x),x,x)-(ax+b)*y(x))
@@ -1483,7 +1482,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     else:
         return tuple(retlist)
 
-def match_2nd_linear_bessel(r, func, point):
+def match_2nd_linear_bessel(r, func):
+
+    from sympy.polys.polytools import factor
 
     # eq = a3*f(x).diff(x, 2) + b3*f(x).diff(x) + c3*f(x)
     f = func
@@ -1498,36 +1499,46 @@ def match_2nd_linear_bessel(r, func, point):
     a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
     b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
     c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
+
+    # leading coeff of f(x).diff(x, 2)
+    coeff = factor(r[a3]).match(a4*(x-b)**b4)
+
+    if coeff:
+      # if coeff[b4] = 0 means constant coefficient
+      if coeff[b4] == 0:
+          return None
+      point = coeff[b]
+    else:
+        return None
+
     if point:
         r[a3] = simplify(r[a3].subs(x, x+point))
         r[b3] = simplify(r[b3].subs(x, x+point))
         r[c3] = simplify(r[c3].subs(x, x+point))
 
-    coeff = r[a3].match(a*(x)**b4) # leading coeff of f(x).diff(x, 2)
     # making a3 in the form of x**2
-    r[a3] = cancel(r[a3]/(coeff[a]*(x)**(-2+coeff[b4])))
-    r[b3] = cancel(r[b3]/(coeff[a]*(x)**(-2+coeff[b4])))
-    r[c3] = cancel(r[c3]/(coeff[a]*(x)**(-2+coeff[b4])))
+    r[a3] = cancel(r[a3]/(coeff[a4]*(x)**(-2+coeff[b4])))
+    r[b3] = cancel(r[b3]/(coeff[a4]*(x)**(-2+coeff[b4])))
+    r[c3] = cancel(r[c3]/(coeff[a4]*(x)**(-2+coeff[b4])))
     # checking if b3 is of form c*(x-b)
-    coeff1 = r[b3].match(a4*(x))
+    coeff1 = factor(r[b3]).match(a4*(x))
     if coeff1 is None:
         return None
     # c3 maybe of very complex form so I am simply checking (a - b) form
     # if yes later I will match with the standerd form of bessel in a and b
     # a, b are wild variable defined above.
     _coeff2 = r[c3].match(a - b)
-
     if _coeff2 is None:
         return None
     # matching with standerd form for c3
-    coeff2 = _coeff2[a].match(c4**2*(x)**(2*a4))
+    coeff2 = factor(_coeff2[a]).match(c4**2*(x)**(2*a4))
     if coeff2 is None:
         return None
 
     if _coeff2[b] == 0:
         coeff2[d4] = 0
     else:
-         coeff2[d4] = _coeff2[b].match(d4**2)[d4]
+         coeff2[d4] = factor(_coeff2[b]).match(d4**2)[d4]
 
     rn = {'n':coeff2[d4], 'a4':coeff2[c4], 'd4':coeff2[a4]}
     rn['c4'] = coeff1[a4]
