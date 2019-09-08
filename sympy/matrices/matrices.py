@@ -1069,7 +1069,7 @@ class MatrixSubspaces(MatrixReductions):
         rankcheck = kwargs.get('rankcheck', False)
 
         def project(a, b):
-            return b * (a.dot(b) / b.dot(b))
+            return b * (a.dot(b, hermitian=True) / b.dot(b, hermitian=True))
 
         def perp_to_subspace(vec, basis):
             """projects vec onto the subspace given
@@ -4741,7 +4741,7 @@ class MatrixBase(MatrixDeprecated,
             tmp = mat[:, j]  # take original v
             for i in range(j):
                 # subtract the project of mat on new vector
-                R[i, j] = Q[:, i].dot(mat[:, j])
+                R[i, j] = Q[:, i].dot(mat[:, j], hermitian=True)
                 tmp -= Q[:, i] * R[i, j]
                 tmp.expand()
             # normalize it
