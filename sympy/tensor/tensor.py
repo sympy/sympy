@@ -3980,26 +3980,10 @@ def perm2tensor(t, g, is_canon_bp=False):
     raise NotImplementedError()
 
 
-@deprecated(useinstead=".substitute_indices() instance method", issue=15276,
-            deprecated_since_version="1.5")
 def substitute_indices(t, *index_tuples):
     if not isinstance(t, TensExpr):
         return t
-    free = t.free
-    free1 = []
-    for j, ipos in free:
-        for i, v in index_tuples:
-            if i._name == j._name and i.tensor_index_type == j.tensor_index_type:
-                if i._is_up == j._is_up:
-                    free1.append((v, ipos))
-                else:
-                    free1.append((-v, ipos))
-                break
-        else:
-            free1.append((j, ipos))
-
-    t = TensMul.from_data(t.coeff, t.components, free1, t.dum)
-    return t
+    return t.substitute_indices(*index_tuples)
 
 
 def _expand(expr, **kwargs):

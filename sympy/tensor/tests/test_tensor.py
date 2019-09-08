@@ -12,7 +12,7 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     get_symmetric_group_sgs, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensor_heads, \
     TensorManager, TensExpr, TensorHead, canon_bp, \
-    tensorhead, tensorsymmetry, TensorType
+    tensorhead, tensorsymmetry, TensorType, substitute_indices
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy, ignore_warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import range
@@ -709,15 +709,10 @@ def test_mul():
     assert t == 1
     raises(ValueError, lambda: A(a, b)*A(a, c))
 
-@filter_warnings_decorator
 def test_substitute_indices():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     i, j, k, l, m, n, p, q = tensor_indices('i,j,k,l,m,n,p,q', Lorentz)
     A, B = tensor_heads('A,B', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
-    t = A(i, k)*B(-k, -j)
-    t1 = t.substitute_indices((i, j), (j, k))
-    t1a = A(j, l)*B(-l, -k)
-    assert t1 == t1a
 
     p = TensorHead('p', [Lorentz])
     t = p(i)
@@ -731,24 +726,25 @@ def test_substitute_indices():
     assert t1 == p(-j)
     t1 = t.substitute_indices((-i, -j))
     assert t1 == p(j)
+    t = A(m, n)
+    t1 = t.substitute_indices((m, i), (n, -i))
+    assert t1 == A(n, -n)
+    t1 = substitute_indices(t, (m, i), (n, -i))
+    assert t1 == A(n, -n)
 
-    A_tmul = A(m, n)
-    A_c = A_tmul(m, -m)
-    assert _is_equal(A_c, A(n, -n))
-    ABm = A(i, j)*B(m, n)
-    ABc1 = ABm(i, j, -i, -j)
-    assert _is_equal(ABc1, A(i, -j)*B(-i, j))
-    ABc2 = ABm(i, -i, j, -j)
-    assert _is_equal(ABc2, A(m, -m)*B(-n, n))
+    t = A(i, k)*B(-k, -j)
+    t1 = t.substitute_indices((i, j), (j, k))
+    t1a = A(j, l)*B(-l, -k)
+    assert t1 == t1a
+    t1 = substitute_indices(t, (i, j), (j, k))
+    assert t1 == t1a
 
-    asum = A(i, j) + B(i, j)
-    asc1 = asum(i, -i)
-    assert _is_equal(asc1, A(i, -i) + B(i, -i))
-
-    assert A(i, -i) == A(i, -i)()
-    assert canon_bp(A(i, -i) + B(-j, j) - (A(i, -i) + B(i, -i))()) == 0
-    assert _is_equal(A(i, j)*B(-j, k), (A(m, -j)*B(j, n))(i, k))
-    raises(ValueError, lambda: A(i, -i)(j, k))
+    t = A(i, j) + B(i, j)
+    t1 = t.substitute_indices((j, -i))
+    t1a = A(i, -i) + B(i, -i)
+    assert t1 == t1a
+    t1 = substitute_indices(t, (j, -i))
+    assert t1 == t1a
 
 def test_riemann_cyclic_replace():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
