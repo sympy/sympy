@@ -496,7 +496,7 @@ class Range(Set):
         >>> next(iter(r))
         Traceback (most recent call last):
         ...
-        ValueError: Cannot iterate over Range with infinite start
+        TypeError: Cannot iterate over Range with infinite start
         >>> next(iter(r.reversed))
         0
 
