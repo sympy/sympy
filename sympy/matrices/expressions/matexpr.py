@@ -665,7 +665,12 @@ def _matrix_derivative(expr, x):
             p1, p2 = parts[:2]
             if p2.is_Matrix:
                 p2 = p2.T
-            pbase = p1*p2
+            if p1 == Identity(1):
+                pbase = p2
+            elif p2 == Identity(1):
+                pbase = p1
+            else:
+                pbase = p1*p2
             if len(parts) == 2:
                 return pbase
             else:  # len(parts) > 2

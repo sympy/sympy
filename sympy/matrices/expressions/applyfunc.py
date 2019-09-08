@@ -72,19 +72,28 @@ class ElementwiseApplyFunction(MatrixExpr):
         # This strange construction is required by the assumptions:
         # (.func needs to be a class)
 
-        class ElementwiseApplyFunction2(ElementwiseApplyFunction):
-            def __new__(obj, expr):
+        class _(ElementwiseApplyFunction):
+            def __new__(cls, expr):
                 return ElementwiseApplyFunction(self.function, expr)
 
-        return ElementwiseApplyFunction2
+        return _
 
     def doit(self, **kwargs):
         deep = kwargs.get("deep", True)
         expr = self.expr
         if deep:
             expr = expr.doit(**kwargs)
+        function = self.function
+        if isinstance(function, Lambda) and function.is_identity:
+            # This is a Lambda containing the identity function.
+            return expr
         if isinstance(expr, MatrixBase):
             return expr.applyfunc(self.function)
+        elif isinstance(expr, ElementwiseApplyFunction):
+            return ElementwiseApplyFunction(
+                lambda x: self.function(expr.function(x)),
+                expr.expr
+            ).doit()
         else:
             return self
 

@@ -195,10 +195,16 @@ class DiagonalizeVector(MatrixExpr):
     def doit(self, **hints):
         from sympy.assumptions import ask, Q
         from sympy import Transpose, Mul, MatMul
+        from sympy import MatrixBase, eye
         vector = self._vector
         # This accounts for shape (1, 1) and identity matrices, among others:
         if ask(Q.diagonal(vector)):
             return vector
+        if isinstance(vector, MatrixBase):
+            ret = eye(max(vector.shape))
+            for i in range(ret.shape[0]):
+                ret[i, i] = vector[i]
+            return type(vector)(ret)
         if vector.is_MatMul:
             matrices = [arg for arg in vector.args if arg.is_Matrix]
             scalars = [arg for arg in vector.args if arg not in matrices]
