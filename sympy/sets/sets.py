@@ -1339,7 +1339,19 @@ class Intersection(Set, LatticeOp):
         completed = False
         candidates = sets_sift[True] + sets_sift[None]
 
-        for s in candidates:
+        finite_candidates, others = [], []
+        for candidate in candidates:
+            length = None
+            try:
+                length = len(candidate)
+            except:
+                others.append(candidate)
+
+            if length is not None:
+                finite_candidates.append(candidate)
+        finite_candidates.sort(key=len)
+
+        for s in finite_candidates + others:
             other_sets = set(self.args) - set((s,))
             other = Intersection(*other_sets, evaluate=False)
             completed = True
