@@ -1,7 +1,10 @@
 from __future__ import print_function, division
 
+from functools import reduce
+
 from sympy.core.basic import Basic
-from sympy.core.compatibility import with_metaclass, range, PY3
+from sympy.core.compatibility import as_int, with_metaclass, range, PY3
+from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or
@@ -348,102 +351,67 @@ class ImageSet(Set):
         return len(self.lamda.variables) > 1
 
     def _contains(self, other):
-        from sympy.matrices import Matrix
+        from sympy.core.logic import fuzzy_and
         from sympy.solvers.solveset import solveset, linsolve
-        from sympy.solvers.solvers import solve
-        from sympy.utilities.iterables import is_sequence, cartes
-        L = self.lamda
-        if is_sequence(other) != is_sequence(L.expr):
-            return False
-        elif is_sequence(other) and len(L.expr) != len(other):
+
+        other = _sympify(other)
+        expr = self.lamda.expr
+
+        # Map the parts of other to those in the Lambda expr
+        equations = []
+
+        def rmap(ex, ot):
+            if isinstance(ot, Tuple):
+                if not isinstance(ex, Tuple) or len(ex) != len(ot):
+                    return False
+                return all(rmap(e, o) for e, o in zip(ex, ot))
+            else:
+                eq = Eq(ex, ot)
+                if eq is S.false:
+                    return False
+                equations.append(eq)
+                return True
+
+        if not rmap(expr, other):
             return False
 
-        if self._is_multivariate():
-            if not is_sequence(L.expr):
-                # exprs -> (numer, denom) and check again
-                # XXX this is a bad idea -- make the user
-                # remap self to desired form
-                return other.as_numer_denom() in self.func(
-                    Lambda(L.signature, L.expr.as_numer_denom()), self.base_set)
-            eqs = [expr - val for val, expr in zip(other, L.expr)]
-            variables = L.variables
-            free = set(variables)
-            if all(i.is_number for i in list(Matrix(eqs).jacobian(variables))):
-                solns = list(linsolve([e - val for e, val in
-                zip(L.expr, other)], variables))
+        # Map the symbols in the signature to the corresponding domains
+        symsetmap = {}
+
+        def rmatch(sig, bs):
+            if isinstance(sig, Tuple):
+                if not bs.is_ProductSet or len(sig) != len(bs.sets):
+                    return False
+                return all(rmatch(s, b) for s, b in zip(sig, bs.sets))
             else:
-                try:
-                    syms = [e.free_symbols & free for e in eqs]
-                    solns = {}
-                    for i, (e, s, v) in enumerate(zip(eqs, syms, other)):
-                        if not s:
-                            if e != v:
-                                return S.false
-                            solns[vars[i]] = [v]
-                            continue
-                        elif len(s) == 1:
-                            sy = s.pop()
-                            sol = solveset(e, sy)
-                            if sol is S.EmptySet:
-                                return S.false
-                            elif isinstance(sol, FiniteSet):
-                                solns[sy] = list(sol)
-                            else:
-                                raise NotImplementedError
-                        else:
-                            # if there is more than 1 symbol from
-                            # variables in expr than this is a
-                            # coupled system
-                            raise NotImplementedError
-                    solns = cartes(*[solns[s] for s in variables])
-                except NotImplementedError:
-                    solns = solve([e - val for e, val in
-                        zip(L.expr, other)], variables, set=True)
-                    if solns:
-                        _v, solns = solns
-                        # watch for infinite solutions like solving
-                        # for x, y and getting (x, 0), (0, y), (0, 0)
-                        solns = [i for i in solns if not any(
-                            s in i for s in variables)]
-                        if not solns:
-                            return False
-                    else:
-                        # not sure if [] means no solution or
-                        # couldn't find one
-                        return
-        else:
-            x = L.variables[0]
-            if isinstance(L.expr, Expr):
-                # scalar -> scalar mapping
-                solnsSet = solveset(L.expr - other, x)
-                if solnsSet.is_FiniteSet:
-                    solns = list(solnsSet)
-                else:
-                    msgset = solnsSet
+                symsetmap[sig] = bs
+                return True
+
+        if not rmatch(self.lamda.signature[0], self.base_set):
+            return False
+
+
+        # Which of the variables in the Lambda signature need to be solved for?
+        symss = (eq.free_symbols for eq in equations)
+        variables = set(self.lamda.variables) & reduce(set.union, symss, set())
+
+        for e in equations:
+            syms = e.free_symbols & variables
+            n = len(syms)
+            if n == 1:
+                sym, = syms
+                sol = solveset(e, sym)
+                symsetmap[sym] &= sol
             else:
-                # scalar -> vector
-                # note: it is not necessary for components of other
-                # to be in the corresponding base set unless the
-                # computed component is always in the corresponding
-                # domain. e.g. 1/2 is in imageset(x, x/2, Integers)
-                # while it cannot be in imageset(x, x + 2, Integers).
-                # So when the base set is comprised of integers or reals
-                # perhaps a pre-check could be done to see if the computed
-                # values are still in the set.
-                dom = self.base_set
-                for e, o in zip(L.expr, other):
-                    dom = dom.intersection(solveset(e - o, x, domain=dom))
-                    if dom.is_empty:
-                        # there is no solution in common
-                        return False
-                return fuzzy_not(dom.is_empty)
-        for soln in solns:
-            try:
-                if soln in self.base_set:
-                    return True
-            except TypeError:
-                return
-        return S.false
+                # Give up on solveset
+                from sympy.solvers.solvers import solve
+                solns = solve(equations, variables, dict=True)
+                return fuzzy_or(
+                        fuzzy_and(symsetmap[sym]._contains(sol[sym]) for sym in sol)
+                        for sol in solns
+                        )
+
+        return fuzzy_not(fuzzy_or(s.is_empty for s in symsetmap.values()))
 
     @property
     def is_iterable(self):
