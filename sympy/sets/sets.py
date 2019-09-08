@@ -1987,7 +1987,10 @@ def imageset(*args):
         dexpr = _sympify(f(*[Dummy() for i in s]))
         var = tuple(_uniquely_named_symbol(Symbol(i), dexpr) for i in s)
         expr = f(*var)
-        f = Lambda((var,), expr)
+        if len(var) == 1:
+            f = Lambda(var[0], expr)
+        else:
+            f = Lambda((var,), expr)
     else:
         raise TypeError(filldedent('''
             expecting lambda, Lambda, or FunctionClass,
@@ -2026,7 +2029,9 @@ def imageset(*args):
         if r is not None:
             return r
 
-    return ImageSet(f, *set_list)
+    set_list = set_list[0] if len(set_list) == 1 else ProductSet(*set_list)
+
+    return ImageSet(f, set_list)
 
 
 def is_function_invertible_in_set(func, setv):
