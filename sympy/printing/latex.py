@@ -2055,6 +2055,7 @@ class LatexPrinter(Printer):
         return r"\mathbb{C}"
 
     def _print_ImageSet(self, s):
+        # FIXME: this might need changing after ImageSet has changed...
         sets = s.args[1:]
         varsets = [r"%s \in %s" % (self._print(var), self._print(setv))
                    for var, setv in zip(s.lamda.variables, sets)]
