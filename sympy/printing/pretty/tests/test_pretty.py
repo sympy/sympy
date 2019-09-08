@@ -33,7 +33,7 @@ from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent
 
-from sympy.sets import ImageSet
+from sympy.sets import ImageSet, ProductSet
 from sympy.sets.setexpr import SetExpr
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
@@ -3800,9 +3800,9 @@ def test_pretty_SetExpr():
 
 
 def test_pretty_ImageSet():
-    imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
-    ascii_str = '{x + y | x in {1, 2, 3} , y in {3, 4}}'
-    ucode_str = u('{x + y | x ∊ {1, 2, 3} , y ∊ {3, 4}}')
+    imgset = ImageSet(Lambda(((x, y),), x + y), ProductSet({1, 2, 3}, {3, 4}))
+    ascii_str = '{x + y | (x, y) in {1, 2, 3} x {3, 4}}'
+    ucode_str = u('{x + y | (x, y) ∊ {1, 2, 3} × {3, 4}}')
     assert pretty(imgset) == ascii_str
     assert upretty(imgset) == ucode_str
 
