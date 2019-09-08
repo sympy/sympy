@@ -2055,13 +2055,10 @@ class LatexPrinter(Printer):
         return r"\mathbb{C}"
 
     def _print_ImageSet(self, s):
-        # FIXME: this might need changing after ImageSet has changed...
-        sets = s.args[1:]
-        varsets = [r"%s \in %s" % (self._print(var), self._print(setv))
-                   for var, setv in zip(s.lamda.variables, sets)]
-        return r"\left\{%s\; |\; %s\right\}" % (
-            self._print(s.lamda.expr),
-            ', '.join(varsets))
+        sig = s.lamda.signature[0]
+        expr = s.lamda.expr
+        xiny = r"%s \in %s" % (self._print(sig), self._print(s.base_set))
+        return r"\left\{%s\; |\; %s\right\}" % (self._print(expr), xiny)
 
     def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
