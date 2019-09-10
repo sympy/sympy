@@ -62,6 +62,10 @@ def test_matrix_derivative_by_scalar():
     assert x.applyfunc(sin).diff(i) == ZeroMatrix(k, 1)
     assert Trace(i**2*X).diff(i) == 2*i*Trace(X)
 
+    mu = symbols("mu")
+    expr = (2*mu*x)
+    assert expr.diff(x) == 2*mu*Identity(k)
+
 
 def test_matrix_derivative_non_matrix_result():
     # This is a 4-dimensional array:
