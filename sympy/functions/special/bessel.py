@@ -88,7 +88,7 @@ class besselj(BesselBase):
     r"""
     Bessel function of the first kind.
 
-    The Bessel `J` function of order `\nu` is defined to be the function
+    The Bessel $J$ function of order $\nu$ is defined to be the function
     satisfying Bessel's differential equation
 
     .. math ::
@@ -100,7 +100,7 @@ class besselj(BesselBase):
     .. math ::
         J_\nu(z) = z^\nu \left(\frac{1}{\Gamma(\nu + 1) 2^\nu} + O(z^2) \right),
 
-    if :math:`\nu` is not a negative integer. If :math:`\nu=-n \in \mathbb{Z}_{<0}`
+    if $\nu$ is not a negative integer. If $\nu=-n \in \mathbb{Z}_{<0}$
     *is* a negative integer, then the definition is
 
     .. math ::
@@ -214,16 +214,16 @@ class bessely(BesselBase):
     r"""
     Bessel function of the second kind.
 
-    The Bessel `Y` function of order `\nu` is defined as
+    The Bessel $Y$ function of order $\nu$ is defined as
 
     .. math ::
         Y_\nu(z) = \lim_{\mu \to \nu} \frac{J_\mu(z) \cos(\pi \mu)
                                             - J_{-\mu}(z)}{\sin(\pi \mu)},
 
-    where :math:`J_\mu(z)` is the Bessel function of the first kind.
+    where $J_\mu(z)$ is the Bessel function of the first kind.
 
     It is a solution to Bessel's equation, and linearly independent from
-    :math:`J_\nu`.
+    $J_\nu$.
 
     Examples
     ========
@@ -304,7 +304,7 @@ class besseli(BesselBase):
     .. math ::
         I_\nu(z) = i^{-\nu} J_\nu(iz),
 
-    where :math:`J_\nu(z)` is the Bessel function of the first kind.
+    where $J_\nu(z)$ is the Bessel function of the first kind.
 
     Examples
     ========
@@ -393,16 +393,16 @@ class besselk(BesselBase):
     r"""
     Modified Bessel function of the second kind.
 
-    The Bessel K function of order :math:`\nu` is defined as
+    The Bessel K function of order $\nu$ is defined as
 
     .. math ::
         K_\nu(z) = \lim_{\mu \to \nu} \frac{\pi}{2}
                    \frac{I_{-\mu}(z) -I_\mu(z)}{\sin(\pi \mu)},
 
-    where :math:`I_\mu(z)` is the modified Bessel function of the first kind.
+    where $I_\mu(z)$ is the modified Bessel function of the first kind.
 
     It is a solution of the modified Bessel equation, and linearly independent
-    from :math:`Y_\nu`.
+    from $Y_\nu$.
 
     Examples
     ========
@@ -482,8 +482,8 @@ class hankel1(BesselBase):
     .. math ::
         H_\nu^{(1)} = J_\nu(z) + iY_\nu(z),
 
-    where :math:`J_\nu(z)` is the Bessel function of the first kind, and
-    :math:`Y_\nu(z)` is the Bessel function of the second kind.
+    where $J_\nu(z)$ is the Bessel function of the first kind, and
+    $Y_\nu(z)$ is the Bessel function of the second kind.
 
     It is a solution to Bessel's equation.
 
@@ -525,11 +525,11 @@ class hankel2(BesselBase):
     .. math ::
         H_\nu^{(2)} = J_\nu(z) - iY_\nu(z),
 
-    where :math:`J_\nu(z)` is the Bessel function of the first kind, and
-    :math:`Y_\nu(z)` is the Bessel function of the second kind.
+    where $J_\nu(z)$ is the Bessel function of the first kind, and
+    $Y_\nu(z)$ is the Bessel function of the second kind.
 
     It is a solution to Bessel's equation, and linearly independent from
-    :math:`H_\nu^{(1)}`.
+    $H_\nu^{(1)}$.
 
     Examples
     ========
@@ -627,14 +627,14 @@ class jn(SphericalBesselBase):
     .. math ::
         j_\nu(z) = \sqrt{\frac{\pi}{2z}} J_{\nu + \frac{1}{2}}(z),
 
-    where :math:`J_\nu(z)` is the Bessel function of the first kind.
+    where $J_\nu(z)$ is the Bessel function of the first kind.
 
     The spherical Bessel functions of integral order are
     calculated using the formula:
 
     .. math:: j_n(z) = f_n(z) \sin{z} + (-1)^{n+1} f_{-n-1}(z) \cos{z},
 
-    where the coefficients :math:`f_n(z)` are available as
+    where the coefficients $f_n(z)$ are available as
     :func:`polys.orthopolys.spherical_bessel_fn`.
 
     Examples
@@ -690,14 +690,14 @@ class yn(SphericalBesselBase):
     Spherical Bessel function of the second kind.
 
     This function is another solution to the spherical Bessel equation, and
-    linearly independent from :math:`j_n`. It can be defined as
+    linearly independent from $j_n$. It can be defined as
 
     .. math ::
         y_\nu(z) = \sqrt{\frac{\pi}{2z}} Y_{\nu + \frac{1}{2}}(z),
 
-    where :math:`Y_\nu(z)` is the Bessel function of the second kind.
+    where $Y_\nu(z)$ is the Bessel function of the second kind.
 
-    For integral orders :math:`n`, :math:`y_n` is calculated using the formula:
+    For integral orders $n$, $y_n$ is calculated using the formula:
 
     .. math:: y_n(z) = (-1)^{n+1} j_{-n-1}(z)
 
@@ -812,10 +812,10 @@ class hn1(SphericalHankelBase):
 
     .. math:: h_\nu^(1)(z) = j_\nu(z) + i y_\nu(z),
 
-    where :math:`j_\nu(z)` and :math:`y_\nu(z)` are the spherical
+    where $j_\nu(z)$ and $y_\nu(z)$ are the spherical
     Bessel function of the first and second kinds.
 
-    For integral orders :math:`n`, :math:`h_n^(1)` is calculated using the formula:
+    For integral orders $n$, $h_n^(1)$ is calculated using the formula:
 
     .. math:: h_n^(1)(z) = j_{n}(z) + i (-1)^{n+1} j_{-n-1}(z)
 
@@ -865,10 +865,10 @@ class hn2(SphericalHankelBase):
 
     .. math:: h_\nu^(2)(z) = j_\nu(z) - i y_\nu(z),
 
-    where :math:`j_\nu(z)` and :math:`y_\nu(z)` are the spherical
+    where $j_\nu(z)$ and $y_\nu(z)$ are the spherical
     Bessel function of the first and second kinds.
 
-    For integral orders :math:`n`, :math:`h_n^(2)` is calculated using the formula:
+    For integral orders $n$, $h_n^(2)$ is calculated using the formula:
 
     .. math:: h_n^(2)(z) = j_{n} - i (-1)^{n+1} j_{-n-1}(z)
 
@@ -1020,15 +1020,15 @@ class AiryBase(Function):
 
 class airyai(AiryBase):
     r"""
-    The Airy function `\operatorname{Ai}` of the first kind.
+    The Airy function $\operatorname{Ai}$ of the first kind.
 
-    The Airy function `\operatorname{Ai}(z)` is defined to be the function
+    The Airy function $\operatorname{Ai}(z)$ is defined to be the function
     satisfying Airy's differential equation
 
     .. math::
         \frac{\mathrm{d}^2 w(z)}{\mathrm{d}z^2} - z w(z) = 0.
 
-    Equivalently, for real `z`
+    Equivalently, for real $z$
 
     .. math::
         \operatorname{Ai}(z) := \frac{1}{\pi}
@@ -1186,15 +1186,15 @@ class airyai(AiryBase):
 
 class airybi(AiryBase):
     r"""
-    The Airy function `\operatorname{Bi}` of the second kind.
+    The Airy function $\operatorname{Bi}$ of the second kind.
 
-    The Airy function `\operatorname{Bi}(z)` is defined to be the function
+    The Airy function $\operatorname{Bi}(z)$ is defined to be the function
     satisfying Airy's differential equation
 
     .. math::
         \frac{\mathrm{d}^2 w(z)}{\mathrm{d}z^2} - z w(z) = 0.
 
-    Equivalently, for real `z`
+    Equivalently, for real $z$
 
     .. math::
         \operatorname{Bi}(z) := \frac{1}{\pi}
@@ -1356,9 +1356,9 @@ class airybi(AiryBase):
 
 class airyaiprime(AiryBase):
     r"""
-    The derivative `\operatorname{Ai}^\prime` of the Airy function of the first kind.
+    The derivative $\operatorname{Ai}^\prime$ of the Airy function of the first kind.
 
-    The Airy function `\operatorname{Ai}^\prime(z)` is defined to be the function
+    The Airy function $\operatorname{Ai}^\prime(z)$ is defined to be the function
 
     .. math::
         \operatorname{Ai}^\prime(z) := \frac{\mathrm{d} \operatorname{Ai}(z)}{\mathrm{d} z}.
@@ -1508,9 +1508,9 @@ class airyaiprime(AiryBase):
 
 class airybiprime(AiryBase):
     r"""
-    The derivative `\operatorname{Bi}^\prime` of the Airy function of the first kind.
+    The derivative $\operatorname{Bi}^\prime$ of the Airy function of the first kind.
 
-    The Airy function `\operatorname{Bi}^\prime(z)` is defined to be the function
+    The Airy function $\operatorname{Bi}^\prime(z)$ is defined to be the function
 
     .. math::
         \operatorname{Bi}^\prime(z) := \frac{\mathrm{d} \operatorname{Bi}(z)}{\mathrm{d} z}.
