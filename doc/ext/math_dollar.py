@@ -49,5 +49,10 @@ def process_dollars(app, docname, source):
     # now save results in "source"
     source[:] = [s]
 
+
+def process_docstring(app, what, name, obj, options, lines):
+    return process_dollars(app, None, lines)
+
 def setup(app):
     app.connect("source-read", process_dollars)
+    app.connect("autodoc-process-docstring", process_docstring)
