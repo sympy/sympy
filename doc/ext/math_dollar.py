@@ -51,6 +51,9 @@ def process_dollars(app, docname, source):
 
 
 def process_docstring(app, what, name, obj, options, lines):
+    if name.endswith('.latex'):
+        # Disable in the latex() docstring, as it breaks the example output
+        return
     return process_dollars(app, None, lines)
 
 def setup(app):
