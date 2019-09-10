@@ -235,6 +235,8 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import islice
 
+from sympy.functions import hyper
+
 from sympy.core import Add, S, Mul, Pow, oo, Rational
 from sympy.core.compatibility import ordered, iterable, is_sequence, range, string_types
 from sympy.core.containers import Tuple
@@ -310,6 +312,7 @@ allhints = (
     "Liouville",
     "2nd_linear_airy",
     "2nd_linear_bessel",
+    "2nd_hypergeometirc",
     "nth_order_reducible",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
@@ -1372,6 +1375,12 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     if not check.has(oo, NaN, zoo, -oo):
                         coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                         matching_hints["2nd_power_series_regular"] = coeff_dict
+                        # For Hypergeometric solutions.
+                        _r = {}
+                        _r.update(r)
+                        rn = match_2nd_hypergeometric(_r, func, point)
+                        if rn:
+                            matching_hints["2nd_hypergeometirc"] = rn
             # If the ODE has regular singular point at x0 and is of the form
             # Eq((x)**2*Derivative(y(x), x, x) + x*Derivative(y(x), x) +
             # (a4**2*x**(2*p)-n**2)*y(x) thus Bessel's equation
@@ -1481,6 +1490,63 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
+
+def ode_2nd_hypergeometirc(eq, func, order, match):
+
+    x = func.args[0]
+    C0, C1 = get_numbered_constants(eq, num=2)
+    a = match['a']
+    b = match['b']
+    c = match['c']
+    x0 = match['x0']
+
+    if x0 == 0:
+        if c.is_integer == False:
+            return Eq(func, C0*hyper([a, b], [c], x) + C1*hyper([a-c+1, b-c+1], [2-c], x)*x**(1-c))
+
+    raise NotImplementedError(" .....")
+
+def match_2nd_hypergeometric(r, func, x0):
+
+    from sympy.polys.polytools import factor
+    # eq = a3*f(x).diff(x, 2) + b3*f(x).diff(x) + c3*f(x)
+    f = func
+    x = func.args[0]
+    df = f.diff(x)
+    a = Wild('a', exclude=[x,f,df])
+    b = Wild('b', exclude=[x,f,df])
+    c = Wild('c', exclude=[x,f,df])
+    d = Wild('d', exclude=[x,f,df])
+    a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
+    b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
+    c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
+    if r[c3].has(x):
+        coeff3 = factor(r[c3]).match(a*(x-b)**c)
+        if coeff3:
+            r[a3] = cancel(r[a3]/((x-coeff3[b])**(coeff3[c])))
+            r[b3] = cancel(r[b3]/((x-coeff3[b])**(coeff3[c])))
+            r[c3] = cancel(r[c3]/((x-coeff3[b])**(coeff3[c])))
+        else:
+            return None
+    coeff1 = (r[a3]).match(a*x-a*x**2)
+    if coeff1:
+        if coeff1[a]!=1:
+            r[a3] = cancel(r[a3]/coeff1[a])
+            r[b3] = cancel(r[b3]/coeff1[a])
+            r[c3] = cancel(r[c3]/coeff1[a])
+    else:
+        return None
+    coeff2 = r[b3].match(c - d*x)
+    if coeff2:
+        sol = solve([a + b - coeff2[d]+1, a*b + r[c3]], [a, b])
+        if sol:
+            a = sol[0][0]
+            b = sol[0][1]
+            c = coeff2[c]
+        else:
+            return None
+    rn = {'a':a, 'b':b, 'c':c, 'x0':x0}
+    return rn
 
 def match_2nd_linear_bessel(r, func):
 
