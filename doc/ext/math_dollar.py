@@ -38,7 +38,7 @@ def process_dollars(app, docname, source):
         return t
     s = re.sub(r"({[^{}$]*\$[^{}$]*\$[^{}]*})", repl, s)
     # matches $...$
-    dollars = re.compile(r"(?<!\$)(?<!\\)\$([^\$]+?)\$")
+    dollars = re.compile(r"(?<!\$)(?<!\\)\$([^\$ ][^\$]*?)\$")
     # regular expression for \$
     slashdollar = re.compile(r"\\\$")
     s = dollars.sub(r":math:`\1`", s)
