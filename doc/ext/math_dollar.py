@@ -19,7 +19,7 @@ def process_dollars(app, docname, source):
 
     Thus the above line would get changed to
 
-      `f(n) = 0 \text{ if $n$ is prime}`
+      :math:`f(n) = 0 \text{ if $n$ is prime}`
     """
     s = "\n".join(source)
     if s.find("$") == -1:
