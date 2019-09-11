@@ -168,34 +168,16 @@ matrix:
       env:
         - TEST_DOCTESTS="true" TEST_EXAMPLES="true"
         - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy3
-          packages:
-            - pypy3
     - python: "pypy3"
       env:
         - TEST_SYMPY="true"
         - SPLIT="1/2"
         - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy3
-          packages:
-            - pypy3
     - python: "pypy3"
       env:
         - TEST_SYMPY="true"
         - SPLIT="2/2"
         - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy3
-          packages:
-            - pypy3
 
   fast_finish: true
 
@@ -205,34 +187,16 @@ matrix:
       env:
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy3
-          packages:
-            - pypy3
     - python: "pypy3"
       env:
         - TEST_SYMPY="true"
         - SPLIT="1/2"
         - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy3
-          packages:
-            - pypy3
     - python: "pypy3"
       env:
         - TEST_SYMPY="true"
         - SPLIT="2/2"
         - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy3
-          packages:
-            - pypy3
 
 before_install:
   - set -e
