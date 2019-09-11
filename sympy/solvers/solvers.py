@@ -2358,7 +2358,7 @@ def solve_linear_system(system, *symbols, **flags):
     while i < matrix.rows:
         if i == m:
             # an overdetermined system
-            if any(matrix[i:, m]):
+            if fuzzy_not(fuzzy_and(e.is_zero for e in matrix[i:, m])):
                 return None   # no solutions
             else:
                 # remove trailing rows
