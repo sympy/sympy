@@ -164,17 +164,17 @@ matrix:
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
-    - python: "pypy"
+    - python: "pypy3"
       env:
         - TEST_DOCTESTS="true" TEST_EXAMPLES="true"
         - FASTCACHE="false"
       addons:
         apt:
           sources:
-            - pypy
+            - pypy3
           packages:
-            - pypy
-    - python: "pypy"
+            - pypy3
+    - python: "pypy3"
       env:
         - TEST_SYMPY="true"
         - SPLIT="1/2"
@@ -182,10 +182,10 @@ matrix:
       addons:
         apt:
           sources:
-            - pypy
+            - pypy3
           packages:
-            - pypy
-    - python: "pypy"
+            - pypy3
+    - python: "pypy3"
       env:
         - TEST_SYMPY="true"
         - SPLIT="2/2"
@@ -193,25 +193,25 @@ matrix:
       addons:
         apt:
           sources:
-            - pypy
+            - pypy3
           packages:
-            - pypy
+            - pypy3
 
   fast_finish: true
 
   allow_failures:
     # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
-    - python: "pypy"
+    - python: "pypy3"
       env:
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
       addons:
         apt:
           sources:
-            - pypy
+            - pypy3
           packages:
-            - pypy
-    - python: "pypy"
+            - pypy3
+    - python: "pypy3"
       env:
         - TEST_SYMPY="true"
         - SPLIT="1/2"
@@ -219,10 +219,10 @@ matrix:
       addons:
         apt:
           sources:
-            - pypy
+            - pypy3
           packages:
-            - pypy
-    - python: "pypy"
+            - pypy3
+    - python: "pypy3"
       env:
         - TEST_SYMPY="true"
         - SPLIT="2/2"
@@ -230,9 +230,9 @@ matrix:
       addons:
         apt:
           sources:
-            - pypy
+            - pypy3
           packages:
-            - pypy
+            - pypy3
 
 before_install:
   - set -e
@@ -280,7 +280,7 @@ before_install:
         if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
             conda install matchpy;
         fi
-    elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
+    elif [ "$TRAVIS_PYTHON_VERSION" != "pypy3" ]; then
         pip list | grep "numpy" && pip uninstall -y numpy;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
@@ -290,8 +290,8 @@ before_install:
 install:
   # If a command fails, fail the build.
   - set -e
-  - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
-      then virtualenv -p /usr/bin/pypy ~/.venv;
+  - if [ "$TRAVIS_PYTHON_VERSION" = "pypy3" ];
+      then virtualenv -p /usr/bin/pypy3 ~/.venv;
            . ~/.venv/bin/activate;
     fi
   # Once https://github.com/fredrik-johansson/mpmath/pull/403 is in a released
