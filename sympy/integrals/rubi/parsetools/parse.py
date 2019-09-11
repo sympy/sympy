@@ -249,7 +249,7 @@ def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
                 cons_index += 1
                 c = '\n    def cons_f{}({}, {}):\n'.format(cons_index, i, x)
                 c += r
-                c += '\n\n    cons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+                c += '\n\n    cons{} = CustomConstraint(lambda {}, {}: {})\n'.format(cons_index, i, x, 'cons_f{}({}, {})'.format(cons_index, i, x))
                 cons_name = 'cons{}'.format(cons_index)
                 cons_dict[cons_name] = r
             else:
@@ -264,7 +264,7 @@ def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
                 cons_index += 1
                 c = '\n    def cons_f{}({}):\n'.format(cons_index, s)
                 c += r
-                c += '\n\n    cons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+                c += '\n\n    cons{} = CustomConstraint(lambda {}: {})\n'.format(cons_index, s, 'cons_f{}({})'.format(cons_index, s))
                 cons_name = 'cons{}'.format(cons_index)
                 cons_dict[cons_name] = r
             else:
@@ -361,7 +361,7 @@ def set_matchq_in_constraint(a, cons_index):
             pattern = rubi_printer(pattern, sympy_integers=True)
             pattern = setWC(pattern)
             res = '        def _cons_f_{}({}):\n            return {}\n'.format(cons_index, ', '.join(free_symbols), cons)
-            res += '        _cons_{} = CustomConstraint(_cons_f_{})\n'.format(cons_index, cons_index)
+            res += '        _cons_{} = CustomConstraint(lambda {}: _cons_f_{}({}))\n'.format(cons_index, ', '.join(free_symbols), cons_index, ', '.join(free_symbols))
             res += '        pat = Pattern(UtilityOperator({}, x), _cons_{})\n'.format(pattern, cons_index)
             res += '        result_matchq = is_match(UtilityOperator({}, x), pat)'.format(r.args[0])
             return "result_matchq", res
@@ -399,7 +399,7 @@ def _divide_constriant(s, symbols, cons_index, cons_dict, cons_import):
         if 'x' in lambda_symbols:
             cons += '        if isinstance(x, (int, Integer, float, Float)):\n            return False\n'
         cons += res
-        cons += '\n\n    cons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+        cons += '\n\n    cons{} = CustomConstraint(lambda {}: {})\n'.format(cons_index, ', '.join(lambda_symbols), 'cons_f{}({})'.format(cons_index, ', '.join(lambda_symbols)))
         cons_name = 'cons{}'.format(cons_index)
         cons_dict[cons_name] = res
     else:
@@ -496,12 +496,13 @@ def extract_set(s, L):
             pass
     return lst
 
-def replaceWith(s, symbols, index):
+def replaceWith(s, symbols, index, cons_import):
     '''
     Replaces `With` and `Module by python functions`
     '''
     return_type = None
     with_value = ''
+    cons = ''
     if type(s) == Function('With') or type(s) == Function('Module'):
         constraints = ' '
         result = '    def With{}({}):'.format(index, ', '.join(symbols))
@@ -527,7 +528,7 @@ def replaceWith(s, symbols, index):
             if isinstance(C.args[0], Set):
                 result += '\n        {} = {}'.format(C.args[0].args[0], C.args[0].args[1])
             result += '\n        rubi.append({})\n        return {}'.format(index, rubi_printer(C.args[1], sympy_integers=True))
-            return result, constraints, return_type
+            return result, constraints, return_type, cons
 
         elif type(s.args[1]) == Function('Condition'):
             C = s.args[1]
@@ -555,8 +556,12 @@ def replaceWith(s, symbols, index):
                         return_type = ( with_value+return_type1[0], rubi_printer(return_type1[1]))
                     result += '\n            return True'
                     result += '\n        return False'
-            constraints = ', CustomConstraint(With{})'.format(index)
-            return result, constraints, return_type
+                    result += '\n    cons_with_{} = CustomConstraint(lambda {}: With{}({}))\n'.format(index, ', '.join(symbols), index, ', '.join(symbols))
+                    cons_import.append('cons_with_{}'.format(index))
+                    cons = result
+                    result = ''
+            constraints = ', cons_with_{}'.format(index)
+            return result, constraints, return_type, cons
 
         elif type(s.args[1]) == Function('Module') or type(s.args[1]) == Function('With'):
             C = s.args[1]
@@ -567,7 +572,7 @@ def replaceWith(s, symbols, index):
                 return_type = ( with_value+return_type1[0], rubi_printer(return_type1[1]))
             result+=return_type1[0]
             result+='\n        rubi.append({})\n        return {}'.format(index, rubi_printer(return_type1[1]))
-            return result, constraints, None
+            return result, constraints, None, cons
 
         elif s.args[1].has(Function("CompoundExpression")):
             C = s.args[1].args[0]
@@ -575,13 +580,13 @@ def replaceWith(s, symbols, index):
             if isinstance(C.args[0], Set):
                 result += '\n        {} = {}'.format(C.args[0].args[0], C.args[0].args[1])
             result += '\n        return {}({}, {})'.format(s.args[1].func, C.args[-1], s.args[1].args[1])
-            return result, constraints, None
+            return result, constraints, None, cons
 
         result += with_value
         result += '\n        rubi.append({})\n        return {}'.format(index, rubi_printer(s.args[1], sympy_integers=True))
-        return result, constraints, return_type
+        return result, constraints, return_type, cons
     else:
-        return rubi_printer(s, sympy_integers=True), '', return_type
+        return rubi_printer(s, sympy_integers=True), '', return_type, cons
 
 def downvalues_rules(r, header, cons_dict, cons_index, index):
     '''
@@ -621,31 +626,34 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
         pattern = setWC(pattern)
         transformed = sympify(transformed, locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not") })
         constraint_def = constraint_def + free_cons_def
-        cons+=constraint_def
+        cons += constraint_def
         index += 1
 
         # below are certain if - else condition depending on various situation that may be encountered
         if type(transformed) == Function('With') or type(transformed) == Function('Module'): # define separate function when With appears
-            transformed, With_constraints, return_type = replaceWith(transformed, free_symbols, index)
+            transformed, With_constraints, return_type, c = replaceWith(transformed, free_symbols, index, cons_import)
+            cons += c
             if return_type is None:
                 parsed += '{}'.format(transformed)
                 parsed += '\n    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
                 parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', With{}'.format(index) + ')\n'
+                parsed +='\n    matcher.add(pattern{}, {})\n'.format(index, index)
             else:
 
                 parsed += '{}'.format(transformed)
                 parsed += '\n    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + With_constraints + ')'
                 parsed += '\n    def replacement{}({}):\n'.format(index, ', '.join(free_symbols)) + return_type[0] + '\n        rubi.append({})\n        return '.format(index) + return_type[1]
                 parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
-
+                parsed +='\n    matcher.add(pattern{}, {})\n'.format(index, index)
         else:
             transformed = rubi_printer(transformed, sympy_integers=True)
             parsed += '    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
             parsed += '\n    def replacement{}({}):\n        rubi.append({})\n        return '.format(index, ', '.join(free_symbols), index) + transformed
             parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
+            parsed +='\n    matcher.add(pattern{}, {})\n'.format(index, index)
         rules += 'rule{}, '.format(index)
     rules += ']'
-    parsed += '    return ' + rules +'\n'
+    parsed += '    return matcher, ' + rules +'\n'
 
     header += '    from sympy.integrals.rubi.constraints import ' + ', '.join(word for word in cons_import)
     parsed = header + parsed

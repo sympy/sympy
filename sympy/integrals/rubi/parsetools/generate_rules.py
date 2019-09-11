@@ -23,7 +23,7 @@ def generate_rules_from_downvalues():
         'miscellaneous_algebraic.py' ,'piecewise_linear.py', 'exponential.py', 'logarithms.py', 'sine.py', 'tangent.py', 'secant.py', 'miscellaneous_trig.py',
         'inverse_trig.py', 'hyperbolic.py', 'inverse_hyperbolic.py', 'special_functions.py', 'miscellaneous_integration.py']
 
-    for k in range(0, 18):
+    for k in range(0, 2):
         module_name = output[k][0:-3]
         path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         header = open(os.path.join(path_header, "header.py.txt"), "r").read()

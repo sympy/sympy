@@ -50,26 +50,31 @@ if matchpy:
         from sympy.integrals.rubi.rules.miscellaneous_integration import miscellaneous_integration
         rules = []
         rules_applied = []
-        rules += integrand_simplification(rules_applied)
-        rules += linear_products(rules_applied)
-        rules += quadratic_products(rules_applied)
-        rules += binomial_products(rules_applied)
-        rules += trinomial_products(rules_applied)
-        rules += miscellaneous_algebraic(rules_applied)
-        rules += exponential(rules_applied)
-        rules += logarithms(rules_applied)
-        rules += special_functions(rules_applied)
-        rules += sine(rules_applied)
-        rules += tangent(rules_applied)
-        rules += secant(rules_applied)
-        rules += miscellaneous_trig(rules_applied)
-        rules += inverse_trig(rules_applied)
-        rules += hyperbolic(rules_applied)
-        rules += inverse_hyperbolic(rules_applied)
+        from matchpy import ManyToOneMatcher
+        matcher = ManyToOneMatcher()
+
+        # rules += integrand_simplification(rules_applied)
+        r = linear_products(rules_applied, matcher)
+        rules += r[1]
+        matcher = r[0]
+        # rules += quadratic_products(rules_applied)
+        # rules += binomial_products(rules_applied)
+        # rules += trinomial_products(rules_applied)
+        # rules += miscellaneous_algebraic(rules_applied)
+        # rules += exponential(rules_applied)
+        # rules += logarithms(rules_applied)
+        # rules += special_functions(rules_applied)
+        # rules += sine(rules_applied)
+        # rules += tangent(rules_applied)
+        # rules += secant(rules_applied)
+        # rules += miscellaneous_trig(rules_applied)
+        # rules += inverse_trig(rules_applied)
+        # rules += hyperbolic(rules_applied)
+        # rules += inverse_hyperbolic(rules_applied)
         #rubi = piecewise_linear(rubi)
-        rules += miscellaneous_integration(rules_applied)
-        rubi = ManyToOneReplacer(*rules)
-        return rubi, rules_applied, rules
+        # rules += miscellaneous_integration(rules_applied)
+        # rubi = ManyToOneReplacer(*rules)
+        return matcher, rules_applied, rules
     _E = rubi_unevaluated_expr(E)
     Integrate = Function('Integrate')
     rubi, rules_applied, rules = rubi_object()
