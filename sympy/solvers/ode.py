@@ -1376,11 +1376,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                         coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                         matching_hints["2nd_power_series_regular"] = coeff_dict
                         # For Hypergeometric solutions.
-                        _r = {}
-                        _r.update(r)
-                        rn = match_2nd_hypergeometric(_r, func, point)
-                        if rn:
-                            matching_hints["2nd_hypergeometirc"] = rn
+                _r = {}
+                _r.update(r)
+                rn = match_2nd_hypergeometric(_r, func, point)
+                if rn:
+                    matching_hints["2nd_hypergeometirc"] = rn
             # If the ODE has regular singular point at x0 and is of the form
             # Eq((x)**2*Derivative(y(x), x, x) + x*Derivative(y(x), x) +
             # (a4**2*x**(2*p)-n**2)*y(x) thus Bessel's equation
@@ -1493,6 +1493,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
 def ode_2nd_hypergeometirc(eq, func, order, match):
 
+    from sympy.simplify.hyperexpand import hyperexpand
     x = func.args[0]
     C0, C1 = get_numbered_constants(eq, num=2)
     a = match['a']
@@ -1500,11 +1501,34 @@ def ode_2nd_hypergeometirc(eq, func, order, match):
     c = match['c']
     x0 = match['x0']
 
+    sol = None
     if x0 == 0:
-        if c.is_integer == False:
-            return Eq(func, C0*hyper([a, b], [c], x) + C1*hyper([a-c+1, b-c+1], [2-c], x)*x**(1-c))
+        if c.is_integer == False or c.is_positive is not True:
+            sol = Eq(func, C0*hyper([a, b], [c], x) + C1*hyper([a-c+1, b-c+1], [2-c], x)*x**(1-c))
+        elif c == 1:
+            y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/hyperexpand(hyper([a, b], [c], x)**2), x)*hyper([a, b], [c], x)
+            sol = Eq(func, C0*hyper([a, b], [c], x) + C1*y2)
 
-    raise NotImplementedError(" .....")
+    elif x0 == 1:
+        if (c-a-b).is_integer is False:
+            sol = Eq(func, C0*hyper([a, b], [-c+a+b+1], 1-x) + C1*hyper([c-a, c-b], [c-a-b+1], 1-x)*(1-x)**(c-a-b))
+        elif (c-a-b) == 0:
+            y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/hyperexpand(hyper([a, b], [c], x)**2), x)*hyper([a, b], [c], x)
+            sol = Eq(func, C0*hyper([a, b], [-c+a+b+1], 1-x) + C1*y2)
+
+    elif x0 == oo:
+        if (a-b).is_integer is False:
+            sol = Eq(func, C0*(hyper([a, a+1-c], [a+1-b], 1/x)*x**(-a)) + C1*(hyper([b, b+1-c], [b+1-a], 1/x)*x**(-b)))
+    # if sol is None then we can only return series solution
+    if sol is None:
+        try:
+            sol = dsolve(eq, func, hint = "2nd_power_series_regular", x0=x0)
+        except ValueError:
+            pass
+    if sol is None:
+        raise NotImplementedError("....")
+
+    return sol
 
 def match_2nd_hypergeometric(r, func, x0):
 
@@ -1520,6 +1544,7 @@ def match_2nd_hypergeometric(r, func, x0):
     a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
     b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
     c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
+
     if r[c3].has(x):
         coeff3 = factor(r[c3]).match(a*(x-b)**c)
         if coeff3:
@@ -1528,7 +1553,7 @@ def match_2nd_hypergeometric(r, func, x0):
             r[c3] = cancel(r[c3]/((x-coeff3[b])**(coeff3[c])))
         else:
             return None
-    coeff1 = (r[a3]).match(a*x-a*x**2)
+    coeff1 = (expand(r[a3])).match(a*x-a*x**2)
     if coeff1:
         if coeff1[a]!=1:
             r[a3] = cancel(r[a3]/coeff1[a])
@@ -1545,6 +1570,8 @@ def match_2nd_hypergeometric(r, func, x0):
             c = coeff2[c]
         else:
             return None
+    if not (a.is_real and b.is_real):
+        return None
     rn = {'a':a, 'b':b, 'c':c, 'x0':x0}
     return rn
 
