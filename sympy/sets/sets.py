@@ -8,6 +8,7 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import (iterable, with_metaclass,
     ordered, range, PY3, is_sequence, reduce)
 from sympy.core.cache import cacheit
+from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
@@ -23,6 +24,7 @@ from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
 from sympy.utilities import subsets
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
 
@@ -190,21 +192,19 @@ class Set(Basic):
 
     def _complement(self, other):
         # this behaves as other - self
-        if isinstance(other, ProductSet):
-            # For each set consider it or it's complement
-            # We need at least one of the sets to be complemented
-            # Consider all 2^n combinations.
-            # We can conveniently represent these options easily using a
-            # ProductSet
+        if isinstance(self, ProductSet) and isinstance(other, ProductSet):
+            # If self and other are disjoint then other - self == self
+            if len(self.sets) != len(other.sets):
+                return other
 
-            # XXX: this doesn't work if the dimensions of the sets isn't same.
-            # A - B is essentially same as A if B has a different
-            # dimensionality than A
-            switch_sets = ProductSet(FiniteSet(o, o - s) for s, o in
-                                     zip(self.sets, other.sets))
-            product_sets = (ProductSet(*set) for set in switch_sets)
-            # Union of all combinations but this one
-            return Union(*(p for p in product_sets if p != other))
+            # There can be other ways to represent this but this gives:
+            # (A x B) - (C x D) = ((A - C) x B) U (A x (B - D))
+            overlaps = []
+            pairs = list(zip(self.sets, other.sets))
+            for n in range(len(pairs)):
+                sets = (o if i != n else o-s for i, (s, o) in enumerate(pairs))
+                overlaps.append(ProductSet(*sets))
+            return Union(*overlaps)
 
         elif isinstance(other, Interval):
             if isinstance(self, Interval) or isinstance(self, FiniteSet):
@@ -611,9 +611,9 @@ class Set(Basic):
         return SymmetricDifference(self, other)
 
     def __pow__(self, exp):
-        if not sympify(exp).is_Integer and exp >= 0:
+        if not (sympify(exp).is_Integer and exp >= 0):
             raise ValueError("%s: Exponent must be a positive Integer" % exp)
-        return ProductSet([self]*exp)
+        return ProductSet(*[self]*exp)
 
     def __sub__(self, other):
         return Complement(self, other)
@@ -654,12 +654,17 @@ class ProductSet(Set):
     >>> set(coin**2)
     {(H, H), (H, T), (T, H), (T, T)}
 
+    The Cartesian product is not commutative or associative e.g.:
+
+    >>> I*S == S*I
+    False
+    >>> (I*I)*I == I*(I*I)
+    False
 
     Notes
     =====
 
     - Passes most operations down to the argument sets
-    - Flattens Products of ProductSets
 
     References
     ==========
@@ -669,33 +674,52 @@ class ProductSet(Set):
     is_ProductSet = True
 
     def __new__(cls, *sets, **assumptions):
-        def flatten(arg):
-            if isinstance(arg, Set):
-                if arg.is_ProductSet:
-                    return sum(map(flatten, arg.args), [])
-                else:
-                    return [arg]
-            elif iterable(arg):
-                return sum(map(flatten, arg), [])
-            raise TypeError("Input must be Sets or iterables of Sets")
-        sets = flatten(list(sets))
+        if len(sets) == 1 and iterable(sets[0]) and not isinstance(sets[0], (Set, set)):
+            SymPyDeprecationWarning(
+                feature="ProductSet(iterable)",
+                useinstead="ProductSet(*iterable)",
+                issue=17557,
+                deprecated_since_version="1.5"
+            ).warn()
+            sets = tuple(sets[0])
 
-        if EmptySet() in sets or len(sets) == 0:
+        sets = [sympify(s) for s in sets]
+
+        if not all(isinstance(s, Set) for s in sets):
+            raise TypeError("Arguments to ProductSet should be of type Set")
+
+        # Nullary product of sets is *not* the empty set
+        if len(sets) == 0:
+            return FiniteSet(())
+
+        if EmptySet() in sets:
             return EmptySet()
 
-        if len(sets) == 1:
-            return sets[0]
-
         return Basic.__new__(cls, *sets, **assumptions)
+
+    @property
+    def sets(self):
+        return self.args
+
+    def flatten(self):
+        def _flatten(sets):
+            for s in sets:
+                if s.is_ProductSet:
+                    for s2 in _flatten(s.sets):
+                        yield s2
+                else:
+                    yield s
+        return ProductSet(*_flatten(self.sets))
 
     def _eval_Eq(self, other):
         if not other.is_ProductSet:
             return
 
-        if len(self.args) != len(other.args):
+        if len(self.sets) != len(other.sets):
             return false
 
-        return And(*(Eq(x, y) for x, y in zip(self.args, other.args)))
+        eqs = (Eq(x, y) for x, y in zip(self.sets, other.sets))
+        return tfn[fuzzy_and(map(fuzzy_bool, eqs))]
 
     def _contains(self, element):
         """
@@ -713,30 +737,26 @@ class ProductSet(Set):
 
         Passes operation on to constituent sets
         """
-        if is_sequence(element):
-            if len(element) != len(self.args):
-                return False
-        elif len(self.args) > 1:
+        if element.is_Symbol:
+            return None
+
+        if not isinstance(element, Tuple) or len(element) != len(self.sets):
             return False
-        d = [Dummy() for i in element]
-        reps = dict(zip(d, element))
-        return tfn[self.as_relational(*d).xreplace(reps)]
+
+        return fuzzy_and(s._contains(e) for s, e in zip(self.sets, element))
 
     def as_relational(self, *symbols):
-        if len(symbols) != len(self.args) or not all(
+        symbols = [_sympify(s) for s in symbols]
+        if len(symbols) != len(self.sets) or not all(
                 i.is_Symbol for i in symbols):
             raise ValueError(
                 'number of symbols must match the number of sets')
-        return And(*[s.contains(i) for s, i in zip(self.args, symbols)])
-
-    @property
-    def sets(self):
-        return self.args
+        return And(*[s.as_relational(i) for s, i in zip(self.sets, symbols)])
 
     @property
     def _boundary(self):
-        return Union(*(ProductSet(b + b.boundary if i != j else b.boundary
-                                for j, b in enumerate(self.sets))
+        return Union(*(ProductSet(*(b + b.boundary if i != j else b.boundary
+                                for j, b in enumerate(self.sets)))
                                 for i, a in enumerate(self.sets)))
 
     @property
@@ -777,15 +797,15 @@ class ProductSet(Set):
     @property
     def _measure(self):
         measure = 1
-        for set in self.sets:
-            measure *= set.measure
+        for s in self.sets:
+            measure *= s.measure
         return measure
 
     def __len__(self):
-        return Mul(*[len(s) for s in self.args])
+        return Mul(*[len(s) for s in self.sets])
 
     def __bool__(self):
-        return all([bool(s) for s in self.args])
+        return all([bool(s) for s in self.sets])
 
     __nonzero__ = __bool__
 
@@ -1702,7 +1722,7 @@ class FiniteSet(Set, EvalfMixin):
             yield fuzzy_and(self._contains(e) for e in o_set - s_set)
             yield fuzzy_and(other._contains(e) for e in s_set - o_set)
 
-        return fuzzy_and(all_in_both())
+        return tfn[fuzzy_and(all_in_both())]
 
     def __iter__(self):
         return iter(self.args)
@@ -1765,7 +1785,7 @@ class FiniteSet(Set, EvalfMixin):
         """
         # evaluate=True is needed to override evaluate=False context;
         # we need Eq to do the evaluation
-        return fuzzy_or([tfn[Eq(e, other, evaluate=True)] for e in self.args])
+        return fuzzy_or(fuzzy_bool(Eq(e, other, evaluate=True)) for e in self.args)
 
     @property
     def _boundary(self):

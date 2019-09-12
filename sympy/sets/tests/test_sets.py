@@ -261,6 +261,15 @@ def test_Complement():
     assert Complement(FiniteSet(x, y, 2), Interval(-10, 10)) == \
             Complement(FiniteSet(x, y), Interval(-10, 10))
 
+    A = FiniteSet(*symbols('a:c'))
+    B = FiniteSet(*symbols('d:f'))
+    assert unchanged(Complement, ProductSet(A, A), B)
+
+    A2 = ProductSet(A, A)
+    B3 = ProductSet(B, B, B)
+    assert A2 - B3 == A2
+    assert B3 - A2 == B3
+
 
 def test_complement():
     assert Interval(0, 1).complement(S.Reals) == \
@@ -425,8 +434,85 @@ def test_is_disjoint():
     assert Interval(0, 2).is_disjoint(Interval(3, 4)) == True
 
 
-def test_ProductSet_of_single_arg_is_arg():
-    assert ProductSet(Interval(0, 1)) == Interval(0, 1)
+def test_ProductSet():
+    # ProductSet is always a set of Tuples
+    assert ProductSet(S.Reals) == S.Reals ** 1
+    assert ProductSet(S.Reals, S.Reals) == S.Reals ** 2
+    assert ProductSet(S.Reals, S.Reals, S.Reals) == S.Reals ** 3
+
+    assert ProductSet(S.Reals) != S.Reals
+    assert ProductSet(S.Reals, S.Reals) == S.Reals * S.Reals
+    assert ProductSet(S.Reals, S.Reals, S.Reals) != S.Reals * S.Reals * S.Reals
+    assert ProductSet(S.Reals, S.Reals, S.Reals) == (S.Reals * S.Reals * S.Reals).flatten()
+
+    assert 1 not in ProductSet(S.Reals)
+    assert (1,) in ProductSet(S.Reals)
+
+    assert 1 not in ProductSet(S.Reals, S.Reals)
+    assert (1, 2) in ProductSet(S.Reals, S.Reals)
+    assert (1, I) not in ProductSet(S.Reals, S.Reals)
+
+    assert (1, 2, 3) in ProductSet(S.Reals, S.Reals, S.Reals)
+    assert (1, 2, 3) in S.Reals ** 3
+    assert (1, 2, 3) not in S.Reals * S.Reals * S.Reals
+    assert ((1, 2), 3) in S.Reals * S.Reals * S.Reals
+    assert (1, (2, 3)) not in S.Reals * S.Reals * S.Reals
+    assert (1, (2, 3)) in S.Reals * (S.Reals * S.Reals)
+
+    assert ProductSet() == FiniteSet(())
+    assert ProductSet(S.Reals, S.EmptySet) == S.EmptySet
+
+    # See GH-17458
+
+    for n in range(5):
+        Rn = ProductSet(*(S.Reals,) * n)
+        assert (1,) * n in Rn
+        assert 1 not in Rn
+
+    assert (S.Reals * S.Reals) * S.Reals != S.Reals * (S.Reals * S.Reals)
+
+    S1 = S.Reals
+    S2 = S.Integers
+    x1 = pi
+    x2 = 3
+    assert x1 in S1
+    assert x2 in S2
+    assert (x1, x2) in S1 * S2
+    S3 = S1 * S2
+    x3 = (x1, x2)
+    assert x3 in S3
+    assert (x3, x3) in S3 * S3
+    assert x3 + x3 not in S3 * S3
+
+    raises(ValueError, lambda: S.Reals**-1)
+    with warns_deprecated_sympy():
+        ProductSet(FiniteSet(s) for s in range(2))
+    raises(TypeError, lambda: ProductSet(None))
+
+    S1 = FiniteSet(1, 2)
+    S2 = FiniteSet(3, 4)
+    S3 = ProductSet(S1, S2)
+    assert (S3.as_relational(x, y)
+            == And(S1.as_relational(x), S2.as_relational(y))
+            == And(Or(Eq(x, 1), Eq(x, 2)), Or(Eq(y, 3), Eq(y, 4))))
+    raises(ValueError, lambda: S3.as_relational(x))
+    raises(ValueError, lambda: S3.as_relational(x, 1))
+    raises(ValueError, lambda: ProductSet(Interval(0, 1)).as_relational(x, y))
+
+    Z2 = ProductSet(S.Integers, S.Integers)
+    assert Z2.contains((1, 2)) is S.true
+    assert Z2.contains((1,)) is S.false
+    assert Z2.contains(x) == Contains(x, Z2, evaluate=False)
+    assert Z2.contains(x).subs(x, 1) is S.false
+    assert Z2.contains((x, 1)).subs(x, 2) is S.true
+    assert Z2.contains((x, y)) == Contains((x, y), Z2, evaluate=False)
+    assert unchanged(Contains, (x, y), Z2)
+    assert Contains((1, 2), Z2) is S.true
+
+
+def test_ProductSet_of_single_arg_is_not_arg():
+    assert unchanged(ProductSet, Interval(0, 1))
+    assert ProductSet(Interval(0, 1)) != Interval(0, 1)
 
 
 def test_ProductSet_is_empty():
@@ -799,8 +885,10 @@ def test_product_basic():
     assert (0, 0) in square
     assert 0 not in square
     assert (H, T) in coin ** 2
-    assert (.5, .5, .5) in square * unit_line
-    assert (H, 3, 3) in coin * d6* d6
+    assert (.5, .5, .5) in (square * unit_line).flatten()
+    assert ((.5, .5), .5) in square * unit_line
+    assert (H, 3, 3) in (coin * d6 * d6).flatten()
+    assert ((H, 3), 3) in coin * d6 * d6
     HH, TT = sympify(H), sympify(T)
     assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
 
@@ -1040,10 +1128,20 @@ def test_Eq():
     assert Eq(s1*s2, s2*s1) == False
 
     assert unchanged(Eq, FiniteSet({x, y}), FiniteSet({x}))
-    assert Eq(FiniteSet({x, y}).subs(y, x), FiniteSet({x})) is True
-    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x) is True
-    assert Eq(FiniteSet({x, y}).subs(y, x+1), FiniteSet({x})) is False
-    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) is False
+    assert Eq(FiniteSet({x, y}).subs(y, x), FiniteSet({x})) is S.true
+    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x) is S.true
+    assert Eq(FiniteSet({x, y}).subs(y, x+1), FiniteSet({x})) is S.false
+    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) is S.false
+
+    assert Eq(ProductSet({1}, {2}), Interval(1, 2)) not in (S.true, S.false)
+    assert Eq(ProductSet({1}), ProductSet({1}, {2})) is S.false
+
+    assert Eq(FiniteSet(()), FiniteSet(1)) is S.false
+    assert Eq(ProductSet(), FiniteSet(1)) is S.false
+
+    i1 = Interval(0, 1)
+    i2 = Interval(x, y)
+    assert unchanged(Eq, ProductSet(i1, i1), ProductSet(i2, i2))
 
 
 def test_SymmetricDifference():

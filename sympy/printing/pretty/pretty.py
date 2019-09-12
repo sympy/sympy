@@ -1892,7 +1892,7 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        if len(p.sets) > 1 and not has_variety(p.sets):
+        if len(p.sets) >= 1 and not has_variety(p.sets):
             from sympy import Pow
             return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
         else:

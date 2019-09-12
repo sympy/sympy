@@ -2031,7 +2031,7 @@ class LatexPrinter(Printer):
 
     def _print_ProductSet(self, p):
         prec = precedence_traditional(p)
-        if len(p.sets) > 1 and not has_variety(p.sets):
+        if len(p.sets) >= 1 and not has_variety(p.sets):
             return self.parenthesize(p.sets[0], prec) + "^{%d}" % len(p.sets)
         return r" \times ".join(
             self.parenthesize(set, prec) for set in p.sets)

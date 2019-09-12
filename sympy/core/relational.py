@@ -455,6 +455,7 @@ class Equality(Relational):
 
     def __new__(cls, lhs, rhs=None, **options):
         from sympy.core.add import Add
+        from sympy.core.containers import Tuple
         from sympy.core.logic import fuzzy_bool
         from sympy.core.expr import _n2
         from sympy.simplify.simplify import clear_coefficients
