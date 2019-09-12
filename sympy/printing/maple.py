@@ -13,6 +13,7 @@ from __future__ import print_function, division
 from sympy.codegen.ast import Assignment
 from sympy.core import S
 from sympy.core.basic import Atom
+from sympy.core.numbers import Integer, IntegerConstant
 from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -212,7 +213,9 @@ class MapleCodePrinter(CodePrinter):
         _print_SparseMatrix
 
     def _print_Identity(self, expr):
-        return self._print(sympy.SparseMatrix(expr))
+        if isinstance(expr.rows, Integer) or isinstance(expr.rows, IntegerConstant):
+            return self._print(sympy.SparseMatrix(expr))
+        # TODO: Identity Matrix Symbol in Maple.
 
     def _print_MatMul(self, expr):
         _fact_list = list(expr.args)
