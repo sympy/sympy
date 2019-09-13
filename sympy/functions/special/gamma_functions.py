@@ -1092,6 +1092,34 @@ class digamma(Function):
         n, z = map(sympify, (0, z))
         from sympy import unpolarify
 
+
+        if n.is_integer:
+            if n.is_nonnegative:
+                nz = unpolarify(z)
+                if z != nz:
+                    return polygamma(n, nz)
+
+            if n == -1:
+                return loggamma(z)
+            else:
+                if z.is_Number:
+                    if z is S.NaN:
+                        return S.NaN
+                    elif z is S.Infinity:
+                        if n.is_Number:
+                            if n is S.Zero:
+                                return S.Infinity
+                            else:
+                                return S.Zero
+                    elif z.is_Integer:
+                        if z.is_nonpositive:
+                            return S.ComplexInfinity
+                        else:
+                            if n is S.Zero:
+                                return -S.EulerGamma + harmonic(z - 1, 1)
+                            elif n.is_odd:
+                                return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
+
         if n == 0:
             if z is S.NaN:
                 return S.NaN
