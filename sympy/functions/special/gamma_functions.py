@@ -1280,8 +1280,47 @@ class trigamma(Function):
         if n.is_integer:
             if n.is_nonnegative:
                 nz = unpolarify(z)
-            if z != nz:
-                return polygamma(n, nz)
+                if z != nz:
+                    return polygamma(n, nz)
+
+            if n == -1:
+                return loggamma(z)
+            else:
+                if z.is_Number:
+                    if z is S.NaN:
+                        return S.NaN
+                    elif z is S.Infinity:
+                        if n.is_Number:
+                            if n is S.Zero:
+                                return S.Infinity
+                            else:
+                                return S.Zero
+                    elif z.is_Integer:
+                        if z.is_nonpositive:
+                            return S.ComplexInfinity
+                        else:
+                            if n is S.Zero:
+                                return -S.EulerGamma + harmonic(z - 1, 1)
+                            elif n.is_odd:
+                                return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
+
+        if n == 0:
+            if z is S.NaN:
+                return S.NaN
+            elif z.is_Rational:
+
+                p, q = z.as_numer_denom()
+
+                # only expand for small denominators to avoid creating long expressions
+                if q <= 5:
+                    return expand_func(polygamma(n, z, evaluate=False))
+
+            elif z in (S.Infinity, S.NegativeInfinity):
+                return S.Infinity
+            else:
+                t = z.extract_multiplicatively(S.ImaginaryUnit)
+                if t in (S.Infinity, S.NegativeInfinity):
+                    return S.Infinity
 
         # TODO n == 1 also can do some rational z
 
