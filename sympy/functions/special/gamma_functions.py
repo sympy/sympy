@@ -1176,128 +1176,128 @@ class trigamma(Function):
     .. [2] http://mathworld.wolfram.com/TrigammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
-        def _eval_evalf(self, prec):
-            n = sympify(1)
-            # the mpmath polygamma implementation valid only for nonnegative integers
-            if n.is_number and n.is_real:
-                if (n.is_integer or n == int(n)) and n.is_nonnegative:
-                    return super(polygamma, self)._eval_evalf(prec)
+    def _eval_evalf(self, prec):
+        n = sympify(1)
+        # the mpmath polygamma implementation valid only for nonnegative integers
+        if n.is_number and n.is_real:
+            if (n.is_integer or n == int(n)) and n.is_nonnegative:
+                return super(polygamma, self)._eval_evalf(prec)
 
         def fdiff(self, argindex=1):
-            if argindex == 1:
-                n = sympify(1)
-                z = self.args[0]
-                return polygamma(n + 1, z)
-            else:
-                raise ArgumentIndexError(self, argindex)
-
-        def _eval_is_real(self):
-            if self.args[0].is_positive:
-                return True
-
-        def _eval_is_positive(self):
-            if self.args[0].is_positive:
-                return True
-
-        def _eval_is_negative(self):
-            if self.args[0].is_positive:
-                return False
-
-        def _eval_aseries(self, n, args0, x, logx):
-            from sympy import Order
-            if args0[1] != oo or not \
-                    (self.args[0].is_Integer and self.args[0].is_nonnegative):
-                return super(polygamma, self)._eval_aseries(n, args0, x, logx)
-            z = self.args[1]
-            N = self.args[0]
-
-            if N == 0:
-                # digamma function series
-                # Abramowitz & Stegun, p. 259, 6.3.18
-                r = log(z) - 1/(2*z)
-                o = None
-                if n < 2:
-                    o = Order(1/z, x)
-                else:
-                    m = ceiling((n + 1)//2)
-                    l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
-                    r -= Add(*l)
-                    o = Order(1/z**(2*m), x)
-                return r._eval_nseries(x, n, logx) + o
-            else:
-                # proper polygamma function
-                # Abramowitz & Stegun, p. 260, 6.4.10
-                # We return terms to order higher than O(x**n) on purpose
-                # -- otherwise we would not be able to return any terms for
-                #    quite a long time!
-                fac = gamma(N)
-                e0 = fac + N*fac/(2*z)
-                m = ceiling((n + 1)//2)
-                for k in range(1, m):
-                    fac = fac*(2*k + N - 1)*(2*k + N - 2) / ((2*k)*(2*k - 1))
-                    e0 += bernoulli(2*k)*fac/z**(2*k)
-                o = Order(1/z**(2*m), x)
-                if n == 0:
-                    o = Order(1/z, x)
-                elif n == 1:
-                    o = Order(1/z**2, x)
-                r = e0._eval_nseries(z, n, logx) + o
-                return (-1 * (-1/z)**N * r)._eval_nseries(x, n, logx)
-
-        @classmethod
-        def eval(cls, z):
-            n, z = map(sympify, (1, z))
-            from sympy import unpolarify
-
-            if n.is_integer:
-                if n.is_nonnegative:
-                    nz = unpolarify(z)
-                    if z != nz:
-                        return polygamma(n, nz)
-
-            # TODO n == 1 also can do some rational z
-
-        def _eval_expand_func(self, **hints):
+        if argindex == 1:
             n = sympify(1)
             z = self.args[0]
+            return polygamma(n + 1, z)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
-            if n.is_Integer and n.is_nonnegative:
-                if z.is_Add:
-                    coeff = z.args[0]
-                    if coeff.is_Integer:
-                        e = -(n + 1)
-                        if coeff > 0:
-                            tail = Add(*[Pow(
-                                z - i, e) for i in range(1, int(coeff) + 1)])
-                        else:
-                            tail = -Add(*[Pow(
-                                z + i, e) for i in range(0, int(-coeff))])
-                        return polygamma(n, z - coeff) + (-1)**n*factorial(n)*tail
+    def _eval_is_real(self):
+        if self.args[0].is_positive:
+            return True
 
-                elif z.is_Mul:
-                    coeff, z = z.as_two_terms()
-                    if coeff.is_Integer and coeff.is_positive:
-                        tail = [ polygamma(n, z + Rational(
-                            i, coeff)) for i in range(0, int(coeff)) ]
-                        if n == 0:
-                            return Add(*tail)/coeff + log(coeff)
-                        else:
-                            return Add(*tail)/coeff**(n + 1)
-                    z *= coeff
+    def _eval_is_positive(self):
+        if self.args[0].is_positive:
+            return True
 
-            return polygamma(n, z)
+    def _eval_is_negative(self):
+        if self.args[0].is_positive:
+            return False
 
-        def _eval_rewrite_as_zeta(self, z, **kwargs):
-            return (-1)**(2)*factorial(2)*zeta(2, z)
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy import Order
+        if args0[1] != oo or not \
+                (self.args[0].is_Integer and self.args[0].is_nonnegative):
+            return super(polygamma, self)._eval_aseries(n, args0, x, logx)
+        z = self.args[1]
+        N = self.args[0]
 
-        def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
-            return S.NegativeOne**(2) * factorial(1) * (zeta(2) - harmonic(0, 2))
+        if N == 0:
+            # digamma function series
+            # Abramowitz & Stegun, p. 259, 6.3.18
+            r = log(z) - 1/(2*z)
+            o = None
+            if n < 2:
+                o = Order(1/z, x)
+            else:
+                m = ceiling((n + 1)//2)
+                l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
+                r -= Add(*l)
+                o = Order(1/z**(2*m), x)
+            return r._eval_nseries(x, n, logx) + o
+        else:
+            # proper polygamma function
+            # Abramowitz & Stegun, p. 260, 6.4.10
+            # We return terms to order higher than O(x**n) on purpose
+            # -- otherwise we would not be able to return any terms for
+            #    quite a long time!
+            fac = gamma(N)
+            e0 = fac + N*fac/(2*z)
+            m = ceiling((n + 1)//2)
+            for k in range(1, m):
+                fac = fac*(2*k + N - 1)*(2*k + N - 2) / ((2*k)*(2*k - 1))
+                e0 += bernoulli(2*k)*fac/z**(2*k)
+            o = Order(1/z**(2*m), x)
+            if n == 0:
+                o = Order(1/z, x)
+            elif n == 1:
+                o = Order(1/z**2, x)
+            r = e0._eval_nseries(z, n, logx) + o
+            return (-1 * (-1/z)**N * r)._eval_nseries(x, n, logx)
 
-        def _eval_as_leading_term(self, x):
-            from sympy import Order
-            n = sympify(1)
-            z = self.args[0].as_leading_term(x)
-            return self.func(n, z)
+    @classmethod
+    def eval(cls, z):
+        n, z = map(sympify, (1, z))
+        from sympy import unpolarify
+
+            if n.is_integer:
+            if n.is_nonnegative:
+                nz = unpolarify(z)
+                if z != nz:
+                    return polygamma(n, nz)
+
+        # TODO n == 1 also can do some rational z
+
+    def _eval_expand_func(self, **hints):
+        n = sympify(1)
+        z = self.args[0]
+
+        if n.is_Integer and n.is_nonnegative:
+            if z.is_Add:
+                coeff = z.args[0]
+                if coeff.is_Integer:
+                    e = -(n + 1)
+                    if coeff > 0:
+                        tail = Add(*[Pow(
+                            z - i, e) for i in range(1, int(coeff) + 1)])
+                    else:
+                        tail = -Add(*[Pow(
+                            z + i, e) for i in range(0, int(-coeff))])
+                    return polygamma(n, z - coeff) + (-1)**n*factorial(n)*tail
+
+            elif z.is_Mul:
+                coeff, z = z.as_two_terms()
+                if coeff.is_Integer and coeff.is_positive:
+                    tail = [ polygamma(n, z + Rational(
+                        i, coeff)) for i in range(0, int(coeff)) ]
+                    if n == 0:
+                        return Add(*tail)/coeff + log(coeff)
+                    else:
+                        return Add(*tail)/coeff**(n + 1)
+                z *= coeff
+
+        return polygamma(n, z)
+
+    def _eval_rewrite_as_zeta(self, z, **kwargs):
+        return (-1)**(2)*factorial(2)*zeta(2, z)
+
+    def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
+        return S.NegativeOne**(2) * factorial(1) * (zeta(2) - harmonic(0, 2))
+
+    def _eval_as_leading_term(self, x):
+        from sympy import Order
+        n = sympify(1)
+        z = self.args[0].as_leading_term(x)
+        return self.func(n, z)
 
 
 ###############################################################################
