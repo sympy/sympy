@@ -244,7 +244,7 @@ def test_containers():
     # scalar, matrix, empty matrix and empty list
 
     assert maple_code((1, eye(3), Matrix(0, 0, []), [])) == \
-           "[1, Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = rectangular), zeros(0, 0), Matrix([], storage = rectangular)]"  # PROBLEM
+           "[1, Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = rectangular), Matrix([], storage = rectangular), []]"
 
 
 # There possibly no such feature in maple
