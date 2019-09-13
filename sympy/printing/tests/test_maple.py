@@ -118,7 +118,7 @@ def test_mix_number_pow_symbols():
 
     print(maple_code(x ** (y ** z)))
     assert maple_code(x ** (y ** z)) == 'x^y^z'
-    assert maple_code((x ** y) ** z) == '(x^y)^z'
+    assert maple_code((x ** y) ** z) == '(x^y)^z'  # PROBLEM
 
 
 def test_imag():
@@ -127,7 +127,7 @@ def test_imag():
     assert maple_code(5 * I) == "5*I"
 
     print(maple_code((S(3) / 2) * I))
-    assert maple_code((S(3) / 2) * I) == "(3/2)*I"  # PROBLEM
+    assert maple_code((S(3) / 2) * I) == "(3/2)*I"
     assert maple_code(3 + 4 * I) == "3 + 4*I"
 
 
@@ -246,8 +246,8 @@ def test_containers():
     assert maple_code((1, x * y, (3, x ** 2))) == "[1, x*y, [3, x^2]]"
     # scalar, matrix, empty matrix and empty list
     assert maple_code((1, eye(3), Matrix(0, 0, []), [])) == \
-           "[1, Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = sparse), zeros(0, 0), Matrix([], storage = rectangular)]"
-    # PROBLEM
+           "[1, Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = sparse), zeros(0, 0), Matrix([], storage = rectangular)]"  # PROBLEM
+
     print("Need more info about tuple in maple.")
 
 
@@ -382,10 +382,10 @@ def test_maple_piecewise_times_const():
     pw = Piecewise((x, x < 1), (x ** 2, True))
 
     print(maple_code(2 * pw))
-    assert maple_code(2 * pw) == "2*piecewise(x < 1, x, x^2)"  # PROBLEM
+    assert maple_code(2 * pw) == "2*piecewise(x < 1, x, x^2)"
     assert maple_code(pw / x) == "piecewise(x < 1, x, x^2)/x"
     assert maple_code(pw / (x * y)) == "piecewise(x < 1, x, x^2)/(x*y)"
-    assert maple_code(pw / 3) == "piecewise(x < 1, x, x^2)/3"
+    assert maple_code(pw / 3) == "piecewise(x < 1, x, x^2)/3"  # PROBLEM
 
 
 def test_maple_derivatives():
