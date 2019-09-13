@@ -139,56 +139,82 @@ if matchpy:
 def inverse_trig(rubi):
     from sympy.integrals.rubi.constraints import cons89, cons90, cons2, cons3, cons8, cons91, cons1581, cons4, cons150, cons68, cons29, cons19, cons64, cons1736, cons1737, cons1738, cons1739, cons270, cons50, cons586, cons1740, cons130, cons340, cons165, cons139, cons232, cons5, cons1741, cons1742, cons1743, cons1744, cons1745, cons40, cons1746, cons1572, cons338, cons1747, cons149, cons127, cons210, cons56, cons244, cons1748, cons349, cons1749, cons488, cons963, cons95, cons96, cons164, cons274, cons1750, cons20, cons168, cons276, cons1751, cons21, cons1752, cons240, cons239, cons1753, cons248, cons1754, cons1755, cons1756, cons1757, cons1758, cons211, cons927, cons466, cons86, cons1759, cons1760, cons721, cons170, cons1761, cons669, cons1762, cons269, cons719, cons1763, cons1610, cons14, cons152, cons1200, cons1275, cons1362, cons1764, cons1765, cons36, cons37, cons38, cons1766, cons1767, cons167, cons1444, cons1768, cons1769, cons1770, cons1232, cons1771, cons1772, cons1773, cons1774, cons342, cons1775, cons1776, cons1777, cons1778, cons1045, cons87, cons33, cons1779, cons1499, cons1780, cons13, cons1781, cons1782, cons1783, cons1784, cons242, cons243, cons148, cons1785, cons1512, cons1786, cons1154, cons321, cons1787, cons1788, cons1789, cons1790, cons1791, cons1792, cons1793, cons1794, cons1795, cons1796, cons1797, cons1798, cons603, cons1799, cons263, cons1800, cons1801, cons1802, cons1803, cons1804, cons1805, cons1806, cons1807, cons179, cons119, cons1808, cons1809, cons1810, cons1811, cons1812, cons1813, cons1814, cons1815, cons1816, cons1817, cons1818, cons1819, cons1582, cons1820, cons1821, cons1822, cons1823, cons1824, cons1825, cons1826, cons1827, cons1828, cons1829, cons1830, cons1831, cons1832, cons1096, cons1833, cons1834, cons1835, cons1836, cons1837, cons385, cons1838, cons1839, cons820, cons465, cons1840, cons1841, cons1842, cons1843, cons1844, cons1845, cons1846, cons69, cons1847, cons1848, cons1849, cons1850, cons1851, cons1852, cons1853, cons554, cons1148, cons1854, cons1855, cons1244, cons1245, cons1856, cons180, cons1857, cons1858, cons1301, cons1859, cons1860
 
+
     pattern5034 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons89, cons90)
     rule5034 = ReplacementRule(pattern5034, replacement5034)
+
     pattern5035 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons89, cons90)
     rule5035 = ReplacementRule(pattern5035, replacement5035)
+
     pattern5036 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons89, cons91)
     rule5036 = ReplacementRule(pattern5036, replacement5036)
+
     pattern5037 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons89, cons91)
     rule5037 = ReplacementRule(pattern5037, replacement5037)
+
     pattern5038 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons4, cons1581)
     rule5038 = ReplacementRule(pattern5038, replacement5038)
+
     pattern5039 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons4, cons1581)
     rule5039 = ReplacementRule(pattern5039, replacement5039)
+
     pattern5040 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/x_, x_), cons2, cons3, cons8, cons150)
     rule5040 = ReplacementRule(pattern5040, replacement5040)
+
     pattern5041 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/x_, x_), cons2, cons3, cons8, cons150)
     rule5041 = ReplacementRule(pattern5041, replacement5041)
+
     pattern5042 = Pattern(Integral((x_*WC('d', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons19, cons150, cons68)
     rule5042 = ReplacementRule(pattern5042, replacement5042)
+
     pattern5043 = Pattern(Integral((x_*WC('d', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons19, cons150, cons68)
     rule5043 = ReplacementRule(pattern5043, replacement5043)
+
     pattern5044 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons64, cons89, cons90)
     rule5044 = ReplacementRule(pattern5044, replacement5044)
+
     pattern5045 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons64, cons89, cons90)
     rule5045 = ReplacementRule(pattern5045, replacement5045)
+
     pattern5046 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons64, cons89, cons1736)
     rule5046 = ReplacementRule(pattern5046, replacement5046)
+
     pattern5047 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons64, cons89, cons1736)
     rule5047 = ReplacementRule(pattern5047, replacement5047)
+
     pattern5048 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons64, cons89, cons1737)
     rule5048 = ReplacementRule(pattern5048, replacement5048)
+
     pattern5049 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons64, cons89, cons1737)
     rule5049 = ReplacementRule(pattern5049, replacement5049)
+
     pattern5050 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons4, cons64)
     rule5050 = ReplacementRule(pattern5050, replacement5050)
+
     pattern5051 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons4, cons64)
     rule5051 = ReplacementRule(pattern5051, replacement5051)
+
     pattern5052 = Pattern(Integral((x_*WC('d', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons19, cons4, cons1738)
     rule5052 = ReplacementRule(pattern5052, replacement5052)
+
     pattern5053 = Pattern(Integral((x_*WC('d', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons19, cons4, cons1738)
     rule5053 = ReplacementRule(pattern5053, replacement5053)
+
     pattern5054 = Pattern(Integral(S(1)/(sqrt(d_ + x_**S(2)*WC('e', S(1)))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons270)
     rule5054 = ReplacementRule(pattern5054, replacement5054)
+
     pattern5055 = Pattern(Integral(S(1)/(sqrt(d_ + x_**S(2)*WC('e', S(1)))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons270)
     rule5055 = ReplacementRule(pattern5055, replacement5055)
+
     pattern5056 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons270, cons586)
     rule5056 = ReplacementRule(pattern5056, replacement5056)
+
     pattern5057 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons270, cons586)
     rule5057 = ReplacementRule(pattern5057, replacement5057)
+
     pattern5058 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons1740)
     rule5058 = ReplacementRule(pattern5058, replacement5058)
+
     pattern5059 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons1740)
     rule5059 = ReplacementRule(pattern5059, replacement5059)
 
@@ -197,40 +223,58 @@ def inverse_trig(rubi):
 
     pattern5061 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons130)
     rule5061 = ReplacementRule(pattern5061, With5061)
+
     pattern5062 = Pattern(Integral(sqrt(d_ + x_**S(2)*WC('e', S(1)))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons89, cons90)
     rule5062 = ReplacementRule(pattern5062, replacement5062)
+
     pattern5063 = Pattern(Integral(sqrt(d_ + x_**S(2)*WC('e', S(1)))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons89, cons90)
     rule5063 = ReplacementRule(pattern5063, replacement5063)
+
     pattern5064 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons340, cons90, cons165)
     rule5064 = ReplacementRule(pattern5064, replacement5064)
+
     pattern5065 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons340, cons90, cons165)
     rule5065 = ReplacementRule(pattern5065, replacement5065)
+
     pattern5066 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1)))**(S(3)/2), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons89, cons90, cons270)
     rule5066 = ReplacementRule(pattern5066, replacement5066)
+
     pattern5067 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1)))**(S(3)/2), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons89, cons90, cons270)
     rule5067 = ReplacementRule(pattern5067, replacement5067)
+
     pattern5068 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1)))**(S(3)/2), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons89, cons90)
     rule5068 = ReplacementRule(pattern5068, replacement5068)
+
     pattern5069 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1)))**(S(3)/2), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons89, cons90)
     rule5069 = ReplacementRule(pattern5069, replacement5069)
+
     pattern5070 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons340, cons90, cons139, cons232)
     rule5070 = ReplacementRule(pattern5070, replacement5070)
+
     pattern5071 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons340, cons90, cons139, cons232)
     rule5071 = ReplacementRule(pattern5071, replacement5071)
+
     pattern5072 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons150)
     rule5072 = ReplacementRule(pattern5072, replacement5072)
+
     pattern5073 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons150)
     rule5073 = ReplacementRule(pattern5073, replacement5073)
+
     pattern5074 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1739, cons89, cons91)
     rule5074 = ReplacementRule(pattern5074, replacement5074)
+
     pattern5075 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1739, cons89, cons91)
     rule5075 = ReplacementRule(pattern5075, replacement5075)
+
     pattern5076 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons1741, cons1742)
     rule5076 = ReplacementRule(pattern5076, replacement5076)
+
     pattern5077 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons1741, cons1742)
     rule5077 = ReplacementRule(pattern5077, replacement5077)
+
     pattern5078 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons1741, cons1743)
     rule5078 = ReplacementRule(pattern5078, replacement5078)
+
     pattern5079 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons1741, cons1743)
     rule5079 = ReplacementRule(pattern5079, replacement5079)
 
@@ -239,40 +283,58 @@ def inverse_trig(rubi):
 
     pattern5081 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1744, cons1745)
     rule5081 = ReplacementRule(pattern5081, With5081)
+
     pattern5082 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1744, cons40, cons1746)
     rule5082 = ReplacementRule(pattern5082, replacement5082)
+
     pattern5083 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1744, cons40, cons1746)
     rule5083 = ReplacementRule(pattern5083, replacement5083)
+
     pattern5084 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1572)
     rule5084 = ReplacementRule(pattern5084, replacement5084)
+
     pattern5085 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1572)
     rule5085 = ReplacementRule(pattern5085, replacement5085)
+
     pattern5086 = Pattern(Integral((d_ + x_*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons4, cons5, cons338, cons1747, cons149)
     rule5086 = ReplacementRule(pattern5086, replacement5086)
+
     pattern5087 = Pattern(Integral((d_ + x_*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons4, cons5, cons338, cons1747, cons149)
     rule5087 = ReplacementRule(pattern5087, replacement5087)
+
     pattern5088 = Pattern(Integral(x_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons150)
     rule5088 = ReplacementRule(pattern5088, replacement5088)
+
     pattern5089 = Pattern(Integral(x_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons150)
     rule5089 = ReplacementRule(pattern5089, replacement5089)
+
     pattern5090 = Pattern(Integral(x_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1739, cons89, cons90, cons56)
     rule5090 = ReplacementRule(pattern5090, replacement5090)
+
     pattern5091 = Pattern(Integral(x_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1739, cons89, cons90, cons56)
     rule5091 = ReplacementRule(pattern5091, replacement5091)
+
     pattern5092 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/(x_*(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons150)
     rule5092 = ReplacementRule(pattern5092, replacement5092)
+
     pattern5093 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/(x_*(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons150)
     rule5093 = ReplacementRule(pattern5093, replacement5093)
+
     pattern5094 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons5, cons1739, cons89, cons90, cons244, cons68)
     rule5094 = ReplacementRule(pattern5094, replacement5094)
+
     pattern5095 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons5, cons1739, cons89, cons90, cons244, cons68)
     rule5095 = ReplacementRule(pattern5095, replacement5095)
+
     pattern5096 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))/x_, x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons130)
     rule5096 = ReplacementRule(pattern5096, replacement5096)
+
     pattern5097 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))/x_, x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons130)
     rule5097 = ReplacementRule(pattern5097, replacement5097)
+
     pattern5098 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons130, cons1748)
     rule5098 = ReplacementRule(pattern5098, replacement5098)
+
     pattern5099 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons130, cons1748)
     rule5099 = ReplacementRule(pattern5099, replacement5099)
 
@@ -293,80 +355,118 @@ def inverse_trig(rubi):
 
     pattern5105 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons963, cons1749)
     rule5105 = ReplacementRule(pattern5105, With5105)
+
     pattern5106 = Pattern(Integral((x_*WC('f', S(1)))**m_*sqrt(d_ + x_**S(2)*WC('e', S(1)))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons95, cons90, cons96)
     rule5106 = ReplacementRule(pattern5106, replacement5106)
+
     pattern5107 = Pattern(Integral((x_*WC('f', S(1)))**m_*sqrt(d_ + x_**S(2)*WC('e', S(1)))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons95, cons90, cons96)
     rule5107 = ReplacementRule(pattern5107, replacement5107)
+
     pattern5108 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons164, cons90, cons165, cons96)
     rule5108 = ReplacementRule(pattern5108, replacement5108)
+
     pattern5109 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons164, cons90, cons165, cons96)
     rule5109 = ReplacementRule(pattern5109, replacement5109)
+
     pattern5110 = Pattern(Integral((x_*WC('f', S(1)))**m_*sqrt(d_ + x_**S(2)*WC('e', S(1)))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons89, cons90, cons274, cons1750)
     rule5110 = ReplacementRule(pattern5110, replacement5110)
+
     pattern5111 = Pattern(Integral((x_*WC('f', S(1)))**m_*sqrt(d_ + x_**S(2)*WC('e', S(1)))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons89, cons90, cons274, cons1750)
     rule5111 = ReplacementRule(pattern5111, replacement5111)
+
     pattern5112 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons340, cons90, cons165, cons274, cons1750)
     rule5112 = ReplacementRule(pattern5112, replacement5112)
+
     pattern5113 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons340, cons90, cons165, cons274, cons1750)
     rule5113 = ReplacementRule(pattern5113, replacement5113)
+
     pattern5114 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons5, cons1739, cons95, cons90, cons96, cons20)
     rule5114 = ReplacementRule(pattern5114, replacement5114)
+
     pattern5115 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons5, cons1739, cons95, cons90, cons96, cons20)
     rule5115 = ReplacementRule(pattern5115, replacement5115)
+
     pattern5116 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons164, cons90, cons139, cons168)
     rule5116 = ReplacementRule(pattern5116, replacement5116)
+
     pattern5117 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons164, cons90, cons139, cons168)
     rule5117 = ReplacementRule(pattern5117, replacement5117)
+
     pattern5118 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons340, cons90, cons139, cons276, cons1751)
     rule5118 = ReplacementRule(pattern5118, replacement5118)
+
     pattern5119 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons340, cons90, cons139, cons276, cons1751)
     rule5119 = ReplacementRule(pattern5119, replacement5119)
+
     pattern5120 = Pattern(Integral((x_*WC('f', S(1)))**m_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons95, cons90, cons168, cons20)
     rule5120 = ReplacementRule(pattern5120, replacement5120)
+
     pattern5121 = Pattern(Integral((x_*WC('f', S(1)))**m_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons95, cons90, cons168, cons20)
     rule5121 = ReplacementRule(pattern5121, replacement5121)
+
     pattern5122 = Pattern(Integral(x_**m_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons270, cons150, cons20)
     rule5122 = ReplacementRule(pattern5122, replacement5122)
+
     pattern5123 = Pattern(Integral(x_**m_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1739, cons270, cons150, cons20)
     rule5123 = ReplacementRule(pattern5123, replacement5123)
+
     pattern5124 = Pattern(Integral((x_*WC('f', S(1)))**m_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons270, cons21)
     rule5124 = ReplacementRule(pattern5124, replacement5124)
+
     pattern5125 = Pattern(Integral((x_*WC('f', S(1)))**m_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons270, cons21)
     rule5125 = ReplacementRule(pattern5125, replacement5125)
+
     pattern5126 = Pattern(Integral((x_*WC('f', S(1)))**m_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons89, cons90, cons1740, cons1752)
     rule5126 = ReplacementRule(pattern5126, replacement5126)
+
     pattern5127 = Pattern(Integral((x_*WC('f', S(1)))**m_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons89, cons90, cons1740, cons1752)
     rule5127 = ReplacementRule(pattern5127, replacement5127)
+
     pattern5128 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons5, cons1739, cons95, cons90, cons168, cons240, cons20)
     rule5128 = ReplacementRule(pattern5128, replacement5128)
+
     pattern5129 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons5, cons1739, cons95, cons90, cons168, cons240, cons20)
     rule5129 = ReplacementRule(pattern5129, replacement5129)
+
     pattern5130 = Pattern(Integral((x_*WC('f', S(1)))**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons5, cons1739, cons89, cons91, cons239)
     rule5130 = ReplacementRule(pattern5130, replacement5130)
+
     pattern5131 = Pattern(Integral((x_*WC('f', S(1)))**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons5, cons1739, cons89, cons91, cons239)
     rule5131 = ReplacementRule(pattern5131, replacement5131)
+
     pattern5132 = Pattern(Integral((x_*WC('f', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons89, cons91, cons270)
     rule5132 = ReplacementRule(pattern5132, replacement5132)
+
     pattern5133 = Pattern(Integral((x_*WC('f', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1739, cons89, cons91, cons270)
     rule5133 = ReplacementRule(pattern5133, replacement5133)
+
     pattern5134 = Pattern(Integral((x_*WC('f', S(1)))**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons89, cons91, cons20, cons1753, cons1741)
     rule5134 = ReplacementRule(pattern5134, replacement5134)
+
     pattern5135 = Pattern(Integral((x_*WC('f', S(1)))**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1739, cons89, cons91, cons20, cons1753, cons1741)
     rule5135 = ReplacementRule(pattern5135, replacement5135)
+
     pattern5136 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons248, cons1754, cons64, cons1742)
     rule5136 = ReplacementRule(pattern5136, replacement5136)
+
     pattern5137 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons248, cons1754, cons64, cons1742)
     rule5137 = ReplacementRule(pattern5137, replacement5137)
+
     pattern5138 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons248, cons1754, cons64, cons1743)
     rule5138 = ReplacementRule(pattern5138, replacement5138)
+
     pattern5139 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons248, cons1754, cons64, cons1743)
     rule5139 = ReplacementRule(pattern5139, replacement5139)
+
     pattern5140 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons4, cons1739, cons270, cons963, cons1755, cons20, cons1756)
     rule5140 = ReplacementRule(pattern5140, replacement5140)
+
     pattern5141 = Pattern(Integral((x_*WC('f', S(1)))**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons4, cons1739, cons270, cons963, cons1755, cons20, cons1756)
     rule5141 = ReplacementRule(pattern5141, replacement5141)
+
     pattern5142 = Pattern(Integral(x_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1744, cons56)
     rule5142 = ReplacementRule(pattern5142, replacement5142)
+
     pattern5143 = Pattern(Integral(x_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1744, cons56)
     rule5143 = ReplacementRule(pattern5143, replacement5143)
 
@@ -375,32 +475,46 @@ def inverse_trig(rubi):
 
     pattern5145 = Pattern(Integral((x_*WC('f', S(1)))**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons1744, cons40, cons1757)
     rule5145 = ReplacementRule(pattern5145, With5145)
+
     pattern5146 = Pattern(Integral((x_*WC('f', S(1)))**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1744, cons150, cons40, cons20)
     rule5146 = ReplacementRule(pattern5146, replacement5146)
+
     pattern5147 = Pattern(Integral((x_*WC('f', S(1)))**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons1744, cons150, cons40, cons20)
     rule5147 = ReplacementRule(pattern5147, replacement5147)
+
     pattern5148 = Pattern(Integral((x_*WC('f', S(1)))**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons4, cons5, cons1758)
     rule5148 = ReplacementRule(pattern5148, replacement5148)
+
     pattern5149 = Pattern(Integral((x_*WC('f', S(1)))**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons4, cons5, cons1758)
     rule5149 = ReplacementRule(pattern5149, replacement5149)
+
     pattern5150 = Pattern(Integral((x_*WC('h', S(1)))**WC('m', S(1))*(d_ + x_*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons211, cons19, cons4, cons5, cons338, cons1747, cons149)
     rule5150 = ReplacementRule(pattern5150, replacement5150)
+
     pattern5151 = Pattern(Integral((x_*WC('h', S(1)))**WC('m', S(1))*(d_ + x_*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons211, cons19, cons4, cons5, cons338, cons1747, cons149)
     rule5151 = ReplacementRule(pattern5151, replacement5151)
+
     pattern5152 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons150)
     rule5152 = ReplacementRule(pattern5152, replacement5152)
+
     pattern5153 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons150)
     rule5153 = ReplacementRule(pattern5153, replacement5153)
+
     pattern5154 = Pattern(Integral((d_ + x_*WC('e', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons150, cons68)
     rule5154 = ReplacementRule(pattern5154, replacement5154)
+
     pattern5155 = Pattern(Integral((d_ + x_*WC('e', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons150, cons68)
     rule5155 = ReplacementRule(pattern5155, replacement5155)
+
     pattern5156 = Pattern(Integral((d_ + x_*WC('e', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons64, cons89, cons91)
     rule5156 = ReplacementRule(pattern5156, replacement5156)
+
     pattern5157 = Pattern(Integral((d_ + x_*WC('e', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons64, cons89, cons91)
     rule5157 = ReplacementRule(pattern5157, replacement5157)
+
     pattern5158 = Pattern(Integral((x_*WC('e', S(1)) + WC('d', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons4, cons64)
     rule5158 = ReplacementRule(pattern5158, replacement5158)
+
     pattern5159 = Pattern(Integral((x_*WC('e', S(1)) + WC('d', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons4, cons64)
     rule5159 = ReplacementRule(pattern5159, replacement5159)
 
@@ -409,8 +523,10 @@ def inverse_trig(rubi):
 
     pattern5161 = Pattern(Integral(Px_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons927)
     rule5161 = ReplacementRule(pattern5161, With5161)
+
     pattern5162 = Pattern(Integral(Px_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons4, cons927)
     rule5162 = ReplacementRule(pattern5162, replacement5162)
+
     pattern5163 = Pattern(Integral(Px_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons4, cons927)
     rule5163 = ReplacementRule(pattern5163, replacement5163)
 
@@ -431,8 +547,10 @@ def inverse_trig(rubi):
 
     pattern5169 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_*(x_**S(2)*WC('h', S(1)) + x_*WC('g', S(1)) + WC('f', S(0)))**WC('p', S(1))/(d_ + x_*WC('e', S(1)))**S(2), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons211, cons466, cons1760)
     rule5169 = ReplacementRule(pattern5169, With5169)
+
     pattern5170 = Pattern(Integral(Px_*(d_ + x_*WC('e', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons927, cons150, cons20)
     rule5170 = ReplacementRule(pattern5170, replacement5170)
+
     pattern5171 = Pattern(Integral(Px_*(d_ + x_*WC('e', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons927, cons150, cons20)
     rule5171 = ReplacementRule(pattern5171, replacement5171)
 
@@ -441,44 +559,64 @@ def inverse_trig(rubi):
 
     pattern5173 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons721, cons270, cons170, cons1761)
     rule5173 = ReplacementRule(pattern5173, With5173)
+
     pattern5174 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons669, cons270, cons150, cons170, cons1762)
     rule5174 = ReplacementRule(pattern5174, replacement5174)
+
     pattern5175 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons669, cons270, cons150, cons170, cons1762)
     rule5175 = ReplacementRule(pattern5175, replacement5175)
+
     pattern5176 = Pattern(Integral(sqrt(d_ + x_**S(2)*WC('e', S(1)))*(f_ + x_*WC('g', S(1)))**m_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons270, cons150, cons269)
     rule5176 = ReplacementRule(pattern5176, replacement5176)
+
     pattern5177 = Pattern(Integral(sqrt(d_ + x_**S(2)*WC('e', S(1)))*(f_ + x_*WC('g', S(1)))**m_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons270, cons150, cons269)
     rule5177 = ReplacementRule(pattern5177, replacement5177)
+
     pattern5178 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons963, cons270, cons150)
     rule5178 = ReplacementRule(pattern5178, replacement5178)
+
     pattern5179 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons963, cons270, cons150)
     rule5179 = ReplacementRule(pattern5179, replacement5179)
+
     pattern5180 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons719, cons270, cons150, cons269)
     rule5180 = ReplacementRule(pattern5180, replacement5180)
+
     pattern5181 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons719, cons270, cons150, cons269)
     rule5181 = ReplacementRule(pattern5181, replacement5181)
+
     pattern5182 = Pattern(Integral((f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**n_/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons270, cons170, cons89, cons91)
     rule5182 = ReplacementRule(pattern5182, replacement5182)
+
     pattern5183 = Pattern(Integral((f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**n_/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons270, cons170, cons89, cons91)
     rule5183 = ReplacementRule(pattern5183, replacement5183)
+
     pattern5184 = Pattern(Integral((f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons4, cons1739, cons20, cons270, cons1763)
     rule5184 = ReplacementRule(pattern5184, replacement5184)
+
     pattern5185 = Pattern(Integral((f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons4, cons1739, cons20, cons270, cons1763)
     rule5185 = ReplacementRule(pattern5185, replacement5185)
+
     pattern5186 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons721, cons270, cons150)
     rule5186 = ReplacementRule(pattern5186, replacement5186)
+
     pattern5187 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1739, cons20, cons721, cons270, cons150)
     rule5187 = ReplacementRule(pattern5187, replacement5187)
+
     pattern5188 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons4, cons1739, cons20, cons349, cons1740)
     rule5188 = ReplacementRule(pattern5188, replacement5188)
+
     pattern5189 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons4, cons1739, cons20, cons349, cons1740)
     rule5189 = ReplacementRule(pattern5189, replacement5189)
+
     pattern5190 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))*log((x_*WC('g', S(1)) + WC('f', S(0)))**WC('m', S(1))*WC('h', S(1)))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons211, cons19, cons1739, cons270, cons150)
     rule5190 = ReplacementRule(pattern5190, replacement5190)
+
     pattern5191 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))*log((x_*WC('g', S(1)) + WC('f', S(0)))**WC('m', S(1))*WC('h', S(1)))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons211, cons19, cons1739, cons270, cons150)
     rule5191 = ReplacementRule(pattern5191, replacement5191)
+
     pattern5192 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))*log((x_*WC('g', S(1)) + WC('f', S(0)))**WC('m', S(1))*WC('h', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons211, cons19, cons4, cons1739, cons349, cons1740)
     rule5192 = ReplacementRule(pattern5192, replacement5192)
+
     pattern5193 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))*log((x_*WC('g', S(1)) + WC('f', S(0)))**WC('m', S(1))*WC('h', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons211, cons19, cons4, cons1739, cons349, cons1740)
     rule5193 = ReplacementRule(pattern5193, replacement5193)
 
@@ -487,8 +625,10 @@ def inverse_trig(rubi):
 
     pattern5195 = Pattern(Integral((d_ + x_*WC('e', S(1)))**m_*(f_ + x_*WC('g', S(1)))**m_*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1610)
     rule5195 = ReplacementRule(pattern5195, With5195)
+
     pattern5196 = Pattern(Integral((d_ + x_*WC('e', S(1)))**WC('m', S(1))*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons4, cons20)
     rule5196 = ReplacementRule(pattern5196, replacement5196)
+
     pattern5197 = Pattern(Integral((d_ + x_*WC('e', S(1)))**WC('m', S(1))*(f_ + x_*WC('g', S(1)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons4, cons20)
     rule5197 = ReplacementRule(pattern5197, replacement5197)
 
@@ -515,8 +655,10 @@ def inverse_trig(rubi):
 
     pattern5205 = Pattern(Integral(RFx_*acos(x_*WC('c', S(1)))**WC('n', S(1)), x_), cons8, cons1200, cons150, CustomConstraint(With5205))
     rule5205 = ReplacementRule(pattern5205, replacement5205)
+
     pattern5206 = Pattern(Integral(RFx_*(a_ + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons1200, cons150)
     rule5206 = ReplacementRule(pattern5206, replacement5206)
+
     pattern5207 = Pattern(Integral(RFx_*(a_ + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons1200, cons150)
     rule5207 = ReplacementRule(pattern5207, replacement5207)
 
@@ -525,94 +667,139 @@ def inverse_trig(rubi):
 
     pattern5209 = Pattern(Integral(RFx_*(d_ + x_**S(2)*WC('e', S(1)))**p_*acos(x_*WC('c', S(1)))**WC('n', S(1)), x_), cons8, cons29, cons50, cons1200, cons150, cons1739, cons349, CustomConstraint(With5209))
     rule5209 = ReplacementRule(pattern5209, replacement5209)
+
     pattern5210 = Pattern(Integral(RFx_*(a_ + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**p_, x_), cons2, cons3, cons8, cons29, cons50, cons1200, cons150, cons1739, cons349)
     rule5210 = ReplacementRule(pattern5210, replacement5210)
+
     pattern5211 = Pattern(Integral(RFx_*(a_ + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**p_, x_), cons2, cons3, cons8, cons29, cons50, cons1200, cons150, cons1739, cons349)
     rule5211 = ReplacementRule(pattern5211, replacement5211)
+
     pattern5212 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(x_*WC('c', S(1))))**WC('n', S(1))*WC('u', S(1)), x_), cons2, cons3, cons8, cons4, cons1581)
     rule5212 = ReplacementRule(pattern5212, replacement5212)
+
     pattern5213 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_*WC('c', S(1))))**WC('n', S(1))*WC('u', S(1)), x_), cons2, cons3, cons8, cons4, cons1581)
     rule5213 = ReplacementRule(pattern5213, replacement5213)
+
     pattern5214 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(c_ + x_*WC('d', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons4, cons1275)
     rule5214 = ReplacementRule(pattern5214, replacement5214)
+
     pattern5215 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(c_ + x_*WC('d', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons4, cons1275)
     rule5215 = ReplacementRule(pattern5215, replacement5215)
+
     pattern5216 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(c_ + x_*WC('d', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons4, cons1362)
     rule5216 = ReplacementRule(pattern5216, replacement5216)
+
     pattern5217 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(c_ + x_*WC('d', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons4, cons1362)
     rule5217 = ReplacementRule(pattern5217, replacement5217)
+
     pattern5218 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(c_ + x_*WC('d', S(1))))**WC('n', S(1))*(x_**S(2)*WC('C', S(1)) + x_*WC('B', S(1)) + WC('A', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons8, cons29, cons36, cons37, cons38, cons4, cons5, cons1764, cons1765)
     rule5218 = ReplacementRule(pattern5218, replacement5218)
+
     pattern5219 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(c_ + x_*WC('d', S(1))))**WC('n', S(1))*(x_**S(2)*WC('C', S(1)) + x_*WC('B', S(1)) + WC('A', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons8, cons29, cons36, cons37, cons38, cons4, cons5, cons1764, cons1765)
     rule5219 = ReplacementRule(pattern5219, replacement5219)
+
     pattern5220 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(c_ + x_*WC('d', S(1))))**WC('n', S(1))*(x_**S(2)*WC('C', S(1)) + x_*WC('B', S(1)) + WC('A', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons36, cons37, cons38, cons19, cons4, cons5, cons1764, cons1765)
     rule5220 = ReplacementRule(pattern5220, replacement5220)
+
     pattern5221 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(c_ + x_*WC('d', S(1))))**WC('n', S(1))*(x_**S(2)*WC('C', S(1)) + x_*WC('B', S(1)) + WC('A', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons36, cons37, cons38, cons19, cons4, cons5, cons1764, cons1765)
     rule5221 = ReplacementRule(pattern5221, replacement5221)
+
     pattern5222 = Pattern(Integral(sqrt(WC('a', S(0)) + WC('b', S(1))*asin(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons8, cons29, cons1766)
     rule5222 = ReplacementRule(pattern5222, replacement5222)
+
     pattern5223 = Pattern(Integral(sqrt(WC('a', S(0)) + WC('b', S(1))*acos(x_**S(2)*WC('d', S(1)) + S(1))), x_), cons2, cons3, cons29, cons1767)
     rule5223 = ReplacementRule(pattern5223, replacement5223)
+
     pattern5224 = Pattern(Integral(sqrt(WC('a', S(0)) + WC('b', S(1))*acos(x_**S(2)*WC('d', S(1)) + S(-1))), x_), cons2, cons3, cons29, cons1767)
     rule5224 = ReplacementRule(pattern5224, replacement5224)
+
     pattern5225 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(c_ + x_**S(2)*WC('d', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons1766, cons89, cons167)
     rule5225 = ReplacementRule(pattern5225, replacement5225)
+
     pattern5226 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(c_ + x_**S(2)*WC('d', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons1766, cons89, cons167)
     rule5226 = ReplacementRule(pattern5226, replacement5226)
+
     pattern5227 = Pattern(Integral(S(1)/(WC('a', S(0)) + WC('b', S(1))*asin(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons8, cons29, cons1766)
     rule5227 = ReplacementRule(pattern5227, replacement5227)
+
     pattern5228 = Pattern(Integral(S(1)/(WC('a', S(0)) + WC('b', S(1))*acos(x_**S(2)*WC('d', S(1)) + S(1))), x_), cons2, cons3, cons29, cons1767)
     rule5228 = ReplacementRule(pattern5228, replacement5228)
+
     pattern5229 = Pattern(Integral(S(1)/(WC('a', S(0)) + WC('b', S(1))*acos(x_**S(2)*WC('d', S(1)) + S(-1))), x_), cons2, cons3, cons29, cons1767)
     rule5229 = ReplacementRule(pattern5229, replacement5229)
+
     pattern5230 = Pattern(Integral(S(1)/sqrt(WC('a', S(0)) + WC('b', S(1))*asin(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons8, cons29, cons1766)
     rule5230 = ReplacementRule(pattern5230, replacement5230)
+
     pattern5231 = Pattern(Integral(S(1)/sqrt(WC('a', S(0)) + WC('b', S(1))*acos(x_**S(2)*WC('d', S(1)) + S(1))), x_), cons2, cons3, cons29, cons1767)
     rule5231 = ReplacementRule(pattern5231, replacement5231)
+
     pattern5232 = Pattern(Integral(S(1)/sqrt(WC('a', S(0)) + WC('b', S(1))*acos(x_**S(2)*WC('d', S(1)) + S(-1))), x_), cons2, cons3, cons29, cons1767)
     rule5232 = ReplacementRule(pattern5232, replacement5232)
+
     pattern5233 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(c_ + x_**S(2)*WC('d', S(1))))**(S(-3)/2), x_), cons2, cons3, cons8, cons29, cons1766)
     rule5233 = ReplacementRule(pattern5233, replacement5233)
+
     pattern5234 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_**S(2)*WC('d', S(1)) + S(1)))**(S(-3)/2), x_), cons2, cons3, cons29, cons1767)
     rule5234 = ReplacementRule(pattern5234, replacement5234)
+
     pattern5235 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_**S(2)*WC('d', S(1)) + S(-1)))**(S(-3)/2), x_), cons2, cons3, cons29, cons1767)
     rule5235 = ReplacementRule(pattern5235, replacement5235)
+
     pattern5236 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(c_ + x_**S(2)*WC('d', S(1))))**(S(-2)), x_), cons2, cons3, cons8, cons29, cons1766)
     rule5236 = ReplacementRule(pattern5236, replacement5236)
+
     pattern5237 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_**S(2)*WC('d', S(1)) + S(1)))**(S(-2)), x_), cons2, cons3, cons29, cons1767)
     rule5237 = ReplacementRule(pattern5237, replacement5237)
+
     pattern5238 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(x_**S(2)*WC('d', S(1)) + S(-1)))**(S(-2)), x_), cons2, cons3, cons29, cons1767)
     rule5238 = ReplacementRule(pattern5238, replacement5238)
+
     pattern5239 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asin(c_ + x_**S(2)*WC('d', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons1766, cons89, cons91, cons1444)
     rule5239 = ReplacementRule(pattern5239, replacement5239)
+
     pattern5240 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acos(c_ + x_**S(2)*WC('d', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons1766, cons89, cons91, cons1444)
     rule5240 = ReplacementRule(pattern5240, replacement5240)
+
     pattern5241 = Pattern(Integral(asin(x_**p_*WC('a', S(1)))**WC('n', S(1))/x_, x_), cons2, cons5, cons150)
     rule5241 = ReplacementRule(pattern5241, replacement5241)
+
     pattern5242 = Pattern(Integral(acos(x_**p_*WC('a', S(1)))**WC('n', S(1))/x_, x_), cons2, cons5, cons150)
     rule5242 = ReplacementRule(pattern5242, replacement5242)
+
     pattern5243 = Pattern(Integral(WC('u', S(1))*asin(WC('c', S(1))/(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0))))**WC('m', S(1)), x_), cons2, cons3, cons8, cons4, cons19, cons1768)
     rule5243 = ReplacementRule(pattern5243, replacement5243)
+
     pattern5244 = Pattern(Integral(WC('u', S(1))*acos(WC('c', S(1))/(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0))))**WC('m', S(1)), x_), cons2, cons3, cons8, cons4, cons19, cons1768)
     rule5244 = ReplacementRule(pattern5244, replacement5244)
+
     pattern5245 = Pattern(Integral(asin(sqrt(x_**S(2)*WC('b', S(1)) + S(1)))**WC('n', S(1))/sqrt(x_**S(2)*WC('b', S(1)) + S(1)), x_), cons3, cons4, cons1769)
     rule5245 = ReplacementRule(pattern5245, replacement5245)
+
     pattern5246 = Pattern(Integral(acos(sqrt(x_**S(2)*WC('b', S(1)) + S(1)))**WC('n', S(1))/sqrt(x_**S(2)*WC('b', S(1)) + S(1)), x_), cons3, cons4, cons1769)
     rule5246 = ReplacementRule(pattern5246, replacement5246)
+
     pattern5247 = Pattern(Integral(f_**(WC('c', S(1))*asin(x_*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)))*WC('u', S(1)), x_), cons2, cons3, cons8, cons127, cons150)
     rule5247 = ReplacementRule(pattern5247, replacement5247)
+
     pattern5248 = Pattern(Integral(f_**(WC('c', S(1))*acos(x_*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)))*WC('u', S(1)), x_), cons2, cons3, cons8, cons127, cons150)
     rule5248 = ReplacementRule(pattern5248, replacement5248)
+
     pattern5249 = Pattern(Integral(asin(x_**S(2)*WC('a', S(1)) + sqrt(c_ + x_**S(2)*WC('d', S(1)))*WC('b', S(1))), x_), cons2, cons3, cons8, cons29, cons1770)
     rule5249 = ReplacementRule(pattern5249, replacement5249)
+
     pattern5250 = Pattern(Integral(acos(x_**S(2)*WC('a', S(1)) + sqrt(c_ + x_**S(2)*WC('d', S(1)))*WC('b', S(1))), x_), cons2, cons3, cons8, cons29, cons1770)
     rule5250 = ReplacementRule(pattern5250, replacement5250)
+
     pattern5251 = Pattern(Integral(asin(u_), x_), cons1232, cons1771)
     rule5251 = ReplacementRule(pattern5251, replacement5251)
+
     pattern5252 = Pattern(Integral(acos(u_), x_), cons1232, cons1771)
     rule5252 = ReplacementRule(pattern5252, replacement5252)
+
     pattern5253 = Pattern(Integral((x_*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asin(u_)), x_), cons2, cons3, cons8, cons29, cons19, cons68, cons1232, cons1772, cons1771)
     rule5253 = ReplacementRule(pattern5253, replacement5253)
+
     pattern5254 = Pattern(Integral((x_*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acos(u_)), x_), cons2, cons3, cons8, cons29, cons19, cons68, cons1232, cons1772, cons1771)
     rule5254 = ReplacementRule(pattern5254, replacement5254)
 
@@ -621,134 +808,199 @@ def inverse_trig(rubi):
 
     pattern5256 = Pattern(Integral(v_*(WC('a', S(0)) + WC('b', S(1))*acos(u_)), x_), cons2, cons3, cons1232, cons1774, CustomConstraint(With5256))
     rule5256 = ReplacementRule(pattern5256, replacement5256)
+
     pattern5257 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons150)
     rule5257 = ReplacementRule(pattern5257, replacement5257)
+
     pattern5258 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons150)
     rule5258 = ReplacementRule(pattern5258, replacement5258)
+
     pattern5259 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_, x_), cons2, cons3, cons8, cons4, cons342)
     rule5259 = ReplacementRule(pattern5259, replacement5259)
+
     pattern5260 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons4, cons342)
     rule5260 = ReplacementRule(pattern5260, replacement5260)
+
     pattern5261 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(d_ + x_*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1775, cons150)
     rule5261 = ReplacementRule(pattern5261, replacement5261)
+
     pattern5262 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1775, cons150)
     rule5262 = ReplacementRule(pattern5262, replacement5262)
+
     pattern5263 = Pattern(Integral(ArcTan(x_*WC('c', S(1)))/(d_ + x_*WC('e', S(1))), x_), cons8, cons29, cons50, cons1776, cons1777)
     rule5263 = ReplacementRule(pattern5263, replacement5263)
+
     pattern5264 = Pattern(Integral(ArcTan(x_*WC('c', S(1)))/(x_*WC('e', S(1)) + WC('d', S(0))), x_), cons8, cons29, cons50, cons1778)
     rule5264 = ReplacementRule(pattern5264, replacement5264)
+
     pattern5265 = Pattern(Integral(acot(x_*WC('c', S(1)))/(x_*WC('e', S(1)) + WC('d', S(0))), x_), cons8, cons29, cons50, cons1778)
     rule5265 = ReplacementRule(pattern5265, replacement5265)
+
     pattern5266 = Pattern(Integral((a_ + ArcTan(x_*WC('c', S(1)))*WC('b', S(1)))/(x_*WC('e', S(1)) + WC('d', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons1045)
     rule5266 = ReplacementRule(pattern5266, replacement5266)
+
     pattern5267 = Pattern(Integral((a_ + WC('b', S(1))*acot(x_*WC('c', S(1))))/(x_*WC('e', S(1)) + WC('d', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons1045)
     rule5267 = ReplacementRule(pattern5267, replacement5267)
+
     pattern5268 = Pattern(Integral((x_*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons56)
     rule5268 = ReplacementRule(pattern5268, replacement5268)
+
     pattern5269 = Pattern(Integral((x_*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons56)
     rule5269 = ReplacementRule(pattern5269, replacement5269)
+
     pattern5270 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_/x_, x_), cons2, cons3, cons8, cons87, cons167)
     rule5270 = ReplacementRule(pattern5270, replacement5270)
+
     pattern5271 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_/x_, x_), cons2, cons3, cons8, cons87, cons167)
     rule5271 = ReplacementRule(pattern5271, replacement5271)
+
     pattern5272 = Pattern(Integral(x_**WC('m', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_, x_), cons2, cons3, cons8, cons19, cons87, cons167, cons68)
     rule5272 = ReplacementRule(pattern5272, replacement5272)
+
     pattern5273 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons19, cons87, cons167, cons68)
     rule5273 = ReplacementRule(pattern5273, replacement5273)
+
     pattern5274 = Pattern(Integral((d_ + x_*WC('e', S(1)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons466)
     rule5274 = ReplacementRule(pattern5274, replacement5274)
+
     pattern5275 = Pattern(Integral((d_ + x_*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons466)
     rule5275 = ReplacementRule(pattern5275, replacement5275)
+
     pattern5276 = Pattern(Integral((x_*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1572)
     rule5276 = ReplacementRule(pattern5276, replacement5276)
+
     pattern5277 = Pattern(Integral((x_*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1572)
     rule5277 = ReplacementRule(pattern5277, replacement5277)
+
     pattern5278 = Pattern(Integral(x_**WC('m', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(d_ + x_*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1775, cons150, cons33, cons170)
     rule5278 = ReplacementRule(pattern5278, replacement5278)
+
     pattern5279 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1775, cons150, cons33, cons170)
     rule5279 = ReplacementRule(pattern5279, replacement5279)
+
     pattern5280 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(x_*(d_ + x_*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1775, cons150)
     rule5280 = ReplacementRule(pattern5280, replacement5280)
+
     pattern5281 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(x_*(d_ + x_*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1775, cons150)
     rule5281 = ReplacementRule(pattern5281, replacement5281)
+
     pattern5282 = Pattern(Integral(x_**m_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(d_ + x_*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1775, cons150, cons33, cons96)
     rule5282 = ReplacementRule(pattern5282, replacement5282)
+
     pattern5283 = Pattern(Integral(x_**m_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1775, cons150, cons33, cons96)
     rule5283 = ReplacementRule(pattern5283, replacement5283)
+
     pattern5284 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_*WC('e', S(1)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons40, cons150, cons1779)
     rule5284 = ReplacementRule(pattern5284, replacement5284)
+
     pattern5285 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons40, cons150, cons1779)
     rule5285 = ReplacementRule(pattern5285, replacement5285)
+
     pattern5286 = Pattern(Integral(x_**WC('m', S(1))*(x_*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons4, cons5, cons1499)
     rule5286 = ReplacementRule(pattern5286, replacement5286)
+
     pattern5287 = Pattern(Integral(x_**WC('m', S(1))*(x_*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons4, cons5, cons1499)
     rule5287 = ReplacementRule(pattern5287, replacement5287)
+
     pattern5288 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons13, cons165)
     rule5288 = ReplacementRule(pattern5288, replacement5288)
+
     pattern5289 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons13, cons165)
     rule5289 = ReplacementRule(pattern5289, replacement5289)
+
     pattern5290 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons340, cons165, cons167)
     rule5290 = ReplacementRule(pattern5290, replacement5290)
+
     pattern5291 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons340, cons165, cons167)
     rule5291 = ReplacementRule(pattern5291, replacement5291)
+
     pattern5292 = Pattern(Integral(S(1)/((d_ + x_**S(2)*WC('e', S(1)))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780)
     rule5292 = ReplacementRule(pattern5292, replacement5292)
+
     pattern5293 = Pattern(Integral(S(1)/((d_ + x_**S(2)*WC('e', S(1)))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))), x_), cons2, cons3, cons8, cons29, cons50, cons1780)
     rule5293 = ReplacementRule(pattern5293, replacement5293)
+
     pattern5294 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1780, cons586)
     rule5294 = ReplacementRule(pattern5294, replacement5294)
+
     pattern5295 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1780, cons586)
     rule5295 = ReplacementRule(pattern5295, replacement5295)
+
     pattern5296 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons270)
     rule5296 = ReplacementRule(pattern5296, replacement5296)
+
     pattern5297 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons270)
     rule5297 = ReplacementRule(pattern5297, replacement5297)
+
     pattern5298 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons150, cons270)
     rule5298 = ReplacementRule(pattern5298, replacement5298)
+
     pattern5299 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons150, cons270)
     rule5299 = ReplacementRule(pattern5299, replacement5299)
+
     pattern5300 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons150, cons1740)
     rule5300 = ReplacementRule(pattern5300, replacement5300)
+
     pattern5301 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons150, cons1740)
     rule5301 = ReplacementRule(pattern5301, replacement5301)
+
     pattern5302 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1)))**S(2), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90)
     rule5302 = ReplacementRule(pattern5302, replacement5302)
+
     pattern5303 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1)))**S(2), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90)
     rule5303 = ReplacementRule(pattern5303, replacement5303)
+
     pattern5304 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))/(d_ + x_**S(2)*WC('e', S(1)))**(S(3)/2), x_), cons2, cons3, cons8, cons29, cons50, cons1780)
     rule5304 = ReplacementRule(pattern5304, replacement5304)
+
     pattern5305 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))/(d_ + x_**S(2)*WC('e', S(1)))**(S(3)/2), x_), cons2, cons3, cons8, cons29, cons50, cons1780)
     rule5305 = ReplacementRule(pattern5305, replacement5305)
+
     pattern5306 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons13, cons139, cons232)
     rule5306 = ReplacementRule(pattern5306, replacement5306)
+
     pattern5307 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons13, cons139, cons232)
     rule5307 = ReplacementRule(pattern5307, replacement5307)
+
     pattern5308 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_/(d_ + x_**S(2)*WC('e', S(1)))**(S(3)/2), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons167)
     rule5308 = ReplacementRule(pattern5308, replacement5308)
+
     pattern5309 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_/(d_ + x_**S(2)*WC('e', S(1)))**(S(3)/2), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons167)
     rule5309 = ReplacementRule(pattern5309, replacement5309)
+
     pattern5310 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons340, cons139, cons167, cons232)
     rule5310 = ReplacementRule(pattern5310, replacement5310)
+
     pattern5311 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons340, cons139, cons167, cons232)
     rule5311 = ReplacementRule(pattern5311, replacement5311)
+
     pattern5312 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons340, cons139, cons91)
     rule5312 = ReplacementRule(pattern5312, replacement5312)
+
     pattern5313 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons340, cons139, cons91)
     rule5313 = ReplacementRule(pattern5313, replacement5313)
+
     pattern5314 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1780, cons1781, cons1742)
     rule5314 = ReplacementRule(pattern5314, replacement5314)
+
     pattern5315 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1780, cons1781, cons1743)
     rule5315 = ReplacementRule(pattern5315, replacement5315)
+
     pattern5316 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1780, cons1781, cons40)
     rule5316 = ReplacementRule(pattern5316, replacement5316)
+
     pattern5317 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1780, cons1781, cons149)
     rule5317 = ReplacementRule(pattern5317, replacement5317)
+
     pattern5318 = Pattern(Integral(ArcTan(x_*WC('c', S(1)))/(x_**S(2)*WC('e', S(1)) + WC('d', S(0))), x_), cons8, cons29, cons50, cons1778)
     rule5318 = ReplacementRule(pattern5318, replacement5318)
+
     pattern5319 = Pattern(Integral(acot(x_*WC('c', S(1)))/(x_**S(2)*WC('e', S(1)) + WC('d', S(0))), x_), cons8, cons29, cons50, cons1778)
     rule5319 = ReplacementRule(pattern5319, replacement5319)
+
     pattern5320 = Pattern(Integral((a_ + ArcTan(x_*WC('c', S(1)))*WC('b', S(1)))/(x_**S(2)*WC('e', S(1)) + WC('d', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons1045)
     rule5320 = ReplacementRule(pattern5320, replacement5320)
+
     pattern5321 = Pattern(Integral((a_ + WC('b', S(1))*acot(x_*WC('c', S(1))))/(x_**S(2)*WC('e', S(1)) + WC('d', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons1045)
     rule5321 = ReplacementRule(pattern5321, replacement5321)
 
@@ -757,140 +1009,208 @@ def inverse_trig(rubi):
 
     pattern5323 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1782)
     rule5323 = ReplacementRule(pattern5323, With5323)
+
     pattern5324 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons40, cons150)
     rule5324 = ReplacementRule(pattern5324, replacement5324)
+
     pattern5325 = Pattern(Integral((d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons40, cons150)
     rule5325 = ReplacementRule(pattern5325, replacement5325)
+
     pattern5326 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1572)
     rule5326 = ReplacementRule(pattern5326, replacement5326)
+
     pattern5327 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1572)
     rule5327 = ReplacementRule(pattern5327, replacement5327)
+
     pattern5328 = Pattern(Integral(x_**m_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons95, cons90, cons168)
     rule5328 = ReplacementRule(pattern5328, replacement5328)
+
     pattern5329 = Pattern(Integral(x_**m_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons95, cons90, cons168)
     rule5329 = ReplacementRule(pattern5329, replacement5329)
+
     pattern5330 = Pattern(Integral(x_**m_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons95, cons90, cons96)
     rule5330 = ReplacementRule(pattern5330, replacement5330)
+
     pattern5331 = Pattern(Integral(x_**m_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons95, cons90, cons96)
     rule5331 = ReplacementRule(pattern5331, replacement5331)
+
     pattern5332 = Pattern(Integral(x_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons150)
     rule5332 = ReplacementRule(pattern5332, replacement5332)
+
     pattern5333 = Pattern(Integral(x_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons150)
     rule5333 = ReplacementRule(pattern5333, replacement5333)
+
     pattern5334 = Pattern(Integral(x_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons342, cons586)
     rule5334 = ReplacementRule(pattern5334, replacement5334)
+
     pattern5335 = Pattern(Integral(x_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons342, cons586)
     rule5335 = ReplacementRule(pattern5335, replacement5335)
+
     pattern5336 = Pattern(Integral(x_**m_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons95, cons90, cons168)
     rule5336 = ReplacementRule(pattern5336, replacement5336)
+
     pattern5337 = Pattern(Integral(x_**m_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons95, cons90, cons168)
     rule5337 = ReplacementRule(pattern5337, replacement5337)
+
     pattern5338 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(x_*(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90)
     rule5338 = ReplacementRule(pattern5338, replacement5338)
+
     pattern5339 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(x_*(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90)
     rule5339 = ReplacementRule(pattern5339, replacement5339)
+
     pattern5340 = Pattern(Integral(x_**m_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons95, cons90, cons96)
     rule5340 = ReplacementRule(pattern5340, replacement5340)
+
     pattern5341 = Pattern(Integral(x_**m_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons95, cons90, cons96)
     rule5341 = ReplacementRule(pattern5341, replacement5341)
+
     pattern5342 = Pattern(Integral(x_**m_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1780, cons89, cons91)
     rule5342 = ReplacementRule(pattern5342, replacement5342)
+
     pattern5343 = Pattern(Integral(x_**m_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1780, cons89, cons91)
     rule5343 = ReplacementRule(pattern5343, replacement5343)
+
     pattern5344 = Pattern(Integral(x_**WC('m', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons20, cons1783)
     rule5344 = ReplacementRule(pattern5344, replacement5344)
+
     pattern5345 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons20, cons1783)
     rule5345 = ReplacementRule(pattern5345, replacement5345)
+
     pattern5346 = Pattern(Integral(x_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1780, cons89, cons90, cons56)
     rule5346 = ReplacementRule(pattern5346, replacement5346)
+
     pattern5347 = Pattern(Integral(x_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1780, cons89, cons90, cons56)
     rule5347 = ReplacementRule(pattern5347, replacement5347)
+
     pattern5348 = Pattern(Integral(x_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_/(d_ + x_**S(2)*WC('e', S(1)))**S(2), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons91, cons1444)
     rule5348 = ReplacementRule(pattern5348, replacement5348)
+
     pattern5349 = Pattern(Integral(x_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_/(d_ + x_**S(2)*WC('e', S(1)))**S(2), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons91, cons1444)
     rule5349 = ReplacementRule(pattern5349, replacement5349)
+
     pattern5350 = Pattern(Integral(x_**S(2)*(d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons13, cons139, cons1784)
     rule5350 = ReplacementRule(pattern5350, replacement5350)
+
     pattern5351 = Pattern(Integral(x_**S(2)*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons13, cons139, cons1784)
     rule5351 = ReplacementRule(pattern5351, replacement5351)
+
     pattern5352 = Pattern(Integral(x_**S(2)*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1)))**S(2), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90)
     rule5352 = ReplacementRule(pattern5352, replacement5352)
+
     pattern5353 = Pattern(Integral(x_**S(2)*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1)))**S(2), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90)
     rule5353 = ReplacementRule(pattern5353, replacement5353)
+
     pattern5354 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons242, cons13, cons139)
     rule5354 = ReplacementRule(pattern5354, replacement5354)
+
     pattern5355 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons242, cons13, cons139)
     rule5355 = ReplacementRule(pattern5355, replacement5355)
+
     pattern5356 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1780, cons242, cons340, cons139, cons167)
     rule5356 = ReplacementRule(pattern5356, replacement5356)
+
     pattern5357 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1780, cons242, cons340, cons139, cons167)
     rule5357 = ReplacementRule(pattern5357, replacement5357)
+
     pattern5358 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons19, cons5, cons1780, cons242, cons89, cons91)
     rule5358 = ReplacementRule(pattern5358, replacement5358)
+
     pattern5359 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons19, cons5, cons1780, cons242, cons89, cons91)
     rule5359 = ReplacementRule(pattern5359, replacement5359)
+
     pattern5360 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons5, cons1780, cons244, cons89, cons90, cons68)
     rule5360 = ReplacementRule(pattern5360, replacement5360)
+
     pattern5361 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons5, cons1780, cons244, cons89, cons90, cons68)
     rule5361 = ReplacementRule(pattern5361, replacement5361)
+
     pattern5362 = Pattern(Integral(x_**m_*sqrt(d_ + x_**S(2)*WC('e', S(1)))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1780, cons243)
     rule5362 = ReplacementRule(pattern5362, replacement5362)
+
     pattern5363 = Pattern(Integral(x_**m_*sqrt(d_ + x_**S(2)*WC('e', S(1)))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1780, cons243)
     rule5363 = ReplacementRule(pattern5363, replacement5363)
+
     pattern5364 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1780, cons150, cons40, cons148)
     rule5364 = ReplacementRule(pattern5364, replacement5364)
+
     pattern5365 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1780, cons150, cons40, cons148)
     rule5365 = ReplacementRule(pattern5365, replacement5365)
+
     pattern5366 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1780, cons13, cons165, cons150, cons1785)
     rule5366 = ReplacementRule(pattern5366, replacement5366)
+
     pattern5367 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1780, cons13, cons165, cons150, cons1785)
     rule5367 = ReplacementRule(pattern5367, replacement5367)
+
     pattern5368 = Pattern(Integral(x_**m_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons95, cons90, cons168)
     rule5368 = ReplacementRule(pattern5368, replacement5368)
+
     pattern5369 = Pattern(Integral(x_**m_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons95, cons90, cons168)
     rule5369 = ReplacementRule(pattern5369, replacement5369)
+
     pattern5370 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))/(x_*sqrt(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons270)
     rule5370 = ReplacementRule(pattern5370, replacement5370)
+
     pattern5371 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))/(x_*sqrt(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons270)
     rule5371 = ReplacementRule(pattern5371, replacement5371)
+
     pattern5372 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_/(x_*sqrt(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons150, cons270)
     rule5372 = ReplacementRule(pattern5372, replacement5372)
+
     pattern5373 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**n_/(x_*sqrt(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons150, cons270)
     rule5373 = ReplacementRule(pattern5373, replacement5373)
+
     pattern5374 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(x_*sqrt(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons150, cons1740)
     rule5374 = ReplacementRule(pattern5374, replacement5374)
+
     pattern5375 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(x_*sqrt(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons150, cons1740)
     rule5375 = ReplacementRule(pattern5375, replacement5375)
+
     pattern5376 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(x_**S(2)*sqrt(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90)
     rule5376 = ReplacementRule(pattern5376, replacement5376)
+
     pattern5377 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(x_**S(2)*sqrt(d_ + x_**S(2)*WC('e', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90)
     rule5377 = ReplacementRule(pattern5377, replacement5377)
+
     pattern5378 = Pattern(Integral(x_**m_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons95, cons90, cons96, cons1512)
     rule5378 = ReplacementRule(pattern5378, replacement5378)
+
     pattern5379 = Pattern(Integral(x_**m_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/sqrt(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons95, cons90, cons96, cons1512)
     rule5379 = ReplacementRule(pattern5379, replacement5379)
+
     pattern5380 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons1786, cons139, cons168, cons1154)
     rule5380 = ReplacementRule(pattern5380, replacement5380)
+
     pattern5381 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons1786, cons139, cons168, cons1154)
     rule5381 = ReplacementRule(pattern5381, replacement5381)
+
     pattern5382 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons1786, cons139, cons269, cons1154)
     rule5382 = ReplacementRule(pattern5382, replacement5382)
+
     pattern5383 = Pattern(Integral(x_**m_*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons1786, cons139, cons269, cons1154)
     rule5383 = ReplacementRule(pattern5383, replacement5383)
+
     pattern5384 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons164, cons139, cons91, cons321)
     rule5384 = ReplacementRule(pattern5384, replacement5384)
+
     pattern5385 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons164, cons139, cons91, cons321)
     rule5385 = ReplacementRule(pattern5385, replacement5385)
+
     pattern5386 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1780, cons64, cons1787, cons1742)
     rule5386 = ReplacementRule(pattern5386, replacement5386)
+
     pattern5387 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**p_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1780, cons64, cons1787, cons1743)
     rule5387 = ReplacementRule(pattern5387, replacement5387)
+
     pattern5388 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1780, cons64, cons1787, cons40)
     rule5388 = ReplacementRule(pattern5388, replacement5388)
+
     pattern5389 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**p_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1780, cons64, cons1787, cons149)
     rule5389 = ReplacementRule(pattern5389, replacement5389)
+
     pattern5390 = Pattern(Integral(x_*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons56)
     rule5390 = ReplacementRule(pattern5390, replacement5390)
+
     pattern5391 = Pattern(Integral(x_*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons56)
     rule5391 = ReplacementRule(pattern5391, replacement5391)
 
@@ -899,58 +1219,85 @@ def inverse_trig(rubi):
 
     pattern5393 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons5, cons1788)
     rule5393 = ReplacementRule(pattern5393, With5393)
+
     pattern5394 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons40, cons150, cons1789)
     rule5394 = ReplacementRule(pattern5394, replacement5394)
+
     pattern5395 = Pattern(Integral(x_**WC('m', S(1))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons40, cons150, cons1789)
     rule5395 = ReplacementRule(pattern5395, replacement5395)
+
     pattern5396 = Pattern(Integral(x_**WC('m', S(1))*(a_ + ArcTan(x_*WC('c', S(1)))*WC('b', S(1)))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons5, cons1790)
     rule5396 = ReplacementRule(pattern5396, replacement5396)
+
     pattern5397 = Pattern(Integral(x_**WC('m', S(1))*(a_ + WC('b', S(1))*acot(x_*WC('c', S(1))))*(d_ + x_**S(2)*WC('e', S(1)))**WC('p', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons5, cons1790)
     rule5397 = ReplacementRule(pattern5397, replacement5397)
+
     pattern5398 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons4, cons5, cons1499)
     rule5398 = ReplacementRule(pattern5398, replacement5398)
+
     pattern5399 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons4, cons5, cons1499)
     rule5399 = ReplacementRule(pattern5399, replacement5399)
+
     pattern5400 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))*atanh(u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90, cons1791)
     rule5400 = ReplacementRule(pattern5400, replacement5400)
+
     pattern5401 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))*acoth(u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90, cons1791)
     rule5401 = ReplacementRule(pattern5401, replacement5401)
+
     pattern5402 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))*atanh(u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90, cons1792)
     rule5402 = ReplacementRule(pattern5402, replacement5402)
+
     pattern5403 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))*acoth(u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90, cons1792)
     rule5403 = ReplacementRule(pattern5403, replacement5403)
+
     pattern5404 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))*log(u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90, cons1793)
     rule5404 = ReplacementRule(pattern5404, replacement5404)
+
     pattern5405 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))*log(u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90, cons1793)
     rule5405 = ReplacementRule(pattern5405, replacement5405)
+
     pattern5406 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))*log(u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90, cons1794)
     rule5406 = ReplacementRule(pattern5406, replacement5406)
+
     pattern5407 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))*log(u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons89, cons90, cons1794)
     rule5407 = ReplacementRule(pattern5407, replacement5407)
+
     pattern5408 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))*PolyLog(p_, u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1780, cons89, cons90, cons1791)
     rule5408 = ReplacementRule(pattern5408, replacement5408)
+
     pattern5409 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))*PolyLog(p_, u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1780, cons89, cons90, cons1791)
     rule5409 = ReplacementRule(pattern5409, replacement5409)
+
     pattern5410 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))*PolyLog(p_, u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1780, cons89, cons90, cons1792)
     rule5410 = ReplacementRule(pattern5410, replacement5410)
+
     pattern5411 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))*PolyLog(p_, u_)/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons1780, cons89, cons90, cons1792)
     rule5411 = ReplacementRule(pattern5411, replacement5411)
+
     pattern5412 = Pattern(Integral(S(1)/((d_ + x_**S(2)*WC('e', S(1)))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))), x_), cons2, cons3, cons8, cons29, cons50, cons1780)
     rule5412 = ReplacementRule(pattern5412, replacement5412)
+
     pattern5413 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('m', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons152, cons1795)
     rule5413 = ReplacementRule(pattern5413, replacement5413)
+
     pattern5414 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**WC('n', S(1))/(d_ + x_**S(2)*WC('e', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons1780, cons152, cons1796)
     rule5414 = ReplacementRule(pattern5414, replacement5414)
+
     pattern5415 = Pattern(Integral(ArcTan(x_*WC('a', S(1)))/(c_ + x_**WC('n', S(1))*WC('d', S(1))), x_), cons2, cons8, cons29, cons87, cons1797)
     rule5415 = ReplacementRule(pattern5415, replacement5415)
+
     pattern5416 = Pattern(Integral(acot(x_*WC('a', S(1)))/(c_ + x_**WC('n', S(1))*WC('d', S(1))), x_), cons2, cons8, cons29, cons87, cons1797)
     rule5416 = ReplacementRule(pattern5416, replacement5416)
+
     pattern5417 = Pattern(Integral((ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))*(WC('d', S(0)) + WC('e', S(1))*log(x_**S(2)*WC('g', S(1)) + WC('f', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1798)
     rule5417 = ReplacementRule(pattern5417, replacement5417)
+
     pattern5418 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))*(WC('d', S(0)) + WC('e', S(1))*log(x_**S(2)*WC('g', S(1)) + WC('f', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1798)
     rule5418 = ReplacementRule(pattern5418, replacement5418)
+
     pattern5419 = Pattern(Integral(x_**WC('m', S(1))*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))*(WC('d', S(0)) + WC('e', S(1))*log(x_**S(2)*WC('g', S(1)) + WC('f', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons603)
     rule5419 = ReplacementRule(pattern5419, replacement5419)
+
     pattern5420 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))*(WC('d', S(0)) + WC('e', S(1))*log(x_**S(2)*WC('g', S(1)) + WC('f', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons603)
     rule5420 = ReplacementRule(pattern5420, replacement5420)
 
@@ -965,232 +1312,346 @@ def inverse_trig(rubi):
 
     pattern5424 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))*(WC('d', S(0)) + WC('e', S(1))*log(x_**S(2)*WC('g', S(1)) + WC('f', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons20, cons263)
     rule5424 = ReplacementRule(pattern5424, With5424)
+
     pattern5425 = Pattern(Integral(x_*(ArcTan(x_*WC('c', S(1)))*WC('b', S(1)) + WC('a', S(0)))**S(2)*(WC('d', S(0)) + WC('e', S(1))*log(f_ + x_**S(2)*WC('g', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1800)
     rule5425 = ReplacementRule(pattern5425, replacement5425)
+
     pattern5426 = Pattern(Integral(x_*(WC('a', S(0)) + WC('b', S(1))*acot(x_*WC('c', S(1))))**S(2)*(WC('d', S(0)) + WC('e', S(1))*log(f_ + x_**S(2)*WC('g', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons1800)
     rule5426 = ReplacementRule(pattern5426, replacement5426)
+
     pattern5427 = Pattern(Integral(exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons1801)
     rule5427 = ReplacementRule(pattern5427, replacement5427)
+
     pattern5428 = Pattern(Integral(x_**WC('m', S(1))*exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons19, cons1801)
     rule5428 = ReplacementRule(pattern5428, replacement5428)
+
     pattern5429 = Pattern(Integral(exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons4, cons1802)
     rule5429 = ReplacementRule(pattern5429, replacement5429)
+
     pattern5430 = Pattern(Integral(x_**WC('m', S(1))*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons19, cons4, cons1802)
     rule5430 = ReplacementRule(pattern5430, replacement5430)
+
     pattern5431 = Pattern(Integral((c_ + x_*WC('d', S(1)))**WC('p', S(1))*WC('u', S(1))*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons5, cons1803, cons1804)
     rule5431 = ReplacementRule(pattern5431, replacement5431)
+
     pattern5432 = Pattern(Integral((c_ + x_*WC('d', S(1)))**WC('p', S(1))*WC('u', S(1))*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons5, cons1803, cons1805)
     rule5432 = ReplacementRule(pattern5432, replacement5432)
+
     pattern5433 = Pattern(Integral((c_ + WC('d', S(1))/x_)**WC('p', S(1))*WC('u', S(1))*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons1806, cons40)
     rule5433 = ReplacementRule(pattern5433, replacement5433)
+
     pattern5434 = Pattern(Integral((c_ + WC('d', S(1))/x_)**p_*WC('u', S(1))*exp(n_*atanh(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons5, cons1806, cons149, cons1807, cons179)
     rule5434 = ReplacementRule(pattern5434, replacement5434)
+
     pattern5435 = Pattern(Integral((c_ + WC('d', S(1))/x_)**p_*WC('u', S(1))*exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons5, cons1806, cons149, cons1807, cons119)
     rule5435 = ReplacementRule(pattern5435, replacement5435)
+
     pattern5436 = Pattern(Integral((c_ + WC('d', S(1))/x_)**p_*WC('u', S(1))*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons5, cons1806, cons149)
     rule5436 = ReplacementRule(pattern5436, replacement5436)
+
     pattern5437 = Pattern(Integral(exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1)))/(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2), x_), cons2, cons8, cons29, cons4, cons1808, cons1809)
     rule5437 = ReplacementRule(pattern5437, replacement5437)
+
     pattern5438 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**p_*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons1808, cons13, cons139, cons1809, cons1810, cons248)
     rule5438 = ReplacementRule(pattern5438, replacement5438)
+
     pattern5439 = Pattern(Integral(exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1)))/(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons8, cons29, cons4, cons1808)
     rule5439 = ReplacementRule(pattern5439, replacement5439)
+
     pattern5440 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**WC('p', S(1))*exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons5, cons1808, cons40, cons1811, cons1812)
     rule5440 = ReplacementRule(pattern5440, replacement5440)
+
     pattern5441 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**WC('p', S(1))*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons5, cons1808, cons1804)
     rule5441 = ReplacementRule(pattern5441, replacement5441)
+
     pattern5442 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**p_*exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons5, cons1808, cons1805, cons1813)
     rule5442 = ReplacementRule(pattern5442, replacement5442)
+
     pattern5443 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**p_*exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons5, cons1808, cons1805, cons1814)
     rule5443 = ReplacementRule(pattern5443, replacement5443)
+
     pattern5444 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**p_*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons5, cons1808, cons1805)
     rule5444 = ReplacementRule(pattern5444, replacement5444)
+
     pattern5445 = Pattern(Integral(x_*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1)))/(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2), x_), cons2, cons8, cons29, cons4, cons1808, cons1809)
     rule5445 = ReplacementRule(pattern5445, replacement5445)
+
     pattern5446 = Pattern(Integral(x_*(c_ + x_**S(2)*WC('d', S(1)))**p_*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons1808, cons13, cons139, cons1809, cons248)
     rule5446 = ReplacementRule(pattern5446, replacement5446)
+
     pattern5447 = Pattern(Integral(x_**S(2)*(c_ + x_**S(2)*WC('d', S(1)))**WC('p', S(1))*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons1808, cons1815, cons1809)
     rule5447 = ReplacementRule(pattern5447, replacement5447)
+
     pattern5448 = Pattern(Integral(x_**S(2)*(c_ + x_**S(2)*WC('d', S(1)))**p_*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons1808, cons13, cons139, cons1809, cons1810, cons248)
     rule5448 = ReplacementRule(pattern5448, replacement5448)
+
     pattern5449 = Pattern(Integral(x_**WC('m', S(1))*(c_ + x_**S(2)*WC('d', S(1)))**WC('p', S(1))*exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons19, cons5, cons1808, cons1804, cons1811, cons1812)
     rule5449 = ReplacementRule(pattern5449, replacement5449)
+
     pattern5450 = Pattern(Integral(x_**WC('m', S(1))*(c_ + x_**S(2)*WC('d', S(1)))**WC('p', S(1))*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons19, cons4, cons5, cons1808, cons1804)
     rule5450 = ReplacementRule(pattern5450, replacement5450)
+
     pattern5451 = Pattern(Integral(x_**WC('m', S(1))*(c_ + x_**S(2)*WC('d', S(1)))**p_*exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons19, cons5, cons1808, cons1805, cons1813)
     rule5451 = ReplacementRule(pattern5451, replacement5451)
+
     pattern5452 = Pattern(Integral(x_**WC('m', S(1))*(c_ + x_**S(2)*WC('d', S(1)))**p_*exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons19, cons5, cons1808, cons1805, cons1814)
     rule5452 = ReplacementRule(pattern5452, replacement5452)
+
     pattern5453 = Pattern(Integral(x_**WC('m', S(1))*(c_ + x_**S(2)*WC('d', S(1)))**p_*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons19, cons4, cons5, cons1808, cons1805)
     rule5453 = ReplacementRule(pattern5453, replacement5453)
+
     pattern5454 = Pattern(Integral(u_*(c_ + x_**S(2)*WC('d', S(1)))**WC('p', S(1))*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons5, cons1808, cons1804)
     rule5454 = ReplacementRule(pattern5454, replacement5454)
+
     pattern5455 = Pattern(Integral(u_*(c_ + x_**S(2)*WC('d', S(1)))**WC('p', S(1))*exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons5, cons1808, cons1804, cons1807)
     rule5455 = ReplacementRule(pattern5455, replacement5455)
+
     pattern5456 = Pattern(Integral(u_*(c_ + x_**S(2)*WC('d', S(1)))**p_*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons5, cons1808, cons1805, cons1816)
     rule5456 = ReplacementRule(pattern5456, replacement5456)
+
     pattern5457 = Pattern(Integral((c_ + WC('d', S(1))/x_**S(2))**WC('p', S(1))*WC('u', S(1))*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons1817, cons40)
     rule5457 = ReplacementRule(pattern5457, replacement5457)
+
     pattern5458 = Pattern(Integral((c_ + WC('d', S(1))/x_**S(2))**p_*WC('u', S(1))*exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons5, cons1817, cons149, cons1807, cons179)
     rule5458 = ReplacementRule(pattern5458, replacement5458)
+
     pattern5459 = Pattern(Integral((c_ + WC('d', S(1))/x_**S(2))**p_*WC('u', S(1))*exp(n_*ArcTan(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons5, cons1817, cons149, cons1807, cons119)
     rule5459 = ReplacementRule(pattern5459, replacement5459)
+
     pattern5460 = Pattern(Integral((c_ + WC('d', S(1))/x_**S(2))**p_*WC('u', S(1))*exp(ArcTan(x_*WC('a', S(1)))*WC('n', S(1))), x_), cons2, cons8, cons29, cons4, cons5, cons1817, cons149, cons1816)
     rule5460 = ReplacementRule(pattern5460, replacement5460)
+
     pattern5461 = Pattern(Integral(exp(ArcTan((a_ + x_*WC('b', S(1)))*WC('c', S(1)))*WC('n', S(1))), x_), cons2, cons3, cons8, cons4, cons1581)
     rule5461 = ReplacementRule(pattern5461, replacement5461)
+
     pattern5462 = Pattern(Integral(x_**m_*exp(n_*ArcTan((a_ + x_*WC('b', S(1)))*WC('c', S(1)))), x_), cons2, cons3, cons8, cons86, cons1818, cons1819)
     rule5462 = ReplacementRule(pattern5462, replacement5462)
+
     pattern5463 = Pattern(Integral((x_*WC('e', S(1)) + WC('d', S(0)))**WC('m', S(1))*exp(ArcTan((a_ + x_*WC('b', S(1)))*WC('c', S(1)))*WC('n', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons4, cons1582)
     rule5463 = ReplacementRule(pattern5463, replacement5463)
+
     pattern5464 = Pattern(Integral((c_ + x_**S(2)*WC('e', S(1)) + x_*WC('d', S(1)))**WC('p', S(1))*WC('u', S(1))*exp(ArcTan(a_ + x_*WC('b', S(1)))*WC('n', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1820, cons1821, cons1822)
     rule5464 = ReplacementRule(pattern5464, replacement5464)
+
     pattern5465 = Pattern(Integral((c_ + x_**S(2)*WC('e', S(1)) + x_*WC('d', S(1)))**WC('p', S(1))*WC('u', S(1))*exp(ArcTan(a_ + x_*WC('b', S(1)))*WC('n', S(1))), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1820, cons1821, cons1823)
     rule5465 = ReplacementRule(pattern5465, replacement5465)
+
     pattern5466 = Pattern(Integral(WC('u', S(1))*exp(ArcTan(WC('c', S(1))/(x_*WC('b', S(1)) + WC('a', S(0))))*WC('n', S(1))), x_), cons2, cons3, cons8, cons4, cons1581)
     rule5466 = ReplacementRule(pattern5466, replacement5466)
+
     pattern5467 = Pattern(Integral(WC('u', S(1))*exp(n_*acot(x_*WC('a', S(1)))), x_), cons2, cons1807)
     rule5467 = ReplacementRule(pattern5467, replacement5467)
+
     pattern5468 = Pattern(Integral(exp(n_*acot(x_*WC('a', S(1)))), x_), cons2, cons1801)
     rule5468 = ReplacementRule(pattern5468, replacement5468)
+
     pattern5469 = Pattern(Integral(x_**WC('m', S(1))*exp(n_*acot(x_*WC('a', S(1)))), x_), cons2, cons1801, cons20)
     rule5469 = ReplacementRule(pattern5469, replacement5469)
+
     pattern5470 = Pattern(Integral(exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons4, cons1809)
     rule5470 = ReplacementRule(pattern5470, replacement5470)
+
     pattern5471 = Pattern(Integral(x_**WC('m', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons4, cons1809, cons20)
     rule5471 = ReplacementRule(pattern5471, replacement5471)
+
     pattern5472 = Pattern(Integral(x_**m_*exp(n_*acot(x_*WC('a', S(1)))), x_), cons2, cons19, cons1801, cons21)
     rule5472 = ReplacementRule(pattern5472, replacement5472)
+
     pattern5473 = Pattern(Integral(x_**m_*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons19, cons4, cons1816, cons21)
     rule5473 = ReplacementRule(pattern5473, replacement5473)
+
     pattern5474 = Pattern(Integral((c_ + x_*WC('d', S(1)))**WC('p', S(1))*WC('u', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons1803, cons1816, cons40)
     rule5474 = ReplacementRule(pattern5474, replacement5474)
+
     pattern5475 = Pattern(Integral((c_ + x_*WC('d', S(1)))**p_*WC('u', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons5, cons1803, cons1816, cons149)
     rule5475 = ReplacementRule(pattern5475, replacement5475)
+
     pattern5476 = Pattern(Integral((c_ + WC('d', S(1))/x_)**WC('p', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons5, cons1806, cons1816, cons1804)
     rule5476 = ReplacementRule(pattern5476, replacement5476)
+
     pattern5477 = Pattern(Integral(x_**WC('m', S(1))*(c_ + WC('d', S(1))/x_)**WC('p', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons19, cons4, cons5, cons1806, cons1816, cons1804, cons20)
     rule5477 = ReplacementRule(pattern5477, replacement5477)
+
     pattern5478 = Pattern(Integral((c_ + WC('d', S(1))/x_)**p_*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons5, cons1806, cons1816, cons1805)
     rule5478 = ReplacementRule(pattern5478, replacement5478)
+
     pattern5479 = Pattern(Integral(x_**m_*(c_ + WC('d', S(1))/x_)**WC('p', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons19, cons4, cons5, cons1806, cons1816, cons1804, cons21)
     rule5479 = ReplacementRule(pattern5479, replacement5479)
+
     pattern5480 = Pattern(Integral((c_ + WC('d', S(1))/x_)**p_*WC('u', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons5, cons1806, cons1816, cons1805)
     rule5480 = ReplacementRule(pattern5480, replacement5480)
+
     pattern5481 = Pattern(Integral(exp(WC('n', S(1))*acot(x_*WC('a', S(1))))/(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons8, cons29, cons4, cons1808)
     rule5481 = ReplacementRule(pattern5481, replacement5481)
+
     pattern5482 = Pattern(Integral(exp(WC('n', S(1))*acot(x_*WC('a', S(1))))/(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2), x_), cons2, cons8, cons29, cons4, cons1808, cons1802)
     rule5482 = ReplacementRule(pattern5482, replacement5482)
+
     pattern5483 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**p_*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons1808, cons13, cons139, cons232, cons1810, cons1824, cons1825)
     rule5483 = ReplacementRule(pattern5483, replacement5483)
+
     pattern5484 = Pattern(Integral(x_*exp(WC('n', S(1))*acot(x_*WC('a', S(1))))/(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2), x_), cons2, cons8, cons29, cons4, cons1808, cons1802)
     rule5484 = ReplacementRule(pattern5484, replacement5484)
+
     pattern5485 = Pattern(Integral(x_*(c_ + x_**S(2)*WC('d', S(1)))**p_*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons1808, cons13, cons1826, cons232, cons1810, cons1824, cons1825)
     rule5485 = ReplacementRule(pattern5485, replacement5485)
+
     pattern5486 = Pattern(Integral(x_**S(2)*(c_ + x_**S(2)*WC('d', S(1)))**WC('p', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons1808, cons1815, cons1827)
     rule5486 = ReplacementRule(pattern5486, replacement5486)
+
     pattern5487 = Pattern(Integral(x_**S(2)*(c_ + x_**S(2)*WC('d', S(1)))**p_*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons1808, cons13, cons1826, cons1828, cons1810, cons1824, cons1825)
     rule5487 = ReplacementRule(pattern5487, replacement5487)
+
     pattern5488 = Pattern(Integral(x_**WC('m', S(1))*(c_ + x_**S(2)*WC('d', S(1)))**p_*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons1808, cons20, cons1829, cons40)
     rule5488 = ReplacementRule(pattern5488, replacement5488)
+
     pattern5489 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**WC('p', S(1))*WC('u', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons1808, cons1816, cons40)
     rule5489 = ReplacementRule(pattern5489, replacement5489)
+
     pattern5490 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**p_*WC('u', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons5, cons1808, cons1816, cons149)
     rule5490 = ReplacementRule(pattern5490, replacement5490)
+
     pattern5491 = Pattern(Integral((c_ + WC('d', S(1))/x_**S(2))**WC('p', S(1))*WC('u', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons5, cons1817, cons1816, cons1804, cons1830)
     rule5491 = ReplacementRule(pattern5491, replacement5491)
+
     pattern5492 = Pattern(Integral((c_ + WC('d', S(1))/x_**S(2))**WC('p', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons5, cons1817, cons1816, cons1804, cons1831)
     rule5492 = ReplacementRule(pattern5492, replacement5492)
+
     pattern5493 = Pattern(Integral(x_**WC('m', S(1))*(c_ + WC('d', S(1))/x_**S(2))**WC('p', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons5, cons1817, cons1816, cons1804, cons1831, cons20)
     rule5493 = ReplacementRule(pattern5493, replacement5493)
+
     pattern5494 = Pattern(Integral(x_**m_*(c_ + WC('d', S(1))/x_**S(2))**WC('p', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons19, cons4, cons5, cons1817, cons1816, cons1804, cons1831, cons21)
     rule5494 = ReplacementRule(pattern5494, replacement5494)
+
     pattern5495 = Pattern(Integral((c_ + WC('d', S(1))/x_**S(2))**p_*WC('u', S(1))*exp(WC('n', S(1))*acot(x_*WC('a', S(1)))), x_), cons2, cons8, cons29, cons4, cons5, cons1817, cons1816, cons1805)
     rule5495 = ReplacementRule(pattern5495, replacement5495)
+
     pattern5496 = Pattern(Integral(WC('u', S(1))*exp(n_*acot((a_ + x_*WC('b', S(1)))*WC('c', S(1)))), x_), cons2, cons3, cons8, cons1807)
     rule5496 = ReplacementRule(pattern5496, replacement5496)
+
     pattern5497 = Pattern(Integral(exp(WC('n', S(1))*acot((a_ + x_*WC('b', S(1)))*WC('c', S(1)))), x_), cons2, cons3, cons8, cons4, cons1816)
     rule5497 = ReplacementRule(pattern5497, replacement5497)
+
     pattern5498 = Pattern(Integral(x_**m_*exp(n_*acoth((a_ + x_*WC('b', S(1)))*WC('c', S(1)))), x_), cons2, cons3, cons8, cons86, cons1818, cons1819)
     rule5498 = ReplacementRule(pattern5498, replacement5498)
+
     pattern5499 = Pattern(Integral((x_*WC('e', S(1)) + WC('d', S(0)))**WC('m', S(1))*exp(WC('n', S(1))*acoth((a_ + x_*WC('b', S(1)))*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons4, cons1816)
     rule5499 = ReplacementRule(pattern5499, replacement5499)
+
     pattern5500 = Pattern(Integral((c_ + x_**S(2)*WC('e', S(1)) + x_*WC('d', S(1)))**WC('p', S(1))*WC('u', S(1))*exp(WC('n', S(1))*acot(a_ + x_*WC('b', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1816, cons1820, cons1821, cons1822)
     rule5500 = ReplacementRule(pattern5500, replacement5500)
+
     pattern5501 = Pattern(Integral((c_ + x_**S(2)*WC('e', S(1)) + x_*WC('d', S(1)))**WC('p', S(1))*WC('u', S(1))*exp(WC('n', S(1))*acot(a_ + x_*WC('b', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1816, cons1820, cons1821, cons1823)
     rule5501 = ReplacementRule(pattern5501, replacement5501)
+
     pattern5502 = Pattern(Integral(WC('u', S(1))*exp(WC('n', S(1))*acot(WC('c', S(1))/(x_*WC('b', S(1)) + WC('a', S(0))))), x_), cons2, cons3, cons8, cons4, cons1581)
     rule5502 = ReplacementRule(pattern5502, replacement5502)
+
     pattern5503 = Pattern(Integral((ArcTan(c_ + x_*WC('d', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons150)
     rule5503 = ReplacementRule(pattern5503, replacement5503)
+
     pattern5504 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(c_ + x_*WC('d', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons150)
     rule5504 = ReplacementRule(pattern5504, replacement5504)
+
     pattern5505 = Pattern(Integral((ArcTan(c_ + x_*WC('d', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_, x_), cons2, cons3, cons8, cons29, cons4, cons342)
     rule5505 = ReplacementRule(pattern5505, replacement5505)
+
     pattern5506 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(c_ + x_*WC('d', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons4, cons342)
     rule5506 = ReplacementRule(pattern5506, replacement5506)
+
     pattern5507 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*(ArcTan(c_ + x_*WC('d', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons4, cons150)
     rule5507 = ReplacementRule(pattern5507, replacement5507)
+
     pattern5508 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(c_ + x_*WC('d', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons4, cons150)
     rule5508 = ReplacementRule(pattern5508, replacement5508)
+
     pattern5509 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**m_*(ArcTan(c_ + x_*WC('d', S(1)))*WC('b', S(1)) + WC('a', S(0)))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons4, cons342)
     rule5509 = ReplacementRule(pattern5509, replacement5509)
+
     pattern5510 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**m_*(WC('a', S(0)) + WC('b', S(1))*acot(c_ + x_*WC('d', S(1))))**n_, x_), cons2, cons3, cons8, cons29, cons50, cons127, cons19, cons4, cons342)
     rule5510 = ReplacementRule(pattern5510, replacement5510)
+
     pattern5511 = Pattern(Integral((ArcTan(c_ + x_*WC('d', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))*(x_**S(2)*WC('C', S(1)) + x_*WC('B', S(1)) + WC('A', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons8, cons29, cons36, cons37, cons38, cons4, cons5, cons1832, cons1765)
     rule5511 = ReplacementRule(pattern5511, replacement5511)
+
     pattern5512 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acot(c_ + x_*WC('d', S(1))))**WC('n', S(1))*(x_**S(2)*WC('C', S(1)) + x_*WC('B', S(1)) + WC('A', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons8, cons29, cons36, cons37, cons38, cons4, cons5, cons1832, cons1765)
     rule5512 = ReplacementRule(pattern5512, replacement5512)
+
     pattern5513 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*(ArcTan(c_ + x_*WC('d', S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))*(x_**S(2)*WC('C', S(1)) + x_*WC('B', S(1)) + WC('A', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons36, cons37, cons38, cons19, cons4, cons5, cons1832, cons1765)
     rule5513 = ReplacementRule(pattern5513, replacement5513)
+
     pattern5514 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(c_ + x_*WC('d', S(1))))**WC('n', S(1))*(x_**S(2)*WC('C', S(1)) + x_*WC('B', S(1)) + WC('A', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons36, cons37, cons38, cons19, cons4, cons5, cons1832, cons1765)
     rule5514 = ReplacementRule(pattern5514, replacement5514)
+
     pattern5515 = Pattern(Integral(ArcTan(a_ + x_*WC('b', S(1)))/(c_ + x_**WC('n', S(1))*WC('d', S(1))), x_), cons2, cons3, cons8, cons29, cons89)
     rule5515 = ReplacementRule(pattern5515, replacement5515)
+
     pattern5516 = Pattern(Integral(acot(a_ + x_*WC('b', S(1)))/(c_ + x_**WC('n', S(1))*WC('d', S(1))), x_), cons2, cons3, cons8, cons29, cons89)
     rule5516 = ReplacementRule(pattern5516, replacement5516)
+
     pattern5517 = Pattern(Integral(ArcTan(a_ + x_*WC('b', S(1)))/(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons8, cons29, cons4, cons1096)
     rule5517 = ReplacementRule(pattern5517, replacement5517)
+
     pattern5518 = Pattern(Integral(acot(a_ + x_*WC('b', S(1)))/(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons8, cons29, cons4, cons1096)
     rule5518 = ReplacementRule(pattern5518, replacement5518)
+
     pattern5519 = Pattern(Integral(ArcTan(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons4, cons1833)
     rule5519 = ReplacementRule(pattern5519, replacement5519)
+
     pattern5520 = Pattern(Integral(acot(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons4, cons1833)
     rule5520 = ReplacementRule(pattern5520, replacement5520)
+
     pattern5521 = Pattern(Integral(ArcTan(x_**n_*WC('b', S(1)) + WC('a', S(0)))/x_, x_), cons2, cons3, cons4, cons1833)
     rule5521 = ReplacementRule(pattern5521, replacement5521)
+
     pattern5522 = Pattern(Integral(acot(x_**n_*WC('b', S(1)) + WC('a', S(0)))/x_, x_), cons2, cons3, cons4, cons1833)
     rule5522 = ReplacementRule(pattern5522, replacement5522)
+
     pattern5523 = Pattern(Integral(x_**WC('m', S(1))*ArcTan(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons95, cons1834, cons1835)
     rule5523 = ReplacementRule(pattern5523, replacement5523)
+
     pattern5524 = Pattern(Integral(x_**WC('m', S(1))*acot(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons95, cons1834, cons1835)
     rule5524 = ReplacementRule(pattern5524, replacement5524)
+
     pattern5525 = Pattern(Integral(ArcTan(f_**(x_*WC('d', S(1)) + WC('c', S(0)))*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons127, cons1836)
     rule5525 = ReplacementRule(pattern5525, replacement5525)
+
     pattern5526 = Pattern(Integral(acot(f_**(x_*WC('d', S(1)) + WC('c', S(0)))*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons127, cons1836)
     rule5526 = ReplacementRule(pattern5526, replacement5526)
+
     pattern5527 = Pattern(Integral(x_**WC('m', S(1))*ArcTan(f_**(x_*WC('d', S(1)) + WC('c', S(0)))*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons127, cons20, cons170)
     rule5527 = ReplacementRule(pattern5527, replacement5527)
+
     pattern5528 = Pattern(Integral(x_**WC('m', S(1))*acot(f_**(x_*WC('d', S(1)) + WC('c', S(0)))*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons127, cons20, cons170)
     rule5528 = ReplacementRule(pattern5528, replacement5528)
+
     pattern5529 = Pattern(Integral(ArcTan(WC('c', S(1))/(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0))))**WC('m', S(1))*WC('u', S(1)), x_), cons2, cons3, cons8, cons4, cons19, cons1768)
     rule5529 = ReplacementRule(pattern5529, replacement5529)
+
     pattern5530 = Pattern(Integral(WC('u', S(1))*acot(WC('c', S(1))/(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0))))**WC('m', S(1)), x_), cons2, cons3, cons8, cons4, cons19, cons1768)
     rule5530 = ReplacementRule(pattern5530, replacement5530)
+
     pattern5531 = Pattern(Integral(S(1)/(sqrt(x_**S(2)*WC('b', S(1)) + WC('a', S(0)))*ArcTan(x_*WC('c', S(1))/sqrt(x_**S(2)*WC('b', S(1)) + WC('a', S(0))))), x_), cons2, cons3, cons8, cons1837)
     rule5531 = ReplacementRule(pattern5531, replacement5531)
+
     pattern5532 = Pattern(Integral(S(1)/(sqrt(x_**S(2)*WC('b', S(1)) + WC('a', S(0)))*acot(x_*WC('c', S(1))/sqrt(x_**S(2)*WC('b', S(1)) + WC('a', S(0))))), x_), cons2, cons3, cons8, cons1837)
     rule5532 = ReplacementRule(pattern5532, replacement5532)
+
     pattern5533 = Pattern(Integral(ArcTan(x_*WC('c', S(1))/sqrt(x_**S(2)*WC('b', S(1)) + WC('a', S(0))))**WC('m', S(1))/sqrt(x_**S(2)*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons19, cons1837, cons68)
     rule5533 = ReplacementRule(pattern5533, replacement5533)
+
     pattern5534 = Pattern(Integral(acot(x_*WC('c', S(1))/sqrt(x_**S(2)*WC('b', S(1)) + WC('a', S(0))))**WC('m', S(1))/sqrt(x_**S(2)*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons19, cons1837, cons68)
     rule5534 = ReplacementRule(pattern5534, replacement5534)
+
     pattern5535 = Pattern(Integral(ArcTan(x_*WC('c', S(1))/sqrt(x_**S(2)*WC('b', S(1)) + WC('a', S(0))))**WC('m', S(1))/sqrt(x_**S(2)*WC('e', S(1)) + WC('d', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1837, cons385)
     rule5535 = ReplacementRule(pattern5535, replacement5535)
+
     pattern5536 = Pattern(Integral(acot(x_*WC('c', S(1))/sqrt(x_**S(2)*WC('b', S(1)) + WC('a', S(0))))**WC('m', S(1))/sqrt(x_**S(2)*WC('e', S(1)) + WC('d', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons1837, cons385)
     rule5536 = ReplacementRule(pattern5536, replacement5536)
+
     pattern5537 = Pattern(Integral(ArcTan(v_ + sqrt(w_)*WC('s', S(1)))*WC('u', S(1)), x_), cons1838, cons1839)
     rule5537 = ReplacementRule(pattern5537, replacement5537)
+
     pattern5538 = Pattern(Integral(WC('u', S(1))*acot(v_ + sqrt(w_)*WC('s', S(1))), x_), cons1838, cons1839)
     rule5538 = ReplacementRule(pattern5538, replacement5538)
 
@@ -1199,92 +1660,136 @@ def inverse_trig(rubi):
 
     pattern5540 = Pattern(Integral(u_*v_**WC('n', S(1)), x_), cons820, cons87, cons465, cons1840, cons1842, CustomConstraint(With5540))
     rule5540 = ReplacementRule(pattern5540, replacement5540)
+
     pattern5541 = Pattern(Integral(ArcTan(WC('c', S(0)) + WC('d', S(1))*tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1843)
     rule5541 = ReplacementRule(pattern5541, replacement5541)
+
     pattern5542 = Pattern(Integral(acot(WC('c', S(0)) + WC('d', S(1))*tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1843)
     rule5542 = ReplacementRule(pattern5542, replacement5542)
+
     pattern5543 = Pattern(Integral(ArcTan(WC('c', S(0)) + WC('d', S(1))/tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1844)
     rule5543 = ReplacementRule(pattern5543, replacement5543)
+
     pattern5544 = Pattern(Integral(acot(WC('c', S(0)) + WC('d', S(1))/tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1844)
     rule5544 = ReplacementRule(pattern5544, replacement5544)
+
     pattern5545 = Pattern(Integral(ArcTan(WC('c', S(0)) + WC('d', S(1))*tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1845)
     rule5545 = ReplacementRule(pattern5545, replacement5545)
+
     pattern5546 = Pattern(Integral(acot(WC('c', S(0)) + WC('d', S(1))*tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1845)
     rule5546 = ReplacementRule(pattern5546, replacement5546)
+
     pattern5547 = Pattern(Integral(ArcTan(WC('c', S(0)) + WC('d', S(1))/tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1845)
     rule5547 = ReplacementRule(pattern5547, replacement5547)
+
     pattern5548 = Pattern(Integral(acot(WC('c', S(0)) + WC('d', S(1))/tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1846)
     rule5548 = ReplacementRule(pattern5548, replacement5548)
+
     pattern5549 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*ArcTan(WC('c', S(0)) + WC('d', S(1))*tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1843)
     rule5549 = ReplacementRule(pattern5549, replacement5549)
+
     pattern5550 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*acot(WC('c', S(0)) + WC('d', S(1))*tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1843)
     rule5550 = ReplacementRule(pattern5550, replacement5550)
+
     pattern5551 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*ArcTan(WC('c', S(0)) + WC('d', S(1))/tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1844)
     rule5551 = ReplacementRule(pattern5551, replacement5551)
+
     pattern5552 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*acot(WC('c', S(0)) + WC('d', S(1))/tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1844)
     rule5552 = ReplacementRule(pattern5552, replacement5552)
+
     pattern5553 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*ArcTan(WC('c', S(0)) + WC('d', S(1))*tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1845)
     rule5553 = ReplacementRule(pattern5553, replacement5553)
+
     pattern5554 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*acot(WC('c', S(0)) + WC('d', S(1))*tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1845)
     rule5554 = ReplacementRule(pattern5554, replacement5554)
+
     pattern5555 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*ArcTan(WC('c', S(0)) + WC('d', S(1))/tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1846)
     rule5555 = ReplacementRule(pattern5555, replacement5555)
+
     pattern5556 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*acot(WC('c', S(0)) + WC('d', S(1))/tan(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1846)
     rule5556 = ReplacementRule(pattern5556, replacement5556)
+
     pattern5557 = Pattern(Integral(ArcTan(tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons69)
     rule5557 = ReplacementRule(pattern5557, replacement5557)
+
     pattern5558 = Pattern(Integral(acot(tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons69)
     rule5558 = ReplacementRule(pattern5558, replacement5558)
+
     pattern5559 = Pattern(Integral(ArcTan(S(1)/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons69)
     rule5559 = ReplacementRule(pattern5559, replacement5559)
+
     pattern5560 = Pattern(Integral(acot(S(1)/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons69)
     rule5560 = ReplacementRule(pattern5560, replacement5560)
+
     pattern5561 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*ArcTan(tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons50, cons127, cons64)
     rule5561 = ReplacementRule(pattern5561, replacement5561)
+
     pattern5562 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*acot(tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons50, cons127, cons64)
     rule5562 = ReplacementRule(pattern5562, replacement5562)
+
     pattern5563 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*ArcTan(S(1)/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons50, cons127, cons64)
     rule5563 = ReplacementRule(pattern5563, replacement5563)
+
     pattern5564 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*acot(S(1)/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons50, cons127, cons64)
     rule5564 = ReplacementRule(pattern5564, replacement5564)
+
     pattern5565 = Pattern(Integral(ArcTan(WC('c', S(0)) + WC('d', S(1))*tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1847)
     rule5565 = ReplacementRule(pattern5565, replacement5565)
+
     pattern5566 = Pattern(Integral(acot(WC('c', S(0)) + WC('d', S(1))*tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1847)
     rule5566 = ReplacementRule(pattern5566, replacement5566)
+
     pattern5567 = Pattern(Integral(ArcTan(WC('c', S(0)) + WC('d', S(1))/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1847)
     rule5567 = ReplacementRule(pattern5567, replacement5567)
+
     pattern5568 = Pattern(Integral(acot(WC('c', S(0)) + WC('d', S(1))/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1847)
     rule5568 = ReplacementRule(pattern5568, replacement5568)
+
     pattern5569 = Pattern(Integral(ArcTan(WC('c', S(0)) + WC('d', S(1))*tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1848)
     rule5569 = ReplacementRule(pattern5569, replacement5569)
+
     pattern5570 = Pattern(Integral(acot(WC('c', S(0)) + WC('d', S(1))*tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1848)
     rule5570 = ReplacementRule(pattern5570, replacement5570)
+
     pattern5571 = Pattern(Integral(ArcTan(WC('c', S(0)) + WC('d', S(1))/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1848)
     rule5571 = ReplacementRule(pattern5571, replacement5571)
+
     pattern5572 = Pattern(Integral(acot(WC('c', S(0)) + WC('d', S(1))/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons1848)
     rule5572 = ReplacementRule(pattern5572, replacement5572)
+
     pattern5573 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*ArcTan(WC('c', S(0)) + WC('d', S(1))*tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1847)
     rule5573 = ReplacementRule(pattern5573, replacement5573)
+
     pattern5574 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*acot(WC('c', S(0)) + WC('d', S(1))*tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1847)
     rule5574 = ReplacementRule(pattern5574, replacement5574)
+
     pattern5575 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*ArcTan(WC('c', S(0)) + WC('d', S(1))/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1847)
     rule5575 = ReplacementRule(pattern5575, replacement5575)
+
     pattern5576 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*acot(WC('c', S(0)) + WC('d', S(1))/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1847)
     rule5576 = ReplacementRule(pattern5576, replacement5576)
+
     pattern5577 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*ArcTan(WC('c', S(0)) + WC('d', S(1))*tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1848)
     rule5577 = ReplacementRule(pattern5577, replacement5577)
+
     pattern5578 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*acot(WC('c', S(0)) + WC('d', S(1))*tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1848)
     rule5578 = ReplacementRule(pattern5578, replacement5578)
+
     pattern5579 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*ArcTan(WC('c', S(0)) + WC('d', S(1))/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1848)
     rule5579 = ReplacementRule(pattern5579, replacement5579)
+
     pattern5580 = Pattern(Integral((x_*WC('f', S(1)) + WC('e', S(0)))**WC('m', S(1))*acot(WC('c', S(0)) + WC('d', S(1))/tanh(x_*WC('b', S(1)) + WC('a', S(0)))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons64, cons1848)
     rule5580 = ReplacementRule(pattern5580, replacement5580)
+
     pattern5581 = Pattern(Integral(ArcTan(u_), x_), cons1232)
     rule5581 = ReplacementRule(pattern5581, replacement5581)
+
     pattern5582 = Pattern(Integral(acot(u_), x_), cons1232)
     rule5582 = ReplacementRule(pattern5582, replacement5582)
+
     pattern5583 = Pattern(Integral((x_*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1))*(ArcTan(u_)*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons29, cons19, cons68, cons1232, cons1772, cons1849)
     rule5583 = ReplacementRule(pattern5583, replacement5583)
+
     pattern5584 = Pattern(Integral((x_*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acot(u_)), x_), cons2, cons3, cons8, cons29, cons19, cons68, cons1232, cons1772, cons1849)
     rule5584 = ReplacementRule(pattern5584, replacement5584)
 
@@ -1293,10 +1798,13 @@ def inverse_trig(rubi):
 
     pattern5586 = Pattern(Integral(v_*(WC('a', S(0)) + WC('b', S(1))*acot(u_)), x_), cons2, cons3, cons1232, cons1852, cons1853, CustomConstraint(With5586))
     rule5586 = ReplacementRule(pattern5586, replacement5586)
+
     pattern5587 = Pattern(Integral(ArcTan(v_)*log(w_)/(x_*WC('b', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons554, cons1148, cons1854, cons1855)
     rule5587 = ReplacementRule(pattern5587, replacement5587)
+
     pattern5588 = Pattern(Integral(ArcTan(v_)*log(w_), x_), cons1244, cons1245)
     rule5588 = ReplacementRule(pattern5588, replacement5588)
+
     pattern5589 = Pattern(Integral(log(w_)*acot(v_), x_), cons1244, cons1245)
     rule5589 = ReplacementRule(pattern5589, replacement5589)
 
@@ -1305,28 +1813,40 @@ def inverse_trig(rubi):
 
     pattern5591 = Pattern(Integral(u_*log(w_)*acot(v_), x_), cons1244, cons1245, CustomConstraint(With5591))
     rule5591 = ReplacementRule(pattern5591, replacement5591)
+
     pattern5592 = Pattern(Integral(asec(x_*WC('c', S(1))), x_), cons8, cons8)
     rule5592 = ReplacementRule(pattern5592, replacement5592)
+
     pattern5593 = Pattern(Integral(acsc(x_*WC('c', S(1))), x_), cons8, cons8)
     rule5593 = ReplacementRule(pattern5593, replacement5593)
+
     pattern5594 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons4, cons1581)
     rule5594 = ReplacementRule(pattern5594, replacement5594)
+
     pattern5595 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons4, cons1581)
     rule5595 = ReplacementRule(pattern5595, replacement5595)
+
     pattern5596 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))/x_, x_), cons2, cons3, cons8, cons14)
     rule5596 = ReplacementRule(pattern5596, replacement5596)
+
     pattern5597 = Pattern(Integral((WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))/x_, x_), cons2, cons3, cons8, cons14)
     rule5597 = ReplacementRule(pattern5597, replacement5597)
+
     pattern5598 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons19, cons68)
     rule5598 = ReplacementRule(pattern5598, replacement5598)
+
     pattern5599 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons19, cons68)
     rule5599 = ReplacementRule(pattern5599, replacement5599)
+
     pattern5600 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons4, cons20)
     rule5600 = ReplacementRule(pattern5600, replacement5600)
+
     pattern5601 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))**n_, x_), cons2, cons3, cons8, cons4, cons20)
     rule5601 = ReplacementRule(pattern5601, replacement5601)
+
     pattern5602 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons19, cons4, cons1856)
     rule5602 = ReplacementRule(pattern5602, replacement5602)
+
     pattern5603 = Pattern(Integral(x_**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons19, cons4, cons1856)
     rule5603 = ReplacementRule(pattern5603, replacement5603)
 
@@ -1335,24 +1855,34 @@ def inverse_trig(rubi):
 
     pattern5605 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons1745)
     rule5605 = ReplacementRule(pattern5605, With5605)
+
     pattern5606 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons40)
     rule5606 = ReplacementRule(pattern5606, replacement5606)
+
     pattern5607 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons40)
     rule5607 = ReplacementRule(pattern5607, replacement5607)
+
     pattern5608 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**p_*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons669, cons180, cons1857)
     rule5608 = ReplacementRule(pattern5608, replacement5608)
+
     pattern5609 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**p_*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons669, cons180, cons1857)
     rule5609 = ReplacementRule(pattern5609, replacement5609)
+
     pattern5610 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**p_*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons669, cons1858)
     rule5610 = ReplacementRule(pattern5610, replacement5610)
+
     pattern5611 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**p_*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons669, cons1858)
     rule5611 = ReplacementRule(pattern5611, replacement5611)
+
     pattern5612 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1572)
     rule5612 = ReplacementRule(pattern5612, replacement5612)
+
     pattern5613 = Pattern(Integral((x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons5, cons1572)
     rule5613 = ReplacementRule(pattern5613, replacement5613)
+
     pattern5614 = Pattern(Integral(x_*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons56)
     rule5614 = ReplacementRule(pattern5614, replacement5614)
+
     pattern5615 = Pattern(Integral(x_*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons5, cons56)
     rule5615 = ReplacementRule(pattern5615, replacement5615)
 
@@ -1361,56 +1891,82 @@ def inverse_trig(rubi):
 
     pattern5617 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1)))), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons5, cons1788)
     rule5617 = ReplacementRule(pattern5617, With5617)
+
     pattern5618 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1301)
     rule5618 = ReplacementRule(pattern5618, replacement5618)
+
     pattern5619 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1301)
     rule5619 = ReplacementRule(pattern5619, replacement5619)
+
     pattern5620 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**p_*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons20, cons669, cons180, cons1857)
     rule5620 = ReplacementRule(pattern5620, replacement5620)
+
     pattern5621 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**p_*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons20, cons669, cons180, cons1857)
     rule5621 = ReplacementRule(pattern5621, replacement5621)
+
     pattern5622 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**p_*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons20, cons669, cons1858)
     rule5622 = ReplacementRule(pattern5622, replacement5622)
+
     pattern5623 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**p_*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons4, cons1739, cons20, cons669, cons1858)
     rule5623 = ReplacementRule(pattern5623, replacement5623)
+
     pattern5624 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*asec(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons4, cons5, cons1499)
     rule5624 = ReplacementRule(pattern5624, replacement5624)
+
     pattern5625 = Pattern(Integral(x_**WC('m', S(1))*(x_**S(2)*WC('e', S(1)) + WC('d', S(0)))**WC('p', S(1))*(WC('a', S(0)) + WC('b', S(1))*acsc(x_*WC('c', S(1))))**WC('n', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons19, cons4, cons5, cons1499)
     rule5625 = ReplacementRule(pattern5625, replacement5625)
+
     pattern5626 = Pattern(Integral(asec(a_ + x_*WC('b', S(1))), x_), cons2, cons3, cons69)
     rule5626 = ReplacementRule(pattern5626, replacement5626)
+
     pattern5627 = Pattern(Integral(acsc(a_ + x_*WC('b', S(1))), x_), cons2, cons3, cons69)
     rule5627 = ReplacementRule(pattern5627, replacement5627)
+
     pattern5628 = Pattern(Integral(asec(a_ + x_*WC('b', S(1)))**n_, x_), cons2, cons3, cons4, cons1833)
     rule5628 = ReplacementRule(pattern5628, replacement5628)
+
     pattern5629 = Pattern(Integral(acsc(a_ + x_*WC('b', S(1)))**n_, x_), cons2, cons3, cons4, cons1833)
     rule5629 = ReplacementRule(pattern5629, replacement5629)
+
     pattern5630 = Pattern(Integral(asec(a_ + x_*WC('b', S(1)))/x_, x_), cons2, cons3, cons69)
     rule5630 = ReplacementRule(pattern5630, replacement5630)
+
     pattern5631 = Pattern(Integral(acsc(a_ + x_*WC('b', S(1)))/x_, x_), cons2, cons3, cons69)
     rule5631 = ReplacementRule(pattern5631, replacement5631)
+
     pattern5632 = Pattern(Integral(x_**WC('m', S(1))*asec(a_ + x_*WC('b', S(1))), x_), cons2, cons3, cons19, cons20, cons68)
     rule5632 = ReplacementRule(pattern5632, replacement5632)
+
     pattern5633 = Pattern(Integral(x_**WC('m', S(1))*acsc(a_ + x_*WC('b', S(1))), x_), cons2, cons3, cons19, cons20, cons68)
     rule5633 = ReplacementRule(pattern5633, replacement5633)
+
     pattern5634 = Pattern(Integral(x_**WC('m', S(1))*asec(a_ + x_*WC('b', S(1)))**n_, x_), cons2, cons3, cons4, cons64)
     rule5634 = ReplacementRule(pattern5634, replacement5634)
+
     pattern5635 = Pattern(Integral(x_**WC('m', S(1))*acsc(a_ + x_*WC('b', S(1)))**n_, x_), cons2, cons3, cons4, cons64)
     rule5635 = ReplacementRule(pattern5635, replacement5635)
+
     pattern5636 = Pattern(Integral(WC('u', S(1))*asec(WC('c', S(1))/(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0))))**WC('m', S(1)), x_), cons2, cons3, cons8, cons4, cons19, cons1768)
     rule5636 = ReplacementRule(pattern5636, replacement5636)
+
     pattern5637 = Pattern(Integral(WC('u', S(1))*acsc(WC('c', S(1))/(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0))))**WC('m', S(1)), x_), cons2, cons3, cons8, cons4, cons19, cons1768)
     rule5637 = ReplacementRule(pattern5637, replacement5637)
+
     pattern5638 = Pattern(Integral(f_**(WC('c', S(1))*asec(x_*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)))*WC('u', S(1)), x_), cons2, cons3, cons8, cons127, cons150)
     rule5638 = ReplacementRule(pattern5638, replacement5638)
+
     pattern5639 = Pattern(Integral(f_**(WC('c', S(1))*acsc(x_*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1)))*WC('u', S(1)), x_), cons2, cons3, cons8, cons127, cons150)
     rule5639 = ReplacementRule(pattern5639, replacement5639)
+
     pattern5640 = Pattern(Integral(asec(u_), x_), cons1232, cons1771)
     rule5640 = ReplacementRule(pattern5640, replacement5640)
+
     pattern5641 = Pattern(Integral(acsc(u_), x_), cons1232, cons1771)
     rule5641 = ReplacementRule(pattern5641, replacement5641)
+
     pattern5642 = Pattern(Integral((x_*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*asec(u_)), x_), cons2, cons3, cons8, cons29, cons19, cons68, cons1232, cons1772, cons1771)
     rule5642 = ReplacementRule(pattern5642, replacement5642)
+
     pattern5643 = Pattern(Integral((x_*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1))*(WC('a', S(0)) + WC('b', S(1))*acsc(u_)), x_), cons2, cons3, cons8, cons29, cons19, cons68, cons1232, cons1772, cons1771)
     rule5643 = ReplacementRule(pattern5643, replacement5643)
 
@@ -1423,2119 +1979,2715 @@ def inverse_trig(rubi):
 
 
 
-def replacement5034(c, n, x, a, b):
-        # rubi.append(5034)
-        return -Dist(b*c*n, Int(x*(a + b*asin(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*asin(c*x))**n, x)
-def replacement5035(c, n, x, a, b):
-        # rubi.append(5035)
-        return Dist(b*c*n, Int(x*(a + b*acos(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*acos(c*x))**n, x)
-def replacement5036(c, n, x, a, b):
-        # rubi.append(5036)
-        return Dist(c/(b*(n + S(1))), Int(x*(a + b*asin(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5037(c, n, x, a, b):
-        # rubi.append(5037)
-        return -Dist(c/(b*(n + S(1))), Int(x*(a + b*acos(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5038(c, n, x, a, b):
-        # rubi.append(5038)
-        return Dist(S(1)/(b*c), Subst(Int(x**n*cos(a/b - x/b), x), x, a + b*asin(c*x)), x)
-def replacement5039(c, n, x, a, b):
-        # rubi.append(5039)
-        return Dist(S(1)/(b*c), Subst(Int(x**n*sin(a/b - x/b), x), x, a + b*acos(c*x)), x)
-def replacement5040(c, n, x, a, b):
-        # rubi.append(5040)
-        return Subst(Int((a + b*x)**n/tan(x), x), x, asin(c*x))
-def replacement5041(c, n, x, a, b):
-        # rubi.append(5041)
-        return -Subst(Int((a + b*x)**n*tan(x), x), x, acos(c*x))
-def replacement5042(c, m, n, x, d, a, b):
-        # rubi.append(5042)
-        return -Dist(b*c*n/(d*(m + S(1))), Int((d*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((d*x)**(m + S(1))*(a + b*asin(c*x))**n/(d*(m + S(1))), x)
-def replacement5043(c, m, n, x, d, a, b):
-        # rubi.append(5043)
-        return Dist(b*c*n/(d*(m + S(1))), Int((d*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((d*x)**(m + S(1))*(a + b*acos(c*x))**n/(d*(m + S(1))), x)
-def replacement5044(c, m, n, x, a, b):
-        # rubi.append(5044)
-        return -Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x**(m + S(1))*(a + b*asin(c*x))**n/(m + S(1)), x)
-def replacement5045(c, m, n, x, a, b):
-        # rubi.append(5045)
-        return Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x**(m + S(1))*(a + b*acos(c*x))**n/(m + S(1)), x)
-def replacement5046(c, m, n, x, a, b):
-        # rubi.append(5046)
-        return -Dist(c**(-m + S(-1))/(b*(n + S(1))), Subst(Int(ExpandTrigReduce((a + b*x)**(n + S(1)), (m - (m + S(1))*sin(x)**S(2))*sin(x)**(m + S(-1)), x), x), x, asin(c*x)), x) + Simp(x**m*(a + b*asin(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5047(c, m, n, x, a, b):
-        # rubi.append(5047)
-        return -Dist(c**(-m + S(-1))/(b*(n + S(1))), Subst(Int(ExpandTrigReduce((a + b*x)**(n + S(1)), (m - (m + S(1))*cos(x)**S(2))*cos(x)**(m + S(-1)), x), x), x, acos(c*x)), x) - Simp(x**m*(a + b*acos(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5048(c, m, n, x, a, b):
-        # rubi.append(5048)
-        return -Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*asin(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Dist(c*(m + S(1))/(b*(n + S(1))), Int(x**(m + S(1))*(a + b*asin(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x**m*(a + b*asin(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5049(c, m, n, x, a, b):
-        # rubi.append(5049)
-        return Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*acos(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Dist(c*(m + S(1))/(b*(n + S(1))), Int(x**(m + S(1))*(a + b*acos(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Simp(x**m*(a + b*acos(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5050(c, m, n, x, a, b):
-        # rubi.append(5050)
-        return Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*sin(x)**m*cos(x), x), x, asin(c*x)), x)
-def replacement5051(c, m, n, x, a, b):
-        # rubi.append(5051)
-        return -Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*sin(x)*cos(x)**m, x), x, acos(c*x)), x)
-def replacement5052(c, m, n, x, d, a, b):
-        # rubi.append(5052)
-        return Int((d*x)**m*(a + b*asin(c*x))**n, x)
-def replacement5053(c, m, n, x, d, a, b):
-        # rubi.append(5053)
-        return Int((d*x)**m*(a + b*acos(c*x))**n, x)
-def replacement5054(c, x, d, a, e, b):
-        # rubi.append(5054)
-        return Simp(log(a + b*asin(c*x))/(b*c*sqrt(d)), x)
-def replacement5055(c, x, d, a, e, b):
-        # rubi.append(5055)
-        return -Simp(log(a + b*acos(c*x))/(b*c*sqrt(d)), x)
-def replacement5056(c, n, x, d, a, e, b):
-        # rubi.append(5056)
-        return Simp((a + b*asin(c*x))**(n + S(1))/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5057(c, n, x, d, a, e, b):
-        # rubi.append(5057)
-        return -Simp((a + b*acos(c*x))**(n + S(1))/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5058(c, n, x, d, a, e, b):
-        # rubi.append(5058)
-        return Dist(sqrt(-c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*asin(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x)
-def replacement5059(c, n, x, d, a, e, b):
-        # rubi.append(5059)
-        return Dist(sqrt(-c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*acos(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x)
 
-def With5060(c, x, d, a, p, e, b):
-        u = IntHide((d + e*x**S(2))**p, x)
-        # rubi.append(5060)
-        return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
 
-def With5061(c, x, d, a, p, e, b):
-        u = IntHide((d + e*x**S(2))**p, x)
-        # rubi.append(5061)
-        return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
-def replacement5062(c, n, x, d, a, e, b):
-        # rubi.append(5062)
-        return Dist(sqrt(d + e*x**S(2))/(S(2)*sqrt(-c**S(2)*x**S(2) + S(1))), Int((a + b*asin(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Dist(b*c*n*sqrt(d + e*x**S(2))/(S(2)*sqrt(-c**S(2)*x**S(2) + S(1))), Int(x*(a + b*asin(c*x))**(n + S(-1)), x), x) + Simp(x*(a + b*asin(c*x))**n*sqrt(d + e*x**S(2))/S(2), x)
-def replacement5063(c, n, x, d, a, e, b):
-        # rubi.append(5063)
-        return Dist(sqrt(d + e*x**S(2))/(S(2)*sqrt(-c**S(2)*x**S(2) + S(1))), Int((a + b*acos(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Dist(b*c*n*sqrt(d + e*x**S(2))/(S(2)*sqrt(-c**S(2)*x**S(2) + S(1))), Int(x*(a + b*acos(c*x))**(n + S(-1)), x), x) + Simp(x*(a + b*acos(c*x))**n*sqrt(d + e*x**S(2))/S(2), x)
-def replacement5064(c, n, x, d, a, p, e, b):
-        # rubi.append(5064)
-        return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*p + S(1)), Int(x*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp(x*(a + b*asin(c*x))**n*(d + e*x**S(2))**p/(S(2)*p + S(1)), x)
-def replacement5065(c, n, x, d, a, p, e, b):
-        # rubi.append(5065)
-        return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*p + S(1)), Int(x*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp(x*(a + b*acos(c*x))**n*(d + e*x**S(2))**p/(S(2)*p + S(1)), x)
-def replacement5066(c, n, x, d, a, e, b):
-        # rubi.append(5066)
-        return -Dist(b*c*n/sqrt(d), Int(x*(a + b*asin(c*x))**(n + S(-1))/(d + e*x**S(2)), x), x) + Simp(x*(a + b*asin(c*x))**n/(d*sqrt(d + e*x**S(2))), x)
-def replacement5067(c, n, x, d, a, e, b):
-        # rubi.append(5067)
-        return Dist(b*c*n/sqrt(d), Int(x*(a + b*acos(c*x))**(n + S(-1))/(d + e*x**S(2)), x), x) + Simp(x*(a + b*acos(c*x))**n/(d*sqrt(d + e*x**S(2))), x)
-def replacement5068(c, n, x, d, a, e, b):
-        # rubi.append(5068)
-        return -Dist(b*c*n*sqrt(-c**S(2)*x**S(2) + S(1))/(d*sqrt(d + e*x**S(2))), Int(x*(a + b*asin(c*x))**(n + S(-1))/(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*asin(c*x))**n/(d*sqrt(d + e*x**S(2))), x)
-def replacement5069(c, n, x, d, a, e, b):
-        # rubi.append(5069)
-        return Dist(b*c*n*sqrt(-c**S(2)*x**S(2) + S(1))/(d*sqrt(d + e*x**S(2))), Int(x*(a + b*acos(c*x))**(n + S(-1))/(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*acos(c*x))**n/(d*sqrt(d + e*x**S(2))), x)
-def replacement5070(c, n, x, d, a, p, e, b):
-        # rubi.append(5070)
-        return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*(p + S(1))), Int(x*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) - Simp(x*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x)
-def replacement5071(c, n, x, d, a, p, e, b):
-        # rubi.append(5071)
-        return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*(p + S(1))), Int(x*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) - Simp(x*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x)
-def replacement5072(c, n, x, d, a, e, b):
-        # rubi.append(5072)
-        return Dist(S(1)/(c*d), Subst(Int((a + b*x)**n/cos(x), x), x, asin(c*x)), x)
-def replacement5073(c, n, x, d, a, e, b):
-        # rubi.append(5073)
-        return -Dist(S(1)/(c*d), Subst(Int((a + b*x)**n/sin(x), x), x, acos(c*x)), x)
-def replacement5074(c, n, x, d, a, p, e, b):
-        # rubi.append(5074)
-        return Dist(c*d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(S(2)*p + S(1))*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*(n + S(1))), Int(x*(a + b*asin(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5075(c, n, x, d, a, p, e, b):
-        # rubi.append(5075)
-        return -Dist(c*d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(S(2)*p + S(1))*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*(n + S(1))), Int(x*(a + b*acos(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5076(c, n, x, d, a, p, e, b):
-        # rubi.append(5076)
-        return Dist(d**p/c, Subst(Int((a + b*x)**n*cos(x)**(S(2)*p + S(1)), x), x, asin(c*x)), x)
-def replacement5077(c, n, x, d, a, p, e, b):
-        # rubi.append(5077)
-        return -Dist(d**p/c, Subst(Int((a + b*x)**n*sin(x)**(S(2)*p + S(1)), x), x, acos(c*x)), x)
-def replacement5078(c, n, x, d, a, p, e, b):
-        # rubi.append(5078)
-        return Dist(d**(p + S(-1)/2)*sqrt(d + e*x**S(2))/sqrt(-c**S(2)*x**S(2) + S(1)), Int((a + b*asin(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p, x), x)
-def replacement5079(c, n, x, d, a, p, e, b):
-        # rubi.append(5079)
-        return Dist(d**(p + S(-1)/2)*sqrt(d + e*x**S(2))/sqrt(-c**S(2)*x**S(2) + S(1)), Int((a + b*acos(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p, x), x)
+def replacement5034(a, c, n, b, x):
+    return -Dist(b*c*n, Int(x*(a + b*asin(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*asin(c*x))**n, x)
 
-def With5080(c, x, d, a, p, e, b):
-        u = IntHide((d + e*x**S(2))**p, x)
-        # rubi.append(5080)
-        return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
 
-def With5081(c, x, d, a, p, e, b):
-        u = IntHide((d + e*x**S(2))**p, x)
-        # rubi.append(5081)
-        return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
-def replacement5082(c, n, x, d, a, p, e, b):
-        # rubi.append(5082)
-        return Int(ExpandIntegrand((a + b*asin(c*x))**n, (d + e*x**S(2))**p, x), x)
-def replacement5083(c, n, x, d, a, p, e, b):
-        # rubi.append(5083)
-        return Int(ExpandIntegrand((a + b*acos(c*x))**n, (d + e*x**S(2))**p, x), x)
-def replacement5084(c, n, x, d, a, p, e, b):
-        # rubi.append(5084)
-        return Int((a + b*asin(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5085(c, n, x, d, a, p, e, b):
-        # rubi.append(5085)
-        return Int((a + b*acos(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5086(c, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5086)
-        return Dist((d + e*x)**FracPart(p)*(f + g*x)**FracPart(p)*(d*f + e*g*x**S(2))**(-FracPart(p)), Int((a + b*asin(c*x))**n*(d*f + e*g*x**S(2))**p, x), x)
-def replacement5087(c, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5087)
-        return Dist((d + e*x)**FracPart(p)*(f + g*x)**FracPart(p)*(d*f + e*g*x**S(2))**(-FracPart(p)), Int((a + b*acos(c*x))**n*(d*f + e*g*x**S(2))**p, x), x)
-def replacement5088(c, n, x, d, a, e, b):
-        # rubi.append(5088)
-        return -Dist(S(1)/e, Subst(Int((a + b*x)**n*tan(x), x), x, asin(c*x)), x)
-def replacement5089(c, n, x, d, a, e, b):
-        # rubi.append(5089)
-        return Dist(S(1)/e, Subst(Int((a + b*x)**n/tan(x), x), x, acos(c*x)), x)
-def replacement5090(c, n, x, d, a, p, e, b):
-        # rubi.append(5090)
-        return Dist(b*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*c*(p + S(1))), Int((a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
-def replacement5091(c, n, x, d, a, p, e, b):
-        # rubi.append(5091)
-        return -Dist(b*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*c*(p + S(1))), Int((a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
-def replacement5092(c, n, x, d, a, e, b):
-        # rubi.append(5092)
-        return Dist(S(1)/d, Subst(Int((a + b*x)**n/(sin(x)*cos(x)), x), x, asin(c*x)), x)
-def replacement5093(c, n, x, d, a, e, b):
-        # rubi.append(5093)
-        return -Dist(S(1)/d, Subst(Int((a + b*x)**n/(sin(x)*cos(x)), x), x, acos(c*x)), x)
-def replacement5094(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5094)
-        return -Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*f*(m + S(1))), x)
-def replacement5095(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5095)
-        return Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*f*(m + S(1))), x)
-def replacement5096(c, x, d, a, p, e, b):
-        # rubi.append(5096)
-        return Dist(d, Int((a + b*asin(c*x))*(d + e*x**S(2))**(p + S(-1))/x, x), x) - Dist(b*c*d**p/(S(2)*p), Int((-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((a + b*asin(c*x))*(d + e*x**S(2))**p/(S(2)*p), x)
-def replacement5097(c, x, d, a, p, e, b):
-        # rubi.append(5097)
-        return Dist(d, Int((a + b*acos(c*x))*(d + e*x**S(2))**(p + S(-1))/x, x), x) + Dist(b*c*d**p/(S(2)*p), Int((-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((a + b*acos(c*x))*(d + e*x**S(2))**p/(S(2)*p), x)
-def replacement5098(c, m, x, d, f, a, p, e, b):
-        # rubi.append(5098)
-        return -Dist(S(2)*e*p/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*asin(c*x))*(d + e*x**S(2))**(p + S(-1)), x), x) - Dist(b*c*d**p/(f*(m + S(1))), Int((f*x)**(m + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))*(d + e*x**S(2))**p/(f*(m + S(1))), x)
-def replacement5099(c, m, x, d, f, a, p, e, b):
-        # rubi.append(5099)
-        return -Dist(S(2)*e*p/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*acos(c*x))*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b*c*d**p/(f*(m + S(1))), Int((f*x)**(m + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))*(d + e*x**S(2))**p/(f*(m + S(1))), x)
+def replacement5035(a, c, n, b, x):
+    return Dist(b*c*n, Int(x*(a + b*acos(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*acos(c*x))**n, x)
 
-def With5100(c, m, x, d, f, a, p, e, b):
-        u = IntHide((f*x)**m*(d + e*x**S(2))**p, x)
-        # rubi.append(5100)
-        return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
 
-def With5101(c, m, x, d, f, a, p, e, b):
-        u = IntHide((f*x)**m*(d + e*x**S(2))**p, x)
-        # rubi.append(5101)
-        return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
+def replacement5036(a, c, n, b, x):
+    return Dist(c/(b*(n + S(1))), Int(x*(a + b*asin(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
 
-def With5102(c, m, x, d, a, p, e, b):
-        u = IntHide(x**m*(-c**S(2)*x**S(2) + S(1))**p, x)
-        # rubi.append(5102)
-        return Dist(d**p*(a + b*asin(c*x)), u, x) - Dist(b*c*d**p, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x)
 
-def With5103(c, m, x, d, a, p, e, b):
-        u = IntHide(x**m*(-c**S(2)*x**S(2) + S(1))**p, x)
-        # rubi.append(5103)
-        return Dist(d**p*(a + b*acos(c*x)), u, x) + Dist(b*c*d**p, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x)
+def replacement5037(a, c, n, b, x):
+    return -Dist(c/(b*(n + S(1))), Int(x*(a + b*acos(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
 
-def With5104(c, m, x, d, a, p, e, b):
-        u = IntHide(x**m*(-c**S(2)*x**S(2) + S(1))**p, x)
-        # rubi.append(5104)
-        return -Dist(b*c*d**(p + S(-1)/2)*sqrt(d + e*x**S(2))/sqrt(-c**S(2)*x**S(2) + S(1)), Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), Int(x**m*(d + e*x**S(2))**p, x), x)
 
-def With5105(c, m, x, d, a, p, e, b):
-        u = IntHide(x**m*(-c**S(2)*x**S(2) + S(1))**p, x)
-        # rubi.append(5105)
-        return Dist(b*c*d**(p + S(-1)/2)*sqrt(d + e*x**S(2))/sqrt(-c**S(2)*x**S(2) + S(1)), Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), Int(x**m*(d + e*x**S(2))**p, x), x)
-def replacement5106(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5106)
-        return Dist(c**S(2)*sqrt(d + e*x**S(2))/(f**S(2)*(m + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(2))*(a + b*asin(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Dist(b*c*n*sqrt(d + e*x**S(2))/(f*(m + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1)), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*sqrt(d + e*x**S(2))/(f*(m + S(1))), x)
-def replacement5107(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5107)
-        return Dist(c**S(2)*sqrt(d + e*x**S(2))/(f**S(2)*(m + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(2))*(a + b*acos(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Dist(b*c*n*sqrt(d + e*x**S(2))/(f*(m + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1)), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*sqrt(d + e*x**S(2))/(f*(m + S(1))), x)
-def replacement5108(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5108)
-        return -Dist(S(2)*e*p/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**p/(f*(m + S(1))), x)
-def replacement5109(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5109)
-        return -Dist(S(2)*e*p/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**p/(f*(m + S(1))), x)
-def replacement5110(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5110)
-        return Dist(sqrt(d + e*x**S(2))/((m + S(2))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**m*(a + b*asin(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Dist(b*c*n*sqrt(d + e*x**S(2))/(f*(m + S(2))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1)), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*sqrt(d + e*x**S(2))/(f*(m + S(2))), x)
-def replacement5111(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5111)
-        return Dist(sqrt(d + e*x**S(2))/((m + S(2))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**m*(a + b*acos(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Dist(b*c*n*sqrt(d + e*x**S(2))/(f*(m + S(2))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1)), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*sqrt(d + e*x**S(2))/(f*(m + S(2))), x)
-def replacement5112(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5112)
-        return Dist(S(2)*d*p/(m + S(2)*p + S(1)), Int((f*x)**m*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(2)*p + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**p/(f*(m + S(2)*p + S(1))), x)
-def replacement5113(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5113)
-        return Dist(S(2)*d*p/(m + S(2)*p + S(1)), Int((f*x)**m*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(2)*p + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**p/(f*(m + S(2)*p + S(1))), x)
-def replacement5114(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5114)
-        return Dist(c**S(2)*(m + S(2)*p + S(3))/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*asin(c*x))**n*(d + e*x**S(2))**p, x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*f*(m + S(1))), x)
-def replacement5115(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5115)
-        return Dist(c**S(2)*(m + S(2)*p + S(3))/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*acos(c*x))**n*(d + e*x**S(2))**p, x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*f*(m + S(1))), x)
-def replacement5116(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5116)
-        return -Dist(f**S(2)*(m + S(-1))/(S(2)*e*(p + S(1))), Int((f*x)**(m + S(-2))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) + Dist(b*d**IntPart(p)*f*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*c*(p + S(1))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
-def replacement5117(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5117)
-        return -Dist(f**S(2)*(m + S(-1))/(S(2)*e*(p + S(1))), Int((f*x)**(m + S(-2))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(b*d**IntPart(p)*f*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*c*(p + S(1))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
-def replacement5118(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5118)
-        return Dist((m + S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((f*x)**m*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*f*(p + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) - Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*f*(p + S(1))), x)
-def replacement5119(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5119)
-        return Dist((m + S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((f*x)**m*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*f*(p + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) - Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*f*(p + S(1))), x)
-def replacement5120(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5120)
-        return Dist(f**S(2)*(m + S(-1))/(c**S(2)*m), Int((f*x)**(m + S(-2))*(a + b*asin(c*x))**n/sqrt(d + e*x**S(2)), x), x) + Dist(b*f*n*sqrt(-c**S(2)*x**S(2) + S(1))/(c*m*sqrt(d + e*x**S(2))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(-1)), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*asin(c*x))**n*sqrt(d + e*x**S(2))/(e*m), x)
-def replacement5121(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5121)
-        return Dist(f**S(2)*(m + S(-1))/(c**S(2)*m), Int((f*x)**(m + S(-2))*(a + b*acos(c*x))**n/sqrt(d + e*x**S(2)), x), x) - Dist(b*f*n*sqrt(-c**S(2)*x**S(2) + S(1))/(c*m*sqrt(d + e*x**S(2))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(-1)), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*acos(c*x))**n*sqrt(d + e*x**S(2))/(e*m), x)
-def replacement5122(c, m, n, x, d, a, e, b):
-        # rubi.append(5122)
-        return Dist(c**(-m + S(-1))/sqrt(d), Subst(Int((a + b*x)**n*sin(x)**m, x), x, asin(c*x)), x)
-def replacement5123(c, m, n, x, d, a, e, b):
-        # rubi.append(5123)
-        return -Dist(c**(-m + S(-1))/sqrt(d), Subst(Int((a + b*x)**n*cos(x)**m, x), x, acos(c*x)), x)
-def replacement5124(c, m, x, d, f, a, e, b):
-        # rubi.append(5124)
-        return Simp((f*x)**(m + S(1))*(a + b*asin(c*x))*Hypergeometric2F1(S(1)/2, m/S(2) + S(1)/2, m/S(2) + S(3)/2, c**S(2)*x**S(2))/(sqrt(d)*f*(m + S(1))), x) - Simp(b*c*(f*x)**(m + S(2))*HypergeometricPFQ(List(S(1), m/S(2) + S(1), m/S(2) + S(1)), List(m/S(2) + S(3)/2, m/S(2) + S(2)), c**S(2)*x**S(2))/(sqrt(d)*f**S(2)*(m + S(1))*(m + S(2))), x)
-def replacement5125(c, m, x, d, f, a, e, b):
-        # rubi.append(5125)
-        return Simp((f*x)**(m + S(1))*(a + b*acos(c*x))*Hypergeometric2F1(S(1)/2, m/S(2) + S(1)/2, m/S(2) + S(3)/2, c**S(2)*x**S(2))/(sqrt(d)*f*(m + S(1))), x) + Simp(b*c*(f*x)**(m + S(2))*HypergeometricPFQ(List(S(1), m/S(2) + S(1), m/S(2) + S(1)), List(m/S(2) + S(3)/2, m/S(2) + S(2)), c**S(2)*x**S(2))/(sqrt(d)*f**S(2)*(m + S(1))*(m + S(2))), x)
-def replacement5126(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5126)
-        return Dist(sqrt(-c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((f*x)**m*(a + b*asin(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x)
-def replacement5127(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5127)
-        return Dist(sqrt(-c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((f*x)**m*(a + b*acos(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x)
-def replacement5128(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5128)
-        return Dist(f**S(2)*(m + S(-1))/(c**S(2)*(m + S(2)*p + S(1))), Int((f*x)**(m + S(-2))*(a + b*asin(c*x))**n*(d + e*x**S(2))**p, x), x) + Dist(b*d**IntPart(p)*f*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(c*(m + S(2)*p + S(1))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(e*(m + S(2)*p + S(1))), x)
-def replacement5129(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5129)
-        return Dist(f**S(2)*(m + S(-1))/(c**S(2)*(m + S(2)*p + S(1))), Int((f*x)**(m + S(-2))*(a + b*acos(c*x))**n*(d + e*x**S(2))**p, x), x) - Dist(b*d**IntPart(p)*f*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(c*(m + S(2)*p + S(1))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(e*(m + S(2)*p + S(1))), x)
-def replacement5130(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5130)
-        return -Dist(d**IntPart(p)*f*m*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*c*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**m*(a + b*asin(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5131(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5131)
-        return Dist(d**IntPart(p)*f*m*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*c*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) - Simp((f*x)**m*(a + b*acos(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5132(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5132)
-        return -Dist(f*m/(b*c*sqrt(d)*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(1)), x), x) + Simp((f*x)**m*(a + b*asin(c*x))**(n + S(1))/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5133(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5133)
-        return Dist(f*m/(b*c*sqrt(d)*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(1)), x), x) - Simp((f*x)**m*(a + b*acos(c*x))**(n + S(1))/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5134(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5134)
-        return -Dist(d**IntPart(p)*f*m*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*c*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Dist(c*d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))*(m + S(2)*p + S(1))/(b*f*(n + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**m*(a + b*asin(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5135(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5135)
-        return Dist(d**IntPart(p)*f*m*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*c*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) - Dist(c*d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))*(m + S(2)*p + S(1))/(b*f*(n + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) - Simp((f*x)**m*(a + b*acos(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
-def replacement5136(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5136)
-        return Dist(c**(-m + S(-1))*d**p, Subst(Int((a + b*x)**n*sin(x)**m*cos(x)**(S(2)*p + S(1)), x), x, asin(c*x)), x)
-def replacement5137(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5137)
-        return -Dist(c**(-m + S(-1))*d**p, Subst(Int((a + b*x)**n*sin(x)**(S(2)*p + S(1))*cos(x)**m, x), x, acos(c*x)), x)
-def replacement5138(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5138)
-        return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int(x**m*(a + b*asin(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p, x), x)
-def replacement5139(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5139)
-        return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int(x**m*(a + b*acos(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p, x), x)
-def replacement5140(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5140)
-        return Int(ExpandIntegrand((a + b*asin(c*x))**n/sqrt(d + e*x**S(2)), (f*x)**m*(d + e*x**S(2))**(p + S(1)/2), x), x)
-def replacement5141(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5141)
-        return Int(ExpandIntegrand((a + b*acos(c*x))**n/sqrt(d + e*x**S(2)), (f*x)**m*(d + e*x**S(2))**(p + S(1)/2), x), x)
-def replacement5142(c, x, d, a, p, e, b):
-        # rubi.append(5142)
-        return -Dist(b*c/(S(2)*e*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*asin(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
-def replacement5143(c, x, d, a, p, e, b):
-        # rubi.append(5143)
-        return Dist(b*c/(S(2)*e*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*acos(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+def replacement5038(a, c, n, b, x):
+    return Dist(S(1)/(b*c), Subst(Int(x**n*cos(a/b - x/b), x), x, a + b*asin(c*x)), x)
 
-def With5144(c, m, x, d, f, a, p, e, b):
-        u = IntHide((f*x)**m*(d + e*x**S(2))**p, x)
-        # rubi.append(5144)
-        return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
 
-def With5145(c, m, x, d, f, a, p, e, b):
-        u = IntHide((f*x)**m*(d + e*x**S(2))**p, x)
-        # rubi.append(5145)
-        return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
-def replacement5146(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5146)
-        return Int(ExpandIntegrand((a + b*asin(c*x))**n, (f*x)**m*(d + e*x**S(2))**p, x), x)
-def replacement5147(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5147)
-        return Int(ExpandIntegrand((a + b*acos(c*x))**n, (f*x)**m*(d + e*x**S(2))**p, x), x)
-def replacement5148(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5148)
-        return Int((f*x)**m*(a + b*asin(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5149(c, m, n, x, d, f, a, p, e, b):
-        # rubi.append(5149)
-        return Int((f*x)**m*(a + b*acos(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5150(c, m, n, x, d, h, f, g, a, p, e, b):
-        # rubi.append(5150)
-        return Dist((d + e*x)**FracPart(p)*(f + g*x)**FracPart(p)*(d*f + e*g*x**S(2))**(-FracPart(p)), Int((h*x)**m*(a + b*asin(c*x))**n*(d*f + e*g*x**S(2))**p, x), x)
-def replacement5151(c, m, n, x, d, h, f, g, a, p, e, b):
-        # rubi.append(5151)
-        return Dist((d + e*x)**FracPart(p)*(f + g*x)**FracPart(p)*(d*f + e*g*x**S(2))**(-FracPart(p)), Int((h*x)**m*(a + b*acos(c*x))**n*(d*f + e*g*x**S(2))**p, x), x)
-def replacement5152(c, n, x, d, a, e, b):
-        # rubi.append(5152)
-        return Subst(Int((a + b*x)**n*cos(x)/(c*d + e*sin(x)), x), x, asin(c*x))
-def replacement5153(c, n, x, d, a, e, b):
-        # rubi.append(5153)
-        return -Subst(Int((a + b*x)**n*sin(x)/(c*d + e*cos(x)), x), x, acos(c*x))
-def replacement5154(c, m, n, x, d, a, e, b):
-        # rubi.append(5154)
-        return -Dist(b*c*n/(e*(m + S(1))), Int((a + b*asin(c*x))**(n + S(-1))*(d + e*x)**(m + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*asin(c*x))**n*(d + e*x)**(m + S(1))/(e*(m + S(1))), x)
-def replacement5155(c, m, n, x, d, a, e, b):
-        # rubi.append(5155)
-        return Dist(b*c*n/(e*(m + S(1))), Int((a + b*acos(c*x))**(n + S(-1))*(d + e*x)**(m + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*acos(c*x))**n*(d + e*x)**(m + S(1))/(e*(m + S(1))), x)
-def replacement5156(c, m, n, x, d, a, e, b):
-        # rubi.append(5156)
-        return Int(ExpandIntegrand((a + b*asin(c*x))**n*(d + e*x)**m, x), x)
-def replacement5157(c, m, n, x, d, a, e, b):
-        # rubi.append(5157)
-        return Int(ExpandIntegrand((a + b*acos(c*x))**n*(d + e*x)**m, x), x)
-def replacement5158(c, m, n, x, d, a, e, b):
-        # rubi.append(5158)
-        return Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*(c*d + e*sin(x))**m*cos(x), x), x, asin(c*x)), x)
-def replacement5159(c, m, n, x, d, a, e, b):
-        # rubi.append(5159)
-        return -Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*(c*d + e*cos(x))**m*sin(x), x), x, acos(c*x)), x)
+def replacement5039(a, c, n, b, x):
+    return Dist(S(1)/(b*c), Subst(Int(x**n*sin(a/b - x/b), x), x, a + b*acos(c*x)), x)
 
-def With5160(c, x, Px, a, b):
-        u = IntHide(Px, x)
-        # rubi.append(5160)
-        return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
 
-def With5161(c, x, Px, a, b):
-        u = IntHide(Px, x)
-        # rubi.append(5161)
-        return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
-def replacement5162(c, n, x, Px, a, b):
-        # rubi.append(5162)
-        return Int(ExpandIntegrand(Px*(a + b*asin(c*x))**n, x), x)
-def replacement5163(c, n, x, Px, a, b):
-        # rubi.append(5163)
-        return Int(ExpandIntegrand(Px*(a + b*acos(c*x))**n, x), x)
+def replacement5040(a, c, n, b, x):
+    return Subst(Int((a + b*x)**n/tan(x), x), x, asin(c*x))
 
-def With5164(c, m, x, d, Px, a, e, b):
-        u = IntHide(Px*(d + e*x)**m, x)
-        # rubi.append(5164)
-        return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
 
-def With5165(c, m, x, d, Px, a, e, b):
-        u = IntHide(Px*(d + e*x)**m, x)
-        # rubi.append(5165)
-        return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
+def replacement5041(a, c, n, b, x):
+    return -Subst(Int((a + b*x)**n*tan(x), x), x, acos(c*x))
 
-def With5166(c, m, n, x, d, f, g, a, p, e, b):
-        u = IntHide((d + e*x)**m*(f + g*x)**p, x)
-        # rubi.append(5166)
-        return -Dist(b*c*n, Int(SimplifyIntegrand(u*(a + b*asin(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist((a + b*asin(c*x))**n, u, x)
 
-def With5167(c, m, n, x, d, f, g, a, p, e, b):
-        u = IntHide((d + e*x)**m*(f + g*x)**p, x)
-        # rubi.append(5167)
-        return Dist(b*c*n, Int(SimplifyIntegrand(u*(a + b*acos(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist((a + b*acos(c*x))**n, u, x)
+def replacement5042(d, a, c, n, m, b, x):
+    return -Dist(b*c*n/(d*(m + S(1))), Int((d*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((d*x)**(m + S(1))*(a + b*asin(c*x))**n/(d*(m + S(1))), x)
 
-def With5168(c, n, x, d, h, f, g, a, p, e, b):
-        u = IntHide((f + g*x + h*x**S(2))**p/(d + e*x)**S(2), x)
-        # rubi.append(5168)
-        return -Dist(b*c*n, Int(SimplifyIntegrand(u*(a + b*asin(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist((a + b*asin(c*x))**n, u, x)
 
-def With5169(c, n, x, d, h, f, g, a, p, e, b):
-        u = IntHide((f + g*x + h*x**S(2))**p/(d + e*x)**S(2), x)
-        # rubi.append(5169)
-        return Dist(b*c*n, Int(SimplifyIntegrand(u*(a + b*acos(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist((a + b*acos(c*x))**n, u, x)
-def replacement5170(c, m, n, x, d, Px, a, e, b):
-        # rubi.append(5170)
-        return Int(ExpandIntegrand(Px*(a + b*asin(c*x))**n*(d + e*x)**m, x), x)
-def replacement5171(c, m, n, x, d, Px, a, e, b):
-        # rubi.append(5171)
-        return Int(ExpandIntegrand(Px*(a + b*acos(c*x))**n*(d + e*x)**m, x), x)
+def replacement5043(d, a, c, n, m, b, x):
+    return Dist(b*c*n/(d*(m + S(1))), Int((d*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((d*x)**(m + S(1))*(a + b*acos(c*x))**n/(d*(m + S(1))), x)
 
-def With5172(c, m, x, d, f, g, a, p, e, b):
-        u = IntHide((d + e*x**S(2))**p*(f + g*x)**m, x)
-        # rubi.append(5172)
-        return -Dist(b*c, Int(Dist(S(1)/sqrt(-c**S(2)*x**S(2) + S(1)), u, x), x), x) + Dist(a + b*asin(c*x), u, x)
 
-def With5173(c, m, x, d, f, g, a, p, e, b):
-        u = IntHide((d + e*x**S(2))**p*(f + g*x)**m, x)
-        # rubi.append(5173)
-        return Dist(b*c, Int(Dist(S(1)/sqrt(-c**S(2)*x**S(2) + S(1)), u, x), x), x) + Dist(a + b*acos(c*x), u, x)
-def replacement5174(c, m, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5174)
-        return Int(ExpandIntegrand((a + b*asin(c*x))**n*(d + e*x**S(2))**p, (f + g*x)**m, x), x)
-def replacement5175(c, m, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5175)
-        return Int(ExpandIntegrand((a + b*acos(c*x))**n*(d + e*x**S(2))**p, (f + g*x)**m, x), x)
-def replacement5176(c, m, n, x, d, f, g, a, e, b):
-        # rubi.append(5176)
-        return -Dist(S(1)/(b*c*sqrt(d)*(n + S(1))), Int((a + b*asin(c*x))**(n + S(1))*(f + g*x)**(m + S(-1))*(d*g*m + S(2)*e*f*x + e*g*x**S(2)*(m + S(2))), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*(d + e*x**S(2))*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5177(c, m, n, x, d, f, g, a, e, b):
-        # rubi.append(5177)
-        return Dist(S(1)/(b*c*sqrt(d)*(n + S(1))), Int((a + b*acos(c*x))**(n + S(1))*(f + g*x)**(m + S(-1))*(d*g*m + S(2)*e*f*x + e*g*x**S(2)*(m + S(2))), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*(d + e*x**S(2))*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5178(c, m, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5178)
-        return Int(ExpandIntegrand((a + b*asin(c*x))**n*sqrt(d + e*x**S(2)), (d + e*x**S(2))**(p + S(-1)/2)*(f + g*x)**m, x), x)
-def replacement5179(c, m, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5179)
-        return Int(ExpandIntegrand((a + b*acos(c*x))**n*sqrt(d + e*x**S(2)), (d + e*x**S(2))**(p + S(-1)/2)*(f + g*x)**m, x), x)
-def replacement5180(c, m, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5180)
-        return -Dist(S(1)/(b*c*sqrt(d)*(n + S(1))), Int(ExpandIntegrand((a + b*asin(c*x))**(n + S(1))*(f + g*x)**(m + S(-1)), (d + e*x**S(2))**(p + S(-1)/2)*(d*g*m + e*f*x*(S(2)*p + S(1)) + e*g*x**S(2)*(m + S(2)*p + S(1))), x), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1)/2)*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5181(c, m, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5181)
-        return Dist(S(1)/(b*c*sqrt(d)*(n + S(1))), Int(ExpandIntegrand((a + b*acos(c*x))**(n + S(1))*(f + g*x)**(m + S(-1)), (d + e*x**S(2))**(p + S(-1)/2)*(d*g*m + e*f*x*(S(2)*p + S(1)) + e*g*x**S(2)*(m + S(2)*p + S(1))), x), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1)/2)*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5182(c, m, n, x, d, f, g, a, e, b):
-        # rubi.append(5182)
-        return -Dist(g*m/(b*c*sqrt(d)*(n + S(1))), Int((a + b*asin(c*x))**(n + S(1))*(f + g*x)**(m + S(-1)), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5183(c, m, n, x, d, f, g, a, e, b):
-        # rubi.append(5183)
-        return Dist(g*m/(b*c*sqrt(d)*(n + S(1))), Int((a + b*acos(c*x))**(n + S(1))*(f + g*x)**(m + S(-1)), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5184(c, m, n, x, d, f, g, a, e, b):
-        # rubi.append(5184)
-        return Dist(c**(-m + S(-1))/sqrt(d), Subst(Int((a + b*x)**n*(c*f + g*sin(x))**m, x), x, asin(c*x)), x)
-def replacement5185(c, m, n, x, d, f, g, a, e, b):
-        # rubi.append(5185)
-        return -Dist(c**(-m + S(-1))/sqrt(d), Subst(Int((a + b*x)**n*(c*f + g*cos(x))**m, x), x, acos(c*x)), x)
-def replacement5186(c, m, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5186)
-        return Int(ExpandIntegrand((a + b*asin(c*x))**n/sqrt(d + e*x**S(2)), (d + e*x**S(2))**(p + S(1)/2)*(f + g*x)**m, x), x)
-def replacement5187(c, m, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5187)
-        return Int(ExpandIntegrand((a + b*acos(c*x))**n/sqrt(d + e*x**S(2)), (d + e*x**S(2))**(p + S(1)/2)*(f + g*x)**m, x), x)
-def replacement5188(c, m, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5188)
-        return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int((a + b*asin(c*x))**n*(f + g*x)**m*(-c**S(2)*x**S(2) + S(1))**p, x), x)
-def replacement5189(c, m, n, x, d, f, g, a, p, e, b):
-        # rubi.append(5189)
-        return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int((a + b*acos(c*x))**n*(f + g*x)**m*(-c**S(2)*x**S(2) + S(1))**p, x), x)
-def replacement5190(c, m, n, x, d, h, f, g, a, e, b):
-        # rubi.append(5190)
-        return -Dist(g*m/(b*c*sqrt(d)*(n + S(1))), Int((a + b*asin(c*x))**(n + S(1))/(f + g*x), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*log(h*(f + g*x)**m)/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5191(c, m, n, x, d, h, f, g, a, e, b):
-        # rubi.append(5191)
-        return Dist(g*m/(b*c*sqrt(d)*(n + S(1))), Int((a + b*acos(c*x))**(n + S(1))/(f + g*x), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*log(h*(f + g*x)**m)/(b*c*sqrt(d)*(n + S(1))), x)
-def replacement5192(c, m, n, x, d, h, f, g, a, p, e, b):
-        # rubi.append(5192)
-        return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int((a + b*asin(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p*log(h*(f + g*x)**m), x), x)
-def replacement5193(c, m, n, x, d, h, f, g, a, p, e, b):
-        # rubi.append(5193)
-        return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int((a + b*acos(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p*log(h*(f + g*x)**m), x), x)
+def replacement5044(a, c, n, m, b, x):
+    return -Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x**(m + S(1))*(a + b*asin(c*x))**n/(m + S(1)), x)
 
-def With5194(c, m, x, d, f, g, a, e, b):
-        u = IntHide((d + e*x)**m*(f + g*x)**m, x)
-        # rubi.append(5194)
-        return -Dist(b*c, Int(Dist(S(1)/sqrt(-c**S(2)*x**S(2) + S(1)), u, x), x), x) + Dist(a + b*asin(c*x), u, x)
 
-def With5195(c, m, x, d, f, g, a, e, b):
-        u = IntHide((d + e*x)**m*(f + g*x)**m, x)
-        # rubi.append(5195)
-        return Dist(b*c, Int(Dist(S(1)/sqrt(-c**S(2)*x**S(2) + S(1)), u, x), x), x) + Dist(a + b*acos(c*x), u, x)
-def replacement5196(c, m, n, x, d, f, g, a, e, b):
-        # rubi.append(5196)
-        return Int(ExpandIntegrand((a + b*asin(c*x))**n*(d + e*x)**m*(f + g*x)**m, x), x)
-def replacement5197(c, m, n, x, d, f, g, a, e, b):
-        # rubi.append(5197)
-        return Int(ExpandIntegrand((a + b*acos(c*x))**n*(d + e*x)**m*(f + g*x)**m, x), x)
+def replacement5045(a, c, n, m, b, x):
+    return Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x**(m + S(1))*(a + b*acos(c*x))**n/(m + S(1)), x)
 
-def With5198(c, x, u, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        v = IntHide(u, x)
-        if InverseFunctionFreeQ(v, x):
-            return True
+
+def replacement5046(a, c, n, m, b, x):
+    return -Dist(c**(-m + S(-1))/(b*(n + S(1))), Subst(Int(ExpandTrigReduce((a + b*x)**(n + S(1)), (m - (m + S(1))*sin(x)**S(2))*sin(x)**(m + S(-1)), x), x), x, asin(c*x)), x) + Simp(x**m*(a + b*asin(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
+
+
+def replacement5047(a, c, n, m, b, x):
+    return -Dist(c**(-m + S(-1))/(b*(n + S(1))), Subst(Int(ExpandTrigReduce((a + b*x)**(n + S(1)), (m - (m + S(1))*cos(x)**S(2))*cos(x)**(m + S(-1)), x), x), x, acos(c*x)), x) - Simp(x**m*(a + b*acos(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
+
+
+def replacement5048(a, c, n, m, b, x):
+    return -Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*asin(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Dist(c*(m + S(1))/(b*(n + S(1))), Int(x**(m + S(1))*(a + b*asin(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x**m*(a + b*asin(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
+
+
+def replacement5049(a, c, n, m, b, x):
+    return Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*acos(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Dist(c*(m + S(1))/(b*(n + S(1))), Int(x**(m + S(1))*(a + b*acos(c*x))**(n + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Simp(x**m*(a + b*acos(c*x))**(n + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
+
+
+def replacement5050(a, c, n, m, b, x):
+    return Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*sin(x)**m*cos(x), x), x, asin(c*x)), x)
+
+
+def replacement5051(a, c, n, m, b, x):
+    return -Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*sin(x)*cos(x)**m, x), x, acos(c*x)), x)
+
+
+def replacement5052(d, a, c, n, m, b, x):
+    return Int((d*x)**m*(a + b*asin(c*x))**n, x)
+
+
+def replacement5053(d, a, c, n, m, b, x):
+    return Int((d*x)**m*(a + b*acos(c*x))**n, x)
+
+
+def replacement5054(d, a, c, b, e, x):
+    return Simp(log(a + b*asin(c*x))/(b*c*sqrt(d)), x)
+
+
+def replacement5055(d, a, c, b, e, x):
+    return -Simp(log(a + b*acos(c*x))/(b*c*sqrt(d)), x)
+
+
+def replacement5056(d, a, c, n, b, e, x):
+    return Simp((a + b*asin(c*x))**(n + S(1))/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5057(d, a, c, n, b, e, x):
+    return -Simp((a + b*acos(c*x))**(n + S(1))/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5058(d, a, c, n, b, e, x):
+    return Dist(sqrt(-c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*asin(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x)
+
+
+def replacement5059(d, a, c, n, b, e, x):
+    return Dist(sqrt(-c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*acos(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x)
+
+
+def With5060(d, p, a, c, b, e, x):
+    u = IntHide((d + e*x**S(2))**p, x)
+    return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
+
+
+def With5061(d, p, a, c, b, e, x):
+    u = IntHide((d + e*x**S(2))**p, x)
+    return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
+
+
+def replacement5062(d, a, c, n, b, e, x):
+    return Dist(sqrt(d + e*x**S(2))/(S(2)*sqrt(-c**S(2)*x**S(2) + S(1))), Int((a + b*asin(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Dist(b*c*n*sqrt(d + e*x**S(2))/(S(2)*sqrt(-c**S(2)*x**S(2) + S(1))), Int(x*(a + b*asin(c*x))**(n + S(-1)), x), x) + Simp(x*(a + b*asin(c*x))**n*sqrt(d + e*x**S(2))/S(2), x)
+
+
+def replacement5063(d, a, c, n, b, e, x):
+    return Dist(sqrt(d + e*x**S(2))/(S(2)*sqrt(-c**S(2)*x**S(2) + S(1))), Int((a + b*acos(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Dist(b*c*n*sqrt(d + e*x**S(2))/(S(2)*sqrt(-c**S(2)*x**S(2) + S(1))), Int(x*(a + b*acos(c*x))**(n + S(-1)), x), x) + Simp(x*(a + b*acos(c*x))**n*sqrt(d + e*x**S(2))/S(2), x)
+
+
+def replacement5064(d, p, a, c, n, b, e, x):
+    return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*p + S(1)), Int(x*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp(x*(a + b*asin(c*x))**n*(d + e*x**S(2))**p/(S(2)*p + S(1)), x)
+
+
+def replacement5065(d, p, a, c, n, b, e, x):
+    return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*p + S(1)), Int(x*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp(x*(a + b*acos(c*x))**n*(d + e*x**S(2))**p/(S(2)*p + S(1)), x)
+
+
+def replacement5066(d, a, c, n, b, e, x):
+    return -Dist(b*c*n/sqrt(d), Int(x*(a + b*asin(c*x))**(n + S(-1))/(d + e*x**S(2)), x), x) + Simp(x*(a + b*asin(c*x))**n/(d*sqrt(d + e*x**S(2))), x)
+
+
+def replacement5067(d, a, c, n, b, e, x):
+    return Dist(b*c*n/sqrt(d), Int(x*(a + b*acos(c*x))**(n + S(-1))/(d + e*x**S(2)), x), x) + Simp(x*(a + b*acos(c*x))**n/(d*sqrt(d + e*x**S(2))), x)
+
+
+def replacement5068(d, a, c, n, b, e, x):
+    return -Dist(b*c*n*sqrt(-c**S(2)*x**S(2) + S(1))/(d*sqrt(d + e*x**S(2))), Int(x*(a + b*asin(c*x))**(n + S(-1))/(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*asin(c*x))**n/(d*sqrt(d + e*x**S(2))), x)
+
+
+def replacement5069(d, a, c, n, b, e, x):
+    return Dist(b*c*n*sqrt(-c**S(2)*x**S(2) + S(1))/(d*sqrt(d + e*x**S(2))), Int(x*(a + b*acos(c*x))**(n + S(-1))/(-c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*acos(c*x))**n/(d*sqrt(d + e*x**S(2))), x)
+
+
+def replacement5070(d, p, a, c, n, b, e, x):
+    return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*(p + S(1))), Int(x*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) - Simp(x*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x)
+
+
+def replacement5071(d, p, a, c, n, b, e, x):
+    return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*(p + S(1))), Int(x*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) - Simp(x*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x)
+
+
+def replacement5072(d, a, c, n, b, e, x):
+    return Dist(S(1)/(c*d), Subst(Int((a + b*x)**n/cos(x), x), x, asin(c*x)), x)
+
+
+def replacement5073(d, a, c, n, b, e, x):
+    return -Dist(S(1)/(c*d), Subst(Int((a + b*x)**n/sin(x), x), x, acos(c*x)), x)
+
+
+def replacement5074(d, p, a, c, n, b, e, x):
+    return Dist(c*d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(S(2)*p + S(1))*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*(n + S(1))), Int(x*(a + b*asin(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
+
+
+def replacement5075(d, p, a, c, n, b, e, x):
+    return -Dist(c*d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(S(2)*p + S(1))*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*(n + S(1))), Int(x*(a + b*acos(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
+
+
+def replacement5076(d, p, a, c, n, b, e, x):
+    return Dist(d**p/c, Subst(Int((a + b*x)**n*cos(x)**(S(2)*p + S(1)), x), x, asin(c*x)), x)
+
+
+def replacement5077(d, p, a, c, n, b, e, x):
+    return -Dist(d**p/c, Subst(Int((a + b*x)**n*sin(x)**(S(2)*p + S(1)), x), x, acos(c*x)), x)
+
+
+def replacement5078(d, p, a, c, n, b, e, x):
+    return Dist(d**(p + S(-1)/2)*sqrt(d + e*x**S(2))/sqrt(-c**S(2)*x**S(2) + S(1)), Int((a + b*asin(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p, x), x)
+
+
+def replacement5079(d, p, a, c, n, b, e, x):
+    return Dist(d**(p + S(-1)/2)*sqrt(d + e*x**S(2))/sqrt(-c**S(2)*x**S(2) + S(1)), Int((a + b*acos(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p, x), x)
+
+
+def With5080(d, p, a, c, b, e, x):
+    u = IntHide((d + e*x**S(2))**p, x)
+    return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
+
+
+def With5081(d, p, a, c, b, e, x):
+    u = IntHide((d + e*x**S(2))**p, x)
+    return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
+
+
+def replacement5082(d, p, a, c, n, b, e, x):
+    return Int(ExpandIntegrand((a + b*asin(c*x))**n, (d + e*x**S(2))**p, x), x)
+
+
+def replacement5083(d, p, a, c, n, b, e, x):
+    return Int(ExpandIntegrand((a + b*acos(c*x))**n, (d + e*x**S(2))**p, x), x)
+
+
+def replacement5084(d, p, a, c, n, b, e, x):
+    return Int((a + b*asin(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5085(d, p, a, c, n, b, e, x):
+    return Int((a + b*acos(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5086(d, p, a, c, g, n, b, f, e, x):
+    return Dist((d + e*x)**FracPart(p)*(f + g*x)**FracPart(p)*(d*f + e*g*x**S(2))**(-FracPart(p)), Int((a + b*asin(c*x))**n*(d*f + e*g*x**S(2))**p, x), x)
+
+
+def replacement5087(d, p, a, c, g, n, b, f, e, x):
+    return Dist((d + e*x)**FracPart(p)*(f + g*x)**FracPart(p)*(d*f + e*g*x**S(2))**(-FracPart(p)), Int((a + b*acos(c*x))**n*(d*f + e*g*x**S(2))**p, x), x)
+
+
+def replacement5088(d, a, c, n, b, e, x):
+    return -Dist(S(1)/e, Subst(Int((a + b*x)**n*tan(x), x), x, asin(c*x)), x)
+
+
+def replacement5089(d, a, c, n, b, e, x):
+    return Dist(S(1)/e, Subst(Int((a + b*x)**n/tan(x), x), x, acos(c*x)), x)
+
+
+def replacement5090(d, p, a, c, n, b, e, x):
+    return Dist(b*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*c*(p + S(1))), Int((a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def replacement5091(d, p, a, c, n, b, e, x):
+    return -Dist(b*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*c*(p + S(1))), Int((a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def replacement5092(d, a, c, n, b, e, x):
+    return Dist(S(1)/d, Subst(Int((a + b*x)**n/(sin(x)*cos(x)), x), x, asin(c*x)), x)
+
+
+def replacement5093(d, a, c, n, b, e, x):
+    return -Dist(S(1)/d, Subst(Int((a + b*x)**n/(sin(x)*cos(x)), x), x, acos(c*x)), x)
+
+
+def replacement5094(d, p, a, c, n, m, b, f, e, x):
+    return -Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*f*(m + S(1))), x)
+
+
+def replacement5095(d, p, a, c, n, m, b, f, e, x):
+    return Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*f*(m + S(1))), x)
+
+
+def replacement5096(d, p, a, c, b, e, x):
+    return Dist(d, Int((a + b*asin(c*x))*(d + e*x**S(2))**(p + S(-1))/x, x), x) - Dist(b*c*d**p/(S(2)*p), Int((-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((a + b*asin(c*x))*(d + e*x**S(2))**p/(S(2)*p), x)
+
+
+def replacement5097(d, p, a, c, b, e, x):
+    return Dist(d, Int((a + b*acos(c*x))*(d + e*x**S(2))**(p + S(-1))/x, x), x) + Dist(b*c*d**p/(S(2)*p), Int((-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((a + b*acos(c*x))*(d + e*x**S(2))**p/(S(2)*p), x)
+
+
+def replacement5098(d, p, a, c, m, b, f, e, x):
+    return -Dist(S(2)*e*p/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*asin(c*x))*(d + e*x**S(2))**(p + S(-1)), x), x) - Dist(b*c*d**p/(f*(m + S(1))), Int((f*x)**(m + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))*(d + e*x**S(2))**p/(f*(m + S(1))), x)
+
+
+def replacement5099(d, p, a, c, m, b, f, e, x):
+    return -Dist(S(2)*e*p/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*acos(c*x))*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b*c*d**p/(f*(m + S(1))), Int((f*x)**(m + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))*(d + e*x**S(2))**p/(f*(m + S(1))), x)
+
+
+def With5100(d, p, a, c, m, b, f, e, x):
+    u = IntHide((f*x)**m*(d + e*x**S(2))**p, x)
+    return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
+
+
+def With5101(d, p, a, c, m, b, f, e, x):
+    u = IntHide((f*x)**m*(d + e*x**S(2))**p, x)
+    return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
+
+
+def With5102(d, p, a, c, m, b, e, x):
+    u = IntHide(x**m*(-c**S(2)*x**S(2) + S(1))**p, x)
+    return Dist(d**p*(a + b*asin(c*x)), u, x) - Dist(b*c*d**p, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x)
+
+
+def With5103(d, p, a, c, m, b, e, x):
+    u = IntHide(x**m*(-c**S(2)*x**S(2) + S(1))**p, x)
+    return Dist(d**p*(a + b*acos(c*x)), u, x) + Dist(b*c*d**p, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x)
+
+
+def With5104(d, p, a, c, m, b, e, x):
+    u = IntHide(x**m*(-c**S(2)*x**S(2) + S(1))**p, x)
+    return -Dist(b*c*d**(p + S(-1)/2)*sqrt(d + e*x**S(2))/sqrt(-c**S(2)*x**S(2) + S(1)), Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), Int(x**m*(d + e*x**S(2))**p, x), x)
+
+
+def With5105(d, p, a, c, m, b, e, x):
+    u = IntHide(x**m*(-c**S(2)*x**S(2) + S(1))**p, x)
+    return Dist(b*c*d**(p + S(-1)/2)*sqrt(d + e*x**S(2))/sqrt(-c**S(2)*x**S(2) + S(1)), Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), Int(x**m*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5106(d, a, c, n, m, b, f, e, x):
+    return Dist(c**S(2)*sqrt(d + e*x**S(2))/(f**S(2)*(m + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(2))*(a + b*asin(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Dist(b*c*n*sqrt(d + e*x**S(2))/(f*(m + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1)), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*sqrt(d + e*x**S(2))/(f*(m + S(1))), x)
+
+
+def replacement5107(d, a, c, n, m, b, f, e, x):
+    return Dist(c**S(2)*sqrt(d + e*x**S(2))/(f**S(2)*(m + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(2))*(a + b*acos(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Dist(b*c*n*sqrt(d + e*x**S(2))/(f*(m + S(1))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1)), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*sqrt(d + e*x**S(2))/(f*(m + S(1))), x)
+
+
+def replacement5108(d, p, a, c, n, m, b, f, e, x):
+    return -Dist(S(2)*e*p/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**p/(f*(m + S(1))), x)
+
+
+def replacement5109(d, p, a, c, n, m, b, f, e, x):
+    return -Dist(S(2)*e*p/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**p/(f*(m + S(1))), x)
+
+
+def replacement5110(d, a, c, n, m, b, f, e, x):
+    return Dist(sqrt(d + e*x**S(2))/((m + S(2))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**m*(a + b*asin(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) - Dist(b*c*n*sqrt(d + e*x**S(2))/(f*(m + S(2))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1)), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*sqrt(d + e*x**S(2))/(f*(m + S(2))), x)
+
+
+def replacement5111(d, a, c, n, m, b, f, e, x):
+    return Dist(sqrt(d + e*x**S(2))/((m + S(2))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**m*(a + b*acos(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Dist(b*c*n*sqrt(d + e*x**S(2))/(f*(m + S(2))*sqrt(-c**S(2)*x**S(2) + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1)), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*sqrt(d + e*x**S(2))/(f*(m + S(2))), x)
+
+
+def replacement5112(d, p, a, c, n, m, b, f, e, x):
+    return Dist(S(2)*d*p/(m + S(2)*p + S(1)), Int((f*x)**m*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(2)*p + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**p/(f*(m + S(2)*p + S(1))), x)
+
+
+def replacement5113(d, p, a, c, n, m, b, f, e, x):
+    return Dist(S(2)*d*p/(m + S(2)*p + S(1)), Int((f*x)**m*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(2)*p + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**p/(f*(m + S(2)*p + S(1))), x)
+
+
+def replacement5114(d, p, a, c, n, m, b, f, e, x):
+    return Dist(c**S(2)*(m + S(2)*p + S(3))/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*asin(c*x))**n*(d + e*x**S(2))**p, x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*f*(m + S(1))), x)
+
+
+def replacement5115(d, p, a, c, n, m, b, f, e, x):
+    return Dist(c**S(2)*(m + S(2)*p + S(3))/(f**S(2)*(m + S(1))), Int((f*x)**(m + S(2))*(a + b*acos(c*x))**n*(d + e*x**S(2))**p, x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(f*(m + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*f*(m + S(1))), x)
+
+
+def replacement5116(d, p, a, c, n, m, b, f, e, x):
+    return -Dist(f**S(2)*(m + S(-1))/(S(2)*e*(p + S(1))), Int((f*x)**(m + S(-2))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) + Dist(b*d**IntPart(p)*f*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*c*(p + S(1))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def replacement5117(d, p, a, c, n, m, b, f, e, x):
+    return -Dist(f**S(2)*(m + S(-1))/(S(2)*e*(p + S(1))), Int((f*x)**(m + S(-2))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(b*d**IntPart(p)*f*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*c*(p + S(1))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def replacement5118(d, p, a, c, n, m, b, f, e, x):
+    return Dist((m + S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((f*x)**m*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) + Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*f*(p + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) - Simp((f*x)**(m + S(1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*f*(p + S(1))), x)
+
+
+def replacement5119(d, p, a, c, n, m, b, f, e, x):
+    return Dist((m + S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((f*x)**m*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(b*c*d**IntPart(p)*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(S(2)*f*(p + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) - Simp((f*x)**(m + S(1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*f*(p + S(1))), x)
+
+
+def replacement5120(d, a, c, n, m, b, f, e, x):
+    return Dist(f**S(2)*(m + S(-1))/(c**S(2)*m), Int((f*x)**(m + S(-2))*(a + b*asin(c*x))**n/sqrt(d + e*x**S(2)), x), x) + Dist(b*f*n*sqrt(-c**S(2)*x**S(2) + S(1))/(c*m*sqrt(d + e*x**S(2))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(-1)), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*asin(c*x))**n*sqrt(d + e*x**S(2))/(e*m), x)
+
+
+def replacement5121(d, a, c, n, m, b, f, e, x):
+    return Dist(f**S(2)*(m + S(-1))/(c**S(2)*m), Int((f*x)**(m + S(-2))*(a + b*acos(c*x))**n/sqrt(d + e*x**S(2)), x), x) - Dist(b*f*n*sqrt(-c**S(2)*x**S(2) + S(1))/(c*m*sqrt(d + e*x**S(2))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(-1)), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*acos(c*x))**n*sqrt(d + e*x**S(2))/(e*m), x)
+
+
+def replacement5122(d, a, c, n, m, b, e, x):
+    return Dist(c**(-m + S(-1))/sqrt(d), Subst(Int((a + b*x)**n*sin(x)**m, x), x, asin(c*x)), x)
+
+
+def replacement5123(d, a, c, n, m, b, e, x):
+    return -Dist(c**(-m + S(-1))/sqrt(d), Subst(Int((a + b*x)**n*cos(x)**m, x), x, acos(c*x)), x)
+
+
+def replacement5124(d, a, c, m, b, f, e, x):
+    return Simp((f*x)**(m + S(1))*(a + b*asin(c*x))*Hypergeometric2F1(S(1)/2, m/S(2) + S(1)/2, m/S(2) + S(3)/2, c**S(2)*x**S(2))/(sqrt(d)*f*(m + S(1))), x) - Simp(b*c*(f*x)**(m + S(2))*HypergeometricPFQ(List(S(1), m/S(2) + S(1), m/S(2) + S(1)), List(m/S(2) + S(3)/2, m/S(2) + S(2)), c**S(2)*x**S(2))/(sqrt(d)*f**S(2)*(m + S(1))*(m + S(2))), x)
+
+
+def replacement5125(d, a, c, m, b, f, e, x):
+    return Simp((f*x)**(m + S(1))*(a + b*acos(c*x))*Hypergeometric2F1(S(1)/2, m/S(2) + S(1)/2, m/S(2) + S(3)/2, c**S(2)*x**S(2))/(sqrt(d)*f*(m + S(1))), x) + Simp(b*c*(f*x)**(m + S(2))*HypergeometricPFQ(List(S(1), m/S(2) + S(1), m/S(2) + S(1)), List(m/S(2) + S(3)/2, m/S(2) + S(2)), c**S(2)*x**S(2))/(sqrt(d)*f**S(2)*(m + S(1))*(m + S(2))), x)
+
+
+def replacement5126(d, a, c, n, m, b, f, e, x):
+    return Dist(sqrt(-c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((f*x)**m*(a + b*asin(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x)
+
+
+def replacement5127(d, a, c, n, m, b, f, e, x):
+    return Dist(sqrt(-c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((f*x)**m*(a + b*acos(c*x))**n/sqrt(-c**S(2)*x**S(2) + S(1)), x), x)
+
+
+def replacement5128(d, p, a, c, n, m, b, f, e, x):
+    return Dist(f**S(2)*(m + S(-1))/(c**S(2)*(m + S(2)*p + S(1))), Int((f*x)**(m + S(-2))*(a + b*asin(c*x))**n*(d + e*x**S(2))**p, x), x) + Dist(b*d**IntPart(p)*f*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(c*(m + S(2)*p + S(1))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*asin(c*x))**n*(d + e*x**S(2))**(p + S(1))/(e*(m + S(2)*p + S(1))), x)
+
+
+def replacement5129(d, p, a, c, n, m, b, f, e, x):
+    return Dist(f**S(2)*(m + S(-1))/(c**S(2)*(m + S(2)*p + S(1))), Int((f*x)**(m + S(-2))*(a + b*acos(c*x))**n*(d + e*x**S(2))**p, x), x) - Dist(b*d**IntPart(p)*f*n*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(c*(m + S(2)*p + S(1))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(-1))*(-c**S(2)*x**S(2) + S(1))**(p + S(1)/2), x), x) + Simp(f*(f*x)**(m + S(-1))*(a + b*acos(c*x))**n*(d + e*x**S(2))**(p + S(1))/(e*(m + S(2)*p + S(1))), x)
+
+
+def replacement5130(d, p, a, c, n, m, b, f, e, x):
+    return -Dist(d**IntPart(p)*f*m*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*c*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**m*(a + b*asin(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
+
+
+def replacement5131(d, p, a, c, n, m, b, f, e, x):
+    return Dist(d**IntPart(p)*f*m*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*c*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) - Simp((f*x)**m*(a + b*acos(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
+
+
+def replacement5132(d, a, c, n, m, b, f, e, x):
+    return -Dist(f*m/(b*c*sqrt(d)*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(1)), x), x) + Simp((f*x)**m*(a + b*asin(c*x))**(n + S(1))/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5133(d, a, c, n, m, b, f, e, x):
+    return Dist(f*m/(b*c*sqrt(d)*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(1)), x), x) - Simp((f*x)**m*(a + b*acos(c*x))**(n + S(1))/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5134(d, p, a, c, n, m, b, f, e, x):
+    return -Dist(d**IntPart(p)*f*m*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*c*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*asin(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Dist(c*d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))*(m + S(2)*p + S(1))/(b*f*(n + S(1))), Int((f*x)**(m + S(1))*(a + b*asin(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) + Simp((f*x)**m*(a + b*asin(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
+
+
+def replacement5135(d, p, a, c, n, m, b, f, e, x):
+    return Dist(d**IntPart(p)*f*m*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))/(b*c*(n + S(1))), Int((f*x)**(m + S(-1))*(a + b*acos(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) - Dist(c*d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p))*(m + S(2)*p + S(1))/(b*f*(n + S(1))), Int((f*x)**(m + S(1))*(a + b*acos(c*x))**(n + S(1))*(-c**S(2)*x**S(2) + S(1))**(p + S(-1)/2), x), x) - Simp((f*x)**m*(a + b*acos(c*x))**(n + S(1))*(d + e*x**S(2))**p*sqrt(-c**S(2)*x**S(2) + S(1))/(b*c*(n + S(1))), x)
+
+
+def replacement5136(d, p, a, c, n, m, b, e, x):
+    return Dist(c**(-m + S(-1))*d**p, Subst(Int((a + b*x)**n*sin(x)**m*cos(x)**(S(2)*p + S(1)), x), x, asin(c*x)), x)
+
+
+def replacement5137(d, p, a, c, n, m, b, e, x):
+    return -Dist(c**(-m + S(-1))*d**p, Subst(Int((a + b*x)**n*sin(x)**(S(2)*p + S(1))*cos(x)**m, x), x, acos(c*x)), x)
+
+
+def replacement5138(d, p, a, c, n, m, b, e, x):
+    return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int(x**m*(a + b*asin(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p, x), x)
+
+
+def replacement5139(d, p, a, c, n, m, b, e, x):
+    return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int(x**m*(a + b*acos(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p, x), x)
+
+
+def replacement5140(d, p, a, c, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*asin(c*x))**n/sqrt(d + e*x**S(2)), (f*x)**m*(d + e*x**S(2))**(p + S(1)/2), x), x)
+
+
+def replacement5141(d, p, a, c, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*acos(c*x))**n/sqrt(d + e*x**S(2)), (f*x)**m*(d + e*x**S(2))**(p + S(1)/2), x), x)
+
+
+def replacement5142(d, p, a, c, b, e, x):
+    return -Dist(b*c/(S(2)*e*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*asin(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def replacement5143(d, p, a, c, b, e, x):
+    return Dist(b*c/(S(2)*e*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*acos(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def With5144(d, p, a, c, m, b, f, e, x):
+    u = IntHide((f*x)**m*(d + e*x**S(2))**p, x)
+    return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
+
+
+def With5145(d, p, a, c, m, b, f, e, x):
+    u = IntHide((f*x)**m*(d + e*x**S(2))**p, x)
+    return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
+
+
+def replacement5146(d, p, a, c, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*asin(c*x))**n, (f*x)**m*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5147(d, p, a, c, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*acos(c*x))**n, (f*x)**m*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5148(d, p, a, c, n, m, b, f, e, x):
+    return Int((f*x)**m*(a + b*asin(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5149(d, p, a, c, n, m, b, f, e, x):
+    return Int((f*x)**m*(a + b*acos(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5150(d, p, a, f, c, g, n, m, b, h, e, x):
+    return Dist((d + e*x)**FracPart(p)*(f + g*x)**FracPart(p)*(d*f + e*g*x**S(2))**(-FracPart(p)), Int((h*x)**m*(a + b*asin(c*x))**n*(d*f + e*g*x**S(2))**p, x), x)
+
+
+def replacement5151(d, p, a, f, c, g, n, m, b, h, e, x):
+    return Dist((d + e*x)**FracPart(p)*(f + g*x)**FracPart(p)*(d*f + e*g*x**S(2))**(-FracPart(p)), Int((h*x)**m*(a + b*acos(c*x))**n*(d*f + e*g*x**S(2))**p, x), x)
+
+
+def replacement5152(d, a, c, n, b, e, x):
+    return Subst(Int((a + b*x)**n*cos(x)/(c*d + e*sin(x)), x), x, asin(c*x))
+
+
+def replacement5153(d, a, c, n, b, e, x):
+    return -Subst(Int((a + b*x)**n*sin(x)/(c*d + e*cos(x)), x), x, acos(c*x))
+
+
+def replacement5154(d, a, c, n, m, b, e, x):
+    return -Dist(b*c*n/(e*(m + S(1))), Int((a + b*asin(c*x))**(n + S(-1))*(d + e*x)**(m + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*asin(c*x))**n*(d + e*x)**(m + S(1))/(e*(m + S(1))), x)
+
+
+def replacement5155(d, a, c, n, m, b, e, x):
+    return Dist(b*c*n/(e*(m + S(1))), Int((a + b*acos(c*x))**(n + S(-1))*(d + e*x)**(m + S(1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*acos(c*x))**n*(d + e*x)**(m + S(1))/(e*(m + S(1))), x)
+
+
+def replacement5156(d, a, c, n, m, b, e, x):
+    return Int(ExpandIntegrand((a + b*asin(c*x))**n*(d + e*x)**m, x), x)
+
+
+def replacement5157(d, a, c, n, m, b, e, x):
+    return Int(ExpandIntegrand((a + b*acos(c*x))**n*(d + e*x)**m, x), x)
+
+
+def replacement5158(d, a, c, n, m, b, e, x):
+    return Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*(c*d + e*sin(x))**m*cos(x), x), x, asin(c*x)), x)
+
+
+def replacement5159(d, a, c, n, m, b, e, x):
+    return -Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*(c*d + e*cos(x))**m*sin(x), x), x, acos(c*x)), x)
+
+
+def With5160(a, c, b, x, Px):
+    u = IntHide(Px, x)
+    return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
+
+
+def With5161(a, c, b, x, Px):
+    u = IntHide(Px, x)
+    return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
+
+
+def replacement5162(a, c, n, b, x, Px):
+    return Int(ExpandIntegrand(Px*(a + b*asin(c*x))**n, x), x)
+
+
+def replacement5163(a, c, n, b, x, Px):
+    return Int(ExpandIntegrand(Px*(a + b*acos(c*x))**n, x), x)
+
+
+def With5164(d, a, c, m, b, e, x, Px):
+    u = IntHide(Px*(d + e*x)**m, x)
+    return -Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), u, x)
+
+
+def With5165(d, a, c, m, b, e, x, Px):
+    u = IntHide(Px*(d + e*x)**m, x)
+    return Dist(b*c, Int(SimplifyIntegrand(u/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), u, x)
+
+
+def With5166(d, p, a, c, g, n, m, b, f, e, x):
+    u = IntHide((d + e*x)**m*(f + g*x)**p, x)
+    return -Dist(b*c*n, Int(SimplifyIntegrand(u*(a + b*asin(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist((a + b*asin(c*x))**n, u, x)
+
+
+def With5167(d, p, a, c, g, n, m, b, f, e, x):
+    u = IntHide((d + e*x)**m*(f + g*x)**p, x)
+    return Dist(b*c*n, Int(SimplifyIntegrand(u*(a + b*acos(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist((a + b*acos(c*x))**n, u, x)
+
+
+def With5168(d, p, a, c, g, n, b, f, e, h, x):
+    u = IntHide((f + g*x + h*x**S(2))**p/(d + e*x)**S(2), x)
+    return -Dist(b*c*n, Int(SimplifyIntegrand(u*(a + b*asin(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist((a + b*asin(c*x))**n, u, x)
+
+
+def With5169(d, p, a, c, g, n, b, f, e, h, x):
+    u = IntHide((f + g*x + h*x**S(2))**p/(d + e*x)**S(2), x)
+    return Dist(b*c*n, Int(SimplifyIntegrand(u*(a + b*acos(c*x))**(n + S(-1))/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist((a + b*acos(c*x))**n, u, x)
+
+
+def replacement5170(d, a, c, n, m, b, e, x, Px):
+    return Int(ExpandIntegrand(Px*(a + b*asin(c*x))**n*(d + e*x)**m, x), x)
+
+
+def replacement5171(d, a, c, n, m, b, e, x, Px):
+    return Int(ExpandIntegrand(Px*(a + b*acos(c*x))**n*(d + e*x)**m, x), x)
+
+
+def With5172(d, p, a, c, g, m, b, f, e, x):
+    u = IntHide((d + e*x**S(2))**p*(f + g*x)**m, x)
+    return -Dist(b*c, Int(Dist(S(1)/sqrt(-c**S(2)*x**S(2) + S(1)), u, x), x), x) + Dist(a + b*asin(c*x), u, x)
+
+
+def With5173(d, p, a, c, g, m, b, f, e, x):
+    u = IntHide((d + e*x**S(2))**p*(f + g*x)**m, x)
+    return Dist(b*c, Int(Dist(S(1)/sqrt(-c**S(2)*x**S(2) + S(1)), u, x), x), x) + Dist(a + b*acos(c*x), u, x)
+
+
+def replacement5174(d, p, a, c, g, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*asin(c*x))**n*(d + e*x**S(2))**p, (f + g*x)**m, x), x)
+
+
+def replacement5175(d, p, a, c, g, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*acos(c*x))**n*(d + e*x**S(2))**p, (f + g*x)**m, x), x)
+
+
+def replacement5176(d, a, c, g, n, m, b, f, e, x):
+    return -Dist(S(1)/(b*c*sqrt(d)*(n + S(1))), Int((a + b*asin(c*x))**(n + S(1))*(f + g*x)**(m + S(-1))*(d*g*m + S(2)*e*f*x + e*g*x**S(2)*(m + S(2))), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*(d + e*x**S(2))*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5177(d, a, c, g, n, m, b, f, e, x):
+    return Dist(S(1)/(b*c*sqrt(d)*(n + S(1))), Int((a + b*acos(c*x))**(n + S(1))*(f + g*x)**(m + S(-1))*(d*g*m + S(2)*e*f*x + e*g*x**S(2)*(m + S(2))), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*(d + e*x**S(2))*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5178(d, p, a, c, g, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*asin(c*x))**n*sqrt(d + e*x**S(2)), (d + e*x**S(2))**(p + S(-1)/2)*(f + g*x)**m, x), x)
+
+
+def replacement5179(d, p, a, c, g, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*acos(c*x))**n*sqrt(d + e*x**S(2)), (d + e*x**S(2))**(p + S(-1)/2)*(f + g*x)**m, x), x)
+
+
+def replacement5180(d, p, a, c, g, n, m, b, f, e, x):
+    return -Dist(S(1)/(b*c*sqrt(d)*(n + S(1))), Int(ExpandIntegrand((a + b*asin(c*x))**(n + S(1))*(f + g*x)**(m + S(-1)), (d + e*x**S(2))**(p + S(-1)/2)*(d*g*m + e*f*x*(S(2)*p + S(1)) + e*g*x**S(2)*(m + S(2)*p + S(1))), x), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1)/2)*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5181(d, p, a, c, g, n, m, b, f, e, x):
+    return Dist(S(1)/(b*c*sqrt(d)*(n + S(1))), Int(ExpandIntegrand((a + b*acos(c*x))**(n + S(1))*(f + g*x)**(m + S(-1)), (d + e*x**S(2))**(p + S(-1)/2)*(d*g*m + e*f*x*(S(2)*p + S(1)) + e*g*x**S(2)*(m + S(2)*p + S(1))), x), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1)/2)*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5182(d, a, c, g, n, m, b, f, e, x):
+    return -Dist(g*m/(b*c*sqrt(d)*(n + S(1))), Int((a + b*asin(c*x))**(n + S(1))*(f + g*x)**(m + S(-1)), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5183(d, a, c, g, n, m, b, f, e, x):
+    return Dist(g*m/(b*c*sqrt(d)*(n + S(1))), Int((a + b*acos(c*x))**(n + S(1))*(f + g*x)**(m + S(-1)), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*(f + g*x)**m/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5184(d, a, c, g, n, m, b, f, e, x):
+    return Dist(c**(-m + S(-1))/sqrt(d), Subst(Int((a + b*x)**n*(c*f + g*sin(x))**m, x), x, asin(c*x)), x)
+
+
+def replacement5185(d, a, c, g, n, m, b, f, e, x):
+    return -Dist(c**(-m + S(-1))/sqrt(d), Subst(Int((a + b*x)**n*(c*f + g*cos(x))**m, x), x, acos(c*x)), x)
+
+
+def replacement5186(d, p, a, c, g, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*asin(c*x))**n/sqrt(d + e*x**S(2)), (d + e*x**S(2))**(p + S(1)/2)*(f + g*x)**m, x), x)
+
+
+def replacement5187(d, p, a, c, g, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*acos(c*x))**n/sqrt(d + e*x**S(2)), (d + e*x**S(2))**(p + S(1)/2)*(f + g*x)**m, x), x)
+
+
+def replacement5188(d, p, a, c, g, n, m, b, f, e, x):
+    return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int((a + b*asin(c*x))**n*(f + g*x)**m*(-c**S(2)*x**S(2) + S(1))**p, x), x)
+
+
+def replacement5189(d, p, a, c, g, n, m, b, f, e, x):
+    return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int((a + b*acos(c*x))**n*(f + g*x)**m*(-c**S(2)*x**S(2) + S(1))**p, x), x)
+
+
+def replacement5190(d, a, c, g, n, m, b, f, e, h, x):
+    return -Dist(g*m/(b*c*sqrt(d)*(n + S(1))), Int((a + b*asin(c*x))**(n + S(1))/(f + g*x), x), x) + Simp((a + b*asin(c*x))**(n + S(1))*log(h*(f + g*x)**m)/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5191(d, a, c, g, n, m, b, f, e, h, x):
+    return Dist(g*m/(b*c*sqrt(d)*(n + S(1))), Int((a + b*acos(c*x))**(n + S(1))/(f + g*x), x), x) - Simp((a + b*acos(c*x))**(n + S(1))*log(h*(f + g*x)**m)/(b*c*sqrt(d)*(n + S(1))), x)
+
+
+def replacement5192(d, p, a, c, g, n, m, b, f, e, h, x):
+    return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int((a + b*asin(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p*log(h*(f + g*x)**m), x), x)
+
+
+def replacement5193(d, p, a, c, g, n, m, b, f, e, h, x):
+    return Dist(d**IntPart(p)*(d + e*x**S(2))**FracPart(p)*(-c**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int((a + b*acos(c*x))**n*(-c**S(2)*x**S(2) + S(1))**p*log(h*(f + g*x)**m), x), x)
+
+
+def With5194(d, a, c, g, m, b, f, e, x):
+    u = IntHide((d + e*x)**m*(f + g*x)**m, x)
+    return -Dist(b*c, Int(Dist(S(1)/sqrt(-c**S(2)*x**S(2) + S(1)), u, x), x), x) + Dist(a + b*asin(c*x), u, x)
+
+
+def With5195(d, a, c, g, m, b, f, e, x):
+    u = IntHide((d + e*x)**m*(f + g*x)**m, x)
+    return Dist(b*c, Int(Dist(S(1)/sqrt(-c**S(2)*x**S(2) + S(1)), u, x), x), x) + Dist(a + b*acos(c*x), u, x)
+
+
+def replacement5196(d, a, c, g, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*asin(c*x))**n*(d + e*x)**m*(f + g*x)**m, x), x)
+
+
+def replacement5197(d, a, c, g, n, m, b, f, e, x):
+    return Int(ExpandIntegrand((a + b*acos(c*x))**n*(d + e*x)**m*(f + g*x)**m, x), x)
+
+
+def With5198(u, a, c, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5198(c, x, u, a, b):
+    v = IntHide(u, x)
+    if InverseFunctionFreeQ(v, x):
+        return True
+    return False
 
-        v = IntHide(u, x)
-        # rubi.append(5198)
-        return -Dist(b*c, Int(SimplifyIntegrand(v/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), v, x)
 
-def With5199(c, x, u, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        v = IntHide(u, x)
-        if InverseFunctionFreeQ(v, x):
-            return True
+def replacement5198(u, a, c, b, x):
+
+    v = IntHide(u, x)
+    return -Dist(b*c, Int(SimplifyIntegrand(v/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*asin(c*x), v, x)
+
+
+def With5199(u, a, c, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5199(c, x, u, a, b):
+    v = IntHide(u, x)
+    if InverseFunctionFreeQ(v, x):
+        return True
+    return False
 
-        v = IntHide(u, x)
-        # rubi.append(5199)
-        return Dist(b*c, Int(SimplifyIntegrand(v/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), v, x)
 
-def With5200(c, n, x, d, Px, a, p, e, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        u = ExpandIntegrand(Px*(a + b*asin(c*x))**n*(d + e*x**S(2))**p, x)
-        if SumQ(u):
-            return True
+def replacement5199(u, a, c, b, x):
+
+    v = IntHide(u, x)
+    return Dist(b*c, Int(SimplifyIntegrand(v/sqrt(-c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acos(c*x), v, x)
+
+
+def With5200(d, p, a, c, n, b, e, x, Px):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5200(c, n, x, d, Px, a, p, e, b):
+    u = ExpandIntegrand(Px*(a + b*asin(c*x))**n*(d + e*x**S(2))**p, x)
+    if SumQ(u):
+        return True
+    return False
 
-        u = ExpandIntegrand(Px*(a + b*asin(c*x))**n*(d + e*x**S(2))**p, x)
-        # rubi.append(5200)
-        return Int(u, x)
 
-def With5201(c, n, x, d, Px, a, p, e, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        u = ExpandIntegrand(Px*(a + b*acos(c*x))**n*(d + e*x**S(2))**p, x)
-        if SumQ(u):
-            return True
+def replacement5200(d, p, a, c, n, b, e, x, Px):
+
+    u = ExpandIntegrand(Px*(a + b*asin(c*x))**n*(d + e*x**S(2))**p, x)
+    return Int(u, x)
+
+
+def With5201(d, p, a, c, n, b, e, x, Px):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5201(c, n, x, d, Px, a, p, e, b):
+    u = ExpandIntegrand(Px*(a + b*acos(c*x))**n*(d + e*x**S(2))**p, x)
+    if SumQ(u):
+        return True
+    return False
 
-        u = ExpandIntegrand(Px*(a + b*acos(c*x))**n*(d + e*x**S(2))**p, x)
-        # rubi.append(5201)
-        return Int(u, x)
 
-def With5202(c, m, n, x, d, Px, f, g, a, p, e, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        u = ExpandIntegrand(Px*(a + b*asin(c*x))**n*(f + g*(d + e*x**S(2))**p)**m, x)
-        if SumQ(u):
-            return True
+def replacement5201(d, p, a, c, n, b, e, x, Px):
+
+    u = ExpandIntegrand(Px*(a + b*acos(c*x))**n*(d + e*x**S(2))**p, x)
+    return Int(u, x)
+
+
+def With5202(d, p, a, c, g, n, m, b, f, e, x, Px):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5202(c, m, n, x, d, Px, f, g, a, p, e, b):
+    u = ExpandIntegrand(Px*(a + b*asin(c*x))**n*(f + g*(d + e*x**S(2))**p)**m, x)
+    if SumQ(u):
+        return True
+    return False
 
-        u = ExpandIntegrand(Px*(a + b*asin(c*x))**n*(f + g*(d + e*x**S(2))**p)**m, x)
-        # rubi.append(5202)
-        return Int(u, x)
 
-def With5203(c, m, n, x, d, Px, f, g, a, p, e, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        u = ExpandIntegrand(Px*(a + b*acos(c*x))**n*(f + g*(d + e*x**S(2))**p)**m, x)
-        if SumQ(u):
-            return True
+def replacement5202(d, p, a, c, g, n, m, b, f, e, x, Px):
+
+    u = ExpandIntegrand(Px*(a + b*asin(c*x))**n*(f + g*(d + e*x**S(2))**p)**m, x)
+    return Int(u, x)
+
+
+def With5203(d, p, a, c, g, n, m, b, f, e, x, Px):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5203(c, m, n, x, d, Px, f, g, a, p, e, b):
+    u = ExpandIntegrand(Px*(a + b*acos(c*x))**n*(f + g*(d + e*x**S(2))**p)**m, x)
+    if SumQ(u):
+        return True
+    return False
 
-        u = ExpandIntegrand(Px*(a + b*acos(c*x))**n*(f + g*(d + e*x**S(2))**p)**m, x)
-        # rubi.append(5203)
-        return Int(u, x)
 
-def With5204(c, x, n, RFx):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        u = ExpandIntegrand(asin(c*x)**n, RFx, x)
-        if SumQ(u):
-            return True
+def replacement5203(d, p, a, c, g, n, m, b, f, e, x, Px):
+
+    u = ExpandIntegrand(Px*(a + b*acos(c*x))**n*(f + g*(d + e*x**S(2))**p)**m, x)
+    return Int(u, x)
+
+
+def With5204(n, RFx, c, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5204(c, x, n, RFx):
+    u = ExpandIntegrand(asin(c*x)**n, RFx, x)
+    if SumQ(u):
+        return True
+    return False
 
-        u = ExpandIntegrand(asin(c*x)**n, RFx, x)
-        # rubi.append(5204)
-        return Int(u, x)
 
-def With5205(c, x, n, RFx):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        u = ExpandIntegrand(acos(c*x)**n, RFx, x)
-        if SumQ(u):
-            return True
+def replacement5204(n, RFx, c, x):
+
+    u = ExpandIntegrand(asin(c*x)**n, RFx, x)
+    return Int(u, x)
+
+
+def With5205(n, RFx, c, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5205(c, x, n, RFx):
+    u = ExpandIntegrand(acos(c*x)**n, RFx, x)
+    if SumQ(u):
+        return True
+    return False
 
-        u = ExpandIntegrand(acos(c*x)**n, RFx, x)
-        # rubi.append(5205)
-        return Int(u, x)
-def replacement5206(c, n, x, RFx, a, b):
-        # rubi.append(5206)
-        return Int(ExpandIntegrand(RFx*(a + b*asin(c*x))**n, x), x)
-def replacement5207(c, n, x, RFx, a, b):
-        # rubi.append(5207)
-        return Int(ExpandIntegrand(RFx*(a + b*acos(c*x))**n, x), x)
 
-def With5208(c, n, x, d, RFx, p, e):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        u = ExpandIntegrand((d + e*x**S(2))**p*asin(c*x)**n, RFx, x)
-        if SumQ(u):
-            return True
+def replacement5205(n, RFx, c, x):
+
+    u = ExpandIntegrand(acos(c*x)**n, RFx, x)
+    return Int(u, x)
+
+
+def replacement5206(RFx, a, c, n, b, x):
+    return Int(ExpandIntegrand(RFx*(a + b*asin(c*x))**n, x), x)
+
+
+def replacement5207(RFx, a, c, n, b, x):
+    return Int(ExpandIntegrand(RFx*(a + b*acos(c*x))**n, x), x)
+
+
+def With5208(d, p, RFx, c, n, e, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5208(c, n, x, d, RFx, p, e):
+    u = ExpandIntegrand((d + e*x**S(2))**p*asin(c*x)**n, RFx, x)
+    if SumQ(u):
+        return True
+    return False
 
-        u = ExpandIntegrand((d + e*x**S(2))**p*asin(c*x)**n, RFx, x)
-        # rubi.append(5208)
-        return Int(u, x)
 
-def With5209(c, n, x, d, RFx, p, e):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        u = ExpandIntegrand((d + e*x**S(2))**p*acos(c*x)**n, RFx, x)
-        if SumQ(u):
-            return True
+def replacement5208(d, p, RFx, c, n, e, x):
+
+    u = ExpandIntegrand((d + e*x**S(2))**p*asin(c*x)**n, RFx, x)
+    return Int(u, x)
+
+
+def With5209(d, p, RFx, c, n, e, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5209(c, n, x, d, RFx, p, e):
+    u = ExpandIntegrand((d + e*x**S(2))**p*acos(c*x)**n, RFx, x)
+    if SumQ(u):
+        return True
+    return False
 
-        u = ExpandIntegrand((d + e*x**S(2))**p*acos(c*x)**n, RFx, x)
-        # rubi.append(5209)
-        return Int(u, x)
-def replacement5210(c, n, x, d, RFx, a, p, e, b):
-        # rubi.append(5210)
-        return Int(ExpandIntegrand((d + e*x**S(2))**p, RFx*(a + b*asin(c*x))**n, x), x)
-def replacement5211(c, n, x, d, RFx, a, p, e, b):
-        # rubi.append(5211)
-        return Int(ExpandIntegrand((d + e*x**S(2))**p, RFx*(a + b*acos(c*x))**n, x), x)
-def replacement5212(c, n, x, u, a, b):
-        # rubi.append(5212)
-        return Int(u*(a + b*asin(c*x))**n, x)
-def replacement5213(c, n, x, u, a, b):
-        # rubi.append(5213)
-        return Int(u*(a + b*acos(c*x))**n, x)
-def replacement5214(c, n, x, d, a, b):
-        # rubi.append(5214)
-        return Dist(S(1)/d, Subst(Int((a + b*asin(x))**n, x), x, c + d*x), x)
-def replacement5215(c, n, x, d, a, b):
-        # rubi.append(5215)
-        return Dist(S(1)/d, Subst(Int((a + b*acos(x))**n, x), x, c + d*x), x)
-def replacement5216(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5216)
-        return Dist(S(1)/d, Subst(Int((a + b*asin(x))**n*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
-def replacement5217(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5217)
-        return Dist(S(1)/d, Subst(Int((a + b*acos(x))**n*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
-def replacement5218(c, p, n, x, d, B, A, a, C, b):
-        # rubi.append(5218)
-        return Dist(S(1)/d, Subst(Int((a + b*asin(x))**n*(C*x**S(2)/d**S(2) - C/d**S(2))**p, x), x, c + d*x), x)
-def replacement5219(c, p, n, x, d, B, A, a, C, b):
-        # rubi.append(5219)
-        return Dist(S(1)/d, Subst(Int((a + b*acos(x))**n*(C*x**S(2)/d**S(2) - C/d**S(2))**p, x), x, c + d*x), x)
-def replacement5220(c, m, p, n, x, d, B, A, f, a, C, e, b):
-        # rubi.append(5220)
-        return Dist(S(1)/d, Subst(Int((a + b*asin(x))**n*(C*x**S(2)/d**S(2) - C/d**S(2))**p*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
-def replacement5221(c, m, p, n, x, d, B, A, f, a, C, e, b):
-        # rubi.append(5221)
-        return Dist(S(1)/d, Subst(Int((a + b*acos(x))**n*(C*x**S(2)/d**S(2) - C/d**S(2))**p*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
-def replacement5222(c, x, d, a, b):
-        # rubi.append(5222)
-        return Simp(x*sqrt(a + b*asin(c + d*x**S(2))), x) + Simp(sqrt(Pi)*x*(-c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelS(sqrt(c/(Pi*b))*sqrt(a + b*asin(c + d*x**S(2))))/(sqrt(c/b)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x) - Simp(sqrt(Pi)*x*(c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelC(sqrt(c/(Pi*b))*sqrt(a + b*asin(c + d*x**S(2))))/(sqrt(c/b)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x)
-def replacement5223(x, a, d, b):
-        # rubi.append(5223)
-        return Simp(-S(2)*sqrt(a + b*acos(d*x**S(2) + S(1)))*sin(acos(d*x**S(2) + S(1))/S(2))**S(2)/(d*x), x) - Simp(S(2)*sqrt(Pi)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(a/(S(2)*b))*sin(acos(d*x**S(2) + S(1))/S(2))/(d*x*sqrt(S(1)/b)), x) + Simp(S(2)*sqrt(Pi)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(acos(d*x**S(2) + S(1))/S(2))*cos(a/(S(2)*b))/(d*x*sqrt(S(1)/b)), x)
-def replacement5224(x, a, d, b):
-        # rubi.append(5224)
-        return Simp(S(2)*sqrt(a + b*acos(d*x**S(2) + S(-1)))*cos(acos(d*x**S(2) + S(-1))/S(2))**S(2)/(d*x), x) - Simp(S(2)*sqrt(Pi)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*cos(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x*sqrt(S(1)/b)), x) - Simp(S(2)*sqrt(Pi)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*sin(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x*sqrt(S(1)/b)), x)
-def replacement5225(c, n, x, d, a, b):
-        # rubi.append(5225)
-        return -Dist(S(4)*b**S(2)*n*(n + S(-1)), Int((a + b*asin(c + d*x**S(2)))**(n + S(-2)), x), x) + Simp(x*(a + b*asin(c + d*x**S(2)))**n, x) + Simp(S(2)*b*n*(a + b*asin(c + d*x**S(2)))**(n + S(-1))*sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(d*x), x)
-def replacement5226(c, n, x, d, a, b):
-        # rubi.append(5226)
-        return -Dist(S(4)*b**S(2)*n*(n + S(-1)), Int((a + b*acos(c + d*x**S(2)))**(n + S(-2)), x), x) + Simp(x*(a + b*acos(c + d*x**S(2)))**n, x) - Simp(S(2)*b*n*(a + b*acos(c + d*x**S(2)))**(n + S(-1))*sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(d*x), x)
-def replacement5227(c, x, d, a, b):
-        # rubi.append(5227)
-        return -Simp(x*(c*cos(a/(S(2)*b)) - sin(a/(S(2)*b)))*CosIntegral(c*(a + b*asin(c + d*x**S(2)))/(S(2)*b))/(S(2)*b*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x) - Simp(x*(c*cos(a/(S(2)*b)) + sin(a/(S(2)*b)))*SinIntegral(c*(a + b*asin(c + d*x**S(2)))/(S(2)*b))/(S(2)*b*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x)
-def replacement5228(x, a, d, b):
-        # rubi.append(5228)
-        return Simp(sqrt(S(2))*x*CosIntegral((a + b*acos(d*x**S(2) + S(1)))/(S(2)*b))*cos(a/(S(2)*b))/(S(2)*b*sqrt(-d*x**S(2))), x) + Simp(sqrt(S(2))*x*SinIntegral((a + b*acos(d*x**S(2) + S(1)))/(S(2)*b))*sin(a/(S(2)*b))/(S(2)*b*sqrt(-d*x**S(2))), x)
-def replacement5229(x, a, d, b):
-        # rubi.append(5229)
-        return Simp(sqrt(S(2))*x*CosIntegral((a + b*acos(d*x**S(2) + S(-1)))/(S(2)*b))*sin(a/(S(2)*b))/(S(2)*b*sqrt(d*x**S(2))), x) - Simp(sqrt(S(2))*x*SinIntegral((a + b*acos(d*x**S(2) + S(-1)))/(S(2)*b))*cos(a/(S(2)*b))/(S(2)*b*sqrt(d*x**S(2))), x)
-def replacement5230(c, x, d, a, b):
-        # rubi.append(5230)
-        return -Simp(sqrt(Pi)*x*(-c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelC(sqrt(a + b*asin(c + d*x**S(2)))/(sqrt(Pi)*sqrt(b*c)))/(sqrt(b*c)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x) - Simp(sqrt(Pi)*x*(c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelS(sqrt(a + b*asin(c + d*x**S(2)))/(sqrt(Pi)*sqrt(b*c)))/(sqrt(b*c)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x)
-def replacement5231(x, a, d, b):
-        # rubi.append(5231)
-        return Simp(-S(2)*sqrt(Pi/b)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(acos(d*x**S(2) + S(1))/S(2))*cos(a/(S(2)*b))/(d*x), x) - Simp(S(2)*sqrt(Pi/b)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(a/(S(2)*b))*sin(acos(d*x**S(2) + S(1))/S(2))/(d*x), x)
-def replacement5232(x, a, d, b):
-        # rubi.append(5232)
-        return Simp(S(2)*sqrt(Pi/b)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*sin(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x), x) - Simp(S(2)*sqrt(Pi/b)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*cos(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x), x)
-def replacement5233(c, x, d, a, b):
-        # rubi.append(5233)
-        return -Simp(sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(b*d*x*sqrt(a + b*asin(c + d*x**S(2)))), x) + Simp(sqrt(Pi)*x*(c/b)**(S(3)/2)*(-c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelS(sqrt(c/(Pi*b))*sqrt(a + b*asin(c + d*x**S(2))))/(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2))), x) - Simp(sqrt(Pi)*x*(c/b)**(S(3)/2)*(c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelC(sqrt(c/(Pi*b))*sqrt(a + b*asin(c + d*x**S(2))))/(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2))), x)
-def replacement5234(x, a, d, b):
-        # rubi.append(5234)
-        return Simp(sqrt(-d**S(2)*x**S(4) - S(2)*d*x**S(2))/(b*d*x*sqrt(a + b*acos(d*x**S(2) + S(1)))), x) - Simp(S(2)*sqrt(Pi)*(S(1)/b)**(S(3)/2)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(a/(S(2)*b))*sin(acos(d*x**S(2) + S(1))/S(2))/(d*x), x) + Simp(S(2)*sqrt(Pi)*(S(1)/b)**(S(3)/2)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(acos(d*x**S(2) + S(1))/S(2))*cos(a/(S(2)*b))/(d*x), x)
-def replacement5235(x, a, d, b):
-        # rubi.append(5235)
-        return Simp(sqrt(-d**S(2)*x**S(4) + S(2)*d*x**S(2))/(b*d*x*sqrt(a + b*acos(d*x**S(2) + S(-1)))), x) - Simp(S(2)*sqrt(Pi)*(S(1)/b)**(S(3)/2)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*cos(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x), x) - Simp(S(2)*sqrt(Pi)*(S(1)/b)**(S(3)/2)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*sin(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x), x)
-def replacement5236(c, x, d, a, b):
-        # rubi.append(5236)
-        return Simp(x*(-c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*SinIntegral(c*(a + b*asin(c + d*x**S(2)))/(S(2)*b))/(S(4)*b**S(2)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x) - Simp(x*(c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*CosIntegral(c*(a + b*asin(c + d*x**S(2)))/(S(2)*b))/(S(4)*b**S(2)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x) - Simp(sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(S(2)*b*d*x*(a + b*asin(c + d*x**S(2)))), x)
-def replacement5237(x, a, d, b):
-        # rubi.append(5237)
-        return Simp(sqrt(-d**S(2)*x**S(4) - S(2)*d*x**S(2))/(S(2)*b*d*x*(a + b*acos(d*x**S(2) + S(1)))), x) + Simp(sqrt(S(2))*x*CosIntegral((a + b*acos(d*x**S(2) + S(1)))/(S(2)*b))*sin(a/(S(2)*b))/(S(4)*b**S(2)*sqrt(-d*x**S(2))), x) - Simp(sqrt(S(2))*x*SinIntegral((a + b*acos(d*x**S(2) + S(1)))/(S(2)*b))*cos(a/(S(2)*b))/(S(4)*b**S(2)*sqrt(-d*x**S(2))), x)
-def replacement5238(x, a, d, b):
-        # rubi.append(5238)
-        return Simp(sqrt(-d**S(2)*x**S(4) + S(2)*d*x**S(2))/(S(2)*b*d*x*(a + b*acos(d*x**S(2) + S(-1)))), x) - Simp(sqrt(S(2))*x*CosIntegral((a + b*acos(d*x**S(2) + S(-1)))/(S(2)*b))*cos(a/(S(2)*b))/(S(4)*b**S(2)*sqrt(d*x**S(2))), x) - Simp(sqrt(S(2))*x*SinIntegral((a + b*acos(d*x**S(2) + S(-1)))/(S(2)*b))*sin(a/(S(2)*b))/(S(4)*b**S(2)*sqrt(d*x**S(2))), x)
-def replacement5239(c, n, x, d, a, b):
-        # rubi.append(5239)
-        return -Dist(S(1)/(S(4)*b**S(2)*(n + S(1))*(n + S(2))), Int((a + b*asin(c + d*x**S(2)))**(n + S(2)), x), x) + Simp(x*(a + b*asin(c + d*x**S(2)))**(n + S(2))/(S(4)*b**S(2)*(n + S(1))*(n + S(2))), x) + Simp((a + b*asin(c + d*x**S(2)))**(n + S(1))*sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(S(2)*b*d*x*(n + S(1))), x)
-def replacement5240(c, n, x, d, a, b):
-        # rubi.append(5240)
-        return -Dist(S(1)/(S(4)*b**S(2)*(n + S(1))*(n + S(2))), Int((a + b*acos(c + d*x**S(2)))**(n + S(2)), x), x) + Simp(x*(a + b*acos(c + d*x**S(2)))**(n + S(2))/(S(4)*b**S(2)*(n + S(1))*(n + S(2))), x) - Simp((a + b*acos(c + d*x**S(2)))**(n + S(1))*sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(S(2)*b*d*x*(n + S(1))), x)
-def replacement5241(x, a, p, n):
-        # rubi.append(5241)
-        return Dist(S(1)/p, Subst(Int(x**n/tan(x), x), x, asin(a*x**p)), x)
-def replacement5242(x, a, p, n):
-        # rubi.append(5242)
-        return -Dist(S(1)/p, Subst(Int(x**n*tan(x), x), x, acos(a*x**p)), x)
-def replacement5243(c, m, n, x, u, a, b):
-        # rubi.append(5243)
-        return Int(u*acsc(a/c + b*x**n/c)**m, x)
-def replacement5244(c, m, n, x, u, a, b):
-        # rubi.append(5244)
-        return Int(u*asec(a/c + b*x**n/c)**m, x)
-def replacement5245(x, n, b):
-        # rubi.append(5245)
-        return Dist(sqrt(-b*x**S(2))/(b*x), Subst(Int(asin(x)**n/sqrt(S(1) - x**S(2)), x), x, sqrt(b*x**S(2) + S(1))), x)
-def replacement5246(x, n, b):
-        # rubi.append(5246)
-        return Dist(sqrt(-b*x**S(2))/(b*x), Subst(Int(acos(x)**n/sqrt(S(1) - x**S(2)), x), x, sqrt(b*x**S(2) + S(1))), x)
-def replacement5247(c, n, x, u, f, a, b):
-        # rubi.append(5247)
-        return Dist(S(1)/b, Subst(Int(f**(c*x**n)*ReplaceAll(u, Rule(x, -a/b + sin(x)/b))*cos(x), x), x, asin(a + b*x)), x)
-def replacement5248(c, n, x, u, f, a, b):
-        # rubi.append(5248)
-        return -Dist(S(1)/b, Subst(Int(f**(c*x**n)*ReplaceAll(u, Rule(x, -a/b + cos(x)/b))*sin(x), x), x, acos(a + b*x)), x)
-def replacement5249(c, x, d, a, b):
-        # rubi.append(5249)
-        return -Dist(x*sqrt(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)/sqrt(-x**S(2)*(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)), Int(x*(S(2)*a*sqrt(c + d*x**S(2)) + b*d)/(sqrt(c + d*x**S(2))*sqrt(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)), x), x) + Simp(x*asin(a*x**S(2) + b*sqrt(c + d*x**S(2))), x)
-def replacement5250(c, x, d, a, b):
-        # rubi.append(5250)
-        return Dist(x*sqrt(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)/sqrt(-x**S(2)*(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)), Int(x*(S(2)*a*sqrt(c + d*x**S(2)) + b*d)/(sqrt(c + d*x**S(2))*sqrt(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)), x), x) + Simp(x*acos(a*x**S(2) + b*sqrt(c + d*x**S(2))), x)
-def replacement5251(x, u):
-        # rubi.append(5251)
-        return -Int(SimplifyIntegrand(x*D(u, x)/sqrt(S(1) - u**S(2)), x), x) + Simp(x*asin(u), x)
-def replacement5252(x, u):
-        # rubi.append(5252)
-        return Int(SimplifyIntegrand(x*D(u, x)/sqrt(S(1) - u**S(2)), x), x) + Simp(x*acos(u), x)
-def replacement5253(c, m, x, d, u, a, b):
-        # rubi.append(5253)
-        return -Dist(b/(d*(m + S(1))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/sqrt(S(1) - u**S(2)), x), x), x) + Simp((a + b*asin(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
-def replacement5254(c, m, x, d, u, a, b):
-        # rubi.append(5254)
-        return Dist(b/(d*(m + S(1))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/sqrt(S(1) - u**S(2)), x), x), x) + Simp((a + b*acos(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
 
-def With5255(x, v, u, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        w = IntHide(v, x)
-        if InverseFunctionFreeQ(w, x):
-            return True
+def replacement5209(d, p, RFx, c, n, e, x):
+
+    u = ExpandIntegrand((d + e*x**S(2))**p*acos(c*x)**n, RFx, x)
+    return Int(u, x)
+
+
+def replacement5210(d, p, RFx, a, c, n, b, e, x):
+    return Int(ExpandIntegrand((d + e*x**S(2))**p, RFx*(a + b*asin(c*x))**n, x), x)
+
+
+def replacement5211(d, p, RFx, a, c, n, b, e, x):
+    return Int(ExpandIntegrand((d + e*x**S(2))**p, RFx*(a + b*acos(c*x))**n, x), x)
+
+
+def replacement5212(u, a, c, n, b, x):
+    return Int(u*(a + b*asin(c*x))**n, x)
+
+
+def replacement5213(u, a, c, n, b, x):
+    return Int(u*(a + b*acos(c*x))**n, x)
+
+
+def replacement5214(d, a, c, n, b, x):
+    return Dist(S(1)/d, Subst(Int((a + b*asin(x))**n, x), x, c + d*x), x)
+
+
+def replacement5215(d, a, c, n, b, x):
+    return Dist(S(1)/d, Subst(Int((a + b*acos(x))**n, x), x, c + d*x), x)
+
+
+def replacement5216(d, a, c, n, m, b, f, e, x):
+    return Dist(S(1)/d, Subst(Int((a + b*asin(x))**n*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
+
+
+def replacement5217(d, a, c, n, m, b, f, e, x):
+    return Dist(S(1)/d, Subst(Int((a + b*acos(x))**n*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
+
+
+def replacement5218(d, p, B, a, c, A, n, C, b, x):
+    return Dist(S(1)/d, Subst(Int((a + b*asin(x))**n*(C*x**S(2)/d**S(2) - C/d**S(2))**p, x), x, c + d*x), x)
+
+
+def replacement5219(d, p, B, a, c, A, n, C, b, x):
+    return Dist(S(1)/d, Subst(Int((a + b*acos(x))**n*(C*x**S(2)/d**S(2) - C/d**S(2))**p, x), x, c + d*x), x)
+
+
+def replacement5220(d, p, B, a, c, A, n, C, m, b, f, e, x):
+    return Dist(S(1)/d, Subst(Int((a + b*asin(x))**n*(C*x**S(2)/d**S(2) - C/d**S(2))**p*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
+
+
+def replacement5221(d, p, B, a, c, A, n, C, m, b, f, e, x):
+    return Dist(S(1)/d, Subst(Int((a + b*acos(x))**n*(C*x**S(2)/d**S(2) - C/d**S(2))**p*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
+
+
+def replacement5222(d, a, c, b, x):
+    return Simp(x*sqrt(a + b*asin(c + d*x**S(2))), x) + Simp(sqrt(Pi)*x*(-c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelS(sqrt(c/(Pi*b))*sqrt(a + b*asin(c + d*x**S(2))))/(sqrt(c/b)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x) - Simp(sqrt(Pi)*x*(c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelC(sqrt(c/(Pi*b))*sqrt(a + b*asin(c + d*x**S(2))))/(sqrt(c/b)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x)
+
+
+def replacement5223(a, d, x, b):
+    return Simp(-S(2)*sqrt(a + b*acos(d*x**S(2) + S(1)))*sin(acos(d*x**S(2) + S(1))/S(2))**S(2)/(d*x), x) - Simp(S(2)*sqrt(Pi)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(a/(S(2)*b))*sin(acos(d*x**S(2) + S(1))/S(2))/(d*x*sqrt(S(1)/b)), x) + Simp(S(2)*sqrt(Pi)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(acos(d*x**S(2) + S(1))/S(2))*cos(a/(S(2)*b))/(d*x*sqrt(S(1)/b)), x)
+
+
+def replacement5224(a, d, x, b):
+    return Simp(S(2)*sqrt(a + b*acos(d*x**S(2) + S(-1)))*cos(acos(d*x**S(2) + S(-1))/S(2))**S(2)/(d*x), x) - Simp(S(2)*sqrt(Pi)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*cos(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x*sqrt(S(1)/b)), x) - Simp(S(2)*sqrt(Pi)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*sin(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x*sqrt(S(1)/b)), x)
+
+
+def replacement5225(d, a, c, n, b, x):
+    return -Dist(S(4)*b**S(2)*n*(n + S(-1)), Int((a + b*asin(c + d*x**S(2)))**(n + S(-2)), x), x) + Simp(x*(a + b*asin(c + d*x**S(2)))**n, x) + Simp(S(2)*b*n*(a + b*asin(c + d*x**S(2)))**(n + S(-1))*sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(d*x), x)
+
+
+def replacement5226(d, a, c, n, b, x):
+    return -Dist(S(4)*b**S(2)*n*(n + S(-1)), Int((a + b*acos(c + d*x**S(2)))**(n + S(-2)), x), x) + Simp(x*(a + b*acos(c + d*x**S(2)))**n, x) - Simp(S(2)*b*n*(a + b*acos(c + d*x**S(2)))**(n + S(-1))*sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(d*x), x)
+
+
+def replacement5227(d, a, c, b, x):
+    return -Simp(x*(c*cos(a/(S(2)*b)) - sin(a/(S(2)*b)))*CosIntegral(c*(a + b*asin(c + d*x**S(2)))/(S(2)*b))/(S(2)*b*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x) - Simp(x*(c*cos(a/(S(2)*b)) + sin(a/(S(2)*b)))*SinIntegral(c*(a + b*asin(c + d*x**S(2)))/(S(2)*b))/(S(2)*b*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x)
+
+
+def replacement5228(a, d, x, b):
+    return Simp(sqrt(S(2))*x*CosIntegral((a + b*acos(d*x**S(2) + S(1)))/(S(2)*b))*cos(a/(S(2)*b))/(S(2)*b*sqrt(-d*x**S(2))), x) + Simp(sqrt(S(2))*x*SinIntegral((a + b*acos(d*x**S(2) + S(1)))/(S(2)*b))*sin(a/(S(2)*b))/(S(2)*b*sqrt(-d*x**S(2))), x)
+
+
+def replacement5229(a, d, x, b):
+    return Simp(sqrt(S(2))*x*CosIntegral((a + b*acos(d*x**S(2) + S(-1)))/(S(2)*b))*sin(a/(S(2)*b))/(S(2)*b*sqrt(d*x**S(2))), x) - Simp(sqrt(S(2))*x*SinIntegral((a + b*acos(d*x**S(2) + S(-1)))/(S(2)*b))*cos(a/(S(2)*b))/(S(2)*b*sqrt(d*x**S(2))), x)
+
+
+def replacement5230(d, a, c, b, x):
+    return -Simp(sqrt(Pi)*x*(-c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelC(sqrt(a + b*asin(c + d*x**S(2)))/(sqrt(Pi)*sqrt(b*c)))/(sqrt(b*c)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x) - Simp(sqrt(Pi)*x*(c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelS(sqrt(a + b*asin(c + d*x**S(2)))/(sqrt(Pi)*sqrt(b*c)))/(sqrt(b*c)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x)
+
+
+def replacement5231(a, d, x, b):
+    return Simp(-S(2)*sqrt(Pi/b)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(acos(d*x**S(2) + S(1))/S(2))*cos(a/(S(2)*b))/(d*x), x) - Simp(S(2)*sqrt(Pi/b)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(a/(S(2)*b))*sin(acos(d*x**S(2) + S(1))/S(2))/(d*x), x)
+
+
+def replacement5232(a, d, x, b):
+    return Simp(S(2)*sqrt(Pi/b)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*sin(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x), x) - Simp(S(2)*sqrt(Pi/b)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*cos(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x), x)
+
+
+def replacement5233(d, a, c, b, x):
+    return -Simp(sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(b*d*x*sqrt(a + b*asin(c + d*x**S(2)))), x) + Simp(sqrt(Pi)*x*(c/b)**(S(3)/2)*(-c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelS(sqrt(c/(Pi*b))*sqrt(a + b*asin(c + d*x**S(2))))/(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2))), x) - Simp(sqrt(Pi)*x*(c/b)**(S(3)/2)*(c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*FresnelC(sqrt(c/(Pi*b))*sqrt(a + b*asin(c + d*x**S(2))))/(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2))), x)
+
+
+def replacement5234(a, d, x, b):
+    return Simp(sqrt(-d**S(2)*x**S(4) - S(2)*d*x**S(2))/(b*d*x*sqrt(a + b*acos(d*x**S(2) + S(1)))), x) - Simp(S(2)*sqrt(Pi)*(S(1)/b)**(S(3)/2)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(a/(S(2)*b))*sin(acos(d*x**S(2) + S(1))/S(2))/(d*x), x) + Simp(S(2)*sqrt(Pi)*(S(1)/b)**(S(3)/2)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(1))))*sin(acos(d*x**S(2) + S(1))/S(2))*cos(a/(S(2)*b))/(d*x), x)
+
+
+def replacement5235(a, d, x, b):
+    return Simp(sqrt(-d**S(2)*x**S(4) + S(2)*d*x**S(2))/(b*d*x*sqrt(a + b*acos(d*x**S(2) + S(-1)))), x) - Simp(S(2)*sqrt(Pi)*(S(1)/b)**(S(3)/2)*FresnelC(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*cos(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x), x) - Simp(S(2)*sqrt(Pi)*(S(1)/b)**(S(3)/2)*FresnelS(sqrt(S(1)/(Pi*b))*sqrt(a + b*acos(d*x**S(2) + S(-1))))*sin(a/(S(2)*b))*cos(acos(d*x**S(2) + S(-1))/S(2))/(d*x), x)
+
+
+def replacement5236(d, a, c, b, x):
+    return Simp(x*(-c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*SinIntegral(c*(a + b*asin(c + d*x**S(2)))/(S(2)*b))/(S(4)*b**S(2)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x) - Simp(x*(c*sin(a/(S(2)*b)) + cos(a/(S(2)*b)))*CosIntegral(c*(a + b*asin(c + d*x**S(2)))/(S(2)*b))/(S(4)*b**S(2)*(-c*sin(asin(c + d*x**S(2))/S(2)) + cos(asin(c + d*x**S(2))/S(2)))), x) - Simp(sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(S(2)*b*d*x*(a + b*asin(c + d*x**S(2)))), x)
+
+
+def replacement5237(a, d, x, b):
+    return Simp(sqrt(-d**S(2)*x**S(4) - S(2)*d*x**S(2))/(S(2)*b*d*x*(a + b*acos(d*x**S(2) + S(1)))), x) + Simp(sqrt(S(2))*x*CosIntegral((a + b*acos(d*x**S(2) + S(1)))/(S(2)*b))*sin(a/(S(2)*b))/(S(4)*b**S(2)*sqrt(-d*x**S(2))), x) - Simp(sqrt(S(2))*x*SinIntegral((a + b*acos(d*x**S(2) + S(1)))/(S(2)*b))*cos(a/(S(2)*b))/(S(4)*b**S(2)*sqrt(-d*x**S(2))), x)
+
+
+def replacement5238(a, d, x, b):
+    return Simp(sqrt(-d**S(2)*x**S(4) + S(2)*d*x**S(2))/(S(2)*b*d*x*(a + b*acos(d*x**S(2) + S(-1)))), x) - Simp(sqrt(S(2))*x*CosIntegral((a + b*acos(d*x**S(2) + S(-1)))/(S(2)*b))*cos(a/(S(2)*b))/(S(4)*b**S(2)*sqrt(d*x**S(2))), x) - Simp(sqrt(S(2))*x*SinIntegral((a + b*acos(d*x**S(2) + S(-1)))/(S(2)*b))*sin(a/(S(2)*b))/(S(4)*b**S(2)*sqrt(d*x**S(2))), x)
+
+
+def replacement5239(d, a, c, n, b, x):
+    return -Dist(S(1)/(S(4)*b**S(2)*(n + S(1))*(n + S(2))), Int((a + b*asin(c + d*x**S(2)))**(n + S(2)), x), x) + Simp(x*(a + b*asin(c + d*x**S(2)))**(n + S(2))/(S(4)*b**S(2)*(n + S(1))*(n + S(2))), x) + Simp((a + b*asin(c + d*x**S(2)))**(n + S(1))*sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(S(2)*b*d*x*(n + S(1))), x)
+
+
+def replacement5240(d, a, c, n, b, x):
+    return -Dist(S(1)/(S(4)*b**S(2)*(n + S(1))*(n + S(2))), Int((a + b*acos(c + d*x**S(2)))**(n + S(2)), x), x) + Simp(x*(a + b*acos(c + d*x**S(2)))**(n + S(2))/(S(4)*b**S(2)*(n + S(1))*(n + S(2))), x) - Simp((a + b*acos(c + d*x**S(2)))**(n + S(1))*sqrt(-S(2)*c*d*x**S(2) - d**S(2)*x**S(4))/(S(2)*b*d*x*(n + S(1))), x)
+
+
+def replacement5241(n, a, p, x):
+    return Dist(S(1)/p, Subst(Int(x**n/tan(x), x), x, asin(a*x**p)), x)
+
+
+def replacement5242(n, a, p, x):
+    return -Dist(S(1)/p, Subst(Int(x**n*tan(x), x), x, acos(a*x**p)), x)
+
+
+def replacement5243(u, a, c, n, m, b, x):
+    return Int(u*acsc(a/c + b*x**n/c)**m, x)
+
+
+def replacement5244(u, a, c, n, m, b, x):
+    return Int(u*asec(a/c + b*x**n/c)**m, x)
+
+
+def replacement5245(n, x, b):
+    return Dist(sqrt(-b*x**S(2))/(b*x), Subst(Int(asin(x)**n/sqrt(S(1) - x**S(2)), x), x, sqrt(b*x**S(2) + S(1))), x)
+
+
+def replacement5246(n, x, b):
+    return Dist(sqrt(-b*x**S(2))/(b*x), Subst(Int(acos(x)**n/sqrt(S(1) - x**S(2)), x), x, sqrt(b*x**S(2) + S(1))), x)
+
+
+def replacement5247(u, a, c, n, b, f, x):
+    return Dist(S(1)/b, Subst(Int(f**(c*x**n)*ReplaceAll(u, Rule(x, -a/b + sin(x)/b))*cos(x), x), x, asin(a + b*x)), x)
+
+
+def replacement5248(u, a, c, n, b, f, x):
+    return -Dist(S(1)/b, Subst(Int(f**(c*x**n)*ReplaceAll(u, Rule(x, -a/b + cos(x)/b))*sin(x), x), x, acos(a + b*x)), x)
+
+
+def replacement5249(d, a, c, b, x):
+    return -Dist(x*sqrt(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)/sqrt(-x**S(2)*(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)), Int(x*(S(2)*a*sqrt(c + d*x**S(2)) + b*d)/(sqrt(c + d*x**S(2))*sqrt(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)), x), x) + Simp(x*asin(a*x**S(2) + b*sqrt(c + d*x**S(2))), x)
+
+
+def replacement5250(d, a, c, b, x):
+    return Dist(x*sqrt(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)/sqrt(-x**S(2)*(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)), Int(x*(S(2)*a*sqrt(c + d*x**S(2)) + b*d)/(sqrt(c + d*x**S(2))*sqrt(a**S(2)*x**S(2) + S(2)*a*b*sqrt(c + d*x**S(2)) + b**S(2)*d)), x), x) + Simp(x*acos(a*x**S(2) + b*sqrt(c + d*x**S(2))), x)
+
+
+def replacement5251(u, x):
+    return -Int(SimplifyIntegrand(x*D(u, x)/sqrt(S(1) - u**S(2)), x), x) + Simp(x*asin(u), x)
+
+
+def replacement5252(u, x):
+    return Int(SimplifyIntegrand(x*D(u, x)/sqrt(S(1) - u**S(2)), x), x) + Simp(x*acos(u), x)
+
+
+def replacement5253(u, d, a, c, m, b, x):
+    return -Dist(b/(d*(m + S(1))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/sqrt(S(1) - u**S(2)), x), x), x) + Simp((a + b*asin(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
+
+
+def replacement5254(u, d, a, c, m, b, x):
+    return Dist(b/(d*(m + S(1))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/sqrt(S(1) - u**S(2)), x), x), x) + Simp((a + b*acos(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
+
+
+def With5255(u, a, v, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5255(x, v, u, a, b):
+    w = IntHide(v, x)
+    if InverseFunctionFreeQ(w, x):
+        return True
+    return False
 
-        w = IntHide(v, x)
-        # rubi.append(5255)
-        return -Dist(b, Int(SimplifyIntegrand(w*D(u, x)/sqrt(S(1) - u**S(2)), x), x), x) + Dist(a + b*asin(u), w, x)
 
-def With5256(x, v, u, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        w = IntHide(v, x)
-        if InverseFunctionFreeQ(w, x):
-            return True
+def replacement5255(u, a, v, b, x):
+
+    w = IntHide(v, x)
+    return -Dist(b, Int(SimplifyIntegrand(w*D(u, x)/sqrt(S(1) - u**S(2)), x), x), x) + Dist(a + b*asin(u), w, x)
+
+
+def With5256(u, a, v, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5256(x, v, u, a, b):
+    w = IntHide(v, x)
+    if InverseFunctionFreeQ(w, x):
+        return True
+    return False
 
-        w = IntHide(v, x)
-        # rubi.append(5256)
-        return Dist(b, Int(SimplifyIntegrand(w*D(u, x)/sqrt(S(1) - u**S(2)), x), x), x) + Dist(a + b*acos(u), w, x)
-def replacement5257(c, n, x, a, b):
-        # rubi.append(5257)
-        return -Dist(b*c*n, Int(x*(a + b*ArcTan(c*x))**(n + S(-1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*ArcTan(c*x))**n, x)
-def replacement5258(c, n, x, a, b):
-        # rubi.append(5258)
-        return Dist(b*c*n, Int(x*(a + b*acot(c*x))**(n + S(-1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*acot(c*x))**n, x)
-def replacement5259(c, n, x, a, b):
-        # rubi.append(5259)
-        return Int((a + b*ArcTan(c*x))**n, x)
-def replacement5260(c, n, x, a, b):
-        # rubi.append(5260)
-        return Int((a + b*acot(c*x))**n, x)
-def replacement5261(c, n, x, d, a, e, b):
-        # rubi.append(5261)
-        return Dist(b*c*n/e, Int((a + b*ArcTan(c*x))**(n + S(-1))*log(S(2)*d/(d + e*x))/(c**S(2)*x**S(2) + S(1)), x), x) - Simp((a + b*ArcTan(c*x))**n*log(S(2)*d/(d + e*x))/e, x)
-def replacement5262(c, n, x, d, a, e, b):
-        # rubi.append(5262)
-        return -Dist(b*c*n/e, Int((a + b*acot(c*x))**(n + S(-1))*log(S(2)*d/(d + e*x))/(c**S(2)*x**S(2) + S(1)), x), x) - Simp((a + b*acot(c*x))**n*log(S(2)*d/(d + e*x))/e, x)
-def replacement5263(c, d, e, x):
-        # rubi.append(5263)
-        return Simp(I*PolyLog(S(2), Simp(I*c*(d + e*x)/(I*c*d - e), x))/(S(2)*e), x) - Simp(I*PolyLog(S(2), Simp(I*c*(d + e*x)/(I*c*d + e), x))/(S(2)*e), x) - Simp(ArcTan(c*d/e)*log(d + e*x)/e, x)
-def replacement5264(c, d, x, e):
-        # rubi.append(5264)
-        return Dist(I/S(2), Int(log(-I*c*x + S(1))/(d + e*x), x), x) - Dist(I/S(2), Int(log(I*c*x + S(1))/(d + e*x), x), x)
-def replacement5265(c, d, x, e):
-        # rubi.append(5265)
-        return Dist(I/S(2), Int(log(S(1) - I/(c*x))/(d + e*x), x), x) - Dist(I/S(2), Int(log(S(1) + I/(c*x))/(d + e*x), x), x)
-def replacement5266(c, x, d, a, e, b):
-        # rubi.append(5266)
-        return Dist(b, Int(ArcTan(c*x)/(d + e*x), x), x) + Simp(a*log(RemoveContent(d + e*x, x))/e, x)
-def replacement5267(c, x, d, a, e, b):
-        # rubi.append(5267)
-        return Dist(b, Int(acot(c*x)/(d + e*x), x), x) + Simp(a*log(RemoveContent(d + e*x, x))/e, x)
-def replacement5268(c, x, d, a, p, e, b):
-        # rubi.append(5268)
-        return -Dist(b*c/(e*(p + S(1))), Int((d + e*x)**(p + S(1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*ArcTan(c*x))*(d + e*x)**(p + S(1))/(e*(p + S(1))), x)
-def replacement5269(c, x, d, a, p, e, b):
-        # rubi.append(5269)
-        return Dist(b*c/(e*(p + S(1))), Int((d + e*x)**(p + S(1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*acot(c*x))*(d + e*x)**(p + S(1))/(e*(p + S(1))), x)
-def replacement5270(c, n, x, a, b):
-        # rubi.append(5270)
-        return -Dist(S(2)*b*c*n, Int((a + b*ArcTan(c*x))**(n + S(-1))*atanh(S(1) - S(2)*I/(-c*x + I))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(S(2)*(a + b*ArcTan(c*x))**n*atanh(S(1) - S(2)*I/(-c*x + I)), x)
-def replacement5271(c, n, x, a, b):
-        # rubi.append(5271)
-        return Dist(S(2)*b*c*n, Int((a + b*acot(c*x))**(n + S(-1))*acoth(S(1) - S(2)*I/(-c*x + I))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(S(2)*(a + b*acot(c*x))**n*acoth(S(1) - S(2)*I/(-c*x + I)), x)
-def replacement5272(c, m, n, x, a, b):
-        # rubi.append(5272)
-        return -Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*ArcTan(c*x))**(n + S(-1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(x**(m + S(1))*(a + b*ArcTan(c*x))**n/(m + S(1)), x)
-def replacement5273(c, m, n, x, a, b):
-        # rubi.append(5273)
-        return Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*acot(c*x))**(n + S(-1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(x**(m + S(1))*(a + b*acot(c*x))**n/(m + S(1)), x)
-def replacement5274(c, n, x, d, a, p, e, b):
-        # rubi.append(5274)
-        return Int(ExpandIntegrand((a + b*ArcTan(c*x))**n*(d + e*x)**p, x), x)
-def replacement5275(c, n, x, d, a, p, e, b):
-        # rubi.append(5275)
-        return Int(ExpandIntegrand((a + b*acot(c*x))**n*(d + e*x)**p, x), x)
-def replacement5276(c, n, x, d, a, p, e, b):
-        # rubi.append(5276)
-        return Int((a + b*ArcTan(c*x))**n*(d + e*x)**p, x)
-def replacement5277(c, n, x, d, a, p, e, b):
-        # rubi.append(5277)
-        return Int((a + b*acot(c*x))**n*(d + e*x)**p, x)
-def replacement5278(c, m, n, x, d, a, e, b):
-        # rubi.append(5278)
-        return Dist(S(1)/e, Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**n/(d + e*x), x), x)
-def replacement5279(c, m, n, x, d, a, e, b):
-        # rubi.append(5279)
-        return Dist(S(1)/e, Int(x**(m + S(-1))*(a + b*acot(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-1))*(a + b*acot(c*x))**n/(d + e*x), x), x)
-def replacement5280(c, n, x, d, a, e, b):
-        # rubi.append(5280)
-        return -Dist(b*c*n/d, Int((a + b*ArcTan(c*x))**(n + S(-1))*log(S(2)*e*x/(d + e*x))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*ArcTan(c*x))**n*log(S(2)*e*x/(d + e*x))/d, x)
-def replacement5281(c, n, x, d, a, e, b):
-        # rubi.append(5281)
-        return Dist(b*c*n/d, Int((a + b*acot(c*x))**(n + S(-1))*log(S(2)*e*x/(d + e*x))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*acot(c*x))**n*log(S(2)*e*x/(d + e*x))/d, x)
-def replacement5282(c, m, n, x, d, a, e, b):
-        # rubi.append(5282)
-        return Dist(S(1)/d, Int(x**m*(a + b*ArcTan(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(1))*(a + b*ArcTan(c*x))**n/(d + e*x), x), x)
-def replacement5283(c, m, n, x, d, a, e, b):
-        # rubi.append(5283)
-        return Dist(S(1)/d, Int(x**m*(a + b*acot(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(1))*(a + b*acot(c*x))**n/(d + e*x), x), x)
-def replacement5284(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5284)
-        return Int(ExpandIntegrand(x**m*(a + b*ArcTan(c*x))**n*(d + e*x)**p, x), x)
-def replacement5285(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5285)
-        return Int(ExpandIntegrand(x**m*(a + b*acot(c*x))**n*(d + e*x)**p, x), x)
-def replacement5286(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5286)
-        return Int(x**m*(a + b*ArcTan(c*x))**n*(d + e*x)**p, x)
-def replacement5287(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5287)
-        return Int(x**m*(a + b*acot(c*x))**n*(d + e*x)**p, x)
-def replacement5288(c, x, d, a, p, e, b):
-        # rubi.append(5288)
-        return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(-1)), x), x) + Simp(x*(a + b*ArcTan(c*x))*(d + e*x**S(2))**p/(S(2)*p + S(1)), x) - Simp(b*(d + e*x**S(2))**p/(S(2)*c*p*(S(2)*p + S(1))), x)
-def replacement5289(c, x, d, a, p, e, b):
-        # rubi.append(5289)
-        return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*acot(c*x))*(d + e*x**S(2))**(p + S(-1)), x), x) + Simp(x*(a + b*acot(c*x))*(d + e*x**S(2))**p/(S(2)*p + S(1)), x) + Simp(b*(d + e*x**S(2))**p/(S(2)*c*p*(S(2)*p + S(1))), x)
-def replacement5290(c, n, x, d, a, p, e, b):
-        # rubi.append(5290)
-        return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b**S(2)*d*n*(n + S(-1))/(S(2)*p*(S(2)*p + S(1))), Int((a + b*ArcTan(c*x))**(n + S(-2))*(d + e*x**S(2))**(p + S(-1)), x), x) + Simp(x*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p/(S(2)*p + S(1)), x) - Simp(b*n*(a + b*ArcTan(c*x))**(n + S(-1))*(d + e*x**S(2))**p/(S(2)*c*p*(S(2)*p + S(1))), x)
-def replacement5291(c, n, x, d, a, p, e, b):
-        # rubi.append(5291)
-        return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b**S(2)*d*n*(n + S(-1))/(S(2)*p*(S(2)*p + S(1))), Int((a + b*acot(c*x))**(n + S(-2))*(d + e*x**S(2))**(p + S(-1)), x), x) + Simp(x*(a + b*acot(c*x))**n*(d + e*x**S(2))**p/(S(2)*p + S(1)), x) + Simp(b*n*(a + b*acot(c*x))**(n + S(-1))*(d + e*x**S(2))**p/(S(2)*c*p*(S(2)*p + S(1))), x)
-def replacement5292(c, x, d, a, e, b):
-        # rubi.append(5292)
-        return Simp(log(RemoveContent(a + b*ArcTan(c*x), x))/(b*c*d), x)
-def replacement5293(c, x, d, a, e, b):
-        # rubi.append(5293)
-        return -Simp(log(RemoveContent(a + b*acot(c*x), x))/(b*c*d), x)
-def replacement5294(c, n, x, d, a, e, b):
-        # rubi.append(5294)
-        return Simp((a + b*ArcTan(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5295(c, n, x, d, a, e, b):
-        # rubi.append(5295)
-        return -Simp((a + b*acot(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5296(c, x, d, a, e, b):
-        # rubi.append(5296)
-        return Simp(I*b*PolyLog(S(2), -I*sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x) - Simp(I*b*PolyLog(S(2), I*sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x) + Simp(-S(2)*I*(a + b*ArcTan(c*x))*ArcTan(sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x)
-def replacement5297(c, x, d, a, e, b):
-        # rubi.append(5297)
-        return -Simp(I*b*PolyLog(S(2), -I*sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x) + Simp(I*b*PolyLog(S(2), I*sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x) + Simp(-S(2)*I*(a + b*acot(c*x))*ArcTan(sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x)
-def replacement5298(c, n, x, d, a, e, b):
-        # rubi.append(5298)
-        return Dist(S(1)/(c*sqrt(d)), Subst(Int((a + b*x)**n/cos(x), x), x, ArcTan(c*x)), x)
-def replacement5299(c, n, x, d, a, e, b):
-        # rubi.append(5299)
-        return -Dist(x*sqrt(S(1) + S(1)/(c**S(2)*x**S(2)))/sqrt(d + e*x**S(2)), Subst(Int((a + b*x)**n/sin(x), x), x, acot(c*x)), x)
-def replacement5300(c, n, x, d, a, e, b):
-        # rubi.append(5300)
-        return Dist(sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*ArcTan(c*x))**n/sqrt(c**S(2)*x**S(2) + S(1)), x), x)
-def replacement5301(c, n, x, d, a, e, b):
-        # rubi.append(5301)
-        return Dist(sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*acot(c*x))**n/sqrt(c**S(2)*x**S(2) + S(1)), x), x)
-def replacement5302(c, n, x, d, a, e, b):
-        # rubi.append(5302)
-        return -Dist(b*c*n/S(2), Int(x*(a + b*ArcTan(c*x))**(n + S(-1))/(d + e*x**S(2))**S(2), x), x) + Simp(x*(a + b*ArcTan(c*x))**n/(S(2)*d*(d + e*x**S(2))), x) + Simp((a + b*ArcTan(c*x))**(n + S(1))/(S(2)*b*c*d**S(2)*(n + S(1))), x)
-def replacement5303(c, n, x, d, a, e, b):
-        # rubi.append(5303)
-        return Dist(b*c*n/S(2), Int(x*(a + b*acot(c*x))**(n + S(-1))/(d + e*x**S(2))**S(2), x), x) + Simp(x*(a + b*acot(c*x))**n/(S(2)*d*(d + e*x**S(2))), x) - Simp((a + b*acot(c*x))**(n + S(1))/(S(2)*b*c*d**S(2)*(n + S(1))), x)
-def replacement5304(c, x, d, a, e, b):
-        # rubi.append(5304)
-        return Simp(b/(c*d*sqrt(d + e*x**S(2))), x) + Simp(x*(a + b*ArcTan(c*x))/(d*sqrt(d + e*x**S(2))), x)
-def replacement5305(c, x, d, a, e, b):
-        # rubi.append(5305)
-        return -Simp(b/(c*d*sqrt(d + e*x**S(2))), x) + Simp(x*(a + b*acot(c*x))/(d*sqrt(d + e*x**S(2))), x)
-def replacement5306(c, x, d, a, p, e, b):
-        # rubi.append(5306)
-        return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) + Simp(b*(d + e*x**S(2))**(p + S(1))/(S(4)*c*d*(p + S(1))**S(2)), x) - Simp(x*(a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x)
-def replacement5307(c, x, d, a, p, e, b):
-        # rubi.append(5307)
-        return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) - Simp(b*(d + e*x**S(2))**(p + S(1))/(S(4)*c*d*(p + S(1))**S(2)), x) - Simp(x*(a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x)
-def replacement5308(c, n, x, d, a, e, b):
-        # rubi.append(5308)
-        return -Dist(b**S(2)*n*(n + S(-1)), Int((a + b*ArcTan(c*x))**(n + S(-2))/(d + e*x**S(2))**(S(3)/2), x), x) + Simp(x*(a + b*ArcTan(c*x))**n/(d*sqrt(d + e*x**S(2))), x) + Simp(b*n*(a + b*ArcTan(c*x))**(n + S(-1))/(c*d*sqrt(d + e*x**S(2))), x)
-def replacement5309(c, n, x, d, a, e, b):
-        # rubi.append(5309)
-        return -Dist(b**S(2)*n*(n + S(-1)), Int((a + b*acot(c*x))**(n + S(-2))/(d + e*x**S(2))**(S(3)/2), x), x) + Simp(x*(a + b*acot(c*x))**n/(d*sqrt(d + e*x**S(2))), x) - Simp(b*n*(a + b*acot(c*x))**(n + S(-1))/(c*d*sqrt(d + e*x**S(2))), x)
-def replacement5310(c, n, x, d, a, p, e, b):
-        # rubi.append(5310)
-        return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(b**S(2)*n*(n + S(-1))/(S(4)*(p + S(1))**S(2)), Int((a + b*ArcTan(c*x))**(n + S(-2))*(d + e*x**S(2))**p, x), x) - Simp(x*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x) + Simp(b*n*(a + b*ArcTan(c*x))**(n + S(-1))*(d + e*x**S(2))**(p + S(1))/(S(4)*c*d*(p + S(1))**S(2)), x)
-def replacement5311(c, n, x, d, a, p, e, b):
-        # rubi.append(5311)
-        return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(b**S(2)*n*(n + S(-1))/(S(4)*(p + S(1))**S(2)), Int((a + b*acot(c*x))**(n + S(-2))*(d + e*x**S(2))**p, x), x) - Simp(x*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x) - Simp(b*n*(a + b*acot(c*x))**(n + S(-1))*(d + e*x**S(2))**(p + S(1))/(S(4)*c*d*(p + S(1))**S(2)), x)
-def replacement5312(c, n, x, d, a, p, e, b):
-        # rubi.append(5312)
-        return -Dist(S(2)*c*(p + S(1))/(b*(n + S(1))), Int(x*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) + Simp((a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5313(c, n, x, d, a, p, e, b):
-        # rubi.append(5313)
-        return Dist(S(2)*c*(p + S(1))/(b*(n + S(1))), Int(x*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) - Simp((a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5314(c, n, x, d, a, p, e, b):
-        # rubi.append(5314)
-        return Dist(d**p/c, Subst(Int((a + b*x)**n*cos(x)**(-S(2)*p + S(-2)), x), x, ArcTan(c*x)), x)
-def replacement5315(c, n, x, d, a, p, e, b):
-        # rubi.append(5315)
-        return Dist(d**(p + S(1)/2)*sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*ArcTan(c*x))**n*(c**S(2)*x**S(2) + S(1))**p, x), x)
-def replacement5316(c, n, x, d, a, p, e, b):
-        # rubi.append(5316)
-        return -Dist(d**p/c, Subst(Int((a + b*x)**n*sin(x)**(-S(2)*p + S(-2)), x), x, acot(c*x)), x)
-def replacement5317(c, n, x, d, a, p, e, b):
-        # rubi.append(5317)
-        return -Dist(d**(p + S(1)/2)*x*sqrt((c**S(2)*x**S(2) + S(1))/(c**S(2)*x**S(2)))/sqrt(d + e*x**S(2)), Subst(Int((a + b*x)**n*sin(x)**(-S(2)*p + S(-2)), x), x, acot(c*x)), x)
-def replacement5318(c, d, x, e):
-        # rubi.append(5318)
-        return Dist(I/S(2), Int(log(-I*c*x + S(1))/(d + e*x**S(2)), x), x) - Dist(I/S(2), Int(log(I*c*x + S(1))/(d + e*x**S(2)), x), x)
-def replacement5319(c, d, x, e):
-        # rubi.append(5319)
-        return Dist(I/S(2), Int(log(S(1) - I/(c*x))/(d + e*x**S(2)), x), x) - Dist(I/S(2), Int(log(S(1) + I/(c*x))/(d + e*x**S(2)), x), x)
-def replacement5320(c, x, d, a, e, b):
-        # rubi.append(5320)
-        return Dist(a, Int(S(1)/(d + e*x**S(2)), x), x) + Dist(b, Int(ArcTan(c*x)/(d + e*x**S(2)), x), x)
-def replacement5321(c, x, d, a, e, b):
-        # rubi.append(5321)
-        return Dist(a, Int(S(1)/(d + e*x**S(2)), x), x) + Dist(b, Int(acot(c*x)/(d + e*x**S(2)), x), x)
 
-def With5322(c, x, d, a, p, e, b):
-        u = IntHide((d + e*x**S(2))**p, x)
-        # rubi.append(5322)
-        return -Dist(b*c, Int(ExpandIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*ArcTan(c*x), u, x)
+def replacement5256(u, a, v, b, x):
 
-def With5323(c, x, d, a, p, e, b):
-        u = IntHide((d + e*x**S(2))**p, x)
-        # rubi.append(5323)
-        return Dist(b*c, Int(ExpandIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acot(c*x), u, x)
-def replacement5324(c, n, x, d, a, p, e, b):
-        # rubi.append(5324)
-        return Int(ExpandIntegrand((a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x), x)
-def replacement5325(c, n, x, d, a, p, e, b):
-        # rubi.append(5325)
-        return Int(ExpandIntegrand((a + b*acot(c*x))**n*(d + e*x**S(2))**p, x), x)
-def replacement5326(c, n, x, d, a, p, e, b):
-        # rubi.append(5326)
-        return Int((a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5327(c, n, x, d, a, p, e, b):
-        # rubi.append(5327)
-        return Int((a + b*acot(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5328(c, m, n, x, d, a, e, b):
-        # rubi.append(5328)
-        return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n/(d + e*x**S(2)), x), x)
-def replacement5329(c, m, n, x, d, a, e, b):
-        # rubi.append(5329)
-        return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n/(d + e*x**S(2)), x), x)
-def replacement5330(c, m, n, x, d, a, e, b):
-        # rubi.append(5330)
-        return Dist(S(1)/d, Int(x**m*(a + b*ArcTan(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*ArcTan(c*x))**n/(d + e*x**S(2)), x), x)
-def replacement5331(c, m, n, x, d, a, e, b):
-        # rubi.append(5331)
-        return Dist(S(1)/d, Int(x**m*(a + b*acot(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*acot(c*x))**n/(d + e*x**S(2)), x), x)
-def replacement5332(c, n, x, d, a, e, b):
-        # rubi.append(5332)
-        return -Dist(S(1)/(c*d), Int((a + b*ArcTan(c*x))**n/(-c*x + I), x), x) - Simp(I*(a + b*ArcTan(c*x))**(n + S(1))/(b*e*(n + S(1))), x)
-def replacement5333(c, n, x, d, a, e, b):
-        # rubi.append(5333)
-        return -Dist(S(1)/(c*d), Int((a + b*acot(c*x))**n/(-c*x + I), x), x) + Simp(I*(a + b*acot(c*x))**(n + S(1))/(b*e*(n + S(1))), x)
-def replacement5334(c, n, x, d, a, e, b):
-        # rubi.append(5334)
-        return -Dist(S(1)/(b*c*d*(n + S(1))), Int((a + b*ArcTan(c*x))**(n + S(1)), x), x) + Simp(x*(a + b*ArcTan(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5335(c, n, x, d, a, e, b):
-        # rubi.append(5335)
-        return Dist(S(1)/(b*c*d*(n + S(1))), Int((a + b*acot(c*x))**(n + S(1)), x), x) - Simp(x*(a + b*acot(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5336(c, m, n, x, d, a, e, b):
-        # rubi.append(5336)
-        return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n/(d + e*x**S(2)), x), x)
-def replacement5337(c, m, n, x, d, a, e, b):
-        # rubi.append(5337)
-        return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n/(d + e*x**S(2)), x), x)
-def replacement5338(c, n, x, d, a, e, b):
-        # rubi.append(5338)
-        return Dist(I/d, Int((a + b*ArcTan(c*x))**n/(x*(c*x + I)), x), x) - Simp(I*(a + b*ArcTan(c*x))**(n + S(1))/(b*d*(n + S(1))), x)
-def replacement5339(c, n, x, d, a, e, b):
-        # rubi.append(5339)
-        return Dist(I/d, Int((a + b*acot(c*x))**n/(x*(c*x + I)), x), x) + Simp(I*(a + b*acot(c*x))**(n + S(1))/(b*d*(n + S(1))), x)
-def replacement5340(c, m, n, x, d, a, e, b):
-        # rubi.append(5340)
-        return Dist(S(1)/d, Int(x**m*(a + b*ArcTan(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*ArcTan(c*x))**n/(d + e*x**S(2)), x), x)
-def replacement5341(c, m, n, x, d, a, e, b):
-        # rubi.append(5341)
-        return Dist(S(1)/d, Int(x**m*(a + b*acot(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*acot(c*x))**n/(d + e*x**S(2)), x), x)
-def replacement5342(c, m, n, x, d, a, e, b):
-        # rubi.append(5342)
-        return -Dist(m/(b*c*d*(n + S(1))), Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**(n + S(1)), x), x) + Simp(x**m*(a + b*ArcTan(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5343(c, m, n, x, d, a, e, b):
-        # rubi.append(5343)
-        return Dist(m/(b*c*d*(n + S(1))), Int(x**(m + S(-1))*(a + b*acot(c*x))**(n + S(1)), x), x) - Simp(x**m*(a + b*acot(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5344(c, m, x, d, a, e, b):
-        # rubi.append(5344)
-        return Int(ExpandIntegrand(a + b*ArcTan(c*x), x**m/(d + e*x**S(2)), x), x)
-def replacement5345(c, m, x, d, a, e, b):
-        # rubi.append(5345)
-        return Int(ExpandIntegrand(a + b*acot(c*x), x**m/(d + e*x**S(2)), x), x)
-def replacement5346(c, n, x, d, a, p, e, b):
-        # rubi.append(5346)
-        return -Dist(b*n/(S(2)*c*(p + S(1))), Int((a + b*ArcTan(c*x))**(n + S(-1))*(d + e*x**S(2))**p, x), x) + Simp((a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
-def replacement5347(c, n, x, d, a, p, e, b):
-        # rubi.append(5347)
-        return Dist(b*n/(S(2)*c*(p + S(1))), Int((a + b*acot(c*x))**(n + S(-1))*(d + e*x**S(2))**p, x), x) + Simp((a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
-def replacement5348(c, n, x, d, a, e, b):
-        # rubi.append(5348)
-        return -Dist(S(4)/(b**S(2)*(n + S(1))*(n + S(2))), Int(x*(a + b*ArcTan(c*x))**(n + S(2))/(d + e*x**S(2))**S(2), x), x) - Simp((a + b*ArcTan(c*x))**(n + S(2))*(-c**S(2)*x**S(2) + S(1))/(b**S(2)*e*(d + e*x**S(2))*(n + S(1))*(n + S(2))), x) + Simp(x*(a + b*ArcTan(c*x))**(n + S(1))/(b*c*d*(d + e*x**S(2))*(n + S(1))), x)
-def replacement5349(c, n, x, d, a, e, b):
-        # rubi.append(5349)
-        return -Dist(S(4)/(b**S(2)*(n + S(1))*(n + S(2))), Int(x*(a + b*acot(c*x))**(n + S(2))/(d + e*x**S(2))**S(2), x), x) - Simp((a + b*acot(c*x))**(n + S(2))*(-c**S(2)*x**S(2) + S(1))/(b**S(2)*e*(d + e*x**S(2))*(n + S(1))*(n + S(2))), x) - Simp(x*(a + b*acot(c*x))**(n + S(1))/(b*c*d*(d + e*x**S(2))*(n + S(1))), x)
-def replacement5350(c, x, d, a, p, e, b):
-        # rubi.append(5350)
-        return -Dist(S(1)/(S(2)*c**S(2)*d*(p + S(1))), Int((a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) - Simp(b*(d + e*x**S(2))**(p + S(1))/(S(4)*c**S(3)*d*(p + S(1))**S(2)), x) + Simp(x*(a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*c**S(2)*d*(p + S(1))), x)
-def replacement5351(c, x, d, a, p, e, b):
-        # rubi.append(5351)
-        return -Dist(S(1)/(S(2)*c**S(2)*d*(p + S(1))), Int((a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) + Simp(b*(d + e*x**S(2))**(p + S(1))/(S(4)*c**S(3)*d*(p + S(1))**S(2)), x) + Simp(x*(a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*c**S(2)*d*(p + S(1))), x)
-def replacement5352(c, n, x, d, a, e, b):
-        # rubi.append(5352)
-        return Dist(b*n/(S(2)*c), Int(x*(a + b*ArcTan(c*x))**(n + S(-1))/(d + e*x**S(2))**S(2), x), x) + Simp((a + b*ArcTan(c*x))**(n + S(1))/(S(2)*b*c**S(3)*d**S(2)*(n + S(1))), x) - Simp(x*(a + b*ArcTan(c*x))**n/(S(2)*c**S(2)*d*(d + e*x**S(2))), x)
-def replacement5353(c, n, x, d, a, e, b):
-        # rubi.append(5353)
-        return -Dist(b*n/(S(2)*c), Int(x*(a + b*acot(c*x))**(n + S(-1))/(d + e*x**S(2))**S(2), x), x) - Simp((a + b*acot(c*x))**(n + S(1))/(S(2)*b*c**S(3)*d**S(2)*(n + S(1))), x) - Simp(x*(a + b*acot(c*x))**n/(S(2)*c**S(2)*d*(d + e*x**S(2))), x)
-def replacement5354(c, m, x, d, a, p, e, b):
-        # rubi.append(5354)
-        return Dist((m + S(-1))/(c**S(2)*d*m), Int(x**(m + S(-2))*(a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) + Simp(b*x**m*(d + e*x**S(2))**(p + S(1))/(c*d*m**S(2)), x) - Simp(x**(m + S(-1))*(a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1))/(c**S(2)*d*m), x)
-def replacement5355(c, m, x, d, a, p, e, b):
-        # rubi.append(5355)
-        return Dist((m + S(-1))/(c**S(2)*d*m), Int(x**(m + S(-2))*(a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) - Simp(b*x**m*(d + e*x**S(2))**(p + S(1))/(c*d*m**S(2)), x) - Simp(x**(m + S(-1))*(a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1))/(c**S(2)*d*m), x)
-def replacement5356(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5356)
-        return -Dist(b**S(2)*n*(n + S(-1))/m**S(2), Int(x**m*(a + b*ArcTan(c*x))**(n + S(-2))*(d + e*x**S(2))**p, x), x) + Dist((m + S(-1))/(c**S(2)*d*m), Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Simp(x**(m + S(-1))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1))/(c**S(2)*d*m), x) + Simp(b*n*x**m*(a + b*ArcTan(c*x))**(n + S(-1))*(d + e*x**S(2))**(p + S(1))/(c*d*m**S(2)), x)
-def replacement5357(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5357)
-        return -Dist(b**S(2)*n*(n + S(-1))/m**S(2), Int(x**m*(a + b*acot(c*x))**(n + S(-2))*(d + e*x**S(2))**p, x), x) + Dist((m + S(-1))/(c**S(2)*d*m), Int(x**(m + S(-2))*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Simp(x**(m + S(-1))*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1))/(c**S(2)*d*m), x) - Simp(b*n*x**m*(a + b*acot(c*x))**(n + S(-1))*(d + e*x**S(2))**(p + S(1))/(c*d*m**S(2)), x)
-def replacement5358(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5358)
-        return -Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) + Simp(x**m*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5359(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5359)
-        return Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) - Simp(x**m*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5360(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5360)
-        return -Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*ArcTan(c*x))**(n + S(-1))*(d + e*x**S(2))**p, x), x) + Simp(x**(m + S(1))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*(m + S(1))), x)
-def replacement5361(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5361)
-        return Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*acot(c*x))**(n + S(-1))*(d + e*x**S(2))**p, x), x) + Simp(x**(m + S(1))*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*(m + S(1))), x)
-def replacement5362(c, m, x, d, a, e, b):
-        # rubi.append(5362)
-        return Dist(d/(m + S(2)), Int(x**m*(a + b*ArcTan(c*x))/sqrt(d + e*x**S(2)), x), x) - Dist(b*c*d/(m + S(2)), Int(x**(m + S(1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*ArcTan(c*x))*sqrt(d + e*x**S(2))/(m + S(2)), x)
-def replacement5363(c, m, x, d, a, e, b):
-        # rubi.append(5363)
-        return Dist(d/(m + S(2)), Int(x**m*(a + b*acot(c*x))/sqrt(d + e*x**S(2)), x), x) + Dist(b*c*d/(m + S(2)), Int(x**(m + S(1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*acot(c*x))*sqrt(d + e*x**S(2))/(m + S(2)), x)
-def replacement5364(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5364)
-        return Int(ExpandIntegrand(x**m*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x), x)
-def replacement5365(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5365)
-        return Int(ExpandIntegrand(x**m*(a + b*acot(c*x))**n*(d + e*x**S(2))**p, x), x)
-def replacement5366(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5366)
-        return Dist(d, Int(x**m*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(c**S(2)*d, Int(x**(m + S(2))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x)
-def replacement5367(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5367)
-        return Dist(d, Int(x**m*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(c**S(2)*d, Int(x**(m + S(2))*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x)
-def replacement5368(c, m, n, x, d, a, e, b):
-        # rubi.append(5368)
-        return -Dist((m + S(-1))/(c**S(2)*m), Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n/sqrt(d + e*x**S(2)), x), x) - Dist(b*n/(c*m), Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**(n + S(-1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(-1))*(a + b*ArcTan(c*x))**n*sqrt(d + e*x**S(2))/(c**S(2)*d*m), x)
-def replacement5369(c, m, n, x, d, a, e, b):
-        # rubi.append(5369)
-        return -Dist((m + S(-1))/(c**S(2)*m), Int(x**(m + S(-2))*(a + b*acot(c*x))**n/sqrt(d + e*x**S(2)), x), x) + Dist(b*n/(c*m), Int(x**(m + S(-1))*(a + b*acot(c*x))**(n + S(-1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(-1))*(a + b*acot(c*x))**n*sqrt(d + e*x**S(2))/(c**S(2)*d*m), x)
-def replacement5370(c, x, d, a, e, b):
-        # rubi.append(5370)
-        return Simp(-S(2)*(a + b*ArcTan(c*x))*atanh(sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x) + Simp(I*b*PolyLog(S(2), -sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x) - Simp(I*b*PolyLog(S(2), sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x)
-def replacement5371(c, x, d, a, e, b):
-        # rubi.append(5371)
-        return Simp(-S(2)*(a + b*acot(c*x))*atanh(sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x) - Simp(I*b*PolyLog(S(2), -sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x) + Simp(I*b*PolyLog(S(2), sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x)
-def replacement5372(c, n, x, d, a, e, b):
-        # rubi.append(5372)
-        return Dist(S(1)/sqrt(d), Subst(Int((a + b*x)**n/sin(x), x), x, ArcTan(c*x)), x)
-def replacement5373(c, n, x, d, a, e, b):
-        # rubi.append(5373)
-        return -Dist(c*x*sqrt(S(1) + S(1)/(c**S(2)*x**S(2)))/sqrt(d + e*x**S(2)), Subst(Int((a + b*x)**n/cos(x), x), x, acot(c*x)), x)
-def replacement5374(c, n, x, d, a, e, b):
-        # rubi.append(5374)
-        return Dist(sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*ArcTan(c*x))**n/(x*sqrt(c**S(2)*x**S(2) + S(1))), x), x)
-def replacement5375(c, n, x, d, a, e, b):
-        # rubi.append(5375)
-        return Dist(sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*acot(c*x))**n/(x*sqrt(c**S(2)*x**S(2) + S(1))), x), x)
-def replacement5376(c, n, x, d, a, e, b):
-        # rubi.append(5376)
-        return Dist(b*c*n, Int((a + b*ArcTan(c*x))**(n + S(-1))/(x*sqrt(d + e*x**S(2))), x), x) - Simp((a + b*ArcTan(c*x))**n*sqrt(d + e*x**S(2))/(d*x), x)
-def replacement5377(c, n, x, d, a, e, b):
-        # rubi.append(5377)
-        return -Dist(b*c*n, Int((a + b*acot(c*x))**(n + S(-1))/(x*sqrt(d + e*x**S(2))), x), x) - Simp((a + b*acot(c*x))**n*sqrt(d + e*x**S(2))/(d*x), x)
-def replacement5378(c, m, n, x, d, a, e, b):
-        # rubi.append(5378)
-        return -Dist(c**S(2)*(m + S(2))/(m + S(1)), Int(x**(m + S(2))*(a + b*ArcTan(c*x))**n/sqrt(d + e*x**S(2)), x), x) - Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*ArcTan(c*x))**(n + S(-1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*ArcTan(c*x))**n*sqrt(d + e*x**S(2))/(d*(m + S(1))), x)
-def replacement5379(c, m, n, x, d, a, e, b):
-        # rubi.append(5379)
-        return -Dist(c**S(2)*(m + S(2))/(m + S(1)), Int(x**(m + S(2))*(a + b*acot(c*x))**n/sqrt(d + e*x**S(2)), x), x) + Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*acot(c*x))**(n + S(-1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*acot(c*x))**n*sqrt(d + e*x**S(2))/(d*(m + S(1))), x)
-def replacement5380(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5380)
-        return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x), x)
-def replacement5381(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5381)
-        return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n*(d + e*x**S(2))**p, x), x)
-def replacement5382(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5382)
-        return Dist(S(1)/d, Int(x**m*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x), x)
-def replacement5383(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5383)
-        return Dist(S(1)/d, Int(x**m*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*acot(c*x))**n*(d + e*x**S(2))**p, x), x)
-def replacement5384(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5384)
-        return -Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) - Dist(c*(m + S(2)*p + S(2))/(b*(n + S(1))), Int(x**(m + S(1))*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) + Simp(x**m*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5385(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5385)
-        return Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) + Dist(c*(m + S(2)*p + S(2))/(b*(n + S(1))), Int(x**(m + S(1))*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) - Simp(x**m*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
-def replacement5386(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5386)
-        return Dist(c**(-m + S(-1))*d**p, Subst(Int((a + b*x)**n*sin(x)**m*cos(x)**(-m - S(2)*p + S(-2)), x), x, ArcTan(c*x)), x)
-def replacement5387(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5387)
-        return Dist(d**(p + S(1)/2)*sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int(x**m*(a + b*ArcTan(c*x))**n*(c**S(2)*x**S(2) + S(1))**p, x), x)
-def replacement5388(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5388)
-        return -Dist(c**(-m + S(-1))*d**p, Subst(Int((a + b*x)**n*sin(x)**(-m - S(2)*p + S(-2))*cos(x)**m, x), x, acot(c*x)), x)
-def replacement5389(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5389)
-        return -Dist(c**(-m)*d**(p + S(1)/2)*x*sqrt((c**S(2)*x**S(2) + S(1))/(c**S(2)*x**S(2)))/sqrt(d + e*x**S(2)), Subst(Int((a + b*x)**n*sin(x)**(-m - S(2)*p + S(-2))*cos(x)**m, x), x, acot(c*x)), x)
-def replacement5390(c, x, d, a, p, e, b):
-        # rubi.append(5390)
-        return -Dist(b*c/(S(2)*e*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
-def replacement5391(c, x, d, a, p, e, b):
-        # rubi.append(5391)
-        return Dist(b*c/(S(2)*e*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+    w = IntHide(v, x)
+    return Dist(b, Int(SimplifyIntegrand(w*D(u, x)/sqrt(S(1) - u**S(2)), x), x), x) + Dist(a + b*acos(u), w, x)
 
-def With5392(c, m, x, d, a, p, e, b):
-        u = IntHide(x**m*(d + e*x**S(2))**p, x)
-        # rubi.append(5392)
-        return -Dist(b*c, Int(SimplifyIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*ArcTan(c*x), u, x)
 
-def With5393(c, m, x, d, a, p, e, b):
-        u = IntHide(x**m*(d + e*x**S(2))**p, x)
-        # rubi.append(5393)
-        return Dist(b*c, Int(SimplifyIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acot(c*x), u, x)
-def replacement5394(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5394)
-        return Int(ExpandIntegrand((a + b*ArcTan(c*x))**n, x**m*(d + e*x**S(2))**p, x), x)
-def replacement5395(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5395)
-        return Int(ExpandIntegrand((a + b*acot(c*x))**n, x**m*(d + e*x**S(2))**p, x), x)
-def replacement5396(c, m, x, d, a, p, e, b):
-        # rubi.append(5396)
-        return Dist(a, Int(x**m*(d + e*x**S(2))**p, x), x) + Dist(b, Int(x**m*(d + e*x**S(2))**p*ArcTan(c*x), x), x)
-def replacement5397(c, m, x, d, a, p, e, b):
-        # rubi.append(5397)
-        return Dist(a, Int(x**m*(d + e*x**S(2))**p, x), x) + Dist(b, Int(x**m*(d + e*x**S(2))**p*acot(c*x), x), x)
-def replacement5398(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5398)
-        return Int(x**m*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5399(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5399)
-        return Int(x**m*(a + b*acot(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5400(c, n, x, d, u, a, e, b):
-        # rubi.append(5400)
-        return -Dist(S(1)/2, Int((a + b*ArcTan(c*x))**n*log(S(1) - u)/(d + e*x**S(2)), x), x) + Dist(S(1)/2, Int((a + b*ArcTan(c*x))**n*log(u + S(1))/(d + e*x**S(2)), x), x)
-def replacement5401(c, n, x, d, u, a, e, b):
-        # rubi.append(5401)
-        return -Dist(S(1)/2, Int((a + b*acot(c*x))**n*log(SimplifyIntegrand(S(1) - S(1)/u, x))/(d + e*x**S(2)), x), x) + Dist(S(1)/2, Int((a + b*acot(c*x))**n*log(SimplifyIntegrand(S(1) + S(1)/u, x))/(d + e*x**S(2)), x), x)
-def replacement5402(c, n, x, d, u, a, e, b):
-        # rubi.append(5402)
-        return -Dist(S(1)/2, Int((a + b*ArcTan(c*x))**n*log(S(1) - u)/(d + e*x**S(2)), x), x) + Dist(S(1)/2, Int((a + b*ArcTan(c*x))**n*log(u + S(1))/(d + e*x**S(2)), x), x)
-def replacement5403(c, n, x, d, u, a, e, b):
-        # rubi.append(5403)
-        return -Dist(S(1)/2, Int((a + b*acot(c*x))**n*log(SimplifyIntegrand(S(1) - S(1)/u, x))/(d + e*x**S(2)), x), x) + Dist(S(1)/2, Int((a + b*acot(c*x))**n*log(SimplifyIntegrand(S(1) + S(1)/u, x))/(d + e*x**S(2)), x), x)
-def replacement5404(c, n, x, d, u, a, e, b):
-        # rubi.append(5404)
-        return -Dist(I*b*n/S(2), Int((a + b*ArcTan(c*x))**(n + S(-1))*PolyLog(S(2), Together(S(1) - u))/(d + e*x**S(2)), x), x) + Simp(I*(a + b*ArcTan(c*x))**n*PolyLog(S(2), Together(S(1) - u))/(S(2)*c*d), x)
-def replacement5405(c, n, x, d, u, a, e, b):
-        # rubi.append(5405)
-        return Dist(I*b*n/S(2), Int((a + b*acot(c*x))**(n + S(-1))*PolyLog(S(2), Together(S(1) - u))/(d + e*x**S(2)), x), x) + Simp(I*(a + b*acot(c*x))**n*PolyLog(S(2), Together(S(1) - u))/(S(2)*c*d), x)
-def replacement5406(c, n, x, d, u, a, e, b):
-        # rubi.append(5406)
-        return Dist(I*b*n/S(2), Int((a + b*ArcTan(c*x))**(n + S(-1))*PolyLog(S(2), Together(S(1) - u))/(d + e*x**S(2)), x), x) - Simp(I*(a + b*ArcTan(c*x))**n*PolyLog(S(2), Together(S(1) - u))/(S(2)*c*d), x)
-def replacement5407(c, n, x, d, u, a, e, b):
-        # rubi.append(5407)
-        return -Dist(I*b*n/S(2), Int((a + b*acot(c*x))**(n + S(-1))*PolyLog(S(2), Together(S(1) - u))/(d + e*x**S(2)), x), x) - Simp(I*(a + b*acot(c*x))**n*PolyLog(S(2), Together(S(1) - u))/(S(2)*c*d), x)
-def replacement5408(c, n, x, d, u, a, p, e, b):
-        # rubi.append(5408)
-        return Dist(I*b*n/S(2), Int((a + b*ArcTan(c*x))**(n + S(-1))*PolyLog(p + S(1), u)/(d + e*x**S(2)), x), x) - Simp(I*(a + b*ArcTan(c*x))**n*PolyLog(p + S(1), u)/(S(2)*c*d), x)
-def replacement5409(c, n, x, d, u, a, p, e, b):
-        # rubi.append(5409)
-        return -Dist(I*b*n/S(2), Int((a + b*acot(c*x))**(n + S(-1))*PolyLog(p + S(1), u)/(d + e*x**S(2)), x), x) - Simp(I*(a + b*acot(c*x))**n*PolyLog(p + S(1), u)/(S(2)*c*d), x)
-def replacement5410(c, n, x, d, u, a, p, e, b):
-        # rubi.append(5410)
-        return -Dist(I*b*n/S(2), Int((a + b*ArcTan(c*x))**(n + S(-1))*PolyLog(p + S(1), u)/(d + e*x**S(2)), x), x) + Simp(I*(a + b*ArcTan(c*x))**n*PolyLog(p + S(1), u)/(S(2)*c*d), x)
-def replacement5411(c, n, x, d, u, a, p, e, b):
-        # rubi.append(5411)
-        return Dist(I*b*n/S(2), Int((a + b*acot(c*x))**(n + S(-1))*PolyLog(p + S(1), u)/(d + e*x**S(2)), x), x) + Simp(I*(a + b*acot(c*x))**n*PolyLog(p + S(1), u)/(S(2)*c*d), x)
-def replacement5412(c, x, d, a, e, b):
-        # rubi.append(5412)
-        return Simp((log(a + b*ArcTan(c*x)) - log(a + b*acot(c*x)))/(b*c*d*(S(2)*a + b*ArcTan(c*x) + b*acot(c*x))), x)
-def replacement5413(c, m, n, x, d, a, e, b):
-        # rubi.append(5413)
-        return Dist(n/(m + S(1)), Int((a + b*ArcTan(c*x))**(n + S(-1))*(a + b*acot(c*x))**(m + S(1))/(d + e*x**S(2)), x), x) - Simp((a + b*ArcTan(c*x))**n*(a + b*acot(c*x))**(m + S(1))/(b*c*d*(m + S(1))), x)
-def replacement5414(c, m, n, x, d, a, e, b):
-        # rubi.append(5414)
-        return Dist(n/(m + S(1)), Int((a + b*ArcTan(c*x))**(m + S(1))*(a + b*acot(c*x))**(n + S(-1))/(d + e*x**S(2)), x), x) + Simp((a + b*ArcTan(c*x))**(m + S(1))*(a + b*acot(c*x))**n/(b*c*d*(m + S(1))), x)
-def replacement5415(c, n, x, d, a):
-        # rubi.append(5415)
-        return Dist(I/S(2), Int(log(-I*a*x + S(1))/(c + d*x**n), x), x) - Dist(I/S(2), Int(log(I*a*x + S(1))/(c + d*x**n), x), x)
-def replacement5416(c, n, x, d, a):
-        # rubi.append(5416)
-        return Dist(I/S(2), Int(log(S(1) - I/(a*x))/(c + d*x**n), x), x) - Dist(I/S(2), Int(log(S(1) + I/(a*x))/(c + d*x**n), x), x)
-def replacement5417(c, x, d, f, g, a, e, b):
-        # rubi.append(5417)
-        return -Dist(b*c, Int(x*(d + e*log(f + g*x**S(2)))/(c**S(2)*x**S(2) + S(1)), x), x) - Dist(S(2)*e*g, Int(x**S(2)*(a + b*ArcTan(c*x))/(f + g*x**S(2)), x), x) + Simp(x*(a + b*ArcTan(c*x))*(d + e*log(f + g*x**S(2))), x)
-def replacement5418(c, x, d, f, g, a, e, b):
-        # rubi.append(5418)
-        return Dist(b*c, Int(x*(d + e*log(f + g*x**S(2)))/(c**S(2)*x**S(2) + S(1)), x), x) - Dist(S(2)*e*g, Int(x**S(2)*(a + b*acot(c*x))/(f + g*x**S(2)), x), x) + Simp(x*(a + b*acot(c*x))*(d + e*log(f + g*x**S(2))), x)
-def replacement5419(c, m, x, d, f, g, a, e, b):
-        # rubi.append(5419)
-        return -Dist(b*c/(m + S(1)), Int(x**(m + S(1))*(d + e*log(f + g*x**S(2)))/(c**S(2)*x**S(2) + S(1)), x), x) - Dist(S(2)*e*g/(m + S(1)), Int(x**(m + S(2))*(a + b*ArcTan(c*x))/(f + g*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*ArcTan(c*x))*(d + e*log(f + g*x**S(2)))/(m + S(1)), x)
-def replacement5420(c, m, x, d, f, g, a, e, b):
-        # rubi.append(5420)
-        return Dist(b*c/(m + S(1)), Int(x**(m + S(1))*(d + e*log(f + g*x**S(2)))/(c**S(2)*x**S(2) + S(1)), x), x) - Dist(S(2)*e*g/(m + S(1)), Int(x**(m + S(2))*(a + b*acot(c*x))/(f + g*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*acot(c*x))*(d + e*log(f + g*x**S(2)))/(m + S(1)), x)
+def replacement5257(a, c, n, b, x):
+    return -Dist(b*c*n, Int(x*(a + b*ArcTan(c*x))**(n + S(-1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*ArcTan(c*x))**n, x)
 
-def With5421(c, m, x, d, f, g, a, e, b):
-        u = IntHide(x**m*(d + e*log(f + g*x**S(2))), x)
-        # rubi.append(5421)
-        return -Dist(b*c, Int(ExpandIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*ArcTan(c*x), u, x)
 
-def With5422(c, m, x, d, f, g, a, e, b):
-        u = IntHide(x**m*(d + e*log(f + g*x**S(2))), x)
-        # rubi.append(5422)
-        return Dist(b*c, Int(ExpandIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acot(c*x), u, x)
+def replacement5258(a, c, n, b, x):
+    return Dist(b*c*n, Int(x*(a + b*acot(c*x))**(n + S(-1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(x*(a + b*acot(c*x))**n, x)
 
-def With5423(c, m, x, d, f, g, a, e, b):
-        u = IntHide(x**m*(a + b*ArcTan(c*x)), x)
-        # rubi.append(5423)
-        return -Dist(S(2)*e*g, Int(ExpandIntegrand(u*x/(f + g*x**S(2)), x), x), x) + Dist(d + e*log(f + g*x**S(2)), u, x)
 
-def With5424(c, m, x, d, f, g, a, e, b):
-        u = IntHide(x**m*(a + b*acot(c*x)), x)
-        # rubi.append(5424)
-        return -Dist(S(2)*e*g, Int(ExpandIntegrand(u*x/(f + g*x**S(2)), x), x), x) + Dist(d + e*log(f + g*x**S(2)), u, x)
-def replacement5425(c, x, d, f, g, a, e, b):
-        # rubi.append(5425)
-        return -Dist(b/c, Int((a + b*ArcTan(c*x))*(d + e*log(f + g*x**S(2))), x), x) + Dist(b*c*e, Int(x**S(2)*(a + b*ArcTan(c*x))/(c**S(2)*x**S(2) + S(1)), x), x) - Simp(e*x**S(2)*(a + b*ArcTan(c*x))**S(2)/S(2), x) + Simp((a + b*ArcTan(c*x))**S(2)*(d + e*log(f + g*x**S(2)))*(f + g*x**S(2))/(S(2)*g), x)
-def replacement5426(c, x, d, f, g, a, e, b):
-        # rubi.append(5426)
-        return Dist(b/c, Int((a + b*acot(c*x))*(d + e*log(f + g*x**S(2))), x), x) - Dist(b*c*e, Int(x**S(2)*(a + b*acot(c*x))/(c**S(2)*x**S(2) + S(1)), x), x) - Simp(e*x**S(2)*(a + b*acot(c*x))**S(2)/S(2), x) + Simp((a + b*acot(c*x))**S(2)*(d + e*log(f + g*x**S(2)))*(f + g*x**S(2))/(S(2)*g), x)
-def replacement5427(x, a, n):
-        # rubi.append(5427)
-        return Int((-I*a*x + S(1))**(I*n/S(2) + S(1)/2)*(I*a*x + S(1))**(-I*n/S(2) + S(1)/2)/sqrt(a**S(2)*x**S(2) + S(1)), x)
-def replacement5428(x, a, m, n):
-        # rubi.append(5428)
-        return Int(x**m*(-I*a*x + S(1))**(I*n/S(2) + S(1)/2)*(I*a*x + S(1))**(-I*n/S(2) + S(1)/2)/sqrt(a**S(2)*x**S(2) + S(1)), x)
-def replacement5429(x, a, n):
-        # rubi.append(5429)
-        return Int((-I*a*x + S(1))**(I*n/S(2))*(I*a*x + S(1))**(-I*n/S(2)), x)
-def replacement5430(x, a, m, n):
-        # rubi.append(5430)
-        return Int(x**m*(-I*a*x + S(1))**(I*n/S(2))*(I*a*x + S(1))**(-I*n/S(2)), x)
-def replacement5431(c, n, x, d, u, a, p):
-        # rubi.append(5431)
-        return Dist(c**p, Int(u*(S(1) + d*x/c)**p*(-I*a*x + S(1))**(I*n/S(2))*(I*a*x + S(1))**(-I*n/S(2)), x), x)
-def replacement5432(c, n, x, d, u, a, p):
-        # rubi.append(5432)
-        return Int(u*(c + d*x)**p*(-I*a*x + S(1))**(I*n/S(2))*(I*a*x + S(1))**(-I*n/S(2)), x)
-def replacement5433(c, n, x, d, u, a, p):
-        # rubi.append(5433)
-        return Dist(d**p, Int(u*x**(-p)*(c*x/d + S(1))**p*exp(n*ArcTan(a*x)), x), x)
-def replacement5434(c, n, x, d, u, a, p):
-        # rubi.append(5434)
-        return Dist((S(-1))**(n/S(2))*c**p, Int(u*(S(1) - I/(a*x))**(-I*n/S(2))*(S(1) + I/(a*x))**(I*n/S(2))*(S(1) + d/(c*x))**p, x), x)
-def replacement5435(c, n, x, d, u, a, p):
-        # rubi.append(5435)
-        return Int(u*(c + d/x)**p*(-I*a*x + S(1))**(I*n/S(2))*(I*a*x + S(1))**(-I*n/S(2)), x)
-def replacement5436(c, n, x, d, u, a, p):
-        # rubi.append(5436)
-        return Dist(x**p*(c + d/x)**p*(c*x/d + S(1))**(-p), Int(u*x**(-p)*(c*x/d + S(1))**p*exp(n*ArcTan(a*x)), x), x)
-def replacement5437(c, n, x, d, a):
-        # rubi.append(5437)
-        return Simp((a*x + n)*exp(n*ArcTan(a*x))/(a*c*sqrt(c + d*x**S(2))*(n**S(2) + S(1))), x)
-def replacement5438(c, n, x, d, a, p):
-        # rubi.append(5438)
-        return Dist(S(2)*(p + S(1))*(S(2)*p + S(3))/(c*(n**S(2) + S(4)*(p + S(1))**S(2))), Int((c + d*x**S(2))**(p + S(1))*exp(n*ArcTan(a*x)), x), x) + Simp((c + d*x**S(2))**(p + S(1))*(-S(2)*a*x*(p + S(1)) + n)*exp(n*ArcTan(a*x))/(a*c*(n**S(2) + S(4)*(p + S(1))**S(2))), x)
-def replacement5439(c, n, x, d, a):
-        # rubi.append(5439)
-        return Simp(exp(n*ArcTan(a*x))/(a*c*n), x)
-def replacement5440(c, n, x, d, a, p):
-        # rubi.append(5440)
-        return Dist(c**p, Int((a**S(2)*x**S(2) + S(1))**(-I*n/S(2) + p)*(-I*a*x + S(1))**(I*n), x), x)
-def replacement5441(c, n, x, d, a, p):
-        # rubi.append(5441)
-        return Dist(c**p, Int((-I*a*x + S(1))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n/S(2) + p), x), x)
-def replacement5442(c, n, x, d, a, p):
-        # rubi.append(5442)
-        return Dist(c**(I*n/S(2)), Int((c + d*x**S(2))**(-I*n/S(2) + p)*(-I*a*x + S(1))**(I*n), x), x)
-def replacement5443(c, n, x, d, a, p):
-        # rubi.append(5443)
-        return Dist(c**(-I*n/S(2)), Int((c + d*x**S(2))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n), x), x)
-def replacement5444(c, n, x, d, a, p):
-        # rubi.append(5444)
-        return Dist(c**IntPart(p)*(c + d*x**S(2))**FracPart(p)*(a**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int((a**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
-def replacement5445(c, n, x, d, a):
-        # rubi.append(5445)
-        return -Simp((-a*n*x + S(1))*exp(n*ArcTan(a*x))/(d*sqrt(c + d*x**S(2))*(n**S(2) + S(1))), x)
-def replacement5446(c, n, x, d, a, p):
-        # rubi.append(5446)
-        return -Dist(a*c*n/(S(2)*d*(p + S(1))), Int((c + d*x**S(2))**p*exp(n*ArcTan(a*x)), x), x) + Simp((c + d*x**S(2))**(p + S(1))*exp(n*ArcTan(a*x))/(S(2)*d*(p + S(1))), x)
-def replacement5447(c, n, x, d, a, p):
-        # rubi.append(5447)
-        return -Simp((c + d*x**S(2))**(p + S(1))*(-a*n*x + S(1))*exp(n*ArcTan(a*x))/(a*d*n*(n**S(2) + S(1))), x)
-def replacement5448(c, n, x, d, a, p):
-        # rubi.append(5448)
-        return Dist((n**S(2) - S(2)*p + S(-2))/(d*(n**S(2) + S(4)*(p + S(1))**S(2))), Int((c + d*x**S(2))**(p + S(1))*exp(n*ArcTan(a*x)), x), x) - Simp((c + d*x**S(2))**(p + S(1))*(-S(2)*a*x*(p + S(1)) + n)*exp(n*ArcTan(a*x))/(a*d*(n**S(2) + S(4)*(p + S(1))**S(2))), x)
-def replacement5449(c, m, n, x, d, a, p):
-        # rubi.append(5449)
-        return Dist(c**p, Int(x**m*(a**S(2)*x**S(2) + S(1))**(-I*n/S(2) + p)*(-I*a*x + S(1))**(I*n), x), x)
-def replacement5450(c, m, n, x, d, a, p):
-        # rubi.append(5450)
-        return Dist(c**p, Int(x**m*(-I*a*x + S(1))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n/S(2) + p), x), x)
-def replacement5451(c, m, n, x, d, a, p):
-        # rubi.append(5451)
-        return Dist(c**(I*n/S(2)), Int(x**m*(c + d*x**S(2))**(-I*n/S(2) + p)*(-I*a*x + S(1))**(I*n), x), x)
-def replacement5452(c, m, n, x, d, a, p):
-        # rubi.append(5452)
-        return Dist(c**(-I*n/S(2)), Int(x**m*(c + d*x**S(2))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n), x), x)
-def replacement5453(c, m, n, x, d, a, p):
-        # rubi.append(5453)
-        return Dist(c**IntPart(p)*(c + d*x**S(2))**FracPart(p)*(a**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int(x**m*(a**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
-def replacement5454(c, n, x, d, u, a, p):
-        # rubi.append(5454)
-        return Dist(c**p, Int(u*(-I*a*x + S(1))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n/S(2) + p), x), x)
-def replacement5455(c, n, x, d, u, a, p):
-        # rubi.append(5455)
-        return Dist(c**IntPart(p)*(c + d*x**S(2))**FracPart(p)*(-I*a*x + S(1))**(-FracPart(p))*(I*a*x + S(1))**(-FracPart(p)), Int(u*(-I*a*x + S(1))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n/S(2) + p), x), x)
-def replacement5456(c, n, x, d, u, a, p):
-        # rubi.append(5456)
-        return Dist(c**IntPart(p)*(c + d*x**S(2))**FracPart(p)*(a**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int(u*(a**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
-def replacement5457(c, n, x, d, u, a, p):
-        # rubi.append(5457)
-        return Dist(d**p, Int(u*x**(-S(2)*p)*(a**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
-def replacement5458(c, n, x, d, u, a, p):
-        # rubi.append(5458)
-        return Dist(c**p, Int(u*(S(1) - I/(a*x))**p*(S(1) + I/(a*x))**p*exp(n*ArcTan(a*x)), x), x)
-def replacement5459(c, n, x, d, u, a, p):
-        # rubi.append(5459)
-        return Dist(x**(S(2)*p)*(c + d/x**S(2))**p*(-I*a*x + S(1))**(-p)*(I*a*x + S(1))**(-p), Int(u*x**(-S(2)*p)*(-I*a*x + S(1))**p*(I*a*x + S(1))**p*exp(n*ArcTan(a*x)), x), x)
-def replacement5460(c, n, x, d, u, a, p):
-        # rubi.append(5460)
-        return Dist(x**(S(2)*p)*(c + d/x**S(2))**p*(a**S(2)*x**S(2) + S(1))**(-p), Int(u*x**(-S(2)*p)*(a**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
-def replacement5461(c, n, x, a, b):
-        # rubi.append(5461)
-        return Int((-I*a*c - I*b*c*x + S(1))**(I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(-I*n/S(2)), x)
-def replacement5462(c, m, n, x, a, b):
-        # rubi.append(5462)
-        return Dist(S(4)*I**(-m)*b**(-m + S(-1))*c**(-m + S(-1))/n, Subst(Int(x**(-S(2)*I/n)*(S(1) + x**(-S(2)*I/n))**(-m + S(-2))*(-I*a*c + S(1) - x**(-S(2)*I/n)*(I*a*c + S(1)))**m, x), x, (-I*c*(a + b*x) + S(1))**(I*n/S(2))*(I*c*(a + b*x) + S(1))**(-I*n/S(2))), x)
-def replacement5463(c, m, n, x, d, a, e, b):
-        # rubi.append(5463)
-        return Int((d + e*x)**m*(-I*a*c - I*b*c*x + S(1))**(I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(-I*n/S(2)), x)
-def replacement5464(c, n, x, d, u, a, p, e, b):
-        # rubi.append(5464)
-        return Dist((c/(a**S(2) + S(1)))**p, Int(u*(-I*a - I*b*x + S(1))**(I*n/S(2) + p)*(I*a + I*b*x + S(1))**(-I*n/S(2) + p), x), x)
-def replacement5465(c, n, x, d, u, a, p, e, b):
-        # rubi.append(5465)
-        return Dist((c + d*x + e*x**S(2))**p*(a**S(2) + S(2)*a*b*x + b**S(2)*x**S(2) + S(1))**(-p), Int(u*(a**S(2) + S(2)*a*b*x + b**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
-def replacement5466(c, n, x, u, a, b):
-        # rubi.append(5466)
-        return Int(u*exp(n*acot(a/c + b*x/c)), x)
-def replacement5467(x, a, u, n):
-        # rubi.append(5467)
-        return Dist((S(-1))**(I*n/S(2)), Int(u*exp(-n*ArcTan(a*x)), x), x)
-def replacement5468(x, a, n):
-        # rubi.append(5468)
-        return -Subst(Int((S(1) - I*x/a)**(I*n/S(2) + S(1)/2)*(S(1) + I*x/a)**(-I*n/S(2) + S(1)/2)/(x**S(2)*sqrt(S(1) + x**S(2)/a**S(2))), x), x, S(1)/x)
-def replacement5469(x, a, m, n):
-        # rubi.append(5469)
-        return -Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2) + S(1)/2)*(S(1) + I*x/a)**(-I*n/S(2) + S(1)/2)/sqrt(S(1) + x**S(2)/a**S(2)), x), x, S(1)/x)
-def replacement5470(x, a, n):
-        # rubi.append(5470)
-        return -Subst(Int((S(1) - I*x/a)**(I*n/S(2))*(S(1) + I*x/a)**(-I*n/S(2))/x**S(2), x), x, S(1)/x)
-def replacement5471(x, a, m, n):
-        # rubi.append(5471)
-        return -Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(n/S(2))*(S(1) + I*x/a)**(-n/S(2)), x), x, S(1)/x)
-def replacement5472(x, a, m, n):
-        # rubi.append(5472)
-        return -Dist(x**m*(S(1)/x)**m, Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2) + S(1)/2)*(S(1) + I*x/a)**(-I*n/S(2) + S(1)/2)/sqrt(S(1) + x**S(2)/a**S(2)), x), x, S(1)/x), x)
-def replacement5473(x, a, m, n):
-        # rubi.append(5473)
-        return -Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(n/S(2))*(S(1) + I*x/a)**(-n/S(2)), x), x, S(1)/x)
-def replacement5474(c, n, x, d, u, a, p):
-        # rubi.append(5474)
-        return Dist(d**p, Int(u*x**p*(c/(d*x) + S(1))**p*exp(n*acot(a*x)), x), x)
-def replacement5475(c, n, x, d, u, a, p):
-        # rubi.append(5475)
-        return Dist(x**(-p)*(c + d*x)**p*(c/(d*x) + S(1))**(-p), Int(u*x**p*(c/(d*x) + S(1))**p*exp(n*acot(a*x)), x), x)
-def replacement5476(c, n, x, d, a, p):
-        # rubi.append(5476)
-        return -Dist(c**p, Subst(Int((S(1) - I*x/a)**(I*n/S(2))*(S(1) + I*x/a)**(-I*n/S(2))*(S(1) + d*x/c)**p/x**S(2), x), x, S(1)/x), x)
-def replacement5477(c, m, n, x, d, a, p):
-        # rubi.append(5477)
-        return -Dist(c**p, Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2))*(S(1) + I*x/a)**(-I*n/S(2))*(S(1) + d*x/c)**p, x), x, S(1)/x), x)
-def replacement5478(c, n, x, d, a, p):
-        # rubi.append(5478)
-        return Dist((S(1) + d/(c*x))**(-p)*(c + d/x)**p, Int((S(1) + d/(c*x))**p*exp(n*acot(a*x)), x), x)
-def replacement5479(c, m, n, x, d, a, p):
-        # rubi.append(5479)
-        return -Dist(c**p*x**m*(S(1)/x)**m, Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2))*(S(1) + I*x/a)**(-I*n/S(2))*(S(1) + d*x/c)**p, x), x, S(1)/x), x)
-def replacement5480(c, n, x, d, u, a, p):
-        # rubi.append(5480)
-        return Dist((S(1) + d/(c*x))**(-p)*(c + d/x)**p, Int(u*(S(1) + d/(c*x))**p*exp(n*acot(a*x)), x), x)
-def replacement5481(c, n, x, d, a):
-        # rubi.append(5481)
-        return -Simp(exp(n*acot(a*x))/(a*c*n), x)
-def replacement5482(c, n, x, d, a):
-        # rubi.append(5482)
-        return -Simp((-a*x + n)*exp(n*acot(a*x))/(a*c*sqrt(c + d*x**S(2))*(n**S(2) + S(1))), x)
-def replacement5483(c, n, x, d, a, p):
-        # rubi.append(5483)
-        return Dist(S(2)*(p + S(1))*(S(2)*p + S(3))/(c*(n**S(2) + S(4)*(p + S(1))**S(2))), Int((c + d*x**S(2))**(p + S(1))*exp(n*acot(a*x)), x), x) - Simp((c + d*x**S(2))**(p + S(1))*(S(2)*a*x*(p + S(1)) + n)*exp(n*acot(a*x))/(a*c*(n**S(2) + S(4)*(p + S(1))**S(2))), x)
-def replacement5484(c, n, x, d, a):
-        # rubi.append(5484)
-        return -Simp((a*n*x + S(1))*exp(n*acot(a*x))/(a**S(2)*c*sqrt(c + d*x**S(2))*(n**S(2) + S(1))), x)
-def replacement5485(c, n, x, d, a, p):
-        # rubi.append(5485)
-        return Dist(n*(S(2)*p + S(3))/(a*c*(n**S(2) + S(4)*(p + S(1))**S(2))), Int((c + d*x**S(2))**(p + S(1))*exp(n*acot(a*x)), x), x) + Simp((c + d*x**S(2))**(p + S(1))*(-a*n*x + S(2)*p + S(2))*exp(n*acot(a*x))/(a**S(2)*c*(n**S(2) + S(4)*(p + S(1))**S(2))), x)
-def replacement5486(c, n, x, d, a, p):
-        # rubi.append(5486)
-        return Simp((c + d*x**S(2))**(p + S(1))*(S(2)*a*x*(p + S(1)) + n)*exp(n*acot(a*x))/(a**S(3)*c*n**S(2)*(n**S(2) + S(1))), x)
-def replacement5487(c, n, x, d, a, p):
-        # rubi.append(5487)
-        return Dist((n**S(2) - S(2)*p + S(-2))/(a**S(2)*c*(n**S(2) + S(4)*(p + S(1))**S(2))), Int((c + d*x**S(2))**(p + S(1))*exp(n*acot(a*x)), x), x) + Simp((c + d*x**S(2))**(p + S(1))*(S(2)*a*x*(p + S(1)) + n)*exp(n*acot(a*x))/(a**S(3)*c*(n**S(2) + S(4)*(p + S(1))**S(2))), x)
-def replacement5488(c, m, n, x, d, a, p):
-        # rubi.append(5488)
-        return -Dist(a**(-m + S(-1))*c**p, Subst(Int((S(1)/tan(x))**(m + S(2)*p + S(2))*exp(n*x)*cos(x)**(-S(2)*p + S(-2)), x), x, acot(a*x)), x)
-def replacement5489(c, n, x, d, u, a, p):
-        # rubi.append(5489)
-        return Dist(d**p, Int(u*x**(S(2)*p)*(S(1) + S(1)/(a**S(2)*x**S(2)))**p*exp(n*acot(a*x)), x), x)
-def replacement5490(c, n, x, d, u, a, p):
-        # rubi.append(5490)
-        return Dist(x**(-S(2)*p)*(S(1) + S(1)/(a**S(2)*x**S(2)))**(-p)*(c + d*x**S(2))**p, Int(u*x**(S(2)*p)*(S(1) + S(1)/(a**S(2)*x**S(2)))**p*exp(n*acot(a*x)), x), x)
-def replacement5491(c, n, x, d, u, a, p):
-        # rubi.append(5491)
-        return Dist(c**p*(I*a)**(-S(2)*p), Int(u*x**(-S(2)*p)*(I*a*x + S(-1))**(-I*n/S(2) + p)*(I*a*x + S(1))**(I*n/S(2) + p), x), x)
-def replacement5492(c, n, x, d, a, p):
-        # rubi.append(5492)
-        return -Dist(c**p, Subst(Int((S(1) - I*x/a)**(I*n/S(2) + p)*(S(1) + I*x/a)**(-I*n/S(2) + p)/x**S(2), x), x, S(1)/x), x)
-def replacement5493(c, m, n, x, d, a, p):
-        # rubi.append(5493)
-        return -Dist(c**p, Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2) + p)*(S(1) + I*x/a)**(-I*n/S(2) + p), x), x, S(1)/x), x)
-def replacement5494(c, m, n, x, d, a, p):
-        # rubi.append(5494)
-        return -Dist(c**p*x**m*(S(1)/x)**m, Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2) + p)*(S(1) + I*x/a)**(-I*n/S(2) + p), x), x, S(1)/x), x)
-def replacement5495(c, n, x, d, u, a, p):
-        # rubi.append(5495)
-        return Dist((S(1) + S(1)/(a**S(2)*x**S(2)))**(-p)*(c + d/x**S(2))**p, Int(u*(S(1) + S(1)/(a**S(2)*x**S(2)))**p*exp(n*acot(a*x)), x), x)
-def replacement5496(c, n, x, u, a, b):
-        # rubi.append(5496)
-        return Dist((S(-1))**(I*n/S(2)), Int(u*exp(-n*ArcTan(c*(a + b*x))), x), x)
-def replacement5497(c, n, x, a, b):
-        # rubi.append(5497)
-        return Dist((I*c*(a + b*x))**(I*n/S(2))*(S(1) - I/(c*(a + b*x)))**(I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(-I*n/S(2)), Int((I*a*c + I*b*c*x + S(-1))**(-I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(I*n/S(2)), x), x)
-def replacement5498(c, m, n, x, a, b):
-        # rubi.append(5498)
-        return Dist(S(4)*I**(-m)*b**(-m + S(-1))*c**(-m + S(-1))/n, Subst(Int(x**(-S(2)*I/n)*(S(-1) + x**(-S(2)*I/n))**(-m + S(-2))*(I*a*c + S(1) + x**(-S(2)*I/n)*(-I*a*c + S(1)))**m, x), x, (S(1) - I/(c*(a + b*x)))**(I*n/S(2))*(S(1) + I/(c*(a + b*x)))**(-I*n/S(2))), x)
-def replacement5499(c, m, n, x, d, a, e, b):
-        # rubi.append(5499)
-        return Dist((I*c*(a + b*x))**(I*n/S(2))*(S(1) - I/(c*(a + b*x)))**(I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(-I*n/S(2)), Int((d + e*x)**m*(I*a*c + I*b*c*x + S(-1))**(-I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(I*n/S(2)), x), x)
-def replacement5500(c, n, x, d, u, a, p, e, b):
-        # rubi.append(5500)
-        return Dist((c/(a**S(2) + S(1)))**p*((I*a + I*b*x + S(1))/(I*a + I*b*x))**(I*n/S(2))*((I*a + I*b*x)/(I*a + I*b*x + S(1)))**(I*n/S(2))*(-I*a - I*b*x + S(1))**(I*n/S(2))*(I*a + I*b*x + S(-1))**(-I*n/S(2)), Int(u*(-I*a - I*b*x + S(1))**(-I*n/S(2) + p)*(I*a + I*b*x + S(1))**(I*n/S(2) + p), x), x)
-def replacement5501(c, n, x, d, u, a, p, e, b):
-        # rubi.append(5501)
-        return Dist((c + d*x + e*x**S(2))**p*(a**S(2) + S(2)*a*b*x + b**S(2)*x**S(2) + S(1))**(-p), Int(u*(a**S(2) + S(2)*a*b*x + b**S(2)*x**S(2) + S(1))**p*exp(n*acot(a*x)), x), x)
-def replacement5502(c, n, x, u, a, b):
-        # rubi.append(5502)
-        return Int(u*exp(n*ArcTan(a/c + b*x/c)), x)
-def replacement5503(c, n, x, d, a, b):
-        # rubi.append(5503)
-        return Dist(S(1)/d, Subst(Int((a + b*ArcTan(x))**n, x), x, c + d*x), x)
-def replacement5504(c, n, x, d, a, b):
-        # rubi.append(5504)
-        return Dist(S(1)/d, Subst(Int((a + b*acot(x))**n, x), x, c + d*x), x)
-def replacement5505(c, n, x, d, a, b):
-        # rubi.append(5505)
-        return Int((a + b*ArcTan(c + d*x))**n, x)
-def replacement5506(c, n, x, d, a, b):
-        # rubi.append(5506)
-        return Int((a + b*acot(c + d*x))**n, x)
-def replacement5507(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5507)
-        return Dist(S(1)/d, Subst(Int((a + b*ArcTan(x))**n*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
-def replacement5508(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5508)
-        return Dist(S(1)/d, Subst(Int((a + b*acot(x))**n*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
-def replacement5509(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5509)
-        return Int((a + b*ArcTan(c + d*x))**n*(e + f*x)**m, x)
-def replacement5510(c, m, n, x, d, f, a, e, b):
-        # rubi.append(5510)
-        return Int((a + b*acot(c + d*x))**n*(e + f*x)**m, x)
-def replacement5511(c, p, n, x, d, B, A, a, C, b):
-        # rubi.append(5511)
-        return Dist(S(1)/d, Subst(Int((a + b*ArcTan(x))**n*(C*x**S(2)/d**S(2) + C/d**S(2))**p, x), x, c + d*x), x)
-def replacement5512(c, p, n, x, d, B, A, a, C, b):
-        # rubi.append(5512)
-        return Dist(S(1)/d, Subst(Int((a + b*acot(x))**n*(C*x**S(2)/d**S(2) + C/d**S(2))**p, x), x, c + d*x), x)
-def replacement5513(c, m, p, n, x, d, B, A, f, a, C, e, b):
-        # rubi.append(5513)
-        return Dist(S(1)/d, Subst(Int((a + b*ArcTan(x))**n*(C*x**S(2)/d**S(2) + C/d**S(2))**p*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
-def replacement5514(c, m, p, n, x, d, B, A, f, a, C, e, b):
-        # rubi.append(5514)
-        return Dist(S(1)/d, Subst(Int((a + b*acot(x))**n*(C*x**S(2)/d**S(2) + C/d**S(2))**p*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
-def replacement5515(c, n, x, d, a, b):
-        # rubi.append(5515)
-        return Dist(I/S(2), Int(log(-I*a - I*b*x + S(1))/(c + d*x**n), x), x) - Dist(I/S(2), Int(log(I*a + I*b*x + S(1))/(c + d*x**n), x), x)
-def replacement5516(c, n, x, d, a, b):
-        # rubi.append(5516)
-        return Dist(I/S(2), Int(log((a + b*x - I)/(a + b*x))/(c + d*x**n), x), x) - Dist(I/S(2), Int(log((a + b*x + I)/(a + b*x))/(c + d*x**n), x), x)
-def replacement5517(c, n, x, d, a, b):
-        # rubi.append(5517)
-        return Int(ArcTan(a + b*x)/(c + d*x**n), x)
-def replacement5518(c, n, x, d, a, b):
-        # rubi.append(5518)
-        return Int(acot(a + b*x)/(c + d*x**n), x)
-def replacement5519(x, a, n, b):
-        # rubi.append(5519)
-        return -Dist(b*n, Int(x**n/(a**S(2) + S(2)*a*b*x**n + b**S(2)*x**(S(2)*n) + S(1)), x), x) + Simp(x*ArcTan(a + b*x**n), x)
-def replacement5520(x, a, n, b):
-        # rubi.append(5520)
-        return Dist(b*n, Int(x**n/(a**S(2) + S(2)*a*b*x**n + b**S(2)*x**(S(2)*n) + S(1)), x), x) + Simp(x*acot(a + b*x**n), x)
-def replacement5521(x, a, n, b):
-        # rubi.append(5521)
-        return Dist(I/S(2), Int(log(-I*a - I*b*x**n + S(1))/x, x), x) - Dist(I/S(2), Int(log(I*a + I*b*x**n + S(1))/x, x), x)
-def replacement5522(x, a, n, b):
-        # rubi.append(5522)
-        return Dist(I/S(2), Int(log(S(1) - I/(a + b*x**n))/x, x), x) - Dist(I/S(2), Int(log(S(1) + I/(a + b*x**n))/x, x), x)
-def replacement5523(m, n, x, a, b):
-        # rubi.append(5523)
-        return -Dist(b*n/(m + S(1)), Int(x**(m + n)/(a**S(2) + S(2)*a*b*x**n + b**S(2)*x**(S(2)*n) + S(1)), x), x) + Simp(x**(m + S(1))*ArcTan(a + b*x**n)/(m + S(1)), x)
-def replacement5524(m, n, x, a, b):
-        # rubi.append(5524)
-        return Dist(b*n/(m + S(1)), Int(x**(m + n)/(a**S(2) + S(2)*a*b*x**n + b**S(2)*x**(S(2)*n) + S(1)), x), x) + Simp(x**(m + S(1))*acot(a + b*x**n)/(m + S(1)), x)
-def replacement5525(c, x, d, f, a, b):
-        # rubi.append(5525)
-        return Dist(I/S(2), Int(log(-I*a - I*b*f**(c + d*x) + S(1)), x), x) - Dist(I/S(2), Int(log(I*a + I*b*f**(c + d*x) + S(1)), x), x)
-def replacement5526(c, x, d, f, a, b):
-        # rubi.append(5526)
-        return Dist(I/S(2), Int(log(S(1) - I/(a + b*f**(c + d*x))), x), x) - Dist(I/S(2), Int(log(S(1) + I/(a + b*f**(c + d*x))), x), x)
-def replacement5527(c, m, x, d, f, a, b):
-        # rubi.append(5527)
-        return Dist(I/S(2), Int(x**m*log(-I*a - I*b*f**(c + d*x) + S(1)), x), x) - Dist(I/S(2), Int(x**m*log(I*a + I*b*f**(c + d*x) + S(1)), x), x)
-def replacement5528(c, m, x, d, f, a, b):
-        # rubi.append(5528)
-        return Dist(I/S(2), Int(x**m*log(S(1) - I/(a + b*f**(c + d*x))), x), x) - Dist(I/S(2), Int(x**m*log(S(1) + I/(a + b*f**(c + d*x))), x), x)
-def replacement5529(c, m, n, x, u, a, b):
-        # rubi.append(5529)
-        return Int(u*acot(a/c + b*x**n/c)**m, x)
-def replacement5530(c, m, n, x, u, a, b):
-        # rubi.append(5530)
-        return Int(u*ArcTan(a/c + b*x**n/c)**m, x)
-def replacement5531(c, a, x, b):
-        # rubi.append(5531)
-        return Simp(log(ArcTan(c*x/sqrt(a + b*x**S(2))))/c, x)
-def replacement5532(c, a, x, b):
-        # rubi.append(5532)
-        return -Simp(log(acot(c*x/sqrt(a + b*x**S(2))))/c, x)
-def replacement5533(c, m, x, a, b):
-        # rubi.append(5533)
-        return Simp(ArcTan(c*x/sqrt(a + b*x**S(2)))**(m + S(1))/(c*(m + S(1))), x)
-def replacement5534(c, m, x, a, b):
-        # rubi.append(5534)
-        return -Simp(acot(c*x/sqrt(a + b*x**S(2)))**(m + S(1))/(c*(m + S(1))), x)
-def replacement5535(c, m, x, d, a, e, b):
-        # rubi.append(5535)
-        return Dist(sqrt(a + b*x**S(2))/sqrt(d + e*x**S(2)), Int(ArcTan(c*x/sqrt(a + b*x**S(2)))**m/sqrt(a + b*x**S(2)), x), x)
-def replacement5536(c, m, x, d, a, e, b):
-        # rubi.append(5536)
-        return Dist(sqrt(a + b*x**S(2))/sqrt(d + e*x**S(2)), Int(acot(c*x/sqrt(a + b*x**S(2)))**m/sqrt(a + b*x**S(2)), x), x)
-def replacement5537(x, v, u, w, s):
-        # rubi.append(5537)
-        return Dist(S(1)/2, Int(u*ArcTan(v), x), x) + Dist(Pi*s/S(4), Int(u, x), x)
-def replacement5538(x, v, u, w, s):
-        # rubi.append(5538)
-        return -Dist(S(1)/2, Int(u*ArcTan(v), x), x) + Dist(Pi*s/S(4), Int(u, x), x)
+def replacement5259(a, c, n, b, x):
+    return Int((a + b*ArcTan(c*x))**n, x)
 
-def With5539(x, u, v, n):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            tmp = InverseFunctionOfLinear(u, x)
-            res = And(Not(FalseQ(tmp)), SameQ(Head(tmp), ArcTan), ZeroQ(D(v, x)**S(2) + Discriminant(v, x)*Part(tmp, S(1))**S(2)))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+
+def replacement5260(a, c, n, b, x):
+    return Int((a + b*acot(c*x))**n, x)
+
+
+def replacement5261(d, a, c, n, b, e, x):
+    return Dist(b*c*n/e, Int((a + b*ArcTan(c*x))**(n + S(-1))*log(S(2)*d/(d + e*x))/(c**S(2)*x**S(2) + S(1)), x), x) - Simp((a + b*ArcTan(c*x))**n*log(S(2)*d/(d + e*x))/e, x)
+
+
+def replacement5262(d, a, c, n, b, e, x):
+    return -Dist(b*c*n/e, Int((a + b*acot(c*x))**(n + S(-1))*log(S(2)*d/(d + e*x))/(c**S(2)*x**S(2) + S(1)), x), x) - Simp((a + b*acot(c*x))**n*log(S(2)*d/(d + e*x))/e, x)
+
+
+def replacement5263(d, e, c, x):
+    return Simp(I*PolyLog(S(2), Simp(I*c*(d + e*x)/(I*c*d - e), x))/(S(2)*e), x) - Simp(I*PolyLog(S(2), Simp(I*c*(d + e*x)/(I*c*d + e), x))/(S(2)*e), x) - Simp(ArcTan(c*d/e)*log(d + e*x)/e, x)
+
+
+def replacement5264(d, e, c, x):
+    return Dist(I/S(2), Int(log(-I*c*x + S(1))/(d + e*x), x), x) - Dist(I/S(2), Int(log(I*c*x + S(1))/(d + e*x), x), x)
+
+
+def replacement5265(d, e, c, x):
+    return Dist(I/S(2), Int(log(S(1) - I/(c*x))/(d + e*x), x), x) - Dist(I/S(2), Int(log(S(1) + I/(c*x))/(d + e*x), x), x)
+
+
+def replacement5266(d, a, c, b, e, x):
+    return Dist(b, Int(ArcTan(c*x)/(d + e*x), x), x) + Simp(a*log(RemoveContent(d + e*x, x))/e, x)
+
+
+def replacement5267(d, a, c, b, e, x):
+    return Dist(b, Int(acot(c*x)/(d + e*x), x), x) + Simp(a*log(RemoveContent(d + e*x, x))/e, x)
+
+
+def replacement5268(d, p, a, c, b, e, x):
+    return -Dist(b*c/(e*(p + S(1))), Int((d + e*x)**(p + S(1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*ArcTan(c*x))*(d + e*x)**(p + S(1))/(e*(p + S(1))), x)
+
+
+def replacement5269(d, p, a, c, b, e, x):
+    return Dist(b*c/(e*(p + S(1))), Int((d + e*x)**(p + S(1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*acot(c*x))*(d + e*x)**(p + S(1))/(e*(p + S(1))), x)
+
+
+def replacement5270(a, c, n, b, x):
+    return -Dist(S(2)*b*c*n, Int((a + b*ArcTan(c*x))**(n + S(-1))*atanh(S(1) - S(2)*I/(-c*x + I))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(S(2)*(a + b*ArcTan(c*x))**n*atanh(S(1) - S(2)*I/(-c*x + I)), x)
+
+
+def replacement5271(a, c, n, b, x):
+    return Dist(S(2)*b*c*n, Int((a + b*acot(c*x))**(n + S(-1))*acoth(S(1) - S(2)*I/(-c*x + I))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(S(2)*(a + b*acot(c*x))**n*acoth(S(1) - S(2)*I/(-c*x + I)), x)
+
+
+def replacement5272(a, c, n, m, b, x):
+    return -Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*ArcTan(c*x))**(n + S(-1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(x**(m + S(1))*(a + b*ArcTan(c*x))**n/(m + S(1)), x)
+
+
+def replacement5273(a, c, n, m, b, x):
+    return Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*acot(c*x))**(n + S(-1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp(x**(m + S(1))*(a + b*acot(c*x))**n/(m + S(1)), x)
+
+
+def replacement5274(d, p, a, c, n, b, e, x):
+    return Int(ExpandIntegrand((a + b*ArcTan(c*x))**n*(d + e*x)**p, x), x)
+
+
+def replacement5275(d, p, a, c, n, b, e, x):
+    return Int(ExpandIntegrand((a + b*acot(c*x))**n*(d + e*x)**p, x), x)
+
+
+def replacement5276(d, p, a, c, n, b, e, x):
+    return Int((a + b*ArcTan(c*x))**n*(d + e*x)**p, x)
+
+
+def replacement5277(d, p, a, c, n, b, e, x):
+    return Int((a + b*acot(c*x))**n*(d + e*x)**p, x)
+
+
+def replacement5278(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/e, Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**n/(d + e*x), x), x)
+
+
+def replacement5279(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/e, Int(x**(m + S(-1))*(a + b*acot(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-1))*(a + b*acot(c*x))**n/(d + e*x), x), x)
+
+
+def replacement5280(d, a, c, n, b, e, x):
+    return -Dist(b*c*n/d, Int((a + b*ArcTan(c*x))**(n + S(-1))*log(S(2)*e*x/(d + e*x))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*ArcTan(c*x))**n*log(S(2)*e*x/(d + e*x))/d, x)
+
+
+def replacement5281(d, a, c, n, b, e, x):
+    return Dist(b*c*n/d, Int((a + b*acot(c*x))**(n + S(-1))*log(S(2)*e*x/(d + e*x))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*acot(c*x))**n*log(S(2)*e*x/(d + e*x))/d, x)
+
+
+def replacement5282(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/d, Int(x**m*(a + b*ArcTan(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(1))*(a + b*ArcTan(c*x))**n/(d + e*x), x), x)
+
+
+def replacement5283(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/d, Int(x**m*(a + b*acot(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(1))*(a + b*acot(c*x))**n/(d + e*x), x), x)
+
+
+def replacement5284(d, p, a, c, n, m, b, e, x):
+    return Int(ExpandIntegrand(x**m*(a + b*ArcTan(c*x))**n*(d + e*x)**p, x), x)
+
+
+def replacement5285(d, p, a, c, n, m, b, e, x):
+    return Int(ExpandIntegrand(x**m*(a + b*acot(c*x))**n*(d + e*x)**p, x), x)
+
+
+def replacement5286(d, p, a, c, n, m, b, e, x):
+    return Int(x**m*(a + b*ArcTan(c*x))**n*(d + e*x)**p, x)
+
+
+def replacement5287(d, p, a, c, n, m, b, e, x):
+    return Int(x**m*(a + b*acot(c*x))**n*(d + e*x)**p, x)
+
+
+def replacement5288(d, p, a, c, b, e, x):
+    return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(-1)), x), x) + Simp(x*(a + b*ArcTan(c*x))*(d + e*x**S(2))**p/(S(2)*p + S(1)), x) - Simp(b*(d + e*x**S(2))**p/(S(2)*c*p*(S(2)*p + S(1))), x)
+
+
+def replacement5289(d, p, a, c, b, e, x):
+    return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*acot(c*x))*(d + e*x**S(2))**(p + S(-1)), x), x) + Simp(x*(a + b*acot(c*x))*(d + e*x**S(2))**p/(S(2)*p + S(1)), x) + Simp(b*(d + e*x**S(2))**p/(S(2)*c*p*(S(2)*p + S(1))), x)
+
+
+def replacement5290(d, p, a, c, n, b, e, x):
+    return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b**S(2)*d*n*(n + S(-1))/(S(2)*p*(S(2)*p + S(1))), Int((a + b*ArcTan(c*x))**(n + S(-2))*(d + e*x**S(2))**(p + S(-1)), x), x) + Simp(x*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p/(S(2)*p + S(1)), x) - Simp(b*n*(a + b*ArcTan(c*x))**(n + S(-1))*(d + e*x**S(2))**p/(S(2)*c*p*(S(2)*p + S(1))), x)
+
+
+def replacement5291(d, p, a, c, n, b, e, x):
+    return Dist(S(2)*d*p/(S(2)*p + S(1)), Int((a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(b**S(2)*d*n*(n + S(-1))/(S(2)*p*(S(2)*p + S(1))), Int((a + b*acot(c*x))**(n + S(-2))*(d + e*x**S(2))**(p + S(-1)), x), x) + Simp(x*(a + b*acot(c*x))**n*(d + e*x**S(2))**p/(S(2)*p + S(1)), x) + Simp(b*n*(a + b*acot(c*x))**(n + S(-1))*(d + e*x**S(2))**p/(S(2)*c*p*(S(2)*p + S(1))), x)
+
+
+def replacement5292(d, a, c, b, e, x):
+    return Simp(log(RemoveContent(a + b*ArcTan(c*x), x))/(b*c*d), x)
+
+
+def replacement5293(d, a, c, b, e, x):
+    return -Simp(log(RemoveContent(a + b*acot(c*x), x))/(b*c*d), x)
+
+
+def replacement5294(d, a, c, n, b, e, x):
+    return Simp((a + b*ArcTan(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5295(d, a, c, n, b, e, x):
+    return -Simp((a + b*acot(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5296(d, a, c, b, e, x):
+    return Simp(I*b*PolyLog(S(2), -I*sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x) - Simp(I*b*PolyLog(S(2), I*sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x) + Simp(-S(2)*I*(a + b*ArcTan(c*x))*ArcTan(sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x)
+
+
+def replacement5297(d, a, c, b, e, x):
+    return -Simp(I*b*PolyLog(S(2), -I*sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x) + Simp(I*b*PolyLog(S(2), I*sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x) + Simp(-S(2)*I*(a + b*acot(c*x))*ArcTan(sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/(c*sqrt(d)), x)
+
+
+def replacement5298(d, a, c, n, b, e, x):
+    return Dist(S(1)/(c*sqrt(d)), Subst(Int((a + b*x)**n/cos(x), x), x, ArcTan(c*x)), x)
+
+
+def replacement5299(d, a, c, n, b, e, x):
+    return -Dist(x*sqrt(S(1) + S(1)/(c**S(2)*x**S(2)))/sqrt(d + e*x**S(2)), Subst(Int((a + b*x)**n/sin(x), x), x, acot(c*x)), x)
+
+
+def replacement5300(d, a, c, n, b, e, x):
+    return Dist(sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*ArcTan(c*x))**n/sqrt(c**S(2)*x**S(2) + S(1)), x), x)
+
+
+def replacement5301(d, a, c, n, b, e, x):
+    return Dist(sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*acot(c*x))**n/sqrt(c**S(2)*x**S(2) + S(1)), x), x)
+
+
+def replacement5302(d, a, c, n, b, e, x):
+    return -Dist(b*c*n/S(2), Int(x*(a + b*ArcTan(c*x))**(n + S(-1))/(d + e*x**S(2))**S(2), x), x) + Simp(x*(a + b*ArcTan(c*x))**n/(S(2)*d*(d + e*x**S(2))), x) + Simp((a + b*ArcTan(c*x))**(n + S(1))/(S(2)*b*c*d**S(2)*(n + S(1))), x)
+
+
+def replacement5303(d, a, c, n, b, e, x):
+    return Dist(b*c*n/S(2), Int(x*(a + b*acot(c*x))**(n + S(-1))/(d + e*x**S(2))**S(2), x), x) + Simp(x*(a + b*acot(c*x))**n/(S(2)*d*(d + e*x**S(2))), x) - Simp((a + b*acot(c*x))**(n + S(1))/(S(2)*b*c*d**S(2)*(n + S(1))), x)
+
+
+def replacement5304(d, a, c, b, e, x):
+    return Simp(b/(c*d*sqrt(d + e*x**S(2))), x) + Simp(x*(a + b*ArcTan(c*x))/(d*sqrt(d + e*x**S(2))), x)
+
+
+def replacement5305(d, a, c, b, e, x):
+    return -Simp(b/(c*d*sqrt(d + e*x**S(2))), x) + Simp(x*(a + b*acot(c*x))/(d*sqrt(d + e*x**S(2))), x)
+
+
+def replacement5306(d, p, a, c, b, e, x):
+    return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) + Simp(b*(d + e*x**S(2))**(p + S(1))/(S(4)*c*d*(p + S(1))**S(2)), x) - Simp(x*(a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x)
+
+
+def replacement5307(d, p, a, c, b, e, x):
+    return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) - Simp(b*(d + e*x**S(2))**(p + S(1))/(S(4)*c*d*(p + S(1))**S(2)), x) - Simp(x*(a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x)
+
+
+def replacement5308(d, a, c, n, b, e, x):
+    return -Dist(b**S(2)*n*(n + S(-1)), Int((a + b*ArcTan(c*x))**(n + S(-2))/(d + e*x**S(2))**(S(3)/2), x), x) + Simp(x*(a + b*ArcTan(c*x))**n/(d*sqrt(d + e*x**S(2))), x) + Simp(b*n*(a + b*ArcTan(c*x))**(n + S(-1))/(c*d*sqrt(d + e*x**S(2))), x)
+
+
+def replacement5309(d, a, c, n, b, e, x):
+    return -Dist(b**S(2)*n*(n + S(-1)), Int((a + b*acot(c*x))**(n + S(-2))/(d + e*x**S(2))**(S(3)/2), x), x) + Simp(x*(a + b*acot(c*x))**n/(d*sqrt(d + e*x**S(2))), x) - Simp(b*n*(a + b*acot(c*x))**(n + S(-1))/(c*d*sqrt(d + e*x**S(2))), x)
+
+
+def replacement5310(d, p, a, c, n, b, e, x):
+    return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(b**S(2)*n*(n + S(-1))/(S(4)*(p + S(1))**S(2)), Int((a + b*ArcTan(c*x))**(n + S(-2))*(d + e*x**S(2))**p, x), x) - Simp(x*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x) + Simp(b*n*(a + b*ArcTan(c*x))**(n + S(-1))*(d + e*x**S(2))**(p + S(1))/(S(4)*c*d*(p + S(1))**S(2)), x)
+
+
+def replacement5311(d, p, a, c, n, b, e, x):
+    return Dist((S(2)*p + S(3))/(S(2)*d*(p + S(1))), Int((a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(b**S(2)*n*(n + S(-1))/(S(4)*(p + S(1))**S(2)), Int((a + b*acot(c*x))**(n + S(-2))*(d + e*x**S(2))**p, x), x) - Simp(x*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*d*(p + S(1))), x) - Simp(b*n*(a + b*acot(c*x))**(n + S(-1))*(d + e*x**S(2))**(p + S(1))/(S(4)*c*d*(p + S(1))**S(2)), x)
+
+
+def replacement5312(d, p, a, c, n, b, e, x):
+    return -Dist(S(2)*c*(p + S(1))/(b*(n + S(1))), Int(x*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) + Simp((a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5313(d, p, a, c, n, b, e, x):
+    return Dist(S(2)*c*(p + S(1))/(b*(n + S(1))), Int(x*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) - Simp((a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5314(d, p, a, c, n, b, e, x):
+    return Dist(d**p/c, Subst(Int((a + b*x)**n*cos(x)**(-S(2)*p + S(-2)), x), x, ArcTan(c*x)), x)
+
+
+def replacement5315(d, p, a, c, n, b, e, x):
+    return Dist(d**(p + S(1)/2)*sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*ArcTan(c*x))**n*(c**S(2)*x**S(2) + S(1))**p, x), x)
+
+
+def replacement5316(d, p, a, c, n, b, e, x):
+    return -Dist(d**p/c, Subst(Int((a + b*x)**n*sin(x)**(-S(2)*p + S(-2)), x), x, acot(c*x)), x)
+
+
+def replacement5317(d, p, a, c, n, b, e, x):
+    return -Dist(d**(p + S(1)/2)*x*sqrt((c**S(2)*x**S(2) + S(1))/(c**S(2)*x**S(2)))/sqrt(d + e*x**S(2)), Subst(Int((a + b*x)**n*sin(x)**(-S(2)*p + S(-2)), x), x, acot(c*x)), x)
+
+
+def replacement5318(d, e, c, x):
+    return Dist(I/S(2), Int(log(-I*c*x + S(1))/(d + e*x**S(2)), x), x) - Dist(I/S(2), Int(log(I*c*x + S(1))/(d + e*x**S(2)), x), x)
+
+
+def replacement5319(d, e, c, x):
+    return Dist(I/S(2), Int(log(S(1) - I/(c*x))/(d + e*x**S(2)), x), x) - Dist(I/S(2), Int(log(S(1) + I/(c*x))/(d + e*x**S(2)), x), x)
+
+
+def replacement5320(d, a, c, b, e, x):
+    return Dist(a, Int(S(1)/(d + e*x**S(2)), x), x) + Dist(b, Int(ArcTan(c*x)/(d + e*x**S(2)), x), x)
+
+
+def replacement5321(d, a, c, b, e, x):
+    return Dist(a, Int(S(1)/(d + e*x**S(2)), x), x) + Dist(b, Int(acot(c*x)/(d + e*x**S(2)), x), x)
+
+
+def With5322(d, p, a, c, b, e, x):
+    u = IntHide((d + e*x**S(2))**p, x)
+    return -Dist(b*c, Int(ExpandIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*ArcTan(c*x), u, x)
+
+
+def With5323(d, p, a, c, b, e, x):
+    u = IntHide((d + e*x**S(2))**p, x)
+    return Dist(b*c, Int(ExpandIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acot(c*x), u, x)
+
+
+def replacement5324(d, p, a, c, n, b, e, x):
+    return Int(ExpandIntegrand((a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5325(d, p, a, c, n, b, e, x):
+    return Int(ExpandIntegrand((a + b*acot(c*x))**n*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5326(d, p, a, c, n, b, e, x):
+    return Int((a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5327(d, p, a, c, n, b, e, x):
+    return Int((a + b*acot(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5328(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n/(d + e*x**S(2)), x), x)
+
+
+def replacement5329(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n/(d + e*x**S(2)), x), x)
+
+
+def replacement5330(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/d, Int(x**m*(a + b*ArcTan(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*ArcTan(c*x))**n/(d + e*x**S(2)), x), x)
+
+
+def replacement5331(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/d, Int(x**m*(a + b*acot(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*acot(c*x))**n/(d + e*x**S(2)), x), x)
+
+
+def replacement5332(d, a, c, n, b, e, x):
+    return -Dist(S(1)/(c*d), Int((a + b*ArcTan(c*x))**n/(-c*x + I), x), x) - Simp(I*(a + b*ArcTan(c*x))**(n + S(1))/(b*e*(n + S(1))), x)
+
+
+def replacement5333(d, a, c, n, b, e, x):
+    return -Dist(S(1)/(c*d), Int((a + b*acot(c*x))**n/(-c*x + I), x), x) + Simp(I*(a + b*acot(c*x))**(n + S(1))/(b*e*(n + S(1))), x)
+
+
+def replacement5334(d, a, c, n, b, e, x):
+    return -Dist(S(1)/(b*c*d*(n + S(1))), Int((a + b*ArcTan(c*x))**(n + S(1)), x), x) + Simp(x*(a + b*ArcTan(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5335(d, a, c, n, b, e, x):
+    return Dist(S(1)/(b*c*d*(n + S(1))), Int((a + b*acot(c*x))**(n + S(1)), x), x) - Simp(x*(a + b*acot(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5336(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n/(d + e*x**S(2)), x), x)
+
+
+def replacement5337(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n, x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n/(d + e*x**S(2)), x), x)
+
+
+def replacement5338(d, a, c, n, b, e, x):
+    return Dist(I/d, Int((a + b*ArcTan(c*x))**n/(x*(c*x + I)), x), x) - Simp(I*(a + b*ArcTan(c*x))**(n + S(1))/(b*d*(n + S(1))), x)
+
+
+def replacement5339(d, a, c, n, b, e, x):
+    return Dist(I/d, Int((a + b*acot(c*x))**n/(x*(c*x + I)), x), x) + Simp(I*(a + b*acot(c*x))**(n + S(1))/(b*d*(n + S(1))), x)
+
+
+def replacement5340(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/d, Int(x**m*(a + b*ArcTan(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*ArcTan(c*x))**n/(d + e*x**S(2)), x), x)
+
+
+def replacement5341(d, a, c, n, m, b, e, x):
+    return Dist(S(1)/d, Int(x**m*(a + b*acot(c*x))**n, x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*acot(c*x))**n/(d + e*x**S(2)), x), x)
+
+
+def replacement5342(d, a, c, n, m, b, e, x):
+    return -Dist(m/(b*c*d*(n + S(1))), Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**(n + S(1)), x), x) + Simp(x**m*(a + b*ArcTan(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5343(d, a, c, n, m, b, e, x):
+    return Dist(m/(b*c*d*(n + S(1))), Int(x**(m + S(-1))*(a + b*acot(c*x))**(n + S(1)), x), x) - Simp(x**m*(a + b*acot(c*x))**(n + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5344(d, a, c, m, b, e, x):
+    return Int(ExpandIntegrand(a + b*ArcTan(c*x), x**m/(d + e*x**S(2)), x), x)
+
+
+def replacement5345(d, a, c, m, b, e, x):
+    return Int(ExpandIntegrand(a + b*acot(c*x), x**m/(d + e*x**S(2)), x), x)
+
+
+def replacement5346(d, p, a, c, n, b, e, x):
+    return -Dist(b*n/(S(2)*c*(p + S(1))), Int((a + b*ArcTan(c*x))**(n + S(-1))*(d + e*x**S(2))**p, x), x) + Simp((a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def replacement5347(d, p, a, c, n, b, e, x):
+    return Dist(b*n/(S(2)*c*(p + S(1))), Int((a + b*acot(c*x))**(n + S(-1))*(d + e*x**S(2))**p, x), x) + Simp((a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def replacement5348(d, a, c, n, b, e, x):
+    return -Dist(S(4)/(b**S(2)*(n + S(1))*(n + S(2))), Int(x*(a + b*ArcTan(c*x))**(n + S(2))/(d + e*x**S(2))**S(2), x), x) - Simp((a + b*ArcTan(c*x))**(n + S(2))*(-c**S(2)*x**S(2) + S(1))/(b**S(2)*e*(d + e*x**S(2))*(n + S(1))*(n + S(2))), x) + Simp(x*(a + b*ArcTan(c*x))**(n + S(1))/(b*c*d*(d + e*x**S(2))*(n + S(1))), x)
+
+
+def replacement5349(d, a, c, n, b, e, x):
+    return -Dist(S(4)/(b**S(2)*(n + S(1))*(n + S(2))), Int(x*(a + b*acot(c*x))**(n + S(2))/(d + e*x**S(2))**S(2), x), x) - Simp((a + b*acot(c*x))**(n + S(2))*(-c**S(2)*x**S(2) + S(1))/(b**S(2)*e*(d + e*x**S(2))*(n + S(1))*(n + S(2))), x) - Simp(x*(a + b*acot(c*x))**(n + S(1))/(b*c*d*(d + e*x**S(2))*(n + S(1))), x)
+
+
+def replacement5350(d, p, a, c, b, e, x):
+    return -Dist(S(1)/(S(2)*c**S(2)*d*(p + S(1))), Int((a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) - Simp(b*(d + e*x**S(2))**(p + S(1))/(S(4)*c**S(3)*d*(p + S(1))**S(2)), x) + Simp(x*(a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*c**S(2)*d*(p + S(1))), x)
+
+
+def replacement5351(d, p, a, c, b, e, x):
+    return -Dist(S(1)/(S(2)*c**S(2)*d*(p + S(1))), Int((a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) + Simp(b*(d + e*x**S(2))**(p + S(1))/(S(4)*c**S(3)*d*(p + S(1))**S(2)), x) + Simp(x*(a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*c**S(2)*d*(p + S(1))), x)
+
+
+def replacement5352(d, a, c, n, b, e, x):
+    return Dist(b*n/(S(2)*c), Int(x*(a + b*ArcTan(c*x))**(n + S(-1))/(d + e*x**S(2))**S(2), x), x) + Simp((a + b*ArcTan(c*x))**(n + S(1))/(S(2)*b*c**S(3)*d**S(2)*(n + S(1))), x) - Simp(x*(a + b*ArcTan(c*x))**n/(S(2)*c**S(2)*d*(d + e*x**S(2))), x)
+
+
+def replacement5353(d, a, c, n, b, e, x):
+    return -Dist(b*n/(S(2)*c), Int(x*(a + b*acot(c*x))**(n + S(-1))/(d + e*x**S(2))**S(2), x), x) - Simp((a + b*acot(c*x))**(n + S(1))/(S(2)*b*c**S(3)*d**S(2)*(n + S(1))), x) - Simp(x*(a + b*acot(c*x))**n/(S(2)*c**S(2)*d*(d + e*x**S(2))), x)
+
+
+def replacement5354(d, p, a, c, m, b, e, x):
+    return Dist((m + S(-1))/(c**S(2)*d*m), Int(x**(m + S(-2))*(a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) + Simp(b*x**m*(d + e*x**S(2))**(p + S(1))/(c*d*m**S(2)), x) - Simp(x**(m + S(-1))*(a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1))/(c**S(2)*d*m), x)
+
+
+def replacement5355(d, p, a, c, m, b, e, x):
+    return Dist((m + S(-1))/(c**S(2)*d*m), Int(x**(m + S(-2))*(a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1)), x), x) - Simp(b*x**m*(d + e*x**S(2))**(p + S(1))/(c*d*m**S(2)), x) - Simp(x**(m + S(-1))*(a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1))/(c**S(2)*d*m), x)
+
+
+def replacement5356(d, p, a, c, n, m, b, e, x):
+    return -Dist(b**S(2)*n*(n + S(-1))/m**S(2), Int(x**m*(a + b*ArcTan(c*x))**(n + S(-2))*(d + e*x**S(2))**p, x), x) + Dist((m + S(-1))/(c**S(2)*d*m), Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Simp(x**(m + S(-1))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1))/(c**S(2)*d*m), x) + Simp(b*n*x**m*(a + b*ArcTan(c*x))**(n + S(-1))*(d + e*x**S(2))**(p + S(1))/(c*d*m**S(2)), x)
+
+
+def replacement5357(d, p, a, c, n, m, b, e, x):
+    return -Dist(b**S(2)*n*(n + S(-1))/m**S(2), Int(x**m*(a + b*acot(c*x))**(n + S(-2))*(d + e*x**S(2))**p, x), x) + Dist((m + S(-1))/(c**S(2)*d*m), Int(x**(m + S(-2))*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Simp(x**(m + S(-1))*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1))/(c**S(2)*d*m), x) - Simp(b*n*x**m*(a + b*acot(c*x))**(n + S(-1))*(d + e*x**S(2))**(p + S(1))/(c*d*m**S(2)), x)
+
+
+def replacement5358(d, p, a, c, n, m, b, e, x):
+    return -Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) + Simp(x**m*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5359(d, p, a, c, n, m, b, e, x):
+    return Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) - Simp(x**m*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5360(d, p, a, c, n, m, b, e, x):
+    return -Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*ArcTan(c*x))**(n + S(-1))*(d + e*x**S(2))**p, x), x) + Simp(x**(m + S(1))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*(m + S(1))), x)
+
+
+def replacement5361(d, p, a, c, n, m, b, e, x):
+    return Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*acot(c*x))**(n + S(-1))*(d + e*x**S(2))**p, x), x) + Simp(x**(m + S(1))*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1))/(d*(m + S(1))), x)
+
+
+def replacement5362(d, a, c, m, b, e, x):
+    return Dist(d/(m + S(2)), Int(x**m*(a + b*ArcTan(c*x))/sqrt(d + e*x**S(2)), x), x) - Dist(b*c*d/(m + S(2)), Int(x**(m + S(1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*ArcTan(c*x))*sqrt(d + e*x**S(2))/(m + S(2)), x)
+
+
+def replacement5363(d, a, c, m, b, e, x):
+    return Dist(d/(m + S(2)), Int(x**m*(a + b*acot(c*x))/sqrt(d + e*x**S(2)), x), x) + Dist(b*c*d/(m + S(2)), Int(x**(m + S(1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*acot(c*x))*sqrt(d + e*x**S(2))/(m + S(2)), x)
+
+
+def replacement5364(d, p, a, c, n, m, b, e, x):
+    return Int(ExpandIntegrand(x**m*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5365(d, p, a, c, n, m, b, e, x):
+    return Int(ExpandIntegrand(x**m*(a + b*acot(c*x))**n*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5366(d, p, a, c, n, m, b, e, x):
+    return Dist(d, Int(x**m*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(c**S(2)*d, Int(x**(m + S(2))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x)
+
+
+def replacement5367(d, p, a, c, n, m, b, e, x):
+    return Dist(d, Int(x**m*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x) + Dist(c**S(2)*d, Int(x**(m + S(2))*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(-1)), x), x)
+
+
+def replacement5368(d, a, c, n, m, b, e, x):
+    return -Dist((m + S(-1))/(c**S(2)*m), Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n/sqrt(d + e*x**S(2)), x), x) - Dist(b*n/(c*m), Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**(n + S(-1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(-1))*(a + b*ArcTan(c*x))**n*sqrt(d + e*x**S(2))/(c**S(2)*d*m), x)
+
+
+def replacement5369(d, a, c, n, m, b, e, x):
+    return -Dist((m + S(-1))/(c**S(2)*m), Int(x**(m + S(-2))*(a + b*acot(c*x))**n/sqrt(d + e*x**S(2)), x), x) + Dist(b*n/(c*m), Int(x**(m + S(-1))*(a + b*acot(c*x))**(n + S(-1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(-1))*(a + b*acot(c*x))**n*sqrt(d + e*x**S(2))/(c**S(2)*d*m), x)
+
+
+def replacement5370(d, a, c, b, e, x):
+    return Simp(-S(2)*(a + b*ArcTan(c*x))*atanh(sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x) + Simp(I*b*PolyLog(S(2), -sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x) - Simp(I*b*PolyLog(S(2), sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x)
+
+
+def replacement5371(d, a, c, b, e, x):
+    return Simp(-S(2)*(a + b*acot(c*x))*atanh(sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x) - Simp(I*b*PolyLog(S(2), -sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x) + Simp(I*b*PolyLog(S(2), sqrt(I*c*x + S(1))/sqrt(-I*c*x + S(1)))/sqrt(d), x)
+
+
+def replacement5372(d, a, c, n, b, e, x):
+    return Dist(S(1)/sqrt(d), Subst(Int((a + b*x)**n/sin(x), x), x, ArcTan(c*x)), x)
+
+
+def replacement5373(d, a, c, n, b, e, x):
+    return -Dist(c*x*sqrt(S(1) + S(1)/(c**S(2)*x**S(2)))/sqrt(d + e*x**S(2)), Subst(Int((a + b*x)**n/cos(x), x), x, acot(c*x)), x)
+
+
+def replacement5374(d, a, c, n, b, e, x):
+    return Dist(sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*ArcTan(c*x))**n/(x*sqrt(c**S(2)*x**S(2) + S(1))), x), x)
+
+
+def replacement5375(d, a, c, n, b, e, x):
+    return Dist(sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int((a + b*acot(c*x))**n/(x*sqrt(c**S(2)*x**S(2) + S(1))), x), x)
+
+
+def replacement5376(d, a, c, n, b, e, x):
+    return Dist(b*c*n, Int((a + b*ArcTan(c*x))**(n + S(-1))/(x*sqrt(d + e*x**S(2))), x), x) - Simp((a + b*ArcTan(c*x))**n*sqrt(d + e*x**S(2))/(d*x), x)
+
+
+def replacement5377(d, a, c, n, b, e, x):
+    return -Dist(b*c*n, Int((a + b*acot(c*x))**(n + S(-1))/(x*sqrt(d + e*x**S(2))), x), x) - Simp((a + b*acot(c*x))**n*sqrt(d + e*x**S(2))/(d*x), x)
+
+
+def replacement5378(d, a, c, n, m, b, e, x):
+    return -Dist(c**S(2)*(m + S(2))/(m + S(1)), Int(x**(m + S(2))*(a + b*ArcTan(c*x))**n/sqrt(d + e*x**S(2)), x), x) - Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*ArcTan(c*x))**(n + S(-1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*ArcTan(c*x))**n*sqrt(d + e*x**S(2))/(d*(m + S(1))), x)
+
+
+def replacement5379(d, a, c, n, m, b, e, x):
+    return -Dist(c**S(2)*(m + S(2))/(m + S(1)), Int(x**(m + S(2))*(a + b*acot(c*x))**n/sqrt(d + e*x**S(2)), x), x) + Dist(b*c*n/(m + S(1)), Int(x**(m + S(1))*(a + b*acot(c*x))**(n + S(-1))/sqrt(d + e*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*acot(c*x))**n*sqrt(d + e*x**S(2))/(d*(m + S(1))), x)
+
+
+def replacement5380(d, p, a, c, n, m, b, e, x):
+    return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5381(d, p, a, c, n, m, b, e, x):
+    return Dist(S(1)/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(d/e, Int(x**(m + S(-2))*(a + b*acot(c*x))**n*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5382(d, p, a, c, n, m, b, e, x):
+    return Dist(S(1)/d, Int(x**m*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5383(d, p, a, c, n, m, b, e, x):
+    return Dist(S(1)/d, Int(x**m*(a + b*acot(c*x))**n*(d + e*x**S(2))**(p + S(1)), x), x) - Dist(e/d, Int(x**(m + S(2))*(a + b*acot(c*x))**n*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5384(d, p, a, c, n, m, b, e, x):
+    return -Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) - Dist(c*(m + S(2)*p + S(2))/(b*(n + S(1))), Int(x**(m + S(1))*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) + Simp(x**m*(a + b*ArcTan(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5385(d, p, a, c, n, m, b, e, x):
+    return Dist(m/(b*c*(n + S(1))), Int(x**(m + S(-1))*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) + Dist(c*(m + S(2)*p + S(2))/(b*(n + S(1))), Int(x**(m + S(1))*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**p, x), x) - Simp(x**m*(a + b*acot(c*x))**(n + S(1))*(d + e*x**S(2))**(p + S(1))/(b*c*d*(n + S(1))), x)
+
+
+def replacement5386(d, p, a, c, n, m, b, e, x):
+    return Dist(c**(-m + S(-1))*d**p, Subst(Int((a + b*x)**n*sin(x)**m*cos(x)**(-m - S(2)*p + S(-2)), x), x, ArcTan(c*x)), x)
+
+
+def replacement5387(d, p, a, c, n, m, b, e, x):
+    return Dist(d**(p + S(1)/2)*sqrt(c**S(2)*x**S(2) + S(1))/sqrt(d + e*x**S(2)), Int(x**m*(a + b*ArcTan(c*x))**n*(c**S(2)*x**S(2) + S(1))**p, x), x)
+
+
+def replacement5388(d, p, a, c, n, m, b, e, x):
+    return -Dist(c**(-m + S(-1))*d**p, Subst(Int((a + b*x)**n*sin(x)**(-m - S(2)*p + S(-2))*cos(x)**m, x), x, acot(c*x)), x)
+
+
+def replacement5389(d, p, a, c, n, m, b, e, x):
+    return -Dist(c**(-m)*d**(p + S(1)/2)*x*sqrt((c**S(2)*x**S(2) + S(1))/(c**S(2)*x**S(2)))/sqrt(d + e*x**S(2)), Subst(Int((a + b*x)**n*sin(x)**(-m - S(2)*p + S(-2))*cos(x)**m, x), x, acot(c*x)), x)
+
+
+def replacement5390(d, p, a, c, b, e, x):
+    return -Dist(b*c/(S(2)*e*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*ArcTan(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def replacement5391(d, p, a, c, b, e, x):
+    return Dist(b*c/(S(2)*e*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/(c**S(2)*x**S(2) + S(1)), x), x) + Simp((a + b*acot(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def With5392(d, p, a, c, m, b, e, x):
+    u = IntHide(x**m*(d + e*x**S(2))**p, x)
+    return -Dist(b*c, Int(SimplifyIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*ArcTan(c*x), u, x)
+
+
+def With5393(d, p, a, c, m, b, e, x):
+    u = IntHide(x**m*(d + e*x**S(2))**p, x)
+    return Dist(b*c, Int(SimplifyIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acot(c*x), u, x)
+
+
+def replacement5394(d, p, a, c, n, m, b, e, x):
+    return Int(ExpandIntegrand((a + b*ArcTan(c*x))**n, x**m*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5395(d, p, a, c, n, m, b, e, x):
+    return Int(ExpandIntegrand((a + b*acot(c*x))**n, x**m*(d + e*x**S(2))**p, x), x)
+
+
+def replacement5396(d, p, a, c, m, b, e, x):
+    return Dist(a, Int(x**m*(d + e*x**S(2))**p, x), x) + Dist(b, Int(x**m*(d + e*x**S(2))**p*ArcTan(c*x), x), x)
+
+
+def replacement5397(d, p, a, c, m, b, e, x):
+    return Dist(a, Int(x**m*(d + e*x**S(2))**p, x), x) + Dist(b, Int(x**m*(d + e*x**S(2))**p*acot(c*x), x), x)
+
+
+def replacement5398(d, p, a, c, n, m, b, e, x):
+    return Int(x**m*(a + b*ArcTan(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5399(d, p, a, c, n, m, b, e, x):
+    return Int(x**m*(a + b*acot(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5400(u, d, a, c, n, b, e, x):
+    return -Dist(S(1)/2, Int((a + b*ArcTan(c*x))**n*log(S(1) - u)/(d + e*x**S(2)), x), x) + Dist(S(1)/2, Int((a + b*ArcTan(c*x))**n*log(u + S(1))/(d + e*x**S(2)), x), x)
+
+
+def replacement5401(u, d, a, c, n, b, e, x):
+    return -Dist(S(1)/2, Int((a + b*acot(c*x))**n*log(SimplifyIntegrand(S(1) - S(1)/u, x))/(d + e*x**S(2)), x), x) + Dist(S(1)/2, Int((a + b*acot(c*x))**n*log(SimplifyIntegrand(S(1) + S(1)/u, x))/(d + e*x**S(2)), x), x)
+
+
+def replacement5402(u, d, a, c, n, b, e, x):
+    return -Dist(S(1)/2, Int((a + b*ArcTan(c*x))**n*log(S(1) - u)/(d + e*x**S(2)), x), x) + Dist(S(1)/2, Int((a + b*ArcTan(c*x))**n*log(u + S(1))/(d + e*x**S(2)), x), x)
+
+
+def replacement5403(u, d, a, c, n, b, e, x):
+    return -Dist(S(1)/2, Int((a + b*acot(c*x))**n*log(SimplifyIntegrand(S(1) - S(1)/u, x))/(d + e*x**S(2)), x), x) + Dist(S(1)/2, Int((a + b*acot(c*x))**n*log(SimplifyIntegrand(S(1) + S(1)/u, x))/(d + e*x**S(2)), x), x)
+
+
+def replacement5404(u, d, a, c, n, b, e, x):
+    return -Dist(I*b*n/S(2), Int((a + b*ArcTan(c*x))**(n + S(-1))*PolyLog(S(2), Together(S(1) - u))/(d + e*x**S(2)), x), x) + Simp(I*(a + b*ArcTan(c*x))**n*PolyLog(S(2), Together(S(1) - u))/(S(2)*c*d), x)
+
+
+def replacement5405(u, d, a, c, n, b, e, x):
+    return Dist(I*b*n/S(2), Int((a + b*acot(c*x))**(n + S(-1))*PolyLog(S(2), Together(S(1) - u))/(d + e*x**S(2)), x), x) + Simp(I*(a + b*acot(c*x))**n*PolyLog(S(2), Together(S(1) - u))/(S(2)*c*d), x)
+
+
+def replacement5406(u, d, a, c, n, b, e, x):
+    return Dist(I*b*n/S(2), Int((a + b*ArcTan(c*x))**(n + S(-1))*PolyLog(S(2), Together(S(1) - u))/(d + e*x**S(2)), x), x) - Simp(I*(a + b*ArcTan(c*x))**n*PolyLog(S(2), Together(S(1) - u))/(S(2)*c*d), x)
+
+
+def replacement5407(u, d, a, c, n, b, e, x):
+    return -Dist(I*b*n/S(2), Int((a + b*acot(c*x))**(n + S(-1))*PolyLog(S(2), Together(S(1) - u))/(d + e*x**S(2)), x), x) - Simp(I*(a + b*acot(c*x))**n*PolyLog(S(2), Together(S(1) - u))/(S(2)*c*d), x)
+
+
+def replacement5408(u, d, p, a, c, n, b, e, x):
+    return Dist(I*b*n/S(2), Int((a + b*ArcTan(c*x))**(n + S(-1))*PolyLog(p + S(1), u)/(d + e*x**S(2)), x), x) - Simp(I*(a + b*ArcTan(c*x))**n*PolyLog(p + S(1), u)/(S(2)*c*d), x)
+
+
+def replacement5409(u, d, p, a, c, n, b, e, x):
+    return -Dist(I*b*n/S(2), Int((a + b*acot(c*x))**(n + S(-1))*PolyLog(p + S(1), u)/(d + e*x**S(2)), x), x) - Simp(I*(a + b*acot(c*x))**n*PolyLog(p + S(1), u)/(S(2)*c*d), x)
+
+
+def replacement5410(u, d, p, a, c, n, b, e, x):
+    return -Dist(I*b*n/S(2), Int((a + b*ArcTan(c*x))**(n + S(-1))*PolyLog(p + S(1), u)/(d + e*x**S(2)), x), x) + Simp(I*(a + b*ArcTan(c*x))**n*PolyLog(p + S(1), u)/(S(2)*c*d), x)
+
+
+def replacement5411(u, d, p, a, c, n, b, e, x):
+    return Dist(I*b*n/S(2), Int((a + b*acot(c*x))**(n + S(-1))*PolyLog(p + S(1), u)/(d + e*x**S(2)), x), x) + Simp(I*(a + b*acot(c*x))**n*PolyLog(p + S(1), u)/(S(2)*c*d), x)
+
+
+def replacement5412(d, a, c, b, e, x):
+    return Simp((log(a + b*ArcTan(c*x)) - log(a + b*acot(c*x)))/(b*c*d*(S(2)*a + b*ArcTan(c*x) + b*acot(c*x))), x)
+
+
+def replacement5413(d, a, c, n, m, b, e, x):
+    return Dist(n/(m + S(1)), Int((a + b*ArcTan(c*x))**(n + S(-1))*(a + b*acot(c*x))**(m + S(1))/(d + e*x**S(2)), x), x) - Simp((a + b*ArcTan(c*x))**n*(a + b*acot(c*x))**(m + S(1))/(b*c*d*(m + S(1))), x)
+
+
+def replacement5414(d, a, c, n, m, b, e, x):
+    return Dist(n/(m + S(1)), Int((a + b*ArcTan(c*x))**(m + S(1))*(a + b*acot(c*x))**(n + S(-1))/(d + e*x**S(2)), x), x) + Simp((a + b*ArcTan(c*x))**(m + S(1))*(a + b*acot(c*x))**n/(b*c*d*(m + S(1))), x)
+
+
+def replacement5415(d, a, c, n, x):
+    return Dist(I/S(2), Int(log(-I*a*x + S(1))/(c + d*x**n), x), x) - Dist(I/S(2), Int(log(I*a*x + S(1))/(c + d*x**n), x), x)
+
+
+def replacement5416(d, a, c, n, x):
+    return Dist(I/S(2), Int(log(S(1) - I/(a*x))/(c + d*x**n), x), x) - Dist(I/S(2), Int(log(S(1) + I/(a*x))/(c + d*x**n), x), x)
+
+
+def replacement5417(d, a, c, g, b, f, e, x):
+    return -Dist(b*c, Int(x*(d + e*log(f + g*x**S(2)))/(c**S(2)*x**S(2) + S(1)), x), x) - Dist(S(2)*e*g, Int(x**S(2)*(a + b*ArcTan(c*x))/(f + g*x**S(2)), x), x) + Simp(x*(a + b*ArcTan(c*x))*(d + e*log(f + g*x**S(2))), x)
+
+
+def replacement5418(d, a, c, g, b, f, e, x):
+    return Dist(b*c, Int(x*(d + e*log(f + g*x**S(2)))/(c**S(2)*x**S(2) + S(1)), x), x) - Dist(S(2)*e*g, Int(x**S(2)*(a + b*acot(c*x))/(f + g*x**S(2)), x), x) + Simp(x*(a + b*acot(c*x))*(d + e*log(f + g*x**S(2))), x)
+
+
+def replacement5419(d, a, c, g, m, b, f, e, x):
+    return -Dist(b*c/(m + S(1)), Int(x**(m + S(1))*(d + e*log(f + g*x**S(2)))/(c**S(2)*x**S(2) + S(1)), x), x) - Dist(S(2)*e*g/(m + S(1)), Int(x**(m + S(2))*(a + b*ArcTan(c*x))/(f + g*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*ArcTan(c*x))*(d + e*log(f + g*x**S(2)))/(m + S(1)), x)
+
+
+def replacement5420(d, a, c, g, m, b, f, e, x):
+    return Dist(b*c/(m + S(1)), Int(x**(m + S(1))*(d + e*log(f + g*x**S(2)))/(c**S(2)*x**S(2) + S(1)), x), x) - Dist(S(2)*e*g/(m + S(1)), Int(x**(m + S(2))*(a + b*acot(c*x))/(f + g*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*acot(c*x))*(d + e*log(f + g*x**S(2)))/(m + S(1)), x)
+
+
+def With5421(d, a, c, g, m, b, f, e, x):
+    u = IntHide(x**m*(d + e*log(f + g*x**S(2))), x)
+    return -Dist(b*c, Int(ExpandIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*ArcTan(c*x), u, x)
+
+
+def With5422(d, a, c, g, m, b, f, e, x):
+    u = IntHide(x**m*(d + e*log(f + g*x**S(2))), x)
+    return Dist(b*c, Int(ExpandIntegrand(u/(c**S(2)*x**S(2) + S(1)), x), x), x) + Dist(a + b*acot(c*x), u, x)
+
+
+def With5423(d, a, c, g, m, b, f, e, x):
+    u = IntHide(x**m*(a + b*ArcTan(c*x)), x)
+    return -Dist(S(2)*e*g, Int(ExpandIntegrand(u*x/(f + g*x**S(2)), x), x), x) + Dist(d + e*log(f + g*x**S(2)), u, x)
+
+
+def With5424(d, a, c, g, m, b, f, e, x):
+    u = IntHide(x**m*(a + b*acot(c*x)), x)
+    return -Dist(S(2)*e*g, Int(ExpandIntegrand(u*x/(f + g*x**S(2)), x), x), x) + Dist(d + e*log(f + g*x**S(2)), u, x)
+
+
+def replacement5425(d, a, c, g, b, f, e, x):
+    return -Dist(b/c, Int((a + b*ArcTan(c*x))*(d + e*log(f + g*x**S(2))), x), x) + Dist(b*c*e, Int(x**S(2)*(a + b*ArcTan(c*x))/(c**S(2)*x**S(2) + S(1)), x), x) - Simp(e*x**S(2)*(a + b*ArcTan(c*x))**S(2)/S(2), x) + Simp((a + b*ArcTan(c*x))**S(2)*(d + e*log(f + g*x**S(2)))*(f + g*x**S(2))/(S(2)*g), x)
+
+
+def replacement5426(d, a, c, g, b, f, e, x):
+    return Dist(b/c, Int((a + b*acot(c*x))*(d + e*log(f + g*x**S(2))), x), x) - Dist(b*c*e, Int(x**S(2)*(a + b*acot(c*x))/(c**S(2)*x**S(2) + S(1)), x), x) - Simp(e*x**S(2)*(a + b*acot(c*x))**S(2)/S(2), x) + Simp((a + b*acot(c*x))**S(2)*(d + e*log(f + g*x**S(2)))*(f + g*x**S(2))/(S(2)*g), x)
+
+
+def replacement5427(n, a, x):
+    return Int((-I*a*x + S(1))**(I*n/S(2) + S(1)/2)*(I*a*x + S(1))**(-I*n/S(2) + S(1)/2)/sqrt(a**S(2)*x**S(2) + S(1)), x)
+
+
+def replacement5428(n, a, m, x):
+    return Int(x**m*(-I*a*x + S(1))**(I*n/S(2) + S(1)/2)*(I*a*x + S(1))**(-I*n/S(2) + S(1)/2)/sqrt(a**S(2)*x**S(2) + S(1)), x)
+
+
+def replacement5429(n, a, x):
+    return Int((-I*a*x + S(1))**(I*n/S(2))*(I*a*x + S(1))**(-I*n/S(2)), x)
+
+
+def replacement5430(n, a, m, x):
+    return Int(x**m*(-I*a*x + S(1))**(I*n/S(2))*(I*a*x + S(1))**(-I*n/S(2)), x)
+
+
+def replacement5431(u, d, p, a, c, n, x):
+    return Dist(c**p, Int(u*(S(1) + d*x/c)**p*(-I*a*x + S(1))**(I*n/S(2))*(I*a*x + S(1))**(-I*n/S(2)), x), x)
+
+
+def replacement5432(u, d, p, a, c, n, x):
+    return Int(u*(c + d*x)**p*(-I*a*x + S(1))**(I*n/S(2))*(I*a*x + S(1))**(-I*n/S(2)), x)
+
+
+def replacement5433(u, d, p, a, c, n, x):
+    return Dist(d**p, Int(u*x**(-p)*(c*x/d + S(1))**p*exp(n*ArcTan(a*x)), x), x)
+
+
+def replacement5434(u, d, p, a, c, n, x):
+    return Dist((S(-1))**(n/S(2))*c**p, Int(u*(S(1) - I/(a*x))**(-I*n/S(2))*(S(1) + I/(a*x))**(I*n/S(2))*(S(1) + d/(c*x))**p, x), x)
+
+
+def replacement5435(u, d, p, a, c, n, x):
+    return Int(u*(c + d/x)**p*(-I*a*x + S(1))**(I*n/S(2))*(I*a*x + S(1))**(-I*n/S(2)), x)
+
+
+def replacement5436(u, d, p, a, c, n, x):
+    return Dist(x**p*(c + d/x)**p*(c*x/d + S(1))**(-p), Int(u*x**(-p)*(c*x/d + S(1))**p*exp(n*ArcTan(a*x)), x), x)
+
+
+def replacement5437(d, a, c, n, x):
+    return Simp((a*x + n)*exp(n*ArcTan(a*x))/(a*c*sqrt(c + d*x**S(2))*(n**S(2) + S(1))), x)
+
+
+def replacement5438(d, p, a, c, n, x):
+    return Dist(S(2)*(p + S(1))*(S(2)*p + S(3))/(c*(n**S(2) + S(4)*(p + S(1))**S(2))), Int((c + d*x**S(2))**(p + S(1))*exp(n*ArcTan(a*x)), x), x) + Simp((c + d*x**S(2))**(p + S(1))*(-S(2)*a*x*(p + S(1)) + n)*exp(n*ArcTan(a*x))/(a*c*(n**S(2) + S(4)*(p + S(1))**S(2))), x)
+
+
+def replacement5439(d, a, c, n, x):
+    return Simp(exp(n*ArcTan(a*x))/(a*c*n), x)
+
+
+def replacement5440(d, p, a, c, n, x):
+    return Dist(c**p, Int((a**S(2)*x**S(2) + S(1))**(-I*n/S(2) + p)*(-I*a*x + S(1))**(I*n), x), x)
+
+
+def replacement5441(d, p, a, c, n, x):
+    return Dist(c**p, Int((-I*a*x + S(1))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n/S(2) + p), x), x)
+
+
+def replacement5442(d, p, a, c, n, x):
+    return Dist(c**(I*n/S(2)), Int((c + d*x**S(2))**(-I*n/S(2) + p)*(-I*a*x + S(1))**(I*n), x), x)
+
+
+def replacement5443(d, p, a, c, n, x):
+    return Dist(c**(-I*n/S(2)), Int((c + d*x**S(2))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n), x), x)
+
+
+def replacement5444(d, p, a, c, n, x):
+    return Dist(c**IntPart(p)*(c + d*x**S(2))**FracPart(p)*(a**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int((a**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
+
+
+def replacement5445(d, a, c, n, x):
+    return -Simp((-a*n*x + S(1))*exp(n*ArcTan(a*x))/(d*sqrt(c + d*x**S(2))*(n**S(2) + S(1))), x)
+
+
+def replacement5446(d, p, a, c, n, x):
+    return -Dist(a*c*n/(S(2)*d*(p + S(1))), Int((c + d*x**S(2))**p*exp(n*ArcTan(a*x)), x), x) + Simp((c + d*x**S(2))**(p + S(1))*exp(n*ArcTan(a*x))/(S(2)*d*(p + S(1))), x)
+
+
+def replacement5447(d, p, a, c, n, x):
+    return -Simp((c + d*x**S(2))**(p + S(1))*(-a*n*x + S(1))*exp(n*ArcTan(a*x))/(a*d*n*(n**S(2) + S(1))), x)
+
+
+def replacement5448(d, p, a, c, n, x):
+    return Dist((n**S(2) - S(2)*p + S(-2))/(d*(n**S(2) + S(4)*(p + S(1))**S(2))), Int((c + d*x**S(2))**(p + S(1))*exp(n*ArcTan(a*x)), x), x) - Simp((c + d*x**S(2))**(p + S(1))*(-S(2)*a*x*(p + S(1)) + n)*exp(n*ArcTan(a*x))/(a*d*(n**S(2) + S(4)*(p + S(1))**S(2))), x)
+
+
+def replacement5449(d, p, a, c, n, m, x):
+    return Dist(c**p, Int(x**m*(a**S(2)*x**S(2) + S(1))**(-I*n/S(2) + p)*(-I*a*x + S(1))**(I*n), x), x)
+
+
+def replacement5450(d, p, a, c, n, m, x):
+    return Dist(c**p, Int(x**m*(-I*a*x + S(1))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n/S(2) + p), x), x)
+
+
+def replacement5451(d, p, a, c, n, m, x):
+    return Dist(c**(I*n/S(2)), Int(x**m*(c + d*x**S(2))**(-I*n/S(2) + p)*(-I*a*x + S(1))**(I*n), x), x)
+
+
+def replacement5452(d, p, a, c, n, m, x):
+    return Dist(c**(-I*n/S(2)), Int(x**m*(c + d*x**S(2))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n), x), x)
+
+
+def replacement5453(d, p, a, c, n, m, x):
+    return Dist(c**IntPart(p)*(c + d*x**S(2))**FracPart(p)*(a**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int(x**m*(a**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
+
+
+def replacement5454(u, d, p, a, c, n, x):
+    return Dist(c**p, Int(u*(-I*a*x + S(1))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n/S(2) + p), x), x)
+
+
+def replacement5455(u, d, p, a, c, n, x):
+    return Dist(c**IntPart(p)*(c + d*x**S(2))**FracPart(p)*(-I*a*x + S(1))**(-FracPart(p))*(I*a*x + S(1))**(-FracPart(p)), Int(u*(-I*a*x + S(1))**(I*n/S(2) + p)*(I*a*x + S(1))**(-I*n/S(2) + p), x), x)
+
+
+def replacement5456(u, d, p, a, c, n, x):
+    return Dist(c**IntPart(p)*(c + d*x**S(2))**FracPart(p)*(a**S(2)*x**S(2) + S(1))**(-FracPart(p)), Int(u*(a**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
+
+
+def replacement5457(u, d, p, a, c, n, x):
+    return Dist(d**p, Int(u*x**(-S(2)*p)*(a**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
+
+
+def replacement5458(u, d, p, a, c, n, x):
+    return Dist(c**p, Int(u*(S(1) - I/(a*x))**p*(S(1) + I/(a*x))**p*exp(n*ArcTan(a*x)), x), x)
+
+
+def replacement5459(u, d, p, a, c, n, x):
+    return Dist(x**(S(2)*p)*(c + d/x**S(2))**p*(-I*a*x + S(1))**(-p)*(I*a*x + S(1))**(-p), Int(u*x**(-S(2)*p)*(-I*a*x + S(1))**p*(I*a*x + S(1))**p*exp(n*ArcTan(a*x)), x), x)
+
+
+def replacement5460(u, d, p, a, c, n, x):
+    return Dist(x**(S(2)*p)*(c + d/x**S(2))**p*(a**S(2)*x**S(2) + S(1))**(-p), Int(u*x**(-S(2)*p)*(a**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
+
+
+def replacement5461(a, c, n, b, x):
+    return Int((-I*a*c - I*b*c*x + S(1))**(I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(-I*n/S(2)), x)
+
+
+def replacement5462(a, c, n, m, b, x):
+    return Dist(S(4)*I**(-m)*b**(-m + S(-1))*c**(-m + S(-1))/n, Subst(Int(x**(-S(2)*I/n)*(S(1) + x**(-S(2)*I/n))**(-m + S(-2))*(-I*a*c + S(1) - x**(-S(2)*I/n)*(I*a*c + S(1)))**m, x), x, (-I*c*(a + b*x) + S(1))**(I*n/S(2))*(I*c*(a + b*x) + S(1))**(-I*n/S(2))), x)
+
+
+def replacement5463(d, a, c, n, m, b, e, x):
+    return Int((d + e*x)**m*(-I*a*c - I*b*c*x + S(1))**(I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(-I*n/S(2)), x)
+
+
+def replacement5464(u, d, p, a, c, n, b, e, x):
+    return Dist((c/(a**S(2) + S(1)))**p, Int(u*(-I*a - I*b*x + S(1))**(I*n/S(2) + p)*(I*a + I*b*x + S(1))**(-I*n/S(2) + p), x), x)
+
+
+def replacement5465(u, d, p, a, c, n, b, e, x):
+    return Dist((c + d*x + e*x**S(2))**p*(a**S(2) + S(2)*a*b*x + b**S(2)*x**S(2) + S(1))**(-p), Int(u*(a**S(2) + S(2)*a*b*x + b**S(2)*x**S(2) + S(1))**p*exp(n*ArcTan(a*x)), x), x)
+
+
+def replacement5466(u, a, c, n, b, x):
+    return Int(u*exp(n*acot(a/c + b*x/c)), x)
+
+
+def replacement5467(u, a, n, x):
+    return Dist((S(-1))**(I*n/S(2)), Int(u*exp(-n*ArcTan(a*x)), x), x)
+
+
+def replacement5468(n, a, x):
+    return -Subst(Int((S(1) - I*x/a)**(I*n/S(2) + S(1)/2)*(S(1) + I*x/a)**(-I*n/S(2) + S(1)/2)/(x**S(2)*sqrt(S(1) + x**S(2)/a**S(2))), x), x, S(1)/x)
+
+
+def replacement5469(n, a, m, x):
+    return -Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2) + S(1)/2)*(S(1) + I*x/a)**(-I*n/S(2) + S(1)/2)/sqrt(S(1) + x**S(2)/a**S(2)), x), x, S(1)/x)
+
+
+def replacement5470(n, a, x):
+    return -Subst(Int((S(1) - I*x/a)**(I*n/S(2))*(S(1) + I*x/a)**(-I*n/S(2))/x**S(2), x), x, S(1)/x)
+
+
+def replacement5471(n, a, m, x):
+    return -Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(n/S(2))*(S(1) + I*x/a)**(-n/S(2)), x), x, S(1)/x)
+
+
+def replacement5472(n, a, m, x):
+    return -Dist(x**m*(S(1)/x)**m, Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2) + S(1)/2)*(S(1) + I*x/a)**(-I*n/S(2) + S(1)/2)/sqrt(S(1) + x**S(2)/a**S(2)), x), x, S(1)/x), x)
+
+
+def replacement5473(n, a, m, x):
+    return -Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(n/S(2))*(S(1) + I*x/a)**(-n/S(2)), x), x, S(1)/x)
+
+
+def replacement5474(u, d, p, a, c, n, x):
+    return Dist(d**p, Int(u*x**p*(c/(d*x) + S(1))**p*exp(n*acot(a*x)), x), x)
+
+
+def replacement5475(u, d, p, a, c, n, x):
+    return Dist(x**(-p)*(c + d*x)**p*(c/(d*x) + S(1))**(-p), Int(u*x**p*(c/(d*x) + S(1))**p*exp(n*acot(a*x)), x), x)
+
+
+def replacement5476(d, p, a, c, n, x):
+    return -Dist(c**p, Subst(Int((S(1) - I*x/a)**(I*n/S(2))*(S(1) + I*x/a)**(-I*n/S(2))*(S(1) + d*x/c)**p/x**S(2), x), x, S(1)/x), x)
+
+
+def replacement5477(d, p, a, c, n, m, x):
+    return -Dist(c**p, Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2))*(S(1) + I*x/a)**(-I*n/S(2))*(S(1) + d*x/c)**p, x), x, S(1)/x), x)
+
+
+def replacement5478(d, p, a, c, n, x):
+    return Dist((S(1) + d/(c*x))**(-p)*(c + d/x)**p, Int((S(1) + d/(c*x))**p*exp(n*acot(a*x)), x), x)
+
+
+def replacement5479(d, p, a, c, n, m, x):
+    return -Dist(c**p*x**m*(S(1)/x)**m, Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2))*(S(1) + I*x/a)**(-I*n/S(2))*(S(1) + d*x/c)**p, x), x, S(1)/x), x)
+
+
+def replacement5480(u, d, p, a, c, n, x):
+    return Dist((S(1) + d/(c*x))**(-p)*(c + d/x)**p, Int(u*(S(1) + d/(c*x))**p*exp(n*acot(a*x)), x), x)
+
+
+def replacement5481(d, a, c, n, x):
+    return -Simp(exp(n*acot(a*x))/(a*c*n), x)
+
+
+def replacement5482(d, a, c, n, x):
+    return -Simp((-a*x + n)*exp(n*acot(a*x))/(a*c*sqrt(c + d*x**S(2))*(n**S(2) + S(1))), x)
+
+
+def replacement5483(d, p, a, c, n, x):
+    return Dist(S(2)*(p + S(1))*(S(2)*p + S(3))/(c*(n**S(2) + S(4)*(p + S(1))**S(2))), Int((c + d*x**S(2))**(p + S(1))*exp(n*acot(a*x)), x), x) - Simp((c + d*x**S(2))**(p + S(1))*(S(2)*a*x*(p + S(1)) + n)*exp(n*acot(a*x))/(a*c*(n**S(2) + S(4)*(p + S(1))**S(2))), x)
+
+
+def replacement5484(d, a, c, n, x):
+    return -Simp((a*n*x + S(1))*exp(n*acot(a*x))/(a**S(2)*c*sqrt(c + d*x**S(2))*(n**S(2) + S(1))), x)
+
+
+def replacement5485(d, p, a, c, n, x):
+    return Dist(n*(S(2)*p + S(3))/(a*c*(n**S(2) + S(4)*(p + S(1))**S(2))), Int((c + d*x**S(2))**(p + S(1))*exp(n*acot(a*x)), x), x) + Simp((c + d*x**S(2))**(p + S(1))*(-a*n*x + S(2)*p + S(2))*exp(n*acot(a*x))/(a**S(2)*c*(n**S(2) + S(4)*(p + S(1))**S(2))), x)
+
+
+def replacement5486(d, p, a, c, n, x):
+    return Simp((c + d*x**S(2))**(p + S(1))*(S(2)*a*x*(p + S(1)) + n)*exp(n*acot(a*x))/(a**S(3)*c*n**S(2)*(n**S(2) + S(1))), x)
+
+
+def replacement5487(d, p, a, c, n, x):
+    return Dist((n**S(2) - S(2)*p + S(-2))/(a**S(2)*c*(n**S(2) + S(4)*(p + S(1))**S(2))), Int((c + d*x**S(2))**(p + S(1))*exp(n*acot(a*x)), x), x) + Simp((c + d*x**S(2))**(p + S(1))*(S(2)*a*x*(p + S(1)) + n)*exp(n*acot(a*x))/(a**S(3)*c*(n**S(2) + S(4)*(p + S(1))**S(2))), x)
+
+
+def replacement5488(d, p, a, c, n, m, x):
+    return -Dist(a**(-m + S(-1))*c**p, Subst(Int((S(1)/tan(x))**(m + S(2)*p + S(2))*exp(n*x)*cos(x)**(-S(2)*p + S(-2)), x), x, acot(a*x)), x)
+
+
+def replacement5489(u, d, p, a, c, n, x):
+    return Dist(d**p, Int(u*x**(S(2)*p)*(S(1) + S(1)/(a**S(2)*x**S(2)))**p*exp(n*acot(a*x)), x), x)
+
+
+def replacement5490(u, d, p, a, c, n, x):
+    return Dist(x**(-S(2)*p)*(S(1) + S(1)/(a**S(2)*x**S(2)))**(-p)*(c + d*x**S(2))**p, Int(u*x**(S(2)*p)*(S(1) + S(1)/(a**S(2)*x**S(2)))**p*exp(n*acot(a*x)), x), x)
+
+
+def replacement5491(u, d, p, a, c, n, x):
+    return Dist(c**p*(I*a)**(-S(2)*p), Int(u*x**(-S(2)*p)*(I*a*x + S(-1))**(-I*n/S(2) + p)*(I*a*x + S(1))**(I*n/S(2) + p), x), x)
+
+
+def replacement5492(d, p, a, c, n, x):
+    return -Dist(c**p, Subst(Int((S(1) - I*x/a)**(I*n/S(2) + p)*(S(1) + I*x/a)**(-I*n/S(2) + p)/x**S(2), x), x, S(1)/x), x)
+
+
+def replacement5493(d, p, a, c, n, m, x):
+    return -Dist(c**p, Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2) + p)*(S(1) + I*x/a)**(-I*n/S(2) + p), x), x, S(1)/x), x)
+
+
+def replacement5494(d, p, a, c, n, m, x):
+    return -Dist(c**p*x**m*(S(1)/x)**m, Subst(Int(x**(-m + S(-2))*(S(1) - I*x/a)**(I*n/S(2) + p)*(S(1) + I*x/a)**(-I*n/S(2) + p), x), x, S(1)/x), x)
+
+
+def replacement5495(u, d, p, a, c, n, x):
+    return Dist((S(1) + S(1)/(a**S(2)*x**S(2)))**(-p)*(c + d/x**S(2))**p, Int(u*(S(1) + S(1)/(a**S(2)*x**S(2)))**p*exp(n*acot(a*x)), x), x)
+
+
+def replacement5496(u, a, c, n, b, x):
+    return Dist((S(-1))**(I*n/S(2)), Int(u*exp(-n*ArcTan(c*(a + b*x))), x), x)
+
+
+def replacement5497(a, c, n, b, x):
+    return Dist((I*c*(a + b*x))**(I*n/S(2))*(S(1) - I/(c*(a + b*x)))**(I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(-I*n/S(2)), Int((I*a*c + I*b*c*x + S(-1))**(-I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(I*n/S(2)), x), x)
+
+
+def replacement5498(a, c, n, m, b, x):
+    return Dist(S(4)*I**(-m)*b**(-m + S(-1))*c**(-m + S(-1))/n, Subst(Int(x**(-S(2)*I/n)*(S(-1) + x**(-S(2)*I/n))**(-m + S(-2))*(I*a*c + S(1) + x**(-S(2)*I/n)*(-I*a*c + S(1)))**m, x), x, (S(1) - I/(c*(a + b*x)))**(I*n/S(2))*(S(1) + I/(c*(a + b*x)))**(-I*n/S(2))), x)
+
+
+def replacement5499(d, a, c, n, m, b, e, x):
+    return Dist((I*c*(a + b*x))**(I*n/S(2))*(S(1) - I/(c*(a + b*x)))**(I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(-I*n/S(2)), Int((d + e*x)**m*(I*a*c + I*b*c*x + S(-1))**(-I*n/S(2))*(I*a*c + I*b*c*x + S(1))**(I*n/S(2)), x), x)
+
+
+def replacement5500(u, d, p, a, c, n, b, e, x):
+    return Dist((c/(a**S(2) + S(1)))**p*((I*a + I*b*x + S(1))/(I*a + I*b*x))**(I*n/S(2))*((I*a + I*b*x)/(I*a + I*b*x + S(1)))**(I*n/S(2))*(-I*a - I*b*x + S(1))**(I*n/S(2))*(I*a + I*b*x + S(-1))**(-I*n/S(2)), Int(u*(-I*a - I*b*x + S(1))**(-I*n/S(2) + p)*(I*a + I*b*x + S(1))**(I*n/S(2) + p), x), x)
+
+
+def replacement5501(u, d, p, a, c, n, b, e, x):
+    return Dist((c + d*x + e*x**S(2))**p*(a**S(2) + S(2)*a*b*x + b**S(2)*x**S(2) + S(1))**(-p), Int(u*(a**S(2) + S(2)*a*b*x + b**S(2)*x**S(2) + S(1))**p*exp(n*acot(a*x)), x), x)
+
+
+def replacement5502(u, a, c, n, b, x):
+    return Int(u*exp(n*ArcTan(a/c + b*x/c)), x)
+
+
+def replacement5503(d, a, c, n, b, x):
+    return Dist(S(1)/d, Subst(Int((a + b*ArcTan(x))**n, x), x, c + d*x), x)
+
+
+def replacement5504(d, a, c, n, b, x):
+    return Dist(S(1)/d, Subst(Int((a + b*acot(x))**n, x), x, c + d*x), x)
+
+
+def replacement5505(d, a, c, n, b, x):
+    return Int((a + b*ArcTan(c + d*x))**n, x)
+
+
+def replacement5506(d, a, c, n, b, x):
+    return Int((a + b*acot(c + d*x))**n, x)
+
+
+def replacement5507(d, a, c, n, m, b, f, e, x):
+    return Dist(S(1)/d, Subst(Int((a + b*ArcTan(x))**n*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
+
+
+def replacement5508(d, a, c, n, m, b, f, e, x):
+    return Dist(S(1)/d, Subst(Int((a + b*acot(x))**n*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
+
+
+def replacement5509(d, a, c, n, m, b, f, e, x):
+    return Int((a + b*ArcTan(c + d*x))**n*(e + f*x)**m, x)
+
+
+def replacement5510(d, a, c, n, m, b, f, e, x):
+    return Int((a + b*acot(c + d*x))**n*(e + f*x)**m, x)
+
+
+def replacement5511(d, p, B, a, c, A, n, C, b, x):
+    return Dist(S(1)/d, Subst(Int((a + b*ArcTan(x))**n*(C*x**S(2)/d**S(2) + C/d**S(2))**p, x), x, c + d*x), x)
+
+
+def replacement5512(d, p, B, a, c, A, n, C, b, x):
+    return Dist(S(1)/d, Subst(Int((a + b*acot(x))**n*(C*x**S(2)/d**S(2) + C/d**S(2))**p, x), x, c + d*x), x)
+
+
+def replacement5513(d, p, B, a, c, A, n, C, m, b, f, e, x):
+    return Dist(S(1)/d, Subst(Int((a + b*ArcTan(x))**n*(C*x**S(2)/d**S(2) + C/d**S(2))**p*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
+
+
+def replacement5514(d, p, B, a, c, A, n, C, m, b, f, e, x):
+    return Dist(S(1)/d, Subst(Int((a + b*acot(x))**n*(C*x**S(2)/d**S(2) + C/d**S(2))**p*(f*x/d + (-c*f + d*e)/d)**m, x), x, c + d*x), x)
+
+
+def replacement5515(d, a, c, n, b, x):
+    return Dist(I/S(2), Int(log(-I*a - I*b*x + S(1))/(c + d*x**n), x), x) - Dist(I/S(2), Int(log(I*a + I*b*x + S(1))/(c + d*x**n), x), x)
+
+
+def replacement5516(d, a, c, n, b, x):
+    return Dist(I/S(2), Int(log((a + b*x - I)/(a + b*x))/(c + d*x**n), x), x) - Dist(I/S(2), Int(log((a + b*x + I)/(a + b*x))/(c + d*x**n), x), x)
+
+
+def replacement5517(d, a, c, n, b, x):
+    return Int(ArcTan(a + b*x)/(c + d*x**n), x)
+
+
+def replacement5518(d, a, c, n, b, x):
+    return Int(acot(a + b*x)/(c + d*x**n), x)
+
+
+def replacement5519(n, a, x, b):
+    return -Dist(b*n, Int(x**n/(a**S(2) + S(2)*a*b*x**n + b**S(2)*x**(S(2)*n) + S(1)), x), x) + Simp(x*ArcTan(a + b*x**n), x)
+
+
+def replacement5520(n, a, x, b):
+    return Dist(b*n, Int(x**n/(a**S(2) + S(2)*a*b*x**n + b**S(2)*x**(S(2)*n) + S(1)), x), x) + Simp(x*acot(a + b*x**n), x)
+
+
+def replacement5521(n, a, x, b):
+    return Dist(I/S(2), Int(log(-I*a - I*b*x**n + S(1))/x, x), x) - Dist(I/S(2), Int(log(I*a + I*b*x**n + S(1))/x, x), x)
+
+
+def replacement5522(n, a, x, b):
+    return Dist(I/S(2), Int(log(S(1) - I/(a + b*x**n))/x, x), x) - Dist(I/S(2), Int(log(S(1) + I/(a + b*x**n))/x, x), x)
+
+
+def replacement5523(a, n, m, b, x):
+    return -Dist(b*n/(m + S(1)), Int(x**(m + n)/(a**S(2) + S(2)*a*b*x**n + b**S(2)*x**(S(2)*n) + S(1)), x), x) + Simp(x**(m + S(1))*ArcTan(a + b*x**n)/(m + S(1)), x)
+
+
+def replacement5524(a, n, m, b, x):
+    return Dist(b*n/(m + S(1)), Int(x**(m + n)/(a**S(2) + S(2)*a*b*x**n + b**S(2)*x**(S(2)*n) + S(1)), x), x) + Simp(x**(m + S(1))*acot(a + b*x**n)/(m + S(1)), x)
+
+
+def replacement5525(d, a, c, b, f, x):
+    return Dist(I/S(2), Int(log(-I*a - I*b*f**(c + d*x) + S(1)), x), x) - Dist(I/S(2), Int(log(I*a + I*b*f**(c + d*x) + S(1)), x), x)
+
+
+def replacement5526(d, a, c, b, f, x):
+    return Dist(I/S(2), Int(log(S(1) - I/(a + b*f**(c + d*x))), x), x) - Dist(I/S(2), Int(log(S(1) + I/(a + b*f**(c + d*x))), x), x)
+
+
+def replacement5527(d, a, c, m, b, f, x):
+    return Dist(I/S(2), Int(x**m*log(-I*a - I*b*f**(c + d*x) + S(1)), x), x) - Dist(I/S(2), Int(x**m*log(I*a + I*b*f**(c + d*x) + S(1)), x), x)
+
+
+def replacement5528(d, a, c, m, b, f, x):
+    return Dist(I/S(2), Int(x**m*log(S(1) - I/(a + b*f**(c + d*x))), x), x) - Dist(I/S(2), Int(x**m*log(S(1) + I/(a + b*f**(c + d*x))), x), x)
+
+
+def replacement5529(u, a, c, n, m, b, x):
+    return Int(u*acot(a/c + b*x**n/c)**m, x)
+
+
+def replacement5530(u, a, c, n, m, b, x):
+    return Int(u*ArcTan(a/c + b*x**n/c)**m, x)
+
+
+def replacement5531(a, x, c, b):
+    return Simp(log(ArcTan(c*x/sqrt(a + b*x**S(2))))/c, x)
+
+
+def replacement5532(a, x, c, b):
+    return -Simp(log(acot(c*x/sqrt(a + b*x**S(2))))/c, x)
+
+
+def replacement5533(a, c, m, b, x):
+    return Simp(ArcTan(c*x/sqrt(a + b*x**S(2)))**(m + S(1))/(c*(m + S(1))), x)
+
+
+def replacement5534(a, c, m, b, x):
+    return -Simp(acot(c*x/sqrt(a + b*x**S(2)))**(m + S(1))/(c*(m + S(1))), x)
+
+
+def replacement5535(d, a, c, m, b, e, x):
+    return Dist(sqrt(a + b*x**S(2))/sqrt(d + e*x**S(2)), Int(ArcTan(c*x/sqrt(a + b*x**S(2)))**m/sqrt(a + b*x**S(2)), x), x)
+
+
+def replacement5536(d, a, c, m, b, e, x):
+    return Dist(sqrt(a + b*x**S(2))/sqrt(d + e*x**S(2)), Int(acot(c*x/sqrt(a + b*x**S(2)))**m/sqrt(a + b*x**S(2)), x), x)
+
+
+def replacement5537(u, w, s, v, x):
+    return Dist(S(1)/2, Int(u*ArcTan(v), x), x) + Dist(Pi*s/S(4), Int(u, x), x)
+
+
+def replacement5538(u, w, s, v, x):
+    return -Dist(S(1)/2, Int(u*ArcTan(v), x), x) + Dist(Pi*s/S(4), Int(u, x), x)
+
+
+def With5539(n, x, u, v):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5539(x, u, v, n):
-
+    try:
         tmp = InverseFunctionOfLinear(u, x)
-        # rubi.append(5539)
-        return Dist((-Discriminant(v, x)/(S(4)*Coefficient(v, x, S(2))))**n/Coefficient(Part(tmp, S(1)), x, S(1)), Subst(Int(SimplifyIntegrand((S(1)/cos(x))**(S(2)*n + S(2))*SubstForInverseFunction(u, tmp, x), x), x), x, tmp), x)
-
-def With5540(x, u, v, n):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            tmp = InverseFunctionOfLinear(u, x)
-            res = And(Not(FalseQ(tmp)), SameQ(Head(tmp), ArcCot), ZeroQ(D(v, x)**S(2) + Discriminant(v, x)*Part(tmp, S(1))**S(2)))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = And(Not(FalseQ(tmp)), SameQ(Head(tmp), ArcTan), ZeroQ(D(v, x)**S(2) + Discriminant(v, x)*Part(tmp, S(1))**S(2)))
+    except (TypeError, AttributeError):
         return False
-def replacement5540(x, u, v, n):
+    if res:
+        return True
+    return False
 
+
+def replacement5539(n, x, u, v):
+
+    tmp = InverseFunctionOfLinear(u, x)
+    return Dist((-Discriminant(v, x)/(S(4)*Coefficient(v, x, S(2))))**n/Coefficient(Part(tmp, S(1)), x, S(1)), Subst(Int(SimplifyIntegrand((S(1)/cos(x))**(S(2)*n + S(2))*SubstForInverseFunction(u, tmp, x), x), x), x, tmp), x)
+
+
+def With5540(n, x, u, v):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         tmp = InverseFunctionOfLinear(u, x)
-        # rubi.append(5540)
-        return -Dist((-Discriminant(v, x)/(S(4)*Coefficient(v, x, S(2))))**n/Coefficient(Part(tmp, S(1)), x, S(1)), Subst(Int(SimplifyIntegrand((S(1)/sin(x))**(S(2)*n + S(2))*SubstForInverseFunction(u, tmp, x), x), x), x, tmp), x)
-def replacement5541(c, x, d, a, b):
-        # rubi.append(5541)
-        return -Dist(I*b, Int(x/(c*exp(S(2)*I*a + S(2)*I*b*x) + c + I*d), x), x) + Simp(x*ArcTan(c + d*tan(a + b*x)), x)
-def replacement5542(c, x, d, a, b):
-        # rubi.append(5542)
-        return Dist(I*b, Int(x/(c*exp(S(2)*I*a + S(2)*I*b*x) + c + I*d), x), x) + Simp(x*acot(c + d*tan(a + b*x)), x)
-def replacement5543(c, x, d, a, b):
-        # rubi.append(5543)
-        return -Dist(I*b, Int(x/(-c*exp(S(2)*I*a + S(2)*I*b*x) + c - I*d), x), x) + Simp(x*ArcTan(c + d/tan(a + b*x)), x)
-def replacement5544(c, x, d, a, b):
-        # rubi.append(5544)
-        return Dist(I*b, Int(x/(-c*exp(S(2)*I*a + S(2)*I*b*x) + c - I*d), x), x) + Simp(x*acot(c + d/tan(a + b*x)), x)
-def replacement5545(c, x, d, a, b):
-        # rubi.append(5545)
-        return Dist(b*(-I*c - d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c + d + (-I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) - Dist(b*(I*c + d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(I*c - d + (I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp(x*ArcTan(c + d*tan(a + b*x)), x)
-def replacement5546(c, x, d, a, b):
-        # rubi.append(5546)
-        return -Dist(b*(-I*c - d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c + d + (-I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Dist(b*(I*c + d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(I*c - d + (I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp(x*acot(c + d*tan(a + b*x)), x)
-def replacement5547(c, x, d, a, b):
-        # rubi.append(5547)
-        return -Dist(b*(-I*c + d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c - d - (-I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Dist(b*(I*c - d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(I*c + d - (I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp(x*ArcTan(c + d/tan(a + b*x)), x)
-def replacement5548(c, x, d, a, b):
-        # rubi.append(5548)
-        return Dist(b*(-I*c + d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c - d - (-I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) - Dist(b*(I*c - d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(I*c + d - (I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp(x*acot(c + d/tan(a + b*x)), x)
-def replacement5549(c, m, x, d, f, a, e, b):
-        # rubi.append(5549)
-        return -Dist(I*b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(c*exp(S(2)*I*a + S(2)*I*b*x) + c + I*d), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d*tan(a + b*x))/(f*(m + S(1))), x)
-def replacement5550(c, m, x, d, f, a, e, b):
-        # rubi.append(5550)
-        return Dist(I*b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(c*exp(S(2)*I*a + S(2)*I*b*x) + c + I*d), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d*tan(a + b*x))/(f*(m + S(1))), x)
-def replacement5551(c, m, x, d, f, a, e, b):
-        # rubi.append(5551)
-        return -Dist(I*b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(-c*exp(S(2)*I*a + S(2)*I*b*x) + c - I*d), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d/tan(a + b*x))/(f*(m + S(1))), x)
-def replacement5552(c, m, x, d, f, a, e, b):
-        # rubi.append(5552)
-        return Dist(I*b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(-c*exp(S(2)*I*a + S(2)*I*b*x) + c - I*d), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d/tan(a + b*x))/(f*(m + S(1))), x)
-def replacement5553(c, m, x, d, f, a, e, b):
-        # rubi.append(5553)
-        return Dist(b*(-I*c - d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c + d + (-I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) - Dist(b*(I*c + d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(I*c - d + (I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d*tan(a + b*x))/(f*(m + S(1))), x)
-def replacement5554(c, m, x, d, f, a, e, b):
-        # rubi.append(5554)
-        return -Dist(b*(-I*c - d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c + d + (-I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Dist(b*(I*c + d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(I*c - d + (I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d*tan(a + b*x))/(f*(m + S(1))), x)
-def replacement5555(c, m, x, d, f, a, e, b):
-        # rubi.append(5555)
-        return -Dist(b*(-I*c + d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c - d - (-I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Dist(b*(I*c - d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(I*c + d - (I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d/tan(a + b*x))/(f*(m + S(1))), x)
-def replacement5556(c, m, x, d, f, a, e, b):
-        # rubi.append(5556)
-        return Dist(b*(-I*c + d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c - d - (-I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) - Dist(b*(I*c - d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(I*c + d - (I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d/tan(a + b*x))/(f*(m + S(1))), x)
-def replacement5557(x, a, b):
-        # rubi.append(5557)
-        return -Dist(b, Int(x/cosh(S(2)*a + S(2)*b*x), x), x) + Simp(x*ArcTan(tanh(a + b*x)), x)
-def replacement5558(x, a, b):
-        # rubi.append(5558)
-        return Dist(b, Int(x/cosh(S(2)*a + S(2)*b*x), x), x) + Simp(x*acot(tanh(a + b*x)), x)
-def replacement5559(x, a, b):
-        # rubi.append(5559)
-        return Dist(b, Int(x/cosh(S(2)*a + S(2)*b*x), x), x) + Simp(x*ArcTan(S(1)/tanh(a + b*x)), x)
-def replacement5560(x, a, b):
-        # rubi.append(5560)
-        return -Dist(b, Int(x/cosh(S(2)*a + S(2)*b*x), x), x) + Simp(x*acot(S(1)/tanh(a + b*x)), x)
-def replacement5561(m, x, f, a, e, b):
-        # rubi.append(5561)
-        return -Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/cosh(S(2)*a + S(2)*b*x), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5562(m, x, f, a, e, b):
-        # rubi.append(5562)
-        return Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/cosh(S(2)*a + S(2)*b*x), x), x) + Simp((e + f*x)**(m + S(1))*acot(tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5563(m, x, f, a, e, b):
-        # rubi.append(5563)
-        return Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/cosh(S(2)*a + S(2)*b*x), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(S(1)/tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5564(m, x, f, a, e, b):
-        # rubi.append(5564)
-        return -Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/cosh(S(2)*a + S(2)*b*x), x), x) + Simp((e + f*x)**(m + S(1))*acot(S(1)/tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5565(c, x, d, a, b):
-        # rubi.append(5565)
-        return -Dist(b, Int(x/(c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp(x*ArcTan(c + d*tanh(a + b*x)), x)
-def replacement5566(c, x, d, a, b):
-        # rubi.append(5566)
-        return Dist(b, Int(x/(c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp(x*acot(c + d*tanh(a + b*x)), x)
-def replacement5567(c, x, d, a, b):
-        # rubi.append(5567)
-        return -Dist(b, Int(x/(-c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp(x*ArcTan(c + d/tanh(a + b*x)), x)
-def replacement5568(c, x, d, a, b):
-        # rubi.append(5568)
-        return Dist(b, Int(x/(-c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp(x*acot(c + d/tanh(a + b*x)), x)
-def replacement5569(c, x, d, a, b):
-        # rubi.append(5569)
-        return Dist(I*b*(-c - d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(-c + d + (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) - Dist(I*b*(c + d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(c - d + (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp(x*ArcTan(c + d*tanh(a + b*x)), x)
-def replacement5570(c, x, d, a, b):
-        # rubi.append(5570)
-        return -Dist(I*b*(-c - d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(-c + d + (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Dist(I*b*(c + d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(c - d + (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp(x*acot(c + d*tanh(a + b*x)), x)
-def replacement5571(c, x, d, a, b):
-        # rubi.append(5571)
-        return -Dist(I*b*(-c - d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(-c + d - (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Dist(I*b*(c + d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(c - d - (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp(x*ArcTan(c + d/tanh(a + b*x)), x)
-def replacement5572(c, x, d, a, b):
-        # rubi.append(5572)
-        return Dist(I*b*(-c - d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(-c + d - (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) - Dist(I*b*(c + d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(c - d - (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp(x*acot(c + d/tanh(a + b*x)), x)
-def replacement5573(c, m, x, d, f, a, e, b):
-        # rubi.append(5573)
-        return -Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d*tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5574(c, m, x, d, f, a, e, b):
-        # rubi.append(5574)
-        return Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d*tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5575(c, m, x, d, f, a, e, b):
-        # rubi.append(5575)
-        return -Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(-c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d/tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5576(c, m, x, d, f, a, e, b):
-        # rubi.append(5576)
-        return Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(-c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d/tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5577(c, m, x, d, f, a, e, b):
-        # rubi.append(5577)
-        return Dist(I*b*(-c - d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(-c + d + (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) - Dist(I*b*(c + d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(c - d + (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d*tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5578(c, m, x, d, f, a, e, b):
-        # rubi.append(5578)
-        return -Dist(I*b*(-c - d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(-c + d + (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Dist(I*b*(c + d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(c - d + (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d*tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5579(c, m, x, d, f, a, e, b):
-        # rubi.append(5579)
-        return -Dist(I*b*(-c - d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(-c + d - (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Dist(I*b*(c + d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(c - d - (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d/tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5580(c, m, x, d, f, a, e, b):
-        # rubi.append(5580)
-        return Dist(I*b*(-c - d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(-c + d - (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) - Dist(I*b*(c + d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(c - d - (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d/tanh(a + b*x))/(f*(m + S(1))), x)
-def replacement5581(x, u):
-        # rubi.append(5581)
-        return -Int(SimplifyIntegrand(x*D(u, x)/(u**S(2) + S(1)), x), x) + Simp(x*ArcTan(u), x)
-def replacement5582(x, u):
-        # rubi.append(5582)
-        return Int(SimplifyIntegrand(x*D(u, x)/(u**S(2) + S(1)), x), x) + Simp(x*acot(u), x)
-def replacement5583(c, m, x, d, u, a, b):
-        # rubi.append(5583)
-        return -Dist(b/(d*(m + S(1))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/(u**S(2) + S(1)), x), x), x) + Simp((a + b*ArcTan(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
-def replacement5584(c, m, x, d, u, a, b):
-        # rubi.append(5584)
-        return Dist(b/(d*(m + S(1))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/(u**S(2) + S(1)), x), x), x) + Simp((a + b*acot(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
-
-def With5585(x, v, u, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        w = IntHide(v, x)
-        if InverseFunctionFreeQ(w, x):
-            return True
+        res = And(Not(FalseQ(tmp)), SameQ(Head(tmp), ArcCot), ZeroQ(D(v, x)**S(2) + Discriminant(v, x)*Part(tmp, S(1))**S(2)))
+    except (TypeError, AttributeError):
         return False
-def replacement5585(x, v, u, a, b):
+    if res:
+        return True
+    return False
 
-        w = IntHide(v, x)
-        # rubi.append(5585)
-        return -Dist(b, Int(SimplifyIntegrand(w*D(u, x)/(u**S(2) + S(1)), x), x), x) + Dist(a + b*ArcTan(u), w, x)
 
-def With5586(x, v, u, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        w = IntHide(v, x)
-        if InverseFunctionFreeQ(w, x):
-            return True
+def replacement5540(n, x, u, v):
+
+    tmp = InverseFunctionOfLinear(u, x)
+    return -Dist((-Discriminant(v, x)/(S(4)*Coefficient(v, x, S(2))))**n/Coefficient(Part(tmp, S(1)), x, S(1)), Subst(Int(SimplifyIntegrand((S(1)/sin(x))**(S(2)*n + S(2))*SubstForInverseFunction(u, tmp, x), x), x), x, tmp), x)
+
+
+def replacement5541(d, a, c, b, x):
+    return -Dist(I*b, Int(x/(c*exp(S(2)*I*a + S(2)*I*b*x) + c + I*d), x), x) + Simp(x*ArcTan(c + d*tan(a + b*x)), x)
+
+
+def replacement5542(d, a, c, b, x):
+    return Dist(I*b, Int(x/(c*exp(S(2)*I*a + S(2)*I*b*x) + c + I*d), x), x) + Simp(x*acot(c + d*tan(a + b*x)), x)
+
+
+def replacement5543(d, a, c, b, x):
+    return -Dist(I*b, Int(x/(-c*exp(S(2)*I*a + S(2)*I*b*x) + c - I*d), x), x) + Simp(x*ArcTan(c + d/tan(a + b*x)), x)
+
+
+def replacement5544(d, a, c, b, x):
+    return Dist(I*b, Int(x/(-c*exp(S(2)*I*a + S(2)*I*b*x) + c - I*d), x), x) + Simp(x*acot(c + d/tan(a + b*x)), x)
+
+
+def replacement5545(d, a, c, b, x):
+    return Dist(b*(-I*c - d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c + d + (-I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) - Dist(b*(I*c + d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(I*c - d + (I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp(x*ArcTan(c + d*tan(a + b*x)), x)
+
+
+def replacement5546(d, a, c, b, x):
+    return -Dist(b*(-I*c - d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c + d + (-I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Dist(b*(I*c + d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(I*c - d + (I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp(x*acot(c + d*tan(a + b*x)), x)
+
+
+def replacement5547(d, a, c, b, x):
+    return -Dist(b*(-I*c + d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c - d - (-I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Dist(b*(I*c - d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(I*c + d - (I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp(x*ArcTan(c + d/tan(a + b*x)), x)
+
+
+def replacement5548(d, a, c, b, x):
+    return Dist(b*(-I*c + d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c - d - (-I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) - Dist(b*(I*c - d + S(1)), Int(x*exp(S(2)*I*a + S(2)*I*b*x)/(I*c + d - (I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp(x*acot(c + d/tan(a + b*x)), x)
+
+
+def replacement5549(d, a, c, m, b, f, e, x):
+    return -Dist(I*b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(c*exp(S(2)*I*a + S(2)*I*b*x) + c + I*d), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d*tan(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5550(d, a, c, m, b, f, e, x):
+    return Dist(I*b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(c*exp(S(2)*I*a + S(2)*I*b*x) + c + I*d), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d*tan(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5551(d, a, c, m, b, f, e, x):
+    return -Dist(I*b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(-c*exp(S(2)*I*a + S(2)*I*b*x) + c - I*d), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d/tan(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5552(d, a, c, m, b, f, e, x):
+    return Dist(I*b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(-c*exp(S(2)*I*a + S(2)*I*b*x) + c - I*d), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d/tan(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5553(d, a, c, m, b, f, e, x):
+    return Dist(b*(-I*c - d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c + d + (-I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) - Dist(b*(I*c + d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(I*c - d + (I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d*tan(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5554(d, a, c, m, b, f, e, x):
+    return -Dist(b*(-I*c - d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c + d + (-I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Dist(b*(I*c + d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(I*c - d + (I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d*tan(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5555(d, a, c, m, b, f, e, x):
+    return -Dist(b*(-I*c + d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c - d - (-I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Dist(b*(I*c - d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(I*c + d - (I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d/tan(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5556(d, a, c, m, b, f, e, x):
+    return Dist(b*(-I*c + d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(-I*c - d - (-I*c + d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) - Dist(b*(I*c - d + S(1))/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*I*a + S(2)*I*b*x)/(I*c + d - (I*c - d + S(1))*exp(S(2)*I*a + S(2)*I*b*x) + S(1)), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d/tan(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5557(a, x, b):
+    return -Dist(b, Int(x/cosh(S(2)*a + S(2)*b*x), x), x) + Simp(x*ArcTan(tanh(a + b*x)), x)
+
+
+def replacement5558(a, x, b):
+    return Dist(b, Int(x/cosh(S(2)*a + S(2)*b*x), x), x) + Simp(x*acot(tanh(a + b*x)), x)
+
+
+def replacement5559(a, x, b):
+    return Dist(b, Int(x/cosh(S(2)*a + S(2)*b*x), x), x) + Simp(x*ArcTan(S(1)/tanh(a + b*x)), x)
+
+
+def replacement5560(a, x, b):
+    return -Dist(b, Int(x/cosh(S(2)*a + S(2)*b*x), x), x) + Simp(x*acot(S(1)/tanh(a + b*x)), x)
+
+
+def replacement5561(a, m, b, f, e, x):
+    return -Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/cosh(S(2)*a + S(2)*b*x), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5562(a, m, b, f, e, x):
+    return Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/cosh(S(2)*a + S(2)*b*x), x), x) + Simp((e + f*x)**(m + S(1))*acot(tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5563(a, m, b, f, e, x):
+    return Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/cosh(S(2)*a + S(2)*b*x), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(S(1)/tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5564(a, m, b, f, e, x):
+    return -Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/cosh(S(2)*a + S(2)*b*x), x), x) + Simp((e + f*x)**(m + S(1))*acot(S(1)/tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5565(d, a, c, b, x):
+    return -Dist(b, Int(x/(c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp(x*ArcTan(c + d*tanh(a + b*x)), x)
+
+
+def replacement5566(d, a, c, b, x):
+    return Dist(b, Int(x/(c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp(x*acot(c + d*tanh(a + b*x)), x)
+
+
+def replacement5567(d, a, c, b, x):
+    return -Dist(b, Int(x/(-c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp(x*ArcTan(c + d/tanh(a + b*x)), x)
+
+
+def replacement5568(d, a, c, b, x):
+    return Dist(b, Int(x/(-c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp(x*acot(c + d/tanh(a + b*x)), x)
+
+
+def replacement5569(d, a, c, b, x):
+    return Dist(I*b*(-c - d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(-c + d + (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) - Dist(I*b*(c + d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(c - d + (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp(x*ArcTan(c + d*tanh(a + b*x)), x)
+
+
+def replacement5570(d, a, c, b, x):
+    return -Dist(I*b*(-c - d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(-c + d + (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Dist(I*b*(c + d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(c - d + (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp(x*acot(c + d*tanh(a + b*x)), x)
+
+
+def replacement5571(d, a, c, b, x):
+    return -Dist(I*b*(-c - d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(-c + d - (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Dist(I*b*(c + d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(c - d - (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp(x*ArcTan(c + d/tanh(a + b*x)), x)
+
+
+def replacement5572(d, a, c, b, x):
+    return Dist(I*b*(-c - d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(-c + d - (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) - Dist(I*b*(c + d + I), Int(x*exp(S(2)*a + S(2)*b*x)/(c - d - (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp(x*acot(c + d/tanh(a + b*x)), x)
+
+
+def replacement5573(d, a, c, m, b, f, e, x):
+    return -Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d*tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5574(d, a, c, m, b, f, e, x):
+    return Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d*tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5575(d, a, c, m, b, f, e, x):
+    return -Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(-c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d/tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5576(d, a, c, m, b, f, e, x):
+    return Dist(b/(f*(m + S(1))), Int((e + f*x)**(m + S(1))/(-c*exp(S(2)*a + S(2)*b*x) + c - d), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d/tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5577(d, a, c, m, b, f, e, x):
+    return Dist(I*b*(-c - d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(-c + d + (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) - Dist(I*b*(c + d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(c - d + (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d*tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5578(d, a, c, m, b, f, e, x):
+    return -Dist(I*b*(-c - d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(-c + d + (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Dist(I*b*(c + d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(c - d + (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d*tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5579(d, a, c, m, b, f, e, x):
+    return -Dist(I*b*(-c - d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(-c + d - (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Dist(I*b*(c + d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(c - d - (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp((e + f*x)**(m + S(1))*ArcTan(c + d/tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5580(d, a, c, m, b, f, e, x):
+    return Dist(I*b*(-c - d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(-c + d - (-c - d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) - Dist(I*b*(c + d + I)/(f*(m + S(1))), Int((e + f*x)**(m + S(1))*exp(S(2)*a + S(2)*b*x)/(c - d - (c + d + I)*exp(S(2)*a + S(2)*b*x) + I), x), x) + Simp((e + f*x)**(m + S(1))*acot(c + d/tanh(a + b*x))/(f*(m + S(1))), x)
+
+
+def replacement5581(u, x):
+    return -Int(SimplifyIntegrand(x*D(u, x)/(u**S(2) + S(1)), x), x) + Simp(x*ArcTan(u), x)
+
+
+def replacement5582(u, x):
+    return Int(SimplifyIntegrand(x*D(u, x)/(u**S(2) + S(1)), x), x) + Simp(x*acot(u), x)
+
+
+def replacement5583(u, d, a, c, m, b, x):
+    return -Dist(b/(d*(m + S(1))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/(u**S(2) + S(1)), x), x), x) + Simp((a + b*ArcTan(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
+
+
+def replacement5584(u, d, a, c, m, b, x):
+    return Dist(b/(d*(m + S(1))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/(u**S(2) + S(1)), x), x), x) + Simp((a + b*acot(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
+
+
+def With5585(u, a, v, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5586(x, v, u, a, b):
+    w = IntHide(v, x)
+    if InverseFunctionFreeQ(w, x):
+        return True
+    return False
 
-        w = IntHide(v, x)
-        # rubi.append(5586)
-        return Dist(b, Int(SimplifyIntegrand(w*D(u, x)/(u**S(2) + S(1)), x), x), x) + Dist(a + b*acot(u), w, x)
-def replacement5587(x, v, w, a, b):
-        # rubi.append(5587)
-        return Dist(I/S(2), Int(log(w)*log(-I*v + S(1))/(a + b*x), x), x) - Dist(I/S(2), Int(log(w)*log(I*v + S(1))/(a + b*x), x), x)
-def replacement5588(x, w, v):
-        # rubi.append(5588)
-        return -Int(SimplifyIntegrand(x*ArcTan(v)*D(w, x)/w, x), x) - Int(SimplifyIntegrand(x*D(v, x)*log(w)/(v**S(2) + S(1)), x), x) + Simp(x*ArcTan(v)*log(w), x)
-def replacement5589(x, w, v):
-        # rubi.append(5589)
-        return -Int(SimplifyIntegrand(x*D(w, x)*acot(v)/w, x), x) + Int(SimplifyIntegrand(x*D(v, x)*log(w)/(v**S(2) + S(1)), x), x) + Simp(x*log(w)*acot(v), x)
 
-def With5590(x, u, w, v):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        z = IntHide(u, x)
-        if InverseFunctionFreeQ(z, x):
-            return True
+def replacement5585(u, a, v, b, x):
+
+    w = IntHide(v, x)
+    return -Dist(b, Int(SimplifyIntegrand(w*D(u, x)/(u**S(2) + S(1)), x), x), x) + Dist(a + b*ArcTan(u), w, x)
+
+
+def With5586(u, a, v, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5590(x, u, w, v):
+    w = IntHide(v, x)
+    if InverseFunctionFreeQ(w, x):
+        return True
+    return False
 
-        z = IntHide(u, x)
-        # rubi.append(5590)
-        return Dist(ArcTan(v)*log(w), z, x) - Int(SimplifyIntegrand(z*ArcTan(v)*D(w, x)/w, x), x) - Int(SimplifyIntegrand(z*D(v, x)*log(w)/(v**S(2) + S(1)), x), x)
 
-def With5591(x, u, w, v):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        z = IntHide(u, x)
-        if InverseFunctionFreeQ(z, x):
-            return True
+def replacement5586(u, a, v, b, x):
+
+    w = IntHide(v, x)
+    return Dist(b, Int(SimplifyIntegrand(w*D(u, x)/(u**S(2) + S(1)), x), x), x) + Dist(a + b*acot(u), w, x)
+
+
+def replacement5587(a, w, v, b, x):
+    return Dist(I/S(2), Int(log(w)*log(-I*v + S(1))/(a + b*x), x), x) - Dist(I/S(2), Int(log(w)*log(I*v + S(1))/(a + b*x), x), x)
+
+
+def replacement5588(v, w, x):
+    return -Int(SimplifyIntegrand(x*ArcTan(v)*D(w, x)/w, x), x) - Int(SimplifyIntegrand(x*D(v, x)*log(w)/(v**S(2) + S(1)), x), x) + Simp(x*ArcTan(v)*log(w), x)
+
+
+def replacement5589(v, w, x):
+    return -Int(SimplifyIntegrand(x*D(w, x)*acot(v)/w, x), x) + Int(SimplifyIntegrand(x*D(v, x)*log(w)/(v**S(2) + S(1)), x), x) + Simp(x*log(w)*acot(v), x)
+
+
+def With5590(v, w, x, u):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5591(x, u, w, v):
+    z = IntHide(u, x)
+    if InverseFunctionFreeQ(z, x):
+        return True
+    return False
 
-        z = IntHide(u, x)
-        # rubi.append(5591)
-        return Dist(log(w)*acot(v), z, x) - Int(SimplifyIntegrand(z*D(w, x)*acot(v)/w, x), x) + Int(SimplifyIntegrand(z*D(v, x)*log(w)/(v**S(2) + S(1)), x), x)
+
+def replacement5590(v, w, x, u):
+
+    z = IntHide(u, x)
+    return Dist(ArcTan(v)*log(w), z, x) - Int(SimplifyIntegrand(z*ArcTan(v)*D(w, x)/w, x), x) - Int(SimplifyIntegrand(z*D(v, x)*log(w)/(v**S(2) + S(1)), x), x)
+
+
+def With5591(v, w, x, u):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    z = IntHide(u, x)
+    if InverseFunctionFreeQ(z, x):
+        return True
+    return False
+
+
+def replacement5591(v, w, x, u):
+
+    z = IntHide(u, x)
+    return Dist(log(w)*acot(v), z, x) - Int(SimplifyIntegrand(z*D(w, x)*acot(v)/w, x), x) + Int(SimplifyIntegrand(z*D(v, x)*log(w)/(v**S(2) + S(1)), x), x)
+
+
 def replacement5592(c, x):
-        # rubi.append(5592)
-        return -Dist(S(1)/c, Int(S(1)/(x*sqrt(S(1) - S(1)/(c**S(2)*x**S(2)))), x), x) + Simp(x*asec(c*x), x)
+    return -Dist(S(1)/c, Int(S(1)/(x*sqrt(S(1) - S(1)/(c**S(2)*x**S(2)))), x), x) + Simp(x*asec(c*x), x)
+
+
 def replacement5593(c, x):
-        # rubi.append(5593)
-        return Dist(S(1)/c, Int(S(1)/(x*sqrt(S(1) - S(1)/(c**S(2)*x**S(2)))), x), x) + Simp(x*acsc(c*x), x)
-def replacement5594(c, n, x, a, b):
-        # rubi.append(5594)
-        return Dist(S(1)/c, Subst(Int((a + b*x)**n*tan(x)/cos(x), x), x, asec(c*x)), x)
-def replacement5595(c, n, x, a, b):
-        # rubi.append(5595)
-        return -Dist(S(1)/c, Subst(Int((a + b*x)**n/(sin(x)*tan(x)), x), x, acsc(c*x)), x)
-def replacement5596(c, a, x, b):
-        # rubi.append(5596)
-        return -Subst(Int((a + b*acos(x/c))/x, x), x, S(1)/x)
-def replacement5597(c, a, x, b):
-        # rubi.append(5597)
-        return -Subst(Int((a + b*asin(x/c))/x, x), x, S(1)/x)
-def replacement5598(c, m, x, a, b):
-        # rubi.append(5598)
-        return -Dist(b/(c*(m + S(1))), Int(x**(m + S(-1))/sqrt(S(1) - S(1)/(c**S(2)*x**S(2))), x), x) + Simp(x**(m + S(1))*(a + b*asec(c*x))/(m + S(1)), x)
-def replacement5599(c, m, x, a, b):
-        # rubi.append(5599)
-        return Dist(b/(c*(m + S(1))), Int(x**(m + S(-1))/sqrt(S(1) - S(1)/(c**S(2)*x**S(2))), x), x) + Simp(x**(m + S(1))*(a + b*acsc(c*x))/(m + S(1)), x)
-def replacement5600(c, m, n, x, a, b):
-        # rubi.append(5600)
-        return Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*(S(1)/cos(x))**(m + S(1))*tan(x), x), x, asec(c*x)), x)
-def replacement5601(c, m, n, x, a, b):
-        # rubi.append(5601)
-        return -Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*(S(1)/sin(x))**(m + S(1))/tan(x), x), x, acsc(c*x)), x)
-def replacement5602(c, m, n, x, a, b):
-        # rubi.append(5602)
-        return Int(x**m*(a + b*asec(c*x))**n, x)
-def replacement5603(c, m, n, x, a, b):
-        # rubi.append(5603)
-        return Int(x**m*(a + b*acsc(c*x))**n, x)
+    return Dist(S(1)/c, Int(S(1)/(x*sqrt(S(1) - S(1)/(c**S(2)*x**S(2)))), x), x) + Simp(x*acsc(c*x), x)
 
-def With5604(c, x, d, a, p, e, b):
-        u = IntHide((d + e*x**S(2))**p, x)
-        # rubi.append(5604)
-        return -Dist(b*c*x/sqrt(c**S(2)*x**S(2)), Int(SimplifyIntegrand(u/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x), x) + Dist(a + b*asec(c*x), u, x)
 
-def With5605(c, x, d, a, p, e, b):
-        u = IntHide((d + e*x**S(2))**p, x)
-        # rubi.append(5605)
-        return Dist(b*c*x/sqrt(c**S(2)*x**S(2)), Int(SimplifyIntegrand(u/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x), x) + Dist(a + b*acsc(c*x), u, x)
-def replacement5606(c, n, x, d, a, p, e, b):
-        # rubi.append(5606)
-        return -Subst(Int(x**(-S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x)
-def replacement5607(c, n, x, d, a, p, e, b):
-        # rubi.append(5607)
-        return -Subst(Int(x**(-S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x)
-def replacement5608(c, n, x, d, a, p, e, b):
-        # rubi.append(5608)
-        return -Dist(sqrt(x**S(2))/x, Subst(Int(x**(-S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
-def replacement5609(c, n, x, d, a, p, e, b):
-        # rubi.append(5609)
-        return -Dist(sqrt(x**S(2))/x, Subst(Int(x**(-S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
-def replacement5610(c, n, x, d, a, p, e, b):
-        # rubi.append(5610)
-        return -Dist(sqrt(d + e*x**S(2))/(x*sqrt(d/x**S(2) + e)), Subst(Int(x**(-S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
-def replacement5611(c, n, x, d, a, p, e, b):
-        # rubi.append(5611)
-        return -Dist(sqrt(d + e*x**S(2))/(x*sqrt(d/x**S(2) + e)), Subst(Int(x**(-S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
-def replacement5612(c, n, x, d, a, p, e, b):
-        # rubi.append(5612)
-        return Int((a + b*asec(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5613(c, n, x, d, a, p, e, b):
-        # rubi.append(5613)
-        return Int((a + b*acsc(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5614(c, x, d, a, p, e, b):
-        # rubi.append(5614)
-        return -Dist(b*c*x/(S(2)*e*sqrt(c**S(2)*x**S(2))*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x) + Simp((a + b*asec(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
-def replacement5615(c, x, d, a, p, e, b):
-        # rubi.append(5615)
-        return Dist(b*c*x/(S(2)*e*sqrt(c**S(2)*x**S(2))*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x) + Simp((a + b*acsc(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+def replacement5594(a, c, n, b, x):
+    return Dist(S(1)/c, Subst(Int((a + b*x)**n*tan(x)/cos(x), x), x, asec(c*x)), x)
 
-def With5616(c, m, x, d, a, p, e, b):
-        u = IntHide(x**m*(d + e*x**S(2))**p, x)
-        # rubi.append(5616)
-        return -Dist(b*c*x/sqrt(c**S(2)*x**S(2)), Int(SimplifyIntegrand(u/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x), x) + Dist(a + b*asec(c*x), u, x)
 
-def With5617(c, m, x, d, a, p, e, b):
-        u = IntHide(x**m*(d + e*x**S(2))**p, x)
-        # rubi.append(5617)
-        return Dist(b*c*x/sqrt(c**S(2)*x**S(2)), Int(SimplifyIntegrand(u/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x), x) + Dist(a + b*acsc(c*x), u, x)
-def replacement5618(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5618)
-        return -Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x)
-def replacement5619(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5619)
-        return -Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x)
-def replacement5620(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5620)
-        return -Dist(sqrt(x**S(2))/x, Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
-def replacement5621(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5621)
-        return -Dist(sqrt(x**S(2))/x, Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
-def replacement5622(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5622)
-        return -Dist(sqrt(d + e*x**S(2))/(x*sqrt(d/x**S(2) + e)), Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
-def replacement5623(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5623)
-        return -Dist(sqrt(d + e*x**S(2))/(x*sqrt(d/x**S(2) + e)), Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
-def replacement5624(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5624)
-        return Int(x**m*(a + b*asec(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5625(c, m, n, x, d, a, p, e, b):
-        # rubi.append(5625)
-        return Int(x**m*(a + b*acsc(c*x))**n*(d + e*x**S(2))**p, x)
-def replacement5626(x, a, b):
-        # rubi.append(5626)
-        return -Int(S(1)/(sqrt(S(1) - S(1)/(a + b*x)**S(2))*(a + b*x)), x) + Simp((a + b*x)*asec(a + b*x)/b, x)
-def replacement5627(x, a, b):
-        # rubi.append(5627)
-        return Int(S(1)/(sqrt(S(1) - S(1)/(a + b*x)**S(2))*(a + b*x)), x) + Simp((a + b*x)*acsc(a + b*x)/b, x)
-def replacement5628(x, a, n, b):
-        # rubi.append(5628)
-        return Dist(S(1)/b, Subst(Int(x**n*tan(x)/cos(x), x), x, asec(a + b*x)), x)
-def replacement5629(x, a, n, b):
-        # rubi.append(5629)
-        return -Dist(S(1)/b, Subst(Int(x**n/(sin(x)*tan(x)), x), x, acsc(a + b*x)), x)
-def replacement5630(x, a, b):
-        # rubi.append(5630)
-        return -Simp(I*PolyLog(S(2), (S(1) - sqrt(S(1) - a**S(2)))*exp(I*asec(a + b*x))/a), x) - Simp(I*PolyLog(S(2), (sqrt(S(1) - a**S(2)) + S(1))*exp(I*asec(a + b*x))/a), x) + Simp(I*PolyLog(S(2), -exp(S(2)*I*asec(a + b*x)))/S(2), x) + Simp(log(S(1) - (S(1) - sqrt(S(1) - a**S(2)))*exp(I*asec(a + b*x))/a)*asec(a + b*x), x) + Simp(log(S(1) - (sqrt(S(1) - a**S(2)) + S(1))*exp(I*asec(a + b*x))/a)*asec(a + b*x), x) - Simp(log(exp(S(2)*I*asec(a + b*x)) + S(1))*asec(a + b*x), x)
-def replacement5631(x, a, b):
-        # rubi.append(5631)
-        return Simp(I*PolyLog(S(2), I*(S(1) - sqrt(S(1) - a**S(2)))*exp(-I*acsc(a + b*x))/a), x) + Simp(I*PolyLog(S(2), I*(sqrt(S(1) - a**S(2)) + S(1))*exp(-I*acsc(a + b*x))/a), x) + Simp(I*PolyLog(S(2), exp(S(2)*I*acsc(a + b*x)))/S(2), x) + Simp(I*acsc(a + b*x)**S(2), x) + Simp(log(S(1) - I*(S(1) - sqrt(S(1) - a**S(2)))*exp(-I*acsc(a + b*x))/a)*acsc(a + b*x), x) + Simp(log(S(1) - I*(sqrt(S(1) - a**S(2)) + S(1))*exp(-I*acsc(a + b*x))/a)*acsc(a + b*x), x) - Simp(log(S(1) - exp(S(2)*I*acsc(a + b*x)))*acsc(a + b*x), x)
-def replacement5632(x, a, m, b):
-        # rubi.append(5632)
-        return -Dist(b**(-m + S(-1))/(m + S(1)), Subst(Int(x**(-m + S(-1))*((-a*x)**(m + S(1)) - (-a*x + S(1))**(m + S(1)))/sqrt(S(1) - x**S(2)), x), x, S(1)/(a + b*x)), x) - Simp(b**(-m + S(-1))*(-b**(m + S(1))*x**(m + S(1)) + (-a)**(m + S(1)))*asec(a + b*x)/(m + S(1)), x)
-def replacement5633(x, a, m, b):
-        # rubi.append(5633)
-        return Dist(b**(-m + S(-1))/(m + S(1)), Subst(Int(x**(-m + S(-1))*((-a*x)**(m + S(1)) - (-a*x + S(1))**(m + S(1)))/sqrt(S(1) - x**S(2)), x), x, S(1)/(a + b*x)), x) - Simp(b**(-m + S(-1))*(-b**(m + S(1))*x**(m + S(1)) + (-a)**(m + S(1)))*acsc(a + b*x)/(m + S(1)), x)
-def replacement5634(m, n, x, a, b):
-        # rubi.append(5634)
-        return Dist(b**(-m + S(-1)), Subst(Int(x**n*(-a + S(1)/cos(x))**m*tan(x)/cos(x), x), x, asec(a + b*x)), x)
-def replacement5635(m, n, x, a, b):
-        # rubi.append(5635)
-        return -Dist(b**(-m + S(-1)), Subst(Int(x**n*(-a + S(1)/sin(x))**m/(sin(x)*tan(x)), x), x, acsc(a + b*x)), x)
-def replacement5636(c, m, n, x, u, a, b):
-        # rubi.append(5636)
-        return Int(u*acos(a/c + b*x**n/c)**m, x)
-def replacement5637(c, m, n, x, u, a, b):
-        # rubi.append(5637)
-        return Int(u*asin(a/c + b*x**n/c)**m, x)
-def replacement5638(c, n, x, u, f, a, b):
-        # rubi.append(5638)
-        return Dist(S(1)/b, Subst(Int(f**(c*x**n)*ReplaceAll(u, Rule(x, -a/b + S(1)/(b*cos(x))))*tan(x)/cos(x), x), x, asec(a + b*x)), x)
-def replacement5639(c, n, x, u, f, a, b):
-        # rubi.append(5639)
-        return -Dist(S(1)/b, Subst(Int(f**(c*x**n)*ReplaceAll(u, Rule(x, -a/b + S(1)/(b*sin(x))))/(sin(x)*tan(x)), x), x, acsc(a + b*x)), x)
-def replacement5640(x, u):
-        # rubi.append(5640)
-        return -Dist(u/sqrt(u**S(2)), Int(SimplifyIntegrand(x*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Simp(x*asec(u), x)
-def replacement5641(x, u):
-        # rubi.append(5641)
-        return Dist(u/sqrt(u**S(2)), Int(SimplifyIntegrand(x*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Simp(x*acsc(u), x)
-def replacement5642(c, m, x, d, u, a, b):
-        # rubi.append(5642)
-        return -Dist(b*u/(d*(m + S(1))*sqrt(u**S(2))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Simp((a + b*asec(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
-def replacement5643(c, m, x, d, u, a, b):
-        # rubi.append(5643)
-        return Dist(b*u/(d*(m + S(1))*sqrt(u**S(2))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Simp((a + b*acsc(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
+def replacement5595(a, c, n, b, x):
+    return -Dist(S(1)/c, Subst(Int((a + b*x)**n/(sin(x)*tan(x)), x), x, acsc(c*x)), x)
 
-def With5644(x, v, u, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        w = IntHide(v, x)
-        if InverseFunctionFreeQ(w, x):
-            return True
+
+def replacement5596(a, x, c, b):
+    return -Subst(Int((a + b*acos(x/c))/x, x), x, S(1)/x)
+
+
+def replacement5597(a, x, c, b):
+    return -Subst(Int((a + b*asin(x/c))/x, x), x, S(1)/x)
+
+
+def replacement5598(a, c, m, b, x):
+    return -Dist(b/(c*(m + S(1))), Int(x**(m + S(-1))/sqrt(S(1) - S(1)/(c**S(2)*x**S(2))), x), x) + Simp(x**(m + S(1))*(a + b*asec(c*x))/(m + S(1)), x)
+
+
+def replacement5599(a, c, m, b, x):
+    return Dist(b/(c*(m + S(1))), Int(x**(m + S(-1))/sqrt(S(1) - S(1)/(c**S(2)*x**S(2))), x), x) + Simp(x**(m + S(1))*(a + b*acsc(c*x))/(m + S(1)), x)
+
+
+def replacement5600(a, c, n, m, b, x):
+    return Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*(S(1)/cos(x))**(m + S(1))*tan(x), x), x, asec(c*x)), x)
+
+
+def replacement5601(a, c, n, m, b, x):
+    return -Dist(c**(-m + S(-1)), Subst(Int((a + b*x)**n*(S(1)/sin(x))**(m + S(1))/tan(x), x), x, acsc(c*x)), x)
+
+
+def replacement5602(a, c, n, m, b, x):
+    return Int(x**m*(a + b*asec(c*x))**n, x)
+
+
+def replacement5603(a, c, n, m, b, x):
+    return Int(x**m*(a + b*acsc(c*x))**n, x)
+
+
+def With5604(d, p, a, c, b, e, x):
+    u = IntHide((d + e*x**S(2))**p, x)
+    return -Dist(b*c*x/sqrt(c**S(2)*x**S(2)), Int(SimplifyIntegrand(u/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x), x) + Dist(a + b*asec(c*x), u, x)
+
+
+def With5605(d, p, a, c, b, e, x):
+    u = IntHide((d + e*x**S(2))**p, x)
+    return Dist(b*c*x/sqrt(c**S(2)*x**S(2)), Int(SimplifyIntegrand(u/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x), x) + Dist(a + b*acsc(c*x), u, x)
+
+
+def replacement5606(d, p, a, c, n, b, e, x):
+    return -Subst(Int(x**(-S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x)
+
+
+def replacement5607(d, p, a, c, n, b, e, x):
+    return -Subst(Int(x**(-S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x)
+
+
+def replacement5608(d, p, a, c, n, b, e, x):
+    return -Dist(sqrt(x**S(2))/x, Subst(Int(x**(-S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
+
+
+def replacement5609(d, p, a, c, n, b, e, x):
+    return -Dist(sqrt(x**S(2))/x, Subst(Int(x**(-S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
+
+
+def replacement5610(d, p, a, c, n, b, e, x):
+    return -Dist(sqrt(d + e*x**S(2))/(x*sqrt(d/x**S(2) + e)), Subst(Int(x**(-S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
+
+
+def replacement5611(d, p, a, c, n, b, e, x):
+    return -Dist(sqrt(d + e*x**S(2))/(x*sqrt(d/x**S(2) + e)), Subst(Int(x**(-S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
+
+
+def replacement5612(d, p, a, c, n, b, e, x):
+    return Int((a + b*asec(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5613(d, p, a, c, n, b, e, x):
+    return Int((a + b*acsc(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5614(d, p, a, c, b, e, x):
+    return -Dist(b*c*x/(S(2)*e*sqrt(c**S(2)*x**S(2))*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x) + Simp((a + b*asec(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def replacement5615(d, p, a, c, b, e, x):
+    return Dist(b*c*x/(S(2)*e*sqrt(c**S(2)*x**S(2))*(p + S(1))), Int((d + e*x**S(2))**(p + S(1))/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x) + Simp((a + b*acsc(c*x))*(d + e*x**S(2))**(p + S(1))/(S(2)*e*(p + S(1))), x)
+
+
+def With5616(d, p, a, c, m, b, e, x):
+    u = IntHide(x**m*(d + e*x**S(2))**p, x)
+    return -Dist(b*c*x/sqrt(c**S(2)*x**S(2)), Int(SimplifyIntegrand(u/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x), x) + Dist(a + b*asec(c*x), u, x)
+
+
+def With5617(d, p, a, c, m, b, e, x):
+    u = IntHide(x**m*(d + e*x**S(2))**p, x)
+    return Dist(b*c*x/sqrt(c**S(2)*x**S(2)), Int(SimplifyIntegrand(u/(x*sqrt(c**S(2)*x**S(2) + S(-1))), x), x), x) + Dist(a + b*acsc(c*x), u, x)
+
+
+def replacement5618(d, p, a, c, n, m, b, e, x):
+    return -Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x)
+
+
+def replacement5619(d, p, a, c, n, m, b, e, x):
+    return -Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x)
+
+
+def replacement5620(d, p, a, c, n, m, b, e, x):
+    return -Dist(sqrt(x**S(2))/x, Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
+
+
+def replacement5621(d, p, a, c, n, m, b, e, x):
+    return -Dist(sqrt(x**S(2))/x, Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
+
+
+def replacement5622(d, p, a, c, n, m, b, e, x):
+    return -Dist(sqrt(d + e*x**S(2))/(x*sqrt(d/x**S(2) + e)), Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*acos(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
+
+
+def replacement5623(d, p, a, c, n, m, b, e, x):
+    return -Dist(sqrt(d + e*x**S(2))/(x*sqrt(d/x**S(2) + e)), Subst(Int(x**(-m - S(2)*p + S(-2))*(a + b*asin(x/c))**n*(d*x**S(2) + e)**p, x), x, S(1)/x), x)
+
+
+def replacement5624(d, p, a, c, n, m, b, e, x):
+    return Int(x**m*(a + b*asec(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5625(d, p, a, c, n, m, b, e, x):
+    return Int(x**m*(a + b*acsc(c*x))**n*(d + e*x**S(2))**p, x)
+
+
+def replacement5626(a, x, b):
+    return -Int(S(1)/(sqrt(S(1) - S(1)/(a + b*x)**S(2))*(a + b*x)), x) + Simp((a + b*x)*asec(a + b*x)/b, x)
+
+
+def replacement5627(a, x, b):
+    return Int(S(1)/(sqrt(S(1) - S(1)/(a + b*x)**S(2))*(a + b*x)), x) + Simp((a + b*x)*acsc(a + b*x)/b, x)
+
+
+def replacement5628(n, a, x, b):
+    return Dist(S(1)/b, Subst(Int(x**n*tan(x)/cos(x), x), x, asec(a + b*x)), x)
+
+
+def replacement5629(n, a, x, b):
+    return -Dist(S(1)/b, Subst(Int(x**n/(sin(x)*tan(x)), x), x, acsc(a + b*x)), x)
+
+
+def replacement5630(a, x, b):
+    return -Simp(I*PolyLog(S(2), (S(1) - sqrt(S(1) - a**S(2)))*exp(I*asec(a + b*x))/a), x) - Simp(I*PolyLog(S(2), (sqrt(S(1) - a**S(2)) + S(1))*exp(I*asec(a + b*x))/a), x) + Simp(I*PolyLog(S(2), -exp(S(2)*I*asec(a + b*x)))/S(2), x) + Simp(log(S(1) - (S(1) - sqrt(S(1) - a**S(2)))*exp(I*asec(a + b*x))/a)*asec(a + b*x), x) + Simp(log(S(1) - (sqrt(S(1) - a**S(2)) + S(1))*exp(I*asec(a + b*x))/a)*asec(a + b*x), x) - Simp(log(exp(S(2)*I*asec(a + b*x)) + S(1))*asec(a + b*x), x)
+
+
+def replacement5631(a, x, b):
+    return Simp(I*PolyLog(S(2), I*(S(1) - sqrt(S(1) - a**S(2)))*exp(-I*acsc(a + b*x))/a), x) + Simp(I*PolyLog(S(2), I*(sqrt(S(1) - a**S(2)) + S(1))*exp(-I*acsc(a + b*x))/a), x) + Simp(I*PolyLog(S(2), exp(S(2)*I*acsc(a + b*x)))/S(2), x) + Simp(I*acsc(a + b*x)**S(2), x) + Simp(log(S(1) - I*(S(1) - sqrt(S(1) - a**S(2)))*exp(-I*acsc(a + b*x))/a)*acsc(a + b*x), x) + Simp(log(S(1) - I*(sqrt(S(1) - a**S(2)) + S(1))*exp(-I*acsc(a + b*x))/a)*acsc(a + b*x), x) - Simp(log(S(1) - exp(S(2)*I*acsc(a + b*x)))*acsc(a + b*x), x)
+
+
+def replacement5632(a, x, m, b):
+    return -Dist(b**(-m + S(-1))/(m + S(1)), Subst(Int(x**(-m + S(-1))*((-a*x)**(m + S(1)) - (-a*x + S(1))**(m + S(1)))/sqrt(S(1) - x**S(2)), x), x, S(1)/(a + b*x)), x) - Simp(b**(-m + S(-1))*(-b**(m + S(1))*x**(m + S(1)) + (-a)**(m + S(1)))*asec(a + b*x)/(m + S(1)), x)
+
+
+def replacement5633(a, x, m, b):
+    return Dist(b**(-m + S(-1))/(m + S(1)), Subst(Int(x**(-m + S(-1))*((-a*x)**(m + S(1)) - (-a*x + S(1))**(m + S(1)))/sqrt(S(1) - x**S(2)), x), x, S(1)/(a + b*x)), x) - Simp(b**(-m + S(-1))*(-b**(m + S(1))*x**(m + S(1)) + (-a)**(m + S(1)))*acsc(a + b*x)/(m + S(1)), x)
+
+
+def replacement5634(a, n, m, b, x):
+    return Dist(b**(-m + S(-1)), Subst(Int(x**n*(-a + S(1)/cos(x))**m*tan(x)/cos(x), x), x, asec(a + b*x)), x)
+
+
+def replacement5635(a, n, m, b, x):
+    return -Dist(b**(-m + S(-1)), Subst(Int(x**n*(-a + S(1)/sin(x))**m/(sin(x)*tan(x)), x), x, acsc(a + b*x)), x)
+
+
+def replacement5636(u, a, c, n, m, b, x):
+    return Int(u*acos(a/c + b*x**n/c)**m, x)
+
+
+def replacement5637(u, a, c, n, m, b, x):
+    return Int(u*asin(a/c + b*x**n/c)**m, x)
+
+
+def replacement5638(u, a, c, n, b, f, x):
+    return Dist(S(1)/b, Subst(Int(f**(c*x**n)*ReplaceAll(u, Rule(x, -a/b + S(1)/(b*cos(x))))*tan(x)/cos(x), x), x, asec(a + b*x)), x)
+
+
+def replacement5639(u, a, c, n, b, f, x):
+    return -Dist(S(1)/b, Subst(Int(f**(c*x**n)*ReplaceAll(u, Rule(x, -a/b + S(1)/(b*sin(x))))/(sin(x)*tan(x)), x), x, acsc(a + b*x)), x)
+
+
+def replacement5640(u, x):
+    return -Dist(u/sqrt(u**S(2)), Int(SimplifyIntegrand(x*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Simp(x*asec(u), x)
+
+
+def replacement5641(u, x):
+    return Dist(u/sqrt(u**S(2)), Int(SimplifyIntegrand(x*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Simp(x*acsc(u), x)
+
+
+def replacement5642(u, d, a, c, m, b, x):
+    return -Dist(b*u/(d*(m + S(1))*sqrt(u**S(2))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Simp((a + b*asec(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
+
+
+def replacement5643(u, d, a, c, m, b, x):
+    return Dist(b*u/(d*(m + S(1))*sqrt(u**S(2))), Int(SimplifyIntegrand((c + d*x)**(m + S(1))*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Simp((a + b*acsc(u))*(c + d*x)**(m + S(1))/(d*(m + S(1))), x)
+
+
+def With5644(u, a, v, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5644(x, v, u, a, b):
+    w = IntHide(v, x)
+    if InverseFunctionFreeQ(w, x):
+        return True
+    return False
 
-        w = IntHide(v, x)
-        # rubi.append(5644)
-        return -Dist(b*u/sqrt(u**S(2)), Int(SimplifyIntegrand(w*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Dist(a + b*asec(u), w, x)
 
-def With5645(x, v, u, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        w = IntHide(v, x)
-        if InverseFunctionFreeQ(w, x):
-            return True
+def replacement5644(u, a, v, b, x):
+
+    w = IntHide(v, x)
+    return -Dist(b*u/sqrt(u**S(2)), Int(SimplifyIntegrand(w*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Dist(a + b*asec(u), w, x)
+
+
+def With5645(u, a, v, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement5645(x, v, u, a, b):
+    w = IntHide(v, x)
+    if InverseFunctionFreeQ(w, x):
+        return True
+    return False
 
-        w = IntHide(v, x)
-        # rubi.append(5645)
-        return Dist(b*u/sqrt(u**S(2)), Int(SimplifyIntegrand(w*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Dist(a + b*acsc(u), w, x)
+
+def replacement5645(u, a, v, b, x):
+
+    w = IntHide(v, x)
+    return Dist(b*u/sqrt(u**S(2)), Int(SimplifyIntegrand(w*D(u, x)/(u*sqrt(u**S(2) + S(-1))), x), x), x) + Dist(a + b*acsc(u), w, x)

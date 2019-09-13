@@ -175,17 +175,17 @@ def get_default_values(parsed, default_values={}):
     if not isinstance(parsed, list):
         return default_values
 
-    if parsed[0] == "Times": # find Default arguments for "Times"
+    if parsed[0] == "Times":  # find Default arguments for "Times"
         for i in parsed[1:]:
             if i[0] == "Optional":
                 default_values[(i[1][1])] = 1
 
-    if parsed[0] == "Plus": # find Default arguments for "Plus"
+    if parsed[0] == "Plus":  # find Default arguments for "Plus"
         for i in parsed[1:]:
             if i[0] == "Optional":
                 default_values[(i[1][1])] = 0
 
-    if parsed[0] == "Power": # find Default arguments for "Power"
+    if parsed[0] == "Power":  # find Default arguments for "Power"
         for i in parsed[1:]:
             if i[0] == "Optional":
                 default_values[(i[1][1])] = 1
@@ -263,10 +263,10 @@ def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
                 cons_dict[cons_name] = r
             else:
                 c = ''
-                cons_name = next(key for key, value in cons_dict.items() if value == r)
+                cons_name = next(key for key, value in sorted(cons_dict.items()) if value == r)
 
         elif isinstance(i, list):
-            s = list(set(get_free_symbols(i, symbols)))
+            s = sorted(set(get_free_symbols(i, symbols)))
             s = ', '.join(s)
             r = '        return FreeQ({}, {})'.format(generate_sympy_from_parsed(i), x)
             if r not in cons_dict.values():
@@ -304,7 +304,7 @@ def generate_sympy_from_parsed(parsed, wild=False, symbols=[], replace_Int=False
     out = ""
 
     if not isinstance(parsed, list):
-        try: #return S(number) if parsed is Number
+        try:  # return S(number) if parsed is Number
             float(parsed)
             return "S({})".format(parsed)
         except:
@@ -366,7 +366,7 @@ def set_matchq_in_constraint(a, cons_index):
             optional = get_default_values(s, {})
             r = generate_sympy_from_parsed(s, replace_Int=True)
             r, free_symbols = add_wildcards(r, optional=optional)
-            free_symbols = list(set(free_symbols)) #remove common symbols
+            free_symbols = sorted(set(free_symbols))  # remove common symbols
             r = sympify(r, locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not")})
             pattern = r.args[1].args[0]
             cons = r.args[1].args[1]
@@ -391,7 +391,7 @@ def set_matchq_in_constraint(a, cons_index):
 
 def _divide_constriant(s, symbols, cons_index, cons_dict, cons_import):
     # Creates a CustomConstraint of the form `CustomConstraint(lambda a, x: FreeQ(a, x))`
-    lambda_symbols = list(set(get_free_symbols(s, symbols, [])))
+    lambda_symbols = sorted(set(get_free_symbols(s, symbols, [])))
     r = generate_sympy_from_parsed(s)
     r = sympify(r, locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not")})
     if r.has(Function('MatchQ')):
@@ -420,7 +420,8 @@ def _divide_constriant(s, symbols, cons_index, cons_dict, cons_import):
 
     if cons_name not in cons_import:
         cons_import.append(cons_name)
-    return (cons_name, cons, cons_index)
+    return cons_name, cons, cons_index
+
 
 def divide_constraint(s, symbols, cons_index, cons_dict, cons_import):
     """
@@ -446,13 +447,13 @@ def divide_constraint(s, symbols, cons_index, cons_dict, cons_import):
         cons += a[1]
         cons_index = a[2]
 
-
     r = ['']
     for i in result:
         if i != '':
             r.append(i)
 
     return ', '.join(r),cons, cons_index
+
 
 def setWC(string):
     """
@@ -465,12 +466,13 @@ def setWC(string):
 
     return string
 
+
 def process_return_type(a1, L):
     """
     Functions like `Set`, `With` and `CompoundExpression` has to be taken special care.
     """
     a = sympify(a1[1])
-    x  =''
+    x = ''
     processed = False
     return_value = ''
     if type(a) == Function('With') or type(a) == Function('Module'):
@@ -483,7 +485,7 @@ def process_return_type(a1, L):
                 return_value = i
                 processed = True
 
-            elif type(i) ==Function('CompoundExpression'):
+            elif type(i) == Function('CompoundExpression'):
                 return_value = i.args[-1]
                 processed = True
 
@@ -492,6 +494,7 @@ def process_return_type(a1, L):
                 return_value = '{}({}, {})'.format(i.func, C.args[-1], i.args[1])
                 processed = True
     return x, return_value, processed
+
 
 def extract_set(s, L):
     """
@@ -534,12 +537,12 @@ def replaceWith(s, symbols, index):
             elif isinstance(i, Symbol):
                 with_value += "\n    {} = Symbol('{}')".format(i, i)
         #result += with_value
-        if type(s.args[1]) == Function('CompoundExpression'): # Expand CompoundExpression
+        if type(s.args[1]) == Function('CompoundExpression'):  # Expand CompoundExpression
             C = s.args[1]
             result += with_value
             if isinstance(C.args[0], Set):
                 result += '\n    {} = {}'.format(C.args[0].args[0], C.args[0].args[1])
-            result += '\n    # rubi.append({})\n    return {}'.format(index, rubi_printer(C.args[1], sympy_integers=True))
+            result += '\n    return {}'.format(rubi_printer(C.args[1], sympy_integers=True))
             return result, constraints, return_type
 
         elif type(s.args[1]) == Function('Condition'):
@@ -548,15 +551,15 @@ def replaceWith(s, symbols, index):
                 if all(j in symbols for j in [str(i) for i in C.free_symbols]):
                     result += with_value
                     #constraints += 'CustomConstraint(lambda {}: {})'.format(', '.join([str(i) for i in C.free_symbols]), sstr(C.args[1], sympy_integers=True))
-                    result += '\n    # rubi.append({})\n    return {}'.format(index, rubi_printer(C.args[0], sympy_integers=True))
+                    result += '\n    return {}'.format(rubi_printer(C.args[0], sympy_integers=True))
                 else:
                     if 'x' in symbols:
-                        result += '\n    if isinstance(x, (int, Integer, float, Float)):\n            return False'
+                        result += '\n    if isinstance(x, (int, Integer, float, Float)):\n        return False'
 
                     if contains_diff_return_type(s):
                         n_with_value = with_value.replace('\n', '\n    ')
                         result += '\n    try:{}\n        res = {}'.format(n_with_value, rubi_printer(C.args[1], sympy_integers=True))
-                        result += '\n    except (TypeError, AttributeError):\n            return False'
+                        result += '\n    except (TypeError, AttributeError):\n        return False'
                         result += '\n    if res:'
 
                     else:
@@ -565,7 +568,7 @@ def replaceWith(s, symbols, index):
                     return_type = (with_value, rubi_printer(C.args[0], sympy_integers=True))
                     return_type1 = process_return_type(return_type, L)
                     if return_type1[2]:
-                        return_type = ( with_value+return_type1[0], rubi_printer(return_type1[1]))
+                        return_type = (with_value+return_type1[0], rubi_printer(return_type1[1]))
                     result += '\n        return True'
                     result += '\n    return False'
             constraints = ', CustomConstraint(With{})'.format(index)
@@ -577,9 +580,9 @@ def replaceWith(s, symbols, index):
             return_type = (with_value, rubi_printer(C, sympy_integers=True))
             return_type1 = process_return_type(return_type, L)
             if return_type1[2]:
-                return_type = ( with_value+return_type1[0], rubi_printer(return_type1[1]))
-            result+=return_type1[0]
-            result+='\n    # rubi.append({})\n    return {}'.format(index, rubi_printer(return_type1[1]))
+                return_type = (with_value+return_type1[0], rubi_printer(return_type1[1]))
+            result += return_type1[0]
+            result += '\n    return {}'.format(rubi_printer(return_type1[1]))
             return result, constraints, None
 
         elif s.args[1].has(Function("CompoundExpression")):
@@ -591,7 +594,7 @@ def replaceWith(s, symbols, index):
             return result, constraints, None
 
         result += with_value
-        result += '\n    # rubi.append({})\n    return {}'.format(index, rubi_printer(s.args[1], sympy_integers=True))
+        result += '\n    return {}'.format(rubi_printer(s.args[1], sympy_integers=True))
         return result, constraints, return_type
     else:
         return rubi_printer(s, sympy_integers=True), '', return_type
@@ -618,7 +621,7 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
         optional = get_default_values(p, {})
         pattern = generate_sympy_from_parsed(p.copy(), replace_Int=True)
         pattern, free_symbols = add_wildcards(pattern, optional=optional)
-        free_symbols = list(set(free_symbols)) #remove common symbols
+        free_symbols = sorted(set(free_symbols)) #remove common symbols
         # Parse Transformed Expression and Constraints
         if i[2][0] == 'Condition': # parse rules without constraints separately
             constriant, constraint_def, cons_index = divide_constraint(i[2][2], free_symbols, cons_index, cons_dict, cons_import) # separate And constraints into individual constraints
@@ -636,7 +639,7 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
         pattern = setWC(pattern)
         transformed = sympify(transformed, locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not") })
         constraint_def = constraint_def + free_cons_def
-        cons+=constraint_def
+        cons += constraint_def
         index += 1
 
         # below are certain if - else condition depending on various situation that may be encountered
@@ -649,14 +652,16 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
             else:
                 repl_funcs += '{}'.format(transformed)
                 parsed += '\n    pattern' + str(index) + ' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + With_constraints + ')'
-                repl_funcs += '\n\n\ndef replacement{}({}):\n'.format(index, ', '.join(free_symbols)) + return_type[0] + '\n        # rubi.append({})\n        return '.format(index) + return_type[1]
+                repl_funcs += '\n\n\ndef replacement{}({}):\n'.format(
+                    index, ', '.join(free_symbols)
+                ) + return_type[0] + '\n    return '.format(index) + return_type[1]
                 parsed += '\n    ' + 'rule' + str(index) + ' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
 
         else:
             transformed = rubi_printer(transformed, sympy_integers=True)
-            parsed += '    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
-            repl_funcs += '\n\n\ndef replacement{}({}):\n        # rubi.append({})\n        return '.format(index, ', '.join(free_symbols), index) + transformed
-            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
+            parsed += '\n    pattern' + str(index) + ' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
+            repl_funcs += '\n\n\ndef replacement{}({}):\n    return '.format(index, ', '.join(free_symbols), index) + transformed
+            parsed += '\n    ' + 'rule' + str(index) + ' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
         rules += 'rule{}, '.format(index)
     rules += ']'
     parsed += '    return ' + rules +'\n'

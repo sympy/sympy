@@ -139,18 +139,25 @@ if matchpy:
 def miscellaneous_integration(rubi):
     from sympy.integrals.rubi.constraints import cons149, cons2004, cons2, cons3, cons8, cons4, cons5, cons388, cons29, cons52, cons2005, cons2006, cons2007, cons2008, cons50, cons127, cons210, cons36, cons37, cons38, cons1101, cons2009, cons68, cons19, cons86, cons1039, cons1038, cons40, cons2010, cons10, cons2011, cons2012, cons2013, cons211, cons1833, cons1246, cons2014, cons48, cons2015, cons2016, cons2017, cons2018, cons54, cons2019, cons802, cons2020, cons20, cons2021, cons588, cons2022, cons2023, cons2024, cons2025, cons2026, cons2027, cons2028, cons2029, cons2030, cons669, cons198, cons2031, cons842, cons2032, cons21, cons2033, cons150, cons47, cons2034, cons1856, cons1249, cons263, cons2035, cons369, cons2036, cons69, cons1481, cons746, cons1484, cons167, cons2037, cons2038, cons1678, cons1257, cons2039, cons349
 
+
     pattern6934 = Pattern(Integral(u_*((x_*WC('b', S(1)) + WC('a', S(0)))**n_*WC('c', S(1)))**p_, x_), cons2, cons3, cons8, cons4, cons5, cons149, cons2004)
     rule6934 = ReplacementRule(pattern6934, replacement6934)
+
     pattern6935 = Pattern(Integral(((d_*(x_*WC('b', S(1)) + WC('a', S(0))))**p_*WC('c', S(1)))**q_*WC('u', S(1)), x_), cons2, cons3, cons8, cons29, cons5, cons52, cons149, cons388)
     rule6935 = ReplacementRule(pattern6935, replacement6935)
+
     pattern6936 = Pattern(Integral((((x_*WC('b', S(1)) + WC('a', S(0)))**n_*WC('d', S(1)))**p_*WC('c', S(1)))**q_*WC('u', S(1)), x_), cons2, cons3, cons8, cons29, cons4, cons5, cons52, cons149, cons388)
     rule6936 = ReplacementRule(pattern6936, replacement6936)
+
     pattern6937 = Pattern(Integral((F_*sqrt(x_*WC('e', S(1)) + WC('d', S(0)))*WC('b', S(1))*WC('c', S(1))/sqrt(x_*WC('g', S(1)) + WC('f', S(0))) + WC('a', S(0)))**WC('n', S(1))/(x_**S(2)*WC('C', S(1)) + x_*WC('B', S(1)) + WC('A', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons36, cons37, cons38, cons1101, cons2005, cons2006, cons2007, cons2008)
     rule6937 = ReplacementRule(pattern6937, replacement6937)
+
     pattern6938 = Pattern(Integral((F_*sqrt(x_*WC('e', S(1)) + S(1))*WC('b', S(1))*WC('c', S(1))/sqrt(x_*WC('g', S(1)) + S(1)) + WC('a', S(0)))**WC('n', S(1))/(x_**S(2)*WC('C', S(1)) + WC('A', S(0))), x_), cons2, cons3, cons8, cons50, cons210, cons36, cons38, cons1101, cons2005, cons2009)
     rule6938 = ReplacementRule(pattern6938, replacement6938)
+
     pattern6939 = Pattern(Integral((F_**(sqrt(x_*WC('e', S(1)) + WC('d', S(0)))*WC('c', S(1))/sqrt(x_*WC('g', S(1)) + WC('f', S(0))))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(x_**S(2)*WC('C', S(1)) + x_*WC('B', S(1)) + WC('A', S(0))), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons210, cons36, cons37, cons38, cons1101, cons2005, cons2006, cons2007, cons2008)
     rule6939 = ReplacementRule(pattern6939, replacement6939)
+
     pattern6940 = Pattern(Integral((F_**(sqrt(x_*WC('e', S(1)) + S(1))*WC('c', S(1))/sqrt(x_*WC('g', S(1)) + S(1)))*WC('b', S(1)) + WC('a', S(0)))**WC('n', S(1))/(x_**S(2)*WC('C', S(1)) + WC('A', S(0))), x_), cons2, cons3, cons8, cons50, cons210, cons36, cons38, cons1101, cons2005, cons2009)
     rule6940 = ReplacementRule(pattern6940, replacement6940)
 
@@ -168,10 +175,13 @@ def miscellaneous_integration(rubi):
 
     pattern6945 = Pattern(Integral(u_, x_), CustomConstraint(With6945))
     rule6945 = ReplacementRule(pattern6945, replacement6945)
+
     pattern6946 = Pattern(Integral((sqrt(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))*WC('e', S(1)) + sqrt(x_**WC('n', S(1))*WC('d', S(1)) + WC('c', S(0)))*WC('f', S(1)))**m_*WC('u', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons4, cons86, cons1039)
     rule6946 = ReplacementRule(pattern6946, replacement6946)
+
     pattern6947 = Pattern(Integral((sqrt(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))*WC('e', S(1)) + sqrt(x_**WC('n', S(1))*WC('d', S(1)) + WC('c', S(0)))*WC('f', S(1)))**m_*WC('u', S(1)), x_), cons2, cons3, cons8, cons29, cons50, cons127, cons4, cons86, cons1038)
     rule6947 = ReplacementRule(pattern6947, replacement6947)
+
     pattern6948 = Pattern(Integral(u_**WC('m', S(1))*w_*(u_**n_*WC('a', S(1)) + v_)**WC('p', S(1)), x_), cons2, cons19, cons4, cons40, cons2010, cons10)
     rule6948 = ReplacementRule(pattern6948, replacement6948)
 
@@ -243,6 +253,7 @@ def miscellaneous_integration(rubi):
 
     pattern6971 = Pattern(Integral(u_*v_**WC('r', S(1))*w_**WC('s', S(1))*(v_**WC('p', S(1))*WC('a', S(1)) + w_**WC('q', S(1))*WC('b', S(1)))**WC('m', S(1)), x_), cons2, cons3, cons19, cons5, cons52, cons54, cons802, cons2025, cons2023, cons2024, cons20, CustomConstraint(With6971))
     rule6971 = ReplacementRule(pattern6971, replacement6971)
+
     pattern6972 = Pattern(Integral(u_*x_**WC('m', S(1)), x_), cons19, cons68, cons2026)
     rule6972 = ReplacementRule(pattern6972, replacement6972)
 
@@ -251,16 +262,22 @@ def miscellaneous_integration(rubi):
 
     pattern6974 = Pattern(Integral(u_, x_), CustomConstraint(With6974))
     rule6974 = ReplacementRule(pattern6974, replacement6974)
+
     pattern6975 = Pattern(Integral((v_**WC('m', S(1))*w_**WC('n', S(1))*z_**WC('q', S(1))*WC('a', S(1)))**p_*WC('u', S(1)), x_), cons2, cons19, cons4, cons5, cons52, cons149, cons10, cons2027, cons2028)
     rule6975 = ReplacementRule(pattern6975, replacement6975)
+
     pattern6976 = Pattern(Integral((v_**WC('m', S(1))*w_**WC('n', S(1))*WC('a', S(1)))**p_*WC('u', S(1)), x_), cons2, cons19, cons4, cons5, cons149, cons10, cons2027)
     rule6976 = ReplacementRule(pattern6976, replacement6976)
+
     pattern6977 = Pattern(Integral((v_**WC('m', S(1))*WC('a', S(1)))**p_*WC('u', S(1)), x_), cons2, cons19, cons5, cons149, cons10, cons2029, cons2030)
     rule6977 = ReplacementRule(pattern6977, replacement6977)
+
     pattern6978 = Pattern(Integral((x_**n_*WC('b', S(1)) + WC('a', S(0)))**p_*WC('u', S(1)), x_), cons2, cons3, cons5, cons669, cons198, cons2031)
     rule6978 = ReplacementRule(pattern6978, replacement6978)
+
     pattern6979 = Pattern(Integral((v_**n_*WC('b', S(1)) + WC('a', S(0)))**p_*WC('u', S(1)), x_), cons2, cons3, cons5, cons149, cons198, cons842, cons2032)
     rule6979 = ReplacementRule(pattern6979, replacement6979)
+
     pattern6980 = Pattern(Integral((v_**n_*x_**WC('m', S(1))*WC('b', S(1)) + WC('a', S(0)))**p_*WC('u', S(1)), x_), cons2, cons3, cons19, cons5, cons149, cons198, cons842)
     rule6980 = ReplacementRule(pattern6980, replacement6980)
 
@@ -269,13 +286,16 @@ def miscellaneous_integration(rubi):
 
     pattern6982 = Pattern(Integral(u_/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons150, CustomConstraint(With6982))
     rule6982 = ReplacementRule(pattern6982, replacement6982)
+
     pattern6983 = Pattern(Integral(u_*(x_**WC('n', S(1))*WC('b', S(1)) + x_**WC('n2', S(1))*WC('c', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons8, cons4, cons48, cons47, cons40, cons2034)
     rule6983 = ReplacementRule(pattern6983, replacement6983)
+
     pattern6984 = Pattern(Integral(u_*(x_**WC('n', S(1))*WC('b', S(1)) + x_**WC('n2', S(1))*WC('c', S(1)) + WC('a', S(0)))**p_, x_), cons2, cons3, cons8, cons4, cons5, cons48, cons47, cons149, cons2034)
     rule6984 = ReplacementRule(pattern6984, replacement6984)
 
     pattern6985 = Pattern(Integral(u_/(x_**WC('n', S(1))*WC('b', S(1)) + x_**WC('n2', S(1))*WC('c', S(1)) + WC('a', S(0))), x_), cons2, cons3, cons8, cons48, cons150, CustomConstraint(With6985))
     rule6985 = ReplacementRule(pattern6985, replacement6985)
+
     pattern6986 = Pattern(Integral(WC('u', S(1))/(x_**WC('m', S(1))*WC('a', S(1)) + sqrt(x_**n_*WC('c', S(1)))*WC('b', S(1))), x_), cons2, cons3, cons8, cons19, cons4, cons1856)
     rule6986 = ReplacementRule(pattern6986, replacement6986)
 
@@ -293,12 +313,16 @@ def miscellaneous_integration(rubi):
 
     pattern6991 = Pattern(Integral(u_, x_), cons2036, CustomConstraint(With6991))
     rule6991 = ReplacementRule(pattern6991, replacement6991)
+
     pattern6992 = Pattern(Integral(S(1)/(a_ + v_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons69)
     rule6992 = ReplacementRule(pattern6992, replacement6992)
+
     pattern6993 = Pattern(Integral(S(1)/(a_ + v_**n_*WC('b', S(1))), x_), cons2, cons3, cons1481, cons746)
     rule6993 = ReplacementRule(pattern6993, replacement6993)
+
     pattern6994 = Pattern(Integral(S(1)/(a_ + v_**n_*WC('b', S(1))), x_), cons2, cons3, cons1484, cons167)
     rule6994 = ReplacementRule(pattern6994, replacement6994)
+
     pattern6995 = Pattern(Integral(v_/(a_ + u_**WC('n', S(1))*WC('b', S(1))), x_), cons2, cons3, cons150, cons2037)
     rule6995 = ReplacementRule(pattern6995, replacement6995)
 
@@ -307,757 +331,864 @@ def miscellaneous_integration(rubi):
 
     pattern6997 = Pattern(Integral(u_, x_), CustomConstraint(With6997))
     rule6997 = ReplacementRule(pattern6997, replacement6997)
+
     pattern6998 = Pattern(Integral((x_**WC('m', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*(x_**WC('n', S(1))*WC('d', S(1)) + WC('c', S(0)))**WC('q', S(1))*WC('u', S(1)), x_), cons2, cons3, cons8, cons29, cons19, cons4, cons5, cons52, cons2038, cons1678, cons1257, cons2039)
     rule6998 = ReplacementRule(pattern6998, replacement6998)
+
     pattern6999 = Pattern(Integral(u_*(a_ + x_**WC('n', S(1))*WC('b', S(1)) + x_**WC('n2', S(1))*WC('c', S(1)))**p_, x_), cons2, cons3, cons8, cons4, cons5, cons48, cons47, cons349)
     rule6999 = ReplacementRule(pattern6999, replacement6999)
 
     pattern7000 = Pattern(Integral(u_, x_), CustomConstraint(With7000))
     rule7000 = ReplacementRule(pattern7000, replacement7000)
+
     pattern7001 = Pattern(Integral(u_, x_))
     rule7001 = ReplacementRule(pattern7001, replacement7001)
     return [rule6934, rule6935, rule6936, rule6937, rule6938, rule6939, rule6940, rule6941, rule6942, rule6943, rule6944, rule6945, rule6946, rule6947, rule6948, rule6949, rule6950, rule6951, rule6952, rule6953, rule6954, rule6955, rule6956, rule6957, rule6958, rule6959, rule6960, rule6961, rule6962, rule6963, rule6964, rule6965, rule6966, rule6967, rule6968, rule6969, rule6970, rule6971, rule6972, rule6973, rule6974, rule6975, rule6976, rule6977, rule6978, rule6979, rule6980, rule6981, rule6982, rule6983, rule6984, rule6985, rule6986, rule6987, rule6988, rule6989, rule6990, rule6991, rule6992, rule6993, rule6994, rule6995, rule6996, rule6997, rule6998, rule6999, rule7000, rule7001, ]
 
 
 
-def replacement6934(c, n, x, u, a, p, b):
-        # rubi.append(6934)
-        return Dist(c**IntPart(p)*(c*(a + b*x)**n)**FracPart(p)*(a + b*x)**(-n*FracPart(p)), Int(u*(a + b*x)**(n*p), x), x)
-def replacement6935(c, q, x, d, u, a, p, b):
-        # rubi.append(6935)
-        return Dist((c*(d*(a + b*x))**p)**q*(a + b*x)**(-p*q), Int(u*(a + b*x)**(p*q), x), x)
-def replacement6936(c, q, n, x, d, u, a, p, b):
-        # rubi.append(6936)
-        return Dist((c*(d*(a + b*x)**n)**p)**q*(a + b*x)**(-n*p*q), Int(u*(a + b*x)**(n*p*q), x), x)
-def replacement6937(c, n, F, x, d, B, A, f, g, a, C, e, b):
-        # rubi.append(6937)
-        return Dist(g/C, Subst(Int((a + b*F(c*x))**n/x, x), x, sqrt(d + e*x)/sqrt(f + g*x)), x)
-def replacement6938(c, n, F, x, A, g, a, C, e, b):
-        # rubi.append(6938)
-        return Dist(g/C, Subst(Int((a + b*F(c*x))**n/x, x), x, sqrt(e*x + S(1))/sqrt(g*x + S(1))), x)
-def replacement6939(c, n, F, x, d, B, A, f, g, a, C, e, b):
-        # rubi.append(6939)
-        return Dist(g/C, Subst(Int((F**(c*x)*b + a)**n/x, x), x, sqrt(d + e*x)/sqrt(f + g*x)), x)
-def replacement6940(c, n, F, x, A, g, a, C, e, b):
-        # rubi.append(6940)
-        return Dist(g/C, Subst(Int((F**(c*x)*b + a)**n/x, x), x, sqrt(e*x + S(1))/sqrt(g*x + S(1))), x)
 
-def With6941(x, u, y):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+
+def replacement6934(u, p, a, c, n, b, x):
+    return Dist(c**IntPart(p)*(c*(a + b*x)**n)**FracPart(p)*(a + b*x)**(-n*FracPart(p)), Int(u*(a + b*x)**(n*p), x), x)
+
+
+def replacement6935(u, d, p, q, a, c, b, x):
+    return Dist((c*(d*(a + b*x))**p)**q*(a + b*x)**(-p*q), Int(u*(a + b*x)**(p*q), x), x)
+
+
+def replacement6936(u, d, p, q, a, c, n, b, x):
+    return Dist((c*(d*(a + b*x)**n)**p)**q*(a + b*x)**(-n*p*q), Int(u*(a + b*x)**(n*p*q), x), x)
+
+
+def replacement6937(d, B, a, c, A, g, C, n, b, F, f, e, x):
+    return Dist(g/C, Subst(Int((a + b*F(c*x))**n/x, x), x, sqrt(d + e*x)/sqrt(f + g*x)), x)
+
+
+def replacement6938(a, c, A, g, C, n, b, F, e, x):
+    return Dist(g/C, Subst(Int((a + b*F(c*x))**n/x, x), x, sqrt(e*x + S(1))/sqrt(g*x + S(1))), x)
+
+
+def replacement6939(d, B, a, c, g, n, A, C, b, F, f, e, x):
+    return Dist(g/C, Subst(Int((F**(c*x)*b + a)**n/x, x), x, sqrt(d + e*x)/sqrt(f + g*x)), x)
+
+
+def replacement6940(a, c, g, n, A, C, b, F, e, x):
+    return Dist(g/C, Subst(Int((F**(c*x)*b + a)**n/x, x), x, sqrt(e*x + S(1))/sqrt(g*x + S(1))), x)
+
+
+def With6941(u, y, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6941(x, u, y):
-
+    try:
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6941)
-        return Simp(q*log(RemoveContent(y, x)), x)
-
-def With6942(x, u, w, y):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(w*y, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6942(x, u, w, y):
+    if res:
+        return True
+    return False
 
+
+def replacement6941(u, y, x):
+
+    q = DerivativeDivides(y, u, x)
+    return Simp(q*log(RemoveContent(y, x)), x)
+
+
+def With6942(u, y, w, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(w*y, u, x)
-        # rubi.append(6942)
-        return Simp(q*log(RemoveContent(w*y, x)), x)
-
-def With6943(x, u, m, y):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6943(x, u, m, y):
+    if res:
+        return True
+    return False
 
+
+def replacement6942(u, y, w, x):
+
+    q = DerivativeDivides(w*y, u, x)
+    return Simp(q*log(RemoveContent(w*y, x)), x)
+
+
+def With6943(u, y, m, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6943)
-        return Simp(q*y**(m + S(1))/(m + S(1)), x)
-
-def With6944(m, n, x, u, y, z):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(y*z, u*z**(-m + n), x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6944(m, n, x, u, y, z):
+    if res:
+        return True
+    return False
 
+
+def replacement6943(u, y, m, x):
+
+    q = DerivativeDivides(y, u, x)
+    return Simp(q*y**(m + S(1))/(m + S(1)), x)
+
+
+def With6944(u, y, z, n, m, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(y*z, u*z**(-m + n), x)
-        # rubi.append(6944)
-        return Simp(q*y**(m + S(1))*z**(m + S(1))/(m + S(1)), x)
-
-def With6945(x, u):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        v = SimplifyIntegrand(u, x)
-        if SimplerIntegrandQ(v, u, x):
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6945(x, u):
+    if res:
+        return True
+    return False
 
-        v = SimplifyIntegrand(u, x)
-        # rubi.append(6945)
-        return Int(v, x)
-def replacement6946(c, m, n, x, d, u, f, a, e, b):
-        # rubi.append(6946)
-        return Dist((a*e**S(2) - c*f**S(2))**m, Int(ExpandIntegrand(u*(e*sqrt(a + b*x**n) - f*sqrt(c + d*x**n))**(-m), x), x), x)
-def replacement6947(c, m, n, x, d, u, f, a, e, b):
-        # rubi.append(6947)
-        return Dist((b*e**S(2) - d*f**S(2))**m, Int(ExpandIntegrand(u*x**(m*n)*(e*sqrt(a + b*x**n) - f*sqrt(c + d*x**n))**(-m), x), x), x)
-def replacement6948(m, n, x, v, u, w, a, p):
-        # rubi.append(6948)
-        return Int(u**(m + n*p)*w*(a + u**(-n)*v)**p, x)
 
-def With6949(c, m, n, x, d, v, u, y, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+def replacement6944(u, y, z, n, m, x):
+
+    q = DerivativeDivides(y*z, u*z**(-m + n), x)
+    return Simp(q*y**(m + S(1))*z**(m + S(1))/(m + S(1)), x)
+
+
+def With6945(u, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6949(c, m, n, x, d, v, u, y, a, b):
+    v = SimplifyIntegrand(u, x)
+    if SimplerIntegrandQ(v, u, x):
+        return True
+    return False
 
+
+def replacement6945(u, x):
+
+    v = SimplifyIntegrand(u, x)
+    return Int(v, x)
+
+
+def replacement6946(u, d, a, c, n, m, b, f, e, x):
+    return Dist((a*e**S(2) - c*f**S(2))**m, Int(ExpandIntegrand(u*(e*sqrt(a + b*x**n) - f*sqrt(c + d*x**n))**(-m), x), x), x)
+
+
+def replacement6947(u, d, a, c, n, m, b, f, e, x):
+    return Dist((b*e**S(2) - d*f**S(2))**m, Int(ExpandIntegrand(u*x**(m*n)*(e*sqrt(a + b*x**n) - f*sqrt(c + d*x**n))**(-m), x), x), x)
+
+
+def replacement6948(u, p, a, w, n, v, m, x):
+    return Int(u**(m + n*p)*w*(a + u**(-n)*v)**p, x)
+
+
+def With6949(u, d, a, y, c, n, v, m, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6949)
-        return Dist(q, Subst(Int((a + b*x)**m*(c + d*x)**n, x), x, y), x)
-
-def With6950(c, m, n, x, d, v, u, w, f, y, a, p, e, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6950(c, m, n, x, d, v, u, w, f, y, a, p, e, b):
+    if res:
+        return True
+    return False
 
+
+def replacement6949(u, d, a, y, c, n, v, m, b, x):
+
+    q = DerivativeDivides(y, u, x)
+    return Dist(q, Subst(Int((a + b*x)**m*(c + d*x)**n, x), x, y), x)
+
+
+def With6950(u, d, p, a, w, y, c, n, v, m, b, f, e, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6950)
-        return Dist(q, Subst(Int((a + b*x)**m*(c + d*x)**n*(e + f*x)**p, x), x, y), x)
-
-def With6951(c, m, q, n, x, d, v, h, u, w, f, g, y, a, p, e, z, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            r = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(r))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6951(c, m, q, n, x, d, v, h, u, w, f, g, y, a, p, e, z, b):
+    if res:
+        return True
+    return False
 
+
+def replacement6950(u, d, p, a, w, y, c, n, v, m, b, f, e, x):
+
+    q = DerivativeDivides(y, u, x)
+    return Dist(q, Subst(Int((a + b*x)**m*(c + d*x)**n*(e + f*x)**p, x), x, y), x)
+
+
+def With6951(u, d, p, q, a, w, y, c, z, g, n, v, m, b, f, e, h, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         r = DerivativeDivides(y, u, x)
-        # rubi.append(6951)
-        return Dist(r, Subst(Int((a + b*x)**m*(c + d*x)**n*(e + f*x)**p*(g + h*x)**q, x), x, y), x)
-
-def With6952(n, x, u, y, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(r))
+    except (TypeError, AttributeError):
         return False
-def replacement6952(n, x, u, y, a, b):
+    if res:
+        return True
+    return False
 
+
+def replacement6951(u, d, p, q, a, w, y, c, z, g, n, v, m, b, f, e, h, x):
+
+    r = DerivativeDivides(y, u, x)
+    return Dist(r, Subst(Int((a + b*x)**m*(c + d*x)**n*(e + f*x)**p*(g + h*x)**q, x), x, y), x)
+
+
+def With6952(u, a, y, n, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6952)
-        return Dist(a, Int(u, x), x) + Dist(b*q, Subst(Int(x**n, x), x, y), x)
-
-def With6953(n, x, u, y, a, p, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6953(n, x, u, y, a, p, b):
+    if res:
+        return True
+    return False
 
+
+def replacement6952(u, a, y, n, b, x):
+
+    q = DerivativeDivides(y, u, x)
+    return Dist(a, Int(u, x), x) + Dist(b*q, Subst(Int(x**n, x), x, y), x)
+
+
+def With6953(u, p, a, y, n, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6953)
-        return Dist(q, Subst(Int((a + b*x**n)**p, x), x, y), x)
-
-def With6954(m, n, x, v, u, y, a, p, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = Symbol('q')
-            r = Symbol('r')
-            r = Divides(y**m, v**m, x)
-            q = DerivativeDivides(y, u, x)
-            res = And(Not(FalseQ(Set(r, Divides(y**m, v**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6954(m, n, x, v, u, y, a, p, b):
+    if res:
+        return True
+    return False
 
+
+def replacement6953(u, p, a, y, n, b, x):
+
+    q = DerivativeDivides(y, u, x)
+    return Dist(q, Subst(Int((a + b*x**n)**p, x), x, y), x)
+
+
+def With6954(u, p, a, y, v, n, m, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = Symbol('q')
         r = Symbol('r')
         r = Divides(y**m, v**m, x)
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6954)
-        return Dist(q*r, Subst(Int(x**m*(a + b*x**n)**p, x), x, y), x)
-
-def With6955(c, n, x, v, u, y, n2, a, p, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = And(Not(FalseQ(Set(r, Divides(y**m, v**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
+    except (TypeError, AttributeError):
         return False
-def replacement6955(c, n, x, v, u, y, n2, a, p, b):
+    if res:
+        return True
+    return False
 
+
+def replacement6954(u, p, a, y, v, n, m, b, x):
+
+    q = Symbol('q')
+    r = Symbol('r')
+    r = Divides(y**m, v**m, x)
+    q = DerivativeDivides(y, u, x)
+    return Dist(q*r, Subst(Int(x**m*(a + b*x**n)**p, x), x, y), x)
+
+
+def With6955(u, p, n2, a, y, c, v, n, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6955)
-        return Dist(q, Subst(Int((a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
-
-def With6956(c, n, x, v, B, A, u, w, y, n2, a, p, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6956(c, n, x, v, B, A, u, w, y, n2, a, p, b):
+    if res:
+        return True
+    return False
 
+
+def replacement6955(u, p, n2, a, y, c, v, n, b, x):
+
+    q = DerivativeDivides(y, u, x)
+    return Dist(q, Subst(Int((a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
+
+
+def With6956(u, p, n2, B, a, w, y, c, A, v, n, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6956)
-        return Dist(q, Subst(Int((A + B*x**n)*(a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
-
-def With6957(c, n, x, B, A, u, w, y, n2, a, p):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6957(c, n, x, B, A, u, w, y, n2, a, p):
+    if res:
+        return True
+    return False
 
+
+def replacement6956(u, p, n2, B, a, w, y, c, A, v, n, b, x):
+
+    q = DerivativeDivides(y, u, x)
+    return Dist(q, Subst(Int((A + B*x**n)*(a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
+
+
+def With6957(u, p, n2, B, a, w, y, c, A, n, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6957)
-        return Dist(q, Subst(Int((A + B*x**n)*(a + c*x**(S(2)*n))**p, x), x, y), x)
-
-def With6958(c, m, n, x, v, u, w, y, n2, a, p, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = Symbol('q')
-            r = Symbol('r')
-            r = Divides(y**m, v**m, x)
-            q = DerivativeDivides(y, u, x)
-            res = And(Not(FalseQ(Set(r, Divides(y**m, v**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6958(c, m, n, x, v, u, w, y, n2, a, p, b):
+    if res:
+        return True
+    return False
 
+
+def replacement6957(u, p, n2, B, a, w, y, c, A, n, x):
+
+    q = DerivativeDivides(y, u, x)
+    return Dist(q, Subst(Int((A + B*x**n)*(a + c*x**(S(2)*n))**p, x), x, y), x)
+
+
+def With6958(u, p, n2, a, w, y, c, v, n, m, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = Symbol('q')
         r = Symbol('r')
         r = Divides(y**m, v**m, x)
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6958)
-        return Dist(q*r, Subst(Int(x**m*(a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
-
-def With6959(c, m, n, x, v, B, A, u, w, y, n2, a, p, z, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = Symbol('q')
-            r = Symbol('r')
-            r = Divides(y**m, z**m, x)
-            q = DerivativeDivides(y, u, x)
-            res = And(Not(FalseQ(Set(r, Divides(y**m, z**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = And(Not(FalseQ(Set(r, Divides(y**m, v**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
+    except (TypeError, AttributeError):
         return False
-def replacement6959(c, m, n, x, v, B, A, u, w, y, n2, a, p, z, b):
+    if res:
+        return True
+    return False
 
+
+def replacement6958(u, p, n2, a, w, y, c, v, n, m, b, x):
+
+    q = Symbol('q')
+    r = Symbol('r')
+    r = Divides(y**m, v**m, x)
+    q = DerivativeDivides(y, u, x)
+    return Dist(q*r, Subst(Int(x**m*(a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
+
+
+def With6959(u, p, n2, B, a, w, y, c, z, A, v, n, m, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = Symbol('q')
         r = Symbol('r')
         r = Divides(y**m, z**m, x)
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6959)
-        return Dist(q*r, Subst(Int(x**m*(A + B*x**n)*(a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
-
-def With6960(c, m, n, x, B, A, u, w, y, n2, a, p, z):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = Symbol('q')
-            r = Symbol('r')
-            r = Divides(y**m, z**m, x)
-            q = DerivativeDivides(y, u, x)
-            res = And(Not(FalseQ(Set(r, Divides(y**m, z**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = And(Not(FalseQ(Set(r, Divides(y**m, z**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
+    except (TypeError, AttributeError):
         return False
-def replacement6960(c, m, n, x, B, A, u, w, y, n2, a, p, z):
+    if res:
+        return True
+    return False
 
+
+def replacement6959(u, p, n2, B, a, w, y, c, z, A, v, n, m, b, x):
+
+    q = Symbol('q')
+    r = Symbol('r')
+    r = Divides(y**m, z**m, x)
+    q = DerivativeDivides(y, u, x)
+    return Dist(q*r, Subst(Int(x**m*(A + B*x**n)*(a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
+
+
+def With6960(u, p, n2, B, a, w, y, c, z, A, n, m, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = Symbol('q')
         r = Symbol('r')
         r = Divides(y**m, z**m, x)
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6960)
-        return Dist(q*r, Subst(Int(x**m*(A + B*x**n)*(a + c*x**(S(2)*n))**p, x), x, y), x)
-
-def With6961(c, m, n, x, d, v, u, y, a, p, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = And(Not(FalseQ(Set(r, Divides(y**m, z**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
+    except (TypeError, AttributeError):
         return False
-def replacement6961(c, m, n, x, d, v, u, y, a, p, b):
+    if res:
+        return True
+    return False
 
+
+def replacement6960(u, p, n2, B, a, w, y, c, z, A, n, m, x):
+
+    q = Symbol('q')
+    r = Symbol('r')
+    r = Divides(y**m, z**m, x)
+    q = DerivativeDivides(y, u, x)
+    return Dist(q*r, Subst(Int(x**m*(A + B*x**n)*(a + c*x**(S(2)*n))**p, x), x, y), x)
+
+
+def With6961(u, d, p, a, y, c, v, n, m, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(y, u, x)
-        # rubi.append(6961)
-        return Dist(q, Subst(Int((a + b*x**n)**m*(c + d*x**n)**p, x), x, y), x)
-
-def With6962(c, m, q, n, x, d, v, u, w, f, y, a, p, e, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            r = DerivativeDivides(y, u, x)
-            res = Not(FalseQ(r))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6962(c, m, q, n, x, d, v, u, w, f, y, a, p, e, b):
+    if res:
+        return True
+    return False
 
+
+def replacement6961(u, d, p, a, y, c, v, n, m, b, x):
+
+    q = DerivativeDivides(y, u, x)
+    return Dist(q, Subst(Int((a + b*x**n)**m*(c + d*x**n)**p, x), x, y), x)
+
+
+def With6962(u, d, p, q, a, w, y, c, v, n, m, b, f, e, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         r = DerivativeDivides(y, u, x)
-        # rubi.append(6962)
-        return Dist(r, Subst(Int((a + b*x**n)**m*(c + d*x**n)**p*(e + f*x**n)**q, x), x, y), x)
-
-def With6963(x, u, v, F):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(v, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(r))
+    except (TypeError, AttributeError):
         return False
-def replacement6963(x, u, v, F):
+    if res:
+        return True
+    return False
 
+
+def replacement6962(u, d, p, q, a, w, y, c, v, n, m, b, f, e, x):
+
+    r = DerivativeDivides(y, u, x)
+    return Dist(r, Subst(Int((a + b*x**n)**m*(c + d*x**n)**p*(e + f*x**n)**q, x), x, y), x)
+
+
+def With6963(v, x, u, F):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(v, u, x)
-        # rubi.append(6963)
-        return Simp(F**v*q/log(F), x)
-
-def With6964(m, F, x, v, w, u):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            q = DerivativeDivides(v, u, x)
-            res = Not(FalseQ(q))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6964(m, F, x, v, w, u):
+    if res:
+        return True
+    return False
 
+
+def replacement6963(v, x, u, F):
+
+    q = DerivativeDivides(v, u, x)
+    return Simp(F**v*q/log(F), x)
+
+
+def With6964(u, w, v, m, F, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         q = DerivativeDivides(v, u, x)
-        # rubi.append(6964)
-        return Dist(q, Subst(Int(F**x*x**m, x), x, v), x)
-
-def With6965(m, x, v, u, w, a, p, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        c = u/(v*D(w, x) + w*D(v, x))
-        if FreeQ(c, x):
-            return True
+        res = Not(FalseQ(q))
+    except (TypeError, AttributeError):
         return False
-def replacement6965(m, x, v, u, w, a, p, b):
+    if res:
+        return True
+    return False
 
-        c = u/(v*D(w, x) + w*D(v, x))
-        # rubi.append(6965)
-        return Dist(c, Subst(Int((a + b*x**p)**m, x), x, v*w), x)
 
-def With6966(m, q, r, x, v, u, w, a, p, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        c = u/(p*w*D(v, x) + q*v*D(w, x))
-        if FreeQ(c, x):
-            return True
+def replacement6964(u, w, v, m, F, x):
+
+    q = DerivativeDivides(v, u, x)
+    return Dist(q, Subst(Int(F**x*x**m, x), x, v), x)
+
+
+def With6965(u, p, a, w, v, m, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6966(m, q, r, x, v, u, w, a, p, b):
+    c = u/(v*D(w, x) + w*D(v, x))
+    if FreeQ(c, x):
+        return True
+    return False
 
-        c = u/(p*w*D(v, x) + q*v*D(w, x))
-        # rubi.append(6966)
-        return Dist(c*p/(r + S(1)), Subst(Int((a + b*x**(p/(r + S(1))))**m, x), x, v**(r + S(1))*w), x)
 
-def With6967(m, q, r, x, v, u, w, a, p, s, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        c = u/(p*w*D(v, x) + q*v*D(w, x))
-        if FreeQ(c, x):
-            return True
+def replacement6965(u, p, a, w, v, m, b, x):
+
+    c = u/(v*D(w, x) + w*D(v, x))
+    return Dist(c, Subst(Int((a + b*x**p)**m, x), x, v*w), x)
+
+
+def With6966(u, p, q, a, w, v, m, b, r, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6967(m, q, r, x, v, u, w, a, p, s, b):
+    c = u/(p*w*D(v, x) + q*v*D(w, x))
+    if FreeQ(c, x):
+        return True
+    return False
 
-        c = u/(p*w*D(v, x) + q*v*D(w, x))
-        # rubi.append(6967)
-        return Dist(c*p/(r + S(1)), Subst(Int((a + b*x**(p/(r + S(1))))**m, x), x, v**(r + S(1))*w**(s + S(1))), x)
 
-def With6968(m, q, x, v, u, w, a, p, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        c = u/(p*w*D(v, x) - q*v*D(w, x))
-        if FreeQ(c, x):
-            return True
+def replacement6966(u, p, q, a, w, v, m, b, r, x):
+
+    c = u/(p*w*D(v, x) + q*v*D(w, x))
+    return Dist(c*p/(r + S(1)), Subst(Int((a + b*x**(p/(r + S(1))))**m, x), x, v**(r + S(1))*w), x)
+
+
+def With6967(u, p, q, a, w, s, v, m, b, r, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6968(m, q, x, v, u, w, a, p, b):
+    c = u/(p*w*D(v, x) + q*v*D(w, x))
+    if FreeQ(c, x):
+        return True
+    return False
 
-        c = u/(p*w*D(v, x) - q*v*D(w, x))
-        # rubi.append(6968)
-        return Dist(c*p, Subst(Int((a*x**p + b)**m, x), x, v*w**(m*q + S(1))), x)
 
-def With6969(m, q, r, x, v, u, w, a, p, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        c = u/(p*w*D(v, x) - q*v*D(w, x))
-        if FreeQ(c, x):
-            return True
+def replacement6967(u, p, q, a, w, s, v, m, b, r, x):
+
+    c = u/(p*w*D(v, x) + q*v*D(w, x))
+    return Dist(c*p/(r + S(1)), Subst(Int((a + b*x**(p/(r + S(1))))**m, x), x, v**(r + S(1))*w**(s + S(1))), x)
+
+
+def With6968(u, p, q, a, w, v, m, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6969(m, q, r, x, v, u, w, a, p, b):
+    c = u/(p*w*D(v, x) - q*v*D(w, x))
+    if FreeQ(c, x):
+        return True
+    return False
 
-        c = u/(p*w*D(v, x) - q*v*D(w, x))
-        # rubi.append(6969)
-        return -Dist(c*q, Subst(Int((a + b*x**q)**m, x), x, v**(m*p + r + S(1))*w), x)
 
-def With6970(m, q, x, v, u, w, a, p, s, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        c = u/(p*w*D(v, x) - q*v*D(w, x))
-        if FreeQ(c, x):
-            return True
+def replacement6968(u, p, q, a, w, v, m, b, x):
+
+    c = u/(p*w*D(v, x) - q*v*D(w, x))
+    return Dist(c*p, Subst(Int((a*x**p + b)**m, x), x, v*w**(m*q + S(1))), x)
+
+
+def With6969(u, p, q, a, w, v, m, b, r, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6970(m, q, x, v, u, w, a, p, s, b):
+    c = u/(p*w*D(v, x) - q*v*D(w, x))
+    if FreeQ(c, x):
+        return True
+    return False
 
-        c = u/(p*w*D(v, x) - q*v*D(w, x))
-        # rubi.append(6970)
-        return -Dist(c*q/(s + S(1)), Subst(Int((a + b*x**(q/(s + S(1))))**m, x), x, v**(m*p + S(1))*w**(s + S(1))), x)
 
-def With6971(m, q, r, x, v, u, w, a, p, s, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        c = u/(p*w*D(v, x) - q*v*D(w, x))
-        if FreeQ(c, x):
-            return True
+def replacement6969(u, p, q, a, w, v, m, b, r, x):
+
+    c = u/(p*w*D(v, x) - q*v*D(w, x))
+    return -Dist(c*q, Subst(Int((a + b*x**q)**m, x), x, v**(m*p + r + S(1))*w), x)
+
+
+def With6970(u, p, q, a, w, s, v, m, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6971(m, q, r, x, v, u, w, a, p, s, b):
+    c = u/(p*w*D(v, x) - q*v*D(w, x))
+    if FreeQ(c, x):
+        return True
+    return False
 
-        c = u/(p*w*D(v, x) - q*v*D(w, x))
-        # rubi.append(6971)
-        return -Dist(c*q/(s + S(1)), Subst(Int((a + b*x**(q/(s + S(1))))**m, x), x, v**(m*p + r + S(1))*w**(s + S(1))), x)
-def replacement6972(x, u, m):
-        # rubi.append(6972)
-        return Dist(S(1)/(m + S(1)), Subst(Int(SubstFor(x**(m + S(1)), u, x), x), x, x**(m + S(1))), x)
 
-def With6973(x, u):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            lst = SubstForFractionalPowerOfLinear(u, x)
-            res = And(Not(FalseQ(lst)), SubstForFractionalPowerQ(u, Part(lst, S(3)), x))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+def replacement6970(u, p, q, a, w, s, v, m, b, x):
+
+    c = u/(p*w*D(v, x) - q*v*D(w, x))
+    return -Dist(c*q/(s + S(1)), Subst(Int((a + b*x**(q/(s + S(1))))**m, x), x, v**(m*p + S(1))*w**(s + S(1))), x)
+
+
+def With6971(u, p, q, a, w, s, v, m, b, r, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6973(x, u):
+    c = u/(p*w*D(v, x) - q*v*D(w, x))
+    if FreeQ(c, x):
+        return True
+    return False
 
+
+def replacement6971(u, p, q, a, w, s, v, m, b, r, x):
+
+    c = u/(p*w*D(v, x) - q*v*D(w, x))
+    return -Dist(c*q/(s + S(1)), Subst(Int((a + b*x**(q/(s + S(1))))**m, x), x, v**(m*p + r + S(1))*w**(s + S(1))), x)
+
+
+def replacement6972(u, m, x):
+    return Dist(S(1)/(m + S(1)), Subst(Int(SubstFor(x**(m + S(1)), u, x), x), x, x**(m + S(1))), x)
+
+
+def With6973(u, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         lst = SubstForFractionalPowerOfLinear(u, x)
-        # rubi.append(6973)
-        return Dist(Part(lst, S(2))*Part(lst, S(4)), Subst(Int(Part(lst, S(1)), x), x, Part(lst, S(3))**(S(1)/Part(lst, S(2)))), x)
-
-def With6974(x, u):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            lst = SubstForFractionalPowerOfQuotientOfLinears(u, x)
-            res = Not(FalseQ(lst))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = And(Not(FalseQ(lst)), SubstForFractionalPowerQ(u, Part(lst, S(3)), x))
+    except (TypeError, AttributeError):
         return False
-def replacement6974(x, u):
+    if res:
+        return True
+    return False
 
+
+def replacement6973(u, x):
+
+    lst = SubstForFractionalPowerOfLinear(u, x)
+    return Dist(Part(lst, S(2))*Part(lst, S(4)), Subst(Int(Part(lst, S(1)), x), x, Part(lst, S(3))**(S(1)/Part(lst, S(2)))), x)
+
+
+def With6974(u, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         lst = SubstForFractionalPowerOfQuotientOfLinears(u, x)
-        # rubi.append(6974)
-        return Dist(Part(lst, S(2))*Part(lst, S(4)), Subst(Int(Part(lst, S(1)), x), x, Part(lst, S(3))**(S(1)/Part(lst, S(2)))), x)
-def replacement6975(m, q, n, x, v, u, w, a, p, z):
-        # rubi.append(6975)
-        return Dist(a**IntPart(p)*v**(-m*FracPart(p))*w**(-n*FracPart(p))*z**(-q*FracPart(p))*(a*v**m*w**n*z**q)**FracPart(p), Int(u*v**(m*p)*w**(n*p)*z**(p*q), x), x)
-def replacement6976(m, n, x, v, u, w, a, p):
-        # rubi.append(6976)
-        return Dist(a**IntPart(p)*v**(-m*FracPart(p))*w**(-n*FracPart(p))*(a*v**m*w**n)**FracPart(p), Int(u*v**(m*p)*w**(n*p), x), x)
-def replacement6977(m, x, v, u, a, p):
-        # rubi.append(6977)
-        return Dist(a**IntPart(p)*v**(-m*FracPart(p))*(a*v**m)**FracPart(p), Int(u*v**(m*p), x), x)
-def replacement6978(n, x, u, a, p, b):
-        # rubi.append(6978)
-        return Dist(FullSimplify(x**(-n/S(2))*sqrt(a + b*x**n)/sqrt(a*x**(-n) + b)), Int(u*x**(n*p)*(a*x**(-n) + b)**p, x), x)
-def replacement6979(n, x, v, u, a, p, b):
-        # rubi.append(6979)
-        return Dist(v**(-n*FracPart(p))*(a + b*v**n)**FracPart(p)*(a*v**(-n) + b)**(-FracPart(p)), Int(u*v**(n*p)*(a*v**(-n) + b)**p, x), x)
-def replacement6980(m, n, x, v, u, a, p, b):
-        # rubi.append(6980)
-        return Dist(v**(-n*FracPart(p))*(a + b*v**n*x**m)**FracPart(p)*(a*v**(-n) + b*x**m)**(-FracPart(p)), Int(u*v**(n*p)*(a*v**(-n) + b*x**m)**p, x), x)
-
-def With6981(m, r, x, u, a, s, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        v = x**(-r*FracPart(m))*(a + b*x**(-r + s))**(-FracPart(m))*(a*x**r + b*x**s)**FracPart(m)
-        if Not(EqQ(v, S(1))):
-            return True
+        res = Not(FalseQ(lst))
+    except (TypeError, AttributeError):
         return False
-def replacement6981(m, r, x, u, a, s, b):
+    if res:
+        return True
+    return False
 
-        v = x**(-r*FracPart(m))*(a + b*x**(-r + s))**(-FracPart(m))*(a*x**r + b*x**s)**FracPart(m)
-        # rubi.append(6981)
-        return Dist(v, Int(u*x**(m*r)*(a + b*x**(-r + s))**m, x), x)
 
-def With6982(n, x, u, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        v = RationalFunctionExpand(u/(a + b*x**n), x)
-        if SumQ(v):
-            return True
+def replacement6974(u, x):
+
+    lst = SubstForFractionalPowerOfQuotientOfLinears(u, x)
+    return Dist(Part(lst, S(2))*Part(lst, S(4)), Subst(Int(Part(lst, S(1)), x), x, Part(lst, S(3))**(S(1)/Part(lst, S(2)))), x)
+
+
+def replacement6975(u, p, q, a, w, z, n, v, m, x):
+    return Dist(a**IntPart(p)*v**(-m*FracPart(p))*w**(-n*FracPart(p))*z**(-q*FracPart(p))*(a*v**m*w**n*z**q)**FracPart(p), Int(u*v**(m*p)*w**(n*p)*z**(p*q), x), x)
+
+
+def replacement6976(u, p, a, w, n, v, m, x):
+    return Dist(a**IntPart(p)*v**(-m*FracPart(p))*w**(-n*FracPart(p))*(a*v**m*w**n)**FracPart(p), Int(u*v**(m*p)*w**(n*p), x), x)
+
+
+def replacement6977(u, p, a, v, m, x):
+    return Dist(a**IntPart(p)*v**(-m*FracPart(p))*(a*v**m)**FracPart(p), Int(u*v**(m*p), x), x)
+
+
+def replacement6978(u, p, a, n, b, x):
+    return Dist(FullSimplify(x**(-n/S(2))*sqrt(a + b*x**n)/sqrt(a*x**(-n) + b)), Int(u*x**(n*p)*(a*x**(-n) + b)**p, x), x)
+
+
+def replacement6979(u, p, a, n, v, b, x):
+    return Dist(v**(-n*FracPart(p))*(a + b*v**n)**FracPart(p)*(a*v**(-n) + b)**(-FracPart(p)), Int(u*v**(n*p)*(a*v**(-n) + b)**p, x), x)
+
+
+def replacement6980(u, p, a, v, n, m, b, x):
+    return Dist(v**(-n*FracPart(p))*(a + b*v**n*x**m)**FracPart(p)*(a*v**(-n) + b*x**m)**(-FracPart(p)), Int(u*v**(n*p)*(a*v**(-n) + b*x**m)**p, x), x)
+
+
+def With6981(u, a, s, m, b, r, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6982(n, x, u, a, b):
+    v = x**(-r*FracPart(m))*(a + b*x**(-r + s))**(-FracPart(m))*(a*x**r + b*x**s)**FracPart(m)
+    if Not(EqQ(v, S(1))):
+        return True
+    return False
 
-        v = RationalFunctionExpand(u/(a + b*x**n), x)
-        # rubi.append(6982)
-        return Int(v, x)
-def replacement6983(c, n, x, u, n2, a, p, b):
-        # rubi.append(6983)
-        return Dist(S(4)**(-p)*c**(-p), Int(u*(b + S(2)*c*x**n)**(S(2)*p), x), x)
-def replacement6984(c, n, x, u, n2, a, p, b):
-        # rubi.append(6984)
-        return Dist((b + S(2)*c*x**n)**(-S(2)*p)*(a + b*x**n + c*x**(S(2)*n))**p, Int(u*(b + S(2)*c*x**n)**(S(2)*p), x), x)
 
-def With6985(c, n, x, u, n2, a, b):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        v = RationalFunctionExpand(u/(a + b*x**n + c*x**(S(2)*n)), x)
-        if SumQ(v):
-            return True
+def replacement6981(u, a, s, m, b, r, x):
+
+    v = x**(-r*FracPart(m))*(a + b*x**(-r + s))**(-FracPart(m))*(a*x**r + b*x**s)**FracPart(m)
+    return Dist(v, Int(u*x**(m*r)*(a + b*x**(-r + s))**m, x), x)
+
+
+def With6982(u, a, n, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6985(c, n, x, u, n2, a, b):
+    v = RationalFunctionExpand(u/(a + b*x**n), x)
+    if SumQ(v):
+        return True
+    return False
 
-        v = RationalFunctionExpand(u/(a + b*x**n + c*x**(S(2)*n)), x)
-        # rubi.append(6985)
-        return Int(v, x)
-def replacement6986(c, m, n, x, u, a, b):
-        # rubi.append(6986)
-        return Int(u*(a*x**m - b*sqrt(c*x**n))/(a**S(2)*x**(S(2)*m) - b**S(2)*c*x**n), x)
 
-def With6987(x, u):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            lst = FunctionOfLinear(u, x)
-            res = Not(FalseQ(lst))
-        except (TypeError, AttributeError):
-            return False
-        return res == True
-        if res:
-            return True
+def replacement6982(u, a, n, b, x):
+
+    v = RationalFunctionExpand(u/(a + b*x**n), x)
+    return Int(v, x)
+
+
+def replacement6983(u, p, n2, a, c, n, b, x):
+    return Dist(S(4)**(-p)*c**(-p), Int(u*(b + S(2)*c*x**n)**(S(2)*p), x), x)
+
+
+def replacement6984(u, p, n2, a, c, n, b, x):
+    return Dist((b + S(2)*c*x**n)**(-S(2)*p)*(a + b*x**n + c*x**(S(2)*n))**p, Int(u*(b + S(2)*c*x**n)**(S(2)*p), x), x)
+
+
+def With6985(u, n2, a, c, n, b, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
+    v = RationalFunctionExpand(u/(a + b*x**n + c*x**(S(2)*n)), x)
+    if SumQ(v):
+        return True
+    return False
 
 
-def replacement6987(x, u):
+def replacement6985(u, n2, a, c, n, b, x):
 
+    v = RationalFunctionExpand(u/(a + b*x**n + c*x**(S(2)*n)), x)
+    return Int(v, x)
+
+
+def replacement6986(u, a, c, n, m, b, x):
+    return Int(u*(a*x**m - b*sqrt(c*x**n))/(a**S(2)*x**(S(2)*m) - b**S(2)*c*x**n), x)
+
+
+def With6987(u, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         lst = FunctionOfLinear(u, x)
-        # rubi.append(6987)
-        return Dist(S(1)/Part(lst, S(3)), Subst(Int(Part(lst, S(1)), x), x, x*Part(lst, S(3)) + Part(lst, S(2))), x)
-
-def With6988(x, u):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            lst = PowerVariableExpn(u, S(0), x)
-            res = And(Not(FalseQ(lst)), NonzeroQ(Part(lst, S(2))))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = Not(FalseQ(lst))
+    except (TypeError, AttributeError):
         return False
-def replacement6988(x, u):
+    if res:
+        return True
+    return False
 
+
+def replacement6987(u, x):
+
+    lst = FunctionOfLinear(u, x)
+    return Dist(S(1)/Part(lst, S(3)), Subst(Int(Part(lst, S(1)), x), x, x*Part(lst, S(3)) + Part(lst, S(2))), x)
+
+
+def With6988(u, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         lst = PowerVariableExpn(u, S(0), x)
-        # rubi.append(6988)
-        return Dist(S(1)/Part(lst, S(2)), Subst(Int(NormalizeIntegrand(Part(lst, S(1))/x, x), x), x, (x*Part(lst, S(3)))**Part(lst, S(2))), x)
-
-def With6989(x, u, m):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            lst = PowerVariableExpn(u, m + S(1), x)
-            res = And(Not(FalseQ(lst)), NonzeroQ(-m + Part(lst, S(2)) + S(-1)))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = And(Not(FalseQ(lst)), NonzeroQ(Part(lst, S(2))))
+    except (TypeError, AttributeError):
         return False
-def replacement6989(x, u, m):
+    if res:
+        return True
+    return False
 
+
+def replacement6988(u, x):
+
+    lst = PowerVariableExpn(u, S(0), x)
+    return Dist(S(1)/Part(lst, S(2)), Subst(Int(NormalizeIntegrand(Part(lst, S(1))/x, x), x), x, (x*Part(lst, S(3)))**Part(lst, S(2))), x)
+
+
+def With6989(u, m, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         lst = PowerVariableExpn(u, m + S(1), x)
-        # rubi.append(6989)
-        return Dist(S(1)/Part(lst, S(2)), Subst(Int(NormalizeIntegrand(Part(lst, S(1))/x, x), x), x, (x*Part(lst, S(3)))**Part(lst, S(2))), x)
-
-def With6990(x, u, m):
-        k = Denominator(m)
-        # rubi.append(6990)
-        return Dist(k, Subst(Int(x**(k*(m + S(1)) + S(-1))*ReplaceAll(u, Rule(x, x**k)), x), x, x**(S(1)/k)), x)
-
-def With6991(x, u):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            lst = FunctionOfSquareRootOfQuadratic(u, x)
-            res = Not(FalseQ(lst))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+        res = And(Not(FalseQ(lst)), NonzeroQ(-m + Part(lst, S(2)) + S(-1)))
+    except (TypeError, AttributeError):
         return False
-def replacement6991(x, u):
+    if res:
+        return True
+    return False
 
+
+def replacement6989(u, m, x):
+
+    lst = PowerVariableExpn(u, m + S(1), x)
+    return Dist(S(1)/Part(lst, S(2)), Subst(Int(NormalizeIntegrand(Part(lst, S(1))/x, x), x), x, (x*Part(lst, S(3)))**Part(lst, S(2))), x)
+
+
+def With6990(u, m, x):
+    k = Denominator(m)
+    return Dist(k, Subst(Int(x**(k*(m + S(1)) + S(-1))*ReplaceAll(u, Rule(x, x**k)), x), x, x**(S(1)/k)), x)
+
+
+def With6991(u, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         lst = FunctionOfSquareRootOfQuadratic(u, x)
-        # rubi.append(6991)
-        return Dist(S(2), Subst(Int(Part(lst, S(1)), x), x, Part(lst, S(2))), x)
-def replacement6992(x, a, v, b):
-        # rubi.append(6992)
-        return Dist(S(1)/(S(2)*a), Int(Together(S(1)/(-v/Rt(-a/b, S(2)) + S(1))), x), x) + Dist(S(1)/(S(2)*a), Int(Together(S(1)/(v/Rt(-a/b, S(2)) + S(1))), x), x)
-def replacement6993(n, x, v, a, b):
-        # rubi.append(6993)
-        return Dist(S(2)/(a*n), Sum_doit(Int(Together(S(1)/(S(1) - (S(-1))**(-S(4)*k/n)*v**S(2)/Rt(-a/b, n/S(2)))), x), List(k, S(1), n/S(2))), x)
-def replacement6994(n, x, v, a, b):
-        # rubi.append(6994)
-        return Dist(S(1)/(a*n), Sum_doit(Int(Together(S(1)/(S(1) - (S(-1))**(-S(2)*k/n)*v/Rt(-a/b, n))), x), List(k, S(1), n)), x)
-def replacement6995(n, x, v, u, a, b):
-        # rubi.append(6995)
-        return Int(ReplaceAll(ExpandIntegrand(PolynomialInSubst(v, u, x)/(a + b*x**n), x), Rule(x, u)), x)
-
-def With6996(x, u):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        v = NormalizeIntegrand(u, x)
-        if UnsameQ(v, u):
-            return True
+        res = Not(FalseQ(lst))
+    except (TypeError, AttributeError):
         return False
-def replacement6996(x, u):
+    if res:
+        return True
+    return False
 
-        v = NormalizeIntegrand(u, x)
-        # rubi.append(6996)
-        return Int(v, x)
 
-def With6997(x, u):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        v = ExpandIntegrand(u, x)
-        if SumQ(v):
-            return True
+def replacement6991(u, x):
+
+    lst = FunctionOfSquareRootOfQuadratic(u, x)
+    return Dist(S(2), Subst(Int(Part(lst, S(1)), x), x, Part(lst, S(2))), x)
+
+
+def replacement6992(v, a, x, b):
+    return Dist(S(1)/(S(2)*a), Int(Together(S(1)/(-v/Rt(-a/b, S(2)) + S(1))), x), x) + Dist(S(1)/(S(2)*a), Int(Together(S(1)/(v/Rt(-a/b, S(2)) + S(1))), x), x)
+
+
+def replacement6993(a, v, n, b, x):
+    return Dist(S(2)/(a*n), Sum_doit(Int(Together(S(1)/(S(1) - (S(-1))**(-S(4)*k/n)*v**S(2)/Rt(-a/b, n/S(2)))), x), List(k, S(1), n/S(2))), x)
+
+
+def replacement6994(a, v, n, b, x):
+    return Dist(S(1)/(a*n), Sum_doit(Int(Together(S(1)/(S(1) - (S(-1))**(-S(2)*k/n)*v/Rt(-a/b, n))), x), List(k, S(1), n)), x)
+
+
+def replacement6995(u, a, n, v, b, x):
+    return Int(ReplaceAll(ExpandIntegrand(PolynomialInSubst(v, u, x)/(a + b*x**n), x), Rule(x, u)), x)
+
+
+def With6996(u, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement6997(x, u):
+    v = NormalizeIntegrand(u, x)
+    if UnsameQ(v, u):
+        return True
+    return False
 
-        v = ExpandIntegrand(u, x)
-        # rubi.append(6997)
-        return Int(v, x)
-def replacement6998(c, m, q, n, x, d, u, a, p, b):
-        # rubi.append(6998)
-        return Dist(x**(-m*p)*(a + b*x**m)**p*(c + d*x**n)**q, Int(u*x**(m*p), x), x)
-def replacement6999(c, n, x, u, n2, a, p, b):
-        # rubi.append(6999)
-        return Dist((S(4)*c)**(S(1)/2 - p)*sqrt(a + b*x**n + c*x**(S(2)*n))/(b + S(2)*c*x**n), Int(u*(b + S(2)*c*x**n)**(S(2)*p), x), x)
 
-def With7000(x, u):
-        if isinstance(x, (int, Integer, float, Float)):
-            return False
-        try:
-            lst = SubstForFractionalPowerOfLinear(u, x)
-            res = Not(FalseQ(lst))
-        except (TypeError, AttributeError):
-            return False
-        if res:
-            return True
+def replacement6996(u, x):
+
+    v = NormalizeIntegrand(u, x)
+    return Int(v, x)
+
+
+def With6997(u, x):
+    if isinstance(x, (int, Integer, float, Float)):
         return False
-def replacement7000(x, u):
+    v = ExpandIntegrand(u, x)
+    if SumQ(v):
+        return True
+    return False
 
+
+def replacement6997(u, x):
+
+    v = ExpandIntegrand(u, x)
+    return Int(v, x)
+
+
+def replacement6998(u, d, p, q, a, c, n, m, b, x):
+    return Dist(x**(-m*p)*(a + b*x**m)**p*(c + d*x**n)**q, Int(u*x**(m*p), x), x)
+
+
+def replacement6999(u, p, n2, a, c, n, b, x):
+    return Dist((S(4)*c)**(S(1)/2 - p)*sqrt(a + b*x**n + c*x**(S(2)*n))/(b + S(2)*c*x**n), Int(u*(b + S(2)*c*x**n)**(S(2)*p), x), x)
+
+
+def With7000(u, x):
+    if isinstance(x, (int, Integer, float, Float)):
+        return False
+    try:
         lst = SubstForFractionalPowerOfLinear(u, x)
-        # rubi.append(7000)
-        return Dist(Part(lst, S(2))*Part(lst, S(4)), Subst(Int(Part(lst, S(1)), x), x, Part(lst, S(3))**(S(1)/Part(lst, S(2)))), x)
-def replacement7001(x, u):
-        # rubi.append(7001)
-        return Int(u, x)
+        res = Not(FalseQ(lst))
+    except (TypeError, AttributeError):
+        return False
+    if res:
+        return True
+    return False
+
+
+def replacement7000(u, x):
+
+    lst = SubstForFractionalPowerOfLinear(u, x)
+    return Dist(Part(lst, S(2))*Part(lst, S(4)), Subst(Int(Part(lst, S(1)), x), x, Part(lst, S(3))**(S(1)/Part(lst, S(2)))), x)
+
+
+def replacement7001(u, x):
+    return Int(u, x)
