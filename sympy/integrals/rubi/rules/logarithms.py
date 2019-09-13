@@ -1,11 +1,10 @@
-'''
+"""
 This code is automatically generated. Never edit it manually.
 For details of generating the code see `rubi_parsing_guide.md` in `parsetools`.
-'''
+"""
 
 from sympy.external import import_module
 matchpy = import_module("matchpy")
-from sympy.utilities.decorator import doctest_depends_on
 
 if matchpy:
     from matchpy import Pattern, ReplacementRule, CustomConstraint, is_match
@@ -128,13 +127,13 @@ if matchpy:
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec, atan2)
     from sympy import pi as Pi
 
-
     A_, B_, C_, F_, G_, H_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, y_, z_ = [WC(i) for i in 'ABCFGHabcdefghijklmnpqrtuvswxyz']
     a1_, a2_, b1_, b2_, c1_, c2_, d1_, d2_, n1_, n2_, e1_, e2_, f1_, f2_, g1_, g2_, n1_, n2_, n3_, Pq_, Pm_, Px_, Qm_, Qr_, Qx_, jn_, mn_, non2_, RFx_, RGx_ = [WC(i) for i in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'n1', 'n2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2', 'n1', 'n2', 'n3', 'Pq', 'Pm', 'Px', 'Qm', 'Qr', 'Qx', 'jn', 'mn', 'non2', 'RFx', 'RGx']]
-    i, ii , Pqq, Q, R, r, C, k, u = symbols('i ii Pqq Q R r C k u')
+    i, ii, Pqq, Q, R, r, C, k, u = symbols('i ii Pqq Q R r C k u')
     _UseGamma = False
     ShowSteps = False
     StepCounter = None
+
 
 def logarithms(rubi):
     from sympy.integrals.rubi.constraints import cons1158, cons8, cons29, cons50, cons127, cons5, cons52, cons89, cons90, cons2, cons3, cons1159, cons417, cons1160, cons1161, cons91, cons545, cons1162, cons210, cons211, cons586, cons4, cons68, cons19, cons1163, cons1164, cons1165, cons1166, cons1167, cons1168, cons1169, cons1170, cons1171, cons150, cons1172, cons1173, cons64, cons95, cons170, cons812, cons813, cons224, cons1174, cons226, cons798, cons81, cons1175, cons20, cons1176, cons1177, cons1178, cons1179, cons1180, cons1181, cons1182, cons1183, cons1184, cons1185, cons1186, cons1187, cons1188, cons1189, cons1190, cons1191, cons1192, cons799, cons1193, cons54, cons927, cons1194, cons1195, cons1196, cons1197, cons1198, cons1199, cons1200, cons1201, cons40, cons554, cons1202, cons1203, cons1204, cons27, cons654, cons1205, cons73, cons130, cons1206, cons1207, cons1208, cons1209, cons1210, cons148, cons1211, cons1212, cons13, cons165, cons1213, cons139, cons1214, cons1215, cons1216, cons1217, cons1218, cons1219, cons1220, cons1221, cons1222, cons1223, cons1224, cons72, cons1225, cons1226, cons808, cons842, cons1227, cons1228, cons70, cons1127, cons1229, cons1230, cons1231, cons1232, cons465, cons1233, cons1234, cons1235, cons1236, cons1237, cons1238, cons33, cons1101, cons1239, cons1057, cons517, cons818, cons819, cons1240, cons1241, cons1242, cons1243, cons1244, cons1245, cons1246, cons1247, cons36, cons37, cons1248, cons1249, cons1250
@@ -619,140 +618,140 @@ def logarithms(rubi):
 
 
 
-def replacement2009(d, p, q, c, f, e, x):
+def replacement2009(c, d, e, f, p, q, x):
     return Simp((e + f*x)*log(c*(d*(e + f*x)**p)**q)/f, x) - Simp(p*q*x, x)
 
 
-def replacement2010(d, p, q, a, c, n, b, f, e, x):
+def replacement2010(a, b, c, d, e, f, n, p, q, x):
     return -Dist(b*n*p*q, Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(-1)), x), x) + Simp((a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f, x)
 
 
-def replacement2011(d, f, e, x):
+def replacement2011(d, e, f, x):
     return Simp(LogIntegral(d*(e + f*x))/(d*f), x)
 
 
-def replacement2012(d, p, q, a, c, b, f, e, x):
+def replacement2012(a, b, c, d, e, f, p, q, x):
     return Simp((c*(d*(e + f*x)**p)**q)**(-S(1)/(p*q))*(e + f*x)*ExpIntegralEi((a + b*log(c*(d*(e + f*x)**p)**q))/(b*p*q))*exp(-a/(b*p*q))/(b*f*p*q), x)
 
 
-def replacement2013(d, p, q, a, c, b, f, e, x):
+def replacement2013(a, b, c, d, e, f, p, q, x):
     return Simp(sqrt(Pi)*(c*(d*(e + f*x)**p)**q)**(-S(1)/(p*q))*(e + f*x)*Erfi(sqrt(a + b*log(c*(d*(e + f*x)**p)**q))/Rt(b*p*q, S(2)))*Rt(b*p*q, S(2))*exp(-a/(b*p*q))/(b*f*p*q), x)
 
 
-def replacement2014(d, p, q, a, c, b, f, e, x):
+def replacement2014(a, b, c, d, e, f, p, q, x):
     return Simp(sqrt(Pi)*(c*(d*(e + f*x)**p)**q)**(-S(1)/(p*q))*(e + f*x)*Erf(sqrt(a + b*log(c*(d*(e + f*x)**p)**q))/Rt(-b*p*q, S(2)))*Rt(-b*p*q, S(2))*exp(-a/(b*p*q))/(b*f*p*q), x)
 
 
-def replacement2015(d, p, q, a, c, n, b, f, e, x):
+def replacement2015(a, b, c, d, e, f, n, p, q, x):
     return -Dist(S(1)/(b*p*q*(n + S(1))), Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(1)), x), x) + Simp((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(1))*(e + f*x)/(b*f*p*q*(n + S(1))), x)
 
 
-def replacement2016(d, p, q, a, c, n, b, f, e, x):
+def replacement2016(a, b, c, d, e, f, n, p, q, x):
     return Simp((c*(d*(e + f*x)**p)**q)**(-S(1)/(p*q))*(-(a + b*log(c*(d*(e + f*x)**p)**q))/(b*p*q))**(-n)*(a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)*Gamma(n + S(1), -(a + b*log(c*(d*(e + f*x)**p)**q))/(b*p*q))*exp(-a/(b*p*q))/f, x)
 
 
-def replacement2017(d, p, q, a, c, g, b, f, e, h, x):
+def replacement2017(a, b, c, d, e, f, g, h, p, q, x):
     return Simp(log(RemoveContent(a + b*log(c*(d*(e + f*x)**p)**q), x))/(b*h*p*q), x)
 
 
-def replacement2018(d, p, q, a, c, g, n, b, f, e, h, x):
+def replacement2018(a, b, c, d, e, f, g, h, n, p, q, x):
     return Simp((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(1))/(b*h*p*q*(n + S(1))), x)
 
 
-def replacement2019(d, p, q, a, c, g, n, m, b, f, e, h, x):
+def replacement2019(a, b, c, d, e, f, g, h, m, n, p, q, x):
     return -Dist(b*n*p*q/(m + S(1)), Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(-1))*(g + h*x)**m, x), x) + Simp((a + b*log(c*(d*(e + f*x)**p)**q))**n*(g + h*x)**(m + S(1))/(h*(m + S(1))), x)
 
 
-def replacement2020(d, p, g, m, f, e, h, x):
+def replacement2020(d, e, f, g, h, m, p, x):
     return Simp((h/f)**(p + S(-1))*LogIntegral(d*(e + f*x)**p)/(d*f*p), x)
 
 
-def replacement2021(d, p, g, m, f, e, h, x):
+def replacement2021(d, e, f, g, h, m, p, x):
     return Dist((e + f*x)**(S(1) - p)*(g + h*x)**(p + S(-1)), Int((e + f*x)**(p + S(-1))/log(d*(e + f*x)**p), x), x)
 
 
-def replacement2022(d, p, q, a, c, g, m, b, f, e, h, x):
+def replacement2022(a, b, c, d, e, f, g, h, m, p, q, x):
     return Simp((c*(d*(e + f*x)**p)**q)**(-(m + S(1))/(p*q))*(g + h*x)**(m + S(1))*ExpIntegralEi((a + b*log(c*(d*(e + f*x)**p)**q))*(m + S(1))/(b*p*q))*exp(-a*(m + S(1))/(b*p*q))/(b*h*p*q), x)
 
 
-def replacement2023(d, p, q, a, c, g, m, b, f, e, h, x):
+def replacement2023(a, b, c, d, e, f, g, h, m, p, q, x):
     return Simp(sqrt(Pi)*(c*(d*(e + f*x)**p)**q)**(-(m + S(1))/(p*q))*(g + h*x)**(m + S(1))*Erfi(sqrt(a + b*log(c*(d*(e + f*x)**p)**q))*Rt((m + S(1))/(b*p*q), S(2)))*exp(-a*(m + S(1))/(b*p*q))/(b*h*p*q*Rt((m + S(1))/(b*p*q), S(2))), x)
 
 
-def replacement2024(d, p, q, a, c, g, m, b, f, e, h, x):
+def replacement2024(a, b, c, d, e, f, g, h, m, p, q, x):
     return Simp(sqrt(Pi)*(c*(d*(e + f*x)**p)**q)**(-(m + S(1))/(p*q))*(g + h*x)**(m + S(1))*Erf(sqrt(a + b*log(c*(d*(e + f*x)**p)**q))*Rt(-(m + S(1))/(b*p*q), S(2)))*exp(-a*(m + S(1))/(b*p*q))/(b*h*p*q*Rt(-(m + S(1))/(b*p*q), S(2))), x)
 
 
-def replacement2025(d, p, q, a, c, g, n, m, b, f, e, h, x):
+def replacement2025(a, b, c, d, e, f, g, h, m, n, p, q, x):
     return -Dist((m + S(1))/(b*p*q*(n + S(1))), Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(1))*(g + h*x)**m, x), x) + Simp((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(1))*(g + h*x)**(m + S(1))/(b*h*p*q*(n + S(1))), x)
 
 
-def replacement2026(d, p, q, a, c, g, n, m, b, f, e, h, x):
+def replacement2026(a, b, c, d, e, f, g, h, m, n, p, q, x):
     return Simp((c*(d*(e + f*x)**p)**q)**(-(m + S(1))/(p*q))*(-(a + b*log(c*(d*(e + f*x)**p)**q))*(m + S(1))/(b*p*q))**(-n)*(a + b*log(c*(d*(e + f*x)**p)**q))**n*(g + h*x)**(m + S(1))*Gamma(n + S(1), -(a + b*log(c*(d*(e + f*x)**p)**q))*(m + S(1))/(b*p*q))*exp(-a*(m + S(1))/(b*p*q))/(h*(m + S(1))), x)
 
 
-def replacement2027(c, g, f, e, h, x):
+def replacement2027(c, e, f, g, h, x):
     return -Simp(PolyLog(S(2), -(g + h*x)*Together(c*f/h))/h, x)
 
 
-def replacement2028(a, c, g, b, f, e, h, x):
+def replacement2028(a, b, c, e, f, g, h, x):
     return Dist(b, Int(log(-h*(e + f*x)/(-e*h + f*g))/(g + h*x), x), x) + Simp((a + b*log(c*(e - f*g/h)))*log(g + h*x)/h, x)
 
 
-def replacement2029(d, p, q, a, c, g, n, b, f, e, h, x):
+def replacement2029(a, b, c, d, e, f, g, h, n, p, q, x):
     return -Dist(b*f*n*p*q/h, Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(-1))*log(f*(g + h*x)/(-e*h + f*g))/(e + f*x), x), x) + Simp((a + b*log(c*(d*(e + f*x)**p)**q))**n*log(f*(g + h*x)/(-e*h + f*g))/h, x)
 
 
-def replacement2030(d, p, q, a, c, g, m, b, f, e, h, x):
+def replacement2030(a, b, c, d, e, f, g, h, m, p, q, x):
     return -Dist(b*f*p*q/(h*(m + S(1))), Int((g + h*x)**(m + S(1))/(e + f*x), x), x) + Simp((a + b*log(c*(d*(e + f*x)**p)**q))*(g + h*x)**(m + S(1))/(h*(m + S(1))), x)
 
 
-def replacement2031(d, p, q, a, c, g, n, b, f, e, h, x):
+def replacement2031(a, b, c, d, e, f, g, h, n, p, q, x):
     return -Dist(b*f*n*p*q/(-e*h + f*g), Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(-1))/(g + h*x), x), x) + Simp((a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/((g + h*x)*(-e*h + f*g)), x)
 
 
-def replacement2032(d, p, q, a, c, g, n, m, b, f, e, h, x):
+def replacement2032(a, b, c, d, e, f, g, h, m, n, p, q, x):
     return -Dist(b*f*n*p*q/(h*(m + S(1))), Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(-1))*(g + h*x)**(m + S(1))/(e + f*x), x), x) + Simp((a + b*log(c*(d*(e + f*x)**p)**q))**n*(g + h*x)**(m + S(1))/(h*(m + S(1))), x)
 
 
-def replacement2033(d, p, q, a, c, g, m, b, f, e, h, x):
+def replacement2033(a, b, c, d, e, f, g, h, m, p, q, x):
     return Int(ExpandIntegrand((g + h*x)**m/(a + b*log(c*(d*(e + f*x)**p)**q)), x), x)
 
 
-def replacement2034(d, p, q, a, c, g, n, m, b, f, e, h, x):
+def replacement2034(a, b, c, d, e, f, g, h, m, n, p, q, x):
     return -Dist((m + S(1))/(b*p*q*(n + S(1))), Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(1))*(g + h*x)**m, x), x) + Dist(m*(-e*h + f*g)/(b*f*p*q*(n + S(1))), Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(1))*(g + h*x)**(m + S(-1)), x), x) + Simp((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(1))*(e + f*x)*(g + h*x)**m/(b*f*p*q*(n + S(1))), x)
 
 
-def replacement2035(d, p, q, a, c, g, n, m, b, f, e, h, x):
+def replacement2035(a, b, c, d, e, f, g, h, m, n, p, q, x):
     return Int(ExpandIntegrand((a + b*log(c*(d*(e + f*x)**p)**q))**n*(g + h*x)**m, x), x)
 
 
-def replacement2036(u, d, p, q, a, c, n, v, m, b, x):
+def replacement2036(a, b, c, d, m, n, p, q, u, v, x):
     return Int((a + b*log(c*(d*ExpandToSum(v, x)**p)**q))**n*ExpandToSum(u, x)**m, x)
 
 
-def replacement2037(d, p, q, a, c, g, n, m, b, f, e, h, x):
+def replacement2037(a, b, c, d, e, f, g, h, m, n, p, q, x):
     return Int((a + b*log(c*(d*(e + f*x)**p)**q))**n*(g + h*x)**m, x)
 
 
-def replacement2038(j, c, g, i, f, e, h, x):
+def replacement2038(c, e, f, g, h, i, j, x):
     return Simp(f*PolyLog(S(2), f*(i + j*x)/(j*(e + f*x)))/(h*(-e*j + f*i)), x)
 
 
-def replacement2039(j, a, c, g, b, i, f, e, h, x):
+def replacement2039(a, b, c, e, f, g, h, i, j, x):
     return Dist(a, Int(S(1)/((g + h*x)*(i + j*x)), x), x) + Dist(b, Int(log(c/(e + f*x))/((g + h*x)*(i + j*x)), x), x)
 
 
-def With2040(d, p, q, a, j, c, g, m, b, i, f, e, h, x):
+def With2040(a, b, c, d, e, f, g, h, i, j, m, p, q, x):
     u = IntHide((i + j*x)**m/(g + h*x), x)
     return -Dist(b*h*p*q, Int(SimplifyIntegrand(u/(g + h*x), x), x), x) + Dist(a + b*log(c*(d*(e + f*x)**p)**q), u, x)
 
 
-def replacement2041(a, j, c, g, n, m, b, i, f, e, h, x):
+def replacement2041(a, b, c, e, f, g, h, i, j, m, n, x):
     return Dist(c**(-m)*f**(-m)/h, Subst(Int((a + b*x)**n*(-c*e*j + c*f*i + j*exp(x))**m, x), x, log(c*(e + f*x))), x)
 
 
-def With2042(d, p, q, a, j, c, g, n, m, b, i, f, e, h, x):
+def With2042(a, b, c, d, e, f, g, h, i, j, m, n, p, q, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     u = ExpandIntegrand((a + b*log(c*(d*(e + f*x)**p)**q))**n, (i + j*x)**m/(g + h*x), x)
@@ -761,101 +760,101 @@ def With2042(d, p, q, a, j, c, g, n, m, b, i, f, e, h, x):
     return False
 
 
-def replacement2042(d, p, q, a, j, c, g, n, m, b, i, f, e, h, x):
+def replacement2042(a, b, c, d, e, f, g, h, i, j, m, n, p, q, x):
 
     u = ExpandIntegrand((a + b*log(c*(d*(e + f*x)**p)**q))**n, (i + j*x)**m/(g + h*x), x)
     return Int(u, x)
 
 
-def replacement2043(d, p, q, a, j, c, g, n, m, b, i, f, e, h, x):
+def replacement2043(a, b, c, d, e, f, g, h, i, j, m, n, p, q, x):
     return Int((a + b*log(c*(d*(e + f*x)**p)**q))**n*(i + j*x)**m/(g + h*x), x)
 
 
-def replacement2044(c, g, f, e, h, x):
+def replacement2044(c, e, f, g, h, x):
     return -Simp(f*PolyLog(S(2), (-e + f*x)/(e + f*x))/(S(2)*e*h), x)
 
 
-def replacement2045(a, c, g, b, f, e, h, x):
+def replacement2045(a, b, c, e, f, g, h, x):
     return Dist(b, Int(log(S(2)*e/(e + f*x))/(g + h*x**S(2)), x), x) + Dist(a + b*log(c/(S(2)*e)), Int(S(1)/(g + h*x**S(2)), x), x)
 
 
-def replacement2046(d, p, q, a, c, g, b, i, f, e, h, x):
+def replacement2046(a, b, c, d, e, f, g, h, i, p, q, x):
     return Dist(e*f, Int((a + b*log(c*(d*(e + f*x)**p)**q))/((e + f*x)*(e*i*x + f*g)), x), x)
 
 
-def replacement2047(d, p, q, a, c, g, b, i, f, e, x):
+def replacement2047(a, b, c, d, e, f, g, i, p, q, x):
     return Dist(e*f, Int((a + b*log(c*(d*(e + f*x)**p)**q))/((e + f*x)*(e*i*x + f*g)), x), x)
 
 
-def With2048(d, p, q, a, c, g, b, f, e, h, x):
+def With2048(a, b, c, d, e, f, g, h, p, q, x):
     u = IntHide(S(1)/sqrt(g + h*x**S(2)), x)
     return -Dist(b*f*p*q, Int(SimplifyIntegrand(u/(e + f*x), x), x), x) + Simp(u*(a + b*log(c*(d*(e + f*x)**p)**q)), x)
 
 
-def With2049(h2, d, p, h1, q, a, c, g2, b, g1, f, e, x):
+def With2049(a, b, c, d, e, f, g1, g2, h1, h2, p, q, x):
     u = IntHide(S(1)/sqrt(g1*g2 + h1*h2*x**S(2)), x)
     return -Dist(b*f*p*q, Int(SimplifyIntegrand(u/(e + f*x), x), x), x) + Simp(u*(a + b*log(c*(d*(e + f*x)**p)**q)), x)
 
 
-def replacement2050(d, p, q, a, c, g, b, f, e, h, x):
+def replacement2050(a, b, c, d, e, f, g, h, p, q, x):
     return Dist(sqrt(S(1) + h*x**S(2)/g)/sqrt(g + h*x**S(2)), Int((a + b*log(c*(d*(e + f*x)**p)**q))/sqrt(S(1) + h*x**S(2)/g), x), x)
 
 
-def replacement2051(h2, d, p, h1, q, a, c, g2, b, g1, f, e, x):
+def replacement2051(a, b, c, d, e, f, g1, g2, h1, h2, p, q, x):
     return Dist(sqrt(S(1) + h1*h2*x**S(2)/(g1*g2))/(sqrt(g1 + h1*x)*sqrt(g2 + h2*x)), Int((a + b*log(c*(d*(e + f*x)**p)**q))/sqrt(S(1) + h1*h2*x**S(2)/(g1*g2)), x), x)
 
 
-def replacement2052(d, p, k, q, j, a, c, g, n, i, b, f, e, h, x):
+def replacement2052(a, b, c, d, e, f, g, h, i, j, k, n, p, q, x):
     return Dist(b*f*n*p*q/h, Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(-1))*PolyLog(S(2), Together(-i*(j + k*x) + S(1)))/(e + f*x), x), x) - Simp((a + b*log(c*(d*(e + f*x)**p)**q))**n*PolyLog(S(2), Together(-i*(j + k*x) + S(1)))/h, x)
 
 
-def replacement2053(d, p, k, q, j, a, c, g, n, m, i, b, f, e, h, x):
+def replacement2053(a, b, c, d, e, f, g, h, i, j, k, m, n, p, q, x):
     return Dist(b*f*n*p*q/(h*m), Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(-1))*PolyLog(S(2), -i*(j + k*x)**m)/(e + f*x), x), x) - Simp((a + b*log(c*(d*(e + f*x)**p)**q))**n*PolyLog(S(2), -i*(j + k*x)**m)/(h*m), x)
 
 
-def replacement2054(d, p, k, q, a, j, c, g, n, r, m, b, i, f, e, h, x):
+def replacement2054(a, b, c, d, e, f, g, h, i, j, k, m, n, p, q, r, x):
     return -Dist(b*f*n*p*q/(h*m), Int((a + b*log(c*(d*(e + f*x)**p)**q))**(n + S(-1))*PolyLog(r + S(1), i*(j + k*x)**m)/(e + f*x), x), x) + Simp((a + b*log(c*(d*(e + f*x)**p)**q))**n*PolyLog(r + S(1), i*(j + k*x)**m)/(h*m), x)
 
 
-def With2055(d, p, q, a, c, g, m, b, F, f, e, h, x, Px):
+def With2055(F, Px, a, b, c, d, e, f, g, h, m, p, q, x):
     u = IntHide(Px*F(g + h*x)**m, x)
     return -Dist(b*f*p*q, Int(SimplifyIntegrand(u/(e + f*x), x), x), x) + Dist(a + b*log(c*(d*(e + f*x)**p)**q), u, x)
 
 
-def replacement2056(d, p, q, a, c, n, m, b, f, e, x):
+def replacement2056(a, b, c, d, e, f, m, n, p, q, x):
     return Dist(S(1)/m, Subst(Int((a + b*log(c*(d*(e + f*x)**p)**q))**n/x, x), x, x**m), x)
 
 
-def replacement2057(d, p, q, a, c, n, m, b, f, e, r, x):
+def replacement2057(a, b, c, d, e, f, m, n, p, q, r, x):
     return Dist(S(1)/m, Subst(Int((a + b*log(c*(d*(e + f*x)**p)**q))**n/x, x), x, x**m), x)
 
 
-def replacement2058(d, p, r1, q, a, c, n, r, b, f, e, x):
+def replacement2058(a, b, c, d, e, f, n, p, q, r, r1, x):
     return Dist(S(1)/r, Subst(Int((a + b*log(c*(d*(e + f*x)**p)**q))**n, x), x, x**r), x)
 
 
-def replacement2059(d, p, r1, q, a, c, g, n, r, m, b, f, e, h, x):
+def replacement2059(a, b, c, d, e, f, g, h, m, n, p, q, r, r1, x):
     return Dist(S(1)/r, Subst(Int((a + b*log(c*(d*(e + f*x)**p)**q))**n*(g + h*x)**m, x), x, x**r), x)
 
 
-def With2060(d, a, c, n, b, e, x):
+def With2060(a, b, c, d, e, n, x):
     u = IntHide(S(1)/(d + e*x**S(2)), x)
     return -Dist(b*n, Int(u/x, x), x) + Dist(a + b*log(c*x**n), u, x)
 
 
-def replacement2061(d, a, c, mn, n, b, e, x):
+def replacement2061(a, b, c, d, e, mn, n, x):
     return Simp(PolyLog(S(2), -Together(b*c*x**(-n)*(d + e*x**n)/d))/(d*n), x)
 
 
-def replacement2062(d, a, c, mn, n, b, e, x):
+def replacement2062(a, b, c, d, e, mn, n, x):
     return Simp(PolyLog(S(2), -Together(b*c*x**(-n)*(d + e*x**n)/d))/(d*n), x)
 
 
-def replacement2063(d, p, q, a, c, n, b, f, e, x, Px):
+def replacement2063(Px, a, b, c, d, e, f, n, p, q, x):
     return Int(ExpandIntegrand(Px*(a + b*log(c*(d*(e + f*x)**p)**q))**n, x), x)
 
 
-def With2064(d, p, RFx, q, a, c, n, b, f, e, x):
+def With2064(RFx, a, b, c, d, e, f, n, p, q, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     u = ExpandIntegrand((a + b*log(c*(d*(e + f*x)**p)**q))**n, RFx, x)
@@ -864,13 +863,13 @@ def With2064(d, p, RFx, q, a, c, n, b, f, e, x):
     return False
 
 
-def replacement2064(d, p, RFx, q, a, c, n, b, f, e, x):
+def replacement2064(RFx, a, b, c, d, e, f, n, p, q, x):
 
     u = ExpandIntegrand((a + b*log(c*(d*(e + f*x)**p)**q))**n, RFx, x)
     return Int(u, x)
 
 
-def With2065(d, p, RFx, q, a, c, n, b, f, e, x):
+def With2065(RFx, a, b, c, d, e, f, n, p, q, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     u = ExpandIntegrand(RFx*(a + b*log(c*(d*(e + f*x)**p)**q))**n, x)
@@ -879,227 +878,227 @@ def With2065(d, p, RFx, q, a, c, n, b, f, e, x):
     return False
 
 
-def replacement2065(d, p, RFx, q, a, c, n, b, f, e, x):
+def replacement2065(RFx, a, b, c, d, e, f, n, p, q, x):
 
     u = ExpandIntegrand(RFx*(a + b*log(c*(d*(e + f*x)**p)**q))**n, x)
     return Int(u, x)
 
 
-def replacement2066(u, d, p, q, a, c, g, n, b, f, e, x):
+def replacement2066(a, b, c, d, e, f, g, n, p, q, u, x):
     return Int(u*(a + b*log(c*(S(4)**(-p)*d*g**(-p)*(f + S(2)*g*x)**(S(2)*p))**q))**n, x)
 
 
-def replacement2067(u, d, p, q, a, c, n, v, b, x):
+def replacement2067(a, b, c, d, n, p, q, u, v, x):
     return Int(u*(a + b*log(c*(d*ExpandToSum(v, x)**p)**q))**n, x)
 
 
-def replacement2068(p, q, a, c, n, b, r, x):
+def replacement2068(a, b, c, n, p, q, r, x):
     return Subst(Int(log(x**(n*p*q))**r, x), x**(n*p*q), a*(b*(c*x**n)**p)**q)
 
 
-def replacement2069(p, q, a, c, n, m, b, r, x):
+def replacement2069(a, b, c, m, n, p, q, r, x):
     return Subst(Int(x**m*log(x**(n*p*q))**r, x), x**(n*p*q), a*(b*(c*x**n)**p)**q)
 
 
-def replacement2070(u, d, e1, p, a, c, n, b, e, x):
+def replacement2070(a, b, c, d, e, e1, n, p, u, x):
     return Dist(log(e*(b*e1/d)**n)**p, Int(u, x), x)
 
 
-def replacement2071(d, e1, p, n2, a, c, n, b, n1, e, x):
+def replacement2071(a, b, c, d, e, e1, n, n1, n2, p, x):
     return -Dist(n*n1*p*(-a*d + b*c)/b, Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**(p + S(-1))/(c + d*x), x), x) + Simp((a + b*x)*log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/b, x)
 
 
-def replacement2072(d, a, c, g, b, f, e, x):
+def replacement2072(a, b, c, d, e, f, g, x):
     return Simp(PolyLog(S(2), Together(-a*e + c)/(c + d*x))/g, x)
 
 
-def replacement2073(d, e1, p, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2073(a, b, c, d, e, e1, f, g, n, n1, n2, p, x):
     return Dist(n*n1*p*(-a*d + b*c)/g, Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**(p + S(-1))*log((-a*d + b*c)/(b*(c + d*x)))/((a + b*x)*(c + d*x)), x), x) - Simp(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p*log((-a*d + b*c)/(b*(c + d*x)))/g, x)
 
 
-def replacement2074(d, e1, p, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2074(a, b, c, d, e, e1, f, g, n, n1, n2, p, x):
     return Dist(n*n1*p*(-a*d + b*c)/g, Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**(p + S(-1))*log(-(-a*d + b*c)/(d*(a + b*x)))/((a + b*x)*(c + d*x)), x), x) - Simp(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p*log(-(-a*d + b*c)/(d*(a + b*x)))/g, x)
 
 
-def replacement2075(d, e1, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2075(a, b, c, d, e, e1, f, g, n, n1, n2, x):
     return -Dist(n*n1*(-a*d + b*c)/g, Int(log(f + g*x)/((a + b*x)*(c + d*x)), x), x) + Simp(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)*log(f + g*x)/g, x)
 
 
-def replacement2076(d, e1, p, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2076(a, b, c, d, e, e1, f, g, n, n1, n2, p, x):
     return Dist(d/g, Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/(c + d*x), x), x) - Dist((-c*g + d*f)/g, Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/((c + d*x)*(f + g*x)), x), x)
 
 
-def replacement2077(d, a, c, g, b, f, e, x):
+def replacement2077(a, b, c, d, e, f, g, x):
     return Simp(d**S(2)*LogIntegral(e*(a + b*x)/(c + d*x))/(e*g**S(2)*(-a*d + b*c)), x)
 
 
-def replacement2078(d, e1, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2078(a, b, c, d, e, e1, f, g, n, n1, n2, x):
     return Simp(d**S(2)*(e*(e1*(a + b*x)**n1*(c + d*x)**n2)**n)**(-S(1)/(n*n1))*(a + b*x)*ExpIntegralEi(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)/(n*n1))/(g**S(2)*n*n1*(c + d*x)*(-a*d + b*c)), x)
 
 
-def replacement2079(d, e1, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2079(a, b, c, d, e, e1, f, g, n, n1, n2, x):
     return Simp(b**S(2)*(e*(e1*(a + b*x)**n1*(c + d*x)**n2)**n)**(S(1)/(n*n1))*(c + d*x)*ExpIntegralEi(-log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)/(n*n1))/(g**S(2)*n*n1*(a + b*x)*(-a*d + b*c)), x)
 
 
-def replacement2080(d, e1, p, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2080(a, b, c, d, e, e1, f, g, n, n1, n2, p, x):
     return -Dist(n*n1*p*(-a*d + b*c)/(-a*g + b*f), Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**(p + S(-1))/((c + d*x)*(f + g*x)), x), x) + Simp((a + b*x)*log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/((f + g*x)*(-a*g + b*f)), x)
 
 
-def replacement2081(d, e1, p, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2081(a, b, c, d, e, e1, f, g, n, n1, n2, p, x):
     return -Dist(n*n1*p*(-a*d + b*c)/(-c*g + d*f), Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**(p + S(-1))/((a + b*x)*(f + g*x)), x), x) + Simp((c + d*x)*log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/((f + g*x)*(-c*g + d*f)), x)
 
 
-def replacement2082(d, e1, p, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2082(a, b, c, d, e, e1, f, g, n, n1, n2, p, x):
     return Dist(b/(-a*g + b*f), Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/(f + g*x)**S(2), x), x) - Dist(g/(-a*g + b*f), Int((a + b*x)*log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/(f + g*x)**S(3), x), x)
 
 
-def replacement2083(d, e1, p, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2083(a, b, c, d, e, e1, f, g, n, n1, n2, p, x):
     return Dist(d/(-c*g + d*f), Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/(f + g*x)**S(2), x), x) - Dist(g/(-c*g + d*f), Int((c + d*x)*log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/(f + g*x)**S(3), x), x)
 
 
-def replacement2084(d, e1, p, n2, a, c, g, n, m, b, n1, f, e, x):
+def replacement2084(a, b, c, d, e, e1, f, g, m, n, n1, n2, p, x):
     return -Dist(n*n1*p*(-a*d + b*c)/(g*(m + S(1))), Int((f + g*x)**(m + S(1))*log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**(p + S(-1))/((a + b*x)*(c + d*x)), x), x) + Simp((f + g*x)**(m + S(1))*log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/(g*(m + S(1))), x)
 
 
-def replacement2085(u, d, p, m2, a, c, n, m, b, e, x):
+def replacement2085(a, b, c, d, e, m, m2, n, p, u, x):
     return -Dist(n*p/(m + S(1)), Int((a + b*x)**m*(c + d*x)**(-m + S(-2))*log(e*u**n)**(p + S(-1)), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(-m + S(-1))*log(e*u**n)**p/((m + S(1))*(-a*d + b*c)), x)
 
 
-def replacement2086(u, d, p, m2, a, c, m, b, x):
+def replacement2086(a, b, c, d, m, m2, p, u, x):
     return -Dist(p/(m + S(1)), Int((a + b*x)**m*(c + d*x)**(-m + S(-2))*log(u)**(p + S(-1)), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(-m + S(-1))*log(u)**p/((m + S(1))*(-a*d + b*c)), x)
 
 
-def replacement2087(u, d, m2, a, c, n, m, b, e, x):
+def replacement2087(a, b, c, d, e, m, m2, n, u, x):
     return Simp((e*u**n)**(-(m + S(1))/n)*(a + b*x)**(m + S(1))*(c + d*x)**(-m + S(-1))*ExpIntegralEi((m + S(1))*log(e*u**n)/n)/(n*(-a*d + b*c)), x)
 
 
-def replacement2088(u, d, m2, a, c, m, b, x):
+def replacement2088(a, b, c, d, m, m2, u, x):
     return Simp(u**(-m + S(-1))*(a + b*x)**(m + S(1))*(c + d*x)**(-m + S(-1))*ExpIntegralEi((m + S(1))*log(u))/(-a*d + b*c), x)
 
 
-def replacement2089(u, d, p, m2, a, c, n, m, b, e, x):
+def replacement2089(a, b, c, d, e, m, m2, n, p, u, x):
     return -Dist((m + S(1))/(n*(p + S(1))), Int((a + b*x)**m*(c + d*x)**(-m + S(-2))*log(e*u**n)**(p + S(1)), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(-m + S(-1))*log(e*u**n)**(p + S(1))/(n*(p + S(1))*(-a*d + b*c)), x)
 
 
-def replacement2090(u, d, p, m2, a, c, m, b, x):
+def replacement2090(a, b, c, d, m, m2, p, u, x):
     return -Dist((m + S(1))/(p + S(1)), Int((a + b*x)**m*(c + d*x)**(-m + S(-2))*log(u)**(p + S(1)), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(-m + S(-1))*log(u)**(p + S(1))/((p + S(1))*(-a*d + b*c)), x)
 
 
-def replacement2091(d, e1, p, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2091(a, b, c, d, e, e1, f, g, n, n1, n2, p, x):
     return Dist(d/g, Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/(c + d*x)**S(2), x), x)
 
 
-def replacement2092(d, a, c, g, b, f, e, x):
+def replacement2092(a, b, c, d, e, f, g, x):
     return Simp(PolyLog(S(2), -(f + g*x)*(a*e - c)/(f*(c + d*x)))/(-c*g + d*f), x)
 
 
-def replacement2093(d, e1, p, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2093(a, b, c, d, e, e1, f, g, n, n1, n2, p, x):
     return Dist(n*n1*p*(-a*d + b*c)/(-c*g + d*f), Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**(p + S(-1))*log((f + g*x)*(-a*d + b*c)/((c + d*x)*(-a*g + b*f)))/((a + b*x)*(c + d*x)), x), x) - Simp(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p*log((f + g*x)*(-a*d + b*c)/((c + d*x)*(-a*g + b*f)))/(-c*g + d*f), x)
 
 
-def replacement2094(d, a, c, g, b, f, e, x):
+def replacement2094(a, b, c, d, e, f, g, x):
     return Simp(c*PolyLog(S(2), -(c - d*x)*(a*e - c)/(c*(c + d*x)))/(S(2)*d*f), x)
 
 
-def replacement2095(d, e1, p, n2, a, c, g, n, b, n1, f, e, h, x):
+def replacement2095(a, b, c, d, e, e1, f, g, h, n, n1, n2, p, x):
     return Dist(d**S(2), Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/((c + d*x)*(-c*h + d*g + d*h*x)), x), x)
 
 
-def replacement2096(d, e1, p, n2, a, c, n, b, n1, f, e, h, x):
+def replacement2096(a, b, c, d, e, e1, f, h, n, n1, n2, p, x):
     return -Dist(d**S(2)/h, Int(log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/((c - d*x)*(c + d*x)), x), x)
 
 
-def replacement2097(d, e1, p, n2, a, c, g, n, b, n1, f, e, x):
+def replacement2097(a, b, c, d, e, e1, f, g, n, n1, n2, p, x):
     return Dist(b/(g*n*n1*(-a*d + b*c)), Subst(Int(x**p, x), x, log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)), x)
 
 
-def replacement2098(u, d, p, a, c, n, v, b, e, x):
+def replacement2098(a, b, c, d, e, n, p, u, v, x):
     return Dist(n*p, Int(PolyLog(S(2), Together(S(1) - v))*log(e*u**n)**(p + S(-1))/((a + b*x)*(c + d*x)), x), x) - Simp(PolyLog(S(2), Together(S(1) - v))*log(e*u**n)**p/(-a*d + b*c), x)
 
 
-def replacement2099(u, d, p, a, c, v, b, x):
+def replacement2099(a, b, c, d, p, u, v, x):
     return Dist(p, Int(PolyLog(S(2), Together(S(1) - v))*log(u)**(p + S(-1))/((a + b*x)*(c + d*x)), x), x) - Simp(PolyLog(S(2), Together(S(1) - v))*log(u)**p/(-a*d + b*c), x)
 
 
-def With2100(u, d, p, a, c, n, v, b, e, x):
+def With2100(a, b, c, d, e, n, p, u, v, x):
     f = (S(1) - v)/u
     return Dist(f/(n*(p + S(1))), Int(log(e*u**n)**(p + S(1))/((c + d*x)*(-a*f - b*f + c + d)), x), x) + Simp(log(v)*log(e*u**n)**(p + S(1))/(n*(p + S(1))*(-a*d + b*c)), x)
 
 
-def With2101(u, d, p, a, c, v, b, x):
+def With2101(a, b, c, d, p, u, v, x):
     f = (S(1) - v)/u
     return Dist(f/(p + S(1)), Int(log(u)**(p + S(1))/((c + d*x)*(-a*f - b*f + c + d)), x), x) + Simp(log(u)**(p + S(1))*log(v)/((p + S(1))*(-a*d + b*c)), x)
 
 
-def replacement2102(u, d, p, a, c, n, v, b, e, x):
+def replacement2102(a, b, c, d, e, n, p, u, v, x):
     return -Dist(n*p, Int(PolyLog(S(2), Together(S(1) - v))*log(e*u**n)**(p + S(-1))/((a + b*x)*(c + d*x)), x), x) + Simp(PolyLog(S(2), Together(S(1) - v))*log(e*u**n)**p/(-a*d + b*c), x)
 
 
-def replacement2103(u, d, p, a, c, v, b, x):
+def replacement2103(a, b, c, d, p, u, v, x):
     return -Dist(p, Int(PolyLog(S(2), Together(S(1) - v))*log(u)**(p + S(-1))/((a + b*x)*(c + d*x)), x), x) + Simp(PolyLog(S(2), Together(S(1) - v))*log(u)**p/(-a*d + b*c), x)
 
 
-def With2104(u, d, p, a, c, n, v, b, e, x):
+def With2104(a, b, c, d, e, n, p, u, v, x):
     f = u*(S(1) - v)
     return -Dist(f/(n*(p + S(1))), Int(log(e*u**n)**(p + S(1))/((a + b*x)*(a + b - c*f - d*f)), x), x) + Simp(log(v)*log(e*u**n)**(p + S(1))/(n*(p + S(1))*(-a*d + b*c)), x)
 
 
-def With2105(u, d, p, a, c, v, b, x):
+def With2105(a, b, c, d, p, u, v, x):
     f = u*(S(1) - v)
     return -Dist(f/(p + S(1)), Int(log(u)**(p + S(1))/((a + b*x)*(a + b - c*f - d*f)), x), x) + Simp(log(u)**(p + S(1))*log(v)/((p + S(1))*(-a*d + b*c)), x)
 
 
-def replacement2106(u, d, p, q, a, c, n, v, b, e, x):
+def replacement2106(a, b, c, d, e, n, p, q, u, v, x):
     return -Dist(n*p, Int(PolyLog(q + S(1), v)*log(e*u**n)**(p + S(-1))/((a + b*x)*(c + d*x)), x), x) + Simp(PolyLog(q + S(1), v)*log(e*u**n)**p/(-a*d + b*c), x)
 
 
-def replacement2107(u, d, p, q, a, c, v, b, x):
+def replacement2107(a, b, c, d, p, q, u, v, x):
     return -Dist(p, Int(PolyLog(q + S(1), v)*log(u)**(p + S(-1))/((a + b*x)*(c + d*x)), x), x) + Simp(PolyLog(q + S(1), v)*log(u)**p/(-a*d + b*c), x)
 
 
-def replacement2108(u, d, p, q, a, c, n, v, b, e, x):
+def replacement2108(a, b, c, d, e, n, p, q, u, v, x):
     return -Dist(S(1)/(n*(p + S(1))), Int(PolyLog(q + S(-1), v)*log(e*u**n)**(p + S(1))/((a + b*x)*(c + d*x)), x), x) + Simp(PolyLog(q, v)*log(e*u**n)**(p + S(1))/(n*(p + S(1))*(-a*d + b*c)), x)
 
 
-def replacement2109(u, d, p, q, a, c, v, b, x):
+def replacement2109(a, b, c, d, p, q, u, v, x):
     return -Dist(S(1)/(p + S(1)), Int(PolyLog(q + S(-1), v)*log(u)**(p + S(1))/((a + b*x)*(c + d*x)), x), x) + Simp(PolyLog(q, v)*log(u)**(p + S(1))/((p + S(1))*(-a*d + b*c)), x)
 
 
-def replacement2110(u, d, p, q, a, c, n, v, b, e, x):
+def replacement2110(a, b, c, d, e, n, p, q, u, v, x):
     return Dist(n*p, Int(PolyLog(q + S(1), v)*log(e*u**n)**(p + S(-1))/((a + b*x)*(c + d*x)), x), x) - Simp(PolyLog(q + S(1), v)*log(e*u**n)**p/(-a*d + b*c), x)
 
 
-def replacement2111(u, d, p, q, a, c, v, b, x):
+def replacement2111(a, b, c, d, p, q, u, v, x):
     return Dist(p, Int(PolyLog(q + S(1), v)*log(u)**(p + S(-1))/((a + b*x)*(c + d*x)), x), x) - Simp(PolyLog(q + S(1), v)*log(u)**p/(-a*d + b*c), x)
 
 
-def replacement2112(u, d, p, q, a, c, n, v, b, e, x):
+def replacement2112(a, b, c, d, e, n, p, q, u, v, x):
     return Dist(S(1)/(n*(p + S(1))), Int(PolyLog(q + S(-1), v)*log(e*u**n)**(p + S(1))/((a + b*x)*(c + d*x)), x), x) + Simp(PolyLog(q, v)*log(e*u**n)**(p + S(1))/(n*(p + S(1))*(-a*d + b*c)), x)
 
 
-def replacement2113(u, d, p, q, a, c, v, b, x):
+def replacement2113(a, b, c, d, p, q, u, v, x):
     return Dist(S(1)/(p + S(1)), Int(PolyLog(q + S(-1), v)*log(u)**(p + S(1))/((a + b*x)*(c + d*x)), x), x) + Simp(PolyLog(q, v)*log(u)**(p + S(1))/((p + S(1))*(-a*d + b*c)), x)
 
 
-def replacement2114(u, d, e1, p, n2, a, c, g, n, b, n1, f, e, h, x):
+def replacement2114(a, b, c, d, e, e1, f, g, h, n, n1, n2, p, u, x):
     return Dist(b*d/h, Int(u*log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/((a + b*x)*(c + d*x)), x), x)
 
 
-def replacement2115(u, d, e1, p, n2, a, c, n, b, n1, f, e, h, x):
+def replacement2115(a, b, c, d, e, e1, f, h, n, n1, n2, p, u, x):
     return Dist(b*d/h, Int(u*log(e*(e1*(a + b*x)**n1*(c + d*x)**(-n1))**n)**p/((a + b*x)*(c + d*x)), x), x)
 
 
-def With2116(d, e1, n2, a, f, c, g, n, b, n1, h, e, x):
+def With2116(a, b, c, d, e, e1, f, g, h, n, n1, n2, x):
     u = IntHide(S(1)/(f + g*x + h*x**S(2)), x)
     return -Dist(n*(-a*d + b*c), Int(u/((a + b*x)*(c + d*x)), x), x) + Simp(u*log(e*(e1*(a + b*x)**n1*(c + d*x)**n2)**n), x)
 
 
-def With2117(d, e1, n2, a, f, c, n, b, n1, h, e, x):
+def With2117(a, b, c, d, e, e1, f, h, n, n1, n2, x):
     u = IntHide(S(1)/(f + h*x**S(2)), x)
     return -Dist(n*(-a*d + b*c), Int(u/((a + b*x)*(c + d*x)), x), x) + Simp(u*log(e*(e1*(a + b*x)**n1*(c + d*x)**n2)**n), x)
 
 
-def With2118(d, e1, p, RFx, n2, a, c, n, b, n1, e, x):
+def With2118(RFx, a, b, c, d, e, e1, n, n1, n2, p, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     u = ExpandIntegrand(log(e*(e1*(a + b*x)**n1*(c + d*x)**n2)**n)**p, RFx, x)
@@ -1108,13 +1107,13 @@ def With2118(d, e1, p, RFx, n2, a, c, n, b, n1, e, x):
     return False
 
 
-def replacement2118(d, e1, p, RFx, n2, a, c, n, b, n1, e, x):
+def replacement2118(RFx, a, b, c, d, e, e1, n, n1, n2, p, x):
 
     u = ExpandIntegrand(log(e*(e1*(a + b*x)**n1*(c + d*x)**n2)**n)**p, RFx, x)
     return Int(u, x)
 
 
-def With2119(u, p, x, v):
+def With2119(p, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     lst = QuotientOfLinearsParts(v, x)
@@ -1123,55 +1122,55 @@ def With2119(u, p, x, v):
     return False
 
 
-def replacement2119(u, p, x, v):
+def replacement2119(p, u, v, x):
 
     lst = QuotientOfLinearsParts(v, x)
     return Int(u*log((x*Part(lst, S(2)) + Part(lst, S(1)))/(x*Part(lst, S(4)) + Part(lst, S(3))))**p, x)
 
 
-def replacement2120(p, a, c, n, b, x):
+def replacement2120(a, b, c, n, p, x):
     return -Dist(b*n*p, Int(x**n/(a + b*x**n), x), x) + Simp(x*log(c*(a + b*x**n)**p), x)
 
 
-def replacement2121(v, p, c, x):
+def replacement2121(c, p, v, x):
     return Int(log(c*ExpandToSum(v, x)**p), x)
 
 
-def replacement2122(d, p, a, c, g, n, b, f, e, x):
+def replacement2122(a, b, c, d, e, f, g, n, p, x):
     return -Dist(b*e*n*p/g, Int(x**(n + S(-1))*log(f + g*x)/(d + e*x**n), x), x) + Simp((a + b*log(c*(d + e*x**n)**p))*log(f + g*x)/g, x)
 
 
-def replacement2123(d, p, a, c, g, n, m, b, f, e, x):
+def replacement2123(a, b, c, d, e, f, g, m, n, p, x):
     return -Dist(b*e*n*p/(g*(m + S(1))), Int(x**(n + S(-1))*(f + g*x)**(m + S(1))/(d + e*x**n), x), x) + Simp((a + b*log(c*(d + e*x**n)**p))*(f + g*x)**(m + S(1))/(g*(m + S(1))), x)
 
 
-def replacement2124(u, p, a, c, v, m, b, x):
+def replacement2124(a, b, c, m, p, u, v, x):
     return Int((a + b*log(c*ExpandToSum(v, x)**p))*ExpandToSum(u, x)**m, x)
 
 
-def With2125(d, p, a, c, g, n, m, b, f, e, x):
+def With2125(a, b, c, d, e, f, g, m, n, p, x):
     w = IntHide(asin(f + g*x)**m, x)
     return -Dist(b*e*n*p, Int(SimplifyIntegrand(w*x**(n + S(-1))/(d + e*x**n), x), x), x) + Dist(a + b*log(c*(d + e*x**n)**p), w, x)
 
 
-def With2126(d, p, a, c, g, b, f, e, x):
+def With2126(a, b, c, d, e, f, g, p, x):
     u = IntHide(S(1)/(f + g*x**S(2)), x)
     return -Dist(S(2)*b*e*p, Int(u*x/(d + e*x**S(2)), x), x) + Simp(u*(a + b*log(c*(d + e*x**S(2))**p)), x)
 
 
-def replacement2127(d, p, a, c, n, b, e, x):
+def replacement2127(a, b, c, d, e, n, p, x):
     return -Dist(S(2)*b*e*n*p, Int(x**S(2)*(a + b*log(c*(d + e*x**S(2))**p))**(n + S(-1))/(d + e*x**S(2)), x), x) + Simp(x*(a + b*log(c*(d + e*x**S(2))**p))**n, x)
 
 
-def replacement2128(d, p, a, c, n, m, b, e, x):
+def replacement2128(a, b, c, d, e, m, n, p, x):
     return Dist(S(1)/2, Subst(Int(x**(m/S(2) + S(-1)/2)*(a + b*log(c*(d + e*x)**p))**n, x), x, x**S(2)), x)
 
 
-def replacement2129(d, p, a, c, n, m, b, e, x):
+def replacement2129(a, b, c, d, e, m, n, p, x):
     return -Dist(S(2)*b*e*n*p/(m + S(1)), Int(x**(m + S(2))*(a + b*log(c*(d + e*x**S(2))**p))**(n + S(-1))/(d + e*x**S(2)), x), x) + Simp(x**(m + S(1))*(a + b*log(c*(d + e*x**S(2))**p))**n/(m + S(1)), x)
 
 
-def With2130(v, x, u):
+def With2130(u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -1184,13 +1183,13 @@ def With2130(v, x, u):
     return False
 
 
-def replacement2130(v, x, u):
+def replacement2130(u, v, x):
 
     w = DerivativeDivides(v, u*(S(1) - v), x)
     return Simp(w*PolyLog(S(2), Together(S(1) - v)), x)
 
 
-def With2131(u, a, w, v, b, x):
+def With2131(a, b, u, v, w, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -1203,47 +1202,47 @@ def With2131(u, a, w, v, b, x):
     return False
 
 
-def replacement2131(u, a, w, v, b, x):
+def replacement2131(a, b, u, v, w, x):
 
     z = DerivativeDivides(v, w*(S(1) - v), x)
     return -Dist(b, Int(SimplifyIntegrand(z*D(u, x)*PolyLog(S(2), Together(S(1) - v))/u, x), x), x) + Simp(z*(a + b*log(u))*PolyLog(S(2), Together(S(1) - v)), x)
 
 
-def replacement2132(d, p, a, c, n, b, e, x):
+def replacement2132(a, b, c, d, e, n, p, x):
     return -Dist(b*n*p, Int(S(1)/(a*(d + e*x)**(-n) + b), x), x) + Simp((d + e*x)*log(c*(a + b*(d + e*x)**n)**p)/e, x)
 
 
-def replacement2133(d, p, a, c, n, b, e, x):
+def replacement2133(a, b, c, d, e, n, p, x):
     return Dist(a*n*p, Int(S(1)/(a + b*(d + e*x)**n), x), x) + Simp((d + e*x)*log(c*(a + b*(d + e*x)**n)**p)/e, x) - Simp(n*p*x, x)
 
 
-def replacement2134(d, p, a, c, g, n, b, f, e, x):
+def replacement2134(a, b, c, d, e, f, g, n, p, x):
     return -Dist(b*e*n*p/(d*g), Subst(Int((a + b*log(c*(d + e*x)**p))**(n + S(-1))/x, x), x, S(1)/(f + g*x)), x) + Simp((a + b*log(c*(d + e/(f + g*x))**p))**n*(d*(f + g*x) + e)/(d*g), x)
 
 
-def replacement2135(p, RFx, a, c, n, b, x):
+def replacement2135(RFx, a, b, c, n, p, x):
     return -Dist(b*n*p, Int(SimplifyIntegrand(x*(a + b*log(RFx**p*c))**(n + S(-1))*D(RFx, x)/RFx, x), x), x) + Simp(x*(a + b*log(RFx**p*c))**n, x)
 
 
-def replacement2136(d, p, RFx, a, c, n, b, e, x):
+def replacement2136(RFx, a, b, c, d, e, n, p, x):
     return -Dist(b*n*p/e, Int((a + b*log(RFx**p*c))**(n + S(-1))*D(RFx, x)*log(d + e*x)/RFx, x), x) + Simp((a + b*log(RFx**p*c))**n*log(d + e*x)/e, x)
 
 
-def replacement2137(d, p, RFx, a, c, n, m, b, e, x):
+def replacement2137(RFx, a, b, c, d, e, m, n, p, x):
     return -Dist(b*n*p/(e*(m + S(1))), Int(SimplifyIntegrand((a + b*log(RFx**p*c))**(n + S(-1))*(d + e*x)**(m + S(1))*D(RFx, x)/RFx, x), x), x) + Simp((a + b*log(RFx**p*c))**n*(d + e*x)**(m + S(1))/(e*(m + S(1))), x)
 
 
-def With2138(d, RFx, c, n, e, x):
+def With2138(RFx, c, d, e, n, x):
     u = IntHide(S(1)/(d + e*x**S(2)), x)
     return -Dist(n, Int(SimplifyIntegrand(u*D(RFx, x)/RFx, x), x), x) + Simp(u*log(RFx**n*c), x)
 
 
-def With2139(Px, c, n, x, Qx):
+def With2139(Px, Qx, c, n, x):
     u = IntHide(S(1)/Qx, x)
     return -Dist(n, Int(SimplifyIntegrand(u*D(Px, x)/Px, x), x), x) + Simp(u*log(Px**n*c), x)
 
 
-def With2140(p, RFx, RGx, a, c, n, b, x):
+def With2140(RFx, RGx, a, b, c, n, p, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     u = ExpandIntegrand((a + b*log(RFx**p*c))**n, RGx, x)
@@ -1252,13 +1251,13 @@ def With2140(p, RFx, RGx, a, c, n, b, x):
     return False
 
 
-def replacement2140(p, RFx, RGx, a, c, n, b, x):
+def replacement2140(RFx, RGx, a, b, c, n, p, x):
 
     u = ExpandIntegrand((a + b*log(RFx**p*c))**n, RGx, x)
     return Int(u, x)
 
 
-def With2141(p, RFx, RGx, a, c, n, b, x):
+def With2141(RFx, RGx, a, b, c, n, p, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     u = ExpandIntegrand(RGx*(a + b*log(RFx**p*c))**n, x)
@@ -1267,13 +1266,13 @@ def With2141(p, RFx, RGx, a, c, n, b, x):
     return False
 
 
-def replacement2141(p, RFx, RGx, a, c, n, b, x):
+def replacement2141(RFx, RGx, a, b, c, n, p, x):
 
     u = ExpandIntegrand(RGx*(a + b*log(RFx**p*c))**n, x)
     return Int(u, x)
 
 
-def With2142(u, RFx, a, b, x):
+def With2142(RFx, a, b, u, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -1286,37 +1285,37 @@ def With2142(u, RFx, a, b, x):
     return False
 
 
-def replacement2142(u, RFx, a, b, x):
+def replacement2142(RFx, a, b, u, x):
 
     lst = SubstForFractionalPowerOfLinear(RFx*(a + b*log(u)), x)
     return Dist(Part(lst, S(2))*Part(lst, S(4)), Subst(Int(Part(lst, S(1)), x), x, Part(lst, S(3))**(S(1)/Part(lst, S(2)))), x)
 
 
-def replacement2143(a, c, g, n, m, b, F, f, e, x):
+def replacement2143(F, a, b, c, e, f, g, m, n, x):
     return Dist(g*m/(b*c*n*log(F)), Int((f + g*x)**(m + S(-1))*PolyLog(S(2), -e*(F**(c*(a + b*x)))**n), x), x) - Simp((f + g*x)**m*PolyLog(S(2), -e*(F**(c*(a + b*x)))**n)/(b*c*n*log(F)), x)
 
 
-def replacement2144(d, a, c, g, n, m, b, F, f, e, x):
+def replacement2144(F, a, b, c, d, e, f, g, m, n, x):
     return Int((f + g*x)**m*log(S(1) + e*(F**(c*(a + b*x)))**n/d), x) - Simp((f + g*x)**(m + S(1))*log(S(1) + e*(F**(c*(a + b*x)))**n/d)/(g*(m + S(1))), x) + Simp((f + g*x)**(m + S(1))*log(d + e*(F**(c*(a + b*x)))**n)/(g*(m + S(1))), x)
 
 
-def replacement2145(d, a, c, b, f, e, x):
+def replacement2145(a, b, c, d, e, f, x):
     return Dist(f**S(2)*(-S(4)*a*c + b**S(2))/S(2), Int(x/(-f*sqrt(a + b*x + c*x**S(2))*(-S(2)*a*e + b*d + x*(-b*e + S(2)*c*d)) + (-b*f**S(2) + S(2)*d*e)*(a + b*x + c*x**S(2))), x), x) + Simp(x*log(d + e*x + f*sqrt(a + b*x + c*x**S(2))), x)
 
 
-def replacement2146(d, a, c, f, e, x):
+def replacement2146(a, c, d, e, f, x):
     return -Dist(a*c*f**S(2), Int(x/(d*e*(a + c*x**S(2)) + f*sqrt(a + c*x**S(2))*(a*e - c*d*x)), x), x) + Simp(x*log(d + e*x + f*sqrt(a + c*x**S(2))), x)
 
 
-def replacement2147(d, a, c, g, m, b, f, e, x):
+def replacement2147(a, b, c, d, e, f, g, m, x):
     return Dist(f**S(2)*(-S(4)*a*c + b**S(2))/(S(2)*g*(m + S(1))), Int((g*x)**(m + S(1))/(-f*sqrt(a + b*x + c*x**S(2))*(-S(2)*a*e + b*d + x*(-b*e + S(2)*c*d)) + (-b*f**S(2) + S(2)*d*e)*(a + b*x + c*x**S(2))), x), x) + Simp((g*x)**(m + S(1))*log(d + e*x + f*sqrt(a + b*x + c*x**S(2)))/(g*(m + S(1))), x)
 
 
-def replacement2148(d, a, c, g, m, f, e, x):
+def replacement2148(a, c, d, e, f, g, m, x):
     return -Dist(a*c*f**S(2)/(g*(m + S(1))), Int((g*x)**(m + S(1))/(d*e*(a + c*x**S(2)) + f*sqrt(a + c*x**S(2))*(a*e - c*d*x)), x), x) + Simp((g*x)**(m + S(1))*log(d + e*x + f*sqrt(a + c*x**S(2)))/(g*(m + S(1))), x)
 
 
-def replacement2149(u, d, v, f, e, x):
+def replacement2149(d, e, f, u, v, x):
     return Int(v*log(d + e*x + f*sqrt(ExpandToSum(u, x))), x)
 
 
@@ -1324,24 +1323,24 @@ def replacement2150(u, x):
     return -Int(SimplifyIntegrand(x*D(u, x)/u, x), x) + Simp(x*log(u), x)
 
 
-def replacement2151(u, a, x, b):
+def replacement2151(a, b, u, x):
     return -Dist(S(1)/b, Int(SimplifyIntegrand(D(u, x)*log(a + b*x)/u, x), x), x) + Simp(log(u)*log(a + b*x)/b, x)
 
 
-def replacement2152(u, a, m, b, x):
+def replacement2152(a, b, m, u, x):
     return -Dist(S(1)/(b*(m + S(1))), Int(SimplifyIntegrand((a + b*x)**(m + S(1))*D(u, x)/u, x), x), x) + Simp((a + b*x)**(m + S(1))*log(u)/(b*(m + S(1))), x)
 
 
-def With2153(u, x, Qx):
+def With2153(Qx, u, x):
     v = IntHide(S(1)/Qx, x)
     return -Int(SimplifyIntegrand(v*D(u, x)/u, x), x) + Simp(v*log(u), x)
 
 
-def replacement2154(u, a, x):
+def replacement2154(a, u, x):
     return -Int(SimplifyIntegrand(u**(a*x + S(-1))*x*D(u, x), x), x) + Simp(u**(a*x)/a, x)
 
 
-def With2155(u, x, v):
+def With2155(u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     w = IntHide(v, x)
@@ -1350,7 +1349,7 @@ def With2155(u, x, v):
     return False
 
 
-def replacement2155(u, x, v):
+def replacement2155(u, v, x):
 
     w = IntHide(v, x)
     return Dist(log(u), w, x) - Int(SimplifyIntegrand(w*D(u, x)/u, x), x)
@@ -1360,7 +1359,7 @@ def replacement2156(v, w, x):
     return -Int(SimplifyIntegrand(x*D(v, x)*log(w)/v, x), x) - Int(SimplifyIntegrand(x*D(w, x)*log(v)/w, x), x) + Simp(x*log(v)*log(w), x)
 
 
-def With2157(v, w, x, u):
+def With2157(u, v, w, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     z = IntHide(u, x)
@@ -1369,29 +1368,29 @@ def With2157(v, w, x, u):
     return False
 
 
-def replacement2157(v, w, x, u):
+def replacement2157(u, v, w, x):
 
     z = IntHide(u, x)
     return Dist(log(v)*log(w), z, x) - Int(SimplifyIntegrand(z*D(v, x)*log(w)/v, x), x) - Int(SimplifyIntegrand(z*D(w, x)*log(v)/w, x), x)
 
 
-def replacement2158(p, a, n, b, x):
+def replacement2158(a, b, n, p, x):
     return -Dist(n*p, Int(S(1)/log(b*x**n), x), x) + Simp(x*log(a*log(b*x**n)**p), x)
 
 
-def replacement2159(p, a, n, b, x):
+def replacement2159(a, b, n, p, x):
     return Simp((-p + log(a*log(b*x**n)**p))*log(b*x**n)/n, x)
 
 
-def replacement2160(p, a, n, m, b, x):
+def replacement2160(a, b, m, n, p, x):
     return -Dist(n*p/(m + S(1)), Int(x**m/log(b*x**n), x), x) + Simp(x**(m + S(1))*log(a*log(b*x**n)**p)/(m + S(1)), x)
 
 
-def replacement2161(d, B, a, c, A, b, x):
+def replacement2161(A, B, a, b, c, d, x):
     return Dist(B/b, Int(sqrt(a + b*log(c + d*x)), x), x) + Dist((A*b - B*a)/b, Int(S(1)/sqrt(a + b*log(c + d*x)), x), x)
 
 
-def replacement2162(u, a, f, x):
+def replacement2162(a, f, u, x):
     return Int(u**(a*log(f)), x)
 
 
@@ -1414,13 +1413,13 @@ def replacement2163(u, x):
     return Dist(S(1)/Part(lst, S(3)), Subst(Int(Part(lst, S(1)), x), x, log(Part(lst, S(2)))), x)
 
 
-def replacement2164(u, x, v):
+def replacement2164(u, v, x):
     return Dist(-LogGamma(v) + log(Gamma(v)), Int(u, x), x) + Int(u*LogGamma(v), x)
 
 
-def replacement2165(u, p, a, w, n, v, b, x):
+def replacement2165(a, b, n, p, u, v, w, x):
     return Int(u*w**p*(a + b*log(v)**n)**p, x)
 
 
-def replacement2166(u, d, p, q, a, c, n, b, f, e, x):
+def replacement2166(a, b, c, d, e, f, n, p, q, u, x):
     return Int(u*(a + b*log(c*(d*(e + f*x)**p)**q))**n, x)

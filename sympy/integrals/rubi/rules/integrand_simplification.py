@@ -1,11 +1,10 @@
-'''
+"""
 This code is automatically generated. Never edit it manually.
 For details of generating the code see `rubi_parsing_guide.md` in `parsetools`.
-'''
+"""
 
 from sympy.external import import_module
 matchpy = import_module("matchpy")
-from sympy.utilities.decorator import doctest_depends_on
 
 if matchpy:
     from matchpy import Pattern, ReplacementRule, CustomConstraint, is_match
@@ -128,13 +127,13 @@ if matchpy:
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec, atan2)
     from sympy import pi as Pi
 
-
     A_, B_, C_, F_, G_, H_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, y_, z_ = [WC(i) for i in 'ABCFGHabcdefghijklmnpqrtuvswxyz']
     a1_, a2_, b1_, b2_, c1_, c2_, d1_, d2_, n1_, n2_, e1_, e2_, f1_, f2_, g1_, g2_, n1_, n2_, n3_, Pq_, Pm_, Px_, Qm_, Qr_, Qx_, jn_, mn_, non2_, RFx_, RGx_ = [WC(i) for i in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'n1', 'n2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2', 'n1', 'n2', 'n3', 'Pq', 'Pm', 'Px', 'Qm', 'Qr', 'Qx', 'jn', 'mn', 'non2', 'RFx', 'RGx']]
-    i, ii , Pqq, Q, R, r, C, k, u = symbols('i ii Pqq Q R r C k u')
+    i, ii, Pqq, Q, R, r, C, k, u = symbols('i ii Pqq Q R r C k u')
     _UseGamma = False
     ShowSteps = False
     StepCounter = None
+
 
 def integrand_simplification(rubi):
     from sympy.integrals.rubi.constraints import cons1, cons2, cons3, cons4, cons5, cons6, cons7, cons8, cons9, cons10, cons11, cons12, cons13, cons14, cons15, cons16, cons17, cons18, cons19, cons20, cons21, cons22, cons23, cons24, cons25, cons26, cons27, cons28, cons29, cons30, cons31, cons32, cons33, cons34, cons35, cons36, cons37, cons38, cons39, cons40, cons41, cons42, cons43, cons44, cons45, cons46, cons47, cons48, cons49, cons50, cons51, cons52, cons53, cons54, cons55, cons56, cons57, cons58, cons59, cons60, cons61, cons62, cons63, cons64, cons65, cons66, cons67
@@ -259,31 +258,31 @@ def integrand_simplification(rubi):
 
 
 
-def replacement1(u, p, a, n, b, x):
+def replacement1(a, b, n, p, u, x):
     return Int(u*(b*x**n)**p, x)
 
 
-def replacement2(u, p, a, n, b, x):
+def replacement2(a, b, n, p, u, x):
     return Int(a**p*u, x)
 
 
-def replacement3(u, p, j, a, c, n, b, x):
+def replacement3(a, b, c, j, n, p, u, x):
     return Int(u*(b*x**n + c*x**(S(2)*n))**p, x)
 
 
-def replacement4(u, p, a, j, c, n, b, x):
+def replacement4(a, b, c, j, n, p, u, x):
     return Int(u*(a + c*x**(S(2)*n))**p, x)
 
 
-def replacement5(u, p, a, j, c, n, b, x):
+def replacement5(a, b, c, j, n, p, u, x):
     return Int(u*(a + b*x**n)**p, x)
 
 
-def replacement6(u, p, a, w, v, b, x):
+def replacement6(a, b, p, u, v, w, x):
     return Int(u*(v*(a + b) + w)**p, x)
 
 
-def replacement7(u, p, Pm, x):
+def replacement7(Pm, p, u, x):
     return Int(Pm**p*u, x)
 
 
@@ -291,7 +290,7 @@ def replacement8(a, x):
     return Simp(a*x, x)
 
 
-def replacement9(a, x, c, b):
+def replacement9(a, b, c, x):
     return Simp(a*(b + c*x)**S(2)/(S(2)*c), x)
 
 
@@ -299,11 +298,11 @@ def replacement10(u, x):
     return Dist(S(-1), Int(u, x), x)
 
 
-def replacement11(u, a, x):
+def replacement11(a, u, x):
     return Dist(Complex(S(0), a), Int(u, x), x)
 
 
-def replacement12(u, a, x):
+def replacement12(a, u, x):
     return Dist(a, Int(u, x), x)
 
 
@@ -311,91 +310,91 @@ def replacement13(u, x):
     return Simp(IntSum(u, x), x)
 
 
-def replacement14(u, c, m, x):
+def replacement14(c, m, u, x):
     return Int(ExpandIntegrand(u*(c*x)**m, x), x)
 
 
-def replacement15(u, n, v, m, b, x):
+def replacement15(b, m, n, u, v, x):
     return Dist(b**(-m), Int(u*(b*v)**(m + n), x), x)
 
 
-def replacement16(u, a, v, n, m, b, x):
+def replacement16(a, b, m, n, u, v, x):
     return Dist(a**(m + S(1)/2)*b**(n + S(-1)/2)*sqrt(b*v)/sqrt(a*v), Int(u*v**(m + n), x), x)
 
 
-def replacement17(u, a, v, n, m, b, x):
+def replacement17(a, b, m, n, u, v, x):
     return Dist(a**(m + S(-1)/2)*b**(n + S(1)/2)*sqrt(a*v)/sqrt(b*v), Int(u*v**(m + n), x), x)
 
 
-def replacement18(u, a, v, n, m, b, x):
+def replacement18(a, b, m, n, u, v, x):
     return Dist(a**(m + n)*(a*v)**(-n)*(b*v)**n, Int(u*v**(m + n), x), x)
 
 
-def replacement19(u, a, v, n, m, b, x):
+def replacement19(a, b, m, n, u, v, x):
     return Dist(a**(-IntPart(n))*b**IntPart(n)*(a*v)**(-FracPart(n))*(b*v)**FracPart(n), Int(u*(a*v)**(m + n), x), x)
 
 
-def replacement20(u, d, a, c, n, v, m, b, x):
+def replacement20(a, b, c, d, m, n, u, v, x):
     return Dist((b/d)**m, Int(u*(c + d*v)**(m + n), x), x)
 
 
-def replacement21(u, d, a, c, v, n, m, b, x):
+def replacement21(a, b, c, d, m, n, u, v, x):
     return Dist((b/d)**m, Int(u*(c + d*v)**(m + n), x), x)
 
 
-def replacement22(u, d, a, c, v, n, m, b, x):
+def replacement22(a, b, c, d, m, n, u, v, x):
     return Dist((a + b*v)**m*(c + d*v)**(-m), Int(u*(c + d*v)**(m + n), x), x)
 
 
-def replacement23(u, a, c, v, m, b, x):
+def replacement23(a, b, c, m, u, v, x):
     return Dist(S(1)/a, Int(u*(a*v)**(m + S(1))*(b + c*v), x), x)
 
 
-def replacement24(u, B, a, A, v, C, m, b, x):
+def replacement24(A, B, C, a, b, m, u, v, x):
     return Dist(b**(S(-2)), Int(u*(a + b*v)**(m + S(1))*Simp(B*b - C*a + C*b*v, x), x), x)
 
 
-def replacement25(u, d, p, q, a, c, n, m, b, x):
+def replacement25(a, b, c, d, m, n, p, q, u, x):
     return Dist((d/a)**p, Int(u*x**(-n*p)*(a + b*x**n)**(m + p), x), x)
 
 
-def replacement26(u, d, p, a, j, c, n, m, b, x):
+def replacement26(a, b, c, d, j, m, n, p, u, x):
     return Dist((-b**S(2)/d)**m, Int(u*(a - b*x**n)**(-m), x), x)
 
 
-def replacement27(u, p, a, c, b, x):
+def replacement27(a, b, c, p, u, x):
     return Int(S(2)**(-S(2)*p)*c**(-p)*u*(b + S(2)*c*x)**(S(2)*p), x)
 
 
-def replacement28(u, p, n2, a, c, n, b, x):
+def replacement28(a, b, c, n, n2, p, u, x):
     return Dist(c**(-p), Int(u*(b/S(2) + c*x**n)**(S(2)*p), x), x)
 
 
-def replacement29(d, p, a, c, b, e, x):
+def replacement29(a, b, c, d, e, p, x):
     return Dist(d/b, Subst(Int(x**p, x), x, a + b*x + c*x**S(2)), x)
 
 
-def replacement30(u, p, q, a, m, b, x):
+def replacement30(a, b, m, p, q, u, x):
     return Int(u*x**(m*p)*(a + b*x**(-p + q))**m, x)
 
 
-def replacement31(u, p, q, a, c, m, b, r, x):
+def replacement31(a, b, c, m, p, q, r, u, x):
     return Int(u*x**(m*p)*(a + b*x**(-p + q) + c*x**(-p + r))**m, x)
 
 
-def replacement32(a, n, m, b, x):
+def replacement32(a, b, m, n, x):
     return Simp(log(RemoveContent(a + b*x**n, x))/(b*n), x)
 
 
-def replacement33(p, a, n, m, b, x):
+def replacement33(a, b, m, n, p, x):
     return Simp((a + b*x**n)**(p + S(1))/(b*n*(p + S(1))), x)
 
 
-def replacement34(b2, p, a1, n, m, b1, a2, x):
+def replacement34(a1, a2, b1, b2, m, n, p, x):
     return Simp((a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*b1*b2*n*(p + S(1))), x)
 
 
-def With35(p, a, n, Qm, b, Pm, x):
+def With35(Pm, Qm, a, b, n, p, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     m = Expon(Pm, x)
@@ -404,13 +403,13 @@ def With35(p, a, n, Qm, b, Pm, x):
     return False
 
 
-def replacement35(p, a, n, Qm, b, Pm, x):
+def replacement35(Pm, Qm, a, b, n, p, x):
 
     m = Expon(Pm, x)
     return Dist(Coeff(Qm, x, m + S(-1))/(m*Coeff(Pm, x, m)), Subst(Int((a + b*x**n)**p, x), x, Pm), x)
 
 
-def With36(p, n2, a, c, n, Qm, b, Pm, x):
+def With36(Pm, Qm, a, b, c, n, n2, p, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     m = Expon(Pm, x)
@@ -419,13 +418,13 @@ def With36(p, n2, a, c, n, Qm, b, Pm, x):
     return False
 
 
-def replacement36(p, n2, a, c, n, Qm, b, Pm, x):
+def replacement36(Pm, Qm, a, b, c, n, n2, p, x):
 
     m = Expon(Pm, x)
     return Dist(Coeff(Qm, x, m + S(-1))/(m*Coeff(Pm, x, m)), Subst(Int((a + b*x**n + c*x**(S(2)*n))**p, x), x, Pm), x)
 
 
-def With37(u, p, Qr, Pq, m, x):
+def With37(Pq, Qr, m, p, u, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     gcd = PolyGCD(Pq, Qr, x)
@@ -434,13 +433,13 @@ def With37(u, p, Qr, Pq, m, x):
     return False
 
 
-def replacement37(u, p, Qr, Pq, m, x):
+def replacement37(Pq, Qr, m, p, u, x):
 
     gcd = PolyGCD(Pq, Qr, x)
     return Int(gcd**(m + p)*u*PolynomialQuotient(Pq, gcd, x)**m*PolynomialQuotient(Qr, gcd, x)**p, x)
 
 
-def With38(u, p, Qr, Pq, x):
+def With38(Pq, Qr, p, u, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     gcd = PolyGCD(Pq, Qr, x)
@@ -449,7 +448,7 @@ def With38(u, p, Qr, Pq, x):
     return False
 
 
-def replacement38(u, p, Qr, Pq, x):
+def replacement38(Pq, Qr, p, u, x):
 
     gcd = PolyGCD(Pq, Qr, x)
     return Int(gcd**(p + S(1))*u*PolynomialQuotient(Pq, gcd, x)*PolynomialQuotient(Qr, gcd, x)**p, x)

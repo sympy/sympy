@@ -1,11 +1,10 @@
-'''
+"""
 This code is automatically generated. Never edit it manually.
 For details of generating the code see `rubi_parsing_guide.md` in `parsetools`.
-'''
+"""
 
 from sympy.external import import_module
 matchpy = import_module("matchpy")
-from sympy.utilities.decorator import doctest_depends_on
 
 if matchpy:
     from matchpy import Pattern, ReplacementRule, CustomConstraint, is_match
@@ -128,13 +127,13 @@ if matchpy:
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec, atan2)
     from sympy import pi as Pi
 
-
     A_, B_, C_, F_, G_, H_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, y_, z_ = [WC(i) for i in 'ABCFGHabcdefghijklmnpqrtuvswxyz']
     a1_, a2_, b1_, b2_, c1_, c2_, d1_, d2_, n1_, n2_, e1_, e2_, f1_, f2_, g1_, g2_, n1_, n2_, n3_, Pq_, Pm_, Px_, Qm_, Qr_, Qx_, jn_, mn_, non2_, RFx_, RGx_ = [WC(i) for i in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'n1', 'n2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2', 'n1', 'n2', 'n3', 'Pq', 'Pm', 'Px', 'Qm', 'Qr', 'Qx', 'jn', 'mn', 'non2', 'RFx', 'RGx']]
-    i, ii , Pqq, Q, R, r, C, k, u = symbols('i ii Pqq Q R r C k u')
+    i, ii, Pqq, Q, R, r, C, k, u = symbols('i ii Pqq Q R r C k u')
     _UseGamma = False
     ShowSteps = False
     StepCounter = None
+
 
 def piecewise_linear(rubi):
     from sympy.integrals.rubi.constraints import cons1092, cons19, cons1093, cons89, cons90, cons1094, cons91, cons25, cons74, cons68, cons4, cons1095, cons216, cons685, cons102, cons103, cons1096, cons1097, cons33, cons96, cons358, cons1098, cons21, cons1099, cons2, cons3
@@ -202,12 +201,12 @@ def piecewise_linear(rubi):
 
 
 
-def With1885(u, m, x):
+def With1885(m, u, x):
     c = D(u, x)
     return Dist(S(1)/c, Subst(Int(x**m, x), x, u), x)
 
 
-def With1886(u, x, v):
+def With1886(u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -217,14 +216,14 @@ def With1886(u, x, v):
     return False
 
 
-def replacement1886(u, x, v):
+def replacement1886(u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return -Dist((-a*v + b*u)/a, Int(S(1)/u, x), x) + Simp(b*x/a, x)
 
 
-def With1887(u, n, x, v):
+def With1887(n, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -234,14 +233,14 @@ def With1887(u, n, x, v):
     return False
 
 
-def replacement1887(u, n, x, v):
+def replacement1887(n, u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return -Dist((-a*v + b*u)/a, Int(v**(n + S(-1))/u, x), x) + Simp(v**n/(a*n), x)
 
 
-def With1888(u, x, v):
+def With1888(u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -251,14 +250,14 @@ def With1888(u, x, v):
     return False
 
 
-def replacement1888(u, x, v):
+def replacement1888(u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return -Dist(a/(-a*v + b*u), Int(S(1)/u, x), x) + Dist(b/(-a*v + b*u), Int(S(1)/v, x), x)
 
 
-def With1889(u, x, v):
+def With1889(u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -268,14 +267,14 @@ def With1889(u, x, v):
     return False
 
 
-def replacement1889(u, x, v):
+def replacement1889(u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return Simp(S(2)*ArcTan(sqrt(v)/Rt((-a*v + b*u)/a, S(2)))/(a*Rt((-a*v + b*u)/a, S(2))), x)
 
 
-def With1890(u, x, v):
+def With1890(u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -285,14 +284,14 @@ def With1890(u, x, v):
     return False
 
 
-def replacement1890(u, x, v):
+def replacement1890(u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return Simp(-S(2)*atanh(sqrt(v)/Rt(-(-a*v + b*u)/a, S(2)))/(a*Rt(-(-a*v + b*u)/a, S(2))), x)
 
 
-def With1891(u, n, x, v):
+def With1891(n, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -302,14 +301,14 @@ def With1891(u, n, x, v):
     return False
 
 
-def replacement1891(u, n, x, v):
+def replacement1891(n, u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return -Dist(a/(-a*v + b*u), Int(v**(n + S(1))/u, x), x) + Simp(v**(n + S(1))/((n + S(1))*(-a*v + b*u)), x)
 
 
-def With1892(u, n, x, v):
+def With1892(n, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -319,14 +318,14 @@ def With1892(u, n, x, v):
     return False
 
 
-def replacement1892(u, n, x, v):
+def replacement1892(n, u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return Simp(v**(n + S(1))*Hypergeometric2F1(S(1), n + S(1), n + S(2), -a*v/(-a*v + b*u))/((n + S(1))*(-a*v + b*u)), x)
 
 
-def With1893(u, x, v):
+def With1893(u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -336,14 +335,14 @@ def With1893(u, x, v):
     return False
 
 
-def replacement1893(u, x, v):
+def replacement1893(u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return Simp(S(2)*atanh(sqrt(u)*Rt(a*b, S(2))/(a*sqrt(v)))/Rt(a*b, S(2)), x)
 
 
-def With1894(u, x, v):
+def With1894(u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -353,14 +352,14 @@ def With1894(u, x, v):
     return False
 
 
-def replacement1894(u, x, v):
+def replacement1894(u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return Simp(S(2)*ArcTan(sqrt(u)*Rt(-a*b, S(2))/(a*sqrt(v)))/Rt(-a*b, S(2)), x)
 
 
-def With1895(u, n, v, m, x):
+def With1895(m, n, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -370,14 +369,14 @@ def With1895(u, n, v, m, x):
     return False
 
 
-def replacement1895(u, n, v, m, x):
+def replacement1895(m, n, u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return -Simp(u**(m + S(1))*v**(n + S(1))/((m + S(1))*(-a*v + b*u)), x)
 
 
-def With1896(u, n, v, m, x):
+def With1896(m, n, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -387,14 +386,14 @@ def With1896(u, n, v, m, x):
     return False
 
 
-def replacement1896(u, n, v, m, x):
+def replacement1896(m, n, u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return -Dist(b*n/(a*(m + S(1))), Int(u**(m + S(1))*v**(n + S(-1)), x), x) + Simp(u**(m + S(1))*v**n/(a*(m + S(1))), x)
 
 
-def With1897(u, n, v, m, x):
+def With1897(m, n, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -404,14 +403,14 @@ def With1897(u, n, v, m, x):
     return False
 
 
-def replacement1897(u, n, v, m, x):
+def replacement1897(m, n, u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return -Dist(n*(-a*v + b*u)/(a*(m + n + S(1))), Int(u**m*v**(n + S(-1)), x), x) + Simp(u**(m + S(1))*v**n/(a*(m + n + S(1))), x)
 
 
-def With1898(u, n, v, m, x):
+def With1898(m, n, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -421,14 +420,14 @@ def With1898(u, n, v, m, x):
     return False
 
 
-def replacement1898(u, n, v, m, x):
+def replacement1898(m, n, u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return -Dist(n*(-a*v + b*u)/(a*(m + n + S(1))), Int(u**m*v**(n + S(-1)), x), x) + Simp(u**(m + S(1))*v**n/(a*(m + n + S(1))), x)
 
 
-def With1899(u, n, v, m, x):
+def With1899(m, n, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -438,14 +437,14 @@ def With1899(u, n, v, m, x):
     return False
 
 
-def replacement1899(u, n, v, m, x):
+def replacement1899(m, n, u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return Dist(b*(m + n + S(2))/((m + S(1))*(-a*v + b*u)), Int(u**(m + S(1))*v**n, x), x) - Simp(u**(m + S(1))*v**(n + S(1))/((m + S(1))*(-a*v + b*u)), x)
 
 
-def With1900(u, n, v, m, x):
+def With1900(m, n, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -455,14 +454,14 @@ def With1900(u, n, v, m, x):
     return False
 
 
-def replacement1900(u, n, v, m, x):
+def replacement1900(m, n, u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return Dist(b*(m + n + S(2))/((m + S(1))*(-a*v + b*u)), Int(u**(m + S(1))*v**n, x), x) - Simp(u**(m + S(1))*v**(n + S(1))/((m + S(1))*(-a*v + b*u)), x)
 
 
-def With1901(u, n, v, m, x):
+def With1901(m, n, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     a = D(u, x)
@@ -472,18 +471,18 @@ def With1901(u, n, v, m, x):
     return False
 
 
-def replacement1901(u, n, v, m, x):
+def replacement1901(m, n, u, v, x):
 
     a = D(u, x)
     b = D(v, x)
     return Simp(u**m*v**(n + S(1))*(b*u/(-a*v + b*u))**(-m)*Hypergeometric2F1(-m, n + S(1), n + S(2), -a*v/(-a*v + b*u))/(b*(n + S(1))), x)
 
 
-def With1902(u, a, n, b, x):
+def With1902(a, b, n, u, x):
     c = D(u, x)
     return -Dist(c*n/b, Int(u**(n + S(-1))*(a + b*x)*log(a + b*x), x), x) - Int(u**n, x) + Simp(u**n*(a + b*x)*log(a + b*x)/b, x)
 
 
-def With1903(u, a, n, m, b, x):
+def With1903(a, b, m, n, u, x):
     c = D(u, x)
     return -Dist(c*n/(b*(m + S(1))), Int(u**(n + S(-1))*(a + b*x)**(m + S(1))*log(a + b*x), x), x) - Dist(S(1)/(m + S(1)), Int(u**n*(a + b*x)**m, x), x) + Simp(u**n*(a + b*x)**(m + S(1))*log(a + b*x)/(b*(m + S(1))), x)

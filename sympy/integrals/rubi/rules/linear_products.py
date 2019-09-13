@@ -1,11 +1,10 @@
-'''
+"""
 This code is automatically generated. Never edit it manually.
 For details of generating the code see `rubi_parsing_guide.md` in `parsetools`.
-'''
+"""
 
 from sympy.external import import_module
 matchpy = import_module("matchpy")
-from sympy.utilities.decorator import doctest_depends_on
 
 if matchpy:
     from matchpy import Pattern, ReplacementRule, CustomConstraint, is_match
@@ -128,18 +127,19 @@ if matchpy:
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec, atan2)
     from sympy import pi as Pi
 
-
     A_, B_, C_, F_, G_, H_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, y_, z_ = [WC(i) for i in 'ABCFGHabcdefghijklmnpqrtuvswxyz']
     a1_, a2_, b1_, b2_, c1_, c2_, d1_, d2_, n1_, n2_, e1_, e2_, f1_, f2_, g1_, g2_, n1_, n2_, n3_, Pq_, Pm_, Px_, Qm_, Qr_, Qx_, jn_, mn_, non2_, RFx_, RGx_ = [WC(i) for i in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'n1', 'n2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2', 'n1', 'n2', 'n3', 'Pq', 'Pm', 'Px', 'Qm', 'Qr', 'Qx', 'jn', 'mn', 'non2', 'RFx', 'RGx']]
-    i, ii , Pqq, Q, R, r, C, k, u = symbols('i ii Pqq Q R r C k u')
+    i, ii, Pqq, Q, R, r, C, k, u = symbols('i ii Pqq Q R r C k u')
     _UseGamma = False
     ShowSteps = False
     StepCounter = None
 
+
 def linear_products(rubi):
     from sympy.integrals.rubi.constraints import cons2, cons68, cons19, cons69, cons3, cons70, cons71, cons72, cons8, cons29, cons73, cons74, cons4, cons75, cons76, cons77, cons45, cons78, cons79, cons80, cons81, cons82, cons83, cons84, cons64, cons85, cons86, cons87, cons88, cons89, cons90, cons91, cons92, cons93, cons94, cons25, cons95, cons96, cons97, cons98, cons99, cons100, cons101, cons102, cons103, cons104, cons105, cons106, cons107, cons108, cons33, cons109, cons110, cons111, cons112, cons113, cons114, cons115, cons116, cons21, cons117, cons118, cons119, cons120, cons121, cons122, cons123, cons124, cons125, cons126, cons20, cons50, cons127, cons5, cons128, cons129, cons130, cons131, cons132, cons133, cons134, cons135, cons136, cons137, cons56, cons138, cons13, cons139, cons140, cons12, cons141, cons142, cons143, cons144, cons145, cons146, cons40, cons147, cons148, cons149, cons150, cons151, cons152, cons153, cons154, cons155, cons156, cons157, cons158, cons159, cons160, cons161, cons162, cons163, cons164, cons165, cons166, cons167, cons168, cons169, cons170, cons171, cons172, cons173, cons174, cons175, cons176, cons177, cons178, cons179, cons180, cons181, cons182, cons183, cons184, cons185, cons186, cons187, cons188, cons189, cons190, cons191, cons192, cons193, cons194, cons195, cons196, cons197, cons198, cons199, cons200, cons201, cons202, cons203, cons204, cons205, cons206, cons207, cons208, cons209, cons210, cons211, cons212, cons213, cons214, cons215, cons216, cons217, cons218, cons219, cons220, cons221, cons52, cons222, cons223, cons224, cons225, cons226, cons54
 
-    pattern39 = Pattern(Integral(a_, x_), cons2)
+
+    pattern39 = Pattern(Integral(a, x_), cons2, cons2)
     rule39 = ReplacementRule(pattern39, replacement39)
 
     pattern40 = Pattern(Integral(S(1)/x_, x_))
@@ -615,613 +615,613 @@ def replacement41(m, x):
     return Simp(x**(m + S(1))/(m + S(1)), x)
 
 
-def replacement42(a, x, b):
+def replacement42(a, b, x):
     return Simp(log(RemoveContent(a + b*x, x))/b, x)
 
 
-def replacement43(a, x, m, b):
+def replacement43(a, b, m, x):
     return Simp((a + b*x)**(m + S(1))/(b*(m + S(1))), x)
 
 
-def replacement44(u, a, m, b, x):
+def replacement44(a, b, m, u, x):
     return Dist(S(1)/Coefficient(u, x, S(1)), Subst(Int((a + b*x)**m, x), x, u), x)
 
 
-def replacement45(d, a, c, b, x):
+def replacement45(a, b, c, d, x):
     return Int(S(1)/(a*c + b*d*x**S(2)), x)
 
 
-def replacement46(d, a, c, b, x):
+def replacement46(a, b, c, d, x):
     return Dist(b/(-a*d + b*c), Int(S(1)/(a + b*x), x), x) - Dist(d/(-a*d + b*c), Int(S(1)/(c + d*x), x), x)
 
 
-def replacement47(d, a, c, n, m, b, x):
+def replacement47(a, b, c, d, m, n, x):
     return Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))/((m + S(1))*(-a*d + b*c)), x)
 
 
-def replacement48(d, a, c, m, b, x):
+def replacement48(a, b, c, d, m, x):
     return Dist(S(2)*a*c*m/(S(2)*m + S(1)), Int((a + b*x)**(m + S(-1))*(c + d*x)**(m + S(-1)), x), x) + Simp(x*(a + b*x)**m*(c + d*x)**m/(S(2)*m + S(1)), x)
 
 
-def replacement49(d, a, c, b, x):
+def replacement49(a, b, c, d, x):
     return Simp(x/(a*c*sqrt(a + b*x)*sqrt(c + d*x)), x)
 
 
-def replacement50(d, a, c, m, b, x):
+def replacement50(a, b, c, d, m, x):
     return Dist((S(2)*m + S(3))/(S(2)*a*c*(m + S(1))), Int((a + b*x)**(m + S(1))*(c + d*x)**(m + S(1)), x), x) - Simp(x*(a + b*x)**(m + S(1))*(c + d*x)**(m + S(1))/(S(2)*a*c*(m + S(1))), x)
 
 
-def replacement51(d, a, c, m, b, x):
+def replacement51(a, b, c, d, m, x):
     return Int((a*c + b*d*x**S(2))**m, x)
 
 
-def replacement52(d, a, c, b, x):
+def replacement52(a, b, c, d, x):
     return Simp(acosh(b*x/a)/b, x)
 
 
-def replacement53(d, a, c, b, x):
+def replacement53(a, b, c, d, x):
     return Dist(S(2), Subst(Int(S(1)/(b - d*x**S(2)), x), x, sqrt(a + b*x)/sqrt(c + d*x)), x)
 
 
-def replacement54(d, a, c, m, b, x):
+def replacement54(a, b, c, d, m, x):
     return Dist((a + b*x)**FracPart(m)*(c + d*x)**FracPart(m)*(a*c + b*d*x**S(2))**(-FracPart(m)), Int((a*c + b*d*x**S(2))**m, x), x)
 
 
-def replacement55(d, a, c, b, x):
+def replacement55(a, b, c, d, x):
     return Dist((-a*d + b*c)/(S(2)*b), Int(S(1)/((a + b*x)**(S(5)/4)*(c + d*x)**(S(5)/4)), x), x) + Simp(-S(2)/(b*(a + b*x)**(S(1)/4)*(c + d*x)**(S(1)/4)), x)
 
 
-def replacement56(d, a, c, b, x):
+def replacement56(a, b, c, d, x):
     return -Dist(d/(S(5)*b), Int(S(1)/((a + b*x)**(S(5)/4)*(c + d*x)**(S(5)/4)), x), x) + Simp(-S(4)/(S(5)*b*(a + b*x)**(S(5)/4)*(c + d*x)**(S(1)/4)), x)
 
 
-def replacement57(d, a, c, n, m, b, x):
+def replacement57(a, b, c, d, m, n, x):
     return Dist(S(2)*c*n/(m + n + S(1)), Int((a + b*x)**m*(c + d*x)**(n + S(-1)), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**n/(b*(m + n + S(1))), x)
 
 
-def replacement58(d, a, c, n, m, b, x):
+def replacement58(a, b, c, d, m, n, x):
     return Dist((m + n + S(2))/(S(2)*a*(m + S(1))), Int((a + b*x)**(m + S(1))*(c + d*x)**n, x), x) - Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))/(S(2)*a*d*(m + S(1))), x)
 
 
-def replacement59(d, a, c, n, m, b, x):
+def replacement59(a, b, c, d, m, n, x):
     return Int(ExpandIntegrand((a + b*x)**m*(c + d*x)**n, x), x)
 
 
-def replacement60(d, a, c, n, m, b, x):
+def replacement60(a, b, c, d, m, n, x):
     return Int(ExpandIntegrand((a + b*x)**m*(c + d*x)**n, x), x)
 
 
-def replacement61(d, a, c, n, b, x):
+def replacement61(a, b, c, d, n, x):
     return Dist((-a*d + b*c)/b, Int((c + d*x)**(n + S(-1))/(a + b*x), x), x) + Simp((c + d*x)**n/(b*n), x)
 
 
-def replacement62(d, a, c, n, b, x):
+def replacement62(a, b, c, d, n, x):
     return Dist(b/(-a*d + b*c), Int((c + d*x)**(n + S(1))/(a + b*x), x), x) - Simp((c + d*x)**(n + S(1))/((n + S(1))*(-a*d + b*c)), x)
 
 
-def With63(d, a, c, b, x):
+def With63(a, b, c, d, x):
     q = Rt((-a*d + b*c)/b, S(3))
     return Dist(S(3)/(S(2)*b), Subst(Int(S(1)/(q**S(2) + q*x + x**S(2)), x), x, (c + d*x)**(S(1)/3)), x) - Dist(S(3)/(S(2)*b*q), Subst(Int(S(1)/(q - x), x), x, (c + d*x)**(S(1)/3)), x) - Simp(log(RemoveContent(a + b*x, x))/(S(2)*b*q), x)
 
 
-def With64(d, a, c, b, x):
+def With64(a, b, c, d, x):
     q = Rt(-(-a*d + b*c)/b, S(3))
     return Dist(S(3)/(S(2)*b), Subst(Int(S(1)/(q**S(2) - q*x + x**S(2)), x), x, (c + d*x)**(S(1)/3)), x) - Dist(S(3)/(S(2)*b*q), Subst(Int(S(1)/(q + x), x), x, (c + d*x)**(S(1)/3)), x) + Simp(log(RemoveContent(a + b*x, x))/(S(2)*b*q), x)
 
 
-def With65(d, a, c, b, x):
+def With65(a, b, c, d, x):
     q = Rt((-a*d + b*c)/b, S(3))
     return -Dist(S(3)/(S(2)*b*q**S(2)), Subst(Int(S(1)/(q - x), x), x, (c + d*x)**(S(1)/3)), x) - Dist(S(3)/(S(2)*b*q), Subst(Int(S(1)/(q**S(2) + q*x + x**S(2)), x), x, (c + d*x)**(S(1)/3)), x) - Simp(log(RemoveContent(a + b*x, x))/(S(2)*b*q**S(2)), x)
 
 
-def With66(d, a, c, b, x):
+def With66(a, b, c, d, x):
     q = Rt(-(-a*d + b*c)/b, S(3))
     return Dist(S(3)/(S(2)*b*q**S(2)), Subst(Int(S(1)/(q + x), x), x, (c + d*x)**(S(1)/3)), x) + Dist(S(3)/(S(2)*b*q), Subst(Int(S(1)/(q**S(2) - q*x + x**S(2)), x), x, (c + d*x)**(S(1)/3)), x) - Simp(log(RemoveContent(a + b*x, x))/(S(2)*b*q**S(2)), x)
 
 
-def With67(d, a, c, n, b, x):
+def With67(a, b, c, d, n, x):
     p = Denominator(n)
     return Dist(p, Subst(Int(x**(p*(n + S(1)) + S(-1))/(a*d - b*c + b*x**p), x), x, (c + d*x)**(S(1)/p)), x)
 
 
-def replacement68(n, d, c, x):
+def replacement68(c, d, n, x):
     return -Simp((c + d*x)**(n + S(1))*Hypergeometric2F1(S(1), n + S(1), n + S(2), S(1) + d*x/c)/(c*(n + S(1))), x)
 
 
-def replacement69(d, a, c, n, b, x):
+def replacement69(a, b, c, d, n, x):
     return -Simp((c + d*x)**(n + S(1))*Hypergeometric2F1(S(1), n + S(1), n + S(2), TogetherSimplify(b*(c + d*x)/(-a*d + b*c)))/((n + S(1))*(-a*d + b*c)), x)
 
 
-def replacement70(d, a, c, n, m, b, x):
+def replacement70(a, b, c, d, m, n, x):
     return -Dist(d*n/(b*(m + S(1))), Int((a + b*x)**(m + S(1))*(c + d*x)**(n + S(-1)), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**n/(b*(m + S(1))), x)
 
 
-def replacement71(d, a, c, n, m, b, x):
+def replacement71(a, b, c, d, m, n, x):
     return -Dist(d*(m + n + S(2))/((m + S(1))*(-a*d + b*c)), Int((a + b*x)**(m + S(1))*(c + d*x)**n, x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))/((m + S(1))*(-a*d + b*c)), x)
 
 
-def replacement72(d, a, c, n, m, b, x):
+def replacement72(a, b, c, d, m, n, x):
     return Dist(n*(-a*d + b*c)/(b*(m + n + S(1))), Int((a + b*x)**m*(c + d*x)**(n + S(-1)), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**n/(b*(m + n + S(1))), x)
 
 
-def replacement73(d, a, c, b, x):
+def replacement73(a, b, c, d, x):
     return Int(S(1)/sqrt(a*c - b**S(2)*x**S(2) - b*x*(a - c)), x)
 
 
-def replacement74(d, a, c, b, x):
+def replacement74(a, b, c, d, x):
     return Dist(S(2)/sqrt(b), Subst(Int(S(1)/sqrt(-a*d + b*c + d*x**S(2)), x), x, sqrt(a + b*x)), x)
 
 
-def replacement75(d, a, c, b, x):
+def replacement75(a, b, c, d, x):
     return Dist(S(2)/b, Subst(Int(S(1)/sqrt(-a + c + x**S(2)), x), x, sqrt(a + b*x)), x)
 
 
-def replacement76(d, a, c, b, x):
+def replacement76(a, b, c, d, x):
     return Dist(S(2), Subst(Int(S(1)/(b - d*x**S(2)), x), x, sqrt(a + b*x)/sqrt(c + d*x)), x)
 
 
-def replacement77(d, a, c, m, b, x):
+def replacement77(a, b, c, d, m, x):
     return Dist((a + b*x)**m*(c + d*x)**m*(a*c + b*d*x**S(2) + x*(a*d + b*c))**(-m), Int((a*c + b*d*x**S(2) + x*(a*d + b*c))**m, x), x)
 
 
-def With78(d, a, c, b, x):
+def With78(a, b, c, d, x):
     q = Rt(d/b, S(3))
     return -Simp(q*log(c + d*x)/(S(2)*d), x) - Simp(S(3)*q*log(q*(a + b*x)**(S(1)/3)/(c + d*x)**(S(1)/3) + S(-1))/(S(2)*d), x) - Simp(sqrt(S(3))*q*ArcTan(S(2)*sqrt(S(3))*q*(a + b*x)**(S(1)/3)/(S(3)*(c + d*x)**(S(1)/3)) + sqrt(S(3))/S(3))/d, x)
 
 
-def With79(d, a, c, b, x):
+def With79(a, b, c, d, x):
     q = Rt(-d/b, S(3))
     return Simp(q*log(c + d*x)/(S(2)*d), x) + Simp(S(3)*q*log(q*(a + b*x)**(S(1)/3)/(c + d*x)**(S(1)/3) + S(1))/(S(2)*d), x) + Simp(sqrt(S(3))*q*ArcTan(-S(2)*sqrt(S(3))*q*(a + b*x)**(S(1)/3)/(S(3)*(c + d*x)**(S(1)/3)) + sqrt(S(3))/S(3))/d, x)
 
 
-def With80(d, a, c, n, m, b, x):
+def With80(a, b, c, d, m, n, x):
     p = Denominator(m)
     return Dist(p, Subst(Int(x**(p*(m + S(1)) + S(-1))/(b - d*x**p), x), x, (a + b*x)**(S(1)/p)*(c + d*x)**(-S(1)/p)), x)
 
 
-def With81(d, a, c, n, m, b, x):
+def With81(a, b, c, d, m, n, x):
     p = Denominator(m)
     return Dist(p/b, Subst(Int(x**(p*(m + S(1)) + S(-1))*(-a*d/b + c + d*x**p/b)**n, x), x, (a + b*x)**(S(1)/p)), x)
 
 
-def replacement82(d, a, c, n, m, b, x):
+def replacement82(a, b, c, d, m, n, x):
     return -Dist(d*(m + n + S(2))/((m + S(1))*(-a*d + b*c)), Int((a + b*x)**(m + S(1))*(c + d*x)**n, x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))/((m + S(1))*(-a*d + b*c)), x)
 
 
-def replacement83(d, c, n, m, b, x):
+def replacement83(b, c, d, m, n, x):
     return Simp(c**n*(b*x)**(m + S(1))*Hypergeometric2F1(-n, m + S(1), m + S(2), -d*x/c)/(b*(m + S(1))), x)
 
 
-def replacement84(d, c, n, m, b, x):
+def replacement84(b, c, d, m, n, x):
     return Simp((-d/(b*c))**(-m)*(c + d*x)**(n + S(1))*Hypergeometric2F1(-m, n + S(1), n + S(2), S(1) + d*x/c)/(d*(n + S(1))), x)
 
 
-def replacement85(d, c, n, m, b, x):
+def replacement85(b, c, d, m, n, x):
     return Dist(c**IntPart(n)*(S(1) + d*x/c)**(-FracPart(n))*(c + d*x)**FracPart(n), Int((b*x)**m*(S(1) + d*x/c)**n, x), x)
 
 
-def replacement86(d, c, n, m, b, x):
+def replacement86(b, c, d, m, n, x):
     return Dist((b*x)**FracPart(m)*(-b*c/d)**IntPart(m)*(-d*x/c)**(-FracPart(m)), Int((-d*x/c)**m*(c + d*x)**n, x), x)
 
 
-def replacement87(d, a, c, n, m, b, x):
+def replacement87(a, b, c, d, m, n, x):
     return Simp(b**(-n + S(-1))*(a + b*x)**(m + S(1))*(-a*d + b*c)**n*Hypergeometric2F1(-n, m + S(1), m + S(2), -d*(a + b*x)/(-a*d + b*c))/(m + S(1)), x)
 
 
-def replacement88(d, a, c, n, m, b, x):
+def replacement88(a, b, c, d, m, n, x):
     return Simp((b/(-a*d + b*c))**(-n)*(a + b*x)**(m + S(1))*Hypergeometric2F1(-n, m + S(1), m + S(2), -d*(a + b*x)/(-a*d + b*c))/(b*(m + S(1))), x)
 
 
-def replacement89(d, a, c, n, m, b, x):
+def replacement89(a, b, c, d, m, n, x):
     return Dist((b/(-a*d + b*c))**(-IntPart(n))*(b*(c + d*x)/(-a*d + b*c))**(-FracPart(n))*(c + d*x)**FracPart(n), Int((a + b*x)**m*(b*c/(-a*d + b*c) + b*d*x/(-a*d + b*c))**n, x), x)
 
 
-def replacement90(u, d, a, c, n, m, b, x):
+def replacement90(a, b, c, d, m, n, u, x):
     return Dist(S(1)/Coefficient(u, x, S(1)), Subst(Int((a + b*x)**m*(c + d*x)**n, x), x, u), x)
 
 
-def replacement91(d, p, a, c, n, m, b, f, e, x):
+def replacement91(a, b, c, d, e, f, m, n, p, x):
     return Int((e + f*x)**p*(a*c + b*d*x**S(2))**m, x)
 
 
-def replacement92(d, p, a, c, n, b, f, e, x):
+def replacement92(a, b, c, d, e, f, n, p, x):
     return Simp(b*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/(d*f*(n + p + S(2))), x)
 
 
-def replacement93(d, p, a, n, b, f, e, x):
+def replacement93(a, b, d, e, f, n, p, x):
     return Int(ExpandIntegrand((d*x)**n*(a + b*x)*(e + f*x)**p, x), x)
 
 
-def replacement94(d, p, a, n, b, f, e, x):
+def replacement94(a, b, d, e, f, n, p, x):
     return Int(ExpandIntegrand((d*x)**n*(a + b*x)*(e + f*x)**p, x), x)
 
 
-def replacement95(d, p, a, c, n, b, f, e, x):
+def replacement95(a, b, c, d, e, f, n, p, x):
     return Int(ExpandIntegrand((a + b*x)*(c + d*x)**n*(e + f*x)**p, x), x)
 
 
-def replacement96(d, p, a, c, n, b, f, e, x):
+def replacement96(a, b, c, d, e, f, n, p, x):
     return Dist(b/f, Int((c + d*x)**n*(e + f*x)**(p + S(1)), x), x) - Simp((c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))*(-a*f + b*e)/(f*(p + S(1))*(c*f - d*e)), x)
 
 
-def replacement97(d, p, a, c, n, b, f, e, x):
+def replacement97(a, b, c, d, e, f, n, p, x):
     return -Dist((a*d*f*(n + p + S(2)) - b*(c*f*(p + S(1)) + d*e*(n + S(1))))/(f*(p + S(1))*(c*f - d*e)), Int((c + d*x)**n*(e + f*x)**(p + S(1)), x), x) - Simp((c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))*(-a*f + b*e)/(f*(p + S(1))*(c*f - d*e)), x)
 
 
-def replacement98(d, p, a, c, n, b, f, e, x):
+def replacement98(a, b, c, d, e, f, n, p, x):
     return -Dist((a*d*f*(n + p + S(2)) - b*(c*f*(p + S(1)) + d*e*(n + S(1))))/(f*(p + S(1))*(c*f - d*e)), Int((c + d*x)**n*(e + f*x)**(p + S(1)), x), x) - Simp((c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))*(-a*f + b*e)/(f*(p + S(1))*(c*f - d*e)), x)
 
 
-def replacement99(d, p, a, c, n, b, f, e, x):
+def replacement99(a, b, c, d, e, f, n, p, x):
     return Dist((a*d*f*(n + p + S(2)) - b*(c*f*(p + S(1)) + d*e*(n + S(1))))/(d*f*(n + p + S(2))), Int((c + d*x)**n*(e + f*x)**p, x), x) + Simp(b*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/(d*f*(n + p + S(2))), x)
 
 
-def replacement100(d, p, a, c, n, b, f, e, x):
+def replacement100(a, b, c, d, e, f, n, p, x):
     return Simp(b*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))*(S(2)*a*d*f*(n + p + S(3)) + b*d*f*x*(n + p + S(2)) - b*(c*f*(p + S(2)) + d*e*(n + S(2))))/(d**S(2)*f**S(2)*(n + p + S(2))*(n + p + S(3))), x)
 
 
-def replacement101(d, p, a, c, n, m, b, f, x):
+def replacement101(a, b, c, d, f, m, n, p, x):
     return Dist(a, Int((f*x)**p*(a + b*x)**n*(c + d*x)**n, x), x) + Dist(b/f, Int((f*x)**(p + S(1))*(a + b*x)**n*(c + d*x)**n, x), x)
 
 
-def replacement102(d, p, a, c, b, f, e, x):
+def replacement102(a, b, c, d, e, f, p, x):
     return Int(ExpandIntegrand((e + f*x)**p/((a + b*x)*(c + d*x)), x), x)
 
 
-def replacement103(d, p, a, c, b, f, e, x):
+def replacement103(a, b, c, d, e, f, p, x):
     return Dist((-a*f + b*e)/(-a*d + b*c), Int((e + f*x)**(p + S(-1))/(a + b*x), x), x) - Dist((-c*f + d*e)/(-a*d + b*c), Int((e + f*x)**(p + S(-1))/(c + d*x), x), x)
 
 
-def replacement104(d, p, a, c, b, f, e, x):
+def replacement104(a, b, c, d, e, f, p, x):
     return Dist(S(1)/(b*d), Int((e + f*x)**(p + S(-2))*(-a*c*f**S(2) + b*d*e**S(2) + f*x*(-a*d*f - b*c*f + S(2)*b*d*e))/((a + b*x)*(c + d*x)), x), x) + Simp(f*(e + f*x)**(p + S(-1))/(b*d*(p + S(-1))), x)
 
 
-def replacement105(d, p, a, c, b, f, e, x):
+def replacement105(a, b, c, d, e, f, p, x):
     return Dist(S(1)/((-a*f + b*e)*(-c*f + d*e)), Int((e + f*x)**(p + S(1))*(-a*d*f - b*c*f + b*d*e - b*d*f*x)/((a + b*x)*(c + d*x)), x), x) + Simp(f*(e + f*x)**(p + S(1))/((p + S(1))*(-a*f + b*e)*(-c*f + d*e)), x)
 
 
-def replacement106(d, p, a, c, b, f, e, x):
+def replacement106(a, b, c, d, e, f, p, x):
     return Dist(b/(-a*d + b*c), Int((e + f*x)**p/(a + b*x), x), x) - Dist(d/(-a*d + b*c), Int((e + f*x)**p/(c + d*x), x), x)
 
 
-def replacement107(d, p, a, c, n, b, f, e, x):
+def replacement107(a, b, c, d, e, f, n, p, x):
     return Int(ExpandIntegrand((e + f*x)**FractionalPart(p), (c + d*x)**n*(e + f*x)**IntegerPart(p)/(a + b*x), x), x)
 
 
-def replacement108(d, p, a, c, n, m, b, f, e, x):
+def replacement108(a, b, c, d, e, f, m, n, p, x):
     return Int(ExpandIntegrand((a + b*x)**m*(c + d*x)**n*(e + f*x)**p, x), x)
 
 
-def replacement109(d, p, a, c, n, b, f, e, x):
+def replacement109(a, b, c, d, e, f, n, p, x):
     return -Dist(S(1)/(d**S(2)*(n + S(1))*(-c*f + d*e)), Int((c + d*x)**(n + S(1))*(e + f*x)**p*Simp(a**S(2)*d**S(2)*f*(n + p + S(2)) - S(2)*a*b*d*(c*f*(p + S(1)) + d*e*(n + S(1))) + b**S(2)*c*(c*f*(p + S(1)) + d*e*(n + S(1))) - b**S(2)*d*x*(n + S(1))*(-c*f + d*e), x), x), x) + Simp((c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))*(-a*d + b*c)**S(2)/(d**S(2)*(n + S(1))*(-c*f + d*e)), x)
 
 
-def replacement110(d, p, a, c, n, b, f, e, x):
+def replacement110(a, b, c, d, e, f, n, p, x):
     return Dist(S(1)/(d*f*(n + p + S(3))), Int((c + d*x)**n*(e + f*x)**p*Simp(a**S(2)*d*f*(n + p + S(3)) + b*x*(a*d*f*(n + p + S(4)) - b*(c*f*(p + S(2)) + d*e*(n + S(2)))) - b*(a*(c*f*(p + S(1)) + d*e*(n + S(1))) + b*c*e), x), x), x) + Simp(b*(a + b*x)*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/(d*f*(n + p + S(3))), x)
 
 
-def With111(d, a, c, b, f, e, x):
+def With111(a, b, c, d, e, f, x):
     q = Rt((-c*f + d*e)/(-a*f + b*e), S(3))
     return Simp(q*log(e + f*x)/(-S(2)*c*f + S(2)*d*e), x) - Simp(S(3)*q*log(q*(a + b*x)**(S(1)/3) - (c + d*x)**(S(1)/3))/(-S(2)*c*f + S(2)*d*e), x) - Simp(sqrt(S(3))*q*ArcTan(S(2)*sqrt(S(3))*q*(a + b*x)**(S(1)/3)/(S(3)*(c + d*x)**(S(1)/3)) + sqrt(S(3))/S(3))/(-c*f + d*e), x)
 
 
-def replacement112(d, a, c, b, f, e, x):
+def replacement112(a, b, c, d, e, f, x):
     return Dist(b*f, Subst(Int(S(1)/(b*f**S(2)*x**S(2) + d*(-a*f + b*e)**S(2)), x), x, sqrt(a + b*x)*sqrt(c + d*x)), x)
 
 
-def With113(d, a, c, n, m, b, f, e, x):
+def With113(a, b, c, d, e, f, m, n, x):
     q = Denominator(m)
     return Dist(q, Subst(Int(x**(q*(m + S(1)) + S(-1))/(-a*f + b*e - x**q*(-c*f + d*e)), x), x, (a + b*x)**(S(1)/q)*(c + d*x)**(-S(1)/q)), x)
 
 
-def replacement114(d, p, a, c, n, m, b, f, e, x):
+def replacement114(a, b, c, d, e, f, m, n, p, x):
     return -Dist(n*(-c*f + d*e)/((m + S(1))*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**(n + S(-1))*(e + f*x)**p, x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**(p + S(1))/((m + S(1))*(-a*f + b*e)), x)
 
 
-def replacement115(d, p, a, c, n, m, b, f, e, x):
+def replacement115(a, b, c, d, e, f, m, n, p, x):
     return Simp(b*(a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), x)
 
 
-def replacement116(d, p, a, c, n, m, b, f, e, x):
+def replacement116(a, b, c, d, e, f, m, n, p, x):
     return Dist((a*d*f*(m + S(1)) + b*c*f*(n + S(1)) + b*d*e*(p + S(1)))/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**p, x), x) + Simp(b*(a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), x)
 
 
-def replacement117(d, p, a, c, n, m, b, f, e, x):
+def replacement117(a, b, c, d, e, f, m, n, p, x):
     return -Dist(S(1)/(b*(m + S(1))), Int((a + b*x)**(m + S(1))*(c + d*x)**(n + S(-1))*(e + f*x)**(p + S(-1))*Simp(c*f*p + d*e*n + d*f*x*(n + p), x), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**p/(b*(m + S(1))), x)
 
 
-def replacement118(d, p, a, c, n, m, b, f, e, x):
+def replacement118(a, b, c, d, e, f, m, n, p, x):
     return Dist(S(1)/(b*(m + S(1))*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**(n + S(-2))*(e + f*x)**p*Simp(a*d*(c*f*(p + S(1)) + d*e*(n + S(-1))) + b*c*(-c*f*(m + p + S(2)) + d*e*(m - n + S(2))) + d*x*(a*d*f*(n + p) + b*(-c*f*(m + n + p + S(1)) + d*e*(m + S(1)))), x), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(-1))*(e + f*x)**(p + S(1))*(-a*d + b*c)/(b*(m + S(1))*(-a*f + b*e)), x)
 
 
-def replacement119(d, p, a, c, n, m, b, f, e, x):
+def replacement119(a, b, c, d, e, f, m, n, p, x):
     return -Dist(S(1)/((m + S(1))*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**(n + S(-1))*(e + f*x)**p*Simp(c*f*(m + p + S(2)) + d*e*n + d*f*x*(m + n + p + S(2)), x), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**(p + S(1))/((m + S(1))*(-a*f + b*e)), x)
 
 
-def replacement120(d, p, a, c, n, m, b, f, e, x):
+def replacement120(a, b, c, d, e, f, m, n, p, x):
     return Dist(S(1)/(d*f*(m + n + p + S(1))), Int((a + b*x)**(m + S(-2))*(c + d*x)**n*(e + f*x)**p*Simp(a**S(2)*d*f*(m + n + p + S(1)) + b*x*(a*d*f*(S(2)*m + n + p) - b*(c*f*(m + p) + d*e*(m + n))) - b*(a*(c*f*(p + S(1)) + d*e*(n + S(1))) + b*c*e*(m + S(-1))), x), x), x) + Simp(b*(a + b*x)**(m + S(-1))*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/(d*f*(m + n + p + S(1))), x)
 
 
-def replacement121(d, p, a, c, n, m, b, f, e, x):
+def replacement121(a, b, c, d, e, f, m, n, p, x):
     return -Dist(S(1)/(f*(m + n + p + S(1))), Int((a + b*x)**(m + S(-1))*(c + d*x)**(n + S(-1))*(e + f*x)**p*Simp(a*n*(-c*f + d*e) + c*m*(-a*f + b*e) + x*(b*n*(-c*f + d*e) + d*m*(-a*f + b*e)), x), x), x) + Simp((a + b*x)**m*(c + d*x)**n*(e + f*x)**(p + S(1))/(f*(m + n + p + S(1))), x)
 
 
-def replacement122(d, p, a, c, n, m, b, f, e, x):
+def replacement122(a, b, c, d, e, f, m, n, p, x):
     return Dist(S(1)/(d*f*(m + n + p + S(1))), Int((a + b*x)**(m + S(-2))*(c + d*x)**n*(e + f*x)**p*Simp(a**S(2)*d*f*(m + n + p + S(1)) + b*x*(a*d*f*(S(2)*m + n + p) - b*(c*f*(m + p) + d*e*(m + n))) - b*(a*(c*f*(p + S(1)) + d*e*(n + S(1))) + b*c*e*(m + S(-1))), x), x), x) + Simp(b*(a + b*x)**(m + S(-1))*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/(d*f*(m + n + p + S(1))), x)
 
 
-def replacement123(d, p, a, c, n, m, b, f, e, x):
+def replacement123(a, b, c, d, e, f, m, n, p, x):
     return Dist(S(1)/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**p*Simp(a*d*f*(m + S(1)) - b*d*f*x*(m + n + p + S(3)) - b*(c*f*(m + p + S(2)) + d*e*(m + n + S(2))), x), x), x) + Simp(b*(a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), x)
 
 
-def replacement124(d, p, a, c, n, m, b, f, e, x):
+def replacement124(a, b, c, d, e, f, m, n, p, x):
     return Dist(S(1)/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**p*Simp(a*d*f*(m + S(1)) - b*d*f*x*(m + n + p + S(3)) - b*(c*f*(m + p + S(2)) + d*e*(m + n + S(2))), x), x), x) + Simp(b*(a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), x)
 
 
-def replacement125(d, a, c, n, m, b, f, e, x):
+def replacement125(a, b, c, d, e, f, m, n, x):
     return Dist(b/f, Int((a + b*x)**(m + S(-1))*(c + d*x)**n, x), x) - Dist((-a*f + b*e)/f, Int((a + b*x)**(m + S(-1))*(c + d*x)**n/(e + f*x), x), x)
 
 
-def replacement126(d, a, c, b, f, e, x):
+def replacement126(a, b, c, d, e, f, x):
     return Dist(S(-4), Subst(Int(x**S(2)/(sqrt(c - d*e/f + d*x**S(4)/f)*(-a*f + b*e - b*x**S(4))), x), x, (e + f*x)**(S(1)/4)), x)
 
 
-def replacement127(d, a, c, b, f, e, x):
+def replacement127(a, b, c, d, e, f, x):
     return Dist(sqrt(-f*(c + d*x)/(-c*f + d*e))/sqrt(c + d*x), Int(S(1)/((a + b*x)*(e + f*x)**(S(1)/4)*sqrt(-c*f/(-c*f + d*e) - d*f*x/(-c*f + d*e))), x), x)
 
 
-def replacement128(d, a, c, b, f, e, x):
+def replacement128(a, b, c, d, e, f, x):
     return Dist(S(-4), Subst(Int(S(1)/(sqrt(c - d*e/f + d*x**S(4)/f)*(-a*f + b*e - b*x**S(4))), x), x, (e + f*x)**(S(1)/4)), x)
 
 
-def replacement129(d, a, c, b, f, e, x):
+def replacement129(a, b, c, d, e, f, x):
     return Dist(sqrt(-f*(c + d*x)/(-c*f + d*e))/sqrt(c + d*x), Int(S(1)/((a + b*x)*(e + f*x)**(S(3)/4)*sqrt(-c*f/(-c*f + d*e) - d*f*x/(-c*f + d*e))), x), x)
 
 
-def replacement130(d, c, b, f, e, x):
+def replacement130(b, c, d, e, f, x):
     return Simp(S(2)*sqrt(e)*EllipticE(asin(sqrt(b*x)/(sqrt(c)*Rt(-b/d, S(2)))), c*f/(d*e))*Rt(-b/d, S(2))/b, x)
 
 
-def replacement131(d, c, b, f, e, x):
+def replacement131(b, c, d, e, f, x):
     return Dist(sqrt(-b*x)/sqrt(b*x), Int(sqrt(e + f*x)/(sqrt(-b*x)*sqrt(c + d*x)), x), x)
 
 
-def replacement132(d, c, b, f, e, x):
+def replacement132(b, c, d, e, f, x):
     return Dist(sqrt(S(1) + d*x/c)*sqrt(e + f*x)/(sqrt(S(1) + f*x/e)*sqrt(c + d*x)), Int(sqrt(S(1) + f*x/e)/(sqrt(b*x)*sqrt(S(1) + d*x/c)), x), x)
 
 
-def replacement133(d, a, c, b, f, e, x):
+def replacement133(a, b, c, d, e, f, x):
     return Simp(S(2)*EllipticE(asin(sqrt(a + b*x)/Rt(-(-a*d + b*c)/d, S(2))), f*(-a*d + b*c)/(d*(-a*f + b*e)))*Rt(-(-a*f + b*e)/d, S(2))/b, x)
 
 
-def replacement134(d, a, c, b, f, e, x):
+def replacement134(a, b, c, d, e, f, x):
     return Dist(sqrt(b*(c + d*x)/(-a*d + b*c))*sqrt(e + f*x)/(sqrt(b*(e + f*x)/(-a*f + b*e))*sqrt(c + d*x)), Int(sqrt(b*e/(-a*f + b*e) + b*f*x/(-a*f + b*e))/(sqrt(a + b*x)*sqrt(b*c/(-a*d + b*c) + b*d*x/(-a*d + b*c))), x), x)
 
 
-def replacement135(d, c, b, f, e, x):
+def replacement135(b, c, d, e, f, x):
     return Simp(S(2)*EllipticF(asin(sqrt(b*x)/(sqrt(c)*Rt(-b/d, S(2)))), c*f/(d*e))*Rt(-b/d, S(2))/(b*sqrt(e)), x)
 
 
-def replacement136(d, c, b, f, e, x):
+def replacement136(b, c, d, e, f, x):
     return Simp(S(2)*EllipticF(asin(sqrt(b*x)/(sqrt(c)*Rt(-b/d, S(2)))), c*f/(d*e))*Rt(-b/d, S(2))/(b*sqrt(e)), x)
 
 
-def replacement137(d, c, b, f, e, x):
+def replacement137(b, c, d, e, f, x):
     return Dist(sqrt(S(1) + d*x/c)*sqrt(S(1) + f*x/e)/(sqrt(c + d*x)*sqrt(e + f*x)), Int(S(1)/(sqrt(b*x)*sqrt(S(1) + d*x/c)*sqrt(S(1) + f*x/e)), x), x)
 
 
-def replacement138(d, a, c, b, f, e, x):
+def replacement138(a, b, c, d, e, f, x):
     return Simp(S(2)*sqrt(b**S(2)/((-a*d + b*c)*(-a*f + b*e)))*EllipticF(asin(sqrt(a + b*x)/Rt(-(-a*d + b*c)/d, S(2))), f*(-a*d + b*c)/(d*(-a*f + b*e)))*Rt(-(-a*d + b*c)/d, S(2))/b, x)
 
 
-def replacement139(d, a, c, b, f, e, x):
+def replacement139(a, b, c, d, e, f, x):
     return Simp(S(2)*sqrt(b**S(2)/((-a*d + b*c)*(-a*f + b*e)))*EllipticF(asin(sqrt(a + b*x)/Rt(-(-a*d + b*c)/d, S(2))), f*(-a*d + b*c)/(d*(-a*f + b*e)))*Rt(-(-a*d + b*c)/d, S(2))/b, x)
 
 
-def replacement140(d, a, c, b, f, e, x):
+def replacement140(a, b, c, d, e, f, x):
     return Dist(sqrt(b*(c + d*x)/(-a*d + b*c))*sqrt(b*(e + f*x)/(-a*f + b*e))/(sqrt(c + d*x)*sqrt(e + f*x)), Int(S(1)/(sqrt(a + b*x)*sqrt(b*c/(-a*d + b*c) + b*d*x/(-a*d + b*c))*sqrt(b*e/(-a*f + b*e) + b*f*x/(-a*f + b*e))), x), x)
 
 
-def With141(d, a, c, b, f, e, x):
+def With141(a, b, c, d, e, f, x):
     q = Rt(b*(-a*f + b*e)/(-a*d + b*c)**S(2), S(3))
     return -Simp(log(a + b*x)/(S(2)*q*(-a*d + b*c)), x) + Simp(S(3)*log(q*(c + d*x)**(S(2)/3) - (e + f*x)**(S(1)/3))/(S(4)*q*(-a*d + b*c)), x) - Simp(sqrt(S(3))*ArcTan(S(2)*sqrt(S(3))*q*(c + d*x)**(S(2)/3)/(S(3)*(e + f*x)**(S(1)/3)) + sqrt(S(3))/S(3))/(S(2)*q*(-a*d + b*c)), x)
 
 
-def replacement142(d, a, c, m, b, f, e, x):
+def replacement142(a, b, c, d, e, f, m, x):
     return Dist(f/(S(6)*(m + S(1))*(-a*d + b*c)*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(a*d*(S(3)*m + S(1)) - S(3)*b*c*(S(3)*m + S(5)) - S(2)*b*d*x*(S(3)*m + S(7)))/((c + d*x)**(S(1)/3)*(e + f*x)**(S(1)/3)), x), x) + Simp(b*(a + b*x)**(m + S(1))*(c + d*x)**(S(2)/3)*(e + f*x)**(S(2)/3)/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), x)
 
 
-def replacement143(d, p, a, c, n, m, b, f, x):
+def replacement143(a, b, c, d, f, m, n, p, x):
     return Int((f*x)**p*(a*c + b*d*x**S(2))**m, x)
 
 
-def replacement144(d, p, a, c, n, m, b, f, x):
+def replacement144(a, b, c, d, f, m, n, p, x):
     return Dist((a + b*x)**FracPart(m)*(c + d*x)**FracPart(m)*(a*c + b*d*x**S(2))**(-FracPart(m)), Int((f*x)**p*(a*c + b*d*x**S(2))**m, x), x)
 
 
-def replacement145(d, p, a, c, n, m, b, f, x):
+def replacement145(a, b, c, d, f, m, n, p, x):
     return Int(ExpandIntegrand((f*x)**p*(a + b*x)**n*(c + d*x)**n, (a + b*x)**(m - n), x), x)
 
 
-def replacement146(d, p, a, c, n, m, b, f, e, x):
+def replacement146(a, b, c, d, e, f, m, n, p, x):
     return Int(ExpandIntegrand((a + b*x)**m*(c + d*x)**n*(e + f*x)**p, x), x)
 
 
-def replacement147(d, p, a, c, n, m, b, f, e, x):
+def replacement147(a, b, c, d, e, f, m, n, p, x):
     return Dist(S(1)/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**p*Simp(a*d*f*(m + S(1)) - b*d*f*x*(m + n + p + S(3)) - b*(c*f*(m + p + S(2)) + d*e*(m + n + S(2))), x), x), x) + Simp(b*(a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), x)
 
 
-def replacement148(d, p, a, c, n, m, b, f, e, x):
+def replacement148(a, b, c, d, e, f, m, n, p, x):
     return Simp((a + b*x)**(m + S(1))*(e + f*x)**(-m + S(-1))*(-a*d + b*c)**n*(-a*f + b*e)**(-n + S(-1))*Hypergeometric2F1(m + S(1), -n, m + S(2), -(a + b*x)*(-c*f + d*e)/((e + f*x)*(-a*d + b*c)))/(m + S(1)), x)
 
 
-def replacement149(d, p, a, c, n, m, b, f, e, x):
+def replacement149(a, b, c, d, e, f, m, n, p, x):
     return Simp(((c + d*x)*(-a*f + b*e)/((e + f*x)*(-a*d + b*c)))**(-n)*(a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**(p + S(1))*Hypergeometric2F1(m + S(1), -n, m + S(2), -(a + b*x)*(-c*f + d*e)/((e + f*x)*(-a*d + b*c)))/((m + S(1))*(-a*f + b*e)), x)
 
 
-def replacement150(d, p, c, n, m, b, f, e, x):
+def replacement150(b, c, d, e, f, m, n, p, x):
     return Simp(c**n*e**p*(b*x)**(m + S(1))*AppellF1(m + S(1), -n, -p, m + S(2), -d*x/c, -f*x/e)/(b*(m + S(1))), x)
 
 
-def replacement151(d, p, c, n, m, b, f, e, x):
+def replacement151(b, c, d, e, f, m, n, p, x):
     return Simp((d/(-c*f + d*e))**(-p)*(-d/(b*c))**(-m)*(c + d*x)**(n + S(1))*AppellF1(n + S(1), -m, -p, n + S(2), S(1) + d*x/c, -f*(c + d*x)/(-c*f + d*e))/(d*(n + S(1))), x)
 
 
-def replacement152(d, p, c, n, m, b, f, e, x):
+def replacement152(b, c, d, e, f, m, n, p, x):
     return Dist(c**IntPart(n)*(S(1) + d*x/c)**(-FracPart(n))*(c + d*x)**FracPart(n), Int((b*x)**m*(S(1) + d*x/c)**n*(e + f*x)**p, x), x)
 
 
-def replacement153(d, p, a, c, n, m, b, f, e, x):
+def replacement153(a, b, c, d, e, f, m, n, p, x):
     return Simp(b**(-p + S(-1))*(b/(-a*d + b*c))**(-n)*(a + b*x)**(m + S(1))*(-a*f + b*e)**p*AppellF1(m + S(1), -n, -p, m + S(2), -d*(a + b*x)/(-a*d + b*c), -f*(a + b*x)/(-a*f + b*e))/(m + S(1)), x)
 
 
-def replacement154(d, p, a, c, n, m, b, f, e, x):
+def replacement154(a, b, c, d, e, f, m, n, p, x):
     return Dist((b/(-a*d + b*c))**(-IntPart(n))*(b*(c + d*x)/(-a*d + b*c))**(-FracPart(n))*(c + d*x)**FracPart(n), Int((a + b*x)**m*(e + f*x)**p*(b*c/(-a*d + b*c) + b*d*x/(-a*d + b*c))**n, x), x)
 
 
-def replacement155(d, p, a, c, n, m, b, f, e, x):
+def replacement155(a, b, c, d, e, f, m, n, p, x):
     return Simp((b/(-a*d + b*c))**(-n)*(b/(-a*f + b*e))**(-p)*(a + b*x)**(m + S(1))*AppellF1(m + S(1), -n, -p, m + S(2), -d*(a + b*x)/(-a*d + b*c), -f*(a + b*x)/(-a*f + b*e))/(b*(m + S(1))), x)
 
 
-def replacement156(d, p, a, c, n, m, b, f, e, x):
+def replacement156(a, b, c, d, e, f, m, n, p, x):
     return Dist((b/(-a*f + b*e))**(-IntPart(p))*(b*(e + f*x)/(-a*f + b*e))**(-FracPart(p))*(e + f*x)**FracPart(p), Int((a + b*x)**m*(c + d*x)**n*(b*e/(-a*f + b*e) + b*f*x/(-a*f + b*e))**p, x), x)
 
 
-def replacement157(d, p, a, c, n, m, b, f, e, x):
+def replacement157(a, b, c, d, e, f, m, n, p, x):
     return Dist((b/(-a*d + b*c))**(-IntPart(n))*(b*(c + d*x)/(-a*d + b*c))**(-FracPart(n))*(c + d*x)**FracPart(n), Int((a + b*x)**m*(e + f*x)**p*(b*c/(-a*d + b*c) + b*d*x/(-a*d + b*c))**n, x), x)
 
 
-def replacement158(u, d, p, a, c, n, m, b, f, e, x):
+def replacement158(a, b, c, d, e, f, m, n, p, u, x):
     return Dist(S(1)/Coefficient(u, x, S(1)), Subst(Int((a + b*x)**m*(c + d*x)**n*(e + f*x)**p, x), x, u), x)
 
 
-def replacement159(d, a, c, g, n, m, b, f, e, h, x):
+def replacement159(a, b, c, d, e, f, g, h, m, n, x):
     return Int(ExpandIntegrand((a + b*x)**m*(c + d*x)**n*(e + f*x)*(g + h*x), x), x)
 
 
-def replacement160(d, a, c, g, n, m, b, f, e, h, x):
+def replacement160(a, b, c, d, e, f, g, h, m, n, x):
     return Dist((a*d*f*h*m + b*(-c*f*h*(m + S(2)) + d*(e*h + f*g)))/(b**S(2)*d), Int((a + b*x)**(m + S(1))*(c + d*x)**n, x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(-a**S(2)*d*f*h*m - a*b*(-c*f*h*(m + S(1)) + d*(e*h + f*g)) + b**S(2)*d*e*g + b*f*h*x*(m + S(1))*(-a*d + b*c))/(b**S(2)*d*(m + S(1))*(-a*d + b*c)), x)
 
 
-def replacement161(d, a, c, g, n, m, b, f, e, h, x):
+def replacement161(a, b, c, d, e, f, g, h, m, n, x):
     return -Dist((a**S(2)*d**S(2)*f*h*(n**S(2) + S(3)*n + S(2)) + a*b*d*(n + S(1))*(S(2)*c*f*h*(m + S(1)) - d*(e*h + f*g)*(m + n + S(3))) + b**S(2)*(c**S(2)*f*h*(m**S(2) + S(3)*m + S(2)) - c*d*(m + S(1))*(e*h + f*g)*(m + n + S(3)) + d**S(2)*e*g*(m**S(2) + m*(S(2)*n + S(5)) + n**S(2) + S(5)*n + S(6))))/(b*d*(m + S(1))*(n + S(1))*(-a*d + b*c)**S(2)), Int((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1)), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(a**S(2)*c*d*f*h*(n + S(1)) + a*b*(c**S(2)*f*h*(m + S(1)) - c*d*(e*h + f*g)*(m + n + S(2)) + d**S(2)*e*g*(m + S(1))) + b**S(2)*c*d*e*g*(n + S(1)) + x*(a**S(2)*d**S(2)*f*h*(n + S(1)) - a*b*d**S(2)*(n + S(1))*(e*h + f*g) + b**S(2)*(c**S(2)*f*h*(m + S(1)) - c*d*(m + S(1))*(e*h + f*g) + d**S(2)*e*g*(m + n + S(2)))))/(b*d*(m + S(1))*(n + S(1))*(-a*d + b*c)**S(2)), x)
 
 
-def replacement162(d, a, c, g, n, m, b, f, e, h, x):
+def replacement162(a, b, c, d, e, f, g, h, m, n, x):
     return Dist(-d*(m + n + S(3))*(a**S(2)*d*f*h*(m - n) - a*b*(S(2)*c*f*h*(m + S(1)) - d*(n + S(1))*(e*h + f*g)) + b**S(2)*(c*(m + S(1))*(e*h + f*g) - d*e*g*(m + n + S(2))))/(b**S(2)*(m + S(1))*(m + S(2))*(-a*d + b*c)**S(2)) + f*h/b**S(2), Int((a + b*x)**(m + S(2))*(c + d*x)**n, x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(-a**S(3)*d*f*h*(n + S(2)) - a**S(2)*b*(c*f*h*m - d*(e*h + f*g)*(m + n + S(3))) - a*b**S(2)*(c*(e*h + f*g) + d*e*g*(S(2)*m + n + S(4))) + b**S(3)*c*e*g*(m + S(2)) + b*x*(a**S(2)*d*f*h*(m - n) - a*b*(S(2)*c*f*h*(m + S(1)) - d*(n + S(1))*(e*h + f*g)) + b**S(2)*(c*(m + S(1))*(e*h + f*g) - d*e*g*(m + n + S(2)))))/(b**S(2)*(m + S(1))*(m + S(2))*(-a*d + b*c)**S(2)), x)
 
 
-def replacement163(d, a, c, g, n, m, b, f, e, h, x):
+def replacement163(a, b, c, d, e, f, g, h, m, n, x):
     return -Dist((a**S(2)*d**S(2)*f*h*(n + S(1))*(n + S(2)) + a*b*d*(n + S(1))*(S(2)*c*f*h*(m + S(1)) - d*(e*h + f*g)*(m + n + S(3))) + b**S(2)*(c**S(2)*f*h*(m + S(1))*(m + S(2)) - c*d*(m + S(1))*(e*h + f*g)*(m + n + S(3)) + d**S(2)*e*g*(m + n + S(2))*(m + n + S(3))))/(b**S(2)*d*(m + S(1))*(-a*d + b*c)*(m + n + S(3))), Int((a + b*x)**(m + S(1))*(c + d*x)**n, x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(a**S(2)*d*f*h*(n + S(2)) + a*b*(c*f*h*(m + S(1)) - d*(e*h + f*g)*(m + n + S(3))) + b**S(2)*d*e*g*(m + n + S(3)) + b*f*h*x*(m + S(1))*(-a*d + b*c))/(b**S(2)*d*(m + S(1))*(-a*d + b*c)*(m + n + S(3))), x)
 
 
-def replacement164(d, a, c, g, n, m, b, f, e, h, x):
+def replacement164(a, b, c, d, e, f, g, h, m, n, x):
     return Dist((a**S(2)*d**S(2)*f*h*(n + S(1))*(n + S(2)) + a*b*d*(n + S(1))*(S(2)*c*f*h*(m + S(1)) - d*(e*h + f*g)*(m + n + S(3))) + b**S(2)*(c**S(2)*f*h*(m + S(1))*(m + S(2)) - c*d*(m + S(1))*(e*h + f*g)*(m + n + S(3)) + d**S(2)*e*g*(m + n + S(2))*(m + n + S(3))))/(b**S(2)*d**S(2)*(m + n + S(2))*(m + n + S(3))), Int((a + b*x)**m*(c + d*x)**n, x), x) - Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(a*d*f*h*(n + S(2)) + b*c*f*h*(m + S(2)) - b*d*f*h*x*(m + n + S(2)) - b*d*(e*h + f*g)*(m + n + S(3)))/(b**S(2)*d**S(2)*(m + n + S(2))*(m + n + S(3))), x)
 
 
-def replacement165(d, p, a, c, g, n, m, b, f, e, h, x):
+def replacement165(a, b, c, d, e, f, g, h, m, n, p, x):
     return Int(ExpandIntegrand((a + b*x)**m*(c + d*x)**n*(e + f*x)**p*(g + h*x), x), x)
 
 
-def replacement166(d, p, a, c, g, n, m, b, f, e, h, x):
+def replacement166(a, b, c, d, e, f, g, h, m, n, p, x):
     return -Dist(S(1)/(b*(m + S(1))*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**(n + S(-1))*(e + f*x)**p*Simp(b*c*(m + S(1))*(-e*h + f*g) + d*x*(b*(m + S(1))*(-e*h + f*g) + f*(-a*h + b*g)*(n + p + S(1))) + (-a*h + b*g)*(c*f*(p + S(1)) + d*e*n), x), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**(p + S(1))*(-a*h + b*g)/(b*(m + S(1))*(-a*f + b*e)), x)
 
 
-def replacement167(d, p, a, c, g, n, m, b, f, e, h, x):
+def replacement167(a, b, c, d, e, f, g, h, m, n, p, x):
     return -Dist(S(1)/(b*(m + S(1))*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**(n + S(-1))*(e + f*x)**p*Simp(b*c*(m + S(1))*(-e*h + f*g) + d*x*(b*(m + S(1))*(-e*h + f*g) + f*(-a*h + b*g)*(n + p + S(1))) + (-a*h + b*g)*(c*f*(p + S(1)) + d*e*n), x), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**(p + S(1))*(-a*h + b*g)/(b*(m + S(1))*(-a*f + b*e)), x)
 
 
-def replacement168(d, p, a, c, g, n, m, b, f, e, h, x):
+def replacement168(a, b, c, d, e, f, g, h, m, n, p, x):
     return Dist(S(1)/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**p*Simp(-d*f*x*(-a*h + b*g)*(m + n + p + S(3)) + (m + S(1))*(a*d*f*g + b*c*e*h - b*g*(c*f + d*e)) - (-a*h + b*g)*(c*f*(p + S(1)) + d*e*(n + S(1))), x), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))*(-a*h + b*g)/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), x)
 
 
-def replacement169(d, p, a, c, g, n, m, b, f, e, h, x):
+def replacement169(a, b, c, d, e, f, g, h, m, n, p, x):
     return Dist(S(1)/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**p*Simp(-d*f*x*(-a*h + b*g)*(m + n + p + S(3)) + (m + S(1))*(a*d*f*g + b*c*e*h - b*g*(c*f + d*e)) - (-a*h + b*g)*(c*f*(p + S(1)) + d*e*(n + S(1))), x), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))*(-a*h + b*g)/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), x)
 
 
-def replacement170(d, p, a, c, g, n, m, b, f, e, h, x):
+def replacement170(a, b, c, d, e, f, g, h, m, n, p, x):
     return Dist(S(1)/(d*f*(m + n + p + S(2))), Int((a + b*x)**(m + S(-1))*(c + d*x)**n*(e + f*x)**p*Simp(a*d*f*g*(m + n + p + S(2)) - h*(a*(c*f*(p + S(1)) + d*e*(n + S(1))) + b*c*e*m) + x*(b*d*f*g*(m + n + p + S(2)) + h*(a*d*f*m - b*(c*f*(m + p + S(1)) + d*e*(m + n + S(1))))), x), x), x) + Simp(h*(a + b*x)**m*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/(d*f*(m + n + p + S(2))), x)
 
 
-def replacement171(d, p, a, c, g, n, m, b, f, e, h, x):
+def replacement171(a, b, c, d, e, f, g, h, m, n, p, x):
     return Dist(S(1)/(d*f*(m + n + p + S(2))), Int((a + b*x)**(m + S(-1))*(c + d*x)**n*(e + f*x)**p*Simp(a*d*f*g*(m + n + p + S(2)) - h*(a*(c*f*(p + S(1)) + d*e*(n + S(1))) + b*c*e*m) + x*(b*d*f*g*(m + n + p + S(2)) + h*(a*d*f*m - b*(c*f*(m + p + S(1)) + d*e*(m + n + S(1))))), x), x), x) + Simp(h*(a + b*x)**m*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))/(d*f*(m + n + p + S(2))), x)
 
 
-def replacement172(d, p, a, c, g, n, m, b, f, e, h, x):
+def replacement172(a, b, c, d, e, f, g, h, m, n, p, x):
     return Dist(S(1)/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), Int((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**p*Simp(-d*f*x*(-a*h + b*g)*(m + n + p + S(3)) + (m + S(1))*(a*d*f*g + b*c*e*h - b*g*(c*f + d*e)) - (-a*h + b*g)*(c*f*(p + S(1)) + d*e*(n + S(1))), x), x), x) + Simp((a + b*x)**(m + S(1))*(c + d*x)**(n + S(1))*(e + f*x)**(p + S(1))*(-a*h + b*g)/((m + S(1))*(-a*d + b*c)*(-a*f + b*e)), x)
 
 
-def replacement173(d, p, a, c, g, b, f, e, h, x):
+def replacement173(a, b, c, d, e, f, g, h, p, x):
     return Dist((-a*h + b*g)/(-a*d + b*c), Int((e + f*x)**p/(a + b*x), x), x) - Dist((-c*h + d*g)/(-a*d + b*c), Int((e + f*x)**p/(c + d*x), x), x)
 
 
-def replacement174(d, p, a, c, g, n, b, f, e, h, x):
+def replacement174(a, b, c, d, e, f, g, h, n, p, x):
     return Dist(h/b, Int((c + d*x)**n*(e + f*x)**p, x), x) + Dist((-a*h + b*g)/b, Int((c + d*x)**n*(e + f*x)**p/(a + b*x), x), x)
 
 
-def replacement175(d, a, c, g, b, f, e, h, x):
+def replacement175(a, b, c, d, e, f, g, h, x):
     return Dist(h/f, Int(sqrt(e + f*x)/(sqrt(a + b*x)*sqrt(c + d*x)), x), x) + Dist((-e*h + f*g)/f, Int(S(1)/(sqrt(a + b*x)*sqrt(c + d*x)*sqrt(e + f*x)), x), x)
 
 
-def replacement176(d, p, a, c, g, n, m, b, f, e, h, x):
+def replacement176(a, b, c, d, e, f, g, h, m, n, p, x):
     return Dist(h/b, Int((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**p, x), x) + Dist((-a*h + b*g)/b, Int((a + b*x)**m*(c + d*x)**n*(e + f*x)**p, x), x)
 
 
-def replacement177(d, p, q, a, c, g, b, f, e, h, x):
+def replacement177(a, b, c, d, e, f, g, h, p, q, x):
     return Dist((-a*f + b*e)/(-a*d + b*c), Int((e + f*x)**(p + S(-1))*(g + h*x)**q/(a + b*x), x), x) - Dist((-c*f + d*e)/(-a*d + b*c), Int((e + f*x)**(p + S(-1))*(g + h*x)**q/(c + d*x), x), x)
 
 
-def replacement178(d, a, c, g, b, f, e, h, x):
+def replacement178(a, b, c, d, e, f, g, h, x):
     return Simp(-S(2)*sqrt(d*(e + f*x)/(-c*f + d*e))*sqrt(d*(g + h*x)/(-c*h + d*g))*EllipticPi(-b*(-c*f + d*e)/(f*(-a*d + b*c)), asin(sqrt(-f/(-c*f + d*e))*sqrt(c + d*x)), h*(-c*f + d*e)/(f*(-c*h + d*g)))/(sqrt(-f/(-c*f + d*e))*sqrt(e + f*x)*sqrt(g + h*x)*(-a*d + b*c)), x)
 
 
-def replacement179(d, a, c, g, n, b, f, e, h, x):
+def replacement179(a, b, c, d, e, f, g, h, n, x):
     return Int(ExpandIntegrand(S(1)/(sqrt(c + d*x)*sqrt(e + f*x)*sqrt(g + h*x)), (c + d*x)**(n + S(1)/2)/(a + b*x), x), x)
 
 
-def replacement180(d, a, c, g, b, f, e, h, x):
+def replacement180(a, b, c, d, e, f, g, h, x):
     return Dist(b**(S(-2)), Int((-a*f*h + b*e*h + b*f*g + b*f*h*x)/(sqrt(c + d*x)*sqrt(e + f*x)*sqrt(g + h*x)), x), x) + Dist((-a*f + b*e)*(-a*h + b*g)/b**S(2), Int(S(1)/((a + b*x)*sqrt(c + d*x)*sqrt(e + f*x)*sqrt(g + h*x)), x), x)
 
 
-def replacement181(d, a, c, g, b, f, e, h, x):
+def replacement181(a, b, c, d, e, f, g, h, x):
     return Dist(-S(2)*sqrt((c + d*x)*(-a*h + b*g)/((a + b*x)*(-c*h + d*g)))*sqrt((e + f*x)*(-a*h + b*g)/((a + b*x)*(-e*h + f*g)))*(a + b*x)/(sqrt(c + d*x)*sqrt(e + f*x)*(-a*h + b*g)), Subst(Int(S(1)/(sqrt(x**S(2)*(-a*d + b*c)/(-c*h + d*g) + S(1))*sqrt(x**S(2)*(-a*f + b*e)/(-e*h + f*g) + S(1))), x), x, sqrt(g + h*x)/sqrt(a + b*x)), x)
 
 
-def replacement182(d, a, c, g, b, f, e, h, x):
+def replacement182(a, b, c, d, e, f, g, h, x):
     return Dist(-S(2)*sqrt((c + d*x)*(-a*h + b*g)/((a + b*x)*(-c*h + d*g)))*sqrt((e + f*x)*(-a*h + b*g)/((a + b*x)*(-e*h + f*g)))*(a + b*x)*(-c*h + d*g)/(sqrt(c + d*x)*sqrt(e + f*x)*(-a*h + b*g)**S(2)), Subst(Int(sqrt(x**S(2)*(-a*d + b*c)/(-c*h + d*g) + S(1))/sqrt(x**S(2)*(-a*f + b*e)/(-e*h + f*g) + S(1)), x), x, sqrt(g + h*x)/sqrt(a + b*x)), x)
 
 
-def replacement183(d, a, c, g, b, f, e, h, x):
+def replacement183(a, b, c, d, e, f, g, h, x):
     return Dist(S(2)*sqrt((c + d*x)*(-a*h + b*g)/((a + b*x)*(-c*h + d*g)))*sqrt((e + f*x)*(-a*h + b*g)/((a + b*x)*(-e*h + f*g)))*(a + b*x)/(sqrt(c + d*x)*sqrt(e + f*x)), Subst(Int(S(1)/((-b*x**S(2) + h)*sqrt(x**S(2)*(-a*d + b*c)/(-c*h + d*g) + S(1))*sqrt(x**S(2)*(-a*f + b*e)/(-e*h + f*g) + S(1))), x), x, sqrt(g + h*x)/sqrt(a + b*x)), x)
 
 
-def replacement184(d, a, c, g, b, f, e, h, x):
+def replacement184(a, b, c, d, e, f, g, h, x):
     return Dist(b/(-a*d + b*c), Int(sqrt(c + d*x)/((a + b*x)**(S(3)/2)*sqrt(e + f*x)*sqrt(g + h*x)), x), x) - Dist(d/(-a*d + b*c), Int(S(1)/(sqrt(a + b*x)*sqrt(c + d*x)*sqrt(e + f*x)*sqrt(g + h*x)), x), x)
 
 
-def replacement185(d, a, c, g, b, f, e, h, x):
+def replacement185(a, b, c, d, e, f, g, h, x):
     return Dist((a*d*f*h - b*(-c*f*h + d*e*h + d*f*g))/(S(2)*f**S(2)*h), Int(sqrt(e + f*x)/(sqrt(a + b*x)*sqrt(c + d*x)*sqrt(g + h*x)), x), x) + Dist((-c*f + d*e)*(-S(2)*a*f*h + b*e*h + b*f*g)/(S(2)*f**S(2)*h), Int(S(1)/(sqrt(a + b*x)*sqrt(c + d*x)*sqrt(e + f*x)*sqrt(g + h*x)), x), x) - Dist((-c*f + d*e)*(-e*h + f*g)/(S(2)*f*h), Int(sqrt(a + b*x)/(sqrt(c + d*x)*(e + f*x)**(S(3)/2)*sqrt(g + h*x)), x), x) + Simp(sqrt(a + b*x)*sqrt(c + d*x)*sqrt(g + h*x)/(h*sqrt(e + f*x)), x)
 
 
-def replacement186(d, a, c, g, b, f, e, h, x):
+def replacement186(a, b, c, d, e, f, g, h, x):
     return Dist(b/d, Int(sqrt(a + b*x)*sqrt(c + d*x)/(sqrt(e + f*x)*sqrt(g + h*x)), x), x) - Dist((-a*d + b*c)/d, Int(sqrt(a + b*x)/(sqrt(c + d*x)*sqrt(e + f*x)*sqrt(g + h*x)), x), x)
 
 
-def replacement187(d, p, q, a, c, g, n, m, b, f, e, h, x):
+def replacement187(a, b, c, d, e, f, g, h, m, n, p, q, x):
     return Int(ExpandIntegrand((a + b*x)**m*(c + d*x)**n*(e + f*x)**p*(g + h*x)**q, x), x)
 
 
-def replacement188(d, p, q, a, c, g, n, m, b, f, e, h, x):
+def replacement188(a, b, c, d, e, f, g, h, m, n, p, q, x):
     return Dist(h/b, Int((a + b*x)**(m + S(1))*(c + d*x)**n*(e + f*x)**p*(g + h*x)**(q + S(-1)), x), x) + Dist((-a*h + b*g)/b, Int((a + b*x)**m*(c + d*x)**n*(e + f*x)**p*(g + h*x)**(q + S(-1)), x), x)
 
 
-def replacement189(d, p, q, a, c, g, n, m, b, f, e, h, x):
+def replacement189(a, b, c, d, e, f, g, h, m, n, p, q, x):
     return Int((a + b*x)**m*(c + d*x)**n*(e + f*x)**p*(g + h*x)**q, x)
 
 
-def replacement190(u, d, p, q, a, c, g, n, m, b, f, e, h, x):
+def replacement190(a, b, c, d, e, f, g, h, m, n, p, q, u, x):
     return Dist(S(1)/Coefficient(u, x, S(1)), Subst(Int((a + b*x)**m*(c + d*x)**n*(e + f*x)**p*(g + h*x)**q, x), x, u), x)
 
 
-def replacement191(d, p, q, a, c, g, n, r, m, i, b, f, e, h, x):
+def replacement191(a, b, c, d, e, f, g, h, i, m, n, p, q, r, x):
     return Dist((i*(a + b*x)**m*(c + d*x)**n*(e + f*x)**p*(g + h*x)**q)**r*(a + b*x)**(-m*r)*(c + d*x)**(-n*r)*(e + f*x)**(-p*r)*(g + h*x)**(-q*r), Int((a + b*x)**(m*r)*(c + d*x)**(n*r)*(e + f*x)**(p*r)*(g + h*x)**(q*r), x), x)

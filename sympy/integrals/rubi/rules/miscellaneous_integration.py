@@ -1,11 +1,10 @@
-'''
+"""
 This code is automatically generated. Never edit it manually.
 For details of generating the code see `rubi_parsing_guide.md` in `parsetools`.
-'''
+"""
 
 from sympy.external import import_module
 matchpy = import_module("matchpy")
-from sympy.utilities.decorator import doctest_depends_on
 
 if matchpy:
     from matchpy import Pattern, ReplacementRule, CustomConstraint, is_match
@@ -128,13 +127,13 @@ if matchpy:
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec, atan2)
     from sympy import pi as Pi
 
-
     A_, B_, C_, F_, G_, H_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, y_, z_ = [WC(i) for i in 'ABCFGHabcdefghijklmnpqrtuvswxyz']
     a1_, a2_, b1_, b2_, c1_, c2_, d1_, d2_, n1_, n2_, e1_, e2_, f1_, f2_, g1_, g2_, n1_, n2_, n3_, Pq_, Pm_, Px_, Qm_, Qr_, Qx_, jn_, mn_, non2_, RFx_, RGx_ = [WC(i) for i in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'n1', 'n2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2', 'n1', 'n2', 'n3', 'Pq', 'Pm', 'Px', 'Qm', 'Qr', 'Qx', 'jn', 'mn', 'non2', 'RFx', 'RGx']]
-    i, ii , Pqq, Q, R, r, C, k, u = symbols('i ii Pqq Q R r C k u')
+    i, ii, Pqq, Q, R, r, C, k, u = symbols('i ii Pqq Q R r C k u')
     _UseGamma = False
     ShowSteps = False
     StepCounter = None
+
 
 def miscellaneous_integration(rubi):
     from sympy.integrals.rubi.constraints import cons149, cons2004, cons2, cons3, cons8, cons4, cons5, cons388, cons29, cons52, cons2005, cons2006, cons2007, cons2008, cons50, cons127, cons210, cons36, cons37, cons38, cons1101, cons2009, cons68, cons19, cons86, cons1039, cons1038, cons40, cons2010, cons10, cons2011, cons2012, cons2013, cons211, cons1833, cons1246, cons2014, cons48, cons2015, cons2016, cons2017, cons2018, cons54, cons2019, cons802, cons2020, cons20, cons2021, cons588, cons2022, cons2023, cons2024, cons2025, cons2026, cons2027, cons2028, cons2029, cons2030, cons669, cons198, cons2031, cons842, cons2032, cons21, cons2033, cons150, cons47, cons2034, cons1856, cons1249, cons263, cons2035, cons369, cons2036, cons69, cons1481, cons746, cons1484, cons167, cons2037, cons2038, cons1678, cons1257, cons2039, cons349
@@ -349,35 +348,35 @@ def miscellaneous_integration(rubi):
 
 
 
-def replacement6934(u, p, a, c, n, b, x):
+def replacement6934(a, b, c, n, p, u, x):
     return Dist(c**IntPart(p)*(c*(a + b*x)**n)**FracPart(p)*(a + b*x)**(-n*FracPart(p)), Int(u*(a + b*x)**(n*p), x), x)
 
 
-def replacement6935(u, d, p, q, a, c, b, x):
+def replacement6935(a, b, c, d, p, q, u, x):
     return Dist((c*(d*(a + b*x))**p)**q*(a + b*x)**(-p*q), Int(u*(a + b*x)**(p*q), x), x)
 
 
-def replacement6936(u, d, p, q, a, c, n, b, x):
+def replacement6936(a, b, c, d, n, p, q, u, x):
     return Dist((c*(d*(a + b*x)**n)**p)**q*(a + b*x)**(-n*p*q), Int(u*(a + b*x)**(n*p*q), x), x)
 
 
-def replacement6937(d, B, a, c, A, g, C, n, b, F, f, e, x):
+def replacement6937(A, B, C, F, a, b, c, d, e, f, g, n, x):
     return Dist(g/C, Subst(Int((a + b*F(c*x))**n/x, x), x, sqrt(d + e*x)/sqrt(f + g*x)), x)
 
 
-def replacement6938(a, c, A, g, C, n, b, F, e, x):
+def replacement6938(A, C, F, a, b, c, e, g, n, x):
     return Dist(g/C, Subst(Int((a + b*F(c*x))**n/x, x), x, sqrt(e*x + S(1))/sqrt(g*x + S(1))), x)
 
 
-def replacement6939(d, B, a, c, g, n, A, C, b, F, f, e, x):
+def replacement6939(A, B, C, F, a, b, c, d, e, f, g, n, x):
     return Dist(g/C, Subst(Int((F**(c*x)*b + a)**n/x, x), x, sqrt(d + e*x)/sqrt(f + g*x)), x)
 
 
-def replacement6940(a, c, g, n, A, C, b, F, e, x):
+def replacement6940(A, C, F, a, b, c, e, g, n, x):
     return Dist(g/C, Subst(Int((F**(c*x)*b + a)**n/x, x), x, sqrt(e*x + S(1))/sqrt(g*x + S(1))), x)
 
 
-def With6941(u, y, x):
+def With6941(u, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -390,13 +389,13 @@ def With6941(u, y, x):
     return False
 
 
-def replacement6941(u, y, x):
+def replacement6941(u, x, y):
 
     q = DerivativeDivides(y, u, x)
     return Simp(q*log(RemoveContent(y, x)), x)
 
 
-def With6942(u, y, w, x):
+def With6942(u, w, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -409,13 +408,13 @@ def With6942(u, y, w, x):
     return False
 
 
-def replacement6942(u, y, w, x):
+def replacement6942(u, w, x, y):
 
     q = DerivativeDivides(w*y, u, x)
     return Simp(q*log(RemoveContent(w*y, x)), x)
 
 
-def With6943(u, y, m, x):
+def With6943(m, u, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -428,13 +427,13 @@ def With6943(u, y, m, x):
     return False
 
 
-def replacement6943(u, y, m, x):
+def replacement6943(m, u, x, y):
 
     q = DerivativeDivides(y, u, x)
     return Simp(q*y**(m + S(1))/(m + S(1)), x)
 
 
-def With6944(u, y, z, n, m, x):
+def With6944(m, n, u, x, y, z):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -447,7 +446,7 @@ def With6944(u, y, z, n, m, x):
     return False
 
 
-def replacement6944(u, y, z, n, m, x):
+def replacement6944(m, n, u, x, y, z):
 
     q = DerivativeDivides(y*z, u*z**(-m + n), x)
     return Simp(q*y**(m + S(1))*z**(m + S(1))/(m + S(1)), x)
@@ -468,19 +467,19 @@ def replacement6945(u, x):
     return Int(v, x)
 
 
-def replacement6946(u, d, a, c, n, m, b, f, e, x):
+def replacement6946(a, b, c, d, e, f, m, n, u, x):
     return Dist((a*e**S(2) - c*f**S(2))**m, Int(ExpandIntegrand(u*(e*sqrt(a + b*x**n) - f*sqrt(c + d*x**n))**(-m), x), x), x)
 
 
-def replacement6947(u, d, a, c, n, m, b, f, e, x):
+def replacement6947(a, b, c, d, e, f, m, n, u, x):
     return Dist((b*e**S(2) - d*f**S(2))**m, Int(ExpandIntegrand(u*x**(m*n)*(e*sqrt(a + b*x**n) - f*sqrt(c + d*x**n))**(-m), x), x), x)
 
 
-def replacement6948(u, p, a, w, n, v, m, x):
+def replacement6948(a, m, n, p, u, v, w, x):
     return Int(u**(m + n*p)*w*(a + u**(-n)*v)**p, x)
 
 
-def With6949(u, d, a, y, c, n, v, m, b, x):
+def With6949(a, b, c, d, m, n, u, v, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -493,13 +492,13 @@ def With6949(u, d, a, y, c, n, v, m, b, x):
     return False
 
 
-def replacement6949(u, d, a, y, c, n, v, m, b, x):
+def replacement6949(a, b, c, d, m, n, u, v, x, y):
 
     q = DerivativeDivides(y, u, x)
     return Dist(q, Subst(Int((a + b*x)**m*(c + d*x)**n, x), x, y), x)
 
 
-def With6950(u, d, p, a, w, y, c, n, v, m, b, f, e, x):
+def With6950(a, b, c, d, e, f, m, n, p, u, v, w, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -512,13 +511,13 @@ def With6950(u, d, p, a, w, y, c, n, v, m, b, f, e, x):
     return False
 
 
-def replacement6950(u, d, p, a, w, y, c, n, v, m, b, f, e, x):
+def replacement6950(a, b, c, d, e, f, m, n, p, u, v, w, x, y):
 
     q = DerivativeDivides(y, u, x)
     return Dist(q, Subst(Int((a + b*x)**m*(c + d*x)**n*(e + f*x)**p, x), x, y), x)
 
 
-def With6951(u, d, p, q, a, w, y, c, z, g, n, v, m, b, f, e, h, x):
+def With6951(a, b, c, d, e, f, g, h, m, n, p, q, u, v, w, x, y, z):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -531,13 +530,13 @@ def With6951(u, d, p, q, a, w, y, c, z, g, n, v, m, b, f, e, h, x):
     return False
 
 
-def replacement6951(u, d, p, q, a, w, y, c, z, g, n, v, m, b, f, e, h, x):
+def replacement6951(a, b, c, d, e, f, g, h, m, n, p, q, u, v, w, x, y, z):
 
     r = DerivativeDivides(y, u, x)
     return Dist(r, Subst(Int((a + b*x)**m*(c + d*x)**n*(e + f*x)**p*(g + h*x)**q, x), x, y), x)
 
 
-def With6952(u, a, y, n, b, x):
+def With6952(a, b, n, u, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -550,13 +549,13 @@ def With6952(u, a, y, n, b, x):
     return False
 
 
-def replacement6952(u, a, y, n, b, x):
+def replacement6952(a, b, n, u, x, y):
 
     q = DerivativeDivides(y, u, x)
     return Dist(a, Int(u, x), x) + Dist(b*q, Subst(Int(x**n, x), x, y), x)
 
 
-def With6953(u, p, a, y, n, b, x):
+def With6953(a, b, n, p, u, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -569,13 +568,13 @@ def With6953(u, p, a, y, n, b, x):
     return False
 
 
-def replacement6953(u, p, a, y, n, b, x):
+def replacement6953(a, b, n, p, u, x, y):
 
     q = DerivativeDivides(y, u, x)
     return Dist(q, Subst(Int((a + b*x**n)**p, x), x, y), x)
 
 
-def With6954(u, p, a, y, v, n, m, b, x):
+def With6954(a, b, m, n, p, u, v, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -591,7 +590,7 @@ def With6954(u, p, a, y, v, n, m, b, x):
     return False
 
 
-def replacement6954(u, p, a, y, v, n, m, b, x):
+def replacement6954(a, b, m, n, p, u, v, x, y):
 
     q = Symbol('q')
     r = Symbol('r')
@@ -600,7 +599,7 @@ def replacement6954(u, p, a, y, v, n, m, b, x):
     return Dist(q*r, Subst(Int(x**m*(a + b*x**n)**p, x), x, y), x)
 
 
-def With6955(u, p, n2, a, y, c, v, n, b, x):
+def With6955(a, b, c, n, n2, p, u, v, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -613,13 +612,13 @@ def With6955(u, p, n2, a, y, c, v, n, b, x):
     return False
 
 
-def replacement6955(u, p, n2, a, y, c, v, n, b, x):
+def replacement6955(a, b, c, n, n2, p, u, v, x, y):
 
     q = DerivativeDivides(y, u, x)
     return Dist(q, Subst(Int((a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
 
 
-def With6956(u, p, n2, B, a, w, y, c, A, v, n, b, x):
+def With6956(A, B, a, b, c, n, n2, p, u, v, w, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -632,13 +631,13 @@ def With6956(u, p, n2, B, a, w, y, c, A, v, n, b, x):
     return False
 
 
-def replacement6956(u, p, n2, B, a, w, y, c, A, v, n, b, x):
+def replacement6956(A, B, a, b, c, n, n2, p, u, v, w, x, y):
 
     q = DerivativeDivides(y, u, x)
     return Dist(q, Subst(Int((A + B*x**n)*(a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
 
 
-def With6957(u, p, n2, B, a, w, y, c, A, n, x):
+def With6957(A, B, a, c, n, n2, p, u, w, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -651,13 +650,13 @@ def With6957(u, p, n2, B, a, w, y, c, A, n, x):
     return False
 
 
-def replacement6957(u, p, n2, B, a, w, y, c, A, n, x):
+def replacement6957(A, B, a, c, n, n2, p, u, w, x, y):
 
     q = DerivativeDivides(y, u, x)
     return Dist(q, Subst(Int((A + B*x**n)*(a + c*x**(S(2)*n))**p, x), x, y), x)
 
 
-def With6958(u, p, n2, a, w, y, c, v, n, m, b, x):
+def With6958(a, b, c, m, n, n2, p, u, v, w, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -673,7 +672,7 @@ def With6958(u, p, n2, a, w, y, c, v, n, m, b, x):
     return False
 
 
-def replacement6958(u, p, n2, a, w, y, c, v, n, m, b, x):
+def replacement6958(a, b, c, m, n, n2, p, u, v, w, x, y):
 
     q = Symbol('q')
     r = Symbol('r')
@@ -682,7 +681,7 @@ def replacement6958(u, p, n2, a, w, y, c, v, n, m, b, x):
     return Dist(q*r, Subst(Int(x**m*(a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
 
 
-def With6959(u, p, n2, B, a, w, y, c, z, A, v, n, m, b, x):
+def With6959(A, B, a, b, c, m, n, n2, p, u, v, w, x, y, z):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -698,7 +697,7 @@ def With6959(u, p, n2, B, a, w, y, c, z, A, v, n, m, b, x):
     return False
 
 
-def replacement6959(u, p, n2, B, a, w, y, c, z, A, v, n, m, b, x):
+def replacement6959(A, B, a, b, c, m, n, n2, p, u, v, w, x, y, z):
 
     q = Symbol('q')
     r = Symbol('r')
@@ -707,7 +706,7 @@ def replacement6959(u, p, n2, B, a, w, y, c, z, A, v, n, m, b, x):
     return Dist(q*r, Subst(Int(x**m*(A + B*x**n)*(a + b*x**n + c*x**(S(2)*n))**p, x), x, y), x)
 
 
-def With6960(u, p, n2, B, a, w, y, c, z, A, n, m, x):
+def With6960(A, B, a, c, m, n, n2, p, u, w, x, y, z):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -723,7 +722,7 @@ def With6960(u, p, n2, B, a, w, y, c, z, A, n, m, x):
     return False
 
 
-def replacement6960(u, p, n2, B, a, w, y, c, z, A, n, m, x):
+def replacement6960(A, B, a, c, m, n, n2, p, u, w, x, y, z):
 
     q = Symbol('q')
     r = Symbol('r')
@@ -732,7 +731,7 @@ def replacement6960(u, p, n2, B, a, w, y, c, z, A, n, m, x):
     return Dist(q*r, Subst(Int(x**m*(A + B*x**n)*(a + c*x**(S(2)*n))**p, x), x, y), x)
 
 
-def With6961(u, d, p, a, y, c, v, n, m, b, x):
+def With6961(a, b, c, d, m, n, p, u, v, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -745,13 +744,13 @@ def With6961(u, d, p, a, y, c, v, n, m, b, x):
     return False
 
 
-def replacement6961(u, d, p, a, y, c, v, n, m, b, x):
+def replacement6961(a, b, c, d, m, n, p, u, v, x, y):
 
     q = DerivativeDivides(y, u, x)
     return Dist(q, Subst(Int((a + b*x**n)**m*(c + d*x**n)**p, x), x, y), x)
 
 
-def With6962(u, d, p, q, a, w, y, c, v, n, m, b, f, e, x):
+def With6962(a, b, c, d, e, f, m, n, p, q, u, v, w, x, y):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -764,13 +763,13 @@ def With6962(u, d, p, q, a, w, y, c, v, n, m, b, f, e, x):
     return False
 
 
-def replacement6962(u, d, p, q, a, w, y, c, v, n, m, b, f, e, x):
+def replacement6962(a, b, c, d, e, f, m, n, p, q, u, v, w, x, y):
 
     r = DerivativeDivides(y, u, x)
     return Dist(r, Subst(Int((a + b*x**n)**m*(c + d*x**n)**p*(e + f*x**n)**q, x), x, y), x)
 
 
-def With6963(v, x, u, F):
+def With6963(F, u, v, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -783,13 +782,13 @@ def With6963(v, x, u, F):
     return False
 
 
-def replacement6963(v, x, u, F):
+def replacement6963(F, u, v, x):
 
     q = DerivativeDivides(v, u, x)
     return Simp(F**v*q/log(F), x)
 
 
-def With6964(u, w, v, m, F, x):
+def With6964(F, m, u, v, w, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -802,13 +801,13 @@ def With6964(u, w, v, m, F, x):
     return False
 
 
-def replacement6964(u, w, v, m, F, x):
+def replacement6964(F, m, u, v, w, x):
 
     q = DerivativeDivides(v, u, x)
     return Dist(q, Subst(Int(F**x*x**m, x), x, v), x)
 
 
-def With6965(u, p, a, w, v, m, b, x):
+def With6965(a, b, m, p, u, v, w, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     c = u/(v*D(w, x) + w*D(v, x))
@@ -817,13 +816,13 @@ def With6965(u, p, a, w, v, m, b, x):
     return False
 
 
-def replacement6965(u, p, a, w, v, m, b, x):
+def replacement6965(a, b, m, p, u, v, w, x):
 
     c = u/(v*D(w, x) + w*D(v, x))
     return Dist(c, Subst(Int((a + b*x**p)**m, x), x, v*w), x)
 
 
-def With6966(u, p, q, a, w, v, m, b, r, x):
+def With6966(a, b, m, p, q, r, u, v, w, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     c = u/(p*w*D(v, x) + q*v*D(w, x))
@@ -832,13 +831,13 @@ def With6966(u, p, q, a, w, v, m, b, r, x):
     return False
 
 
-def replacement6966(u, p, q, a, w, v, m, b, r, x):
+def replacement6966(a, b, m, p, q, r, u, v, w, x):
 
     c = u/(p*w*D(v, x) + q*v*D(w, x))
     return Dist(c*p/(r + S(1)), Subst(Int((a + b*x**(p/(r + S(1))))**m, x), x, v**(r + S(1))*w), x)
 
 
-def With6967(u, p, q, a, w, s, v, m, b, r, x):
+def With6967(a, b, m, p, q, r, s, u, v, w, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     c = u/(p*w*D(v, x) + q*v*D(w, x))
@@ -847,13 +846,13 @@ def With6967(u, p, q, a, w, s, v, m, b, r, x):
     return False
 
 
-def replacement6967(u, p, q, a, w, s, v, m, b, r, x):
+def replacement6967(a, b, m, p, q, r, s, u, v, w, x):
 
     c = u/(p*w*D(v, x) + q*v*D(w, x))
     return Dist(c*p/(r + S(1)), Subst(Int((a + b*x**(p/(r + S(1))))**m, x), x, v**(r + S(1))*w**(s + S(1))), x)
 
 
-def With6968(u, p, q, a, w, v, m, b, x):
+def With6968(a, b, m, p, q, u, v, w, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     c = u/(p*w*D(v, x) - q*v*D(w, x))
@@ -862,13 +861,13 @@ def With6968(u, p, q, a, w, v, m, b, x):
     return False
 
 
-def replacement6968(u, p, q, a, w, v, m, b, x):
+def replacement6968(a, b, m, p, q, u, v, w, x):
 
     c = u/(p*w*D(v, x) - q*v*D(w, x))
     return Dist(c*p, Subst(Int((a*x**p + b)**m, x), x, v*w**(m*q + S(1))), x)
 
 
-def With6969(u, p, q, a, w, v, m, b, r, x):
+def With6969(a, b, m, p, q, r, u, v, w, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     c = u/(p*w*D(v, x) - q*v*D(w, x))
@@ -877,13 +876,13 @@ def With6969(u, p, q, a, w, v, m, b, r, x):
     return False
 
 
-def replacement6969(u, p, q, a, w, v, m, b, r, x):
+def replacement6969(a, b, m, p, q, r, u, v, w, x):
 
     c = u/(p*w*D(v, x) - q*v*D(w, x))
     return -Dist(c*q, Subst(Int((a + b*x**q)**m, x), x, v**(m*p + r + S(1))*w), x)
 
 
-def With6970(u, p, q, a, w, s, v, m, b, x):
+def With6970(a, b, m, p, q, s, u, v, w, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     c = u/(p*w*D(v, x) - q*v*D(w, x))
@@ -892,13 +891,13 @@ def With6970(u, p, q, a, w, s, v, m, b, x):
     return False
 
 
-def replacement6970(u, p, q, a, w, s, v, m, b, x):
+def replacement6970(a, b, m, p, q, s, u, v, w, x):
 
     c = u/(p*w*D(v, x) - q*v*D(w, x))
     return -Dist(c*q/(s + S(1)), Subst(Int((a + b*x**(q/(s + S(1))))**m, x), x, v**(m*p + S(1))*w**(s + S(1))), x)
 
 
-def With6971(u, p, q, a, w, s, v, m, b, r, x):
+def With6971(a, b, m, p, q, r, s, u, v, w, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     c = u/(p*w*D(v, x) - q*v*D(w, x))
@@ -907,13 +906,13 @@ def With6971(u, p, q, a, w, s, v, m, b, r, x):
     return False
 
 
-def replacement6971(u, p, q, a, w, s, v, m, b, r, x):
+def replacement6971(a, b, m, p, q, r, s, u, v, w, x):
 
     c = u/(p*w*D(v, x) - q*v*D(w, x))
     return -Dist(c*q/(s + S(1)), Subst(Int((a + b*x**(q/(s + S(1))))**m, x), x, v**(m*p + r + S(1))*w**(s + S(1))), x)
 
 
-def replacement6972(u, m, x):
+def replacement6972(m, u, x):
     return Dist(S(1)/(m + S(1)), Subst(Int(SubstFor(x**(m + S(1)), u, x), x), x, x**(m + S(1))), x)
 
 
@@ -955,31 +954,31 @@ def replacement6974(u, x):
     return Dist(Part(lst, S(2))*Part(lst, S(4)), Subst(Int(Part(lst, S(1)), x), x, Part(lst, S(3))**(S(1)/Part(lst, S(2)))), x)
 
 
-def replacement6975(u, p, q, a, w, z, n, v, m, x):
+def replacement6975(a, m, n, p, q, u, v, w, x, z):
     return Dist(a**IntPart(p)*v**(-m*FracPart(p))*w**(-n*FracPart(p))*z**(-q*FracPart(p))*(a*v**m*w**n*z**q)**FracPart(p), Int(u*v**(m*p)*w**(n*p)*z**(p*q), x), x)
 
 
-def replacement6976(u, p, a, w, n, v, m, x):
+def replacement6976(a, m, n, p, u, v, w, x):
     return Dist(a**IntPart(p)*v**(-m*FracPart(p))*w**(-n*FracPart(p))*(a*v**m*w**n)**FracPart(p), Int(u*v**(m*p)*w**(n*p), x), x)
 
 
-def replacement6977(u, p, a, v, m, x):
+def replacement6977(a, m, p, u, v, x):
     return Dist(a**IntPart(p)*v**(-m*FracPart(p))*(a*v**m)**FracPart(p), Int(u*v**(m*p), x), x)
 
 
-def replacement6978(u, p, a, n, b, x):
+def replacement6978(a, b, n, p, u, x):
     return Dist(FullSimplify(x**(-n/S(2))*sqrt(a + b*x**n)/sqrt(a*x**(-n) + b)), Int(u*x**(n*p)*(a*x**(-n) + b)**p, x), x)
 
 
-def replacement6979(u, p, a, n, v, b, x):
+def replacement6979(a, b, n, p, u, v, x):
     return Dist(v**(-n*FracPart(p))*(a + b*v**n)**FracPart(p)*(a*v**(-n) + b)**(-FracPart(p)), Int(u*v**(n*p)*(a*v**(-n) + b)**p, x), x)
 
 
-def replacement6980(u, p, a, v, n, m, b, x):
+def replacement6980(a, b, m, n, p, u, v, x):
     return Dist(v**(-n*FracPart(p))*(a + b*v**n*x**m)**FracPart(p)*(a*v**(-n) + b*x**m)**(-FracPart(p)), Int(u*v**(n*p)*(a*v**(-n) + b*x**m)**p, x), x)
 
 
-def With6981(u, a, s, m, b, r, x):
+def With6981(a, b, m, r, s, u, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     v = x**(-r*FracPart(m))*(a + b*x**(-r + s))**(-FracPart(m))*(a*x**r + b*x**s)**FracPart(m)
@@ -988,13 +987,13 @@ def With6981(u, a, s, m, b, r, x):
     return False
 
 
-def replacement6981(u, a, s, m, b, r, x):
+def replacement6981(a, b, m, r, s, u, x):
 
     v = x**(-r*FracPart(m))*(a + b*x**(-r + s))**(-FracPart(m))*(a*x**r + b*x**s)**FracPart(m)
     return Dist(v, Int(u*x**(m*r)*(a + b*x**(-r + s))**m, x), x)
 
 
-def With6982(u, a, n, b, x):
+def With6982(a, b, n, u, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     v = RationalFunctionExpand(u/(a + b*x**n), x)
@@ -1003,21 +1002,21 @@ def With6982(u, a, n, b, x):
     return False
 
 
-def replacement6982(u, a, n, b, x):
+def replacement6982(a, b, n, u, x):
 
     v = RationalFunctionExpand(u/(a + b*x**n), x)
     return Int(v, x)
 
 
-def replacement6983(u, p, n2, a, c, n, b, x):
+def replacement6983(a, b, c, n, n2, p, u, x):
     return Dist(S(4)**(-p)*c**(-p), Int(u*(b + S(2)*c*x**n)**(S(2)*p), x), x)
 
 
-def replacement6984(u, p, n2, a, c, n, b, x):
+def replacement6984(a, b, c, n, n2, p, u, x):
     return Dist((b + S(2)*c*x**n)**(-S(2)*p)*(a + b*x**n + c*x**(S(2)*n))**p, Int(u*(b + S(2)*c*x**n)**(S(2)*p), x), x)
 
 
-def With6985(u, n2, a, c, n, b, x):
+def With6985(a, b, c, n, n2, u, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     v = RationalFunctionExpand(u/(a + b*x**n + c*x**(S(2)*n)), x)
@@ -1026,13 +1025,13 @@ def With6985(u, n2, a, c, n, b, x):
     return False
 
 
-def replacement6985(u, n2, a, c, n, b, x):
+def replacement6985(a, b, c, n, n2, u, x):
 
     v = RationalFunctionExpand(u/(a + b*x**n + c*x**(S(2)*n)), x)
     return Int(v, x)
 
 
-def replacement6986(u, a, c, n, m, b, x):
+def replacement6986(a, b, c, m, n, u, x):
     return Int(u*(a*x**m - b*sqrt(c*x**n))/(a**S(2)*x**(S(2)*m) - b**S(2)*c*x**n), x)
 
 
@@ -1074,7 +1073,7 @@ def replacement6988(u, x):
     return Dist(S(1)/Part(lst, S(2)), Subst(Int(NormalizeIntegrand(Part(lst, S(1))/x, x), x), x, (x*Part(lst, S(3)))**Part(lst, S(2))), x)
 
 
-def With6989(u, m, x):
+def With6989(m, u, x):
     if isinstance(x, (int, Integer, float, Float)):
         return False
     try:
@@ -1087,13 +1086,13 @@ def With6989(u, m, x):
     return False
 
 
-def replacement6989(u, m, x):
+def replacement6989(m, u, x):
 
     lst = PowerVariableExpn(u, m + S(1), x)
     return Dist(S(1)/Part(lst, S(2)), Subst(Int(NormalizeIntegrand(Part(lst, S(1))/x, x), x), x, (x*Part(lst, S(3)))**Part(lst, S(2))), x)
 
 
-def With6990(u, m, x):
+def With6990(m, u, x):
     k = Denominator(m)
     return Dist(k, Subst(Int(x**(k*(m + S(1)) + S(-1))*ReplaceAll(u, Rule(x, x**k)), x), x, x**(S(1)/k)), x)
 
@@ -1117,19 +1116,19 @@ def replacement6991(u, x):
     return Dist(S(2), Subst(Int(Part(lst, S(1)), x), x, Part(lst, S(2))), x)
 
 
-def replacement6992(v, a, x, b):
+def replacement6992(a, b, v, x):
     return Dist(S(1)/(S(2)*a), Int(Together(S(1)/(-v/Rt(-a/b, S(2)) + S(1))), x), x) + Dist(S(1)/(S(2)*a), Int(Together(S(1)/(v/Rt(-a/b, S(2)) + S(1))), x), x)
 
 
-def replacement6993(a, v, n, b, x):
+def replacement6993(a, b, n, v, x):
     return Dist(S(2)/(a*n), Sum_doit(Int(Together(S(1)/(S(1) - (S(-1))**(-S(4)*k/n)*v**S(2)/Rt(-a/b, n/S(2)))), x), List(k, S(1), n/S(2))), x)
 
 
-def replacement6994(a, v, n, b, x):
+def replacement6994(a, b, n, v, x):
     return Dist(S(1)/(a*n), Sum_doit(Int(Together(S(1)/(S(1) - (S(-1))**(-S(2)*k/n)*v/Rt(-a/b, n))), x), List(k, S(1), n)), x)
 
 
-def replacement6995(u, a, n, v, b, x):
+def replacement6995(a, b, n, u, v, x):
     return Int(ReplaceAll(ExpandIntegrand(PolynomialInSubst(v, u, x)/(a + b*x**n), x), Rule(x, u)), x)
 
 
@@ -1163,11 +1162,11 @@ def replacement6997(u, x):
     return Int(v, x)
 
 
-def replacement6998(u, d, p, q, a, c, n, m, b, x):
+def replacement6998(a, b, c, d, m, n, p, q, u, x):
     return Dist(x**(-m*p)*(a + b*x**m)**p*(c + d*x**n)**q, Int(u*x**(m*p), x), x)
 
 
-def replacement6999(u, p, n2, a, c, n, b, x):
+def replacement6999(a, b, c, n, n2, p, u, x):
     return Dist((S(4)*c)**(S(1)/2 - p)*sqrt(a + b*x**n + c*x**(S(2)*n))/(b + S(2)*c*x**n), Int(u*(b + S(2)*c*x**n)**(S(2)*p), x), x)
 
 
