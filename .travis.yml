@@ -255,7 +255,7 @@ install:
   # If a command fails, fail the build.
   - set -e
   - if [ "$TRAVIS_PYTHON_VERSION" = "pypy3" ];
-      then virtualenv -p /usr/bin/python ~/.venv;
+      then virtualenv -p /usr/bin/pypy ~/.venv;
            . ~/.venv/bin/activate;
     fi
   # Once https://github.com/fredrik-johansson/mpmath/pull/403 is in a released
