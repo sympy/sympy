@@ -1249,11 +1249,11 @@ class trigamma(Function):
         n, z = map(sympify, (1, z))
         from sympy import unpolarify
 
-            if n.is_integer:
-            if n.is_nonnegative:
-                nz = unpolarify(z)
-                if z != nz:
-                    return polygamma(n, nz)
+        if n.is_integer:
+        if n.is_nonnegative:
+            nz = unpolarify(z)
+            if z != nz:
+                return polygamma(n, nz)
 
         # TODO n == 1 also can do some rational z
 
