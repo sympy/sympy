@@ -1025,7 +1025,7 @@ class digamma(Function):
         # the mpmath polygamma implementation valid only for nonnegative integers
         if n.is_number and n.is_real:
             if (n.is_integer or n == int(n)) and n.is_nonnegative:
-                return super(polygamma, self)._eval_evalf(prec)
+                return super(digamma, self)._eval_evalf(prec)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1208,7 +1208,7 @@ class trigamma(Function):
         # the mpmath polygamma implementation valid only for nonnegative integers
         if n.is_number and n.is_real:
             if (n.is_integer or n == int(n)) and n.is_nonnegative:
-                return super(polygamma, self)._eval_evalf(prec)
+                return super(trigamma, self)._eval_evalf(prec)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
