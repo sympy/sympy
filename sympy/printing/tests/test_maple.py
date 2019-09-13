@@ -47,10 +47,9 @@ def test_Function():
 
 def test_Pow():
     assert maple_code(x ** 3) == "x^3"
-    assert maple_code(x ** (y ** 3)) == "x^y^3"
+    assert maple_code(x ** (y ** 3)) == "x^(y^3)"
 
-    print(maple_code((x ** 3) ** y))
-    assert maple_code((x ** 3) ** y) == "(x^3)^y"  # PROBLEM
+    assert maple_code((x ** 3) ** y) == "(x^3)^y"
     assert maple_code(x ** Rational(2, 3)) == 'x^(2/3)'
 
     g = implemented_function('g', Lambda(x, 2 * x))
@@ -113,12 +112,11 @@ def test_mix_number_pow_symbols():
     assert maple_code(pi ** 3) == 'Pi^3'
     assert maple_code(x ** 2) == 'x^2'
 
-    assert maple_code(x ** (pi ** 3)) == 'x^Pi^3'
+    assert maple_code(x ** (pi ** 3)) == 'x^(Pi^3)'
     assert maple_code(x ** y) == 'x^y'
 
-    print(maple_code(x ** (y ** z)))
-    assert maple_code(x ** (y ** z)) == 'x^y^z'
-    assert maple_code((x ** y) ** z) == '(x^y)^z'  # PROBLEM
+    assert maple_code(x ** (y ** z)) == 'x^(y^z)'
+    assert maple_code((x ** y) ** z) == '(x^y)^z'
 
 
 def test_imag():
@@ -224,10 +222,9 @@ def test_MatrixSymbol():
         A * (B + 3 * Identity(n))) == "A*(3*Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = sparse) + B)"
         """  # TODO Identity Symbol in Maple.
 
-    print(maple_code(A ** (x ** 2)))
-    assert maple_code(A ** (x ** 2)) == "A^x^2"  # PROBLEM
-    assert maple_code(A ** 3) == "A^3"
-    assert maple_code(A ** (S.Half)) == "A^(1/2)"
+    assert maple_code(A ** (x ** 2)) == "MatrixPower(A, x^2)"
+    assert maple_code(A ** 3) == "MatrixPower(A, 3)"
+    assert maple_code(A ** (S.Half)) == "MatrixPower(A, 1/2)"
 
 
 def test_special_matrices():

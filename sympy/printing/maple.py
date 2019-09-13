@@ -234,7 +234,7 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_MatPow(self, expr):
         # This function requires LinearAlgebra Function in Maple
-        return 'MatrixPower({A}, {n})'.format(A=expr.base, n=expr.exp)
+        return 'MatrixPower({A}, {n})'.format(A=self._print(expr.base), n=self._print(expr.exp))
 
     def _print_HadamardProduct(self, expr):
         _fact_list = list(expr.args)
