@@ -27,7 +27,6 @@ _known_func_same_name = [
 
 known_functions = {
     # Sympy -> Maple
-    # FIXME: maybe need added
     'Abs': 'abs',
     'log': 'ln',
     'asin': 'arcsin',
@@ -294,7 +293,6 @@ def maple_code(expr, assign_to=None, **settings):
             If True, we try to create single-statement code instead of multiple
             statements.  [default=True].
 
-        FIXME: examples should be added.
     """
     return MapleCodePrinter(settings).doprint(expr, assign_to)
 

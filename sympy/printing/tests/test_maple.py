@@ -145,7 +145,6 @@ def test_constants_other():
 
 
 def test_boolean():
-    # FIXME: need more info.
     assert maple_code(x & y) == "x && y"
     assert maple_code(x | y) == "x || y"
     assert maple_code(~x) == "!x"
@@ -198,9 +197,6 @@ def test_vector_entries_hadamard():
 
 
 def test_Matrices_entries_not_hadamard():
-    # For Matrix with col >= 2, row >= 2, they need to be scalars
-    # FIXME: is it worth worrying about this?  Its not wrong, just
-    # leave it user's responsibility to put scalar data for x.
     A = Matrix([[1, sin(2 / x), 3 * pi / x / 5], [1, 2, x * y]])
     expected = \
         'Matrix([[1, sin(2/x), (3/5)*Pi/x], [1, 2, x*y]], ' \
@@ -234,7 +230,6 @@ def test_containers():
     assert maple_code([1, 2, 3, [4, 5, [6, 7]], 8, [9, 10], 11]) == \
            "[1, 2, 3, [4, 5, [6, 7]], 8, [9, 10], 11]"
 
-    # FIXME: need more info about tuple in maple
     assert maple_code((1, 2, (3, 4))) == "[1, 2, [3, 4]]"
     assert maple_code([1]) == "[1]"
     assert maple_code((1,)) == "[1]"
@@ -249,7 +244,6 @@ def test_containers():
 # There possibly no such feature in maple
 r"""
 def test_maple_noninline():
-    # FIXME: need more info.
     source = maple_code((x + y)/Catalan, assign_to='me', inline=False)
     expected = (
                    "const Catalan = %s\n"
