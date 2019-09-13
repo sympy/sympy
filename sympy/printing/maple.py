@@ -227,7 +227,7 @@ class MapleCodePrinter(CodePrinter):
             _fact_list[0], sympy.MatrixSymbol)):
             _const, _fact_list = _fact_list[0], _fact_list[1:]
 
-        if _const is None:
+        if _const is None or _const == 1:
             return '.'.join(self._print(_m) for _m in _fact_list)
         else:
             return '{c}*{m}'.format(c=_const, m='.'.join(self._print(_m) for _m in _fact_list))

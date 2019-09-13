@@ -242,10 +242,9 @@ def test_containers():
     assert maple_code(Tuple(*[1, 2, 3])) == "[1, 2, 3]"
     assert maple_code((1, x * y, (3, x ** 2))) == "[1, x*y, [3, x^2]]"
     # scalar, matrix, empty matrix and empty list
-    assert maple_code((1, eye(3), Matrix(0, 0, []), [])) == \
-           "[1, Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = sparse), zeros(0, 0), Matrix([], storage = rectangular)]"  # PROBLEM
 
-    print("Need more info about tuple in maple.")
+    assert maple_code((1, eye(3), Matrix(0, 0, []), [])) == \
+           "[1, Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = rectangular), zeros(0, 0), Matrix([], storage = rectangular)]"  # PROBLEM
 
 
 # There possibly no such feature in maple
@@ -336,10 +335,9 @@ def test_MatrixElement_printing():
     assert (maple_code(A[0, 0]) == "A[1, 1]")
     assert (maple_code(3 * A[0, 0]) == "3*A[1, 1]")
 
-    F = C[0, 0].subs(C, A - B)
+    F = A-B
 
-    print(maple_code(F))
-    assert (maple_code(F) == "(A - B)[1, 1]")  # PROBLEM
+    assert (maple_code(F[0,0]) == "A[1, 1] - B[1, 1]")
 
 
 def test_hadamard():
@@ -350,14 +348,15 @@ def test_hadamard():
     C = HadamardProduct(A, B)
     assert maple_code(C) == "A*B"
 
-    print(maple_code(C * v))
     assert maple_code(C * v) == "A*B.v"  # TODO: don't know if the precedence of
     # HadamardProduct is higher than dot product.
 
-    assert maple_code(h * C * v) == "h*(A*B)*v"
-    assert maple_code(C * A) == "(A*B)*A"
+    assert maple_code(h * C * v) == "h.A*B.v"
+
+    assert maple_code(C * A) == "A*B.A"
     # mixing Hadamard and scalar strange b/c we vectorize scalars
-    assert maple_code(C * x * y) == "(x*y)*(A*B)"
+
+    assert maple_code(C * x * y) == "x*y*A*B"
 
 
 def test_maple_piecewise():
