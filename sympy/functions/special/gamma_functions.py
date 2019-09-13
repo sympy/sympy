@@ -1048,11 +1048,10 @@ class digamma(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
-        if args0[1] != oo or not \
-                (self.args[0].is_Integer and self.args[0].is_nonnegative):
+        if args0[1] != oo:
             return super(polygamma, self)._eval_aseries(n, args0, x, logx)
-        z = self.args[1]
-        N = self.args[0]
+        z = self.args[0]
+        N = sympify(0)
 
         if N == 0:
             # digamma function series
