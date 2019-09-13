@@ -7,7 +7,7 @@ from sympy import powsimp
 
 if matchpy:
     from matchpy import (Operation, CommutativeOperation, AssociativeOperation,
-        ManyToOneReplacer, OneIdentityOperation, CustomConstraint)
+                         ManyToOneReplacer, OneIdentityOperation, CustomConstraint, ManyToOneMatcher)
     from sympy import Pow, Add, Integral, Basic, Mul, S, Function, E
     from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf,
         exp as sym_exp, gamma, acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh,
@@ -20,15 +20,15 @@ if matchpy:
     from sympy.utilities.matchpy_connector import op_iter, op_len
 
     @doctest_depends_on(modules=('matchpy',))
-    def rubi_object():
-        '''
+    def get_rubi_object():
+        """
         Returns rubi ManyToOneReplacer by adding all rules from different modules.
 
         Uncomment the lines to add integration capabilities of that module.
 
         Currently, there are parsing issues with special_function,
         derivative and miscellaneous_integration. Hence they are commented.
-        '''
+        """
         from sympy.integrals.rubi.rules.integrand_simplification import integrand_simplification
         from sympy.integrals.rubi.rules.linear_products import linear_products
         from sympy.integrals.rubi.rules.quadratic_products import quadratic_products
@@ -50,29 +50,34 @@ if matchpy:
         from sympy.integrals.rubi.rules.miscellaneous_integration import miscellaneous_integration
         rules = []
         rules_applied = []
+
         rules += integrand_simplification(rules_applied)
         rules += linear_products(rules_applied)
-        rules += quadratic_products(rules_applied)
-        rules += binomial_products(rules_applied)
-        rules += trinomial_products(rules_applied)
-        rules += miscellaneous_algebraic(rules_applied)
-        rules += exponential(rules_applied)
-        rules += logarithms(rules_applied)
-        rules += special_functions(rules_applied)
-        rules += sine(rules_applied)
-        rules += tangent(rules_applied)
-        rules += secant(rules_applied)
-        rules += miscellaneous_trig(rules_applied)
-        rules += inverse_trig(rules_applied)
-        rules += hyperbolic(rules_applied)
-        rules += inverse_hyperbolic(rules_applied)
+        #rules += quadratic_products(rules_applied)
+        #rules += binomial_products(rules_applied)
+        #rules += trinomial_products(rules_applied)
+        #rules += miscellaneous_algebraic(rules_applied)
+        #rules += exponential(rules_applied)
+        #rules += logarithms(rules_applied)
+        #rules += special_functions(rules_applied)
+        #rules += sine(rules_applied)
+        #rules += tangent(rules_applied)
+        #rules += secant(rules_applied)
+        #rules += miscellaneous_trig(rules_applied)
+        #rules += inverse_trig(rules_applied)
+        #rules += hyperbolic(rules_applied)
+        #rules += inverse_hyperbolic(rules_applied)
         #rubi = piecewise_linear(rubi)
+
         rules += miscellaneous_integration(rules_applied)
+
         rubi = ManyToOneReplacer(*rules)
         return rubi, rules_applied, rules
     _E = rubi_unevaluated_expr(E)
     Integrate = Function('Integrate')
-    rubi, rules_applied, rules = rubi_object()
+    #rubi, rules_applied, rules = get_rubi_object()
+    rules_applied = []
+
 
 def _has_cycle():
     if rules_applied.count(rules_applied[-1]) == 1:
@@ -80,8 +85,9 @@ def _has_cycle():
     if rules_applied[-1] == rules_applied[-2] == rules_applied[-3] == rules_applied[-4] == rules_applied[-5]:
         return True
 
+
 def process_final_integral(expr):
-    '''
+    """
     When there is recursion for more than 10 rules or in total 20 rules have been applied
     rubi returns `Integrate` in order to stop any further matching. After complete integration,
     Integrate needs to be replaced back to Integral. Also rubi's `rubi_exp`
@@ -100,15 +106,16 @@ def process_final_integral(expr):
     >>> process_final_integral(_E**5)
     exp(5)
 
-    '''
+    """
     if expr.has(Integrate):
         expr = expr.replace(Integrate, Integral)
     if expr.has(_E):
         expr = expr.replace(_E, E)
     return expr
 
+
 def rubi_powsimp(expr):
-    '''
+    """
     This function is needed to preprocess an expression as done in matchpy
     `x^a*x^b` in matchpy auotmatically transforms to `x^(a+b)`
 
@@ -120,8 +127,8 @@ def rubi_powsimp(expr):
     >>> rubi_powsimp(x**a*x**b)
     x**(a+b)
 
-    '''
-    lst_pow =[]
+    """
+    lst_pow = []
     lst_non_pow = []
     if isinstance(expr, Mul):
         for i in expr.args:
@@ -132,9 +139,10 @@ def rubi_powsimp(expr):
         return powsimp(Mul(*lst_pow))*Mul(*lst_non_pow)
     return expr
 
+
 @doctest_depends_on(modules=('matchpy',))
 def rubi_integrate(expr, var, showsteps=False):
-    '''
+    """
     Rule based algorithm for integration. Integrates the expression by applying
     transformation rules to the expression.
 
@@ -146,7 +154,7 @@ def rubi_integrate(expr, var, showsteps=False):
     var : variable of integration
 
     Returns Integral object if unable to integrate.
-    '''
+    """
     expr = expr.replace(sym_exp, rubi_exp)
     rules_applied[:] = []
     expr = process_trig(expr)
@@ -161,8 +169,9 @@ def rubi_integrate(expr, var, showsteps=False):
             rules_applied[:] = []
         return process_final_integral(results)
 
-    results = rubi.replace(Integral(expr, var), max_count = 10)
+    results = rubi.replace(Integral(expr, var), max_count=10)
     return process_final_integral(results)
+
 
 @doctest_depends_on(modules=('matchpy',))
 def util_rubi_integrate(expr, var, showsteps=False):
@@ -175,20 +184,21 @@ def util_rubi_integrate(expr, var, showsteps=False):
     if len(rules_applied) > 10:
         if _has_cycle() or len(rules_applied) > 20:
             return Integrate(expr, var)
-    results = rubi.replace(Integral(expr, var), max_count = 10)
+    results = rubi.replace(Integral(expr, var), max_count=10)
     rules_applied[:] = []
     return results
 
+
 @doctest_depends_on(modules=('matchpy',))
 def get_matching_rule_definition(expr, var):
-    '''
+    """
     Prints the list or rules which match to `expr`.
 
     Parameters
     ==========
     expr : integrand expression
     var : variable of integration
-    '''
+    """
     matcher = rubi.matcher
     miter = matcher.match(Integral(expr, var))
     for fun, e in miter:
