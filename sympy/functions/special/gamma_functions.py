@@ -1250,8 +1250,8 @@ class trigamma(Function):
         from sympy import unpolarify
 
         if n.is_integer:
-        if n.is_nonnegative:
-            nz = unpolarify(z)
+            if n.is_nonnegative:
+                nz = unpolarify(z)
             if z != nz:
                 return polygamma(n, nz)
 
