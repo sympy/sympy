@@ -307,23 +307,29 @@ class ImageSet(Set):
     sympy.sets.sets.imageset
     """
     def __new__(cls, flambda, base_set, *sets):
+        if not isinstance(flambda, Lambda):
+            raise ValueError('First argument must be a Lambda')
+
         if sets:
+            # XXX: Should be a DeprecationWarning
             raise ValueError("Multiple set arguments to ImageSet")
             base_set = ProductSet(*((base_set,) + sets)).flatten()
 
-        if not isinstance(flambda, Lambda):
-            raise ValueError('First argument must be a Lambda')
+        if len(flambda.signature) != 1:
+            # XXX: Should be a DeprecationWarning
+            raise ValueError('Only one argument Lambda allowed in ImageSet')
+            flambda = Lambda((flambda.signature,), flambda.expr)
 
         base_set = _sympify(base_set)
         if not isinstance(base_set, Set):
             raise TypeError("Set argument to ImageSet should of type Set")
 
+        if not cls._check_compatible_signature(flambda, base_set):
+            raise ValueError("Signature %s does not match Set %s"
+                                % (flambda.signature[0], base_set))
+
         if flambda is S.IdentityFunction:
             return base_set
-
-        if 1 not in flambda.nargs:
-            # FIXME: Better checking is needed here for the signature...
-            raise ValueError("ImageSet should have a one argument Lambda")
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
             is_empty = base_set.is_empty
@@ -336,6 +342,28 @@ class ImageSet(Set):
 
     lamda = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
+
+    @classmethod
+    def _check_compatible_signature(cls, flambda, base_set):
+
+        def rcheck(tsig, pset):
+            if tsig.is_symbol:
+                return True
+            elif isinstance(pset, ProductSet):
+                sets = pset.sets
+                if len(tsig) != len(sets):
+                    return False
+                return all(rcheck(ts, ps) for ts, ps in zip(tsig, sets))
+            else:
+                # XXX: Need a better way of checking whether a set is a set of
+                # Tuples or not. For example a FiniteSet can contain Tuples
+                # but so can an ImageSet or a ConditionSet. Others like
+                # Integers, Reals etc can not contain Tuples. We could just
+                # list the possibilities here... Current code for e.g.
+                # _contains probably only works for ProductSet.
+                return True # Give the benefit of the doubt
+
+        return rcheck(flambda.signature[0], base_set)
 
     def __iter__(self):
         already_seen = set()
