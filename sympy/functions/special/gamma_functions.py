@@ -1143,6 +1143,30 @@ class digamma(Function):
         n = sympify(0)
         z = self.args[0]
 
+        if n.is_Integer and n.is_nonnegative:
+            if z.is_Add:
+                coeff = z.args[0]
+                if coeff.is_Integer:
+                    e = -(n + 1)
+                    if coeff > 0:
+                        tail = Add(*[Pow(
+                            z - i, e) for i in range(1, int(coeff) + 1)])
+                    else:
+                        tail = -Add(*[Pow(
+                            z + i, e) for i in range(0, int(-coeff))])
+                    return polygamma(n, z - coeff) + (-1)**n*factorial(n)*tail
+
+            elif z.is_Mul:
+                coeff, z = z.as_two_terms()
+                if coeff.is_Integer and coeff.is_positive:
+                    tail = [ polygamma(n, z + Rational(
+                        i, coeff)) for i in range(0, int(coeff)) ]
+                    if n == 0:
+                        return Add(*tail)/coeff + log(coeff)
+                    else:
+                        return Add(*tail)/coeff**(n + 1)
+                z *= coeff
+
         if n == 0 and z.is_Rational:
             p, q = z.as_numer_denom()
 
@@ -1349,6 +1373,23 @@ class trigamma(Function):
                     else:
                         return Add(*tail)/coeff**(n + 1)
                 z *= coeff
+
+        if n == 0 and z.is_Rational:
+            p, q = z.as_numer_denom()
+
+            # Reference:
+            #   Values of the polygamma functions at rational arguments, J. Choi, 2007
+            part_1 = -S.EulerGamma - pi * cot(p * pi / q) / 2 - log(q) + Add(
+                *[cos(2 * k * pi * p / q) * log(2 * sin(k * pi / q)) for k in range(1, q)])
+
+            if z > 0:
+                n = floor(z)
+                z0 = z - n
+                return part_1 + Add(*[1 / (z0 + k) for k in range(n)])
+            elif z < 0:
+                n = floor(1 - z)
+                z0 = z + n
+                return part_1 - Add(*[1 / (z0 - 1 - k) for k in range(n)])
 
         return polygamma(n, z)
 
