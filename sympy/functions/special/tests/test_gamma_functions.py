@@ -410,6 +410,23 @@ def test_digamma():
 
     assert digamma(I).is_real is None
 
+def test_digamma_expand_func():
+    assert digamma(x).expand(func=True) == polygamma(0, x)
+    assert digamma(2*x).expand(func=True) == \
+        polygamma(0, x)/2 + polygamma(0, Rational(1, 2) + x)/2 + log(2)
+    assert digamma(-1 + x).expand(func=True) == \
+        polygamma(0, x) - 1/(x - 1)
+    assert digamma(1 + x).expand(func=True) == \
+        1/x + polygamma(0, x )
+    assert digamma(2 + x).expand(func=True) == \
+        1/x + 1/(1 + x) + polygamma(0, x)
+    assert digamma(3 + x).expand(func=True) == \
+        polygamma(0, x) + 1/x + 1/(1 + x) + 1/(2 + x)
+    assert digamma(4 + x).expand(func=True) == \
+        polygamma(0, x) + 1/x + 1/(1 + x) + 1/(2 + x) + 1/(3 + x)
+    assert digamma(x + y).expand(func=True) == \
+        polygamma(0, x + y)
+
 def test_trigamma():
     from sympy import I
 
@@ -422,7 +439,25 @@ def test_trigamma():
     assert trigamma(3) == pi**2/6 - Rational(5, 4)
 
     assert trigamma(x).rewrite(zeta) == zeta(2, x)
-    
+
+def test_trigamma_expand_func():
+    assert trigamma(2*x).expand(func=True) == \
+        polygamma(1, x)/4 + polygamma(1, Rational(1, 2) + x)/4
+    assert trigamma(1 + x).expand(func=True) == \
+        polygamma(1, x) - 1/x**2
+    assert trigamma(2 + x).expand(func=True, multinomial=False) == \
+        polygamma(1, x) - 1/x**2 - 1/(1 + x)**2
+    assert trigamma(3 + x).expand(func=True, multinomial=False) == \
+        polygamma(1, x) - 1/x**2 - 1/(1 + x)**2 - 1/(2 + x)**2
+    assert trigamma(4 + x).expand(func=True, multinomial=False) == \
+        polygamma(1, x) - 1/x**2 - 1/(1 + x)**2 - \
+        1/(2 + x)**2 - 1/(3 + x)**2
+    assert trigamma(x + y).expand(func=True) == \
+        polygamma(1, x + y)
+    assert trigamma(3 + 4*x + y).expand(func=True, multinomial=False) == \
+        polygamma(1, y + 4*x) - 1/(y + 4*x)**2 - \
+        1/(1 + y + 4*x)**2 - 1/(2 + y + 4*x)**2
+
 def test_loggamma():
     raises(TypeError, lambda: loggamma(2, 3))
     raises(ArgumentIndexError, lambda: loggamma(x).fdiff(2))
