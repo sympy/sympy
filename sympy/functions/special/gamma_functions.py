@@ -1183,7 +1183,7 @@ class trigamma(Function):
             if (n.is_integer or n == int(n)) and n.is_nonnegative:
                 return super(polygamma, self)._eval_evalf(prec)
 
-        def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1):
         if argindex == 1:
             n = sympify(1)
             z = self.args[0]
