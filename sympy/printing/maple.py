@@ -242,10 +242,13 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_Derivative(self, expr):
         _f, (_var, _order) = expr.args
-        _second_arg = '{var}${order}'.format(var=self._print(_var),
-                                             order=self._print(_order)) if _order != 1 else self._print(_var)
-        return 'diff({func_expr}, {sec_arg})'.format(func_expr=self._print(_f), sec_arg=_second_arg)
 
+        if _order != 1:
+            _second_arg = '{var}${order}'.format(var=self._print(_var),
+                                                 order=self._print(_order))
+        else:
+            _second_arg = '{var}'.format(var=self._print(_var))
+        return 'diff({func_expr}, {sec_arg})'.format(func_expr=self._print(_f), sec_arg=_second_arg)
 
 
 def maple_code(expr, assign_to=None, **settings):
