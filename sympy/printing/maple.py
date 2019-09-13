@@ -124,8 +124,8 @@ class MapleCodePrinter(CodePrinter):
             return '1/sqrt(%s)' % self._print(expr.base)
         else:
             return '{base}^{exp}'.format(
-                base=self.parenthesize(expr.base, PREC, strict=True),
-                exp=self.parenthesize(expr.exp, PREC, strict=True))
+                base=self.parenthesize(expr.base, PREC),
+                exp=self.parenthesize(expr.exp, PREC))
 
     def _print_Piecewise(self, expr):
         if (expr.args[-1].cond is not True) and (expr.args[-1].cond != S.BooleanTrue):
