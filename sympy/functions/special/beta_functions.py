@@ -47,12 +47,12 @@ class beta(Function):
     >>> from sympy import beta
     >>> from sympy import diff
     >>> diff(beta(x,y), x)
-    (polygamma(0, x) - polygamma(0, x + y))*beta(x, y)
+    (digamma(x) - digamma(x + y))*beta(x, y)
 
     >>> from sympy import beta
     >>> from sympy import diff
     >>> diff(beta(x,y), y)
-    (polygamma(0, y) - polygamma(0, x + y))*beta(x, y)
+    (digamma(y) - digamma(x + y))*beta(x, y)
 
     We can numerically evaluate the gamma function to arbitrary precision
     on the whole complex plane:

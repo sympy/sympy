@@ -1,6 +1,6 @@
 from sympy import (
     Symbol, Dummy, gamma, I, oo, nan, zoo, factorial, sqrt, Rational,
-    multigamma, log, polygamma, EulerGamma, pi, uppergamma, S, expand_func,
+    multigamma, log, polygamma, digamma, trigamma, EulerGamma, pi, uppergamma, S, expand_func,
     loggamma, sin, cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic,
     zeta, conjugate, Ei, im, re, tanh, Abs)
 
