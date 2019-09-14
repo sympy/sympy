@@ -129,6 +129,9 @@ def test_Eq():
     # issue 13348
     assert Eq(True, 1) is S.false
 
+    assert Eq((), 1) is S.false
+
+
 def test_rel_Infinity():
     # NOTE: All of these are actually handled by sympy.core.Number, and do
     # not create Relational objects.
@@ -960,6 +963,16 @@ def test_improved_canonical():
     assert (pi >= x).canonical == (x <= pi)
 
 
+def test_set_equality_canonical():
+    a, b, c = symbols('a b c')
+
+    A = Eq(FiniteSet(a, b, c), FiniteSet(1, 2, 3))
+    B = Ne(FiniteSet(a, b, c), FiniteSet(4, 5, 6))
+
+    assert A.canonical == A.reversed
+    assert B.canonical == B.reversed
+
+
 def test_trigsimp():
     # issue 16736
     s, c = sin(2*x), cos(2*x)
@@ -979,6 +992,7 @@ def test_polynomial_relation_simplification():
     assert Le(-(3*x*(x + 1) + 4), -3*x).simplify() in [Ge(x**2, -Rational(4,3)), Le(-x**2, Rational(4, 3))]
     assert ((x**2+3)*(x**2-1)+3*x >= 2*x**2).simplify() in [(x**4 + 3*x >= 3), (-x**4 - 3*x <= -3)]
 
+
 def test_multivariate_linear_function_simplification():
     assert Ge(x + y, x - y).simplify() == Ge(y, 0)
     assert Le(-x + y, -x - y).simplify() == Le(y, 0)
@@ -988,6 +1002,7 @@ def test_multivariate_linear_function_simplification():
     assert (2*x + y < 2*x + y + 3).simplify() == True
     a, b, c, d, e, f, g = symbols('a b c d e f g')
     assert Lt(a + b + c + 2*d, 3*d - f + g). simplify() == Lt(a, -b - c + d - f + g)
+
 
 def test_nonpolymonial_relations():
     assert Eq(cos(x), 0).simplify() == Eq(cos(x), 0)

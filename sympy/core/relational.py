@@ -216,19 +216,25 @@ class Relational(Boolean, Expr, EvalfMixin):
         elif tuple(ordered(args)) != args:
             r = r.reversed
 
+        LHS_CEMS = getattr(r.lhs, 'could_extract_minus_sign', None)
+        RHS_CEMS = getattr(r.rhs, 'could_extract_minus_sign', None)
+
+        if isinstance(r.lhs, BooleanAtom) or isinstance(r.rhs, BooleanAtom):
+            return r
+
         # Check if first value has negative sign
-        if not isinstance(r.lhs, BooleanAtom) and \
-                r.lhs.could_extract_minus_sign():
-            r = r.reversedsign
-        elif not isinstance(r.rhs, BooleanAtom) and not r.rhs.is_number and \
-                r.rhs.could_extract_minus_sign():
+        if LHS_CEMS and LHS_CEMS():
+            return r.reversedsign
+        elif not r.rhs.is_number and RHS_CEMS and RHS_CEMS():
             # Right hand side has a minus, but not lhs.
             # How does the expression with reversed signs behave?
-            # This is so that expressions of the type Eq(x, -y) and Eq(-x, y)
+            # This is so that expressions of the type
+            # Eq(x, -y) and Eq(-x, y)
             # have the same canonical representation
             expr1, _ = ordered([r.lhs, -r.rhs])
             if expr1 != r.lhs:
-                r = r.reversed.reversedsign
+                return r.reversed.reversedsign
+
         return r
 
     def equals(self, other, failing_expression=False):
@@ -449,6 +455,7 @@ class Equality(Relational):
 
     def __new__(cls, lhs, rhs=None, **options):
         from sympy.core.add import Add
+        from sympy.core.containers import Tuple
         from sympy.core.logic import fuzzy_bool
         from sympy.core.expr import _n2
         from sympy.simplify.simplify import clear_coefficients

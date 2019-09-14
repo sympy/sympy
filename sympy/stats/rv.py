@@ -292,7 +292,6 @@ class RandomIndexedSymbol(RandomSymbol):
 
 class RandomMatrixSymbol(MatrixSymbol):
     def __new__(cls, symbol, n, m, pspace=None):
-        from sympy.stats.random_matrix import RandomMatrixPSpace
         n, m = _sympify(n), _sympify(m)
         symbol = _symbol_converter(symbol)
         return Basic.__new__(cls, symbol, n, m, pspace)
@@ -510,7 +509,7 @@ class ProductDomain(RandomDomain):
 
     @property
     def set(self):
-        return ProductSet(domain.set for domain in self.domains)
+        return ProductSet(*(domain.set for domain in self.domains))
 
     def __contains__(self, other):
         # Split event into each subdomain
@@ -822,7 +821,6 @@ class Density(Basic):
     def doit(self, evaluate=True, **kwargs):
         from sympy.stats.joint_rv import JointPSpace
         from sympy.stats.frv import SingleFiniteDistribution
-        from sympy.stats.random_matrix_models import RandomMatrixPSpace
         expr, condition = self.expr, self.condition
         if _sympify(expr).has(RandomMatrixSymbol):
             return pspace(expr).compute_density(expr)

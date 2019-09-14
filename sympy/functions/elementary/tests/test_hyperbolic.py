@@ -1,7 +1,7 @@
 from sympy import (symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log,
     sqrt, coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth,
     Integer, O, exp, sech, sec, csch, asech, acsch, acos, asin, expand_mul,
-    AccumBounds, im, re, Abs)
+    AccumBounds, im, re)
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError

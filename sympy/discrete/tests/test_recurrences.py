@@ -1,5 +1,5 @@
-from sympy import sqrt, Rational, fibonacci
-from sympy.core import S, symbols, I
+from sympy import Rational, fibonacci
+from sympy.core import S, symbols
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises
 from sympy.discrete.recurrences import linrec

@@ -5,7 +5,7 @@ from sympy.matrices.expressions.blockmatrix import (
 from sympy.matrices.expressions import (MatrixSymbol, Identity,
         Inverse, trace, Transpose, det)
 from sympy.matrices import (
-    Matrix, ImmutableMatrix, ImmutableSparseMatrix, ones)
+    Matrix, ImmutableMatrix, ImmutableSparseMatrix)
 from sympy.core import Tuple, symbols, Expr
 from sympy.core.compatibility import range
 from sympy.functions import transpose

@@ -32,7 +32,6 @@ from sympy.utilities.iterables import numbered_symbols
 from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
-from sympy.core.containers import Dict
 
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
@@ -186,7 +185,15 @@ def test_issue_17479():
     fy = sb.diff(f, y)
     fz = sb.diff(f, z)
     sol = nonlinsolve([fx, fy, fz], [x, y, z])
-    assert len(sol) == 18
+    # FIXME: This previously gave 18 solutions and now gives 20 due to fixes
+    # in the handling of intersection of FiniteSets or possibly a small change
+    # to ImageSet._contains. However Using expand I can turn this into 16
+    # solutions either way:
+    #
+    #    >>> len(FiniteSet(*(Tuple(*(expand(w) for w in s)) for s in sol)))
+    #    16
+    #
+    assert len(sol) == 20
 
 
 def test_is_function_class_equation():
@@ -1906,7 +1913,6 @@ def test_expo_conditionset():
 
 def test_exponential_symbols():
     x, y, z = symbols('x y z', positive=True)
-    from sympy import simplify
 
     assert solveset(z**x - y, x, S.Reals) == Intersection(
         S.Reals, FiniteSet(log(y)/log(z)))

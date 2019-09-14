@@ -2,10 +2,10 @@ from __future__ import print_function, division
 
 from sympy.core import Mul, sympify
 from sympy.matrices.expressions.matexpr import (
-    MatrixExpr, ShapeError, Identity, OneMatrix, ZeroMatrix
+    MatrixExpr, ShapeError, OneMatrix, ZeroMatrix
 )
 from sympy.strategies import (
-    unpack, flatten, condition, exhaust, do_one, rm_id, sort
+    unpack, flatten, condition, exhaust, rm_id, sort
 )
 
 
@@ -80,7 +80,19 @@ class HadamardProduct(MatrixExpr):
         return HadamardProduct(*list(map(transpose, self.args)))
 
     def doit(self, **ignored):
-        return canonicalize(self)
+        expr = self.func(*[i.doit(**ignored) for i in self.args])
+        # Check for explicit matrices:
+        from sympy import MatrixBase
+        from sympy.matrices.immutable import ImmutableMatrix
+        explicit = [i for i in expr.args if isinstance(i, MatrixBase)]
+        if explicit:
+            remainder = [i for i in expr.args if i not in explicit]
+            expl_mat = ImmutableMatrix([
+                Mul.fromiter(i) for i in zip(*explicit)
+            ]).reshape(*self.shape)
+            expr = HadamardProduct(*([expl_mat] + remainder))
+
+        return canonicalize(expr)
 
     def _eval_derivative(self, x):
         from sympy import Add
@@ -418,7 +430,7 @@ class HadamardPower(MatrixExpr):
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.codegen.array_utils import CodegenArrayTensorProduct
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayDiagonal
+        from sympy.codegen.array_utils import CodegenArrayDiagonal
         from sympy.core.expr import ExprBuilder
         from sympy.matrices.expressions.matexpr import _make_matrix
 

@@ -1,18 +1,18 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, with_metaclass, range, PY3
+from sympy.core.compatibility import with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
+from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import oo, Integer
-from sympy.core.logic import fuzzy_or
 from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
-    ProductSet, Intersection)
+    ProductSet)
 from sympy.utilities.misc import filldedent
 
 
@@ -305,12 +305,19 @@ class ImageSet(Set):
     """
     def __new__(cls, flambda, *sets):
         if not isinstance(flambda, Lambda):
-            raise ValueError('first argument must be a Lambda')
+            raise ValueError('First argument must be a Lambda')
+
+        sets = [_sympify(s) for s in sets]
 
         if flambda is S.IdentityFunction:
             if len(sets) != 1:
-                raise ValueError('identify function requires a single set')
+                raise ValueError('Identity function requires a single set')
             return sets[0]
+
+        if not all(isinstance(s, Set) for s in sets):
+            raise TypeError("Set arguments to ImageSet should of type Set")
+
+        sets = [s.flatten() if s.is_ProductSet else s for s in sets]
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
             emptyprod = fuzzy_or(s.is_empty for s in sets)
@@ -322,7 +329,14 @@ class ImageSet(Set):
         return Basic.__new__(cls, flambda, *sets)
 
     lamda = property(lambda self: self.args[0])
-    base_set = property(lambda self: ProductSet(self.args[1:]))
+
+    @property
+    def base_set(self):
+        sets = self.args[1:]
+        if len(sets) == 1:
+            return sets[0]
+        else:
+            return ProductSet(*self.args[1:]).flatten()
 
     def __iter__(self):
         already_seen = set()
@@ -341,7 +355,7 @@ class ImageSet(Set):
         from sympy.matrices import Matrix
         from sympy.solvers.solveset import solveset, linsolve
         from sympy.solvers.solvers import solve
-        from sympy.utilities.iterables import is_sequence, iterable, cartes
+        from sympy.utilities.iterables import is_sequence, cartes
         L = self.lamda
         if is_sequence(other) != is_sequence(L.expr):
             return False
@@ -423,10 +437,10 @@ class ImageSet(Set):
                 dom = self.base_set
                 for e, o in zip(L.expr, other):
                     dom = dom.intersection(solveset(e - o, x, domain=dom))
-                    if not dom:
+                    if dom.is_empty:
                         # there is no solution in common
                         return False
-                return not isinstance(dom, Intersection)
+                return fuzzy_not(dom.is_empty)
         for soln in solns:
             try:
                 if soln in self.base_set:

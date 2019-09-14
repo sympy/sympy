@@ -3,7 +3,7 @@ from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
-    ImageSet, Naturals0, Rationals)
+    ImageSet, Rationals)
 from sympy.sets.sets import UniversalSet, imageset, ProductSet
 
 
@@ -81,7 +81,6 @@ def intersection_sets(a, b):
 @dispatch(Range, Interval)
 def intersection_sets(a, b):
     from sympy.functions.elementary.integers import floor, ceiling
-    from sympy.functions.elementary.miscellaneous import Min, Max
     if not all(i.is_number for i in b.args[:2]):
         return
 
@@ -351,8 +350,8 @@ def intersection_sets(self, other):
 def intersection_sets(a, b):
     if len(b.args) != len(a.args):
         return S.EmptySet
-    return ProductSet(i.intersect(j)
-            for i, j in zip(a.sets, b.sets))
+    return ProductSet(*(i.intersect(j) for i, j in zip(a.sets, b.sets)))
+
 
 @dispatch(Interval, Interval)
 def intersection_sets(a, b):

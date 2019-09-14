@@ -876,7 +876,7 @@ def test_latex_productset():
     fset = FiniteSet(1, 2, 3)
     assert latex(line**2) == r"%s^{2}" % latex(line)
     assert latex(line**10) == r"%s^{10}" % latex(line)
-    assert latex(line * bigline * fset) == r"%s \times %s \times %s" % (
+    assert latex((line * bigline * fset).flatten()) == r"%s \times %s \times %s" % (
         latex(line), latex(bigline), latex(fset))
 
 
@@ -978,7 +978,7 @@ def test_set_operators_parenthesis():
         '\\left\\{d\\right\\}\\right)'
 
     # XXX This can be incorrect since cartesian product is not associative
-    assert latex(ProductSet(A, P2)) == \
+    assert latex(ProductSet(A, P2).flatten()) == \
         '\\left\\{a\\right\\} \\times \\left\\{c\\right\\} \\times ' \
         '\\left\\{d\\right\\}'
     assert latex(ProductSet(U1, U2)) == \

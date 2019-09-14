@@ -4,7 +4,7 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,
       check_and_join, encipher_vigenere, decipher_vigenere,
       encipher_hill, decipher_hill, encipher_bifid5, encipher_bifid6,
-      bifid5_square, bifid6_square, bifid5, bifid6, bifid10,
+      bifid5_square, bifid6_square, bifid5, bifid6,
       decipher_bifid5, decipher_bifid6, encipher_kid_rsa,
       decipher_kid_rsa, kid_rsa_private_key, kid_rsa_public_key,
       decipher_rsa, rsa_private_key, rsa_public_key, encipher_rsa,
@@ -20,7 +20,7 @@ from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
-from sympy.utilities.pytest import raises, slow, warns
+from sympy.utilities.pytest import raises, warns
 
 from random import randrange
 

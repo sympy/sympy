@@ -1,11 +1,10 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, S, sympify, oo, pi, Symbol, Dummy, expand_func
+from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
 from sympy.core.compatibility import range, as_int
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.elementary.complexes import re
@@ -197,6 +196,25 @@ class gamma(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.gamma(self.args[0]._sage_())
+
+    def _eval_as_leading_term(self, x):
+        from sympy import Order
+        arg = self.args[0]
+        arg_1 = arg.as_leading_term(x)
+        if Order(x, x).contains(arg_1):
+            return S(1) / arg_1
+        if Order(1, x).contains(arg_1):
+            return self.func(arg_1)
+        ####################################################
+        # The correct result here should be 'None'.        #
+        # Indeed arg in not bounded as x tends to 0.       #
+        # Consequently the series expansion does not admit #
+        # the leading term.                                #
+        # For compatibility reasons, the return value here #
+        # is the original function, i.e. gamma(arg),       #
+        # instead of None.                                 #
+        ####################################################
+        return self.func(arg)
 
 
 ###############################################################################

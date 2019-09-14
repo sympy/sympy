@@ -1,4 +1,4 @@
-from sympy import Identity, OneMatrix, ZeroMatrix
+from sympy import Identity, OneMatrix, ZeroMatrix, Matrix, MatAdd
 from sympy.core import symbols
 from sympy.utilities.pytest import raises
 
@@ -74,6 +74,22 @@ def test_hadamard():
         hadamard_product(A, I)
     assert hadamard_product(X, I) == X
     assert isinstance(hadamard_product(X, I), MatrixSymbol)
+
+    a = MatrixSymbol("a", k, 1)
+    expr = MatAdd(ZeroMatrix(k, 1), OneMatrix(k, 1))
+    expr = HadamardProduct(expr, a)
+    assert expr.doit() == a
+
+
+def test_hadamard_product_with_explicit_mat():
+    A = MatrixSymbol("A", 3, 3).as_explicit()
+    B = MatrixSymbol("B", 3, 3).as_explicit()
+    X = MatrixSymbol("X", 3, 3)
+    expr = hadamard_product(A, B)
+    ret = Matrix([i*j for i, j in zip(A, B)]).reshape(3, 3)
+    assert expr == ret
+    expr = hadamard_product(A, X, B)
+    assert expr == HadamardProduct(ret, X)
 
 
 def test_hadamard_power():

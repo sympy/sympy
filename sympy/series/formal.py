@@ -25,7 +25,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp
-from sympy.series.sequences import sequence, SeqMul
+from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
 
 

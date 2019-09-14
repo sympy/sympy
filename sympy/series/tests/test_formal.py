@@ -1,6 +1,6 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai, acos, acosh, gamma, erf, asech, Add, Integral, Mul,
+                   airyai, acos, acosh, gamma, erf, asech, Add, Mul,
                    integrate)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  FormalPowerSeriesProduct, FormalPowerSeriesCompose,

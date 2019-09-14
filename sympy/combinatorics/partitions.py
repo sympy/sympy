@@ -6,7 +6,7 @@ from sympy.core.sympify import _sympify
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
 from sympy.sets.sets import FiniteSet, Union
-from sympy.utilities.iterables import has_dups, flatten, group
+from sympy.utilities.iterables import flatten, group
 
 from collections import defaultdict
 

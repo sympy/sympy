@@ -4,9 +4,8 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
-                   Derivative, sin, exp, cos, tan, log, Lambda, S, sqrt,
-                   hadamard_product, DiagonalizeVector, OneMatrix, HadamardProduct, HadamardPower, KroneckerDelta, Sum,
-                   Dummy)
+                   Derivative, sin, exp, cos, tan, log, S, sqrt,
+                   hadamard_product, DiagonalizeVector, OneMatrix, HadamardProduct, HadamardPower, KroneckerDelta, Sum)
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
 from sympy.matrices.expressions import hadamard_power
 
@@ -62,6 +61,10 @@ def test_matrix_derivative_by_scalar():
     assert (sin(i)*A*B*x).diff(i) == cos(i)*A*B*x
     assert x.applyfunc(sin).diff(i) == ZeroMatrix(k, 1)
     assert Trace(i**2*X).diff(i) == 2*i*Trace(X)
+
+    mu = symbols("mu")
+    expr = (2*mu*x)
+    assert expr.diff(x) == 2*mu*Identity(k)
 
 
 def test_matrix_derivative_non_matrix_result():

@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import random
 from collections import defaultdict
 
-from sympy.core.basic import Basic, Atom
+from sympy.core.basic import Atom
 from sympy.core.compatibility import is_sequence, reduce, range, as_int
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
