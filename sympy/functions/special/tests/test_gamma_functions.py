@@ -114,7 +114,7 @@ def test_lowergamma():
     assert td(lowergamma(randcplx(), y), y)
     assert td(lowergamma(x, randcplx()), x)
     assert lowergamma(x, y).diff(x) == \
-        gamma(x)*polygamma(0, x) - uppergamma(x, y)*log(y) \
+        gamma(x)*digamma(x) - uppergamma(x, y)*log(y) \
         - meijerg([], [1, 1], [0, 0, x], [], y)
 
     assert lowergamma(S.Half, x) == sqrt(pi)*erf(sqrt(x))
@@ -430,7 +430,7 @@ def test_digamma_expand_func():
 def test_trigamma():
     from sympy import I
 
-    assert trigamma(n, nan) == nan
+    assert trigamma(nan) == nan
 
     assert trigamma(oo) == 0
 
