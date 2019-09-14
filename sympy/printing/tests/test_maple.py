@@ -241,16 +241,11 @@ def test_containers():
            "[1, Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = rectangular), Matrix([], storage = rectangular), []]"
 
 
-# There possibly no such feature in maple
-r"""
 def test_maple_noninline():
     source = maple_code((x + y)/Catalan, assign_to='me', inline=False)
-    expected = (
-                   "const Catalan = %s\n"
-                   "me = (x + y)/Catalan"
-               ) % Catalan.evalf(17)
+    expected = "me := (x + y)/Catalan"
+
     assert source == expected
-"""
 
 
 def test_maple_matrix_assign_to():
