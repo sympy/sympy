@@ -386,5 +386,5 @@ def test_maple_derivatives():
 
 
 def test_specfun():
-    # TODO: addition not supported function need to be add.
-    pass
+    assert maple_code('asin(x)') == 'arcsin(x)'
+    assert maple_code(besseli(x, y)) == 'BesselI(x, y)'
