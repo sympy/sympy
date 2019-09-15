@@ -1981,19 +1981,23 @@ class PrettyPrinter(Printer):
                                or set.is_Union)
 
     def _print_ImageSet(self, ts):
+        from sympy.sets.sets import ProductSet
         if self._use_unicode:
             inn = u"\N{SMALL ELEMENT OF}"
         else:
             inn = 'in'
-        (variables,) = ts.lamda.signature
-        expr = self._print(ts.lamda.expr)
+        fun = ts.lamda
+        sets = ts.base_sets
+        signature = fun.signature
+        expr = self._print(fun.expr)
         bar = self._print("|")
-        sets = [self._print(i) for i in ts.args[1:]]
-        if variables.is_symbol:
-            pargs = variables
+        if len(signature) == 1:
+            pargs = self._print(signature[0])
+            psets = self._print(sets[0])
         else:
-            pargs = '(' + ', '.join(map(str, variables)) + ')'
-        return self._print_seq((expr, bar, pargs, inn, sets[0]), "{", "}", ' ')
+            pargs = self._print(signature)
+            psets = self._print(ProductSet(*sets)) # XXX: evaluate=False?
+        return self._print_seq((expr, bar, pargs, inn, psets), "{", "}", ' ')
 
     def _print_ConditionSet(self, ts):
         if self._use_unicode:

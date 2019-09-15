@@ -674,7 +674,7 @@ class ProductSet(Set):
     is_ProductSet = True
 
     def __new__(cls, *sets, **assumptions):
-        if len(sets) == 1 and iterable(sets[0]) and not isinstance(sets[0], (Set, set)):
+        if len(sets) == 1 and not isinstance(sets[0], (Set, set)) and iterable(sets[0]):
             SymPyDeprecationWarning(
                 feature="ProductSet(iterable)",
                 useinstead="ProductSet(*iterable)",
