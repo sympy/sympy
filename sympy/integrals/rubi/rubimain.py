@@ -1,21 +1,18 @@
 from sympy.external import import_module
-matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.core import Integer, Float
-import inspect, re
+from sympy import Pow, Add, Integral, Mul, S, Function, E
+from sympy.functions import exp as sym_exp
+import inspect
+import re
 from sympy import powsimp
+matchpy = import_module("matchpy")
 
 if matchpy:
-    from matchpy import (Operation, CommutativeOperation, AssociativeOperation,
-                         ManyToOneReplacer, OneIdentityOperation, CustomConstraint, ManyToOneMatcher)
-    from sympy import Pow, Add, Integral, Basic, Mul, S, Function, E
-    from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf,
-        exp as sym_exp, gamma, acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh,
-        tanh, coth, sech, csch, atan, acsc, asin, acot, acos, asec, fresnels,
-        fresnelc, erfc, erfi, Ei, uppergamma, polylog, zeta, factorial, polygamma, digamma, li,
-        expint, LambertW, loggamma)
-    from sympy.integrals.rubi.utility_function import (Gamma, rubi_exp, rubi_log, ProductLog, PolyGamma,
-        rubi_unevaluated_expr, process_trig)
+    from matchpy import ManyToOneReplacer, ManyToOneMatcher
+    from sympy.integrals.rubi.utility_function import (
+        rubi_exp, rubi_unevaluated_expr, process_trig
+    )
 
     from sympy.utilities.matchpy_connector import op_iter, op_len
 
@@ -133,6 +130,7 @@ def process_final_integral(expr):
     return expr
 
 
+@doctest_depends_on(modules=('matchpy',))
 def rubi_powsimp(expr):
     """
     This function is needed to preprocess an expression as done in matchpy
@@ -195,6 +193,7 @@ def rubi_integrate(expr, var, showsteps=False):
 
 @doctest_depends_on(modules=('matchpy',))
 def util_rubi_integrate(expr, var, showsteps=False):
+    rubi = LoadRubiReplacer()
     expr = process_trig(expr)
     expr = expr.replace(sym_exp, rubi_exp)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
@@ -219,6 +218,7 @@ def get_matching_rule_definition(expr, var):
     expr : integrand expression
     var : variable of integration
     """
+    rubi = LoadRubiReplacer()
     matcher = rubi.matcher
     miter = matcher.match(Integral(expr, var))
     for fun, e in miter:
