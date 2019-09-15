@@ -306,64 +306,70 @@ class ImageSet(Set):
 
     sympy.sets.sets.imageset
     """
-    def __new__(cls, flambda, base_set, *sets):
+    def __new__(cls, flambda, *sets):
         if not isinstance(flambda, Lambda):
             raise ValueError('First argument must be a Lambda')
 
-        if sets:
-            # XXX: Should be a DeprecationWarning
-            raise ValueError("Multiple set arguments to ImageSet")
-            base_set = ProductSet(*((base_set,) + sets)).flatten()
+        signature = flambda.signature
 
-        if len(flambda.signature) != 1:
-            # XXX: Should be a DeprecationWarning
-            raise ValueError('Only one argument Lambda allowed in ImageSet')
-            flambda = Lambda((flambda.signature,), flambda.expr)
+        if len(signature) != len(sets):
+            raise ValueError('Incompatible signature')
 
-        base_set = _sympify(base_set)
-        if not isinstance(base_set, Set):
+        sets = [_sympify(s) for s in sets]
+
+        if not all(isinstance(s, Set) for s in sets):
             raise TypeError("Set argument to ImageSet should of type Set")
 
-        if not cls._check_compatible_signature(flambda, base_set):
-            raise ValueError("Signature %s does not match Set %s"
-                                % (flambda.signature[0], base_set))
+        if not all(cls._check_sig(sg, st) for sg, st in zip(signature, sets)):
+            raise ValueError("Signature %s does not match Set %s" % (signature, sets))
 
-        if flambda is S.IdentityFunction:
-            return base_set
+        if flambda is S.IdentityFunction and len(sets) == 1:
+            return sets[0]
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
-            is_empty = base_set.is_empty
+            is_empty = ProductSet(*sets).is_empty
             if is_empty == True:
                 return S.EmptySet
             elif is_empty == False:
                 return FiniteSet(flambda.expr)
 
-        return Basic.__new__(cls, flambda, base_set)
+        return Basic.__new__(cls, flambda, *sets)
 
     lamda = property(lambda self: self.args[0])
-    base_set = property(lambda self: self.args[1])
+    base_sets = property(lambda self: self.args[1:])
+
+    @property
+    def base_set(self):
+        # XXX: Maybe deprecate this? It is poorly defined in handling
+        # the multivariate case...
+        sets = self.base_sets
+        if len(sets) == 1:
+            return sets[0]
+        else:
+            return ProductSet(*sets).flatten()
+
+    @property
+    def base_pset(self):
+        return ProductSet(*self.base_sets)
 
     @classmethod
-    def _check_compatible_signature(cls, flambda, base_set):
-
-        def rcheck(tsig, pset):
-            if tsig.is_symbol:
-                return True
-            elif isinstance(pset, ProductSet):
-                sets = pset.sets
-                if len(tsig) != len(sets):
-                    return False
-                return all(rcheck(ts, ps) for ts, ps in zip(tsig, sets))
-            else:
-                # XXX: Need a better way of checking whether a set is a set of
-                # Tuples or not. For example a FiniteSet can contain Tuples
-                # but so can an ImageSet or a ConditionSet. Others like
-                # Integers, Reals etc can not contain Tuples. We could just
-                # list the possibilities here... Current code for e.g.
-                # _contains probably only works for ProductSet.
-                return True # Give the benefit of the doubt
-
-        return rcheck(flambda.signature[0], base_set)
+    def _check_sig(cls, sig_i, set_i):
+        if sig_i.is_symbol:
+            return True
+        elif isinstance(set_i, ProductSet):
+            sets = set_i.sets
+            if len(sig_i) != len(sets):
+                return False
+            # Recurse through the signature for nested tuples:
+            return all(cls._check_sig(ts, ps) for ts, ps in zip(sig_i, sets))
+        else:
+            # XXX: Need a better way of checking whether a set is a set of
+            # Tuples or not. For example a FiniteSet can contain Tuples
+            # but so can an ImageSet or a ConditionSet. Others like
+            # Integers, Reals etc can not contain Tuples. We could just
+            # list the possibilities here... Current code for e.g.
+            # _contains probably only works for ProductSet.
+            return True # Give the benefit of the doubt
 
     def __iter__(self):
         already_seen = set()
