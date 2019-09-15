@@ -79,6 +79,25 @@ if matchpy:
     rules_applied = []
 
 
+class LoadRubiReplacer(object):
+    """
+    Class trick to load RUBI only once.
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        if matchpy is None:
+            print("MatchPy library not found")
+            return None
+        if LoadRubiReplacer._instance is not None:
+            return LoadRubiReplacer._instance
+        print("Loading RUBI rules... this may take around one hour to complete.")
+        rubi, rules_applied, rules = get_rubi_object()
+        LoadRubiReplacer._instance = rubi
+        return LoadRubiReplacer._instance
+
+
 def _has_cycle():
     if rules_applied.count(rules_applied[-1]) == 1:
         return False
@@ -96,7 +115,7 @@ def process_final_integral(expr):
     Examples
     ========
     >>> from sympy import Function, E
-    >>> from sympy.integrals.rubi.rubi import process_final_integral
+    >>> from sympy.integrals.rubi.rubimain import process_final_integral
     >>> from sympy.integrals.rubi.utility_function import rubi_unevaluated_expr
     >>> Integrate = Function("Integrate")
     >>> from sympy.abc import a, x
@@ -122,10 +141,10 @@ def rubi_powsimp(expr):
     Examples
     ========
 
-    >>> from sympy.integrals.rubi.rubi import rubi_powsimp
+    >>> from sympy.integrals.rubi.rubimain import rubi_powsimp
     >>> from sympy.abc import a, b, x
     >>> rubi_powsimp(x**a*x**b)
-    x**(a+b)
+    x**(a + b)
 
     """
     lst_pow = []
@@ -155,6 +174,7 @@ def rubi_integrate(expr, var, showsteps=False):
 
     Returns Integral object if unable to integrate.
     """
+    rubi = LoadRubiReplacer()
     expr = expr.replace(sym_exp, rubi_exp)
     rules_applied[:] = []
     expr = process_trig(expr)
