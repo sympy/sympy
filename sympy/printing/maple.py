@@ -222,7 +222,8 @@ class MapleCodePrinter(CodePrinter):
     def _print_Identity(self, expr):
         if isinstance(expr.rows, Integer) or isinstance(expr.rows, IntegerConstant):
             return self._print(sympy.SparseMatrix(expr))
-        # TODO: Identity Matrix Symbol in Maple.
+        else:
+            return "Matrix({var_size}, shape=identity)".format(var_size=self._print(expr.rows))
 
     def _print_MatMul(self, expr):
         _fact_list = list(expr.args)
