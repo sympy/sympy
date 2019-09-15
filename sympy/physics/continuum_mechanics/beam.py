@@ -1533,7 +1533,7 @@ class Beam(object):
 
         pictorial: Boolean (default=True)
             Setting ``pictorial=True`` would simply create a pictorial (scaled) view
-            of the beam diagram not according to the scale.
+            of the beam diagram not with the exact dimensions.
             Although setting ``pictorial=False`` would create a beam diagram with
             the exact dimensions on the plot
 
@@ -1558,7 +1558,7 @@ class Beam(object):
             >>> b.apply_support(50, "pin")
             >>> b.apply_support(0, "fixed")
             >>> b.apply_support(20, "roller")
-            >>> b.draw(pictorial=True)
+            >>> b.draw()
             Plot object containing:
             [0]: cartesian line: 25*SingularityFunction(x, 5, 0)
             - 25*SingularityFunction(x, 23, 0) + SingularityFunction(x, 30, 1)
@@ -1632,20 +1632,35 @@ class Beam(object):
             # higher order loads
             elif load[2] >= 0:
                 higher_order = True
+                # if pictorial is True we remake the load equation again with
+                # some constant magnitude values.
                 if pictorial:
                     value, start, order, end = load
-                    value = 1 if order > 0 else length/2
+                    value = 10**(1-order) if order > 0 else length/2
 
                     scaled_load += value*SingularityFunction(x, start, order)
-                    f2 = 1*x**order if order > 0 else length/2*x**order
-                    for i in range(0, order + 1):
-                        scaled_load -= (f2.diff(x, i).subs(x, end - start) *
-                                       SingularityFunction(x, end, i) / factorial(i))
+                    if end:
+                        f2 = 10**(1-order)*x**order if order > 0 else length/2*x**order
+                        for i in range(0, order + 1):
+                            scaled_load -= (f2.diff(x, i).subs(x, end - start)*
+                                           SingularityFunction(x, end, i) / factorial(i))
 
+        # `fill` will be assigned only when higher order loads are present
         if higher_order:
-            load_args = scaled_load.args if pictorial else self.load.args
+            if pictorial:
+                if isinstance(scaled_load, Add):
+                    load_args = scaled_load.args
+                else:
+                    # when the load equation consists of only a single term
+                    load_args = (scaled_load,)
+                load_eq = [i.subs(l) for i in load_args]
+            else:
+                if isinstance(self.load, Add):
+                    load_args = self.load.args
+                else:
+                    load_args = (self.load,)
+                load_eq = [i.subs(l) for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
 
-            load_eq = [i.subs(l) for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
             load_eq = Add(*load_eq)
 
             # filling higher order loads with colour
