@@ -1791,13 +1791,19 @@ class PrettyPrinter(Printer):
                 a.append( self._print(S.One) )
             return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
 
-    # A helper function for _print_Pow to print x**(1/n)
-    def _print_nth_root(self, base, expt):
+    # A helper function for _print_Pow to print x**(1/expt)
+    def _print_nth_root(self, base, exp):
         bpretty = self._print(base)
+        exp = pretty(exp)
+        if exp == '2':  # careful, don't want 2.0 here
+            istwo = True
+            exp = ''
+        else:
+            istwo = False
 
         # In very simple cases, use a single-char root sign
         if (self._settings['use_unicode_sqrt_char'] and self._use_unicode
-            and expt is S.Half and bpretty.height() == 1
+            and istwo and bpretty.height() == 1
             and (bpretty.width() == 1
                  or (base.is_Integer and base.is_nonnegative))):
             return prettyForm(*bpretty.left(u'\N{SQUARE ROOT}'))
@@ -1805,13 +1811,7 @@ class PrettyPrinter(Printer):
         # Construct root sign, start with the \/ shape
         _zZ = xobj('/', 1)
         rootsign = xobj('\\', 1) + _zZ
-        # Make exponent number to put above it
-        if isinstance(expt, Rational):
-            exp = str(expt.q)
-            if exp == '2':
-                exp = ''
-        else:
-            exp = str(expt.args[0])
+        # Make exponent to put above it
         exp = exp.ljust(2)
         if len(exp) > 2:
             rootsign = ' '*(len(exp) - 2) + rootsign
@@ -1845,7 +1845,8 @@ class PrettyPrinter(Printer):
                 return prettyForm("1")/self._print(b)
             n, d = fraction(e)
             if n is S.One and d.is_Atom and not e.is_Integer and self._settings['root_notation']:
-                return self._print_nth_root(b, e)
+                # TODO: assumes d prints on single line: does Atom imply that?
+                return self._print_nth_root(b, d)
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))
 

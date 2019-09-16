@@ -6892,3 +6892,31 @@ u("""\
  ‾‾‾    \n\
 n = -∞  \
 """)
+
+
+def test_issue_17616():
+    assert pretty(pi**(exp(-1))) == \
+    'E ____\n'\
+    '\/ pi '
+
+    assert upretty(pi**(exp(-1))) == \
+u("""\
+ℯ ___\n\
+╲╱ π \
+""")
+
+    assert pretty(pi**(1/pi)) == \
+    'pi____\n'\
+    '\/ pi '
+
+    assert upretty(pi**(1/pi)) == \
+u("""\
+π ___\n\
+╲╱ π \
+""")
+
+    assert upretty(pi**(1/EulerGamma)) == \
+u("""\
+γ ___\n\
+╲╱ π \
+""")
