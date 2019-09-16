@@ -1473,7 +1473,7 @@ class Variable(Node):
         >>> from sympy.codegen.ast import Variable, NoneToken
         >>> x = Variable('x')
         >>> decl1 = x.as_Declaration()
-        # value is special NoneToken() which must be tested with == operator
+        >>> # value is special NoneToken() which must be tested with == operator
         >>> decl1.variable.value is None  # won't work
         False
         >>> decl1.variable.value == None  # not PEP-8 compliant
@@ -1571,7 +1571,7 @@ class Declaration(Token):
     >>> z = Declaration('z')
     >>> z.variable.type == untyped
     True
-    # value is special NoneToken() which must be tested with == operator
+    >>> # value is special NoneToken() which must be tested with == operator
     >>> z.variable.value is None  # won't work
     False
     >>> z.variable.value == None  # not PEP-8 compliant
