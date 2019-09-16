@@ -127,20 +127,16 @@ class LoadRubiReplacer(object):
 @doctest_depends_on(modules=('matchpy',))
 def process_final_integral(expr):
     """
-    When there is recursion for more than 10 rules or in total 20 rules have been applied
-    rubi returns `Integrate` in order to stop any further matching. After complete integration,
-    Integrate needs to be replaced back to Integral. Also rubi's `rubi_exp`
-    need to be replaced back to SymPy's general `exp`.
+    Rubi's `rubi_exp` need to be replaced back to SymPy's general `exp`.
 
     Examples
     ========
     >>> from sympy import Function, E
     >>> from sympy.integrals.rubi.rubimain import process_final_integral
     >>> from sympy.integrals.rubi.utility_function import rubi_unevaluated_expr
-    >>> Integrate = Function("Integrate")
     >>> from sympy.abc import a, x
     >>> _E = rubi_unevaluated_expr(E)
-    >>> process_final_integral(Integrate(a, x))
+    >>> process_final_integral(Integral(a, x))
     Integral(a, x)
     >>> process_final_integral(_E**5)
     exp(5)
