@@ -1155,6 +1155,9 @@ class digamma(Function):
     def _eval_rewrite_as_harmonic(self, z, **kwargs):
         return harmonic(z - 1) - S.EulerGamma
 
+    def _eval_rewrite_as_polygamma(self, z, **kwargs):
+        return polygamma(0,z)
+
     def _eval_as_leading_term(self, x):
         from sympy import Order
         n = sympify(0)
