@@ -1049,7 +1049,7 @@ class digamma(Function):
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
         as_polygamma = self.rewrite(polygamma)
-        args0 = [S.Zero,] + args0
+        args0 = [sympify(0),] + args0
         return as_polygamma._eval_aseries(n,args0,x,logx)
 
     @classmethod
