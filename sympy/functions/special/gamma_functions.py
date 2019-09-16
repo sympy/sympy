@@ -1331,6 +1331,9 @@ class trigamma(Function):
     def _eval_rewrite_as_zeta(self, z, **kwargs):
         return (-1)**(2)*factorial(1)*zeta(2, z)
 
+    def _eval_rewrite_as_polygamma(self, z, **kwargs):
+        return polygamma(0,z)
+
     def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
         return S.NegativeOne**(2) * factorial(1) * (zeta(2) - harmonic(0, 2))
 
