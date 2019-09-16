@@ -1048,43 +1048,9 @@ class digamma(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
-        if args0[1] != oo:
-            return super(polygamma, self)._eval_aseries(n, args0, x, logx)
-        z = self.args[0]
-        N = sympify(0)
-
-        if N == 0:
-            # digamma function series
-            # Abramowitz & Stegun, p. 259, 6.3.18
-            r = log(z) - 1/(2*z)
-            o = None
-            if n < 2:
-                o = Order(1/z, x)
-            else:
-                m = ceiling((n + 1)//2)
-                l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
-                r -= Add(*l)
-                o = Order(1/z**(2*m), x)
-            return r._eval_nseries(x, n, logx) + o
-        else:
-            # proper polygamma function
-            # Abramowitz & Stegun, p. 260, 6.4.10
-            # We return terms to order higher than O(x**n) on purpose
-            # -- otherwise we would not be able to return any terms for
-            #    quite a long time!
-            fac = gamma(N)
-            e0 = fac + N*fac/(2*z)
-            m = ceiling((n + 1)//2)
-            for k in range(1, m):
-                fac = fac*(2*k + N - 1)*(2*k + N - 2) / ((2*k)*(2*k - 1))
-                e0 += bernoulli(2*k)*fac/z**(2*k)
-            o = Order(1/z**(2*m), x)
-            if n == 0:
-                o = Order(1/z, x)
-            elif n == 1:
-                o = Order(1/z**2, x)
-            r = e0._eval_nseries(z, n, logx) + o
-            return (-1 * (-1/z)**N * r)._eval_nseries(x, n, logx)
+        as_polygamma = self.rewrite(polygamma)
+        args0 = [S.Zero,] + args0
+        return as_polygamma._eval_aseries(n,args0,x,logx)
 
     @classmethod
     def eval(cls, z):
@@ -1256,43 +1222,9 @@ class trigamma(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
-        if args0[1] != oo:
-            return super(polygamma, self)._eval_aseries(n, args0, x, logx)
-        z = self.args[0]
-        N = sympify(0)
-
-        if N == 0:
-            # digamma function series
-            # Abramowitz & Stegun, p. 259, 6.3.18
-            r = log(z) - 1/(2*z)
-            o = None
-            if n < 2:
-                o = Order(1/z, x)
-            else:
-                m = ceiling((n + 1)//2)
-                l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
-                r -= Add(*l)
-                o = Order(1/z**(2*m), x)
-            return r._eval_nseries(x, n, logx) + o
-        else:
-            # proper polygamma function
-            # Abramowitz & Stegun, p. 260, 6.4.10
-            # We return terms to order higher than O(x**n) on purpose
-            # -- otherwise we would not be able to return any terms for
-            #    quite a long time!
-            fac = gamma(N)
-            e0 = fac + N*fac/(2*z)
-            m = ceiling((n + 1)//2)
-            for k in range(1, m):
-                fac = fac*(2*k + N - 1)*(2*k + N - 2) / ((2*k)*(2*k - 1))
-                e0 += bernoulli(2*k)*fac/z**(2*k)
-            o = Order(1/z**(2*m), x)
-            if n == 0:
-                o = Order(1/z, x)
-            elif n == 1:
-                o = Order(1/z**2, x)
-            r = e0._eval_nseries(z, n, logx) + o
-            return (-1 * (-1/z)**N * r)._eval_nseries(x, n, logx)
+        as_polygamma = self.rewrite(polygamma)
+        args0 = [S.One,] + args0
+        return as_polygamma._eval_aseries(n,args0,x,logx)
 
     @classmethod
     def eval(cls, z):
