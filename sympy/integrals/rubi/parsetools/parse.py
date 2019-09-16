@@ -101,9 +101,8 @@ replacements = dict(  # Mathematica equivalent functions in SymPy
 )
 
 temporary_variable_replacement = {  # Temporarily rename because it can raise errors while sympifying
-        'gcd' : "_gcd",
-        'jn' : "_jn",
-
+    'gcd' : "_gcd",
+    'jn' : "_jn",
 }
 
 permanent_variable_replacement = {  # Permamenely rename these variables
@@ -111,7 +110,7 @@ permanent_variable_replacement = {  # Permamenely rename these variables
     "$UseGamma": '_UseGamma',
 }
 
-#these functions have different return type in different cases. So better to use a try and except in the constraints, when any of these appear
+# These functions have different return type in different cases. So better to use a try and except in the constraints, when any of these appear
 f_diff_return_type = ['BinomialParts', 'BinomialDegree', 'TrinomialParts', 'GeneralizedBinomialParts', 'GeneralizedTrinomialParts', 'PseudoBinomialParts', 'PerfectPowerTest',
     'SquareFreeFactorTest', 'SubstForFractionalPowerOfQuotientOfLinears', 'FractionalPowerOfQuotientOfLinears', 'InverseFunctionOfQuotientOfLinears',
     'FractionalPowerOfSquareQ', 'FunctionOfLinear', 'FunctionOfInverseLinear', 'FunctionOfTrig', 'FindTrigFactor', 'FunctionOfLog',
@@ -623,7 +622,7 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
         pattern, free_symbols = add_wildcards(pattern, optional=optional)
         free_symbols = sorted(set(free_symbols)) #remove common symbols
         # Parse Transformed Expression and Constraints
-        if i[2][0] == 'Condition': # parse rules without constraints separately
+        if i[2][0] == 'Condition':  # parse rules without constraints separately
             constriant, constraint_def, cons_index = divide_constraint(i[2][2], free_symbols, cons_index, cons_dict, cons_import) # separate And constraints into individual constraints
             FreeQ_vars, FreeQ_x = seperate_freeq(i[2][2].copy()) # separate FreeQ into individual constraints
             transformed = generate_sympy_from_parsed(i[2][1].copy(), symbols=free_symbols)

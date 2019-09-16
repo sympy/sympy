@@ -135,7 +135,7 @@ if matchpy:
     StepCounter = None
 
 
-def tangent(rubi):
+def tangent():
     from sympy.integrals.rubi.constraints import cons1510, cons2, cons3, cons50, cons127, cons19, cons4, cons1511, cons20, cons25, cons95, cons167, cons96, cons1512, cons1172, cons89, cons1513, cons91, cons168, cons685, cons33, cons268, cons34, cons1514, cons1515, cons21, cons157, cons1252, cons1516, cons1517, cons1518, cons1519, cons1520, cons1521, cons1522, cons1523, cons1524, cons82, cons81, cons1525, cons1526, cons1527, cons1528, cons29, cons5, cons1529, cons8, cons1263, cons1266, cons1441, cons465, cons1442, cons1530, cons1257, cons1531, cons90, cons1532, cons1533, cons1534, cons517, cons1535, cons1536, cons1537, cons1538, cons1539, cons1540, cons68, cons1541, cons86, cons1230, cons150, cons198, cons1542, cons87, cons72, cons1543, cons73, cons1414, cons269, cons1305, cons170, cons1544, cons1545, cons1324, cons1546, cons1325, cons1547, cons1548, cons1549, cons1550, cons79, cons1551, cons1552, cons1553, cons1425, cons1387, cons113, cons274, cons1327, cons1329, cons1336, cons1554, cons1555, cons1335, cons1556, cons1557, cons1338, cons1558, cons1559, cons810, cons382, cons210, cons149, cons1419, cons52, cons40, cons36, cons37, cons348, cons1420, cons1428, cons1560, cons1561, cons1562, cons1258, cons1563, cons38, cons35, cons1435, cons1564, cons1565, cons1566, cons1567, cons1568, cons1569, cons1570, cons1571, cons1494, cons1458, cons1572, cons1483, cons1481, cons745, cons1499, cons48, cons47, cons228, cons1482, cons64, cons530, cons1573, cons1574, cons812, cons813, cons1362, cons1575, cons1497, cons70, cons71, cons825, cons826, cons1576, cons1577, cons1578, cons1579, cons1580, cons1581, cons49, cons241, cons1582
 
 

@@ -135,7 +135,7 @@ if matchpy:
     StepCounter = None
 
 
-def exponential(rubi):
+def exponential():
     from sympy.integrals.rubi.constraints import cons33, cons170, cons517, cons1100, cons1101, cons3, cons8, cons29, cons50, cons127, cons210, cons4, cons96, cons20, cons21, cons19, cons1102, cons130, cons2, cons246, cons139, cons554, cons1103, cons1104, cons5, cons382, cons56, cons1105, cons1106, cons1107, cons211, cons226, cons798, cons799, cons52, cons1108, cons806, cons1109, cons814, cons1110, cons1111, cons1112, cons1113, cons586, cons1114, cons1115, cons481, cons482, cons1116, cons198, cons25, cons1117, cons55, cons1118, cons1119, cons1120, cons1121, cons87, cons1122, cons358, cons533, cons1123, cons1124, cons537, cons95, cons1125, cons1126, cons178, cons369, cons168, cons746, cons70, cons842, cons1127, cons1128, cons1129, cons27, cons73, cons1130, cons1131, cons1132, cons820, cons1133, cons1134, cons1135, cons1136, cons821, cons1137, cons1138, cons1139, cons1140, cons150, cons812, cons813, cons1141, cons1142, cons54, cons802, cons1143, cons1144, cons1145, cons815, cons1146, cons228, cons64, cons1147, cons1148, cons1149, cons1150, cons1151, cons1152, cons1153, cons465, cons1154, cons45, cons450, cons1155, cons1156, cons1157, cons1019
 
 

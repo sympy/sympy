@@ -135,10 +135,11 @@ if matchpy:
     StepCounter = None
 
 
-def linear_products(rubi):
+def linear_products():
     from sympy.integrals.rubi.constraints import cons2, cons68, cons19, cons69, cons3, cons70, cons71, cons72, cons8, cons29, cons73, cons74, cons4, cons75, cons76, cons77, cons45, cons78, cons79, cons80, cons81, cons82, cons83, cons84, cons64, cons85, cons86, cons87, cons88, cons89, cons90, cons91, cons92, cons93, cons94, cons25, cons95, cons96, cons97, cons98, cons99, cons100, cons101, cons102, cons103, cons104, cons105, cons106, cons107, cons108, cons33, cons109, cons110, cons111, cons112, cons113, cons114, cons115, cons116, cons21, cons117, cons118, cons119, cons120, cons121, cons122, cons123, cons124, cons125, cons126, cons20, cons50, cons127, cons5, cons128, cons129, cons130, cons131, cons132, cons133, cons134, cons135, cons136, cons137, cons56, cons138, cons13, cons139, cons140, cons12, cons141, cons142, cons143, cons144, cons145, cons146, cons40, cons147, cons148, cons149, cons150, cons151, cons152, cons153, cons154, cons155, cons156, cons157, cons158, cons159, cons160, cons161, cons162, cons163, cons164, cons165, cons166, cons167, cons168, cons169, cons170, cons171, cons172, cons173, cons174, cons175, cons176, cons177, cons178, cons179, cons180, cons181, cons182, cons183, cons184, cons185, cons186, cons187, cons188, cons189, cons190, cons191, cons192, cons193, cons194, cons195, cons196, cons197, cons198, cons199, cons200, cons201, cons202, cons203, cons204, cons205, cons206, cons207, cons208, cons209, cons210, cons211, cons212, cons213, cons214, cons215, cons216, cons217, cons218, cons219, cons220, cons221, cons52, cons222, cons223, cons224, cons225, cons226, cons54
 
-    pattern39 = Pattern(Integral(a_, x_), cons2)
+
+    pattern39 = Pattern(Integral(a_, x_), cons2, cons2)
     rule39 = ReplacementRule(pattern39, replacement39)
 
     pattern40 = Pattern(Integral(S(1)/x_, x_))
@@ -603,7 +604,7 @@ def linear_products(rubi):
 
 
 def replacement39(x):
-    return Simp(a*x, x)
+    return Simp(a_*x, x)
 
 
 def replacement40(x):

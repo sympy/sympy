@@ -1,5 +1,7 @@
 import sys
 from sympy.external import import_module
+from sympy.integrals.rubi.rubimain import LoadRubiReplacer
+
 matchpy = import_module("matchpy")
 
 if not matchpy:

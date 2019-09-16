@@ -135,4 +135,4 @@ if matchpy:
     StepCounter = None
 
 
-def {}(rubi):
+def {}():

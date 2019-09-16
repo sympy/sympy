@@ -105,17 +105,7 @@ if matchpy:
     a, b, c, d, e = symbols('a b c d e')
 
 
-class Int(Function):
-    """
-    Integrates given `expr` by matching rubi rules.
-    """
-    @classmethod
-    def eval(cls, expr, var):
-        if isinstance(expr, (int, Integer, float, Float)):
-            return S(expr)*var
-        return None
-        from sympy.integrals.rubi.rubimain import util_rubi_integrate
-        return util_rubi_integrate(expr, var)
+Int = Integral
 
 
 def replace_pow_exp(z):
@@ -210,9 +200,8 @@ def NegativeQ(u):
 def NonzeroQ(expr):
     return Simplify(expr) != 0
 
+
 def FreeQ(nodes, var):
-    if var == Int:
-        return FreeQ(nodes, Integral)
     if isinstance(nodes, list):
         return not any(S(expr).has(var) for expr in nodes)
     else:

@@ -135,7 +135,7 @@ if matchpy:
     StepCounter = None
 
 
-def piecewise_linear(rubi):
+def piecewise_linear():
     from sympy.integrals.rubi.constraints import cons1092, cons19, cons1093, cons89, cons90, cons1094, cons91, cons25, cons74, cons68, cons4, cons1095, cons216, cons685, cons102, cons103, cons1096, cons1097, cons33, cons96, cons358, cons1098, cons21, cons1099, cons2, cons3
 
 

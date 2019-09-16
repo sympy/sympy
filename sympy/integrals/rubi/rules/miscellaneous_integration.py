@@ -135,7 +135,7 @@ if matchpy:
     StepCounter = None
 
 
-def miscellaneous_integration(rubi):
+def miscellaneous_integration():
     from sympy.integrals.rubi.constraints import cons149, cons2004, cons2, cons3, cons8, cons4, cons5, cons388, cons29, cons52, cons2005, cons2006, cons2007, cons2008, cons50, cons127, cons210, cons36, cons37, cons38, cons1101, cons2009, cons68, cons19, cons86, cons1039, cons1038, cons40, cons2010, cons10, cons2011, cons2012, cons2013, cons211, cons1833, cons1246, cons2014, cons48, cons2015, cons2016, cons2017, cons2018, cons54, cons2019, cons802, cons2020, cons20, cons2021, cons588, cons2022, cons2023, cons2024, cons2025, cons2026, cons2027, cons2028, cons2029, cons2030, cons669, cons198, cons2031, cons842, cons2032, cons21, cons2033, cons150, cons47, cons2034, cons1856, cons1249, cons263, cons2035, cons369, cons2036, cons69, cons1481, cons746, cons1484, cons167, cons2037, cons2038, cons1678, cons1257, cons2039, cons349
 
 

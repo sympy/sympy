@@ -135,7 +135,7 @@ if matchpy:
     StepCounter = None
 
 
-def special_functions(rubi):
+def special_functions():
     from sympy.integrals.rubi.constraints import cons69, cons2, cons3, cons68, cons19, cons1266, cons8, cons29, cons20, cons168, cons1959, cons1960, cons96, cons263, cons1961, cons1834, cons64, cons1962, cons1963, cons1964, cons249, cons1965, cons1966, cons1967, cons1833, cons4, cons1257, cons21, cons1361, cons1968, cons1969, cons170, cons1970, cons1971, cons33, cons1972, cons1973, cons1974, cons802, cons89, cons90, cons5, cons52, cons91, cons385, cons50, cons1975, cons1976, cons1977, cons54, cons1978, cons1101, cons127, cons1245, cons13, cons139, cons1381, cons1979, cons1980, cons198, cons1981, cons1982, cons1983, cons152, cons465, cons1767, cons165, cons950, cons951, cons1984, cons1985, cons805, cons1986, cons1987, cons1988, cons1989, cons340, cons1990, cons1991, cons1992, cons1993, cons1994, cons1995, cons40, cons1996, cons349, cons1997, cons1998, cons1999, cons2000, cons2001, cons2002, cons2003
 
 

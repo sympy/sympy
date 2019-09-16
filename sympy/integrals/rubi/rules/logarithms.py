@@ -135,7 +135,7 @@ if matchpy:
     StepCounter = None
 
 
-def logarithms(rubi):
+def logarithms():
     from sympy.integrals.rubi.constraints import cons1158, cons8, cons29, cons50, cons127, cons5, cons52, cons89, cons90, cons2, cons3, cons1159, cons417, cons1160, cons1161, cons91, cons545, cons1162, cons210, cons211, cons586, cons4, cons68, cons19, cons1163, cons1164, cons1165, cons1166, cons1167, cons1168, cons1169, cons1170, cons1171, cons150, cons1172, cons1173, cons64, cons95, cons170, cons812, cons813, cons224, cons1174, cons226, cons798, cons81, cons1175, cons20, cons1176, cons1177, cons1178, cons1179, cons1180, cons1181, cons1182, cons1183, cons1184, cons1185, cons1186, cons1187, cons1188, cons1189, cons1190, cons1191, cons1192, cons799, cons1193, cons54, cons927, cons1194, cons1195, cons1196, cons1197, cons1198, cons1199, cons1200, cons1201, cons40, cons554, cons1202, cons1203, cons1204, cons27, cons654, cons1205, cons73, cons130, cons1206, cons1207, cons1208, cons1209, cons1210, cons148, cons1211, cons1212, cons13, cons165, cons1213, cons139, cons1214, cons1215, cons1216, cons1217, cons1218, cons1219, cons1220, cons1221, cons1222, cons1223, cons1224, cons72, cons1225, cons1226, cons808, cons842, cons1227, cons1228, cons70, cons1127, cons1229, cons1230, cons1231, cons1232, cons465, cons1233, cons1234, cons1235, cons1236, cons1237, cons1238, cons33, cons1101, cons1239, cons1057, cons517, cons818, cons819, cons1240, cons1241, cons1242, cons1243, cons1244, cons1245, cons1246, cons1247, cons36, cons37, cons1248, cons1249, cons1250
 
 

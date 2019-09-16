@@ -45,35 +45,31 @@ if matchpy:
         #from sympy.integrals.rubi.rules.derivative import derivative
         #from sympy.integrals.rubi.rules.piecewise_linear import piecewise_linear
         from sympy.integrals.rubi.rules.miscellaneous_integration import miscellaneous_integration
+
         rules = []
-        rules_applied = []
 
-        rules += integrand_simplification(rules_applied)
-        rules += linear_products(rules_applied)
-        rules += quadratic_products(rules_applied)
-        rules += binomial_products(rules_applied)
-        rules += trinomial_products(rules_applied)
-        rules += miscellaneous_algebraic(rules_applied)
-        rules += exponential(rules_applied)
-        rules += logarithms(rules_applied)
-        rules += special_functions(rules_applied)
-        rules += sine(rules_applied)
-        rules += tangent(rules_applied)
-        rules += secant(rules_applied)
-        rules += miscellaneous_trig(rules_applied)
-        rules += inverse_trig(rules_applied)
-        rules += hyperbolic(rules_applied)
-        rules += inverse_hyperbolic(rules_applied)
+        rules += integrand_simplification()
+        rules += linear_products()
+        rules += quadratic_products()
+        rules += binomial_products()
+        rules += trinomial_products()
+        rules += miscellaneous_algebraic()
+        rules += exponential()
+        rules += logarithms()
+        rules += special_functions()
+        rules += sine()
+        rules += tangent()
+        rules += secant()
+        rules += miscellaneous_trig()
+        rules += inverse_trig()
+        rules += hyperbolic()
+        rules += inverse_hyperbolic()
         #rubi = piecewise_linear(rubi)
-
-        rules += miscellaneous_integration(rules_applied)
+        rules += miscellaneous_integration()
 
         rubi = ManyToOneReplacer(*rules)
-        return rubi, rules_applied, rules
+        return rubi, rules
     _E = rubi_unevaluated_expr(E)
-    Integrate = Function('Integrate')
-    #rubi, rules_applied, rules = get_rubi_object()
-    rules_applied = []
 
 
 class LoadRubiReplacer(object):
@@ -89,17 +85,43 @@ class LoadRubiReplacer(object):
             return None
         if LoadRubiReplacer._instance is not None:
             return LoadRubiReplacer._instance
-        print("Loading RUBI rules... this may take around one hour to complete.")
-        rubi, rules_applied, rules = get_rubi_object()
-        LoadRubiReplacer._instance = rubi
-        return LoadRubiReplacer._instance
+        obj = object.__new__(cls)
+        obj._rubi = None
+        obj._rules = None
+        LoadRubiReplacer._instance = obj
+        return obj
 
+    def load(self):
+        if self._rubi is not None:
+            return self._rubi
+        rubi, rules = get_rubi_object()
+        self._rubi = rubi
+        self._rules = rules
+        return rubi
 
-def _has_cycle():
-    if rules_applied.count(rules_applied[-1]) == 1:
-        return False
-    if rules_applied[-1] == rules_applied[-2] == rules_applied[-3] == rules_applied[-4] == rules_applied[-5]:
-        return True
+    def to_pickle(self, filename):
+        import pickle
+        rubi = self.load()
+        with open(filename, "wb") as fout:
+            pickle.dump(rubi, fout)
+
+    def to_dill(self, filename):
+        import dill
+        rubi = self.load()
+        with open(filename, "wb") as fout:
+            dill.dump(rubi, fout)
+
+    def from_pickle(self, filename):
+        import pickle
+        with open(filename, "rb") as fin:
+            self._rubi = pickle.load(fin)
+        return self._rubi
+
+    def from_dill(self, filename):
+        import dill
+        with open(filename, "rb") as fin:
+            self._rubi = dill.load(fin)
+        return self._rubi
 
 
 @doctest_depends_on(modules=('matchpy',))
@@ -124,8 +146,6 @@ def process_final_integral(expr):
     exp(5)
 
     """
-    if expr.has(Integrate):
-        expr = expr.replace(Integrate, Integral)
     if expr.has(_E):
         expr = expr.replace(_E, E)
     return expr
@@ -173,9 +193,8 @@ def rubi_integrate(expr, var, showsteps=False):
 
     Returns Integral object if unable to integrate.
     """
-    rubi = LoadRubiReplacer()
+    rubi = LoadRubiReplacer().load()
     expr = expr.replace(sym_exp, rubi_exp)
-    rules_applied[:] = []
     expr = process_trig(expr)
     expr = rubi_powsimp(expr)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
@@ -183,29 +202,25 @@ def rubi_integrate(expr, var, showsteps=False):
     if isinstance(expr, Add):
         results = 0
         for ex in expr.args:
-            rules_applied[:] = []
             results += rubi.replace(Integral(ex, var))
-            rules_applied[:] = []
         return process_final_integral(results)
 
-    results = rubi.replace(Integral(expr, var), max_count=10)
+    results = util_rubi_integrate(Integral(expr, var))
     return process_final_integral(results)
 
 
 @doctest_depends_on(modules=('matchpy',))
-def util_rubi_integrate(expr, var, showsteps=False):
-    rubi = LoadRubiReplacer()
+def util_rubi_integrate(expr, showsteps=False, max_loop=10):
+    rubi = LoadRubiReplacer().load()
     expr = process_trig(expr)
     expr = expr.replace(sym_exp, rubi_exp)
-    if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
-        return S(expr)*var
-    if isinstance(expr, Add):
-        return rubi_integrate(expr, var)
-    if len(rules_applied) > 10:
-        if _has_cycle() or len(rules_applied) > 20:
-            return Integrate(expr, var)
-    results = rubi.replace(Integral(expr, var), max_count=10)
-    rules_applied[:] = []
+    for i in range(max_loop):
+        results = expr.replace(
+            lambda x: isinstance(x, Integral),
+            lambda x: rubi.replace(x, max_count=10)
+        )
+        if expr == results:
+            return results
     return results
 
 
