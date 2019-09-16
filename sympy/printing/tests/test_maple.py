@@ -213,9 +213,8 @@ def test_MatrixSymbol():
     assert maple_code(2 * A * B) == "2*A.B"
     assert maple_code(B * 2 * A) == "2*B.A"
 
-    """assert maple_code(
-        A * (B + 3 * Identity(n))) == "A*(3*Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = sparse) + B)"
-        """  # TODO Identity Symbol in Maple.
+    assert maple_code(
+        A * (B + 3 * Identity(n))) == "A*(3*Matrix(n, shape = identity) + B)"
 
     assert maple_code(A ** (x ** 2)) == "MatrixPower(A, x^2)"
     assert maple_code(A ** 3) == "MatrixPower(A, 3)"
@@ -224,7 +223,7 @@ def test_MatrixSymbol():
 
 def test_special_matrices():
     assert maple_code(6 * Identity(3)) == "6*Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], storage = sparse)"
-    assert maple_code(Identity(x)) == 'Matrix(x, shape=identity)'
+    assert maple_code(Identity(x)) == 'Matrix(x, shape = identity)'
 
 
 def test_containers():

@@ -223,7 +223,7 @@ class MapleCodePrinter(CodePrinter):
         if isinstance(expr.rows, Integer) or isinstance(expr.rows, IntegerConstant):
             return self._print(sympy.SparseMatrix(expr))
         else:
-            return "Matrix({var_size}, shape=identity)".format(var_size=self._print(expr.rows))
+            return "Matrix({var_size}, shape = identity)".format(var_size=self._print(expr.rows))
 
     def _print_MatMul(self, expr):
         _fact_list = list(expr.args)
