@@ -214,7 +214,7 @@ def test_MatrixSymbol():
     assert maple_code(B * 2 * A) == "2*B.A"
 
     assert maple_code(
-        A * (B + 3 * Identity(n))) == "A*(3*Matrix(n, shape = identity) + B)"
+        A * (B + 3 * Identity(n))) == "A.3*Matrix(n, shape = identity) + B"
 
     assert maple_code(A ** (x ** 2)) == "MatrixPower(A, x^2)"
     assert maple_code(A ** 3) == "MatrixPower(A, 3)"
