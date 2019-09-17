@@ -799,11 +799,7 @@ class ProductSet(Set):
         return measure
 
     def __len__(self):
-<<<<<<< HEAD
-        return Mul(*[len(s) for s in self.sets])
-=======
         return reduce(lambda a, b: a*b, (len(s) for s in self.args))
->>>>>>> 8f2abd4276... Add __iter__ for symbolic set objects
 
     def __bool__(self):
         return all([bool(s) for s in self.sets])
