@@ -131,7 +131,7 @@ def process_final_integral(expr):
 
     Examples
     ========
-    >>> from sympy import Function, E
+    >>> from sympy import Function, E, Integral
     >>> from sympy.integrals.rubi.rubimain import process_final_integral
     >>> from sympy.integrals.rubi.utility_function import rubi_unevaluated_expr
     >>> from sympy.abc import a, x
