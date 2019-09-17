@@ -3800,6 +3800,12 @@ def test_pretty_SetExpr():
 
 
 def test_pretty_ImageSet():
+    imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
+    ascii_str = '{x + y | x in {1, 2, 3} , y in {3, 4}}'
+    ucode_str = u('{x + y | x ∊ {1, 2, 3} , y ∊ {3, 4}}')
+    assert pretty(imgset) == ascii_str
+    assert upretty(imgset) == ucode_str
+
     imgset = ImageSet(Lambda(((x, y),), x + y), ProductSet({1, 2, 3}, {3, 4}))
     ascii_str = '{x + y | (x, y) in {1, 2, 3} x {3, 4}}'
     ucode_str = u('{x + y | (x, y) ∊ {1, 2, 3} × {3, 4}}')
