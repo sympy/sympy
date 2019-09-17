@@ -234,7 +234,7 @@ def iproduct(*iterables):
     Examples
     ========
 
-    >>> from sympy.utilities import iproduct
+    >>> from sympy.utilities.iterables import iproduct
     >>> sorted(iproduct([1,2], [3,4]))
     [(1, 3), (1, 4), (2, 3), 2, 4)]
 
