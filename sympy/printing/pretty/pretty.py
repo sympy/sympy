@@ -1992,12 +1992,10 @@ class PrettyPrinter(Printer):
         expr = self._print(fun.expr)
         bar = self._print("|")
         if len(signature) == 1:
-            pargs = self._print(signature[0])
-            psets = self._print(sets[0])
+            return self._print_seq((expr, bar, signature[0], inn, sets[0]), "{", "}", ' ')
         else:
-            pargs = self._print(signature)
-            psets = self._print(ProductSet(*sets)) # XXX: evaluate=False?
-        return self._print_seq((expr, bar, pargs, inn, psets), "{", "}", ' ')
+            pargs = tuple(j for var, setv in zip(signature, sets) for j in (var, inn, setv, ","))
+            return self._print_seq((expr, bar) + pargs[:-1], "{", "}", ' ')
 
     def _print_ConditionSet(self, ts):
         if self._use_unicode:

@@ -2056,14 +2056,10 @@ class LatexPrinter(Printer):
 
     def _print_ImageSet(self, s):
         expr = s.lamda.expr
-        if len(s.lamda.signature) == 1:
-            sig = s.lamda.signature[0]
-            set = s.base_sets[0]
-        else:
-            sig = s.lamda.signature
-            set = s.base_pset
-        xiny = r"%s \in %s" % (self._print(sig), self._print(set))
-        return r"\left\{%s\; |\; %s\right\}" % (self._print(expr), xiny)
+        sig = s.lamda.signature
+        xys = ((self._print(x), self._print(y)) for x, y in zip(sig, s.base_sets))
+        xinys = r" , ".join(r"%s \in %s" % xy for xy in xys)
+        return r"\left\{%s\; |\; %s\right\}" % (self._print(expr), xinys)
 
     def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
