@@ -1771,10 +1771,9 @@ def stirling(n, k, d=None, kind=2, signed=False):
     ``n`` distinct items that have ``k`` cycles; the second kind counts the
     ways in which ``n`` distinct items can be partitioned into ``k`` parts.
     If ``d`` is given, the "reduced Stirling number of the second kind" is
-    returned: ``S^{d}(n, k) = S(n - d + 1, k - d + 1)`` with ``n >= k >= d``.
-    (This counts the ways to partition ``n`` consecutive integers into
-    ``k`` groups with no pairwise difference less than ``d``. See example
-    below.)
+    returned: $S^{d}(n, k) = S(n - d + 1, k - d + 1)$ with $n \ge k \ge d$.
+    (This counts the ways to partition $n$ consecutive integers into $k$
+    groups with no pairwise difference less than $d$. See example below.)
 
     To obtain the signed Stirling numbers of the first kind, use keyword
     ``signed=True``. Using this keyword automatically sets ``kind`` to 1.
