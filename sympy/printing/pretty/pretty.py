@@ -1500,15 +1500,16 @@ class PrettyPrinter(Printer):
         return self._print_Function(e, func_name="W")
 
     def _print_Lambda(self, e):
-        vars, expr = e.args
+        expr = e.expr
+        sig = e.signature
         if self._use_unicode:
             arrow = u" \N{RIGHTWARDS ARROW FROM BAR} "
         else:
             arrow = " -> "
-        if len(vars) == 1:
-            var_form = self._print(vars[0])
+        if len(sig) == 1 and sig[0].is_symbol:
+            var_form = self._print(sig[0])
         else:
-            var_form = self._print(tuple(vars))
+            var_form = self._print(tuple(sig))
 
         return prettyForm(*stringPict.next(var_form, arrow, self._print(expr)), binding=8)
 

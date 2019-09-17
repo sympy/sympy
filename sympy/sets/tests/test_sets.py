@@ -34,7 +34,8 @@ def test_imageset():
     raises(TypeError, lambda: imageset(x, ints))
     raises(ValueError, lambda: imageset(x, y, z, ints))
     raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))
-    assert (1, 2) in imageset(Lambda(x, x), ints, ints)
+    assert (1, 2) in imageset(Lambda((x, y), (x, y)), ints, ints)
+    raises(ValueError, lambda: imageset(Lambda(x, x), ints, ints))
     assert imageset(cos, ints) == ImageSet(Lambda(x, cos(x)), ints)
     def f(x):
         return cos(x)
@@ -43,13 +44,13 @@ def test_imageset():
     assert imageset(f, ints) == ImageSet(Lambda(x, cos(x)), ints)
     assert imageset(x, 1, ints) == FiniteSet(1)
     assert imageset(x, y, ints) == {y}
-    assert imageset((x, y), (1, z), ints*S.Reals) == {(1, z)}
+    assert imageset((x, y), (1, z), ints, S.Reals) == {(1, z)}
     clash = Symbol('x', integer=true)
     assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
     x1, x2 = symbols("x1, x2")
-    assert imageset(lambda x, y: Add(x, y), Interval(1, 2)*Interval(2, 3)) == \
-        ImageSet(Lambda(((x1, x2),), x1+x2), Interval(1, 2)*Interval(2, 3))
+    assert imageset(lambda x, y: Add(x, y), Interval(1, 2), Interval(2, 3)) == \
+        ImageSet(Lambda((x1, x2), x1+x2), Interval(1, 2), Interval(2, 3))
 
 
 def test_is_empty():
