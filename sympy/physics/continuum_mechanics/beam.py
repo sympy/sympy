@@ -15,13 +15,11 @@ from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
+from sympy import lambdify, Add
 from sympy.core.compatibility import iterable
+from sympy.utilities.decorator import doctest_depends_on
 
-matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
-numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
-
-__doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
-
+numpy = import_module('numpy', __import__kwargs={'fromlist':['arange']})
 
 class Beam(object):
     """
@@ -121,6 +119,8 @@ class Beam(object):
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
+        self._applied_supports = []
+        self._support_as_loads = []
         self._applied_loads = []
         self._reaction_loads = {}
         self._composite_type = None
@@ -364,6 +364,8 @@ class Beam(object):
         (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
         """
+        loc = sympify(loc)
+        self._applied_supports.append((loc, type))
         if type == "pin" or type == "roller":
             reaction_load = Symbol('R_'+str(loc))
             self.apply_load(reaction_load, loc, -1)
@@ -375,6 +377,9 @@ class Beam(object):
             self.apply_load(reaction_moment, loc, -2)
             self.bc_deflection.append((loc, 0))
             self.bc_slope.append((loc, 0))
+            self._support_as_loads.append((reaction_moment, loc, -2, None))
+
+        self._support_as_loads.append((reaction_load, loc, -1, None))
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -1517,6 +1522,181 @@ class Beam(object):
                    line_color='r', show=False)
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
+
+
+    @doctest_depends_on(modules=('numpy',))
+    def draw(self, pictorial=True):
+        """Returns a plot object representing the beam diagram of the beam.
+
+        Parameters
+        ==========
+
+        pictorial: Boolean (default=True)
+            Setting ``pictorial=True`` would simply create a pictorial (scaled) view
+            of the beam diagram not with the exact dimensions.
+            Although setting ``pictorial=False`` would create a beam diagram with
+            the exact dimensions on the plot
+
+        Examples
+        ========
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> R1, R2 = symbols('R1, R2')
+            >>> E, I = symbols('E, I')
+            >>> b = Beam(50, 20, 30)
+            >>> b.apply_load(10, 2, -1)
+            >>> b.apply_load(R1, 10, -1)
+            >>> b.apply_load(R2, 30, -1)
+            >>> b.apply_load(90, 5, 0, 23)
+            >>> b.apply_load(10, 30, 1, 50)
+            >>> b.apply_support(50, "pin")
+            >>> b.apply_support(0, "fixed")
+            >>> b.apply_support(20, "roller")
+            >>> b.draw()
+            Plot object containing:
+            [0]: cartesian line: 25*SingularityFunction(x, 5, 0)
+            - 25*SingularityFunction(x, 23, 0) + SingularityFunction(x, 30, 1)
+            - 20*SingularityFunction(x, 50, 0) - SingularityFunction(x, 50, 1)
+            + 5 for x over (0.0, 50.0)
+        """
+        if not numpy:
+            raise ImportError("To use this function numpy module is required")
+
+        x = self.variable
+
+        # checking whether length is an expression in terms of any Symbol.
+        from sympy import Expr
+        if isinstance(self.length, Expr):
+            l = list(self.length.atoms(Symbol))
+            # assigning every Symbol a default value of 10
+            l = {i:10 for i in l}
+            length = self.length.subs(l)
+        else:
+            l = {}
+            length = self.length
+        height = length/10
+
+        rectangles = []
+        rectangles.append({'xy':(0, 0), 'width':length, 'height': height, 'facecolor':"brown"})
+        annotations, markers, load_eq, fill = self._draw_load(pictorial, length, l)
+        support_markers, support_rectangles = self._draw_supports(length, l)
+
+        rectangles += support_rectangles
+        markers += support_markers
+
+        sing_plot = plot(height + load_eq, (x, 0, length),
+         xlim=(-height, length + height), ylim=(-length, 1.25*length), annotations=annotations,
+          markers=markers, rectangles=rectangles, fill=fill, axis=False, show=False)
+
+        return sing_plot
+
+
+    def _draw_load(self, pictorial, length, l):
+        loads = list(set(self.applied_loads) - set(self._support_as_loads))
+        height = length/10
+        x = self.variable
+
+        annotations = []
+        markers = []
+        load_args = []
+        scaled_load = 0
+        load_eq = 0
+        higher_order = False
+        fill = None
+
+        for load in loads:
+            # check if the position of load is in terms of the beam length.
+            if l:
+                pos =  load[1].subs(l)
+            else:
+                pos = load[1]
+
+            # point loads
+            if load[2] == -1:
+                if isinstance(load[0], Symbol) or load[0].is_negative:
+                    annotations.append({'s':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
+                else:
+                    annotations.append({'s':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
+            # moment loads
+            elif load[2] == -2:
+                if load[0].is_negative:
+                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
+                else:
+                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
+            # higher order loads
+            elif load[2] >= 0:
+                higher_order = True
+                # if pictorial is True we remake the load equation again with
+                # some constant magnitude values.
+                if pictorial:
+                    value, start, order, end = load
+                    value = 10**(1-order) if order > 0 else length/2
+
+                    scaled_load += value*SingularityFunction(x, start, order)
+                    if end:
+                        f2 = 10**(1-order)*x**order if order > 0 else length/2*x**order
+                        for i in range(0, order + 1):
+                            scaled_load -= (f2.diff(x, i).subs(x, end - start)*
+                                           SingularityFunction(x, end, i) / factorial(i))
+
+        # `fill` will be assigned only when higher order loads are present
+        if higher_order:
+            if pictorial:
+                if isinstance(scaled_load, Add):
+                    load_args = scaled_load.args
+                else:
+                    # when the load equation consists of only a single term
+                    load_args = (scaled_load,)
+                load_eq = [i.subs(l) for i in load_args]
+            else:
+                if isinstance(self.load, Add):
+                    load_args = self.load.args
+                else:
+                    load_args = (self.load,)
+                load_eq = [i.subs(l) for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
+
+            load_eq = Add(*load_eq)
+
+            # filling higher order loads with colour
+            y = numpy.arange(0, float(length), 0.001)
+            expr = height + load_eq.rewrite(Piecewise)
+            y1 = lambdify(x, expr, 'numpy')
+            y2 = float(height)
+            fill = {'x': y, 'y1': y1(y), 'y2': y2, 'color':'darkkhaki'}
+
+        return annotations, markers, load_eq, fill
+
+
+    def _draw_supports(self, length, l):
+        height = float(length/10)
+
+        support_markers = []
+        support_rectangles = []
+        for support in self._applied_supports:
+            if l:
+                pos =  support[0].subs(l)
+            else:
+                pos = support[0]
+
+            if support[1] == "pin":
+                support_markers.append({'args':[pos, [0]], 'marker':6, 'markersize':13, 'color':"black"})
+
+            elif support[1] == "roller":
+                support_markers.append({'args':[pos, [-height/2.5]], 'marker':'o', 'markersize':11, 'color':"black"})
+
+            elif support[1] == "fixed":
+                if pos == 0:
+                    support_rectangles.append({'xy':(0, -3*height), 'width':-length/20, 'height':6*height + height, 'fill':False, 'hatch':'/////'})
+                else:
+                    support_rectangles.append({'xy':(length, -3*height), 'width':length/20, 'height': 6*height + height, 'fill':False, 'hatch':'/////'})
+
+        return support_markers, support_rectangles
 
 
 class Beam3D(Beam):
