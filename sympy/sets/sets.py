@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-from itertools import product
 from collections import defaultdict
 import inspect
 
@@ -25,7 +24,7 @@ from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
 from sympy.utilities import subsets
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, iproduct
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
@@ -786,7 +785,7 @@ class ProductSet(Set):
         then return the Cartesian Product. Otherwise, raise TypeError.
         """
         if self.is_iterable:
-            return product(*self.sets)
+            return iproduct(*self.sets)
         else:
             raise TypeError("Not all constituent sets are iterable")
 
@@ -2019,12 +2018,15 @@ def imageset(*args):
             return set
 
         if isinstance(set, ImageSet):
+            # XXX: Maybe this should just be:
+            # f2 = set.lambda
+            # fun = Lambda(f2.signature, f(*f2.expr))
+            # return imageset(fun, *set.base_sets)
             if len(set.lamda.variables) == 1 and len(f.variables) == 1:
                 x = set.lamda.variables[0]
                 y = f.variables[0]
                 return imageset(
-                    Lambda(x, f.expr.subs(y, set.lamda.expr)),
-                    set.base_set)
+                    Lambda(x, f.expr.subs(y, set.lamda.expr)), *set.base_sets)
 
         if r is not None:
             return r

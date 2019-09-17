@@ -2055,9 +2055,14 @@ class LatexPrinter(Printer):
         return r"\mathbb{C}"
 
     def _print_ImageSet(self, s):
-        sig = s.lamda.signature[0]
         expr = s.lamda.expr
-        xiny = r"%s \in %s" % (self._print(sig), self._print(s.base_set))
+        if len(s.lamda.signature) == 1:
+            sig = s.lamda.signature[0]
+            set = s.base_sets[0]
+        else:
+            sig = s.lamda.signature
+            set = s.base_pset
+        xiny = r"%s \in %s" % (self._print(sig), self._print(set))
         return r"\left\{%s\; |\; %s\right\}" % (self._print(expr), xiny)
 
     def _print_ConditionSet(self, s):
