@@ -5,18 +5,18 @@ from sympy import (
     symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
     factorial, true)
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
-from sympy.core.compatibility import range
+from sympy.core.compatibility import iterable, range
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
     cartes, common_prefix, common_suffix, connected_components, dict_merge,
     filter_symbols, flatten, generate_bell, generate_derangements,
     generate_involutions, generate_oriented_forest, group, has_dups, ibin,
-    kbins, minlex, multiset, multiset_combinations, multiset_partitions,
-    multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
-    permutations, postfixes, postorder_traversal, prefixes, reshape,
-    rotate_left, rotate_right, runs, sift, strongly_connected_components,
-    subsets, take, topological_sort, unflatten, uniq, variations,
-    ordered_partitions, rotations)
+    iproduct, kbins, minlex, multiset, multiset_combinations,
+    multiset_partitions, multiset_permutations, necklaces, numbered_symbols,
+    ordered, partitions, permutations, postfixes, postorder_traversal,
+    prefixes, reshape, rotate_left, rotate_right, runs, sift,
+    strongly_connected_components, subsets, take, topological_sort, unflatten,
+    uniq, variations, ordered_partitions, rotations)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -72,6 +72,20 @@ def test_flatten():
     assert flatten([MyOp(x, y), z], cls=MyOp) == [x, y, z]
 
     assert flatten({1, 11, 2}) == list({1, 11, 2})
+
+
+def test_iproduct():
+    assert list(iproduct()) == [()]
+    assert list(iproduct([])) == []
+    assert list(iproduct([1,2,3])) == [(1,),(2,),(3,)]
+    assert sorted(iproduct([1, 2], [3, 4, 5])) == [
+        (1,3),(1,4),(1,5),(2,3),(2,4),(2,5)]
+    assert sorted(iproduct([0,1],[0,1],[0,1])) == [
+        (0,0,0),(0,0,1),(0,1,0),(0,1,1),(1,0,0),(1,0,1),(1,1,0),(1,1,1)]
+    assert iterable(iproduct(S.Integers)) is True
+    assert iterable(iproduct(S.Integers, S.Integers)) is True
+    assert (3,) in iproduct(S.Integers)
+    assert (4, 5) in iproduct(S.Integers, S.Integers)
 
 
 def test_group():
