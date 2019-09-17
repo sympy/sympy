@@ -156,8 +156,9 @@ class MapleCodePrinter(CodePrinter):
         return "{p}/{q}".format(p=str(p), q=str(q))
 
     def _print_Relational(self, expr):
-        lhs_code = self._print(expr.lhs)
-        rhs_code = self._print(expr.rhs)
+        PREC=precedence(expr)
+        lhs_code = self.parenthesize(expr.lhs, PREC)
+        rhs_code = self.parenthesize(expr.rhs, PREC)
         op = expr.rel_op
         if op in spec_relational_ops:
             op = spec_relational_ops[op]
@@ -226,6 +227,7 @@ class MapleCodePrinter(CodePrinter):
             return "Matrix({var_size}, shape = identity)".format(var_size=self._print(expr.rows))
 
     def _print_MatMul(self, expr):
+        PREC=precedence(expr)
         _fact_list = list(expr.args)
         _const = None
         if not (
@@ -236,17 +238,18 @@ class MapleCodePrinter(CodePrinter):
             _const, _fact_list = _fact_list[0], _fact_list[1:]
 
         if _const is None or _const == 1:
-            return '.'.join(self._print(_m) for _m in _fact_list)
+            return '.'.join(self.parenthesize(_m, PREC) for _m in _fact_list)
         else:
-            return '{c}*{m}'.format(c=_const, m='.'.join(self._print(_m) for _m in _fact_list))
+            return '{c}*{m}'.format(c=_const, m='.'.join(self.parenthesize(_m, PREC) for _m in _fact_list))
 
     def _print_MatPow(self, expr):
         # This function requires LinearAlgebra Function in Maple
         return 'MatrixPower({A}, {n})'.format(A=self._print(expr.base), n=self._print(expr.exp))
 
     def _print_HadamardProduct(self, expr):
+        PREC = precedence(expr)
         _fact_list = list(expr.args)
-        return '*'.join(self._print(_m) for _m in _fact_list)
+        return '*'.join(self.parenthesize(_m, PREC) for _m in _fact_list)
 
     def _print_Derivative(self, expr):
         _f, (_var, _order) = expr.args
