@@ -124,18 +124,17 @@ There is a function constructing a loop (or a complete function) like this in
 
 from __future__ import print_function, division
 
-from functools import total_ordering
 from itertools import chain
 from collections import defaultdict
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
 from sympy.core.compatibility import string_types
+from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Lt, Le, Ge, Gt
 from sympy.core.sympify import _sympify, sympify, SympifyError
-from sympy.logic import true, false
 from sympy.utilities.iterables import iterable
+
 
 
 def _mk_Tuple(args):
@@ -145,11 +144,13 @@ def _mk_Tuple(args):
 
     Parameters
     ==========
+
     args: iterable
         Arguments to :class:`sympy.Tuple`.
 
     Returns
     =======
+
     sympy.Tuple
     """
     args = [String(arg) if isinstance(arg, string_types) else arg for arg in args]
@@ -188,7 +189,7 @@ class Token(Basic):
     @classmethod
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
-        if arg == None:
+        if arg == None: # Must be "== None", cannot be "is None"
             return cls.defaults.get(attr, none)
         else:
             if isinstance(arg, Dummy):  # sympy's replace uses Dummy instances
@@ -265,7 +266,7 @@ class Token(Basic):
             if isinstance(arg, Token):
                 return printer._print(arg, *args, joiner=self._joiner(k, il), **kwargs)
             else:
-                return printer._print(v, *args, **kwargs)
+                return printer._print(arg, *args, **kwargs)
 
         if isinstance(v, Tuple):
             joined = self._joiner(k, il).join([_print(arg) for arg in v.args])
@@ -311,6 +312,7 @@ class Token(Basic):
 
         Parameters
         ==========
+
         exclude : collection of str
             Collection of keywords to exclude.
 
@@ -382,7 +384,7 @@ class NoneToken(Token):
         return ()
 
     def __hash__(self):
-        return super(Token, self).__hash__()
+        return super(NoneToken, self).__hash__()
 
 
 none = NoneToken()
@@ -597,8 +599,8 @@ class CodeBlock(Basic):
         Return a new CodeBlock with common subexpressions eliminated and
         pulled out as assignments.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import symbols, ccode
     >>> from sympy.codegen.ast import CodeBlock, Assignment
@@ -628,7 +630,6 @@ class CodeBlock(Basic):
         return iter(self.args)
 
     def _sympyrepr(self, printer, *args, **kwargs):
-        from sympy.printing.printer import printer_context
         il = printer._context.get('indent_level', 0)
         joiner = ',\n' + ' '*il
         joined = joiner.join(map(printer._print, self.args))
@@ -654,8 +655,8 @@ class CodeBlock(Basic):
         This is a class constructor so that the default constructor for
         CodeBlock can error when variables are used before they are assigned.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.codegen.ast import CodeBlock, Assignment
@@ -1082,7 +1083,6 @@ class Type(Token):
         0.123456789012345649
 
         """
-        from sympy.functions.elementary.complexes import im, re
         val = sympify(value)
 
         ten = Integer(10)
@@ -1250,6 +1250,10 @@ class FloatType(FloatBaseType):
 
     def cast_nocheck(self, value):
         """ Casts without checking if out of bounds or subnormal. """
+        if value == oo:  # float(oo) or oo
+            return float(oo)
+        elif value == -oo:  # float(-oo) or -oo
+            return float(-oo)
         return Float(str(sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
 
     def _check(self, value):
@@ -1507,7 +1511,7 @@ class Pointer(Variable):
     >>> i = Symbol('i', integer=True)
     >>> p = Pointer('x')
     >>> p[i+1]
-    Element(x, indices=((i + 1,),))
+    Element(x, indices=(i + 1,))
 
     """
 
@@ -1578,7 +1582,7 @@ class While(Token):
     Parameters
     ==========
 
-    condition : expression convertable to Boolean
+    condition : expression convertible to Boolean
     body : CodeBlock or iterable
         When passed an iterable it is used to instantiate a CodeBlock.
 

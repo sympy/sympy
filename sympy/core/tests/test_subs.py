@@ -1,12 +1,11 @@
-from __future__ import division
 from sympy import (
     Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
     Integer, Eq, symbols, Add, I, Float, log, Rational,
     Lambda, atan2, cse, cot, tan, S, Tuple, Basic, Dict,
     Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
-    AccumBounds, Matrix, zeros)
+    AccumBounds, Matrix, zeros, ZeroMatrix)
 from sympy.core.basic import _aresame
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import a, x, y, z
 
 
@@ -24,11 +23,17 @@ def test_subs():
 
 def test_subs_Matrix():
     z = zeros(2)
-    assert (x*y).subs({x:z, y:0}) == z
+    z1 = ZeroMatrix(2, 2)
+    assert (x*y).subs({x:z, y:0}) in [z, z1]
     assert (x*y).subs({y:z, x:0}) == 0
-    assert (x*y).subs({y:z, x:0}, simultaneous=True) == z
-    assert (x + y).subs({x: z, y: z}) == z
+    assert (x*y).subs({y:z, x:0}, simultaneous=True) in [z, z1]
+    assert (x + y).subs({x: z, y: z}, simultaneous=True) in [z, z1]
+    assert (x + y).subs({x: z, y: z}) in [z, z1]
 
+    # Issue #15528
+    assert Mul(Matrix([[3]]), x).subs(x, 2.0) == Matrix([[6.0]])
+    # Does not raise a TypeError, see comment on the MatAdd postprocessor
+    assert Add(Matrix([[3]]), x).subs(x, 2.0) == Add(Matrix([[3]]), 2.0)
 
 def test_subs_AccumBounds():
     e = x
@@ -194,7 +199,7 @@ def test_mul():
     x, y, z, a, b, c = symbols('x y z a b c')
     A, B, C = symbols('A B C', commutative=0)
     assert (x*y*z).subs(z*x, y) == y**2
-    assert (z*x).subs(1/x, z) == z*x
+    assert (z*x).subs(1/x, z) == 1
     assert (x*y/z).subs(1/z, a) == a*x*y
     assert (x*y/z).subs(x/z, a) == a*y
     assert (x*y/z).subs(y/z, a) == a*x
@@ -317,10 +322,10 @@ def test_subs_noncommutative():
     for p in range(1, 5):
         for k in range(10):
             assert (y * x**k).subs(x**p, L) == y * L**(k//p) * x**(k % p)
-    assert (x**(3/2)).subs(x**(1/2), L) == x**(3/2)
-    assert (x**(1/2)).subs(x**(1/2), L) == L
-    assert (x**(-1/2)).subs(x**(1/2), L) == x**(-1/2)
-    assert (x**(-1/2)).subs(x**(-1/2), L) == L
+    assert (x**(S(3)/2)).subs(x**(S(1)/2), L) == x**(S(3)/2)
+    assert (x**(S(1)/2)).subs(x**(S(1)/2), L) == L
+    assert (x**(-S(1)/2)).subs(x**(S(1)/2), L) == x**(-S(1)/2)
+    assert (x**(-S(1)/2)).subs(x**(-S(1)/2), L) == L
 
     assert (x**(2*someint)).subs(x**someint, L) == L**2
     assert (x**(2*someint + 3)).subs(x**someint, L) == L**2*x**3
@@ -697,7 +702,7 @@ def test_issue_2877():
 
     def r(a, b, c):
         return factor(a*x**2 + b*x + c)
-    e = r(5/6, 10, 5)
+    e = r(5.0/6, 10, 5)
     assert nsimplify(e) == 5*x**2/6 + 10*x + 5
 
 
@@ -799,3 +804,30 @@ def test_issue_13333():
     eq = 1/x
     assert eq.subs(dict(x='1/2')) == 2
     assert eq.subs(dict(x='(1/2)')) == 2
+
+
+def test_issue_15234():
+    x, y = symbols('x y', real=True)
+    p = 6*x**5 + x**4 - 4*x**3 + 4*x**2 - 2*x + 3
+    p_subbed = 6*x**5 - 4*x**3 - 2*x + y**4 + 4*y**2 + 3
+    assert p.subs([(x**i, y**i) for i in [2, 4]]) == p_subbed
+    x, y = symbols('x y', complex=True)
+    p = 6*x**5 + x**4 - 4*x**3 + 4*x**2 - 2*x + 3
+    p_subbed = 6*x**5 - 4*x**3 - 2*x + y**4 + 4*y**2 + 3
+    assert p.subs([(x**i, y**i) for i in [2, 4]]) == p_subbed
+
+
+def test_issue_6976():
+    x, y = symbols('x y')
+    assert (sqrt(x)**3 + sqrt(x) + x + x**2).subs(sqrt(x), y) == \
+        y**4 + y**3 + y**2 + y
+    assert (x**4 + x**3 + x**2 + x + sqrt(x)).subs(x**2, y) == \
+        sqrt(x) + x**3 + x + y**2 + y
+    assert x.subs(x**3, y) == x
+    assert x.subs(x**(S(1)/3), y) == y**3
+
+    # More substitutions are possible with nonnegative symbols
+    x, y = symbols('x y', nonnegative=True)
+    assert (x**4 + x**3 + x**2 + x + sqrt(x)).subs(x**2, y) == \
+        y**(S(1)/4) + y**(S(3)/2) + sqrt(y) + y**2 + y
+    assert x.subs(x**3, y) == y**(S(1)/3)

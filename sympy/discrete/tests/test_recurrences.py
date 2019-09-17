@@ -1,7 +1,5 @@
-from __future__ import print_function, division
-
-from sympy import sqrt, Rational, fibonacci
-from sympy.core import S, symbols, I
+from sympy import Rational, fibonacci
+from sympy.core import S, symbols
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises
 from sympy.discrete.recurrences import linrec
@@ -57,3 +55,4 @@ def test_linrec():
         58516436*x + 56372788*y
     assert linrec(coeffs=[0]*50 + [1, 2, 3], init=[x, y, z], n=1000) == \
         11477135884896*x + 25999077948732*y + 41975630244216*z
+    assert linrec(coeffs=[], init=[1, 1], n=20) == 0

@@ -480,9 +480,9 @@ class DifferentialExtension(object):
                     # Example: exp(x + x**2) over QQ(x, exp(x), exp(x**2))
                     self.newf = self.newf.xreplace({exp(arg): exp(const)*Mul(*[
                         u**power for u, power in ans])})
-                    self.newf = self.newf.xreplace(dict([(exp(p*exparg),
-                        exp(const*p) * Mul(*[u**power for u, power in ans]))
-                        for exparg, p in others]))
+                    self.newf = self.newf.xreplace({exp(p*exparg):
+                        exp(const*p) * Mul(*[u**power for u, power in ans])
+                        for exparg, p in others})
                     # TODO: Add something to backsubs to put exp(const*p)
                     # back together.
 

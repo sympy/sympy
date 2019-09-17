@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range, is_sequence
 from sympy.external import import_module
 from sympy.printing.printer import Printer
-from sympy.core.compatibility import range, is_sequence
 import sympy
 from functools import partial
 
@@ -53,6 +53,8 @@ if theano:
             sympy.Or: tt.or_,
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
+            sympy.conjugate: tt.conj,
+            sympy.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
@@ -161,9 +163,7 @@ class TheanoPrinter(Printer):
         return self._get_or_create(X, dtype=dtype, broadcastable=(None, None))
 
     def _print_DenseMatrix(self, X, **kwargs):
-        try:
-            tt.stacklists
-        except AttributeError:
+        if not hasattr(tt, 'stacklists'):
             raise NotImplementedError(
                "Matrix translation not yet supported in this version of Theano")
 
@@ -292,7 +292,9 @@ class TheanoPrinter(Printer):
 
         See Also
         ========
+
         theano.tensor.Tensor
+
         """
         if dtypes is None:
             dtypes = {}
@@ -381,7 +383,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
             for s, d in dims.items()
         }
 
-    if broadcastables != None:
+    if broadcastables is not None:
         return broadcastables
 
     return {}
@@ -492,6 +494,9 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
                    broadcastables=broadcastables)
     tinputs = list(map(code, inputs))
     toutputs = list(map(code, outputs))
+
+    #fix constant expressions as variables
+    toutputs = [output if isinstance(output, theano.Variable) else tt.as_tensor_variable(output) for output in toutputs]
 
     if len(toutputs) == 1:
         toutputs = toutputs[0]

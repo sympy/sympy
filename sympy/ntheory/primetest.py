@@ -6,7 +6,6 @@ Primality testing
 from __future__ import print_function, division
 
 from sympy.core.compatibility import range, as_int
-from sympy.core.numbers import Float
 
 from mpmath.libmp import bitcount as _bitlength
 
@@ -64,6 +63,15 @@ def is_square(n, prep=True):
     If n is suspected of *not* being a square then this is a
     quick method of confirming that it is not.
 
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_square
+    >>> is_square(25)
+    True
+    >>> is_square(2)
+    False
+
     References
     ==========
 
@@ -83,9 +91,8 @@ def is_square(n, prep=True):
     if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
         m = n % 63
         if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
-            from sympy.ntheory import perfect_power
-            if perfect_power(n, [2]):
-                return True
+            from sympy.core.power import integer_nthroot
+            return integer_nthroot(n, 2)[1]
     return False
 
 
@@ -488,7 +495,37 @@ def isprime(n):
     >>> from sympy.ntheory import isprime
     >>> isprime(13)
     True
+    >>> isprime(13.0)  # limited precision
+    False
     >>> isprime(15)
+    False
+
+    Notes
+    =====
+
+    This routine is intended only for integer input, not numerical
+    expressions which may represent numbers. Floats are also
+    rejected as input because they represent numbers of limited
+    precision. While it is tempting to permit 7.0 to represent an
+    integer there are errors that may "pass silently" if this is
+    allowed:
+
+    >>> from sympy import Float, S
+    >>> int(1e3) == 1e3 == 10**3
+    True
+    >>> int(1e23) == 1e23
+    True
+    >>> int(1e23) == 10**23
+    False
+
+    >>> near_int = 1 + S(1)/10**19
+    >>> near_int == int(near_int)
+    False
+    >>> n = Float(near_int, 10)  # truncated by precision
+    >>> n == int(n)
+    True
+    >>> n = Float(near_int, 20)
+    >>> n == int(n)
     False
 
     See Also
@@ -505,9 +542,10 @@ def isprime(n):
       http://mpqs.free.fr/LucasPseudoprimes.pdf
     - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
-    if isinstance(n, (Float, float)):
+    try:
+        n = as_int(n)
+    except ValueError:
         return False
-    n = int(n)
 
     # Step 1, do quick composite testing via trial division.  The individual
     # modulo tests benchmark faster than one or two primorial igcds for me.

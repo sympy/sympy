@@ -1,6 +1,6 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     I, erf, tan, asin, asinh, acos, atan, Function, Derivative, diff, simplify, \
-    LambertW, Eq, Ne, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
+    LambertW, Ne, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
     besselj, besselk, bessely, jn, tanh
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
 from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
@@ -33,6 +33,8 @@ def test_heurisch_polynomials():
     assert heurisch(1, x) == x
     assert heurisch(x, x) == x**2/2
     assert heurisch(x**17, x) == x**18/18
+    # For coverage
+    assert heurisch_wrapper(y, x) == y*x
 
 
 def test_heurisch_fractions():
@@ -244,7 +246,7 @@ def test_pmint_logexp():
 
     assert ratsimp(heurisch(f, x)) == g
 
-@slow # 8 seconds on 3.4 GHz
+
 @XFAIL  # there's a hash dependent failure lurking here
 def test_pmint_erf():
     f = exp(-x**2)*erf(x)/(erf(x)**3 - erf(x)**2 - erf(x) + 1)

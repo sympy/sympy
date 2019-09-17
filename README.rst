@@ -82,7 +82,7 @@ To start it, issue::
 
     $ bin/isympy
 
-from this directory if SymPy is not installed or simply::
+from this directory, if SymPy is not installed or simply::
 
     $ isympy
 
@@ -188,11 +188,11 @@ Brief History
 -------------
 
 SymPy was started by Ondřej Čertík in 2005, he wrote some code during the
-summer, then he wrote some more code during the summer 2006. In February 2007,
+summer, then he wrote some more code during summer 2006. In February 2007,
 Fabian Pedregosa joined the project and helped fixed many things, contributed
 documentation and made it alive again. 5 students (Mateusz Paprocki, Brian
-Jorgensen, Jason Gedge, Robert Schwarz and Chris Wu) improved SymPy incredibly
-during the summer 2007 as part of the Google Summer of Code. Pearu Peterson
+Jorgensen, Jason Gedge, Robert Schwarz, and Chris Wu) improved SymPy incredibly
+during summer 2007 as part of the Google Summer of Code. Pearu Peterson
 joined the development during the summer 2007 and he has made SymPy much more
 competitive by rewriting the core from scratch, that has made it from 10x to
 100x faster. Jurjen N.E. Bos has contributed pretty printing and other patches.
@@ -205,7 +205,7 @@ from Google Summer of Code students.
 
 In 2011, Ondřej Čertík stepped down as lead developer, with Aaron Meurer, who
 also started as a Google Summer of Code student, taking his place. Ondřej
-Čertík is still active in the community, but is too busy with work and family
+Čertík is still active in the community but is too busy with work and family
 to play a lead development role.
 
 Since then, a lot more people have joined the development and some people have
@@ -213,7 +213,7 @@ also left. You can see the full list in doc/src/aboutus.rst, or online at:
 
 https://docs.sympy.org/dev/aboutus.html#sympy-development-team
 
-The git history goes back to 2007, when development moved from svn to hg.  To
+The git history goes back to 2007 when development moved from svn to hg.  To
 see the history before that point, look at https://github.com/sympy/sympy-old.
 
 You can use git to see the biggest developers.  The command::
@@ -244,12 +244,12 @@ A BibTeX entry for LaTeX users is
 
     @article{10.7717/peerj-cs.103,
      title = {SymPy: symbolic computing in Python},
-     author = {Meurer, Aaron and Smith, Christopher P. and Paprocki, Mateusz and \v{C}ert\'{i}k, Ond\v{r}ej and Kirpichev, Sergey B. and Rocklin, Matthew and Kumar, AMiT and Ivanov, Sergiu and Moore, Jason K. and Singh, Sartaj and Rathnayake, Thilina and Vig, Sean and Granger, Brian E. and Muller, Richard P. and Bonazzi, Francesco and Gupta, Harsh and Vats, Shivam and Johansson, Fredrik and Pedregosa, Fabian and Curry, Matthew J. and Terrel, Andy R. and Rou\v{c}ka, \v{S}t\v{e}p\'{a}n and Saboo, Ashutosh and Fernando, Isuru and Kulal, Sumith and Cimrman, Robert and Scopatz, Anthony},
+     author = {Meurer, Aaron and Smith, Christopher P. and Paprocki, Mateusz and \v{C}ert\'{i}k, Ond\v{r}ej and Kirpichev, Sergey B. and Rocklin, Matthew and Kumar, Amit and Ivanov, Sergiu and Moore, Jason K. and Singh, Sartaj and Rathnayake, Thilina and Vig, Sean and Granger, Brian E. and Muller, Richard P. and Bonazzi, Francesco and Gupta, Harsh and Vats, Shivam and Johansson, Fredrik and Pedregosa, Fabian and Curry, Matthew J. and Terrel, Andy R. and Rou\v{c}ka, \v{S}t\v{e}p\'{a}n and Saboo, Ashutosh and Fernando, Isuru and Kulal, Sumith and Cimrman, Robert and Scopatz, Anthony},
      year = 2017,
      month = jan,
      keywords = {Python, Computer algebra system, Symbolics},
      abstract = {
-                SymPy is an open source computer algebra system written in pure Python. It is built with a focus on extensibility and ease of use, through both interactive and programmatic applications. These characteristics have led SymPy to become a popular symbolic library for the scientific Python ecosystem. This paper presents the architecture of SymPy, a description of its features, and a discussion of select submodules. The supplementary material provide additional examples and further outline details of the architecture and features of SymPy.
+                SymPy is an open source computer algebra system written in pure Python. It is built with a focus on extensibility and ease of use, through both interactive and programmatic applications. These characteristics have led SymPy to become a popular symbolic library for the scientific Python ecosystem. This paper presents the architecture of SymPy, a description of its features, and a discussion of select submodules. The supplementary material provides additional examples and further outline details of the architecture and features of SymPy.
              },
      volume = 3,
      pages = {e103},

@@ -1,30 +1,30 @@
 from __future__ import print_function, division
 
 try:
-    from pyglet.gl.gl import c_float
+    from ctypes import c_float, c_int, c_double
 except ImportError:
     pass
 
-from pyglet.gl import *
+import pyglet.gl as pgl
 from sympy.core import S
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, string_types
 
 
-def get_model_matrix(array_type=c_float, glGetMethod=glGetFloatv):
+def get_model_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv):
     """
     Returns the current modelview matrix.
     """
     m = (array_type*16)()
-    glGetMethod(GL_MODELVIEW_MATRIX, m)
+    glGetMethod(pgl.GL_MODELVIEW_MATRIX, m)
     return m
 
 
-def get_projection_matrix(array_type=c_float, glGetMethod=glGetFloatv):
+def get_projection_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv):
     """
     Returns the current modelview matrix.
     """
     m = (array_type*16)()
-    glGetMethod(GL_PROJECTION_MATRIX, m)
+    glGetMethod(pgl.GL_PROJECTION_MATRIX, m)
     return m
 
 
@@ -33,7 +33,7 @@ def get_viewport():
     Returns the current viewport.
     """
     m = (c_int*4)()
-    glGetIntegerv(GL_VIEWPORT, m)
+    pgl.glGetIntegerv(pgl.GL_VIEWPORT, m)
     return m
 
 
@@ -56,20 +56,20 @@ def get_basis_vectors():
 
 
 def screen_to_model(x, y, z):
-    m = get_model_matrix(c_double, glGetDoublev)
-    p = get_projection_matrix(c_double, glGetDoublev)
+    m = get_model_matrix(c_double, pgl.glGetDoublev)
+    p = get_projection_matrix(c_double, pgl.glGetDoublev)
     w = get_viewport()
     mx, my, mz = c_double(), c_double(), c_double()
-    gluUnProject(x, y, z, m, p, w, mx, my, mz)
+    pgl.gluUnProject(x, y, z, m, p, w, mx, my, mz)
     return float(mx.value), float(my.value), float(mz.value)
 
 
 def model_to_screen(x, y, z):
-    m = get_model_matrix(c_double, glGetDoublev)
-    p = get_projection_matrix(c_double, glGetDoublev)
+    m = get_model_matrix(c_double, pgl.glGetDoublev)
+    p = get_projection_matrix(c_double, pgl.glGetDoublev)
     w = get_viewport()
     mx, my, mz = c_double(), c_double(), c_double()
-    gluProject(x, y, z, m, p, w, mx, my, mz)
+    pgl.gluProject(x, y, z, m, p, w, mx, my, mz)
     return float(mx.value), float(my.value), float(mz.value)
 
 
@@ -99,7 +99,7 @@ def billboard_matrix():
     m[8] = 0
     m[9] = 0
     m[10] = 1
-    glLoadMatrixf(m)
+    pgl.glLoadMatrixf(m)
 
 
 def create_bounds():
@@ -122,7 +122,7 @@ def interpolate(a_min, a_max, a_ratio):
 
 def rinterpolate(a_min, a_max, a_value):
     a_range = a_max - a_min
-    if a_range == 0:
+    if a_max == a_min:
         a_range = 1.0
     return (a_value - a_min) / float(a_range)
 
@@ -147,7 +147,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
         return []
     try:
         range(int(r_min - r_max))
-    except TypeError:
+    except (TypeError, OverflowError):
         return []
     if r_min > r_max:
         raise ValueError("r_min can not be greater than r_max")
@@ -164,7 +164,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
 
 
 def parse_option_string(s):
-    if not isinstance(s, str):
+    if not isinstance(s, string_types):
         return None
     options = {}
     for token in s.split(';'):

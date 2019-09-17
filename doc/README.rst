@@ -12,9 +12,17 @@ and do::
 
     make html
 
+If you get **mpmath** error, install python-mpmath package::
+
+    apt-get install python-mpmath
+
+If you get **matplotlib** error, install python-matplotlib package::
+
+    apt-get install python-matplotlib
+
 and to view it, do::
 
-    epiphany _build/html/index.html
+    firefox _build/html/index.html
 
 Fedora
 ------
@@ -31,10 +39,37 @@ If you get **mpmath** error, install python3-mpmath package::
 
     dnf install python3-mpmath
 
+If you get **matplotlib** error, install python3-matplotlib package::
+
+    dnf install python3-matplotlib
+
 And view it at::
 
     _build/html/index.html
+    
+Mac
+---
 
+- Install MacTex: http://www.tug.org/mactex/
+- Install homebrew: https://brew.sh/
+
+Install these packages with homebrew:
+
+```bash
+brew install imagemagick graphviz docbook librsvg
+```
+
+Install these packages with either pip or conda:
+
+```bash
+pip install mpmath matplotlib sphinx
+```
+
+or
+
+```bash
+conda install mpmpath matplotlib sphinx
+```
 Windows 10
 ----------
 

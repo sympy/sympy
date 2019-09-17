@@ -597,3 +597,17 @@ def test_Relationals():
     assert theq(theano_code_(x < y), xt < yt)
     assert theq(theano_code_(x >= y), xt >= yt)
     assert theq(theano_code_(x <= y), xt <= yt)
+
+
+def test_complexfunctions():
+    xt, yt = theano_code(x, dtypes={x:'complex128'}), theano_code(y, dtypes={y: 'complex128'})
+    from sympy import conjugate
+    from theano.tensor import as_tensor_variable as atv
+    from theano.tensor import complex as cplx
+    assert theq(theano_code(y*conjugate(x)), yt*(xt.conj()))
+    assert theq(theano_code((1+2j)*x), xt*(atv(1.0)+atv(2.0)*cplx(0,1)))
+
+
+def test_constantfunctions():
+    tf = theano_function([],[1+1j])
+    assert(tf()==1+1j)

@@ -53,14 +53,14 @@ class CantSympify(object):
 
 def _convert_numpy_types(a, **sympify_args):
     """
-    Converts a numpy datatype input to an appropriate sympy type.
+    Converts a numpy datatype input to an appropriate SymPy type.
     """
     import numpy as np
     if not isinstance(a, np.floating):
         if np.iscomplex(a):
-            return converter[complex](np.asscalar(a))
+            return converter[complex](a.item())
         else:
-            return sympify(np.asscalar(a), **sympify_args)
+            return sympify(a.item(), **sympify_args)
     else:
         try:
             from sympy.core.numbers import Float
@@ -85,11 +85,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     with SAGE.
 
     It currently accepts as arguments:
-       - any object defined in sympy
+       - any object defined in SymPy
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
        - booleans, including ``None`` (will leave ``None`` unchanged)
-       - lists, sets or tuples containing any of the above
+       - dict, lists, sets or tuples containing any of the above
 
     .. warning::
         Note that this function uses ``eval``, and thus shouldn't be used on
@@ -242,6 +242,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Notes
     =====
 
+    The keywords ``rational`` and ``convert_xor`` are only used
+    when the input is a string.
+
     Sometimes autosimplification during sympification results in expressions
     that are very different in structure than what was entered. Until such
     autosimplification is no longer done, the ``kernS`` function might be of
@@ -259,27 +262,36 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     """
-    if evaluate is None:
-        if global_evaluate[0] is False:
-            evaluate = global_evaluate[0]
-        else:
-            evaluate = True
-    try:
-        if a in sympy_classes:
-            return a
-    except TypeError: # Type of a is unhashable
-        pass
-    try:
-        cls = a.__class__
-    except AttributeError:  # a is probably an old-style class object
-        cls = type(a)
-    if cls in sympy_classes:
+    is_sympy = getattr(a, '__sympy__', None)
+    if is_sympy is not None:
         return a
+
+    if isinstance(a, CantSympify):
+        raise SympifyError(a)
+    cls = getattr(a, "__class__", None)
+    if cls is None:
+        cls = type(a)  # Probably an old-style class
+    conv = converter.get(cls, None)
+    if conv is not None:
+        return conv(a)
+
+    for superclass in getmro(cls):
+        try:
+            return converter[superclass](a)
+        except KeyError:
+            continue
+
     if cls is type(None):
         if strict:
             raise SympifyError(a)
         else:
             return a
+
+    if evaluate is None:
+        if global_evaluate[0] is False:
+            evaluate = global_evaluate[0]
+        else:
+            evaluate = True
 
     # Support for basic numpy datatypes
     # Note that this check exists to avoid importing NumPy when not necessary
@@ -290,37 +302,38 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 convert_xor=convert_xor, strict=strict, rational=rational,
                 evaluate=evaluate)
 
-    try:
-        return converter[cls](a)
-    except KeyError:
-        for superclass in getmro(cls):
-            try:
-                return converter[superclass](a)
-            except KeyError:
-                continue
-
-    if isinstance(a, CantSympify):
-        raise SympifyError(a)
-
-    try:
-        return a._sympy_()
-    except AttributeError:
-        pass
+    _sympy_ = getattr(a, "_sympy_", None)
+    if _sympy_ is not None:
+        try:
+            return a._sympy_()
+        # XXX: Catches AttributeError: 'SympyConverter' object has no
+        # attribute 'tuple'
+        # This is probably a bug somewhere but for now we catch it here.
+        except AttributeError:
+            pass
 
     if not strict:
         # Put numpy array conversion _before_ float/int, see
         # <https://github.com/sympy/sympy/issues/13924>.
-        try:
-            from ..tensor.array import Array
-            return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
-        except AttributeError:
-            pass
+        flat = getattr(a, "flat", None)
+        if flat is not None:
+            shape = getattr(a, "shape", None)
+            if shape is not None:
+                from ..tensor.array import Array
+                return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
             try:
-                return sympify(coerce(a))
-            except (TypeError, ValueError, AttributeError, SympifyError):
+                coerced = coerce(a)
+            except (TypeError, ValueError):
+                continue
+            # XXX: AttributeError only needed here for Py2
+            except AttributeError:
+                continue
+            try:
+                return sympify(coerced)
+            except SympifyError:
                 continue
 
     if strict:

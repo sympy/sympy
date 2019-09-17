@@ -65,21 +65,21 @@ class BesselBase(Function):
 
     def _eval_conjugate(self):
         z = self.argument
-        if (z.is_real and z.is_negative) is False:
+        if z.is_extended_negative is False:
             return self.__class__(self.order.conjugate(), z.conjugate())
 
     def _eval_expand_func(self, **hints):
         nu, z, f = self.order, self.argument, self.__class__
-        if nu.is_real:
-            if (nu - 1).is_positive:
+        if nu.is_extended_real:
+            if (nu - 1).is_extended_positive:
                 return (-self._a*self._b*f(nu - 2, z)._eval_expand_func() +
                         2*self._a*(nu - 1)*f(nu - 1, z)._eval_expand_func()/z)
-            elif (nu + 1).is_negative:
+            elif (nu + 1).is_extended_negative:
                 return (2*self._b*(nu + 1)*f(nu + 1, z)._eval_expand_func()/z -
                         self._a*self._b*f(nu + 2, z)._eval_expand_func())
         return self
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import besselsimp
         return besselsimp(self)
 
@@ -200,9 +200,9 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         nu, z = self.args
-        if nu.is_integer and z.is_real:
+        if nu.is_integer and z.is_extended_real:
             return True
 
     def _sage_(self):
@@ -279,7 +279,7 @@ class bessely(BesselBase):
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
         return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
@@ -379,9 +379,9 @@ class besseli(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
         return self._eval_rewrite_as_besselj(*self.args).rewrite(jn)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         nu, z = self.args
-        if nu.is_integer and z.is_real:
+        if nu.is_integer and z.is_extended_real:
             return True
 
     def _sage_(self):
@@ -463,7 +463,7 @@ class besselk(BesselBase):
         if ay:
             return ay.rewrite(yn)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
@@ -512,7 +512,7 @@ class hankel1(BesselBase):
 
     def _eval_conjugate(self):
         z = self.argument
-        if (z.is_real and z.is_negative) is False:
+        if z.is_extended_negative is False:
             return hankel2(self.order.conjugate(), z.conjugate())
 
 
@@ -556,7 +556,7 @@ class hankel2(BesselBase):
 
     def _eval_conjugate(self):
         z = self.argument
-        if (z.is_real and z.is_negative) is False:
+        if z.is_extended_negative is False:
             return hankel1(self.order.conjugate(), z.conjugate())
 
 
@@ -990,11 +990,11 @@ class AiryBase(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_is_real(self):
-        return self.args[0].is_real
+    def _eval_is_extended_real(self):
+        return self.args[0].is_extended_real
 
     def _as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_real:
+        if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
                 return (self.expand(deep, **hints), S.Zero)
@@ -1660,3 +1660,96 @@ class airybiprime(AiryBase):
                     pf = (d**m * z**(n*m)) / (d * z**n)**m
                     newarg = c * d**m * z**(n*m)
                     return S.Half * (sqrt(3)*(pf - S.One)*airyaiprime(newarg) + (pf + S.One)*airybiprime(newarg))
+
+
+class marcumq(Function):
+    r"""
+    The Marcum Q-function
+
+    It is defined by the meromorphic continuation of
+
+    .. math::
+        Q_m(a, b) = a^{- m + 1} \int_{b}^{\infty} x^{m} e^{- \frac{a^{2}}{2} - \frac{x^{2}}{2}} I_{m - 1}\left(a x\right)\, dx
+
+    Examples
+    ========
+
+    >>> from sympy import marcumq
+    >>> from sympy.abc import m, a, b, x
+    >>> marcumq(m, a, b)
+    marcumq(m, a, b)
+
+    Special values:
+
+    >>> marcumq(m, 0, b)
+    uppergamma(m, b**2/2)/gamma(m)
+    >>> marcumq(0, 0, 0)
+    0
+    >>> marcumq(0, a, 0)
+    1 - exp(-a**2/2)
+    >>> marcumq(1, a, a)
+    1/2 + exp(-a**2)*besseli(0, a**2)/2
+    >>> marcumq(2, a, a)
+    1/2 + exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2)
+
+    Differentiation with respect to a and b is supported:
+
+    >>> from sympy import diff
+    >>> diff(marcumq(m, a, b), a)
+    a*(-marcumq(m, a, b) + marcumq(m + 1, a, b))
+    >>> diff(marcumq(m, a, b), b)
+    -a**(1 - m)*b**m*exp(-a**2/2 - b**2/2)*besseli(m - 1, a*b)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Marcum_Q-function
+    .. [2] http://mathworld.wolfram.com/MarcumQ-Function.html
+    """
+
+    @classmethod
+    def eval(cls, m, a, b):
+        from sympy import exp, uppergamma
+        if a == 0:
+            if m == 0 and b == 0:
+                return S.Zero
+            return uppergamma(m, b**2 / 2) / gamma(m)
+
+        if m == 0 and b == 0:
+            return 1 - 1 / exp(a**2 / 2)
+
+        if a == b:
+            if m == 1:
+                return (1 + exp(-a**2) * besseli(0, a**2)) / 2
+            if m == 2:
+                return S.Half + S.Half * exp(-a**2) * besseli(0, a**2) + exp(-a**2) * besseli(1, a**2)
+
+    def fdiff(self, argindex=2):
+        from sympy import exp
+        m, a, b = self.args
+        if argindex == 2:
+            return a * (-marcumq(m, a, b) + marcumq(1+m, a, b))
+        elif argindex == 3:
+            return (-b**m / a**(m-1)) * exp(-(a**2 + b**2)/2) * besseli(m-1, a*b)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Integral(self, m, a, b, **kwargs):
+        from sympy import Integral, exp, Dummy, oo
+        x = kwargs.get('x', Dummy('x'))
+        return a ** (1 - m) * \
+               Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, oo])
+
+    def _eval_rewrite_as_Sum(self, m, a, b, **kwargs):
+        from sympy import Sum, exp, Dummy, oo
+        k = kwargs.get('k', Dummy('k'))
+        return exp(-(a**2 + b**2) / 2) * Sum((a/b)**k * besseli(k, a*b), [k, 1-m, oo])
+
+    def _eval_rewrite_as_besseli(self, m, a, b, **kwargs):
+        if a == b:
+            from sympy import exp
+            if m == 1:
+                return (1 + exp(-a**2) * besseli(0, a**2)) / 2
+            if m.is_Integer and m >= 2:
+                s = sum([besseli(i, a**2) for i in range(1, m)])
+                return S.Half + exp(-a**2) * besseli(0, a**2) / 2 + exp(-a**2) * s

@@ -132,7 +132,15 @@ def test_isprime():
     sieve.extend(3000)
     assert isprime(2819)
     assert not isprime(2931)
+    assert not isprime(2.0)
 
 
 def test_is_square():
     assert [i for i in range(25) if is_square(i)] == [0, 1, 4, 9, 16]
+
+    # issue #17044
+    assert not is_square(60 ** 3)
+    assert not is_square(60 ** 5)
+    assert not is_square(84 ** 7)
+    assert not is_square(105 ** 9)
+    assert not is_square(120 ** 3)

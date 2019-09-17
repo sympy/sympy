@@ -64,22 +64,22 @@ from itertools import product
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
     EulerGamma, oo, zoo, expand_func, Add, nan, Expr)
+from sympy.core.compatibility import default_sort_key, range, reduce
 from sympy.core.mod import Mod
-from sympy.core.compatibility import default_sort_key, range
-from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
         sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
         rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
+from sympy.functions.elementary.complexes import polarify, unpolarify
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
         HyperRep_cosasin, HyperRep_sinasin, meijerg)
-from sympy.simplify import simplify
-from sympy.functions.elementary.complexes import polarify, unpolarify
-from sympy.simplify.powsimp import powdenest
 from sympy.polys import poly, Poly
 from sympy.series import residue
+from sympy.simplify import simplify
+from sympy.simplify.powsimp import powdenest
+from sympy.utilities.iterables import sift
 
 # function to define "buckets"
 def _mod1(x):
@@ -525,6 +525,9 @@ class Hyper_Function(Expr):
         If the index pair contains parameters, then this is not truly an
         invariant, since the parameters cannot be sorted uniquely mod1.
 
+        Examples
+        ========
+
         >>> from sympy.simplify.hyperexpand import Hyper_Function
         >>> from sympy import S
         >>> ap = (S(1)/2, S(1)/3, S(-1)/2, -2)
@@ -674,6 +677,9 @@ class Formula(object):
     - func, the function
     - B, C, M (see _compute_basis)
 
+    Examples
+    ========
+
     >>> from sympy.abc import a, b, z
     >>> from sympy.simplify.hyperexpand import Formula, Hyper_Function
     >>> func = Hyper_Function((a/2, a/3 + b, (1+a)/2), (a, b, (a+b)/7))
@@ -729,7 +735,7 @@ class Formula(object):
 
     @property
     def closed_form(self):
-        return (self.C*self.B)[0]
+        return reduce(lambda s,m: s+m[0]*m[1], zip(self.C, self.B), S.Zero)
 
     def find_instantiations(self, func):
         """
@@ -821,6 +827,9 @@ class FormulaCollection(object):
         Given the suitable target ``func``, try to find an origin in our
         knowledge base.
 
+        Examples
+        ========
+
         >>> from sympy.simplify.hyperexpand import (FormulaCollection,
         ...     Hyper_Function)
         >>> f = FormulaCollection()
@@ -863,8 +872,8 @@ class FormulaCollection(object):
                     f.C.subs(repl), f.M.subs(repl))
             if not any(e.has(S.NaN, oo, -oo, zoo) for e in [f2.B, f2.M, f2.C]):
                 return f2
-        else:
-            return None
+
+        return None
 
 
 class MeijerFormula(object):
@@ -890,7 +899,7 @@ class MeijerFormula(object):
 
     @property
     def closed_form(self):
-        return (self.C*self.B)[0]
+        return reduce(lambda s,m: s+m[0]*m[1], zip(self.C, self.B), S.Zero)
 
     def try_instantiate(self, func):
         """
@@ -958,6 +967,9 @@ class Operator(object):
     def apply(self, obj, op):
         """
         Apply ``self`` to the object ``obj``, where the generator is ``op``.
+
+        Examples
+        ========
 
         >>> from sympy.simplify.hyperexpand import Operator
         >>> from sympy.polys.polytools import Poly
@@ -1502,6 +1514,9 @@ def devise_plan(target, origin, z):
     to the hypergeometric function ``target`` to yield ``origin``.
     Returns a list of operators.
 
+    Examples
+    ========
+
     >>> from sympy.simplify.hyperexpand import devise_plan, Hyper_Function
     >>> from sympy.abc import z
 
@@ -1967,8 +1982,8 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
 
         if premult == 1:
             C = C.applyfunc(make_simp(z0))
-        r = C*f.B.subs(f.z, z0)*premult
-        res = r[0].subs(z0, z)
+        r = reduce(lambda s,m: s+m[0]*m[1], zip(C, f.B.subs(f.z, z0)), S.Zero)*premult
+        res = r.subs(z0, z)
         if rewrite:
             res = res.rewrite(rewrite)
         return res
@@ -2053,6 +2068,9 @@ def devise_plan_meijer(fro, to, z):
     assumed that a1 can be shifted to a2, etc. The only thing this routine
     determines is the order of shifts to apply, nothing clever will be tried.
     It is also assumed that fro is suitable.
+
+    Examples
+    ========
 
     >>> from sympy.simplify.hyperexpand import (devise_plan_meijer,
     ...                                         G_Function)

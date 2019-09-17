@@ -95,11 +95,8 @@ class SingletonRegistry(Registry):
 
     def register(self, cls):
         # Make sure a duplicate class overwrites the old one
-        try:
-            if getattr(self, cls.__name__):
-                delattr(self, cls.__name__)
-        except AttributeError:
-            pass
+        if hasattr(self, cls.__name__):
+            delattr(self, cls.__name__)
         self._classes_to_install[cls.__name__] = cls
 
     def __getattr__(self, name):

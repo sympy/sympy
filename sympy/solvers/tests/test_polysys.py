@@ -124,7 +124,7 @@ def test_solve_triangulated():
 
 def test_solve_issue_3686():
     roots = solve_poly_system([((x - 5)**2/250000 + (y - S(5)/10)**2/250000) - 1, x], x, y)
-    assert roots == [(0, S(1)/2 + 15*sqrt(1111)), (0, S(1)/2 - 15*sqrt(1111))]
+    assert roots == [(0, S(1)/2 - 15*sqrt(1111)), (0, S(1)/2 + 15*sqrt(1111))]
 
     roots = solve_poly_system([((x - 5)**2/250000 + (y - 5.0/10)**2/250000) - 1, x], x, y)
     # TODO: does this really have to be so complicated?!

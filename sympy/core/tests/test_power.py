@@ -5,6 +5,7 @@ from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
     sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
 from sympy.series.order import O
@@ -264,7 +265,7 @@ def test_pow_as_base_exp():
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S(1), S(2))
 
 
-def test_issue_6100_12942():
+def test_issue_6100_12942_4473():
     x = Symbol('x')
     y = Symbol('y')
     assert x**1.0 != x
@@ -273,8 +274,9 @@ def test_issue_6100_12942():
     assert x**1.0 is not True
     assert x is not True
     assert x*y != (x*y)**1.0
+    # Pow != Symbol
     assert (x**1.0)**1.0 != x
-    assert (x**1.0)**2.0 == x**2
+    assert (x**1.0)**2.0 != x**2
     b = Basic()
     assert Pow(b, 1.0, evaluate=False) != b
     # if the following gets distributed as a Mul (x**1.0*y**1.0 then
@@ -360,7 +362,8 @@ def test_issue_7638():
     e = 1/(1 - sqrt(2))
     assert sqrt(e) == I/sqrt(-1 + sqrt(2))
     assert e**-S.Half == -I*sqrt(-1 + sqrt(2))
-    assert sqrt((cos(1)**2 + sin(1)**2 - 1)**(3 + I)).exp == S.Half
+    assert sqrt((cos(1)**2 + sin(1)**2 - 1)**(3 + I)).exp in [S.Half,
+                                                              S(3)/2 + I/2]
     assert sqrt(r**(4/S(3))) != r**(2/S(3))
     assert sqrt((p + I)**(4/S(3))) == (p + I)**(2/S(3))
     assert sqrt((p - p**2*I)**2) == p - p**2*I
@@ -452,3 +455,27 @@ def test_better_sqrt():
     assert sqrt(-I/2) == Mul(S.Half, 1 - I, evaluate=False)
     # fractional im part
     assert Pow(-9*I/2, 3/S(2)) == 27*(1 - I)**3/8
+
+
+def test_issue_2993():
+    x = Symbol('x')
+    assert str((2.3*x - 4)**0.3) == '1.5157165665104*(0.575*x - 1)**0.3'
+    assert str((2.3*x + 4)**0.3) == '1.5157165665104*(0.575*x + 1)**0.3'
+    assert str((-2.3*x + 4)**0.3) == '1.5157165665104*(1 - 0.575*x)**0.3'
+    assert str((-2.3*x - 4)**0.3) == '1.5157165665104*(-0.575*x - 1)**0.3'
+    assert str((2.3*x - 2)**0.3) == '1.28386201800527*(x - 0.869565217391304)**0.3'
+    assert str((-2.3*x - 2)**0.3) == '1.28386201800527*(-x - 0.869565217391304)**0.3'
+    assert str((-2.3*x + 2)**0.3) == '1.28386201800527*(0.869565217391304 - x)**0.3'
+    assert str((2.3*x + 2)**0.3) == '1.28386201800527*(x + 0.869565217391304)**0.3'
+    assert str((2.3*x - 4)**(S(1)/3)) == '1.5874010519682*(0.575*x - 1)**(1/3)'
+    eq = (2.3*x + 4)
+    assert eq**2 == 16.0*(0.575*x + 1)**2
+    assert (1/eq).args == (eq, -1)  # don't change trivial power
+
+
+def test_issue_17450():
+    assert (erf(cosh(1)**7)**I).is_real is None
+    assert (erf(cosh(1)**7)**I).is_imaginary is False
+    assert (Pow(exp(1+sqrt(2)), ((1-sqrt(2))*I*pi), evaluate=False)).is_real is None
+    assert ((-10)**(10*I*pi/3)).is_real is False
+    assert ((-5)**(4*I*pi)).is_real is False

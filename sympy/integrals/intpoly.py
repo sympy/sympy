@@ -51,7 +51,7 @@ def polytope_integrate(poly, expr=None, **kwargs):
     >>> from sympy.geometry.polygon import Polygon
     >>> from sympy.geometry.point import Point
     >>> from sympy.integrals.intpoly import polytope_integrate
-    >>> polygon = Polygon(Point(0,0), Point(0,1), Point(1,1), Point(1,0))
+    >>> polygon = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
     >>> polys = [1, x, y, x*y, x**2*y, x*y**2]
     >>> expr = x*y
     >>> polytope_integrate(polygon, expr)
@@ -62,9 +62,9 @@ def polytope_integrate(poly, expr=None, **kwargs):
     clockwise = kwargs.get('clockwise', False)
     max_degree = kwargs.get('max_degree', None)
 
-    if clockwise is True:
+    if clockwise:
         if isinstance(poly, Polygon):
-            poly = point_sort(poly)
+            poly = Polygon(*point_sort(poly.vertices), evaluate=False)
         else:
             raise TypeError("clockwise=True works for only 2-Polytope"
                             "V-representation input")
@@ -1009,19 +1009,20 @@ def point_sort(poly, normal=None, clockwise=True):
     >>> point_sort([Point(0, 0), Point(1, 0), Point(1, 1)])
     [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
     """
-    n = len(poly)
+    pts = poly.vertices if isinstance(poly, Polygon) else poly
+    n = len(pts)
     if n < 2:
-        return poly
+        return list(pts)
 
     order = S(1) if clockwise else S(-1)
-    dim = len(poly[0])
+    dim = len(pts[0])
     if dim == 2:
-        center = Point(sum(map(lambda vertex: vertex.x, poly)) / n,
-                       sum(map(lambda vertex: vertex.y, poly)) / n)
+        center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
+                        sum(map(lambda vertex: vertex.y, pts)) / n)
     else:
-        center = Point(sum(map(lambda vertex: vertex.x, poly)) / n,
-                       sum(map(lambda vertex: vertex.y, poly)) / n,
-                       sum(map(lambda vertex: vertex.z, poly)) / n)
+        center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
+                        sum(map(lambda vertex: vertex.y, pts)) / n,
+                        sum(map(lambda vertex: vertex.z, pts)) / n)
 
     def compare(a, b):
         if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
@@ -1054,9 +1055,7 @@ def point_sort(poly, normal=None, clockwise=True):
         elif dot_product > S.Zero:
             return order
 
-    if dim == 2:
-        return sorted(poly, key=cmp_to_key(compare))
-    return sorted(poly, key=cmp_to_key(compare3d))
+    return sorted(pts, key=cmp_to_key(compare if dim==2 else compare3d))
 
 
 def norm(point):

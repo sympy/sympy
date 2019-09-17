@@ -1,12 +1,9 @@
-from __future__ import division
-import warnings
-from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt
+from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, S
 from sympy import solve, simplify
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
-from sympy.utilities.pytest import slow
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import slow, warns_deprecated_sympy
 
 
 @slow
@@ -77,8 +74,7 @@ def test_linearize_rolling_disc_kane():
     KM = KanesMethod(N, [q1, q2, q3, q4, q5], [u1, u2, u3], kd_eqs=kindiffs,
             q_dependent=[q6], configuration_constraints=f_c,
             u_dependent=[u4, u5, u6], velocity_constraints=f_v)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         (fr, fr_star) = KM.kanes_equations(FL, BL)
 
     # Test generalized form equations
@@ -121,7 +117,7 @@ def test_linearize_rolling_disc_kane():
                     [0, 0, 0, 0, 0, 0, 1, 0],
                     [sin(q1)*q3d, 0, 0, 0, 0, -sin(q1), -cos(q1), 0],
                     [-cos(q1)*q3d, 0, 0, 0, 0, cos(q1), -sin(q1), 0],
-                    [0, 4/5, 0, 0, 0, 0, 0, 6*q3d/5],
+                    [0, S(4)/5, 0, 0, 0, 0, 0, 6*q3d/5],
                     [0, 0, 0, 0, 0, 0, 0, 0],
                     [0, 0, 0, 0, 0, -2*q3d, 0, 0]])
     B_sol = Matrix([])
@@ -162,8 +158,7 @@ def test_linearize_pendulum_kane_minimal():
 
     # Solve for eom with kanes method
     KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], kd_eqs=kde)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
 
     # Linearize
@@ -223,8 +218,7 @@ def test_linearize_pendulum_kane_nonminimal():
     KM = KanesMethod(N, q_ind=[q2], u_ind=[u2], q_dependent=[q1],
             u_dependent=[u1], configuration_constraints=f_c,
             velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
 
     # Set the operating point to be straight down, and non-moving

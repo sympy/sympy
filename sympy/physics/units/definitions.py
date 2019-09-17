@@ -1,11 +1,10 @@
-from sympy import Rational, pi, sqrt, sympify, S
+from sympy import Rational, pi, sqrt, S
 from sympy.physics.units.quantities import Quantity
-from sympy.physics.units.dimensions import (
+from sympy.physics.units.dimensions import (dimsys_default, Dimension,
     acceleration, action, amount_of_substance, capacitance, charge,
-    conductance, current, energy, force, frequency, information, impedance, inductance,
-    length, luminous_intensity, magnetic_density, magnetic_flux, mass, power,
-    pressure, temperature, time, velocity, voltage)
-from sympy.physics.units.dimensions import dimsys_default, Dimension
+    conductance, current, energy, force, frequency, information, impedance,
+    inductance, length, luminous_intensity, magnetic_density, magnetic_flux,
+    mass, power, pressure, temperature, time, velocity, voltage)
 from sympy.physics.units.prefixes import (
     centi, deci, kilo, micro, milli, nano, pico,
     kibi, mebi, gibi, tebi, pebi, exbi)
@@ -16,7 +15,7 @@ One = S.One
 
 # Dimensionless:
 
-percent = percents = Quantity("percent")
+percent = percents = Quantity("percent", latex_repr=r"\%")
 percent.set_dimension(One)
 percent.set_scale_factor(Rational(1, 100))
 
@@ -27,11 +26,11 @@ permille.set_scale_factor(Rational(1, 1000))
 
 # Angular units (dimensionless)
 
-rad = radian = radians = Quantity("radian")
+rad = radian = radians = Quantity("radian", abbrev="rad")
 radian.set_dimension(One)
 radian.set_scale_factor(One)
 
-deg = degree = degrees = Quantity("degree", abbrev="deg")
+deg = degree = degrees = Quantity("degree", abbrev="deg", latex_repr=r"^\circ")
 degree.set_dimension(One)
 degree.set_scale_factor(pi/180)
 
@@ -92,7 +91,7 @@ mg = milligram = milligrams = Quantity("milligram", abbrev="mg")
 milligram.set_dimension(mass)
 milligram.set_scale_factor(milli*gram)
 
-ug = microgram = micrograms = Quantity("microgram", abbrev="ug")
+ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\mu\text{g}")
 microgram.set_dimension(mass)
 microgram.set_scale_factor(micro*gram)
 
@@ -129,7 +128,7 @@ volt = volts = v = V = Quantity("volt", abbrev='V')
 volt.set_dimension(voltage)
 volt.set_scale_factor(joule/coulomb)
 
-ohm = ohms = Quantity("ohm", abbrev='ohm')
+ohm = ohms = Quantity("ohm", abbrev='ohm', latex_repr=r"\Omega")
 ohm.set_dimension(impedance)
 ohm.set_scale_factor(volt/ampere)
 
@@ -156,16 +155,16 @@ weber.set_scale_factor(joule/ampere)
 
 # Other derived units:
 
-optical_power = dioptre = D = Quantity("dioptre")
+optical_power = dioptre = diopter = D = Quantity("dioptre")
 dioptre.set_dimension(1/length)
 dioptre.set_scale_factor(1/meter)
 
-lux = lx = Quantity("lux")
+lux = lx = Quantity("lux", abbrev="lx")
 lux.set_dimension(luminous_intensity/length**2)
 lux.set_scale_factor(steradian*candela/meter**2)
 
 # katal is the SI unit of catalytic activity
-katal = kat = Quantity("katal")
+katal = kat = Quantity("katal", abbrev="kat")
 katal.set_dimension(amount_of_substance/time)
 katal.set_scale_factor(mol/second)
 
@@ -175,7 +174,7 @@ gray.set_dimension(energy/mass)
 gray.set_scale_factor(meter**2/second**2)
 
 # becquerel is the SI unit of radioactivity
-becquerel = Bq = Quantity("becquerel")
+becquerel = Bq = Quantity("becquerel", abbrev="Bq")
 becquerel.set_dimension(1/time)
 becquerel.set_scale_factor(1/second)
 
@@ -198,11 +197,12 @@ mm = millimeter = millimeters = Quantity("millimeter", abbrev="mm")
 millimeter.set_dimension(length)
 millimeter.set_scale_factor(milli*meter)
 
-um = micrometer = micrometers = micron = microns = Quantity("micrometer", abbrev="um")
+um = micrometer = micrometers = micron = microns = \
+    Quantity("micrometer", abbrev="um", latex_repr=r'\mu\text{m}')
 micrometer.set_dimension(length)
 micrometer.set_scale_factor(micro*meter)
 
-nm = nanometer = nanometers = Quantity("nanometer", abbrev="nn")
+nm = nanometer = nanometers = Quantity("nanometer", abbrev="nm")
 nanometer.set_dimension(length)
 nanometer.set_scale_factor(nano*meter)
 
@@ -257,7 +257,7 @@ ms = millisecond = milliseconds = Quantity("millisecond", abbrev="ms")
 millisecond.set_dimension(time)
 millisecond.set_scale_factor(milli*second)
 
-us = microsecond = microseconds = Quantity("microsecond", abbrev="us")
+us = microsecond = microseconds = Quantity("microsecond", abbrev="us", latex_repr=r'\mu\text{s}')
 microsecond.set_dimension(time)
 microsecond.set_scale_factor(micro*second)
 
@@ -321,34 +321,45 @@ year = years = tropical_year
 #### CONSTANTS ####
 
 # Newton constant
+# REF: NIST SP 959 (June 2019)
 G = gravitational_constant = Quantity("gravitational_constant", abbrev="G")
 gravitational_constant.set_dimension(length**3*mass**-1*time**-2)
-gravitational_constant.set_scale_factor(6.67408e-11*m**3/(kg*s**2))
+gravitational_constant.set_scale_factor(6.67430e-11*m**3/(kg*s**2))
 
 # speed of light
 c = speed_of_light = Quantity("speed_of_light", abbrev="c")
 speed_of_light.set_dimension(velocity)
 speed_of_light.set_scale_factor(299792458*meter/second)
 
-# Reduced Planck constant
-hbar = Quantity("hbar", abbrev="hbar")
-hbar.set_dimension(action)
-hbar.set_scale_factor(1.05457266e-34*joule*second)
+# elementary charge
+# REF: NIST SP 959 (June 2019)
+elementary_charge = Quantity("elementary_charge", abbrev="e")
+elementary_charge.set_dimension(charge)
+elementary_charge.set_scale_factor(1.602176634e-19*coulomb)
 
 # Planck constant
+# REF: NIST SP 959 (June 2019)
 planck = Quantity("planck", abbrev="h")
 planck.set_dimension(action)
-planck.set_scale_factor(2*pi*hbar)
+planck.set_scale_factor(6.62607015e-34*joule*second)
+
+# Reduced Planck constant
+# REF: NIST SP 959 (June 2019)
+hbar = Quantity("hbar", abbrev="hbar")
+hbar.set_dimension(action)
+hbar.set_scale_factor(planck / (2 * pi))
 
 # Electronvolt
+# REF: NIST SP 959 (June 2019)
 eV = electronvolt = electronvolts = Quantity("electronvolt", abbrev="eV")
 electronvolt.set_dimension(energy)
-electronvolt.set_scale_factor(1.60219e-19*joule)
+electronvolt.set_scale_factor(1.602176634e-19*joule)
 
 # Avogadro number
+# REF: NIST SP 959 (June 2019)
 avogadro_number = Quantity("avogadro_number")
 avogadro_number.set_dimension(One)
-avogadro_number.set_scale_factor(6.022140857e23)
+avogadro_number.set_scale_factor(6.02214076e23)
 
 # Avogadro constant
 avogadro = avogadro_constant = Quantity("avogadro_constant")
@@ -356,39 +367,43 @@ avogadro_constant.set_dimension(amount_of_substance**-1)
 avogadro_constant.set_scale_factor(avogadro_number / mol)
 
 # Boltzmann constant
+# REF: NIST SP 959 (June 2019)
 boltzmann = boltzmann_constant = Quantity("boltzmann_constant")
 boltzmann_constant.set_dimension(energy/temperature)
-boltzmann_constant.set_scale_factor(1.38064852e-23*joule/kelvin)
+boltzmann_constant.set_scale_factor(1.380649e-23*joule/kelvin)
 
 # Stefan-Boltzmann constant
+# REF: NIST SP 959 (June 2019)
 stefan = stefan_boltzmann_constant = Quantity("stefan_boltzmann_constant")
 stefan_boltzmann_constant.set_dimension(energy*time**-1*length**-2*temperature**-4)
-stefan_boltzmann_constant.set_scale_factor(5.670367e-8*joule/(s*m**2*kelvin**4))
+stefan_boltzmann_constant.set_scale_factor(pi**2 * boltzmann_constant**4 / (60 * hbar**3 * speed_of_light ** 2))
 
 # Atomic mass
+# REF: NIST SP 959 (June 2019)
 amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
 atomic_mass_constant.set_dimension(mass)
-atomic_mass_constant.set_scale_factor(1.660539040e-24*gram)
+atomic_mass_constant.set_scale_factor(1.66053906660e-24*gram)
 
 # Molar gas constant
+# REF: NIST SP 959 (June 2019)
 R = molar_gas_constant = Quantity("molar_gas_constant", abbrev="R")
 molar_gas_constant.set_dimension(energy/(temperature * amount_of_substance))
-molar_gas_constant.set_scale_factor(8.3144598*joule/kelvin/mol)
+molar_gas_constant.set_scale_factor(boltzmann_constant * avogadro_constant)
 
 # Faraday constant
 faraday_constant = Quantity("faraday_constant")
 faraday_constant.set_dimension(charge/amount_of_substance)
-faraday_constant.set_scale_factor(96485.33289*C/mol)
+faraday_constant.set_scale_factor(elementary_charge * avogadro_constant)
 
 # Josephson constant
 josephson_constant = Quantity("josephson_constant", abbrev="K_j")
 josephson_constant.set_dimension(frequency/voltage)
-josephson_constant.set_scale_factor(483597.8525e9*hertz/V)
+josephson_constant.set_scale_factor(0.5 * planck / elementary_charge)
 
 # Von Klitzing constant
 von_klitzing_constant = Quantity("von_klitzing_constant", abbrev="R_k")
 von_klitzing_constant.set_dimension(voltage/current)
-von_klitzing_constant.set_scale_factor(25812.8074555*ohm)
+von_klitzing_constant.set_scale_factor(hbar / elementary_charge ** 2)
 
 # Acceleration due to gravity (on the Earth surface)
 gee = gees = acceleration_due_to_gravity = Quantity("acceleration_due_to_gravity", abbrev="g")
@@ -406,12 +421,13 @@ vacuum_permittivity.set_dimension(capacitance/length)
 vacuum_permittivity.set_scale_factor(1/(u0 * c**2))
 
 # vacuum impedance:
-Z0 = vacuum_impedance = Quantity("vacuum_impedance", abbrev='Z_0')
+Z0 = vacuum_impedance = Quantity("vacuum_impedance", abbrev='Z_0', latex_repr=r'Z_{0}')
 vacuum_impedance.set_dimension(impedance)
 vacuum_impedance.set_scale_factor(u0 * c)
 
 # Coulomb's constant:
-coulomb_constant = coulombs_constant = electric_force_constant = Quantity("coulomb_constant", abbrev="k_e")
+coulomb_constant = coulombs_constant = electric_force_constant = \
+    Quantity("coulomb_constant", abbrev="k_e")
 coulomb_constant.set_dimension(force*length**2/charge**2)
 coulomb_constant.set_scale_factor(1/(4*pi*vacuum_permittivity))
 
@@ -463,23 +479,24 @@ astronomical_unit.set_scale_factor(149597870691*meter)
 
 
 # Fundamental Planck units:
-planck_mass = Quantity("planck_mass", abbrev="m_P")
+planck_mass = Quantity("planck_mass", abbrev="m_P", latex_repr=r'm_\text{P}')
 planck_mass.set_dimension(mass)
 planck_mass.set_scale_factor(sqrt(hbar*speed_of_light/G))
 
-planck_time = Quantity("planck_time", abbrev="t_P")
+planck_time = Quantity("planck_time", abbrev="t_P", latex_repr=r't_\text{P}')
 planck_time.set_dimension(time)
 planck_time.set_scale_factor(sqrt(hbar*G/speed_of_light**5))
 
-planck_temperature = Quantity("planck_temperature", abbrev="T_P")
+planck_temperature = Quantity("planck_temperature", abbrev="T_P",
+                              latex_repr=r'T_\text{P}')
 planck_temperature.set_dimension(temperature)
 planck_temperature.set_scale_factor(sqrt(hbar*speed_of_light**5/G/boltzmann**2))
 
-planck_length = Quantity("planck_length", abbrev="l_P")
+planck_length = Quantity("planck_length", abbrev="l_P", latex_repr=r'l_\text{P}')
 planck_length.set_dimension(length)
 planck_length.set_scale_factor(sqrt(hbar*G/speed_of_light**3))
 
-planck_charge = Quantity("planck_charge", abbrev="q_P")
+planck_charge = Quantity("planck_charge", abbrev="q_P", latex_repr=r'q_\text{P}')
 planck_charge.set_dimension(charge)
 planck_charge.set_scale_factor(sqrt(4*pi*electric_constant*hbar*speed_of_light))
 
@@ -497,19 +514,19 @@ planck_momentum = Quantity("planck_momentum")
 planck_momentum.set_dimension(mass*velocity)
 planck_momentum.set_scale_factor(planck_mass * speed_of_light)
 
-planck_energy = Quantity("planck_energy", abbrev="E_P")
+planck_energy = Quantity("planck_energy", abbrev="E_P", latex_repr=r'E_\text{P}')
 planck_energy.set_dimension(energy)
 planck_energy.set_scale_factor(planck_mass * speed_of_light**2)
 
-planck_force = Quantity("planck_force", abbrev="F_P")
+planck_force = Quantity("planck_force", abbrev="F_P", latex_repr=r'F_\text{P}')
 planck_force.set_dimension(force)
 planck_force.set_scale_factor(planck_energy / planck_length)
 
-planck_power = Quantity("planck_power", abbrev="P_P")
+planck_power = Quantity("planck_power", abbrev="P_P", latex_repr=r'P_\text{P}')
 planck_power.set_dimension(power)
 planck_power.set_scale_factor(planck_energy / planck_time)
 
-planck_density = Quantity("planck_density", abbrev="rho_P")
+planck_density = Quantity("planck_density", abbrev="rho_P", latex_repr=r'\rho_\text{P}')
 planck_density.set_dimension(mass/length**3)
 planck_density.set_scale_factor(planck_mass / planck_length**3)
 
@@ -517,31 +534,33 @@ planck_energy_density = Quantity("planck_energy_density", abbrev="rho^E_P")
 planck_energy_density.set_dimension(energy / length**3)
 planck_energy_density.set_scale_factor(planck_energy / planck_length**3)
 
-planck_intensity = Quantity("planck_intensity", abbrev="I_P")
+planck_intensity = Quantity("planck_intensity", abbrev="I_P", latex_repr=r'I_\text{P}')
 planck_intensity.set_dimension(mass * time**(-3))
 planck_intensity.set_scale_factor(planck_energy_density * speed_of_light)
 
-planck_angular_frequency = Quantity("planck_angular_frequency", abbrev="omega_P")
+planck_angular_frequency = Quantity("planck_angular_frequency", abbrev="omega_P",
+                                    latex_repr=r'\omega_\text{P}')
 planck_angular_frequency.set_dimension(1 / time)
 planck_angular_frequency.set_scale_factor(1 / planck_time)
 
-planck_pressure = Quantity("planck_pressure", abbrev="p_P")
+planck_pressure = Quantity("planck_pressure", abbrev="p_P", latex_repr=r'p_\text{P}')
 planck_pressure.set_dimension(pressure)
 planck_pressure.set_scale_factor(planck_force / planck_length**2)
 
-planck_current = Quantity("planck_current", abbrev="I_P")
+planck_current = Quantity("planck_current", abbrev="I_P", latex_repr=r'I_\text{P}')
 planck_current.set_dimension(current)
 planck_current.set_scale_factor(planck_charge / planck_time)
 
-planck_voltage = Quantity("planck_voltage", abbrev="V_P")
+planck_voltage = Quantity("planck_voltage", abbrev="V_P", latex_repr=r'V_\text{P}')
 planck_voltage.set_dimension(voltage)
 planck_voltage.set_scale_factor(planck_energy / planck_charge)
 
-planck_impedance = Quantity("planck_impedance", abbrev="Z_P")
+planck_impedance = Quantity("planck_impedance", abbrev="Z_P", latex_repr=r'Z_\text{P}')
 planck_impedance.set_dimension(impedance)
 planck_impedance.set_scale_factor(planck_voltage / planck_current)
 
-planck_acceleration = Quantity("planck_acceleration", abbrev="a_P")
+planck_acceleration = Quantity("planck_acceleration", abbrev="a_P",
+                               latex_repr=r'a_\text{P}')
 planck_acceleration.set_dimension(acceleration)
 planck_acceleration.set_scale_factor(speed_of_light / planck_time)
 
@@ -579,6 +598,14 @@ exbibyte = exbibytes = Quantity("exbibyte")
 exbibyte.set_dimension(information)
 exbibyte.set_scale_factor(exbi*byte)
 
+# Older units for radioactivity
+curie = Ci = Quantity("curie", abbrev="Ci")
+curie.set_dimension(1/time)
+curie.set_scale_factor(37000000000*becquerel)
+
+rutherford = Rd = Quantity("rutherford", abbrev="Rd")
+rutherford.set_dimension(1/time)
+rutherford.set_scale_factor(1000000*becquerel)
 
 # check that scale factors are the right SI dimensions:
 for _scale_factor, _dimension in zip(

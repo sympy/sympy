@@ -33,10 +33,9 @@ complete source code files.
 
 from __future__ import print_function, division
 
-from sympy.core import S, numbers, Rational, Float, Lambda
+from sympy.core import S, Rational, Float, Lambda
 from sympy.core.compatibility import string_types, range
-from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.printing.precedence import precedence
+from sympy.printing.codeprinter import CodePrinter
 
 # Rust's methods for integer and float can be found at here :
 #
@@ -300,7 +299,7 @@ class RustCodePrinter(CodePrinter):
             cond_func = self.known_functions[expr.func.__name__]
             func = None
             style = 1
-            if isinstance(cond_func, str):
+            if isinstance(cond_func, string_types):
                 func = cond_func
             else:
                 for cond, func, style in cond_func:
@@ -358,6 +357,12 @@ class RustCodePrinter(CodePrinter):
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
         return '%d_f64/%d.0' % (p, q)
+
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array

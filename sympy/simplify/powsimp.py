@@ -201,10 +201,14 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # check for base and negated base pairs
         be = list(c_powers.items())
         _n = S.NegativeOne
-        for i, (b, e) in enumerate(be):
-            if ((-b).is_Symbol or b.is_Add) and -b in c_powers:
-                if (b.is_positive in (0, 1) or e.is_integer):
-                    c_powers[-b] += c_powers.pop(b)
+        for b, e in be:
+            if (b.is_Symbol or b.is_Add) and -b in c_powers and b in c_powers:
+                if (b.is_positive is not None or e.is_integer):
+                    if e.is_integer or b.is_negative:
+                        c_powers[-b] += c_powers.pop(b)
+                    else:  # (-b).is_positive so use its e
+                        e = c_powers.pop(-b)
+                        c_powers[b] += e
                     if _n in c_powers:
                         c_powers[_n] += e
                     else:
@@ -282,7 +286,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 common_b[b] = e
             if b[1] != 1 and b[0].is_Mul:
                 bases.append(b)
-        c_powers = [(b, e) for b, e in common_b.items() if e]
         bases.sort(key=default_sort_key)  # this makes tie-breaking canonical
         bases.sort(key=measure, reverse=True)  # handle longest first
         for base in bases:

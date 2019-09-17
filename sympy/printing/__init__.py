@@ -5,8 +5,8 @@ __all__ = []
 from .pretty import pager_print, pretty, pretty_print, pprint, pprint_use_unicode, pprint_try_use_unicode
 __all__ += ['pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode', 'pprint_try_use_unicode']
 
-from .latex import latex, print_latex
-__all__ += ['latex', 'print_latex']
+from .latex import latex, print_latex, multiline_latex
+__all__ += ['latex', 'print_latex', 'multiline_latex']
 
 from .mathml import mathml, print_mathml
 __all__ += ['mathml', 'print_mathml']

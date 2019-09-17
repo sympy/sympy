@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import raises
 from sympy import (symbols, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
-    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild)
+    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
@@ -243,15 +243,42 @@ def test_DMP():
     assert srepr(ZZ.old_poly_ring(x)([1, 2])) == \
         "DMP([1, 2], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x')))"
 
+
 def test_FiniteExtension():
     assert srepr(FiniteExtension(Poly(x**2 + 1, x))) == \
         "FiniteExtension(Poly(x**2 + 1, x, domain='ZZ'))"
+
 
 def test_ExtensionElement():
     A = FiniteExtension(Poly(x**2 + 1, x))
     assert srepr(A.generator) == \
         "ExtElem(DMP([1, 0], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x'))), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
 
+
 def test_BooleanAtom():
     assert srepr(true) == "true"
     assert srepr(false) == "false"
+
+
+def test_Integers():
+    sT(S.Integers, "Integers")
+
+
+def test_Naturals():
+    sT(S.Naturals, "Naturals")
+
+
+def test_Naturals0():
+    sT(S.Naturals0, "Naturals0")
+
+
+def test_Reals():
+    sT(S.Reals, "Reals")
+
+def test_matrix_expressions():
+    n = symbols('n', integer=True)
+    A = MatrixSymbol("A", n, n)
+    B = MatrixSymbol("B", n, n)
+    sT(A, "MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True))")
+    sT(A*B, "MatMul(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
+    sT(A + B, "MatAdd(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")

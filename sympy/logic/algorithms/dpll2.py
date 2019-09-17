@@ -14,8 +14,8 @@ from collections import defaultdict
 from heapq import heappush, heappop
 
 from sympy.core.compatibility import range
-from sympy import default_sort_key, ordered
-from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
+from sympy import ordered
+from sympy.assumptions.cnf import EncodedCNF
 
 
 def dpll_satisfiable(expr, all_models=False):
@@ -35,16 +35,18 @@ def dpll_satisfiable(expr, all_models=False):
     False
 
     """
-    clauses = conjuncts(to_cnf(expr))
-    if False in clauses:
+    if not isinstance(expr, EncodedCNF):
+        exprs = EncodedCNF()
+        exprs.add_prop(expr)
+        expr = exprs
+
+    # Return UNSAT when False (encoded as 0) is present in the CNF
+    if {0} in expr.data:
         if all_models:
             return (f for f in [False])
         return False
-    symbols = sorted(_find_predicates(expr), key=default_sort_key)
-    symbols_int_repr = range(1, len(symbols) + 1)
-    clauses_int_repr = to_int_repr(clauses, symbols)
 
-    solver = SATSolver(clauses_int_repr, symbols_int_repr, set(), symbols)
+    solver = SATSolver(expr.data, expr.variables, set(), expr.symbols)
     models = solver._find_model()
 
     if all_models:
@@ -183,6 +185,7 @@ class SATSolver(object):
         ... {3, -2}], {1, 2, 3}, set(), [A, B, C])
         >>> list(l._find_model())
         [{A: True, B: False, C: False}, {A: True, B: True, C: True}]
+
         """
 
         # We use this variable to keep track of if we should flip a
@@ -276,6 +279,7 @@ class SATSolver(object):
         False
         >>> l._current_level.var_settings
         {1, 2}
+
         """
         return self.levels[-1]
 
@@ -295,6 +299,7 @@ class SATSolver(object):
         False
         >>> l._clause_sat(1)
         True
+
         """
         for lit in self.clauses[cls]:
             if lit in self.var_settings:
@@ -316,6 +321,7 @@ class SATSolver(object):
         True
         >>> l._is_sentinel(-3, 1)
         False
+
         """
         return cls in self.sentinels[lit]
 
@@ -348,6 +354,7 @@ class SATSolver(object):
         ...     pass
         >>> l.var_settings
         {-1}
+
         """
         self.var_settings.add(lit)
         self._current_level.var_settings.add(lit)
@@ -392,6 +399,7 @@ class SATSolver(object):
         >>> level = l._current_level
         >>> level.decision, level.var_settings, level.flipped
         (0, {1}, False)
+
         """
         # Undo the variable settings
         for lit in self._current_level.var_settings:
@@ -431,6 +439,7 @@ class SATSolver(object):
         >>> l.sentinels
         {-3: {0, 2}, -2: {3, 4}, -1: set(), 2: {0, 3},
         ...3: {2, 4}}
+
         """
         changed = True
         while changed:
@@ -487,6 +496,7 @@ class SATSolver(object):
 
         >>> l.lit_scores
         {-3: -1.0, -2: -1.0, -1: 0.0, 1: 0.0, 2: -1.0, 3: -1.0}
+
         """
         # We divide every literal score by 2 for a decay factor
         #  Note: This doesn't change the heap property
@@ -512,6 +522,7 @@ class SATSolver(object):
 
         >>> l.lit_heap
         [(-2.0, -2), (-2.0, 2), (0.0, -1), (0.0, 1), (-2.0, 3)]
+
         """
         if len(self.lit_heap) == 0:
             return 0
@@ -545,6 +556,7 @@ class SATSolver(object):
         >>> l.lit_heap
         [(-2.0, -3), (-2.0, -2), (-2.0, -2), (-2.0, 2), (-2.0, 3), (0.0, -1),
         ...(-2.0, 2), (0.0, 1)]
+
         """
         var = abs(lit)
         heappush(self.lit_heap, (self.lit_scores[var], var))
@@ -571,6 +583,7 @@ class SATSolver(object):
         1
         >>> l.lit_scores
         {-3: -1.0, -2: -2.0, -1: 0.0, 1: 0.0, 2: -1.0, 3: -2.0}
+
         """
         self.num_learned_clauses += 1
         for lit in cls:
@@ -602,6 +615,7 @@ class SATSolver(object):
         [[2, -3], [1], [3, -3], [2, -2], [3, -2], [3]]
         >>> l.sentinels
         {-3: {0, 2}, -2: {3, 4}, 2: {0, 3}, 3: {2, 4, 5}}
+
         """
         cls_num = len(self.clauses)
         self.clauses.append(cls)
@@ -628,6 +642,7 @@ class SATSolver(object):
         {1: True, 2: False, 3: False}
         >>> l._simple_compute_conflict()
         [3]
+
         """
         return [-(level.decision) for level in self.levels[1:]]
 

@@ -2,24 +2,18 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.polytools import (
-    poly_from_expr, parallel_poly_from_expr, Poly)
-from sympy.polys.polyoptions import allowed_flags
-
-from sympy.polys.specialpolys import (
-    symmetric_poly, interpolating_poly)
-
+from sympy.core import S, Basic, Add, Mul, symbols
+from sympy.core.compatibility import range
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
     MultivariatePolynomialError, OptionError)
-
+from sympy.polys.polyoptions import allowed_flags
+from sympy.polys.polytools import (
+    poly_from_expr, parallel_poly_from_expr, Poly)
+from sympy.polys.specialpolys import (
+    symmetric_poly, interpolating_poly)
 from sympy.utilities import numbered_symbols, take, public
-
-from sympy.core import S, Basic, Add, Mul, symbols
-
-from sympy.core.compatibility import range
-
-from sympy.functions.combinatorial.factorials import factorial
 
 @public
 def symmetrize(F, *gens, **args):
@@ -72,17 +66,17 @@ def symmetrize(F, *gens, **args):
                 result.append((expr, S.Zero))
             else:
                 raise ComputationFailed('symmetrize', len(F), exc)
-        else:
-            if not iterable:
-                result, = result
 
-            if not exc.opt.formal:
-                return result
+        if not iterable:
+            result, = result
+
+        if not exc.opt.formal:
+            return result
+        else:
+            if iterable:
+                return result, []
             else:
-                if iterable:
-                    return result, []
-                else:
-                    return result + ([],)
+                return result + ([],)
 
     polys, symbols = [], opt.symbols
     gens, dom = opt.gens, opt.domain
@@ -277,6 +271,7 @@ def rational_interpolate(data, degnum, X=symbols('x')):
 
     Examples
     ========
+
     >>> from sympy.polys.polyfuncs import rational_interpolate
 
     >>> data = [(1, -210), (2, -35), (3, 105), (4, 231), (5, 350), (6, 465)]
@@ -299,8 +294,9 @@ def rational_interpolate(data, degnum, X=symbols('x')):
 
     References
     ==========
-    Algorithm is adapted from:
-        http://axiom-wiki.newsynthesis.org/RationalInterpolation
+
+    .. [1] Algorithm is adapted from:
+           http://axiom-wiki.newsynthesis.org/RationalInterpolation
 
     """
     from sympy.matrices.dense import ones

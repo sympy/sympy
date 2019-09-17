@@ -16,22 +16,17 @@ each function for more information.
 """
 from __future__ import print_function, division
 
-from sympy.core import Dummy, ilcm, Add, Mul, Pow, S, oo
-
-from sympy.matrices import zeros, eye
-from sympy.polys.polymatrix import PolyMatrix as Matrix
-
-from sympy.solvers import solve
-
-from sympy.polys import Poly, lcm, cancel, sqf_list
-
-from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    NonElementaryIntegralException, residue_reduce, splitfactor,
-    residue_reduce_derivation, DecrementLevel, recognize_log_derivative)
-from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
-    bound_degree, spde, solve_poly_rde)
+from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 from sympy.core.compatibility import reduce, range
-from sympy.utilities.misc import debug
+from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
+    bound_degree)
+from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
+    residue_reduce, splitfactor, residue_reduce_derivation, DecrementLevel,
+    recognize_log_derivative)
+from sympy.matrices import zeros, eye
+from sympy.polys import Poly, lcm, cancel, sqf_list
+from sympy.polys.polymatrix import PolyMatrix as Matrix
+from sympy.solvers import solve
 
 
 def prde_normal_denom(fa, fd, G, DE):
@@ -781,7 +776,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     if DE.case in ['base', 'primitive', 'exp', 'tan']:
         hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es)  # lcm(ds, es1, ..., esm)
         a = hn*hs
-        b = -derivation(hn, DE) - (hn*derivation(hs, DE)).quo(hs)
+        b -= (hn*derivation(hs, DE)).quo(hs)
         mu = min(order_at_oo(fa, fd, DE.t), min([order_at_oo(ga, gd, DE.t) for
             ga, gd in G]))
         # So far, all the above are also nonlinear or Liouvillian, but if this
@@ -801,7 +796,7 @@ def limited_integrate(fa, fd, G, DE):
     Solves the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
     """
     fa, fd = fa*Poly(1/fd.LC(), DE.t), fd.monic()
-    # interpretting limited integration problem as a
+    # interpreting limited integration problem as a
     # parametric Risch DE problem
     Fa = Poly(0, DE.t)
     Fd = Poly(1, DE.t)
@@ -1097,7 +1092,6 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     is_log_deriv_k_t_radical_in_field, is_deriv_k
 
     """
-    H = []
     if Df:
         dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)).cancel(fd**2,
             include=True)

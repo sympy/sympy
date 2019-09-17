@@ -1,8 +1,5 @@
-from __future__ import print_function, division
-
 from sympy import sqrt, pi, E, exp
-from sympy.core import S, Symbol, symbols, I
-from sympy.core.compatibility import range
+from sympy.core import S, symbols, I
 from sympy.discrete.convolutions import (
     convolution, convolution_fft, convolution_ntt, convolution_fwht,
     convolution_subset, covering_product, intersecting_product)
@@ -143,6 +140,8 @@ def test_cyclic_convolution():
              p*w + r*u + s*y + t*x,
              p*x + q*w + r*v + s*u,
              p*y + t*u]
+
+    raises(ValueError, lambda: convolution([1, 2, 3], [4, 5, 6], cycle=-1))
 
 
 def test_convolution_fft():

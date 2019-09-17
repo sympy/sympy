@@ -1,7 +1,7 @@
 from sympy import (
     symbols, powsimp, symbols, MatrixSymbol, sqrt, pi, Mul, gamma, Function,
     S, I, exp, simplify, sin, E, log, hyper, Symbol, Dummy, powdenest, root,
-    Rational, oo)
+    Rational, oo, signsimp)
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -117,11 +117,16 @@ def test_powsimp_negated_base():
     assert powsimp((-x + y)/sqrt(x - y)) == -sqrt(x - y)
     assert powsimp((-x + y)*(-z + y)/sqrt(x - y)/sqrt(z - y)) == sqrt(x - y)*sqrt(z - y)
     p = symbols('p', positive=True)
-    assert powsimp((-p)**a/p**a) == (-1)**a
+    reps = {p: 2, a: S.Half}
+    assert powsimp((-p)**a/p**a).subs(reps) == ((-1)**a).subs(reps)
+    assert powsimp((-p)**a*p**a).subs(reps) == ((-p**2)**a).subs(reps)
     n = symbols('n', negative=True)
-    assert powsimp((-n)**a/n**a) == (-1)**a
+    reps = {p: -2, a: S.Half}
+    assert powsimp((-n)**a/n**a).subs(reps) == (-1)**(-a).subs(a, S.Half)
+    assert powsimp((-n)**a*n**a).subs(reps) == ((-n**2)**a).subs(reps)
     # if x is 0 then the lhs is 0**a*oo**a which is not (-1)**a
-    assert powsimp((-x)**a/x**a) != (-1)**a
+    eq = (-x)**a/x**a
+    assert powsimp(eq) == eq
 
 
 def test_powsimp_nc():
@@ -169,7 +174,6 @@ def test_powdenest():
     assert powdenest((x**(2*a/3))**(3*x)) == ((x**(2*a/3))**(3*x))
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p
-    i, j = symbols('i,j', integer=True)
     eq = p**(2*i)*q**(4*i)
     assert powdenest(eq) == (p*q**2)**(2*i)
     # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
@@ -223,7 +227,7 @@ def test_issue_9324_powsimp_on_matrix_symbol():
     M = MatrixSymbol('M', 10, 10)
     expr = powsimp(M, deep=True)
     assert expr == M
-    assert expr.args[0] == 'M'
+    assert expr.args[0] == Symbol('M')
 
 
 def test_issue_6367():
@@ -310,6 +314,16 @@ def test_issue_10195():
             Rational(1,2))
     assert powsimp((-1)**(3*a/2)) == (-I)**a
 
+def test_issue_15709():
+    assert powsimp(2*3**x/3) == 2*3**(x-1)
+
+
 def test_issue_11981():
     x, y = symbols('x y', commutative=False)
     assert powsimp((x*y)**2 * (y*x)**2) == (x*y)**2 * (y*x)**2
+
+
+def test_issue_17524():
+    a = symbols("a", real=True)
+    e = (-1 - a**2)*sqrt(1 + a**2)
+    assert signsimp(powsimp(e)) == signsimp(e) == -(a**2 + 1)**(S(3)/2)

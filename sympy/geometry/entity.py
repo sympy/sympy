@@ -22,18 +22,17 @@ R3 are currently the only ambient spaces implemented.
 
 from __future__ import division, print_function
 
+from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
-from sympy.core.basic import Basic
-from sympy.core.symbol import _symbol
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
 from sympy.matrices import eye
-from sympy.sets import Set
-from sympy.utilities.misc import func_name
 from sympy.multipledispatch import dispatch
-from sympy.sets.handlers.union import union_sets
+from sympy.sets import Set
 from sympy.sets.handlers.intersection import intersection_sets
+from sympy.sets.handlers.union import union_sets
+from sympy.utilities.misc import func_name
 
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
@@ -143,7 +142,7 @@ class GeometryEntity(Basic):
         return a.__mul__(self)
 
     def __rsub__(self, a):
-        """Implementation of reverse substraction method."""
+        """Implementation of reverse subtraction method."""
         return a.__sub__(self)
 
     def __str__(self):
@@ -490,8 +489,7 @@ class GeometryEntity(Basic):
         >>> t.translate(2)
         Triangle(Point2D(3, 0), Point2D(3/2, sqrt(3)/2), Point2D(3/2, -sqrt(3)/2))
         >>> t.translate(2, 2)
-        Triangle(Point2D(3, 2), Point2D(3/2, sqrt(3)/2 + 2),
-            Point2D(3/2, -sqrt(3)/2 + 2))
+        Triangle(Point2D(3, 2), Point2D(3/2, sqrt(3)/2 + 2), Point2D(3/2, 2 - sqrt(3)/2))
 
         """
         newargs = []
@@ -569,7 +567,7 @@ def intersection_sets(self, o):
     """ Returns a sympy.sets.Set of intersection objects,
     if possible. """
 
-    from sympy.sets import Set, FiniteSet, Union
+    from sympy.sets import FiniteSet, Union
     from sympy.geometry import Point
 
     try:

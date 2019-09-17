@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-import warnings
-
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import S, Symbol, sqrt
 from sympy.physics.units.dimensions import Dimension, length, time, dimsys_default
@@ -10,16 +7,14 @@ from sympy.utilities.pytest import raises
 
 
 def test_Dimension_definition():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         assert length.get_dimensional_dependencies() == {"length": 1}
     assert dimsys_default.get_dimensional_dependencies(length) == {"length": 1}
     assert length.name == Symbol("length")
     assert length.symbol == Symbol("L")
 
     halflength = sqrt(length)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         assert halflength.get_dimensional_dependencies() == {"length": S.Half}
     assert dimsys_default.get_dimensional_dependencies(halflength) == {"length": S.Half}
 
@@ -40,12 +35,11 @@ def test_Dimension_error_definition():
 
 
 def test_Dimension_error_regisration():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
+    with warns_deprecated_sympy():
         # tuple with more or less than two entries
         raises(IndexError, lambda: length._register_as_base_dim())
 
+    with warns_deprecated_sympy():
         one = Dimension(1)
         raises(TypeError, lambda: one._register_as_base_dim())
 

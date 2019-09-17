@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import division
-
 from sympy import (Abs, Add, Basic, Function, Number, Rational, S, Symbol,
     diff, exp, integrate, log, sin, sqrt, symbols)
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
@@ -15,8 +11,7 @@ from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
 from sympy.physics.units.dimensions import Dimension, charge, length, time, dimsys_default
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
-from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
 
 k = PREFIXES["k"]
 
@@ -76,8 +71,10 @@ def test_Quantity_definition():
     assert v.dimension == length
     assert v.scale_factor == 5000
 
-    raises(SymPyDeprecationWarning, lambda: Quantity('invalid', 'dimension', 1))
-    raises(SymPyDeprecationWarning, lambda: Quantity('mismatch', dimension=length, scale_factor=kg))
+    with warns_deprecated_sympy():
+        Quantity('invalid', 'dimension', 1)
+    with warns_deprecated_sympy():
+        Quantity('mismatch', dimension=length, scale_factor=kg)
 
 
 def test_abbrev():
@@ -187,6 +184,7 @@ def test_check_unit_consistency():
     raises(ValueError, lambda: check_unit_consistency(u - w))
     raises(ValueError, lambda: check_unit_consistency(u + 1))
     raises(ValueError, lambda: check_unit_consistency(u - 1))
+    raises(ValueError, lambda: check_unit_consistency(1 - exp(u / w)))
 
 
 def test_mul_div():
@@ -266,7 +264,7 @@ def test_units():
     t = (1*au / speed_of_light) / minute
     # TODO: need a better way to simplify expressions containing units:
     t = convert_to(convert_to(t, meter / minute), meter)
-    assert t == 49865956897/5995849160
+    assert t == S(49865956897)/5995849160
 
     # TODO: fix this, it should give `m` without `Abs`
     assert sqrt(m**2) == Abs(m)
@@ -288,8 +286,8 @@ def test_issue_5565():
 
 def test_find_unit():
     assert find_unit('coulomb') == ['coulomb', 'coulombs', 'coulomb_constant']
-    assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs', 'planck_charge']
-    assert find_unit(charge) == ['C', 'coulomb', 'coulombs', 'planck_charge']
+    assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
+    assert find_unit(charge) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     assert find_unit(inch) == [
         'm', 'au', 'cm', 'dm', 'ft', 'km', 'ly', 'mi', 'mm', 'nm', 'pm', 'um',
         'yd', 'nmi', 'feet', 'foot', 'inch', 'mile', 'yard', 'meter', 'miles',
@@ -375,7 +373,8 @@ def test_factor_and_dimension():
 
 @XFAIL
 def test_factor_and_dimension_with_Abs():
-    v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
+    with warns_deprecated_sympy():
+        v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
     v_w1.set_dimension(length/time)
     v_w1.set_scale_factor(S(3)/2*meter/second)
     expr = v_w1 - Abs(v_w1)

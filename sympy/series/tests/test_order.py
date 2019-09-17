@@ -88,7 +88,9 @@ def test_simple_8():
     assert O(x**2*sqrt(x)) == O(x**(S(5)/2))
     assert O(x**3*sqrt(-(-x)**3)) == O(x**(S(9)/2))
     assert O(x**(S(3)/2)*sqrt((-x)**3)) == O(x**3)
-    assert O(x*(-2*x)**(I/2)) == O(x*(-x)**(I/2))
+    # not sure why the first doesn't become the 3rd without
+    # iteration in the Order.__new__ routine.
+    assert O(x*(-2*x)**(I/2)) == O(x*(-x)**(I/2)) == O((-x)**(1 + I/2))
 
 
 def test_as_expr_variables():
@@ -428,3 +430,10 @@ def test_issue_14622():
     assert O(x, (x, oo)).contains(O(x, (x, 0))) is None
     assert O(x, (x, 0)).contains(O(x, (x, oo))) is None
     raises(NotImplementedError, lambda: O(x**3).contains(x**w))
+
+
+def test_issue_15539():
+    assert O(1/x**2 + 1/x**4, (x, -oo)) == O(1/x**2, (x, -oo))
+    assert O(1/x**4 + exp(x), (x, -oo)) == O(1/x**4, (x, -oo))
+    assert O(1/x**4 + exp(-x), (x, -oo)) == O(exp(-x), (x, -oo))
+    assert O(1/x, (x, oo)).subs(x, -x) == O(-1/x, (x, -oo))

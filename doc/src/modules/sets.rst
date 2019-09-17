@@ -1,5 +1,6 @@
+====
 Sets
-===========
+====
 
 .. automodule:: sympy.sets.sets
 

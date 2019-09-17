@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import Basic, Expr, sympify
+from sympy import Basic, Expr, sympify, S
 from sympy.matrices.matrices import MatrixBase
 from .matexpr import ShapeError
 
@@ -19,6 +19,7 @@ class Trace(Expr):
     Trace(A)
     """
     is_Trace = True
+    is_commutative = True
 
     def __new__(cls, mat):
         mat = sympify(mat)
@@ -35,19 +36,58 @@ class Trace(Expr):
         return self
 
     def _eval_derivative(self, v):
-        from sympy import Dummy, MatrixExpr, Sum
-        if not isinstance(v, MatrixExpr):
-            return None
+        from sympy import Sum
+        from .matexpr import MatrixElement
+        if isinstance(v, MatrixElement):
+            return self.rewrite(Sum).diff(v)
+        expr = self.doit()
+        if isinstance(expr, Trace):
+            # Avoid looping infinitely:
+            raise NotImplementedError
+        return expr._eval_derivative(v)
 
-        t1 = Dummy("t_1")
-        m = Dummy("m")
-        n = Dummy("n")
-        # TODO: use self.rewrite(Sum) instead:
-        return MatrixExpr.from_index_summation(
-                Sum(self.args[0][t1, t1].diff(v[m, n]), (t1, 0, self.args[0].shape[0]-1)),
-                m,
-                dimensions=(v.args[1:])
-            )
+    def _eval_derivative_matrix_lines(self, x):
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+        from sympy.core.expr import ExprBuilder
+        r = self.args[0]._eval_derivative_matrix_lines(x)
+        for lr in r:
+            if lr.higher == 1:
+                lr.higher = ExprBuilder(
+                    CodegenArrayContraction,
+                    [
+                        ExprBuilder(
+                            CodegenArrayTensorProduct,
+                            [
+                                lr._lines[0],
+                                lr._lines[1],
+                            ]
+                        ),
+                        (1, 3),
+                    ],
+                    validator=CodegenArrayContraction._validate
+                )
+            else:
+                # This is not a matrix line:
+                lr.higher = ExprBuilder(
+                    CodegenArrayContraction,
+                    [
+                        ExprBuilder(
+                            CodegenArrayTensorProduct,
+                            [
+                                lr._lines[0],
+                                lr._lines[1],
+                                lr.higher,
+                            ]
+                        ),
+                        (1, 3), (0, 2)
+                    ]
+                )
+            lr._lines = [S.One, S.One]
+            lr._first_pointer_parent = lr._lines
+            lr._second_pointer_parent = lr._lines
+            lr._first_pointer_index = 0
+            lr._second_pointer_index = 1
+        return r
 
     @property
     def arg(self):

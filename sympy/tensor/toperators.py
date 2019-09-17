@@ -1,5 +1,4 @@
 from sympy.tensor.tensor import (TensExpr, TensMul)
-from sympy import S, diag
 
 
 class PartialDerivative(TensExpr):
@@ -9,11 +8,11 @@ class PartialDerivative(TensExpr):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensorhead
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorHead
     >>> from sympy.tensor.toperators import PartialDerivative
     >>> from sympy import symbols
     >>> L = TensorIndexType("L")
-    >>> A = tensorhead("A", [L], [[1]])
+    >>> A = TensorHead("A", [L])
     >>> i, j = symbols("i j")
 
     >>> expr = PartialDerivative(A(i), A(j))
@@ -71,7 +70,7 @@ class PartialDerivative(TensExpr):
         return self.args[1:]
 
     def _extract_data(self, replacement_dict):
-        from .array import derive_by_array, tensorcontraction, tensorproduct
+        from .array import derive_by_array, tensorcontraction
         indices, array = self.expr._extract_data(replacement_dict)
         for variable in self.variables:
             var_indices, var_array = variable._extract_data(replacement_dict)

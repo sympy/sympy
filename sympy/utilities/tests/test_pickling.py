@@ -2,7 +2,6 @@ import sys
 import inspect
 import copy
 import pickle
-import warnings
 
 from sympy.physics.units import meter
 
@@ -32,7 +31,12 @@ from sympy import symbols, S
 from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
 
-excluded_attrs = set(['_assumptions', '_mhash'])
+excluded_attrs = set([
+    '_assumptions',  # This is a local cache that isn't automatically filled on creation
+    '_mhash',   # Cached after __hash__ is called but set to None after creation
+    'message',   # This is an exception attribute that is present but deprecated in Py2 (can be removed when Py2 support is dropped
+    'is_EmptySet',  # Deprecated from SymPy 1.5. This can be removed when is_EmptySet is removed.
+    ])
 
 
 def check(a, exclude=[], check_attr=True):
@@ -68,14 +72,19 @@ def check(a, exclude=[], check_attr=True):
 
         def c(a, b, d):
             for i in d:
-                if not hasattr(a, i) or i in excluded_attrs:
+                if i in excluded_attrs:
+                    continue
+                if not hasattr(a, i):
                     continue
                 attr = getattr(a, i)
                 if not hasattr(attr, "__call__"):
                     assert hasattr(b, i), i
                     assert getattr(b, i) == attr, "%s != %s, protocol: %s" % (getattr(b, i), attr, protocol)
+
         c(a, b, d1)
         c(b, a, d2)
+
+
 
 #================== core =========================
 

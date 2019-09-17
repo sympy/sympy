@@ -8,12 +8,12 @@ from sympy.functions import adjoint
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
-        exhaust, do_one, glom)
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
+    exhaust, do_one, glom)
+from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
+    ZeroMatrix, GenericZeroMatrix)
 from sympy.utilities import default_sort_key, sift
-from sympy.core.operations import AssocOp
 
-
+# XXX: MatAdd should perhaps not subclass directly from Add
 class MatAdd(MatrixExpr, Add):
     """A Sum of Matrix Expressions
 
@@ -31,7 +31,15 @@ class MatAdd(MatrixExpr, Add):
     """
     is_MatAdd = True
 
+    identity = GenericZeroMatrix()
+
     def __new__(cls, *args, **kwargs):
+        if not args:
+            return cls.identity
+
+        # This must be removed aggressively in the constructor to avoid
+        # TypeErrors from GenericZeroMatrix().shape
+        args = filter(lambda i: cls.identity != i, args)
         args = list(map(sympify, args))
         check = kwargs.get('check', False)
 
@@ -46,8 +54,8 @@ class MatAdd(MatrixExpr, Add):
     def shape(self):
         return self.args[0].shape
 
-    def _entry(self, i, j, expand=None):
-        return Add(*[arg._entry(i, j) for arg in self.args])
+    def _entry(self, i, j, **kwargs):
+        return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])
 
     def _eval_transpose(self):
         return MatAdd(*[transpose(arg) for arg in self.args]).doit()
@@ -66,6 +74,10 @@ class MatAdd(MatrixExpr, Add):
         else:
             args = self.args
         return canonicalize(MatAdd(*args))
+
+    def _eval_derivative_matrix_lines(self, x):
+        add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
+        return [j for i in add_lines for j in i]
 
 
 def validate(*args):

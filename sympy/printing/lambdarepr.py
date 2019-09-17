@@ -1,14 +1,9 @@
 from __future__ import print_function, division
-from distutils.version import LooseVersion as V
-
-from .str import StrPrinter
 from .pycode import (
     PythonCodePrinter,
     MpmathPrinter,  # MpmathPrinter is imported for backward compatibility
     NumPyPrinter  # NumPyPrinter is imported for backward compatibility
 )
-from sympy.core.basic import Basic
-from sympy.external import import_module
 from sympy.utilities import default_sort_key
 
 
@@ -58,6 +53,11 @@ class LambdaPrinter(PythonCodePrinter):
 
     def _print_NumberSymbol(self, expr):
         return str(expr)
+
+    def _print_Pow(self, expr, **kwargs):
+        # XXX Temporary workaround. Should python math printer be
+        # isolated from PythonCodePrinter?
+        return super(PythonCodePrinter, self)._print_Pow(expr, **kwargs)
 
 
 # numexpr works by altering the string passed to numexpr.evaluate

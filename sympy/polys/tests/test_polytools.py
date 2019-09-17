@@ -56,10 +56,9 @@ from sympy import (
     exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, PY3
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
-from sympy.simplify import simplify
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 from sympy import MatrixSymbol
@@ -1178,6 +1177,7 @@ def test_Poly_degree():
     raises(TypeError, lambda: degree(y**2 + x**3))
     raises(TypeError, lambda: degree(y**2 + x**3, 1))
     raises(PolynomialError, lambda: degree(x, 1.1))
+    raises(PolynomialError, lambda: degree(x**2/(x**3 + 1), x))
 
     assert degree(Poly(0,x),z) == -oo
     assert degree(Poly(1,x),z) == 0
@@ -1731,6 +1731,12 @@ def test_div():
     assert q.get_domain().is_Frac and r.get_domain().is_Frac
 
 
+def test_issue_7864():
+    q, r = div(a, .408248290463863*a)
+    assert abs(q - 2.44948974278318) < 1e-14
+    assert r == 0
+
+
 def test_gcdex():
     f, g = 2*x, x**2 - 16
     s, t, h = x/32, -Rational(1, 16), 1
@@ -2169,7 +2175,7 @@ def test_transform():
 
     # Unify ZZ, QQ, and RR
     assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1.0), Poly(x - S(1)/2)) == \
-        Poly(9/4, x) == \
+        Poly(S(9)/4, x) == \
         cancel((x - S(1)/2)**2*(x**2 - 2*x + 1).subs(x, (x + 1.0)/(x - S(1)/2)))
 
     raises(ValueError, lambda: Poly(x*y).transform(Poly(x + 1), Poly(x - 1)))
@@ -2461,6 +2467,7 @@ def test_factor():
 
     # deep option
     assert factor(sin(x**2 + x) + x, deep=True) == sin(x*(x + 1)) + x
+    assert factor(sin(x**2 + x)*x, deep=True) == sin(x*(x + 1))*x
 
     assert factor(sqrt(x**2)) == sqrt(x**2)
 
@@ -2468,6 +2475,16 @@ def test_factor():
     assert factor(expand((0.5*x+1)*(0.5*y+1))) == Mul(1.0, 0.5*x + 1.0,
         0.5*y + 1.0, evaluate = False)
     assert factor(expand((0.5*x+0.5)**2)) == 0.25*(1.0*x + 1.0)**2
+
+    eq = x**2*y**2 + 11*x**2*y + 30*x**2 + 7*x*y**2 + 77*x*y + 210*x + 12*y**2 + 132*y + 360
+    assert factor(eq, x) == (x + 3)*(x + 4)*(y**2 + 11*y + 30)
+    assert factor(eq, x, deep=True) == (x + 3)*(x + 4)*(y**2 + 11*y + 30)
+    assert factor(eq, y, deep=True) == (y + 5)*(y + 6)*(x**2 + 7*x + 12)
+
+    # fraction option
+    f = 5*x + 3*exp(2 - 7*x)
+    assert factor(f, deep=True) == factor(f, deep=True, fraction=True)
+    assert factor(f, deep=True, fraction=False) == 5*x + 3*exp(2)*exp(-7*x)
 
 
 def test_factor_large():
@@ -3207,12 +3224,17 @@ def test_keep_coeff():
     assert _keep_coeff(x + 1, S(2)) == u
 
 
-@XFAIL
+# @XFAIL
+# Seems to pass on Python 3.X, but not on Python 2.7
 def test_poly_matching_consistency():
     # Test for this issue:
     # https://github.com/sympy/sympy/issues/5514
     assert I * Poly(x, x) == Poly(I*x, x)
     assert Poly(x, x) * I == Poly(I*x, x)
+
+
+if not PY3:
+    test_poly_matching_consistency = XFAIL(test_poly_matching_consistency)
 
 
 @XFAIL
@@ -3282,3 +3304,10 @@ def test_issue_14364():
     assert gcd([S(6)*(1 + sqrt(7))/5, S(2)*(1 + sqrt(7))/7, S(4)*(1 + sqrt(7))/13]) == S(2)/455 * (1 + sqrt(7))
     assert lcm((S(7)/sqrt(15)/2, S(5)/sqrt(15)/6, S(5)/sqrt(15)/8)) == S(35)/(2*sqrt(15))
     assert lcm([S(5)*(2 + 2**(S(5)/7))/6, S(7)*(2 + 2**(S(5)/7))/2, S(13)*(2 + 2**(S(5)/7))/4]) == S(455)/2 * (2 + 2**(S(5)/7))
+
+
+def test_issue_15669():
+    x = Symbol("x", positive=True)
+    expr = (16*x**3/(-x**2 + sqrt(8*x**2 + (x**2 - 2)**2) + 2)**2 -
+        2*2**(S(4)/5)*x*(-x**2 + sqrt(8*x**2 + (x**2 - 2)**2) + 2)**(S(3)/5) + 10*x)
+    assert factor(expr, deep=True) == x*(x**2 + 2)

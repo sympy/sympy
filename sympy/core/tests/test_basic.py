@@ -5,9 +5,9 @@ import collections
 import sys
 
 from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
-    _atomic)
+    _atomic, _aresame)
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
@@ -20,6 +20,12 @@ b1 = Basic()
 b2 = Basic(b1)
 b3 = Basic(b2)
 b21 = Basic(b2, b1)
+
+
+def test__aresame():
+    assert not _aresame(Basic([]), Basic())
+    assert not _aresame(Basic([]), Basic(()))
+    assert not _aresame(Basic(2), Basic(2.))
 
 
 def test_structure():
@@ -117,6 +123,18 @@ def test_subs():
     # cannot be sympified; sympification is strict if foo is not string
     raises(ValueError, lambda: b21.subs(b1='bad arg'))
 
+    assert Symbol(u"text").subs({u"text": b1}) == b1
+    assert Symbol(u"s").subs({u"s": 1}) == 1
+
+
+def test_subs_with_unicode_symbols():
+    expr = Symbol('var1')
+    replaced = expr.subs('var1', u'x')
+    assert replaced.name == 'x'
+
+    replaced = expr.subs('var1', 'x')
+    assert replaced.name == 'x'
+
 
 def test_atoms():
     assert b21.atoms() == set()
@@ -210,6 +228,7 @@ def test_rewrite():
     f2 = sin(x) + cos(y)/gamma(z)
     assert f2.rewrite(sin,exp) == -I*(exp(I*x) - exp(-I*x))/2 + cos(y)/gamma(z)
 
+    assert f1.rewrite() == f1
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
     from sympy.integrals.integrals import Integral
@@ -252,6 +271,8 @@ def test_atomic():
     x = symbols('x')
     assert _atomic(g(x + h(x))) == {g(x + h(x))}
     assert _atomic(g(x + h(x)), recursive=True) == {h(x), x, g(x + h(x))}
+    assert _atomic(1) == set()
+    assert _atomic(Basic(1,2)) == {Basic(1, 2)}
 
 
 def test_as_dummy():
@@ -265,3 +286,15 @@ def test_canonical_variables():
     x, i0, i1 = symbols('x _:2')
     assert Integral(x, (x, x + 1)).canonical_variables == {x: i0}
     assert Integral(x, (x, x + i0)).canonical_variables == {x: i1}
+
+
+def test_replace_exceptions():
+    from sympy import Wild
+    x, y = symbols('x y')
+    e = (x**2 + x*y)
+    raises(TypeError, lambda: e.replace(sin, 2))
+    b = Wild('b')
+    c = Wild('c')
+    raises(TypeError, lambda: e.replace(b*c, c.is_real))
+    raises(TypeError, lambda: e.replace(b.is_real, 1))
+    raises(TypeError, lambda: e.replace(lambda d: d.is_Number, 1))

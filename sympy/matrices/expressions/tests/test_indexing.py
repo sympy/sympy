@@ -1,6 +1,6 @@
 from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, KroneckerDelta,
-        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, Dummy, MatMul, trace,
-        Symbol, Mul)
+        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, Dummy, trace,
+        Symbol)
 from sympy.utilities.pytest import raises
 from sympy.matrices.expressions.matexpr import MatrixElement, MatrixExpr
 
@@ -11,6 +11,11 @@ W = MatrixSymbol('W', k, l)
 X = MatrixSymbol('X', l, m)
 Y = MatrixSymbol('Y', l, m)
 Z = MatrixSymbol('Z', m, n)
+
+X1 = MatrixSymbol('X1', m, m)
+X2 = MatrixSymbol('X2', m, m)
+X3 = MatrixSymbol('X3', m, m)
+X4 = MatrixSymbol('X4', m, m)
 
 A = MatrixSymbol('A', 2, 2)
 B = MatrixSymbol('B', 2, 2)
@@ -57,6 +62,7 @@ def test_Identity_index():
     I = Identity(3)
     assert I[0, 0] == I[1, 1] == I[2, 2] == 1
     assert I[1, 0] == I[0, 1] == I[2, 1] == 0
+    assert I[i, 0].delta_range == (0, 2)
     raises(IndexError, lambda: I[3, 3])
 
 
@@ -124,6 +130,12 @@ def test_matrix_expression_to_indices():
     expr = A*B**2*A
     #assert replace_dummies(expr._entry(i, j)) == \
     #        Sum(A[i, i1]*B[i1, i2]*B[i2, i3]*A[i3, j], (i1, 0, 1), (i2, 0, 1), (i3, 0, 1))
+
+    # Check that different dummies are used in sub-multiplications:
+    expr = (X1*X2 + X2*X1)*X3
+    assert replace_dummies(expr._entry(i, j)) == \
+           Sum((Sum(X1[i, i2] * X2[i2, i1], (i2, 0, m - 1)) + Sum(X1[i3, i1] * X2[i, i3], (i3, 0, m - 1))) * X3[
+               i1, j], (i1, 0, m - 1))
 
 
 def test_matrix_expression_from_index_summation():

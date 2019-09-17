@@ -1,6 +1,6 @@
+from sympy import Expr, S, Mul, sympify
 from sympy.core.compatibility import Iterable
 from sympy.core.evaluate import global_evaluate
-from sympy import Expr, S, Mul, sympify
 
 
 class TensorProduct(Expr):

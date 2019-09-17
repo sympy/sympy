@@ -22,13 +22,13 @@ class Inverse(MatPow):
     >>> A = MatrixSymbol('A', 3, 3)
     >>> B = MatrixSymbol('B', 3, 3)
     >>> Inverse(A)
-    A^-1
+    A**(-1)
     >>> A.inverse() == Inverse(A)
     True
     >>> (A*B).inverse()
-    B^-1*A^-1
+    B**(-1)*A**(-1)
     >>> Inverse(A*B)
-    (A*B)^-1
+    (A*B)**(-1)
 
     """
     is_Inverse = True
@@ -67,6 +67,14 @@ class Inverse(MatPow):
         else:
             return self.arg.inverse()
 
+    def _eval_derivative_matrix_lines(self, x):
+        arg = self.args[0]
+        lines = arg._eval_derivative_matrix_lines(x)
+        for line in lines:
+            line.first_pointer *= -self.T
+            line.second_pointer *= self
+        return lines
+
 
 from sympy.assumptions.ask import ask, Q
 from sympy.assumptions.refine import handlers_dict
@@ -77,7 +85,7 @@ def refine_Inverse(expr, assumptions):
     >>> from sympy import MatrixSymbol, Q, assuming, refine
     >>> X = MatrixSymbol('X', 2, 2)
     >>> X.I
-    X^-1
+    X**(-1)
     >>> with assuming(Q.orthogonal(X)):
     ...     print(refine(X.I))
     X.T

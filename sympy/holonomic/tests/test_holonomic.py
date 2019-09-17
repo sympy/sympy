@@ -94,8 +94,8 @@ def test_addition_initial_condition():
     assert p + q == r
     p = HolonomicFunction(Dx - x + Dx**2, x, 0, [1, 2])
     q = HolonomicFunction(Dx**2 + x, x, 0, [1, 0])
-    r = HolonomicFunction((-x**4 - x**3/4 - x**2 + 1/4) + (x**3 + x**2/4 + 3*x/4 + 1)*Dx + \
-        (-3*x/2 + 7/4)*Dx**2 + (x**2 - 7*x/4 + 1/4)*Dx**3 + (x**2 + x/4 + 1/2)*Dx**4, x, 0, [2, 2, -2, 2])
+    r = HolonomicFunction((-x**4 - x**3/4 - x**2 + S(1)/4) + (x**3 + x**2/4 + 3*x/4 + 1)*Dx + \
+        (-3*x/2 + S(7)/4)*Dx**2 + (x**2 - 7*x/4 + S(1)/4)*Dx**3 + (x**2 + x/4 + S(1)/2)*Dx**4, x, 0, [2, 2, -2, 2])
     assert p + q == r
     p = HolonomicFunction(Dx**2 + 4*x*Dx + x**2, x, 0, [3, 4])
     q = HolonomicFunction(Dx**2 + 1, x, 0, [1, 1])
@@ -131,11 +131,11 @@ def test_multiplication_initial_condition():
     p = HolonomicFunction(Dx**2 + x, x, 0, [1, 0])
     q = HolonomicFunction(Dx**3 - x**2, x, 0, [3, 3, 3])
     r = HolonomicFunction((x**8 - 37*x**7/27 - 10*x**6/27 - 164*x**5/9 - 184*x**4/9 + \
-        160*x**3/27 + 404*x**2/9 + 8*x + 40/3) + (6*x**7 - 128*x**6/9 - 98*x**5/9 - 28*x**4/9 + \
+        160*x**3/27 + 404*x**2/9 + 8*x + S(40)/3) + (6*x**7 - 128*x**6/9 - 98*x**5/9 - 28*x**4/9 + \
         8*x**3/9 + 28*x**2 + 40*x/9 - 40)*Dx + (3*x**6 - 82*x**5/9 + 76*x**4/9 + 4*x**3/3 + \
-        220*x**2/9 - 80*x/3)*Dx**2 + (-2*x**6 + 128*x**5/27 - 2*x**4/3 -80*x**2/9 + 200/9)*Dx**3 + \
-        (3*x**5 - 64*x**4/9 - 28*x**3/9 + 6*x**2 - 20*x/9 - 20/3)*Dx**4 + (-4*x**3 + 64*x**2/9 + \
-            8*x/3)*Dx**5 + (x**4 - 64*x**3/27 - 4*x**2/3 + 20/9)*Dx**6, x, 0, [3, 3, 3, -3, -12, -24])
+        220*x**2/9 - 80*x/3)*Dx**2 + (-2*x**6 + 128*x**5/27 - 2*x**4/3 -80*x**2/9 + S(200)/9)*Dx**3 + \
+        (3*x**5 - 64*x**4/9 - 28*x**3/9 + 6*x**2 - 20*x/9 - S(20)/3)*Dx**4 + (-4*x**3 + 64*x**2/9 + \
+            8*x/3)*Dx**5 + (x**4 - 64*x**3/27 - 4*x**2/3 + S(20)/9)*Dx**6, x, 0, [3, 3, 3, -3, -12, -24])
     assert p * q == r
     p = HolonomicFunction(Dx - 1, x, 0, [2])
     q = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])
@@ -188,7 +188,7 @@ def test_from_hyper():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = hyper([1, 1], [S(3)/2], x**2/4)
-    q = HolonomicFunction((4*x) + (5*x**2 - 8)*Dx + (x**3 - 4*x)*Dx**2, x, 1, [2*sqrt(3)*pi/9, -4*sqrt(3)*pi/27 + 4/3])
+    q = HolonomicFunction((4*x) + (5*x**2 - 8)*Dx + (x**3 - 4*x)*Dx**2, x, 1, [2*sqrt(3)*pi/9, -4*sqrt(3)*pi/27 + S(4)/3])
     r = from_hyper(p)
     assert r == q
     p = from_hyper(hyper([1], [S(3)/2], x**2/4))
@@ -203,14 +203,14 @@ def test_from_meijerg():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = from_meijerg(meijerg(([], [S(3)/2]), ([S(1)/2], [S(1)/2, 1]), x))
-    q = HolonomicFunction(x/2 - 1/4 + (-x**2 + x/4)*Dx + x**2*Dx**2 + x**3*Dx**3, x, 1, \
+    q = HolonomicFunction(x/2 - S(1)/4 + (-x**2 + x/4)*Dx + x**2*Dx**2 + x**3*Dx**3, x, 1, \
         [1/sqrt(pi), 1/(2*sqrt(pi)), -1/(4*sqrt(pi))])
     assert p == q
     p = from_meijerg(meijerg(([], []), ([0], []), x))
     q = HolonomicFunction(1 + Dx, x, 0, [1])
     assert p == q
     p = from_meijerg(meijerg(([1], []), ([S(1)/2], [0]), x))
-    q = HolonomicFunction((x + 1/2)*Dx + x*Dx**2, x, 1, [sqrt(pi)*erf(1), exp(-1)])
+    q = HolonomicFunction((x + S(1)/2)*Dx + x*Dx**2, x, 1, [sqrt(pi)*erf(1), exp(-1)])
     assert p == q
     p = from_meijerg(meijerg(([0], [1]), ([0], []), 2*x**2))
     q = HolonomicFunction((3*x**2 - 1)*Dx + x**3*Dx**2, x, 1, [-exp(-S(1)/2) + 1, -exp(-S(1)/2)])
@@ -248,7 +248,7 @@ def test_to_Sequence_Initial_Coniditons():
     q = [(HolonomicSequence(1 + (n**2 + 3*n + 2)*Sn**2, [0, 1]), 0)]
     assert p == q
     p = HolonomicFunction(Dx**2 + 1 + x**3*Dx, x, 0, [2, 3]).to_sequence()
-    q = [(HolonomicSequence(n + Sn**2 + (n**2 + 7*n + 12)*Sn**4, [2, 3, -1, -1/2, 1/12]), 1)]
+    q = [(HolonomicSequence(n + Sn**2 + (n**2 + 7*n + 12)*Sn**4, [2, 3, -1, -S(1)/2, S(1)/12]), 1)]
     assert p == q
     p = HolonomicFunction(x**3*Dx**5 + 1 + Dx, x).to_sequence()
     q = [(HolonomicSequence(1 + (n + 1)*Sn + (n**5 - 5*n**3 + 4*n)*Sn**2), 0, 3)]
@@ -460,7 +460,7 @@ def test_expr_to_holonomic():
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = expr_to_holonomic((sin(x)/x)**2)
     q = HolonomicFunction(8*x + (4*x**2 + 6)*Dx + 6*x*Dx**2 + x**2*Dx**3, x, 0, \
-        [1, 0, -2/3])
+        [1, 0, -S(2)/3])
     assert p == q
     p = expr_to_holonomic(1/(1+x**2)**2)
     q = HolonomicFunction(4*x + (x**2 + 1)*Dx, x, 0, [1])
@@ -469,7 +469,7 @@ def test_expr_to_holonomic():
     q = HolonomicFunction((2*x**3 + 10*x**2 + 20*x + 18) + (-2*x**4 - 10*x**3 - 20*x**2 \
         - 18*x)*Dx + (2*x**5 + 6*x**4 + 7*x**3 + 8*x**2 + 10*x - 4)*Dx**2 + \
         (-2*x**5 - 5*x**4 - 2*x**3 + 2*x**2 - x + 4)*Dx**3 + (x**5 + 2*x**4 - x**3 - \
-        7*x**2/2 + x + 5/2)*Dx**4, x, 0, [0, 1, 4, -1])
+        7*x**2/2 + x + S(5)/2)*Dx**4, x, 0, [0, 1, 4, -1])
     assert p == q
     p = expr_to_holonomic(x*exp(x)+cos(x)+1)
     q = HolonomicFunction((-x - 3)*Dx + (x + 2)*Dx**2 + (-x - 3)*Dx**3 + (x + 2)*Dx**4, x, \
@@ -481,7 +481,7 @@ def test_expr_to_holonomic():
     assert p == q
     p = expr_to_holonomic(erf(x)**2 + x)
     q = HolonomicFunction((8*x**4 - 2*x**2 + 2)*Dx**2 + (6*x**3 - x/2)*Dx**3 + \
-        (x**2+ 1/4)*Dx**4, x, 0, [0, 1, 8/pi, 0])
+        (x**2+ S(1)/4)*Dx**4, x, 0, [0, 1, 8/pi, 0])
     assert p == q
     p = expr_to_holonomic(cosh(x)*x)
     q = HolonomicFunction((-x**2 + 2) -2*x*Dx + x**2*Dx**2, x, 0, [0, 1])
@@ -490,8 +490,8 @@ def test_expr_to_holonomic():
     q = HolonomicFunction((x**2 - 4) + x*Dx + x**2*Dx**2, x, 0, [0, 0])
     assert p == q
     p = expr_to_holonomic(besselj(0, x) + exp(x))
-    q = HolonomicFunction((-x**2 - x/2 + 1/2) + (x**2 - x/2 - 3/2)*Dx + (-x**2 + x/2 + 1)*Dx**2 +\
-        (x**2 + x/2)*Dx**3, x, 0, [2, 1, 1/2])
+    q = HolonomicFunction((-x**2 - x/2 + S(1)/2) + (x**2 - x/2 - S(3)/2)*Dx + (-x**2 + x/2 + 1)*Dx**2 +\
+        (x**2 + x/2)*Dx**3, x, 0, [2, 1, S(1)/2])
     assert p == q
     p = expr_to_holonomic(sin(x)**2/x)
     q = HolonomicFunction(4 + 4*x*Dx + 3*Dx**2 + x*Dx**3, x, 0, [0, 1, 0])
@@ -508,7 +508,7 @@ def test_expr_to_holonomic():
     q = log(x)/2 - Ci(2*x)/2 + Ci(2)/2
     assert p == q
     p = expr_to_holonomic(x**(S(1)/2), x0=1)
-    q = HolonomicFunction(x*Dx - 1/2, x, 1, [1])
+    q = HolonomicFunction(x*Dx - S(1)/2, x, 1, [1])
     assert p == q
     p = expr_to_holonomic(sqrt(1 + x**2))
     q = HolonomicFunction((-x) + (x**2 + 1)*Dx, x, 0, [1])
@@ -540,7 +540,7 @@ def test_to_hyper():
     q = -x**2*hyper((2, 2, 1), (3, 2), -x)/2 + x
     assert p == q
     p = HolonomicFunction(2*x*Dx + Dx**2, x, 0, [0, 2/sqrt(pi)]).to_hyper()
-    q = 2*x*hyper((1/2,), (3/2,), -x**2)/sqrt(pi)
+    q = 2*x*hyper((S(1)/2,), (S(3)/2,), -x**2)/sqrt(pi)
     assert p == q
     p = hyperexpand(HolonomicFunction(2*x*Dx + Dx**2, x, 0, [1, -2/sqrt(pi)]).to_hyper())
     q = erfc(x)
@@ -648,7 +648,7 @@ def test_integrate():
     q = -Si(2*x) - cos(x)**2/x
     assert p == q
     p = expr_to_holonomic(sqrt(x**2+x)).integrate(x).to_expr()
-    q = (x**(3/2)*(2*x**2 + 3*x + 1) - x*sqrt(x + 1)*asinh(sqrt(x)))/(4*x*sqrt(x + 1))
+    q = (x**(S(3)/2)*(2*x**2 + 3*x + 1) - x*sqrt(x + 1)*asinh(sqrt(x)))/(4*x*sqrt(x + 1))
     assert p == q
     p = expr_to_holonomic(sqrt(x**2+1)).integrate(x).to_expr()
     q = (sqrt(x**2+1)).integrate(x)
@@ -798,3 +798,18 @@ def test_expr_in_power():
     h2 = HolonomicFunction((-n + 3) + (x)*Dx, x)
 
     assert h1 == h2
+
+def test_DifferentialOperatorEqPoly():
+    x = symbols('x', integer=True)
+    R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+    do = DifferentialOperator([x**2, R.base.zero, R.base.zero], R)
+    do2 = DifferentialOperator([x**2, 1, x], R)
+    assert not do == do2
+
+    # polynomial comparison issue, see https://github.com/sympy/sympy/pull/15799
+    # should work once that is solved
+    # p = do.listofpoly[0]
+    # assert do == p
+
+    p2 = do2.listofpoly[0]
+    assert not do2 == p2

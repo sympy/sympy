@@ -1,15 +1,15 @@
 from __future__ import print_function, division
 
 from sympy import pi, I
-from sympy.core.singleton import S
 from sympy.core import Dummy, sympify
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.singleton import S
 from sympy.functions import assoc_legendre
-from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin, cos, cot
 
 _x = Dummy("x")
 
@@ -31,7 +31,7 @@ class Ynm(Function):
     Examples
     ========
 
-    >>> from sympy import Ynm, Symbol
+    >>> from sympy import Ynm, Symbol, simplify
     >>> from sympy.abc import n,m
     >>> theta = Symbol("theta")
     >>> phi = Symbol("phi")
@@ -41,20 +41,10 @@ class Ynm(Function):
 
     Several symmetries are known, for the order
 
-    >>> from sympy import Ynm, Symbol
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
-
     >>> Ynm(n, -m, theta, phi)
     (-1)**m*exp(-2*I*m*phi)*Ynm(n, m, theta, phi)
 
     as well as for the angles
-
-    >>> from sympy import Ynm, Symbol, simplify
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
 
     >>> Ynm(n, m, -theta, phi)
     Ynm(n, m, theta, phi)

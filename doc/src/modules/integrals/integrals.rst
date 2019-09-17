@@ -1,5 +1,6 @@
-Symbolic Integrals
-==================
+=========
+Integrals
+=========
 
 .. module:: sympy.integrals
 
@@ -126,6 +127,8 @@ any order and any precision:
 .. autofunction:: sympy.integrals.quadrature.gauss_chebyshev_u
 
 .. autofunction:: sympy.integrals.quadrature.gauss_jacobi
+
+.. autofunction:: sympy.integrals.quadrature.gauss_lobatto
 
 Integration over Polytopes
 ==========================

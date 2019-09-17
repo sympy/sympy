@@ -1,8 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import S
-from sympy.combinatorics.free_groups import FreeGroupElement
-from sympy.combinatorics.rewritingsystem_fsm import State, StateMachine
+from sympy.combinatorics.rewritingsystem_fsm import StateMachine
 
 class RewritingSystem(object):
     '''
@@ -10,12 +8,12 @@ class RewritingSystem(object):
 
     References
     ==========
-    [1] Epstein, D., Holt, D. and Rees, S. (1991).
-        The use of Knuth-Bendix methods to solve the word problem in automatic groups.
-        Journal of Symbolic Computation, 12(4-5), pp.397-414.
+    .. [1] Epstein, D., Holt, D. and Rees, S. (1991).
+           The use of Knuth-Bendix methods to solve the word problem in automatic groups.
+           Journal of Symbolic Computation, 12(4-5), pp.397-414.
 
-    [2] GAP's Manual on its KBMAG package
-        https://www.gap-system.org/Manuals/pkg/kbmag-1.5.3/doc/manual.pdf
+    .. [2] GAP's Manual on its KBMAG package
+           https://www.gap-system.org/Manuals/pkg/kbmag-1.5.3/doc/manual.pdf
 
     '''
     def __init__(self, group):
@@ -54,7 +52,7 @@ class RewritingSystem(object):
         Set the maximum number of rules that can be defined
 
         '''
-        if self._max_exceeded and n > self.maxeqns:
+        if n > self.maxeqns:
             self._max_exceeded = False
         self.maxeqns = n
         return
@@ -400,7 +398,7 @@ class RewritingSystem(object):
                     else:
                         self.reduction_automaton.states[state].add_transition(letter, current_state_name)
             elif current_state_type == 'a':
-                # Check if the transition to any new state in posible.
+                # Check if the transition to any new state in possible.
                 for letter in automaton_alphabet:
                     _next = current_state_name*letter
                     while len(_next) and _next not in self.reduction_automaton.states:

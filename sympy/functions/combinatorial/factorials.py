@@ -1,29 +1,28 @@
 from __future__ import print_function, division
 
 from sympy.core import S, sympify, Dummy, Mod
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import reduce, range, HAS_GMPY
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
 from sympy.core.relational import Eq
-
 from sympy.ntheory import sieve
+from sympy.polys.polytools import Poly
 
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, range, HAS_GMPY
-from sympy.core.cache import cacheit
-
-from sympy.polys.polytools import Poly
 
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.combsimp import combsimp
         # combinatorial function with non-integer arguments is
         # automatically passed to gammasimp
         expr = combsimp(self)
-        if measure(expr) <= ratio*measure(self):
+        measure = kwargs['measure']
+        if measure(expr) <= kwargs['ratio']*measure(self):
             return expr
         return self
 
@@ -266,6 +265,25 @@ class factorial(CombinatorialFunction):
         x = self.args[0]
         if x.is_nonnegative or x.is_noninteger:
             return True
+
+    def _eval_as_leading_term(self, x):
+        from sympy import Order
+        arg = self.args[0]
+        arg_1 = arg.as_leading_term(x)
+        if Order(x, x).contains(arg_1):
+            return S.One
+        if Order(1, x).contains(arg_1):
+            return self.func(arg_1)
+        ####################################################
+        # The correct result here should be 'None'.        #
+        # Indeed arg in not bounded as x tends to 0.       #
+        # Consequently the series expansion does not admit #
+        # the leading term.                                #
+        # For compatibility reasons, the return value here #
+        # is the original function, i.e. factorial(arg),   #
+        # instead of None.                                 #
+        ####################################################
+        return self.func(arg)
 
 class MultiFactorial(CombinatorialFunction):
     pass
@@ -580,6 +598,10 @@ class RisingFactorial(CombinatorialFunction):
                                             r*(x - i),
                                             range(1, abs(int(k)) + 1), 1)
 
+        if k.is_integer == False:
+            if x.is_integer and x.is_negative:
+                return S.Zero
+
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma
         return gamma(x + k) / gamma(x)
@@ -842,8 +864,6 @@ class binomial(CombinatorialFunction):
     @classmethod
     def _eval(self, n, k):
         # n.is_Number and k.is_Integer and k != 1 and n != k
-        from sympy.functions.elementary.exponential import log
-        from sympy.core import N
 
         if k.is_Integer:
             if n.is_Integer and n >= 0:

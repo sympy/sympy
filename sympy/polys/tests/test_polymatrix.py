@@ -31,7 +31,7 @@ def test_polymatrix():
 
     pm3 = PolyMatrix([[Poly(x**2, x), S(1)]], ring='ZZ[x]')
     v3 = (S(1)/2)*pm3
-    assert v3 == PolyMatrix([[Poly(1/2*x**2, x, domain='QQ'), S(1)/2]], ring='EX')
+    assert v3 == PolyMatrix([[Poly(S(1)/2*x**2, x, domain='QQ'), S(1)/2]], ring='EX')
     assert pm3*(S(1)/2) == v3
     assert v3.ring == EX
 
