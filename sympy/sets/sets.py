@@ -673,7 +673,7 @@ class ProductSet(Set):
     is_ProductSet = True
 
     def __new__(cls, *sets, **assumptions):
-        if len(sets) == 1 and not isinstance(sets[0], (Set, set)) and iterable(sets[0]):
+        if len(sets) == 1 and iterable(sets[0]) and not isinstance(sets[0], (Set, set)):
             SymPyDeprecationWarning(
                 feature="ProductSet(iterable)",
                 useinstead="ProductSet(*iterable)",
@@ -1976,11 +1976,7 @@ def imageset(*args):
         raise ValueError('imageset expects at least 2 args, got: %s' % len(args))
 
     if isinstance(args[0], (Symbol, tuple)) and len(args) > 2:
-        if isinstance(args[0], tuple):
-            sig = (args[0],)
-        else:
-            sig = args[0]
-        f = Lambda(sig, args[1])
+        f = Lambda(args[0], args[1])
         set_list = args[2:]
     else:
         f = args[0]
@@ -2010,11 +2006,7 @@ def imageset(*args):
                 s = inspect.getargspec(f).args
         dexpr = _sympify(f(*[Dummy() for i in s]))
         var = tuple(_uniquely_named_symbol(Symbol(i), dexpr) for i in s)
-        expr = f(*var)
-        if len(var) == 1:
-            f = Lambda(var[0], expr)
-        else:
-            f = Lambda((var,), expr)
+        f = Lambda(var, f(*var))
     else:
         raise TypeError(filldedent('''
             expecting lambda, Lambda, or FunctionClass,
@@ -2056,9 +2048,9 @@ def imageset(*args):
         if r is not None:
             return r
 
-    set_list = set_list[0] if len(set_list) == 1 else ProductSet(*set_list)
+    #set_list = set_list[0] if len(set_list) == 1 else ProductSet(*set_list)
 
-    return ImageSet(f, set_list)
+    return ImageSet(f, *set_list)
 
 
 def is_function_invertible_in_set(func, setv):

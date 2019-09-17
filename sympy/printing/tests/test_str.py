@@ -177,6 +177,8 @@ def test_Lambda():
     # issue 2908
     assert str(Lambda((), 1)) == "Lambda((), 1)"
     assert str(Lambda((), x)) == "Lambda((), x)"
+    assert str(Lambda((x, y), x+y)) == "Lambda((x, y), x + y)"
+    assert str(Lambda(((x, y),), x+y)) == "Lambda(((x, y),), x + y)"
 
 
 def test_Limit():
