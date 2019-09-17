@@ -461,7 +461,7 @@ by injecting a custom zero test with warnings enabled.
     ...         result = None
     ...
     ...     # Warnings if evaluated into None
-    ...     if not result:
+    ...     if not isinstance(result, bool):
     ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
     ...     return result
     ...
@@ -487,7 +487,7 @@ while being harmless to other polynomials or transcendental functions.
     ...         result = None
     ...
     ...     # Warnings if evaluated into None
-    ...     if not result:
+    ...     if not isinstance(result, bool):
     ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
     ...     return result
     ...
