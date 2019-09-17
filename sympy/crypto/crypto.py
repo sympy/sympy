@@ -20,6 +20,8 @@ from string import whitespace, ascii_uppercase as uppercase, printable
 from functools import reduce
 import warnings
 
+from itertools import cycle
+
 from sympy import nextprime
 from sympy.core import Rational, Symbol
 from sympy.core.numbers import igcdex, mod_inverse, igcd
@@ -2699,7 +2701,7 @@ def decipher_elgamal(msg, key):
     True
 
     """
-    p, r, d = key
+    p, _, d = key
     c1, c2 = msg
     u = igcdex(c1**d, p)[0]
     return u * c2 % p
@@ -3069,6 +3071,76 @@ def decipher_gm(message, key):
         m += not b
     return m
 
+
+
+########### RailFence Cipher #############
+
+def encipher_railfence(message,rails):
+    """
+    Performs Railfence Encryption on plaintext and returns ciphertext
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_railfence
+    >>> message = "hello world"
+    >>> encipher_railfence(message,3)
+    'horel ollwd'
+
+    Parameters
+    ==========
+
+    message : string, the message to encrypt.
+    rails : int, the number of rails.
+
+    Returns
+    =======
+
+    The Encrypted string message.
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Rail_fence_cipher
+
+    """
+    r = list(range(rails))
+    p = cycle(r + r[-2:0:-1])
+    return ''.join(sorted(message, key=lambda i: next(p)))
+
+
+def decipher_railfence(ciphertext,rails):
+    """
+    Decrypt the message using the given rails
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decipher_railfence
+    >>> decipher_railfence("horel ollwd",3)
+    'hello world'
+
+    Parameters
+    ==========
+
+    message : string, the message to encrypt.
+    rails : int, the number of rails.
+
+    Returns
+    =======
+
+    The Decrypted string message.
+
+    """
+    r = list(range(rails))
+    p = cycle(r + r[-2:0:-1])
+
+    idx = sorted(range(len(ciphertext)), key=lambda i: next(p))
+    res = [''] * len(ciphertext)
+    for i, c in zip(idx, ciphertext):
+        res[i] = c
+    return ''.join(res)
+
+
 ################ Blum–Goldwasser cryptosystem  #########################
 
 def bg_private_key(p, q):
@@ -3193,7 +3265,7 @@ def encipher_bg(i, key, seed=None):
     x_L = pow(int(x), int(2**L), int(key))
 
     rand_bits = []
-    for k in range(L):
+    for _ in range(L):
         rand_bits.append(x % 2)
         x = x**2 % key
 
@@ -3244,7 +3316,7 @@ def decipher_bg(message, key):
     x = (q * mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
 
     orig_bits = []
-    for k in range(L):
+    for _ in range(L):
         orig_bits.append(x % 2)
         x = x**2 % public_key
 
