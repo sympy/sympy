@@ -1763,9 +1763,9 @@ def stirling(n, k, d=None, kind=2, signed=False):
     .. math :: {{n+1} \brace k} = j {n \brace k} + {n \brace {k-1}}
 
     where `j` is:
-        `n` for Stirling numbers of the first kind
-        `-n` for signed Stirling numbers of the first kind
-        `k` for Stirling numbers of the second kind
+        `n` for Stirling numbers of the first kind,
+        `-n` for signed Stirling numbers of the first kind,
+        `k` for Stirling numbers of the second kind.
 
     The first kind of Stirling number counts the number of permutations of
     ``n`` distinct items that have ``k`` cycles; the second kind counts the
