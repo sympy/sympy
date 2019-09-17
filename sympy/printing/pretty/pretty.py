@@ -1798,7 +1798,9 @@ class PrettyPrinter(Printer):
         convertible by ``str``.  It should be a single line.
         """
         bpretty = self._print(base)
-        exp = str(exp)
+        #exp = str(exp)  # doesn't work on Python 2
+        from sympy.core.compatibility import unicode
+        exp = unicode(exp)
         if exp == '2':  # careful, don't want 2.0 here
             istwo = True
             exp = ''
