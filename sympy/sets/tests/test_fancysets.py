@@ -119,9 +119,8 @@ def test_ImageSet():
     assert Rational(2, 3) in ImageSet(Lambda(((x, y),), 2/x), c)
 
     S1 = imageset(lambda x, y: x + y, S.Integers, S.Naturals)
-    # FIXME: The sets must be flattened somewhere in imageset...
-    #assert S1.base_pset == ProductSet(S.Integers, S.Naturals)
-    #assert S1.base_sets == (S.Integers, S.Naturals)
+    assert S1.base_pset == ProductSet(S.Integers, S.Naturals)
+    assert S1.base_sets == (S.Integers, S.Naturals)
 
     # Passing a set instead of a FiniteSet shouldn't raise
     assert unchanged(ImageSet, Lambda(x, x**2), {1, 2, 3})
@@ -141,7 +140,7 @@ def test_halfcircle():
     L = Lambda(((r, th),), (r*cos(th), r*sin(th)))
     halfcircle = ImageSet(L, Interval(0, 1)*Interval(0, pi))
 
-    #assert (r, 0) in halfcircle
+    #assert halfcircle._contains((r, 0)) is None
     assert (1, 0) in halfcircle
     assert (0, -1) not in halfcircle
     assert (r, 2*pi) not in halfcircle
