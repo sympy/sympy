@@ -6897,7 +6897,7 @@ n = -∞  \
 def test_issue_17616():
     assert pretty(pi**(exp(-1))) == \
     'E ____\n'\
-    '\/ pi '
+    '\\/ pi '
 
     assert upretty(pi**(exp(-1))) == \
 u("""\
@@ -6907,7 +6907,7 @@ u("""\
 
     assert pretty(pi**(1/pi)) == \
     'pi____\n'\
-    '\/ pi '
+    '\\/ pi '
 
     assert upretty(pi**(1/pi)) == \
 u("""\

@@ -1791,10 +1791,14 @@ class PrettyPrinter(Printer):
                 a.append( self._print(S.One) )
             return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
 
-    # A helper function for _print_Pow to print x**(1/expt)
     def _print_nth_root(self, base, exp):
+        """A helper function to print ``x**(1/exp)`` as a root.
+
+        Here ``exp`` should be a ``prettyForm``, a string, or something
+        convertible by ``str``.  It should be a single line.
+        """
         bpretty = self._print(base)
-        exp = pretty(exp)
+        exp = str(exp)
         if exp == '2':  # careful, don't want 2.0 here
             istwo = True
             exp = ''
@@ -1845,8 +1849,9 @@ class PrettyPrinter(Printer):
                 return prettyForm("1")/self._print(b)
             n, d = fraction(e)
             if n is S.One and d.is_Atom and not e.is_Integer and self._settings['root_notation']:
-                # TODO: assumes d prints on single line: does Atom imply that?
-                return self._print_nth_root(b, d)
+                dp = self._print(d)
+                if dp.height() == 1:
+                    return self._print_nth_root(b, dp)
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))
 
