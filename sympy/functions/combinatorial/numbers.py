@@ -1752,20 +1752,20 @@ def _stirling2(n, k):
 
 
 def stirling(n, k, d=None, kind=2, signed=False):
-    r"""Return Stirling number `S(n, k)` of the first or second (default) kind.
+    r"""Return Stirling number $S(n, k)$ of the first or second (default) kind.
 
-    The sum of all Stirling numbers of the second kind for `k = 1`
-    through `n` is ``bell(n)``. The recurrence relationship for these numbers
+    The sum of all Stirling numbers of the second kind for $k = 1$
+    through $n$ is ``bell(n)``. The recurrence relationship for these numbers
     is:
 
     .. math :: {0 \brace 0} = 1; {n \brace 0} = {0 \brace k} = 0;
 
     .. math :: {{n+1} \brace k} = j {n \brace k} + {n \brace {k-1}}
 
-    where `j` is:
-        `n` for Stirling numbers of the first kind,
-        `-n` for signed Stirling numbers of the first kind,
-        `k` for Stirling numbers of the second kind.
+    where $j$ is:
+        $n$ for Stirling numbers of the first kind,
+        $-n$ for signed Stirling numbers of the first kind,
+        $k$ for Stirling numbers of the second kind.
 
     The first kind of Stirling number counts the number of permutations of
     ``n`` distinct items that have ``k`` cycles; the second kind counts the
