@@ -214,7 +214,7 @@ def test_MatrixSymbol():
     assert maple_code(B * 2 * A) == "2*B.A"
 
     assert maple_code(
-        A * (B + 3 * Identity(n))) == "A.3*Matrix(n, shape = identity) + B"
+        A * (B + 3 * Identity(n))) == "A.(3*Matrix(n, shape = identity) + B)"
 
     assert maple_code(A ** (x ** 2)) == "MatrixPower(A, x^2)"
     assert maple_code(A ** 3) == "MatrixPower(A, 3)"
@@ -336,15 +336,15 @@ def test_hadamard():
     C = HadamardProduct(A, B)
     assert maple_code(C) == "A*B"
 
-    assert maple_code(C * v) == "A*B.v"  # TODO: don't know if the precedence of
+    assert maple_code(C * v) == "(A*B).v"
     # HadamardProduct is higher than dot product.
 
-    assert maple_code(h * C * v) == "h.A*B.v"
+    assert maple_code(h * C * v) == "h.(A*B).v"
 
-    assert maple_code(C * A) == "A*B.A"
+    assert maple_code(C * A) == "(A*B).A"
     # mixing Hadamard and scalar strange b/c we vectorize scalars
 
-    assert maple_code(C * x * y) == "x*y*A*B"
+    assert maple_code(C * x * y) == "x*y*(A*B)"
 
 
 def test_maple_piecewise():
