@@ -373,8 +373,8 @@ class ImageSet(Set):
 
     def __iter__(self):
         already_seen = set()
-        for i in self.base_set:
-            val = self.lamda(i)
+        for i in self.base_pset:
+            val = self.lamda(*i)
             if val in already_seen:
                 continue
             else:
@@ -421,9 +421,8 @@ class ImageSet(Set):
                 symsetmap[sig] = bs
                 return True
 
-        if not rmatch(self.lamda.signature[0], self.base_set):
+        if not all(rmatch(sg, st) for sg, st in zip(self.lamda.signature, self.base_sets)):
             return False
-
 
         # Which of the variables in the Lambda signature need to be solved for?
         symss = (eq.free_symbols for eq in equations)
@@ -449,12 +448,12 @@ class ImageSet(Set):
 
     @property
     def is_iterable(self):
-        return self.base_set.is_iterable
+        return all(s.is_iterable for s in self.base_sets)
 
     def doit(self, **kwargs):
         from sympy.sets.setexpr import SetExpr
         f = self.lamda
-        base_set = self.base_set
+        base_set = self.base_sets[0] # XXX: What if there are more base sets?
         return SetExpr(base_set)._eval_func(f).set
 
 

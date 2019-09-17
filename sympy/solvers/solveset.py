@@ -851,7 +851,7 @@ def solve_decomposition(f, symbol, domain):
             for iset in iter_iset:
                 new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
                 dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
-                base_set = iset.base_set
+                base_set = iset.base_sets[0]
                 if isinstance(new_solutions, FiniteSet):
                     new_exprs = new_solutions
 
@@ -1278,15 +1278,15 @@ def _solve_modular(f, symbol, domain):
     if isinstance(g_n, ImageSet):
         lamda_expr = g_n.lamda.expr
         lamda_vars = g_n.lamda.variables
-        base_set = g_n.base_set
+        base_sets = g_n.base_sets
         sol_set = _solveset(f_x - lamda_expr, symbol, S.Integers)
         if isinstance(sol_set, FiniteSet):
             tmp_sol = EmptySet()
             for sol in sol_set:
-                tmp_sol += ImageSet(Lambda(lamda_vars, sol), base_set)
+                tmp_sol += ImageSet(Lambda(lamda_vars, sol), *base_sets)
             sol_set = tmp_sol
         else:
-            sol_set =  ImageSet(Lambda(lamda_vars, sol_set), base_set)
+            sol_set =  ImageSet(Lambda(lamda_vars, sol_set), *base_sets)
         return domain.intersect(sol_set)
 
     return unsolved_result
@@ -2898,7 +2898,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             res[key_res] = value_res.lamda.expr
                             original_imageset[key_res] = value_res
                             dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
-                            base = value_res.base_set
+                            base = value_res.base_sets[0]
                             imgset_yes = (dummy_n, base)
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res).expand()
