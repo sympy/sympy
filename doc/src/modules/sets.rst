@@ -99,7 +99,7 @@ Iteration over sets
 ^^^^^^^^^^^^^^^^^^^
 
 For set unions, `\{a, b\} \cup \{x, y\}` can be treated as
- `\{a, b, x, y\}` for iteration regardless of the distinctiveness of
+`\{a, b, x, y\}` for iteration regardless of the distinctiveness of
 the elements, however, for set intersections, assuming that
 `\{a, b\} \cap \{x, y\}` is `\varnothing` or `\{a, b \}` would not
 always be valid, since some of `a`, `b`, `x` or `y` may or may not be
