@@ -105,6 +105,10 @@ def test_ImageSet():
     assert imageset(x, -x, Interval(0, 1)) == Interval(-1, 0)
 
     assert ImageSet(Lambda(x, x**2), Interval(0, 2)).doit() == Interval(0, 4)
+    # This could evaluate in principle. This just tests that doit with two
+    # base sets doesn't raise:
+    s = ImageSet(Lambda((x, y), 2*x), {4}, {3})
+    assert s.doit() == s
 
     c = Interval(1, 3) * Interval(1, 3)
     assert Tuple(2, 6) in ImageSet(Lambda(((x, y),), (x, 2*y)), c)

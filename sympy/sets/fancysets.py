@@ -453,8 +453,10 @@ class ImageSet(Set):
     def doit(self, **kwargs):
         from sympy.sets.setexpr import SetExpr
         f = self.lamda
-        base_set = self.base_sets[0] # XXX: What if there are more base sets?
-        return SetExpr(base_set)._eval_func(f).set
+        if len(self.base_sets) == 1:
+            base_set = self.base_sets[0] # XXX: What if there are more base sets?
+            return SetExpr(base_set)._eval_func(f).set
+        return self
 
 
 class Range(Set):
