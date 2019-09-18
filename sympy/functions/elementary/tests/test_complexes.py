@@ -299,7 +299,7 @@ def test_sign():
     assert sign(x).rewrite(Piecewise) == \
         Piecewise((1, x > 0), (-1, x < 0), (0, True))
     assert sign(y).rewrite(Piecewise) == sign(y)
-    assert sign(x).rewrite(Heaviside) == 2*Heaviside(x)-1
+    assert sign(x).rewrite(Heaviside) == 2*Heaviside(x, H0=S(1)/2) - 1
     assert sign(y).rewrite(Heaviside) == sign(y)
 
     # evaluate what can be evaluated
@@ -446,6 +446,19 @@ def test_Abs():
     arg = sqrt(acos(1 - I)*acos(1 + I))
     assert abs(arg) == arg
 
+    # special handling to put Abs in denom
+    assert abs(1/x) == 1/Abs(x)
+    e = abs(2/x**2)
+    assert e.is_Mul and e == 2/Abs(x**2)
+    assert unchanged(Abs, y/x)
+    assert unchanged(Abs, x/(x + 1))
+    assert unchanged(Abs, x*y)
+    p = Symbol('p', positive=True)
+    assert abs(x/p) == abs(x)/p
+
+    # coverage
+    assert unchanged(Abs, Symbol('x', real=True)**y)
+
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
@@ -460,6 +473,17 @@ def test_Abs_rewrite():
     assert Abs(x).rewrite(Piecewise) == Piecewise((x, x >= 0), (-x, True))
     assert Abs(y).rewrite(Piecewise) == Abs(y)
     assert Abs(y).rewrite(sign) == y/sign(y)
+
+    i = Symbol('i', imaginary=True)
+    assert abs(i).rewrite(Piecewise) == Piecewise((I*i, I*i >= 0), (-I*i, True))
+
+
+    assert Abs(y).rewrite(conjugate) == sqrt(y*conjugate(y))
+    assert Abs(i).rewrite(conjugate) == sqrt(-i**2) #  == -I*i
+
+    y = Symbol('y', extended_real=True)
+    assert  (Abs(exp(-I*x)-exp(-I*y))**2).rewrite(conjugate) == \
+        -exp(I*x)*exp(-I*y) + 2 - exp(-I*x)*exp(I*y)
 
 
 def test_Abs_real():

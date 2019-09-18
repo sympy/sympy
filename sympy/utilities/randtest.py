@@ -117,7 +117,7 @@ def _randrange(seed=None):
                 raise ValueError('_randrange got empty range')
             try:
                 x = seq.pop()
-            except IndexError as e:
+            except IndexError:
                 raise ValueError('_randrange sequence was too short')
             if a <= x < b:
                 return x

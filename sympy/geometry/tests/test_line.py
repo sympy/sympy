@@ -8,10 +8,8 @@ from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises, slow, warns
+from sympy.utilities.pytest import raises, warns
 
-import traceback
-import sys
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)

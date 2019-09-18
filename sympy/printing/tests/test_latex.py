@@ -6,7 +6,7 @@ from sympy import (
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin, acsc, Mod,
+    Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, Mod,
     assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
@@ -14,11 +14,11 @@ from sympy import (
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
+    Contains, divisor_sigma, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
     stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
-    UnevaluatedExpr, Quaternion, I, KroneckerProduct, Intersection, LambertW)
+    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -44,6 +44,8 @@ from sympy.combinatorics.permutations import Cycle, Permutation
 from sympy import MatrixSymbol, ln
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 from sympy.sets.setexpr import SetExpr
+from sympy.sets.sets import \
+    Union, Intersection, Complement, SymmetricDifference, ProductSet
 
 import sympy as sym
 
@@ -525,6 +527,8 @@ def test_latex_functions():
         r'\left(\Omega\left(n\right)\right)^{2}'
 
     assert latex(LambertW(n)) == r'W\left(n\right)'
+    assert latex(LambertW(n, -1)) == r'W_{-1}\left(n\right)'
+    assert latex(LambertW(n, k)) == r'W_{k}\left(n\right)'
 
     assert latex(Mod(x, 7)) == r'x\bmod{7}'
     assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'
@@ -655,6 +659,17 @@ def test_latex_derivatives():
 
     assert latex(diff(f(x), (x, n))) == \
         r"\frac{d^{n}}{d x^{n}} f{\left(x \right)}"
+
+    x1 = Symbol('x1')
+    x2 = Symbol('x2')
+    assert latex(diff(f(x1, x2), x1)) == r'\frac{\partial}{\partial x_{1}} f{\left(x_{1},x_{2} \right)}'
+
+    n1 = Symbol('n1')
+    assert latex(diff(f(x), (x, n1))) ==  r'\frac{d^{n_{1}}}{d x^{n_{1}}} f{\left(x \right)}'
+
+    n2 = Symbol('n2')
+    assert latex(diff(f(x), (x, Max(n1, n2)))) == \
+        r'\frac{d^{\max\left(n_{1}, n_{2}\right)}}{d x^{\max\left(n_{1}, n_{2}\right)}} f{\left(x \right)}'
 
 
 def test_latex_subs():
@@ -855,18 +870,137 @@ def test_latex_Complement():
         r"\mathbb{R} \setminus \mathbb{N}"
 
 
-def test_latex_Complexes():
-    assert latex(S.Complexes) == r"\mathbb{C}"
-
-
 def test_latex_productset():
     line = Interval(0, 1)
     bigline = Interval(0, 10)
     fset = FiniteSet(1, 2, 3)
     assert latex(line**2) == r"%s^{2}" % latex(line)
     assert latex(line**10) == r"%s^{10}" % latex(line)
-    assert latex(line * bigline * fset) == r"%s \times %s \times %s" % (
+    assert latex((line * bigline * fset).flatten()) == r"%s \times %s \times %s" % (
         latex(line), latex(bigline), latex(fset))
+
+
+def test_set_operators_parenthesis():
+    a, b, c, d = symbols('a:d')
+    A = FiniteSet(a)
+    B = FiniteSet(b)
+    C = FiniteSet(c)
+    D = FiniteSet(d)
+
+    U1 = Union(A, B, evaluate=False)
+    U2 = Union(C, D, evaluate=False)
+    I1 = Intersection(A, B, evaluate=False)
+    I2 = Intersection(C, D, evaluate=False)
+    C1 = Complement(A, B, evaluate=False)
+    C2 = Complement(C, D, evaluate=False)
+    D1 = SymmetricDifference(A, B, evaluate=False)
+    D2 = SymmetricDifference(C, D, evaluate=False)
+    # XXX ProductSet does not support evaluate keyword
+    P1 = ProductSet(A, B)
+    P2 = ProductSet(C, D)
+
+    assert latex(Intersection(A, U2, evaluate=False)) == \
+        '\\left\\{a\\right\\} \\cap ' \
+        '\\left(\\left\\{c\\right\\} \\cup \\left\\{d\\right\\}\\right)'
+    assert latex(Intersection(U1, U2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\cup \\left\\{b\\right\\}\\right) ' \
+        '\\cap \\left(\\left\\{c\\right\\} \\cup \\left\\{d\\right\\}\\right)'
+    assert latex(Intersection(C1, C2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\setminus ' \
+        '\\left\\{b\\right\\}\\right) \\cap \\left(\\left\\{c\\right\\} ' \
+        '\\setminus \\left\\{d\\right\\}\\right)'
+    assert latex(Intersection(D1, D2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\triangle ' \
+        '\\left\\{b\\right\\}\\right) \\cap \\left(\\left\\{c\\right\\} ' \
+        '\\triangle \\left\\{d\\right\\}\\right)'
+    assert latex(Intersection(P1, P2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\times \\left\\{b\\right\\}\\right) ' \
+        '\\cap \\left(\\left\\{c\\right\\} \\times ' \
+        '\\left\\{d\\right\\}\\right)'
+
+    assert latex(Union(A, I2, evaluate=False)) == \
+        '\\left\\{a\\right\\} \\cup ' \
+        '\\left(\\left\\{c\\right\\} \\cap \\left\\{d\\right\\}\\right)'
+    assert latex(Union(I1, I2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\cap ''\\left\\{b\\right\\}\\right) ' \
+        '\\cup \\left(\\left\\{c\\right\\} \\cap \\left\\{d\\right\\}\\right)'
+    assert latex(Union(C1, C2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\setminus ' \
+        '\\left\\{b\\right\\}\\right) \\cup \\left(\\left\\{c\\right\\} ' \
+        '\\setminus \\left\\{d\\right\\}\\right)'
+    assert latex(Union(D1, D2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\triangle ' \
+        '\\left\\{b\\right\\}\\right) \\cup \\left(\\left\\{c\\right\\} ' \
+        '\\triangle \\left\\{d\\right\\}\\right)'
+    assert latex(Union(P1, P2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\times \\left\\{b\\right\\}\\right) ' \
+        '\\cup \\left(\\left\\{c\\right\\} \\times ' \
+        '\\left\\{d\\right\\}\\right)'
+
+    assert latex(Complement(A, C2, evaluate=False)) == \
+        '\\left\\{a\\right\\} \\setminus \\left(\\left\\{c\\right\\} ' \
+        '\\setminus \\left\\{d\\right\\}\\right)'
+    assert latex(Complement(U1, U2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\cup \\left\\{b\\right\\}\\right) ' \
+        '\\setminus \\left(\\left\\{c\\right\\} \\cup ' \
+        '\\left\\{d\\right\\}\\right)'
+    assert latex(Complement(I1, I2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\cap \\left\\{b\\right\\}\\right) ' \
+        '\\setminus \\left(\\left\\{c\\right\\} \\cap ' \
+        '\\left\\{d\\right\\}\\right)'
+    assert latex(Complement(D1, D2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\triangle ' \
+        '\\left\\{b\\right\\}\\right) \\setminus ' \
+        '\\left(\\left\\{c\\right\\} \\triangle \\left\\{d\\right\\}\\right)'
+    assert latex(Complement(P1, P2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\times \\left\\{b\\right\\}\\right) '\
+        '\\setminus \\left(\\left\\{c\\right\\} \\times '\
+        '\\left\\{d\\right\\}\\right)'
+
+    assert latex(SymmetricDifference(A, D2, evaluate=False)) == \
+        '\\left\\{a\\right\\} \\triangle \\left(\\left\\{c\\right\\} ' \
+        '\\triangle \\left\\{d\\right\\}\\right)'
+    assert latex(SymmetricDifference(U1, U2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\cup \\left\\{b\\right\\}\\right) ' \
+        '\\triangle \\left(\\left\\{c\\right\\} \\cup ' \
+        '\\left\\{d\\right\\}\\right)'
+    assert latex(SymmetricDifference(I1, I2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\cap \\left\\{b\\right\\}\\right) ' \
+        '\\triangle \\left(\\left\\{c\\right\\} \\cap ' \
+        '\\left\\{d\\right\\}\\right)'
+    assert latex(SymmetricDifference(C1, C2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\setminus ' \
+        '\\left\\{b\\right\\}\\right) \\triangle ' \
+        '\\left(\\left\\{c\\right\\} \\setminus \\left\\{d\\right\\}\\right)'
+    assert latex(SymmetricDifference(P1, P2, evaluate=False)) == \
+        '\\left(\\left\\{a\\right\\} \\times \\left\\{b\\right\\}\\right) ' \
+        '\\triangle \\left(\\left\\{c\\right\\} \\times ' \
+        '\\left\\{d\\right\\}\\right)'
+
+    # XXX This can be incorrect since cartesian product is not associative
+    assert latex(ProductSet(A, P2).flatten()) == \
+        '\\left\\{a\\right\\} \\times \\left\\{c\\right\\} \\times ' \
+        '\\left\\{d\\right\\}'
+    assert latex(ProductSet(U1, U2)) == \
+        '\\left(\\left\\{a\\right\\} \\cup \\left\\{b\\right\\}\\right) ' \
+        '\\times \\left(\\left\\{c\\right\\} \\cup ' \
+        '\\left\\{d\\right\\}\\right)'
+    assert latex(ProductSet(I1, I2)) == \
+        '\\left(\\left\\{a\\right\\} \\cap \\left\\{b\\right\\}\\right) ' \
+        '\\times \\left(\\left\\{c\\right\\} \\cap ' \
+        '\\left\\{d\\right\\}\\right)'
+    assert latex(ProductSet(C1, C2)) == \
+        '\\left(\\left\\{a\\right\\} \\setminus ' \
+        '\\left\\{b\\right\\}\\right) \\times \\left(\\left\\{c\\right\\} ' \
+        '\\setminus \\left\\{d\\right\\}\\right)'
+    assert latex(ProductSet(D1, D2)) == \
+        '\\left(\\left\\{a\\right\\} \\triangle ' \
+        '\\left\\{b\\right\\}\\right) \\times \\left(\\left\\{c\\right\\} ' \
+        '\\triangle \\left\\{d\\right\\}\\right)'
+
+
+def test_latex_Complexes():
+    assert latex(S.Complexes) == r"\mathbb{C}"
 
 
 def test_latex_Naturals():
@@ -1640,23 +1774,28 @@ def test_Hadamard():
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
 
     assert latex(HadamardPower(X, 2)) == r'X^{\circ {2}}'
-    assert latex(HadamardPower(X, -1)) == r'X^{\circ {-1}}'
+    assert latex(HadamardPower(X, -1)) == r'X^{\circ \left({-1}\right)}'
     assert latex(HadamardPower(MatAdd(X, Y), 2)) == \
         r'\left(X + Y\right)^{\circ {2}}'
     assert latex(HadamardPower(MatMul(X, Y), 2)) == \
         r'\left(X Y\right)^{\circ {2}}'
 
     assert latex(HadamardPower(MatPow(X, -1), -1)) == \
-        r'\left(X^{-1}\right)^{\circ {-1}}'
+        r'\left(X^{-1}\right)^{\circ \left({-1}\right)}'
     assert latex(MatPow(HadamardPower(X, -1), -1)) == \
-        r'\left(X^{\circ {-1}}\right)^{-1}'
+        r'\left(X^{\circ \left({-1}\right)}\right)^{-1}'
+
+    assert latex(HadamardPower(X, n+1)) == \
+        r'X^{\circ \left({n + 1}\right)}'
 
 
 def test_ElementwiseApplyFunction():
     from sympy.matrices import MatrixSymbol
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
-    assert latex(expr) == r"\sin\left({X^{T} X}\ldots\right)"
+    assert latex(expr) == r"{\sin}_{\circ}\left({X^{T} X}\right)"
+    expr = X.applyfunc(Lambda(x, 1/x))
+    assert latex(expr) == r'{\left( d \mapsto \frac{1}{d} \right)}_{\circ}\left({X}\right)'
 
 
 def test_ZeroMatrix():
@@ -2075,13 +2214,13 @@ def test_issue_9216():
 
 
 def test_latex_printer_tensor():
-    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensor_heads
     L = TensorIndexType("L")
     i, j, k, l = tensor_indices("i j k l", L)
     i0 = tensor_indices("i_0", L)
-    A, B, C, D = tensorhead("A B C D", [L], [[1]])
-    H = tensorhead("H", [L, L], [[1], [1]])
-    K = tensorhead("K", [L, L, L, L], [[1], [1], [1], [1]])
+    A, B, C, D = tensor_heads("A B C D", [L])
+    H = TensorHead("H", [L, L])
+    K = TensorHead("K", [L, L, L, L])
 
     assert latex(i) == "{}^{i}"
     assert latex(-i) == "{}_{i}"

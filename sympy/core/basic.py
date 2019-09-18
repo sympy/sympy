@@ -981,9 +981,12 @@ class Basic(with_metaclass(ManagedProperties)):
             reps = {}
             rv = self
             kwargs['hack2'] = True
-            m = Dummy()
+            m = Dummy('subs_m')
             for old, new in sequence:
-                d = Dummy(commutative=new.is_commutative)
+                com = new.is_commutative
+                if com is None:
+                    com = True
+                d = Dummy('subs_d', commutative=com)
                 # using d*m so Subs will be used on dummy variables
                 # in things like Derivative(f(x, y), x) in which x
                 # is both free and bound
@@ -1518,11 +1521,15 @@ class Basic(with_metaclass(ManagedProperties)):
                 if new is not None and new != expr:
                     mapping[expr] = new
                     if simultaneous:
-                        # don't let this expression be changed during rebuilding
+                        # don't let this change during rebuilding;
+                        # XXX this may fail if the object being replaced
+                        # cannot be represented as a Dummy in the expression
+                        # tree, e.g. an ExprConditionPair in Piecewise
+                        # cannot be represented with a Dummy
                         com = getattr(new, 'is_commutative', True)
                         if com is None:
                             com = True
-                        d = Dummy(commutative=com)
+                        d = Dummy('rec_replace', commutative=com)
                         mask.append((d, new))
                         expr = d
                     else:
@@ -1536,7 +1543,12 @@ class Basic(with_metaclass(ManagedProperties)):
             mask = list(reversed(mask))
             for o, n in mask:
                 r = {o: n}
-                rv = rv.xreplace(r)
+                # if a sub-expression could not be replaced with
+                # a Dummy then this will fail; either filter
+                # against such sub-expressions or figure out a
+                # way to carry out simultaneous replacement
+                # in this situation.
+                rv = rv.xreplace(r)  # if this fails, see above
 
         if not map:
             return rv

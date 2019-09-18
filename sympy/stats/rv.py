@@ -292,7 +292,6 @@ class RandomIndexedSymbol(RandomSymbol):
 
 class RandomMatrixSymbol(MatrixSymbol):
     def __new__(cls, symbol, n, m, pspace=None):
-        from sympy.stats.random_matrix import RandomMatrixPSpace
         n, m = _sympify(n), _sympify(m)
         symbol = _symbol_converter(symbol)
         return Basic.__new__(cls, symbol, n, m, pspace)
@@ -397,7 +396,6 @@ class IndependentProductPSpace(ProductPSpace):
             cond_inv = True
         expr = condition.lhs - condition.rhs
         rvs = random_symbols(expr)
-        z = Dummy('z', real=True, Finite=True)
         dens = self.compute_density(expr)
         if any([pspace(rv).is_Continuous for rv in rvs]):
             from sympy.stats.crv import (ContinuousDistributionHandmade,
@@ -409,23 +407,26 @@ class IndependentProductPSpace(ProductPSpace):
                 pdf = self.domain.integrate(self.pdf, symbols, **kwargs)
                 return Lambda(expr.symbol, pdf)
             dens = ContinuousDistributionHandmade(dens)
+            z = Dummy('z', real=True)
             space = SingleContinuousPSpace(z, dens)
             result = space.probability(condition.__class__(space.value, 0))
         else:
             from sympy.stats.drv import (DiscreteDistributionHandmade,
                 SingleDiscretePSpace)
             dens = DiscreteDistributionHandmade(dens)
+            z = Dummy('z', integer=True)
             space = SingleDiscretePSpace(z, dens)
             result = space.probability(condition.__class__(space.value, 0))
         return result if not cond_inv else S.One - result
 
     def compute_density(self, expr, **kwargs):
-        z = Dummy('z', real=True, finite=True)
         rvs = random_symbols(expr)
         if any(pspace(rv).is_Continuous for rv in rvs):
+            z = Dummy('z', real=True)
             expr = self.compute_expectation(DiracDelta(expr - z),
              **kwargs)
         else:
+            z = Dummy('z', integer=True)
             expr = self.compute_expectation(KroneckerDelta(expr, z),
              **kwargs)
         return Lambda(z, expr)
@@ -453,7 +454,9 @@ class IndependentProductPSpace(ProductPSpace):
             replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
             norm = domain.compute_expectation(self.pdf, **kwargs)
             pdf = self.pdf / norm.xreplace(replacement)
-            density = Lambda(domain.symbols, pdf)
+            # XXX: Converting symbols from set to tuple. The order matters to
+            # Lambda though so we shouldn't be starting with a set here...
+            density = Lambda(tuple(domain.symbols), pdf)
 
         return space(domain, density)
 
@@ -506,7 +509,7 @@ class ProductDomain(RandomDomain):
 
     @property
     def set(self):
-        return ProductSet(domain.set for domain in self.domains)
+        return ProductSet(*(domain.set for domain in self.domains))
 
     def __contains__(self, other):
         # Split event into each subdomain
@@ -818,7 +821,6 @@ class Density(Basic):
     def doit(self, evaluate=True, **kwargs):
         from sympy.stats.joint_rv import JointPSpace
         from sympy.stats.frv import SingleFiniteDistribution
-        from sympy.stats.random_matrix_models import RandomMatrixPSpace
         expr, condition = self.expr, self.condition
         if _sympify(expr).has(RandomMatrixSymbol):
             return pspace(expr).compute_density(expr)

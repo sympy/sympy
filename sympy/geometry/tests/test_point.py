@@ -5,9 +5,6 @@ from sympy.matrices import Matrix
 from sympy.utilities.iterables import subsets, permutations, cartes
 from sympy.utilities.pytest import raises, warns
 
-import traceback
-import sys
-
 
 def test_point():
     x = Symbol('x', real=True)
@@ -333,7 +330,7 @@ def test_arguments():
         for p in singles3d:
             getattr(p3d, func)(p)
     for func in test_double:
-        for p in doubles2d:
+        for p in doubles3d:
             getattr(p3d, func)(*p)
 
     # test 4D

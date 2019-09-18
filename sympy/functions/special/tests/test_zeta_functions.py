@@ -2,7 +2,7 @@ from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
                    exp_polar, polar_lift, O, stieltjes, Abs, Sum, oo)
 from sympy.core.function import ArgumentIndexError
-from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+from sympy.functions.combinatorial.numbers import bernoulli, factorial
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically as tn)

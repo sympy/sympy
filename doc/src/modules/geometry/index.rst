@@ -1,6 +1,6 @@
-===============
-Geometry Module
-===============
+========
+Geometry
+========
 
 
 Introduction

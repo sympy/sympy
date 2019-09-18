@@ -562,10 +562,10 @@ def _rewrite_gamma(f, s, a, b):
         fact, is_numer = args.pop()
         if is_numer:
             ugammas, lgammas = numer_gammas, denom_gammas
-            ufacs, lfacs = facs, dfacs
+            ufacs = facs
         else:
             ugammas, lgammas = denom_gammas, numer_gammas
-            ufacs, lfacs = dfacs, facs
+            ufacs = dfacs
 
         def linear_arg(arg):
             """ Test if arg is of form a*s+b, raise exception if not. """
@@ -739,7 +739,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
         else:
             try:
                 h = hyperexpand(G)
-            except NotImplementedError as detail:
+            except NotImplementedError:
                 raise IntegralTransformError(
                     'Inverse Mellin', F, 'Could not calculate integral')
 
@@ -955,6 +955,8 @@ def _simplifyconds(expr, s, a):
         if ex == True or ex == False:
             return bool(ex)
         return ex.replace(*args)
+    from sympy.simplify.radsimp import collect_abs
+    expr = collect_abs(expr)
     expr = repl(expr, StrictLessThan, replie)
     expr = repl(expr, StrictGreaterThan, lambda x, y: replie(y, x))
     expr = repl(expr, Unequality, replue)

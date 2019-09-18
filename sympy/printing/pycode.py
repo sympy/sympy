@@ -449,6 +449,11 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
     def _print_Half(self, expr):
         return self._print_Rational(expr)
 
+    _print_lowergamma = CodePrinter._print_not_supported
+    _print_uppergamma = CodePrinter._print_not_supported
+    _print_fresnelc = CodePrinter._print_not_supported
+    _print_fresnels = CodePrinter._print_not_supported
+
 
 for k in PythonCodePrinter._kf:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
@@ -490,6 +495,9 @@ def pycode(expr, **settings):
 _not_in_mpmath = 'log1p log2'.split()
 _in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
 _known_functions_mpmath = dict(_in_mpmath, **{
+    'beta': 'beta',
+    'fresnelc': 'fresnelc',
+    'fresnels': 'fresnels',
     'sign': 'sign',
 })
 _known_constants_mpmath = {
@@ -502,6 +510,8 @@ class MpmathPrinter(PythonCodePrinter):
     Lambda printer for mpmath which maintains precision for floats
     """
     printmethod = "_mpmathcode"
+
+    language = "Python with mpmath"
 
     _kf = dict(chain(
         _known_functions.items(),
@@ -581,6 +591,7 @@ class NumPyPrinter(PythonCodePrinter):
     logical operators, etc.
     """
     printmethod = "_numpycode"
+    language = "Python with NumPy"
 
     _kf = dict(chain(
         PythonCodePrinter._kf.items(),
@@ -777,11 +788,16 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s, %s)" % (
             self._module_format("numpy.transpose"),
             self._print(expr.expr),
-            self._print(expr.permutation.args[0]),
+            self._print(expr.permutation.array_form),
         )
 
     def _print_CodegenArrayElementwiseAdd(self, expr):
         return self._expand_fold_binary_op('numpy.add', expr.args)
+
+    _print_lowergamma = CodePrinter._print_not_supported
+    _print_uppergamma = CodePrinter._print_not_supported
+    _print_fresnelc = CodePrinter._print_not_supported
+    _print_fresnels = CodePrinter._print_not_supported
 
 
 for k in NumPyPrinter._kf:
@@ -811,15 +827,19 @@ _known_functions_scipy_special = {
     'hermite': 'eval_hermite',
     'laguerre': 'eval_laguerre',
     'assoc_laguerre': 'eval_genlaguerre',
+    'beta': 'beta'
 }
 
 _known_constants_scipy_constants = {
     'GoldenRatio': 'golden_ratio',
     'Pi': 'pi',
-    'E': 'e'
+    'E': 'e',
+    'Exp1': 'e'
 }
 
 class SciPyPrinter(NumPyPrinter):
+
+    language = "Python with SciPy"
 
     _kf = dict(chain(
         NumPyPrinter._kf.items(),
@@ -849,6 +869,31 @@ class SciPyPrinter(NumPyPrinter):
             self._print(expr.args[1]),
             self._print(expr.args[2]))
 
+    def _print_lowergamma(self, expr):
+        return "{0}({2})*{1}({2}, {3})".format(
+            self._module_format('scipy.special.gamma'),
+            self._module_format('scipy.special.gammainc'),
+            self._print(expr.args[0]),
+            self._print(expr.args[1]))
+
+    def _print_uppergamma(self, expr):
+        return "{0}({2})*{1}({2}, {3})".format(
+            self._module_format('scipy.special.gamma'),
+            self._module_format('scipy.special.gammaincc'),
+            self._print(expr.args[0]),
+            self._print(expr.args[1]))
+
+    def _print_fresnels(self, expr):
+        return "{0}({1})[0]".format(
+                self._module_format("scipy.special.fresnel"),
+                self._print(expr.args[0]))
+
+    def _print_fresnelc(self, expr):
+        return "{0}({1})[1]".format(
+                self._module_format("scipy.special.fresnel"),
+                self._print(expr.args[0]))
+
+
 for k in SciPyPrinter._kf:
     setattr(SciPyPrinter, '_print_%s' % k, _print_known_func)
 
@@ -857,6 +902,8 @@ for k in SciPyPrinter._kc:
 
 
 class SymPyPrinter(PythonCodePrinter):
+
+    language = "Python with SymPy"
 
     _kf = {k: 'sympy.' + v for k, v in chain(
         _known_functions.items(),

@@ -8,11 +8,9 @@ from sympy import re, im, conjugate
 from sympy import sqrt, sin, cos, acos, exp, ln
 from sympy import trigsimp
 from sympy import integrate
-from sympy import Matrix, Add, Mul
+from sympy import Matrix
 from sympy import sympify
-from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.expr import Expr
-from sympy.core.numbers import Integer
 
 
 class Quaternion(Expr):
@@ -196,6 +194,16 @@ class Quaternion(Expr):
     def __neg__(self):
         return Quaternion(-self._a, -self._b, -self._c, -self.d)
 
+    def __truediv__(self, other):
+        return self * sympify(other)**-1
+
+    __div__ = __truediv__
+
+    def __rtruediv__(self, other):
+        return sympify(other) * self**-1
+
+    __rdiv__ = __rtruediv__
+
     def _eval_Integral(self, *args):
         return self.integrate(*args)
 
@@ -246,14 +254,12 @@ class Quaternion(Expr):
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
-            if q1.real_field:
-                if q2.is_complex:
+            if q1.real_field and q2.is_complex:
                     return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
-                else:
-                    # q2 is something strange, do not evaluate:
-                    return Add(q1, q2)
-            else:
+            elif q2.is_commutative:
                 return Quaternion(q1.a + q2, q1.b, q1.c, q1.d)
+            else:
+                raise ValueError("Only commutative expressions can be added with a Quaternion.")
 
         return Quaternion(q1.a + q2.a, q1.b + q2.b, q1.c + q2.c, q1.d
                           + q2.d)
@@ -321,14 +327,14 @@ class Quaternion(Expr):
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> from sympy import symbols
+        >>> from sympy import Symbol
         >>> q1 = Quaternion(1, 2, 3, 4)
         >>> q2 = Quaternion(5, 6, 7, 8)
         >>> Quaternion._generic_mul(q1, q2)
         (-60) + 12*i + 30*j + 24*k
         >>> Quaternion._generic_mul(q1, 2)
         2 + 4*i + 6*j + 8*k
-        >>> x = symbols('x', real = True)
+        >>> x = Symbol('x', real = True)
         >>> Quaternion._generic_mul(q1, x)
         x + 2*x*i + 3*x*j + 4*x*k
 
@@ -349,24 +355,21 @@ class Quaternion(Expr):
 
         # If q1 is a number or a sympy expression instead of a quaternion
         if not isinstance(q1, Quaternion):
-            if q2.real_field:
-                if q1.is_complex:
-                    return q2 * Quaternion(re(q1), im(q1), 0, 0)
-                else:
-                    return Mul(q1, q2)
-            else:
+            if q2.real_field and q1.is_complex:
+                    return Quaternion(re(q1), im(q1), 0, 0) * q2
+            elif q1.is_commutative:
                 return Quaternion(q1 * q2.a, q1 * q2.b, q1 * q2.c, q1 * q2.d)
-
+            else:
+                raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
-            if q1.real_field:
-                if q2.is_complex:
+            if q1.real_field and q2.is_complex:
                     return q1 * Quaternion(re(q2), im(q2), 0, 0)
-                else:
-                    return Mul(q1, q2)
-            else:
+            elif q2.is_commutative:
                 return Quaternion(q2 * q1.a, q2 * q1.b, q2 * q1.c, q2 * q1.d)
+            else:
+                raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
         return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
                           q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
@@ -421,22 +424,23 @@ class Quaternion(Expr):
         >>> q.pow(4)
         668 + (-224)*i + (-336)*j + (-448)*k
         """
+        p = sympify(p)
         q = self
         if p == -1:
             return q.inverse()
         res = 1
 
+        if not p.is_Integer:
+            return NotImplemented
+
         if p < 0:
             q, p = q.inverse(), -p
 
-        if not (isinstance(p, (Integer, SYMPY_INTS))):
-            return NotImplemented
-
         while p > 0:
-            if p & 1:
+            if p % 2 == 1:
                 res = q * res
 
-            p = p >> 1
+            p = p//2
             q = q * q
 
         return res
@@ -597,14 +601,8 @@ class Quaternion(Expr):
         2*pi/3
         """
         q = self
-        try:
-            # Skips it if it doesn't know whether q.a is negative
-            if q.a < 0:
-                # avoid error with acos
-                # axis and angle of rotation of q and q*-1 will be the same
-                q = q * -1
-        except BaseException:
-            pass
+        if q.a.is_negative:
+            q = q * -1
 
         q = q.normalize()
         angle = trigsimp(2 * acos(q.a))

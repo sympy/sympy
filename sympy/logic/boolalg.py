@@ -10,7 +10,7 @@ from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (ordered, range, with_metaclass,
     as_int)
-from sympy.core.function import Application, Derivative, count_ops
+from sympy.core.function import Application, Derivative
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
@@ -555,7 +555,7 @@ class BooleanFunction(Application, Boolean):
                            binary=True)
         if len(Rel) <= 1:
             return rv
-        Rel, nonRealRel = sift(rv.args, lambda i: all(s.is_real is not False
+        Rel, nonRealRel = sift(Rel, lambda i: all(s.is_real is not False
                                                       for s in i.free_symbols),
                                binary=True)
         Rel = [i.canonical for i in Rel]
@@ -679,6 +679,26 @@ class And(LatticeOp, BooleanFunction):
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
+    def _eval_subs(self, old, new):
+        args = []
+        bad = None
+        for i in self.args:
+            try:
+                i = i.subs(old, new)
+            except TypeError:
+                # store TypeError
+                if bad is None:
+                    bad = i
+                continue
+            if i == False:
+                return S.false
+            elif i != True:
+                args.append(i)
+        if bad is not None:
+            # let it raise
+            bad.subs(old, new)
+        return self.func(*args)
+
     def _eval_simplify(self, **kwargs):
         from sympy.core.relational import Equality, Relational
         from sympy.solvers.solveset import linear_coeffs
@@ -796,6 +816,26 @@ class Or(LatticeOp, BooleanFunction):
                 rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
+
+    def _eval_subs(self, old, new):
+        args = []
+        bad = None
+        for i in self.args:
+            try:
+                i = i.subs(old, new)
+            except TypeError:
+                # store TypeError
+                if bad is None:
+                    bad = i
+                continue
+            if i == True:
+                return S.true
+            elif i != False:
+                args.append(i)
+        if bad is not None:
+            # let it raise
+            bad.subs(old, new)
+        return self.func(*args)
 
     def _eval_as_set(self):
         from sympy.sets.sets import Union
@@ -1569,7 +1609,9 @@ def to_cnf(expr, simplify=False):
         return expr
 
     expr = eliminate_implications(expr)
-    return distribute_and_over_or(expr)
+    res = distribute_and_over_or(expr)
+
+    return res
 
 
 def to_dnf(expr, simplify=False):
@@ -1701,44 +1743,23 @@ def _is_form(expr, function1, function2):
     """
     expr = sympify(expr)
 
-    # Special case of an Atom
-    if expr.is_Atom:
-        return True
-
-    # Special case of a single expression of function2
-    if isinstance(expr, function2):
-        for lit in expr.args:
-            if isinstance(lit, Not):
-                if not lit.args[0].is_Atom:
-                    return False
-            else:
-                if not lit.is_Atom:
-                    return False
-        return True
-
-    # Special case of a single negation
-    if isinstance(expr, Not):
-        if not expr.args[0].is_Atom:
-            return False
-
-    if not isinstance(expr, function1):
+    def is_a_literal(lit):
+        if isinstance(lit, Not) \
+                and lit.args[0].is_Atom:
+            return True
+        elif lit.is_Atom:
+            return True
         return False
 
-    for cls in expr.args:
-        if cls.is_Atom:
-            continue
-        if isinstance(cls, Not):
-            if not cls.args[0].is_Atom:
-                return False
-        elif not isinstance(cls, function2):
+    vals = function1.make_args(expr) if isinstance(expr, function1) else [expr]
+    for lit in vals:
+        if isinstance(lit, function2):
+            vals2 = function2.make_args(lit) if isinstance(lit, function2) else [lit]
+            for l in vals2:
+                if is_a_literal(l) is False:
+                    return False
+        elif is_a_literal(lit) is False:
             return False
-        for lit in cls.args:
-            if isinstance(lit, Not):
-                if not lit.args[0].is_Atom:
-                    return False
-            else:
-                if not lit.is_Atom:
-                    return False
 
     return True
 

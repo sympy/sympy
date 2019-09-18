@@ -1,6 +1,6 @@
 from sympy import (
     adjoint, conjugate, DiracDelta, Heaviside, nan, pi, sign, sqrt,
-    symbols, transpose, Symbol, Piecewise, I, S, Eq, oo,
+    symbols, transpose, Symbol, Piecewise, I, S, Eq, Ne, oo,
     SingularityFunction, signsimp
 )
 
@@ -8,7 +8,6 @@ from sympy.utilities.pytest import raises, warns_deprecated_sympy
 
 from sympy.core.function import ArgumentIndexError
 
-from sympy.utilities.misc import filldedent
 
 x, y = symbols('x y')
 i = symbols('t', nonzero=True)
@@ -90,8 +89,10 @@ def test_heaviside():
     assert Heaviside(0, nan) == nan
     assert Heaviside(x, None) == Heaviside(x)
     assert Heaviside(0, None) == Heaviside(0)
-    # we do not want None in the args:
-    assert None not in Heaviside(x, None).args
+
+    # we do not want None and Heaviside(0) in the args:
+    assert Heaviside(x, H0=None).args == (x,)
+    assert Heaviside(x, H0=Heaviside(0)).args == (x,)
 
     assert adjoint(Heaviside(x)) == Heaviside(x)
     assert adjoint(Heaviside(x - y)) == Heaviside(x - y)
@@ -122,10 +123,22 @@ def test_rewrite():
     assert Heaviside(x, 1).rewrite(Piecewise) == (
         Piecewise((0, x < 0), (1, x >= 0)))
 
-    assert Heaviside(x).rewrite(sign) == (sign(x)+1)/2
+    assert Heaviside(x).rewrite(sign) == \
+        Heaviside(x, H0=Heaviside(0)).rewrite(sign) == \
+        Piecewise(
+            (sign(x)/2 + S(1)/2, Eq(Heaviside(0), S(1)/2)),
+            (Piecewise(
+                (sign(x)/2 + S(1)/2, Ne(x, 0)), (Heaviside(0), True)), True)
+        )
+
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
     assert Heaviside(x, S.Half).rewrite(sign) == (sign(x)+1)/2
-    assert Heaviside(x, y).rewrite(sign) == Heaviside(x, y)
+    assert Heaviside(x, y).rewrite(sign) == \
+        Piecewise(
+            (sign(x)/2 + S(1)/2, Eq(y, S(1)/2)),
+            (Piecewise(
+                (sign(x)/2 + S(1)/2, Ne(x, 0)), (y, True)), True)
+        )
 
     assert DiracDelta(y).rewrite(Piecewise) == Piecewise((DiracDelta(0), Eq(y, 0)), (0, True))
     assert DiracDelta(y, 1).rewrite(Piecewise) == DiracDelta(y, 1)

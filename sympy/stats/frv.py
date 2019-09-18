@@ -12,7 +12,7 @@ from __future__ import print_function, division
 import random
 from itertools import product
 
-from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul,
+from sympy import (Basic, Symbol, cacheit, sympify, Mul,
                    And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan,
                    Sum, Intersection)
 from sympy.core.containers import Dict
@@ -311,7 +311,7 @@ class FinitePSpace(PSpace):
 
     def compute_quantile(self, expr):
         cdf = self.compute_cdf(expr)
-        p = symbols('p', real=True, finite=True, cls=Dummy)
+        p = Dummy('p', real=True)
         set = ((nan, (p < 0) | (p > 1)),)
         for key, value in cdf.items():
             set = set + ((key, p <= value), )

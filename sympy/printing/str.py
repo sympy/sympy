@@ -331,17 +331,6 @@ class StrPrinter(Printer):
             [self.parenthesize(arg, precedence(expr)) for arg in expr.args]
         )
 
-    def _print_HadamardProduct(self, expr):
-        return '.*'.join([self.parenthesize(arg, precedence(expr))
-            for arg in expr.args])
-
-    def _print_HadamardPower(self, expr):
-        PREC = precedence(expr)
-        return '.**'.join([
-            self.parenthesize(expr.base, PREC),
-            self.parenthesize(expr.exp, PREC)
-        ])
-
     def _print_ElementwiseApplyFunction(self, expr):
         return "{0}({1}...)".format(
             expr.function,
@@ -517,9 +506,6 @@ class StrPrinter(Printer):
                 gens[index] = item[1:len(item) - 1]
 
         return format % (' '.join(terms), ', '.join(gens))
-
-    def _print_ProductSet(self, p):
-        return ' x '.join(self._print(set) for set in p.sets)
 
     def _print_UniversalSet(self, p):
         return 'UniversalSet'
@@ -787,12 +773,6 @@ class StrPrinter(Printer):
 
     def _print_Uniform(self, expr):
         return "Uniform(%s, %s)" % (self._print(expr.a), self._print(expr.b))
-
-    def _print_Union(self, expr):
-        return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
-
-    def _print_Complement(self, expr):
-        return r' \ '.join(self._print(set_) for set_ in expr.args)
 
     def _print_Quantity(self, expr):
         if self._settings.get("abbrev", False):

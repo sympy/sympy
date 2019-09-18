@@ -740,7 +740,6 @@ def _check_antecedents_1(g, x, helper=False):
     delta = g.delta
     eta, _ = _get_coeff_exp(g.argument, x)
     m, n, p, q = S([len(g.bm), len(g.an), len(g.ap), len(g.bq)])
-    xi = m + n - p
 
     if p > q:
         def tr(l):
@@ -1680,8 +1679,9 @@ def _meijerint_indefinite_1(f, x):
                 tr(g.an) + [1], tr(g.aother), tr(g.bm), tr(g.bother) + [0], t)
         # The antiderivative is most often expected to be defined
         # in the neighborhood of  x = 0.
-        place = 0
-        if b < 0 or f.subs(x, 0).has(nan, zoo):
+        if b.is_extended_nonnegative and not f.subs(x, 0).has(nan, zoo):
+            place = 0  # Assume we can expand at zero
+        else:
             place = None
         r = hyperexpand(r.subs(t, a*x**b), place=place)
 

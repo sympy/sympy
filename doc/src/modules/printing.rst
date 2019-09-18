@@ -1,5 +1,6 @@
-Printing System
-===============
+========
+Printing
+========
 
 See the :ref:`tutorial-printing` section in tutorial for introduction into
 printing.
@@ -299,6 +300,20 @@ Mathematica code printing
    .. autoattribute:: MCodePrinter.printmethod
 
 .. autofunction:: sympy.printing.mathematica.mathematica_code
+
+Maple code printing
+-------------------
+
+.. module:: sympy.printing.maple
+
+.. autoclass:: sympy.printing.maple.MapleCodePrinter
+   :members:
+
+   .. autoattribute:: MapleCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.maple.maple_code
+
+.. autofunction:: sympy.printing.maple.print_maple_code
 
 Javascript Code printing
 ------------------------

@@ -1,6 +1,6 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc, Abs, symbols, I, re, Lambda, simplify,
-                   ImageSet)
+                   cot, sec, csc, Abs, symbols, I, re, simplify,
+                   expint)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
@@ -45,6 +45,8 @@ def test_function_range():
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
     raises(NotImplementedError, lambda : function_range(
+        sin(x) + x, x, S.Reals)) # issue 13273
+    raises(NotImplementedError, lambda : function_range(
         log(x), x, S.Integers))
     raises(NotImplementedError, lambda : function_range(
         sin(x)/2, x, S.Naturals))
@@ -82,7 +84,9 @@ def test_not_empty_in():
     assert not_empty_in(FiniteSet((x**2 - 3*x + 2)/(x - 1)).intersect(S.Reals), x) == \
         Complement(S.Reals, FiniteSet(1))
     assert not_empty_in(FiniteSet(3, 4, x/(x - 1)).intersect(Interval(2, 3)), x) == \
-        Union(Interval(S(3)/2, 2), FiniteSet(3))
+        Interval(-oo, oo)
+    assert not_empty_in(FiniteSet(4, x/(x - 1)).intersect(Interval(2, 3)), x) == \
+        Interval(S(3)/2, 2)
     assert not_empty_in(FiniteSet(x/(x**2 - 1)).intersect(S.Reals), x) == \
         Complement(S.Reals, FiniteSet(-1, 1))
     assert not_empty_in(FiniteSet(x, x**2).intersect(Union(Interval(1, 3, True, True),
@@ -160,6 +164,8 @@ def test_periodicity():
 
     assert periodicity((x**2 + 4)%2, x) is None
     assert periodicity((E**x)%3, x) is None
+
+    assert periodicity(sin(expint(1, x))/expint(1, x), x) is None
 
 
 def test_periodicity_check():
@@ -521,3 +527,9 @@ def test_union_AccumBounds():
     assert AccumBounds(0, 3).union(AccumBounds(-1, 2)) == AccumBounds(-1, 3)
     assert AccumBounds(0, 3).union(AccumBounds(-1, 4)) == AccumBounds(-1, 4)
     raises(TypeError, lambda: AccumBounds(0, 3).union(1))
+
+
+def test_issue_16469():
+    x = Symbol("x", real=True)
+    f = abs(x)
+    assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)

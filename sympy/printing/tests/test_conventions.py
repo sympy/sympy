@@ -89,7 +89,6 @@ def test_requires_partial():
     assert requires_partial(Derivative(f(x, y), z)) is True
     assert requires_partial(Derivative(f(x, y), x, y)) is True
 
-
 @XFAIL
 def test_requires_partial_unspecified_variables():
     x, y = symbols('x y')

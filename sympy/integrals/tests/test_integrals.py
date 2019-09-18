@@ -5,7 +5,7 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
 )
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
@@ -729,6 +729,7 @@ def test_expand():
     e = Integral(f(x)+f(x**2), (x, 1, y))
     assert e.expand() == Integral(f(x), (x, 1, y)) + Integral(f(x**2), (x, 1, y))
 
+
 def test_integration_variable():
     raises(ValueError, lambda: Integral(exp(-x**2), 3))
     raises(ValueError, lambda: Integral(exp(-x**2), (3, -oo, oo)))
@@ -778,6 +779,7 @@ def test_as_sum_left():
         y**2 + y + S(1)/3 - y/n - 1/(2*n) + 1/(6*n**2)
     assert e.as_sum(10, method="left", evaluate=False).has(Sum)
 
+
 def test_as_sum_right():
     e = Integral((x + y)**2, (x, 0, 1))
     assert e.as_sum(1, method="right").expand() == 1 + 2*y + y**2
@@ -797,6 +799,7 @@ def test_as_sum_trapezoid():
     assert e.as_sum(n, method="trapezoid").expand() == \
         y**2 + y + S(1)/3 + 1/(6*n**2)
     assert Integral(sign(x), (x, 0, 1)).as_sum(1, 'trapezoid') == S(1)/2
+
 
 def test_as_sum_raises():
     e = Integral((x + y)**2, (x, 0, 1))
@@ -1397,42 +1400,52 @@ def test_issue_12677():
 def test_issue_14078():
     assert integrate((cos(3*x)-cos(x))/x, (x, 0, oo)) == -log(3)
 
+
 def test_issue_14064():
     assert integrate(1/cosh(x), (x, 0, oo)) == pi/2
+
 
 def test_issue_14027():
     assert integrate(1/(1 + exp(x - S(1)/2)/(1 + exp(x))), x) == \
         x - exp(S(1)/2)*log(exp(x) + exp(S(1)/2)/(1 + exp(S(1)/2)))/(exp(S(1)/2) + E)
 
+
 def test_issue_8170():
     assert integrate(tan(x), (x, 0, pi/2)) == S.Infinity
+
 
 def test_issue_8440_14040():
     assert integrate(1/x, (x, -1, 1)) == S.NaN
     assert integrate(1/(x + 1), (x, -2, 3)) == S.NaN
+
 
 def test_issue_14096():
     assert integrate(1/(x + y)**2, (x, 0, 1)) == -1/(y + 1) + 1/y
     assert integrate(1/(1 + x + y + z)**2, (x, 0, 1), (y, 0, 1), (z, 0, 1)) == \
         -4*log(4) - 6*log(2) + 9*log(3)
 
+
 def test_issue_14144():
     assert Abs(integrate(1/sqrt(1 - x**3), (x, 0, 1)).n() - 1.402182) < 1e-6
     assert Abs(integrate(sqrt(1 - x**3), (x, 0, 1)).n() - 0.841309) < 1e-6
+
 
 def test_issue_14375():
     # This raised a TypeError. The antiderivative has exp_polar, which
     # may be possible to unpolarify, so the exact output is not asserted here.
     assert integrate(exp(I*x)*log(x), x).has(Ei)
 
+
 def test_issue_14437():
     f = Function('f')(x, y, z)
     assert integrate(f, (x, 0, 1), (y, 0, 2), (z, 0, 3)) == \
                 Integral(f, (x, 0, 1), (y, 0, 2), (z, 0, 3))
 
+
 def test_issue_14470():
     assert integrate(1/sqrt(exp(x) + 1), x) == \
         log(-1 + 1/sqrt(exp(x) + 1)) - log(1 + 1/sqrt(exp(x) + 1))
+
 
 def test_issue_14877():
     f = exp(1 - exp(x**2)*x + 2*x**2)*(2*x**3 + x)/(1 - exp(x**2)*x)**2
@@ -1517,6 +1530,7 @@ def test_issue_15640_log_substitutions():
     F = -sqrt(pi)*erfc(sqrt(log(x)))/2 - sqrt(log(x))/x
     assert integrate(f, x) == F and F.diff(x) == f
 
+
 def test_issue_15509():
     from sympy.vector import CoordSys3D
     N = CoordSys3D('N')
@@ -1525,12 +1539,25 @@ def test_issue_15509():
         (-sin(a*x_1 + b)/a + sin(a*x_2 + b)/a, (a > -oo) & (a < oo) & Ne(a, 0)), \
             (-x_1*cos(b) + x_2*cos(b), True))
 
-def test_issue_4311():
+
+def test_issue_4311_fast():
     x = symbols('x', real=True)
     assert integrate(x*abs(9-x**2), x) == Piecewise(
         (x**4/4 - 9*x**2/2, x <= -3),
         (-x**4/4 + 9*x**2/2 - S(81)/2, x <= 3),
         (x**4/4 - 9*x**2/2, True))
+
+
+def test_integrate_with_complex_constants():
+    K = Symbol('K', real=True, positive=True)
+    x = Symbol('x', real=True)
+    m = Symbol('m', real=True)
+    assert integrate(exp(-I*K*x**2+m*x), x) == sqrt(I)*sqrt(pi)*exp(-I*m**2
+                    /(4*K))*erfi((-2*I*K*x + m)/(2*sqrt(K)*sqrt(-I)))/(2*sqrt(K))
+    assert integrate(1/(1 + I*x**2), x) == -sqrt(I)*log(x - sqrt(I))/2 +\
+        sqrt(I)*log(x + sqrt(I))/2
+    assert integrate(exp(-I*x**2), x) == sqrt(pi)*erf(sqrt(I)*x)/(2*sqrt(I))
+
 
 def test_issue_14241():
     x = Symbol('x')
@@ -1546,3 +1573,41 @@ def test_issue_14709b():
     h = Symbol('h', positive=True)
     i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
     assert i == 5*h**2*pi/16
+
+
+def test_issue_8614():
+    x = Symbol('x')
+    t = Symbol('t')
+    assert integrate(exp(t)/t, (t, -oo, x)) == Ei(x)
+    assert integrate((exp(-x) - exp(-2*x))/x, (x, 0, oo)) == log(2)
+
+
+def test_issue_15494():
+    s = symbols('s', real=True, positive=True)
+
+    integrand = (exp(s/2) - 2*exp(1.6*s) + exp(s))*exp(s)
+    solution = integrate(integrand, s)
+    assert solution != S.NaN
+    # Not sure how to test this properly as it is a symbolic expression with floats
+    # assert str(solution) == '0.666666666666667*exp(1.5*s) + 0.5*exp(2.0*s) - 0.769230769230769*exp(2.6*s)'
+    # Maybe
+    assert abs(solution.subs(s, 1) - (-3.67440080236188)) <= 1e-8
+
+    integrand = (exp(s/2) - 2*exp(S(8)/5*s) + exp(s))*exp(s)
+    assert integrate(integrand, s) == -10*exp(13*s/5)/13 + 2*exp(3*s/2)/3 + exp(2*s)/2
+
+
+def test_li_integral():
+    y = Symbol('y')
+    assert Integral(li(y*x**2), x).doit() == Piecewise(
+            (x*li(x**2*y) - x*Ei(3*log(x) + 3*log(y)/2)/(sqrt(y)*sqrt(x**2)), Ne(y, 0)),
+            (0, True))
+
+
+def test_issue_17473():
+    x = Symbol('x')
+    n = Symbol('n')
+    assert integrate(sin(x**n), x) == \
+        x*x**n*gamma(S(1)/2 + 1/(2*n))*hyper((S(1)/2 + 1/(2*n),),
+                     (S(3)/2, S(3)/2 + 1/(2*n)),
+                     -x**(2*n)/4)/(2*n*gamma(S(3)/2 + 1/(2*n)))

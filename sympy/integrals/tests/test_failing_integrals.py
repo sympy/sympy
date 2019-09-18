@@ -2,7 +2,7 @@
 
 from sympy import (
     integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
-    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta
+    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, I
 )
 
 from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
@@ -104,17 +104,29 @@ def test_issue_4992():
     # Nonelementary integral.  Requires hypergeometric/Meijer-G handling.
     assert not integrate(log(x) * x**(k - 1) * exp(-x) / gamma(k), (x, 0, oo)).has(Integral)
 
+
 @XFAIL
-def test_issue_16084():
-    i = integrate(log(sin(x)), (x, 0, pi/2))
+def test_issue_16396a():
+    i = integrate(1/(1+sqrt(tan(x))), (x, pi/3, pi/6))
     assert not i.has(Integral)
-    # assert i == -pi*log(2)/2
+
+
+@XFAIL
+def test_issue_16396b():
+    i = integrate(x*sin(x)/(1+cos(x)**2), (x, 0, pi))
+    assert not i.has(Integral)
+
 
 @XFAIL
 def test_issue_16161():
     i = integrate(x*sec(x)**2, x)
     assert not i.has(Integral)
     # assert i == x*tan(x) + log(cos(x))
+
+
+@XFAIL
+def test_issue_16046():
+    assert integrate(exp(exp(I*x)), [x, 0, 2*pi]) == 2*pi
 
 
 @XFAIL
@@ -125,6 +137,8 @@ def test_issue_15925a():
 @XFAIL
 @slow
 def test_issue_15925b():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     assert not integrate(sqrt((-12*cos(x)**2*sin(x))**2+(12*cos(x)*sin(x)**2)**2),
                          (x, 0, pi/6)).has(Integral)
 
@@ -182,6 +196,13 @@ def test_issue_14078b():
     i = integrate((atan(4*x)-atan(2*x))/x, (x, 0, oo))
     assert not i.has(Integral)
     # assert i == pi*log(2)/2
+
+
+@XFAIL
+def test_issue_13792():
+    i =  integrate(log(1/x) / (1 - x), (x, 0, 1))
+    assert not i.has(Integral)
+    # assert i in [polylog(2, -exp_polar(I*pi)), pi**2/6]
 
 
 @XFAIL
@@ -256,6 +277,6 @@ def test_integrate_Piecewise_rational_over_reals():
 
 
 @XFAIL
-@slow
 def test_issue_4311_slow():
+    # Not slow when bypassing heurish
     assert not integrate(x*abs(9-x**2), x).has(Integral)

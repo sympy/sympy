@@ -32,6 +32,7 @@ import subprocess
 import signal
 import stat
 import tempfile
+import sympy
 
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import exec_, PY3, string_types, range, unwrap
@@ -205,13 +206,14 @@ def run_in_subprocess_with_hash_randomization(
     # randomization.
 
     """
+    cwd = get_sympy_dir()
     # Note, we must return False everywhere, not None, as subprocess.call will
     # sometimes return None.
 
     # First check if the Python version supports hash randomization
-    # If it doesn't have this support, it won't reconize the -R flag
+    # If it doesn't have this support, it won't recognize the -R flag
     p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
+                         stderr=subprocess.STDOUT, cwd=cwd)
     p.communicate()
     if p.returncode != 0:
         return False
@@ -231,7 +233,7 @@ def run_in_subprocess_with_hash_randomization(
                       repr(function_kwargs)))
 
     try:
-        p = subprocess.Popen([command, "-R", "-c", commandstring])
+        p = subprocess.Popen([command, "-R", "-c", commandstring], cwd=cwd)
         p.communicate()
     except KeyboardInterrupt:
         p.wait()
@@ -268,6 +270,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
     ... test_kwargs={"colors:False"}) # doctest: +SKIP
 
     """
+    cwd = get_sympy_dir()
     tests_successful = True
 
     test_kwargs = test_kwargs or {}
@@ -304,7 +307,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
                                stderr=dev_null) == 0:
                 if subprocess.call("sage -python bin/test "
                                    "sympy/external/tests/test_sage.py",
-                    shell=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) != 0:
+                    shell=True, cwd=cwd) != 0:
                     tests_successful = False
 
         if tests_successful:
@@ -653,19 +656,18 @@ def _get_doctest_blacklist():
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
+        "sympy/galgebra.py", # no longer part of SymPy
+        "sympy/this.py", # prints text
         "sympy/physics/gaussopt.py", # raises deprecation warning
-        "sympy/galgebra.py", # raises ImportError
-        "sympy/this.py", # Prints text to the terminal
         "sympy/matrices/densearith.py", # raises deprecation warning
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
-        "sympy/physics/unitsystems.py", # raises deprecation warning
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
         "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
         "sympy/parsing/latex/_antlr/latexparser.py", # generated code
-        "sympy/integrals/rubi/rubi.py"
+        "sympy/integrals/rubi/rubi.py",
     ])
     # autolev parser tests
     num = 12
@@ -713,6 +715,12 @@ def _get_doctest_blacklist():
             "sympy/parsing/latex/_parse_latex_antlr.py",
         ])
 
+    if import_module('lfortran') is None:
+        #throws ImportError when lfortran not installed
+        blacklist.extend([
+            "sympy/parsing/sym_expr.py",
+        ])
+
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
         "sympy/utilities/autowrap.py",
@@ -722,7 +730,7 @@ def _get_doctest_blacklist():
 
     # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
-        "sympy/conftest.py",
+        "sympy/conftest.py", # Python 2.7 issues
         "sympy/utilities/benchmarking.py"
     ])
 

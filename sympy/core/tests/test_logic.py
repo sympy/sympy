@@ -175,7 +175,6 @@ def test_logic_not():
     assert Not(And('a', 'b')) == Or(Not('a'), Not('b'))
     assert Not(Or('a', 'b')) == And(Not('a'), Not('b'))
 
-    S = Logic.fromstring
     raises(ValueError, lambda: Not(1))
 
 

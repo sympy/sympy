@@ -1,8 +1,9 @@
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
-    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
-    AccumBounds, MatrixSymbol, Pow, gcd)
+    sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
+    AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product)
+from sympy.functions.elementary.exponential import match_real_imag
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -155,8 +156,15 @@ def test_exp_rewrite():
 
 def test_exp_leading_term():
     assert exp(x).as_leading_term(x) == 1
-    assert exp(1/x).as_leading_term(x) == exp(1/x)
     assert exp(2 + x).as_leading_term(x) == exp(2)
+    assert exp((2*x + 3) / (x+1)).as_leading_term(x) == exp(3)
+    # The following tests are commented, since now SymPy returns the
+    # original function when the leading term in the series expansion does
+    # not exist.
+    # raises(NotImplementedError, lambda: exp(1/x).as_leading_term(x))
+    # raises(NotImplementedError, lambda: exp((x + 1) / x**2).as_leading_term(x))
+    # raises(NotImplementedError, lambda: exp(x + 1/x).as_leading_term(x))
+
 
 def test_exp_taylor_term():
     x = symbols('x')
@@ -215,6 +223,21 @@ def test_log_values():
     assert log(S.Half) == -log(2)
     assert log(2*3).func is log
     assert log(2*3**2).func is log
+
+
+def test_match_real_imag():
+    x, y = symbols('x,y', real=True)
+    i = Symbol('i', imaginary=True)
+    assert match_real_imag(S.One) == (1, 0)
+    assert match_real_imag(I) == (0, 1)
+    assert match_real_imag(3 - 5*I) == (3, -5)
+    assert match_real_imag(-sqrt(3) + S.Half*I) == (-sqrt(3), S.Half)
+    assert match_real_imag(x + y*I) == (x, y)
+    assert match_real_imag(x*I + y*I) == (0, x + y)
+    assert match_real_imag((x + y)*I) == (0, x + y)
+    assert match_real_imag(-S(2)/3*i*I) == (None, None)
+    assert match_real_imag(1 - 2*i) == (None, None)
+    assert match_real_imag(sqrt(2)*(3 - 5*I)) == (None, None)
 
 
 def test_log_exact():
@@ -313,6 +336,14 @@ def test_log_symbolic():
     assert (log(p**-5)**-1).expand() == -1/log(p)/5
     assert log(-x).func is log and log(-x).args[0] == -x
     assert log(-p).func is log and log(-p).args[0] == -p
+
+
+def test_log_exp():
+    assert log(exp(4*I*pi)) == 0     # exp evaluates
+    assert log(exp(-5*I*pi)) == I*pi # exp evaluates
+    assert log(exp(19*I*pi/4)) == 3*I*pi/4
+    assert log(exp(25*I*pi/7)) == -3*I*pi/7
+    assert log(exp(-5*I)) == -5*I + 2*I*pi
 
 
 def test_exp_assumptions():
@@ -457,6 +488,9 @@ def test_lambertw():
     assert LambertW(-pi/2, -1) == -I*pi/2
     assert LambertW(-1/E, -1) == -1
     assert LambertW(-2*exp(-2), -1) == -2
+    assert LambertW(2*log(2)) == log(2)
+    assert LambertW(-pi/2) == I*pi/2
+    assert LambertW(exp(1 + E)) == E
 
     assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1 + LambertW(x**2))
     assert LambertW(x, k).diff(x) == LambertW(x, k)/x/(1 + LambertW(x, k))
@@ -546,17 +580,43 @@ def test_polar():
     assert exp_polar(0).is_rational is True  # issue 8008
 
 
+def test_exp_summation():
+    w = symbols("w")
+    m, n, i, j = symbols("m n i j")
+    expr = exp(Sum(w*i, (i, 0, n), (j, 0, m)))
+    assert expr.expand() == Product(exp(w*i), (i, 0, n), (j, 0, m))
+
+
 def test_log_product():
     from sympy.abc import n, m
+    from sympy.concrete import Product
+
     i, j = symbols('i,j', positive=True, integer=True)
     x, y = symbols('x,y', positive=True)
-    from sympy.concrete import Product
-    assert simplify(log(Product(x**i, (i, 1, n)))) == log(Product(x**i, (i, 1, n)))
-    assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
-            log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))
+    z = symbols('z', real=True)
+    w = symbols('w')
+
+    expr = log(Product(x**i, (i, 1, n)))
+    assert simplify(expr) == expr
+    assert expr.expand() == Sum(i*log(x), (i, 1, n))
+    expr = log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))
+    assert simplify(expr) == expr
+    assert expr.expand() == Sum(i*log(x) + j*log(y), (i, 1, n), (j, 1, m))
 
     expr = log(Product(-2, (n, 0, 4)))
     assert simplify(expr) == expr
+    assert expr.expand() == expr
+    assert expr.expand(force=True) == Sum(log(-2), (n, 0, 4))
+
+    expr = log(Product(exp(z*i), (i, 0, n)))
+    assert expr.expand() == Sum(z*i, (i, 0, n))
+
+    expr = log(Product(exp(w*i), (i, 0, n)))
+    assert expr.expand() == expr
+    assert expr.expand(force=True) == Sum(w*i, (i, 0, n))
+
+    expr = log(Product(i**2*abs(j), (i, 1, n), (j, 1, m)))
+    assert expr.expand() == Sum(2*log(i) + log(j), (i, 1, n), (j, 1, m))
 
 
 @XFAIL

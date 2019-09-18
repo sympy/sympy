@@ -1,8 +1,8 @@
 .. _combinatiorics-docs:
 
-====================
-Combinatorics Module
-====================
+=============
+Combinatorics
+=============
 
 Contents
 ========

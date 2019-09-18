@@ -2517,7 +2517,6 @@ class Line3D(LinearEntity3D, Line):
         p1, p2 = self.points
         d1, d2, d3 = p1.direction_ratio(p2)
         x1, y1, z1 = p1
-        v = (x, y, z)
         eqs = [-d1*k + x - x1, -d2*k + y - y1, -d3*k + z - z1]
         # eliminate k from equations by solving first eq with k for k
         for i, e in enumerate(eqs):

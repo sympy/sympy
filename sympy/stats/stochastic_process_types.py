@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
-from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
-                   Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
-                   nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
-                   linsolve, Piecewise, eye, Or, Ne, Not, Intersection,
-                   Union, Expr, Function, sympify, Le, exp, cacheit, Gt,
+from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
+                   Set, And, Eq, FiniteSet, ImmutableMatrix,
+                   Lambda, Mul, Dummy, IndexedBase,
+                   linsolve, eye, Or, Not, Intersection,
+                   Union, Expr, Function, exp, cacheit,
                    Ge)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
@@ -508,11 +508,6 @@ class MarkovProcess(StochasticProcess):
         if check:
             return Expectation(expr, condition)
 
-        if isinstance(self, ContinuousMarkovChain):
-            trans_probs = self.transition_probabilities(mat)
-        elif isinstance(self, DiscreteMarkovChain):
-            trans_probs = mat
-
         rvs = random_symbols(expr)
         if isinstance(expr, Expr) and isinstance(condition, Eq) \
             and len(rvs) == 1:
@@ -529,7 +524,6 @@ class MarkovProcess(StochasticProcess):
             mat_of = TransitionMatrixOf(self, mat) if isinstance(self, DiscreteMarkovChain) else GeneratorMatrixOf(self, mat)
             cond = condition & mat_of & \
                     StochasticStateSpaceOf(self, state_space)
-            s = Dummy('s')
             func = lambda s: self.probability(Eq(rv, s), cond)*expr.subs(rv, s)
             return sum([func(s) for s in state_space])
 

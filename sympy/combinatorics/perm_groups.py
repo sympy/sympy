@@ -1344,7 +1344,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation, PermutationGroup
         >>> p = PermutationGroup(Permutation(1, 3), Permutation(1, 2))
         >>> p.elements
-        {(3), (2 3), (3)(1 2), (1 2 3), (1 3 2), (1 3)}
+        {(1 2 3), (1 3 2), (1 3), (2 3), (3), (3)(1 2)}
 
         """
         return set(self._elements)
@@ -4516,6 +4516,21 @@ class PermutationGroup(Basic):
         return G._fp_presentation
 
     def polycyclic_group(self):
+        """
+        Return the PolycyclicGroup instance with below parameters:
+
+        * ``pc_sequence`` : Polycyclic sequence is formed by collecting all
+          the missing generators between the adjacent groups in the
+          derived series of given permutation group.
+
+        * ``pc_series`` : Polycyclic series is formed by adding all the missing
+          generators of ``der[i+1]`` in ``der[i]``, where ``der`` represents
+          the derived series.
+
+        * ``relative_order`` : A list, computed by the ratio of adjacent groups in
+          pc_series.
+
+        """
         from sympy.combinatorics.pc_groups import PolycyclicGroup
         if not self.is_polycyclic:
             raise ValueError("The group must be solvable")

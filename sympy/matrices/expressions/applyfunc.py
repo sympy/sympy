@@ -72,30 +72,35 @@ class ElementwiseApplyFunction(MatrixExpr):
         # This strange construction is required by the assumptions:
         # (.func needs to be a class)
 
-        class ElementwiseApplyFunction2(ElementwiseApplyFunction):
-            def __new__(obj, expr):
+        class _(ElementwiseApplyFunction):
+            def __new__(cls, expr):
                 return ElementwiseApplyFunction(self.function, expr)
 
-        return ElementwiseApplyFunction2
+        return _
 
     def doit(self, **kwargs):
         deep = kwargs.get("deep", True)
         expr = self.expr
         if deep:
             expr = expr.doit(**kwargs)
+        function = self.function
+        if isinstance(function, Lambda) and function.is_identity:
+            # This is a Lambda containing the identity function.
+            return expr
         if isinstance(expr, MatrixBase):
             return expr.applyfunc(self.function)
+        elif isinstance(expr, ElementwiseApplyFunction):
+            return ElementwiseApplyFunction(
+                lambda x: self.function(expr.function(x)),
+                expr.expr
+            ).doit()
         else:
             return self
 
     def _entry(self, i, j, **kwargs):
         return self.function(self.expr._entry(i, j, **kwargs))
 
-    def _eval_derivative_matrix_lines(self, x):
-        from sympy import Identity
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal
-        from sympy.core.expr import ExprBuilder
-
+    def _get_function_fdiff(self):
         d = Dummy("d")
         function = self.function(d)
         fdiff = function.diff(d)
@@ -103,6 +108,23 @@ class ElementwiseApplyFunction(MatrixExpr):
             fdiff = type(fdiff)
         else:
             fdiff = Lambda(d, fdiff)
+        return fdiff
+
+    def _eval_derivative(self, x):
+        from sympy import hadamard_product
+        dexpr = self.expr.diff(x)
+        fdiff = self._get_function_fdiff()
+        return hadamard_product(
+            dexpr,
+            ElementwiseApplyFunction(fdiff, self.expr)
+        )
+
+    def _eval_derivative_matrix_lines(self, x):
+        from sympy import Identity
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal
+        from sympy.core.expr import ExprBuilder
+
+        fdiff = self._get_function_fdiff()
         lr = self.expr._eval_derivative_matrix_lines(x)
         ewdiff = ElementwiseApplyFunction(fdiff, self.expr)
         if 1 in x.shape:
