@@ -7,6 +7,7 @@ Debian/Ubuntu
 To make the html documentation, install the prerequisites::
 
     apt-get install python-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
+    python -m pip install sphinx-math-dollar
 
 and do::
 
@@ -30,6 +31,7 @@ Fedora
 Fedora (and maybe other RPM based distributions), install the prerequisites::
 
     dnf install python3-sphinx librsvg2 ImageMagick docbook2X texlive-dvipng-bin texlive-scheme-medium librsvg2-tools
+    python -m pip install sphinx-math-dollar
 
 After that, run::
 
@@ -46,7 +48,7 @@ If you get **matplotlib** error, install python3-matplotlib package::
 And view it at::
 
     _build/html/index.html
-    
+
 Mac
 ---
 
@@ -62,14 +64,15 @@ brew install imagemagick graphviz docbook librsvg
 Install these packages with either pip or conda:
 
 ```bash
-pip install mpmath matplotlib sphinx
+python -m pip install mpmath matplotlib sphinx sphinx-math-dollar
 ```
 
 or
 
 ```bash
-conda install mpmpath matplotlib sphinx
+conda install -c conda-forge mpmpath matplotlib sphinx sphinx-math-dollar
 ```
+
 Windows 10
 ----------
 
