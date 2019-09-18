@@ -1052,7 +1052,7 @@ class digamma(Function):
 
     def _eval_expand_func(self, **hints):
         z = self.args[0]
-        return polygamma(0, z).expand_func()
+        return polygamma(0, z).expand(func=True)
 
     def _eval_rewrite_as_harmonic(self, z, **kwargs):
         return harmonic(z - 1) - S.EulerGamma
@@ -1094,31 +1094,24 @@ class trigamma(Function):
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
     def _eval_evalf(self, prec):
-        n = sympify(1)
-        # the mpmath polygamma implementation valid only for nonnegative integers
-        if n.is_number and n.is_real:
-            if (n.is_integer or n == int(n)) and n.is_nonnegative:
-                return super(trigamma, self)._eval_evalf(prec)
+        z = self.args[0]
+        return polygamma(1,z).evalf(prec)
 
     def fdiff(self, argindex=1):
-        if argindex == 1:
-            n = sympify(1)
-            z = self.args[0]
-            return polygamma(n + 1, z)
-        else:
-            raise ArgumentIndexError(self, argindex)
+        z = self.args[0]
+        return polygamma(1,z).fdiff(1)
 
     def _eval_is_real(self):
-        if self.args[0].is_positive:
-            return True
+        z = self.args[0]
+        return polygamma(0,z).is_real()
 
     def _eval_is_positive(self):
-        if self.args[0].is_positive:
-            return True
+        z = self.args[0]
+        return polygamma(0,z).is_positive()
 
     def _eval_is_negative(self):
-        if self.args[0].is_positive:
-            return False
+        z = self.args[0]
+        return polygamma(0,z).is_negative()
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
@@ -1128,117 +1121,24 @@ class trigamma(Function):
 
     @classmethod
     def eval(cls, z):
-        n, z = map(sympify, (1, z))
-        from sympy import unpolarify
-
-        if n.is_integer:
-            if n.is_nonnegative:
-                nz = unpolarify(z)
-                if z != nz:
-                    return polygamma(n, nz)
-
-            if n == -1:
-                return loggamma(z)
-            else:
-                if z.is_Number:
-                    if z is S.NaN:
-                        return S.NaN
-                    elif z is S.Infinity:
-                        if n.is_Number:
-                            if n is S.Zero:
-                                return S.Infinity
-                            else:
-                                return S.Zero
-                    elif z.is_Integer:
-                        if z.is_nonpositive:
-                            return S.ComplexInfinity
-                        else:
-                            if n is S.Zero:
-                                return -S.EulerGamma + harmonic(z - 1, 1)
-                            elif n.is_odd:
-                                return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
-
-        if n == 0:
-            if z is S.NaN:
-                return S.NaN
-            elif z.is_Rational:
-
-                p, q = z.as_numer_denom()
-
-                # only expand for small denominators to avoid creating long expressions
-                if q <= 5:
-                    return expand_func(polygamma(n, z, evaluate=False))
-
-            elif z in (S.Infinity, S.NegativeInfinity):
-                return S.Infinity
-            else:
-                t = z.extract_multiplicatively(S.ImaginaryUnit)
-                if t in (S.Infinity, S.NegativeInfinity):
-                    return S.Infinity
-
-        # TODO n == 1 also can do some rational z
+        return polygamma(1, z)
 
     def _eval_expand_func(self, **hints):
-        n = sympify(1)
         z = self.args[0]
-
-        if n.is_Integer and n.is_nonnegative:
-            if z.is_Add:
-                coeff = z.args[0]
-                if coeff.is_Integer:
-                    e = -(n + 1)
-                    if coeff > 0:
-                        tail = Add(*[Pow(
-                            z - i, e) for i in range(1, int(coeff) + 1)])
-                    else:
-                        tail = -Add(*[Pow(
-                            z + i, e) for i in range(0, int(-coeff))])
-                    return polygamma(n, z - coeff) + (-1)**n*factorial(n)*tail
-
-            elif z.is_Mul:
-                coeff, z = z.as_two_terms()
-                if coeff.is_Integer and coeff.is_positive:
-                    tail = [ polygamma(n, z + Rational(
-                        i, coeff)) for i in range(0, int(coeff)) ]
-                    if n == 0:
-                        return Add(*tail)/coeff + log(coeff)
-                    else:
-                        return Add(*tail)/coeff**(n + 1)
-                z *= coeff
-
-        if n == 0 and z.is_Rational:
-            p, q = z.as_numer_denom()
-
-            # Reference:
-            #   Values of the polygamma functions at rational arguments, J. Choi, 2007
-            part_1 = -S.EulerGamma - pi * cot(p * pi / q) / 2 - log(q) + Add(
-                *[cos(2 * k * pi * p / q) * log(2 * sin(k * pi / q)) for k in range(1, q)])
-
-            if z > 0:
-                n = floor(z)
-                z0 = z - n
-                return part_1 + Add(*[1 / (z0 + k) for k in range(n)])
-            elif z < 0:
-                n = floor(1 - z)
-                z0 = z + n
-                return part_1 - Add(*[1 / (z0 - 1 - k) for k in range(n)])
-
-        return polygamma(n, z)
+        return polygamma(1, z).expand(func=True)
 
     def _eval_rewrite_as_zeta(self, z, **kwargs):
         return (-1)**(2)*factorial(1)*zeta(2, z)
 
     def _eval_rewrite_as_polygamma(self, z, **kwargs):
-        return polygamma(0,z)
+        return polygamma(1,z)
 
     def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
         return S.NegativeOne**(2) * factorial(1) * (zeta(2) - harmonic(0, 2))
 
     def _eval_as_leading_term(self, x):
-        from sympy import Order
-        n = sympify(1)
-        z = self.args[0].as_leading_term(x)
-        return self.func(n, z)
+        z = self.args[0]
+        return polygamma(1,z).as_leading_term(x)
 
 
 ###############################################################################
