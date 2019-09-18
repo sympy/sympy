@@ -98,20 +98,23 @@ ComplexRegion
 Iteration over sets
 ^^^^^^^^^^^^^^^^^^^
 
-For set unions, `\{a, b\} \cup \{x, y\}` may have no problem to be
-comprehended like `\{a, b, x, y\}` regardless of the distinctiveness of
+For set unions, `\{a, b\} \cup \{x, y\}` can be treated as
+ `\{a, b, x, y\}` for iteration regardless of the distinctiveness of
 the elements, however, for set intersections, assuming that
 `\{a, b\} \cap \{x, y\}` is `\varnothing` or `\{a, b \}` would not
-always be valid.
+always be valid, since some of `a`, `b`, `x` or `y` may or may not be
+the elements of the intersection.
 
-So, we have designed ``__iter__`` method for composite sets to sample an
-element from a enumeratible set and testing its membership for an
-another set, until an undecidable `\in` appears, which would raise a
-``TypeError``.
+Iterating over the elements of a set involving intersection, complement,
+or symmetric difference yields (possibly duplicate) elements of the set
+provided that all elements are known to be the elements of the set.
+If any element cannot be determined to be a member of a set then the
+iteration gives ``TypeError``.
+This happens in the same cases where ``x in y`` would give an error.
 
 There are some reasons to implement like this, even if it breaks the
 consistency with how the python set iterator works.
 We keep in mind that sympy set comprehension like ``FiniteSet(*s)`` from
-a existing sympy sets could be a common usage, and at least try to give
-a consistent result with ``s`` simplified in a symbolic way,
-than giving a mathematically wrong iteration.
+a existing sympy sets could be a common usage.
+And this approach would make ``FiniteSet(*s)`` to be consistent with any
+symbolic set processing methods like ``FiniteSet(*simplify(s))``.
