@@ -1,5 +1,5 @@
 from sympy import (Symbol, gamma, expand_func, beta, digamma, diff, conjugate)
-from sympy.functions.special.gamma_functions import digamma
+from sympy.functions.special.gamma_functions import polygamma
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 
