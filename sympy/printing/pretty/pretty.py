@@ -1791,25 +1791,22 @@ class PrettyPrinter(Printer):
                 a.append( self._print(S.One) )
             return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
 
-    def _print_nth_root(self, base, exp):
-        """A helper function to print ``x**(1/exp)`` as a root.
+    def _print_nth_root(self, base, n):
+        """Helper function to print ``x**(1/n)`` as a root.
 
-        Here ``exp`` should be a ``prettyForm``, a string, or something
+        Here ``n`` should be a ``prettyForm``, a string, or something
         convertible by ``str``.  It should be a single line.
         """
         bpretty = self._print(base)
-        #exp = str(exp)  # doesn't work on Python 2
+        #exp = str(n)  # doesn't work on Python 2
         from sympy.core.compatibility import unicode
-        exp = unicode(exp)
-        if exp == '2':  # careful, don't want 2.0 here
-            istwo = True
+        exp = unicode(n)
+        if exp == '2':
             exp = ''
-        else:
-            istwo = False
 
         # In very simple cases, use a single-char root sign
         if (self._settings['use_unicode_sqrt_char'] and self._use_unicode
-            and istwo and bpretty.height() == 1
+            and not exp and bpretty.height() == 1
             and (bpretty.width() == 1
                  or (base.is_Integer and base.is_nonnegative))):
             return prettyForm(*bpretty.left(u'\N{SQUARE ROOT}'))
@@ -1849,13 +1846,15 @@ class PrettyPrinter(Printer):
         if power.is_commutative:
             if e is S.NegativeOne:
                 return prettyForm("1")/self._print(b)
-            n, d = fraction(e)
-            if n is S.One and d.is_Atom and not e.is_Integer and self._settings['root_notation']:
-                dp = self._print(d)
-                if dp.height() == 1:
-                    return self._print_nth_root(b, dp)
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))
+            if self._settings['root_notation']:
+                # small Integer roots and short Symbols, not irrational roots
+                n, d = fraction(e)
+                if n == 1 and (d.is_Symbol or (d.is_Integer and d != 1)):
+                    dp = self._print(d)
+                    if dp.height() == 1 and dp.width() <= 3:
+                        return self._print_nth_root(b, dp)
 
         if b.is_Relational:
             return prettyForm(*self._print(b).parens()).__pow__(self._print(e))

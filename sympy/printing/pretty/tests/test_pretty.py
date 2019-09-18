@@ -2058,19 +2058,28 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = 2**Rational(1, 1000)
+    expr = 2**Rational(1, 999)
     ascii_str = \
 """\
-1000___\n\
-  \\/ 2 \
+999___\n\
+ \\/ 2 \
 """
     ucode_str = \
 u("""\
-1000___\n\
-  ╲╱ 2 \
+999___\n\
+ ╲╱ 2 \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+    expr = 2**Rational(1, 1000)
+    ascii_str = \
+"""\
+ 1/1000\n\
+2      \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ascii_str
 
     expr = sqrt(x**2 + 1)
     ascii_str = \
@@ -2132,11 +2141,11 @@ u("""\
     assert upretty(expr) == ucode_str
 
     expr = (2 + (
-        1 + x**2)/(2 + x))**Rational(1, 4) + (1 + x**Rational(1, 1000))/sqrt(3 + x**2)
+        1 + x**2)/(2 + x))**Rational(1, 4) + (1 + x**Rational(1, 100))/sqrt(3 + x**2)
     ascii_str = \
 """\
      ____________              \n\
-    /      2        1000___    \n\
+    /      2         100___    \n\
    /      x  + 1      \\/ x  + 1\n\
 4 /   2 + ------  + -----------\n\
 \\/        x + 2        ________\n\
@@ -2146,7 +2155,7 @@ u("""\
     ucode_str = \
 u("""\
      ____________              \n\
-    ╱      2        1000___    \n\
+    ╱      2         100___    \n\
    ╱      x  + 1      ╲╱ x  + 1\n\
 4 ╱   2 + ──────  + ───────────\n\
 ╲╱        x + 2        ________\n\
@@ -5656,7 +5665,6 @@ def test_PrettyPoly():
 
 def test_issue_6285():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
-    assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
 
 
 def test_issue_6359():
@@ -6896,27 +6904,58 @@ n = -∞  \
 
 def test_issue_17616():
     assert pretty(pi**(exp(-1))) == \
-    'E ____\n'\
-    '\\/ pi '
-
+    '  / -1\\\n'\
+    '  \\e  /\n'\
+    'pi     '
     assert upretty(pi**(exp(-1))) == \
 u("""\
-ℯ ___\n\
-╲╱ π \
-""")
-
-    assert pretty(pi**(1/pi)) == \
-    'pi____\n'\
-    '\\/ pi '
-
-    assert upretty(pi**(1/pi)) == \
-u("""\
-π ___\n\
-╲╱ π \
+ ⎛ -1⎞\n\
+ ⎝ℯ  ⎠\n\
+π     \
 """)
 
     assert upretty(pi**(1/EulerGamma)) == \
 u("""\
-γ ___\n\
-╲╱ π \
+ 1\n\
+ ─\n\
+ γ\n\
+π \
+""")
+    assert pretty(pi**(1/EulerGamma)) == \
+    '      1     \n'\
+    '  ----------\n'\
+    '  EulerGamma\n'\
+    'pi          '
+
+
+def test_Pow_symbol_short_and_long():
+    z = Symbol("x_2")
+    assert upretty(7**(1/z)) == \
+u("""\
+x₂___\n\
+╲╱ 7 \
+""")
+    assert pretty(7**(1/z)) == \
+    'x_2___\n'\
+    ' \/ 7 '
+
+    z = Symbol("x_17")
+    assert upretty(7**(1/z)) == \
+u("""\
+x₁₇___\n\
+ ╲╱ 7 \
+""")
+    assert pretty(7**(1/z)) == \
+    '  1  \n'\
+    ' ----\n'\
+    ' x_17\n'\
+    '7    '
+
+    z = Symbol("verylong")
+    assert upretty(7**(1/z)) == \
+u("""\
+    1    \n\
+ ────────\n\
+ verylong\n\
+7        \
 """)
