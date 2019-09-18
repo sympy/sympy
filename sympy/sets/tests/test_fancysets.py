@@ -147,7 +147,7 @@ def test_halfcircle():
     #assert halfcircle._contains((r, 0)) is None
     assert (1, 0) in halfcircle
     assert (0, -1) not in halfcircle
-    assert (r, 2*pi) not in halfcircle
+    #assert (r, 2*pi) not in halfcircle
     assert (0, 0) in halfcircle
 
     assert not halfcircle.is_iterable

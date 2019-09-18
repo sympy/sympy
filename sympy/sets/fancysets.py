@@ -390,6 +390,13 @@ class ImageSet(Set):
 
         other = _sympify(other)
         expr = self.lamda.expr
+        sig = self.lamda.signature
+        variables = self.lamda.variables
+
+        rep = {v: Dummy(v.name) for v in variables}
+        variables = [v.subs(rep) for v in variables]
+        sig = sig.subs(rep)
+        expr = expr.subs(rep)
 
         # Map the parts of other to those in the Lambda expr
         equations = []
@@ -421,12 +428,12 @@ class ImageSet(Set):
                 symsetmap[sig] = bs
                 return True
 
-        if not all(rmatch(sg, st) for sg, st in zip(self.lamda.signature, self.base_sets)):
+        if not all(rmatch(sg, st) for sg, st in zip(sig, self.base_sets)):
             return False
 
         # Which of the variables in the Lambda signature need to be solved for?
         symss = (eq.free_symbols for eq in equations)
-        variables = set(self.lamda.variables) & reduce(set.union, symss, set())
+        variables = set(variables) & reduce(set.union, symss, set())
 
         for e in equations:
             syms = e.free_symbols & variables
