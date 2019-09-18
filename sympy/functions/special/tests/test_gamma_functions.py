@@ -404,7 +404,7 @@ def test_digamma():
     assert t(2, 3)
     assert t(123, 5)
 
-    assert digamma(x).rewrite(zeta) == digamma(x)
+    assert digamma(x).rewrite(zeta) == polygamma(0, x)
 
     assert digamma(x).rewrite(harmonic) == harmonic(x - 1) - EulerGamma
 
