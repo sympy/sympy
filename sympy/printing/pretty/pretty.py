@@ -1849,9 +1849,9 @@ class PrettyPrinter(Printer):
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))
             if self._settings['root_notation']:
-                # small Integer roots and short Symbols, not irrational roots
+                # small integer roots and short symbols
                 n, d = fraction(e)
-                if n == 1 and (d.is_Symbol or (d.is_Integer and d != 1)):
+                if n == 1 and d != 1 and d.is_Atom:
                     dp = self._print(d)
                     if dp.height() == 1 and dp.width() <= 3:
                         return self._print_nth_root(b, dp)

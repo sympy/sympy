@@ -5665,6 +5665,7 @@ def test_PrettyPoly():
 
 def test_issue_6285():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
+    assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
 
 
 def test_issue_6359():
@@ -6904,40 +6905,37 @@ n = -∞  \
 
 def test_issue_17616():
     assert pretty(pi**(exp(-1))) == \
-    '  / -1\\\n'\
-    '  \\e  /\n'\
-    'pi     '
+    'E ____\n'\
+    '\\/ pi '
+
     assert upretty(pi**(exp(-1))) == \
 u("""\
- ⎛ -1⎞\n\
- ⎝ℯ  ⎠\n\
-π     \
+ℯ ___\n\
+╲╱ π \
 """)
 
+    assert pretty(pi**(1/pi)) == \
+    'pi____\n'\
+    '\\/ pi '
+
+    assert upretty(pi**(1/pi)) == \
+u("""\
+π ___\n\
+╲╱ π \
+""")
+
+
+def test_Pow_symbol_short_and_long():
     assert upretty(pi**(1/EulerGamma)) == \
 u("""\
- 1\n\
- ─\n\
- γ\n\
-π \
+γ ___\n\
+╲╱ π \
 """)
     assert pretty(pi**(1/EulerGamma)) == \
     '      1     \n'\
     '  ----------\n'\
     '  EulerGamma\n'\
     'pi          '
-
-
-def test_Pow_symbol_short_and_long():
-    z = Symbol("x_2")
-    assert upretty(7**(1/z)) == \
-u("""\
-x₂___\n\
-╲╱ 7 \
-""")
-    assert pretty(7**(1/z)) == \
-    'x_2___\n'\
-    ' \/ 7 '
 
     z = Symbol("x_17")
     assert upretty(7**(1/z)) == \
@@ -6950,12 +6948,3 @@ x₁₇___\n\
     ' ----\n'\
     ' x_17\n'\
     '7    '
-
-    z = Symbol("verylong")
-    assert upretty(7**(1/z)) == \
-u("""\
-    1    \n\
- ────────\n\
- verylong\n\
-7        \
-""")
