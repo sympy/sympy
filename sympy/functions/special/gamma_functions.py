@@ -1103,15 +1103,15 @@ class trigamma(Function):
 
     def _eval_is_real(self):
         z = self.args[0]
-        return polygamma(0,z).is_real()
+        return polygamma(1,z).is_real()
 
     def _eval_is_positive(self):
         z = self.args[0]
-        return polygamma(0,z).is_positive()
+        return polygamma(1,z).is_positive()
 
     def _eval_is_negative(self):
         z = self.args[0]
-        return polygamma(0,z).is_negative()
+        return polygamma(1,z).is_negative()
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
