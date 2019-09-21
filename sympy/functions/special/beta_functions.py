@@ -47,7 +47,7 @@ class beta(Function):
     >>> from sympy import beta
     >>> from sympy import diff
     >>> diff(beta(x,y), x)
-    (polygamma(x) - polygamma(x + y))*beta(x, y)
+    (polygamma(0, x) - polygamma(0, x + y))*beta(x, y)
 
     >>> from sympy import beta
     >>> from sympy import diff
