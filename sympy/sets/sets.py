@@ -2023,8 +2023,6 @@ def imageset(*args):
         if r is not None:
             return r
 
-    #set_list = set_list[0] if len(set_list) == 1 else ProductSet(*set_list)
-
     return ImageSet(f, *set_list)
 
 

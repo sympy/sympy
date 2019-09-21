@@ -318,16 +318,16 @@ class ImageSet(Set):
         sets = [_sympify(s) for s in sets]
 
         if not all(isinstance(s, Set) for s in sets):
-            raise TypeError("Set argument to ImageSet should of type Set")
+            raise TypeError("Set arguments to ImageSet should of type Set")
 
         if not all(cls._check_sig(sg, st) for sg, st in zip(signature, sets)):
-            raise ValueError("Signature %s does not match Set %s" % (signature, sets))
+            raise ValueError("Signature %s does not match sets %s" % (signature, sets))
 
         if flambda is S.IdentityFunction and len(sets) == 1:
             return sets[0]
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
-            is_empty = ProductSet(*sets).is_empty
+            is_empty = fuzzy_or(s.is_empty for s in sets)
             if is_empty == True:
                 return S.EmptySet
             elif is_empty == False:
@@ -461,7 +461,7 @@ class ImageSet(Set):
         from sympy.sets.setexpr import SetExpr
         f = self.lamda
         if len(self.base_sets) == 1:
-            base_set = self.base_sets[0] # XXX: What if there are more base sets?
+            base_set = self.base_sets[0]
             return SetExpr(base_set)._eval_func(f).set
         return self
 

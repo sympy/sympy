@@ -851,7 +851,7 @@ def solve_decomposition(f, symbol, domain):
             for iset in iter_iset:
                 new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
                 dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
-                base_set = iset.base_sets[0]
+                (base_set,) = iset.base_sets
                 if isinstance(new_solutions, FiniteSet):
                     new_exprs = new_solutions
 
@@ -2899,7 +2899,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             res[key_res] = value_res.lamda.expr
                             original_imageset[key_res] = value_res
                             dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
-                            base = value_res.base_sets[0]
+                            (base,) = value_res.base_sets
                             imgset_yes = (dummy_n, base)
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res).expand()
