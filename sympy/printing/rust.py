@@ -454,7 +454,6 @@ class RustCodePrinter(CodePrinter):
     # method from higher up the class hierarchy (see _print_NumberSymbol).
     # Then subclasses like us would not need to repeat all this.
     _print_Matrix = \
-        _print_MatrixElement = \
         _print_DenseMatrix = \
         _print_MutableDenseMatrix = \
         _print_ImmutableMatrix = \
