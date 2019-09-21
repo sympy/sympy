@@ -1507,9 +1507,8 @@ class PrettyPrinter(Printer):
         else:
             arrow = " -> "
         if len(sig) == 1 and sig[0].is_symbol:
-            var_form = self._print(sig[0])
-        else:
-            var_form = self._print(tuple(sig))
+            sig = sig[0]
+        var_form = self._print(sig)
 
         return prettyForm(*stringPict.next(var_form, arrow, self._print(expr)), binding=8)
 
@@ -1982,7 +1981,6 @@ class PrettyPrinter(Printer):
                                or set.is_Union)
 
     def _print_ImageSet(self, ts):
-        from sympy.sets.sets import ProductSet
         if self._use_unicode:
             inn = u"\N{SMALL ELEMENT OF}"
         else:
