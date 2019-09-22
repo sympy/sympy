@@ -7,6 +7,7 @@ from sympy.logic import ITE
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
+from sympy.matrices import MatrixSymbol
 
 from sympy import rust_code
 
@@ -49,6 +50,8 @@ def test_printmethod():
         def _rust_code(self, printer):
             return "%s.fabs()" % printer._print(self.args[0])
     assert rust_code(fabs(x)) == "x.fabs()"
+    a = MatrixSymbol("a", 1 ,3)
+    assert rust_code(a[0,0]) == 'a[0]'
 
 
 def test_Functions():
