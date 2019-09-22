@@ -2358,6 +2358,8 @@ class Integer(Rational):
             else:
                 return Rational(1, self.p)**ne
         # see if base is a perfect root, sqrt(4) --> 2
+        if abs(self) >= 16**16 or abs(expt) >= 16**16:
+            return Pow(self, expt, evaluate=False)
         x, xexact = integer_nthroot(abs(self.p), expt.q)
         if xexact:
             # if it's a perfect root we've finished
