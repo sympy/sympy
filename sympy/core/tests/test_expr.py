@@ -179,6 +179,18 @@ def test_relational():
     assert Lt(x + I, x + I + 2).func == Lt  # issue 8288
 
 
+def test_optimized_nthroot():
+    from sympy.abc import a, b, c
+    import mpmath as mp
+    mp.dps = 15
+    input_value = -144
+    b = a ** a
+    c = b ** b
+    observed_out = c.subs({a: input_value})
+    expected_out = 1.000
+    assert mp.almosteq(observed_out, expected_out)
+
+
 def test_relational_assumptions():
     from sympy import Lt, Gt, Le, Ge
     m1 = Symbol("m1", nonnegative=False)
