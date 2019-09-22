@@ -1799,6 +1799,7 @@ class Rational(Number):
 
     def _eval_power(self, expt):
         import mpmath as mp
+        from copy import deepcopy
         mp.dps = 15
         if isinstance(expt, Number):
             if isinstance(expt, Float):
@@ -1812,7 +1813,9 @@ class Rational(Number):
                     return S.NegativeOne**expt*Rational(self.q, -self.p)**ne
                 else:
                     if abs(self) >= 16**16 or abs(ne) >= 16**16:
-                        return Rational(self.q, self.p)**ne
+                        cself = deepcopy(self)
+                        cself.p, cself.q = self.q, self.p
+                        return Pow(cself, ne, evaluate=False)
                     x = mp.fdiv(self.q, self.p)
                     y = mp.fdiv(ne.p, ne.q)
                     return sympify(mp.power(x, y))
@@ -1826,24 +1829,18 @@ class Rational(Number):
                 return S.Zero
             if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
-                if abs(self) >= 16**16 or abs(ne) >= 16**16:
-                    return Rational(self.p**expt.p, self.q**expt.p, 1)
                 a = Integer(mp.power(self.p, expt.p))
                 b = Integer(mp.power(self.q, expt.p))
                 return Rational(a, b, 1)
             if isinstance(expt, Rational):
+                if abs(self) >= 16**16 or abs(expt) >= 16**16:
+                    return Pow(self, expt, evaluate=False)
                 if self.p != 1:
                     # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
-                    if abs(self) >= 16**16 or abs(expt) >= 16**16:
-                        return Integer(self.p)**expt*Integer(self.q)**(-expt)
                     a = mp.fdiv(self.p, self.q)
                     b = mp.fdiv(expt.p, expt.q)
                     return sympify(mp.power(a, b))
                 # as the above caught negative self.p, now self is positive
-                if abs(self) >= 16**16 or abs(expt) >= 16**16:
-                    return Integer(self.q)**Rational(
-                expt.p*(expt.q - 1), expt.q) / \
-                    Integer(self.q)**Integer(expt.p)
                 x = mp.fmul(expt.p, (expt.q - 1))
                 a = mp.fdiv(x, expt.q)
                 b = mp.power(self.q, expt.p)
@@ -1851,6 +1848,8 @@ class Rational(Number):
                 return sympify(mp.fdiv(c, b))
 
         if self.is_extended_negative and expt.is_even:
+            if abs(self) >= 16**16 or abs(expt) >= 16**16:
+                return Pow((-self), expt, evaluate=False)
             x = mp.fdiv(self.p, self.q)
             nx = mp.fneg(x)
             y = mp.fdiv(expt.p, expt.q)
