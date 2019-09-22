@@ -412,27 +412,54 @@ class Pow(Expr):
             return s*Pow(b, e*other)
 
     def _eval_Mod(self, q):
-        if self.exp.is_integer and self.exp.is_positive:
-            if q.is_integer and self.base % q == 0:
+        r"""A dispatched function to compute `b^e \bmod q`, dispatched
+        by ``Mod``.
+
+        Notes
+        =====
+
+        Algorithms:
+
+        1. For unevaluated integer power, use built-in ``pow`` function
+        with 3 arguments, if powers are not too large wrt base.
+
+        2. For very large powers, use totient reduction if e >= lg(m).
+        Bound on m, is for safe factorization memory wise ie m^(1/4).
+        For pollard-rho to be faster than built-in pow lg(e) > m^(1/4)
+        check is added.
+
+        3. For any unevaluated power found in `b` or `e`, the step 2
+        will be recursed down such that the `b \bmod q` becomes the new
+        base and ``\phi(q) + e \bmod \phi(q)`` becomes the new
+        exponent, and then
+        """
+        from sympy.ntheory import totient
+        from .mod import Mod
+
+        base, exp = self.base, self.exp
+
+        if exp.is_integer and exp.is_positive:
+            if q.is_integer and base % q == 0:
                 return S.Zero
 
-            '''
-            For unevaluated Integer power, use built-in pow modular
-            exponentiation, if powers are not too large wrt base.
-            '''
-            if self.base.is_Integer and self.exp.is_Integer and q.is_Integer:
-                b, e, m = int(self.base), int(self.exp), int(q)
-                # For very large powers, use totient reduction if e >= lg(m).
-                # Bound on m, is for safe factorization memory wise ie m^(1/4).
-                # For pollard-rho to be faster than built-in pow lg(e) > m^(1/4)
-                # check is added.
+            if base.is_Integer and exp.is_Integer and q.is_Integer:
+                b, e, m = int(base), int(exp), int(q)
                 mb = m.bit_length()
-                if mb <= 80  and e >= mb and e.bit_length()**4 >= m:
-                    from sympy.ntheory import totient
+                if mb <= 80 and e >= mb and e.bit_length()**4 >= m:
                     phi = totient(m)
-                    return pow(b, phi + e%phi, m)
-                else:
-                    return pow(b, e, m)
+                    return Integer(pow(b, phi + e%phi, m))
+                return Integer(pow(b, e, m))
+
+            if isinstance(base, Pow) and base.is_integer and base.is_number:
+                base = Mod(base, q)
+                return Mod(Pow(base, exp), q)
+
+            if isinstance(exp, Pow) and exp.is_integer and exp.is_number:
+                bit_length = int(q).bit_length()
+                if bit_length <= 80:
+                    phi = totient(q)
+                    exp = phi + Mod(exp, phi)
+                    return Mod(Pow(base, exp), q)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
