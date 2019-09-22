@@ -456,6 +456,9 @@ class Pow(Expr):
 
             if isinstance(exp, Pow) and exp.is_integer and exp.is_number:
                 bit_length = int(q).bit_length()
+                # XXX Mod-Pow actually attempts to do a hanging evaluation
+                # if this dispatched function returns None.
+                # May need some fixes in the dispatcher itself.
                 if bit_length <= 80:
                     phi = totient(q)
                     exp = phi + Mod(exp, phi)
