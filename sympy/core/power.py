@@ -96,13 +96,13 @@ def integer_nthroot(y, n):
             shift = mp.fsub(exp, EXP_CONSTANT, rounding='d')
             k = mp.fsub(exp, shift, rounding='d')
             d = mp.power(2, k)
-            guess = mp.power((d + 1), shift, rounding='d')
+            guess = mp.power((d + 1), shift)
             del d
             del k
             del c
             del shift
         else:
-            guess = mp.power(2, exp, rounding='d')
+            guess = mp.power(2, exp)
         del exp
     if guess > mp.power(2, 50):
         # Newton iteration
@@ -122,13 +122,13 @@ def integer_nthroot(y, n):
     else:
         x = guess
     # Compensate
-    t = mp.power(x, n, rounding='d')
+    t = mp.power(x, n)
     while t < y:
         x = mp.fadd(x, 1)
-        t = mp.power(x, n, rounding='d')
+        t = mp.power(x, n)
     while t > y:
         x = mp.fsub(x, 1)
-        t = mp.power(x, n, rounding='d')
+        t = mp.power(x, n)
     return int(x), mp.almosteq(t, y)  # int converts long to int if possible
 
 def integer_log(y, x):
