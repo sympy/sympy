@@ -38,7 +38,6 @@ def isqrt(n):
 
     return integer_nthroot(n, 2)[0]
 
-
 def integer_nthroot(y, n):
     """
     Return a tuple containing x = floor(y**(1/n))
@@ -82,35 +81,55 @@ def integer_nthroot(y, n):
         return 1, False
     # Get initial estimate for Newton's method. Care must be taken to
     # avoid overflow
+    import mpmath as mp
+    mp.dps = 15
     try:
-        guess = int(y**(1./n) + 0.5)
+        a = mp.fdiv(1, n)
+        b = mp.power(y, a)
+        guess = mp.fadd(b, 0.5)
+        del a
+        del b
     except OverflowError:
-        exp = _log(y, 2)/n
-        if exp > 53:
-            shift = int(exp - 53)
-            guess = int(2.0**(exp - shift) + 1) << shift
+        exp = mp.fdiv(mp.log(y, 2), n)
+        EXP_CONSTANT = 53
+        if exp > EXP_CONSTANT:
+            shift = mp.fsub(exp, EXP_CONSTANT, rounding='d')
+            k = mp.fsub(exp, shift, rounding='d')
+            d = mp.power(2, k)
+            guess = mp.power((d + 1), shift, rounding='d')
+            del d
+            del k
+            del c
+            del shift
         else:
-            guess = int(2.0**exp)
-    if guess > 2**50:
+            guess = mp.power(2, exp, rounding='d')
+        del exp
+    if guess > mp.power(2, 50):
         # Newton iteration
         xprev, x = -1, guess
         while 1:
-            t = x**(n - 1)
-            xprev, x = x, ((n - 1)*x + y//t)//n
-            if abs(x - xprev) < 2:
+            t = mp.power(x, (n - 1))
+            e = mp.fmul((n - 1), x)
+            f = mp.fdiv(y, t, rounding='d')
+            h = mp.fadd(e, f)
+            del e
+            del f
+            g = mp.fdiv(h, n, rounding='d')
+            del h
+            xprev, x = x, g
+            if mp.fabs(x - xprev, rounding='d') < 2:
                 break
     else:
         x = guess
     # Compensate
-    t = x**n
+    t = mp.power(x, n, rounding='d')
     while t < y:
-        x += 1
-        t = x**n
+        x = mp.fadd(x, 1)
+        t = mp.power(x, n, rounding='d')
     while t > y:
-        x -= 1
-        t = x**n
-    return int(x), t == y  # int converts long to int if possible
-
+        x = mp.fsub(x, 1)
+        t = mp.power(x, n, rounding='d')
+    return int(x), mp.almosteq(t, y)  # int converts long to int if possible
 
 def integer_log(y, x):
     """Returns (e, bool) where e is the largest nonnegative integer

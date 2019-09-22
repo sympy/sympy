@@ -1798,6 +1798,8 @@ class Rational(Number):
         return Number.__rmod__(self, other)
 
     def _eval_power(self, expt):
+        import mpmath as mp
+        mp.dps = 15
         if isinstance(expt, Number):
             if isinstance(expt, Float):
                 return self._eval_evalf(expt._prec)**expt
@@ -1809,7 +1811,9 @@ class Rational(Number):
                 if self.is_negative:
                     return S.NegativeOne**expt*Rational(self.q, -self.p)**ne
                 else:
-                    return Rational(self.q, self.p)**ne
+                    x = mp.fdiv(self.q, self.p)
+                    y = mp.fdiv(ne.p, ne.q)
+                    return sympify(mp.power(x, y))
             if expt is S.Infinity:  # -oo already caught by test for negative
                 if self.p > self.q:
                     # (3/2)**oo -> oo
@@ -1820,18 +1824,27 @@ class Rational(Number):
                 return S.Zero
             if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
-                return Rational(self.p**expt.p, self.q**expt.p, 1)
+                a = Integer(mp.power(self.p, expt.p))
+                b = Integer(mp.power(self.q, expt.p))
+                return Rational(a, b, 1)
             if isinstance(expt, Rational):
                 if self.p != 1:
                     # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
-                    return Integer(self.p)**expt*Integer(self.q)**(-expt)
+                    a = mp.fdiv(self.p, self.q)
+                    b = mp.fdiv(expt.p, expt.q)
+                    return sympify(mp.power(a, b))
                 # as the above caught negative self.p, now self is positive
-                return Integer(self.q)**Rational(
-                expt.p*(expt.q - 1), expt.q) / \
-                    Integer(self.q)**Integer(expt.p)
+                x = mp.fmul(expt.p, (expt.q - 1))
+                a = mp.fdiv(x, expt.q)
+                b = mp.power(self.q, expt.p)
+                c = mp.power(self.q, a)
+                return sympify(mp.fdiv(c, b))
 
         if self.is_extended_negative and expt.is_even:
-            return (-self)**expt
+            x = mp.fdiv(self.p, self.q)
+            nx = mp.fneg(x)
+            y = mp.fdiv(expt.p, expt.q)
+            return sympify(mp.power(nx, y))
 
         return
 
