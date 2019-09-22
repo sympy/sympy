@@ -1708,6 +1708,48 @@ def test_Mod_Pow():
     assert Mod(Pow(78789849597, 333**555, evaluate=False),12**9) == \
         pow(78789849597,333**555,12**9)
 
+    # modular nested exponentiation
+    expr = Pow(2, 2, evaluate=False)
+    expr = Pow(2, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 16
+    expr = Pow(2, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 6487
+    expr = Pow(2, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 32191
+    expr = Pow(2, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 18016
+    expr = Pow(2, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 5137
+
+    expr = Pow(2, 2, evaluate=False)
+    expr = Pow(expr, 2, evaluate=False)
+    assert Mod(expr, 3**10) == 16
+    expr = Pow(expr, 2, evaluate=False)
+    assert Mod(expr, 3**10) == 256
+    expr = Pow(expr, 2, evaluate=False)
+    assert Mod(expr, 3**10) == 6487
+    expr = Pow(expr, 2, evaluate=False)
+    assert Mod(expr, 3**10) == 38281
+    expr = Pow(expr, 2, evaluate=False)
+    assert Mod(expr, 3**10) == 15928
+
+
+@XFAIL
+def test_failing_Mod_Pow_nested():
+    expr = Pow(2, 2, evaluate=False)
+    expr = Pow(expr, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 256
+    expr = Pow(expr, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 9229
+    expr = Pow(expr, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 25708
+    expr = Pow(expr, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 26608
+    # XXX This fails in nondeterministic way because of the overflow
+    # error in mpmath
+    expr = Pow(expr, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 1966
+
 
 def test_Mod_is_integer():
     p = Symbol('p', integer=True)
