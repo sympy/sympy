@@ -2821,6 +2821,42 @@ class PermutationGroup(Basic):
             return self.order()//H.order()
 
     @property
+    def is_symmetric(self):
+        """Return ``True`` if the group is symmetric.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> g = SymmetricGroup(5)
+        >>> g.is_symmetric
+        True
+
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
+        >>> g = PermutationGroup(
+        ...     Permutation(0, 1, 2, 3, 4),
+        ...     Permutation(2, 3))
+        >>> g.is_symmetric
+        True
+
+        Notes
+        =====
+
+        Symmetric groups have an order of `n!` for permutation groups
+        where `n` is the cardinality of the set every permutation is
+        based on.
+        """
+        _is_sym = self._is_sym
+        if _is_sym is not None:
+            return _is_sym
+
+        size = self.generators[0].size
+        order = self.order()
+        is_sym = factorial(size) == order
+        self._is_sym = is_sym
+        return is_sym
+
+    @property
     def is_cyclic(self):
         """
         Return ``True`` if the group is Cyclic.
