@@ -429,9 +429,10 @@ class Pow(Expr):
         check is added.
 
         3. For any unevaluated power found in `b` or `e`, the step 2
-        will be recursed down such that the `b \bmod q` becomes the new
-        base and ``\phi(q) + e \bmod \phi(q)`` becomes the new
-        exponent, and then
+        will be recursed down to the base and the exponent
+        such that the `b \bmod q` becomes the new base and
+        ``\phi(q) + e \bmod \phi(q)`` becomes the new exponent, and then
+        the computation for the reduced expression can be done.
         """
         from sympy.ntheory import totient
         from .mod import Mod
