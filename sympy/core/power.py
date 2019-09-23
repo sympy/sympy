@@ -453,7 +453,7 @@ class Pow(Expr):
 
             if isinstance(base, Pow) and base.is_integer and base.is_number:
                 base = Mod(base, q)
-                return Mod(Pow(base, exp), q)
+                return Mod(Pow(base, exp, evaluate=False), q)
 
             if isinstance(exp, Pow) and exp.is_integer and exp.is_number:
                 bit_length = int(q).bit_length()
@@ -463,7 +463,7 @@ class Pow(Expr):
                 if bit_length <= 80:
                     phi = totient(q)
                     exp = phi + Mod(exp, phi)
-                    return Mod(Pow(base, exp), q)
+                    return Mod(Pow(base, exp, evaluate=False), q)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
