@@ -42,9 +42,11 @@ def test_simple_code_with_header():
     result, = codegen(name_expr, "Rust", header=True, empty=False)
     assert result[0] == "test.rs"
     source = result[1]
+    version_str = "Code generated with sympy %s" % sympy.__version__
+    version_line = version_str.center(76).rstrip()
     expected = (
         "/*\n"
-        " *                    Code generated with sympy " + sympy.__version__ + "\n"
+        " *%(version_line)s\n"
         " *\n"
         " *              See http://www.sympy.org/ for more information.\n"
         " *\n"
@@ -54,7 +56,7 @@ def test_simple_code_with_header():
         "    let out1 = z*(x + y);\n"
         "    out1\n"
         "}\n"
-    )
+    ) % {'version_line': version_line}
     assert source == expected
 
 
@@ -78,11 +80,11 @@ def test_numbersymbol():
     source = result[1]
     expected = (
         "fn test() -> f64 {\n"
-        "    const Catalan: f64 = 0.915965594177219;\n"
+        "    const Catalan: f64 = %s;\n"
         "    let out1 = PI.powf(Catalan);\n"
         "    out1\n"
         "}\n"
-    )
+    ) % Catalan.evalf(17)
     assert source == expected
 
 
@@ -95,13 +97,13 @@ def test_numbersymbol_inline():
     source = result[1]
     expected = (
         "fn test() -> (f64, f64) {\n"
-        "    const Catalan: f64 = 0.915965594177219;\n"
-        "    const EulerGamma: f64 = 0.5772156649015329;\n"
+        "    const Catalan: f64 = %s;\n"
+        "    const EulerGamma: f64 = %s;\n"
         "    let out1 = PI.powf(Catalan);\n"
         "    let out2 = EulerGamma);\n"
         "    (out1, out2)\n"
         "}\n"
-    )
+    ) % (Catalan.evalf(17), EulerGamma.evalf(17))
     assert source == expected
 
 
@@ -224,7 +226,7 @@ def test_output_arg_mixed_unordered():
 
 
 def test_piecewise_():
-    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
+    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True), evaluate=False)
     name_expr = ("pwtest", pw)
     result, = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
@@ -235,7 +237,7 @@ def test_piecewise_():
         "    } else if (x <= 1) {\n"
         "        x.powi(2)\n"
         "    } else if (x > 1) {\n"
-        "        -x + 2\n"
+        "        2 - x\n"
         "    } else {\n"
         "        1\n"
         "    };\n"
@@ -288,9 +290,11 @@ def test_multifcns_per_file_w_header():
     result = codegen(name_expr, "Rust", header=True, empty=False)
     assert result[0][0] == "foo.rs"
     source = result[0][1];
+    version_str = "Code generated with sympy %s" % sympy.__version__
+    version_line = version_str.center(76).rstrip()
     expected = (
         "/*\n"
-        " *                    Code generated with sympy " + sympy.__version__ + "\n"
+        " *%(version_line)s\n"
         " *\n"
         " *              See http://www.sympy.org/ for more information.\n"
         " *\n"
@@ -306,7 +310,7 @@ def test_multifcns_per_file_w_header():
         "    let out2 = 4*y;\n"
         "    (out1, out2)\n"
         "}\n"
-    )
+    ) % {'version_line': version_line}
     assert source == expected
 
 

@@ -238,12 +238,30 @@ def test_wigner():
         70)/(246960*sqrt(105)) - 365/(3528*sqrt(70)*sqrt(105))
     assert wigner_6j(5, 5, 5, 5, 5, 5) == Rational(1, 52)
     assert tn(wigner_6j(8, 8, 8, 8, 8, 8, prec=64), -S(12219)/965770)
+    # regression test for #8747
+    half = Rational(1, 2)
+    assert wigner_9j(0, 0, 0, 0, half, half, 0, half, half) == half
+    assert (wigner_9j(3, 5, 4,
+                      7 * half, 5 * half, 4,
+                      9 * half, 9 * half, 0)
+            == -sqrt(Rational(361, 205821000)))
+    assert (wigner_9j(1, 4, 3,
+                      5 * half, 4, 5 * half,
+                      5 * half, 2, 7 * half)
+            == -sqrt(Rational(3971, 373403520)))
+    assert (wigner_9j(4, 9 * half, 5 * half,
+                      2, 4, 4,
+                      5, 7 * half, 7 * half)
+            == -sqrt(Rational(3481, 5042614500)))
 
 
 def test_gaunt():
     def tn(a, b):
         return (a - b).n(64) < S('1e-64')
     assert gaunt(1, 0, 1, 1, 0, -1) == -1/(2*sqrt(pi))
+    assert isinstance(gaunt(1, 1, 0, -1, 1, 0).args[0], Rational)
+    assert isinstance(gaunt(0, 1, 1, 0, -1, 1).args[0], Rational)
+
     assert tn(gaunt(
         10, 10, 12, 9, 3, -12, prec=64), (-S(98)/62031) * sqrt(6279)/sqrt(pi))
     def gaunt_ref(l1, l2, l3, m1, m2, m3):
@@ -295,6 +313,6 @@ def test_dot_rota_grad_SH():
         sqrt(3)*Ynm(4, 4, theta, phi)/sqrt(pi)
     assert dot_rot_grad_Ynm(3, 2, 2, 0, theta, phi).doit() ==  \
         3*sqrt(55)*Ynm(5, 2, theta, phi)/(11*sqrt(pi))
-    assert dot_rot_grad_Ynm(3, 2, 3, 2, theta, phi).doit() ==  \
+    assert dot_rot_grad_Ynm(3, 2, 3, 2, theta, phi).doit().expand() ==  \
         -sqrt(70)*Ynm(4, 4, theta, phi)/(11*sqrt(pi)) + \
         45*sqrt(182)*Ynm(6, 4, theta, phi)/(143*sqrt(pi))

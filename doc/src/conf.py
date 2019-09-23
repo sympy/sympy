@@ -12,27 +12,36 @@
 # serve to show the default value.
 
 import sys
+import inspect
+import os
+import subprocess
 import sympy
 
 # If your extensions are in another directory, add it here.
-sys.path = ['../sympy', 'ext'] + sys.path
+sys.path = ['ext'] + sys.path
 
 # General configuration
 # ---------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'numpydoc', 'sympylive', 'sphinx.ext.graphviz', ]
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
+              'sphinx.ext.mathjax', 'numpydoc', 'sympylive',
+              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
 
-# MathJax file, which is free to use.  See http://www.mathjax.org/docs/2.0/start.html
-mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
+# To stop docstrings inheritance.
+autodoc_inherit_docstrings = False
+
+# MathJax file, which is free to use.  See https://www.mathjax.org/#gettingstarted
+# As explained in the link using latest.js will get the latest version even
+# though it says 2.7.5.
+mathjax_path = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML-full'
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['.templates']
+templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -40,9 +49,11 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
+suppress_warnings = ['ref.citation', 'ref.footnote']
+
 # General substitutions.
 project = 'SymPy'
-copyright = '2017 SymPy Development Team'
+copyright = '2019 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -75,6 +86,8 @@ today_fmt = '%B %d, %Y'
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
+# Don't show the source code hyperlinks when using matplotlib plot directive.
+plot_html_show_source_link = False
 
 # Options for HTML output
 # -----------------------
@@ -97,7 +110,7 @@ html_theme = 'classic'
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
-# See http://sphinx-doc.org/theming.html#builtin-themes.
+# See http://www.sphinx-doc.org/en/master/theming.html#builtin-themes
 
 
 # If true, SmartyPants will be used to convert quotes and dashes to
@@ -194,5 +207,83 @@ texinfo_documents = [
 ]
 
 # Use svg for graphviz
-
 graphviz_output_format = 'svg'
+
+
+# Requried for linkcode extension.
+# Get commit hash from the external file.
+commit_hash_filepath = '../commit_hash.txt'
+commit_hash = None
+if os.path.isfile(commit_hash_filepath):
+    with open(commit_hash_filepath, 'r') as f:
+        commit_hash = f.readline()
+
+# Get commit hash from the external file.
+if not commit_hash:
+    try:
+        commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+        commit_hash = commit_hash.decode('ascii')
+        commit_hash = commit_hash.rstrip()
+    except:
+        import warnings
+        warnings.warn(
+            "Failed to get the git commit hash as the command " \
+            "'git rev-parse HEAD' is not working. The commit hash will be " \
+            "assumed as the SymPy master, but the lines may be misleading " \
+            "or nonexistent as it is not the correct branch the doc is " \
+            "built with. Check your installation of 'git' if you want to " \
+            "resolve this warning.")
+        commit_hash = 'master'
+
+fork = 'sympy'
+blobpath = \
+    "https://github.com/{}/sympy/blob/{}/sympy/".format(fork, commit_hash)
+
+
+def linkcode_resolve(domain, info):
+    """Determine the URL corresponding to Python object."""
+    if domain != 'py':
+        return
+
+    modname = info['module']
+    fullname = info['fullname']
+
+    submod = sys.modules.get(modname)
+    if submod is None:
+        return
+
+    obj = submod
+    for part in fullname.split('.'):
+        try:
+            obj = getattr(obj, part)
+        except Exception:
+            return
+
+    # strip decorators, which would resolve to the source of the decorator
+    # possibly an upstream bug in getsourcefile, bpo-1764286
+    try:
+        unwrap = inspect.unwrap
+    except AttributeError:
+        pass
+    else:
+        obj = unwrap(obj)
+
+    try:
+        fn = inspect.getsourcefile(obj)
+    except Exception:
+        fn = None
+    if not fn:
+        return
+
+    try:
+        source, lineno = inspect.getsourcelines(obj)
+    except Exception:
+        lineno = None
+
+    if lineno:
+        linespec = "#L%d-L%d" % (lineno, lineno + len(source) - 1)
+    else:
+        linespec = ""
+
+    fn = os.path.relpath(fn, start=os.path.dirname(sympy.__file__))
+    return blobpath + fn + linespec

@@ -113,7 +113,7 @@ class StateBase(QExpr):
 
     @classmethod
     def dual_class(self):
-        """Return the class used to construt the dual."""
+        """Return the class used to construct the dual."""
         raise NotImplementedError(
             'dual_class must be implemented in a subclass'
         )
@@ -234,7 +234,7 @@ class KetBase(StateBase):
     #-------------------------------------------------------------------------
 
     def _eval_innerproduct(self, bra, **hints):
-        """Evaluate the inner product betweeen this ket and a bra.
+        """Evaluate the inner product between this ket and a bra.
 
         This is called to compute <bra|ket>, where the ket is ``self``.
 
@@ -388,7 +388,7 @@ class Ket(State, KetBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Bra-ket_notation
+    .. [1] https://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
     @classmethod
@@ -449,7 +449,7 @@ class Bra(State, BraBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Bra-ket_notation
+    .. [1] https://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
     @classmethod
@@ -715,7 +715,7 @@ class Wavefunction(Function):
                 new_args[ct] = arg
             ct += 1
 
-        return super(Function, cls).__new__(cls, *new_args, **options)
+        return super(Wavefunction, cls).__new__(cls, *new_args, **options)
 
     def __call__(self, *args, **options):
         var = self.variables
@@ -934,7 +934,7 @@ class Wavefunction(Function):
             return Wavefunction((const)**(-1)*self.expr, *self.args[1:])
 
     def prob(self):
-        """
+        r"""
         Return the absolute magnitude of the w.f., `|\psi(x)|^2`
 
         Examples

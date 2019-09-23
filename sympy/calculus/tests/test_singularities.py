@@ -8,11 +8,12 @@ from sympy.calculus.singularities import (
     is_monotonic
 )
 from sympy.sets import Interval, FiniteSet
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y
 
 
 def test_singularities():
+    x = Symbol('x')
     assert singularities(x**2, x) == S.EmptySet
     assert singularities(x/(x**2 + 3*x + 2), x) == FiniteSet(-2, -1)
     assert singularities(1/(x**2 + 1), x) == FiniteSet(I, -I)
@@ -20,6 +21,9 @@ def test_singularities():
         FiniteSet(-1, (1 - sqrt(3) * I) / 2, (1 + sqrt(3) * I) / 2)
     assert singularities(1/(y**2 + 2*I*y + 1), y) == \
         FiniteSet(-I + sqrt(2)*I, -I - sqrt(2)*I)
+
+    x = Symbol('x', real=True)
+    assert singularities(1/(x**2 + 1), x) == S.EmptySet
 
 
 @XFAIL
@@ -83,3 +87,4 @@ def test_is_monotonic():
     assert is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
     assert not is_monotonic(-x**2, S.Reals)
     assert is_monotonic(x**2 + y + 1, Interval(1, 2), x)
+    raises(NotImplementedError, lambda: is_monotonic(x**2 + y + 1))

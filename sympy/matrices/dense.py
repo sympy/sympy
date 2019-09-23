@@ -1,26 +1,24 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import random
-from sympy import Derivative
 
 from sympy.core import SympifyError
 from sympy.core.basic import Basic
+from sympy.core.compatibility import is_sequence, range, reduce
 from sympy.core.expr import Expr
-from sympy.core.compatibility import is_sequence, as_int, range, reduce
-from sympy.core.function import count_ops
+from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.matrices.common import \
+    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
+from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
-from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.misc import filldedent
 
-from sympy.matrices.matrices import (MatrixBase,
-                                     ShapeError, a2idx, classof)
-
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def _iszero(x):
     """Returns True if x is zero."""
@@ -46,16 +44,17 @@ class DenseMatrix(MatrixBase):
     _class_priority = 4
 
     def __eq__(self, other):
-        try:
-            other = sympify(other)
-            if self.shape != other.shape:
-                return False
-            if isinstance(other, Matrix):
-                return _compare_sequence(self._mat,  other._mat)
-            elif isinstance(other, MatrixBase):
-                return _compare_sequence(self._mat, Matrix(other)._mat)
-        except AttributeError:
+        other = sympify(other)
+        self_shape = getattr(self, 'shape', None)
+        other_shape = getattr(other, 'shape', None)
+        if None in (self_shape, other_shape):
             return False
+        if self_shape != other_shape:
+            return False
+        if isinstance(other, Matrix):
+            return _compare_sequence(self._mat,  other._mat)
+        elif isinstance(other, MatrixBase):
+            return _compare_sequence(self._mat, Matrix(other)._mat)
 
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
@@ -130,24 +129,34 @@ class DenseMatrix(MatrixBase):
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
-    def _cholesky(self):
+    def _cholesky(self, hermitian=True):
         """Helper function of cholesky.
         Without the error checks.
-        To be used privately. """
-        L = zeros(self.rows, self.rows)
-        for i in range(self.rows):
-            for j in range(i):
-                L[i, j] = (1 / L[j, j])*(self[i, j] -
-                                         sum(L[i, k]*L[j, k] for k in range(j)))
-            L[i, i] = sqrt(self[i, i] -
-                           sum(L[i, k]**2 for k in range(i)))
-        return self._new(L)
-
-    def _diagonal_solve(self, rhs):
-        """Helper function of function diagonal_solve,
-        without the error checks, to be used privately.
+        To be used privately.
+        Implements the Cholesky-Banachiewicz algorithm.
+        Returns L such that L*L.H == self if hermitian flag is True,
+        or L*L.T == self if hermitian is False.
         """
-        return self._new(rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
+        L = zeros(self.rows, self.rows)
+        if hermitian:
+            for i in range(self.rows):
+                for j in range(i):
+                    L[i, j] = (1 / L[j, j])*expand_mul(self[i, j] -
+                        sum(L[i, k]*L[j, k].conjugate() for k in range(j)))
+                Lii2 = expand_mul(self[i, i] -
+                    sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
+                if Lii2.is_positive is False:
+                    raise NonPositiveDefiniteMatrixError(
+                        "Matrix must be positive-definite")
+                L[i, i] = sqrt(Lii2)
+        else:
+            for i in range(self.rows):
+                for j in range(i):
+                    L[i, j] = (1 / L[j, j])*(self[i, j] -
+                        sum(L[i, k]*L[j, k] for k in range(j)))
+                L[i, i] = sqrt(self[i, i] -
+                    sum(L[i, k]**2 for k in range(i)))
+        return self._new(L)
 
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
@@ -165,14 +174,14 @@ class DenseMatrix(MatrixBase):
     def _eval_matrix_mul(self, other):
         from sympy import Add
         # cache attributes for faster access
-        self_rows, self_cols = self.rows, self.cols
+        self_cols = self.cols
         other_rows, other_cols = other.rows, other.cols
         other_len = other_rows * other_cols
         new_mat_rows = self.rows
         new_mat_cols = other.cols
 
         # preallocate the array
-        new_mat = [S.Zero]*new_mat_rows*new_mat_cols
+        new_mat = [self.zero]*new_mat_rows*new_mat_cols
 
         # if we multiply an n x 0 with a 0 x m, the
         # expected behavior is to produce an n x m matrix of zeros
@@ -200,12 +209,6 @@ class DenseMatrix(MatrixBase):
     def _eval_matrix_mul_elementwise(self, other):
         mat = [a*b for a,b in zip(self._mat, other._mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
-
-    def _eval_diff(self, *args, **kwargs):
-        if kwargs.pop("evaluate", True):
-            return self.diff(*args)
-        else:
-            return Derivative(self, *args, **kwargs)
 
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using the method indicated (default
@@ -283,19 +286,32 @@ class DenseMatrix(MatrixBase):
         cols = self.cols
         return [mat[i*cols:(i + 1)*cols] for i in range(self.rows)]
 
-    def _LDLdecomposition(self):
+    def _LDLdecomposition(self, hermitian=True):
         """Helper function of LDLdecomposition.
         Without the error checks.
         To be used privately.
+        Returns L and D such that L*D*L.H == self if hermitian flag is True,
+        or L*D*L.T == self if hermitian is False.
         """
+        # https://en.wikipedia.org/wiki/Cholesky_decomposition#LDL_decomposition_2
         D = zeros(self.rows, self.rows)
         L = eye(self.rows)
-        for i in range(self.rows):
-            for j in range(i):
-                L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
-                    L[i, k]*L[j, k]*D[k, k] for k in range(j)))
-            D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k]
-                                       for k in range(i))
+        if hermitian:
+            for i in range(self.rows):
+                for j in range(i):
+                    L[i, j] = (1 / D[j, j])*expand_mul(self[i, j] - sum(
+                        L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j)))
+                D[i, i] = expand_mul(self[i, i] -
+                    sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
+                if D[i, i].is_positive is False:
+                    raise NonPositiveDefiniteMatrixError(
+                        "Matrix must be positive-definite")
+        else:
+            for i in range(self.rows):
+                for j in range(i):
+                    L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
+                        L[i, k]*L[j, k]*D[k, k] for k in range(j)))
+                D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i))
         return self._new(L), self._new(D)
 
     def _lower_triangular_solve(self, rhs):
@@ -378,20 +394,21 @@ class DenseMatrix(MatrixBase):
         ========
         sympy.core.expr.equals
         """
-        try:
-            if self.shape != other.shape:
-                return False
-            rv = True
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    ans = self[i, j].equals(other[i, j], failing_expression)
-                    if ans is False:
-                        return False
-                    elif ans is not True and rv is True:
-                        rv = ans
-            return rv
-        except AttributeError:
+        self_shape = getattr(self, 'shape', None)
+        other_shape = getattr(other, 'shape', None)
+        if None in (self_shape, other_shape):
             return False
+        if self_shape != other_shape:
+            return False
+        rv = True
+        for i in range(self.rows):
+            for j in range(self.cols):
+                ans = self[i, j].equals(other[i, j], failing_expression)
+                if ans is False:
+                    return False
+                elif ans is not True and rv is True:
+                    rv = ans
+        return rv
 
 
 def _force_mutable(x):
@@ -732,7 +749,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         for k in range(0, self.cols):
             self[i, k], self[j, k] = self[j, k], self[i, k]
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, **kwargs):
         """Applies simplify to the elements of a matrix in place.
 
         This is a shortcut for M.applyfunc(lambda x: simplify(x, ratio, measure))
@@ -743,8 +760,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         sympy.simplify.simplify.simplify
         """
         for i in range(len(self._mat)):
-            self._mat[i] = _simplify(self._mat[i], ratio=ratio,
-                                     measure=measure)
+            self._mat[i] = _simplify(self._mat[i], **kwargs)
 
     def zip_row_op(self, i, k, f):
         """In-place operation on row ``i`` using two-arg functor whose args are
@@ -948,7 +964,7 @@ def rot_axis1(theta):
 
 @doctest_depends_on(modules=('numpy',))
 def symarray(prefix, shape, **kwargs):  # pragma: no cover
-    """Create a numpy ndarray of symbols (as an object array).
+    r"""Create a numpy ndarray of symbols (as an object array).
 
     The created symbols are named ``prefix_i1_i2_``...  You should thus provide a
     non-empty prefix if you want your symbols to be unique for different output
@@ -1053,7 +1069,6 @@ def casoratian(seqs, n, zero=True):
        True
 
     """
-    from .dense import Matrix
 
     seqs = list(map(sympify, seqs))
 
@@ -1077,131 +1092,91 @@ def eye(*args, **kwargs):
     zeros
     ones
     """
-    from .dense import Matrix
 
     return Matrix.eye(*args, **kwargs)
 
 
 def diag(*values, **kwargs):
-    """Create a sparse, diagonal matrix from a list of diagonal values.
-
-    Notes
-    =====
-
-    When arguments are matrices they are fitted in resultant matrix.
-
-    The returned matrix is a mutable, dense matrix. To make it a different
-    type, send the desired class for keyword ``cls``.
+    """Returns a matrix with the provided values placed on the
+    diagonal. If non-square matrices are included, they will
+    produce a block-diagonal matrix.
 
     Examples
     ========
 
-    >>> from sympy.matrices import diag, Matrix, ones
-    >>> diag(1, 2, 3)
+    This version of diag is a thin wrapper to Matrix.diag that differs
+    in that it treats all lists like matrices -- even when a single list
+    is given. If this is not desired, either put a `*` before the list or
+    set `unpack=True`.
+
+    >>> from sympy import diag
+
+    >>> diag([1, 2, 3], unpack=True)  # = diag(1,2,3) or diag(*[1,2,3])
     Matrix([
     [1, 0, 0],
     [0, 2, 0],
     [0, 0, 3]])
-    >>> diag(*[1, 2, 3])
+
+    >>> diag([1, 2, 3])  # a column vector
     Matrix([
-    [1, 0, 0],
-    [0, 2, 0],
-    [0, 0, 3]])
+    [1],
+    [2],
+    [3]])
 
-    The diagonal elements can be matrices; diagonal filling will
-    continue on the diagonal from the last element of the matrix:
-
-    >>> from sympy.abc import x, y, z
-    >>> a = Matrix([x, y, z])
-    >>> b = Matrix([[1, 2], [3, 4]])
-    >>> c = Matrix([[5, 6]])
-    >>> diag(a, 7, b, c)
-    Matrix([
-    [x, 0, 0, 0, 0, 0],
-    [y, 0, 0, 0, 0, 0],
-    [z, 0, 0, 0, 0, 0],
-    [0, 7, 0, 0, 0, 0],
-    [0, 0, 1, 2, 0, 0],
-    [0, 0, 3, 4, 0, 0],
-    [0, 0, 0, 0, 5, 6]])
-
-    When diagonal elements are lists, they will be treated as arguments
-    to Matrix:
-
-    >>> diag([1, 2, 3], 4)
-    Matrix([
-    [1, 0],
-    [2, 0],
-    [3, 0],
-    [0, 4]])
-    >>> diag([[1, 2, 3]], 4)
-    Matrix([
-    [1, 2, 3, 0],
-    [0, 0, 0, 4]])
-
-    A given band off the diagonal can be made by padding with a
-    vertical or horizontal "kerning" vector:
-
-    >>> hpad = ones(0, 2)
-    >>> vpad = ones(2, 0)
-    >>> diag(vpad, 1, 2, 3, hpad) + diag(hpad, 4, 5, 6, vpad)
-    Matrix([
-    [0, 0, 4, 0, 0],
-    [0, 0, 0, 5, 0],
-    [1, 0, 0, 0, 6],
-    [0, 2, 0, 0, 0],
-    [0, 0, 3, 0, 0]])
+    See Also
+    ========
+    .common.MatrixCommon.eye
+    .common.MatrixCommon.diagonal - to extract a diagonal
+    .common.MatrixCommon.diag
+    .expressions.blockmatrix.BlockMatrix
+    """
+    # Extract any setting so we don't duplicate keywords sent
+    # as named parameters:
+    kw = kwargs.copy()
+    strict = kw.pop('strict', True)  # lists will be converted to Matrices
+    unpack = kw.pop('unpack', False)
+    return Matrix.diag(*values, strict=strict, unpack=unpack, **kw)
 
 
+def GramSchmidt(vlist, orthonormal=False):
+    """Apply the Gram-Schmidt process to a set of vectors.
 
-    The type is mutable by default but can be made immutable by setting
-    the ``mutable`` flag to False:
+    Parameters
+    ==========
 
-    >>> type(diag(1))
-    <class 'sympy.matrices.dense.MutableDenseMatrix'>
-    >>> from sympy.matrices import ImmutableMatrix
-    >>> type(diag(1, cls=ImmutableMatrix))
-    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
+    vlist : List of Matrix
+        Vectors to be orthogonalized for.
+
+    orthonormal : Bool, optional
+        If true, return an orthonormal basis.
+
+    Returns
+    =======
+
+    vlist : List of Matrix
+        Orthogonalized vectors
+
+    Notes
+    =====
+
+    This routine is mostly duplicate from ``Matrix.orthogonalize``,
+    except for some difference that this always raises error when
+    linearly dependent vectors are found, and the keyword ``normalize``
+    has been named as ``orthonormal`` in this function.
 
     See Also
     ========
 
-    eye
+    .matrices.MatrixSubspaces.orthogonalize
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
-
-    from .dense import Matrix
-
-    # diag assumes any lists passed in are to be interpreted
-    # as arguments to Matrix, so apply Matrix to any list arguments
-    def normalize(m):
-        if is_sequence(m) and not isinstance(m, MatrixBase):
-            return Matrix(m)
-        return m
-    values = (normalize(m) for m in values)
-
-    return Matrix.diag(*values, **kwargs)
-
-
-def GramSchmidt(vlist, orthonormal=False):
-    """
-    Apply the Gram-Schmidt process to a set of vectors.
-
-    see: http://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
-    """
-    out = []
-    m = len(vlist)
-    for i in range(m):
-        tmp = vlist[i]
-        for j in range(i):
-            tmp -= vlist[i].project(out[j])
-        if not tmp.values():
-            raise ValueError(
-                "GramSchmidt: vector set not linearly independent")
-        out.append(tmp)
-    if orthonormal:
-        for i in range(len(out)):
-            out[i] = out[i].normalized()
-    return out
+    return MutableDenseMatrix.orthogonalize(
+        *vlist, normalize=orthonormal, rankcheck=True
+    )
 
 
 def hessian(f, varlist, constraints=[]):
@@ -1239,7 +1214,7 @@ def hessian(f, varlist, constraints=[]):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Hessian_matrix
+    https://en.wikipedia.org/wiki/Hessian_matrix
 
     See Also
     ========
@@ -1283,7 +1258,7 @@ def hessian(f, varlist, constraints=[]):
 
 def jordan_cell(eigenval, n):
     """
-    Create matrix of Jordan cell kind:
+    Create a Jordan block:
 
     Examples
     ========
@@ -1297,7 +1272,6 @@ def jordan_cell(eigenval, n):
     [0, 0, x, 1],
     [0, 0, 0, x]])
     """
-    from .dense import Matrix
 
     return Matrix.jordan_block(size=n, eigenvalue=eigenval)
 
@@ -1319,11 +1293,7 @@ def matrix_multiply_elementwise(A, B):
 
     __mul__
     """
-    if A.shape != B.shape:
-        raise ShapeError()
-    shape = A.shape
-    return classof(A, B)._new(shape[0], shape[1],
-                              lambda i, j: A[i, j]*B[i, j])
+    return A.multiply_elementwise(B)
 
 
 def ones(*args, **kwargs):
@@ -1340,10 +1310,6 @@ def ones(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
-                                useinstead="cols",
-                                deprecated_since_version="1.1")
-    from .dense import Matrix
 
     return Matrix.ones(*args, **kwargs)
 
@@ -1387,38 +1353,41 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     [29, 43, 57]
     >>> A = randMatrix(3, seed=1)
     >>> B = randMatrix(3, seed=2)
-    >>> A == B # doctest:+SKIP
+    >>> A == B
     False
     >>> A == randMatrix(3, seed=1)
     True
     >>> randMatrix(3, symmetric=True, percent=50) # doctest:+SKIP
-    [0, 68, 43]
-    [0, 68,  0]
-    [0, 91, 34]
+    [77, 70,  0],
+    [70,  0,  0],
+    [ 0,  0, 88]
     """
     if c is None:
         c = r
     # Note that ``Random()`` is equivalent to ``Random(None)``
     prng = prng or random.Random(seed)
-    if symmetric and r != c:
-        raise ValueError(
-            'For symmetric matrices, r must equal c, but %i != %i' % (r, c))
+
     if not symmetric:
         m = Matrix._new(r, c, lambda i, j: prng.randint(min, max))
-    else:
-        m = zeros(r)
-        for i in range(r):
-            for j in range(i, r):
-                m[i, j] = prng.randint(min, max)
-        for i in range(r):
-            for j in range(i):
-                m[i, j] = m[j, i]
-    if percent == 100:
-        return m
-    else:
-        z = int(r*c*percent // 100)
+        if percent == 100:
+            return m
+        z = int(r*c*(100 - percent) // 100)
         m._mat[:z] = [S.Zero]*z
         prng.shuffle(m._mat)
+
+        return m
+
+    # Symmetric case
+    if r != c:
+        raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
+    m = zeros(r)
+    ij = [(i, j) for i in range(r) for j in range(i, r)]
+    if percent != 100:
+        ij = prng.sample(ij, int(len(ij)*percent // 100))
+
+    for i, j in ij:
+        value = prng.randint(min, max)
+        m[i, j] = m[j, i] = value
     return m
 
 
@@ -1436,7 +1405,7 @@ def wronskian(functions, var, method='bareiss'):
                          |  (n)      (n)            (n)     |
                          | D   (f1) D   (f2)  ...  D   (fn) |
 
-    see: http://en.wikipedia.org/wiki/Wronskian
+    see: https://en.wikipedia.org/wiki/Wronskian
 
     See Also
     ========
@@ -1444,7 +1413,6 @@ def wronskian(functions, var, method='bareiss'):
     sympy.matrices.mutable.Matrix.jacobian
     hessian
     """
-    from .dense import Matrix
 
     for index in range(0, len(functions)):
         functions[index] = sympify(functions[index])
@@ -1469,10 +1437,5 @@ def zeros(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
-                                useinstead="cols",
-                                deprecated_since_version="1.1")
-
-    from .dense import Matrix
 
     return Matrix.zeros(*args, **kwargs)

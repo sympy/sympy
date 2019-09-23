@@ -1,10 +1,10 @@
 from sympy import (
-    adjoint, conjugate, nan, pi, symbols, transpose, DiracDelta, Symbol, diff,
+    nan, pi, symbols, DiracDelta, Symbol, diff,
     Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside,
-    Derivative, Float
+    Float
 )
 
-
+from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 
@@ -37,7 +37,7 @@ def test_fdiff():
 
 def test_eval():
     assert SingularityFunction(x, a, n).func == SingularityFunction
-    assert SingularityFunction(x, 5, n) == SingularityFunction(x, 5, n)
+    assert unchanged(SingularityFunction, x, 5, n)
     assert SingularityFunction(5, 3, 2) == 4
     assert SingularityFunction(3, 5, 1) == 0
     assert SingularityFunction(3, 3, 0) == 1
@@ -79,7 +79,7 @@ def test_rewrite():
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
 
     expr_in = SingularityFunction(x, a, n) + SingularityFunction(x, a, -1) - SingularityFunction(x, a, -2)
-    expr_out = (x - a)**n*Heaviside(x - a) + DiracDelta(x - a) - DiracDelta(x - a, 1)
+    expr_out = (x - a)**n*Heaviside(x - a) + DiracDelta(x - a) + DiracDelta(a - x, 1)
     assert expr_in.rewrite(Heaviside) == expr_out
     assert expr_in.rewrite(DiracDelta) == expr_out
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out

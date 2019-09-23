@@ -2,17 +2,15 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.core import Basic, sympify
 from sympy.core.compatibility import HAS_GMPY, integer_types, is_sequence
-
-from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
-from sympy.polys.orderings import lex
-from sympy.polys.polyutils import _unify_gens
-
-from sympy.utilities import default_sort_key, public
 from sympy.core.decorators import deprecated
+from sympy.polys.domains.domainelement import DomainElement
+from sympy.polys.orderings import lex
+from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
+from sympy.polys.polyutils import _unify_gens, _not_a_coeff
+from sympy.utilities import default_sort_key, public
 
 @public
 class Domain(object):
@@ -43,6 +41,7 @@ class Domain(object):
 
     is_Simple = False
     is_Composite = False
+    is_PID = False
 
     has_CharacteristicZero = False
 
@@ -104,6 +103,9 @@ class Domain(object):
 
     def convert(self, element, base=None):
         """Convert ``element`` to ``self.dtype``. """
+        if _not_a_coeff(element):
+            raise CoercionFailed('%s is not in any domain' % element)
+
         if base is not None:
             return self.convert_from(element, base)
 
@@ -163,7 +165,9 @@ class Domain(object):
     def __contains__(self, a):
         """Check if ``a`` belongs to this domain. """
         try:
-            self.convert(a)
+            if _not_a_coeff(a):
+                raise CoercionFailed
+            self.convert(a)  # this might raise, too
         except CoercionFailed:
             return False
 
@@ -342,7 +346,7 @@ class Domain(object):
 
     def __ne__(self, other):
         """Returns ``False`` if two domains are equivalent. """
-        return not self.__eq__(other)
+        return not self == other
 
     def map(self, seq):
         """Rersively apply ``self`` to all elements of ``seq``. """
@@ -396,7 +400,7 @@ class Domain(object):
         return FractionField(self, *symbols, **kwargs)
 
     def algebraic_field(self, *extension):
-        """Returns an algebraic field, i.e. `K(\\alpha, \ldots)`. """
+        r"""Returns an algebraic field, i.e. `K(\alpha, \ldots)`. """
         raise DomainError("can't create algebraic field over %s" % self)
 
     def inject(self, *symbols):

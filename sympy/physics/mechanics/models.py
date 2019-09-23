@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """This module contains some sample symbolic models used for testing and
 examples."""
 
@@ -11,7 +9,7 @@ import sympy.physics.mechanics as me
 
 def multi_mass_spring_damper(n=1, apply_gravity=False,
                              apply_external_forces=False):
-    """Returns a system containing the symbolic equations of motion and
+    r"""Returns a system containing the symbolic equations of motion and
     associated variables for a simple multi-degree of freedom point mass,
     spring, damper system with optional gravitational and external
     specified forces. For example, a two mass system under the influence of
@@ -110,7 +108,7 @@ def multi_mass_spring_damper(n=1, apply_gravity=False,
 
 
 def n_link_pendulum_on_cart(n=1, cart_force=True, joint_torques=False):
-    """Returns the system containing the symbolic first order equations of
+    r"""Returns the system containing the symbolic first order equations of
     motion for a 2D n-link pendulum on a sliding cart under the influence of
     gravity.
 

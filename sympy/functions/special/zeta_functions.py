@@ -1,12 +1,12 @@
 """ Riemann zeta and related function. """
 from __future__ import print_function, division
 
-from sympy.core import Function, S, sympify, pi
-from sympy.core.function import ArgumentIndexError
+from sympy.core import Function, S, sympify, pi, I
 from sympy.core.compatibility import range
+from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
-from sympy.functions.elementary.exponential import log
-
+from sympy.functions.elementary.exponential import log, exp_polar
+from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -68,7 +68,7 @@ class lerchphi(Function):
     .. [1] Bateman, H.; Erdelyi, A. (1953), Higher Transcendental Functions,
            Vol. I, New York: McGraw-Hill. Section 1.11.
     .. [2] http://dlmf.nist.gov/25.14
-    .. [3] http://en.wikipedia.org/wiki/Lerch_transcendent
+    .. [3] https://en.wikipedia.org/wiki/Lerch_transcendent
 
     Examples
     ========
@@ -160,7 +160,7 @@ class lerchphi(Function):
                   / (unpolarify(zet)**k*root)**m for k in range(n)])
 
         # TODO use minpoly instead of ad-hoc methods when issue 5888 is fixed
-        if z.func is exp and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
+        if isinstance(z, exp) and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
             # TODO reference?
             if z == -1:
                 p, q = S([1, 2])
@@ -192,10 +192,10 @@ class lerchphi(Function):
         else:
             return self
 
-    def _eval_rewrite_as_zeta(self, z, s, a):
+    def _eval_rewrite_as_zeta(self, z, s, a, **kwargs):
         return self._eval_rewrite_helper(z, s, a, zeta)
 
-    def _eval_rewrite_as_polylog(self, z, s, a):
+    def _eval_rewrite_as_polylog(self, z, s, a, **kwargs):
         return self._eval_rewrite_helper(z, s, a, polylog)
 
 ###############################################################################
@@ -253,9 +253,9 @@ class polylog(Function):
     >>> from sympy import expand_func
     >>> from sympy.abc import z
     >>> expand_func(polylog(1, z))
-    -log(z*exp_polar(-I*pi) + 1)
+    -log(1 - z)
     >>> expand_func(polylog(0, z))
-    z/(-z + 1)
+    z/(1 - z)
 
     The derivative with respect to :math:`z` can be computed in closed form:
 
@@ -271,12 +271,38 @@ class polylog(Function):
 
     @classmethod
     def eval(cls, s, z):
+        s, z = sympify((s, z))
         if z == 1:
             return zeta(s)
         elif z == -1:
             return -dirichlet_eta(s)
         elif z == 0:
-            return 0
+            return S.Zero
+        elif s == 2:
+            if z == S.Half:
+                return pi**2/12 - log(2)**2/2
+            elif z == 2:
+                return pi**2/4 - I*pi*log(2)
+            elif z == -(sqrt(5) - 1)/2:
+                return -pi**2/15 + log((sqrt(5)-1)/2)**2/2
+            elif z == -(sqrt(5) + 1)/2:
+                return -pi**2/10 - log((sqrt(5)+1)/2)**2
+            elif z == (3 - sqrt(5))/2:
+                return pi**2/15 - log((sqrt(5)-1)/2)**2
+            elif z == (sqrt(5) - 1)/2:
+                return pi**2/10 - log((sqrt(5)-1)/2)**2
+        # For s = 0 or -1 use explicit formulas to evaluate, but
+        # automatically expanding polylog(1, z) to -log(1-z) seems undesirable
+        # for summation methods based on hypergeometric functions
+        elif s == 0:
+            return z/(1 - z)
+        elif s == -1:
+            return z/(1 - z)**2
+        # polylog is branched, but not over the unit disk
+        from sympy.functions.elementary.complexes import (Abs, unpolarify,
+            polar_lift)
+        if z.has(exp_polar, polar_lift) and (Abs(z) <= S.One) == True:
+            return cls(s, unpolarify(z))
 
     def fdiff(self, argindex=1):
         s, z = self.args
@@ -284,14 +310,14 @@ class polylog(Function):
             return polylog(s - 1, z)/z
         raise ArgumentIndexError
 
-    def _eval_rewrite_as_lerchphi(self, s, z):
+    def _eval_rewrite_as_lerchphi(self, s, z, **kwargs):
         return z*lerchphi(z, s, 1)
 
     def _eval_expand_func(self, **hints):
-        from sympy import log, expand_mul, Dummy, exp_polar, I
+        from sympy import log, expand_mul, Dummy
         s, z = self.args
         if s == 1:
-            return -log(1 + exp_polar(-I*pi)*z)
+            return -log(1 - z)
         if s.is_Integer and s <= 0:
             u = Dummy('u')
             start = u/(1 - u)
@@ -341,7 +367,7 @@ class zeta(Function):
     ==========
 
     .. [1] http://dlmf.nist.gov/25.11
-    .. [2] http://en.wikipedia.org/wiki/Hurwitz_zeta_function
+    .. [2] https://en.wikipedia.org/wiki/Hurwitz_zeta_function
 
     Examples
     ========
@@ -363,7 +389,7 @@ class zeta(Function):
 
     >>> from sympy import dirichlet_eta
     >>> zeta(s).rewrite(dirichlet_eta)
-    dirichlet_eta(s)/(-2**(-s + 1) + 1)
+    dirichlet_eta(s)/(1 - 2**(1 - s))
 
     The Riemann zeta function at positive even integer and negative odd integer
     values is related to the Bernoulli numbers:
@@ -436,28 +462,29 @@ class zeta(Function):
                 return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity
-            elif z.is_Integer:
-                if a.is_Integer:
-                    if z.is_negative:
-                        zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
-                    elif z.is_even:
-                        B, F = bernoulli(z), factorial(z)
-                        zeta = 2**(z - 1) * abs(B) * pi**z / F
-                    else:
-                        return
+        if z.is_integer:
+            if a.is_Integer:
+                if z.is_negative:
+                    zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
+                elif z.is_even and z.is_positive:
+                    B, F = bernoulli(z), factorial(z)
+                    zeta = ((-1)**(z/2+1) * 2**(z - 1) * B * pi**z) / F
+                else:
+                    return
 
-                    if a.is_negative:
-                        return zeta + harmonic(abs(a), z)
-                    else:
-                        return zeta - harmonic(a - 1, z)
+                if a.is_negative:
+                    return zeta + harmonic(abs(a), z)
+                else:
+                    return zeta - harmonic(a - 1, z)
 
-    def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
+
+    def _eval_rewrite_as_dirichlet_eta(self, s, a=1, **kwargs):
         if a != 1:
             return self
         s = self.args[0]
         return dirichlet_eta(s)/(1 - 2**(1 - s))
 
-    def _eval_rewrite_as_lerchphi(self, s, a=1):
+    def _eval_rewrite_as_lerchphi(self, s, a=1, **kwargs):
         return lerchphi(1, s, a)
 
     def _eval_is_finite(self):
@@ -482,7 +509,7 @@ class dirichlet_eta(Function):
 
     For `\operatorname{Re}(s) > 0`, this function is defined as
 
-    .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^n}{n^s}.
+    .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^{n-1}}{n^s}.
 
     It admits a unique analytic continuation to all of :math:`\mathbb{C}`.
     It is an entire, unbranched function.
@@ -495,7 +522,7 @@ class dirichlet_eta(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Dirichlet_eta_function
+    .. [1] https://en.wikipedia.org/wiki/Dirichlet_eta_function
 
     Examples
     ========
@@ -505,7 +532,7 @@ class dirichlet_eta(Function):
     >>> from sympy import dirichlet_eta, zeta
     >>> from sympy.abc import s
     >>> dirichlet_eta(s).rewrite(zeta)
-    (-2**(-s + 1) + 1)*zeta(s)
+    (1 - 2**(1 - s))*zeta(s)
 
     """
 
@@ -517,7 +544,7 @@ class dirichlet_eta(Function):
         if not z.has(zeta):
             return (1 - 2**(1 - s))*z
 
-    def _eval_rewrite_as_zeta(self, s):
+    def _eval_rewrite_as_zeta(self, s, **kwargs):
         return (1 - 2**(1 - s)) * zeta(s)
 
 
@@ -553,14 +580,14 @@ class stieltjes(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Stieltjes_constants
+    .. [1] https://en.wikipedia.org/wiki/Stieltjes_constants
     """
 
     @classmethod
     def eval(cls, n, a=None):
         n = sympify(n)
 
-        if a != None:
+        if a is not None:
             a = sympify(a)
             if a is S.NaN:
                 return S.NaN

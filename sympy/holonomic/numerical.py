@@ -3,8 +3,9 @@
 from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
-from mpmath import mp
 from sympy.holonomic.holonomic import DMFsubs
+
+from mpmath import mp
 
 
 def _evalf(func, points, derivatives=False, method='RK4'):

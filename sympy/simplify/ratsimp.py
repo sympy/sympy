@@ -5,7 +5,7 @@ from sympy.core import symbols, Add, Dummy
 from sympy.core.numbers import Rational
 from sympy.polys import cancel, ComputationFailed, parallel_poly_from_expr, reduced, Poly
 from sympy.polys.monomials import Monomial, monomial_div
-from sympy.polys.polyerrors import PolificationFailed
+from sympy.polys.polyerrors import DomainError, PolificationFailed
 from sympy.utilities.misc import debug
 
 def ratsimp(expr):
@@ -53,7 +53,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     References
     ==========
 
-    M. Monagan, R. Pearce, Rational Simplification Modulo a Polynomial
+    .. [1] M. Monagan, R. Pearce, Rational Simplification Modulo a Polynomial
     Ideal,
     http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.163.6984
     (specifically, the second algorithm)
@@ -104,7 +104,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
         return [Monomial(s).as_expr(*opt.gens) for s in S] + staircase(n - 1)
 
     def _ratsimpmodprime(a, b, allsol, N=0, D=0):
-        """
+        r"""
         Computes a rational simplification of ``a/b`` which minimizes
         the sum of the total degrees of the numerator and the denominator.
 
@@ -165,7 +165,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
                 c = c_hat.subs(sol)
                 d = d_hat.subs(sol)
 
-                # The "free" variables occuring before as parameters
+                # The "free" variables occurring before as parameters
                 # might still be in the substituted c, d, so set them
                 # to the value chosen before:
                 c = c.subs(dict(list(zip(Cs + Ds, [1] * (len(Cs) + len(Ds))))))

@@ -9,9 +9,9 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        hyperexpand, Hyper_Function, G_Function,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
-from sympy import hyper, I, S, meijerg, Piecewise, Tuple
+from sympy import hyper, I, S, meijerg, Piecewise, Tuple, Sum, binomial, Expr
 from sympy.abc import z, a, b, c
-from sympy.utilities.pytest import XFAIL, raises, slow
+from sympy.utilities.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.core.compatibility import range
 
@@ -38,6 +38,7 @@ def test_hyperexpand():
     assert hyperexpand(z*hyper([], [S('3/2')], -z**2/4)) == sin(z)
     assert hyperexpand(hyper([S('1/2'), S('1/2')], [S('3/2')], z**2)*z) \
         == asin(z)
+    assert isinstance(Sum(binomial(2, z)*z**2, (z, 0, a)).doit(), Expr)
 
 
 def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
@@ -346,7 +347,7 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
 
 @slow
 def test_meijerg_expand():
-    from sympy import combsimp, simplify
+    from sympy import gammasimp, simplify
     # from mpmath docs
     assert hyperexpand(meijerg([[], []], [[0], []], -z)) == exp(z)
 
@@ -396,7 +397,7 @@ def test_meijerg_expand():
                   (meijerg([0, 2], [], [], [-1, 1], z), True))
 
     # Test that the simplest possible answer is returned:
-    assert combsimp(simplify(hyperexpand(
+    assert gammasimp(simplify(hyperexpand(
         meijerg([1], [1 - a], [-a/2, -a/2 + S(1)/2], [], 1/z)))) == \
         -2*sqrt(pi)*(sqrt(z + 1) + 1)**a/a
 
@@ -564,7 +565,7 @@ def test_meijerg_with_Floats():
 
 
 def test_lerchphi():
-    from sympy import combsimp, exp_polar, polylog, log, lerchphi
+    from sympy import gammasimp, exp_polar, polylog, log, lerchphi
     assert hyperexpand(hyper([1, a], [a + 1], z)/a) == lerchphi(z, 1, a)
     assert hyperexpand(
         hyper([1, a, a], [a + 1, a + 1], z)/a**2) == lerchphi(z, 2, a)
@@ -572,11 +573,11 @@ def test_lerchphi():
         lerchphi(z, 3, a)
     assert hyperexpand(hyper([1] + [a]*10, [a + 1]*10, z)/a**10) == \
         lerchphi(z, 10, a)
-    assert combsimp(hyperexpand(meijerg([0, 1 - a], [], [0],
+    assert gammasimp(hyperexpand(meijerg([0, 1 - a], [], [0],
         [-a], exp_polar(-I*pi)*z))) == lerchphi(z, 1, a)
-    assert combsimp(hyperexpand(meijerg([0, 1 - a, 1 - a], [], [0],
+    assert gammasimp(hyperexpand(meijerg([0, 1 - a, 1 - a], [], [0],
         [-a, -a], exp_polar(-I*pi)*z))) == lerchphi(z, 2, a)
-    assert combsimp(hyperexpand(meijerg([0, 1 - a, 1 - a, 1 - a], [], [0],
+    assert gammasimp(hyperexpand(meijerg([0, 1 - a, 1 - a, 1 - a], [], [0],
         [-a, -a, -a], exp_polar(-I*pi)*z))) == lerchphi(z, 3, a)
 
     assert hyperexpand(z*hyper([1, 1], [2], z)) == -log(1 + -z)
@@ -680,7 +681,6 @@ def test_prudnikov_misc():
     assert can_do([a], [a + 1], lowerplane=True)  # lowergamma
 
 
-@slow
 def test_prudnikov_1():
     # A. P. Prudnikov, Yu. A. Brychkov and O. I. Marichev (1990).
     # Integrals and Series: More Special Functions, Vol. 3,.
@@ -728,6 +728,10 @@ def test_prudnikov_2():
 
 @slow
 def test_prudnikov_3():
+    if ON_TRAVIS:
+        # See https://github.com/sympy/sympy/pull/12795
+        skip("Too slow for travis.")
+
     h = S.Half
     assert can_do([S(1)/4, S(3)/4], [h])
     assert can_do([S(1)/4, S(3)/4], [3*h])
@@ -888,7 +892,6 @@ def test_prudnikov_11():
     assert can_do([1, 1], [S(3)/2, 2, 2])  # cosh-integral chi
 
 
-@slow
 def test_prudnikov_12():
     # 7.16
     assert can_do(

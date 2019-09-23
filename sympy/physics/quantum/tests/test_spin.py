@@ -1,4 +1,3 @@
-from __future__ import division
 from sympy import cos, exp, expand, I, Matrix, pi, S, sin, sqrt, Sum, symbols
 from sympy.abc import alpha, beta, gamma, j, m
 from sympy.physics.quantum import hbar, represent, Commutator, InnerProduct
@@ -3423,15 +3422,15 @@ def test_rotation_small_d():
     assert Rotation.d(S(1)/2, -S(1)/2, S(1)/2, pi/2).doit() == sqrt(2)/2
     assert Rotation.d(S(1)/2, -S(1)/2, -S(1)/2, pi/2).doit() == sqrt(2)/2
     # j = 1
-    assert Rotation.d(1, 1, 1, pi/2).doit() == 1/2
+    assert Rotation.d(1, 1, 1, pi/2).doit() == S(1)/2
     assert Rotation.d(1, 1, 0, pi/2).doit() == -sqrt(2)/2
-    assert Rotation.d(1, 1, -1, pi/2).doit() == 1/2
+    assert Rotation.d(1, 1, -1, pi/2).doit() == S(1)/2
     assert Rotation.d(1, 0, 1, pi/2).doit() == sqrt(2)/2
     assert Rotation.d(1, 0, 0, pi/2).doit() == 0
     assert Rotation.d(1, 0, -1, pi/2).doit() == -sqrt(2)/2
-    assert Rotation.d(1, -1, 1, pi/2).doit() == 1/2
+    assert Rotation.d(1, -1, 1, pi/2).doit() == S(1)/2
     assert Rotation.d(1, -1, 0, pi/2).doit() == sqrt(2)/2
-    assert Rotation.d(1, -1, -1, pi/2).doit() == 1/2
+    assert Rotation.d(1, -1, -1, pi/2).doit() == S(1)/2
     # j = 3/2
     assert Rotation.d(S(3)/2, S(3)/2, S(3)/2, pi/2).doit() == sqrt(2)/4
     assert Rotation.d(S(3)/2, S(3)/2, S(1)/2, pi/2).doit() == -sqrt(6)/4
@@ -3450,31 +3449,31 @@ def test_rotation_small_d():
     assert Rotation.d(S(3)/2, -S(3)/2, -S(1)/2, pi/2).doit() == sqrt(6)/4
     assert Rotation.d(S(3)/2, -S(3)/2, -S(3)/2, pi/2).doit() == sqrt(2)/4
     # j = 2
-    assert Rotation.d(2, 2, 2, pi/2).doit() == 1/4
-    assert Rotation.d(2, 2, 1, pi/2).doit() == -1/2
+    assert Rotation.d(2, 2, 2, pi/2).doit() == S(1)/4
+    assert Rotation.d(2, 2, 1, pi/2).doit() == -S(1)/2
     assert Rotation.d(2, 2, 0, pi/2).doit() == sqrt(6)/4
-    assert Rotation.d(2, 2, -1, pi/2).doit() == -1/2
-    assert Rotation.d(2, 2, -2, pi/2).doit() == 1/4
-    assert Rotation.d(2, 1, 2, pi/2).doit() == 1/2
-    assert Rotation.d(2, 1, 1, pi/2).doit() == -1/2
+    assert Rotation.d(2, 2, -1, pi/2).doit() == -S(1)/2
+    assert Rotation.d(2, 2, -2, pi/2).doit() == S(1)/4
+    assert Rotation.d(2, 1, 2, pi/2).doit() == S(1)/2
+    assert Rotation.d(2, 1, 1, pi/2).doit() == -S(1)/2
     assert Rotation.d(2, 1, 0, pi/2).doit() == 0
-    assert Rotation.d(2, 1, -1, pi/2).doit() == 1/2
-    assert Rotation.d(2, 1, -2, pi/2).doit() == -1/2
+    assert Rotation.d(2, 1, -1, pi/2).doit() == S(1)/2
+    assert Rotation.d(2, 1, -2, pi/2).doit() == -S(1)/2
     assert Rotation.d(2, 0, 2, pi/2).doit() == sqrt(6)/4
     assert Rotation.d(2, 0, 1, pi/2).doit() == 0
-    assert Rotation.d(2, 0, 0, pi/2).doit() == -1/2
+    assert Rotation.d(2, 0, 0, pi/2).doit() == -S(1)/2
     assert Rotation.d(2, 0, -1, pi/2).doit() == 0
     assert Rotation.d(2, 0, -2, pi/2).doit() == sqrt(6)/4
-    assert Rotation.d(2, -1, 2, pi/2).doit() == 1/2
-    assert Rotation.d(2, -1, 1, pi/2).doit() == 1/2
+    assert Rotation.d(2, -1, 2, pi/2).doit() == S(1)/2
+    assert Rotation.d(2, -1, 1, pi/2).doit() == S(1)/2
     assert Rotation.d(2, -1, 0, pi/2).doit() == 0
-    assert Rotation.d(2, -1, -1, pi/2).doit() == -1/2
-    assert Rotation.d(2, -1, -2, pi/2).doit() == -1/2
-    assert Rotation.d(2, -2, 2, pi/2).doit() == 1/4
-    assert Rotation.d(2, -2, 1, pi/2).doit() == 1/2
+    assert Rotation.d(2, -1, -1, pi/2).doit() == -S(1)/2
+    assert Rotation.d(2, -1, -2, pi/2).doit() == -S(1)/2
+    assert Rotation.d(2, -2, 2, pi/2).doit() == S(1)/4
+    assert Rotation.d(2, -2, 1, pi/2).doit() == S(1)/2
     assert Rotation.d(2, -2, 0, pi/2).doit() == sqrt(6)/4
-    assert Rotation.d(2, -2, -1, pi/2).doit() == 1/2
-    assert Rotation.d(2, -2, -2, pi/2).doit() == 1/4
+    assert Rotation.d(2, -2, -1, pi/2).doit() == S(1)/2
+    assert Rotation.d(2, -2, -2, pi/2).doit() == S(1)/4
 
 
 def test_rotation_d():
@@ -3601,15 +3600,15 @@ def test_rotation_d():
     assert Rotation.D(
         S(1)/2, -S(1)/2, -S(1)/2, pi/2, pi/2, pi/2).doit() == I*sqrt(2)/2
     # j = 1
-    assert Rotation.D(1, 1, 1, pi/2, pi/2, pi/2).doit() == -1/2
+    assert Rotation.D(1, 1, 1, pi/2, pi/2, pi/2).doit() == -S(1)/2
     assert Rotation.D(1, 1, 0, pi/2, pi/2, pi/2).doit() == I*sqrt(2)/2
-    assert Rotation.D(1, 1, -1, pi/2, pi/2, pi/2).doit() == 1/2
+    assert Rotation.D(1, 1, -1, pi/2, pi/2, pi/2).doit() == S(1)/2
     assert Rotation.D(1, 0, 1, pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/2
     assert Rotation.D(1, 0, 0, pi/2, pi/2, pi/2).doit() == 0
     assert Rotation.D(1, 0, -1, pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/2
-    assert Rotation.D(1, -1, 1, pi/2, pi/2, pi/2).doit() == 1/2
+    assert Rotation.D(1, -1, 1, pi/2, pi/2, pi/2).doit() == S(1)/2
     assert Rotation.D(1, -1, 0, pi/2, pi/2, pi/2).doit() == I*sqrt(2)/2
-    assert Rotation.D(1, -1, -1, pi/2, pi/2, pi/2).doit() == -1/2
+    assert Rotation.D(1, -1, -1, pi/2, pi/2, pi/2).doit() == -S(1)/2
     # j = 3/2
     assert Rotation.D(
         S(3)/2, S(3)/2, S(3)/2, pi/2, pi/2, pi/2).doit() == I*sqrt(2)/4
@@ -3644,31 +3643,31 @@ def test_rotation_d():
     assert Rotation.D(
         S(3)/2, -S(3)/2, -S(3)/2, pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/4
     # j = 2
-    assert Rotation.D(2, 2, 2, pi/2, pi/2, pi/2).doit() == 1/4
+    assert Rotation.D(2, 2, 2, pi/2, pi/2, pi/2).doit() == S(1)/4
     assert Rotation.D(2, 2, 1, pi/2, pi/2, pi/2).doit() == -I/2
     assert Rotation.D(2, 2, 0, pi/2, pi/2, pi/2).doit() == -sqrt(6)/4
     assert Rotation.D(2, 2, -1, pi/2, pi/2, pi/2).doit() == I/2
-    assert Rotation.D(2, 2, -2, pi/2, pi/2, pi/2).doit() == 1/4
+    assert Rotation.D(2, 2, -2, pi/2, pi/2, pi/2).doit() == S(1)/4
     assert Rotation.D(2, 1, 2, pi/2, pi/2, pi/2).doit() == I/2
-    assert Rotation.D(2, 1, 1, pi/2, pi/2, pi/2).doit() == 1/2
+    assert Rotation.D(2, 1, 1, pi/2, pi/2, pi/2).doit() == S(1)/2
     assert Rotation.D(2, 1, 0, pi/2, pi/2, pi/2).doit() == 0
-    assert Rotation.D(2, 1, -1, pi/2, pi/2, pi/2).doit() == 1/2
+    assert Rotation.D(2, 1, -1, pi/2, pi/2, pi/2).doit() == S(1)/2
     assert Rotation.D(2, 1, -2, pi/2, pi/2, pi/2).doit() == -I/2
     assert Rotation.D(2, 0, 2, pi/2, pi/2, pi/2).doit() == -sqrt(6)/4
     assert Rotation.D(2, 0, 1, pi/2, pi/2, pi/2).doit() == 0
-    assert Rotation.D(2, 0, 0, pi/2, pi/2, pi/2).doit() == -1/2
+    assert Rotation.D(2, 0, 0, pi/2, pi/2, pi/2).doit() == -S(1)/2
     assert Rotation.D(2, 0, -1, pi/2, pi/2, pi/2).doit() == 0
     assert Rotation.D(2, 0, -2, pi/2, pi/2, pi/2).doit() == -sqrt(6)/4
     assert Rotation.D(2, -1, 2, pi/2, pi/2, pi/2).doit() == -I/2
-    assert Rotation.D(2, -1, 1, pi/2, pi/2, pi/2).doit() == 1/2
+    assert Rotation.D(2, -1, 1, pi/2, pi/2, pi/2).doit() == S(1)/2
     assert Rotation.D(2, -1, 0, pi/2, pi/2, pi/2).doit() == 0
-    assert Rotation.D(2, -1, -1, pi/2, pi/2, pi/2).doit() == 1/2
+    assert Rotation.D(2, -1, -1, pi/2, pi/2, pi/2).doit() == S(1)/2
     assert Rotation.D(2, -1, -2, pi/2, pi/2, pi/2).doit() == I/2
-    assert Rotation.D(2, -2, 2, pi/2, pi/2, pi/2).doit() == 1/4
+    assert Rotation.D(2, -2, 2, pi/2, pi/2, pi/2).doit() == S(1)/4
     assert Rotation.D(2, -2, 1, pi/2, pi/2, pi/2).doit() == I/2
     assert Rotation.D(2, -2, 0, pi/2, pi/2, pi/2).doit() == -sqrt(6)/4
     assert Rotation.D(2, -2, -1, pi/2, pi/2, pi/2).doit() == -I/2
-    assert Rotation.D(2, -2, -2, pi/2, pi/2, pi/2).doit() == 1/4
+    assert Rotation.D(2, -2, -2, pi/2, pi/2, pi/2).doit() == S(1)/4
 
 
 def test_wignerd():
@@ -4270,10 +4269,10 @@ def test_jzketcoupled():
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((1, 2),)))
     # all jn are integer or half-integer
     raises(ValueError, lambda: JzKetCoupled(1, 1, (S(1)/3, S(2)/3)))
-    # indicies in coupling scheme must be integers
+    # indices in coupling scheme must be integers
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((S(1)/2, 1, 2),) ))
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((1, S(1)/2, 2),) ))
-    # indicies out of range
+    # indices out of range
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((0, 2, 1),) ))
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((3, 2, 1),) ))
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((1, 0, 1),) ))

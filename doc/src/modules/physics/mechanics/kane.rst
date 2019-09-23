@@ -1,3 +1,5 @@
+.. _kane_method:
+
 ==================================
 Kane's Method in Physics/Mechanics
 ==================================

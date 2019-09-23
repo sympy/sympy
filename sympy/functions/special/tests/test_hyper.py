@@ -1,5 +1,5 @@
 from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
-                   cos, sqrt, symbols, oo, Derivative, gamma, O)
+                   cos, sqrt, symbols, oo, Derivative, gamma, O, appellf1)
 from sympy.series.limits import limit
 from sympy.abc import x, z, k
 from sympy.utilities.pytest import raises, slow
@@ -123,6 +123,9 @@ def test_meijer():
     assert g.nu == 75
     assert g.delta == -1
     assert g.is_commutative is True
+    assert g.is_number is False
+    #issue 13071
+    assert meijerg([[],[]], [[S(1)/2],[0]], 1).is_number is True
 
     assert meijerg([1, 2], [3], [4], [5], z).delta == S(1)/2
 
@@ -208,6 +211,7 @@ def test_hyper_unpolarify():
     assert hyper([0], [], a).argument == a
     assert hyper([0], [0], a).argument == b
     assert hyper([0, 1], [0], a).argument == a
+    assert hyper([0, 1], [0], exp_polar(2*pi*I)).argument == 1
 
 
 @slow
@@ -339,3 +343,17 @@ def test_limits():
            O(k**6) # issue 6350
     assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
             meijerg(((), ()), ((1,), (0,)), 0) # issue 6052
+
+def test_appellf1():
+    a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
+    assert appellf1(a, b2, b1, c, y, x) == appellf1(a, b1, b2, c, x, y)
+    assert appellf1(a, b1, b1, c, y, x) == appellf1(a, b1, b1, c, x, y)
+    assert appellf1(a, b1, b2, c, S(0), S(0)) == S(1)
+
+def test_derivative_appellf1():
+    from sympy import diff
+    a, b1, b2, c, x, y, z = symbols('a b1 b2 c x y z')
+    assert diff(appellf1(a, b1, b2, c, x, y), x) == a*b1*appellf1(a + 1, b2, b1 + 1, c + 1, y, x)/c
+    assert diff(appellf1(a, b1, b2, c, x, y), y) == a*b2*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)/c
+    assert diff(appellf1(a, b1, b2, c, x, y), z) == 0
+    assert diff(appellf1(a, b1, b2, c, x, y), a) ==  Derivative(appellf1(a, b1, b2, c, x, y), a)

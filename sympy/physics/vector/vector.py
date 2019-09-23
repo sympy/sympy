@@ -57,6 +57,8 @@ class Vector(object):
 
     def __add__(self, other):
         """The add operator for Vector. """
+        if other == 0:
+            return self
         other = _check_vector(other)
         return Vector(self.args + other.args)
 
@@ -166,7 +168,7 @@ class Vector(object):
         return Vector(newlist)
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def __neg__(self):
         return self * -1
@@ -270,18 +272,18 @@ class Vector(object):
                         # if the coef of the basis vector is -1, we skip the 1
                         elif ar[i][0][j] == -1:
                             pform = vp._print(ar[i][1].pretty_vecs[j])
-                            pform= prettyForm(*pform.left(" - "))
+                            pform = prettyForm(*pform.left(" - "))
                             bin = prettyForm.NEG
                             pform = prettyForm(binding=bin, *pform)
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
+                            pform = vp._print(ar[i][0][j])
+
                             if isinstance(ar[i][0][j], Add):
-                                pform = vp._print(
-                                    ar[i][0][j]).parens()
-                            else:
-                                pform = vp._print(
-                                    ar[i][0][j])
+                                tmp = pform.parens()
+                                pform = prettyForm(tmp[0], tmp[1])
+
                             pform = prettyForm(*pform.right(" ",
                                                 ar[i][1].pretty_vecs[j]))
                         else:
@@ -383,7 +385,7 @@ class Vector(object):
         return outstr
 
     def __sub__(self, other):
-        """The subraction operator. """
+        """The subtraction operator. """
         return self.__add__(other * -1)
 
     def __xor__(self, other):
@@ -445,6 +447,26 @@ class Vector(object):
                 Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz]])
             outlist += _det(tempm).args
         return Vector(outlist)
+
+
+    # We don't define _repr_png_ here because it would add a large amount of
+    # data to any notebook containing SymPy expressions, without adding
+    # anything useful to the notebook. It can still enabled manually, e.g.,
+    # for the qtconsole, with init_printing().
+    def _repr_latex_(self):
+        """
+        IPython/Jupyter LaTeX printing
+
+        To change the behavior of this (e.g., pass in some settings to LaTeX),
+        use init_printing(). init_printing() will also enable LaTeX printing
+        for built in numeric types like ints and container types that contain
+        SymPy objects, like lists and dictionaries of expressions.
+        """
+        from sympy.printing.latex import latex
+        s = latex(self, mode='plain')
+        return "$\\displaystyle %s$" % s
+
+    _repr_latex_orig = _repr_latex_
 
     _sympystr = __str__
     _sympyrepr = _sympystr
@@ -657,7 +679,7 @@ class Vector(object):
         return Vector(d)
 
     def subs(self, *args, **kwargs):
-        """Substituion on the Vector.
+        """Substitution on the Vector.
 
         Examples
         ========
@@ -694,6 +716,22 @@ class Vector(object):
         for v in self.args:
             d[v[1]] = v[0].applyfunc(f)
         return Vector(d)
+
+    def free_symbols(self, reference_frame):
+        """
+        Returns the free symbols in the measure numbers of the vector
+        expressed in the given reference frame.
+
+        Parameter
+        =========
+
+        reference_frame : ReferenceFrame
+            The frame with respect to which the free symbols of the
+            given vector is to be determined.
+
+        """
+
+        return self.to_matrix(reference_frame).free_symbols
 
 
 class VectorTypeError(TypeError):

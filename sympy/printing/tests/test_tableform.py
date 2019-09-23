@@ -109,7 +109,7 @@ def test_TableForm_latex():
         '\\hline\n'
         '1 &   & $x^{3}$ \\\\\n'
         '2 & $c$ & $\\frac{1}{4}$ \\\\\n'
-        '3 & $\\sqrt{x}$ & $\\sin{\\left (x^{2} \\right )}$ \\\\\n'
+        '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
         '\\end{tabular}'
     )
     s = latex(TableForm([[0, x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],
@@ -120,7 +120,7 @@ def test_TableForm_latex():
         '\\hline\n'
         '1 &   & $x^{3}$ \\\\\n'
         '2 & $c$ & $\\frac{1}{4}$ \\\\\n'
-        '3 & $\\sqrt{x}$ & $\\sin{\\left (x^{2} \\right )}$ \\\\\n'
+        '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
         '\\end{tabular}'
     )
     s = latex(TableForm([[0, x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],
@@ -131,7 +131,7 @@ def test_TableForm_latex():
         '\\hline\n'
         '1 &   & $x^{3}$ \\\\\n'
         '2 & $c$ & $\\frac{1}{4}$ \\\\\n'
-        '3 & $\\sqrt{x}$ & $\\sin{\\left (x^{2} \\right )}$ \\\\\n'
+        '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
         '\\end{tabular}'
     )
     s = latex(TableForm([["a", x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],
@@ -142,7 +142,7 @@ def test_TableForm_latex():
         '\\hline\n'
         '1 & $a$ & $x^{3}$ \\\\\n'
         '2 & $c$ & $\\frac{1}{4}$ \\\\\n'
-        '3 & $\\sqrt{x}$ & $\\sin{\\left (x^{2} \\right )}$ \\\\\n'
+        '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
         '\\end{tabular}'
     )
     s = latex(TableForm([["a", x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],
@@ -153,7 +153,7 @@ def test_TableForm_latex():
         '\\hline\n'
         '1 & (a) & $x^{3}$ \\\\\n'
         '2 & (c) & $\\frac{1}{4}$ \\\\\n'
-        '3 & (sqrt(x)) & $\\sin{\\left (x^{2} \\right )}$ \\\\\n'
+        '3 & (sqrt(x)) & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
         '\\end{tabular}'
     )
 
@@ -177,6 +177,6 @@ def test_TableForm_latex():
         '\\begin{tabular}{l l}\n'
         '$a$ & $x^{3}$ \\\\\n'
         '$c$ & $\\frac{1}{4}$ \\\\\n'
-        '$\\sqrt{x}$ & $\\sin{\\left (x^{2} \\right )}$ \\\\\n'
+        '$\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
         '\\end{tabular}'
     )

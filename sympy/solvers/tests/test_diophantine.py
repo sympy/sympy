@@ -1,7 +1,6 @@
-from sympy import (Add, factor_list, igcd, Matrix, Mul, S, simplify,
-    Symbol, symbols, Eq, pi, factorint, oo, powsimp)
+from sympy import (Add, Matrix, Mul, S, symbols, Eq, pi, factorint, oo, powsimp)
 from sympy.core.function import _mexpand
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, ordered
 from sympy.functions.elementary.trigonometric import sin
 from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
     diop_solve, diophantine, divisible, equivalent, find_DN, ldescent, length,
@@ -20,7 +19,6 @@ from sympy.utilities import default_sort_key
 
 from sympy.utilities.pytest import slow, raises, XFAIL
 from sympy.utilities.iterables import (
-        permute_signs,
         signed_permutations)
 
 a, b, c, d, p, q, x, y, z, w, t, u, v, X, Y, Z = symbols(
@@ -273,11 +271,9 @@ def test_bf_pell():
 def test_length():
     assert length(2, 1, 0) == 1
     assert length(-2, 4, 5) == 3
-    assert length(-5, 4, 17) == 5
+    assert length(-5, 4, 17) == 4
     assert length(0, 4, 13) == 6
-    assert length(-31, 8, 613) == 69
     assert length(7, 13, 11) == 23
-    assert length(-40, 5, 23) == 4
     assert length(1, 6, 4) == 2
 
 
@@ -413,10 +409,10 @@ def test_diop_ternary_quadratic():
         (-2, 0, n1)
     eq = -5*x*y - 8*x*z - 3*y*z + 8*z**2
     assert parametrize_ternary_quadratic(eq) == \
-        (64*p**2 - 24*p*q, -64*p*q + 64*q**2, 40*p*q)
+        (8*p**2 - 3*p*q, -8*p*q + 8*q**2, 5*p*q)
     # this cannot be tested with diophantine because it will
     # factor into a product
-    assert diop_solve(x*y + 2*y*z) == (-4*p*q, -2*n1*p**2 + 2*p**2, 2*p*q)
+    assert diop_solve(x*y + 2*y*z) == (-2*p*q, -n1*p**2 + p**2, p*q)
 
 
 def test_square_factor():
@@ -540,6 +536,8 @@ def test_diophantine():
     assert diophantine(1/x) == set()
     assert diophantine(1/x + 1/y - S.Half)
     set([(6, 3), (-2, 1), (4, 4), (1, -2), (3, 6)])
+    assert diophantine(x**2 + y**2 +3*x- 5, permute=True) == \
+        set([(-1, 1), (-4, -1), (1, -1), (1, 1), (-4, 1), (-1, -1), (4, 1), (4, -1)])
 
 
 def test_general_pythagorean():
@@ -687,7 +685,7 @@ def test_assumptions():
     Test whether diophantine respects the assumptions.
     """
     #Test case taken from the below so question regarding assumptions in diophantine module
-    #http://stackoverflow.com/questions/23301941/how-can-i-declare-natural-symbols-with-sympy
+    #https://stackoverflow.com/questions/23301941/how-can-i-declare-natural-symbols-with-sympy
     m, n = symbols('m n', integer=True, positive=True)
     diof = diophantine(n ** 2 + m * n - 500)
     assert diof == set([(5, 20), (40, 10), (95, 5), (121, 4), (248, 2), (499, 1)])
@@ -826,6 +824,7 @@ def test_sum_of_squares_powers():
     eq = u**2 + v**2 + x**2 + y**2 + z**2 - 123
     ans = diop_general_sum_of_squares(eq, oo)  # allow oo to be used
     assert len(ans) == 14
+    assert ans == tru
 
     raises(ValueError, lambda: list(sum_of_squares(10, -1)))
     assert list(sum_of_squares(-10, 2)) == []
@@ -907,3 +906,31 @@ def test_issue_9538():
     eq = x - 3*y + 2
     assert diophantine(eq, syms=[y,x]) == set([(t_0, 3*t_0 - 2)])
     raises(TypeError, lambda: diophantine(eq, syms=set([y,x])))
+
+
+def test_ternary_quadratic():
+    # solution with 3 parameters
+    s = diophantine(2*x**2 + y**2 - 2*z**2)
+    p, q, r = ordered(S(s).free_symbols)
+    assert s == {(
+        p**2 - 2*q**2,
+        -2*p**2 + 4*p*q - 4*p*r - 4*q**2,
+        p**2 - 4*p*q + 2*q**2 - 4*q*r)}
+    # solution with Mul in solution
+    s = diophantine(x**2 + 2*y**2 - 2*z**2)
+    assert s == {(4*p*q, p**2 - 2*q**2, p**2 + 2*q**2)}
+    # solution with no Mul in solution
+    s = diophantine(2*x**2 + 2*y**2 - z**2)
+    assert s == {(2*p**2 - q**2, -2*p**2 + 4*p*q - q**2,
+        4*p**2 - 4*p*q + 2*q**2)}
+    # reduced form when parametrized
+    s = diophantine(3*x**2 + 72*y**2 - 27*z**2)
+    assert s == {(24*p**2 - 9*q**2, 6*p*q, 8*p**2 + 3*q**2)}
+    assert parametrize_ternary_quadratic(
+        3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z) == (
+        2*p**2 - 2*p*q - q**2, 2*p**2 + 2*p*q - q**2, 2*p**2 -
+        2*p*q + 3*q**2)
+    assert parametrize_ternary_quadratic(
+        124*x**2 - 30*y**2 - 7729*z**2) == (
+        -1410*p**2 - 363263*q**2, 2700*p**2 + 30916*p*q -
+        695610*q**2, -60*p**2 + 5400*p*q + 15458*q**2)

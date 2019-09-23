@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from sympy.core import Basic, Rational
 from sympy.core.compatibility import range
-from sympy.core.numbers import igcd
 from .cartan_type import CartanType
 from mpmath import fac
-from sympy.matrices import Matrix, eye
+from sympy.core.backend import Matrix, eye, Rational, Basic, igcd
 
 class WeylGroup(Basic):
 
@@ -175,7 +173,7 @@ class WeylGroup(Basic):
                 if len(reflections) == 1:
                     return 2
                 else:
-                    m = len(reflections) / 2
+                    m = len(reflections) // 2
                     lcm = (6 * m)/ igcd(m, 6)
                 order = lcm / m
                 return order

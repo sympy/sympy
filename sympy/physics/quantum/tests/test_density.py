@@ -159,12 +159,12 @@ def test_get_prob():
 def test_entropy():
     up = JzKet(S(1)/2, S(1)/2)
     down = JzKet(S(1)/2, -S(1)/2)
-    d = Density((up, 0.5), (down, 0.5))
+    d = Density((up, S(1)/2), (down, S(1)/2))
 
     # test for density object
     ent = entropy(d)
-    assert entropy(d) == 0.5*log(2)
-    assert d.entropy() == 0.5*log(2)
+    assert entropy(d) == log(2)/2
+    assert d.entropy() == log(2)/2
 
     np = import_module('numpy', min_module_version='1.4.0')
     if np:
@@ -208,7 +208,6 @@ def test_eval_trace():
     assert t.doit() == 1
 
 
-@slow
 def test_fidelity():
     #test with kets
     up = JzKet(S(1)/2, S(1)/2)

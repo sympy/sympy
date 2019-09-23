@@ -137,7 +137,7 @@ def is_conservative(field):
     """
     Checks if a field is conservative.
 
-    Paramaters
+    Parameters
     ==========
 
     field : Vector
@@ -169,7 +169,7 @@ def is_solenoidal(field):
     """
     Checks if a field is solenoidal.
 
-    Paramaters
+    Parameters
     ==========
 
     field : Vector
@@ -233,7 +233,7 @@ def scalar_potential(field, frame):
     if field == Vector(0):
         return S(0)
     #Express the field exntirely in frame
-    #Subsitute coordinate variables also
+    #Substitute coordinate variables also
     _check_frame(frame)
     field = express(field, frame, variables=True)
     #Make a list of dimensions of the frame

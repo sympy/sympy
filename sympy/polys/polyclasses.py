@@ -2,12 +2,11 @@
 
 from __future__ import print_function, division
 
-from sympy.core.sympify import CantSympify
-
-from sympy.polys.polyutils import PicklableWithSlots
-from sympy.polys.polyerrors import CoercionFailed, NotReversible
-
 from sympy import oo
+from sympy.core.sympify import CantSympify
+from sympy.polys.polyerrors import CoercionFailed, NotReversible, NotInvertible
+from sympy.polys.polyutils import PicklableWithSlots
+
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
@@ -114,6 +113,7 @@ from sympy.polys.euclidtools import (
 
 from sympy.polys.sqfreetools import (
     dup_gff_list,
+    dmp_norm,
     dmp_sqf_p,
     dmp_sqf_norm,
     dmp_sqf_part,
@@ -245,6 +245,23 @@ class DMP(PicklableWithSlots, CantSympify):
             rep[k] = f.dom.to_sympy(v)
 
         return rep
+
+    def to_list(f):
+        """Convert ``f`` to a list representation with native coefficients. """
+        return f.rep
+
+    def to_sympy_list(f):
+        """Convert ``f`` to a list representation with SymPy coefficients. """
+        def sympify_nested_list(rep):
+            out = []
+            for val in rep:
+                if isinstance(val, list):
+                    out.append(sympify_nested_list(val))
+                else:
+                    out.append(f.dom.to_sympy(val))
+            return out
+
+        return sympify_nested_list(f.rep)
 
     def to_tuple(f):
         """
@@ -750,6 +767,11 @@ class DMP(PicklableWithSlots, CantSympify):
         else:
             raise ValueError('univariate polynomial expected')
 
+    def norm(f):
+        """Computes ``Norm(f)``."""
+        r = dmp_norm(f.rep, f.lev, f.dom)
+        return f.per(r, dom=f.dom.dom)
+
     def sqf_norm(f):
         """Computes square-free norm of ``f``. """
         s, g, r = dmp_sqf_norm(f.rep, f.lev, f.dom)
@@ -1000,11 +1022,11 @@ class DMP(PicklableWithSlots, CantSympify):
         return False
 
     def __ne__(f, g):
-        return not f.__eq__(g)
+        return not f == g
 
     def eq(f, g, strict=False):
         if not strict:
-            return f.__eq__(g)
+            return f == g
         else:
             return f._strict_eq(g)
 
@@ -1018,19 +1040,19 @@ class DMP(PicklableWithSlots, CantSympify):
 
     def __lt__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__lt__(G)
+        return F < G
 
     def __le__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__le__(G)
+        return F <= G
 
     def __gt__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__gt__(G)
+        return F > G
 
     def __ge__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__ge__(G)
+        return F >= G
 
     def __nonzero__(f):
         return not dmp_zero_p(f.rep, f.lev)
@@ -1465,19 +1487,19 @@ class DMF(PicklableWithSlots, CantSympify):
 
     def __lt__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__lt__(G)
+        return F < G
 
     def __le__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__le__(G)
+        return F <= G
 
     def __gt__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__gt__(G)
+        return F > G
 
     def __ge__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__ge__(G)
+        return F >= G
 
     def __nonzero__(f):
         return not dmp_zero_p(f.num, f.lev)
@@ -1618,11 +1640,17 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def div(f, g):
         dom, per, F, G, mod = f.unify(g)
-        return (per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom)), self.zero(mod, dom))
+        return (per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom)), f.zero(mod, dom))
 
     def rem(f, g):
-        dom, _, _, _, mod = f.unify(g)
-        return self.zero(mod, dom)
+        dom, _, _, G, mod = f.unify(g)
+
+        s, h = dup_half_gcdex(G, mod, dom)
+
+        if h == [dom.one]:
+            return f.zero(mod, dom)
+        else:
+            raise NotInvertible("zero divisor")
 
     def quo(f, g):
         dom, per, F, G, mod = f.unify(g)
@@ -1730,19 +1758,19 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def __lt__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__lt__(G)
+        return F < G
 
     def __le__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__le__(G)
+        return F <= G
 
     def __gt__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__gt__(G)
+        return F > G
 
     def __ge__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__ge__(G)
+        return F >= G
 
     def __nonzero__(f):
         return bool(f.rep)

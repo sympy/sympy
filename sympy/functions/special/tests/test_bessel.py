@@ -3,10 +3,10 @@ from itertools import product
 from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
                    bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
                    expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
-                   Abs, I, O, oo, conjugate)
+                   Abs, I, O, oo, conjugate, uppergamma, exp, Integral, Sum)
 from sympy.functions.special.bessel import fn
 from sympy.functions.special.bessel import (airyai, airybi,
-                                            airyaiprime, airybiprime)
+                                            airyaiprime, airybiprime, marcumq)
 from sympy.utilities.randtest import (random_complex_number as randcplx,
                                       verify_numerically as tn,
                                       test_derivative_numerically as td,
@@ -192,14 +192,14 @@ def test_expand():
     i = Symbol('i', integer=True)
 
     for besselx in [besselj, bessely, besseli, besselk]:
-        assert besselx(i, p).is_real
-        assert besselx(i, x).is_real is None
-        assert besselx(x, z).is_real is None
+        assert besselx(i, p).is_extended_real is True
+        assert besselx(i, x).is_extended_real is None
+        assert besselx(x, z).is_extended_real is None
 
     for besselx in [besselj, besseli]:
-        assert besselx(i, r).is_real
+        assert besselx(i, r).is_extended_real is True
     for besselx in [bessely, besselk]:
-        assert besselx(i, r).is_real is None
+        assert besselx(i, r).is_extended_real is None
 
 
 def test_fn():
@@ -338,8 +338,11 @@ def test_bessel_nan():
 
 def test_conjugate():
     from sympy import conjugate, I, Symbol
-    n, z, x = Symbol('n'), Symbol('z', real=False), Symbol('x', real=True)
-    y, t = Symbol('y', real=True, positive=True), Symbol('t', negative=True)
+    n = Symbol('n')
+    z = Symbol('z', extended_real=False)
+    x = Symbol('x', extended_real=True)
+    y = Symbol('y', real=True, positive=True)
+    t = Symbol('t', negative=True)
 
     for f in [besseli, besselj, besselk, bessely, hankel1, hankel2]:
         assert f(n, -1).conjugate() != f(conjugate(n), -1)
@@ -407,7 +410,7 @@ def test_airy_base():
     y = Symbol('y', real=True)
 
     assert conjugate(airyai(z)) == airyai(conjugate(z))
-    assert airyai(x).is_real
+    assert airyai(x).is_extended_real
 
     assert airyai(x+I*y).as_real_imag() == (
         airyai(x - I*x*Abs(y)/Abs(x))/2 + airyai(x + I*x*Abs(y)/Abs(x))/2,
@@ -554,3 +557,44 @@ def test_airybiprime():
     assert expand_func(airybiprime(2*(3*z**5)**(S(1)/3))) == (
         sqrt(3)*(z**(S(5)/3)/(z**5)**(S(1)/3) - 1)*airyaiprime(2*3**(S(1)/3)*z**(S(5)/3))/2 +
         (z**(S(5)/3)/(z**5)**(S(1)/3) + 1)*airybiprime(2*3**(S(1)/3)*z**(S(5)/3))/2)
+
+
+def test_marcumq():
+    m = Symbol('m')
+    a = Symbol('a')
+    b = Symbol('b')
+
+    assert marcumq(0, 0, 0) == 0
+    assert marcumq(m, 0, b) == uppergamma(m, b**2/2)/gamma(m)
+    assert marcumq(2, 0, 5) == 27*exp(-S(25)/2)/2
+    assert marcumq(0, a, 0) == 1 - exp(-a**2/2)
+    assert marcumq(0, pi, 0) == 1 - exp(-pi**2/2)
+    assert marcumq(1, a, a) == S.Half + exp(-a**2)*besseli(0, a**2)/2
+    assert marcumq(2, a, a) == S.Half + exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2)
+
+    assert diff(marcumq(1, a, 3), a) == a*(-marcumq(1, a, 3) + marcumq(2, a, 3))
+    assert diff(marcumq(2, 3, b), b) == -b**2*exp(-b**2/2 - S(9)/2)*besseli(1, 3*b)/3
+
+    x = Symbol('x')
+    assert marcumq(2, 3, 4).rewrite(Integral, x=x) == \
+           Integral(x**2*exp(-x**2/2 - S(9)/2)*besseli(1, 3*x), (x, 4, oo))/3
+    assert eq([marcumq(5, -2, 3).rewrite(Integral).evalf(10)],
+              [0.7905769565])
+
+    k = Symbol('k')
+    assert marcumq(-3, -5, -7).rewrite(Sum, k=k) == \
+           exp(-37)*Sum((S(5)/7)**k*besseli(k, 35), (k, 4, oo))
+    assert eq([marcumq(1, 3, 1).rewrite(Sum).evalf(10)],
+              [0.9891705502])
+
+    assert marcumq(1, a, a, evaluate=False).rewrite(besseli) == S.Half + exp(-a**2)*besseli(0, a**2)/2
+    assert marcumq(2, a, a, evaluate=False).rewrite(besseli) == S.Half + exp(-a**2)*besseli(0, a**2)/2 + \
+           exp(-a**2)*besseli(1, a**2)
+    assert marcumq(3, a, a).rewrite(besseli) == (besseli(1, a**2) + besseli(2, a**2))*exp(-a**2) + \
+           S.Half + exp(-a**2)*besseli(0, a**2)/2
+    assert marcumq(5, 8, 8).rewrite(besseli) == exp(-64)*besseli(0, 64)/2 + \
+           (besseli(4, 64) + besseli(3, 64) + besseli(2, 64) + besseli(1, 64))*exp(-64) + S.Half
+    assert marcumq(m, a, a).rewrite(besseli) == marcumq(m, a, a)
+
+    x = Symbol('x', integer=True)
+    assert marcumq(x, a, a).rewrite(besseli) == marcumq(x, a, a)
