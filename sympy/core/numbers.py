@@ -1803,6 +1803,8 @@ class Rational(Number):
         mp.dps = 15
         if isinstance(expt, Number):
             if isinstance(expt, Float):
+                if abs(self) >= 16**16 or abs(expt) >= 16**16:
+                    return Pow(self, expt, evaluate=False)
                 return self._eval_evalf(expt._prec)**expt
             if expt.is_extended_negative:
                 # (3/4)**-2 -> (4/3)**2
