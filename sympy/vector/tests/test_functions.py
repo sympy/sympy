@@ -1,6 +1,6 @@
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.functions import express, matrix_to_vector, orthogonalize
+from sympy.vector.functions import extended_express, express, matrix_to_vector, orthogonalize
 from sympy import symbols, S, sqrt, sin, cos, ImmutableMatrix as Matrix
 from sympy.utilities.pytest import raises
 
@@ -9,6 +9,23 @@ q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 A = N.orient_new_axis('A', q1, N.k)
 B = A.orient_new_axis('B', q2, A.i)
 C = B.orient_new_axis('C', q3, B.j)
+
+from sympy import pi,atan2
+
+Sph=N.create_new('S',transformation='spherical')
+Cyl=N.create_new('C',transformation='cylindrical',vector_names=('r','t','z'),variable_names=('rho','theta','h'))
+
+def test_extended_express():
+    assert extended_express(N.i,Cyl)==Cyl.r
+    assert extended_express(N.j,Cyl)==Cyl.r+pi/2*Cyl.t
+    assert extended_express(N.k,Cyl)==Cyl.z
+    assert extended_express(4*N.i+3*N.j+100*N.k,Cyl)==5*Cyl.r+atan2(3,4)*Cyl.t+100*Cyl.z
+    assert extended_express(Cyl.r,N)==N.i
+    assert extended_express(Cyl.t,N)==Vector.zero
+    assert extended_express(Cyl.z,N)==N.k
+    assert extended_express(Cyl.r+pi/2*Cyl.t,N)==N.j
+    assert extended_express(5*Cyl.r+atan2(3,4)*Cyl.t+100*Cyl.z,N)== 4*N.i+3*N.j+100*N.k
+
 
 
 def test_express():
