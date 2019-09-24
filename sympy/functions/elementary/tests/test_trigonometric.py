@@ -781,7 +781,11 @@ def test_sinc():
 
     assert sinc(-x) == sinc(x)
 
-    assert sinc(x).diff() == (x*cos(x) - sin(x)) / x**2
+    assert sinc(x).diff() == Piecewise(((x*cos(x) - sin(x)) / x**2, Ne(x, 0)), (0, True))
+
+    assert sinc(x).diff(x).equals(sinc(x).rewrite(sin).diff(x))
+
+    assert sinc(x).diff().subs(x, 0) is S.Zero
 
     assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
 

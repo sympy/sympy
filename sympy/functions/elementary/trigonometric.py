@@ -1826,7 +1826,7 @@ class sinc(Function):
     * Differentiation
 
     >>> sinc(x).diff()
-    (x*cos(x) - sin(x))/x**2
+    Piecewise(((x*cos(x) - sin(x))/x**2, Ne(x, 0)), (0, True))
 
     * Series Expansion
 
@@ -1848,7 +1848,7 @@ class sinc(Function):
     def fdiff(self, argindex=1):
         x = self.args[0]
         if argindex == 1:
-            return (x*cos(x) - sin(x)) / x**2
+            return Piecewise(((x*cos(x) - sin(x))/x**2, Ne(x, S.Zero)), (S.Zero, S.true))
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -1885,7 +1885,7 @@ class sinc(Function):
         return jn(0, arg)
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
-        return Piecewise((sin(arg)/arg, Ne(arg, 0)), (1, True))
+        return Piecewise((sin(arg)/arg, Ne(arg, S.Zero)), (S.One, S.true))
 
 
 ###############################################################################
