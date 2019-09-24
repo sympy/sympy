@@ -36,8 +36,8 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
 from __future__ import print_function, division
 
-from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm,
-        Function, sin, cos, exp, I, factorial, binomial, Matrix)
+from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm, zeros,
+                  Function, sin, cos, exp, I, factorial, binomial, Matrix)
 from sympy.core.compatibility import range
 
 # This list of precomputed factorials is needed to massively
@@ -761,20 +761,22 @@ def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
 def wigner_d_small(J, beta):
     u"""Return the small Wigner d matrix for angular momentum J.
 
-    We use the general formula from [1], equation 4.1.15.
+    We use the general formula from [Edmonds74]_, equation 4.1.15.
 
-    Some examples form [1]:
+    Some examples form [Edmonds74]_:
 
-    >>> from sympy.physics.wigner import wigner_d_small
-    >>> from sympy import Integer, symbols, pi
+    >>> from sympy import Integer, symbols, pi, pprint
     >>> half = 1/Integer(2)
     >>> beta = symbols("beta", real=True)
-    >>> wigner_d_small(half, beta)
-    Matrix([
-    [ cos(beta/2), sin(beta/2)],
-    [-sin(beta/2), cos(beta/2)]])
+    >>> pprint(wigner_d_small(half, beta))
+    ⎡   ⎛β⎞      ⎛β⎞⎤
+    ⎢cos⎜─⎟   sin⎜─⎟⎥
+    ⎢   ⎝2⎠      ⎝2⎠⎥
+    ⎢               ⎥
+    ⎢    ⎛β⎞     ⎛β⎞⎥
+    ⎢-sin⎜─⎟  cos⎜─⎟⎥
+    ⎣    ⎝2⎠     ⎝2⎠⎦
 
-    >>> from sympy import pprint
     >>> pprint(wigner_d_small(2*half, beta), use_unicode=True)
     ⎡        2⎛β⎞              ⎛β⎞    ⎛β⎞           2⎛β⎞     ⎤
     ⎢     cos ⎜─⎟        √2⋅sin⎜─⎟⋅cos⎜─⎟        sin ⎜─⎟     ⎥
@@ -788,32 +790,63 @@ def wigner_d_small(J, beta):
     ⎢     sin ⎜─⎟        -√2⋅sin⎜─⎟⋅cos⎜─⎟       cos ⎜─⎟     ⎥
     ⎣         ⎝2⎠               ⎝2⎠    ⎝2⎠           ⎝2⎠     ⎦
 
-    From table 4 in [1]
-    >>> wigner_d_small(half, beta).subs({beta:pi/2})
-    Matrix([
-    [ sqrt(2)/2, sqrt(2)/2],
-    [-sqrt(2)/2, sqrt(2)/2]])
+    From table 4 in [Edmonds74]_
 
-    >>> wigner_d_small(2*half, beta).subs({beta:pi/2})
-    Matrix([
-    [       1/2,  sqrt(2)/2,       1/2],
-    [-sqrt(2)/2,          0, sqrt(2)/2],
-    [       1/2, -sqrt(2)/2,       1/2]])
+    >>> pprint(wigner_d_small(half, beta).subs({beta:pi/2}))
+    ⎡ √2   √2⎤
+    ⎢ ──   ──⎥
+    ⎢ 2    2 ⎥
+    ⎢        ⎥
+    ⎢-√2   √2⎥
+    ⎢────  ──⎥
+    ⎣ 2    2 ⎦
 
-    >>> wigner_d_small(3*half, beta).subs({beta:pi/2})
-    Matrix([
-    [ sqrt(2)/4,  sqrt(6)/4,  sqrt(6)/4, sqrt(2)/4],
-    [-sqrt(6)/4, -sqrt(2)/4,  sqrt(2)/4, sqrt(6)/4],
-    [ sqrt(6)/4, -sqrt(2)/4, -sqrt(2)/4, sqrt(6)/4],
-    [-sqrt(2)/4,  sqrt(6)/4, -sqrt(6)/4, sqrt(2)/4]])
+    >>> pprint(wigner_d_small(2*half, beta).subs({beta:pi/2}))
+    ⎡       √2      ⎤
+    ⎢1/2    ──   1/2⎥
+    ⎢       2       ⎥
+    ⎢               ⎥
+    ⎢-√2         √2 ⎥
+    ⎢────   0    ── ⎥
+    ⎢ 2          2  ⎥
+    ⎢               ⎥
+    ⎢      -√2      ⎥
+    ⎢1/2   ────  1/2⎥
+    ⎣       2       ⎦
 
-    >>> wigner_d_small(4*half, beta).subs({beta:pi/2})
-    Matrix([
-    [      1/4,  1/2, sqrt(6)/4,  1/2,       1/4],
-    [     -1/2, -1/2,         0,  1/2,       1/2],
-    [sqrt(6)/4,    0,      -1/2,    0, sqrt(6)/4],
-    [     -1/2,  1/2,         0, -1/2,       1/2],
-    [      1/4, -1/2, sqrt(6)/4, -1/2,       1/4]])
+    >>> pprint(wigner_d_small(3*half, beta).subs({beta:pi/2}))
+    ⎡ √2    √6    √6   √2⎤
+    ⎢ ──    ──    ──   ──⎥
+    ⎢ 4     4     4    4 ⎥
+    ⎢                    ⎥
+    ⎢-√6   -√2    √2   √6⎥
+    ⎢────  ────   ──   ──⎥
+    ⎢ 4     4     4    4 ⎥
+    ⎢                    ⎥
+    ⎢ √6   -√2   -√2   √6⎥
+    ⎢ ──   ────  ────  ──⎥
+    ⎢ 4     4     4    4 ⎥
+    ⎢                    ⎥
+    ⎢-√2    √6   -√6   √2⎥
+    ⎢────   ──   ────  ──⎥
+    ⎣ 4     4     4    4 ⎦
+
+    >>> pprint(wigner_d_small(4*half, beta).subs({beta:pi/2}))
+    ⎡             √6            ⎤
+    ⎢1/4   1/2    ──   1/2   1/4⎥
+    ⎢             4             ⎥
+    ⎢                           ⎥
+    ⎢-1/2  -1/2   0    1/2   1/2⎥
+    ⎢                           ⎥
+    ⎢ √6                     √6 ⎥
+    ⎢ ──    0    -1/2   0    ── ⎥
+    ⎢ 4                      4  ⎥
+    ⎢                           ⎥
+    ⎢-1/2  1/2    0    -1/2  1/2⎥
+    ⎢                           ⎥
+    ⎢             √6            ⎥
+    ⎢1/4   -1/2   ──   -1/2  1/4⎥
+    ⎣             4             ⎦
 
     [1] A. R. Edmonds. Angular momentum in quantum mechanics. Investigations
         in physics, 4.; Investigations in physics, no. 4. Princeton, N.J.,
@@ -825,10 +858,9 @@ def wigner_d_small(J, beta):
         return p
 
     M = [J-i for i in range(2*J+1)]
-    d = []
-    for Mi in M:
-        row = []
-        for Mj in M:
+    d = zeros(2*J+1)
+    for i, Mi in enumerate(M):
+        for j, Mj in enumerate(M):
 
             # We get the maximum and minimum value of sigma.
             sigmamax = max([-Mi-Mj, J-Mj])
@@ -845,11 +877,9 @@ def wigner_d_small(J, beta):
 
             terms = [prod(term) if 0 not in term else 0 for term in terms]
 
-            dij = dij*sum(terms)
-            row += [dij]
-        d += [row]
+            d[i, j] = dij*sum(terms)
 
-    return Matrix(d)
+    return d
 
 
 def wigner_d(J, alpha, beta, gamma):
