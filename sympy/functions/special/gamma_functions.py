@@ -50,6 +50,8 @@ class gamma(Function):
     1
     >>> gamma(4)
     6
+    >>> gamma(I*oo)
+    0
     >>> gamma(S(3)/2)
     sqrt(pi)/2
 
@@ -64,6 +66,33 @@ class gamma(Function):
     >>> from sympy import diff
     >>> diff(gamma(x), x)
     gamma(x)*polygamma(0, x)
+
+    Euler's reflection formula:
+
+    >>> from sympy import expand_func, combsimp
+    >>> G = gamma(x)*gamma(1-x)
+    >>> G
+    gamma(x)*gamma(-x + 1)
+    >>> G = expand_func(G)
+    >>> G
+    -x*gamma(-x)*gamma(x)
+    >>> G = expand_func(G)
+    >>> G
+    pi*x*csc(pi*x)*gamma(x)/gamma(x + 1)
+    >>> combsimp(G)
+    pi*csc(pi*x)
+
+    The duplication formula:
+
+    >>> from sympy import simplify
+    >>> G = gamma(x)*gamma(x+S.Half)
+    >>> G
+    gamma(x)*gamma(x + 1/2)
+    >>> G = combsimp(G)
+    >>> G
+    2*sqrt(2)*2**(-2*x - 1/2)*sqrt(pi)*gamma(2*x)
+    >>> simplify(G)
+    2**(-2*x + 1)*sqrt(pi)*gamma(2*x)
 
     Series expansion is also supported:
 
@@ -141,6 +170,11 @@ class gamma(Function):
                     else:
                         return 2**n*sqrt(S.Pi) / coeff
 
+        z = arg.extract_multiplicatively(S.ImaginaryUnit)
+        if z is not None:
+            if z is S.Infinity or S.NegativeInfinity:
+                return S.Zero
+
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
         if arg.is_Rational:
@@ -158,6 +192,10 @@ class gamma(Function):
                 coeff = intpart
             tail = arg._new_rawargs(*tail, reeval=False)
             return self.func(tail)*RisingFactorial(tail, coeff)
+
+        z = arg.extract_multiplicatively(-1)
+        if z:
+            return -pi*csc(pi*z)/gamma(z+1)
 
         return self.func(*self.args)
 
