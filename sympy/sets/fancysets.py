@@ -462,7 +462,7 @@ class ImageSet(Set):
         from sympy.sets.setexpr import SetExpr
         f = self.lamda
         sig = f.signature
-        if len(sig) == 1 and sig[0].is_symbol:
+        if len(sig) == 1 and sig[0].is_symbol and isinstance(f.expr, Expr):
             base_set = self.base_sets[0]
             return SetExpr(base_set)._eval_func(f).set
         if all(s.is_FiniteSet for s in self.base_sets):
