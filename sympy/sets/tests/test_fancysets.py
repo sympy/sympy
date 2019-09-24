@@ -220,7 +220,7 @@ def test_Range_set():
     assert all(i.is_Integer for i in Range(0, -1, 1))
 
     it = iter(Range(-oo, 0, 2))
-    raises(ValueError, lambda: next(it))
+    raises(TypeError, lambda: next(it))
 
     assert empty.intersect(S.Integers) == empty
     assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)

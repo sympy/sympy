@@ -25,7 +25,7 @@ from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
 from sympy.utilities import subsets
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, roundrobin
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
@@ -785,10 +785,7 @@ class ProductSet(Set):
         If self.is_iterable returns True (both constituent sets are iterable),
         then return the Cartesian Product. Otherwise, raise TypeError.
         """
-        if self.is_iterable:
-            return product(*self.sets)
-        else:
-            raise TypeError("Not all constituent sets are iterable")
+        return product(*self.sets)
 
     @property
     def is_empty(self):
@@ -802,7 +799,7 @@ class ProductSet(Set):
         return measure
 
     def __len__(self):
-        return Mul(*[len(s) for s in self.sets])
+        return reduce(lambda a, b: a*b, (len(s) for s in self.args))
 
     def __bool__(self):
         return all([bool(s) for s in self.sets])
@@ -1256,30 +1253,7 @@ class Union(Set, LatticeOp, EvalfMixin):
                    sys.exc_info()[2])
 
     def __iter__(self):
-        import itertools
-
-        # roundrobin recipe taken from itertools documentation:
-        # https://docs.python.org/2/library/itertools.html#recipes
-        def roundrobin(*iterables):
-            "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
-            # Recipe credited to George Sakkis
-            pending = len(iterables)
-            if PY3:
-                nexts = itertools.cycle(iter(it).__next__ for it in iterables)
-            else:
-                nexts = itertools.cycle(iter(it).next for it in iterables)
-            while pending:
-                try:
-                    for next in nexts:
-                        yield next()
-                except StopIteration:
-                    pending -= 1
-                    nexts = itertools.cycle(itertools.islice(nexts, pending))
-
-        if all(set.is_iterable for set in self.args):
-            return roundrobin(*(iter(arg) for arg in self.args))
-        else:
-            raise TypeError("Not all constituent sets are iterable")
+        return roundrobin(*(iter(arg) for arg in self.args))
 
 
 class Intersection(Set, LatticeOp):
@@ -1356,23 +1330,42 @@ class Intersection(Set, LatticeOp):
         return And(*[set.contains(other) for set in self.args])
 
     def __iter__(self):
-        no_iter = True
-        for s in self.args:
-            if s.is_iterable:
-                no_iter = False
-                other_sets = set(self.args) - set((s,))
-                other = Intersection(*other_sets, evaluate=False)
-                for x in s:
-                    c = sympify(other.contains(x))
-                    if c is S.true:
-                        yield x
-                    elif c is S.false:
-                        pass
-                    else:
-                        yield c
+        sets_sift = sift(self.args, lambda x: x.is_iterable)
 
-        if no_iter:
-            raise ValueError("None of the constituent sets are iterable")
+        completed = False
+        candidates = sets_sift[True] + sets_sift[None]
+
+        finite_candidates, others = [], []
+        for candidate in candidates:
+            length = None
+            try:
+                length = len(candidate)
+            except:
+                others.append(candidate)
+
+            if length is not None:
+                finite_candidates.append(candidate)
+        finite_candidates.sort(key=len)
+
+        for s in finite_candidates + others:
+            other_sets = set(self.args) - set((s,))
+            other = Intersection(*other_sets, evaluate=False)
+            completed = True
+            for x in s:
+                try:
+                    if x in other:
+                        yield x
+                except TypeError:
+                    completed = False
+            if completed:
+                return
+
+        if not completed:
+            if not candidates:
+                raise TypeError("None of the constituent sets are iterable")
+            raise TypeError(
+                "The computation had not completed because of the "
+                "undecidable set membership is found in every candidates.")
 
     @staticmethod
     def _handle_finite_sets(args):
@@ -1544,6 +1537,19 @@ class Complement(Set, EvalfMixin):
         B_rel = Not(B.as_relational(symbol))
 
         return And(A_rel, B_rel)
+
+    @property
+    def is_iterable(self):
+        if self.args[0].is_iterable:
+            return True
+
+    def __iter__(self):
+        A, B = self.args
+        for a in A:
+            if a not in B:
+                    yield a
+            else:
+                continue
 
 
 class EmptySet(with_metaclass(Singleton, Set)):
@@ -1898,6 +1904,25 @@ class SymmetricDifference(Set):
         B_rel = B.as_relational(symbol)
 
         return Xor(A_rel, B_rel)
+
+    @property
+    def is_iterable(self):
+        if all(arg.is_iterable for arg in self.args):
+            return True
+
+    def __iter__(self):
+
+        args = self.args
+        union = roundrobin(*(iter(arg) for arg in args))
+
+        for item in union:
+            count = 0
+            for s in args:
+                if item in s:
+                    count += 1
+
+            if count % 2 == 1:
+                yield item
 
 
 def imageset(*args):
