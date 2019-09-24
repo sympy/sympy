@@ -15,6 +15,8 @@ References
 
 .. [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
   T. Regge, Nuovo Cimento, Volume 10, pp. 544 (1958)
+.. [Regge59] 'Symmetry Properties of Racah Coefficients',
+  T. Regge, Nuovo Cimento, Volume 11, pp. 116 (1959)
 .. [Edmonds74] A. R. Edmonds. Angular momentum in quantum mechanics.
   Investigations in physics, 4.; Investigations in physics, no. 4.
   Princeton, N.J., Princeton University Press, 1957.
