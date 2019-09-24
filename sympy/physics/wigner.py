@@ -793,7 +793,7 @@ def wigner_d_small(J, beta):
 
     From table 4 in [Edmonds74]_
 
-    >>> pprint(wigner_d_small(half, beta).subs({beta:pi/2}))
+    >>> pprint(wigner_d_small(half, beta).subs({beta:pi/2}), use_unicode=True)
     ⎡ √2   √2⎤
     ⎢ ──   ──⎥
     ⎢ 2    2 ⎥
@@ -802,7 +802,8 @@ def wigner_d_small(J, beta):
     ⎢────  ──⎥
     ⎣ 2    2 ⎦
 
-    >>> pprint(wigner_d_small(2*half, beta).subs({beta:pi/2}))
+    >>> pprint(wigner_d_small(2*half, beta).subs({beta:pi/2}),
+    ... use_unicode=True)
     ⎡       √2      ⎤
     ⎢1/2    ──   1/2⎥
     ⎢       2       ⎥
@@ -815,7 +816,8 @@ def wigner_d_small(J, beta):
     ⎢1/2   ────  1/2⎥
     ⎣       2       ⎦
 
-    >>> pprint(wigner_d_small(3*half, beta).subs({beta:pi/2}))
+    >>> pprint(wigner_d_small(3*half, beta).subs({beta:pi/2}),
+    ... use_unicode=True)
     ⎡ √2    √6    √6   √2⎤
     ⎢ ──    ──    ──   ──⎥
     ⎢ 4     4     4    4 ⎥
@@ -832,7 +834,8 @@ def wigner_d_small(J, beta):
     ⎢────   ──   ────  ──⎥
     ⎣ 4     4     4    4 ⎦
 
-    >>> pprint(wigner_d_small(4*half, beta).subs({beta:pi/2}))
+    >>> pprint(wigner_d_small(4*half, beta).subs({beta:pi/2}),
+    ... use_unicode=True)
     ⎡             √6            ⎤
     ⎢1/4   1/2    ──   1/2   1/4⎥
     ⎢             4             ⎥
