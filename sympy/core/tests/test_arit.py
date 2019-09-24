@@ -1660,13 +1660,6 @@ def test_Mod():
     assert factorial(n + 2) % n == 0
     assert (factorial(n + 4) % (n + 5)).func is Mod
 
-    # modular exponentiation
-    assert Mod(Pow(4, 13, evaluate=False), 497) == Mod(Pow(4, 13), 497)
-    assert Mod(Pow(2, 10000000000, evaluate=False), 3) == 1
-    assert Mod(Pow(32131231232, 9**10**6, evaluate=False),10**12) == pow(32131231232,9**10**6,10**12)
-    assert Mod(Pow(33284959323, 123**999, evaluate=False),11**13) == pow(33284959323,123**999,11**13)
-    assert Mod(Pow(78789849597, 333**555, evaluate=False),12**9) == pow(78789849597,333**555,12**9)
-
     # Wilson's theorem
     factorial(18042, evaluate=False) % 18043 == 18042
     p = Symbol('n', prime=True)
@@ -1700,6 +1693,62 @@ def test_Mod():
     # rewrite
     assert Mod(x, y).rewrite(floor) == x - y*floor(x/y)
     assert ((x - Mod(x, y))/y).rewrite(floor) == floor(x/y)
+
+
+def test_Mod_Pow():
+    # modular exponentiation
+    assert isinstance(Mod(Pow(2, 2, evaluate=False), 3), Integer)
+
+    assert Mod(Pow(4, 13, evaluate=False), 497) == Mod(Pow(4, 13), 497)
+    assert Mod(Pow(2, 10000000000, evaluate=False), 3) == 1
+    assert Mod(Pow(32131231232, 9**10**6, evaluate=False),10**12) == \
+        pow(32131231232,9**10**6,10**12)
+    assert Mod(Pow(33284959323, 123**999, evaluate=False),11**13) == \
+        pow(33284959323,123**999,11**13)
+    assert Mod(Pow(78789849597, 333**555, evaluate=False),12**9) == \
+        pow(78789849597,333**555,12**9)
+
+    # modular nested exponentiation
+    expr = Pow(2, 2, evaluate=False)
+    expr = Pow(2, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 16
+    expr = Pow(2, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 6487
+    expr = Pow(2, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 32191
+    expr = Pow(2, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 18016
+    expr = Pow(2, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 5137
+
+    expr = Pow(2, 2, evaluate=False)
+    expr = Pow(expr, 2, evaluate=False)
+    assert Mod(expr, 3**10) == 16
+    expr = Pow(expr, 2, evaluate=False)
+    assert Mod(expr, 3**10) == 256
+    expr = Pow(expr, 2, evaluate=False)
+    assert Mod(expr, 3**10) == 6487
+    expr = Pow(expr, 2, evaluate=False)
+    assert Mod(expr, 3**10) == 38281
+    expr = Pow(expr, 2, evaluate=False)
+    assert Mod(expr, 3**10) == 15928
+
+
+@XFAIL
+def test_failing_Mod_Pow_nested():
+    expr = Pow(2, 2, evaluate=False)
+    expr = Pow(expr, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 256
+    expr = Pow(expr, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 9229
+    expr = Pow(expr, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 25708
+    expr = Pow(expr, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 26608
+    # XXX This fails in nondeterministic way because of the overflow
+    # error in mpmath
+    expr = Pow(expr, expr, evaluate=False)
+    assert Mod(expr, 3**10) == 1966
 
 
 def test_Mod_is_integer():
