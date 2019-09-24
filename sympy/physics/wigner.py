@@ -766,6 +766,7 @@ def wigner_d_small(J, beta):
     Some examples form [Edmonds74]_:
 
     >>> from sympy import Integer, symbols, pi, pprint
+    >>> from sympy.physics.wigner import wigner_d_small
     >>> half = 1/Integer(2)
     >>> beta = symbols("beta", real=True)
     >>> pprint(wigner_d_small(half, beta))
@@ -890,6 +891,7 @@ def wigner_d(J, alpha, beta, gamma):
     The simplest possible example:
     >>> from sympy.physics.wigner import wigner_d
     >>> from sympy import Integer, symbols, pprint
+    >>> from sympy.physics.wigner import wigner_d_small
     >>> half = 1/Integer(2)
     >>> alpha, beta, gamma = symbols("alpha, beta, gamma", real=True)
     >>> pprint(wigner_d(half, alpha, beta, gamma), use_unicode=True)
