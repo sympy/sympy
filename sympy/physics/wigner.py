@@ -16,6 +16,9 @@ References
 .. [Rasch03] J. Rasch and A. C. H. Yu, 'Efficient Storage Scheme for
   Pre-calculated Wigner 3j, 6j and Gaunt Coefficients', SIAM
   J. Sci. Comput. Volume 25, Issue 4, pp. 1416-1428 (2003)
+.. [Edmonds74] A. R. Edmonds. Angular momentum in quantum mechanics.
+  Investigations in physics, 4.; Investigations in physics, no. 4.
+  Princeton, N.J., Princeton University Press, 1957.
 
 Credits and Copyright
 ~~~~~~~~~~~~~~~~~~~~~
@@ -763,8 +766,6 @@ def wigner_d_small(J, beta):
 
     We use the general formula from [Edmonds74]_, equation 4.1.15.
 
-    Some examples form [Edmonds74]_:
-
     >>> from sympy import Integer, symbols, pi, pprint
     >>> from sympy.physics.wigner import wigner_d_small
     >>> half = 1/Integer(2)
@@ -852,9 +853,6 @@ def wigner_d_small(J, beta):
     ⎢1/4   -1/2   ──   -1/2  1/4⎥
     ⎣             4             ⎦
 
-    [1] A. R. Edmonds. Angular momentum in quantum mechanics. Investigations
-        in physics, 4.; Investigations in physics, no. 4. Princeton, N.J.,
-        Princeton University Press, 1957.
     """
     def prod(x):
         p = 1
@@ -889,7 +887,7 @@ def wigner_d_small(J, beta):
 def wigner_d(J, alpha, beta, gamma):
     u"""Return the Wigner D matrix for angular momentum J.
 
-    We use the general formula from [1], equation 4.1.12.
+    We use the general formula from [Edmonds74]_, equation 4.1.12.
 
     The simplest possible example:
     >>> from sympy.physics.wigner import wigner_d
@@ -910,9 +908,6 @@ def wigner_d(J, alpha, beta, gamma):
     ⎢-ℯ     ⋅ℯ   ⋅sin⎜─⎟  ℯ     ⋅ℯ     ⋅cos⎜─⎟⎥
     ⎣                ⎝2⎠                   ⎝2⎠⎦
 
-    [1] A. R. Edmonds. Angular momentum in quantum mechanics. Investigations
-        in physics, 4.; Investigations in physics, no. 4. Princeton, N.J.,
-        Princeton University Press, 1957.
     """
     d = wigner_d_small(J, beta)
     M = [J-i for i in range(2*J+1)]
