@@ -13,12 +13,17 @@ details and examples.
 References
 ~~~~~~~~~~
 
-.. [Rasch03] J. Rasch and A. C. H. Yu, 'Efficient Storage Scheme for
-  Pre-calculated Wigner 3j, 6j and Gaunt Coefficients', SIAM
-  J. Sci. Comput. Volume 25, Issue 4, pp. 1416-1428 (2003)
+.. [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
+  T. Regge, Nuovo Cimento, Volume 10, pp. 544 (1958)
 .. [Edmonds74] A. R. Edmonds. Angular momentum in quantum mechanics.
   Investigations in physics, 4.; Investigations in physics, no. 4.
   Princeton, N.J., Princeton University Press, 1957.
+.. [Rasch03] J. Rasch and A. C. H. Yu, 'Efficient Storage Scheme for
+  Pre-calculated Wigner 3j, 6j and Gaunt Coefficients', SIAM
+  J. Sci. Comput. Volume 25, Issue 4, pp. 1416-1428 (2003)
+.. [Liberatodebrito82] 'FORTRAN program for the integral of three
+  spherical harmonics', A. Liberato de Brito,
+  Comput. Phys. Commun., Volume 25, pp. 81-85 (1982)
 
 Credits and Copyright
 ~~~~~~~~~~~~~~~~~~~~~
@@ -151,14 +156,6 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     alternating sums over large factorials and is therefore unsuitable
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
-
-    REFERENCES:
-
-    .. [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
-      T. Regge, Nuovo Cimento, Volume 10, pp. 544 (1958)
-
-    .. [Edmonds74] 'Angular Momentum in Quantum Mechanics',
-      A. R. Edmonds, Princeton University Press (1974)
 
     AUTHORS:
 
@@ -485,10 +482,6 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
 
-    REFERENCES:
-
-    .. [Regge59] 'Symmetry Properties of Racah Coefficients',
-      T. Regge, Nuovo Cimento, Volume 11, pp. 116 (1959)
     """
     res = (-1) ** int(j_1 + j_2 + j_4 + j_5) * \
         racah(j_1, j_2, j_5, j_4, j_3, j_6, prec)
@@ -643,12 +636,6 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     the formula contains alternating sums over large factorials and is
     therefore unsuitable for finite precision arithmetic and only
     useful for a computer algebra system [Rasch03]_.
-
-    REFERENCES:
-
-    .. [Liberatodebrito82] 'FORTRAN program for the integral of three
-      spherical harmonics', A. Liberato de Brito,
-      Comput. Phys. Commun., Volume 25, pp. 81-85 (1982)
 
     AUTHORS:
 
