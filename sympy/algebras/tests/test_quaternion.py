@@ -10,9 +10,10 @@ def test_quaternion_construction():
     q = Quaternion(x, y, z, w)
     assert q + q == Quaternion(2*x, 2*y, 2*z, 2*w)
 
-    q2 = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
-    assert q2 == Quaternion(Rational(1, 2), Rational(1, 2),
-                            Rational(1, 2), Rational(1, 2))
+    q2 = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3),
+                                    pi*Rational(2, 3))
+    assert q2 == Quaternion(S.Half, S.Half,
+                            S.Half, S.Half)
 
     M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))
@@ -68,8 +69,8 @@ def test_quaternion_functions():
     raises(ValueError, lambda: q0.inverse())
     assert q.pow(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
     assert q**(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
-    assert q1.pow(-2) == Quaternion(-S(7)/225, -S(1)/225, -S(1)/150, -S(2)/225)
-    assert q1**(-2) == Quaternion(-S(7)/225, -S(1)/225, -S(1)/150, -S(2)/225)
+    assert q1.pow(-2) == Quaternion(Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
+    assert q1**(-2) == Quaternion(Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
     assert q1.pow(-0.5) == NotImplemented
     raises(TypeError, lambda: q1**(-0.5))
 
@@ -95,7 +96,7 @@ def test_quaternion_functions():
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
 
-    assert Quaternion.rotate_point((1, 1, 1), q1) == (S(1) / 5, 1, S(7) / 5)
+    assert Quaternion.rotate_point((1, 1, 1), q1) == (S.One / 5, 1, S(7) / 5)
     n = Symbol('n')
     raises(TypeError, lambda: q1**n)
     n = Symbol('n', integer=True)
@@ -110,14 +111,14 @@ def test_quaternion_conversions():
                                    4 * sqrt(29)/29),
                                    2 * acos(sqrt(30)/30))
 
-    assert q1.to_rotation_matrix() == Matrix([[-S(2)/3, S(2)/15, S(11)/15],
-                                     [S(2)/3, -S(1)/3, S(2)/3],
-                                     [S(1)/3, S(14)/15, S(2)/15]])
+    assert q1.to_rotation_matrix() == Matrix([[Rational(-2, 3), Rational(2, 15), Rational(11, 15)],
+                                              [Rational(2, 3), Rational(-1, 3), Rational(2, 3)],
+                                              [Rational(1, 3), Rational(14, 15), Rational(2, 15)]])
 
-    assert q1.to_rotation_matrix((1, 1, 1)) == Matrix([[-S(2)/3, S(2)/15, S(11)/15, S(4)/5],
-                                                  [S(2)/3, -S(1)/3, S(2)/3, S(0)],
-                                                       [S(1)/3, S(14)/15, S(2)/15, -S(2)/5],
-                                                  [S(0), S(0), S(0), S(1)]])
+    assert q1.to_rotation_matrix((1, 1, 1)) == Matrix([[Rational(-2, 3), Rational(2, 15), Rational(11, 15), Rational(4, 5)],
+                                                       [Rational(2, 3), Rational(-1, 3), Rational(2, 3), S.Zero],
+                                                       [Rational(1, 3), Rational(14, 15), Rational(2, 15), Rational(-2, 5)],
+                                                       [S.Zero, S.Zero, S.Zero, S.One]])
 
     theta = symbols("theta", real=True)
     q2 = Quaternion(cos(theta/2), 0, 0, sin(theta/2))

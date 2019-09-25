@@ -1,4 +1,4 @@
-from sympy.core import S
+from sympy.core import Rational
 from sympy.simplify import simplify, trigsimp
 from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
      sin, cos, Function, Integral, Derivative, diff
@@ -219,9 +219,9 @@ def test_projection():
     v2 = 3*i + 4*j
     v3 = 0*i + 0*j
     assert v1.projection(v1) == i + j + k
-    assert v1.projection(v2) == S(7)/3*C.i + S(7)/3*C.j + S(7)/3*C.k
+    assert v1.projection(v2) == Rational(7, 3)*C.i + Rational(7, 3)*C.j + Rational(7, 3)*C.k
     assert v1.projection(v1, scalar=True) == 1
-    assert v1.projection(v2, scalar=True) == S(7)/3
+    assert v1.projection(v2, scalar=True) == Rational(7, 3)
     assert v3.projection(v1) == Vector.zero
 
 

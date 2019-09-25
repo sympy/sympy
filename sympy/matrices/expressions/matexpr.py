@@ -129,9 +129,9 @@ class MatrixExpr(Expr):
             raise ShapeError("Power of non-square matrix %s" % self)
         elif self.is_Identity:
             return self
-        elif other is S.Zero:
+        elif other == S.Zero:
             return Identity(self.rows)
-        elif other is S.One:
+        elif other == S.One:
             return self
         return MatPow(self, other).doit(deep=False)
 
@@ -173,7 +173,7 @@ class MatrixExpr(Expr):
 
     def as_real_imag(self):
         from sympy import I
-        real = (S(1)/2) * (self + self._eval_conjugate())
+        real = S.Half * (self + self._eval_conjugate())
         im = (self - self._eval_conjugate())/(2*I)
         return (real, im)
 

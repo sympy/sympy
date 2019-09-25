@@ -257,7 +257,7 @@ class Order(Expr):
 
             expr = expr.subs(rs)
 
-        if expr is S.Zero:
+        if expr.is_zero:
             return expr
 
         if expr.is_Order:
@@ -339,7 +339,7 @@ class Order(Expr):
         (e.g. when self and expr have different symbols).
         """
         from sympy import powsimp
-        if expr is S.Zero:
+        if expr.is_zero:
             return True
         if expr is S.NaN:
             return False
@@ -353,7 +353,7 @@ class Order(Expr):
                 return all([x in self.args[1:] for x in expr.args[1:]])
             if expr.expr.is_Add:
                 return all([self.contains(x) for x in expr.expr.args])
-            if self.expr.is_Add and point == S.Zero:
+            if self.expr.is_Add and point.is_zero:
                 return any([self.func(x, *self.args[1:]).contains(expr)
                             for x in self.expr.args])
             if self.variables and expr.variables:
@@ -371,7 +371,7 @@ class Order(Expr):
                     other = expr.expr.as_independent(symbol, as_Add=False)[1]
                     if (other.is_Pow and other.base == symbol and
                         self.expr.base == symbol):
-                            if point == S.Zero:
+                            if point.is_zero:
                                 rv = (self.expr.exp - other.exp).is_nonpositive
                             if point.is_infinite:
                                 rv = (self.expr.exp - other.exp).is_nonnegative
@@ -400,7 +400,7 @@ class Order(Expr):
             other = expr.as_independent(symbol, as_Add=False)[1]
             if (other.is_Pow and other.base == symbol and
                 self.expr.base == symbol):
-                    if point == S.Zero:
+                    if point.is_zero:
                         rv = (self.expr.exp - other.exp).is_nonpositive
                     if point.is_infinite:
                         rv = (self.expr.exp - other.exp).is_nonnegative

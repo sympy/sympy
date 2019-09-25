@@ -1,6 +1,6 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols, I, re, simplify,
-                   expint)
+                   expint, Rational)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
@@ -24,7 +24,7 @@ def test_function_range():
     assert function_range(tan(x), x, Interval(pi/2, pi)
         ) == Interval(-oo, 0)
     assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)
-        ) == Union(Interval(-oo, S(2)/7), Interval(S(8)/3, oo))
+        ) == Union(Interval(-oo, Rational(2, 7)), Interval(Rational(8, 3), oo))
     assert function_range(1/(x**2), x, Interval(-1, 1)
         ) == Interval(1, oo)
     assert function_range(exp(x), x, Interval(-1, 1)
@@ -56,12 +56,12 @@ def test_continuous_domain():
     x = Symbol('x')
     assert continuous_domain(sin(x), x, Interval(0, 2*pi)) == Interval(0, 2*pi)
     assert continuous_domain(tan(x), x, Interval(0, 2*pi)) == \
-        Union(Interval(0, pi/2, False, True), Interval(pi/2, 3*pi/2, True, True),
-              Interval(3*pi/2, 2*pi, True, False))
+        Union(Interval(0, pi/2, False, True), Interval(pi/2, pi*Rational(3, 2), True, True),
+              Interval(pi*Rational(3, 2), 2*pi, True, False))
     assert continuous_domain((x - 1)/((x - 1)**2), x, S.Reals) == \
         Union(Interval(-oo, 1, True, True), Interval(1, oo, True, True))
     assert continuous_domain(log(x) + log(4*x - 1), x, S.Reals) == \
-        Interval(S(1)/4, oo, True, True)
+        Interval(Rational(1, 4), oo, True, True)
     assert continuous_domain(1/sqrt(x - 3), x, S.Reals) == Interval(3, oo, True, True)
     assert continuous_domain(1/x - 2, x, S.Reals) == \
         Union(Interval.open(-oo, 0), Interval.open(0, oo))
@@ -71,12 +71,12 @@ def test_continuous_domain():
 
 def test_not_empty_in():
     assert not_empty_in(FiniteSet(x, 2*x).intersect(Interval(1, 2, True, False)), x) == \
-        Interval(S(1)/2, 2, True, False)
+        Interval(S.Half, 2, True, False)
     assert not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x) == \
         Union(Interval(-sqrt(2), -1), Interval(1, 2))
     assert not_empty_in(FiniteSet(x**2 + x, x).intersect(Interval(2, 4)), x) == \
-        Union(Interval(-sqrt(17)/2 - S(1)/2, -2),
-              Interval(1, -S(1)/2 + sqrt(17)/2), Interval(2, 4))
+        Union(Interval(-sqrt(17)/2 - S.Half, -2),
+              Interval(1, Rational(-1, 2) + sqrt(17)/2), Interval(2, 4))
     assert not_empty_in(FiniteSet(x/(x - 1)).intersect(S.Reals), x) == \
         Complement(S.Reals, FiniteSet(1))
     assert not_empty_in(FiniteSet(a/(a - 1)).intersect(S.Reals), a) == \
@@ -127,12 +127,12 @@ def test_periodicity():
     assert periodicity(2*tan(x)**2, x) == pi
     assert periodicity(sin(x%4), x) == 4
     assert periodicity(sin(x)%4, x) == 2*pi
-    assert periodicity(tan((3*x-2)%4), x) == S(4)/3
+    assert periodicity(tan((3*x-2)%4), x) == Rational(4, 3)
     assert periodicity((sqrt(2)*(x+1)+x) % 3, x) == 3 / (sqrt(2)+1)
-    assert periodicity((x**2+1) % x, x) == None
+    assert periodicity((x**2+1) % x, x) is None
     assert periodicity(sin(re(x)), x) == 2*pi
-    assert periodicity(sin(x)**2 + cos(x)**2, x) == S.Zero
-    assert periodicity(tan(x), y) == S.Zero
+    assert periodicity(sin(x)**2 + cos(x)**2, x) is S.Zero
+    assert periodicity(tan(x), y) is S.Zero
     assert periodicity(sin(x) + I*cos(x), x) == 2*pi
     assert periodicity(x - sin(2*y), y) == pi
 
@@ -182,11 +182,11 @@ def test_periodicity_check():
 def test_lcim():
     from sympy import pi
 
-    assert lcim([S(1)/2, S(2), S(3)]) == 6
+    assert lcim([S.Half, S(2), S(3)]) == 6
     assert lcim([pi/2, pi/4, pi]) == pi
     assert lcim([2*pi, pi/2]) == 2*pi
-    assert lcim([S(1), 2*pi]) is None
-    assert lcim([S(2) + 2*E, E/3 + S(1)/3, S(1) + E]) == S(2) + 2*E
+    assert lcim([S.One, 2*pi]) is None
+    assert lcim([S(2) + 2*E, E/3 + Rational(1, 3), S.One + E]) == S(2) + 2*E
 
 
 def test_is_convex():
@@ -207,11 +207,11 @@ def test_stationary_points():
     assert stationary_points(tan(x), x,
         ) == EmptySet()
     assert stationary_points(sin(x)*cos(x), x, Interval(0, pi)
-        ) == {pi/4, 3*pi/4}
+        ) == {pi/4, pi*Rational(3, 4)}
     assert stationary_points(sec(x), x, Interval(0, pi)
         ) == {0, pi}
     assert stationary_points((x+3)*(x-2), x
-        ) == FiniteSet(-S.Half)
+        ) == FiniteSet(Rational(-1, 2))
     assert stationary_points((x + 3)/(x - 2), x, Interval(-5, 5)
         ) == EmptySet()
     assert stationary_points((x**2+3)/(x-2), x
@@ -219,7 +219,7 @@ def test_stationary_points():
     assert stationary_points((x**2+3)/(x-2), x, Interval(0, 5)
         ) == {2 + sqrt(7)}
     assert stationary_points(x**4 + x**3 - 5*x**2, x, S.Reals
-        ) == FiniteSet(-2, 0, S(5)/4)
+        ) == FiniteSet(-2, 0, Rational(5, 4))
     assert stationary_points(exp(x), x
         ) == EmptySet()
     assert stationary_points(log(x) - x, x, S.Reals
@@ -233,22 +233,22 @@ def test_stationary_points():
 
 def test_maximum():
     x, y = symbols('x y')
-    assert maximum(sin(x), x) == S.One
+    assert maximum(sin(x), x) is S.One
     assert maximum(sin(x), x, Interval(0, 1)) == sin(1)
-    assert maximum(tan(x), x) == oo
-    assert maximum(tan(x), x, Interval(-pi/4, pi/4)) == S.One
+    assert maximum(tan(x), x) is oo
+    assert maximum(tan(x), x, Interval(-pi/4, pi/4)) is S.One
     assert maximum(sin(x)*cos(x), x, S.Reals) == S.Half
-    assert simplify(maximum(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
+    assert simplify(maximum(sin(x)*cos(x), x, Interval(pi*Rational(3, 8), pi*Rational(5, 8)))
         ) == sqrt(2)/4
-    assert maximum((x+3)*(x-2), x) == oo
+    assert maximum((x+3)*(x-2), x) is oo
     assert maximum((x+3)*(x-2), x, Interval(-5, 0)) == S(14)
-    assert maximum((x+3)/(x-2), x, Interval(-5, 0)) == S(2)/7
+    assert maximum((x+3)/(x-2), x, Interval(-5, 0)) == Rational(2, 7)
     assert simplify(maximum(-x**4-x**3+x**2+10, x)
-        ) == 41*sqrt(41)/512 + S(5419)/512
+        ) == 41*sqrt(41)/512 + Rational(5419, 512)
     assert maximum(exp(x), x, Interval(-oo, 2)) == exp(2)
-    assert maximum(log(x) - x, x, S.Reals) == -S.One
+    assert maximum(log(x) - x, x, S.Reals) is S.NegativeOne
     assert maximum(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
-        ) == S.One
+        ) is S.One
     assert maximum(cos(x)-sin(x), x, S.Reals) == sqrt(2)
     assert maximum(y, x, S.Reals) == y
 
@@ -257,26 +257,26 @@ def test_maximum():
     raises(ValueError, lambda : maximum(1/(x**2 + y**2 + 1), x, S.EmptySet))
     raises(ValueError, lambda : maximum(sin(x), sin(x)))
     raises(ValueError, lambda : maximum(sin(x), x*y, S.EmptySet))
-    raises(ValueError, lambda : maximum(sin(x), S(1)))
+    raises(ValueError, lambda : maximum(sin(x), S.One))
 
 
 def test_minimum():
     x, y = symbols('x y')
 
-    assert minimum(sin(x), x) == -S.One
+    assert minimum(sin(x), x) is S.NegativeOne
     assert minimum(sin(x), x, Interval(1, 4)) == sin(4)
-    assert minimum(tan(x), x) == -oo
-    assert minimum(tan(x), x, Interval(-pi/4, pi/4)) == -S.One
-    assert minimum(sin(x)*cos(x), x, S.Reals) == -S.Half
-    assert simplify(minimum(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
+    assert minimum(tan(x), x) is -oo
+    assert minimum(tan(x), x, Interval(-pi/4, pi/4)) is S.NegativeOne
+    assert minimum(sin(x)*cos(x), x, S.Reals) == Rational(-1, 2)
+    assert simplify(minimum(sin(x)*cos(x), x, Interval(pi*Rational(3, 8), pi*Rational(5, 8)))
         ) == -sqrt(2)/4
-    assert minimum((x+3)*(x-2), x) == -S(25)/4
-    assert minimum((x+3)/(x-2), x, Interval(-5, 0)) == -S(3)/2
+    assert minimum((x+3)*(x-2), x) == Rational(-25, 4)
+    assert minimum((x+3)/(x-2), x, Interval(-5, 0)) == Rational(-3, 2)
     assert minimum(x**4-x**3+x**2+10, x) == S(10)
     assert minimum(exp(x), x, Interval(-2, oo)) == exp(-2)
-    assert minimum(log(x) - x, x, S.Reals) == -oo
+    assert minimum(log(x) - x, x, S.Reals) is -oo
     assert minimum(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
-        ) == -S.One
+        ) is S.NegativeOne
     assert minimum(cos(x)-sin(x), x, S.Reals) == -sqrt(2)
     assert minimum(y, x, S.Reals) == y
 
@@ -285,16 +285,16 @@ def test_minimum():
     raises(ValueError, lambda : minimum(1/(x**2 + y**2 + 1), x, S.EmptySet))
     raises(ValueError, lambda : minimum(sin(x), sin(x)))
     raises(ValueError, lambda : minimum(sin(x), x*y, S.EmptySet))
-    raises(ValueError, lambda : minimum(sin(x), S(1)))
+    raises(ValueError, lambda : minimum(sin(x), S.One))
 
 
 def test_AccumBounds():
     assert AccumBounds(1, 2).args == (1, 2)
-    assert AccumBounds(1, 2).delta == S(1)
-    assert AccumBounds(1, 2).mid == S(3)/2
+    assert AccumBounds(1, 2).delta is S.One
+    assert AccumBounds(1, 2).mid == Rational(3, 2)
     assert AccumBounds(1, 3).is_real == True
 
-    assert AccumBounds(1, 1) == S(1)
+    assert AccumBounds(1, 1) is S.One
 
     assert AccumBounds(1, 2) + 1 == AccumBounds(2, 3)
     assert 1 + AccumBounds(1, 2) == AccumBounds(2, 3)
@@ -311,18 +311,18 @@ def test_AccumBounds():
     assert AccumBounds(1, 2) - x == Add(AccumBounds(1, 2), -x)
 
     assert AccumBounds(-oo, 1) + oo == AccumBounds(-oo, oo)
-    assert AccumBounds(1, oo) + oo == oo
+    assert AccumBounds(1, oo) + oo is oo
     assert AccumBounds(1, oo) - oo == AccumBounds(-oo, oo)
-    assert (-oo - AccumBounds(-1, oo)) == -oo
-    assert AccumBounds(-oo, 1) - oo == -oo
+    assert (-oo - AccumBounds(-1, oo)) is -oo
+    assert AccumBounds(-oo, 1) - oo is -oo
 
     assert AccumBounds(1, oo) - oo == AccumBounds(-oo, oo)
     assert AccumBounds(-oo, 1) - (-oo) == AccumBounds(-oo, oo)
     assert (oo - AccumBounds(1, oo)) == AccumBounds(-oo, oo)
-    assert (-oo - AccumBounds(1, oo)) == -oo
+    assert (-oo - AccumBounds(1, oo)) is -oo
 
-    assert AccumBounds(1, 2)/2 == AccumBounds(S(1)/2, 1)
-    assert 2/AccumBounds(2, 3) == AccumBounds(S(2)/3, 1)
+    assert AccumBounds(1, 2)/2 == AccumBounds(S.Half, 1)
+    assert 2/AccumBounds(2, 3) == AccumBounds(Rational(2, 3), 1)
     assert 1/AccumBounds(-1, 1) == AccumBounds(-oo, oo)
 
     assert abs(AccumBounds(1, 2)) == AccumBounds(1, 2)
@@ -356,26 +356,26 @@ def test_AccumBounds_mul():
 
 
 def test_AccumBounds_div():
-    assert AccumBounds(-1, 3)/AccumBounds(3, 4) == AccumBounds(-S(1)/3, 1)
+    assert AccumBounds(-1, 3)/AccumBounds(3, 4) == AccumBounds(Rational(-1, 3), 1)
     assert AccumBounds(-2, 4)/AccumBounds(-3, 4) == AccumBounds(-oo, oo)
-    assert AccumBounds(-3, -2)/AccumBounds(-4, 0) == AccumBounds(S(1)/2, oo)
+    assert AccumBounds(-3, -2)/AccumBounds(-4, 0) == AccumBounds(S.Half, oo)
 
     # these two tests can have a better answer
     # after Union of AccumBounds is improved
     assert AccumBounds(-3, -2)/AccumBounds(-2, 1) == AccumBounds(-oo, oo)
     assert AccumBounds(2, 3)/AccumBounds(-2, 2) == AccumBounds(-oo, oo)
 
-    assert AccumBounds(-3, -2)/AccumBounds(0, 4) == AccumBounds(-oo, -S(1)/2)
-    assert AccumBounds(2, 4)/AccumBounds(-3, 0) == AccumBounds(-oo, -S(2)/3)
-    assert AccumBounds(2, 4)/AccumBounds(0, 3) == AccumBounds(S(2)/3, oo)
+    assert AccumBounds(-3, -2)/AccumBounds(0, 4) == AccumBounds(-oo, Rational(-1, 2))
+    assert AccumBounds(2, 4)/AccumBounds(-3, 0) == AccumBounds(-oo, Rational(-2, 3))
+    assert AccumBounds(2, 4)/AccumBounds(0, 3) == AccumBounds(Rational(2, 3), oo)
 
     assert AccumBounds(0, 1)/AccumBounds(0, 1) == AccumBounds(0, oo)
     assert AccumBounds(-1, 0)/AccumBounds(0, 1) == AccumBounds(-oo, 0)
     assert AccumBounds(-1, 2)/AccumBounds(-2, 2) == AccumBounds(-oo, oo)
 
     assert 1/AccumBounds(-1, 2) == AccumBounds(-oo, oo)
-    assert 1/AccumBounds(0, 2) == AccumBounds(S(1)/2, oo)
-    assert (-1)/AccumBounds(0, 2) == AccumBounds(-oo, -S(1)/2)
+    assert 1/AccumBounds(0, 2) == AccumBounds(S.Half, oo)
+    assert (-1)/AccumBounds(0, 2) == AccumBounds(-oo, Rational(-1, 2))
     assert 1/AccumBounds(-oo, 0) == AccumBounds(-oo, 0)
     assert 1/AccumBounds(-1, 0) == AccumBounds(-oo, -1)
     assert (-2)/AccumBounds(-oo, 0) == AccumBounds(0, oo)
@@ -410,51 +410,51 @@ def test_AccumBounds_pow():
     assert AccumBounds(-1, 2)**3 == AccumBounds(-1, 8)
     assert AccumBounds(-1, 1)**0 == 1
 
-    assert AccumBounds(1, 2)**(S(5)/2) == AccumBounds(1, 4*sqrt(2))
-    assert AccumBounds(-1, 2)**(S(1)/3) == AccumBounds(-1, 2**(S(1)/3))
-    assert AccumBounds(0, 2)**(S(1)/2) == AccumBounds(0, sqrt(2))
+    assert AccumBounds(1, 2)**Rational(5, 2) == AccumBounds(1, 4*sqrt(2))
+    assert AccumBounds(-1, 2)**Rational(1, 3) == AccumBounds(-1, 2**Rational(1, 3))
+    assert AccumBounds(0, 2)**S.Half == AccumBounds(0, sqrt(2))
 
-    assert AccumBounds(-4, 2)**(S(2)/3) == AccumBounds(0, 2*2**(S(1)/3))
+    assert AccumBounds(-4, 2)**Rational(2, 3) == AccumBounds(0, 2*2**Rational(1, 3))
 
-    assert AccumBounds(-1, 5)**(S(1)/2) == AccumBounds(0, sqrt(5))
-    assert AccumBounds(-oo, 2)**(S(1)/2) == AccumBounds(0, sqrt(2))
-    assert AccumBounds(-2, 3)**(S(-1)/4) == AccumBounds(0, oo)
+    assert AccumBounds(-1, 5)**S.Half == AccumBounds(0, sqrt(5))
+    assert AccumBounds(-oo, 2)**S.Half == AccumBounds(0, sqrt(2))
+    assert AccumBounds(-2, 3)**Rational(-1, 4) == AccumBounds(0, oo)
 
-    assert AccumBounds(1, 5)**(-2) == AccumBounds(S(1)/25, 1)
+    assert AccumBounds(1, 5)**(-2) == AccumBounds(Rational(1, 25), 1)
     assert AccumBounds(-1, 3)**(-2) == AccumBounds(0, oo)
-    assert AccumBounds(0, 2)**(-2) == AccumBounds(S(1)/4, oo)
+    assert AccumBounds(0, 2)**(-2) == AccumBounds(Rational(1, 4), oo)
     assert AccumBounds(-1, 2)**(-3) == AccumBounds(-oo, oo)
-    assert AccumBounds(-3, -2)**(-3) == AccumBounds(S(-1)/8, -S(1)/27)
-    assert AccumBounds(-3, -2)**(-2) == AccumBounds(S(1)/9, S(1)/4)
-    assert AccumBounds(0, oo)**(S(1)/2) == AccumBounds(0, oo)
-    assert AccumBounds(-oo, -1)**(S(1)/3) == AccumBounds(-oo, -1)
-    assert AccumBounds(-2, 3)**(-S(1)/3) == AccumBounds(-oo, oo)
+    assert AccumBounds(-3, -2)**(-3) == AccumBounds(Rational(-1, 8), Rational(-1, 27))
+    assert AccumBounds(-3, -2)**(-2) == AccumBounds(Rational(1, 9), Rational(1, 4))
+    assert AccumBounds(0, oo)**S.Half == AccumBounds(0, oo)
+    assert AccumBounds(-oo, -1)**Rational(1, 3) == AccumBounds(-oo, -1)
+    assert AccumBounds(-2, 3)**(Rational(-1, 3)) == AccumBounds(-oo, oo)
     assert AccumBounds(-oo, 0)**(-2) == AccumBounds(0, oo)
-    assert AccumBounds(-2, 0)**(-2) == AccumBounds(S(1)/4, oo)
+    assert AccumBounds(-2, 0)**(-2) == AccumBounds(Rational(1, 4), oo)
 
-    assert AccumBounds(S(1)/3, S(1)/2)**oo == S(0)
-    assert AccumBounds(0, S(1)/2)**oo == S(0)
-    assert AccumBounds(S(1)/2, 1)**oo == AccumBounds(0, oo)
+    assert AccumBounds(Rational(1, 3), S.Half)**oo is S.Zero
+    assert AccumBounds(0, S.Half)**oo is S.Zero
+    assert AccumBounds(S.Half, 1)**oo == AccumBounds(0, oo)
     assert AccumBounds(0, 1)**oo == AccumBounds(0, oo)
-    assert AccumBounds(2, 3)**oo == oo
+    assert AccumBounds(2, 3)**oo is oo
     assert AccumBounds(1, 2)**oo == AccumBounds(0, oo)
-    assert AccumBounds(S(1)/2, 3)**oo == AccumBounds(0, oo)
-    assert AccumBounds(-S(1)/3, -S(1)/4)**oo == S(0)
-    assert AccumBounds(-1, -S(1)/2)**oo == AccumBounds(-oo, oo)
+    assert AccumBounds(S.Half, 3)**oo == AccumBounds(0, oo)
+    assert AccumBounds(Rational(-1, 3), Rational(-1, 4))**oo is S.Zero
+    assert AccumBounds(-1, Rational(-1, 2))**oo == AccumBounds(-oo, oo)
     assert AccumBounds(-3, -2)**oo == FiniteSet(-oo, oo)
     assert AccumBounds(-2, -1)**oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-2, -S(1)/2)**oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-S(1)/2, S(1)/2)**oo == S(0)
-    assert AccumBounds(-S(1)/2, 1)**oo == AccumBounds(0, oo)
-    assert AccumBounds(-S(2)/3, 2)**oo == AccumBounds(0, oo)
+    assert AccumBounds(-2, Rational(-1, 2))**oo == AccumBounds(-oo, oo)
+    assert AccumBounds(Rational(-1, 2), S.Half)**oo is S.Zero
+    assert AccumBounds(Rational(-1, 2), 1)**oo == AccumBounds(0, oo)
+    assert AccumBounds(Rational(-2, 3), 2)**oo == AccumBounds(0, oo)
     assert AccumBounds(-1, 1)**oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-1, S(1)/2)**oo == AccumBounds(-oo, oo)
+    assert AccumBounds(-1, S.Half)**oo == AccumBounds(-oo, oo)
     assert AccumBounds(-1, 2)**oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-2, S(1)/2)**oo == AccumBounds(-oo, oo)
+    assert AccumBounds(-2, S.Half)**oo == AccumBounds(-oo, oo)
 
     assert AccumBounds(1, 2)**x == Pow(AccumBounds(1, 2), x, evaluate=False)
 
-    assert AccumBounds(2, 3)**(-oo) == S(0)
+    assert AccumBounds(2, 3)**(-oo) is S.Zero
     assert AccumBounds(0, 2)**(-oo) == AccumBounds(0, oo)
     assert AccumBounds(-1, 2)**(-oo) == AccumBounds(-oo, oo)
 

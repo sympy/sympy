@@ -593,7 +593,7 @@ class MinMaxBase(Expr, LatticeOp):
         for a in self.args:
             i += 1
             da = a.diff(s)
-            if da is S.Zero:
+            if da.is_zero:
                 continue
             try:
                 df = self.fdiff(i)

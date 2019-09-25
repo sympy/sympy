@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import S, pi, I
+from sympy.core import S, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.hyperbolic import atanh
@@ -55,14 +55,14 @@ class elliptic_k(Function):
 
     @classmethod
     def eval(cls, m):
-        if m is S.Zero:
+        if m.is_zero:
             return pi/2
         elif m is S.Half:
-            return 8*pi**(S(3)/2)/gamma(-S(1)/4)**2
+            return 8*pi**Rational(3, 2)/gamma(Rational(-1, 4))**2
         elif m is S.One:
             return S.ComplexInfinity
         elif m is S.NegativeOne:
-            return gamma(S(1)/4)**2/(4*sqrt(2*pi))
+            return gamma(Rational(1, 4))**2/(4*sqrt(2*pi))
         elif m in (S.Infinity, S.NegativeInfinity, I*S.Infinity,
                    I*S.NegativeInfinity, S.ComplexInfinity):
             return S.Zero
@@ -264,12 +264,12 @@ class elliptic_e(Function):
     def _eval_rewrite_as_hyper(self, *args, **kwargs):
         if len(args) == 1:
             m = args[0]
-            return (pi/2)*hyper((-S.Half, S.Half), (S.One,), m)
+            return (pi/2)*hyper((Rational(-1, 2), S.Half), (S.One,), m)
 
     def _eval_rewrite_as_meijerg(self, *args, **kwargs):
         if len(args) == 1:
             m = args[0]
-            return -meijerg(((S.Half, S(3)/2), []), \
+            return -meijerg(((S.Half, Rational(3, 2)), []), \
                             ((S.Zero,), (S.Zero,)), -m)/4
 
 
@@ -320,7 +320,7 @@ class elliptic_pi(Function):
         if z is not None:
             n, z, m = n, m, z
             k = 2*z/pi
-            if n == S.Zero:
+            if n.is_zero:
                 return elliptic_f(z, m)
             elif n == S.One:
                 return (elliptic_f(z, m) +
@@ -328,7 +328,7 @@ class elliptic_pi(Function):
                          elliptic_e(z, m))/(1 - m))
             elif k.is_integer:
                 return k*elliptic_pi(n, m)
-            elif m == S.Zero:
+            elif m.is_zero:
                 return atanh(sqrt(n - 1)*tan(z))/sqrt(n - 1)
             elif n == m:
                 return (elliptic_f(z, n) - elliptic_pi(1, z, n) +
@@ -340,14 +340,14 @@ class elliptic_pi(Function):
             elif z.could_extract_minus_sign():
                 return -elliptic_pi(n, -z, m)
         else:
-            if n == S.Zero:
+            if n.is_zero:
                 return elliptic_k(m)
             elif n == S.One:
                 return S.ComplexInfinity
-            elif m == S.Zero:
+            elif m.is_zero:
                 return pi/(2*sqrt(1 - n))
             elif m == S.One:
-                return -S.Infinity/sign(n - 1)
+                return S.NegativeInfinity/sign(n - 1)
             elif n == m:
                 return elliptic_e(n)/(1 - n)
             elif n in (S.Infinity, S.NegativeInfinity):

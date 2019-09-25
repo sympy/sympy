@@ -4373,16 +4373,16 @@ class MatrixBase(MatrixDeprecated,
             elif ord == 1:  # sum(abs(x))
                 return Add(*(abs(i) for i in vals))
 
-            elif ord == S.Infinity:  # max(abs(x))
+            elif ord is S.Infinity:  # max(abs(x))
                 return Max(*[abs(i) for i in vals])
 
-            elif ord == S.NegativeInfinity:  # min(abs(x))
+            elif ord is S.NegativeInfinity:  # min(abs(x))
                 return Min(*[abs(i) for i in vals])
 
             # Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
             # Note that while useful this is not mathematically a norm
             try:
-                return Pow(Add(*(abs(i) ** ord for i in vals)), S(1) / ord)
+                return Pow(Add(*(abs(i) ** ord for i in vals)), S.One / ord)
             except (NotImplementedError, TypeError):
                 raise ValueError("Expected order to be Number, Symbol, oo")
 
@@ -4400,7 +4400,7 @@ class MatrixBase(MatrixDeprecated,
                 # Minimum singular value
                 return Min(*self.singular_values())
 
-            elif ord == S.Infinity:   # Infinity Norm - Maximum row sum
+            elif ord is S.Infinity:   # Infinity Norm - Maximum row sum
                 m = self.applyfunc(abs)
                 return Max(*[sum(m.row(i)) for i in range(m.rows)])
 

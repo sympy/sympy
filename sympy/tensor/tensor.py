@@ -1758,7 +1758,7 @@ class TensorHead(Basic):
             marray = tensorproduct(marray, metric, marray)
             marray = tensorcontraction(marray, (0, marraydim), (marraydim+1, marraydim+2))
 
-        return marray ** (Rational(1, 2) * other)
+        return marray ** (other * S.Half)
 
     @property
     def data(self):
@@ -1912,7 +1912,7 @@ class TensExpr(Expr):
                 marray),
                 (0, mdim), (mdim+1, mdim+2)
             )
-        return marray ** (Rational(1, 2) * other)
+        return marray ** (other * S.Half)
 
     def __rpow__(self, other):
         raise NotImplementedError
@@ -3853,9 +3853,9 @@ def riemann_cyclic_replace(t_r):
     """
     free = sorted(t_r.free, key=lambda x: x[1])
     m, n, p, q = [x[0] for x in free]
-    t0 = S(2)/3*t_r
-    t1 = - S(1)/3*t_r.substitute_indices((m,m),(n,q),(p,n),(q,p))
-    t2 = S(1)/3*t_r.substitute_indices((m,m),(n,p),(p,n),(q,q))
+    t0 = t_r*Rational(2, 3)
+    t1 = -t_r.substitute_indices((m,m),(n,q),(p,n),(q,p))*Rational(1, 3)
+    t2 = t_r.substitute_indices((m,m),(n,p),(p,n),(q,q))*Rational(1, 3)
     t3 = t0 + t1 + t2
     return t3
 

@@ -2573,7 +2573,7 @@ def simplify_patterns_and():
                      (And(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
                      (And(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
                      # Sign
-                     (And(Eq(a, b), Eq(a, -b)), And(Eq(a, S(0)), Eq(b, S(0)))),
+                     (And(Eq(a, b), Eq(a, -b)), And(Eq(a, S.Zero), Eq(b, S.Zero))),
                      )
     return _matchers_and
 

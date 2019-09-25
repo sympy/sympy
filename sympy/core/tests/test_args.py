@@ -9,7 +9,7 @@ import re
 import io
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
-                   Eq, log, Function)
+                   Eq, log, Function, Rational)
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
@@ -1562,7 +1562,7 @@ def test_sympy__stats__stochastic_process__StochasticPSpace():
     from sympy.stats.stochastic_process import StochasticPSpace
     from sympy.stats.stochastic_process_types import StochasticProcess
     from sympy.stats.frv_types import BernoulliDistribution
-    assert _test_args(StochasticPSpace("Y", StochasticProcess("Y", [1, 2, 3]), BernoulliDistribution(S(1)/2, 1, 0)))
+    assert _test_args(StochasticPSpace("Y", StochasticProcess("Y", [1, 2, 3]), BernoulliDistribution(S.Half, 1, 0)))
 
 def test_sympy__stats__stochastic_process_types__StochasticProcess():
     from sympy.stats.stochastic_process_types import StochasticProcess
@@ -3086,7 +3086,7 @@ def test_sympy__physics__quantum__cartesian__ZOp():
 def test_sympy__physics__quantum__cg__CG():
     from sympy.physics.quantum.cg import CG
     from sympy import S
-    assert _test_args(CG(S(3)/2, S(3)/2, S(1)/2, -S(1)/2, 1, 1))
+    assert _test_args(CG(Rational(3, 2), Rational(3, 2), S.Half, Rational(-1, 2), 1, 1))
 
 
 def test_sympy__physics__quantum__cg__Wigner3j():
@@ -3101,7 +3101,7 @@ def test_sympy__physics__quantum__cg__Wigner6j():
 
 def test_sympy__physics__quantum__cg__Wigner9j():
     from sympy.physics.quantum.cg import Wigner9j
-    assert _test_args(Wigner9j(2, 1, 1, S(3)/2, S(1)/2, 1, S(1)/2, S(1)/2, 0))
+    assert _test_args(Wigner9j(2, 1, 1, Rational(3, 2), S.Half, 1, S.Half, S.Half, 0))
 
 def test_sympy__physics__quantum__circuitplot__Mz():
     from sympy.physics.quantum.circuitplot import Mz
@@ -3467,9 +3467,9 @@ def test_sympy__physics__quantum__shor__CMod():
 def test_sympy__physics__quantum__spin__CoupledSpinState():
     from sympy.physics.quantum.spin import CoupledSpinState
     assert _test_args(CoupledSpinState(1, 0, (1, 1)))
-    assert _test_args(CoupledSpinState(1, 0, (1, S(1)/2, S(1)/2)))
+    assert _test_args(CoupledSpinState(1, 0, (1, S.Half, S.Half)))
     assert _test_args(CoupledSpinState(
-        1, 0, (1, S(1)/2, S(1)/2), ((2, 3, S(1)/2), (1, 2, 1)) ))
+        1, 0, (1, S.Half, S.Half), ((2, 3, S.Half), (1, 2, 1)) ))
     j, m, j1, j2, j3, j12, x = symbols('j m j1:4 j12 x')
     assert CoupledSpinState(
         j, m, (j1, j2, j3)).subs(j2, x) == CoupledSpinState(j, m, (j1, x, j3))

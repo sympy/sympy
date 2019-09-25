@@ -192,7 +192,7 @@ class Integers(with_metaclass(Singleton, Set)):
 
     @property
     def _inf(self):
-        return -S.Infinity
+        return S.NegativeInfinity
 
     @property
     def _sup(self):
@@ -237,13 +237,13 @@ class Reals(with_metaclass(Singleton, Interval)):
     ComplexRegion
     """
     def __new__(cls):
-        return Interval.__new__(cls, -S.Infinity, S.Infinity)
+        return Interval.__new__(cls, S.NegativeInfinity, S.Infinity)
 
     def __eq__(self, other):
-        return other == Interval(-S.Infinity, S.Infinity)
+        return other == Interval(S.NegativeInfinity, S.Infinity)
 
     def __hash__(self):
-        return hash(Interval(-S.Infinity, S.Infinity))
+        return hash(Interval(S.NegativeInfinity, S.Infinity))
 
 
 class ImageSet(Set):

@@ -1,9 +1,9 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    Max, Min, Float,
+    LessThan, Max, Min, And, Or, Eq, Le, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, Range, Add, symbols, zoo)
+    Matrix, Range, Add, symbols, zoo, Rational)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -579,8 +579,8 @@ def test_measure():
     assert (square - offsetsquare).measure == 75
     assert (square * FiniteSet(1, 2, 3)).measure == 0
     assert (square.intersect(band)).measure == 20
-    assert (square + band).measure == oo
-    assert (band * FiniteSet(1, 2, 3)).measure == nan
+    assert (square + band).measure is oo
+    assert (band * FiniteSet(1, 2, 3)).measure is nan
 
 
 def test_is_subset():
@@ -688,8 +688,8 @@ def test_contains():
     raises(TypeError, lambda: 1 in FiniteSet(a))
 
     # issue 8209
-    rad1 = Pow(Pow(2, S(1)/3) - 1, S(1)/3)
-    rad2 = Pow(S(1)/9, S(1)/3) - Pow(S(2)/9, S(1)/3) + Pow(S(4)/9, S(1)/3)
+    rad1 = Pow(Pow(2, Rational(1, 3)) - 1, Rational(1, 3))
+    rad2 = Pow(Rational(1, 9), Rational(1, 3)) - Pow(Rational(2, 9), Rational(1, 3)) + Pow(Rational(4, 9), Rational(1, 3))
     s1 = FiniteSet(rad1)
     s2 = FiniteSet(rad2)
     assert s1 - s2 == S.EmptySet
@@ -711,9 +711,9 @@ def test_contains():
 
     # non-bool results
     assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \
-        Or(And(S(1) <= x, x <= 2), And(S(3) <= x, x <= 4))
+        Or(And(S.One <= x, x <= 2), And(S(3) <= x, x <= 4))
     assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
-        And(y <= 3, y <= x, S(1) <= y, S(2) <= y)
+        And(y <= 3, y <= x, S.One <= y, S(2) <= y)
 
     assert (S.Complexes).contains(S.ComplexInfinity) == S.false
 
@@ -721,10 +721,10 @@ def test_contains():
 def test_interval_symbolic():
     x = Symbol('x')
     e = Interval(0, 1)
-    assert e.contains(x) == And(S(0) <= x, x <= 1)
+    assert e.contains(x) == And(S.Zero <= x, x <= 1)
     raises(TypeError, lambda: x in e)
     e = Interval(0, 1, True, True)
-    assert e.contains(x) == And(S(0) < x, x < 1)
+    assert e.contains(x) == And(S.Zero < x, x < 1)
 
 
 def test_union_contains():
@@ -732,7 +732,7 @@ def test_union_contains():
     i1 = Interval(0, 1)
     i2 = Interval(2, 3)
     i3 = Union(i1, i2)
-    assert i3.as_relational(x) == Or(And(S(0) <= x, x <= 1), And(S(2) <= x, x <= 3))
+    assert i3.as_relational(x) == Or(And(S.Zero <= x, x <= 1), And(S(2) <= x, x <= 3))
     raises(TypeError, lambda: x in i3)
     e = i3.contains(x)
     assert e == i3.as_relational(x)
@@ -978,7 +978,7 @@ def test_universalset():
     assert U.union(Interval(2, 4)) == U
 
     assert U.intersect(Interval(2, 4)) == Interval(2, 4)
-    assert U.measure == S.Infinity
+    assert U.measure is S.Infinity
     assert U.boundary == S.EmptySet
     assert U.contains(0) is S.true
 
@@ -1031,7 +1031,7 @@ def test_image_interval():
 def test_image_piecewise():
     f = Piecewise((x, x <= -1), (1/x**2, x <= 5), (x**3, True))
     f1 = Piecewise((0, x <= 1), (1, x <= 2), (2, True))
-    assert imageset(x, f, Interval(-5, 5)) == Union(Interval(-5, -1), Interval(S(1)/25, oo))
+    assert imageset(x, f, Interval(-5, 5)) == Union(Interval(-5, -1), Interval(Rational(1, 25), oo))
     assert imageset(x, f1, Interval(1, 2)) == FiniteSet(0, 1)
 
 
@@ -1250,7 +1250,7 @@ def test_issue_10113():
     f = x**2/(x**2 - 4)
     assert imageset(x, f, S.Reals) == Union(Interval(-oo, 0), Interval(1, oo, True, True))
     assert imageset(x, f, Interval(-2, 2)) == Interval(-oo, 0)
-    assert imageset(x, f, Interval(-2, 3)) == Union(Interval(-oo, 0), Interval(S(9)/5, oo))
+    assert imageset(x, f, Interval(-2, 3)) == Union(Interval(-oo, 0), Interval(Rational(9, 5), oo))
 
 
 def test_issue_10248():

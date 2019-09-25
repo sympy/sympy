@@ -1,4 +1,4 @@
-from sympy import (symbols, pi, Piecewise, sin, cos, sinc, Rational,
+from sympy import (symbols, pi, Piecewise, sin, cos, sinc, Rational, S,
                    oo, fourier_series, Add, log, exp, tan)
 from sympy.series.fourier import FourierSeries
 from sympy.utilities.pytest import raises
@@ -69,7 +69,7 @@ def test_FourierSeries_2():
     assert f.term(3) == (2*sin(3*pi*x / 2) / (3*pi) -
                          4*cos(3*pi*x / 2) / (9*pi**2))
     assert f.truncate() == (2*sin(pi*x / 2) / pi - sin(pi*x) / pi -
-                            4*cos(pi*x / 2) / pi**2 + Rational(1, 2))
+                            4*cos(pi*x / 2) / pi**2 + S.Half)
 
 
 def test_fourier_series_square_wave():

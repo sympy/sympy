@@ -127,7 +127,7 @@ def roots_cubic(f, trig=False):
         if (D > 0) == True:
             rv = []
             for k in range(3):
-                rv.append(2*sqrt(-p/3)*cos(acos(3*q/2/p*sqrt(-3/p))/3 - k*2*pi/3))
+                rv.append(2*sqrt(-p/3)*cos(acos(q/p*sqrt(-3/p)*Rational(3, 2))/3 - k*pi*Rational(2, 3)))
             return [i - b/3/a for i in rv]
 
     _, a, b, c = f.monic().all_coeffs()
@@ -159,17 +159,17 @@ def roots_cubic(f, trig=False):
 
     coeff = I*sqrt(3)/2
     if u1 is None:
-        u1 = S(1)
-        u2 = -S.Half + coeff
-        u3 = -S.Half - coeff
+        u1 = S.One
+        u2 = Rational(-1, 2) + coeff
+        u3 = Rational(-1, 2) - coeff
         a, b, c, d = S(1), a, b, c
         D0 = b**2 - 3*a*c
         D1 = 2*b**3 - 9*a*b*c + 27*a**2*d
         C = root((D1 + sqrt(D1**2 - 4*D0**3))/2, 3)
         return [-(b + uk*C + D0/C/uk)/3/a for uk in [u1, u2, u3]]
 
-    u2 = u1*(-S.Half + coeff)
-    u3 = u1*(-S.Half - coeff)
+    u2 = u1*(Rational(-1, 2) + coeff)
+    u3 = u1*(Rational(-1, 2) - coeff)
 
     if p is S.Zero:
         return [u1 - aon3, u2 - aon3, u3 - aon3]
@@ -343,7 +343,7 @@ def roots_quartic(f):
                 return ans
 
             # p == 0 case
-            y1 = -5*e/6 - q**TH
+            y1 = e*Rational(-5, 6) - q**TH
             if p.is_zero:
                 return _ans(y1)
 
@@ -351,7 +351,7 @@ def roots_quartic(f):
             root = sqrt(q**2/4 + p**3/27)
             r = -q/2 + root  # or -q/2 - root
             u = r**TH  # primary root of solve(x**3 - r, x)
-            y2 = -5*e/6 + u - p/u/3
+            y2 = e*Rational(-5, 6) + u - p/u/3
             if fuzzy_not(p.is_zero):
                 return _ans(y2)
 
@@ -931,7 +931,7 @@ def roots(f, *gens, **flags):
         if f.is_ground:
             return []
         if f.is_monomial:
-            return [S(0)]*f.degree()
+            return [S.Zero]*f.degree()
 
         if f.length() == 2:
             if f.degree() == 1:
@@ -969,7 +969,7 @@ def roots(f, *gens, **flags):
     if not k:
         zeros = {}
     else:
-        zeros = {S(0): k}
+        zeros = {S.Zero: k}
 
     coeff, f = preprocess_roots(f)
 

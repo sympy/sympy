@@ -124,7 +124,7 @@ class lerchphi(Function):
             t = Dummy('t')
             p = Poly((t + a)**(-s), t)
             start = 1/(1 - t)
-            res = S(0)
+            res = S.Zero
             for c in reversed(p.all_coeffs()):
                 res += c*start
                 start = t*start.diff(t)
@@ -136,8 +136,8 @@ class lerchphi(Function):
             #   In: Proceedings of the 1997 International Symposium on Symbolic and
             #   Algebraic Computation, pages 205-211, New York, 1997. ACM.
             # TODO should something be polarified here?
-            add = S(0)
-            mul = S(1)
+            add = S.Zero
+            mul = S.One
             # First reduce a to the interaval (0, 1]
             if a > 1:
                 n = floor(a)
@@ -458,7 +458,7 @@ class zeta(Function):
                 return S.NaN
             elif z is S.Infinity:
                 return S.One
-            elif z is S.Zero:
+            elif z.is_zero:
                 return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity

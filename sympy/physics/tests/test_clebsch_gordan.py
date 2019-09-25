@@ -6,111 +6,111 @@ from sympy.core.numbers import Rational
 # for test cases, refer : https://en.wikipedia.org/wiki/Table_of_Clebsch%E2%80%93Gordan_coefficients
 
 def test_clebsch_gordan_docs():
-    assert clebsch_gordan(S(3)/2, S(1)/2, 2, S(3)/2, S(1)/2, 2) == 1
-    assert clebsch_gordan(S(3)/2, S(1)/2, 1, S(3)/2, -S(1)/2, 1) == sqrt(3)/2
-    assert clebsch_gordan(S(3)/2, S(1)/2, 1, -S(1)/2, S(1)/2, 0) == -sqrt(2)/2
+    assert clebsch_gordan(Rational(3, 2), S.Half, 2, Rational(3, 2), S.Half, 2) == 1
+    assert clebsch_gordan(Rational(3, 2), S.Half, 1, Rational(3, 2), Rational(-1, 2), 1) == sqrt(3)/2
+    assert clebsch_gordan(Rational(3, 2), S.Half, 1, Rational(-1, 2), S.Half, 0) == -sqrt(2)/2
 
 
 def test_clebsch_gordan1():
-    j_1 = S(1)/2
-    j_2 = S(1)/2
+    j_1 = S.Half
+    j_2 = S.Half
     m = 1
     j = 1
-    m_1 = S(1)/2
-    m_2 = S(1)/2
+    m_1 = S.Half
+    m_2 = S.Half
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
 
-    j_1 = S(1)/2
-    j_2 = S(1)/2
+    j_1 = S.Half
+    j_2 = S.Half
     m = -1
     j = 1
-    m_1 = -S(1)/2
-    m_2 = -S(1)/2
+    m_1 = Rational(-1, 2)
+    m_2 = Rational(-1, 2)
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
 
-    j_1 = S(1)/2
-    j_2 = S(1)/2
+    j_1 = S.Half
+    j_2 = S.Half
     m = 0
     j = 1
-    m_1 = S(1)/2
-    m_2 = S(1)/2
+    m_1 = S.Half
+    m_2 = S.Half
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 0
 
-    j_1 = S(1)/2
-    j_2 = S(1)/2
+    j_1 = S.Half
+    j_2 = S.Half
     m = 0
     j = 1
-    m_1 = S(1)/2
-    m_2 = -S(1)/2
+    m_1 = S.Half
+    m_2 = Rational(-1, 2)
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(2)/2
 
-    j_1 = S(1)/2
-    j_2 = S(1)/2
+    j_1 = S.Half
+    j_2 = S.Half
     m = 0
     j = 0
-    m_1 = S(1)/2
-    m_2 = -S(1)/2
+    m_1 = S.Half
+    m_2 = Rational(-1, 2)
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(2)/2
 
-    j_1 = S(1)/2
-    j_2 = S(1)/2
+    j_1 = S.Half
+    j_2 = S.Half
     m = 0
     j = 1
-    m_1 = -S(1)/2
-    m_2 = S(1)/2
+    m_1 = Rational(-1, 2)
+    m_2 = S.Half
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(2)/2
 
-    j_1 = S(1)/2
-    j_2 = S(1)/2
+    j_1 = S.Half
+    j_2 = S.Half
     m = 0
     j = 0
-    m_1 = -S(1)/2
-    m_2 = S(1)/2
+    m_1 = Rational(-1, 2)
+    m_2 = S.Half
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == -sqrt(2)/2
 
 def test_clebsch_gordan2():
-    j_1 = S(1)
-    j_2 = S(1)/2
-    m = S(3)/2
-    j = S(3)/2
+    j_1 = S.One
+    j_2 = S.Half
+    m = Rational(3, 2)
+    j = Rational(3, 2)
     m_1 = 1
-    m_2 = S(1)/2
+    m_2 = S.Half
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
 
-    j_1 = S(1)
-    j_2 = S(1)/2
-    m = S(1)/2
-    j = S(3)/2
+    j_1 = S.One
+    j_2 = S.Half
+    m = S.Half
+    j = Rational(3, 2)
     m_1 = 1
-    m_2 = -S(1)/2
+    m_2 = Rational(-1, 2)
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(3)
 
-    j_1 = S(1)
-    j_2 = S(1)/2
-    m = S(1)/2
-    j = S(1)/2
+    j_1 = S.One
+    j_2 = S.Half
+    m = S.Half
+    j = S.Half
     m_1 = 1
-    m_2 = -S(1)/2
+    m_2 = Rational(-1, 2)
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(2)/sqrt(3)
 
-    j_1 = S(1)
-    j_2 = S(1)/2
-    m = S(1)/2
-    j = S(1)/2
+    j_1 = S.One
+    j_2 = S.Half
+    m = S.Half
+    j = S.Half
     m_1 = 0
-    m_2 = S(1)/2
+    m_2 = S.Half
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == -1/sqrt(3)
 
-    j_1 = S(1)
-    j_2 = S(1)/2
-    m = S(1)/2
-    j = S(3)/2
+    j_1 = S.One
+    j_2 = S.Half
+    m = S.Half
+    j = Rational(3, 2)
     m_1 = 0
-    m_2 = S(1)/2
+    m_2 = S.Half
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(2)/sqrt(3)
 
-    j_1 = S(1)
-    j_2 = S(1)
+    j_1 = S.One
+    j_2 = S.One
     m = S(2)
     j = S(2)
     m_1 = 1
@@ -118,8 +118,8 @@ def test_clebsch_gordan2():
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
 
 
-    j_1 = S(1)
-    j_2 = S(1)
+    j_1 = S.One
+    j_2 = S.One
     m = 1
     j = S(2)
     m_1 = 1
@@ -127,24 +127,24 @@ def test_clebsch_gordan2():
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
 
 
-    j_1 = S(1)
-    j_2 = S(1)
+    j_1 = S.One
+    j_2 = S.One
     m = 1
     j = S(2)
     m_1 = 0
     m_2 = 1
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
 
-    j_1 = S(1)
-    j_2 = S(1)
+    j_1 = S.One
+    j_2 = S.One
     m = 1
     j = 1
     m_1 = 1
     m_2 = 0
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
 
-    j_1 = S(1)
-    j_2 = S(1)
+    j_1 = S.One
+    j_2 = S.One
     m = 1
     j = 1
     m_1 = 0
@@ -152,29 +152,29 @@ def test_clebsch_gordan2():
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == -1/sqrt(2)
 
 def test_clebsch_gordan3():
-    j_1 = S(3)/2
-    j_2 = S(3)/2
+    j_1 = Rational(3, 2)
+    j_2 = Rational(3, 2)
     m = S(3)
     j = S(3)
-    m_1 = S(3)/2
-    m_2 = S(3)/2
+    m_1 = Rational(3, 2)
+    m_2 = Rational(3, 2)
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
 
 
-    j_1 = S(3)/2
-    j_2 = S(3)/2
+    j_1 = Rational(3, 2)
+    j_2 = Rational(3, 2)
     m = S(2)
     j = S(2)
-    m_1 = S(3)/2
-    m_2 = S(1)/2
+    m_1 = Rational(3, 2)
+    m_2 = S.Half
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
 
-    j_1 = S(3)/2
-    j_2 = S(3)/2
+    j_1 = Rational(3, 2)
+    j_2 = Rational(3, 2)
     m = S(2)
     j = S(3)
-    m_1 = S(3)/2
-    m_2 = S(1)/2
+    m_1 = Rational(3, 2)
+    m_2 = S.Half
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
 
 def test_clebsch_gordan4():
@@ -204,28 +204,28 @@ def test_clebsch_gordan4():
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 0
 
 def test_clebsch_gordan5():
-    j_1 = S(5)/2
-    j_2 = S(1)
-    m = S(7)/2
-    j = S(7)/2
-    m_1 = S(5)/2
+    j_1 = Rational(5, 2)
+    j_2 = S.One
+    m = Rational(7, 2)
+    j = Rational(7, 2)
+    m_1 = Rational(5, 2)
     m_2 = 1
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
 
 
-    j_1 = S(5)/2
-    j_2 = S(1)
-    m = S(5)/2
-    j = S(5)/2
-    m_1 = S(5)/2
+    j_1 = Rational(5, 2)
+    j_2 = S.One
+    m = Rational(5, 2)
+    j = Rational(5, 2)
+    m_1 = Rational(5, 2)
     m_2 = 0
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(5)/sqrt(7)
 
-    j_1 = S(5)/2
-    j_2 = S(1)
-    m = S(3)/2
-    j = S(3)/2
-    m_1 = S(1)/2
+    j_1 = Rational(5, 2)
+    j_2 = S.One
+    m = Rational(3, 2)
+    j = Rational(3, 2)
+    m_1 = S.Half
     m_2 = 1
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(15)
 
@@ -233,13 +233,13 @@ def test_clebsch_gordan5():
 def test_wigner():
     def tn(a, b):
         return (a - b).n(64) < S('1e-64')
-    assert tn(wigner_9j(1, 1, 1, 1, 1, 1, 1, 1, 0, prec=64), S(1)/18)
+    assert tn(wigner_9j(1, 1, 1, 1, 1, 1, 1, 1, 0, prec=64), Rational(1, 18))
     assert wigner_9j(3, 3, 2, 3, 3, 2, 3, 3, 2) == 3221*sqrt(
         70)/(246960*sqrt(105)) - 365/(3528*sqrt(70)*sqrt(105))
     assert wigner_6j(5, 5, 5, 5, 5, 5) == Rational(1, 52)
-    assert tn(wigner_6j(8, 8, 8, 8, 8, 8, prec=64), -S(12219)/965770)
+    assert tn(wigner_6j(8, 8, 8, 8, 8, 8, prec=64), Rational(-12219, 965770))
     # regression test for #8747
-    half = Rational(1, 2)
+    half = S.Half
     assert wigner_9j(0, 0, 0, 0, half, half, 0, half, half) == half
     assert (wigner_9j(3, 5, 4,
                       7 * half, 5 * half, 4,
@@ -263,7 +263,7 @@ def test_gaunt():
     assert isinstance(gaunt(0, 1, 1, 0, -1, 1).args[0], Rational)
 
     assert tn(gaunt(
-        10, 10, 12, 9, 3, -12, prec=64), (-S(98)/62031) * sqrt(6279)/sqrt(pi))
+        10, 10, 12, 9, 3, -12, prec=64), (Rational(-98, 62031)) * sqrt(6279)/sqrt(pi))
     def gaunt_ref(l1, l2, l3, m1, m2, m3):
         return (
             sqrt((2 * l1 + 1) * (2 * l2 + 1) * (2 * l3 + 1) / (4 * pi)) *

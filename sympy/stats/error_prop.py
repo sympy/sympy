@@ -58,13 +58,13 @@ def variance_prop(expr, consts=(), include_covar=False):
     args = expr.args
     if len(args) == 0:
         if expr in consts:
-            return S(0)
+            return S.Zero
         elif isinstance(expr, RandomSymbol):
             return Variance(expr).doit()
         elif isinstance(expr, Symbol):
             return Variance(RandomSymbol(expr)).doit()
         else:
-            return S(0)
+            return S.Zero
     nargs = len(args)
     var_args = list(map(variance_prop, args, repeat(consts, nargs),
                         repeat(include_covar, nargs)))

@@ -1990,7 +1990,7 @@ class Rational(Number):
     @_sympifyit('other', NotImplemented)
     def gcd(self, other):
         if isinstance(other, Rational):
-            if other is S.Zero:
+            if other == S.Zero:
                 return other
             return Rational(
                 Integer(igcd(self.p, other.p)),
@@ -3374,7 +3374,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
             return S.NaN
 
         if isinstance(expt, Number):
-            if expt is S.Zero:
+            if expt.is_zero:
                 return S.NaN
             else:
                 if expt.is_positive:

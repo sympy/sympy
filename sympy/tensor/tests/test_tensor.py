@@ -626,15 +626,15 @@ def test_special_eq_ne():
     assert p(i) != A(a, b)
     assert A(a, -a) != A(a, b)
     assert 0*(A(a, b) + B(a, b)) == 0
-    assert 0*(A(a, b) + B(a, b)) == S.Zero
+    assert 0*(A(a, b) + B(a, b)) is S.Zero
 
-    assert 3*(A(a, b) - A(a, b)) == S.Zero
+    assert 3*(A(a, b) - A(a, b)) is S.Zero
 
     assert p(i) + q(i) != A(a, b)
     assert p(i) + q(i) != A(a, b) + B(a, b)
 
     assert p(i) - p(i) == 0
-    assert p(i) - p(i) == S.Zero
+    assert p(i) - p(i) is S.Zero
 
     assert _is_equal(A(a, b), A(b, a))
 
@@ -647,7 +647,7 @@ def test_add2():
     t2 = t1*A(-n, -p, -q)
     t2 = t2.canon_bp()
     assert t2 == 0
-    t1 = S(2)/3*R(m,n,p,q) - S(1)/3*R(m,q,n,p) + S(1)/3*R(m,p,n,q)
+    t1 = Rational(2, 3)*R(m,n,p,q) - Rational(1, 3)*R(m,q,n,p) + Rational(1, 3)*R(m,p,n,q)
     t2 = t1*A(-n, -p, -q)
     t2 = t2.canon_bp()
     assert t2 == 0
@@ -761,7 +761,7 @@ def test_riemann_cyclic_replace():
     R = TensorHead('R', [Lorentz]*4, TensorSymmetry.riemann())
     t = R(m0, m2, m1, m3)
     t1 = riemann_cyclic_replace(t)
-    t1a = -S.One/3*R(m0, m3, m2, m1) + S.One/3*R(m0, m1, m2, m3) + Rational(2, 3)*R(m0, m2, m1, m3)
+    t1a = Rational(-1, 3)*R(m0, m3, m2, m1) + Rational(1, 3)*R(m0, m1, m2, m3) + Rational(2, 3)*R(m0, m2, m1, m3)
     assert t1 == t1a
 
 def test_riemann_cyclic():
@@ -778,7 +778,7 @@ def test_riemann_cyclic():
     assert t1 == 0
     t = R(i,j,k,l)
     t1 = riemann_cyclic(t)
-    assert t1 == -S(1)/3*R(i, l, j, k) + S(1)/3*R(i, k, j, l) + S(2)/3*R(i, j, k, l)
+    assert t1 == Rational(-1, 3)*R(i, l, j, k) + Rational(1, 3)*R(i, k, j, l) + Rational(2, 3)*R(i, j, k, l)
 
     t = R(i,j,k,l)*R(-k,-l,m,n)*(R(-m,-n,-i,-j) + 2*R(-m,-j,-n,-i))
     t1 = riemann_cyclic(t)

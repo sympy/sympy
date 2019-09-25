@@ -878,14 +878,14 @@ class Interval(Set, EvalfMixin):
         if end == start and (left_open or right_open):
             return S.EmptySet
         if end == start and not (left_open or right_open):
-            if start == S.Infinity or start == S.NegativeInfinity:
+            if start is S.Infinity or start is S.NegativeInfinity:
                 return S.EmptySet
             return FiniteSet(end)
 
         # Make sure infinite interval end points are open.
-        if start == S.NegativeInfinity:
+        if start is S.NegativeInfinity:
             left_open = true
-        if end == S.Infinity:
+        if end is S.Infinity:
             right_open = true
         if start == S.Infinity or end == S.NegativeInfinity:
             return S.EmptySet

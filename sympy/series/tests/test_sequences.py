@@ -1,6 +1,6 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
                    SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx, sqrt,
-                   fibonacci, tribonacci, sin, cos, exp)
+                   fibonacci, tribonacci, sin, cos, exp, Rational)
 from sympy.series.sequences import SeqExpr, SeqExprOp
 from sympy.utilities.pytest import raises, slow
 
@@ -285,7 +285,7 @@ def test_find_linear_recurrence():
     assert sequence((2,3,4,5,6,79),(n, 0, 5)).find_linear_recurrence(6,gfvar=x) \
     == ([], None)
     assert sequence((2,3,4,5,8,30),(n, 0, 5)).find_linear_recurrence(6,gfvar=x) \
-    == ([S(19)/2, -20, S(27)/2], (-31*x**2 + 32*x - 4)/(27*x**3 - 40*x**2 + 19*x -2))
+    == ([Rational(19, 2), -20, Rational(27, 2)], (-31*x**2 + 32*x - 4)/(27*x**3 - 40*x**2 + 19*x -2))
     assert sequence(fibonacci(n)).find_linear_recurrence(30,gfvar=x) \
     == ([1, 1], -x/(x**2 + x - 1))
     assert sequence(tribonacci(n)).find_linear_recurrence(30,gfvar=x) \

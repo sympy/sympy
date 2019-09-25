@@ -718,7 +718,7 @@ x + 10\
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    expr = -S(1)/2 - 3*x
+    expr = -S.Half - 3*x
     ascii_str = \
 """\
 -3*x - 1/2\
@@ -730,7 +730,7 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = S(1)/2 - 3*x
+    expr = S.Half - 3*x
     ascii_str = \
 """\
 1/2 - 3*x\
@@ -742,7 +742,7 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = -S(1)/2 - 3*x/2
+    expr = -S.Half - 3*x/2
     ascii_str = \
 """\
   3*x   1\n\
@@ -758,7 +758,7 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = S(1)/2 - 3*x/2
+    expr = S.Half - 3*x/2
     ascii_str = \
 """\
 1   3*x\n\

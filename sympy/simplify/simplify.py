@@ -549,7 +549,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         inverse=kwargs.get('inverse', inverse),
         doit=kwargs.get('doit', doit))
     # no routine for Expr needs to check for is_zero
-    if isinstance(expr, Expr) and expr.is_zero and expr*0 is S.Zero:
+    if isinstance(expr, Expr) and expr.is_zero and expr*0 == S.Zero:
         return S.Zero
 
     _eval_simplify = getattr(expr, '_eval_simplify', None)
@@ -1277,7 +1277,7 @@ def besselsimp(expr):
 
     def expander(fro):
         def repl(nu, z):
-            if (nu % 1) == S(1)/2:
+            if (nu % 1) == S.Half:
                 return simplify(trigsimp(unpolarify(
                         fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
                             func=True)).subs(z0, z)))

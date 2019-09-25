@@ -1,7 +1,7 @@
 from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
     sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
     PoleError, floor, ceiling, asin, symbols, limit, Piecewise, Eq, sign,
-    Derivative)
+    Derivative, S)
 from sympy.abc import x, y, z
 
 from sympy.utilities.pytest import raises, XFAIL
@@ -176,7 +176,7 @@ def test_generalexponent():
     p = 2
     e = (2/x + 3/x**p)/(1/x + 1/x**p)
     assert e.nseries(x, 0, 3) == 3 + O(x)
-    p = Rational(1, 2)
+    p = S.Half
     e = (2/x + 3/x**p)/(1/x + 1/x**p)
     assert e.nseries(x, 0, 2) == 2 + sqrt(x) + O(x)
 
@@ -227,7 +227,7 @@ def test_seriesbug2c():
     e = (sin(2*w)/w)**(1 + w)
     assert e.series(w, 0, 1) == 2 + O(w)
     assert e.series(w, 0, 3) == 2 + 2*w*log(2) + \
-        w**2*(-Rational(4, 3) + log(2)**2) + O(w**3)
+        w**2*(Rational(-4, 3) + log(2)**2) + O(w**3)
     assert e.series(w, 0, 2).subs(w, 0) == 2
 
 
@@ -298,7 +298,7 @@ def test_issue_3515():
 def test_issue_3505():
     e = sin(x)**(-4)*(sqrt(cos(x))*sin(x)**2 -
         cos(x)**Rational(1, 3)*sin(x)**2)
-    assert e.nseries(x, n=9) == -Rational(1)/12 - 7*x**2/288 - \
+    assert e.nseries(x, n=9) == Rational(-1, 12) - 7*x**2/288 - \
         43*x**4/10368 + O(x**5)
 
 
@@ -327,7 +327,7 @@ def test_issue_3503():
 def test_issue_3506():
     e = (x + sin(3*x))**(-2)*(x*(x + sin(3*x)) - (x + sin(3*x))*sin(2*x))
     assert e.nseries(x, n=7) == \
-        -Rational(1, 4) + 5*x**2/96 + 91*x**4/768 + O(x**5)
+        Rational(-1, 4) + 5*x**2/96 + 91*x**4/768 + O(x**5)
 
 
 def test_issue_3508():

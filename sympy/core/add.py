@@ -211,7 +211,7 @@ class Add(Expr, AssocOp):
         noncommutative = False
         for s, c in terms.items():
             # 0*s
-            if c is S.Zero:
+            if c.is_zero:
                 continue
             # 1*s
             elif c is S.One:
@@ -435,7 +435,7 @@ class Add(Expr, AssocOp):
             eq = signsimp(lhs.xreplace(reps) - rhs.xreplace(reps))
             if eq.has(oo):
                 eq = eq.replace(
-                    lambda x: x.is_Pow and x.base == oo,
+                    lambda x: x.is_Pow and x.base is oo,
                     lambda x: x.base)
             return eq.xreplace(ireps)
         else:

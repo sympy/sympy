@@ -70,7 +70,7 @@ class JointPSpace(ProductPSpace):
             return S(len(_set.args))
         elif isinstance(_set, Product):
             return _set.limits[0][-1]
-        return S(1)
+        return S.One
 
     @property
     def pdf(self):
