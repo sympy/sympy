@@ -227,7 +227,8 @@ def test_undefined_function():
     x = sympy.symbols('x')
     sx = sage.var('x')
     is_trivially_equal(sf(sx), f(x)._sage_())
-    #assert bool(f == sympy.sympify(sf))
+    assert bool(sf == f._sage_())
+    assert bool(f == sympy.sympify(sf))
 
 def test_abstract_function():
     from sage.symbolic.expression import Expression
