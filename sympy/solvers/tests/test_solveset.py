@@ -1517,7 +1517,7 @@ def test_nonlinsolve_conditionset():
     soln = ConditionSet(
         symbols,
         intermediate_system,
-        S.Complexes)
+        S.Complexes**2)
     assert nonlinsolve([f1, f2], [x, y]) == soln
 
 
