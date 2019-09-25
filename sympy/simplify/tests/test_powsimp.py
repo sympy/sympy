@@ -327,3 +327,11 @@ def test_issue_17524():
     a = symbols("a", real=True)
     e = (-1 - a**2)*sqrt(1 + a**2)
     assert signsimp(powsimp(e)) == signsimp(e) == -(a**2 + 1)**(S(3)/2)
+
+def test_issue_17634():
+    x = Symbol('x')
+    y = Symbol('y')
+    assert powsimp(sqrt(1-x**2)/sqrt(1-x), force=True) == sqrt((1 - x**2)/(1 - x))
+    assert powsimp(sqrt(x)/sqrt(y), force=True) == sqrt(x/y)
+    assert powsimp(x**(S(1)/2)/y**(S(1)/2), force=True) == sqrt(x/y)
+    assert powsimp(x**S.Half/y**S.Half, force=True) == sqrt(x/y)

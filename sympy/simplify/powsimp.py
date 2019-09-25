@@ -393,6 +393,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if not (all(x.is_nonnegative for x in b.as_numer_denom()) or e.is_integer or force or b.is_polar):
                 continue
             exp_c, exp_t = e.as_coeff_Mul(rational=True)
+            if exp_t is S.One and exp_c.is_negative:
+                exp_c, exp_t = -exp_t, -exp_c
             if exp_c is not S.One and exp_t is not S.One:
                 c_powers[i] = [Pow(b, exp_c), exp_t]
 
