@@ -41,7 +41,7 @@ from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float
 from .operations import LatticeOp
 from .rules import Transform
-from .singleton import S
+from .singleton import S, Singleton
 from .sympify import sympify
 
 from sympy.core.compatibility import string_types, with_metaclass, PY3, range
@@ -875,7 +875,7 @@ class AppliedUndef(Function):
         return True
 
 
-class UndefSage(object):
+class UndefSage(with_metaclass(Singleton)):
     """
     Helper to facilitate Sage conversion.
     """
