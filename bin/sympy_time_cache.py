@@ -1,4 +1,5 @@
 from __future__ import print_function
+from sympy.core.compatibility import string_types
 
 import time
 import timeit
@@ -63,7 +64,7 @@ class TreeNode(object):
         self.print_generic(n, method="exclusive_time")
 
     def write_cachegrind(self, f):
-        if isinstance(f, str):
+        if isinstance(f, string_types):
             f = open(f, "w")
             f.write("events: Microseconds\n")
             f.write("fl=sympyallimport\n")

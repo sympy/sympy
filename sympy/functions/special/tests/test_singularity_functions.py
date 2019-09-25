@@ -1,10 +1,10 @@
 from sympy import (
-    adjoint, conjugate, nan, pi, symbols, transpose, DiracDelta, Symbol, diff,
+    nan, pi, symbols, DiracDelta, Symbol, diff,
     Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside,
-    Derivative, Float
+    Float
 )
 
-
+from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 
@@ -37,21 +37,21 @@ def test_fdiff():
 
 def test_eval():
     assert SingularityFunction(x, a, n).func == SingularityFunction
-    assert SingularityFunction(x, 5, n) == SingularityFunction(x, 5, n)
+    assert unchanged(SingularityFunction, x, 5, n)
     assert SingularityFunction(5, 3, 2) == 4
     assert SingularityFunction(3, 5, 1) == 0
     assert SingularityFunction(3, 3, 0) == 1
-    assert SingularityFunction(4, 4, -1) == oo
+    assert SingularityFunction(4, 4, -1) is oo
     assert SingularityFunction(4, 2, -1) == 0
     assert SingularityFunction(4, 7, -1) == 0
     assert SingularityFunction(5, 6, -2) == 0
     assert SingularityFunction(4, 2, -2) == 0
-    assert SingularityFunction(4, 4, -2) == oo
+    assert SingularityFunction(4, 4, -2) is oo
     assert (SingularityFunction(6.1, 4, 5)).evalf(5) == Float('40.841', '5')
     assert SingularityFunction(6.1, pi, 2) == (-pi + 6.1)**2
-    assert SingularityFunction(x, a, nan) == nan
-    assert SingularityFunction(x, nan, 1) == nan
-    assert SingularityFunction(nan, a, n) == nan
+    assert SingularityFunction(x, a, nan) is nan
+    assert SingularityFunction(x, nan, 1) is nan
+    assert SingularityFunction(nan, a, n) is nan
 
     raises(ValueError, lambda: SingularityFunction(x, a, I))
     raises(ValueError, lambda: SingularityFunction(2*I, I, n))

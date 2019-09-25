@@ -59,6 +59,7 @@ try:
     import platform
     if platform.python_implementation() == 'PyPy':
         raise ImportError
+    lru_cache = fastcache.clru_cache
 
 except ImportError:
 
