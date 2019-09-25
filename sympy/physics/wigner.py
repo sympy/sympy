@@ -11,19 +11,19 @@ Please see the description of the individual functions for further
 details and examples.
 
 References
-~~~~~~~~~~
+==========
 
-.. [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
+.. [1] [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
   T. Regge, Nuovo Cimento, Volume 10, pp. 544 (1958)
-.. [Regge59] 'Symmetry Properties of Racah Coefficients',
+.. [2] [Regge59] 'Symmetry Properties of Racah Coefficients',
   T. Regge, Nuovo Cimento, Volume 11, pp. 116 (1959)
-.. [Edmonds74] A. R. Edmonds. Angular momentum in quantum mechanics.
+.. [3] [Edmonds74] A. R. Edmonds. Angular momentum in quantum mechanics.
   Investigations in physics, 4.; Investigations in physics, no. 4.
   Princeton, N.J., Princeton University Press, 1957.
-.. [Rasch03] J. Rasch and A. C. H. Yu, 'Efficient Storage Scheme for
+.. [4] [Rasch03] J. Rasch and A. C. H. Yu, 'Efficient Storage Scheme for
   Pre-calculated Wigner 3j, 6j and Gaunt Coefficients', SIAM
   J. Sci. Comput. Volume 25, Issue 4, pp. 1416-1428 (2003)
-.. [Liberatodebrito82] 'FORTRAN program for the integral of three
+.. [5] [Liberatodebrito82] 'FORTRAN program for the integral of three
   spherical harmonics', A. Liberato de Brito,
   Comput. Phys. Commun., Volume 25, pp. 81-85 (1982)
 
@@ -753,7 +753,11 @@ def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
 def wigner_d_small(J, beta):
     u"""Return the small Wigner d matrix for angular momentum J.
 
-    We use the general formula from [Edmonds74]_, equation 4.1.15.
+    The components are calculated using the general from [Edmonds74]_,
+    equation 4.1.15.
+
+    Examples
+    ========
 
     >>> from sympy import Integer, symbols, pi, pprint
     >>> from sympy.physics.wigner import wigner_d_small
@@ -876,7 +880,11 @@ def wigner_d_small(J, beta):
 def wigner_d(J, alpha, beta, gamma):
     u"""Return the Wigner D matrix for angular momentum J.
 
-    We use the general formula from [Edmonds74]_, equation 4.1.12.
+    The components are calculated using the general from [Edmonds74]_,
+    equation 4.1.12.
+
+    Examples
+    ========
 
     The simplest possible example:
     >>> from sympy.physics.wigner import wigner_d
