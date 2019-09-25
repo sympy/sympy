@@ -2,7 +2,7 @@ from sympy.sets import (ConditionSet, Intersection, FiniteSet,
     EmptySet, Union, Contains)
 from sympy import (Symbol, Eq, S, Abs, sin, pi, Interval,
     And, Mod, oo, Function)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
 
 w = Symbol('w')
@@ -131,8 +131,10 @@ def test_subs_CondSet():
 
 
 def test_subs_CondSet_tebr():
-    raises(TypeError,
-        lambda: ConditionSet((x, y), {x + 1, x + y}, S.Reals))
+    with warns_deprecated_sympy():
+        ConditionSet((x, y), {x + 1, x + y}, S.Reals) == \
+            ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
+
     c = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
     assert c.subs(x, z) == c
 
