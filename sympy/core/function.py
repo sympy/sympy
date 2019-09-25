@@ -885,16 +885,6 @@ class UndefSage(object):
             return lambda: function(typ.__name__)
         else:
             args = [arg._sage_() for arg in ins.args]
-            return lambda : function(ins.__class__.__name__)(*args)class UndefSage(object):
-    """
-    Helper to facilitate Sage conversion.
-    """
-    def __get__(self, ins, typ):
-        from sage.calculus.var import function
-        if ins is None:
-            return lambda: function(typ.__name__)
-        else:
-            args = [arg._sage_() for arg in ins.args]
             return lambda : function(ins.__class__.__name__)(*args)
 
 
