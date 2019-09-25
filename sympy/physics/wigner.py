@@ -13,17 +13,17 @@ details and examples.
 References
 ==========
 
-.. [1] [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
+1. [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
   T. Regge, Nuovo Cimento, Volume 10, pp. 544 (1958)
-.. [2] [Regge59] 'Symmetry Properties of Racah Coefficients',
+2. [Regge59] 'Symmetry Properties of Racah Coefficients',
   T. Regge, Nuovo Cimento, Volume 11, pp. 116 (1959)
-.. [3] [Edmonds74] A. R. Edmonds. Angular momentum in quantum mechanics.
+3. [Edmonds74] A. R. Edmonds. Angular momentum in quantum mechanics.
   Investigations in physics, 4.; Investigations in physics, no. 4.
   Princeton, N.J., Princeton University Press, 1957.
-.. [4] [Rasch03] J. Rasch and A. C. H. Yu, 'Efficient Storage Scheme for
+4. [Rasch03] J. Rasch and A. C. H. Yu, 'Efficient Storage Scheme for
   Pre-calculated Wigner 3j, 6j and Gaunt Coefficients', SIAM
   J. Sci. Comput. Volume 25, Issue 4, pp. 1416-1428 (2003)
-.. [5] [Liberatodebrito82] 'FORTRAN program for the integral of three
+5. [Liberatodebrito82] 'FORTRAN program for the integral of three
   spherical harmonics', A. Liberato de Brito,
   Comput. Phys. Commun., Volume 25, pp. 81-85 (1982)
 
@@ -43,6 +43,7 @@ AUTHORS:
 - Oscar Gerardo Lazo Arjona (2017-06-18): added Wigner D matrices
 
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
+
 """
 from __future__ import print_function, division
 
