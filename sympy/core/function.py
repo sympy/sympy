@@ -41,7 +41,7 @@ from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float
 from .operations import LatticeOp
 from .rules import Transform
-from .singleton import S, Singleton
+from .singleton import S
 from .sympify import sympify
 
 from sympy.core.compatibility import string_types, with_metaclass, PY3, range
@@ -875,7 +875,7 @@ class AppliedUndef(Function):
         return True
 
 
-class UndefSage(with_metaclass(Singleton)):
+class UndefSageHelper(object):
     """
     Helper to facilitate Sage conversion.
     """
@@ -887,6 +887,7 @@ class UndefSage(with_metaclass(Singleton)):
             args = [arg._sage_() for arg in ins.args]
             return lambda : sage.function(ins.__class__.__name__)(*args)
 
+_undef_sage_helper = UndefSageHelper()
 
 class UndefinedFunction(FunctionClass):
     """
@@ -922,7 +923,7 @@ class UndefinedFunction(FunctionClass):
         __dict__['__module__'] = None
         obj = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
         obj.name = name
-        obj._sage_ = UndefSage()
+        obj._sage_ = _undef_sage_helper
         return obj
 
     def __instancecheck__(cls, instance):
