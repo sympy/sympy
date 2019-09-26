@@ -8,12 +8,17 @@ from sympy.utilities.pytest import raises, XFAIL
 
 
 def test_powerset_creation():
-    assert PowerSet(FiniteSet(1, 2)) == \
-        FiniteSet(S.EmptySet, FiniteSet(1), FiniteSet(2), FiniteSet(1, 2))
-    assert PowerSet(S.EmptySet) == FiniteSet(S.EmptySet)
+    assert unchanged(PowerSet, FiniteSet(1, 2))
+    assert unchanged(PowerSet, S.EmptySet)
     raises(ValueError, lambda: PowerSet(123))
     assert unchanged(PowerSet, S.Reals)
     assert unchanged(PowerSet, S.Integers)
+
+
+def test_powerset_rewrite_FiniteSet():
+    assert PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet) == \
+        FiniteSet(S.EmptySet, FiniteSet(1), FiniteSet(2), FiniteSet(1, 2))
+    assert PowerSet(S.EmptySet).rewrite(FiniteSet) == FiniteSet(S.EmptySet)
 
 
 def test_powerset__contains__():
@@ -47,19 +52,19 @@ def test_powerset__contains__():
 def test_failing_powerset__contains__():
     # XXX These are failing when evaluate=True,
     # but using unevaluated PowerSet works fine.
-    assert FiniteSet(1, 2) not in PowerSet(S.EmptySet)
-    assert S.Naturals not in PowerSet(S.EmptySet)
-    assert S.Naturals not in PowerSet(FiniteSet(1, 2))
-    assert S.Naturals0 not in PowerSet(S.EmptySet)
-    assert S.Naturals0 not in PowerSet(FiniteSet(1, 2))
-    assert S.Integers not in PowerSet(S.EmptySet)
-    assert S.Integers not in PowerSet(FiniteSet(1, 2))
-    assert S.Rationals not in PowerSet(S.EmptySet)
-    assert S.Rationals not in PowerSet(FiniteSet(1, 2))
-    assert S.Reals not in PowerSet(S.EmptySet)
-    assert S.Reals not in PowerSet(FiniteSet(1, 2))
-    assert S.Complexes not in PowerSet(S.EmptySet)
-    assert S.Complexes not in PowerSet(FiniteSet(1, 2))
+    assert FiniteSet(1, 2) not in PowerSet(S.EmptySet).rewrite(FiniteSet)
+    assert S.Naturals not in PowerSet(S.EmptySet).rewrite(FiniteSet)
+    assert S.Naturals not in PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet)
+    assert S.Naturals0 not in PowerSet(S.EmptySet).rewrite(FiniteSet)
+    assert S.Naturals0 not in PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet)
+    assert S.Integers not in PowerSet(S.EmptySet).rewrite(FiniteSet)
+    assert S.Integers not in PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet)
+    assert S.Rationals not in PowerSet(S.EmptySet).rewrite(FiniteSet)
+    assert S.Rationals not in PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet)
+    assert S.Reals not in PowerSet(S.EmptySet).rewrite(FiniteSet)
+    assert S.Reals not in PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet)
+    assert S.Complexes not in PowerSet(S.EmptySet).rewrite(FiniteSet)
+    assert S.Complexes not in PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet)
 
 
 def test_powerset__len__():
@@ -80,4 +85,4 @@ def test_powerset_contains():
     x = Symbol('x')
 
     A = PowerSet(FiniteSet(x), evaluate=False)
-    assert A.contains(FiniteSet(1)) == Contains(A, FiniteSet(1))
+    assert A.contains(FiniteSet(1)) == Contains(FiniteSet(1), A)

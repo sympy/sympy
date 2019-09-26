@@ -75,17 +75,17 @@ class PowerSet(Set):
         if not isinstance(arg, Set):
             raise ValueError('{} must be a set.'.format(arg))
 
-        if evaluate:
-            ret = arg._eval_powerset()
-
-            if ret is not None and not isinstance(arg, PowerSet):
-                return ret
-
         return super(PowerSet, cls).__new__(cls, arg)
 
     @property
     def arg(self):
         return self.args[0]
+
+    def _eval_rewrite_as_FiniteSet(self, *args, **kwargs):
+        arg = self.arg
+        if arg.is_FiniteSet:
+            return arg.powerset()
+        return None
 
     @_sympifyit('other', NotImplemented)
     def _contains(self, other):
