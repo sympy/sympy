@@ -98,5 +98,11 @@ class PowerSet(Set):
             return ret
         return None
 
+    def _eval_is_subset(self, other):
+        if isinstance(other, PowerSet):
+            ret = self.arg.is_subset(other.arg)
+            if ret is not None:
+                return ret
+
     def __len__(self):
         return 2 ** len(self.arg)

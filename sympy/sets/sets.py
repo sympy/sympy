@@ -366,6 +366,12 @@ class Set(Basic):
 
         """
         if isinstance(other, Set):
+            dispatch = getattr(self, '_eval_is_subset', None)
+            if dispatch is not None:
+                ret = dispatch(other)
+                if ret is not None:
+                    return ret
+
             s_o = self.intersect(other)
             if s_o == self:
                 return True
