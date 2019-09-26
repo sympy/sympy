@@ -106,3 +106,17 @@ class PowerSet(Set):
 
     def __len__(self):
         return 2 ** len(self.arg)
+
+    def __iter__(self):
+        from .sets import FiniteSet
+        found = [S.EmptySet]
+        yield S.EmptySet
+
+        for x in self.arg:
+            temp = []
+            x = FiniteSet(x)
+            for y in found:
+                new = x + y
+                yield new
+                temp.append(new)
+            found.extend(temp)
