@@ -1491,6 +1491,83 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     else:
         return tuple(retlist)
 
+def is_equivalance(max_num_pow, dem_pow):
+
+
+    if max_num_pow == 2:
+        if dem_pow in [[2, 2], [2, 2, 2]]:
+            return True
+    elif max_num_pow == 1:
+        if dem_pow in [[1, 2, 2], [2, 2, 2], [1, 2], [2, 2]]:
+            return True
+    elif max_num_pow == 0:
+        if dem_pow in [[1, 1, 2], [2, 2], [1 ,2, 2], [1, 1], [2], [1, 2], [2, 2]]:
+            return True
+    return False
+
+def equivalance_hypergeometric(r, func):
+    f = func
+    x = func.args[0]
+    df = f.diff(x)
+    a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
+    b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
+    c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
+    A = cancel(r[b3]/r[a3])
+    B = cancel(r[c3]/r[a3])
+
+    from sympy import factor, gcd
+    if B != 0:
+        I1 = factor(cancel(A.diff(x)/2 + A**2/4 - B))
+    else:
+         I1 = A
+
+    J1 = factor(cancel(x**2*I1 + S(1)/4))
+    num, dem = J1.as_numer_denom()
+    num = powdenest(expand(num))
+    dem = powdenest(expand(dem))
+    pow_num = set()
+    pow_dem = set()
+
+    def _power_counting(num):
+        _pow = set()
+        for val in num:
+            if val.has(x):
+                if isinstance(val, Pow) and val.base == x:
+                    _pow.add(val.exp)
+                elif val == x:
+                    _pow.add(1)
+                else:
+                    _pow.update(_power_counting(val.args))
+        return _pow
+
+    pow_num = _power_counting((num, ))
+    pow_dem = _power_counting((dem, ))
+    pow_dem.update(pow_num)
+
+    _pow = pow_dem
+    k = list(_pow)[0]
+    for i in _pow:
+        k = gcd(i, k)
+
+    I0 = powdenest(simplify(factor(((J1/k**2) - S(1)/4)/((x**k)**2))))
+    I0 = factor(simplify(I0.subs(x, x**(S(1)/k))))
+    num, dem = I0.as_numer_denom()
+    max_num_pow = max(_power_counting((num, )))
+    dem_args = dem.args
+    sing_point = []
+    dem_pow = []
+    for arg in dem_args:
+        if arg.has(x):
+            dem_pow.append(arg.exp)
+            sing_point.append(solve(arg.base, x)[0])
+
+    dem_pow.sort()
+    print(k, sing_point, max_num_pow, dem_pow, I0)
+    if is_equivalance(max_num_pow, dem_pow):
+        return I0, k, sing_point
+    else:
+        return None, None, None
+
 def ode_2nd_hypergeometirc(eq, func, order, match):
 
     from sympy.simplify.hyperexpand import hyperexpand
