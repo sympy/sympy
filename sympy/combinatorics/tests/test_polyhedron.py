@@ -83,3 +83,13 @@ def test_polyhedron():
         (3, 4, 4, 5, 5),
             (12, 24, 24, 60, 60)):
         check(h, size, rpt, target)
+
+
+def test_pgroups():
+    from sympy.combinatorics.polyhedron import (tetrahedron, cube, octahedron,
+            dodecahedron, icosahedron, tetrahedron_faces, cube_faces,
+            octahedron_faces, dodecahedron_faces, icosahedron_faces)
+    from sympy.combinatorics.polyhedron import _pgroup_calcs
+    assert (tetrahedron, cube, octahedron, dodecahedron, icosahedron,
+            tetrahedron_faces, cube_faces, octahedron_faces,
+            dodecahedron_faces, icosahedron_faces) == _pgroup_calcs()
