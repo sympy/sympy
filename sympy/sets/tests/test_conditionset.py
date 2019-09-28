@@ -132,7 +132,7 @@ def test_subs_CondSet():
 
 def test_subs_CondSet_tebr():
     with warns_deprecated_sympy():
-        ConditionSet((x, y), {x + 1, x + y}, S.Reals) == \
+        assert ConditionSet((x, y), {x + 1, x + y}, S.Reals) == \
             ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
 
     c = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
