@@ -17,6 +17,7 @@ from sympy.logic.boolalg import And
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
     ProductSet)
 from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import cartes
 
 
 class Rationals(with_metaclass(Singleton, Set)):
@@ -460,9 +461,12 @@ class ImageSet(Set):
     def doit(self, **kwargs):
         from sympy.sets.setexpr import SetExpr
         f = self.lamda
-        if len(self.base_sets) == 1:
+        sig = f.signature
+        if len(sig) == 1 and sig[0].is_symbol and isinstance(f.expr, Expr):
             base_set = self.base_sets[0]
             return SetExpr(base_set)._eval_func(f).set
+        if all(s.is_FiniteSet for s in self.base_sets):
+            return FiniteSet(*(f(*a) for a in cartes(*self.base_sets)))
         return self
 
 
