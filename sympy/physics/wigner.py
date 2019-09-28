@@ -752,12 +752,13 @@ def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
 
 
 def wigner_d_small(J, beta):
-    r"""Return the small Wigner d matrix for angular momentum J.
+    u"""Return the small Wigner d matrix for angular momentum J.
 
     The components are calculated using the general from [Edmonds74]_,
     equation 4.1.15.
 
     INPUT:
+
     -  ``J`` - An integer, half-integer, or sympy symbol for the total angular
         momentum of the angular momentum space being rotated.
 
@@ -765,8 +766,9 @@ def wigner_d_small(J, beta):
         the so-called line of nodes. See [Edmonds74]_.
 
     OUTPUT:
+
     A matrix representing the corresponding Euler angle rotation in the
-    ``M_J`` basis: `|J, -J\rangle, |J, -J+1\rangle \cdot, |J, -J\rangle`.
+    ``M_J`` basis: ``|J, -J>, |J, -J+1> ..., |J, -J>``.
 
     Examples
     ========
@@ -890,12 +892,13 @@ def wigner_d_small(J, beta):
 
 
 def wigner_d(J, alpha, beta, gamma):
-    r"""Return the Wigner D matrix for angular momentum J.
+    u"""Return the Wigner D matrix for angular momentum J.
 
     The components are calculated using the general from [Edmonds74]_,
     equation 4.1.12.
 
     INPUT:
+
     -  ``J`` - An integer, half-integer, or sympy symbol for the total angular
         momentum of the angular momentum space being rotated.
 
@@ -904,8 +907,9 @@ def wigner_d(J, alpha, beta, gamma):
         figure axes. See [Edmonds74]_.
 
     OUTPUT:
+
     A matrix representing the corresponding Euler angle rotation in the
-    ``M_J`` basis: `|J, -J\rangle, |J, -J+1\rangle \cdot, |J, -J\rangle`.
+    ``M_J`` basis: ``|J, -J>, |J, -J+1> ..., |J, -J>``.
 
     Examples
     ========
