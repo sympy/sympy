@@ -757,6 +757,17 @@ def wigner_d_small(J, beta):
     The components are calculated using the general from [Edmonds74]_,
     equation 4.1.15.
 
+    INPUT:
+    -  ``J`` - An integer, half-integer, or sympy symbol for the total angular
+        momentum of the angular momentum space being rotated.
+
+    -  ``beta`` - A real number representing the Euler angle of rotation about
+        the so-called line of nodes. See [Edmonds74]_.
+
+    OUTPUT:
+    A matrix representing the corresponding Euler angle rotation in the
+    ``M_J`` basis: `|J, -J\rangle, |J, -J+1\rangle \cdot, |J, -J\rangle`.
+
     Examples
     ========
 
@@ -879,10 +890,22 @@ def wigner_d_small(J, beta):
 
 
 def wigner_d(J, alpha, beta, gamma):
-    u"""Return the Wigner D matrix for angular momentum J.
+    ur"""Return the Wigner D matrix for angular momentum J.
 
     The components are calculated using the general from [Edmonds74]_,
     equation 4.1.12.
+
+    INPUT:
+    -  ``J`` - An integer, half-integer, or sympy symbol for the total angular
+        momentum of the angular momentum space being rotated.
+
+    -  ``alpha``, ``beta``, ``gamma`` - Real numbers representing the Euler
+        angles of rotation about the so-called vertical, line of nodes, and
+        figure axes. See [Edmonds74]_.
+
+    OUTPUT:
+    A matrix representing the corresponding Euler angle rotation in the
+    ``M_J`` basis: `|J, -J\rangle, |J, -J+1\rangle \cdot, |J, -J\rangle`.
 
     Examples
     ========
