@@ -875,6 +875,20 @@ class AppliedUndef(Function):
         return True
 
 
+class UndefSageHelper(object):
+    """
+    Helper to facilitate Sage conversion.
+    """
+    def __get__(self, ins, typ):
+        import sage.all as sage
+        if ins is None:
+            return lambda: sage.function(typ.__name__)
+        else:
+            args = [arg._sage_() for arg in ins.args]
+            return lambda : sage.function(ins.__class__.__name__)(*args)
+
+_undef_sage_helper = UndefSageHelper()
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
@@ -909,6 +923,7 @@ class UndefinedFunction(FunctionClass):
         __dict__['__module__'] = None
         obj = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
         obj.name = name
+        obj._sage_ = _undef_sage_helper
         return obj
 
     def __instancecheck__(cls, instance):
