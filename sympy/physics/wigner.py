@@ -11,7 +11,7 @@ Please see the description of the individual functions for further
 details and examples.
 
 References
-==========
+~~~~~~~~~~
 
 .. [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
   T. Regge, Nuovo Cimento, Volume 10, pp. 544 (1958)
