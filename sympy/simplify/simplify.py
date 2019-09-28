@@ -11,7 +11,7 @@ from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, n
 from sympy.core.numbers import Float, I, pi, Rational, Integer
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
-from sympy.functions import gamma, exp, sqrt, log, exp_polar, piecewise_fold, re
+from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.exponential import ExpBase
@@ -614,9 +614,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product, Integral
 
-    # hyperexpand automatically only works on hypergeometric terms
-    expr = hyperexpand(expr)
-
     # Deal with Piecewise separately to avoid recursive growth of expressions
     if expr.has(Piecewise):
         # Fold into a single Piecewise
@@ -644,6 +641,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
                     # As all expressions have been simplified above with the
                     # complete simplify, nothing more needs to be done here
                     return expr
+
+    # hyperexpand automatically only works on hypergeometric terms
+    # Do this after the Piecewise part to avoid recursive expansion
+    expr = hyperexpand(expr)
 
     if expr.has(KroneckerDelta):
         expr = kroneckersimp(expr)
