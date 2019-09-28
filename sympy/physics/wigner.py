@@ -890,7 +890,7 @@ def wigner_d_small(J, beta):
 
 
 def wigner_d(J, alpha, beta, gamma):
-    ur"""Return the Wigner D matrix for angular momentum J.
+    u"""Return the Wigner D matrix for angular momentum J.
 
     The components are calculated using the general from [Edmonds74]_,
     equation 4.1.12.
