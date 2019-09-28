@@ -471,6 +471,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         return sum([_terms(ai) for ai in e.args])
                     if e.is_Mul:
                         return prod([_terms(mi) for mi in e.args])
+                    if e.is_Pow:
+                        return _terms(e.base)
                     return 1
                 xnew_base = expand_mul(new_base, deep=False)
                 if len(Add.make_args(xnew_base)) < _terms(new_base):
