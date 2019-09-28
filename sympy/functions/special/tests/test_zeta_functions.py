@@ -167,6 +167,9 @@ def test_polylog_values():
             assert tn(polylog(s, z), polylog(s, z, evaluate=False), z,
                 a=2, b=-2, c=5, d=2)
 
+    from sympy import Integral
+    assert polylog(0, Integral(1, (x, 0, 1))) == -S.Half
+
 
 def test_lerchphi_expansion():
     assert myexpand(lerchphi(1, s, a), zeta(s, a))

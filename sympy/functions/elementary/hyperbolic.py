@@ -127,6 +127,9 @@ class sinh(HyperbolicFunction):
                 if m:
                     return sinh(m)*cosh(x) + cosh(m)*sinh(x)
 
+            if arg.is_zero:
+                return S.Zero
+
             if arg.func == asinh:
                 return arg.args[0]
 
@@ -243,6 +246,11 @@ class sinh(HyperbolicFunction):
         if arg.is_imaginary:
             return True
 
+    def _eval_is_zero(self):
+        arg = self.args[0]
+        if arg.is_zero:
+            return True
+
 
 class cosh(HyperbolicFunction):
     r"""
@@ -294,6 +302,9 @@ class cosh(HyperbolicFunction):
                 x, m = _peeloff_ipi(arg)
                 if m:
                     return cosh(m)*cosh(x) + sinh(m)*sinh(x)
+
+            if arg.is_zero:
+                return S.One
 
             if arg.func == asinh:
                 return sqrt(1 + arg.args[0]**2)
@@ -460,6 +471,9 @@ class tanh(HyperbolicFunction):
                     else: # tanhm == 0
                         return tanh(x)
 
+            if arg.is_zero:
+                return S.Zero
+
             if arg.func == asinh:
                 x = arg.args[0]
                 return x/sqrt(1 + x**2)
@@ -551,6 +565,11 @@ class tanh(HyperbolicFunction):
         if arg.is_extended_real:
             return True
 
+    def _eval_is_zero(self):
+        arg = self.args[0]
+        if arg.is_zero:
+            return True
+
 
 class coth(HyperbolicFunction):
     r"""
@@ -609,6 +628,9 @@ class coth(HyperbolicFunction):
                         return coth(x)
                     else: # cothm == 0
                         return tanh(x)
+
+            if arg.is_zero:
+                return S.ComplexInfinity
 
             if arg.func == asinh:
                 x = arg.args[0]
@@ -919,6 +941,9 @@ class asinh(InverseHyperbolicFunction):
             if arg is S.ComplexInfinity:
                 return S.ComplexInfinity
 
+            if arg.is_zero:
+                return S.Zero
+
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
@@ -974,6 +999,11 @@ class asinh(InverseHyperbolicFunction):
         Returns the inverse of this function.
         """
         return sinh
+
+    def _eval_is_zero(self):
+        arg = self.args[0]
+        if arg.is_zero:
+            return True
 
 
 class acosh(InverseHyperbolicFunction):
@@ -1047,6 +1077,9 @@ class acosh(InverseHyperbolicFunction):
             return S.Infinity + S.ImaginaryUnit*S.Pi/2
         if arg == -S.ImaginaryUnit*S.Infinity:
             return S.Infinity - S.ImaginaryUnit*S.Pi/2
+
+        if arg.is_zero:
+            return S.Pi*S.ImaginaryUnit*S.Half
 
         if isinstance(arg, cosh) and arg.args[0].is_number:
             z = arg.args[0]
@@ -1158,6 +1191,9 @@ class atanh(InverseHyperbolicFunction):
                 if _coeff_isneg(arg):
                     return -cls(-arg)
 
+        if arg.is_zero:
+            return S.Zero
+
         if isinstance(arg, tanh) and arg.args[0].is_number:
             z = arg.args[0]
             if z.is_real:
@@ -1192,6 +1228,12 @@ class atanh(InverseHyperbolicFunction):
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return (log(1 + x) - log(1 - x)) / 2
+
+    def _eval_is_zero(self):
+        arg = self.args[0]
+        if arg.is_zero:
+            return True
+
 
     def inverse(self, argindex=1):
         """
@@ -1244,6 +1286,9 @@ class acoth(InverseHyperbolicFunction):
             else:
                 if _coeff_isneg(arg):
                     return -cls(-arg)
+
+        if arg.is_zero:
+            return S.Pi*S.ImaginaryUnit*S.Half
 
     @staticmethod
     @cacheit
@@ -1375,6 +1420,9 @@ class asech(InverseHyperbolicFunction):
             from sympy.calculus.util import AccumBounds
             return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
 
+        if arg.is_zero:
+            return S.Infinity
+
     @staticmethod
     @cacheit
     def expansion_term(n, x, *previous_terms):
@@ -1483,6 +1531,9 @@ class acsch(InverseHyperbolicFunction):
 
         if arg is S.ComplexInfinity:
             return S.Zero
+
+        if arg.is_zero:
+            return S.ComplexInfinity
 
         if _coeff_isneg(arg):
             return -cls(-arg)

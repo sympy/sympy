@@ -433,7 +433,7 @@ def BetaBinomial(name, n, alpha, beta):
 
     >>> X = BetaBinomial('X', 2, 1, 1)
     >>> density(X).dict
-    {0: beta(1, 3)/beta(1, 1), 1: 2*beta(2, 2)/beta(1, 1), 2: beta(3, 1)/beta(1, 1)}
+    {0: 1/3, 1: 2*beta(2, 2), 2: 1/3}
 
     References
     ==========

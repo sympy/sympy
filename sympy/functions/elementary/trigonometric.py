@@ -196,6 +196,8 @@ def _pi_coeff(arg, cycles=1):
                 else:
                     return c2*x
             return cx
+    elif arg.is_zero:
+        return S.Zero
 
 
 class sin(TrigonometricFunction):
@@ -339,6 +341,9 @@ class sin(TrigonometricFunction):
             if m:
                 return sin(m)*cos(x) + cos(m)*sin(x)
 
+        if arg.is_zero:
+            return S.Zero
+
         if isinstance(arg, asin):
             return arg.args[0]
 
@@ -474,6 +479,11 @@ class sin(TrigonometricFunction):
     def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_extended_real:
+            return True
+
+    def _eval_is_zero(self):
+        arg = self.args[0]
+        if arg.is_zero:
             return True
 
 
@@ -642,6 +652,9 @@ class cos(TrigonometricFunction):
             x, m = _peeloff_pi(arg)
             if m:
                 return cos(m)*cos(x) - sin(m)*sin(x)
+
+        if arg.is_zero:
+            return S.One
 
         if isinstance(arg, acos):
             return arg.args[0]
@@ -1063,6 +1076,9 @@ class tan(TrigonometricFunction):
                 else: # tanm == 0
                     return tan(x)
 
+        if arg.is_zero:
+            return S.Zero
+
         if isinstance(arg, atan):
             return arg.args[0]
 
@@ -1222,6 +1238,11 @@ class tan(TrigonometricFunction):
         if arg.is_imaginary:
             return True
 
+    def _eval_is_zero(self):
+        arg = self.args[0]
+        if arg.is_zero:
+            return True
+
 
 class cot(TrigonometricFunction):
     """
@@ -1355,6 +1376,9 @@ class cot(TrigonometricFunction):
                     return cot(x)
                 else: # cotm == 0
                     return -tan(x)
+
+        if arg.is_zero:
+            return S.ComplexInfinity
 
         if isinstance(arg, acot):
             return arg.args[0]
@@ -2059,6 +2083,9 @@ class asin(InverseTrigonometricFunction):
         if i_coeff is not None:
             return S.ImaginaryUnit * asinh(i_coeff)
 
+        if arg.is_zero:
+            return S.Zero
+
         if isinstance(arg, sin):
             ang = arg.args[0]
             if ang.is_comparable:
@@ -2403,6 +2430,9 @@ class atan(InverseTrigonometricFunction):
         if i_coeff is not None:
             return S.ImaginaryUnit * atanh(i_coeff)
 
+        if arg.is_zero:
+            return S.Zero
+
         if isinstance(arg, tan):
             ang = arg.args[0]
             if ang.is_comparable:
@@ -2571,6 +2601,9 @@ class acot(InverseTrigonometricFunction):
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
             return -S.ImaginaryUnit * acoth(i_coeff)
+
+        if arg.is_zero:
+            return S.Pi*S.Half
 
         if isinstance(arg, cot):
             ang = arg.args[0]

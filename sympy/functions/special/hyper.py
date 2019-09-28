@@ -178,9 +178,9 @@ class hyper(TupleParametersBase):
     """
 
 
-    def __new__(cls, ap, bq, z):
+    def __new__(cls, ap, bq, z, **kwargs):
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z)
+        return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
 
     @classmethod
     def eval(cls, ap, bq, z):
@@ -442,7 +442,7 @@ class meijerg(TupleParametersBase):
     """
 
 
-    def __new__(cls, *args):
+    def __new__(cls, *args, **kwargs):
         if len(args) == 5:
             args = [(args[0], args[1]), (args[2], args[3]), args[4]]
         if len(args) != 3:
@@ -463,7 +463,7 @@ class meijerg(TupleParametersBase):
                          "any b1, ..., bm by a positive integer")
 
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, arg0, arg1, args[2])
+        return Function.__new__(cls, arg0, arg1, args[2], **kwargs)
 
     def fdiff(self, argindex=3):
         if argindex != 3:

@@ -1117,6 +1117,8 @@ class airyai(AiryBase):
                 return S.Zero
             elif arg.is_zero:
                 return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
+        if arg.is_zero:
+            return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1286,6 +1288,9 @@ class airybi(AiryBase):
             elif arg.is_zero:
                 return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
 
+        if arg.is_zero:
+            return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return airybiprime(self.args[0])
@@ -1440,8 +1445,9 @@ class airyaiprime(AiryBase):
                 return S.NaN
             elif arg is S.Infinity:
                 return S.Zero
-            elif arg.is_zero:
-                return -S.One / (3**Rational(1, 3) * gamma(Rational(1, 3)))
+
+        if arg.is_zero:
+            return S.NegativeOne / (3**Rational(1, 3) * gamma(Rational(1, 3)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1599,6 +1605,10 @@ class airybiprime(AiryBase):
             elif arg.is_zero:
                 return 3**Rational(1, 6) / gamma(Rational(1, 3))
 
+        if arg.is_zero:
+            return 3**Rational(1, 6) / gamma(Rational(1, 3))
+
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return self.args[0]*airybi(self.args[0])
@@ -1710,19 +1720,27 @@ class marcumq(Function):
     @classmethod
     def eval(cls, m, a, b):
         from sympy import exp, uppergamma
-        if a == 0:
-            if m == 0 and b == 0:
+        if a is S.Zero:
+            if m is S.Zero and b is S.Zero:
                 return S.Zero
-            return uppergamma(m, b**2 / 2) / gamma(m)
+            return uppergamma(m, b**2 * S.Half) / gamma(m)
 
-        if m == 0 and b == 0:
-            return 1 - 1 / exp(a**2 / 2)
+        if m is S.Zero and b is S.Zero:
+            return 1 - 1 / exp(a**2 * S.Half)
 
         if a == b:
-            if m == 1:
-                return (1 + exp(-a**2) * besseli(0, a**2)) / 2
+            if m is S.One:
+                return (1 + exp(-a**2) * besseli(0, a**2))*S.Half
             if m == 2:
                 return S.Half + S.Half * exp(-a**2) * besseli(0, a**2) + exp(-a**2) * besseli(1, a**2)
+
+        if a.is_zero:
+            if m.is_zero and b.is_zero:
+                return S.Zero
+            return uppergamma(m, b**2*S.Half) / gamma(m)
+
+        if m.is_zero and b.is_zero:
+            return 1 - 1 / exp(a**2*S.Half)
 
     def fdiff(self, argindex=2):
         from sympy import exp
@@ -1753,3 +1771,7 @@ class marcumq(Function):
             if m.is_Integer and m >= 2:
                 s = sum([besseli(i, a**2) for i in range(1, m)])
                 return S.Half + exp(-a**2) * besseli(0, a**2) / 2 + exp(-a**2) * s
+
+    def _eval_is_zero(self):
+        if all(arg.is_zero for arg in self.args):
+            return True

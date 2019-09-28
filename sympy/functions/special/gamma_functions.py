@@ -303,7 +303,7 @@ class lowergamma(Function):
         #    of both s and x), i.e.
         #    lowergamma(s, exp(2*I*pi*n)*x) = exp(2*pi*I*n*a)*lowergamma(a, x)
         from sympy import unpolarify, I
-        if x == 0:
+        if x is S.Zero:
             return S.Zero
         nx, n = x.extract_branch_factor()
         if a.is_integer and a.is_positive:
@@ -333,6 +333,9 @@ class lowergamma(Function):
                 if not a.is_Integer:
                     return (-1)**(S.Half - a)*pi*erf(sqrt(x))/gamma(1 - a) + exp(-x)*Add(*[x**(k + a - 1)*gamma(a)/gamma(a + k) for k in range(1, Rational(3, 2) - a)])
 
+        if x.is_zero:
+            return S.Zero
+
     def _eval_evalf(self, prec):
         from mpmath import mp, workprec
         from sympy import Expr
@@ -346,9 +349,9 @@ class lowergamma(Function):
             return self
 
     def _eval_conjugate(self):
-        z = self.args[1]
-        if not z in (S.Zero, S.NegativeInfinity):
-            return self.func(self.args[0].conjugate(), z.conjugate())
+        x = self.args[1]
+        if x not in (S.Zero, S.NegativeInfinity):
+            return self.func(self.args[0].conjugate(), x.conjugate())
 
     def _eval_rewrite_as_uppergamma(self, s, x, **kwargs):
         return gamma(s) - uppergamma(s, x)
@@ -358,6 +361,11 @@ class lowergamma(Function):
         if s.is_integer and s.is_nonpositive:
             return self
         return self.rewrite(uppergamma).rewrite(expint)
+
+    def _eval_is_zero(self):
+        x = self.args[1]
+        if x.is_zero:
+            return True
 
 
 class uppergamma(Function):
@@ -487,6 +495,12 @@ class uppergamma(Function):
 
                 if not a.is_Integer:
                     return (-1)**(S.Half - a) * pi*erfc(sqrt(z))/gamma(1-a) - z**a * exp(-z) * Add(*[z**k * gamma(a) / gamma(a+k+1) for k in range(S.Half - a)])
+
+        if a.is_zero and z.is_positive:
+            return -Ei(-z)
+
+        if z.is_zero and re(a).is_positive:
+            return gamma(a)
 
     def _eval_conjugate(self):
         z = self.args[1]
@@ -682,7 +696,7 @@ class polygamma(Function):
                 if z != nz:
                     return polygamma(n, nz)
 
-            if n == -1:
+            if n is S.NegativeOne:
                 return loggamma(z)
             else:
                 if z.is_Number:
@@ -694,6 +708,8 @@ class polygamma(Function):
                                 return S.Infinity
                             else:
                                 return S.Zero
+                        if n.is_zero:
+                            return S.Infinity
                     elif z.is_Integer:
                         if z.is_nonpositive:
                             return S.ComplexInfinity
@@ -703,7 +719,7 @@ class polygamma(Function):
                             elif n.is_odd:
                                 return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
 
-        if n == 0:
+        if n.is_zero:
             if z is S.NaN:
                 return S.NaN
             elif z.is_Rational:
@@ -712,7 +728,7 @@ class polygamma(Function):
 
                 # only expand for small denominators to avoid creating long expressions
                 if q <= 5:
-                    return expand_func(polygamma(n, z, evaluate=False))
+                    return expand_func(polygamma(S.Zero, z, evaluate=False))
 
             elif z in (S.Infinity, S.NegativeInfinity):
                 return S.Infinity
