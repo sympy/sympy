@@ -927,6 +927,24 @@ def test_sympy__sets__fancysets__ComplexRegion():
     assert _test_args(ComplexRegion(a*theta, polar=True))
 
 
+def test_sympy__sets__fancysets__CartesianComplexRegion():
+    from sympy.sets.fancysets import CartesianComplexRegion
+    from sympy import S
+    from sympy.sets import Interval
+    a = Interval(0, 1)
+    b = Interval(2, 3)
+    assert _test_args(CartesianComplexRegion(a*b))
+
+
+def test_sympy__sets__fancysets__PolarComplexRegion():
+    from sympy.sets.fancysets import PolarComplexRegion
+    from sympy import S
+    from sympy.sets import Interval
+    a = Interval(0, 1)
+    theta = Interval(0, 2*S.Pi)
+    assert _test_args(PolarComplexRegion(a*theta))
+
+
 def test_sympy__sets__fancysets__ImageSet():
     from sympy.sets.fancysets import ImageSet
     from sympy import S, Symbol
