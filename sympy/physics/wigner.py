@@ -752,7 +752,7 @@ def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
 
 
 def wigner_d_small(J, beta):
-    u"""Return the small Wigner d matrix for angular momentum J.
+    r"""Return the small Wigner d matrix for angular momentum J.
 
     The components are calculated using the general from [Edmonds74]_,
     equation 4.1.15.
@@ -890,7 +890,7 @@ def wigner_d_small(J, beta):
 
 
 def wigner_d(J, alpha, beta, gamma):
-    u"""Return the Wigner D matrix for angular momentum J.
+    r"""Return the Wigner D matrix for angular momentum J.
 
     The components are calculated using the general from [Edmonds74]_,
     equation 4.1.12.
