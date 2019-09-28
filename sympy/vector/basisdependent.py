@@ -221,8 +221,6 @@ class BasisDependentAdd(BasisDependent, Add):
 
         return obj
 
-    __init__ = Add.__init__
-
 
 class BasisDependentMul(BasisDependent, Mul):
     """
@@ -286,8 +284,6 @@ class BasisDependentMul(BasisDependent, Mul):
         obj._sys = expr._base_instance._sys
 
         return obj
-
-    __init__ = Mul.__init__
 
     def __str__(self, printer=None):
         measure_str = self._measure_number.__str__()
