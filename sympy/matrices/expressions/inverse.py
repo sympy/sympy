@@ -32,9 +32,9 @@ class Inverse(MatPow):
 
     """
     is_Inverse = True
-    exp = S(-1)
+    exp = S.NegativeOne
 
-    def __new__(cls, mat, exp=S(-1)):
+    def __new__(cls, mat, exp=S.NegativeOne):
         # exp is there to make it consistent with
         # inverse.func(*inverse.args) == inverse
         mat = _sympify(mat)

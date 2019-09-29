@@ -88,6 +88,14 @@ the various ODE solving methods. For this reason, they are documented here.
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_1st_linear
 
+:obj:`2nd_linear_airy`
+^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_2nd_linear_airy
+
+:obj:`2nd_linear_bessel`
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_2nd_linear_bessel
+
 :obj:`Bernoulli`
 ^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_Bernoulli

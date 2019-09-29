@@ -1,4 +1,3 @@
-import re
 import os
 import inspect
 from sympy.integrals.rubi.parsetools.parse import (parse_full_form, downvalues_rules, temporary_variable_replacement,
@@ -6,12 +5,12 @@ from sympy.integrals.rubi.parsetools.parse import (parse_full_form, downvalues_r
 
 
 def generate_rules_from_downvalues():
-    '''
+    """
     This function generate rules and saves in file. For more details,
     see `https://github.com/sympy/sympy/wiki/Rubi-parsing-guide`
-    '''
+    """
     cons_dict = {}
-    cons_index =0
+    cons_index = 0
     index = 0
     cons = ''
     input = ["Integrand_simplification.txt", "Linear_products.txt", "Quadratic_products.txt", "Binomial_products.txt",
@@ -19,7 +18,7 @@ def generate_rules_from_downvalues():
         "Sine.txt", "Tangent.txt", "Secant.txt", "Miscellaneous_trig.txt", "Inverse_trig.txt", "Hyperbolic.txt",
         "Inverse_hyperbolic.txt", "Special_functions.txt", "Miscellaneous_integration.txt"]
 
-    output =['integrand_simplification.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py', 'trinomial_products.py',
+    output = ['integrand_simplification.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py', 'trinomial_products.py',
         'miscellaneous_algebraic.py' ,'piecewise_linear.py', 'exponential.py', 'logarithms.py', 'sine.py', 'tangent.py', 'secant.py', 'miscellaneous_trig.py',
         'inverse_trig.py', 'hyperbolic.py', 'inverse_hyperbolic.py', 'special_functions.py', 'miscellaneous_integration.py']
 

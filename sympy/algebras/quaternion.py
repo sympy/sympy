@@ -3,12 +3,12 @@
 # https://en.wikipedia.org/wiki/Quaternion
 from __future__ import print_function
 
-from sympy import Rational
+from sympy import S, Rational
 from sympy import re, im, conjugate
 from sympy import sqrt, sin, cos, acos, exp, ln
 from sympy import trigsimp
 from sympy import integrate
-from sympy import Matrix, Add, Mul
+from sympy import Matrix
 from sympy import sympify
 from sympy.core.expr import Expr
 
@@ -108,8 +108,8 @@ class Quaternion(Expr):
         (x, y, z) = vector
         norm = sqrt(x**2 + y**2 + z**2)
         (x, y, z) = (x / norm, y / norm, z / norm)
-        s = sin(angle * Rational(1, 2))
-        a = cos(angle * Rational(1, 2))
+        s = sin(angle * S.Half)
+        a = cos(angle * S.Half)
         b = x * s
         c = y * s
         d = z * s

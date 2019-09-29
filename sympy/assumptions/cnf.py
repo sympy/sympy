@@ -6,7 +6,7 @@ please refer to sympy.logic classes And, Or, Not, etc.
 """
 from itertools import combinations, product
 from sympy import S, Nor, Nand, Xor, Implies, Equivalent, ITE
-from sympy.logic.boolalg import BooleanFunction, Or, And, Not, Xnor
+from sympy.logic.boolalg import Or, And, Not, Xnor
 from sympy.core.compatibility import zip_longest
 
 

@@ -59,7 +59,7 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
     def pmf(self, x):
         x = Symbol('x')
         return Lambda(x, Piecewise(*(
-            [(v, Eq(k, x)) for k, v in self.dict.items()] + [(0, True)])))
+            [(v, Eq(k, x)) for k, v in self.dict.items()] + [(S.Zero, True)])))
 
     @property
     def set(self):
@@ -165,7 +165,7 @@ class DieDistribution(SingleFiniteDistribution):
 
     @property
     def low(self):
-        return S(1)
+        return S.One
 
     @property
     def set(self):
@@ -179,7 +179,7 @@ class DieDistribution(SingleFiniteDistribution):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
         cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
-        return Piecewise((S(1)/self.sides, cond), (S.Zero, True))
+        return Piecewise((S.One/self.sides, cond), (S.Zero, True))
 
 def Die(name, sides=6):
     """
@@ -225,7 +225,9 @@ class BernoulliDistribution(SingleFiniteDistribution):
         return set([self.succ, self.fail])
 
     def pmf(self, x):
-        return Piecewise((self.p, x == self.succ), (1 - self.p, x == self.fail), (0, True))
+        return Piecewise((self.p, x == self.succ),
+                         (1 - self.p, x == self.fail),
+                         (S.Zero, True))
 
 
 def Bernoulli(name, p, succ=1, fail=0):
@@ -311,7 +313,7 @@ class BinomialDistribution(SingleFiniteDistribution):
 
     @property
     def low(self):
-        return S(0)
+        return S.Zero
 
     @property
     def is_symbolic(self):
@@ -395,7 +397,7 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
 
     @property
     def low(self):
-        return S(0)
+        return S.Zero
 
     @property
     def is_symbolic(self):
@@ -431,7 +433,7 @@ def BetaBinomial(name, n, alpha, beta):
 
     >>> X = BetaBinomial('X', 2, 1, 1)
     >>> density(X).dict
-    {0: beta(1, 3)/beta(1, 1), 1: 2*beta(2, 2)/beta(1, 1), 2: beta(3, 1)/beta(1, 1)}
+    {0: 1/3, 1: 2*beta(2, 2), 2: 1/3}
 
     References
     ==========
@@ -518,7 +520,7 @@ class RademacherDistribution(SingleFiniteDistribution):
     @property
     def pmf(self):
         k = Dummy('k')
-        return Lambda(k, Piecewise((S.Half, Or(Eq(k, -1), Eq(k, 1))), (0, True)))
+        return Lambda(k, Piecewise((S.Half, Or(Eq(k, -1), Eq(k, 1))), (S.Zero, True)))
 
 def Rademacher(name):
     """

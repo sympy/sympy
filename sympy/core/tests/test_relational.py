@@ -129,6 +129,9 @@ def test_Eq():
     # issue 13348
     assert Eq(True, 1) is S.false
 
+    assert Eq((), 1) is S.false
+
+
 def test_rel_Infinity():
     # NOTE: All of these are actually handled by sympy.core.Number, and do
     # not create Relational objects.
@@ -487,7 +490,7 @@ def test_nan_equality_exceptions():
     assert Unequality(nan, nan) is S.true
 
     # See issue #7773
-    A = (x, S(0), S(1)/3, pi, oo, -oo)
+    A = (x, S.Zero, S.One/3, pi, oo, -oo)
     assert Equality(nan, random.choice(A)) is S.false
     assert Equality(random.choice(A), nan) is S.false
     assert Unequality(nan, random.choice(A)) is S.true
@@ -497,7 +500,7 @@ def test_nan_equality_exceptions():
 def test_nan_inequality_raise_errors():
     # See discussion in pull request #7776.  We test inequalities with
     # a set including examples of various classes.
-    for q in (x, S(0), S(10), S(1)/3, pi, S(1.3), oo, -oo, nan):
+    for q in (x, S.Zero, S(10), S.One/3, pi, S(1.3), oo, -oo, nan):
         assert_all_ineq_raise_TypeError(q, nan)
 
 
@@ -519,7 +522,7 @@ def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
     # We test all combinations from a set
     # FIXME: could replace with random selection after test passes
-    A = (x, y, S(0), S(1)/3, pi, oo, -oo)
+    A = (x, y, S.Zero, S.One/3, pi, oo, -oo)
     for a in A:
         for b in A:
             assert Gt(a, b) == (a > b)
@@ -527,13 +530,13 @@ def test_inequalities_symbol_name_same():
             assert Ge(a, b) == (a >= b)
             assert Le(a, b) == (a <= b)
 
-    for b in (y, S(0), S(1)/3, pi, oo, -oo):
+    for b in (y, S.Zero, S.One/3, pi, oo, -oo):
         assert Gt(x, b, evaluate=False) == (x > b)
         assert Lt(x, b, evaluate=False) == (x < b)
         assert Ge(x, b, evaluate=False) == (x >= b)
         assert Le(x, b, evaluate=False) == (x <= b)
 
-    for b in (y, S(0), S(1)/3, pi, oo, -oo):
+    for b in (y, S.Zero, S.One/3, pi, oo, -oo):
         assert Gt(b, x, evaluate=False) == (b > x)
         assert Lt(b, x, evaluate=False) == (b < x)
         assert Ge(b, x, evaluate=False) == (b >= x)
@@ -545,7 +548,7 @@ def test_inequalities_symbol_name_same_complex():
     With complex non-real numbers, both should raise errors.
     """
     # FIXME: could replace with random selection after test passes
-    for a in (x, S(0), S(1)/3, pi, oo):
+    for a in (x, S.Zero, S.One/3, pi, oo, Rational(1, 3)):
         raises(TypeError, lambda: Gt(a, I))
         raises(TypeError, lambda: a > I)
         raises(TypeError, lambda: Lt(a, I))
@@ -562,7 +565,7 @@ def test_inequalities_cant_sympify_other():
 
     bar = "foo"
 
-    for a in (x, S(0), S(1)/3, pi, I, zoo, oo, -oo, nan):
+    for a in (x, S.Zero, S.One/3, pi, I, zoo, oo, -oo, nan, Rational(1, 3)):
         for op in (lt, gt, le, ge):
             raises(TypeError, lambda: op(a, bar))
 
@@ -626,7 +629,7 @@ def test_simplify_relational():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
     assert simplify(x*(y + 1) - x*y - x - 1 < x) == (x > -1)
     assert simplify(x < x*(y + 1) - x*y - x + 1) == (x < 1)
-    r = S(1) < x
+    r = S.One < x
     # canonical operations are not the same as simplification,
     # so if there is no simplification, canonicalization will
     # be done unless the measure forbids it
@@ -636,9 +639,8 @@ def test_simplify_relational():
     # this will simplify to S.false and that is the
     # reason for the 'if r.is_Relational' in Relational's
     # _eval_simplify routine
-    assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
-        2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
-
+    assert simplify(-(2**(pi*Rational(3, 2)) + 6**pi)**(1/pi) +
+                    2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
     # canonical at least
     assert Eq(y, x).simplify() == Eq(x, y)
     assert Eq(x - 1, 0).simplify() == Eq(x, 1)
@@ -873,7 +875,7 @@ def test_rel_args():
     # can be removed.
     for op in ['<', '<=', '>', '>=']:
         for b in (S.true, x < 1, And(x, y)):
-            for v in (0.1, 1, 2**32, t, S(1)):
+            for v in (0.1, 1, 2**32, t, S.One):
                 raises(TypeError, lambda: Relational(b, v, op))
 
 
@@ -960,6 +962,16 @@ def test_improved_canonical():
     assert (pi >= x).canonical == (x <= pi)
 
 
+def test_set_equality_canonical():
+    a, b, c = symbols('a b c')
+
+    A = Eq(FiniteSet(a, b, c), FiniteSet(1, 2, 3))
+    B = Ne(FiniteSet(a, b, c), FiniteSet(4, 5, 6))
+
+    assert A.canonical == A.reversed
+    assert B.canonical == B.reversed
+
+
 def test_trigsimp():
     # issue 16736
     s, c = sin(2*x), cos(2*x)
@@ -979,6 +991,7 @@ def test_polynomial_relation_simplification():
     assert Le(-(3*x*(x + 1) + 4), -3*x).simplify() in [Ge(x**2, -Rational(4,3)), Le(-x**2, Rational(4, 3))]
     assert ((x**2+3)*(x**2-1)+3*x >= 2*x**2).simplify() in [(x**4 + 3*x >= 3), (-x**4 - 3*x <= -3)]
 
+
 def test_multivariate_linear_function_simplification():
     assert Ge(x + y, x - y).simplify() == Ge(y, 0)
     assert Le(-x + y, -x - y).simplify() == Le(y, 0)
@@ -988,6 +1001,7 @@ def test_multivariate_linear_function_simplification():
     assert (2*x + y < 2*x + y + 3).simplify() == True
     a, b, c, d, e, f, g = symbols('a b c d e f g')
     assert Lt(a + b + c + 2*d, 3*d - f + g). simplify() == Lt(a, -b - c + d - f + g)
+
 
 def test_nonpolymonial_relations():
     assert Eq(cos(x), 0).simplify() == Eq(cos(x), 0)

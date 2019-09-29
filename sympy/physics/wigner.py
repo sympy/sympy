@@ -749,7 +749,8 @@ def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
 
     def alpha(l,m,j,p,k):
         return sqrt((2*l+1)*(2*j+1)*(2*k+1)/(4*pi)) * \
-                Wigner3j(j, l, k, S(0), S(0), S(0)) * Wigner3j(j, l, k, p, m, -m-p)
+                Wigner3j(j, l, k, S.Zero, S.Zero, S.Zero) * \
+                Wigner3j(j, l, k, p, m, -m-p)
 
-    return (-S(1))**(m+p) * Sum(Ynm(k, m+p, theta, phi) * alpha(l,m,j,p,k) / 2 \
+    return (S.NegativeOne)**(m+p) * Sum(Ynm(k, m+p, theta, phi) * alpha(l,m,j,p,k) / 2 \
         *(k**2-j**2-l**2+k-j-l), (k, abs(l-j), l+j))

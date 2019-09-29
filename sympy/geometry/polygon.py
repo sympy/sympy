@@ -19,8 +19,6 @@ from .point import Point
 from .ellipse import Circle
 from .line import Line, Segment, Ray
 
-from sympy import sqrt
-
 import warnings
 
 

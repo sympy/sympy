@@ -16,7 +16,7 @@ def test_inverse():
     raises(ShapeError, lambda: Inverse(A))
     raises(ShapeError, lambda: Inverse(A*B))
 
-    assert Inverse(C).args == (C, S(-1))
+    assert Inverse(C).args == (C, S.NegativeOne)
     assert Inverse(C).shape == (n, n)
     assert Inverse(A*E).shape == (n, n)
     assert Inverse(E*A).shape == (m, m)

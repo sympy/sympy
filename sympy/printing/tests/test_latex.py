@@ -876,7 +876,7 @@ def test_latex_productset():
     fset = FiniteSet(1, 2, 3)
     assert latex(line**2) == r"%s^{2}" % latex(line)
     assert latex(line**10) == r"%s^{10}" % latex(line)
-    assert latex(line * bigline * fset) == r"%s \times %s \times %s" % (
+    assert latex((line * bigline * fset).flatten()) == r"%s \times %s \times %s" % (
         latex(line), latex(bigline), latex(fset))
 
 
@@ -978,7 +978,7 @@ def test_set_operators_parenthesis():
         '\\left\\{d\\right\\}\\right)'
 
     # XXX This can be incorrect since cartesian product is not associative
-    assert latex(ProductSet(A, P2)) == \
+    assert latex(ProductSet(A, P2).flatten()) == \
         '\\left\\{a\\right\\} \\times \\left\\{c\\right\\} \\times ' \
         '\\left\\{d\\right\\}'
     assert latex(ProductSet(U1, U2)) == \
@@ -2034,7 +2034,7 @@ def test_Mul():
     assert latex(e) == r'- 2 \left(x + 1\right)'
     e = Mul(2, x + 1, evaluate=False)
     assert latex(e) == r'2 \left(x + 1\right)'
-    e = Mul(S.One/2, x + 1, evaluate=False)
+    e = Mul(S.Half, x + 1, evaluate=False)
     assert latex(e) == r'\frac{x + 1}{2}'
     e = Mul(y, x + 1, evaluate=False)
     assert latex(e) == r'y \left(x + 1\right)'
@@ -2345,11 +2345,12 @@ def test_issue_15353():
     from sympy import ConditionSet, Tuple, FiniteSet, S, sin, cos
     a, x = symbols('a x')
     # Obtained from nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
-    sol = ConditionSet(Tuple(x, a), FiniteSet(sin(a*x), cos(a*x)), S.Complexes)
+    sol = ConditionSet(
+        Tuple(x, a), Eq(sin(a*x), 0) & Eq(cos(a*x), 0), S.Complexes**2)
     assert latex(sol) == \
-        r'\left\{\left( x, \  a\right) \mid \left( x, \  a\right) \in '\
-        r'\mathbb{C} \wedge \left\{\sin{\left(a x \right)}, \cos{\left(a x '\
-        r'\right)}\right\} \right\}'
+        r'\left\{\left( x, \  a\right) \mid \left( x, \  a\right) \in ' \
+        r'\mathbb{C}^{2} \wedge \sin{\left(a x \right)} = 0 \wedge ' \
+        r'\cos{\left(a x \right)} = 0 \right\}'
 
 
 def test_trace():

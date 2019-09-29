@@ -244,7 +244,7 @@ def test_mul_div():
     u2.set_dimension(length**2)
     u3.set_dimension(length**-1)
     u2.set_scale_factor(S(100))
-    u3.set_scale_factor(S(1)/10)
+    u3.set_scale_factor(Rational(1, 10))
 
     assert u ** 2 != u2
     assert u ** -1 != u3
@@ -264,7 +264,7 @@ def test_units():
     t = (1*au / speed_of_light) / minute
     # TODO: need a better way to simplify expressions containing units:
     t = convert_to(convert_to(t, meter / minute), meter)
-    assert t == S(49865956897)/5995849160
+    assert t == Rational(49865956897, 5995849160)
 
     # TODO: fix this, it should give `m` without `Abs`
     assert sqrt(m**2) == Abs(m)
@@ -355,28 +355,28 @@ def test_factor_and_dimension():
 
     v_w1.set_dimension(length/time)
     v_w2.set_dimension(length/time)
-    v_w1.set_scale_factor(S(3)/2*meter/second)
+    v_w1.set_scale_factor(Rational(3, 2)*meter/second)
     v_w2.set_scale_factor(2*meter/second)
 
     expr = Abs(v_w1/2 - v_w2)
-    assert (S(5)/4, length/time) == \
+    assert (Rational(5, 4), length/time) == \
         Quantity._collect_factor_and_dimension(expr)
 
-    expr = S(5)/2*second/meter*v_w1 - 3000
-    assert (-(2996 + S(1)/4), Dimension(1)) == \
+    expr = Rational(5, 2)*second/meter*v_w1 - 3000
+    assert (-(2996 + Rational(1, 4)), Dimension(1)) == \
         Quantity._collect_factor_and_dimension(expr)
 
     expr = v_w1**(v_w2/v_w1)
-    assert ((S(3)/2)**(S(4)/3), (length/time)**(S(4)/3)) == \
+    assert ((Rational(3, 2))**Rational(4, 3), (length/time)**Rational(4, 3)) == \
         Quantity._collect_factor_and_dimension(expr)
 
 
 @XFAIL
 def test_factor_and_dimension_with_Abs():
     with warns_deprecated_sympy():
-        v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
+        v_w1 = Quantity('v_w1', length/time, Rational(3, 2)*meter/second)
     v_w1.set_dimension(length/time)
-    v_w1.set_scale_factor(S(3)/2*meter/second)
+    v_w1.set_scale_factor(Rational(3, 2)*meter/second)
     expr = v_w1 - Abs(v_w1)
     assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
 

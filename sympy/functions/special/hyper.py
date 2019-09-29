@@ -178,9 +178,9 @@ class hyper(TupleParametersBase):
     """
 
 
-    def __new__(cls, ap, bq, z):
+    def __new__(cls, ap, bq, z, **kwargs):
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z)
+        return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
 
     @classmethod
     def eval(cls, ap, bq, z):
@@ -262,7 +262,7 @@ class hyper(TupleParametersBase):
             aints = [a for a in self.ap if a.is_Integer and (a <= 0) == True]
             bints = [a for a in self.bq if a.is_Integer and (a <= 0) == True]
             if len(aints) < len(bints):
-                return S(0)
+                return S.Zero
             popped = False
             for b in bints:
                 cancelled = False
@@ -273,17 +273,17 @@ class hyper(TupleParametersBase):
                         break
                     popped = True
                 if not cancelled:
-                    return S(0)
+                    return S.Zero
             if aints or popped:
                 # There are still non-positive numerator parameters.
                 # This is a polynomial.
                 return oo
         if len(self.ap) == len(self.bq) + 1:
-            return S(1)
+            return S.One
         elif len(self.ap) <= len(self.bq):
             return oo
         else:
-            return S(0)
+            return S.Zero
 
     @property
     def convergence_statement(self):
@@ -442,7 +442,7 @@ class meijerg(TupleParametersBase):
     """
 
 
-    def __new__(cls, *args):
+    def __new__(cls, *args, **kwargs):
         if len(args) == 5:
             args = [(args[0], args[1]), (args[2], args[3]), args[4]]
         if len(args) != 3:
@@ -463,7 +463,7 @@ class meijerg(TupleParametersBase):
                          "any b1, ..., bm by a positive integer")
 
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, arg0, arg1, args[2])
+        return Function.__new__(cls, arg0, arg1, args[2], **kwargs)
 
     def fdiff(self, argindex=3):
         if argindex != 3:
@@ -628,9 +628,9 @@ class meijerg(TupleParametersBase):
                 return
             branch = branch[0].args[0]/I
         else:
-            branch = S(0)
+            branch = S.Zero
         n = ceiling(abs(branch/S.Pi)) + 1
-        znum = znum**(S(1)/n)*exp(I*branch / n)
+        znum = znum**(S.One/n)*exp(I*branch / n)
 
         # Convert all args to mpf or mpc
         try:
@@ -760,7 +760,7 @@ class HyperRep(Function):
         newargs = self.args[:-1] + (x,)
         if not n.is_Integer:
             minus = True
-            n -= S(1)/2
+            n -= S.Half
         newerargs = newargs + (n,)
         if minus:
             small = self._expr_small_minus(*newargs)
@@ -886,11 +886,11 @@ class HyperRep_asin1(HyperRep):
 
     @classmethod
     def _expr_big(cls, z, n):
-        return S(-1)**n*((S(1)/2 - n)*pi/sqrt(z) + I*acosh(sqrt(z))/sqrt(z))
+        return S.NegativeOne**n*((S.Half - n)*pi/sqrt(z) + I*acosh(sqrt(z))/sqrt(z))
 
     @classmethod
     def _expr_big_minus(cls, z, n):
-        return S(-1)**n*(asinh(sqrt(z))/sqrt(z) + n*pi*I/sqrt(z))
+        return S.NegativeOne**n*(asinh(sqrt(z))/sqrt(z) + n*pi*I/sqrt(z))
 
 
 class HyperRep_asin2(HyperRep):
@@ -899,22 +899,22 @@ class HyperRep_asin2(HyperRep):
     @classmethod
     def _expr_small(cls, z):
         return HyperRep_asin1._expr_small(z) \
-            /HyperRep_power1._expr_small(S(1)/2, z)
+            /HyperRep_power1._expr_small(S.Half, z)
 
     @classmethod
     def _expr_small_minus(cls, z):
         return HyperRep_asin1._expr_small_minus(z) \
-            /HyperRep_power1._expr_small_minus(S(1)/2, z)
+            /HyperRep_power1._expr_small_minus(S.Half, z)
 
     @classmethod
     def _expr_big(cls, z, n):
         return HyperRep_asin1._expr_big(z, n) \
-            /HyperRep_power1._expr_big(S(1)/2, z, n)
+            /HyperRep_power1._expr_big(S.Half, z, n)
 
     @classmethod
     def _expr_big_minus(cls, z, n):
         return HyperRep_asin1._expr_big_minus(z, n) \
-            /HyperRep_power1._expr_big_minus(S(1)/2, z, n)
+            /HyperRep_power1._expr_big_minus(S.Half, z, n)
 
 
 class HyperRep_sqrts1(HyperRep):
@@ -982,24 +982,24 @@ class HyperRep_log2(HyperRep):
 
     @classmethod
     def _expr_small(cls, z):
-        return log(S(1)/2 + sqrt(1 - z)/2)
+        return log(S.Half + sqrt(1 - z)/2)
 
     @classmethod
     def _expr_small_minus(cls, z):
-        return log(S(1)/2 + sqrt(1 + z)/2)
+        return log(S.Half + sqrt(1 + z)/2)
 
     @classmethod
     def _expr_big(cls, z, n):
         if n.is_even:
-            return (n - S(1)/2)*pi*I + log(sqrt(z)/2) + I*asin(1/sqrt(z))
+            return (n - S.Half)*pi*I + log(sqrt(z)/2) + I*asin(1/sqrt(z))
         else:
-            return (n - S(1)/2)*pi*I + log(sqrt(z)/2) - I*asin(1/sqrt(z))
+            return (n - S.Half)*pi*I + log(sqrt(z)/2) - I*asin(1/sqrt(z))
 
     def _expr_big_minus(cls, z, n):
         if n.is_even:
-            return pi*I*n + log(S(1)/2 + sqrt(1 + z)/2)
+            return pi*I*n + log(S.Half + sqrt(1 + z)/2)
         else:
-            return pi*I*n + log(sqrt(1 + z)/2 - S(1)/2)
+            return pi*I*n + log(sqrt(1 + z)/2 - S.Half)
 
 
 class HyperRep_cosasin(HyperRep):

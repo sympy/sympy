@@ -16,9 +16,9 @@ class PlotSurface(PlotModeBase):
         self.u_set = list(self.u_interval.frange())
         self.v_interval = self.intervals[1]
         self.v_set = list(self.v_interval.frange())
-        self.bounds = [[S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0]]
+        self.bounds = [[S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0]]
         evaluate = self._get_evaluator()
 
         self._calculating_verts_pos = 0.0

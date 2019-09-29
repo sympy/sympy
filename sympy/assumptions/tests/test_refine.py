@@ -26,10 +26,10 @@ def test_pow1():
     assert refine(sqrt(x**2), Q.complex(x)) != Abs(x)
     assert refine(sqrt(x**2), Q.real(x)) == Abs(x)
     assert refine(sqrt(x**2), Q.positive(x)) == x
-    assert refine((x**3)**(S(1)/3)) != x
+    assert refine((x**3)**Rational(1, 3)) != x
 
-    assert refine((x**3)**(S(1)/3), Q.real(x)) != x
-    assert refine((x**3)**(S(1)/3), Q.positive(x)) == x
+    assert refine((x**3)**Rational(1, 3), Q.real(x)) != x
+    assert refine((x**3)**Rational(1, 3), Q.positive(x)) == x
 
     assert refine(sqrt(1/x), Q.real(x)) != 1/sqrt(x)
     assert refine(sqrt(1/x), Q.positive(x)) == 1/sqrt(x)
@@ -47,7 +47,6 @@ def test_pow1():
     assert refine((-1)**((-1)**x/2 + 5*S.Half), Q.integer(x)) == (-1)**(x + 1)
 
 
-@slow
 def test_pow2():
     assert refine((-1)**((-1)**x/2 - 7*S.Half), Q.integer(x)) == (-1)**(x + 1)
     assert refine((-1)**((-1)**x/2 - 9*S.Half), Q.integer(x)) == (-1)**x
@@ -61,7 +60,7 @@ def test_pow2():
 def test_exp():
     x = Symbol('x', integer=True)
     assert refine(exp(pi*I*2*x)) == 1
-    assert refine(exp(pi*I*2*(x + Rational(1, 2)))) == -1
+    assert refine(exp(pi*I*2*(x + S.Half))) == -1
     assert refine(exp(pi*I*2*(x + Rational(1, 4)))) == I
     assert refine(exp(pi*I*2*(x + Rational(3, 4)))) == -I
 
@@ -136,7 +135,7 @@ def test_atan2():
     assert refine(atan2(y, x), Q.zero(y) & Q.negative(x)) == pi
     assert refine(atan2(y, x), Q.positive(y) & Q.zero(x)) == pi/2
     assert refine(atan2(y, x), Q.negative(y) & Q.zero(x)) == -pi/2
-    assert refine(atan2(y, x), Q.zero(y) & Q.zero(x)) == nan
+    assert refine(atan2(y, x), Q.zero(y) & Q.zero(x)) is nan
 
 
 def test_re():

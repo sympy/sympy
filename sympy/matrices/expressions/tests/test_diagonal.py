@@ -138,3 +138,14 @@ def test_DiagonalizeVector():
     assert dv.args == (3*v,)
     assert dv.doit() == 3*DiagonalizeVector(v)
     assert isinstance(dv.doit(), MatMul)
+
+    a = MatrixSymbol("a", 3, 1).as_explicit()
+    expr = DiagonalizeVector(a)
+    result = Matrix([
+        [a[0, 0], 0, 0],
+        [0, a[1, 0], 0],
+        [0, 0, a[2, 0]],
+    ])
+    assert expr.doit() == result
+    expr = DiagonalizeVector(a.T)
+    assert expr.doit() == result

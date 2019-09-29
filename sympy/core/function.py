@@ -334,7 +334,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
             def eval(cls, arg):
                 if arg is S.NaN:
                     return S.NaN
-                if arg is S.Zero: return S.Zero
+                if arg.is_zero: return S.Zero
                 if arg.is_positive: return S.One
                 if arg.is_negative: return S.NegativeOne
                 if isinstance(arg, Mul):
@@ -410,7 +410,7 @@ class Function(Application, Expr):
     ...     @classmethod
     ...     def eval(cls, x):
     ...         if x.is_Number:
-    ...             if x is S.Zero:
+    ...             if x.is_zero:
     ...                 return S.One
     ...             elif x is S.Infinity:
     ...                 return S.Zero
@@ -609,7 +609,7 @@ class Function(Application, Expr):
         for a in self.args:
             i += 1
             da = a.diff(s)
-            if da is S.Zero:
+            if da.is_zero:
                 continue
             try:
                 df = self.fdiff(i)
@@ -875,6 +875,20 @@ class AppliedUndef(Function):
         return True
 
 
+class UndefSageHelper(object):
+    """
+    Helper to facilitate Sage conversion.
+    """
+    def __get__(self, ins, typ):
+        import sage.all as sage
+        if ins is None:
+            return lambda: sage.function(typ.__name__)
+        else:
+            args = [arg._sage_() for arg in ins.args]
+            return lambda : sage.function(ins.__class__.__name__)(*args)
+
+_undef_sage_helper = UndefSageHelper()
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
@@ -909,6 +923,7 @@ class UndefinedFunction(FunctionClass):
         __dict__['__module__'] = None
         obj = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
         obj.name = name
+        obj._sage_ = _undef_sage_helper
         return obj
 
     def __instancecheck__(cls, instance):

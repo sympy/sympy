@@ -67,3 +67,6 @@ __all__ += ['TableForm']
 
 from .dot import dotprint
 __all__ += ['dotprint']
+
+from .maple import maple_code, print_maple_code
+__all__ += ['maple_code', 'print_maple_code']

@@ -328,7 +328,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         sols.remove(())
     null = tuple([0]*len(var))
     # if there is no solution, return trivial solution
-    if not sols and eq.subs(zip(var, null)) is S.Zero:
+    if not sols and eq.subs(zip(var, null)).is_zero:
         sols.add(null)
     final_soln = set([])
     for sol in sols:
@@ -631,7 +631,6 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     diop_quadratic(), diop_ternary_quadratic(), diop_general_pythagorean(),
     diop_general_sum_of_squares()
     """
-    from sympy.core.function import count_ops
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type == "linear":
@@ -1804,7 +1803,7 @@ def _transformation_to_DN(var, coeff):
         # eq_1 = A*B*X**2 + B*(c*T - A*C**2)*Y**2 + d*T*X + (B*e*T - d*T*C)*Y + f*T*B
         coeff = {X**2: A*B, X*Y: 0, Y**2: B*(c*T - A*C**2), X: d*T, Y: B*e*T - d*T*C, 1: f*T*B}
         A_0, B_0 = _transformation_to_DN([X, Y], coeff)
-        return Matrix(2, 2, [S(1)/B, -S(C)/B, 0, 1])*A_0, Matrix(2, 2, [S(1)/B, -S(C)/B, 0, 1])*B_0
+        return Matrix(2, 2, [S.One/B, -S(C)/B, 0, 1])*A_0, Matrix(2, 2, [S.One/B, -S(C)/B, 0, 1])*B_0
 
     else:
         if d:
@@ -1814,7 +1813,7 @@ def _transformation_to_DN(var, coeff):
             # eq_2 = A*X**2 + c*T*Y**2 + e*T*Y + f*T - A*C**2
             coeff = {X**2: A, X*Y: 0, Y**2: c*T, X: 0, Y: e*T, 1: f*T - A*C**2}
             A_0, B_0 = _transformation_to_DN([X, Y], coeff)
-            return Matrix(2, 2, [S(1)/B, 0, 0, 1])*A_0, Matrix(2, 2, [S(1)/B, 0, 0, 1])*B_0 + Matrix([-S(C)/B, 0])
+            return Matrix(2, 2, [S.One/B, 0, 0, 1])*A_0, Matrix(2, 2, [S.One/B, 0, 0, 1])*B_0 + Matrix([-S(C)/B, 0])
 
         else:
             if e:
@@ -1824,13 +1823,13 @@ def _transformation_to_DN(var, coeff):
                 # eq_3 = a*T*X**2 + A*Y**2 + f*T - A*C**2
                 coeff = {X**2: a*T, X*Y: 0, Y**2: A, X: 0, Y: 0, 1: f*T - A*C**2}
                 A_0, B_0 = _transformation_to_DN([X, Y], coeff)
-                return Matrix(2, 2, [1, 0, 0, S(1)/B])*A_0, Matrix(2, 2, [1, 0, 0, S(1)/B])*B_0 + Matrix([0, -S(C)/B])
+                return Matrix(2, 2, [1, 0, 0, S.One/B])*A_0, Matrix(2, 2, [1, 0, 0, S.One/B])*B_0 + Matrix([0, -S(C)/B])
 
             else:
                 # TODO: pre-simplification: Not necessary but may simplify
                 # the equation.
 
-                return Matrix(2, 2, [S(1)/a, 0, 0, 1]), Matrix([0, 0])
+                return Matrix(2, 2, [S.One/a, 0, 0, 1]), Matrix([0, 0])
 
 
 def find_DN(eq):

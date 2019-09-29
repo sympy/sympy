@@ -504,10 +504,10 @@ def test_function__eval_nseries():
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
 
     # issue 6725:
-    assert expint(S(3)/2, -x)._eval_nseries(x, 5, None) == \
+    assert expint(Rational(3, 2), -x)._eval_nseries(x, 5, None) == \
         2 - 2*sqrt(pi)*sqrt(-x) - 2*x - x**2/3 - x**3/15 - x**4/84 + O(x**5)
     assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
-        sqrt(x) - x**(S(3)/2)/6 + x**(S(5)/2)/120 + O(x**3)
+        sqrt(x) - x**Rational(3, 2)/6 + x**Rational(5, 2)/120 + O(x**3)
 
 
 def test_doit():
@@ -843,11 +843,11 @@ def test_nfloat():
     from sympy.polys.rootoftools import rootof
 
     x = Symbol("x")
-    eq = x**(S(4)/3) + 4*x**(S(1)/3)/3
-    assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(S(1)/3))
+    eq = x**Rational(4, 3) + 4*x**(S.One/3)/3
+    assert _aresame(nfloat(eq), x**Rational(4, 3) + (4.0/3)*x**(S.One/3))
     assert _aresame(nfloat(eq, exponent=True), x**(4.0/3) + (4.0/3)*x**(1.0/3))
-    eq = x**(S(4)/3) + 4*x**(x/3)/3
-    assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(x/3))
+    eq = x**Rational(4, 3) + 4*x**(x/3)/3
+    assert _aresame(nfloat(eq), x**Rational(4, 3) + (4.0/3)*x**(x/3))
     big = 12345678901234567890
     # specify precision to match value used in nfloat
     Float_big = Float(big, 15)
@@ -981,31 +981,31 @@ def test_Derivative_as_finite_difference():
     x, h = symbols('x h', real=True)
     dfdx = f(x).diff(x)
     assert (dfdx.as_finite_difference([x-2, x-1, x, x+1, x+2]) -
-            (S(1)/12*(f(x-2)-f(x+2)) + S(2)/3*(f(x+1)-f(x-1)))).simplify() == 0
+            (S.One/12*(f(x-2)-f(x+2)) + Rational(2, 3)*(f(x+1)-f(x-1)))).simplify() == 0
 
     # Central 1st derivative "half-way"
     assert (dfdx.as_finite_difference() -
-            (f(x + S(1)/2)-f(x - S(1)/2))).simplify() == 0
+            (f(x + S.Half)-f(x - S.Half))).simplify() == 0
     assert (dfdx.as_finite_difference(h) -
             (f(x + h/S(2))-f(x - h/S(2)))/h).simplify() == 0
     assert (dfdx.as_finite_difference([x - 3*h, x-h, x+h, x + 3*h]) -
             (S(9)/(8*2*h)*(f(x+h) - f(x-h)) +
-             S(1)/(24*2*h)*(f(x - 3*h) - f(x + 3*h)))).simplify() == 0
+             S.One/(24*2*h)*(f(x - 3*h) - f(x + 3*h)))).simplify() == 0
 
     # One sided 1st derivative at gridpoint
     assert (dfdx.as_finite_difference([0, 1, 2], 0) -
-            (-S(3)/2*f(0) + 2*f(1) - f(2)/2)).simplify() == 0
+            (Rational(-3, 2)*f(0) + 2*f(1) - f(2)/2)).simplify() == 0
     assert (dfdx.as_finite_difference([x, x+h], x) -
             (f(x+h) - f(x))/h).simplify() == 0
     assert (dfdx.as_finite_difference([x-h, x, x+h], x-h) -
             (-S(3)/(2*h)*f(x-h) + 2/h*f(x) -
-             S(1)/(2*h)*f(x+h))).simplify() == 0
+             S.One/(2*h)*f(x+h))).simplify() == 0
 
     # One sided 1st derivative "half-way"
     assert (dfdx.as_finite_difference([x-h, x+h, x + 3*h, x + 5*h, x + 7*h])
             - 1/(2*h)*(-S(11)/(12)*f(x-h) + S(17)/(24)*f(x+h)
-                       + S(3)/8*f(x + 3*h) - S(5)/24*f(x + 5*h)
-                       + S(1)/24*f(x + 7*h))).simplify() == 0
+                       + Rational(3, 8)*f(x + 3*h) - Rational(5, 24)*f(x + 5*h)
+                       + S.One/24*f(x + 7*h))).simplify() == 0
 
     d2fdx2 = f(x).diff(x, 2)
     # Central 2nd derivative at gridpoint
@@ -1013,13 +1013,13 @@ def test_Derivative_as_finite_difference():
             h**-2 * (f(x-h) + f(x+h) - 2*f(x))).simplify() == 0
 
     assert (d2fdx2.as_finite_difference([x - 2*h, x-h, x, x+h, x + 2*h]) -
-            h**-2 * (-S(1)/12*(f(x - 2*h) + f(x + 2*h)) +
-                     S(4)/3*(f(x+h) + f(x-h)) - S(5)/2*f(x))).simplify() == 0
+            h**-2 * (Rational(-1, 12)*(f(x - 2*h) + f(x + 2*h)) +
+                     Rational(4, 3)*(f(x+h) + f(x-h)) - Rational(5, 2)*f(x))).simplify() == 0
 
     # Central 2nd derivative "half-way"
     assert (d2fdx2.as_finite_difference([x - 3*h, x-h, x+h, x + 3*h]) -
-            (2*h)**-2 * (S(1)/2*(f(x - 3*h) + f(x + 3*h)) -
-                         S(1)/2*(f(x+h) + f(x-h)))).simplify() == 0
+            (2*h)**-2 * (S.Half*(f(x - 3*h) + f(x + 3*h)) -
+                         S.Half*(f(x+h) + f(x-h)))).simplify() == 0
 
     # One sided 2nd derivative at gridpoint
     assert (d2fdx2.as_finite_difference([x, x+h, x + 2*h, x + 3*h]) -
@@ -1028,19 +1028,19 @@ def test_Derivative_as_finite_difference():
 
     # One sided 2nd derivative at "half-way"
     assert (d2fdx2.as_finite_difference([x-h, x+h, x + 3*h, x + 5*h]) -
-            (2*h)**-2 * (S(3)/2*f(x-h) - S(7)/2*f(x+h) + S(5)/2*f(x + 3*h) -
-                         S(1)/2*f(x + 5*h))).simplify() == 0
+            (2*h)**-2 * (Rational(3, 2)*f(x-h) - Rational(7, 2)*f(x+h) + Rational(5, 2)*f(x + 3*h) -
+                         S.Half*f(x + 5*h))).simplify() == 0
 
     d3fdx3 = f(x).diff(x, 3)
     # Central 3rd derivative at gridpoint
     assert (d3fdx3.as_finite_difference() -
-            (-f(x - 3/S(2)) + 3*f(x - 1/S(2)) -
-             3*f(x + 1/S(2)) + f(x + 3/S(2)))).simplify() == 0
+            (-f(x - Rational(3, 2)) + 3*f(x - S.Half) -
+             3*f(x + S.Half) + f(x + Rational(3, 2)))).simplify() == 0
 
     assert (d3fdx3.as_finite_difference(
         [x - 3*h, x - 2*h, x-h, x, x+h, x + 2*h, x + 3*h]) -
-        h**-3 * (S(1)/8*(f(x - 3*h) - f(x + 3*h)) - f(x - 2*h) +
-                 f(x + 2*h) + S(13)/8*(f(x-h) - f(x+h)))).simplify() == 0
+        h**-3 * (S.One/8*(f(x - 3*h) - f(x + 3*h)) - f(x - 2*h) +
+                 f(x + 2*h) + Rational(13, 8)*(f(x-h) - f(x+h)))).simplify() == 0
 
     # Central 3rd derivative at "half-way"
     assert (d3fdx3.as_finite_difference([x - 3*h, x-h, x+h, x + 3*h]) -
@@ -1060,10 +1060,10 @@ def test_Derivative_as_finite_difference():
     y = Symbol('y', real=True)
     d2fdxdy = f(x, y).diff(x, y)
 
-    ref0 = Derivative(f(x + S(1)/2, y), y) - Derivative(f(x - S(1)/2, y), y)
+    ref0 = Derivative(f(x + S.Half, y), y) - Derivative(f(x - S.Half, y), y)
     assert (d2fdxdy.as_finite_difference(wrt=x) - ref0).simplify() == 0
 
-    half = S(1)/2
+    half = S.Half
     xm, xp, ym, yp = x-half, x+half, y-half, y+half
     ref2 = f(xm, ym) + f(xp, yp) - f(xp, ym) - f(xm, yp)
     assert (d2fdxdy.as_finite_difference() - ref2).simplify() == 0
@@ -1085,7 +1085,7 @@ def test_issue_12005():
     e3 = Subs(Derivative(f(x) + y**2 - y, y), y, y**2)
     assert e3.diff(y) == 4*y
     e4 = Subs(Derivative(f(x + y), y), y, (x**2))
-    assert e4.diff(y) == S.Zero
+    assert e4.diff(y) is S.Zero
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
     assert f(g(x)).diff(g(x), g(x)) == Derivative(f(g(x)), g(x), g(x))
@@ -1106,8 +1106,8 @@ def test_order_could_be_zero():
     n = symbols('n', integer=True, nonnegative=True)
     m = symbols('m', integer=True, positive=True)
     assert diff(y, (x, n)) == Piecewise((y, Eq(n, 0)), (0, True))
-    assert diff(y, (x, n + 1)) == S.Zero
-    assert diff(y, (x, m)) == S.Zero
+    assert diff(y, (x, n + 1)) is S.Zero
+    assert diff(y, (x, m)) is S.Zero
 
 
 def test_undefined_function_eq():

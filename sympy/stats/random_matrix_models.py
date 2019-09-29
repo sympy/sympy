@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
-                   gamma, Product, Dummy, Sum, Abs, IndexedBase, Matrix, I)
+                   gamma, Product, Dummy, Sum, Abs, IndexedBase, I)
 from sympy.core.sympify import _sympify
 from sympy.stats.rv import (_symbol_converter, Density, RandomMatrixSymbol,
                             RandomSymbol)
@@ -69,7 +69,7 @@ class GaussianEnsemble(RandomMatrixEnsemble):
         .. [1] https://en.wikipedia.org/wiki/Selberg_integral#Mehta's_integral
         """
         n = S(n)
-        prod_term = lambda j: gamma(1 + beta*S(j)/2)/gamma(S(1) + beta/S(2))
+        prod_term = lambda j: gamma(1 + beta*S(j)/2)/gamma(S.One + beta/S(2))
         j = Dummy('j', integer=True, positive=True)
         term1 = Product(prod_term(j), (j, 1, n)).doit()
         term2 = (2/(beta*n))**(beta*n*(n - 1)/4 + n/2)
@@ -150,7 +150,7 @@ class GaussianOrthogonalEnsemble(GaussianEnsemble):
         return Lambda(H, exp(-S(n)/4 * Trace(H**2))/ZGOE)
 
     def joint_eigen_distribution(self):
-        return self._compute_joint_eigen_distribution(S(1))
+        return self._compute_joint_eigen_distribution(S.One)
 
     def level_spacing_distribution(self):
         s = Dummy('s')
@@ -267,7 +267,7 @@ class CircularOrthogonalEnsemble(CircularEnsemble):
     unitary group which is not unique.
     """
     def joint_eigen_distribution(self):
-        return self._compute_joint_eigen_distribution(S(1))
+        return self._compute_joint_eigen_distribution(S.One)
 
 class CircularSymplecticEnsemble(CircularEnsemble):
     """

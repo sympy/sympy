@@ -301,6 +301,20 @@ Mathematica code printing
 
 .. autofunction:: sympy.printing.mathematica.mathematica_code
 
+Maple code printing
+-------------------
+
+.. module:: sympy.printing.maple
+
+.. autoclass:: sympy.printing.maple.MapleCodePrinter
+   :members:
+
+   .. autoattribute:: MapleCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.maple.maple_code
+
+.. autofunction:: sympy.printing.maple.print_maple_code
+
 Javascript Code printing
 ------------------------
 

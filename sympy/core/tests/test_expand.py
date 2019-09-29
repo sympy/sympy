@@ -133,6 +133,8 @@ def test_expand_frac():
 def test_issue_6121():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
     assert eq.expand(complex=True)  # does not give oo recursion
+    eq = -I*exp(-3*I*pi/4)/(4*pi**(R(3, 2))*sqrt(x))
+    assert eq.expand(complex=True)  # does not give oo recursion
 
 
 def test_expand_power_base():
@@ -289,7 +291,7 @@ def test_issues_5919_6830():
         return verify_numerically(e, expand_multinomial(e))
 
     for a in [2, S.Half]:
-        for b in [3, S(1)/3]:
+        for b in [3, R(1, 3)]:
             for n in range(2, 6):
                 assert ok(a, b, n)
 

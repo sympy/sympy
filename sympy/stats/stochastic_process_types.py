@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
-from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
-                   Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
-                   nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
-                   linsolve, Piecewise, eye, Or, Ne, Not, Intersection,
-                   Union, Expr, Function, sympify, Le, exp, cacheit, Gt,
+from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
+                   Set, And, Eq, FiniteSet, ImmutableMatrix,
+                   Lambda, Mul, Dummy, IndexedBase,
+                   linsolve, eye, Or, Not, Intersection,
+                   Union, Expr, Function, exp, cacheit,
                    Ge)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
@@ -409,12 +409,12 @@ class MarkovProcess(StochasticProcess):
                     prob[gstates] = gprob
                 elif len(gstates) == len(state_space) - 1:
                     gstate = list(state_space - gstates)[0]
-                    gprob = S(1) - sum(prob.values())
+                    gprob = S.One - sum(prob.values())
                     prob[state_space - gstates] = gprob
                 else:
                     raise ValueError("Conflicting information.")
             else:
-                gprob = S(1)
+                gprob = S.One
 
             if min_key_rv == rv:
                 return sum([prob[FiniteSet(state)] for state in states])
@@ -427,7 +427,7 @@ class MarkovProcess(StochasticProcess):
 
         if isinstance(condition, Not):
             expr = condition.args[0]
-            return S(1) - self.probability(expr, given_condition, evaluate, **kwargs)
+            return S.One - self.probability(expr, given_condition, evaluate, **kwargs)
 
         if isinstance(condition, And):
             compute_later, state2cond, conds = [], dict(), condition.args
@@ -662,7 +662,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         trans_probs = self.transition_probabilities
         if isinstance(trans_probs, ImmutableMatrix) and \
             state < trans_probs.shape[0]:
-            return S(trans_probs[state, state]) == S.One
+            return S(trans_probs[state, state]) is S.One
 
     def is_absorbing_chain(self):
         trans_probs = self.transition_probabilities

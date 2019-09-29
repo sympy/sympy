@@ -173,7 +173,7 @@ matrix:
           sources:
             - pypy
           packages:
-            - pypy
+            - pypy3
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
@@ -184,7 +184,7 @@ matrix:
           sources:
             - pypy
           packages:
-            - pypy
+            - pypy3
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
@@ -195,7 +195,7 @@ matrix:
           sources:
             - pypy
           packages:
-            - pypy
+            - pypy3
     - python: 3.7
       dist: xenial
       sudo: true
@@ -215,7 +215,7 @@ matrix:
           sources:
             - pypy
           packages:
-            - pypy
+            - pypy3
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
@@ -226,7 +226,7 @@ matrix:
           sources:
             - pypy
           packages:
-            - pypy
+            - pypy3
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
@@ -237,7 +237,7 @@ matrix:
           sources:
             - pypy
           packages:
-            - pypy
+            - pypy3
     - python: 3.7
       dist: xenial
       sudo: true
@@ -298,14 +298,14 @@ before_install:
         pip list | grep "numpy" && pip uninstall -y numpy;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr matplotlib;
+      pip install "sphinx" "docutils" doctr matplotlib sphinx-math-dollar;
     fi
 
 install:
   # If a command fails, fail the build.
   - set -e
   - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
-      then virtualenv -p /usr/bin/pypy ~/.venv;
+      then virtualenv -p /usr/bin/pypy3 ~/.venv;
            . ~/.venv/bin/activate;
     fi
   # Once https://github.com/fredrik-johansson/mpmath/pull/403 is in a released

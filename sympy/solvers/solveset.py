@@ -578,7 +578,7 @@ def _solve_trig1(f, symbol, domain):
 def _solve_trig2(f, symbol, domain):
     """Secondary helper to solve trigonometric equations,
     called when first helper fails """
-    from sympy import ilcm, expand_trig, degree, simplify
+    from sympy import ilcm, expand_trig, degree
     f = trigsimp(f)
     f_original = f
     trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
@@ -719,7 +719,7 @@ def _has_rational_power(expr, symbol):
     """
     a, p, q = Wild('a'), Wild('p'), Wild('q')
     pattern_match = expr.match(a*p**q) or {}
-    if pattern_match.get(a, S.Zero) is S.Zero:
+    if pattern_match.get(a, S.Zero).is_zero:
         return (False, S.One)
     elif p not in pattern_match.keys():
         return (False, S.One)
@@ -2530,10 +2530,9 @@ def linsolve(system, *symbols):
 
 def _return_conditionset(eqs, symbols):
         # return conditionset
+        eqs = (Eq(lhs, 0) for lhs in eqs)
         condition_set = ConditionSet(
-            Tuple(*symbols),
-            FiniteSet(*eqs),
-            S.Complexes)
+            Tuple(*symbols), And(*eqs), S.Complexes**len(symbols))
         return condition_set
 
 
@@ -3298,7 +3297,6 @@ def nonlinsolve(system, *symbols):
 
     """
     from sympy.polys.polytools import is_zero_dimensional
-    from sympy.polys import RR
 
     if not system:
         return S.EmptySet

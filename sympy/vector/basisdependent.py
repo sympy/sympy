@@ -2,7 +2,7 @@ from sympy.simplify import simplify as simp, trigsimp as tsimp
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.assumptions import StdFactKB
 from sympy import factor as fctr, diff as df, Integral
-from sympy.core import S, Add, Mul, count_ops
+from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
 
 
@@ -41,7 +41,7 @@ class BasisDependent(Expr):
         return self._mul_func(other, self)
 
     def __neg__(self):
-        return self._mul_func(S(-1), self)
+        return self._mul_func(S.NegativeOne, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
@@ -141,7 +141,7 @@ class BasisDependent(Expr):
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
-        return (S(1), self)
+        return (S.One, self)
 
     def as_coeff_add(self, *deps):
         """Efficiently extract the coefficient of a summation. """
@@ -221,8 +221,6 @@ class BasisDependentAdd(BasisDependent, Add):
 
         return obj
 
-    __init__ = Add.__init__
-
 
 class BasisDependentMul(BasisDependent, Mul):
     """
@@ -232,7 +230,7 @@ class BasisDependentMul(BasisDependent, Mul):
     def __new__(cls, *args, **options):
         from sympy.vector import Cross, Dot, Curl, Gradient
         count = 0
-        measure_number = S(1)
+        measure_number = S.One
         zeroflag = False
         extra_args = []
 
@@ -243,7 +241,7 @@ class BasisDependentMul(BasisDependent, Mul):
             if isinstance(arg, cls._zero_func):
                 count += 1
                 zeroflag = True
-            elif arg == S(0):
+            elif arg == S.Zero:
                 zeroflag = True
             elif isinstance(arg, (cls._base_func, cls._mul_func)):
                 count += 1
@@ -287,8 +285,6 @@ class BasisDependentMul(BasisDependent, Mul):
 
         return obj
 
-    __init__ = Mul.__init__
-
     def __str__(self, printer=None):
         measure_str = self._measure_number.__str__()
         if ('(' in measure_str or '-' in measure_str or
@@ -310,7 +306,7 @@ class BasisDependentZero(BasisDependent):
         obj = super(BasisDependentZero, cls).__new__(cls)
         # Pre-compute a specific hash value for the zero vector
         # Use the same one always
-        obj._hash = tuple([S(0), cls]).__hash__()
+        obj._hash = tuple([S.Zero, cls]).__hash__()
         return obj
 
     def __hash__(self):

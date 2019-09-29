@@ -481,11 +481,11 @@ class bernoulli(Function):
     def eval(cls, n, sym=None):
         if n.is_Number:
             if n.is_Integer and n.is_nonnegative:
-                if n is S.Zero:
+                if n.is_zero:
                     return S.One
                 elif n is S.One:
                     if sym is None:
-                        return -S.Half
+                        return Rational(-1, 2)
                     else:
                         return sym - S.Half
                 # Bernoulli numbers
@@ -1040,7 +1040,7 @@ class euler(Function):
             return Em
         if x:
             k = Dummy("k", integer=True)
-            return Sum(binomial(n, k)*euler(k)/2**k*(x-S.Half)**(n-k), (k, 0, n))
+            return Sum(binomial(n, k)*euler(k)/2**k*(x - S.Half)**(n - k), (k, 0, n))
 
     def _eval_evalf(self, prec):
         m, x = (self.args[0], None) if len(self.args) == 1 else self.args
@@ -1107,7 +1107,7 @@ class catalan(Function):
     For some non-integer values of n we can get closed form
     expressions by rewriting in terms of gamma functions:
 
-    >>> catalan(Rational(1,2)).rewrite(gamma)
+    >>> catalan(Rational(1, 2)).rewrite(gamma)
     8/(3*pi)
 
     We can differentiate the Catalan numbers C(n) interpreted as a
@@ -1159,12 +1159,12 @@ class catalan(Function):
             if (n + 1).is_negative:
                 return S.Zero
             if (n + 1).is_zero:
-                return -S.Half
+                return Rational(-1, 2)
 
     def fdiff(self, argindex=1):
         from sympy import polygamma, log
         n = self.args[0]
-        return catalan(n)*(polygamma(0, n + Rational(1, 2)) - polygamma(0, n + 2) + log(4))
+        return catalan(n)*(polygamma(0, n + S.Half) - polygamma(0, n + 2) + log(4))
 
     def _eval_rewrite_as_binomial(self, n, **kwargs):
         return binomial(2*n, n)/(n + 1)
@@ -1752,29 +1752,28 @@ def _stirling2(n, k):
 
 
 def stirling(n, k, d=None, kind=2, signed=False):
-    r"""Return Stirling number `S(n, k)` of the first or second (default) kind.
+    r"""Return Stirling number $S(n, k)$ of the first or second (default) kind.
 
-    The sum of all Stirling numbers of the second kind for `k = 1`
-    through `n` is ``bell(n)``. The recurrence relationship for these numbers
+    The sum of all Stirling numbers of the second kind for $k = 1$
+    through $n$ is ``bell(n)``. The recurrence relationship for these numbers
     is:
 
     .. math :: {0 \brace 0} = 1; {n \brace 0} = {0 \brace k} = 0;
 
     .. math :: {{n+1} \brace k} = j {n \brace k} + {n \brace {k-1}}
 
-    where `j` is:
-        `n` for Stirling numbers of the first kind
-        `-n` for signed Stirling numbers of the first kind
-        `k` for Stirling numbers of the second kind
+    where $j$ is:
+        $n$ for Stirling numbers of the first kind,
+        $-n$ for signed Stirling numbers of the first kind,
+        $k$ for Stirling numbers of the second kind.
 
     The first kind of Stirling number counts the number of permutations of
     ``n`` distinct items that have ``k`` cycles; the second kind counts the
     ways in which ``n`` distinct items can be partitioned into ``k`` parts.
     If ``d`` is given, the "reduced Stirling number of the second kind" is
-    returned: ``S^{d}(n, k) = S(n - d + 1, k - d + 1)`` with ``n >= k >= d``.
-    (This counts the ways to partition ``n`` consecutive integers into
-    ``k`` groups with no pairwise difference less than ``d``. See example
-    below.)
+    returned: $S^{d}(n, k) = S(n - d + 1, k - d + 1)$ with $n \ge k \ge d$.
+    (This counts the ways to partition $n$ consecutive integers into $k$
+    groups with no pairwise difference less than $d$. See example below.)
 
     To obtain the signed Stirling numbers of the first kind, use keyword
     ``signed=True``. Using this keyword automatically sets ``kind`` to 1.

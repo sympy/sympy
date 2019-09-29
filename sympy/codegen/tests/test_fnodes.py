@@ -11,6 +11,7 @@ from sympy.codegen.fnodes import (
 )
 from sympy.codegen.futils import render_as_module
 from sympy.core.expr import unchanged
+from sympy.core.compatibility import PY3
 from sympy.external import import_module
 from sympy.printing.fcode import fcode
 from sympy.utilities._compilation import has_fortran, compile_run_strings, compile_link_import_strings
@@ -201,6 +202,7 @@ def test_bind_C():
         mod, info = compile_link_import_strings([
             ('rms.f90', f_mod),
             ('_rms.pyx', (
+                "#cython: language_level={}\n".format("3" if PY3 else "2") +
                 "cdef extern double rms(double*, int*)\n"
                 "def py_rms(double[::1] x):\n"
                 "    cdef int s = x.size\n"

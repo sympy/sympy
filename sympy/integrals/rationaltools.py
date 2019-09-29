@@ -86,7 +86,7 @@ def ratint(f, x, **flags):
             else:
                 real = True
 
-        eps = S(0)
+        eps = S.Zero
 
         if not real:
             for h, q in L:
@@ -241,7 +241,7 @@ def ratint_logpart(f, g, x, t=None):
             for a, j in h_lc_sqf:
                 h = h.quo(Poly(a.gcd(q)**j, x))
 
-            inv, coeffs = h_lc.invert(q), [S(1)]
+            inv, coeffs = h_lc.invert(q), [S.One]
 
             for coeff in h.coeffs()[1:]:
                 T = (inv*coeff).rem(q)
@@ -339,8 +339,8 @@ def log_to_real(h, q, x, t):
     H_map = collect(H, I, evaluate=False)
     Q_map = collect(Q, I, evaluate=False)
 
-    a, b = H_map.get(S(1), S(0)), H_map.get(I, S(0))
-    c, d = Q_map.get(S(1), S(0)), Q_map.get(I, S(0))
+    a, b = H_map.get(S.One, S.Zero), H_map.get(I, S.Zero)
+    c, d = Q_map.get(S.One, S.Zero), Q_map.get(I, S.Zero)
 
     R = Poly(resultant(c, d, v), u)
 
@@ -349,7 +349,7 @@ def log_to_real(h, q, x, t):
     if len(R_u) != R.count_roots():
         return None
 
-    result = S(0)
+    result = S.Zero
 
     for r_u in R_u.keys():
         C = Poly(c.subs({u: r_u}), v)

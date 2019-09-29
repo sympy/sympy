@@ -549,21 +549,21 @@ def test_neg_symbol_falsenonnegative_real():
 
 
 def test_prime():
-    assert S(-1).is_prime is False
+    assert S.NegativeOne.is_prime is False
     assert S(-2).is_prime is False
     assert S(-4).is_prime is False
-    assert S(0).is_prime is False
-    assert S(1).is_prime is False
+    assert S.Zero.is_prime is False
+    assert S.One.is_prime is False
     assert S(2).is_prime is True
     assert S(17).is_prime is True
     assert S(4).is_prime is False
 
 
 def test_composite():
-    assert S(-1).is_composite is False
+    assert S.NegativeOne.is_composite is False
     assert S(-2).is_composite is False
     assert S(-4).is_composite is False
-    assert S(0).is_composite is False
+    assert S.Zero.is_composite is False
     assert S(2).is_composite is False
     assert S(17).is_composite is False
     assert S(4).is_composite is True
@@ -859,10 +859,10 @@ def test_Pow_is_pos_neg():
     z = Symbol('z', real=True)
     w = Symbol('w', nonpositive=True)
 
-    assert (S(-1)**S(2)).is_positive is True
-    assert (S(1)**z).is_positive is True
-    assert (S(-1)**S(3)).is_positive is False
-    assert (S(0)**S(0)).is_positive is True  # 0**0 is 1
+    assert (S.NegativeOne**S(2)).is_positive is True
+    assert (S.One**z).is_positive is True
+    assert (S.NegativeOne**S(3)).is_positive is False
+    assert (S.Zero**S.Zero).is_positive is True  # 0**0 is 1
     assert (w**S(3)).is_positive is False
     assert (w**S(2)).is_positive is None
     assert (I**2).is_positive is False
@@ -1094,9 +1094,9 @@ def test_issue_9115_9150():
 def test_issue_9165():
     z = Symbol('z', zero=True)
     f = Symbol('f', finite=False)
-    assert 0/z == S.NaN
-    assert 0*(1/z) == S.NaN
-    assert 0*f == S.NaN
+    assert 0/z is S.NaN
+    assert 0*(1/z) is S.NaN
+    assert 0*f is S.NaN
 
 def test_issue_10024():
     x = Dummy('x')

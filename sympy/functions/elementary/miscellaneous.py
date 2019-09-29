@@ -46,7 +46,6 @@ class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
 
     def __new__(cls):
-        from sympy.sets.sets import FiniteSet
         x = Dummy('x')
         #construct "by hand" to avoid infinite loop
         return Expr.__new__(cls, Tuple(x), x)
@@ -594,7 +593,7 @@ class MinMaxBase(Expr, LatticeOp):
         for a in self.args:
             i += 1
             da = a.diff(s)
-            if da is S.Zero:
+            if da.is_zero:
                 continue
             try:
                 df = self.fdiff(i)
