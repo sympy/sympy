@@ -388,6 +388,39 @@ class ImageSet(Set):
     def _contains(self, other):
         from sympy.solvers.solveset import _solveset_multi
 
+        def get_symsetmap(signature, base_sets):
+            '''Attempt to get a map of symbols to base_sets'''
+            queue = list(zip(signature, base_sets))
+            symsetmap = {}
+            for sig, base_set in queue:
+                if sig.is_symbol:
+                    symsetmap[sig] = base_set
+                elif base_set.is_ProductSet:
+                    sets = base_set.sets
+                    if len(sig) != len(sets):
+                        raise ValueError("Incompatible signature")
+                    # Recurse
+                    queue.extend(zip(sig, sets))
+                else:
+                    # If we get here then we have something like sig = (x, y) and
+                    # base_set = {(1, 2), (3, 4)}. For now we give up.
+                    return None
+
+            return symsetmap
+
+        def get_equations(expr, candidate):
+            '''Find the equations relating symbols in expr and candidate.'''
+            queue = [(expr, candidate)]
+            equations = []
+            for e, c in queue:
+                if not isinstance(e, Tuple):
+                    yield Eq(e, c)
+                elif not isinstance(c, Tuple) or len(e) != len(c):
+                    yield False
+                    return
+                else:
+                    queue.extend(zip(e, c))
+
         # Get the basic objects together:
         other = _sympify(other)
         expr = self.lamda.expr
@@ -402,64 +435,19 @@ class ImageSet(Set):
         sig = sig.subs(rep)
         expr = expr.subs(rep)
 
-        def rwalk(sig1, sig2, pred1=None, pred2=None, map1=None, map2=None):
-
-            pred1 = pred1 or (lambda s: isinstance(s, Tuple))
-            pred2 = pred2 or (lambda s: isinstance(s, Tuple))
-            map1 = map1 or (lambda s: s)
-            map2 = map2 or (lambda s: s)
-
-            def _rwalk(sig1, sig2):
-
-                # Base case of recursion:
-                if not pred1(sig1):
-                    yield sig1, sig2
-                    return
-
-                # Can we also recurse sig2?
-                check2 = pred2(sig2)
-                if not check2:
-                    yield check2
-                    return
-
-                # Need the lengths to match
-                sig1 = map1(sig1)
-                sig2 = map2(sig2)
-                if len(sig1) != len(sig2):
-                    yield False
-                    return
-
-                # Recurse on elements of sig1 and sig2
-                for s1, s2 in zip(sig1, sig2):
-                    for pair in _rwalk(s1, s2):
-                        yield pair
-
-            for pair in _rwalk(sig1, sig2):
-                yield pair
-
         # Map the parts of other to those in the Lambda expr
         equations = []
-
-        for pair in rwalk(expr, other):
-            if not pair:
-                return pair
-            lhs, rhs = pair
-            eq = Eq(lhs, rhs)
-            if eq is None:
+        for eq in get_equations(expr, other):
+            # Unsatisfiable equation?
+            if eq is False:
                 return False
             equations.append(eq)
 
         # Map the symbols in the signature to the corresponding domains
-        symsetmap = {}
-        pred2 = lambda bs: True if bs.is_ProductSet else None
-        map2 = lambda bs: bs.sets
-
-        for sig, bs in zip(sig, base_sets):
-            for pair in rwalk(sig, bs, pred2=pred2, map2=map2):
-                if not pair:
-                    return pair
-                var, base_set = pair
-                symsetmap[var] = base_set
+        symsetmap = get_symsetmap(sig, base_sets)
+        if symsetmap is None:
+            # Can't factor the base sets to a ProductSet
+            return None
 
         # Which of the variables in the Lambda signature need to be solved for?
         symss = (eq.free_symbols for eq in equations)
