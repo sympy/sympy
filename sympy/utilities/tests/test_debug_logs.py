@@ -20,9 +20,6 @@ def environ(env):
     yield
     os.environ = original_environ # reset the environment variable to prevent side effect
 
-from sympy.utilities.pytest import XFAIL
-
-
 def test_debug_logs():
     my_filename = abspath(inspect.getfile(inspect.currentframe()))
     my_dirname = dirname(my_filename)
