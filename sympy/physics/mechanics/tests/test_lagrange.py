@@ -216,11 +216,11 @@ def test_rolling_disc():
     q3 = Function('q3')
     l = LagrangesMethod(Lag, q)
     l.form_lagranges_equations()
-    RHS = l.rhs().as_mutable()
+    RHS = l.rhs()
     RHS.simplify()
     t = symbols('t')
 
-    assert tuple(l.mass_matrix[3:6]) == (0, 5*m*r**2/4, 0)
+    assert (l.mass_matrix[3:6] == [0, 5*m*r**2/4, 0])
     assert RHS[4].simplify() == (
         (-8*g*sin(q2(t)) + r*(5*sin(2*q2(t))*Derivative(q1(t), t) +
         12*cos(q2(t))*Derivative(q3(t), t))*Derivative(q1(t), t))/(10*r))

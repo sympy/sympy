@@ -1,4 +1,6 @@
-from sympy import (Symbol, gamma, expand_func, beta, digamma, diff)
+from sympy import (Symbol, gamma, expand_func, beta, digamma, diff, conjugate)
+from sympy.core.function import ArgumentIndexError
+from sympy.utilities.pytest import raises
 
 
 def test_beta():
@@ -12,3 +14,9 @@ def test_beta():
 
     assert diff(beta(x, y), x) == beta(x, y)*(digamma(x) - digamma(x + y))
     assert diff(beta(x, y), y) == beta(x, y)*(digamma(y) - digamma(x + y))
+
+    assert conjugate(beta(x, y)) == beta(conjugate(x), conjugate(y))
+
+    raises(ArgumentIndexError, lambda: beta(x, y).fdiff(3))
+
+    assert beta(x, y).rewrite(gamma) == gamma(x)*gamma(y)/gamma(x + y)

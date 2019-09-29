@@ -13,6 +13,8 @@ def test_Vector():
     assert A.y != A.z
     assert A.z != A.x
 
+    assert A.x + 0 == A.x
+
     v1 = x*A.x + y*A.y + z*A.z
     v2 = x**2*A.x + y**2*A.y + z**2*A.z
     v3 = v1 + v2
@@ -57,6 +59,8 @@ def test_Vector():
     #Test the free_symbols property
     v6 = x*A.x + y*A.y + z*A.z
     assert v6.free_symbols(A) == {x,y,z}
+
+    raises(TypeError, lambda: v3.applyfunc(v1))
 
 
 def test_Vector_diffs():

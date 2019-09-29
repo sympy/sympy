@@ -48,7 +48,7 @@ def test_get_upper_degree():
     h = c * x ** 2 + y
     dixon = DixonResultant(polynomials=[h, q], variables=[x, y])
 
-    assert dixon.get_upper_degree() == 2
+    assert dixon.get_upper_degree() == 3
 
 def test_get_dixon_matrix_example_two():
     """Test Dixon's matrix for example from [Palancz08]_."""
@@ -117,7 +117,6 @@ def test_macaulay_example_one():
     assert mac.degrees == [2, 2, 1]
     assert mac.degree_m == 3
 
-    mac.get_monomials_set()
     assert mac.monomial_set == [x ** 3, x ** 2 * y, x ** 2 * z,
                                 x * y ** 2,
                                 x * y * z, x * z ** 2, y ** 3,
@@ -148,9 +147,6 @@ def test_macaulay_example_two():
 
     assert mac.degrees == [1, 2, 3]
     assert mac.degree_m == 4
-
-    mac.get_monomials_set()
-
     assert mac.monomials_size == 15
     assert len(mac.get_row_coefficients()) == mac.n
 

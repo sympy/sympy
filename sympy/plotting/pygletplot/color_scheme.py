@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
 from sympy import Basic, Symbol, symbols, lambdify
+from sympy.core.compatibility import range, string_types
+from .util import interpolate, rinterpolate, create_bounds, update_bounds
 from sympy.utilities.iterables import sift
-from util import interpolate, rinterpolate, create_bounds, update_bounds
-from sympy.core.compatibility import range
 
 
 class ColorGradient(object):
@@ -54,20 +54,20 @@ class ColorScheme(object):
 
         if len(args) == 1 and not isinstance(args[0], Basic) and callable(args[0]):
             self.f = args[0]
-        elif len(args) == 1 and isinstance(args[0], str):
+        elif len(args) == 1 and isinstance(args[0], string_types):
             if args[0] in default_color_schemes:
                 cs = default_color_schemes[args[0]]
                 self.f, self.gradient = cs.f, cs.gradient.copy()
             else:
                 self.f = lambdify('x,y,z,u,v', args[0])
         else:
-            self.f, self.gradient = self._interpret_args(args, kwargs)
+            self.f, self.gradient = self._interpret_args(args)
         self._test_color_function()
         if not isinstance(self.gradient, ColorGradient):
             raise ValueError("Color gradient not properly initialized. "
                              "(Not a ColorGradient instance.)")
 
-    def _interpret_args(self, args, kwargs):
+    def _interpret_args(self, args):
         f, gradient = None, self.gradient
         atoms, lists = self._sort_args(args)
         s = self._pop_symbol_list(lists)
@@ -162,6 +162,7 @@ class ColorScheme(object):
 
     def _fill_in_vars(self, args):
         defaults = symbols('x,y,z,u,v')
+        v_error = ValueError("Could not find what to plot.")
         if len(args) == 0:
             return defaults
         if not isinstance(args, (tuple, list)):
@@ -205,6 +206,7 @@ class ColorScheme(object):
     def _sort_args(self, args):
         lists, atoms = sift(args,
             lambda a: isinstance(a, (tuple, list)), binary=True)
+        return atoms, lists
 
     def _test_color_function(self):
         if not callable(self.f):
@@ -213,18 +215,18 @@ class ColorScheme(object):
             result = self.f(0, 0, 0, 0, 0)
             if len(result) != 3:
                 raise ValueError("length should be equal to 3")
-        except TypeError as te:
+        except TypeError:
             raise ValueError("Color function needs to accept x,y,z,u,v, "
                              "as arguments even if it doesn't use all of them.")
-        except AssertionError as ae:
+        except AssertionError:
             raise ValueError("Color function needs to return 3-tuple r,g,b.")
-        except Exception as ie:
+        except Exception:
             pass  # color function probably not valid at 0,0,0,0,0
 
     def __call__(self, x, y, z, u, v):
         try:
             return self.f(x, y, z, u, v)
-        except Exception as e:
+        except Exception:
             return None
 
     def apply_to_curve(self, verts, u_set, set_len=None, inc_pos=None):

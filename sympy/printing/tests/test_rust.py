@@ -1,13 +1,13 @@
 from sympy.core import (S, pi, oo, symbols, Rational, Integer,
-                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
+                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy,
+                        Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, sign)
+                             sign)
 from sympy.logic import ITE
 from sympy.utilities.pytest import raises
-from sympy.printing.rust import RustCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
-from sympy.matrices import Matrix, MatrixSymbol
+from sympy.matrices import MatrixSymbol
 
 from sympy import rust_code
 
@@ -17,6 +17,15 @@ x, y, z = symbols('x,y,z')
 def test_Integer():
     assert rust_code(Integer(42)) == "42"
     assert rust_code(Integer(-56)) == "-56"
+
+
+def test_Relational():
+    assert rust_code(Eq(x, y)) == "x == y"
+    assert rust_code(Ne(x, y)) == "x != y"
+    assert rust_code(Le(x, y)) == "x <= y"
+    assert rust_code(Lt(x, y)) == "x < y"
+    assert rust_code(Gt(x, y)) == "x > y"
+    assert rust_code(Ge(x, y)) == "x >= y"
 
 
 def test_Rational():
@@ -41,6 +50,8 @@ def test_printmethod():
         def _rust_code(self, printer):
             return "%s.fabs()" % printer._print(self.args[0])
     assert rust_code(fabs(x)) == "x.fabs()"
+    a = MatrixSymbol("a", 1 ,3)
+    assert rust_code(a[0,0]) == 'a[0]'
 
 
 def test_Functions():

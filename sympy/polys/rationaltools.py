@@ -8,7 +8,7 @@ from sympy.core.exprtools import gcd_terms
 from sympy.utilities import public
 
 @public
-def together(expr, deep=False):
+def together(expr, deep=False, fraction=True):
     """
     Denest and combine rational expressions using symbolic methods.
 
@@ -65,7 +65,7 @@ def together(expr, deep=False):
             if expr.is_Atom or (expr.is_Function and not deep):
                 return expr
             elif expr.is_Add:
-                return gcd_terms(list(map(_together, Add.make_args(expr))))
+                return gcd_terms(list(map(_together, Add.make_args(expr))), fraction=fraction)
             elif expr.is_Pow:
                 base = _together(expr.base)
 

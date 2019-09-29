@@ -1,22 +1,26 @@
-import warnings
-from sympy.core import (S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio,
-                        EulerGamma, Catalan, Lambda, Dummy, Eq, nan, Mul, Pow)
-from sympy.functions import (Abs, acos, acosh, asin, asinh, atan, atanh, atan2,
-                             ceiling, cos, cosh, erf, erfc, exp, floor, gamma, log,
-                             loggamma, Max, Min, Piecewise,
-                             sign, sin, sinh, sqrt, tan, tanh)
+from sympy.core import (
+    S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio, EulerGamma, Catalan,
+    Lambda, Dummy, Eq, nan, Mul, Pow
+)
+from sympy.functions import (
+    Abs, acos, acosh, asin, asinh, atan, atanh, atan2, ceiling, cos, cosh, erf,
+    erfc, exp, floor, gamma, log, loggamma, Max, Min, Piecewise, sign, sin, sinh,
+    sqrt, tan, tanh
+)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
-    Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
-    real, float32, float64, float80, float128
+    AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
+    While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Return,
+    real, float32, float64, float80, float128, intc, Comment, CodeBlock
 )
-from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt, restrict
+from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
+from sympy.codegen.cnodes import restrict
 from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import warns_deprecated_sympy
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
@@ -66,6 +70,14 @@ def test_ccode_Pow():
 def test_ccode_Max():
     # Test for gh-11926
     assert ccode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
+
+
+def test_ccode_Min_performance():
+    #Shouldn't take more than a few seconds
+    big_min = Min(*symbols('a[0:50]'))
+    for curr_standard in ('c89', 'c99', 'c11'):
+        output = ccode(big_min, standard=curr_standard)
+        assert output.count('(') == output.count(')')
 
 
 def test_ccode_constants_mathh():
@@ -128,7 +140,12 @@ def test_ccode_inline_function():
 
 def test_ccode_exceptions():
     assert ccode(gamma(x), standard='C99') == "tgamma(x)"
-    assert 'not supported in c' in ccode(gamma(x), standard='C89').lower()
+    gamma_c89 = ccode(gamma(x), standard='C89')
+    assert 'not supported in c' in gamma_c89.lower()
+    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=False)
+    assert 'not supported in c' in gamma_c89.lower()
+    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=True)
+    assert not 'not supported in c' in gamma_c89.lower()
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"
@@ -281,28 +298,34 @@ def test_ccode_Indexed():
     A = IndexedBase('A')[i, j]
     B = IndexedBase('B')[i, j, k]
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         p = CCodePrinter()
-        p._not_c = set()
+    p._not_c = set()
 
-        assert p._print_Indexed(x) == 'x[j]'
-        assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
-        assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
-        assert p._not_c == set()
+    assert p._print_Indexed(x) == 'x[j]'
+    assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
+    assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
+    assert p._not_c == set()
 
-        A = IndexedBase('A', shape=(5,3))[i, j]
-        assert p._print_Indexed(A) == 'A[%s]' % (3*i + j)
+    A = IndexedBase('A', shape=(5,3))[i, j]
+    assert p._print_Indexed(A) == 'A[%s]' % (3*i + j)
 
-        A = IndexedBase('A', shape=(5,3), strides='F')[i, j]
-        assert ccode(A) == 'A[%s]' % (i + 5*j)
+    A = IndexedBase('A', shape=(5,3), strides='F')[i, j]
+    assert ccode(A) == 'A[%s]' % (i + 5*j)
 
-        A = IndexedBase('A', shape=(29,29), strides=(1, s), offset=o)[i, j]
-        assert ccode(A) == 'A[o + s*j + i]'
+    A = IndexedBase('A', shape=(29,29), strides=(1, s), offset=o)[i, j]
+    assert ccode(A) == 'A[o + s*j + i]'
 
-        Abase = IndexedBase('A', strides=(s, m, n), offset=o)
-        assert ccode(Abase[i, j, k]) == 'A[m*j + n*k + o + s*i]'
-        assert ccode(Abase[2, 3, k]) == 'A[3*m + n*k + o + 2*s]'
+    Abase = IndexedBase('A', strides=(s, m, n), offset=o)
+    assert ccode(Abase[i, j, k]) == 'A[m*j + n*k + o + s*i]'
+    assert ccode(Abase[2, 3, k]) == 'A[3*m + n*k + o + 2*s]'
+
+
+def test_Element():
+    assert ccode(Element('x', 'ij')) == 'x[i][j]'
+    assert ccode(Element('x', 'ij', strides='kl', offset='o')) == 'x[i*k + j*l + o]'
+    assert ccode(Element('x', (3,))) == 'x[3]'
+    assert ccode(Element('x', (3,4,5))) == 'x[3][4][5]'
 
 
 def test_ccode_Indexed_without_looking_for_contraction():
@@ -572,12 +595,9 @@ def test_ccode_standard():
 
 
 def test_CCodePrinter():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("error", category=SymPyDeprecationWarning)
-        with raises(SymPyDeprecationWarning):
-            CCodePrinter()
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
+        CCodePrinter()
+    with warns_deprecated_sympy():
         assert CCodePrinter().language == 'C'
 
 
@@ -681,17 +701,17 @@ def test_get_math_macros():
 
 def test_ccode_Declaration():
     i = symbols('i', integer=True)
-    var1 = Variable(i, type_=Type.from_expr(i))
+    var1 = Variable(i, type=Type.from_expr(i))
     dcl1 = Declaration(var1)
     assert ccode(dcl1) == 'int i'
 
-    var2 = Variable(x, {value_const}, float32)
+    var2 = Variable(x, type=float32, attrs={value_const})
     dcl2a = Declaration(var2)
     assert ccode(dcl2a) == 'const float x'
-    dcl2b = Declaration(var2, pi)
+    dcl2b = var2.as_Declaration(value=pi)
     assert ccode(dcl2b) == 'const float x = M_PI'
 
-    var3 = Variable(y, type_=Type('bool'))
+    var3 = Variable(y, type=Type('bool'))
     dcl3 = Declaration(var3)
     printer = C89CodePrinter()
     assert 'stdbool.h' not in printer.headers
@@ -699,14 +719,15 @@ def test_ccode_Declaration():
     assert 'stdbool.h' in printer.headers
 
     u = symbols('u', real=True)
-    ptr4 = Pointer.deduced(u, {pointer_const, restrict})
+    ptr4 = Pointer.deduced(u, attrs={pointer_const, restrict})
     dcl4 = Declaration(ptr4)
     assert ccode(dcl4) == 'double * const restrict u'
 
-    var5 = Variable(x, {value_const}, Type('__float128'))
+    var5 = Variable(x, Type('__float128'), attrs={value_const})
     dcl5a = Declaration(var5)
     assert ccode(dcl5a) == 'const __float128 x'
-    dcl5b = Declaration(var5, pi)
+    var5b = Variable(var5.symbol, var5.type, pi, attrs=var5.attrs)
+    dcl5b = Declaration(var5b)
     assert ccode(dcl5b) == 'const __float128 x = M_PI'
 
 
@@ -738,13 +759,15 @@ def test_C99CodePrinter_custom_type():
     assert p128.doprint(sin(x)) == 'sinf128(x)'
     assert p128.doprint(cos(2., evaluate=False)) == 'cosf128(2.0Q)'
 
-    var5 = Variable(x, {value_const}, f128)
+    var5 = Variable(x, f128, attrs={value_const})
 
     dcl5a = Declaration(var5)
     assert ccode(dcl5a) == 'const _Float128 x'
-    dcl5b = Declaration(var5, pi)
+    var5b = Variable(x, f128, pi, attrs={value_const})
+    dcl5b = Declaration(var5b)
     assert p128.doprint(dcl5b) == 'const _Float128 x = M_PIf128'
-    dcl5c = Declaration(var5, Catalan.evalf(38))
+    var5b = Variable(x, f128, value=Catalan.evalf(38), attrs={value_const})
+    dcl5c = Declaration(var5b)
     assert p128.doprint(dcl5c) == 'const _Float128 x = %sQ' % Catalan.evalf(f128.decimal_dig)
 
 
@@ -758,7 +781,7 @@ def test_MatrixElement_printing():
     assert(ccode(3 * A[0, 0]) == "3*A[0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(ccode(F) == "(-B + A)[0]")
+    assert(ccode(F) == "(A - B)[0]")
 
 
 def test_subclass_CCodePrinter():
@@ -784,3 +807,43 @@ def test_ccode_math_macros():
     assert ccode(z + Sqrt(2)) == 'z + M_SQRT2'
     assert ccode(z + 1/sqrt(2)) == 'z + M_SQRT1_2'
     assert ccode(z + 1/Sqrt(2)) == 'z + M_SQRT1_2'
+
+
+def test_ccode_Type():
+    assert ccode(Type('float')) == 'float'
+    assert ccode(intc) == 'int'
+
+
+def test_ccode_codegen_ast():
+    assert ccode(Comment("this is a comment")) == "// this is a comment"
+    assert ccode(While(abs(x) > 1, [aug_assign(x, '-', 1)])) == (
+        'while (fabs(x) > 1) {\n'
+        '   x -= 1;\n'
+        '}'
+    )
+    assert ccode(Scope([AddAugmentedAssignment(x, 1)])) == (
+        '{\n'
+        '   x += 1;\n'
+        '}'
+    )
+    inp_x = Declaration(Variable(x, type=real))
+    assert ccode(FunctionPrototype(real, 'pwer', [inp_x])) == 'double pwer(double x)'
+    assert ccode(FunctionDefinition(real, 'pwer', [inp_x], [Assignment(x, x**2)])) == (
+        'double pwer(double x){\n'
+        '   x = pow(x, 2);\n'
+        '}'
+    )
+
+    # Elements of CodeBlock are formatted as statements:
+    block = CodeBlock(
+        x,
+        Print([x, y], "%d %d"),
+        FunctionCall('pwer', [x]),
+        Return(x),
+    )
+    assert ccode(block) == '\n'.join([
+        'x;',
+        'printf("%d %d", x, y);',
+        'pwer(x);',
+        'return x;',
+    ])

@@ -136,7 +136,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         else:
             val = self.val
 
-        return self.__class__(pow(val, exp, self.mod))
+        return self.__class__(pow(val, int(exp), self.mod))
 
     def _compare(self, other, op):
         val = self._get_val(other)

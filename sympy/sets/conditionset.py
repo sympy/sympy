@@ -1,19 +1,21 @@
 from __future__ import print_function, division
 
 from sympy import S
-from sympy.sets.contains import Contains
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_bool
+from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol, Dummy
+from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import And, as_Boolean
-from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet)
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
-from sympy.multipledispatch import dispatch
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+from .contains import Contains
+from .sets import Set, EmptySet, Union, FiniteSet, ProductSet, UniversalSet
 
 
 class ConditionSet(Set):
@@ -84,14 +86,14 @@ class ConditionSet(Set):
     If no base set is specified, the universal set is implied:
 
     >>> ConditionSet(x, x < 1).base_set
-    UniversalSet()
+    UniversalSet
 
     Although expressions other than symbols may be used, this
     is discouraged and will raise an error if the expression
     is not found in the condition:
 
     >>> ConditionSet(x + 1, x + 1 < 1, S.Integers)
-    ConditionSet(x + 1, x + 1 < 1, S.Integers)
+    ConditionSet(x + 1, x + 1 < 1, Integers)
 
     >>> ConditionSet(x + 1, x < 1, S.Integers)
     Traceback (most recent call last):
@@ -104,43 +106,58 @@ class ConditionSet(Set):
     of the base set appears as a free symbol in the condition:
 
     >>> ConditionSet(x, x < y, ConditionSet(y, x + y < 2, S.Integers))
-    ConditionSet(lambda, (lambda < y) & (lambda + x < 2), S.Integers)
+    ConditionSet(lambda, (lambda < y) & (lambda + x < 2), Integers)
 
     The best way to do anything with the dummy symbol is to access
     it with the sym property.
 
     >>> _.subs(_.sym, Symbol('_x'))
-    ConditionSet(_x, (_x < y) & (_x + x < 2), S.Integers)
+    ConditionSet(_x, (_x < y) & (_x + x < 2), Integers)
     """
     def __new__(cls, sym, condition, base_set=S.UniversalSet):
         # nonlinsolve uses ConditionSet to return an unsolved system
         # of equations (see _return_conditionset in solveset) so until
         # that is changed we do minimal checking of the args
-        if isinstance(sym, (Tuple, tuple)):  # unsolved eqns syntax
-            sym = Tuple(*sym)
-            condition = FiniteSet(*condition)
-            return Basic.__new__(cls, sym, condition, base_set)
+        sym = _sympify(sym)
+        base_set = _sympify(base_set)
+        condition = _sympify(condition)
+
+        if isinstance(condition, FiniteSet):
+            condition_orig = condition
+            temp = (Eq(lhs, 0) for lhs in condition)
+            condition = And(*temp)
+            SymPyDeprecationWarning(
+                feature="Using {} for condition".format(condition_orig),
+                issue=17651,
+                deprecated_since_version='1.5',
+                useinstead="{} for condition".format(condition)
+                ).warn()
+
         condition = as_Boolean(condition)
-        if isinstance(base_set, set):
-            base_set = FiniteSet(*base_set)
-        elif not isinstance(base_set, Set):
+
+        if isinstance(sym, Tuple):  # unsolved eqns syntax
+            return Basic.__new__(cls, sym, condition, base_set)
+
+        if not isinstance(base_set, Set):
             raise TypeError('expecting set for base_set')
+
         if condition is S.false:
             return S.EmptySet
-        if condition is S.true:
+        elif condition is S.true:
             return base_set
         if isinstance(base_set, EmptySet):
             return base_set
+
         know = None
         if isinstance(base_set, FiniteSet):
             sifted = sift(
-                base_set, lambda _: fuzzy_bool(
-                    condition.subs(sym, _)))
+                base_set, lambda _: fuzzy_bool(condition.subs(sym, _)))
             if sifted[None]:
                 know = FiniteSet(*sifted[True])
                 base_set = FiniteSet(*sifted[None])
             else:
                 return FiniteSet(*sifted[True])
+
         if isinstance(base_set, cls):
             s, c, base_set = base_set.args
             if sym == s:
@@ -160,11 +177,13 @@ class ConditionSet(Set):
                     condition.xreplace({sym: dum}),
                     c.xreplace({s: dum}))
                 sym = dum
+
         if not isinstance(sym, Symbol):
             s = Dummy('lambda')
             if s not in condition.xreplace({sym: s}).free_symbols:
                 raise ValueError(
                     'non-symbol dummy not recognized in condition')
+
         rv = Basic.__new__(cls, sym, condition, base_set)
         return rv if know is None else Union(know, rv)
 
@@ -177,7 +196,12 @@ class ConditionSet(Set):
         s, c, b = self.args
         return (c.free_symbols - s.free_symbols) | b.free_symbols
 
-    def contains(self, other):
+    def _contains(self, other):
+        return And(
+            Contains(other, self.base_set),
+            Lambda(self.sym, self.condition)(other))
+
+    def as_relational(self, other):
         return And(Lambda(self.sym, self.condition)(
             other), self.base_set.contains(other))
 

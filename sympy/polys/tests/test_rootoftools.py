@@ -12,10 +12,11 @@ from sympy.polys.polyerrors import (
 
 from sympy import (
     S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
-    solve, legendre_poly
+    solve, legendre_poly, Integral
 )
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
+from sympy.core.expr import unchanged
 from sympy.core.compatibility import range
 
 from sympy.abc import a, b, x, y, z, r
@@ -79,8 +80,9 @@ def test_CRootOf___new__():
 
     raises(PolynomialError, lambda: rootof(Poly(0, x), 0))
     raises(PolynomialError, lambda: rootof(Poly(1, x), 0))
-
     raises(PolynomialError, lambda: rootof(x - y, 0))
+    # issue 8617
+    raises(PolynomialError, lambda: rootof(exp(x), 0))
 
     raises(NotImplementedError, lambda: rootof(x**3 - x + sqrt(2), 0))
     raises(NotImplementedError, lambda: rootof(x**3 - x + I, 0))
@@ -137,12 +139,11 @@ def test_CRootOf___eval_Eq__():
     r1 = rootof(eq, 1)
     assert Eq(r, r1) is S.false
     assert Eq(r, r) is S.true
-    assert Eq(r, x) is S.false
+    assert unchanged(Eq, r, x)
     assert Eq(r, 0) is S.false
     assert Eq(r, S.Infinity) is S.false
     assert Eq(r, I) is S.false
-    assert Eq(r, f(0)) is S.false
-    assert Eq(r, f(0)) is S.false
+    assert unchanged(Eq, r, f(0))
     sol = solve(eq)
     for s in sol:
         if s.is_real:
@@ -177,6 +178,7 @@ def test_CRootOf_diff():
     assert rootof(x**3 + x + 1, 0).diff(y) == 0
 
 
+@slow
 def test_CRootOf_evalf():
     real = rootof(x**3 + x + 3, 0).evalf(n=20)
 
@@ -237,9 +239,6 @@ def test_CRootOf_evalf():
     # issue 6451
     r = rootof(legendre_poly(64, x), 7)
     assert r.n(2) == r.n(100).n(2)
-    # issue 8617
-    ans = [w.n(2) for w in solve(x**3 - x - 4)]
-    assert rootof(exp(x)**3 - exp(x) - 4, 0).n(2) in ans
     # issue 9019
     r0 = rootof(x**2 + 1, 0, radicals=False)
     r1 = rootof(x**2 + 1, 1, radicals=False)
@@ -290,8 +289,8 @@ def test_CRootOf_real_roots():
 def test_CRootOf_all_roots():
     assert Poly(x**5 + x + 1).all_roots() == [
         rootof(x**3 - x**2 + 1, 0),
-        -S(1)/2 - sqrt(3)*I/2,
-        -S(1)/2 + sqrt(3)*I/2,
+        Rational(-1, 2) - sqrt(3)*I/2,
+        Rational(-1, 2) + sqrt(3)*I/2,
         rootof(x**3 - x**2 + 1, 1),
         rootof(x**3 - x**2 + 1, 2),
     ]
@@ -350,8 +349,8 @@ def test_RootSum___new__():
 
     assert RootSum(f, auto=False).is_commutative is True
 
-    assert RootSum(f, Lambda(x, 1/(x + x**2))) == S(11)/3
-    assert RootSum(f, Lambda(x, y/(x + x**2))) == S(11)/3*y
+    assert RootSum(f, Lambda(x, 1/(x + x**2))) == Rational(11, 3)
+    assert RootSum(f, Lambda(x, y/(x + x**2))) == Rational(11, 3)*y
 
     assert RootSum(x**2 - 1, Lambda(x, 3*x**2), x) == 6
     assert RootSum(x**2 - y, Lambda(x, 3*x**2), x) == 6*y
@@ -434,7 +433,7 @@ def test_RootSum_rational():
 
     f = 161*z**3 + 115*z**2 + 19*z + 1
     g = Lambda(z, z*log(
-        -3381*z**4/4 - 3381*z**3/4 - 625*z**2/2 - 125*z/2 - 5 + exp(x)))
+        -3381*z**4/4 - 3381*z**3/4 - 625*z**2/2 - z*Rational(125, 2) - 5 + exp(x)))
 
     assert RootSum(f, g).diff(x) == -(
         (5*exp(2*x) - 6*exp(x) + 4)*exp(x)/(exp(3*x) - exp(2*x) + 1))/7
@@ -519,14 +518,17 @@ def test_pure_key_dict():
     raises(ValueError, lambda: dont(1))
 
 
+@slow
 def test_eval_approx_relative():
+    CRootOf.clear_cache()
     t = [CRootOf(x**3 + 10*x + 1, i) for i in range(3)]
     assert [i.eval_rational(1e-1) for i in t] == [
-        -21/220, 15/256 - 805*I/256, 15/256 + 805*I/256]
+        Rational(-21, 220), Rational(15, 256) - I*Rational(805, 256),
+        Rational(15, 256) + I*Rational(805, 256)]
     t[0]._reset()
     assert [i.eval_rational(1e-1, 1e-4) for i in t] == [
-        -21/220, 3275/65536 - 414645*I/131072,
-        3275/65536 + 414645*I/131072]
+        Rational(-21, 220), Rational(3275, 65536) - I*Rational(414645, 131072),
+        Rational(3275, 65536) + I*Rational(414645, 131072)]
     assert S(t[0]._get_interval().dx) < 1e-1
     assert S(t[1]._get_interval().dx) < 1e-1
     assert S(t[1]._get_interval().dy) < 1e-4
@@ -534,8 +536,8 @@ def test_eval_approx_relative():
     assert S(t[2]._get_interval().dy) < 1e-4
     t[0]._reset()
     assert [i.eval_rational(1e-4, 1e-4) for i in t] == [
-        -2001/20020, 6545/131072 - 414645*I/131072,
-        6545/131072 + 414645*I/131072]
+        Rational(-2001, 20020), Rational(6545, 131072) - I*Rational(414645, 131072),
+        Rational(6545, 131072) + I*Rational(414645, 131072)]
     assert S(t[0]._get_interval().dx) < 1e-4
     assert S(t[1]._get_interval().dx) < 1e-4
     assert S(t[1]._get_interval().dy) < 1e-4
@@ -545,8 +547,8 @@ def test_eval_approx_relative():
     # less than tested, but it should never be greater
     t[0]._reset()
     assert [i.eval_rational(n=2) for i in t] == [
-        -202201/2024022, 104755/2097152 - 6634255*I/2097152,
-        104755/2097152 + 6634255*I/2097152]
+        Rational(-202201, 2024022), Rational(104755, 2097152) - I*Rational(6634255, 2097152),
+        Rational(104755, 2097152) + I*Rational(6634255, 2097152)]
     assert abs(S(t[0]._get_interval().dx)/t[0]) < 1e-2
     assert abs(S(t[1]._get_interval().dx)/t[1]).n() < 1e-2
     assert abs(S(t[1]._get_interval().dy)/t[1]).n() < 1e-2
@@ -554,8 +556,8 @@ def test_eval_approx_relative():
     assert abs(S(t[2]._get_interval().dy)/t[2]).n() < 1e-2
     t[0]._reset()
     assert [i.eval_rational(n=3) for i in t] == [
-        -202201/2024022, 1676045/33554432 - 106148135*I/33554432,
-        1676045/33554432 + 106148135*I/33554432]
+        Rational(-202201, 2024022), Rational(1676045, 33554432) - I*Rational(106148135, 33554432),
+        Rational(1676045, 33554432) + I*Rational(106148135, 33554432)]
     assert abs(S(t[0]._get_interval().dx)/t[0]) < 1e-3
     assert abs(S(t[1]._get_interval().dx)/t[1]).n() < 1e-3
     assert abs(S(t[1]._get_interval().dy)/t[1]).n() < 1e-3
@@ -567,3 +569,9 @@ def test_eval_approx_relative():
     assert [str(i) for i in a] == [
         '-0.10', '0.05 - 3.2*I', '0.05 + 3.2*I']
     assert all(abs(((a[i] - t[i])/t[i]).n()) < 1e-2 for i in range(len(a)))
+
+
+def test_issue_15920():
+    r = rootof(x**5 - x + 1, 0)
+    p = Integral(x, (x, 1, y))
+    assert unchanged(Eq, r, p)

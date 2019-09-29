@@ -118,18 +118,16 @@ debug this function to figure out the exact problem.
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
+from sympy import cacheit
+from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul
+from sympy.core.compatibility import reduce
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest
-from sympy import cacheit
-
-from sympy.core.compatibility import reduce
-
+from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
 
-from sympy.utilities.misc import debug_decorator as debug
 
 
 def compare(a, b, x):
@@ -644,9 +642,9 @@ def gruntz(e, z, z0, dir="+"):
 
     # convert all limits to the limit z->oo; sign of z is handled in limitinf
     r = None
-    if z0 == oo:
+    if z0 is oo:
         r = limitinf(e, z)
-    elif z0 == -oo:
+    elif z0 is -oo:
         r = limitinf(e.subs(z, -z), z)
     else:
         if str(dir) == "-":

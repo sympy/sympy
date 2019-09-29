@@ -381,11 +381,6 @@ class MultisetPartitionTraverser():
     data structures which can be interpreted by the same visitor
     functions used for the output of ``multiset_partitions_taocp``.
 
-    See Also
-    ========
-    multiset_partitions_taocp
-    sympy.utilities.iterables.multiset_partititions
-
     Examples
     ========
 
@@ -395,6 +390,12 @@ class MultisetPartitionTraverser():
     127750
     >>> m.count_partitions([3,3,3])
     686
+
+    See Also
+    ========
+
+    multiset_partitions_taocp
+    sympy.utilities.iterables.multiset_partititions
 
     References
     ==========
@@ -485,7 +486,7 @@ class MultisetPartitionTraverser():
         """
         plen = len(part)
         for j in range(plen - 1, -1, -1):
-            if (j == 0 and part[j].v > 1) or (j > 0 and part[j].v > 0):
+            if j == 0 and part[j].v > 1 or j > 0 and part[j].v > 0:
                 # found val to decrement
                 part[j].v -= 1
                 # Reset trailing parts back to maximum
@@ -551,11 +552,11 @@ class MultisetPartitionTraverser():
         plen = len(part)
         for j in range(plen - 1, -1, -1):
             # Knuth's mod, (answer to problem 7.2.1.5.69)
-            if (j == 0) and (part[0].v - 1)*(ub - self.lpart) < part[0].u:
+            if j == 0 and (part[0].v - 1)*(ub - self.lpart) < part[0].u:
                 self.k1 += 1
                 return False
 
-            if (j == 0 and part[j].v > 1) or (j > 0 and part[j].v > 0):
+            if j == 0 and part[j].v > 1 or j > 0 and part[j].v > 0:
                 # found val to decrement
                 part[j].v -= 1
                 # Reset trailing parts back to maximum
@@ -567,7 +568,7 @@ class MultisetPartitionTraverser():
                 # that turns out to be surprisingly common - exactly
                 # enough room to expand the leading component, but no
                 # room for the second component, which has v=0.
-                if (plen > 1 and (part[1].v == 0) and
+                if (plen > 1 and part[1].v == 0 and
                     (part[0].u - part[0].v) ==
                         ((ub - self.lpart - 1) * part[0].v)):
                     self.k2 += 1
@@ -753,7 +754,7 @@ class MultisetPartitionTraverser():
         [['a'], ['a'], ['b', 'b']],
         [['a'], ['a'], ['b'], ['b']]]
 
-        See also
+        See Also
         ========
 
         multiset_partitions_taocp():
@@ -784,10 +785,6 @@ class MultisetPartitionTraverser():
 
         Equivalent to enum_range(multiplicities, 0, ub)
 
-        See also
-        ========
-        enum_all, enum_large, enum_range
-
         Parameters
         ==========
 
@@ -813,6 +810,11 @@ class MultisetPartitionTraverser():
 
         The implementation is based, in part, on the answer given to
         exercise 69, in Knuth [AOCP]_.
+
+        See Also
+        ========
+
+        enum_all, enum_large, enum_range
 
         """
 
@@ -853,10 +855,6 @@ class MultisetPartitionTraverser():
 
         Equivalent to enum_range(multiplicities, lb, sum(multiplicities))
 
-        See also
-        ========
-        enum_all, enum_small, enum_range
-
         Parameters
         ==========
 
@@ -880,6 +878,11 @@ class MultisetPartitionTraverser():
         [['a', 'b'], ['a'], ['b']],
         [['a'], ['a'], ['b', 'b']],
         [['a'], ['a'], ['b'], ['b']]]
+
+        See Also
+        ========
+
+        enum_all, enum_small, enum_range
 
         """
         self.discarded = 0

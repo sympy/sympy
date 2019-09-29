@@ -1,6 +1,6 @@
-import collections
-from sympy.core.evaluate import global_evaluate
 from sympy import Expr, S, Mul, sympify
+from sympy.core.compatibility import Iterable
+from sympy.core.evaluate import global_evaluate
 
 
 class TensorProduct(Expr):
@@ -25,7 +25,7 @@ class TensorProduct(Expr):
         other = []
         scalar = S.One
         for arg in args:
-            if isinstance(arg, (collections.Iterable, MatrixBase, NDimArray)):
+            if isinstance(arg, (Iterable, MatrixBase, NDimArray)):
                 arrays.append(Array(arg))
             elif isinstance(arg, (MatrixExpr,)):
                 other.append(arg)
