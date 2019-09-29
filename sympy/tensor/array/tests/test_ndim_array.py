@@ -27,3 +27,5 @@ def test_array_negative_indices():
 
         assert raises(ValueError, lambda: test_array[:, -6])
         assert raises(ValueError, lambda: test_array[-3, :])
+
+        assert test_array[-1, -1] == 10
