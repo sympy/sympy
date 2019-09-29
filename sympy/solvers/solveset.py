@@ -2045,13 +2045,13 @@ def _solveset_multi(eqs, syms, domains):
 
     eqs = sorted(eqs, key=lambda eq: len(eq.free_symbols & set(syms)))
 
-    for n, eq in enumerate(eqs):
+    for n in range(len(eqs)):
         sols = []
         all_handled = True
         for sym in syms:
-            if sym not in eq.free_symbols:
+            if sym not in eqs[n].free_symbols:
                 continue
-            sol = solveset(eq, sym, domains[syms.index(sym)])
+            sol = solveset(eqs[n], sym, domains[syms.index(sym)])
 
             if isinstance(sol, FiniteSet):
                 i = syms.index(sym)

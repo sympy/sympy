@@ -136,18 +136,16 @@ def test_image_is_ImageSet():
 
 
 def test_halfcircle():
-    # This test sometimes works and sometimes doesn't.
-    # It may be an issue with solve? Maybe with using Lambdas/dummys?
-    # I believe the code within fancysets is correct
     r, th = symbols('r, theta', real=True)
     L = Lambda(((r, th),), (r*cos(th), r*sin(th)))
     halfcircle = ImageSet(L, Interval(0, 1)*Interval(0, pi))
 
-    assert halfcircle._contains((r, 0)) is None
     assert (1, 0) in halfcircle
     assert (0, -1) not in halfcircle
-    #assert (r, 2*pi) not in halfcircle
     assert (0, 0) in halfcircle
+    assert halfcircle._contains((r, 0)) is None
+    # This one doesn't work:
+    #assert (r, 2*pi) not in halfcircle
 
     assert not halfcircle.is_iterable
 
