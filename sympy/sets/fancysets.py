@@ -386,73 +386,83 @@ class ImageSet(Set):
         return len(self.lamda.variables) > 1
 
     def _contains(self, other):
-        from sympy.core.logic import fuzzy_and
-        from sympy.solvers.solveset import solveset, linsolve
+        from sympy.solvers.solveset import _solveset_multi
 
+        # Get the basic objects together:
         other = _sympify(other)
         expr = self.lamda.expr
         sig = self.lamda.signature
         variables = self.lamda.variables
+        base_sets = self.base_sets
 
+        # Use dummy symbols for ImageSet parameters so they don't match
+        # anything in other
         rep = {v: Dummy(v.name) for v in variables}
         variables = [v.subs(rep) for v in variables]
         sig = sig.subs(rep)
         expr = expr.subs(rep)
 
+        def rwalk(sig1, sig2, pred1=None, pred2=None, map1=None, map2=None):
+
+            pred1 = pred1 or (lambda s: isinstance(s, Tuple))
+            pred2 = pred2 or (lambda s: isinstance(s, Tuple))
+            map1 = map1 or (lambda s: s)
+            map2 = map2 or (lambda s: s)
+
+            def _rwalk(sig1, sig2):
+                if not pred1(sig1):
+                    yield sig1, sig2
+                elif not pred2(sig2):
+                    yield None
+                    return
+                else:
+                    sig1 = map1(sig1)
+                    sig2 = map2(sig2)
+                    if len(sig1) != len(sig2):
+                        yield None
+                        return
+                    for s1, s2 in zip(sig1, sig2):
+                        for pair in _rwalk(s1, s2):
+                            yield pair
+
+            for pair in _rwalk(sig1, sig2):
+                yield pair
+
         # Map the parts of other to those in the Lambda expr
         equations = []
 
-        def rmap(ex, ot):
-            if isinstance(ot, Tuple):
-                if not isinstance(ex, Tuple) or len(ex) != len(ot):
-                    return False
-                return all(rmap(e, o) for e, o in zip(ex, ot))
-            else:
-                eq = Eq(ex, ot)
-                if eq is S.false:
-                    return False
-                equations.append(eq)
-                return True
-
-        if not rmap(expr, other):
-            return False
+        for pair in rwalk(expr, other):
+            if pair is None:
+                return False
+            lhs, rhs = pair
+            eq = Eq(lhs, rhs)
+            if eq is None:
+                return False
+            equations.append(eq)
 
         # Map the symbols in the signature to the corresponding domains
         symsetmap = {}
+        pred2 = lambda bs: bs.is_ProductSet
+        map2 = lambda bs: bs.sets
 
-        def rmatch(sig, bs):
-            if isinstance(sig, Tuple):
-                if not bs.is_ProductSet or len(sig) != len(bs.sets):
+        for sig, bs in zip(sig, base_sets):
+            for pair in rwalk(sig, bs, pred2=pred2, map2=map2):
+                if pair is None:
                     return False
-                return all(rmatch(s, b) for s, b in zip(sig, bs.sets))
-            else:
-                symsetmap[sig] = bs
-                return True
-
-        if not all(rmatch(sg, st) for sg, st in zip(sig, self.base_sets)):
-            return False
+                var, base_set = pair
+                symsetmap[var] = base_set
 
         # Which of the variables in the Lambda signature need to be solved for?
         symss = (eq.free_symbols for eq in equations)
         variables = set(variables) & reduce(set.union, symss, set())
 
-        for e in equations:
-            syms = e.free_symbols & variables
-            n = len(syms)
-            if n == 1:
-                sym, = syms
-                sol = solveset(e, sym)
-                symsetmap[sym] &= sol
-            else:
-                # Use internal multivariate solveset
-                from sympy.solvers.solveset import _solveset_multi
-                base_sets = [symsetmap[v] for v in variables]
-                solnset = _solveset_multi(equations, variables, base_sets)
-                if solnset is None:
-                    return None
-                return fuzzy_not(solnset.is_empty)
-
-        return fuzzy_not(fuzzy_or(s.is_empty for s in symsetmap.values()))
+        # Use internal multivariate solveset
+        variables = tuple(variables)
+        base_sets = [symsetmap[v] for v in variables]
+        solnset = _solveset_multi(equations, variables, base_sets)
+        if solnset is None:
+            return None
+        return fuzzy_not(solnset.is_empty)
 
     @property
     def is_iterable(self):
