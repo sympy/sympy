@@ -410,20 +410,29 @@ class ImageSet(Set):
             map2 = map2 or (lambda s: s)
 
             def _rwalk(sig1, sig2):
+
+                # Base case of recursion:
                 if not pred1(sig1):
                     yield sig1, sig2
-                elif not pred2(sig2):
-                    yield None
                     return
-                else:
-                    sig1 = map1(sig1)
-                    sig2 = map2(sig2)
-                    if len(sig1) != len(sig2):
-                        yield None
-                        return
-                    for s1, s2 in zip(sig1, sig2):
-                        for pair in _rwalk(s1, s2):
-                            yield pair
+
+                # Can we also recurse sig2?
+                check2 = pred2(sig2)
+                if not check2:
+                    yield check2
+                    return
+
+                # Need the lengths to match
+                sig1 = map1(sig1)
+                sig2 = map2(sig2)
+                if len(sig1) != len(sig2):
+                    yield False
+                    return
+
+                # Recurse on elements of sig1 and sig2
+                for s1, s2 in zip(sig1, sig2):
+                    for pair in _rwalk(s1, s2):
+                        yield pair
 
             for pair in _rwalk(sig1, sig2):
                 yield pair
@@ -432,8 +441,8 @@ class ImageSet(Set):
         equations = []
 
         for pair in rwalk(expr, other):
-            if pair is None:
-                return False
+            if not pair:
+                return pair
             lhs, rhs = pair
             eq = Eq(lhs, rhs)
             if eq is None:
@@ -442,13 +451,13 @@ class ImageSet(Set):
 
         # Map the symbols in the signature to the corresponding domains
         symsetmap = {}
-        pred2 = lambda bs: bs.is_ProductSet
+        pred2 = lambda bs: True if bs.is_ProductSet else None
         map2 = lambda bs: bs.sets
 
         for sig, bs in zip(sig, base_sets):
             for pair in rwalk(sig, bs, pred2=pred2, map2=map2):
-                if pair is None:
-                    return False
+                if not pair:
+                    return pair
                 var, base_set = pair
                 symsetmap[var] = base_set
 
