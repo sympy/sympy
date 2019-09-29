@@ -128,6 +128,12 @@ def test_ImageSet():
     # Passing a set instead of a FiniteSet shouldn't raise
     assert unchanged(ImageSet, Lambda(x, x**2), {1, 2, 3})
 
+    S2 = ImageSet(Lambda(((x, y),), x+y), {(1, 2), (3, 4)})
+    assert 3 in S2.doit()
+    # FIXME: This doesn't yet work:
+    #assert 3 in S2
+    assert S2._contains(3) is None
+
     raises(TypeError, lambda: ImageSet(Lambda(x, x**2), 1))
 
 
