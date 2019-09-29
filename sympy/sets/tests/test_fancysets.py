@@ -143,11 +143,9 @@ def test_halfcircle():
     L = Lambda(((r, th),), (r*cos(th), r*sin(th)))
     halfcircle = ImageSet(L, Interval(0, 1)*Interval(0, pi))
 
-    # See https://github.com/sympy/sympy/issues/17621
-    #assert halfcircle._contains((r, 0)) is None
+    assert halfcircle._contains((r, 0)) is None
     assert (1, 0) in halfcircle
     assert (0, -1) not in halfcircle
-    # XXX; What's happening here??????
     #assert (r, 2*pi) not in halfcircle
     assert (0, 0) in halfcircle
 

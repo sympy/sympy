@@ -444,13 +444,13 @@ class ImageSet(Set):
                 sol = solveset(e, sym)
                 symsetmap[sym] &= sol
             else:
-                # Give up on solveset
-                from sympy.solvers.solvers import solve
-                solns = solve(equations, variables, dict=True)
-                return fuzzy_or(
-                        fuzzy_and(symsetmap[sym]._contains(sol[sym]) for sym in sol)
-                        for sol in solns
-                        )
+                # Use internal multivariate solveset
+                from sympy.solvers.solveset import _solveset_multi
+                base_sets = [symsetmap[v] for v in variables]
+                solnset = _solveset_multi(equations, variables, base_sets)
+                if solnset is None:
+                    return None
+                return fuzzy_not(solnset.is_empty)
 
         return fuzzy_not(fuzzy_or(s.is_empty for s in symsetmap.values()))
 
