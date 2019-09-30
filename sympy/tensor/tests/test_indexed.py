@@ -229,7 +229,24 @@ def test_IndexedBase_assumptions_inheritance():
 
     assert I_inherit.is_integer
     assert I_explicit.is_integer
+    assert I_inherit.label.is_integer
+    assert I_explicit.label.is_integer
     assert I_inherit == I_explicit
+
+
+def test_issue_17652():
+    """Regression test issue #17652.
+
+    IndexedBase.label should not upcast subclasses of Symbol
+    """
+    class SubClass(Symbol):
+        pass
+
+    x = SubClass('X')
+    assert type(x) == SubClass
+    base = IndexedBase(x)
+    assert type(x) == SubClass
+    assert type(base.label) == SubClass
 
 
 def test_Indexed_constructor():
