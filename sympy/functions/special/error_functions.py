@@ -6,6 +6,7 @@ from __future__ import print_function, division
 from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
 from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.relational import Lt
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.integers import floor
@@ -13,6 +14,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.complexes import polar_lift
 from sympy.functions.elementary.hyperbolic import cosh, sinh
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, sinc
 from sympy.functions.special.hyper import hyper, meijerg
 
@@ -1110,7 +1112,7 @@ class Ei(Function):
         return li(exp(z))
 
     def _eval_rewrite_as_Si(self, z, **kwargs):
-        return Shi(z) + Chi(z)
+        return Piecewise((Shi(z) + Chi(z) - I*pi, Lt(z, 0)), (Shi(z) + Chi(z), True))
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
