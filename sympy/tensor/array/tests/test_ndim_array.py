@@ -1,6 +1,8 @@
 from sympy.utilities.pytest import raises
-from sympy import (Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray,
-    MutableDenseNDimArray, MutableSparseNDimArray)
+from sympy import (
+    Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray,
+    MutableDenseNDimArray, MutableSparseNDimArray
+)
 
 
 array_types = [
@@ -25,7 +27,7 @@ def test_array_negative_indices():
         assert test_array[:, 3] == Array([4, 9])
         assert test_array[:, 4] == Array([5, 10])
 
-        assert raises(ValueError, lambda: test_array[:, -6])
-        assert raises(ValueError, lambda: test_array[-3, :])
+        raises(ValueError, lambda: test_array[:, -6])
+        raises(ValueError, lambda: test_array[-3, :])
 
         assert test_array[-1, -1] == 10
