@@ -1002,22 +1002,10 @@ icosahedron = Polyhedron(
 
 tetrahedron_faces = [(0, 1, 2), (0, 2, 3), (0, 3, 1), (1, 2, 3)]
 
-cube_faces = [
-    (0, 1, 2, 3), (0, 1, 5, 4), (1, 2, 6, 5),
-    (2, 3, 7, 6), (0, 3, 7, 4), (4, 5, 6, 7)]
+cube_faces = list(tuple(arg) for arg in cube.faces)
 
-octahedron_faces = [
-    (0, 1, 2), (0, 2, 3), (0, 3, 4), (0, 1, 4),
-    (1, 2, 5), (2, 3, 5), (3, 4, 5), (1, 4, 5)]
+octahedron_faces = list(tuple(arg) for arg in octahedron.faces)
 
-dodecahedron_faces = [
-    (0, 1, 2, 3, 4), (0, 1, 6, 10, 5), (1, 2, 7, 11, 6),
-    (2, 3, 8, 12, 7), (3, 4, 9, 13, 8), (0, 4, 9, 14, 5),
-    (5, 10, 16, 15, 14), (6, 10, 16, 17, 11), (7, 11, 17, 18, 12),
-    (8, 12, 18, 19, 13), (9, 13, 19, 15, 14), (15, 16, 17, 18, 19)]
+dodecahedron_faces = list(tuple(arg) for arg in dodecahedron.faces)
 
-icosahedron_faces = [
-    (0, 1, 2), (0, 2, 3), (0, 3, 4), (0, 4, 5), (0, 1, 5),
-    (1, 6, 7), (1, 2, 7), (2, 7, 8), (2, 3, 8), (3, 8, 9),
-    (3, 4, 9), (4, 9, 10), (4, 5, 10), (5, 6, 10), (1, 5, 6),
-    (6, 7, 11), (7, 8, 11), (8, 9, 11), (9, 10, 11), (6, 10, 11)]
+icosahedron_faces = list(tuple(arg) for arg in icosahedron.faces)
