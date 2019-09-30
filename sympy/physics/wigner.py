@@ -49,7 +49,7 @@ from __future__ import print_function, division
 
 from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm, zeros,
                    Function, sin, cos, exp, I, factorial, binomial,
-                   ImmutableMatrix)
+                   Mul, ImmutableMatrix)
 from sympy.core.compatibility import range
 
 # This list of precomputed factorials is needed to massively
@@ -862,11 +862,6 @@ def wigner_d_small(J, beta):
     ⎣             4             ⎦
 
     """
-    def prod(x):
-        p = 1
-        for i, xi in enumerate(x): p = p*xi
-        return p
-
     M = [J-i for i in range(2*J+1)]
     d = zeros(2*J+1)
     for i, Mi in enumerate(M):
@@ -885,9 +880,7 @@ def wigner_d_small(J, beta):
                       sin(beta/2)**(2*J-2*s-Mj-Mi)]
                      for s in range(sigmamin, sigmamax+1)]
 
-            terms = [prod(term) if 0 not in term else 0 for term in terms]
-
-            d[i, j] = dij*sum(terms)
+            d[i, j] = dij*Sum(Mul(terms))
 
     return ImmutableMatrix(d)
 
