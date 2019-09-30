@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
-from sympy.core.compatibility import range, iterable
+from sympy.core.compatibility import iterable
 from sympy.sets import Set, FiniteSet, EmptySet
 
 
@@ -273,11 +273,7 @@ class CompositeMorphism(Morphism):
 
         normalised_components = Tuple()
 
-        # TODO: Fix the unpythonicity.
-        for i in range(len(components) - 1):
-            current = components[i]
-            following = components[i + 1]
-
+        for current, following in zip(components, components[1:]):
             if not isinstance(current, Morphism) or \
                     not isinstance(following, Morphism):
                 raise TypeError("All components must be morphisms.")

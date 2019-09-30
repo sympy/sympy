@@ -31,7 +31,7 @@ def R_nl(n, l, nu, r):
     >>> R_nl(0, 0, 1, r)
     2*2**(3/4)*exp(-r**2)/pi**(1/4)
     >>> R_nl(1, 0, 1, r)
-    4*2**(1/4)*sqrt(3)*(-2*r**2 + 3/2)*exp(-r**2)/(3*pi**(1/4))
+    4*2**(1/4)*sqrt(3)*(3/2 - 2*r**2)*exp(-r**2)/(3*pi**(1/4))
 
     l, nu and r may be symbolic:
 
@@ -59,7 +59,7 @@ def R_nl(n, l, nu, r):
             ((2*nu)**(l + Rational(3, 2))*2**(n + l + 1)*factorial(n - 1))/
             (sqrt(pi)*(factorial2(2*n + 2*l - 1)))
     )
-    return C*r**(l)*exp(-nu*r**2)*assoc_laguerre(n - 1, l + S(1)/2, 2*nu*r**2)
+    return C*r**(l)*exp(-nu*r**2)*assoc_laguerre(n - 1, l + S.Half, 2*nu*r**2)
 
 
 def E_nl(n, l, hw):

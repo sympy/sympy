@@ -10,7 +10,7 @@ from sympy.vector.operators import curl, divergence, gradient, Gradient, Diverge
 from sympy.vector.deloperator import Del
 from sympy.vector.functions import (is_conservative, is_solenoidal,
                                     scalar_potential, directional_derivative,
-                                    scalar_potential_difference)
+                                    laplacian, scalar_potential_difference)
 from sympy.utilities.pytest import raises
 
 C = CoordSys3D('C')
@@ -43,10 +43,10 @@ def test_del_operator():
             curl(2*x**2*j))
 
     #Tests for divergence
-    assert delop & Vector.zero == S(0) == divergence(Vector.zero)
-    assert (delop & Vector.zero).doit() == S(0)
+    assert delop & Vector.zero is S.Zero == divergence(Vector.zero)
+    assert (delop & Vector.zero).doit() is S.Zero
     assert delop.dot(Vector.zero) == delop & Vector.zero
-    assert (delop & i).doit() == S(0)
+    assert (delop & i).doit() is S.Zero
     assert (delop & x**2*i).doit() == 2*x == divergence(x**2*i)
     assert (delop.dot(v, doit=True) == x*y + y*z + z*x ==
             divergence(v))
@@ -64,7 +64,7 @@ def test_del_operator():
     assert (delop.gradient(0, doit=True) == Vector.zero ==
             gradient(0))
     assert delop.gradient(0) == delop(0)
-    assert (delop(S(0))).doit() == Vector.zero
+    assert (delop(S.Zero)).doit() == Vector.zero
     assert (delop(x) == (Derivative(C.x, C.x))*C.i +
             (Derivative(C.x, C.y))*C.j + (Derivative(C.x, C.z))*C.k)
     assert (delop(x)).doit() == i == gradient(x)
@@ -81,10 +81,10 @@ def test_del_operator():
             -a*sin(y)/x**2 * i + a*cos(y)/x * j)
 
     #Tests for directional derivative
-    assert (Vector.zero & delop)(a) == S(0)
-    assert ((Vector.zero & delop)(a)).doit() == S(0)
+    assert (Vector.zero & delop)(a) is S.Zero
+    assert ((Vector.zero & delop)(a)).doit() is S.Zero
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
-    assert ((v & delop)(S(0))).doit() == S(0)
+    assert ((v & delop)(S.Zero)).doit() is S.Zero
     assert ((i & delop)(x)).doit() == 1
     assert ((j & delop)(y)).doit() == 1
     assert ((k & delop)(z)).doit() == 1
@@ -99,6 +99,22 @@ def test_del_operator():
     assert ((k & delop)(v)).doit() == k
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
 
+    # Tests for laplacian on scalar fields
+    assert laplacian(x*y*z) is S.Zero
+    assert laplacian(x**2) == S(2)
+    assert laplacian(x**2*y**2*z**2) == \
+                    2*y**2*z**2 + 2*x**2*z**2 + 2*x**2*y**2
+    A = CoordSys3D('A', transformation="spherical", variable_names=["r", "theta", "phi"])
+    B = CoordSys3D('B', transformation='cylindrical', variable_names=["r", "theta", "z"])
+    assert laplacian(A.r + A.theta + A.phi) == 2/A.r + cos(A.theta)/(A.r**2*sin(A.theta))
+    assert laplacian(B.r + B.theta + B.z) == 1/B.r
+
+    # Tests for laplacian on vector fields
+    assert laplacian(x*y*z*(i + j + k)) == Vector.zero
+    assert laplacian(x*y**2*z*(i + j + k)) == \
+                            2*x*z*i + 2*x*z*j + 2*x*z*k
+
+
 
 def test_product_rules():
     """
@@ -108,7 +124,7 @@ def test_product_rules():
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Del
+    .. [1] https://en.wikipedia.org/wiki/Del
 
     """
 
@@ -189,7 +205,7 @@ def test_solenoidal():
 def test_directional_derivative():
     assert directional_derivative(C.x*C.y*C.z, 3*C.i + 4*C.j + C.k) == C.x*C.y + 4*C.x*C.z + 3*C.y*C.z
     assert directional_derivative(5*C.x**2*C.z, 3*C.i + 4*C.j + C.k) == 5*C.x**2 + 30*C.x*C.z
-    assert directional_derivative(5*C.x**2*C.z, 4*C.j) == S.Zero
+    assert directional_derivative(5*C.x**2*C.z, 4*C.j) is S.Zero
 
     D = CoordSys3D("D", "spherical", variable_names=["r", "theta", "phi"],
                    vector_names=["e_r", "e_theta", "e_phi"])
@@ -216,7 +232,7 @@ def test_scalar_potential_difference():
     point2 = C.origin.locate_new('P2', 4*i + 5*j + 6*k)
     genericpointC = C.origin.locate_new('RP', x*i + y*j + z*k)
     genericpointP = P.origin.locate_new('PP', P.x*P.i + P.y*P.j + P.z*P.k)
-    assert scalar_potential_difference(S(0), C, point1, point2) == 0
+    assert scalar_potential_difference(S.Zero, C, point1, point2) == 0
     assert (scalar_potential_difference(scalar_field, C, C.origin,
                                         genericpointC) ==
             scalar_field)
@@ -250,14 +266,23 @@ def test_differential_operators_curvilinear_system():
            (sin(A.theta)*A.r + cos(A.theta)*A.r*A.theta)/(sin(A.theta)*A.r**2) + 9*A.phi + A.theta/sin(A.theta)
     assert divergence(Vector.zero) == 0
     assert divergence(0*A.i + 0*A.j + 0*A.k) == 0
-    # Test for cylindrical coordinate system and divergence
-    assert divergence(B.r*B.i + B.theta*B.j + B.z*B.k) == 2 + 1/B.theta
-    assert divergence(B.r*B.j + B.z*B.k) == 1
-    # Test for spherical coordinate system and divergence
+    # Test for spherical coordinate system and curl
     assert curl(A.r*A.i + A.theta*A.j + A.phi*A.k) == \
            (cos(A.theta)*A.phi/(sin(A.theta)*A.r))*A.i + (-A.phi/A.r)*A.j + A.theta/A.r*A.k
     assert curl(A.r*A.j + A.phi*A.k) == (cos(A.theta)*A.phi/(sin(A.theta)*A.r))*A.i + (-A.phi/A.r)*A.j + 2*A.k
 
+    # Test for cylindrical coordinate system and gradient
+    assert gradient(0*B.r + 0*B.theta+0*B.z) == Vector.zero
+    assert gradient(B.r*B.theta*B.z) == B.theta*B.z*B.i + B.z*B.j + B.r*B.theta*B.k
+    assert gradient(3*B.r) == 3*B.i
+    assert gradient(2*B.theta) == 2/B.r * B.j
+    assert gradient(4*B.z) == 4*B.k
+    # Test for cylindrical coordinate system and divergence
+    assert divergence(B.r*B.i + B.theta*B.j + B.z*B.k) == 3 + 1/B.r
+    assert divergence(B.r*B.j + B.z*B.k) == 1
+    # Test for cylindrical coordinate system and curl
+    assert curl(B.r*B.j + B.z*B.k) == 2*B.k
+    assert curl(3*B.i + 2/B.r*B.j + 4*B.k) == Vector.zero
 
 def test_mixed_coordinates():
     # gradient

@@ -1,5 +1,5 @@
 from sympy import limit, Symbol, oo, sqrt, Rational, log, exp, cos, sin, tan, \
-    pi, asin, together, root
+    pi, asin, together, root, S
 
 # Numbers listed with the tests refer to problem numbers in the book
 # "Anti-demidovich, problemas resueltos, Ed. URSS"
@@ -33,11 +33,11 @@ def test_Limits_simple_1():
 
 def test_Limits_simple_2():
     assert limit(1000*x/(x**2 - 1), x, oo) == 0  # 182
-    assert limit((x**2 - 5*x + 1)/(3*x + 7), x, oo) == oo  # 183
+    assert limit((x**2 - 5*x + 1)/(3*x + 7), x, oo) is oo  # 183
     assert limit((2*x**2 - x + 3)/(x**3 - 8*x + 5), x, oo) == 0  # 184
     assert limit((2*x**2 - 3*x - 4)/sqrt(x**4 + 1), x, oo) == 2  # 186
     assert limit((2*x + 3)/(x + root3(x)), x, oo) == 2  # 187
-    assert limit(x**2/(10 + x*sqrt(x)), x, oo) == oo  # 188
+    assert limit(x**2/(10 + x*sqrt(x)), x, oo) is oo  # 188
     assert limit(root3(x**2 + 1)/(x + 1), x, oo) == 0  # 189
     assert limit(sqrt(x)/sqrt(x + sqrt(x + sqrt(x))), x, oo) == 1  # 190
 
@@ -64,9 +64,9 @@ def test_Limits_simple_3b():
 def test_Limits_simple_4a():
     a = Symbol('a')
     assert limit((sqrt(x) - sqrt(a))/(x - a), x, a) == 1/(2*sqrt(a))  # Primer 5
-    assert limit((sqrt(x) - 1)/(root3(x) - 1), x, 1) == Rational(3)/2  # 205
+    assert limit((sqrt(x) - 1)/(root3(x) - 1), x, 1) == Rational(3, 2)  # 205
     assert limit((sqrt(1 + x) - sqrt(1 - x))/x, x, 0) == 1  # 207
-    assert limit(sqrt(x**2 - 5*x + 6) - x, x, oo) == -Rational(5)/2  # 213
+    assert limit(sqrt(x**2 - 5*x + 6) - x, x, oo) == Rational(-5, 2)  # 213
 
 
 def test_limits_simple_4aa():
@@ -106,13 +106,13 @@ def test_f1b():
     a = Symbol("a")
     assert limit(sin(x)/x, x, 2) == sin(2)/2  # 216a
     assert limit(sin(3*x)/x, x, 0) == 3  # 217
-    assert limit(sin(5*x)/sin(2*x), x, 0) == Rational(5)/2  # 218
-    assert limit(sin(pi*x)/sin(3*pi*x), x, 0) == Rational(1)/3  # 219
+    assert limit(sin(5*x)/sin(2*x), x, 0) == Rational(5, 2)  # 218
+    assert limit(sin(pi*x)/sin(3*pi*x), x, 0) == Rational(1, 3)  # 219
     assert limit(x*sin(pi/x), x, oo) == pi  # 220
-    assert limit((1 - cos(x))/x**2, x, 0) == Rational(1, 2)  # 221
+    assert limit((1 - cos(x))/x**2, x, 0) == S.Half  # 221
     assert limit(x*sin(1/x), x, oo) == 1  # 227b
     assert limit((cos(m*x) - cos(n*x))/x**2, x, 0) == ((n**2 - m**2)/2)  # 232
-    assert limit((tan(x) - sin(x))/x**3, x, 0) == Rational(1, 2)  # 233
+    assert limit((tan(x) - sin(x))/x**3, x, 0) == S.Half  # 233
     assert limit((x - sin(2*x))/(x + sin(3*x)), x, 0) == -Rational(1, 4)  # 237
     assert limit((1 - sqrt(cos(x)))/x**2, x, 0) == Rational(1, 4)  # 239
     assert limit((sqrt(1 + sin(x)) - sqrt(1 - sin(x)))/x, x, 0) == 1  # 240

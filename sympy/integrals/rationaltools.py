@@ -80,13 +80,13 @@ def ratint(f, x, **flags):
                 atoms = p.atoms() | q.atoms()
 
             for elt in atoms - {x}:
-                if not elt.is_real:
+                if not elt.is_extended_real:
                     real = False
                     break
             else:
                 real = True
 
-        eps = S(0)
+        eps = S.Zero
 
         if not real:
             for h, q in L:
@@ -219,7 +219,7 @@ def ratint_logpart(f, g, x, t=None):
         R_map[r.degree()] = r
 
     def _include_sign(c, sqf):
-        if (c < 0) == True:
+        if c.is_extended_real and (c < 0) == True:
             h, k = sqf[0]
             sqf[0] = h*c, k
 
@@ -241,7 +241,7 @@ def ratint_logpart(f, g, x, t=None):
             for a, j in h_lc_sqf:
                 h = h.quo(Poly(a.gcd(q)**j, x))
 
-            inv, coeffs = h_lc.invert(q), [S(1)]
+            inv, coeffs = h_lc.invert(q), [S.One]
 
             for coeff in h.coeffs()[1:]:
                 T = (inv*coeff).rem(q)
@@ -339,8 +339,8 @@ def log_to_real(h, q, x, t):
     H_map = collect(H, I, evaluate=False)
     Q_map = collect(Q, I, evaluate=False)
 
-    a, b = H_map.get(S(1), S(0)), H_map.get(I, S(0))
-    c, d = Q_map.get(S(1), S(0)), Q_map.get(I, S(0))
+    a, b = H_map.get(S.One, S.Zero), H_map.get(I, S.Zero)
+    c, d = Q_map.get(S.One, S.Zero), Q_map.get(I, S.Zero)
 
     R = Poly(resultant(c, d, v), u)
 
@@ -349,7 +349,7 @@ def log_to_real(h, q, x, t):
     if len(R_u) != R.count_roots():
         return None
 
-    result = S(0)
+    result = S.Zero
 
     for r_u in R_u.keys():
         C = Poly(c.subs({u: r_u}), v)
@@ -358,9 +358,15 @@ def log_to_real(h, q, x, t):
         if len(R_v) != C.count_roots():
             return None
 
+        R_v_paired = [] # take one from each pair of conjugate roots
         for r_v in R_v:
-            if not r_v.is_positive:
-                continue
+            if r_v not in R_v_paired and -r_v not in R_v_paired:
+                if r_v.is_negative or r_v.could_extract_minus_sign():
+                    R_v_paired.append(-r_v)
+                elif not r_v.is_zero:
+                    R_v_paired.append(r_v)
+
+        for r_v in R_v_paired:
 
             D = d.subs({u: r_u, v: r_v})
 

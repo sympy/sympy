@@ -2,10 +2,8 @@ from __future__ import print_function, division
 
 from sympy.core import Function, S, Mul, Pow, Add
 from sympy.core.compatibility import ordered, default_sort_key
-from sympy.core.basic import preorder_traversal
 from sympy.core.function import count_ops, expand_func
-from sympy.functions.combinatorial.factorials import (binomial,
-    CombinatorialFunction, factorial)
+from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions import gamma, sqrt, sin
 from sympy.polys import factor, cancel
 
@@ -78,7 +76,7 @@ def _gammasimp(expr, as_comb):
 
     if as_comb:
         expr = expr.replace(_rf,
-            lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
+            lambda a, b: gamma(b + 1))
     else:
         expr = expr.replace(_rf,
             lambda a, b: gamma(a + b)/gamma(a))
@@ -129,7 +127,7 @@ def _gammasimp(expr, as_comb):
 
         def gamma_factor(x):
             # return True if there is a gamma factor in shallow args
-            if x.func is gamma:
+            if isinstance(x, gamma):
                 return True
             if x.is_Add or x.is_Mul:
                 return any(gamma_factor(xi) for xi in x.args)
@@ -154,12 +152,11 @@ def _gammasimp(expr, as_comb):
                 return rule_gamma(Mul._from_args(args), level + 1)*Mul._from_args(nc)
             level += 1
 
-        # pure gamma handling, not factor absorbtion
+        # pure gamma handling, not factor absorption
         if level == 2:
-            sifted = sift(expr.args, gamma_factor)
-            gamma_ind = Mul(*sifted.pop(False, []))
-            d = Mul(*sifted.pop(True, []))
-            assert not sifted
+            T, F = sift(expr.args, gamma_factor, binary=True)
+            gamma_ind = Mul(*F)
+            d = Mul(*T)
 
             nd, dd = d.as_numer_denom()
             for ipass in range(2):
@@ -198,7 +195,7 @@ def _gammasimp(expr, as_comb):
                 return None, []
             b, e = p.as_base_exp()
             if e.is_Integer:
-                if b.func is gamma:
+                if isinstance(b, gamma):
                     return True, [b.args[0]]*e
                 else:
                     return False, [b]*e
@@ -281,7 +278,7 @@ def _gammasimp(expr, as_comb):
                     elif n < 0:
                         for k in range(-n):
                             do.append(2*y - 1 - k)
-                    ng.append(y + S(1)/2)
+                    ng.append(y + S.Half)
                     no.append(2**(2*y - 1))
                     do.append(sqrt(S.Pi))
 
@@ -365,7 +362,7 @@ def _gammasimp(expr, as_comb):
 
                         # (2)
                         numer.append((2*S.Pi)**(S(n - 1)/2)*
-                                     n**(S(1)/2 - con))
+                                     n**(S.Half - con))
                         # (3)
                         new.append(con)
 
@@ -383,7 +380,7 @@ def _gammasimp(expr, as_comb):
                                     (denom_gammas, denom_others, numer_others)]:
                 _mult_thm(l, numer, denom)
 
-        # =========== level >= 2 work: factor absorbtion =========
+        # =========== level >= 2 work: factor absorption =========
 
         if level >= 2:
             # Try to absorb factors into the gammas: x*gamma(x) -> gamma(x + 1)

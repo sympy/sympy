@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
-
 """
 Naturalunit system.
 
@@ -18,11 +15,12 @@ from sympy.physics.units.dimensions import (
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 from sympy.physics.units.unitsystem import UnitSystem
 
-dims = (length, mass, time, momentum, force, energy, power, frequency)
 
 # dimension system
-_natural_dim = DimensionSystem(base=(action, energy, velocity), dims=dims,
-                              name="Natural system")
+_natural_dim = DimensionSystem(
+    base_dims=(action, energy, velocity),
+    derived_dims=(length, mass, time, momentum, force, power, frequency)
+)
 
 units = prefix_unit(eV, PREFIXES)
 

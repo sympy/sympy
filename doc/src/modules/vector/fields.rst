@@ -269,7 +269,7 @@ system all we need to do is to create proper coordinate system
   >>> from sympy.vector import CoordSys3D
   >>> c = CoordSys3D('c', transformation='cylindrical', variable_names=("r", "theta", "z"))
   >>> gradient(c.r*c.theta*c.z)
-      c.theta*c.z*c.i + c.r*c.z/c.theta*c.j + c.r*c.theta*c.k
+      c.theta*c.z*c.i + c.z*c.j + c.r*c.theta*c.k
 
 Conservative and Solenoidal fields
 ==================================

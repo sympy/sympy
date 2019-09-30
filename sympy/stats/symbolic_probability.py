@@ -1,11 +1,9 @@
 import itertools
 
-from sympy.core.sympify import _sympify
-
+from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol
 from sympy.core.compatibility import default_sort_key
-
-from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol, Dummy, Basic
 from sympy.core.evaluate import global_evaluate
+from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
 from sympy.stats.rv import RandomSymbol, probability, expectation
 
@@ -46,11 +44,10 @@ class Probability(Expr):
         obj._condition = condition
         return obj
 
-    def _eval_rewrite_as_Integral(self, arg, condition=None):
+    def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
         return probability(arg, condition, evaluate=False)
 
-    def _eval_rewrite_as_Sum(self, arg, condition=None):
-        return self.rewrite(Integral)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -135,7 +132,7 @@ class Expectation(Expr):
 
         return self
 
-    def _eval_rewrite_as_Probability(self, arg, condition=None):
+    def _eval_rewrite_as_Probability(self, arg, condition=None, **kwargs):
         rvs = arg.atoms(RandomSymbol)
         if len(rvs) > 1:
             raise NotImplementedError()
@@ -160,11 +157,10 @@ class Expectation(Expr):
             else:
                 return Sum(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.set.sup))
 
-    def _eval_rewrite_as_Integral(self, arg, condition=None):
+    def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
         return expectation(arg, condition=condition, evaluate=False)
 
-    def _eval_rewrite_as_Sum(self, arg, condition=None):
-        return self.rewrite(Integral)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -262,19 +258,18 @@ class Variance(Expr):
         # this expression contains a RandomSymbol somehow:
         return self
 
-    def _eval_rewrite_as_Expectation(self, arg, condition=None):
+    def _eval_rewrite_as_Expectation(self, arg, condition=None, **kwargs):
             e1 = Expectation(arg**2, condition)
             e2 = Expectation(arg, condition)**2
             return e1 - e2
 
-    def _eval_rewrite_as_Probability(self, arg, condition=None):
+    def _eval_rewrite_as_Probability(self, arg, condition=None, **kwargs):
         return self.rewrite(Expectation).rewrite(Probability)
 
-    def _eval_rewrite_as_Integral(self, arg, condition=None):
+    def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
         return variance(self.args[0], self._condition, evaluate=False)
 
-    def _eval_rewrite_as_Sum(self, arg, condition=None):
-        return self.rewrite(Integral)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -395,19 +390,18 @@ class Covariance(Expr):
                 nonrv.append(a)
         return (Mul(*nonrv), Mul(*rv))
 
-    def _eval_rewrite_as_Expectation(self, arg1, arg2, condition=None):
+    def _eval_rewrite_as_Expectation(self, arg1, arg2, condition=None, **kwargs):
         e1 = Expectation(arg1*arg2, condition)
         e2 = Expectation(arg1, condition)*Expectation(arg2, condition)
         return e1 - e2
 
-    def _eval_rewrite_as_Probability(self, arg1, arg2, condition=None):
+    def _eval_rewrite_as_Probability(self, arg1, arg2, condition=None, **kwargs):
         return self.rewrite(Expectation).rewrite(Probability)
 
-    def _eval_rewrite_as_Integral(self, arg1, arg2, condition=None):
+    def _eval_rewrite_as_Integral(self, arg1, arg2, condition=None, **kwargs):
         return covariance(self.args[0], self.args[1], self._condition, evaluate=False)
 
-    def _eval_rewrite_as_Sum(self, arg1, arg2, condition=None):
-        return self.rewrite(Integral)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()

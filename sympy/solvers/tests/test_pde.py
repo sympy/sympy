@@ -17,6 +17,14 @@ def test_pde_separate_add():
     assert res == [D(X(x), x)*exp(-X(x)), D(T(t), t)*exp(T(t))]
 
 
+def test_pde_separate():
+    x, y, z, t = symbols("x,y,z,t")
+    F, T, X, Y, Z, u = map(Function, 'FTXYZu')
+
+    eq = Eq(D(u(x, t), x), D(u(x, t), t)*exp(u(x, t)))
+    raises(ValueError, lambda: pde_separate(eq, u(x, t), [X(x), T(t)], 'div'))
+
+
 def test_pde_separate_mul():
     x, y, z, t = symbols("x,y,z,t")
     c = Symbol("C", real=True)
@@ -25,7 +33,7 @@ def test_pde_separate_mul():
     r, theta, z = symbols('r,theta,z')
 
     # Something simple :)
-    eq = Eq(D(F(x, y, z), x) + D(F(x, y, z), y) + D(F(x, y, z), z))
+    eq = Eq(D(F(x, y, z), x) + D(F(x, y, z), y) + D(F(x, y, z), z), 0)
 
     # Duplicate arguments in functions
     raises(
@@ -48,7 +56,7 @@ def test_pde_separate_mul():
 
     # Laplace equation in cylindrical coords
     eq = Eq(1/r * D(Phi(r, theta, z), r) + D(Phi(r, theta, z), r, 2) +
-            1/r**2 * D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2))
+            1/r**2 * D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2), 0)
     # Separate z
     res = pde_separate_mul(eq, Phi(r, theta, z), [Z(z), u(theta, r)])
     assert res == [D(Z(z), z, z)/Z(z),

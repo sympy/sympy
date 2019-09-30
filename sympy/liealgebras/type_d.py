@@ -28,7 +28,7 @@ class TypeD(Standard_Cartan):
         """
         This is a method just to generate roots
         with a 1 iin the ith position and a -1
-        in the jth postion.
+        in the jth position.
 
         """
 

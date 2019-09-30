@@ -1,6 +1,4 @@
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.pytest import raises
-import warnings
+from sympy.utilities.pytest import raises, warns_deprecated_sympy
 from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import sin, sinh, cos, cosh, sqrt, pi, ImmutableMatrix as Matrix, \
@@ -318,7 +316,7 @@ def test_lame_coefficients():
     a = CoordSys3D('a', 'cartesian')
     assert a.lame_coefficients() == (1, 1, 1)
     a = CoordSys3D('a', 'cylindrical')
-    assert a.lame_coefficients() == (1, a.theta, 1)
+    assert a.lame_coefficients() == (1, a.r, 1)
 
 
 def test_transformation_equations():
@@ -356,7 +354,7 @@ def test_transformation_equations():
         r*sin(theta),
         z
     )
-    assert a.lame_coefficients() == (1, a.theta, 1)
+    assert a.lame_coefficients() == (1, a.r, 1)
     assert a.transformation_from_parent_function()(x, y, z) == (sqrt(x**2 + y**2),
                             atan2(y, x), z)
 
@@ -438,14 +436,13 @@ def test_check_orthogonality():
     a = CoordSys3D('a', transformation=((u, v, z), (cosh(u) * cos(v), sinh(u) * sin(v), z)))
     assert a._check_orthogonality(a._transformation) is True
 
-    raises(ValueError, lambda: CoordSys3D('a', transformation=((x, x, z), (x, y, z))))
+    raises(ValueError, lambda: CoordSys3D('a', transformation=((x, y, z), (x, x, z))))
     raises(ValueError, lambda: CoordSys3D('a', transformation=(
         (x, y, z), (x*sin(y/2)*cos(z), x*sin(y)*sin(z), x*cos(y)))))
 
 
 def test_coordsys3d():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         assert CoordSysCartesian("C") == CoordSys3D("C")
 
 

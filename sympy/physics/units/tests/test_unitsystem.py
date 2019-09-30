@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
-from sympy import Rational
+from sympy.utilities.pytest import warns_deprecated_sympy
+
+from sympy import Rational, S
 from sympy.physics.units.definitions import c, kg, m, s
 from sympy.physics.units.dimensions import (
     Dimension, DimensionSystem, action, current, length, mass, time, velocity)
@@ -10,7 +11,10 @@ from sympy.utilities.pytest import raises
 
 def test_definition():
     # want to test if the system can have several units of the same dimension
-    dm = Quantity("dm", length, Rational(1, 10))
+    dm = Quantity("dm")
+    dm.set_dimension(length)
+
+    dm.set_scale_factor(Rational(1, 10))
 
     base = (m, s)
     base_dim = (m.dimension, s.dimension)
@@ -22,8 +26,8 @@ def test_definition():
     assert ms.name == "MS"
     assert ms.descr == "MS system"
 
-    assert ms._system._base_dims == DimensionSystem.sort_dims(base_dim)
-    assert set(ms._system._dims) == set(base_dim + (velocity,))
+    assert ms._system.base_dims == base_dim
+    assert ms._system.derived_dims == (velocity,)
 
 
 def test_error_definition():
@@ -38,16 +42,24 @@ def test_str_repr():
 
 
 def test_print_unit_base():
-    A = Quantity("A", current, 1)
-    Js = Quantity("Js", action, 1)
-    mksa = UnitSystem((m, kg, s, A), (Js,))
+    A = Quantity("A")
+    A.set_dimension(current)
+    A.set_scale_factor(S.One)
 
-    assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
+    Js = Quantity("Js")
+    Js.set_dimension(action)
+    Js.set_scale_factor(S.One)
+
+    mksa = UnitSystem((m, kg, s, A), (Js,))
+    with warns_deprecated_sympy():
+        assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
 
 
 def test_extend():
     ms = UnitSystem((m, s), (c,))
-    Js = Quantity("Js", action, 1)
+    Js = Quantity("Js")
+    Js.set_dimension(action)
+    Js.set_scale_factor(1)
     mks = ms.extend((kg,), (Js,))
 
     res = UnitSystem((m, s, kg), (c, Js))
