@@ -6,7 +6,7 @@ from sympy.polys.polyoptions import (
     Frac, Formal, Polys, Include, All, Gen, Symbols, Method)
 
 from sympy.polys.orderings import lex
-from sympy.polys.domains import FF, GF, ZZ, QQ, EX
+from sympy.polys.domains import FF, GF, ZZ, QQ, RR, CC, EX
 
 from sympy.polys.polyerrors import OptionError, GeneratorsError
 
@@ -176,15 +176,23 @@ def test_Domain_preprocess():
 
     assert Domain.preprocess('Z[x]') == ZZ[x]
     assert Domain.preprocess('Q[x]') == QQ[x]
+    assert Domain.preprocess('R[x]') == RR[x]
+    assert Domain.preprocess('C[x]') == CC[x]
 
     assert Domain.preprocess('ZZ[x]') == ZZ[x]
     assert Domain.preprocess('QQ[x]') == QQ[x]
+    assert Domain.preprocess('RR[x]') == RR[x]
+    assert Domain.preprocess('CC[x]') == CC[x]
 
     assert Domain.preprocess('Z[x,y]') == ZZ[x, y]
     assert Domain.preprocess('Q[x,y]') == QQ[x, y]
+    assert Domain.preprocess('R[x,y]') == RR[x, y]
+    assert Domain.preprocess('C[x,y]') == CC[x, y]
 
     assert Domain.preprocess('ZZ[x,y]') == ZZ[x, y]
     assert Domain.preprocess('QQ[x,y]') == QQ[x, y]
+    assert Domain.preprocess('RR[x,y]') == RR[x, y]
+    assert Domain.preprocess('CC[x,y]') == CC[x, y]
 
     raises(OptionError, lambda: Domain.preprocess('Z()'))
 

@@ -1,15 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """
 Unit system for physical quantities; include definition of constants.
 """
 
 from __future__ import division
 
-from sympy.core.decorators import deprecated
-from sympy.physics.units.quantities import Quantity
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy import S
 from .dimensions import DimensionSystem
 
 
@@ -28,12 +24,12 @@ class UnitSystem(object):
         self.descr = descr
 
         # construct the associated dimension system
-        self._system = DimensionSystem([u.dimension for u in base],
-                                       [u.dimension for u in units])
+        base_dims = [u.dimension for u in base]
+        derived_dims = [u.dimension for u in units if u.dimension not in base_dims]
+        self._system = DimensionSystem(base_dims, derived_dims)
 
-        if self.is_consistent is False:
-            raise ValueError("The system with basis '%s' is not consistent"
-                             % str(self._base_units))
+        if not self.is_consistent:
+            raise ValueError("UnitSystem is not consistent")
 
         self._units = tuple(set(base) | set(units))
 
@@ -43,7 +39,7 @@ class UnitSystem(object):
         base_dict = dict((u.dimension, u) for u in base)
         # order the base units in the same order than the dimensions in the
         # associated system, in order to ensure that we get always the same
-        self._base_units = tuple(base_dict[d] for d in self._system._base_dims)
+        self._base_units = tuple(base_dict[d] for d in self._system.base_dims)
 
     def __str__(self):
         """
@@ -56,31 +52,18 @@ class UnitSystem(object):
         if self.name != "":
             return self.name
         else:
-            return "UnitSystem((%s))" % ", ".join(str(d) for d in self._base_units)
+            return "UnitSystem((%s))" % ", ".join(
+                str(d) for d in self._base_units)
 
     def __repr__(self):
         return '<UnitSystem: %s>' % repr(self._base_units)
 
-    def __getitem__(self, key):
-        """
-        Shortcut to the get_unit method, using key access.
-        """
-
-        u = self.get_unit(key)
-
-        #TODO: really want to raise an error?
-        if u is None:
-            raise KeyError(key)
-
-        return u
-
     def extend(self, base, units=(), name="", description=""):
-        """
-        Extend the current system into a new one.
+        """Extend the current system into a new one.
 
         Take the base and normal units of the current system to merge
         them to the base and normal units given in argument.
-        If not provided, name and description are overriden by empty strings.
+        If not provided, name and description are overridden by empty strings.
         """
 
         base = self._base_units + tuple(base)
@@ -90,28 +73,22 @@ class UnitSystem(object):
 
     def print_unit_base(self, unit):
         """
+        Useless method.
+
+        DO NOT USE, use instead ``convert_to``.
+
         Give the string expression of a unit in term of the basis.
 
         Units are displayed by decreasing power.
         """
-
-        res = S.One
-
-        factor = unit.scale_factor
-        vec = self._system.dim_vector(unit.dimension)
-
-        for (u, p) in sorted(zip(self._base_units, vec), key=lambda x: x[1],
-                             reverse=True):
-
-            factor /= u.scale_factor ** p
-            if p == 0:
-                continue
-            elif p == 1:
-                res *= u
-            else:
-                res *= u**p
-
-        return factor * res
+        SymPyDeprecationWarning(
+            deprecated_since_version="1.2",
+            issue=13336,
+            feature="print_unit_base",
+            useinstead="convert_to",
+        ).warn()
+        from sympy.physics.units import convert_to
+        return convert_to(unit, self._base_units)
 
     @property
     def dim(self):
@@ -128,4 +105,5 @@ class UnitSystem(object):
         """
         Check if the underlying dimension system is consistent.
         """
+        # test is performed in DimensionSystem
         return self._system.is_consistent

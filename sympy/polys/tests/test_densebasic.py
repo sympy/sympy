@@ -95,24 +95,24 @@ def test_dmp_true_LT():
 
 
 def test_dup_degree():
-    assert dup_degree([]) == -oo
+    assert dup_degree([]) is -oo
     assert dup_degree([1]) == 0
     assert dup_degree([1, 0]) == 1
     assert dup_degree([1, 0, 0, 0, 1]) == 4
 
 
 def test_dmp_degree():
-    assert dmp_degree([[]], 1) == -oo
-    assert dmp_degree([[[]]], 2) == -oo
+    assert dmp_degree([[]], 1) is -oo
+    assert dmp_degree([[[]]], 2) is -oo
 
     assert dmp_degree([[1]], 1) == 0
     assert dmp_degree([[2], [1]], 1) == 1
 
 
 def test_dmp_degree_in():
-    assert dmp_degree_in([[[]]], 0, 2) == -oo
-    assert dmp_degree_in([[[]]], 1, 2) == -oo
-    assert dmp_degree_in([[[]]], 2, 2) == -oo
+    assert dmp_degree_in([[[]]], 0, 2) is -oo
+    assert dmp_degree_in([[[]]], 1, 2) is -oo
+    assert dmp_degree_in([[[]]], 2, 2) is -oo
 
     assert dmp_degree_in([[[1]]], 0, 2) == 0
     assert dmp_degree_in([[[1]]], 1, 2) == 0
@@ -235,16 +235,16 @@ def test_dmp_convert():
 
 
 def test_dup_from_sympy():
-    assert dup_from_sympy([S(1), S(2)], ZZ) == \
+    assert dup_from_sympy([S.One, S(2)], ZZ) == \
         [ZZ(1), ZZ(2)]
-    assert dup_from_sympy([S(1)/2, S(3)], QQ) == \
+    assert dup_from_sympy([S.Half, S(3)], QQ) == \
         [QQ(1, 2), QQ(3, 1)]
 
 
 def test_dmp_from_sympy():
-    assert dmp_from_sympy([[S(1), S(2)], [S(0)]], 1, ZZ) == \
+    assert dmp_from_sympy([[S.One, S(2)], [S.Zero]], 1, ZZ) == \
         [[ZZ(1), ZZ(2)], []]
-    assert dmp_from_sympy([[S(1)/2, S(2)]], 1, QQ) == \
+    assert dmp_from_sympy([[S.Half, S(2)]], 1, QQ) == \
         [[QQ(1, 2), QQ(2, 1)]]
 
 

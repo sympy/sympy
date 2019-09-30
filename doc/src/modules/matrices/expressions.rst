@@ -9,7 +9,7 @@ The Matrix expression module allows users to write down statements like
     >>> X = MatrixSymbol('X', 3, 3)
     >>> Y = MatrixSymbol('Y', 3, 3)
     >>> (X.T*X).I*Y
-    X^-1*X.T^-1*Y
+    X**(-1)*X.T**(-1)*Y
 
     >>> Matrix(X)
     Matrix([
@@ -33,6 +33,10 @@ Matrix Expressions Core Reference
 .. autoclass:: MatMul
    :members:
 .. autoclass:: MatPow
+   :members:
+.. autoclass:: HadamardProduct
+   :members:
+.. autoclass:: HadamardPower
    :members:
 .. autoclass:: Inverse
    :members:

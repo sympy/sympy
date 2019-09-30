@@ -2,15 +2,14 @@ from __future__ import print_function, division
 
 from itertools import permutations
 
-from sympy.matrices import Matrix
-from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
-from sympy.core.compatibility import range
-from sympy.core.numbers import Zero
-from sympy.solvers import solve
-from sympy.functions import factorial
-from sympy.simplify import simplify
-from sympy.core.compatibility import reduce
 from sympy.combinatorics import Permutation
+from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
+from sympy.core.compatibility import range, reduce
+from sympy.core.numbers import Zero
+from sympy.functions import factorial
+from sympy.matrices import Matrix
+from sympy.simplify import simplify
+from sympy.solvers import solve
 
 
 # TODO you are a bit excessive in the use of Dummies
@@ -40,7 +39,7 @@ class Manifold(Basic):
         return obj
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}' % self.name
+        return r'\text{%s}' % self.name
 
 
 class Patch(Basic):
@@ -84,7 +83,7 @@ class Patch(Basic):
         return self.manifold.dim
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}_{%s}' % (self.name, self.manifold._latex(printer, *args))
+        return r'\text{%s}_{%s}' % (self.name, self.manifold._latex(printer, *args))
 
 
 class CoordSystem(Basic):
@@ -245,16 +244,11 @@ class CoordSystem(Basic):
 
     @staticmethod
     def _inv_transf(from_coords, to_exprs):
-        # TODO, check for results, get solve to return results in definite
-        # format instead of wondering dict/tuple/whatever.
-        # As it is at the moment this is an ugly hack for changing the format
         inv_from = [i.as_dummy() for i in from_coords]
         inv_to = solve(
-            [t[0] - t[1] for t in zip(inv_from, to_exprs)], list(from_coords))
-        if isinstance(inv_to, dict):
-            inv_to = [inv_to[fc] for fc in from_coords]
-        else:
-            inv_to = inv_to[0]
+            [t[0] - t[1] for t in zip(inv_from, to_exprs)],
+            list(from_coords), dict=True)[0]
+        inv_to = [inv_to[fc] for fc in from_coords]
         return Matrix(inv_from), Matrix(inv_to)
 
     @staticmethod
@@ -347,7 +341,7 @@ class CoordSystem(Basic):
     ##########################################################################
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}^{\mathrm{%s}}_{%s}' % (
+        return r'\text{%s}^{\text{%s}}_{%s}' % (
             self.name, self.patch.name, self.patch.manifold._latex(printer, *args))
 
 
@@ -411,7 +405,7 @@ class Point(Basic):
         return self._coords.free_symbols
 
 
-class BaseScalarField(Expr):
+class BaseScalarField(AtomicExpr):
     """Base Scalar Field over a Manifold for a given Coordinate System.
 
     A scalar field takes a point as an argument and returns a scalar.
@@ -467,7 +461,7 @@ class BaseScalarField(Expr):
     is_commutative = True
 
     def __new__(cls, coord_sys, index):
-        obj = Expr.__new__(cls, coord_sys, sympify(index))
+        obj = AtomicExpr.__new__(cls, coord_sys, sympify(index))
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
@@ -495,7 +489,7 @@ class BaseScalarField(Expr):
         return self
 
 
-class BaseVectorField(Expr):
+class BaseVectorField(AtomicExpr):
     r"""Vector Field over a Manifold.
 
     A vector field is an operator taking a scalar field and returning a
@@ -548,7 +542,7 @@ class BaseVectorField(Expr):
      d
     ---(g(x0, y0))
     dy0
-    >>> pprint(v(s_field).rcall(point_p).doit())
+    >>> pprint(v(s_field).rcall(point_p))
     /  d                           \|
     |-----(g(r0*cos(theta0), xi_2))||
     \dxi_2                         /|xi_2=r0*sin(theta0)
@@ -559,7 +553,7 @@ class BaseVectorField(Expr):
 
     def __new__(cls, coord_sys, index):
         index = sympify(index)
-        obj = Expr.__new__(cls, coord_sys, index)
+        obj = AtomicExpr.__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
@@ -600,7 +594,7 @@ class BaseVectorField(Expr):
         # Remove the dummies
         result = d_result.subs(list(zip(d_funcs, base_scalars)))
         result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
-        return result.doit()  # XXX doit for the Subs instances
+        return result.doit()
 
 
 class Commutator(Expr):
@@ -633,8 +627,8 @@ class Commutator(Expr):
     >>> c_xr
     Commutator(e_x, e_r)
 
-    >>> simplify(c_xr(R2.y**2).doit())
-    -2*cos(theta)*y**2/(x**2 + y**2)
+    >>> simplify(c_xr(R2.y**2))
+    -2*y**2*cos(theta)/(x**2 + y**2)
 
     """
     def __new__(cls, v1, v2):
@@ -677,7 +671,7 @@ class Commutator(Expr):
 
 
 class Differential(Expr):
-    """Return the differential (exterior derivative) of a form field.
+    r"""Return the differential (exterior derivative) of a form field.
 
     The differential of a form (i.e. the exterior derivative) has a complicated
     definition in the general case.
@@ -771,7 +765,7 @@ class Differential(Expr):
         else:
             # For higher form it is more complicated:
             # Invariant formula:
-            # http://en.wikipedia.org/wiki/Exterior_derivative#Invariant_formula
+            # https://en.wikipedia.org/wiki/Exterior_derivative#Invariant_formula
             # df(v1, ... vn) = +/- vi(f(v1..no i..vn))
             #                  +/- f([vi,vj],v1..no i, no j..vn)
             f = self._form_field
@@ -803,10 +797,8 @@ class TensorProduct(Expr):
 
     Use the predefined R2 manifold, setup some boilerplate.
 
-    >>> from sympy import Function
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import TensorProduct
-    >>> from sympy import pprint
 
     >>> TensorProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
     1
@@ -876,10 +868,6 @@ class TensorProduct(Expr):
         multipliers = [t[0].rcall(*t[1]) for t in zip(self._args, fields)]
         return TensorProduct(*multipliers)
 
-    def _latex(self, printer, *args):
-        elements = [printer._print(a) for a in self.args]
-        return r'\otimes'.join(elements)
-
 
 class WedgeProduct(TensorProduct):
     """Wedge product of forms.
@@ -892,10 +880,8 @@ class WedgeProduct(TensorProduct):
 
     Use the predefined R2 manifold, setup some boilerplate.
 
-    >>> from sympy import Function
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import WedgeProduct
-    >>> from sympy import pprint
 
     >>> WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
     1
@@ -957,7 +943,7 @@ class LieDerivative(Expr):
     >>> tp = TensorProduct(R2.dx, R2.dy)
     >>> LieDerivative(R2.e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
-    >>> LieDerivative(R2.e_x, tp).doit()
+    >>> LieDerivative(R2.e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
     """
     def __new__(cls, v_field, expr):
@@ -1052,7 +1038,9 @@ class BaseCovarDerivativeOp(Expr):
         to_subs = [wrt_vector(d) for d in d_funcs]
         result = d_result.subs(list(zip(to_subs, derivs)))
 
-        return result  # TODO .doit() # XXX doit for the Subs instances
+        # Remove the dummies
+        result = result.subs(list(zip(d_funcs, vectors)))
+        return result.doit()
 
 
 class CovarDerivativeOp(Expr):
@@ -1134,7 +1122,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     param
         the argument of the function `\gamma` from R to the curve
     start_point
-        the point which coresponds to `\gamma(0)`
+        the point which corresponds to `\gamma(0)`
     n
         the order to which to expand
     coord_sys
@@ -1246,7 +1234,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     param
         the argument of the function `\gamma` from R to the curve
     start_point
-        the point which coresponds to `\gamma(0)`
+        the point which corresponds to `\gamma(0)`
     coord_sys
         the coordinate system in which to give the equations
 
@@ -1305,7 +1293,8 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 def dummyfy(args, exprs):
     # TODO Is this a good idea?
     d_args = Matrix([s.as_dummy() for s in args])
-    d_exprs = Matrix([sympify(expr).subs(list(zip(args, d_args))) for expr in exprs])
+    reps = dict(zip(args, d_args))
+    d_exprs = Matrix([sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
 
 
@@ -1417,7 +1406,7 @@ def vectors_in_basis(expr, to_sys):
     >>> from sympy.diffgeom import vectors_in_basis
     >>> from sympy.diffgeom.rn import R2_r, R2_p
     >>> vectors_in_basis(R2_r.e_x, R2_p)
-    -y*e_theta/(x**2 + y**2) + x*e_r/sqrt(x**2 + y**2)
+    x*e_r/sqrt(x**2 + y**2) - y*e_theta/(x**2 + y**2)
     >>> vectors_in_basis(R2_p.e_r, R2_r)
     sin(theta)*e_y + cos(theta)*e_x
     """
@@ -1558,7 +1547,7 @@ def metric_to_Riemann_components(expr):
     Examples
     ========
 
-    >>> from sympy import pprint, exp
+    >>> from sympy import exp
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Riemann_components, TensorProduct
     >>> TP = TensorProduct
@@ -1568,10 +1557,10 @@ def metric_to_Riemann_components(expr):
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
         R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
+    r**2*TensorProduct(dtheta, dtheta) + exp(2*r)*TensorProduct(dr, dr)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
     >>> riemann[0, :, :, :]
-    [[[0, 0], [0, 0]], [[0, exp(-2*r)*r], [-exp(-2*r)*r, 0]]]
+    [[[0, 0], [0, 0]], [[0, r*exp(-2*r)], [-r*exp(-2*r), 0]]]
     >>> riemann[1, :, :, :]
     [[[0, -1/r], [1/r, 0]], [[0, 0], [0, 0]]]
 
@@ -1612,7 +1601,7 @@ def metric_to_Ricci_components(expr):
     Examples
     ========
 
-    >>> from sympy import pprint, exp
+    >>> from sympy import exp
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Ricci_components, TensorProduct
     >>> TP = TensorProduct
@@ -1622,9 +1611,9 @@ def metric_to_Ricci_components(expr):
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
                              R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
+    r**2*TensorProduct(dtheta, dtheta) + exp(2*r)*TensorProduct(dr, dr)
     >>> metric_to_Ricci_components(non_trivial_metric)
-    [[1/r, 0], [0, exp(-2*r)*r]]
+    [[1/r, 0], [0, r*exp(-2*r)]]
 
     """
     riemann = metric_to_Riemann_components(expr)

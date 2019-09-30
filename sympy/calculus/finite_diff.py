@@ -148,7 +148,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     derivative is wanted, weights for 0th, 1st and 2nd order are
     calculated "for free", so are formulae using subsets of ``x_list``.
     This is something one can take advantage of to save computational cost.
-    Be aware that one should define ``x_list`` from nearest to farest from
+    Be aware that one should define ``x_list`` from nearest to furthest from
     ``x0``. If not, subsets of ``x_list`` will yield poorer approximations,
     which might not grand an order of accuracy of ``len(x_list) - order``.
 
@@ -167,6 +167,9 @@ def finite_diff_weights(order, x_list, x0=S.One):
 
     """
     # The notation below closely corresponds to the one used in the paper.
+    order = S(order)
+    if not order.is_number:
+        raise ValueError("Cannot handle symbolic order.")
     if order < 0:
         raise ValueError("Negative derivative order illegal.")
     if int(order) != order:
@@ -175,10 +178,10 @@ def finite_diff_weights(order, x_list, x0=S.One):
     N = len(x_list) - 1
     delta = [[[0 for nu in range(N+1)] for n in range(N+1)] for
              m in range(M+1)]
-    delta[0][0][0] = S(1)
-    c1 = S(1)
+    delta[0][0][0] = S.One
+    c1 = S.One
     for n in range(1, N+1):
-        c2 = S(1)
+        c2 = S.One
         for nu in range(0, n):
             c3 = x_list[n]-x_list[nu]
             c2 = c2 * c3
@@ -195,7 +198,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     return delta
 
 
-def apply_finite_diff(order, x_list, y_list, x0=S(0)):
+def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     """
     Calculates the finite difference approximation of
     the derivative of requested order at ``x0`` from points
@@ -213,7 +216,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S(0)):
         variable in x_list.
     x0: Number or Symbol
         At what value of the independent variable the derivative should be
-        evaluated. Defaults to S(0).
+        evaluated. Defaults to 0.
 
     Returns
     =======
@@ -387,6 +390,8 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
         x0 = wrt
 
     if not iterable(points):
+        if getattr(points, 'is_Function', False) and wrt in points.args:
+            points = points.subs(wrt, x0)
         # points is simply the step-size, let's make it a
         # equidistant sequence centered around x0
         if order % 2 == 0:
@@ -412,6 +417,10 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
 as_finite_diff = deprecated(
     useinstead="Derivative.as_finite_difference",
     deprecated_since_version="1.1", issue=11410)(_as_finite_diff)
+
+as_finite_diff.__doc__ = """
+    Deprecated function. Use Diff.as_finite_difference instead.
+    """
 
 
 def differentiate_finite(expr, *symbols,
@@ -465,7 +474,7 @@ def differentiate_finite(expr, *symbols,
     x0 = kwargs.pop('x0', None)
     wrt = kwargs.pop('wrt', None)
     evaluate = kwargs.pop('evaluate', False)
-    if kwargs != {}:
+    if kwargs:
         raise ValueError("Unknown kwargs: %s" % kwargs)
 
     Dexpr = expr.diff(*symbols, evaluate=evaluate)

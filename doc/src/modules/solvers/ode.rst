@@ -64,6 +64,10 @@ the various ODE solving methods. For this reason, they are documented here.
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_sol_simplicity
 
+:obj:`factorable`
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_factorable
+
 :obj:`1st_exact`
 ^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_1st_exact
@@ -83,6 +87,14 @@ the various ODE solving methods. For this reason, they are documented here.
 :obj:`1st_linear`
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_1st_linear
+
+:obj:`2nd_linear_airy`
+^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_2nd_linear_airy
+
+:obj:`2nd_linear_bessel`
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_2nd_linear_bessel
 
 :obj:`Bernoulli`
 ^^^^^^^^^^^^^^^^
@@ -107,6 +119,14 @@ the various ODE solving methods. For this reason, they are documented here.
 :obj:`nth_linear_constant_coeff_variation_of_parameters`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_nth_linear_constant_coeff_variation_of_parameters
+
+:obj:`nth_algebraic`
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_nth_algebraic
+
+:obj:`nth_order_reducible`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_nth_order_reducible
 
 :obj:`separable`
 ^^^^^^^^^^^^^^^^

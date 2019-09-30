@@ -19,5 +19,4 @@ if [[ -z $2 ]]; then
     $2=$1
 fi
 
-docker build -f Dockerfile . -t sympy-release
-docker run -v "$parent_path/release-$2":/home/release sympy-release "$@"
+docker run -t -v "$parent_path/release-$2":/root/release sympy/sympy-release "$@"

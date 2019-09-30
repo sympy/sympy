@@ -1,10 +1,9 @@
-from __future__ import division
-
 from sympy import sqrt, simplify
 from sympy.physics.optics import Medium
-from sympy.abc import epsilon, mu
+from sympy.abc import epsilon, mu, n
 from sympy.physics.units import speed_of_light, u0, e0, m, kg, s, A
 
+from sympy.utilities.pytest import raises
 
 c = speed_of_light.convert_to(m/s)
 e0 = e0.convert_to(A**2*s**4/(kg*m**3))
@@ -29,6 +28,7 @@ def test_medium():
     m3 = Medium('m3', 9.0*10**(-12)*s**4*A**2/(m**3*kg), 1.45*10**(-6)*kg*m/(A**2*s**2))
     assert m3.refractive_index > m1.refractive_index
     assert m3 > m1
+    assert m3 != m1
     # Decreasing electric permittivity and magnetic permeability
     # by small amount from its value in vacuum.
     m4 = Medium('m4', 7.0*10**(-12)*s**4*A**2/(m**3*kg), 1.15*10**(-6)*kg*m/(A**2*s**2))
@@ -43,3 +43,7 @@ def test_medium():
                 < 1e-20*A**2*s**4/(kg*m**3)
     assert abs(m5.permeability - 2.77206575232851e-8*kg*m/(A**2*s**2)) \
                 < 1e-20*kg*m/(A**2*s**2)
+    m6 = Medium('m6', None, mu, n)
+    assert m6.permittivity == n**2/(c**2*mu)
+    assert Medium('m7') == Medium('m8', e0, u0) # test for equality
+    raises(ValueError, lambda:Medium('m9', e0, u0, 2))
