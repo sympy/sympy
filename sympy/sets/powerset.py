@@ -43,24 +43,24 @@ class PowerSet(Set):
     A power set of a finite set:
 
     >>> PowerSet(FiniteSet(1, 2, 3))
-    {EmptySet(), {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 3}, {1, 2, 3}}
+    PowerSet({1, 2, 3})
 
     A power set of an empty set:
 
     >>> PowerSet(S.EmptySet)
-    {EmptySet()}
+    PowerSet(EmptySet())
     >>> PowerSet(PowerSet(S.EmptySet))
-    {EmptySet(), {EmptySet()}}
+    PowerSet(PowerSet(EmptySet()))
 
     A power set of an infinite set:
 
     >>> PowerSet(S.Reals)
     PowerSet(Reals)
 
-    An unevaluated power set:
+    Evaluating the power set of a finite set to its explicit form:
 
-    >>> PowerSet(FiniteSet(1, 2, 3), evaluate=False)
-    PowerSet({1, 2, 3})
+    >>> PowerSet(FiniteSet(1, 2, 3)).rewrite(FiniteSet)
+    {EmptySet(), {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 3}, {1, 2, 3}}
 
     References
     ==========
