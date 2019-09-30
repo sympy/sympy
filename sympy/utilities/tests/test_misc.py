@@ -1,6 +1,8 @@
 from textwrap import dedent
 from sympy.core.compatibility import range, unichr
 from sympy.utilities.misc import translate, replace, ordinal, rawlines, strlines
+import sys
+from subprocess import Popen, PIPE
 
 def test_translate():
     abc = 'abc'
@@ -102,3 +104,15 @@ def test_translate_args():
         pass # Exception raised successfully
     else:
         assert False
+
+
+def test_debug_output():
+    env = {'SYMPY_DEBUG':'True'}
+    cmd = 'from sympy import *; x = Symbol("x"); print(integrate((1-cos(x))/x, x))'
+    cmdline = [sys.executable, '-c', cmd]
+    proc = Popen(cmdline, env=env, stdout=PIPE, stderr=PIPE)
+    out, err = proc.communicate()
+    out = out.decode('ascii') # utf-8?
+    err = err.decode('ascii')
+    expected = 'substituted: -x*(cos(x) - 1), u: 1/x, u_var: _u'
+    assert expected in err
