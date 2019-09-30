@@ -95,7 +95,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     >>> eq = 2*x + y*sin(x)
     >>> separatevars(eq) == eq
     True
-    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) == None
+    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) is None
     True
 
     """

@@ -21,7 +21,7 @@ class AskFiniteHandler(CommonHandler):
     >>> from sympy.assumptions.handlers.calculus import AskFiniteHandler
     >>> from sympy.abc import x
     >>> a = AskFiniteHandler()
-    >>> a.Symbol(x, Q.positive(x)) == None
+    >>> a.Symbol(x, Q.positive(x)) is None
     True
     >>> a.Symbol(x, Q.finite(x))
     True
@@ -40,7 +40,7 @@ class AskFiniteHandler(CommonHandler):
         >>> from sympy.assumptions.handlers.calculus import AskFiniteHandler
         >>> from sympy.abc import x
         >>> a = AskFiniteHandler()
-        >>> a.Symbol(x, Q.positive(x)) == None
+        >>> a.Symbol(x, Q.positive(x)) is None
         True
         >>> a.Symbol(x, Q.finite(x))
         True
