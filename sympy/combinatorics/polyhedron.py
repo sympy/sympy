@@ -1000,7 +1000,7 @@ icosahedron = Polyhedron(
         Perm(0, 8, 10)(1, 7, 6)(2, 11, 5)(3, 9, 4),
         Perm(0, 9, 6)(1, 3, 11)(2, 8, 7)(4, 10, 5)))
 
-tetrahedron_faces = [(0, 1, 2), (0, 2, 3), (0, 3, 1), (1, 2, 3)]
+tetrahedron_faces = list(tuple(arg) for arg in tetrahedron.faces)
 
 cube_faces = list(tuple(arg) for arg in cube.faces)
 

@@ -99,7 +99,7 @@ def test_pgroups():
     assert octahedron == octahedron2
     assert dodecahedron == dodecahedron2
     assert icosahedron == icosahedron2
-    assert sorted(tetrahedron_faces) == sorted(tetrahedron_faces2)
+    assert sorted(map(sorted, tetrahedron_faces)) == sorted(map(sorted, tetrahedron_faces2))
     assert sorted(cube_faces) == sorted(cube_faces2)
     assert sorted(octahedron_faces) == sorted(octahedron_faces2)
     assert sorted(dodecahedron_faces) == sorted(dodecahedron_faces2)
