@@ -2850,9 +2850,9 @@ class PermutationGroup(Basic):
         if _is_sym is not None:
             return _is_sym
 
-        size = self.generators[0].size
+        n = self.degree
         order = self.order()
-        is_sym = factorial(size) == order
+        is_sym = factorial(n) == order
         self._is_sym = is_sym
         return is_sym
 
