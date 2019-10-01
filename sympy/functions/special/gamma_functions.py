@@ -1008,7 +1008,7 @@ class loggamma(Function):
         return sage.log_gamma(self.args[0]._sage_())
 
 
-def digamma(x):
+class digamma(Function):
     r"""
     The digamma function is the first derivative of the loggamma function i.e,
 
@@ -1036,10 +1036,52 @@ def digamma(x):
     .. [2] http://mathworld.wolfram.com/DigammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
-    return polygamma(0, x)
+    def _eval_evalf(self, prec):
+        z = self.args[0]
+        return polygamma(0, z).evalf(prec)
+
+    def fdiff(self, argindex=1):
+        z = self.args[0]
+        return polygamma(0, z).fdiff()
+
+    def _eval_is_real(self):
+        z = self.args[0]
+        return polygamma(0, z).is_real
+
+    def _eval_is_positive(self):
+        z = self.args[0]
+        return polygamma(0, z).is_positive
+
+    def _eval_is_negative(self):
+        z = self.args[0]
+        return polygamma(0, z).is_negative
+
+    def _eval_aseries(self, n, args0, x, logx):
+        as_polygamma = self.rewrite(polygamma)
+        args0 = [S.Zero,] + args0
+        return as_polygamma._eval_aseries(n, args0, x, logx)
+
+    @classmethod
+    def eval(cls, z):
+        return polygamma(0, z)
+
+    def _eval_expand_func(self, **hints):
+        z = self.args[0]
+        return polygamma(0, z).expand(func=True)
+
+    def _eval_rewrite_as_harmonic(self, z, **kwargs):
+        return harmonic(z - 1) - S.EulerGamma
+
+    def _eval_rewrite_as_polygamma(self, z, **kwargs):
+        return polygamma(0, z)
+
+    def _eval_as_leading_term(self, x):
+        z = self.args[0]
+        return polygamma(0, z).as_leading_term(x)
 
 
-def trigamma(x):
+
+class trigamma(Function):
     r"""
     The trigamma function is the second derivative of the loggamma function i.e,
 
@@ -1066,7 +1108,52 @@ def trigamma(x):
     .. [2] http://mathworld.wolfram.com/TrigammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
-    return polygamma(1, x)
+    def _eval_evalf(self, prec):
+        z = self.args[0]
+        return polygamma(1, z).evalf(prec)
+
+    def fdiff(self, argindex=1):
+        z = self.args[0]
+        return polygamma(1, z).fdiff()
+
+    def _eval_is_real(self):
+        z = self.args[0]
+        return polygamma(1, z).is_real
+
+    def _eval_is_positive(self):
+        z = self.args[0]
+        return polygamma(1, z).is_positive
+
+    def _eval_is_negative(self):
+        z = self.args[0]
+        return polygamma(1, z).is_negative
+
+    def _eval_aseries(self, n, args0, x, logx):
+        as_polygamma = self.rewrite(polygamma)
+        args0 = [S.One,] + args0
+        return as_polygamma._eval_aseries(n, args0, x, logx)
+
+    @classmethod
+    def eval(cls, z):
+        return polygamma(1, z)
+
+    def _eval_expand_func(self, **hints):
+        z = self.args[0]
+        return polygamma(1, z).expand(func=True)
+
+    def _eval_rewrite_as_zeta(self, z, **kwargs):
+        return zeta(2, z)
+
+    def _eval_rewrite_as_polygamma(self, z, **kwargs):
+        return polygamma(1, z)
+
+    def _eval_rewrite_as_harmonic(self, z, **kwargs):
+        return -harmonic(z - 1, 2) + S.Pi**2 / 6
+
+    def _eval_as_leading_term(self, x):
+        z = self.args[0]
+        return polygamma(1, z).as_leading_term(x)
+
 
 ###############################################################################
 ##################### COMPLETE MULTIVARIATE GAMMA FUNCTION ####################

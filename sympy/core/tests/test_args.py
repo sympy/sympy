@@ -2306,6 +2306,13 @@ def test_sympy__functions__special__gamma_functions__polygamma():
     from sympy.functions.special.gamma_functions import polygamma
     assert _test_args(polygamma(x, 2))
 
+def test_sympy__functions__special__gamma_functions__digamma():
+    from sympy.functions.special.gamma_functions import digamma
+    assert _test_args(digamma(x))
+
+def test_sympy__functions__special__gamma_functions__trigamma():
+    from sympy.functions.special.gamma_functions import trigamma
+    assert _test_args(trigamma(x))
 
 def test_sympy__functions__special__gamma_functions__uppergamma():
     from sympy.functions.special.gamma_functions import uppergamma
