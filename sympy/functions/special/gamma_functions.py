@@ -1133,8 +1133,8 @@ class trigamma(Function):
     def _eval_rewrite_as_polygamma(self, z, **kwargs):
         return polygamma(1,z)
 
-    def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
-        return S.NegativeOne**(2) * factorial(1) * (zeta(2) - harmonic(0, 2))
+    def _eval_rewrite_as_harmonic(self, z, **kwargs):
+        return -harmonic(z - 1, 2) + S.Pi**2 / 6
 
     def _eval_as_leading_term(self, x):
         z = self.args[0]
