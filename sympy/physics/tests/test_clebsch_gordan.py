@@ -1,6 +1,7 @@
-from sympy import S, sqrt, pi, Dummy, Sum, Ynm, symbols
+from sympy import (S, sqrt, pi, Dummy, Sum, Ynm, symbols, exp, sin, cos, I,
+                   Matrix)
 from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
-        racah, dot_rot_grad_Ynm, Wigner3j, wigner_3j)
+        racah, dot_rot_grad_Ynm, Wigner3j, wigner_3j, wigner_d_small, wigner_d)
 from sympy.core.numbers import Rational
 
 # for test cases, refer : https://en.wikipedia.org/wiki/Table_of_Clebsch%E2%80%93Gordan_coefficients
@@ -316,3 +317,17 @@ def test_dot_rota_grad_SH():
     assert dot_rot_grad_Ynm(3, 2, 3, 2, theta, phi).doit().expand() ==  \
         -sqrt(70)*Ynm(4, 4, theta, phi)/(11*sqrt(pi)) + \
         45*sqrt(182)*Ynm(6, 4, theta, phi)/(143*sqrt(pi))
+
+
+def test_wigner_d():
+    half = S(1)/2
+    alpha, beta, gamma = symbols("alpha, beta, gamma", real=True)
+    d = wigner_d_small(half, beta).subs({beta: pi/2})
+    d_ = Matrix([[1, 1], [-1, 1]])/sqrt(2)
+    assert d == d_
+
+    D = wigner_d(half, alpha, beta, gamma)
+    assert D[0, 0] == exp(I*alpha/2)*exp(I*gamma/2)*cos(beta/2)
+    assert D[0, 1] == exp(I*alpha/2)*exp(-I*gamma/2)*sin(beta/2)
+    assert D[1, 0] == -exp(-I*alpha/2)*exp(I*gamma/2)*sin(beta/2)
+    assert D[1, 1] == exp(-I*alpha/2)*exp(-I*gamma/2)*cos(beta/2)
