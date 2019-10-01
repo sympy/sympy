@@ -1644,6 +1644,7 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
     a = Wild("a")
     b = Wild("b")
     c = Wild("c")
+    t = Wild("t")
     alpha = Wild("alpha")
     beta = Wild("beta")
     gamma = Wild("gamma")
@@ -1655,7 +1656,7 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
     if sing_point != [0, 1]:
         # If singular point is [0, 1] then we have standerd equation.
         eqs = []
-        sing_eqs = [-delta/gamma, -beta/alpha, (delta-beta)/(alpha-gamma)]
+        sing_eqs = [-beta/alpha, -delta/gamma, (delta-beta)/(alpha-gamma)]
         # making equations for the finding the mobius transformation
         for i in range(3):
             if i<len(sing_point):
@@ -1663,8 +1664,8 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
             else:
                 eqs.append(Eq(1/sing_eqs[i], 0))
         # solving above equations for the mobius transformation
-        _delta = solve(eqs[0], delta)[0]
-        _beta = solve(eqs[1], beta)[0]
+        _beta = solve(eqs[0], beta)[0]
+        _delta = solve(eqs[1], delta)[0]
         _gamma = solve(((eqs[2]).subs(beta, _beta)).subs(delta, _delta), gamma)[0]
         subs = (alpha*x + beta)/(gamma*x + delta)
         subs = subs.subs(beta, _beta)
@@ -1673,14 +1674,16 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
         subs = cancel(subs)
     else:
         subs = x
-    # applying mobius transformation in I0.
-    I0 = I0.subs(x, subs)
-    I0 = I0*(subs.diff(x))**2
-    I0 = factor(I0)
+    t = (solve(Eq(subs, t), x)[0]).subs(t, x)
+    # applying mobius transformation in I to make it into I0.
+    I = I.subs(x, t)
+    I = I*(t.diff(x))**2
+    I = factor(I)
+
     dict_I = {x**2:0, x:0, 1:0}
     I0_num, I0_dem = I0.as_numer_denom()
     # collecting coeff of (x**2, x), of the standerd equation.
-    dict_I0 = collect(expand(I0_num), [x**2, x], evaluate=False)
+    dict_I0 = {x**2:(a-b)**2 - 1, x:2*((1-a-b)*c + 2*a*b), 1:c*(c-2)}
     # collecting coeff of (x**2, x) from I0 of the given equation.
     dict_I.update(collect(expand(cancel(I*I0_dem)), [x**2, x], evaluate=False))
     eqs = []
@@ -1692,7 +1695,11 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
     # this is not a efficient way to solve and it is slowing the process
     # also it is not giving solution always.
 
-    _a, _b, _c = solve(eqs, [a, b, c])[0]
+    _c = solve(eqs[2], c)[0]
+    t = solve(eqs[0].subs(a-b, t), t)[0]
+    _a = t+b
+    _b = solve((eqs[1].subs(c, _c)).subs(a, _a), b)[0]
+    _a = t + _b
 
     rn = {'a':simplify(_a), 'b':simplify(_b), 'c':simplify(_c), 'k':k, 'r':r, 'mobius':subs, 'type':"2F1"}
 
