@@ -410,6 +410,14 @@ def test_digamma():
 
     assert digamma(I).is_real is None
 
+    assert digamma(x,evaluate=False).fdiff() == polygamma(1, x)
+
+    assert digamma(x,evaluate=False).is_real is None
+
+    assert digamma(x,evaluate=False).is_positive is None
+
+    assert digamma(x,evaluate=False).is_negative is None
+
 def test_digamma_expand_func():
     assert digamma(x).expand(func=True) == polygamma(0, x)
     assert digamma(2*x).expand(func=True) == \
@@ -439,6 +447,14 @@ def test_trigamma():
     assert trigamma(3) == pi**2/6 - Rational(5, 4)
 
     assert trigamma(x).rewrite(zeta) == zeta(2, x)
+
+    assert trigamma(x,evaluate=False).fdiff() == polygamma(2, x)
+
+    assert trigamma(x,evaluate=False).is_real is None
+
+    assert trigamma(x,evaluate=False).is_positive is None
+
+    assert trigamma(x,evaluate=False).is_negative is None
 
 def test_trigamma_expand_func():
     assert trigamma(2*x).expand(func=True) == \
