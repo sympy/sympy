@@ -1022,33 +1022,32 @@ class digamma(Function):
     """
     def _eval_evalf(self, prec):
         z = self.args[0]
-        return polygamma(0,z).evalf(prec)
+        return polygamma(0, z).evalf(prec)
 
     def fdiff(self, argindex=1):
         z = self.args[0]
-        return polygamma(0,z).fdiff()
+        return polygamma(0, z).fdiff()
 
     def _eval_is_real(self):
         z = self.args[0]
-        return polygamma(0,z).is_real
+        return polygamma(0, z).is_real
 
     def _eval_is_positive(self):
         z = self.args[0]
-        return polygamma(0,z).is_positive
+        return polygamma(0, z).is_positive
 
     def _eval_is_negative(self):
         z = self.args[0]
-        return polygamma(0,z).is_negative
+        return polygamma(0, z).is_negative
 
     def _eval_aseries(self, n, args0, x, logx):
-        from sympy import Order
         as_polygamma = self.rewrite(polygamma)
         args0 = [S.Zero,] + args0
-        return as_polygamma._eval_aseries(n,args0,x,logx)
+        return as_polygamma._eval_aseries(n, args0, x, logx)
 
     @classmethod
     def eval(cls, z):
-        return polygamma(0,z)
+        return polygamma(0, z)
 
     def _eval_expand_func(self, **hints):
         z = self.args[0]
@@ -1058,11 +1057,11 @@ class digamma(Function):
         return harmonic(z - 1) - S.EulerGamma
 
     def _eval_rewrite_as_polygamma(self, z, **kwargs):
-        return polygamma(0,z)
+        return polygamma(0, z)
 
     def _eval_as_leading_term(self, x):
         z = self.args[0]
-        return polygamma(0,z).as_leading_term(x)
+        return polygamma(0, z).as_leading_term(x)
 
 
 
@@ -1095,29 +1094,28 @@ class trigamma(Function):
     """
     def _eval_evalf(self, prec):
         z = self.args[0]
-        return polygamma(1,z).evalf(prec)
+        return polygamma(1, z).evalf(prec)
 
     def fdiff(self, argindex=1):
         z = self.args[0]
-        return polygamma(1,z).fdiff()
+        return polygamma(1, z).fdiff()
 
     def _eval_is_real(self):
         z = self.args[0]
-        return polygamma(1,z).is_real
+        return polygamma(1, z).is_real
 
     def _eval_is_positive(self):
         z = self.args[0]
-        return polygamma(1,z).is_positive
+        return polygamma(1, z).is_positive
 
     def _eval_is_negative(self):
         z = self.args[0]
-        return polygamma(1,z).is_negative
+        return polygamma(1, z).is_negative
 
     def _eval_aseries(self, n, args0, x, logx):
-        from sympy import Order
         as_polygamma = self.rewrite(polygamma)
         args0 = [S.One,] + args0
-        return as_polygamma._eval_aseries(n,args0,x,logx)
+        return as_polygamma._eval_aseries(n, args0, x, logx)
 
     @classmethod
     def eval(cls, z):
@@ -1131,14 +1129,14 @@ class trigamma(Function):
         return (-1)**(2)*factorial(1)*zeta(2, z)
 
     def _eval_rewrite_as_polygamma(self, z, **kwargs):
-        return polygamma(1,z)
+        return polygamma(1, z)
 
     def _eval_rewrite_as_harmonic(self, z, **kwargs):
         return -harmonic(z - 1, 2) + S.Pi**2 / 6
 
     def _eval_as_leading_term(self, x):
         z = self.args[0]
-        return polygamma(1,z).as_leading_term(x)
+        return polygamma(1, z).as_leading_term(x)
 
 
 ###############################################################################
