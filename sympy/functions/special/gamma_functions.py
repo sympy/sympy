@@ -1126,7 +1126,7 @@ class trigamma(Function):
         return polygamma(1, z).expand(func=True)
 
     def _eval_rewrite_as_zeta(self, z, **kwargs):
-        return (-1)**(2)*factorial(1)*zeta(2, z)
+        return zeta(2, z)
 
     def _eval_rewrite_as_polygamma(self, z, **kwargs):
         return polygamma(1, z)

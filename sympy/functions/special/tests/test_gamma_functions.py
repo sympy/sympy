@@ -449,7 +449,7 @@ def test_trigamma():
     assert trigamma(2) == pi**2/6 - 1
     assert trigamma(3) == pi**2/6 - Rational(5, 4)
 
-    assert trigamma(x).rewrite(zeta) == zeta(2, x)
+    assert trigamma(x, evaluate=False).rewrite(zeta) == zeta(2, x)
     assert trigamma(x, evaluate=False).rewrite(harmonic) == \
         trigamma(x).rewrite(polygamma).rewrite(harmonic)
 
