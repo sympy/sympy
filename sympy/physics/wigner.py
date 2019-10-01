@@ -49,7 +49,7 @@ from __future__ import print_function, division
 
 from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm, zeros,
                    Function, sin, cos, exp, I, factorial, binomial,
-                   Mul, ImmutableMatrix)
+                   Add, ImmutableMatrix)
 from sympy.core.compatibility import range
 
 # This list of precomputed factorials is needed to massively
@@ -755,9 +755,6 @@ def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
 def wigner_d_small(J, beta):
     u"""Return the small Wigner d matrix for angular momentum J.
 
-    The components are calculated using the general from [Edmonds74]_,
-    equation 4.1.15.
-
     INPUT:
 
     -  ``J`` - An integer, half-integer, or sympy symbol for the total angular
@@ -768,8 +765,14 @@ def wigner_d_small(J, beta):
 
     OUTPUT:
 
-    A matrix representing the corresponding Euler angle rotation in the
-    ``M_J`` basis: ``|J, -J>, |J, -J+1> ..., |J, -J>``.
+    A matrix representing the corresponding Euler angle rotation( in the basis
+    of eigenvectors of `J_z`).
+
+    .. math ::
+        \\mathcal{d}_{\\beta} = \\exp\\big( \\frac{i\\beta}{\\hbar} J_y\\big)
+
+    The components are calculated using the general form [Edmonds74]_,
+    equation 4.1.15.
 
     Examples
     ========
@@ -873,23 +876,20 @@ def wigner_d_small(J, beta):
 
             dij = sqrt(factorial(J+Mi)*factorial(J-Mi) /
                        factorial(J+Mj)/factorial(J-Mj))
-            terms = [[(-1)**(J-Mi-s),
-                      binomial(J+Mj, J-Mi-s),
-                      binomial(J-Mj, s),
-                      cos(beta/2)**(2*s+Mi+Mj),
-                      sin(beta/2)**(2*J-2*s-Mj-Mi)]
+            terms = [(-1)**(J-Mi-s) *
+                     binomial(J+Mj, J-Mi-s) *
+                     binomial(J-Mj, s) *
+                     cos(beta/2)**(2*s+Mi+Mj) *
+                     sin(beta/2)**(2*J-2*s-Mj-Mi)
                      for s in range(sigmamin, sigmamax+1)]
 
-            d[i, j] = dij*Sum(Mul(terms))
+            d[i, j] = dij*Add(*terms)
 
     return ImmutableMatrix(d)
 
 
 def wigner_d(J, alpha, beta, gamma):
     u"""Return the Wigner D matrix for angular momentum J.
-
-    The components are calculated using the general from [Edmonds74]_,
-    equation 4.1.12.
 
     INPUT:
 
@@ -902,13 +902,23 @@ def wigner_d(J, alpha, beta, gamma):
 
     OUTPUT:
 
-    A matrix representing the corresponding Euler angle rotation in the
-    ``M_J`` basis: ``|J, -J>, |J, -J+1> ..., |J, -J>``.
+    A matrix representing the corresponding Euler angle rotation( in the basis
+    of eigenvectors of `J_z`).
+
+    .. math ::
+        \\mathcal{D}_{\\alpha \\beta \\gamma} =
+        \\exp\\big( \\frac{i\\alpha}{\\hbar} J_z\\big)
+        \\exp\\big( \\frac{i\\beta}{\\hbar} J_y\\big)
+        \\exp\\big( \\frac{i\\gamma}{\\hbar} J_z\\big)
+
+    The components are calculated using the general form [Edmonds74]_,
+    equation 4.1.12.
 
     Examples
     ========
 
     The simplest possible example:
+
     >>> from sympy.physics.wigner import wigner_d
     >>> from sympy import Integer, symbols, pprint
     >>> from sympy.physics.wigner import wigner_d_small
