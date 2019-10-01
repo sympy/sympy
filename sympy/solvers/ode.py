@@ -1613,15 +1613,17 @@ def ode_2nd_hypergeometirc(eq, func, order, match):
             y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/hyperexpand(hyper([a, b], [c], x)**2), x)*hyper([a, b], [c], x)
             sol = C0*hyper([a, b], [c], x) + C1*y2
         # applying transformation in the solution
-        e = logcombine(Integral(((a + b + 1)*x - c)/(2*(x**2 - x)), x), force=True)
+        e = logcombine(Integral(((a + b + 1)*x - c)/(2*(x**2 - x)), x).doit(), force=True)
         sol = (sol).subs(x, match['mobius'])
         sol = sol.subs(x, x**match['k'])
         e = (e.subs(x, match['mobius'])).subs(x, x**match['k'])
+
         if B:
-            e1 = Integral(A/2, x)
-            e1 = logcombine(e, force=True)
+            e1 = Integral(A/2, x).doit()
+            e1 = logcombine(e1, force=True)
             e = simplify(e - e1)
-        sol = exp(e)*(sol*x**((-match['k']+1)/2))
+
+        sol = cancel(exp(e))*(sol)*x**((-match['k']+1)/2)
         sol = Eq(func, sol)
 
     # if sol is None then we can try for series solution
@@ -1690,10 +1692,7 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
     # this is not a efficient way to solve and it is slowing the process
     # also it is not giving solution always.
 
-    _c = simplify(solve(eqs[2], c)[0])
-    _a, _b = solve([eqs[0].subs(c, _c), eqs[1].subs(c, _c)], [a, b])[0]
-    _c = _c.subs(a, _a)
-    _c = _c.subs(b, _b)
+    _a, _b, _c = solve(eqs, [a, b, c])[0]
 
     rn = {'a':simplify(_a), 'b':simplify(_b), 'c':simplify(_c), 'k':k, 'r':r, 'mobius':subs, 'type':"2F1"}
 
