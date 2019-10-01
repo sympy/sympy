@@ -418,6 +418,9 @@ def test_digamma():
 
     assert digamma(x,evaluate=False).is_negative is None
 
+    assert digamma(x,evaluate=False).rewrite(polygamma) == polygamma(0, x)
+
+
 def test_digamma_expand_func():
     assert digamma(x).expand(func=True) == polygamma(0, x)
     assert digamma(2*x).expand(func=True) == \
@@ -455,6 +458,8 @@ def test_trigamma():
     assert trigamma(x,evaluate=False).is_positive is None
 
     assert trigamma(x,evaluate=False).is_negative is None
+
+    assert trigamma(x,evaluate=False).rewrite(polygamma) == polygamma(1, x)
 
 def test_trigamma_expand_func():
     assert trigamma(2*x).expand(func=True) == \
