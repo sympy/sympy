@@ -504,6 +504,11 @@ def test_is_primitive():
     C = CyclicGroup(7)
     assert C.is_primitive() is True
 
+    a = Permutation(0, 1, 2, size=6)
+    b = Permutation(3, 4, 5, size=6)
+    G = PermutationGroup(a, b)
+    assert G.is_primitive() is False
+
 
 def test_random_stab():
     S = SymmetricGroup(5)

@@ -2077,6 +2077,10 @@ class PermutationGroup(Basic):
         """
         if self._is_primitive is not None:
             return self._is_primitive
+
+        if self.is_transitive() is False:
+            return False
+
         if randomized:
             random_stab_gens = []
             v = self.schreier_vector(0)
