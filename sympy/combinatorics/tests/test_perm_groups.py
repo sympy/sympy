@@ -1013,3 +1013,17 @@ def test_composition_series():
     assert is_isomorphic(series[1], CyclicGroup(4))
     assert is_isomorphic(series[2], CyclicGroup(2))
     assert series[3].is_trivial
+
+
+def test_is_symmetric():
+    a = Permutation(0, 1, 2)
+    b = Permutation(0, 1, size=3)
+    assert PermutationGroup(a, b).is_symmetric == True
+
+    a = Permutation(0, 2, 1)
+    b = Permutation(1, 2, size=3)
+    assert PermutationGroup(a, b).is_symmetric == True
+
+    a = Permutation(0, 1, 2, 3)
+    b = Permutation(0, 3)(1, 2)
+    assert PermutationGroup(a, b).is_symmetric == False
