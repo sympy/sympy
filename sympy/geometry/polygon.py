@@ -2648,7 +2648,7 @@ class Triangle(Polygon):
         References
         ==========
 
-        [1] http://mathworld.wolfram.com/Excircles.html
+        .. [1] http://mathworld.wolfram.com/Excircles.html
 
         """
 
