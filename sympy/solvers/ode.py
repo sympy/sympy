@@ -1561,8 +1561,8 @@ def equivalance_hypergeometric(r, func):
             k = gcd(i, k)
 
     # computing I0 of the given equation
-    I0 = powdenest(simplify(factor(((J1/k**2) - S(1)/4)/((x**k)**2))))
-    I0 = factor(simplify(I0.subs(x, x**(S(1)/k))))
+    I0 = powdenest(simplify(factor(((J1/k**2) - S(1)/4)/((x**k)**2))), force=True)
+    I0 = factor(simplify(powdenest(I0.subs(x, x**(S(1)/k)), force=True)))
     num, dem = I0.as_numer_denom()
 
     max_num_pow = max(_power_counting((num, )))
@@ -1613,17 +1613,21 @@ def ode_2nd_hypergeometirc(eq, func, order, match):
             y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/hyperexpand(hyper([a, b], [c], x)**2), x)*hyper([a, b], [c], x)
             sol = C0*hyper([a, b], [c], x) + C1*y2
         # applying transformation in the solution
-        e = logcombine(Integral(((a + b + 1)*x - c)/(2*(x**2 - x)), x).doit(), force=True)
+        subs = match['mobius']
+        dtdx = simplify(1/(subs.diff(x)))
+        _B = simplify(((a + b + 1)*x - c).subs(x, subs)*dtdx)
+        _B = simplify(_B + ((x**2 -x).subs(x, subs))*(dtdx.diff(x)*dtdx))
+        _A = simplify((x**2 - x).subs(x, subs)*(dtdx**2))
+        e = exp(logcombine(Integral(cancel(_B/(2*_A)), x).doit(), force=True))
         sol = (sol).subs(x, match['mobius'])
         sol = sol.subs(x, x**match['k'])
-        e = (e.subs(x, match['mobius'])).subs(x, x**match['k'])
+        e = (e).subs(x, x**match['k'])
 
         if B:
             e1 = Integral(A/2, x).doit()
-            e1 = logcombine(e1, force=True)
-            e = simplify(e - e1)
+            e1 = exp(logcombine(e1, force=True))
 
-        sol = cancel(exp(e))*(sol)*x**((-match['k']+1)/2)
+        sol = cancel(powdenest(cancel(e/e1)*x**((-match['k']+1)/2), force=True))*(sol)
         sol = Eq(func, sol)
 
     # if sol is None then we can try for series solution
@@ -1694,7 +1698,6 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
     # I am trying to solve the equations for a, b, c.
     # this is not a efficient way to solve and it is slowing the process
     # also it is not giving solution always.
-
     _c = solve(eqs[2], c)[0]
     t = solve(eqs[0].subs(a-b, t), t)[0]
     _a = t+b
