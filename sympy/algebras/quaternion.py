@@ -552,8 +552,8 @@ class Quaternion(Expr):
         r : Quaternion or tuple
             Axis and angle of rotation.
 
-        It's important to note that when r is a tuple, it must be of the form
-        (axis, angle)
+            It's important to note that when r is a tuple, it must be of the form
+            (axis, angle)
 
         Returns
         =======
