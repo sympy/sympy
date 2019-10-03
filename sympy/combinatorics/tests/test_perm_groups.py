@@ -437,7 +437,15 @@ def test_random_pr():
 def test_is_alt_sym():
     G = DihedralGroup(10)
     assert G.is_alt_sym() is False
+    assert G._eval_is_alt_sym_naive() is False
+    assert G._eval_is_alt_sym_naive(only_alt=True) is False
+    assert G._eval_is_alt_sym_naive(only_sym=True) is False
+
     S = SymmetricGroup(10)
+    assert S._eval_is_alt_sym_naive() is True
+    assert S._eval_is_alt_sym_naive(only_alt=True) is False
+    assert S._eval_is_alt_sym_naive(only_sym=True) is True
+
     N_eps = 10
     _random_prec = {'N_eps': N_eps,
         0: Permutation([[2], [1, 4], [0, 6, 7, 8, 9, 3, 5]]),
@@ -451,7 +459,12 @@ def test_is_alt_sym():
         8: Permutation([[1, 5, 6, 3], [0, 2, 7, 8, 4, 9]]),
         9: Permutation([[8], [6, 7], [2, 3, 4, 5], [0, 1, 9]])}
     assert S.is_alt_sym(_random_prec=_random_prec) is True
+
     A = AlternatingGroup(10)
+    assert A._eval_is_alt_sym_naive() is True
+    assert A._eval_is_alt_sym_naive(only_alt=True) is True
+    assert A._eval_is_alt_sym_naive(only_sym=True) is False
+
     _random_prec = {'N_eps': N_eps,
         0: Permutation([[1, 6, 4, 2, 7, 8, 5, 9, 3], [0]]),
         1: Permutation([[1], [0, 5, 8, 4, 9, 2, 3, 6, 7]]),
