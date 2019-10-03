@@ -465,6 +465,11 @@ def test_is_alt_sym():
         9: Permutation([[4, 9, 6], [3, 8], [1, 2], [0, 5, 7]])}
     assert A.is_alt_sym(_random_prec=_random_prec) is False
 
+    G = PermutationGroup(
+        Permutation(1, 3, size=8)(0, 2, 4, 6),
+        Permutation(5, 7, size=8)(0, 2, 4, 6))
+    assert G.is_alt_sym() is False
+
 
 def test_minimal_block():
     D = DihedralGroup(6)
