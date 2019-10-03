@@ -1,7 +1,7 @@
 from sympy import symbols, re, im, I, Abs, Symbol, \
      cos, sin, sqrt, conjugate, log, acos, E, pi, \
      Matrix, diff, integrate, trigsimp, S, Rational
-from sympy.algebras.quaternion import Quaternion
+from sympy.algebras.quaternion import Quaternion, UnitQuaternion
 from sympy.utilities.pytest import raises
 
 x, y, z, w = symbols("x y z w")
@@ -10,13 +10,13 @@ def test_quaternion_construction():
     q = Quaternion(x, y, z, w)
     assert q + q == Quaternion(2*x, 2*y, 2*z, 2*w)
 
-    q2 = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3),
+    q2 = UnitQuaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3),
                                     pi*Rational(2, 3))
     assert q2 == Quaternion(S.Half, S.Half,
                             S.Half, S.Half)
 
     M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
-    q3 = trigsimp(Quaternion.from_rotation_matrix(M))
+    q3 = trigsimp(UnitQuaternion.from_rotation_matrix(M))
     assert q3 == Quaternion(sqrt(2)*sqrt(cos(x) + 1)/2, 0, 0, sqrt(-2*cos(x) + 2)/2)
 
     nc = Symbol('nc', commutative=False)
@@ -96,7 +96,7 @@ def test_quaternion_functions():
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
 
-    assert Quaternion.rotate_point((1, 1, 1), q1) == (S.One / 5, 1, S(7) / 5)
+    assert q1.normalize().rotate_point((1, 1, 1)) == (S.One / 5, 1, S(7) / 5)
     n = Symbol('n')
     raises(TypeError, lambda: q1**n)
     n = Symbol('n', integer=True)
@@ -106,22 +106,22 @@ def test_quaternion_functions():
 def test_quaternion_conversions():
     q1 = Quaternion(1, 2, 3, 4)
 
-    assert q1.to_axis_angle() == ((2 * sqrt(29)/29,
+    assert q1.normalize().to_axis_angle() == ((2 * sqrt(29)/29,
                                    3 * sqrt(29)/29,
                                    4 * sqrt(29)/29),
                                    2 * acos(sqrt(30)/30))
 
-    assert q1.to_rotation_matrix() == Matrix([[Rational(-2, 3), Rational(2, 15), Rational(11, 15)],
+    assert q1.normalize().to_rotation_matrix() == Matrix([[Rational(-2, 3), Rational(2, 15), Rational(11, 15)],
                                               [Rational(2, 3), Rational(-1, 3), Rational(2, 3)],
                                               [Rational(1, 3), Rational(14, 15), Rational(2, 15)]])
 
-    assert q1.to_rotation_matrix((1, 1, 1)) == Matrix([[Rational(-2, 3), Rational(2, 15), Rational(11, 15), Rational(4, 5)],
+    assert q1.normalize().to_rotation_matrix((1, 1, 1)) == Matrix([[Rational(-2, 3), Rational(2, 15), Rational(11, 15), Rational(4, 5)],
                                                        [Rational(2, 3), Rational(-1, 3), Rational(2, 3), S.Zero],
                                                        [Rational(1, 3), Rational(14, 15), Rational(2, 15), Rational(-2, 5)],
                                                        [S.Zero, S.Zero, S.Zero, S.One]])
 
     theta = symbols("theta", real=True)
-    q2 = Quaternion(cos(theta/2), 0, 0, sin(theta/2))
+    q2 = UnitQuaternion(cos(theta/2), 0, 0, sin(theta/2))
 
     assert trigsimp(q2.to_rotation_matrix()) == Matrix([
                                                [cos(theta), -sin(theta), 0],
@@ -147,7 +147,7 @@ def test_quaternion_rotation_iss1593():
     https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Quaternion-derived_rotation_matrix
     for the correct definition
     """
-    q = Quaternion(cos(x/2), sin(x/2), 0, 0)
+    q = UnitQuaternion(cos(x/2), sin(x/2), 0, 0)
     assert(trigsimp(q.to_rotation_matrix()) == Matrix([
                 [1,      0,      0],
                 [0, cos(x), -sin(x)],

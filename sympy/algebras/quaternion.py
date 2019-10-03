@@ -78,101 +78,6 @@ class Quaternion(Expr):
     def real_field(self):
         return self._real_field
 
-    @classmethod
-    def from_axis_angle(cls, vector, angle):
-        """Returns a rotation quaternion given the axis and the angle of rotation.
-
-        Parameters
-        ==========
-
-        vector : tuple of three numbers
-            The vector representation of the given axis.
-        angle : number
-            The angle by which axis is rotated (in radians).
-
-        Returns
-        =======
-
-        Quaternion
-            The normalized rotation quaternion calculated from the given axis and the angle of rotation.
-
-        Examples
-        ========
-
-        >>> from sympy.algebras.quaternion import Quaternion
-        >>> from sympy import pi, sqrt
-        >>> q = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
-        >>> q
-        1/2 + 1/2*i + 1/2*j + 1/2*k
-        """
-        (x, y, z) = vector
-        norm = sqrt(x**2 + y**2 + z**2)
-        (x, y, z) = (x / norm, y / norm, z / norm)
-        s = sin(angle * S.Half)
-        a = cos(angle * S.Half)
-        b = x * s
-        c = y * s
-        d = z * s
-
-        return cls(a, b, c, d).normalize()
-
-    @classmethod
-    def from_rotation_matrix(cls, M):
-        """Returns the equivalent quaternion of a matrix. The quaternion will be normalized
-        only if the matrix is special orthogonal (orthogonal and det(M) = 1).
-
-        Parameters
-        ==========
-
-        M : Matrix
-            Input matrix to be converted to equivalent quaternion. M must be special
-            orthogonal (orthogonal and det(M) = 1) for the quaternion to be normalized.
-
-        Returns
-        =======
-
-        Quaternion
-            The quaternion equivalent to given matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.algebras.quaternion import Quaternion
-        >>> from sympy import Matrix, symbols, cos, sin, trigsimp
-        >>> x = symbols('x')
-        >>> M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
-        >>> q = trigsimp(Quaternion.from_rotation_matrix(M))
-        >>> q
-        sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(2 - 2*cos(x))/2*k
-        """
-
-        absQ = M.det()**Rational(1, 3)
-
-        a = sqrt(absQ + M[0, 0] + M[1, 1] + M[2, 2]) / 2
-        b = sqrt(absQ + M[0, 0] - M[1, 1] - M[2, 2]) / 2
-        c = sqrt(absQ - M[0, 0] + M[1, 1] - M[2, 2]) / 2
-        d = sqrt(absQ - M[0, 0] - M[1, 1] + M[2, 2]) / 2
-
-        try:
-            b = Quaternion.__copysign(b, M[2, 1] - M[1, 2])
-            c = Quaternion.__copysign(c, M[0, 2] - M[2, 0])
-            d = Quaternion.__copysign(d, M[1, 0] - M[0, 1])
-
-        except Exception:
-            pass
-
-        return Quaternion(a, b, c, d)
-
-    @staticmethod
-    def __copysign(x, y):
-
-        # Takes the sign from the second term and sets the sign of the first
-        # without altering the magnitude.
-
-        if y == 0:
-            return 0
-        return x if x*y > 0 else -x
-
     def __add__(self, other):
         return self.add(other)
 
@@ -391,7 +296,7 @@ class Quaternion(Expr):
     def normalize(self):
         """Returns the normalized form of the quaternion."""
         q = self
-        return q * (1/q.norm())
+        return UnitQuaternion(*(q * (1/q.norm())).args)
 
     def inverse(self):
         """Returns the inverse of the quaternion."""
@@ -530,8 +435,8 @@ class Quaternion(Expr):
         # q^p = ||q||^p * (cos(p*a) + u*sin(p*a))
 
         q = self
-        (v, angle) = q.to_axis_angle()
-        q2 = Quaternion.from_axis_angle(v, p * angle)
+        (v, angle) = q.normalize().to_axis_angle()
+        q2 = UnitQuaternion.from_axis_angle(v, p * angle)
         return q2 * (q.norm()**p)
 
     def integrate(self, *args):
@@ -539,8 +444,130 @@ class Quaternion(Expr):
         return Quaternion(integrate(self.a, *args), integrate(self.b, *args),
                           integrate(self.c, *args), integrate(self.d, *args))
 
+class UnitQuaternion(Quaternion):
+    """
+    """
+
+    def __new__(cls, a=0, b=1, c=0, d=0):
+        quat = Quaternion.__new__(cls, a, b, c, d)
+        if quat.norm().simplify() != 1:
+            raise ValueError("invalid arguments for unit norm")
+        return quat
+
+    def __eq__(self, other):
+        if isinstance(other, UnitQuaternion):
+            return Quaternion.__eq__(self, other)
+        else:
+            return Quaternion.__eq__(Quaternion(*self.args), other)
+
+    @classmethod
+    def from_axis_angle(cls, vector, angle):
+        """Returns a rotation quaternion given the axis and the angle of rotation.
+
+        Parameters
+        ==========
+
+        vector : tuple of three numbers
+            The vector representation of the given axis.
+        angle : number
+            The angle by which axis is rotated (in radians).
+
+        Returns
+        =======
+
+        UnitQuaternion
+            The normalized rotation quaternion calculated from the given axis and the angle of rotation.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import UnitQuaternion
+        >>> from sympy import pi, sqrt
+        >>> q = UnitQuaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
+        >>> q
+        1/2 + 1/2*i + 1/2*j + 1/2*k
+
+        """
+        (x, y, z) = vector
+        norm = sqrt(x**2 + y**2 + z**2)
+        (x, y, z) = (x / norm, y / norm, z / norm)
+        s = sin(angle * S.Half)
+        a = cos(angle * S.Half)
+        b = x * s
+        c = y * s
+        d = z * s
+        return cls(a, b, c, d)
+
+    @classmethod
+    def from_rotation_matrix(cls, M):
+        """Returns the equivalent quaternion of a rotation matrix.
+
+        The matrix has to be special orthogonal (orthogonal and det(M) = 1).
+
+        Parameters
+        ==========
+
+        M : Matrix
+            Input matrix to be converted to equivalent quaternion. M must be special
+            orthogonal (orthogonal and det(M) = 1).
+
+        Returns
+        =======
+
+        UnitQuaternion
+            The quaternion equivalent to given matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import UnitQuaternion
+        >>> from sympy import Matrix, symbols, cos, sin, trigsimp
+        >>> x = symbols('x')
+        >>> M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
+        >>> q = trigsimp(UnitQuaternion.from_rotation_matrix(M))
+        >>> q
+        sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(2 - 2*cos(x))/2*k
+
+        """
+        absQ = M.det()**Rational(1, 3)
+
+        a = sqrt(absQ + M[0, 0] + M[1, 1] + M[2, 2]) / 2
+        b = sqrt(absQ + M[0, 0] - M[1, 1] - M[2, 2]) / 2
+        c = sqrt(absQ - M[0, 0] + M[1, 1] - M[2, 2]) / 2
+        d = sqrt(absQ - M[0, 0] - M[1, 1] + M[2, 2]) / 2
+
+        try:
+            b = UnitQuaternion.__copysign(b, M[2, 1] - M[1, 2])
+            c = UnitQuaternion.__copysign(c, M[0, 2] - M[2, 0])
+            d = UnitQuaternion.__copysign(d, M[1, 0] - M[0, 1])
+        except Exception:
+            pass
+
+        return cls(a, b, c, d)
+
     @staticmethod
-    def rotate_point(pin, r):
+    def __copysign(x, y):
+
+        # Takes the sign from the second term and sets the sign of the first
+        # without altering the magnitude.
+
+        if y == 0:
+            return 0
+        return x if x*y > 0 else -x
+
+    def __mul__(self, other):
+        q = Quaternion.__mul__(self, other)
+        if isinstance(other, UnitQuaternion):
+            q = UnitQuaternion(*q.args)
+        return q
+
+    def __pow__(self, p):
+        return UnitQuaternion(*Quaternion.__pow__(self, p).args)
+
+    def inverse(self):
+        return UnitQuaternion(*Quaternion.inverse(self).args)
+
+    def rotate_point(self, pin):
         """Returns the coordinates of the point pin(a 3 tuple) after rotation.
 
         Parameters
@@ -549,8 +576,6 @@ class Quaternion(Expr):
         pin : tuple
             A 3-element tuple of coordinates of a point. This point will be
             the axis of rotation.
-        r
-            Angle to be rotated.
 
         Returns
         =======
@@ -561,23 +586,17 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import UnitQuaternion
         >>> from sympy import symbols, trigsimp, cos, sin
         >>> x = symbols('x')
-        >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
-        >>> trigsimp(Quaternion.rotate_point((1, 1, 1), q))
+        >>> q = UnitQuaternion(cos(x/2), 0, 0, sin(x/2))
+        >>> trigsimp(q.rotate_point((1, 1, 1)))
         (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
-        >>> (axis, angle) = q.to_axis_angle()
-        >>> trigsimp(Quaternion.rotate_point((1, 1, 1), (axis, angle)))
-        (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
+
         """
-        if isinstance(r, tuple):
-            # if r is of the form (vector, angle)
-            q = Quaternion.from_axis_angle(r[0], r[1])
-        else:
-            # if r is a quaternion
-            q = r.normalize()
-        pout = q * Quaternion(0, pin[0], pin[1], pin[2]) * conjugate(q)
+        x, y, z = pin
+        pin = Quaternion(0, x, y, z)
+        pout = self * pin * conjugate(self)
         return (pout.b, pout.c, pout.d)
 
     def to_axis_angle(self):
@@ -592,8 +611,9 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion(1, 1, 1, 1)
+        >>> from sympy.algebras.quaternion import UnitQuaternion
+        >>> from sympy import S
+        >>> q = UnitQuaternion(S.Half, S.Half, S.Half, S.Half)
         >>> (axis, angle) = q.to_axis_angle()
         >>> axis
         (sqrt(3)/3, sqrt(3)/3, sqrt(3)/3)
@@ -604,7 +624,6 @@ class Quaternion(Expr):
         if q.a.is_negative:
             q = q * -1
 
-        q = q.normalize()
         angle = trigsimp(2 * acos(q.a))
 
         # Since quaternion is normalised, q.a is less than 1.
@@ -639,10 +658,10 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import UnitQuaternion
         >>> from sympy import symbols, trigsimp, cos, sin
         >>> x = symbols('x')
-        >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
+        >>> q = UnitQuaternion(cos(x/2), 0, 0, sin(x/2))
         >>> trigsimp(q.to_rotation_matrix())
         Matrix([
         [cos(x), -sin(x), 0],
@@ -655,10 +674,10 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import UnitQuaternion
         >>> from sympy import symbols, trigsimp, cos, sin
         >>> x = symbols('x')
-        >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
+        >>> q = UnitQuaternion(cos(x/2), 0, 0, sin(x/2))
         >>> trigsimp(q.to_rotation_matrix((1, 1, 1)))
          Matrix([
         [cos(x), -sin(x), 0,  sin(x) - cos(x) + 1],
@@ -668,18 +687,17 @@ class Quaternion(Expr):
         """
 
         q = self
-        s = q.norm()**-2
-        m00 = 1 - 2*s*(q.c**2 + q.d**2)
-        m01 = 2*s*(q.b*q.c - q.d*q.a)
-        m02 = 2*s*(q.b*q.d + q.c*q.a)
+        m00 = 1 - 2*(q.c**2 + q.d**2)
+        m01 = 2*(q.b*q.c - q.d*q.a)
+        m02 = 2*(q.b*q.d + q.c*q.a)
 
-        m10 = 2*s*(q.b*q.c + q.d*q.a)
-        m11 = 1 - 2*s*(q.b**2 + q.d**2)
-        m12 = 2*s*(q.c*q.d - q.b*q.a)
+        m10 = 2*(q.b*q.c + q.d*q.a)
+        m11 = 1 - 2*(q.b**2 + q.d**2)
+        m12 = 2*(q.c*q.d - q.b*q.a)
 
-        m20 = 2*s*(q.b*q.d - q.c*q.a)
-        m21 = 2*s*(q.c*q.d + q.b*q.a)
-        m22 = 1 - 2*s*(q.b**2 + q.c**2)
+        m20 = 2*(q.b*q.d - q.c*q.a)
+        m21 = 2*(q.c*q.d + q.b*q.a)
+        m22 = 1 - 2*(q.b**2 + q.c**2)
 
         if not v:
             return Matrix([[m00, m01, m02], [m10, m11, m12], [m20, m21, m22]])
@@ -694,4 +712,4 @@ class Quaternion(Expr):
             m33 = 1
 
             return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
-                          [m20, m21, m22, m23], [m30, m31, m32, m33]])
+                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
