@@ -490,6 +490,11 @@ def test_is_alt_sym():
     G = DihedralGroup(20)
     assert G._eval_is_alt_sym_monte_carlo() is False
 
+    # A dry-running test to check if it looks up for the updated cache.
+    G = DihedralGroup(6)
+    assert G.is_alt_sym()
+    assert G.is_alt_sym() == False
+
 
 def test_minimal_block():
     D = DihedralGroup(6)
