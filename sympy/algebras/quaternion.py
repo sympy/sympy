@@ -547,14 +547,13 @@ class Quaternion(Expr):
         ==========
 
         pin : tuple
-            A 3-element tuple of coordinates of a point which needs to be 
+            A 3-element tuple of coordinates of a point which needs to be
             rotated.
         r : Quaternion or tuple
             Axis of rotation.
 
         It's important to note that when r is a tuple, it must be of the form
         (axis, angle)
-            
 
         Returns
         =======
