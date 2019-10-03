@@ -294,10 +294,10 @@ def _refine_reim(expr, assumptions):
 def refine_sgn(expr, assumptions):
     """
     Handler for sign
-    
+
     Examples
     ========
-    
+
     >>> from sympy.assumptions.refine import refine_sgn
     >>> x = Symbol('x', real = True)
     >>> expr = sign(x)
@@ -325,7 +325,7 @@ def refine_sgn(expr, assumptions):
         if ask(Q.positive(arg_im), assumptions):
             return S.ImaginaryUnit
         if ask(Q.negative(arg_im), assumptions):
-            return -S.ImaginaryUnit 
+            return -S.ImaginaryUnit
     return expr
 
 
