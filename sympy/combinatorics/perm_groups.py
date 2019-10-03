@@ -2842,9 +2842,18 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        Symmetric groups have an order of `n!` for permutation groups
-        where `n` is the cardinality of the set every permutation is
-        based on.
+        This uses a naive test involving the computation of the full
+        group order.
+        If you need more quicker taxonomy for large groups, you can use
+        :meth:`PermutationGroup.is_alt_sym`.
+        However, :meth:`PermutationGroup.is_alt_sym` may not be accurate
+        and is not able to distinguish between an alternating group and
+        a symmetric group.
+
+        See Also
+        ========
+
+        is_alt_sym
         """
         _is_sym = self._is_sym
         if _is_sym is not None:
@@ -2855,6 +2864,51 @@ class PermutationGroup(Basic):
         is_sym = factorial(n) == order
         self._is_sym = is_sym
         return is_sym
+
+    @property
+    def is_alternating(self):
+        """Return ``True`` if the group is alternating.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup
+        >>> g = AlternatingGroup(5)
+        >>> g.is_alternating
+        True
+
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
+        >>> g = PermutationGroup(
+        ...     Permutation(0, 1, 2, 3, 4),
+        ...     Permutation(2, 3, 4))
+        >>> g.is_alternating
+        True
+
+        Notes
+        =====
+
+        This uses a naive test involving the computation of the full
+        group order.
+        If you need more quicker taxonomy for large groups, you can use
+        :meth:`PermutationGroup.is_alt_sym`.
+        However, :meth:`PermutationGroup.is_alt_sym` may not be accurate
+        and is not able to distinguish between an alternating group and
+        a symmetric group.
+
+        See Also
+        ========
+
+        is_alt_sym
+        """
+        _is_alt = self._is_alt
+        if _is_alt is not None:
+            return _is_alt
+
+        n = self.degree
+        order = self.order()
+        _is_alt = factorial(n)/2 == order
+        self._is_alt = _is_alt
+        return _is_alt
 
     @property
     def is_cyclic(self):
