@@ -483,6 +483,13 @@ def test_is_alt_sym():
         Permutation(5, 7, size=8)(0, 2, 4, 6))
     assert G.is_alt_sym() is False
 
+    # Tests for monte-carlo c_n parameter setting, and which guarantees
+    # to give False.
+    G = DihedralGroup(10)
+    assert G._eval_is_alt_sym_monte_carlo() is False
+    G = DihedralGroup(20)
+    assert G._eval_is_alt_sym_monte_carlo() is False
+
 
 def test_minimal_block():
     D = DihedralGroup(6)
