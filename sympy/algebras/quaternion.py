@@ -550,7 +550,7 @@ class Quaternion(Expr):
             A 3-element tuple of coordinates of a point which needs to be
             rotated.
         r : Quaternion or tuple
-            Axis of rotation.
+            Axis and angle of rotation.
 
         It's important to note that when r is a tuple, it must be of the form
         (axis, angle)
