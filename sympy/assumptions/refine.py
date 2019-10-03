@@ -291,6 +291,44 @@ def _refine_reim(expr, assumptions):
     return None
 
 
+def refine_sgn(expr, assumptions):
+    """
+    Handler for sign
+    
+    Examples
+    ========
+    
+    >>> from sympy.assumptions.refine import refine_sgn
+    >>> x = Symbol('x', real = True)
+    >>> expr = sign(x)
+    >>> refine_sgn(expr, Q.positive(x) & Q.nonzero(x))
+    1
+    >>> refine_sgn(expr, Q.negative(x) & Q.nonzero(x))
+    -1
+    >>> refine_sgn(expr, Q.zero(x))
+    0
+    >>> refine_sgn(expr, Q.positive(im(x)))
+    I
+    >>> refine_sgn(expr, Q.negative(im(x)))
+    -I
+    """
+    arg = expr.args[0]
+    if ask(Q.real(arg)):
+        if ask(Q.positive(arg), assumptions):
+            return 1
+        if ask(Q.negative(arg), assumptions):
+            return -1
+        if ask(Q.zero(arg), assumptions):
+            return 0
+    if ask(Q.complex(arg)):
+        arg_re, arg_im = arg.as_real_imag()
+        if ask(Q.positive(arg_im), assumptions):
+            return S.ImaginaryUnit
+        if ask(Q.negative(arg_im), assumptions):
+            return -S.ImaginaryUnit 
+    return expr
+
+
 handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -302,5 +340,6 @@ handlers_dict = {
     'StrictGreaterThan': refine_Relational,
     'StrictLessThan': refine_Relational,
     're': refine_re,
-    'im': refine_im
+    'im': refine_im,
+    'sgn': refine_sgn
 }
