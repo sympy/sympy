@@ -492,7 +492,7 @@ def test_is_alt_sym():
 
     # A dry-running test to check if it looks up for the updated cache.
     G = DihedralGroup(6)
-    assert G.is_alt_sym()
+    G.is_alt_sym()
     assert G.is_alt_sym() == False
 
 
