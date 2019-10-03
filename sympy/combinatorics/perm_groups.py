@@ -1889,19 +1889,15 @@ class PermutationGroup(Basic):
         if order == sym_order:
             self._is_sym = True
             self._is_alt = False
-            if only_sym:
-                return self._is_sym
-            elif only_alt:
-                return self._is_alt
+            if only_alt:
+                return False
             return True
 
         elif 2*order == sym_order:
             self._is_sym = False
             self._is_alt = True
             if only_sym:
-                return self._is_sym
-            elif only_alt:
-                return self._is_alt
+                return False
             return True
 
         return False
