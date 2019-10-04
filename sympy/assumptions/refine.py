@@ -320,7 +320,7 @@ def refine_sgn(expr, assumptions):
             return -1
         if ask(Q.zero(arg), assumptions):
             return 0
-    if ask(Q.complex(arg)):
+    if ask(Q.imaginary(arg)):
         arg_re, arg_im = arg.as_real_imag()
         if ask(Q.positive(arg_im), assumptions):
             return S.ImaginaryUnit
