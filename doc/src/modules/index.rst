@@ -16,6 +16,7 @@ access any SymPy module, or use the list below:
 .. toctree::
    :maxdepth: 2
 
+   abc.rst
    algebras.rst
    assumptions/index.rst
    calculus/index.rst
