@@ -32,6 +32,10 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
 
+# Enable warnings for all bad cross references. These are turned into errors
+# with the -W flag in the Makefile.
+nitpicky = True
+
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
 
