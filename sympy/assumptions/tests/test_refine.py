@@ -1,10 +1,10 @@
 from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
-                   atan, atan2, nan, Symbol, re, im)
+                   atan, atan2, nan, Symbol, re, im, sign)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.pytest import slow
-
+from sympy.core import S
 
 def test_Abs():
     assert refine(Abs(x), Q.positive(x)) == x
@@ -169,6 +169,17 @@ def test_complex():
         & Q.real(z)) == w*y - x*z
     assert refine(im((w + I*x) * (y + I*z)), Q.real(w) & Q.real(x) & Q.real(y)
         & Q.real(z)) == w*z + x*y
+
+
+def test_sgn():
+    x = Symbol('x', real = True)
+    assert refine(sign(x), Q.positive(x)) == 1
+    assert refine(sign(x), Q.negative(x)) == -1
+    assert refine(sign(x), Q.zero(x)) == 0
+    assert refine(sign(Abs(x)), Q.nonzero(x)) == 1
+    x = Symbol('x', imaginary = True)
+    assert refine(sign(x), Q.positive(im(x))) == S.ImaginaryUnit
+    assert refine(sign(x), Q.negative(im(x))) == -S.ImaginaryUnit
 
 
 def test_func_args():

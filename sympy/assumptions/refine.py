@@ -344,5 +344,5 @@ handlers_dict = {
     'StrictLessThan': refine_Relational,
     're': refine_re,
     'im': refine_im,
-    'sgn': refine_sgn
+    'sign': refine_sgn
 }
