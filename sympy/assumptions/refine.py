@@ -299,6 +299,7 @@ def refine_sgn(expr, assumptions):
     ========
 
     >>> from sympy.assumptions.refine import refine_sgn
+    >>> from sympy import Symbol, Q, sign, im
     >>> x = Symbol('x', real = True)
     >>> expr = sign(x)
     >>> refine_sgn(expr, Q.positive(x) & Q.nonzero(x))
@@ -307,9 +308,11 @@ def refine_sgn(expr, assumptions):
     -1
     >>> refine_sgn(expr, Q.zero(x))
     0
-    >>> refine_sgn(expr, Q.positive(im(x)))
+    >>> y = Symbol('y', imaginary = True)
+    >>> expr = sign(y)
+    >>> refine_sgn(expr, Q.positive(im(y)))
     I
-    >>> refine_sgn(expr, Q.negative(im(x)))
+    >>> refine_sgn(expr, Q.negative(im(y)))
     -I
     """
     arg = expr.args[0]
