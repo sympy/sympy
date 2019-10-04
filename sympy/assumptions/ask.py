@@ -31,7 +31,8 @@ predicate_memo = memoize_property(predicate_storage)
 
 class AssumptionKeys(object):
     """
-    This class contains all the supported keys by ``ask``.
+    This class contains all the supported keys by ``ask``. It should be accessed via the instance ``sympy.Q``.
+
     """
 
     @predicate_memo
