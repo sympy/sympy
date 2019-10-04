@@ -5,7 +5,7 @@ from sympy import (
     atan, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
-    acos, erfi, LambertW, factorial)
+    acos, erfi, LambertW, factorial, Ei, EulerGamma)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -586,3 +586,7 @@ def test_issue_17431():
     assert limit((n + 2)**2*factorial(n)/((n + 1)*(n + 3)*factorial(n + 1))
                  , n, oo) == 0
     assert limit((n + 1) * factorial(n) / (n * factorial(n + 1)), n, oo) == 0
+
+
+def test_issue_17671():
+    assert limit(Ei(-log(x)) - log(log(x))/x, x, 1) == EulerGamma
