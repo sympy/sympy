@@ -1693,11 +1693,9 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
     eqs = []
     # We are comparing the coeff of powers of different x, for finding the values of
     # parameters of standerd equation.
-    for key, val in dict_I.items():
-        eqs.append(Eq(val, dict_I0[key]))
-    # I am trying to solve the equations for a, b, c.
-    # this is not a efficient way to solve and it is slowing the process
-    # also it is not giving solution always.
+    for key in [x**2, x, 1]:
+        eqs.append(Eq(dict_I[key], dict_I0[key]))
+
     _c = solve(eqs[2], c)[0]
     t = solve(eqs[0].subs(a-b, t), t)[0]
     _a = t+b

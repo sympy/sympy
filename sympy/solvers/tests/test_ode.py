@@ -1,7 +1,7 @@
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect)
+    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper)
 from sympy.solvers.ode import (_undetermined_coefficients_match,
     checkodesol, classify_ode, classify_sysode, constant_renumber,
     constantsimp, homogeneous_order, infinitesimals, checkinfsol,
@@ -3705,3 +3705,29 @@ def test_issue_17322():
     sol = [Eq(f(x), C1), Eq(f(x), C1*exp(-x))]
     assert set(sol) == set(dsolve(eq, hint='lie_group'))
     assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+def test_2nd_2F1_hypergeometric():
+
+    a, b, c = symbols("a b c")
+
+    eq = x*(x-1)*f(x).diff(x, 2) + ((a+b+1)*x-c)*f(x).diff(x) + a*b*f(x)
+    sol = Eq(f(x), C1*x**(1 - c)*hyper((b - c + 1, a - c + 1), (2 - c,), x) + C2*hyper((b, a), (c,), x))
+    assert sol == dsolve(eq, hint='2nd_hypergeometirc')
+    # assert checkodesol(eq, sol) == (True, 0) Hanging
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (S(3)/2 -2*x)*f(x).diff(x) + 2*f(x)
+    sol = Eq(f(x), C1*x**(S(5)/2)*hyper((S(1)/2, S(3)/2), (S(7)/2,), x) + C2*hyper((-2, -1), (-S(3)/2,), x))
+    assert sol == dsolve(eq, hint='2nd_hypergeometirc')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq=x*(x-1)*f(x).diff(x, 2) + (S(3) -2*x)*f(x).diff(x) + 2*f(x)
+    sol = Eq(f(x), C1*x**4*hyper((2, 3), (5,), x) + C2*hyper((-2, -1), (-3,), x))
+    assert sol == dsolve(eq, hint='2nd_hypergeometirc')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = -x**(S(5)/7)*(-416*x**(S(9)/7)/9 - 2385*x**(S(5)/7)/49 + S(298)*x/3)*f(x)/(196*(-x**(S(6)/7) +
+         x)**2*(x**(S(6)/7) + x)**2) + Derivative(f(x), (x, 2))
+    sol = Eq(f(x), x**(S(45)/98)*(C1*x**(S(4)/49)*hyper((S(-1)/2, S(1)/3), (S(9)/7,), x**(S(2)/7)) +
+          C2*hyper((S(-11)/14, S(1)/21), (S(5)/7,), x**(S(2)/7)))/(x**(S(2)/7) - 1)**(S(19)/84))
+    assert sol == dsolve(eq, hint='2nd_hypergeometirc')
+    # assert checkodesol(eq, sol) == (True, 0) Hanging
