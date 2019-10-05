@@ -1542,7 +1542,7 @@ class Li(Function):
     def eval(cls, z):
         if z is S.Infinity:
             return S.Infinity
-        elif z is 2*S.One:
+        elif z == S(2):
             return S.Zero
 
     def fdiff(self, argindex=1):
