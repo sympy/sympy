@@ -951,6 +951,12 @@ class LambertW(Function):
         elif k is None:
             k = S.Zero
 
+        if x.is_number and k.is_number:
+            orig = cls(x, k, evaluate=False)
+            ret = orig._extract_identity()
+            if orig != ret:
+                return ret
+
         if k.is_zero:
             if x.is_zero:
                 return S.Zero
