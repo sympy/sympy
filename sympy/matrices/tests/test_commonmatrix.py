@@ -1257,6 +1257,10 @@ def test_diagonal():
     assert banded({i: list(M.diagonal(i))
         for i in range(1-M.rows, M.cols)}) == M
 
+def test_diagonal_difference():
+    m = Matrix(3, 3, range(9))
+    diag_diff = m.diagonal_difference()
+    assert m == 2
 
 def test_jordan_block():
     assert SpecialOnlyMatrix.jordan_block(3, 2) == SpecialOnlyMatrix.jordan_block(3, eigenvalue=2) \
