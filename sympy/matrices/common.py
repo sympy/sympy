@@ -1768,7 +1768,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         >>> from sympy.matrices import Matrix
-        >>> a = Matrix([1, 2, 3], [4, 5, 6], [7, 8, 9])
+        >>> a = Matrix(2, 2, [1, 0, 0, 1])
         >>> a.diagonal_difference()
         2
 
@@ -1778,7 +1778,10 @@ class MatrixOperations(MatrixRequired):
         """
         if self.rows != self.cols:
             raise NonSquareMatrixError()
-
+        trace = self._eval_trace()
+        antidiag_sum = self._eval_antidiagonal_sum()
+        diag_diff = Abs(trace - antidiag_sum)
+        return diag_diff
 
     def doit(self, **kwargs):
         return self.applyfunc(lambda x: x.doit())
