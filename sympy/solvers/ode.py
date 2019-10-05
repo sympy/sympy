@@ -258,7 +258,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
-                         PolynomialError, lcm, roots)
+                         PolynomialError, lcm, roots, gcd)
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -312,7 +312,7 @@ allhints = (
     "Liouville",
     "2nd_linear_airy",
     "2nd_linear_bessel",
-    "2nd_hypergeometirc",
+    "2nd_hypergeometric",
     "nth_order_reducible",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
@@ -1380,7 +1380,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 _r.update(r)
                 rn = match_2nd_hypergeometric(_r, func)
                 if rn:
-                    matching_hints["2nd_hypergeometirc"] = rn
+                    matching_hints["2nd_hypergeometric"] = rn
             # If the ODE has regular singular point at x0 and is of the form
             # Eq((x)**2*Derivative(y(x), x, x) + x*Derivative(y(x), x) +
             # (a4**2*x**(2*p)-n**2)*y(x) thus Bessel's equation
@@ -1491,8 +1491,12 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     else:
         return tuple(retlist)
 
-def equivalance(max_num_pow, dem_pow):
-    # this function is made for checking the equivalance with 2F1 type of equation.
+def equivalence(max_num_pow, dem_pow):
+    # this function is made for checking the equivalence with 2F1 type of equation.
+    # max_num_pow is the value of maximum power of x in numerator
+    # and dem_pow is list of powers of different factor of form (a*x b).
+    # reference from table 1 in paper - "Non-Liouvillian solutions for second order
+    # linear ODEs" by L. Chan, E.S. Cheb-Terrab.
     # We can extend it for 1F1 and 0F1 type also.
 
     if max_num_pow == 2:
@@ -1507,25 +1511,23 @@ def equivalance(max_num_pow, dem_pow):
 
     return None
 
-def equivalance_hypergeometric(r, func):
+def equivalence_hypergeometric(A, B, func):
 
-    # This method for finding the equivalance is only for 2F1 type.
+    from sympy import factor
+
+    # This method for finding the equivalence is only for 2F1 type.
     # We can extend it for 1F1 and 0F1 type also.
     f = func
     x = func.args[0]
     df = f.diff(x)
-    a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
-    b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
-    c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
-    A = cancel(r[b3]/r[a3])
-    B = cancel(r[c3]/r[a3])
 
     # making given equation in normal form
-    from sympy import factor, gcd
-    if B != 0:
+    from sympy.core.logic import fuzzy_not
+    if not fuzzy_not(B.is_zero):
         I1 = factor(cancel(A.diff(x)/2 + A**2/4 - B))
     else:
-         I1 = A
+        I1 = A
+
     # computing shifted invariant(J1) of the equation
     J1 = factor(cancel(x**2*I1 + S(1)/4))
     num, dem = J1.as_numer_denom()
@@ -1553,16 +1555,11 @@ def equivalance_hypergeometric(r, func):
     pow_dem.update(pow_num)
 
     _pow = pow_dem
-    k = 0
-    if _pow:
-        k = list(_pow)[0]
-        # computing value of k
-        for i in _pow:
-            k = gcd(i, k)
+    k = gcd(_pow)
 
     # computing I0 of the given equation
     I0 = powdenest(simplify(factor(((J1/k**2) - S(1)/4)/((x**k)**2))), force=True)
-    I0 = factor(simplify(powdenest(I0.subs(x, x**(S(1)/k)), force=True)))
+    I0 = factor(cancel(powdenest(I0.subs(x, x**(S(1)/k)), force=True)))
     num, dem = I0.as_numer_denom()
 
     max_num_pow = max(_power_counting((num, )))
@@ -1575,59 +1572,57 @@ def equivalance_hypergeometric(r, func):
             if isinstance(arg, Pow):
                 # (x-a)**n
                 dem_pow.append(arg.exp)
-                sing_point.append(solve(arg.base, x)[0])
+                sing_point.append(list(roots(arg.base, x).keys())[0])
             else:
                 # (x-a) type
                 dem_pow.append(1)
-                sing_point.append(solve(arg, x)[0])
+                sing_point.append(list(roots(arg, x).keys())[0])
 
     dem_pow.sort()
-    # checking if equivalance is exists or not.
+    # checking if equivalence is exists or not.
 
-    if equivalance(max_num_pow, dem_pow) == "2F1":
+    if equivalence(max_num_pow, dem_pow) == "2F1":
         return {'I0':I0, 'k':k, 'sing_point':sing_point, 'type':"2F1"}
     else:
-        return {'I0':None, 'k':None, 'sing_point':None, 'type':None}
+        return None
 
-def ode_2nd_hypergeometirc(eq, func, order, match):
+def ode_2nd_hypergeometric(eq, func, order, match):
 
     from sympy.simplify.hyperexpand import hyperexpand
+    from sympy import factor
     x = func.args[0]
     f = func
     C0, C1 = get_numbered_constants(eq, num=2)
     a = match['a']
     b = match['b']
     c = match['c']
-    a3 = Wild('a3', exclude=[f, f.diff(x), f.diff(x, 2)])
-    b3 = Wild('b3', exclude=[f, f.diff(x), f.diff(x, 2)])
-    c3 = Wild('c3', exclude=[f, f.diff(x), f.diff(x, 2)])
 
-    A = cancel((match['r'][b3])/((match['r'])[a3]))
-    B = cancel((match['r'][c3])/((match['r'])[a3]))
+    A = match['A']
+    B = match['B']
 
     sol = None
     if match['type'] == "2F1":
         if c.is_integer == False or c.is_positive is not True:
             sol = C0*hyper([a, b], [c], x) + C1*hyper([a-c+1, b-c+1], [2-c], x)*x**(1-c)
         elif c == 1:
-            y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/hyperexpand(hyper([a, b], [c], x)**2), x)*hyper([a, b], [c], x)
+            y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/(hyper([a, b], [c], x)**2), x)*hyper([a, b], [c], x)
             sol = C0*hyper([a, b], [c], x) + C1*y2
         # applying transformation in the solution
         subs = match['mobius']
         dtdx = simplify(1/(subs.diff(x)))
-        _B = simplify(((a + b + 1)*x - c).subs(x, subs)*dtdx)
-        _B = simplify(_B + ((x**2 -x).subs(x, subs))*(dtdx.diff(x)*dtdx))
-        _A = simplify((x**2 - x).subs(x, subs)*(dtdx**2))
-        e = exp(logcombine(Integral(cancel(_B/(2*_A)), x).doit(), force=True))
-        sol = (sol).subs(x, match['mobius'])
+        _B = ((a + b + 1)*x - c).subs(x, subs)*dtdx
+        _B = factor(_B + ((x**2 -x).subs(x, subs))*(dtdx.diff(x)*dtdx))
+        _A = factor((x**2 - x).subs(x, subs)*(dtdx**2))
+        e = exp(logcombine(Integral(cancel(_B/(2*_A)), x), force=True))
+        sol = sol.subs(x, match['mobius'])
         sol = sol.subs(x, x**match['k'])
-        e = (e).subs(x, x**match['k'])
+        e = e.subs(x, x**match['k'])
 
         if B:
-            e1 = Integral(A/2, x).doit()
+            e1 = Integral(A/2, x)
             e1 = exp(logcombine(e1, force=True))
 
-        sol = cancel(powdenest(cancel(e/e1)*x**((-match['k']+1)/2), force=True))*(sol)
+        sol = cancel((e/e1)*x**((-match['k']+1)/2))*sol
         sol = Eq(func, sol)
 
     # if sol is None then we can try for series solution
@@ -1641,7 +1636,7 @@ def ode_2nd_hypergeometirc(eq, func, order, match):
 
     return sol
 
-def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
+def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
 
     from sympy import factor
     x = func.args[0]
@@ -1649,6 +1644,7 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
     b = Wild("b")
     c = Wild("c")
     t = Wild("t")
+    s = Wild("s")
     alpha = Wild("alpha")
     beta = Wild("beta")
     gamma = Wild("gamma")
@@ -1668,22 +1664,26 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
             else:
                 eqs.append(Eq(1/sing_eqs[i], 0))
         # solving above equations for the mobius transformation
-        _beta = solve(eqs[0], beta)[0]
-        _delta = solve(eqs[1], delta)[0]
-        _gamma = solve(((eqs[2]).subs(beta, _beta)).subs(delta, _delta), gamma)[0]
-        subs = (alpha*x + beta)/(gamma*x + delta)
-        subs = subs.subs(beta, _beta)
-        subs = subs.subs(delta, _delta)
-        subs = subs.subs(gamma, _gamma)
-        subs = cancel(subs)
+        _beta = -alpha*sing_point[0]
+        _delta = -gamma*sing_point[1]
+        _gamma = alpha
+        if len(sing_point) == 3:
+            _gamma = (_beta + sing_point[2]*alpha)/(sing_point[2] - sing_point[1])
+        mob = (alpha*x + beta)/(gamma*x + delta)
+        mob = mob.subs(beta, _beta)
+        mob = mob.subs(delta, _delta)
+        mob = mob.subs(gamma, _gamma)
+        mob = cancel(mob)
+        t = (beta - delta*x)/(gamma*x - alpha)
+        t = cancel(((t.subs(beta, _beta)).subs(delta, _delta)).subs(gamma, _gamma))
     else:
-        subs = x
-    t = (solve(Eq(subs, t), x)[0]).subs(t, x)
+        mob = x
+        t = x
+
     # applying mobius transformation in I to make it into I0.
     I = I.subs(x, t)
     I = I*(t.diff(x))**2
     I = factor(I)
-
     dict_I = {x**2:0, x:0, 1:0}
     I0_num, I0_dem = I0.as_numer_denom()
     # collecting coeff of (x**2, x), of the standerd equation.
@@ -1696,23 +1696,35 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func, r):
     for key in [x**2, x, 1]:
         eqs.append(Eq(dict_I[key], dict_I0[key]))
 
-    _c = solve(eqs[2], c)[0]
-    t = solve(eqs[0].subs(a-b, t), t)[0]
-    _a = t+b
-    _b = solve((eqs[1].subs(c, _c)).subs(a, _a), b)[0]
-    _a = t + _b
-
-    rn = {'a':simplify(_a), 'b':simplify(_b), 'c':simplify(_c), 'k':k, 'r':r, 'mobius':subs, 'type':"2F1"}
+    _c = list(roots(eqs[2], c))[0]
+    if not _c.has(Symbol):
+        _c = min(list(roots(eqs[2], c)))
+    s = list(roots(eqs[0].subs(a-b, s), s))[-1]
+    _a = s+b
+    _b = list(roots((eqs[1].subs(c, _c)).subs(a, _a), b))[0]
+    _a = s + _b
+    rn = {'a':simplify(_a), 'b':simplify(_b), 'c':simplify(_c), 'k':k, 'mobius':mob, 'type':"2F1"}
 
     return rn
 
 
 def match_2nd_hypergeometric(r, func):
 
-    d = equivalance_hypergeometric(r, func)
+    x = func.args[0]
+    a3 = Wild('a3', exclude=[func, func.diff(x), func.diff(x, 2)])
+    b3 = Wild('b3', exclude=[func, func.diff(x), func.diff(x, 2)])
+    c3 = Wild('c3', exclude=[func, func.diff(x), func.diff(x, 2)])
+
+    A = cancel(r[b3]/r[a3])
+    B = cancel(r[c3]/r[a3])
+
+    d = equivalence_hypergeometric(A, B, func)
     rn = None
-    if d['type'] == "2F1":
-        rn = match_2nd_2F1_hypergeometric(d['I0'], d['k'], d['sing_point'], func, r)
+    if d:
+        if d['type'] == "2F1":
+            rn = match_2nd_2F1_hypergeometric(d['I0'], d['k'], d['sing_point'], func)
+            if rn is not None:
+                rn.update({'A':A, 'B':B})
 
    # We can extend it for 1F1 and 0F1 type also.
 
