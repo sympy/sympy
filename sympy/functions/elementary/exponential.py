@@ -1100,6 +1100,10 @@ class LambertW(Function):
         re_part = re(var)
         im_part = im(var)
 
+        # XXX Workaround for some invalid comparison error.
+        if re_part.is_zero or im_part.is_zero:
+            return self
+
         if k == 0:
             if im_part == 0 and (re_part >= -1) == True:
                 return var
@@ -1115,9 +1119,9 @@ class LambertW(Function):
                     (re_part < -im_part*cot(im_part)) == True
 
                 cond2 = (im_part >= (2*k - 1) * S.Pi) == True and \
-                    (im_part <= 2*k * S.Pi*S.Pi) == True
+                    (im_part <= 2*k * S.Pi) == True
 
-                cond3 = (im_part > 2*k * S.Pi*S.Pi) == True and \
+                cond3 = (im_part > 2*k * S.Pi) == True and \
                     (im_part < (2*k + 1) * S.Pi) == True and \
                     (re_part > -im_part*cot(im_part)) == True
 
@@ -1130,9 +1134,9 @@ class LambertW(Function):
                     (re_part < -im_part*cot(im_part)) == True
 
                 cond2 = (im_part <= (2*k + 1) * S.Pi) == True and \
-                    (im_part >= 2*k * S.Pi*S.Pi) == True
+                    (im_part >= 2*k * S.Pi) == True
 
-                cond3 = (im_part < 2*k * S.Pi*S.Pi) == True and \
+                cond3 = (im_part < 2*k * S.Pi) == True and \
                     (im_part > (2*k - 1) * S.Pi) == True and \
                     (re_part > -im_part*cot(im_part)) == True
 
