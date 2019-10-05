@@ -7,6 +7,7 @@ and differential calculus with respect to 3D Cartesian coordinate
 systems. This documentation provides an overview of all the
 features offered, and relevant API.
 
+.. module:: sympy.vector
 
 Guide to Vector
 ===============
