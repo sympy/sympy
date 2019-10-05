@@ -256,7 +256,7 @@ def refine_re(expr, assumptions):
     if ask(Q.real(arg), assumptions):
         return arg
     if ask(Q.imaginary(arg), assumptions):
-        return 0
+        return S.Zero
     return _refine_reim(expr, assumptions)
 
 
@@ -274,7 +274,7 @@ def refine_im(expr, assumptions):
     """
     arg = expr.args[0]
     if ask(Q.real(arg), assumptions):
-        return 0
+        return S.Zero
     if ask(Q.imaginary(arg), assumptions):
         return - S.ImaginaryUnit * arg
     return _refine_reim(expr, assumptions)
