@@ -1260,7 +1260,7 @@ def test_diagonal():
 def test_diagonal_difference():
     m = Matrix(3, 3, range(9))
     diag_diff = m.diagonal_difference()
-    assert m == 2
+    assert diag_diff == 2
 
 def test_jordan_block():
     assert SpecialOnlyMatrix.jordan_block(3, 2) == SpecialOnlyMatrix.jordan_block(3, eigenvalue=2) \
