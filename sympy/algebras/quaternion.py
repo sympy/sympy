@@ -361,7 +361,7 @@ class Quaternion(Expr):
                     return q2 * Quaternion(re(q1), im(q1), 0, 0)
                 else:
                     return Mul(q1, q2)
-            else:
+            elif q1.is_commutative:
                 return Quaternion(q1 * q2.a, q1 * q2.b, q1 * q2.c, q1 * q2.d)
             else:
                 raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
