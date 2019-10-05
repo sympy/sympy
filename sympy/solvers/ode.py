@@ -1627,12 +1627,8 @@ def ode_2nd_hypergeometric(eq, func, order, match):
 
     # if sol is None then we can try for series solution
     if sol is None:
-        try:
-            sol = dsolve(eq, func, hint = "2nd_power_series_regular", x0=x0)
-        except ValueError:
-            pass
-    if sol is None:
-        raise NotImplementedError("....")
+        raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+            + " the hypergeometric method")
 
     return sol
 
