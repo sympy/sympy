@@ -1661,6 +1661,9 @@ class MatrixOperations(MatrixRequired):
     def _eval_adjoint(self):
         return self.transpose().conjugate()
 
+    def _eval_antidiagonal_sum(self):
+        return sum(self[i, self.rows-i-1] for i in range(self.rows))
+
     def _eval_applyfunc(self, f):
         out = self._new(self.rows, self.cols, [f(x) for x in self])
         return out
@@ -1775,6 +1778,7 @@ class MatrixOperations(MatrixRequired):
         """
         if self.rows != self.cols:
             raise NonSquareMatrixError()
+
 
     def doit(self, **kwargs):
         return self.applyfunc(lambda x: x.doit())
