@@ -1759,7 +1759,19 @@ class MatrixOperations(MatrixRequired):
 
     def diagonal_difference(self):
         """Returns the diagonal difference, or absolute difference
-        between the sum of diagonals of square matrix. 
+        between the sum of diagonals of square matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> a = Matrix([1, 2, 3], [4, 5, 6], [7, 8, 9])
+        >>> a.diagonal_difference()
+        2
+
+        See Also
+        ========
+        trace: the sum of the diagonal elements.
         """
 
     def doit(self, **kwargs):
