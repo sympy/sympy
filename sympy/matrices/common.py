@@ -1757,6 +1757,11 @@ class MatrixOperations(MatrixRequired):
         """
         return self._eval_conjugate()
 
+    def diagonal_difference(self):
+        """Returns the diagonal difference, or absolute difference
+        between the sum of diagonals of square matrix. 
+        """
+
     def doit(self, **kwargs):
         return self.applyfunc(lambda x: x.doit())
 
