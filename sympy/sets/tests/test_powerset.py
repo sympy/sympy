@@ -19,6 +19,16 @@ def test_powerset_rewrite_FiniteSet():
     assert PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet) == \
         FiniteSet(S.EmptySet, FiniteSet(1), FiniteSet(2), FiniteSet(1, 2))
     assert PowerSet(S.EmptySet).rewrite(FiniteSet) == FiniteSet(S.EmptySet)
+    assert PowerSet(S.Naturals).rewrite(FiniteSet) == PowerSet(S.Naturals)
+
+
+def test_finiteset_rewrite_powerset():
+    assert FiniteSet(S.EmptySet).rewrite(PowerSet) == PowerSet(S.EmptySet)
+    assert FiniteSet(
+        S.EmptySet, FiniteSet(1),
+        FiniteSet(2), FiniteSet(1, 2)).rewrite(PowerSet) == \
+            PowerSet(FiniteSet(1, 2))
+    assert FiniteSet(1, 2, 3).rewrite(PowerSet) == FiniteSet(1, 2, 3)
 
 
 def test_powerset__contains__():
