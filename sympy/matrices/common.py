@@ -1773,6 +1773,8 @@ class MatrixOperations(MatrixRequired):
         ========
         trace: the sum of the diagonal elements.
         """
+        if self.rows != self.cols:
+            raise NonSquareMatrixError()
 
     def doit(self, **kwargs):
         return self.applyfunc(lambda x: x.doit())
