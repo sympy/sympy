@@ -456,9 +456,11 @@ class Equality(Relational):
     def __new__(cls, lhs, rhs=None, **options):
         from sympy.core.add import Add
         from sympy.core.containers import Tuple
-        from sympy.core.logic import fuzzy_bool
+        from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
         from sympy.core.expr import _n2
+        from sympy.functions.elementary.complexes import arg
         from sympy.simplify.simplify import clear_coefficients
+        from sympy.utilities.iterables import sift
 
         if rhs is None:
             SymPyDeprecationWarning(
@@ -494,16 +496,43 @@ class Equality(Relational):
                     isinstance(rhs, Boolean)):
                 return S.false  # only Booleans can equal Booleans
 
-            # check finiteness
-            fin = L, R = [i.is_finite for i in (lhs, rhs)]
-            if None not in fin:
-                if L != R:
+            if lhs.is_infinite or rhs.is_infinite:
+                if fuzzy_xor([lhs.is_infinite, rhs.is_infinite]):
                     return S.false
-                if L is False:
-                    if lhs == -rhs:  # Eq(oo, -oo)
-                        return S.false
-                    return S.true
-            elif None in fin and False in fin:
+                if fuzzy_xor([lhs.is_extended_real, rhs.is_extended_real]):
+                    return S.false
+                if fuzzy_and([lhs.is_extended_real, rhs.is_extended_real]):
+                    r = fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
+                    return S(r)
+
+                # Try to split real/imaginary parts and equate them
+                I = S.ImaginaryUnit
+
+                def split_real_imag(expr):
+                    real_imag = lambda t: (
+                            'real' if t.is_extended_real else
+                            'imag' if (I*t).is_extended_real else None)
+                    return sift(Add.make_args(expr), real_imag)
+
+                lhs_ri = split_real_imag(lhs)
+                if not lhs_ri[None]:
+                    rhs_ri = split_real_imag(rhs)
+                    if not rhs_ri[None]:
+                        eq_real = Eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
+                        eq_imag = Eq(I*Add(*lhs_ri['imag']), I*Add(*rhs_ri['imag']))
+                        res = fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
+                        if res is not None:
+                            return S(res)
+
+                # Compare e.g. zoo with 1+I*oo by comparing args
+                arglhs = arg(lhs)
+                argrhs = arg(rhs)
+                # Guard against Eq(nan, nan) -> False
+                if not (arglhs == S.NaN and argrhs == S.NaN):
+                    res = fuzzy_bool(Eq(arglhs, argrhs))
+                    if res is not None:
+                        return S(res)
+
                 return Relational.__new__(cls, lhs, rhs, **options)
 
             if all(isinstance(i, Expr) for i in (lhs, rhs)):
