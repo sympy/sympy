@@ -28,7 +28,7 @@ from sympy.physics.quantum import ComplexSpace, HilbertSpace, FockSpace, hbar, D
 from sympy.printing.mathml import mathml, MathMLContentPrinter, \
     MathMLPresentationPrinter, MathMLPrinter
 from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, \
-    SymmetricDifference, Interval, EmptySet
+    SymmetricDifference, Interval, EmptySet, ProductSet
 from sympy.stats.rv import RandomSymbol
 from sympy.utilities.pytest import raises
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
@@ -1230,22 +1230,61 @@ def test_print_SetOp():
     f1 = FiniteSet(x, 1, 3)
     f2 = FiniteSet(y, 2, 4)
 
-    assert mpp.doprint(Union(f1, f2, evaluate=False)) == \
+    prntr = lambda x: mathml(x, printer='presentation')
+
+    assert prntr(Union(f1, f2, evaluate=False)) == \
     '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
     '</mfenced><mo>&#x222A;</mo><mfenced close="}" open="{"><mn>2</mn>'\
     '<mn>4</mn><mi>y</mi></mfenced></mrow>'
-    assert mpp.doprint(Intersection(f1, f2, evaluate=False)) == \
+    assert prntr(Intersection(f1, f2, evaluate=False)) == \
     '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
     '</mfenced><mo>&#x2229;</mo><mfenced close="}" open="{"><mn>2</mn>'\
     '<mn>4</mn><mi>y</mi></mfenced></mrow>'
-    assert mpp.doprint(Complement(f1, f2, evaluate=False)) == \
+    assert prntr(Complement(f1, f2, evaluate=False)) == \
     '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
     '</mfenced><mo>&#x2216;</mo><mfenced close="}" open="{"><mn>2</mn>'\
     '<mn>4</mn><mi>y</mi></mfenced></mrow>'
-    assert mpp.doprint(SymmetricDifference(f1, f2, evaluate=False)) == \
+    assert prntr(SymmetricDifference(f1, f2, evaluate=False)) == \
     '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
     '</mfenced><mo>&#x2206;</mo><mfenced close="}" open="{"><mn>2</mn>'\
     '<mn>4</mn><mi>y</mi></mfenced></mrow>'
+
+    A = FiniteSet(a)
+    C = FiniteSet(c)
+    D = FiniteSet(d)
+
+    U1 = Union(C, D, evaluate=False)
+    I1 = Intersection(C, D, evaluate=False)
+    C1 = Complement(C, D, evaluate=False)
+    D1 = SymmetricDifference(C, D, evaluate=False)
+    # XXX ProductSet does not support evaluate keyword
+    P1 = ProductSet(C, D)
+
+    assert prntr(Union(A, I1, evaluate=False)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x222A;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x2229;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(Intersection(A, C1, evaluate=False)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x2229;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x2216;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(Complement(A, D1, evaluate=False)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x2216;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x2206;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(SymmetricDifference(A, P1, evaluate=False)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x2206;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x00d7;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(ProductSet(A, U1)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x00d7;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x222A;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
 
 
 def test_print_logic():
