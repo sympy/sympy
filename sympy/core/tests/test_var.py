@@ -37,7 +37,7 @@ def __make_z2():
     z2 = var("z2")
 
 def _make_z2():
-    __make_z2()        
+    __make_z2()
 
 # see if var() really injects into global namespace
 raises(NameError, lambda: z1)
