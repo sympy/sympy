@@ -1,4 +1,3 @@
-# Tests for var are in their own file, because var pollutes global namespace.
 from sympy import Symbol, var, Function, FunctionClass
 from sympy.utilities.pytest import raises
 
@@ -25,12 +24,12 @@ assert v == [d, e, fg]
 # make z1 with call-depth = 1
 
 def _make_z1():
-    z1 = var("z1")
+    var("z1")
 
 # make z2 with call-depth = 2
 
 def __make_z2():
-    z2 = var("z2")
+    var("z2")
 
 def _make_z2():
     __make_z2()
