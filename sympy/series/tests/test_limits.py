@@ -36,7 +36,7 @@ def test_basic1():
     assert limit((1 + x)**oo, x, 0) is oo
     assert limit((1 + x)**oo, x, 0, dir='-') == 0
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
-    assert limit(y/x/log(x), x, 0) is -oo*sign(y)
+    assert limit(y/x/log(x), x, 0) == -oo*sign(y)
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) is S.NaN
