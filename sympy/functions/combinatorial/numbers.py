@@ -1711,44 +1711,26 @@ def nC(n, k=None, replacement=False):
 
 @cacheit
 def _stirling1(n, k):
-    if n == k == 0:
-        return S.One
-    if 0 in (n, k):
-        return S.Zero
-    n1 = n - 1
-
-    # some special values
-    if n == k:
-        return S.One
-    elif k == 1:
-        return factorial(n1)
-    elif k == n1:
-        return binomial(n, 2)
-    elif k == n - 2:
-        return (3*n - 1)*binomial(n, 3)/4
-    elif k == n - 3:
-        return binomial(n, 2)*binomial(n, 4)
-
-    # general recurrence
-    return n1*_stirling1(n1, k) + _stirling1(n1, k - 1)
+    row = [1]+[0 for _ in range(k)]
+    for i in range(1, n+1):
+        new = [0]
+        for j in range(1, k+1):
+            stirling = (i-1) * row[j] + row[j-1]
+            new.append(stirling)
+        row = new
+    return row[k]
 
 
 @cacheit
 def _stirling2(n, k):
-    if n == k == 0:
-        return S.One
-    if 0 in (n, k):
-        return S.Zero
-    n1 = n - 1
-
-    # some special values
-    if k == n1:
-        return binomial(n, 2)
-    elif k == 2:
-        return 2**n1 - 1
-
-    # general recurrence
-    return k*_stirling2(n1, k) + _stirling2(n1, k - 1)
+    row = [1]+[0 for _ in range(k)]
+    for i in range(1, n+1):
+        new = [0]
+        for j in range(1, k+1):
+            stirling = j * row[j] + row[j-1]
+            new.append(stirling)
+        row = new
+    return row[k]
 
 
 def stirling(n, k, d=None, kind=2, signed=False):
