@@ -1,8 +1,10 @@
 from __future__ import print_function
+
 from textwrap import dedent
+from itertools import islice, product
 
 from sympy import (
-    symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
+    symbols, Integer, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
     factorial, true)
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.core.compatibility import iterable, range
@@ -86,6 +88,14 @@ def test_iproduct():
     assert iterable(iproduct(S.Integers, S.Integers)) is True
     assert (3,) in iproduct(S.Integers)
     assert (4, 5) in iproduct(S.Integers, S.Integers)
+    assert (1, 2, 3) in iproduct(S.Integers, S.Integers, S.Integers)
+    triples  = set(islice(iproduct(S.Integers, S.Integers, S.Integers), 1000))
+    for n1, n2, n3 in triples:
+        assert isinstance(n1, Integer)
+        assert isinstance(n2, Integer)
+        assert isinstance(n3, Integer)
+    for t in set(product(*([range(-2, 3)]*3))):
+        assert t in iproduct(S.Integers, S.Integers, S.Integers)
 
 
 def test_group():
