@@ -1711,26 +1711,46 @@ def nC(n, k=None, replacement=False):
 
 @cacheit
 def _stirling1(n, k):
-    row = [1]+[0 for _ in range(k)]
-    for i in range(1, n+1):
-        new = [0]
-        for j in range(1, k+1):
-            stirling = (i-1) * row[j] + row[j-1]
-            new.append(stirling)
-        row = new
-    return row[k]
+    if n == k == 0:
+        return S.One
+    if 0 in (n, k):
+        return S.Zero
+
+    # some special values
+    if n == k:
+        return S.One
+    elif k == n - 1:
+        return binomial(n, 2)
+    elif k == n - 2:
+        return (3*n - 1)*binomial(n, 3)/4
+    elif k == n - 3:
+        return binomial(n, 2)*binomial(n, 4)
+
+    row = [0, 1]+[0]*(k-1) # for n = 1
+    for i in range(2, n+1):
+        for j in range(k, 0, -1):
+            row[j] = (i-1) * row[j] + row[j-1]
+    return Integer(row[k])
 
 
 @cacheit
 def _stirling2(n, k):
-    row = [1]+[0 for _ in range(k)]
-    for i in range(1, n+1):
-        new = [0]
-        for j in range(1, k+1):
-            stirling = j * row[j] + row[j-1]
-            new.append(stirling)
-        row = new
-    return row[k]
+    if n == k == 0:
+        return S.One
+    if 0 in (n, k):
+        return S.Zero
+
+    # some special values
+    if k == n - 1:
+        return binomial(n, 2)
+    elif k == 2:
+        return Integer(2**(n - 1) - 1)
+
+    row = [0, 1]+[0]*(k-1) # for n = 1
+    for i in range(2, n+1):
+        for j in range(k, 0, -1):
+            row[j] = j * row[j] + row[j-1]
+    return Integer(row[k])
 
 
 def stirling(n, k, d=None, kind=2, signed=False):
