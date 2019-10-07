@@ -1718,7 +1718,7 @@ def _stirling1(n, k):
             stirling = (i-1) * row[j] + row[j-1]
             new.append(stirling)
         row = new
-    return row[k]
+    return Integer(row[k])
 
 
 @cacheit
@@ -1730,7 +1730,7 @@ def _stirling2(n, k):
             stirling = j * row[j] + row[j-1]
             new.append(stirling)
         row = new
-    return row[k]
+    return Integer(row[k])
 
 
 def stirling(n, k, d=None, kind=2, signed=False):

@@ -12,7 +12,7 @@ from sympy.functions.combinatorial.numbers import _nT
 
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
-from sympy.core.numbers import GoldenRatio
+from sympy.core.numbers import GoldenRatio, Integer
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -473,7 +473,8 @@ def test_nC_nP_nT():
         multiset_permutations, multiset_combinations, multiset_partitions,
         partitions, subsets, permutations)
     from sympy.functions.combinatorial.numbers import (
-        nP, nC, nT, stirling, _multiset_histogram, _AOP_product)
+        nP, nC, nT, stirling, _stirling1, _stirling2, _multiset_histogram,
+        _AOP_product)
     from sympy.combinatorics.permutations import Permutation
     from sympy.core.numbers import oo
     from random import choice
@@ -595,6 +596,10 @@ def test_nC_nP_nT():
             0, 1, 255, 3025, 7770, 6951, 2646, 462, 36, 1]
     assert stirling(3, 4, kind=1) == stirling(3, 4, kind=1) == 0
     raises(ValueError, lambda: stirling(-2, 2))
+
+    # Assertion that the return type is SymPy Integer.
+    assert isinstance(_stirling1(6, 3), Integer)
+    assert isinstance(_stirling2(6, 3), Integer)
 
     def delta(p):
         if len(p) == 1:
