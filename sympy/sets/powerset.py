@@ -92,17 +92,11 @@ class PowerSet(Set):
         if not isinstance(other, Set):
             return None
 
-        arg = self.arg
-        ret = fuzzy_bool(arg.is_superset(other))
-        if ret is not None:
-            return ret
-        return None
+        return fuzzy_bool(self.arg.is_superset(other))
 
     def _eval_is_subset(self, other):
         if isinstance(other, PowerSet):
-            ret = self.arg.is_subset(other.arg)
-            if ret is not None:
-                return ret
+            return self.arg.is_subset(other.arg)
 
     def __len__(self):
         return 2 ** len(self.arg)
