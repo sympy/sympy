@@ -9,6 +9,9 @@ from sympy.utilities.decorator import doctest_depends_on
 import xml.dom.minidom
 
 
+__doctest_requires__ = {('apply_xsl', 'c2p'): ['lxml']}
+
+
 def add_mathml_headers(s):
     return """<math xmlns:mml="http://www.w3.org/1998/Math/MathML"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

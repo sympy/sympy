@@ -1,5 +1,6 @@
-Plotting Module
-===============
+========
+Plotting
+========
 
 .. module:: sympy.plotting.plot
 
@@ -45,6 +46,12 @@ Plotting Function Reference
 
 .. autofunction:: sympy.plotting.plot_implicit.plot_implicit
 
+PlotGrid Class
+--------------
+
+.. autoclass:: sympy.plotting.plot.PlotGrid
+   :members:
+
 Series Classes
 --------------
 
@@ -81,8 +88,8 @@ Series Classes
 
 
 
-Pyglet Plotting Module
-======================
+Pyglet Plotting
+---------------
 
 .. module:: sympy.plotting.pygletplot
 

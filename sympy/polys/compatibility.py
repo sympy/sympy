@@ -1072,7 +1072,7 @@ class IPolys(object):
     def gf_sqf_part(self, f):
         return self.from_gf_dense(gf_sqf_part(self.to_gf_dense(f), self.domain.mod, self.domain.dom))
     def gf_sqf_list(self, f, all=False):
-        coeff, factors = gf_sqf_part(self.to_gf_dense(f), self.domain.mod, self.domain.dom, all=all)
+        coeff, factors = gf_sqf_part(self.to_gf_dense(f), self.domain.mod, self.domain.dom)
         return coeff, [ (self.from_gf_dense(g), k) for g, k in factors ]
 
     def gf_Qmatrix(self, f):

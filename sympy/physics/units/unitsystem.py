@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Unit system for physical quantities; include definition of constants.
 """
 
 from __future__ import division
 
-from sympy import S
-from sympy.core.decorators import deprecated
-from sympy.physics.units.quantities import Quantity
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .dimensions import DimensionSystem
@@ -68,7 +63,7 @@ class UnitSystem(object):
 
         Take the base and normal units of the current system to merge
         them to the base and normal units given in argument.
-        If not provided, name and description are overriden by empty strings.
+        If not provided, name and description are overridden by empty strings.
         """
 
         base = self._base_units + tuple(base)

@@ -1,4 +1,4 @@
-from sympy import Q, ask, Symbol
+from sympy import Q, ask, Symbol, DiagonalizeVector, DiagonalMatrix
 from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
         Trace, MatrixSlice, Determinant)
 from sympy.matrices.expressions.factorizations import LofLU
@@ -38,7 +38,7 @@ def test_singular():
 
 @XFAIL
 def test_invertible_fullrank():
-    assert ask(Q.invertible(X), Q.fullrank(X))
+    assert ask(Q.invertible(X), Q.fullrank(X)) is True
 
 
 def test_symmetric():
@@ -50,7 +50,7 @@ def test_symmetric():
     assert ask(Q.symmetric(Y*Y.T)) is True
     assert ask(Q.symmetric(Y.T*X*Y)) is None
     assert ask(Q.symmetric(Y.T*X*Y), Q.symmetric(X)) is True
-    assert ask(Q.symmetric(X*X*X*X*X*X*X*X*X*X), Q.symmetric(X)) is True
+    assert ask(Q.symmetric(X**10), Q.symmetric(X)) is True
     assert ask(Q.symmetric(A1x1)) is True
     assert ask(Q.symmetric(A1x1 + B1x1)) is True
     assert ask(Q.symmetric(A1x1 * B1x1)) is True
@@ -63,8 +63,10 @@ def _test_orthogonal_unitary(predicate):
     assert ask(predicate(X), predicate(X))
     assert ask(predicate(X.T), predicate(X)) is True
     assert ask(predicate(X.I), predicate(X)) is True
+    assert ask(predicate(X**2), predicate(X))
     assert ask(predicate(Y)) is False
     assert ask(predicate(X)) is None
+    assert ask(predicate(X), ~Q.invertible(X)) is False
     assert ask(predicate(X*Z*X), predicate(X) & predicate(Z)) is True
     assert ask(predicate(Identity(3))) is True
     assert ask(predicate(ZeroMatrix(3, 3))) is False
@@ -80,6 +82,7 @@ def test_unitary():
 
 def test_fullrank():
     assert ask(Q.fullrank(X), Q.fullrank(X))
+    assert ask(Q.fullrank(X**2), Q.fullrank(X))
     assert ask(Q.fullrank(X.T), Q.fullrank(X)) is True
     assert ask(Q.fullrank(X)) is None
     assert ask(Q.fullrank(Y)) is None
@@ -95,6 +98,7 @@ def test_positive_definite():
     assert ask(Q.positive_definite(X.I), Q.positive_definite(X)) is True
     assert ask(Q.positive_definite(Y)) is False
     assert ask(Q.positive_definite(X)) is None
+    assert ask(Q.positive_definite(X**3), Q.positive_definite(X))
     assert ask(Q.positive_definite(X*Z*X),
             Q.positive_definite(X) & Q.positive_definite(Z)) is True
     assert ask(Q.positive_definite(X), Q.orthogonal(X))
@@ -116,6 +120,8 @@ def test_triangular():
     assert ask(Q.lower_triangular(Identity(3))) is True
     assert ask(Q.lower_triangular(ZeroMatrix(3, 3))) is True
     assert ask(Q.triangular(X), Q.unit_triangular(X))
+    assert ask(Q.upper_triangular(X**3), Q.upper_triangular(X))
+    assert ask(Q.lower_triangular(X**3), Q.lower_triangular(X))
 
 
 def test_diagonal():
@@ -134,6 +140,10 @@ def test_diagonal():
     assert ask(Q.diagonal(V1.T*(X + Z)*V1))
     assert ask(Q.diagonal(MatrixSlice(Y, (0, 1), (1, 2)))) is True
     assert ask(Q.diagonal(V1.T*(V1 + V2))) is True
+    assert ask(Q.diagonal(X**3), Q.diagonal(X))
+    assert ask(Q.diagonal(Identity(3)))
+    assert ask(Q.diagonal(DiagonalizeVector(V1)))
+    assert ask(Q.diagonal(DiagonalMatrix(X)))
 
 
 def test_non_atoms():
@@ -144,10 +154,10 @@ def test_non_trivial_implies():
     X = MatrixSymbol('X', 3, 3)
     Y = MatrixSymbol('Y', 3, 3)
     assert ask(Q.lower_triangular(X+Y), Q.lower_triangular(X) &
-               Q.lower_triangular(Y))
-    assert ask(Q.triangular(X), Q.lower_triangular(X))
+               Q.lower_triangular(Y)) is True
+    assert ask(Q.triangular(X), Q.lower_triangular(X)) is True
     assert ask(Q.triangular(X+Y), Q.lower_triangular(X) &
-               Q.lower_triangular(Y))
+               Q.lower_triangular(Y)) is True
 
 def test_MatrixSlice():
     X = MatrixSymbol('X', 4, 4)
@@ -176,6 +186,8 @@ def test_field_assumptions():
     assert ask(Q.real_elements(X), Q.real_elements(X))
     assert not ask(Q.integer_elements(X), Q.real_elements(X))
     assert ask(Q.complex_elements(X), Q.real_elements(X))
+    assert ask(Q.complex_elements(X**2), Q.real_elements(X))
+    assert ask(Q.real_elements(X**2), Q.integer_elements(X))
     assert ask(Q.real_elements(X+Y), Q.real_elements(X)) is None
     assert ask(Q.real_elements(X+Y), Q.real_elements(X) & Q.real_elements(Y))
     from sympy.matrices.expressions.hadamard import HadamardProduct
@@ -191,6 +203,9 @@ def test_field_assumptions():
     alpha = Symbol('alpha')
     assert ask(Q.real_elements(alpha*X), Q.real_elements(X) & Q.real(alpha))
     assert ask(Q.real_elements(LofLU(X)), Q.real_elements(X))
+    e = Symbol('e', integer=True, negative=True)
+    assert ask(Q.real_elements(X**e), Q.real_elements(X) & Q.invertible(X))
+    assert ask(Q.real_elements(X**e), Q.real_elements(X)) is None
 
 def test_matrix_element_sets():
     X = MatrixSymbol('X', 4, 4)

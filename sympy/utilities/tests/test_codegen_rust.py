@@ -226,7 +226,7 @@ def test_output_arg_mixed_unordered():
 
 
 def test_piecewise_():
-    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
+    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True), evaluate=False)
     name_expr = ("pwtest", pw)
     result, = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
@@ -237,7 +237,7 @@ def test_piecewise_():
         "    } else if (x <= 1) {\n"
         "        x.powi(2)\n"
         "    } else if (x > 1) {\n"
-        "        -x + 2\n"
+        "        2 - x\n"
         "    } else {\n"
         "        1\n"
         "    };\n"

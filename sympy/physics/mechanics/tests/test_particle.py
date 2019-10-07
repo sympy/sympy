@@ -1,12 +1,15 @@
 from sympy import symbols
 from sympy.physics.mechanics import Point, Particle, ReferenceFrame
 
+from sympy.utilities.pytest import raises
+
 
 def test_particle():
     m, m2, v1, v2, v3, r, g, h = symbols('m m2 v1 v2 v3 r g h')
     P = Point('P')
     P2 = Point('P2')
     p = Particle('pa', P, m)
+    assert p.__str__() == 'pa'
     assert p.mass == m
     assert p.point == P
     # Test the mass setter
@@ -20,6 +23,8 @@ def test_particle():
     O = Point('O')
     P2.set_pos(O, r * N.y)
     P2.set_vel(N, v1 * N.x)
+    raises(TypeError, lambda: Particle(P, P, m))
+    raises(TypeError, lambda: Particle('pa', m, m))
     assert p.linear_momentum(N) == m2 * v1 * N.x
     assert p.angular_momentum(O, N) == -m2 * r *v1 * N.z
     P2.set_vel(N, v2 * N.y)

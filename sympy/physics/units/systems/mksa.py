@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 MKS unit system.
 
@@ -13,9 +11,9 @@ from sympy.physics.units.dimensions import (
     capacitance, charge, conductance, current, impedance, inductance,
     magnetic_density, magnetic_flux, voltage, dimsys_MKSA)
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
-from sympy.physics.units.systems.mks import MKS, _mks_dim
+from sympy.physics.units.systems.mks import MKS
 
-dims = (voltage, impedance, conductance, capacitance, inductance, charge,
+dims = (voltage, impedance, conductance, current, capacitance, inductance, charge,
         magnetic_density, magnetic_flux)
 
 # dimension system

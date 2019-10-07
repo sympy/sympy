@@ -1,12 +1,15 @@
 from sympy import Matrix
 
-from sympy.tensor.tensor import tensor_indices, tensorhead, TensExpr
+from sympy.tensor.tensor import tensor_indices, TensorHead, tensor_heads, \
+    TensExpr, canon_bp
 from sympy import eye
 from sympy.physics.hep.gamma_matrices import GammaMatrix as G, LorentzIndex, \
     kahane_simplify, gamma_trace, _simplify_single_line, simplify_gamma_expression
 
 
 def _is_tensor_eq(arg1, arg2):
+    arg1 = canon_bp(arg1)
+    arg2 = canon_bp(arg2)
     if isinstance(arg1, TensExpr):
         return arg1.equals(arg2)
     elif isinstance(arg2, TensExpr):
@@ -265,7 +268,7 @@ def test_gamma_matrix_class():
     i, j, k = tensor_indices('i,j,k', LorentzIndex)
 
     # define another type of TensorHead to see if exprs are correctly handled:
-    A = tensorhead('A', [LorentzIndex], [[1]])
+    A = TensorHead('A', [LorentzIndex])
 
     t = A(k)*G(i)*G(-i)
     ts = simplify_gamma_expression(t)
@@ -338,13 +341,13 @@ def test_gamma_matrix_trace():
     t1 = gamma_trace(t)
     t2 = (-4*D)*g(m1, m3)*g(m2, m4) + (4*D)*g(m1, m2)*g(m3, m4) + \
                  (4*D)*g(m1, m4)*g(m2, m3)
-    assert t1.equals(t2)
+    assert _is_tensor_eq(t1, t2)
 
     t = G(-m5)*G(m0)*G(m1)*G(m2)*G(m3)*G(m4)*G(-m0)*G(m5)
     t1 = gamma_trace(t)
     t2 = (32*D + 4*(-D + 4)**2 - 64)*(g(m1, m2)*g(m3, m4) - \
             g(m1, m3)*g(m2, m4) + g(m1, m4)*g(m2, m3))
-    assert t1.equals(t2)
+    assert _is_tensor_eq(t1, t2)
 
     t = G(m0)*G(m1)*G(-m0)*G(m3)
     t1 = gamma_trace(t)
@@ -378,7 +381,7 @@ def test_gamma_matrix_trace():
     assert _is_tensor_eq(t1, c1*g(n1, n4)*g(n2, n3) + c2*g(n1, n2)*g(n3, n4) + \
             (-c1)*g(n1, n3)*g(n2, n4))
 
-    p, q = tensorhead('p,q', [LorentzIndex], [[1]])
+    p, q = tensor_heads('p,q', [LorentzIndex])
     ps = p(m0)*G(-m0)
     qs = q(m0)*G(-m0)
     p2 = p(m0)*p(-m0)
@@ -389,10 +392,10 @@ def test_gamma_matrix_trace():
     assert _is_tensor_eq(r, 8*pq*pq - 4*p2*q2)
     t = ps*qs*ps*qs*ps*qs
     r = gamma_trace(t)
-    assert r.equals(-12*p2*pq*q2 + 16*pq*pq*pq)
+    assert _is_tensor_eq(r, -12*p2*pq*q2 + 16*pq*pq*pq)
     t = ps*qs*ps*qs*ps*qs*ps*qs
     r = gamma_trace(t)
-    assert r.equals(-32*pq*pq*p2*q2 + 32*pq*pq*pq*pq + 4*p2*p2*q2*q2)
+    assert _is_tensor_eq(r, -32*pq*pq*p2*q2 + 32*pq*pq*pq*pq + 4*p2*p2*q2*q2)
 
     t = 4*p(m1)*p(m0)*p(-m0)*q(-m1)*q(m2)*q(-m2)
     assert _is_tensor_eq(gamma_trace(t), t)

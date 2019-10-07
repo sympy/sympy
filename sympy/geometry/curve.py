@@ -12,11 +12,10 @@ from sympy import sqrt
 from sympy.core import sympify, diff
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
+from sympy.core.symbol import _symbol
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point
 from sympy.integrals import integrate
-
-from .util import _symbol
 
 
 class Curve(GeometrySet):
@@ -136,7 +135,7 @@ class Curve(GeometrySet):
         if parameter is None:
             return Point(*self.functions)
 
-        tnew = _symbol(parameter, self.parameter)
+        tnew = _symbol(parameter, self.parameter, real=True)
         t = self.parameter
         if (tnew.name != t.name and
                 tnew.name in (f.name for f in self.free_symbols)):
@@ -165,6 +164,10 @@ class Curve(GeometrySet):
             free |= a.free_symbols
         free = free.difference({self.parameter})
         return free
+
+    @property
+    def ambient_dimension(self):
+        return len(self.args[0])
 
     @property
     def functions(self):
@@ -293,7 +296,7 @@ class Curve(GeometrySet):
         [s, 1, 2]
 
         """
-        t = _symbol(parameter, self.parameter)
+        t = _symbol(parameter, self.parameter, real=True)
         return [t] + list(self.limits[1:])
 
     def rotate(self, angle=0, pt=None):

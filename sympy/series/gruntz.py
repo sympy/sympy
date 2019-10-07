@@ -118,7 +118,9 @@ debug this function to figure out the exact problem.
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
+from sympy import cacheit
+from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul
+from sympy.core.compatibility import reduce
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest
@@ -127,10 +129,10 @@ from sympy import cacheit
 
 from sympy.core.compatibility import reduce
 
+from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
 
-from sympy.utilities.misc import debug_decorator as debug
 
 
 def compare(a, b, x):
@@ -190,7 +192,7 @@ class SubsSet(dict):
         {d3: exp(x-d2)}.
 
     The function rewrite uses all this information to correctly rewrite our
-    expression in terms of w. In this case w can be choosen to be exp(-x),
+    expression in terms of w. In this case w can be chosen to be exp(-x),
     i.e. d2. The correct rewriting then is::
 
         exp(-w)/w + 1/w + x.
@@ -364,7 +366,7 @@ def sign(e, x):
         e <  0 for x sufficiently large ... -1
 
     The result of this function is currently undefined if e changes sign
-    arbitarily often for arbitrarily large x (e.g. sin(x)).
+    arbitrarily often for arbitrarily large x (e.g. sin(x)).
 
     Note that this returns zero only if e is *constantly* zero
     for x sufficiently large. [If e is constant, of course, this is just
@@ -642,7 +644,7 @@ def gruntz(e, z, z0, dir="+"):
     file. It relies heavily on the series expansion. Most frequently, gruntz()
     is only used if the faster limit() function (which uses heuristics) fails.
     """
-    if not z.is_Symbol:
+    if not z.is_symbol:
         raise NotImplementedError("Second argument must be a Symbol")
 
     # convert all limits to the limit z->oo; sign of z is handled in limitinf
