@@ -1741,8 +1741,12 @@ def _stirling2(n, k):
         return S.Zero
 
     # some special values
-    if k == n - 1:
+    if n == k:
+        return S.One
+    elif k == n - 1:
         return binomial(n, 2)
+    elif k == 1:
+        return S.One
     elif k == 2:
         return Integer(2**(n - 1) - 1)
 
