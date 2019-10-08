@@ -135,7 +135,7 @@ class ImplicitSeries(BaseSeries):
                 #array values to 1.
                 if func_eval[1] is False or func_eval[0] is False:
                     pass
-                elif func_eval[0] and func_eval[1]:
+                elif func_eval == (True, True):
                     plot_list.append([intervalx, intervaly])
                 elif func_eval[1] is None or func_eval[0] is None:
                     #Subdivide

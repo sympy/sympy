@@ -103,6 +103,12 @@ class intervalBool(object):
         b = (b1 and not b2) or (not b1 and b2)
         return intervalBool(not a, not b)
 
+    def __eq__(self, other):
+        return self._wrapped == other
+
+    def __ne__(self, other):
+        return self._wrapped != other
+
 
 class interval(object):
     """ Represents an interval containing floating points as start and
