@@ -1759,7 +1759,7 @@ class sec(ReciprocalTrigonometricFunction):
     def _eval_is_complex(self):
         arg = self.args[0]
 
-        if arg.is_real and (arg / pi - S.Half).is_integer is False:
+        if arg.is_complex and (arg / pi - S.Half).is_integer is False:
             return True
 
     @staticmethod
