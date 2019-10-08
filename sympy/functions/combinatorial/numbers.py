@@ -1709,8 +1709,7 @@ def nC(n, k=None, replacement=False):
         return nC(_multiset_histogram(n), k, replacement)
 
 
-@cacheit
-def _stirling1(n, k):
+def _eval_stirling1(n, k):
     if n == k == 0:
         return S.One
     if 0 in (n, k):
@@ -1726,6 +1725,11 @@ def _stirling1(n, k):
     elif k == n - 3:
         return binomial(n, 2)*binomial(n, 4)
 
+    return _stirling1(n, k)
+
+
+@cacheit
+def _stirling1(n, k):
     row = [0, 1]+[0]*(k-1) # for n = 1
     for i in range(2, n+1):
         for j in range(min(k,i), 0, -1):
@@ -1733,8 +1737,7 @@ def _stirling1(n, k):
     return Integer(row[k])
 
 
-@cacheit
-def _stirling2(n, k):
+def _eval_stirling2(n, k):
     if n == k == 0:
         return S.One
     if 0 in (n, k):
@@ -1750,7 +1753,11 @@ def _stirling2(n, k):
     elif k == 2:
         return Integer(2**(n - 1) - 1)
 
+    return _stirling2(n, k)
 
+
+@cacheit
+def _stirling2(n, k):
     row = [0, 1]+[0]*(k-1) # for n = 1
     for i in range(2, n+1):
         for j in range(min(k,i), 0, -1):
@@ -1854,15 +1861,15 @@ def stirling(n, k, d=None, kind=2, signed=False):
     if d:
         # assert k >= d
         # kind is ignored -- only kind=2 is supported
-        return _stirling2(n - d + 1, k - d + 1)
+        return _eval_stirling2(n - d + 1, k - d + 1)
     elif signed:
         # kind is ignored -- only kind=1 is supported
-        return (-1)**(n - k)*_stirling1(n, k)
+        return (-1)**(n - k)*_eval_stirling1(n, k)
 
     if kind == 1:
-        return _stirling1(n, k)
+        return _eval_stirling1(n, k)
     elif kind == 2:
-        return _stirling2(n, k)
+        return _eval_stirling2(n, k)
     else:
         raise ValueError('kind must be 1 or 2, not %s' % k)
 
