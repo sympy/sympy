@@ -36,6 +36,74 @@ from __future__ import print_function, division
 from sympy.simplify.simplify import nsimplify
 
 
+class intervalBool(object):
+    """Represents a boolean expression returned by the comparison of
+    the interval object.
+
+    Parameters
+    ==========
+
+    (a, b) : (bool, bool)
+        The first value determines the comparison as follows:
+        - True: If the comparison is True throughout the intervals.
+        - False: If the comparison is False throughout the intervals.
+        - None: If the comparison is True for some part of the intervals.
+
+        The second value is determined as follows:
+        - True: If both the intervals in comparison are valid.
+        - False: If at least one of the intervals is False, else
+        - None
+    """
+    def __init__(self, a, b):
+        self._wrapped = (a, b)
+
+    def __getitem__(self, i):
+        return self._wrapped[i]
+
+    def __len__(self):
+        return 2
+
+    def __iter__(self):
+        return iter(self._wrapped)
+
+    def __str__(self):
+        return "intervalBool({}, {})".format(*self)
+    __repr__ = __str__
+
+    def __and__(self, other):
+        if not isinstance(other, intervalBool):
+            raise ValueError(
+                "The comparison is not supported for {}.".format(other))
+
+        a1, b1 = self
+        a2, b2 = other
+        return intervalBool(a1 and a2, b1 and b2)
+
+    def __or__(self, other):
+        if not isinstance(other, intervalBool):
+            raise ValueError(
+                "The comparison is not supported for {}.".format(other))
+
+        a1, b1 = self
+        a2, b2 = other
+        return intervalBool(a1 or a2, b1 or b2)
+
+    def __invert__(self):
+        a, b = self
+        return intervalBool(not a, not b)
+
+    def __xor__(self, other):
+        if not isinstance(other, intervalBool):
+            raise ValueError(
+                "The comparison is not supported for {}.".format(other))
+
+        a1, b1 = self
+        a2, b2 = other
+        a = (a1 and not a2) or (not a1 and a2)
+        b = (b1 and not b2) or (not b1 and b2)
+        return intervalBool(not a, not b)
+
+
 class interval(object):
     """ Represents an interval containing floating points as start and
     end of the interval
@@ -49,18 +117,9 @@ class interval(object):
             the function's argument interval is partly in the domain of the
             function
 
-    The comparison of two intervals returns a tuple of two 3-valued logic
-    values.
-
-    The first value determines the comparison as follows:
-    - True: If the comparison is True throughout the intervals.
-    - False: If the comparison is False throughout the intervals.
-    - None: If the comparison is True for some part of the intervals.
-
-    The second value is determined as follows:
-    - True: If both the intervals in comparison are valid.
-    - False: If at least one of the intervals is False, else
-    - None
+    A comparison between an interval and a real number, or a
+    comparison between two intervals may return ``intervalBool``
+    of two 3-valued logic values.
     """
 
     def __init__(self, *args, **kwargs):
@@ -100,11 +159,11 @@ class interval(object):
     def __lt__(self, other):
         if isinstance(other, (int, float)):
             if self.end < other:
-                return (True, self.is_valid)
+                return intervalBool(True, self.is_valid)
             elif self.start > other:
-                return (False, self.is_valid)
+                return intervalBool(False, self.is_valid)
             else:
-                return (None, self.is_valid)
+                return intervalBool(None, self.is_valid)
 
         elif isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
@@ -114,21 +173,21 @@ class interval(object):
             else:
                 valid = True
             if self.end < other. start:
-                return (True, valid)
+                return intervalBool(True, valid)
             if self.start > other.end:
-                return (False, valid)
-            return (None, valid)
+                return intervalBool(False, valid)
+            return intervalBool(None, valid)
         else:
             return NotImplemented
 
     def __gt__(self, other):
         if isinstance(other, (int, float)):
             if self.start > other:
-                return (True, self.is_valid)
+                return intervalBool(True, self.is_valid)
             elif self.end < other:
-                return (False, self.is_valid)
+                return intervalBool(False, self.is_valid)
             else:
-                return (None, self.is_valid)
+                return intervalBool(None, self.is_valid)
         elif isinstance(other, interval):
             return other.__lt__(self)
         else:
@@ -137,11 +196,11 @@ class interval(object):
     def __eq__(self, other):
         if isinstance(other, (int, float)):
             if self.start == other and self.end == other:
-                return (True, self.is_valid)
+                return intervalBool(True, self.is_valid)
             if other in self:
-                return (None, self.is_valid)
+                return intervalBool(None, self.is_valid)
             else:
-                return (False, self.is_valid)
+                return intervalBool(False, self.is_valid)
 
         if isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
@@ -151,22 +210,22 @@ class interval(object):
             else:
                 valid = True
             if self.start == other.start and self.end == other.end:
-                return (True, valid)
+                return intervalBool(True, valid)
             elif self.__lt__(other)[0] is not None:
-                return (False, valid)
+                return intervalBool(False, valid)
             else:
-                return (None, valid)
+                return intervalBool(None, valid)
         else:
             return NotImplemented
 
     def __ne__(self, other):
         if isinstance(other, (int, float)):
             if self.start == other and self.end == other:
-                return (False, self.is_valid)
+                return intervalBool(False, self.is_valid)
             if other in self:
-                return (None, self.is_valid)
+                return intervalBool(None, self.is_valid)
             else:
-                return (True, self.is_valid)
+                return intervalBool(True, self.is_valid)
 
         if isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
@@ -176,21 +235,21 @@ class interval(object):
             else:
                 valid = True
             if self.start == other.start and self.end == other.end:
-                return (False, valid)
+                return intervalBool(False, valid)
             if not self.__lt__(other)[0] is None:
-                return (True, valid)
-            return (None, valid)
+                return intervalBool(True, valid)
+            return intervalBool(None, valid)
         else:
             return NotImplemented
 
     def __le__(self, other):
         if isinstance(other, (int, float)):
             if self.end <= other:
-                return (True, self.is_valid)
+                return intervalBool(True, self.is_valid)
             if self.start > other:
-                return (False, self.is_valid)
+                return intervalBool(False, self.is_valid)
             else:
-                return (None, self.is_valid)
+                return intervalBool(None, self.is_valid)
 
         if isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
@@ -200,21 +259,21 @@ class interval(object):
             else:
                 valid = True
             if self.end <= other.start:
-                return (True, valid)
+                return intervalBool(True, valid)
             if self.start > other.end:
-                return (False, valid)
-            return (None, valid)
+                return intervalBool(False, valid)
+            return intervalBool(None, valid)
         else:
             return NotImplemented
 
     def __ge__(self, other):
         if isinstance(other, (int, float)):
             if self.start >= other:
-                return (True, self.is_valid)
+                return intervalBool(True, self.is_valid)
             elif self.end < other:
-                return (False, self.is_valid)
+                return intervalBool(False, self.is_valid)
             else:
-                return (None, self.is_valid)
+                return intervalBool(None, self.is_valid)
         elif isinstance(other, interval):
             return other.__le__(self)
 

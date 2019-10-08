@@ -274,9 +274,6 @@ class Lambdifier(object):
         self.dict_str = self.get_dict_str()
         self.dict_fun = self.get_dict_fun()
         exprstr = str(expr)
-        # the & and | operators don't work on tuples, see discussion #12108
-        exprstr = exprstr.replace(" & "," and ").replace(" | "," or ")
-
         newexpr = self.tree2str_translate(self.str2tree(exprstr))
 
         # Constructing the namespaces
