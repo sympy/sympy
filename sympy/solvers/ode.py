@@ -1692,12 +1692,12 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     for key in [x**2, x, 1]:
         eqs.append(Eq(dict_I[key], dict_I0[key]))
 
-    _c = list(roots(eqs[2], c))[0]
+    _c = list(ordered(roots(eqs[2], c)))[0]
     if not _c.has(Symbol):
         _c = min(list(roots(eqs[2], c)))
-    s = list(roots(eqs[0].subs(a-b, s), s))[-1]
+    s = list(ordered(roots(eqs[0].subs(a-b, s), s)))[-1]
     _a = s+b
-    _b = list(roots((eqs[1].subs(c, _c)).subs(a, _a), b))[0]
+    _b = list(ordered(roots((eqs[1].subs(c, _c)).subs(a, _a), b)))[0]
     _a = s + _b
     rn = {'a':simplify(_a), 'b':simplify(_b), 'c':simplify(_c), 'k':k, 'mobius':mob, 'type':"2F1"}
 

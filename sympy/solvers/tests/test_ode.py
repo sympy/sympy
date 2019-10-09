@@ -3727,7 +3727,7 @@ def test_2nd_2F1_hypergeometric():
 
     eq = -x**(S(5)/7)*(-416*x**(S(9)/7)/9 - 2385*x**(S(5)/7)/49 + S(298)*x/3)*f(x)/(196*(-x**(S(6)/7) +
          x)**2*(x**(S(6)/7) + x)**2) + Derivative(f(x), (x, 2))
-    sol = Eq(f(x), x**(S(45)/98)*(x**(S(2)/7) - 1)**(S(103)/84)*(C1*x**(S(4)/49)*hyper((S(25)/14,
-          S(20)/21), (S(9)/7,), x**(S(2)/7)) + C2*hyper((S(3)/2, S(2)/3), (S(5)/7,), x**(S(2)/7))))
+    sol = Eq(f(x), x**(S(45)/98)*(C1*x**(S(4)/49)*hyper((S(1)/3, -S(1)/2), (S(9)/7,), x**(S(2)/7)) +
+          C2*hyper((S(1)/21, -S(11)/14), (S(5)/7,), x**(S(2)/7)))/(x**(S(2)/7) - 1)**(S(19)/84))
     assert sol == dsolve(eq, hint='2nd_hypergeometric')
     # assert checkodesol(eq, sol) == (True, 0) #issue-https://github.com/sympy/sympy/issues/17702
