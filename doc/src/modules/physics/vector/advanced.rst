@@ -26,6 +26,7 @@ The default behavior is::
 
    >>> TIME
    t
+   >>> from sympy.physics.vector import dynamicsymbols
    >>> q = dynamicsymbols('q')
    >>> q
    q(t)
@@ -34,7 +35,7 @@ The default behavior is::
 
 You can set a different symbol for time like so::
 
-   >>> import sympy
+   >>> from sympy import Symbol
    >>> import sympy.physics.vector.functions
    >>> tau = Symbol('tau')
    >>> sympy.physics.vector.functions.TIME = tau

@@ -493,11 +493,12 @@ def test_partial_velocity():
 
 
 def test_different_time_symbol():
-    # NOTE : Keep this test at the end of the file because it changes the time
-    # value and can affect subsequent function calls that rely on the default
-    # time value.
     import sympy.physics.vector.functions
+    t = sympy.physics.vector.functions.TIME
     x = Symbol('x')
     sympy.physics.vector.functions.TIME = x
     q = dynamicsymbols('q')
     assert q.diff(x) == Derivative(Function('q')(x), x)
+    # Set it back to the original so no other functions in this file are
+    # affected.
+    sympy.physics.vector.functions.TIME = t
