@@ -57,6 +57,8 @@ class Quaternion(Expr):
             obj._c = c
             obj._d = d
             obj._real_field = real_field
+            if obj.norm().simplify() == 1:
+                obj.__class__ = UnitQuaternion
             return obj
 
     @property
@@ -296,7 +298,7 @@ class Quaternion(Expr):
     def normalize(self):
         """Returns the normalized form of the quaternion."""
         q = self
-        return UnitQuaternion(*(q * (1/q.norm())).args)
+        return q * (1/q.norm())
 
     def inverse(self):
         """Returns the inverse of the quaternion."""
@@ -448,20 +450,11 @@ class UnitQuaternion(Quaternion):
     """
     """
 
-    def __new__(cls, a=0, b=1, c=0, d=0):
-        quat = Quaternion.__new__(cls, a, b, c, d)
-        if quat.norm().simplify() != 1:
-            raise ValueError("invalid arguments for unit norm")
-        return quat
+    def __new__(cls, *args, **kwargs):
+        raise TypeError("TODO: meaningful error message")
 
-    def __eq__(self, other):
-        if isinstance(other, UnitQuaternion):
-            return Quaternion.__eq__(self, other)
-        else:
-            return Quaternion.__eq__(Quaternion(*self.args), other)
-
-    @classmethod
-    def from_axis_angle(cls, vector, angle):
+    @staticmethod
+    def from_axis_angle(vector, angle):
         """Returns a rotation quaternion given the axis and the angle of rotation.
 
         Parameters
@@ -496,10 +489,10 @@ class UnitQuaternion(Quaternion):
         b = x * s
         c = y * s
         d = z * s
-        return cls(a, b, c, d)
+        return Quaternion(a, b, c, d)
 
-    @classmethod
-    def from_rotation_matrix(cls, M):
+    @staticmethod
+    def from_rotation_matrix(M):
         """Returns the equivalent quaternion of a rotation matrix.
 
         The matrix has to be special orthogonal (orthogonal and det(M) = 1).
@@ -543,7 +536,7 @@ class UnitQuaternion(Quaternion):
         except Exception:
             pass
 
-        return cls(a, b, c, d)
+        return Quaternion(a, b, c, d)
 
     @staticmethod
     def __copysign(x, y):
@@ -554,18 +547,6 @@ class UnitQuaternion(Quaternion):
         if y == 0:
             return 0
         return x if x*y > 0 else -x
-
-    def __mul__(self, other):
-        q = Quaternion.__mul__(self, other)
-        if isinstance(other, UnitQuaternion):
-            q = UnitQuaternion(*q.args)
-        return q
-
-    def __pow__(self, p):
-        return UnitQuaternion(*Quaternion.__pow__(self, p).args)
-
-    def inverse(self):
-        return UnitQuaternion(*Quaternion.inverse(self).args)
 
     def rotate_point(self, pin):
         """Returns the coordinates of the point pin(a 3 tuple) after rotation.
