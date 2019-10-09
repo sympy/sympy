@@ -14,8 +14,11 @@ from sympy.utilities.misc import translate
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
            'dynamicsymbols', 'vprint', 'vsprint', 'vpprint', 'vlatex',
-           'init_vprinting']
+           'init_vprinting', 'TIME']
 
+# NOTE : Vectors and Dyadics can be differentiated with respect to a symbol
+# representing time. This is the default symbol for time.
+TIME = Symbol('t')
 
 def cross(vec1, vec2):
     """Cross product convenience wrapper for Vector.cross(): \n"""
@@ -180,7 +183,7 @@ def time_derivative(expr, frame, order=1):
 
     """
 
-    t = dynamicsymbols._t
+    t = TIME
     _check_frame(frame)
 
     if order == 0:
@@ -277,7 +280,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         if w1 == w2 == w3 == 0:
             return [S.Zero]*3
         q1, q2, q3 = coords
-        q1d, q2d, q3d = [diff(i, dynamicsymbols._t) for i in coords]
+        q1d, q2d, q3d = [diff(i, TIME) for i in coords]
         s1, s2, s3 = [sin(q1), sin(q2), sin(q3)]
         c1, c2, c3 = [cos(q1), cos(q2), cos(q3)]
         if rot_type == 'body':
@@ -364,7 +367,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         w = Matrix(speeds + [0])
         E = Matrix([[e0, -e3, e2, e1], [e3, e0, -e1, e2], [-e2, e1, e0, e3],
             [-e1, -e2, -e3, e0]])
-        edots = Matrix([diff(i, dynamicsymbols._t) for i in [e1, e2, e3, e0]])
+        edots = Matrix([diff(i, TIME) for i in [e1, e2, e3, e0]])
         return list(edots.T - 0.5 * w.T * E.T)
     else:
         raise ValueError('Not an approved rotation type for this function')
@@ -501,16 +504,16 @@ def get_motion_params(frame, **kwargs):
     if mode == 2:
         vel = _process_vector_differential(kwargs['acceleration'],
                                            kwargs['velocity'],
-                                           dynamicsymbols._t,
+                                           TIME,
                                            kwargs['timevalue2'], frame)[2]
         pos = _process_vector_differential(vel, kwargs['position'],
-                                           dynamicsymbols._t,
+                                           TIME,
                                            kwargs['timevalue1'], frame)[2]
         return (kwargs['acceleration'], vel, pos)
     elif mode == 1:
         return _process_vector_differential(kwargs['velocity'],
                                             kwargs['position'],
-                                            dynamicsymbols._t,
+                                            TIME,
                                             kwargs['timevalue1'], frame)
     else:
         vel = time_derivative(kwargs['position'], frame)
@@ -601,7 +604,7 @@ def dynamicsymbols(names, level=0):
 
     """
     esses = symbols(names, cls=Function)
-    t = dynamicsymbols._t
+    t = TIME
     if iterable(esses):
         esses = [reduce(diff, [t] * level, e(t)) for e in esses]
         return esses
@@ -609,5 +612,7 @@ def dynamicsymbols(names, level=0):
         return reduce(diff, [t] * level, esses(t))
 
 
-dynamicsymbols._t = Symbol('t')
+# TODO : _t should be removed in the future, but there is a lot of code in the
+# wild accessing it even though it was technically "private".
+dynamicsymbols._t = TIME
 dynamicsymbols._str = '\''

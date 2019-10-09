@@ -8,6 +8,42 @@ the features that will be implemented in the future will also be covered, along
 with unanswered questions about proper functionality. Also, common problems
 will be discussed, along with some solutions.
 
+Time Variable
+=============
+
+The objects in `sympy.physics.vector` and `sympy.physics.mechanics` rely on a
+default symbol for time. If symbols are created with ``dynamicsymbols()`` they
+are implicit functions of the default time varialb.e This default symbol can be
+accessed like so::
+
+   >>> from sympy.physics.vector import TIME
+
+or::
+
+   >>> from sympy.physics.mechanics import TIME
+
+The default behavior is::
+
+   >>> TIME
+   t
+   >>> q = dynamicsymbols('q')
+   >>> q
+   q(t)
+   >>> q.diff(TIME)
+   Derivative(q(t), t)
+
+You can set a different symbol for time like so::
+
+   >>> import sympy
+   >>> import sympy.physics.vector.functions
+   >>> tau = Symbol('tau')
+   >>> sympy.physics.vector.functions.TIME = tau
+   >>> q = sympy.physics.vector.functions.dynamicsymbols('q')
+   >>> q
+   q(tau)
+   >>> q.diff(tau)
+   Derivative(q(tau), tau)
+
 Inertia (Dyadics)
 =================
 
@@ -117,38 +153,3 @@ that would be used if there were custom indices. ::
   '\\mathbf{n}_2'
   >>> vlatex(N.z)
   'cat'
-
-dynamicsymbols
---------------
-The ``dynamicsymbols`` function also has 'hidden' functionality; the variable
-which is associated with time can be changed, as well as the notation for
-printing derivatives. ::
-
-  >>> from sympy import symbols
-  >>> from sympy.physics.vector import dynamicsymbols, vprint
-  >>> q1 = dynamicsymbols('q1')
-  >>> q1
-  q1(t)
-  >>> dynamicsymbols._t = symbols('T')
-  >>> q2 = dynamicsymbols('q2')
-  >>> q2
-  q2(T)
-  >>> q1
-  q1(t)
-  >>> q1d = dynamicsymbols('q1', 1)
-  >>> vprint(q1d)
-  q1'
-  >>> dynamicsymbols._str = 'd'
-  >>> vprint(q1d)
-  q1d
-  >>> dynamicsymbols._str = '\''
-  >>> dynamicsymbols._t = symbols('t')
-
-
-Note that only dynamic symbols created after the change are different. The same
-is not true for the `._str` attribute; this affects the printing output only,
-so dynamic symbols created before or after will print the same way.
-
-Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
-``dynamicsymbols``, along with a number of other important functions and
-methods. Don't mix and match symbols representing time.

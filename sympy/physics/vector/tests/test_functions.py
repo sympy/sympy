@@ -1,10 +1,12 @@
-from sympy import S, Integral, sin, cos, pi, sqrt, symbols
+from sympy import (S, Integral, sin, cos, pi, sqrt, symbols, Derivative,
+                   Function, Symbol)
 from sympy.physics.vector import Dyadic, Point, ReferenceFrame, Vector
 from sympy.physics.vector.functions import (cross, dot, express,
                                             time_derivative,
                                             kinematic_equations, outer,
                                             partial_velocity,
-                                            get_motion_params, dynamicsymbols)
+                                            get_motion_params, dynamicsymbols,
+                                            TIME)
 from sympy.utilities.pytest import raises
 
 Vector.simp = True
@@ -378,7 +380,7 @@ def test_time_derivative():
 
 def test_get_motion_methods():
     #Initialization
-    t = dynamicsymbols._t
+    t = TIME
     s1, s2, s3 = symbols('s1 s2 s3')
     S1, S2, S3 = symbols('S1 S2 S3')
     S4, S5, S6 = symbols('S4 S5 S6')
@@ -488,3 +490,14 @@ def test_partial_velocity():
 
     raises(TypeError, lambda: partial_velocity(Dmc.vel(N), u_list, N))
     raises(TypeError, lambda: partial_velocity(vel_list, u1, N))
+
+
+def test_different_time_symbol():
+    # NOTE : Keep this test at the end of the file because it changes the time
+    # value and can affect subsequent function calls that rely on the default
+    # time value.
+    import sympy.physics.vector.functions
+    x = Symbol('x')
+    sympy.physics.vector.functions.TIME = x
+    q = dynamicsymbols('q')
+    assert q.diff(x) == Derivative(Function('q')(x), x)
