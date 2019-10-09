@@ -106,9 +106,12 @@ See the appropriate docstrings for a detailed explanation of the output.
 
 from __future__ import print_function, division
 
-from sympy.core import Expr, Tuple, Symbol, sympify, S
+from sympy.core.assumptions import StdFactKB
+from sympy.core import Expr, Tuple, sympify, S
+from sympy.core.symbol import _filter_assumptions, Symbol
 from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
                                       Iterable)
+from sympy.core.logic import fuzzy_bool
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
@@ -125,10 +128,13 @@ class Indexed(Expr):
     >>> Indexed('A', i, j)
     A[i, j]
 
-    It is recommended that ``Indexed`` objects be created via ``IndexedBase``:
+    It is recommended that ``Indexed`` objects be created by indexing ``IndexedBase``:
+    ``IndexedBase('A')[i, j]`` instead of ``Indexed(IndexedBase('A'), i, j)``.
 
     >>> A = IndexedBase('A')
-    >>> Indexed('A', i, j) == A[i, j]
+    >>> a_ij = A[i, j]           # Prefer this,
+    >>> b_ij = Indexed(A, i, j)  # over this.
+    >>> a_ij == b_ij
     True
 
     """
@@ -148,7 +154,10 @@ class Indexed(Expr):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base, IndexedBase):
             raise TypeError(filldedent("""
-                Indexed expects string, Symbol, or IndexedBase as base."""))
+                The base can only be replaced with a string, Symbol,
+                IndexedBase or an object with a method for getting
+                items (i.e. an object with a `__getitem__` method).
+                """))
         args = list(map(sympify, args))
         if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
             if len(args) == 1:
@@ -156,7 +165,16 @@ class Indexed(Expr):
             else:
                 return base[args]
 
-        return Expr.__new__(cls, base, *args, **kw_args)
+        obj = Expr.__new__(cls, base, *args, **kw_args)
+
+        try:
+            IndexedBase._set_assumptions(obj, base.assumptions0)
+        except AttributeError:
+            IndexedBase._set_assumptions(obj, {})
+        return obj
+
+    def _hashable_content(self):
+        return super(Indexed, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def name(self):
@@ -186,6 +204,10 @@ class Indexed(Expr):
             if Tuple(self.indices).has(wrt):
                 return S.NaN
             return S.Zero
+
+    @property
+    def assumptions0(self):
+        return {k: v for k, v in self._assumptions.items() if v is not None}
 
     @property
     def base(self):
@@ -265,15 +287,21 @@ class Indexed(Expr):
 
         if self.base.shape:
             return self.base.shape
-        try:
-            return Tuple(*[i.upper - i.lower + 1 for i in self.indices])
-        except AttributeError:
-            raise IndexException(filldedent("""
-                Range is not defined for all indices in: %s""" % self))
-        except TypeError:
-            raise IndexException(filldedent("""
-                Shape cannot be inferred from Idx with
-                undefined range: %s""" % self))
+        sizes = []
+        for i in self.indices:
+            upper = getattr(i, 'upper', None)
+            lower = getattr(i, 'lower', None)
+            if None in (upper, lower):
+                raise IndexException(filldedent("""
+                    Range is not defined for all indices in: %s""" % self))
+            try:
+                size = upper - lower + 1
+            except TypeError:
+                raise IndexException(filldedent("""
+                    Shape cannot be inferred from Idx with
+                    undefined range: %s""" % self))
+            sizes.append(size)
+        return Tuple(*sizes)
 
     @property
     def ranges(self):
@@ -297,9 +325,12 @@ class Indexed(Expr):
         """
         ranges = []
         for i in self.indices:
-            try:
-                ranges.append(Tuple(i.lower, i.upper))
-            except AttributeError:
+            sentinel = object()
+            upper = getattr(i, 'upper', sentinel)
+            lower = getattr(i, 'lower', sentinel)
+            if sentinel not in (upper, lower):
+                ranges.append(Tuple(lower, upper))
+            else:
                 ranges.append(None)
         return ranges
 
@@ -372,18 +403,43 @@ class IndexedBase(Expr, NotIterable):
     >>> B[i, j].shape
     (o, p)
 
+    Assumptions can be specified with keyword arguments the same way as for Symbol:
+
+    >>> A_real = IndexedBase('A', real=True)
+    >>> A_real.is_real
+    True
+    >>> A != A_real
+    True
+
+    Assumptions can also be inherited if a Symbol is used to initialize the IndexedBase:
+
+    >>> I = symbols('I', integer=True)
+    >>> C_inherit = IndexedBase(I)
+    >>> C_explicit = IndexedBase('I', integer=True)
+    >>> C_inherit == C_explicit
+    True
     """
     is_commutative = True
     is_symbol = True
     is_Atom = True
 
+    @staticmethod
+    def _set_assumptions(obj, assumptions):
+        """Set assumptions on obj, making sure to apply consistent values."""
+        tmp_asm_copy = assumptions.copy()
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        assumptions['commutative'] = is_commutative
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
+
     def __new__(cls, label, shape=None, **kw_args):
         from sympy import MatrixBase, NDimArray
 
+        assumptions, kw_args = _filter_assumptions(kw_args)
         if isinstance(label, string_types):
-            label = Symbol(label)
+            label = Symbol(label, **assumptions)
         elif isinstance(label, Symbol):
-            pass
+            assumptions = label._merge(assumptions)
         elif isinstance(label, (MatrixBase, NDimArray)):
             return label
         elif isinstance(label, Iterable):
@@ -407,11 +463,20 @@ class IndexedBase(Expr, NotIterable):
         obj._offset = offset
         obj._strides = strides
         obj._name = str(label)
+
+        IndexedBase._set_assumptions(obj, assumptions)
         return obj
 
     @property
     def name(self):
         return self._name
+
+    def _hashable_content(self):
+        return super(IndexedBase, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
+
+    @property
+    def assumptions0(self):
+        return {k: v for k, v in self._assumptions.items() if v is not None}
 
     def __getitem__(self, indices, **kw_args):
         if is_sequence(indices):
@@ -593,7 +658,8 @@ class Idx(Expr):
                 raise ValueError(filldedent("""
                     Idx range tuple must have length 2, but got %s""" % len(range)))
             for bound in range:
-                if bound.is_integer is False:
+                if (bound.is_integer is False and bound is not S.Infinity
+                        and bound is not S.NegativeInfinity):
                     raise TypeError("Idx object requires integer bounds.")
             args = label, Tuple(*range)
         elif isinstance(range, Expr):

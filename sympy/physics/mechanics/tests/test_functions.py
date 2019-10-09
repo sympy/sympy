@@ -5,7 +5,7 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      inertia, inertia_of_point_mass,
                                      kinetic_energy, linear_momentum,
                                      outer, potential_energy, msubs,
-                                     find_dynamicsymbols)
+                                     find_dynamicsymbols, Lagrangian)
 
 from sympy.physics.mechanics.functions import gravity, center_of_mass
 from sympy.physics.vector.vector import Vector
@@ -26,6 +26,7 @@ def test_inertia():
     assert inertia(N, ixx, iyy, izz) == (ixx * (N.x | N.x) + iyy *
             (N.y | N.y) + izz * (N.z | N.z))
     assert inertia(N, 0, 0, 0) == 0 * (N.x | N.x)
+    raises(TypeError, lambda: inertia(0, 0, 0, 0))
     assert inertia(N, ixx, iyy, izz, ixy, iyz, izx) == (ixx * (N.x | N.x) +
             ixy * (N.x | N.y) + izx * (N.x | N.z) + ixy * (N.y | N.x) + iyy *
         (N.y | N.y) + iyz * (N.y | N.z) + izx * (N.z | N.x) + iyz * (N.z |
@@ -70,6 +71,8 @@ def test_linear_momentum():
     P = Point('P')
     Pa = Particle('Pa', P, 1)
     Pa.point.set_vel(N, 10 * N.x)
+    raises(TypeError, lambda: linear_momentum(A, A, Pa))
+    raises(TypeError, lambda: linear_momentum(N, N, Pa))
     assert linear_momentum(N, A, Pa) == 10 * N.x + 500 * N.y
 
 
@@ -93,6 +96,9 @@ def test_angular_momentum_and_linear_momentum():
     A = RigidBody('A', Ac, a, M, (I * outer(N.z, N.z), Ac))
     expected = 2 * m * omega * l * N.y + M * l * omega * N.y
     assert linear_momentum(N, A, Pa) == expected
+    raises(TypeError, lambda: angular_momentum(N, N, A, Pa))
+    raises(TypeError, lambda: angular_momentum(O, O, A, Pa))
+    raises(TypeError, lambda: angular_momentum(O, N, O, Pa))
     expected = (I + M * l**2 + 4 * m * l**2) * omega * N.z
     assert angular_momentum(O, N, A, Pa) == expected
 
@@ -112,6 +118,8 @@ def test_kinetic_energy():
     Pa = Particle('Pa', P, m)
     I = outer(N.z, N.z)
     A = RigidBody('A', Ac, a, M, (I, Ac))
+    raises(TypeError, lambda: kinetic_energy(Pa, Pa, A))
+    raises(TypeError, lambda: kinetic_energy(N, N, A))
     assert 0 == (kinetic_energy(N, Pa, A) - (M*l1**2*omega**2/2
             + 2*l1**2*m*omega**2 + omega**2/2)).expand()
 
@@ -134,6 +142,26 @@ def test_potential_energy():
     Pa.potential_energy = m * g * h
     A.potential_energy = M * g * H
     assert potential_energy(A, Pa) == m * g * h + M * g * H
+
+
+def test_Lagrangian():
+    M, m, g, h = symbols('M m g h')
+    N = ReferenceFrame('N')
+    O = Point('O')
+    O.set_vel(N, 0 * N.x)
+    P = O.locatenew('P', 1 * N.x)
+    P.set_vel(N, 10 * N.x)
+    Pa = Particle('Pa', P, 1)
+    Ac = O.locatenew('Ac', 2 * N.y)
+    Ac.set_vel(N, 5 * N.y)
+    a = ReferenceFrame('a')
+    a.set_ang_vel(N, 10 * N.z)
+    I = outer(N.z, N.z)
+    A = RigidBody('A', Ac, a, 20, (I, Ac))
+    Pa.potential_energy = m * g * h
+    A.potential_energy = M * g * h
+    raises(TypeError, lambda: Lagrangian(A, A, Pa))
+    raises(TypeError, lambda: Lagrangian(N, N, Pa))
 
 
 def test_msubs():
@@ -206,7 +234,7 @@ def test_gravity():
 def test_center_of_mass():
     a = ReferenceFrame('a')
     m = symbols('m', real=True)
-    p1 = Particle('p1', Point('p1_pt'), S(1))
+    p1 = Particle('p1', Point('p1_pt'), S.One)
     p2 = Particle('p2', Point('p2_pt'), S(2))
     p3 = Particle('p3', Point('p3_pt'), S(3))
     p4 = Particle('p4', Point('p4_pt'), m)

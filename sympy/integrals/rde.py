@@ -30,8 +30,10 @@ from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
 
+from sympy import sqrt, re, im
+
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    splitfactor, NonElementaryIntegralException, DecrementLevel)
+    splitfactor, NonElementaryIntegralException, DecrementLevel, recognize_log_derivative)
 
 # TODO: Add messages to NonElementaryIntegralException errors
 
@@ -713,7 +715,7 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
 
             else:
                 raise NotImplementedError("Other Poly (P)RDE cancellation "
-                    "cases are not yet implemented (%s)." % case)
+                    "cases are not yet implemented (%s)." % DE.case)
 
         if parametric:
             raise NotImplementedError("Remaining cases for Poly PRDE not yet "

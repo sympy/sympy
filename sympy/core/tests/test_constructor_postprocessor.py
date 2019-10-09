@@ -1,5 +1,6 @@
 from sympy import Symbol, Mul, symbols, Basic
 
+from sympy.utilities.pytest import XFAIL
 
 class SymbolInMulOnce(Symbol):
     # Test class for a symbol that can only appear once in a `Mul` expression.
@@ -36,7 +37,6 @@ class SubclassSymbolRemovesOtherSymbols(SymbolRemovesOtherSymbols):
 
 
 def test_constructor_postprocessors1():
-    a = symbols("a")
     x = SymbolInMulOnce("x")
     y = SymbolInMulOnce("y")
     assert isinstance(3*x, Mul)
@@ -50,13 +50,9 @@ def test_constructor_postprocessors1():
     w = SymbolRemovesOtherSymbols("w")
     assert x*w == w
     assert (3*w).args == (3, w)
-    assert 3*a*w**2 == 3*w**2
-    assert 3*a*x**3*w**2 == 3*w**2
     assert set((w + x).args) == set((x, w))
 
-
 def test_constructor_postprocessors2():
-    a = symbols("a")
     x = SubclassSymbolInMulOnce("x")
     y = SubclassSymbolInMulOnce("y")
     assert isinstance(3*x, Mul)
@@ -70,6 +66,20 @@ def test_constructor_postprocessors2():
     w = SubclassSymbolRemovesOtherSymbols("w")
     assert x*w == w
     assert (3*w).args == (3, w)
+    assert set((w + x).args) == set((x, w))
+
+
+@XFAIL
+def test_subexpression_postprocessors():
+    # The postprocessors used to work with subexpressions, but the
+    # functionality was removed. See #15948.
+    a = symbols("a")
+    x = SymbolInMulOnce("x")
+    w = SymbolRemovesOtherSymbols("w")
     assert 3*a*w**2 == 3*w**2
     assert 3*a*x**3*w**2 == 3*w**2
-    assert set((w + x).args) == set((x, w))
+
+    x = SubclassSymbolInMulOnce("x")
+    w = SubclassSymbolRemovesOtherSymbols("w")
+    assert 3*a*w**2 == 3*w**2
+    assert 3*a*x**3*w**2 == 3*w**2

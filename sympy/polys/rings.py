@@ -694,8 +694,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             for k in p1.keys():
                 if not almosteq(p1[k], p2[k], tolerance):
                     return False
-            else:
-                return True
+            return True
         elif len(p1) > 1:
             return False
         else:
@@ -1193,7 +1192,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return self.square()
         elif n == 3:
             return self*self.square()
-        elif len(self) <= 5: # TODO: use an actuall density measure
+        elif len(self) <= 5: # TODO: use an actual density measure
             return self._pow_multinomial(n)
         else:
             return self._pow_generic(n)

@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import Tuple, Add, Mul, Matrix, log, expand, Rational
+from sympy import Tuple, Add, Mul, Matrix, log, expand, S
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
@@ -238,7 +238,7 @@ def entropy(density):
     >>> from sympy import S, log
     >>> up = JzKet(S(1)/2,S(1)/2)
     >>> down = JzKet(S(1)/2,-S(1)/2)
-    >>> d = Density((up,0.5),(down,0.5))
+    >>> d = Density((up,S(1)/2),(down,S(1)/2))
     >>> entropy(d)
     log(2)/2
 
@@ -318,5 +318,5 @@ def fidelity(state1, state2):
         raise ValueError("The dimensions of both args should be equal and the "
                          "matrix obtained should be a square matrix")
 
-    sqrt_state1 = state1**Rational(1, 2)
-    return Tr((sqrt_state1 * state2 * sqrt_state1)**Rational(1, 2)).doit()
+    sqrt_state1 = state1**S.Half
+    return Tr((sqrt_state1 * state2 * sqrt_state1)**S.Half).doit()

@@ -8,7 +8,7 @@ import os
 import contextlib
 import warnings
 
-from sympy.core.compatibility import get_function_name
+from sympy.core.compatibility import get_function_name, string_types
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 try:
@@ -84,7 +84,7 @@ if not USE_PYTEST:
             except expectedException:
                 return
             raise Failed("DID NOT RAISE")
-        elif isinstance(code, str):
+        elif isinstance(code, string_types):
             raise TypeError(
                 '\'raises(xxx, "code")\' has been phased out; '
                 'change \'raises(xxx, "expression")\' '
@@ -198,16 +198,8 @@ if not USE_PYTEST:
 
 else:
     XFAIL = py.test.mark.xfail
+    SKIP = py.test.mark.skip
     slow = py.test.mark.slow
-
-    def SKIP(reason):
-        def skipping(func):
-            @functools.wraps(func)
-            def inner(*args, **kwargs):
-                skip(reason)
-            return inner
-
-        return skipping
 
 
 @contextlib.contextmanager

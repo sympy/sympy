@@ -1,5 +1,6 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols, IndexedBase, atan
+    Function, log, sqrt, Symbol, Subs, pi, symbols, IndexedBase, atan, \
+    LambertW, Rational
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
@@ -32,7 +33,7 @@ def test_exp2():
 
 def test_issue_5223():
     assert series(1, x) == 1
-    assert next(S(0).lseries(x)) == 0
+    assert next(S.Zero.lseries(x)) == 0
     assert cos(x).series() == cos(x).series(x)
     raises(ValueError, lambda: cos(x + y).series())
     raises(ValueError, lambda: x.series(dir=""))
@@ -59,7 +60,7 @@ def test_issue_5223():
     assert (1 + x + O(x**2)).getn() == 2
     assert (1 + x).getn() is None
 
-    assert ((1/sin(x))**oo).series() == oo
+    assert ((1/sin(x))**oo).series() is oo
     logx = Symbol('logx')
     assert ((sin(x))**y).nseries(x, n=1, logx=logx) == \
         exp(y*logx) + O(x*exp(y*logx), x)
@@ -167,13 +168,13 @@ def test_issue_4583():
 
 
 def test_issue_6318():
-    eq = (1/x)**(S(2)/3)
+    eq = (1/x)**Rational(2, 3)
     assert (eq + 1).as_leading_term(x) == eq
 
 
 def test_x_is_base_detection():
-    eq = (x**2)**(S(2)/3)
-    assert eq.series() == x**(S(4)/3)
+    eq = (x**2)**Rational(2, 3)
+    assert eq.series() == x**Rational(4, 3)
 
 
 def test_sin_power():
@@ -203,9 +204,9 @@ def test_issue_10761():
 
 
 def test_issue_14885():
-    assert series(x**(-S(3)/2)*exp(x), x, 0) == (x**(-S(3)/2) + 1/sqrt(x) +
-        sqrt(x)/2 + x**(S(3)/2)/6 + x**(S(5)/2)/24 + x**(S(7)/2)/120 +
-        x**(S(9)/2)/720 + x**(S(11)/2)/5040 + O(x**6))
+    assert series(x**Rational(-3, 2)*exp(x), x, 0) == (x**Rational(-3, 2) + 1/sqrt(x) +
+        sqrt(x)/2 + x**Rational(3, 2)/6 + x**Rational(5, 2)/24 + x**Rational(7, 2)/120 +
+        x**Rational(9, 2)/720 + x**Rational(11, 2)/5040 + O(x**6))
 
 
 def test_issue_15539():
@@ -213,3 +214,9 @@ def test_issue_15539():
         + O(x**(-6), (x, -oo)))
     assert series(atan(x), x, oo) == (-1/(5*x**5) + 1/(3*x**3) - 1/x + pi/2
         + O(x**(-6), (x, oo)))
+
+
+def test_issue_7259():
+    assert series(LambertW(x), x) == x - x**2 + 3*x**3/2 - 8*x**4/3 + 125*x**5/24 + O(x**6)
+    assert series(LambertW(x**2), x, n=8) == x**2 - x**4 + 3*x**6/2 + O(x**8)
+    assert series(LambertW(sin(x)), x, n=4) == x - x**2 + 4*x**3/3 + O(x**4)

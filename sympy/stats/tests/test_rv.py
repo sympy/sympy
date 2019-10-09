@@ -1,15 +1,15 @@
-from __future__ import unicode_literals
-from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-        DiracDelta)
-from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, variance, covariance,
-        skewness, density, given, independent, dependent, where, pspace,
-        random_symbols, sample)
-from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
-        RandomSymbol, PSpace)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy import (S, Symbol, symbols, Interval, FallingFactorial,
+                   Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
+                   DiracDelta, log, pi, Rational)
 from sympy.core.compatibility import range
-from sympy.abc import x
+from sympy.core.numbers import comp
+from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
+                         density, given, independent, dependent, where, pspace, factorial_moment,
+                         random_symbols, sample, Geometric, Binomial, Poisson, Hypergeometric)
+from sympy.stats.frv_types import BernoulliDistribution
+from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
+                            RandomSymbol, PSpace)
+from sympy.utilities.pytest import raises
 
 
 def test_where():
@@ -47,6 +47,7 @@ def test_random_symbols():
 
 def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
+    x = Symbol('x')
 
     raises(ValueError, lambda: pspace(5 + 3))
     raises(ValueError, lambda: pspace(x < 1))
@@ -108,6 +109,15 @@ def test_E():
     assert E(5) == 5
 
 
+def test_H():
+    X = Normal('X', 0, 1)
+    D = Die('D', sides = 4)
+    G = Geometric('G', 0.5)
+    assert H(X, X > 0) == -log(2)/2 + S.Half + log(pi)/2
+    assert H(D, D > 2) == log(2)
+    assert comp(H(G).evalf().round(2), 1.39)
+
+
 def test_Sample():
     X = Die('X', 6)
     Y = Normal('Y', 0, 1)
@@ -142,6 +152,24 @@ def test_given():
     assert X == A == B
 
 
+def test_factorial_moment():
+    X = Poisson('X', 2)
+    Y = Binomial('Y', 2, S.Half)
+    Z = Hypergeometric('Z', 4, 2, 2)
+    assert factorial_moment(X, 2) == 4
+    assert factorial_moment(Y, 2) == S.Half
+    assert factorial_moment(Z, 2) == Rational(1, 3)
+
+    x, y, z, l = symbols('x y z l')
+    Y = Binomial('Y', 2, y)
+    Z = Hypergeometric('Z', 10, 2, 3)
+    assert factorial_moment(Y, l) == y**2*FallingFactorial(
+        2, l) + 2*y*(1 - y)*FallingFactorial(1, l) + (1 - y)**2*\
+            FallingFactorial(0, l)
+    assert factorial_moment(Z, l) == 7*FallingFactorial(0, l)/\
+        15 + 7*FallingFactorial(1, l)/15 + FallingFactorial(2, l)/15
+
+
 def test_dependence():
     X, Y = Die('X'), Die('Y')
     assert independent(X, 2*Y)
@@ -155,8 +183,6 @@ def test_dependence():
     XX, YY = given(Tuple(X, Y), Eq(X + Y, 3))
     assert dependent(XX, YY)
 
-
-@XFAIL
 def test_dependent_finite():
     X, Y = Die('X'), Die('Y')
     # Dependence testing requires symbolic conditions which currently break
@@ -169,7 +195,8 @@ def test_dependent_finite():
 
 def test_normality():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
-    x, z = symbols('x, z', real=True, finite=True)
+    x = Symbol('x', real=True, finite=True)
+    z = Symbol('z', real=True, finite=True)
     dens = density(X - Y, Eq(X + Y, z))
 
     assert integrate(dens(x), (x, -oo, oo)) == 1
@@ -227,3 +254,13 @@ def test_issue_8129():
     assert P(X >= X) == 1
     assert P(X > X) == 0
     assert P(X > X+1) == 0
+
+def test_issue_12237():
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 1)
+    U = P(X > 0, X)
+    V = P(Y < 0, X)
+    W = P(X + Y > 0, X)
+    assert W == P(X + Y > 0, X)
+    assert U == BernoulliDistribution(S.Half, S.Zero, S.One)
+    assert V == S.Half

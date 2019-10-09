@@ -42,7 +42,7 @@ Moved modules:
     * `reduce()`
     * `StringIO()`
     * `cStringIO()` (same as `StingIO()` in Python 3)
-    * Python 2 `__builtins__`, access with Python 3 name, `builtins`
+    * Python 2 `__builtin__`, access with Python 3 name, `builtins`
 
 Iterator/list changes:
     * `xrange` renamed as `range` in Python 3, import `range` for Python 2/3
@@ -90,9 +90,10 @@ if PY3:
     from io import StringIO
     cStringIO = StringIO
 
-    exec_=getattr(builtins, "exec")
+    exec_ = getattr(builtins, "exec")
 
-    range=range
+    range = range
+    round = round
 
     from collections.abc import (Mapping, Callable, MutableMapping,
         MutableSet, Iterable, Hashable)
@@ -141,7 +142,14 @@ else:
         elif _locs_ is None:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
-    range=xrange
+
+    range = xrange
+    _round = round
+    def round(x, *args):
+        try:
+            return x.__round__(*args)
+        except (AttributeError, TypeError):
+            return _round(x, *args)
 
     from collections import (Mapping, Callable, MutableMapping,
         MutableSet, Iterable, Hashable)
@@ -238,16 +246,17 @@ def with_metaclass(meta, *bases):
 
 class NotIterable:
     """
-    Use this as mixin when creating a class which is not supposed to return
-    true when iterable() is called on its instances. I.e. avoid infinite loop
-    when calling e.g. list() on the instance
+    Use this as mixin when creating a class which is not supposed to
+    return true when iterable() is called on its instances because
+    calling list() on the instance, for example, would result in
+    an infinite loop.
     """
     pass
 
 def iterable(i, exclude=(string_types, dict, NotIterable)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
-    True also indicates that the iterator is finite, i.e. you e.g.
+    True also indicates that the iterator is finite, e.g. you can
     call list(...) on the instance.
 
     When SymPy is working with iterables, it is almost always assuming
@@ -354,37 +363,66 @@ except ImportError:
     maketrans = str.maketrans
 
 
-def as_int(n):
+def as_int(n, strict=True):
     """
     Convert the argument to a builtin integer.
 
-    The return value is guaranteed to be equal to the input. ValueError is
-    raised if the input has a non-integral value.
+    The return value is guaranteed to be equal to the input. ValueError
+    is raised if the input has a non-integral value. When ``strict`` is
+    False, non-integer input that compares equal to the integer value
+    will not raise an error.
+
 
     Examples
     ========
 
     >>> from sympy.core.compatibility import as_int
-    >>> from sympy import sqrt
-    >>> 3.0
-    3.0
-    >>> as_int(3.0) # convert to int and test for equality
+    >>> from sympy import sqrt, S
+
+    The function is primarily concerned with sanitizing input for
+    functions that need to work with builtin integers, so anything that
+    is unambiguously an integer should be returned as an int:
+
+    >>> as_int(S(3))
     3
-    >>> int(sqrt(10))
-    3
-    >>> as_int(sqrt(10))
+
+    Floats, being of limited precision, are not assumed to be exact and
+    will raise an error unless the ``strict`` flag is False. This
+    precision issue becomes apparent for large floating point numbers:
+
+    >>> big = 1e23
+    >>> type(big) is float
+    True
+    >>> big == int(big)
+    True
+    >>> as_int(big)
     Traceback (most recent call last):
     ...
     ValueError: ... is not an integer
+    >>> as_int(big, strict=False)
+    99999999999999991611392
 
+    Input that might be a complex representation of an integer value is
+    also rejected by default:
+
+    >>> one = sqrt(3 + 2*sqrt(2)) - sqrt(2)
+    >>> int(one) == 1
+    True
+    >>> as_int(one)
+    Traceback (most recent call last):
+    ...
+    ValueError: ... is not an integer
     """
+    from sympy.core.numbers import Integer
     try:
+        if strict and not isinstance(n, SYMPY_INTS + (Integer,)):
+            raise TypeError
         result = int(n)
         if result != n:
             raise TypeError
+        return result
     except TypeError:
         raise ValueError('%s is not an integer' % (n,))
-    return result
 
 
 def default_sort_key(item, order=None):
@@ -873,7 +911,6 @@ def lru_cache(maxsize=100, typed=False):
                         # empty the oldest link and make it the new root
                         root = nonlocal_root[0] = oldroot[NEXT]
                         oldkey = root[KEY]
-                        oldvalue = root[RESULT]
                         root[KEY] = root[RESULT] = None
                         # now update the cache dictionary for the new links
                         del cache[oldkey]
@@ -916,3 +953,8 @@ try:
 except ImportError:  # Python 2.7
     def filterfalse(pred, itr):
         return filter(lambda x: not pred(x), itr)
+
+try:
+    from time import clock
+except ImportError: # Python 3.8+
+    from time import perf_counter as clock

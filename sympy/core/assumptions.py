@@ -165,27 +165,46 @@ _assume_rules = FactRules([
     'integer        ->  rational',
     'rational       ->  real',
     'rational       ->  algebraic',
-    'algebraic      ->  complex',
-    'real           ->  complex',
+    'algebraic      ->  complex & finite',
+    'transcendental ==  complex & !algebraic & finite',
     'real           ->  hermitian',
-    'imaginary      ->  complex',
+    'imaginary      ->  complex & finite',
     'imaginary      ->  antihermitian',
+    'extended_real  ->  commutative',
     'complex        ->  commutative',
+    'complex        ->  infinite | finite',
 
     'odd            ==  integer & !even',
     'even           ==  integer & !odd',
 
-    'real           ==  negative | zero | positive',
-    'transcendental ==  complex & !algebraic',
+    'real           ->  complex',
+    'extended_real  ->  real | infinite',
+    'real           ==  extended_real & finite',
 
+    'extended_real        ==  extended_negative | zero | extended_positive',
+    'extended_negative    ==  extended_nonpositive & extended_nonzero',
+    'extended_positive    ==  extended_nonnegative & extended_nonzero',
+
+    'extended_nonpositive ==  extended_real & !extended_positive',
+    'extended_nonnegative ==  extended_real & !extended_negative',
+
+    'real           ==  negative | zero | positive',
     'negative       ==  nonpositive & nonzero',
     'positive       ==  nonnegative & nonzero',
-    'zero           ==  nonnegative & nonpositive',
 
     'nonpositive    ==  real & !positive',
     'nonnegative    ==  real & !negative',
 
+    'positive       ==  extended_positive & finite',
+    'negative       ==  extended_negative & finite',
+    'nonpositive    ==  extended_nonpositive & finite',
+    'nonnegative    ==  extended_nonnegative & finite',
+    'nonzero        ==  extended_nonzero & finite',
+
     'zero           ->  even & finite',
+    'zero           ==  extended_nonnegative & extended_nonpositive',
+    'zero           ==  nonnegative & nonpositive',
+    'nonzero        ->  real',
 
     'prime          ->  integer & positive',
     'composite      ->  integer & positive & !prime',
@@ -193,11 +212,11 @@ _assume_rules = FactRules([
 
     'irrational     ==  real & !rational',
 
-    'imaginary      ->  !real',
+    'imaginary      ->  !extended_real',
 
     'infinite       ->  !finite',
-    'noninteger     ==  real & !integer',
-    'nonzero        ==  real & !zero',
+    'noninteger     ==  extended_real & !integer',
+    'extended_nonzero == extended_real & !zero',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
@@ -210,9 +229,8 @@ class StdFactKB(FactKB):
 
     This is the only kind of FactKB that Basic objects should use.
     """
-    rules = _assume_rules
-
     def __init__(self, facts=None):
+        super(StdFactKB, self).__init__(_assume_rules)
         # save a copy of the facts dict
         if not facts:
             self._generator = {}
@@ -327,10 +345,9 @@ class ManagedProperties(BasicMeta):
 
         defs = {}
         for base in reversed(cls.__bases__):
-            try:
-                defs.update(base._explicit_class_assumptions)
-            except AttributeError:
-                pass
+            assumptions = getattr(base, '_explicit_class_assumptions', None)
+            if assumptions is not None:
+                defs.update(assumptions)
         defs.update(local_defs)
 
         cls._explicit_class_assumptions = defs
@@ -338,10 +355,9 @@ class ManagedProperties(BasicMeta):
 
         cls._prop_handler = {}
         for k in _assume_defined:
-            try:
-                cls._prop_handler[k] = getattr(cls, '_eval_is_%s' % k)
-            except AttributeError:
-                pass
+            eval_is_meth = getattr(cls, '_eval_is_%s' % k, None)
+            if eval_is_meth is not None:
+                cls._prop_handler[k] = eval_is_meth
 
         # Put definite results directly into the class dict, for speed
         for k, v in cls.default_assumptions.items():
@@ -350,10 +366,11 @@ class ManagedProperties(BasicMeta):
         # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
         derived_from_bases = set()
         for base in cls.__bases__:
-            try:
-                derived_from_bases |= set(base.default_assumptions)
-            except AttributeError:
-                continue  # not an assumption-aware class
+            default_assumptions = getattr(base, 'default_assumptions', None)
+            # is an assumption-aware class
+            if default_assumptions is not None:
+                derived_from_bases.update(default_assumptions)
+
         for fact in derived_from_bases - set(cls.default_assumptions):
             pname = as_property(fact)
             if pname not in cls.__dict__:

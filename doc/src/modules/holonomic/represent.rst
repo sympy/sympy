@@ -1,7 +1,7 @@
 Representation of holonomic functions in SymPy
 ==============================================
 
-.. module:: sympy.holonomic.holonomic
+.. currentmodule:: sympy.holonomic.holonomic
 
 Class :class:`DifferentialOperator` is used to represent the annihilator
 but we create differential operators easily using the function

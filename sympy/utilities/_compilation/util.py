@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function)
 
 from collections import namedtuple
-from contextlib import contextmanager
-from distutils.errors import CompileError
 from hashlib import sha256
-import glob
-import io
 import os
 import shutil
 import sys
@@ -122,7 +117,7 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         raise FileNotFoundError("Source: `{}` does not exist".format(src))
 
     # We accept both (re)naming destination file _or_
-    # passing a (possible non-existant) destination directory
+    # passing a (possible non-existent) destination directory
     if dest_is_dir:
         if not dst[-1] == '/':
             dst = dst+'/'

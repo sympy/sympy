@@ -4,7 +4,7 @@ from sympy.core import S, sympify, diff
 from sympy.core.decorators import deprecated
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys.polyerrors import PolynomialError
@@ -202,16 +202,16 @@ class DiracDelta(Function):
                 Complex part: %s  found in %s .''' % (
                 repr(im(arg)), repr(arg))))
         c, nc = arg.args_cnc()
-        if c and c[0] == -1:
+        if c and c[0] is S.NegativeOne:
             # keep this fast and simple instead of using
             # could_extract_minus_sign
-            if k % 2 == 1:
+            if k.is_odd:
                 return -cls(-arg, k)
-            elif k % 2 == 0:
+            elif k.is_even:
                 return cls(-arg, k) if k else cls(-arg)
 
     @deprecated(useinstead="expand(diracdelta=True, wrt=x)", issue=12859, deprecated_since_version="1.1")
-    def simplify(self, x):
+    def simplify(self, x, **kwargs):
         return self.expand(diracdelta=True, wrt=x)
 
     def _eval_expand_diracdelta(self, **hints):
@@ -451,10 +451,12 @@ class Heaviside(Function):
             raise ArgumentIndexError(self, argindex)
 
     def __new__(cls, arg, H0=None, **options):
+        if isinstance(H0, Heaviside) and len(H0.args) == 1:
+            H0 = None
+
         if H0 is None:
             return super(cls, cls).__new__(cls, arg, **options)
-        else:
-            return super(cls, cls).__new__(cls, arg, H0, **options)
+        return super(cls, cls).__new__(cls, arg, H0, **options)
 
     @classmethod
     def eval(cls, arg, H0=None):
@@ -504,9 +506,9 @@ class Heaviside(Function):
         """
         H0 = sympify(H0)
         arg = sympify(arg)
-        if arg.is_negative:
+        if arg.is_extended_negative:
             return S.Zero
-        elif arg.is_positive:
+        elif arg.is_extended_positive:
             return S.One
         elif arg.is_zero:
             return H0
@@ -551,19 +553,19 @@ class Heaviside(Function):
         Examples
         ========
 
-        >>> from sympy import Heaviside, Symbol, sign
+        >>> from sympy import Heaviside, Symbol, sign, S
         >>> x = Symbol('x', real=True)
 
-        >>> Heaviside(x).rewrite(sign)
+        >>> Heaviside(x, H0=S.Half).rewrite(sign)
         sign(x)/2 + 1/2
 
         >>> Heaviside(x, 0).rewrite(sign)
-        Heaviside(x, 0)
+        Piecewise((sign(x)/2 + 1/2, Ne(x, 0)), (0, True))
 
-        >>> Heaviside(x - 2).rewrite(sign)
+        >>> Heaviside(x - 2, H0=S.Half).rewrite(sign)
         sign(x - 2)/2 + 1/2
 
-        >>> Heaviside(x**2 - 2*x + 1).rewrite(sign)
+        >>> Heaviside(x**2 - 2*x + 1, H0=S.Half).rewrite(sign)
         sign(x**2 - 2*x + 1)/2 + 1/2
 
         >>> y = Symbol('y')
@@ -580,9 +582,14 @@ class Heaviside(Function):
         sign
 
         """
-        if arg.is_real:
-            if H0 is None or H0 == S.Half:
-                return (sign(arg)+1)/2
+        if arg.is_extended_real:
+            pw1 = Piecewise(
+                ((sign(arg) + 1)/2, Ne(arg, 0)),
+                (Heaviside(0, H0=H0), True))
+            pw2 = Piecewise(
+                ((sign(arg) + 1)/2, Eq(Heaviside(0, H0=H0), S(1)/2)),
+                (pw1, True))
+            return pw2
 
     def _eval_rewrite_as_SingularityFunction(self, args, **kwargs):
         """

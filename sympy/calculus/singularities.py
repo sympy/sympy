@@ -15,10 +15,10 @@ the following function types in the given ``Interval``:
 
 """
 
-from sympy.core.sympify import sympify
-from sympy.solvers.solveset import solveset
-from sympy.simplify import simplify
 from sympy import S, Symbol
+from sympy.core.sympify import sympify
+from sympy.simplify import simplify
+from sympy.solvers.solveset import solveset
 
 
 def singularities(expression, symbol):

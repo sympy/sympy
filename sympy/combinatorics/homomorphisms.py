@@ -116,7 +116,7 @@ class GroupHomomorphism(object):
         from sympy import S
         G = self.domain
         G_order = G.order()
-        if G_order == S.Infinity:
+        if G_order is S.Infinity:
             raise NotImplementedError(
                 "Kernel computation is not implemented for infinite groups")
         gens = []
@@ -199,7 +199,7 @@ class GroupHomomorphism(object):
         from sympy import S
         im = self.image().order()
         oth = self.codomain.order()
-        if im == S.Infinity and oth == S.Infinity:
+        if im is S.Infinity and oth is S.Infinity:
             return None
         else:
             return im == oth
@@ -332,13 +332,13 @@ def _check_homomorphism(domain, codomain, images):
             # both indices
             while i < len(r):
                 power = r_arr[j][1]
-                if isinstance(domain, PermutationGroup):
+                if isinstance(domain, PermutationGroup) and r[i] in gens:
                     s = domain.generators[gens.index(r[i])]
                 else:
                     s = r[i]
                 if s in images:
                     w = w*images[s]**power
-                else:
+                elif s**-1 in images:
                     w = w*images[s**-1]**power
                 i += abs(power)
                 j += 1
@@ -353,7 +353,7 @@ def _check_homomorphism(domain, codomain, images):
                 # truth of equality otherwise
                 success = codomain.make_confluent()
                 s = codomain.equals(_image(r), identity)
-                if s in None and not success:
+                if s is None and not success:
                     raise RuntimeError("Can't determine if the images "
                         "define a homomorphism. Try increasing "
                         "the maximum number of rewriting rules "
@@ -495,11 +495,11 @@ def group_isomorphism(G, H, isomorphism=True):
     g_order = G.order()
     h_order = H.order()
 
-    if g_order == S.Infinity:
+    if g_order is S.Infinity:
         raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
 
     if isinstance(H, FpGroup):
-        if h_order == S.Infinity:
+        if h_order is S.Infinity:
             raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
         _H, h_isomorphism = H._to_perm_group()
 

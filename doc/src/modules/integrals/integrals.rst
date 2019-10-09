@@ -1,5 +1,6 @@
-Symbolic Integrals
-==================
+=========
+Integrals
+=========
 
 .. module:: sympy.integrals
 

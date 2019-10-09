@@ -284,21 +284,21 @@ def test_issue_4499():
     B = Function('B')
     G = Function('G')
     t = Tuple(*
-        (a, a + S(1)/2, 2*a, b, 2*a - b + 1, (sqrt(z)/2)**(-2*a + 1)*B(2*a -
+        (a, a + S.Half, 2*a, b, 2*a - b + 1, (sqrt(z)/2)**(-2*a + 1)*B(2*a -
         b, sqrt(z))*B(b - 1, sqrt(z))*G(b)*G(2*a - b + 1),
         sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b,
         sqrt(z))*G(b)*G(2*a - b + 1), sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b - 1,
         sqrt(z))*B(2*a - b + 1, sqrt(z))*G(b)*G(2*a - b + 1),
         (sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b + 1,
-        sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S(1)/2, z/2, -b + 1, -2*a + b,
+        sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S.Half, z/2, -b + 1, -2*a + b,
         -2*a))
     c = cse(t)
     ans = (
         [(x0, 2*a), (x1, -b), (x2, x0 + x1), (x3, x2 + 1), (x4, sqrt(z)), (x5,
         B(b - 1, x4)), (x6, -x0), (x7, (x4/2)**(x6 + 1)*G(b)*G(x3)), (x8,
         x7*B(x2, x4)), (x9, B(b, x4)), (x10, x7*B(x3, x4))],
-        [(a, a + S(1)/2, x0, b, x3, x5*x8, x4*x8*x9, x10*x4*x5, x10*x9,
-        1, 0, S(1)/2, z/2, x1 + 1, b + x6, x6)])
+        [(a, a + S.Half, x0, b, x3, x5*x8, x4*x8*x9, x10*x4*x5, x10*x9,
+        1, 0, S.Half, z/2, x1 + 1, b + x6, x6)])
     assert ans == c
 
 
@@ -314,7 +314,6 @@ def test_cse_Indexed():
     len_y = 5
     y = IndexedBase('y', shape=(len_y,))
     x = IndexedBase('x', shape=(len_y,))
-    Dy = IndexedBase('Dy', shape=(len_y-1,))
     i = Idx('i', len_y-1)
 
     expr1 = (y[i+1]-y[i])/(x[i+1]-x[i])

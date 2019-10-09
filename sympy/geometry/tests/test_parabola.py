@@ -1,20 +1,24 @@
 from sympy import Rational, oo, sqrt, S
 from sympy import Line, Point, Point2D, Parabola, Segment2D, Ray2D
-from sympy import Circle, Ellipse
+from sympy import Circle, Ellipse, symbols, sign
 from sympy.utilities.pytest import raises
 
 
 def test_parabola_geom():
+    a, b = symbols('a b')
     p1 = Point(0, 0)
     p2 = Point(3, 7)
     p3 = Point(0, 4)
     p4 = Point(6, 0)
+    p5 = Point(a, a)
     d1 = Line(Point(4, 0), Point(4, 9))
     d2 = Line(Point(7, 6), Point(3, 6))
     d3 = Line(Point(4, 0), slope=oo)
     d4 = Line(Point(7, 6), slope=0)
+    d5 = Line(Point(b, a), slope=oo)
+    d6 = Line(Point(a, b), slope=0)
 
-    half = Rational(1, 2)
+    half = S.Half
 
     pa1 = Parabola(None, d2)
     pa2 = Parabola(directrix=d1)
@@ -25,6 +29,8 @@ def test_parabola_geom():
     pa7 = Parabola(p2, d1)
     pa8 = Parabola(p4, d1)
     pa9 = Parabola(p4, d3)
+    pa10 = Parabola(p5, d5)
+    pa11 = Parabola(p5, d6)
 
     raises(ValueError, lambda:
            Parabola(Point(7, 8, 9), Line(Point(6, 7), Point(7, 7))))
@@ -62,6 +68,9 @@ def test_parabola_geom():
     assert pa8.p_parameter == pa9.p_parameter
     assert pa8.vertex == pa9.vertex
     assert pa8.equation() == pa9.equation()
+    assert pa10.focal_length == pa11.focal_length == sqrt((a - b) ** 2) / 2 # if a, b real == abs(a - b)/2
+    assert pa11.vertex == Point(*pa10.vertex[::-1]) == Point(a,
+                            a - sqrt((a - b)**2)*sign(a - b)/2) # change axis x->y, y->x on pa10
 
 
 def test_parabola_intersection():
@@ -103,4 +112,4 @@ def test_parabola_intersection():
     assert parabola1.intersection(Ellipse(p2, 2, 1)) == [Point2D(0, -1), Point2D(0, -1)]
     assert parabola1.intersection(Ellipse(Point(0, 19), 5, 7)) == []
     assert parabola1.intersection(Ellipse((0, 3), 12, 4)) == \
-           [Point2D(0, -1), Point2D(0, -1), Point2D(-4*sqrt(17)/3, S(59)/9), Point2D(4*sqrt(17)/3, S(59)/9)]
+           [Point2D(0, -1), Point2D(0, -1), Point2D(-4*sqrt(17)/3, Rational(59, 9)), Point2D(4*sqrt(17)/3, Rational(59, 9))]

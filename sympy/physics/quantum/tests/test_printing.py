@@ -505,7 +505,7 @@ u("""\
 
 def test_operator():
     a = Operator('A')
-    b = Operator('B', Symbol('t'), S(1)/2)
+    b = Operator('B', Symbol('t'), S.Half)
     inv = a.inv()
     f = Function('f')
     x = symbols('x')

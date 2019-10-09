@@ -7,27 +7,75 @@ from sympy.core.numbers import Integer, Rational, Float
 from sympy.core.compatibility import default_sort_key
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.printing.repr import srepr
 
 __all__ = ['dotprint']
 
-default_styles = ((Basic, {'color': 'blue', 'shape': 'ellipse'}),
-          (Expr,  {'color': 'black'}))
+default_styles = (
+    (Basic, {'color': 'blue', 'shape': 'ellipse'}),
+    (Expr,  {'color': 'black'})
+)
 
-
-sort_classes = (Add, Mul)
 slotClasses = (Symbol, Integer, Rational, Float)
-# XXX: Why not just use srepr()?
-def purestr(x):
-    """ A string that follows obj = type(obj)(*obj.args) exactly """
+def purestr(x, with_args=False):
+    """A string that follows ```obj = type(obj)(*obj.args)``` exactly.
+
+    Parameters
+    ==========
+
+    with_args : boolean, optional
+        If ``True``, there will be a second argument for the return
+        value, which is a tuple containing ``purestr`` applied to each
+        of the subnodes.
+
+        If ``False``, there will not be a second argument for the
+        return.
+
+        Default is ``False``
+
+    Examples
+    ========
+
+    >>> from sympy import Integer, Float, Symbol, MatrixSymbol
+    >>> from sympy.printing.dot import purestr
+
+    Applying ``purestr`` for basic symbolic object:
+    >>> code = purestr(Symbol('x'))
+    >>> code
+    "Symbol('x')"
+    >>> eval(code) == Symbol('x')
+    True
+
+    For basic numeric object:
+    >>> purestr(Float(2))
+    "Float('2.0', precision=53)"
+
+    For matrix symbol:
+    >>> code = purestr(MatrixSymbol('x', 2, 2))
+    >>> code
+    "MatrixSymbol(Symbol('x'), Integer(2), Integer(2))"
+    >>> eval(code) == MatrixSymbol('x', 2, 2)
+    True
+
+    With ``with_args=True``:
+    >>> purestr(Float(2), with_args=True)
+    ("Float('2.0', precision=53)", ())
+    >>> purestr(MatrixSymbol('x', 2, 2), with_args=True)
+    ("MatrixSymbol(Symbol('x'), Integer(2), Integer(2))",
+     ("Symbol('x')", 'Integer(2)', 'Integer(2)'))
+    """
+    sargs = ()
     if not isinstance(x, Basic):
-        return str(x)
-    if type(x) in slotClasses:
-        args = [getattr(x, slot) for slot in x.__slots__]
-    elif type(x) in sort_classes:
-        args = sorted(x.args, key=default_sort_key)
+        rv = str(x)
+    elif not x.args:
+        rv = srepr(x)
     else:
         args = x.args
-    return "%s(%s)"%(type(x).__name__, ', '.join(map(purestr, args)))
+        sargs = tuple(map(purestr, args))
+        rv = "%s(%s)"%(type(x).__name__, ', '.join(sargs))
+    if with_args:
+        rv = rv, sargs
+    return rv
 
 
 def styleof(expr, styles=default_styles):
@@ -54,6 +102,7 @@ def styleof(expr, styles=default_styles):
             style.update(sty)
     return style
 
+
 def attrprint(d, delimiter=', '):
     """ Print a dictionary of attributes
 
@@ -66,6 +115,7 @@ def attrprint(d, delimiter=', '):
     """
     return delimiter.join('"%s"="%s"'%item for item in sorted(d.items()))
 
+
 def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
     """ String defining a node
 
@@ -75,7 +125,7 @@ def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
     >>> from sympy.printing.dot import dotnode
     >>> from sympy.abc import x
     >>> print(dotnode(x))
-    "Symbol(x)_()" ["color"="black", "label"="x", "shape"="ellipse"];
+    "Symbol('x')_()" ["color"="black", "label"="x", "shape"="ellipse"];
     """
     style = styleof(expr, styles)
 
@@ -102,20 +152,19 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True)
     >>> from sympy.abc import x
     >>> for e in dotedges(x+2):
     ...     print(e)
-    "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
-    "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
+    "Add(Integer(2), Symbol('x'))_()" -> "Integer(2)_(0,)";
+    "Add(Integer(2), Symbol('x'))_()" -> "Symbol('x')_(1,)";
     """
+    from sympy.utilities.misc import func_name
     if atom(expr):
         return []
     else:
-        # TODO: This is quadratic in complexity (purestr(expr) already
-        # contains [purestr(arg) for arg in expr.args]).
-        expr_str = purestr(expr)
-        arg_strs = [purestr(arg) for arg in expr.args]
+        expr_str, arg_strs = purestr(expr, with_args=True)
         if repeat:
             expr_str += '_%s' % str(pos)
-            arg_strs = [arg_str + '_%s' % str(pos + (i,)) for i, arg_str in enumerate(arg_strs)]
-        return ['"%s" -> "%s";' % (expr_str, arg_str) for arg_str in arg_strs]
+            arg_strs = ['%s_%s' % (a, str(pos + (i,)))
+                for i, a in enumerate(arg_strs)]
+        return ['"%s" -> "%s";' % (expr_str, a) for a in arg_strs]
 
 template = \
 """digraph{
@@ -138,38 +187,66 @@ template = \
 
 _graphstyle = {'rankdir': 'TD', 'ordering': 'out'}
 
-def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
-    Basic), maxdepth=None, repeat=True, labelfunc=str, **kwargs):
-    """
-    DOT description of a SymPy expression tree
+def dotprint(expr,
+    styles=default_styles, atom=lambda x: not isinstance(x, Basic),
+    maxdepth=None, repeat=True, labelfunc=str, **kwargs):
+    """DOT description of a SymPy expression tree
 
-    Options are
+    Parameters
+    ==========
 
-    ``styles``: Styles for different classes.  The default is::
+    styles : list of lists composed of (Class, mapping), optional
+        Styles for different classes.
 
-        [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
-        (Expr, {'color': 'black'})]``
+        The default is
 
-    ``atom``: Function used to determine if an arg is an atom.  The default is
-          ``lambda x: not isinstance(x, Basic)``.  Another good choice is
-          ``lambda x: not x.args``.
+        .. code-block:: python
 
-    ``maxdepth``: The maximum depth.  The default is None, meaning no limit.
+            (
+                (Basic, {'color': 'blue', 'shape': 'ellipse'}),
+                (Expr,  {'color': 'black'})
+            )
 
-    ``repeat``: Whether to different nodes for separate common subexpressions.
-          The default is True.  For example, for ``x + x*y`` with
-          ``repeat=True``, it will have two nodes for ``x`` and with
-          ``repeat=False``, it will have one (warning: even if it appears
-          twice in the same object, like Pow(x, x), it will still only appear
-          only once.  Hence, with repeat=False, the number of arrows out of an
-          object might not equal the number of args it has).
+    atom : function, optional
+        Function used to determine if an arg is an atom.
 
-    ``labelfunc``: How to label leaf nodes.  The default is ``str``.  Another
-          good option is ``srepr``. For example with ``str``, the leaf nodes
-          of ``x + 1`` are labeled, ``x`` and ``1``.  With ``srepr``, they
-          are labeled ``Symbol('x')`` and ``Integer(1)``.
+        A good choice is ``lambda x: not x.args``.
 
-    Additional keyword arguments are included as styles for the graph.
+        The default is ``lambda x: not isinstance(x, Basic)``.
+
+    maxdepth : integer, optional
+        The maximum depth.
+
+        The default is ``None``, meaning no limit.
+
+    repeat : boolean, optional
+        Whether to use different nodes for common subexpressions.
+
+        The default is ``True``.
+
+        For example, for ``x + x*y`` with ``repeat=True``, it will have
+        two nodes for ``x``; with ``repeat=False``, it will have one
+        node.
+
+        .. warning::
+            Even if a node appears twice in the same object like ``x`` in
+            ``Pow(x, x)``, it will still only appear once.
+            Hence, with ``repeat=False``, the number of arrows out of an
+            object might not equal the number of args it has.
+
+    labelfunc : function, optional
+        A function to create a label for a given leaf node.
+
+        The default is ``str``.
+
+        Another good option is ``srepr``.
+
+        For example with ``str``, the leaf nodes of ``x + 1`` are labeled,
+        ``x`` and ``1``.  With ``srepr``, they are labeled ``Symbol('x')``
+        and ``Integer(1)``.
+
+    **kwargs : optional
+        Additional keyword arguments are included as styles for the graph.
 
     Examples
     ========
@@ -187,16 +264,16 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
     # Nodes #
     #########
     <BLANKLINE>
-    "Add(Integer(2), Symbol(x))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    "Add(Integer(2), Symbol('x'))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
     "Integer(2)_(0,)" ["color"="black", "label"="2", "shape"="ellipse"];
-    "Symbol(x)_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
+    "Symbol('x')_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
     <BLANKLINE>
     #########
     # Edges #
     #########
     <BLANKLINE>
-    "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
-    "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
+    "Add(Integer(2), Symbol('x'))_()" -> "Integer(2)_(0,)";
+    "Add(Integer(2), Symbol('x'))_()" -> "Symbol('x')_(1,)";
     }
 
     """

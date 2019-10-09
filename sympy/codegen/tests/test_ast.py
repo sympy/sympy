@@ -1,6 +1,7 @@
 import math
 from sympy import (
-    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Symbol, Tuple, Lt, nan, oo
+    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin,
+    symbols, Symbol, Tuple, Lt, nan, oo
 )
 from sympy.core.relational import StrictLessThan
 from sympy.utilities.pytest import raises, XFAIL
@@ -493,8 +494,9 @@ def test_FloatType():
     assert isinstance(f64.cast_check(3), (Float, float))
 
     assert f64.cast_nocheck(oo) == float('inf')
-    assert f64.cast_nocheck(-oo) == -float('inf')
-    assert f64.cast_nocheck(-oo) == -float('inf')
+    assert f64.cast_nocheck(-oo) == float('-inf')
+    assert f64.cast_nocheck(float(oo)) == float('inf')
+    assert f64.cast_nocheck(float(-oo)) == float('-inf')
     assert math.isnan(f64.cast_nocheck(nan))
 
     assert f32 != f64
@@ -617,12 +619,22 @@ def test_FunctionCall():
     fc = FunctionCall('power', (x, 3))
     assert fc.function_args[0] == x
     assert fc.function_args[1] == 3
+    assert len(fc.function_args) == 2
     assert isinstance(fc.function_args[1], Integer)
     assert fc == FunctionCall('power', (x, 3))
     assert fc != FunctionCall('power', (3, x))
     assert fc != FunctionCall('Power', (x, 3))
     assert fc.func(*fc.args) == fc
 
+    fc2 = FunctionCall('fma', [2, 3, 4])
+    assert len(fc2.function_args) == 3
+    assert fc2.function_args[0] == 2
+    assert fc2.function_args[1] == 3
+    assert fc2.function_args[2] == 4
+    assert str(fc2) in ( # not sure if QuotedString is a better default...
+        'FunctionCall(fma, function_args=(2, 3, 4))',
+        'FunctionCall("fma", function_args=(2, 3, 4))',
+    )
 
 def test_ast_replace():
     x = Variable('x', real)

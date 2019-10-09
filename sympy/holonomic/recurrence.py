@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from sympy import symbols, Symbol, S
 from sympy.printing import sstr
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, string_types
 from sympy.core.sympify import sympify
 
 
@@ -68,7 +68,7 @@ class RecurrenceOperatorAlgebra(object):
         if generator is None:
             self.gen_symbol = symbols('Sn', commutative=False)
         else:
-            if isinstance(generator, str):
+            if isinstance(generator, string_types):
                 self.gen_symbol = symbols(generator, commutative=False)
             elif isinstance(generator, Symbol):
                 self.gen_symbol = generator
@@ -188,11 +188,11 @@ class RecurrenceOperator(object):
 
             if isinstance(b, list):
                 for i in b:
-                    j = base.to_sympy(i).subs(base.gens[0], base.gens[0] + S(1))
+                    j = base.to_sympy(i).subs(base.gens[0], base.gens[0] + S.One)
                     sol.append(base.from_sympy(j))
 
             else:
-                j = b.subs(base.gens[0], base.gens[0] + S(1))
+                j = b.subs(base.gens[0], base.gens[0] + S.One)
                 sol.append(base.from_sympy(j))
 
             return sol

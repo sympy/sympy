@@ -325,6 +325,31 @@ but we can also apply functions to our matrix entries using ``applyfunc()``. Her
     [       ]
     [0  0  2]
 
+If you want to extract a common factor from a matrix you can do so by
+applying ``gcd`` to the data of the matrix:
+
+    >>> from sympy.abc import x, y
+    >>> from sympy import gcd
+    >>> m = Matrix([[x, y], [1, x*y]]).inv(); m
+    [  -x*y          y     ]
+    [----------  ----------]
+    [   2           2      ]
+    [- x *y + y  - x *y + y]
+    [                      ]
+    [    1          -x     ]
+    [----------  ----------]
+    [   2           2      ]
+    [- x *y + y  - x *y + y]
+    >>> gcd(tuple(_))
+        1
+    ----------
+       2
+    - x *y + y
+    >>> m/_
+    [-x*y  y ]
+    [        ]
+    [ 1    -x]
+
 One more useful matrix-wide entry application function is the substitution function. Let's declare a matrix with symbolic entries then substitute a value. Remember we can substitute anything - even another symbol!:
 
     >>> from sympy import Symbol

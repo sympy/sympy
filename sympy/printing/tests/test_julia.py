@@ -1,5 +1,5 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
-                        Tuple, Symbol)
+                        Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
 from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
 from sympy.utilities.pytest import raises
@@ -10,7 +10,6 @@ from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
                                             besselk, hankel1, hankel2, airyai,
                                             airybi, airyaiprime, airybiprime)
 from sympy.utilities.pytest import XFAIL
-from sympy.core.compatibility import range
 
 from sympy import julia_code
 
@@ -29,6 +28,15 @@ def test_Rational():
     assert julia_code(Rational(-3, -7)) == "3/7"
     assert julia_code(x + Rational(3, 7)) == "x + 3/7"
     assert julia_code(Rational(3, 7)*x) == "3*x/7"
+
+
+def test_Relational():
+    assert julia_code(Eq(x, y)) == "x == y"
+    assert julia_code(Ne(x, y)) == "x != y"
+    assert julia_code(Le(x, y)) == "x <= y"
+    assert julia_code(Lt(x, y)) == "x < y"
+    assert julia_code(Gt(x, y)) == "x > y"
+    assert julia_code(Ge(x, y)) == "x >= y"
 
 
 def test_Function():
@@ -188,7 +196,7 @@ def test_MatrixSymbol():
     assert julia_code(A*(B + 3*Identity(n))) == "A*(3*eye(n) + B)"
     assert julia_code(A**(x**2)) == "A^(x.^2)"
     assert julia_code(A**3) == "A^3"
-    assert julia_code(A**(S.Half)) == "A^(1/2)"
+    assert julia_code(A**S.Half) == "A^(1/2)"
 
 
 def test_special_matrices():

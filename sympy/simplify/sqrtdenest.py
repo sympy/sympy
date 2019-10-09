@@ -156,7 +156,8 @@ def _sqrt_match(p):
         res = (p, S.Zero, S.Zero)
     elif p.is_Add:
         pargs = sorted(p.args, key=default_sort_key)
-        if all((x**2).is_Rational for x in pargs):
+        sqargs = [x**2 for x in pargs]
+        if all(sq.is_Rational and sq.is_positive for sq in sqargs):
             r, b, a = split_surds(p)
             res = a, b, r
             return list(res)
@@ -395,7 +396,7 @@ def _sqrt_symbolic_denest(a, b, r):
 
     >>> a, b, r = 16 - 2*sqrt(29), 2, -10*sqrt(29) + 55
     >>> _sqrt_symbolic_denest(a, b, r)
-    sqrt(-2*sqrt(29) + 11) + sqrt(5)
+    sqrt(11 - 2*sqrt(29)) + sqrt(5)
 
     If the expression is numeric, it will be simplified:
 

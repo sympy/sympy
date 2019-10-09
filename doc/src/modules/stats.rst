@@ -1,5 +1,6 @@
+=====
 Stats
-===========
+=====
 
 .. automodule:: sympy.stats
 
@@ -7,7 +8,7 @@ Random Variable Types
 ^^^^^^^^^^^^^^^^^^^^^
 
 Finite Types
----------------
+------------
 .. autofunction:: DiscreteUniform
 .. autofunction:: Die
 .. autofunction:: Bernoulli
@@ -18,7 +19,7 @@ Finite Types
 .. autofunction:: Rademacher
 
 Discrete Types
------------------
+--------------
 .. autofunction:: Geometric
 .. autofunction:: Poisson
 .. autofunction:: Logarithmic
@@ -27,7 +28,7 @@ Discrete Types
 .. autofunction:: Zeta
 
 Continuous Types
--------------------
+----------------
 
 .. autofunction:: Arcsin
 .. autofunction:: Benini
@@ -45,6 +46,8 @@ Continuous Types
 .. autofunction:: Frechet
 .. autofunction:: Gamma
 .. autofunction:: GammaInverse
+.. autofunction:: Gompertz
+.. autofunction:: Gumbel
 .. autofunction:: Kumaraswamy
 .. autofunction:: Laplace
 .. autofunction:: Logistic
@@ -57,6 +60,8 @@ Continuous Types
 .. autofunction:: RaisedCosine
 .. autofunction:: Rayleigh
 .. autofunction:: StudentT
+.. autofunction:: ShiftedGompertz
+.. autofunction:: Trapezoidal
 .. autofunction:: Triangular
 .. autofunction:: Uniform
 .. autofunction:: UniformSum
@@ -64,6 +69,22 @@ Continuous Types
 .. autofunction:: Weibull
 .. autofunction:: WignerSemicircle
 .. autofunction:: ContinuousRV
+
+Joint Types
+-----------
+.. autofunction:: JointRV
+.. autofunction:: GeneralizedMultivariateLogGamma
+.. autofunction:: GeneralizedMultivariateLogGammaOmega
+.. autofunction:: Multinomial
+.. autofunction:: MultivariateBeta
+.. autofunction:: MultivariateEwens
+.. autofunction:: MultivariateT
+.. autofunction:: NegativeMultinomial
+.. autofunction:: NormalGamma
+
+Stochastic Processes
+--------------------
+.. autofunction:: DiscreteMarkovChain
 
 Interface
 ^^^^^^^^^
@@ -73,6 +94,7 @@ Interface
 .. autofunction:: E
 .. autoclass:: Expectation
 .. autofunction:: density
+.. autofunction:: entropy
 .. autofunction:: given
 .. autofunction:: where
 .. autofunction:: variance

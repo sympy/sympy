@@ -17,7 +17,7 @@ from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import cos
+from sympy.functions.elementary.trigonometric import cos, sec
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
 
@@ -65,15 +65,14 @@ class jacobi(OrthogonalPolynomial):
     ========
 
     >>> from sympy import jacobi, S, conjugate, diff
-    >>> from sympy.abc import n,a,b,x
+    >>> from sympy.abc import a, b, n, x
 
     >>> jacobi(0, a, b, x)
     1
     >>> jacobi(1, a, b, x)
     a/2 - b/2 + x*(a/2 + b/2 + 1)
-    >>> jacobi(2, a, b, x)   # doctest:+SKIP
-    (a**2/8 - a*b/4 - a/8 + b**2/8 - b/8 + x**2*(a**2/8 + a*b/4 + 7*a/8 +
-    b**2/8 + 7*b/8 + 3/2) + x*(a**2/4 + 3*a/4 - b**2/4 - 3*b/4) - 1/2)
+    >>> jacobi(2, a, b, x)
+    a**2/8 - a*b/4 - a/8 + b**2/8 - b/8 + x**2*(a**2/8 + a*b/4 + 7*a/8 + b**2/8 + 7*b/8 + 3/2) + x*(a**2/4 + 3*a/4 - b**2/4 - 3*b/4) - 1/2
 
     >>> jacobi(n, a, b, x)
     jacobi(n, a, b, x)
@@ -134,9 +133,9 @@ class jacobi(OrthogonalPolynomial):
         # Simplify to other polynomials
         # P^{a, a}_n(x)
         if a == b:
-            if a == -S.Half:
+            if a == Rational(-1, 2):
                 return RisingFactorial(S.Half, n) / factorial(n) * chebyshevt(n, x)
-            elif a == S.Zero:
+            elif a.is_zero:
                 return legendre(n, x)
             elif a == S.Half:
                 return RisingFactorial(3*S.Half, n) / factorial(n + 1) * chebyshevu(n, x)
@@ -145,9 +144,6 @@ class jacobi(OrthogonalPolynomial):
         elif b == -a:
             # P^{a, -a}_n(x)
             return gamma(n + a + 1) / gamma(n + 1) * (1 + x)**(a/2) / (1 - x)**(a/2) * assoc_legendre(n, -a, x)
-        elif a == -b:
-            # P^{-b, b}_n(x)
-            return gamma(n - b + 1) / gamma(n + 1) * (1 - x)**(b/2) / (1 + x)**(b/2) * assoc_legendre(n, b, x)
 
         if not n.is_Number:
             # Symbolic result P^{a,b}_n(x)
@@ -155,12 +151,12 @@ class jacobi(OrthogonalPolynomial):
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * jacobi(n, b, a, -x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return (2**(-n) * gamma(a + n + 1) / (gamma(a + 1) * factorial(n)) *
                         hyper([-b - n, -n], [a + 1], -1))
             if x == S.One:
                 return RisingFactorial(a + 1, n) / factorial(n)
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 if n.is_positive:
                     # Make sure a+b+2*n \notin Z
                     if (a + b + 2*n).is_integer:
@@ -306,7 +302,7 @@ class gegenbauer(OrthogonalPolynomial):
     (-1)**n*gegenbauer(n, a, x)
 
     >>> gegenbauer(n, a, 0)
-    2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(-n/2 + 1/2)*gamma(n + 1))
+    2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(1/2 - n/2)*gamma(n + 1))
     >>> gegenbauer(n, a, 1)
     gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
 
@@ -361,22 +357,20 @@ class gegenbauer(OrthogonalPolynomial):
                 if (re(a) > S.Half) == True:
                     return S.ComplexInfinity
                 else:
-                    # No sec function available yet
-                    #return (cos(S.Pi*(a+n)) * sec(S.Pi*a) * gamma(2*a+n) /
-                    #            (gamma(2*a) * gamma(n+1)))
-                    return None
+                    return (cos(S.Pi*(a+n)) * sec(S.Pi*a) * gamma(2*a+n) /
+                                (gamma(2*a) * gamma(n+1)))
 
             # Symbolic result C^a_n(x)
             # C^a_n(-x)  --->  (-1)**n * C^a_n(x)
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * gegenbauer(n, a, -x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return (2**n * sqrt(S.Pi) * gamma(a + S.Half*n) /
                         (gamma((1 - n)/2) * gamma(n + 1) * gamma(a)) )
             if x == S.One:
                 return gamma(2*a + n) / (gamma(2*a) * gamma(n + 1))
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 if n.is_positive:
                     return RisingFactorial(a, n) * S.Infinity
         else:
@@ -497,11 +491,11 @@ class chebyshevt(OrthogonalPolynomial):
             if n.could_extract_minus_sign():
                 return chebyshevt(-n, x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return cos(S.Half * S.Pi * n)
             if x == S.One:
                 return S.One
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
@@ -604,15 +598,16 @@ class chebyshevu(OrthogonalPolynomial):
             # U_{-n}(x)  --->  -U_{n-2}(x)
             if n.could_extract_minus_sign():
                 if n == S.NegativeOne:
+                    # n can not be -1 here
                     return S.Zero
-                else:
+                elif not (-n - 2).could_extract_minus_sign():
                     return -chebyshevu(-n - 2, x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return cos(S.Half * S.Pi * n)
             if x == S.One:
                 return S.One + n
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
@@ -787,14 +782,14 @@ class legendre(OrthogonalPolynomial):
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * legendre(n, -x)
             # L_{-n}(x)  --->  L_{n-1}(x)
-            if n.could_extract_minus_sign():
+            if n.could_extract_minus_sign() and not(-n - 1).could_extract_minus_sign():
                 return legendre(-n - S.One, x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return sqrt(S.Pi)/(gamma(S.Half - n/2)*gamma(S.One + n/2))
             elif x == S.One:
                 return S.One
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial;
@@ -809,7 +804,19 @@ class legendre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
         elif argindex == 2:
             # Diff wrt x
-            # Find better formula, this is unsuitable for x = 1
+            # Find better formula, this is unsuitable for x = +/-1
+            # http://www.autodiff.org/ad16/Oral/Buecker_Legendre.pdf says
+            # at x = 1:
+            #    n*(n + 1)/2            , m = 0
+            #    oo                     , m = 1
+            #    -(n-1)*n*(n+1)*(n+2)/4 , m = 2
+            #    0                      , m = 3, 4, ..., n
+            #
+            # at x = -1
+            #    (-1)**(n+1)*n*(n + 1)/2       , m = 0
+            #    (-1)**n*oo                    , m = 1
+            #    (-1)**n*(n-1)*n*(n+1)*(n+2)/4 , m = 2
+            #    0                             , m = 3, 4, ..., n
             n, x = self.args
             return n/(x**2 - 1)*(x*legendre(n, x) - legendre(n - 1, x))
         else:
@@ -847,7 +854,7 @@ class assoc_legendre(Function):
     >>> assoc_legendre(1,0, x)
     x
     >>> assoc_legendre(1,1, x)
-    -sqrt(-x**2 + 1)
+    -sqrt(1 - x**2)
     >>> assoc_legendre(n,m,x)
     assoc_legendre(n, m, x)
 
@@ -987,9 +994,9 @@ class hermite(OrthogonalPolynomial):
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * hermite(n, -x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return 2**n * sqrt(S.Pi) / gamma((S.One - n)/2)
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
@@ -1039,7 +1046,7 @@ class laguerre(OrthogonalPolynomial):
     >>> laguerre(0, x)
     1
     >>> laguerre(1, x)
-    -x + 1
+    1 - x
     >>> laguerre(2, x)
     x**2/2 - 2*x + 1
     >>> laguerre(3, x)
@@ -1080,24 +1087,24 @@ class laguerre(OrthogonalPolynomial):
 
     @classmethod
     def eval(cls, n, x):
+        if n.is_integer is False:
+            raise ValueError("Error: n should be an integer.")
         if not n.is_Number:
             # Symbolic result L_n(x)
             # L_{n}(-x)  --->  exp(-x) * L_{-n-1}(x)
             # L_{-n}(x)  --->  exp(x) * L_{n-1}(-x)
-            if n.could_extract_minus_sign():
-                return exp(x) * laguerre(n - 1, -x)
+            if n.could_extract_minus_sign() and not(-n - 1).could_extract_minus_sign():
+                return exp(x)*laguerre(-n - 1, -x)
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return S.One
-            elif x == S.NegativeInfinity:
+            elif x is S.NegativeInfinity:
                 return S.Infinity
-            elif x == S.Infinity:
+            elif x is S.Infinity:
                 return S.NegativeOne**n * S.Infinity
         else:
-            # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
-                raise ValueError(
-                    "The index n must be nonnegative integer (got %r)" % n)
+                return exp(x)*laguerre(-n - 1, -x)
             else:
                 return cls._eval_at_order(n, x)
 
@@ -1115,8 +1122,10 @@ class laguerre(OrthogonalPolynomial):
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
         from sympy import Sum
         # Make sure n \in N_0
-        if n.is_negative or n.is_integer is False:
-            raise ValueError("Error: n should be a non-negative integer.")
+        if n.is_negative:
+            return exp(x) * self._eval_rewrite_as_polynomial(-n - 1, -x, **kwargs)
+        if n.is_integer is False:
+            raise ValueError("Error: n should be an integer.")
         k = Dummy("k")
         kern = RisingFactorial(-n, k) / factorial(k)**2 * x**k
         return Sum(kern, (k, 0, n))
@@ -1185,7 +1194,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Laguerre_polynomial#Assoc_laguerre_polynomials
+    .. [1] https://en.wikipedia.org/wiki/Laguerre_polynomial#Generalized_Laguerre_polynomials
     .. [2] http://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
@@ -1194,16 +1203,16 @@ class assoc_laguerre(OrthogonalPolynomial):
     @classmethod
     def eval(cls, n, alpha, x):
         # L_{n}^{0}(x)  --->  L_{n}(x)
-        if alpha == S.Zero:
+        if alpha.is_zero:
             return laguerre(n, x)
 
         if not n.is_Number:
             # We can evaluate for some special values of x
-            if x == S.Zero:
+            if x.is_zero:
                 return binomial(n + alpha, alpha)
-            elif x == S.Infinity and n > S.Zero:
+            elif x is S.Infinity and n > 0:
                 return S.NegativeOne**n * S.Infinity
-            elif x == S.NegativeInfinity and n > S.Zero:
+            elif x is S.NegativeInfinity and n > 0:
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
@@ -1230,7 +1239,7 @@ class assoc_laguerre(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+    def _eval_rewrite_as_polynomial(self, n, alpha, x, **kwargs):
         from sympy import Sum
         # Make sure n \in N_0
         if n.is_negative or n.is_integer is False:

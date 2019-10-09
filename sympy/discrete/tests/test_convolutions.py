@@ -1,4 +1,4 @@
-from sympy import sqrt, pi, E, exp
+from sympy import sqrt, pi, E, exp, Rational
 from sympy.core import S, Symbol, symbols, I
 from sympy.core.compatibility import range
 from sympy.discrete.convolutions import (
@@ -9,7 +9,7 @@ from sympy.abc import x, y
 
 def test_convolution():
     # fft
-    a = [1, S(5)/3, sqrt(3), S(7)/5]
+    a = [1, Rational(5, 3), sqrt(3), Rational(7, 5)]
     b = [9, 5, 5, 4, 3, 2]
     c = [3, 5, 3, 7, 8]
     d = [1422, 6572, 3213, 5552]
@@ -52,7 +52,7 @@ def test_convolution():
 
 def test_cyclic_convolution():
     # fft
-    a = [1, S(5)/3, sqrt(3), S(7)/5]
+    a = [1, Rational(5, 3), sqrt(3), Rational(7, 5)]
     b = [9, 5, 5, 4, 3, 2]
 
     assert convolution([1, 2, 3], [4, 5, 6], cycle=0) == \
@@ -61,17 +61,17 @@ def test_cyclic_convolution():
 
     assert convolution([1, 2, 3], [4, 5, 6], cycle=3) == [31, 31, 28]
 
-    a = [S(1)/3, S(7)/3, S(5)/9, S(2)/7, S(5)/8]
-    b = [S(3)/5, S(4)/7, S(7)/8, S(8)/9]
+    a = [Rational(1, 3), Rational(7, 3), Rational(5, 9), Rational(2, 7), Rational(5, 8)]
+    b = [Rational(3, 5), Rational(4, 7), Rational(7, 8), Rational(8, 9)]
 
     assert convolution(a, b, cycle=0) == \
             convolution(a, b, cycle=len(a) + len(b) - 1)
 
-    assert convolution(a, b, cycle=4) == [S(87277)/26460, S(30521)/11340,
-                            S(11125)/4032, S(3653)/1080]
+    assert convolution(a, b, cycle=4) == [Rational(87277, 26460), Rational(30521, 11340),
+                            Rational(11125, 4032), Rational(3653, 1080)]
 
-    assert convolution(a, b, cycle=6) == [S(20177)/20160, S(676)/315, S(47)/24,
-                            S(3053)/1080, S(16397)/5292, S(2497)/2268]
+    assert convolution(a, b, cycle=6) == [Rational(20177, 20160), Rational(676, 315), Rational(47, 24),
+                            Rational(3053, 1080), Rational(16397, 5292), Rational(2497, 2268)]
 
     assert convolution(a, b, cycle=9) == \
                 convolution(a, b, cycle=0) + [S.Zero]
@@ -142,6 +142,8 @@ def test_cyclic_convolution():
              p*x + q*w + r*v + s*u,
              p*y + t*u]
 
+    raises(ValueError, lambda: convolution([1, 2, 3], [4, 5, 6], cycle=-1))
+
 
 def test_convolution_fft():
     assert all(convolution_fft([], x, dps=y) == [] for x in ([], [1]) for y in (None, 3))
@@ -150,14 +152,14 @@ def test_convolution_fft():
     assert convolution_fft([1, 3], [5, 6, 7]) == [5, 21, 25, 21]
 
     assert convolution_fft([1 + 2*I], [2 + 3*I]) == [-4 + 7*I]
-    assert convolution_fft([1 + 2*I, 3 + 4*I, 5 + S(3)/5*I], [S(2)/5 + S(4)/7*I]) == \
-            [-S(26)/35 + 48*I/35, -S(38)/35 + 116*I/35, S(58)/35 + 542*I/175]
+    assert convolution_fft([1 + 2*I, 3 + 4*I, 5 + Rational(3, 5)*I], [Rational(2, 5) + Rational(4, 7)*I]) == \
+            [Rational(-26, 35) + I*Rational(48, 35), Rational(-38, 35) + I*Rational(116, 35), Rational(58, 35) + I*Rational(542, 175)]
 
-    assert convolution_fft([S(3)/4, S(5)/6], [S(7)/8, S(1)/3, S(2)/5]) == \
-                                    [S(21)/32, S(47)/48, S(26)/45, S(1)/3]
+    assert convolution_fft([Rational(3, 4), Rational(5, 6)], [Rational(7, 8), Rational(1, 3), Rational(2, 5)]) == \
+                                    [Rational(21, 32), Rational(47, 48), Rational(26, 45), Rational(1, 3)]
 
-    assert convolution_fft([S(1)/9, S(2)/3, S(3)/5], [S(2)/5, S(3)/7, S(4)/9]) == \
-                                [S(2)/45, S(11)/35, S(8152)/14175, S(523)/945, S(4)/15]
+    assert convolution_fft([Rational(1, 9), Rational(2, 3), Rational(3, 5)], [Rational(2, 5), Rational(3, 7), Rational(4, 9)]) == \
+                                [Rational(2, 45), Rational(11, 35), Rational(8152, 14175), Rational(523, 945), Rational(4, 15)]
 
     assert convolution_fft([pi, E, sqrt(2)], [sqrt(3), 1/pi, 1/E]) == \
                     [sqrt(3)*pi, 1 + sqrt(3)*E, E/pi + pi*exp(-1) + sqrt(6),
@@ -205,28 +207,28 @@ def test_convolution_fwht():
     assert convolution_fwht([], [1]) == []
     assert convolution_fwht([1, 2, 3], [4, 5, 6]) == [32, 13, 18, 27]
 
-    assert convolution_fwht([S(5)/7, S(6)/8, S(7)/3], [2, 4, S(6)/7]) == \
-                                    [S(45)/7, S(61)/14, S(776)/147, S(419)/42]
+    assert convolution_fwht([Rational(5, 7), Rational(6, 8), Rational(7, 3)], [2, 4, Rational(6, 7)]) == \
+                                    [Rational(45, 7), Rational(61, 14), Rational(776, 147), Rational(419, 42)]
 
-    a = [1, S(5)/3, sqrt(3), S(7)/5, 4 + 5*I]
+    a = [1, Rational(5, 3), sqrt(3), Rational(7, 5), 4 + 5*I]
     b = [94, 51, 53, 45, 31, 27, 13]
-    c = [3 + 4*I, 5 + 7*I, 3, S(7)/6, 8]
+    c = [3 + 4*I, 5 + 7*I, 3, Rational(7, 6), 8]
 
     assert convolution_fwht(a, b) == [53*sqrt(3) + 366 + 155*I,
-                                    45*sqrt(3) + S(5848)/15 + 135*I,
-                                    94*sqrt(3) + S(1257)/5 + 65*I,
-                                    51*sqrt(3) + S(3974)/15,
+                                    45*sqrt(3) + Rational(5848, 15) + 135*I,
+                                    94*sqrt(3) + Rational(1257, 5) + 65*I,
+                                    51*sqrt(3) + Rational(3974, 15),
                                     13*sqrt(3) + 452 + 470*I,
-                                    S(4513)/15 + 255*I,
-                                    31*sqrt(3) + S(1314)/5 + 265*I,
-                                    27*sqrt(3) + S(3676)/15 + 225*I]
+                                    Rational(4513, 15) + 255*I,
+                                    31*sqrt(3) + Rational(1314, 5) + 265*I,
+                                    27*sqrt(3) + Rational(3676, 15) + 225*I]
 
-    assert convolution_fwht(b, c) == [1993/S(2) + 733*I, 6215/S(6) + 862*I,
-        1659/S(2) + 527*I, 1988/S(3) + 551*I, 1019 + 313*I, 3955/S(6) + 325*I,
-        1175/S(2) + 52*I, 3253/S(6) + 91*I]
+    assert convolution_fwht(b, c) == [Rational(1993, 2) + 733*I, Rational(6215, 6) + 862*I,
+        Rational(1659, 2) + 527*I, Rational(1988, 3) + 551*I, 1019 + 313*I, Rational(3955, 6) + 325*I,
+        Rational(1175, 2) + 52*I, Rational(3253, 6) + 91*I]
 
-    assert convolution_fwht(a[3:], c) == [-S(54)/5 + 293*I/5, -1 + 204*I/5,
-            133/S(15) + 35*I/6, 409/S(30) + 15*I, 56/S(5), 32 + 40*I, 0, 0]
+    assert convolution_fwht(a[3:], c) == [Rational(-54, 5) + I*Rational(293, 5), -1 + I*Rational(204, 5),
+            Rational(133, 15) + I*Rational(35, 6), Rational(409, 30) + 15*I, Rational(56, 5), 32 + 40*I, 0, 0]
 
     u, v, w, x, y, z = symbols('u v w x y z')
 
@@ -244,28 +246,28 @@ def test_convolution_fwht():
 
 def test_convolution_subset():
     assert convolution_subset([], []) == []
-    assert convolution_subset([], [S(1)/3]) == []
-    assert convolution_subset([6 + 3*I/7], [S(2)/3]) == [4 + 2*I/7]
+    assert convolution_subset([], [Rational(1, 3)]) == []
+    assert convolution_subset([6 + I*Rational(3, 7)], [Rational(2, 3)]) == [4 + I*Rational(2, 7)]
 
-    a = [1, S(5)/3, sqrt(3), 4 + 5*I]
+    a = [1, Rational(5, 3), sqrt(3), 4 + 5*I]
     b = [64, 71, 55, 47, 33, 29, 15]
-    c = [3 + 2*I/3, 5 + 7*I, 7, S(7)/5, 9]
+    c = [3 + I*Rational(2, 3), 5 + 7*I, 7, Rational(7, 5), 9]
 
-    assert convolution_subset(a, b) == [64, 533/S(3), 55 + 64*sqrt(3),
-                                        71*sqrt(3) + 1184/S(3) + 320*I, 33, 84,
+    assert convolution_subset(a, b) == [64, Rational(533, 3), 55 + 64*sqrt(3),
+                                        71*sqrt(3) + Rational(1184, 3) + 320*I, 33, 84,
                                         15 + 33*sqrt(3), 29*sqrt(3) + 157 + 165*I]
 
-    assert convolution_subset(b, c) == [192 + 128*I/3, 533 + 1486*I/3,
-                                        613 + 110*I/3, S(5013)/5 + 1249*I/3,
-                                        675 + 22*I, 891 + 751*I/3,
-                                        771 + 10*I, S(3736)/5 + 105*I]
+    assert convolution_subset(b, c) == [192 + I*Rational(128, 3), 533 + I*Rational(1486, 3),
+                                        613 + I*Rational(110, 3), Rational(5013, 5) + I*Rational(1249, 3),
+                                        675 + 22*I, 891 + I*Rational(751, 3),
+                                        771 + 10*I, Rational(3736, 5) + 105*I]
 
     assert convolution_subset(a, c) == convolution_subset(c, a)
     assert convolution_subset(a[:2], b) == \
-            [64, 533/S(3), 55, 416/S(3), 33, 84, 15, 25]
+            [64, Rational(533, 3), 55, Rational(416, 3), 33, 84, 15, 25]
 
     assert convolution_subset(a[:2], c) == \
-            [3 + 2*I/3, 10 + 73*I/9, 7, 196/S(15), 9, 15, 0, 0]
+            [3 + I*Rational(2, 3), 10 + I*Rational(73, 9), 7, Rational(196, 15), 9, 15, 0, 0]
 
     u, v, w, x, y, z = symbols('u v w x y z')
 
@@ -277,37 +279,37 @@ def test_convolution_subset():
                     convolution_subset([x, y, z], [u, v])
 
     raises(TypeError, lambda: convolution_subset(x, z))
-    raises(TypeError, lambda: convolution_subset(S(7)/3, u))
+    raises(TypeError, lambda: convolution_subset(Rational(7, 3), u))
 
 
 def test_covering_product():
     assert covering_product([], []) == []
-    assert covering_product([], [S(1)/3]) == []
-    assert covering_product([6 + 3*I/7], [S(2)/3]) == [4 + 2*I/7]
+    assert covering_product([], [Rational(1, 3)]) == []
+    assert covering_product([6 + I*Rational(3, 7)], [Rational(2, 3)]) == [4 + I*Rational(2, 7)]
 
-    a = [1, S(5)/8, sqrt(7), 4 + 9*I]
+    a = [1, Rational(5, 8), sqrt(7), 4 + 9*I]
     b = [66, 81, 95, 49, 37, 89, 17]
-    c = [3 + 2*I/3, 51 + 72*I, 7, S(7)/15, 91]
+    c = [3 + I*Rational(2, 3), 51 + 72*I, 7, Rational(7, 15), 91]
 
-    assert covering_product(a, b) == [66, S(1383)/8, 95 + 161*sqrt(7),
+    assert covering_product(a, b) == [66, Rational(1383, 8), 95 + 161*sqrt(7),
                                         130*sqrt(7) + 1303 + 2619*I, 37,
-                                        S(671)/4, 17 + 54*sqrt(7),
-                                        89*sqrt(7) + S(4661)/8 + 1287*I]
+                                        Rational(671, 4), 17 + 54*sqrt(7),
+                                        89*sqrt(7) + Rational(4661, 8) + 1287*I]
 
     assert covering_product(b, c) == [198 + 44*I, 7740 + 10638*I,
-                                        1412 + 190*I/3, S(42684)/5 + 31202*I/3,
-                                        9484 + 74*I/3, 22163 + 27394*I/3,
-                                        10621 + 34*I/3, S(90236)/15 + 1224*I]
+                                        1412 + I*Rational(190, 3), Rational(42684, 5) + I*Rational(31202, 3),
+                                        9484 + I*Rational(74, 3), 22163 + I*Rational(27394, 3),
+                                        10621 + I*Rational(34, 3), Rational(90236, 15) + 1224*I]
 
     assert covering_product(a, c) == covering_product(c, a)
     assert covering_product(b, c[:-1]) == [198 + 44*I, 7740 + 10638*I,
-                                         1412 + 190*I/3, S(42684)/5 + 31202*I/3,
-                                         111 + 74*I/3, 6693 + 27394*I/3,
-                                         429 + 34*I/3, S(23351)/15 + 1224*I]
+                                         1412 + I*Rational(190, 3), Rational(42684, 5) + I*Rational(31202, 3),
+                                         111 + I*Rational(74, 3), 6693 + I*Rational(27394, 3),
+                                         429 + I*Rational(34, 3), Rational(23351, 15) + 1224*I]
 
-    assert covering_product(a, c[:-1]) == [3 + 2*I/3,
-                            S(339)/4 + 1409*I/12, 7 + 10*sqrt(7) + 2*sqrt(7)*I/3,
-                            -403 + 772*sqrt(7)/15 + 72*sqrt(7)*I + 12658*I/15]
+    assert covering_product(a, c[:-1]) == [3 + I*Rational(2, 3),
+                            Rational(339, 4) + I*Rational(1409, 12), 7 + 10*sqrt(7) + 2*sqrt(7)*I/3,
+                            -403 + 772*sqrt(7)/15 + 72*sqrt(7)*I + I*Rational(12658, 15)]
 
     u, v, w, x, y, z = symbols('u v w x y z')
 
@@ -321,32 +323,32 @@ def test_covering_product():
                     covering_product([x, y, z], [u, v])
 
     raises(TypeError, lambda: covering_product(x, z))
-    raises(TypeError, lambda: covering_product(S(7)/3, u))
+    raises(TypeError, lambda: covering_product(Rational(7, 3), u))
 
 
 def test_intersecting_product():
     assert intersecting_product([], []) == []
-    assert intersecting_product([], [S(1)/3]) == []
-    assert intersecting_product([6 + 3*I/7], [S(2)/3]) == [4 + 2*I/7]
+    assert intersecting_product([], [Rational(1, 3)]) == []
+    assert intersecting_product([6 + I*Rational(3, 7)], [Rational(2, 3)]) == [4 + I*Rational(2, 7)]
 
-    a = [1, sqrt(5), S(3)/8 + 5*I, 4 + 7*I]
+    a = [1, sqrt(5), Rational(3, 8) + 5*I, 4 + 7*I]
     b = [67, 51, 65, 48, 36, 79, 27]
-    c = [3 + 2*I/5, 5 + 9*I, 7, S(7)/19, 13]
+    c = [3 + I*Rational(2, 5), 5 + 9*I, 7, Rational(7, 19), 13]
 
-    assert intersecting_product(a, b) == [195*sqrt(5) + 6979/S(8) + 1886*I,
-                                178*sqrt(5) + 520 + 910*I, 841/S(2) + 1344*I,
+    assert intersecting_product(a, b) == [195*sqrt(5) + Rational(6979, 8) + 1886*I,
+                                178*sqrt(5) + 520 + 910*I, Rational(841, 2) + 1344*I,
                                 192 + 336*I, 0, 0, 0, 0]
 
-    assert intersecting_product(b, c) == [128553/S(19) + 9521*I/5,
-                S(17820)/19 + 1602*I, S(19264)/19, S(336)/19, 1846, 0, 0, 0]
+    assert intersecting_product(b, c) == [Rational(128553, 19) + I*Rational(9521, 5),
+                Rational(17820, 19) + 1602*I, Rational(19264, 19), Rational(336, 19), 1846, 0, 0, 0]
 
     assert intersecting_product(a, c) == intersecting_product(c, a)
-    assert intersecting_product(b[1:], c[:-1]) == [64788/S(19) + 8622*I/5,
-                    12804/S(19) + 1152*I, 11508/S(19), 252/S(19), 0, 0, 0, 0]
+    assert intersecting_product(b[1:], c[:-1]) == [Rational(64788, 19) + I*Rational(8622, 5),
+                    Rational(12804, 19) + 1152*I, Rational(11508, 19), Rational(252, 19), 0, 0, 0, 0]
 
     assert intersecting_product(a, c[:-2]) == \
-                    [-99/S(5) + 10*sqrt(5) + 2*sqrt(5)*I/5 + 3021*I/40,
-                    -43 + 5*sqrt(5) + 9*sqrt(5)*I + 71*I, 245/S(8) + 84*I, 0]
+                    [Rational(-99, 5) + 10*sqrt(5) + 2*sqrt(5)*I/5 + I*Rational(3021, 40),
+                    -43 + 5*sqrt(5) + 9*sqrt(5)*I + 71*I, Rational(245, 8) + 84*I, 0]
 
     u, v, w, x, y, z = symbols('u v w x y z')
 
@@ -360,4 +362,4 @@ def test_intersecting_product():
                     intersecting_product([x, y, z], [u, v])
 
     raises(TypeError, lambda: intersecting_product(x, z))
-    raises(TypeError, lambda: intersecting_product(u, S(8)/3))
+    raises(TypeError, lambda: intersecting_product(u, Rational(8, 3)))

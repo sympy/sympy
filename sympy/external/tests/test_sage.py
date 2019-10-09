@@ -170,6 +170,7 @@ def test_functions():
     check_expression("atanh(x)", "x")
     check_expression("acoth(x)", "x")
     check_expression("exp(x)", "x")
+    check_expression("gamma(x)", "x")
     check_expression("log(x)", "x")
     check_expression("re(x)", "x")
     check_expression("im(x)", "x")
@@ -193,6 +194,7 @@ def test_functions():
     check_expression("loggamma(x)", "x")
     check_expression("Ynm(n,m,x,y)", "n, m, x, y")
     check_expression("hyper((n,m),(m,n),x)", "n, m, x")
+    check_expression("uppergamma(y, x)", "x, y")
 
 def test_issue_4023():
     sage.var("a x")
@@ -225,6 +227,8 @@ def test_undefined_function():
     x = sympy.symbols('x')
     sx = sage.var('x')
     is_trivially_equal(sf(sx), f(x)._sage_())
+    assert f(x) == sympy.sympify(sf(sx))
+    assert sf == f._sage_()
     #assert bool(f == sympy.sympify(sf))
 
 def test_abstract_function():

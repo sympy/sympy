@@ -4,7 +4,7 @@ from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises, XFAIL
 
 # import test:
-from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
+from sympy import IndexedBase, Idx, Indexed, S, sin, cos, exp, log, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
     GreaterThan, StrictLessThan, Range, Array, Subs, Function, KroneckerDelta, Derivative
 
 
@@ -41,13 +41,13 @@ def test_Idx_bounds():
     assert Idx(i, 5).lower == 0
     assert Idx(i, 5).upper == 4
     assert Idx(i, oo).lower == 0
-    assert Idx(i, oo).upper == oo
+    assert Idx(i, oo).upper is oo
     assert Idx(i, (a, b)).lower == a
     assert Idx(i, (a, b)).upper == b
     assert Idx(i, (1, 5)).lower == 1
     assert Idx(i, (1, 5)).upper == 5
-    assert Idx(i, (-oo, oo)).lower == -oo
-    assert Idx(i, (-oo, oo)).upper == oo
+    assert Idx(i, (-oo, oo)).lower is -oo
+    assert Idx(i, (-oo, oo)).upper is oo
 
 
 def test_Idx_fixed_bounds():
@@ -59,13 +59,13 @@ def test_Idx_fixed_bounds():
     assert Idx(x, 5).lower == 0
     assert Idx(x, 5).upper == 4
     assert Idx(x, oo).lower == 0
-    assert Idx(x, oo).upper == oo
+    assert Idx(x, oo).upper is oo
     assert Idx(x, (a, b)).lower == a
     assert Idx(x, (a, b)).upper == b
     assert Idx(x, (1, 5)).lower == 1
     assert Idx(x, (1, 5)).upper == 5
-    assert Idx(x, (-oo, oo)).lower == -oo
-    assert Idx(x, (-oo, oo)).upper == oo
+    assert Idx(x, (-oo, oo)).lower is -oo
+    assert Idx(x, (-oo, oo)).upper is oo
 
 
 def test_Idx_inequalities():
@@ -176,14 +176,15 @@ def test_IndexedBase_sugar():
     assert A1 == A2[Tuple(i, j)]
     assert all(a.is_Integer for a in A2[1, 0].args[1:])
 
+
 def test_IndexedBase_subs():
-    i, j, k = symbols('i j k', integer=True)
-    a, b, c = symbols('a b c')
+    i = symbols('i', integer=True)
+    a, b = symbols('a b')
     A = IndexedBase(a)
     B = IndexedBase(b)
-    C = IndexedBase(c)
     assert A[i] == B[i].subs(b, a)
-    assert isinstance(C[1].subs(C, {1: 2}), type(A[1]))
+    C = {1: 2}
+    assert C[1] == A[1].subs(A, C)
 
 
 def test_IndexedBase_shape():
@@ -201,6 +202,51 @@ def test_IndexedBase_shape():
     assert F.shape == Tuple(m)
     assert F[i].subs(i, j) == F[j]
     raises(IndexException, lambda: F[i, j])
+
+
+def test_IndexedBase_assumptions():
+    i = Symbol('i', integer=True)
+    a = Symbol('a')
+    A = IndexedBase(a, positive=True)
+    for c in (A, A[i]):
+        assert c.is_real
+        assert c.is_complex
+        assert not c.is_imaginary
+        assert c.is_nonnegative
+        assert c.is_nonzero
+        assert c.is_commutative
+        assert log(exp(c)) == c
+
+    assert A != IndexedBase(a)
+    assert A == IndexedBase(a, positive=True, real=True)
+    assert A[i] != Indexed(a, i)
+
+
+def test_IndexedBase_assumptions_inheritance():
+    I = Symbol('I', integer=True)
+    I_inherit = IndexedBase(I)
+    I_explicit = IndexedBase('I', integer=True)
+
+    assert I_inherit.is_integer
+    assert I_explicit.is_integer
+    assert I_inherit.label.is_integer
+    assert I_explicit.label.is_integer
+    assert I_inherit == I_explicit
+
+
+def test_issue_17652():
+    """Regression test issue #17652.
+
+    IndexedBase.label should not upcast subclasses of Symbol
+    """
+    class SubClass(Symbol):
+        pass
+
+    x = SubClass('X')
+    assert type(x) == SubClass
+    base = IndexedBase(x)
+    assert type(x) == SubClass
+    assert type(base.label) == SubClass
 
 
 def test_Indexed_constructor():
@@ -299,19 +345,19 @@ def test_differentiation():
     expr = S(2) * hi
     assert expr.diff(hj) == S(2) * KroneckerDelta(i, j)
     assert expr.diff(hi) == S(2) * KroneckerDelta(i, i)
-    assert expr.diff(a) == S.Zero
+    assert expr.diff(a) is S.Zero
 
     assert Sum(expr, (i, -oo, oo)).diff(hj) == Sum(2*KroneckerDelta(i, j), (i, -oo, oo))
     assert Sum(expr.diff(hj), (i, -oo, oo)) == Sum(2*KroneckerDelta(i, j), (i, -oo, oo))
     assert Sum(expr, (i, -oo, oo)).diff(hj).doit() == 2
 
     assert Sum(expr.diff(hi), (i, -oo, oo)).doit() == Sum(2, (i, -oo, oo)).doit()
-    assert Sum(expr, (i, -oo, oo)).diff(hi).doit() == oo
+    assert Sum(expr, (i, -oo, oo)).diff(hi).doit() is oo
 
     expr = a * hj * hj / S(2)
     assert expr.diff(hi) == a * h[j] * KroneckerDelta(i, j)
     assert expr.diff(a) == hj * hj / S(2)
-    assert expr.diff(a, 2) == S.Zero
+    assert expr.diff(a, 2) is S.Zero
 
     assert Sum(expr, (i, -oo, oo)).diff(hi) == Sum(a*KroneckerDelta(i, j)*h[j], (i, -oo, oo))
     assert Sum(expr.diff(hi), (i, -oo, oo)) == Sum(a*KroneckerDelta(i, j)*h[j], (i, -oo, oo))

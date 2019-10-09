@@ -65,21 +65,21 @@ class BesselBase(Function):
 
     def _eval_conjugate(self):
         z = self.argument
-        if (z.is_real and z.is_negative) is False:
+        if z.is_extended_negative is False:
             return self.__class__(self.order.conjugate(), z.conjugate())
 
     def _eval_expand_func(self, **hints):
         nu, z, f = self.order, self.argument, self.__class__
-        if nu.is_real:
-            if (nu - 1).is_positive:
+        if nu.is_extended_real:
+            if (nu - 1).is_extended_positive:
                 return (-self._a*self._b*f(nu - 2, z)._eval_expand_func() +
                         2*self._a*(nu - 1)*f(nu - 1, z)._eval_expand_func()/z)
-            elif (nu + 1).is_negative:
+            elif (nu + 1).is_extended_negative:
                 return (2*self._b*(nu + 1)*f(nu + 1, z)._eval_expand_func()/z -
                         self._a*self._b*f(nu + 2, z)._eval_expand_func())
         return self
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import besselsimp
         return besselsimp(self)
 
@@ -88,7 +88,7 @@ class besselj(BesselBase):
     r"""
     Bessel function of the first kind.
 
-    The Bessel `J` function of order `\nu` is defined to be the function
+    The Bessel $J$ function of order $\nu$ is defined to be the function
     satisfying Bessel's differential equation
 
     .. math ::
@@ -100,7 +100,7 @@ class besselj(BesselBase):
     .. math ::
         J_\nu(z) = z^\nu \left(\frac{1}{\Gamma(\nu + 1) 2^\nu} + O(z^2) \right),
 
-    if :math:`\nu` is not a negative integer. If :math:`\nu=-n \in \mathbb{Z}_{<0}`
+    if $\nu$ is not a negative integer. If $\nu=-n \in \mathbb{Z}_{<0}$
     *is* a negative integer, then the definition is
 
     .. math ::
@@ -170,7 +170,7 @@ class besselj(BesselBase):
             return (z)**nu*(-z)**(-nu)*besselj(nu, -z)
         if nu.is_integer:
             if nu.could_extract_minus_sign():
-                return S(-1)**(-nu)*besselj(-nu, z)
+                return S.NegativeOne**(-nu)*besselj(-nu, z)
             newz = z.extract_multiplicatively(I)
             if newz:  # NOTE we don't want to change the function if z==0
                 return I**(nu)*besseli(nu, newz)
@@ -200,9 +200,9 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         nu, z = self.args
-        if nu.is_integer and z.is_real:
+        if nu.is_integer and z.is_extended_real:
             return True
 
     def _sage_(self):
@@ -214,16 +214,16 @@ class bessely(BesselBase):
     r"""
     Bessel function of the second kind.
 
-    The Bessel `Y` function of order `\nu` is defined as
+    The Bessel $Y$ function of order $\nu$ is defined as
 
     .. math ::
         Y_\nu(z) = \lim_{\mu \to \nu} \frac{J_\mu(z) \cos(\pi \mu)
                                             - J_{-\mu}(z)}{\sin(\pi \mu)},
 
-    where :math:`J_\mu(z)` is the Bessel function of the first kind.
+    where $J_\mu(z)$ is the Bessel function of the first kind.
 
     It is a solution to Bessel's equation, and linearly independent from
-    :math:`J_\nu`.
+    $J_\nu$.
 
     Examples
     ========
@@ -265,7 +265,7 @@ class bessely(BesselBase):
 
         if nu.is_integer:
             if nu.could_extract_minus_sign():
-                return S(-1)**(-nu)*bessely(-nu, z)
+                return S.NegativeOne**(-nu)*bessely(-nu, z)
 
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
         if nu.is_integer is False:
@@ -279,7 +279,7 @@ class bessely(BesselBase):
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
         return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
@@ -304,7 +304,7 @@ class besseli(BesselBase):
     .. math ::
         I_\nu(z) = i^{-\nu} J_\nu(iz),
 
-    where :math:`J_\nu(z)` is the Bessel function of the first kind.
+    where $J_\nu(z)$ is the Bessel function of the first kind.
 
     Examples
     ========
@@ -379,9 +379,9 @@ class besseli(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
         return self._eval_rewrite_as_besselj(*self.args).rewrite(jn)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         nu, z = self.args
-        if nu.is_integer and z.is_real:
+        if nu.is_integer and z.is_extended_real:
             return True
 
     def _sage_(self):
@@ -393,16 +393,16 @@ class besselk(BesselBase):
     r"""
     Modified Bessel function of the second kind.
 
-    The Bessel K function of order :math:`\nu` is defined as
+    The Bessel K function of order $\nu$ is defined as
 
     .. math ::
         K_\nu(z) = \lim_{\mu \to \nu} \frac{\pi}{2}
                    \frac{I_{-\mu}(z) -I_\mu(z)}{\sin(\pi \mu)},
 
-    where :math:`I_\mu(z)` is the modified Bessel function of the first kind.
+    where $I_\mu(z)$ is the modified Bessel function of the first kind.
 
     It is a solution of the modified Bessel equation, and linearly independent
-    from :math:`Y_\nu`.
+    from $Y_\nu$.
 
     Examples
     ========
@@ -463,7 +463,7 @@ class besselk(BesselBase):
         if ay:
             return ay.rewrite(yn)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
@@ -482,8 +482,8 @@ class hankel1(BesselBase):
     .. math ::
         H_\nu^{(1)} = J_\nu(z) + iY_\nu(z),
 
-    where :math:`J_\nu(z)` is the Bessel function of the first kind, and
-    :math:`Y_\nu(z)` is the Bessel function of the second kind.
+    where $J_\nu(z)$ is the Bessel function of the first kind, and
+    $Y_\nu(z)$ is the Bessel function of the second kind.
 
     It is a solution to Bessel's equation.
 
@@ -512,7 +512,7 @@ class hankel1(BesselBase):
 
     def _eval_conjugate(self):
         z = self.argument
-        if (z.is_real and z.is_negative) is False:
+        if z.is_extended_negative is False:
             return hankel2(self.order.conjugate(), z.conjugate())
 
 
@@ -525,11 +525,11 @@ class hankel2(BesselBase):
     .. math ::
         H_\nu^{(2)} = J_\nu(z) - iY_\nu(z),
 
-    where :math:`J_\nu(z)` is the Bessel function of the first kind, and
-    :math:`Y_\nu(z)` is the Bessel function of the second kind.
+    where $J_\nu(z)$ is the Bessel function of the first kind, and
+    $Y_\nu(z)$ is the Bessel function of the second kind.
 
     It is a solution to Bessel's equation, and linearly independent from
-    :math:`H_\nu^{(1)}`.
+    $H_\nu^{(1)}$.
 
     Examples
     ========
@@ -556,7 +556,7 @@ class hankel2(BesselBase):
 
     def _eval_conjugate(self):
         z = self.argument
-        if (z.is_real and z.is_negative) is False:
+        if z.is_extended_negative is False:
             return hankel1(self.order.conjugate(), z.conjugate())
 
 
@@ -627,14 +627,14 @@ class jn(SphericalBesselBase):
     .. math ::
         j_\nu(z) = \sqrt{\frac{\pi}{2z}} J_{\nu + \frac{1}{2}}(z),
 
-    where :math:`J_\nu(z)` is the Bessel function of the first kind.
+    where $J_\nu(z)$ is the Bessel function of the first kind.
 
     The spherical Bessel functions of integral order are
     calculated using the formula:
 
     .. math:: j_n(z) = f_n(z) \sin{z} + (-1)^{n+1} f_{-n-1}(z) \cos{z},
 
-    where the coefficients :math:`f_n(z)` are available as
+    where the coefficients $f_n(z)$ are available as
     :func:`polys.orthopolys.spherical_bessel_fn`.
 
     Examples
@@ -690,14 +690,14 @@ class yn(SphericalBesselBase):
     Spherical Bessel function of the second kind.
 
     This function is another solution to the spherical Bessel equation, and
-    linearly independent from :math:`j_n`. It can be defined as
+    linearly independent from $j_n$. It can be defined as
 
     .. math ::
         y_\nu(z) = \sqrt{\frac{\pi}{2z}} Y_{\nu + \frac{1}{2}}(z),
 
-    where :math:`Y_\nu(z)` is the Bessel function of the second kind.
+    where $Y_\nu(z)$ is the Bessel function of the second kind.
 
-    For integral orders :math:`n`, :math:`y_n` is calculated using the formula:
+    For integral orders $n$, $y_n$ is calculated using the formula:
 
     .. math:: y_n(z) = (-1)^{n+1} j_{-n-1}(z)
 
@@ -812,10 +812,10 @@ class hn1(SphericalHankelBase):
 
     .. math:: h_\nu^(1)(z) = j_\nu(z) + i y_\nu(z),
 
-    where :math:`j_\nu(z)` and :math:`y_\nu(z)` are the spherical
+    where $j_\nu(z)$ and $y_\nu(z)$ are the spherical
     Bessel function of the first and second kinds.
 
-    For integral orders :math:`n`, :math:`h_n^(1)` is calculated using the formula:
+    For integral orders $n$, $h_n^(1)$ is calculated using the formula:
 
     .. math:: h_n^(1)(z) = j_{n}(z) + i (-1)^{n+1} j_{-n-1}(z)
 
@@ -865,10 +865,10 @@ class hn2(SphericalHankelBase):
 
     .. math:: h_\nu^(2)(z) = j_\nu(z) - i y_\nu(z),
 
-    where :math:`j_\nu(z)` and :math:`y_\nu(z)` are the spherical
+    where $j_\nu(z)$ and $y_\nu(z)$ are the spherical
     Bessel function of the first and second kinds.
 
-    For integral orders :math:`n`, :math:`h_n^(2)` is calculated using the formula:
+    For integral orders $n$, $h_n^(2)$ is calculated using the formula:
 
     .. math:: h_n^(2)(z) = j_{n} - i (-1)^{n+1} j_{-n-1}(z)
 
@@ -990,11 +990,11 @@ class AiryBase(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_is_real(self):
-        return self.args[0].is_real
+    def _eval_is_extended_real(self):
+        return self.args[0].is_extended_real
 
     def _as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_real:
+        if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
                 return (self.expand(deep, **hints), S.Zero)
@@ -1020,15 +1020,15 @@ class AiryBase(Function):
 
 class airyai(AiryBase):
     r"""
-    The Airy function `\operatorname{Ai}` of the first kind.
+    The Airy function $\operatorname{Ai}$ of the first kind.
 
-    The Airy function `\operatorname{Ai}(z)` is defined to be the function
+    The Airy function $\operatorname{Ai}(z)$ is defined to be the function
     satisfying Airy's differential equation
 
     .. math::
         \frac{\mathrm{d}^2 w(z)}{\mathrm{d}z^2} - z w(z) = 0.
 
-    Equivalently, for real `z`
+    Equivalently, for real $z$
 
     .. math::
         \operatorname{Ai}(z) := \frac{1}{\pi}
@@ -1115,8 +1115,10 @@ class airyai(AiryBase):
                 return S.Zero
             elif arg is S.NegativeInfinity:
                 return S.Zero
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
+        if arg.is_zero:
+            return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1133,10 +1135,10 @@ class airyai(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return ((3**(S(1)/3)*x)**(-n)*(3**(S(1)/3)*x)**(n + 1)*sin(pi*(2*n/3 + S(4)/3))*factorial(n) *
-                        gamma(n/3 + S(2)/3)/(sin(pi*(2*n/3 + S(2)/3))*factorial(n + 1)*gamma(n/3 + S(1)/3)) * p)
+                return ((3**Rational(1, 3)*x)**(-n)*(3**Rational(1, 3)*x)**(n + 1)*sin(pi*(n*Rational(2, 3) + Rational(4, 3)))*factorial(n) *
+                        gamma(n/3 + Rational(2, 3))/(sin(pi*(n*Rational(2, 3) + Rational(2, 3)))*factorial(n + 1)*gamma(n/3 + Rational(1, 3))) * p)
             else:
-                return (S.One/(3**(S(2)/3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3)) /
+                return (S.One/(3**Rational(2, 3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3)) /
                         factorial(n) * (root(3, 3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
@@ -1156,9 +1158,9 @@ class airyai(AiryBase):
             return ot*(Pow(a, ot)*besseli(-ot, tt*a) - z*Pow(a, -ot)*besseli(ot, tt*a))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        pf1 = S.One / (3**(S(2)/3)*gamma(S(2)/3))
-        pf2 = z / (root(3, 3)*gamma(S(1)/3))
-        return pf1 * hyper([], [S(2)/3], z**3/9) - pf2 * hyper([], [S(4)/3], z**3/9)
+        pf1 = S.One / (3**Rational(2, 3)*gamma(Rational(2, 3)))
+        pf2 = z / (root(3, 3)*gamma(Rational(1, 3)))
+        return pf1 * hyper([], [Rational(2, 3)], z**3/9) - pf2 * hyper([], [Rational(4, 3)], z**3/9)
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -1186,15 +1188,15 @@ class airyai(AiryBase):
 
 class airybi(AiryBase):
     r"""
-    The Airy function `\operatorname{Bi}` of the second kind.
+    The Airy function $\operatorname{Bi}$ of the second kind.
 
-    The Airy function `\operatorname{Bi}(z)` is defined to be the function
+    The Airy function $\operatorname{Bi}(z)$ is defined to be the function
     satisfying Airy's differential equation
 
     .. math::
         \frac{\mathrm{d}^2 w(z)}{\mathrm{d}z^2} - z w(z) = 0.
 
-    Equivalently, for real `z`
+    Equivalently, for real $z$
 
     .. math::
         \operatorname{Bi}(z) := \frac{1}{\pi}
@@ -1283,8 +1285,11 @@ class airybi(AiryBase):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Zero
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
+
+        if arg.is_zero:
+            return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1301,7 +1306,7 @@ class airybi(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return (3**(S(1)/3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * factorial((n - S.One)/S(3)) /
+                return (3**Rational(1, 3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * factorial((n - S.One)/S(3)) /
                         ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * factorial((n - 2)/S(3))) * p)
             else:
                 return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(2*pi*(n + S.One)/S(3))) /
@@ -1326,9 +1331,9 @@ class airybi(AiryBase):
             return sqrt(ot)*(b*besseli(-ot, tt*a) + z*c*besseli(ot, tt*a))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        pf1 = S.One / (root(3, 6)*gamma(S(2)/3))
-        pf2 = z*root(3, 6) / gamma(S(1)/3)
-        return pf1 * hyper([], [S(2)/3], z**3/9) + pf2 * hyper([], [S(4)/3], z**3/9)
+        pf1 = S.One / (root(3, 6)*gamma(Rational(2, 3)))
+        pf2 = z*root(3, 6) / gamma(Rational(1, 3))
+        return pf1 * hyper([], [Rational(2, 3)], z**3/9) + pf2 * hyper([], [Rational(4, 3)], z**3/9)
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -1356,9 +1361,9 @@ class airybi(AiryBase):
 
 class airyaiprime(AiryBase):
     r"""
-    The derivative `\operatorname{Ai}^\prime` of the Airy function of the first kind.
+    The derivative $\operatorname{Ai}^\prime$ of the Airy function of the first kind.
 
-    The Airy function `\operatorname{Ai}^\prime(z)` is defined to be the function
+    The Airy function $\operatorname{Ai}^\prime(z)$ is defined to be the function
 
     .. math::
         \operatorname{Ai}^\prime(z) := \frac{\mathrm{d} \operatorname{Ai}(z)}{\mathrm{d} z}.
@@ -1440,8 +1445,9 @@ class airyaiprime(AiryBase):
                 return S.NaN
             elif arg is S.Infinity:
                 return S.Zero
-            elif arg is S.Zero:
-                return -S.One / (3**Rational(1, 3) * gamma(Rational(1, 3)))
+
+        if arg.is_zero:
+            return S.NegativeOne / (3**Rational(1, 3) * gamma(Rational(1, 3)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1476,9 +1482,9 @@ class airyaiprime(AiryBase):
             return ot * (z**2*c*besseli(tt, tt*a) - b*besseli(-ot, tt*a))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        pf1 = z**2 / (2*3**(S(2)/3)*gamma(S(2)/3))
-        pf2 = 1 / (root(3, 3)*gamma(S(1)/3))
-        return pf1 * hyper([], [S(5)/3], z**3/9) - pf2 * hyper([], [S(1)/3], z**3/9)
+        pf1 = z**2 / (2*3**Rational(2, 3)*gamma(Rational(2, 3)))
+        pf2 = 1 / (root(3, 3)*gamma(Rational(1, 3)))
+        return pf1 * hyper([], [Rational(5, 3)], z**3/9) - pf2 * hyper([], [Rational(1, 3)], z**3/9)
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -1508,9 +1514,9 @@ class airyaiprime(AiryBase):
 
 class airybiprime(AiryBase):
     r"""
-    The derivative `\operatorname{Bi}^\prime` of the Airy function of the first kind.
+    The derivative $\operatorname{Bi}^\prime$ of the Airy function of the first kind.
 
-    The Airy function `\operatorname{Bi}^\prime(z)` is defined to be the function
+    The Airy function $\operatorname{Bi}^\prime(z)$ is defined to be the function
 
     .. math::
         \operatorname{Bi}^\prime(z) := \frac{\mathrm{d} \operatorname{Bi}(z)}{\mathrm{d} z}.
@@ -1596,8 +1602,12 @@ class airybiprime(AiryBase):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Zero
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return 3**Rational(1, 6) / gamma(Rational(1, 3))
+
+        if arg.is_zero:
+            return 3**Rational(1, 6) / gamma(Rational(1, 3))
+
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1632,9 +1642,9 @@ class airybiprime(AiryBase):
             return sqrt(ot) * (b*besseli(-tt, tt*a) + z**2*c*besseli(tt, tt*a))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        pf1 = z**2 / (2*root(3, 6)*gamma(S(2)/3))
-        pf2 = root(3, 6) / gamma(S(1)/3)
-        return pf1 * hyper([], [S(5)/3], z**3/9) + pf2 * hyper([], [S(1)/3], z**3/9)
+        pf1 = z**2 / (2*root(3, 6)*gamma(Rational(2, 3)))
+        pf2 = root(3, 6) / gamma(Rational(1, 3))
+        return pf1 * hyper([], [Rational(5, 3)], z**3/9) + pf2 * hyper([], [Rational(1, 3)], z**3/9)
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -1660,3 +1670,108 @@ class airybiprime(AiryBase):
                     pf = (d**m * z**(n*m)) / (d * z**n)**m
                     newarg = c * d**m * z**(n*m)
                     return S.Half * (sqrt(3)*(pf - S.One)*airyaiprime(newarg) + (pf + S.One)*airybiprime(newarg))
+
+
+class marcumq(Function):
+    r"""
+    The Marcum Q-function
+
+    It is defined by the meromorphic continuation of
+
+    .. math::
+        Q_m(a, b) = a^{- m + 1} \int_{b}^{\infty} x^{m} e^{- \frac{a^{2}}{2} - \frac{x^{2}}{2}} I_{m - 1}\left(a x\right)\, dx
+
+    Examples
+    ========
+
+    >>> from sympy import marcumq
+    >>> from sympy.abc import m, a, b, x
+    >>> marcumq(m, a, b)
+    marcumq(m, a, b)
+
+    Special values:
+
+    >>> marcumq(m, 0, b)
+    uppergamma(m, b**2/2)/gamma(m)
+    >>> marcumq(0, 0, 0)
+    0
+    >>> marcumq(0, a, 0)
+    1 - exp(-a**2/2)
+    >>> marcumq(1, a, a)
+    1/2 + exp(-a**2)*besseli(0, a**2)/2
+    >>> marcumq(2, a, a)
+    1/2 + exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2)
+
+    Differentiation with respect to a and b is supported:
+
+    >>> from sympy import diff
+    >>> diff(marcumq(m, a, b), a)
+    a*(-marcumq(m, a, b) + marcumq(m + 1, a, b))
+    >>> diff(marcumq(m, a, b), b)
+    -a**(1 - m)*b**m*exp(-a**2/2 - b**2/2)*besseli(m - 1, a*b)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Marcum_Q-function
+    .. [2] http://mathworld.wolfram.com/MarcumQ-Function.html
+    """
+
+    @classmethod
+    def eval(cls, m, a, b):
+        from sympy import exp, uppergamma
+        if a is S.Zero:
+            if m is S.Zero and b is S.Zero:
+                return S.Zero
+            return uppergamma(m, b**2 * S.Half) / gamma(m)
+
+        if m is S.Zero and b is S.Zero:
+            return 1 - 1 / exp(a**2 * S.Half)
+
+        if a == b:
+            if m is S.One:
+                return (1 + exp(-a**2) * besseli(0, a**2))*S.Half
+            if m == 2:
+                return S.Half + S.Half * exp(-a**2) * besseli(0, a**2) + exp(-a**2) * besseli(1, a**2)
+
+        if a.is_zero:
+            if m.is_zero and b.is_zero:
+                return S.Zero
+            return uppergamma(m, b**2*S.Half) / gamma(m)
+
+        if m.is_zero and b.is_zero:
+            return 1 - 1 / exp(a**2*S.Half)
+
+    def fdiff(self, argindex=2):
+        from sympy import exp
+        m, a, b = self.args
+        if argindex == 2:
+            return a * (-marcumq(m, a, b) + marcumq(1+m, a, b))
+        elif argindex == 3:
+            return (-b**m / a**(m-1)) * exp(-(a**2 + b**2)/2) * besseli(m-1, a*b)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Integral(self, m, a, b, **kwargs):
+        from sympy import Integral, exp, Dummy, oo
+        x = kwargs.get('x', Dummy('x'))
+        return a ** (1 - m) * \
+               Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, oo])
+
+    def _eval_rewrite_as_Sum(self, m, a, b, **kwargs):
+        from sympy import Sum, exp, Dummy, oo
+        k = kwargs.get('k', Dummy('k'))
+        return exp(-(a**2 + b**2) / 2) * Sum((a/b)**k * besseli(k, a*b), [k, 1-m, oo])
+
+    def _eval_rewrite_as_besseli(self, m, a, b, **kwargs):
+        if a == b:
+            from sympy import exp
+            if m == 1:
+                return (1 + exp(-a**2) * besseli(0, a**2)) / 2
+            if m.is_Integer and m >= 2:
+                s = sum([besseli(i, a**2) for i in range(1, m)])
+                return S.Half + exp(-a**2) * besseli(0, a**2) / 2 + exp(-a**2) * s
+
+    def _eval_is_zero(self):
+        if all(arg.is_zero for arg in self.args):
+            return True

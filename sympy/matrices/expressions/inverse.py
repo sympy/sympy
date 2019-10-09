@@ -32,9 +32,9 @@ class Inverse(MatPow):
 
     """
     is_Inverse = True
-    exp = S(-1)
+    exp = S.NegativeOne
 
-    def __new__(cls, mat, exp=S(-1)):
+    def __new__(cls, mat, exp=S.NegativeOne):
         # exp is there to make it consistent with
         # inverse.func(*inverse.args) == inverse
         mat = _sympify(mat)
@@ -71,12 +71,8 @@ class Inverse(MatPow):
         arg = self.args[0]
         lines = arg._eval_derivative_matrix_lines(x)
         for line in lines:
-            if line.transposed:
-                line.first *= self
-                line.second *= -self.T
-            else:
-                line.first *= -self.T
-                line.second *= self
+            line.first_pointer *= -self.T
+            line.second_pointer *= self
         return lines
 
 

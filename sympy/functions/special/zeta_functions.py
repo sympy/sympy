@@ -124,7 +124,7 @@ class lerchphi(Function):
             t = Dummy('t')
             p = Poly((t + a)**(-s), t)
             start = 1/(1 - t)
-            res = S(0)
+            res = S.Zero
             for c in reversed(p.all_coeffs()):
                 res += c*start
                 start = t*start.diff(t)
@@ -136,8 +136,8 @@ class lerchphi(Function):
             #   In: Proceedings of the 1997 International Symposium on Symbolic and
             #   Algebraic Computation, pages 205-211, New York, 1997. ACM.
             # TODO should something be polarified here?
-            add = S(0)
-            mul = S(1)
+            add = S.Zero
+            mul = S.One
             # First reduce a to the interaval (0, 1]
             if a > 1:
                 n = floor(a)
@@ -253,9 +253,9 @@ class polylog(Function):
     >>> from sympy import expand_func
     >>> from sympy.abc import z
     >>> expand_func(polylog(1, z))
-    -log(-z + 1)
+    -log(1 - z)
     >>> expand_func(polylog(0, z))
-    z/(-z + 1)
+    z/(1 - z)
 
     The derivative with respect to :math:`z` can be computed in closed form:
 
@@ -272,11 +272,11 @@ class polylog(Function):
     @classmethod
     def eval(cls, s, z):
         s, z = sympify((s, z))
-        if z == 1:
+        if z is S.One:
             return zeta(s)
-        elif z == -1:
+        elif z is S.NegativeOne:
             return -dirichlet_eta(s)
-        elif z == 0:
+        elif z is S.Zero:
             return S.Zero
         elif s == 2:
             if z == S.Half:
@@ -291,17 +291,32 @@ class polylog(Function):
                 return pi**2/15 - log((sqrt(5)-1)/2)**2
             elif z == (sqrt(5) - 1)/2:
                 return pi**2/10 - log((sqrt(5)-1)/2)**2
-        # For s = 0 or -1 use explicit formulas to evaluate, but
-        # automatically expanding polylog(1, z) to -log(1-z) seems undesirable
-        # for summation methods based on hypergeometric functions
-        elif s == 0:
-            return z/(1 - z)
-        elif s == -1:
-            return z/(1 - z)**2
+
+        if z.is_zero:
+            return S.Zero
+
+        # Make an effort to determine if z is 1 to avoid replacing into
+        # expression with singularity
+        zone = z.equals(S.One)
+
+        if zone:
+            return zeta(s)
+        elif zone is False:
+            # For s = 0 or -1 use explicit formulas to evaluate, but
+            # automatically expanding polylog(1, z) to -log(1-z) seems
+            # undesirable for summation methods based on hypergeometric
+            # functions
+            if s is S.Zero:
+                return z/(1 - z)
+            elif s is S.NegativeOne:
+                return z/(1 - z)**2
+            if s.is_zero:
+                return z/(1 - z)
+
         # polylog is branched, but not over the unit disk
         from sympy.functions.elementary.complexes import (Abs, unpolarify,
-            polar_lift)
-        if z.has(exp_polar, polar_lift) and (Abs(z) <= S.One) == True:
+                                                          polar_lift)
+        if z.has(exp_polar, polar_lift) and (zone or (Abs(z) <= S.One) == True):
             return cls(s, unpolarify(z))
 
     def fdiff(self, argindex=1):
@@ -325,6 +340,11 @@ class polylog(Function):
                 start = u*start.diff(u)
             return expand_mul(start).subs(u, z)
         return polylog(s, z)
+
+    def _eval_is_zero(self):
+        z = self.args[1]
+        if z.is_zero:
+            return True
 
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
@@ -389,7 +409,7 @@ class zeta(Function):
 
     >>> from sympy import dirichlet_eta
     >>> zeta(s).rewrite(dirichlet_eta)
-    dirichlet_eta(s)/(-2**(-s + 1) + 1)
+    dirichlet_eta(s)/(1 - 2**(1 - s))
 
     The Riemann zeta function at positive even integer and negative odd integer
     values is related to the Bernoulli numbers:
@@ -458,7 +478,7 @@ class zeta(Function):
                 return S.NaN
             elif z is S.Infinity:
                 return S.One
-            elif z is S.Zero:
+            elif z.is_zero:
                 return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity
@@ -476,7 +496,8 @@ class zeta(Function):
                     return zeta + harmonic(abs(a), z)
                 else:
                     return zeta - harmonic(a - 1, z)
-
+        if z.is_zero:
+            return S.Half - a
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1, **kwargs):
         if a != 1:
@@ -532,7 +553,7 @@ class dirichlet_eta(Function):
     >>> from sympy import dirichlet_eta, zeta
     >>> from sympy.abc import s
     >>> dirichlet_eta(s).rewrite(zeta)
-    (-2**(-s + 1) + 1)*zeta(s)
+    (1 - 2**(1 - s))*zeta(s)
 
     """
 
@@ -587,7 +608,7 @@ class stieltjes(Function):
     def eval(cls, n, a=None):
         n = sympify(n)
 
-        if a != None:
+        if a is not None:
             a = sympify(a)
             if a is S.NaN:
                 return S.NaN
@@ -601,5 +622,14 @@ class stieltjes(Function):
                 return S.ComplexInfinity
             elif not n.is_Integer:
                 return S.ComplexInfinity
-            elif n == 0 and a in [None, 1]:
+            elif n is S.Zero and a in [None, 1]:
                 return S.EulerGamma
+
+        if n.is_extended_negative:
+            return S.ComplexInfinity
+
+        if n.is_zero and a in [None, 1]:
+            return S.EulerGamma
+
+        if n.is_integer == False:
+            return S.ComplexInfinity

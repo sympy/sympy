@@ -124,6 +124,10 @@ from sympy.core.compatibility import reduce
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest
+from sympy import cacheit
+
+from sympy.core.compatibility import reduce
+
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
@@ -407,8 +411,13 @@ def sign(e, x):
 @debug
 @timeit
 @cacheit
-def limitinf(e, x):
-    """Limit e(x) for x-> oo"""
+def limitinf(e, x, leadsimp=False):
+    """Limit e(x) for x-> oo.
+
+    If ``leadsimp`` is True, an attempt is made to simplify the leading
+    term of the series expansion of ``e``. That may succeed even if
+    ``e`` cannot be simplified.
+    """
     # rewrite e in terms of tractable functions only
     e = e.rewrite('tractable', deep=True)
 
@@ -436,7 +445,11 @@ def limitinf(e, x):
             raise ValueError("Leading term should not be 0")
         return s*oo
     elif sig == 0:
-        return limitinf(c0, x)  # e0=0: lim f = lim c0
+        if leadsimp:
+            c0 = c0.simplify()
+        return limitinf(c0, x, leadsimp)  # e0=0: lim f = lim c0
+    else:
+        raise ValueError("{} could not be evaluated".format(sig))
 
 
 def moveup2(s, x):
@@ -643,9 +656,9 @@ def gruntz(e, z, z0, dir="+"):
     # convert all limits to the limit z->oo; sign of z is handled in limitinf
     r = None
     if z0 == oo:
-        r = limitinf(e, z)
+        e0 = e
     elif z0 == -oo:
-        r = limitinf(e.subs(z, -z), z)
+        e0 = e.subs(z, -z)
     else:
         if str(dir) == "-":
             e0 = e.subs(z, z0 - 1/z)
@@ -653,7 +666,11 @@ def gruntz(e, z, z0, dir="+"):
             e0 = e.subs(z, z0 + 1/z)
         else:
             raise NotImplementedError("dir must be '+' or '-'")
+
+    try:
         r = limitinf(e0, z)
+    except ValueError:
+        r = limitinf(e0, z, leadsimp=True)
 
     # This is a bit of a heuristic for nice results... we always rewrite
     # tractable functions in terms of familiar intractable ones.

@@ -1,8 +1,8 @@
 .. _codegen_prose:
 
-================================================
-Structural Details of Code Generation with SymPy
-================================================
+===============
+Code Generation
+===============
 
 Several submodules in SymPy allow one to generate directly compilable and
 executable code in a variety of different programming languages from SymPy
@@ -164,8 +164,8 @@ An example of Mathematica code printer::
 
     >>> expr = summation(expr, (n, -1, 1))
     >>> mathematica_code(expr)
-    T*x[-T]*Sin[(T + t)/T]/(T + t) + T*x[T]*Sin[(-T + t)/T]/(-T + t) + T*x[0]*Sin[
-    t/T]/t
+    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(-T + t)/T]/(-T + t) + x[0]*Sin[t/T
+    ]/t)
 
 We can go through a common expression in different languages we support and see
 how it works::
@@ -289,12 +289,12 @@ For example::
     >>> [arg.result_var for arg in routine.results]   # doctest: +SKIP
     [result₅₁₄₂₃₄₁₆₈₁₃₉₇₇₁₉₄₂₈]
     >>> [arg.expr for arg in routine.results]
-    ⎡                ___________                                           ⎤
-    ⎢          y    ╱ (-y + 2)!   -2⋅x                                     ⎥
-    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ───────── ⋅ℯ    ⋅assoc_laguerre(-y + 2, 2⋅y + 1, 4⋅x)⎥
-    ⎢            ╲╱    (y + 3)!                                            ⎥
-    ⎢──────────────────────────────────────────────────────────────────────⎥
-    ⎣                                  3                                   ⎦
+    ⎡                __________                                          ⎤
+    ⎢          y    ╱ (2 - y)!   -2⋅x                                    ⎥
+    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ──────── ⋅ℯ    ⋅assoc_laguerre(2 - y, 2⋅y + 1, 4⋅x)⎥
+    ⎢            ╲╱   (y + 3)!                                           ⎥
+    ⎢────────────────────────────────────────────────────────────────────⎥
+    ⎣                                 3                                  ⎦
     >>> [arg.name for arg in routine.arguments]
     [x, y]
 
@@ -505,9 +505,9 @@ Let us see an example for some quantitative analysis::
     >>> from sympy.physics.hydrogen import R_nl
     >>> expr = R_nl(3, 1, x, 6)
     >>> expr
-                    -2⋅x
-    8⋅x⋅(-4⋅x + 4)⋅ℯ
-    ────────────────────
+                   -2⋅x
+    8⋅x⋅(4 - 4⋅x)⋅ℯ
+    ───────────────────
              3
 
 The lambdify function translates SymPy expressions into Python functions,
@@ -546,6 +546,9 @@ Classes and functions for rewriting expressions (sympy.codegen.rewriting)
 -------------------------------------------------------------------------
 
 .. automodule:: sympy.codegen.rewriting
+   :members:
+
+.. automodule:: sympy.codegen.matrix_nodes
    :members:
 
 Tools for simplifying expressions using approximations (sympy.codegen.approximations)
@@ -611,4 +614,11 @@ Fortran utilities (sympy.codegen.futils)
 ----------------------------------------
 
 .. automodule:: sympy.codegen.futils
+   :members:
+
+
+Array utilities (sympy.codegen.array_utils)
+-------------------------------------------
+
+.. automodule:: sympy.codegen.array_utils
    :members:

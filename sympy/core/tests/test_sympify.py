@@ -2,7 +2,8 @@ from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range, Xor)
 from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
+from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
+    CantSympify)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, XFAIL, skip
@@ -13,9 +14,9 @@ from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-from sympy.external import import_module
 
 import mpmath
+from collections import defaultdict, OrderedDict
 from mpmath.rational import mpq
 
 
@@ -34,7 +35,7 @@ def test_sympify1():
     assert sympify("   x") == Symbol("x")
     assert sympify("   x   ") == Symbol("x")
     # issue 4877
-    n1 = Rational(1, 2)
+    n1 = S.Half
     assert sympify('--.5') == n1
     assert sympify('-1/2') == -n1
     assert sympify('-+--.5') == -n1
@@ -161,9 +162,24 @@ def test_sympify_bool():
 def test_sympyify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(['.3', '.2'], rational=True) == ans
-    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
     assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
     assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
+
+
+@XFAIL
+def test_issue_16772():
+    # because there is a converter for tuple, the
+    # args are only sympified without the flags being passed
+    # along; list, on the other hand, is not converted
+    # with a converter so its args are traversed later
+    ans = [Rational(3, 10), Rational(1, 5)]
+    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
+
+
+def test_issue_16859():
+    class no(float, CantSympify):
+        pass
+    raises(SympifyError, lambda: sympify(no(1.2)))
 
 
 def test_sympify4():
@@ -244,7 +260,7 @@ def test_lambda():
     assert sympify('lambda: 1') == Lambda((), 1)
     assert sympify('lambda x: x') == Lambda(x, x)
     assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
-    assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x + y)
+    assert sympify('lambda x, y: 2*x+y') == Lambda((x, y), 2*x + y)
 
 
 def test_lambda_raises():
@@ -492,7 +508,7 @@ def test_kernS():
 
 def test_issue_6540_6552():
     assert S('[[1/3,2], (2/5,)]') == [[Rational(1, 3), 2], (Rational(2, 5),)]
-    assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (Rational(1, 2),)]
+    assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (S.Half,)]
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
 
@@ -525,9 +541,10 @@ def test_issue_10295():
 
     B = numpy.array([-7, x, 3*y**2])
     sB = S(B)
-    assert B[0] == -7
-    assert B[1] == x
-    assert B[2] == 3*y**2
+    assert sB.shape == (3,)
+    assert B[0] == sB[0] == -7
+    assert B[1] == sB[1] == x
+    assert B[2] == sB[2] == 3*y**2
 
     C = numpy.arange(0, 24)
     C.resize(2,3,4)
@@ -596,17 +613,14 @@ def test_sympify_numpy():
     assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
     assert equal(sympify(np.longcomplex(1 + 2j)), S(1.0 + 2.0*I))
 
-    try:
+    #float96 does not exist on all platforms
+    if hasattr(np, 'float96'):
         assert equal(sympify(np.float96(1.123456789)),
                     Float(1.123456789, precision=80))
-    except AttributeError:  #float96 does not exist on all platforms
-        pass
-
-    try:
+    #float128 does not exist on all platforms
+    if hasattr(np, 'float128'):
         assert equal(sympify(np.float128(1.123456789123)),
                     Float(1.123456789123, precision=80))
-    except AttributeError:  #float128 does not exist on all platforms
-        pass
 
 
 @XFAIL
@@ -660,3 +674,24 @@ def test_numpy_sympify_args():
     a = sympify(numpy.str_('x + x'), evaluate=False)
     assert isinstance(a, Add)
     assert a == Add(x, x, evaluate=False)
+
+
+def test_issue_5939():
+     a = Symbol('a')
+     b = Symbol('b')
+     assert sympify('''a+\nb''') == a + b
+
+
+def test_issue_16759():
+    d = sympify({.5: 1})
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
+    d = sympify(OrderedDict({.5: 1}))
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
+    d = sympify(defaultdict(int, {.5: 1}))
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
