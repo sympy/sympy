@@ -337,7 +337,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         for me in (self, other):
             if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+                raise TypeError("Invalid comparison of non-real %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
@@ -360,7 +360,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         for me in (self, other):
             if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+                raise TypeError("Invalid comparison of non-real %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
@@ -383,7 +383,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         for me in (self, other):
             if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+                raise TypeError("Invalid comparison of non-real %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
@@ -407,7 +407,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         for me in (self, other):
             if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+                raise TypeError("Invalid comparison of non-real %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
