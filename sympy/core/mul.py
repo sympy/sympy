@@ -1201,9 +1201,7 @@ class Mul(Expr, AssocOp):
         comp = _fuzzy_group((a.is_complex for a in self.args))
         if comp is False:
             if any(a.is_infinite for a in self.args):
-                if any(a.is_zero for a in self.args):
-                    return S.NaN.is_infinite
-                if any(a.is_zero is None for a in self.args):
+                if any(a.is_zero is not False for a in self.args):
                     return None
                 return False
         return comp
