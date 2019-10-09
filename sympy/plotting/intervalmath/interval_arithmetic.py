@@ -36,7 +36,7 @@ from __future__ import print_function, division
 from sympy.simplify.simplify import nsimplify
 
 
-class intervalBool(object):
+class intervalMembership(object):
     """Represents a boolean expression returned by the comparison of
     the interval object.
 
@@ -67,33 +67,33 @@ class intervalBool(object):
         return iter(self._wrapped)
 
     def __str__(self):
-        return "intervalBool({}, {})".format(*self)
+        return "intervalMembership({}, {})".format(*self)
     __repr__ = __str__
 
     def __and__(self, other):
-        if not isinstance(other, intervalBool):
+        if not isinstance(other, intervalMembership):
             raise ValueError(
                 "The comparison is not supported for {}.".format(other))
 
         a1, b1 = self
         a2, b2 = other
-        return intervalBool(a1 and a2, b1 and b2)
+        return intervalMembership(a1 and a2, b1 and b2)
 
     def __or__(self, other):
-        if not isinstance(other, intervalBool):
+        if not isinstance(other, intervalMembership):
             raise ValueError(
                 "The comparison is not supported for {}.".format(other))
 
         a1, b1 = self
         a2, b2 = other
-        return intervalBool(a1 or a2, b1 or b2)
+        return intervalMembership(a1 or a2, b1 or b2)
 
     def __invert__(self):
         a, b = self
-        return intervalBool(not a, not b)
+        return intervalMembership(not a, not b)
 
     def __xor__(self, other):
-        if not isinstance(other, intervalBool):
+        if not isinstance(other, intervalMembership):
             raise ValueError(
                 "The comparison is not supported for {}.".format(other))
 
@@ -101,7 +101,7 @@ class intervalBool(object):
         a2, b2 = other
         a = (a1 and not a2) or (not a1 and a2)
         b = (b1 and not b2) or (not b1 and b2)
-        return intervalBool(not a, not b)
+        return intervalMembership(not a, not b)
 
     def __eq__(self, other):
         return self._wrapped == other
@@ -124,7 +124,7 @@ class interval(object):
             function
 
     A comparison between an interval and a real number, or a
-    comparison between two intervals may return ``intervalBool``
+    comparison between two intervals may return ``intervalMembership``
     of two 3-valued logic values.
     """
 
@@ -165,11 +165,11 @@ class interval(object):
     def __lt__(self, other):
         if isinstance(other, (int, float)):
             if self.end < other:
-                return intervalBool(True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
             elif self.start > other:
-                return intervalBool(False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
             else:
-                return intervalBool(None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
 
         elif isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
@@ -179,21 +179,21 @@ class interval(object):
             else:
                 valid = True
             if self.end < other. start:
-                return intervalBool(True, valid)
+                return intervalMembership(True, valid)
             if self.start > other.end:
-                return intervalBool(False, valid)
-            return intervalBool(None, valid)
+                return intervalMembership(False, valid)
+            return intervalMembership(None, valid)
         else:
             return NotImplemented
 
     def __gt__(self, other):
         if isinstance(other, (int, float)):
             if self.start > other:
-                return intervalBool(True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
             elif self.end < other:
-                return intervalBool(False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
             else:
-                return intervalBool(None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
         elif isinstance(other, interval):
             return other.__lt__(self)
         else:
@@ -202,11 +202,11 @@ class interval(object):
     def __eq__(self, other):
         if isinstance(other, (int, float)):
             if self.start == other and self.end == other:
-                return intervalBool(True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
             if other in self:
-                return intervalBool(None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
             else:
-                return intervalBool(False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
 
         if isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
@@ -216,22 +216,22 @@ class interval(object):
             else:
                 valid = True
             if self.start == other.start and self.end == other.end:
-                return intervalBool(True, valid)
+                return intervalMembership(True, valid)
             elif self.__lt__(other)[0] is not None:
-                return intervalBool(False, valid)
+                return intervalMembership(False, valid)
             else:
-                return intervalBool(None, valid)
+                return intervalMembership(None, valid)
         else:
             return NotImplemented
 
     def __ne__(self, other):
         if isinstance(other, (int, float)):
             if self.start == other and self.end == other:
-                return intervalBool(False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
             if other in self:
-                return intervalBool(None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
             else:
-                return intervalBool(True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
 
         if isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
@@ -241,21 +241,21 @@ class interval(object):
             else:
                 valid = True
             if self.start == other.start and self.end == other.end:
-                return intervalBool(False, valid)
+                return intervalMembership(False, valid)
             if not self.__lt__(other)[0] is None:
-                return intervalBool(True, valid)
-            return intervalBool(None, valid)
+                return intervalMembership(True, valid)
+            return intervalMembership(None, valid)
         else:
             return NotImplemented
 
     def __le__(self, other):
         if isinstance(other, (int, float)):
             if self.end <= other:
-                return intervalBool(True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
             if self.start > other:
-                return intervalBool(False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
             else:
-                return intervalBool(None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
 
         if isinstance(other, interval):
             if self.is_valid is False or other.is_valid is False:
@@ -265,21 +265,21 @@ class interval(object):
             else:
                 valid = True
             if self.end <= other.start:
-                return intervalBool(True, valid)
+                return intervalMembership(True, valid)
             if self.start > other.end:
-                return intervalBool(False, valid)
-            return intervalBool(None, valid)
+                return intervalMembership(False, valid)
+            return intervalMembership(None, valid)
         else:
             return NotImplemented
 
     def __ge__(self, other):
         if isinstance(other, (int, float)):
             if self.start >= other:
-                return intervalBool(True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
             elif self.end < other:
-                return intervalBool(False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
             else:
-                return intervalBool(None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
         elif isinstance(other, interval):
             return other.__le__(self)
 
