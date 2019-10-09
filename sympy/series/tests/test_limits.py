@@ -206,6 +206,7 @@ def test_exponential():
     assert limit((1 + x/(2*n + 1))**n, n, oo) == exp(x/2)
     assert limit(((x - 1)/(x + 1))**x, x, oo) == exp(-2)
     assert limit(1 + (1 + 1/x)**x, x, oo) == 1 + S.Exp1
+    assert limit((2 + 6*x)**x/(6*x)**x, x, oo) == exp(S('1/3'))
 
 
 @XFAIL
@@ -500,6 +501,11 @@ def test_issue_6599():
 def test_issue_12555():
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, -oo) == 2
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, oo) is oo
+
+
+def test_issue_13332():
+    assert limit(sqrt(30)*5**(-5*x - 1)*(46656*x)**x*(5*x + 2)**(5*x + 5*S.Half) *
+                (6*x + 2)**(-6*x - 5*S.Half), x, oo) == Rational(25, 36)
 
 
 def test_issue_12564():
