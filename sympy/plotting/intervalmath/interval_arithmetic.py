@@ -34,7 +34,7 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 from __future__ import print_function, division
 
 from sympy.simplify.simplify import nsimplify
-from sympy.core.logic import fuzzy_and, fuzzy_or
+from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not, fuzzy_xor
 
 
 class intervalMembership(object):
@@ -87,11 +87,11 @@ class intervalMembership(object):
 
         a1, b1 = self
         a2, b2 = other
-        return intervalMembership(a1 or a2, b1 or b2)
+        return intervalMembership(fuzzy_or([a1, a2]), fuzzy_or([b1, b2]))
 
     def __invert__(self):
         a, b = self
-        return intervalMembership(not a, not b)
+        return intervalMembership(fuzzy_not(a), fuzzy_not(b))
 
     def __xor__(self, other):
         if not isinstance(other, intervalMembership):
@@ -100,9 +100,7 @@ class intervalMembership(object):
 
         a1, b1 = self
         a2, b2 = other
-        a = (a1 and not a2) or (not a1 and a2)
-        b = (b1 and not b2) or (not b1 and b2)
-        return intervalMembership(not a, not b)
+        return intervalMembership(fuzzy_xor(a1, a2), fuzzy_xor(b1, b2))
 
     def __eq__(self, other):
         return self._wrapped == other
