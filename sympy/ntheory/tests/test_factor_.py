@@ -624,7 +624,7 @@ def test_is_amicable():
 def test_issue_17676():
     n = 28300421052393658575  #original issue 17676 problematic input
     assert sqrt(n)**2 == n
-    
+
     #some extra tests from issue 17676
     n = 2063**2 * 4127**1 * 4129**1
     assert sqrt(n)**2 == n
