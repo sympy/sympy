@@ -10,6 +10,7 @@ from sympy.core.expr import unchanged
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
 from sympy.core.sympify import sympify
+from sympy.matrices import MutableMatrix, ImmutableMatrix
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
@@ -889,6 +890,18 @@ def test_nfloat():
     assert nfloat(Eq((3 - I)**2/2 + I, 0)) == S.false
     # pass along kwargs
     assert nfloat([{S.Half: x}], dkeys=True) == [{Float(0.5): x}]
+
+    # Issue 17706
+    A = MutableMatrix([[1, 2], [3, 4]])
+    B = MutableMatrix(
+        [[Float('1.0', precision=53), Float('2.0', precision=53)],
+        [Float('3.0', precision=53), Float('4.0', precision=53)]])
+    assert _aresame(nfloat(A), B)
+    A = ImmutableMatrix([[1, 2], [3, 4]])
+    B = ImmutableMatrix(
+        [[Float('1.0', precision=53), Float('2.0', precision=53)],
+        [Float('3.0', precision=53), Float('4.0', precision=53)]])
+    assert _aresame(nfloat(A), B)
 
 
 def test_issue_7068():
