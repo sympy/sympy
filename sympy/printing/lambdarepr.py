@@ -135,7 +135,7 @@ class NumExprPrinter(LambdaPrinter):
                 is_last_cond_True = True
                 break
             else:
-                ans.append('where(%s,%s,' % (cond, expr))
+                ans.append('where(%s, %s, ' % (cond, expr))
                 parenthesis_count += 1
         if not is_last_cond_True:
             # simplest way to put a nan but raises
