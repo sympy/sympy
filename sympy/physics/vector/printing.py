@@ -183,7 +183,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         # 2 condition: w/o unicode support it is impossible to draw
         # dots above symbols
         # So we'll just print the SymPy way
-        if len(pform.picture) > 1 or not self._use_unicode:
+        if len(pform.picture) > 1:
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
         # There are only special symbols up to fourth-order derivatives
