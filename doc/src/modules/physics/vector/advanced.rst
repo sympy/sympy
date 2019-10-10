@@ -44,6 +44,7 @@ You can set a different symbol for time like so::
    q(tau)
    >>> q.diff(tau)
    Derivative(q(tau), tau)
+   >>> sympy.physics.vector.functions.TIME = Symbol('t')
 
 Inertia (Dyadics)
 =================
