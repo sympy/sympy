@@ -59,7 +59,12 @@ class intervalMembership(object):
         self._wrapped = (a, b)
 
     def __getitem__(self, i):
-        return self._wrapped[i]
+        try:
+            return self._wrapped[i]
+        except IndexError:
+            raise IndexError(
+                "{} must be a valid indexing for the 2-tuple."
+                .format(i))
 
     def __len__(self):
         return 2
