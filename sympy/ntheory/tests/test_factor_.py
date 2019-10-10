@@ -161,6 +161,11 @@ def test_factorint():
     assert factorint(64015937) == {7993: 1, 8009: 1}
     assert factorint(2**(2**6) + 1) == {274177: 1, 67280421310721: 1}
 
+    #issue 17676
+    assert factorint(28300421052393658575) == {3: 1, 5: 2, 11: 2, 43: 1, 2063: 2, 4127: 1, 4129: 1}
+    assert factorint(2063**2 * 4127**1 * 4129**1) == {2063: 2, 4127: 1, 4129: 1}
+    assert factorint(2347**2 * 7039**1 * 7043**1) == {2347: 2, 7039: 1, 7043: 1}
+
     assert factorint(0, multiple=True) == [0]
     assert factorint(1, multiple=True) == []
     assert factorint(-1, multiple=True) == [-1]
@@ -619,15 +624,3 @@ def test_is_amicable():
     assert is_amicable(173, 129) is False
     assert is_amicable(220, 284) is True
     assert is_amicable(8756, 8756) is False
-
-
-def test_issue_17676():
-    n = 28300421052393658575  #original issue 17676 problematic input
-    assert sqrt(n)**2 == n
-
-    #some extra tests from issue 17676
-    n = 2063**2 * 4127**1 * 4129**1
-    assert sqrt(n)**2 == n
-
-    n = 2347**2 * 7039**1 * 7043**1
-    assert sqrt(n)**2 == n
