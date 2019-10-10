@@ -1,5 +1,5 @@
 from sympy import (Mul, S, Pow, Symbol, summation, Dict,
-    factorial as fac)
+                   factorial as fac, sqrt)
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 from sympy.core.compatibility import long, range
@@ -619,3 +619,15 @@ def test_is_amicable():
     assert is_amicable(173, 129) is False
     assert is_amicable(220, 284) is True
     assert is_amicable(8756, 8756) is False
+
+
+def test_issue_17676():
+    n = 28300421052393658575  #original issue 17676 problematic input
+    assert sqrt(n)**2 == n
+    
+    #some extra tests from issue 17676
+    n = 2063**2 * 4127**1 * 4129**1
+    assert sqrt(n)**2 == n
+
+    n = 2347**2 * 7039**1 * 7043**1
+    assert sqrt(n)**2 == n
