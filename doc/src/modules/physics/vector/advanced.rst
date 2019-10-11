@@ -13,7 +13,7 @@ Time Variable
 
 The objects in `sympy.physics.vector` and `sympy.physics.mechanics` rely on a
 default symbol for time. If symbols are created with ``dynamicsymbols()`` they
-are implicit functions of the default time varialb.e This default symbol can be
+are implicit functions of the default time variable. This default symbol can be
 accessed like so::
 
    >>> from sympy.physics.vector import TIME
@@ -30,21 +30,29 @@ The default behavior is::
    >>> q = dynamicsymbols('q')
    >>> q
    q(t)
+   >>> list(q.free_symbols)[0] is TIME
+   True
    >>> q.diff(TIME)
    Derivative(q(t), t)
 
-You can set a different symbol for time like so::
+There are sometimes cases where you may want to set the default variable for
+time to something other than the default. It is possible to do so, but it
+requires monkey patching the variable in the module. **Note that this is
+fragile and you can likely encounter errors if the imports are not carefully
+done.** You can set a different symbol for time like so::
 
    >>> from sympy import Symbol
-   >>> import sympy.physics.vector.functions
+   >>> from sympy.physics.vector import functions, dynamicsymbols
    >>> tau = Symbol('tau')
-   >>> sympy.physics.vector.functions.TIME = tau
-   >>> q = sympy.physics.vector.functions.dynamicsymbols('q')
+   >>> t = functions.TIME
+   >>> functions.TIME = tau
+   >>> q = dynamicsymbols('q')
    >>> q
    q(tau)
    >>> q.diff(tau)
    Derivative(q(tau), tau)
-   >>> sympy.physics.vector.functions.TIME = Symbol('t')
+   >>> # set the value back to the default
+   >>> functions.TIME = t
 
 Inertia (Dyadics)
 =================
