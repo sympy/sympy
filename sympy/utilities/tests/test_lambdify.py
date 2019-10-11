@@ -258,11 +258,14 @@ def test_issue_9334():
     func_numexpr(foo, bar)
 
 def test_issue_12984():
+    import warnings
     if not numexpr:
         skip("numexpr not installed.")
-    func_numexpr = lambdify((x,y,z), Piecewise((y, x >= 0), (z, True)), numexpr)
+    func_numexpr = lambdify((x,y,z), Piecewise((y, x >= 0), (z, x > -1)), numexpr)
     assert func_numexpr(1, 24, 42) == 24
     assert func_numexpr(-1, 24, 42) == 42
+    warnings.simplefilter("error", RuntimeWarning)
+    raises(RuntimeWarning, lambda: func_numexpr(-1, 24, 42))
 
 #================== Test some functions ============================
 
