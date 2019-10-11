@@ -1692,6 +1692,10 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     for key in [x**2, x, 1]:
         eqs.append(Eq(dict_I[key], dict_I0[key]))
 
+    # We can have many possible roots for the equation.
+    # I am selecting the root on the basis that when we have
+    # standard equation eq = x*(x-1)*f(x).diff(x, 2) + ((a+b+1)*x-c)*f(x).diff(x) + a*b*f(x)
+    # then root should be a, b, c.
     _c = list(ordered(roots(eqs[2], c)))[0]
     if not _c.has(Symbol):
         _c = min(list(roots(eqs[2], c)))
