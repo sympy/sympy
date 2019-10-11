@@ -9,7 +9,7 @@ from sympy import (
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio,
     LambertW, airyai, airybi, airyaiprime, airybiprime, fresnelc, fresnels,
-    Heaviside, dirichlet_eta)
+    Heaviside, dirichlet_eta, diag)
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
@@ -2899,6 +2899,17 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    unicode_str = \
+u("""\
+⎡v̇_msc_00     0         0    ⎤
+⎢                            ⎥
+⎢   0      v̇_msc_01     0    ⎥
+⎢                            ⎥
+⎣   0         0      v̇_msc_02⎦\
+""")
+
+    expr = diag(*MatrixSymbol('vdot_msc',1,3))
+    assert upretty(expr) == unicode_str
 
 def test_pretty_ndim_arrays():
     x, y, z, w = symbols("x y z w")
