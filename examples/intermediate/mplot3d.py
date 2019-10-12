@@ -9,7 +9,7 @@ import sys
 
 from sample import sample
 
-from sympy import sin, Symbol
+from sympy import Symbol
 from sympy.external import import_module
 
 

@@ -8,11 +8,15 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
+from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly, factor
 from sympy.core.function import _mexpand
 from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
+from sympy.simplify.simplify import powsimp
 from sympy.solvers.solvers import solve, _invert
+from sympy.utilities.iterables import uniq
+
 
 
 def _filtered_gens(poly, symbol):
@@ -99,9 +103,12 @@ def _linab(arg, symbol):
     >>> _linab(3 + 2*exp(x), x)
     (2, 3, exp(x))
     """
-
-    arg = arg.expand()
+    from sympy.core.exprtools import factor_terms
+    arg = factor_terms(arg.expand())
     ind, dep = arg.as_independent(symbol)
+    if arg.is_Mul and dep.is_Add:
+        a, b, x = _linab(dep, symbol)
+        return ind*a, ind*b, x
     if not arg.is_Add:
         b = 0
         a, x = ind, dep
@@ -118,7 +125,7 @@ def _lambert(eq, x):
     """
     Given an expression assumed to be in the form
         ``F(X, a..f) = a*log(b*X + c) + d*X + f = 0``
-    where X = g(x) and x = g^-1(X), return the Lambert solution if possible:
+    where X = g(x) and x = g^-1(X), return the Lambert solution,
         ``x = g^-1(-c/b + (a/d)*W(d/(a*b)*exp(c*d/a/b)*exp(-f/a)))``.
     """
     eq = _mexpand(expand_log(eq))
@@ -145,21 +152,45 @@ def _lambert(eq, x):
     if X1 != X2:
         return []  # violated assumptions
 
+    # invert the generator X1 so we have x(u)
     u = Dummy('rhs')
-    sol = []
-    # check only real solutions:
-    for k in [-1, 0]:
-        l = LambertW(d/(a*b)*exp(c*d/a/b)*exp(-f/a), k)
-        # if W's arg is between -1/e and 0 there is
-        # a -1 branch real solution, too.
-        if k and not l.is_real:
-            continue
-        rhs = -c/b + (a/d)*l
+    xusolns = solve(X1 - u, x)
 
-        solns = solve(X1 - u, x)
-        for i, tmp in enumerate(solns):
-            solns[i] = tmp.subs(u, rhs)
-            sol.append(solns[i])
+    # There are infinitely many branches for LambertW
+    # but only branches for k = -1 and 0 might be real. The k = 0
+    # branch is real and the k = -1 branch is real if the LambertW argumen
+    # in in range [-1/e, 0]. Since `solve` does not return infinite
+    # solutions we will only include the -1 branch if it tests as real.
+    # Otherwise, inclusion of any LambertW in the solution indicates to
+    #  the user that there are imaginary solutions corresponding to
+    # different k values.
+    lambert_real_branches = [-1, 0]
+    sol = []
+
+    # solution of the given Lambert equation is like
+    # sol = -c/b + (a/d)*LambertW(arg, k),
+    # where arg = d/(a*b)*exp((c*d-b*f)/a/b) and k in lambert_real_branches.
+    # Instead of considering the single arg, `d/(a*b)*exp((c*d-b*f)/a/b)`,
+    # the individual `p` roots obtained when writing `exp((c*d-b*f)/a/b)`
+    # as `exp(A/p) = exp(A)**(1/p)`, where `p` is an Integer, are used.
+
+    # calculating args for LambertW
+    num, den = ((c*d-b*f)/a/b).as_numer_denom()
+    p, den = den.as_coeff_Mul()
+    e = exp(num/den)
+    t = Dummy('t')
+    args = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
+
+    # calculating solutions from args
+    for arg in args:
+        for k in lambert_real_branches:
+            w = LambertW(arg, k)
+            if k and not w.is_real:
+                continue
+            rhs = -c/b + (a/d)*w
+
+            for xu in xusolns:
+                sol.append(xu.subs(u, rhs))
     return sol
 
 
@@ -167,34 +198,89 @@ def _solve_lambert(f, symbol, gens):
     """Return solution to ``f`` if it is a Lambert-type expression
     else raise NotImplementedError.
 
-    The equality, ``f(x, a..f) = a*log(b*X + c) + d*X - f = 0`` has the
-    solution,  `X = -c/b + (a/d)*W(d/(a*b)*exp(c*d/a/b)*exp(f/a))`. There
-    are a variety of forms for `f(X, a..f)` as enumerated below:
+    For ``f(X, a..f) = a*log(b*X + c) + d*X - f = 0`` the solution
+    for ``X`` is ``X = -c/b + (a/d)*W(d/(a*b)*exp(c*d/a/b)*exp(f/a))``.
+    There are a variety of forms for `f(X, a..f)` as enumerated below:
 
     1a1)
-      if B**B = R for R not [0, 1] then
-      log(B) + log(log(B)) = log(log(R))
+      if B**B = R for R not in [0, 1] (since those cases would already
+      be solved before getting here) then log of both sides gives
+      log(B) + log(log(B)) = log(log(R)) and
       X = log(B), a = 1, b = 1, c = 0, d = 1, f = log(log(R))
     1a2)
-      if B*(b*log(B) + c)**a = R then
-      log(B) + a*log(b*log(B) + c) = log(R)
-      X = log(B); d=1, f=log(R)
+      if B*(b*log(B) + c)**a = R then log of both sides gives
+      log(B) + a*log(b*log(B) + c) = log(R) and
+      X = log(B), d=1, f=log(R)
     1b)
-      if a*log(b*B + c) + d*B = R then
+      if a*log(b*B + c) + d*B = R and
       X = B, f = R
     2a)
-      if (b*B + c)*exp(d*B + g) = R then
-      log(b*B + c) + d*B + g = log(R)
-      a = 1, f = log(R) - g, X = B
+      if (b*B + c)*exp(d*B + g) = R then log of both sides gives
+      log(b*B + c) + d*B + g = log(R) and
+      X = B, a = 1, f = log(R) - g
     2b)
-      if -b*B + g*exp(d*B + h) = c then
-      log(g) + d*B + h - log(b*B + c) = 0
-      a = -1, f = -h - log(g), X = B
+      if g*exp(d*B + h) - b*B = c then the log form is
+      log(g) + d*B + h - log(b*B + c) = 0 and
+      X = B, a = -1, f = -h - log(g)
     3)
-      if d*p**(a*B + g) - b*B = c then
-      log(d) + (a*B + g)*log(p) - log(c + b*B) = 0
-      a = -1, d = a*log(p), f = -log(d) - g*log(p)
+      if d*p**(a*B + g) - b*B = c then the log form is
+      log(d) + (a*B + g)*log(p) - log(b*B + c) = 0 and
+      X = B, a = -1, d = a*log(p), f = -log(d) - g*log(p)
     """
+
+    def _solve_even_degree_expr(expr, t, symbol):
+        """Return the unique solutions of equations derived from
+        ``expr`` by replacing ``t`` with ``+/- symbol``.
+
+        Parameters
+        ==========
+
+        expr : Expr
+            The expression which includes a dummy variable t to be
+            replaced with +symbol and -symbol.
+
+        symbol : Symbol
+            The symbol for which a solution is being sought.
+
+        Returns
+        =======
+
+        List of unique solution of the two equations generated by
+        replacing ``t`` with positive and negative ``symbol``.
+
+        Notes
+        =====
+
+        If ``expr = 2*log(t) + x/2` then solutions for
+        ``2*log(x) + x/2 = 0`` and ``2*log(-x) + x/2 = 0`` are
+        returned by this function. Though this may seem
+        counter-intuitive, one must note that the ``expr`` being
+        solved here has been derived from a different expression. For
+        an expression like ``eq = x**2*g(x) = 1``, if we take the
+        log of both sides we obtain ``log(x**2) + log(g(x)) = 0``. If
+        x is positive then this simplifies to
+        ``2*log(x) + log(g(x)) = 0``; the Lambert-solving routines will
+        return solutions for this, but we must also consider the
+        solutions for  ``2*log(-x) + log(g(x))`` since those must also
+        be a solution of ``eq`` which has the same value when the ``x``
+        in ``x**2`` is negated. If `g(x)` does not have even powers of
+        symbol then we don't want to replace the ``x`` there with
+        ``-x``. So the role of the ``t`` in the expression received by
+        this function is to mark where ``+/-x`` should be inserted
+        before obtaining the Lambert solutions.
+
+        """
+        nlhs, plhs = [
+            expr.xreplace({t: sgn*symbol}) for sgn in (-1, 1)]
+        sols = _solve_lambert(nlhs, symbol, gens)
+        if plhs != nlhs:
+            sols.extend(_solve_lambert(plhs, symbol, gens))
+        # uniq is needed for a case like
+        # 2*log(t) - log(-z**2) + log(z + log(x) + log(z))
+        # where subtituting t with +/-x gives all the same solution;
+        # uniq, rather than list(set()), is used to maintain canonical
+        # order
+        return list(uniq(sols))
 
     nrhs, lhs = f.as_independent(symbol, as_Add=True)
     rhs = -nrhs
@@ -205,30 +291,55 @@ def _solve_lambert(f, symbol, gens):
     if not lamcheck:
         raise NotImplementedError()
 
-    if lhs.is_Mul:
-        lhs = expand_log(log(lhs))
-        rhs = log(rhs)
+    if lhs.is_Add or lhs.is_Mul:
+        # replacing all even_degrees of symbol with dummy variable t
+        # since these will need special handling; non-Add/Mul do not
+        # need this handling
+        t = Dummy('t', **symbol.assumptions0)
+        lhs = lhs.replace(
+            lambda i:  # find symbol**even
+                i.is_Pow and i.base == symbol and i.exp.is_even,
+            lambda i:  # replace t**even
+                t**i.exp)
 
-    lhs = factor(lhs, deep=True)
+        if lhs.is_Add and lhs.has(t):
+            t_indep = lhs.subs(t, 0)
+            t_term = lhs - t_indep
+            _rhs = rhs - t_indep
+            if not t_term.is_Add and _rhs and not (
+                    t_term.has(S.ComplexInfinity, S.NaN)):
+                eq = expand_log(log(t_term) - log(_rhs))
+                return _solve_even_degree_expr(eq, t, symbol)
+        elif lhs.is_Mul and rhs:
+            # this needs to happen whether t is present or not
+            lhs = expand_log(log(lhs), force=True)
+            rhs = log(rhs)
+            if lhs.has(t) and lhs.is_Add:
+                # it expanded from Mul to Add
+                eq = lhs - rhs
+                return _solve_even_degree_expr(eq, t, symbol)
+
+        # restore symbol in lhs
+        lhs = lhs.xreplace({t: symbol})
+
+    lhs = powsimp(factor(lhs, deep=True))
+
     # make sure we have inverted as completely as possible
     r = Dummy()
     i, lhs = _invert(lhs - r, symbol)
     rhs = i.xreplace({r: rhs})
 
-    # For the first ones:
-    # 1a1) B**B = R != 0 (when 0, there is only a solution if the base is 0,
-    #                     but if it is, the exp is 0 and 0**0=1
-    #                     comes back as B*log(B) = log(R)
-    # 1a2) B*(a + b*log(B))**p = R or with monomial expanded or with whole
-    #                              thing expanded comes back unchanged
-    #     log(B) + p*log(a + b*log(B)) = log(R)
-    #     lhs is Mul:
-    #         expand log of both sides to give:
-    #         log(B) + log(log(B)) = log(log(R))
-    # 1b) d*log(a*B + b) + c*B = R
-    #     lhs is Add:
-    #         isolate c*B and expand log of both sides:
-    #         log(c) + log(B) = log(R - d*log(a*B + b))
+    # For the first forms:
+    #
+    # 1a1) B**B = R will arrive here as B*log(B) = log(R)
+    #      lhs is Mul so take log of both sides:
+    #        log(B) + log(log(B)) = log(log(R))
+    # 1a2) B*(b*log(B) + c)**a = R will arrive unchanged so
+    #      lhs is Mul, so take log of both sides:
+    #        log(B) + a*log(b*log(B) + c) = log(R)
+    # 1b) d*log(a*B + b) + c*B = R will arrive unchanged so
+    #      lhs is Add, so isolate c*B and expand log of both sides:
+    #        log(c) + log(B) = log(R - d*log(a*B + b))
 
     soln = []
     if not soln:
@@ -250,17 +361,16 @@ def _solve_lambert(f, symbol, gens):
                     #it's ready to go
                     soln = _lambert(lhs - rhs, symbol)
 
-    # For the next two,
+    # For the next forms,
+    #
     #     collect on main exp
     #     2a) (b*B + c)*exp(d*B + g) = R
-    #         lhs is mul:
-    #             log to give
-    #             log(b*B + c) + d*B = log(R) - g
-    #     2b) -b*B + g*exp(d*B + h) = R
-    #         lhs is add:
-    #             add b*B
-    #             log and rearrange
-    #             log(R + b*B) - d*B = log(g) + h
+    #         lhs is mul, so take log of both sides:
+    #           log(b*B + c) + d*B = log(R) - g
+    #     2b) g*exp(d*B + h) - b*B = R
+    #         lhs is add, so add b*B to both sides,
+    #         take the log of both sides and rearrange to give
+    #           log(R + b*B) - d*B = log(g) + h
 
     if not soln:
         mainexp = _mostfunc(lhs, exp, symbol)
@@ -280,15 +390,18 @@ def _solve_lambert(f, symbol, gens):
                 diff = log(mainterm) - log(rhs)
                 soln = _lambert(expand_log(diff), symbol)
 
-    # 3) d*p**(a*B + b) + c*B = R
-    #     collect on main pow
-    #     log(R - c*B) - a*B*log(p) = log(d) + b*log(p)
-
+    # For the last form:
+    #
+    #  3) d*p**(a*B + g) - b*B = c
+    #     collect on main pow, add b*B to both sides,
+    #     take log of both sides and rearrange to give
+    #       a*B*log(p) - log(b*B + c) = -log(d) - g*log(p)
     if not soln:
         mainpow = _mostfunc(lhs, Pow, symbol)
         if mainpow and symbol in mainpow.exp.free_symbols:
             lhs = collect(lhs, mainpow)
             if lhs.is_Mul and rhs != 0:
+                # b*B = 0
                 soln = _lambert(expand_log(log(lhs) - log(rhs)), symbol)
             elif lhs.is_Add:
                 # move all but mainpow-containing term to rhs

@@ -1,7 +1,7 @@
 from sympy.core import (S, pi, oo, Symbol, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, sign, Max)
+                             gamma, sign, Max, Min, factorial, beta)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
@@ -82,6 +82,8 @@ def test_rcode_Integer():
 
 def test_rcode_functions():
     assert rcode(sin(x) ** cos(x)) == "sin(x)^cos(x)"
+    assert rcode(factorial(x) + gamma(y)) == "factorial(x) + gamma(y)"
+    assert rcode(beta(Min(x, y), Max(x, y))) == "beta(min(x, y), max(x, y))"
 
 
 def test_rcode_inline_function():
@@ -486,4 +488,4 @@ def test_MatrixElement_printing():
     assert(rcode(3 * A[0, 0]) == "3*A[0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(rcode(F) == "((-1)*B + A)[0]")
+    assert(rcode(F) == "(A - B)[0]")

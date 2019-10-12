@@ -66,12 +66,18 @@ fibonacci
 .. autoclass:: sympy.functions.combinatorial.numbers.fibonacci
    :members:
 
+tribonacci
+----------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.tribonacci
+   :members:
+
+
 harmonic
 --------
 
 .. autoclass:: sympy.functions.combinatorial.numbers.harmonic
    :members:
-
 
 lucas
 -----
@@ -79,6 +85,17 @@ lucas
 .. autoclass:: sympy.functions.combinatorial.numbers.lucas
    :members:
 
+genocchi
+--------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.genocchi
+   :members:
+
+partition
+---------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.partition
+   :members:
 
 MultiFactorial
 --------------

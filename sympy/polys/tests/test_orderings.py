@@ -108,13 +108,13 @@ def test_monomial_key():
     raises(ValueError, lambda: monomial_key('foo'))
     raises(ValueError, lambda: monomial_key(1))
 
-    M = [x, x**2*z**2, x*y, x**2, S(1), y**2, x**3, y, z, x*y**2*z, x**2*y**2]
+    M = [x, x**2*z**2, x*y, x**2, S.One, y**2, x**3, y, z, x*y**2*z, x**2*y**2]
     assert sorted(M, key=monomial_key('lex', [z, y, x])) == \
-        [S(1), x, x**2, x**3, y, x*y, y**2, x**2*y**2, z, x*y**2*z, x**2*z**2]
+        [S.One, x, x**2, x**3, y, x*y, y**2, x**2*y**2, z, x*y**2*z, x**2*z**2]
     assert sorted(M, key=monomial_key('grlex', [z, y, x])) == \
-        [S(1), x, y, z, x**2, x*y, y**2, x**3, x**2*y**2, x*y**2*z, x**2*z**2]
+        [S.One, x, y, z, x**2, x*y, y**2, x**3, x**2*y**2, x*y**2*z, x**2*z**2]
     assert sorted(M, key=monomial_key('grevlex', [z, y, x])) == \
-        [S(1), x, y, z, x**2, x*y, y**2, x**3, x**2*y**2, x**2*z**2, x*y**2*z]
+        [S.One, x, y, z, x**2, x*y, y**2, x**3, x**2*y**2, x**2*z**2, x*y**2*z]
 
 def test_build_product_order():
     assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])((4, 5, 6, 7)) == \

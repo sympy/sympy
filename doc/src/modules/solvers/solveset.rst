@@ -1,3 +1,5 @@
+.. _solveset:
+
 Solveset
 ========
 
@@ -398,7 +400,7 @@ How does ``solveset`` ensure that it is not returning any wrong solution?
     >>> from sympy import symbols, S, pprint, solveset
     >>> x, n = symbols('x, n')
     >>> pprint(solveset(abs(x) - n, x, domain=S.Reals), use_unicode=True)
-    ([0, ∞) ∩ {n}) ∪ ((-∞, 0] ∩ {-n})
+    {x | x ∊ {-n, n} ∧ (n ∈ [0, ∞))}
 
  Though, there still a lot of work needs to be done in this regard.
 
@@ -522,7 +524,7 @@ How are symbolic parameters handled in solveset?
     >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
     Interval(0, 2)
     >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
-    Union(Interval(-sqrt(2), -1), Interval(1, 2))
+    Union(Interval(1, 2), Interval(-sqrt(2), -1))
 
 
 References
@@ -589,6 +591,20 @@ nonlinsolve
 -----------
 
 .. autofunction:: sympy.solvers.solveset.nonlinsolve
+
+
+transolve
+---------
+
+.. autofunction:: sympy.solvers.solveset._transolve
+
+.. autofunction:: sympy.solvers.solveset._is_exponential
+
+.. autofunction:: sympy.solvers.solveset._solve_exponential
+
+.. autofunction:: sympy.solvers.solveset._solve_logarithm
+
+.. autofunction:: sympy.solvers.solveset._is_logarithmic
 
 
 Diophantine Equations (DEs)

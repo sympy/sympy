@@ -58,7 +58,7 @@ class mathieus(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
     .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuS/
@@ -73,7 +73,7 @@ class mathieus(MathieuBase):
 
     @classmethod
     def eval(cls, a, q, z):
-        if q.is_Number and q is S.Zero:
+        if q.is_Number and q.is_zero:
             return sin(sqrt(a)*z)
         # Try to pull out factors of -1
         if z.could_extract_minus_sign():
@@ -115,7 +115,7 @@ class mathieuc(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
     .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuC/
@@ -130,7 +130,7 @@ class mathieuc(MathieuBase):
 
     @classmethod
     def eval(cls, a, q, z):
-        if q.is_Number and q is S.Zero:
+        if q.is_Number and q.is_zero:
             return cos(sqrt(a)*z)
         # Try to pull out factors of -1
         if z.could_extract_minus_sign():
@@ -172,7 +172,7 @@ class mathieusprime(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
     .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuSPrime/
@@ -187,7 +187,7 @@ class mathieusprime(MathieuBase):
 
     @classmethod
     def eval(cls, a, q, z):
-        if q.is_Number and q is S.Zero:
+        if q.is_Number and q.is_zero:
             return sqrt(a)*cos(sqrt(a)*z)
         # Try to pull out factors of -1
         if z.could_extract_minus_sign():
@@ -229,7 +229,7 @@ class mathieucprime(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
     .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuCPrime/
@@ -244,7 +244,7 @@ class mathieucprime(MathieuBase):
 
     @classmethod
     def eval(cls, a, q, z):
-        if q.is_Number and q is S.Zero:
+        if q.is_Number and q.is_zero:
             return -sqrt(a)*sin(sqrt(a)*z)
         # Try to pull out factors of -1
         if z.could_extract_minus_sign():

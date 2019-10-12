@@ -4,7 +4,7 @@
 Program to execute doctests using the py.test like interface.
 
 The advantage over py.test is that it only depends on sympy and should just
-work in any circumstances. See "sympy.dotest?" for documentation.
+work in any circumstances. See "sympy.doctest?" for documentation.
 """
 
 from __future__ import print_function

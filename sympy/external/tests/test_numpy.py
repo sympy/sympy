@@ -4,8 +4,7 @@
 # Always write regular SymPy tests for anything, that can be tested in pure
 # Python (without numpy). Here we test everything, that a user may need when
 # using SymPy with NumPy
-
-from __future__ import division
+from distutils.version import LooseVersion
 
 from sympy.external import import_module
 
@@ -24,6 +23,7 @@ import sympy
 import mpmath
 from sympy.abc import x, y, z
 from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.pytest import raises
 
 
 # first, systematically check, that all operations are implemented and don't
@@ -232,11 +232,15 @@ def test_lambdify():
     f = lambdify(x, sin(x), "numpy")
     prec = 1e-15
     assert -prec < f(0.2) - sin02 < prec
-    try:
-        f(x)  # if this succeeds, it can't be a numpy function
-        assert False
-    except AttributeError:
-        pass
+
+    # if this succeeds, it can't be a numpy function
+
+    if LooseVersion(numpy.__version__) >= LooseVersion('1.17'):
+        with raises(TypeError):
+            f(x)
+    else:
+        with raises(AttributeError):
+            f(x)
 
 
 def test_lambdify_matrix():

@@ -27,7 +27,7 @@ def test_free_group():
     assert len(F) == 3
     assert str(F) == '<free group on the generators (x, y, z)>'
     assert not F == G
-    assert F.order() == oo
+    assert F.order() is oo
     assert F.is_abelian == False
     assert F.center() == set([F.identity])
 
@@ -90,7 +90,7 @@ def test_FreeGroupElm_type_error():
 
 def test_FreeGroupElm_methods():
     assert (x**0).order() == 1
-    assert (y**2).order() == oo
+    assert (y**2).order() is oo
     assert (x**-1*y).commutator(x) == y**-1*x**-1*y*x
     assert len(x**2*y**-1) == 3
     assert len(x**-1*y**3*z) == 5
@@ -131,6 +131,9 @@ def test_FreeGroupElm_ext_rep():
 
 
 def test_FreeGroupElm__mul__pow__():
+    x1 = x.group.dtype(((Symbol('x'), 1),))
+    assert x**2 == x1*x
+
     assert (x**2*y*x**-2)**4 == x**2*y**4*x**-2
     assert (x**2)**2 == x**4
     assert (x**-1)**-1 == x

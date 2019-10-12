@@ -28,8 +28,8 @@ Gamma, Beta and related Functions
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.polygamma
    :members:
-.. autofunction:: sympy.functions.special.gamma_functions.digamma
-.. autofunction:: sympy.functions.special.gamma_functions.trigamma
+.. autoclass:: sympy.functions.special.gamma_functions.digamma
+.. autoclass:: sympy.functions.special.gamma_functions.trigamma
 .. autoclass:: sympy.functions.special.gamma_functions.uppergamma
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.lowergamma

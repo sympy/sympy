@@ -14,7 +14,7 @@ from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point, Point2D
 from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
 from sympy.geometry.ellipse import Ellipse
-
+from sympy.functions import sign
 
 class Parabola(GeometrySet):
     """A parabolic GeometryEntity.
@@ -183,7 +183,7 @@ class Parabola(GeometrySet):
         The eccentricity for every Parabola is 1 by definition.
 
         """
-        return S(1)
+        return S.One
 
     def equation(self, x='x', y='y'):
         """The equation of the parabola.
@@ -368,20 +368,13 @@ class Parabola(GeometrySet):
         -4
 
         """
-        if (self.axis_of_symmetry.slope == 0):
-            x = -(self.directrix.coefficients[2])
-            if (x < self.focus.args[0]):
-                p = self.focal_length
-            else:
-                p = -self.focal_length
+        if self.axis_of_symmetry.slope == 0:
+            x = self.directrix.coefficients[2]
+            p = sign(self.focus.args[0] + x)
         else:
-            y = -(self.directrix.coefficients[2])
-            if (y > self.focus.args[1]):
-                p = -self.focal_length
-            else:
-                p = self.focal_length
-
-        return p
+            y = self.directrix.coefficients[2]
+            p = sign(self.focus.args[1] + y)
+        return p * self.focal_length
 
     @property
     def vertex(self):
