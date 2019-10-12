@@ -31,7 +31,7 @@ from sympy.matrices.expressions import hadamard_power
 from sympy.physics import mechanics
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
-from sympy.printing.pretty.pretty_symbology import center_accent
+from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
 
 from sympy.sets import ImageSet
 from sympy.sets.setexpr import SetExpr
@@ -6903,3 +6903,8 @@ u("""\
  ‾‾‾    \n\
 n = -∞  \
 """)
+
+def test_is_combining():
+    line = 'v̇_m'
+    assert [is_combining(sym) for sym in line] == \
+        [False, True, False, False]
