@@ -1008,7 +1008,9 @@ def solve(f, *symbols, **flags):
                         ele[sol.lhs] = sol.rhs
                     solutions[i] = ele
                 return solutions
-            return reduce_inequalities(f, symbols=symbols)
+
+            if fi.is_Relational:
+                return reduce_inequalities(f, symbols=symbols)
 
         if isinstance(fi, Poly):
             f[i] = fi.as_expr()
