@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # isort:skip_file
 """
 Dimensional analysis and unit systems.
@@ -41,7 +40,7 @@ from .dimensions import (
     force, frequency, impedance, inductance, length,
     luminous_intensity, magnetic_density,
     magnetic_flux, mass, momentum, power, pressure, temperature, time,
-    velocity, voltage, volume,
+    velocity, voltage, volume
 )
 
 Unit = Quantity
@@ -114,6 +113,9 @@ from .definitions import (
     weber, webers, Wb, wb,
     optical_power, dioptre, D,
     lux, lx,
+    katal, kat,
+    gray, Gy,
+    becquerel, Bq,
     km, kilometer, kilometers,
     dm, decimeter, decimeters,
     cm, centimeter, centimeters,
@@ -148,6 +150,7 @@ from .definitions import (
     year, years, tropical_year,
     G, gravitational_constant,
     c, speed_of_light,
+    elementary_charge,
     Z0,
     hbar,
     planck,
@@ -162,7 +165,7 @@ from .definitions import (
     von_klitzing_constant,
     amu, amus, atomic_mass_unit, atomic_mass_constant,
     gee, gees, acceleration_due_to_gravity,
-    u0, magnetic_constant,
+    u0, magnetic_constant, vacuum_permeability,
     e0, electric_constant, vacuum_permittivity,
     Z0, vacuum_impedance,
     coulomb_constant, electric_force_constant,
@@ -222,9 +225,9 @@ def find_unit(quantity):
 
     >>> from sympy.physics import units as u
     >>> u.find_unit('charge')
-    ['C', 'coulomb', 'coulombs', 'planck_charge']
+    ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit(u.charge)
-    ['C', 'coulomb', 'coulombs', 'planck_charge']
+    ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit("ampere")
     ['ampere', 'amperes']
     >>> u.find_unit('volt')

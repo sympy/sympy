@@ -4,15 +4,16 @@ from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
 
-from sympy.core.evaluate import global_evaluate
-from sympy.core.compatibility import iterable, ordered, default_sort_key
 from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, symbols, expand_mul
-from sympy.core.numbers import Rational
-from sympy.core.exprtools import Factors, gcd_terms
-from sympy.core.mul import _keep_coeff, _unevaluated_Mul
-from sympy.core.function import _mexpand
 from sympy.core.add import _unevaluated_Add
+from sympy.core.compatibility import iterable, ordered, default_sort_key
+from sympy.core.evaluate import global_evaluate
+from sympy.core.exprtools import Factors, gcd_terms
+from sympy.core.function import _mexpand
+from sympy.core.mul import _keep_coeff, _unevaluated_Mul
+from sympy.core.numbers import Rational
 from sympy.functions import exp, sqrt, log
+from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
 
@@ -129,10 +130,10 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         (a + b)*Derivative(f(x), x)
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), f)
-        (a + b)*Derivative(f(x), x, x)
+        (a + b)*Derivative(f(x), (x, 2))
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
-        a*Derivative(f(x), x, x) + b*Derivative(f(x), x, x)
+        a*Derivative(f(x), (x, 2)) + b*Derivative(f(x), (x, 2))
 
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f)
         (a + b)*f(x) + (a + b)*Derivative(f(x), x)
@@ -140,7 +141,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     Or you can even match both derivative order and exponent at the same time::
 
         >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
-        (a + b)*Derivative(f(x), x, x)**2
+        (a + b)*Derivative(f(x), (x, 2))**2
 
     Finally, you can apply a function to each of the collected coefficients.
     For example you can factorize symbolic coefficients of polynomial::
@@ -155,6 +156,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     See Also
     ========
+
     collect_const, collect_sqrt, rcollect
     """
     expr = sympify(expr)
@@ -325,7 +327,12 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             return [_f for _f in terms if _f], elems, common_expo, has_deriv
 
     if evaluate:
-        if expr.is_Mul:
+        if expr.is_Add:
+            o = expr.getO() or 0
+            expr = expr.func(*[
+                    collect(a, syms, func, True, exact, distribute_order_term)
+                    for a in expr.args if a != o]) + o
+        elif expr.is_Mul:
             return expr.func(*[
                 collect(term, syms, func, True, exact, distribute_order_term)
                 for term in expr.args])
@@ -371,6 +378,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                 print("DEBUG: returned %s" % str(result))
 
             if result is not None:
+                if not symbol.is_commutative:
+                    raise AttributeError("Can not collect noncommutative symbol")
+
                 terms, elems, common_expo, has_deriv = result
 
                 # when there was derivative in current pattern we
@@ -430,6 +440,7 @@ def rcollect(expr, *vars):
 
     See Also
     ========
+
     collect, collect_const, collect_sqrt
     """
     if expr.is_Atom or not expr.has(*vars):
@@ -481,6 +492,7 @@ def collect_sqrt(expr, evaluate=None):
 
     See Also
     ========
+
     collect, collect_const, rcollect
     """
     if evaluate is None:
@@ -521,11 +533,84 @@ def collect_sqrt(expr, evaluate=None):
     return coeff*d
 
 
+def collect_abs(expr):
+    """Return ``expr`` with arguments of multiple Abs in a term collected
+    under a single instance.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.radsimp import collect_abs
+    >>> from sympy.abc import x
+    >>> collect_abs(abs(x + 1)/abs(x**2 - 1))
+    Abs((x + 1)/(x**2 - 1))
+    >>> collect_abs(abs(1/x))
+    Abs(1/x)
+    """
+    def _abs(mul):
+      from sympy.core.mul import _mulsort
+      c, nc = mul.args_cnc()
+      a = []
+      o = []
+      for i in c:
+          if isinstance(i, Abs):
+              a.append(i.args[0])
+          elif isinstance(i, Pow) and isinstance(i.base, Abs) and i.exp.is_real:
+              a.append(i.base.args[0]**i.exp)
+          else:
+              o.append(i)
+      if len(a) < 2 and not any(i.exp.is_negative for i in a if isinstance(i, Pow)):
+          return mul
+      absarg = Mul(*a)
+      A = Abs(absarg)
+      args = [A]
+      args.extend(o)
+      if not A.has(Abs):
+          args.extend(nc)
+          return Mul(*args)
+      if not isinstance(A, Abs):
+          # reevaluate and make it unevaluated
+          A = Abs(absarg, evaluate=False)
+      args[0] = A
+      _mulsort(args)
+      args.extend(nc)  # nc always go last
+      return Mul._from_args(args, is_commutative=bool(nc))
+
+    return expr.replace(
+        lambda x: isinstance(x, Mul),
+        lambda x: _abs(x)).replace(
+            lambda x: isinstance(x, Pow),
+            lambda x: _abs(x))
+
+
 def collect_const(expr, *vars, **kwargs):
     """A non-greedy collection of terms with similar number coefficients in
     an Add expr. If ``vars`` is given then only those constants will be
     targeted. Although any Number can also be targeted, if this is not
     desired set ``Numbers=False`` and no Float or Rational will be collected.
+
+    Parameters
+    ==========
+
+    expr : sympy expression
+        This parameter defines the expression the expression from which
+        terms with similar coefficients are to be collected. A non-Add
+        expression is returned as it is.
+
+    vars : variable length collection of Numbers, optional
+        Specifies the constants to target for collection. Can be multiple in
+        number.
+
+    kwargs : ``Numbers`` is the only possible argument to pass.
+        Numbers (default=True) specifies to target all instance of
+        :class:`sympy.core.numbers.Number` class. If ``Numbers=False``, then
+        no Float or Rational will be collected.
+
+    Returns
+    =======
+
+    expr : Expr
+        Returns an expression with similar coefficient terms collected.
 
     Examples
     ========
@@ -557,6 +642,7 @@ def collect_const(expr, *vars, **kwargs):
 
     See Also
     ========
+
     collect, collect_sqrt, rcollect
     """
     if not expr.is_Add:
@@ -659,7 +745,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> from sympy.abc import a, b, c
 
     >>> radsimp(1/(2 + sqrt(2)))
-    (-sqrt(2) + 2)/2
+    (2 - sqrt(2))/2
     >>> x,y = map(Symbol, 'xy')
     >>> e = ((2 + 2*sqrt(2))*x + (2 + sqrt(8))*y)/(2 + sqrt(2))
     >>> radsimp(e)
@@ -885,7 +971,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
 def rad_rationalize(num, den):
     """
     Rationalize num/den by removing square roots in the denominator;
-    num and den are sum of terms whose squares are rationals
+    num and den are sum of terms whose squares are positive rationals.
 
     Examples
     ========
@@ -1026,9 +1112,9 @@ expand_fraction = fraction_expand
 
 def split_surds(expr):
     """
-    split an expression with terms whose squares are rationals
+    Split an expression with terms whose squares are positive rationals
     into a sum of terms whose surds squared have gcd equal to g
-    and a sum of terms with surds squared prime with g
+    and a sum of terms with surds squared prime with g.
 
     Examples
     ========

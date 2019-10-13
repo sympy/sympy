@@ -22,9 +22,19 @@ fi
 
 if [[ "${TEST_SAGE}" == "true" ]]; then
     echo "Testing SAGE"
+    source deactivate
+    source activate sage
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
-    sage -t sympy/external/tests/test_sage.py
+    PYTHONPATH=. sage -t sympy/external/tests/test_sage.py
+    export MPMATH_NOSAGE=1
+    source deactivate
+    source activate test-environment
+fi
+
+if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
+    python bin/test_external_imports.py
+    python bin/test_executable.py
 fi
 
 # We change directories to make sure that we test the installed version of
@@ -32,9 +42,30 @@ fi
 mkdir empty
 cd empty
 
+if [[ "${TEST_COVERAGE}" == "true" ]]; then
+    rm -f $TRAVIS_BUILD_DIR/.coverage.* $TRAVIS_BUILD_DIR/.coverage
+    cat << EOF | python
+import distutils.sysconfig
+import os
+
+with open(os.path.join(distutils.sysconfig.get_python_lib(), 'coverage.pth'), 'w') as pth:
+    pth.write('import sys; exec(%r)\n' % '''\
+try:
+    import coverage
+except ImportError:
+    pass
+else:
+    coverage.process_startup()
+''')
+EOF
+    export COVERAGE_PROCESS_START=$TRAVIS_BUILD_DIR/coveragerc_travis
+fi
+
 if [[ "${TEST_ASCII}" == "true" ]]; then
-    export OLD_LC_ALL=$LC_ALL
-    export LC_ALL=C
+    # Force Python to act like pre-3.7 where LC_ALL=C causes
+    # UnicodeEncodeErrors. Once the lowest Python version we support is 3.7,
+    # we can consider dropping this test entirely. See PEP 538.
+    export PYTHONIOENCODING=ascii:strict
     cat <<EOF | python
 print('Testing ASCII')
 try:
@@ -47,7 +78,6 @@ import sympy
 if not (sympy.test('print') and sympy.doctest()):
     raise Exception('Tests failed')
 EOF
-    export LC_ALL=$OLD_LC_ALL
 fi
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
@@ -72,59 +102,111 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
-# lambdify with tensorflow is tested here
-if [[ "${TEST_OPT_DEPENDENCY}" == *"numpy"* ]]; then
+# lambdify with tensorflow and numexpr is tested here
+
+# TODO: Generate these tests automatically
+if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     cat << EOF | python
-print('Testing NUMPY')
+print('Testing optional dependencies')
+
 import sympy
-if not (sympy.test('*numpy*', 'sympy/core/tests/test_numbers.py',
-                   'sympy/matrices/', 'sympy/physics/quantum/',
-                   'sympy/core/tests/test_sympify.py',
-                   'sympy/utilities/tests/test_lambdify.py',
-                   blacklist=['sympy/physics/quantum/tests/test_circuitplot.py'])
-        and sympy.doctest('sympy/matrices/', 'sympy/utilities/lambdify.py')):
+test_list = [
+    # numpy
+    '*numpy*',
+    'sympy/core/tests/test_numbers.py',
+    'sympy/matrices/',
+    'sympy/physics/quantum/',
+    'sympy/core/tests/test_sympify.py',
+    'sympy/utilities/tests/test_lambdify.py',
+
+    # scipy
+    '*scipy*',
+
+    # llvmlite
+    '*llvm*',
+
+    # theano
+    '*theano*',
+
+    # gmpy
+    'polys',
+
+    # autowrap
+    '*autowrap*',
+
+    # ipython
+    '*ipython*',
+
+    # antlr, lfortran, clang
+    'sympy/parsing/',
+
+    # matchpy
+    '*rubi*',
+
+    # codegen
+    'sympy/codegen/',
+    'sympy/utilities/tests/test_codegen',
+    'sympy/utilities/_compilation/tests/test_compilation',
+
+    # cloudpickle
+    'pickling',
+
+    # pycosat
+    'sympy/logic',
+    'sympy/assumptions',
+
+]
+
+blacklist = [
+    'sympy/physics/quantum/tests/test_circuitplot.py',
+]
+
+doctest_list = [
+    # numpy
+    'sympy/matrices/',
+    'sympy/utilities/lambdify.py',
+
+    # scipy
+    '*scipy*',
+
+    # llvmlite
+    '*llvm*',
+
+    # theano
+    '*theano*',
+
+    # gmpy
+    'polys',
+
+    # autowrap
+    '*autowrap*',
+
+    # ipython
+    '*ipython*',
+
+    # antlr, lfortran, clang
+    'sympy/parsing/',
+
+    # matchpy
+    '*rubi*',
+
+    # codegen
+    'sympy/codegen/',
+
+    # pycosat
+    'sympy/logic',
+    'sympy/assumptions',
+
+]
+
+if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
     raise Exception('Tests failed')
 EOF
+    cd ..
+    bin/doctest doc/src/modules/numeric-computation.rst
 fi
 
-if [[ "${TEST_OPT_DEPENDENCY}" == *"scipy"* ]]; then
-    cat << EOF | python
-print('Testing SCIPY')
-import sympy
-# scipy matrices are tested in numpy testing
-if not sympy.test('sympy/external/tests/test_scipy.py'):
-    raise Exception('Tests failed')
-EOF
-fi
-
-if [[ "${TEST_OPT_DEPENDENCY}" == *"llvmlite"* ]]; then
-    cat << EOF | python
-print('Testing LLVMJIT')
-import sympy
-if not (sympy.test('sympy/printing/tests/test_llvmjit.py')
-        and sympy.doctest('sympy/printing/llvmjitcode.py')):
-    raise Exception('Tests failed')
-EOF
-fi
-
-if [[ "${TEST_OPT_DEPENDENCY}" == *"theano"* ]]; then
-    cat << EOF | python
-print('Testing THEANO')
-import sympy
-if not sympy.test('*theano*'):
-    raise Exception('Tests failed')
-EOF
-fi
-
-if [[ "${TEST_OPT_DEPENDENCY}" == *"gmpy"* ]]; then
-    cat << EOF | python
-print('Testing GMPY')
-import sympy
-if not (sympy.test('sympy/polys/') and sympy.doctest('sympy/polys/')):
-    raise Exception('Tests failed')
-EOF
-fi
-
+# This is separate because it needs to be run with subprocess=False
 if [[ "${TEST_OPT_DEPENDENCY}" == *"matplotlib"* ]]; then
     cat << EOF | python
 print('Testing MATPLOTLIB')
@@ -142,14 +224,17 @@ if not (sympy.test('sympy/plotting', 'sympy/physics/quantum/tests/test_circuitpl
 EOF
 fi
 
-if [[ "${TEST_OPT_DEPENDENCY}" == *"autowrap"* ]]; then
+if [[ "${TEST_OPT_DEPENDENCY}" == *"symengine"* ]]; then
+    export USE_SYMENGINE=1
     cat << EOF | python
-print('Testing AUTOWRAP')
+print('Testing SYMENGINE')
 import sympy
-if not (sympy.test('sympy/external/tests/test_autowrap.py')
-        and sympy.doctest('sympy/utilities/autowrap.py')):
+if not sympy.test('sympy/physics/mechanics'):
+    raise Exception('Tests failed')
+if not sympy.test('sympy/liealgebras'):
     raise Exception('Tests failed')
 EOF
+    unset USE_SYMENGINE
 fi
 
 if [[ "${TEST_SYMPY}" == "true" ]]; then
@@ -162,17 +247,11 @@ if not sympy.test(split='${SPLIT}'):
    raise Exception('Tests failed')
 EOF
 fi
+if [[ "${TEST_COVERAGE}" == "true" ]]; then
+    unset COVERAGE_PROCESS_START
+fi
 
-
-if [[ "${TEST_OPT_DEPENDENCY}" == *"symengine"* ]]; then
-    export USE_SYMENGINE=1
-    cat << EOF | python
-print('Testing SYMENGINE')
-import sympy
-if not sympy.test('sympy/physics/mechanics'):
-    raise Exception('Tests failed')
-if not sympy.test('sympy/liealgebras'):
-    raise Exception('Tests failed')
-EOF
-    unset USE_SYMENGINE
+if [[ "${TEST_EXAMPLES}" == "true" ]]; then
+    # No need to change directory if executed after the rst doctest
+    examples/all.py -q
 fi

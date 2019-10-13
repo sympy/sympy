@@ -34,7 +34,7 @@ def residue(expr, x, x0):
     References
     ==========
 
-    1. http://en.wikipedia.org/wiki/Residue_theorem
+    .. [1] https://en.wikipedia.org/wiki/Residue_theorem
     """
     # The current implementation uses series expansion to
     # calculate it. A more general implementation is explained in
@@ -64,7 +64,7 @@ def residue(expr, x, x0):
         args = s.args
     else:
         args = [s]
-    res = S(0)
+    res = S.Zero
     for arg in args:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)

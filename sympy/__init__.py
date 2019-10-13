@@ -7,7 +7,7 @@ may be optionally for things like plotting support.
 
 See the webpage for more information and documentation:
 
-    http://sympy.org
+    https://sympy.org
 
 """
 
@@ -19,7 +19,7 @@ try:
     import mpmath
 except ImportError:
     raise ImportError("SymPy now depends on mpmath as an external library. "
-    "See http://docs.sympy.org/latest/install.html#mpmath for more information.")
+    "See https://docs.sympy.org/latest/install.html#mpmath for more information.")
 
 del mpmath
 
@@ -35,11 +35,10 @@ if 'dev' in __version__:
 
 
 import sys
-if sys.version_info[0] == 2 and sys.version_info[1] < 6:
-    raise ImportError("Python Version 2.6 or above is required for SymPy.")
-else:  # Python 3
-    pass
-    # Here we can also check for specific Python 3 versions, if needed
+if ((sys.version_info[0] == 2 and sys.version_info[1] < 7) or
+    (sys.version_info[0] == 3 and sys.version_info[1] < 4)):
+    raise ImportError("Python version 2.7 or 3.4 or above "
+                      "is required for SymPy.")
 
 del sys
 
@@ -63,6 +62,7 @@ from .series import *
 from .functions import *
 from .ntheory import *
 from .concrete import *
+from .discrete import *
 from .simplify import *
 from .sets import *
 from .solvers import *
@@ -74,16 +74,14 @@ from .tensor import *
 from .parsing import *
 from .calculus import *
 from .algebras import *
+# This module causes conflicts with other modules:
+# from .stats import *
 # Adds about .04-.05 seconds of import time
 # from combinatorics import *
 # This module is slow to import:
 #from physics import units
-from .plotting import plot, textplot, plot_backends, plot_implicit
-from .printing import pretty, pretty_print, pprint, pprint_use_unicode, \
-    pprint_try_use_unicode, print_gtk, print_tree, pager_print, TableForm
-from .printing import rcode, ccode, fcode, jscode, julia_code, mathematica_code, \
-    octave_code, latex, preview, rust_code, mathml, glsl_code, cxxcode
-from .printing import python, print_python, srepr, sstr, sstrrepr
+from .plotting import plot, textplot, plot_backends, plot_implicit, plot_parametric
+from .printing import *
 from .interactive import init_session, init_printing
 
 evalf._create_evalf_table()

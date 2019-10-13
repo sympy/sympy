@@ -114,7 +114,7 @@ def express(expr, system, system2=None, variables=False):
             # Given expr is a scalar field
             system_set = set([])
             expr = sympify(expr)
-            # Subsitute all the coordinate variables
+            # Substitute all the coordinate variables
             for x in expr.atoms(BaseScalar):
                 if x.system != system:
                     system_set.add(x.system)
@@ -171,7 +171,7 @@ def directional_derivative(field, direction_vector):
     elif isinstance(field, Vector):
         return Vector.zero
     else:
-        return S(0)
+        return S.Zero
 
 
 def laplacian(expr):
@@ -198,6 +198,7 @@ def laplacian(expr):
     2*R.i + 6*R.y*R.j + 12*R.z**2*R.k
 
     """
+
     delop = Del()
     if expr.is_Vector:
         return (gradient(divergence(expr)) - curl(curl(expr))).doit()
@@ -208,7 +209,7 @@ def is_conservative(field):
     """
     Checks if a field is conservative.
 
-    Paramaters
+    Parameters
     ==========
 
     field : Vector
@@ -241,7 +242,7 @@ def is_solenoidal(field):
     """
     Checks if a field is solenoidal.
 
-    Paramaters
+    Parameters
     ==========
 
     field : Vector
@@ -267,7 +268,7 @@ def is_solenoidal(field):
         raise TypeError("field should be a Vector")
     if field == Vector.zero:
         return True
-    return divergence(field).simplify() == S(0)
+    return divergence(field).simplify() is S.Zero
 
 
 def scalar_potential(field, coord_sys):
@@ -304,9 +305,9 @@ def scalar_potential(field, coord_sys):
     if not is_conservative(field):
         raise ValueError("Field is not conservative")
     if field == Vector.zero:
-        return S(0)
+        return S.Zero
     # Express the field exntirely in coord_sys
-    # Subsitute coordinate variables also
+    # Substitute coordinate variables also
     if not isinstance(coord_sys, CoordSys3D):
         raise TypeError("coord_sys must be a CoordSys3D")
     field = express(field, coord_sys, variables=True)
@@ -474,7 +475,7 @@ def orthogonalize(*vlist, **kwargs):
     vlist : sequence of independent vectors to be made orthogonal.
 
     orthonormal : Optional parameter
-                  Set to True if the the vectors returned should be
+                  Set to True if the vectors returned should be
                   orthonormal.
                   Default: False
 

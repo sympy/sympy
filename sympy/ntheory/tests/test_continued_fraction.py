@@ -1,13 +1,27 @@
-from sympy import S, pi, GoldenRatio as phi, sqrt
+from sympy import S, pi, GoldenRatio as phi, sqrt, Rational
 from sympy.ntheory.continued_fraction import \
     (continued_fraction_periodic as cf_p,
      continued_fraction_iterator as cf_i,
      continued_fraction_convergents as cf_c,
-     continued_fraction_reduce as cf_r)
+     continued_fraction_reduce as cf_r,
+     continued_fraction as cf)
 from sympy.utilities.pytest import raises
 
 
 def test_continued_fraction():
+    assert cf_p(1, 1, 10, 0) == cf_p(1, 1, 0, 1)
+    assert cf_p(1, -1, 10, 1) == cf_p(-1, 1, 10, -1)
+    t = sqrt(2)
+    assert cf((1 + t)*(1 - t)) == cf(-1)
+    for n in [0, 2, Rational(2, 3), sqrt(2), 3*sqrt(2), 1 + 2*sqrt(3)/5,
+            (2 - 3*sqrt(5))/7, 1 + sqrt(2), (-5 + sqrt(17))/4]:
+        assert (cf_r(cf(n)) - n).expand() == 0
+        assert (cf_r(cf(-n)) + n).expand() == 0
+    raises(ValueError, lambda: cf(sqrt(2 + sqrt(3))))
+    raises(ValueError, lambda: cf(sqrt(2) + sqrt(3)))
+    raises(ValueError, lambda: cf(pi))
+    raises(ValueError, lambda: cf(.1))
+
     raises(ValueError, lambda: cf_p(1, 0, 0))
     raises(ValueError, lambda: cf_p(1, 1, -1))
     assert cf_p(4, 3, 0) == [1, 3]
@@ -38,18 +52,19 @@ def test_continued_fraction():
     assert take(phi) == [1, 1, 1, 1, 1, 1, 1]
     assert take(pi) == [3, 7, 15, 1, 292, 1, 1]
 
-    assert list(cf_i(S(17)/12)) == [1, 2, 2, 2]
-    assert list(cf_i(S(-17)/12)) == [-2, 1, 1, 2, 2]
+    assert list(cf_i(Rational(17, 12))) == [1, 2, 2, 2]
+    assert list(cf_i(Rational(-17, 12))) == [-2, 1, 1, 2, 2]
 
-    assert list(cf_c([1, 6, 1, 8])) == [S(1), S(7)/6, S(8)/7, S(71)/62]
+    assert list(cf_c([1, 6, 1, 8])) == [S.One, Rational(7, 6), Rational(8, 7), Rational(71, 62)]
     assert list(cf_c([2])) == [S(2)]
-    assert list(cf_c([1, 1, 1, 1, 1, 1, 1])) == [S.One, S(2), S(3)/2, S(5)/3,
-                                                 S(8)/5, S(13)/8, S(21)/13]
-    assert list(cf_c([1, 6, S(-1)/2, 4])) == [S.One, S(7)/6, S(5)/4, S(3)/2]
+    assert list(cf_c([1, 1, 1, 1, 1, 1, 1])) == [S.One, S(2), Rational(3, 2), Rational(5, 3),
+                                                 Rational(8, 5), Rational(13, 8), Rational(21, 13)]
+    assert list(cf_c([1, 6, Rational(-1, 2), 4])) == [S.One, Rational(7, 6), Rational(5, 4), Rational(3, 2)]
 
-    assert cf_r([1, 6, 1, 8]) == S(71)/62
+    assert cf_r([1, 6, 1, 8]) == Rational(71, 62)
     assert cf_r([3]) == S(3)
-    assert cf_r([-1, 5, 1, 4]) == S(-24)/29
+    assert cf_r([-1, 5, 1, 4]) == Rational(-24, 29)
     assert (cf_r([0, 1, 1, 7, [24, 8]]) - (sqrt(3) + 2)/7).expand() == 0
-    assert cf_r([1, 5, 9]) == S(55)/46
+    assert cf_r([1, 5, 9]) == Rational(55, 46)
     assert (cf_r([[1]]) - (sqrt(5) + 1)/2).expand() == 0
+    assert cf_r([-3, 1, 1, [2]]) == -1 - sqrt(2)

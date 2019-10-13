@@ -2,7 +2,7 @@
     sympylive
     ~~~~~~~~~
 
-    Allow `SymPy Live <http://live.sympy.org/>`_ to be used for interactive
+    Allow `SymPy Live <https://live.sympy.org/>`_ to be used for interactive
     evaluation of SymPy's code examples.
 
     :copyright: Copyright 2014 by the SymPy Development Team, see AUTHORS.
@@ -30,5 +30,5 @@ def builder_inited(app):
 
 
 def setup(app):
-    app.add_config_value('sympylive_url', 'http://live.sympy.org', False)
+    app.add_config_value('sympylive_url', 'https://live.sympy.org', False)
     app.connect('builder-inited', builder_inited)

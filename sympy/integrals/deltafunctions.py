@@ -184,7 +184,7 @@ def deltaintegrate(f, x):
                 m = 0
                 while n >= 0:
                     r = (-1)**n*rest_mult.diff(x, n).subs(x, point)
-                    if r is S.Zero:
+                    if r.is_zero:
                         n -= 1
                         m += 1
                     else:
@@ -193,6 +193,6 @@ def deltaintegrate(f, x):
                         else:
                             return r*DiracDelta(x,m-1)
                 # In some very weak sense, x=0 is still a singularity,
-                # but we hope will not be of any practial consequence.
+                # but we hope will not be of any practical consequence.
                 return S.Zero
     return None
