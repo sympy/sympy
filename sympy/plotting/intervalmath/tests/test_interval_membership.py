@@ -101,13 +101,13 @@ def test_boolean():
     # Reduced tests for 'Or'
     a1 = [
         intervalMembership(False, False),
+        intervalMembership(None, False),
+        intervalMembership(True, False),
+        intervalMembership(None, False),
         intervalMembership(None, None),
-        intervalMembership(True, True),
-        intervalMembership(None, None),
-        intervalMembership(None, None),
-        intervalMembership(True, True),
-        intervalMembership(True, True),
-        intervalMembership(True, True),
+        intervalMembership(True, None),
+        intervalMembership(True, False),
+        intervalMembership(True, None),
         intervalMembership(True, True)
     ]
     a1_iter = iter(a1)
@@ -118,14 +118,14 @@ def test_boolean():
     # Reduced tests for 'Xor'
     a1 = [
         intervalMembership(False, False),
+        intervalMembership(None, False),
+        intervalMembership(True, False),
+        intervalMembership(None, False),
         intervalMembership(None, None),
-        intervalMembership(True, True),
         intervalMembership(None, None),
+        intervalMembership(True, False),
         intervalMembership(None, None),
-        intervalMembership(None, None),
-        intervalMembership(True, True),
-        intervalMembership(None, None),
-        intervalMembership(False, False)
+        intervalMembership(False, True)
     ]
     a1_iter = iter(a1)
     for i in range(len(s)):
@@ -134,9 +134,9 @@ def test_boolean():
 
     # Reduced tests for 'Not'
     a1 = [
-        intervalMembership(True, True),
+        intervalMembership(True, False),
         intervalMembership(None, None),
-        intervalMembership(False, False)
+        intervalMembership(False, True)
     ]
     a1_iter = iter(a1)
     for i in range(len(s)):
