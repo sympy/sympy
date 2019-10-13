@@ -576,17 +576,19 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
 
 
 def dynamicsymbols(names, level=0):
-    """Uses symbols and Function for functions of time.
+    """Returns functions of time with the provide names.
 
     Creates a SymPy UndefinedFunction, which is then initialized as a function
-    of a variable, the default being Symbol('t').
+    of a variable, the default being the value store in
+    ``physics.vector.TIME``. ``names`` follows the same conventions as the
+    first arugment to `symbols`. See the documentation for `symbols()` for an
+    explanation of the options.
 
     Parameters
     ==========
-
     names : str
         Names of the dynamic symbols you want to create; works the same way as
-        inputs to symbols
+        inputs to `symbols`.
     level : int
         Level of differentiation of the returned function; d/dt once of t,
         twice of t, etc.
@@ -594,13 +596,34 @@ def dynamicsymbols(names, level=0):
     Examples
     ========
 
+    >>> from sympy import diff
     >>> from sympy.physics.vector import dynamicsymbols
-    >>> from sympy import diff, Symbol
-    >>> q1 = dynamicsymbols('q1')
-    >>> q1
-    q1(t)
-    >>> diff(q1, Symbol('t'))
+    >>> q = dynamicsymbols('q')
+    >>> q
+    q(t)
+    >>> from sympy.physics.vector import TIME
+    >>> diff(q, TIME)
+    Derivative(q(t), t)
+    >>> dynamicsymbols('q', 1)
+    Derivative(Derivative(q(t), t), t)
+    >>> q1, q2 = dynamicsymbols('q1:3')
+    >>> q1, q2
+    q1(t), q2(t)
+
+    ``dynamicsymbols`` is essentially a wrapper to ``symbols`` that does the
+    following:
+
+    >>> from sympy import symbols, Function
+    >>> from sympy.physics.vector import TIME as t
+    >>> Function('q')(t)
+    q(t)
+    >>> diff(Function('q')(t), t)
     Derivative(q1(t), t)
+
+    See Also
+    ========
+
+    symbols
 
     """
     esses = symbols(names, cls=Function)
