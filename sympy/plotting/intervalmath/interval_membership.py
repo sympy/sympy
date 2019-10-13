@@ -56,11 +56,11 @@ class intervalMembership(object):
 
         a1, b1 = self
         a2, b2 = other
-        return intervalMembership(fuzzy_or([a1, a2]), fuzzy_or([b1, b2]))
+        return intervalMembership(fuzzy_or([a1, a2]), fuzzy_and([b1, b2]))
 
     def __invert__(self):
         a, b = self
-        return intervalMembership(fuzzy_not(a), fuzzy_not(b))
+        return intervalMembership(fuzzy_not(a), b)
 
     def __xor__(self, other):
         if not isinstance(other, intervalMembership):
@@ -69,7 +69,7 @@ class intervalMembership(object):
 
         a1, b1 = self
         a2, b2 = other
-        return intervalMembership(fuzzy_xor([a1, a2]), fuzzy_xor([b1, b2]))
+        return intervalMembership(fuzzy_xor([a1, a2]), fuzzy_and([b1, b2]))
 
     def __eq__(self, other):
         return self._wrapped == other

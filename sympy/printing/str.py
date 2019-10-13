@@ -82,6 +82,9 @@ class StrPrinter(Printer):
     def _print_Or(self, expr):
         return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
 
+    def _print_Xor(self, expr):
+        return self.stringify(expr.args, " ^ ", PRECEDENCE["BitwiseXor"])
+
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (self._print(expr.func), self._print(expr.arg))
 
