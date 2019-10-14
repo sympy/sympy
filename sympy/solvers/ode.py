@@ -1523,10 +1523,7 @@ def equivalence_hypergeometric(A, B, func):
 
     # making given equation in normal form
     from sympy.core.logic import fuzzy_not
-    if not fuzzy_not(B.is_zero):
-        I1 = factor(cancel(A.diff(x)/2 + A**2/4 - B))
-    else:
-        I1 = A
+    I1 = factor(cancel(A.diff(x)/2 + A**2/4 - B))
 
     # computing shifted invariant(J1) of the equation
     J1 = factor(cancel(x**2*I1 + S(1)/4))
@@ -1542,10 +1539,10 @@ def equivalence_hypergeometric(A, B, func):
         _pow = {0}
         for val in num:
             if val.has(x):
-                if isinstance(val, Pow) and val.base == x:
-                    _pow.add(val.exp)
+                if isinstance(val, Pow) and val.as_base_exp()[0] == x:
+                    _pow.add(val.as_base_exp()[1])
                 elif val == x:
-                    _pow.add(1)
+                    _pow.add(val.as_base_exp()[1])
                 else:
                     _pow.update(_power_counting(val.args))
         return _pow
@@ -1571,11 +1568,11 @@ def equivalence_hypergeometric(A, B, func):
         if arg.has(x):
             if isinstance(arg, Pow):
                 # (x-a)**n
-                dem_pow.append(arg.exp)
-                sing_point.append(list(roots(arg.base, x).keys())[0])
+                dem_pow.append(arg.as_base_exp()[1])
+                sing_point.append(list(roots(arg.as_base_exp()[0], x).keys())[0])
             else:
                 # (x-a) type
-                dem_pow.append(1)
+                dem_pow.append(arg.as_base_exp()[1])
                 sing_point.append(list(roots(arg, x).keys())[0])
 
     dem_pow.sort()
@@ -1602,11 +1599,20 @@ def ode_2nd_hypergeometric(eq, func, order, match):
 
     sol = None
     if match['type'] == "2F1":
-        if c.is_integer == False or c.is_positive is not True:
+        if c.is_integer == False:
             sol = C0*hyper([a, b], [c], x) + C1*hyper([a-c+1, b-c+1], [2-c], x)*x**(1-c)
         elif c == 1:
             y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/(hyper([a, b], [c], x)**2), x)*hyper([a, b], [c], x)
             sol = C0*hyper([a, b], [c], x) + C1*y2
+        elif (c-a-b).is_integer == False:
+            sol = C0*hyper([a, b], [1+a+b-c], 1-x) + C1*hyper([c-a, c-b], [1+c-a-b], 1-x)*(1-x)**(c-a-b)
+        elif (a-b).is_integer == False:
+            sol = C0*hyper([a, 1+a-c], [1+a-b], 1/x)*x**(-a) + C1*hyper([b, b-c+1], [1+b-a], 1/x)*x**(-a)
+
+        if sol is None:
+            raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+                + " the hypergeometric method")
+
         # applying transformation in the solution
         subs = match['mobius']
         dtdx = simplify(1/(subs.diff(x)))
@@ -1618,14 +1624,16 @@ def ode_2nd_hypergeometric(eq, func, order, match):
         sol = sol.subs(x, x**match['k'])
         e = e.subs(x, x**match['k'])
 
-        if B:
+        if not A.is_zero:
             e1 = Integral(A/2, x)
             e1 = exp(logcombine(e1, force=True))
+            sol = cancel((e/e1)*x**((-match['k']+1)/2))*sol
+            sol = Eq(func, sol)
+            return sol
 
-        sol = cancel((e/e1)*x**((-match['k']+1)/2))*sol
+        sol = cancel((e)*x**((-match['k']+1)/2))*sol
         sol = Eq(func, sol)
 
-    # if sol is None then we can try for series solution
     if sol is None:
         raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
             + " the hypergeometric method")
@@ -1641,6 +1649,7 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     c = Wild("c")
     t = Wild("t")
     s = Wild("s")
+    r = Wild("r")
     alpha = Wild("alpha")
     beta = Wild("beta")
     gamma = Wild("gamma")
@@ -1683,7 +1692,8 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     dict_I = {x**2:0, x:0, 1:0}
     I0_num, I0_dem = I0.as_numer_denom()
     # collecting coeff of (x**2, x), of the standerd equation.
-    dict_I0 = {x**2:(a-b)**2 - 1, x:2*((1-a-b)*c + 2*a*b), 1:c*(c-2)}
+    # substituting (a-b) = s, (a+b) = r
+    dict_I0 = {x**2:s**2 - 1, x:2*((1-r)*c + (r+s)*(r-s)/2), 1:c*(c-2)}
     # collecting coeff of (x**2, x) from I0 of the given equation.
     dict_I.update(collect(expand(cancel(I*I0_dem)), [x**2, x], evaluate=False))
     eqs = []
@@ -1699,10 +1709,10 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     _c = list(ordered(roots(eqs[2], c)))[0]
     if not _c.has(Symbol):
         _c = min(list(roots(eqs[2], c)))
-    s = list(ordered(roots(eqs[0].subs(a-b, s), s)))[-1]
-    _a = s+b
-    _b = list(ordered(roots((eqs[1].subs(c, _c)).subs(a, _a), b)))[0]
-    _a = s + _b
+    _s = list(ordered(roots(eqs[0], s)))[-1]
+    _r = list(ordered(roots(((eqs[1].subs(s, _s))).subs(c, _c), r)))[0]
+    _a = (_r + _s)/2
+    _b = (_r - _s)/2
     rn = {'a':simplify(_a), 'b':simplify(_b), 'c':simplify(_c), 'k':k, 'mobius':mob, 'type':"2F1"}
 
     return rn

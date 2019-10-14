@@ -3708,7 +3708,7 @@ def test_issue_17322():
 
 def test_2nd_2F1_hypergeometric():
 
-    a, b, c = symbols("a b c")
+    a, b, c = symbols("a b c", integer=False)
 
     eq = x*(x-1)*f(x).diff(x, 2) + ((a+b+1)*x-c)*f(x).diff(x) + a*b*f(x)
     sol = Eq(f(x), C1*x**(1 - c)*hyper((a - c + 1, b - c + 1), (2 - c,), x) + C2*hyper((a, b), (c,), x))
@@ -3720,10 +3720,6 @@ def test_2nd_2F1_hypergeometric():
     assert sol == dsolve(eq, hint='2nd_hypergeometric')
     assert checkodesol(eq, sol) == (True, 0)
 
-    eq=x*(x-1)*f(x).diff(x, 2) + (S(3) -2*x)*f(x).diff(x) + 2*f(x)
-    sol = Eq(f(x), C1*x**4*hyper((3, 2), (5,), x) + C2*hyper((-1, -2), (-3,), x))
-    assert sol == dsolve(eq, hint='2nd_hypergeometric')
-    assert checkodesol(eq, sol) == (True, 0)
 
     eq = -x**(S(5)/7)*(-416*x**(S(9)/7)/9 - 2385*x**(S(5)/7)/49 + S(298)*x/3)*f(x)/(196*(-x**(S(6)/7) +
          x)**2*(x**(S(6)/7) + x)**2) + Derivative(f(x), (x, 2))
