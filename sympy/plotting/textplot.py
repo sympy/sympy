@@ -37,40 +37,8 @@ def linspace(start, stop, num):
     return [start + (stop - start) * x / (num-1) for x in range(num)]
 
 
-def textplot(expr, a, b, W=55, H=18):
-    r"""
-    Print a crude ASCII art plot of the SymPy expression 'expr' (which
-    should contain a single symbol, e.g. x or something else) over the
-    interval [a, b].
-
-    Examples
-    ========
-
-    >>> from sympy import Symbol, sin
-    >>> from sympy.plotting import textplot
-    >>> t = Symbol('t')
-    >>> textplot(sin(t)*t, 0, 15)
-    14.1605 |                                                   ...
-            |                                                      .
-            |                                                  .
-            |                                                 .     .
-            |                             ..
-            |                            /  ..               .
-            |                           /     .
-            |                          /
-    2.30284 | ------...---------------/--------.------------.--------
-            |   ....   ...           /
-            | ..          \         /           .          .
-            |              ..      /             .
-            |                ..   /                       .
-            |                  ...                .
-            |                                            .
-            |                                      .
-            |                                       \   .
-    -11.037 |                                        ...
-            0                          7.5                        15
-    """
-
+def textplot_str(expr, a, b, W=55, H=18):
+    """Generator for the lines of the plot"""
     free = expr.free_symbols
     if len(free) > 1:
         raise ValueError(
@@ -87,7 +55,7 @@ def textplot(expr, a, b, W=55, H=18):
     for val in x:
         try:
             y.append(f(val))
-        except (TypeError, ValueError, ZeroDivisionError):
+        except:
             y.append(None)
 
     # Normalize height to screen space
@@ -127,7 +95,7 @@ def textplot(expr, a, b, W=55, H=18):
         s = "".join(s)
         if h == H//2:
             s = s.replace(" ", "-")
-        print(prefix + " | " + s)
+        yield prefix + " | " + s
 
     # Print x values
     bottom = " " * (margin + 3)
@@ -137,4 +105,41 @@ def textplot(expr, a, b, W=55, H=18):
     else:
         bottom += ("%g" % x[W//2]).ljust(W//2-1)
     bottom += "%g" % x[-1]
-    print(bottom)
+    yield bottom
+
+
+def textplot(expr, a, b, W=55, H=18):
+    r"""
+    Print a crude ASCII art plot of the SymPy expression 'expr' (which
+    should contain a single symbol, e.g. x or something else) over the
+    interval [a, b].
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, sin
+    >>> from sympy.plotting import textplot
+    >>> t = Symbol('t')
+    >>> textplot(sin(t)*t, 0, 15)
+    14.1605 |                                                   ...
+            |                                                      .
+            |                                                  .
+            |                                                 .     .
+            |                             ..
+            |                            /  ..               .
+            |                           /     .
+            |                          /
+    2.30284 | ------...---------------/--------.------------.--------
+            |   ....   ...           /
+            | ..          \         /           .          .
+            |              ..      /             .
+            |                ..   /                       .
+            |                  ...                .
+            |                                            .
+            |                                      .
+            |                                       \   .
+    -11.037 |                                        ...
+            0                          7.5                        15
+    """
+    for line in textplot_str(expr, a, b, W, H):
+        print(line)
