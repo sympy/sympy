@@ -170,7 +170,5 @@ def test_quaternion_multiplication():
     z_quat = Quaternion(re(z), im(z), 0, 0)
     q = Quaternion(*symbols('q:4', real=True))
 
-    # This test seems bizarre. I don't think quaternion should be defined in
-    # a way that conflates quaternions with complex numbers like this...
-    #assert z * q == z_quat * q
+    assert z * q == z_quat * q
     assert q * z == q * z_quat

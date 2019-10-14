@@ -356,7 +356,7 @@ class Quaternion(Expr):
         # If q1 is a number or a sympy expression instead of a quaternion
         if not isinstance(q1, Quaternion):
             if q2.real_field and q1.is_complex:
-                return q2 * Quaternion(re(q1), im(q1), 0, 0)
+                return Quaternion(re(q1), im(q1), 0, 0) * q2
             elif q1.is_commutative:
                 return Quaternion(q1 * q2.a, q1 * q2.b, q1 * q2.c, q1 * q2.d)
             else:
