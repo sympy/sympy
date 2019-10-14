@@ -1,17 +1,20 @@
 from __future__ import print_function, division
 
+from sympy.core.numbers import Float
 from sympy.core.symbol import Dummy
 from sympy.core.compatibility import range
 from sympy.utilities.lambdify import lambdify
 
+import math
+
 
 def is_valid(x):
     """Check if a floating point number is valid"""
-    if x in (None, float('inf'), float('-inf'), float('nan')):
+    if x is None:
         return False
     if isinstance(x, complex):
         return False
-    return True
+    return not math.isinf(x) and not math.isnan(x)
 
 
 def rescale(y, W, H, mi, ma):
@@ -26,8 +29,14 @@ def rescale(y, W, H, mi, ma):
     for x in range(W):
         if is_valid(y[x]):
             normalized = (y[x] - offset) / norm
-            rescaled = round((normalized * H + H/2) * (H-1)/H)
-            y_new.append(rescaled)
+            if not is_valid(normalized):
+                y_new.append(None)
+            else:
+                # XXX There are some test failings because of the
+                # difference between the python 2 and 3 rounding.
+                rescaled = Float((normalized*H + H/2) * (H-1)/H).round()
+                rescaled = int(rescaled)
+                y_new.append(rescaled)
         else:
             y_new.append(None)
     return y_new
