@@ -141,3 +141,10 @@ def test_boolean():
     a1_iter = iter(a1)
     for i in range(len(s)):
         assert ~s[i] == next(a1_iter)
+
+
+def test_boolean_errors():
+    a = intervalMembership(True, True)
+    raises(ValueError, lambda: a & 1)
+    raises(ValueError, lambda: a | 1)
+    raises(ValueError, lambda: a ^ 1)
