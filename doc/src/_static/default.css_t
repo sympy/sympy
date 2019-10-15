@@ -337,3 +337,10 @@ code{
     border-radius: 3px;
     padding: 2px;
 }
+
+
+p.rubric {
+    font-size: 18px;
+    color: #2f441e;
+    font-family: "Trebuchet MS", sans-serif;
+}
