@@ -892,7 +892,6 @@ def test_powerset():
                              FiniteSet(2), A)
     # Not finite sets
     I = Interval(0, 1)
-    raises(NotImplementedError, I.powerset)
 
 
 def test_product_basic():

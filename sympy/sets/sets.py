@@ -366,6 +366,12 @@ class Set(Basic):
 
         """
         if isinstance(other, Set):
+            dispatch = getattr(self, '_eval_is_subset', None)
+            if dispatch is not None:
+                ret = dispatch(other)
+                if ret is not None:
+                    return ret
+
             s_o = self.intersect(other)
             if s_o == self:
                 return True
@@ -448,7 +454,7 @@ class Set(Basic):
             raise ValueError("Unknown argument '%s'" % other)
 
     def _eval_powerset(self):
-        raise NotImplementedError('Power set not defined for: %s' % self.func)
+        return None
 
     def powerset(self):
         """
@@ -1831,6 +1837,25 @@ class FiniteSet(Set, EvalfMixin):
 
     def _eval_powerset(self):
         return self.func(*[self.func(*s) for s in subsets(self.args)])
+
+    def _eval_rewrite_as_PowerSet(self, *args, **kwargs):
+        """Rewriting method for a finite set to a power set."""
+        from .powerset import PowerSet
+
+        is2pow = lambda n: bool(n and not n & (n - 1))
+        if not is2pow(len(self)):
+            return None
+
+        fs_test = lambda arg: isinstance(arg, Set) and arg.is_FiniteSet
+        if not all((fs_test(arg) for arg in args)):
+            return None
+
+        biggest = max(args, key=len)
+        for arg in subsets(biggest.args):
+            arg_set = FiniteSet(*arg)
+            if arg_set not in args:
+                return None
+        return PowerSet(biggest)
 
     def __ge__(self, other):
         if not isinstance(other, Set):
