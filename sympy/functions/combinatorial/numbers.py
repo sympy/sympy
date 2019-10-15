@@ -1448,9 +1448,12 @@ def _multiset_histogram(n):
 def nP(n, k=None, replacement=False):
     """Return the number of permutations of ``n`` items taken ``k`` at a time.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - set of length ``n``
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     If ``k`` is None then the total of all permutations of length 0
@@ -1619,9 +1622,12 @@ def _AOP_product(n):
 def nC(n, k=None, replacement=False):
     """Return the number of combinations of ``n`` items taken ``k`` at a time.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - set of length ``n``
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     If ``k`` is None then the total of all combinations of length 0
@@ -1906,9 +1912,12 @@ def _nT(n, k):
 def nT(n, k=None):
     """Return the number of ``k``-sized partitions of ``n`` items.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - ``n`` identical items
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     Note: the convention for ``nT`` is different than that of ``nC`` and
