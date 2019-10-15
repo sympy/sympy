@@ -34,7 +34,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     expected to provide an expression is an appropriate form. This makes
     :func:`collect` more predictable as there is no magic happening behind the
     scenes. However, it is important to note, that powers of products are
-    converted to products of powers using the :func:`expand_power_base`
+    converted to products of powers using the :func:`~.expand_power_base`
     function.
 
     There are two possible types of output. First, if ``evaluate`` flag is
@@ -152,7 +152,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         x**3 + 3*x**2*(a + 1) + 3*x*(a + 1)**2 + (a + 1)**3
 
     .. note:: Arguments are expected to be in expanded form, so you might have
-              to call :func:`expand` prior to calling this function.
+              to call :func:`~.expand` prior to calling this function.
 
     See Also
     ========

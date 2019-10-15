@@ -691,6 +691,7 @@ def sift(seq, keyfunc, binary=False):
 
     See Also
     ========
+
     ordered
     """
     if not binary:
@@ -874,7 +875,7 @@ def topological_sort(graph, key=None):
         [7, 5, 11, 3, 10, 8, 9, 2]
 
     Only acyclic graphs can be sorted. If the input graph has a cycle,
-    then :py:exc:`ValueError` will be raised::
+    then ``ValueError`` will be raised::
 
         >>> topological_sort((V, E + [(10, 7)]))
         Traceback (most recent call last):
@@ -998,7 +999,7 @@ def strongly_connected_components(G):
     See Also
     ========
 
-    utilities.iterables.connected_components()
+    sympy.utilities.iterables.connected_components()
 
     """
     # Map from a vertex to its neighbours
@@ -1112,7 +1113,7 @@ def connected_components(G):
     See Also
     ========
 
-    utilities.iterables.strongly_connected_components()
+    sympy.utilities.iterables.strongly_connected_components()
 
     """
     # Duplicate edges both ways so that the graph is effectively undirected
@@ -1492,6 +1493,7 @@ def multiset_partitions(multiset, m=None):
 
     See Also
     ========
+
     partitions
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
@@ -2059,7 +2061,7 @@ def generate_bell(n):
 
     See Also
     ========
-    sympy.combinatorics.Permutation.next_trotterjohnson
+    sympy.combinatorics.permutations.Permutation.next_trotterjohnson
 
     References
     ==========

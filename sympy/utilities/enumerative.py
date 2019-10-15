@@ -395,7 +395,7 @@ class MultisetPartitionTraverser():
     ========
 
     multiset_partitions_taocp
-    sympy.utilities.iterables.multiset_partititions
+    sympy.utilities.iterables.multiset_partitions
 
     References
     ==========

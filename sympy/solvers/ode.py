@@ -24,7 +24,7 @@ specific hint.  See also the docstring on
     - :py:meth:`~sympy.solvers.ode.infinitesimals` - Returns the infinitesimals
       of the Lie group of point transformations of an ODE, such that it is
       invariant.
-    - :py:meth:`~sympy.solvers.ode_checkinfsol` - Checks if the given infinitesimals
+    - :py:meth:`~sympy.solvers.ode.checkinfsol` - Checks if the given infinitesimals
       are the actual infinitesimals of a first order ODE.
 
     These are the non-solver helper functions that are for internal use.  The
@@ -176,8 +176,7 @@ the main SymPy documentation.  Be sure to make the Sphinx documentation by
 running ``make html`` from within the doc directory to verify that the
 docstring formats correctly.
 
-If your solution method involves integrating, use :py:meth:`Integral()
-<sympy.integrals.integrals.Integral>` instead of
+If your solution method involves integrating, use :py:obj:`~.Integral` instead of
 :py:meth:`~sympy.core.expr.Expr.integrate`.  This allows the user to bypass
 hard/slow integration by using the ``_Integral`` variant of your hint.  In
 most cases, calling :py:meth:`sympy.core.basic.Basic.doit` will integrate your
@@ -193,7 +192,7 @@ to solve the solution for you, so you do not need to do that.  Lastly, if your
 ODE has a common simplification that can be applied to your solutions, you can
 add a special case in :py:meth:`~sympy.solvers.ode.odesimp` for it.  For
 example, solutions returned from the ``1st_homogeneous_coeff`` hints often
-have many :py:meth:`~sympy.functions.log` terms, so
+have many :obj:`~sympy.functions.elementary.exponential.log` terms, so
 :py:meth:`~sympy.solvers.ode.odesimp` calls
 :py:meth:`~sympy.simplify.simplify.logcombine` on them (it also helps to write
 the arbitrary constant as ``log(C1)`` instead of ``C1`` in this case).  Also
@@ -873,7 +872,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     ``_Integral``
 
         If a classification has ``_Integral`` at the end, it will return the
-        expression with an unevaluated :py:class:`~sympy.integrals.Integral`
+        expression with an unevaluated :py:class:`~.Integral`
         class in it.  Note that a hint may do this anyway if
         :py:meth:`~sympy.core.expr.Expr.integrate` cannot do the integral,
         though just using an ``_Integral`` will do so much faster.  Indeed, an
@@ -886,7 +885,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         ``all_Integral`` to get it return something.
 
         Note that some hints do not have ``_Integral`` counterparts.  This is
-        because :py:meth:`~sympy.solvers.ode.integrate` is not used in solving
+        because :py:func:`~sympy.integrals.integrate` is not used in solving
         the ODE for those method. For example, `n`\th order linear homogeneous
         ODEs with constant coefficients do not require integration to solve,
         so there is no ``nth_linear_homogeneous_constant_coeff_Integrate``
@@ -3470,8 +3469,8 @@ def homogeneous_order(eq, *symbols):
     or `H(y/x)`.  This fact is used to solve 1st order ordinary differential
     equations whose coefficients are homogeneous of the same order (see the
     docstrings of
-    :py:meth:`~solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep` and
-    :py:meth:`~solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`).
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep` and
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`).
 
     Symbols can be functions, but every argument of the function must be a
     symbol, and the arguments of the function that appear in the expression
@@ -4565,7 +4564,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     are returned, based on expansions with Euler's formula.  The general
     solution is the sum of the terms found.  If SymPy cannot find exact roots
     to the characteristic equation, a
-    :py:class:`~sympy.polys.rootoftools.CRootOf` instance will be returned
+    :py:obj:`~.ComplexRootOf` instance will be returned
     instead.
 
     >>> from sympy import Function, dsolve, Eq
@@ -5201,7 +5200,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     constants) as `e^{a x} \left(C_1 \cos(b x) + C_2 \sin(b x)\right)`.
 
     If SymPy cannot find exact roots to the characteristic equation, a
-    :py:class:`~sympy.polys.rootoftools.CRootOf` instance will be return
+    :py:class:`~sympy.polys.rootoftools.ComplexRootOf` instance will be return
     instead.
 
     >>> from sympy import Function, dsolve, Eq

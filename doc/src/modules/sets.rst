@@ -78,6 +78,17 @@ Integers
 .. autoclass:: Integers
    :members:
 
+
+Reals
+^^^^^
+.. autoclass:: Reals
+   :members:
+
+Complexes
+^^^^^^^^^
+.. autoclass:: Complexes
+   :members:
+
 ImageSet
 ^^^^^^^^
 .. autoclass:: ImageSet
@@ -91,6 +102,12 @@ Range
 ComplexRegion
 ^^^^^^^^^^^^^
 .. autoclass:: ComplexRegion
+   :members:
+
+.. autoclass:: CartesianComplexRegion
+   :members:
+
+.. autoclass:: PolarComplexRegion
    :members:
 
 .. autofunction:: normalize_theta_set
@@ -118,3 +135,13 @@ We keep in mind that sympy set comprehension like ``FiniteSet(*s)`` from
 a existing sympy sets could be a common usage.
 And this approach would make ``FiniteSet(*s)`` to be consistent with any
 symbolic set processing methods like ``FiniteSet(*simplify(s))``.
+
+Condition Sets
+--------------
+
+.. automodule:: sympy.sets.conditionset
+
+ConditionSet
+^^^^^^^^^^^^
+
+.. autofunction:: ConditionSet
