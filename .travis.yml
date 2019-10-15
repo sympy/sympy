@@ -196,6 +196,11 @@ matrix:
             - pypy
           packages:
             - pypy3
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_FLAKE8="true"
 
   fast_finish: true
 
@@ -233,6 +238,11 @@ matrix:
             - pypy
           packages:
             - pypy3
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_FLAKE8="true"
 
 before_install:
   - set -e
@@ -243,6 +253,10 @@ before_install:
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
       pip install coverage;
       coverage debug sys;
+    fi
+  - if [[ "${TEST_FLAKE8}" == "true" ]]; then
+      pip install flake8;
+      flake8 sympy;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.8-dev" ]; then
         pip uninstall -y Cython;
