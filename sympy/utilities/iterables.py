@@ -457,11 +457,10 @@ def variations(seq, n, repetition=False):
         >>> list(variations([0, 1], 3, repetition=True))[:4]
         [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1)]
 
-    See Also
-    ========
+    .. seealso::
 
-    sympy.core.compatibility.permutations
-    sympy.core.compatibility.product
+       `itertools.permutations <https://docs.python.org/3/library/itertools.html#itertools.permutations>`_,
+       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
     """
     if not repetition:
         seq = tuple(seq)
