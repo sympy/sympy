@@ -521,3 +521,8 @@ gcd_terms
 factor_terms
 ^^^^^^^^^^^^
 .. autofunction:: factor_terms
+
+ordered
+^^^^^^^
+
+.. autofunction:: sympy.core.compatibility.ordered
