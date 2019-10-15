@@ -3708,16 +3708,28 @@ def test_issue_17322():
 
 def test_2nd_2F1_hypergeometric():
 
-    a, b, c = symbols("a b c", integer=False)
-
-    eq = x*(x-1)*f(x).diff(x, 2) + ((a+b+1)*x-c)*f(x).diff(x) + a*b*f(x)
-    sol = Eq(f(x), C1*x**(1 - c)*hyper((a - c + 1, b - c + 1), (2 - c,), x) + C2*hyper((a, b), (c,), x))
-    assert sol == dsolve(eq, hint='2nd_hypergeometric')
-    # assert checkodesol(eq, sol) == (True, 0) Hanging
-
     eq = x*(x-1)*f(x).diff(x, 2) + (S(3)/2 -2*x)*f(x).diff(x) + 2*f(x)
     sol = Eq(f(x), C1*x**(S(5)/2)*hyper((S(3)/2, S(1)/2), (S(7)/2,), x) + C2*hyper((-1, -2), (-S(3)/2,), x))
     assert sol == dsolve(eq, hint='2nd_hypergeometric')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (S(7)/2*x)*f(x).diff(x) + f(x)
+    sol = Eq(f(x), (C1*(1 - x)**(S(5)/2)*hyper((S(1)/2, 2), (S(7)/2,), 1 - x) +
+          C2*hyper((-S(1)/2, -2), (-S(3)/2,), 1 - x))/(x - 1)**(S(5)/2))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (S(3)+ S(7)/2*x)*f(x).diff(x) + f(x)
+    sol = Eq(f(x), (C1*(1 - x)**(S(11)/2)*hyper((S(1)/2, 2), (S(13)/2,), 1 - x) +
+          C2*hyper((-S(7)/2, -5), (-S(9)/2,), 1 - x))/(x - 1)**(S(11)/2))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (-1+ S(7)/2*x)*f(x).diff(x) + f(x)
+    sol = Eq(f(x), (C1 + C2*Integral(exp(Integral((1 - x/2)/(x*(x - 1)), x))/(1 -
+          x/2)**2, x))*exp(Integral(1/(x - 1), x)/4)*exp(-Integral(7/(x -
+          1), x)/4)*hyper((S(1)/2, -1), (1,), x))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric_Integral')
     assert checkodesol(eq, sol) == (True, 0)
 
 

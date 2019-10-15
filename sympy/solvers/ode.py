@@ -313,6 +313,7 @@ allhints = (
     "2nd_linear_airy",
     "2nd_linear_bessel",
     "2nd_hypergeometric",
+    "2nd_hypergeometric_Integral",
     "nth_order_reducible",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
@@ -1381,6 +1382,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 rn = match_2nd_hypergeometric(_r, func)
                 if rn:
                     matching_hints["2nd_hypergeometric"] = rn
+                    matching_hints["2nd_hypergeometric_Integral"] = rn
             # If the ODE has regular singular point at x0 and is of the form
             # Eq((x)**2*Derivative(y(x), x, x) + x*Derivative(y(x), x) +
             # (a4**2*x**(2*p)-n**2)*y(x) thus Bessel's equation
@@ -1602,12 +1604,10 @@ def ode_2nd_hypergeometric(eq, func, order, match):
         if c.is_integer == False:
             sol = C0*hyper([a, b], [c], x) + C1*hyper([a-c+1, b-c+1], [2-c], x)*x**(1-c)
         elif c == 1:
-            y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/(hyper([a, b], [c], x)**2), x)*hyper([a, b], [c], x)
+            y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/(hyperexpand(hyper([a, b], [c], x))**2), x)*hyper([a, b], [c], x)
             sol = C0*hyper([a, b], [c], x) + C1*y2
         elif (c-a-b).is_integer == False:
             sol = C0*hyper([a, b], [1+a+b-c], 1-x) + C1*hyper([c-a, c-b], [1+c-a-b], 1-x)*(1-x)**(c-a-b)
-        elif (a-b).is_integer == False:
-            sol = C0*hyper([a, 1+a-c], [1+a-b], 1/x)*x**(-a) + C1*hyper([b, b-c+1], [1+b-a], 1/x)*x**(-a)
 
         if sol is None:
             raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
@@ -1693,7 +1693,7 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     I0_num, I0_dem = I0.as_numer_denom()
     # collecting coeff of (x**2, x), of the standerd equation.
     # substituting (a-b) = s, (a+b) = r
-    dict_I0 = {x**2:s**2 - 1, x:2*((1-r)*c + (r+s)*(r-s)/2), 1:c*(c-2)}
+    dict_I0 = {x**2:s**2 - 1, x:(2*(1-r)*c + (r+s)*(r-s)), 1:c*(c-2)}
     # collecting coeff of (x**2, x) from I0 of the given equation.
     dict_I.update(collect(expand(cancel(I*I0_dem)), [x**2, x], evaluate=False))
     eqs = []
@@ -1706,13 +1706,15 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     # I am selecting the root on the basis that when we have
     # standard equation eq = x*(x-1)*f(x).diff(x, 2) + ((a+b+1)*x-c)*f(x).diff(x) + a*b*f(x)
     # then root should be a, b, c.
-    _c = list(ordered(roots(eqs[2], c)))[0]
+
+    _c = 1 - factor(sqrt(1+eqs[2].lhs))
     if not _c.has(Symbol):
         _c = min(list(roots(eqs[2], c)))
-    _s = list(ordered(roots(eqs[0], s)))[-1]
-    _r = list(ordered(roots(((eqs[1].subs(s, _s))).subs(c, _c), r)))[0]
+    _s = factor(sqrt(eqs[0].lhs + 1))
+    _r = _c - factor(sqrt(_c**2 + _s**2 + eqs[1].lhs - 2*_c))
     _a = (_r + _s)/2
     _b = (_r - _s)/2
+
     rn = {'a':simplify(_a), 'b':simplify(_b), 'c':simplify(_c), 'k':k, 'mobius':mob, 'type':"2F1"}
 
     return rn
