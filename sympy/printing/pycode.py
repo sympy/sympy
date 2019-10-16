@@ -237,7 +237,7 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
-        return ('{0} % {1}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
+        return ('({0} % {1})'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
 
     def _print_Piecewise(self, expr):
         result = []
