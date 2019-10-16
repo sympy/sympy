@@ -752,13 +752,15 @@ class MatrixReductions(MatrixDeterminant):
 
         # Compute RREF after computing echelon form with
         # backward substitution.
+        prev_col = cols
         if zero_above:
             for r, c in reversed(list(enumerate(pivot_cols))):
-                if c == cols-1 or c+1 in pivot_cols:
+                if c == prev_col - 1:
                     get_col(c)[:r] = [self.zero] * r
-
-                for i in reversed(range(r)):
-                    cross_cancel(mat[r*cols + c], i, mat[i*cols + c], r)
+                else:
+                    for i in reversed(range(r)):
+                        cross_cancel(mat[r*cols + c], i, mat[i*cols + c], r)
+                prev_col = c
 
         # normalize each row
         if normalize_last is True and normalize is True:
