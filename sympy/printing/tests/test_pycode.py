@@ -155,6 +155,13 @@ def test_issue_14283():
 
     assert prntr.doprint(zoo) == "float('nan')"
     assert prntr.doprint(-oo) == "float('-inf')"
+    
+def test_issue_17737():
+    x, y = symbols('x y')
+    expr = -Mod(x, y)
+    g = lambdify([x, y], expr, modules=[])
+    assert g(3, 7) == (-3)
+    assert pycode(-Mod(x,y)) == "-(x % y)"
 
 def test_NumPyPrinter_print_seq():
     n = NumPyPrinter()
