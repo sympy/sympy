@@ -665,26 +665,48 @@ class MatrixReductions(MatrixDeterminant):
 
     def _row_reduce(self, iszerofunc, simpfunc, normalize_last=True,
                     normalize=True, zero_above=True):
-        """Row reduce ``self`` and return a tuple (rref_matrix,
-        pivot_cols, swaps) where pivot_cols are the pivot columns
-        and swaps are any row swaps that were used in the process
-        of row reduction.
+        """A subroutine used both in the ``rref`` and the
+        ``echelon_form``.
 
         Parameters
         ==========
 
-        iszerofunc : determines if an entry can be used as a pivot
-        simpfunc : used to simplify elements and test if they are
+        iszerofunc : function
+            Determines if an entry can be used as a pivot
+
+        simpfunc : function
+            Used to simplify elements and test if they are
             zero if ``iszerofunc`` returns `None`
-        normalize_last : indicates where all row reduction should
+
+        normalize_last : bool
+            Indicates where all row reduction should
             happen in a fraction-free manner and then the rows are
             normalized (so that the pivots are 1), or whether
             rows should be normalized along the way (like the naive
             row reduction algorithm)
-        normalize : whether pivot rows should be normalized so that
+
+        normalize : bool
+            Whether pivot rows should be normalized so that
             the pivot value is 1
-        zero_above : whether entries above the pivot should be zeroed.
+
+        zero_above : bool
+            Whether entries above the pivot should be zeroed.
             If ``zero_above=False``, an echelon matrix will be returned.
+
+        Returns
+        =======
+
+        (matrix, pivot_cols, swaps) : (Matrix, tuple, tuple)
+            ``matrix`` contains the resulting matrix of the
+            row-reduction.
+
+            ``pivot_cols`` contains only the column indices of the
+            pivots.
+            Note that computing the row indices is trivial and can be
+            done easily by ``for r, c in enumerate(pivot_cols)``
+
+            ``swaps`` contains the array-form of the permutation that
+            is used in permuting the rows during the pivoting process.
         """
         rows, cols = self.rows, self.cols
         mat = list(self)
