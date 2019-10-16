@@ -756,7 +756,7 @@ class MatrixReductions(MatrixDeterminant):
         if zero_above:
             for r, c in reversed(list(enumerate(pivot_cols))):
                 if c == prev_col - 1:
-                    get_col(c)[:r] = [self.zero] * r
+                    mat[c: c + r*cols: cols] = (self.zero,) * r
                 else:
                     for i in reversed(range(r)):
                         cross_cancel(mat[r*cols + c], i, mat[i*cols + c], r)
