@@ -81,7 +81,6 @@ def test_get_dixon_matrix():
 
 def test_macaulay_resultant_init():
     """Test init method of MacaulayResultant."""
-    a = IndexedBase("alpha")
 
     assert macaulay.polynomials == [p, q]
     assert macaulay.variables == [x, y]

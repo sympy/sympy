@@ -64,8 +64,8 @@ from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 from sympy import MatrixSymbol
 
 def _epsilon_eq(a, b):
-    for x, y in zip(a, b):
-        if abs(x - y) > 1e-10:
+    for u, v in zip(a, b):
+        if abs(u - v) > 1e-10:
             return False
     return True
 
