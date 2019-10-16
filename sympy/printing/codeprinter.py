@@ -481,7 +481,7 @@ class CodePrinter(StrPrinter):
                     b.append(Pow(item.base, -item.exp))
             else:
                 a.append(item)
-                
+
         a = a or [S.One]
 
         a_str = [self.parenthesize(x, prec) for x in a]
