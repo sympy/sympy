@@ -3,7 +3,6 @@ from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.utilities.pytest import slow
 
 
 def test_Abs():
