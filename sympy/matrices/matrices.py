@@ -750,6 +750,7 @@ class MatrixReductions(MatrixDeterminant):
 
                 cross_cancel(pivot_val, row, val, piv_row)
             piv_row += 1
+            piv_col += 1
 
         # normalize each row
         if normalize_last is True and normalize is True:
