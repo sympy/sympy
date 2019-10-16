@@ -380,6 +380,10 @@ class ReferenceFrame(object):
         r"""Returns the direction cosine matrix relative to the provided
         reference frame.
 
+        The returned matrix can be used to express the orthogonal unit vectors
+        of this frame in terms of the orthogonal unit vectors of
+        ``otherframe``.
+
         Parameters
         ==========
 
@@ -391,8 +395,8 @@ class ReferenceFrame(object):
         ========
 
         The following example rotates the reference frame A relative to N by a
-        simple rotation and then calculates the direction cosine matrix of A
-        relative to N.
+        simple rotation and then calculates the direction cosine matrix of N
+        relative to A.
 
         >>> from sympy import symbols, sin, cos
         >>> from sympy.physics.vector import ReferenceFrame
@@ -405,10 +409,8 @@ class ReferenceFrame(object):
         [0, cos(q1), -sin(q1)],
         [0, sin(q1),  cos(q1)]])
 
-        The returned matrix can be used to express the orthogonal unit vectors
-        of ``otherframe`` in terms of the orthogonal unit vectors of this
-        frame. For example, the second row of the above direction cosine matrix
-        represents the ``N.y`` unit vector in N expressed in A. Like so:
+        The second row of the above direction cosine matrix represents the
+        ``N.y`` unit vector in N expressed in A. Like so:
 
         >>> Ny = 0*A.x + cos(q1)*A.y - sin(q1)*A.z
 
