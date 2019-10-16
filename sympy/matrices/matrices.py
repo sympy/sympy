@@ -572,15 +572,6 @@ class MatrixReductions(MatrixDeterminant):
             return self[i, j]
         return self._new(self.rows, self.cols, entry)
 
-    def _eval_echelon_form(self, iszerofunc, simpfunc):
-        """Returns (mat, swaps) where ``mat`` is a row-equivalent matrix
-        in echelon form and ``swaps`` is a list of row-swaps performed."""
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
-                                                      normalize_last=True,
-                                                      normalize=False,
-                                                      zero_above=False)
-        return reduced, pivot_cols, swaps
-
     def _eval_is_echelon(self, iszerofunc):
         if self.rows <= 0 or self.cols <= 0:
             return True
@@ -789,7 +780,9 @@ class MatrixReductions(MatrixDeterminant):
 
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
-    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
+    def echelon_form(
+        self, iszerofunc=_iszero, simplify=False, with_pivots=False,
+        normalize_last=True, normalize=False):
         """Returns a matrix row-equivalent to ``self`` that is
         in echelon form.  Note that echelon form of a matrix
         is *not* unique, however, properties like the row
@@ -797,7 +790,10 @@ class MatrixReductions(MatrixDeterminant):
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
 
-        mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc)
+        mat, pivots, _ = self._row_reduce(
+            iszerofunc=iszerofunc, simpfunc=simpfunc, zero_above=False,
+            normalize_last=normalize_last, normalize=normalize)
+
         if with_pivots:
             return mat, pivots
         return mat
@@ -906,7 +902,8 @@ class MatrixReductions(MatrixDeterminant):
                 return 2
 
         mat, _ = self._permute_complexity_right(iszerofunc=iszerofunc)
-        echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
+        _, pivots = mat.echelon_form(
+            iszerofunc=iszerofunc, simplify=simpfunc, with_pivots=True)
         return len(pivots)
 
     def rref(
