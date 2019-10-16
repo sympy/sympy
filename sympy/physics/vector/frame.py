@@ -377,31 +377,71 @@ class ReferenceFrame(object):
         return outvec
 
     def dcm(self, otherframe):
-        """The direction cosine matrix between frames.
-
-        This gives the DCM between this frame and the otherframe.
-        The format is N.xyz = N.dcm(B) * B.xyz
-        A SymPy Matrix is returned.
+        r"""Returns the direction cosine matrix relative to the provided
+        reference frame.
 
         Parameters
         ==========
 
         otherframe : ReferenceFrame
-            The otherframe which the DCM is generated to.
+            The reference frame which the direction cosine matrix of this frame
+            is formed relative to.
 
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
-        >>> from sympy import symbols
+        The following example rotates the reference frame A relative to N by a
+        simple rotation and then calculates the direction cosine matrix of A
+        relative to N.
+
+        >>> from sympy import symbols, sin, cos
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
+        >>> A = N.orientnew('A', 'Axis', (q1, N.x))
         >>> N.dcm(A)
         Matrix([
         [1,       0,        0],
         [0, cos(q1), -sin(q1)],
         [0, sin(q1),  cos(q1)]])
+
+        The returned matrix can be used to express the orthogonal unit vectors
+        of ``otherframe`` in terms of the orthogonal unit vectors of this
+        frame. For example, the second row of the above direction cosine matrix
+        represents the ``N.y`` unit vector in N expressed in A. Like so:
+
+        >>> Ny = 0*A.x + cos(q1)*A.y - sin(q1)*A.z
+
+        Thus, expressing ``N.y`` in A should return the same result:
+
+        >>> N.y.express(A)
+        cos(q1)*A.y - sin(q1)*A.z
+
+        Notes
+        =====
+
+        It is import to know what form of the direction cosine matrix is
+        returned. If ``B.dcm(A)`` is called, it means the "direction cosine
+        matrix of B relative to A". This is the matrix :math:`^A\mathbf{R}^B`
+        shown in the following relationship:
+
+        .. math::
+
+           \begin{bmatrix}
+             \hat{\mathbf{b}}_1 \\
+             \hat{\mathbf{b}}_2 \\
+             \hat{\mathbf{b}}_3
+           \end{bmatrix}
+           =
+           ^A\mathbf{R}^B
+           \begin{bmatrix}
+             \hat{\mathbf{a}}_1 \\
+             \hat{\mathbf{a}}_2 \\
+             \hat{\mathbf{a}}_3
+           \end{bmatrix}.
+
+        :math:`^A\mathbf{R}^B` is the matrix that expresses the B unit vectors
+        in terms of the A unit vectors.
 
         """
 
