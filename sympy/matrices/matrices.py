@@ -589,12 +589,6 @@ class MatrixReductions(MatrixDeterminant):
             return zeros_below and self[:, 1:]._eval_is_echelon(iszerofunc)
         return zeros_below and self[1:, 1:]._eval_is_echelon(iszerofunc)
 
-    def _eval_rref(self, iszerofunc, simpfunc, normalize_last=True):
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
-                                                      normalize_last, normalize=True,
-                                                      zero_above=True)
-        return reduced, pivot_cols
-
     def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
         """Validate the arguments for a row/column operation.  ``error_str``
         can be one of "row" or "col" depending on the arguments being parsed."""
@@ -915,7 +909,9 @@ class MatrixReductions(MatrixDeterminant):
         echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
         return len(pivots)
 
-    def rref(self, iszerofunc=_iszero, simplify=False, pivots=True, normalize_last=True):
+    def rref(
+        self, iszerofunc=_iszero, simplify=False, pivots=True,
+        normalize_last=True, normalize=True):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
         Parameters
@@ -969,11 +965,13 @@ class MatrixReductions(MatrixDeterminant):
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
 
-        ret, pivot_cols = self._eval_rref(iszerofunc=iszerofunc,
-                                          simpfunc=simpfunc,
-                                          normalize_last=normalize_last)
+        ret, pivot_cols, _ = self._row_reduce(
+            iszerofunc=iszerofunc, simpfunc=simpfunc,
+            normalize_last=normalize_last, normalize=normalize,
+            zero_above=True)
+
         if pivots:
-            ret = (ret, pivot_cols)
+            return ret, pivot_cols
         return ret
 
 
