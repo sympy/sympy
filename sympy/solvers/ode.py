@@ -1634,10 +1634,6 @@ def ode_2nd_hypergeometric(eq, func, order, match):
         sol = cancel((e)*x**((-match['k']+1)/2))*sol
         sol = Eq(func, sol)
 
-    if sol is None:
-        raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
-            + " the hypergeometric method")
-
     return sol
 
 def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
