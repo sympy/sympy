@@ -763,12 +763,16 @@ class MatrixReductions(MatrixDeterminant):
         prev_col = cols
         if zero_above:
             for r, c in reversed(list(enumerate(pivot_cols))):
+                # If the last N pivot columns are attatched each other
+                # from the end, the backward substitution can be
+                # done simply by replacing the elements of the column
+                # into zero.
                 if c == prev_col - 1:
                     mat[c: c + r*cols: cols] = (self.zero,) * r
+                    prev_col = c
                 else:
                     for i in reversed(range(r)):
                         cross_cancel(mat[r*cols + c], i, mat[i*cols + c], r)
-                prev_col = c
 
         # normalize each row
         if normalize_last is True and normalize is True:
