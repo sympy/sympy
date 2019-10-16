@@ -663,8 +663,9 @@ class MatrixReductions(MatrixDeterminant):
 
         return (self.permute(perm, orientation='cols'), perm)
 
-    def _row_reduce(self, iszerofunc, simpfunc, normalize_last=True,
-                    normalize=True, zero_above=True):
+    def _row_reduce(
+        self, iszerofunc=_iszero, simpfunc=_simplify, normalize_last=True,
+        normalize=True, zero_above=True):
         """A subroutine used both in the ``rref`` and the
         ``echelon_form``.
 
