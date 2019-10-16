@@ -469,7 +469,7 @@ class CodePrinter(StrPrinter):
         else:
             # use make_args in case expr was something like -x -> x
             args = Mul.make_args(expr)
-        
+
         # Gather args for numerator/denominator
         for item in args:
             if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
@@ -482,7 +482,6 @@ class CodePrinter(StrPrinter):
             else:
                 a.append(item)
                 
-
         a = a or [S.One]
 
         a_str = [self.parenthesize(x, prec) for x in a]
@@ -492,6 +491,7 @@ class CodePrinter(StrPrinter):
         for item in pow_paren:
             if item.base in b:
                 b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
+
         if not b:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
