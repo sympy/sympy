@@ -12,7 +12,7 @@ system has common roots. That is when the resultant is equal to zero.
 from sympy import IndexedBase, Matrix, Mul, Poly
 from sympy import rem, prod, degree_list, diag
 from sympy.core.compatibility import range
-from sympy.polys.monomials import monomial_deg, itermonomials
+from sympy.polys.monomials import itermonomials
 from sympy.polys.orderings import monomial_key
 from sympy.polys.polytools import poly_from_expr, total_degree
 from sympy.functions.combinatorial.factorials import binomial
@@ -121,7 +121,7 @@ class DixonResultant():
 
         return poly_from_expr(dixon_polynomial, self.dummy_variables)[0]
 
-    def get_upper_degrees(self, polynomial):
+    def get_max_degrees(self, polynomial):
         r"""
         Returns a list of the maximum degree of each variable appearing
         in the coefficients of the Dixon polynomial. The coefficients are
@@ -140,7 +140,7 @@ class DixonResultant():
         x_n.
         """
 
-        max_degrees = self.get_upper_degrees(polynomial)
+        max_degrees = self.get_max_degrees(polynomial)
 
         # list of column headers of the Dixon matrix.
         monomials = itermonomials(self.variables, max_degrees)
