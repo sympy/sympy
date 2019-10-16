@@ -727,7 +727,7 @@ class MatrixReductions(MatrixDeterminant):
 
             # if we aren't normalizing last, we normalize
             # before we zero the other rows
-            if normalize_last is False:
+            if normalize_last is False and normalize is True:
                 i, j = piv_row, piv_col
                 mat[i*cols + j] = self.one
                 for p in range(i*cols + j + 1, (i + 1)*cols):
@@ -735,14 +735,12 @@ class MatrixReductions(MatrixDeterminant):
                 # after normalizing, the pivot value is 1
                 pivot_val = self.one
 
-            # zero above and below the pivot
+            # zero below the pivot
             for row in range(rows):
-                # don't zero our current row
-                if row == piv_row:
+                # Zero above the pivot after computing the echelon form.
+                if row <= piv_row:
                     continue
-                # don't zero above the pivot unless we're told.
-                if zero_above is False and row < piv_row:
-                    continue
+
                 # if we're already a zero, don't do anything
                 val = mat[row*cols + piv_col]
                 if iszerofunc(val):
@@ -751,6 +749,16 @@ class MatrixReductions(MatrixDeterminant):
                 cross_cancel(pivot_val, row, val, piv_row)
             piv_row += 1
             piv_col += 1
+
+        # Compute RREF after computing echelon form with
+        # backward substitution.
+        if zero_above:
+            for r, c in reversed(list(enumerate(pivot_cols))):
+                if c == cols-1 or c+1 in pivot_cols:
+                    get_col(c)[:r] = [self.zero] * r
+
+                for i in reversed(range(r)):
+                    cross_cancel(mat[r*cols + c], i, mat[i*cols + c], r)
 
         # normalize each row
         if normalize_last is True and normalize is True:
