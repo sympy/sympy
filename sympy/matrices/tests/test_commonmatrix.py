@@ -1135,6 +1135,18 @@ def test_rref():
         assert simplify(i - j).is_zero
 
 
+def test_echelon_form_rref_normalize():
+    M = ReductionsOnlyMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    assert M.echelon_form(normalize=True) == \
+        Matrix([[1, 2, 3], [0, 1, 2], [0, 0, 0]])
+    assert M.echelon_form(normalize=False) == \
+        Matrix([[1, 2, 3], [0, -3, -6], [0, 0, 0]])
+    assert M.rref(normalize=True, pivots=False) == \
+        Matrix([[1, 0, -1], [0, 1, 2], [0, 0, 0]])
+    assert M.rref(normalize=False, pivots=False) == \
+        Matrix([[-3, 0, 3], [0, -3, -6], [0, 0, 0]])
+
+
 # SpecialOnlyMatrix tests
 def test_eye():
     assert list(SpecialOnlyMatrix.eye(2, 2)) == [1, 0, 0, 1]
