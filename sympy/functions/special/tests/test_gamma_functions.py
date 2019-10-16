@@ -439,8 +439,6 @@ def test_digamma_expand_func():
         polygamma(0, x + y)
 
 def test_trigamma():
-    from sympy import I
-
     assert trigamma(nan) == nan
 
     assert trigamma(oo) == 0
