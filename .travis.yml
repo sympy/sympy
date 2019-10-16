@@ -275,6 +275,12 @@ before_install:
         export PATH="$HOME/miniconda/bin:$PATH";
         hash -r;
         conda config --set always_yes yes --set changeps1 no;
+
+        # Workaround for upstream bug in conda:
+        # https://github.com/conda/conda/issues/9337#issuecomment-542462030
+        pip uninstall -y setuptools
+        conda install setuptools
+
         conda update -q conda;
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
 
