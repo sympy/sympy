@@ -44,17 +44,17 @@ matrix:
         - SPLIT="2/2" TEST_SYMPY="true"
 
     - stage: test
-      python: 3.8-dev
+      python: 3.8
       dist: xenial
       sudo: true
       env:
         - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
-    - python: 3.8-dev
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
         - SPLIT="1/2" TEST_SYMPY="true"
-    - python: 3.8-dev
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
@@ -258,7 +258,7 @@ before_install:
       pip install flake8;
       flake8 sympy;
     fi
-  - if [ "$TRAVIS_PYTHON_VERSION" == "3.8-dev" ]; then
+  - if [ "$TRAVIS_PYTHON_VERSION" == "3.8" ]; then
         pip uninstall -y Cython;
     fi
   - |
