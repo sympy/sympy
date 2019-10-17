@@ -240,7 +240,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         return self._print_NaN(expr)
 
     def _print_Mod(self, expr):
-        PREC = precedence(expr, _def_prec)
+        PREC = precedence(expr, self._def_prec)
         return ('{0} % {1}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
 
     def _print_Piecewise(self, expr):
@@ -375,7 +375,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
             f=self._module_format('math.copysign'), e=self._print(e.args[0]))
 
     def _print_Not(self, expr):
-        PREC = precedence(expr, _def_prec)
+        PREC = precedence(expr, self._def_prec)
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
     def _print_Indexed(self, expr):
@@ -422,7 +422,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
 
         sympy.printing.str.StrPrinter._print_Pow
         """
-        PREC = precedence(expr, _def_prec)
+        PREC = precedence(expr, self._def_prec)
 
         if expr.exp == S.Half and not rational:
             func = self._module_format(sqrt)
