@@ -2,7 +2,7 @@ from sympy.physics.quantum.qasm import Qasm, prod, flip_index, trim,\
      get_index, nonblank, fullsplit, fixcommand, stripquotes, read_qasm
 from sympy.physics.quantum.gate import X, Z, H, S, T
 from sympy.physics.quantum.gate import CNOT, SWAP, CPHASE, CGate, CGateS
-from sympy.physics.quantum.circuitplot import Mz, CreateOneQubitGate, CreateCGate
+from sympy.physics.quantum.circuitplot import Mz
 
 def test_qasm_readqasm():
     qasm_lines = """\
