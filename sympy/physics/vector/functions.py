@@ -604,11 +604,11 @@ def dynamicsymbols(names, level=0):
     >>> from sympy.physics.vector import TIME
     >>> diff(q, TIME)
     Derivative(q(t), t)
-    >>> dynamicsymbols('q', 1)
-    Derivative(Derivative(q(t), t), t)
+    >>> dynamicsymbols('q', 2)
+    Derivative(q(t), (t, 2))
     >>> q1, q2 = dynamicsymbols('q1:3')
     >>> q1, q2
-    q1(t), q2(t)
+    (q1(t), q2(t))
 
     ``dynamicsymbols`` is essentially a wrapper to ``symbols`` that does the
     following:
@@ -618,7 +618,7 @@ def dynamicsymbols(names, level=0):
     >>> Function('q')(t)
     q(t)
     >>> diff(Function('q')(t), t)
-    Derivative(q1(t), t)
+    Derivative(q(t), t)
 
     See Also
     ========
