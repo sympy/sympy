@@ -127,9 +127,10 @@ class DixonResultant():
         in the coefficients of the Dixon polynomial. The coefficients are
         viewed as polys in x_1, ... , x_n.
         """
-        max_degrees = [
-            max(degree_list(Poly(poly, self.variables))[i] for poly
-                in polynomial.coeffs()) for i in range(self.n)]
+        deg_lists = [degree_list(Poly(poly, self.variables))
+                     for poly in polynomial.coeffs()]
+
+        max_degrees = [max(degs) for degs in zip(*deg_lists)]
 
         return max_degrees
 
