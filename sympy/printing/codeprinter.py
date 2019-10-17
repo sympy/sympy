@@ -421,36 +421,36 @@ class CodePrinter(StrPrinter):
         return self._print_NumberSymbol(expr)
 
     def _print_And(self, expr):
-        PREC = precedence(expr)
+        PREC = precedence(expr, self._def_prec)
         return (" %s " % self._operators['and']).join(self.parenthesize(a, PREC)
                 for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Or(self, expr):
-        PREC = precedence(expr)
+        PREC = precedence(expr, self._def_prec)
         return (" %s " % self._operators['or']).join(self.parenthesize(a, PREC)
                 for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Xor(self, expr):
         if self._operators.get('xor') is None:
             return self._print_not_supported(expr)
-        PREC = precedence(expr)
+        PREC = precedence(expr, self._def_prec)
         return (" %s " % self._operators['xor']).join(self.parenthesize(a, PREC)
                 for a in expr.args)
 
     def _print_Equivalent(self, expr):
         if self._operators.get('equivalent') is None:
             return self._print_not_supported(expr)
-        PREC = precedence(expr)
+        PREC = precedence(expr, self._def_prec)
         return (" %s " % self._operators['equivalent']).join(self.parenthesize(a, PREC)
                 for a in expr.args)
 
     def _print_Not(self, expr):
-        PREC = precedence(expr)
+        PREC = precedence(expr, self._def_prec)
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
     def _print_Mul(self, expr):
 
-        prec = precedence(expr)
+        prec = precedence(expr, self._def_prec)
 
         c, e = expr.as_coeff_Mul()
         if c < 0:

@@ -8,7 +8,7 @@ This module contains python code printers for plain python as well as NumPy & Sc
 from collections import defaultdict
 from itertools import chain
 from sympy.core import S
-from .precedence import precedence
+from .precedence import precedence, PRECEDENCE
 from .codeprinter import CodePrinter
 
 _kw_py2and3 = {
@@ -96,6 +96,10 @@ class AbstractPythonCodePrinter(CodePrinter):
         contract=False,
         standard='python3'
     )
+
+    @property
+    def _def_prec(self):
+        return {'Mod': PRECEDENCE['Add']-1}
 
     def __init__(self, settings=None):
         super(AbstractPythonCodePrinter, self).__init__(settings)
@@ -236,7 +240,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         return self._print_NaN(expr)
 
     def _print_Mod(self, expr):
-        PREC = precedence(expr)
+        PREC = precedence(expr, _def_prec)
         return ('{0} % {1}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
 
     def _print_Piecewise(self, expr):
@@ -371,7 +375,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
             f=self._module_format('math.copysign'), e=self._print(e.args[0]))
 
     def _print_Not(self, expr):
-        PREC = precedence(expr)
+        PREC = precedence(expr, _def_prec)
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
     def _print_Indexed(self, expr):
@@ -418,7 +422,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
 
         sympy.printing.str.StrPrinter._print_Pow
         """
-        PREC = precedence(expr)
+        PREC = precedence(expr, _def_prec)
 
         if expr.exp == S.Half and not rational:
             func = self._module_format(sqrt)
@@ -598,12 +602,11 @@ class NumPyPrinter(PythonCodePrinter):
         [(k, 'numpy.' + v) for k, v in _known_functions_numpy.items()]
     ))
     _kc = {k: 'numpy.'+v for k, v in _known_constants_math.items()}
-
-    def parenthesize(self, item, level, strict=False):
-        # Avoiding Mod function to have parenthesis with NumPyPrinter
-        if item.__class__.__name__ == 'Mod':
-            return self._print(item)
-        return super().parenthesize(item, level, strict)
+   
+    @property
+    def _def_prec(self):
+        # Resets the precedence of Mod function
+        return {}
 
     def _print_seq(self, seq):
         "General sequence printer: converts to tuple"

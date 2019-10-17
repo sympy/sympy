@@ -23,11 +23,15 @@ class StrPrinter(Printer):
         "sympy_integers": False,
         "abbrev": False,
     }
+    
+    @property
+    def _def_prec(self):
+        return {}
 
     _relationals = dict()
 
     def parenthesize(self, item, level, strict=False):
-        if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
+        if (precedence(item, self._def_prec) < level) or ((not strict) and precedence(item, self._def_prec) <= level):
             return "(%s)" % self._print(item)
         else:
             return self._print(item)
@@ -49,7 +53,7 @@ class StrPrinter(Printer):
         else:
             terms = self._as_ordered_terms(expr, order=order)
 
-        PREC = precedence(expr)
+        PREC = precedence(expr, self._def_prec)
         l = []
         for term in terms:
             t = self._print(term)
@@ -58,7 +62,7 @@ class StrPrinter(Printer):
                 t = t[1:]
             else:
                 sign = "+"
-            if precedence(term) < PREC:
+            if precedence(term, self._def_prec) < PREC:
                 l.extend([sign, "(%s)" % t])
             else:
                 l.extend([sign, t])
@@ -330,7 +334,7 @@ class StrPrinter(Printer):
             sign = ""
 
         return sign + '*'.join(
-            [self.parenthesize(arg, precedence(expr)) for arg in expr.args]
+            [self.parenthesize(arg, precedence(expr, self._def_prec)) for arg in expr.args]
         )
 
     def _print_ElementwiseApplyFunction(self, expr):
@@ -406,7 +410,7 @@ class StrPrinter(Printer):
         # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
         sign, args = expr._get_args_for_traditional_printer()
         return sign + "*".join(
-            [self.parenthesize(arg, precedence(expr)) for arg in args]
+            [self.parenthesize(arg, precedence(expr, self._def_prec)) for arg in args]
         )
 
     def _print_TensAdd(self, expr):
@@ -557,7 +561,7 @@ class StrPrinter(Printer):
         so there is no need of defining a separate printer for ``sqrt``.
         Instead, it should be handled here as well.
         """
-        PREC = precedence(expr)
+        PREC = precedence(expr, self._def_prec)
 
         if expr.exp is S.Half and not rational:
             return "sqrt(%s)" % self._print(expr.base)
@@ -584,7 +588,7 @@ class StrPrinter(Printer):
         return self._print(expr.args[0])
 
     def _print_MatPow(self, expr):
-        PREC = precedence(expr)
+        PREC = precedence(expr, self._def_prec)
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False),
                          self.parenthesize(expr.exp, PREC, strict=False))
 
@@ -685,12 +689,13 @@ class StrPrinter(Printer):
         }
 
         if expr.rel_op in charmap:
+            print(expr.lhs.__class__.__name__)
             return '%s(%s, %s)' % (charmap[expr.rel_op], self._print(expr.lhs),
                                    self._print(expr.rhs))
 
-        return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
+        return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr, self._def_prec)),
                            self._relationals.get(expr.rel_op) or expr.rel_op,
-                           self.parenthesize(expr.rhs, precedence(expr)))
+                           self.parenthesize(expr.rhs, precedence(expr, self._def_prec)))
 
     def _print_ComplexRootOf(self, expr):
         return "CRootOf(%s, %d)" % (self._print_Add(expr.expr,  order='lex'),

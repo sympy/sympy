@@ -11,11 +11,12 @@ PRECEDENCE = {
     "Or": 20,
     "And": 30,
     "Relational": 35,
-    "Mod": 39,
     "Add": 40,
     "Mul": 50,
     "Pow": 60,
     "Func": 70,
+    # Mod defined in StrPrinter as Mod(a,b) and therefore doesn't need parenthesis
+    "Mod": 71,
     "Not": 100,
     "Atom": 1000,
     "BitwiseOr": 36,
@@ -119,11 +120,12 @@ PRECEDENCE_FUNCTIONS = {
 }
 
 
-def precedence(item):
+def precedence(item, predefined_prec = {}):
     """Returns the precedence of a given object.
 
     This is the precedence for StrPrinter.
     """
+
     if hasattr(item, "precedence"):
         return item.precedence
     try:
@@ -132,6 +134,8 @@ def precedence(item):
         return PRECEDENCE["Atom"]
     for i in mro:
         n = i.__name__
+        if n in predefined_prec:
+            return predefined_prec[n]
         if n in PRECEDENCE_FUNCTIONS:
             return PRECEDENCE_FUNCTIONS[n](item)
         elif n in PRECEDENCE_VALUES:
