@@ -23,7 +23,7 @@ class StrPrinter(Printer):
         "sympy_integers": False,
         "abbrev": False,
     }
-    
+
     @property
     def _def_prec(self):
         return {}
@@ -689,7 +689,6 @@ class StrPrinter(Printer):
         }
 
         if expr.rel_op in charmap:
-            print(expr.lhs.__class__.__name__)
             return '%s(%s, %s)' % (charmap[expr.rel_op], self._print(expr.lhs),
                                    self._print(expr.rhs))
 
