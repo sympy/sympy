@@ -602,7 +602,7 @@ class NumPyPrinter(PythonCodePrinter):
         [(k, 'numpy.' + v) for k, v in _known_functions_numpy.items()]
     ))
     _kc = {k: 'numpy.'+v for k, v in _known_constants_math.items()}
-   
+
     @property
     def _def_prec(self):
         # Resets the precedence of Mod function
