@@ -603,7 +603,7 @@ class NumPyPrinter(PythonCodePrinter):
         # Avoiding Mod function to have parenthesis with NumPyPrinter
         if item.__class__.__name__ == 'Mod':
             return self._print(item)
-        return super().parenthesize(item)
+        return super().parenthesize(item, level, strict)
 
     def _print_seq(self, seq):
         "General sequence printer: converts to tuple"
