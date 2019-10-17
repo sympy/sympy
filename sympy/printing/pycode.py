@@ -599,6 +599,11 @@ class NumPyPrinter(PythonCodePrinter):
     ))
     _kc = {k: 'numpy.'+v for k, v in _known_constants_math.items()}
 
+    def parenthesize(self, item, level, strict=False):
+        # Avoiding Mod function to have parenthesis with NumPyPrinter
+        if item.__class__.__name__ == 'Mod':
+            return self._print(item)
+        return super().parenthesize(item)
 
     def _print_seq(self, seq):
         "General sequence printer: converts to tuple"
