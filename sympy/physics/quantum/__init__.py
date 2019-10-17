@@ -3,6 +3,8 @@
 __all__ = [
     'AntiCommutator',
 
+    'qapply',
+
     'Commutator',
 
     'Dagger',
@@ -28,6 +30,8 @@ __all__ = [
 
 ]
 from .anticommutator import AntiCommutator
+
+from .qapply import qapply
 
 from .commutator import Commutator
 
