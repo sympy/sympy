@@ -25,7 +25,7 @@ __all__ = [
     'UnivariatePolynomialError', 'MultivariatePolynomialError',
     'PolificationFailed', 'OptionError', 'FlagError',
 
-    'minimal_polynomial', 'primitive_element', 'field_isomorphism',
+    'minpoly', 'minimal_polynomial', 'primitive_element', 'field_isomorphism',
     'to_number_field', 'isolate',
 
     'itermonomials', 'Monomial',
@@ -85,7 +85,7 @@ from .polyerrors import (BasePolynomialError, ExactQuotientFailed,
         MultivariatePolynomialError, PolificationFailed, OptionError,
         FlagError)
 
-from .numberfields import (minimal_polynomial, primitive_element,
+from .numberfields import (minpoly, minimal_polynomial, primitive_element,
         field_isomorphism, to_number_field, isolate)
 
 from .monomials import itermonomials, Monomial
