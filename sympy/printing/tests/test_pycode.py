@@ -157,6 +157,8 @@ def test_issue_14283():
     assert prntr.doprint(-oo) == "float('-inf')"
 
 def test_issue_17737():
+    from sympy import Mod, pycode, lambdify, symbols
+
     x, y = symbols('x y')
     expr = -Mod(x, y)
     g = lambdify([x, y], expr, modules=[])
