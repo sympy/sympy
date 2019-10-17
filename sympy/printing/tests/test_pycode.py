@@ -155,7 +155,7 @@ def test_issue_14283():
 
     assert prntr.doprint(zoo) == "float('nan')"
     assert prntr.doprint(-oo) == "float('-inf')"
-    
+
 def test_issue_17737():
     x, y = symbols('x y')
     expr = -Mod(x, y)
