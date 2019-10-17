@@ -11,7 +11,7 @@ PRECEDENCE = {
     "Or": 20,
     "And": 30,
     "Relational": 35,
-    "Mod":39,
+    "Mod": 39,
     "Add": 40,
     "Mul": 50,
     "Pow": 60,
