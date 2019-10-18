@@ -789,7 +789,7 @@ class MatrixReductions(MatrixDeterminant):
         iszerofunc : function
             See the doc of :meth:`rref` for the same parameter.
 
-        simpfunc : function
+        simplify : function or bool
             See the doc of :meth:`rref` for the same parameter.
 
         normalize : bool
@@ -966,7 +966,7 @@ class MatrixReductions(MatrixDeterminant):
             A function used for detecting whether an element can
             act as a pivot.  ``lambda x: x.is_zero`` is used by default.
 
-        simpfunc : function
+        simplify : function or bool
             A function used to simplify elements when looking for a pivot.
             By default SymPy's ``simplify`` is used.
 
