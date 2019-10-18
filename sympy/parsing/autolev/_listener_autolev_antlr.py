@@ -399,9 +399,58 @@ def writeImaginary(self, ctx):
     self.write(b)
     self.var_list = []
 
+
+def gcd(a, b):
+    if (b == 0):
+        return a
+    return gcd(b, a%b)
+
+
+# Returns smallest integer k such that k * str becomes
+# natural. str is an input floating point number
+def findnum(str):
+    import math as m
+    # reference: https://www.geeksforgeeks.org/smallest-number-multiply-convert-floating-point-natural/
+    # Find size of string representing a
+    # floating point number.
+    n = len(str)
+    # Below is used to find denominator in
+    # fraction form.
+    count_after_dot = 0
+
+    # Used to find value of count_after_dot
+    dot_seen = 0
+
+    # To find numerator in fraction form of
+    # given number. For example, for 30.25,
+    # numerator would be 3025.
+    num = 0
+    for i in range(n):
+        if (str[i] != '.'):
+            num = num*10 + int(str[i])
+            if (dot_seen == 1):
+                count_after_dot += 1
+        else:
+            dot_seen = 1
+
+    # If there was no dot, then number
+    # is already a natural.
+    if (dot_seen == 0):
+        return 1
+
+    # Find denominator in fraction form. For example,
+    # for 30.25, denominator is 100
+    dem = int(m.pow(10, count_after_dot))
+
+    # Result is denominator divided by
+    # GCD-of-numerator-and-denominator. For example, for
+    # 30.25, result is 100 / GCD(3025,100) = 100/25 = 4
+    return (dem / gcd(num, dem))
+
+
 if AutolevListener:
     class MyListener(AutolevListener):
-        def __init__(self, include_numeric=False):
+        def __init__(self, include_numeric=False, include_numpy=False):
             # Stores data in tree nodes(tree annotation). Especially useful for expr reconstruction.
             self.tree_property = {}
 
@@ -438,12 +487,16 @@ if AutolevListener:
 
             # Stores the variables and their rhs for substituting upon the Autolev command EXPLICIT.
             self.explicit = collections.OrderedDict()
+            # numpy code will be included only if this flag is set to True
+            self.include_numpy = include_numpy
 
             # Write code to import common dependencies.
             self.output_code.append("import sympy.physics.mechanics as me\n")
             self.output_code.append("import sympy as sm\n")
-            self.output_code.append("import math as m\n")
-            self.output_code.append("import numpy as np\n")
+            if self.include_numpy:
+                self.output_code.append("import numpy as np\n")
+            else:
+                self.output_code.append("import math as m\n")
             self.output_code.append("\n")
 
             # Just a store for the max degree variable in a line.
@@ -1644,12 +1697,19 @@ if AutolevListener:
                             z = ""
                         if i not in e:
                             if z == "deg":
-                                d.append(i + ":" + "np.deg2rad(" + j + ")")
+                                if self.include_numpy:
+                                    d.append(i + ":" + "np.deg2rad(" + j + ")")
+                                else:
+                                    d.append(i + ":" + "m.radians(" + j + ")")
+
                             else:
                                 d.append(i + ":" + j)
                         else:
                             if z == "deg":
-                                guess.append("np.deg2rad(" + j + ")")
+                                if self.include_numpy:
+                                    guess.append("np.deg2rad(" + j + ")")
+                                else:
+                                    guess.append("m.radians(" + j + ")")
                             else:
                                 guess.append(j)
 
@@ -1674,7 +1734,10 @@ if AutolevListener:
                             if i in self.inputs.keys():
                                 if type(self.inputs[i]) is tuple:
                                     if self.inputs[i][1] == "deg":
-                                        x0.append(i + ":" + "np.deg2rad(" + self.inputs[i][0] + ")")
+                                        if self.include_numpy:
+                                            x0.append(i + ":" + "np.deg2rad(" + self.inputs[i][0] + ")")
+                                        else:
+                                            x0.append(i + ":" + "m.radians(" + self.inputs[i][0] + ")")
                                     else:
                                         x0.append(i + ":" + self.inputs[i][0])
                                 else:
@@ -1714,11 +1777,28 @@ if AutolevListener:
                         self.constants + self.q_ind + self.q_dep + self.u_ind + self.u_dep:
                             specifieds.append(self.symbol_table[i] + ":" + self.inputs[i])
 
-                    self.write("sys = System(kane, constants = {" + ", ".join(const_list) + "},\n" +
-                               "specifieds={" + ", ".join(specifieds) + "},\n" +
-                               "initial_conditions={" + ", ".join(x0) + "},\n" +
-                               "times = np.linspace(0.0, " + str(t_final) + ", " + str(t_final) +
-                               "/" + str(integ_stp) + "))\n\ny=sys.integrate()\n")
+                    # convert np.linspace to python list equivalent while handling rounding errors
+                    integ_stp_str = str(integ_stp)
+                    multiply_by_val = findnum(integ_stp_str)
+
+                    new_t_final = t_final * multiply_by_val
+                    # update new_t_final value
+
+                    str = str(new_t_final)
+                    multiply_update_limit_by_val = findnum(str)
+
+                    time_scale = [p/(multiply_by_val*multiply_update_limit_by_val) for p in range(0, round(new_t_final*multiply_update_limit_by_val), round(integ_stp * multiply_by_val*multiply_update_limit_by_val))]
+                    if self.include_numpy:
+                        self.write("sys = System(kane, constants = {" + ", ".join(const_list) + "},\n" +
+                                "specifieds={" + ", ".join(specifieds) + "},\n" +
+                                "initial_conditions={" + ", ".join(x0) + "},\n" +
+                                "times = np.linspace(0.0, " + str(t_final) + ", " + str(t_final) +
+                                "/" + str(integ_stp) + "))\n\ny=sys.integrate()\n")
+                    else:
+                        self.write("sys = System(kane, constants = {" + ", ".join(const_list) + "},\n" +
+                                "specifieds={" + ", ".join(specifieds) + "},\n" +
+                                "initial_conditions={" + ", ".join(x0) + "},\n" +
+                                "times = {})".format(time_scale) + "\n\ny=sys.integrate()\n")
 
                     # For outputs other than qs and us.
                     other_outputs = []
@@ -1851,7 +1931,10 @@ if AutolevListener:
                         value = self.getValue(ctx.expr(3))
                     else:
                         if ctx.expr(3) in self.numeric_expr:
-                            value = "np.deg2rad(" + self.getValue(ctx.expr(3)) + ")"
+                            if self.include_numpy:
+                                value = "np.deg2rad(" + self.getValue(ctx.expr(3)) + ")"
+                            else:
+                                value = "m.radians(" + self.getValue(ctx.expr(3)) + ")"
                         else:
                             value = self.getValue(ctx.expr(3))
                     self.write(frame2 + ".orient(" + frame1 +

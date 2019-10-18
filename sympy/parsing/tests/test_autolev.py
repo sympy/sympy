@@ -14,14 +14,14 @@ FILE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
 
 
-def _test_examples(in_filename, out_filename, test_name=""):
+def _test_examples(in_filename, out_filename, test_name="", include_numpy=False):
 
     in_file_path = os.path.join(FILE_DIR, 'autolev', 'test-examples',
                                 in_filename)
     correct_file_path = os.path.join(FILE_DIR, 'autolev', 'test-examples',
                                      out_filename)
     with open(in_file_path) as f:
-        generated_code = parse_autolev(f, include_numeric=True)
+        generated_code = parse_autolev(f, include_numeric=True, include_numpy=include_numpy)
 
     with open(correct_file_path) as f:
         for idx, line1 in enumerate(f):
@@ -45,6 +45,10 @@ def test_rule_tests():
         in_filepath = i + ".al"
         out_filepath = i + ".py"
         _test_examples(in_filepath, out_filepath, i)
+    for i in l:
+        in_filepath = i + ".al"
+        out_filepath = i + ".py"
+        _test_examples(in_filepath, out_filepath, i, include_numpy=True)
 
 
 def test_pydy_examples():
@@ -56,6 +60,10 @@ def test_pydy_examples():
         in_filepath = os.path.join("pydy-example-repo", i + ".al")
         out_filepath = os.path.join("pydy-example-repo", i + ".py")
         _test_examples(in_filepath, out_filepath, i)
+    for i in l:
+        in_filepath = os.path.join("pydy-example-repo", i + ".al")
+        out_filepath = os.path.join("pydy-example-repo", i + ".py")
+        _test_examples(in_filepath, out_filepath, i, include_numpy=True)
 
 
 def test_autolev_tutorial():
@@ -70,7 +78,10 @@ def test_autolev_tutorial():
             in_filepath = os.path.join("autolev-tutorial", i + ".al")
             out_filepath = os.path.join("autolev-tutorial", i + ".py")
             _test_examples(in_filepath, out_filepath, i)
-
+        for i in l:
+            in_filepath = os.path.join("autolev-tutorial", i + ".al")
+            out_filepath = os.path.join("autolev-tutorial", i + ".py")
+            _test_examples(in_filepath, out_filepath, i, include_numpy=True)
 
 def test_dynamics_online():
 
@@ -90,6 +101,10 @@ def test_dynamics_online():
                 in_filepath = os.path.join("dynamics-online", name, i + ".al")
                 out_filepath = os.path.join("dynamics-online", name, i + ".py")
                 _test_examples(in_filepath, out_filepath, i)
+            for i in ch:
+                in_filepath = os.path.join("dynamics-online", name, i + ".al")
+                out_filepath = os.path.join("dynamics-online", name, i + ".py")
+                _test_examples(in_filepath, out_filepath, i, include_numpy=True)
 
 
 def test_output_01():
