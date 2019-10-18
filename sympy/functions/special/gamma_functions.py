@@ -1004,12 +1004,12 @@ class digamma(Function):
 
     >>> from sympy import digamma
     >>> digamma(0)
-    zoo    
+    zoo
     >>> from sympy import Symbol
     >>> z = Symbol('z')
     >>> digamma(z)
     polygamma(0, z)
-    
+
     To retain digamma as it is:
 
     >>> digamma(0, evaluate=False)
@@ -1088,15 +1088,15 @@ class trigamma(Function):
         \psi^{(1)}(z) := \frac{\mathrm{d}^{2}}{\mathrm{d} z^{2}} \log\Gamma(z).
 
     In this case, ``trigamma(z) = polygamma(1, z)``.
-   
+
     >>> from sympy import trigamma
     >>> trigamma(0)
-    zoo    
+    zoo
     >>> from sympy import Symbol
     >>> z = Symbol('z')
     >>> trigamma(z)
     polygamma(1, z)
-    
+
     To retain trigamma as it is:
 
     >>> trigamma(0, evaluate=False)
