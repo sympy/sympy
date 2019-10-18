@@ -1252,7 +1252,7 @@ class Mul(Expr, AssocOp):
             n, d = self.as_numer_denom()
             if d is S.One:
                 return True
-            elif d is S(2):
+            elif d == S(2):
                 return n.is_even
         elif is_rational is False:
             return False
