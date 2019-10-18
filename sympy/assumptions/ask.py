@@ -1561,4 +1561,4 @@ def get_known_facts():
     )
 
 from sympy.assumptions.ask_generated import (
-    get_known_facts_dict, get_known_facts_cnf, get_all_known_facts)
+    get_known_facts_dict, get_all_known_facts)

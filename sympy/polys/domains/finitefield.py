@@ -100,4 +100,4 @@ class FiniteField(Field, SimpleDomain):
         p, q = K0.to_rational(a)
 
         if q == 1:
-            return K1.dtype(self.dom.dtype(p))
+            return K1.dtype(K1.dom.dtype(p))
