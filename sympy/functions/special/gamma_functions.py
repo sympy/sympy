@@ -1103,7 +1103,7 @@ class trigamma(Function):
 
     >>> trigamma(0, evaluate=False)
     trigamma(0)
-    >>> digamma(z, evaluate=False)
+    >>> trigamma(z, evaluate=False)
     trigamma(z)
 
 
