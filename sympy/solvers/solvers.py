@@ -1007,7 +1007,7 @@ def solve(f, *symbols, **flags):
                     for sol in solutions[i]:
                         ele[sol.lhs] = sol.rhs
                     solutions[i] = ele
-                return solutions
+                return [] if solutions == [{}] else solutions
             return reduce_inequalities(f, symbols=symbols)
 
         if isinstance(fi, Poly):

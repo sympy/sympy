@@ -167,7 +167,7 @@ def test_solve_args():
     assert solve((x + y - 2, 2*x + 2*y - 4)) == {x: -y + 2}
     # When one or more args are Boolean
     assert solve([True, Eq(x, 0)], [x], dict=True) == [{x: 0}]
-    assert solve([Eq(x, x), Eq(x, 0), Eq(x, x+1)], [x], dict=True) == [{}]
+    assert solve([Eq(x, x), Eq(x, 0), Eq(x, x+1)], [x], dict=True) == []
     assert not solve([Eq(x, x+1), x < 2], x)
     assert solve([Eq(x, 0), x+1<2]) == Eq(x, 0)
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
