@@ -1,10 +1,8 @@
-===============================
+*******************************
 SymPy Documentation Style Guide
-===============================
+*******************************
 
 **A Writing Resource for Documentation and Docstrings**
-
-.. contents:: Table Of Contents
 
 General Guidelines
 ==================
@@ -29,8 +27,64 @@ The SymPy documentation found at `docs.sympy.org
 source code and dedicated narrative documentation files in the `doc/src
 directory <https://github.com/sympy/sympy/tree/master/doc/src>`_. Both are
 written in `reStructuredText <http://docutils.sourceforge.net/rst.html>`_ format
-extended by `Sphinx <http://www.sphinx-doc.org/en/master/>`_. Sphinx is also
-used to compile documentation to various formats such as HTML and LaTeX.
+extended by `Sphinx <http://www.sphinx-doc.org/en/master/>`_.
+
+The documentation contained in the `doc/src directory
+<https://github.com/sympy/sympy/tree/master/doc/src>`_ and the docstrings
+embedded in the Python source code are processed by Sphinx and various Sphinx
+extensions. This means that the documentation source format is specified by the
+documentation processing tools. The SymPy Documentation Style Guide provides
+both the essential elements for writing SymPy documentation as well as any
+deviations in style we specify relative to these documentation processing tools.
+The following lists the processing tools:
+
+* reStructuredText: Narrative documentation files and documentation strings
+  embedded in Python code follow the reStructuredText format. Advanced features
+  not described in this document can be found at
+  http://docutils.sourceforge.net/rst.html.
+
+* Sphinx: Sphinx includes additional default features for the
+  reStructuredText specification that are described at: http://www.sphinx-doc.org/.
+
+* Sphinx extensions included with Sphinx that we enable:
+
+  * ``sphinx.ext.autodoc``: Processes Python source code files for the
+    associated documentation strings to automatically generate pages containing
+    the Application Programming Interface (API). See section on calling autodoc
+    directives in this document to get started. More information is at:
+    https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html.
+  * ``sphinx.ext.graphviz``: Provides a directive for adding Graphviz graphics.
+    See https://www.sphinx-doc.org/en/master/usage/extensions/graphviz.html for
+    more info.
+  * ``sphinx.ext.mathjax``: Causes math written in LaTeX to display using
+    MathJax in the HTML version of the documentation. More information is at:
+    https://www.sphinx-doc.org/en/master/usage/extensions/math.html#module-sphinx.ext.mathjax.
+    *No bearing on documentation source format.*
+  * ``sphinx.ext.linkcode``: Causes links to source code to direct to the
+    related files on Github. More information is at:
+    https://www.sphinx-doc.org/en/master/usage/extensions/linkcode.html. *No
+    bearing on documentation source format.*
+
+* Sphinx extensions that are not included with Sphinx that we enable:
+
+  * ``numpydoc``: Processes docstrings written in the "numpydoc" format, see
+    https://numpydoc.readthedocs.io. We recommend the subset of numpydoc
+    formatting features in this document. (Note that we currently use an older
+    modified fork of numpydoc, which is included in the SymPy source code.)
+  * ``sphinx_math_dollar``: Allows math to be delimited with dollar signs
+    instead of reStructuredText directives (e.g., ``$a^$`` instead of
+    ``:math:a^2``). See https://www.sympy.org/sphinx-math-dollar/ for more info.
+  * ``matplotlib.sphinxext.plot_directive``: Provides directives for included
+    matplotlib generated figures in reStructuredText. See
+    https://matplotlib.org/devel/plot_directive.html for more info.
+  * ``sympylive``: Adds a button on each example in the HTML documentation that
+    opens the example in SymPy Live. *No bearing on documentation source
+    format.*
+
+Everything supported by the above processing tools is available for use in the
+SymPy documentation, but this style guide supersedes any recommendations made
+in the above documents. Note that we do not follow PEP 257 or the
+www.python.org documentation recommendations.
 
 If you are contributing to SymPy for the first time, please read our
 `Introduction to Contributing
@@ -92,13 +146,11 @@ know that they always produce the output that they say that they do. Here is an
 <https://github.com/sympy/sympy/blob/b176f6a1d9890b42dc361857c887992315e3d5ad/sympy/functions/elementary/complexes.py#L22-L47>`_.
 Most docstrings are also automatically included in the Sphinx documentation
 above, so that they appear on the SymPy Documentation website. Here is that
-`same docstring
-<https://docs.sympy.org/latest/modules/functions/elementary.html#sympy.functions.elementary.complexes.im>`_
-on the SymPy website. The docstrings are formatted in a specific way so that
-Sphinx can render them correctly for the docs website. The SymPy sources all
-contain sparse technical documentation in the form of source code comments,
-although this does not generally constitute anything substantial and is not
-displayed on the documentation website.
+:obj:`same docstring <.im>` on the SymPy website. The docstrings are formatted
+in a specific way so that Sphinx can render them correctly for the docs
+website. The SymPy sources all contain sparse technical documentation in the
+form of source code comments, although this does not generally constitute
+anything substantial and is not displayed on the documentation website.
 
 **SymPy Wiki** https://github.com/sympy/sympy/wiki
 
@@ -111,19 +163,8 @@ types of documentation, including:
 * Release notes (for example: https://github.com/sympy/sympy/wiki/Release-Notes-for-1.5)
 * Various pages that different contributors have added
 
-Narrative Documentation Guidelines
-==================================
-
-Extensive documentation, or documentation that is not centered around an API
-reference, should be written as a narrative document in the Sphinx docs (located
-in the `doc/src directory
-<https://github.com/sympy/sympy/tree/master/doc/src>`_). The narrative documents
-do not reside in the Python source files, but as standalone restructured files
-in the doc/src directory. SymPy’s narrative documentation is defined as the
-collective documents, tutorials, and guides that teach users how to use SymPy.
-
-Steps to Writing Documentation
-------------------------------
+Getting Started
+===============
 
 The first step to contributing to the code base is creating your development
 environment. Please find instructions on how to create your development
@@ -141,7 +182,8 @@ Once you have created your development environment, follow these steps:
 For Debian/Ubuntu, install the prerequisites::
 
    apt-get install python-sphinx texlive-latex-recommended dvipng librsvg2-bin
-   imagemagick docbook2x graphviz python -m pip install sphinx-math-dollar
+   imagemagick docbook2x graphviz
+   python -m pip install sphinx-math-dollar
 
 And do::
 
@@ -181,7 +223,7 @@ If you get matplotlib error, install python3-matplotlib package::
 
 And view it at::
 
-  _build/html/index.html
+   _build/html/index.html
 
 **Mac**
 
@@ -189,15 +231,15 @@ For Mac, first install homebrew: https://brew.sh/
 
 Then install these packages with homebrew::
 
-  brew install imagemagick graphviz docbook librsvg
+   brew install imagemagick graphviz docbook librsvg
 
 Install these packages with either pip or conda::
 
-  python -m pip install mpmath matplotlib sphinx sphinx-math-dollar
+   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar
 
 Or::
 
-  conda install -c conda-forge mpmpath matplotlib sphinx sphinx-math-dollar
+   conda install -c conda-forge mpmpath matplotlib sphinx sphinx-math-dollar
 
 **Windows 10**
 
@@ -238,9 +280,9 @@ folder, open the index.html file.
 
 To build the HTML documentation, run::
 
-  cd doc
+   cd doc
 
-  make html
+   make html
 
 This builds a local version of the documentation in ``doc/_build/html`` in your
 web browser.
@@ -255,38 +297,74 @@ coding conventions, creating your environment, picking an issue to fix, and
 opening a pull request, please read our full `Development Workflow
 <https://github.com/sympy/sympy/wiki/Development-workflow>`_ guide.
 
+Narrative Documentation Guidelines
+==================================
+
+Extensive documentation, or documentation that is not centered around an API
+reference, should be written as a narrative document in the Sphinx docs (located
+in the `doc/src directory
+<https://github.com/sympy/sympy/tree/master/doc/src>`_). The narrative documents
+do not reside in the Python source files, but as standalone restructured files
+in the doc/src directory. SymPy’s narrative documentation is defined as the
+collective documents, tutorials, and guides that teach users how to use SymPy.
+
 Best Practices for Writing Documentation
-========================================
+----------------------------------------
 
 Please follow these formatting, style, and tone preferences when writing
 documentation.
 
 Formatting Preferences
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
-**Math vs. Code**
+**Math vs. Code**: In order for math and code to render correctly on the SymPy
+website, please follow these formatting guidelines.
 
-**Math:** text that is surrounded by dollar signs $ _ $ will be rendered as
-LaTeX math. Any text that is meant to appear as LaTeX math should be written as
-$math$. In the HTML version of the docs, MathJax will render the math.
+Math
+^^^^
+
+Text that is surrounded by dollar signs $ _ $ will be rendered as LaTeX math.
+Any text that is meant to appear as LaTeX math should be written as ``$math$``.
+In the HTML version of the docs, MathJax will render the math.
 
 **Example**
 
 ::
 
-  The Bessel $J$ function of order $\nu$ is defined to be the function
-  satisfying Bessel’s differential equation.
+   The Bessel $J$ function of order $\nu$ is defined to be the function
+   satisfying Bessel’s differential equation.
 
-**Code:** text that should be printed verbatim, such as code, should be
-surrounded by a set of double backticks ``like this``. (WORK IN PROGRESS: change
-single backticks to render as code via issue `#13519
+LaTeX Recommendations
+^^^^^^^^^^^^^^^^^^^^^
+
+* Avoid unnecessary ``\left`` and ``\right`` (but be sure to use them when they
+  are required).
+* Avoid unnecessary ``{}``. (For example, write ``x^2`` instead of ``x^{2}``.)
+* Use whitespace in a way that makes the equation easiest to read.
+
+**Examples**
+
+Correct::
+
+   \int \sin(x)\,dx
+
+Incorrect::
+
+   \int \sin{\left( x\right)}\, dx
+
+Code
+^^^^
+
+Text that should be printed verbatim, such as code, should be surrounded by a
+set of double backticks ``like this``. (WORK IN PROGRESS: change single
+backticks to render as code via issue `#13519
 <https://github.com/sympy/sympy/issues/13519>`_.)
 
 **Example**
 
 ::
 
-  To use this class, define the ``_rewrite`` and ``_expand`` methods.
+   To use this class, define the ``_rewrite()`` and ``_expand()`` methods.
 
 Sometimes a variable will be the same in both math and code, and can even
 appear in the same paragraph, making it difficult to know if it should be
@@ -298,16 +376,16 @@ SymPy implementation specifically, then code should be used.
 
 ::
 
-  def stirling(n, k, d=None, kind=2, signed=False):
-      """
-      ...
+   def stirling(n, k, d=None, kind=2, signed=False):
+       """
+       ...
 
-      The first kind of Stirling number counts the number of permutations of
-      ``n`` distinct items that have ``k`` cycles... This counts the ways to
-      partition $n$ consecutive integers into $k$ groups with no pairwise
-      difference less than $d$.
+       The first kind of Stirling number counts the number of permutations of
+       ``n`` distinct items that have ``k`` cycles... This counts the ways to
+       partition $n$ consecutive integers into $k$ groups with no pairwise
+       difference less than $d$.
 
-      """
+       """
 
 Note that in the above example, the first instances of *n* and *k* are
 referring to the input parameters of the function ``stirling``, so they refer
@@ -322,10 +400,33 @@ reason being that $\alpha$ cannot be used in contexts referring to Python code
 because it is not valid Python, and conversely ``alpha`` would be incorrect in
 a math context because it does not render as the Greek letter (α).
 
-Style Preferences
------------------
+Headings
+^^^^^^^^
 
-**Spelling and Punctuation**
+Section headings are created by underlining (and optionally overlining) the
+section title with a punctuation character at least as long as the text.
+
+Normally, there are no heading levels assigned to certain characters as the
+structure is determined from the succession of headings. However, for SymPy's
+documentation, here is a suggested convention:
+
+``***`` with overline: title (top level heading)
+
+``===`` heading 1
+
+``---`` heading 2
+
+``~~~`` heading 3
+
+``^^^`` heading 4
+
+``"""`` heading 5
+
+Style Preferences
+~~~~~~~~~~~~~~~~~
+
+Spelling and Punctuation
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 All narrative writing in SymPy follows American spelling and punctuation
 standards. For example, “color” is preferred over “colour” and commas should be
@@ -335,11 +436,11 @@ placed inside of quotation marks.
 
 ::
 
-  If the ``line_color`` aesthetic is a function of arity 1, then the coloring is
-  a function of the x value of a point.
+   If the ``line_color`` aesthetic is a function of arity 1, then the coloring
+   is a function of the x value of a point.
 
-  The term "unrestricted necklace," or "bracelet," is used to imply an object
-  that can be turned over or a sequence that can be reversed.
+   The term "unrestricted necklace," or "bracelet," is used to imply an object
+   that can be turned over or a sequence that can be reversed.
 
 If there is any ambiguity about the spelling of a word, such as in the case of
 a function named after a person, refer to the spelling of the actual SymPy
@@ -354,14 +455,15 @@ function.
 
 ::
 
-  class chebyshevt(OrthogonalPolynomial):
-      r"""
-      Chebyshev polynomial of the first kind, $T_n(x)$
-      ...
+   class chebyshevt(OrthogonalPolynomial):
+       r"""
+       Chebyshev polynomial of the first kind, $T_n(x)$
+       ...
 
-      """
+       """
 
-**Capitalization**
+Capitalization
+^^^^^^^^^^^^^^
 
 Title case capitalization is preferred in all SymPy headings.
 
@@ -369,17 +471,18 @@ Title case capitalization is preferred in all SymPy headings.
 
 ::
 
-  What is Symbolic Computation?
-  -----------------------------
+   What is Symbolic Computation?
+   -----------------------------
 
-**Grammar**
+Grammar
+^^^^^^^
 
 WORK IN PROGRESS: Google Season of Docs technical writer will track common
 grammar mistakes (e.g., using certain articles correctly) while editing and add
 to this guide.
 
 Tone Preferences
-----------------
+~~~~~~~~~~~~~~~~
 
 Across SymPy documentation, please write in:
 
@@ -413,26 +516,26 @@ becomes the ``__doc__`` special attribute of that object.
 
 Here is a basic docstring::
 
-  def fdiff(self, argindex=1):
-      """
-      Returns the first derivative of a Heaviside Function.
+   def fdiff(self, argindex=1):
+       """
+       Returns the first derivative of a Heaviside Function.
 
-      Examples
-      ========
+       Examples
+       ========
 
-      >>> from sympy import Heaviside, diff
-      >>> from sympy.abc import x
+       >>> from sympy import Heaviside, diff
+       >>> from sympy.abc import x
 
-      >>> Heaviside(x).fdiff()
-      DiracDelta(x)
+       >>> Heaviside(x).fdiff()
+       DiracDelta(x)
 
-      >>> Heaviside(x**2 - 1).fdiff()
-      DiracDelta(x**2 - 1)
+       >>> Heaviside(x**2 - 1).fdiff()
+       DiracDelta(x**2 - 1)
 
-      >>> diff(Heaviside(x)).fdiff()
-      DiracDelta(x, 1)
+       >>> diff(Heaviside(x)).fdiff()
+       DiracDelta(x, 1)
 
-      """
+       """
 
 Every public function, class, and method should have a docstring that describes
 what it does. A public function is one that is intended to be used by the end-
@@ -446,7 +549,7 @@ SymPy developers understand how to use the function.
 
 It may not always be clear what is a public function and what is a private
 function. If a function begins with an underscore, it is private, and if a
-function is included in ``_init_.py`` it is public, but the converse is not
+function is included in ``__init__.py`` it is public, but the converse is not
 always true, so sometimes you have to decide based on context. In general, if
 you are unsure, having documentation on a function is better than not having
 documentation, regardless if it is public or private.
@@ -564,7 +667,7 @@ Deprecation warnings should go directly after the Single-Sentence Summary, so
 as to notify users right away. Deprecation warnings should be written as a note
 in the Sphinx directive::
 
-  .. note:: Deprecated in Sympy 0.7.1.
+   .. note:: Deprecated in Sympy 0.7.1.
 
 2. Explanation Section
 ----------------------
@@ -575,8 +678,8 @@ with the same length in equals signs.
 
 ::
 
-  Explanation
-  ===========
+   Explanation
+   ===========
 
 This section consists of a more elaborate description of what the function,
 class, or method does when the concise Single-Sentence Summary will not
@@ -594,8 +697,8 @@ length in equals signs.
 
 ::
 
-  Examples
-  ========
+   Examples
+   ========
 
 This section consists of examples that show how the function works, called
 doctests. Doctests should be complicated enough that they fully demonstrate the
@@ -621,9 +724,11 @@ If necessary, testing of an example can be skipped by adding a special comment.
 
 **Example**
 
->>> import random
->>> random.random()      # doctest: +SKIP
-0.6868680200532414
+.. code::
+
+   >>> import random
+   >>> random.random()      # doctest: +SKIP
+   0.6868680200532414
 
 If an example is longer than 80 characters, it should be line wrapped. Examples
 should be line wrapped so that they are still valid Python code, using ``...``
@@ -632,12 +737,14 @@ documentation:
 
 **Example**
 
->>> from sympy import Function, dsolve, cos, sin
->>> from sympy.abc import x
->>> f = Function('f')
->>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
-... f(x), hint='1st_exact')
-Eq(x*cos(f(x)) + f(x)**3/3, C1)
+.. code::
+
+   >>> from sympy import Function, dsolve, cos, sin
+   >>> from sympy.abc import x
+   >>> f = Function('f')
+   >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
+   ... f(x), hint='1st_exact')
+   Eq(x*cos(f(x)) + f(x)**3/3, C1)
 
 Here ``dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), hint='1st_exact')`` is too long, so we line break it after a comma so that it
 is readable, and put ``...`` on the continuation lines. If this is not done
@@ -648,9 +755,11 @@ this case. The doctester automatically accepts output that is line wrapped.
 
 **Example**
 
->>> list(range(30))
-[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-22, 23, 24, 25, 26, 27, 28, 29]
+.. code::
+
+   >>> list(range(30))
+   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+   21, 22, 23, 24, 25, 26, 27, 28, 29]
 
 In general, you should run ``./bin/doctest`` to make sure your examples run
 correctly, and fix them if they do not.
@@ -664,8 +773,8 @@ with the same length in equals signs.
 
 ::
 
-  Parameters
-  ==========
+   Parameters
+   ==========
 
 If you have parameters listed in parentheses after a function, class, or method
 name, you must include a parameters section.
@@ -697,21 +806,21 @@ subheading within the Parameters section.
 
 Here is an example of a correctly formatted Parameters section::
 
-  def opt_cse(exprs, order='canonical'):
-      """
-      Find optimization opportunities in Adds, Muls, Pows and negative
-      coefficient Muls.
+   def opt_cse(exprs, order='canonical'):
+       """
+       Find optimization opportunities in Adds, Muls, Pows and negative
+       coefficient Muls.
 
-      Parameters
-      ==========
+       Parameters
+       ==========
 
-      exprs : list of sympy expressions
-          The expressions to optimize.
-      order : string, 'none' or 'canonical'
-          The order by which Mul and Add arguments are processed. For large
-          expressions where speed is a concern, use the setting order='none'.
+       exprs : list of sympy expressions
+           The expressions to optimize.
+       order : string, 'none' or 'canonical'
+           The order by which Mul and Add arguments are processed. For large
+           expressions where speed is a concern, use the setting order='none'.
 
-      """
+       """
 
 5. See Also Section
 -------------------
@@ -722,13 +831,17 @@ same length in equals signs.
 
 ::
 
-  See Also
-  ========
+   See Also
+   ========
 
 This section consists of a listing of related functions, classes, and methods.
 The related items can be described with a concise fragment (not a full
 sentence) if desired, but this is not required. If the description spans more
 than one line, subsequent lines must be indented.
+
+The See Also section should only be used to reference other SymPy objects.
+Anything that is a link should be embedded as a hyperlink in the text of the
+docstring instead; see the References section for details.
 
 Do not reference classes with ``class:Classname``, ``class:`Classname```, or
 ``:class:`Classname```, but rather only by their name if they are in the same
@@ -743,34 +856,34 @@ path even if the function is in a different file.)
 
 Here is a correctly formatted See Also section with concise descriptions::
 
-  class erf(Function):
-      r"""
-      The Gauss error function.
+   class erf(Function):
+       r"""
+       The Gauss error function.
 
-      See Also
-      ========
+       See Also
+       ========
 
-      erfc: Complementary error function.
-      erfi: Imaginary error function.
-      erf2: Two-argument error function.
-      erfinv: Inverse error function.
-      erfcinv: Inverse Complementary error function.
-      erf2inv: Inverse two-argument error function.
+       erfc: Complementary error function.
+       erfi: Imaginary error function.
+       erf2: Two-argument error function.
+       erfinv: Inverse error function.
+       erfcinv: Inverse Complementary error function.
+       erf2inv: Inverse two-argument error function.
 
-      """
+       """
 
 Here is a correctly formatted See Also section with just a list of names::
 
-  class besselj(BesselBase):
-      r"""
-      Bessel function of the first kind.
+   class besselj(BesselBase):
+       r"""
+       Bessel function of the first kind.
 
-      See Also
-      ========
+       See Also
+       ========
 
-      bessely, besseli, besselk
+       bessely, besseli, besselk
 
-      """
+       """
 
 6. References Section
 ---------------------
@@ -781,110 +894,121 @@ with the same length in equals signs.
 
 ::
 
-  References
-  ==========
+   References
+   ==========
 
 This section consists of a list of references cited anywhere in the previous
-sections.
+sections. Any reference to other SymPy objects should go in the See Also
+section instead.
 
-The References section should include links to Wikipedia, Wolfram MathWorld,
-DLMF, paper citations, and/or any other resources giving general information
-about the function. References are meant to augment the docstring, but should
-not be required to understand it. References are numbered, starting from one,
-in the order in which they are cited.
+Do not list online resources in the References section. Instead, an online
+resource should be cited by embedding a hyperlink in the text of the
+docstring. Only link to freely accessible and stable online resources such as
+Wikipedia, Wolfram MathWorld, and the NIST Digital Library of Mathematical
+Functions (DLMF), which are unlikely to suffer from hyperlink rot.
+
+The References section should include paper citations and/or any other printed
+resource giving general information about the function. References are meant
+to augment the docstring, but should not be required to understand it.
+References are numbered, starting from one, in the order in which they are
+cited.
 
 References for papers should include, in this order: reference citation, author
 name, title of work, journal or publication, year published, page number.
 
+If there is a DOI (Digital Object Identifier), include it in the citation and
+make sure it is a clickable hyperlink.
+
 **Examples**
 
-[Kozen89] D. Kozen, S. Landau, Polynomial Decomposition Algorithms, Journal of
-Symbolic Computation 7 (1989), pp. 445-456
+::
 
-[R340]https://en.wikipedia.org/wiki/Airy_function
+   [Kozen89] D. Kozen, S. Landau, Polynomial Decomposition Algorithms, Journal
+             of Symbolic Computation 7 (1989), pp. 445-456
 
 Sample Docstring
 ================
 
 Here is an example of a correctly formatted docstring::
 
-  class gamma(Function):
-      r"""
-      The gamma function
+   class gamma(Function):
+       r"""
+       The gamma function
 
-      .. math::
+       .. math::
           \Gamma(x) := \int^{\infty}_{0} t^{x-1} e^{-t} \mathrm{d}t.
 
-      Explanation
-      ===========
+       Explanation
+       ===========
 
-      The ``gamma`` function implements the function which passes through the
-      values of the factorial function (i.e., `\Gamma(n) = (n - 1)!`), when n is
-      an integer. More generally, `\Gamma(z)` is defined in the whole complex
-      plane except at the negative integers where there are simple poles.
+       The ``gamma`` function implements the function which passes through the
+       values of the factorial function (i.e., `\Gamma(n) = (n - 1)!`), when n
+       is an integer. More generally, `\Gamma(z)` is defined in the whole
+       complex plane except at the negative integers where there are simple
+       poles.
 
-      Examples
-      ========
+       Examples
+       ========
 
-      >>> from sympy import S, I, pi, oo, gamma
-      >>> from sympy.abc import x
+       >>> from sympy import S, I, pi, oo, gamma
+       >>> from sympy.abc import x
 
-      Several special values are known:
+       Several special values are known:
 
-      >>> gamma(1)
-      1
-      >>> gamma(4)
-      6
-      >>> gamma(S(3)/2)
-      sqrt(pi)/2
+       >>> gamma(1)
+       1
+       >>> gamma(4)
+       6
+       >>> gamma(S(3)/2)
+       sqrt(pi)/2
 
-      The Gamma function obeys the mirror symmetry:
+       The Gamma function obeys the mirror symmetry:
 
-      >>> from sympy import conjugate
-      >>> conjugate(gamma(x))
-      gamma(conjugate(x))
+       >>> from sympy import conjugate
+       >>> conjugate(gamma(x))
+       gamma(conjugate(x))
 
-      Differentiation with respect to x is supported:
+       Differentiation with respect to x is supported:
 
-      >>> from sympy import diff
-      >>> diff(gamma(x), x)
-      gamma(x)*polygamma(0, x)
+       >>> from sympy import diff
+       >>> diff(gamma(x), x)
+       gamma(x)*polygamma(0, x)
 
-      Series expansion is also supported:
+       Series expansion is also supported:
 
-      >>> from sympy import series
-      >>> series(gamma(x), x, 0, 3)
-      1/x - EulerGamma + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma*pi**2/12 +
-      polygamma(2, 1)/6 - EulerGamma**3/6) + O(x**3)
+       >>> from sympy import series
+       >>> series(gamma(x), x, 0, 3)
+       1/x - EulerGamma + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma*pi**2/12 +
+       polygamma(2, 1)/6 - EulerGamma**3/6) + O(x**3)
 
-      We can numerically evaluate the gamma function to arbitrary precision
-      on the whole complex plane:
+       We can numerically evaluate the gamma function to arbitrary precision
+       on the whole complex plane:
 
-      >>> gamma(pi).evalf(40)
-      2.288037795340032417959588909060233922890
-      >>> gamma(1+I).evalf(20)
-      0.49801566811835604271 - 0.15494982830181068512*I
+       >>> gamma(pi).evalf(40)
+       2.288037795340032417959588909060233922890
+       >>> gamma(1+I).evalf(20)
+       0.49801566811835604271 - 0.15494982830181068512*I
 
-      See Also
-      ========
+       See Also
+       ========
 
-      lowergamma: Lower incomplete gamma function.
-      uppergamma: Upper incomplete gamma function.
-      polygamma: Polygamma function.
-      loggamma: Log Gamma function.
-      digamma: Digamma function.
-      trigamma: Trigamma function.
-      sympy.functions.special.beta_functions.beta: Euler Beta function.
+       lowergamma: Lower incomplete gamma function.
+       uppergamma: Upper incomplete gamma function.
+       polygamma: Polygamma function.
+       loggamma: Log Gamma function.
+       digamma: Digamma function.
+       trigamma: Trigamma function.
+       sympy.functions.special.beta_functions.beta: Euler Beta function.
 
-      References
-      ==========
+       References
+       ==========
 
-      .. [1] https://en.wikipedia.org/wiki/Gamma_function
-      .. [2] http://dlmf.nist.gov/5
-      .. [3] http://mathworld.wolfram.com/GammaFunction.html
-      .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma/
+       .. [1] https://en.wikipedia.org/wiki/Gamma_function
+       .. [2] http://dlmf.nist.gov/5
+       .. [3] http://mathworld.wolfram.com/GammaFunction.html
+       .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma/
 
-      """
+       """
 
 Docstrings for Classes that are Mathematical Functions
 ======================================================
@@ -894,14 +1018,13 @@ The docstrings for classes that are mathematical functions should include
 details specific to this kind of class, as noted below:
 
 * The Explanation section should include a mathematical definition of the
-  function. This should use LaTeX math. Use `$$ for inline math
-  <https://github.com/sympy/sympy/wiki/SymPy-Documentation-Style-Guide#formatting-
-  preferences>`_ and .. math:: for display math, which should be used for the
-  main definition. The variable names in the formulas should match the names of
-  the parameters, and the LaTeX formatting should match the LaTeX pretty
-  printing used by SymPy. As relevant, the mathematical definitions should
-  mention their domain of definition, especially if the domain is different from
-  the complex numbers.
+  function. This should use LaTeX math. Use :obj:`$$ for inline math
+  <.documentation_style_guide.html#math>` and .. math:: for display math, which
+  should be used for the main definition. The variable names in the formulas
+  should match the names of the parameters, and the LaTeX formatting should
+  match the LaTeX pretty printing used by SymPy. As relevant, the mathematical
+  definitions should mention their domain of definition, especially if the
+  domain is different from the complex numbers.
 
 * If there are multiple conventions in the literature for a function, make sure
   to clearly specify which convention SymPy uses.
@@ -931,8 +1054,8 @@ Best Practices for Writing Docstrings
 
 When writing docstrings, please follow all of the same formatting, style, and
 tone preferences as when writing narrative documentation. For guidelines, see
-`Best Practices for Writing Documentation
-<https://github.com/sympy/sympy/wiki/SymPy-Documentation-Style-Guide#best-practices-for-writing-documentation>`_,
+:obj:`Best Practices for Writing Documentation
+<.documentation_style_guide.html#best-practices-for-writing-documentation>`,
 Formatting, Style, and Tone.
 
 Importing Docstrings into the Sphinx Documentation
@@ -941,74 +1064,74 @@ Importing Docstrings into the Sphinx Documentation
 Here is a part of the ``doc/src/modules/geometry.txt`` file that imports the
 relevant docstrings from geometry module into documentation::
 
- Utils
- =====
+   Utils
+   =====
 
- .. module:: sympy.geometry.util
+   .. module:: sympy.geometry.util
 
- .. autofunction:: intersection
+   .. autofunction:: intersection
 
- .. autofunction:: convex_hull
+   .. autofunction:: convex_hull
 
- .. autofunction:: are_similar
+   .. autofunction:: are_similar
 
- Points
- ======
+   Points
+   ======
 
- .. module:: sympy.geometry.point
+   .. module:: sympy.geometry.point
 
- .. autoclass:: Point
-    :members:
+   .. autoclass:: Point
+      :members:
 
- Lines
- =====
+   Lines
+   =====
 
- .. module:: sympy.geometry.line
+   .. module:: sympy.geometry.line
 
- .. autoclass:: LinearEntity
-    :members:
+   .. autoclass:: LinearEntity
+      :members:
 
- .. autoclass:: Line
-    :members:
+   .. autoclass:: Line
+      :members:
 
- .. autoclass:: Ray
-    :members:
+   .. autoclass:: Ray
+      :members:
 
- .. autoclass:: Segment
-    :members:
+   .. autoclass:: Segment
+      :members:
 
- Curves
- ======
+   Curves
+   ======
 
- .. module:: sympy.geometry.curve
+   .. module:: sympy.geometry.curve
 
- .. autoclass:: Curve
-    :members:
+   .. autoclass:: Curve
+      :members:
 
- Ellipses
- ========
+   Ellipses
+   ========
 
- .. module:: sympy.geometry.ellipse
+   .. module:: sympy.geometry.ellipse
 
- .. autoclass:: Ellipse
-    :members:
+   .. autoclass:: Ellipse
+      :members:
 
- .. autoclass:: Circle
-    :members:
+   .. autoclass:: Circle
+      :members:
 
- Polygons
- ========
+   Polygons
+   ========
 
- .. module:: sympy.geometry.polygon
+   .. module:: sympy.geometry.polygon
 
- .. autoclass:: Polygon
-    :members:
+   .. autoclass:: Polygon
+      :members:
 
- .. autoclass:: RegularPolygon
-    :members:
+   .. autoclass:: RegularPolygon
+      :members:
 
- .. autoclass:: Triangle
-    :members:
+   .. autoclass:: Triangle
+      :members:
 
 First namespace is set to particular submodule (file) with ``.. module::``
 directive, then docstrings are imported with ``.. autoclass::`` or ``..
