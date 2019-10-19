@@ -11,6 +11,7 @@ from sympy.polys.polyclasses import DMP
 from sympy.polys.agca.extensions import FiniteExtension
 
 x, y = symbols('x,y')
+Permutation.print_cyclic=True
 
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
