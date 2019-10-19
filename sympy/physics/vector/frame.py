@@ -102,13 +102,14 @@ class ReferenceFrame(object):
         Parameters
         ==========
 
-        indices : list (of strings)
-            If custom indices are desired for console, pretty, and LaTeX
-            printing, supply three as a list. The basis vectors can then be
-            accessed with the get_item method.
-        latexs : list (of strings)
-            If custom names are desired for LaTeX printing of each basis
-            vector, supply the names here in a list.
+        indices : tuple of str
+            Enables the reference frame's basis unit vectors to be accessed by
+            Python's square bracket indexing notation using the provided three
+            indice strings and alters the printing of the unit vectors to
+            reflect this choice.
+        latexs : tuple of str
+            Alters the LaTeX printing of the reference frame's basis unit
+            vectors to the provided three valid LaTeX strings.
 
         Examples
         ========
@@ -779,63 +780,83 @@ class ReferenceFrame(object):
 
     def orientnew(self, newname, rot_type, amounts, rot_order='',
                   variables=None, indices=None, latexs=None):
-        """Creates a new ReferenceFrame oriented with respect to this Frame.
+        """Returns a new reference frame oriented with respect to this
+        reference frame.
 
-        See ReferenceFrame.orient() for acceptable rotation types, amounts,
-        and orders. Parent is going to be self.
+        See ``ReferenceFrame.orient()`` for detailed examples of how to orient
+        reference frames.
 
         Parameters
         ==========
 
         newname : str
-            The name for the new ReferenceFrame
+            Name for the new reference frame.
         rot_type : str
-            The type of orientation matrix that is being created.
-        amounts : list OR value
-            The quantities that the orientation matrix will be defined by.
-        rot_order : str
-            If applicable, the order of a series of rotations.
+            The method used to generate the direction cosine matrix. Supported
+            methods are:
+
+            - ``'Axis'``: simple rotations about a single common axis
+            - ``'DCM'``: for setting the direction cosine matrix directly
+            - ``'Body'``: three successive rotations about new intermediate
+              axes, also called "Euler and Tait-Bryan angles"
+            - ``'Space'``: three successive rotations about the parent
+              frames' unit vectors
+            - ``'Quaternion'``: rotations defined by four parameters which
+              result in a singularity free direction cosine matrix
+
+        amounts :
+            Expressions defining the rotation angles or direction cosine
+            matrix. These must match the ``rot_type``. See examples below for
+            details. The input types are:
+
+            - ``'Axis'``: 2-tuple (expr/sym/func, Vector)
+            - ``'DCM'``: Matrix, shape(3,3)
+            - ``'Body'``: 3-tuple of expressions, symbols, or functions
+            - ``'Space'``: 3-tuple of expressions, symbols, or functions
+            - ``'Quaternion'``: 4-tuple of expressions, symbols, or
+              functions
+
+        rot_order : str or int, optional
+            If applicable, the order of the successive of rotations. The string
+            ``'123'`` and integer ``123`` are equivalent, for example. Required
+            for ``'Body'`` and ``'Space'``.
+        indices : tuple of str
+            Enables the reference frame's basis unit vectors to be accessed by
+            Python's square bracket indexing notation using the provided three
+            indice strings and alters the printing of the unit vectors to
+            reflect this choice.
+        latexs : tuple of str
+            Alters the LaTeX printing of the reference frame's basis unit
+            vectors to the provided three valid LaTeX strings.
 
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
         >>> from sympy import symbols
+        >>> from sympy.physics.vector import ReferenceFrame, vlatex
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
         >>> N = ReferenceFrame('N')
 
-        Now we have a choice of how to implement the orientation. First is
-        Body. Body orientation takes this reference frame through three
-        successive simple rotations. Acceptable rotation orders are of length
-        3, expressed in XYZ or 123, and cannot have a rotation about about an
-        axis twice in a row.
+        Create a new reference frame A rotated relative to N through a simple
+        rotation.
 
-        >>> A = N.orientnew('A', 'Body', [q1, q2, q3], '123')
-        >>> A = N.orientnew('A', 'Body', [q1, q2, 0], 'ZXZ')
-        >>> A = N.orientnew('A', 'Body', [0, 0, 0], 'XYX')
+        >>> A = N.orientnew('A', 'Axis', (q0, N.x))
 
-        Next is Space. Space is like Body, but the rotations are applied in the
-        opposite order.
+        Create a new reference frame A rotated relative to N through body-fixed
+        rotations.
 
-        >>> A = N.orientnew('A', 'Space', [q1, q2, q3], '312')
+        >>> B = N.orientnew('B', 'Body', (q1, q2, q3), '123')
 
-        Next is Quaternion. This orients the new ReferenceFrame with
-        Quaternions, defined as a finite rotation about lambda, a unit vector,
-        by some amount theta.
-        This orientation is described by four parameters:
-        q0 = cos(theta/2)
-        q1 = lambda_x sin(theta/2)
-        q2 = lambda_y sin(theta/2)
-        q3 = lambda_z sin(theta/2)
-        Quaternion does not take in a rotation order.
+        Create a new reference frame C rotated relative to N through a simple
+        rotation with unique indices and LaTeX printing.
 
-        >>> A = N.orientnew('A', 'Quaternion', [q0, q1, q2, q3])
-
-        Last is Axis. This is a rotation about an arbitrary, non-time-varying
-        axis by some angle. The axis is supplied as a Vector. This is how
-        simple rotations are defined.
-
-        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
+        >>> C = N.orientnew('C', 'Axis', (q0, N.x), indices=('1', '2', '3'),
+        ... latexs=(r'\hat{\mathbf{c}}_1',r'\hat{\mathbf{c}}_2',
+        ... r'\hat{\mathbf{c}}_3'))
+        >>> C['1']
+        C['1']
+        >>> vlatex(C['1'])
+        '\hat{\mathbf{c}}_1'
 
         """
 
