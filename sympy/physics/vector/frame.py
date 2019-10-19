@@ -456,7 +456,7 @@ class ReferenceFrame(object):
 
         rot_order : str or int, optional
             If applicable, the order of the successive of rotations. The string
-            ``'123'`` and integer ``123` are equivalent, for example. Required
+            ``'123'`` and integer ``123`` are equivalent, for example. Required
             for ``'Body'`` and ``'Space'``.
 
         Examples
