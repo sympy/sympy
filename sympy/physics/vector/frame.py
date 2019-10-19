@@ -780,7 +780,7 @@ class ReferenceFrame(object):
 
     def orientnew(self, newname, rot_type, amounts, rot_order='',
                   variables=None, indices=None, latexs=None):
-        """Returns a new reference frame oriented with respect to this
+        r"""Returns a new reference frame oriented with respect to this
         reference frame.
 
         See ``ReferenceFrame.orient()`` for detailed examples of how to orient
