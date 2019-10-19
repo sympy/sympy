@@ -855,8 +855,8 @@ class ReferenceFrame(object):
         ... r'\hat{\mathbf{c}}_3'))
         >>> C['1']
         C['1']
-        >>> vlatex(C['1'])
-        '\hat{\mathbf{c}}_1'
+        >>> print(vlatex(C['1']))
+        \hat{\mathbf{c}}_1
 
         """
 
