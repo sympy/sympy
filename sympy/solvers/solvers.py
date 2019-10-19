@@ -983,7 +983,7 @@ def solve(f, *symbols, **flags):
                     fi = fi.rewrite(Add, evaluate=False)
             f[i] = fi
 
-        if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
+        if fi.is_Relational:
             if flags.get('dict', False):
                 solution = reduce_inequalities(f, symbols=symbols)
                 if isinstance(solution, Equality):
