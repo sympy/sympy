@@ -6905,6 +6905,6 @@ n = -∞  \
 """)
 
 def test_is_combining():
-    line = u"v̇_m"
+    line = upretty("v̇_m")
     assert [is_combining(sym) for sym in line] == \
         [False, True, False, False]
