@@ -1018,13 +1018,12 @@ The docstrings for classes that are mathematical functions should include
 details specific to this kind of class, as noted below:
 
 * The Explanation section should include a mathematical definition of the
-  function. This should use LaTeX math. Use :obj:`$$ for inline math
-  <.documentation_style_guide.html#math>` and .. math:: for display math, which
-  should be used for the main definition. The variable names in the formulas
-  should match the names of the parameters, and the LaTeX formatting should
-  match the LaTeX pretty printing used by SymPy. As relevant, the mathematical
-  definitions should mention their domain of definition, especially if the
-  domain is different from the complex numbers.
+  function. This should use LaTeX math. Use $$ for inline math_ and .. math::
+  for display math, which should be used for the main definition. The
+  variable names in the formulas should match the names of the parameters, and
+  the LaTeX formatting should match the LaTeX pretty printing used by SymPy. As
+  relevant, the mathematical definitions should mention their domain of
+  definition, especially if the domain is different from the complex numbers.
 
 * If there are multiple conventions in the literature for a function, make sure
   to clearly specify which convention SymPy uses.
@@ -1049,14 +1048,16 @@ details specific to this kind of class, as noted below:
   code, so if there is anything very important that you want to mention here,
   it should go in the class-level docstring as well.
 
+.. _math: documentation_style_guide.html#math
+
 Best Practices for Writing Docstrings
 =====================================
 
 When writing docstrings, please follow all of the same formatting, style, and
-tone preferences as when writing narrative documentation. For guidelines, see
-:obj:`Best Practices for Writing Documentation
-<.documentation_style_guide.html#best-practices-for-writing-documentation>`,
-Formatting, Style, and Tone.
+tone preferences as when writing narrative documentation. For guidelines_, see
+Best Practices for Writing Documentation, Formatting, Style, and Tone.
+
+.. _guidelines: documentation_style_guide.html#best-practices-for-writing-documentation
 
 Importing Docstrings into the Sphinx Documentation
 ==================================================
