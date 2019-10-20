@@ -32,7 +32,7 @@ should be :math:`L^3 M^{-1} T^{-2}`.
     >>> from sympy import symbols
     >>> from sympy.physics.units import length, mass, acceleration, force
     >>> from sympy.physics.units import gravitational_constant as G
-    >>> from sympy.physics.units.dimensions import dimsys_SI
+    >>> from sympy.physics.units.systems.si import dimsys_SI
     >>> F = mass*acceleration
     >>> F
     Dimension(acceleration*mass)
