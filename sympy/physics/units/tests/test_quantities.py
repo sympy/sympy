@@ -1,16 +1,20 @@
 from sympy import (Abs, Add, Basic, Function, Number, Rational, S, Symbol,
-    diff, exp, integrate, log, sin, sqrt, symbols)
+                   diff, exp, integrate, log, sin, sqrt, symbols, Matrix)
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
     volume)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
-    day, energy, foot, grams, hour, inch, kg, km, m, meter, mile, millimeter,
-    minute, pressure, quart, s, second, speed_of_light, temperature, bit,
+    day, foot, grams, hour, inch, kg, km, m, meter, mile, millimeter,
+    minute, quart, s, second, speed_of_light, bit,
     byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte,
     kilogram, gravitational_constant)
 
-from sympy.physics.units.dimensions import Dimension, charge, length, time, dimsys_default
+from sympy.physics.units.definitions.dimension_definitions import (
+    Dimension, charge, length, time, temperature, pressure,
+    energy
+)
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.systems import SI
 from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
 
 k = PREFIXES["k"]
@@ -18,6 +22,7 @@ k = PREFIXES["k"]
 
 def test_str_repr():
     assert str(kg) == "kilogram"
+
 
 def test_eq():
     # simple test
@@ -156,8 +161,13 @@ def test_quantity_abs():
 
     expr = v_w3 - Abs(v_w1 - v_w2)
 
-    Dq = Dimension(Quantity.get_dimensional_expr(expr))
-    assert dimsys_default.get_dimensional_dependencies(Dq) == {
+    Dq = Dimension(SI.get_dimensional_expr(expr))
+
+    with warns_deprecated_sympy():
+        Dq1 = Dimension(Quantity.get_dimensional_expr(expr))
+        assert Dq == Dq1
+
+    assert SI.get_dimension_system().get_dimensional_dependencies(Dq) == {
         'length': 1,
         'time': -1,
     }
@@ -178,7 +188,7 @@ def test_check_unit_consistency():
     w.set_scale_factor(S(2))
 
     def check_unit_consistency(expr):
-        Quantity._collect_factor_and_dimension(expr)
+        SI._collect_factor_and_dimension(expr)
 
     raises(ValueError, lambda: check_unit_consistency(u + w))
     raises(ValueError, lambda: check_unit_consistency(u - w))
@@ -318,13 +328,13 @@ def test_quantity_postprocessing():
     q1 = Quantity('q1')
     q2 = Quantity('q2')
 
-    q1.set_dimension(length*pressure**2*temperature/time)
-    q2.set_dimension(energy*pressure*temperature/(length**2*time))
+    SI.set_quantity_dimension(q1, length*pressure**2*temperature/time)
+    SI.set_quantity_dimension(q2, energy*pressure*temperature/(length**2*time))
 
     assert q1 + q2
     q = q1 + q2
-    Dq = Dimension(Quantity.get_dimensional_expr(q))
-    assert dimsys_default.get_dimensional_dependencies(Dq) == {
+    Dq = Dimension(SI.get_dimensional_expr(q))
+    assert SI.get_dimension_system().get_dimensional_dependencies(Dq) == {
         'length': -1,
         'mass': 2,
         'temperature': 1,
@@ -333,21 +343,21 @@ def test_quantity_postprocessing():
 
 
 def test_factor_and_dimension():
-    assert (3000, Dimension(1)) == Quantity._collect_factor_and_dimension(3000)
-    assert (1001, length) == Quantity._collect_factor_and_dimension(meter + km)
-    assert (2, length/time) == Quantity._collect_factor_and_dimension(
+    assert (3000, Dimension(1)) == SI._collect_factor_and_dimension(3000)
+    assert (1001, length) == SI._collect_factor_and_dimension(meter + km)
+    assert (2, length/time) == SI._collect_factor_and_dimension(
         meter/second + 36*km/(10*hour))
 
     x, y = symbols('x y')
-    assert (x + y/100, length) == Quantity._collect_factor_and_dimension(
+    assert (x + y/100, length) == SI._collect_factor_and_dimension(
         x*m + y*centimeter)
 
     cH = Quantity('cH')
-    cH.set_dimension(amount_of_substance/volume)
+    SI.set_quantity_dimension(cH, amount_of_substance/volume)
 
     pH = -log(cH)
 
-    assert (1, volume/amount_of_substance) == Quantity._collect_factor_and_dimension(
+    assert (1, volume/amount_of_substance) == SI._collect_factor_and_dimension(
         exp(pH))
 
     v_w1 = Quantity('v_w1')
@@ -360,15 +370,18 @@ def test_factor_and_dimension():
 
     expr = Abs(v_w1/2 - v_w2)
     assert (Rational(5, 4), length/time) == \
-        Quantity._collect_factor_and_dimension(expr)
+        SI._collect_factor_and_dimension(expr)
 
     expr = Rational(5, 2)*second/meter*v_w1 - 3000
     assert (-(2996 + Rational(1, 4)), Dimension(1)) == \
-        Quantity._collect_factor_and_dimension(expr)
+        SI._collect_factor_and_dimension(expr)
 
     expr = v_w1**(v_w2/v_w1)
     assert ((Rational(3, 2))**Rational(4, 3), (length/time)**Rational(4, 3)) == \
-        Quantity._collect_factor_and_dimension(expr)
+        SI._collect_factor_and_dimension(expr)
+
+    with warns_deprecated_sympy():
+        assert (3000, Dimension(1)) == Quantity._collect_factor_and_dimension(3000)
 
 
 @XFAIL
@@ -396,11 +409,11 @@ def test_dimensional_expr_of_derivative():
     f = Function('f')
     dfdx = f(x, y).diff(x, y)
     dl_dt = dfdx.subs({f(x, y): l, x: t, y: t1})
-    assert Quantity.get_dimensional_expr(dl_dt) ==\
-        Quantity.get_dimensional_expr(l / t / t1) ==\
+    assert SI.get_dimensional_expr(dl_dt) ==\
+        SI.get_dimensional_expr(l / t / t1) ==\
         Symbol("length")/Symbol("time")**2
-    assert Quantity._collect_factor_and_dimension(dl_dt) ==\
-        Quantity._collect_factor_and_dimension(l / t / t1) ==\
+    assert SI._collect_factor_and_dimension(dl_dt) ==\
+        SI._collect_factor_and_dimension(l / t / t1) ==\
         (10, length/time**2)
 
 
@@ -412,9 +425,9 @@ def test_get_dimensional_expr_with_function():
     v_w1.set_scale_factor(meter/second)
     v_w2.set_scale_factor(meter/second)
 
-    assert Quantity.get_dimensional_expr(sin(v_w1)) == \
-        sin(Quantity.get_dimensional_expr(v_w1))
-    assert Quantity.get_dimensional_expr(sin(v_w1/v_w2)) == 1
+    assert SI.get_dimensional_expr(sin(v_w1)) == \
+        sin(SI.get_dimensional_expr(v_w1))
+    assert SI.get_dimensional_expr(sin(v_w1/v_w2)) == 1
 
 
 def test_binary_information():
@@ -433,6 +446,30 @@ def test_binary_information():
     assert convert_to(a, byte) == 10240*byte*hour
     assert convert_to(a, minute) == 600*kibibyte*minute
     assert convert_to(a, [byte, minute]) == 614400*byte*minute
+
+
+def test_conversion_with_2_nonstandard_dimensions():
+    smartness = Dimension("smartness")
+    generousness = Dimension("generousness")
+
+    good_grade = Quantity("good_grade")
+    kilo_good_grade = Quantity("kilo_good_grade")
+    centi_good_grade = Quantity("centi_good_grade")
+
+    kilo_good_grade.set_global_relative_scale_factor(1000, good_grade)
+    centi_good_grade.set_global_relative_scale_factor(S.One/10**5, kilo_good_grade)
+
+    charity_points = Quantity("charity_points")
+    milli_charity_points = Quantity("milli_charity_points")
+    missions = Quantity("missions")
+
+    milli_charity_points.set_global_relative_scale_factor(S.One/1000, charity_points)
+    missions.set_global_relative_scale_factor(251, charity_points)
+
+    assert convert_to(
+        kilo_good_grade*milli_charity_points*millimeter,
+        [centi_good_grade, missions, centimeter]
+    ) == S.One * 10**5 / (251*1000) / 10 * centi_good_grade*missions*centimeter
 
 
 def test_eval_subs():
