@@ -176,7 +176,7 @@ def test_solve_args():
 
 
 def test_solve_dict():
-    assert solve(Eq(2*x,1), dict=True) == [{x: 1/2}]
+    assert solve(Eq(2*x,1), dict=True) == [{x: S(1)/2}]
     assert solve([Eq(x**2-1, 0), Gt(x, 0)], (x,), dict=True) == [{x: 1}]
     assert solve([Eq(x**3-6*x**2+11*x-6, 0), Eq(y**2, 1), Eq(z, 1)],
             (x, y, z,), dict=True) == [{x: 1, y: -1, z: 1}, {x: 1, y: 1, z: 1},
