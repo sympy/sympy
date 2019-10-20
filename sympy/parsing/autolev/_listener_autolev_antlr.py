@@ -1787,7 +1787,7 @@ if AutolevListener:
                     new_t_final_str = str(new_t_final)
                     multiply_update_limit_by_val = findnum(new_t_final_str)
 
-                    time_scale = [p/(multiply_by_val*multiply_update_limit_by_val) for p in range(0, round(new_t_final*multiply_update_limit_by_val), round(integ_stp * multiply_by_val*multiply_update_limit_by_val))]
+                    time_scale = (p/(multiply_by_val*multiply_update_limit_by_val) for p in range(0, round(new_t_final*multiply_update_limit_by_val), round(integ_stp * multiply_by_val*multiply_update_limit_by_val)))
                     if self.include_numpy:
                         self.write("sys = System(kane, constants = {" + ", ".join(const_list) + "},\n" +
                                 "specifieds={" + ", ".join(specifieds) + "},\n" +
