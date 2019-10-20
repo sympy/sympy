@@ -842,7 +842,7 @@ class ReferenceFrame(object):
 
         >>> A = N.orientnew('A', 'Axis', (q0, N.x))
 
-        Create a new reference frame A rotated relative to N through body-fixed
+        Create a new reference frame B rotated relative to N through body-fixed
         rotations.
 
         >>> B = N.orientnew('B', 'Body', (q1, q2, q3), '123')
