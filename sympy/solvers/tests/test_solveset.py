@@ -19,6 +19,7 @@ from sympy.functions.special.error_functions import (erf, erfc,
     erfcinv, erfinv)
 from sympy.logic.boolalg import And
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import CRootOf
 from sympy.sets.contains import Contains
@@ -1234,6 +1235,16 @@ def test_linsolve():
     assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
     assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
     assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
+
+
+def test_linsolve_immutable():
+    A = ImmutableDenseMatrix([[1, 1, 2], [0, 1, 2], [0, 0, 1]])
+    B = ImmutableDenseMatrix([2, 1, -1])
+    c = symbols('c1 c2 c3')
+    assert linsolve([A, B], c) == FiniteSet((1, 3, -1))
+
+    A = ImmutableDenseMatrix([[1, 1, 7], [1, -1, 3]])
+    assert linsolve(A) == FiniteSet((5, 2))
 
 
 def test_solve_decomposition():
