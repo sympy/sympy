@@ -7,53 +7,38 @@ Added kelvin, candela and mole.
 
 from __future__ import division
 
-from sympy.physics.units import percent, permille, kilogram, newton, second, meter, gram, microgram, milligram, \
-    Quantity, DimensionSystem, Dimension
+from sympy.physics.units import DimensionSystem, Dimension
 
 from sympy import Rational, pi, sqrt, S
 from sympy.physics.units.definitions.dimension_definitions import (
-    acceleration, action, amount_of_substance, capacitance, charge,
-    conductance, current, energy, force, frequency, information, impedance,
-    inductance, length, luminous_intensity, magnetic_density, magnetic_flux,
-    mass, power, pressure, temperature, time, velocity, voltage
+    acceleration, action, current, impedance, length, mass, time, velocity,
+    amount_of_substance, temperature, information, frequency, force, pressure,
+    energy, power, charge, voltage, capacitance, conductance, magnetic_flux,
+    magnetic_density, inductance, luminous_intensity
 )
 from sympy.physics.units.prefixes import (
-    centi, deci, kilo, micro, milli, nano, pico,
     kibi, mebi, gibi, tebi, pebi, exbi
 )
 from sympy.physics.units.definitions import (
-    joule, watt, pascal, hertz, coulomb, volt, ohm, siemens, farad, henry,
-    tesla, weber, dioptre, lux, katal, gray, becquerel, kilometer, decimeter,
-    centimeter, millimeter, um, micrometer, micrometers, micron, microns, foot,
-    inch, yard, mile, nautical_mile, liter, deciliter, centiliter, milliliter,
-    millisecond, microsecond, nanosecond, picosecond, minute, hour, day,
-    anomalistic_year, sidereal_year, tropical_year, common_year, julian_year,
-    draconic_year, gaussian_year, full_moon_cycle, year, years, tropical_year,
-    gravitational_constant, speed_of_light, elementary_charge, planck, hbar,
-    electronvolt, avogadro_number, avogadro_constant, boltzmann_constant,
+    kilogram, newton, second, meter, gram, cd, K, joule, watt, pascal, hertz,
+    coulomb, volt, ohm, siemens, farad, henry, tesla, weber, dioptre, lux,
+    katal, gray, becquerel, inch, liter, julian_year, gravitational_constant,
+    speed_of_light, elementary_charge, planck, hbar, electronvolt,
+    avogadro_number, avogadro_constant, boltzmann_constant,
     stefan_boltzmann_constant, atomic_mass_constant, molar_gas_constant,
     faraday_constant, josephson_constant, von_klitzing_constant,
     acceleration_due_to_gravity, magnetic_constant, vacuum_permittivity,
-    vacuum_impedance, coulomb_constant, coulombs_constant,
-    electric_force_constant, coulomb_constant, atmosphere, kilopascal, bar,
-    pound, psi, dHg0, mmHg, milli_mass_unit, quart, lightyear,
-    astronomical_unit, planck_mass, planck_time, planck_temperature,
-    planck_length, planck_charge, planck_area, planck_volume, planck_momentum,
-    planck_energy, planck_force, planck_power, planck_density,
-    planck_energy_density, planck_intensity, planck_angular_frequency,
-    planck_pressure, planck_current, planck_voltage, planck_impedance,
-    planck_acceleration, bit, byte, kibibyte, mebibyte, gibibyte, tebibyte,
-    pebibyte, exbibyte, curie, rutherford,
-    radian, degree, steradian, angular_mil, atomic_mass_unit, gee, kPa, Pa, ampere, u0, c, kelvin, mol, mole, candela,
-    nanometer, picometer, feet, m, kg, s, electric_constant, G, boltzmann)
-from sympy.physics.units.definitions import (
-    K, cd, lux, mol, hertz, newton, pascal, joule, watt, coulomb, volt, farad,
-    ohm, siemens, weber, tesla, henry, candela, becquerel, gray, katal)
-from sympy.physics.units.definitions.dimension_definitions import (
-    amount_of_substance, temperature, information,
-    frequency, force, pressure, energy, power, charge, voltage, capacitance,
-    conductance, magnetic_flux, magnetic_density, inductance,
-    luminous_intensity)
+    vacuum_impedance, coulomb_constant, atmosphere, bar, pound, psi, mmHg,
+    milli_mass_unit, quart, lightyear, astronomical_unit, planck_mass,
+    planck_time, planck_temperature, planck_length, planck_charge, planck_area,
+    planck_volume, planck_momentum, planck_energy, planck_force, planck_power,
+    planck_density, planck_energy_density, planck_intensity,
+    planck_angular_frequency, planck_pressure, planck_current, planck_voltage,
+    planck_impedance, planck_acceleration, bit, byte, kibibyte, mebibyte,
+    gibibyte, tebibyte, pebibyte, exbibyte, curie, rutherford, radian, degree,
+    steradian, angular_mil, atomic_mass_unit, gee, kPa, ampere, u0, c, kelvin,
+    mol, mole, candela, m, kg, s, electric_constant, G, boltzmann
+)
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 from sympy.physics.units.systems.mksa import MKSA, dimsys_MKSA
 
