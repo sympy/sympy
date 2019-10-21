@@ -2454,11 +2454,11 @@ def linsolve(system, *symbols):
     if hasattr(system, '__iter__'):
 
         # 1). (A, b)
-        if len(system) == 2 and isinstance(system[0], Matrix):
+        if len(system) == 2 and isinstance(system[0], MatrixBase):
             A, b = system
 
         # 2). (eq1, eq2, ...)
-        if not isinstance(system[0], Matrix):
+        if not isinstance(system[0], MatrixBase):
             if sym_gen or not symbols:
                 raise ValueError(filldedent('''
                     When passing a system of equations, the explicit
@@ -2472,9 +2472,9 @@ def linsolve(system, *symbols):
             A, b = linear_eq_to_matrix(system, symbols)
             syms_needed_msg = 'free symbols in the equations provided'
 
-    elif isinstance(system, Matrix) and not (
+    elif isinstance(system, MatrixBase) and not (
             symbols and not isinstance(symbols, GeneratorType) and
-            isinstance(symbols[0], Matrix)):
+            isinstance(symbols[0], MatrixBase)):
         # 3). A augmented with b
         A, b = system[:, :-1], system[:, -1:]
 
