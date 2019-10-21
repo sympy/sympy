@@ -1002,6 +1002,9 @@ class digamma(Function):
 
     In this case, ``digamma(z) = polygamma(0, z)``.
 
+    Examples
+    ========
+
     >>> from sympy import digamma
     >>> digamma(0)
     zoo
@@ -1088,6 +1091,9 @@ class trigamma(Function):
         \psi^{(1)}(z) := \frac{\mathrm{d}^{2}}{\mathrm{d} z^{2}} \log\Gamma(z).
 
     In this case, ``trigamma(z) = polygamma(1, z)``.
+
+    Examples
+    ========
 
     >>> from sympy import trigamma
     >>> trigamma(0)
