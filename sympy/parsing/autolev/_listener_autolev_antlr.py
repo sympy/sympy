@@ -1779,15 +1779,10 @@ if AutolevListener:
 
                     # convert np.linspace to python list equivalent while handling rounding errors
                     integ_stp_str = str(integ_stp)
-                    multiply_by_val = findnum(integ_stp_str)
+                    multiply_by_integ_stp = findnum(integ_stp_str)
+                    integ_stp_transformed = round(integ_stp * multiply_by_integ_stp)
 
-                    new_t_final = t_final * multiply_by_val
-                    # update new_t_final value
-
-                    new_t_final_str = str(new_t_final)
-                    multiply_update_limit_by_val = findnum(new_t_final_str)
-
-                    time_scale = (p/(multiply_by_val*multiply_update_limit_by_val) for p in range(0, round(new_t_final*multiply_update_limit_by_val), round(integ_stp * multiply_by_val*multiply_update_limit_by_val)))
+                    time_scale = [x/multiply_by_integ_stp for x in range (0, round(t_final*multiply_by_integ_stp), integ_stp_transformed )]
                     if self.include_numpy:
                         self.write("sys = System(kane, constants = {" + ", ".join(const_list) + "},\n" +
                                 "specifieds={" + ", ".join(specifieds) + "},\n" +
