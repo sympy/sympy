@@ -13,7 +13,7 @@ from sympy import (
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
-from sympy.core.compatibility import range, u_decode as u, PY3
+from sympy.core.compatibility import range, u_decode as u, unicode, PY3
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.trace import Tr
 
@@ -6905,7 +6905,6 @@ n = -∞  \
 """)
 
 def test_is_combining():
-    line = upretty("v̇_m")
-    print([sym for sym in line])
+    line = unicode("v̇_m")
     assert [is_combining(sym) for sym in line] == \
         [False, True, False, False]
