@@ -1778,6 +1778,7 @@ if AutolevListener:
                             specifieds.append(self.symbol_table[i] + ":" + self.inputs[i])
 
                     # convert np.linspace to python list equivalent while handling rounding errors
+                    time_scale = []
                     if isinstance(integ_stp, float):
                         integ_stp_str = str(integ_stp)
                         multiply_by_integ_stp = findnum(integ_stp_str)
@@ -1785,7 +1786,7 @@ if AutolevListener:
                         time_scale = [x/multiply_by_integ_stp for x in range (0, round(t_final*multiply_by_integ_stp)+1, integ_stp_transformed )]
                     if isinstance(integ_stp, int):
                         time_scale = range (0, round(t_final)+1, integ_stp )
-                    time_scale = [item for item in time_scale if item < t_final]  # filter to prevent exceeding the limit
+                    time_scale = [item for item in time_scale if item <= t_final]  # filter to prevent exceeding the limit
                     if self.include_numpy:
                         self.write("sys = System(kane, constants = {" + ", ".join(const_list) + "},\n" +
                                 "specifieds={" + ", ".join(specifieds) + "},\n" +
