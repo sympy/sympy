@@ -92,7 +92,7 @@ class DixonResultant():
     def max_degrees(self):
         SymPyDeprecationWarning(feature="max_degrees",
                         issue=17763,
-                        deprecated_since_version="1.5")
+                        deprecated_since_version="1.5").warn()
         return self._max_degrees
 
     def get_dixon_polynomial(self):
