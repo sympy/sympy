@@ -1,3 +1,5 @@
+.. _series_expansions:
+
 Series Expansions
 =================
 
@@ -123,7 +125,7 @@ More Intuitive Series Expansion
 
 This is achieved
 by creating a wrapper around Basic.series(). This allows for the use of
-series(x*cos(x),x), which is possibly more intuative than (x*cos(x)).series(x).
+series(x*cos(x),x), which is possibly more intuitive than (x*cos(x)).series(x).
 
 Examples
 ^^^^^^^^

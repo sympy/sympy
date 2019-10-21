@@ -10,6 +10,6 @@ Matrix Class Reference
 ImmutableMatrix Class Reference
 -------------------------------
 
-.. autoclass:: sympy.matrices.immutable.ImmutableMatrix
+.. autoclass:: sympy.matrices.immutable.ImmutableDenseMatrix
    :members:
    :noindex:

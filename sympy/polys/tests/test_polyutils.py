@@ -14,10 +14,7 @@ from sympy.polys.polyutils import (
     dict_from_expr,
 )
 
-from sympy.polys.polyerrors import (
-    GeneratorsNeeded,
-    PolynomialError,
-)
+from sympy.polys.polyerrors import PolynomialError
 
 from sympy.polys.domains import ZZ
 

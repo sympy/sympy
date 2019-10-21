@@ -29,7 +29,7 @@ def solve_lin_sys(eqs, ring, _raw=True):
     """
     as_expr = not _raw
 
-    assert ring.domain.has_Field
+    assert ring.domain.is_Field
 
     # transform from equations to matrix form
     matrix = eqs_to_matrix(eqs, ring)

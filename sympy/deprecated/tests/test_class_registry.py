@@ -1,7 +1,6 @@
-from sympy.deprecated.class_registry import C
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import warns_deprecated_sympy
 
 def test_C():
-    with raises(SymPyDeprecationWarning):
+    from sympy.deprecated.class_registry import C
+    with warns_deprecated_sympy():
         C.Add

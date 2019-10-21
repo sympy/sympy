@@ -1,23 +1,9 @@
-from __future__ import division
-
-from sympy import I, Rational, Symbol, pi, sqrt
+from sympy import I, Rational, Symbol, pi, sqrt, S
 from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.matrices import Matrix
 from sympy.utilities.iterables import subsets, permutations, cartes
-from sympy.utilities.pytest import raises
-
-import traceback
-import warnings
-import sys
-
-# make warnings show tracebacks
-def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
-    traceback.print_stack()
-    log = file if hasattr(file,'write') else sys.stderr
-    log.write(warnings.formatwarning(message, category, filename, lineno, line))
-warnings.showwarning = warn_with_traceback
-warnings.simplefilter('always', UserWarning)     # make sure to show warnings every time they occurr
+from sympy.utilities.pytest import raises, warns
 
 
 def test_point():
@@ -27,19 +13,19 @@ def test_point():
     x2 = Symbol('x2', real=True)
     y1 = Symbol('y1', real=True)
     y2 = Symbol('y2', real=True)
-    half = Rational(1, 2)
+    half = S.Half
     p1 = Point(x1, x2)
     p2 = Point(y1, y2)
     p3 = Point(0, 0)
     p4 = Point(1, 1)
     p5 = Point(0, 1)
+    line = Line(Point(1, 0), slope=1)
 
     assert p1 in p1
     assert p1 not in p2
     assert p2.y == y2
     assert (p3 + p4) == p4
     assert (p2 - p1) == Point(y1 - x1, y2 - x2)
-    assert p4*5 == Point(5, 5)
     assert -p2 == Point(-y1, -y2)
     raises(ValueError, lambda: Point(3, I))
     raises(ValueError, lambda: Point(2*I, I))
@@ -55,22 +41,27 @@ def test_point():
     assert Point.distance(p1, p1) == 0
     assert Point.distance(p3, p2) == sqrt(p2.x**2 + p2.y**2)
 
+    # distance should be symmetric
+    assert p1.distance(line) == line.distance(p1)
+    assert p4.distance(line) == line.distance(p4)
+
     assert Point.taxicab_distance(p4, p3) == 2
+
+    assert Point.canberra_distance(p4, p5) == 1
 
     p1_1 = Point(x1, x1)
     p1_2 = Point(y2, y2)
     p1_3 = Point(x1 + 1, x1)
     assert Point.is_collinear(p3)
 
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert Point.is_collinear(p3, Point(p3, dim=4))
-        assert len(w) == 1
     assert p3.is_collinear()
     assert Point.is_collinear(p3, p4)
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
     assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
     assert Point.is_collinear(p3, p3, p4, p5) is False
-    line = Line(Point(1,0), slope = 1)
+
     raises(TypeError, lambda: Point.is_collinear(line))
     raises(TypeError, lambda: p1_1.is_collinear(line))
 
@@ -100,15 +91,16 @@ def test_point():
 
     assert p4 * 5 == Point(5, 5)
     assert p4 / 5 == Point(0.2, 0.2)
+    assert 5 * p4 == Point(5, 5)
 
     raises(ValueError, lambda: Point(0, 0) + 10)
 
     # Point differences should be simplified
     assert Point(x*(x - 1), y) - Point(x**2 - x, y + 1) == Point(0, -1)
 
-    a, b = Rational(1, 2), Rational(1, 3)
+    a, b = S.Half, Rational(1, 3)
     assert Point(a, b).evalf(2) == \
-        Point(a.n(2), b.n(2))
+        Point(a.n(2), b.n(2), evaluate=False)
     raises(ValueError, lambda: Point(1, 2) + 1)
 
     # test transformations
@@ -136,7 +128,7 @@ def test_point3D():
     y1 = Symbol('y1', real=True)
     y2 = Symbol('y2', real=True)
     y3 = Symbol('y3', real=True)
-    half = Rational(1, 2)
+    half = S.Half
     p1 = Point3D(x1, x2, x3)
     p2 = Point3D(y1, y2, y3)
     p3 = Point3D(0, 0, 0)
@@ -148,7 +140,6 @@ def test_point3D():
     assert p2.y == y2
     assert (p3 + p4) == p4
     assert (p2 - p1) == Point3D(y1 - x1, y2 - x2, y3 - x3)
-    assert p4*5 == Point3D(5, 5, 5)
     assert -p2 == Point3D(-y1, -y2, -y3)
 
     assert Point(34.05, sqrt(3)) == Point(Rational(681, 20), sqrt(3))
@@ -177,6 +168,7 @@ def test_point3D():
 
     assert p4 * 5 == Point3D(5, 5, 5)
     assert p4 / 5 == Point3D(0.2, 0.2, 0.2)
+    assert 5 * p4 == Point3D(5, 5, 5)
 
     raises(ValueError, lambda: Point3D(0, 0, 0) + 10)
 
@@ -184,10 +176,10 @@ def test_point3D():
     assert Point3D(x*(x - 1), y, 2) - Point3D(x**2 - x, y + 1, 1) == \
         Point3D(0, -1, 1)
 
-    a, b = Rational(1, 2), Rational(1, 3)
-    assert Point(a, b).evalf(2) == \
-        Point(a.n(2), b.n(2))
-    raises(ValueError, lambda: Point(1, 2) + 1)
+    a, b, c = S.Half, Rational(1, 3), Rational(1, 4)
+    assert Point3D(a, b, c).evalf(2) == \
+        Point(a.n(2), b.n(2), c.n(2), evaluate=False)
+    raises(ValueError, lambda: Point3D(1, 2, 3) + 1)
 
     # test transformations
     p = Point3D(1, 1, 1)
@@ -199,7 +191,6 @@ def test_point3D():
 
     # Test __new__
     assert Point3D(0.1, 0.2, evaluate=False, on_morph='ignore').args[0].is_Float
-
 
     # Test length property returns correctly
     assert p.length == 0
@@ -213,7 +204,7 @@ def test_point3D():
     assert Point.are_coplanar()
     assert Point.are_coplanar((1, 2, 0), (1, 2, 0), (1, 3, 0))
     assert Point.are_coplanar((1, 2, 0), (1, 2, 3))
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         raises(ValueError, lambda: Point2D.are_coplanar((1, 2), (1, 2, 3)))
     assert Point3D.are_coplanar((1, 2, 0), (1, 2, 3))
     assert Point.are_coplanar((0, 0, 0), (1, 1, 0), (1, 1, 1), (1, 2, 1)) is False
@@ -252,13 +243,11 @@ def test_point3D():
 
     # Test __sub__
     p_4d = Point(0, 0, 0, 1)
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert p - p_4d == Point(1, 1, 1, -1)
-        assert len(w) == 1
     p_4d3d = Point(0, 0, 1, 0)
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert p - p_4d3d == Point(1, 1, 0, 0)
-        assert len(w) == 1
 
 
 def test_Point2D():
@@ -283,9 +272,8 @@ def test_issue_11617():
     p1 = Point3D(1,0,2)
     p2 = Point2D(2,0)
 
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert p1.distance(p2) == sqrt(5)
-        assert len(w) == 1
 
 
 def test_transform():
@@ -342,7 +330,7 @@ def test_arguments():
         for p in singles3d:
             getattr(p3d, func)(p)
     for func in test_double:
-        for p in doubles2d:
+        for p in doubles3d:
             getattr(p3d, func)(*p)
 
     # test 4D
@@ -359,11 +347,11 @@ def test_arguments():
     # test evaluate=False for ops
     x = Symbol('x')
     a = Point(0, 1)
-    assert a + (0.1, x) == Point(0.1, 1 + x)
+    assert a + (0.1, x) == Point(0.1, 1 + x, evaluate=False)
     a = Point(0, 1)
-    assert a/10.0 == Point(0.0, 0.1)
+    assert a/10.0 == Point(0, 0.1, evaluate=False)
     a = Point(0, 1)
-    assert a*10.0 == Point(0.0, 10.0)
+    assert a*10.0 == Point(0.0, 10.0, evaluate=False)
 
     # test evaluate=False when changing dimensions
     u = Point(.1, .2, evaluate=False)
@@ -391,3 +379,24 @@ def test__normalize_dimension():
     assert Point._normalize_dimension(
         Point(1, 2), Point(3, 4, 0), on_morph='ignore') == [
         Point(1, 2, 0), Point(3, 4, 0)]
+
+
+def test_direction_cosine():
+    p1 = Point3D(0, 0, 0)
+    p2 = Point3D(1, 1, 1)
+
+    assert p1.direction_cosine(Point3D(1, 0, 0)) == [1, 0, 0]
+    assert p1.direction_cosine(Point3D(0, 1, 0)) == [0, 1, 0]
+    assert p1.direction_cosine(Point3D(0, 0, pi)) == [0, 0, 1]
+
+    assert p1.direction_cosine(Point3D(5, 0, 0)) == [1, 0, 0]
+    assert p1.direction_cosine(Point3D(0, sqrt(3), 0)) == [0, 1, 0]
+    assert p1.direction_cosine(Point3D(0, 0, 5)) == [0, 0, 1]
+
+    assert p1.direction_cosine(Point3D(2.4, 2.4, 0)) == [sqrt(2)/2, sqrt(2)/2, 0]
+    assert p1.direction_cosine(Point3D(1, 1, 1)) == [sqrt(3) / 3, sqrt(3) / 3, sqrt(3) / 3]
+    assert p1.direction_cosine(Point3D(-12, 0 -15)) == [-4*sqrt(41)/41, -5*sqrt(41)/41, 0]
+
+    assert p2.direction_cosine(Point3D(0, 0, 0)) == [-sqrt(3) / 3, -sqrt(3) / 3, -sqrt(3) / 3]
+    assert p2.direction_cosine(Point3D(1, 1, 12)) == [0, 0, 1]
+    assert p2.direction_cosine(Point3D(12, 1, 12)) == [sqrt(2) / 2, 0, sqrt(2) / 2]
