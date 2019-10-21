@@ -488,6 +488,7 @@ class ReferenceFrame(object):
         transpose which defines the orientation of B relative to N and vice
         versa. Once orient is called, ``dcm()`` outputs the appropriate
         direction cosine matrix.
+
         >>> B.dcm(N)
         Matrix([
         [1,       0,      0],
@@ -496,6 +497,7 @@ class ReferenceFrame(object):
 
         The following two lines show how the sense of the rotation can be
         defined. Both lines produce the same result.
+
         >>> B.orient(N, 'Axis', (q1, -N.x))
         >>> B.orient(N, 'Axis', (-q1, N.x))
 
@@ -519,8 +521,8 @@ class ReferenceFrame(object):
         [0,  cos(q1), sin(q1)],
         [0, -sin(q1), cos(q1)]])
 
-        **Note carefully that ``N.dcm(B)`` was passed into ``orient()`` for
-        ``A.dcm(N)`` to match ``B.dcm(N)``.**
+        **Note carefully that** ``N.dcm(B)`` **was passed into** ``orient()``
+        **for** ``A.dcm(N)`` **to match** ``B.dcm(N)``.
 
         Body
         ----
