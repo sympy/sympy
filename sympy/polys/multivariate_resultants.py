@@ -12,13 +12,12 @@ system has common roots. That is when the resultant is equal to zero.
 from sympy import IndexedBase, Matrix, Mul, Poly
 from sympy import rem, prod, degree_list, diag
 from sympy.core.compatibility import range
-from sympy.polys.monomials import itermonomials
+from sympy.polys.monomials import itermonomials, monomial_deg
 from sympy.polys.orderings import monomial_key
 from sympy.polys.polytools import poly_from_expr, total_degree
 from sympy.functions.combinatorial.factorials import binomial
-
 from itertools import combinations_with_replacement
-
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 class DixonResultant():
     """
@@ -85,6 +84,17 @@ class DixonResultant():
         # A list of n alpha variables (the replacing variables)
         self.dummy_variables = [a[i] for i in range(self.n)]
 
+        # A list of the d_max of each variable.
+        self._max_degrees = [max(degree_list(poly)[i] for poly in self.polynomials)
+            for i in range(self.n)]
+
+    @property
+    def max_degrees(self):
+        SymPyDeprecationWarning(feature="max_degrees",
+                        issue=17763,
+                        deprecated_since_version="1.5")
+        return self._max_degrees
+
     def get_dixon_polynomial(self):
         r"""
         Returns
@@ -120,6 +130,19 @@ class DixonResultant():
         dixon_polynomial = (A.det() / product_of_differences).factor()
 
         return poly_from_expr(dixon_polynomial, self.dummy_variables)[0]
+
+    def get_upper_degree(self):
+        SymPyDeprecationWarning(feature="get_upper_degree",
+                        useinstead="get_max_degrees",
+                        issue=17763,
+                        deprecated_since_version="1.5").warn()
+                        
+        list_of_products = [self.variables[i] ** self.max_degrees[i]
+                            for i in range(self.n)]
+        product = prod(list_of_products)
+        product = Poly(product).monoms()
+
+        return monomial_deg(*product)
 
     def get_max_degrees(self, polynomial):
         r"""
