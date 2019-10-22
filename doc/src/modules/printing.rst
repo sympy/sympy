@@ -389,6 +389,8 @@ Theano Code printing
 
 .. autofunction:: sympy.printing.theanocode.theano_function
 
+.. autofunction:: sympy.printing.theanocode.dim_handling
+
 Gtk
 ---
 
