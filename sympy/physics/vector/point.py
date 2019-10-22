@@ -13,6 +13,41 @@ class Point(object):
     The position is a vector defined as the vector distance from a parent
     point to this point.
 
+    Parameters
+    ==========
+
+    name : string
+        The display name of the Point
+
+    Examples
+    ========
+
+    >>> from sympy.physics.vector import Point, ReferenceFrame
+    >>> N = ReferenceFrame('N')
+    >>> O = Point('O')
+    >>> P = Point('P')
+    >>> O.set_vel(N, 10 * N.x + 20 * N.y + 30 * N.z)
+    >>> O.set_acc(N, 7 * N.x + 14 * N.y)
+    >>> O.vel(N)
+    10*N.x + 20*N.y + 30*N.z
+    >>> O.acc(N)
+    7*N.x + 14*N.y
+    
+
+    Example to create multiple Points:
+
+    >>> from sympy.physics.vector import Point, ReferenceFrame
+    >>> from sympy import symbols
+    >>> N = ReferenceFrame('N')
+    >>> A, B = symbols('A B', cls=Point)
+    >>> type(A)
+    <class 'sympy.physics.vector.point.Point'>
+    >>> A.set_acc(N, 30 * N.x + 70 * N.y)
+    >>> B.set_acc(N, 10 * N.x + 50 * N.y)
+    >>> A.acc(N) - B.acc(N)
+    20*N.x + 20*N.y
+
+
     """
 
     def __init__(self, name):
