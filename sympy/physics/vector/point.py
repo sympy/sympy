@@ -33,7 +33,6 @@ class Point(object):
     >>> O.acc(N)
     7*N.x + 14*N.y
 
-
     Example to create multiple Points:
 
     >>> from sympy.physics.vector import Point, ReferenceFrame
