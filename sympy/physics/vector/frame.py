@@ -35,19 +35,11 @@ class CoordinateSym(Symbol):
     ========
 
     >>> from sympy.physics.vector import ReferenceFrame, CoordinateSym
-    >>> from sympy import symbols
     >>> A = ReferenceFrame('A')
-    >>> B, C = symbols('B C', cls=ReferenceFrame, indices=('1', '2', '3'))
     >>> A[1]
     A_y
-    >>> B[0]
-    B_x
     >>> type(A[0])
     <class 'sympy.physics.vector.frame.CoordinateSym'>
-    >>> type(A[0]) == type(B[0])
-    True
-    >>> B.indices
-    ('1', '2', '3')
     >>> a_y = CoordinateSym('a_y', A, 1)
     >>> a_y == A[1]
     True
@@ -97,6 +89,8 @@ class ReferenceFrame(object):
     the parent frame's basis vectors.  It can also have an angular velocity
     vector, defined in another frame.
 
+
+
     """
     _count = 0
 
@@ -134,6 +128,22 @@ class ReferenceFrame(object):
         >>> P = ReferenceFrame('P', latexs=('A1', 'A2', 'A3'))
         >>> vlatex(P.x)
         'A1'
+
+
+        Example to create multiple ReferenceFrames:
+
+        >>> from sympy.physics.vector import ReferenceFrame, CoordinateSym
+        >>> from sympy import symbols
+        >>> A, B, C = symbols('A B C', cls=ReferenceFrame)
+        >>> D, E = symbols('D E', cls=ReferenceFrame, indices=('1', '2', '3'))
+        >>> A[0]
+        A_x
+        >>> D.x
+        D['1']
+        >>> E.y
+        E['2']
+        >>> type(A) == type(D)
+        True
 
         """
 
