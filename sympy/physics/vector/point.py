@@ -101,7 +101,7 @@ class Point(object):
         >>> x = Point('X')
         >>> type(a) == type(x)
         True
-        
+
         """
 
         _check_frame(outframe)
