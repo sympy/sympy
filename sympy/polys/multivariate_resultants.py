@@ -137,7 +137,7 @@ class DixonResultant():
                         issue=17763,
                         deprecated_since_version="1.5").warn()
 
-        list_of_products = [self.variables[i] ** self.max_degrees[i]
+        list_of_products = [self.variables[i] ** self._max_degrees[i]
                             for i in range(self.n)]
         product = prod(list_of_products)
         product = Poly(product).monoms()
