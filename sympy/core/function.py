@@ -32,7 +32,7 @@ There are three types of functions implemented in SymPy:
 from __future__ import print_function, division
 
 from .add import Add
-from .assumptions import ManagedProperties, _assume_defined
+from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
 from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered, Iterable
@@ -1237,7 +1237,7 @@ class Derivative(Expr):
 
         from sympy.matrices.common import MatrixCommon
         from sympy import Integer, MatrixExpr
-        from sympy.tensor.array import Array, NDimArray, derive_by_array
+        from sympy.tensor.array import Array, NDimArray
         from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)

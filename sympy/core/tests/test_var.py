@@ -21,29 +21,6 @@ def test_var():
 # check return value
     assert v == ['d', 'e', 'fg']
 
-# make z1 with call-depth = 1
-
-def _make_z1():
-    eval("var('z1')", ns)
-
-# make z2 with call-depth = 2
-
-def __make_z2():
-    eval("var('z2')", ns)
-
-def _make_z2():
-    __make_z2()
-
-# see if var() really injects into global namespace
-    "raises(NameError, lambda: z1)"
-    _make_z1()
-    assert ns["z1"] == Symbol("z1")
-
-    "raises(NameError, lambda: z2)"
-    _make_z2()
-    assert ns["z2"] == Symbol("z2")
-
-
 
 def test_var_return():
     ns = {"var": var, "raises": raises}
@@ -53,7 +30,6 @@ def test_var_return():
 
     assert v2 == Symbol('q')
     assert v3 == (Symbol('q'), Symbol('p'))
-
 
 
 def test_var_accepts_comma():
@@ -74,7 +50,7 @@ def test_var_keywords():
 
 def test_var_cls():
     ns = {"var": var, "isinstance": isinstance, "Function": Function, "FunctionClass": FunctionClass}
-    f = eval("var('f', cls=Function)", ns)
+    eval("var('f', cls=Function)", ns)
 
     assert "isinstance(f, FunctionClass)"
 

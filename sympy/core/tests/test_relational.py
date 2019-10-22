@@ -786,7 +786,8 @@ def test_issue_10401():
     inf = symbols('inf', infinite=True)
     inf2 = symbols('inf2', infinite=True)
     infx = symbols('infx', infinite=True, extended_real=True)
-    infx2 = symbols('infx2', infinite=True, extended_real=True)
+    # Used in the commented tests below:
+    #infx2 = symbols('infx2', infinite=True, extended_real=True)
     infnx = symbols('inf~x', infinite=True, extended_real=False)
     infnx2 = symbols('inf~x2', infinite=True, extended_real=False)
     infp = symbols('infp', infinite=True, extended_positive=True)

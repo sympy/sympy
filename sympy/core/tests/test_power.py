@@ -1,6 +1,6 @@
 from sympy.core import (
     Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
-    Basic, I, nan, pi, E, symbols, oo, zoo, Rational, N)
+    Basic, I, nan, pi, symbols, oo, zoo, Rational, N)
 from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
 from sympy.functions.elementary.complexes import Abs
@@ -10,7 +10,6 @@ from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
     sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
 from sympy.series.order import O
-from sympy.utilities.pytest import XFAIL
 
 
 def test_rational():

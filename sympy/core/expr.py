@@ -756,7 +756,6 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.simplify.simplify import nsimplify, simplify
-        from sympy.solvers.solveset import solveset
         from sympy.solvers.solvers import solve
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
@@ -3070,7 +3069,7 @@ class Expr(Basic, EvalfMixin):
 
         from sympy import Order, Dummy
         from sympy.functions import exp, log
-        from sympy.series.gruntz import mrv, rewrite, mrv_leadterm
+        from sympy.series.gruntz import mrv, rewrite
 
         if x.is_positive is x.is_negative is None:
             xpos = Dummy('x', positive=True)
@@ -3697,7 +3696,6 @@ class Expr(Basic, EvalfMixin):
         >>> isinstance(round(S(123), -2), Number)
         True
         """
-        from sympy.core.power import integer_log
         from sympy.core.numbers import Float
 
         x = self
