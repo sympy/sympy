@@ -232,6 +232,11 @@ TribonacciConstant
 .. autoclass:: TribonacciConstant
    :members:
 
+mod_inverse
+^^^^^^^^^^^
+
+.. autofunction:: mod_inverse
+
 power
 -----
 .. module:: sympy.core.power

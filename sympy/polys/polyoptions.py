@@ -1,4 +1,4 @@
-"""Options manager for :class:`Poly` and public API functions. """
+"""Options manager for :class:`~.Poly` and public API functions. """
 
 from __future__ import print_function, division
 

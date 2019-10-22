@@ -379,10 +379,10 @@ def rs_subs(p, rules, x, prec):
 
     Parameters
     ----------
-    p : :class:`PolyElement` Input series.
-    rules : :class:`dict` with substitution mappings.
-    x : :class:`PolyElement` in which the series truncation is to be done.
-    prec : :class:`Integer` order of the series after truncation.
+    p : :class:`~.PolyElement` Input series.
+    rules : ``dict`` with substitution mappings.
+    x : :class:`~.PolyElement` in which the series truncation is to be done.
+    prec : :class:`~.Integer` order of the series after truncation.
 
     Examples
     ========
@@ -560,7 +560,7 @@ def rs_series_inversion(p, x, prec):
     return r
 
 def _coefficient_t(p, t):
-    r"""Coefficient of `x\_i**j` in p, where ``t`` = (i, j)"""
+    r"""Coefficient of `x_i**j` in p, where ``t`` = (i, j)"""
     i, j = t
     R = p.ring
     expv1 = [0]*R.ngens
@@ -671,10 +671,14 @@ def rs_series_from_list(p, c, x, prec, concur=1):
     >>> rs_trunc(pc.compose(x, p), x, 4)
     6*x**3 + 11*x**2 + 8*x + 6
 
+    """
+
+    # TODO: Add this when it is documented in Sphinx
+    """
     See Also
     ========
 
-    sympy.polys.ring.compose
+    sympy.polys.rings.PolyRing.compose
 
     """
     R = p.ring
@@ -736,7 +740,7 @@ def rs_diff(p, x):
     Parameters
     ==========
 
-    x : :class:`PolyElement` with respect to which ``p`` is differentiated.
+    x : :class:`~.PolyElement` with respect to which ``p`` is differentiated.
 
     Examples
     ========
@@ -768,7 +772,7 @@ def rs_integrate(p, x):
     Parameters
     ==========
 
-    x : :class:`PolyElement` with respect to which ``p`` is integrated.
+    x : :class:`~.PolyElement` with respect to which ``p`` is integrated.
 
     Examples
     ========
@@ -809,9 +813,9 @@ def rs_fun(p, f, *args):
     Parameters
     ==========
 
-    p : :class:`PolyElement` The multivariate series to be expanded.
+    p : :class:`~.PolyElement` The multivariate series to be expanded.
     f : `ring\_series` function to be applied on `p`.
-    args[-2] : :class:`PolyElement` with respect to which, the series is to be expanded.
+    args[-2] : :class:`~.PolyElement` with respect to which, the series is to be expanded.
     args[-1] : Required order of the expanded series.
 
     Examples
@@ -928,7 +932,7 @@ def rs_nth_root(p, n, x, prec):
         The polynomial to computer the root of.
     n : integer
         The order of the root to be computed.
-    x : :class:`PolyElement`
+    x : :class:`~.PolyElement`
     prec : integer
         Order of the expanded series.
 
@@ -1273,16 +1277,16 @@ def rs_asin(p, x, prec):
 
 def _tan1(p, x, prec):
     r"""
-    Helper function of `rs\_tan`.
+    Helper function of :func:`rs_tan`.
 
     Return the series expansion of tan of a univariate series using Newton's
     method. It takes advantage of the fact that series expansion of atan is
     easier than that of tan.
 
-    Consider `f(x) = y - atan(x)`
+    Consider `f(x) = y - \atan(x)`
     Let r be a root of f(x) found using Newton's method.
     Then `f(r) = 0`
-    Or `y  = atan(x)` where `x = tan(y)` as required.
+    Or `y = \atan(x)` where `x = \tan(y)` as required.
     """
     R = p.ring
     p1 = R(0)
@@ -1533,7 +1537,7 @@ def rs_cos(p, x, prec):
 
 def rs_cos_sin(p, x, prec):
     r"""
-    Return the tuple `(rs\_cos(p, x, prec)`, `rs\_sin(p, x, prec))`.
+    Return the tuple ``(rs_cos(p, x, prec)`, `rs_sin(p, x, prec))``.
 
     Is faster than calling rs_cos and rs_sin separately
     """
@@ -1670,7 +1674,7 @@ def rs_cosh(p, x, prec):
 
 def _tanh(p, x, prec):
     r"""
-    Helper function of `rs\_tanh`
+    Helper function of :func:`rs_tanh`
 
     Return the series expansion of tanh of a univariate series using Newton's
     method. It takes advantage of the fact that series expansion of atanh is

@@ -4,6 +4,8 @@
 Polynomials Manipulation Module Reference
 =========================================
 
+.. automodule:: sympy.polys
+
 Basic polynomial manipulation functions
 =======================================
 
@@ -121,6 +123,7 @@ Orderings of monomials
 
 .. currentmodule:: sympy.polys.orderings
 
+.. autoclass:: MonomialOrder
 .. autoclass:: LexOrder
 .. autoclass:: GradedLexOrder
 .. autoclass:: ReversedGradedLexOrder
@@ -134,6 +137,8 @@ Formal manipulation of roots of polynomials
 .. autoclass:: RootOf
    :members:
 .. autoclass:: ComplexRootOf
+   :members:
+   :private-members:
 .. autoclass:: RootSum
 
 Symbolic root-finding algorithms
