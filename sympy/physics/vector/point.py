@@ -94,8 +94,7 @@ class Point(object):
         >>> O.set_vel(N, 0)
         >>> P.a1pt_theory(O, N, B)
         (-25*q + q'')*B.x + q2''*B.y - 10*q'*B.z
-
-        >>> a,b = symbols('a b', cls=Point)
+        >>> a, b = symbols('a b', cls=Point)
         >>> type(a)
         <class 'sympy.physics.vector.point.Point'>
         >>> x = Point('X')
