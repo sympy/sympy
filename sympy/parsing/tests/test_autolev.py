@@ -27,11 +27,12 @@ def _test_examples(in_filename, out_filename, test_name="", include_numpy=False)
         for idx, line1 in enumerate(f):
             if line1.startswith("#"):
                 break
-            if not include_numpy and "numpy" in line1: #  use the same ruleset for both cases
-                continue
             try:
                 line2 = generated_code.split('\n')[idx]
-                assert line1.rstrip() == line2.rstrip()
+                if not include_numpy:
+                    assert "numpy" not in line1 or "numpy" not in line2
+                else:
+                    assert line1.rstrip() == line2.rstrip()
             except Exception:
                 msg = 'mismatch in ' + test_name + ' in line no: {0}'
                 raise AssertionError(msg.format(idx+1))
