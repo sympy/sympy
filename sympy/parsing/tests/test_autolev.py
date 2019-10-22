@@ -30,7 +30,7 @@ def _test_examples(in_filename, out_filename, test_name="", include_numpy=False)
             try:
                 line2 = generated_code.split('\n')[idx]
                 if not include_numpy:
-                    assert "numpy" not in line1 or "numpy" not in line2
+                    assert "numpy" not in line2
                 else:
                     assert line1.rstrip() == line2.rstrip()
             except Exception:
