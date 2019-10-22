@@ -47,7 +47,7 @@ class CoordinateSym(Symbol):
     >>> type(A[0]) == type(B[0])
     True
     >>> B.indices
-    (1, 2, 3)
+    ('1', '2', '3')
     >>> a_y = CoordinateSym('a_y', A, 1)
     >>> a_y == A[1]
     True
