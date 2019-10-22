@@ -316,13 +316,13 @@ def refine_sign(expr, assumptions):
     -I
     """
     arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return S.Zero
     if ask(Q.real(arg)):
         if ask(Q.positive(arg), assumptions):
-            return 1
+            return S.One
         if ask(Q.negative(arg), assumptions):
-            return -1
-        if ask(Q.zero(arg), assumptions):
-            return 0
+            return S.NegativeOne
     if ask(Q.imaginary(arg)):
         arg_re, arg_im = arg.as_real_imag()
         if ask(Q.positive(arg_im), assumptions):

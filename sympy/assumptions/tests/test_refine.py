@@ -176,10 +176,16 @@ def test_sign():
     assert refine(sign(x), Q.positive(x)) == 1
     assert refine(sign(x), Q.negative(x)) == -1
     assert refine(sign(x), Q.zero(x)) == 0
+    assert refine(sign(x), True) == sign(x)
     assert refine(sign(Abs(x)), Q.nonzero(x)) == 1
-    x = Symbol('x', imaginary = True)
+
+    x = Symbol('x', imaginary=True)
     assert refine(sign(x), Q.positive(im(x))) == S.ImaginaryUnit
     assert refine(sign(x), Q.negative(im(x))) == -S.ImaginaryUnit
+    assert refine(sign(x), True) == sign(x)
+
+    x = Symbol('x', complex=True)
+    assert refine(sign(x), Q.zero(x)) == 0
 
 
 def test_func_args():
