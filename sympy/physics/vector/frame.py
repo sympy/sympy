@@ -37,7 +37,7 @@ class CoordinateSym(Symbol):
     >>> from sympy.physics.vector import ReferenceFrame, CoordinateSym
     >>> from sympy import symbols
     >>> A = ReferenceFrame('A')
-    >>> B, C = symbols('B C', cls=ReferenceFrame, indices=(1, 2, 3))
+    >>> B, C = symbols('B C', cls=ReferenceFrame, indices=('1', '2', '3'))
     >>> A[1]
     A_y
     >>> B[0]
