@@ -171,7 +171,7 @@ def test_complex():
         & Q.real(z)) == w*z + x*y
 
 
-def test_sgn():
+def test_sign():
     x = Symbol('x', real = True)
     assert refine(sign(x), Q.positive(x)) == 1
     assert refine(sign(x), Q.negative(x)) == -1
