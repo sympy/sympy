@@ -39,6 +39,8 @@ The module ``pretty_symbology`` provides primitives to construct 2D shapes
 (hline, vline, etc) together with a technique to use unicode automatically
 when possible.
 
+.. module:: sympy.printing.pretty
+
 .. module:: sympy.printing.pretty.pretty
 
 .. autoclass:: PrettyPrinter
@@ -532,6 +534,8 @@ This module generates readable representations of SymPy expressions.
    :members: parenthesize, stringify, emptyPrinter
 
    .. autoattribute:: StrPrinter.printmethod
+
+.. autofunction:: sstr
 
 .. autofunction:: sstrrepr
 
