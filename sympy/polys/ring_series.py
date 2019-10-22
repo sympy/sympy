@@ -576,33 +576,40 @@ def rs_series_reversion(p, x, n, y):
     r"""
     Reversion of a series.
 
-    ``p`` is a series with ``O(x**n)`` of the form `p = a*x + f(x)`
-    where `a` is a number different from 0.
+    ``p`` is a series with ``O(x**n)`` of the form $p = ax + f(x)$
+    where $a$ is a number different from 0.
 
-    `f(x) = sum( a\_k*x\_k, k in range(2, n))`
+    $f(x) = \sum_{k=2}^{n-1} a_kx_k$
+
+    Parameters
+    ==========
 
       a_k : Can depend polynomially on other variables, not indicated.
       x : Variable with name x.
       y : Variable with name y.
 
-    Solve `p = y`, that is, given `a*x + f(x) - y = 0`,
-    find the solution x = r(y) up to O(y**n)
+    Returns
+    =======
 
-    Algorithm:
+    Solve $p = y$, that is, given $ax + f(x) - y = 0$,
+    find the solution $x = r(y)$ up to $O(y^n)$.
 
-    If `r\_i` is the solution at order i, then:
-    `a*r\_i + f(r\_i) - y = O(y**(i + 1))`
+    Algorithm
+    =========
 
-    and if r_(i + 1) is the solution at order i + 1, then:
-    `a*r\_(i + 1) + f(r\_(i + 1)) - y = O(y**(i + 2))`
+    If $r_i$ is the solution at order $i$, then:
+    $ar_i + f(r_i) - y = O\left(y^{i + 1}\right)$
 
-    We have, r_(i + 1) = r_i + e, such that,
-    `a*e + f(r\_i) = O(y**(i + 2))`
-    or `e = -f(r\_i)/a`
+    and if $r_{i + 1}$ is the solution at order $i + 1$, then:
+    $ar_{i + 1} + f(r_{i + 1}) - y = O\left(y^{i + 2}\right)$
+
+    We have, $r_{i + 1} = r_i + e$, such that,
+    $ae + f(r_i) = O\left(y^{i + 2}\right)$
+    or $e = -f(r_i)/a$
 
     So we use the recursion relation:
-    `r\_(i + 1) = r\_i - f(r\_i)/a`
-    with the boundary condition: `r\_1 = y`
+    $r_{i + 1} = r_i - f(r_i)/a$
+    with the boundary condition: $r_1 = y$
 
     Examples
     ========
