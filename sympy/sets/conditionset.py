@@ -15,7 +15,7 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .contains import Contains
-from .sets import Set, EmptySet, Union, FiniteSet, ProductSet, UniversalSet
+from .sets import Set, EmptySet, Union, FiniteSet
 
 
 class ConditionSet(Set):
