@@ -621,9 +621,6 @@ class Function(Application, Expr):
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
 
-    def _eval_is_complex(self):
-        return fuzzy_and(a.is_complex for a in self.args)
-
     def as_base_exp(self):
         """
         Returns the method as the 2-tuple (base, exponent).

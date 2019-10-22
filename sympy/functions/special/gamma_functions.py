@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
 from sympy.core.compatibility import range, as_int
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.functions.special.zeta_functions import zeta
@@ -635,6 +636,11 @@ class polygamma(Function):
     def _eval_is_real(self):
         if self.args[0].is_positive and self.args[1].is_positive:
             return True
+
+    def _eval_is_complex(self):
+        z = self.args[1]
+        is_negative_integer = fuzzy_and([z.is_negative, z.is_integer])
+        return fuzzy_and([z.is_complex, fuzzy_not(is_negative_integer)])
 
     def _eval_is_positive(self):
         if self.args[0].is_positive and self.args[1].is_positive:
