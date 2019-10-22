@@ -6,6 +6,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.pytest import slow
 from sympy.core import S
 
+
 def test_Abs():
     assert refine(Abs(x), Q.positive(x)) == x
     assert refine(1 + Abs(x), Q.positive(x)) == 1 + x
@@ -140,7 +141,7 @@ def test_atan2():
 
 def test_re():
     assert refine(re(x), Q.real(x)) == x
-    assert refine(re(x), Q.imaginary(x)) == 0
+    assert refine(re(x), Q.imaginary(x)) is S.Zero
     assert refine(re(x+y), Q.real(x) & Q.real(y)) == x + y
     assert refine(re(x+y), Q.real(x) & Q.imaginary(y)) == x
     assert refine(re(x*y), Q.real(x) & Q.real(y)) == x * y
@@ -150,7 +151,7 @@ def test_re():
 
 def test_im():
     assert refine(im(x), Q.imaginary(x)) == -I*x
-    assert refine(im(x), Q.real(x)) == 0
+    assert refine(im(x), Q.real(x)) is S.Zero
     assert refine(im(x+y), Q.imaginary(x) & Q.imaginary(y)) == -I*x - I*y
     assert refine(im(x+y), Q.real(x) & Q.imaginary(y)) == -I*y
     assert refine(im(x*y), Q.imaginary(x) & Q.real(y)) == -I*x*y

@@ -574,7 +574,7 @@ def collect_abs(expr):
       args[0] = A
       _mulsort(args)
       args.extend(nc)  # nc always go last
-      return Mul._from_args(args, is_commutative=bool(nc))
+      return Mul._from_args(args, is_commutative=not nc)
 
     return expr.replace(
         lambda x: isinstance(x, Mul),

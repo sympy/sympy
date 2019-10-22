@@ -471,6 +471,9 @@ def test_issue_2993():
     eq = (2.3*x + 4)
     assert eq**2 == 16.0*(0.575*x + 1)**2
     assert (1/eq).args == (eq, -1)  # don't change trivial power
+    # issue 17735
+    q=.5*exp(x) - .5*exp(-x) + 0.1
+    assert int((q**2).subs(x, 1)) == 1
 
 
 def test_issue_17450():

@@ -20,13 +20,30 @@ python:
 matrix:
   include:
     - stage: quality
-      python: 3.7
+      python: 3.8
       dist: xenial
       sudo: true
       script: bin/test quality
       env:
 
     - stage: baseline
+      python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="1/2" TEST_SYMPY="true"
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="2/2" TEST_SYMPY="true"
+
+    - stage: test
       python: 3.7
       dist: xenial
       sudo: true
@@ -38,23 +55,6 @@ matrix:
       env:
         - SPLIT="1/2" TEST_SYMPY="true"
     - python: 3.7
-      dist: xenial
-      sudo: true
-      env:
-        - SPLIT="2/2" TEST_SYMPY="true"
-
-    - stage: test
-      python: 3.8-dev
-      dist: xenial
-      sudo: true
-      env:
-        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
-    - python: 3.8-dev
-      dist: xenial
-      sudo: true
-      env:
-        - SPLIT="1/2" TEST_SYMPY="true"
-    - python: 3.8-dev
       dist: xenial
       sudo: true
       env:
@@ -90,7 +90,7 @@ matrix:
             - gfortran
             - python-scipy
 
-    - python: 3.7
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
@@ -119,13 +119,13 @@ matrix:
       env:
         - TEST_SLOW="true"
         - SPLIT="2/2"
-    - python: 3.7
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
         - TEST_SLOW="true"
         - SPLIT="1/2"
-    - python: 3.7
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
@@ -196,6 +196,11 @@ matrix:
             - pypy
           packages:
             - pypy3
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_FLAKE8="true"
 
   fast_finish: true
 
@@ -233,6 +238,11 @@ matrix:
             - pypy
           packages:
             - pypy3
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_FLAKE8="true"
 
 before_install:
   - set -e
@@ -244,7 +254,11 @@ before_install:
       pip install coverage;
       coverage debug sys;
     fi
-  - if [ "$TRAVIS_PYTHON_VERSION" == "3.8-dev" ]; then
+  - if [[ "${TEST_FLAKE8}" == "true" ]]; then
+      pip install flake8;
+      flake8 sympy;
+    fi
+  - if [ "$TRAVIS_PYTHON_VERSION" == "3.8" ]; then
         pip uninstall -y Cython;
     fi
   - |

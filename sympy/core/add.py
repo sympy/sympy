@@ -389,13 +389,14 @@ class Add(Expr, AssocOp):
             c, m = zip(*[i.as_coeff_Mul() for i in self.args])
             big = 0
             float = False
+            s = dict()
             for i in c:
                 float = float or i.is_Float
-                if abs(i) > big:
+                if abs(i) >= big:
                     big = 1.0*abs(i)
-                    s = -1 if i < 0 else 1
+                    s[i] = -1 if i < 0 else 1
             if float and big and big != 1:
-                addpow = Add(*[(s if abs(c[i]) == big else c[i]/big)*m[i]
+                addpow = Add(*[(s[c[i]] if abs(c[i]) == big else c[i]/big)*m[i]
                              for i in range(len(c))])**e
                 return big**e*addpow
 
@@ -523,6 +524,19 @@ class Add(Expr, AssocOp):
         (a.is_algebraic for a in self.args), quick_exit=True)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
+
+    def _eval_is_infinite(self):
+        sawinf = False
+        for a in self.args:
+            ainf = a.is_infinite
+            if ainf is None:
+                return None
+            elif ainf is True:
+                # infinite+infinite might not be infinite
+                if sawinf is True:
+                    return None
+                sawinf = True
+        return sawinf
 
     def _eval_is_imaginary(self):
         nz = []

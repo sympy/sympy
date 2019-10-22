@@ -216,9 +216,16 @@ def intersection_sets(a, b):
 @dispatch(ImageSet, Set)
 def intersection_sets(self, other):
     from sympy.solvers.diophantine import diophantine
-    if self.base_set is S.Integers:
+
+    # Only handle the straight-forward univariate case
+    if (len(self.lamda.variables) > 1
+            or self.lamda.signature != self.lamda.variables):
+        return None
+    base_set = self.base_sets[0]
+
+    if base_set is S.Integers:
         g = None
-        if isinstance(other, ImageSet) and other.base_set is S.Integers:
+        if isinstance(other, ImageSet) and other.base_sets == (S.Integers,):
             g = other.lamda.expr
             m = other.lamda.variables[0]
         elif other is S.Integers:
@@ -253,8 +260,6 @@ def intersection_sets(self, other):
     if other == S.Reals:
         from sympy.solvers.solveset import solveset_real
         from sympy.core.function import expand_complex
-        if len(self.lamda.variables) > 1:
-            return None
 
         f = self.lamda.expr
         n = self.lamda.variables[0]
@@ -269,7 +274,6 @@ def intersection_sets(self, other):
         im = im.subs(n_, n)
         ifree = im.free_symbols
         lam = Lambda(n, re)
-        base = self.base_set
         if not im:
             # allow re-evaluation
             # of self in this case to make
@@ -281,8 +285,8 @@ def intersection_sets(self, other):
             return None
         else:
             # univarite imaginary part in same variable
-            base = base.intersect(solveset_real(im, n))
-        return imageset(lam, base)
+            base_set = base_set.intersect(solveset_real(im, n))
+        return imageset(lam, base_set)
 
     elif isinstance(other, Interval):
         from sympy.solvers.solveset import (invert_real, invert_complex,
@@ -290,7 +294,6 @@ def intersection_sets(self, other):
 
         f = self.lamda.expr
         n = self.lamda.variables[0]
-        base_set = self.base_set
         new_inf, new_sup = None, None
         new_lopen, new_ropen = other.left_open, other.right_open
 

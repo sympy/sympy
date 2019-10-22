@@ -1,7 +1,7 @@
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect)
+    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper)
 from sympy.solvers.ode import (_undetermined_coefficients_match,
     checkodesol, classify_ode, classify_sysode, constant_renumber,
     constantsimp, homogeneous_order, infinitesimals, checkinfsol,
@@ -2950,19 +2950,24 @@ def test_kamke():
 
 
 def test_series():
-    # FIXME: Maybe there should be a way to check series solutions
-    # checkodesol doesn't work with them.
     C1 = Symbol("C1")
     eq = f(x).diff(x) - f(x)
-    assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
-        C1 + C1*x + C1*x**2/2 + C1*x**3/6 + C1*x**4/24 +
-        C1*x**5/120 + O(x**6))
+    sol = Eq(f(x), C1 + C1*x + C1*x**2/2 + C1*x**3/6 + C1*x**4/24 +
+            C1*x**5/120 + O(x**6))
+    assert dsolve(eq, hint='1st_power_series') == sol
+    assert checkodesol(eq, sol, order=1)[0]
+
     eq = f(x).diff(x) - x*f(x)
-    assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
-        C1*x**4/8 + C1*x**2/2 + C1 + O(x**6))
+    sol = Eq(f(x), C1*x**4/8 + C1*x**2/2 + C1 + O(x**6))
+    assert dsolve(eq, hint='1st_power_series') == sol
+    assert checkodesol(eq, sol, order=1)[0]
+
     eq = f(x).diff(x) - sin(x*f(x))
     sol = Eq(f(x), (x - 2)**2*(1+ sin(4))*cos(4) + (x - 2)*sin(4) + 2 + O(x**3))
     assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == sol
+    # FIXME: The solution here should be O((x-2)**3) so is incorrect
+    #assert checkodesol(eq, sol, order=1)[0]
+
 
 
 @XFAIL
@@ -3086,38 +3091,51 @@ def test_issue_7081():
 
 @slow
 def test_2nd_power_series_ordinary():
-    # FIXME: Maybe there should be a way to check series solutions
-    # checkodesol doesn't work with them.
     C1, C2 = symbols("C1 C2")
+
     eq = f(x).diff(x, 2) - x*f(x)
     assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary')
-    assert dsolve(eq, hint='2nd_power_series_ordinary') == Eq(f(x),
-        C2*(x**3/6 + 1) + C1*x*(x**3/12 + 1) + O(x**6))
-    assert dsolve(eq, x0=-2, hint='2nd_power_series_ordinary') == Eq(f(x),
-        C2*((x + 2)**4/6 + (x + 2)**3/6 - (x + 2)**2 + 1)
+    sol = Eq(f(x), C2*(x**3/6 + 1) + C1*x*(x**3/12 + 1) + O(x**6))
+    assert dsolve(eq, hint='2nd_power_series_ordinary') == sol
+    assert checkodesol(eq, sol) == (True, 0)
+
+    sol = Eq(f(x), C2*((x + 2)**4/6 + (x + 2)**3/6 - (x + 2)**2 + 1)
         + C1*(x + (x + 2)**4/12 - (x + 2)**3/3 + S(2))
         + O(x**6))
-    assert dsolve(eq, n=2, hint='2nd_power_series_ordinary') == Eq(f(x), C2*x + C1 + O(x**2))
+    assert dsolve(eq, hint='2nd_power_series_ordinary', x0=-2) == sol
+    # FIXME: Solution should be O((x+2)**6)
+    # assert checkodesol(eq, sol) == (True, 0)
+
+    sol = Eq(f(x), C2*x + C1 + O(x**2))
+    assert dsolve(eq, hint='2nd_power_series_ordinary', n=2) == sol
+    assert checkodesol(eq, sol) == (True, 0)
+
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    assert dsolve(eq) == Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x
-        + O(x**6))
+    sol = Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x + O(x**6))
+    assert dsolve(eq) == sol
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    assert dsolve(eq) == Eq(f(x), C2*(
-        x**4/8 - x**2/2 + 1) + C1*x*(-x**2/3 + 1) + O(x**6))
+    sol = Eq(f(x), C2*(x**4/8 - x**2/2 + 1) + C1*x*(-x**2/3 + 1) + O(x**6))
+    assert dsolve(eq) == sol
+    # FIXME: checkodesol fails for this solution...
+    # assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + f(x).diff(x) - x*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    assert dsolve(eq) == Eq(f(x), C2*(
-        -x**4/24 + x**3/6 + 1) + C1*x*(x**3/24 + x**2/6 - x/2
-        + 1) + O(x**6))
+    sol = Eq(f(x), C2*(-x**4/24 + x**3/6 + 1)
+            + C1*x*(x**3/24 + x**2/6 - x/2 + 1) + O(x**6))
+    assert dsolve(eq) == sol
+    # FIXME: checkodesol fails for this solution...
+    # assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*f(x)
     assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary')
-    assert dsolve(eq, n=7, hint='2nd_power_series_ordinary') == Eq(f(x), C2*(
-        x**6/180 - x**3/6 + 1) + C1*x*(-x**3/12 + 1) + O(x**7))
+    sol = Eq(f(x), C2*(x**6/180 - x**3/6 + 1) + C1*x*(-x**3/12 + 1) + O(x**7))
+    assert dsolve(eq, hint='2nd_power_series_ordinary', n=7) == sol
+    assert checkodesol(eq, sol) == (True, 0)
 
 def test_Airy_equation():
     eq = f(x).diff(x, 2) - x*f(x)
@@ -3137,25 +3155,30 @@ def test_Airy_equation():
     assert dsolve(eq, f(x), hint='2nd_linear_airy') in (sol, sols)
 
 def test_2nd_power_series_regular():
-    # FIXME: Maybe there should be a way to check series solutions
-    # checkodesol doesn't work with them.
+    C1, C2 = symbols("C1 C2")
     eq = x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x)
-    assert dsolve(eq, hint='2nd_power_series_regular') == Eq(f(x), C1*x**2*(-16*x**3/9 +
-        4*x**2 - 4*x + 1) + O(x**6))
+    sol = Eq(f(x), C1*x**2*(-16*x**3/9 + 4*x**2 - 4*x + 1) + O(x**6))
+    assert dsolve(eq, hint='2nd_power_series_regular') == sol
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = 4*x**2*(f(x).diff(x, 2)) -8*x**2*(f(x).diff(x)) + (4*x**2 +
         1)*f(x)
-    assert dsolve(eq, hint='2nd_power_series_regular') == Eq(f(x), C1*sqrt(x)*(
-        x**4/24 + x**3/6 + x**2/2 + x + 1) + O(x**6))
+    sol = Eq(f(x), C1*sqrt(x)*(x**4/24 + x**3/6 + x**2/2 + x + 1) + O(x**6))
+    assert dsolve(eq, hint='2nd_power_series_regular') == sol
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = x**2*(f(x).diff(x, 2)) - x**2*(f(x).diff(x)) + (
         x**2 - 2)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*(-x**6/720 - 3*x**5/80 - x**4/8 +
-        x**2/2 + x/2 + 1)/x + C2*x**2*(-x**3/60 + x**2/20 + x/2 + 1)
-        + O(x**6))
+    sol = Eq(f(x), C1*(-x**6/720 - 3*x**5/80 - x**4/8 + x**2/2 + x/2 + 1)/x +
+            C2*x**2*(-x**3/60 + x**2/20 + x/2 + 1) + O(x**6))
+    assert dsolve(eq) == sol
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - Rational(1, 4))*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*besselj(S.Half, x) + C2*bessely(S.Half, x))
+    sol = Eq(f(x), C1*(x**4/24 - x**2/2 + 1)/sqrt(x) +
+        C2*sqrt(x)*(x**4/120 - x**2/6 + 1) + O(x**6))
+    assert dsolve(eq, hint='2nd_power_series_regular') == sol
+    assert checkodesol(eq, sol) == (True, 0)
 
 def test_2nd_linear_bessel_equation():
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 4)*f(x)
@@ -3704,3 +3727,37 @@ def test_issue_17322():
     sol = [Eq(f(x), C1), Eq(f(x), C1*exp(-x))]
     assert set(sol) == set(dsolve(eq, hint='lie_group'))
     assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+def test_2nd_2F1_hypergeometric():
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (S(3)/2 -2*x)*f(x).diff(x) + 2*f(x)
+    sol = Eq(f(x), C1*x**(S(5)/2)*hyper((S(3)/2, S(1)/2), (S(7)/2,), x) + C2*hyper((-1, -2), (-S(3)/2,), x))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (S(7)/2*x)*f(x).diff(x) + f(x)
+    sol = Eq(f(x), (C1*(1 - x)**(S(5)/2)*hyper((S(1)/2, 2), (S(7)/2,), 1 - x) +
+          C2*hyper((-S(1)/2, -2), (-S(3)/2,), 1 - x))/(x - 1)**(S(5)/2))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (S(3)+ S(7)/2*x)*f(x).diff(x) + f(x)
+    sol = Eq(f(x), (C1*(1 - x)**(S(11)/2)*hyper((S(1)/2, 2), (S(13)/2,), 1 - x) +
+          C2*hyper((-S(7)/2, -5), (-S(9)/2,), 1 - x))/(x - 1)**(S(11)/2))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (-1+ S(7)/2*x)*f(x).diff(x) + f(x)
+    sol = Eq(f(x), (C1 + C2*Integral(exp(Integral((1 - x/2)/(x*(x - 1)), x))/(1 -
+          x/2)**2, x))*exp(Integral(1/(x - 1), x)/4)*exp(-Integral(7/(x -
+          1), x)/4)*hyper((S(1)/2, -1), (1,), x))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric_Integral')
+    assert checkodesol(eq, sol) == (True, 0)
+
+
+    eq = -x**(S(5)/7)*(-416*x**(S(9)/7)/9 - 2385*x**(S(5)/7)/49 + S(298)*x/3)*f(x)/(196*(-x**(S(6)/7) +
+         x)**2*(x**(S(6)/7) + x)**2) + Derivative(f(x), (x, 2))
+    sol = Eq(f(x), x**(S(45)/98)*(C1*x**(S(4)/49)*hyper((S(1)/3, -S(1)/2), (S(9)/7,), x**(S(2)/7)) +
+          C2*hyper((S(1)/21, -S(11)/14), (S(5)/7,), x**(S(2)/7)))/(x**(S(2)/7) - 1)**(S(19)/84))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric')
+    # assert checkodesol(eq, sol) == (True, 0) #issue-https://github.com/sympy/sympy/issues/17702

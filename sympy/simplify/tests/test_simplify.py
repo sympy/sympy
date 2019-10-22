@@ -113,6 +113,10 @@ def test_simplify_expr():
         x**2 - y**2)*(y**2 - 1))
     assert simplify(expr) == 2*x/(a**2*(x**2 - y**2))
 
+    #issue 17631
+    assert simplify('((-1/2)*Boole(True)*Boole(False)-1)*Boole(True)') == \
+            Mul(sympify('(2 + Boole(True)*Boole(False))'), sympify('-Boole(True)/2'))
+
     A, B = symbols('A,B', commutative=False)
 
     assert simplify(A*B - B*A) == A*B - B*A
