@@ -32,7 +32,7 @@ class Point(object):
     10*N.x + 20*N.y + 30*N.z
     >>> O.acc(N)
     7*N.x + 14*N.y
-    
+
 
     Example to create multiple Points:
 
