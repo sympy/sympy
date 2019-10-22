@@ -291,28 +291,28 @@ def _refine_reim(expr, assumptions):
     return None
 
 
-def refine_sgn(expr, assumptions):
+def refine_sign(expr, assumptions):
     """
     Handler for sign
 
     Examples
     ========
 
-    >>> from sympy.assumptions.refine import refine_sgn
+    >>> from sympy.assumptions.refine import refine_sign
     >>> from sympy import Symbol, Q, sign, im
     >>> x = Symbol('x', real = True)
     >>> expr = sign(x)
-    >>> refine_sgn(expr, Q.positive(x) & Q.nonzero(x))
+    >>> refine_sign(expr, Q.positive(x) & Q.nonzero(x))
     1
-    >>> refine_sgn(expr, Q.negative(x) & Q.nonzero(x))
+    >>> refine_sign(expr, Q.negative(x) & Q.nonzero(x))
     -1
-    >>> refine_sgn(expr, Q.zero(x))
+    >>> refine_sign(expr, Q.zero(x))
     0
     >>> y = Symbol('y', imaginary = True)
     >>> expr = sign(y)
-    >>> refine_sgn(expr, Q.positive(im(y)))
+    >>> refine_sign(expr, Q.positive(im(y)))
     I
-    >>> refine_sgn(expr, Q.negative(im(y)))
+    >>> refine_sign(expr, Q.negative(im(y)))
     -I
     """
     arg = expr.args[0]
@@ -344,5 +344,5 @@ handlers_dict = {
     'StrictLessThan': refine_Relational,
     're': refine_re,
     'im': refine_im,
-    'sign': refine_sgn
+    'sign': refine_sign
 }
