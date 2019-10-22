@@ -80,6 +80,7 @@ class Point(object):
 
         >>> from sympy.physics.vector import Point, ReferenceFrame
         >>> from sympy.physics.vector import Vector, dynamicsymbols
+        >>> from sympy import symbols
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -93,6 +94,13 @@ class Point(object):
         >>> O.set_vel(N, 0)
         >>> P.a1pt_theory(O, N, B)
         (-25*q + q'')*B.x + q2''*B.y - 10*q'*B.z
+
+        >>> a,b = symbols('a b', cls=Point)
+        >>> type(a)
+        <class 'sympy.physics.vector.point.Point'>
+        >>> x = Point('X')
+        >>> type(a) == type(x)
+        True
 
         """
 

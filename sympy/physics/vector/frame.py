@@ -35,11 +35,19 @@ class CoordinateSym(Symbol):
     ========
 
     >>> from sympy.physics.vector import ReferenceFrame, CoordinateSym
+    >>> from sympy import symbols
     >>> A = ReferenceFrame('A')
+    >>> B, C = symbols('B C', cls=ReferenceFrame, indices=(1, 2, 3))
     >>> A[1]
     A_y
+    >>> B[0]
+    B_x
     >>> type(A[0])
     <class 'sympy.physics.vector.frame.CoordinateSym'>
+    >>> type(A[0]) == type(B[0])
+    True
+    >>> B.indices
+    (1, 2, 3)
     >>> a_y = CoordinateSym('a_y', A, 1)
     >>> a_y == A[1]
     True
