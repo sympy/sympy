@@ -35,7 +35,7 @@ class Point(object):
     >>> O.acc(N)
     v1*N.x + v2*N.y
     
-    symbols() can be used to create multiple Points in one step, for example:
+    symbols() can be used to create multiple Points in a single step, for example:
 
     >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
     >>> from sympy import symbols
