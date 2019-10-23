@@ -30,7 +30,7 @@ class Point(object):
     >>> O.set_vel(N, u1 * N.x + u2 * N.y + u3 * N.z)
     >>> O.acc(N)
     u1'*N.x + u2'*N.y + u3'*N.z
-    
+
     symbols() can be used to create multiple Points in a single step, for example:
 
     >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
