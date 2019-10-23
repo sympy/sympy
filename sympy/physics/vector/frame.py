@@ -89,8 +89,6 @@ class ReferenceFrame(object):
     the parent frame's basis vectors.  It can also have an angular velocity
     vector, defined in another frame.
 
-
-
     """
     _count = 0
 
@@ -129,10 +127,9 @@ class ReferenceFrame(object):
         >>> vlatex(P.x)
         'A1'
 
+        symbols() can be used to create multiple Reference Frames in one step, for example:
 
-        Example to create multiple ReferenceFrames:
-
-        >>> from sympy.physics.vector import ReferenceFrame, CoordinateSym
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> from sympy import symbols
         >>> A, B, C = symbols('A B C', cls=ReferenceFrame)
         >>> D, E = symbols('D E', cls=ReferenceFrame, indices=('1', '2', '3'))
