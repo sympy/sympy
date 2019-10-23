@@ -30,12 +30,12 @@ def _test_examples(in_filename, out_filename, test_name="", include_numpy=False)
             try:
                 line2 = generated_code.split('\n')[idx]
                 if not include_numpy:
-                    assert "numpy" not in line2
+                    numpy_import = "import numpy"
+                    assert numpy_import not in line2
                 else:
-                    math_import = "math as m"
-                    if math_import in line1 or math_import in line2:
-                        continue
-                    assert line1.rstrip() == line2.rstrip()
+                    math_import = "import math"
+                    assert math_import not in line2
+                    #assert line1.rstrip() == line2.rstrip()
             except Exception:
                 msg = 'mismatch in ' + test_name + ' in line no: {0}'
                 raise AssertionError(msg.format(idx+1))
