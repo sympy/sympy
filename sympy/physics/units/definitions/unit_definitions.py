@@ -187,49 +187,39 @@ year = years = tropical_year
 #### CONSTANTS ####
 
 # Newton constant
-# REF: NIST SP 959 (June 2019)
 G = gravitational_constant = Quantity("gravitational_constant", abbrev="G")
 
 # speed of light
 c = speed_of_light = Quantity("speed_of_light", abbrev="c")
 
 # elementary charge
-# REF: NIST SP 959 (June 2019)
 elementary_charge = Quantity("elementary_charge", abbrev="e")
 
 # Planck constant
-# REF: NIST SP 959 (June 2019)
 planck = Quantity("planck", abbrev="h")
 
 # Reduced Planck constant
-# REF: NIST SP 959 (June 2019)
 hbar = Quantity("hbar", abbrev="hbar")
 
 # Electronvolt
-# REF: NIST SP 959 (June 2019)
 eV = electronvolt = electronvolts = Quantity("electronvolt", abbrev="eV")
 
 # Avogadro number
-# REF: NIST SP 959 (June 2019)
 avogadro_number = Quantity("avogadro_number")
 
 # Avogadro constant
 avogadro = avogadro_constant = Quantity("avogadro_constant")
 
 # Boltzmann constant
-# REF: NIST SP 959 (June 2019)
 boltzmann = boltzmann_constant = Quantity("boltzmann_constant")
 
 # Stefan-Boltzmann constant
-# REF: NIST SP 959 (June 2019)
 stefan = stefan_boltzmann_constant = Quantity("stefan_boltzmann_constant")
 
 # Atomic mass
-# REF: NIST SP 959 (June 2019)
 amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
 
 # Molar gas constant
-# REF: NIST SP 959 (June 2019)
 R = molar_gas_constant = Quantity("molar_gas_constant", abbrev="R")
 
 # Faraday constant

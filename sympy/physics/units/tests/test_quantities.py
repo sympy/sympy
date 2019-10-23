@@ -1,7 +1,7 @@
 from sympy import (Abs, Add, Basic, Function, Number, Rational, S, Symbol,
                    diff, exp, integrate, log, sin, sqrt, symbols, Matrix)
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
-    volume)
+                                 volume, kilometer)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     day, foot, grams, hour, inch, kg, km, m, meter, mile, millimeter,
     minute, quart, s, second, speed_of_light, bit,
@@ -32,8 +32,7 @@ def test_eq():
 
 def test_convert_to():
     q = Quantity("q1")
-    q.set_dimension(length)
-    q.set_scale_factor(S(5000))
+    q.set_global_relative_scale_factor(S(5000), meter)
 
     assert q.convert_to(m) == 5000*m
 
@@ -49,17 +48,13 @@ def test_convert_to():
 
 def test_Quantity_definition():
     q = Quantity("s10", abbrev="sabbr")
-    q.set_dimension(time)
-    q.set_scale_factor(10)
-    u  =  Quantity("u", abbrev="dam")
-    u.set_dimension(length)
-    u.set_scale_factor(10)
-    km =  Quantity("km")
-    km.set_dimension(length)
-    km.set_scale_factor(kilo)
-    v =  Quantity("u")
-    v.set_dimension(length)
-    v.set_scale_factor(5*kilo)
+    q.set_global_relative_scale_factor(10, second)
+    u = Quantity("u", abbrev="dam")
+    u.set_global_relative_scale_factor(10, meter)
+    km = Quantity("km")
+    km.set_global_relative_scale_factor(kilo, meter)
+    v = Quantity("u")
+    v.set_global_relative_scale_factor(5*kilo, meter)
 
     assert q.scale_factor == 10
     assert q.dimension == time
@@ -84,15 +79,13 @@ def test_Quantity_definition():
 
 def test_abbrev():
     u = Quantity("u")
-    u.set_dimension(length)
-    u.set_scale_factor(S.One)
+    u.set_global_relative_scale_factor(S.One, meter)
 
     assert u.name == Symbol("u")
     assert u.abbrev == Symbol("u")
 
     u = Quantity("u", abbrev="om")
-    u.set_dimension(length)
-    u.set_scale_factor(S(2))
+    u.set_global_relative_scale_factor(S(2), meter)
 
     assert u.name == Symbol("u")
     assert u.abbrev == Symbol("om")
@@ -100,8 +93,7 @@ def test_abbrev():
     assert isinstance(u.scale_factor, Number)
 
     u = Quantity("u", abbrev="ikm")
-    u.set_dimension(length)
-    u.set_scale_factor(3*kilo)
+    u.set_global_relative_scale_factor(3*kilo, meter)
 
     assert u.abbrev == Symbol("ikm")
     assert u.scale_factor == 3000
@@ -128,13 +120,9 @@ def test_add_sub():
     v = Quantity("v")
     w = Quantity("w")
 
-    u.set_dimension(length)
-    v.set_dimension(length)
-    w.set_dimension(time)
-
-    u.set_scale_factor(S(10))
-    v.set_scale_factor(S(5))
-    w.set_scale_factor(S(2))
+    u.set_global_relative_scale_factor(S(10), meter)
+    v.set_global_relative_scale_factor(S(5), meter)
+    w.set_global_relative_scale_factor(S(2), second)
 
     assert isinstance(u + v, Add)
     assert (u + v.convert_to(u)) == (1 + S.Half)*u
@@ -151,15 +139,13 @@ def test_quantity_abs():
     v_w2 = Quantity('v_w2')
     v_w3 = Quantity('v_w3')
 
-    v_w1.set_dimension(length/time)
-    v_w2.set_dimension(length/time)
-    v_w3.set_dimension(length/time)
-
-    v_w1.set_scale_factor(meter/second)
-    v_w2.set_scale_factor(meter/second)
-    v_w3.set_scale_factor(meter/second)
+    v_w1.set_global_relative_scale_factor(1, meter/second)
+    v_w2.set_global_relative_scale_factor(1, meter/second)
+    v_w3.set_global_relative_scale_factor(1, meter/second)
 
     expr = v_w3 - Abs(v_w1 - v_w2)
+
+    assert SI.get_dimensional_expr(v_w1) == (length/time).name
 
     Dq = Dimension(SI.get_dimensional_expr(expr))
 
@@ -179,13 +165,9 @@ def test_check_unit_consistency():
     v = Quantity("v")
     w = Quantity("w")
 
-    u.set_dimension(length)
-    v.set_dimension(length)
-    w.set_dimension(time)
-
-    u.set_scale_factor(S(10))
-    v.set_scale_factor(S(5))
-    w.set_scale_factor(S(2))
+    u.set_global_relative_scale_factor(S(10), meter)
+    v.set_global_relative_scale_factor(S(5), meter)
+    w.set_global_relative_scale_factor(S(2), second)
 
     def check_unit_consistency(expr):
         SI._collect_factor_and_dimension(expr)
@@ -204,17 +186,11 @@ def test_mul_div():
     ut = Quantity("ut")
     v2 = Quantity("v")
 
-    u.set_dimension(length)
-    v.set_dimension(length)
-    t.set_dimension(time)
-    ut.set_dimension(length*time)
-    v2.set_dimension(length/time)
-
-    u.set_scale_factor(S(10))
-    v.set_scale_factor(S(5))
-    t.set_scale_factor(S(2))
-    ut.set_scale_factor(S(20))
-    v2.set_scale_factor(S(5))
+    u.set_global_relative_scale_factor(S(10), meter)
+    v.set_global_relative_scale_factor(S(5), meter)
+    t.set_global_relative_scale_factor(S(2), second)
+    ut.set_global_relative_scale_factor(S(20), meter*second)
+    v2.set_global_relative_scale_factor(S(5), meter/second)
 
     assert 1 / u == u**(-1)
     assert u / 1 == u
@@ -241,8 +217,7 @@ def test_mul_div():
 
     # Mul only supports structural equality:
     lp1 = Quantity("lp1")
-    lp1.set_dimension(length**-1)
-    lp1.set_scale_factor(S(2))
+    lp1.set_global_relative_scale_factor(S(2), 1/meter)
     assert u * lp1 != 20
 
     assert u**0 == 1
@@ -251,10 +226,8 @@ def test_mul_div():
     # TODO: Pow only support structural equality:
     u2 = Quantity("u2")
     u3 = Quantity("u3")
-    u2.set_dimension(length**2)
-    u3.set_dimension(length**-1)
-    u2.set_scale_factor(S(100))
-    u3.set_scale_factor(Rational(1, 10))
+    u2.set_global_relative_scale_factor(S(100), meter**2)
+    u3.set_global_relative_scale_factor(Rational(1, 10), 1/meter)
 
     assert u ** 2 != u2
     assert u ** -1 != u3
@@ -363,10 +336,8 @@ def test_factor_and_dimension():
     v_w1 = Quantity('v_w1')
     v_w2 = Quantity('v_w2')
 
-    v_w1.set_dimension(length/time)
-    v_w2.set_dimension(length/time)
-    v_w1.set_scale_factor(Rational(3, 2)*meter/second)
-    v_w2.set_scale_factor(2*meter/second)
+    v_w1.set_global_relative_scale_factor(Rational(3, 2), meter/second)
+    v_w2.set_global_relative_scale_factor(2, meter/second)
 
     expr = Abs(v_w1/2 - v_w2)
     assert (Rational(5, 4), length/time) == \
@@ -388,8 +359,7 @@ def test_factor_and_dimension():
 def test_factor_and_dimension_with_Abs():
     with warns_deprecated_sympy():
         v_w1 = Quantity('v_w1', length/time, Rational(3, 2)*meter/second)
-    v_w1.set_dimension(length/time)
-    v_w1.set_scale_factor(Rational(3, 2)*meter/second)
+    v_w1.set_global_relative_scale_factor(Rational(3, 2), meter/second)
     expr = v_w1 - Abs(v_w1)
     assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
 
@@ -398,12 +368,9 @@ def test_dimensional_expr_of_derivative():
     l = Quantity('l')
     t = Quantity('t')
     t1 = Quantity('t1')
-    l.set_dimension(length)
-    t.set_dimension(time)
-    t1.set_dimension(time)
-    l.set_scale_factor(36*km)
-    t.set_scale_factor(hour)
-    t1.set_scale_factor(second)
+    l.set_global_relative_scale_factor(36, km)
+    t.set_global_relative_scale_factor(1, hour)
+    t1.set_global_relative_scale_factor(1, second)
     x = Symbol('x')
     y = Symbol('y')
     f = Function('f')
@@ -420,10 +387,8 @@ def test_dimensional_expr_of_derivative():
 def test_get_dimensional_expr_with_function():
     v_w1 = Quantity('v_w1')
     v_w2 = Quantity('v_w2')
-    v_w1.set_dimension(length/time)
-    v_w2.set_dimension(length/time)
-    v_w1.set_scale_factor(meter/second)
-    v_w2.set_scale_factor(meter/second)
+    v_w1.set_global_relative_scale_factor(1, meter/second)
+    v_w2.set_global_relative_scale_factor(1, meter/second)
 
     assert SI.get_dimensional_expr(sin(v_w1)) == \
         sin(SI.get_dimensional_expr(v_w1))
@@ -509,3 +474,12 @@ def test_issue_14547():
     assert e.is_Add and set(e.args) == {foot, x}
     e = foot + 1
     assert e.is_Add and set(e.args) == {foot, 1}
+
+
+def test_deprecated_quantity_methods():
+    step = Quantity("step")
+    with warns_deprecated_sympy():
+        step.set_dimension(length)
+        step.set_scale_factor(2*meter)
+        assert convert_to(step, centimeter) == 200*centimeter
+        assert convert_to(1000*step/second, kilometer/second) == 2*kilometer/second

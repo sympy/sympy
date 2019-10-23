@@ -76,11 +76,23 @@ class Quantity(AtomicExpr):
         return obj
 
     def set_dimension(self, dimension, unit_system="SI"):
+        SymPyDeprecationWarning(
+            deprecated_since_version="1.5",
+            issue=17765,
+            feature="Moving method to UnitSystem class",
+            useinstead="unit_system.set_quantity_dimension or {}.set_global_relative_scale_factor".format(self),
+        ).warn()
         from sympy.physics.units import UnitSystem
         unit_system = UnitSystem.get_unit_system(unit_system)
         unit_system.set_quantity_dimension(self, dimension)
 
     def set_scale_factor(self, scale_factor, unit_system="SI"):
+        SymPyDeprecationWarning(
+            deprecated_since_version="1.5",
+            issue=17765,
+            feature="Moving method to UnitSystem class",
+            useinstead="unit_system.set_quantity_scale_factor or {}.set_global_relative_scale_factor".format(self),
+        ).warn()
         from sympy.physics.units import UnitSystem
         unit_system = UnitSystem.get_unit_system(unit_system)
         unit_system.set_quantity_scale_factor(self, scale_factor)

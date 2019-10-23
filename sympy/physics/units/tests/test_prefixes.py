@@ -1,5 +1,5 @@
 from sympy import symbols, log, Mul, Symbol, S, Rational
-from sympy.physics.units import Quantity, Dimension, length
+from sympy.physics.units import Quantity, Dimension, length, meter
 from sympy.physics.units.prefixes import PREFIXES, Prefix, prefix_unit, kilo, \
     kibi
 from sympy.physics.units.systems import SI
@@ -51,8 +51,7 @@ def test_prefix_operations():
 
 def test_prefix_unit():
     m = Quantity("fake_meter", abbrev="m")
-    m.set_dimension(length)
-    m.set_scale_factor(1)
+    m.set_global_relative_scale_factor(1, meter)
 
     pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
 
@@ -60,19 +59,17 @@ def test_prefix_unit():
     q2 = Quantity("centifake_meter", abbrev="cm")
     q3 = Quantity("decifake_meter", abbrev="dm")
 
-    q1.set_dimension(length)
-    q1.set_dimension(length)
-    q1.set_dimension(length)
+    SI.set_quantity_dimension(q1, length)
 
-    q1.set_scale_factor(PREFIXES["m"])
-    q1.set_scale_factor(PREFIXES["c"])
-    q1.set_scale_factor(PREFIXES["d"])
+    SI.set_quantity_scale_factor(q1, PREFIXES["m"])
+    SI.set_quantity_scale_factor(q1, PREFIXES["c"])
+    SI.set_quantity_scale_factor(q1, PREFIXES["d"])
 
     res = [q1, q2, q3]
 
     prefs = prefix_unit(m, pref)
     assert set(prefs) == set(res)
-    assert set(map(lambda x: x.abbrev, prefs)) == set(symbols("mm,cm,dm"))
+    assert set(map(lambda v: v.abbrev, prefs)) == set(symbols("mm,cm,dm"))
 
 
 def test_bases():

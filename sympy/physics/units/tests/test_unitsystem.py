@@ -1,4 +1,4 @@
-from sympy.physics.units import DimensionSystem
+from sympy.physics.units import DimensionSystem, joule, second, ampere
 from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import Rational, S
@@ -35,12 +35,10 @@ def test_str_repr():
 
 def test_print_unit_base():
     A = Quantity("A")
-    A.set_dimension(current)
-    A.set_scale_factor(S.One)
+    A.set_global_relative_scale_factor(S.One, ampere)
 
     Js = Quantity("Js")
-    Js.set_dimension(action)
-    Js.set_scale_factor(S.One)
+    Js.set_global_relative_scale_factor(S.One, joule*second)
 
     mksa = UnitSystem((m, kg, s, A), (Js,))
     with warns_deprecated_sympy():
@@ -50,8 +48,7 @@ def test_print_unit_base():
 def test_extend():
     ms = UnitSystem((m, s), (c,))
     Js = Quantity("Js")
-    Js.set_dimension(action)
-    Js.set_scale_factor(1)
+    Js.set_global_relative_scale_factor(1, joule*second)
     mks = ms.extend((kg,), (Js,))
 
     res = UnitSystem((m, s, kg), (c, Js))

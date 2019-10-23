@@ -108,12 +108,13 @@ class UnitSystem(object):
     def get_quantity_dimension(self, unit):
         from sympy.physics.units import Quantity
         if unit in self._quantity_dimension_map:
-            assert unit not in self._quantity_dimensional_equivalence_map_global
             return self._quantity_dimension_map[unit]
         if unit in self._quantity_dimensional_equivalence_map_global:
-            return self.get_quantity_dimension(
-                self._quantity_dimensional_equivalence_map_global[unit]
-            )
+            dep_unit = self._quantity_dimensional_equivalence_map_global[unit]
+            if isinstance(dep_unit, Quantity):
+                return self.get_quantity_dimension(dep_unit)
+            else:
+                return Dimension(self.get_dimensional_expr(dep_unit))
         if isinstance(unit, Quantity):
             return Dimension(unit.name)
         else:
