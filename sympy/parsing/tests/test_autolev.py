@@ -32,6 +32,9 @@ def _test_examples(in_filename, out_filename, test_name="", include_numpy=False)
                 if not include_numpy:
                     assert "numpy" not in line2
                 else:
+                    math_import = "math as m"
+                    if math_import in line1 or math_import in line2:
+                        continue
                     assert line1.rstrip() == line2.rstrip()
             except Exception:
                 msg = 'mismatch in ' + test_name + ' in line no: {0}'
