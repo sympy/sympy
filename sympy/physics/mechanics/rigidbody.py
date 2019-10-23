@@ -7,7 +7,6 @@ from sympy.physics.vector import Point, ReferenceFrame, Dyadic
 
 __all__ = ['RigidBody']
 
-__all__ = ['RigidBody']
 
 
 class RigidBody(object):

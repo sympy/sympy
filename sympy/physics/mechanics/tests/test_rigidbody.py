@@ -115,7 +115,6 @@ def test_pendulum_angular_momentum():
 
 
 def test_parallel_axis():
-
     N = ReferenceFrame('N')
     m, Ix, Iy, Iz, a, b = symbols('m, I_x, I_y, I_z, a, b')
     Io = inertia(N, Ix, Iy, Iz)
