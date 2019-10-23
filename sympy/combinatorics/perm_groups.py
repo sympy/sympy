@@ -3004,7 +3004,7 @@ class PermutationGroup(Basic):
 
     @property
     def is_cyclic(self):
-        """
+        r"""
         Return ``True`` if the group is Cyclic.
 
         Examples
@@ -3018,6 +3018,27 @@ class PermutationGroup(Basic):
         >>> G.is_cyclic
         False
 
+        Notes
+        =====
+
+        If the order of a group $n$ can be factored into the distinct
+        primes $p_1, p_2, ... , p_s$ and if
+
+        .. math::
+            \forall i, j \in \{1, 2, \ldots, s \}:
+            p_i \not \equiv 1 \pmod {p_j}
+
+        holds true, there is only one group of the order $n$ which
+        is a cyclic group. [1]_
+
+        This is a generalization of the lemma that the group of order
+        $15, 35, ...$ are cyclic.
+
+        References
+        ==========
+
+        .. [1] 1978: John S. Rose: A Course on Group Theory,
+            Introduction to Finite Group Theory: 1.4
         """
         if self._is_cyclic is not None:
             return self._is_cyclic
