@@ -2991,6 +2991,17 @@ class PermutationGroup(Basic):
 
         return self._eval_is_alt_sym_naive(only_alt=True)
 
+    def _eval_is_cyclic_distinct_primes(self, primes):
+        """Subroutine to test if there is only one cyclic group for the
+        order."""
+        primes = sorted(primes)
+        l = len(primes)
+        for i in range(l):
+            for j in range(i+1, l):
+                if primes[j] % primes[i] == 1:
+                    return None
+        return True
+
     @property
     def is_cyclic(self):
         """
@@ -3019,7 +3030,17 @@ class PermutationGroup(Basic):
         if self._is_abelian is False:
             self._is_cyclic = False
             return False
-        for p in primefactors(self.order()):
+
+        order = self.order()
+        factors = factorint(order)
+        if all(v == 1 for v in factors.values()):
+            primes = list(factors.keys())
+            if self._eval_is_cyclic_distinct_primes(primes) is True:
+                self._is_cyclic = True
+                self._is_abelian = True
+                return True
+
+        for p in factors:
             pgens = []
             for g in self.generators:
                 pgens.append(g**p)
