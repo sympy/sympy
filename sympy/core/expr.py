@@ -2131,8 +2131,8 @@ class Expr(Basic, EvalfMixin):
         (1, 6.0*x*(y + 1) + 3*z*(y + 1))
         >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive()
         (121, x**2*(y + 1)**2)
-        >>> ((5*(x*(1 + y)) + 2.0*x*(3 + 3*y))**2).as_content_primitive()
-        (1, 121.0*x**2*(y + 1)**2)
+        >>> ((x*(1 + y) + 0.4*x*(3 + 3*y))**2).as_content_primitive()
+        (1, 4.84*x**2*(y + 1)**2)
 
         Radical content can also be factored out of the primitive:
 

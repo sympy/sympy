@@ -385,21 +385,19 @@ class Add(Expr, AssocOp):
                         r - i*S.ImaginaryUnit,
                         1/(r**2 + i**2))
         elif e.is_Number and abs(e) != 1:
-            # handle the Float case: (2.0 + 4*x)**e -> 2.**e*(1 + 2.0*x)**e
+            # handle the Float case: (2.0 + 4*x)**e -> 4**e*(0.5 + x)**e
             c, m = zip(*[i.as_coeff_Mul() for i in self.args])
-            big = 0
-            float = False
-            s = dict()
-            for i in c:
-                float = float or i.is_Float
-                if abs(i) >= big:
-                    big = 1.0*abs(i)
-                    s[i] = -1 if i < 0 else 1
-            if float and big and big != 1:
-                addpow = Add(*[(s[c[i]] if abs(c[i]) == big else c[i]/big)*m[i]
-                             for i in range(len(c))])**e
-                return big**e*addpow
-
+            if any(i.is_Float for i in c):  # XXX should this always be done?
+                big = -1
+                for i in c:
+                    if abs(i) >= big:
+                        big = abs(i)
+                if big > 0 and big != 1:
+                    from sympy.functions.elementary.complexes import sign
+                    bigs = (big, -big)
+                    c = [sign(i) if i in bigs else i/big for i in c]
+                    addpow = Add(*[c*m for c, m in zip(c, m)])**e
+                    return big**e*addpow
     @cacheit
     def _eval_derivative(self, s):
         return self.func(*[a.diff(s) for a in self.args])
