@@ -3010,10 +3010,12 @@ class PermutationGroup(Basic):
         """
         if self._is_cyclic is not None:
             return self._is_cyclic
-        self._is_cyclic = True
 
         if len(self.generators) == 1:
+            self._is_cyclic = True
+            self._is_abelian = True
             return True
+
         if not self._is_abelian:
             self._is_cyclic = False
             return False
@@ -3026,6 +3028,8 @@ class PermutationGroup(Basic):
                 return False
             else:
                 continue
+        self._is_cyclic = True
+        self._is_abelian = True
         return True
 
     def pointwise_stabilizer(self, points, incremental=True):
