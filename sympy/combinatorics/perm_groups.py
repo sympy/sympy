@@ -3016,7 +3016,7 @@ class PermutationGroup(Basic):
             self._is_abelian = True
             return True
 
-        if not self._is_abelian:
+        if self._is_abelian == False:
             self._is_cyclic = False
             return False
         for p in primefactors(self.order()):
