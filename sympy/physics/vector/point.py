@@ -27,13 +27,9 @@ class Point(object):
     >>> O = Point('O')
     >>> P = Point('P')
     >>> u1, u2, u3 = dynamicsymbols('u1 u2 u3')
-    >>> v1, v2 = dynamicsymbols('v1 v2')
     >>> O.set_vel(N, u1 * N.x + u2 * N.y + u3 * N.z)
-    >>> O.set_acc(N, v1 * N.x + v2 * N.y)
-    >>> O.vel(N)
-    u1*N.x + u2*N.y + u3*N.z
     >>> O.acc(N)
-    v1*N.x + v2*N.y
+    u1'*N.x + u2'*N.y + u3'*N.z
     
     symbols() can be used to create multiple Points in a single step, for example:
 
@@ -44,10 +40,10 @@ class Point(object):
     >>> A, B = symbols('A B', cls=Point)
     >>> type(A)
     <class 'sympy.physics.vector.point.Point'>
-    >>> A.set_acc(N, u1 * N.x + u2 * N.y)
-    >>> B.set_acc(N, u2 * N.x + u1 * N.y)
+    >>> A.set_vel(N, u1 * N.x + u2 * N.y)
+    >>> B.set_vel(N, u2 * N.x + u1 * N.y)
     >>> A.acc(N) - B.acc(N)
-    (u1 - u2)*N.x + (-u1 + u2)*N.y
+    (u1' - u2')*N.x + (-u1' + u2')*N.y
 
     """
 
