@@ -3022,6 +3022,8 @@ class PermutationGroup(Basic):
         Notes
         =====
 
+        Lemma 1:
+
         If the order of a group $n$ can be factored into the distinct
         primes $p_1, p_2, ... , p_s$ and if
 
@@ -3034,6 +3036,11 @@ class PermutationGroup(Basic):
 
         This is a generalization of the lemma that the group of order
         $15, 35, ...$ are cyclic.
+
+        Lemma 2:
+
+        If the group is abelian and the order of the group is
+        square-free, the group is cyclic.
 
         References
         ==========
@@ -3056,6 +3063,10 @@ class PermutationGroup(Basic):
         order = self.order()
         factors = factorint(order)
         if all(v == 1 for v in factors.values()):
+            if self._is_abelian:
+                self._is_cyclic = True
+                return True
+
             primes = list(factors.keys())
             if PermutationGroup._distinct_primes_lemma(primes) is True:
                 self._is_cyclic = True
