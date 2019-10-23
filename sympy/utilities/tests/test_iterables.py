@@ -696,9 +696,9 @@ def test_kbins():
     assert len(list(kbins('1123', 2, ordered=None))) == 3
 
     def test():
-        for ordered in [None, 0, 1, 10, 11]:
-            print('ordered =', ordered)
-            for p in kbins([0, 0, 1], 2, ordered=ordered):
+        for orderedval in [None, 0, 1, 10, 11]:
+            print('ordered =', orderedval)
+            for p in kbins([0, 0, 1], 2, ordered=orderedval):
                 print('   ', p)
     assert capture(lambda : test()) == dedent('''\
         ordered = None
@@ -725,9 +725,9 @@ def test_kbins():
             [[1, 0], [0]]\n''')
 
     def test():
-        for ordered in [None, 0, 1, 10, 11]:
-            print('ordered =', ordered)
-            for p in kbins(list(range(3)), 2, ordered=ordered):
+        for orderedval in [None, 0, 1, 10, 11]:
+            print('ordered =', orderedval)
+            for p in kbins(list(range(3)), 2, ordered=orderedval):
                 print('   ', p)
     assert capture(lambda : test()) == dedent('''\
         ordered = None
