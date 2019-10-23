@@ -14,20 +14,19 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     im, DiracDelta, chebyshevt, legendre_poly, polylog, series, O,
     atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc, sec,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, ZZ,
-    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt, Min,
-    ask, refine, AlgebraicNumber, continued_fraction_iterator as cf_i,
-    continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
-    continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
-    powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
-    residue, Derivative, logcombine, Symbol, Intersection, Union,
-    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max, MatMul, conjugate)
+    Poly, expand_func, E, Q, And, Lt, Min, ask, refine, AlgebraicNumber,
+    continued_fraction_iterator as cf_i, continued_fraction_periodic as cf_p,
+    continued_fraction_convergents as cf_c, continued_fraction_reduce as cf_r,
+    FiniteSet, elliptic_e, elliptic_f, powsimp, hessian, wronskian, fibonacci,
+    sign, Lambda, Piecewise, Subs, residue, Derivative, logcombine, Symbol,
+    Intersection, Union, EmptySet, Interval, idiff, ImageSet, acos, Max,
+    MatMul, conjugate)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
-from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow, SKIP, skip, ON_TRAVIS
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
@@ -36,8 +35,8 @@ from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
 from sympy.physics.quantum import Commutator
 from sympy.assumptions import assuming
-from sympy.polys.rings import vring, PolyRing
-from sympy.polys.fields import vfield, FracField
+from sympy.polys.rings import PolyRing
+from sympy.polys.fields import FracField
 from sympy.polys.solvers import solve_lin_sys
 from sympy.concrete import Sum
 from sympy.concrete.products import Product
@@ -900,7 +899,7 @@ def test_M8():
 
 @XFAIL
 def test_M9():
-    x = symbols('x')
+    # x = symbols('x')
     raise NotImplementedError("solveset(exp(2-x**2)-exp(-x),x) has complex solutions.")
 
 

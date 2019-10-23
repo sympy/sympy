@@ -197,16 +197,14 @@ def test_Singletons():
 
 
 #================== functions ===================
-from sympy.functions import (Piecewise, lowergamma, acosh,
-        chebyshevu, chebyshevt, ln, chebyshevt_root, binomial, legendre,
-        Heaviside, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
-        arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ynm,
-        cos, cot, acos, acot, gamma, bell, hermite, harmonic,
-        LambertW, zeta, log, factorial, asinh, acoth, Znm,
-        cosh, dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
-        tribonacci, conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
-        RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
-        polygamma, exp)
+from sympy.functions import (Piecewise, lowergamma, acosh, chebyshevu,
+        chebyshevt, ln, chebyshevt_root, legendre, Heaviside, bernoulli, coth,
+        tanh, assoc_legendre, sign, arg, asin, DiracDelta, re, rf, Abs,
+        uppergamma, binomial, sinh, cos, cot, acos, acot, gamma, bell,
+        hermite, harmonic, LambertW, zeta, log, factorial, asinh, acoth, cosh,
+        dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
+        tribonacci, conjugate, tan, chebyshevu_root, floor, atanh, sqrt, sin,
+        atan, ff, lucas, atan2, polygamma, exp)
 
 
 def test_functions():
@@ -328,20 +326,23 @@ def test_plotting():
 
 @XFAIL
 def test_plotting2():
-    from sympy.plotting.color_scheme import ColorGradient, ColorScheme
-    from sympy.plotting.managed_window import ManagedWindow
-    from sympy.plotting.plot import Plot, ScreenShot
-    from sympy.plotting.plot_axes import PlotAxes, PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
-    from sympy.plotting.plot_camera import PlotCamera
-    from sympy.plotting.plot_controller import PlotController
-    from sympy.plotting.plot_curve import PlotCurve
-    from sympy.plotting.plot_interval import PlotInterval
-    from sympy.plotting.plot_mode import PlotMode
-    from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical, \
-        ParametricCurve2D, ParametricCurve3D, ParametricSurface, Polar, Spherical
-    from sympy.plotting.plot_object import PlotObject
-    from sympy.plotting.plot_surface import PlotSurface
-    from sympy.plotting.plot_window import PlotWindow
+    #from sympy.plotting.color_scheme import ColorGradient
+    from sympy.plotting.color_scheme import ColorScheme
+    #from sympy.plotting.managed_window import ManagedWindow
+    from sympy.plotting.plot import Plot
+    #from sympy.plotting.plot import ScreenShot
+    from sympy.plotting.plot_axes import PlotAxes
+    #from sympy.plotting.plot_axes import PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
+    #from sympy.plotting.plot_camera import PlotCamera
+    #from sympy.plotting.plot_controller import PlotController
+    #from sympy.plotting.plot_curve import PlotCurve
+    #from sympy.plotting.plot_interval import PlotInterval
+    #from sympy.plotting.plot_mode import PlotMode
+    #from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical, \
+    #    ParametricCurve2D, ParametricCurve3D, ParametricSurface, Polar, Spherical
+    #from sympy.plotting.plot_object import PlotObject
+    #from sympy.plotting.plot_surface import PlotSurface
+    # from sympy.plotting.plot_window import PlotWindow
     check(ColorScheme("rainbow"))
     check(Plot(1, visible=False))
     check(PlotAxes())
@@ -350,7 +351,8 @@ def test_plotting2():
 from sympy import Poly, ZZ, QQ, lex
 
 def test_pickling_polys_polytools():
-    from sympy.polys.polytools import Poly, PurePoly, GroebnerBasis
+    from sympy.polys.polytools import PurePoly
+    # from sympy.polys.polytools import GroebnerBasis
     x = Symbol('x')
 
     for c in (Poly, Poly(x, x)):
@@ -389,12 +391,13 @@ def test_pickling_polys_rings():
         check(c, exclude=[0, 1], check_attr=False) # TODO: Py3k
 
 def test_pickling_polys_fields():
+    pass
     # NOTE: can't use protocols < 2 because we have to execute __new__ to
     # make sure caching of fields works properly.
 
-    from sympy.polys.fields import FracField
+    # from sympy.polys.fields import FracField
 
-    field = FracField("x,y,z", ZZ, lex)
+    # field = FracField("x,y,z", ZZ, lex)
 
     # TODO: AssertionError: assert id(obj) not in self.memo
     # for c in (FracField, field):
@@ -406,7 +409,7 @@ def test_pickling_polys_fields():
 
 def test_pickling_polys_elements():
     from sympy.polys.domains.pythonrational import PythonRational
-    from sympy.polys.domains.pythonfinitefield import PythonFiniteField
+    #from sympy.polys.domains.pythonfinitefield import PythonFiniteField
     #from sympy.polys.domains.mpelements import MPContext
 
     for c in (PythonRational, PythonRational(1, 7)):
