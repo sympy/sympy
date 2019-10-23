@@ -223,7 +223,7 @@ class ExprWithLimits(Expr):
 
         function, limits, free_symbols
         as_dummy : Rename dummy variables
-        transform : Perform mapping on the dummy variable
+        Integral.transform : Perform mapping on the dummy variable
         """
         return [l[0] for l in self.limits]
 

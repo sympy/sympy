@@ -362,9 +362,10 @@ reference frame when calling the function. In other words the user is not
 limited to determining just inertial kinetic energy.
 
 For potential energies, the user must first specify the potential energy of
-every entity of the system using the :obj:`~.potential_energy` property. The
-potential energy of any number of entities comprising the system can then be
-determined: ::
+every entity of the system using the
+:obj:`sympy.physics.mechanics.rigidbody.RigidBody.potential_energy` property.
+The potential energy of any number of entities comprising the system can then
+be determined: ::
 
   >>> Pa.potential_energy = m * g * h
   >>> A.potential_energy = M * g * H

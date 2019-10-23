@@ -4,6 +4,8 @@ Dense Matrices
 Matrix Class Reference
 ----------------------
 
+.. autoclass:: sympy.matrices.dense.DenseMatrix
+   :members:
 .. autoclass:: sympy.matrices.dense.MutableDenseMatrix
    :members:
 

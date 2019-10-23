@@ -869,7 +869,7 @@ def convert_equals_signs(result, local_dict, global_dict):
 
 
 #: Standard transformations for :func:`parse_expr`.
-#: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
+#: Inserts calls to :class:`~.Symbol`, :class:`~.Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
 standard_transformations = (lambda_notation, auto_symbol, repeated_decimals, auto_number,
     factorial_notation)

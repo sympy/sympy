@@ -13,6 +13,9 @@ class ReorderError(NotImplementedError):
             "%s could not be reordered: %s." % (expr, msg))
 
 class ExprWithIntLimits(ExprWithLimits):
+    """
+    Superclass for Product and Sum
+    """
     def change_index(self, var, trafo, newvar=None):
         r"""
         Change index of a Sum or Product.
