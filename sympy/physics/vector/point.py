@@ -22,30 +22,32 @@ class Point(object):
     Examples
     ========
 
-    >>> from sympy.physics.vector import Point, ReferenceFrame
+    >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> O = Point('O')
     >>> P = Point('P')
-    >>> O.set_vel(N, 10 * N.x + 20 * N.y + 30 * N.z)
-    >>> O.set_acc(N, 7 * N.x + 14 * N.y)
+    >>> u1, u2, u3 = dynamicsymbols('u1 u2 u3')
+    >>> v1, v2 = dynamicsymbols('v1 v2')
+    >>> O.set_vel(N, u1 * N.x + u2 * N.y + u3 * N.z)
+    >>> O.set_acc(N, v1 * N.x + v2 * N.y)
     >>> O.vel(N)
-    10*N.x + 20*N.y + 30*N.z
+    u1*N.x + u2*N.y + u3*N.z
     >>> O.acc(N)
-    7*N.x + 14*N.y
+    v1*N.x + v2*N.y
+    
+    symbols() can be used to create multiple Points in one step, for example:
 
-    Example to create multiple Points:
-
-    >>> from sympy.physics.vector import Point, ReferenceFrame
+    >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
     >>> from sympy import symbols
     >>> N = ReferenceFrame('N')
+    >>> u1, u2 = dynamicsymbols('u1 u2')
     >>> A, B = symbols('A B', cls=Point)
     >>> type(A)
     <class 'sympy.physics.vector.point.Point'>
-    >>> A.set_acc(N, 30 * N.x + 70 * N.y)
-    >>> B.set_acc(N, 10 * N.x + 50 * N.y)
+    >>> A.set_acc(N, u1 * N.x + u2 * N.y)
+    >>> B.set_acc(N, u2 * N.x + u1 * N.y)
     >>> A.acc(N) - B.acc(N)
-    20*N.x + 20*N.y
-
+    (u1 - u2)*N.x + (-u1 + u2)*N.y
 
     """
 
