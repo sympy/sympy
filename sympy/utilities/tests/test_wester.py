@@ -36,8 +36,8 @@ from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
 from sympy.physics.quantum import Commutator
 from sympy.assumptions import assuming
-from sympy.polys.rings import vring
-from sympy.polys.fields import vfield
+from sympy.polys.rings import vring, PolyRing
+from sympy.polys.fields import vfield, FracField
 from sympy.polys.solvers import solve_lin_sys
 from sympy.concrete import Sum
 from sympy.concrete.products import Product
@@ -1076,7 +1076,15 @@ def test_M37():
 
 
 def test_M38():
-    variables = vring("k1:50", vfield("a,b,c", ZZ).to_domain())
+    a, b, c = symbols('a, b, c')
+    domain = FracField([a, b, c], ZZ).to_domain()
+    ring = PolyRing('k1:50', domain)
+    (k1, k2, k3, k4, k5, k6, k7, k8, k9, k10,
+    k11, k12, k13, k14, k15, k16, k17, k18, k19, k20,
+    k21, k22, k23, k24, k25, k26, k27, k28, k29, k30,
+    k31, k32, k33, k34, k35, k36, k37, k38, k39, k40,
+    k41, k42, k43, k44, k45, k46, k47, k48, k49) = ring.gens
+
     system = [
         -b*k8/a + c*k8/a, -b*k11/a + c*k11/a, -b*k10/a + c*k10/a + k2, -k3 - b*k9/a + c*k9/a,
         -b*k14/a + c*k14/a, -b*k15/a + c*k15/a, -b*k18/a + c*k18/a - k2, -b*k17/a + c*k17/a,
@@ -1127,7 +1135,7 @@ def test_M38():
         k2:  0, k1:  0,
         k34: b/c*k42, k31: k39, k26: a/c*k42, k23: k39
     }
-    assert solve_lin_sys(system, variables) == solution
+    assert solve_lin_sys(system, ring) == solution
 
 
 def test_M39():
