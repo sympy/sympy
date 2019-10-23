@@ -3447,6 +3447,16 @@ def test_gauss_jordan_solve():
     b = Matrix([1, 1, 1])
     raises(ValueError, lambda: A.gauss_jordan_solve(b))
 
+    # Test for immutable matrix
+    A = ImmutableMatrix([[1, 0], [0, 1]])
+    B = ImmutableMatrix([1, 2])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == ImmutableMatrix([1, 2])
+    assert params == ImmutableMatrix(0, 1, [])
+    assert sol.__class__ == ImmutableDenseMatrix
+    assert params.__class__ == ImmutableDenseMatrix
+
+
 def test_solve():
     A = Matrix([[1,2], [2,4]])
     b = Matrix([[3], [4]])

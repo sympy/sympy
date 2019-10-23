@@ -313,7 +313,7 @@ def test_solve_univariate_inequality():
         x**2 < zero*I, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
-    raises(ValueError, lambda: isolve(x - I < 0, x))
+    raises(TypeError, lambda: isolve(x - I < 0, x))
 
     zero = x**2 + x - x*(x + 1)
     assert isolve(zero < 0, x, relational=False) is S.EmptySet

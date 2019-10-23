@@ -222,12 +222,12 @@ You may have noticed that we have been using ``**`` for exponentiation instead
 of the standard ``^``.  That's because SymPy follows Python's conventions.  In
 Python, ``^`` represents logical exclusive or.  SymPy follows this convention:
 
-     >>> True ^ False
-     True
-     >>> True ^ True
-     False
-     >>> x^y
-     Xor(x, y)
+    >>> True ^ False
+    True
+    >>> True ^ True
+    False
+    >>> Xor(x, y)
+    x ^ y
 
 Finally, a small technical discussion on how SymPy works is in order.  When
 you type something like ``x + 1``, the SymPy Symbol ``x`` is added to the

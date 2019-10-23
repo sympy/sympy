@@ -82,6 +82,9 @@ class StrPrinter(Printer):
     def _print_Or(self, expr):
         return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
 
+    def _print_Xor(self, expr):
+        return self.stringify(expr.args, " ^ ", PRECEDENCE["BitwiseXor"])
+
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (self._print(expr.func), self._print(expr.arg))
 
@@ -209,12 +212,11 @@ class StrPrinter(Printer):
         return "%s**(-1)" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
 
     def _print_Lambda(self, obj):
-        args, expr = obj.args
-        if len(args) == 1:
-            return "Lambda(%s, %s)" % (self._print(args.args[0]), self._print(expr))
-        else:
-            arg_string = ", ".join(self._print(arg) for arg in args)
-            return "Lambda((%s), %s)" % (arg_string, self._print(expr))
+        expr = obj.expr
+        sig = obj.signature
+        if len(sig) == 1 and sig[0].is_symbol:
+            sig = sig[0]
+        return "Lambda(%s, %s)" % (self._print(sig), self._print(expr))
 
     def _print_LatticeOp(self, expr):
         args = sorted(expr.args, key=default_sort_key)

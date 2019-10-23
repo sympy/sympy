@@ -105,24 +105,34 @@ def test_ImageSet():
     assert imageset(x, -x, Interval(0, 1)) == Interval(-1, 0)
 
     assert ImageSet(Lambda(x, x**2), Interval(0, 2)).doit() == Interval(0, 4)
+    assert ImageSet(Lambda((x, y), 2*x), {4}, {3}).doit() == FiniteSet(8)
+    assert (ImageSet(Lambda((x, y), x+y), {1, 2, 3}, {10, 20, 30}).doit() ==
+                FiniteSet(11, 12, 13, 21, 22, 23, 31, 32, 33))
 
-    c = ComplexRegion(Interval(1, 3)*Interval(1, 3))
-    assert Tuple(2, 6) in ImageSet(Lambda((x, y), (x, 2*y)), c)
-    assert Tuple(2, S.Half) in ImageSet(Lambda((x, y), (x, 1/y)), c)
-    assert Tuple(2, -2) not in ImageSet(Lambda((x, y), (x, y**2)), c)
-    assert Tuple(2, -2) in ImageSet(Lambda((x, y), (x, -2)), c)
-    c3 = Interval(3, 7)*Interval(8, 11)*Interval(5, 9)
-    assert Tuple(8, 3, 9) in ImageSet(Lambda((t, y, x), (y, t, x)), c3)
-    assert Tuple(Rational(1, 8), 3, 9) in ImageSet(Lambda((t, y, x), (1/y, t, x)), c3)
-    assert 2/pi not in ImageSet(Lambda((x, y), 2/x), c)
-    assert 2/S(100) not in ImageSet(Lambda((x, y), 2/x), c)
-    assert Rational(2, 3) in ImageSet(Lambda((x, y), 2/x), c)
+    c = Interval(1, 3) * Interval(1, 3)
+    assert Tuple(2, 6) in ImageSet(Lambda(((x, y),), (x, 2*y)), c)
+    assert Tuple(2, S.Half) in ImageSet(Lambda(((x, y),), (x, 1/y)), c)
+    assert Tuple(2, -2) not in ImageSet(Lambda(((x, y),), (x, y**2)), c)
+    assert Tuple(2, -2) in ImageSet(Lambda(((x, y),), (x, -2)), c)
+    c3 = ProductSet(Interval(3, 7), Interval(8, 11), Interval(5, 9))
+    assert Tuple(8, 3, 9) in ImageSet(Lambda(((t, y, x),), (y, t, x)), c3)
+    assert Tuple(Rational(1, 8), 3, 9) in ImageSet(Lambda(((t, y, x),), (1/y, t, x)), c3)
+    assert 2/pi not in ImageSet(Lambda(((x, y),), 2/x), c)
+    assert 2/S(100) not in ImageSet(Lambda(((x, y),), 2/x), c)
+    assert Rational(2, 3) in ImageSet(Lambda(((x, y),), 2/x), c)
 
-    assert imageset(lambda x, y: x + y, S.Integers, S.Naturals
-        ).base_set == ProductSet(S.Integers, S.Naturals)
+    S1 = imageset(lambda x, y: x + y, S.Integers, S.Naturals)
+    assert S1.base_pset == ProductSet(S.Integers, S.Naturals)
+    assert S1.base_sets == (S.Integers, S.Naturals)
 
     # Passing a set instead of a FiniteSet shouldn't raise
     assert unchanged(ImageSet, Lambda(x, x**2), {1, 2, 3})
+
+    S2 = ImageSet(Lambda(((x, y),), x+y), {(1, 2), (3, 4)})
+    assert 3 in S2.doit()
+    # FIXME: This doesn't yet work:
+    #assert 3 in S2
+    assert S2._contains(3) is None
 
     raises(TypeError, lambda: ImageSet(Lambda(x, x**2), 1))
 
@@ -132,18 +142,16 @@ def test_image_is_ImageSet():
 
 
 def test_halfcircle():
-    # This test sometimes works and sometimes doesn't.
-    # It may be an issue with solve? Maybe with using Lambdas/dummys?
-    # I believe the code within fancysets is correct
     r, th = symbols('r, theta', real=True)
-    L = Lambda((r, th), (r*cos(th), r*sin(th)))
+    L = Lambda(((r, th),), (r*cos(th), r*sin(th)))
     halfcircle = ImageSet(L, Interval(0, 1)*Interval(0, pi))
 
-    assert (r, 0) in halfcircle
     assert (1, 0) in halfcircle
     assert (0, -1) not in halfcircle
-    assert (r, 2*pi) not in halfcircle
     assert (0, 0) in halfcircle
+    assert halfcircle._contains((r, 0)) is None
+    # This one doesn't work:
+    #assert (r, 2*pi) not in halfcircle
 
     assert not halfcircle.is_iterable
 

@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
 from sympy.core.compatibility import range, as_int
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.functions.special.zeta_functions import zeta
@@ -636,6 +637,11 @@ class polygamma(Function):
         if self.args[0].is_positive and self.args[1].is_positive:
             return True
 
+    def _eval_is_complex(self):
+        z = self.args[1]
+        is_negative_integer = fuzzy_and([z.is_negative, z.is_integer])
+        return fuzzy_and([z.is_complex, fuzzy_not(is_negative_integer)])
+
     def _eval_is_positive(self):
         if self.args[0].is_positive and self.args[1].is_positive:
             return self.args[0].is_odd
@@ -1018,6 +1024,24 @@ class digamma(Function):
 
     In this case, ``digamma(z) = polygamma(0, z)``.
 
+    Examples
+    ========
+
+    >>> from sympy import digamma
+    >>> digamma(0)
+    zoo
+    >>> from sympy import Symbol
+    >>> z = Symbol('z')
+    >>> digamma(z)
+    polygamma(0, z)
+
+    To retain digamma as it is:
+
+    >>> digamma(0, evaluate=False)
+    digamma(0)
+    >>> digamma(z, evaluate=False)
+    digamma(z)
+
     See Also
     ========
 
@@ -1089,6 +1113,25 @@ class trigamma(Function):
         \psi^{(1)}(z) := \frac{\mathrm{d}^{2}}{\mathrm{d} z^{2}} \log\Gamma(z).
 
     In this case, ``trigamma(z) = polygamma(1, z)``.
+
+    Examples
+    ========
+
+    >>> from sympy import trigamma
+    >>> trigamma(0)
+    zoo
+    >>> from sympy import Symbol
+    >>> z = Symbol('z')
+    >>> trigamma(z)
+    polygamma(1, z)
+
+    To retain trigamma as it is:
+
+    >>> trigamma(0, evaluate=False)
+    trigamma(0)
+    >>> trigamma(z, evaluate=False)
+    trigamma(z)
+
 
     See Also
     ========

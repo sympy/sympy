@@ -2080,7 +2080,7 @@ def test_compute_known_facts():
                       Implies(Q.real, Q.complex))
     known_facts_keys = {Q.integer, Q.rational, Q.real, Q.complex}
 
-    s = compute_known_facts(known_facts, known_facts_keys)
+    compute_known_facts(known_facts, known_facts_keys)
 
 
 @slow
