@@ -237,10 +237,7 @@ class sinh(HyperbolicFunction):
         # if `im` is of the form n*pi
         # else, check if it is a number
         re, im = arg.as_real_imag()
-        if (im % pi) == 0:
-            return True
-        elif im.is_number:
-            return False
+        return (im%pi).is_zero
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
@@ -421,10 +418,7 @@ class cosh(HyperbolicFunction):
         # the imaginary part can be an expression like n*pi
         # if not, check if the imaginary part is a number
         re, im = arg.as_real_imag()
-        if (im % pi) == 0:
-            return True
-        elif im.is_number:
-            return False
+        return (im%pi).is_zero
 
     def _eval_is_positive(self):
         if self.args[0].is_extended_real:
@@ -589,10 +583,7 @@ class tanh(HyperbolicFunction):
 
         # check if im is of the form n*pi/2 to make sin(2*im) = 0
         # if not, im could be a number, return False in that case
-        if (im % (pi/2)) == 0:
-            return True
-        elif im.is_number:
-            return False
+        return (im % (pi/2)).is_zero
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
@@ -623,8 +614,6 @@ class tanh(HyperbolicFunction):
         arg = self.args[0]
         if arg.is_zero:
             return True
-
-
 
 
 class coth(HyperbolicFunction):
