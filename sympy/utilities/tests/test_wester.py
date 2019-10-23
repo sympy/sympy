@@ -648,13 +648,9 @@ def test_I11():
 
 @XFAIL
 def test_I12():
-    try:
-        # This should fail or return nan or something.
-        diff((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1), x)
-    except:
-        assert True
-    else:
-        assert False, "taking the derivative with a fraction equivalent to 0/0 should fail"
+    # This should fail or return nan or something.
+    res = diff((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1), x)
+    assert res is nan # trigsimp(res) gives nan
 
 # J. Special functions.
 
@@ -1265,7 +1261,9 @@ def test_O2():
 # respect to a basis)
 @XFAIL
 def test_O3():
-    assert (va ^ vb) | (vc ^ vd) == -(va | vc)*(vb | vd) + (va | vd)*(vb | vc)
+    # assert (va ^ vb) | (vc ^ vd) == -(va | vc)*(vb | vd) + (va | vd)*(vb | vc)
+    raise NotImplementedError("""The vector module has no way of representing
+        vectors symbolically (without respect to a basis)""")
 
 def test_O4():
     from sympy.vector import CoordSys3D, Del
@@ -1276,11 +1274,11 @@ def test_O4():
     F = i*(x*y*z) + j*((x*y*z)**2) + k*((y**2)*(z**3))
     assert delop.cross(F).doit() == (-2*x**2*y**2*z + 2*y*z**3)*i + x*y*j + (2*x*y**2*z**2 - x*z)*k
 
-# The vector module has no way of representing vectors symbolically (without
-# respect to a basis)
 @XFAIL
 def test_O5():
-    assert grad|(f^g)-g|(grad^f)+f|(grad^g)  == 0
+    #assert grad|(f^g)-g|(grad^f)+f|(grad^g)  == 0
+    raise NotImplementedError("""The vector module has no way of representing
+        vectors symbolically (without respect to a basis)""")
 
 #testO8-O9 MISSING!!
 
@@ -2227,7 +2225,8 @@ def test_U10():
 
 @XFAIL
 def test_U11():
-    assert (2*dx + dz) ^ (3*dx + dy + dz) ^ (dx + dy + 4*dz) == 8*dx ^ dy ^dz
+    # assert (2*dx + dz) ^ (3*dx + dy + dz) ^ (dx + dy + 4*dz) == 8*dx ^ dy ^dz
+    raise NotImplementedError
 
 
 @XFAIL

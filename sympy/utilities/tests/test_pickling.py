@@ -407,18 +407,18 @@ def test_pickling_polys_fields():
 def test_pickling_polys_elements():
     from sympy.polys.domains.pythonrational import PythonRational
     from sympy.polys.domains.pythonfinitefield import PythonFiniteField
-    from sympy.polys.domains.mpelements import MPContext
+    #from sympy.polys.domains.mpelements import MPContext
 
     for c in (PythonRational, PythonRational(1, 7)):
         check(c)
 
-    gf = PythonFiniteField(17)
+    #gf = PythonFiniteField(17)
 
     # TODO: fix pickling of ModularInteger
     # for c in (gf.dtype, gf(5)):
     #     check(c)
 
-    mp = MPContext()
+    #mp = MPContext()
 
     # TODO: fix pickling of RealElement
     # for c in (mp.mpf, mp.mpf(1.0)):
@@ -429,7 +429,7 @@ def test_pickling_polys_elements():
     #     check(c)
 
 def test_pickling_polys_domains():
-    from sympy.polys.domains.pythonfinitefield import PythonFiniteField
+    # from sympy.polys.domains.pythonfinitefield import PythonFiniteField
     from sympy.polys.domains.pythonintegerring import PythonIntegerRing
     from sympy.polys.domains.pythonrationalfield import PythonRationalField
 
@@ -444,7 +444,7 @@ def test_pickling_polys_domains():
         check(c, check_attr=False)
 
     if HAS_GMPY:
-        from sympy.polys.domains.gmpyfinitefield import GMPYFiniteField
+        # from sympy.polys.domains.gmpyfinitefield import GMPYFiniteField
         from sympy.polys.domains.gmpyintegerring import GMPYIntegerRing
         from sympy.polys.domains.gmpyrationalfield import GMPYRationalField
 
@@ -458,11 +458,11 @@ def test_pickling_polys_domains():
         for c in (GMPYRationalField, GMPYRationalField()):
             check(c, check_attr=False)
 
-    from sympy.polys.domains.realfield import RealField
-    from sympy.polys.domains.complexfield import ComplexField
+    #from sympy.polys.domains.realfield import RealField
+    #from sympy.polys.domains.complexfield import ComplexField
     from sympy.polys.domains.algebraicfield import AlgebraicField
-    from sympy.polys.domains.polynomialring import PolynomialRing
-    from sympy.polys.domains.fractionfield import FractionField
+    #from sympy.polys.domains.polynomialring import PolynomialRing
+    #from sympy.polys.domains.fractionfield import FractionField
     from sympy.polys.domains.expressiondomain import ExpressionDomain
 
     # TODO: fix pickling of RealElement
@@ -495,7 +495,8 @@ def test_pickling_polys_numberfields():
 
 def test_pickling_polys_orderings():
     from sympy.polys.orderings import (LexOrder, GradedLexOrder,
-        ReversedGradedLexOrder, ProductOrder, InverseOrder)
+        ReversedGradedLexOrder, InverseOrder)
+    # from sympy.polys.orderings import ProductOrder
 
     for c in (LexOrder, LexOrder()):
         check(c)
@@ -527,14 +528,17 @@ def test_pickling_polys_monomials():
         check(c)
 
 def test_pickling_polys_errors():
-    from sympy.polys.polyerrors import (ExactQuotientFailed, OperationNotSupported,
-        HeuristicGCDFailed, HomomorphismFailed, IsomorphismFailed, ExtraneousFactors,
-        EvaluationFailed, RefinementFailed, CoercionFailed, NotInvertible, NotReversible,
-        NotAlgebraic, DomainError, PolynomialError, UnificationFailed, GeneratorsError,
-        GeneratorsNeeded, ComputationFailed, UnivariatePolynomialError,
-        MultivariatePolynomialError, PolificationFailed, OptionError, FlagError)
+    from sympy.polys.polyerrors import (HeuristicGCDFailed,
+        HomomorphismFailed, IsomorphismFailed, ExtraneousFactors,
+        EvaluationFailed, RefinementFailed, CoercionFailed, NotInvertible,
+        NotReversible, NotAlgebraic, DomainError, PolynomialError,
+        UnificationFailed, GeneratorsError, GeneratorsNeeded,
+        UnivariatePolynomialError, MultivariatePolynomialError, OptionError,
+        FlagError)
+    # from sympy.polys.polyerrors import (ExactQuotientFailed,
+    #         OperationNotSupported, ComputationFailed, PolificationFailed)
 
-    x = Symbol('x')
+    # x = Symbol('x')
 
     # TODO: TypeError: __init__() takes at least 3 arguments (1 given)
     # for c in (ExactQuotientFailed, ExactQuotientFailed(x, 3*x, ZZ)):
@@ -609,8 +613,8 @@ def test_pickling_polys_errors():
     for c in (FlagError, FlagError()):
         check(c)
 
-def test_pickling_polys_options():
-    from sympy.polys.polyoptions import Options
+#def test_pickling_polys_options():
+    #from sympy.polys.polyoptions import Options
 
     # TODO: fix pickling of `symbols' flag
     # for c in (Options, Options((), dict(domain='ZZ', polys=False))):
