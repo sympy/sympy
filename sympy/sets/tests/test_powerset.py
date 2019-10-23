@@ -2,6 +2,7 @@ from sympy.core.expr import unchanged
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.sets.contains import Contains
+from sympy.sets.fancysets import Interval
 from sympy.sets.powerset import PowerSet
 from sympy.sets.sets import FiniteSet
 from sympy.utilities.pytest import raises, XFAIL
@@ -114,3 +115,21 @@ def test_powerset_contains():
 
     A = PowerSet(FiniteSet(x), evaluate=False)
     assert A.contains(FiniteSet(1)) == Contains(FiniteSet(1), A)
+
+
+def test_powerset_method():
+    # EmptySet
+    A = FiniteSet()
+    pset = A.powerset()
+    assert len(pset) == 1
+    assert pset ==  FiniteSet(S.EmptySet)
+
+    # FiniteSets
+    A = FiniteSet(1, 2)
+    pset = A.powerset()
+    assert len(pset) == 2**len(A)
+    assert pset == FiniteSet(FiniteSet(), FiniteSet(1),
+                             FiniteSet(2), A)
+    # Not finite sets
+    A = Interval(0, 1)
+    assert A.powerset() == PowerSet(A)

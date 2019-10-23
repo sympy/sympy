@@ -6,7 +6,7 @@ from sympy.core.logic import fuzzy_bool
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 
-from .sets import Set, tfn
+from .sets import Set
 
 
 class PowerSet(Set):

@@ -5,7 +5,7 @@ import inspect
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range, PY3, is_sequence, reduce)
+    ordered, range, PY3, reduce)
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
@@ -13,7 +13,6 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_bool, fuzzy_or, fuzzy_and
-from sympy.core.mul import Mul
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
 from sympy.core.relational import Eq, Ne
@@ -453,7 +452,8 @@ class Set(Basic):
             raise ValueError("Unknown argument '%s'" % other)
 
     def _eval_powerset(self):
-        return None
+        from .powerset import PowerSet
+        return PowerSet(self)
 
     def powerset(self):
         """
@@ -462,14 +462,25 @@ class Set(Basic):
         Examples
         ========
 
-        >>> from sympy import FiniteSet, EmptySet
+        >>> from sympy import EmptySet, FiniteSet, Interval, PowerSet
+
+        A power set of an empty set:
+
         >>> A = EmptySet()
         >>> A.powerset()
         {EmptySet()}
+
+        A power set of a finite set:
+
         >>> A = FiniteSet(1, 2)
         >>> a, b, c = FiniteSet(1), FiniteSet(2), FiniteSet(1, 2)
         >>> A.powerset() == FiniteSet(a, b, c, EmptySet())
         True
+
+        A power set of an interval:
+
+        >>> Interval(1, 2).powerset()
+        PowerSet(Interval(1, 2))
 
         References
         ==========
