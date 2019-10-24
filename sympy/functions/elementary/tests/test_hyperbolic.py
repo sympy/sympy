@@ -77,6 +77,8 @@ def test_sinh():
 
     x = Symbol('x', real=True)
     assert sinh(I*x).is_finite is True
+    assert sinh(x).is_real is True
+    assert sinh(I).is_real is False
 
 
 def test_sinh_series():
@@ -157,6 +159,8 @@ def test_cosh():
 
     x = Symbol('x', real=True)
     assert cosh(I*x).is_finite is True
+    assert cosh(I*x).is_real is True
+    assert cosh(I*2 + 1).is_real is False
 
 
 def test_cosh_series():
@@ -237,6 +241,9 @@ def test_tanh():
                                 sin(im(x))*cos(im(x))/(cos(im(x))**2 + sinh(re(x))**2))
     x = Symbol('x', extended_real=True)
     assert tanh(x).as_real_imag(deep=False) == (tanh(x), 0)
+    assert tanh(I*pi/3 + 1).is_real is False
+    assert tanh(x).is_real is True
+    assert tanh(I*pi*x/2).is_real is None
 
 
 def test_tanh_series():
