@@ -442,8 +442,8 @@ class ReferenceFrame(object):
              \hat{\mathbf{a}}_3
            \end{bmatrix}.
 
-        :math:`^A\mathbf{R}^B` is the matrix that expresses the B unit vectors
-        in terms of the A unit vectors.
+        :math:`^{}A\mathbf{R}^B` is the matrix that expresses the B unit
+        vectors in terms of the A unit vectors.
 
         """
 
