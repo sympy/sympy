@@ -1,7 +1,10 @@
 from itertools import permutations
 
 from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
+from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
+from sympy.core.singleton import S
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_rmul, _af_rmuln, Cycle)
 from sympy.utilities.pytest import raises
@@ -465,3 +468,20 @@ def test_printing_non_cyclic():
     assert str(p3) == 'Permutation([0, 2, 1])'
     p4 = Permutation([0, 1, 3, 2, 4, 5, 6, 7])
     assert repr(p4) == 'Permutation([0, 1, 3, 2], size=8)'
+
+
+def test_permutation_equality():
+    a = Permutation(0, 1, 2)
+    b = Permutation(0, 1, 2)
+    assert Eq(a, b) is S.true
+    c = Permutation(0, 2, 1)
+    assert Eq(a, c) is S.false
+
+    d = Permutation(0, 1, 2, size=4)
+    assert unchanged(Eq, a, d)
+    e = Permutation(0, 2, 1, size=4)
+    assert unchanged(Eq, a, e)
+
+    i = Permutation()
+    assert unchanged(Eq, i, 0)
+    assert unchanged(Eq, 0, i)
