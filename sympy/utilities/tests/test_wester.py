@@ -935,6 +935,7 @@ def test_M14():
     assert solveset_real(tan(x) - 1, x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
 
 
+# This test fails when running with the cache off:
 def test_M15():
     if PY3:
         n = Dummy('n')

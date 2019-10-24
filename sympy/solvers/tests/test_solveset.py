@@ -791,6 +791,7 @@ def test_solve_trig():
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
+    # This fails when running with the cache off:
     assert solveset_complex(cos(x) - S.Half, x) == \
         Union(imageset(Lambda(n, 2*n*pi + pi*Rational(5, 3)), S.Integers),
               imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
