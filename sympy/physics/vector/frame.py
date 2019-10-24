@@ -424,7 +424,7 @@ class ReferenceFrame(object):
 
         It is import to know what form of the direction cosine matrix is
         returned. If ``B.dcm(A)`` is called, it means the "direction cosine
-        matrix of B relative to A". This is the matrix :math:`^A\mathbf{R}^B`
+        matrix of B relative to A". This is the matrix :math:`{}^A\mathbf{R}^B`
         shown in the following relationship:
 
         .. math::
@@ -435,7 +435,7 @@ class ReferenceFrame(object):
              \hat{\mathbf{b}}_3
            \end{bmatrix}
            =
-           ^A\mathbf{R}^B
+           {}^A\mathbf{R}^B
            \begin{bmatrix}
              \hat{\mathbf{a}}_1 \\
              \hat{\mathbf{a}}_2 \\
@@ -448,15 +448,15 @@ class ReferenceFrame(object):
         """
 
         _check_frame(otherframe)
-        #Check if the dcm wrt that frame has already been calculated
+        # Check if the dcm wrt that frame has already been calculated
         if otherframe in self._dcm_cache:
             return self._dcm_cache[otherframe]
         flist = self._dict_list(otherframe, 0)
         outdcm = eye(3)
         for i in range(len(flist) - 1):
             outdcm = outdcm * flist[i]._dcm_dict[flist[i + 1]]
-        #After calculation, store the dcm in dcm cache for faster
-        #future retrieval
+        # After calculation, store the dcm in dcm cache for faster future
+        # retrieval
         self._dcm_cache[otherframe] = outdcm
         otherframe._dcm_cache[self] = outdcm.T
         return outdcm
