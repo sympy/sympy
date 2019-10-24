@@ -3022,8 +3022,6 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        Lemma 1:
-
         If the order of a group $n$ can be factored into the distinct
         primes $p_1, p_2, ... , p_s$ and if
 
@@ -3032,15 +3030,17 @@ class PermutationGroup(Basic):
             p_i \not \equiv 1 \pmod {p_j}
 
         holds true, there is only one group of the order $n$ which
-        is a cyclic group. [1]_
+        is a cyclic group. [1]_ This is a generalization of the lemma
+        that the group of order $15, 35, ...$ are cyclic.
 
-        This is a generalization of the lemma that the group of order
-        $15, 35, ...$ are cyclic.
+        And also, these additional lemmas can be used to test if a
+        group is cyclic if the order of the group is already found.
 
-        Lemma 2:
-
-        If the group is abelian and the order of the group is
-        square-free, the group is cyclic.
+        - If the group is abelian and the order of the group is
+          square-free, the group is cyclic.
+        - If the order of the group is less than $6$ and is not $4$, the
+          group is cyclic.
+        - If the order of the group is prime, the group is cyclic.
 
         References
         ==========
@@ -3061,6 +3061,13 @@ class PermutationGroup(Basic):
             return False
 
         order = self.order()
+
+        if order < 6:
+            self._is_abelian == True
+            if order != 4:
+                self._is_cyclic == True
+                return True
+
         factors = factorint(order)
         if all(v == 1 for v in factors.values()):
             if self._is_abelian:
@@ -3080,8 +3087,7 @@ class PermutationGroup(Basic):
             if self.index(self.subgroup(pgens)) != p:
                 self._is_cyclic = False
                 return False
-            else:
-                continue
+
         self._is_cyclic = True
         self._is_abelian = True
         return True
