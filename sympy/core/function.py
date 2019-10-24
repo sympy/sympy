@@ -3248,6 +3248,9 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
         else:
             pass  # pure_complex(rv) is likely True
         return rv
+    elif rv.is_Boolean and (not rv.is_Atom):
+        # this case catches boolean expression like Or, And, Not
+        return expr.func(*[nfloat(a, **kw) for a in expr.args])
     elif rv.is_Atom:
         return rv
 
