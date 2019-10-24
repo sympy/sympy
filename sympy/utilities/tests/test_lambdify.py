@@ -4,7 +4,7 @@ import math
 import inspect
 
 import mpmath
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
@@ -126,7 +126,8 @@ def test_sympy_lambda():
     prec = 1e-15
     assert -prec < f(Rational(1, 5)).evalf() - Float(str(sin02)) < prec
     # arctan is in numpy module and should not be available
-    raises(NameError, lambda: lambdify(x, arctan(x), "sympy"))
+    # The arctan below gives NameError. What is this supposed to test?
+    # raises(NameError, lambda: lambdify(x, arctan(x), "sympy"))
 
 
 @conserve_mpmath_dps
@@ -1076,7 +1077,7 @@ def test_scipy_polys():
             diff = abs(scipy_result - sympy_result)
             try:
                 assert diff < atol
-            except:
+            except TypeError:
                 raise AssertionError(
                     msg.format(
                         func=repr(sympy_fn),

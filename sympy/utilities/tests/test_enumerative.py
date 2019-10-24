@@ -5,7 +5,6 @@ from sympy.utilities.enumerative import (
     multiset_partitions_taocp
     )
 from sympy.utilities.iterables import _set_partitions
-from sympy.utilities.pytest import slow
 
 # first some functions only useful as test scaffolding - these provide
 # straightforward, but slow reference implementations against which to
