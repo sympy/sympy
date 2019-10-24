@@ -85,7 +85,7 @@ Advanced Interfaces
 ===================
 
 Here we will cover advanced options in: ``ReferenceFrame``, ``dynamicsymbols``,
-and some associated functionality.
+``Point``, and some associated functionality.
 
 ReferenceFrame
 --------------
@@ -117,6 +117,22 @@ that would be used if there were custom indices. ::
   '\\mathbf{n}_2'
   >>> vlatex(N.z)
   'cat'
+
+Multiple ReferenceFrame can be created in a single step using ``symbols()``. An 
+example of this is shown below. ::
+
+  >>> from sympy.physics.vector import ReferenceFrame
+  >>> from sympy import symbols
+  >>> A, B, C = symbols('A B C', cls=ReferenceFrame)
+  >>> D, E = symbols('D E', cls=ReferenceFrame, indices=('1', '2', '3'))
+  >>> A[0]
+  A_x
+  >>> D.x
+  D['1']
+  >>> E.y
+  E['2']
+  >>> type(A) == type(D)
+  True
 
 dynamicsymbols
 --------------
@@ -152,3 +168,20 @@ so dynamic symbols created before or after will print the same way.
 Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
 ``dynamicsymbols``, along with a number of other important functions and
 methods. Don't mix and match symbols representing time.
+
+Point
+--------------
+Multiple instances of ``Point`` can also be created in a single step, using the 
+``symbols()`` function. An example of this is shown below. :
+
+  >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+  >>> from sympy import symbols
+  >>> N = ReferenceFrame('N')
+  >>> u1, u2 = dynamicsymbols('u1 u2')
+  >>> A, B = symbols('A B', cls=Point)
+  >>> type(A)
+  <class 'sympy.physics.vector.point.Point'>
+  >>> A.set_vel(N, u1 * N.x + u2 * N.y)
+  >>> B.set_vel(N, u2 * N.x + u1 * N.y)
+  >>> A.acc(N) - B.acc(N)
+  (u1' - u2')*N.x + (-u1' + u2')*N.y
