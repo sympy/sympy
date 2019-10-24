@@ -996,6 +996,22 @@ def test_cyclic():
     G = AlternatingGroup(4)
     assert not G.is_cyclic
 
+    # Order less than 6
+    G = PermutationGroup(Permutation(0, 1, 2), Permutation(0, 2, 1))
+    assert G.is_cyclic
+    G = PermutationGroup(
+        Permutation(0, 1, 2, 3),
+        Permutation(0, 2)(1, 3)
+    )
+    assert G.is_cyclic
+    G = PermutationGroup(
+        Permutation(3),
+        Permutation(0, 1)(2, 3),
+        Permutation(0, 2)(1, 3),
+        Permutation(0, 3)(1, 2)
+    )
+    assert G.is_cyclic is False
+
     # Order 15
     G = PermutationGroup(
         Permutation(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14),
