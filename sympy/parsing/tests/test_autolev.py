@@ -35,7 +35,7 @@ def _test_examples(in_filename, out_filename, test_name="", include_numpy=False)
                         assert content not in line2
                 else:
                     math_list = ["import math", "m.radians"]
-                    for content in numpy_list:
+                    for content in math_list:
                         assert content not in line2
                     #assert line1.rstrip() == line2.rstrip()
             except Exception:
