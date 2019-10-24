@@ -1776,17 +1776,6 @@ if AutolevListener:
                         if i in self.symbol_table.keys() and self.symbol_table[i] not in\
                         self.constants + self.q_ind + self.q_dep + self.u_ind + self.u_dep:
                             specifieds.append(self.symbol_table[i] + ":" + self.inputs[i])
-
-                    # convert np.linspace to python list equivalent while handling rounding errors
-                    time_scale = []
-                    if isinstance(integ_stp, float):
-                        integ_stp_str = str(integ_stp)
-                        multiply_by_integ_stp = findnum(integ_stp_str)
-                        integ_stp_transformed = round(integ_stp * multiply_by_integ_stp)
-                        time_scale = [x/multiply_by_integ_stp for x in range (0, round(t_final*multiply_by_integ_stp)+1, integ_stp_transformed )]
-                    if isinstance(integ_stp, int):
-                        time_scale = range (0, round(t_final)+1, integ_stp )
-                    time_scale = [item for item in time_scale if item <= t_final]  # filter to prevent exceeding the limit
                     if self.include_numpy:
                         self.write("sys = System(kane, constants = {" + ", ".join(const_list) + "},\n" +
                                 "specifieds={" + ", ".join(specifieds) + "},\n" +
@@ -1794,6 +1783,16 @@ if AutolevListener:
                                 "times = np.linspace(0.0, " + str(t_final) + ", " + str(t_final) +
                                 "/" + str(integ_stp) + "))\n\ny=sys.integrate()\n")
                     else:
+                        # convert np.linspace to python list equivalent while handling rounding errors
+                        time_scale = []
+                        if isinstance(integ_stp, float):
+                            integ_stp_str = str(integ_stp)
+                            multiply_by_integ_stp = findnum(integ_stp_str)
+                            integ_stp_transformed = round(integ_stp * multiply_by_integ_stp)
+                            time_scale = [x/multiply_by_integ_stp for x in range (0, round(t_final*multiply_by_integ_stp)+1, integ_stp_transformed )]
+                        if isinstance(integ_stp, int):
+                            time_scale = range (0, round(t_final)+1, integ_stp )
+                        time_scale = [item for item in time_scale if item <= t_final]  # filter to prevent exceeding the limit
                         self.write("sys = System(kane, constants = {" + ", ".join(const_list) + "},\n" +
                                 "specifieds={" + ", ".join(specifieds) + "},\n" +
                                 "initial_conditions={" + ", ".join(x0) + "},\n" +

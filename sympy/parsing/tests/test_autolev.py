@@ -30,11 +30,13 @@ def _test_examples(in_filename, out_filename, test_name="", include_numpy=False)
             try:
                 line2 = generated_code.split('\n')[idx]
                 if not include_numpy:
-                    numpy_import = "import numpy"
-                    assert numpy_import not in line2
+                    numpy_list = ["import numpy", "np.deg2rad"]
+                    for content in numpy_list:
+                        assert content not in line2
                 else:
-                    math_import = "import math"
-                    assert math_import not in line2
+                    math_list = ["import math", "m.radians"]
+                    for content in numpy_list:
+                        assert content not in line2
                     #assert line1.rstrip() == line2.rstrip()
             except Exception:
                 msg = 'mismatch in ' + test_name + ' in line no: {0}'
