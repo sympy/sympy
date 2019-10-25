@@ -2991,9 +2991,21 @@ class PermutationGroup(Basic):
 
         return self._eval_is_alt_sym_naive(only_alt=True)
 
+    @classmethod
+    def _distinct_primes_lemma(cls, primes):
+        """Subroutine to test if there is only one cyclic group for the
+        order."""
+        primes = sorted(primes)
+        l = len(primes)
+        for i in range(l):
+            for j in range(i+1, l):
+                if primes[j] % primes[i] == 1:
+                    return None
+        return True
+
     @property
     def is_cyclic(self):
-        """
+        r"""
         Return ``True`` if the group is Cyclic.
 
         Examples
@@ -3007,25 +3019,77 @@ class PermutationGroup(Basic):
         >>> G.is_cyclic
         False
 
+        Notes
+        =====
+
+        If the order of a group $n$ can be factored into the distinct
+        primes $p_1, p_2, ... , p_s$ and if
+
+        .. math::
+            \forall i, j \in \{1, 2, \ldots, s \}:
+            p_i \not \equiv 1 \pmod {p_j}
+
+        holds true, there is only one group of the order $n$ which
+        is a cyclic group. [1]_ This is a generalization of the lemma
+        that the group of order $15, 35, ...$ are cyclic.
+
+        And also, these additional lemmas can be used to test if a
+        group is cyclic if the order of the group is already found.
+
+        - If the group is abelian and the order of the group is
+          square-free, the group is cyclic.
+        - If the order of the group is less than $6$ and is not $4$, the
+          group is cyclic.
+        - If the order of the group is prime, the group is cyclic.
+
+        References
+        ==========
+
+        .. [1] 1978: John S. Rose: A Course on Group Theory,
+            Introduction to Finite Group Theory: 1.4
         """
         if self._is_cyclic is not None:
             return self._is_cyclic
-        self._is_cyclic = True
 
         if len(self.generators) == 1:
+            self._is_cyclic = True
+            self._is_abelian = True
             return True
-        if not self._is_abelian:
+
+        if self._is_abelian is False:
             self._is_cyclic = False
             return False
-        for p in primefactors(self.order()):
+
+        order = self.order()
+
+        if order < 6:
+            self._is_abelian == True
+            if order != 4:
+                self._is_cyclic == True
+                return True
+
+        factors = factorint(order)
+        if all(v == 1 for v in factors.values()):
+            if self._is_abelian:
+                self._is_cyclic = True
+                return True
+
+            primes = list(factors.keys())
+            if PermutationGroup._distinct_primes_lemma(primes) is True:
+                self._is_cyclic = True
+                self._is_abelian = True
+                return True
+
+        for p in factors:
             pgens = []
             for g in self.generators:
                 pgens.append(g**p)
             if self.index(self.subgroup(pgens)) != p:
                 self._is_cyclic = False
                 return False
-            else:
-                continue
+
+        self._is_cyclic = True
+        self._is_abelian = True
         return True
 
     def pointwise_stabilizer(self, points, incremental=True):
