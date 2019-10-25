@@ -663,20 +663,15 @@ docstrings consist of the following sections in this order:
 6. References
 
 The Single-Sentence Summary and Examples sections are **required** for every
-docstring. Checks will not pass if these sections are not included in a
-docstring.
+docstring. Docstrings will not pass review if these sections are not included.
 
 Do not change the names of these supported sections, for example, the heading
-“Examples” as a plural should be used even if there is only one example. If you
-wish to include a section that is not listed in these main section headings, you
-can add a subheading of your choice under Explanation, Examples, or Parameters.
+“Examples” as a plural should be used even if there is only one example.
 
-Additionally, SymPy will continue to support all of the section headings listed
-in the `NumPy Docstring Guide
-<https://numpydoc.readthedocs.io/en/latest/format.html>`_.
+SymPy will continue to support all of the section headings listed in the `NumPy
+Docstring Guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
 
-Headings should be underlined with the same length in equals signs and
-subheadings should be underlined with the same length in hyphens.
+Headings should be underlined with the same length in equals signs.
 
 If a section is not required and that information for the function in question
 is unnecessary, do not use it. Unnecessary sections and cluttered docstrings
@@ -686,8 +681,8 @@ information required to understand the function.
 1. Single-Sentence Summary
 --------------------------
 
-This section is **required** for every docstring and checks will not pass if it
-is not included. No heading is necessary for this section.
+This section is **required** for every docstring. A docstring will not pass
+review if it is not included. No heading is necessary for this section.
 
 This section consists of a one-line sentence ending in a period that describes
 the function, class, or method's effect.
@@ -718,9 +713,10 @@ sentences or paragraphs.
 3. Examples Section
 -------------------
 
-This section is **required** for every docstring and checks will not pass if it
-is not included. It should be labeled with the heading “Examples” (even if
-there is only one example) underlined with the same length in equals signs.
+This section is **required** for every docstring. A docstring will not pass
+review if it is not included. It should be labeled with the heading “Examples”
+(even if there is only one example) underlined with the same length in equals
+signs.
 
 ::
 
@@ -814,7 +810,7 @@ name, you must include a parameters section.
 This section consists of descriptions of the function arguments, keywords, and
 their respective types.
 
-Enclose variables in single backticks. The colon must be preceded by a space,
+Enclose variables in double backticks. The colon must be preceded by a space,
 or omitted if the type is absent. For the parameter types, be as precise as
 possible. If it is not necessary to specify a keyword argument, use
 ``optional``. Optional keyword parameters have default values, which are
@@ -829,7 +825,8 @@ combined.
 If the Parameters section is not formatted correctly, the documentation build
 will render incorrectly.
 
-Returns can be listed as a subheading within the Parameters section.
+If you wish to include a Returns section, write it as its own section with its
+own heading.
 
 **Example**
 
