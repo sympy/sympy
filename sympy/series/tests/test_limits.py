@@ -548,6 +548,7 @@ def test_issue_15984():
 
 
 def test_issue_13575():
+    # This fails with infinite recursion when run without the cache:
     result = limit(acos(erfi(x)), x, 1)
     assert isinstance(result, Add)
 

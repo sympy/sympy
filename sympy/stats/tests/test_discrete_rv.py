@@ -56,6 +56,7 @@ def test_negative_binomial():
     p = S.One / 3
     x = NegativeBinomial('x', r, p)
     assert E(x) == p*r / (1-p)
+    # This hangs when run with the cache disabled:
     assert variance(x) == p*r / (1-p)**2
     assert E(x**5 + 2*x + 3) == Rational(9207, 4)
     assert isinstance(E(x, evaluate=False), Sum)

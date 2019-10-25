@@ -167,6 +167,8 @@ def test_bell():
     # For large numbers, this is too slow
     # For nonintegers, there are significant precision errors
     for i in [0, 2, 3, 7, 13, 42, 55]:
+        # Running without the cache this is either very slow or goes into an
+        # infinite loop.
         assert bell(i).evalf() == bell(n).rewrite(Sum).evalf(subs={n: i})
 
     m = Symbol("m")

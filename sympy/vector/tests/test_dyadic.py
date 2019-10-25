@@ -62,6 +62,7 @@ def test_dyadic():
     q = symbols('q')
     B = A.orient_new_axis('B', q, A.k)
     assert express(d1, B) == express(d1, B, B)
+    # This assertion fails when running with the cache off:
     assert express(d1, B) == ((cos(q)**2) * (B.i | B.i) + (-sin(q) * cos(q)) *
             (B.i | B.j) + (-sin(q) * cos(q)) * (B.j | B.i) + (sin(q)**2) *
             (B.j | B.j))
