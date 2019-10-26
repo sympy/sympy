@@ -90,6 +90,12 @@ matrix:
             - gfortran
             - python-scipy
 
+    # Tensorflow 1 support
+    - python: 3.7
+      env:
+        - TEST_ASCII="true"
+        - TEST_OPT_DEPENDENCY="tensorflow<2"
+
     - python: 3.8
       dist: xenial
       sudo: true

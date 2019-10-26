@@ -20,6 +20,12 @@ from sympy.utilities.pytest import skip
 
 tf = tensorflow = import_module("tensorflow")
 
+if tensorflow:
+    # Hide Tensorflow warnings
+    import os
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+
 M = MatrixSymbol("M", 3, 3)
 N = MatrixSymbol("N", 3, 3)
 P = MatrixSymbol("P", 3, 3)
@@ -208,21 +214,6 @@ def test_tensorflow_math():
     _compare_tensorflow_scalar(
         (x,), expr, rng=lambda: random.uniform(-.5, .5))
 
-    expr = re(x)
-    assert tensorflow_code(expr) == "tensorflow.math.real(x)"
-    _compare_tensorflow_scalar(
-        (x,), expr, rng=lambda: random.random() + random.random()*1j)
-
-    expr = im(x)
-    assert tensorflow_code(expr) == "tensorflow.math.imag(x)"
-    _compare_tensorflow_scalar(
-        (x,), expr, rng=lambda: random.random() + random.random()*1j)
-
-    expr = arg(x)
-    assert tensorflow_code(expr) == "tensorflow.math.angle(x)"
-    _compare_tensorflow_scalar(
-        (x,), expr, rng=lambda: random.random() + random.random()*1j)
-
     expr = erf(x)
     assert tensorflow_code(expr) == "tensorflow.math.erf(x)"
     _compare_tensorflow_scalar(
@@ -232,6 +223,12 @@ def test_tensorflow_math():
     assert tensorflow_code(expr) == "tensorflow.math.lgamma(x)"
     _compare_tensorflow_scalar(
         (x,), expr, rng=lambda: random.random())
+
+
+def test_tensorflow_complexes():
+    assert tensorflow_code(re(x)) == "tensorflow.math.real(x)"
+    assert tensorflow_code(im(x)) == "tensorflow.math.imag(x)"
+    assert tensorflow_code(arg(x)) == "tensorflow.math.angle(x)"
 
 
 def test_tensorflow_relational():

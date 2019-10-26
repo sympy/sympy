@@ -155,6 +155,7 @@ def _import_tensorflow(namespace):
     exec_("mod = tensorflow.math.mod", {}, namespace)
     exec_("conj = tensorflow.math.conj", {}, namespace)
 
+    exec_("where = tensorflow.where", {}, namespace)
 
 
 # Available modules:
