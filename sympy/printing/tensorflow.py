@@ -119,21 +119,21 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
     def _print_Piecewise(self, expr):
         tensorflow = import_module('tensorflow')
         if tensorflow and V(tensorflow.__version__) < '1.0':
-            tensorflow_piecewise = "select"
+            tensorflow_piecewise = "tensorflow.select"
         else:
-            tensorflow_piecewise = "where"
+            tensorflow_piecewise = "tensorflow.where"
 
         from sympy import Piecewise
         e, cond = expr.args[0].args
         if len(expr.args) == 1:
             return '{0}({1}, {2}, {3})'.format(
-                tensorflow_piecewise,
+                self._module_format(tensorflow_piecewise),
                 self._print(cond),
                 self._print(e),
                 0)
 
         return '{0}({1}, {2}, {3})'.format(
-            tensorflow_piecewise,
+            self._module_format(tensorflow_piecewise),
             self._print(cond),
             self._print(e),
             self._print(Piecewise(*expr.args[1:])))
