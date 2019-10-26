@@ -34,7 +34,7 @@ class Relational(Boolean, Expr, EvalfMixin):
     """Base class for all relation types.
 
     Subclasses of Relational should generally be instantiated directly, but
-    Relational can be instantiated with a valid `rop` value to dispatch to
+    Relational can be instantiated with a valid ``rop`` value to dispatch to
     the appropriate subclass.
 
     Parameters
@@ -171,7 +171,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         =====
 
         This works more or less identical to ``~``/``Not``. The difference is
-        that ``negated`` returns the relationship even if `evaluate=False`.
+        that ``negated`` returns the relationship even if ``evaluate=False``.
         Hence, this is useful in code when checking for e.g. negated relations
         to existing ones as it will not be affected by the `evaluate` flag.
 
@@ -190,7 +190,7 @@ class Relational(Boolean, Expr, EvalfMixin):
     def canonical(self):
         """Return a canonical form of the relational by putting a
         Number on the rhs else ordering the args. The relation is also changed
-        so that the left-hand side expression does not start with a `-`.
+        so that the left-hand side expression does not start with a ``-``.
         No other simplification is attempted.
 
         Examples

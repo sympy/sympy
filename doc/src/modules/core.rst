@@ -47,7 +47,11 @@ singleton
 
 S
 ^
+
 .. autoclass:: sympy.core.singleton.SingletonRegistry
+   :members:
+
+.. autoclass:: Singleton
    :members:
 
 expr
@@ -250,6 +254,10 @@ integer_nthroot
 ^^^^^^^^^^^^^^^
 .. autofunction:: integer_nthroot
 
+integer_log
+^^^^^^^^^^^
+.. autofunction:: integer_log
+
 mul
 ---
 .. module:: sympy.core.mul
@@ -287,6 +295,9 @@ relational
 
 Rel
 ^^^
+.. autoclass:: Relational
+   :members:
+
 .. autoclass:: Rel
    :members:
 
@@ -377,6 +388,7 @@ Derivative
 ^^^^^^^^^^
 .. autoclass:: Derivative
    :members:
+   :private-members:
 
 diff
 ^^^^
@@ -475,6 +487,12 @@ nfloat
 evalf
 -----
 .. module:: sympy.core.evalf
+
+EvalfMixin
+^^^^^^^^^^
+
+.. autoclass:: EvalfMixin
+   :members:
 
 PrecisionExhausted
 ^^^^^^^^^^^^^^^^^^

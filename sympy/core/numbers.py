@@ -1582,7 +1582,7 @@ class Rational(Number):
 
     See Also
     ========
-    sympify, sympy.simplify.simplify.nsimplify
+    sympy.core.sympify.sympify, sympy.simplify.simplify.nsimplify
     """
     is_real = True
     is_integer = False

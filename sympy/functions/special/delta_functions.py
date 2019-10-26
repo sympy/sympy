@@ -88,7 +88,7 @@ class DiracDelta(Function):
     ========
 
     Heaviside
-    simplify, is_simple
+    sympy.simplify.simplify.simplify, is_simple
     sympy.functions.special.tensor_functions.KroneckerDelta
 
     References
