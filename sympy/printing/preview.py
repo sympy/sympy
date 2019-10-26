@@ -1,23 +1,24 @@
 from __future__ import print_function, division
 
-from os.path import join
-import tempfile
-import shutil
 import io
 from io import BytesIO
+import os
+from os.path import join
+import shutil
+import tempfile
 
 try:
     from subprocess import STDOUT, CalledProcessError, check_output
 except ImportError:
     pass
 
-from sympy.core.compatibility import unicode, u_decode
-
+from sympy.core.compatibility import unicode, u_decode, string_types
+from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
 from .latex import latex
 
-from sympy.utilities.decorator import doctest_depends_on
+__doctest_requires__ = {('preview',): ['pyglet']}
 
 @doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
@@ -165,22 +166,23 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
                                              for p in actual_packages])
 
-        preamble = r"""\documentclass[12pt]{article}
-\pagestyle{empty}
+        preamble = r"""\documentclass[varwidth,12pt]{standalone}
 %s
 
 \begin{document}
 """ % (package_includes)
     else:
-        if len(packages) > 0:
+        if packages:
             raise ValueError("The \"packages\" keyword must not be set if a "
                              "custom LaTeX preamble was specified")
     latex_main = preamble + '\n%s\n\n' + r"\end{document}"
 
-    if isinstance(expr, str):
+    if isinstance(expr, string_types):
         latex_string = expr
     else:
-        latex_string = latex(expr, mode='inline', **latex_settings)
+        latex_string = ('$\\displaystyle ' +
+                        latex(expr, mode='plain', **latex_settings) +
+                        '$')
 
     try:
         workdir = tempfile.mkdtemp()
@@ -195,8 +197,17 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             raise RuntimeError("latex program is not installed")
 
         try:
+            # Avoid showing a cmd.exe window when running this
+            # on Windows
+            if os.name == 'nt':
+                creation_flag = 0x08000000 # CREATE_NO_WINDOW
+            else:
+                creation_flag = 0 # Default value
             check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
-                          'texput.tex'], cwd=workdir, stderr=STDOUT)
+                          'texput.tex'],
+                         cwd=workdir,
+                         stderr=STDOUT,
+                         creationflags=creation_flag)
         except CalledProcessError as e:
             raise RuntimeError(
                 "'latex' exited abnormally with the following output:\n%s" %
@@ -233,7 +244,14 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise SystemError("Invalid output format: %s" % output)
 
             try:
-                check_output(cmd, cwd=workdir, stderr=STDOUT)
+                # Avoid showing a cmd.exe window when running this
+                # on Windows
+                if os.name == 'nt':
+                    creation_flag = 0x08000000 # CREATE_NO_WINDOW
+                else:
+                    creation_flag = 0 # Default value
+                check_output(cmd, cwd=workdir, stderr=STDOUT,
+                             creationflags=creation_flag)
             except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s' exited abnormally with the following output:\n%s" %
@@ -310,7 +328,14 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             win.close()
         else:
             try:
-                check_output([viewer, src], cwd=workdir, stderr=STDOUT)
+                # Avoid showing a cmd.exe window when running this
+                # on Windows
+                if os.name == 'nt':
+                    creation_flag = 0x08000000 # CREATE_NO_WINDOW
+                else:
+                    creation_flag = 0 # Default value
+                check_output([viewer, src], cwd=workdir, stderr=STDOUT,
+                             creationflags=creation_flag)
             except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s %s' exited abnormally with the following output:\n%s" %

@@ -1,13 +1,26 @@
-from sympy.core import (pi, oo, symbols, Rational, Integer,
-                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
-from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, sign, Max)
+from sympy.core import (
+    S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio, EulerGamma, Catalan,
+    Lambda, Dummy, Eq, nan, Mul, Pow
+)
+from sympy.functions import (
+    Abs, acos, acosh, asin, asinh, atan, atanh, atan2, ceiling, cos, cosh, erf,
+    erfc, exp, floor, gamma, log, loggamma, Max, Min, Piecewise, sign, sin, sinh,
+    sqrt, tan, tanh
+)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.utilities.pytest import raises
-from sympy.printing.ccode import CCodePrinter
+from sympy.utilities.pytest import raises, XFAIL
+from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
+from sympy.codegen.ast import (
+    AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
+    While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Return,
+    real, float32, float64, float80, float128, intc, Comment, CodeBlock
+)
+from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
+from sympy.codegen.cnodes import restrict
 from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.pytest import warns_deprecated_sympy
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
@@ -20,6 +33,7 @@ def test_printmethod():
     class fabs(Abs):
         def _ccode(self, printer):
             return "fabs(%s)" % printer._print(self.args[0])
+
     assert ccode(fabs(x)) == "fabs(x)"
 
 
@@ -36,16 +50,21 @@ def test_ccode_Pow():
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2) + y)"
     assert ccode(x**-1.0) == '1.0/x'
-    assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
+    assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0/3.0)'
+    assert ccode(x**Rational(2, 3), type_aliases={real: float80}) == 'powl(x, 2.0L/3.0L)'
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
                    (lambda base, exp: not exp.is_integer, "pow")]
     assert ccode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
-    assert ccode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
+    assert ccode(x**0.5, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 0.5)'
+    assert ccode(x**Rational(16, 5), user_functions={'Pow': _cond_cfunc}) == 'pow(x, 16.0/5.0)'
     _cond_cfunc2 = [(lambda base, exp: base == 2, lambda base, exp: 'exp2(%s)' % exp),
                     (lambda base, exp: base != 2, 'pow')]
     # Related to gh-11353
     assert ccode(2**x, user_functions={'Pow': _cond_cfunc2}) == 'exp2(x)'
     assert ccode(x**2, user_functions={'Pow': _cond_cfunc2}) == 'pow(x, 2)'
+    # For issue 14160
+    assert ccode(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
+                                                evaluate=False)) == '-2*x/(y*y)'
 
 
 def test_ccode_Max():
@@ -53,27 +72,44 @@ def test_ccode_Max():
     assert ccode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
 
 
+def test_ccode_Min_performance():
+    #Shouldn't take more than a few seconds
+    big_min = Min(*symbols('a[0:50]'))
+    for curr_standard in ('c89', 'c99', 'c11'):
+        output = ccode(big_min, standard=curr_standard)
+        assert output.count('(') == output.count(')')
+
+
 def test_ccode_constants_mathh():
     assert ccode(exp(1)) == "M_E"
     assert ccode(pi) == "M_PI"
-    assert ccode(oo) == "HUGE_VAL"
-    assert ccode(-oo) == "-HUGE_VAL"
+    assert ccode(oo, standard='c89') == "HUGE_VAL"
+    assert ccode(-oo, standard='c89') == "-HUGE_VAL"
+    assert ccode(oo) == "INFINITY"
+    assert ccode(-oo, standard='c99') == "-INFINITY"
+    assert ccode(pi, type_aliases={real: float80}) == "M_PIl"
+
 
 
 def test_ccode_constants_other():
-    assert ccode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
+    assert ccode(2*GoldenRatio) == "const double GoldenRatio = %s;\n2*GoldenRatio" % GoldenRatio.evalf(17)
     assert ccode(
-        2*Catalan) == "double const Catalan = 0.915965594177219;\n2*Catalan"
-    assert ccode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2*EulerGamma"
+        2*Catalan) == "const double Catalan = %s;\n2*Catalan" % Catalan.evalf(17)
+    assert ccode(2*EulerGamma) == "const double EulerGamma = %s;\n2*EulerGamma" % EulerGamma.evalf(17)
 
 
 def test_ccode_Rational():
-    assert ccode(Rational(3, 7)) == "3.0L/7.0L"
+    assert ccode(Rational(3, 7)) == "3.0/7.0"
+    assert ccode(Rational(3, 7), type_aliases={real: float80}) == "3.0L/7.0L"
     assert ccode(Rational(18, 9)) == "2"
-    assert ccode(Rational(3, -7)) == "-3.0L/7.0L"
-    assert ccode(Rational(-3, -7)) == "3.0L/7.0L"
-    assert ccode(x + Rational(3, 7)) == "x + 3.0L/7.0L"
-    assert ccode(Rational(3, 7)*x) == "(3.0L/7.0L)*x"
+    assert ccode(Rational(3, -7)) == "-3.0/7.0"
+    assert ccode(Rational(3, -7), type_aliases={real: float80}) == "-3.0L/7.0L"
+    assert ccode(Rational(-3, -7)) == "3.0/7.0"
+    assert ccode(Rational(-3, -7), type_aliases={real: float80}) == "3.0L/7.0L"
+    assert ccode(x + Rational(3, 7)) == "x + 3.0/7.0"
+    assert ccode(x + Rational(3, 7), type_aliases={real: float80}) == "x + 3.0L/7.0L"
+    assert ccode(Rational(3, 7)*x) == "(3.0/7.0)*x"
+    assert ccode(Rational(3, 7)*x, type_aliases={real: float80}) == "(3.0L/7.0L)*x"
 
 
 def test_ccode_Integer():
@@ -91,7 +127,7 @@ def test_ccode_inline_function():
     assert ccode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
     assert ccode(
-        g(x)) == "double const Catalan = %s;\n2*x/Catalan" % Catalan.n()
+        g(x)) == "const double Catalan = %s;\n2*x/Catalan" % Catalan.evalf(17)
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
@@ -103,9 +139,19 @@ def test_ccode_inline_function():
 
 
 def test_ccode_exceptions():
+    assert ccode(gamma(x), standard='C99') == "tgamma(x)"
+    gamma_c89 = ccode(gamma(x), standard='C89')
+    assert 'not supported in c' in gamma_c89.lower()
+    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=False)
+    assert 'not supported in c' in gamma_c89.lower()
+    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=True)
+    assert not 'not supported in c' in gamma_c89.lower()
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"
+    r, s = symbols('r,s', real=True)
+    assert ccode(Mod(ceiling(r), ceiling(s))) == "((ceil(r)) % (ceil(s)))"
+    assert ccode(Mod(r, s)) == "fmod(r, s)"
 
 
 def test_ccode_user_functions():
@@ -121,6 +167,10 @@ def test_ccode_user_functions():
 
 
 def test_ccode_boolean():
+    assert ccode(True) == "true"
+    assert ccode(S.true) == "true"
+    assert ccode(False) == "false"
+    assert ccode(S.false) == "false"
     assert ccode(x & y) == "x && y"
     assert ccode(x | y) == "x || y"
     assert ccode(~x) == "!x"
@@ -224,13 +274,13 @@ def test_ccode_Piecewise_deep():
 
 
 def test_ccode_ITE():
-    expr = ITE(x < 1, x, x**2)
+    expr = ITE(x < 1, y, z)
     assert ccode(expr) == (
             "((x < 1) ? (\n"
-            "   x\n"
+            "   y\n"
             ")\n"
             ": (\n"
-            "   pow(x, 2)\n"
+            "   z\n"
             "))")
 
 
@@ -241,19 +291,41 @@ def test_ccode_settings():
 def test_ccode_Indexed():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    n, m, o = symbols('n m o', integer=True)
+    s, n, m, o = symbols('s n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
-    p = CCodePrinter()
-    p._not_c = set()
 
     x = IndexedBase('x')[j]
-    assert p._print_Indexed(x) == 'x[j]'
     A = IndexedBase('A')[i, j]
-    assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
     B = IndexedBase('B')[i, j, k]
-    assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
 
+    with warns_deprecated_sympy():
+        p = CCodePrinter()
+    p._not_c = set()
+
+    assert p._print_Indexed(x) == 'x[j]'
+    assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
+    assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
     assert p._not_c == set()
+
+    A = IndexedBase('A', shape=(5,3))[i, j]
+    assert p._print_Indexed(A) == 'A[%s]' % (3*i + j)
+
+    A = IndexedBase('A', shape=(5,3), strides='F')[i, j]
+    assert ccode(A) == 'A[%s]' % (i + 5*j)
+
+    A = IndexedBase('A', shape=(29,29), strides=(1, s), offset=o)[i, j]
+    assert ccode(A) == 'A[o + s*j + i]'
+
+    Abase = IndexedBase('A', strides=(s, m, n), offset=o)
+    assert ccode(Abase[i, j, k]) == 'A[m*j + n*k + o + s*i]'
+    assert ccode(Abase[2, 3, k]) == 'A[3*m + n*k + o + 2*s]'
+
+
+def test_Element():
+    assert ccode(Element('x', 'ij')) == 'x[i][j]'
+    assert ccode(Element('x', 'ij', strides='kl', offset='o')) == 'x[i*k + j*l + o]'
+    assert ccode(Element('x', (3,))) == 'x[3]'
+    assert ccode(Element('x', (3,4,5))) == 'x[3][4][5]'
 
 
 def test_ccode_Indexed_without_looking_for_contraction():
@@ -285,8 +357,7 @@ def test_ccode_loops_matrix_vector():
         '   }\n'
         '}'
     )
-    c = ccode(A[i, j]*x[j], assign_to=y[i])
-    assert c == s
+    assert ccode(A[i, j]*x[j], assign_to=y[i]) == s
 
 
 def test_dummy_loops():
@@ -300,8 +371,8 @@ def test_dummy_loops():
         '   y[i_%(icount)i] = x[i_%(icount)i];\n'
         '}'
     ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
-    code = ccode(x[i], assign_to=y[i])
-    assert code == expected
+
+    assert ccode(x[i], assign_to=y[i]) == expected
 
 
 def test_ccode_loops_add():
@@ -325,8 +396,7 @@ def test_ccode_loops_add():
         '   }\n'
         '}'
     )
-    c = ccode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
-    assert c == s
+    assert ccode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i]) == s
 
 
 def test_ccode_loops_multiple_contractions():
@@ -355,8 +425,7 @@ def test_ccode_loops_multiple_contractions():
         '   }\n'
         '}'
     )
-    c = ccode(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
-    assert c == s
+    assert ccode(b[j, k, l]*a[i, j, k, l], assign_to=y[i]) == s
 
 
 def test_ccode_loops_addfactor():
@@ -386,8 +455,7 @@ def test_ccode_loops_addfactor():
         '   }\n'
         '}'
     )
-    c = ccode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
-    assert c == s
+    assert ccode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i]) == s
 
 
 def test_ccode_loops_multiple_terms():
@@ -430,8 +498,7 @@ def test_ccode_loops_multiple_terms():
         '   }\n'
         '}\n'
     )
-    c = ccode(
-        b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
+    c = ccode(b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
     assert (c == s0 + s1 + s2 + s3[:-1] or
             c == s0 + s1 + s3 + s2[:-1] or
             c == s0 + s2 + s1 + s3[:-1] or
@@ -486,30 +553,22 @@ def test_Matrix_printing():
 
 
 def test_ccode_reserved_words():
-
     x, y = symbols('x, if')
-
+    with raises(ValueError):
+        ccode(y**2, error_on_reserved=True, standard='C99')
     assert ccode(y**2) == 'pow(if_, 2)'
     assert ccode(x * y**2, dereference=[y]) == 'pow((*if_), 2)*x'
-
-    expected = 'pow(if_unreserved, 2)'
-    assert ccode(y**2, reserved_word_suffix='_unreserved') == expected
-
-    with raises(ValueError):
-        ccode(y**2, error_on_reserved=True)
+    assert ccode(y**2, reserved_word_suffix='_unreserved') == 'pow(if_unreserved, 2)'
 
 
 def test_ccode_sign():
-
-    expr = sign(x) * y
-    assert ccode(expr) == 'y*(((x) > 0) - ((x) < 0))'
-    assert ccode(expr, 'z') == 'z = y*(((x) > 0) - ((x) < 0));'
-
-    assert ccode(sign(2 * x + x**2) * x + x**2) == \
-        'pow(x, 2) + x*(((pow(x, 2) + 2*x) > 0) - ((pow(x, 2) + 2*x) < 0))'
-
-    expr = sign(cos(x))
-    assert ccode(expr) == '(((cos(x)) > 0) - ((cos(x)) < 0))'
+    expr1, ref1 = sign(x) * y, 'y*(((x) > 0) - ((x) < 0))'
+    expr2, ref2 = sign(cos(x)), '(((cos(x)) > 0) - ((cos(x)) < 0))'
+    expr3, ref3 = sign(2 * x + x**2) * x + x**2, 'pow(x, 2) + x*(((pow(x, 2) + 2*x) > 0) - ((pow(x, 2) + 2*x) < 0))'
+    assert ccode(expr1) == ref1
+    assert ccode(expr1, 'z') == 'z = %s;' % ref1
+    assert ccode(expr2) == ref2
+    assert ccode(expr3) == ref3
 
 def test_ccode_Assignment():
     assert ccode(Assignment(x, y + z)) == 'x = y + z;'
@@ -518,7 +577,273 @@ def test_ccode_Assignment():
 
 def test_ccode_For():
     f = For(x, Range(0, 10, 2), [aug_assign(y, '*', x)])
-    sol = ccode(f)
-    assert sol == ("for (x = 0; x < 10; x += 2) {\n"
-                   "   y *= x;\n"
-                   "}")
+    assert ccode(f) == ("for (x = 0; x < 10; x += 2) {\n"
+                        "   y *= x;\n"
+                        "}")
+
+def test_ccode_Max_Min():
+    assert ccode(Max(x, 0), standard='C89') == '((0 > x) ? 0 : x)'
+    assert ccode(Max(x, 0), standard='C99') == 'fmax(0, x)'
+    assert ccode(Min(x, 0, sqrt(x)), standard='c89') == (
+        '((0 < ((x < sqrt(x)) ? x : sqrt(x))) ? 0 : ((x < sqrt(x)) ? x : sqrt(x)))'
+    )
+
+def test_ccode_standard():
+    assert ccode(expm1(x), standard='c99') == 'expm1(x)'
+    assert ccode(nan, standard='c99') == 'NAN'
+    assert ccode(float('nan'), standard='c99') == 'NAN'
+
+
+def test_CCodePrinter():
+    with warns_deprecated_sympy():
+        CCodePrinter()
+    with warns_deprecated_sympy():
+        assert CCodePrinter().language == 'C'
+
+
+def test_C89CodePrinter():
+    c89printer = C89CodePrinter()
+    assert c89printer.language == 'C'
+    assert c89printer.standard == 'C89'
+    assert 'void' in c89printer.reserved_words
+    assert 'template' not in c89printer.reserved_words
+
+
+def test_C99CodePrinter():
+    assert C99CodePrinter().doprint(expm1(x)) == 'expm1(x)'
+    assert C99CodePrinter().doprint(log1p(x)) == 'log1p(x)'
+    assert C99CodePrinter().doprint(exp2(x)) == 'exp2(x)'
+    assert C99CodePrinter().doprint(log2(x)) == 'log2(x)'
+    assert C99CodePrinter().doprint(fma(x, y, -z)) == 'fma(x, y, -z)'
+    assert C99CodePrinter().doprint(log10(x)) == 'log10(x)'
+    assert C99CodePrinter().doprint(Cbrt(x)) == 'cbrt(x)'  # note Cbrt due to cbrt already taken.
+    assert C99CodePrinter().doprint(hypot(x, y)) == 'hypot(x, y)'
+    assert C99CodePrinter().doprint(loggamma(x)) == 'lgamma(x)'
+    assert C99CodePrinter().doprint(Max(x, 3, x**2)) == 'fmax(3, fmax(x, pow(x, 2)))'
+    assert C99CodePrinter().doprint(Min(x, 3)) == 'fmin(3, x)'
+    c99printer = C99CodePrinter()
+    assert c99printer.language == 'C'
+    assert c99printer.standard == 'C99'
+    assert 'restrict' in c99printer.reserved_words
+    assert 'using' not in c99printer.reserved_words
+
+
+@XFAIL
+def test_C99CodePrinter__precision_f80():
+    f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
+    assert f80_printer.doprint(sin(x+Float('2.1'))) == 'sinl(x + 2.1L)'
+
+
+def test_C99CodePrinter__precision():
+    n = symbols('n', integer=True)
+    f32_printer = C99CodePrinter(dict(type_aliases={real: float32}))
+    f64_printer = C99CodePrinter(dict(type_aliases={real: float64}))
+    f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
+    assert f32_printer.doprint(sin(x+2.1)) == 'sinf(x + 2.1F)'
+    assert f64_printer.doprint(sin(x+2.1)) == 'sin(x + 2.1000000000000001)'
+    assert f80_printer.doprint(sin(x+Float('2.0'))) == 'sinl(x + 2.0L)'
+
+    for printer, suffix in zip([f32_printer, f64_printer, f80_printer], ['f', '', 'l']):
+        def check(expr, ref):
+            assert printer.doprint(expr) == ref.format(s=suffix, S=suffix.upper())
+        check(Abs(n), 'abs(n)')
+        check(Abs(x + 2.0), 'fabs{s}(x + 2.0{S})')
+        check(sin(x + 4.0)**cos(x - 2.0), 'pow{s}(sin{s}(x + 4.0{S}), cos{s}(x - 2.0{S}))')
+        check(exp(x*8.0), 'exp{s}(8.0{S}*x)')
+        check(exp2(x), 'exp2{s}(x)')
+        check(expm1(x*4.0), 'expm1{s}(4.0{S}*x)')
+        check(Mod(n, 2), '((n) % (2))')
+        check(Mod(2*n + 3, 3*n + 5), '((2*n + 3) % (3*n + 5))')
+        check(Mod(x + 2.0, 3.0), 'fmod{s}(1.0{S}*x + 2.0{S}, 3.0{S})')
+        check(Mod(x, 2.0*x + 3.0), 'fmod{s}(1.0{S}*x, 2.0{S}*x + 3.0{S})')
+        check(log(x/2), 'log{s}((1.0{S}/2.0{S})*x)')
+        check(log10(3*x/2), 'log10{s}((3.0{S}/2.0{S})*x)')
+        check(log2(x*8.0), 'log2{s}(8.0{S}*x)')
+        check(log1p(x), 'log1p{s}(x)')
+        check(2**x, 'pow{s}(2, x)')
+        check(2.0**x, 'pow{s}(2.0{S}, x)')
+        check(x**3, 'pow{s}(x, 3)')
+        check(x**4.0, 'pow{s}(x, 4.0{S})')
+        check(sqrt(3+x), 'sqrt{s}(x + 3)')
+        check(Cbrt(x-2.0), 'cbrt{s}(x - 2.0{S})')
+        check(hypot(x, y), 'hypot{s}(x, y)')
+        check(sin(3.*x + 2.), 'sin{s}(3.0{S}*x + 2.0{S})')
+        check(cos(3.*x - 1.), 'cos{s}(3.0{S}*x - 1.0{S})')
+        check(tan(4.*y + 2.), 'tan{s}(4.0{S}*y + 2.0{S})')
+        check(asin(3.*x + 2.), 'asin{s}(3.0{S}*x + 2.0{S})')
+        check(acos(3.*x + 2.), 'acos{s}(3.0{S}*x + 2.0{S})')
+        check(atan(3.*x + 2.), 'atan{s}(3.0{S}*x + 2.0{S})')
+        check(atan2(3.*x, 2.*y), 'atan2{s}(3.0{S}*x, 2.0{S}*y)')
+
+        check(sinh(3.*x + 2.), 'sinh{s}(3.0{S}*x + 2.0{S})')
+        check(cosh(3.*x - 1.), 'cosh{s}(3.0{S}*x - 1.0{S})')
+        check(tanh(4.0*y + 2.), 'tanh{s}(4.0{S}*y + 2.0{S})')
+        check(asinh(3.*x + 2.), 'asinh{s}(3.0{S}*x + 2.0{S})')
+        check(acosh(3.*x + 2.), 'acosh{s}(3.0{S}*x + 2.0{S})')
+        check(atanh(3.*x + 2.), 'atanh{s}(3.0{S}*x + 2.0{S})')
+        check(erf(42.*x), 'erf{s}(42.0{S}*x)')
+        check(erfc(42.*x), 'erfc{s}(42.0{S}*x)')
+        check(gamma(x), 'tgamma{s}(x)')
+        check(loggamma(x), 'lgamma{s}(x)')
+
+        check(ceiling(x + 2.), "ceil{s}(x + 2.0{S})")
+        check(floor(x + 2.), "floor{s}(x + 2.0{S})")
+        check(fma(x, y, -z), 'fma{s}(x, y, -z)')
+        check(Max(x, 8.0, x**4.0), 'fmax{s}(8.0{S}, fmax{s}(x, pow{s}(x, 4.0{S})))')
+        check(Min(x, 2.0), 'fmin{s}(2.0{S}, x)')
+
+
+def test_get_math_macros():
+    macros = get_math_macros()
+    assert macros[exp(1)] == 'M_E'
+    assert macros[1/Sqrt(2)] == 'M_SQRT1_2'
+
+
+def test_ccode_Declaration():
+    i = symbols('i', integer=True)
+    var1 = Variable(i, type=Type.from_expr(i))
+    dcl1 = Declaration(var1)
+    assert ccode(dcl1) == 'int i'
+
+    var2 = Variable(x, type=float32, attrs={value_const})
+    dcl2a = Declaration(var2)
+    assert ccode(dcl2a) == 'const float x'
+    dcl2b = var2.as_Declaration(value=pi)
+    assert ccode(dcl2b) == 'const float x = M_PI'
+
+    var3 = Variable(y, type=Type('bool'))
+    dcl3 = Declaration(var3)
+    printer = C89CodePrinter()
+    assert 'stdbool.h' not in printer.headers
+    assert printer.doprint(dcl3) == 'bool y'
+    assert 'stdbool.h' in printer.headers
+
+    u = symbols('u', real=True)
+    ptr4 = Pointer.deduced(u, attrs={pointer_const, restrict})
+    dcl4 = Declaration(ptr4)
+    assert ccode(dcl4) == 'double * const restrict u'
+
+    var5 = Variable(x, Type('__float128'), attrs={value_const})
+    dcl5a = Declaration(var5)
+    assert ccode(dcl5a) == 'const __float128 x'
+    var5b = Variable(var5.symbol, var5.type, pi, attrs=var5.attrs)
+    dcl5b = Declaration(var5b)
+    assert ccode(dcl5b) == 'const __float128 x = M_PI'
+
+
+def test_C99CodePrinter_custom_type():
+    # We will look at __float128 (new in glibc 2.26)
+    f128 = FloatType('_Float128', float128.nbits, float128.nmant, float128.nexp)
+    p128 = C99CodePrinter(dict(
+        type_aliases={real: f128},
+        type_literal_suffixes={f128: 'Q'},
+        type_func_suffixes={f128: 'f128'},
+        type_math_macro_suffixes={
+            real: 'f128',
+            f128: 'f128'
+        },
+        type_macros={
+            f128: ('__STDC_WANT_IEC_60559_TYPES_EXT__',)
+        }
+    ))
+    assert p128.doprint(x) == 'x'
+    assert not p128.headers
+    assert not p128.libraries
+    assert not p128.macros
+    assert p128.doprint(2.0) == '2.0Q'
+    assert not p128.headers
+    assert not p128.libraries
+    assert p128.macros == {'__STDC_WANT_IEC_60559_TYPES_EXT__'}
+
+    assert p128.doprint(Rational(1, 2)) == '1.0Q/2.0Q'
+    assert p128.doprint(sin(x)) == 'sinf128(x)'
+    assert p128.doprint(cos(2., evaluate=False)) == 'cosf128(2.0Q)'
+
+    var5 = Variable(x, f128, attrs={value_const})
+
+    dcl5a = Declaration(var5)
+    assert ccode(dcl5a) == 'const _Float128 x'
+    var5b = Variable(x, f128, pi, attrs={value_const})
+    dcl5b = Declaration(var5b)
+    assert p128.doprint(dcl5b) == 'const _Float128 x = M_PIf128'
+    var5b = Variable(x, f128, value=Catalan.evalf(38), attrs={value_const})
+    dcl5c = Declaration(var5b)
+    assert p128.doprint(dcl5c) == 'const _Float128 x = %sQ' % Catalan.evalf(f128.decimal_dig)
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert(ccode(A[0, 0]) == "A[0]")
+    assert(ccode(3 * A[0, 0]) == "3*A[0]")
+
+    F = C[0, 0].subs(C, A - B)
+    assert(ccode(F) == "(A - B)[0]")
+
+
+def test_subclass_CCodePrinter():
+    # issue gh-12687
+    class MySubClass(CCodePrinter):
+        pass
+
+
+def test_ccode_math_macros():
+    assert ccode(z + exp(1)) == 'z + M_E'
+    assert ccode(z + log2(exp(1))) == 'z + M_LOG2E'
+    assert ccode(z + 1/log(2)) == 'z + M_LOG2E'
+    assert ccode(z + log(2)) == 'z + M_LN2'
+    assert ccode(z + log(10)) == 'z + M_LN10'
+    assert ccode(z + pi) == 'z + M_PI'
+    assert ccode(z + pi/2) == 'z + M_PI_2'
+    assert ccode(z + pi/4) == 'z + M_PI_4'
+    assert ccode(z + 1/pi) == 'z + M_1_PI'
+    assert ccode(z + 2/pi) == 'z + M_2_PI'
+    assert ccode(z + 2/sqrt(pi)) == 'z + M_2_SQRTPI'
+    assert ccode(z + 2/Sqrt(pi)) == 'z + M_2_SQRTPI'
+    assert ccode(z + sqrt(2)) == 'z + M_SQRT2'
+    assert ccode(z + Sqrt(2)) == 'z + M_SQRT2'
+    assert ccode(z + 1/sqrt(2)) == 'z + M_SQRT1_2'
+    assert ccode(z + 1/Sqrt(2)) == 'z + M_SQRT1_2'
+
+
+def test_ccode_Type():
+    assert ccode(Type('float')) == 'float'
+    assert ccode(intc) == 'int'
+
+
+def test_ccode_codegen_ast():
+    assert ccode(Comment("this is a comment")) == "// this is a comment"
+    assert ccode(While(abs(x) > 1, [aug_assign(x, '-', 1)])) == (
+        'while (fabs(x) > 1) {\n'
+        '   x -= 1;\n'
+        '}'
+    )
+    assert ccode(Scope([AddAugmentedAssignment(x, 1)])) == (
+        '{\n'
+        '   x += 1;\n'
+        '}'
+    )
+    inp_x = Declaration(Variable(x, type=real))
+    assert ccode(FunctionPrototype(real, 'pwer', [inp_x])) == 'double pwer(double x)'
+    assert ccode(FunctionDefinition(real, 'pwer', [inp_x], [Assignment(x, x**2)])) == (
+        'double pwer(double x){\n'
+        '   x = pow(x, 2);\n'
+        '}'
+    )
+
+    # Elements of CodeBlock are formatted as statements:
+    block = CodeBlock(
+        x,
+        Print([x, y], "%d %d"),
+        FunctionCall('pwer', [x]),
+        Return(x),
+    )
+    assert ccode(block) == '\n'.join([
+        'x;',
+        'printf("%d %d", x, y);',
+        'pwer(x);',
+        'return x;',
+    ])
