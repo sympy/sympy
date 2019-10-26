@@ -137,10 +137,15 @@ def _import_tensorflow(namespace):
 
     exec_("matrix_transpose = tensorflow.linalg.matrix_transpose",
           {}, namespace)
+    exec_("matmul = tensorflow.linalg.matmul", {}, namespace)
     exec_("inv = tensorflow.linalg.inv", {}, namespace)
     exec_("det = tensorflow.linalg.det", {}, namespace)
     exec_("trace = tensorflow.linalg.trace", {}, namespace)
+    exec_("einsum = tensorflow.linalg.einsum", {}, namespace)
 
+    exec_("add = tensorflow.math.add", {}, namespace)
+    exec_("multiply = tensorflow.math.multiply", {}, namespace)
+    exec_("pow = tensorflow.math.pow", {}, namespace)
     exec_("mod = tensorflow.math.mod", {}, namespace)
     exec_("conj = tensorflow.math.conj", {}, namespace)
 
@@ -152,7 +157,7 @@ MODULES = {
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
-    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("from tensorflow import *", _import_tensorflow,)),
+    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, (_import_tensorflow,)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",

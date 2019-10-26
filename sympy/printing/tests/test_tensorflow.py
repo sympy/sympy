@@ -234,6 +234,9 @@ def test_tensorflow_math():
 
 
 def test_tensorflow_relational():
+    if not tf:
+        skip("TensorFlow not installed")
+
     expr = Eq(x, y)
     assert tensorflow_code(expr) == "tensorflow.math.equal(x, y)"
     _compare_tensorflow_relational((x, y), expr)
@@ -347,7 +350,8 @@ def test_codegen_extra():
         md = tf.constant([[1,-1], [4, 7]])
 
         cg = CodegenArrayTensorProduct(M, N)
-        assert tensorflow_code(cg) == 'tensorflow.einsum("ab,cd", M, N)'
+        assert tensorflow_code(cg) == \
+            'tensorflow.linalg.einsum("ab,cd", M, N)'
         f = lambdify((M, N), cg, 'tensorflow')
         y = session.run(f(ma, mb))
         c = session.run(tf.einsum("ij,kl", ma, mb))
@@ -385,14 +389,17 @@ def test_codegen_extra():
         assert (y == c).all()
 
         cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 2, 3, 0])
-        assert tensorflow_code(cg) == 'tensorflow.transpose(tensorflow.einsum("ab,cd", M, N), [1, 2, 3, 0])'
+        assert tensorflow_code(cg) == \
+            'tensorflow.transpose(' \
+                'tensorflow.linalg.einsum("ab,cd", M, N), [1, 2, 3, 0])'
         f = lambdify((M, N), cg, 'tensorflow')
         y = session.run(f(ma, mb))
         c = session.run(tf.transpose(tf.einsum("ab,cd", ma, mb), [1, 2, 3, 0]))
         assert (y == c).all()
 
         cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (1, 2))
-        assert tensorflow_code(cg) == 'tensorflow.einsum("ab,bc->acb", M, N)'
+        assert tensorflow_code(cg) == \
+            'tensorflow.linalg.einsum("ab,bc->acb", M, N)'
         f = lambdify((M, N), cg, 'tensorflow')
         y = session.run(f(ma, mb))
         c = session.run(tf.einsum("ab,bc->acb", ma, mb))

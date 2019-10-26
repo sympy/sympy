@@ -200,7 +200,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         letters = self._get_letter_generator_for_einsum()
         contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.subranks])
         return '%s("%s", %s)' % (
-                self._module_format('tensorflow.einsum'),
+                self._module_format('tensorflow.linalg.einsum'),
                 contraction_string,
                 ", ".join([self._print(arg) for arg in expr.args])
         )
@@ -216,7 +216,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         if isinstance(base, CodegenArrayTensorProduct):
             elems = ["%s" % (self._print(arg)) for arg in base.args]
             return "%s(\"%s\", %s)" % (
-                self._module_format("tensorflow.einsum"),
+                self._module_format("tensorflow.linalg.einsum"),
                 contraction_string,
                 ", ".join(elems)
             )
@@ -242,7 +242,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         diagonal_string, letters_free, letters_dum = self._get_einsum_string(subranks, diagonal_indices)
         elems = [self._print(i) for i in elems]
         return '%s("%s", %s)' % (
-            self._module_format("tensorflow.einsum"),
+            self._module_format("tensorflow.linalg.einsum"),
             "{0}->{1}{2}".format(diagonal_string, "".join(letters_free), "".join(letters_dum)),
             ", ".join(elems)
         )
