@@ -78,7 +78,7 @@ matrix:
       # and we aren't actually using the Travis Python anyway.
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang"
+        - TEST_OPT_DEPENDENCY="matchpy numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang"
         - TEST_SAGE="true"
       addons:
         apt:
@@ -296,9 +296,6 @@ before_install:
             # Use a separate environment because sage downgrades matplotlib
             conda create -c conda-forge/label/cf201901 -n sage sagelib mpmath "ipython>=5.5.0,<6";
             conda clean --all;
-        fi
-        if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-            conda install matchpy;
         fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list | grep "numpy" && pip uninstall -y numpy;
