@@ -9,7 +9,7 @@ from sympy.external import import_module
 from sympy.functions import \
     Abs, Max, Min, ceiling, exp, floor, sign, sin, asin, sqrt, cos, \
     acos, tan, atan, atan2, cosh, acosh, sinh, asinh, tanh, atanh, \
-    re, im, arg, erf, loggamma
+    re, im, arg, erf, loggamma, log
 from sympy.matrices import Matrix, MatrixBase, eye, randMatrix
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
@@ -59,7 +59,8 @@ def _compare_tensorflow_matrix(variables, expr, use_float=False):
     else:
         r = [i for row in r for i in row]
         e = [i for row in e for i in row]
-        assert all(abs(a-b) < 10**-6 for a, b in zip(r, e))
+        assert all(
+            abs(a-b) < 10**-(5-int(log(abs(a), 10))) for a, b in zip(r, e))
 
 
 def _compare_tensorflow_matrix_scalar(variables, expr):
