@@ -11,6 +11,8 @@ import re
 import textwrap
 import linecache
 
+from types import FunctionType
+
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, PY3)
 from sympy.utilities.misc import filldedent
@@ -94,13 +96,63 @@ TENSORFLOW_TRANSLATIONS = {
 
 NUMEXPR_TRANSLATIONS = {}
 
+
+def _import_tensorflow(namespace):
+    """Import hack for tensorflow."""
+    exec_("import tensorflow", {}, namespace)
+    exec_("abs = tensorflow.math.abs", {}, namespace)
+    exec_("sign = tensorflow.math.sign", {}, namespace)
+    exec_("ceil = tensorflow.math.ceil", {}, namespace)
+    exec_("floor = tensorflow.math.floor", {}, namespace)
+    exec_("log = tensorflow.math.log", {}, namespace)
+    exec_("exp = tensorflow.math.exp", {}, namespace)
+    exec_("sqrt = tensorflow.math.sqrt", {}, namespace)
+    exec_("cos = tensorflow.math.cos", {}, namespace)
+    exec_("acos = tensorflow.math.acos", {}, namespace)
+    exec_("sin = tensorflow.math.sin", {}, namespace)
+    exec_("asin = tensorflow.math.asin", {}, namespace)
+    exec_("tan = tensorflow.math.tan", {}, namespace)
+    exec_("atan = tensorflow.math.atan", {}, namespace)
+    exec_("atan2 = tensorflow.math.atan2", {}, namespace)
+    exec_("cosh = tensorflow.math.cosh", {}, namespace)
+    exec_("acosh = tensorflow.math.acosh", {}, namespace)
+    exec_("sinh = tensorflow.math.sinh", {}, namespace)
+    exec_("asinh = tensorflow.math.asinh", {}, namespace)
+    exec_("tanh = tensorflow.math.tanh", {}, namespace)
+    exec_("atanh = tensorflow.math.atanh", {}, namespace)
+
+    exec_("real = tensorflow.math.real", {}, namespace)
+    exec_("imag = tensorflow.math.imag", {}, namespace)
+    exec_("angle = tensorflow.math.angle", {}, namespace)
+
+    exec_("erf = tensorflow.math.erf", {}, namespace)
+    exec_("lgamma = tensorflow.math.lgamma", {}, namespace)
+
+    exec_("equal = tensorflow.math.equal", {}, namespace)
+    exec_("not_equal = tensorflow.math.not_equal", {}, namespace)
+    exec_("less = tensorflow.math.less", {}, namespace)
+    exec_("less_equal = tensorflow.math.less_equal", {}, namespace)
+    exec_("greater = tensorflow.math.greater", {}, namespace)
+    exec_("greater_equal = tensorflow.math.greater_equal", {}, namespace)
+
+    exec_("matrix_transpose = tensorflow.linalg.matrix_transpose",
+          {}, namespace)
+    exec_("inv = tensorflow.linalg.inv", {}, namespace)
+    exec_("det = tensorflow.linalg.det", {}, namespace)
+    exec_("trace = tensorflow.linalg.trace", {}, namespace)
+
+    exec_("mod = tensorflow.math.mod", {}, namespace)
+    exec_("conj = tensorflow.math.conj", {}, namespace)
+
+
+
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
-    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("from tensorflow import *",)),
+    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("from tensorflow import *", _import_tensorflow,)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -138,6 +190,10 @@ def _import(module, reload=False):
             return
 
     for import_command in import_commands:
+        if isinstance(import_command, FunctionType):
+            import_command(namespace)
+            continue
+
         if import_command.startswith('import_module'):
             module = eval(import_command)
 
