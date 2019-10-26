@@ -223,7 +223,7 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
     See Also
     ========
 
-    _orbits_transversals_from_bsgs, distribute_gens_by_base
+    _orbits_transversals_from_bsgs, _distribute_gens_by_base
 
     """
     if strong_gens_distr is None:
