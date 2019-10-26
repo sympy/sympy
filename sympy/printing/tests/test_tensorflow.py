@@ -60,7 +60,7 @@ def _compare_tensorflow_matrix(variables, expr, use_float=False):
         r = [i for row in r for i in row]
         e = [i for row in e for i in row]
         assert all(
-            abs(a-b) < 10**-(5-int(log(abs(a), 10))) for a, b in zip(r, e))
+            abs(a-b) < 10**-(4-int(log(abs(a), 10))) for a, b in zip(r, e))
 
 
 def _compare_tensorflow_matrix_scalar(variables, expr):

@@ -135,6 +135,12 @@ def _import_tensorflow(namespace):
     exec_("greater = tensorflow.math.greater", {}, namespace)
     exec_("greater_equal = tensorflow.math.greater_equal", {}, namespace)
 
+    exec_("logical_and = tensorflow.math.logical_and", {}, namespace)
+    exec_("logical_or = tensorflow.math.logical_or", {}, namespace)
+    exec_("logical_not = tensorflow.math.logical_not", {}, namespace)
+    exec_("maximum = tensorflow.math.maximum", {}, namespace)
+    exec_("minimum = tensorflow.math.minimum", {}, namespace)
+
     exec_("matrix_transpose = tensorflow.linalg.matrix_transpose",
           {}, namespace)
     exec_("matmul = tensorflow.linalg.matmul", {}, namespace)
