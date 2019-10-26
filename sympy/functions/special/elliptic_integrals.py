@@ -95,15 +95,9 @@ class elliptic_k(Function):
             return True
 
     def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
-
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, m):
         from sympy import Integral, Dummy
         t = Dummy('t')
+        m = self.args[0]
         return Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2))
 
     def _sage_(self):
@@ -180,16 +174,11 @@ class elliptic_f(Function):
             return self.func(z.conjugate(), m.conjugate())
 
     def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
-
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, z, m):
         from sympy import Integral, Dummy
         t = Dummy('t')
+        z, m = self.args[0], self.args[1]
         return Integral(1/(sqrt(1 - m*sin(t)**2)), (t, 0, z))
+
     def _eval_is_zero(self):
         z, m = self.args
         if z.is_zero:
@@ -311,15 +300,8 @@ class elliptic_e(Function):
                             ((S.Zero,), (S.Zero,)), -m)/4
 
     def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
-
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, *args):
         from sympy import Integral, Dummy
-        z, m = (pi/2, args[0]) if len(args) == 1 else args
+        z, m = (pi/2, self.args[0]) if len(self.args) == 1 else self.args
         t = Dummy('t')
         return Integral(sqrt(1 - m*sin(t)**2), (t, 0, z))
 
@@ -450,14 +432,10 @@ class elliptic_pi(Function):
         raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
-
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, n, m, z=None):
         from sympy import Integral, Dummy
+        n, m, z = self.args[0], self.args[1], None
+        if len(self.args) == 3:
+            z = self.args[2]
         if z is None:
             z = pi/2
         else:
