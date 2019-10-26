@@ -8,6 +8,7 @@ from sympy.printing.precedence import PRECEDENCE
 from sympy.printing.pycode import AbstractPythonCodePrinter
 import sympy
 
+tensorflow = import_module('tensorflow')
 
 class TensorflowPrinter(AbstractPythonCodePrinter):
     """
@@ -66,11 +67,23 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         sympy.MatAdd: "tensorflow.math.add",
         sympy.HadamardProduct: "tensorflow.math.multiply",
         sympy.Trace: "tensorflow.linalg.trace",
-        sympy.Transpose: "tensorflow.linalg.matrix_transpose",
 
         # XXX May raise error for integer matrices.
         sympy.Determinant : "tensorflow.linalg.det",
     }
+
+    _default_settings = dict(
+        AbstractPythonCodePrinter._default_settings,
+        tensorflow_version=None
+    )
+
+    def __init__(self, settings=None):
+        super(TensorflowPrinter, self).__init__(settings)
+
+        version = self._settings['tensorflow_version']
+        if version is None and tensorflow:
+            version = tensorflow.__version__
+        self.tensorflow_version = version
 
     def _print_Function(self, expr):
         op = self.mapping.get(type(expr), None)
@@ -93,13 +106,20 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
     _print_Not = _print_Function
     _print_And = _print_Function
     _print_Or = _print_Function
-    _print_Transpose = _print_Function
     _print_HadamardProduct = _print_Function
     _print_Trace = _print_Function
     _print_Determinant = _print_Function
 
     def _print_Inverse(self, expr):
         op = self._module_format('tensorflow.linalg.inv')
+        return "{}({})".format(op, self._print(expr.arg))
+
+    def _print_Transpose(self, expr):
+        version = self.tensorflow_version
+        if version and V(version) < V('1.14'):
+            op = self._module_format('tensorflow.matrix_transpose')
+        else:
+            op = self._module_format('tensorflow.linalg.matrix_transpose')
         return "{}({})".format(op, self._print(expr.arg))
 
     def _print_Derivative(self, expr):
@@ -117,8 +137,8 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         return unfold(expr.expr, variables)
 
     def _print_Piecewise(self, expr):
-        tensorflow = import_module('tensorflow')
-        if tensorflow and V(tensorflow.__version__) < '1.0':
+        version = self.tensorflow_version
+        if version and V(version) < V('1.0'):
             tensorflow_piecewise = "tensorflow.select"
         else:
             tensorflow_piecewise = "tensorflow.where"
@@ -258,6 +278,6 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         return self._expand_fold_binary_op('tensorflow.math.add', expr.args)
 
 
-def tensorflow_code(expr):
-    printer = TensorflowPrinter()
+def tensorflow_code(expr, **settings):
+    printer = TensorflowPrinter(settings)
     return printer.doprint(expr)

@@ -292,10 +292,6 @@ def test_tensorflow_matrices():
         "tensorflow.linalg.matmul(tensorflow.linalg.matmul(M, M), M)"
     _compare_tensorflow_matrix((M,), expr)
 
-    expr = M.T
-    assert tensorflow_code(expr) == "tensorflow.linalg.matrix_transpose(M)"
-    _compare_tensorflow_matrix((M,), expr)
-
     expr = Trace(M)
     assert tensorflow_code(expr) == "tensorflow.linalg.trace(M)"
     _compare_tensorflow_matrix((M,), expr)
@@ -307,6 +303,16 @@ def test_tensorflow_matrices():
     expr = Inverse(M)
     assert tensorflow_code(expr) == "tensorflow.linalg.inv(M)"
     _compare_tensorflow_matrix((M,), expr, use_float=True)
+
+
+def test_transpose():
+    expr = M.T
+    assert tensorflow_code(expr, tensorflow_version='1.14') == \
+        "tensorflow.linalg.matrix_transpose(M)"
+    assert tensorflow_code(expr, tensorflow_version='1.13') == \
+        "tensorflow.matrix_transpose(M)"
+
+    _compare_tensorflow_matrix((M,), expr)
 
 
 def test_codegen_einsum():
