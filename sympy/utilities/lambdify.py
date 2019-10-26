@@ -787,7 +787,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 ln = "from %s import %s" % (mod, k)
                 try:
                     exec_(ln, {}, namespace)
-                except ModuleNotFoundError:
+                except ImportError:
                     # Tensorflow 2.0 has issues with importing a specific
                     # function from its submodule.
                     # https://github.com/tensorflow/tensorflow/issues/33022
