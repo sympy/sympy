@@ -1,6 +1,5 @@
 import sympy.physics.mechanics as me
 import sympy as sm
-import math as m
 import numpy as np
 
 q1, q2, u1, u2 = me.dynamicsymbols('q1 q2 u1 u2')
