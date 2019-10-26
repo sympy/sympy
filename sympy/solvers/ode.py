@@ -82,7 +82,7 @@ hint, and it has its own function, named ``ode_<hint>``.  That function takes
 in the ODE and any match expression gathered by
 :py:meth:`~sympy.solvers.ode.classify_ode` and returns a solved result.  If
 this result has any integrals in it, the hint function will return an
-unevaluated :py:class:`~sympy.integrals.Integral` class.
+unevaluated :py:class:`~sympy.integrals.integrals.Integral` class.
 :py:meth:`~sympy.solvers.ode.dsolve`, which is the user wrapper function
 around all of this, will then call :py:meth:`~sympy.solvers.ode.odesimp` on
 the result, which, among other things, will attempt to solve the equation for
@@ -884,14 +884,15 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         impossible integral.  Try using an ``_Integral`` hint or
         ``all_Integral`` to get it return something.
 
-        Note that some hints do not have ``_Integral`` counterparts.  This is
-        because :py:func:`~sympy.integrals.integrate` is not used in solving
-        the ODE for those method. For example, `n`\th order linear homogeneous
-        ODEs with constant coefficients do not require integration to solve,
-        so there is no ``nth_linear_homogeneous_constant_coeff_Integrate``
-        hint. You can easily evaluate any unevaluated
-        :py:class:`~sympy.integrals.Integral`\s in an expression by doing
-        ``expr.doit()``.
+        Note that some hints do not have ``_Integral`` counterparts. This is
+        because :py:func:`~sympy.integrals.integrals.integrate` is not used in
+        solving the ODE for those method. For example, `n`\th order linear
+        homogeneous ODEs with constant coefficients do not require integration
+        to solve, so there is no
+        ``nth_linear_homogeneous_constant_coeff_Integrate`` hint. You can
+        easily evaluate any unevaluated
+        :py:class:`~sympy.integrals.integrals.Integral`\s in an expression by
+        doing ``expr.doit()``.
 
     Ordinals
 
@@ -2253,7 +2254,7 @@ def odesimp(ode, eq, func, hint):
     It may use knowledge of the type of solution that the hint returns to
     apply additional simplifications.
 
-    It also attempts to integrate any :py:class:`~sympy.integrals.Integral`\s
+    It also attempts to integrate any :py:class:`~sympy.integrals.integrals.Integral`\s
     in the expression, if the hint is not an ``_Integral`` hint.
 
     This function should have no effect on expressions returned by
@@ -2640,7 +2641,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
       a solution returned by ``dsolve(ode, func, simplify=False``).
     - If ``sol`` is not solved for ``func``, then base the result on the
       length of ``sol``, as computed by ``len(str(sol))``.
-    - If ``sol`` has any unevaluated :py:class:`~sympy.integrals.Integral`\s,
+    - If ``sol`` has any unevaluated :py:class:`~sympy.integrals.integrals.Integral`\s,
       this will automatically be considered less simple than any of the above.
 
     This function returns an integer such that if solution A is simpler than
@@ -2661,7 +2662,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     | ``func``                                     |                   |
     +----------------------------------------------+-------------------+
     | ``sol`` contains an                          | ``oo``            |
-    | :py:class:`~sympy.integrals.Integral`        |                   |
+    | :obj:`~sympy.integrals.integrals.Integral`   |                   |
     +----------------------------------------------+-------------------+
 
     ``oo`` here means the SymPy infinity, which should compare greater than

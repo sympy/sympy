@@ -309,7 +309,7 @@ class DiracDelta(Function):
            See Also
            ========
 
-           simplify, Diracdelta
+           sympy.simplify.simplify.simplify, DiracDelta
 
         """
         p = self.args[0].as_poly(x)

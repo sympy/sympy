@@ -171,6 +171,7 @@ Orthogonal polynomials
 .. autofunction:: jacobi_poly
 .. autofunction:: legendre_poly
 .. autofunction:: laguerre_poly
+.. autofunction:: spherical_bessel_fn
 
 Manipulation of rational functions
 ==================================

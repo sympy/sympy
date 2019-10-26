@@ -451,7 +451,7 @@ class zeta(Function):
     Derivative(zeta(s, a), s)
 
     The Hurwitz zeta function can be expressed in terms of the Lerch transcendent,
-    :class:`sympy.functions.special.lerchphi`:
+    :class:`~.lerchphi`:
 
     >>> from sympy import lerchphi
     >>> zeta(s, a).rewrite(lerchphi)
