@@ -91,7 +91,7 @@ matrix:
             - python-scipy
 
     # Tensorflow 1 support
-    - python: 3.7
+    - python: 3.6
       env:
         - TEST_ASCII="true"
         - TEST_OPT_DEPENDENCY="tensorflow<2"
