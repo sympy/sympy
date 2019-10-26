@@ -1,4 +1,4 @@
-from sympy import symbols
+from sympy import symbols, S
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer, inertia
 from sympy.physics.mechanics import inertia_of_point_mass
