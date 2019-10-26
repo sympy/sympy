@@ -105,7 +105,6 @@ def _compare_tensorflow_relational(
     with graph.as_default():
         tf_rvs = [eval(tensorflow_code(i)) for i in rvs]
         session = tf.compat.v1.Session(graph=graph)
-        print(f(*tf_rvs))
         r = session.run(f(*tf_rvs))
 
     e = expr.subs({k: v for k, v in zip(variables, rvs)}).doit()
