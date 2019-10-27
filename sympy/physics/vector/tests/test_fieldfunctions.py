@@ -26,8 +26,8 @@ def test_curl():
 
 
 def test_divergence():
-    assert divergence(Vector(0), R) == S(0)
-    assert divergence(R.x, R) == S(0)
+    assert divergence(Vector(0), R) is S.Zero
+    assert divergence(R.x, R) is S.Zero
     assert divergence(R[0]**2*R.x, R) == 2*R[0]
     assert divergence(R[0]*R[1]*R[2] * (R.x+R.y+R.z), R) == \
            R[0]*R[1] + R[0]*R[2] + R[1]*R[2]
@@ -109,7 +109,7 @@ def test_scalar_potential_difference():
     point2 = origin.locatenew('P2', 4*R.x + 5*R.y + 6*R.z)
     genericpointR = origin.locatenew('RP', R[0]*R.x + R[1]*R.y + R[2]*R.z)
     genericpointP = origin.locatenew('PP', P[0]*P.x + P[1]*P.y + P[2]*P.z)
-    assert scalar_potential_difference(S(0), R, point1, point2, \
+    assert scalar_potential_difference(S.Zero, R, point1, point2, \
                                        origin) == 0
     assert scalar_potential_difference(scalar_field, R, origin, \
                                        genericpointR, origin) == \

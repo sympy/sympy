@@ -11,7 +11,7 @@ from sympy.utilities import public
 class Ring(Domain):
     """Represents a ring domain. """
 
-    has_Ring = True
+    is_Ring = True
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """

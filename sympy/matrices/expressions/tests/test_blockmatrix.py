@@ -1,9 +1,11 @@
-from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
-        bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd,
-        bc_transpose, blockcut, reblock_2x2, deblock)
+from sympy.matrices.expressions.blockmatrix import (
+    block_collapse, bc_matmul, bc_block_plus_ident, BlockDiagMatrix,
+    BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
+    blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (MatrixSymbol, Identity,
-        Inverse, trace, Transpose, det)
-from sympy.matrices import Matrix, ImmutableMatrix
+        Inverse, trace, Transpose, det, ZeroMatrix)
+from sympy.matrices import (
+    Matrix, ImmutableMatrix, ImmutableSparseMatrix)
 from sympy.core import Tuple, symbols, Expr
 from sympy.core.compatibility import range
 from sympy.functions import transpose
@@ -95,6 +97,19 @@ def test_BlockMatrix():
     Z = MatrixSymbol('Z', *A.shape)
     assert block_collapse(Ab + Z) == A + Z
 
+def test_block_collapse_explicit_matrices():
+    A = Matrix([[1, 2], [3, 4]])
+    assert block_collapse(BlockMatrix([[A]])) == A
+
+    A = ImmutableSparseMatrix([[1, 2], [3, 4]])
+    assert block_collapse(BlockMatrix([[A]])) == A
+
+def test_issue_17624():
+    a = MatrixSymbol("a", 2, 2)
+    z = ZeroMatrix(2, 2)
+    b = BlockMatrix([[a, z], [z, z]])
+    assert block_collapse(b * b) == BlockMatrix([[a**2, z], [z, z]])
+    assert block_collapse(b * b * b) == BlockMatrix([[a**3, z], [z, z]])
 
 def test_BlockMatrix_trace():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
@@ -120,9 +135,9 @@ def test_squareBlockMatrix():
 
     assert X.is_square
 
-    assert (block_collapse(X + Identity(m + n)) ==
-        BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
     Q = X + Identity(m + n)
+    assert (block_collapse(Q) ==
+        BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
 
     assert (X + MatrixSymbol('Q', n + m, n + m)).is_MatAdd
     assert (X * MatrixSymbol('Q', n + m, n + m)).is_MatMul
@@ -203,3 +218,14 @@ def test_deblock():
                     for i in range(4)])
 
     assert deblock(reblock_2x2(B)) == B
+
+def test_block_collapse_type():
+    bm1 = BlockDiagMatrix(ImmutableMatrix([1]), ImmutableMatrix([2]))
+    bm2 = BlockDiagMatrix(ImmutableMatrix([3]), ImmutableMatrix([4]))
+
+    assert bm1.T.__class__ == BlockDiagMatrix
+    assert block_collapse(bm1 - bm2).__class__ == BlockDiagMatrix
+    assert block_collapse(Inverse(bm1)).__class__ == BlockDiagMatrix
+    assert block_collapse(Transpose(bm1)).__class__ == BlockDiagMatrix
+    assert bc_transpose(Transpose(bm1)).__class__ == BlockDiagMatrix
+    assert bc_inverse(Inverse(bm1)).__class__ == BlockDiagMatrix

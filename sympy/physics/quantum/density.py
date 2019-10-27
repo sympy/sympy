@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import Tuple, Add, Mul, Matrix, log, expand, Rational
+from sympy import Tuple, Add, Mul, Matrix, log, expand, S
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
@@ -81,7 +81,7 @@ class Density(HermitianOperator):
         return Tuple(*[arg[1] for arg in self.args])
 
     def get_state(self, index):
-        """Return specfic state by index.
+        """Return specific state by index.
 
         Parameters
         ==========
@@ -201,7 +201,7 @@ class Density(HermitianOperator):
         return printer._print(r'\rho', *args)
 
     def _print_operator_name_pretty(self, printer, *args):
-        return prettyForm(unichr('\N{GREEK SMALL LETTER RHO}'))
+        return prettyForm('\N{GREEK SMALL LETTER RHO}')
 
     def _eval_trace(self, **kwargs):
         indices = kwargs.get('indices', [])
@@ -238,7 +238,7 @@ def entropy(density):
     >>> from sympy import S, log
     >>> up = JzKet(S(1)/2,S(1)/2)
     >>> down = JzKet(S(1)/2,-S(1)/2)
-    >>> d = Density((up,0.5),(down,0.5))
+    >>> d = Density((up,S(1)/2),(down,S(1)/2))
     >>> entropy(d)
     log(2)/2
 
@@ -267,7 +267,7 @@ def fidelity(state1, state2):
     The arguments provided to this function should be a square matrix or a
     Density object. If it is a square matrix, it is assumed to be diagonalizable.
 
-    Parameters:
+    Parameters
     ==========
 
     state1, state2 : a density matrix or Matrix
@@ -302,7 +302,7 @@ def fidelity(state1, state2):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Fidelity_of_quantum_states
+    .. [1] https://en.wikipedia.org/wiki/Fidelity_of_quantum_states
 
     """
     state1 = represent(state1) if isinstance(state1, Density) else state1
@@ -318,5 +318,5 @@ def fidelity(state1, state2):
         raise ValueError("The dimensions of both args should be equal and the "
                          "matrix obtained should be a square matrix")
 
-    sqrt_state1 = state1**Rational(1, 2)
-    return Tr((sqrt_state1 * state2 * sqrt_state1)**Rational(1, 2)).doit()
+    sqrt_state1 = state1**S.Half
+    return Tr((sqrt_state1 * state2 * sqrt_state1)**S.Half).doit()

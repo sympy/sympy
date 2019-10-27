@@ -3,8 +3,8 @@
 
 from __future__ import print_function, division
 
-from sympy.simplify.hyperexpand import FormulaCollection
 from sympy import latex, Eq, hyper
+from sympy.simplify.hyperexpand import FormulaCollection
 
 c = FormulaCollection()
 

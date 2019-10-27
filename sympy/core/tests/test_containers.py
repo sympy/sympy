@@ -1,8 +1,14 @@
 from collections import defaultdict
+
 from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, Integer
-from sympy.core.containers import tuple_wrapper
-from sympy.utilities.pytest import raises
 from sympy.core.compatibility import is_sequence, iterable, range
+from sympy.core.containers import tuple_wrapper
+from sympy.core.expr import unchanged
+from sympy.core.function import Function, Lambda
+from sympy.core.relational import Eq
+from sympy.utilities.pytest import raises
+
+from sympy.abc import x, y
 
 
 def test_Tuple():
@@ -52,7 +58,7 @@ def test_Tuple_concatenation():
 
 
 def test_Tuple_equality():
-    assert Tuple(1, 2) is not (1, 2)
+    assert not isinstance(Tuple(1, 2), tuple)
     assert (Tuple(1, 2) == (1, 2)) is True
     assert (Tuple(1, 2) != (1, 2)) is False
     assert (Tuple(1, 2) == (1, 3)) is False
@@ -61,6 +67,21 @@ def test_Tuple_equality():
     assert (Tuple(1, 2) != Tuple(1, 2)) is False
     assert (Tuple(1, 2) == Tuple(1, 3)) is False
     assert (Tuple(1, 2) != Tuple(1, 3)) is True
+
+
+def test_Tuple_Eq():
+    assert Eq(Tuple(), Tuple()) is S.true
+    assert Eq(Tuple(1), 1) is S.false
+    assert Eq(Tuple(1, 2), Tuple(1)) is S.false
+    assert Eq(Tuple(1), Tuple(1)) is S.true
+    assert Eq(Tuple(1, 2), Tuple(1, 3)) is S.false
+    assert Eq(Tuple(1, 2), Tuple(1, 2)) is S.true
+    assert unchanged(Eq, Tuple(1, x), Tuple(1, 2))
+    assert Eq(Tuple(1, x), Tuple(1, 2)).subs(x, 2) is S.true
+    assert unchanged(Eq, Tuple(1, 2), x)
+    f = Function('f')
+    assert unchanged(Eq, Tuple(1), f(x))
+    assert Eq(Tuple(1), f(x)).subs(x, 1).subs(f, Lambda(y, (y,))) is S.true
 
 
 def test_Tuple_comparision():
@@ -130,7 +151,7 @@ def test_Dict():
     raises(KeyError, lambda: d[2])
     assert len(d) == 3
     assert set(d.keys()) == set((x, y, z))
-    assert set(d.values()) == set((S(1), S(2), S(3)))
+    assert set(d.values()) == set((S.One, S(2), S(3)))
     assert d.get(5, 'default') == 'default'
     assert x in d and z in d and not 5 in d
     assert d.has(x) and d.has(1)  # SymPy Basic .has method
@@ -146,7 +167,7 @@ def test_Dict():
         d[5] = 6  # assert immutability
 
     assert set(
-        d.items()) == set((Tuple(x, S(1)), Tuple(y, S(2)), Tuple(z, S(3))))
+        d.items()) == set((Tuple(x, S.One), Tuple(y, S(2)), Tuple(z, S(3))))
     assert set(d) == {x, y, z}
     assert str(d) == '{x: 1, y: 2, z: 3}'
     assert d.__repr__() == '{x: 1, y: 2, z: 3}'
@@ -164,7 +185,7 @@ def test_Dict():
     d = Dict(d)
     assert len(d) == 3
     assert set(d.keys()) == set((x, y, z))
-    assert set(d.values()) == set((S(0), S(0), S(0)))
+    assert set(d.values()) == set((S.Zero, S.Zero, S.Zero))
 
 
 def test_issue_5788():

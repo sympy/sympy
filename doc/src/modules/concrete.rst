@@ -1,5 +1,6 @@
-Concrete Mathematics
-====================
+========
+Concrete
+========
 
 Hypergeometric terms
 --------------------
