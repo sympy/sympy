@@ -32,7 +32,6 @@ import subprocess
 import signal
 import stat
 import tempfile
-import sympy
 
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import exec_, PY3, string_types, range, unwrap

@@ -127,6 +127,21 @@ class ReferenceFrame(object):
         >>> vlatex(P.x)
         'A1'
 
+        symbols() can be used to create multiple Reference Frames in one step, for example:
+
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> from sympy import symbols
+        >>> A, B, C = symbols('A B C', cls=ReferenceFrame)
+        >>> D, E = symbols('D E', cls=ReferenceFrame, indices=('1', '2', '3'))
+        >>> A[0]
+        A_x
+        >>> D.x
+        D['1']
+        >>> E.y
+        E['2']
+        >>> type(A) == type(D)
+        True
+
         """
 
         if not isinstance(name, string_types):

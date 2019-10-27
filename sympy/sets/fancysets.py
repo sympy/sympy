@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from functools import reduce
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, with_metaclass, range, PY3
+from sympy.core.compatibility import with_metaclass, range, PY3
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
@@ -411,7 +411,6 @@ class ImageSet(Set):
         def get_equations(expr, candidate):
             '''Find the equations relating symbols in expr and candidate.'''
             queue = [(expr, candidate)]
-            equations = []
             for e, c in queue:
                 if not isinstance(e, Tuple):
                     yield Eq(e, c)
@@ -565,7 +564,7 @@ class Range(Set):
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
         if len(args) == 1:
-            if isinstance(args[0], range if PY3 else xrange):
+            if isinstance(args[0], range):
                 raise TypeError(
                     'use sympify(%s) to convert range to Range' % args[0])
 

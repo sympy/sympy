@@ -229,6 +229,16 @@ class sinh(HyperbolicFunction):
         else:
             return self.func(arg)
 
+    def _eval_is_real(self):
+        arg = self.args[0]
+        if arg.is_real:
+            return True
+
+        # if `im` is of the form n*pi
+        # else, check if it is a number
+        re, im = arg.as_real_imag()
+        return (im%pi).is_zero
+
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
             return True
@@ -243,8 +253,7 @@ class sinh(HyperbolicFunction):
 
     def _eval_is_finite(self):
         arg = self.args[0]
-        if arg.is_imaginary:
-            return True
+        return arg.is_finite
 
     def _eval_is_zero(self):
         arg = self.args[0]
@@ -398,14 +407,26 @@ class cosh(HyperbolicFunction):
         else:
             return self.func(arg)
 
+    def _eval_is_real(self):
+        arg = self.args[0]
+
+        # `cosh(x)` is real for real OR purely imaginary `x`
+        if arg.is_real or arg.is_imaginary:
+            return True
+
+        # cosh(a+ib) = cos(b)*cosh(a) + i*sin(b)*sinh(a)
+        # the imaginary part can be an expression like n*pi
+        # if not, check if the imaginary part is a number
+        re, im = arg.as_real_imag()
+        return (im%pi).is_zero
+
     def _eval_is_positive(self):
         if self.args[0].is_extended_real:
             return True
 
     def _eval_is_finite(self):
         arg = self.args[0]
-        if arg.is_imaginary:
-            return True
+        return arg.is_finite
 
 
 class tanh(HyperbolicFunction):
@@ -548,6 +569,22 @@ class tanh(HyperbolicFunction):
         else:
             return self.func(arg)
 
+    def _eval_is_real(self):
+        from sympy import cos, sinh
+        arg = self.args[0]
+        if arg.is_real:
+            return True
+
+        re, im = arg.as_real_imag()
+
+        # if denom = 0, tanh(arg) = zoo
+        if re == 0 and im % pi == pi/2:
+            return None
+
+        # check if im is of the form n*pi/2 to make sin(2*im) = 0
+        # if not, im could be a number, return False in that case
+        return (im % (pi/2)).is_zero
+
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
             return True
@@ -561,7 +598,15 @@ class tanh(HyperbolicFunction):
             return self.args[0].is_negative
 
     def _eval_is_finite(self):
+        from sympy import sinh, cos
         arg = self.args[0]
+
+        re, im = arg.as_real_imag()
+        denom = cos(im)**2 + sinh(re)**2
+        if denom == 0:
+            return False
+        elif denom.is_number:
+            return True
         if arg.is_extended_real:
             return True
 

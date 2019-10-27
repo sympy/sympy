@@ -6,8 +6,6 @@ import sys
 import types
 import inspect
 
-from functools import update_wrapper
-
 from sympy.core.decorators import wraps
 from sympy.core.compatibility import class_types, get_function_globals, get_function_name, iterable
 from sympy.utilities.runtests import DependencyError, SymPyDocTests, PyTestReporter
