@@ -40,11 +40,8 @@ def test_K():
     assert K(z).series(z) == pi/2 + pi*z/8 + 9*pi*z**2/128 + \
         25*pi*z**3/512 + 1225*pi*z**4/32768 + 3969*pi*z**5/131072 + O(z**6)
 
-
-def test_K_as_integral():
-    assert str(K(m).as_integral) == \
-        str(Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2)))
-
+    assert K(m).rewrite(Integral).dummy_eq(
+        Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2)))
 
 def test_F():
     assert F(z, 0) == z
@@ -70,11 +67,8 @@ def test_F():
     assert F(z, m).series(z) == \
         z + z**5*(3*m**2/40 - m/30) + m*z**3/6 + O(z**6)
 
-
-def test_F_as_integral():
-    assert str(F(z, m).as_integral) == \
-        str(Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, z)))
-
+    assert F(z, m).rewrite(Integral).dummy_eq(
+        Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, z)))
 
 def test_E():
     assert E(z, 0) == z
@@ -116,13 +110,10 @@ def test_E():
     assert E(z).series(z) == pi/2 - pi*z/8 - 3*pi*z**2/128 - \
         5*pi*z**3/512 - 175*pi*z**4/32768 - 441*pi*z**5/131072 + O(z**6)
 
-
-def test_E_as_integral():
-    assert str(E(z, m).as_integral) == \
-        str(Integral(sqrt(1 - m*sin(t)**2), (t, 0, z)))
-    assert str(E(m).as_integral) == \
-        str(Integral(sqrt(1 - m*sin(t)**2), (t, 0, pi/2)))
-
+    assert E(z, m).rewrite(Integral).dummy_eq(
+        Integral(sqrt(1 - m*sin(t)**2), (t, 0, z)))
+    assert E(m).rewrite(Integral).dummy_eq(
+        Integral(sqrt(1 - m*sin(t)**2), (t, 0, pi/2)))
 
 def test_P():
     assert P(0, z, m) == F(z, m)
@@ -169,9 +160,7 @@ def test_P():
     assert P(n, z, m).series(z) == z + z**3*(m/6 + n/3) + \
         z**5*(3*m**2/40 + m*n/10 - m/30 + n**2/5 - n/15) + O(z**6)
 
-
-def test_P_as_integral():
-    assert str(P(n, z, m).as_integral) == \
-        str(Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z)))
-    assert str(P(n, m).as_integral) == \
-        str(Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, pi/2)))
+    assert P(n, z, m).rewrite(Integral).dummy_eq(
+        Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z)))
+    assert P(n, m).rewrite(Integral).dummy_eq(
+        Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, pi/2)))
