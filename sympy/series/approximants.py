@@ -1,10 +1,9 @@
 from __future__ import print_function, division
 
-from sympy.utilities import public
-
-from sympy.core.compatibility import range
 from sympy import Integer
 from sympy.core import Symbol
+from sympy.core.compatibility import range
+from sympy.utilities import public
 
 @public
 def approximants(l, X=Symbol('x'), simplify=False):
@@ -49,7 +48,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
     -1/(t*(x + 1) - 1)
     nan
 
-    See also
+    See Also
     ========
     See function sympy.concrete.guess.guess_generating_function_rational and
     function mpmath.pade

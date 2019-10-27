@@ -1,7 +1,10 @@
-from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sqrt, \
-    coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
-    Integer, O, exp, sech, sec, csch, asech, acsch, acos, asin, expand_mul
+from sympy import (symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log,
+    sqrt, coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth,
+    Integer, O, exp, sech, sec, csch, asech, acsch, acos, asin, expand_mul,
+    AccumBounds, im, re)
 
+from sympy.core.expr import unchanged
+from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 
 
@@ -10,24 +13,24 @@ def test_sinh():
 
     k = Symbol('k', integer=True)
 
-    assert sinh(nan) == nan
-    assert sinh(zoo) == nan
+    assert sinh(nan) is nan
+    assert sinh(zoo) is nan
 
-    assert sinh(oo) == oo
-    assert sinh(-oo) == -oo
+    assert sinh(oo) is oo
+    assert sinh(-oo) is -oo
 
     assert sinh(0) == 0
 
-    assert sinh(1) == sinh(1)
+    assert unchanged(sinh, 1)
     assert sinh(-1) == -sinh(1)
 
-    assert sinh(x) == sinh(x)
+    assert unchanged(sinh, x)
     assert sinh(-x) == -sinh(x)
 
-    assert sinh(pi) == sinh(pi)
+    assert unchanged(sinh, pi)
     assert sinh(-pi) == -sinh(pi)
 
-    assert sinh(2**1024 * E) == sinh(2**1024 * E)
+    assert unchanged(sinh, 2**1024 * E)
     assert sinh(-2**1024 * E) == -sinh(2**1024 * E)
 
     assert sinh(pi*I) == 0
@@ -39,26 +42,26 @@ def test_sinh():
 
     assert sinh(pi*I/2) == I
     assert sinh(-pi*I/2) == -I
-    assert sinh(5*pi*I/2) == I
-    assert sinh(7*pi*I/2) == -I
+    assert sinh(pi*I*Rational(5, 2)) == I
+    assert sinh(pi*I*Rational(7, 2)) == -I
 
     assert sinh(pi*I/3) == S.Half*sqrt(3)*I
-    assert sinh(-2*pi*I/3) == -S.Half*sqrt(3)*I
+    assert sinh(pi*I*Rational(-2, 3)) == Rational(-1, 2)*sqrt(3)*I
 
     assert sinh(pi*I/4) == S.Half*sqrt(2)*I
-    assert sinh(-pi*I/4) == -S.Half*sqrt(2)*I
-    assert sinh(17*pi*I/4) == S.Half*sqrt(2)*I
-    assert sinh(-3*pi*I/4) == -S.Half*sqrt(2)*I
+    assert sinh(-pi*I/4) == Rational(-1, 2)*sqrt(2)*I
+    assert sinh(pi*I*Rational(17, 4)) == S.Half*sqrt(2)*I
+    assert sinh(pi*I*Rational(-3, 4)) == Rational(-1, 2)*sqrt(2)*I
 
     assert sinh(pi*I/6) == S.Half*I
-    assert sinh(-pi*I/6) == -S.Half*I
-    assert sinh(7*pi*I/6) == -S.Half*I
-    assert sinh(-5*pi*I/6) == -S.Half*I
+    assert sinh(-pi*I/6) == Rational(-1, 2)*I
+    assert sinh(pi*I*Rational(7, 6)) == Rational(-1, 2)*I
+    assert sinh(pi*I*Rational(-5, 6)) == Rational(-1, 2)*I
 
     assert sinh(pi*I/105) == sin(pi/105)*I
     assert sinh(-pi*I/105) == -sin(pi/105)*I
 
-    assert sinh(2 + 3*I) == sinh(2 + 3*I)
+    assert unchanged(sinh, 2 + 3*I)
 
     assert sinh(x*I) == sin(x)*I
 
@@ -67,6 +70,16 @@ def test_sinh():
 
     assert sinh(k*pi*I/2) == sin(k*pi/2)*I
 
+    assert sinh(x).as_real_imag(deep=False) == (cos(im(x))*sinh(re(x)),
+                sin(im(x))*cosh(re(x)))
+    x = Symbol('x', extended_real=True)
+    assert sinh(x).as_real_imag(deep=False) == (sinh(x), 0)
+
+    x = Symbol('x', real=True)
+    assert sinh(I*x).is_finite is True
+    assert sinh(x).is_real is True
+    assert sinh(I).is_real is False
+
 
 def test_sinh_series():
     x = Symbol('x')
@@ -74,29 +87,34 @@ def test_sinh_series():
         x + x**3/6 + x**5/120 + x**7/5040 + x**9/362880 + O(x**10)
 
 
+def test_sinh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: sinh(x).fdiff(2))
+
+
 def test_cosh():
     x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
-    assert cosh(nan) == nan
-    assert cosh(zoo) == nan
+    assert cosh(nan) is nan
+    assert cosh(zoo) is nan
 
-    assert cosh(oo) == oo
-    assert cosh(-oo) == oo
+    assert cosh(oo) is oo
+    assert cosh(-oo) is oo
 
     assert cosh(0) == 1
 
-    assert cosh(1) == cosh(1)
+    assert unchanged(cosh, 1)
     assert cosh(-1) == cosh(1)
 
-    assert cosh(x) == cosh(x)
+    assert unchanged(cosh, x)
     assert cosh(-x) == cosh(x)
 
     assert cosh(pi*I) == cos(pi)
     assert cosh(-pi*I) == cos(pi)
 
-    assert cosh(2**1024 * E) == cosh(2**1024 * E)
+    assert unchanged(cosh, 2**1024 * E)
     assert cosh(-2**1024 * E) == cosh(2**1024 * E)
 
     assert cosh(pi*I/2) == 0
@@ -110,29 +128,39 @@ def test_cosh():
     assert cosh(8*pi*I) == 1
 
     assert cosh(pi*I/3) == S.Half
-    assert cosh(-2*pi*I/3) == -S.Half
+    assert cosh(pi*I*Rational(-2, 3)) == Rational(-1, 2)
 
     assert cosh(pi*I/4) == S.Half*sqrt(2)
     assert cosh(-pi*I/4) == S.Half*sqrt(2)
-    assert cosh(11*pi*I/4) == -S.Half*sqrt(2)
-    assert cosh(-3*pi*I/4) == -S.Half*sqrt(2)
+    assert cosh(pi*I*Rational(11, 4)) == Rational(-1, 2)*sqrt(2)
+    assert cosh(pi*I*Rational(-3, 4)) == Rational(-1, 2)*sqrt(2)
 
     assert cosh(pi*I/6) == S.Half*sqrt(3)
     assert cosh(-pi*I/6) == S.Half*sqrt(3)
-    assert cosh(7*pi*I/6) == -S.Half*sqrt(3)
-    assert cosh(-5*pi*I/6) == -S.Half*sqrt(3)
+    assert cosh(pi*I*Rational(7, 6)) == Rational(-1, 2)*sqrt(3)
+    assert cosh(pi*I*Rational(-5, 6)) == Rational(-1, 2)*sqrt(3)
 
     assert cosh(pi*I/105) == cos(pi/105)
     assert cosh(-pi*I/105) == cos(pi/105)
 
-    assert cosh(2 + 3*I) == cosh(2 + 3*I)
+    assert unchanged(cosh, 2 + 3*I)
 
     assert cosh(x*I) == cos(x)
 
     assert cosh(k*pi*I) == cos(k*pi)
     assert cosh(17*k*pi*I) == cos(17*k*pi)
 
-    assert cosh(k*pi) == cosh(k*pi)
+    assert unchanged(cosh, k*pi)
+
+    assert cosh(x).as_real_imag(deep=False) == (cos(im(x))*cosh(re(x)),
+                sin(im(x))*sinh(re(x)))
+    x = Symbol('x', extended_real=True)
+    assert cosh(x).as_real_imag(deep=False) == (cosh(x), 0)
+
+    x = Symbol('x', real=True)
+    assert cosh(I*x).is_finite is True
+    assert cosh(I*x).is_real is True
+    assert cosh(I*2 + 1).is_real is False
 
 
 def test_cosh_series():
@@ -141,29 +169,34 @@ def test_cosh_series():
         1 + x**2/2 + x**4/24 + x**6/720 + x**8/40320 + O(x**10)
 
 
+def test_cosh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: cosh(x).fdiff(2))
+
+
 def test_tanh():
     x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
-    assert tanh(nan) == nan
-    assert tanh(zoo) == nan
+    assert tanh(nan) is nan
+    assert tanh(zoo) is nan
 
     assert tanh(oo) == 1
     assert tanh(-oo) == -1
 
     assert tanh(0) == 0
 
-    assert tanh(1) == tanh(1)
+    assert unchanged(tanh, 1)
     assert tanh(-1) == -tanh(1)
 
-    assert tanh(x) == tanh(x)
+    assert unchanged(tanh, x)
     assert tanh(-x) == -tanh(x)
 
-    assert tanh(pi) == tanh(pi)
+    assert unchanged(tanh, pi)
     assert tanh(-pi) == -tanh(pi)
 
-    assert tanh(2**1024 * E) == tanh(2**1024 * E)
+    assert unchanged(tanh, 2**1024 * E)
     assert tanh(-2**1024 * E) == -tanh(2**1024 * E)
 
     assert tanh(pi*I) == 0
@@ -173,28 +206,28 @@ def test_tanh():
     assert tanh(-3*10**73*pi*I) == 0
     assert tanh(7*10**103*pi*I) == 0
 
-    assert tanh(pi*I/2) == tanh(pi*I/2)
-    assert tanh(-pi*I/2) == -tanh(pi*I/2)
-    assert tanh(5*pi*I/2) == tanh(5*pi*I/2)
-    assert tanh(7*pi*I/2) == tanh(7*pi*I/2)
+    assert tanh(pi*I/2) is zoo
+    assert tanh(-pi*I/2) is zoo
+    assert tanh(pi*I*Rational(5, 2)) is zoo
+    assert tanh(pi*I*Rational(7, 2)) is zoo
 
     assert tanh(pi*I/3) == sqrt(3)*I
-    assert tanh(-2*pi*I/3) == sqrt(3)*I
+    assert tanh(pi*I*Rational(-2, 3)) == sqrt(3)*I
 
     assert tanh(pi*I/4) == I
     assert tanh(-pi*I/4) == -I
-    assert tanh(17*pi*I/4) == I
-    assert tanh(-3*pi*I/4) == I
+    assert tanh(pi*I*Rational(17, 4)) == I
+    assert tanh(pi*I*Rational(-3, 4)) == I
 
     assert tanh(pi*I/6) == I/sqrt(3)
     assert tanh(-pi*I/6) == -I/sqrt(3)
-    assert tanh(7*pi*I/6) == I/sqrt(3)
-    assert tanh(-5*pi*I/6) == I/sqrt(3)
+    assert tanh(pi*I*Rational(7, 6)) == I/sqrt(3)
+    assert tanh(pi*I*Rational(-5, 6)) == I/sqrt(3)
 
     assert tanh(pi*I/105) == tan(pi/105)*I
     assert tanh(-pi*I/105) == -tan(pi/105)*I
 
-    assert tanh(2 + 3*I) == tanh(2 + 3*I)
+    assert unchanged(tanh, 2 + 3*I)
 
     assert tanh(x*I) == tan(x)*I
 
@@ -203,6 +236,15 @@ def test_tanh():
 
     assert tanh(k*pi*I/2) == tan(k*pi/2)*I
 
+    assert tanh(x).as_real_imag(deep=False) == (sinh(re(x))*cosh(re(x))/(cos(im(x))**2
+                                + sinh(re(x))**2),
+                                sin(im(x))*cos(im(x))/(cos(im(x))**2 + sinh(re(x))**2))
+    x = Symbol('x', extended_real=True)
+    assert tanh(x).as_real_imag(deep=False) == (tanh(x), 0)
+    assert tanh(I*pi/3 + 1).is_real is False
+    assert tanh(x).is_real is True
+    assert tanh(I*pi*x/2).is_real is None
+
 
 def test_tanh_series():
     x = Symbol('x')
@@ -210,29 +252,33 @@ def test_tanh_series():
         x - x**3/3 + 2*x**5/15 - 17*x**7/315 + 62*x**9/2835 + O(x**10)
 
 
+def test_tanh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: tanh(x).fdiff(2))
+
+
 def test_coth():
     x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
-    assert coth(nan) == nan
-    assert coth(zoo) == nan
+    assert coth(nan) is nan
+    assert coth(zoo) is nan
 
     assert coth(oo) == 1
     assert coth(-oo) == -1
 
-    assert coth(0) == coth(0)
-    assert coth(0) == zoo
-    assert coth(1) == coth(1)
+    assert coth(0) is zoo
+    assert unchanged(coth, 1)
     assert coth(-1) == -coth(1)
 
-    assert coth(x) == coth(x)
+    assert unchanged(coth, x)
     assert coth(-x) == -coth(x)
 
     assert coth(pi*I) == -I*cot(pi)
     assert coth(-pi*I) == cot(pi)*I
 
-    assert coth(2**1024 * E) == coth(2**1024 * E)
+    assert unchanged(coth, 2**1024 * E)
     assert coth(-2**1024 * E) == -coth(2**1024 * E)
 
     assert coth(pi*I) == -I*cot(pi)
@@ -244,26 +290,26 @@ def test_coth():
 
     assert coth(pi*I/2) == 0
     assert coth(-pi*I/2) == 0
-    assert coth(5*pi*I/2) == 0
-    assert coth(7*pi*I/2) == 0
+    assert coth(pi*I*Rational(5, 2)) == 0
+    assert coth(pi*I*Rational(7, 2)) == 0
 
     assert coth(pi*I/3) == -I/sqrt(3)
-    assert coth(-2*pi*I/3) == -I/sqrt(3)
+    assert coth(pi*I*Rational(-2, 3)) == -I/sqrt(3)
 
     assert coth(pi*I/4) == -I
     assert coth(-pi*I/4) == I
-    assert coth(17*pi*I/4) == -I
-    assert coth(-3*pi*I/4) == -I
+    assert coth(pi*I*Rational(17, 4)) == -I
+    assert coth(pi*I*Rational(-3, 4)) == -I
 
     assert coth(pi*I/6) == -sqrt(3)*I
     assert coth(-pi*I/6) == sqrt(3)*I
-    assert coth(7*pi*I/6) == -sqrt(3)*I
-    assert coth(-5*pi*I/6) == -sqrt(3)*I
+    assert coth(pi*I*Rational(7, 6)) == -sqrt(3)*I
+    assert coth(pi*I*Rational(-5, 6)) == -sqrt(3)*I
 
     assert coth(pi*I/105) == -cot(pi/105)*I
     assert coth(-pi*I/105) == cot(pi/105)*I
 
-    assert coth(2 + 3*I) == coth(2 + 3*I)
+    assert unchanged(coth, 2 + 3*I)
 
     assert coth(x*I) == -cot(x)*I
 
@@ -272,11 +318,25 @@ def test_coth():
 
     assert coth(k*pi*I) == -cot(k*pi)*I
 
+    assert coth(log(tan(2))) == coth(log(-tan(2)))
+    assert coth(1 + I*pi/2) == tanh(1)
+
+    assert coth(x).as_real_imag(deep=False) == (sinh(re(x))*cosh(re(x))/(sin(im(x))**2
+                                + sinh(re(x))**2),
+                                -sin(im(x))*cos(im(x))/(sin(im(x))**2 + sinh(re(x))**2))
+    x = Symbol('x', extended_real=True)
+    assert coth(x).as_real_imag(deep=False) == (coth(x), 0)
+
 
 def test_coth_series():
     x = Symbol('x')
     assert coth(x).series(x, 0, 8) == \
         1/x + x/3 - x**3/45 + 2*x**5/945 - x**7/4725 + O(x**8)
+
+
+def test_coth_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: coth(x).fdiff(2))
 
 
 def test_csch():
@@ -285,13 +345,13 @@ def test_csch():
     k = Symbol('k', integer=True)
     n = Symbol('n', positive=True)
 
-    assert csch(nan) == nan
-    assert csch(zoo) == nan
+    assert csch(nan) is nan
+    assert csch(zoo) is nan
 
     assert csch(oo) == 0
     assert csch(-oo) == 0
 
-    assert csch(0) == zoo
+    assert csch(0) is zoo
 
     assert csch(-1) == -csch(1)
 
@@ -299,39 +359,39 @@ def test_csch():
     assert csch(-pi) == -csch(pi)
     assert csch(-2**1024 * E) == -csch(2**1024 * E)
 
-    assert csch(pi*I) == zoo
-    assert csch(-pi*I) == zoo
-    assert csch(2*pi*I) == zoo
-    assert csch(-2*pi*I) == zoo
-    assert csch(-3*10**73*pi*I) == zoo
-    assert csch(7*10**103*pi*I) == zoo
+    assert csch(pi*I) is zoo
+    assert csch(-pi*I) is zoo
+    assert csch(2*pi*I) is zoo
+    assert csch(-2*pi*I) is zoo
+    assert csch(-3*10**73*pi*I) is zoo
+    assert csch(7*10**103*pi*I) is zoo
 
     assert csch(pi*I/2) == -I
     assert csch(-pi*I/2) == I
-    assert csch(5*pi*I/2) == -I
-    assert csch(7*pi*I/2) == I
+    assert csch(pi*I*Rational(5, 2)) == -I
+    assert csch(pi*I*Rational(7, 2)) == I
 
     assert csch(pi*I/3) == -2/sqrt(3)*I
-    assert csch(-2*pi*I/3) == 2/sqrt(3)*I
+    assert csch(pi*I*Rational(-2, 3)) == 2/sqrt(3)*I
 
     assert csch(pi*I/4) == -sqrt(2)*I
     assert csch(-pi*I/4) == sqrt(2)*I
-    assert csch(7*pi*I/4) == sqrt(2)*I
-    assert csch(-3*pi*I/4) == sqrt(2)*I
+    assert csch(pi*I*Rational(7, 4)) == sqrt(2)*I
+    assert csch(pi*I*Rational(-3, 4)) == sqrt(2)*I
 
     assert csch(pi*I/6) == -2*I
     assert csch(-pi*I/6) == 2*I
-    assert csch(7*pi*I/6) == 2*I
-    assert csch(-7*pi*I/6) == -2*I
-    assert csch(-5*pi*I/6) == 2*I
+    assert csch(pi*I*Rational(7, 6)) == 2*I
+    assert csch(pi*I*Rational(-7, 6)) == -2*I
+    assert csch(pi*I*Rational(-5, 6)) == 2*I
 
     assert csch(pi*I/105) == -1/sin(pi/105)*I
     assert csch(-pi*I/105) == 1/sin(pi/105)*I
 
     assert csch(x*I) == -1/sin(x)*I
 
-    assert csch(k*pi*I) == zoo
-    assert csch(17*k*pi*I) == zoo
+    assert csch(k*pi*I) is zoo
+    assert csch(17*k*pi*I) is zoo
 
     assert csch(k*pi*I/2) == -1/sin(k*pi/2)*I
 
@@ -345,14 +405,19 @@ def test_csch_series():
           - 73*x**9/3421440 + O(x**10)
 
 
+def test_csch_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: csch(x).fdiff(2))
+
+
 def test_sech():
     x, y = symbols('x, y')
 
     k = Symbol('k', integer=True)
     n = Symbol('n', positive=True)
 
-    assert sech(nan) == nan
-    assert sech(zoo) == nan
+    assert sech(nan) is nan
+    assert sech(zoo) is nan
 
     assert sech(oo) == 0
     assert sech(-oo) == 0
@@ -367,10 +432,10 @@ def test_sech():
     assert sech(-pi*I) == sec(pi)
     assert sech(-2**1024 * E) == sech(2**1024 * E)
 
-    assert sech(pi*I/2) == zoo
-    assert sech(-pi*I/2) == zoo
-    assert sech((-3*10**73 + 1)*pi*I/2) == zoo
-    assert sech((7*10**103 + 1)*pi*I/2) == zoo
+    assert sech(pi*I/2) is zoo
+    assert sech(-pi*I/2) is zoo
+    assert sech((-3*10**73 + 1)*pi*I/2) is zoo
+    assert sech((7*10**103 + 1)*pi*I/2) is zoo
 
     assert sech(pi*I) == -1
     assert sech(-pi*I) == -1
@@ -378,17 +443,17 @@ def test_sech():
     assert sech(8*pi*I) == 1
 
     assert sech(pi*I/3) == 2
-    assert sech(-2*pi*I/3) == -2
+    assert sech(pi*I*Rational(-2, 3)) == -2
 
     assert sech(pi*I/4) == sqrt(2)
     assert sech(-pi*I/4) == sqrt(2)
-    assert sech(5*pi*I/4) == -sqrt(2)
-    assert sech(-5*pi*I/4) == -sqrt(2)
+    assert sech(pi*I*Rational(5, 4)) == -sqrt(2)
+    assert sech(pi*I*Rational(-5, 4)) == -sqrt(2)
 
     assert sech(pi*I/6) == 2/sqrt(3)
     assert sech(-pi*I/6) == 2/sqrt(3)
-    assert sech(7*pi*I/6) == -2/sqrt(3)
-    assert sech(-5*pi*I/6) == -2/sqrt(3)
+    assert sech(pi*I*Rational(7, 6)) == -2/sqrt(3)
+    assert sech(pi*I*Rational(-5, 6)) == -2/sqrt(3)
 
     assert sech(pi*I/105) == 1/cos(pi/105)
     assert sech(-pi*I/105) == 1/cos(pi/105)
@@ -407,13 +472,18 @@ def test_sech_series():
         1 - x**2/2 + 5*x**4/24 - 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
 
+def test_sech_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: sech(x).fdiff(2))
+
+
 def test_asinh():
     x, y = symbols('x,y')
-    assert asinh(x) == asinh(x)
+    assert unchanged(asinh, x)
     assert asinh(-x) == -asinh(x)
 
     #at specific points
-    assert asinh(nan) == nan
+    assert asinh(nan) is nan
     assert asinh( 0) == 0
     assert asinh(+1) == log(sqrt(2) + 1)
 
@@ -424,23 +494,40 @@ def test_asinh():
     assert asinh(-I/2) == -pi*I/6
 
     # at infinites
-    assert asinh(oo) == oo
-    assert asinh(-oo) == -oo
+    assert asinh(oo) is oo
+    assert asinh(-oo) is -oo
 
-    assert asinh(I*oo) == oo
-    assert asinh(-I *oo) == -oo
+    assert asinh(I*oo) is oo
+    assert asinh(-I *oo) is -oo
 
-    assert asinh(zoo) == zoo
+    assert asinh(zoo) is zoo
 
     #properties
-    assert asinh(I *(sqrt(3) - 1)/(2**(S(3)/2))) == pi*I/12
-    assert asinh(-I *(sqrt(3) - 1)/(2**(S(3)/2))) == -pi*I/12
+    assert asinh(I *(sqrt(3) - 1)/(2**Rational(3, 2))) == pi*I/12
+    assert asinh(-I *(sqrt(3) - 1)/(2**Rational(3, 2))) == -pi*I/12
 
     assert asinh(I*(sqrt(5) - 1)/4) == pi*I/10
     assert asinh(-I*(sqrt(5) - 1)/4) == -pi*I/10
 
-    assert asinh(I*(sqrt(5) + 1)/4) == 3*pi*I/10
-    assert asinh(-I*(sqrt(5) + 1)/4) == -3*pi*I/10
+    assert asinh(I*(sqrt(5) + 1)/4) == pi*I*Rational(3, 10)
+    assert asinh(-I*(sqrt(5) + 1)/4) == pi*I*Rational(-3, 10)
+
+    # Symmetry
+    assert asinh(Rational(-1, 2)) == -asinh(S.Half)
+
+    # inverse composition
+    assert unchanged(asinh, sinh(Symbol('v1')))
+
+    assert asinh(sinh(0, evaluate=False)) == 0
+    assert asinh(sinh(-3, evaluate=False)) == -3
+    assert asinh(sinh(2, evaluate=False)) == 2
+    assert asinh(sinh(I, evaluate=False)) == I
+    assert asinh(sinh(-I, evaluate=False)) == -I
+    assert asinh(sinh(5*I, evaluate=False)) == -2*I*pi + 5*I
+    assert asinh(sinh(15 + 11*I)) == 15 - 4*I*pi + 11*I
+    assert asinh(sinh(-73 + 97*I)) == 73 - 97*I + 31*I*pi
+    assert asinh(sinh(-7 - 23*I)) == 7 - 7*I*pi + 23*I
+    assert asinh(sinh(13 - 3*I)) == -13 - I*pi + 3*I
 
 
 def test_asinh_rewrite():
@@ -457,46 +544,73 @@ def test_asinh_series():
     assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
 
 
+def test_asinh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: asinh(x).fdiff(2))
+
+
 def test_acosh():
     x = Symbol('x')
 
-    assert acosh(-x) == acosh(-x)
+    assert unchanged(acosh, -x)
 
     #at specific points
     assert acosh(1) == 0
     assert acosh(-1) == pi*I
     assert acosh(0) == I*pi/2
-    assert acosh(Rational(1, 2)) == I*pi/3
-    assert acosh(Rational(-1, 2)) == 2*pi*I/3
+    assert acosh(S.Half) == I*pi/3
+    assert acosh(Rational(-1, 2)) == pi*I*Rational(2, 3)
+    assert acosh(nan) is nan
 
     # at infinites
-    assert acosh(oo) == oo
-    assert acosh(-oo) == oo
+    assert acosh(oo) is oo
+    assert acosh(-oo) is oo
 
-    assert acosh(I*oo) == oo
-    assert acosh(-I*oo) == oo
+    assert acosh(I*oo) == oo + I*pi/2
+    assert acosh(-I*oo) == oo - I*pi/2
 
-    assert acosh(zoo) == oo
+    assert acosh(zoo) is zoo
 
     assert acosh(I) == log(I*(1 + sqrt(2)))
     assert acosh(-I) == log(-I*(1 + sqrt(2)))
-    assert acosh((sqrt(3) - 1)/(2*sqrt(2))) == 5*pi*I/12
-    assert acosh(-(sqrt(3) - 1)/(2*sqrt(2))) == 7*pi*I/12
+    assert acosh((sqrt(3) - 1)/(2*sqrt(2))) == pi*I*Rational(5, 12)
+    assert acosh(-(sqrt(3) - 1)/(2*sqrt(2))) == pi*I*Rational(7, 12)
     assert acosh(sqrt(2)/2) == I*pi/4
-    assert acosh(-sqrt(2)/2) == 3*I*pi/4
+    assert acosh(-sqrt(2)/2) == I*pi*Rational(3, 4)
     assert acosh(sqrt(3)/2) == I*pi/6
-    assert acosh(-sqrt(3)/2) == 5*I*pi/6
+    assert acosh(-sqrt(3)/2) == I*pi*Rational(5, 6)
     assert acosh(sqrt(2 + sqrt(2))/2) == I*pi/8
-    assert acosh(-sqrt(2 + sqrt(2))/2) == 7*I*pi/8
-    assert acosh(sqrt(2 - sqrt(2))/2) == 3*I*pi/8
-    assert acosh(-sqrt(2 - sqrt(2))/2) == 5*I*pi/8
+    assert acosh(-sqrt(2 + sqrt(2))/2) == I*pi*Rational(7, 8)
+    assert acosh(sqrt(2 - sqrt(2))/2) == I*pi*Rational(3, 8)
+    assert acosh(-sqrt(2 - sqrt(2))/2) == I*pi*Rational(5, 8)
     assert acosh((1 + sqrt(3))/(2*sqrt(2))) == I*pi/12
-    assert acosh(-(1 + sqrt(3))/(2*sqrt(2))) == 11*I*pi/12
+    assert acosh(-(1 + sqrt(3))/(2*sqrt(2))) == I*pi*Rational(11, 12)
     assert acosh((sqrt(5) + 1)/4) == I*pi/5
-    assert acosh(-(sqrt(5) + 1)/4) == 4*I*pi/5
+    assert acosh(-(sqrt(5) + 1)/4) == I*pi*Rational(4, 5)
 
     assert str(acosh(5*I).n(6)) == '2.31244 + 1.5708*I'
     assert str(acosh(-5*I).n(6)) == '2.31244 - 1.5708*I'
+
+    # inverse composition
+    assert unchanged(acosh, Symbol('v1'))
+
+    assert acosh(cosh(-3, evaluate=False)) == 3
+    assert acosh(cosh(3, evaluate=False)) == 3
+    assert acosh(cosh(0, evaluate=False)) == 0
+    assert acosh(cosh(I, evaluate=False)) == I
+    assert acosh(cosh(-I, evaluate=False)) == I
+    assert acosh(cosh(7*I, evaluate=False)) == -2*I*pi + 7*I
+    assert acosh(cosh(1 + I)) == 1 + I
+    assert acosh(cosh(3 - 3*I)) == 3 - 3*I
+    assert acosh(cosh(-3 + 2*I)) == 3 - 2*I
+    assert acosh(cosh(-5 - 17*I)) == 5 - 6*I*pi + 17*I
+    assert acosh(cosh(-21 + 11*I)) == 21 - 11*I + 4*I*pi
+    assert acosh(cosh(cosh(1) + I)) == cosh(1) + I
+
+
+def test_acosh_rewrite():
+    x = Symbol('x')
+    assert acosh(x).rewrite(log) == log(x + sqrt(x - 1)*sqrt(x + 1))
 
 
 def test_acosh_series():
@@ -508,22 +622,28 @@ def test_acosh_series():
     assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
 
 
+def test_acosh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: acosh(x).fdiff(2))
+
+
 def test_asech():
     x = Symbol('x')
 
-    assert asech(-x) == asech(-x)
+    assert unchanged(asech, -x)
 
     # values at fixed points
     assert asech(1) == 0
     assert asech(-1) == pi*I
-    assert asech(0) == oo
+    assert asech(0) is oo
     assert asech(2) == I*pi/3
     assert asech(-2) == 2*I*pi / 3
+    assert asech(nan) is nan
 
     # at infinites
     assert asech(oo) == I*pi/2
     assert asech(-oo) == I*pi/2
-    assert asech(zoo) == nan
+    assert asech(zoo) == I*AccumBounds(-pi/2, pi/2)
 
     assert asech(I) == log(1 + sqrt(2)) - I*pi/2
     assert asech(-I) == log(1 + sqrt(2)) + I*pi/2
@@ -541,13 +661,13 @@ def test_asech():
     assert asech(sqrt(2)) == acosh(1/sqrt(2))
     assert asech(2/sqrt(3)) == acosh(sqrt(3)/2)
     assert asech(2/sqrt(2 + sqrt(2))) == acosh(sqrt(2 + sqrt(2))/2)
-    assert asech(S(2)) == acosh(1/S(2))
+    assert asech(2) == acosh(S.Half)
 
     # asech(x) == I*acos(1/x)
     # (Note: the exact formula is asech(x) == +/- I*acos(1/x))
     assert asech(-sqrt(2)) == I*acos(-1/sqrt(2))
     assert asech(-2/sqrt(3)) == I*acos(-sqrt(3)/2)
-    assert asech(-S(2)) == I*acos(-S.Half)
+    assert asech(-S(2)) == I*acos(Rational(-1, 2))
     assert asech(-2/sqrt(2)) == I*acos(-sqrt(2)/2)
 
     # sech(asech(x)) / x == 1
@@ -574,19 +694,24 @@ def test_asech_series():
 
 def test_asech_rewrite():
     x = Symbol('x')
-    assert asech(x).rewrite(log) == log(1/x + sqrt(1/x**2 - 1))
+    assert asech(x).rewrite(log) == log(1/x + sqrt(1/x - 1) * sqrt(1/x + 1))
+
+
+def test_asech_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: asech(x).fdiff(2))
 
 
 def test_acsch():
     x = Symbol('x')
 
-    assert acsch(-x) == acsch(-x)
-    assert acsch(x) == -acsch(-x)
+    assert unchanged(acsch, x)
+    assert acsch(-x) == -acsch(x)
 
     # values at fixed points
     assert acsch(1) == log(1 + sqrt(2))
     assert acsch(-1) == - log(1 + sqrt(2))
-    assert acsch(0) == zoo
+    assert acsch(0) is zoo
     assert acsch(2) == log((1+sqrt(5))/2)
     assert acsch(-2) == - log((1+sqrt(5))/2)
 
@@ -614,6 +739,7 @@ def test_acsch():
     assert acsch(I*sqrt(2 - 2/sqrt(5))) == -2*I*pi / 5
     assert acsch(-I*(sqrt(6) - sqrt(2))) == 5*I*pi / 12
     assert acsch(I*(sqrt(6) - sqrt(2))) == -5*I*pi / 12
+    assert acsch(nan) is nan
 
     # properties
     # acsch(x) == asinh(1/x)
@@ -646,6 +772,11 @@ def test_acsch_rewrite():
     assert acsch(x).rewrite(log) == log(1/x + sqrt(1/x**2 + 1))
 
 
+def test_acsch_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: acsch(x).fdiff(2))
+
+
 def test_atanh():
     x = Symbol('x')
 
@@ -653,8 +784,9 @@ def test_atanh():
     assert atanh(0) == 0
     assert atanh(I) == I*pi/4
     assert atanh(-I) == -I*pi/4
-    assert atanh(1) == oo
-    assert atanh(-1) == -oo
+    assert atanh(1) is oo
+    assert atanh(-1) is -oo
+    assert atanh(nan) is nan
 
     # at infinites
     assert atanh(oo) == -I*pi/2
@@ -663,7 +795,7 @@ def test_atanh():
     assert atanh(I*oo) == I*pi/2
     assert atanh(-I*oo) == -I*pi/2
 
-    assert atanh(zoo) == nan
+    assert atanh(zoo) == I*AccumBounds(-pi/2, pi/2)
 
     #properties
     assert atanh(-x) == -atanh(x)
@@ -672,21 +804,51 @@ def test_atanh():
     assert atanh(-I/sqrt(3)) == -I*pi/6
     assert atanh(I*sqrt(3)) == I*pi/3
     assert atanh(-I*sqrt(3)) == -I*pi/3
-    assert atanh(I*(1 + sqrt(2))) == 3*pi*I/8
+    assert atanh(I*(1 + sqrt(2))) == pi*I*Rational(3, 8)
     assert atanh(I*(sqrt(2) - 1)) == pi*I/8
     assert atanh(I*(1 - sqrt(2))) == -pi*I/8
-    assert atanh(-I*(1 + sqrt(2))) == -3*pi*I/8
-    assert atanh(I*sqrt(5 + 2*sqrt(5))) == 2*I*pi/5
-    assert atanh(-I*sqrt(5 + 2*sqrt(5))) == -2*I*pi/5
+    assert atanh(-I*(1 + sqrt(2))) == pi*I*Rational(-3, 8)
+    assert atanh(I*sqrt(5 + 2*sqrt(5))) == I*pi*Rational(2, 5)
+    assert atanh(-I*sqrt(5 + 2*sqrt(5))) == I*pi*Rational(-2, 5)
     assert atanh(I*(2 - sqrt(3))) == pi*I/12
     assert atanh(I*(sqrt(3) - 2)) == -pi*I/12
     assert atanh(oo) == -I*pi/2
+
+    # Symmetry
+    assert atanh(Rational(-1, 2)) == -atanh(S.Half)
+
+    # inverse composition
+    assert unchanged(atanh, tanh(Symbol('v1')))
+
+    assert atanh(tanh(-5, evaluate=False)) == -5
+    assert atanh(tanh(0, evaluate=False)) == 0
+    assert atanh(tanh(7, evaluate=False)) == 7
+    assert atanh(tanh(I, evaluate=False)) == I
+    assert atanh(tanh(-I, evaluate=False)) == -I
+    assert atanh(tanh(-11*I, evaluate=False)) == -11*I + 4*I*pi
+    assert atanh(tanh(3 + I)) == 3 + I
+    assert atanh(tanh(4 + 5*I)) == 4 - 2*I*pi + 5*I
+    assert atanh(tanh(pi/2)) == pi/2
+    assert atanh(tanh(pi)) == pi
+    assert atanh(tanh(-3 + 7*I)) == -3 - 2*I*pi + 7*I
+    assert atanh(tanh(9 - I*Rational(2, 3))) == 9 - I*Rational(2, 3)
+    assert atanh(tanh(-32 - 123*I)) == -32 - 123*I + 39*I*pi
+
+
+def test_atanh_rewrite():
+    x = Symbol('x')
+    assert atanh(x).rewrite(log) == (log(1 + x) - log(1 - x)) / 2
 
 
 def test_atanh_series():
     x = Symbol('x')
     assert atanh(x).series(x, 0, 10) == \
         x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+
+
+def test_atanh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: atanh(x).fdiff(2))
 
 
 def test_acoth():
@@ -696,8 +858,9 @@ def test_acoth():
     assert acoth(0) == I*pi/2
     assert acoth(I) == -I*pi/4
     assert acoth(-I) == I*pi/4
-    assert acoth(1) == oo
-    assert acoth(-1) == -oo
+    assert acoth(1) is oo
+    assert acoth(-1) is -oo
+    assert acoth(nan) is nan
 
     # at infinites
     assert acoth(oo) == 0
@@ -715,20 +878,33 @@ def test_acoth():
     assert acoth(-I*sqrt(3)) == I*pi/6
     assert acoth(I*(1 + sqrt(2))) == -pi*I/8
     assert acoth(-I*(sqrt(2) + 1)) == pi*I/8
-    assert acoth(I*(1 - sqrt(2))) == 3*pi*I/8
-    assert acoth(I*(sqrt(2) - 1)) == -3*pi*I/8
+    assert acoth(I*(1 - sqrt(2))) == pi*I*Rational(3, 8)
+    assert acoth(I*(sqrt(2) - 1)) == pi*I*Rational(-3, 8)
     assert acoth(I*sqrt(5 + 2*sqrt(5))) == -I*pi/10
     assert acoth(-I*sqrt(5 + 2*sqrt(5))) == I*pi/10
     assert acoth(I*(2 + sqrt(3))) == -pi*I/12
     assert acoth(-I*(2 + sqrt(3))) == pi*I/12
-    assert acoth(I*(2 - sqrt(3))) == -5*pi*I/12
-    assert acoth(I*(sqrt(3) - 2)) == 5*pi*I/12
+    assert acoth(I*(2 - sqrt(3))) == pi*I*Rational(-5, 12)
+    assert acoth(I*(sqrt(3) - 2)) == pi*I*Rational(5, 12)
+
+    # Symmetry
+    assert acoth(Rational(-1, 2)) == -acoth(S.Half)
+
+
+def test_acoth_rewrite():
+    x = Symbol('x')
+    assert acoth(x).rewrite(log) == (log(1 + 1/x) - log(1 - 1/x)) / 2
 
 
 def test_acoth_series():
     x = Symbol('x')
     assert acoth(x).series(x, 0, 10) == \
         I*pi/2 + x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+
+
+def test_acoth_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: acoth(x).fdiff(2))
 
 
 def test_inverses():
@@ -933,3 +1109,28 @@ def test_cosh_positive():
     assert cosh(k + 2*n*pi*I).is_positive == True
     assert cosh(I*pi/4).is_positive == True
     assert cosh(3*I*pi/4).is_positive == False
+
+def test_real_assumptions():
+    z = Symbol('z', real=False)
+    assert sinh(z).is_real is None
+    assert cosh(z).is_real is None
+    assert tanh(z).is_real is None
+    assert sech(z).is_real is None
+    assert csch(z).is_real is None
+    assert coth(z).is_real is None
+
+def test_sign_assumptions():
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    assert sinh(n).is_negative is True
+    assert sinh(p).is_positive is True
+    assert cosh(n).is_positive is True
+    assert cosh(p).is_positive is True
+    assert tanh(n).is_negative is True
+    assert tanh(p).is_positive is True
+    assert csch(n).is_negative is True
+    assert csch(p).is_positive is True
+    assert sech(n).is_positive is True
+    assert sech(p).is_positive is True
+    assert coth(n).is_negative is True
+    assert coth(p).is_positive is True

@@ -178,6 +178,8 @@ the given numerical library, usually NumPy.  For example
     [ 0.          0.84147098  0.90929743  0.14112001 -0.7568025  -0.95892427
      -0.2794155   0.6569866   0.98935825  0.41211849]
 
+.. warning:: ``lambdify`` uses ``eval``.  Don't use it on unsanitized input.
+
 You can use other libraries than NumPy. For example, to use the standard
 library math module, use ``"math"``.
 
@@ -198,3 +200,4 @@ dictionary of ``sympy_name:numerical_function`` pairs.  For example
     0.1
 
 .. TODO: Write an advanced numerics section
+

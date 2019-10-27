@@ -1,3 +1,5 @@
+.. _kane_method:
+
 ==================================
 Kane's Method in Physics/Mechanics
 ==================================
@@ -53,7 +55,7 @@ Kane's Method in Physics/Mechanics
 The formulation of the equations of motion in :mod:`mechanics` starts with
 creation of a ``KanesMethod`` object. Upon initialization of the
 ``KanesMethod`` object, an inertial reference frame needs to be supplied. along
-with some basic system information, suchs as coordinates and speeds ::
+with some basic system information, such as coordinates and speeds ::
 
   >>> from sympy.physics.mechanics import *
   >>> N = ReferenceFrame('N')

@@ -1,11 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.core.function import Function
 from sympy.core import S, Integer
-from sympy.core.mul import prod
+from sympy.core.compatibility import range, SYMPY_INTS
+from sympy.core.function import Function
 from sympy.core.logic import fuzzy_not
+from sympy.core.mul import prod
 from sympy.utilities.iterables import (has_dups, default_sort_key)
-from sympy.core.compatibility import range
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -72,7 +72,7 @@ class LeviCivita(Function):
 
     @classmethod
     def eval(cls, *args):
-        if all(isinstance(a, (int, Integer)) for a in args):
+        if all(isinstance(a, (SYMPY_INTS, Integer)) for a in args):
             return eval_levicivita(*args)
         if has_dups(args):
             return S.Zero
@@ -127,13 +127,13 @@ class KroneckerDelta(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Kronecker_delta
+    .. [1] https://en.wikipedia.org/wiki/Kronecker_delta
     """
 
     is_integer = True
 
     @classmethod
-    def eval(cls, i, j):
+    def eval(cls, i, j, delta_range=None):
         """
         Evaluates the discrete delta function.
 
@@ -155,6 +155,18 @@ class KroneckerDelta(Function):
         # indirect doctest
 
         """
+
+        if delta_range is not None:
+            dinf, dsup = delta_range
+            if (dinf - i > 0) == True:
+                return S.Zero
+            if (dinf - j > 0) == True:
+                return S.Zero
+            if (dsup - i < 0) == True:
+                return S.Zero
+            if (dsup - j < 0) == True:
+                return S.Zero
+
         diff = i - j
         if diff.is_zero:
             return S.One
@@ -171,7 +183,15 @@ class KroneckerDelta(Function):
         # following lines will check if inputs are in order
         # if not, will return KroneckerDelta with correct order
         if i is not min(i, j, key=default_sort_key):
-            return cls(j, i)
+            if delta_range:
+                return cls(j, i, delta_range)
+            else:
+                return cls(j, i)
+
+    @property
+    def delta_range(self):
+        if len(self.args) > 2:
+            return self.args[2]
 
     def _eval_power(self, expt):
         if expt.is_positive:
@@ -437,10 +457,6 @@ class KroneckerDelta(Function):
         else:
             return 0
 
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\delta'
-
     @property
     def indices(self):
         return self.args[0:2]
@@ -448,3 +464,9 @@ class KroneckerDelta(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.kronecker_delta(self.args[0]._sage_(), self.args[1]._sage_())
+
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.core.relational import Ne
+        i, j = args
+        return Piecewise((0, Ne(i, j)), (1, True))
