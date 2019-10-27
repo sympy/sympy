@@ -277,7 +277,8 @@ class cosh(HyperbolicFunction):
     sinh, tanh, acosh
     """
 
-    def _eval_is_positive(self):
+    @property
+    def is_positive(self):
         arg = self.args[0]
 
         if arg.is_real:
