@@ -145,7 +145,7 @@ SymPy first applies several heuristic algorithms, as these are the fastest:
 
       g-functions.rst
 
-   All the algorithms mentioned thus far are either pattern-matching based
+7. All the algorithms mentioned thus far are either pattern-matching based
    heuristic, or solve integrals using algorithms that are much different from
    the way most people are taught in their calculus courses. SymPy also
    implements a method that can solve integrals in much the same way you would in
@@ -158,7 +158,7 @@ SymPy first applies several heuristic algorithms, as these are the fastest:
    .. autofunction:: sympy.integrals.manualintegrate.manualintegrate
    .. autofunction:: sympy.integrals.manualintegrate.integral_steps
 
-7. Finally, if all the above fail, SymPy also uses a simplified version of the
+8. Finally, if all the above fail, SymPy also uses a simplified version of the
    Risch algorithm, called the *Risch-Norman algorithm*. This algorithm is tried
    last because it is often the slowest to compute. This is implemented in
    :func:`.heurisch`:
