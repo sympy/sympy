@@ -11,8 +11,11 @@ from sympy import (
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
     digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
-    MatrixSymbol, chebyshevt, chebyshevu, legendre, hermite, laguerre,
-    gegenbauer, assoc_legendre, assoc_laguerre, jacobi, fresnelc, fresnels)
+    MatrixSymbol, fresnelc, fresnels)
+from sympy.functions.elementary.complexes import re, im, Abs, arg
+from sympy.functions.special.polynomials import \
+    chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
+    assoc_legendre, assoc_laguerre, jacobi
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.pycode import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
@@ -202,17 +205,6 @@ def test_scipy_transl():
     for sym, scip in SCIPY_TRANSLATIONS.items():
         assert sym in sympy.__dict__
         assert scip in scipy.__dict__ or scip in scipy.special.__dict__
-
-
-def test_tensorflow_transl():
-    if not tensorflow:
-        skip("tensorflow not installed")
-
-    from sympy.utilities.lambdify import TENSORFLOW_TRANSLATIONS
-    for sym, tens in TENSORFLOW_TRANSLATIONS.items():
-        assert sym in sympy.__dict__
-        # XXX __dict__ is not supported after tensorflow 1.14.0
-        assert tens in tensorflow.__all__
 
 
 def test_numpy_translation_abs():
@@ -571,9 +563,10 @@ def test_tensorflow_basic_math():
         skip("tensorflow not installed.")
     expr = Max(sin(x), Abs(1/(x+2)))
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.constant(0, dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s) == 0.5
+
+    with tensorflow.compat.v1.Session() as s:
+        a = tensorflow.constant(0, dtype=tensorflow.float32)
+        assert func(a).eval(session=s) == 0.5
 
 
 def test_tensorflow_placeholders():
@@ -581,9 +574,10 @@ def test_tensorflow_placeholders():
         skip("tensorflow not installed.")
     expr = Max(sin(x), Abs(1/(x+2)))
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
+
+    with tensorflow.compat.v1.Session() as s:
+        a = tensorflow.compat.v1.placeholder(dtype=tensorflow.float32)
+        assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
 
 
 def test_tensorflow_variables():
@@ -591,13 +585,11 @@ def test_tensorflow_variables():
         skip("tensorflow not installed.")
     expr = Max(sin(x), Abs(1/(x+2)))
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.Variable(0, dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    if V(tensorflow.__version__) < '1.0':
-        s.run(tensorflow.initialize_all_variables())
-    else:
-        s.run(tensorflow.global_variables_initializer())
-    assert func(a).eval(session=s) == 0.5
+
+    with tensorflow.compat.v1.Session() as s:
+        a = tensorflow.Variable(0, dtype=tensorflow.float32)
+        s.run(a.initializer)
+        assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
 
 
 def test_tensorflow_logical_operations():
@@ -605,10 +597,9 @@ def test_tensorflow_logical_operations():
         skip("tensorflow not installed.")
     expr = Not(And(Or(x, y), y))
     func = lambdify([x, y], expr, modules="tensorflow")
-    a = tensorflow.constant(False)
-    b = tensorflow.constant(True)
-    s = tensorflow.Session()
-    assert func(a, b).eval(session=s) == 0
+
+    with tensorflow.compat.v1.Session() as s:
+        assert func(False, True).eval(session=s) == False
 
 
 def test_tensorflow_piecewise():
@@ -616,11 +607,11 @@ def test_tensorflow_piecewise():
         skip("tensorflow not installed.")
     expr = Piecewise((0, Eq(x,0)), (-1, x < 0), (1, x > 0))
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s, feed_dict={a: -1}) == -1
-    assert func(a).eval(session=s, feed_dict={a: 0}) == 0
-    assert func(a).eval(session=s, feed_dict={a: 1}) == 1
+
+    with tensorflow.compat.v1.Session() as s:
+        assert func(-1).eval(session=s) == -1
+        assert func(0).eval(session=s) == 0
+        assert func(1).eval(session=s) == 1
 
 
 def test_tensorflow_multi_max():
@@ -628,9 +619,9 @@ def test_tensorflow_multi_max():
         skip("tensorflow not installed.")
     expr = Max(x, -x, x**2)
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s, feed_dict={a: -2}) == 4
+
+    with tensorflow.compat.v1.Session() as s:
+        assert func(-2).eval(session=s) == 4
 
 
 def test_tensorflow_multi_min():
@@ -638,9 +629,9 @@ def test_tensorflow_multi_min():
         skip("tensorflow not installed.")
     expr = Min(x, -x, x**2)
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s, feed_dict={a: -2}) == -2
+
+    with tensorflow.compat.v1.Session() as s:
+        assert func(-2).eval(session=s) == -2
 
 
 def test_tensorflow_relational():
@@ -648,17 +639,56 @@ def test_tensorflow_relational():
         skip("tensorflow not installed.")
     expr = x >= 0
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s, feed_dict={a: 1})
+
+    with tensorflow.compat.v1.Session() as s:
+        assert func(1).eval(session=s) == True
+
+
+def test_tensorflow_complexes():
+    if not tensorflow:
+        skip("tensorflow not installed")
+
+    func1 = lambdify(x, re(x), modules="tensorflow")
+    func2 = lambdify(x, im(x), modules="tensorflow")
+    func3 = lambdify(x, Abs(x), modules="tensorflow")
+    func4 = lambdify(x, arg(x), modules="tensorflow")
+
+    with tensorflow.compat.v1.Session() as s:
+        # For versions before
+        # https://github.com/tensorflow/tensorflow/issues/30029
+        # resolved, using python numeric types may not work
+        a = tensorflow.constant(1+2j)
+        assert func1(a).eval(session=s) == 1
+        assert func2(a).eval(session=s) == 2
+
+        tensorflow_result = func3(a).eval(session=s)
+        sympy_result = Abs(1 + 2j).evalf()
+        assert abs(tensorflow_result-sympy_result) < 10**-6
+
+        tensorflow_result = func4(a).eval(session=s)
+        sympy_result = arg(1 + 2j).evalf()
+        assert abs(tensorflow_result-sympy_result) < 10**-6
+
+
+def test_tensorflow_array_arg():
+    # Test for issue 14655 (tensorflow part)
+    if not tensorflow:
+        skip("tensorflow not installed.")
+
+    f = lambdify([[x, y]], x*x + y, 'tensorflow')
+
+    with tensorflow.compat.v1.Session() as s:
+        fcall = f(tensorflow.constant([2.0, 1.0]))
+        assert fcall.eval(session=s) == 5.0
+
+
+#================== Test symbolic ==================================
 
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
     l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
     assert l(x) == Integral(exp(-x**2), (x, -oo, oo))
-
-#================== Test symbolic ==================================
 
 
 def test_sym_single_arg():
@@ -967,19 +997,6 @@ def test_numpy_array_arg():
     f = lambdify([[x, y]], x*x + y, 'numpy')
 
     assert f(numpy.array([2.0, 1.0])) == 5
-
-
-def test_tensorflow_array_arg():
-    # Test for issue 14655 (tensorflow part)
-    if not tensorflow:
-        skip("tensorflow not installed.")
-
-    f = lambdify([[x, y]], x*x + y, 'tensorflow')
-
-    fcall = f(tensorflow.constant([2.0, 1.0]))
-
-    s = tensorflow.Session()
-    assert s.run(fcall) == 5
 
 
 def test_scipy_fns():
