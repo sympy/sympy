@@ -38,6 +38,8 @@ __all__ = [
     'JyBra',
     'JzKet',
     'JzBra',
+    'JzOp',
+    'J2Op',
     'JxKetCoupled',
     'JxBraCoupled',
     'JyKetCoupled',

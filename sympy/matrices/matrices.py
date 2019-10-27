@@ -3444,6 +3444,8 @@ class MatrixBase(MatrixDeprecated,
         """
         from sympy.matrices import Matrix, zeros
 
+        cls = self.__class__
+
         aug = self.hstack(self.copy(), B.copy())
         B_cols = B.cols
         row, col = aug[:, :-B_cols].shape
@@ -3479,9 +3481,7 @@ class MatrixBase(MatrixDeprecated,
             col - rank, B_cols)
 
         # Full parametric solution
-        V = A[:rank,:]
-        for c in reversed(pivots):
-            V.col_del(c)
+        V = A[:rank, [c for c in range(A.cols) if c not in pivots]]
         vt = v[:rank, :]
         free_sol = tau.vstack(vt - V * tau, tau)
 
@@ -3490,6 +3490,7 @@ class MatrixBase(MatrixDeprecated,
         for k in range(col):
             sol[permutation[k], :] = free_sol[k,:]
 
+        sol, tau = cls(sol), cls(tau)
         if freevar:
             return sol, tau, free_var_index
         else:

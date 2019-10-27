@@ -621,9 +621,6 @@ class Function(Application, Expr):
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
 
-    def _eval_is_complex(self):
-        return fuzzy_and(a.is_complex for a in self.args)
-
     def as_base_exp(self):
         """
         Returns the method as the 2-tuple (base, exponent).
@@ -3217,8 +3214,13 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     """
     from sympy.core.power import Pow
     from sympy.polys.rootoftools import RootOf
+    from sympy import MatrixBase
 
     kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+
+    if isinstance(expr, MatrixBase):
+        return expr.applyfunc(lambda e: nfloat(e, **kw))
+
     # handling of iterable containers
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):

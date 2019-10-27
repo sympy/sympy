@@ -228,3 +228,6 @@ def test_printmethod():
     assert LambdaPrinter().doprint(obj) == 'lambda'
     assert TensorflowPrinter().doprint(obj) == 'tensorflow'
     assert NumExprPrinter().doprint(obj) == "evaluate('numexpr', truediv=True)"
+
+    assert NumExprPrinter().doprint(Piecewise((y, x >= 0), (z, x < 0))) == \
+            "evaluate('where((x >= 0), y, z)', truediv=True)"

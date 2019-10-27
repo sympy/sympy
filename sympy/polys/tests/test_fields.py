@@ -6,7 +6,7 @@ from sympy.polys.domains import ZZ, QQ
 from sympy.polys.orderings import lex
 
 from sympy.utilities.pytest import raises, XFAIL
-from sympy.core import symbols, E, S
+from sympy.core import symbols, E
 from sympy import sqrt, Rational, exp, log
 
 def test_FracField___init__():

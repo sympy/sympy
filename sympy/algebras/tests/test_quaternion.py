@@ -4,23 +4,24 @@ from sympy import symbols, re, im, I, Abs, Symbol, \
 from sympy.algebras.quaternion import Quaternion
 from sympy.utilities.pytest import raises
 
-x, y, z, w = symbols("x y z w")
+w, x, y, z = symbols('w:z')
+phi = symbols('phi')
 
 def test_quaternion_construction():
-    q = Quaternion(x, y, z, w)
-    assert q + q == Quaternion(2*x, 2*y, 2*z, 2*w)
+    q = Quaternion(w, x, y, z)
+    assert q + q == Quaternion(2*w, 2*x, 2*y, 2*z)
 
     q2 = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3),
                                     pi*Rational(2, 3))
     assert q2 == Quaternion(S.Half, S.Half,
                             S.Half, S.Half)
 
-    M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
+    M = Matrix([[cos(phi), -sin(phi), 0], [sin(phi), cos(phi), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))
-    assert q3 == Quaternion(sqrt(2)*sqrt(cos(x) + 1)/2, 0, 0, sqrt(-2*cos(x) + 2)/2)
+    assert q3 == Quaternion(sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(-2*cos(phi) + 2)/2)
 
     nc = Symbol('nc', commutative=False)
-    raises(ValueError, lambda: Quaternion(x, y, nc, w))
+    raises(ValueError, lambda: Quaternion(w, x, nc, z))
 
 
 def test_quaternion_complex_real_addition():
@@ -29,16 +30,16 @@ def test_quaternion_complex_real_addition():
     # This symbol is not complex:
     c = symbols("c", commutative=False)
 
-    q = Quaternion(x, y, z, w)
-    assert a + q == Quaternion(x + re(a), y + im(a), z, w)
-    assert 1 + q == Quaternion(1 + x, y, z, w)
-    assert I + q == Quaternion(x, 1 + y, z, w)
-    assert b + q == Quaternion(x + b, y, z, w)
+    q = Quaternion(w, x, y, z)
+    assert a + q == Quaternion(w + re(a), x + im(a), y, z)
+    assert 1 + q == Quaternion(1 + w, x, y, z)
+    assert I + q == Quaternion(w, 1 + x, y, z)
+    assert b + q == Quaternion(w + b, x, y, z)
     raises(ValueError, lambda: c + q)
     raises(ValueError, lambda: q * c)
     raises(ValueError, lambda: c * q)
 
-    assert -q == Quaternion(-x, -y, -z, -w)
+    assert -q == Quaternion(-w, -x, -y, -z)
 
     q1 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
     q2 = Quaternion(1, 4, 7, 8)
@@ -57,18 +58,18 @@ def test_quaternion_complex_real_addition():
 
 
 def test_quaternion_functions():
-    q = Quaternion(x, y, z, w)
+    q = Quaternion(w, x, y, z)
     q1 = Quaternion(1, 2, 3, 4)
     q0 = Quaternion(0, 0, 0, 0)
 
-    assert conjugate(q) == Quaternion(x, -y, -z, -w)
+    assert conjugate(q) == Quaternion(w, -x, -y, -z)
     assert q.norm() == sqrt(w**2 + x**2 + y**2 + z**2)
-    assert q.normalize() == Quaternion(x, y, z, w) / sqrt(w**2 + x**2 + y**2 + z**2)
-    assert q.inverse() == Quaternion(x, -y, -z, -w) / (w**2 + x**2 + y**2 + z**2)
+    assert q.normalize() == Quaternion(w, x, y, z) / sqrt(w**2 + x**2 + y**2 + z**2)
+    assert q.inverse() == Quaternion(w, -x, -y, -z) / (w**2 + x**2 + y**2 + z**2)
     assert q.inverse() == q.pow(-1)
     raises(ValueError, lambda: q0.inverse())
-    assert q.pow(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
-    assert q**(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
+    assert q.pow(2) == Quaternion(w**2 - x**2 - y**2 - z**2, 2*w*x, 2*w*y, 2*w*z)
+    assert q**(2) == Quaternion(w**2 - x**2 - y**2 - z**2, 2*w*x, 2*w*y, 2*w*z)
     assert q1.pow(-2) == Quaternion(Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
     assert q1**(-2) == Quaternion(Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
     assert q1.pow(-0.5) == NotImplemented
@@ -147,11 +148,11 @@ def test_quaternion_rotation_iss1593():
     https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Quaternion-derived_rotation_matrix
     for the correct definition
     """
-    q = Quaternion(cos(x/2), sin(x/2), 0, 0)
+    q = Quaternion(cos(phi/2), sin(phi/2), 0, 0)
     assert(trigsimp(q.to_rotation_matrix()) == Matrix([
-                [1,      0,      0],
-                [0, cos(x), -sin(x)],
-                [0, sin(x), cos(x)]]))
+                [1,        0,         0],
+                [0, cos(phi), -sin(phi)],
+                [0, sin(phi),  cos(phi)]]))
 
 
 def test_quaternion_multiplication():

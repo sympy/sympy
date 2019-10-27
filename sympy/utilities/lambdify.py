@@ -960,11 +960,11 @@ class _EvaluatorPrinter(object):
 
             self._exprrepr = printer.doprint
 
-            if hasattr(printer, '_print_Symbol'):
-                symbolrepr = printer._print_Symbol
+            #if hasattr(printer, '_print_Symbol'):
+            #    symbolrepr = printer._print_Symbol
 
-            if hasattr(printer, '_print_Dummy'):
-                dummyrepr = printer._print_Dummy
+            #if hasattr(printer, '_print_Dummy'):
+            #    dummyrepr = printer._print_Dummy
 
         # Used to print the generated function arguments in a standard way
         self._argrepr = LambdaPrinter().doprint

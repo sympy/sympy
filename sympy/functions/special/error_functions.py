@@ -1110,7 +1110,10 @@ class Ei(Function):
         return li(exp(z))
 
     def _eval_rewrite_as_Si(self, z, **kwargs):
-        return Shi(z) + Chi(z)
+        if z.is_negative:
+            return Shi(z) + Chi(z) - I*pi
+        else:
+            return Shi(z) + Chi(z)
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
@@ -1542,7 +1545,7 @@ class Li(Function):
     def eval(cls, z):
         if z is S.Infinity:
             return S.Infinity
-        elif z is 2*S.One:
+        elif z == S(2):
             return S.Zero
 
     def fdiff(self, argindex=1):

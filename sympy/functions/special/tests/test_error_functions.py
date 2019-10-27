@@ -434,11 +434,14 @@ def test_expint():
         z**2/4 + z**3/18 - z**4/96 + z**5/600 + O(z**6)
 
     assert expint(4, z).series(z) == Rational(1, 3) - z/2 + z**2/2 + \
-        z**3*(log(z)/6 - Rational(11, 36) + EulerGamma/6) - z**4/24 + \
+        z**3*(log(z)/6 - Rational(11, 36) + EulerGamma/6 - I*pi/6) - z**4/24 + \
         z**5/240 + O(z**6)
     assert expint(z, y).series(z, 0, 2) == exp(-y)/y - z*meijerg(((), (1, 1)),
                                   ((0, 0, 1), ()), y)/y + O(z**2)
     raises(ArgumentIndexError, lambda: expint(x, y).fdiff(3))
+
+    neg = Symbol('neg', negative=True)
+    assert Ei(neg).rewrite(Si) == Shi(neg) + Chi(neg) - I*pi
 
 
 def test__eis():

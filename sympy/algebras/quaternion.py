@@ -255,7 +255,7 @@ class Quaternion(Expr):
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
             if q1.real_field and q2.is_complex:
-                    return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
+                return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
             elif q2.is_commutative:
                 return Quaternion(q1.a + q2, q1.b, q1.c, q1.d)
             else:
@@ -356,7 +356,7 @@ class Quaternion(Expr):
         # If q1 is a number or a sympy expression instead of a quaternion
         if not isinstance(q1, Quaternion):
             if q2.real_field and q1.is_complex:
-                    return Quaternion(re(q1), im(q1), 0, 0) * q2
+                return Quaternion(re(q1), im(q1), 0, 0) * q2
             elif q1.is_commutative:
                 return Quaternion(q1 * q2.a, q1 * q2.b, q1 * q2.c, q1 * q2.d)
             else:
@@ -365,7 +365,7 @@ class Quaternion(Expr):
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
             if q1.real_field and q2.is_complex:
-                    return q1 * Quaternion(re(q2), im(q2), 0, 0)
+                return q1 * Quaternion(re(q2), im(q2), 0, 0)
             elif q2.is_commutative:
                 return Quaternion(q2 * q1.a, q2 * q1.b, q2 * q1.c, q2 * q1.d)
             else:
@@ -547,16 +547,19 @@ class Quaternion(Expr):
         ==========
 
         pin : tuple
-            A 3-element tuple of coordinates of a point. This point will be
-            the axis of rotation.
-        r
-            Angle to be rotated.
+            A 3-element tuple of coordinates of a point which needs to be
+            rotated.
+        r : Quaternion or tuple
+            Axis and angle of rotation.
+
+            It's important to note that when r is a tuple, it must be of the form
+            (axis, angle)
 
         Returns
         =======
 
         tuple
-            The coordinates of the quaternion after rotation.
+            The coordinates of the point after rotation.
 
         Examples
         ========

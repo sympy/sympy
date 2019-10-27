@@ -823,6 +823,13 @@ def test_sympy__sets__ordinals__OrdinalZero():
     from sympy.sets.ordinals import OrdinalZero
     assert _test_args(OrdinalZero())
 
+
+def test_sympy__sets__powerset__PowerSet():
+    from sympy.sets.powerset import PowerSet
+    from sympy.core.singleton import S
+    assert _test_args(PowerSet(S.EmptySet))
+
+
 def test_sympy__sets__sets__EmptySet():
     from sympy.sets.sets import EmptySet
     assert _test_args(EmptySet())
@@ -2306,6 +2313,13 @@ def test_sympy__functions__special__gamma_functions__polygamma():
     from sympy.functions.special.gamma_functions import polygamma
     assert _test_args(polygamma(x, 2))
 
+def test_sympy__functions__special__gamma_functions__digamma():
+    from sympy.functions.special.gamma_functions import digamma
+    assert _test_args(digamma(x))
+
+def test_sympy__functions__special__gamma_functions__trigamma():
+    from sympy.functions.special.gamma_functions import trigamma
+    assert _test_args(trigamma(x))
 
 def test_sympy__functions__special__gamma_functions__uppergamma():
     from sympy.functions.special.gamma_functions import uppergamma
@@ -3842,7 +3856,7 @@ def test_sympy__physics__units__dimensions__Dimension():
 
 def test_sympy__physics__units__dimensions__DimensionSystem():
     from sympy.physics.units.dimensions import DimensionSystem
-    from sympy.physics.units.dimensions import length, time, velocity
+    from sympy.physics.units.definitions.dimension_definitions import length, time, velocity
     assert _test_args(DimensionSystem((length, time), (velocity,)))
 
 

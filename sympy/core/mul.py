@@ -1196,8 +1196,15 @@ class Mul(Expr, AssocOp):
 
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
-    _eval_is_complex = lambda self: _fuzzy_group(
-        (a.is_complex for a in self.args), quick_exit=True)
+
+    def _eval_is_complex(self):
+        comp = _fuzzy_group((a.is_complex for a in self.args))
+        if comp is False:
+            if any(a.is_infinite for a in self.args):
+                if any(a.is_zero is not False for a in self.args):
+                    return None
+                return False
+        return comp
 
     def _eval_is_finite(self):
         if all(a.is_finite for a in self.args):
@@ -1252,7 +1259,7 @@ class Mul(Expr, AssocOp):
             n, d = self.as_numer_denom()
             if d is S.One:
                 return True
-            elif d is S(2):
+            elif d == S(2):
                 return n.is_even
         elif is_rational is False:
             return False
@@ -1270,7 +1277,7 @@ class Mul(Expr, AssocOp):
         t_not_re_im = None
 
         for t in self.args:
-            if t.is_complex is False and t.is_extended_real is False:
+            if (t.is_complex or t.is_infinite) is False and t.is_extended_real is False:
                 return False
             elif t.is_imaginary:  # I
                 real = not real
@@ -1401,6 +1408,9 @@ class Mul(Expr, AssocOp):
                 saw_NON = True
             elif t.is_extended_nonnegative:
                 saw_NON = True
+            # FIXME: is_positive/is_negative is False doesn't take account of
+            # Symbol('x', infinite=True, extended_real=True) which has
+            # e.g. is_positive is False but has uncertain sign.
             elif t.is_positive is False:
                 sign = -sign
                 if saw_NOT:

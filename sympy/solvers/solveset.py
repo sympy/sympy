@@ -36,7 +36,7 @@ from sympy.functions.elementary.miscellaneous import real_root
 from sympy.logic.boolalg import And
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
-from sympy.sets.sets import Set
+from sympy.sets.sets import Set, ProductSet
 from sympy.matrices import Matrix, MatrixBase
 from sympy.ntheory import totient
 from sympy.ntheory.factor_ import divisors
@@ -851,7 +851,7 @@ def solve_decomposition(f, symbol, domain):
             for iset in iter_iset:
                 new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
                 dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
-                base_set = iset.base_set
+                (base_set,) = iset.base_sets
                 if isinstance(new_solutions, FiniteSet):
                     new_exprs = new_solutions
 
@@ -1278,15 +1278,15 @@ def _solve_modular(f, symbol, domain):
     if isinstance(g_n, ImageSet):
         lamda_expr = g_n.lamda.expr
         lamda_vars = g_n.lamda.variables
-        base_set = g_n.base_set
+        base_sets = g_n.base_sets
         sol_set = _solveset(f_x - lamda_expr, symbol, S.Integers)
         if isinstance(sol_set, FiniteSet):
             tmp_sol = EmptySet()
             for sol in sol_set:
-                tmp_sol += ImageSet(Lambda(lamda_vars, sol), base_set)
+                tmp_sol += ImageSet(Lambda(lamda_vars, sol), *base_sets)
             sol_set = tmp_sol
         else:
-            sol_set =  ImageSet(Lambda(lamda_vars, sol_set), base_set)
+            sol_set =  ImageSet(Lambda(lamda_vars, sol_set), *base_sets)
         return domain.intersect(sol_set)
 
     return unsolved_result
@@ -2019,6 +2019,56 @@ def solveset_complex(f, symbol):
     return solveset(f, symbol, S.Complexes)
 
 
+def _solveset_multi(eqs, syms, domains):
+    '''Basic implementation of a multivariate solveset.
+
+    For internal use (not ready for public consumption)'''
+
+    rep = {}
+    for sym, dom in zip(syms, domains):
+        if dom is S.Reals:
+            rep[sym] = Symbol(sym.name, real=True)
+    eqs = [eq.subs(rep) for eq in eqs]
+    syms = [sym.subs(rep) for sym in syms]
+
+    syms = tuple(syms)
+
+    if len(eqs) == 0:
+        return ProductSet(*domains)
+
+    if len(syms) == 1:
+        sym = syms[0]
+        domain = domains[0]
+        solsets = [solveset(eq, sym, domain) for eq in eqs]
+        solset = Intersection(*solsets)
+        return ImageSet(Lambda((sym,), (sym,)), solset).doit()
+
+    eqs = sorted(eqs, key=lambda eq: len(eq.free_symbols & set(syms)))
+
+    for n in range(len(eqs)):
+        sols = []
+        all_handled = True
+        for sym in syms:
+            if sym not in eqs[n].free_symbols:
+                continue
+            sol = solveset(eqs[n], sym, domains[syms.index(sym)])
+
+            if isinstance(sol, FiniteSet):
+                i = syms.index(sym)
+                symsp = syms[:i] + syms[i+1:]
+                domainsp = domains[:i] + domains[i+1:]
+                eqsp = eqs[:n] + eqs[n+1:]
+                for s in sol:
+                    eqsp_sub = [eq.subs(sym, s) for eq in eqsp]
+                    sol_others = _solveset_multi(eqsp_sub, symsp, domainsp)
+                    fun = Lambda((symsp,), symsp[:i] + (s,) + symsp[i:])
+                    sols.append(ImageSet(fun, sol_others).doit())
+            else:
+                all_handled = False
+        if all_handled:
+            return Union(*sols)
+
+
 def solvify(f, symbol, domain):
     """Solves an equation using solveset and returns the solution in accordance
     with the `solve` output API.
@@ -2454,11 +2504,11 @@ def linsolve(system, *symbols):
     if hasattr(system, '__iter__'):
 
         # 1). (A, b)
-        if len(system) == 2 and isinstance(system[0], Matrix):
+        if len(system) == 2 and isinstance(system[0], MatrixBase):
             A, b = system
 
         # 2). (eq1, eq2, ...)
-        if not isinstance(system[0], Matrix):
+        if not isinstance(system[0], MatrixBase):
             if sym_gen or not symbols:
                 raise ValueError(filldedent('''
                     When passing a system of equations, the explicit
@@ -2472,9 +2522,9 @@ def linsolve(system, *symbols):
             A, b = linear_eq_to_matrix(system, symbols)
             syms_needed_msg = 'free symbols in the equations provided'
 
-    elif isinstance(system, Matrix) and not (
+    elif isinstance(system, MatrixBase) and not (
             symbols and not isinstance(symbols, GeneratorType) and
-            isinstance(symbols[0], Matrix)):
+            isinstance(symbols[0], MatrixBase)):
         # 3). A augmented with b
         A, b = system[:, :-1], system[:, -1:]
 
@@ -2898,7 +2948,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             res[key_res] = value_res.lamda.expr
                             original_imageset[key_res] = value_res
                             dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
-                            base = value_res.base_set
+                            (base,) = value_res.base_sets
                             imgset_yes = (dummy_n, base)
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res).expand()

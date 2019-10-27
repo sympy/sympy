@@ -1,5 +1,5 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    LessThan, Max, Min, And, Or, Eq, Le, Lt, Float,
+    Max, Min, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
@@ -8,8 +8,7 @@ from mpmath import mpi
 
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
-from sympy.core.relational import \
-    Eq, Ne, Le, Lt, LessThan
+from sympy.core.relational import Eq, Ne, Le, Lt, LessThan
 from sympy.logic import And, Or, Xor
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
@@ -34,6 +33,7 @@ def test_imageset():
     raises(TypeError, lambda: imageset(x, ints))
     raises(ValueError, lambda: imageset(x, y, z, ints))
     raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))
+    assert (1, 2) in imageset(Lambda((x, y), (x, y)), ints, ints)
     raises(ValueError, lambda: imageset(Lambda(x, x), ints, ints))
     assert imageset(cos, ints) == ImageSet(Lambda(x, cos(x)), ints)
     def f(x):
@@ -43,13 +43,13 @@ def test_imageset():
     assert imageset(f, ints) == ImageSet(Lambda(x, cos(x)), ints)
     assert imageset(x, 1, ints) == FiniteSet(1)
     assert imageset(x, y, ints) == {y}
-    assert imageset((x, y), (1, z), ints*S.Reals) == {(1, z)}
+    assert imageset((x, y), (1, z), ints, S.Reals) == {(1, z)}
     clash = Symbol('x', integer=true)
     assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
     x1, x2 = symbols("x1, x2")
-    assert imageset(lambda x,y: Add(x,y), Interval(1,2), Interval(2, 3)) == \
-        ImageSet(Lambda((x1, x2), x1+x2), Interval(1,2), Interval(2,3))
+    assert imageset(lambda x, y: Add(x, y), Interval(1, 2), Interval(2, 3)) == \
+        ImageSet(Lambda((x1, x2), x1+x2), Interval(1, 2), Interval(2, 3))
 
 
 def test_is_empty():
@@ -862,7 +862,7 @@ def test_finite_basic():
     assert FiniteSet((1, 2, 3)) != FiniteSet(1, 2, 3)
 
     # Ensure a variety of types can exist in a FiniteSet
-    s = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
+    assert FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
 
     assert (A > B) is False
     assert (A >= B) is False
@@ -875,24 +875,6 @@ def test_finite_basic():
     assert A > AandB and B > AandB
 
     assert FiniteSet(1.0) == FiniteSet(1)
-
-
-def test_powerset():
-    # EmptySet
-    A = FiniteSet()
-    pset = A.powerset()
-    assert len(pset) == 1
-    assert pset ==  FiniteSet(S.EmptySet)
-
-    # FiniteSets
-    A = FiniteSet(1, 2)
-    pset = A.powerset()
-    assert len(pset) == 2**len(A)
-    assert pset == FiniteSet(FiniteSet(), FiniteSet(1),
-                             FiniteSet(2), A)
-    # Not finite sets
-    I = Interval(0, 1)
-    raises(NotImplementedError, I.powerset)
 
 
 def test_product_basic():

@@ -1,9 +1,10 @@
 from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
-                   atan, atan2, nan, Symbol, re, im)
+                   atan, atan2, nan, Symbol, re, im, sign)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.pytest import slow
+from sympy.core import S
 
 
 def test_Abs():
@@ -140,7 +141,7 @@ def test_atan2():
 
 def test_re():
     assert refine(re(x), Q.real(x)) == x
-    assert refine(re(x), Q.imaginary(x)) == 0
+    assert refine(re(x), Q.imaginary(x)) is S.Zero
     assert refine(re(x+y), Q.real(x) & Q.real(y)) == x + y
     assert refine(re(x+y), Q.real(x) & Q.imaginary(y)) == x
     assert refine(re(x*y), Q.real(x) & Q.real(y)) == x * y
@@ -150,7 +151,7 @@ def test_re():
 
 def test_im():
     assert refine(im(x), Q.imaginary(x)) == -I*x
-    assert refine(im(x), Q.real(x)) == 0
+    assert refine(im(x), Q.real(x)) is S.Zero
     assert refine(im(x+y), Q.imaginary(x) & Q.imaginary(y)) == -I*x - I*y
     assert refine(im(x+y), Q.real(x) & Q.imaginary(y)) == -I*y
     assert refine(im(x*y), Q.imaginary(x) & Q.real(y)) == -I*x*y
@@ -169,6 +170,23 @@ def test_complex():
         & Q.real(z)) == w*y - x*z
     assert refine(im((w + I*x) * (y + I*z)), Q.real(w) & Q.real(x) & Q.real(y)
         & Q.real(z)) == w*z + x*y
+
+
+def test_sign():
+    x = Symbol('x', real = True)
+    assert refine(sign(x), Q.positive(x)) == 1
+    assert refine(sign(x), Q.negative(x)) == -1
+    assert refine(sign(x), Q.zero(x)) == 0
+    assert refine(sign(x), True) == sign(x)
+    assert refine(sign(Abs(x)), Q.nonzero(x)) == 1
+
+    x = Symbol('x', imaginary=True)
+    assert refine(sign(x), Q.positive(im(x))) == S.ImaginaryUnit
+    assert refine(sign(x), Q.negative(im(x))) == -S.ImaginaryUnit
+    assert refine(sign(x), True) == sign(x)
+
+    x = Symbol('x', complex=True)
+    assert refine(sign(x), Q.zero(x)) == 0
 
 
 def test_func_args():

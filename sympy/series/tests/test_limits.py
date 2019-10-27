@@ -5,7 +5,7 @@ from sympy import (
     atan, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
-    acos, erfi, LambertW, factorial)
+    acos, erfi, LambertW, factorial, Ei, EulerGamma)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -36,7 +36,7 @@ def test_basic1():
     assert limit((1 + x)**oo, x, 0) is oo
     assert limit((1 + x)**oo, x, 0, dir='-') == 0
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
-    assert limit(y/x/log(x), x, 0) is -oo*sign(y)
+    assert limit(y/x/log(x), x, 0) == -oo*sign(y)
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) is S.NaN
@@ -206,6 +206,7 @@ def test_exponential():
     assert limit((1 + x/(2*n + 1))**n, n, oo) == exp(x/2)
     assert limit(((x - 1)/(x + 1))**x, x, oo) == exp(-2)
     assert limit(1 + (1 + 1/x)**x, x, oo) == 1 + S.Exp1
+    assert limit((2 + 6*x)**x/(6*x)**x, x, oo) == exp(S('1/3'))
 
 
 @XFAIL
@@ -502,6 +503,11 @@ def test_issue_12555():
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, oo) is oo
 
 
+def test_issue_13332():
+    assert limit(sqrt(30)*5**(-5*x - 1)*(46656*x)**x*(5*x + 2)**(5*x + 5*S.Half) *
+                (6*x + 2)**(-6*x - 5*S.Half), x, oo) == Rational(25, 36)
+
+
 def test_issue_12564():
     assert limit(x**2 + x*sin(x) + cos(x), x, -oo) is oo
     assert limit(x**2 + x*sin(x) + cos(x), x, oo) is oo
@@ -586,3 +592,7 @@ def test_issue_17431():
     assert limit((n + 2)**2*factorial(n)/((n + 1)*(n + 3)*factorial(n + 1))
                  , n, oo) == 0
     assert limit((n + 1) * factorial(n) / (n * factorial(n + 1)), n, oo) == 0
+
+
+def test_issue_17671():
+    assert limit(Ei(-log(x)) - log(log(x))/x, x, 1) == EulerGamma

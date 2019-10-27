@@ -1,7 +1,10 @@
 from __future__ import print_function, division
 
+from functools import reduce
+
 from sympy.core.basic import Basic
 from sympy.core.compatibility import with_metaclass, range, PY3
+from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or
@@ -14,6 +17,7 @@ from sympy.logic.boolalg import And
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
     ProductSet)
 from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import cartes
 
 
 class Rationals(with_metaclass(Singleton, Set)):
@@ -307,41 +311,71 @@ class ImageSet(Set):
         if not isinstance(flambda, Lambda):
             raise ValueError('First argument must be a Lambda')
 
-        sets = [_sympify(s) for s in sets]
+        signature = flambda.signature
 
-        if flambda is S.IdentityFunction:
-            if len(sets) != 1:
-                raise ValueError('Identity function requires a single set')
-            return sets[0]
+        if len(signature) != len(sets):
+            raise ValueError('Incompatible signature')
+
+        sets = [_sympify(s) for s in sets]
 
         if not all(isinstance(s, Set) for s in sets):
             raise TypeError("Set arguments to ImageSet should of type Set")
 
-        sets = [s.flatten() if s.is_ProductSet else s for s in sets]
+        if not all(cls._check_sig(sg, st) for sg, st in zip(signature, sets)):
+            raise ValueError("Signature %s does not match sets %s" % (signature, sets))
+
+        if flambda is S.IdentityFunction and len(sets) == 1:
+            return sets[0]
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
-            emptyprod = fuzzy_or(s.is_empty for s in sets)
-            if emptyprod == True:
+            is_empty = fuzzy_or(s.is_empty for s in sets)
+            if is_empty == True:
                 return S.EmptySet
-            elif emptyprod == False:
+            elif is_empty == False:
                 return FiniteSet(flambda.expr)
 
         return Basic.__new__(cls, flambda, *sets)
 
     lamda = property(lambda self: self.args[0])
+    base_sets = property(lambda self: self.args[1:])
 
     @property
     def base_set(self):
-        sets = self.args[1:]
+        # XXX: Maybe deprecate this? It is poorly defined in handling
+        # the multivariate case...
+        sets = self.base_sets
         if len(sets) == 1:
             return sets[0]
         else:
-            return ProductSet(*self.args[1:]).flatten()
+            return ProductSet(*sets).flatten()
+
+    @property
+    def base_pset(self):
+        return ProductSet(*self.base_sets)
+
+    @classmethod
+    def _check_sig(cls, sig_i, set_i):
+        if sig_i.is_symbol:
+            return True
+        elif isinstance(set_i, ProductSet):
+            sets = set_i.sets
+            if len(sig_i) != len(sets):
+                return False
+            # Recurse through the signature for nested tuples:
+            return all(cls._check_sig(ts, ps) for ts, ps in zip(sig_i, sets))
+        else:
+            # XXX: Need a better way of checking whether a set is a set of
+            # Tuples or not. For example a FiniteSet can contain Tuples
+            # but so can an ImageSet or a ConditionSet. Others like
+            # Integers, Reals etc can not contain Tuples. We could just
+            # list the possibilities here... Current code for e.g.
+            # _contains probably only works for ProductSet.
+            return True # Give the benefit of the doubt
 
     def __iter__(self):
         already_seen = set()
-        for i in self.base_set:
-            val = self.lamda(i)
+        for i in self.base_pset:
+            val = self.lamda(*i)
             if val in already_seen:
                 continue
             else:
@@ -352,112 +386,94 @@ class ImageSet(Set):
         return len(self.lamda.variables) > 1
 
     def _contains(self, other):
-        from sympy.matrices import Matrix
-        from sympy.solvers.solveset import solveset, linsolve
-        from sympy.solvers.solvers import solve
-        from sympy.utilities.iterables import is_sequence, cartes
-        L = self.lamda
-        if is_sequence(other) != is_sequence(L.expr):
-            return False
-        elif is_sequence(other) and len(L.expr) != len(other):
-            return False
+        from sympy.solvers.solveset import _solveset_multi
 
-        if self._is_multivariate():
-            if not is_sequence(L.expr):
-                # exprs -> (numer, denom) and check again
-                # XXX this is a bad idea -- make the user
-                # remap self to desired form
-                return other.as_numer_denom() in self.func(
-                    Lambda(L.signature, L.expr.as_numer_denom()), self.base_set)
-            eqs = [expr - val for val, expr in zip(other, L.expr)]
-            variables = L.variables
-            free = set(variables)
-            if all(i.is_number for i in list(Matrix(eqs).jacobian(variables))):
-                solns = list(linsolve([e - val for e, val in
-                zip(L.expr, other)], variables))
-            else:
-                try:
-                    syms = [e.free_symbols & free for e in eqs]
-                    solns = {}
-                    for i, (e, s, v) in enumerate(zip(eqs, syms, other)):
-                        if not s:
-                            if e != v:
-                                return S.false
-                            solns[vars[i]] = [v]
-                            continue
-                        elif len(s) == 1:
-                            sy = s.pop()
-                            sol = solveset(e, sy)
-                            if sol is S.EmptySet:
-                                return S.false
-                            elif isinstance(sol, FiniteSet):
-                                solns[sy] = list(sol)
-                            else:
-                                raise NotImplementedError
-                        else:
-                            # if there is more than 1 symbol from
-                            # variables in expr than this is a
-                            # coupled system
-                            raise NotImplementedError
-                    solns = cartes(*[solns[s] for s in variables])
-                except NotImplementedError:
-                    solns = solve([e - val for e, val in
-                        zip(L.expr, other)], variables, set=True)
-                    if solns:
-                        _v, solns = solns
-                        # watch for infinite solutions like solving
-                        # for x, y and getting (x, 0), (0, y), (0, 0)
-                        solns = [i for i in solns if not any(
-                            s in i for s in variables)]
-                        if not solns:
-                            return False
-                    else:
-                        # not sure if [] means no solution or
-                        # couldn't find one
-                        return
-        else:
-            x = L.variables[0]
-            if isinstance(L.expr, Expr):
-                # scalar -> scalar mapping
-                solnsSet = solveset(L.expr - other, x)
-                if solnsSet.is_FiniteSet:
-                    solns = list(solnsSet)
+        def get_symsetmap(signature, base_sets):
+            '''Attempt to get a map of symbols to base_sets'''
+            queue = list(zip(signature, base_sets))
+            symsetmap = {}
+            for sig, base_set in queue:
+                if sig.is_symbol:
+                    symsetmap[sig] = base_set
+                elif base_set.is_ProductSet:
+                    sets = base_set.sets
+                    if len(sig) != len(sets):
+                        raise ValueError("Incompatible signature")
+                    # Recurse
+                    queue.extend(zip(sig, sets))
                 else:
-                    msgset = solnsSet
-            else:
-                # scalar -> vector
-                # note: it is not necessary for components of other
-                # to be in the corresponding base set unless the
-                # computed component is always in the corresponding
-                # domain. e.g. 1/2 is in imageset(x, x/2, Integers)
-                # while it cannot be in imageset(x, x + 2, Integers).
-                # So when the base set is comprised of integers or reals
-                # perhaps a pre-check could be done to see if the computed
-                # values are still in the set.
-                dom = self.base_set
-                for e, o in zip(L.expr, other):
-                    dom = dom.intersection(solveset(e - o, x, domain=dom))
-                    if dom.is_empty:
-                        # there is no solution in common
-                        return False
-                return fuzzy_not(dom.is_empty)
-        for soln in solns:
-            try:
-                if soln in self.base_set:
-                    return True
-            except TypeError:
-                return
-        return S.false
+                    # If we get here then we have something like sig = (x, y) and
+                    # base_set = {(1, 2), (3, 4)}. For now we give up.
+                    return None
+
+            return symsetmap
+
+        def get_equations(expr, candidate):
+            '''Find the equations relating symbols in expr and candidate.'''
+            queue = [(expr, candidate)]
+            for e, c in queue:
+                if not isinstance(e, Tuple):
+                    yield Eq(e, c)
+                elif not isinstance(c, Tuple) or len(e) != len(c):
+                    yield False
+                    return
+                else:
+                    queue.extend(zip(e, c))
+
+        # Get the basic objects together:
+        other = _sympify(other)
+        expr = self.lamda.expr
+        sig = self.lamda.signature
+        variables = self.lamda.variables
+        base_sets = self.base_sets
+
+        # Use dummy symbols for ImageSet parameters so they don't match
+        # anything in other
+        rep = {v: Dummy(v.name) for v in variables}
+        variables = [v.subs(rep) for v in variables]
+        sig = sig.subs(rep)
+        expr = expr.subs(rep)
+
+        # Map the parts of other to those in the Lambda expr
+        equations = []
+        for eq in get_equations(expr, other):
+            # Unsatisfiable equation?
+            if eq is False:
+                return False
+            equations.append(eq)
+
+        # Map the symbols in the signature to the corresponding domains
+        symsetmap = get_symsetmap(sig, base_sets)
+        if symsetmap is None:
+            # Can't factor the base sets to a ProductSet
+            return None
+
+        # Which of the variables in the Lambda signature need to be solved for?
+        symss = (eq.free_symbols for eq in equations)
+        variables = set(variables) & reduce(set.union, symss, set())
+
+        # Use internal multivariate solveset
+        variables = tuple(variables)
+        base_sets = [symsetmap[v] for v in variables]
+        solnset = _solveset_multi(equations, variables, base_sets)
+        if solnset is None:
+            return None
+        return fuzzy_not(solnset.is_empty)
 
     @property
     def is_iterable(self):
-        return self.base_set.is_iterable
+        return all(s.is_iterable for s in self.base_sets)
 
     def doit(self, **kwargs):
         from sympy.sets.setexpr import SetExpr
         f = self.lamda
-        base_set = self.base_set
-        return SetExpr(base_set)._eval_func(f).set
+        sig = f.signature
+        if len(sig) == 1 and sig[0].is_symbol and isinstance(f.expr, Expr):
+            base_set = self.base_sets[0]
+            return SetExpr(base_set)._eval_func(f).set
+        if all(s.is_FiniteSet for s in self.base_sets):
+            return FiniteSet(*(f(*a) for a in cartes(*self.base_sets)))
+        return self
 
 
 class Range(Set):
@@ -548,7 +564,7 @@ class Range(Set):
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
         if len(args) == 1:
-            if isinstance(args[0], range if PY3 else xrange):
+            if isinstance(args[0], range):
                 raise TypeError(
                     'use sympify(%s) to convert range to Range' % args[0])
 

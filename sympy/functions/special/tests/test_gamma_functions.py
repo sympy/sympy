@@ -1,6 +1,6 @@
 from sympy import (
     Symbol, Dummy, gamma, I, oo, nan, zoo, factorial, sqrt, Rational,
-    multigamma, log, polygamma, EulerGamma, pi, uppergamma, S, expand_func,
+    multigamma, log, polygamma, digamma, trigamma, EulerGamma, pi, uppergamma, S, expand_func,
     loggamma, sin, cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic,
     zeta, conjugate, Ei, im, re, tanh, Abs)
 
@@ -114,7 +114,7 @@ def test_lowergamma():
     assert td(lowergamma(randcplx(), y), y)
     assert td(lowergamma(x, randcplx()), x)
     assert lowergamma(x, y).diff(x) == \
-        gamma(x)*polygamma(0, x) - uppergamma(x, y)*log(y) \
+        gamma(x)*digamma(x) - uppergamma(x, y)*log(y) \
         - meijerg([], [1, 1], [0, 0, x], [], y)
 
     assert lowergamma(S.Half, x) == sqrt(pi)*erf(sqrt(x))
@@ -292,14 +292,14 @@ def test_polygamma():
     assert polygamma(2, 2.5).is_positive == False
     assert polygamma(2, -2.5).is_positive == False
     assert polygamma(3, 2.5).is_positive == True
-    assert polygamma(3, -2.5).is_positive is None
+    assert polygamma(3, -2.5).is_positive is True
     assert polygamma(-2, -2.5).is_positive is None
     assert polygamma(-3, -2.5).is_positive is None
 
     assert polygamma(2, 2.5).is_negative == True
     assert polygamma(3, 2.5).is_negative == False
     assert polygamma(3, -2.5).is_negative == False
-    assert polygamma(2, -2.5).is_negative is None
+    assert polygamma(2, -2.5).is_negative is True
     assert polygamma(-2, -2.5).is_negative is None
     assert polygamma(-3, -2.5).is_negative is None
 
@@ -367,6 +367,117 @@ def test_polygamma_expand_func():
     e = polygamma(3, x + y + Rational(3, 4))
     assert e.expand(func=True, basic=False) == e
 
+def test_digamma():
+    from sympy import I
+
+    assert digamma(nan) == nan
+
+    assert digamma(oo) == oo
+    assert digamma(-oo) == oo
+    assert digamma(I*oo) == oo
+    assert digamma(-I*oo) == oo
+
+    assert digamma(-9) == zoo
+
+    assert digamma(-9) == zoo
+    assert digamma(-1) == zoo
+
+    assert digamma(0) == zoo
+
+    assert digamma(1) == -EulerGamma
+    assert digamma(7) == Rational(49, 20) - EulerGamma
+
+    def t(m, n):
+        x = S(m)/n
+        r = digamma(x)
+        if r.has(digamma):
+            return False
+        return abs(digamma(x.n()).n() - r.n()).n() < 1e-10
+    assert t(1, 2)
+    assert t(3, 2)
+    assert t(-1, 2)
+    assert t(1, 4)
+    assert t(-3, 4)
+    assert t(1, 3)
+    assert t(4, 3)
+    assert t(3, 4)
+    assert t(2, 3)
+    assert t(123, 5)
+
+    assert digamma(x).rewrite(zeta) == polygamma(0, x)
+
+    assert digamma(x).rewrite(harmonic) == harmonic(x - 1) - EulerGamma
+
+    assert digamma(I).is_real is None
+
+    assert digamma(x,evaluate=False).fdiff() == polygamma(1, x)
+
+    assert digamma(x,evaluate=False).is_real is None
+
+    assert digamma(x,evaluate=False).is_positive is None
+
+    assert digamma(x,evaluate=False).is_negative is None
+
+    assert digamma(x,evaluate=False).rewrite(polygamma) == polygamma(0, x)
+
+
+def test_digamma_expand_func():
+    assert digamma(x).expand(func=True) == polygamma(0, x)
+    assert digamma(2*x).expand(func=True) == \
+        polygamma(0, x)/2 + polygamma(0, Rational(1, 2) + x)/2 + log(2)
+    assert digamma(-1 + x).expand(func=True) == \
+        polygamma(0, x) - 1/(x - 1)
+    assert digamma(1 + x).expand(func=True) == \
+        1/x + polygamma(0, x )
+    assert digamma(2 + x).expand(func=True) == \
+        1/x + 1/(1 + x) + polygamma(0, x)
+    assert digamma(3 + x).expand(func=True) == \
+        polygamma(0, x) + 1/x + 1/(1 + x) + 1/(2 + x)
+    assert digamma(4 + x).expand(func=True) == \
+        polygamma(0, x) + 1/x + 1/(1 + x) + 1/(2 + x) + 1/(3 + x)
+    assert digamma(x + y).expand(func=True) == \
+        polygamma(0, x + y)
+
+def test_trigamma():
+    assert trigamma(nan) == nan
+
+    assert trigamma(oo) == 0
+
+    assert trigamma(1) == pi**2/6
+    assert trigamma(2) == pi**2/6 - 1
+    assert trigamma(3) == pi**2/6 - Rational(5, 4)
+
+    assert trigamma(x, evaluate=False).rewrite(zeta) == zeta(2, x)
+    assert trigamma(x, evaluate=False).rewrite(harmonic) == \
+        trigamma(x).rewrite(polygamma).rewrite(harmonic)
+
+    assert trigamma(x,evaluate=False).fdiff() == polygamma(2, x)
+
+    assert trigamma(x,evaluate=False).is_real is None
+
+    assert trigamma(x,evaluate=False).is_positive is None
+
+    assert trigamma(x,evaluate=False).is_negative is None
+
+    assert trigamma(x,evaluate=False).rewrite(polygamma) == polygamma(1, x)
+
+def test_trigamma_expand_func():
+    assert trigamma(2*x).expand(func=True) == \
+        polygamma(1, x)/4 + polygamma(1, Rational(1, 2) + x)/4
+    assert trigamma(1 + x).expand(func=True) == \
+        polygamma(1, x) - 1/x**2
+    assert trigamma(2 + x).expand(func=True, multinomial=False) == \
+        polygamma(1, x) - 1/x**2 - 1/(1 + x)**2
+    assert trigamma(3 + x).expand(func=True, multinomial=False) == \
+        polygamma(1, x) - 1/x**2 - 1/(1 + x)**2 - 1/(2 + x)**2
+    assert trigamma(4 + x).expand(func=True, multinomial=False) == \
+        polygamma(1, x) - 1/x**2 - 1/(1 + x)**2 - \
+        1/(2 + x)**2 - 1/(3 + x)**2
+    assert trigamma(x + y).expand(func=True) == \
+        polygamma(1, x + y)
+    assert trigamma(3 + 4*x + y).expand(func=True, multinomial=False) == \
+        polygamma(1, y + 4*x) - 1/(y + 4*x)**2 - \
+        1/(1 + y + 4*x)**2 - 1/(2 + y + 4*x)**2
 
 def test_loggamma():
     raises(TypeError, lambda: loggamma(2, 3))
