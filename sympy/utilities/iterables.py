@@ -246,10 +246,9 @@ def iproduct(*iterables):
     >>> (3, 4) in iproduct(S.Integers, S.Integers)
     True
 
-    See Also
-    ========
+    .. seealso::
 
-    sympy.iterables.cartes (itertools.product)
+       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
     '''
     if len(iterables) == 0:
         yield ()
