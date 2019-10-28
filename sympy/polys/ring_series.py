@@ -1283,10 +1283,10 @@ def _tan1(p, x, prec):
     method. It takes advantage of the fact that series expansion of atan is
     easier than that of tan.
 
-    Consider `f(x) = y - \atan(x)`
+    Consider `f(x) = y - \arctan(x)`
     Let r be a root of f(x) found using Newton's method.
     Then `f(r) = 0`
-    Or `y = \atan(x)` where `x = \tan(y)` as required.
+    Or `y = \arctan(x)` where `x = \tan(y)` as required.
     """
     R = p.ring
     p1 = R(0)
