@@ -2193,7 +2193,10 @@ def linear_coeffs(eq, *syms, **_kw):
     ValueError: nonlinear term encountered: x*(y + 1)
     """
     d = defaultdict(list)
-    c, terms = _sympify(eq).as_coeff_add(*syms)
+    eq = _sympify(eq)
+    if not eq.has(*syms):
+        return [S.Zero]*len(syms) + [eq]
+    c, terms = eq.as_coeff_add(*syms)
     d[0].extend(Add.make_args(c))
     for t in terms:
         m, f = t.as_coeff_mul(*syms)
