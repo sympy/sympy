@@ -1172,7 +1172,7 @@ if AutolevListener:
             elif func_name == "mass":
                 l = []
                 try:
-                    ch.ID(0).getText().lower()
+                    a = ch.ID(0).getText().lower()
                     for i in range((ch.getChildCount()-1)//2):
                         l.append(self.symbol_table2[ch.ID(i).getText().lower()] + ".mass")
                     self.setValue(ctx, "+".join(l))
@@ -2045,7 +2045,7 @@ if AutolevListener:
         def exitInertiaDecl(self, ctx):
             inertia_list = []
             try:
-                ctx.ID(1).getText()
+                a = ctx.ID(1).getText()
                 num = 5
             except Exception:
                 num = 2
