@@ -2081,7 +2081,10 @@ def test_solve_logarithm():
 
 
 def test_linear_coeffs():
+    import sympy as sp
     from sympy.solvers.solveset import linear_coeffs
+    syms = sp.symbols('x y')
+    x, y = syms
     assert linear_coeffs(0, x) == [0, 0]
     assert all(i is S.Zero for i in linear_coeffs(0, x))
     assert linear_coeffs(x + 2*y + 3, x, y) == [1, 2, 3]
@@ -2092,6 +2095,7 @@ def test_linear_coeffs():
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
     assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
+    assert linear_coeffs(sp.numbers.Float(1.0), *syms) == [0, 0, 1.0]
 
 # modular tests
 def test_is_modular():
