@@ -49,25 +49,25 @@ def jones_vector(psi, chi):
     >>> psi, chi = symbols("psi, chi", real=True)
 
     A general Jones vector.
-    >>> pprint(jones_vector(psi, chi))
+    >>> pprint(jones_vector(psi, chi), use_unicode=True)
     ⎡-ⅈ⋅sin(χ)⋅sin(ψ) + cos(χ)⋅cos(ψ)⎤
     ⎢                                ⎥
     ⎣ⅈ⋅sin(χ)⋅cos(ψ) + sin(ψ)⋅cos(χ) ⎦
 
     Horizontal polarization
-    >>> pprint(jones_vector(0, 0))
+    >>> pprint(jones_vector(0, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
     ⎣0⎦
 
     Vertical polarization
-    >>> pprint(jones_vector(pi/2, 0))
+    >>> pprint(jones_vector(pi/2, 0), use_unicode=True)
     ⎡0⎤
     ⎢ ⎥
     ⎣1⎦
 
     Diagonal polarization
-    >>> pprint(jones_vector(pi/4, 0))
+    >>> pprint(jones_vector(pi/4, 0), use_unicode=True)
     ⎡√2⎤
     ⎢──⎥
     ⎢2 ⎥
@@ -77,7 +77,7 @@ def jones_vector(psi, chi):
     ⎣2 ⎦
 
     Anti-diagonal polarization
-    >>> pprint(jones_vector(-pi/4, 0))
+    >>> pprint(jones_vector(-pi/4, 0), use_unicode=True)
     ⎡ √2 ⎤
     ⎢ ── ⎥
     ⎢ 2  ⎥
@@ -87,7 +87,7 @@ def jones_vector(psi, chi):
     ⎣ 2  ⎦
 
     Right-hand circular polarization
-    >>> pprint(jones_vector(0, pi/4))
+    >>> pprint(jones_vector(0, pi/4), use_unicode=True)
     ⎡ √2 ⎤
     ⎢ ── ⎥
     ⎢ 2  ⎥
@@ -97,7 +97,7 @@ def jones_vector(psi, chi):
     ⎣ 2  ⎦
 
     Left-hand circular polarization
-    >>> pprint(jones_vector(0, -pi/4))
+    >>> pprint(jones_vector(0, -pi/4), use_unicode=True)
     ⎡  √2  ⎤
     ⎢  ──  ⎥
     ⎢  2   ⎥
@@ -132,7 +132,7 @@ def stokes_vector(psi, chi, p=1, I=1):
 
     >>> from sympy import pprint, symbols
     >>> psi, chi, p, I = symbols("psi, chi, p, I", real=True)
-    >>> pprint(stokes_vector(psi, chi, p, I))
+    >>> pprint(stokes_vector(psi, chi, p, I), use_unicode=True)
     ⎡          I          ⎤
     ⎢                     ⎥
     ⎢I⋅p⋅cos(2⋅χ)⋅cos(2⋅ψ)⎥
@@ -143,7 +143,7 @@ def stokes_vector(psi, chi, p=1, I=1):
 
 
     Horizontal polarization
-    >>> pprint(stokes_vector(0, 0))
+    >>> pprint(stokes_vector(0, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
     ⎢1⎥
@@ -153,7 +153,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0⎦
 
     Vertical polarization
-    >>> pprint(stokes_vector(pi/2, 0))
+    >>> pprint(stokes_vector(pi/2, 0), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
     ⎢-1⎥
@@ -163,7 +163,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0 ⎦
 
     Diagonal polarization
-    >>> pprint(stokes_vector(pi/4, 0))
+    >>> pprint(stokes_vector(pi/4, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
     ⎢0⎥
@@ -173,7 +173,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0⎦
 
     Anti-diagonal polarization
-    >>> pprint(stokes_vector(-pi/4, 0))
+    >>> pprint(stokes_vector(-pi/4, 0), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
     ⎢0 ⎥
@@ -183,7 +183,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0 ⎦
 
     Right-hand circular polarization
-    >>> pprint(stokes_vector(0, pi/4))
+    >>> pprint(stokes_vector(0, pi/4), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
     ⎢0⎥
@@ -193,7 +193,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣1⎦
 
     Left-hand circular polarization
-    >>> pprint(stokes_vector(0, -pi/4))
+    >>> pprint(stokes_vector(0, -pi/4), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
     ⎢0 ⎥
@@ -203,7 +203,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣-1⎦
 
     Unpolarized light
-    >>> pprint(stokes_vector(0, 0, 0))
+    >>> pprint(stokes_vector(0, 0, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
     ⎢0⎥
@@ -241,7 +241,8 @@ def jones_2_stokes(e):
     >>> A = jones_vector(-pi/4, 0)
     >>> R = jones_vector(0, pi/4)
     >>> L = jones_vector(0, -pi/4)
-    >>> pprint([jones_2_stokes(e) for e in [H, V, D, A, R, L]])
+    >>> pprint([jones_2_stokes(e) for e in [H, V, D, A, R, L]],
+    ...         use_unicode=True)
     ⎡⎡1⎤  ⎡1 ⎤  ⎡1⎤  ⎡1 ⎤  ⎡1⎤  ⎡1 ⎤⎤
     ⎢⎢ ⎥  ⎢  ⎥  ⎢ ⎥  ⎢  ⎥  ⎢ ⎥  ⎢  ⎥⎥
     ⎢⎢1⎥  ⎢-1⎥  ⎢0⎥  ⎢0 ⎥  ⎢0⎥  ⎢0 ⎥⎥
@@ -312,16 +313,16 @@ def phase_retarder(theta=0, delta=0):
     >>> from sympy import pprint, symbols
     >>> theta, delta = symbols("theta, delta", real=True)
     >>> R = phase_retarder(theta, delta)
-    >>> pprint(R)
-    ⎡                           -ⅈ⋅δ                  -ⅈ⋅δ               ⎤
-    ⎢                           ─────                 ─────              ⎥
-    ⎢ ⎛ ⅈ⋅δ    2         2   ⎞    2     ⎛   ⅈ⋅δ    ⎞    2                ⎥
-    ⎢ ⎝ℯ   ⋅sin (θ) + cos (θ)⎠⋅ℯ        ⎝- ℯ    + 1⎠⋅ℯ     ⋅sin(θ)⋅cos(θ)⎥
-    ⎢                                                                    ⎥
-    ⎢              -ⅈ⋅δ                                            -ⅈ⋅δ  ⎥
-    ⎢              ─────                                           ───── ⎥
-    ⎢⎛   ⅈ⋅δ    ⎞    2                   ⎛ ⅈ⋅δ    2         2   ⎞    2   ⎥
-    ⎣⎝- ℯ    + 1⎠⋅ℯ     ⋅sin(θ)⋅cos(θ)   ⎝ℯ   ⋅cos (θ) + sin (θ)⎠⋅ℯ      ⎦
+    >>> pprint(R, use_unicode=True)
+    ⎡                          -ⅈ⋅δ               -ⅈ⋅δ               ⎤
+    ⎢                          ─────              ─────              ⎥
+    ⎢⎛ ⅈ⋅δ    2         2   ⎞    2    ⎛     ⅈ⋅δ⎞    2                ⎥
+    ⎢⎝ℯ   ⋅sin (θ) + cos (θ)⎠⋅ℯ       ⎝1 - ℯ   ⎠⋅ℯ     ⋅sin(θ)⋅cos(θ)⎥
+    ⎢                                                                ⎥
+    ⎢            -ⅈ⋅δ                                           -ⅈ⋅δ ⎥
+    ⎢            ─────                                          ─────⎥
+    ⎢⎛     ⅈ⋅δ⎞    2                  ⎛ ⅈ⋅δ    2         2   ⎞    2  ⎥
+    ⎣⎝1 - ℯ   ⎠⋅ℯ     ⋅sin(θ)⋅cos(θ)  ⎝ℯ   ⋅cos (θ) + sin (θ)⎠⋅ℯ     ⎦
 
     """
     R = Matrix([[cos(theta)**2 + exp(I*delta)*sin(theta)**2,
@@ -350,7 +351,7 @@ def half_wave_retarder(theta):
     >>> from sympy import pprint, symbols
     >>> theta= symbols("theta", real=True)
     >>> HWP = half_wave_retarder(theta)
-    >>> pprint(HWP)
+    >>> pprint(HWP, use_unicode=True)
     ⎡   ⎛     2         2   ⎞                        ⎤
     ⎢-ⅈ⋅⎝- sin (θ) + cos (θ)⎠    -2⋅ⅈ⋅sin(θ)⋅cos(θ)  ⎥
     ⎢                                                ⎥
@@ -382,7 +383,7 @@ def quarter_wave_retarder(theta):
     >>> from sympy import pprint, symbols
     >>> theta= symbols("theta", real=True)
     >>> QWP = quarter_wave_retarder(theta)
-    >>> pprint(QWP)
+    >>> pprint(QWP, use_unicode=True)
     ⎡                       -ⅈ⋅π            -ⅈ⋅π               ⎤
     ⎢                       ─────           ─────              ⎥
     ⎢⎛     2         2   ⎞    4               4                ⎥
@@ -414,7 +415,7 @@ def attenuator(T):
     >>> from sympy import pprint, symbols
     >>> T = symbols("T", real=True)
     >>> NDF = attenuator(T)
-    >>> pprint(NDF)
+    >>> pprint(NDF, use_unicode=True)
     ⎡√T  0 ⎤
     ⎢      ⎥
     ⎣0   √T⎦
@@ -439,7 +440,7 @@ def mirror(R):
 
     >>> from sympy import pprint, symbols
     >>> R = symbols("R", real=True)
-    >>> pprint(mirror(R))
+    >>> pprint(mirror(R), use_unicode=True)
     ⎡√R   0 ⎤
     ⎢       ⎥
     ⎣0   -√R⎦
@@ -468,23 +469,23 @@ def mueller_matrix(J):
     >>> theta = symbols("theta", real=True)
 
     A linear_polarizer
-    >>> pprint(mueller_matrix(linear_polarizer(theta)))
-    ⎡            cos(2⋅θ)       sin(2⋅θ)      ⎤
-    ⎢  1/2       ────────       ────────     0⎥
-    ⎢               2              2          ⎥
-    ⎢                                         ⎥
-    ⎢cos(2⋅θ)  cos(4⋅θ)   1     sin(4⋅θ)      ⎥
-    ⎢────────  ──────── + ─     ────────     0⎥
-    ⎢   2         4       4        4          ⎥
-    ⎢                                         ⎥
-    ⎢sin(2⋅θ)    sin(4⋅θ)      cos(4⋅θ)   1   ⎥
-    ⎢────────    ────────    - ──────── + ─  0⎥
-    ⎢   2           4             4       4   ⎥
-    ⎢                                         ⎥
-    ⎣   0           0              0         0⎦
+    >>> pprint(mueller_matrix(linear_polarizer(theta)), use_unicode=True)
+    ⎡            cos(2⋅θ)      sin(2⋅θ)     ⎤
+    ⎢  1/2       ────────      ────────    0⎥
+    ⎢               2             2         ⎥
+    ⎢                                       ⎥
+    ⎢cos(2⋅θ)  cos(4⋅θ)   1    sin(4⋅θ)     ⎥
+    ⎢────────  ──────── + ─    ────────    0⎥
+    ⎢   2         4       4       4         ⎥
+    ⎢                                       ⎥
+    ⎢sin(2⋅θ)    sin(4⋅θ)    1   cos(4⋅θ)   ⎥
+    ⎢────────    ────────    ─ - ────────  0⎥
+    ⎢   2           4        4      4       ⎥
+    ⎢                                       ⎥
+    ⎣   0           0             0        0⎦
 
     A half-wave plate
-    >>> pprint(mueller_matrix(half_wave_retarder(theta)))
+    >>> pprint(mueller_matrix(half_wave_retarder(theta)), use_unicode=True)
     ⎡1              0                           0               0 ⎤
     ⎢                                                             ⎥
     ⎢        4           2                                        ⎥
@@ -496,18 +497,18 @@ def mueller_matrix(J):
     ⎣0              0                           0               -1⎦
 
     A quarter-wave plate
-    >>> pprint(mueller_matrix(quarter_wave_retarder(theta)))
-    ⎡1       0              0             0    ⎤
-    ⎢                                          ⎥
-    ⎢   cos(4⋅θ)   1     sin(4⋅θ)              ⎥
-    ⎢0  ──────── + ─     ────────     -sin(2⋅θ)⎥
-    ⎢      2       2        2                  ⎥
-    ⎢                                          ⎥
-    ⎢     sin(4⋅θ)      cos(4⋅θ)   1           ⎥
-    ⎢0    ────────    - ──────── + ─  cos(2⋅θ) ⎥
-    ⎢        2             2       2           ⎥
-    ⎢                                          ⎥
-    ⎣0    sin(2⋅θ)      -cos(2⋅θ)         0    ⎦
+    >>> pprint(mueller_matrix(quarter_wave_retarder(theta)), use_unicode=True)
+    ⎡1       0             0            0    ⎤
+    ⎢                                        ⎥
+    ⎢   cos(4⋅θ)   1    sin(4⋅θ)             ⎥
+    ⎢0  ──────── + ─    ────────    -sin(2⋅θ)⎥
+    ⎢      2       2       2                 ⎥
+    ⎢                                        ⎥
+    ⎢     sin(4⋅θ)    1   cos(4⋅θ)           ⎥
+    ⎢0    ────────    ─ - ────────  cos(2⋅θ) ⎥
+    ⎢        2        2      2               ⎥
+    ⎢                                        ⎥
+    ⎣0    sin(2⋅θ)     -cos(2⋅θ)        0    ⎦
 
     """
     A = Matrix([[1, 0, 0, 1],
@@ -540,21 +541,21 @@ def polarizing_beam_splitter(Tp=1, Rs=1, Ts=0, Rp=0, phia=0, phib=0):
     ========
 
     >>> from sympy import pprint, symbols
-    >>> Ts, Rs, Tp, Rp = symbols(r"T_s, R_s, T_p, R_p", positive=True)
+    >>> Ts, Rs, Tp, Rp = symbols(r"Ts, Rs, Tp, Rp", positive=True)
     >>> phia, phib = symbols("phi_a, phi_b", real=True)
     >>> PBS = polarizing_beam_splitter(Tp, Rs, Ts, Rp, phia, phib)
-    >>> pprint(PBS)
-    ⎡   _____                         _____                 ⎤
-    ⎢ ╲╱ T_p           0          ⅈ⋅╲╱ R_p          0       ⎥
-    ⎢                                                       ⎥
-    ⎢                 _____                      _____  ⅈ⋅φₐ⎥
-    ⎢    0          ╲╱ T_s            0      ⅈ⋅╲╱ R_s ⋅ℯ    ⎥
-    ⎢                                                       ⎥
-    ⎢    _____                       _____                  ⎥
-    ⎢ⅈ⋅╲╱ R_p          0           ╲╱ T_p           0       ⎥
-    ⎢                                                       ⎥
-    ⎢               _____  ⅈ⋅φ_b                   _____    ⎥
-    ⎣    0      ⅈ⋅╲╱ R_s ⋅ℯ           0          ╲╱ T_s     ⎦
+    >>> pprint(PBS, use_unicode=True)
+    ⎡   ____                        ____                ⎤
+    ⎢ ╲╱ Tp           0         ⅈ⋅╲╱ Rp         0       ⎥
+    ⎢                                                   ⎥
+    ⎢                ____                     ____  ⅈ⋅φₐ⎥
+    ⎢   0          ╲╱ Ts           0      ⅈ⋅╲╱ Rs ⋅ℯ    ⎥
+    ⎢                                                   ⎥
+    ⎢    ____                      ____                 ⎥
+    ⎢ⅈ⋅╲╱ Rp          0          ╲╱ Tp          0       ⎥
+    ⎢                                                   ⎥
+    ⎢              ____  ⅈ⋅φ_b                  ____    ⎥
+    ⎣   0      ⅈ⋅╲╱ Rs ⋅ℯ          0          ╲╱ Ts     ⎦
 
     """
     PBS = Matrix([[sqrt(Tp), 0, I*sqrt(Rp), 0],
@@ -562,8 +563,3 @@ def polarizing_beam_splitter(Tp=1, Rs=1, Ts=0, Rp=0, phia=0, phib=0):
                   [I*sqrt(Rp), 0, sqrt(Tp), 0],
                   [0, I*sqrt(Rs)*exp(I*phib), 0, sqrt(Ts)]])
     return PBS
-
-
-if __name__ == "__main__":
-    import doctest
-    print(doctest.testmod(verbose=False))
