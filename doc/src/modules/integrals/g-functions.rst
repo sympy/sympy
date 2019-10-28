@@ -1,3 +1,5 @@
+.. _g-functions:
+
 Computing Integrals using Meijer G-Functions
 ********************************************
 

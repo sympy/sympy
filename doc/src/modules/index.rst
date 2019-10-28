@@ -35,6 +35,7 @@ access any SymPy module, or use the list below:
    simplify/hyperexpand.rst
    solvers/inequalities.rst
    integrals/integrals.rst
+   integrals/g-functions.rst
    interactive.rst
    liealgebras/index.rst
    logic.rst

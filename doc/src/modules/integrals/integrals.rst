@@ -138,12 +138,7 @@ SymPy first applies several heuristic algorithms, as these are the fastest:
    .. autoclass:: sympy.integrals.risch.NonElementaryIntegral
 
 6. For non-elementary definite integrals, SymPy uses so-called Meijer G-functions.
-   Details are described here:
-
-   .. toctree::
-      :maxdepth: 1
-
-      g-functions.rst
+   Details are described in :ref:`g-functions`.
 
 7. All the algorithms mentioned thus far are either pattern-matching based
    heuristic, or solve integrals using algorithms that are much different from
