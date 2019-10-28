@@ -433,12 +433,9 @@ class elliptic_pi(Function):
 
     def _eval_rewrite_as_Integral(self, *args):
         from sympy import Integral, Dummy
-        n, m, z = self.args[0], self.args[1], None
-        if len(self.args) == 3:
-            z = self.args[2]
-        if z is None:
-            z = pi/2
+        if len(self.args) == 2:
+            n, m, z = self.args[0], self.args[1], pi/2
         else:
-            n, z, m = n, m, z
+            n, z, m = self.args
         t = Dummy('t')
         return Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z))
