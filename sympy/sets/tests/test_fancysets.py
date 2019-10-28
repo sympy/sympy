@@ -528,6 +528,10 @@ def test_infinitely_indexed_set_1():
     assert imageset(x, x/2 + Rational(1, 3), S.Integers).intersect(S.Integers) is S.EmptySet
     assert imageset(x, x/2 + S.Half, S.Integers).intersect(S.Integers) is S.Integers
 
+    # https://github.com/sympy/sympy/issues/17355
+    S53 = ImageSet(Lambda(n, 5*n + 3), S.Integers)
+    assert S53.intersect(S.Integers) == S53
+
 
 def test_infinitely_indexed_set_2():
     from sympy.abc import n
