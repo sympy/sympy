@@ -311,6 +311,8 @@ Reference documentation should go in the docstrings and be pulled into the RST
 with autodoc. The RST itself should only have narrative style documentation
 that is not a reference for a single specific function.
 
+.. _style_guide_best_practices_for_writing_documentation:
+
 Best Practices for Writing Documentation
 ----------------------------------------
 
@@ -322,6 +324,8 @@ Formatting Preferences
 
 In order for math and code to render correctly on the SymPy website, please
 follow these formatting guidelines.
+
+.. _style_guide_math_formatting:
 
 Math
 ~~~~
@@ -340,10 +344,18 @@ In the HTML version of the docs, MathJax will render the math.
 LaTeX Recommendations
 ~~~~~~~~~~~~~~~~~~~~~
 
+* If a docstring has any LaTeX, be sure to make it "raw." See the
+  :ref:`Docstring Formatting <style_guide_docstring_formatting>` section for
+  details.
+* If you are not sure how to render something, you can use the SymPy
+  :func:`~.latex` function. But be sure to strip out the unimportant parts (the
+  bullet points below).
 * Avoid unnecessary ``\left`` and ``\right`` (but be sure to use them when they
   are required).
 * Avoid unnecessary ``{}``. (For example, write ``x^2`` instead of ``x^{2}``.)
 * Use whitespace in a way that makes the equation easiest to read.
+* Always check the final rendering to make sure it looks the way you expect it
+  to.
 
 **Examples**
 
@@ -354,6 +366,12 @@ Correct::
 Incorrect::
 
     \int \sin{\left( x\right)}\, dx
+
+For more in-depth resources on how to write math in LaTeX, see:
+
+* https://math.meta.stackexchange.com/questions/5020/mathjax-basic-tutorial-and-quick-reference
+* https://en.wikibooks.org/wiki/LaTeX/Mathematics
+* https://www.overleaf.com/learn/latex/Mathematical_expressions
 
 Code
 ~~~~
@@ -375,10 +393,10 @@ SymPy implementation specifically, then code should be used.
 
 In general, the rule of thumb is to consider if the variable in question were
 something that rendered differently in code and in math. For example, the Greek
-letter α would be written as ``alpha`` in code and $\alpha$ in LaTeX. The
-reason being that $\alpha$ cannot be used in contexts referring to Python code
-because it is not valid Python, and conversely ``alpha`` would be incorrect in
-a math context because it does not render as the Greek letter (α).
+letter α would be written as ``alpha`` in code and ``$\alpha$`` in LaTeX. The
+reason being that ``$\alpha$`` cannot be used in contexts referring to Python
+code because it is not valid Python, and conversely ``alpha`` would be
+incorrect in a math context because it does not render as the Greek letter (α).
 
 **Example**
 
@@ -391,8 +409,8 @@ a math context because it does not render as the Greek letter (α).
 
         """
 
-Variables listed in the parameters after the function name should be italicized
-using Sphinx emphasis with asterisks like ``*this*``.
+Variables listed in the parameters after the function name should, in written
+text, be italicized using Sphinx emphasis with asterisks like ``*this*``.
 
 **Example**
 
@@ -427,9 +445,7 @@ parameter as well, it should be in double backticks to be rendered as code.
 Please note that references to other functions in SymPy are handled differently
 from parameters or code. If something is referencing another function in SymPy,
 the cross-reference reStructuredText syntax should be used. See the section on
-`Cross-Referencing`_ for more information.
-
-.. _Cross-Referencing: documentation_style_guide.html#id8
+:ref:`Cross-Referencing <style_guide_cross-referencing>` for more information.
 
 Headings
 ~~~~~~~~
@@ -528,6 +544,8 @@ friendly and inclusive language like “A common mistake is...”
 
 Avoid extraneous phrases like, “we just have to do one more thing.”
 
+.. _style_guide_docstring_guidelines:
+
 Docstring Guidelines
 ====================
 
@@ -611,6 +629,8 @@ every docstring.
 All public functions, classes, and methods and their corresponding docstrings
 should be imported into the Sphinx docs, instructions on which can be found at
 the end of this guide.
+
+.. _style_guide_docstring_formatting:
 
 Docstring Formatting
 --------------------
@@ -848,6 +868,8 @@ Here is an example of a correctly formatted Parameters section::
 
         """
 
+.. _style_guide_see_also:
+
 5. See Also Section
 -------------------
 
@@ -870,10 +892,7 @@ Anything that is a link should be embedded as a hyperlink in the text of the
 docstring instead; see the References section for details.
 
 Do not reference classes with ``class:Classname``, ``class:`Classname```, or
-``:class:`Classname```, but rather only by their name if they are in the same
-file as the See Also section, or by the full path if they are in a different
-file. Either way, the names listed in the See Also section should actually link
-to the other functions.
+``:class:`Classname```, but rather only by their class name.
 
 **Examples**
 
@@ -1041,12 +1060,13 @@ The docstrings for classes that are mathematical functions should include
 details specific to this kind of class, as noted below:
 
 * The Explanation section should include a mathematical definition of the
-  function. This should use LaTeX math. Use $$ for `inline math`_ and .. math::
-  for display math, which should be used for the main definition. The
-  variable names in the formulas should match the names of the parameters, and
-  the LaTeX formatting should match the LaTeX pretty printing used by SymPy. As
-  relevant, the mathematical definitions should mention their domain of
-  definition, especially if the domain is different from the complex numbers.
+  function. This should use LaTeX math. Use $$ for :ref:`inline math
+  <style_guide_math_formatting>` and .. math:: for display math, which should be
+  used for the main definition. The variable names in the formulas should match
+  the names of the parameters, and the LaTeX formatting should match the LaTeX
+  pretty printing used by SymPy. As relevant, the mathematical definitions
+  should mention their domain of definition, especially if the domain is
+  different from the complex numbers.
 
 * If there are multiple conventions in the literature for a function, make sure
   to clearly specify which convention SymPy uses.
@@ -1071,16 +1091,14 @@ details specific to this kind of class, as noted below:
   code, so if there is anything very important that you want to mention here,
   it should go in the class-level docstring as well.
 
-.. _inline math: documentation_style_guide.html#math
-
 Best Practices for Writing Docstrings
 =====================================
 
 When writing docstrings, please follow all of the same formatting, style, and
 tone preferences as when writing narrative documentation. For guidelines, see
-`Best Practices for Writing Documentation`_, Formatting, Style, and Tone.
-
-.. _Best Practices for Writing Documentation: documentation_style_guide.html#best-practices-for-writing-documentation
+:ref:`Best Practices for Writing Documentation
+<style_guide_best_practices_for_writing_documentation>`, Formatting, Style, and
+Tone.
 
 Importing Docstrings into the Sphinx Documentation
 ==================================================
@@ -1165,6 +1183,8 @@ cumbersome to use (using full paths for all objects) or break something
 viewcode Sphinx extension). All files in ``doc/src/modules/`` should use this
 format.
 
+.. _style_guide_cross-referencing:
+
 Cross-Referencing
 =================
 
@@ -1210,10 +1230,8 @@ using the following syntax ``:obj:`custom text<object>```. For example,
 links to the documentation for ``sin``. Note that the ``~`` character should
 not be used here.
 
-Note that references in the `See Also`_ section of the docstrings do not require
-the ``:obj:`` syntax.
-
-.. _See Also: documentation_style_guide.html#see-also-section
+Note that references in the :ref:`See Also <style_guide_see_also>` section of
+the docstrings do not require the ``:obj:`` syntax.
 
 If the resulting cross reference is written incorrectly, Sphinx will error when
 building the docs with an error like:
@@ -1229,7 +1247,8 @@ Here are some troubleshooting tips to fix the errors:
 * Check if the function you are trying to cross-reference is actually included
   in the Sphinx documentation. If it is not, Sphinx will not be able to create
   a reference for it. In that case, you should add it to the appropriate RST
-  file as described in the `Docstring Guidelines`_.
+  file as described in the :ref:`Docstring Guidelines
+  <style_guide_docstring_guidelines>`.
 * If the function or object is not included in ``from sympy import
   *``, you will need to use the fully qualified name, like
   ``sympy.submodule.submodule.function`` instead of just ``function``.
@@ -1254,8 +1273,6 @@ Here are some troubleshooting tips to fix the errors:
   of object.
 * If you cannot get the cross-referencing syntax to work, go ahead and submit
   the pull request as is and ask the reviewers for help.
-
-.. _Docstring Guidelines: documentation_style_guide.html#docstring-guidelines
 
 You may also see errors like:
 
