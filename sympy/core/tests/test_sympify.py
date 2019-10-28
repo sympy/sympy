@@ -699,4 +699,4 @@ def test_issue_16759():
 
 def test_issue_17811():
     a = Function('a')
-    assert sympify('a(x)*5', evaluate=False).doit() == 5*a(x)
+    assert sympify('a(x)*5', evaluate=False) == Mul(a(x), 5, evaluate=False)
