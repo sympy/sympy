@@ -861,7 +861,10 @@ class SciPyPrinter(NumPyPrinter):
         NumPyPrinter._kf.items(),
         [(k, 'scipy.special.' + v) for k, v in _known_functions_scipy_special.items()]
     ))
-    _kc = {k: 'scipy.constants.' + v for k, v in _known_constants_scipy_constants.items()}
+    _kc =dict(chain(
+        NumPyPrinter._kc.items(),
+        [(k, 'scipy.constants.' + v) for k, v in _known_constants_scipy_constants.items()]
+    ))
 
     def _print_SparseMatrix(self, expr):
         i, j, data = [], [], []
