@@ -145,10 +145,6 @@ SymPy first applies several heuristic algorithms, as these are the fastest:
 
       g-functions.rst
 
-   .. automodule:: sympy.integrals.meijerint
-      :members:
-      :private-members:
-
 7. All the algorithms mentioned thus far are either pattern-matching based
    heuristic, or solve integrals using algorithms that are much different from
    the way most people are taught in their calculus courses. SymPy also
