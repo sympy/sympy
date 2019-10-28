@@ -1043,10 +1043,13 @@ def solve(f, *symbols, **flags):
 
     for i, fi in enumerate(f):
         # Abs
-        fi = fi.replace(Abs, lambda arg:
-            separatevars(Abs(arg)) if arg.has(*symbols) else Abs(arg))
-        fi = fi.replace(Abs, lambda arg:
-            Abs(arg).rewrite(Piecewise) if arg.has(*symbols) else Abs(arg))
+        while True:
+            was = fi
+            fi = fi.replace(Abs, lambda arg:
+                separatevars(Abs(arg)).rewrite(Piecewise) if arg.has(*symbols)
+                else Abs(arg))
+            if was == fi:
+                break
 
         for e in fi.find(Abs):
             if e.has(*symbols):
