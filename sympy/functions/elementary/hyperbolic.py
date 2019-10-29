@@ -277,8 +277,7 @@ class cosh(HyperbolicFunction):
     sinh, tanh, acosh
     """
 
-    @property
-    def is_positive(self):
+    def _eval_is_positive(self):
         arg = self.args[0]
 
         if arg.is_real:
@@ -299,8 +298,7 @@ class cosh(HyperbolicFunction):
         return Or(And(Eq(re, 0), Or(im_mod < pi/2, im_mod > 3*pi/2)), Eq(im_mod, 0))
 
 
-    @property
-    def is_nonnegative(self):
+    def _eval_is_nonnegative(self):
         arg = self.args[0]
 
         if arg.is_real:
@@ -467,10 +465,6 @@ class cosh(HyperbolicFunction):
         # if not, check if the imaginary part is a number
         re, im = arg.as_real_imag()
         return (im%pi).is_zero
-
-    def _eval_is_positive(self):
-        if self.args[0].is_extended_real:
-            return True
 
     def _eval_is_finite(self):
         arg = self.args[0]
