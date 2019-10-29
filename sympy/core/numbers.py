@@ -3755,15 +3755,14 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
 
     `K = 0.91596559\ldots` is given by the infinite series
 
-    >>> from sympy import S, latex, Sum
-    >>> print(".. math:: K = " + latex(S.Catalan.rewrite(Sum)))
-    .. math:: K = \sum_{k=0}^{\infty} \frac{\left(-1\right)^{k}}{\left(2 k + 1\right)^{2}}
+    .. math:: K = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
 
     Catalan is a singleton, and can be accessed by ``S.Catalan``.
 
     Examples
     ========
 
+    >>> from sympy import S
     >>> S.Catalan.is_irrational
     >>> S.Catalan > 0
     True
