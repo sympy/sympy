@@ -13,14 +13,6 @@ The module implements:
 Please see the description of the individual functions for further
 details and examples.
 
-Credits and Copyright
-~~~~~~~~~~~~~~~~~~~~~
-
-AUTHOR:
-
-- Oscar Gerardo Lazo Arjona (2017-06-18): added Wigner D matrices
-
-Copyright (C) 2019 Oscar Gerardo Lazo Arjona <algebraicamente@gmail.com>
 
 """
 
@@ -46,6 +38,7 @@ def jones_vector(psi, chi):
     ========
 
     >>> from sympy import pprint, symbols
+    >>> from sympy.physics.optics.polarization import jones_vector
     >>> psi, chi = symbols("psi, chi", real=True)
 
     A general Jones vector.
@@ -131,6 +124,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ========
 
     >>> from sympy import pprint, symbols
+    >>> from sympy.physics.optics.polarization import stokes_vector
     >>> psi, chi, p, I = symbols("psi, chi, p, I", real=True)
     >>> pprint(stokes_vector(psi, chi, p, I), use_unicode=True)
     ⎡          I          ⎤
@@ -235,6 +229,8 @@ def jones_2_stokes(e):
     ========
 
     >>> from sympy import pprint, Matrix
+    >>> from sympy.physics.optics.polarization import jones_vector
+    >>> from sympy.physics.optics.polarization import jones_2_stokes
     >>> H = jones_vector(0, 0)
     >>> V = jones_vector(pi/2, 0)
     >>> D = jones_vector(pi/4, 0)
@@ -276,6 +272,7 @@ def linear_polarizer(theta=0):
     ========
 
     >>> from sympy import pprint, symbols
+    >>> from sympy.physics.optics.polarization import linear_polarizer
     >>> theta = symbols("theta", real=True)
     >>> J = linear_polarizer(theta)
     >>> pprint(J)
@@ -311,6 +308,7 @@ def phase_retarder(theta=0, delta=0):
     ========
 
     >>> from sympy import pprint, symbols
+    >>> from sympy.physics.optics.polarization import phase_retarder
     >>> theta, delta = symbols("theta, delta", real=True)
     >>> R = phase_retarder(theta, delta)
     >>> pprint(R, use_unicode=True)
@@ -349,6 +347,7 @@ def half_wave_retarder(theta):
     ========
 
     >>> from sympy import pprint, symbols
+    >>> from sympy.physics.optics.polarization import half_wave_retarder
     >>> theta= symbols("theta", real=True)
     >>> HWP = half_wave_retarder(theta)
     >>> pprint(HWP, use_unicode=True)
@@ -381,6 +380,7 @@ def quarter_wave_retarder(theta):
     A Jones matrix representing the retarder.
 
     >>> from sympy import pprint, symbols
+    >>> from sympy.physics.optics.polarization import quarter_wave_retarder
     >>> theta= symbols("theta", real=True)
     >>> QWP = quarter_wave_retarder(theta)
     >>> pprint(QWP, use_unicode=True)
@@ -413,6 +413,7 @@ def attenuator(T):
     ========
 
     >>> from sympy import pprint, symbols
+    >>> from sympy.physics.optics.polarization import attenuator
     >>> T = symbols("T", real=True)
     >>> NDF = attenuator(T)
     >>> pprint(NDF, use_unicode=True)
@@ -439,6 +440,7 @@ def mirror(R):
     ========
 
     >>> from sympy import pprint, symbols
+    >>> from sympy.physics.optics.polarization import mirror
     >>> R = symbols("R", real=True)
     >>> pprint(mirror(R), use_unicode=True)
     ⎡√R   0 ⎤
@@ -450,7 +452,7 @@ def mirror(R):
 
 
 def mueller_matrix(J):
-    u"""A Mueller matrix corresponding to Jones matrix `J`.
+    u"""The Mueller matrix corresponding to Jones matrix `J`.
 
     INPUT:
 
@@ -466,6 +468,8 @@ def mueller_matrix(J):
     A Jones matrix representing the attenuator.
 
     >>> from sympy import pprint, symbols, pi, simplify
+    >>> from sympy.physics.optics.polarization import (mueller_matrix,
+    ...     linear_polarizer, half_wave_retarder, quarter_wave_retarder)
     >>> theta = symbols("theta", real=True)
 
     A linear_polarizer
@@ -541,6 +545,7 @@ def polarizing_beam_splitter(Tp=1, Rs=1, Ts=0, Rp=0, phia=0, phib=0):
     ========
 
     >>> from sympy import pprint, symbols
+    >>> from sympy.physics.optics.polarization import polarizing_beam_splitter
     >>> Ts, Rs, Tp, Rp = symbols(r"Ts, Rs, Tp, Rp", positive=True)
     >>> phia, phib = symbols("phi_a, phi_b", real=True)
     >>> PBS = polarizing_beam_splitter(Tp, Rs, Ts, Rp, phia, phib)
