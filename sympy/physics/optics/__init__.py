@@ -38,5 +38,5 @@ __all__.extend(utils.__all__)
 from . import polarization
 from .polarization import (jones_vector, stokes_vector, jones_2_stokes,
         linear_polarizer, phase_retarder, half_wave_retarder,
-        quarter_wave_retarder, attenuator, mirror, mueller_matrix,
-        polarizing_beam_splitter)
+        quarter_wave_retarder, transmissive_filter, reflective_filter,
+        mueller_matrix, polarizing_beam_splitter)
