@@ -37,7 +37,7 @@ def jones_vector(psi, chi):
     Examples
     ========
 
-    >>> from sympy import pprint, symbols
+    >>> from sympy import pprint, symbols, pi
     >>> from sympy.physics.optics.polarization import jones_vector
     >>> psi, chi = symbols("psi, chi", real=True)
 
@@ -123,7 +123,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     Examples
     ========
 
-    >>> from sympy import pprint, symbols
+    >>> from sympy import pprint, symbols, pi
     >>> from sympy.physics.optics.polarization import stokes_vector
     >>> psi, chi, p, I = symbols("psi, chi, p, I", real=True)
     >>> pprint(stokes_vector(psi, chi, p, I), use_unicode=True)
@@ -228,7 +228,7 @@ def jones_2_stokes(e):
     Examples
     ========
 
-    >>> from sympy import pprint, Matrix
+    >>> from sympy import pprint, Matrix, pi
     >>> from sympy.physics.optics.polarization import jones_vector
     >>> from sympy.physics.optics.polarization import jones_2_stokes
     >>> H = jones_vector(0, 0)
@@ -275,7 +275,7 @@ def linear_polarizer(theta=0):
     >>> from sympy.physics.optics.polarization import linear_polarizer
     >>> theta = symbols("theta", real=True)
     >>> J = linear_polarizer(theta)
-    >>> pprint(J)
+    >>> pprint(J, use_unicode=True)
     ⎡      2                     ⎤
     ⎢   cos (θ)     sin(θ)⋅cos(θ)⎥
     ⎢                            ⎥
