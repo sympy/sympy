@@ -1,6 +1,6 @@
 from __future__ import (absolute_import, division, print_function)
 
-from sympy import And, Gt, Lt, Abs, Dummy, oo, Tuple, Symbol, Function, Pow
+from sympy import And, Gt, Lt, Abs, Dummy, oo, Tuple, Symbol
 from sympy.codegen.ast import (
     Assignment, AddAugmentedAssignment, CodeBlock, Declaration, FunctionDefinition,
     Print, Return, Scope, While, Variable, Pointer, real
@@ -121,9 +121,10 @@ def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tu
     >>> abs(res - 0.865474033102) < 1e-12
     True
 
-    See also
+    See Also
     ========
-    - sympy.codegen.ast.newtons_method
+
+    sympy.codegen.ast.newtons_method
 
     """
     if params is None:

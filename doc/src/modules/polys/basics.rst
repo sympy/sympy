@@ -12,7 +12,7 @@ polynomials within SymPy. All code examples assume::
 
     >>> from sympy import *
     >>> x, y, z = symbols('x,y,z')
-    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
+    >>> init_printing(use_unicode=False, wrap_line=False)
 
 Basic concepts
 ==============

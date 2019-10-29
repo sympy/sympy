@@ -30,6 +30,17 @@ def test_Singleton():
     assert MySingleton_sub() is not MySingleton()
     assert MySingleton_sub() is MySingleton_sub()
 
+def test_singleton_redefinition():
+    class TestSingleton(with_metaclass(Singleton, Basic)):
+        pass
+
+    assert TestSingleton() is S.TestSingleton
+
+    class TestSingleton(with_metaclass(Singleton, Basic)):
+        pass
+
+    assert TestSingleton() is S.TestSingleton
+
 def test_names_in_namespace():
     # Every singleton name should be accessible from the 'from sympy import *'
     # namespace in addition to the S object. However, it does not need to be
@@ -65,8 +76,8 @@ def test_names_in_namespace():
             continue
         if getattr(S, name).__module__.startswith('sympy.physics'):
             continue
-        if name in ['MySingleton', 'MySingleton_sub']:
-            # From the test above
+        if name in ['MySingleton', 'MySingleton_sub', 'TestSingleton']:
+            # From the tests above
             continue
         if name == 'NegativeInfinity':
             # Accessible by -oo

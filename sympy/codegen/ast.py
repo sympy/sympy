@@ -10,7 +10,8 @@ AST Type Tree
 ::
 
   *Basic*
-       |--->Assignment
+       |--->AssignmentBase
+       |             |--->Assignment
        |             |--->AugmentedAssignment
        |                                    |--->AddAugmentedAssignment
        |                                    |--->SubAugmentedAssignment
@@ -123,18 +124,17 @@ There is a function constructing a loop (or a complete function) like this in
 
 from __future__ import print_function, division
 
-from functools import total_ordering
 from itertools import chain
 from collections import defaultdict
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
 from sympy.core.compatibility import string_types
+from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
-from sympy.core.relational import Relational, Lt, Le, Ge, Gt
+from sympy.core.relational import Lt, Le, Ge, Gt
 from sympy.core.sympify import _sympify, sympify, SympifyError
-from sympy.logic import true, false
 from sympy.utilities.iterables import iterable
+
 
 
 def _mk_Tuple(args):
@@ -142,13 +142,15 @@ def _mk_Tuple(args):
     Create a Sympy Tuple object from an iterable, converting Python strings to
     AST strings.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
+
     args: iterable
         Arguments to :class:`sympy.Tuple`.
 
-    Returns:
-    ========
+    Returns
+    =======
+
     sympy.Tuple
     """
     args = [String(arg) if isinstance(arg, string_types) else arg for arg in args]
@@ -187,6 +189,7 @@ class Token(Basic):
     @classmethod
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
+        # arg may be ``NoneToken()``, so comparation is done using == instead of ``is`` operator
         if arg == None:
             return cls.defaults.get(attr, none)
         else:
@@ -264,7 +267,7 @@ class Token(Basic):
             if isinstance(arg, Token):
                 return printer._print(arg, *args, joiner=self._joiner(k, il), **kwargs)
             else:
-                return printer._print(v, *args, **kwargs)
+                return printer._print(arg, *args, **kwargs)
 
         if isinstance(v, Tuple):
             joined = self._joiner(k, il).join([_print(arg) for arg in v.args])
@@ -308,8 +311,9 @@ class Token(Basic):
     def kwargs(self, exclude=(), apply=None):
         """ Get instance's attributes as dict of keyword arguments.
 
-        Parameters:
-        ===========
+        Parameters
+        ==========
+
         exclude : collection of str
             Collection of keywords to exclude.
 
@@ -381,13 +385,70 @@ class NoneToken(Token):
         return ()
 
     def __hash__(self):
-        return super(Token, self).__hash__()
+        return super(NoneToken, self).__hash__()
 
 
 none = NoneToken()
 
 
-class Assignment(Relational):
+class AssignmentBase(Basic):
+    """ Abstract base class for Assignment and AugmentedAssignment.
+
+    Attributes:
+    ===========
+
+    op : str
+        Symbol for assignment operator, e.g. "=", "+=", etc.
+    """
+
+    def __new__(cls, lhs, rhs):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+
+        cls._check_args(lhs, rhs)
+
+        return super(AssignmentBase, cls).__new__(cls, lhs, rhs)
+
+    @property
+    def lhs(self):
+        return self.args[0]
+
+    @property
+    def rhs(self):
+        return self.args[1]
+
+    @classmethod
+    def _check_args(cls, lhs, rhs):
+        """ Check arguments to __new__ and raise exception if any problems found.
+
+        Derived classes may wish to override this.
+        """
+        from sympy.matrices.expressions.matexpr import (
+            MatrixElement, MatrixSymbol)
+        from sympy.tensor.indexed import Indexed
+
+        # Tuple of things that can be on the lhs of an assignment
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable)
+        if not isinstance(lhs, assignable):
+            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+
+        # Indexed types implement shape, but don't define it until later. This
+        # causes issues in assignment validation. For now, matrices are defined
+        # as anything with a shape that is not an Indexed
+        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
+        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
+
+        # If lhs and rhs have same structure, then this assignment is ok
+        if lhs_is_mat:
+            if not rhs_is_mat:
+                raise ValueError("Cannot assign a scalar to a matrix.")
+            elif lhs.shape != rhs.shape:
+                raise ValueError("Dimensions of lhs and rhs don't align.")
+        elif rhs_is_mat and not lhs_is_mat:
+            raise ValueError("Cannot assign a matrix to a scalar.")
+
+
+class Assignment(AssignmentBase):
     """
     Represents variable assignment for code generation.
 
@@ -424,72 +485,54 @@ class Assignment(Relational):
     Assignment(A[0, 1], x)
     """
 
-    rel_op = ':='
-    __slots__ = []
-
-    def __new__(cls, lhs, rhs=0, **assumptions):
-        from sympy.matrices.expressions.matexpr import (
-            MatrixElement, MatrixSymbol)
-        from sympy.tensor.indexed import Indexed
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        # Indexed types implement shape, but don't define it until later. This
-        # causes issues in assignment validation. For now, matrices are defined
-        # as anything with a shape that is not an Indexed
-        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
-        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
-        # If lhs and rhs have same structure, then this assignment is ok
-        if lhs_is_mat:
-            if not rhs_is_mat:
-                raise ValueError("Cannot assign a scalar to a matrix.")
-            elif lhs.shape != rhs.shape:
-                raise ValueError("Dimensions of lhs and rhs don't align.")
-        elif rhs_is_mat and not lhs_is_mat:
-            raise ValueError("Cannot assign a matrix to a scalar.")
-        return Relational.__new__(cls, lhs, rhs, **assumptions)
-
-# XXX: This should be handled better
-Relational.ValidRelationOperator[':='] = Assignment
+    op = ':='
 
 
-class AugmentedAssignment(Assignment):
+class AugmentedAssignment(AssignmentBase):
     """
-    Base class for augmented assignments
+    Base class for augmented assignments.
+
+    Attributes:
+    ===========
+
+    binop : str
+       Symbol for binary operation being applied in the assignment, such as "+",
+       "*", etc.
     """
 
     @property
-    def rel_op(self):
-        return self._symbol + '='
+    def op(self):
+        return self.binop + '='
+
 
 class AddAugmentedAssignment(AugmentedAssignment):
-    _symbol = '+'
+    binop = '+'
 
 
 class SubAugmentedAssignment(AugmentedAssignment):
-    _symbol = '-'
+    binop = '-'
 
 
 class MulAugmentedAssignment(AugmentedAssignment):
-    _symbol = '*'
+    binop = '*'
 
 
 class DivAugmentedAssignment(AugmentedAssignment):
-    _symbol = '/'
+    binop = '/'
 
 
 class ModAugmentedAssignment(AugmentedAssignment):
-    _symbol = '%'
+    binop = '%'
 
 
-Relational.ValidRelationOperator['+='] = AddAugmentedAssignment
-Relational.ValidRelationOperator['-='] = SubAugmentedAssignment
-Relational.ValidRelationOperator['*='] = MulAugmentedAssignment
-Relational.ValidRelationOperator['/='] = DivAugmentedAssignment
-Relational.ValidRelationOperator['%='] = ModAugmentedAssignment
+# Mapping from binary op strings to AugmentedAssignment subclasses
+augassign_classes = {
+    cls.binop: cls for cls in [
+        AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
+        DivAugmentedAssignment, ModAugmentedAssignment
+    ]
+}
+
 
 def aug_assign(lhs, op, rhs):
     """
@@ -526,9 +569,9 @@ def aug_assign(lhs, op, rhs):
     >>> aug_assign(x, '+', y)
     AddAugmentedAssignment(x, y)
     """
-    if op + '=' not in Relational.ValidRelationOperator:
+    if op not in augassign_classes:
         raise ValueError("Unrecognized operator %s" % op)
-    return Relational.ValidRelationOperator[op + '='](lhs, rhs)
+    return augassign_classes[op](lhs, rhs)
 
 
 class CodeBlock(Basic):
@@ -557,8 +600,8 @@ class CodeBlock(Basic):
         Return a new CodeBlock with common subexpressions eliminated and
         pulled out as assignments.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import symbols, ccode
     >>> from sympy.codegen.ast import CodeBlock, Assignment
@@ -588,7 +631,6 @@ class CodeBlock(Basic):
         return iter(self.args)
 
     def _sympyrepr(self, printer, *args, **kwargs):
-        from sympy.printing.printer import printer_context
         il = printer._context.get('indent_level', 0)
         joiner = ',\n' + ' '*il
         joined = joiner.join(map(printer._print, self.args))
@@ -614,8 +656,8 @@ class CodeBlock(Basic):
         This is a class constructor so that the default constructor for
         CodeBlock can error when variables are used before they are assigned.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.codegen.ast import CodeBlock, Assignment
@@ -1042,7 +1084,6 @@ class Type(Token):
         0.123456789012345649
 
         """
-        from sympy.functions.elementary.complexes import im, re
         val = sympify(value)
 
         ten = Integer(10)
@@ -1210,6 +1251,10 @@ class FloatType(FloatBaseType):
 
     def cast_nocheck(self, value):
         """ Casts without checking if out of bounds or subnormal. """
+        if value == oo:  # float(oo) or oo
+            return float(oo)
+        elif value == -oo:  # float(-oo) or -oo
+            return float(-oo)
         return Float(str(sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
 
     def _check(self, value):
@@ -1425,10 +1470,15 @@ class Variable(Node):
         Examples
         ========
 
-        >>> from sympy.codegen.ast import Variable
+        >>> from sympy.codegen.ast import Variable, NoneToken
         >>> x = Variable('x')
         >>> decl1 = x.as_Declaration()
-        >>> decl1.variable.value == None
+        >>> # value is special NoneToken() which must be tested with == operator
+        >>> decl1.variable.value is None  # won't work
+        False
+        >>> decl1.variable.value == None  # not PEP-8 compliant
+        True
+        >>> decl1.variable.value == NoneToken()  # OK
         True
         >>> decl2 = x.as_Declaration(value=42.0)
         >>> decl2.variable.value == 42
@@ -1467,7 +1517,7 @@ class Pointer(Variable):
     >>> i = Symbol('i', integer=True)
     >>> p = Pointer('x')
     >>> p[i+1]
-    Element(x, indices=((i + 1,),))
+    Element(x, indices=(i + 1,))
 
     """
 
@@ -1517,11 +1567,16 @@ class Declaration(Token):
     ========
 
     >>> from sympy import Symbol
-    >>> from sympy.codegen.ast import Declaration, Type, Variable, integer, untyped
+    >>> from sympy.codegen.ast import Declaration, Type, Variable, NoneToken, integer, untyped
     >>> z = Declaration('z')
     >>> z.variable.type == untyped
     True
-    >>> z.variable.value == None
+    >>> # value is special NoneToken() which must be tested with == operator
+    >>> z.variable.value is None  # won't work
+    False
+    >>> z.variable.value == None  # not PEP-8 compliant
+    True
+    >>> z.variable.value == NoneToken()  # OK
     True
     """
     __slots__ = ['variable']
@@ -1538,7 +1593,7 @@ class While(Token):
     Parameters
     ==========
 
-    condition : expression convertable to Boolean
+    condition : expression convertible to Boolean
     body : CodeBlock or iterable
         When passed an iterable it is used to instantiate a CodeBlock.
 

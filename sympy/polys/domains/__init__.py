@@ -1,70 +1,28 @@
 """Implementation of mathematical domains. """
 
-__all__ = []
+__all__ = ['Domain', 'FiniteField', 'IntegerRing', 'RationalField',
+        'RealField', 'ComplexField', 'PythonFiniteField', 'GMPYFiniteField',
+        'PythonIntegerRing', 'GMPYIntegerRing', 'PythonRational',
+        'GMPYRationalField', 'AlgebraicField', 'PolynomialRing',
+        'FractionField', 'ExpressionDomain', 'PythonRational']
 
-from . import domain
-__all__.extend(domain.__all__)
-from .domain import *
-
-from . import finitefield
-__all__.extend(finitefield.__all__)
-from .finitefield import *
-
-from . import integerring
-__all__.extend(integerring.__all__)
-from .integerring import *
-
-from . import rationalfield
-__all__.extend(rationalfield.__all__)
-from .rationalfield import *
-
-from . import realfield
-__all__.extend(realfield.__all__)
-from .realfield import *
-
-from . import complexfield
-__all__.extend(complexfield.__all__)
-from .complexfield import *
-
-from . import pythonfinitefield
-__all__.extend(pythonfinitefield.__all__)
-from .pythonfinitefield import *
-
-from . import gmpyfinitefield
-__all__.extend(gmpyfinitefield.__all__)
-from .gmpyfinitefield import *
-
-from . import pythonintegerring
-__all__.extend(pythonintegerring.__all__)
-from .pythonintegerring import *
-
-from . import gmpyintegerring
-__all__.extend(gmpyintegerring.__all__)
-from .gmpyintegerring import *
-
-from . import pythonrationalfield
-__all__.extend(pythonrationalfield.__all__)
-from .pythonrationalfield import *
-
-from . import gmpyrationalfield
-__all__.extend(gmpyrationalfield.__all__)
-from .gmpyrationalfield import *
-
-from . import algebraicfield
-__all__.extend(algebraicfield.__all__)
-from .algebraicfield import *
-
-from . import polynomialring
-__all__.extend(polynomialring.__all__)
-from .polynomialring import *
-
-from . import fractionfield
-__all__.extend(fractionfield.__all__)
-from .fractionfield import *
-
-from . import expressiondomain
-__all__.extend(expressiondomain.__all__)
-from .expressiondomain import *
+from .domain import Domain
+from .finitefield import FiniteField
+from .integerring import IntegerRing
+from .rationalfield import RationalField
+from .realfield import RealField
+from .complexfield import ComplexField
+from .pythonfinitefield import PythonFiniteField
+from .gmpyfinitefield import GMPYFiniteField
+from .pythonintegerring import PythonIntegerRing
+from .gmpyintegerring import GMPYIntegerRing
+from .pythonrationalfield import PythonRationalField
+from .gmpyrationalfield import GMPYRationalField
+from .algebraicfield import AlgebraicField
+from .polynomialring import PolynomialRing
+from .fractionfield import FractionField
+from .expressiondomain import ExpressionDomain
+from .pythonrational import PythonRational
 
 FF_python = PythonFiniteField
 FF_gmpy = GMPYFiniteField
@@ -77,8 +35,6 @@ QQ_gmpy = GMPYRationalField
 
 RR = RealField()
 CC = ComplexField()
-
-from .pythonrational import PythonRational
 
 from sympy.core.compatibility import GROUND_TYPES
 

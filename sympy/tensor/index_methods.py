@@ -12,15 +12,14 @@
 
 from __future__ import print_function, division
 
-
+from sympy.core.compatibility import reduce
 from sympy.core.function import Function
 from sympy.functions import exp, Piecewise
 from sympy.tensor.indexed import Idx, Indexed
-
-
-from sympy.core.compatibility import reduce
-from collections import OrderedDict
 from sympy.utilities import sift
+
+from collections import OrderedDict
+
 class IndexConformanceException(Exception):
     pass
 
@@ -29,11 +28,10 @@ def _unique_and_repeated(inds):
     Returns the unique and repeated indices. Also note, from the examples given below
     that the order of indices is maintained as given in the input.
 
-    Examples :
+    Examples
     ========
 
     >>> from sympy.tensor.index_methods import _unique_and_repeated
-
     >>> _unique_and_repeated([2, 3, 1, 3, 0, 4, 0])
     ([2, 1, 4], [3, 0])
     """
@@ -52,7 +50,7 @@ def _remove_repeated(inds):
     Returns a set of the unique objects and a tuple of all that have been
     removed.
 
-    Examples :
+    Examples
     ========
 
     >>> from sympy.tensor.index_methods import _remove_repeated
@@ -67,6 +65,9 @@ def _remove_repeated(inds):
 
 def _get_indices_Mul(expr, return_dummies=False):
     """Determine the outer indices of a Mul object.
+
+    Examples
+    ========
 
     >>> from sympy.tensor.index_methods import _get_indices_Mul
     >>> from sympy.tensor.indexed import IndexedBase, Idx
@@ -125,6 +126,9 @@ def _get_indices_Pow(expr):
     contractable with its own base.  Note however, that indices in the same
     exponent can be contracted with each other.
 
+    Examples
+    ========
+
     >>> from sympy.tensor.index_methods import _get_indices_Pow
     >>> from sympy import Pow, exp, IndexedBase, Idx
     >>> A = IndexedBase('A')
@@ -163,6 +167,9 @@ def _get_indices_Add(expr):
         x(i)*y(j) - z(j)*z(j)
 
     FIXME: Add support for Numpy broadcasting
+
+    Examples
+    ========
 
     >>> from sympy.tensor.index_methods import _get_indices_Add
     >>> from sympy.tensor.indexed import IndexedBase, Idx
@@ -311,7 +318,7 @@ def get_contraction_structure(expr):
        dicts for the non-trivial deeper contractions, omitting dicts with None
        as the one and only key.
 
-    .. Note:: The presence of expressions among the dictinary keys indicates
+    .. Note:: The presence of expressions among the dictionary keys indicates
        multiple levels of index contractions.  A nested dict displays nested
        contractions and may itself contain dicts from a deeper level.  In
        practical calculations the summation in the deepest nested level must be

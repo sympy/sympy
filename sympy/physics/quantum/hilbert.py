@@ -18,6 +18,9 @@ from sympy.core.compatibility import reduce
 __all__ = [
     'HilbertSpaceError',
     'HilbertSpace',
+    'TensorProductHilbertSpace',
+    'TensorPowerHilbertSpace',
+    'DirectSumHilbertSpace',
     'ComplexSpace',
     'L2',
     'FockSpace'
@@ -53,7 +56,7 @@ class HilbertSpace(Basic):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hilbert_space
+    .. [1] https://en.wikipedia.org/wiki/Hilbert_space
     """
 
     def __new__(cls):
@@ -254,7 +257,7 @@ class FockSpace(HilbertSpace):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Fock_space
+    .. [1] https://en.wikipedia.org/wiki/Fock_space
     """
 
     def __new__(cls):
@@ -319,7 +322,7 @@ class TensorProductHilbertSpace(HilbertSpace):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
+    .. [1] https://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
     """
 
     def __new__(cls, *args):
@@ -465,7 +468,7 @@ class DirectSumHilbertSpace(HilbertSpace):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Direct_sums
+    .. [1] https://en.wikipedia.org/wiki/Hilbert_space#Direct_sums
     """
     def __new__(cls, *args):
         r = cls.eval(args)
@@ -582,7 +585,7 @@ class TensorPowerHilbertSpace(HilbertSpace):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
+    .. [1] https://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
     """
 
     def __new__(cls, *args):
@@ -623,7 +626,7 @@ class TensorPowerHilbertSpace(HilbertSpace):
 
     @property
     def dimension(self):
-        if self.base.dimension == oo:
+        if self.base.dimension is oo:
             return oo
         else:
             return self.base.dimension**self.exp

@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function)
 
 from collections import namedtuple
-from contextlib import contextmanager
-from distutils.errors import CompileError
 from hashlib import sha256
-import glob
-import io
 import os
 import shutil
 import sys
 import tempfile
+import fnmatch
 
 from sympy.utilities.pytest import XFAIL
 
@@ -122,7 +118,7 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         raise FileNotFoundError("Source: `{}` does not exist".format(src))
 
     # We accept both (re)naming destination file _or_
-    # passing a (possible non-existant) destination directory
+    # passing a (possible non-existent) destination directory
     if dest_is_dir:
         if not dst[-1] == '/':
             dst = dst+'/'
@@ -145,11 +141,12 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
             raise FileNotFoundError("You must create directory first.")
 
     if only_update:
-        if not missing_or_other_newer(dst, src):
+        # This function is not defined:
+        # XXX: This branch is clearly not tested!
+        if not missing_or_other_newer(dst, src): # noqa
             return
 
     if os.path.islink(dst):
-        _cwd = os.path.dirname(dst)
         dst = os.path.abspath(os.path.realpath(dst), cwd=cwd)
 
     shutil.copy(src, dst)
@@ -167,6 +164,7 @@ def glob_at_depth(filename_glob, cwd=None):
     globbed = []
     for root, dirs, filenames in os.walk(cwd):
         for fn in filenames:
+            # This is not tested:
             if fnmatch.fnmatch(fn, filename_glob):
                 globbed.append(os.path.join(root, fn))
     return globbed

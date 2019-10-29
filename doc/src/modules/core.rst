@@ -1,5 +1,6 @@
-SymPy Core
-==========
+====
+Core
+====
 
 sympify
 -------
@@ -15,7 +16,7 @@ assumptions
 .. automodule:: sympy.core.assumptions
 
 cache
--------
+-----
 .. module:: sympy.core.cache
 
 cacheit

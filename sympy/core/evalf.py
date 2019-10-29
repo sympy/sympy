@@ -10,8 +10,8 @@ import mpmath.libmp as libmp
 from mpmath import (
     make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
 from mpmath import inf as mpmath_inf
-from mpmath.libmp import (from_int, from_man_exp, from_rational, from_float,
-        fhalf, fnan, fnone, fone, fzero, mpf_abs, mpf_add,
+from mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
+        fnan, fnone, fone, fzero, mpf_abs, mpf_add,
         mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
         mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
         mpf_sqrt, normalize, round_nearest, to_int, to_str)
@@ -324,7 +324,10 @@ def get_integer_part(expr, no, options, return_ints=False):
         gap = fastlog(iim) - iim_acc
     else:
         # ... or maybe the expression was exactly zero
-        return None, None, None, None
+        if return_ints:
+            return 0, 0
+        else:
+            return None, None, None, None
 
     margin = 10
 
@@ -367,12 +370,14 @@ def get_integer_part(expr, no, options, return_ints=False):
             if s:
                 doit = True
                 from sympy.core.compatibility import as_int
+                # use strict=False with as_int because we take
+                # 2.0 == 2
                 for v in s.values():
                     try:
-                        as_int(v)
+                        as_int(v, strict=False)
                     except ValueError:
                         try:
-                            [as_int(i) for i in v.as_real_imag()]
+                            [as_int(i, strict=False) for i in v.as_real_imag()]
                             continue
                         except (ValueError, AttributeError):
                             doit = False
@@ -441,7 +446,7 @@ def add_terms(terms, prec, target_prec):
     XXX explain why this is needed and why one can't just loop using mpf_add
     """
 
-    terms = [t for t in terms if not iszero(t)]
+    terms = [t for t in terms if not iszero(t[0])]
     if not terms:
         return None, None
     elif len(terms) == 1:
@@ -943,7 +948,7 @@ def do_integral(expr, prec, options):
         # difference
         if xhigh.free_symbols & xlow.free_symbols:
             diff = xhigh - xlow
-            if not diff.free_symbols:
+            if diff.is_number:
                 xlow, xhigh = 0, diff
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
@@ -1183,8 +1188,8 @@ def evalf_sum(expr, prec, options):
     limits = expr.limits
     if len(limits) != 1 or len(limits[0]) != 3:
         raise NotImplementedError
-    if func is S.Zero:
-        return mpf(0), None, None, None
+    if func.is_zero:
+        return None, None, prec, None
     prec2 = prec + 10
     try:
         n, a, b = limits[0]
@@ -1244,7 +1249,6 @@ evalf_table = None
 def _create_evalf_table():
     global evalf_table
     from sympy.functions.combinatorial.numbers import bernoulli
-    from sympy.functions.combinatorial.factorials import rf, ff
     from sympy.concrete.products import Product
     from sympy.concrete.summations import Sum
     from sympy.core.add import Add
@@ -1298,8 +1302,6 @@ def _create_evalf_table():
         Piecewise: evalf_piecewise,
 
         bernoulli: evalf_bernoulli,
-        rf: lambda expr, prec, options: (from_float(mp.rf(*expr.args)), None, prec, None),
-        ff: lambda expr, prec, options: (from_float(mp.ff(*expr.args)), None, prec, None),
     }
 
 
@@ -1309,33 +1311,36 @@ def evalf(x, prec, options):
         rf = evalf_table[x.func]
         r = rf(x, prec, options)
     except KeyError:
-        try:
-            # Fall back to ordinary evalf if possible
-            if 'subs' in options:
-                x = x.subs(evalf_subs(prec, options['subs']))
-            xe = x._eval_evalf(prec)
-            re, im = xe.as_real_imag()
-            if re.has(re_) or im.has(im_):
-                raise NotImplementedError
-            if re == 0:
-                re = None
-                reprec = None
-            elif re.is_number:
-                re = re._to_mpmath(prec, allow_ints=False)._mpf_
-                reprec = prec
-            else:
-                raise NotImplementedError
-            if im == 0:
-                im = None
-                imprec = None
-            elif im.is_number:
-                im = im._to_mpmath(prec, allow_ints=False)._mpf_
-                imprec = prec
-            else:
-                raise NotImplementedError
-            r = re, im, reprec, imprec
-        except AttributeError:
+        # Fall back to ordinary evalf if possible
+        if 'subs' in options:
+            x = x.subs(evalf_subs(prec, options['subs']))
+        xe = x._eval_evalf(prec)
+        if xe is None:
             raise NotImplementedError
+        as_real_imag = getattr(xe, "as_real_imag", None)
+        if as_real_imag is None:
+            raise NotImplementedError # e.g. FiniteSet(-1.0, 1.0).evalf()
+        re, im = as_real_imag()
+        if re.has(re_) or im.has(im_):
+            raise NotImplementedError
+        if re == 0:
+            re = None
+            reprec = None
+        elif re.is_number:
+            re = re._to_mpmath(prec, allow_ints=False)._mpf_
+            reprec = prec
+        else:
+            raise NotImplementedError
+        if im == 0:
+            im = None
+            imprec = None
+        elif im.is_number:
+            im = im._to_mpmath(prec, allow_ints=False)._mpf_
+            imprec = prec
+        else:
+            raise NotImplementedError
+        r = re, im, reprec, imprec
+
     if options.get("verbose"):
         print("### input", x)
         print("### output", to_str(r[0] or fzero, 50))
@@ -1394,6 +1399,24 @@ class EvalfMixin(object):
             verbose=<bool>
                 Print debug information (default=False)
 
+        Notes
+        =====
+
+        When Floats are naively substituted into an expression, precision errors
+        may adversely affect the result. For example, adding 1e16 (a Float) to 1
+        will truncate to 1e16; if 1e16 is then subtracted, the result will be 0.
+        That is exactly what happens in the following:
+
+        >>> from sympy.abc import x, y, z
+        >>> values = {x: 1e16, y: 1, z: 1e16}
+        >>> (x + y - z).subs(values)
+        0
+
+        Using the subs argument for evalf is the accurate way to evaluate such an
+        expression:
+
+        >>> (x + y - z).evalf(subs=values)
+        1.00000000000000
         """
         from sympy import Float, Number
         n = n if n is not None else 15
@@ -1425,6 +1448,8 @@ class EvalfMixin(object):
             v = self._eval_evalf(prec)
             if v is None:
                 return self
+            elif not v.is_number:
+                return v
             try:
                 # If the result is numerical, normalize it
                 result = evalf(v, prec, options)
@@ -1514,4 +1539,6 @@ def N(x, n=15, **options):
     1.291
 
     """
-    return sympify(x).evalf(n, **options)
+    # by using rational=True, any evaluation of a string
+    # will be done using exact values for the Floats
+    return sympify(x, rational=True).evalf(n, **options)

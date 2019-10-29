@@ -1,11 +1,8 @@
-from sympy.multipledispatch import dispatch, Dispatcher
-from sympy.core import Basic, Expr, Function, Add, Mul, Pow, Dummy, Integer
-from sympy import Min, Max, Set, sympify, Lambda, symbols, exp, log, S
+from sympy import symbols, S
+from sympy.core import Basic, Expr
 from sympy.core.numbers import Infinity, NegativeInfinity
-from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-    ProductSet, EmptySet, Intersection)
-from sympy.core.function import FunctionClass
-from sympy.logic.boolalg import And, Or, Not, true, false
+from sympy.multipledispatch import dispatch
+from sympy.sets import Interval, FiniteSet
 
 
 _x, _y = symbols("x y")
@@ -30,13 +27,13 @@ def _set_add(x, y):
 
 @dispatch(Interval, Infinity)
 def _set_add(x, y):
-    if x.start == S.NegativeInfinity:
+    if x.start is S.NegativeInfinity:
         return Interval(-oo, oo)
     return FiniteSet({S.Infinity})
 
 @dispatch(Interval, NegativeInfinity)
 def _set_add(x, y):
-    if x.end == S.Infinity:
+    if x.end is S.Infinity:
         return Interval(-oo, oo)
     return FiniteSet({S.NegativeInfinity})
 

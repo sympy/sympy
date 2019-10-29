@@ -230,7 +230,7 @@ are used for the imaginary unit (:math:`i`), the base of the natural
 logarithm (:math:`e`), the :func:`sympify` function (see :ref:`Symbolic
 Expressions<symbolic-expressions>` below), numeric evaluation (:func:`N`
 is equivalent to :ref:`evalf()<evalf-label>` ),
-the `big O <http://en.wikipedia.org/wiki/Big_O_notation>`_ order symbol
+the `big O <https://en.wikipedia.org/wiki/Big_O_notation>`_ order symbol
 (as in :math:`O(n\log{n})`), and the assumptions object that holds a list of
 supported ask keys (such as :obj:`Q.real`), respectively.  You can use the
 mnemonic ``OSINEQ`` to remember what Symbols are defined by default in SymPy.
@@ -258,10 +258,10 @@ To get a full list of all default names in SymPy do:
     # A big list of all default sympy names and functions follows.
     # Ignore everything that starts and ends with __.
 
-If you have `IPython <http://ipython.org/>`_ installed and
+If you have `IPython <https://ipython.org/>`_ installed and
 use :command:`isympy`, you can also press the TAB key to get a list of
 all built-in names and to autocomplete.  Also, see `this page
-<http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
+<https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
 trick for getting tab completion in the regular Python console.
 
 .. note::
@@ -346,7 +346,7 @@ you don't have to worry about this problem:
 
 Also, if you do not use :command:`isympy`, you could use ``from
 __future__ import division`` to prevent the ``/`` sign from performing
-`integer division <http://en.wikipedia.org/wiki/Integer_division>`_.
+`integer division <https://en.wikipedia.org/wiki/Integer_division>`_.
 
     >>> from __future__ import division
     >>> 1/2   # With division imported it evaluates to a python float
@@ -740,8 +740,8 @@ Getting help from within SymPy
 help()
 ------
 
-Although all docs are available at `docs.sympy.org <http://docs.sympy.org/>`_ or on the
-`SymPy Wiki <http://wiki.sympy.org/>`_, you can also get info on functions from within the
+Although all docs are available at `docs.sympy.org <https://docs.sympy.org/>`_ or on the
+`SymPy Wiki <https://wiki.sympy.org/>`_, you can also get info on functions from within the
 Python interpreter that runs SymPy.  The easiest way to do this is to do
 ``help(function)``, or ``function?`` if you are using :command:`ipython`::
 

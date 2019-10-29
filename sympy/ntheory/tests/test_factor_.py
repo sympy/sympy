@@ -1,26 +1,20 @@
-from sympy import (Sieve, binomial_coefficients, binomial_coefficients_list,
-    Mul, S, Pow, sieve, Symbol, summation, Dummy,
-    factorial as fac)
+from sympy import (Mul, S, Pow, Symbol, summation, Dict,
+                   factorial as fac, sqrt)
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 from sympy.core.compatibility import long, range
 
-from sympy.ntheory import (isprime, n_order, is_primitive_root,
-    is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient,
-    factorint, primefactors, divisors, randprime, nextprime, prevprime,
-    primerange, primepi, prime, pollard_rho, perfect_power, multiplicity,
+from sympy.ntheory import (totient,
+    factorint, primefactors, divisors, nextprime,
+    primerange, pollard_rho, perfect_power, multiplicity,
     trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
-    udivisor_count, primenu, primeomega, small_trailing)
-from sympy.ntheory.generate import cycle_length
-from sympy.ntheory.multinomial import (
-    multinomial_coefficients, multinomial_coefficients_iterator)
-from sympy.ntheory.bbp_pi import pi_hex_digits
-from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
+    udivisor_count, primenu, primeomega, small_trailing, mersenne_prime_exponent,
+    is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable)
 
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises
 
 from sympy.utilities.iterables import capture
 
@@ -103,7 +97,7 @@ def test_multiplicity():
     raises(ValueError, lambda: multiplicity(1.3, 0))
 
     # handles Rationals
-    assert multiplicity(10, Rational(30, 7)) == 0
+    assert multiplicity(10, Rational(30, 7)) == 1
     assert multiplicity(Rational(2, 7), Rational(4, 7)) == 1
     assert multiplicity(Rational(1, 7), Rational(3, 49)) == 2
     assert multiplicity(Rational(2, 7), Rational(7, 2)) == -1
@@ -111,7 +105,8 @@ def test_multiplicity():
 
 
 def test_perfect_power():
-    assert perfect_power(0) is False
+    raises(ValueError, lambda: perfect_power(0))
+    raises(ValueError, lambda: perfect_power(Rational(25, 4)))
     assert perfect_power(1) is False
     assert perfect_power(2) is False
     assert perfect_power(3) is False
@@ -144,6 +139,12 @@ def test_perfect_power():
     assert perfect_power(2**3*5**5) is False
     assert perfect_power(2*13**4) is False
     assert perfect_power(2**5*3**3) is False
+    t = 2**24
+    for d in divisors(24):
+        m = perfect_power(t*3**d)
+        assert m and m[1] == d or d == 1
+        m = perfect_power(t*3**d, big=False)
+        assert m and m[1] == 2 or d == 1 or d == 3, (d, m)
 
 
 def test_factorint():
@@ -159,6 +160,11 @@ def test_factorint():
     assert factorint(5951757) == {3: 1, 7: 1, 29: 2, 337: 1}
     assert factorint(64015937) == {7993: 1, 8009: 1}
     assert factorint(2**(2**6) + 1) == {274177: 1, 67280421310721: 1}
+
+    #issue 17676
+    assert factorint(28300421052393658575) == {3: 1, 5: 2, 11: 2, 43: 1, 2063: 2, 4127: 1, 4129: 1}
+    assert factorint(2063**2 * 4127**1 * 4129**1) == {2063: 2, 4127: 1, 4129: 1}
+    assert factorint(2347**2 * 7039**1 * 7043**1) == {2347: 2, 7039: 1, 7043: 1}
 
     assert factorint(0, multiple=True) == [0]
     assert factorint(1, multiple=True) == []
@@ -261,6 +267,11 @@ def test_factorint():
     assert factorint((p1*p2**2)**3) == {p1: 3, p2: 6}
     # Test for non integer input
     raises(ValueError, lambda: factorint(4.5))
+    # test dict/Dict input
+    sans = '2**10*3**3'
+    n = {4: 2, 12: 3}
+    assert str(factorint(n)) == sans
+    assert str(factorint(Dict(n))) == sans
 
 
 def test_divisors_and_divisor_count():
@@ -465,16 +476,18 @@ def test_visual_factorint():
 
 def test_factorrat():
     assert str(factorrat(S(12)/1, visual=True)) == '2**2*3**1'
-    assert str(factorrat(S(1)/1, visual=True)) == '1'
+    assert str(factorrat(Rational(1, 1), visual=True)) == '1'
     assert str(factorrat(S(25)/14, visual=True)) == '5**2/(2*7)'
+    assert str(factorrat(Rational(25, 14), visual=True)) == '5**2/(2*7)'
     assert str(factorrat(S(-25)/14/9, visual=True)) == '-5**2/(2*3**2*7)'
 
     assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
-    assert factorrat(S(1)/1, multiple=True) == []
-    assert factorrat(S(25)/14, multiple=True) == [1/7, 1/2, 5, 5]
-    assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
+    assert factorrat(Rational(1, 1), multiple=True) == []
+    assert factorrat(S(25)/14, multiple=True) == [Rational(1, 7), S.Half, 5, 5]
+    assert factorrat(Rational(25, 14), multiple=True) == [Rational(1, 7), S.Half, 5, 5]
+    assert factorrat(Rational(12, 1), multiple=True) == [2, 2, 3]
     assert factorrat(S(-25)/14/9, multiple=True) == \
-        [-1, 1/7, 1/3, 1/3, 1/2, 5, 5]
+        [-1, Rational(1, 7), Rational(1, 3), Rational(1, 3), S.Half, 5, 5]
 
 
 def test_visual_io():
@@ -562,3 +575,52 @@ def test_primeomega():
     assert primeomega(n)
     assert primeomega(n).subs(n, 2 ** 31 - 1) == 1
     assert summation(primeomega(n), (n, 2, 30)) == 59
+
+
+def test_mersenne_prime_exponent():
+    assert mersenne_prime_exponent(1) == 2
+    assert mersenne_prime_exponent(4) == 7
+    assert mersenne_prime_exponent(10) == 89
+    assert mersenne_prime_exponent(25) == 21701
+    raises(ValueError, lambda: mersenne_prime_exponent(52))
+    raises(ValueError, lambda: mersenne_prime_exponent(0))
+
+
+def test_is_perfect():
+    assert is_perfect(6) is True
+    assert is_perfect(15) is False
+    assert is_perfect(28) is True
+    assert is_perfect(400) is False
+    assert is_perfect(496) is True
+    assert is_perfect(8128) is True
+    assert is_perfect(10000) is False
+
+
+def test_is_mersenne_prime():
+    assert is_mersenne_prime(10) is False
+    assert is_mersenne_prime(127) is True
+    assert is_mersenne_prime(511) is False
+    assert is_mersenne_prime(131071) is True
+    assert is_mersenne_prime(2147483647) is True
+
+
+def test_is_abundant():
+    assert is_abundant(10) is False
+    assert is_abundant(12) is True
+    assert is_abundant(18) is True
+    assert is_abundant(21) is False
+    assert is_abundant(945) is True
+
+
+def test_is_deficient():
+    assert is_deficient(10) is True
+    assert is_deficient(22) is True
+    assert is_deficient(56) is False
+    assert is_deficient(20) is False
+    assert is_deficient(36) is False
+
+
+def test_is_amicable():
+    assert is_amicable(173, 129) is False
+    assert is_amicable(220, 284) is True
+    assert is_amicable(8756, 8756) is False

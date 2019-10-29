@@ -1,4 +1,3 @@
-import warnings
 from sympy.core import (
     S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio, EulerGamma, Catalan,
     Lambda, Dummy, Eq, nan, Mul, Pow
@@ -21,7 +20,7 @@ from sympy.codegen.ast import (
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
 from sympy.codegen.cnodes import restrict
 from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import warns_deprecated_sympy
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
@@ -71,6 +70,14 @@ def test_ccode_Pow():
 def test_ccode_Max():
     # Test for gh-11926
     assert ccode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
+
+
+def test_ccode_Min_performance():
+    #Shouldn't take more than a few seconds
+    big_min = Min(*symbols('a[0:50]'))
+    for curr_standard in ('c89', 'c99', 'c11'):
+        output = ccode(big_min, standard=curr_standard)
+        assert output.count('(') == output.count(')')
 
 
 def test_ccode_constants_mathh():
@@ -133,7 +140,12 @@ def test_ccode_inline_function():
 
 def test_ccode_exceptions():
     assert ccode(gamma(x), standard='C99') == "tgamma(x)"
-    assert 'not supported in c' in ccode(gamma(x), standard='C89').lower()
+    gamma_c89 = ccode(gamma(x), standard='C89')
+    assert 'not supported in c' in gamma_c89.lower()
+    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=False)
+    assert 'not supported in c' in gamma_c89.lower()
+    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=True)
+    assert not 'not supported in c' in gamma_c89.lower()
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"
@@ -286,28 +298,27 @@ def test_ccode_Indexed():
     A = IndexedBase('A')[i, j]
     B = IndexedBase('B')[i, j, k]
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         p = CCodePrinter()
-        p._not_c = set()
+    p._not_c = set()
 
-        assert p._print_Indexed(x) == 'x[j]'
-        assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
-        assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
-        assert p._not_c == set()
+    assert p._print_Indexed(x) == 'x[j]'
+    assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
+    assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
+    assert p._not_c == set()
 
-        A = IndexedBase('A', shape=(5,3))[i, j]
-        assert p._print_Indexed(A) == 'A[%s]' % (3*i + j)
+    A = IndexedBase('A', shape=(5,3))[i, j]
+    assert p._print_Indexed(A) == 'A[%s]' % (3*i + j)
 
-        A = IndexedBase('A', shape=(5,3), strides='F')[i, j]
-        assert ccode(A) == 'A[%s]' % (i + 5*j)
+    A = IndexedBase('A', shape=(5,3), strides='F')[i, j]
+    assert ccode(A) == 'A[%s]' % (i + 5*j)
 
-        A = IndexedBase('A', shape=(29,29), strides=(1, s), offset=o)[i, j]
-        assert ccode(A) == 'A[o + s*j + i]'
+    A = IndexedBase('A', shape=(29,29), strides=(1, s), offset=o)[i, j]
+    assert ccode(A) == 'A[o + s*j + i]'
 
-        Abase = IndexedBase('A', strides=(s, m, n), offset=o)
-        assert ccode(Abase[i, j, k]) == 'A[m*j + n*k + o + s*i]'
-        assert ccode(Abase[2, 3, k]) == 'A[3*m + n*k + o + 2*s]'
+    Abase = IndexedBase('A', strides=(s, m, n), offset=o)
+    assert ccode(Abase[i, j, k]) == 'A[m*j + n*k + o + s*i]'
+    assert ccode(Abase[2, 3, k]) == 'A[3*m + n*k + o + 2*s]'
 
 
 def test_Element():
@@ -584,12 +595,9 @@ def test_ccode_standard():
 
 
 def test_CCodePrinter():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("error", category=SymPyDeprecationWarning)
-        with raises(SymPyDeprecationWarning):
-            CCodePrinter()
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
+        CCodePrinter()
+    with warns_deprecated_sympy():
         assert CCodePrinter().language == 'C'
 
 
@@ -773,7 +781,7 @@ def test_MatrixElement_printing():
     assert(ccode(3 * A[0, 0]) == "3*A[0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(ccode(F) == "(-B + A)[0]")
+    assert(ccode(F) == "(A - B)[0]")
 
 
 def test_subclass_CCodePrinter():

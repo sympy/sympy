@@ -1,12 +1,13 @@
 from __future__ import print_function, division
 
-from sympy.core.singleton import S
-from sympy.core.function import Function
-from sympy.core import Add
+from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
+from sympy.core.function import Function
+from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import Integer
-from sympy.core.relational import Gt, Lt, Ge, Le
+from sympy.core.relational import Gt, Lt, Ge, Le, Relational
 from sympy.core.symbol import Symbol
+from sympy.core.sympify import _sympify
 
 
 ###############################################################################
@@ -141,10 +142,16 @@ class floor(RoundFunction):
         else:
             return r
 
-    def _eval_rewrite_as_ceiling(self, arg):
+    def _eval_is_negative(self):
+        return self.args[0].is_negative
+
+    def _eval_is_nonnegative(self):
+        return self.args[0].is_nonnegative
+
+    def _eval_rewrite_as_ceiling(self, arg, **kwargs):
         return -ceiling(-arg)
 
-    def _eval_rewrite_as_frac(self, arg):
+    def _eval_rewrite_as_frac(self, arg, **kwargs):
         return arg - frac(arg)
 
     def _eval_Eq(self, other):
@@ -154,15 +161,60 @@ class floor(RoundFunction):
                 return S.true
 
     def __le__(self, other):
+        other = S(other)
+        if self.args[0].is_real:
+            if other.is_integer:
+                return self.args[0] < other + 1
+            if other.is_number and other.is_real:
+                return self.args[0] < ceiling(other)
         if self.args[0] == other and other.is_real:
             return S.true
+        if other is S.Infinity and self.is_finite:
+            return S.true
+
         return Le(self, other, evaluate=False)
 
-    def __gt__(self, other):
+    def __ge__(self, other):
+        other = S(other)
+        if self.args[0].is_real:
+            if other.is_integer:
+                return self.args[0] >= other
+            if other.is_number and other.is_real:
+                return self.args[0] >= ceiling(other)
         if self.args[0] == other and other.is_real:
             return S.false
+        if other is S.NegativeInfinity and self.is_finite:
+            return S.true
+
+        return Ge(self, other, evaluate=False)
+
+    def __gt__(self, other):
+        other = S(other)
+        if self.args[0].is_real:
+            if other.is_integer:
+                return self.args[0] >= other + 1
+            if other.is_number and other.is_real:
+                return self.args[0] >= ceiling(other)
+        if self.args[0] == other and other.is_real:
+            return S.false
+        if other is S.NegativeInfinity and self.is_finite:
+            return S.true
+
         return Gt(self, other, evaluate=False)
 
+    def __lt__(self, other):
+        other = S(other)
+        if self.args[0].is_real:
+            if other.is_integer:
+                return self.args[0] < other
+            if other.is_number and other.is_real:
+                return self.args[0] < ceiling(other)
+        if self.args[0] == other and other.is_real:
+            return S.false
+        if other is S.Infinity and self.is_finite:
+            return S.true
+
+        return Lt(self, other, evaluate=False)
 
 class ceiling(RoundFunction):
     """
@@ -225,11 +277,17 @@ class ceiling(RoundFunction):
         else:
             return r
 
-    def _eval_rewrite_as_floor(self, arg):
+    def _eval_rewrite_as_floor(self, arg, **kwargs):
         return -floor(-arg)
 
-    def _eval_rewrite_as_frac(self, arg):
+    def _eval_rewrite_as_frac(self, arg, **kwargs):
         return arg + frac(-arg)
+
+    def _eval_is_positive(self):
+        return self.args[0].is_positive
+
+    def _eval_is_nonpositive(self):
+        return self.args[0].is_nonpositive
 
     def _eval_Eq(self, other):
         if isinstance(self, ceiling):
@@ -238,15 +296,60 @@ class ceiling(RoundFunction):
                 return S.true
 
     def __lt__(self, other):
+        other = S(other)
+        if self.args[0].is_real:
+            if other.is_integer:
+                return self.args[0] <= other - 1
+            if other.is_number and other.is_real:
+                return self.args[0] <= floor(other)
         if self.args[0] == other and other.is_real:
             return S.false
+        if other is S.Infinity and self.is_finite:
+            return S.true
+
         return Lt(self, other, evaluate=False)
 
+    def __gt__(self, other):
+        other = S(other)
+        if self.args[0].is_real:
+            if other.is_integer:
+                return self.args[0] > other
+            if other.is_number and other.is_real:
+                return self.args[0] > floor(other)
+        if self.args[0] == other and other.is_real:
+            return S.false
+        if other is S.NegativeInfinity and self.is_finite:
+            return S.true
+
+        return Gt(self, other, evaluate=False)
+
     def __ge__(self, other):
+        other = S(other)
+        if self.args[0].is_real:
+            if other.is_integer:
+                return self.args[0] > other - 1
+            if other.is_number and other.is_real:
+                return self.args[0] > floor(other)
         if self.args[0] == other and other.is_real:
             return S.true
+        if other is S.NegativeInfinity and self.is_finite:
+            return S.true
+
         return Ge(self, other, evaluate=False)
 
+    def __le__(self, other):
+        other = S(other)
+        if self.args[0].is_real:
+            if other.is_integer:
+                return self.args[0] <= other
+            if other.is_number and other.is_real:
+                return self.args[0] <= floor(other)
+        if self.args[0] == other and other.is_real:
+            return S.false
+        if other is S.Infinity and self.is_finite:
+            return S.true
+
+        return Le(self, other, evaluate=False)
 
 class frac(Function):
     r"""Represents the fractional part of x
@@ -254,7 +357,7 @@ class frac(Function):
     For real numbers it is defined [1]_ as
 
     .. math::
-        x - \lfloor{x}\rfloor
+        x - \left\lfloor{x}\right\rfloor
 
     Examples
     ========
@@ -293,7 +396,7 @@ class frac(Function):
     References
     ===========
 
-    .. [1] http://en.wikipedia.org/wiki/Fractional_part
+    .. [1] https://en.wikipedia.org/wiki/Fractional_part
     .. [2] http://mathworld.wolfram.com/FractionalPart.html
 
     """
@@ -310,7 +413,7 @@ class frac(Function):
                 if arg is S.NaN:
                     return S.NaN
                 elif arg is S.ComplexInfinity:
-                    return None
+                    return S.NaN
                 else:
                     return arg - floor(arg)
             return cls(arg, evaluate=False)
@@ -333,14 +436,96 @@ class frac(Function):
         imag = _eval(imag)
         return real + S.ImaginaryUnit*imag
 
-    def _eval_rewrite_as_floor(self, arg):
+    def _eval_rewrite_as_floor(self, arg, **kwargs):
         return arg - floor(arg)
 
-    def _eval_rewrite_as_ceiling(self, arg):
+    def _eval_rewrite_as_ceiling(self, arg, **kwargs):
         return arg + ceiling(-arg)
 
     def _eval_Eq(self, other):
         if isinstance(self, frac):
             if (self.rewrite(floor) == other) or \
                     (self.rewrite(ceiling) == other):
+                return S.true
+            # Check if other < 0
+            if other.is_extended_negative:
+                return S.false
+            # Check if other >= 1
+            res = self._value_one_or_more(other)
+            if res is not None:
+                return S.false
+
+    def _eval_is_finite(self):
+        return True
+
+    def _eval_is_real(self):
+        return self.args[0].is_extended_real
+
+    def _eval_is_imaginary(self):
+        return self.args[0].is_imaginary
+
+    def _eval_is_integer(self):
+        return self.args[0].is_integer
+
+    def _eval_is_zero(self):
+        return fuzzy_or([self.args[0].is_zero, self.args[0].is_integer])
+
+    def _eval_is_negative(self):
+        return False
+
+    def __ge__(self, other):
+        if self.is_extended_real:
+            other = _sympify(other)
+            # Check if other <= 0
+            if other.is_extended_nonpositive:
+                return S.true
+            # Check if other >= 1
+            res = self._value_one_or_more(other)
+            if res is not None:
+                return not(res)
+        return Ge(self, other, evaluate=False)
+
+    def __gt__(self, other):
+        if self.is_extended_real:
+            other = _sympify(other)
+            # Check if other < 0
+            res = self._value_one_or_more(other)
+            if res is not None:
+                return not(res)
+            # Check if other >= 1
+            if other.is_extended_negative:
+                return S.true
+        return Gt(self, other, evaluate=False)
+
+    def __le__(self, other):
+        if self.is_extended_real:
+            other = _sympify(other)
+            # Check if other < 0
+            if other.is_extended_negative:
+                return S.false
+            # Check if other >= 1
+            res = self._value_one_or_more(other)
+            if res is not None:
+                return res
+        return Le(self, other, evaluate=False)
+
+    def __lt__(self, other):
+        if self.is_extended_real:
+            other = _sympify(other)
+            # Check if other <= 0
+            if other.is_extended_nonpositive:
+                return S.false
+            # Check if other >= 1
+            res = self._value_one_or_more(other)
+            if res is not None:
+                return res
+        return Lt(self, other, evaluate=False)
+
+    def _value_one_or_more(self, other):
+        if other.is_extended_real:
+            if other.is_number:
+                res = other >= 1
+                if res and not isinstance(res, Relational):
+                    return S.true
+            if other.is_integer and other.is_positive:
                 return S.true

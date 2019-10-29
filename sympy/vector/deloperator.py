@@ -1,6 +1,5 @@
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core import Basic
-from sympy.vector.vector import Vector
 from sympy.vector.operators import gradient, divergence, curl
 
 

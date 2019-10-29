@@ -282,10 +282,21 @@ class IntQubitState(QubitState):
     """A base class for qubits that work with binary representations."""
 
     @classmethod
-    def _eval_args(cls, args):
+    def _eval_args(cls, args, nqubits=None):
         # The case of a QubitState instance
         if len(args) == 1 and isinstance(args[0], QubitState):
             return QubitState._eval_args(args)
+        # otherwise, args should be integer
+        elif not all((isinstance(a, (int, Integer)) for a in args)):
+            raise ValueError('values must be integers, got (%s)' % (tuple(type(a) for a in args),))
+        # use nqubits if specified
+        if nqubits is not None:
+            if not isinstance(nqubits, (int, Integer)):
+                raise ValueError('nqubits must be an integer, got (%s)' % type(nqubits))
+            if len(args) != 1:
+                raise ValueError(
+                    'too many positional arguments (%s). should be (number, nqubits=n)' % (args,))
+            return cls._eval_args_with_nqubits(args[0], nqubits)
         # For a single argument, we construct the binary representation of
         # that integer with the minimal number of bits.
         if len(args) == 1 and args[0] > 1:
@@ -296,14 +307,18 @@ class IntQubitState(QubitState):
         # For two numbers, the second number is the number of bits
         # on which it is expressed, so IntQubit(0,5) == |00000>.
         elif len(args) == 2 and args[1] > 1:
-            need = bitcount(abs(args[0]))
-            if args[1] < need:
-                raise ValueError(
-                    'cannot represent %s with %s bits' % (args[0], args[1]))
-            qubit_values = [(args[0] >> i) & 1 for i in reversed(range(args[1]))]
-            return QubitState._eval_args(qubit_values)
+            return cls._eval_args_with_nqubits(args[0], args[1])
         else:
             return QubitState._eval_args(args)
+
+    @classmethod
+    def _eval_args_with_nqubits(cls, number, nqubits):
+        need = bitcount(abs(number))
+        if nqubits < need:
+            raise ValueError(
+                'cannot represent %s with %s bits' % (number, nqubits))
+        qubit_values = [(number >> i) & 1 for i in reversed(range(nqubits))]
+        return QubitState._eval_args(qubit_values)
 
     def as_int(self):
         """Return the numerical value of the qubit."""
@@ -341,9 +356,17 @@ class IntQubit(IntQubitState, Qubit):
     values : int, tuple
         If a single argument, the integer we want to represent in the qubit
         values. This integer will be represented using the fewest possible
-        number of qubits. If a pair of integers, the first integer gives the
-        integer to represent in binary form and the second integer gives
-        the number of qubits to use.
+        number of qubits.
+        If a pair of integers and the second value is more than one, the first
+        integer gives the integer to represent in binary form and the second
+        integer gives the number of qubits to use.
+        List of zeros and ones is also accepted to generate qubit by bit pattern.
+
+    nqubits : int
+        The integer that represents the number of qubits.
+        This number should be passed with keyword ``nqubits=N``.
+        You can use this in order to avoid ambiguity of Qubit-style tuple of bits.
+        Please see the example below for more details.
 
     Examples
     ========
@@ -372,6 +395,21 @@ class IntQubit(IntQubitState, Qubit):
 
         >>> Qubit(q)
         |101>
+
+    Please note that ``IntQubit`` also accepts a ``Qubit``-style list of bits.
+    So, the code below yields qubits 3, not a single bit ``1``.
+
+        >>> IntQubit(1, 1)
+        |3>
+
+    To avoid ambiguity, use ``nqubits`` parameter.
+    Use of this keyword is recommended especially when you provide the values by variables.
+
+        >>> IntQubit(1, nqubits=1)
+        |1>
+        >>> a = 1
+        >>> IntQubit(a, nqubits=1)
+        |1>
     """
     @classmethod
     def dual_class(self):
@@ -541,7 +579,7 @@ def measure_all(qubit, format='sympy', normalize=True):
         for i in range(size):
             if m[i] != 0.0:
                 results.append(
-                    (Qubit(IntQubit(i, nqubits)), m[i]*conjugate(m[i]))
+                    (Qubit(IntQubit(i, nqubits=nqubits)), m[i]*conjugate(m[i]))
                 )
         return results
     else:

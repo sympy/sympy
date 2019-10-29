@@ -1,8 +1,9 @@
 import math
 from sympy import (
-    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Symbol, Tuple, Lt, nan, oo
+    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin,
+    symbols, Symbol, Tuple, Lt, nan, oo
 )
-from sympy.core.relational import Relational, StrictLessThan
+from sympy.core.relational import StrictLessThan
 from sympy.utilities.pytest import raises, XFAIL
 
 
@@ -27,12 +28,6 @@ B22 = MatrixSymbol('B22',2,2)
 
 
 def test_Assignment():
-    x, y = symbols("x, y")
-    A = MatrixSymbol('A', 3, 1)
-    mat = Matrix([1, 2, 3])
-    B = IndexedBase('B')
-    n = symbols("n", integer=True)
-    i = Idx("i", n)
     # Here we just do things to show they don't error
     Assignment(x, y)
     Assignment(x, 0)
@@ -43,6 +38,7 @@ def test_Assignment():
     Assignment(B[i], 0)
     a = Assignment(x, y)
     assert a.func(*a.args) == a
+    assert a.op == ':='
     # Here we test things to show that they error
     # Matrix to scalar
     raises(ValueError, lambda: Assignment(B[i], A))
@@ -60,7 +56,6 @@ def test_Assignment():
     raises(TypeError, lambda: Assignment(A + A, mat))
     raises(TypeError, lambda: Assignment(B, 0))
 
-    assert Relational(x, y, ':=') == Assignment(x, y)
 
 def test_AugAssign():
     # Here we just do things to show they don't error
@@ -72,25 +67,19 @@ def test_AugAssign():
     aug_assign(B[i], '+', x)
     aug_assign(B[i], '+', 0)
 
-    a = aug_assign(x, '+', y)
-    b = AddAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '-', y)
-    b = SubAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '*', y)
-    b = MulAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '/', y)
-    b = DivAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '%', y)
-    b = ModAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
+    # Check creation via aug_assign vs constructor
+    for binop, cls in [
+            ('+', AddAugmentedAssignment),
+            ('-', SubAugmentedAssignment),
+            ('*', MulAugmentedAssignment),
+            ('/', DivAugmentedAssignment),
+            ('%', ModAugmentedAssignment),
+        ]:
+        a = aug_assign(x, binop, y)
+        b = cls(x, y)
+        assert a.func(*a.args) == a == b
+        assert a.binop == binop
+        assert a.op == binop + '='
 
     # Here we test things to show that they error
     # Matrix to scalar
@@ -108,6 +97,29 @@ def test_AugAssign():
     raises(TypeError, lambda: aug_assign(x * x, '+', 1))
     raises(TypeError, lambda: aug_assign(A + A, '+', mat))
     raises(TypeError, lambda: aug_assign(B, '+', 0))
+
+
+def test_Assignment_printing():
+    assignment_classes = [
+        Assignment,
+        AddAugmentedAssignment,
+        SubAugmentedAssignment,
+        MulAugmentedAssignment,
+        DivAugmentedAssignment,
+        ModAugmentedAssignment,
+    ]
+    pairs = [
+        (x, 2 * y + 2),
+        (B[i], x),
+        (A22, B22),
+        (A[0, 0], x),
+    ]
+
+    for cls in assignment_classes:
+        for lhs, rhs in pairs:
+            a = cls(lhs, rhs)
+            assert repr(a) == '%s(%s, %s)' % (cls.__name__, repr(lhs), repr(rhs))
+
 
 def test_CodeBlock():
     c = CodeBlock(Assignment(x, 1), Assignment(y, x + 1))
@@ -482,8 +494,9 @@ def test_FloatType():
     assert isinstance(f64.cast_check(3), (Float, float))
 
     assert f64.cast_nocheck(oo) == float('inf')
-    assert f64.cast_nocheck(-oo) == -float('inf')
-    assert f64.cast_nocheck(-oo) == -float('inf')
+    assert f64.cast_nocheck(-oo) == float('-inf')
+    assert f64.cast_nocheck(float(oo)) == float('inf')
+    assert f64.cast_nocheck(float(-oo)) == float('-inf')
     assert math.isnan(f64.cast_nocheck(nan))
 
     assert f32 != f64
@@ -606,12 +619,22 @@ def test_FunctionCall():
     fc = FunctionCall('power', (x, 3))
     assert fc.function_args[0] == x
     assert fc.function_args[1] == 3
+    assert len(fc.function_args) == 2
     assert isinstance(fc.function_args[1], Integer)
     assert fc == FunctionCall('power', (x, 3))
     assert fc != FunctionCall('power', (3, x))
     assert fc != FunctionCall('Power', (x, 3))
     assert fc.func(*fc.args) == fc
 
+    fc2 = FunctionCall('fma', [2, 3, 4])
+    assert len(fc2.function_args) == 3
+    assert fc2.function_args[0] == 2
+    assert fc2.function_args[1] == 3
+    assert fc2.function_args[2] == 4
+    assert str(fc2) in ( # not sure if QuotedString is a better default...
+        'FunctionCall(fma, function_args=(2, 3, 4))',
+        'FunctionCall("fma", function_args=(2, 3, 4))',
+    )
 
 def test_ast_replace():
     x = Variable('x', real)

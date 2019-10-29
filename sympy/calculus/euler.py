@@ -62,7 +62,7 @@ def euler_equations(L, funcs=(), vars=()):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Lagrange_equation
+    .. [1] https://en.wikipedia.org/wiki/Euler%E2%80%93Lagrange_equation
 
     """
 
@@ -98,6 +98,6 @@ def euler_equations(L, funcs=(), vars=()):
         for i in range(1, order + 1):
             for p in combinations_with_replacement(vars, i):
                 eq = eq + S.NegativeOne**i*diff(L, diff(f, *p), *p)
-        eqns.append(Eq(eq))
+        eqns.append(Eq(eq, 0))
 
     return eqns

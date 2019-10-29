@@ -61,7 +61,7 @@ class Medium(Symbol):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Optical_medium
+    .. [1] https://en.wikipedia.org/wiki/Optical_medium
 
     """
 
@@ -71,11 +71,11 @@ class Medium(Symbol):
         obj._permeability = sympify(permeability)
         obj._n = sympify(n)
         if n is not None:
-            if permittivity != None and permeability == None:
+            if permittivity is not None and permeability is None:
                 obj._permeability = n**2/(c**2*obj._permittivity)
-            if permeability != None and permittivity == None:
+            if permeability is not None and permittivity is None:
                 obj._permittivity = n**2/(c**2*obj._permeability)
-            if permittivity != None and permittivity != None:
+            if permittivity is not None and permittivity is not None:
                 if abs(n - c*sqrt(obj._permittivity*obj._permeability)) > 1e-6:
                    raise ValueError("Values are not consistent.")
         elif permittivity is not None and permeability is not None:
@@ -120,9 +120,15 @@ class Medium(Symbol):
         >>> m = Medium('m')
         >>> m.speed
         299792458*meter/second
+        >>> m2 = Medium('m2', n=1)
+        >>> m.speed == m2.speed
+        True
 
         """
-        return 1/sqrt(self._permittivity*self._permeability)
+        if self._permittivity is not None and self._permeability is not None:
+            return 1/sqrt(self._permittivity*self._permeability)
+        else:
+            return c/self._n
 
     @property
     def refractive_index(self):
@@ -174,7 +180,8 @@ class Medium(Symbol):
 
     def __str__(self):
         from sympy.printing import sstr
-        return type(self).__name__ + sstr(self.args)
+        return type(self).__name__ + ': ' + sstr([self._permittivity,
+                self._permeability, self._n])
 
     def __lt__(self, other):
         """
