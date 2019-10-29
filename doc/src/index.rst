@@ -30,3 +30,4 @@ Contents:
    outreach.rst
    aboutus.rst
    citing.rst
+   documentation-style-guide.rst
