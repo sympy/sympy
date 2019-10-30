@@ -4,10 +4,12 @@ from sympy.vector import (CoordSys3D, Vector, Dyadic,
                           DyadicAdd, DyadicMul, DyadicZero,
                           BaseDyadic, express)
 
+from sympy.utilities.pytest import nocache_fail
 
 A = CoordSys3D('A')
 
 
+@nocache_fail
 def test_dyadic():
     a, b = symbols('a, b')
     assert Dyadic.zero != 0

@@ -12,7 +12,7 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, nocache_fail
 
 from sympy.abc import x, y, z, k
 n = Symbol('n', integer=True, positive=True)
@@ -547,6 +547,7 @@ def test_issue_15984():
     assert limit((-x + log(exp(x) + 1))/x, x, oo, dir='-').doit() == 0
 
 
+@nocache_fail
 def test_issue_13575():
     # This fails with infinite recursion when run without the cache:
     result = limit(acos(erfi(x)), x, 1)

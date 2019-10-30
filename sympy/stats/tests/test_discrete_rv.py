@@ -11,7 +11,7 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    Poisson, Geometric, Logarithmic, NegativeBinomial, Skellam,
                                    YuleSimon, Zeta)
 from sympy.stats.rv import sample
-from sympy.utilities.pytest import slow, raises
+from sympy.utilities.pytest import slow, nocache_fail
 
 x = Symbol('x')
 
@@ -51,6 +51,7 @@ def test_Logarithmic():
     assert isinstance(E(x, evaluate=False), Sum)
 
 
+@nocache_fail
 def test_negative_binomial():
     r = 5
     p = S.One / 3
