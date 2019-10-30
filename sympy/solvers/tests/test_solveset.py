@@ -274,7 +274,10 @@ def test_garbage_input():
 
 def test_solve_mul():
     assert solveset_real((a*x + b)*(exp(x) - 3), x) == \
-        FiniteSet(-b/a, log(3))
+        Union({log(3)}, Intersection({-b/a}, S.Reals))
+    anz = Symbol('anz', nonzero=True)
+    assert solveset_real((anz*x + b)*(exp(x) - 3), x) == \
+        FiniteSet(-b/anz, log(3))
     assert solveset_real((2*x + 8)*(8 + exp(x)), x) == FiniteSet(S(-4))
     assert solveset_real(x/log(x), x) == EmptySet()
 
@@ -1717,6 +1720,12 @@ def test_issue_14987():
 
 def test_simplification():
     eq = x + (a - b)/(-2*a + 2*b)
+    assert solveset(eq, x) == FiniteSet(S.Half)
+    assert solveset(eq, x, S.Reals) == Intersection({-((a - b)/(-2*a + 2*b))}, S.Reals)
+    # So that ap - bn is not zero:
+    ap = Symbol('ap', positive=True)
+    bn = Symbol('bn', negative=True)
+    eq = x + (ap - bn)/(-2*ap + 2*bn)
     assert solveset(eq, x) == FiniteSet(S.Half)
     assert solveset(eq, x, S.Reals) == FiniteSet(S.Half)
 
