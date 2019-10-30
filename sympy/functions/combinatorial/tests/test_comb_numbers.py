@@ -14,7 +14,7 @@ from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
 
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, nocache_fail
 
 
 x = Symbol('x')
@@ -131,6 +131,7 @@ def test_tribonacci():
     raises(ValueError, lambda: tribonacci(-1, x))
 
 
+@nocache_fail
 def test_bell():
     assert [bell(n) for n in range(8)] == [1, 1, 2, 5, 15, 52, 203, 877]
 
