@@ -1476,42 +1476,27 @@ class Expr(Basic, EvalfMixin):
         if self_c and not x_c:
             return S.Zero
 
-        if self_c:
-            xargs = x.args_cnc(cset=True, warn=False)[0]
-            for a in args:
-                margs = a.args_cnc(cset=True, warn=False)[0]
-                if len(xargs) > len(margs):
-                    continue
-                resid = margs.difference(xargs)
-                if len(resid) + len(xargs) == len(margs):
-                    co.append(Mul(*resid))
-            if co == []:
-                return S.Zero
-            elif co:
-                return Add(*co)
-        elif x_c:
-            xargs = x.args_cnc(cset=True, warn=False)[0]
-            for a in args:
-                margs, nc = a.args_cnc(cset=True)
-                if len(xargs) > len(margs):
-                    continue
-                resid = margs.difference(xargs)
-                if len(resid) + len(xargs) == len(margs):
+        one_c = self_c or x_c
+        xargs, nx = x.args_cnc(cset=True, warn=bool(not x_c))
+        # find the parts that pass the commutative terms
+        for a in args:
+            margs, nc = a.args_cnc(cset=True, warn=bool(not self_c))
+            if nc is None:
+                nc = []
+            if len(xargs) > len(margs):
+                continue
+            resid = margs.difference(xargs)
+            if len(resid) + len(xargs) == len(margs):
+                if one_c:
                     co.append(Mul(*(list(resid) + nc)))
+                else:
+                    co.append((resid, nc))
+        if one_c:
             if co == []:
                 return S.Zero
             elif co:
                 return Add(*co)
         else:  # both nc
-            xargs, nx = x.args_cnc(cset=True)
-            # find the parts that pass the commutative terms
-            for a in args:
-                margs, nc = a.args_cnc(cset=True)
-                if len(xargs) > len(margs):
-                    continue
-                resid = margs.difference(xargs)
-                if len(resid) + len(xargs) == len(margs):
-                    co.append((resid, nc))
             # now check the non-comm parts
             if not co:
                 return S.Zero
