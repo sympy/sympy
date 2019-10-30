@@ -1990,11 +1990,10 @@ def test_exponential_symbols():
     w = symbols('w')
     f1 = 2*x**w - 4*y**w
     f2 = (x/y)**w - 2
-    ans1 = solveset(f1, w, S.Reals)
-    ans2 = solveset(f2, w, S.Reals)
-    assert len(ans1) == len(ans2) == 1
-    a1, a2 = [list(i)[0] for i in (ans1, ans2)]
-    assert a1.equals(a2)
+    sol1 = Intersection({log(2)/(log(x) - log(y))}, S.Reals)
+    sol2 = Intersection({log(2)/log(x/y)}, S.Reals)
+    assert solveset(f1, w, S.Reals) == sol1
+    assert solveset(f2, w, S.Reals) == sol2
 
     assert solveset(x**x, x, S.Reals) == S.EmptySet
     assert solveset(x**y - 1, y, S.Reals) == FiniteSet(0)
