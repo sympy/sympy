@@ -286,7 +286,7 @@ class BlockDiagMatrix(BlockMatrix):
 
     See Also
     ========
-    sympy.matrices.common.diag
+    sympy.matrices.dense.diag
     """
     def __new__(cls, *mats):
         return Basic.__new__(BlockDiagMatrix, *mats)

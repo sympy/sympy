@@ -59,7 +59,7 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
     See Also
     ========
 
-    See the docstring of Expr.series() for complete details of this wrapper.
+    sympy.core.expr.Expr.series: See the docstring of Expr.series() for complete details of this wrapper.
     """
     expr = sympify(expr)
     return expr.series(x, x0, n, dir)

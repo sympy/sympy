@@ -13,6 +13,9 @@ class ReorderError(NotImplementedError):
             "%s could not be reordered: %s." % (expr, msg))
 
 class ExprWithIntLimits(ExprWithLimits):
+    """
+    Superclass for Product and Sum
+    """
     def change_index(self, var, trafo, newvar=None):
         r"""
         Change index of a Sum or Product.
@@ -96,10 +99,11 @@ class ExprWithIntLimits(ExprWithLimits):
         See Also
         ========
 
-        sympy.concrete.simplification.index,
-        sympy.concrete.simplification.reorder_limit,
-        sympy.concrete.simplification.reorder,
-        sympy.concrete.simplification.reverse_order
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.index,
+        reorder_limit,
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.reorder,
+        sympy.concrete.summations.Sum.reverse_order,
+        sympy.concrete.products.Product.reverse_order
         """
         if newvar is None:
             newvar = var
@@ -159,7 +163,8 @@ class ExprWithIntLimits(ExprWithLimits):
         See Also
         ========
 
-        reorder_limit, reorder, reverse_order
+        reorder_limit, reorder, sympy.concrete.summations.Sum.reverse_order,
+        sympy.concrete.products.Product.reverse_order
         """
         variables = [limit[0] for limit in expr.limits]
 
@@ -211,7 +216,8 @@ class ExprWithIntLimits(ExprWithLimits):
         See Also
         ========
 
-        reorder_limit, index, reverse_order
+        reorder_limit, index, sympy.concrete.summations.Sum.reverse_order,
+        sympy.concrete.products.Product.reverse_order
         """
         new_expr = expr
 
@@ -261,7 +267,8 @@ class ExprWithIntLimits(ExprWithLimits):
         See Also
         ========
 
-        index, reorder, reverse_order
+        index, reorder, sympy.concrete.summations.Sum.reverse_order,
+        sympy.concrete.products.Product.reverse_order
         """
         var = {limit[0] for limit in expr.limits}
         limit_x = expr.limits[x]

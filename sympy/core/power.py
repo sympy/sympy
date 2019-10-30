@@ -113,8 +113,9 @@ def integer_nthroot(y, n):
 
 
 def integer_log(y, x):
-    """Returns (e, bool) where e is the largest nonnegative integer
-    such that |y| >= |x**e| and bool is True if y == x**e
+    r"""
+    Returns ``(e, bool)`` where e is the largest nonnegative integer
+    such that :math:`|y| \geq |x^e|` and ``bool`` is True if $y = x^e$.
 
     Examples
     ========

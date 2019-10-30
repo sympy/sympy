@@ -30,6 +30,8 @@ __all__ = [
     'FockStateKet',
     'FockStateBosonKet',
     'FockStateBosonBra',
+    'FockStateFermionKet',
+    'FockStateFermionBra',
     'BBra',
     'BKet',
     'FBra',

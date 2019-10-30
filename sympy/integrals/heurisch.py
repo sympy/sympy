@@ -349,7 +349,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
-    components
+    sympy.integrals.heurisch.components
     """
     f = sympify(f)
 

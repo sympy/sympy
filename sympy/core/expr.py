@@ -489,7 +489,7 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        sympy.core.basic.is_comparable
+        sympy.core.basic.Basic.is_comparable
         """
         return all(obj.is_number for obj in self.args)
 
@@ -1377,8 +1377,8 @@ class Expr(Basic, EvalfMixin):
         as_coeff_Add: separate the additive constant from an expression
         as_coeff_Mul: separate the multiplicative constant from an expression
         as_independent: separate x-dependent terms/factors from others
-        sympy.polys.polytools.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
-        sympy.polys.polytools.nth: like coeff_monomial but powers of monomial terms are used
+        sympy.polys.polytools.Poly.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
+        sympy.polys.polytools.Poly.nth: like coeff_monomial but powers of monomial terms are used
 
         Examples
         ========
@@ -1719,8 +1719,8 @@ class Expr(Basic, EvalfMixin):
         as_coeff_Add: separate the additive constant from an expression
         as_coeff_Mul: separate the multiplicative constant from an expression
         as_independent: separate x-dependent terms/factors from others
-        sympy.polys.polytools.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
-        sympy.polys.polytools.nth: like coeff_monomial but powers of monomial terms are used
+        sympy.polys.polytools.Poly.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
+        sympy.polys.polytools.Poly.nth: like coeff_monomial but powers of monomial terms are used
 
 
         """
@@ -1856,8 +1856,8 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        .separatevars(), .expand(log=True), Add.as_two_terms(),
-        Mul.as_two_terms(), .as_coeff_add(), .as_coeff_mul()
+        .separatevars(), .expand(log=True), sympy.core.add.Add.as_two_terms(),
+        sympy.core.mul.Mul.as_two_terms(), .as_coeff_add(), .as_coeff_mul()
         """
         from .symbol import Symbol
         from .add import _unevaluated_Add
@@ -3065,7 +3065,7 @@ class Expr(Basic, EvalfMixin):
         See Also
         ========
 
-        See the docstring of Expr.aseries() for complete details of this wrapper.
+        Expr.aseries: See the docstring of this function for complete details of this wrapper.
         """
 
         from sympy import Order, Dummy
