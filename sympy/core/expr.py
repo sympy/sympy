@@ -2126,6 +2126,8 @@ class Expr(Basic, EvalfMixin):
             x = self.extract_multiplicatively(a)
             if x is not None:
                 return x.extract_multiplicatively(b)
+            else:
+                return x
 
         quotient = self / c
         if self.is_Number:
