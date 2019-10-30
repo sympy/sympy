@@ -6,7 +6,7 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import range
 from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
         expand_mul)
-from sympy.core.logic import fuzzy_and, fuzzy_not
+from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational
 from sympy.core.power import Pow
@@ -402,7 +402,10 @@ class exp(ExpBase):
             return arg2.is_even
 
     def _eval_is_complex(self):
-        return self.args[0].is_complex
+        def complex_extended_negative(arg):
+            yield arg.is_complex
+            yield arg.is_extended_negative
+        return fuzzy_or(complex_extended_negative(self.args[0]))
 
     def _eval_is_algebraic(self):
         s = self.func(*self.args)
