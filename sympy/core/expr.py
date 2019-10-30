@@ -329,98 +329,55 @@ class Expr(Basic, EvalfMixin):
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
-    def __ge__(self, other):
-        from sympy import GreaterThan
+    def _cmp(self, other, op, cls):
+        assert op in ("<", ">", "<=", ">=")
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
+            raise TypeError("Invalid comparison %s %s %s" % (self, op, other))
         for me in (self, other):
             if me.is_extended_real is False:
                 raise TypeError("Invalid comparison of non-real %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+
         n2 = _n2(self, other)
         if n2 is not None:
-            return _sympify(n2 >= 0)
+            return eval("_sympify(n2 %s 0)" % op)
+
         if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_positive) \
-                    or (other.is_infinite and other.is_extended_negative):
-                return S.true
-            nneg = (self - other).is_extended_nonnegative
-            if nneg is not None:
-                return sympify(nneg)
-        return GreaterThan(self, other, evaluate=False)
+            # this should work for infinite values as well,
+            # so we don't need a separate check
+            diff = self - other
+            if diff is not S.NaN:
+                test = eval("diff.%s" %
+                            {"<": "is_extended_negative",
+                             ">": "is_extended_positive",
+                             "<=": "is_extended_nonpositive",
+                             ">=": "is_extended_nonnegative"}[op])
+                if test is not None:
+                    return sympify(test)
+            else: # e.g. oo > oo
+                raise ValueError("Undefined comparison of infinite values")
+
+        # return unevaluated comparison object
+        return cls(self, other, evaluate=False)
+
+    def __ge__(self, other):
+        from sympy import GreaterThan
+        return self._cmp(other, ">=", GreaterThan)
 
     def __le__(self, other):
         from sympy import LessThan
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        for me in (self, other):
-            if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of non-real %s" % me)
-            if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
-        n2 = _n2(self, other)
-        if n2 is not None:
-            return _sympify(n2 <= 0)
-        if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_negative) \
-                    or (other.is_infinite and other.is_extended_positive):
-                return S.true
-            npos = (self - other).is_extended_nonpositive
-            if npos is not None:
-                return sympify(npos)
-        return LessThan(self, other, evaluate=False)
+        return self._cmp(other, "<=", LessThan)
 
     def __gt__(self, other):
         from sympy import StrictGreaterThan
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
-        for me in (self, other):
-            if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of non-real %s" % me)
-            if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
-        n2 = _n2(self, other)
-        if n2 is not None:
-            return _sympify(n2 > 0)
-
-        if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_negative) \
-                    or (other.is_infinite and other.is_extended_positive):
-                return S.false
-            pos = (self - other).is_extended_positive
-            if pos is not None:
-                return sympify(pos)
-        return StrictGreaterThan(self, other, evaluate=False)
+        return self._cmp(other, ">", StrictGreaterThan)
 
     def __lt__(self, other):
         from sympy import StrictLessThan
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
-        for me in (self, other):
-            if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of non-real %s" % me)
-            if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
-        n2 = _n2(self, other)
-        if n2 is not None:
-            return _sympify(n2 < 0)
-        if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_positive) \
-                    or (other.is_infinite and other.is_extended_negative):
-                return S.false
-            neg = (self - other).is_extended_negative
-            if neg is not None:
-                return sympify(neg)
-        return StrictLessThan(self, other, evaluate=False)
+        return self._cmp(other, "<", StrictLessThan)
 
     def __trunc__(self):
         if not self.is_number:
