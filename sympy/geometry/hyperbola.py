@@ -82,7 +82,8 @@ class Hyperbola(GeometrySet):
     Examples
     ========
 
-    >>> from sympy import Hyperbola, Point, Rational
+    >>> from sympy import Point, Rational
+    >>> from sympy.geometry.hyperbola import Hyperbola
     >>> h1 = Hyperbola(Point(0, 0), 5, 1)
     >>> h1.hradius, h1.vradius
     (5, 1)
@@ -181,7 +182,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola
+        >>> from sympy import Point
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> p1 = Point(0,0)
         >>> h1 = Hyperbola(p1, 3, 1)
         >>> h1.center
@@ -213,7 +215,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola, sqrt
+        >>> from sympy import Point, sqrt
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> p1 = Point(0, 0)
         >>> h1 = Hyperbola(p1, 3, sqrt(2))
         >>> h1.eccentricity
@@ -245,7 +248,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola
+        >>> from sympy import Point
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> p1 = Point(0, 0)
         >>> h1 = Hyperbola(p1, 3, 1)
         >>> h1.foci
@@ -276,7 +280,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola, Symbol
+        >>> from sympy import Point, Symbol
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> p1 = Point(0, 0)
         >>> h1 = Hyperbola(p1, 3, 1)
         >>> h1.major
@@ -318,7 +323,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola, Symbol
+        >>> from sympy import Point, Symbol
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> p1 = Point(0, 0)
         >>> h1 = Hyperbola(p1, 3, 1)
         >>> h1.minor
@@ -362,7 +368,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola
+        >>> from sympy import Point
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> p1 = Point(0, 0)
         >>> h1 = Hyperbola(p1, 3, 1)
         >>> h1.focus_distance
@@ -388,7 +395,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola
+        >>> from sympy import Point
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> p1 = Point(0, 0)
         >>> h1 = Hyperbola(p1, 3, 1)
         >>> h1.semilatus_rectum
@@ -404,7 +412,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Circle, Hyperbola, Point, symbols
+        >>> from sympy import Circle, Point, symbols
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> c = Point(1, 2)
         >>> h1 = Hyperbola(c, 8, 7)
         >>> h1.auxilary_circle()
@@ -432,9 +441,10 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Circle, Hyperbola, Point, symbols
+        >>> from sympy import Circle, Point, symbols
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> c = Point(3,8)
-        >>> Hyperbola(c, 7, 9).director_circle
+        >>> Hyperbola(c, 9, 7).director_circle
         Circle(Point2D(3, 8), 4*sqrt(2))
         >>> Hyperbola(c, 7, 7).director_circle
         Point2D(3, 8)
@@ -476,7 +486,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola
+        >>> from sympy import Point
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> h1 = Hyperbola(Point(0, 0), 3, 2)
         >>> h1.arbitrary_point()
         Point2D(3*sec(t), 2*tan(t))
@@ -519,7 +530,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola, pi
+        >>> from sympy import Point, pi
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> from sympy.abc import x, y
         >>> h1 = Hyperbola(Point(1, 0), 3, 2)
         >>> eq1 = h1.equation(x, y); eq1
@@ -578,7 +590,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola
+        >>> from sympy import Point
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> h1 = Hyperbola(Point(1, 0), 3, 2)
         >>> h1.evolute()
         -2**(2/3)*y**(2/3) + (3*x - 3)**(2/3) - 5**(2/3)
@@ -619,7 +632,8 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Hyperbola, Point, Line, sqrt
+        >>> from sympy import Point, Line, sqrt
+        >>> from sympy.geometry.hyperbola import Hyperbola
         >>> e = Hyperbola(Point(0, 0), 5, 7)
         >>> e.intersection(Point(0, 0))
         []
