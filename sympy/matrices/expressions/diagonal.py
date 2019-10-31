@@ -155,7 +155,7 @@ class DiagonalOf(MatrixExpr):
         return self.arg._entry(i, i, **kwargs)
 
 
-class DiagonalizeVector(MatrixExpr):
+class DiagMatrix(MatrixExpr):
     """
     Turn a vector into a diagonal matrix.
     """
@@ -209,11 +209,11 @@ class DiagonalizeVector(MatrixExpr):
             matrices = [arg for arg in vector.args if arg.is_Matrix]
             scalars = [arg for arg in vector.args if arg not in matrices]
             if scalars:
-                return Mul.fromiter(scalars)*DiagonalizeVector(MatMul.fromiter(matrices).doit()).doit()
+                return Mul.fromiter(scalars)*DiagMatrix(MatMul.fromiter(matrices).doit()).doit()
         if isinstance(vector, Transpose):
             vector = vector.arg
-        return DiagonalizeVector(vector)
+        return DiagMatrix(vector)
 
 
 def diagonalize_vector(vector):
-    return DiagonalizeVector(vector).doit()
+    return DiagMatrix(vector).doit()
