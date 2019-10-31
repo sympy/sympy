@@ -15,6 +15,13 @@ class ReorderError(NotImplementedError):
 class ExprWithIntLimits(ExprWithLimits):
     """
     Superclass for Product and Sum
+
+    See Also
+    ========
+
+    sympy.concrete.expr_with_limits.ExprWithLimits
+    sympy.concrete.products.Product
+    sympy.concrete.summations.Sum
     """
     def change_index(self, var, trafo, newvar=None):
         r"""
