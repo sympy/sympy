@@ -357,6 +357,14 @@ class Expr(Basic, EvalfMixin):
                 return _sympify(n2 >= 0)
 
         if self.is_extended_real and other.is_extended_real:
+            if op in ("<=", ">") \
+                and ((self.is_infinite and self.is_extended_negative) \
+                        or (other.is_infinite and other.is_extended_positive)):
+                return S.true if op == "<=" else S.false
+            if op in ("<", ">=") \
+                and ((self.is_infinite and self.is_extended_positive) \
+                        or (other.is_infinite and other.is_extended_negative)):
+                return S.true if op == ">=" else S.false
             diff = self - other
             if diff is not S.NaN:
                 if op == "<":
@@ -364,12 +372,8 @@ class Expr(Basic, EvalfMixin):
                 elif op == ">":
                     test = sympify(diff.is_extended_positive)
                 else: # <= or >=
-                    if (self.is_infinite and self.is_extended_negative) \
-                            or (other.is_infinite and other.is_extended_positive):
-                        test = S.true if op == "<=" else S.false
-                    elif (self.is_infinite and self.is_extended_positive) \
-                            or (other.is_infinite and other.is_extended_negative):
-                        test = S.true if op == ">=" else S.false
+                    if diff.is_zero:
+                        test = S.true
                     elif op == "<=":
                         test = sympify(diff.is_extended_nonpositive)
                     else:
