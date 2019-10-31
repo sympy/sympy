@@ -683,8 +683,6 @@ class Basic(with_metaclass(ManagedProperties)):
             return False
         if not self.is_number:
             return False
-        if self in (S.NaN, S.NegativeInfinity, S.Infinity):
-            return False
         # don't re-eval numbers that are already evaluated since
         # this will create spurious precision
         n, i = [p.evalf(2) if not p.is_Number else p

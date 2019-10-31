@@ -343,6 +343,10 @@ class Expr(Basic, EvalfMixin):
 
         n2 = _n2(self, other)
         if n2 is not None:
+            # use float comparison for infinity.
+            # otherwise get stuck in infinite recursion
+            if n2 in (S.Infinity, S.NegativeInfinity):
+                n2 = float(n2)
             if op == "<":
                 return _sympify(n2 < 0)
             elif op == ">":
@@ -353,8 +357,6 @@ class Expr(Basic, EvalfMixin):
                 return _sympify(n2 >= 0)
 
         if self.is_extended_real and other.is_extended_real:
-            # this should work for infinite values as well,
-            # so we don't need a separate check
             diff = self - other
             if diff is not S.NaN:
                 if op == "<":
@@ -362,14 +364,25 @@ class Expr(Basic, EvalfMixin):
                 elif op == ">":
                     test = sympify(diff.is_extended_positive)
                 elif op == "<=":
-                    test = sympify(diff.is_extended_nonpositive)
+                    if diff.is_extended_nonpositive is None:
+                        test = None
+                    else:
+                        test = sympify(diff.is_extended_nonpositive or
+                                       self is S.NegativeInfinity or
+                                       other is S.Infinity)
                 else: # >=
-                    test = sympify(diff.is_extended_nonnegative)
+                    if diff.is_extended_nonnegative is None:
+                        test = None
+                    else:
+                        test = sympify(diff.is_extended_nonnegative or
+                                       self is S.Infinity or
+                                       other is S.NegativeInfinity)
 
                 if test is not None:
                     return sympify(test)
-            else: # e.g. oo > oo
-                raise ValueError("Undefined comparison of infinite values")
+            # oo >= oo, etc.
+            elif self == other:
+                return S.false if op in ("<", ">") else S.true
 
         # return unevaluated comparison object
         return cls(self, other, evaluate=False)

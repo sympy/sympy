@@ -2598,6 +2598,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     is_negative = False
     is_zero = True
     is_number = True
+    is_comparable = True
 
     __slots__ = []
 
@@ -2819,6 +2820,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     is_complex = False
     is_extended_real = True
     is_infinite = True
+    is_comparable = True
     is_extended_positive = True
     is_prime = False
 
@@ -2833,6 +2835,9 @@ class Infinity(with_metaclass(Singleton, Number)):
     def _eval_subs(self, old, new):
         if self == old:
             return new
+
+    def evalf(self, prec=None, **options):
+        return Float('inf')
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -2976,6 +2981,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     is_complex = False
     is_commutative = True
     is_infinite = True
+    is_comparable = True
     is_extended_negative = True
     is_number = True
     is_prime = False
@@ -2991,6 +2997,9 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     def _eval_subs(self, old, new):
         if self == old:
             return new
+
+    def evalf(self, prec=None, **options):
+        return Float('-inf')
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
