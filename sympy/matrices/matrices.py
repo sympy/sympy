@@ -601,7 +601,7 @@ class MatrixReductions(MatrixDeterminant):
         if op not in ["n->kn", "n<->m", "n->n+km"]:
             raise ValueError("Unknown {} operation '{}'. Valid col operations "
                              "are 'n->kn', 'n<->m', 'n->n+km'".format(error_str, op))
-            
+
         # define self_col according to error_str
         self_cols = self.cols if error_str == 'col' else self.rows
 
