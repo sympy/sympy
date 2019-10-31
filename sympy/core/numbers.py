@@ -3829,6 +3829,13 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
         elif issubclass(number_cls, Rational):
             return (Rational(9, 10), S.One)
 
+    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
+        from sympy import Sum, Dummy
+        if (k_sym is not None) or (symbols is not None):
+            return self
+        k = Dummy('k', integer=True, nonnegative=True)
+        return Sum((-1)**k / (2*k+1)**2, (k, 0, S.Infinity))
+
     def _sage_(self):
         import sage.all as sage
         return sage.catalan
