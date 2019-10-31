@@ -363,23 +363,18 @@ class Expr(Basic, EvalfMixin):
                     test = sympify(diff.is_extended_negative)
                 elif op == ">":
                     test = sympify(diff.is_extended_positive)
-                elif op == "<=":
-                    if diff.is_extended_nonpositive is None:
-                        test = None
+                else: # <= or >=
+                    if self is S.NegativeInfinity or other is S.Infinity:
+                        test = S.true if op == "<=" else S.false
+                    elif self is S.Infinity or other is S.NegativeInfinity:
+                        test = S.true if op == ">=" else S.false
+                    elif op == "<=":
+                        test = sympify(diff.is_extended_nonpositive)
                     else:
-                        test = sympify(diff.is_extended_nonpositive or
-                                       self is S.NegativeInfinity or
-                                       other is S.Infinity)
-                else: # >=
-                    if diff.is_extended_nonnegative is None:
-                        test = None
-                    else:
-                        test = sympify(diff.is_extended_nonnegative or
-                                       self is S.Infinity or
-                                       other is S.NegativeInfinity)
+                        test = sympify(diff.is_extended_nonnegative)
 
                 if test is not None:
-                    return sympify(test)
+                    return test
             # oo >= oo, etc.
             elif self == other:
                 return S.false if op in ("<", ">") else S.true
