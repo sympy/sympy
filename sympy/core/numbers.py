@@ -2941,45 +2941,10 @@ class Infinity(with_metaclass(Singleton, Number)):
     def __ne__(self, other):
         return other is not S.Infinity and other != float('inf')
 
-    def __lt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if other.is_extended_real:
-            return S.false
-        return Expr.__lt__(self, other)
-
-    def __le__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if other.is_infinite and other.is_extended_positive:
-            return S.true
-        elif other.is_real or other.is_extended_nonpositive:
-            return S.false
-        return Expr.__le__(self, other)
-
-    def __gt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if other.is_infinite and other.is_extended_positive:
-            return S.false
-        elif other.is_real or other.is_extended_nonpositive:
-            return S.true
-        return Expr.__gt__(self, other)
-
-    def __ge__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if other.is_extended_real:
-            return S.true
-        return Expr.__ge__(self, other)
+    __gt__ = Expr.__gt__
+    __ge__ = Expr.__ge__
+    __lt__ = Expr.__lt__
+    __le__ = Expr.__le__
 
     def __mod__(self, other):
         return S.NaN
@@ -3131,45 +3096,10 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     def __ne__(self, other):
         return other is not S.NegativeInfinity and other != float('-inf')
 
-    def __lt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if other.is_infinite and other.is_extended_negative:
-            return S.false
-        elif other.is_real or other.is_extended_nonnegative:
-            return S.true
-        return Expr.__lt__(self, other)
-
-    def __le__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if other.is_extended_real:
-            return S.true
-        return Expr.__le__(self, other)
-
-    def __gt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if other.is_extended_real:
-            return S.false
-        return Expr.__gt__(self, other)
-
-    def __ge__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if other.is_infinite and other.is_extended_negative:
-            return S.true
-        elif other.is_real or other.is_extended_nonnegative:
-            return S.false
-        return Expr.__ge__(self, other)
+    __gt__ = Expr.__gt__
+    __ge__ = Expr.__ge__
+    __lt__ = Expr.__lt__
+    __le__ = Expr.__le__
 
     def __mod__(self, other):
         return S.NaN
