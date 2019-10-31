@@ -2103,6 +2103,7 @@ def test_linear_coeffs():
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
     assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
+    assert linear_coeffs(1.0, x, y) == [0, 0, 1.0]
 
 # modular tests
 def test_is_modular():

@@ -4436,7 +4436,8 @@ def degree(f, gen=0):
 
     See also
     ========
-    total_degree
+
+    sympy.polys.polytools.Poly.total_degree
     degree_list
     """
 
@@ -4989,7 +4990,7 @@ def invert(f, g, *gens, **args):
     NotInvertible: zero divisor
 
     For more efficient inversion of Rationals,
-    use the ``mod_inverse`` function:
+    use the :obj:`~.mod_inverse` function:
 
     >>> mod_inverse(3, 5)
     2
@@ -4998,7 +4999,9 @@ def invert(f, g, *gens, **args):
 
     See Also
     ========
+
     sympy.core.numbers.mod_inverse
+
     """
     options.allowed_flags(args, ['auto', 'polys'])
 
@@ -6266,7 +6269,7 @@ def factor(f, *gens, **args):
 
     In symbolic mode, :func:`factor` will traverse the expression tree and
     factor its components without any prior expansion, unless an instance
-    of :class:`Add` is encountered (in this case formal factorization is
+    of :class:`~.Add` is encountered (in this case formal factorization is
     used). This way :func:`factor` can handle large or symbolic exponents.
 
     By default, the factorization is computed over the rationals. To factor
@@ -6726,7 +6729,7 @@ def groebner(F, *gens, **args):
     ``grevlex``. If no order is specified, it defaults to ``lex``.
 
     For more information on Groebner bases, see the references and the docstring
-    of `solve_poly_system()`.
+    of :func:`~.solve_poly_system`.
 
     Examples
     ========
@@ -6749,9 +6752,9 @@ def groebner(F, *gens, **args):
                   domain='ZZ', order='grevlex')
 
     By default, an improved implementation of the Buchberger algorithm is
-    used. Optionally, an implementation of the F5B algorithm can be used.
-    The algorithm can be set using ``method`` flag or with the :func:`setup`
-    function from :mod:`sympy.polys.polyconfig`:
+    used. Optionally, an implementation of the F5B algorithm can be used. The
+    algorithm can be set using the ``method`` flag or with the
+    :func:`sympy.polys.polyconfig.setup` function.
 
     >>> F = [x**2 - x - 1, (2*x - 1) * y - (x**10 - (1 - x)**10)]
 

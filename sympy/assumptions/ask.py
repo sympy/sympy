@@ -28,7 +28,8 @@ deprecated_predicates = [
 
 class AssumptionKeys(object):
     """
-    This class contains all the supported keys by ``ask``.
+    This class contains all the supported keys by ``ask``. It should be accessed via the instance ``sympy.Q``.
+
     """
 
     @memoize_property

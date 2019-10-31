@@ -284,7 +284,7 @@ class MatrixDeterminant(MatrixCommon):
         ========
 
         cofactor_matrix
-        transpose
+        sympy.matrices.common.MatrixCommon.transpose
         """
         return self.cofactor_matrix(method).transpose()
 
@@ -2957,8 +2957,8 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        conjugate: By-element conjugation
-        H: Hermite conjugation
+        sympy.matrices.common.MatrixCommon.conjugate: By-element conjugation
+        sympy.matrices.common.MatrixCommon.H: Hermite conjugation
         """
         from sympy.physics.matrices import mgamma
         if self.rows != 4:

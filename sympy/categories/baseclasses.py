@@ -25,7 +25,7 @@ class Object(Symbol):
     """
     The base class for any kind of object in an abstract category.
 
-    While technically any instance of :class:`Basic` will do, this
+    While technically any instance of :class:`~.Basic` will do, this
     class is the recommended way to create abstract objects in
     abstract categories.
     """
@@ -490,7 +490,7 @@ class Category(Basic):
     @property
     def commutative_diagrams(self):
         """
-        Returns the :class:`FiniteSet` of diagrams which are known to
+        Returns the :class:`~.FiniteSet` of diagrams which are known to
         be commutative in this category.
 
         >>> from sympy.categories import Object, NamedMorphism, Diagram, Category
@@ -538,7 +538,7 @@ class Diagram(Basic):
     includes a collection of morphisms which are the premises and
     another collection of conclusions.  ``premises`` and
     ``conclusions`` associate morphisms belonging to the corresponding
-    categories with the :class:`FiniteSet`'s of their properties.
+    categories with the :class:`~.FiniteSet`'s of their properties.
 
     The set of properties of a composite morphism is the intersection
     of the sets of properties of its components.  The domain and
@@ -795,7 +795,7 @@ class Diagram(Basic):
     @property
     def objects(self):
         """
-        Returns the :class:`FiniteSet` of objects that appear in this
+        Returns the :class:`~.FiniteSet` of objects that appear in this
         diagram.
 
         Examples

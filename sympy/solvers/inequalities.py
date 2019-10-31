@@ -417,19 +417,19 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
     NotImplementedError
         The solution of the inequality cannot be determined due to limitation
-        in `solvify`.
+        in :func:`sympy.solvers.solveset.solvify`.
 
     Notes
     =====
 
     Currently, we cannot solve all the inequalities due to limitations in
-    `solvify`. Also, the solution returned for trigonometric inequalities
+    :func:`sympy.solvers.solveset.solvify`. Also, the solution returned for trigonometric inequalities
     are restricted in its periodic interval.
 
     See Also
     ========
 
-    solvify: solver returning solveset solutions with solve's output API
+    sympy.solvers.solveset.solvify: solver returning solveset solutions with solve's output API
 
     Examples
     ========

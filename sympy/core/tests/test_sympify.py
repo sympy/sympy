@@ -695,3 +695,8 @@ def test_issue_16759():
     assert S.Half not in d
     assert Float(.5) in d
     assert d[.5] is S.One
+
+
+def test_issue_17811():
+    a = Function('a')
+    assert sympify('a(x)*5', evaluate=False) == Mul(a(x), 5, evaluate=False)
