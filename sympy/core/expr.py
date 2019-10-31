@@ -343,18 +343,29 @@ class Expr(Basic, EvalfMixin):
 
         n2 = _n2(self, other)
         if n2 is not None:
-            return eval("_sympify(n2 %s 0)" % op)
+            if op == "<":
+                return _sympify(n2 < 0)
+            elif op == ">":
+                return _sympify(n2 > 0)
+            elif op == "<=":
+                return _sympify(n2 <= 0)
+            else: # >=
+                return _sympify(n2 >= 0)
 
         if self.is_extended_real and other.is_extended_real:
             # this should work for infinite values as well,
             # so we don't need a separate check
             diff = self - other
             if diff is not S.NaN:
-                test = eval("diff.%s" %
-                            {"<": "is_extended_negative",
-                             ">": "is_extended_positive",
-                             "<=": "is_extended_nonpositive",
-                             ">=": "is_extended_nonnegative"}[op])
+                if op == "<":
+                    test = sympify(diff.is_extended_negative)
+                elif op == ">":
+                    test = sympify(diff.is_extended_positive)
+                elif op == "<=":
+                    test = sympify(diff.is_extended_nonpositive)
+                else: # >=
+                    test = sympify(diff.is_extended_nonnegative)
+
                 if test is not None:
                     return sympify(test)
             else: # e.g. oo > oo
