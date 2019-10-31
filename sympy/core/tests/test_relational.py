@@ -136,14 +136,14 @@ def test_rel_Infinity():
     # NOTE: All of these are actually handled by sympy.core.Number, and do
     # not create Relational objects.
     from sympy.utilities.pytest import raises
-    assert raises(ValueError, lambda: oo < oo)
-    assert raises(ValueError, lambda: oo > oo)
-    assert raises(ValueError, lambda: oo <= oo)
-    assert raises(ValueError, lambda: oo >= oo)
-    assert raises(ValueError, lambda: -oo < -oo)
-    assert raises(ValueError, lambda: -oo > -oo)
-    assert raises(ValueError, lambda: -oo <= -oo)
-    assert raises(ValueError, lambda: -oo >= -oo)
+    raises(ValueError, lambda: oo < oo)
+    raises(ValueError, lambda: oo > oo)
+    raises(ValueError, lambda: oo <= oo)
+    raises(ValueError, lambda: oo >= oo)
+    raises(ValueError, lambda: -oo < -oo)
+    raises(ValueError, lambda: -oo > -oo)
+    raises(ValueError, lambda: -oo <= -oo)
+    raises(ValueError, lambda: -oo >= -oo)
     assert (oo > -oo) is S.true
     assert (oo > 1) is S.true
     assert (oo < -oo) is S.false
@@ -526,6 +526,9 @@ def test_inequalities_symbol_name_same():
     A = (x, y, S.Zero, S.One/3, pi, oo, -oo)
     for a in A:
         for b in A:
+            # do not check undefined comparisons of infinite values
+            if a in (-oo, oo) and a == b:
+                continue
             assert Gt(a, b) == (a > b)
             assert Lt(a, b) == (a < b)
             assert Ge(a, b) == (a >= b)
