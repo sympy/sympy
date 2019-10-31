@@ -357,7 +357,7 @@ def checksol(f, symbol, sol=None, **flags):
         if numerical and val.is_number:
             if val in (S.true, S.false):
                 return bool(val)
-            return bool(abs(val.n(18).n(12, chop=True)) < 1e-9)
+            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         was = val
 
     if flags.get('warn', False):

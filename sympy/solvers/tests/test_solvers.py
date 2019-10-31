@@ -2125,6 +2125,10 @@ def test_issue_17452():
     assert solve(x**(x/11) + pi/11, x) == [exp(LambertW(-11*log(11) + 11*log(pi) + 11*I*pi))]
 
 
+def test_issue_17799():
+    assert solve(-erf(x**(S(1)/3))**pi + I, x) == []
+
+
 def test_issue_17650():
     x = Symbol('x', real=True)
     assert solve(abs((abs(x**2 - 1) - x)) - x) == [1, -1 + sqrt(2), 1 + sqrt(2)]
