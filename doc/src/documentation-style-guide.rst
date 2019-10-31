@@ -72,8 +72,8 @@ The following lists the processing tools:
     formatting features in this document. (Note that we currently use an older
     modified fork of numpydoc, which is included in the SymPy source code.)
   * ``sphinx_math_dollar``: Allows math to be delimited with dollar signs
-    instead of reStructuredText directives (e.g., ``$a^$`` instead of
-    ``:math:a^2``). See https://www.sympy.org/sphinx-math-dollar/ for more info.
+    instead of reStructuredText directives (e.g., ``$a^2$`` instead of
+    ``:math:`a^2```). See https://www.sympy.org/sphinx-math-dollar/ for more info.
   * ``matplotlib.sphinxext.plot_directive``: Provides directives for included
     matplotlib generated figures in reStructuredText. See
     https://matplotlib.org/devel/plot_directive.html for more info.
