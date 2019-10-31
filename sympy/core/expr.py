@@ -364,9 +364,11 @@ class Expr(Basic, EvalfMixin):
                 elif op == ">":
                     test = sympify(diff.is_extended_positive)
                 else: # <= or >=
-                    if self is S.NegativeInfinity or other is S.Infinity:
+                    if (self.is_infinite and self.is_extended_negative) \
+                            or (other.is_infinite and other.is_extended_positive):
                         test = S.true if op == "<=" else S.false
-                    elif self is S.Infinity or other is S.NegativeInfinity:
+                    elif (self.is_infinite and self.is_extended_positive) \
+                            or (other.is_infinite and other.is_extended_negative):
                         test = S.true if op == ">=" else S.false
                     elif op == "<=":
                         test = sympify(diff.is_extended_nonpositive)
