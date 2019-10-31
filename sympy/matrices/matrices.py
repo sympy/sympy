@@ -601,6 +601,9 @@ class MatrixReductions(MatrixDeterminant):
         if op not in ["n->kn", "n<->m", "n->n+km"]:
             raise ValueError("Unknown {} operation '{}'. Valid col operations "
                              "are 'n->kn', 'n<->m', 'n->n+km'".format(error_str, op))
+            
+        # define self_col according to error_str
+        self_cols = self.cols if error_str == 'col' else self.rows
 
         # normalize and validate the arguments
         if op == "n->kn":
@@ -608,7 +611,7 @@ class MatrixReductions(MatrixDeterminant):
             if col is None or k is None:
                 raise ValueError("For a {0} operation 'n->kn' you must provide the "
                                  "kwargs `{0}` and `k`".format(error_str))
-            if not 0 <= col <= self.cols:
+            if not 0 <= col < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
 
         if op == "n<->m":
@@ -623,9 +626,9 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("For a {0} operation 'n<->m' you must provide the "
                                  "kwargs `{0}1` and `{0}2`".format(error_str))
             col1, col2 = cols
-            if not 0 <= col1 <= self.cols:
+            if not 0 <= col1 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col1))
-            if not 0 <= col2 <= self.cols:
+            if not 0 <= col2 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
 
         if op == "n->n+km":
@@ -637,9 +640,9 @@ class MatrixReductions(MatrixDeterminant):
             if col == col2:
                 raise ValueError("For a {0} operation 'n->n+km' `{0}` and `{0}2` must "
                                  "be different.".format(error_str))
-            if not 0 <= col <= self.cols:
+            if not 0 <= col < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
-            if not 0 <= col2 <= self.cols:
+            if not 0 <= col2 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
 
         return op, col, k, col1, col2
