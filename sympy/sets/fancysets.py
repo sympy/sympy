@@ -514,6 +514,10 @@ class ImageSet(Set):
             shortest cycle of unified expression which is of length lcm(a, c).
             And then checks if these points follow a linear relation e*n + f.
             """
+            # Don't handle e.g. Tuple expressions
+            if not all(isinstance(e, Expr) for e in [self_expr, other_expr]):
+                return None
+
             sym = Dummy('n')
 
             # self_expr = a*n + b, other_expr = c*n + d
