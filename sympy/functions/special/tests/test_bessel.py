@@ -414,9 +414,8 @@ def test_airy_base():
     assert airyai(x).is_extended_real
 
     assert airyai(x+I*y).as_real_imag() == (
-        airyai(x - I*x*Abs(y)/Abs(x))/2 + airyai(x + I*x*Abs(y)/Abs(x))/2,
-        I*x*(airyai(x - I*x*Abs(y)/Abs(x)) -
-             airyai(x + I*x*Abs(y)/Abs(x)))*Abs(y)/(2*y*Abs(x)))
+            airyai(x - I*y)/2 + airyai(x + I*y)/2,
+            I*(airyai(x - I*y) - airyai(x + I*y))/2)
 
 
 def test_airyai():

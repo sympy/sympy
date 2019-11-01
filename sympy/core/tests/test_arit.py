@@ -1036,6 +1036,10 @@ def test_Pow_is_real():
 
     assert sqrt(-I).is_real is False  # issue 7843
 
+    i = Symbol('i', integer=True)
+    assert (1/(i-1)).is_real is None
+    assert (1/(i-1)).is_extended_real is None
+
 
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
@@ -1047,6 +1051,7 @@ def test_Pow_is_finite():
     xr = Symbol('xr', real=True)
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
+    i = Symbol('i', integer=True)
 
     assert (xe**2).is_finite is None  # xe could be oo
     assert (xr**2).is_finite is True
@@ -1082,6 +1087,7 @@ def test_Pow_is_finite():
 
     assert (1/S.Pi).is_finite is True
 
+    assert (1/(i-1)).is_finite is None
 
 def test_Pow_is_even_odd():
     x = Symbol('x')
@@ -1243,8 +1249,10 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (I**i).is_nonnegative is True
     assert (exp(I)**i).is_nonnegative is True
 
-    assert ((-k)**n).is_nonnegative is True
-    assert ((-k)**m).is_nonpositive is True
+    assert ((-l)**n).is_nonnegative is True
+    assert ((-l)**m).is_nonpositive is True
+    assert ((-k)**n).is_nonnegative is None
+    assert ((-k)**m).is_nonpositive is None
 
 
 def test_Mul_is_imaginary_real():

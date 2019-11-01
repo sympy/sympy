@@ -478,6 +478,10 @@ def test_roots0():
     assert roots(x**4 - 1, x, filter='Z', multiple=True) == [-S.One, S.One]
     assert roots(x**4 - 1, x, filter='I', multiple=True) == [I, -I]
 
+    ar, br = symbols('a, b', real=True)
+    p = x**2*(ar-br)**2 + 2*x*(br-ar) + 1
+    assert roots(p, x, filter='R') == {1/(ar - br): 2}
+
     assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
     assert roots(1234, x, multiple=True) == []
 

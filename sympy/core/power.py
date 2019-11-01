@@ -583,16 +583,16 @@ class Pow(Expr):
         if real_b and real_e:
             if self.base.is_extended_positive:
                 return True
-            elif self.base.is_extended_nonnegative:
-                if self.exp.is_extended_nonnegative:
-                    return True
-            else:
-                if self.exp.is_integer:
-                    return True
-                elif self.base.is_extended_negative:
-                    if self.exp.is_Rational:
-                        return False
-        if real_e and self.exp.is_extended_negative:
+            elif self.base.is_extended_nonnegative and self.exp.is_extended_nonnegative:
+                return True
+            elif self.exp.is_integer and self.base.is_extended_nonzero:
+                return True
+            elif self.exp.is_integer and self.exp.is_nonnegative:
+                return True
+            elif self.base.is_extended_negative:
+                if self.exp.is_Rational:
+                    return False
+        if real_e and self.exp.is_extended_negative and self.base.is_zero is False:
             return Pow(self.base, -self.exp).is_extended_real
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary
@@ -1280,7 +1280,13 @@ class Pow(Expr):
         elif self.exp.is_rational:
             if self.base.is_algebraic is False:
                 return self.exp.is_zero
-            return self.base.is_algebraic
+            if self.base.is_zero is False:
+                if self.exp.is_nonzero:
+                    return self.base.is_algebraic
+                elif self.base.is_algebraic:
+                    return True
+            if self.exp.is_positive:
+                return self.base.is_algebraic
         elif self.base.is_algebraic and self.exp.is_algebraic:
             if ((fuzzy_not(self.base.is_zero)
                 and fuzzy_not(_is_one(self.base)))
