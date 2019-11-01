@@ -1502,11 +1502,6 @@ def test_union_imageset():
     assert Union(img1, img2) == uni1
 
 
-def test_Union_contains():
-    assert zoo not in Union(
-        Interval.open(-oo, 0), Interval.open(0, oo))
-
-
 @XFAIL
 def test_issue_16878b():
     # in intersection_sets for (ImageSet, Set) there is no code
