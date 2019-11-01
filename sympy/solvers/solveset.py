@@ -1142,7 +1142,7 @@ def _invert_modular(modterm, rhs, n, symbol):
 
     if abs(rhs) >= abs(m):
         # if rhs has value greater than value of m.
-        return symbol, EmptySet()
+        return symbol, EmptySet
 
     if a is symbol:
         return symbol, ImageSet(Lambda(n, m*n + rhs), S.Integers)
@@ -1189,10 +1189,10 @@ def _invert_modular(modterm, rhs, n, symbol):
             try:
                 remainder_list = nthroot_mod(rhs, expo, m, all_roots=True)
                 if remainder_list is None:
-                    return symbol, EmptySet()
+                    return symbol, EmptySet
             except (ValueError, NotImplementedError):
                 return modterm, rhs
-            g_n = EmptySet()
+            g_n = EmptySet
             for rem in remainder_list:
                 g_n += ImageSet(Lambda(n, m*n + rem), S.Integers)
             return base, g_n
