@@ -223,7 +223,7 @@ class Hyperbola(GeometrySet):
         sqrt(11)/3
 
         """
-        return self.focus_distance / self.major
+        return self.focus_distance / self.hradius
 
     @property
     def foci(self):
@@ -259,9 +259,9 @@ class Hyperbola(GeometrySet):
         c = self.center
         hr, vr = self.hradius, self.vradius
 
-        fd = sqrt(self.major**2 + self.minor**2)
+        fd = sqrt(hr**2 + vr**2)
 
-        return c + Point(-fd, 0), c - Point(fd, 0)
+        return (c + Point(-fd, 0), c + Point(fd, 0))
 
     @property
     def major(self):
