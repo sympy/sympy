@@ -471,8 +471,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         except NotImplementedError:
             pass
 
-        leading_term = sequence_term.subs(sym, 1/sym).as_leading_term(sym)
-        leading_term = leading_term.subs(sym, 1/sym)
+        leading_term = sequence_term.subs(sym, 1/p).as_leading_term(p)
+        leading_term = leading_term.subs(p, 1/sym)
         order = O(leading_term, (sym, S.Infinity))
 
         ### --------- p-series test (1/n**p) ---------- ###
