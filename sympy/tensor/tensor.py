@@ -47,6 +47,7 @@ from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp
 from sympy.matrices import eye
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.decorator import memoize_property
 import warnings
 
 
@@ -311,6 +312,18 @@ class _IndexStructure(CantSympify):
         n = self._ext_rank
         g = [None]*n + [n, n+1]
 
+        # Converts the symmetry of the metric into msym from .canonicalize()
+        # method in the combinatorics module
+        def metric_symmetry_to_msym(metric):
+            if metric is None:
+                return None
+            sym = metric.symmetry
+            if sym == TensorSymmetry.fully_symmetric(2):
+                return 0
+            if sym == TensorSymmetry.fully_symmetric(-2):
+                return 1
+            return None
+
         # ordered indices: first the free indices, ordered by types
         # then the dummy indices, ordered by types and contravariant before
         # covariant
@@ -333,7 +346,7 @@ class _IndexStructure(CantSympify):
                     dummies.append(a)
                 a = [pos, pos + 1]
                 prev = typ
-                msym.append(typ.metric_antisym)
+                msym.append(metric_symmetry_to_msym(typ.metric))
             else:
                 a.extend([pos, pos + 1])
             pos += 2
@@ -899,53 +912,49 @@ class TensorIndexType(Basic):
     ==========
 
     name : name of the tensor type
-
-    metric : metric symmetry or metric object or ``None``
-
-    dim : dimension, it can be a symbol or an integer or ``None``
-
-    eps_dim : dimension of the epsilon tensor
-
     dummy_name : name of the head of dummy indices
+    dim : dimension, it can be a symbol or an integer or ``None``
+    eps_dim : dimension of the epsilon tensor
+    metric_symmetry : integer that denotes metric symmetry or `None` for no metirc
+    metric_name : string with the name of the metric tensor
 
     Attributes
     ==========
 
-    ``name``
-    ``metric_name`` : it is 'metric' or metric.name
-    ``metric_antisym``
     ``metric`` : the metric tensor
     ``delta`` : ``Kronecker delta``
     ``epsilon`` : the ``Levi-Civita epsilon`` tensor
-    ``dim``
-    ``eps_dim``
-    ``dummy_name``
     ``data`` : (deprecated) a property to add ``ndarray`` values, to work in a specified basis.
 
     Notes
     =====
 
-    The ``metric`` parameter can be:
-    ``metric = False`` symmetric metric (in Riemannian geometry)
+    The possible values of the `metric_symmetry` parameter are:
 
-    ``metric = True`` antisymmetric metric (for spinor calculus)
+        ``1``   :   metric tensor is fully symmetric
+        ``0``   :   metric tensor possesses no index symmetry
+        ``-1``  :   metric tensor is fully antisymmetric
+        ``None``:   there is no metric tensor (metric equals to `None`)
 
-    ``metric = None``  there is no metric
-
-    ``metric`` can be an object having ``name`` and ``antisym`` attributes.
-
+    The metric is assumed to be symmetric by default. It can also be set
+    to a custom tensor by the `.set_metric()` method.
 
     If there is a metric the metric is used to raise and lower indices.
 
-    In the case of antisymmetric metric, the following raising and
+    In the case of non-symmetric metric, the following raising and
     lowering conventions will be adopted:
 
     ``psi(a) = g(a, b)*psi(-b); chi(-a) = chi(b)*g(-b, -a)``
 
-    ``g(-a, b) = delta(-a, b); g(b, -a) = -delta(a, -b)``
+    From these it is easy to find:
+
+    ``g(-a, b) = delta(-a, b)``
 
     where ``delta(-a, b) = delta(b, -a)`` is the ``Kronecker delta``
     (see ``TensorIndex`` for the conventions on indices).
+    For antisymmetric metrics there is also the following equality:
+
+    ``g(a, -b) = -delta(a, -b)``
 
     If there is no metric it is not possible to raise or lower indices;
     e.g. the index of the defining representation of ``SU(N)``
@@ -964,13 +973,11 @@ class TensorIndexType(Basic):
     >>> Lorentz.metric
     metric(Lorentz,Lorentz)
     """
-    _delta = None
-    _epsilon = None
 
-    def __new__(cls, name, metric=False, dim=None, eps_dim=None,
-                dummy_name=None, **kwargs):
+    def __new__(cls, name, dummy_name=None, dim=None, eps_dim=None,
+                metric_symmetry=1, metric_name='metric', **kwargs):
         if 'dummy_fmt' in kwargs:
-            SymPyDeprecationWarning(use_instead="dummy_name",
+            SymPyDeprecationWarning(useinstead="dummy_name",
                                     feature="dummy_fmt", issue=17517,
                                     deprecated_since_version="1.5").warn()
             dummy_name = kwargs.get('dummy_fmt')
@@ -978,30 +985,105 @@ class TensorIndexType(Basic):
         if isinstance(name, string_types):
             name = Symbol(name)
 
-        obj = Basic.__new__(cls, name, S.One if metric else S.Zero)
-        obj.name = str(name)
-        if dummy_name:
-            obj.dummy_name = dummy_name
-        else:
-            obj.dummy_name = obj.name[0]
+        if dummy_name is None:
+            dummy_name = str(name)[0]
+        if isinstance(dummy_name, string_types):
+            dummy_name = Symbol(dummy_name)
 
-        if metric is None:
-            obj.metric_antisym = None
-            obj.metric = None
+        if dim is None:
+            dim = Symbol("dim_" + dummy_name.name)
         else:
-            if metric in (True, False, 0, 1):
-                metric_name = 'metric'
-                obj.metric_antisym = metric
-            else:
-                metric_name = metric.name
-                obj.metric_antisym = metric.antisym
-            sym2 = TensorSymmetry(get_symmetric_group_sgs(2, obj.metric_antisym))
-            obj.metric = TensorHead(metric_name, [obj]*2, sym2)
+            dim = sympify(dim)
 
-        obj.dim = dim
-        obj.eps_dim = eps_dim if eps_dim else dim
+        if eps_dim is None:
+            eps_dim = dim
+        else:
+            eps_dim = sympify(eps_dim)
+
+        metric_symmetry = sympify(metric_symmetry)
+
+        if isinstance(metric_name, string_types):
+            metric_name = Symbol(metric_name)
+
+        if 'metric' in kwargs:
+            SymPyDeprecationWarning(useinstead="metric_symmetry or .set_metric()",
+                                    feature="metric argument", issue=17517,
+                                    deprecated_since_version="1.5").warn()
+            metric = kwargs.get('metric')
+            if metric is not None:
+                if metric in (True, False, 0, 1):
+                    metric_name = 'metric'
+                    metric_antisym = metric
+                else:
+                    metric_name = metric.name
+                    metric_antisym = metric.antisym
+
+                if metric:
+                    metric_symmetry = -1
+                else:
+                    metric_symmetry = 1
+
+        obj = Basic.__new__(cls, name, dummy_name, dim, eps_dim,
+                            metric_symmetry, metric_name)
+
         obj._autogenerated = []
         return obj
+
+    @property
+    def name(self):
+        return self.args[0].name
+
+    @property
+    def dummy_name(self):
+        return self.args[1].name
+
+    @property
+    def dim(self):
+        return self.args[2]
+
+    @property
+    def eps_dim(self):
+        return self.args[3]
+
+    @memoize_property
+    def metric(self):
+        metric_symmetry = self.args[4]
+        metric_name = self.args[5]
+        if metric_symmetry is None:
+            return None
+
+        if metric_symmetry == 0:
+            symmetry = TensorSymmetry.no_symmetry(2)
+        elif metric_symmetry == 1:
+            symmetry = TensorSymmetry.fully_symmetric(2)
+        elif metric_symmetry == -1:
+            symmetry = TensorSymmetry.fully_symmetric(-2)
+
+        return TensorHead(metric_name, [self]*2, symmetry)
+
+    @memoize_property
+    def delta(self):
+        return TensorHead('KD', [self]*2, TensorSymmetry.fully_symmetric(2))
+
+    @memoize_property
+    def epsilon(self):
+        if not isinstance(self.eps_dim, (SYMPY_INTS, Integer)):
+            return None
+        symmetry = TensorSymmetry.fully_symmetric(-self.eps_dim)
+        return TensorHead('Eps', [self]*self.eps_dim, symmetry)
+
+    def set_metric(self, tensor):
+        self._metric = tensor
+
+    def __lt__(self, other):
+        return self.name < other.name
+
+    def __str__(self):
+        return self.name
+
+    __repr__ = __str__
+
+    # Everything below this line is deprecated
 
     @property
     def data(self):
@@ -1051,22 +1133,6 @@ class TensorIndexType(Basic):
         if self.metric in _tensor_data_substitution_dict:
             del _tensor_data_substitution_dict[self.metric]
 
-    @property
-    def delta(self):
-        if not self._delta:
-            symmetry = TensorSymmetry.fully_symmetric(2)
-            self._delta = TensorHead('KD', [self]*2, symmetry)
-        return self._delta
-
-    @property
-    def epsilon(self):
-        if not self._epsilon:
-            if not isinstance(self.eps_dim, (SYMPY_INTS, Integer)):
-                return None
-            symmetry = TensorSymmetry.fully_symmetric(-self.eps_dim)
-            self._epsilon = TensorHead('Eps', [self]*self.eps_dim, symmetry)
-        return self._epsilon
-
     @deprecated(useinstead=".delta", issue=17517,
                 deprecated_since_version="1.5")
     def get_kronecker_delta(self):
@@ -1082,14 +1148,6 @@ class TensorIndexType(Basic):
         sym = TensorSymmetry(get_symmetric_group_sgs(self._eps_dim, 1))
         epsilon = TensorHead('Eps', [self]*self._eps_dim, sym)
         return epsilon
-
-    def __lt__(self, other):
-        return self.name < other.name
-
-    def __str__(self):
-        return self.name
-
-    __repr__ = __str__
 
     def _components_data_full_destroy(self):
         """
@@ -1183,11 +1241,19 @@ class TensorIndex(Basic):
             raise ValueError("invalid name")
 
         is_up = sympify(is_up)
-        obj = Basic.__new__(cls, name_symbol, tensor_index_type, is_up)
-        obj.name = str(name)
-        obj.tensor_index_type = tensor_index_type
-        obj.is_up = is_up
-        return obj
+        return Basic.__new__(cls, name_symbol, tensor_index_type, is_up)
+
+    @property
+    def name(self):
+        return self.args[0].name
+
+    @property
+    def tensor_index_type(self):
+        return self.args[1]
+
+    @property
+    def is_up(self):
+        return self.args[2]
 
     def _print(self):
         s = self.name
@@ -1294,11 +1360,20 @@ class TensorSymmetry(Basic):
             base = Tuple(*base)
         if not isinstance(generators, Tuple):
             generators = Tuple(*generators)
-        obj = Basic.__new__(cls, base, generators, **kw_args)
-        obj.base = base
-        obj.generators = generators
-        obj.rank = generators[0].size - 2
-        return obj
+
+        return Basic.__new__(cls, base, generators, **kw_args)
+
+    @property
+    def base(self):
+        return self.args[0]
+
+    @property
+    def generators(self):
+        return self.args[1]
+
+    @property
+    def rank(self):
+        return self.generators[0].size - 2
 
     @classmethod
     def fully_symmetric(cls, rank):
@@ -1619,7 +1694,6 @@ class TensorHead(Basic):
     E**2 - p_x**2 - p_y**2 - p_z**2
     """
     is_commutative = False
-    _comm = None
 
     def __new__(cls, name, index_types, symmetry=None, comm=0):
         if isinstance(name, string_types):
@@ -1635,12 +1709,24 @@ class TensorHead(Basic):
             assert symmetry.rank == len(index_types)
 
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry)
-        obj.name = name_symbol.name
-        obj.index_types = index_types
-        obj.rank = len(index_types)
-        obj.symmetry = symmetry
         obj.comm = TensorManager.comm_symbols2i(comm)
         return obj
+
+    @property
+    def name(self):
+        return self.args[0].name
+
+    @property
+    def index_types(self):
+        return list(self.args[1])
+
+    @property
+    def symmetry(self):
+        return self.args[2]
+
+    @property
+    def rank(self):
+        return len(self.index_types)
 
     def __lt__(self, other):
         return (self.name, self.index_types) < (other.name, other.index_types)
@@ -1683,6 +1769,8 @@ class TensorHead(Basic):
         """
         tensor = Tensor(self, indices, **kw_args)
         return tensor.doit()
+
+    # Everything below this line is deprecated
 
     def __pow__(self, other):
         with warnings.catch_warnings():
@@ -2186,16 +2274,28 @@ class TensAdd(TensExpr, AssocOp):
         if len(args) == 1:
             return args[0]
 
-        obj = Basic.__new__(cls, *args, **kw_args)
-        if isinstance(args[0], TensExpr):
-            obj.rank = args[0].rank
-            obj.free_args = args[0].free_args
-            obj.free_indices = args[0].free_indices
+        return Basic.__new__(cls, *args, **kw_args)
+
+    @memoize_property
+    def rank(self):
+        if isinstance(self.args[0], TensExpr):
+            return self.args[0].rank
         else:
-            obj.rank = 0
-            obj.free_args = []
-            obj.free_indices = set()
-        return obj
+            return 0
+
+    @memoize_property
+    def free_args(self):
+        if isinstance(self.args[0], TensExpr):
+            return self.args[0].free_args
+        else:
+            return []
+
+    @memoize_property
+    def free_indices(self):
+        if isinstance(self.args[0], TensExpr):
+            return self.args[0].free_indices
+        else:
+            return set()
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
@@ -2478,24 +2578,39 @@ class Tensor(TensExpr):
         is_canon_bp = kw_args.pop('is_canon_bp', False)
         indices = cls._parse_indices(tensor_head, indices)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
-        obj.head = tensor_head
         obj._index_structure = _IndexStructure.from_indices(*indices)
-        obj.free_indices = set(obj._index_structure.get_free_indices())
         obj.free = obj._index_structure.free[:]
         obj.dum = obj._index_structure.dum[:]
-        obj.rank = len(obj.free)
         obj.ext_rank = obj._index_structure._ext_rank
         obj.coeff = S.One
         obj.nocoeff = obj
         obj.component = tensor_head
         obj.components = [tensor_head]
-        obj.index_types = tensor_head.index_types
         if tensor_head.rank != len(indices):
             raise ValueError("wrong number of indices")
-        obj.indices = indices
         obj.is_canon_bp = is_canon_bp
         obj._index_map = Tensor._build_index_map(indices, obj._index_structure)
         return obj
+
+    @property
+    def head(self):
+        return self.args[0]
+
+    @property
+    def indices(self):
+        return self.args[1]
+
+    @property
+    def free_indices(self):
+        return set(self._index_structure.get_free_indices())
+
+    @property
+    def index_types(self):
+        return self.head.index_types
+
+    @property
+    def rank(self):
+        return len(self.free_indices)
 
     @staticmethod
     def _build_index_map(indices, index_structure):
@@ -2761,7 +2876,15 @@ class Tensor(TensExpr):
         if len(self.free) != 0:
             return self
 
-        antisym = g.index_types[0].metric_antisym
+        #antisym = g.index_types[0].metric_antisym
+        if g.symmetry == TensorSymmetry.fully_symmetric(-2):
+            antisym = 1
+        elif g.symmetry == TensorSymmetry.fully_symmetric(2):
+            antisym = 0
+        elif g.symmetry == TensorSymmetry.no_symmetry(2):
+            antisym = None
+        else:
+            raise NotImplementedError
         sign = S.One
         typ = g.index_types[0]
 
@@ -3331,7 +3454,15 @@ class TensMul(TensExpr, AssocOp):
         pos_map = self._get_indices_to_args_pos()
         args = list(self.args)
 
-        antisym = g.index_types[0].metric_antisym
+        #antisym = g.index_types[0].metric_antisym
+        if g.symmetry == TensorSymmetry.fully_symmetric(-2):
+            antisym = 1
+        elif g.symmetry == TensorSymmetry.fully_symmetric(2):
+            antisym = 0
+        elif g.symmetry == TensorSymmetry.no_symmetry(2):
+            antisym = None
+        else:
+            raise NotImplementedError
 
         # list of positions of the metric ``g`` inside ``args``
         gpos = [i for i, x in enumerate(self.args) if isinstance(x, Tensor) and x.component == g]

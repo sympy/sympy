@@ -166,7 +166,7 @@ def test_no_metric_symmetry():
     # no metric symmetry; A no symmetry
     # A^d1_d0 * A^d0_d1
     # T_c = A^d0_d1 * A^d1_d0
-    Lorentz = TensorIndexType('Lorentz', metric=None, dummy_name='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L', metric_symmetry=0)
     d0, d1, d2, d3 = tensor_indices('d:4', Lorentz)
     A = TensorHead('A', [Lorentz]*2, TensorSymmetry.no_symmetry(2))
     t = A(d1, -d0)*A(d0, -d1)
@@ -266,7 +266,7 @@ def test_canonicalize1():
     # A anticommuting symmetric, B antisymmetric commuting, antisymmetric metric
     # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
     # T_c = -A^{d0 d1 d2} * A_{d0 d1}^d3 * B_{d2 d3}
-    Spinor = TensorIndexType('Spinor', metric=1, dummy_name='S')
+    Spinor = TensorIndexType('Spinor', dummy_name='S', metric_symmetry=-1)
     a, a0, a1, a2, a3, b, d0, d1, d2, d3 = \
         tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Spinor)
     A = TensorHead('A', [Spinor]*3, TensorSymmetry.fully_symmetric(3), 1)
@@ -279,7 +279,7 @@ def test_canonicalize1():
     # no metric symmetry
     # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
     # T_c = A^{d0 d1 d2} * A_{d0 d1 d3} * B_d2^d3
-    Mat = TensorIndexType('Mat', metric=None, dummy_name='M')
+    Mat = TensorIndexType('Mat', metric_symmetry=0, dummy_name='M')
     a, a0, a1, a2, a3, b, d0, d1, d2, d3 = \
         tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Mat)
     A = TensorHead('A', [Mat]*3, TensorSymmetry.fully_symmetric(3), 1)
@@ -397,7 +397,7 @@ def test_riemann_products():
 
 def test_canonicalize2():
     D = Symbol('D')
-    Eucl = TensorIndexType('Eucl', metric=0, dim=D, dummy_name='E')
+    Eucl = TensorIndexType('Eucl', metric_symmetry=1, dim=D, dummy_name='E')
     i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14 = \
         tensor_indices('i0:15', Eucl)
     A = TensorHead('A', [Eucl]*3, TensorSymmetry.fully_symmetric(-3))
@@ -419,7 +419,7 @@ def test_canonicalize2():
 
 def test_canonicalize3():
     D = Symbol('D')
-    Spinor = TensorIndexType('Spinor', dim=D, metric=True, dummy_name='S')
+    Spinor = TensorIndexType('Spinor', dim=D, metric_symmetry=-1, dummy_name='S')
     a0,a1,a2,a3,a4 = tensor_indices('a0:5', Spinor)
     chi, psi = tensor_heads('chi,psi', [Spinor], TensorSymmetry.no_symmetry(1), 1)
 
@@ -432,18 +432,10 @@ def test_canonicalize3():
     assert t1 == -chi(a0)*psi(a1)
 
 
-class Metric(Basic):
-    def __new__(cls, name, antisym, **kwargs):
-        obj = Basic.__new__(cls, name, antisym, **kwargs)
-        obj.name = name
-        obj.antisym = antisym
-        return obj
-
-
 def test_TensorIndexType():
     D = Symbol('D')
-    G = Metric('g', False)
-    Lorentz = TensorIndexType('Lorentz', metric=G, dim=D, dummy_name='L')
+    Lorentz = TensorIndexType('Lorentz', metric_name='g', metric_symmetry=1,
+                              dim=D, dummy_name='L')
     m0, m1, m2, m3, m4 = tensor_indices('m0:5', Lorentz)
     sym2 = TensorSymmetry.fully_symmetric(2)
     sym2n = TensorSymmetry(*get_symmetric_group_sgs(2))
@@ -904,7 +896,7 @@ def test_contract_metric2():
 
 def test_metric_contract3():
     D = Symbol('D')
-    Spinor = TensorIndexType('Spinor', dim=D, metric=True, dummy_name='S')
+    Spinor = TensorIndexType('Spinor', dim=D, metric_symmetry=-1, dummy_name='S')
     a0, a1, a2, a3, a4 = tensor_indices('a0:5', Spinor)
     C = Spinor.metric
     chi, psi = tensor_heads('chi,psi', [Spinor], TensorSymmetry.no_symmetry(1), 1)
@@ -1046,7 +1038,7 @@ def test_epsilon():
 def test_contract_delta1():
     # see Group Theory by Cvitanovic page 9
     n = Symbol('n')
-    Color = TensorIndexType('Color', metric=None, dim=n, dummy_name='C')
+    Color = TensorIndexType('Color', dim=n, dummy_name='C')
     a, b, c, d, e, f = tensor_indices('a,b,c,d,e,f', Color)
     delta = Color.delta
 
@@ -1596,7 +1588,7 @@ def test_valued_components_with_wrong_symmetry():
 
 @filter_warnings_decorator
 def test_issue_10972_TensMul_data():
-    Lorentz = TensorIndexType('Lorentz', metric=False, dummy_name='i', dim=2)
+    Lorentz = TensorIndexType('Lorentz', metric_symmetry=1, dummy_name='i', dim=2)
     Lorentz.data = [-1, 1]
 
     mu, nu, alpha, beta = tensor_indices('\\mu, \\nu, \\alpha, \\beta',
@@ -1620,7 +1612,7 @@ def test_issue_10972_TensMul_data():
 
 @filter_warnings_decorator
 def test_TensMul_data():
-    Lorentz = TensorIndexType('Lorentz', metric=False, dummy_name='L', dim=4)
+    Lorentz = TensorIndexType('Lorentz', metric_symmetry=1, dummy_name='L', dim=4)
     Lorentz.data = [-1, 1, 1, 1]
 
     mu, nu, alpha, beta = tensor_indices('\\mu, \\nu, \\alpha, \\beta',
@@ -1677,7 +1669,7 @@ def test_TensMul_data():
 
 @filter_warnings_decorator
 def test_issue_11020_TensAdd_data():
-    Lorentz = TensorIndexType('Lorentz', metric=False, dummy_name='i', dim=2)
+    Lorentz = TensorIndexType('Lorentz', metric_symmetry=1, dummy_name='i', dim=2)
     Lorentz.data = [-1, 1]
 
     a, b, c, d = tensor_indices('a, b, c, d', Lorentz)
