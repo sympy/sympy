@@ -243,7 +243,7 @@ def intersection_sets(self, other):
             # on the variable name, they are replaced by the dummy variables
             # below
             a, b = Dummy('a'), Dummy('b')
-            f, g = f.subs(n, a), g.subs(m, b)
+            f, g = fn.subs(n, a), gm.subs(m, b)
             solns_set = diophantine(f - g)
             if solns_set == set():
                 return EmptySet
