@@ -3836,13 +3836,10 @@ def test_issue_17827():
     D = C.elementary_row_op('n<->m', row1=2, row2=5)
     E = C.elementary_row_op('n->n+km', row1=5, row2=3, k=-4)
     F = C.elementary_row_op('n->kn', row=5, k=2)
-    assert(D[5, 0] == 0)
-    assert(E[5, 0] == 0)
-    assert(F[5, 0] == 16)
+    assert(D[5, :] == Matrix([[0, 2, 1, 3]]))
+    assert(E[5, :] == Matrix([[0, 3, 0, 14]]))
+    assert(F[5, :] == Matrix([[16, 30, 0, 12]]))
     # Tests for row/col out of range
-    wrong_row = False
-    try:
-        C.elementary_row_op('n<->m', row1=2, row2=6)
-    except ValueError:
-        wrong_row = True
-    assert(wrong_row)
+    raises(ValueError, lambda: C.elementary_row_op('n<->m', row1=2, row2=6))
+    raises(ValueError, lambda: C.elementary_row_op('n->kn', row=7, k=2))
+    raises(ValueError, lambda: C.elementary_row_op('n->n+km', row1=-1, row2=5, k=2))
