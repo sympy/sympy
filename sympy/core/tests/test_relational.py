@@ -569,9 +569,6 @@ def test_inequalities_symbol_name_same():
     A = (x, y, S.Zero, S.One/3, pi, oo, -oo)
     for a in A:
         for b in A:
-            # do not check undefined comparisons of infinite values
-            if a in (-oo, oo) and a == b:
-                continue
             assert Gt(a, b) == (a > b)
             assert Lt(a, b) == (a < b)
             assert Ge(a, b) == (a >= b)
