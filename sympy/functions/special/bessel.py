@@ -30,27 +30,28 @@ from sympy.polys.orthopolys import spherical_bessel_fn as fn
 
 class BesselBase(Function):
     """
-    Abstract base class for bessel-type functions.
+    Abstract base class for Bessel-type functions.
 
     This class is meant to reduce code duplication.
-    All Bessel type functions can 1) be differentiated, and the derivatives
-    expressed in terms of similar functions and 2) be rewritten in terms
-    of other bessel-type functions.
+    All Bessel-type functions can 1) be differentiated, with the derivatives
+    expressed in terms of similar functions, and 2) be rewritten in terms
+    of other Bessel-type functions.
 
-    Here "bessel-type functions" are assumed to have one complex parameter.
+    Here, Bessel-type functions are assumed to have one complex parameter.
 
     To use this base class, define class attributes ``_a`` and ``_b`` such that
     ``2*F_n' = -_a*F_{n+1} + b*F_{n-1}``.
+
     """
 
     @property
     def order(self):
-        """ The order of the bessel-type function. """
+        """ The order of the Bessel-type function. """
         return self.args[0]
 
     @property
     def argument(self):
-        """ The argument of the bessel-type function. """
+        """ The argument of the Bessel-type function. """
         return self.args[1]
 
     @classmethod
@@ -86,9 +87,14 @@ class BesselBase(Function):
 
 class besselj(BesselBase):
     r"""
-    Bessel function of the first kind.
+    `Bessel function <https://en.wikipedia.org/wiki/Bessel_function>`_ of the
+    first kind.
 
-    The Bessel $J$ function of order $\nu$ is defined to be the function
+    Explanation
+    ===========
+
+    The `Bessel J function <http://functions.wolfram.com/Bessel-TypeFunctions/
+    BesselJ/>`_ of order $\nu$ is defined to be the function
     satisfying Bessel's differential equation
 
     .. math ::
@@ -145,8 +151,7 @@ class besselj(BesselBase):
            Mathematical Tables
     .. [2] Luke, Y. L. (1969), The Special Functions and Their
            Approximations, Volume 1
-    .. [3] https://en.wikipedia.org/wiki/Bessel_function
-    .. [4] http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
+
     """
 
     _a = S.One
@@ -214,7 +219,11 @@ class bessely(BesselBase):
     r"""
     Bessel function of the second kind.
 
-    The Bessel $Y$ function of order $\nu$ is defined as
+    Explanation
+    ===========
+
+    The `Bessel Y function <http://functions.wolfram.com/Bessel-
+    TypeFunctions/BesselY/>`_ of order $\nu$ is defined as
 
     .. math ::
         Y_\nu(z) = \lim_{\mu \to \nu} \frac{J_\mu(z) \cos(\pi \mu)
@@ -240,11 +249,6 @@ class bessely(BesselBase):
     ========
 
     besselj, besseli, besselk
-
-    References
-    ==========
-
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselY/
 
     """
 
@@ -293,7 +297,11 @@ class besseli(BesselBase):
     r"""
     Modified Bessel function of the first kind.
 
-    The Bessel I function is a solution to the modified Bessel equation
+    Explanation
+    ===========
+
+    The `Bessel I function <http://functions.wolfram.com/Bessel-TypeFunctions/
+    BesselI/>`_ is a solution to the modified Bessel equation
 
     .. math ::
         z^2 \frac{\mathrm{d}^2 w}{\mathrm{d}z^2}
@@ -318,11 +326,6 @@ class besseli(BesselBase):
     ========
 
     besselj, bessely, besselk
-
-    References
-    ==========
-
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselI/
 
     """
 
@@ -393,7 +396,11 @@ class besselk(BesselBase):
     r"""
     Modified Bessel function of the second kind.
 
-    The Bessel K function of order $\nu$ is defined as
+    Explanation
+    ===========
+
+    The `Bessel K function <http://functions.wolfram.com/Bessel-TypeFunctions/
+    BesselK/>`_ of order $\nu$ is defined as
 
     .. math ::
         K_\nu(z) = \lim_{\mu \to \nu} \frac{\pi}{2}
@@ -416,11 +423,6 @@ class besselk(BesselBase):
     ========
 
     besselj, besseli, bessely
-
-    References
-    ==========
-
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselK/
 
     """
 
@@ -477,7 +479,11 @@ class hankel1(BesselBase):
     r"""
     Hankel function of the first kind.
 
-    This function is defined as
+    Explanation
+    ===========
+
+    The `Hankel 1 function <http://functions.wolfram.com/Bessel-TypeFunctions/
+    HankelH1/>`_ is defined as
 
     .. math ::
         H_\nu^{(1)} = J_\nu(z) + iY_\nu(z),
@@ -500,11 +506,6 @@ class hankel1(BesselBase):
 
     hankel2, besselj, bessely
 
-    References
-    ==========
-
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH1/
-
     """
 
     _a = S.One
@@ -520,7 +521,11 @@ class hankel2(BesselBase):
     r"""
     Hankel function of the second kind.
 
-    This function is defined as
+    Explanation
+    ===========
+
+    The `Hankel 2 function <http://functions.wolfram.com/Bessel-TypeFunctions/
+    HankelH2/>`_ is defined as
 
     .. math ::
         H_\nu^{(2)} = J_\nu(z) - iY_\nu(z),
@@ -543,11 +548,6 @@ class hankel2(BesselBase):
     ========
 
     hankel1, besselj, bessely
-
-    References
-    ==========
-
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH2/
 
     """
 
@@ -576,7 +576,8 @@ class SphericalBesselBase(BesselBase):
     since spherical Bessel functions differ from the ordinary
     ones just by a slight change in order.
 
-    To use this class, define the ``_rewrite`` and ``_expand`` methods.
+    To use this class, define the ``_rewrite()`` and ``_expand()`` methods.
+
     """
 
     def _expand(self, **hints):
@@ -616,7 +617,11 @@ class jn(SphericalBesselBase):
     r"""
     Spherical Bessel function of the first kind.
 
-    This function is a solution to the spherical Bessel equation
+    Explanation
+    ===========
+
+    This `spherical Bessel function <http://dlmf.nist.gov/10.47>`_ is a
+    solution to the spherical Bessel equation
 
     .. math ::
         z^2 \frac{\mathrm{d}^2 w}{\mathrm{d}z^2}
@@ -662,11 +667,6 @@ class jn(SphericalBesselBase):
 
     besselj, bessely, besselk, yn
 
-    References
-    ==========
-
-    .. [1] http://dlmf.nist.gov/10.47
-
     """
 
     def _rewrite(self):
@@ -689,8 +689,12 @@ class yn(SphericalBesselBase):
     r"""
     Spherical Bessel function of the second kind.
 
-    This function is another solution to the spherical Bessel equation, and
-    linearly independent from $j_n$. It can be defined as
+    Explanation
+    ===========
+
+    This `spherical Bessel function <http://dlmf.nist.gov/10.47>`_ is another
+    solution to the spherical Bessel equation, and linearly independent from
+    $j_n$. It can be defined as
 
     .. math ::
         y_\nu(z) = \sqrt{\frac{\pi}{2z}} Y_{\nu + \frac{1}{2}}(z),
@@ -722,11 +726,6 @@ class yn(SphericalBesselBase):
     ========
 
     besselj, bessely, besselk, jn
-
-    References
-    ==========
-
-    .. [1] http://dlmf.nist.gov/10.47
 
     """
 
@@ -808,7 +807,10 @@ class hn1(SphericalHankelBase):
     r"""
     Spherical Hankel function of the first kind.
 
-    This function is defined as
+    Explanation
+    ===========
+
+    This `spherical Hankel function <http://dlmf.nist.gov/10.47>`_ is defined as
 
     .. math:: h_\nu^(1)(z) = j_\nu(z) + i y_\nu(z),
 
@@ -843,11 +845,6 @@ class hn1(SphericalHankelBase):
 
     hn2, jn, yn, hankel1, hankel2
 
-    References
-    ==========
-
-    .. [1] http://dlmf.nist.gov/10.47
-
     """
 
     _hankel_kind_sign = S.One
@@ -861,7 +858,10 @@ class hn2(SphericalHankelBase):
     r"""
     Spherical Hankel function of the second kind.
 
-    This function is defined as
+    Explanation
+    ===========
+
+    This `spherical Hankel function <http://dlmf.nist.gov/10.47>`_ is defined as
 
     .. math:: h_\nu^(2)(z) = j_\nu(z) - i y_\nu(z),
 
@@ -896,11 +896,6 @@ class hn2(SphericalHankelBase):
 
     hn1, jn, yn, hankel1, hankel2
 
-    References
-    ==========
-
-    .. [1] http://dlmf.nist.gov/10.47
-
     """
 
     _hankel_kind_sign = -S.One
@@ -914,7 +909,10 @@ def jn_zeros(n, k, method="sympy", dps=15):
     """
     Zeros of the spherical Bessel function of the first kind.
 
-    This returns an array of zeros of jn up to the k-th zero.
+    Explanation
+    ===========
+
+    This returns an array of zeros of $jn$ up to the $k$-th zero.
 
     * method = "sympy": uses `mpmath.besseljzero
       <http://mpmath.org/doc/current/functions/bessel.html#mpmath.besseljzero>`_
@@ -925,9 +923,9 @@ def jn_zeros(n, k, method="sympy", dps=15):
       to find all
       roots, which is faster than computing the zeros using a general
       numerical solver, but it requires SciPy and only works with low
-      precision floating point numbers.  [The function used with
-      method="sympy" is a recent addition to mpmath, before that a general
-      solver was used.]
+      precision floating point numbers. (The function used with
+      method="sympy" is a recent addition to mpmath; before that a general
+      solver was used.)
 
     Examples
     ========
@@ -940,6 +938,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
     ========
 
     jn, yn, besselj, besselk, bessely
+
     """
     from math import pi
 
@@ -986,6 +985,7 @@ class AiryBase(Function):
     Abstract base class for Airy functions.
 
     This class is meant to reduce code duplication.
+
     """
 
     def _eval_conjugate(self):
@@ -1022,6 +1022,9 @@ class AiryBase(Function):
 class airyai(AiryBase):
     r"""
     The Airy function $\operatorname{Ai}$ of the first kind.
+
+    Explanation
+    ===========
 
     The Airy function $\operatorname{Ai}(z)$ is defined to be the function
     satisfying Airy's differential equation
@@ -1062,7 +1065,7 @@ class airyai(AiryBase):
     >>> conjugate(airyai(z))
     airyai(conjugate(z))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to $z$ is supported:
 
     >>> from sympy import diff
     >>> diff(airyai(z), z)
@@ -1082,7 +1085,7 @@ class airyai(AiryBase):
     >>> airyai(-2).evalf(50)
     0.22740742820168557599192443603787379946077222541710
 
-    Rewrite Ai(z) in terms of hypergeometric functions:
+    Rewrite $\operatorname{Ai}(z)$ in terms of hypergeometric functions:
 
     >>> from sympy import hyper
     >>> airyai(z).rewrite(hyper)
@@ -1102,6 +1105,7 @@ class airyai(AiryBase):
     .. [2] http://dlmf.nist.gov/9
     .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
     .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+
     """
 
     nargs = 1
@@ -1191,6 +1195,9 @@ class airybi(AiryBase):
     r"""
     The Airy function $\operatorname{Bi}$ of the second kind.
 
+    Explanation
+    ===========
+
     The Airy function $\operatorname{Bi}(z)$ is defined to be the function
     satisfying Airy's differential equation
 
@@ -1232,7 +1239,7 @@ class airybi(AiryBase):
     >>> conjugate(airybi(z))
     airybi(conjugate(z))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to $z$ is supported:
 
     >>> from sympy import diff
     >>> diff(airybi(z), z)
@@ -1252,7 +1259,7 @@ class airybi(AiryBase):
     >>> airybi(-2).evalf(50)
     -0.41230258795639848808323405461146104203453483447240
 
-    Rewrite Bi(z) in terms of hypergeometric functions:
+    Rewrite $\operatorname{Bi}(z)$ in terms of hypergeometric functions:
 
     >>> from sympy import hyper
     >>> airybi(z).rewrite(hyper)
@@ -1272,6 +1279,7 @@ class airybi(AiryBase):
     .. [2] http://dlmf.nist.gov/9
     .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
     .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+
     """
 
     nargs = 1
@@ -1362,9 +1370,14 @@ class airybi(AiryBase):
 
 class airyaiprime(AiryBase):
     r"""
-    The derivative $\operatorname{Ai}^\prime$ of the Airy function of the first kind.
+    The derivative $\operatorname{Ai}^\prime$ of the Airy function of the first
+    kind.
 
-    The Airy function $\operatorname{Ai}^\prime(z)$ is defined to be the function
+    Explanation
+    ===========
+
+    The Airy function $\operatorname{Ai}^\prime(z)$ is defined to be the
+    function
 
     .. math::
         \operatorname{Ai}^\prime(z) := \frac{\mathrm{d} \operatorname{Ai}(z)}{\mathrm{d} z}.
@@ -1394,7 +1407,7 @@ class airyaiprime(AiryBase):
     >>> conjugate(airyaiprime(z))
     airyaiprime(conjugate(z))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to $z$ is supported:
 
     >>> from sympy import diff
     >>> diff(airyaiprime(z), z)
@@ -1414,7 +1427,7 @@ class airyaiprime(AiryBase):
     >>> airyaiprime(-2).evalf(50)
     0.61825902074169104140626429133247528291577794512415
 
-    Rewrite Ai'(z) in terms of hypergeometric functions:
+    Rewrite $\operatorname{Ai}^\prime(z)$ in terms of hypergeometric functions:
 
     >>> from sympy import hyper
     >>> airyaiprime(z).rewrite(hyper)
@@ -1434,6 +1447,7 @@ class airyaiprime(AiryBase):
     .. [2] http://dlmf.nist.gov/9
     .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
     .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+
     """
 
     nargs = 1
@@ -1515,9 +1529,14 @@ class airyaiprime(AiryBase):
 
 class airybiprime(AiryBase):
     r"""
-    The derivative $\operatorname{Bi}^\prime$ of the Airy function of the first kind.
+    The derivative $\operatorname{Bi}^\prime$ of the Airy function of the first
+    kind.
 
-    The Airy function $\operatorname{Bi}^\prime(z)$ is defined to be the function
+    Explanation
+    ===========
+
+    The Airy function $\operatorname{Bi}^\prime(z)$ is defined to be the
+    function
 
     .. math::
         \operatorname{Bi}^\prime(z) := \frac{\mathrm{d} \operatorname{Bi}(z)}{\mathrm{d} z}.
@@ -1549,7 +1568,7 @@ class airybiprime(AiryBase):
     >>> conjugate(airybiprime(z))
     airybiprime(conjugate(z))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to $z$ is supported:
 
     >>> from sympy import diff
     >>> diff(airybiprime(z), z)
@@ -1569,7 +1588,7 @@ class airybiprime(AiryBase):
     >>> airybiprime(-2).evalf(50)
     0.27879516692116952268509756941098324140300059345163
 
-    Rewrite Bi'(z) in terms of hypergeometric functions:
+    Rewrite $\operatorname{Bi}^\prime(z)$ in terms of hypergeometric functions:
 
     >>> from sympy import hyper
     >>> airybiprime(z).rewrite(hyper)
@@ -1589,6 +1608,7 @@ class airybiprime(AiryBase):
     .. [2] http://dlmf.nist.gov/9
     .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
     .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+
     """
 
     nargs = 1
@@ -1675,9 +1695,13 @@ class airybiprime(AiryBase):
 
 class marcumq(Function):
     r"""
-    The Marcum Q-function
+    The Marcum Q-function.
 
-    It is defined by the meromorphic continuation of
+    Explanation
+    ===========
+
+    `The Marcum Q-function <http://mathworld.wolfram.com/MarcumQ-
+    Function.html>`_ is defined by the meromorphic continuation of
 
     .. math::
         Q_m(a, b) = a^{- m + 1} \int_{b}^{\infty} x^{m} e^{- \frac{a^{2}}{2} - \frac{x^{2}}{2}} I_{m - 1}\left(a x\right)\, dx
@@ -1703,7 +1727,7 @@ class marcumq(Function):
     >>> marcumq(2, a, a)
     1/2 + exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2)
 
-    Differentiation with respect to a and b is supported:
+    Differentiation with respect to $a$ and $b$ is supported:
 
     >>> from sympy import diff
     >>> diff(marcumq(m, a, b), a)
@@ -1715,7 +1739,7 @@ class marcumq(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Marcum_Q-function
-    .. [2] http://mathworld.wolfram.com/MarcumQ-Function.html
+
     """
 
     @classmethod
