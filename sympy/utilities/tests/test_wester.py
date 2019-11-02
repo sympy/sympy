@@ -966,7 +966,7 @@ def test_M19():
 
 
 def test_M20():
-    assert solveset(sqrt(x**2 + 1) - x + 2, x) == EmptySet.__class__()
+    assert solveset(sqrt(x**2 + 1) - x + 2, x) == EmptySet
 
 
 def test_M21():
