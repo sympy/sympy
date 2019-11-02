@@ -74,13 +74,20 @@ def _add_splines(c, b1, d, b2):
 
 @lru_cache(maxsize=128)
 def bspline_basis(d, knots, n, x):
-    """The `n`-th B-spline at `x` of degree `d` with knots.
+    """
+    The $n$-th B-spline at $x$ of degree $d$ with knots.
 
-    B-Splines are piecewise polynomials of degree `d` [1]_.  They are
-    defined on a set of knots, which is a sequence of integers or
-    floats.
+    Explanation
+    ===========
 
-    The 0th degree splines have a value of one on a single interval:
+    `B-Splines <https://en.wikipedia.org/wiki/B-spline>`_ are piecewise
+    polynomials of degree $d$. They are defined on a set of knots, which
+    is a sequence of integers or floats.
+
+    Examples
+    ========
+
+    The 0th degree splines have a value of 1 on a single interval:
 
         >>> from sympy import bspline_basis
         >>> from sympy.abc import x
@@ -113,8 +120,8 @@ def bspline_basis(d, knots, n, x):
         Piecewise((1 - x/2, (x >= 0) & (x <= 2)), (0, True))
 
     It is quite time consuming to construct and evaluate B-splines. If
-    you need to evaluate a B-splines many times, it is best to
-    lambdify them first:
+    you need to evaluate a B-spline many times, it is best to lambdify them
+    first:
 
         >>> from sympy import lambdify
         >>> d = 3
@@ -127,11 +134,6 @@ def bspline_basis(d, knots, n, x):
     ========
 
     bspline_basis_set
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/B-spline
 
     """
     knots = tuple(sympify(k) for k in knots)
@@ -167,13 +169,17 @@ def bspline_basis(d, knots, n, x):
 
 
 def bspline_basis_set(d, knots, x):
-    """Return the ``len(knots)-d-1`` B-splines at ``x`` of degree ``d``
-    with ``knots``.
+    """
+    Return the ``len(knots)-d-1`` B-splines at *x* of degree *d*
+    with *knots*.
 
-    This function returns a list of Piecewise polynomials that are the
-    ``len(knots)-d-1`` B-splines of degree ``d`` for the given knots.
+    Explanation
+    ===========
+
+    This function returns a list of piecewise polynomials that are the
+    ``len(knots)-d-1`` B-splines of degree *d* for the given knots.
     This function calls ``bspline_basis(d, knots, n, x)`` for different
-    values of ``n``.
+    values of *n*.
 
     Examples
     ========
@@ -197,18 +203,23 @@ def bspline_basis_set(d, knots, x):
     ========
 
     bspline_basis
+
     """
     n_splines = len(knots) - d - 1
     return [bspline_basis(d, tuple(knots), i, x) for i in range(n_splines)]
 
 
 def interpolating_spline(d, x, X, Y):
-    """Return spline of degree ``d``, passing through the given ``X``
-    and ``Y`` values.
+    """
+    Return spline of degree *d*, passing through the given *X*
+    and *Y* values.
+
+    Explanation
+    ===========
 
     This function returns a piecewise function such that each part is
-    a polynomial of degree not greater than ``d``. The value of ``d``
-    must be 1 or greater and the values of ``X`` must be strictly
+    a polynomial of degree not greater than *d*. The value of *d*
+    must be 1 or greater and the values of *X* must be strictly
     increasing.
 
     Examples
@@ -227,7 +238,8 @@ def interpolating_spline(d, x, X, Y):
     See Also
     ========
 
-    bspline_basis_set, sympy.polys.specialpolys.interpolating_poly
+    bspline_basis_set, interpolating_poly
+
     """
     from sympy import symbols, Number, Dummy, Rational
     from sympy.solvers.solveset import linsolve
