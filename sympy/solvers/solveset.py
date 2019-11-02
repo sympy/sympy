@@ -1128,7 +1128,7 @@ def _invert_modular(modterm, rhs, n, symbol):
     >>> invert_modular(Mod(3*x + 8, 7), S(5), n, x)
     (x, ImageSet(Lambda(_n, 7*_n + 6), Integers))
     >>> invert_modular(Mod(x**4, 7), S(5), n, x)
-    (x, EmptySet())
+    (x, EmptySet)
     >>> invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x)
     (x**2 + x + 1, ImageSet(Lambda(_n, 3*_n + 1), Naturals0))
 
@@ -1240,7 +1240,7 @@ def _solve_modular(f, symbol, domain):
     >>> solve_modulo(Mod(5*x - 8, 7) - 3, x, S.Reals)  # domain should be subset of integers.
     ConditionSet(x, Eq(Mod(5*x + 6, 7) - 3, 0), Reals)
     >>> solve_modulo(-7 + Mod(x, 5), x, S.Integers)
-    EmptySet()
+    EmptySet
     >>> solve_modulo(Mod(12**x, 21) - 18, x, S.Integers)
     ImageSet(Lambda(_n, 6*_n + 2), Naturals0)
     >>> solve_modulo(Mod(sin(x), 7) - 3, x, S.Integers) # not solvable
@@ -2396,7 +2396,7 @@ def linsolve(system, *symbols):
     the tuple in FiniteSet is used to maintain a consistent
     output format throughout solveset.)
 
-    Returns EmptySet(), if the linear system is inconsistent.
+    Returns EmptySet, if the linear system is inconsistent.
 
     Raises
     ======
@@ -2477,7 +2477,7 @@ def linsolve(system, *symbols):
     * For an empty system linsolve returns empty set
 
     >>> linsolve([], x)
-    EmptySet()
+    EmptySet
 
     * An error is raised if, after expansion, any nonlinearity
       is detected:
@@ -2652,7 +2652,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     * when you want soln should not satisfy eq `x + 1 = 0`
 
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
-    EmptySet()
+    EmptySet
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x - 1]), [y, x])
     {(1, -1)}
     >>> substitution([x + y - 1, y - x**2 + 5], [x, y])

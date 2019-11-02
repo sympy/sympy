@@ -533,9 +533,9 @@ class Range(Set):
         >>> Range(3)[:0]
         Range(0, 0, 1)
         >>> Range(3).intersect(Interval(4, oo))
-        EmptySet()
+        EmptySet
         >>> Range(3).intersect(Range(4, oo))
-        EmptySet()
+        EmptySet
 
     Range will accept symbolic arguments but has very limited support
     for doing anything other than displaying the Range:

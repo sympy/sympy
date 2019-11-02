@@ -987,7 +987,7 @@ class SeqAdd(SeqExprOp):
     Examples
     ========
 
-    >>> from sympy import EmptySequqnce, oo, SeqAdd, SeqPer, SeqFormula
+    >>> from sympy import EmptySequence, oo, SeqAdd, SeqPer, SeqFormula
     >>> from sympy.abc import n
     >>> SeqAdd(SeqPer((1, 2), (n, 0, oo)), EmptySequence)
     SeqPer((1, 2), (n, 0, oo))

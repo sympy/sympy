@@ -55,7 +55,7 @@ class ConditionSet(Set):
     >>> cond = (n > 0); cond
     False
     >>> ConditionSet(n, cond, S.Integers)
-    EmptySet()
+    EmptySet
 
     In addition, substitution of a dummy symbol can only be
     done with a generic symbol with matching commutativity

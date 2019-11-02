@@ -617,6 +617,12 @@ class StrPrinter(Printer):
     def _print_Complexes(self, expr):
         return 'Complexes'
 
+    def _print_EmptySet(self, expr):
+        return 'EmptySet'
+
+    def _print_EmptySequence(self, expr):
+        return 'EmptySequence'
+
     def _print_int(self, expr):
         return str(expr)
 
