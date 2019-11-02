@@ -240,7 +240,7 @@ def intersection_sets(self, other):
             n = self.lamda.variables[0]
             solns = list(diophantine(fn - gm, syms=(n, m)))
             if len(solns) == 0:
-                return EmptySet()
+                return EmptySet
             elif len(solns) != 1:
                 return
             else:
