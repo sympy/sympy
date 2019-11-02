@@ -378,9 +378,6 @@ class Expr(Basic, EvalfMixin):
 
                 if test is not None:
                     return S.true if test == True else S.false
-            # oo >= oo, etc.
-            elif self == other:
-                return S.false if op in ("<", ">") else S.true
 
         # return unevaluated comparison object
         return cls(self, other, evaluate=False)

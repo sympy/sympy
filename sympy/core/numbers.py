@@ -2836,8 +2836,11 @@ class Infinity(with_metaclass(Singleton, Number)):
         if self == old:
             return new
 
-    def evalf(self, prec=None, **options):
+    def _eval_evalf(self, prec=None):
         return Float('inf')
+
+    def evalf(self, prec=None, **options):
+        return self._eval_evalf(prec)
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -2998,8 +3001,11 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         if self == old:
             return new
 
-    def evalf(self, prec=None, **options):
+    def _eval_evalf(self, prec=None):
         return Float('-inf')
+
+    def evalf(self, prec=None, **options):
+        return self._eval_evalf(prec)
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
