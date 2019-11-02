@@ -216,4 +216,4 @@ class Quantity(AtomicExpr):
     @property
     def free_symbols(self):
         """Return free symbols from quantity."""
-        return {self}
+        return set([])
