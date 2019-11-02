@@ -5,7 +5,7 @@ http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
                    Derivative, sin, exp, cos, tan, log, S, sqrt,
-                   hadamard_product, DiagonalizeVector, OneMatrix,
+                   hadamard_product, DiagMatrix, OneMatrix,
                    HadamardProduct, HadamardPower, KroneckerDelta, Sum,
                    Rational)
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
@@ -357,10 +357,10 @@ def test_derivatives_matrix_norms():
 
 
 def test_derivatives_elementwise_applyfunc():
-    from sympy.matrices.expressions.diagonal import DiagonalizeVector
+    from sympy.matrices.expressions.diagonal import DiagMatrix
 
     expr = x.applyfunc(tan)
-    assert expr.diff(x) == DiagonalizeVector(x.applyfunc(lambda x: tan(x)**2 + 1))
+    assert expr.diff(x) == DiagMatrix(x.applyfunc(lambda x: tan(x)**2 + 1))
     assert expr[i, 0].diff(x[m, 0]).doit() == (tan(x[i, 0])**2 + 1)*KDelta(i, m)
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 
@@ -374,7 +374,7 @@ def test_derivatives_elementwise_applyfunc():
     _check_derivative_with_explicit_matrix(expr, i, expr.diff(i))
 
     expr = A*x.applyfunc(exp)
-    assert expr.diff(x) == DiagonalizeVector(x.applyfunc(exp))*A.T
+    assert expr.diff(x) == DiagMatrix(x.applyfunc(exp))*A.T
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 
     expr = x.T*A*x + k*y.applyfunc(sin).T*x
@@ -382,7 +382,7 @@ def test_derivatives_elementwise_applyfunc():
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 
     expr = x.applyfunc(sin).T*y
-    assert expr.diff(x) == DiagonalizeVector(x.applyfunc(cos))*y
+    assert expr.diff(x) == DiagMatrix(x.applyfunc(cos))*y
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 
     expr = (a.T * X * b).applyfunc(sin)
@@ -390,11 +390,11 @@ def test_derivatives_elementwise_applyfunc():
     _check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
 
     expr = a.T * X.applyfunc(sin) * b
-    assert expr.diff(X) == DiagonalizeVector(a)*X.applyfunc(cos)*DiagonalizeVector(b)
+    assert expr.diff(X) == DiagMatrix(a)*X.applyfunc(cos)*DiagMatrix(b)
     _check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
 
     expr = a.T * (A*X*B).applyfunc(sin) * b
-    assert expr.diff(X) == A.T*DiagonalizeVector(a)*(A*X*B).applyfunc(cos)*DiagonalizeVector(b)*B.T
+    assert expr.diff(X) == A.T*DiagMatrix(a)*(A*X*B).applyfunc(cos)*DiagMatrix(b)*B.T
     _check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
 
     expr = a.T * (A*X*b).applyfunc(sin) * b.T
@@ -403,15 +403,15 @@ def test_derivatives_elementwise_applyfunc():
     #_check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
 
     expr = a.T*A*X.applyfunc(sin)*B*b
-    assert expr.diff(X) == DiagonalizeVector(A.T*a)*X.applyfunc(cos)*DiagonalizeVector(B*b)
+    assert expr.diff(X) == DiagMatrix(A.T*a)*X.applyfunc(cos)*DiagMatrix(B*b)
 
     expr = a.T * (A*X.applyfunc(sin)*B).applyfunc(log) * b
     # TODO: wrong
-    # assert expr.diff(X) == A.T*DiagonalizeVector(a)*(A*X.applyfunc(sin)*B).applyfunc(Lambda(k, 1/k))*DiagonalizeVector(b)*B.T
+    # assert expr.diff(X) == A.T*DiagMatrix(a)*(A*X.applyfunc(sin)*B).applyfunc(Lambda(k, 1/k))*DiagMatrix(b)*B.T
 
     expr = a.T * (X.applyfunc(sin)).applyfunc(log) * b
     # TODO: wrong
-    # assert expr.diff(X) == DiagonalizeVector(a)*X.applyfunc(sin).applyfunc(Lambda(k, 1/k))*DiagonalizeVector(b)
+    # assert expr.diff(X) == DiagMatrix(a)*X.applyfunc(sin).applyfunc(Lambda(k, 1/k))*DiagMatrix(b)
 
 
 def test_derivatives_of_hadamard_expressions():
@@ -419,21 +419,21 @@ def test_derivatives_of_hadamard_expressions():
     # Hadamard Product
 
     expr = hadamard_product(a, x, b)
-    assert expr.diff(x) == DiagonalizeVector(hadamard_product(b, a))
+    assert expr.diff(x) == DiagMatrix(hadamard_product(b, a))
 
     expr = a.T*hadamard_product(A, X, B)*b
-    assert expr.diff(X) == DiagonalizeVector(a)*hadamard_product(B, A)*DiagonalizeVector(b)
+    assert expr.diff(X) == DiagMatrix(a)*hadamard_product(B, A)*DiagMatrix(b)
 
     # Hadamard Power
 
     expr = hadamard_power(x, 2)
-    assert expr.diff(x).doit() == 2*DiagonalizeVector(x)
+    assert expr.diff(x).doit() == 2*DiagMatrix(x)
 
     expr = hadamard_power(x.T, 2)
-    assert expr.diff(x).doit() == 2*DiagonalizeVector(x)
+    assert expr.diff(x).doit() == 2*DiagMatrix(x)
 
     expr = hadamard_power(x, S.Half)
-    assert expr.diff(x) == S.Half*DiagonalizeVector(hadamard_power(x, Rational(-1, 2)))
+    assert expr.diff(x) == S.Half*DiagMatrix(hadamard_power(x, Rational(-1, 2)))
 
     expr = hadamard_power(a.T*X*b, 2)
     assert expr.diff(X) == 2*a*a.T*X*b*b.T
