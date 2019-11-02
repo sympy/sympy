@@ -12,6 +12,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
     acceleration, action, energy, force, frequency, momentum,
     power, pressure, velocity, length, mass, time)
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
+from sympy.physics.units.systems.length_weight_time import dimsys_length_weight_time
 
 dims = (velocity, acceleration, momentum, force, energy, power, pressure,
         frequency, action)
@@ -27,24 +28,5 @@ for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 all_units.extend([G, c])
 
-dimsys_MKS = DimensionSystem([
-    # Dimensional dependencies for MKS base dimensions
-    length,
-    mass,
-    time,
-], dimensional_dependencies=dict(
-    # Dimensional dependencies for derived dimensions
-    velocity=dict(length=1, time=-1),
-    acceleration=dict(length=1, time=-2),
-    momentum=dict(mass=1, length=1, time=-1),
-    force=dict(mass=1, length=1, time=-2),
-    energy=dict(mass=1, length=2, time=-2),
-    power=dict(length=2, mass=1, time=-3),
-    pressure=dict(mass=1, length=-1, time=-2),
-    frequency=dict(time=-1),
-    action=dict(length=2, mass=1, time=-1),
-    volume=dict(length=3),
-))
-
 # unit system
-MKS = UnitSystem(base_units=(m, kg, s), units=all_units, name="MKS", dimension_system=dimsys_MKS)
+MKS = UnitSystem(base_units=(m, kg, s), units=all_units, name="MKS", dimension_system=dimsys_length_weight_time)

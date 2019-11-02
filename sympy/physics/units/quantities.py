@@ -8,6 +8,7 @@ from sympy import (Abs, Add, AtomicExpr, Derivative, Function, Mul,
                    Pow, S, Symbol, sympify, deprecated)
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
+from sympy.physics.units.dimensions import _QuantityMapper
 from sympy.physics.units.prefixes import Prefix
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -97,6 +98,9 @@ class Quantity(AtomicExpr):
         unit_system = UnitSystem.get_unit_system(unit_system)
         unit_system.set_quantity_scale_factor(self, scale_factor)
 
+    def set_global_dimension(self, dimension):
+        _QuantityMapper._quantity_dimension_global[self] = dimension
+
     def set_global_relative_scale_factor(self, scale_factor, reference_quantity):
         """
         Setting a scale factor that is valid across all unit system.
@@ -144,16 +148,13 @@ class Quantity(AtomicExpr):
         return unit_system.get_quantity_scale_factor(self)
 
     def _eval_is_positive(self):
-        return self.scale_factor.is_positive
+        return True
 
     def _eval_is_constant(self):
-        return self.scale_factor.is_constant()
+        return True
 
     def _eval_Abs(self):
-        scale_factor = Abs(self.scale_factor)
-        if scale_factor == self.scale_factor:
-            return self
-        return None
+        return self
 
     def _eval_subs(self, old, new):
         if isinstance(new, Quantity) and self != old:
@@ -215,4 +216,4 @@ class Quantity(AtomicExpr):
     @property
     def free_symbols(self):
         """Return free symbols from quantity."""
-        return self.scale_factor.free_symbols
+        return {self}

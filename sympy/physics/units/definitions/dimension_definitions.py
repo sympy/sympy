@@ -1,6 +1,8 @@
 from sympy.physics.units import Dimension
 
 
+angle = Dimension(name="angle")
+
 # base dimensions (MKS)
 length = Dimension(name="length", symbol="L")
 mass = Dimension(name="mass", symbol="M")
