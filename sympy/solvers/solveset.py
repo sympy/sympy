@@ -1281,7 +1281,7 @@ def _solve_modular(f, symbol, domain):
         base_sets = g_n.base_sets
         sol_set = _solveset(f_x - lamda_expr, symbol, S.Integers)
         if isinstance(sol_set, FiniteSet):
-            tmp_sol = EmptySet()
+            tmp_sol = EmptySet
             for sol in sol_set:
                 tmp_sol += ImageSet(Lambda(lamda_vars, sol), *base_sets)
             sol_set = tmp_sol
