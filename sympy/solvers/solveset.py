@@ -843,10 +843,10 @@ def solve_decomposition(f, symbol, domain):
             elif isinstance(y_s, Union):
                 iter_iset = y_s.args
 
-            elif isinstance(y_s, type(EmptySet)):
+            elif y_s is EmptySet:
                 # y_s is not in the range of g in g_s, so no solution exists
                 #in the given domain
-                return y_s
+                return EmptySet
 
             for iset in iter_iset:
                 new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
@@ -1144,7 +1144,7 @@ def _invert_modular(modterm, rhs, n, symbol):
         # if rhs has value greater than value of m.
         return symbol, EmptySet
 
-    if a is symbol:
+    if a == symbol:
         return symbol, ImageSet(Lambda(n, m*n + rhs), S.Integers)
 
     if a.is_Add:
@@ -3395,7 +3395,7 @@ def nonlinsolve(system, *symbols):
 
         # positive dimensional system
         res = _handle_positive_dimensional(polys, symbols, denominators)
-        if isinstance(res, type(EmptySet)) and any(not p.domain.is_Exact for p in polys):
+        if res is EmptySet and any(not p.domain.is_Exact for p in polys):
             raise NotImplementedError("Equation not in exact domain. Try converting to rational")
         else:
             return res
