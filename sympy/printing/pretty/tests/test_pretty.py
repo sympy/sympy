@@ -3848,7 +3848,7 @@ def test_pretty_ConditionSet():
     assert pretty(ConditionSet(x, Contains(x, S.Reals, evaluate=False), FiniteSet(1))) == '{1}'
     assert upretty(ConditionSet(x, Contains(x, S.Reals, evaluate=False), FiniteSet(1))) == u'{1}'
 
-    assert pretty(ConditionSet(x, And(x > 1, x < -1), FiniteSet(1, 2, 3))) == "EmptySet()"
+    assert pretty(ConditionSet(x, And(x > 1, x < -1), FiniteSet(1, 2, 3))) == "EmptySet"
     assert upretty(ConditionSet(x, And(x > 1, x < -1), FiniteSet(1, 2, 3))) == u"∅"
 
     assert pretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == '{2}'
@@ -5813,21 +5813,21 @@ def test_categories():
 
     # Test how diagrams are printed.
     d = Diagram()
-    assert pretty(d) == "EmptySet()"
+    assert pretty(d) == "EmptySet"
     assert upretty(d) == u"∅"
 
     d = Diagram({f1: "unique", f2: S.EmptySet})
-    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
-        "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
-        "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
+    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet, id:A1-->A1: " \
+        "EmptySet, id:A2-->A2: EmptySet, id:A3-->A3: " \
+        "EmptySet, f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet}"
 
     assert upretty(d) == u("{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
         "id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}")
 
     d = Diagram({f1: "unique", f2: S.EmptySet}, {f2 * f1: "unique"})
-    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
-        "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
-        "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \
+    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet, id:A1-->A1: " \
+        "EmptySet, id:A2-->A2: EmptySet, id:A3-->A3: " \
+        "EmptySet, f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet}" \
         " ==> {f2*f1:A1-->A3: {unique}}"
     assert upretty(d) == u("{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
         "∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
