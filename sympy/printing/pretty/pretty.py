@@ -165,6 +165,8 @@ class PrettyPrinter(Printer):
     _print_Rationals = _print_Atom
     _print_Complexes = _print_Atom
 
+    _print_EmptySequence = _print_Atom
+
     def _print_Reals(self, e):
         if self._use_unicode:
             return self._print_Atom(e)
