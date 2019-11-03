@@ -62,7 +62,7 @@ class PowerSet(Set):
     >>> PowerSet(FiniteSet(1, 2, 3)).rewrite(FiniteSet)
     FiniteSet(FiniteSet(1), FiniteSet(1, 2), FiniteSet(1, 3),
             FiniteSet(1, 2, 3), FiniteSet(2), FiniteSet(2, 3),
-            FiniteSet(3), EmptySet
+            FiniteSet(3), EmptySet)
 
     References
     ==========
