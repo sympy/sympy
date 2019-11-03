@@ -287,19 +287,19 @@ class cosh(HyperbolicFunction):
         re, im = arg.as_real_imag()
         im_mod = im % (2*pi)
 
-        if im_mod == 0:
+        if im_mod.is_zero:
             return True
 
-        if re == 0:
+        if re.is_zero:
             if im_mod < pi/2 or im_mod > 3*pi/2:
                 return True
             elif im_mod >= pi/2 or im_mod <= 3*pi/2:
                 return False
 
-        return fuzzy_or([fuzzy_and([fuzzy_bool(Eq(re, 0)),
-                         fuzzy_or([fuzzy_bool(im_mod < pi/2),
-                                   fuzzy_bool(im_mod > 3*pi/2)])]),
-                         fuzzy_bool(Eq(im_mod, 0))])
+        return fuzzy_or([fuzzy_and([Eq(re, 0),
+                         fuzzy_or([im_mod < pi/2,
+                                   im_mod > 3*pi/2])]),
+                         Eq(im_mod, 0)])
 
 
     def _eval_is_nonnegative(self):
@@ -311,18 +311,18 @@ class cosh(HyperbolicFunction):
         re, im = arg.as_real_imag()
         im_mod = im % (2*pi)
 
-        if im_mod == 0:
+        if im_mod.is_zero:
             return True
 
-        if re == 0:
+        if re.is_zero:
             if im_mod <= pi/2 or im_mod >= 3*pi/2:
                 return True
             elif im_mod > pi/2 or im_mod < 3*pi/2:
                 return False
 
-        return fuzzy_or([fuzzy_and([fuzzy_bool(Eq(re, 0)),
-                         fuzzy_or([fuzzy_bool(im_mod <= pi/2), fuzzy_bool(im_mod >= 3*pi/2)])]),
-                         fuzzy_bool(Eq(im_mod, 0))])
+        return fuzzy_or([fuzzy_and([Eq(re, 0),
+                         fuzzy_or([im_mod <= pi/2, im_mod >= 3*pi/2])]),
+                         Eq(im_mod, 0)])
 
 
     def fdiff(self, argindex=1):

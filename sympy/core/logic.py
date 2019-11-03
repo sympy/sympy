@@ -162,6 +162,7 @@ def fuzzy_not(v):
     True
 
     """
+    v = fuzzy_bool(v)
     if v is None:
         return v
     else:
