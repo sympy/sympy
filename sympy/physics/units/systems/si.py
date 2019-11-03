@@ -16,9 +16,6 @@ from sympy.physics.units.definitions.dimension_definitions import (
     energy, power, charge, voltage, capacitance, conductance, magnetic_flux,
     magnetic_density, inductance, luminous_intensity
 )
-from sympy.physics.units.prefixes import (
-    kibi, mebi, gibi, tebi, pebi, exbi
-)
 from sympy.physics.units.definitions import (
     kilogram, newton, second, meter, gram, cd, K, joule, watt, pascal, hertz,
     coulomb, volt, ohm, siemens, farad, henry, tesla, weber, dioptre, lux,

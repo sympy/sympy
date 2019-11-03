@@ -96,13 +96,13 @@ class UnitSystem(_QuantityMapper):
         qdm = self.get_dimension_system()._quantity_dimension_map
         if unit in qdm:
             return qdm[unit]
-        return super().get_quantity_dimension(unit)
+        return super(UnitSystem, self).get_quantity_dimension(unit)
 
     def get_quantity_scale_factor(self, unit):
         qsfm = self.get_dimension_system()._quantity_scale_factors
         if unit in qsfm:
             return qsfm[unit]
-        return super().get_quantity_scale_factor(unit)
+        return super(UnitSystem, self).get_quantity_scale_factor(unit)
 
     @staticmethod
     def get_unit_system(unit_system):
