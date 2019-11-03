@@ -278,53 +278,6 @@ class cosh(HyperbolicFunction):
     sinh, tanh, acosh
     """
 
-    def _eval_is_positive(self):
-        arg = self.args[0]
-
-        if arg.is_real:
-            return True
-
-        re, im = arg.as_real_imag()
-        im_mod = im % (2*pi)
-
-        if im_mod.is_zero:
-            return True
-
-        if re.is_zero:
-            if im_mod < pi/2 or im_mod > 3*pi/2:
-                return True
-            elif im_mod >= pi/2 or im_mod <= 3*pi/2:
-                return False
-
-        return fuzzy_or([fuzzy_and([Eq(re, 0),
-                         fuzzy_or([im_mod < pi/2,
-                                   im_mod > 3*pi/2])]),
-                         Eq(im_mod, 0)])
-
-
-    def _eval_is_nonnegative(self):
-        arg = self.args[0]
-
-        if arg.is_real:
-            return True
-
-        re, im = arg.as_real_imag()
-        im_mod = im % (2*pi)
-
-        if im_mod.is_zero:
-            return True
-
-        if re.is_zero:
-            if im_mod <= pi/2 or im_mod >= 3*pi/2:
-                return True
-            elif im_mod > pi/2 or im_mod < 3*pi/2:
-                return False
-
-        return fuzzy_or([fuzzy_and([Eq(re, 0),
-                         fuzzy_or([im_mod <= pi/2, im_mod >= 3*pi/2])]),
-                         Eq(im_mod, 0)])
-
-
     def fdiff(self, argindex=1):
         if argindex == 1:
             return sinh(self.args[0])
@@ -471,6 +424,46 @@ class cosh(HyperbolicFunction):
         # if not, check if the imaginary part is a number
         re, im = arg.as_real_imag()
         return (im%pi).is_zero
+
+    def _eval_is_positive(self):
+        # cosh(x+I*y) = cos(y)*cosh(x) + I*sin(y)*sinh(x)
+        # cosh(z) is positive iff it is real and the real part is positive.
+        # So we need sin(y)*sinh(x) = 0 which gives x=0 or y=n*pi
+        z = self.args[0]
+
+        x, y = z.as_real_imag()
+        ymod = y % (2*pi)
+
+        # Case 1 (y=n*pi): cosh(z) = (-1)**n * cosh(x) -> positive for n even
+        def case_y_npi():
+            return ymod.is_zero
+
+        # Case 2 (x=0): cosh(z) = cos(y) -> positive when cos(y) is positive
+        def case_x_zero_and():
+            yield x.is_zero
+            yield fuzzy_or([fuzzy_bool(ymod < pi/2), fuzzy_bool(ymod > 3*pi/2)])
+
+        def cases():
+            yield case_y_npi()
+            yield fuzzy_and(case_x_zero_and())
+
+        return fuzzy_or(cases())
+
+    def _eval_is_nonnegative(self):
+        z = self.args[0]
+
+        x, y = z.as_real_imag()
+        ymod = y % (2*pi)
+
+        return fuzzy_or([
+                # Case 1:
+                ymod.is_zero,
+                # Case 2:
+                fuzzy_and([
+                    x.is_zero,
+                    fuzzy_or([fuzzy_bool(ymod <= pi/2), fuzzy_bool(ymod >= 3*pi/2)])
+                ])
+            ])
 
     def _eval_is_finite(self):
         arg = self.args[0]
