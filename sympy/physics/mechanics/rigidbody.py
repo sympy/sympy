@@ -305,7 +305,7 @@ class RigidBody(object):
                     "RigidBody.set_potential_energy(self, scalar)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.potential_energy",
-                deprecated_since_version="1.0", issue=9800).warn()
+                deprecated_since_version="1.5", issue=9800).warn()
         self.potential_energy = scalar
 
     def parallel_axis(self, point):
