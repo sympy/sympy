@@ -843,10 +843,10 @@ def solve_decomposition(f, symbol, domain):
             elif isinstance(y_s, Union):
                 iter_iset = y_s.args
 
-            elif isinstance(y_s, EmptySet):
+            elif y_s is EmptySet:
                 # y_s is not in the range of g in g_s, so no solution exists
                 #in the given domain
-                return y_s
+                return EmptySet
 
             for iset in iter_iset:
                 new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
@@ -893,12 +893,12 @@ def _solveset(f, symbol, domain, _check=False):
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
     inverter = lambda f, rhs, symbol: _invert(f, rhs, symbol, domain)
 
-    result = EmptySet()
+    result = EmptySet
 
     if f.expand().is_zero:
         return domain
     elif not f.has(symbol):
-        return EmptySet()
+        return EmptySet
     elif f.is_Mul and all(_is_finite_with_finite_vars(m, domain)
             for m in f.args):
         # if f(x) and g(x) are both finite we can say that the solution of
@@ -915,7 +915,7 @@ def _solveset(f, symbol, domain, _check=False):
         a = f.args[0]
         result = solveset_real(a > 0, symbol)
     elif f.is_Piecewise:
-        result = EmptySet()
+        result = EmptySet
         expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
             if in_set.is_Relational:
@@ -1128,7 +1128,7 @@ def _invert_modular(modterm, rhs, n, symbol):
     >>> invert_modular(Mod(3*x + 8, 7), S(5), n, x)
     (x, ImageSet(Lambda(_n, 7*_n + 6), Integers))
     >>> invert_modular(Mod(x**4, 7), S(5), n, x)
-    (x, EmptySet())
+    (x, EmptySet)
     >>> invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x)
     (x**2 + x + 1, ImageSet(Lambda(_n, 3*_n + 1), Naturals0))
 
@@ -1142,9 +1142,9 @@ def _invert_modular(modterm, rhs, n, symbol):
 
     if abs(rhs) >= abs(m):
         # if rhs has value greater than value of m.
-        return symbol, EmptySet()
+        return symbol, EmptySet
 
-    if a is symbol:
+    if a == symbol:
         return symbol, ImageSet(Lambda(n, m*n + rhs), S.Integers)
 
     if a.is_Add:
@@ -1189,10 +1189,10 @@ def _invert_modular(modterm, rhs, n, symbol):
             try:
                 remainder_list = nthroot_mod(rhs, expo, m, all_roots=True)
                 if remainder_list is None:
-                    return symbol, EmptySet()
+                    return symbol, EmptySet
             except (ValueError, NotImplementedError):
                 return modterm, rhs
-            g_n = EmptySet()
+            g_n = EmptySet
             for rem in remainder_list:
                 g_n += ImageSet(Lambda(n, m*n + rem), S.Integers)
             return base, g_n
@@ -1240,7 +1240,7 @@ def _solve_modular(f, symbol, domain):
     >>> solve_modulo(Mod(5*x - 8, 7) - 3, x, S.Reals)  # domain should be subset of integers.
     ConditionSet(x, Eq(Mod(5*x + 6, 7) - 3, 0), Reals)
     >>> solve_modulo(-7 + Mod(x, 5), x, S.Integers)
-    EmptySet()
+    EmptySet
     >>> solve_modulo(Mod(12**x, 21) - 18, x, S.Integers)
     ImageSet(Lambda(_n, 6*_n + 2), Naturals0)
     >>> solve_modulo(Mod(sin(x), 7) - 3, x, S.Integers) # not solvable
@@ -1281,7 +1281,7 @@ def _solve_modular(f, symbol, domain):
         base_sets = g_n.base_sets
         sol_set = _solveset(f_x - lamda_expr, symbol, S.Integers)
         if isinstance(sol_set, FiniteSet):
-            tmp_sol = EmptySet()
+            tmp_sol = EmptySet
             for sol in sol_set:
                 tmp_sol += ImageSet(Lambda(lamda_vars, sol), *base_sets)
             sol_set = tmp_sol
@@ -2396,7 +2396,7 @@ def linsolve(system, *symbols):
     the tuple in FiniteSet is used to maintain a consistent
     output format throughout solveset.)
 
-    Returns EmptySet(), if the linear system is inconsistent.
+    Returns EmptySet, if the linear system is inconsistent.
 
     Raises
     ======
@@ -2477,7 +2477,7 @@ def linsolve(system, *symbols):
     * For an empty system linsolve returns empty set
 
     >>> linsolve([], x)
-    EmptySet()
+    EmptySet
 
     * An error is raised if, after expansion, any nonlinearity
       is detected:
@@ -2652,7 +2652,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     * when you want soln should not satisfy eq `x + 1 = 0`
 
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
-    EmptySet()
+    EmptySet
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x - 1]), [y, x])
     {(1, -1)}
     >>> substitution([x + y - 1, y - x**2 + 5], [x, y])
@@ -3395,7 +3395,7 @@ def nonlinsolve(system, *symbols):
 
         # positive dimensional system
         res = _handle_positive_dimensional(polys, symbols, denominators)
-        if isinstance(res, EmptySet) and any(not p.domain.is_Exact for p in polys):
+        if res is EmptySet and any(not p.domain.is_Exact for p in polys):
             raise NotImplementedError("Equation not in exact domain. Try converting to rational")
         else:
             return res

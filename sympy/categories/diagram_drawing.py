@@ -1324,8 +1324,8 @@ class DiagramGrid(object):
         >>> diagram = Diagram([f, g])
         >>> grid = DiagramGrid(diagram)
         >>> grid.morphisms
-        {NamedMorphism(Object("A"), Object("B"), "f"): EmptySet(),
-        NamedMorphism(Object("B"), Object("C"), "g"): EmptySet()}
+        {NamedMorphism(Object("A"), Object("B"), "f"): EmptySet,
+        NamedMorphism(Object("B"), Object("C"), "g"): EmptySet}
 
         """
         return self._morphisms

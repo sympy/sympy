@@ -3922,8 +3922,10 @@ def test_sympy__series__sequences__SeqBase():
 
 
 def test_sympy__series__sequences__EmptySequence():
-    from sympy.series.sequences import EmptySequence
-    assert _test_args(EmptySequence())
+    # Need to imort the instance from series not the class from
+    # series.sequence
+    from sympy.series import EmptySequence
+    assert _test_args(EmptySequence)
 
 
 @SKIP('Abstract Class')

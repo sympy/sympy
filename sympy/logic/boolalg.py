@@ -405,7 +405,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
 
         >>> from sympy import false
         >>> false.as_set()
-        EmptySet()
+        EmptySet
         """
         return S.EmptySet
 

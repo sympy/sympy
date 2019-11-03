@@ -97,6 +97,12 @@ class ReprPrinter(Printer):
     def _print_Reals(self, expr):
         return 'Reals'
 
+    def _print_EmptySet(self, expr):
+        return 'EmptySet'
+
+    def _print_EmptySequence(self, expr):
+        return 'EmptySequence'
+
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
 

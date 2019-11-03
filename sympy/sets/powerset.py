@@ -48,9 +48,9 @@ class PowerSet(Set):
     A power set of an empty set:
 
     >>> PowerSet(S.EmptySet)
-    PowerSet(EmptySet())
+    PowerSet(EmptySet)
     >>> PowerSet(PowerSet(S.EmptySet))
-    PowerSet(PowerSet(EmptySet()))
+    PowerSet(PowerSet(EmptySet))
 
     A power set of an infinite set:
 
@@ -60,7 +60,7 @@ class PowerSet(Set):
     Evaluating the power set of a finite set to its explicit form:
 
     >>> PowerSet(FiniteSet(1, 2, 3)).rewrite(FiniteSet)
-    {EmptySet(), {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 3}, {1, 2, 3}}
+    {EmptySet, {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 3}, {1, 2, 3}}
 
     References
     ==========

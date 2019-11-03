@@ -736,7 +736,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     >>> x = Symbol('x')
 
     >>> stationary_points(1/x, x, S.Reals)
-    EmptySet()
+    EmptySet
 
     >>> pprint(stationary_points(sin(x), x), use_unicode=False)
               pi                              3*pi
@@ -1547,7 +1547,7 @@ class AccumulationBounds(AtomicExpr):
         AccumBounds(2, 3)
 
         >>> AccumBounds(1, 3).intersection(AccumBounds(4, 6))
-        EmptySet()
+        EmptySet
 
         >>> AccumBounds(1, 4).intersection(FiniteSet(1, 2, 5))
         {1, 2}

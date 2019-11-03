@@ -134,7 +134,7 @@ class Set(Basic):
         >>> n, m = symbols('n m')
         >>> a = imageset(Lambda(n, 2*n), S.Integers)
         >>> a.intersect(imageset(Lambda(m, 2*m + 1), S.Integers))
-        EmptySet()
+        EmptySet
 
         """
         return Intersection(self, other)
@@ -240,7 +240,7 @@ class Set(Basic):
         Union(Interval.open(-oo, 1), Interval.open(10, oo))
 
         >>> from sympy import S, EmptySet
-        >>> S.Reals.symmetric_difference(EmptySet())
+        >>> S.Reals.symmetric_difference(EmptySet)
         Reals
 
         References
@@ -466,15 +466,16 @@ class Set(Basic):
 
         A power set of an empty set:
 
-        >>> A = EmptySet()
+        >>> from sympy import FiniteSet, EmptySet
+        >>> A = EmptySet
         >>> A.powerset()
-        {EmptySet()}
+        {EmptySet}
 
         A power set of a finite set:
 
         >>> A = FiniteSet(1, 2)
         >>> a, b, c = FiniteSet(1), FiniteSet(2), FiniteSet(1, 2)
-        >>> A.powerset() == FiniteSet(a, b, c, EmptySet())
+        >>> A.powerset() == FiniteSet(a, b, c, EmptySet)
         True
 
         A power set of an interval:
@@ -599,7 +600,7 @@ class Set(Basic):
         >>> Interval(0, 1).interior
         Interval.open(0, 1)
         >>> Interval(0, 1).boundary.interior
-        EmptySet()
+        EmptySet
         """
         return self - self.boundary
 
@@ -708,8 +709,8 @@ class ProductSet(Set):
         if len(sets) == 0:
             return FiniteSet(())
 
-        if EmptySet() in sets:
-            return EmptySet()
+        if S.EmptySet in sets:
+            return S.EmptySet
 
         return Basic.__new__(cls, *sets, **assumptions)
 
@@ -1519,7 +1520,7 @@ class Complement(Set, EvalfMixin):
 
         """
         if B == S.UniversalSet or A.is_subset(B):
-            return EmptySet()
+            return S.EmptySet
 
         if isinstance(B, Union):
             return Intersection(*(s.complement(A) for s in B.args))
@@ -1569,10 +1570,10 @@ class EmptySet(with_metaclass(Singleton, Set)):
 
     >>> from sympy import S, Interval
     >>> S.EmptySet
-    EmptySet()
+    EmptySet
 
     >>> Interval(1, 2).intersect(S.EmptySet)
-    EmptySet()
+    EmptySet
 
     See Also
     ========
@@ -1670,7 +1671,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     @property
     def _boundary(self):
-        return EmptySet()
+        return S.EmptySet
 
 
 class FiniteSet(Set, EvalfMixin):
@@ -1710,7 +1711,7 @@ class FiniteSet(Set, EvalfMixin):
             args = list(map(sympify, args))
 
             if len(args) == 0:
-                return EmptySet()
+                return S.EmptySet
         else:
             args = list(map(sympify, args))
 

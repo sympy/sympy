@@ -258,7 +258,7 @@ What is this domain argument about?
     >>> solveset(x**2 + 1, x) # domain=S.Complexes is default
     {-I, I}
     >>> solveset(x**2 + 1, x, domain=S.Reals)
-    EmptySet()
+    EmptySet
 
 
 What are the general methods employed by solveset to solve an equation?
