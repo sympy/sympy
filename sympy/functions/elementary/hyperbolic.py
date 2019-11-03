@@ -10,7 +10,7 @@ from sympy.functions.elementary.integers import floor
 
 from sympy import pi, Eq
 from sympy.logic import Or, And
-from sympy.core.logic import fuzzy_or, fuzzy_and
+from sympy.core.logic import fuzzy_or, fuzzy_and, fuzzy_bool
 
 
 
@@ -296,9 +296,10 @@ class cosh(HyperbolicFunction):
             elif im_mod >= pi/2 or im_mod <= 3*pi/2:
                 return False
 
-        return fuzzy_or(fuzzy_and(Eq(re, 0),
-                        fuzzy_or(im_mod < pi/2, im_mod > 3*pi/2)),
-                        Eq(im_mod, 0))
+        return fuzzy_or([fuzzy_and([fuzzy_bool(Eq(re, 0)),
+                         fuzzy_or([fuzzy_bool(im_mod < pi/2),
+                                   fuzzy_bool(im_mod > 3*pi/2)])]),
+                         fuzzy_bool(Eq(im_mod, 0))])
 
 
     def _eval_is_nonnegative(self):
@@ -319,9 +320,9 @@ class cosh(HyperbolicFunction):
             elif im_mod > pi/2 or im_mod < 3*pi/2:
                 return False
 
-        return fuzzy_or(fuzzy_and(Eq(re, 0),
-                        fuzzy_or(im_mod <= pi/2, im_mod >= 3*pi/2)),
-                        Eq(im_mod, 0))
+        return fuzzy_or([fuzzy_and([fuzzy_bool(Eq(re, 0)),
+                         fuzzy_or([fuzzy_bool(im_mod <= pi/2), fuzzy_bool(im_mod >= 3*pi/2)])]),
+                         fuzzy_bool(Eq(im_mod, 0))])
 
 
     def fdiff(self, argindex=1):
