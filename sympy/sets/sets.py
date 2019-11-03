@@ -363,25 +363,38 @@ class Set(Basic):
         False
 
         """
-        if isinstance(other, Set):
-            dispatch = getattr(self, '_eval_is_subset', None)
-            if dispatch is not None:
-                ret = dispatch(other)
-                if ret is not None:
-                    return ret
-
-            s_o = self.intersect(other)
-            if s_o == self:
-                return True
-            # This assumes that an unevaluated Intersection will always come
-            # back as an Intersection...
-            elif isinstance(s_o, Intersection):
-                return None
-            else:
-                return False
-        else:
+        if not isinstance(other, Set):
             raise ValueError("Unknown argument '%s'" % other)
 
+        if self == other:
+            return True
+
+        # Call the subclass method
+        ret = self._eval_is_subset(other)
+        if ret is not None:
+            return ret
+
+        ret = other._eval_is_superset(self)
+        if ret is not None:
+            return ret
+
+        # Fall back on computing the intersection
+        if self.intersect(other) == self:
+            return True
+
+    def _eval_is_subset(self, other):
+        """
+        Fuzzy bool indicating whether self is a subset of other
+        """
+        return None
+
+    def _eval_is_superset(self, other):
+        """
+        Fuzzy bool indicating whether self is a superset of other
+        """
+        return None
+
+    # This should be deprecated:
     def issubset(self, other):
         """
         Alias for :meth:`is_subset()`
@@ -426,6 +439,7 @@ class Set(Basic):
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
+    # This should be deprecated:
     def issuperset(self, other):
         """
         Alias for :meth:`is_superset()`
@@ -1039,6 +1053,20 @@ class Interval(Set, EvalfMixin):
         d = Dummy()
         return self.as_relational(d).subs(d, other)
 
+    def _eval_is_subset(self, other):
+        if isinstance(other, Interval):
+            # This is correct but can be made more comprehensive...
+            if fuzzy_bool(self.start < other.start):
+                return False
+            if fuzzy_bool(self.end > other.end):
+                return False
+
+        elif isinstance(other, FiniteSet):
+            # An Interval can only be a subset of a finite set if it is finite
+            # which can only happen if the start and end are equal.
+            if fuzzy_bool(self.start < self.end):
+                return False
+
     def as_relational(self, x):
         """Rewrite an interval in terms of inequalities and logic operators."""
         x = sympify(x)
@@ -1235,6 +1263,13 @@ class Union(Set, LatticeOp, EvalfMixin):
 
     def _contains(self, other):
         return Or(*[s.contains(other) for s in self.args])
+
+    def _eval_is_subset(self, other):
+        return fuzzy_and(s.is_subset(other) for s in self.args)
+
+    def _eval_is_superset(self, other):
+        if fuzzy_or(s.is_superset(other) for s in self.args):
+            return True
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
@@ -1601,6 +1636,12 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def _contains(self, other):
         return false
 
+    def _eval_is_subset(self, other):
+        return True
+
+    def _eval_is_superset(self, other):
+        return other.is_empty
+
     def as_relational(self, symbol):
         return false
 
@@ -1800,6 +1841,14 @@ class FiniteSet(Set, EvalfMixin):
         # evaluate=True is needed to override evaluate=False context;
         # we need Eq to do the evaluation
         return fuzzy_or(fuzzy_bool(Eq(e, other, evaluate=True)) for e in self.args)
+
+    def _eval_is_subset(self, other):
+        return fuzzy_and(other._contains(e) for e in self.args)
+
+    def _eval_is_superset(self, other):
+        # A check for infiniteness would better...
+        if other in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals, S.Complexes]:
+            return False
 
     @property
     def _boundary(self):

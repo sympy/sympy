@@ -48,6 +48,10 @@ class Rationals(with_metaclass(Singleton, Set)):
             return other.is_Rational
         return other.is_rational
 
+    def _eval_is_subset(self, other):
+        if other.is_subset(S.Integers):
+            return False
+
     def __iter__(self):
         from sympy.core.numbers import igcd, Rational
         yield S.Zero
@@ -146,6 +150,10 @@ class Naturals0(Naturals):
         elif other.is_integer is False or other.is_nonnegative is False:
             return S.false
 
+    def _eval_is_subset(self, other):
+        if other.is_subset(S.Naturals):
+            return False
+
 
 class Integers(with_metaclass(Singleton, Set)):
     """
@@ -210,6 +218,10 @@ class Integers(with_metaclass(Singleton, Set)):
         from sympy.functions.elementary.integers import floor
         return And(Eq(floor(x), x), -oo < x, x < oo)
 
+    def _eval_is_subset(self, other):
+        if other.is_subset(S.Naturals0):
+            return False
+
 
 class Reals(with_metaclass(Singleton, Interval)):
     """
@@ -248,6 +260,10 @@ class Reals(with_metaclass(Singleton, Interval)):
 
     def __hash__(self):
         return hash(Interval(S.NegativeInfinity, S.Infinity))
+
+    def _eval_is_subset(self, other):
+        if other.is_subset(S.Rationals):
+            return False
 
 
 class ImageSet(Set):
@@ -1375,6 +1391,8 @@ class Complexes(with_metaclass(Singleton, CartesianComplexRegion)):
 
     """
 
+    is_empty = False
+
     # Override property from superclass since Complexes has no args
     sets = ProductSet(S.Reals, S.Reals)
 
@@ -1386,3 +1404,7 @@ class Complexes(with_metaclass(Singleton, CartesianComplexRegion)):
 
     def __repr__(self):
         return "S.Complexes"
+
+    def _eval_is_subset(self, other):
+        if other.is_subset(S.Reals):
+            return False
