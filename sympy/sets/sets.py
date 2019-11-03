@@ -1,12 +1,11 @@
 from __future__ import print_function, division
 
-from itertools import product
 from collections import defaultdict
 import inspect
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range, PY3, is_sequence, reduce)
+    ordered, range, PY3, reduce)
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
@@ -14,7 +13,6 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_bool, fuzzy_or, fuzzy_and
-from sympy.core.mul import Mul
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
 from sympy.core.relational import Eq, Ne
@@ -25,7 +23,7 @@ from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
 from sympy.utilities import subsets
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import sift, roundrobin
+from sympy.utilities.iterables import iproduct, sift, roundrobin
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
@@ -136,7 +134,7 @@ class Set(Basic):
         >>> n, m = symbols('n m')
         >>> a = imageset(Lambda(n, 2*n), S.Integers)
         >>> a.intersect(imageset(Lambda(m, 2*m + 1), S.Integers))
-        EmptySet()
+        EmptySet
 
         """
         return Intersection(self, other)
@@ -242,7 +240,7 @@ class Set(Basic):
         Union(Interval.open(-oo, 1), Interval.open(10, oo))
 
         >>> from sympy import S, EmptySet
-        >>> S.Reals.symmetric_difference(EmptySet())
+        >>> S.Reals.symmetric_difference(EmptySet)
         Reals
 
         References
@@ -366,6 +364,12 @@ class Set(Basic):
 
         """
         if isinstance(other, Set):
+            dispatch = getattr(self, '_eval_is_subset', None)
+            if dispatch is not None:
+                ret = dispatch(other)
+                if ret is not None:
+                    return ret
+
             s_o = self.intersect(other)
             if s_o == self:
                 return True
@@ -448,7 +452,8 @@ class Set(Basic):
             raise ValueError("Unknown argument '%s'" % other)
 
     def _eval_powerset(self):
-        raise NotImplementedError('Power set not defined for: %s' % self.func)
+        from .powerset import PowerSet
+        return PowerSet(self)
 
     def powerset(self):
         """
@@ -457,14 +462,26 @@ class Set(Basic):
         Examples
         ========
 
+        >>> from sympy import EmptySet, FiniteSet, Interval, PowerSet
+
+        A power set of an empty set:
+
         >>> from sympy import FiniteSet, EmptySet
-        >>> A = EmptySet()
+        >>> A = EmptySet
         >>> A.powerset()
-        {EmptySet()}
+        {EmptySet}
+
+        A power set of a finite set:
+
         >>> A = FiniteSet(1, 2)
         >>> a, b, c = FiniteSet(1), FiniteSet(2), FiniteSet(1, 2)
-        >>> A.powerset() == FiniteSet(a, b, c, EmptySet())
+        >>> A.powerset() == FiniteSet(a, b, c, EmptySet)
         True
+
+        A power set of an interval:
+
+        >>> Interval(1, 2).powerset()
+        PowerSet(Interval(1, 2))
 
         References
         ==========
@@ -583,7 +600,7 @@ class Set(Basic):
         >>> Interval(0, 1).interior
         Interval.open(0, 1)
         >>> Interval(0, 1).boundary.interior
-        EmptySet()
+        EmptySet
         """
         return self - self.boundary
 
@@ -692,8 +709,8 @@ class ProductSet(Set):
         if len(sets) == 0:
             return FiniteSet(())
 
-        if EmptySet() in sets:
-            return EmptySet()
+        if S.EmptySet in sets:
+            return S.EmptySet
 
         return Basic.__new__(cls, *sets, **assumptions)
 
@@ -785,7 +802,7 @@ class ProductSet(Set):
         If self.is_iterable returns True (both constituent sets are iterable),
         then return the Cartesian Product. Otherwise, raise TypeError.
         """
-        return product(*self.sets)
+        return iproduct(*self.sets)
 
     @property
     def is_empty(self):
@@ -1217,16 +1234,7 @@ class Union(Set, LatticeOp, EvalfMixin):
         return Union(*map(boundary_of_set, range(len(self.args))))
 
     def _contains(self, other):
-        try:
-            d = Dummy()
-            r = self.as_relational(d).subs(d, other)
-            b = tfn[r]
-            if b is None and not any(isinstance(i.contains(other), Contains)
-                    for i in self.args):
-                return r
-            return b
-        except (TypeError, NotImplementedError):
-            return Or(*[s.contains(other) for s in self.args])
+        return Or(*[s.contains(other) for s in self.args])
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
@@ -1512,7 +1520,7 @@ class Complement(Set, EvalfMixin):
 
         """
         if B == S.UniversalSet or A.is_subset(B):
-            return EmptySet()
+            return S.EmptySet
 
         if isinstance(B, Union):
             return Intersection(*(s.complement(A) for s in B.args))
@@ -1562,10 +1570,10 @@ class EmptySet(with_metaclass(Singleton, Set)):
 
     >>> from sympy import S, Interval
     >>> S.EmptySet
-    EmptySet()
+    EmptySet
 
     >>> Interval(1, 2).intersect(S.EmptySet)
-    EmptySet()
+    EmptySet
 
     See Also
     ========
@@ -1663,7 +1671,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     @property
     def _boundary(self):
-        return EmptySet()
+        return S.EmptySet
 
 
 class FiniteSet(Set, EvalfMixin):
@@ -1703,7 +1711,7 @@ class FiniteSet(Set, EvalfMixin):
             args = list(map(sympify, args))
 
             if len(args) == 0:
-                return EmptySet()
+                return S.EmptySet
         else:
             args = list(map(sympify, args))
 
@@ -1831,6 +1839,25 @@ class FiniteSet(Set, EvalfMixin):
 
     def _eval_powerset(self):
         return self.func(*[self.func(*s) for s in subsets(self.args)])
+
+    def _eval_rewrite_as_PowerSet(self, *args, **kwargs):
+        """Rewriting method for a finite set to a power set."""
+        from .powerset import PowerSet
+
+        is2pow = lambda n: bool(n and not n & (n - 1))
+        if not is2pow(len(self)):
+            return None
+
+        fs_test = lambda arg: isinstance(arg, Set) and arg.is_FiniteSet
+        if not all((fs_test(arg) for arg in args)):
+            return None
+
+        biggest = max(args, key=len)
+        for arg in subsets(biggest.args):
+            arg_set = FiniteSet(*arg)
+            if arg_set not in args:
+                return None
+        return PowerSet(biggest)
 
     def __ge__(self, other):
         if not isinstance(other, Set):
@@ -2007,8 +2034,7 @@ def imageset(*args):
                 s = inspect.getargspec(f).args
         dexpr = _sympify(f(*[Dummy() for i in s]))
         var = tuple(_uniquely_named_symbol(Symbol(i), dexpr) for i in s)
-        expr = f(*var)
-        f = Lambda(var, expr)
+        f = Lambda(var, f(*var))
     else:
         raise TypeError(filldedent('''
             expecting lambda, Lambda, or FunctionClass,
@@ -2037,12 +2063,15 @@ def imageset(*args):
             return set
 
         if isinstance(set, ImageSet):
+            # XXX: Maybe this should just be:
+            # f2 = set.lambda
+            # fun = Lambda(f2.signature, f(*f2.expr))
+            # return imageset(fun, *set.base_sets)
             if len(set.lamda.variables) == 1 and len(f.variables) == 1:
                 x = set.lamda.variables[0]
                 y = f.variables[0]
                 return imageset(
-                    Lambda(x, f.expr.subs(y, set.lamda.expr)),
-                    set.base_set)
+                    Lambda(x, f.expr.subs(y, set.lamda.expr)), *set.base_sets)
 
         if r is not None:
             return r

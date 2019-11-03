@@ -504,7 +504,7 @@ def mod_inverse(a, m):
     3 modulo 11. This is the same as finding x such
     that 3 * x = 1 (mod 11). One value of x that satisfies
     this congruence is 4. Because 3 * 4 = 12 and 12 = 1 (mod 11).
-    This is the value return by mod_inverse:
+    This is the value returned by mod_inverse:
 
     >>> mod_inverse(3, 11)
     4
@@ -1582,7 +1582,7 @@ class Rational(Number):
 
     See Also
     ========
-    sympify, sympy.simplify.simplify.nsimplify
+    sympy.core.sympify.sympify, sympy.simplify.simplify.nsimplify
     """
     is_real = True
     is_integer = False
@@ -3344,7 +3344,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     is_infinite = True
     is_number = True
     is_prime = False
-    is_complex = True
+    is_complex = False
     is_extended_real = False
 
     __slots__ = []
@@ -3828,6 +3828,13 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
             return (S.Zero, S.One)
         elif issubclass(number_cls, Rational):
             return (Rational(9, 10), S.One)
+
+    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
+        from sympy import Sum, Dummy
+        if (k_sym is not None) or (symbols is not None):
+            return self
+        k = Dummy('k', integer=True, nonnegative=True)
+        return Sum((-1)**k / (2*k+1)**2, (k, 0, S.Infinity))
 
     def _sage_(self):
         import sage.all as sage

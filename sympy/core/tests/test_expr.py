@@ -215,13 +215,14 @@ def test_relational_assumptions():
     assert (m4 >= 0) is S.false
 
 
-def test_relational_noncommutative():
-    from sympy import Lt, Gt, Le, Ge
-    A, B = symbols('A,B', commutative=False)
-    assert (A < B) == Lt(A, B)
-    assert (A <= B) == Le(A, B)
-    assert (A > B) == Gt(A, B)
-    assert (A >= B) == Ge(A, B)
+# See https://github.com/sympy/sympy/issues/17708
+#def test_relational_noncommutative():
+#    from sympy import Lt, Gt, Le, Ge
+#    A, B = symbols('A,B', commutative=False)
+#    assert (A < B) == Lt(A, B)
+#    assert (A <= B) == Le(A, B)
+#    assert (A > B) == Gt(A, B)
+#    assert (A >= B) == Ge(A, B)
 
 
 def test_basic_nostr():

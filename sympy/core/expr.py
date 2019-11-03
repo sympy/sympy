@@ -336,8 +336,8 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+            if me.is_extended_real is False:
+                raise TypeError("Invalid comparison of non-real %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
@@ -359,8 +359,8 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+            if me.is_extended_real is False:
+                raise TypeError("Invalid comparison of non-real %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
@@ -382,8 +382,8 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+            if me.is_extended_real is False:
+                raise TypeError("Invalid comparison of non-real %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
@@ -406,8 +406,8 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_extended_real is False:
-                raise TypeError("Invalid comparison of complex %s" % me)
+            if me.is_extended_real is False:
+                raise TypeError("Invalid comparison of non-real %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
@@ -489,7 +489,7 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        sympy.core.basic.is_comparable
+        sympy.core.basic.Basic.is_comparable
         """
         return all(obj.is_number for obj in self.args)
 
@@ -1066,7 +1066,7 @@ class Expr(Basic, EvalfMixin):
 
     def _eval_transpose(self):
         from sympy.functions.elementary.complexes import conjugate
-        if self.is_complex:
+        if (self.is_complex or self.is_infinite):
             return self
         elif self.is_hermitian:
             return conjugate(self)
@@ -1377,8 +1377,8 @@ class Expr(Basic, EvalfMixin):
         as_coeff_Add: separate the additive constant from an expression
         as_coeff_Mul: separate the multiplicative constant from an expression
         as_independent: separate x-dependent terms/factors from others
-        sympy.polys.polytools.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
-        sympy.polys.polytools.nth: like coeff_monomial but powers of monomial terms are used
+        sympy.polys.polytools.Poly.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
+        sympy.polys.polytools.Poly.nth: like coeff_monomial but powers of monomial terms are used
 
         Examples
         ========
@@ -1719,8 +1719,8 @@ class Expr(Basic, EvalfMixin):
         as_coeff_Add: separate the additive constant from an expression
         as_coeff_Mul: separate the multiplicative constant from an expression
         as_independent: separate x-dependent terms/factors from others
-        sympy.polys.polytools.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
-        sympy.polys.polytools.nth: like coeff_monomial but powers of monomial terms are used
+        sympy.polys.polytools.Poly.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
+        sympy.polys.polytools.Poly.nth: like coeff_monomial but powers of monomial terms are used
 
 
         """
@@ -1856,8 +1856,8 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        .separatevars(), .expand(log=True), Add.as_two_terms(),
-        Mul.as_two_terms(), .as_coeff_add(), .as_coeff_mul()
+        .separatevars(), .expand(log=True), sympy.core.add.Add.as_two_terms(),
+        sympy.core.mul.Mul.as_two_terms(), .as_coeff_add(), .as_coeff_mul()
         """
         from .symbol import Symbol
         from .add import _unevaluated_Add
@@ -2131,8 +2131,8 @@ class Expr(Basic, EvalfMixin):
         (1, 6.0*x*(y + 1) + 3*z*(y + 1))
         >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive()
         (121, x**2*(y + 1)**2)
-        >>> ((5*(x*(1 + y)) + 2.0*x*(3 + 3*y))**2).as_content_primitive()
-        (1, 121.0*x**2*(y + 1)**2)
+        >>> ((x*(1 + y) + 0.4*x*(3 + 3*y))**2).as_content_primitive()
+        (1, 4.84*x**2*(y + 1)**2)
 
         Radical content can also be factored out of the primitive:
 
@@ -3065,7 +3065,7 @@ class Expr(Basic, EvalfMixin):
         See Also
         ========
 
-        See the docstring of Expr.aseries() for complete details of this wrapper.
+        Expr.aseries: See the docstring of this function for complete details of this wrapper.
         """
 
         from sympy import Order, Dummy

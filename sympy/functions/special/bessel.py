@@ -635,7 +635,7 @@ class jn(SphericalBesselBase):
     .. math:: j_n(z) = f_n(z) \sin{z} + (-1)^{n+1} f_{-n-1}(z) \cos{z},
 
     where the coefficients $f_n(z)$ are available as
-    :func:`polys.orthopolys.spherical_bessel_fn`.
+    :func:`sympy.polys.orthopolys.spherical_bessel_fn`.
 
     Examples
     ========
@@ -916,7 +916,8 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
     This returns an array of zeros of jn up to the k-th zero.
 
-    * method = "sympy": uses :func:`mpmath.besseljzero`
+    * method = "sympy": uses `mpmath.besseljzero
+      <http://mpmath.org/doc/current/functions/bessel.html#mpmath.besseljzero>`_
     * method = "scipy": uses the
       `SciPy's sph_jn <http://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn_zeros.html>`_
       and
@@ -993,25 +994,13 @@ class AiryBase(Function):
     def _eval_is_extended_real(self):
         return self.args[0].is_extended_real
 
-    def _as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_extended_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            re, im = self.args[0].as_real_imag()
-        return (re, im)
-
     def as_real_imag(self, deep=True, **hints):
-        x, y = self._as_real_imag(deep=deep, **hints)
-        sq = -y**2/x**2
-        re = S.Half*(self.func(x+x*sqrt(sq))+self.func(x-x*sqrt(sq)))
-        im = x/(2*y) * sqrt(sq) * (self.func(x-x*sqrt(sq)) - self.func(x+x*sqrt(sq)))
-        return (re, im)
+        z = self.args[0]
+        zc = z.conjugate()
+        f = self.func
+        u = (f(z)+f(zc))/2
+        v = I*(f(zc)-f(z))/2
+        return u, v
 
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)

@@ -1112,9 +1112,13 @@ def quantile(expr, evaluate=True, **kwargs):
 
 def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
     """
-    See sample_iter
-
     Uses lambdify for computation. This is fast but does not always work.
+
+    See Also
+    ========
+
+    sample_iter
+
     """
     if condition:
         ps = pspace(Tuple(expr, condition))
@@ -1158,9 +1162,13 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
 def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
     """
-    See sample_iter
-
     Uses subs for computation. This is slow but almost always works.
+
+    See Also
+    ========
+
+    sample_iter
+
     """
     if condition is not None:
         ps = pspace(Tuple(expr, condition))

@@ -77,6 +77,8 @@ def test_sinh():
 
     x = Symbol('x', real=True)
     assert sinh(I*x).is_finite is True
+    assert sinh(x).is_real is True
+    assert sinh(I).is_real is False
 
 
 def test_sinh_series():
@@ -157,6 +159,8 @@ def test_cosh():
 
     x = Symbol('x', real=True)
     assert cosh(I*x).is_finite is True
+    assert cosh(I*x).is_real is True
+    assert cosh(I*2 + 1).is_real is False
 
 
 def test_cosh_series():
@@ -237,6 +241,9 @@ def test_tanh():
                                 sin(im(x))*cos(im(x))/(cos(im(x))**2 + sinh(re(x))**2))
     x = Symbol('x', extended_real=True)
     assert tanh(x).as_real_imag(deep=False) == (tanh(x), 0)
+    assert tanh(I*pi/3 + 1).is_real is False
+    assert tanh(x).is_real is True
+    assert tanh(I*pi*x/2).is_real is None
 
 
 def test_tanh_series():
@@ -1089,6 +1096,29 @@ def test_cosh_expansion():
     assert cosh(2*x).expand(trig=True) == cosh(x)**2 + sinh(x)**2
     assert cosh(3*x).expand(trig=True).expand() == \
         3*sinh(x)**2*cosh(x) + cosh(x)**3
+
+def test_cosh_positive():
+    # See issue 11721
+    # cosh(x) is positive for real values of x
+    x = symbols('x')
+    k = symbols('k', real=True)
+    n = symbols('n', integer=True)
+
+    assert cosh(k).is_positive is True
+    assert cosh(k + 2*n*pi*I).is_positive is True
+    assert cosh(I*pi/4).is_positive is True
+    assert cosh(3*I*pi/4).is_positive is False
+
+def test_cosh_nonnegative():
+    x = symbols('x')
+    k = symbols('k', real=True)
+    n = symbols('n', integer=True)
+
+    assert cosh(k).is_nonnegative is True
+    assert cosh(k + 2*n*pi*I).is_nonnegative is True
+    assert cosh(I*pi/4).is_nonnegative is True
+    assert cosh(3*I*pi/4).is_nonnegative is False
+    assert cosh(S.Zero).is_nonnegative is True
 
 def test_real_assumptions():
     z = Symbol('z', real=False)

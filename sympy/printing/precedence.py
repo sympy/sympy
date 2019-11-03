@@ -18,6 +18,7 @@ PRECEDENCE = {
     "Not": 100,
     "Atom": 1000,
     "BitwiseOr": 36,
+    "BitwiseXor": 37,
     "BitwiseAnd": 38
 }
 

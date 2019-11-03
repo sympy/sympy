@@ -58,6 +58,7 @@ from sympy.solvers.inequalities import reduce_inequalities
 
 from types import GeneratorType
 from collections import defaultdict
+import itertools
 import warnings
 
 
@@ -356,7 +357,7 @@ def checksol(f, symbol, sol=None, **flags):
         if numerical and val.is_number:
             if val in (S.true, S.false):
                 return bool(val)
-            return bool(abs(val.n(18).n(12, chop=True)) < 1e-9)
+            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         was = val
 
     if flags.get('warn', False):
@@ -382,7 +383,7 @@ def failing_assumptions(expr, **assumptions):
     >>> failing_assumptions(x**2 - 1, positive=True)
     {'positive': None}
 
-    If all assumptions satisfy the `expr` an empty dictionary is returned.
+    If all assumptions satisfy the ``expr`` an empty dictionary is returned.
 
     >>> failing_assumptions(x**2, positive=True)
     {}
@@ -397,9 +398,9 @@ def failing_assumptions(expr, **assumptions):
 
 
 def check_assumptions(expr, against=None, **assumptions):
-    """Checks whether expression `expr` satisfies all assumptions.
+    """Checks whether expression ``expr`` satisfies all assumptions.
 
-    `assumptions` is a dict of assumptions: {'assumption': True|False, ...}.
+    ``assumptions`` is a dict of assumptions: {'assumption': True|False, ...}.
 
     Examples
     ========
@@ -435,6 +436,7 @@ def check_assumptions(expr, against=None, **assumptions):
 
     See Also
     ========
+
     failing_assumptions
     """
     expr = sympify(expr)
@@ -983,6 +985,30 @@ def solve(f, *symbols, **flags):
             f[i] = fi
 
         if fi.is_Relational:
+            if flags.get('dict', False):
+                solution = reduce_inequalities(f, symbols=symbols)
+                if isinstance(solution, Equality):
+                    return [{solution.lhs: solution.rhs}]
+                solution = list(solution.args)
+                for sol in solution:
+                    # Behavior for types like StrictLessThan is not defined
+                    if not isinstance(sol, (Or, Equality)):
+                        warnings.warn(filldedent('''
+                            Warning: Ignoring dict=True due to
+                            incompatible type of %s.''' % sol))
+                        return reduce_inequalities(f, symbols=symbols)
+                intermediate = [sol for sol in solution
+                                if isinstance(sol, Equality)]
+                solution[:] = [sol.args for sol in solution
+                               if sol not in intermediate]
+                solutions = [intermediate + list(sol)
+                             for sol in itertools.product(*solution)]
+                for i in range(len(solutions)):
+                    ele = {}
+                    for sol in solutions[i]:
+                        ele[sol.lhs] = sol.rhs
+                    solutions[i] = ele
+                return [] if solutions == [{}] else solutions
             return reduce_inequalities(f, symbols=symbols)
 
         if isinstance(fi, Poly):
@@ -1018,10 +1044,13 @@ def solve(f, *symbols, **flags):
 
     for i, fi in enumerate(f):
         # Abs
-        fi = fi.replace(Abs, lambda arg:
-            separatevars(Abs(arg)) if arg.has(*symbols) else Abs(arg))
-        fi = fi.replace(Abs, lambda arg:
-            Abs(arg).rewrite(Piecewise) if arg.has(*symbols) else Abs(arg))
+        while True:
+            was = fi
+            fi = fi.replace(Abs, lambda arg:
+                separatevars(Abs(arg)).rewrite(Piecewise) if arg.has(*symbols)
+                else Abs(arg))
+            if was == fi:
+                break
 
         for e in fi.find(Abs):
             if e.has(*symbols):
@@ -2485,7 +2514,7 @@ def solve_linear_system_LU(matrix, syms):
     See Also
     ========
 
-    sympy.matrices.LUsolve
+    LUsolve
 
     """
     if matrix.rows != matrix.cols - 1:
@@ -3238,7 +3267,7 @@ def unrad(eq, *syms, **flags):
     change of variable needed to rewrite the system as a polynomial cannot
     be solved.
 
-    Otherwise the tuple, ``(eq, cov)``, is returned where::
+    Otherwise the tuple, ``(eq, cov)``, is returned where:
 
         ``eq``, ``cov``
             ``eq`` is an equation without radicals (in the symbol(s) of
@@ -3259,12 +3288,12 @@ def unrad(eq, *syms, **flags):
         set.
 
     ``flags`` are used internally for communication during recursive calls.
-    Two options are also recognized::
+    Two options are also recognized:
 
         ``take``, when defined, is interpreted as a single-argument function
         that returns True if a given Pow should be handled.
 
-    Radicals can be removed from an expression if::
+    Radicals can be removed from an expression if:
 
         *   all bases of the radicals are the same; a change of variables is
             done in this case.

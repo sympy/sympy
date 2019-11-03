@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import warnings
+import glob
 from distutils.errors import CompileError
 from distutils.sysconfig import get_config_var
 

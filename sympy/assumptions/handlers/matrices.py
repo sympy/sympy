@@ -523,7 +523,7 @@ class AskDiagonalHandler(CommonHandler):
         return True
 
     @staticmethod
-    def DiagonalizeVector(expr, assumptions):
+    def DiagMatrix(expr, assumptions):
         return True
 
     @staticmethod

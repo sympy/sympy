@@ -83,5 +83,5 @@ def test_names_in_namespace():
             # Accessible by -oo
             continue
 
-        # Use is here because of complications with ==
-        assert any(getattr(S, name) is i or type(getattr(S, name)) is i for i in d.values()), name
+        # Use is here to ensure it is the exact same object
+        assert any(getattr(S, name) is i for i in d.values()), name

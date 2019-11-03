@@ -757,8 +757,8 @@ def test_no_results_f():
 
 def test_intrinsic_math_codegen():
     # not included: log10
-    from sympy import (acos, asin, atan, ceiling, cos, cosh, floor, log, ln,
-            sin, sinh, sqrt, tan, tanh, Abs)
+    from sympy import (acos, asin, atan, cos, cosh, log, ln, sin, sinh, sqrt,
+            tan, tanh, Abs)
     x = symbols('x')
     name_expr = [
         ("test_abs", Abs(x)),

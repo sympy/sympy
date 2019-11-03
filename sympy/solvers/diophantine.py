@@ -2065,7 +2065,7 @@ def _diop_ternary_quadratic(_var, coeff):
 def transformation_to_normal(eq):
     """
     Returns the transformation Matrix that converts a general ternary
-    quadratic equation `eq` (`ax^2 + by^2 + cz^2 + dxy + eyz + fxz`)
+    quadratic equation ``eq`` (`ax^2 + by^2 + cz^2 + dxy + eyz + fxz`)
     to a form without cross terms: `ax^2 + by^2 + cz^2 = 0`. This is
     not used in solving ternary quadratics; it is only implemented for
     the sake of completeness.
@@ -2861,7 +2861,8 @@ def diop_general_sum_of_even_powers(eq, limit=1):
 
     See Also
     ========
-    power_representation()
+
+    power_representation
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
@@ -3128,7 +3129,7 @@ def sum_of_four_squares(n):
 
 
 def power_representation(n, p, k, zeros=False):
-    """
+    r"""
     Returns a generator for finding k-tuples of integers,
     `(n_{1}, n_{2}, . . . n_{k})`, such that
     `n = n_{1}^p + n_{2}^p + . . . n_{k}^p`.
@@ -3137,7 +3138,7 @@ def power_representation(n, p, k, zeros=False):
     =====
 
     ``power_representation(n, p, k, zeros)``: Represent non-negative number
-    ``n`` as a sum of ``k`` ``p``th powers. If ``zeros`` is true, then the
+    ``n`` as a sum of ``k`` ``p``\ th powers. If ``zeros`` is true, then the
     solutions is allowed to contain zeros.
 
     Examples

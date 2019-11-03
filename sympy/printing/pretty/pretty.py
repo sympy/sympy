@@ -165,6 +165,8 @@ class PrettyPrinter(Printer):
     _print_Rationals = _print_Atom
     _print_Complexes = _print_Atom
 
+    _print_EmptySequence = _print_Atom
+
     def _print_Reals(self, e):
         if self._use_unicode:
             return self._print_Atom(e)
@@ -1500,15 +1502,15 @@ class PrettyPrinter(Printer):
         return self._print_Function(e, func_name="W")
 
     def _print_Lambda(self, e):
-        vars, expr = e.args
+        expr = e.expr
+        sig = e.signature
         if self._use_unicode:
             arrow = u" \N{RIGHTWARDS ARROW FROM BAR} "
         else:
             arrow = " -> "
-        if len(vars) == 1:
-            var_form = self._print(vars[0])
-        else:
-            var_form = self._print(tuple(vars))
+        if len(sig) == 1 and sig[0].is_symbol:
+            sig = sig[0]
+        var_form = self._print(sig)
 
         return prettyForm(*stringPict.next(var_form, arrow, self._print(expr)), binding=8)
 
@@ -1985,14 +1987,15 @@ class PrettyPrinter(Printer):
             inn = u"\N{SMALL ELEMENT OF}"
         else:
             inn = 'in'
-        variables = ts.lamda.variables
-        expr = self._print(ts.lamda.expr)
+        fun = ts.lamda
+        sets = ts.base_sets
+        signature = fun.signature
+        expr = self._print(fun.expr)
         bar = self._print("|")
-        sets = [self._print(i) for i in ts.args[1:]]
-        if len(sets) == 1:
-            return self._print_seq((expr, bar, variables[0], inn, sets[0]), "{", "}", ' ')
+        if len(signature) == 1:
+            return self._print_seq((expr, bar, signature[0], inn, sets[0]), "{", "}", ' ')
         else:
-            pargs = tuple(j for var, setv in zip(variables, sets) for j in (var, inn, setv, ","))
+            pargs = tuple(j for var, setv in zip(signature, sets) for j in (var, inn, setv, ","))
             return self._print_seq((expr, bar) + pargs[:-1], "{", "}", ' ')
 
     def _print_ConditionSet(self, ts):

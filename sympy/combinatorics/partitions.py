@@ -317,7 +317,10 @@ class IntegerPartition(Basic):
     sympy.utilities.iterables.partitions,
     sympy.utilities.iterables.multiset_partitions
 
-    Reference: https://en.wikipedia.org/wiki/Partition_%28number_theory%29
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/Partition_%28number_theory%29
     """
 
     _dict = None

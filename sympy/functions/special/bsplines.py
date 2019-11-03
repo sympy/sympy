@@ -126,7 +126,7 @@ def bspline_basis(d, knots, n, x):
     See Also
     ========
 
-    bsplines_basis_set
+    bspline_basis_set
 
     References
     ==========
@@ -196,7 +196,7 @@ def bspline_basis_set(d, knots, x):
     See Also
     ========
 
-    bsplines_basis
+    bspline_basis
     """
     n_splines = len(knots) - d - 1
     return [bspline_basis(d, tuple(knots), i, x) for i in range(n_splines)]
@@ -227,7 +227,7 @@ def interpolating_spline(d, x, X, Y):
     See Also
     ========
 
-    bsplines_basis_set, sympy.polys.specialpolys.interpolating_poly
+    bspline_basis_set, sympy.polys.specialpolys.interpolating_poly
     """
     from sympy import symbols, Number, Dummy, Rational
     from sympy.solvers.solveset import linsolve

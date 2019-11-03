@@ -621,9 +621,6 @@ class Function(Application, Expr):
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
 
-    def _eval_is_complex(self):
-        return fuzzy_and(a.is_complex for a in self.args)
-
     def as_base_exp(self):
         """
         Returns the method as the 2-tuple (base, exponent).
@@ -1228,7 +1225,7 @@ class Derivative(Expr):
         Derivative(f(x), x)*Derivative(f(f(x)), f(x))
 
         Such an expression will present the same ambiguities as arise
-        when dealing with any other product, like `2*x`, so `_diff_wrt`
+        when dealing with any other product, like ``2*x``, so ``_diff_wrt``
         is False:
 
         >>> Derivative(f(f(x)), x)._diff_wrt
@@ -2442,7 +2439,7 @@ def diff(f, *symbols, **kwargs):
     ========
 
     Derivative
-    sympy.geometry.util.idiff: computes the derivative implicitly
+    idiff: computes the derivative implicitly
 
     """
     if hasattr(f, 'diff'):
@@ -2768,7 +2765,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     ========
 
     expand_log, expand_mul, expand_multinomial, expand_complex, expand_trig,
-    expand_power_base, expand_power_exp, expand_func, hyperexpand
+    expand_power_base, expand_power_exp, expand_func, sympy.simplify.hyperexpand.hyperexpand
 
     """
     # don't modify this; modify the Expr.expand method
@@ -2907,7 +2904,8 @@ def expand_complex(expr, deep=True):
 
     See Also
     ========
-    Expr.as_real_imag
+
+    sympy.core.expr.Expr.as_real_imag
     """
     return sympify(expr).expand(deep=deep, complex=True, basic=False,
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
@@ -3216,8 +3214,13 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     """
     from sympy.core.power import Pow
     from sympy.polys.rootoftools import RootOf
+    from sympy import MatrixBase
 
     kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+
+    if isinstance(expr, MatrixBase):
+        return expr.applyfunc(lambda e: nfloat(e, **kw))
+
     # handling of iterable containers
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):

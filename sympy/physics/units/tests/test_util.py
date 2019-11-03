@@ -1,3 +1,4 @@
+from sympy.physics.units.systems.si import dimsys_SI
 from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import (Add, Mul, Pow, Tuple, pi, sin, sqrt, sstr, sympify,
@@ -7,10 +8,8 @@ from sympy.physics.units import (
     kilogram, kilometer, length, meter, mile, minute, newton, planck,
     planck_length, planck_mass, planck_temperature, planck_time, radians,
     second, speed_of_light, steradian, time, km)
-from sympy.physics.units.dimensions import dimsys_default
-from sympy.physics.units.util import convert_to, dim_simplify, check_dimensions
+from sympy.physics.units.util import convert_to, check_dimensions
 from sympy.utilities.pytest import raises
-
 
 
 def NS(e, n=15, **options):
@@ -22,42 +21,22 @@ T = time
 
 
 def test_dim_simplify_add():
-    with warns_deprecated_sympy():
-        assert dim_simplify(Add(L, L)) == L
-    with warns_deprecated_sympy():
-        assert dim_simplify(L + L) == L
+    # assert Add(L, L) == L
+    assert L + L == L
 
 
 def test_dim_simplify_mul():
-    with warns_deprecated_sympy():
-        assert dim_simplify(Mul(L, T)) == L*T
-    with warns_deprecated_sympy():
-        assert dim_simplify(L*T) == L*T
+    # assert Mul(L, T) == L*T
+    assert L*T == L*T
 
 
 def test_dim_simplify_pow():
-    with warns_deprecated_sympy():
-        assert dim_simplify(Pow(L, 2)) == L**2
-    with warns_deprecated_sympy():
-        assert dim_simplify(L**2) == L**2
+    assert Pow(L, 2) == L**2
 
 
 def test_dim_simplify_rec():
-    with warns_deprecated_sympy():
-        assert dim_simplify(Mul(Add(L, L), T)) == L*T
-    with warns_deprecated_sympy():
-        assert dim_simplify((L + L) * T) == L*T
-
-
-def test_dim_simplify_dimless():
-    # TODO: this should be somehow simplified on its own,
-    # without the need of calling `dim_simplify`:
-    with warns_deprecated_sympy():
-        assert dim_simplify(sin(L*L**-1)**2*L).get_dimensional_dependencies()\
-               == dimsys_default.get_dimensional_dependencies(L)
-    with warns_deprecated_sympy():
-        assert dim_simplify(sin(L * L**(-1))**2 * L).get_dimensional_dependencies()\
-               == dimsys_default.get_dimensional_dependencies(L)
+    # assert Mul(Add(L, L), T) == L*T
+    assert (L + L) * T == L*T
 
 
 def test_convert_to_quantities():
@@ -119,11 +98,11 @@ def test_eval_simplify():
 
     x, y = symbols('x y')
 
-    assert ((cm/mm).simplify()) == 10
-    assert ((km/m).simplify()) == 1000
-    assert ((km/cm).simplify()) == 100000
-    assert ((10*x*K*km**2/m/cm).simplify()) == 1000000000*x*kelvin
-    assert ((cm/km/m).simplify()) == 1/(10000000*centimeter)
+    assert (cm/mm).simplify() == 10
+    assert (km/m).simplify() == 1000
+    assert (km/cm).simplify() == 100000
+    assert (10*x*K*km**2/m/cm).simplify() == 1000000000*x*kelvin
+    assert (cm/km/m).simplify() == 1/(10000000*centimeter)
 
     assert (3*kilo*meter).simplify() == 3000*meter
     assert (4*kilo*meter/(2*kilometer)).simplify() == 2

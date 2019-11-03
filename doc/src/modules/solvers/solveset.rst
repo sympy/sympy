@@ -258,7 +258,7 @@ What is this domain argument about?
     >>> solveset(x**2 + 1, x) # domain=S.Complexes is default
     {-I, I}
     >>> solveset(x**2 + 1, x, domain=S.Reals)
-    EmptySet()
+    EmptySet
 
 
 What are the general methods employed by solveset to solve an equation?
@@ -574,6 +574,7 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solveset.domain_check
 
+.. autofunction:: sympy.solvers.solveset.solvify
 
 linear_eq_to_matrix
 -------------------

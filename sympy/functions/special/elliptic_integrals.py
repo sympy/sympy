@@ -94,6 +94,12 @@ class elliptic_k(Function):
         if m.is_infinite:
             return True
 
+    def _eval_rewrite_as_Integral(self, *args):
+        from sympy import Integral, Dummy
+        t = Dummy('t')
+        m = self.args[0]
+        return Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2))
+
     def _sage_(self):
         import sage.all as sage
         return sage.elliptic_kc(self.args[0]._sage_())
@@ -166,6 +172,12 @@ class elliptic_f(Function):
         z, m = self.args
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(z.conjugate(), m.conjugate())
+
+    def _eval_rewrite_as_Integral(self, *args):
+        from sympy import Integral, Dummy
+        t = Dummy('t')
+        z, m = self.args[0], self.args[1]
+        return Integral(1/(sqrt(1 - m*sin(t)**2)), (t, 0, z))
 
     def _eval_is_zero(self):
         z, m = self.args
@@ -286,6 +298,12 @@ class elliptic_e(Function):
             m = args[0]
             return -meijerg(((S.Half, Rational(3, 2)), []), \
                             ((S.Zero,), (S.Zero,)), -m)/4
+
+    def _eval_rewrite_as_Integral(self, *args):
+        from sympy import Integral, Dummy
+        z, m = (pi/2, self.args[0]) if len(self.args) == 1 else self.args
+        t = Dummy('t')
+        return Integral(sqrt(1 - m*sin(t)**2), (t, 0, z))
 
 
 class elliptic_pi(Function):
@@ -412,3 +430,12 @@ class elliptic_pi(Function):
             elif argindex == 2:
                 return (elliptic_e(m)/(m - 1) + elliptic_pi(n, m))/(2*(n - m))
         raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Integral(self, *args):
+        from sympy import Integral, Dummy
+        if len(self.args) == 2:
+            n, m, z = self.args[0], self.args[1], pi/2
+        else:
+            n, z, m = self.args
+        t = Dummy('t')
+        return Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z))

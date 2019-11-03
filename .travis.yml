@@ -20,13 +20,30 @@ python:
 matrix:
   include:
     - stage: quality
-      python: 3.7
+      python: 3.8
       dist: xenial
       sudo: true
       script: bin/test quality
       env:
 
     - stage: baseline
+      python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="1/2" TEST_SYMPY="true"
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="2/2" TEST_SYMPY="true"
+
+    - stage: test
       python: 3.7
       dist: xenial
       sudo: true
@@ -38,23 +55,6 @@ matrix:
       env:
         - SPLIT="1/2" TEST_SYMPY="true"
     - python: 3.7
-      dist: xenial
-      sudo: true
-      env:
-        - SPLIT="2/2" TEST_SYMPY="true"
-
-    - stage: test
-      python: 3.8-dev
-      dist: xenial
-      sudo: true
-      env:
-        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
-    - python: 3.8-dev
-      dist: xenial
-      sudo: true
-      env:
-        - SPLIT="1/2" TEST_SYMPY="true"
-    - python: 3.8-dev
       dist: xenial
       sudo: true
       env:
@@ -63,7 +63,8 @@ matrix:
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7 pyglet pycosat python-clang"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.5.1 tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7 pyglet pycosat python-clang"
+        - SYMPY_STRICT_COMPILER_CHECKS=1
       addons:
         apt:
           packages:
@@ -78,8 +79,9 @@ matrix:
       # and we aren't actually using the Travis Python anyway.
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang"
+        - TEST_OPT_DEPENDENCY="matchpy numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.5.1 tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang"
         - TEST_SAGE="true"
+        - SYMPY_STRICT_COMPILER_CHECKS=1
       addons:
         apt:
           packages:
@@ -90,7 +92,13 @@ matrix:
             - gfortran
             - python-scipy
 
-    - python: 3.7
+    # Tensorflow 1 support
+    - python: 3.6
+      env:
+        - TEST_ASCII="true"
+        - TEST_OPT_DEPENDENCY="tensorflow<2"
+
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
@@ -119,13 +127,13 @@ matrix:
       env:
         - TEST_SLOW="true"
         - SPLIT="2/2"
-    - python: 3.7
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
         - TEST_SLOW="true"
         - SPLIT="1/2"
-    - python: 3.7
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
@@ -196,6 +204,11 @@ matrix:
             - pypy
           packages:
             - pypy3
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_FLAKE8="true"
 
   fast_finish: true
 
@@ -233,6 +246,11 @@ matrix:
             - pypy
           packages:
             - pypy3
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_FLAKE8="true"
 
 before_install:
   - set -e
@@ -244,7 +262,11 @@ before_install:
       pip install coverage;
       coverage debug sys;
     fi
-  - if [ "$TRAVIS_PYTHON_VERSION" == "3.8-dev" ]; then
+  - if [[ "${TEST_FLAKE8}" == "true" ]]; then
+      pip install flake8;
+      flake8 sympy;
+    fi
+  - if [ "$TRAVIS_PYTHON_VERSION" == "3.8" ]; then
         pip uninstall -y Cython;
     fi
   - |
@@ -270,15 +292,11 @@ before_install:
         export CPATH=$CONDA_PREFIX/include;
         export LIBRARY_PATH=$CONDA_PREFIX/lib;
         export LD_LIBRARY_PATH=$CONDA_PREFIX/lib;
-        export SYMPY_STRICT_COMPILER_CHECKS=1;
         conda clean --all;
         if [[ "$TEST_SAGE" == "true" ]]; then
             # Use a separate environment because sage downgrades matplotlib
             conda create -c conda-forge/label/cf201901 -n sage sagelib mpmath "ipython>=5.5.0,<6";
             conda clean --all;
-        fi
-        if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-            conda install matchpy;
         fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list | grep "numpy" && pip uninstall -y numpy;

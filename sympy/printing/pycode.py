@@ -501,7 +501,14 @@ _known_functions_mpmath = dict(_in_mpmath, **{
     'sign': 'sign',
 })
 _known_constants_mpmath = {
-    'Pi': 'pi'
+    'Exp1': 'e',
+    'Pi': 'pi',
+    'GoldenRatio': 'phi',
+    'EulerGamma': 'euler',
+    'Catalan': 'catalan',
+    'NaN': 'nan',
+    'Infinity': 'inf',
+    'NegativeInfinity': 'ninf'
 }
 
 
@@ -517,6 +524,7 @@ class MpmathPrinter(PythonCodePrinter):
         _known_functions.items(),
         [(k, 'mpmath.' + v) for k, v in _known_functions_mpmath.items()]
     ))
+    _kc = {k: 'mpmath.'+v for k, v in _known_constants_mpmath.items()}
 
     def _print_Float(self, e):
         # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
@@ -583,6 +591,14 @@ _known_functions_numpy = dict(_in_numpy, **{
     'exp2': 'exp2',
     'sign': 'sign',
 })
+_known_constants_numpy = {
+    'Exp1': 'e',
+    'Pi': 'pi',
+    'EulerGamma': 'euler_gamma',
+    'NaN': 'nan',
+    'Infinity': 'PINF',
+    'NegativeInfinity': 'NINF'
+}
 
 
 class NumPyPrinter(PythonCodePrinter):
@@ -597,7 +613,7 @@ class NumPyPrinter(PythonCodePrinter):
         PythonCodePrinter._kf.items(),
         [(k, 'numpy.' + v) for k, v in _known_functions_numpy.items()]
     ))
-    _kc = {k: 'numpy.'+v for k, v in _known_constants_math.items()}
+    _kc = {k: 'numpy.'+v for k, v in _known_constants_numpy.items()}
 
 
     def _print_seq(self, seq):
@@ -650,7 +666,9 @@ class NumPyPrinter(PythonCodePrinter):
         #     it will behave the same as passing the 'default' kwarg to select()
         #     *as long as* it is the last element in expr.args.
         # If this is not the case, it may be triggered prematurely.
-        return '{0}({1}, {2}, default=numpy.nan)'.format(self._module_format('numpy.select'), conds, exprs)
+        return '{0}({1}, {2}, default={3})'.format(
+            self._module_format('numpy.select'), conds, exprs,
+            self._print(S.NaN))
 
     def _print_Relational(self, expr):
         "Relational printer for Equality and Unequality"
@@ -833,8 +851,6 @@ _known_functions_scipy_special = {
 _known_constants_scipy_constants = {
     'GoldenRatio': 'golden_ratio',
     'Pi': 'pi',
-    'E': 'e',
-    'Exp1': 'e'
 }
 
 class SciPyPrinter(NumPyPrinter):
@@ -845,7 +861,10 @@ class SciPyPrinter(NumPyPrinter):
         NumPyPrinter._kf.items(),
         [(k, 'scipy.special.' + v) for k, v in _known_functions_scipy_special.items()]
     ))
-    _kc = {k: 'scipy.constants.' + v for k, v in _known_constants_scipy_constants.items()}
+    _kc =dict(chain(
+        NumPyPrinter._kc.items(),
+        [(k, 'scipy.constants.' + v) for k, v in _known_constants_scipy_constants.items()]
+    ))
 
     def _print_SparseMatrix(self, expr):
         i, j, data = [], [], []

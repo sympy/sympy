@@ -15,7 +15,7 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .contains import Contains
-from .sets import Set, EmptySet, Union, FiniteSet, ProductSet, UniversalSet
+from .sets import Set, EmptySet, Union, FiniteSet
 
 
 class ConditionSet(Set):
@@ -55,7 +55,7 @@ class ConditionSet(Set):
     >>> cond = (n > 0); cond
     False
     >>> ConditionSet(n, cond, S.Integers)
-    EmptySet()
+    EmptySet
 
     In addition, substitution of a dummy symbol can only be
     done with a generic symbol with matching commutativity
