@@ -1067,6 +1067,12 @@ class Interval(Set, EvalfMixin):
                 return False
             if fuzzy_bool(self.end > other.end):
                 return False
+            if (other.left_open and not self.left_open
+                    and fuzzy_bool(Eq(self.start, other.start))):
+                return False
+            if (other.right_open and not self.right_open
+                    and fuzzy_bool(Eq(self.end, other.end))):
+                return False
 
         elif isinstance(other, FiniteSet):
             # An Interval can only be a subset of a finite set if it is finite
@@ -1082,6 +1088,14 @@ class Interval(Set, EvalfMixin):
                     return False
                 if all(fuzzy_bool(self.end > s.end) for s in intervals):
                     return False
+                if self.measure.is_nonzero:
+                    no_overlap = lambda s1, s2: fuzzy_or([
+                            fuzzy_bool(s1.end <= s2.start),
+                            fuzzy_bool(s1.start >= s2.end),
+                            ])
+                    if all(no_overlap(s, self) for s in intervals):
+                        return False
+
 
     def as_relational(self, x):
         """Rewrite an interval in terms of inequalities and logic operators."""

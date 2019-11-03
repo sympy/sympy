@@ -616,6 +616,9 @@ def test_is_subset():
     assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x)) is True
     assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x+1)) is False
 
+    assert Interval(0, 1).is_subset(Interval(0, 1, left_open=True)) is False
+    assert Interval(-2, 3).is_subset(Union(Interval(-oo, -2), Interval(3, oo))) is False
+
 
 def test_is_proper_subset():
     assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True
