@@ -8,6 +8,11 @@ from sympy.functions.elementary.exponential import exp, log, match_real_imag
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.integers import floor
 
+from sympy import pi, Eq
+from sympy.logic import Or, And
+from sympy.core.logic import fuzzy_or, fuzzy_and, fuzzy_bool
+
+
 
 def _rewrite_hyperbolics_as_exp(expr):
     expr = sympify(expr)
@@ -273,6 +278,53 @@ class cosh(HyperbolicFunction):
     sinh, tanh, acosh
     """
 
+    def _eval_is_positive(self):
+        arg = self.args[0]
+
+        if arg.is_real:
+            return True
+
+        re, im = arg.as_real_imag()
+        im_mod = im % (2*pi)
+
+        if im_mod == 0:
+            return True
+
+        if re == 0:
+            if im_mod < pi/2 or im_mod > 3*pi/2:
+                return True
+            elif im_mod >= pi/2 or im_mod <= 3*pi/2:
+                return False
+
+        return fuzzy_or([fuzzy_and([fuzzy_bool(Eq(re, 0)),
+                         fuzzy_or([fuzzy_bool(im_mod < pi/2),
+                                   fuzzy_bool(im_mod > 3*pi/2)])]),
+                         fuzzy_bool(Eq(im_mod, 0))])
+
+
+    def _eval_is_nonnegative(self):
+        arg = self.args[0]
+
+        if arg.is_real:
+            return True
+
+        re, im = arg.as_real_imag()
+        im_mod = im % (2*pi)
+
+        if im_mod == 0:
+            return True
+
+        if re == 0:
+            if im_mod <= pi/2 or im_mod >= 3*pi/2:
+                return True
+            elif im_mod > pi/2 or im_mod < 3*pi/2:
+                return False
+
+        return fuzzy_or([fuzzy_and([fuzzy_bool(Eq(re, 0)),
+                         fuzzy_or([fuzzy_bool(im_mod <= pi/2), fuzzy_bool(im_mod >= 3*pi/2)])]),
+                         fuzzy_bool(Eq(im_mod, 0))])
+
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return sinh(self.args[0])
@@ -419,10 +471,6 @@ class cosh(HyperbolicFunction):
         # if not, check if the imaginary part is a number
         re, im = arg.as_real_imag()
         return (im%pi).is_zero
-
-    def _eval_is_positive(self):
-        if self.args[0].is_extended_real:
-            return True
 
     def _eval_is_finite(self):
         arg = self.args[0]

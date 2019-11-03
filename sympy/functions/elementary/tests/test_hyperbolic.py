@@ -1097,6 +1097,29 @@ def test_cosh_expansion():
     assert cosh(3*x).expand(trig=True).expand() == \
         3*sinh(x)**2*cosh(x) + cosh(x)**3
 
+def test_cosh_positive():
+    # See issue 11721
+    # cosh(x) is positive for real values of x
+    x = symbols('x')
+    k = symbols('k', real=True)
+    n = symbols('n', integer=True)
+
+    assert cosh(k).is_positive is True
+    assert cosh(k + 2*n*pi*I).is_positive is True
+    assert cosh(I*pi/4).is_positive is True
+    assert cosh(3*I*pi/4).is_positive is False
+
+def test_cosh_nonnegative():
+    x = symbols('x')
+    k = symbols('k', real=True)
+    n = symbols('n', integer=True)
+
+    assert cosh(k).is_nonnegative is True
+    assert cosh(k + 2*n*pi*I).is_nonnegative is True
+    assert cosh(I*pi/4).is_nonnegative is True
+    assert cosh(3*I*pi/4).is_nonnegative is False
+    assert cosh(S.Zero).is_nonnegative is True
+
 def test_real_assumptions():
     z = Symbol('z', real=False)
     assert sinh(z).is_real is None
