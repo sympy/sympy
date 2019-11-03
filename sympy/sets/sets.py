@@ -366,7 +366,8 @@ class Set(Basic):
         if not isinstance(other, Set):
             raise ValueError("Unknown argument '%s'" % other)
 
-        if self == other:
+        # Handle the trivial cases
+        if self == other or self.is_empty:
             return True
 
         # Call the subclass method
@@ -379,6 +380,9 @@ class Set(Basic):
             return ret
 
         # Fall back on computing the intersection
+        # XXX: We shouldn't do this. A query like this should be handled
+        # without evaluating new Set objects. It should be the other way round
+        # so that the intersect method uses is_subset for evaluation.
         if self.intersect(other) == self:
             return True
 
@@ -1054,6 +1058,9 @@ class Interval(Set, EvalfMixin):
         return self.as_relational(d).subs(d, other)
 
     def _eval_is_subset(self, other):
+        # Note that self.is_empty was already checked in Set.is_subset and can
+        # be assumed False now.
+
         if isinstance(other, Interval):
             # This is correct but can be made more comprehensive...
             if fuzzy_bool(self.start < other.start):
@@ -1063,9 +1070,18 @@ class Interval(Set, EvalfMixin):
 
         elif isinstance(other, FiniteSet):
             # An Interval can only be a subset of a finite set if it is finite
-            # which can only happen if the start and end are equal.
+            # which can only happen if the start and end are equal (or if it
+            # is empty but that has already been checked).
             if fuzzy_bool(self.start < self.end):
                 return False
+
+        elif isinstance(other, Union):
+            if all(isinstance(s, (Interval, FiniteSet)) for s in other.args):
+                intervals = [s for s in other.args if isinstance(s, Interval)]
+                if all(fuzzy_bool(self.start < s.start) for s in intervals):
+                    return False
+                if all(fuzzy_bool(self.end > s.end) for s in intervals):
+                    return False
 
     def as_relational(self, x):
         """Rewrite an interval in terms of inequalities and logic operators."""
