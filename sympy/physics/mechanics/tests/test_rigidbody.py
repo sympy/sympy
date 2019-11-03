@@ -124,4 +124,4 @@ def test_parallel_axis():
     Ip = R.parallel_axis(p)
     Ip_expected = inertia(N, Ix + m * b**2, Iy + m * a**2,
                           Iz + m * (a**2 + b**2), ixy=-m * a * b)
-    assert (Ip - Ip_expected) == S(0)
+    assert Ip == Ip_expected
