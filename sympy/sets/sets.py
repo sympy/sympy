@@ -12,7 +12,7 @@ from sympy.core.decorators import deprecated
 from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
-from sympy.core.logic import fuzzy_bool, fuzzy_or, fuzzy_and
+from sympy.core.logic import fuzzy_bool, fuzzy_or, fuzzy_and, fuzzy_not
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
 from sympy.core.relational import Eq, Ne
@@ -367,15 +367,17 @@ class Set(Basic):
             raise ValueError("Unknown argument '%s'" % other)
 
         # Handle the trivial cases
-        if self == other or self.is_empty:
+        if self == other:
             return True
+        is_empty = self.is_empty
+        if is_empty is True:
+            return True
+        elif fuzzy_not(is_empty) and other.is_empty:
+            return False
 
-        # Call the subclass method
-        ret = self._eval_is_subset(other)
-        if ret is not None:
-            return ret
-
-        ret = other._eval_is_superset(self)
+        # Use pairwise rules from multiple dispatch
+        from sympy.sets.handlers.issubset import is_subset_sets
+        ret = is_subset_sets(self, other)
         if ret is not None:
             return ret
 
@@ -385,18 +387,6 @@ class Set(Basic):
         # so that the intersect method uses is_subset for evaluation.
         if self.intersect(other) == self:
             return True
-
-    def _eval_is_subset(self, other):
-        """
-        Fuzzy bool indicating whether self is a subset of other
-        """
-        return None
-
-    def _eval_is_superset(self, other):
-        """
-        Fuzzy bool indicating whether self is a superset of other
-        """
-        return None
 
     # This should be deprecated:
     def issubset(self, other):
@@ -1057,46 +1047,6 @@ class Interval(Set, EvalfMixin):
         d = Dummy()
         return self.as_relational(d).subs(d, other)
 
-    def _eval_is_subset(self, other):
-        # Note that self.is_empty was already checked in Set.is_subset and can
-        # be assumed False now.
-
-        if isinstance(other, Interval):
-            # This is correct but can be made more comprehensive...
-            if fuzzy_bool(self.start < other.start):
-                return False
-            if fuzzy_bool(self.end > other.end):
-                return False
-            if (other.left_open and not self.left_open
-                    and fuzzy_bool(Eq(self.start, other.start))):
-                return False
-            if (other.right_open and not self.right_open
-                    and fuzzy_bool(Eq(self.end, other.end))):
-                return False
-
-        elif isinstance(other, FiniteSet):
-            # An Interval can only be a subset of a finite set if it is finite
-            # which can only happen if the start and end are equal (or if it
-            # is empty but that has already been checked).
-            if fuzzy_bool(self.start < self.end):
-                return False
-
-        elif isinstance(other, Union):
-            if all(isinstance(s, (Interval, FiniteSet)) for s in other.args):
-                intervals = [s for s in other.args if isinstance(s, Interval)]
-                if all(fuzzy_bool(self.start < s.start) for s in intervals):
-                    return False
-                if all(fuzzy_bool(self.end > s.end) for s in intervals):
-                    return False
-                if self.measure.is_nonzero:
-                    no_overlap = lambda s1, s2: fuzzy_or([
-                            fuzzy_bool(s1.end <= s2.start),
-                            fuzzy_bool(s1.start >= s2.end),
-                            ])
-                    if all(no_overlap(s, self) for s in intervals):
-                        return False
-
-
     def as_relational(self, x):
         """Rewrite an interval in terms of inequalities and logic operators."""
         x = sympify(x)
@@ -1293,13 +1243,6 @@ class Union(Set, LatticeOp, EvalfMixin):
 
     def _contains(self, other):
         return Or(*[s.contains(other) for s in self.args])
-
-    def _eval_is_subset(self, other):
-        return fuzzy_and(s.is_subset(other) for s in self.args)
-
-    def _eval_is_superset(self, other):
-        if fuzzy_or(s.is_superset(other) for s in self.args):
-            return True
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
@@ -1666,12 +1609,6 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def _contains(self, other):
         return false
 
-    def _eval_is_subset(self, other):
-        return True
-
-    def _eval_is_superset(self, other):
-        return other.is_empty
-
     def as_relational(self, symbol):
         return false
 
@@ -1871,14 +1808,6 @@ class FiniteSet(Set, EvalfMixin):
         # evaluate=True is needed to override evaluate=False context;
         # we need Eq to do the evaluation
         return fuzzy_or(fuzzy_bool(Eq(e, other, evaluate=True)) for e in self.args)
-
-    def _eval_is_subset(self, other):
-        return fuzzy_and(other._contains(e) for e in self.args)
-
-    def _eval_is_superset(self, other):
-        # A check for infiniteness would better...
-        if other in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals, S.Complexes]:
-            return False
 
     @property
     def _boundary(self):
