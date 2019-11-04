@@ -620,9 +620,6 @@ def is_combining(sym):
 
     See stringPict.width on usage.
     """
-    if not pretty_use_unicode():
-        return False
-
     return True if (u'\N{COMBINING GRAVE ACCENT}' <= sym <=
                     u'\N{COMBINING LATIN SMALL LETTER X}' or
 
