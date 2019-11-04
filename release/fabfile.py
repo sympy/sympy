@@ -17,7 +17,7 @@ fab vagrant func
 Even those functions that do not use vagrant must be run this way, because of
 the vagrant configuration at the bottom of this file.
 
-Any function that should be made avaiable from the command line needs to have
+Any function that should be made available from the command line needs to have
 the @task decorator.
 
 Save any files that should be reset between runs somewhere in the repos
@@ -43,11 +43,7 @@ from fabric.contrib.files import exists
 from fabric.colors import blue, red, green
 from fabric.utils import error, warn
 
-try:
-    # Only works in newer versions of fabric
-    env.colorize_errors = True
-except AttributeError:
-    pass
+env.colorize_errors = True
 
 try:
     import requests
@@ -89,7 +85,7 @@ def full_path_split(path):
     """
     Function to do a full split on a path.
     """
-    # Based on http://stackoverflow.com/a/13505966/161801
+    # Based on https://stackoverflow.com/a/13505966/161801
     rest, tail = os.path.split(path)
     if not rest or rest == os.path.sep:
         return (tail,)
@@ -308,7 +304,7 @@ def build_docs():
         with virtualenv(venv):
             with cd("/home/vagrant/repos/sympy/doc"):
                 run("make clean")
-                run("make html-errors")
+                run("make html")
                 run("make man")
                 with cd("/home/vagrant/repos/sympy/doc/_build"):
                     run("mv html {html-nozip}".format(**tarball_formatter()))
@@ -402,7 +398,7 @@ git_whitelist = {
     'bin/test_isolated',
     'bin/test_travis.sh',
     # The notebooks are not ready for shipping yet. They need to be cleaned
-    # up, and preferrably doctested.  See also
+    # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
     'examples/advanced/identitysearch_example.ipynb',
     'examples/beginner/plot_advanced.ipynb',
@@ -507,8 +503,8 @@ descriptions = OrderedDict([
     ('source', "The SymPy source installer.",),
     ('win32', "Python Windows 32-bit installer.",),
     ('html', '''Html documentation for the Python 2 version. This is the same as
-the <a href="http://docs.sympy.org/latest/index.html">online documentation</a>.''',),
-    ('pdf', '''Pdf version of the <a href="http://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
+the <a href="https://docs.sympy.org/latest/index.html">online documentation</a>.''',),
+    ('pdf', '''Pdf version of the <a href="https://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
     ])
 
 @task
@@ -544,7 +540,9 @@ def table():
 
     table = []
 
-    # http://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
+    version = get_sympy_version()
+
+    # https://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
     # recommended as a real way to generate html, but it works better than
     # anything else I've tried.
     @contextmanager
@@ -552,6 +550,11 @@ def table():
         table.append("<%s>" % name)
         yield
         table.append("</%s>" % name)
+    @contextmanager
+    def a_href(link):
+        table.append("<a href=\"%s\">" % link)
+        yield
+        table.append("</a>")
 
     with tag('table'):
         with tag('tr'):
@@ -563,8 +566,9 @@ def table():
             name = get_tarball_name(key)
             with tag('tr'):
                 with tag('td'):
-                    with tag('b'):
-                        table.append(name)
+                    with a_href('https://github.com/sympy/sympy/releases/download/sympy-%s/%s' %(version,name)):
+                        with tag('b'):
+                            table.append(name)
                 with tag('td'):
                     table.append(descriptions[key].format(**tarball_formatter_dict))
                 with tag('td'):
@@ -1013,7 +1017,7 @@ def GitHub_release(username=None, user='sympy', token=None,
     if not check_tag_exists():
         error("The tag for this version has not been pushed yet. Cannot upload the release.")
 
-    # See http://developer.github.com/v3/repos/releases/#create-a-release
+    # See https://developer.github.com/v3/repos/releases/#create-a-release
     # First, create the release
     post = {}
     post['tag_name'] = tag

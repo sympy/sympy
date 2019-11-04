@@ -8,7 +8,7 @@ from sympy.integrals import integrate
 def singularityintegrate(f, x):
     """
     This function handles the indefinite integrations of Singularity functions.
-    The ``integrate`` function calls this function intenally whenever an
+    The ``integrate`` function calls this function internally whenever an
     instance of SingularityFunction is passed as argument.
 
     The idea for integration is the following:

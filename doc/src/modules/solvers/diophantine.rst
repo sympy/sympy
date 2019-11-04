@@ -94,14 +94,14 @@ write the equation in the above form, when we input the equation to any of the
 functions in Diophantine module, it needs to be in the form `eq = 0`.
 
 >>> diophantine(2*x + 3*y - 5)
-{(3*t_0 - 5, -2*t_0 + 5)}
+{(3*t_0 - 5, 5 - 2*t_0)}
 
 Note that stepping one more level below the highest API, we can solve the very
 same equation by calling :py:meth:`~sympy.solvers.diophantine.diop_solve`.
 
 >>> from sympy.solvers.diophantine import diop_solve
 >>> diop_solve(2*x + 3*y - 5)
-(3*t_0 - 5, -2*t_0 + 5)
+(3*t_0 - 5, 5 - 2*t_0)
 
 Note that it returns a tuple rather than a set.
 :py:meth:`~sympy.solvers.diophantine.diophantine` always return a set of tuples.
@@ -113,7 +113,7 @@ which is what :py:meth:`~sympy.solvers.diophantine.diop_solve` calls internally.
 
 >>> from sympy.solvers.diophantine import diop_linear
 >>> diop_linear(2*x + 3*y - 5)
-(3*t_0 - 5, -2*t_0 + 5)
+(3*t_0 - 5, 5 - 2*t_0)
 
 If the given equation has no solutions then the outputs will look like below.
 
@@ -131,7 +131,7 @@ passing a customized parameter. Consider the following example:
 
 >>> m = symbols("m", integer=True)
 >>> diop_solve(2*x + 3*y - 5, m)
-(3*m_0 - 5, -2*m_0 + 5)
+(3*m_0 - 5, 5 - 2*m_0)
 
 For linear Diophantine equations, the customized parameter is the prefix used
 for each free variable in the solution. Consider the following example:
@@ -166,10 +166,10 @@ set()
 >>> diophantine(x**2 - 4*x*y + 4*y**2 - 3*x + 7*y - 5)
 {(-2*t**2 - 7*t + 10, -t**2 - 3*t + 5)}
 >>> diophantine(x**2 + 2*x*y + y**2 - 3*x - 3*y)
-{(t_0, -t_0), (t_0, -t_0 + 3)}
+{(t_0, -t_0), (t_0, 3 - t_0)}
 
 The most interesting case is when `\Delta > 0` and it is not a perfect square.
-In this case, the equation has either no solutions or an infinte number of
+In this case, the equation has either no solutions or an infinite number of
 solutions. Consider the below cases where `\Delta = 8`.
 
 >>> diophantine(x**2 - 4*x*y + 2*y**2 - 3*x + 7*y - 5)
@@ -332,14 +332,14 @@ User Functions
 This functions is imported into the global namespace
 with ``from sympy import *``:
 
-:func:`diophantine`
-^^^^^^^^^^^^^^^^^^^
+diophantine
+^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diophantine
 
 And this function is imported with ``from sympy.solvers.diophantine import *``:
 
-:func:`classify_diop`
-^^^^^^^^^^^^^^^^^^^^^
+classify_diop
+^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.classify_diop
 
 Internal Functions
@@ -347,130 +347,138 @@ Internal Functions
 
 These functions are intended for internal use in the Diophantine module.
 
-:func:`diop_solve`
-^^^^^^^^^^^^^^^^^^
+diop_solve
+^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_solve
 
-:func:`diop_linear`
-^^^^^^^^^^^^^^^^^^^
+diop_linear
+^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_linear
 
-:func:`base_solution_linear`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+base_solution_linear
+^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.base_solution_linear
 
-:func:`diop_quadratic`
-^^^^^^^^^^^^^^^^^^^^^^
+diop_quadratic
+^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_quadratic
 
-:func:`diop_DN`
-^^^^^^^^^^^^^^^
+diop_DN
+^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_DN
 
-:func:`cornacchia`
-^^^^^^^^^^^^^^^^^^
+cornacchia
+^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.cornacchia
 
-:func:`diop_bf_DN`
-^^^^^^^^^^^^^^^^^^
+diop_bf_DN
+^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_bf_DN
 
-:func:`transformation_to_DN`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+transformation_to_DN
+^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.transformation_to_DN
 
-:func:`find_DN`
-^^^^^^^^^^^^^^^
+transformation_to_normal
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.transformation_to_normal
+
+find_DN
+^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.find_DN
 
-:func:`diop_ternary_quadratic`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+diop_ternary_quadratic
+^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_ternary_quadratic
 
-:func:`square_factor`
-^^^^^^^^^^^^^^^^^^^^^
+square_factor
+^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.square_factor
 
-:func:`descent`
-^^^^^^^^^^^^^^^
+descent
+^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.descent
 
-:func:`diop_general_pythagorean`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+diop_general_pythagorean
+^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_general_pythagorean
 
-:func:`diop_general_sum_of_squares`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+diop_general_sum_of_squares
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_general_sum_of_squares
 
-:func:`diop_general_sum_of_even_powers`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+diop_general_sum_of_even_powers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_general_sum_of_even_powers
 
-:func:`partition`
-^^^^^^^^^^^^^^^^^
+power_representation
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.power_representation
+
+partition
+^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.partition
 
-:func:`sum_of_three_squares`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sum_of_three_squares
+^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.sum_of_three_squares
 
-:func:`sum_of_four_squares`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sum_of_four_squares
+^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.sum_of_four_squares
 
-:func:`sum_of_powers`
-^^^^^^^^^^^^^^^^^^^^^
+sum_of_powers
+^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.sum_of_powers
 
-:func:`sum_of_squares`
-^^^^^^^^^^^^^^^^^^^^^^
+sum_of_squares
+^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.sum_of_squares
 
-:obj:`merge_solution`
-^^^^^^^^^^^^^^^^^^^^^
+merge_solution
+^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.merge_solution
 
-:obj:`divisible`
-^^^^^^^^^^^^^^^^
+divisible
+^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.divisible
 
-:obj:`PQa`
-^^^^^^^^^^
+PQa
+^^^
 .. autofunction:: sympy.solvers.diophantine.PQa
 
-:obj:`equivalent`
-^^^^^^^^^^^^^^^^^
+equivalent
+^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.equivalent
 
-:obj:`parametrize_ternary_quadratic`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+parametrize_ternary_quadratic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.parametrize_ternary_quadratic
 
-:obj:`diop_ternary_quadratic_normal`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+diop_ternary_quadratic_normal
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_ternary_quadratic_normal
 
-:obj:`ldescent`
-^^^^^^^^^^^^^^^
+ldescent
+^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.ldescent
 
-:obj:`gaussian_reduce`
-^^^^^^^^^^^^^^^^^^^^^^
+gaussian_reduce
+^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.gaussian_reduce
 
-:obj:`holzer`
-^^^^^^^^^^^^^^
+holzer
+^^^^^^
 .. autofunction:: sympy.solvers.diophantine.holzer
 
-:obj:`prime_as_sum_of_two_squares`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+prime_as_sum_of_two_squares
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.prime_as_sum_of_two_squares
 
-:obj:`sqf_normal`
-^^^^^^^^^^^^^^^^^
+sqf_normal
+^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.sqf_normal
 
-:obj:`reconstruct`
-^^^^^^^^^^^^^^^^^^
+reconstruct
+^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.reconstruct

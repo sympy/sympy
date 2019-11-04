@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, string_types
 from .vector import Vector, _check_vector
 from .frame import _check_frame
 
@@ -12,6 +12,38 @@ class Point(object):
     It stores the: position, velocity, and acceleration of a point.
     The position is a vector defined as the vector distance from a parent
     point to this point.
+
+    Parameters
+    ==========
+
+    name : string
+        The display name of the Point
+
+    Examples
+    ========
+
+    >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> O = Point('O')
+    >>> P = Point('P')
+    >>> u1, u2, u3 = dynamicsymbols('u1 u2 u3')
+    >>> O.set_vel(N, u1 * N.x + u2 * N.y + u3 * N.z)
+    >>> O.acc(N)
+    u1'*N.x + u2'*N.y + u3'*N.z
+
+    symbols() can be used to create multiple Points in a single step, for example:
+
+    >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+    >>> from sympy import symbols
+    >>> N = ReferenceFrame('N')
+    >>> u1, u2 = dynamicsymbols('u1 u2')
+    >>> A, B = symbols('A B', cls=Point)
+    >>> type(A)
+    <class 'sympy.physics.vector.point.Point'>
+    >>> A.set_vel(N, u1 * N.x + u2 * N.y)
+    >>> B.set_vel(N, u2 * N.x + u1 * N.y)
+    >>> A.acc(N) - B.acc(N)
+    (u1' - u2')*N.x + (-u1' + u2')*N.y
 
     """
 
@@ -205,7 +237,7 @@ class Point(object):
 
         """
 
-        if not isinstance(name, str):
+        if not isinstance(name, string_types):
             raise TypeError('Must supply a valid name')
         if value == 0:
             value = Vector(0)

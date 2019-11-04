@@ -1,5 +1,6 @@
-SymPy Core
-==========
+====
+Core
+====
 
 sympify
 -------
@@ -15,7 +16,7 @@ assumptions
 .. automodule:: sympy.core.assumptions
 
 cache
--------
+-----
 .. module:: sympy.core.cache
 
 cacheit
@@ -46,7 +47,11 @@ singleton
 
 S
 ^
-.. autoclass:: S
+
+.. autoclass:: sympy.core.singleton.SingletonRegistry
+   :members:
+
+.. autoclass:: Singleton
    :members:
 
 expr
@@ -56,6 +61,11 @@ expr
 Expr
 ----
 .. autoclass:: Expr
+   :members:
+
+UnevaluatedExpr
+---------------
+.. autoclass:: UnevaluatedExpr
    :members:
 
 AtomicExpr
@@ -220,6 +230,17 @@ GoldenRatio
 .. autoclass:: GoldenRatio
    :members:
 
+TribonacciConstant
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: TribonacciConstant
+   :members:
+
+mod_inverse
+^^^^^^^^^^^
+
+.. autofunction:: mod_inverse
+
 power
 -----
 .. module:: sympy.core.power
@@ -232,6 +253,10 @@ Pow
 integer_nthroot
 ^^^^^^^^^^^^^^^
 .. autofunction:: integer_nthroot
+
+integer_log
+^^^^^^^^^^^
+.. autofunction:: integer_log
 
 mul
 ---
@@ -270,6 +295,9 @@ relational
 
 Rel
 ^^^
+.. autoclass:: Relational
+   :members:
+
 .. autoclass:: Rel
    :members:
 
@@ -360,6 +388,7 @@ Derivative
 ^^^^^^^^^^
 .. autoclass:: Derivative
    :members:
+   :private-members:
 
 diff
 ^^^^
@@ -459,6 +488,12 @@ evalf
 -----
 .. module:: sympy.core.evalf
 
+EvalfMixin
+^^^^^^^^^^
+
+.. autoclass:: EvalfMixin
+   :members:
+
 PrecisionExhausted
 ^^^^^^^^^^^^^^^^^^
 .. autoclass:: PrecisionExhausted
@@ -509,3 +544,8 @@ gcd_terms
 factor_terms
 ^^^^^^^^^^^^
 .. autofunction:: factor_terms
+
+ordered
+^^^^^^^
+
+.. autofunction:: sympy.core.compatibility.ordered

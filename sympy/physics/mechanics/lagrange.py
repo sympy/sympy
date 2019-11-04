@@ -1,15 +1,14 @@
 from __future__ import print_function, division
 
-__all__ = ['LagrangesMethod']
-
 from sympy.core.backend import diff, zeros, Matrix, eye, sympify
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.physics.mechanics.functions import (find_dynamicsymbols, msubs,
-        _f_list_parser)
+                                               _f_list_parser)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities import default_sort_key
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
+
+__all__ = ['LagrangesMethod']
 
 
 class LagrangesMethod(object):
@@ -91,7 +90,7 @@ class LagrangesMethod(object):
 
         >>> l = LagrangesMethod(L, [q], forcelist = fl, frame = N)
         >>> print(l.form_lagranges_equations())
-        Matrix([[b*Derivative(q(t), t) + 1.0*k*q(t) + m*Derivative(q(t), t, t)]])
+        Matrix([[b*Derivative(q(t), t) + 1.0*k*q(t) + m*Derivative(q(t), (t, 2))]])
 
     We can also solve for the states using the 'rhs' method.
 
@@ -101,8 +100,8 @@ class LagrangesMethod(object):
     Please refer to the docstrings on each method for more details.
     """
 
-    def __init__(self, Lagrangian, qs, coneqs=None, forcelist=None, bodies=None,
-                 frame=None, hol_coneqs=None, nonhol_coneqs=None):
+    def __init__(self, Lagrangian, qs, forcelist=None, bodies=None, frame=None,
+                 hol_coneqs=None, nonhol_coneqs=None):
         """Supply the following for the initialization of LagrangesMethod
 
         Lagrangian : Sympifyable
@@ -162,19 +161,12 @@ class LagrangesMethod(object):
         self._qdots = self.q.diff(dynamicsymbols._t)
         self._qdoubledots = self._qdots.diff(dynamicsymbols._t)
 
-        # Deal with constraint equations
-        if coneqs:
-            SymPyDeprecationWarning("The `coneqs` kwarg is deprecated in "
-                    "favor of `hol_coneqs` and `nonhol_coneqs`. Please "
-                    "update your code").warn()
-            self.coneqs = coneqs
-        else:
-            mat_build = lambda x: Matrix(x) if x else Matrix()
-            hol_coneqs = mat_build(hol_coneqs)
-            nonhol_coneqs = mat_build(nonhol_coneqs)
-            self.coneqs = Matrix([hol_coneqs.diff(dynamicsymbols._t),
-                    nonhol_coneqs])
-            self._hol_coneqs = hol_coneqs
+        mat_build = lambda x: Matrix(x) if x else Matrix()
+        hol_coneqs = mat_build(hol_coneqs)
+        nonhol_coneqs = mat_build(nonhol_coneqs)
+        self.coneqs = Matrix([hol_coneqs.diff(dynamicsymbols._t),
+                nonhol_coneqs])
+        self._hol_coneqs = hol_coneqs
 
     def form_lagranges_equations(self):
         """Method to form Lagrange's equations of motion.
@@ -373,7 +365,7 @@ class LagrangesMethod(object):
 
         The operating points may be also entered using the ``op_point`` kwarg.
         This takes a dictionary of {symbol: value}, or a an iterable of such
-        dictionaries. The values may be numberic or symbolic. The more values
+        dictionaries. The values may be numeric or symbolic. The more values
         you can specify beforehand, the faster this computation will run.
 
         For more documentation, please see the ``Linearizer`` class."""
@@ -442,14 +434,6 @@ class LagrangesMethod(object):
             list of valid methods, see
             :meth:`~sympy.matrices.matrices.MatrixBase.inv`
         """
-
-        if 'method' in kwargs:
-            # The method kwarg is deprecated in favor of inv_method.
-            SymPyDeprecationWarning(feature="method kwarg",
-                    useinstead="inv_method kwarg",
-                    deprecated_since_version="0.7.6").warn()
-            # For now accept both
-            inv_method = kwargs['method']
 
         if inv_method is None:
             self._rhs = self.mass_matrix_full.LUsolve(self.forcing_full)

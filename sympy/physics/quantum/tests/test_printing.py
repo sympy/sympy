@@ -24,10 +24,7 @@ from sympy.core.compatibility import exec_
 from sympy.utilities.pytest import XFAIL
 
 # Imports used in srepr strings
-from sympy.physics.quantum.constants import HBar
-from sympy.physics.quantum.hilbert import DirectSumHilbertSpace, TensorProductHilbertSpace, TensorPowerHilbertSpace
-from sympy.physics.quantum.spin import JzOp, J2Op
-from sympy import Add, Integer, Mul, Rational, Tuple
+from sympy.physics.quantum.spin import JzOp
 
 from sympy.printing import srepr
 from sympy.printing.pretty import pretty as xpretty
@@ -37,8 +34,17 @@ from sympy.core.compatibility import u_decode as u
 
 MutableDenseMatrix = Matrix
 
+
 ENV = {}
-exec_("from sympy import *", ENV)
+exec_('from sympy import *', ENV)
+exec_('from sympy.physics.quantum import *', ENV)
+exec_('from sympy.physics.quantum.cg import *', ENV)
+exec_('from sympy.physics.quantum.spin import *', ENV)
+exec_('from sympy.physics.quantum.hilbert import *', ENV)
+exec_('from sympy.physics.quantum.qubit import *', ENV)
+exec_('from sympy.physics.quantum.qexpr import *', ENV)
+exec_('from sympy.physics.quantum.gate import *', ENV)
+exec_('from sympy.physics.quantum.constants import *', ENV)
 
 
 def sT(expr, string):
@@ -47,7 +53,7 @@ def sT(expr, string):
     from sympy/printing/tests/test_repr.py
     """
     assert srepr(expr) == string
-    assert eval(string) == expr
+    assert eval(string, ENV) == expr
 
 
 def pretty(expr):
@@ -222,7 +228,7 @@ x \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
-    assert latex(expr) == r'x^{\dag}'
+    assert latex(expr) == r'x^{\dagger}'
     sT(expr, "Dagger(Symbol('x'))")
 
 
@@ -344,7 +350,7 @@ C \
     assert upretty(h3) == u'F'
     assert latex(h3) == r'\mathcal{F}'
     sT(h3, "FockSpace()")
-    assert str(h4) == 'L2([0, oo))'
+    assert str(h4) == 'L2(Interval(0, oo))'
     ascii_str = \
 """\
  2\n\
@@ -358,7 +364,7 @@ L \
     assert pretty(h4) == ascii_str
     assert upretty(h4) == ucode_str
     assert latex(h4) == r'{\mathcal{L}^2}\left( \left[0, \infty\right) \right)'
-    sT(h4, "L2(Interval(Integer(0), oo, S.false, S.true))")
+    sT(h4, "L2(Interval(Integer(0), oo, false, true))")
     assert str(h1 + h2) == 'H+C(2)'
     ascii_str = \
 """\
@@ -505,7 +511,7 @@ u("""\
 
 def test_operator():
     a = Operator('A')
-    b = Operator('B', Symbol('t'), S(1)/2)
+    b = Operator('B', Symbol('t'), S.Half)
     inv = a.inv()
     f = Function('f')
     x = symbols('x')
@@ -536,7 +542,7 @@ A  \
 """\
                     /d            \\\n\
 DifferentialOperator|--(f(x)),f(x)|\n\
-                    \dx           /\
+                    \\dx           /\
 """
     ucode_str = \
 u("""\
@@ -547,8 +553,8 @@ DifferentialOperator⎜──(f(x)),f(x)⎟\n\
     assert pretty(d) == ascii_str
     assert upretty(d) == ucode_str
     assert latex(d) == \
-        r'DifferentialOperator\left(\frac{d}{d x} f{\left (x \right )},f{\left (x \right )}\right)'
-    sT(d, "DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x')))")
+        r'DifferentialOperator\left(\frac{d}{d x} f{\left(x \right)},f{\left(x \right)}\right)'
+    sT(d, "DifferentialOperator(Derivative(Function('f')(Symbol('x')), Tuple(Symbol('x'), Integer(1))),Function('f')(Symbol('x')))")
     assert str(b) == 'Operator(B,t,1/2)'
     assert pretty(b) == 'Operator(B,t,1/2)'
     assert upretty(b) == u'Operator(B,t,1/2)'
@@ -809,7 +815,7 @@ def test_big_expr():
                  |/                                   +\\         |                                 \n\
     2  / +    +\\ <|                    /d            \\ |   +    +>                                 \n\
 /J \\ x \\A  + B /*||DifferentialOperator|--(f(x)),f(x)| | ,A  + B |*(<1,0| + <1,1|)*(|0,0> + |1,-1>)\n\
-\\ z/             \\\\                    \dx           / /         /                                 \
+\\ z/             \\\\                    \\dx           / /         /                                 \
 """
     ucode_str = \
 u("""\
@@ -822,8 +828,8 @@ u("""\
     assert pretty(e1) == ascii_str
     assert upretty(e1) == ucode_str
     assert latex(e1) == \
-        r'{J_z^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator\left(\frac{d}{d x} f{\left (x \right )},f{\left (x \right )}\right)^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
-    sT(e1, "Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Pow(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x')))), Integer(3)),Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
+        r'{J_z^{2}}\otimes \left({A^{\dagger} + B^{\dagger}}\right) \left\{\left(DifferentialOperator\left(\frac{d}{d x} f{\left(x \right)},f{\left(x \right)}\right)^{\dagger}\right)^{3},A^{\dagger} + B^{\dagger}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
+    sT(e1, "Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Pow(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Tuple(Symbol('x'), Integer(1))),Function('f')(Symbol('x')))), Integer(3)),Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
     assert str(e2) == '[Jz**2,A + B]*{E**(-2),Dagger(D)*Dagger(C)}*[J2,Jz]'
     ascii_str = \
 """\
@@ -840,7 +846,7 @@ u("""\
     assert pretty(e2) == ascii_str
     assert upretty(e2) == ucode_str
     assert latex(e2) == \
-        r'\left[J_z^{2},A + B\right] \left\{E^{-2},D^{\dag} C^{\dag}\right\} \left[J^2,J_z\right]'
+        r'\left[J_z^{2},A + B\right] \left\{E^{-2},D^{\dagger} C^{\dagger}\right\} \left[J^2,J_z\right]'
     sT(e2, "Mul(Commutator(Pow(JzOp(Symbol('J')), Integer(2)),Add(Operator(Symbol('A')), Operator(Symbol('B')))), AntiCommutator(Pow(Operator(Symbol('E')), Integer(-2)),Mul(Dagger(Operator(Symbol('D'))), Dagger(Operator(Symbol('C'))))), Commutator(J2Op(Symbol('J')),JzOp(Symbol('J'))))")
     assert str(e3) == \
         "Wigner3j(1, 2, 3, 4, 5, 6)*[Dagger(B) + A,C + D]x(-J2 + Jz)*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x|1,-1,j1=1,j2=1>"
@@ -861,13 +867,13 @@ u("""\
     assert pretty(e3) == ascii_str
     assert upretty(e3) == ucode_str
     assert latex(e3) == \
-        r'\left(\begin{array}{ccc} 1 & 3 & 5 \\ 2 & 4 & 6 \end{array}\right) {\left[B^{\dag} + A,C + D\right]}\otimes \left({- J^2 + J_z}\right) {\left|1,0\right\rangle }{\left\langle 1,1\right|} \left({{\left|1,0,j_{1}=1,j_{2}=1\right\rangle } + {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }}\right)\otimes {{\left|1,-1,j_{1}=1,j_{2}=1\right\rangle }}'
+        r'\left(\begin{array}{ccc} 1 & 3 & 5 \\ 2 & 4 & 6 \end{array}\right) {\left[B^{\dagger} + A,C + D\right]}\otimes \left({- J^2 + J_z}\right) {\left|1,0\right\rangle }{\left\langle 1,1\right|} \left({{\left|1,0,j_{1}=1,j_{2}=1\right\rangle } + {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }}\right)\otimes {{\left|1,-1,j_{1}=1,j_{2}=1\right\rangle }}'
     sT(e3, "Mul(Wigner3j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6)), TensorProduct(Commutator(Add(Dagger(Operator(Symbol('B'))), Operator(Symbol('A'))),Add(Operator(Symbol('C')), Operator(Symbol('D')))), Add(Mul(Integer(-1), J2Op(Symbol('J'))), JzOp(Symbol('J')))), OuterProduct(JzKet(Integer(1),Integer(0)),JzBra(Integer(1),Integer(1))), TensorProduct(Add(JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1)))), JzKetCoupled(Integer(1),Integer(1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))), JzKetCoupled(Integer(1),Integer(-1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))))")
-    assert str(e4) == '(C(1)*C(2)+F**2)*(L2([0, oo))+H)'
+    assert str(e4) == '(C(1)*C(2)+F**2)*(L2(Interval(0, oo))+H)'
     ascii_str = \
 """\
 // 1    2\\    x2\\   / 2    \\\n\
-\\\\C  x C / + F  / x \L  + H/\
+\\\\C  x C / + F  / x \\L  + H/\
 """
     ucode_str = \
 u("""\
@@ -878,10 +884,10 @@ u("""\
     assert upretty(e4) == ucode_str
     assert latex(e4) == \
         r'\left(\left(\mathcal{C}^{1}\otimes \mathcal{C}^{2}\right)\oplus {\mathcal{F}}^{\otimes 2}\right)\otimes \left({\mathcal{L}^2}\left( \left[0, \infty\right) \right)\oplus \mathcal{H}\right)'
-    sT(e4, "TensorProductHilbertSpace((DirectSumHilbertSpace(TensorProductHilbertSpace(ComplexSpace(Integer(1)),ComplexSpace(Integer(2))),TensorPowerHilbertSpace(FockSpace(),Integer(2)))),(DirectSumHilbertSpace(L2(Interval(Integer(0), oo, S.false, S.true)),HilbertSpace())))")
+    sT(e4, "TensorProductHilbertSpace((DirectSumHilbertSpace(TensorProductHilbertSpace(ComplexSpace(Integer(1)),ComplexSpace(Integer(2))),TensorPowerHilbertSpace(FockSpace(),Integer(2)))),(DirectSumHilbertSpace(L2(Interval(Integer(0), oo, false, true)),HilbertSpace())))")
 
 
 def _test_sho1d():
     ad = RaisingOp('a')
     assert pretty(ad) == u' \N{DAGGER}\na '
-    assert latex(ad) == 'a^{\\dag}'
+    assert latex(ad) == 'a^{\\dagger}'
