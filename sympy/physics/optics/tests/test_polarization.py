@@ -51,5 +51,5 @@ def test_polarization():
                   [0, 0, 0, 0]])
     assert mueller_matrix(linear_polarizer(0)) == res
     #################################################################
-    res = Matrix([[1, 0, 0, 0], [0, 0, 0, I], [0, 0, 1, 0], [0, I, 0, 0]])
+    res = Matrix([[1, 0, 0, 0], [0, 0, 0, -I], [0, 0, 1, 0], [0, -I, 0, 0]])
     assert polarizing_beam_splitter() == res
