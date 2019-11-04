@@ -43,22 +43,6 @@ We calculate how the Jones vector is modified by a half-wave plate:
 >>> alpha = symbols("alpha", real=True)
 >>> HWP = half_wave_retarder(alpha)
 >>> x1 = simplify(HWP*x0)
->>> pprint(x1, use_unicode=True)
-⎡ⅈ⋅(-cos(-2⋅α + χ + ψ) - ⅈ⋅cos(-2⋅α + χ + ψ) - cos(2⋅α + χ - ψ) + ⅈ⋅cos(2⋅α + 
-⎢─────────────────────────────────────────────────────────────────────────────
-⎢                                         2                                   
-⎢                                                                             
-⎢ⅈ⋅(sin(-2⋅α + χ + ψ) + ⅈ⋅sin(-2⋅α + χ + ψ) - sin(2⋅α + χ - ψ) + ⅈ⋅sin(2⋅α + χ
-⎢─────────────────────────────────────────────────────────────────────────────
-⎣                                         2                                   
-<BLANKLINE>
-χ - ψ))⎤
-───────⎥
-       ⎥
-       ⎥
- - ψ)) ⎥
-────── ⎥
-       ⎦
 
 We calculate the very common operation of passing a beam through a half-wave
 plate and then through a polarizing beam-splitter. We do this by putting this
@@ -78,18 +62,12 @@ polarization:
 
 >>> transmitted_power = jones_2_stokes(transmitted_port)[0]
 >>> reflected_power = jones_2_stokes(reflected_port)[0]
->>> pprint(transmitted_power, use_unicode=True)
-   2                    2             
-cos (-2⋅α + χ + ψ)   cos (2⋅α + χ - ψ)
-────────────────── + ─────────────────
-        2                    2        
+>>> print(transmitted_power)
+cos(-2*alpha + chi + psi)**2/2 + cos(2*alpha + chi - psi)**2/2
 
 
->>> pprint(reflected_power, use_unicode=True)
-   2                    2             
-sin (-2⋅α + χ + ψ)   sin (2⋅α + χ - ψ)
-────────────────── + ─────────────────
-        2                    2        
+>>> print(reflected_power)
+sin(-2*alpha + chi + psi)**2/2 + sin(2*alpha + chi - psi)**2/2
 
 Please see the description of the individual functions for further
 details and examples.
