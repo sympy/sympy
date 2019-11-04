@@ -2,21 +2,17 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.domains.ring import Ring
-from sympy.polys.domains.compositedomain import CompositeDomain
+from sympy.core.compatibility import iterable, range
+from sympy.polys.agca.modules import FreeModulePolyRing
 from sympy.polys.domains.characteristiczero import CharacteristicZero
+from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.old_fractionfield import FractionField
-
+from sympy.polys.domains.ring import Ring
+from sympy.polys.orderings import monomial_key, build_product_order
 from sympy.polys.polyclasses import DMP, DMF
 from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
         CoercionFailed, ExactQuotientFailed, NotReversible)
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
-
-from sympy.polys.orderings import monomial_key, build_product_order
-
-from sympy.polys.agca.modules import FreeModulePolyRing
-
-from sympy.core.compatibility import iterable, range
 from sympy.utilities import public
 
 # XXX why does this derive from CharacteristicZero???
@@ -169,6 +165,9 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
         Convert a sparse distributed module into a list of length ``n``.
 
+        Examples
+        ========
+
         >>> from sympy import QQ, ilex
         >>> from sympy.abc import x, y
         >>> R = QQ.old_poly_ring(x, y, order=ilex)
@@ -183,6 +182,9 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     def free_module(self, rank):
         """
         Generate a free module of rank ``rank`` over ``self``.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -268,6 +270,9 @@ class GlobalPolynomialRing(PolynomialRingBase):
 
     def _vector_to_sdm(self, v, order):
         """
+        Examples
+        ========
+
         >>> from sympy import lex, QQ
         >>> from sympy.abc import x, y
         >>> R = QQ.old_poly_ring(x, y)
@@ -332,6 +337,9 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
 
         Note that the vector is multiplied by a unit first to make all entries
         polynomials.
+
+        Examples
+        ========
 
         >>> from sympy import ilex, QQ
         >>> from sympy.abc import x, y

@@ -13,7 +13,8 @@ import mpmath.libmp as mlib
 #-----------------------------------------------------------------------------
 
 __all__ = [
-    'hbar'
+    'hbar',
+    'HBar',
 ]
 
 
@@ -30,7 +31,7 @@ class HBar(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Planck_constant
+    .. [1] https://en.wikipedia.org/wiki/Planck_constant
     """
 
     is_real = True

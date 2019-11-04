@@ -52,19 +52,19 @@ def change_mul(node, x):
     sorted_args.extend(nc)
 
     for arg in sorted_args:
-        if arg.is_Pow and arg.base.func is DiracDelta:
+        if arg.is_Pow and isinstance(arg.base, DiracDelta):
             new_args.append(arg.func(arg.base, arg.exp - 1))
             arg = arg.base
-        if dirac is None and (arg.func is DiracDelta and arg.is_simple(x)):
+        if dirac is None and (isinstance(arg, DiracDelta) and arg.is_simple(x)):
             dirac = arg
         else:
             new_args.append(arg)
     if not dirac:  # there was no simple dirac
         new_args = []
         for arg in sorted_args:
-            if arg.func is DiracDelta:
+            if isinstance(arg, DiracDelta):
                 new_args.append(arg.expand(diracdelta=True, wrt=x))
-            elif arg.is_Pow and arg.base.func is DiracDelta:
+            elif arg.is_Pow and isinstance(arg.base, DiracDelta):
                 new_args.append(arg.func(arg.base.expand(diracdelta=True, wrt=x), arg.exp))
             else:
                 new_args.append(arg)
@@ -184,7 +184,7 @@ def deltaintegrate(f, x):
                 m = 0
                 while n >= 0:
                     r = (-1)**n*rest_mult.diff(x, n).subs(x, point)
-                    if r is S.Zero:
+                    if r.is_zero:
                         n -= 1
                         m += 1
                     else:
@@ -193,6 +193,6 @@ def deltaintegrate(f, x):
                         else:
                             return r*DiracDelta(x,m-1)
                 # In some very weak sense, x=0 is still a singularity,
-                # but we hope will not be of any practial consequence.
+                # but we hope will not be of any practical consequence.
                 return S.Zero
     return None

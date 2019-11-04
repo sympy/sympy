@@ -6,12 +6,13 @@ See the documentation to the class Pauli for examples.
 
 References
 ~~~~~~~~~~
-.. [1] http://en.wikipedia.org/wiki/Pauli_matrices
+.. [1] https://en.wikipedia.org/wiki/Pauli_matrices
 """
 
 from __future__ import print_function, division
 
-from sympy import Symbol, I, Mul
+from sympy import Symbol, I, Mul, Pow, Add
+from sympy.physics.quantum import TensorProduct
 
 __all__ = ['evaluate_pauli_product']
 
@@ -63,18 +64,24 @@ def epsilon(i, j, k):
 
 
 class Pauli(Symbol):
-    """The class representing algebraic properties of Pauli matrices
+    """
+    The class representing algebraic properties of Pauli matrices.
+
+    The symbol used to display the Pauli matrices can be changed with an
+    optional parameter ``label="sigma"``. Pauli matrices with different
+    ``label`` attributes cannot multiply together.
 
     If the left multiplication of symbol or number with Pauli matrix is needed,
     please use parentheses  to separate Pauli and symbolic multiplication
-    (for example: 2*I*(Pauli(3)*Pauli(2)))
+    (for example: 2*I*(Pauli(3)*Pauli(2))).
 
     Another variant is to use evaluate_pauli_product function to evaluate
     the product of Pauli matrices and other symbols (with commutative
-    multiply rules)
+    multiply rules).
 
     See Also
-    =======
+    ========
+
     evaluate_pauli_product
 
     Examples
@@ -92,6 +99,14 @@ class Pauli(Symbol):
     >>> Pauli(1)*Pauli(2)*Pauli(3)
     I
 
+    >>> from sympy.physics.paulialgebra import Pauli
+    >>> Pauli(1, label="tau")
+    tau1
+    >>> Pauli(1)*Pauli(2, label="tau")
+    sigma1*tau2
+    >>> Pauli(1, label="tau")*Pauli(2, label="tau")
+    I*tau3
+
     >>> from sympy import I
     >>> I*(Pauli(2)*Pauli(3))
     -sigma1
@@ -102,30 +117,34 @@ class Pauli(Symbol):
     I*sigma2*sigma3
     >>> evaluate_pauli_product(f)
     -sigma1
-
     """
 
-    __slots__ = ["i"]
+    __slots__ = ["i", "label"]
 
-    def __new__(cls, i):
+    def __new__(cls, i, label="sigma"):
         if not i in [1, 2, 3]:
             raise IndexError("Invalid Pauli index")
-        obj = Symbol.__new__(cls, "sigma%d" % i, commutative=False)
+        obj = Symbol.__new__(cls, "%s%d" %(label,i), commutative=False, hermitian=True)
         obj.i = i
+        obj.label = label
         return obj
 
     def __getnewargs__(self):
-        return (self.i,)
+        return (self.i,self.label,)
 
     # FIXME don't work for -I*Pauli(2)*Pauli(3)
     def __mul__(self, other):
         if isinstance(other, Pauli):
             j = self.i
             k = other.i
-            return delta(j, k) \
-                + I*epsilon(j, k, 1)*Pauli(1) \
-                + I*epsilon(j, k, 2)*Pauli(2) \
-                + I*epsilon(j, k, 3)*Pauli(3)
+            jlab = self.label
+            klab = other.label
+
+            if jlab == klab:
+                return delta(j, k) \
+                    + I*epsilon(j, k, 1)*Pauli(1,jlab) \
+                    + I*epsilon(j, k, 2)*Pauli(2,jlab) \
+                    + I*epsilon(j, k, 3)*Pauli(3,jlab)
         return super(Pauli, self).__mul__(other)
 
     def _eval_power(b, e):
@@ -157,7 +176,19 @@ def evaluate_pauli_product(arg):
     start = arg
     end = arg
 
-    if not(isinstance(arg, Mul)):
+    if isinstance(arg, Pow) and isinstance(arg.args[0], Pauli):
+        if arg.args[1].is_odd:
+            return arg.args[0]
+        else:
+            return 1
+
+    if isinstance(arg, Add):
+        return Add(*[evaluate_pauli_product(part) for part in arg.args])
+
+    if isinstance(arg, TensorProduct):
+        return TensorProduct(*[evaluate_pauli_product(part) for part in arg.args])
+
+    elif not(isinstance(arg, Mul)):
         return arg
 
     while ((not(start == end)) | ((start == arg) & (end == arg))):
@@ -172,8 +203,18 @@ def evaluate_pauli_product(arg):
             if isinstance(el, Pauli):
                 sigma_product *= el
             elif not(el.is_commutative):
-                keeper = keeper*sigma_product*el
-                sigma_product = 1
+                if isinstance(el, Pow) and isinstance(el.args[0], Pauli):
+                    if el.args[1].is_odd:
+                        sigma_product *= el.args[0]
+                elif isinstance(el, TensorProduct):
+                    keeper = keeper*sigma_product*\
+                        TensorProduct(
+                            *[evaluate_pauli_product(part) for part in el.args]
+                        )
+                    sigma_product = 1
+                else:
+                    keeper = keeper*sigma_product*el
+                    sigma_product = 1
             else:
                 com_product *= el
         end = (tmp[0]*keeper*sigma_product*com_product)

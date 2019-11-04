@@ -3,7 +3,7 @@ Vector & ReferenceFrame
 =======================
 
 
-In :mod:`vector`, vectors and reference frames are the "building blocks" of
+In :mod:`sympy.physics.vector`, vectors and reference frames are the "building blocks" of
 dynamic systems. This document will describe these mathematically and describe
 how to use them with this module's code.
 
@@ -23,7 +23,7 @@ Vector Algebra
 
 Vector algebra is the first topic to be discussed.
 
-Two vectors are said to be equal if and only if (iff) they have the same same
+Two vectors are said to be equal if and only if (iff) they have the same
 magnitude and orientation.
 
 Vector Operations
@@ -64,7 +64,7 @@ vector :math:`\mathbf{v}` we can define a unit vector as:
 Note that every vector can be written as the product of a scalar and unit
 vector.
 
-Three vector products are implemented in :mod:`vector`: the dot product, the
+Three vector products are implemented in :mod:`sympy.physics.vector`: the dot product, the
 cross product, and the outer product.
 
 The dot product operation maps two vectors to a scalar.  It is defined as:
@@ -501,7 +501,7 @@ Using Vectors and Reference Frames
 
 We have waited until after all of the relevant mathematical relationships have
 been defined for vectors and reference frames to introduce code. This is due to
-how vectors are formed. When starting any problem in :mod:`vector`, one of
+how vectors are formed. When starting any problem in :mod:`sympy.physics.vector`, one of
 the first steps is defining a reference frame (remember to import
 sympy.physics.vector first)::
 
@@ -545,7 +545,7 @@ Remember to refer to SymPy's Gotchas and Pitfalls when dealing with symbols.::
   >>> x*(N.x + N.y)
   x*N.x + x*N.y
 
-In :mod:`vector` multiple interfaces to vector multiplication have been
+In :mod:`sympy.physics.vector` multiple interfaces to vector multiplication have been
 implemented, at the operator level, method level, and function level. The
 vector dot product can work as follows: ::
 
@@ -565,7 +565,7 @@ vector dot product can work as follows: ::
 The "official" interface is the function interface; this is what will be used
 in all examples. This is to avoid confusion with the attribute and methods
 being next to each other, and in the case of the operator operation priority.
-The operators used in :mod:`vector` for vector multiplication do not posses
+The operators used in :mod:`sympy.physics.vector` for vector multiplication do not posses
 the correct order of operations; this can lead to errors. Care with parentheses
 is needed when using operators to represent vector multiplication.
 
@@ -616,7 +616,7 @@ derivative in that frame right now, if we desire: ::
   N.x
 
 SymPy has a ``diff`` function, but it does not currently work with
-:mod:`vector` Vectors, so please use ``Vector``'s ``diff`` method.  The
+:mod:`sympy.physics.vector` Vectors, so please use ``Vector``'s ``diff`` method.  The
 reason for this is that when differentiating a ``Vector``, the frame of
 reference must be specified in addition to what you are taking the derivative
 with respect to; SymPy's ``diff`` function doesn't fit this mold.
@@ -688,7 +688,7 @@ and ``orientnew`` method help, or in the references [Kane1983]_.
 
 
 Finally, before starting multiframe calculus operations, we will introduce
-another :mod:`vector` tool: ``dynamicsymbols``. ``dynamicsymbols`` is
+another :mod:`sympy.physics.vector` tool: ``dynamicsymbols``. ``dynamicsymbols`` is
 a shortcut function to create undefined functions of time within SymPy. The
 derivative of such a 'dynamicsymbol' is shown below. ::
 
@@ -720,7 +720,7 @@ for SymPy's ``vprint``, ``vpprint``, and ``latex``, ``vlatex``. ::
   q1'
 
 A 'dynamicsymbol' should be used to represent any time varying quantity in
-:mod:`vector`, whether it is a coordinate, varying position, or force.  The
+:mod:`sympy.physics.vector`, whether it is a coordinate, varying position, or force.  The
 primary use of a 'dynamicsymbol' is for speeds and coordinates (of which there
 will be more discussion in the Kinematics Section of the documentation).
 
@@ -747,7 +747,7 @@ How Vectors are Coded
 ---------------------
 
 What follows is a short description of how vectors are defined by the code in
-:mod:`vector`. It is provided for those who want to learn more about how
+:mod:`sympy.physics.vector`. It is provided for those who want to learn more about how
 this part of :mod:`sympy.physics.vector` works, and does not need to be read
 to use this module; don't read it unless you want to learn how this module was
 implemented.
@@ -778,6 +778,6 @@ method after creation. The direction cosine matrices are represented by SymPy's
 ``Matrix``, and are part of a dictionary where the keys are the
 ``ReferenceFrame`` and the value the ``Matrix``; these are set
 bi-directionally; in that when you orient ``A`` to ``N`` you are setting ``A``'s
-orientation dictionary to include ``N`` and its ``Matrix``, but also you also
-are setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
+orientation dictionary to include ``N`` and its ``Matrix``, but you are also
+setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
 (that DCM being the transpose of the other).
