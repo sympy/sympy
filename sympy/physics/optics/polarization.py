@@ -636,7 +636,7 @@ def mueller_matrix(J):
 
 
 def polarizing_beam_splitter(Tp=1, Rs=1, Ts=0, Rp=0, phia=0, phib=0):
-    u"""A polarizing beam splitter Jones matrix at angle `theta`.
+    r"""A polarizing beam splitter Jones matrix at angle `theta`.
 
     Parameters
     ----------
