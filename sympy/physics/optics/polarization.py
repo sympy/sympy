@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-r"""
-The module implements:
+u"""
+The module implements routines to model the polarization of optical fields
+and can be used to calculate the effects of polarization optical elements on
+the fields.
 
 - Jones vectors.
 
@@ -11,9 +13,93 @@ The module implements:
 
 - Mueller matrices.
 
+Examples
+--------
+We calculate a generic Jones vector:
+
+>>> from sympy import symbols, pprint, zeros, simplify
+>>> from sympy.physics.optics.polarization import (jones_vector,
+...     half_wave_retarder, polarizing_beam_splitter, jones_2_stokes)
+
+>>> psi, chi, p, I0 = symbols("psi, chi, p, I0", real=True)
+>>> x0 = jones_vector(psi, chi)
+>>> pprint(x0, use_unicode=True)
+⎡-ⅈ⋅sin(χ)⋅sin(ψ) + cos(χ)⋅cos(ψ)⎤
+⎢                                ⎥
+⎣ⅈ⋅sin(χ)⋅cos(ψ) + sin(ψ)⋅cos(χ) ⎦
+
+And the more general Stokes vector:
+>>> s0 = stokes_vector(psi, chi, p, I0)
+>>> pprint(s0, use_unicode=True)
+⎡          I₀          ⎤
+⎢                      ⎥
+⎢I₀⋅p⋅cos(2⋅χ)⋅cos(2⋅ψ)⎥
+⎢                      ⎥
+⎢I₀⋅p⋅sin(2⋅ψ)⋅cos(2⋅χ)⎥
+⎢                      ⎥
+⎣    I₀⋅p⋅sin(2⋅χ)     ⎦
+
+We calculate how the Jones vector is modified by a half-wave plate:
+>>> alpha = symbols("alpha", real=True)
+>>> HWP = half_wave_retarder(alpha)
+>>> x1 = simplify(HWP*x0)
+>>> pprint(x1, use_unicode=True)
+⎡ⅈ⋅(-cos(-2⋅α + χ + ψ) - ⅈ⋅cos(-2⋅α + χ + ψ) - cos(2⋅α + χ - ψ) + ⅈ⋅cos(2⋅α + 
+⎢─────────────────────────────────────────────────────────────────────────────
+⎢                                         2                                   
+⎢                                                                             
+⎢ⅈ⋅(sin(-2⋅α + χ + ψ) + ⅈ⋅sin(-2⋅α + χ + ψ) - sin(2⋅α + χ - ψ) + ⅈ⋅sin(2⋅α + χ
+⎢─────────────────────────────────────────────────────────────────────────────
+⎣                                         2                                   
+<BLANKLINE>
+χ - ψ))⎤
+───────⎥
+       ⎥
+       ⎥
+ - ψ)) ⎥
+────── ⎥
+       ⎦
+
+We calculate the very common operation of passing a beam through a half-wave
+plate and then through a polarizing beam-splitter. We do this by putting this
+Jones vector as the first entry of a two-Jones-vector state that is transformed
+by a 4x4 Jones matrix modelling the polarizing beam-splitter to get the
+transmitted and reflected Jones vectors:
+
+>>> PBS = polarizing_beam_splitter()
+>>> X1 = zeros(4, 1)
+>>> X1[:2, :] = x1
+>>> X2 = PBS*X1
+>>> transmitted_port = X2[:2, :]
+>>> reflected_port = X2[2:, :]
+
+This allows us to calculate how the power in both ports depends on the initial
+polarization:
+
+>>> transmitted_power = jones_2_stokes(transmitted_port)[0]
+>>> reflected_power = jones_2_stokes(reflected_port)[0]
+>>> pprint(transmitted_power, use_unicode=True)
+   2                    2             
+cos (-2⋅α + χ + ψ)   cos (2⋅α + χ - ψ)
+────────────────── + ─────────────────
+        2                    2        
+
+
+>>> pprint(reflected_power, use_unicode=True)
+   2                    2             
+sin (-2⋅α + χ + ψ)   sin (2⋅α + χ - ψ)
+────────────────── + ─────────────────
+        2                    2        
+
 Please see the description of the individual functions for further
 details and examples.
 
+References
+==========
+
+.. [1] https://en.wikipedia.org/wiki/Jones_calculus
+.. [2] https://en.wikipedia.org/wiki/Mueller_calculus
+.. [3] https://en.wikipedia.org/wiki/Stokes_parameters
 
 """
 
@@ -588,22 +674,22 @@ def polarizing_beam_splitter(Tp=1, Rs=1, Ts=0, Rp=0, phia=0, phib=0):
     >>> Ts, Rs, Tp, Rp = symbols(r"Ts, Rs, Tp, Rp", positive=True)
     >>> phia, phib = symbols("phi_a, phi_b", real=True)
     >>> PBS = polarizing_beam_splitter(Tp, Rs, Ts, Rp, phia, phib)
-    >>> pprint(PBS, use_unicode=True)
-    ⎡   ____                        ____                ⎤
-    ⎢ ╲╱ Tp           0         ⅈ⋅╲╱ Rp         0       ⎥
-    ⎢                                                   ⎥
-    ⎢                ____                     ____  ⅈ⋅φₐ⎥
-    ⎢   0          ╲╱ Ts           0      ⅈ⋅╲╱ Rs ⋅ℯ    ⎥
-    ⎢                                                   ⎥
-    ⎢    ____                      ____                 ⎥
-    ⎢ⅈ⋅╲╱ Rp          0          ╲╱ Tp          0       ⎥
-    ⎢                                                   ⎥
-    ⎢              ____  ⅈ⋅φ_b                  ____    ⎥
-    ⎣   0      ⅈ⋅╲╱ Rs ⋅ℯ          0          ╲╱ Ts     ⎦
+    >>> pprint(PBS, use_unicode=False)
+    [   ____                           ____                    ]
+    [ \/ Tp            0           I*\/ Rp           0         ]
+    [                                                          ]
+    [                  ____                       ____  I*phi_a]
+    [   0            \/ Ts            0      -I*\/ Rs *e       ]
+    [                                                          ]
+    [    ____                         ____                     ]
+    [I*\/ Rp           0            \/ Tp            0         ]
+    [                                                          ]
+    [               ____  I*phi_b                    ____      ]
+    [   0      -I*\/ Rs *e            0            \/ Ts       ]
 
     """
     PBS = Matrix([[sqrt(Tp), 0, I*sqrt(Rp), 0],
-                  [0, sqrt(Ts), 0, I*sqrt(Rs)*exp(I*phia)],
+                  [0, sqrt(Ts), 0, -I*sqrt(Rs)*exp(I*phia)],
                   [I*sqrt(Rp), 0, sqrt(Tp), 0],
-                  [0, I*sqrt(Rs)*exp(I*phib), 0, sqrt(Ts)]])
+                  [0, -I*sqrt(Rs)*exp(I*phib), 0, sqrt(Ts)]])
     return PBS
