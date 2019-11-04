@@ -18,7 +18,7 @@ Examples
 We calculate a generic Jones vector:
 
 >>> from sympy import symbols, pprint, zeros, simplify
->>> from sympy.physics.optics.polarization import (jones_vector,
+>>> from sympy.physics.optics.polarization import (jones_vector, stokes_vector,
 ...     half_wave_retarder, polarizing_beam_splitter, jones_2_stokes)
 
 >>> psi, chi, p, I0 = symbols("psi, chi, p, I0", real=True)
