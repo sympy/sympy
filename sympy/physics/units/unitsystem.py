@@ -7,13 +7,14 @@ from __future__ import division
 from sympy.core.sympify import _sympify, sympify
 
 from sympy import S, Number, Mul, Pow, Add, Function, Derivative
+from sympy.physics.units.dimensions import _QuantityMapper
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .dimensions import Dimension
 
 
-class UnitSystem(object):
+class UnitSystem(_QuantityMapper):
     """
     UnitSystem represents a coherent set of units.
 
@@ -24,8 +25,6 @@ class UnitSystem(object):
     """
 
     _unit_systems = {}
-    _quantity_scale_factors_global = {}
-    _quantity_dimensional_equivalence_map_global = {}
 
     def __init__(self, base_units, units=(), name="", descr="", dimension_system=None):
 
@@ -39,8 +38,7 @@ class UnitSystem(object):
         self._units = tuple(set(base_units) | set(units))
         self._base_units = tuple(base_units)
 
-        self._quantity_dimension_map = {}
-        self._quantity_scale_factors = {}
+        super(UnitSystem, self).__init__()
 
     def __str__(self):
         """
@@ -94,55 +92,17 @@ class UnitSystem(object):
     def get_dimension_system(self):
         return self._dimension_system
 
-    def set_quantity_dimension(self, unit, dimension):
-        from sympy.physics.units import Quantity
-        if not isinstance(dimension, Dimension):
-            if dimension == 1:
-                dimension = Dimension(1)
-            else:
-                raise ValueError("expected dimension or 1")
-        elif isinstance(dimension, Quantity):
-            dimension = self.get_quantity_dimension(dimension)
-        self._quantity_dimension_map[unit] = dimension
-
     def get_quantity_dimension(self, unit):
-        from sympy.physics.units import Quantity
-        if unit in self._quantity_dimension_map:
-            return self._quantity_dimension_map[unit]
-        if unit in self._quantity_dimensional_equivalence_map_global:
-            dep_unit = self._quantity_dimensional_equivalence_map_global[unit]
-            if isinstance(dep_unit, Quantity):
-                return self.get_quantity_dimension(dep_unit)
-            else:
-                return Dimension(self.get_dimensional_expr(dep_unit))
-        if isinstance(unit, Quantity):
-            return Dimension(unit.name)
-        else:
-            return Dimension(1)
-
-    def set_quantity_scale_factor(self, unit, scale_factor):
-        from sympy.physics.units import Quantity
-        from sympy.physics.units.prefixes import Prefix
-        scale_factor = sympify(scale_factor)
-        # replace all prefixes by their ratio to canonical units:
-        scale_factor = scale_factor.replace(
-            lambda x: isinstance(x, Prefix),
-            lambda x: x.scale_factor
-        )
-        # replace all quantities by their ratio to canonical units:
-        scale_factor = scale_factor.replace(
-            lambda x: isinstance(x, Quantity),
-            lambda x: self.get_quantity_scale_factor(x)
-        )
-        self._quantity_scale_factors[unit] = scale_factor
+        qdm = self.get_dimension_system()._quantity_dimension_map
+        if unit in qdm:
+            return qdm[unit]
+        return super(UnitSystem, self).get_quantity_dimension(unit)
 
     def get_quantity_scale_factor(self, unit):
-        if unit in self._quantity_scale_factors:
-            return self._quantity_scale_factors[unit]
-        if unit in self._quantity_scale_factors_global:
-            mul_factor, other_unit = self._quantity_scale_factors_global[unit]
-            return mul_factor*self.get_quantity_scale_factor(other_unit)
-        return S.One
+        qsfm = self.get_dimension_system()._quantity_scale_factors
+        if unit in qsfm:
+            return qsfm[unit]
+        return super(UnitSystem, self).get_quantity_scale_factor(unit)
 
     @staticmethod
     def get_unit_system(unit_system):

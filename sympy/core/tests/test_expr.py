@@ -1342,7 +1342,7 @@ def test_issue_5226():
 def test_free_symbols():
     # free_symbols should return the free symbols of an object
     assert S.One.free_symbols == set()
-    assert (x).free_symbols == {x}
+    assert x.free_symbols == {x}
     assert Integral(x, (x, 1, y)).free_symbols == {y}
     assert (-Integral(x, (x, 1, y))).free_symbols == {y}
     assert meter.free_symbols == set()
@@ -1578,7 +1578,7 @@ def test_is_constant():
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
 
-    assert Poly(3,x).is_constant() is True
+    assert Poly(3, x).is_constant() is True
 
 
 def test_equals():
