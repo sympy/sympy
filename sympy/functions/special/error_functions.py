@@ -67,7 +67,7 @@ class erf(Function):
     >>> erf(-I*oo)
     -oo*I
 
-    In general one can pull out factors of -1 and I from the argument:
+    In general one can pull out factors of -1 and $I$ from the argument:
 
     >>> erf(-z)
     -erf(z)
@@ -78,7 +78,7 @@ class erf(Function):
     >>> conjugate(erf(z))
     erf(conjugate(z))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to $z$ is supported:
 
     >>> from sympy import diff
     >>> diff(erf(z), z)
@@ -110,6 +110,7 @@ class erf(Function):
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/Erf.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/Erf
+
     """
 
     unbranched = True
@@ -124,6 +125,7 @@ class erf(Function):
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
+
         """
         return erfinv
 
@@ -264,7 +266,7 @@ class erfc(Function):
     >>> conjugate(erfc(z))
     erfc(conjugate(z))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to $z$ is supported:
 
     >>> from sympy import diff
     >>> diff(erfc(z), z)
@@ -275,8 +277,8 @@ class erfc(Function):
     >>> erfc(-z)
     2 - erfc(z)
 
-    We can numerically evaluate the complementary error function to arbitrary precision
-    on the whole complex plane:
+    We can numerically evaluate the complementary error function to arbitrary
+    precision on the whole complex plane:
 
     >>> erfc(4).evalf(30)
     0.0000000154172579002800188521596734869
@@ -301,6 +303,7 @@ class erfc(Function):
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/Erfc.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/Erfc
+
     """
 
     unbranched = True
@@ -314,6 +317,7 @@ class erfc(Function):
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
+
         """
         return erfcinv
 
@@ -437,7 +441,7 @@ class erfi(Function):
     >>> erfi(-I*oo)
     -I
 
-    In general one can pull out factors of -1 and I from the argument:
+    In general one can pull out factors of -1 and $I$ from the argument:
 
     >>> erfi(-z)
     -erfi(z)
@@ -446,14 +450,14 @@ class erfi(Function):
     >>> conjugate(erfi(z))
     erfi(conjugate(z))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to $z$ is supported:
 
     >>> from sympy import diff
     >>> diff(erfi(z), z)
     2*exp(z**2)/sqrt(pi)
 
-    We can numerically evaluate the imaginary error function to arbitrary precision
-    on the whole complex plane:
+    We can numerically evaluate the imaginary error function to arbitrary
+    precision on the whole complex plane:
 
     >>> erfi(2).evalf(30)
     18.5648024145755525987042919132
@@ -477,6 +481,7 @@ class erfi(Function):
     .. [1] https://en.wikipedia.org/wiki/Error_function
     .. [2] http://mathworld.wolfram.com/Erfi.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/Erfi
+
     """
 
     unbranched = True
@@ -578,7 +583,8 @@ class erfi(Function):
 
 class erf2(Function):
     r"""
-    Two-argument error function. This function is defined as:
+    Two-argument `error function <http://functions.wolfram.com/GammaBetaErf/
+    Erf2/>`_. This function is defined as:
 
     .. math ::
         \mathrm{erf2}(x, y) = \frac{2}{\sqrt{\pi}} \int_x^y e^{-t^2} \mathrm{d}t
@@ -615,7 +621,7 @@ class erf2(Function):
     >>> conjugate(erf2(x, y))
     erf2(conjugate(x), conjugate(y))
 
-    Differentiation with respect to x, y is supported:
+    Differentiation with respect to $x$, $y$ is supported:
 
     >>> from sympy import diff
     >>> diff(erf2(x, y), x)
@@ -633,10 +639,6 @@ class erf2(Function):
     erfcinv: Inverse Complementary error function.
     erf2inv: Inverse two-argument error function.
 
-    References
-    ==========
-
-    .. [1] http://functions.wolfram.com/GammaBetaErf/Erf2/
     """
 
 
@@ -735,14 +737,14 @@ class erfinv(Function):
     >>> erfinv(1)
     oo
 
-    Differentiation with respect to x is supported:
+    Differentiation with respect to $x$ is supported:
 
     >>> from sympy import diff
     >>> diff(erfinv(x), x)
     sqrt(pi)*exp(erfinv(x)**2)/2
 
-    We can numerically evaluate the inverse error function to arbitrary precision
-    on [-1, 1]:
+    We can numerically evaluate the inverse error function to arbitrary
+    precision on [-1, 1]:
 
     >>> erfinv(0.2).evalf(30)
     0.179143454621291692285822705344
@@ -762,6 +764,7 @@ class erfinv(Function):
 
     .. [1] https://en.wikipedia.org/wiki/Error_function#Inverse_functions
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErf/
+
     """
 
 
@@ -774,6 +777,7 @@ class erfinv(Function):
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
+
         """
         return erf
 
@@ -827,7 +831,7 @@ class erfcinv (Function):
     >>> erfcinv(0)
     oo
 
-    Differentiation with respect to x is supported:
+    Differentiation with respect to $x$ is supported:
 
     >>> from sympy import diff
     >>> diff(erfcinv(x), x)
@@ -848,6 +852,7 @@ class erfcinv (Function):
 
     .. [1] https://en.wikipedia.org/wiki/Error_function#Inverse_functions
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
+
     """
 
 
@@ -860,6 +865,7 @@ class erfcinv (Function):
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
+
         """
         return erfc
 
@@ -907,7 +913,7 @@ class erf2inv(Function):
     >>> erf2inv(oo, y)
     erfcinv(-y)
 
-    Differentiation with respect to x and y is supported:
+    Differentiation with respect to $x$ and $y$ is supported:
 
     >>> from sympy import diff
     >>> diff(erf2inv(x, y), x)
@@ -929,6 +935,7 @@ class erf2inv(Function):
     ==========
 
     .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf2/
+
     """
 
 
@@ -981,25 +988,29 @@ class Ei(Function):
     r"""
     The classical exponential integral.
 
+    Explanation
+    ===========
+
     For use in SymPy, this function is defined as
 
     .. math:: \operatorname{Ei}(x) = \sum_{n=1}^\infty \frac{x^n}{n\, n!}
                                      + \log(x) + \gamma,
 
-    where `\gamma` is the Euler-Mascheroni constant.
+    where $\gamma$ is the Euler-Mascheroni constant.
 
-    If `x` is a polar number, this defines an analytic function on the
+    If $x$ is a polar number, this defines an analytic function on the
     Riemann surface of the logarithm. Otherwise this defines an analytic
-    function in the cut plane `\mathbb{C} \setminus (-\infty, 0]`.
+    function in the cut plane $\mathbb{C} \setminus (-\infty, 0]$.
 
     **Background**
 
-    The name *exponential integral* comes from the following statement:
+    The name `exponential integral <https://en.wikipedia.org/wiki/
+    Exponential_integral>`_ comes from the following statement:
 
     .. math:: \operatorname{Ei}(x) = \int_{-\infty}^x \frac{e^t}{t} \mathrm{d}t
 
     If the integral is interpreted as a Cauchy principal value, this statement
-    holds for `x > 0` and `\operatorname{Ei}(x)` as defined above.
+    holds for $x > 0$ and $\operatorname{Ei}(x)$ as defined above.
 
     Examples
     ========
@@ -1050,14 +1061,13 @@ class Ei(Function):
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
     Chi: Hyperbolic cosine integral.
-    sympy.functions.special.gamma_functions.uppergamma: Upper incomplete gamma function.
+    uppergamma: Upper incomplete gamma function.
 
     References
     ==========
 
     .. [1] http://dlmf.nist.gov/6.6
-    .. [2] https://en.wikipedia.org/wiki/Exponential_integral
-    .. [3] Abramowitz & Stegun, section 5: http://people.math.sfu.ca/~cbm/aands/page_228.htm
+    .. [2] Abramowitz & Stegun, section 5: http://people.math.sfu.ca/~cbm/aands/page_228.htm
 
     """
 
@@ -1133,14 +1143,17 @@ class expint(Function):
     r"""
     Generalized exponential integral.
 
+    Explanation
+    ===========
+
     This function is defined as
 
     .. math:: \operatorname{E}_\nu(z) = z^{\nu - 1} \Gamma(1 - \nu, z),
 
-    where `\Gamma(1 - \nu, z)` is the upper incomplete gamma function
+    where $\Gamma(1 - \nu, z)$ is the upper incomplete gamma function
     (``uppergamma``).
 
-    Hence for :math:`z` with positive real part we have
+    Hence for $z$ with positive real part we have
 
     .. math:: \operatorname{E}_\nu(z)
               =   \int_1^\infty \frac{e^{-zt}}{t^\nu} \mathrm{d}t,
@@ -1148,9 +1161,9 @@ class expint(Function):
     which explains the name.
 
     The representation as an incomplete gamma function provides an analytic
-    continuation for :math:`\operatorname{E}_\nu(z)`. If :math:`\nu` is a
-    non-positive integer the exponential integral is thus an unbranched
-    function of :math:`z`, otherwise there is a branch point at the origin.
+    continuation for $\operatorname{E}_\nu(z)$. If $\nu$ is a
+    non-positive integer, the exponential integral is thus an unbranched
+    function of $z$, otherwise there is a branch point at the origin.
     Refer to the incomplete gamma function documentation for details of the
     branching behavior.
 
@@ -1160,14 +1173,14 @@ class expint(Function):
     >>> from sympy import expint, S
     >>> from sympy.abc import nu, z
 
-    Differentiation is supported. Differentiation with respect to z explains
-    further the name: for integral orders, the exponential integral is an
+    Differentiation is supported. Differentiation with respect to $z$ further
+    explains the name: for integral orders, the exponential integral is an
     iterated integral of the exponential function.
 
     >>> expint(nu, z).diff(z)
     -expint(nu - 1, z)
 
-    Differentiation with respect to nu has no classical expression:
+    Differentiation with respect to $\nu$ has no classical expression:
 
     >>> expint(nu, z).diff(nu)
     -z**(nu - 1)*meijerg(((), (1, 1)), ((0, 0, 1 - nu), ()), z)
@@ -1186,7 +1199,7 @@ class expint(Function):
     sqrt(pi)*erfc(sqrt(z))/sqrt(z)
 
     At positive integer orders it can be rewritten in terms of exponentials
-    and expint(1, z). Use expand_func() to do this:
+    and ``expint(1, z)``. Use ``expand_func()`` to do this:
 
     >>> from sympy import expand_func
     >>> expand_func(expint(5, z))
@@ -1218,7 +1231,7 @@ class expint(Function):
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
     Chi: Hyperbolic cosine integral.
-    sympy.functions.special.gamma_functions.uppergamma
+    uppergamma
 
     References
     ==========
@@ -1311,6 +1324,9 @@ def E1(z):
     """
     Classical case of the generalized exponential integral.
 
+    Explanation
+    ===========
+
     This is equivalent to ``expint(1, z)``.
 
     See Also
@@ -1324,6 +1340,7 @@ def E1(z):
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
     Chi: Hyperbolic cosine integral.
+
     """
     return expint(1, z)
 
@@ -1332,7 +1349,10 @@ class li(Function):
     r"""
     The classical logarithmic integral.
 
-    For the use in SymPy, this function is defined as
+    Explanation
+    ===========
+
+    For use in SymPy, this function is defined as
 
     .. math:: \operatorname{li}(x) = \int_0^x \frac{1}{\log(t)} \mathrm{d}t \,.
 
@@ -1351,16 +1371,16 @@ class li(Function):
     >>> li(oo)
     oo
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to $z$ is supported:
 
     >>> from sympy import diff
     >>> diff(li(z), z)
     1/log(z)
 
-    Defining the `li` function via an integral:
+    Defining the ``li`` function via an integral:
 
 
-    The logarithmic integral can also be defined in terms of Ei:
+    The logarithmic integral can also be defined in terms of ``Ei``:
 
     >>> from sympy import Ei
     >>> li(z).rewrite(Ei)
@@ -1383,8 +1403,8 @@ class li(Function):
     >>> findroot(li, 2)
     1.45136923488338
 
-    Further transformations include rewriting `li` in terms of
-    the trigonometric integrals `Si`, `Ci`, `Shi` and `Chi`:
+    Further transformations include rewriting ``li`` in terms of
+    the trigonometric integrals ``Si``, ``Ci``, ``Shi`` and ``Chi``:
 
     >>> from sympy import Si, Ci, Shi, Chi
     >>> li(z).rewrite(Si)
@@ -1415,6 +1435,7 @@ class li(Function):
     .. [2] http://mathworld.wolfram.com/LogarithmicIntegral.html
     .. [3] http://dlmf.nist.gov/6
     .. [4] http://mathworld.wolfram.com/SoldnersConstant.html
+
     """
 
 
@@ -1484,7 +1505,10 @@ class Li(Function):
     r"""
     The offset logarithmic integral.
 
-    For the use in SymPy, this function is defined as
+    Explanation
+    ===========
+
+    For use in SymPy, this function is defined as
 
     .. math:: \operatorname{Li}(x) = \operatorname{li}(x) - \operatorname{li}(2)
 
@@ -1499,13 +1523,13 @@ class Li(Function):
     >>> Li(2)
     0
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to $z$ is supported:
 
     >>> from sympy import diff
     >>> diff(Li(z), z)
     1/log(z)
 
-    The shifted logarithmic integral can be written in terms of `li(z)`:
+    The shifted logarithmic integral can be written in terms of $li(z)$:
 
     >>> from sympy import li
     >>> Li(z).rewrite(li)
@@ -1538,6 +1562,7 @@ class Li(Function):
     .. [1] https://en.wikipedia.org/wiki/Logarithmic_integral
     .. [2] http://mathworld.wolfram.com/LogarithmicIntegral.html
     .. [3] http://dlmf.nist.gov/6
+
     """
 
 
@@ -1638,6 +1663,9 @@ class Si(TrigonometricIntegral):
     r"""
     Sine integral.
 
+    Explanation
+    ===========
+
     This function is defined by
 
     .. math:: \operatorname{Si}(z) = \int_0^z \frac{\sin{t}}{t} \mathrm{d}t.
@@ -1650,7 +1678,7 @@ class Si(TrigonometricIntegral):
     >>> from sympy import Si
     >>> from sympy.abc import z
 
-    The sine integral is an antiderivative of sin(z)/z:
+    The sine integral is an antiderivative of $sin(z)/z$:
 
     >>> Si(z).diff(z)
     sin(z)/z
@@ -1676,7 +1704,7 @@ class Si(TrigonometricIntegral):
     -I*(-expint(1, z*exp_polar(-I*pi/2))/2 +
          expint(1, z*exp_polar(I*pi/2))/2) + pi/2
 
-    It can be rewritten in the form of sinc function (By definition)
+    It can be rewritten in the form of sinc function (by definition):
 
     >>> from sympy import sinc
     >>> Si(z).rewrite(sinc)
@@ -1744,13 +1772,17 @@ class Ci(TrigonometricIntegral):
     r"""
     Cosine integral.
 
-    This function is defined for positive `x` by
+    Explanation
+    ===========
+
+    This `trigonometric integral function <https://en.wikipedia.org/wiki/
+    Trigonometric_integral>`_ is defined for positive $x$ by
 
     .. math:: \operatorname{Ci}(x) = \gamma + \log{x}
                          + \int_0^x \frac{\cos{t} - 1}{t} \mathrm{d}t
            = -\int_x^\infty \frac{\cos{t}}{t} \mathrm{d}t,
 
-    where `\gamma` is the Euler-Mascheroni constant.
+    where $\gamma$ is the Euler-Mascheroni constant.
 
     We have
 
@@ -1758,12 +1790,12 @@ class Ci(TrigonometricIntegral):
         -\frac{\operatorname{E}_1\left(e^{i\pi/2} z\right)
                + \operatorname{E}_1\left(e^{-i \pi/2} z\right)}{2}
 
-    which holds for all polar `z` and thus provides an analytic
+    which holds for all polar $z$ and thus provides an analytic
     continuation to the Riemann surface of the logarithm.
 
     The formula also holds as stated
-    for `z \in \mathbb{C}` with `\Re(z) > 0`.
-    By lifting to the principal branch we obtain an analytic function on the
+    for $z \in \mathbb{C}$ with $\Re(z) > 0$.
+    By lifting to the principal branch, we obtain an analytic function on the
     cut complex plane.
 
     Examples
@@ -1772,7 +1804,7 @@ class Ci(TrigonometricIntegral):
     >>> from sympy import Ci
     >>> from sympy.abc import z
 
-    The cosine integral is a primitive of `\cos(z)/z`:
+    The cosine integral is a primitive of $\cos(z)/z$:
 
     >>> Ci(z).diff(z)
     cos(z)/z
@@ -1783,7 +1815,8 @@ class Ci(TrigonometricIntegral):
     >>> Ci(z*exp_polar(2*I*pi))
     Ci(z) + 2*I*pi
 
-    The cosine integral behaves somewhat like ordinary `\cos` under multiplication by `i`:
+    The cosine integral behaves somewhat like ordinary $\cos$ under
+    multiplication by $i$:
 
     >>> from sympy import polar_lift
     >>> Ci(polar_lift(I)*z)
@@ -1808,11 +1841,6 @@ class Ci(TrigonometricIntegral):
     E1: Special case of the generalised exponential integral.
     li: Logarithmic integral.
     Li: Offset logarithmic integral.
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1847,7 +1875,11 @@ class Shi(TrigonometricIntegral):
     r"""
     Sinh integral.
 
-    This function is defined by
+    Explanation
+    ===========
+
+    This `trigonometric intergral function <https://en.wikipedia.org/wiki/
+    Trigonometric_integral>`_ is defined by
 
     .. math:: \operatorname{Shi}(z) = \int_0^z \frac{\sinh{t}}{t} \mathrm{d}t.
 
@@ -1859,7 +1891,7 @@ class Shi(TrigonometricIntegral):
     >>> from sympy import Shi
     >>> from sympy.abc import z
 
-    The Sinh integral is a primitive of `\sinh(z)/z`:
+    The Sinh integral is a primitive of $\sinh(z)/z$:
 
     >>> Shi(z).diff(z)
     sinh(z)/z
@@ -1870,7 +1902,8 @@ class Shi(TrigonometricIntegral):
     >>> Shi(z*exp_polar(2*I*pi))
     Shi(z)
 
-    The `\sinh` integral behaves much like ordinary `\sinh` under multiplication by `i`:
+    The $\sinh$ integral behaves much like ordinary $\sinh$ under
+    multiplication by $i$:
 
     >>> Shi(I*z)
     I*Si(z)
@@ -1895,11 +1928,6 @@ class Shi(TrigonometricIntegral):
     E1: Special case of the generalised exponential integral.
     li: Logarithmic integral.
     Li: Offset logarithmic integral.
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1941,19 +1969,23 @@ class Chi(TrigonometricIntegral):
     r"""
     Cosh integral.
 
-    This function is defined for positive :math:`x` by
+    Explanation
+    ===========
+
+    This `trigonometric integral function <https://en.wikipedia.org/wiki/
+    Trigonometric_integral>`_ is defined for positive $x$ by
 
     .. math:: \operatorname{Chi}(x) = \gamma + \log{x}
                          + \int_0^x \frac{\cosh{t} - 1}{t} \mathrm{d}t,
 
-    where :math:`\gamma` is the Euler-Mascheroni constant.
+    where $\gamma$ is the Euler-Mascheroni constant.
 
     We have
 
     .. math:: \operatorname{Chi}(z) = \operatorname{Ci}\left(e^{i \pi/2}z\right)
                          - i\frac{\pi}{2},
 
-    which holds for all polar :math:`z` and thus provides an analytic
+    which holds for all polar $z$ and thus provides an analytic
     continuation to the Riemann surface of the logarithm.
     By lifting to the principal branch we obtain an analytic function on the
     cut complex plane.
@@ -1964,7 +1996,7 @@ class Chi(TrigonometricIntegral):
     >>> from sympy import Chi
     >>> from sympy.abc import z
 
-    The `\cosh` integral is a primitive of `\cosh(z)/z`:
+    The $\cosh$ integral is a primitive of $\cosh(z)/z$:
 
     >>> Chi(z).diff(z)
     cosh(z)/z
@@ -1975,7 +2007,8 @@ class Chi(TrigonometricIntegral):
     >>> Chi(z*exp_polar(2*I*pi))
     Chi(z) + 2*I*pi
 
-    The `\cosh` integral behaves somewhat like ordinary `\cosh` under multiplication by `i`:
+    The $\cosh$ integral behaves somewhat like ordinary $\cosh$ under
+    multiplication by $i$:
 
     >>> from sympy import polar_lift
     >>> Chi(polar_lift(I)*z)
@@ -2000,11 +2033,6 @@ class Chi(TrigonometricIntegral):
     E1: Special case of the generalised exponential integral.
     li: Logarithmic integral.
     Li: Offset logarithmic integral.
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -2102,6 +2130,9 @@ class fresnels(FresnelIntegral):
     r"""
     Fresnel integral S.
 
+    Explanation
+    ===========
+
     This function is defined by
 
     .. math:: \operatorname{S}(z) = \int_0^z \sin{\frac{\pi}{2} t^2} \mathrm{d}t.
@@ -2127,7 +2158,7 @@ class fresnels(FresnelIntegral):
     >>> fresnels(-I*oo)
     I/2
 
-    In general one can pull out factors of -1 and `i` from the argument:
+    In general one can pull out factors of -1 and $i$ from the argument:
 
     >>> fresnels(-z)
     -fresnels(z)
@@ -2135,19 +2166,19 @@ class fresnels(FresnelIntegral):
     -I*fresnels(z)
 
     The Fresnel S integral obeys the mirror symmetry
-    `\overline{S(z)} = S(\bar{z})`:
+    $\overline{S(z)} = S(\bar{z})$:
 
     >>> from sympy import conjugate
     >>> conjugate(fresnels(z))
     fresnels(conjugate(z))
 
-    Differentiation with respect to `z` is supported:
+    Differentiation with respect to $z$ is supported:
 
     >>> from sympy import diff
     >>> diff(fresnels(z), z)
     sin(pi*z**2/2)
 
-    Defining the Fresnel functions via an integral
+    Defining the Fresnel functions via an integral:
 
     >>> from sympy import integrate, pi, sin, gamma, expand_func
     >>> integrate(sin(pi*z**2/2), z)
@@ -2240,6 +2271,9 @@ class fresnelc(FresnelIntegral):
     r"""
     Fresnel integral C.
 
+    Explanation
+    ===========
+
     This function is defined by
 
     .. math:: \operatorname{C}(z) = \int_0^z \cos{\frac{\pi}{2} t^2} \mathrm{d}t.
@@ -2265,7 +2299,7 @@ class fresnelc(FresnelIntegral):
     >>> fresnelc(-I*oo)
     -I/2
 
-    In general one can pull out factors of -1 and `i` from the argument:
+    In general one can pull out factors of -1 and $i$ from the argument:
 
     >>> fresnelc(-z)
     -fresnelc(z)
@@ -2273,19 +2307,19 @@ class fresnelc(FresnelIntegral):
     I*fresnelc(z)
 
     The Fresnel C integral obeys the mirror symmetry
-    `\overline{C(z)} = C(\bar{z})`:
+    $\overline{C(z)} = C(\bar{z})$:
 
     >>> from sympy import conjugate
     >>> conjugate(fresnelc(z))
     fresnelc(conjugate(z))
 
-    Differentiation with respect to `z` is supported:
+    Differentiation with respect to $z$ is supported:
 
     >>> from sympy import diff
     >>> diff(fresnelc(z), z)
     cos(pi*z**2/2)
 
-    Defining the Fresnel functions via an integral
+    Defining the Fresnel functions via an integral:
 
     >>> from sympy import integrate, pi, cos, gamma, expand_func
     >>> integrate(cos(pi*z**2/2), z)
@@ -2316,6 +2350,7 @@ class fresnelc(FresnelIntegral):
     .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelC
     .. [5] The converging factors for the fresnel integrals
             by John W. Wrench Jr. and Vicki Alley
+
     """
     _trigfunc = cos
     _sign = S.One
@@ -2380,8 +2415,9 @@ class fresnelc(FresnelIntegral):
 
 class _erfs(Function):
     """
-    Helper function to make the `\\mathrm{erf}(z)` function
+    Helper function to make the $\\mathrm{erf}(z)$ function
     tractable for the Gruntz algorithm.
+
     """
 
     def _eval_aseries(self, n, args0, x, logx):
@@ -2424,8 +2460,9 @@ class _erfs(Function):
 
 class _eis(Function):
     """
-    Helper function to make the `\\mathrm{Ei}(z)` and `\\mathrm{li}(z)` functions
-    tractable for the Gruntz algorithm.
+    Helper function to make the $\\mathrm{Ei}(z)$ and $\\mathrm{li}(z)$
+    functions tractable for the Gruntz algorithm.
+
     """
 
 
