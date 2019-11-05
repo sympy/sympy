@@ -1,4 +1,4 @@
-""" Elliptic integrals. """
+""" Elliptic Integrals. """
 
 from __future__ import print_function, division
 
@@ -17,16 +17,19 @@ class elliptic_k(Function):
 
     .. math:: K(m) = F\left(\tfrac{\pi}{2}\middle| m\right)
 
-    where `F\left(z\middle| m\right)` is the Legendre incomplete
+    where $F\left(z\middle| m\right)$ is the Legendre incomplete
     elliptic integral of the first kind.
 
-    The function `K(m)` is a single-valued function on the complex
-    plane with branch cut along the interval `(1, \infty)`.
+    Explanation
+    ===========
+
+    The function $K(m)$ is a single-valued function on the complex
+    plane with branch cut along the interval $(1, \infty)$.
 
     Note that our notation defines the incomplete elliptic integral
-    in terms of the parameter `m` instead of the elliptic modulus
-    (eccentricity) `k`.
-    In this case, the parameter `m` is defined as `m=k^2`.
+    in terms of the parameter $m$ instead of the elliptic modulus
+    (eccentricity) $k$.
+    In this case, the parameter $m$ is defined as $m=k^2$.
 
     Examples
     ========
@@ -113,13 +116,16 @@ class elliptic_f(Function):
     .. math:: F\left(z\middle| m\right) =
               \int_0^z \frac{dt}{\sqrt{1 - m \sin^2 t}}
 
+    Explanation
+    ===========
+
     This function reduces to a complete elliptic integral of
-    the first kind, `K(m)`, when `z = \pi/2`.
+    the first kind, $K(m)$, when $z = \pi/2$.
 
     Note that our notation defines the incomplete elliptic integral
-    in terms of the parameter `m` instead of the elliptic modulus
-    (eccentricity) `k`.
-    In this case, the parameter `m` is defined as `m=k^2`.
+    in terms of the parameter $m$ instead of the elliptic modulus
+    (eccentricity) $k$.
+    In this case, the parameter $m$ is defined as $m=k^2$.
 
     Examples
     ========
@@ -189,23 +195,26 @@ class elliptic_f(Function):
 
 class elliptic_e(Function):
     r"""
-    Called with two arguments `z` and `m`, evaluates the
+    Called with two arguments $z$ and $m$, evaluates the
     incomplete elliptic integral of the second kind, defined by
 
     .. math:: E\left(z\middle| m\right) = \int_0^z \sqrt{1 - m \sin^2 t} dt
 
-    Called with a single argument `m`, evaluates the Legendre complete
+    Called with a single argument $m$, evaluates the Legendre complete
     elliptic integral of the second kind
 
     .. math:: E(m) = E\left(\tfrac{\pi}{2}\middle| m\right)
 
-    The function `E(m)` is a single-valued function on the complex
-    plane with branch cut along the interval `(1, \infty)`.
+    Explanation
+    ===========
+
+    The function $E(m)$ is a single-valued function on the complex
+    plane with branch cut along the interval $(1, \infty)$.
 
     Note that our notation defines the incomplete elliptic integral
-    in terms of the parameter `m` instead of the elliptic modulus
-    (eccentricity) `k`.
-    In this case, the parameter `m` is defined as `m=k^2`.
+    in terms of the parameter $m$ instead of the elliptic modulus
+    (eccentricity) $k$.
+    In this case, the parameter $m$ is defined as $m=k^2$.
 
     Examples
     ========
@@ -308,22 +317,25 @@ class elliptic_e(Function):
 
 class elliptic_pi(Function):
     r"""
-    Called with three arguments `n`, `z` and `m`, evaluates the
+    Called with three arguments $n$, $z$ and $m$, evaluates the
     Legendre incomplete elliptic integral of the third kind, defined by
 
     .. math:: \Pi\left(n; z\middle| m\right) = \int_0^z \frac{dt}
               {\left(1 - n \sin^2 t\right) \sqrt{1 - m \sin^2 t}}
 
-    Called with two arguments `n` and `m`, evaluates the complete
+    Called with two arguments $n$ and $m$, evaluates the complete
     elliptic integral of the third kind:
 
     .. math:: \Pi\left(n\middle| m\right) =
               \Pi\left(n; \tfrac{\pi}{2}\middle| m\right)
 
+    Explanation
+    ===========
+
     Note that our notation defines the incomplete elliptic integral
-    in terms of the parameter `m` instead of the elliptic modulus
-    (eccentricity) `k`.
-    In this case, the parameter `m` is defined as `m=k^2`.
+    in terms of the parameter $m$ instead of the elliptic modulus
+    (eccentricity) $k$.
+    In this case, the parameter $m$ is defined as $m=k^2$.
 
     Examples
     ========
