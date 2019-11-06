@@ -60,7 +60,7 @@ class Set(Basic):
     is_ComplexRegion = False
 
     is_empty = None
-    is_finite = None
+    is_finiteset = None
 
     @property
     @deprecated(useinstead="is S.EmptySet or is_empty",
@@ -361,7 +361,7 @@ class Set(Basic):
             return True
         elif fuzzy_not(is_empty) and other.is_empty:
             return False
-        if self.is_finite is False and other.is_finite:
+        if self.is_finiteset is False and other.is_finiteset:
             return False
 
         # Dispatch on subclass rules
@@ -815,9 +815,9 @@ class ProductSet(Set):
         return fuzzy_or(s.is_empty for s in self.sets)
 
     @property
-    def is_finite(self):
-        all_finite = fuzzy_and(s.is_finite for s in self.sets)
-        return fuzzy_or(self.is_empty, all_finite)
+    def is_finiteset(self):
+        all_finite = fuzzy_and(s.is_finiteset for s in self.sets)
+        return fuzzy_or([self.is_empty, all_finite])
 
     @property
     def _measure(self):
@@ -1015,6 +1015,10 @@ class Interval(Set, EvalfMixin):
             cond = self.start > self.end  # Both bounds closed
         return fuzzy_bool(cond)
 
+    @property
+    def is_finiteset(self):
+        return self.measure.is_zero
+
     def _complement(self, other):
         if other == S.Reals:
             a = Interval(S.NegativeInfinity, self.start,
@@ -1188,6 +1192,10 @@ class Union(Set, LatticeOp, EvalfMixin):
     @property
     def is_empty(self):
         return fuzzy_and(set.is_empty for set in self.args)
+
+    @property
+    def is_finiteset(self):
+        return fuzzy_and(set.is_finiteset for set in self.args)
 
     @property
     def _measure(self):
@@ -1600,6 +1608,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
     .. [1] https://en.wikipedia.org/wiki/Empty_set
     """
     is_empty = True
+    is_finiteset = True
     is_FiniteSet = True
 
     @property
@@ -1666,6 +1675,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     is_UniversalSet = True
     is_empty = False
+    is_finiteset = False
 
     def _complement(self, other):
         return S.EmptySet
@@ -1718,7 +1728,7 @@ class FiniteSet(Set, EvalfMixin):
     is_FiniteSet = True
     is_iterable = True
     is_empty = False
-    is_finite = True
+    is_finiteset = True
 
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
