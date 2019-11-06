@@ -80,9 +80,8 @@ def bspline_basis(d, knots, n, x):
     Explanation
     ===========
 
-    `B-Splines <https://en.wikipedia.org/wiki/B-spline>`_ are piecewise
-    polynomials of degree $d$. They are defined on a set of knots, which
-    is a sequence of integers or floats.
+    B-Splines are piecewise polynomials of degree $d$. They are defined on a
+    set of knots, which is a sequence of integers or floats.
 
     Examples
     ========
@@ -134,6 +133,11 @@ def bspline_basis(d, knots, n, x):
     ========
 
     bspline_basis_set
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/B-spline
 
     """
     knots = tuple(sympify(k) for k in knots)
