@@ -19,11 +19,9 @@ class beta(Function):
     Explanation
     ===========
 
-    The `Beta function <http://mathworld.wolfram.com/BetaFunction.html>`_ or
-    `Euler's first integral <http://dlmf.nist.gov/5.12>`_ is `closely associated
-    with the gamma function <https://en.wikipedia.org/wiki/Beta_function>`_.
-    The Beta function is often used in probability theory and mathematical
-    statistics. It satisfies properties like:
+    The Beta function or Euler's first integral is closely associated
+    with the gamma function. The Beta function is often used in probability
+    theory and mathematical statistics. It satisfies properties like:
 
     .. math::
         \mathrm{B}(a,1) = \frac{1}{a} \\
@@ -80,6 +78,13 @@ class beta(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Beta_function
+    .. [2] http://mathworld.wolfram.com/BetaFunction.html
+    .. [3] http://dlmf.nist.gov/5.12
 
     """
     nargs = 2
