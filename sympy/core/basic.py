@@ -1127,7 +1127,7 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         return None
 
-    def xreplace(self, rule, evaluate=True):
+    def xreplace(self, rule, evaluate=False):
         """
         Replace occurrences of objects within the expression.
 
@@ -1136,9 +1136,8 @@ class Basic(with_metaclass(ManagedProperties)):
 
         rule : dict-like
             Expresses a replacement rule.
-        evaluate : boolean (default True)
-            Pass False to avoid evaluating any replaced expressions (see
-            examples below).
+        evaluate : boolean (default False)
+            Pass True to evaluate the expression.
 
         Returns
         =======
@@ -1218,7 +1217,8 @@ class Basic(with_metaclass(ManagedProperties)):
             args = []
             changed = False
             for a in self.args:
-                try:
+                _xreplace = getattr(a, '_xreplace', None)
+                if _xreplace is not None:
                     a_xr = a._xreplace(rule, evaluate)
                     args.append(a_xr[0])
                     changed |= a_xr[1]
@@ -1226,13 +1226,7 @@ class Basic(with_metaclass(ManagedProperties)):
                     args.append(a)
             args = tuple(args)
             if changed:
-                if evaluate is False:
-                    try:
-                        return self.func(*args, evaluate=False), True
-                    except TypeError:
-                        return self.func(*args), True
-                else:
-                    return self.func(*args), True
+                return self.func(*args, evaluate), True
         return self, False
 
     @cacheit
