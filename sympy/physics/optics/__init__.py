@@ -34,3 +34,9 @@ from .utils import (refraction_angle, fresnel_coefficients,
         deviation, brewster_angle, critical_angle, lens_makers_formula,
     mirror_formula, lens_formula, hyperfocal_distance, transverse_magnification)
 __all__.extend(utils.__all__)
+
+from . import polarization
+from .polarization import (jones_vector, stokes_vector, jones_2_stokes,
+        linear_polarizer, phase_retarder, half_wave_retarder,
+        quarter_wave_retarder, transmissive_filter, reflective_filter,
+        mueller_matrix, polarizing_beam_splitter)
