@@ -43,7 +43,12 @@ def real_to_real_as_real_imag(self, deep=True, **hints):
 
 class erf(Function):
     r"""
-    The Gauss error function. This function is defined as:
+    The Gauss error function.
+
+    Explanation
+    ===========
+
+    This function is defined as:
 
     .. math ::
         \mathrm{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} \mathrm{d}t.
@@ -236,7 +241,12 @@ class erf(Function):
 
 class erfc(Function):
     r"""
-    Complementary Error Function. The function is defined as:
+    Complementary Error Function.
+
+    Explanation
+    ===========
+
+    The function is defined as:
 
     .. math ::
         \mathrm{erfc}(x) = \frac{2}{\sqrt{\pi}} \int_x^\infty e^{-t^2} \mathrm{d}t
@@ -417,7 +427,12 @@ class erfc(Function):
 
 class erfi(Function):
     r"""
-    Imaginary error function. The function erfi is defined as:
+    Imaginary error function.
+
+    Explanation
+    ===========
+
+    The function erfi is defined as:
 
     .. math ::
         \mathrm{erfi}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2} \mathrm{d}t
@@ -583,8 +598,12 @@ class erfi(Function):
 
 class erf2(Function):
     r"""
-    Two-argument `error function <http://functions.wolfram.com/GammaBetaErf/
-    Erf2/>`_. This function is defined as:
+    Two-argument error function.
+
+    Explanation
+    ===========
+
+    This function is defined as:
 
     .. math ::
         \mathrm{erf2}(x, y) = \frac{2}{\sqrt{\pi}} \int_x^y e^{-t^2} \mathrm{d}t
@@ -638,6 +657,11 @@ class erf2(Function):
     erfinv: Inverse error function.
     erfcinv: Inverse Complementary error function.
     erf2inv: Inverse two-argument error function.
+
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/GammaBetaErf/Erf2/
 
     """
 
@@ -1004,8 +1028,7 @@ class Ei(Function):
 
     **Background**
 
-    The name `exponential integral <https://en.wikipedia.org/wiki/
-    Exponential_integral>`_ comes from the following statement:
+    The name exponential integral comes from the following statement:
 
     .. math:: \operatorname{Ei}(x) = \int_{-\infty}^x \frac{e^t}{t} \mathrm{d}t
 
@@ -1067,7 +1090,8 @@ class Ei(Function):
     ==========
 
     .. [1] http://dlmf.nist.gov/6.6
-    .. [2] Abramowitz & Stegun, section 5: http://people.math.sfu.ca/~cbm/aands/page_228.htm
+    .. [2] https://en.wikipedia.org/wiki/Exponential_integral
+    .. [3] Abramowitz & Stegun, section 5: http://people.math.sfu.ca/~cbm/aands/page_228.htm
 
     """
 
@@ -1775,8 +1799,7 @@ class Ci(TrigonometricIntegral):
     Explanation
     ===========
 
-    This `trigonometric integral function <https://en.wikipedia.org/wiki/
-    Trigonometric_integral>`_ is defined for positive $x$ by
+    This function is defined for positive $x$ by
 
     .. math:: \operatorname{Ci}(x) = \gamma + \log{x}
                          + \int_0^x \frac{\cos{t} - 1}{t} \mathrm{d}t
@@ -1842,6 +1865,11 @@ class Ci(TrigonometricIntegral):
     li: Logarithmic integral.
     Li: Offset logarithmic integral.
 
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_integral
+
     """
 
     _trigfunc = cos
@@ -1878,8 +1906,7 @@ class Shi(TrigonometricIntegral):
     Explanation
     ===========
 
-    This `trigonometric intergral function <https://en.wikipedia.org/wiki/
-    Trigonometric_integral>`_ is defined by
+    This function is defined by
 
     .. math:: \operatorname{Shi}(z) = \int_0^z \frac{\sinh{t}}{t} \mathrm{d}t.
 
@@ -1929,6 +1956,11 @@ class Shi(TrigonometricIntegral):
     li: Logarithmic integral.
     Li: Offset logarithmic integral.
 
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_integral
+
     """
 
     _trigfunc = sinh
@@ -1972,8 +2004,7 @@ class Chi(TrigonometricIntegral):
     Explanation
     ===========
 
-    This `trigonometric integral function <https://en.wikipedia.org/wiki/
-    Trigonometric_integral>`_ is defined for positive $x$ by
+    This function is defined for positive $x$ by
 
     .. math:: \operatorname{Chi}(x) = \gamma + \log{x}
                          + \int_0^x \frac{\cosh{t} - 1}{t} \mathrm{d}t,
@@ -2033,6 +2064,11 @@ class Chi(TrigonometricIntegral):
     E1: Special case of the generalised exponential integral.
     li: Logarithmic integral.
     Li: Offset logarithmic integral.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
