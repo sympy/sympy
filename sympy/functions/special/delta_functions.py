@@ -23,9 +23,8 @@ class DiracDelta(Function):
     Explanation
     ===========
 
-    `DiracDelta <http://mathworld.wolfram.com/DeltaFunction.html>`_ is not an
-    ordinary function. It can be rigorously defined either as a distribution or
-    as a measure.
+    DiracDelta is not an ordinary function. It can be rigorously defined either
+    as a distribution or as a measure.
 
     DiracDelta only makes sense in definite integrals, and in particular,
     integrals of the form ``Integral(f(x)*DiracDelta(x - x0), (x, a, b))``,
@@ -94,6 +93,11 @@ class DiracDelta(Function):
     Heaviside
     sympy.simplify.simplify.simplify, is_simple
     sympy.functions.special.tensor_functions.KroneckerDelta
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/DeltaFunction.html
 
     """
 
@@ -395,8 +399,7 @@ class Heaviside(Function):
     Explanation
     ===========
 
-    `Heaviside function <http://mathworld.wolfram.com/
-    HeavisideStepFunction.html>`_ has the following properties:
+    Heaviside function has the following properties:
 
     1) ``diff(Heaviside(x),x) = DiracDelta(x)``
                         ``( 0, if x < 0``
@@ -438,7 +441,8 @@ class Heaviside(Function):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/1.16#iv
+    .. [1] http://mathworld.wolfram.com/HeavisideStepFunction.html
+    .. [2] http://dlmf.nist.gov/1.16#iv
 
     """
 
