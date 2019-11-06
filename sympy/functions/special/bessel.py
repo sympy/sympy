@@ -87,14 +87,12 @@ class BesselBase(Function):
 
 class besselj(BesselBase):
     r"""
-    `Bessel function <https://en.wikipedia.org/wiki/Bessel_function>`_ of the
-    first kind.
+    Bessel function of the first kind.
 
     Explanation
     ===========
 
-    The `Bessel J function <http://functions.wolfram.com/Bessel-TypeFunctions/
-    BesselJ/>`_ of order $\nu$ is defined to be the function
+    The Bessel $J$ function of order $\nu$ is defined to be the function
     satisfying Bessel's differential equation
 
     .. math ::
@@ -151,6 +149,8 @@ class besselj(BesselBase):
            Mathematical Tables
     .. [2] Luke, Y. L. (1969), The Special Functions and Their
            Approximations, Volume 1
+    .. [3] https://en.wikipedia.org/wiki/Bessel_function
+    .. [4] http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
 
     """
 
@@ -222,8 +222,7 @@ class bessely(BesselBase):
     Explanation
     ===========
 
-    The `Bessel Y function <http://functions.wolfram.com/Bessel-
-    TypeFunctions/BesselY/>`_ of order $\nu$ is defined as
+    The Bessel $Y$ function of order $\nu$ is defined as
 
     .. math ::
         Y_\nu(z) = \lim_{\mu \to \nu} \frac{J_\mu(z) \cos(\pi \mu)
@@ -249,6 +248,11 @@ class bessely(BesselBase):
     ========
 
     besselj, besseli, besselk
+
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselY/
 
     """
 
@@ -300,8 +304,7 @@ class besseli(BesselBase):
     Explanation
     ===========
 
-    The `Bessel I function <http://functions.wolfram.com/Bessel-TypeFunctions/
-    BesselI/>`_ is a solution to the modified Bessel equation
+    The Bessel $I$ function is a solution to the modified Bessel equation
 
     .. math ::
         z^2 \frac{\mathrm{d}^2 w}{\mathrm{d}z^2}
@@ -326,6 +329,11 @@ class besseli(BesselBase):
     ========
 
     besselj, bessely, besselk
+
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselI/
 
     """
 
@@ -399,8 +407,7 @@ class besselk(BesselBase):
     Explanation
     ===========
 
-    The `Bessel K function <http://functions.wolfram.com/Bessel-TypeFunctions/
-    BesselK/>`_ of order $\nu$ is defined as
+    The Bessel $K$ function of order $\nu$ is defined as
 
     .. math ::
         K_\nu(z) = \lim_{\mu \to \nu} \frac{\pi}{2}
@@ -423,6 +430,11 @@ class besselk(BesselBase):
     ========
 
     besselj, besseli, bessely
+
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselK/
 
     """
 
@@ -482,8 +494,7 @@ class hankel1(BesselBase):
     Explanation
     ===========
 
-    The `Hankel 1 function <http://functions.wolfram.com/Bessel-TypeFunctions/
-    HankelH1/>`_ is defined as
+    This function is defined as
 
     .. math ::
         H_\nu^{(1)} = J_\nu(z) + iY_\nu(z),
@@ -506,6 +517,11 @@ class hankel1(BesselBase):
 
     hankel2, besselj, bessely
 
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH1/
+
     """
 
     _a = S.One
@@ -524,8 +540,7 @@ class hankel2(BesselBase):
     Explanation
     ===========
 
-    The `Hankel 2 function <http://functions.wolfram.com/Bessel-TypeFunctions/
-    HankelH2/>`_ is defined as
+    This function is defined as
 
     .. math ::
         H_\nu^{(2)} = J_\nu(z) - iY_\nu(z),
@@ -548,6 +563,11 @@ class hankel2(BesselBase):
     ========
 
     hankel1, besselj, bessely
+
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH2/
 
     """
 
@@ -620,8 +640,7 @@ class jn(SphericalBesselBase):
     Explanation
     ===========
 
-    This `spherical Bessel function <http://dlmf.nist.gov/10.47>`_ is a
-    solution to the spherical Bessel equation
+    This function is a solution to the spherical Bessel equation
 
     .. math ::
         z^2 \frac{\mathrm{d}^2 w}{\mathrm{d}z^2}
@@ -667,6 +686,11 @@ class jn(SphericalBesselBase):
 
     besselj, bessely, besselk, yn
 
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
+
     """
 
     def _rewrite(self):
@@ -692,9 +716,8 @@ class yn(SphericalBesselBase):
     Explanation
     ===========
 
-    This `spherical Bessel function <http://dlmf.nist.gov/10.47>`_ is another
-    solution to the spherical Bessel equation, and linearly independent from
-    $j_n$. It can be defined as
+    This function is another solution to the spherical Bessel equation, and
+    linearly independent from $j_n$. It can be defined as
 
     .. math ::
         y_\nu(z) = \sqrt{\frac{\pi}{2z}} Y_{\nu + \frac{1}{2}}(z),
@@ -726,6 +749,11 @@ class yn(SphericalBesselBase):
     ========
 
     besselj, bessely, besselk, jn
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
 
     """
 
@@ -810,7 +838,7 @@ class hn1(SphericalHankelBase):
     Explanation
     ===========
 
-    This `spherical Hankel function <http://dlmf.nist.gov/10.47>`_ is defined as
+    This function is defined as
 
     .. math:: h_\nu^(1)(z) = j_\nu(z) + i y_\nu(z),
 
@@ -845,6 +873,11 @@ class hn1(SphericalHankelBase):
 
     hn2, jn, yn, hankel1, hankel2
 
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
+
     """
 
     _hankel_kind_sign = S.One
@@ -861,7 +894,7 @@ class hn2(SphericalHankelBase):
     Explanation
     ===========
 
-    This `spherical Hankel function <http://dlmf.nist.gov/10.47>`_ is defined as
+    This function is defined as
 
     .. math:: h_\nu^(2)(z) = j_\nu(z) - i y_\nu(z),
 
@@ -895,6 +928,11 @@ class hn2(SphericalHankelBase):
     ========
 
     hn1, jn, yn, hankel1, hankel2
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
 
     """
 
@@ -1700,8 +1738,7 @@ class marcumq(Function):
     Explanation
     ===========
 
-    `The Marcum Q-function <http://mathworld.wolfram.com/MarcumQ-
-    Function.html>`_ is defined by the meromorphic continuation of
+    The Marcum Q-function is defined by the meromorphic continuation of
 
     .. math::
         Q_m(a, b) = a^{- m + 1} \int_{b}^{\infty} x^{m} e^{- \frac{a^{2}}{2} - \frac{x^{2}}{2}} I_{m - 1}\left(a x\right)\, dx
@@ -1739,6 +1776,7 @@ class marcumq(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Marcum_Q-function
+    .. [2] http://mathworld.wolfram.com/MarcumQ-Function.html
 
     """
 
