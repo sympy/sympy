@@ -945,3 +945,10 @@ def test_imageset_intersection():
         log(Abs(sqrt(-I))))), S.Integers)
     assert s.intersect(S.Reals) == ImageSet(
         Lambda(n, 2*pi*n + pi*Rational(7, 4)), S.Integers)
+
+
+def test_issue_17858():
+    assert 1 in Range(-oo, oo)
+    assert 0 in Range(oo, -oo, -1)
+    assert oo not in Range(-oo, oo)
+    assert -oo not in Range(-oo, oo)
