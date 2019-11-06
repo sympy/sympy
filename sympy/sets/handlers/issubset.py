@@ -13,8 +13,6 @@ def is_subset_sets(a, b):
     if a in _inf_sets:
         if b in _inf_sets:
             return _inf_sets.index(a) <= _inf_sets.index(b)
-        if isinstance(b, FiniteSet):
-            return False
 
 @dispatch(Interval, Interval)
 def is_subset_sets(a, b):
@@ -50,11 +48,3 @@ def is_subset_sets(a_interval, b_u):
                     ])
             if all(no_overlap(s, a_interval) for s in intervals):
                 return False
-
-@dispatch(FiniteSet, Set)
-def is_subset_sets(a_fs, b):
-    return fuzzy_and(b._contains(e) for e in a_fs.args)
-
-@dispatch(Union, Set)
-def is_subset_sets(a_u, b):
-    return fuzzy_and(s.is_subset(b) for s in a_u.args)

@@ -105,6 +105,7 @@ class Naturals(with_metaclass(Singleton, Set)):
     _inf = S.One
     _sup = S.Infinity
     is_empty = False
+    is_finite = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
