@@ -20,7 +20,7 @@ remainder of the SymPy Docs, and the `official Python Tutorial <https://docs.pyt
 
 If you are already familiar with C or Java, you might also want to look
 at this `4 minute Python tutorial
-<http://www.nerdparadise.com/tech/python/4minutecrashcourse/>`_.
+<https://nerdparadise.com/programming/python4minutes/>`_.
 
 Ignore ``#doctest: +SKIP`` in the examples.  That has to do with
 internal testing of the examples.
@@ -60,7 +60,7 @@ tests expressions exactly, not symbolically.  For example:
 
 If you want to test for symbolic equality, one way is to subtract one
 expression from the other and run it through functions like
-:func:`expand`, :func:`simplify`, and :func:`trigsimp` and see if the
+:func:`~.expand`, :func:`~.simplify`, and :func:`~.trigsimp` and see if the
 equation reduces to 0.
 
     >>> from sympy import simplify, cos, sin, expand
@@ -102,7 +102,7 @@ Consider the following:
     >>> print(b)          # "b" is still pointing at the expression involving `a`
     a + 1
 
-Changing quantity :obj:`a` does not change :obj:`b`; you are not working
+Changing quantity ``a`` does not change ``b``; you are not working
 with a set of simultaneous equations. It might be helpful to remember
 that the string that gets printed when you print a variable referring to
 a SymPy object is the string that was given to it when it was created;
@@ -148,7 +148,7 @@ See the Python docs for more information on defining functions.
 
 
 If you define a circular relationship, you will get a
-:exc:`RuntimeError`.
+``RuntimeError``.
 
     >>> def a():
     ...     return b()
@@ -221,22 +221,24 @@ You can also import common symbol names from :mod:`sympy.abc`.
     'v', 'w', 'x', 'xi', 'y', 'z', 'zeta']
 
 If you want control over the assumptions of the variables, use
-:func:`Symbol` and :func:`symbols`.  See :ref:`Keyword
+:class:`~.Symbol` and :func:`~.symbols`.  See :ref:`Keyword
 Arguments<keyword-arguments>` below.
 
-Lastly, it is recommended that you not use :obj:`I`, :obj:`E`, :obj:`S`,
-:obj:`N`, :obj:`C`, :obj:`O`, or :obj:`Q` for variable or symbol names, as those
-are used for the imaginary unit (:math:`i`), the base of the natural
-logarithm (:math:`e`), the :func:`sympify` function (see :ref:`Symbolic
-Expressions<symbolic-expressions>` below), numeric evaluation (:func:`N`
-is equivalent to :ref:`evalf()<evalf-label>` ),
-the `big O <http://en.wikipedia.org/wiki/Big_O_notation>`_ order symbol
-(as in :math:`O(n\log{n})`), and the assumptions object that holds a list of
-supported ask keys (such as :obj:`Q.real`), respectively.  You can use the
+Lastly, it is recommended that you not use :obj:`I
+<sympy.core.numbers.ImaginaryUnit>`, :obj:`~.E`, :obj:`~.S`, :obj:`N
+<sympy.core.evalf.N>`, ``C``, :obj:`O <sympy.series.order.Order>`, or :obj:`Q
+<sympy.assumptions.ask.AssumptionKeys>` for variable or symbol names, as those
+are used for the imaginary unit (:math:`i`), the base of the natural logarithm
+(:math:`e`), the :func:`~.sympify` function (see :ref:`Symbolic
+Expressions<symbolic-expressions>` below), numeric evaluation (:func:`~.N` is
+equivalent to :ref:`evalf()<evalf-label>` ), the `big O
+<https://en.wikipedia.org/wiki/Big_O_notation>`_ order symbol (as in
+:math:`O(n\log{n})`), and the assumptions object that holds a list of
+supported ask keys (such as :obj:`Q.real
+<sympy.assumptions.ask.AssumptionKeys.real>`), respectively. You can use the
 mnemonic ``OSINEQ`` to remember what Symbols are defined by default in SymPy.
-Or better yet, always use lowercase letters for Symbol names.  Python will
-not prevent you from overriding default SymPy names or functions, so be
-careful.
+Or better yet, always use lowercase letters for Symbol names. Python will not
+prevent you from overriding default SymPy names or functions, so be careful.
 
     >>> cos(pi)  # cos and pi are a built-in sympy names.
     -1
@@ -258,10 +260,10 @@ To get a full list of all default names in SymPy do:
     # A big list of all default sympy names and functions follows.
     # Ignore everything that starts and ends with __.
 
-If you have `IPython <http://ipython.org/>`_ installed and
+If you have `IPython <https://ipython.org/>`_ installed and
 use :command:`isympy`, you can also press the TAB key to get a list of
 all built-in names and to autocomplete.  Also, see `this page
-<http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
+<https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
 trick for getting tab completion in the regular Python console.
 
 .. note::
@@ -279,11 +281,11 @@ Python numbers vs. SymPy Numbers
 --------------------------------
 
 SymPy uses its own classes for integers, rational numbers, and floating
-point numbers instead of the default Python :obj:`int` and :obj:`float`
+point numbers instead of the default Python ``int`` and ``float``
 types because it allows for more control.  But you have to be careful.
 If you type an expression that just has numbers in it, it will default
-to a Python expression.  Use the :func:`sympify` function, or just
-:func:`S`, to ensure that something is a SymPy expression.
+to a Python expression.  Use the :func:`~.sympify` function, or just
+:obj:`~.S`, to ensure that something is a SymPy expression.
 
     >>> 6.2  # Python float. Notice the floating point accuracy problems.
     6.2000000000000002
@@ -298,8 +300,8 @@ If you include numbers in a SymPy expression, they will be sympified
 automatically, but there is one gotcha you should be aware of.  If you
 do ``<number>/<number>`` inside of a SymPy expression, Python will
 evaluate the two numbers before SymPy has a chance to get
-to them.  The solution is to :func:`sympify` one of the numbers, or use
-:mod:`Rational`.
+to them.  The solution is to :func:`~.sympify` one of the numbers, or use
+:obj:`~.Rational`.
 
     >>> x**(1/2)  # evaluates to x**0 or x**0.5
     x**0.5
@@ -322,7 +324,7 @@ you don't have to worry about this problem:
 .. note::
 
     A common mistake is copying an expression that is printed and
-    reusing it.  If the expression has a :mod:`Rational` (i.e.,
+    reusing it.  If the expression has a :obj:`~.Rational` (i.e.,
     ``<number>/<number>``) in it, you will not get the same result,
     obtaining the Python result for the division rather than a SymPy
     Rational.
@@ -334,9 +336,9 @@ you don't have to worry about this problem:
     3.142857142857143
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
-    >>> a = solve(7*x - 22, x)
+    >>> a = solve(7*x - 22, x)[0]
     >>> a
-    [22/7]
+    22/7
 
     The other solution is to put quotes around the expression
     and run it through S() (i.e., sympify it):
@@ -346,7 +348,7 @@ you don't have to worry about this problem:
 
 Also, if you do not use :command:`isympy`, you could use ``from
 __future__ import division`` to prevent the ``/`` sign from performing
-`integer division <http://en.wikipedia.org/wiki/Integer_division>`_.
+`integer division <https://en.wikipedia.org/wiki/Integer_division>`_.
 
     >>> from __future__ import division
     >>> 1/2   # With division imported it evaluates to a python float
@@ -360,7 +362,7 @@ __future__ import division`` to prevent the ``/`` sign from performing
     >>> x**(1/2)
     x**0.5
 
-:mod:`Rational` only works for number/number and is only meant for
+:obj:`~.Rational` only works for number/number and is only meant for
 rational numbers.  If you want a fraction with symbols or expressions in
 it, just use ``/``.  If you do number/expression or expression/number,
 then the number will automatically be converted into a SymPy Number.
@@ -424,14 +426,14 @@ to evaluate them to 20 digits, a difference will become apparent:
     0.14285278320312500000
 
     It is important to realize that although a Float is being displayed in
-    decimal at aritrary precision, it is actually stored in binary. Once the
+    decimal at arbitrary precision, it is actually stored in binary. Once the
     Float is created, its binary information is set at the given precision.
     The accuracy of that value cannot be subsequently changed; so 1/7, at a
     precision of 3 digits, can be padded with binary zeros, but these will
     not make it a more accurate value of 1/7.
 
 If inexact, low-precision numbers are involved in a calculation with
-with higher precision values, the evalf engine will increase the precision
+higher precision values, the evalf engine will increase the precision
 of the low precision values and inexact results will be obtained. This is
 feature of calculations with limited precision:
 
@@ -465,7 +467,7 @@ There are three things that will help you obtain more precise numerical
 values for expressions:
 
     1) Pass the desired substitutions with the call to evaluate. By doing
-    the subs first, the ``Float`` values can not be updated as necessary. By
+    the subs first, the ``Float`` values cannot be updated as necessary. By
     passing the desired substitutions with the call to evalf the ability
     to re-evaluate as necessary is gained and the results are impressively
     better:
@@ -501,25 +503,25 @@ operation.  This means that a function will always return an object, and the
 original expression will not be modified. The following example snippet
 demonstrates how this works::
 
-	def main():
-	    var('x y a b')
-	    expr = 3*x + 4*y
-	    print('original =', expr)
-	    expr_modified = expr.subs({x: a, y: b})
-	    print('modified =', expr_modified)
+    def main():
+        var('x y a b')
+        expr = 3*x + 4*y
+        print('original =', expr)
+        expr_modified = expr.subs({x: a, y: b})
+        print('modified =', expr_modified)
 
-	if __name__ == "__main__":
-	    main()
+    if __name__ == "__main__":
+        main()
 
-The output shows that the :func:`subs` function has replaced variable
-:obj:`x` with variable :obj:`a`, and variable :obj:`y` with variable :obj:`b`::
+The output shows that the :obj:`~sympy.core.basic.Basic.subs()` function has replaced variable
+``x`` with variable ``a``, and variable ``y`` with variable ``b``::
 
-	original = 3*x + 4*y
-	modified = 3*a + 4*b
+    original = 3*x + 4*y
+    modified = 3*a + 4*b
 
-The :func:`subs` function does not modify the original expression :obj:`expr`.
+The :obj:`~sympy.core.basic.Basic.subs()` function does not modify the original expression ``expr``.
 Rather, a modified copy of the expression is returned. This returned object
-is stored in the variable :obj:`expr_modified`. Note that unlike C/C++ and
+is stored in the variable ``expr_modified``. Note that unlike C/C++ and
 other high-level languages, Python does not require you to declare a variable
 before it is used.
 
@@ -562,7 +564,7 @@ Inverse Trig Functions
 
 SymPy uses different names for some functions than most computer algebra
 systems.  In particular, the inverse trig functions use the python names
-of :func:`asin`, :func:`acos` and so on instead of the usual ``arcsin``
+of :obj:`~.asin`, :obj:`~.acos` and so on instead of the usual ``arcsin``
 and ``arccos``.  Use the methods described in :ref:`Symbols <symbols>`
 above to see the names of all SymPy functions.
 
@@ -638,7 +640,7 @@ Tuples
 Parentheses ``()``, aside from changing operator precedence and their
 use in function calls, (like ``cos(x)``), are also used for tuples.  A
 ``tuple`` is identical to a :ref:`list <lists>`, except that it is not
-mutable.  That means that you can not change their values after they
+mutable.  That means that you cannot change their values after they
 have been created.  In general, you will not need tuples in SymPy, but
 sometimes it can be more convenient to type parentheses instead of
 square brackets.
@@ -648,7 +650,7 @@ square brackets.
     (1, 2, x)
     >>> t[0]
     1
-    >>> t[0] = 4  # Except you can not change them after they have been created
+    >>> t[0] = 4  # Except you cannot change them after they have been created
     Traceback (most recent call last):
       File "<console>", line 1, in <module>
     TypeError: 'tuple' object does not support item assignment
@@ -740,8 +742,8 @@ Getting help from within SymPy
 help()
 ------
 
-Although all docs are available at `docs.sympy.org <http://docs.sympy.org/>`_ or on the
-`SymPy Wiki <http://wiki.sympy.org/>`_, you can also get info on functions from within the
+Although all docs are available at `docs.sympy.org <https://docs.sympy.org/>`_ or on the
+`SymPy Wiki <https://wiki.sympy.org/>`_, you can also get info on functions from within the
 Python interpreter that runs SymPy.  The easiest way to do this is to do
 ``help(function)``, or ``function?`` if you are using :command:`ipython`::
 
@@ -752,15 +754,16 @@ Python interpreter that runs SymPy.  The easiest way to do this is to do
     In [4]: powsimp?
 
 These will give you the function parameters and docstring for
-:func:`powsimp`.  The output will look something like this:
+:func:`~.powsimp`.  The output will look something like this:
 
 .. module:: sympy.simplify.simplify
-.. autofunction:noindex: powsimp
+.. autofunction:: powsimp
+   :noindex:
 
 source()
 --------
 
-Another useful option is the :func:`source` function.  This will print
+Another useful option is the :func:`~.source` function.  This will print
 the source code of a function, including any docstring that it may have.
 You can also do ``function??`` in :command:`ipython`.  For example,
 from SymPy 0.6.5:

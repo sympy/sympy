@@ -4,7 +4,7 @@ Vector: Kinematics
 
 This document will give some mathematical background
 to describing a system's kinematics as well as how to represent the kinematics
-in :mod:`physics.vector`.
+in :mod:`sympy.physics.vector`.
 
 Introduction to Kinematics
 ==========================
@@ -419,7 +419,7 @@ Kinematics in physics.vector
 
 It should be clear by now that the topic of kinematics here has been mostly
 describing the correct way to manipulate vectors into representing the
-velocities of points. Within :mod:`vector` there are convenient methods for
+velocities of points. Within :mod:`sympy.physics.vector` there are convenient methods for
 storing these velocities associated with frames and points. We'll now revisit
 the above examples and show how to represent them in :mod:`sympy`.
 
@@ -468,9 +468,9 @@ other. This is coded as: ::
   >>> C.set_ang_vel(B, -u2 * B.z)
   >>> D.set_ang_vel(C, u3 * C.y)
   >>> D.ang_vel_in(N)
-  u3*C.y - u2*B.z + u1*A.x
+  u1*A.x - u2*B.z + u3*C.y
 
-In :mod:`vector` the shortest path between two frames is used when finding
+In :mod:`sympy.physics.vector` the shortest path between two frames is used when finding
 the angular velocity. That would mean if we went back and set: ::
 
   >>> D.set_ang_vel(N, 0)

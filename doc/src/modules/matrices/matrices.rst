@@ -10,7 +10,7 @@ The linear algebra module is designed to be as simple as possible. First, we
 import and declare our first ``Matrix`` object:
 
     >>> from sympy.interactive.printing import init_printing
-    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
+    >>> init_printing(use_unicode=False, wrap_line=False)
     >>> from sympy.matrices import Matrix, eye, zeros, ones, diag, GramSchmidt
     >>> M = Matrix([[1,0,0], [0,0,0]]); M
     [1  0  0]
@@ -325,6 +325,31 @@ but we can also apply functions to our matrix entries using ``applyfunc()``. Her
     [       ]
     [0  0  2]
 
+If you want to extract a common factor from a matrix you can do so by
+applying ``gcd`` to the data of the matrix:
+
+    >>> from sympy.abc import x, y
+    >>> from sympy import gcd
+    >>> m = Matrix([[x, y], [1, x*y]]).inv(); m
+    [  -x*y          y     ]
+    [----------  ----------]
+    [   2           2      ]
+    [- x *y + y  - x *y + y]
+    [                      ]
+    [    1          -x     ]
+    [----------  ----------]
+    [   2           2      ]
+    [- x *y + y  - x *y + y]
+    >>> gcd(tuple(_))
+        1
+    ----------
+       2
+    - x *y + y
+    >>> m/_
+    [-x*y  y ]
+    [        ]
+    [ 1    -x]
+
 One more useful matrix-wide entry application function is the substitution function. Let's declare a matrix with symbolic entries then substitute a value. Remember we can substitute anything - even another symbol!:
 
     >>> from sympy import Symbol
@@ -498,6 +523,31 @@ So there is quite a bit that can be done with the module including eigenvalues,
 eigenvectors, nullspace calculation, cofactor expansion tools, and so on. From
 here one might want to look over the ``matrices.py`` file for all functionality.
 
+MatrixDeterminant Class Reference
+---------------------------------
+.. autoclass:: MatrixDeterminant
+   :members:
+
+MatrixReductions Class Reference
+--------------------------------
+.. autoclass:: MatrixReductions
+    :members:
+
+MatrixSubspaces Class Reference
+-------------------------------
+.. autoclass:: MatrixSubspaces
+   :members:
+
+MatrixEigen Class Reference
+---------------------------
+.. autoclass:: MatrixEigen
+   :members:
+
+MatrixCalculus Class Reference
+------------------------------
+.. autoclass:: MatrixCalculus
+   :members:
+
 MatrixBase Class Reference
 --------------------------
 .. autoclass:: MatrixBase
@@ -515,8 +565,6 @@ Matrix Exceptions Reference
 
 Matrix Functions Reference
 --------------------------
-
-.. autofunction:: classof
 
 .. autofunction:: sympy.matrices.dense.matrix_multiply_elementwise
 

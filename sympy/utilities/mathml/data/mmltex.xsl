@@ -456,16 +456,16 @@ Modified Fabian Seoane 2007 for sympy
 
 <!-- 4.4.3.25 floor -->
 <xsl:template match="m:apply[*[1][self::m:floor]]">
-	<xsl:text>\lfloor </xsl:text>
+	<xsl:text>\left\lfloor </xsl:text>
 	<xsl:apply-templates select="*[2]"/>
-	<xsl:text>\rfloor </xsl:text>
+	<xsl:text>\right\rfloor </xsl:text>
 </xsl:template>
 
 <!-- 4.4.3.25 ceiling -->
 <xsl:template match="m:apply[*[1][self::m:ceiling]]">
-	<xsl:text>\lceil </xsl:text>
+	<xsl:text>\left\lceil </xsl:text>
 	<xsl:apply-templates select="*[2]"/>
-	<xsl:text>\rceil </xsl:text>
+	<xsl:text>\right\rceil </xsl:text>
 </xsl:template>
 
 <!-- 4.4.4.1 eq -->
@@ -940,12 +940,12 @@ priority="2">
 
 <!-- 4.4.9.1 mean -->
 <xsl:template match="m:apply[*[1][self::m:mean]]">
-	<xsl:text>\langle </xsl:text>
+	<xsl:text>\left\langle </xsl:text>
 	<xsl:for-each select="*[position()&gt;1]">
 		<xsl:apply-templates select="."/>
 		<xsl:if test="position() !=last()"><xsl:text>, </xsl:text></xsl:if>
 	</xsl:for-each>
-	<xsl:text>\rangle </xsl:text>
+	<xsl:text>\right\rangle </xsl:text>
 </xsl:template>
 
 <!-- 4.4.9.2 sdef -->
@@ -960,11 +960,11 @@ priority="2">
 
 <!-- 4.4.9.5 moment -->
 <xsl:template match="m:apply[*[1][self::m:moment]]">
-	<xsl:text>\langle </xsl:text>
+	<xsl:text>\left\langle </xsl:text>
 	<xsl:apply-templates select="*[last()]"/>
 	<xsl:text>^{</xsl:text>
 	<xsl:apply-templates select="m:degree/node()"/>
-	<xsl:text>}\rangle</xsl:text>
+	<xsl:text>}\right\rangle</xsl:text>
 	<xsl:if test="m:momentabout">
 		<xsl:text>_{</xsl:text>
 		<xsl:apply-templates select="m:momentabout/node()"/>
@@ -2298,7 +2298,7 @@ priority="2">
 		</xsl:variable>
 		<xsl:value-of select="($valueColor1b*16 + $valueColor2b) div 255"/>
 	</xsl:when>
-<!-- ======================= if color specifed as an html-color-name ========================================== -->
+<!-- ======================= if color specified as an html-color-name ========================================== -->
 	<xsl:when test="$colora='aqua'"><xsl:text>0,1,1</xsl:text></xsl:when>
 	<xsl:when test="$colora='black'"><xsl:text>0,0,0</xsl:text></xsl:when>
 	<xsl:when test="$colora='blue'"><xsl:text>0,0,1</xsl:text></xsl:when>

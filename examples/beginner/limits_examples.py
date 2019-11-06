@@ -18,8 +18,6 @@ def show(computed, correct):
 
 def main():
     x = Symbol("x")
-    a = Symbol("a")
-    h = Symbol("h")
 
     show( limit(sqrt(x**2 - 5*x + 6) - x, x, oo), -Rational(5)/2 )
 

@@ -27,7 +27,7 @@ from __future__ import print_function
 import os
 import re
 import sys
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 minver = '3.4'
 try:
@@ -37,12 +37,10 @@ try:
 except ImportError:
     print(
         "You need to install module coverage (version %s or newer required).\n"
-        "See http://nedbatchelder.com/code/coverage/ or \n"
+        "See https://coverage.readthedocs.io/en/latest/ or \n"
         "https://launchpad.net/ubuntu/+source/python-coverage/" % minver)
     sys.exit(-1)
 
-REPORT_DIR = "covhtml"
-REFRESH = False
 
 omit_dir_patterns = ['.*tests', 'benchmark', 'examples',
                      'pyglet', 'test_external']
@@ -60,16 +58,15 @@ def generate_covered_files(top_dir):
                 yield os.path.join(dirpath, filename)
 
 
-def make_report(source_dir, report_dir, use_cache=False, slow=False):
+def make_report(
+    test_args, source_dir='sympy/', report_dir='covhtml', use_cache=False,
+    slow=False
+    ):
     # code adapted from /bin/test
-    bin_dir = os.path.abspath(os.path.dirname(__file__))  # bin/
-    sympy_top = os.path.split(bin_dir)[0]  # ../
-    sympy_dir = os.path.join(sympy_top, 'sympy')  # ../sympy/
-    if os.path.isdir(sympy_dir):
-        sys.path.insert(0, sympy_top)
+    from get_sympy import path_hack
+    sympy_top = path_hack()
     os.chdir(sympy_top)
 
-    import sympy
     cov = coverage.coverage()
     cov.exclude("raise NotImplementedError")
     cov.exclude("def canonize")  # this should be "@decorated"
@@ -79,40 +76,44 @@ def make_report(source_dir, report_dir, use_cache=False, slow=False):
     else:
         cov.erase()
         cov.start()
-        sympy.test(source_dir, subprocess=False)
-        if slow:
-            sympy.test(source_dir, subprocess=False, slow=slow)
+        import sympy
+        sympy.test(*test_args, subprocess=False, slow=slow)
         #sympy.doctest()  # coverage doesn't play well with doctests
         cov.stop()
-        cov.save()
+        try:
+            cov.save()
+        except PermissionError:
+            import warnings
+            warnings.warn(
+                "PermissionError has been raised while saving the " \
+                "coverage result.",
+                RuntimeWarning
+            )
 
     covered_files = list(generate_covered_files(source_dir))
-
-    if report_dir in os.listdir(os.curdir):
-        for f in os.listdir(report_dir):
-            if f.split('.')[-1] in ['html', 'css', 'js']:
-                os.remove(os.path.join(report_dir, f))
-
     cov.html_report(morfs=covered_files, directory=report_dir)
 
+parser = ArgumentParser()
+parser.add_argument(
+    '-c', '--use-cache', action='store_true', default=False,
+    help='Use cached data.')
+parser.add_argument(
+    '-d', '--report-dir', default='covhtml',
+    help='Directory to put the generated report in.')
+parser.add_argument(
+    "--slow", action="store_true", dest="slow", default=False,
+    help="Run slow functions also.")
+options, args = parser.parse_known_args()
+
 if __name__ == '__main__':
-    parser = OptionParser()
-    parser.add_option('-c', '--use-cache', action='store_true', default=False,
-                      help='Use cached data.')
-    parser.add_option('-d', '--report-dir', default='covhtml',
-                      help='Directory to put the generated report in.')
-    parser.add_option("--slow", action="store_true", dest="slow",
-                      default=False, help="Run slow functions also.")
-
-    options, args = parser.parse_args()
-
-    if args:
-        source_dir = args[0]
-    else:
-        source_dir = 'sympy/'
-
-    make_report(source_dir, **options.__dict__)
+    report_dir = options.report_dir
+    use_cache = options.use_cache
+    slow = options.slow
+    make_report(
+        args, report_dir=report_dir, use_cache=use_cache, slow=slow)
 
     print("The generated coverage report is in covhtml directory.")
-    print("Open %s in your web browser to view the report" % os.sep.join(
-        'sympy covhtml index.html'.split()))
+    print(
+        "Open %s in your web browser to view the report" %
+        os.sep.join([report_dir, 'index.html'])
+    )

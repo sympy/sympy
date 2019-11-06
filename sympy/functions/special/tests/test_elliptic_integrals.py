@@ -1,5 +1,5 @@
 from sympy import (S, Symbol, pi, I, oo, zoo, sin, sqrt, tan, gamma,
-    atanh, hyper, meijerg, O)
+    atanh, hyper, meijerg, O, Dummy, Integral, Rational)
 from sympy.functions.special.elliptic_integrals import (elliptic_k as K,
     elliptic_f as F, elliptic_e as E, elliptic_pi as P)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
@@ -9,12 +9,13 @@ from sympy.abc import z, m, n
 
 i = Symbol('i', integer=True)
 j = Symbol('k', integer=True, positive=True)
+t = Dummy('t')
 
 def test_K():
     assert K(0) == pi/2
-    assert K(S(1)/2) == 8*pi**(S(3)/2)/gamma(-S(1)/4)**2
-    assert K(1) == zoo
-    assert K(-1) == gamma(S(1)/4)**2/(4*sqrt(2*pi))
+    assert K(S.Half) == 8*pi**Rational(3, 2)/gamma(Rational(-1, 4))**2
+    assert K(1) is zoo
+    assert K(-1) == gamma(Rational(1, 4))**2/(4*sqrt(2*pi))
     assert K(oo) == 0
     assert K(-oo) == 0
     assert K(I*oo) == 0
@@ -39,6 +40,8 @@ def test_K():
     assert K(z).series(z) == pi/2 + pi*z/8 + 9*pi*z**2/128 + \
         25*pi*z**3/512 + 1225*pi*z**4/32768 + 3969*pi*z**5/131072 + O(z**6)
 
+    assert K(m).rewrite(Integral).dummy_eq(
+        Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2)))
 
 def test_F():
     assert F(z, 0) == z
@@ -64,18 +67,20 @@ def test_F():
     assert F(z, m).series(z) == \
         z + z**5*(3*m**2/40 - m/30) + m*z**3/6 + O(z**6)
 
+    assert F(z, m).rewrite(Integral).dummy_eq(
+        Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, z)))
 
 def test_E():
     assert E(z, 0) == z
     assert E(0, m) == 0
     assert E(i*pi/2, m) == i*E(m)
-    assert E(z, oo) == zoo
-    assert E(z, -oo) == zoo
+    assert E(z, oo) is zoo
+    assert E(z, -oo) is zoo
     assert E(0) == pi/2
     assert E(1) == 1
     assert E(oo) == I*oo
-    assert E(-oo) == oo
-    assert E(zoo) == zoo
+    assert E(-oo) is oo
+    assert E(zoo) is zoo
 
     assert E(-z, m) == -E(z, m)
 
@@ -94,17 +99,21 @@ def test_E():
     assert E(z, mr).conjugate() == E(z.conjugate(), mr)
     assert E(mr).conjugate() == E(mr)
 
-    assert E(z).rewrite(hyper) == (pi/2)*hyper((-S.Half, S.Half), (S.One,), z)
-    assert tn(E(z), (pi/2)*hyper((-S.Half, S.Half), (S.One,), z))
+    assert E(z).rewrite(hyper) == (pi/2)*hyper((Rational(-1, 2), S.Half), (S.One,), z)
+    assert tn(E(z), (pi/2)*hyper((Rational(-1, 2), S.Half), (S.One,), z))
     assert E(z).rewrite(meijerg) == \
-        -meijerg(((S.Half, S(3)/2), []), ((S.Zero,), (S.Zero,)), -z)/4
-    assert tn(E(z), -meijerg(((S.Half, S(3)/2), []), ((S.Zero,), (S.Zero,)), -z)/4)
+        -meijerg(((S.Half, Rational(3, 2)), []), ((S.Zero,), (S.Zero,)), -z)/4
+    assert tn(E(z), -meijerg(((S.Half, Rational(3, 2)), []), ((S.Zero,), (S.Zero,)), -z)/4)
 
     assert E(z, m).series(z) == \
         z + z**5*(-m**2/40 + m/30) - m*z**3/6 + O(z**6)
     assert E(z).series(z) == pi/2 - pi*z/8 - 3*pi*z**2/128 - \
         5*pi*z**3/512 - 175*pi*z**4/32768 - 441*pi*z**5/131072 + O(z**6)
 
+    assert E(z, m).rewrite(Integral).dummy_eq(
+        Integral(sqrt(1 - m*sin(t)**2), (t, 0, z)))
+    assert E(m).rewrite(Integral).dummy_eq(
+        Integral(sqrt(1 - m*sin(t)**2), (t, 0, pi/2)))
 
 def test_P():
     assert P(0, z, m) == F(z, m)
@@ -118,10 +127,10 @@ def test_P():
     assert P(n, z, oo) == 0
     assert P(n, z, -oo) == 0
     assert P(0, m) == K(m)
-    assert P(1, m) == zoo
+    assert P(1, m) is zoo
     assert P(n, 0) == pi/(2*sqrt(1 - n))
-    assert P(2, 1) == -oo
-    assert P(-1, 1) == oo
+    assert P(2, 1) is -oo
+    assert P(-1, 1) is oo
     assert P(n, n) == E(n)/(1 - n)
 
     assert P(n, -z, m) == -P(n, z, m)
@@ -150,3 +159,8 @@ def test_P():
 
     assert P(n, z, m).series(z) == z + z**3*(m/6 + n/3) + \
         z**5*(3*m**2/40 + m*n/10 - m/30 + n**2/5 - n/15) + O(z**6)
+
+    assert P(n, z, m).rewrite(Integral).dummy_eq(
+        Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z)))
+    assert P(n, m).rewrite(Integral).dummy_eq(
+        Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, pi/2)))

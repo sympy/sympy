@@ -1,11 +1,14 @@
-Details on the Hypergeometric Function Expansion Module
-#######################################################
+========================
+Hypergeometric Expansion
+========================
+
+.. currentmodule:: sympy.simplify.hyperexpand
 
 This page describes how the function :func:`hyperexpand` and related code
 work. For usage, see the documentation of the symplify module.
 
 Hypergeometric Function Expansion Algorithm
-*******************************************
+===========================================
 
 This section describes the algorithm used to expand hypergeometric functions.
 Most of it is based on the papers [Roach1996]_ and [Roach1997]_.
@@ -36,7 +39,7 @@ and the symbol `b` will always denote a denominator parameter. The
 subscripts `p, q, r, s` denote vectors of that length, so e.g.
 `a_p` denotes a vector of `p` numerator parameters. The subscripts
 `i` and `j` denote "running indices", so they should usually be used in
-conjuction with a "for all `i`". E.g. `a_i < 4` for all `i`.
+conjunction with a "for all `i`". E.g. `a_i < 4` for all `i`.
 Uppercase subscripts `I` and `J` denote a chosen, fixed index. So
 for example `a_I > 0` is true if the inequality holds for the one index
 `I` we are currently interested in.
@@ -160,7 +163,7 @@ If `r \ne 0`, then any such `a_p, b_q` is reachable from any
 congruent mod 1, such that `a_i < c < b_j` for all `i` and
 `j`, and similarly `a_i^0 < c^0 < b_j^0`. If `n = c - c^0 > 0` then
 we first inverse-shift all the `b_j^0` `n` times up, and then
-similarly shift shift up all the `a_i^0` `n` times. If `n <
+similarly shift up all the `a_i^0` `n` times. If `n <
 0` then we first inverse-shift down the `a_i^0` and then shift down the
 `b_j^0`. This reduces to the case `c = c^0`. But evidently we can
 now shift or inverse-shift around the `a_i^0` arbitrarily so long as we
@@ -361,7 +364,7 @@ Extending The Hypergeometric Tables
 
 Adding new formulae to the tables is straightforward. At the top of the file
 ``sympy/simplify/hyperexpand.py``, there is a function called
-:func:`add_formulae`. Nested in it are defined two helpers,
+``add_formulae()``. Nested in it are defined two helpers,
 ``add(ap, bq, res)`` and ``addb(ap, bq, B, C, M)``, as well as dummys
 ``a``, ``b``, ``c``, and ``z``.
 
@@ -374,7 +377,7 @@ line: ``add((-a, ), (), (1-z)**a)``.
 From the information provided, the matrices `B`, `C` and `M` will be computed,
 and the formula is now available when expanding hypergeometric functions.
 Next the test file ``sympy/simplify/tests/test_hyperexpand.py`` should be run,
-in particular the test :func:`test_formulae`. This will test the newly added
+in particular the test ``test_formulae()``. This will test the newly added
 formula numerically. If it fails, there is (presumably) a typo in what was
 entered.
 
@@ -432,12 +435,12 @@ we proceed by computing `f(g(w))` (and simplifying naively)
            &= -\exp\left(i \pi\right) w \\
            &= w
 
-and indeed get back `w`. (In case of branched functions we have to be
-aware of branch cuts. In that case we take `w` to be a positive real
-number and check the formula. If what we have found works for positive
-`w`, then just replace :func:`exp` inside any branched function by
-:func:`exp\_polar` and what we get is right for `all` `w`.) Hence
-we can write the formula as
+and indeed get back `w`. (In case of branched functions we have to be aware of
+branch cuts. In that case we take `w` to be a positive real number and check
+the formula. If what we have found works for positive `w`, then just replace
+:class:`~sympy.functions.elementary.exponential.exp` inside any branched
+function by :class:`~sympy.functions.elementary.exponential.exp_polar` and what
+we get is right for `all` `w`.) Hence we can write the formula as
 
 .. math ::
    C(g(w)) = g(w) \cdot {}_{1}F_{2}\left.\left(
@@ -456,7 +459,7 @@ and trivially
    = \frac{C\left(\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}\right)}
           {\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}}
 
-which is exactly what is needed for the third paramenter,
+which is exactly what is needed for the third parameter,
 ``res``, in ``add``. Finally, the whole function call to add
 this rule to the table looks like::
 
@@ -478,7 +481,7 @@ expressed as a linear combination of lower order derivatives. The matrix
 `B` contains the basis `\{B_0, B_1, \ldots\}` and is of shape
 `n \times 1`. The best way to get `B_i` is to take the first
 `n = \max(p, q+1)` derivatives of the expression for `{}_p F_q`
-and take out usefull pieces. In our case we find that
+and take out useful pieces. In our case we find that
 `n = \max{\left(1, 2+1\right)} = 3`. For computing the derivatives,
 we have to use the operator `z\frac{\mathrm{d}}{\mathrm{d}z}`. The
 first basis element `B_0` is set to the expression for `{}_1 F_2`
