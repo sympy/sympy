@@ -1228,8 +1228,7 @@ class trigamma(Function):
 
 class multigamma(Function):
     r"""
-    The `multivariate gamma function <https://en.wikipedia.org/wiki/
-    Multivariate_gamma_function>`_ is a generalization of the gamma function
+    The multivariate gamma function is a generalization of the gamma function
 
     .. math::
         \Gamma_p(z) = \pi^{p(p-1)/4}\prod_{k=1}^p \Gamma[z + (1 - k)/2].
@@ -1277,6 +1276,11 @@ class multigamma(Function):
 
     gamma, lowergamma, uppergamma, polygamma, loggamma, digamma, trigamma,
     beta
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Multivariate_gamma_function
 
     """
     unbranched = True
