@@ -2,7 +2,7 @@ from sympy import S
 from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
 from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union
-from sympy.sets.fancysets import Reals
+from sympy.sets.fancysets import Reals, Range
 from sympy.multipledispatch import dispatch
 
 
@@ -10,9 +10,7 @@ _inf_sets = [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals, S.Comple
 
 @dispatch(Set, Set)
 def is_subset_sets(a, b):
-    if a in _inf_sets:
-        if b in _inf_sets:
-            return _inf_sets.index(a) <= _inf_sets.index(b)
+    return None
 
 @dispatch(Interval, Interval)
 def is_subset_sets(a, b):
@@ -48,3 +46,9 @@ def is_subset_sets(a_interval, b_u):
                     ])
             if all(no_overlap(s, a_interval) for s in intervals):
                 return False
+
+@dispatch(Range, Range)
+def is_subset_sets(a, b):
+    if a.step == b.step == 1:
+        return fuzzy_and([fuzzy_bool(a.start >= b.start),
+                          fuzzy_bool(a.stop <= b.stop)])

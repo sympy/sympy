@@ -116,6 +116,12 @@ class Naturals(with_metaclass(Singleton, Set)):
         elif other.is_integer is False or other.is_positive is False:
             return False
 
+    def _eval_is_subset(self, other):
+        return Range(1, oo).is_subset(other)
+
+    def _eval_is_superset(self, other):
+        return Range(1, oo).is_superset(other)
+
     def __iter__(self):
         i = self._inf
         while True:
@@ -152,8 +158,10 @@ class Naturals0(Naturals):
             return S.false
 
     def _eval_is_subset(self, other):
-        if other.is_subset(S.Naturals):
-            return False
+        return Range(oo).is_subset(other)
+
+    def _eval_is_superset(self, other):
+        return Range(oo).is_superset(other)
 
 
 class Integers(with_metaclass(Singleton, Set)):

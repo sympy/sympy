@@ -368,6 +368,9 @@ class Set(Basic):
         ret = self._eval_is_subset(other)
         if ret is not None:
             return ret
+        ret = other._eval_is_superset(self)
+        if ret is not None:
+            return ret
 
         # Use pairwise rules from multiple dispatch
         from sympy.sets.handlers.issubset import is_subset_sets
@@ -383,6 +386,10 @@ class Set(Basic):
             return True
 
     def _eval_is_subset(self, other):
+        '''Returns a fuzzy bool for whether self is a subset of other.'''
+        return None
+
+    def _eval_is_superset(self, other):
         '''Returns a fuzzy bool for whether self is a subset of other.'''
         return None
 
