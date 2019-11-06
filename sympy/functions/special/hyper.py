@@ -67,8 +67,7 @@ class TupleParametersBase(Function):
 
 class hyper(TupleParametersBase):
     r"""
-    The `generalized hypergeometric function <https://en.wikipedia.org/wiki/
-    Generalized_hypergeometric_function>`_ is defined by a series where
+    The generalized hypergeometric function is defined by a series where
     the ratios of successive terms are a rational function of the summation
     index. When convergent, it is continued analytically to the largest
     possible domain.
@@ -178,6 +177,7 @@ class hyper(TupleParametersBase):
 
     .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
            Volume 1
+    .. [2] https://en.wikipedia.org/wiki/Generalized_hypergeometric_function
 
     """
 
@@ -327,9 +327,9 @@ class hyper(TupleParametersBase):
 
 class meijerg(TupleParametersBase):
     r"""
-    The `Meijer G-function <https://en.wikipedia.org/wiki/Meijer_G-function>`_
-    is defined by a Mellin-Barnes type integral that resembles an inverse
-    Mellin transform. It generalizes the hypergeometric functions.
+    The Meijer G-function is defined by a Mellin-Barnes type integral that
+    resembles an inverse Mellin transform. It generalizes the hypergeometric
+    functions.
 
     Explanation
     ===========
@@ -453,6 +453,7 @@ class meijerg(TupleParametersBase):
 
     .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
            Volume 1
+    .. [2] https://en.wikipedia.org/wiki/Meijer_G-function
 
     """
 
