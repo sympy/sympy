@@ -591,7 +591,7 @@ class _TensorDataLazyEvaluator(CantSympify):
                 if indextype.data is None:
                     raise ValueError("index type {} has no components data"\
                     " associated (needed to raise/lower index)".format(indextype))
-                if indextype.dim is None:
+                if not indextype.dim.is_number:
                     continue
                 if dim != indextype.dim:
                     raise ValueError("wrong dimension of ndarray")
@@ -1102,7 +1102,7 @@ class TensorIndexType(Basic):
         if data.rank() > 2:
             raise ValueError("data have to be of rank 1 (diagonal metric) or 2.")
         if data.rank() == 1:
-            if self.dim is not None:
+            if self.dim.is_number:
                 nda_dim = data.shape[0]
                 if nda_dim != self.dim:
                     raise ValueError("Dimension mismatch")
@@ -1115,7 +1115,7 @@ class TensorIndexType(Basic):
         dim1, dim2 = data.shape
         if dim1 != dim2:
             raise ValueError("Non-square matrix tensor.")
-        if self.dim is not None:
+        if self.dim.is_number:
             if self.dim != dim1:
                 raise ValueError("Dimension mismatch")
         _tensor_data_substitution_dict[self] = data
@@ -2195,7 +2195,7 @@ class TensExpr(Expr):
             else:
                 expected_shape = [index_type.dim for index_type in tensor.index_types]
             if len(expected_shape) != array.rank() or (not all([dim1 == dim2 if
-                dim1 is not None else True for dim1, dim2 in zip(expected_shape,
+                dim1.is_number else True for dim1, dim2 in zip(expected_shape,
                 array.shape)])):
                 raise ValueError("shapes for tensor %s expected to be %s, "\
                     "replacement array shape is %s" % (tensor, expected_shape,
@@ -2890,13 +2890,9 @@ class Tensor(TensExpr):
 
         if not antisym:
             # g(i, -i)
-            if typ.dim is None:
-                raise ValueError('dimension not assigned')
             sign = sign*typ.dim
         else:
             # g(i, -i)
-            if typ.dim is None:
-                raise ValueError('dimension not assigned')
             sign = sign*typ.dim
 
             dp0, dp1 = self.dum[0]
@@ -3532,8 +3528,6 @@ class TensMul(TensExpr, AssocOp):
                     if pos_map[dp0] == pos_map[dp1]:
                         # g(i, -i)
                         typ = g.index_types[0]
-                        if typ.dim is None:
-                            raise ValueError('dimension not assigned')
                         sign = sign*typ.dim
 
                     else:
@@ -3550,8 +3544,6 @@ class TensMul(TensExpr, AssocOp):
                     if pos_map[dp0] == pos_map[dp1]:
                         # g(i, -i)
                         typ = g.index_types[0]
-                        if typ.dim is None:
-                            raise ValueError('dimension not assigned')
                         sign = sign*typ.dim
 
                         if dp0 < dp1:
