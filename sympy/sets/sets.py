@@ -23,7 +23,7 @@ from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
 from sympy.utilities import subsets
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import iproduct, sift, roundrobin
+from sympy.utilities.iterables import iproduct, sift, roundrobin, product
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
@@ -80,6 +80,14 @@ class Set(Basic):
                 AttributeError, AssertionError, ValueError):
             infimum = S.Infinity
         return infimum
+
+    def equals(self, other):
+        """Tests whether ``self`` and ``other`` are equal
+        """
+        if isinstance(other, Set):
+            return self.is_subset(other) and other.is_subset(self)
+        else:
+            raise ValueError("Unknown argument '%s'" % other)
 
     def union(self, other):
         """
@@ -343,12 +351,23 @@ class Set(Basic):
         Examples
         ========
 
+        Checking if an interval is a subset of an another interval:
+
         >>> from sympy import Interval
         >>> Interval(0, 0.5).is_subset(Interval(0, 1))
         True
         >>> Interval(0, 1).is_subset(Interval(0, 1, left_open=True))
         False
 
+        Checking if a cartesian product is a subset of a finite set:
+
+        >>> from sympy import FiniteSet, ProductSet
+        >>> A = ProductSet(FiniteSet(1, 2), FiniteSet(1, 2))
+        >>> B = FiniteSet((1, 1), (1, 2), (2, 1), (2, 2))
+        >>> A.is_subset(B)
+        True
+        >>> B.is_subset(A)
+        True
         """
         if not isinstance(other, Set):
             raise ValueError("Unknown argument '%s'" % other)
@@ -617,6 +636,13 @@ class Set(Basic):
         """
         return self - self.boundary
 
+    def simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
+        """See the simplify function in sympy.simplify"""
+        from sympy.simplify import simplify
+        from sympy.core.function import count_ops
+        measure = measure or count_ops
+        return simplify(self, ratio, measure)
+
     @property
     def _boundary(self):
         raise NotImplementedError()
@@ -841,6 +867,10 @@ class ProductSet(Set):
 
     __nonzero__ = __bool__
 
+    def _eval_rewrite_as_FiniteSet(self, *args, **kwargs):
+        if self.is_finite_set:
+            return FiniteSet(*product(*args))
+
 
 class Interval(Set, EvalfMixin):
     """
@@ -885,6 +915,7 @@ class Interval(Set, EvalfMixin):
     .. [1] https://en.wikipedia.org/wiki/Interval_%28mathematics%29
     """
     is_Interval = True
+    is_finite_set = False
 
     def __new__(cls, start, end, left_open=False, right_open=False):
 
@@ -1897,7 +1928,7 @@ class FiniteSet(Set, EvalfMixin):
         if not is2pow(len(self)):
             return None
 
-        fs_test = lambda arg: isinstance(arg, Set) and arg.is_FiniteSet
+        fs_test = lambda arg: isinstance(arg, Set) and arg.is_finite_set
         if not all((fs_test(arg) for arg in args)):
             return None
 
@@ -1985,6 +2016,12 @@ class SymmetricDifference(Set):
     def is_iterable(self):
         if all(arg.is_iterable for arg in self.args):
             return True
+
+    @property
+    def is_finite_set(self):
+        if all([arg.is_finite_set for arg in self.args]):
+            return True
+        return None
 
     def __iter__(self):
 

@@ -85,7 +85,7 @@ class PowerSet(Set):
 
     def _eval_rewrite_as_FiniteSet(self, *args, **kwargs):
         arg = self.arg
-        if arg.is_FiniteSet:
+        if arg.is_finite_set:
             return arg.powerset()
         return None
 

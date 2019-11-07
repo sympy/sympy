@@ -1,7 +1,7 @@
 from sympy import S
 from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
 from sympy.core.relational import Eq
-from sympy.sets.sets import FiniteSet, Interval, Set, Union
+from sympy.sets.sets import FiniteSet, Interval, Set, Union, ProductSet
 from sympy.sets.fancysets import Complexes, Naturals, Reals, Range, Rationals
 from sympy.multipledispatch import dispatch
 
@@ -99,3 +99,24 @@ def is_subset_sets(a, b):
 @dispatch(Rationals, Range)
 def is_subset_sets(a, b):
     return False
+
+@dispatch(ProductSet, ProductSet)
+def is_subset_sets(a, b):
+    a_args = a.args
+    b_args = b.args
+    if len(a_args) != len(b_args):
+        return None
+
+    def gen():
+        for s1, s2 in zip(a_args, b_args):
+            yield s1.is_subset(s2)
+
+    return fuzzy_and(gen())
+
+@dispatch(FiniteSet, ProductSet)
+def is_subset_sets(a, b):
+    return a.is_subset(b.rewrite(FiniteSet))
+
+@dispatch(ProductSet, FiniteSet)
+def is_subset_sets(a, b):
+    return a.rewrite(FiniteSet).is_subset(b)

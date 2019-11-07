@@ -1407,3 +1407,51 @@ def test_issue_16878b():
     # that handles the base_set of S.Reals like there is
     # for Integers
     assert imageset(x, (x, x), S.Reals).is_subset(S.Reals**2) is True
+
+
+def test_finite_product_set_rewrite():
+    a = FiniteSet(1, 2)
+    b = FiniteSet(1, 2, 3)
+    c = ProductSet(a, b)
+    assert c.rewrite(FiniteSet) == \
+        FiniteSet((1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3))
+
+
+def test_subset_ProuctSet_ProductSet():
+    a = FiniteSet(1, 2)
+    b = FiniteSet(1, 2, 3)
+
+    c = ProductSet(a, a)
+    d = ProductSet(b, b)
+    assert c.is_subset(d)
+    assert d.is_subset(c)
+
+    a = S.Integers
+    b = S.Reals
+
+    c = ProductSet(a, a)
+    d = ProductSet(b, b)
+    assert c.is_subset(d)
+    assert d.is_subset(c)
+
+    a = FiniteSet(1, 2)
+    b = S.Reals
+
+    c = ProductSet(a, a)
+    d = ProductSet(b, b)
+    assert c.is_subset(d)
+    assert d.is_subset(c)
+
+
+def test_finite_set_product_set_subset():
+    a = FiniteSet(1, 2)
+    b = FiniteSet(1, 2, 3)
+    c = ProductSet(a, b)
+    assert FiniteSet((1, 1)).is_subset(c)
+    assert FiniteSet((1, 1), (1, 2), (1, 3)).is_subset(c)
+    assert c.is_subset(
+        FiniteSet((1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3))
+    )
+    assert c.is_subset(
+        FiniteSet((1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (10, 10))
+    )

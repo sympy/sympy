@@ -7,7 +7,7 @@ from sympy.core.compatibility import with_metaclass, range, PY3
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
-from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.numbers import oo, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
@@ -35,7 +35,6 @@ class Rationals(with_metaclass(Singleton, Set)):
     >>> [next(iterable) for i in range(12)]
     [0, 1, -1, 1/2, 2, -1/2, -2, 1/3, 3, -1/3, -3, 2/3]
     """
-
     is_iterable = True
     _inf = S.NegativeInfinity
     _sup = S.Infinity
@@ -97,7 +96,6 @@ class Naturals(with_metaclass(Singleton, Set)):
     Naturals0 : non-negative integers (i.e. includes 0, too)
     Integers : also includes negative integers
     """
-
     is_iterable = True
     _inf = S.One
     _sup = S.Infinity
@@ -190,7 +188,6 @@ class Integers(with_metaclass(Singleton, Set)):
     Naturals0 : non-negative integers
     Integers : positive and negative integers and zero
     """
-
     is_iterable = True
     is_empty = False
     is_finite_set = False
@@ -260,6 +257,8 @@ class Reals(with_metaclass(Singleton, Interval)):
 
     ComplexRegion
     """
+    is_finite_set = False
+
     def __new__(cls):
         return Interval.__new__(cls, S.NegativeInfinity, S.Infinity)
 
@@ -358,6 +357,10 @@ class ImageSet(Set):
 
     lamda = property(lambda self: self.args[0])
     base_sets = property(lambda self: self.args[1:])
+
+    @property
+    def is_empty(self):
+        return fuzzy_or([s.is_empty for s in self.base_sets])
 
     @property
     def base_set(self):
@@ -1077,6 +1080,8 @@ class ComplexRegion(Set):
 
     """
     is_ComplexRegion = True
+    is_finite_set = False
+
 
     def __new__(cls, sets, polar=False):
         if polar is False:
