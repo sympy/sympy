@@ -53,13 +53,16 @@ class OrthogonalPolynomial(Function):
 
 class jacobi(OrthogonalPolynomial):
     r"""
-    Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`
+    Jacobi polynomial $P_n^{\left(\alpha, \beta\right)}(x)$.
 
-    jacobi(n, alpha, beta, x) gives the nth Jacobi polynomial
-    in x, :math:`P_n^{\left(\alpha, \beta\right)}(x)`.
+    Explanation
+    ===========
 
-    The Jacobi polynomials are orthogonal on :math:`[-1, 1]` with respect
-    to the weight :math:`\left(1-x\right)^\alpha \left(1+x\right)^\beta`.
+    ``jacobi`` (n, alpha, beta, x) gives the nth Jacobi polynomial
+    in x, $P_n^{\left(\alpha, \beta\right)}(x)$.
+
+    The Jacobi polynomials are orthogonal on $[-1, 1]$ with respect
+    to the weight $\left(1-x\right)^\alpha \left(1+x\right)^\beta$.
 
     Examples
     ========
@@ -126,6 +129,7 @@ class jacobi(OrthogonalPolynomial):
     .. [1] https://en.wikipedia.org/wiki/Jacobi_polynomials
     .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
+
     """
 
     @classmethod
@@ -211,13 +215,16 @@ class jacobi(OrthogonalPolynomial):
 
 def jacobi_normalized(n, a, b, x):
     r"""
-    Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`
+    Jacobi polynomial $P_n^{\left(\alpha, \beta\right)}(x)$.
 
-    jacobi_normalized(n, alpha, beta, x) gives the nth Jacobi polynomial
-    in x, :math:`P_n^{\left(\alpha, \beta\right)}(x)`.
+    Explanation
+    ===========
 
-    The Jacobi polynomials are orthogonal on :math:`[-1, 1]` with respect
-    to the weight :math:`\left(1-x\right)^\alpha \left(1+x\right)^\beta`.
+    ``jacobi_normalized`` (*n*, *alpha*, *beta*, *x*) gives the nth
+    Jacobi polynomial in *x*, $P_n^{\left(\alpha, \beta\right)}(x)$.
+
+    The Jacobi polynomials are orthogonal on $[-1, 1]$ with respect
+    to the weight $\left(1-x\right)^\alpha \left(1+x\right)^\beta$.
 
     This functions returns the polynomials normilzed:
 
@@ -260,6 +267,7 @@ def jacobi_normalized(n, a, b, x):
     .. [1] https://en.wikipedia.org/wiki/Jacobi_polynomials
     .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
+
     """
     nfactor = (S(2)**(a + b + 1) * (gamma(n + a + 1) * gamma(n + b + 1))
                / (2*n + a + b + 1) / (factorial(n) * gamma(n + a + b + 1)))
@@ -274,13 +282,16 @@ def jacobi_normalized(n, a, b, x):
 
 class gegenbauer(OrthogonalPolynomial):
     r"""
-    Gegenbauer polynomial :math:`C_n^{\left(\alpha\right)}(x)`
+    Gegenbauer polynomial $C_n^{\left(\alpha\right)}(x)$.
 
-    gegenbauer(n, alpha, x) gives the nth Gegenbauer polynomial
-    in x, :math:`C_n^{\left(\alpha\right)}(x)`.
+    Explanation
+    ===========
 
-    The Gegenbauer polynomials are orthogonal on :math:`[-1, 1]` with
-    respect to the weight :math:`\left(1-x^2\right)^{\alpha-\frac{1}{2}}`.
+    ``gegenbauer`` (n, alpha, x) gives the nth Gegenbauer polynomial
+    in x, $C_n^{\left(\alpha\right)}(x)$.
+
+    The Gegenbauer polynomials are orthogonal on $[-1, 1]$ with
+    respect to the weight $\left(1-x^2\right)^{\alpha-\frac{1}{2}}$.
 
     Examples
     ========
@@ -334,6 +345,7 @@ class gegenbauer(OrthogonalPolynomial):
     .. [1] https://en.wikipedia.org/wiki/Gegenbauer_polynomials
     .. [2] http://mathworld.wolfram.com/GegenbauerPolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/
+
     """
 
     @classmethod
@@ -417,13 +429,16 @@ class gegenbauer(OrthogonalPolynomial):
 
 class chebyshevt(OrthogonalPolynomial):
     r"""
-    Chebyshev polynomial of the first kind, :math:`T_n(x)`
+    Chebyshev polynomial of the first kind, $T_n(x)$.
 
-    chebyshevt(n, x) gives the nth Chebyshev polynomial (of the first
-    kind) in x, :math:`T_n(x)`.
+    Explanation
+    ===========
+
+    ``chebyshevt`` (n, x) gives the nth Chebyshev polynomial (of the first
+    kind) in x, $T_n(x)$.
 
     The Chebyshev polynomials of the first kind are orthogonal on
-    :math:`[-1, 1]` with respect to the weight :math:`\frac{1}{\sqrt{1-x^2}}`.
+    $[-1, 1]$ with respect to the weight $\frac{1}{\sqrt{1-x^2}}$.
 
     Examples
     ========
@@ -476,6 +491,7 @@ class chebyshevt(OrthogonalPolynomial):
     .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
     .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/
     .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/
+
     """
 
     _ortho_poly = staticmethod(chebyshevt_poly)
@@ -525,13 +541,16 @@ class chebyshevt(OrthogonalPolynomial):
 
 class chebyshevu(OrthogonalPolynomial):
     r"""
-    Chebyshev polynomial of the second kind, :math:`U_n(x)`
+    Chebyshev polynomial of the second kind, $U_n(x)$.
 
-    chebyshevu(n, x) gives the nth Chebyshev polynomial of the second
-    kind in x, :math:`U_n(x)`.
+    Explanation
+    ===========
+
+    ``chebyshevu`` (n, x) gives the nth Chebyshev polynomial of the second
+    kind in x, $U_n(x)$.
 
     The Chebyshev polynomials of the second kind are orthogonal on
-    :math:`[-1, 1]` with respect to the weight :math:`\sqrt{1-x^2}`.
+    $[-1, 1]$ with respect to the weight $\sqrt{1-x^2}$.
 
     Examples
     ========
@@ -584,6 +603,7 @@ class chebyshevu(OrthogonalPolynomial):
     .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
     .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/
     .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/
+
     """
 
     _ortho_poly = staticmethod(chebyshevu_poly)
@@ -641,9 +661,9 @@ class chebyshevu(OrthogonalPolynomial):
 
 class chebyshevt_root(Function):
     r"""
-    chebyshev_root(n, k) returns the kth root (indexed from zero) of
+    ``chebyshev_root`` (n, k) returns the kth root (indexed from zero) of
     the nth Chebyshev polynomial of the first kind; that is, if
-    0 <= k < n, chebyshevt(n, chebyshevt_root(n, k)) == 0.
+    0 <= k < n, ``chebyshevt`` (n, chebyshevt_root(n, k)) == 0.
 
     Examples
     ========
@@ -681,9 +701,9 @@ class chebyshevt_root(Function):
 
 class chebyshevu_root(Function):
     r"""
-    chebyshevu_root(n, k) returns the kth root (indexed from zero) of the
+    ``chebyshevu_root`` (n, k) returns the kth root (indexed from zero) of the
     nth Chebyshev polynomial of the second kind; that is, if 0 <= k < n,
-    chebyshevu(n, chebyshevu_root(n, k)) == 0.
+    ``chebyshevu`` (n, chebyshevu_root(n, k)) == 0.
 
     Examples
     ========
@@ -725,11 +745,14 @@ class chebyshevu_root(Function):
 
 class legendre(OrthogonalPolynomial):
     r"""
-    legendre(n, x) gives the nth Legendre polynomial of x, :math:`P_n(x)`
+    ``legendre`` (n, x) gives the nth Legendre polynomial of x, $P_n(x)$
+
+    Explanation
+    ===========
 
     The Legendre polynomials are orthogonal on [-1, 1] with respect to
-    the constant weight 1. They satisfy :math:`P_n(1) = 1` for all n; further,
-    :math:`P_n` is odd for odd n and even for even n.
+    the constant weight 1. They satisfy $P_n(1) = 1$ for all n; further,
+    $P_n$ is odd for odd n and even for even n.
 
     Examples
     ========
@@ -770,6 +793,7 @@ class legendre(OrthogonalPolynomial):
     .. [2] http://mathworld.wolfram.com/LegendrePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/LegendreP/
     .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
+
     """
 
     _ortho_poly = staticmethod(legendre_poly)
@@ -831,15 +855,18 @@ class legendre(OrthogonalPolynomial):
 
 class assoc_legendre(Function):
     r"""
-    assoc_legendre(n,m, x) gives :math:`P_n^m(x)`, where n and m are
+    ``assoc_legendre`` (n, m, x) gives $P_n^m(x)$, where n and m are
     the degree and order or an expression which is related to the nth
-    order Legendre polynomial, :math:`P_n(x)` in the following manner:
+    order Legendre polynomial, $P_n(x)$ in the following manner:
 
     .. math::
         P_n^m(x) = (-1)^m (1 - x^2)^{\frac{m}{2}}
                    \frac{\mathrm{d}^m P_n(x)}{\mathrm{d} x^m}
 
-    Associated Legendre polynomial are orthogonal on [-1, 1] with:
+    Explanation
+    ===========
+
+    Associated Legendre polynomials are orthogonal on [-1, 1] with:
 
     - weight = 1            for the same m, and different n.
     - weight = 1/(1-x**2)   for the same n, and different m.
@@ -881,6 +908,7 @@ class assoc_legendre(Function):
     .. [2] http://mathworld.wolfram.com/LegendrePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/LegendreP/
     .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
+
     """
 
     @classmethod
@@ -938,10 +966,13 @@ class assoc_legendre(Function):
 
 class hermite(OrthogonalPolynomial):
     r"""
-    hermite(n, x) gives the nth Hermite polynomial in x, :math:`H_n(x)`
+    ``hermite`` (n, x) gives the nth Hermite polynomial in x, $H_n(x)$
 
-    The Hermite polynomials are orthogonal on :math:`(-\infty, \infty)`
-    with respect to the weight :math:`\exp\left(-x^2\right)`.
+    Explanation
+    ===========
+
+    The Hermite polynomials are orthogonal on $(-\infty, \infty)$
+    with respect to the weight $\exp\left(-x^2\right)$.
 
     Examples
     ========
@@ -982,6 +1013,7 @@ class hermite(OrthogonalPolynomial):
     .. [1] https://en.wikipedia.org/wiki/Hermite_polynomial
     .. [2] http://mathworld.wolfram.com/HermitePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/HermiteH/
+
     """
 
     _ortho_poly = staticmethod(hermite_poly)
@@ -1030,13 +1062,7 @@ class hermite(OrthogonalPolynomial):
 
 class laguerre(OrthogonalPolynomial):
     r"""
-    Returns the nth Laguerre polynomial in x, :math:`L_n(x)`.
-
-    Parameters
-    ==========
-
-    n : int
-        Degree of Laguerre polynomial. Must be ``n >= 0``.
+    Returns the nth Laguerre polynomial in x, $L_n(x)$.
 
     Examples
     ========
@@ -1057,6 +1083,12 @@ class laguerre(OrthogonalPolynomial):
 
     >>> diff(laguerre(n, x), x)
     -assoc_laguerre(n - 1, 1, x)
+
+    Parameters
+    ==========
+
+    n : int
+        Degree of Laguerre polynomial. Must be ``n >= 0``.
 
     See Also
     ========
@@ -1081,6 +1113,7 @@ class laguerre(OrthogonalPolynomial):
     .. [2] http://mathworld.wolfram.com/LaguerrePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
+
     """
 
     _ortho_poly = staticmethod(laguerre_poly)
@@ -1133,17 +1166,7 @@ class laguerre(OrthogonalPolynomial):
 
 class assoc_laguerre(OrthogonalPolynomial):
     r"""
-    Returns the nth generalized Laguerre polynomial in x, :math:`L_n(x)`.
-
-    Parameters
-    ==========
-
-    n : int
-        Degree of Laguerre polynomial. Must be ``n >= 0``.
-
-    alpha : Expr
-        Arbitrary expression. For ``alpha=0`` regular Laguerre
-        polynomials will be generated.
+    Returns the nth generalized Laguerre polynomial in x, $L_n(x)$.
 
     Examples
     ========
@@ -1175,6 +1198,16 @@ class assoc_laguerre(OrthogonalPolynomial):
     >>> diff(assoc_laguerre(n, a, x), a)
     Sum(assoc_laguerre(_k, a, x)/(-a + n), (_k, 0, n - 1))
 
+    Parameters
+    ==========
+
+    n : int
+        Degree of Laguerre polynomial. Must be ``n >= 0``.
+
+    alpha : Expr
+        Arbitrary expression. For ``alpha=0`` regular Laguerre
+        polynomials will be generated.
+
     See Also
     ========
 
@@ -1198,6 +1231,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     .. [2] http://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
+
     """
 
     @classmethod
