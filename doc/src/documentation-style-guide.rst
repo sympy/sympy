@@ -943,17 +943,15 @@ This section consists of a list of references cited anywhere in the previous
 sections. Any reference to other SymPy objects should go in the See Also
 section instead.
 
-Do not list online resources in the References section. Instead, an online
-resource should be cited by embedding a hyperlink in the text of the
-docstring. Only link to freely accessible and stable online resources such as
-Wikipedia, Wolfram MathWorld, and the NIST Digital Library of Mathematical
-Functions (DLMF), which are unlikely to suffer from hyperlink rot.
+The References section should include online resources, paper citations, and/or
+any other printed resource giving general information about the function.
+References are meant to augment the docstring, but should not be required to
+understand it. References are numbered, starting from one, in the order in
+which they are cited.
 
-The References section should include paper citations and/or any other printed
-resource giving general information about the function. References are meant
-to augment the docstring, but should not be required to understand it.
-References are numbered, starting from one, in the order in which they are
-cited.
+For online resources, only link to freely accessible and stable online
+resources such as Wikipedia, Wolfram MathWorld, and the NIST Digital Library of
+Mathematical Functions (DLMF), which are unlikely to suffer from hyperlink rot.
 
 References for papers should include, in this order: reference citation, author
 name, title of work, journal or publication, year published, page number.
@@ -963,10 +961,26 @@ make sure it is a clickable hyperlink.
 
 **Examples**
 
-::
+Here is a References section that cites a printed resource::
 
-    [Kozen89] D. Kozen, S. Landau, Polynomial Decomposition Algorithms, Journal
-              of Symbolic Computation 7 (1989), pp. 445-456
+    References
+    ==========
+
+    .. [1] [Kozen89] D. Kozen, S. Landau, Polynomial Decomposition Algorithms,
+           Journal of Symbolic Computation 7 (1989), pp. 445-456
+
+Here is a References section that cites printed and online resources::
+
+    References
+    ==========
+
+    .. [1] Abramowitz, Milton; Stegun, Irene A., "Chapter 9," Handbook of
+           Mathematical Functions with Formulas, Graphs, and Mathematical
+           Tables, eds. (1965)
+    .. [2] Luke, Y. L., The Special Functions and Their Approximations,
+           Volume 1, (1969)
+    .. [3] https://en.wikipedia.org/wiki/Bessel_function
+    .. [4] http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
 
 Sample Docstring
 ================
@@ -984,8 +998,8 @@ Here is an example of a correctly formatted docstring::
         ===========
 
         The ``gamma`` function implements the function which passes through the
-        values of the factorial function (i.e., `\Gamma(n) = (n - 1)!`), when n
-        is an integer. More generally, `\Gamma(z)` is defined in the whole
+        values of the factorial function (i.e., $\Gamma(n) = (n - 1)!$), when n
+        is an integer. More generally, $\Gamma(z)$ is defined in the whole
         complex plane except at the negative integers where there are simple
         poles.
 
@@ -1004,13 +1018,13 @@ Here is an example of a correctly formatted docstring::
         >>> gamma(S(3)/2)
         sqrt(pi)/2
 
-        The Gamma function obeys the mirror symmetry:
+        The ``gamma`` function obeys the mirror symmetry:
 
         >>> from sympy import conjugate
         >>> conjugate(gamma(x))
         gamma(conjugate(x))
 
-        Differentiation with respect to x is supported:
+        Differentiation with respect to $x$ is supported:
 
         >>> from sympy import diff
         >>> diff(gamma(x), x)
@@ -1023,8 +1037,8 @@ Here is an example of a correctly formatted docstring::
         1/x - EulerGamma + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma*pi**2/12 +
         polygamma(2, 1)/6 - EulerGamma**3/6) + O(x**3)
 
-        We can numerically evaluate the gamma function to arbitrary precision
-        on the whole complex plane:
+        We can numerically evaluate the ``gamma`` function to arbitrary
+        precision on the whole complex plane:
 
         >>> gamma(pi).evalf(40)
         2.288037795340032417959588909060233922890
@@ -1040,7 +1054,7 @@ Here is an example of a correctly formatted docstring::
         loggamma: Log Gamma function.
         digamma: Digamma function.
         trigamma: Trigamma function.
-        sympy.functions.special.beta_functions.beta: Euler Beta function.
+        beta: Euler Beta function.
 
         References
         ==========
