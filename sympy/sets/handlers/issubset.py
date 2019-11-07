@@ -2,7 +2,7 @@ from sympy import S
 from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
 from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union
-from sympy.sets.fancysets import Reals, Range
+from sympy.sets.fancysets import Complexes, Naturals, Reals, Range, Rationals
 from sympy.multipledispatch import dispatch
 
 
@@ -52,3 +52,50 @@ def is_subset_sets(a, b):
     if a.step == b.step == 1:
         return fuzzy_and([fuzzy_bool(a.start >= b.start),
                           fuzzy_bool(a.stop <= b.stop)])
+
+@dispatch(Range, Interval)
+def is_subset_sets(a_range, b_interval):
+    if a_range.step.is_positive:
+        if b_interval.left_open and a_range.inf.is_finite:
+            cond_left = a_range.inf > b_interval.left
+        else:
+            cond_left = a_range.inf >= b_interval.left
+        if b_interval.right_open and a_range.sup.is_finite:
+            cond_right = a_range.sup < b_interval.right
+        else:
+            cond_right = a_range.sup <= b_interval.right
+        return fuzzy_and([cond_left, cond_right])
+
+@dispatch(Interval, Range)
+def is_subset_sets(a_interval, b_range):
+    if a_interval.measure.is_extended_nonzero:
+        return False
+
+@dispatch(Interval, Rationals)
+def is_subset_sets(a_interval, b_rationals):
+    if a_interval.measure.is_extended_nonzero:
+        return False
+
+@dispatch(Range, Complexes)
+def is_subset_sets(a, b):
+    return True
+
+@dispatch(Complexes, Interval)
+def is_subset_sets(a, b):
+    return False
+
+@dispatch(Complexes, Range)
+def is_subset_sets(a, b):
+    return False
+
+@dispatch(Complexes, Rationals)
+def is_subset_sets(a, b):
+    return False
+
+@dispatch(Rationals, Reals)
+def is_subset_sets(a, b):
+    return True
+
+@dispatch(Rationals, Range)
+def is_subset_sets(a, b):
+    return False
