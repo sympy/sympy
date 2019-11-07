@@ -439,6 +439,7 @@ def test_genocchi():
     raises(ValueError, lambda: genocchi(-2))
 
 
+@nocache_fail
 def test_partition():
     partition_nums = [1, 1, 2, 3, 5, 7, 11, 15, 22]
     for n, p in enumerate(partition_nums):
