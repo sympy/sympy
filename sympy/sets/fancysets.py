@@ -663,8 +663,9 @@ class Range(Set):
             ref = self.start
         else:
             ref = self.stop
-        if (ref - other) % self.step is S.true:  # off sequence
-            return S.false
+        if (ref - other).is_finite:
+            if (ref - other) % self.step:  # off sequence
+                return S.false
         return _sympify(other >= self.inf and other <= self.sup)
 
     def __iter__(self):
