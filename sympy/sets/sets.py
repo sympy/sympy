@@ -109,7 +109,7 @@ class Set(Basic):
         >>> Interval(0, 1) + Interval(2, 3)
         Union(Interval(0, 1), Interval(2, 3))
         >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
-        Union({3}, Interval.Lopen(1, 2))
+        Union(FiniteSet(3), Interval.Lopen(1, 2))
 
         Similarly it is possible to use the '-' operator for set differences:
 
@@ -469,7 +469,7 @@ class Set(Basic):
         >>> from sympy import FiniteSet, EmptySet
         >>> A = EmptySet
         >>> A.powerset()
-        {EmptySet}
+        FiniteSet(EmptySet)
 
         A power set of a finite set:
 
@@ -532,9 +532,9 @@ class Set(Basic):
 
         >>> from sympy import Interval
         >>> Interval(0, 1).boundary
-        {0, 1}
+        FiniteSet(0, 1)
         >>> Interval(0, 1, True, False).boundary
-        {0, 1}
+        FiniteSet(0, 1)
         """
         return self._boundary
 
@@ -659,7 +659,7 @@ class ProductSet(Set):
     >>> from sympy import Interval, FiniteSet, ProductSet
     >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
     >>> ProductSet(I, S)
-    ProductSet(Interval(0, 5), {1, 2, 3})
+    ProductSet(Interval(0, 5), FiniteSet(1, 2, 3))
 
     >>> (2, 2) in ProductSet(I, S)
     True
@@ -1492,7 +1492,7 @@ class Complement(Set, EvalfMixin):
 
     >>> from sympy import Complement, FiniteSet
     >>> Complement(FiniteSet(0, 1, 2), FiniteSet(1))
-    {0, 2}
+    FiniteSet(0, 2)
 
     See Also
     =========
@@ -1683,18 +1683,18 @@ class FiniteSet(Set, EvalfMixin):
 
     >>> from sympy import FiniteSet
     >>> FiniteSet(1, 2, 3, 4)
-    {1, 2, 3, 4}
+    FiniteSet(1, 2, 3, 4)
     >>> 3 in FiniteSet(1, 2, 3, 4)
     True
 
     >>> members = [1, 2, 3, 4]
     >>> f = FiniteSet(*members)
     >>> f
-    {1, 2, 3, 4}
+    FiniteSet(1, 2, 3, 4)
     >>> f - FiniteSet(2)
-    {1, 3, 4}
+    FiniteSet(1, 3, 4)
     >>> f + FiniteSet(2, 5)
-    {1, 2, 3, 4, 5}
+    FiniteSet(1, 2, 3, 4, 5)
 
     References
     ==========
@@ -1893,7 +1893,7 @@ class SymmetricDifference(Set):
 
     >>> from sympy import SymmetricDifference, FiniteSet
     >>> SymmetricDifference(FiniteSet(1, 2, 3), FiniteSet(3, 4, 5))
-    {1, 2, 4, 5}
+    FiniteSet(1, 2, 4, 5)
 
     See Also
     ========

@@ -42,7 +42,7 @@ class Partition(FiniteSet):
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([1, 2], [3])
         >>> a
-        {{3}, {1, 2}}
+        Partition(FiniteSet(1, 2), FiniteSet(3))
         >>> a.partition
         [[1, 2], [3]]
         >>> len(a)
@@ -53,7 +53,7 @@ class Partition(FiniteSet):
         Creating Partition from Python sets:
 
         >>> Partition({1, 2, 3}, {4, 5})
-        {{4, 5}, {1, 2, 3}}
+        Partition(FiniteSet(1, 2, 3), FiniteSet(4, 5))
 
         Creating Partition from SymPy finite sets:
 
@@ -61,7 +61,7 @@ class Partition(FiniteSet):
         >>> a = FiniteSet(1, 2, 3)
         >>> b = FiniteSet(4, 5)
         >>> Partition(a, b)
-        {{4, 5}, {1, 2, 3}}
+        Partition(FiniteSet(1, 2, 3), FiniteSet(4, 5))
         """
         args = []
         dups = False
@@ -107,7 +107,7 @@ class Partition(FiniteSet):
         >>> d = Partition(list(range(4)))
         >>> l = [d, b, a + 1, a, c]
         >>> l.sort(key=default_sort_key); l
-        [{{1, 2}}, {{1}, {2}}, {{1, x}}, {{3, 4}}, {{0, 1, 2, 3}}]
+        [Partition(FiniteSet(1, 2)), Partition(FiniteSet(1), FiniteSet(2)), Partition(FiniteSet(1, x)), Partition(FiniteSet(3, 4)), Partition(FiniteSet(0, 1, 2, 3))]
         """
         if order is None:
             members = self.members
@@ -250,7 +250,7 @@ class Partition(FiniteSet):
         >>> a.RGS
         (0, 0, 1, 2, 2)
         >>> a + 1
-        {{3}, {4}, {5}, {1, 2}}
+        Partition(FiniteSet(1, 2), FiniteSet(3), FiniteSet(4), FiniteSet(5))
         >>> _.RGS
         (0, 0, 1, 2, 3)
         """
@@ -278,12 +278,12 @@ class Partition(FiniteSet):
 
         >>> from sympy.combinatorics.partitions import Partition
         >>> Partition.from_rgs([0, 1, 2, 0, 1], list('abcde'))
-        {{c}, {a, d}, {b, e}}
+        Partition(FiniteSet(c), FiniteSet(a, d), FiniteSet(b, e))
         >>> Partition.from_rgs([0, 1, 2, 0, 1], list('cbead'))
-        {{e}, {a, c}, {b, d}}
+        Partition(FiniteSet(e), FiniteSet(a, c), FiniteSet(b, d))
         >>> a = Partition([1, 4], [2], [3, 5])
         >>> Partition.from_rgs(a.RGS, a.members)
-        {{2}, {1, 4}, {3, 5}}
+        Partition(FiniteSet(1, 4), FiniteSet(2), FiniteSet(3, 5))
         """
         if len(rgs) != len(elements):
             raise ValueError('mismatch in rgs and element lengths')
