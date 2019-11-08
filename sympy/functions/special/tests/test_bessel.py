@@ -223,10 +223,6 @@ def test_jn():
     z = symbols("z")
     assert jn(0, 0) == 1
     assert jn(1, 0) == 0
-    assert jn(pi, 0) == 0
-    assert jn(S(1)/2, 0) == 0
-    assert jn(1 + I, 0) == 0
-    assert jn(1 - I, 0) == 0
     assert jn(-1, 0) == S.ComplexInfinity
     assert jn(z, 0) == jn(z, 0, evaluate=False)
 
