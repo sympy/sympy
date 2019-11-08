@@ -674,8 +674,8 @@ class jn(SphericalBesselBase):
         if z.is_zero:
             if nu.is_zero: # jn(0,0)=1
                 return S.One
-            elif nu.is_number:
-                if nu.is_positive or re(nu).is_positive:
+            elif nu.is_integer:
+                if nu.is_positive:
                     return S.Zero
                 else:
                     return S.ComplexInfinity
