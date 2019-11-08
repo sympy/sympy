@@ -393,7 +393,9 @@ def test_issue_10047():
     # assert solve(sin(x) < 2) == (x <= oo)
 
     # with PR 16956, (x <= oo) autoevaluates when x is extended_real
+    # which is assumed in the current implementation of inequality solvers
     assert solve(sin(x) < 2) == True
+    assert solveset(sin(x) < 2, domain=S.Reals) == S.Reals
 
 
 def test_issue_10268():

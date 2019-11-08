@@ -329,98 +329,74 @@ class Expr(Basic, EvalfMixin):
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
-    def __ge__(self, other):
-        from sympy import GreaterThan
+    def _cmp(self, other, op, cls):
+        assert op in ("<", ">", "<=", ">=")
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
+            raise TypeError("Invalid comparison %s %s %s" % (self, op, other))
         for me in (self, other):
             if me.is_extended_real is False:
                 raise TypeError("Invalid comparison of non-real %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+
         n2 = _n2(self, other)
         if n2 is not None:
-            return _sympify(n2 >= 0)
+            # use float comparison for infinity.
+            # otherwise get stuck in infinite recursion
+            if n2 in (S.Infinity, S.NegativeInfinity):
+                n2 = float(n2)
+            if op == "<":
+                return _sympify(n2 < 0)
+            elif op == ">":
+                return _sympify(n2 > 0)
+            elif op == "<=":
+                return _sympify(n2 <= 0)
+            else: # >=
+                return _sympify(n2 >= 0)
+
         if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_positive) \
-                    or (other.is_infinite and other.is_extended_negative):
-                return S.true
-            nneg = (self - other).is_extended_nonnegative
-            if nneg is not None:
-                return sympify(nneg)
-        return GreaterThan(self, other, evaluate=False)
+            if op in ("<=", ">") \
+                and ((self.is_infinite and self.is_extended_negative) \
+                     or (other.is_infinite and other.is_extended_positive)):
+                return S.true if op == "<=" else S.false
+            if op in ("<", ">=") \
+                and ((self.is_infinite and self.is_extended_positive) \
+                     or (other.is_infinite and other.is_extended_negative)):
+                return S.true if op == ">=" else S.false
+            diff = self - other
+            if diff is not S.NaN:
+                if op == "<":
+                    test = diff.is_extended_negative
+                elif op == ">":
+                    test = diff.is_extended_positive
+                elif op == "<=":
+                    test = diff.is_extended_nonpositive
+                else: # >=
+                    test = diff.is_extended_nonnegative
+
+                if test is not None:
+                    return S.true if test == True else S.false
+
+        # return unevaluated comparison object
+        return cls(self, other, evaluate=False)
+
+    def __ge__(self, other):
+        from sympy import GreaterThan
+        return self._cmp(other, ">=", GreaterThan)
 
     def __le__(self, other):
         from sympy import LessThan
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        for me in (self, other):
-            if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of non-real %s" % me)
-            if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
-        n2 = _n2(self, other)
-        if n2 is not None:
-            return _sympify(n2 <= 0)
-        if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_negative) \
-                    or (other.is_infinite and other.is_extended_positive):
-                return S.true
-            npos = (self - other).is_extended_nonpositive
-            if npos is not None:
-                return sympify(npos)
-        return LessThan(self, other, evaluate=False)
+        return self._cmp(other, "<=", LessThan)
 
     def __gt__(self, other):
         from sympy import StrictGreaterThan
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
-        for me in (self, other):
-            if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of non-real %s" % me)
-            if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
-        n2 = _n2(self, other)
-        if n2 is not None:
-            return _sympify(n2 > 0)
-
-        if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_negative) \
-                    or (other.is_infinite and other.is_extended_positive):
-                return S.false
-            pos = (self - other).is_extended_positive
-            if pos is not None:
-                return sympify(pos)
-        return StrictGreaterThan(self, other, evaluate=False)
+        return self._cmp(other, ">", StrictGreaterThan)
 
     def __lt__(self, other):
         from sympy import StrictLessThan
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
-        for me in (self, other):
-            if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of non-real %s" % me)
-            if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
-        n2 = _n2(self, other)
-        if n2 is not None:
-            return _sympify(n2 < 0)
-        if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_positive) \
-                    or (other.is_infinite and other.is_extended_negative):
-                return S.false
-            neg = (self - other).is_extended_negative
-            if neg is not None:
-                return sympify(neg)
-        return StrictLessThan(self, other, evaluate=False)
+        return self._cmp(other, "<", StrictLessThan)
 
     def __trunc__(self):
         if not self.is_number:
@@ -893,7 +869,7 @@ class Expr(Basic, EvalfMixin):
         if extended_negative is False:
             return False
 
-    def _eval_is_extended_positive(self):
+    def _eval_is_extended_positive_negative(self, positive):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
@@ -919,7 +895,7 @@ class Expr(Basic, EvalfMixin):
             if not i.is_Number or not r.is_Number:
                 return False
             if r._prec != 1 and i._prec != 1:
-                return bool(not i and r > 0)
+                return bool(not i and ((r > 0) if positive else (r < 0)))
             elif r._prec == 1 and (not i or i._prec == 1) and \
                     self.is_algebraic and not self.has(Function):
                 try:
@@ -927,41 +903,12 @@ class Expr(Basic, EvalfMixin):
                         return False
                 except (NotAlgebraic, NotImplementedError):
                     pass
+
+    def _eval_is_extended_positive(self):
+        return self._eval_is_extended_positive_negative(positive=True)
 
     def _eval_is_extended_negative(self):
-        from sympy.polys.numberfields import minimal_polynomial
-        from sympy.polys.polyerrors import NotAlgebraic
-        if self.is_number:
-            if self.is_extended_real is False:
-                return False
-
-            # check to see that we can get a value
-            try:
-                n2 = self._eval_evalf(2)
-            # XXX: This shouldn't be caught here
-            # Catches ValueError: hypsum() failed to converge to the requested
-            # 34 bits of accuracy
-            except ValueError:
-                return None
-            if n2 is None:
-                return None
-            if getattr(n2, '_prec', 1) == 1:  # no significance
-                return None
-            if n2 is S.NaN:
-                return None
-
-            r, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not r.is_Number:
-                return False
-            if r._prec != 1 and i._prec != 1:
-                return bool(not i and r < 0)
-            elif r._prec == 1 and (not i or i._prec == 1) and \
-                    self.is_algebraic and not self.has(Function):
-                try:
-                    if minimal_polynomial(self).is_Symbol:
-                        return False
-                except (NotAlgebraic, NotImplementedError):
-                    pass
+        return self._eval_is_extended_positive_negative(positive=False)
 
     def _eval_interval(self, x, a, b):
         """
@@ -985,36 +932,31 @@ class Expr(Basic, EvalfMixin):
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
 
+        def _eval_endpoint(left):
+            c = a if left else b
+            if c is None:
+                return 0
+            else:
+                C = self.subs(x, c)
+                if C.has(S.NaN, S.Infinity, S.NegativeInfinity,
+                         S.ComplexInfinity, AccumBounds):
+                    if (a < b) != False:
+                        C = limit(self, x, c, "+" if left else "-")
+                    else:
+                        C = limit(self, x, c, "-" if left else "+")
+
+                    if isinstance(C, Limit):
+                        raise NotImplementedError("Could not compute limit")
+            return C
+
         if a == b:
             return 0
 
-        if a is None:
-            A = 0
-        else:
-            A = self.subs(x, a)
-            if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity, AccumBounds):
-                if (a < b) != False:
-                    A = limit(self, x, a,"+")
-                else:
-                    A = limit(self, x, a,"-")
+        A = _eval_endpoint(left=True)
+        if A is S.NaN:
+            return A
 
-                if A is S.NaN:
-                    return A
-                if isinstance(A, Limit):
-                    raise NotImplementedError("Could not compute limit")
-
-        if b is None:
-            B = 0
-        else:
-            B = self.subs(x, b)
-            if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity, AccumBounds):
-                if (a < b) != False:
-                    B = limit(self, x, b,"-")
-                else:
-                    B = limit(self, x, b,"+")
-
-                if isinstance(B, Limit):
-                    raise NotImplementedError("Could not compute limit")
+        B = _eval_endpoint(left=False)
 
         if (a and b) is None:
             return B - A
@@ -1553,42 +1495,27 @@ class Expr(Basic, EvalfMixin):
         if self_c and not x_c:
             return S.Zero
 
-        if self_c:
-            xargs = x.args_cnc(cset=True, warn=False)[0]
-            for a in args:
-                margs = a.args_cnc(cset=True, warn=False)[0]
-                if len(xargs) > len(margs):
-                    continue
-                resid = margs.difference(xargs)
-                if len(resid) + len(xargs) == len(margs):
-                    co.append(Mul(*resid))
-            if co == []:
-                return S.Zero
-            elif co:
-                return Add(*co)
-        elif x_c:
-            xargs = x.args_cnc(cset=True, warn=False)[0]
-            for a in args:
-                margs, nc = a.args_cnc(cset=True)
-                if len(xargs) > len(margs):
-                    continue
-                resid = margs.difference(xargs)
-                if len(resid) + len(xargs) == len(margs):
+        one_c = self_c or x_c
+        xargs, nx = x.args_cnc(cset=True, warn=bool(not x_c))
+        # find the parts that pass the commutative terms
+        for a in args:
+            margs, nc = a.args_cnc(cset=True, warn=bool(not self_c))
+            if nc is None:
+                nc = []
+            if len(xargs) > len(margs):
+                continue
+            resid = margs.difference(xargs)
+            if len(resid) + len(xargs) == len(margs):
+                if one_c:
                     co.append(Mul(*(list(resid) + nc)))
+                else:
+                    co.append((resid, nc))
+        if one_c:
             if co == []:
                 return S.Zero
             elif co:
                 return Add(*co)
         else:  # both nc
-            xargs, nx = x.args_cnc(cset=True)
-            # find the parts that pass the commutative terms
-            for a in args:
-                margs, nc = a.args_cnc(cset=True)
-                if len(xargs) > len(margs):
-                    continue
-                resid = margs.difference(xargs)
-                if len(resid) + len(xargs) == len(margs):
-                    co.append((resid, nc))
             # now check the non-comm parts
             if not co:
                 return S.Zero
@@ -2218,6 +2145,8 @@ class Expr(Basic, EvalfMixin):
             x = self.extract_multiplicatively(a)
             if x is not None:
                 return x.extract_multiplicatively(b)
+            else:
+                return x
 
         quotient = self / c
         if self.is_Number:
