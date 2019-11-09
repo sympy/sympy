@@ -6928,3 +6928,8 @@ def test_is_combining():
     line = u("v̇_m")
     assert [is_combining(sym) for sym in line] == \
         [False, True, False, False]
+
+
+def test_issue_17857():
+    assert pretty(Range(-oo, oo)) == '{..., -1, 0, 1, ...}'
+    assert pretty(Range(oo, -oo, -1)) == '{..., 1, 0, -1, ...}'

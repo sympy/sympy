@@ -659,7 +659,12 @@ class Range(Set):
                 _ = self.size  # validate
             except ValueError:
                 return
-        ref = self.start if self.start.is_finite else self.stop
+        if self.start.is_finite:
+            ref = self.start
+        elif self.stop.is_finite:
+            ref = self.stop
+        else:
+            return other.is_Integer
         if (ref - other) % self.step:  # off sequence
             return S.false
         return _sympify(other >= self.inf and other <= self.sup)
