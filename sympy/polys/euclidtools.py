@@ -2,17 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.densebasic import (
-    dup_strip, dmp_raise,
-    dmp_zero, dmp_one, dmp_ground,
-    dmp_one_p, dmp_zero_p,
-    dmp_zeros,
-    dup_degree, dmp_degree, dmp_degree_in,
-    dup_LC, dmp_LC, dmp_ground_LC,
-    dmp_multi_deflate, dmp_inflate,
-    dup_convert, dmp_convert,
-    dmp_apply_pairs)
-
+from sympy.core.compatibility import range
+from sympy.ntheory import nextprime
 from sympy.polys.densearith import (
     dup_sub_mul,
     dup_neg, dmp_neg,
@@ -28,7 +19,16 @@ from sympy.polys.densearith import (
     dmp_mul_term,
     dup_quo_ground, dmp_quo_ground,
     dup_max_norm, dmp_max_norm)
-
+from sympy.polys.densebasic import (
+    dup_strip, dmp_raise,
+    dmp_zero, dmp_one, dmp_ground,
+    dmp_one_p, dmp_zero_p,
+    dmp_zeros,
+    dup_degree, dmp_degree, dmp_degree_in,
+    dup_LC, dmp_LC, dmp_ground_LC,
+    dmp_multi_deflate, dmp_inflate,
+    dup_convert, dmp_convert,
+    dmp_apply_pairs)
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
     dup_diff, dmp_diff,
@@ -37,10 +37,9 @@ from sympy.polys.densetools import (
     dup_monic, dmp_ground_monic,
     dup_primitive, dmp_ground_primitive,
     dup_extract, dmp_ground_extract)
-
 from sympy.polys.galoistools import (
     gf_int, gf_crt)
-
+from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     HeuristicGCDFailed,
@@ -48,11 +47,7 @@ from sympy.polys.polyerrors import (
     NotInvertible,
     DomainError)
 
-from sympy.polys.polyconfig import query
 
-from sympy.ntheory import nextprime
-
-from sympy.core.compatibility import range
 
 
 def dup_half_gcdex(f, g, K):
@@ -74,7 +69,7 @@ def dup_half_gcdex(f, g, K):
     (-1/5*x + 3/5, x + 1)
 
     """
-    if not K.has_Field:
+    if not K.is_Field:
         raise DomainError("can't compute half extended GCD over %s" % K)
 
     a, b = [K.one], []
@@ -337,8 +332,8 @@ def dup_inner_subresultants(f, g, K):
     References
     ==========
 
-    [1] W.S. Brown, The Subresultant PRS Algorithm.
-    ACM Transaction of Mathematical Software 4 (1978) 237-249
+    .. [1] W.S. Brown, The Subresultant PRS Algorithm.
+           ACM Transaction of Mathematical Software 4 (1978) 237-249
 
     """
     n = dup_degree(f)
@@ -796,7 +791,7 @@ def dmp_resultant(f, g, u, K, includePRS=False):
     if includePRS:
         return dmp_prs_resultant(f, g, u, K)
 
-    if K.has_Field:
+    if K.is_Field:
         if K.is_QQ and query('USE_COLLINS_RESULTANT'):
             return dmp_qq_collins_resultant(f, g, u, K)
     else:
@@ -898,6 +893,7 @@ def _dmp_rr_trivial_gcd(f, g, u, K):
     """Handle trivial cases in GCD algorithm over a ring. """
     zero_f = dmp_zero_p(f, u)
     zero_g = dmp_zero_p(g, u)
+    if_contain_one = dmp_one_p(f, u, K) or dmp_one_p(g, u, K)
 
     if zero_f and zero_g:
         return tuple(dmp_zeros(3, u, K))
@@ -911,6 +907,8 @@ def _dmp_rr_trivial_gcd(f, g, u, K):
             return f, dmp_one(u, K), dmp_zero(u)
         else:
             return dmp_neg(f, u, K), dmp_ground(-K.one, u), dmp_zero(u)
+    elif if_contain_one:
+        return dmp_one(u, K), f, g
     elif query('USE_SIMPLIFY_GCD'):
         return _dmp_simplify_gcd(f, g, u, K)
     else:
@@ -1178,7 +1176,7 @@ def dup_zz_heu_gcd(f, g, K):
     References
     ==========
 
-    1. [Liao95]_
+    .. [1] [Liao95]_
 
     """
     result = _dup_rr_trivial_gcd(f, g, K)
@@ -1286,7 +1284,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
     The algorithm computes the polynomial GCD by evaluating polynomials
     f and g at certain points and computing (fast) integer GCD of those
     evaluations. The polynomial GCD is recovered from the integer image
-    by interpolation. The evaluation proces reduces f and g variable by
+    by interpolation. The evaluation process reduces f and g variable by
     variable into a large integer.  The final step is to verify if the
     interpolated polynomial is the correct GCD. This gives cofactors of
     the input polynomials as a side effect.
@@ -1306,7 +1304,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
     References
     ==========
 
-    1. [Liao95]_
+    .. [1] [Liao95]_
 
     """
     if not u:
@@ -1507,7 +1505,7 @@ def dup_inner_gcd(f, g, K):
         cfg = dup_convert(cfg, exact, K)
 
         return h, cff, cfg
-    elif K.has_Field:
+    elif K.is_Field:
         if K.is_QQ and query('USE_HEU_GCD'):
             try:
                 return dup_qq_heu_gcd(f, g, K)
@@ -1543,7 +1541,7 @@ def _dmp_inner_gcd(f, g, u, K):
         cfg = dmp_convert(cfg, u, exact, K)
 
         return h, cff, cfg
-    elif K.has_Field:
+    elif K.is_Field:
         if K.is_QQ and query('USE_HEU_GCD'):
             try:
                 return dmp_qq_heu_gcd(f, g, u, K)
@@ -1691,7 +1689,7 @@ def dup_lcm(f, g, K):
     x**3 - 2*x**2 - x + 2
 
     """
-    if K.has_Field:
+    if K.is_Field:
         return dup_ff_lcm(f, g, K)
     else:
         return dup_rr_lcm(f, g, K)
@@ -1768,7 +1766,7 @@ def dmp_lcm(f, g, u, K):
     if not u:
         return dup_lcm(f, g, K)
 
-    if K.has_Field:
+    if K.is_Field:
         return dmp_ff_lcm(f, g, u, K)
     else:
         return dmp_rr_lcm(f, g, u, K)
@@ -1860,7 +1858,7 @@ def dmp_cancel(f, g, u, K, include=True):
     """
     K0 = None
 
-    if K.has_Field and K.has_assoc_Ring:
+    if K.is_Field and K.has_assoc_Ring:
         K0, K = K, K.get_ring()
 
         cq, f = dmp_clear_denoms(f, u, K0, K, convert=True)

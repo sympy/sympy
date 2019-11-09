@@ -1,8 +1,6 @@
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range
-from sympy.combinatorics.util import _distribute_gens_by_base
 from sympy.combinatorics import Permutation
+from sympy.combinatorics.util import _distribute_gens_by_base
+from sympy.core.compatibility import range
 
 rmul = Permutation.rmul
 
@@ -29,8 +27,8 @@ def _cmp_perm_lists(first, second):
     True
 
     """
-    return set([tuple(a) for a in first]) == \
-        set([tuple(a) for a in second])
+    return {tuple(a) for a in first} == \
+           {tuple(a) for a in second}
 
 
 def _naive_list_centralizer(self, other, af=False):

@@ -61,7 +61,7 @@ def test_condition_multiple():
 
     c = Symbol('c', integer=True)
     d = Symbol('d', integer=True)
-    assert set(rl(c + d)) == set([c**d, d**c])
+    assert set(rl(c + d)) == {c**d, d**c}
 
 def test_assumptions():
     rl = rewriterule(x + y, x**y, [x, y], assume=Q.integer(x))

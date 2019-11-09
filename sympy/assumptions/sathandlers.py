@@ -1,24 +1,22 @@
 from __future__ import print_function, division
 
-from collections import MutableMapping, defaultdict
-
-from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
-from sympy.core.numbers import ImaginaryUnit
-from sympy.core.sympify import _sympify
-from sympy.core.rules import Transform
-from sympy.core.logic import fuzzy_or, fuzzy_and
-from sympy.matrices.expressions import MatMul
-
-from sympy.functions.elementary.complexes import Abs
+from collections import defaultdict
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
-from sympy.logic.boolalg import (Equivalent, Implies, And, Or,
-    BooleanFunction, Not)
+from sympy.assumptions.cnf import AND, OR, to_NNF
+from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
+from sympy.core.compatibility import MutableMapping
+from sympy.core.numbers import ImaginaryUnit
+from sympy.core.rules import Transform
+from sympy.core.sympify import _sympify
+from sympy.functions.elementary.complexes import Abs
+from sympy.logic.boolalg import (Equivalent, Implies, BooleanFunction)
+from sympy.matrices.expressions import MatMul
 
 # APIs here may be subject to change
 
-# XXX: Better name?
+
 class UnevaluatedOnFree(BooleanFunction):
     """
     Represents a Boolean function that remains unevaluated on free predicates
@@ -62,20 +60,26 @@ class UnevaluatedOnFree(BooleanFunction):
             obj.pred = arg
             obj.expr = None
             return obj
-        predicate_args = set([pred.args[0] for pred in applied_predicates])
+        predicate_args = {pred.args[0] for pred in applied_predicates}
         if len(predicate_args) > 1:
             raise ValueError("The AppliedPredicates in arg must be applied to a single expression.")
         obj = BooleanFunction.__new__(cls, arg)
         obj.expr = predicate_args.pop()
         obj.pred = arg.xreplace(Transform(lambda e: e.func, lambda e:
             isinstance(e, AppliedPredicate)))
-        applied = obj.apply()
+        applied = obj.apply(obj.expr)
         if applied is None:
             return obj
         return applied
 
-    def apply(self):
-        return
+    def apply(self, expr=None):
+        if expr is None:
+            return
+        pred = to_NNF(self.pred)
+        return self._eval_apply(expr, pred)
+
+    def _eval_apply(self, expr, pred):
+        return None
 
 
 class AllArgs(UnevaluatedOnFree):
@@ -90,19 +94,20 @@ class AllArgs(UnevaluatedOnFree):
 
     Example
     =======
-
     >>> from sympy.assumptions.sathandlers import AllArgs
     >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
     >>> a = AllArgs(Q.positive | Q.negative)
     >>> a
-    AllArgs(Or(Q.negative, Q.positive))
+    AllArgs(Q.negative | Q.positive)
     >>> a.rcall(x*y)
-    And(Or(Q.negative(x), Q.positive(x)), Or(Q.negative(y), Q.positive(y)))
+    ((Literal(Q.negative(x), False) | Literal(Q.positive(x), False)) & (Literal(Q.negative(y), False) | \
+    Literal(Q.positive(y), False)))
+
     """
 
-    def apply(self):
-        return And(*[self.pred.rcall(arg) for arg in self.expr.args])
+    def _eval_apply(self, expr, pred):
+        return AND(*[pred.rcall(arg) for arg in expr.args])
 
 
 class AnyArgs(UnevaluatedOnFree):
@@ -117,19 +122,20 @@ class AnyArgs(UnevaluatedOnFree):
 
     Example
     =======
-
     >>> from sympy.assumptions.sathandlers import AnyArgs
     >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
     >>> a = AnyArgs(Q.positive & Q.negative)
     >>> a
-    AnyArgs(And(Q.negative, Q.positive))
+    AnyArgs(Q.negative & Q.positive)
     >>> a.rcall(x*y)
-    Or(And(Q.negative(x), Q.positive(x)), And(Q.negative(y), Q.positive(y)))
+    ((Literal(Q.negative(x), False) & Literal(Q.positive(x), False)) | (Literal(Q.negative(y), False) & \
+    Literal(Q.positive(y), False)))
+
     """
 
-    def apply(self):
-        return Or(*[self.pred.rcall(arg) for arg in self.expr.args])
+    def _eval_apply(self, expr, pred):
+        return OR(*[pred.rcall(arg) for arg in expr.args])
 
 
 class ExactlyOneArg(UnevaluatedOnFree):
@@ -145,7 +151,6 @@ class ExactlyOneArg(UnevaluatedOnFree):
 
     Example
     =======
-
     >>> from sympy.assumptions.sathandlers import ExactlyOneArg
     >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
@@ -153,17 +158,19 @@ class ExactlyOneArg(UnevaluatedOnFree):
     >>> a
     ExactlyOneArg(Q.positive)
     >>> a.rcall(x*y)
-    Or(And(Not(Q.positive(x)), Q.positive(y)), And(Not(Q.positive(y)), Q.positive(x)))
+    ((Literal(Q.positive(x), False) & Literal(Q.positive(y), True)) | (Literal(Q.positive(x), True) & \
+    Literal(Q.positive(y), False)))
+
     """
-    def apply(self):
-        expr = self.expr
-        pred = self.pred
+
+    def _eval_apply(self, expr, pred):
         pred_args = [pred.rcall(arg) for arg in expr.args]
         # Technically this is xor, but if one term in the disjunction is true,
         # it is not possible for the remainder to be true, so regular or is
         # fine in this case.
-        return Or(*[And(pred_args[i], *map(Not, pred_args[:i] +
-            pred_args[i+1:])) for i in range(len(pred_args))])
+        res = OR(*[AND(pred_args[i], *[~lit for lit in pred_args[:i] +
+            pred_args[i+1:]]) for i in range(len(pred_args))])
+        return res
         # Note: this is the equivalent cnf form. The above is more efficient
         # as the first argument of an implication, since p >> q is the same as
         # q | ~p, so the the ~ will convert the Or to and, and one just needs
@@ -173,10 +180,6 @@ class ExactlyOneArg(UnevaluatedOnFree):
 
 
 def _old_assump_replacer(obj):
-    # Things to be careful of:
-    # - real means real or infinite in the old assumptions.
-    # - nonzero does not imply real in the old assumptions.
-    # - finite means finite and not zero in the old assumptions.
     if not isinstance(obj, AppliedPredicate):
         return obj
 
@@ -184,33 +187,34 @@ def _old_assump_replacer(obj):
     ret = None
 
     if obj.func == Q.positive:
-        ret = fuzzy_and([e.is_finite, e.is_positive])
-    if obj.func == Q.zero:
+        ret = e.is_positive
+    elif obj.func == Q.zero:
         ret = e.is_zero
-    if obj.func == Q.negative:
-        ret = fuzzy_and([e.is_finite, e.is_negative])
-    if obj.func == Q.nonpositive:
-        ret = fuzzy_and([e.is_finite, e.is_nonpositive])
-    if obj.func == Q.nonzero:
-        ret = fuzzy_and([e.is_nonzero, e.is_finite])
-    if obj.func == Q.nonnegative:
-        ret = fuzzy_and([fuzzy_or([e.is_zero, e.is_finite]),
-        e.is_nonnegative])
+    elif obj.func == Q.negative:
+        ret = e.is_negative
+    elif obj.func == Q.nonpositive:
+        ret = e.is_nonpositive
+    elif obj.func == Q.nonzero:
+        ret = e.is_nonzero
+    elif obj.func == Q.nonnegative:
+        ret = e.is_nonnegative
 
-    if obj.func == Q.rational:
+    elif obj.func == Q.rational:
         ret = e.is_rational
-    if obj.func == Q.irrational:
+    elif obj.func == Q.irrational:
         ret = e.is_irrational
 
-    if obj.func == Q.even:
+    elif obj.func == Q.even:
         ret = e.is_even
-    if obj.func == Q.odd:
+    elif obj.func == Q.odd:
         ret = e.is_odd
-    if obj.func == Q.integer:
+    elif obj.func == Q.integer:
         ret = e.is_integer
-    if obj.func == Q.imaginary:
+    elif obj.func == Q.composite:
+        ret = e.is_composite
+    elif obj.func == Q.imaginary:
         ret = e.is_imaginary
-    if obj.func == Q.commutative:
+    elif obj.func == Q.commutative:
         ret = e.is_commutative
 
     if ret is None:
@@ -230,15 +234,18 @@ def evaluate_old_assump(pred):
 
 
 class CheckOldAssump(UnevaluatedOnFree):
-    def apply(self):
-        return Equivalent(self.args[0], evaluate_old_assump(self.args[0]))
+    def apply(self, expr=None, is_Not=False):
+        arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
+        res = Equivalent(arg, evaluate_old_assump(arg))
+        return to_NNF(res)
 
 
 class CheckIsPrime(UnevaluatedOnFree):
-    def apply(self):
+    def apply(self, expr=None, is_Not=False):
         from sympy import isprime
-        return Equivalent(self.args[0], isprime(self.expr))
-
+        arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
+        res = Equivalent(arg, isprime(expr))
+        return to_NNF(res)
 
 class CustomLambda(object):
     """
@@ -249,8 +256,8 @@ class CustomLambda(object):
     def __init__(self, lamda):
         self.lamda = lamda
 
-    def rcall(self, *args):
-        return self.lamda(*args)
+    def apply(self, *args):
+        return to_NNF(self.lamda(*args))
 
 
 class ClassFactRegistry(MutableMapping):
@@ -293,7 +300,7 @@ fact_registry = ClassFactRegistry()
 
 
 def register_fact(klass, fact, registry=fact_registry):
-    registry[klass] |= set([fact])
+    registry[klass] |= {fact}
 
 
 for klass, fact in [
@@ -304,10 +311,17 @@ for klass, fact in [
     (Mul, Implies(AllArgs(Q.positive), Q.positive)),
     (Mul, Implies(AllArgs(Q.commutative), Q.commutative)),
     (Mul, Implies(AllArgs(Q.real), Q.commutative)),
+
+    (Pow, CustomLambda(lambda power: Implies(Q.real(power.base) &
+    Q.even(power.exp) & Q.nonnegative(power.exp), Q.nonnegative(power)))),
+    (Pow, CustomLambda(lambda power: Implies(Q.nonnegative(power.base) & Q.odd(power.exp) & Q.nonnegative(power.exp), Q.nonnegative(power)))),
+    (Pow, CustomLambda(lambda power: Implies(Q.nonpositive(power.base) & Q.odd(power.exp) & Q.nonnegative(power.exp), Q.nonpositive(power)))),
+
     # This one can still be made easier to read. I think we need basic pattern
     # matching, so that we can just write Equivalent(Q.zero(x**y), Q.zero(x) & Q.positive(y))
     (Pow, CustomLambda(lambda power: Equivalent(Q.zero(power), Q.zero(power.base) & Q.positive(power.exp)))),
     (Integer, CheckIsPrime(Q.prime)),
+    (Integer, CheckOldAssump(Q.composite)),
     # Implicitly assumes Mul has more than one arg
     # Would be AllArgs(Q.prime | Q.composite) except 1 is composite
     (Mul, Implies(AllArgs(Q.prime), ~Q.prime)),
@@ -316,7 +330,7 @@ for klass, fact in [
     (Mul, Implies(AllArgs(Q.imaginary | Q.real), Implies(ExactlyOneArg(Q.imaginary), Q.imaginary))),
     (Mul, Implies(AllArgs(Q.real), Q.real)),
     (Add, Implies(AllArgs(Q.real), Q.real)),
-    #General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
+    # General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
     (Mul, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
         Q.irrational))),
     (Add, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),

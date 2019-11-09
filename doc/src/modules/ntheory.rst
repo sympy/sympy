@@ -1,5 +1,6 @@
+=============
 Number Theory
-====================
+=============
 
 .. module:: sympy.ntheory.generate
 
@@ -27,6 +28,10 @@ Ntheory Functions Reference
 
 .. autofunction:: cycle_length
 
+.. autofunction:: composite
+
+.. autofunction:: compositepi
+
 .. module:: sympy.ntheory.factor_
 
 .. autofunction:: smoothness
@@ -45,6 +50,8 @@ Ntheory Functions Reference
 
 .. autofunction:: factorint
 
+.. autofunction:: factorrat
+
 .. autofunction:: primefactors
 
 .. autofunction:: divisors
@@ -59,15 +66,41 @@ Ntheory Functions Reference
 
 .. autofunction:: antidivisor_count
 
-.. autofunction:: totient
+.. autoclass:: totient
+    :members:
 
-.. autofunction:: divisor_sigma
+.. autoclass:: reduced_totient
+    :members:
 
-.. autofunction:: udivisor_sigma
+.. autoclass:: divisor_sigma
+    :members:
+
+.. autoclass:: udivisor_sigma
+    :members:
 
 .. autofunction:: core
 
 .. autofunction:: digits
+
+.. autoclass:: primenu
+    :members:
+
+.. autoclass:: primeomega
+    :members:
+
+.. autofunction:: mersenne_prime_exponent
+
+.. autofunction:: is_perfect
+
+.. autofunction:: is_mersenne_prime
+
+.. autofunction:: abundance
+
+.. autofunction:: is_abundant
+
+.. autofunction:: is_deficient
+
+.. autofunction:: is_amicable
 
 .. module:: sympy.ntheory.modular
 
@@ -97,7 +130,17 @@ Ntheory Functions Reference
 
 .. module:: sympy.ntheory.primetest
 
+.. autofunction:: is_euler_pseudoprime
+
+.. autofunction:: is_square
+
 .. autofunction:: mr
+
+.. autofunction:: is_lucas_prp
+
+.. autofunction:: is_strong_lucas_prp
+
+.. autofunction:: is_extra_strong_lucas_prp
 
 .. autofunction:: isprime
 
@@ -111,6 +154,8 @@ Ntheory Functions Reference
 
 .. autofunction:: sqrt_mod
 
+.. autofunction:: sqrt_mod_iter
+
 .. autofunction:: quadratic_residues
 
 .. autofunction:: nthroot_mod
@@ -123,12 +168,18 @@ Ntheory Functions Reference
 
 .. autofunction:: jacobi_symbol
 
+.. autofunction:: discrete_log
+
 .. automodule:: sympy.ntheory.continued_fraction
-    :members:
+   :members:
 
 .. autoclass:: sympy.ntheory.mobius
-    :members:
+   :members:
 
 .. module:: sympy.ntheory.egyptian_fraction
 
 .. autofunction:: egyptian_fraction
+
+.. module:: sympy.ntheory.bbp_pi
+
+.. autofunction:: pi_hex_digits

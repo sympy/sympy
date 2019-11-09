@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-
-"""This is rule-based deduction system for SymPy
+r"""This is rule-based deduction system for SymPy
 
 The whole thing is split into two parts
 
@@ -40,12 +38,12 @@ Here we take minimalistic approach to get something usable first.
 Some references on the topic
 ----------------------------
 
-[1] http://en.wikipedia.org/wiki/Rete_algorithm
+[1] https://en.wikipedia.org/wiki/Rete_algorithm
 [2] http://reports-archive.adm.cs.cmu.edu/anon/1995/CMU-CS-95-113.pdf
 
-http://en.wikipedia.org/wiki/Propositional_formula
-http://en.wikipedia.org/wiki/Inference_rule
-http://en.wikipedia.org/wiki/List_of_rules_of_inference
+https://en.wikipedia.org/wiki/Propositional_formula
+https://en.wikipedia.org/wiki/Inference_rule
+https://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
 from __future__ import print_function, division
 
@@ -74,6 +72,7 @@ def _as_pair(atom):
 
 # XXX this prepares forward-chaining rules for alpha-network
 
+
 def transitive_closure(implications):
     """
     Computes the transitive closure of a list of implications
@@ -92,6 +91,7 @@ def transitive_closure(implications):
                         full_implications.add((i, j))
 
     return full_implications
+
 
 def deduce_alpha_implications(implications):
     """deduce all implications
@@ -134,7 +134,8 @@ def deduce_alpha_implications(implications):
 
 
 def apply_beta_to_alpha_route(alpha_implications, beta_rules):
-    """apply additional beta-rules (And conditions) to already-built alpha implication tables
+    """apply additional beta-rules (And conditions) to already-built
+    alpha implication tables
 
        TODO: write about
 
@@ -180,7 +181,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                 raise TypeError("Cond is not And")
             bargs = set(bcond.args)
             for x, (ximpls, bb) in x_impl.items():
-                x_all = ximpls | set([x])
+                x_all = ximpls | {x}
                 # A: ... -> a   B: &(...) -> a  is non-informative
                 if bimpl not in x_all and bargs.issubset(x_all):
                     ximpls.add(bimpl)
@@ -196,7 +197,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
     for bidx, (bcond, bimpl) in enumerate(beta_rules):
         bargs = set(bcond.args)
         for x, (ximpls, bb) in x_impl.items():
-            x_all = ximpls | set([x])
+            x_all = ximpls | {x}
             # A: ... -> a   B: &(...) -> a      (non-informative)
             if bimpl in x_all:
                 continue
@@ -295,7 +296,7 @@ class Prover(object):
             if isinstance(a, And):
                 rules_beta.append((a, b))
             else:
-                rules_alpha.append((a, b) )
+                rules_alpha.append((a, b))
         return rules_alpha, rules_beta
 
     @property
@@ -375,9 +376,9 @@ class Prover(object):
 class FactRules(object):
     """Rules that describe how to deduce facts in logic space
 
-       When defined, these rules allow implications to quickly be determined for a
-       set of facts. For this precomputed deduction tables are used. see
-       `deduce_all_facts`   (forward-chaining)
+       When defined, these rules allow implications to quickly be determined
+       for a set of facts. For this precomputed deduction tables are used.
+       see `deduce_all_facts`   (forward-chaining)
 
        Also it is possible to gather prerequisites for a fact, which is tried
        to be proven.    (backward-chaining)
@@ -438,7 +439,8 @@ class FactRules(object):
 
         # now:
         # - apply beta rules to alpha chains  (static extension), and
-        # - further associate beta rules to alpha chain (for inference at runtime)
+        # - further associate beta rules to alpha chain (for inference
+        # at runtime)
         impl_ab = apply_beta_to_alpha_route(impl_a, P.rules_beta)
 
         # extract defined fact names

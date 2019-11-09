@@ -1,5 +1,5 @@
-from sympy import sympify, Add, ImmutableMatrix as Matrix
-from sympy.core.compatibility import u, unicode
+from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
+from sympy.core.compatibility import unicode
 from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
                        VectorStrPrinter)
 
@@ -10,7 +10,7 @@ class Dyadic(object):
     """A Dyadic object.
 
     See:
-    http://en.wikipedia.org/wiki/Dyadic_tensor
+    https://en.wikipedia.org/wiki/Dyadic_tensor
     Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
 
     A more powerful way to represent a rigid body's inertia. While it is more
@@ -147,7 +147,7 @@ class Dyadic(object):
         return Dyadic(newlist)
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def __neg__(self):
         return self * -1
@@ -207,19 +207,19 @@ class Dyadic(object):
                 mpp = printer if printer else VectorPrettyPrinter(settings)
                 if len(ar) == 0:
                     return unicode(0)
-                bar = u("\N{CIRCLED TIMES}") if use_unicode else "|"
+                bar = u"\N{CIRCLED TIMES}" if use_unicode else "|"
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
                     if ar[i][0] == 1:
-                        ol.extend([u(" + "),
+                        ol.extend([u" + ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
 
                     # if the coef of the dyadic is -1, we skip the 1
                     elif ar[i][0] == -1:
-                        ol.extend([u(" - "),
+                        ol.extend([u" - ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
@@ -232,18 +232,18 @@ class Dyadic(object):
                                 ar[i][0]).parens()[0]
                         else:
                             arg_str = mpp.doprint(ar[i][0])
-                        if arg_str.startswith(u("-")):
+                        if arg_str.startswith(u"-"):
                             arg_str = arg_str[1:]
-                            str_start = u(" - ")
+                            str_start = u" - "
                         else:
-                            str_start = u(" + ")
-                        ol.extend([str_start, arg_str, u(" "),
+                            str_start = u" + "
+                        ol.extend([str_start, arg_str, u" ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
 
-                outstr = u("").join(ol)
-                if outstr.startswith(u(" + ")):
+                outstr = u"".join(ol)
+                if outstr.startswith(u" + "):
                     outstr = outstr[3:]
                 elif outstr.startswith(" "):
                     outstr = outstr[1:]
@@ -373,6 +373,25 @@ class Dyadic(object):
             ol += v[0] * (v[1] | (v[2] ^ other))
         return ol
 
+    # We don't define _repr_png_ here because it would add a large amount of
+    # data to any notebook containing SymPy expressions, without adding
+    # anything useful to the notebook. It can still enabled manually, e.g.,
+    # for the qtconsole, with init_printing().
+    def _repr_latex_(self):
+        """
+        IPython/Jupyter LaTeX printing
+
+        To change the behavior of this (e.g., pass in some settings to LaTeX),
+        use init_printing(). init_printing() will also enable LaTeX printing
+        for built in numeric types like ints and container types that contain
+        SymPy objects, like lists and dictionaries of expressions.
+        """
+        from sympy.printing.latex import latex
+        s = latex(self, mode='plain')
+        return "$\\displaystyle %s$" % s
+
+    _repr_latex_orig = _repr_latex_
+
     _sympystr = __str__
     _sympyrepr = _sympystr
     __repr__ = __str__
@@ -501,7 +520,7 @@ class Dyadic(object):
         return out
 
     def subs(self, *args, **kwargs):
-        """Substituion on the Dyadic.
+        """Substitution on the Dyadic.
 
         Examples
         ========
@@ -510,7 +529,7 @@ class Dyadic(object):
         >>> from sympy import Symbol
         >>> N = ReferenceFrame('N')
         >>> s = Symbol('s')
-        >>> a = s * (N.x|N.x)
+        >>> a = s*(N.x|N.x)
         >>> a.subs({s: 2})
         2*(N.x|N.x)
 

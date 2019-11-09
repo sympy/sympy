@@ -1,4 +1,4 @@
-from sympy import Symbol
+from sympy.core.backend import Symbol
 from sympy.physics.mechanics import (RigidBody, Particle, ReferenceFrame,
                                      inertia)
 from sympy.physics.vector import Point, Vector
@@ -8,64 +8,90 @@ __all__ = ['Body']
 
 class Body(RigidBody, Particle):
     """
-    Body is a common representation of RigidBody or a Particle.
+    Body is a common representation of either a RigidBody or a Particle SymPy
+    object depending on what is passed in during initialization. If a mass is
+    passed in and central_inertia is left as None, the Particle object is
+    created. Otherwise a RigidBody object will be created.
 
-    A Body represents either a rigid body or particle in classical mechanics.
-    Bodies have a body-fixed reference frame, a mass, a mass center and
-    possibly a body-fixed inertia.
+    The attributes that Body possesses will be the same as a Particle instance
+    or a Rigid Body instance depending on which was created. Additional
+    attributes are listed below.
+
+    Attributes
+    ==========
+
+    name : string
+        The body's name
+    masscenter : Point
+        The point which represents the center of mass of the rigid body
+    frame : ReferenceFrame
+        The reference frame which the body is fixed in
+    mass : Sympifyable
+        The body's mass
+    inertia : (Dyadic, Point)
+        The body's inertia around its center of mass. This attribute is specific
+        to the rigid body form of Body and is left undefined for the Particle
+        form
+    loads : iterable
+        This list contains information on the different loads acting on the
+        Body. Forces are listed as a (point, vector) tuple and torques are
+        listed as (reference frame, vector) tuples.
 
     Parameters
-    ----------
-    name: String
-        Defines the name of the body. It is used as the base for defining body
-        specific properties.
+    ==========
+
+    name : String
+        Defines the name of the body. It is used as the base for defining
+        body specific properties.
     masscenter : Point, optional
-        A point that represents the center of mass of the body or particle. If no
-        point is given, a point is generated.
-    frame : ReferenceFrame (optional)
-        The ReferenceFrame that represents the reference frame of the body. If
-        no frame is given, a frame is generated.
+        A point that represents the center of mass of the body or particle.
+        If no point is given, a point is generated.
     mass : Sympifyable, optional
-        A Sympifyable object which represents the mass of the body. if no mass
-        is passed, one is generated.
-    body_inertia : Dyadic
+        A Sympifyable object which represents the mass of the body. If no
+        mass is passed, one is generated.
+    frame : ReferenceFrame, optional
+        The ReferenceFrame that represents the reference frame of the body.
+        If no frame is given, a frame is generated.
+    central_inertia : Dyadic, optional
         Central inertia dyadic of the body. If none is passed while creating
         RigidBody, a default inertia is generated.
 
     Examples
-    --------
-    Default behaviour. It creates a RigidBody after defining mass,
-    mass center, frame and inertia.
+    ========
 
-    >>> from sympy.physics.mechanics import Body
-    >>> body = Body('name_of_body')
+    Default behaviour. This results in the creation of a RigidBody object for
+    which the mass, mass center, frame and inertia attributes are given default
+    values. ::
 
-    Passing attributes of Rigidbody. All the arguments needed to create a
-    RigidBody can be passed while creating a Body too.
+        >>> from sympy.physics.mechanics import Body
+        >>> body = Body('name_of_body')
 
-    >>> from sympy import Symbol
-    >>> from sympy.physics.mechanics import ReferenceFrame, Point, inertia
-    >>> from sympy.physics.mechanics import Body
-    >>> mass = Symbol('mass')
-    >>> masscenter = Point('masscenter')
-    >>> frame = ReferenceFrame('frame')
-    >>> ixx = Symbol('ixx')
-    >>> body_inertia = inertia(frame, ixx, 0, 0)
-    >>> body = Body('name_of_body',masscenter,mass,frame,body_inertia)
+    This next example demonstrates the code required to specify all of the
+    values of the Body object. Note this will also create a RigidBody version of
+    the Body object. ::
 
-    Creating a Particle. If masscenter and mass are passed, and inertia is
-    not then a Particle is created.
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import ReferenceFrame, Point, inertia
+        >>> from sympy.physics.mechanics import Body
+        >>> mass = Symbol('mass')
+        >>> masscenter = Point('masscenter')
+        >>> frame = ReferenceFrame('frame')
+        >>> ixx = Symbol('ixx')
+        >>> body_inertia = inertia(frame, ixx, 0, 0)
+        >>> body = Body('name_of_body', masscenter, mass, frame, body_inertia)
 
-    >>> from sympy import Symbol
-    >>> from sympy.physics.vector import Point
-    >>> from sympy.physics.mechanics import Body
-    >>> mass = Symbol('mass')
-    >>> masscenter = Point('masscenter')
-    >>> body = Body('name_of_body',masscenter,mass)
+    The minimal code required to create a Particle version of the Body object
+    involves simply passing in a name and a mass. ::
 
-    Similarly, A frame can also be passed while creating a Particle.
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import Body
+        >>> mass = Symbol('mass')
+        >>> body = Body('name_of_body', mass=mass)
 
+    The Particle version of the Body object can also receive a masscenter point
+    and a reference frame, just not an inertia.
     """
+
     def __init__(self, name, masscenter=None, mass=None, frame=None,
                  central_inertia=None):
 
@@ -108,43 +134,46 @@ class Body(RigidBody, Particle):
 
     def apply_force(self, vec, point=None):
         """
-        Adds the force to the point (center of mass by default) on the body.
+        Adds a force to a point (center of mass by default) on the body.
 
         Parameters
-        ----------
+        ==========
+
         vec: Vector
             Defines the force vector. Can be any vector w.r.t any frame or
-            combinations of frame.
+            combinations of frames.
         point: Point, optional
-            Defines the point on which the force must be applied. Default is
+            Defines the point on which the force is applied. Default is the
             Body's center of mass.
 
         Example
-        -------
-        To apply a unit force in x direction of body's frame to body's
-        center of mass.
+        =======
 
-        >>> from sympy import Symbol
-        >>> from sympy.physics.mechanics import Body
-        >>> body = Body('body')
-        >>> g = Symbol('g')
-        >>> body.apply_force(body.mass * g * body.frame.x)
+        The first example applies a gravitational force in the x direction of
+        Body's frame to the body's center of mass. ::
+
+            >>> from sympy import Symbol
+            >>> from sympy.physics.mechanics import Body
+            >>> body = Body('body')
+            >>> g = Symbol('g')
+            >>> body.apply_force(body.mass * g * body.frame.x)
 
         To apply force to any other point than center of mass, pass that point
-        as well.
+        as well. This example applies a gravitational force to a point a
+        distance l from the body's center of mass in the y direction. The
+        force is again applied in the x direction. ::
 
-        >>> from sympy import Symbol
-        >>> from sympy.physics.mechanics import Body
-        >>> parent = Body('parent')
-        >>> child = Body('child')
-        >>> g = Symbol('g')
-        >>> frame = parent.frame
-        >>> l = Symbol('l')
-        >>> point = child.masscenter.locatenew('force_point', l * body.frame.y)
-        >>> gravity = child.mass * g
-        >>> body.apply_force(gravity * body.frame.x, point)
+            >>> from sympy import Symbol
+            >>> from sympy.physics.mechanics import Body
+            >>> body = Body('body')
+            >>> g = Symbol('g')
+            >>> l = Symbol('l')
+            >>> point = body.masscenter.locatenew('force_point', l *
+            ...                                   body.frame.y)
+            >>> body.apply_force(body.mass * g * body.frame.x, point)
 
         """
+
         if not isinstance(point, Point):
             if point is None:
                 point = self.masscenter  # masscenter
@@ -157,14 +186,27 @@ class Body(RigidBody, Particle):
 
     def apply_torque(self, vec):
         """
-        Adds torque to the body.
+        Adds a torque to the body.
 
         Parameters
-        ----------
+        ==========
+
         vec: Vector
-        Defines the torque vector. Can be any vector w.r.t any frame or
+            Defines the torque vector. Can be any vector w.r.t any frame or
             combinations of frame.
+
+        Example
+        =======
+
+        This example adds a simple torque around the body's z axis. ::
+
+            >>> from sympy import Symbol
+            >>> from sympy.physics.mechanics import Body
+            >>> body = Body('body')
+            >>> T = Symbol('T')
+            >>> body.apply_torque(T * body.frame.z)
         """
+
         if not isinstance(vec, Vector):
             raise TypeError("A Vector must be supplied to add torque.")
         self.loads.append((self.frame, vec))

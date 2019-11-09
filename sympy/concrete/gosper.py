@@ -118,11 +118,11 @@ def gosper_term(f, n):
     K = S(C.degree())
 
     if (N != M) or (A.LC() != B.LC()):
-        D = set([K - max(N, M)])
+        D = {K - max(N, M)}
     elif not N:
-        D = set([K - N + 1, S(0)])
+        D = {K - N + 1, S.Zero}
     else:
-        D = set([K - N + 1, (B.nth(N - 1) - A.nth(N - 1))/A.LC()])
+        D = {K - N + 1, (B.nth(N - 1) - A.nth(N - 1))/A.LC()}
 
     for d in set(D):
         if not d.is_Integer or d < 0:
@@ -150,7 +150,7 @@ def gosper_term(f, n):
         if coeff not in solution:
             x = x.subs(coeff, 0)
 
-    if x is S.Zero:
+    if x.is_zero:
         return None    # 'f(n)' is *not* Gosper-summable
     else:
         return B.as_expr()*x/C.as_expr()

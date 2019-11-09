@@ -70,7 +70,7 @@ class InnerProduct(Expr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Inner_product
+    .. [1] https://en.wikipedia.org/wiki/Inner_product
     """
     is_complex = True
 

@@ -1,14 +1,13 @@
+from sympy import Dummy
+from sympy.core.compatibility import range
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
-
+from sympy.polys.domains import PolynomialRing
 from sympy.polys.galoistools import (
     gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm)
 from sympy.polys.polyerrors import ModularGCDFailed
-from sympy.polys.domains import PolynomialRing
 
-from sympy.core.compatibility import range
 from mpmath import sqrt
-from sympy import Dummy
 import random
 
 
@@ -451,7 +450,6 @@ def _swap(f, i):
     Make the variable `x_i` the leading one in a multivariate polynomial `f`.
     """
     ring = f.ring
-    k = ring.ngens
     fswap = ring.zero
     for monom, coeff in f.iterterms():
         monomswap = (monom[i],) + monom[:i] + monom[i+1:]
@@ -912,13 +910,13 @@ def modgcd_bivariate(f, g):
 def _modgcd_multivariate_p(f, g, p, degbound, contbound):
     r"""
     Compute the GCD of two polynomials in
-    `\mathbb{Z}_p[x0, \ldots, x{k-1}]`.
+    `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]`.
 
     The algorithm reduces the problem step by step by evaluating the
     polynomials `f` and `g` at `x_{k-1} = a` for suitable
     `a \in \mathbb{Z}_p` and then calls itself recursively to compute the GCD
     in `\mathbb{Z}_p[x_0, \ldots, x_{k-2}]`. If these recursive calls are
-    succsessful for enough evaluation points, the GCD in `k` variables is
+    successful for enough evaluation points, the GCD in `k` variables is
     interpolated, otherwise the algorithm returns ``None``. Every time a GCD
     or a content is computed, their degrees are compared with the bounds. If
     a degree greater then the bound is encountered, then the current call
@@ -1072,7 +1070,7 @@ def modgcd_multivariate(f, g):
     `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]` for suitable primes `p` and then
     reconstructing the coefficients with the Chinese Remainder Theorem. To
     compute the multivariate GCD over `\mathbb{Z}_p` the recursive
-    subroutine ``_modgcd_multivariate_p`` is used. To verify the result in
+    subroutine :func:`_modgcd_multivariate_p` is used. To verify the result in
     `\mathbb{Z}[x_0, \ldots, x_{k-1}]`, trial division is done, but only for
     candidates which are very likely the desired GCD.
 
@@ -1486,11 +1484,10 @@ def _trial_division(f, h, minpoly, p=None):
     References
     ==========
 
-    1. [Hoeij02]_
+    .. [1] [Hoeij02]_
 
     """
     ring = f.ring
-    domain = ring.domain
 
     zxring = ring.clone(symbols=(ring.symbols[1], ring.symbols[0]))
 

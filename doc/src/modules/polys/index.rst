@@ -1,8 +1,8 @@
 .. _polys-docs:
 
-===============================
-Polynomials Manipulation Module
-===============================
+=======================
+Polynomial Manipulation
+=======================
 
 Computations with polynomials are at the core of computer algebra and
 having a fast and robust polynomials manipulation module is a key for
@@ -25,4 +25,5 @@ Contents
     reference.rst
     agca.rst
     internals.rst
+    ringseries.rst
     literature.rst

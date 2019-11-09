@@ -1,4 +1,5 @@
 from sympy.physics.vector import dynamicsymbols, Point, ReferenceFrame
+from sympy.utilities.pytest import raises
 
 
 def test_point_v1pt_theorys():
@@ -110,3 +111,18 @@ def test_point_pos():
     assert Q.pos_from(P) == 10 * N.y + 5 * B.y
     assert Q.pos_from(O) == 10 * N.x + 10 * N.y + 5 * B.x + 5 * B.y
     assert O.pos_from(Q) == -10 * N.x - 10 * N.y - 5 * B.x - 5 * B.y
+
+def test_point_partial_velocity():
+
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+
+    p = Point('p')
+
+    u1, u2 = dynamicsymbols('u1, u2')
+
+    p.set_vel(N, u1 * A.x + u2 * N.y)
+
+    assert p.partial_velocity(N, u1) == A.x
+    assert p.partial_velocity(N, u1, u2) == (A.x, N.y)
+    raises(ValueError, lambda: p.partial_velocity(A, u1))

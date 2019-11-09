@@ -1,6 +1,6 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, Poly, Float
+from sympy import S, sqrt, sin, oo, Poly, Float, Rational
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX
@@ -11,11 +11,11 @@ from sympy.polys.fields import field
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
-    GeneratorsNeeded,
     GeneratorsError,
     CoercionFailed,
     NotInvertible,
     DomainError)
+from sympy.polys.polyutils import illegal
 
 from sympy.utilities.pytest import raises
 
@@ -283,25 +283,25 @@ def test_Domain__contains__():
     assert (17 in QQ[x, y]) is True
     assert (17 in RR[x, y]) is True
 
-    assert (-S(1)/7 in EX) is True
-    assert (-S(1)/7 in ZZ) is False
-    assert (-S(1)/7 in QQ) is True
-    assert (-S(1)/7 in RR) is True
-    assert (-S(1)/7 in CC) is True
-    assert (-S(1)/7 in ALG) is True
-    assert (-S(1)/7 in ZZ[x, y]) is False
-    assert (-S(1)/7 in QQ[x, y]) is True
-    assert (-S(1)/7 in RR[x, y]) is True
+    assert (Rational(-1, 7) in EX) is True
+    assert (Rational(-1, 7) in ZZ) is False
+    assert (Rational(-1, 7) in QQ) is True
+    assert (Rational(-1, 7) in RR) is True
+    assert (Rational(-1, 7) in CC) is True
+    assert (Rational(-1, 7) in ALG) is True
+    assert (Rational(-1, 7) in ZZ[x, y]) is False
+    assert (Rational(-1, 7) in QQ[x, y]) is True
+    assert (Rational(-1, 7) in RR[x, y]) is True
 
-    assert (S(3)/5 in EX) is True
-    assert (S(3)/5 in ZZ) is False
-    assert (S(3)/5 in QQ) is True
-    assert (S(3)/5 in RR) is True
-    assert (S(3)/5 in CC) is True
-    assert (S(3)/5 in ALG) is True
-    assert (S(3)/5 in ZZ[x, y]) is False
-    assert (S(3)/5 in QQ[x, y]) is True
-    assert (S(3)/5 in RR[x, y]) is True
+    assert (Rational(3, 5) in EX) is True
+    assert (Rational(3, 5) in ZZ) is False
+    assert (Rational(3, 5) in QQ) is True
+    assert (Rational(3, 5) in RR) is True
+    assert (Rational(3, 5) in CC) is True
+    assert (Rational(3, 5) in ALG) is True
+    assert (Rational(3, 5) in ZZ[x, y]) is False
+    assert (Rational(3, 5) in QQ[x, y]) is True
+    assert (Rational(3, 5) in RR[x, y]) is True
 
     assert (3.0 in EX) is True
     assert (3.0 in ZZ) is True
@@ -323,25 +323,15 @@ def test_Domain__contains__():
     assert (3.14 in QQ[x, y]) is True
     assert (3.14 in RR[x, y]) is True
 
-    assert (oo in EX) is True
-    assert (oo in ZZ) is False
-    assert (oo in QQ) is False
-    assert (oo in RR) is True
-    assert (oo in CC) is True
     assert (oo in ALG) is False
     assert (oo in ZZ[x, y]) is False
     assert (oo in QQ[x, y]) is False
-    assert (oo in RR[x, y]) is True
 
-    assert (-oo in EX) is True
     assert (-oo in ZZ) is False
     assert (-oo in QQ) is False
-    assert (-oo in RR) is True
-    assert (-oo in CC) is True
     assert (-oo in ALG) is False
     assert (-oo in ZZ[x, y]) is False
     assert (-oo in QQ[x, y]) is False
-    assert (-oo in RR[x, y]) is True
 
     assert (sqrt(7) in EX) is True
     assert (sqrt(7) in ZZ) is False
@@ -399,7 +389,7 @@ def test_Domain__contains__():
     assert (x**2 + y**2 in QQ[x, y]) is True
     assert (x**2 + y**2 in RR[x, y]) is True
 
-    assert (S(3)/2*x/(y + 1) - z in QQ[x, y, z]) is False
+    assert (Rational(3, 2)*x/(y + 1) - z in QQ[x, y, z]) is False
 
 
 def test_Domain_get_ring():
@@ -483,11 +473,13 @@ def test_Domain_convert():
 
 
 def test_PolynomialRing__init():
-    raises(GeneratorsNeeded, lambda: ZZ.poly_ring())
+    R, = ring("", ZZ)
+    assert ZZ.poly_ring() == R.to_domain()
 
 
 def test_FractionField__init():
-    raises(GeneratorsNeeded, lambda: ZZ.frac_field())
+    F, = field("", ZZ)
+    assert ZZ.frac_field() == F.to_domain()
 
 
 def test_inject():
@@ -519,6 +511,8 @@ def test_Domain___eq__():
 
     assert (ZZ.frac_field(x, y) == QQ.frac_field(x, y)) is False
     assert (QQ.frac_field(x, y) == ZZ.frac_field(x, y)) is False
+
+    assert RealField()[x] == RR[x]
 
 
 def test_Domain__algebraic_field():
@@ -580,14 +574,22 @@ def test___eq__():
 
 
 def test_RealField_from_sympy():
-    assert RR.convert(S(0)) == RR.dtype(0)
+    assert RR.convert(S.Zero) == RR.dtype(0)
     assert RR.convert(S(0.0)) == RR.dtype(0.0)
-    assert RR.convert(S(1)) == RR.dtype(1)
+    assert RR.convert(S.One) == RR.dtype(1)
     assert RR.convert(S(1.0)) == RR.dtype(1.0)
     assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
-    assert RR.convert(oo) == RR("+inf")
-    assert RR.convert(-oo) == RR("-inf")
-    raises(CoercionFailed, lambda: RR.convert(x))
+
+
+def test_not_in_any_domain():
+    check = illegal + [x] + [
+        float(i) for i in illegal if i != S.ComplexInfinity]
+    for dom in (ZZ, QQ, RR, CC, EX):
+        for i in check:
+            if i == x and dom == EX:
+                continue
+            assert i not in dom, (i, dom)
+            raises(CoercionFailed, lambda: dom.convert(i))
 
 
 def test_ModularInteger():
@@ -671,6 +673,15 @@ def test_ModularInteger():
     assert isinstance(a, F3.dtype) and a == 2
     a = F3(2)**2
     assert isinstance(a, F3.dtype) and a == 1
+
+    F7 = FF(7)
+
+    a = F7(3)**100000000000
+    assert isinstance(a, F7.dtype) and a == 4
+    a = F7(3)**-100000000000
+    assert isinstance(a, F7.dtype) and a == 2
+    a = F7(3)**S(2)
+    assert isinstance(a, F7.dtype) and a == 2
 
     assert bool(F3(3)) is False
     assert bool(F3(4)) is True
