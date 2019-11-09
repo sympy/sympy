@@ -1,3 +1,181 @@
+"""
+Usage
+=====
+
+Creating models
+===============
+
+From Matrices:
+
+You can create a 'StateSpaceModel' object using four matrices (state space representation)
+or a or 'TransferFunctionModel' using a transfer matrix:
+
+>>> from sympy import Matrix, var, StateSpaceModel, TransferFunctionModel
+>>> var('a:d')
+(a, b, c, d)
+>>> A, B, C, D = Matrix([a]), Matrix([b]), Matrix([c]), Matrix([d])
+>>> var('s')
+s
+>>> T = Matrix([1 / s, s / (1 + s**2)])
+>>> ssm = StateSpaceModel(A, B, C, D)
+>>> ssm
+StateSpaceModel(
+Matrix([[a]]),
+Matrix([[b]]),
+Matrix([[c]]),
+Matrix([[d]]))
+>>> tfm = TransferFunctionModel(T)
+>>> tfm
+TransferFunctionModel(Matrix([
+[         1/s],
+[s/(s**2 + 1)]]))
+
+One can also just use only one, two or three matrices. The missing ones will be filled with a minimum of zeros.
+
+>>> var('a:2, b:2')
+(a0, a1, b0, b1)
+>>> ssm = StateSpaceModel(Matrix([a0, a1]), Matrix([b0, b1]))
+>>> ssm
+StateSpaceModel(
+Matrix([
+[a0],
+[a1]]),
+Matrix([
+[b0],
+[b1]]),
+Matrix([[0]]),
+Matrix([[0]]))
+
+From Other Systems
+==================
+
+You can also create the models from one another:
+
+>>> ssm = StateSpaceModel(tfm)
+>>> tfm2 = TransferFunctionModel(ssm, s)
+TransferFunctionModel(Matrix([
+[         1/s],
+[s/(s**2 + 1)]]))
+```
+
+Or connect two system to create a new one:
+
+>>> var('a:3, b:3')
+(a0, a1, a2, b0, b1, b2)
+>>> ssm1 = StateSpaceModel(
+...         Matrix([[0, 1],
+...                [-a0, -a1]]),
+...         Matrix([0, 1]),
+...         Matrix([[b0, b1]]))
+>>> ssm1
+StateSpaceModel(
+Matrix([
+[  0,   1],
+[-a0, -a1]]),
+Matrix([
+[0],
+[1]]),
+Matrix([[b0, b1]]),
+Matrix([[0]]))
+>>> ssm2 = StateSpaceModel(
+...         Matrix([[0, 1, 0],
+...                 [0, 0, 1],
+...                 [-a0, -a1, -a2]]),
+...         Matrix([0, 0, 1]),
+...         Matrix([[b0, b1, b2]]))
+>>> ssm2
+StateSpaceModel(
+Matrix([
+[  0,   1,   0],
+[  0,   0,   1],
+[-a0, -a1, -a2]]),
+Matrix([
+[0],
+[0],
+[1]]),
+Matrix([[b0, b1, b2]]),
+Matrix([[0]]))
+>>> ssm_series = ssm1.cascade(ssm2)
+>>> ssm_series
+StateSpaceModel(
+Matrix([
+[  0,   1,   0,   0,   0],
+[-a0, -a1,   0,   0,   0],
+[  0,   0,   0,   1,   0],
+[  0,   0,   0,   0,   1],
+[ b0,  b1, -a0, -a1, -a2]]),
+Matrix([
+[0],
+[1],
+[0],
+[0],
+[0]]),
+Matrix([[0, 0, b0, b1, b2]]),
+Matrix([[0]]))
+>>> ssm_parallel = ssm2.parallel(ssm2)
+>>> ssm_parallel
+StateSpaceModel(
+Matrix([
+[  0,   1,   0,   0,   0,   0],
+[  0,   0,   1,   0,   0,   0],
+[-a0, -a1, -a2,   0,   0,   0],
+[  0,   0,   0,   0,   1,   0],
+[  0,   0,   0,   0,   0,   1],
+[  0,   0,   0, -a0, -a1, -a2]]),
+Matrix([
+[0],
+[0],
+[1],
+[0],
+[0],
+[1]]),
+Matrix([[b0, b1, b2, b0, b1, b2]]),
+Matrix([[0]]))
+
+>>> var('a, b, s')
+(a, b, s)
+>>> tfm1 = TransferFunctionModel(Matrix([1 / (a * s)]))
+>>> tfm1
+TransferFunctionModel(Matrix([[1/(a*s)]]))
+>>> tfm2 = TransferFunctionModel(Matrix([(b + s) / (a + s)]))
+>>> tfm2
+TransferFunctionModel(Matrix([[(b + s)/(a + s)]]))
+>>> tfm_series = tfm1.cascade(tfm2)
+>>> tfm_series
+TransferFunctionModel(Matrix([[(b + s)/(a*s*(a + s))]]))
+>>> tfm_parallel = tfm1.cascade(tfm2)
+>>> tfm_parallel
+TransferFunctionModel(Matrix([[(b + s)/(a*s*(a + s))]]))
+
+Note that the systems must have a matching nubmer of inputs and outputs for this to work!
+
+Evaluating models
+=================
+
+Models are always evaluated using the `evaluate` method.
+It is done numercialy or symbolicaly, depending on the parameters of the call:
+
+>>> from sympy import Heaviside
+>>> var('t') # symbolic evaluation
+>>> u = Matrix([Heaviside(t)])
+>>> x0 = zeros(3, 1)
+>>> t0 = 0
+>>> y = ssm.evaluate(u, x0, t, t0)
+>>> y
+Matrix([
+[     t],
+[sin(t)]])
+
+>>> y_list = ssm.evaluate(u, x0, (t, [0, 10, 0.1]))
+
+
+Note that the only difference between the calls is that in the second one, t is substituted by `(t, np.arange(0, 10, 0.1))`; a tuple of the symbol t and a list of times to evaluate for.
+The first call will return a matrix valued expression in terms of t.
+The second call will return a list of matrix valued outputs, matching the time input.
+
+For details on syntax and additional methods, see the docstings of each class and its methods.
+
+"""
 from __future__ import division
 
 from sympy import (
@@ -14,7 +192,10 @@ from sympy.printing import sstr
 # import mpmath for numercial results
 from mpmath import expm, quad, matrix as mpm_matrix
 
-__all__ = ['StateSpaceModel', 'TransferFunctionModel']
+__all__ = [
+    'StateSpaceModel',
+    'TransferFunctionModel'
+]
 
 _matrixTypes = (
     Matrix, ImmutableMatrix, MutableMatrix, SparseMatrix, MutableDenseMatrix)
@@ -306,8 +487,8 @@ class StateSpaceModel(object):
         >>> t, y1, y2, omega = symbols('t, Y1, Y2, omega')
         >>> ssm = StateSpaceModel(eye(2) * omega, zeros(2, 1), eye(2))
 
-            Symbolical evaluation
-            =====================
+        Symbolical evaluation
+        =====================
 
         We can evaluate a StateSpaceModel, giving and input u and initial state
         x0 and a symbol t:
@@ -349,8 +530,8 @@ class StateSpaceModel(object):
         [exp(2*t)/2 + exp(-2*t)/2],
         [exp(2*t)/2 - exp(-2*t)/2]])
 
-            Numerical evaluation
-            ====================
+        Numerical evaluation
+        ====================
 
         If we give a tuple (t, t_list) instead of only the symbol, the system is
         evaluated numericaly. The method returns a list of Matrices:
