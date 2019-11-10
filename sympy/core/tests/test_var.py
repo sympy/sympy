@@ -49,12 +49,12 @@ def test_var_keywords():
 
 
 def test_var_cls():
-    ns = {"var": var, "isinstance": isinstance, "Function": Function, "FunctionClass": FunctionClass}
-    eval("var('f', cls=Function)", ns)
+    ns = {"var": var, "Function": Function}
+    f = eval("var('f', cls=Function)", ns)
 
-    assert "isinstance(f, FunctionClass)"
+    assert isinstance(ns['f'], FunctionClass)
 
     g, h = eval("var('g,h', cls=Function)", ns)
 
-    assert "isinstance(g, FunctionClass)"
-    assert "isinstance(h, FunctionClass)"
+    assert isinstance(ns['g'], FunctionClass)
+    assert isinstance(ns['h'], FunctionClass)
