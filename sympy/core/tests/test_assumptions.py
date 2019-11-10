@@ -852,7 +852,6 @@ def test_Pow_is_algebraic():
 
 
 def test_Mul_is_prime_composite():
-    from sympy import Mul
     x = Symbol('x', positive=True, integer=True)
     y = Symbol('y', positive=True, integer=True)
     assert (x*y).is_prime is None
@@ -890,7 +889,6 @@ def test_Pow_is_pos_neg():
     assert (x**y).is_negative is False
 
 def test_Pow_is_prime_composite():
-    from sympy import Pow
     x = Symbol('x', positive=True, integer=True)
     y = Symbol('y', positive=True, integer=True)
     assert (x**y).is_prime is None

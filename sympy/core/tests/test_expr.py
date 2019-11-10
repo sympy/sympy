@@ -5,7 +5,7 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate, gammasimp, Gt, cot)
+                   integrate, gammasimp, Gt)
 from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range, round, PY3
@@ -132,9 +132,9 @@ all_objs = basic_objs + [
 
 
 def dotest(s):
-    for x in all_objs:
-        for y in all_objs:
-            s(x, y)
+    for xo in all_objs:
+        for yo in all_objs:
+            s(xo, yo)
     return True
 
 
@@ -148,6 +148,7 @@ def test_basic():
         x = a*b
         x = a/b
         x = a**b
+        del x
     assert dotest(j)
 
 

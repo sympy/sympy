@@ -872,15 +872,15 @@ def test_nfloat():
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
 
     # issue 10933
-    for t in (dict, Dict):
-        d = t({S.Half: S.Half})
+    for ti in (dict, Dict):
+        d = ti({S.Half: S.Half})
         n = nfloat(d)
-        assert isinstance(n, t)
+        assert isinstance(n, ti)
         assert _aresame(list(n.items()).pop(), (S.Half, Float(.5)))
-    for t in (dict, Dict):
-        d = t({S.Half: S.Half})
+    for ti in (dict, Dict):
+        d = ti({S.Half: S.Half})
         n = nfloat(d, dkeys=True)
-        assert isinstance(n, t)
+        assert isinstance(n, ti)
         assert _aresame(list(n.items()).pop(), (Float(.5), Float(.5)))
     d = [S.Half]
     n = nfloat(d)
