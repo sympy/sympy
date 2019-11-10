@@ -20,6 +20,7 @@ python:
   - 3.5
 
 matrix:
+  fast_finish: true
   include:
     - stage: quality
       python: 3.8
@@ -219,8 +220,6 @@ matrix:
       env:
         - BENCHMARK="true"
 
-  fast_finish: true
-
   allow_failures:
     - env:
         - TEST_FLAKE8="true"
@@ -315,7 +314,6 @@ install:
 script:
   # Don't run doctr if the build fails
   - set -e
-
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
