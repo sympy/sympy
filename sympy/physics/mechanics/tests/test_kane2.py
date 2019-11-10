@@ -50,7 +50,7 @@ def test_aux_dep():
     ud = [ui.diff(t) for ui in u]
     ud_zero = dict(zip(ud, [0.]*len(ud)))
     ua = dynamicsymbols('ua:3')
-    ua_zero = dict(zip(ua, [0.]*len(ua)))
+    ua_zero = dict(zip(ua, [0.]*len(ua))) # noqa:F841
 
     # Reference frames:
     # Yaw intermediate frame: A.
@@ -86,7 +86,7 @@ def test_aux_dep():
     v_o_n_qd = O.pos_from(P).diff(t, A) + cross(A.ang_vel_in(N), O.pos_from(P))
     kindiffs = Matrix([dot(w_c_n_qd - C.ang_vel_in(N), uv) for uv in B] +
                       [dot(v_o_n_qd - O.vel(N), A.z)])
-    qd_kd = solve(kindiffs, qd)
+    qd_kd = solve(kindiffs, qd) # noqa:F841
 
     # Values of generalized speeds during a steady turn for later substitution
     # into the Fr_star_steady.
@@ -107,7 +107,7 @@ def test_aux_dep():
         O.pos_from(P))), ai).expand() for ai in A])
     v_o_n = cross(C.ang_vel_in(N), O.pos_from(P))
     a_o_n = v_o_n.diff(t, A) + cross(A.ang_vel_in(N), v_o_n)
-    f_a = Matrix([dot(O.acc(N) - a_o_n, ai) for ai in A])
+    f_a = Matrix([dot(O.acc(N) - a_o_n, ai) for ai in A]) # noqa:F841
 
     # Solve for constraint equations in the form of
     #                           u_dependent = A_rs * [u_i; u_aux].

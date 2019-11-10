@@ -1,5 +1,5 @@
-from sympy import symbols, log, Mul, Symbol, S, Rational
-from sympy.physics.units import Quantity, Dimension, length, meter
+from sympy import symbols, Mul, Symbol, S, Rational
+from sympy.physics.units import Quantity, length, meter
 from sympy.physics.units.prefixes import PREFIXES, Prefix, prefix_unit, kilo, \
     kibi
 from sympy.physics.units.systems import SI
