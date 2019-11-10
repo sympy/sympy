@@ -679,6 +679,8 @@ class jn(SphericalBesselBase):
                     return S.Zero
                 else:
                     return S.ComplexInfinity
+        if z.is_infinite:
+            return S.Zero
 
     def _rewrite(self):
         return self._eval_rewrite_as_besselj(self.order, self.argument)
