@@ -1356,6 +1356,11 @@ class Intersection(Set, LatticeOp):
         return any(arg.is_iterable for arg in self.args)
 
     @property
+    def is_finiteset(self):
+        if fuzzy_or(arg.is_finiteset for arg in self.args):
+            return True
+
+    @property
     def _inf(self):
         raise NotImplementedError()
 
@@ -1579,6 +1584,15 @@ class Complement(Set, EvalfMixin):
     def is_iterable(self):
         if self.args[0].is_iterable:
             return True
+
+    @property
+    def is_finiteset(self):
+        A, B = self.args
+        a_finite = A.is_finiteset
+        if a_finite is True:
+            return True
+        elif a_finite is False and B.is_finiteset:
+            return False
 
     def __iter__(self):
         A, B = self.args
