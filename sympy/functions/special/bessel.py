@@ -678,7 +678,7 @@ class jn(SphericalBesselBase):
                     return S.Zero
                 else:
                     return S.ComplexInfinity
-        if z.is_infinite and z.is_real:
+        if z in (S.NegativeInfinity, S.Infinity):
             return S.Zero
 
     def _rewrite(self):
