@@ -4,6 +4,8 @@ stages:
 - quality
 - baseline
 - test
+- allowed_failures
+
 env:
   matrix:
   - SPLIT="1/2" TEST_SYMPY="true"
@@ -42,6 +44,24 @@ matrix:
       sudo: true
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
+    - python: 3.6
+      # This is actually 3.7 (once all the dependencies support it). We use
+      # python: 3.6 here because 3.7 requires the slower xenial/sudo: true container,
+      # and we aren't actually using the Travis Python anyway.
+      env:
+        - TEST_ASCII="true"
+        - TEST_OPT_DEPENDENCY="matchpy numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.5.1 tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang"
+        - TEST_SAGE="true"
+        - SYMPY_STRICT_COMPILER_CHECKS=1
+      addons:
+        apt:
+          packages:
+            # for theano
+            - libatlas-dev
+            - libatlas-base-dev
+            - liblapack-dev
+            - gfortran
+            - python-scipy
 
     - stage: test
       python: 3.7
@@ -73,24 +93,6 @@ matrix:
             - libatlas-base-dev
             - liblapack-dev
             - gfortran
-    - python: 3.6
-      # This is actually 3.7 (once all the dependencies support it). We use
-      # python: 3.6 here because 3.7 requires the slower xenial/sudo: true container,
-      # and we aren't actually using the Travis Python anyway.
-      env:
-        - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="matchpy numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.5.1 tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang"
-        - TEST_SAGE="true"
-        - SYMPY_STRICT_COMPILER_CHECKS=1
-      addons:
-        apt:
-          packages:
-            # for theano
-            - libatlas-dev
-            - libatlas-base-dev
-            - liblapack-dev
-            - gfortran
-            - python-scipy
 
     # Tensorflow 1 support
     - python: 3.6
@@ -170,8 +172,8 @@ matrix:
         - TEST_COVERAGE="true"
         - SPLIT="4/4"
 
-    # Everything here and below is in the allow_failures. The need to be
-    # duplicated here and in that section below.
+    # PyPy randomly fails because of some PyPy bugs
+    # (Fatal RPython error: AssertionError)
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true" TEST_EXAMPLES="true"
@@ -204,53 +206,26 @@ matrix:
             - pypy
           packages:
             - pypy3
-    - python: 3.8
+
+    - stage: allowed_failures
+      python: 3.8
       dist: xenial
       sudo: true
       env:
         - TEST_FLAKE8="true"
+    - python: 3.6
+      dist: xenial
+      sudo: true
+      env:
+        - BENCHMARK="true"
 
   fast_finish: true
 
   allow_failures:
-    # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
-    - python: "pypy"
-      env:
-        - TEST_DOCTESTS="true"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy3
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="1/2"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy3
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="2/2"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy3
-    - python: 3.8
-      dist: xenial
-      sudo: true
-      env:
+    - env:
         - TEST_FLAKE8="true"
+    - env:
+        - BENCHMARK="true"
 
 before_install:
   - set -e
@@ -304,6 +279,10 @@ before_install:
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
       pip install "sphinx" "docutils" doctr matplotlib sphinx-math-dollar;
     fi
+  - if [[ "${BENCHMARK}" == "true" ]]; then
+      pip install asv;
+      git submodule add https://github.com/sympy/sympy_benchmarks.git;
+    fi
 
 install:
   # If a command fails, fail the build.
@@ -336,12 +315,18 @@ install:
 script:
   # Don't run doctr if the build fails
   - set -e
+
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
     fi
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
         bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports";
+    fi
+  - if [[ "${BENCHMARK}" == "true" ]]; then
+        asv machine --yes --config asv.conf.travis.json;
+        asv run --config asv.conf.travis.json;
+        asv compare master HEAD --config asv.conf.travis.json --factor 1.5;
     fi
 notifications:
   email: false
