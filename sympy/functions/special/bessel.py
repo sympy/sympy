@@ -670,9 +670,8 @@ class jn(SphericalBesselBase):
     """
     @classmethod
     def eval(cls, nu, z):
-        # check for z=0
         if z.is_zero:
-            if nu.is_zero: # jn(0,0)=1
+            if nu.is_zero:
                 return S.One
             elif nu.is_integer:
                 if nu.is_positive:
