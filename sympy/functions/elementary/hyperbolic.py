@@ -429,25 +429,33 @@ class cosh(HyperbolicFunction):
         # cosh(x+I*y) = cos(y)*cosh(x) + I*sin(y)*sinh(x)
         # cosh(z) is positive iff it is real and the real part is positive.
         # So we need sin(y)*sinh(x) = 0 which gives x=0 or y=n*pi
+        # Case 1 (y=n*pi): cosh(z) = (-1)**n * cosh(x) -> positive for n even
+        # Case 2 (x=0): cosh(z) = cos(y) -> positive when cos(y) is positive
         z = self.args[0]
 
         x, y = z.as_real_imag()
         ymod = y % (2*pi)
 
-        # Case 1 (y=n*pi): cosh(z) = (-1)**n * cosh(x) -> positive for n even
-        def case_y_npi():
-            return ymod.is_zero
+        yzero = ymod.is_zero
+        # shortcut if ymod is zero
+        if yzero:
+            return True
 
-        # Case 2 (x=0): cosh(z) = cos(y) -> positive when cos(y) is positive
-        def case_x_zero_and():
-            yield x.is_zero
-            yield fuzzy_or([fuzzy_bool(ymod < pi/2), fuzzy_bool(ymod > 3*pi/2)])
+        xzero = x.is_zero
+        # shortcut x is not zero
+        if xzero is False:
+            return yzero
 
-        def cases():
-            yield case_y_npi()
-            yield fuzzy_and(case_x_zero_and())
+        return fuzzy_or([
+                # Case 1:
+                yzero,
+                # Case 2:
+                fuzzy_and([
+                    xzero,
+                    fuzzy_or([ymod < pi/2, ymod > 3*pi/2])
+                ])
+            ])
 
-        return fuzzy_or(cases())
 
     def _eval_is_nonnegative(self):
         z = self.args[0]
@@ -455,13 +463,23 @@ class cosh(HyperbolicFunction):
         x, y = z.as_real_imag()
         ymod = y % (2*pi)
 
+        yzero = ymod.is_zero
+        # shortcut if ymod is zero
+        if yzero:
+            return True
+
+        xzero = x.is_zero
+        # shortcut x is not zero
+        if xzero is False:
+            return yzero
+
         return fuzzy_or([
                 # Case 1:
-                ymod.is_zero,
+                yzero,
                 # Case 2:
                 fuzzy_and([
-                    x.is_zero,
-                    fuzzy_or([fuzzy_bool(ymod <= pi/2), fuzzy_bool(ymod >= 3*pi/2)])
+                    xzero,
+                    fuzzy_or([ymod <= pi/2, ymod >= 3*pi/2])
                 ])
             ])
 
