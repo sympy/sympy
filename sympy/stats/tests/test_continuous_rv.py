@@ -386,7 +386,7 @@ def test_beta():
 def test_beta_noncentral():
     a, b = symbols('a b', positive=True)
     c = Symbol('c', nonnegative=True)
-    _k = Symbol('k')
+    # _k = Symbol('k')
 
     X = BetaNoncentral('x', a, b, c)
 
@@ -395,6 +395,7 @@ def test_beta_noncentral():
     dens = density(X)
     z = Symbol('z')
 
+    # This should be fixed so it doesn't use a string test:
     assert str(dens(z)) == ("Sum(z**(_k + a - 1)*(c/2)**_k*(1 - z)**(b - 1)*exp(-c/2)/"
     "(beta(_k + a, b)*factorial(_k)), (_k, 0, oo))")
 
@@ -971,10 +972,11 @@ def test_uniform_P():
 
 def test_uniformsum():
     n = Symbol("n", integer=True)
-    _k = Symbol("k")
+    # _k = Symbol("k")
     x = Symbol("x")
 
     X = UniformSum('x', n)
+    # This should be fixed so it doesn't use a string test
     assert str(density(X)(x)) == ("Sum((-1)**_k*(-_k + x)**(n - 1)"
     "*binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1)")
 
