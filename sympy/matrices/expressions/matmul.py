@@ -4,13 +4,15 @@ from sympy import Number
 from sympy.core import Mul, Basic, sympify, S
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
-from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
-from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-        Identity, ZeroMatrix, GenericIdentity)
-from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.matrices import MatrixBase
+
+from .inverse import Inverse
+from .matexpr import \
+    MatrixExpr, ShapeError, Identity, ZeroMatrix, GenericIdentity
+from .matpow import MatPow
+from .transpose import transpose
 
 # XXX: MatMul should perhaps not subclass directly from Mul
 class MatMul(MatrixExpr, Mul):
@@ -302,7 +304,6 @@ def combine_powers(mul):
 
     e.g. Y * X * X.I -> Y
     """
-    from sympy.matrices.expressions import MatPow
     factor, args = mul.as_coeff_matrices()
 
     new_args = [args[0]]
