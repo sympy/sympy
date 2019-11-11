@@ -1,5 +1,9 @@
+from sympy.physics.units.definitions.dimension_definitions import current, temperature, amount_of_substance, \
+    luminous_intensity, angle, charge, voltage, impedance, conductance, capacitance, inductance, magnetic_density, \
+    magnetic_flux, information
+
 from sympy import Rational, pi, sqrt, S
-from sympy.physics.units.prefixes import kilo, milli, micro, deci, centi, nano, pico
+from sympy.physics.units.prefixes import kilo, milli, micro, deci, centi, nano, pico, kibi, mebi, gibi, tebi, pebi, exbi
 from sympy.physics.units.quantities import Quantity
 
 One = S.One
@@ -16,7 +20,9 @@ permille.set_global_relative_scale_factor(Rational(1, 1000), One)
 
 # Angular units (dimensionless)
 rad = radian = radians = Quantity("radian", abbrev="rad")
+radian.set_global_dimension(angle)
 deg = degree = degrees = Quantity("degree", abbrev="deg", latex_repr=r"^\circ")
+degree.set_global_relative_scale_factor(pi/180, radian)
 sr = steradian = steradians = Quantity("steradian", abbrev="sr")
 mil = angular_mil = angular_mils = Quantity("angular_mil", abbrev="mil")
 
@@ -39,9 +45,13 @@ kg.set_global_relative_scale_factor(kilo, gram)
 
 s = second = seconds = Quantity("second", abbrev="s")
 A = ampere = amperes = Quantity("ampere", abbrev='A')
+ampere.set_global_dimension(current)
 K = kelvin = kelvins = Quantity("kelvin", abbrev='K')
+kelvin.set_global_dimension(temperature)
 mol = mole = moles = Quantity("mole", abbrev="mol")
+mole.set_global_dimension(amount_of_substance)
 cd = candela = candelas = Quantity("candela", abbrev="cd")
+candela.set_global_dimension(luminous_intensity)
 
 mg = milligram = milligrams = Quantity("milligram", abbrev="mg")
 mg.set_global_relative_scale_factor(milli, gram)
@@ -56,15 +66,38 @@ watt = watts = W = Quantity("watt", abbrev="W")
 pascal = pascals = Pa = pa = Quantity("pascal", abbrev="Pa")
 hertz = hz = Hz = Quantity("hertz", abbrev="Hz")
 
+# CGS derived units:
+dyne = Quantity("dyne")
+dyne.set_global_relative_scale_factor(One/10**5, newton)
+erg = Quantity("erg")
+erg.set_global_relative_scale_factor(One/10**7, joule)
+
 # MKSA extension to MKS: derived units
 coulomb = coulombs = C = Quantity("coulomb", abbrev='C')
+coulomb.set_global_dimension(charge)
 volt = volts = v = V = Quantity("volt", abbrev='V')
+volt.set_global_dimension(voltage)
 ohm = ohms = Quantity("ohm", abbrev='ohm', latex_repr=r"\Omega")
+ohm.set_global_dimension(impedance)
 siemens = S = mho = mhos = Quantity("siemens", abbrev='S')
+siemens.set_global_dimension(conductance)
 farad = farads = F = Quantity("farad", abbrev='F')
+farad.set_global_dimension(capacitance)
 henry = henrys = H = Quantity("henry", abbrev='H')
+henry.set_global_dimension(inductance)
 tesla = teslas = T = Quantity("tesla", abbrev='T')
+tesla.set_global_dimension(magnetic_density)
 weber = webers = Wb = wb = Quantity("weber", abbrev='Wb')
+weber.set_global_dimension(magnetic_flux)
+
+# CGS units for electromagnetic quantities:
+statampere = Quantity("statampere")
+statcoulomb = statC = franklin = Quantity("statcoulomb", abbrev="statC")
+statvolt = Quantity("statvolt")
+gauss = Quantity("gauss")
+maxwell = Quantity("maxwell")
+debye = Quantity("debye")
+oersted = Quantity("oersted")
 
 # Other derived units:
 optical_power = dioptre = diopter = D = Quantity("dioptre")
@@ -250,7 +283,6 @@ coulomb_constant = coulombs_constant = electric_force_constant = \
 
 atmosphere = atmospheres = atm = Quantity("atmosphere", abbrev="atm")
 
-
 kPa = kilopascal = Quantity("kilopascal", abbrev="kPa")
 kilopascal.set_global_relative_scale_factor(kilo, Pa)
 
@@ -262,6 +294,10 @@ psi = Quantity("psi")
 
 dHg0 = 13.5951  # approx value at 0 C
 mmHg = torr = Quantity("mmHg")
+
+atmosphere.set_global_relative_scale_factor(101325, pascal)
+bar.set_global_relative_scale_factor(100, kPa)
+pound.set_global_relative_scale_factor(Rational(45359237, 100000000), kg)
 
 mmu = mmus = milli_mass_unit = Quantity("milli_mass_unit")
 
@@ -324,6 +360,7 @@ planck_acceleration = Quantity("planck_acceleration", abbrev="a_P",
 
 # Information theory units:
 bit = bits = Quantity("bit")
+bit.set_global_dimension(information)
 
 byte = bytes = Quantity("byte")
 
@@ -333,6 +370,14 @@ gibibyte = gibibytes = Quantity("gibibyte")
 tebibyte = tebibytes = Quantity("tebibyte")
 pebibyte = pebibytes = Quantity("pebibyte")
 exbibyte = exbibytes = Quantity("exbibyte")
+
+byte.set_global_relative_scale_factor(8, bit)
+kibibyte.set_global_relative_scale_factor(kibi, byte)
+mebibyte.set_global_relative_scale_factor(mebi, byte)
+gibibyte.set_global_relative_scale_factor(gibi, byte)
+tebibyte.set_global_relative_scale_factor(tebi, byte)
+pebibyte.set_global_relative_scale_factor(pebi, byte)
+exbibyte.set_global_relative_scale_factor(exbi, byte)
 
 # Older units for radioactivity
 curie = Ci = Quantity("curie", abbrev="Ci")

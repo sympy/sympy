@@ -7,7 +7,7 @@ Added kelvin, candela and mole.
 
 from __future__ import division
 
-from sympy.physics.units import DimensionSystem, Dimension
+from sympy.physics.units import DimensionSystem, Dimension, dHg0
 
 from sympy import Rational, pi, sqrt, S
 from sympy.physics.units.definitions.dimension_definitions import (
@@ -15,9 +15,6 @@ from sympy.physics.units.definitions.dimension_definitions import (
     amount_of_substance, temperature, information, frequency, force, pressure,
     energy, power, charge, voltage, capacitance, conductance, magnetic_flux,
     magnetic_density, inductance, luminous_intensity
-)
-from sympy.physics.units.prefixes import (
-    kibi, mebi, gibi, tebi, pebi, exbi
 )
 from sympy.physics.units.definitions import (
     kilogram, newton, second, meter, gram, cd, K, joule, watt, pascal, hertz,
@@ -73,93 +70,34 @@ SI = MKSA.extend(base=(mol, cd, K), units=all_units, name='SI', dimension_system
 
 One = S.One
 
-
-# Angular units (dimensionless)
 SI.set_quantity_dimension(radian, One)
-SI.set_quantity_scale_factor(radian, One)
 
-SI.set_quantity_dimension(degree, One)
-SI.set_quantity_scale_factor(degree, pi/180)
-
-SI.set_quantity_dimension(steradian, One)
-SI.set_quantity_scale_factor(steradian, One)
-
-SI.set_quantity_dimension(angular_mil, One)
-SI.set_quantity_scale_factor(angular_mil, 2*pi/6400)
-
-# Base units:
-SI.set_quantity_dimension(meter, length)
-SI.set_quantity_scale_factor(meter, One)
-
-# gram; used to define its prefixed units
-
-SI.set_quantity_dimension(gram, mass)
-SI.set_quantity_scale_factor(gram, One)
-
-SI.set_quantity_dimension(second, time)
-SI.set_quantity_scale_factor(second, One)
-
-SI.set_quantity_dimension(ampere, current)
 SI.set_quantity_scale_factor(ampere, One)
 
-SI.set_quantity_dimension(kelvin, temperature)
 SI.set_quantity_scale_factor(kelvin, One)
 
-SI.set_quantity_dimension(mole, amount_of_substance)
 SI.set_quantity_scale_factor(mole, One)
 
-SI.set_quantity_dimension(candela, luminous_intensity)
 SI.set_quantity_scale_factor(candela, One)
-
-# derived units
-
-SI.set_quantity_dimension(newton, force)
-SI.set_quantity_scale_factor(newton, kilogram*meter/second**2)
-
-SI.set_quantity_dimension(joule, energy)
-SI.set_quantity_scale_factor(joule, newton*meter)
-
-SI.set_quantity_dimension(watt, power)
-SI.set_quantity_scale_factor(watt, joule/second)
-
-SI.set_quantity_dimension(pascal, pressure)
-SI.set_quantity_scale_factor(pascal, newton/meter**2)
-
-SI.set_quantity_dimension(hertz, frequency)
-SI.set_quantity_scale_factor(hertz, One)
 
 # MKSA extension to MKS: derived units
 
-
-SI.set_quantity_dimension(coulomb, charge)
 SI.set_quantity_scale_factor(coulomb, One)
 
-SI.set_quantity_dimension(volt, voltage)
 SI.set_quantity_scale_factor(volt, joule/coulomb)
 
-SI.set_quantity_dimension(ohm, impedance)
 SI.set_quantity_scale_factor(ohm, volt/ampere)
 
-SI.set_quantity_dimension(siemens, conductance)
 SI.set_quantity_scale_factor(siemens, ampere/volt)
 
-SI.set_quantity_dimension(farad, capacitance)
 SI.set_quantity_scale_factor(farad, coulomb/volt)
 
-SI.set_quantity_dimension(henry, inductance)
 SI.set_quantity_scale_factor(henry, volt*second/ampere)
 
-SI.set_quantity_dimension(tesla, magnetic_density)
 SI.set_quantity_scale_factor(tesla, volt*second/meter**2)
 
-SI.set_quantity_dimension(weber, magnetic_flux)
 SI.set_quantity_scale_factor(weber, joule/ampere)
 
-
-# Other derived units:
-
-SI.set_quantity_dimension(dioptre, 1 / length)
-SI.set_quantity_scale_factor(dioptre, 1/meter)
 
 SI.set_quantity_dimension(lux, luminous_intensity / length ** 2)
 SI.set_quantity_scale_factor(lux, steradian*candela/meter**2)
@@ -179,43 +117,13 @@ SI.set_quantity_scale_factor(gray, meter**2/second**2)
 SI.set_quantity_dimension(becquerel, 1 / time)
 SI.set_quantity_scale_factor(becquerel, 1/second)
 
-
-# Common volume and area units
-
-SI.set_quantity_dimension(liter, length ** 3)
-SI.set_quantity_scale_factor(liter, meter**3 / 1000)
-
-
 #### CONSTANTS ####
-
-# Newton constant
-# REF: NIST SP 959 (June 2019)
-
-SI.set_quantity_dimension(gravitational_constant, length ** 3 * mass ** -1 * time ** -2)
-SI.set_quantity_scale_factor(gravitational_constant, 6.67430e-11*m**3/(kg*s**2))
-
-# speed of light
-
-SI.set_quantity_dimension(speed_of_light, velocity)
-SI.set_quantity_scale_factor(speed_of_light, 299792458*meter/second)
 
 # elementary charge
 # REF: NIST SP 959 (June 2019)
 
 SI.set_quantity_dimension(elementary_charge, charge)
 SI.set_quantity_scale_factor(elementary_charge, 1.602176634e-19*coulomb)
-
-# Planck constant
-# REF: NIST SP 959 (June 2019)
-
-SI.set_quantity_dimension(planck, action)
-SI.set_quantity_scale_factor(planck, 6.62607015e-34*joule*second)
-
-# Reduced Planck constant
-# REF: NIST SP 959 (June 2019)
-
-SI.set_quantity_dimension(hbar, action)
-SI.set_quantity_scale_factor(hbar, planck / (2 * pi))
 
 # Electronvolt
 # REF: NIST SP 959 (June 2019)
@@ -283,7 +191,7 @@ SI.set_quantity_scale_factor(acceleration_due_to_gravity, 9.80665*meter/second**
 SI.set_quantity_dimension(magnetic_constant, force / current ** 2)
 SI.set_quantity_scale_factor(magnetic_constant, 4*pi/10**7 * newton/ampere**2)
 
-# electric constat:
+# electric constant:
 
 SI.set_quantity_dimension(vacuum_permittivity, capacitance / length)
 SI.set_quantity_scale_factor(vacuum_permittivity, 1/(u0 * c**2))
@@ -297,19 +205,8 @@ SI.set_quantity_scale_factor(vacuum_impedance, u0 * c)
 SI.set_quantity_dimension(coulomb_constant, force * length ** 2 / charge ** 2)
 SI.set_quantity_scale_factor(coulomb_constant, 1/(4*pi*vacuum_permittivity))
 
-SI.set_quantity_dimension(atmosphere, pressure)
-SI.set_quantity_scale_factor(atmosphere, 101325 * pascal)
-
-SI.set_quantity_dimension(bar, pressure)
-SI.set_quantity_scale_factor(bar, 100*kPa)
-
-SI.set_quantity_dimension(pound, mass)
-SI.set_quantity_scale_factor(pound, Rational(45359237, 100000000) * kg)
-
 SI.set_quantity_dimension(psi, pressure)
 SI.set_quantity_scale_factor(psi, pound * gee / inch ** 2)
-
-dHg0 = 13.5951  # approx value at 0 C
 
 SI.set_quantity_dimension(mmHg, pressure)
 SI.set_quantity_scale_factor(mmHg, dHg0 * acceleration_due_to_gravity * kilogram / meter**2)
@@ -321,7 +218,6 @@ SI.set_quantity_dimension(quart, length ** 3)
 SI.set_quantity_scale_factor(quart, Rational(231, 4) * inch**3)
 
 # Other convenient units and magnitudes
-
 
 SI.set_quantity_dimension(lightyear, length)
 SI.set_quantity_scale_factor(lightyear, speed_of_light*julian_year)
@@ -392,32 +288,6 @@ SI.set_quantity_scale_factor(planck_impedance, planck_voltage / planck_current)
 
 SI.set_quantity_dimension(planck_acceleration, acceleration)
 SI.set_quantity_scale_factor(planck_acceleration, speed_of_light / planck_time)
-
-# Information theory units:
-
-SI.set_quantity_dimension(bit, information)
-SI.set_quantity_scale_factor(bit, One)
-
-SI.set_quantity_dimension(byte, information)
-SI.set_quantity_scale_factor(byte, 8*bit)
-
-SI.set_quantity_dimension(kibibyte, information)
-SI.set_quantity_scale_factor(kibibyte, kibi*byte)
-
-SI.set_quantity_dimension(mebibyte, information)
-SI.set_quantity_scale_factor(mebibyte, mebi*byte)
-
-SI.set_quantity_dimension(gibibyte, information)
-SI.set_quantity_scale_factor(gibibyte, gibi*byte)
-
-SI.set_quantity_dimension(tebibyte, information)
-SI.set_quantity_scale_factor(tebibyte, tebi*byte)
-
-SI.set_quantity_dimension(pebibyte, information)
-SI.set_quantity_scale_factor(pebibyte, pebi*byte)
-
-SI.set_quantity_dimension(exbibyte, information)
-SI.set_quantity_scale_factor(exbibyte, exbi*byte)
 
 # Older units for radioactivity
 

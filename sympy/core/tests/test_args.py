@@ -936,7 +936,6 @@ def test_sympy__sets__fancysets__ComplexRegion():
 
 def test_sympy__sets__fancysets__CartesianComplexRegion():
     from sympy.sets.fancysets import CartesianComplexRegion
-    from sympy import S
     from sympy.sets import Interval
     a = Interval(0, 1)
     b = Interval(2, 3)
@@ -1572,7 +1571,6 @@ def test_sympy__stats__joint_rv_types__NegativeMultinomialDistribution():
 
 def test_sympy__stats__rv__RandomIndexedSymbol():
     from sympy.stats.rv import RandomIndexedSymbol, pspace
-    from sympy.tensor import Indexed
     from sympy.stats.stochastic_process_types import DiscreteMarkovChain
     X = DiscreteMarkovChain("X")
     assert _test_args(RandomIndexedSymbol(X[0].symbol, pspace(X[0])))
@@ -1619,7 +1617,6 @@ def test_sympy__stats__stochastic_process_types__GeneratorMatrixOf():
 
 def test_sympy__stats__stochastic_process_types__StochasticStateSpaceOf():
     from sympy.stats.stochastic_process_types import StochasticStateSpaceOf, DiscreteMarkovChain
-    from sympy import MatrixSymbol
     DMC = DiscreteMarkovChain("Y")
     assert _test_args(StochasticStateSpaceOf(DMC, [0, 1, 2]))
 
@@ -3862,7 +3859,6 @@ def test_sympy__physics__units__dimensions__DimensionSystem():
 
 def test_sympy__physics__units__quantities__Quantity():
     from sympy.physics.units.quantities import Quantity
-    from sympy.physics.units import length
     assert _test_args(Quantity("dam"))
 
 
@@ -3922,8 +3918,10 @@ def test_sympy__series__sequences__SeqBase():
 
 
 def test_sympy__series__sequences__EmptySequence():
-    from sympy.series.sequences import EmptySequence
-    assert _test_args(EmptySequence())
+    # Need to imort the instance from series not the class from
+    # series.sequence
+    from sympy.series import EmptySequence
+    assert _test_args(EmptySequence)
 
 
 @SKIP('Abstract Class')

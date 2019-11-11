@@ -1,5 +1,5 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
-    Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
+    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range, Xor)
 from sympy.abc import x, y
 from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
@@ -11,7 +11,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.core.compatibility import exec_, HAS_GMPY, PY3
+from sympy.core.compatibility import exec_, HAS_GMPY, range
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
@@ -561,19 +561,14 @@ def test_issue_10295():
 
 def test_Range():
     # Only works in Python 3 where range returns a range type
-    if PY3:
-        builtin_range = range
-    else:
-        builtin_range = xrange
-
-    assert sympify(builtin_range(10)) == Range(10)
-    assert _sympify(builtin_range(10)) == Range(10)
+    assert sympify(range(10)) == Range(10)
+    assert _sympify(range(10)) == Range(10)
 
 
 def test_sympify_set():
     n = Symbol('n')
     assert sympify({n}) == FiniteSet(n)
-    assert sympify(set()) == EmptySet()
+    assert sympify(set()) == EmptySet
 
 
 def test_sympify_numpy():

@@ -10,6 +10,7 @@ Reals = S.Reals
 Naturals = S.Naturals
 Naturals0 = S.Naturals0
 UniversalSet = S.UniversalSet
+EmptySet = S.EmptySet
 Integers = S.Integers
 Rationals = S.Rationals
 del S

@@ -21,6 +21,71 @@ from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
+class _QuantityMapper(object):
+
+    _quantity_scale_factors_global = {}
+    _quantity_dimensional_equivalence_map_global = {}
+    _quantity_dimension_global = {}
+
+    def __init__(self, *args, **kwargs):
+        self._quantity_dimension_map = {}
+        self._quantity_scale_factors = {}
+
+    def set_quantity_dimension(self, unit, dimension):
+        from sympy.physics.units import Quantity
+        dimension = sympify(dimension)
+        if not isinstance(dimension, Dimension):
+            if dimension == 1:
+                dimension = Dimension(1)
+            else:
+                raise ValueError("expected dimension or 1")
+        elif isinstance(dimension, Quantity):
+            dimension = self.get_quantity_dimension(dimension)
+        self._quantity_dimension_map[unit] = dimension
+
+    def set_quantity_scale_factor(self, unit, scale_factor):
+        from sympy.physics.units import Quantity
+        from sympy.physics.units.prefixes import Prefix
+        scale_factor = sympify(scale_factor)
+        # replace all prefixes by their ratio to canonical units:
+        scale_factor = scale_factor.replace(
+            lambda x: isinstance(x, Prefix),
+            lambda x: x.scale_factor
+        )
+        # replace all quantities by their ratio to canonical units:
+        scale_factor = scale_factor.replace(
+            lambda x: isinstance(x, Quantity),
+            lambda x: self.get_quantity_scale_factor(x)
+        )
+        self._quantity_scale_factors[unit] = scale_factor
+
+    def get_quantity_dimension(self, unit):
+        from sympy.physics.units import Quantity
+        # First look-up the local dimension map, then the global one:
+        if unit in self._quantity_dimension_map:
+            return self._quantity_dimension_map[unit]
+        if unit in self._quantity_dimension_global:
+            return self._quantity_dimension_global[unit]
+        if unit in self._quantity_dimensional_equivalence_map_global:
+            dep_unit = self._quantity_dimensional_equivalence_map_global[unit]
+            if isinstance(dep_unit, Quantity):
+                return self.get_quantity_dimension(dep_unit)
+            else:
+                return Dimension(self.get_dimensional_expr(dep_unit))
+        if isinstance(unit, Quantity):
+            return Dimension(unit.name)
+        else:
+            return Dimension(1)
+
+    def get_quantity_scale_factor(self, unit):
+        if unit in self._quantity_scale_factors:
+            return self._quantity_scale_factors[unit]
+        if unit in self._quantity_scale_factors_global:
+            mul_factor, other_unit = self._quantity_scale_factors_global[unit]
+            return mul_factor*self.get_quantity_scale_factor(other_unit)
+        return S.One
+
+
 class Dimension(Expr):
     """
     This class represent the dimension of a physical quantities.
@@ -240,7 +305,7 @@ class Dimension(Expr):
 # dimensional dependency dictionary.
 
 
-class DimensionSystem(Basic):
+class DimensionSystem(Basic, _QuantityMapper):
     r"""
     DimensionSystem represents a coherent set of dimensions.
 
@@ -402,11 +467,14 @@ class DimensionSystem(Basic):
         deps = dict(self.dimensional_dependencies)
         deps.update(new_dim_deps)
 
-        return DimensionSystem(
+        new_dim_sys = DimensionSystem(
             tuple(self.base_dims) + tuple(new_base_dims),
             tuple(self.derived_dims) + tuple(new_derived_dims),
             deps
         )
+        new_dim_sys._quantity_dimension_map.update(self._quantity_dimension_map)
+        new_dim_sys._quantity_scale_factors.update(self._quantity_scale_factors)
+        return new_dim_sys
 
     @staticmethod
     def sort_dims(dims):

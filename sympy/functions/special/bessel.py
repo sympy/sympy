@@ -668,6 +668,18 @@ class jn(SphericalBesselBase):
     .. [1] http://dlmf.nist.gov/10.47
 
     """
+    @classmethod
+    def eval(cls, nu, z):
+        if z.is_zero:
+            if nu.is_zero:
+                return S.One
+            elif nu.is_integer:
+                if nu.is_positive:
+                    return S.Zero
+                else:
+                    return S.ComplexInfinity
+        if z in (S.NegativeInfinity, S.Infinity):
+            return S.Zero
 
     def _rewrite(self):
         return self._eval_rewrite_as_besselj(self.order, self.argument)
