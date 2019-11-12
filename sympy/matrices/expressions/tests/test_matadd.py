@@ -45,4 +45,7 @@ def test_noncommutative_scalar_subs():
     x, y = symbols('x y', commutative=False)
 
     expr = (x*y)**-1 + x*y
-    assert expr.subs({x: X}) ==
+    assert expr.subs(x, X) == MatAdd(X*y, MatPow(X*y, -1))
+
+    expr = x + y
+    assert expr.subs(x, X) == MatAdd(y, X)
