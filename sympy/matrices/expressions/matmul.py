@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Number
-from sympy.core import Mul, Basic, sympify, S
+from sympy.core import Mul, Basic, sympify, S, Pow
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
@@ -118,15 +118,12 @@ class MatMul(MatrixExpr, Mul):
         return coeff, MatMul(*matrices)
 
     def _as_commutative_scalars_others(self):
-        c_scalars = []
-        others = []
-        for arg in self.args:
-            if arg.is_scalar and arg.is_commutative:
-                c_scalars.append(arg)
-            else:
-                others.append(arg)
+        from .matexpr import _as_commutative_scalars_others
+        return _as_commutative_scalars_others(*self.args)
 
-        return c_scalars, others
+    def _as_commutative_coeff_mmul(self):
+        c_scalars, others = self._as_commutative_scalars_others()
+        return Mul(*c_scalars), MatMul(*others)
 
     def _eval_transpose(self):
         """Transposition of matrix multiplication.
@@ -296,18 +293,23 @@ def remove_ids(mul):
     sympy.strategies.rm_id
     """
     # Separate Exprs from MatrixExprs in args
-    factor, mmul = mul.as_coeff_mmul()
+    c_scalars, others = mul._as_commutative_scalars_others()
+    factor = Mul(*c_scalars)
+    others_as_mmul = MatMul(*others)
     # Apply standard rm_id for MatMuls
-    result = rm_id(lambda x: x.is_Identity is True)(mmul)
-    if result != mmul:
+    result = rm_id(
+        lambda x: x.is_Matrix and x.is_Identity is True)(others_as_mmul)
+
+    if result != others_as_mmul:
         return newmul(factor, *result.args)  # Recombine and return
-    else:
-        return mul
+    return mul
 
 def factor_in_front(mul):
-    factor, matrices = mul.as_coeff_matrices()
+    c_scalars, others = mul._as_commutative_scalars_others()
+    factor = Mul(*c_scalars)
+
     if factor != 1:
-        return newmul(factor, *matrices)
+        return newmul(factor, *others)
     return mul
 
 def combine_powers(mul):
@@ -320,34 +322,36 @@ def combine_powers(mul):
 
     e.g. Y * X * X.I -> Y
     """
-    factor, args = mul.as_coeff_matrices()
+    c_scalars, args = mul._as_commutative_scalars_others()
+    factor = Mul(*c_scalars)
     new_args = [args[0]]
 
     for B in args[1:]:
         A = new_args[-1]
-        if A.is_square == False or B.is_square == False:
-            new_args.append(B)
-            continue
+        if A.is_Matrix and B.is_Matrix:
+            if A.is_square == False or B.is_square == False:
+                new_args.append(B)
+                continue
 
-        if isinstance(A, MatPow):
-            A_base, A_exp = A.args
-        else:
-            A_base, A_exp = A, S.One
+            if isinstance(A, MatPow):
+                A_base, A_exp = A.args
+            else:
+                A_base, A_exp = A, S.One
 
-        if isinstance(B, MatPow):
-            B_base, B_exp = B.args
-        else:
-            B_base, B_exp = B, S.One
+            if isinstance(B, MatPow):
+                B_base, B_exp = B.args
+            else:
+                B_base, B_exp = B, S.One
 
-        if A_base == B_base:
-            new_exp = A_exp + B_exp
-            new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
-        elif not isinstance(B_base, MatrixBase) and \
-            A_base == B_base.inverse():
-            new_exp = A_exp - B_exp
-            new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
-        else:
-            new_args.append(B)
+            if A_base == B_base:
+                new_exp = A_exp + B_exp
+                new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
+            elif not isinstance(B_base, MatrixBase) and \
+                A_base == B_base.inverse():
+                new_exp = A_exp - B_exp
+                new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
+            else:
+                new_args.append(B)
 
     return newmul(factor, *new_args)
 

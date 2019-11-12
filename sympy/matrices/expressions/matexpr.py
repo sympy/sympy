@@ -9,7 +9,7 @@ from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key, string
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices import ShapeError
+from sympy.matrices import ShapeError, MatrixBase
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 
@@ -389,6 +389,9 @@ class MatrixExpr(Expr):
     def as_coeff_mmul(self):
         return 1, MatMul(self)
 
+    def _as_commutative_coeff_mmul(self):
+        return S.One, MatMul(self)
+
     @staticmethod
     def from_index_summation(expr, first_index=None, last_index=None, dimensions=None):
         r"""
@@ -598,26 +601,22 @@ def get_postprocessor(cls):
     def _postprocessor(expr):
         # To avoid circular imports, we can't have MatMul/MatAdd on the top level
         mat_class = {Mul: MatMul, Add: MatAdd}[cls]
-        nonmatrices = []
-        matrices = []
-        for term in expr.args:
-            if isinstance(term, MatrixExpr):
-                matrices.append(term)
-            else:
-                nonmatrices.append(term)
 
-        if not matrices:
-            return cls._from_args(nonmatrices)
+        args = expr.args
+        c_scalars, others = _as_commutative_scalars_others(*args)
+        if not others:
+            return cls._from_args(c_scalars)
 
-        if nonmatrices:
+        if c_scalars:
             if cls == Mul:
-                for i in range(len(matrices)):
-                    if not matrices[i].is_MatrixExpr:
-                        # If one of the matrices explicit, absorb the scalar into it
-                        # (doit will combine all explicit matrices into one, so it
-                        # doesn't matter which)
-                        matrices[i] = matrices[i].__mul__(cls._from_args(nonmatrices))
-                        nonmatrices = []
+                for i, arg in enumerate(others):
+                    if isinstance(arg, MatrixBase):
+                        # If one of the argument is an explicit matrix,
+                        # absorb the scalar into it
+                        # (doit will combine all explicit matrices into one,
+                        # so it doesn't matter which)
+                        others[i] = others[i].__mul__(cls._from_args(c_scalars))
+                        c_scalars = []
                         break
 
             else:
@@ -625,11 +624,12 @@ def get_postprocessor(cls):
                 # raising an exception. That way different algorithms can
                 # replace matrix expressions with non-commutative symbols to
                 # manipulate them like non-commutative scalars.
-                return cls._from_args(nonmatrices + [mat_class(*matrices).doit(deep=False)])
+                return cls._from_args(
+                    c_scalars + [mat_class(*others).doit(deep=False)])
 
         if mat_class == MatAdd:
-            return mat_class(*matrices).doit(deep=False)
-        return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
+            return mat_class(*args).doit(deep=False)
+        return mat_class(cls._from_args(c_scalars), *others).doit(deep=False)
     return _postprocessor
 
 
@@ -637,6 +637,18 @@ Basic._constructor_postprocessor_mapping[MatrixExpr] = {
     "Mul": [get_postprocessor(Mul)],
     "Add": [get_postprocessor(Add)],
 }
+
+
+def _as_commutative_scalars_others(*args):
+    c_scalars = []
+    others = []
+    for arg in args:
+        if arg.is_scalar and arg.is_commutative:
+            c_scalars.append(arg)
+        else:
+            others.append(arg)
+
+    return c_scalars, others
 
 
 def _matrix_derivative(expr, x):

@@ -89,8 +89,8 @@ def validate(*args):
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
-factor_of = lambda arg: arg.as_coeff_mmul()[0]
-matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])
+factor_of = lambda arg: arg._as_commutative_coeff_mmul()[0]
+matrix_of = lambda arg: unpack(arg._as_commutative_coeff_mmul()[1])
 def combine(cnt, mat):
     if cnt == 1:
         return mat

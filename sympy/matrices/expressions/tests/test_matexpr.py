@@ -561,6 +561,14 @@ def test_MatMul_postprocessor():
 
     assert Mul(A, x, M, M, x) == MatMul(A, Mx**2)
 
+    # Test whether the postprocessor mangles the ordering of
+    # noncommutative scalars
+    X = MatrixSymbol('X', 2, 2)
+    y = Symbol('y', commutative=False)
+    assert Mul(X, y).args == (X, y)
+    assert Mul(y, X).args == (y, X)
+
+
 @XFAIL
 def test_MatAdd_postprocessor_xfail():
     # This is difficult to get working because of the way that Add processes

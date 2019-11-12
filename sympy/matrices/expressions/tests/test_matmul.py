@@ -136,7 +136,6 @@ def test_matmul_args_cnc():
     assert MatMul(n, A, A.T).args_cnc() == [[n], [A, A.T]]
     assert MatMul(A, A.T).args_cnc() == [[], [A, A.T]]
 
-@XFAIL
 def test_matmul_args_cnc_symbols():
     # Not currently supported
     a, b = symbols('a b', commutative=False)
