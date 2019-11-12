@@ -4085,7 +4085,7 @@ def test_sympy__tensor__indexed__IndexedBase():
 
 def test_sympy__tensor__tensor__TensorIndexType():
     from sympy.tensor.tensor import TensorIndexType
-    assert _test_args(TensorIndexType('Lorentz', metric=False))
+    assert _test_args(TensorIndexType('Lorentz'))
 
 
 @SKIP("deprecated class")
@@ -4100,14 +4100,14 @@ def test_sympy__tensor__tensor__TensorSymmetry():
 
 def test_sympy__tensor__tensor__TensorHead():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, TensorHead
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     assert _test_args(TensorHead('p', [Lorentz], sym, 0))
 
 
 def test_sympy__tensor__tensor__TensorIndex():
     from sympy.tensor.tensor import TensorIndexType, TensorIndex
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     assert _test_args(TensorIndex('i', Lorentz))
 
 @SKIP("abstract class")
@@ -4116,7 +4116,7 @@ def test_sympy__tensor__tensor__TensExpr():
 
 def test_sympy__tensor__tensor__TensAdd():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, TensAdd, tensor_heads
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     p, q = tensor_heads('p,q', [Lorentz], sym)
@@ -4127,7 +4127,7 @@ def test_sympy__tensor__tensor__TensAdd():
 
 def test_sympy__tensor__tensor__Tensor():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, TensorHead
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     p = TensorHead('p', [Lorentz], sym)
@@ -4136,7 +4136,7 @@ def test_sympy__tensor__tensor__Tensor():
 
 def test_sympy__tensor__tensor__TensMul():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, tensor_heads
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     p, q = tensor_heads('p, q', [Lorentz], sym)
@@ -4154,7 +4154,7 @@ def test_sympy__tensor__tensor__TensorElement():
 def test_sympy__tensor__toperators__PartialDerivative():
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead
     from sympy.tensor.toperators import PartialDerivative
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     a, b = tensor_indices('a,b', Lorentz)
     A = TensorHead("A", [Lorentz])
     assert _test_args(PartialDerivative(A(a), A(b)))
