@@ -305,7 +305,6 @@ def combine_powers(mul):
     e.g. Y * X * X.I -> Y
     """
     factor, args = mul.as_coeff_matrices()
-
     new_args = [args[0]]
 
     for B in args[1:]:
@@ -326,11 +325,11 @@ def combine_powers(mul):
 
         if A_base == B_base:
             new_exp = A_exp + B_exp
-            new_args[-1] = MatPow(A_base, new_exp).doit()
+            new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
         elif not isinstance(B_base, MatrixBase) and \
             A_base == B_base.inverse():
             new_exp = A_exp - B_exp
-            new_args[-1] = MatPow(A_base, new_exp).doit()
+            new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
         else:
             new_args.append(B)
 
