@@ -142,3 +142,12 @@ def test_differentiate_finite():
     assert (res2 - ref2).simplify() == 0
     raises(ValueError, lambda: differentiate_finite(f(x)*g(x), x,
                                                     pints=[x-1, x+1]))
+
+    res3 = differentiate_finite(f(x)*g(x).diff(x), x)
+    ref3 = (-g(x) + g(x + 1))*f(x + S.Half) - (g(x) - g(x - 1))*f(x - S.Half)
+    assert (res3 - ref3).simplify() == 0
+
+    res4 = differentiate_finite(f(x)*g(x).diff(x).diff(x), x)
+    ref4 = -(g(x - Rational(3, 2)) - 2*g(x - S.Half) + g(x + S.Half))*f(x - S.Half) \
+           + (g(x - S.Half) - 2*g(x + S.Half) + g(x + Rational(3, 2)))*f(x + S.Half)
+    assert (res4 - ref4).simplify() == 0
