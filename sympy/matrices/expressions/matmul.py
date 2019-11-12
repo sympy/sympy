@@ -7,6 +7,8 @@ from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.matrices import MatrixBase
+from sympy.utilities.iterables import sift
+
 
 from .inverse import Inverse
 from .matexpr import \
@@ -44,14 +46,17 @@ class MatMul(MatrixExpr, Mul):
         args = filter(lambda i: cls.identity != i, args)
         args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
-        factor, matrices = obj.as_coeff_matrices()
+
+        _, others = obj._as_commutative_scalars_others()
+        matrices, _ = sift(others, lambda x: x.is_Matrix, binary=True)
+
         if check:
             validate(*matrices)
         if not matrices:
             # Should it be
             #
             # return Basic.__neq__(cls, factor, GenericIdentity()) ?
-            return factor
+            return Mul(*args)
         return obj
 
     @property
@@ -111,6 +116,17 @@ class MatMul(MatrixExpr, Mul):
     def as_coeff_mmul(self):
         coeff, matrices = self.as_coeff_matrices()
         return coeff, MatMul(*matrices)
+
+    def _as_commutative_scalars_others(self):
+        c_scalars = []
+        others = []
+        for arg in self.args:
+            if arg.is_scalar and arg.is_commutative:
+                c_scalars.append(arg)
+            else:
+                others.append(arg)
+
+        return c_scalars, others
 
     def _eval_transpose(self):
         """Transposition of matrix multiplication.
