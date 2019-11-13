@@ -38,6 +38,8 @@ __all__ = [
     'JyBra',
     'JzKet',
     'JzBra',
+    'JzOp',
+    'J2Op',
     'JxKetCoupled',
     'JxBraCoupled',
     'JyKetCoupled',
@@ -88,7 +90,7 @@ class SpinOpBase(object):
         return r'%s_%s' % ((unicode(self.name), self._coord))
 
     def _represent_base(self, basis, **options):
-        j = options.get('j', Rational(1, 2))
+        j = options.get('j', S.Half)
         size, mvals = m_values(j)
         result = zeros(size, size)
         for p in range(size):
@@ -199,7 +201,7 @@ class JplusOp(SpinOpBase, Operator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
-    def _eval_rewrite_as_xyz(self, *args):
+    def _eval_rewrite_as_xyz(self, *args, **kwargs):
         return JxOp(args[0]) + I*JyOp(args[0])
 
 
@@ -240,7 +242,7 @@ class JminusOp(SpinOpBase, Operator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
-    def _eval_rewrite_as_xyz(self, *args):
+    def _eval_rewrite_as_xyz(self, *args, **kwargs):
         return JxOp(args[0]) - I*JyOp(args[0])
 
 
@@ -275,7 +277,7 @@ class JxOp(SpinOpBase, HermitianOperator):
         jm = JminusOp(self.name)._represent_JzOp(basis, **options)
         return (jp + jm)/Integer(2)
 
-    def _eval_rewrite_as_plusminus(self, *args):
+    def _eval_rewrite_as_plusminus(self, *args, **kwargs):
         return (JplusOp(args[0]) + JminusOp(args[0]))/2
 
 
@@ -310,7 +312,7 @@ class JyOp(SpinOpBase, HermitianOperator):
         jm = JminusOp(self.name)._represent_JzOp(basis, **options)
         return (jp - jm)/(Integer(2)*I)
 
-    def _eval_rewrite_as_plusminus(self, *args):
+    def _eval_rewrite_as_plusminus(self, *args, **kwargs):
         return (JplusOp(args[0]) - JminusOp(args[0]))/(2*I)
 
 
@@ -410,13 +412,13 @@ class J2Op(SpinOpBase, HermitianOperator):
     def _print_contents_latex(self, printer, *args):
         return r'%s^2' % str(self.name)
 
-    def _eval_rewrite_as_xyz(self, *args):
+    def _eval_rewrite_as_xyz(self, *args, **kwargs):
         return JxOp(args[0])**2 + JyOp(args[0])**2 + JzOp(args[0])**2
 
-    def _eval_rewrite_as_plusminus(self, *args):
+    def _eval_rewrite_as_plusminus(self, *args, **kwargs):
         a = args[0]
         return JzOp(a)**2 + \
-            Rational(1, 2)*(JplusOp(a)*JminusOp(a) + JminusOp(a)*JplusOp(a))
+            S.Half*(JplusOp(a)*JminusOp(a) + JminusOp(a)*JplusOp(a))
 
 
 class Rotation(UnitaryOperator):
@@ -601,7 +603,7 @@ class Rotation(UnitaryOperator):
         return result
 
     def _represent_base(self, basis, **options):
-        j = sympify(options.get('j', Rational(1, 2)))
+        j = sympify(options.get('j', S.Half))
         # TODO: move evaluation up to represent function/implement elsewhere
         evaluate = sympify(options.get('doit'))
         size, mvals = m_values(j)
@@ -867,8 +869,8 @@ class WignerD(Expr):
             for k in range(2*j + 1):
                 if k > j + mp or k > j - m or k < mp - m:
                     continue
-                r += (-S(1))**k * binomial(j + mp, k) * binomial(j - mp, k + m - mp)
-            r *= (-S(1))**(m - mp) / 2**j * sqrt(factorial(j + m) *
+                r += (S.NegativeOne)**k * binomial(j + mp, k) * binomial(j - mp, k + m - mp)
+            r *= (S.NegativeOne)**(m - mp) / 2**j * sqrt(factorial(j + m) *
                     factorial(j - m) / (factorial(j + mp) * factorial(j - mp)))
         else:
             # Varshalovich Equation(5), Section 4.7.2, page 87, where we set
@@ -1090,7 +1092,7 @@ class JxKet(SpinState, Ket):
         return self._represent_base(**options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2, **options)
+        return self._represent_base(alpha=pi*Rational(3, 2), **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(beta=pi/2, **options)
@@ -1147,7 +1149,7 @@ class JyKet(SpinState, Ket):
         return self._represent_base(**options)
 
     def _represent_JzOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2, beta=-pi/2, gamma=pi/2, **options)
+        return self._represent_base(alpha=pi*Rational(3, 2), beta=-pi/2, gamma=pi/2, **options)
 
 
 class JyBra(SpinState, Bra):
@@ -1276,7 +1278,7 @@ class JzKet(SpinState, Ket):
     ========
 
     JzKetCoupled: Coupled eigenstates
-    TensorProduct: Used to specify uncoupled states
+    sympy.physics.quantum.tensorproduct.TensorProduct: Used to specify uncoupled states
     uncouple: Uncouples states given coupling parameters
     couple: Couples uncoupled states
 
@@ -1294,10 +1296,10 @@ class JzKet(SpinState, Ket):
         return self._represent_JzOp(None, **options)
 
     def _represent_JxOp(self, basis, **options):
-        return self._represent_base(beta=3*pi/2, **options)
+        return self._represent_base(beta=pi*Rational(3, 2), **options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2, beta=pi/2, gamma=pi/2, **options)
+        return self._represent_base(alpha=pi*Rational(3, 2), beta=pi/2, gamma=pi/2, **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(**options)
@@ -1383,9 +1385,9 @@ class CoupledSpinState(SpinState):
         if any(2*ji != int(2*ji) for ji in jn if ji.is_number):
             raise ValueError('All elements of jn must be integer or half-integer, got: %s' % jn)
         if any(n1 != int(n1) or n2 != int(n2) for (n1, n2, _) in jcoupling):
-            raise ValueError('Indicies in jcoupling must be integers')
+            raise ValueError('Indices in jcoupling must be integers')
         if any(n1 < 1 or n2 < 1 or n1 > len(jn) or n2 > len(jn) for (n1, n2, _) in jcoupling):
-            raise ValueError('Indicies must be between 1 and the number of coupled spin spaces')
+            raise ValueError('Indices must be between 1 and the number of coupled spin spaces')
         if any(2*ji != int(2*ji) for (_, _, ji) in jcoupling if ji.is_number):
             raise ValueError('All coupled j values in coupling scheme must be integer or half-integer')
         coupled_n, coupled_jn = _build_coupled(jcoupling, len(jn))
@@ -1538,7 +1540,7 @@ class JxKetCoupled(CoupledSpinState, Ket):
         return self._represent_coupled_base(**options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_coupled_base(alpha=3*pi/2, **options)
+        return self._represent_coupled_base(alpha=pi*Rational(3, 2), **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_coupled_base(beta=pi/2, **options)
@@ -1595,7 +1597,7 @@ class JyKetCoupled(CoupledSpinState, Ket):
         return self._represent_coupled_base(**options)
 
     def _represent_JzOp(self, basis, **options):
-        return self._represent_coupled_base(alpha=3*pi/2, beta=-pi/2, gamma=pi/2, **options)
+        return self._represent_coupled_base(alpha=pi*Rational(3, 2), beta=-pi/2, gamma=pi/2, **options)
 
 
 class JyBraCoupled(CoupledSpinState, Bra):
@@ -1633,8 +1635,8 @@ class JzKetCoupled(CoupledSpinState, Ket):
     The other required parameter in ``jn``, which is a tuple defining the `j_n`
     angular momentum quantum numbers of the product spaces. So for example, if
     a state represented the coupling of the product basis state
-    `|j_1,m_1\rangle\times|j_2,m_2\rangle`, the ``jn`` for this state would be
-    ``(j1,j2)``.
+    `\left|j_1,m_1\right\rangle\times\left|j_2,m_2\right\rangle`, the ``jn``
+    for this state would be ``(j1,j2)``.
 
     The final option is ``jcoupling``, which is used to define how the spaces
     specified by ``jn`` are coupled, which includes both the order these spaces
@@ -1644,8 +1646,8 @@ class JzKetCoupled(CoupledSpinState, Ket):
     there are N coupled angular momentum spaces, that is ``jn`` has N elements,
     then there must be N-1 sublists. Each of these sublists making up the
     ``jcoupling`` parameter have length 3. The first two elements are the
-    indicies of the product spaces that are considered to be coupled together.
-    For example, if we want to couple `j_1` and `j_4`, the indicies would be 1
+    indices of the product spaces that are considered to be coupled together.
+    For example, if we want to couple `j_1` and `j_4`, the indices would be 1
     and 4. If a state has already been coupled, it is referenced by the
     smallest index that is coupled, so if `j_2` and `j_4` has already been
     coupled to some `j_{24}`, then this value can be coupled by referencing it
@@ -1748,10 +1750,10 @@ class JzKetCoupled(CoupledSpinState, Ket):
         return self._represent_JzOp(None, **options)
 
     def _represent_JxOp(self, basis, **options):
-        return self._represent_coupled_base(beta=3*pi/2, **options)
+        return self._represent_coupled_base(beta=pi*Rational(3, 2), **options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_coupled_base(alpha=3*pi/2, beta=pi/2, gamma=pi/2, **options)
+        return self._represent_coupled_base(alpha=pi*Rational(3, 2), beta=pi/2, gamma=pi/2, **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_coupled_base(**options)

@@ -1,5 +1,7 @@
-from sympy.core import Function, Pow, sympify
+from sympy.core import (Function, Pow, sympify, Expr)
+from sympy.core.relational import Relational
 from sympy.polys import Poly, decompose
+from sympy.utilities.misc import func_name
 
 
 def decompogen(f, symbol):
@@ -31,6 +33,11 @@ def decompogen(f, symbol):
 
     """
     f = sympify(f)
+    if not isinstance(f, Expr) or isinstance(f, Relational):
+        raise TypeError('expecting Expr but got: `%s`' % func_name(f))
+    if symbol not in f.free_symbols:
+        return [f]
+
     result = []
 
     # ===== Simple Functions ===== #

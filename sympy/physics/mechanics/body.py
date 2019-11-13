@@ -159,9 +159,9 @@ class Body(RigidBody, Particle):
             >>> body.apply_force(body.mass * g * body.frame.x)
 
         To apply force to any other point than center of mass, pass that point
-        as well. This example applies a gravitational force to a point a distance
-        l from the body's center of mass in the y direction. The force is again
-        applied in the x direction. ::
+        as well. This example applies a gravitational force to a point a
+        distance l from the body's center of mass in the y direction. The
+        force is again applied in the x direction. ::
 
             >>> from sympy import Symbol
             >>> from sympy.physics.mechanics import Body

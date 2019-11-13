@@ -1,17 +1,19 @@
 from __future__ import print_function, division
 
-from pyglet.gl import *
-from managed_window import ManagedWindow
+from sympy.core.compatibility import clock
 
-from plot_camera import PlotCamera
-from plot_controller import PlotController
+import pyglet.gl as pgl
 
-from time import clock
+from sympy.plotting.pygletplot.managed_window import ManagedWindow
+from sympy.plotting.pygletplot.plot_camera import PlotCamera
+from sympy.plotting.pygletplot.plot_controller import PlotController
 
 
 class PlotWindow(ManagedWindow):
 
-    def __init__(self, plot, **kwargs):
+    def __init__(self, plot, antialiasing=True, ortho=False,
+                 invert_mouse_zoom=False, linewidth=1.5, caption="SymPy Plot",
+                 **kwargs):
         """
         Named Arguments
         ===============
@@ -28,11 +30,11 @@ class PlotWindow(ManagedWindow):
         self.camera = None
         self._calculating = False
 
-        self.antialiasing = kwargs.pop('antialiasing', True)
-        self.ortho = kwargs.pop('ortho', False)
-        self.invert_mouse_zoom = kwargs.pop('invert_mouse_zoom', False)
-        self.linewidth = kwargs.pop('linewidth', 1.5)
-        self.title = kwargs.setdefault('caption', "SymPy Plot")
+        self.antialiasing = antialiasing
+        self.ortho = ortho
+        self.invert_mouse_zoom = invert_mouse_zoom
+        self.linewidth = linewidth
+        self.title = caption
         self.last_caption_update = 0
         self.caption_update_interval = 0.2
         self.drawing_first_object = True
@@ -45,22 +47,22 @@ class PlotWindow(ManagedWindow):
                 invert_mouse_zoom=self.invert_mouse_zoom)
         self.push_handlers(self.controller)
 
-        glClearColor(1.0, 1.0, 1.0, 0.0)
-        glClearDepth(1.0)
+        pgl.glClearColor(1.0, 1.0, 1.0, 0.0)
+        pgl.glClearDepth(1.0)
 
-        glDepthFunc(GL_LESS)
-        glEnable(GL_DEPTH_TEST)
+        pgl.glDepthFunc(pgl.GL_LESS)
+        pgl.glEnable(pgl.GL_DEPTH_TEST)
 
-        glEnable(GL_LINE_SMOOTH)
-        glShadeModel(GL_SMOOTH)
-        glLineWidth(self.linewidth)
+        pgl.glEnable(pgl.GL_LINE_SMOOTH)
+        pgl.glShadeModel(pgl.GL_SMOOTH)
+        pgl.glLineWidth(self.linewidth)
 
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        pgl.glEnable(pgl.GL_BLEND)
+        pgl.glBlendFunc(pgl.GL_SRC_ALPHA, pgl.GL_ONE_MINUS_SRC_ALPHA)
 
         if self.antialiasing:
-            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-            glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
+            pgl.glHint(pgl.GL_LINE_SMOOTH_HINT, pgl.GL_NICEST)
+            pgl.glHint(pgl.GL_POLYGON_SMOOTH_HINT, pgl.GL_NICEST)
 
         self.camera.setup_projection()
 
@@ -85,14 +87,23 @@ class PlotWindow(ManagedWindow):
         if len(self.plot._functions.values()) == 0:
             self.drawing_first_object = True
 
-        for r in self.plot._functions.itervalues():
+        try:
+            dict.iteritems
+        except AttributeError:
+            # Python 3
+            iterfunctions = iter(self.plot._functions.values())
+        else:
+            # Python 2
+            iterfunctions = self.plot._functions.itervalues()
+
+        for r in iterfunctions:
             if self.drawing_first_object:
                 self.camera.set_rot_preset(r.default_rot_preset)
                 self.drawing_first_object = False
 
-            glPushMatrix()
+            pgl.glPushMatrix()
             r._draw()
-            glPopMatrix()
+            pgl.glPopMatrix()
 
             # might as well do this while we are
             # iterating and have the lock rather
@@ -111,9 +122,9 @@ class PlotWindow(ManagedWindow):
                     pass
 
         for r in self.plot._pobjects:
-            glPushMatrix()
+            pgl.glPushMatrix()
             r._draw()
-            glPopMatrix()
+            pgl.glPopMatrix()
 
         if should_update_caption:
             self.update_caption(calc_verts_pos, calc_verts_len,

@@ -1,9 +1,11 @@
+.. _masses:
+
 =================================================================
 Masses, Inertias, Particles and Rigid Bodies in Physics/Mechanics
 =================================================================
 
 This document will describe how to represent masses and inertias in
-:mod:`mechanics` and use of the ``RigidBody`` and ``Particle`` classes.
+:mod:`sympy.physics.mechanics` and use of the ``RigidBody`` and ``Particle`` classes.
 
 It is assumed that the reader is familiar with the basics of these topics, such
 as finding the center of mass for a system of particles, how to manipulate an
@@ -19,7 +21,7 @@ expression. Keep in mind that masses can be time varying.
 Particle
 ========
 
-Particles are created with the class ``Particle`` in :mod:`mechanics`.
+Particles are created with the class ``Particle`` in :mod:`sympy.physics.mechanics`.
 A ``Particle`` object has an associated point and an associated mass which are
 the only two attributes of the object.::
 
@@ -31,14 +33,14 @@ the only two attributes of the object.::
   >>> pa = Particle('pa', po, m)
 
 The associated point contains the position, velocity and acceleration of the
-particle. :mod:`mechanics` allows one to perform kinematic analysis of points
+particle. :mod:`sympy.physics.mechanics` allows one to perform kinematic analysis of points
 separate from their association with masses.
 
 Inertia
 =======
 
 See the Inertia (Dyadics) section in 'Advanced Topics' part of
-:mod:`physics/vector` docs.
+:mod:`sympy.physics.vector` docs.
 
 Rigid Body
 ==========
@@ -62,7 +64,7 @@ The mass is specified exactly as is in a particle. Similar to the
 must be specified. The reference frame is stored in an analogous fashion and
 holds information about the body's orientation and angular velocity. Finally,
 the inertia for a rigid body needs to be specified about a point. In
-:mod:`mechanics`, you are allowed to specify any point for this. The most
+:mod:`sympy.physics.mechanics`, you are allowed to specify any point for this. The most
 common is the center of mass, as shown in the above code. If a point is selected
 which is not the center of mass, ensure that the position between the point and
 the center of mass has been defined. The inertia is specified as a tuple of length
@@ -74,7 +76,7 @@ two with the first entry being a ``Dyadic`` and the second entry being a
 Dyadic
 ======
 
-In :mod:`mechanics`, dyadics are used to represent inertia ([Kane1985]_,
+In :mod:`sympy.physics.mechanics`, dyadics are used to represent inertia ([Kane1985]_,
 [WikiDyadics]_, [WikiDyadicProducts]_). A dyadic is a linear polynomial of
 component unit dyadics, similar to a vector being a linear polynomial of
 component unit vectors. A dyadic is the outer product between two vectors which
@@ -216,48 +218,50 @@ Using momenta functions in Mechanics
 ====================================
 
 The following example shows how to use the momenta functions in
-:mod:`mechanics`.
+:mod:`sympy.physics.mechanics`.
 
 One begins by creating the requisite symbols to describe the system. Then
 the reference frame is created and the kinematics are done. ::
 
-  >> from sympy import symbols
-  >> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
-  >> from sympy.physics.mechanics import RigidBody, Particle, Point, outer
-  >> from symp.physics.mechanics import linear_momentum, angular_momentum
-  >> m, M, l1 = symbols('m M l1')
-  >> q1d = dynamicsymbols('q1d')
-  >> N = ReferenceFrame('N')
-  >> O = Point('O')
-  >> O.set_vel(N, 0 * N.x)
-  >> Ac = O.locatenew('Ac', l1 * N.x)
-  >> P = Ac.locatenew('P', l1 * N.x)
-  >> a = ReferenceFrame('a')
-  >> a.set_ang_vel(N, q1d * N.z)
-  >> Ac.v2pt_theory(O, N, a)
-  >> P.v2pt_theory(O, N, a)
+  >>> from sympy import symbols
+  >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+  >>> from sympy.physics.mechanics import RigidBody, Particle, Point, outer
+  >>> from sympy.physics.mechanics import linear_momentum, angular_momentum
+  >>> m, M, l1 = symbols('m M l1')
+  >>> q1d = dynamicsymbols('q1d')
+  >>> N = ReferenceFrame('N')
+  >>> O = Point('O')
+  >>> O.set_vel(N, 0 * N.x)
+  >>> Ac = O.locatenew('Ac', l1 * N.x)
+  >>> P = Ac.locatenew('P', l1 * N.x)
+  >>> a = ReferenceFrame('a')
+  >>> a.set_ang_vel(N, q1d * N.z)
+  >>> Ac.v2pt_theory(O, N, a)
+  l1*q1d*N.y
+  >>> P.v2pt_theory(O, N, a)
+  2*l1*q1d*N.y
 
 Finally, the bodies that make up the system are created. In this case the
 system consists of a particle Pa and a RigidBody A. ::
 
-  >> Pa = Particle('Pa', P, m)
-  >> I = outer(N.z, N.z)
-  >> A = RigidBody('A', Ac, a, M, (I, Ac))
+  >>> Pa = Particle('Pa', P, m)
+  >>> I = outer(N.z, N.z)
+  >>> A = RigidBody('A', Ac, a, M, (I, Ac))
 
 Then one can either choose to evaluate the momenta of individual components
 of the system or of the entire system itself. ::
 
-  >> linear_momentum(N,A)
+  >>> linear_momentum(N,A)
   M*l1*q1d*N.y
-  >> angular_momentum(O, N, Pa)
+  >>> angular_momentum(O, N, Pa)
   4*l1**2*m*q1d*N.z
-  >> linear_momentum(N, A, Pa)
+  >>> linear_momentum(N, A, Pa)
   (M*l1*q1d + 2*l1*m*q1d)*N.y
-  >> angular_momentum(O, N, A, Pa)
-  (4*l1**2*m*q1d + q1d)*N.z
+  >>> angular_momentum(O, N, A, Pa)
+  (M*l1**2*q1d + 4*l1**2*m*q1d + q1d)*N.z
 
 It should be noted that the user can determine either momenta in any frame
-in :mod:`mechanics` as the user is allowed to specify the reference frame when
+in :mod:`sympy.physics.mechanics` as the user is allowed to specify the reference frame when
 calling the function. In other words the user is not limited to determining
 just inertial linear and angular momenta. Please refer to the docstrings on
 each function to learn more about how each function works precisely.
@@ -318,57 +322,60 @@ Using energy functions in Mechanics
 ===================================
 
 The following example shows how to use the energy functions in
-:mod:`mechanics`.
+:mod:`sympy.physics.mechanics`.
 
 As was discussed above in the momenta functions, one first creates the system
 by going through an identical procedure. ::
 
-  >> from sympy import symbols
-  >> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, outer
-  >> from sympy.physics.mechanics import RigidBody, Particle, mechanics_printing
-  >> from symp.physics.mechanics import kinetic_energy, potential_energy, Point
-  >> mechanics_printing()
-  >> m, M, l1, g, h, H = symbols('m M l1 g h H')
-  >> omega = dynamicsymbols('omega')
-  >> N = ReferenceFrame('N')
-  >> O = Point('O')
-  >> O.set_vel(N, 0 * N.x)
-  >> Ac = O.locatenew('Ac', l1 * N.x)
-  >> P = Ac.locatenew('P', l1 * N.x)
-  >> a = ReferenceFrame('a')
-  >> a.set_ang_vel(N, omega * N.z)
-  >> Ac.v2pt_theory(O, N, a)
-  >> P.v2pt_theory(O, N, a)
-  >> Pa = Particle('Pa', P, m)
-  >> I = outer(N.z, N.z)
-  >> A = RigidBody('A', Ac, a, M, (I, Ac))
+  >>> from sympy import symbols
+  >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, outer
+  >>> from sympy.physics.mechanics import RigidBody, Particle
+  >>> from sympy.physics.mechanics import kinetic_energy, potential_energy, Point
+  >>> m, M, l1, g, h, H = symbols('m M l1 g h H')
+  >>> omega = dynamicsymbols('omega')
+  >>> N = ReferenceFrame('N')
+  >>> O = Point('O')
+  >>> O.set_vel(N, 0 * N.x)
+  >>> Ac = O.locatenew('Ac', l1 * N.x)
+  >>> P = Ac.locatenew('P', l1 * N.x)
+  >>> a = ReferenceFrame('a')
+  >>> a.set_ang_vel(N, omega * N.z)
+  >>> Ac.v2pt_theory(O, N, a)
+  l1*omega*N.y
+  >>> P.v2pt_theory(O, N, a)
+  2*l1*omega*N.y
+  >>> Pa = Particle('Pa', P, m)
+  >>> I = outer(N.z, N.z)
+  >>> A = RigidBody('A', Ac, a, M, (I, Ac))
 
 The user can then determine the kinetic energy of any number of entities of the
 system: ::
 
-  >> kinetic_energy(N, Pa)
-  2*l1**2*m*q1d**2
-  >> kinetic_energy(N, Pa, A)
-  M*l1**2*q1d**2/2 + 2*l1**2*m*q1d**2 + q1d**2/2
+  >>> kinetic_energy(N, Pa)
+  2*l1**2*m*omega(t)**2
+  >>> kinetic_energy(N, Pa, A)
+  M*l1**2*omega(t)**2/2 + 2*l1**2*m*omega(t)**2 + omega(t)**2/2
 
 It should be noted that the user can determine either kinetic energy relative
-to any frame in :mod:`mechanics` as the user is allowed to specify the
+to any frame in :mod:`sympy.physics.mechanics` as the user is allowed to specify the
 reference frame when calling the function. In other words the user is not
 limited to determining just inertial kinetic energy.
 
 For potential energies, the user must first specify the potential energy of
-every entity of the system using the :mod:`potential_energy` property. The
-potential energy of any number of entities comprising the system can then be
-determined: ::
+every entity of the system using the
+:obj:`sympy.physics.mechanics.rigidbody.RigidBody.potential_energy` property.
+The potential energy of any number of entities comprising the system can then
+be determined: ::
 
-  >> Pa.potential_energy = m * g * h
-  >> A.potential_energy = M * g * H
-  >> potential_energy(A, Pa)
+  >>> Pa.potential_energy = m * g * h
+  >>> A.potential_energy = M * g * H
+  >>> potential_energy(A, Pa)
   H*M*g + g*h*m
 
 One can also determine the Lagrangian for this system: ::
 
-  >> Lagrangian(Pa, A)
-  -H*M*g + M*l1**2*q1d**2/2 - g*h*m + 2*l1**2*m*q1d**2 + q1d**2/2
+  >>> from sympy.physics.mechanics import Lagrangian
+  >>> Lagrangian(N, Pa, A)
+  -H*M*g + M*l1**2*omega(t)**2/2 - g*h*m + 2*l1**2*m*omega(t)**2 + omega(t)**2/2
 
 Please refer to the docstrings to learn more about each function.

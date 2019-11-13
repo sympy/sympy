@@ -2,14 +2,14 @@
 Examples
 ========
 
-In the following sections we give few examples of what can be do with this
+In the following sections we give few examples of what can be done with this
 module.
 
 
 Dimensional analysis
 ====================
 
-We will start from the second Newton's law
+We will start from Newton's second law
 
 .. math::
     m a = F
@@ -30,17 +30,30 @@ to determine the dimension of the Newton's constant :math:`G`. The result
 should be :math:`L^3 M^{-1} T^{-2}`.
 
     >>> from sympy import symbols
+    >>> from sympy.physics.units.systems import SI
     >>> from sympy.physics.units import length, mass, acceleration, force
     >>> from sympy.physics.units import gravitational_constant as G
+    >>> from sympy.physics.units.systems.si import dimsys_SI
     >>> F = mass*acceleration
     >>> F
     Dimension(acceleration*mass)
-    >>> F.get_dimensional_dependencies()
+    >>> dimsys_SI.get_dimensional_dependencies(F)
     {'length': 1, 'mass': 1, 'time': -2}
-    >>> force.get_dimensional_dependencies()
+    >>> dimsys_SI.get_dimensional_dependencies(force)
     {'length': 1, 'mass': 1, 'time': -2}
+
+    Dimensions cannot compared directly, even if in the SI convention they are
+    the same:
+
     >>> F == force
+    False
+
+    Dimension system objects provide a way to test the equivalence of
+    dimensions:
+
+    >>> dimsys_SI.equivalent_dims(F, force)
     True
+
     >>> m1, m2, r = symbols("m1 m2 r")
     >>> grav_eq = G * m1 * m2 / r**2
     >>> F2 = grav_eq.subs({m1: mass, m2: mass, r: length, G: G.dimension})
@@ -69,26 +82,39 @@ variables (taken from Wikipedia). The result should be 224.701 days.
     >>> from sympy.physics.units import day, gravitational_constant as G
     >>> from sympy.physics.units import meter, kilogram
     >>> T = symbols("T")
-    >>> a = Quantity("venus_a", length, 108208000e3*meter)
-    >>> M = Quantity("solar_mass", mass, 1.9891e30*kilogram)
+    >>> a = Quantity("venus_a")
+
+    Specify the dimension and scale in SI units:
+
+    >>> SI.set_quantity_dimension(a, length)
+    >>> SI.set_quantity_scale_factor(a, 108208000e3*meter)
+
+    Add the solar mass as quantity:
+
+    >>> M = Quantity("solar_mass")
+    >>> SI.set_quantity_dimension(M, mass)
+    >>> SI.set_quantity_scale_factor(M, 1.9891e30*kilogram)
+
+    Now Kepler's law:
+
     >>> eq = Eq(T**2 / a**3, 4*pi**2 / G / M)
     >>> eq
     Eq(T**2/venus_a**3, 4*pi**2/(gravitational_constant*solar_mass))
     >>> q = solve(eq, T)[1]
     >>> q
-    6.28318530717959*venus_a**(3/2)/(sqrt(gravitational_constant)*sqrt(solar_mass))
+    2*pi*venus_a**(3/2)/(sqrt(gravitational_constant)*sqrt(solar_mass))
 
 To convert to days, use the ``convert_to`` function (and possibly approximate
-the outcoming result:
+the outcoming result):
 
     >>> from sympy.physics.units import convert_to
     >>> convert_to(q, day)
-    2.15992161980729e-7*sqrt(1081898088255574765)*day
+    71.5112118495813*pi*day
     >>> convert_to(q, day).n()
-    224.662800523082*day
+    224.659097795948*day
 
 We could also have the solar mass and the day as units coming from the
-astrophysical system, but I wanted to show how to create a unit that one needs.
+astrophysical system, but we wanted to show how to create a unit that one needs.
 
 We can see in this example that intermediate dimensions can be ill-defined,
 such as sqrt(G), but one should check that the final result - when all

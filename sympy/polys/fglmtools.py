@@ -14,9 +14,9 @@ def matrix_fglm(F, ring, O_to):
     References
     ==========
 
-    J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
-    Computation of Zero-dimensional Groebner Bases by Change of
-    Ordering
+    .. [1] J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
+           Computation of Zero-dimensional Groebner Bases by Change of
+           Ordering
     """
     domain = ring.domain
     ngens = ring.ngens
@@ -51,7 +51,7 @@ def matrix_fglm(F, ring, O_to):
             if g:
                 G.append(g)
         else:
-            # v is linearly independant from V
+            # v is linearly independent from V
             P = _update(s, _lambda, P)
             S.append(_incr_k(S[t[1]], t[0]))
             V.append(v)

@@ -3,10 +3,9 @@
 from __future__ import print_function, division
 
 from sympy.polys.domains.field import Field
-from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.groundtypes import SymPyInteger
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
-
+from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
@@ -101,4 +100,4 @@ class FiniteField(Field, SimpleDomain):
         p, q = K0.to_rational(a)
 
         if q == 1:
-            return K1.dtype(self.dom.dtype(p))
+            return K1.dtype(K1.dom.dtype(p))

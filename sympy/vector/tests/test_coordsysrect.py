@@ -1,6 +1,4 @@
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.pytest import raises
-import warnings
+from sympy.utilities.pytest import raises, warns_deprecated_sympy
 from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import sin, sinh, cos, cosh, sqrt, pi, ImmutableMatrix as Matrix, \
@@ -298,7 +296,7 @@ def test_create_new():
     c = a.create_new('c', transformation='spherical')
     assert c._parent == a
     assert c.transformation_to_parent() == \
-           (c.x*sin(c.y)*cos(c.z), c.x*sin(c.y)*sin(c.z), c.x*cos(c.y))
+           (c.r*sin(c.theta)*cos(c.phi), c.r*sin(c.theta)*sin(c.phi), c.r*cos(c.theta))
     assert c.transformation_from_parent() == \
            (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
 
@@ -312,13 +310,13 @@ def test_evalf():
 
 def test_lame_coefficients():
     a = CoordSys3D('a', 'spherical')
-    assert a.lame_coefficients() == (1, a.x, sin(a.y)*a.x)
+    assert a.lame_coefficients() == (1, a.r, sin(a.theta)*a.r)
     a = CoordSys3D('a')
     assert a.lame_coefficients() == (1, 1, 1)
     a = CoordSys3D('a', 'cartesian')
     assert a.lame_coefficients() == (1, 1, 1)
     a = CoordSys3D('a', 'cylindrical')
-    assert a.lame_coefficients() == (1, a.y, 1)
+    assert a.lame_coefficients() == (1, a.r, 1)
 
 
 def test_transformation_equations():
@@ -356,7 +354,7 @@ def test_transformation_equations():
         r*sin(theta),
         z
     )
-    assert a.lame_coefficients() == (1, a.theta, 1)
+    assert a.lame_coefficients() == (1, a.r, 1)
     assert a.transformation_from_parent_function()(x, y, z) == (sqrt(x**2 + y**2),
                             atan2(y, x), z)
 
@@ -371,7 +369,7 @@ def test_transformation_equations():
     x, y, z = symbols('x y z')
     a = CoordSys3D('a', ((x, y, z), (x, y, z)))
     a._calculate_inv_trans_equations()
-    assert a.transformation_to_parent() == (a.x, a.y, a.z)
+    assert a.transformation_to_parent() == (a.x1, a.x2, a.x3)
     assert a.lame_coefficients() == (1, 1, 1)
     assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
     r, theta, z = symbols("r theta z")
@@ -393,7 +391,7 @@ def test_transformation_equations():
 
     # Cartesian with `lambda`
     a = CoordSys3D('a', lambda x, y, z: (x, y, z))
-    assert a.transformation_to_parent() == (a.x, a.y, a.z)
+    assert a.transformation_to_parent() == (a.x1, a.x2, a.x3)
     assert a.lame_coefficients() == (1, 1, 1)
     a._calculate_inv_trans_equations()
     assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
@@ -438,14 +436,13 @@ def test_check_orthogonality():
     a = CoordSys3D('a', transformation=((u, v, z), (cosh(u) * cos(v), sinh(u) * sin(v), z)))
     assert a._check_orthogonality(a._transformation) is True
 
-    raises(ValueError, lambda: CoordSys3D('a', transformation=((x, x, z), (x, y, z))))
+    raises(ValueError, lambda: CoordSys3D('a', transformation=((x, y, z), (x, x, z))))
     raises(ValueError, lambda: CoordSys3D('a', transformation=(
         (x, y, z), (x*sin(y/2)*cos(z), x*sin(y)*sin(z), x*cos(y)))))
 
 
 def test_coordsys3d():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         assert CoordSysCartesian("C") == CoordSys3D("C")
 
 
@@ -463,19 +460,3 @@ def test_rotation_trans_equations():
            (-sin(q0) * c.y + cos(q0) * c.x, sin(q0) * c.x + cos(q0) * c.y, c.z)
     assert c._rotation_trans_equations(c._inverse_rotation_matrix(), c.base_scalars()) == \
            (sin(q0) * c.y + cos(q0) * c.x, -sin(q0) * c.x + cos(q0) * c.y, c.z)
-
-
-def test_translation_trans_equations():
-    a = CoordSys3D('a')
-    assert a._translation_trans_equations(a, a._origin, a.base_scalars()) == (a.x, a.y, a.z)
-    b = a.locate_new('b', None)
-    assert b._translation_trans_equations(a, b._origin, b.base_scalars()) == (b.x, b.y, b.z)
-    assert b._translation_trans_equations(a, b._origin, b.base_scalars(), inverse=True) == (b.x, b.y, b.z)
-    c = a.locate_new('c', (a.i + a.j + a.k))
-    assert c._translation_trans_equations(a, c._origin, c.base_scalars()) ==\
-           (c.x + 1, c.y + 1, c.z + 1)
-    d = a.locate_new('d', (a.i + a.j + Vector.zero))
-    assert d._translation_trans_equations(a, d._origin, d.base_scalars()) ==\
-           (d.x + 1, d.y + 1, d.z)
-    assert d._translation_trans_equations(a, d._origin, d.base_scalars(), inverse=True) ==\
-           (d.x - 1, d.y - 1, d.z)

@@ -90,7 +90,7 @@ class LagrangesMethod(object):
 
         >>> l = LagrangesMethod(L, [q], forcelist = fl, frame = N)
         >>> print(l.form_lagranges_equations())
-        Matrix([[b*Derivative(q(t), t) + 1.0*k*q(t) + m*Derivative(q(t), t, t)]])
+        Matrix([[b*Derivative(q(t), t) + 1.0*k*q(t) + m*Derivative(q(t), (t, 2))]])
 
     We can also solve for the states using the 'rhs' method.
 
@@ -365,7 +365,7 @@ class LagrangesMethod(object):
 
         The operating points may be also entered using the ``op_point`` kwarg.
         This takes a dictionary of {symbol: value}, or a an iterable of such
-        dictionaries. The values may be numberic or symbolic. The more values
+        dictionaries. The values may be numeric or symbolic. The more values
         you can specify beforehand, the faster this computation will run.
 
         For more documentation, please see the ``Linearizer`` class."""

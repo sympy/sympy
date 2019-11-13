@@ -240,6 +240,98 @@ def refine_Relational(expr, assumptions):
     return ask(Q.is_true(expr), assumptions)
 
 
+def refine_re(expr, assumptions):
+    """
+    Handler for real part.
+
+    >>> from sympy.assumptions.refine import refine_re
+    >>> from sympy import Q, re
+    >>> from sympy.abc import x
+    >>> refine_re(re(x), Q.real(x))
+    x
+    >>> refine_re(re(x), Q.imaginary(x))
+    0
+    """
+    arg = expr.args[0]
+    if ask(Q.real(arg), assumptions):
+        return arg
+    if ask(Q.imaginary(arg), assumptions):
+        return S.Zero
+    return _refine_reim(expr, assumptions)
+
+
+def refine_im(expr, assumptions):
+    """
+    Handler for imaginary part.
+
+    >>> from sympy.assumptions.refine import refine_im
+    >>> from sympy import Q, im
+    >>> from sympy.abc import x
+    >>> refine_im(im(x), Q.real(x))
+    0
+    >>> refine_im(im(x), Q.imaginary(x))
+    -I*x
+    """
+    arg = expr.args[0]
+    if ask(Q.real(arg), assumptions):
+        return S.Zero
+    if ask(Q.imaginary(arg), assumptions):
+        return - S.ImaginaryUnit * arg
+    return _refine_reim(expr, assumptions)
+
+
+def _refine_reim(expr, assumptions):
+    # Helper function for refine_re & refine_im
+    expanded = expr.expand(complex = True)
+    if expanded != expr:
+        refined = refine(expanded, assumptions)
+        if refined != expanded:
+            return refined
+    # Best to leave the expression as is
+    return None
+
+
+def refine_sign(expr, assumptions):
+    """
+    Handler for sign
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_sign
+    >>> from sympy import Symbol, Q, sign, im
+    >>> x = Symbol('x', real = True)
+    >>> expr = sign(x)
+    >>> refine_sign(expr, Q.positive(x) & Q.nonzero(x))
+    1
+    >>> refine_sign(expr, Q.negative(x) & Q.nonzero(x))
+    -1
+    >>> refine_sign(expr, Q.zero(x))
+    0
+    >>> y = Symbol('y', imaginary = True)
+    >>> expr = sign(y)
+    >>> refine_sign(expr, Q.positive(im(y)))
+    I
+    >>> refine_sign(expr, Q.negative(im(y)))
+    -I
+    """
+    arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return S.Zero
+    if ask(Q.real(arg)):
+        if ask(Q.positive(arg), assumptions):
+            return S.One
+        if ask(Q.negative(arg), assumptions):
+            return S.NegativeOne
+    if ask(Q.imaginary(arg)):
+        arg_re, arg_im = arg.as_real_imag()
+        if ask(Q.positive(arg_im), assumptions):
+            return S.ImaginaryUnit
+        if ask(Q.negative(arg_im), assumptions):
+            return -S.ImaginaryUnit
+    return expr
+
+
 handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -249,5 +341,8 @@ handlers_dict = {
     'GreaterThan': refine_Relational,
     'LessThan': refine_Relational,
     'StrictGreaterThan': refine_Relational,
-    'StrictLessThan': refine_Relational
+    'StrictLessThan': refine_Relational,
+    're': refine_re,
+    'im': refine_im,
+    'sign': refine_sign
 }

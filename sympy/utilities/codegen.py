@@ -85,10 +85,10 @@ import os
 import textwrap
 
 from sympy import __version__ as sympy_version
-from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
+from sympy.core import Symbol, S, Tuple, Equality, Function, Basic
 from sympy.core.compatibility import is_sequence, StringIO, string_types
-from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import c_code_printers
+from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fcode import FCodePrinter
 from sympy.printing.julia import JuliaCodePrinter
 from sympy.printing.octave import OctaveCodePrinter
@@ -164,24 +164,24 @@ class Routine(object):
         symbols = set([])
         for arg in arguments:
             if isinstance(arg, OutputArgument):
-                symbols.update(arg.expr.free_symbols)
+                symbols.update(arg.expr.free_symbols - arg.expr.atoms(Indexed))
             elif isinstance(arg, InputArgument):
                 input_symbols.add(arg.name)
             elif isinstance(arg, InOutArgument):
                 input_symbols.add(arg.name)
-                symbols.update(arg.expr.free_symbols)
+                symbols.update(arg.expr.free_symbols - arg.expr.atoms(Indexed))
             else:
                 raise ValueError("Unknown Routine argument: %s" % arg)
 
         for r in results:
             if not isinstance(r, Result):
                 raise ValueError("Unknown Routine result: %s" % r)
-            symbols.update(r.expr.free_symbols)
+            symbols.update(r.expr.free_symbols - r.expr.atoms(Indexed))
 
         local_symbols = set()
         for r in local_vars:
             if isinstance(r, Result):
-                symbols.update(r.expr.free_symbols)
+                symbols.update(r.expr.free_symbols - r.expr.atoms(Indexed))
                 local_symbols.add(r.name)
             else:
                 local_symbols.add(r)
@@ -249,20 +249,38 @@ class DataType(object):
 default_datatypes = {
     "int": DataType("int", "INTEGER*4", "int", "", "", "i32"),
     "float": DataType("double", "REAL*8", "float", "", "", "f64"),
+    "complex": DataType("double", "COMPLEX*16", "complex", "", "", "float") #FIXME:
+       # complex is only supported in fortran, python, julia, and octave.
+       # So to not break c or rust code generation, we stick with double or
+       # float, respecitvely (but actually should raise an exception for
+       # explicitly complex variables (x.is_complex==True))
 }
 
 
-def get_default_datatype(expr):
+COMPLEX_ALLOWED = False
+def get_default_datatype(expr, complex_allowed=None):
     """Derives an appropriate datatype based on the expression."""
+    if complex_allowed is None:
+        complex_allowed = COMPLEX_ALLOWED
+    if complex_allowed:
+        final_dtype = "complex"
+    else:
+        final_dtype = "float"
     if expr.is_integer:
         return default_datatypes["int"]
-    elif isinstance(expr, MatrixBase):
-        for element in expr:
-            if not element.is_integer:
-                return default_datatypes["float"]
-        return default_datatypes["int"]
-    else:
+    elif expr.is_real:
         return default_datatypes["float"]
+    elif isinstance(expr, MatrixBase):
+        #check all entries
+        dt = "int"
+        for element in expr:
+            if dt == "int" and not element.is_integer:
+                dt = "float"
+            if dt == "float" and not element.is_real:
+                return default_datatypes[final_dtype]
+        return default_datatypes[dt]
+    else:
+        return default_datatypes[final_dtype]
 
 
 class Variable(object):
@@ -472,7 +490,7 @@ class Result(Variable, ResultBase):
 
         datatype : optional
             When not given, the data type will be guessed based on the
-            assumptions on the symbol argument.
+            assumptions on the expr argument.
 
         dimension : sequence containing tupes, optional
             If present, this variable is interpreted as an array,
@@ -489,6 +507,10 @@ class Result(Variable, ResultBase):
 
         if name is None:
             name = 'result_%d' % abs(hash(expr))
+
+        if datatype is None:
+            #try to infer data type from the expression
+            datatype = get_default_datatype(expr)
 
         if isinstance(name, string_types):
             if isinstance(expr, (MatrixBase, MatrixExpr)):
@@ -576,7 +598,6 @@ class CodeGen(object):
                 for e in expr:
                     if not e.is_Equality:
                         raise CodeGenError("Lists of expressions must all be Equalities. {} is not.".format(e))
-                lhs = [e.lhs for e in expr]
 
                 # create a list of right hand sides and simplify them
                 rhs = [e.rhs for e in expr]
@@ -627,6 +648,8 @@ class CodeGen(object):
             if isinstance(symbol, Idx):
                 new_symbols.remove(symbol)
                 new_symbols.update(symbol.args[1].free_symbols)
+            if isinstance(symbol, Indexed):
+                new_symbols.remove(symbol)
         symbols = new_symbols
 
         # Decide whether to use output argument or return value
@@ -672,6 +695,11 @@ class CodeGen(object):
         arg_list = []
 
         # setup input argument list
+
+        # helper to get dimensions for data for array-like args
+        def dimensions(s):
+            return [(S.Zero, dim - 1) for dim in s.shape]
+
         array_symbols = {}
         for array in expressions.atoms(Indexed) | local_expressions.atoms(Indexed):
             array_symbols[array.base.label] = array
@@ -680,11 +708,8 @@ class CodeGen(object):
 
         for symbol in sorted(symbols, key=str):
             if symbol in array_symbols:
-                dims = []
                 array = array_symbols[symbol]
-                for dim in array.shape:
-                    dims.append((S.Zero, dim - 1))
-                metadata = {'dimensions': dims}
+                metadata = {'dimensions': dimensions(array)}
             else:
                 metadata = {}
 
@@ -716,7 +741,11 @@ class CodeGen(object):
                 try:
                     new_args.append(name_arg_dict[symbol])
                 except KeyError:
-                    new_args.append(InputArgument(symbol))
+                    if isinstance(symbol, (IndexedBase, MatrixSymbol)):
+                        metadata = {'dimensions': dimensions(symbol)}
+                    else:
+                        metadata = {}
+                    new_args.append(InputArgument(symbol, **metadata))
             arg_list = new_args
 
         return Routine(name, arg_list, return_val, local_vars, global_vars)
@@ -874,7 +903,7 @@ class CCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         if len(routine.results) > 1:
@@ -1134,7 +1163,7 @@ class FCodeGen(CodeGen):
             elif isinstance(arg, OutputArgument):
                 typeinfo = "%s, intent(out)" % arg.get_datatype('fortran')
             else:
-                raise CodeGenError("Unkown Argument type: %s" % type(arg))
+                raise CodeGenError("Unknown Argument type: %s" % type(arg))
 
             fprint = self._get_symbol
 
@@ -1181,7 +1210,7 @@ class FCodeGen(CodeGen):
         If the routine has multiple result objects, a CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         prototype = [ "interface\n" ]
@@ -1202,7 +1231,7 @@ class FCodeGen(CodeGen):
                 assign_to = result.result_var
 
             constants, not_fortran, f_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False, source_format='free'),
+                'doprint', dict(human=False, source_format='free', standard=95),
                 result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
@@ -1315,7 +1344,7 @@ class JuliaCodeGen(CodeGen):
         for s in old_symbols:
             if isinstance(s, Idx):
                 symbols.update(s.args[1].free_symbols)
-            else:
+            elif not isinstance(s, Indexed):
                 symbols.add(s)
 
         # Julia supports multiple return values
@@ -1527,7 +1556,7 @@ class OctaveCodeGen(CodeGen):
         for s in old_symbols:
             if isinstance(s, Idx):
                 symbols.update(s.args[1].free_symbols)
-            else:
+            elif not isinstance(s, Indexed):
                 symbols.add(s)
 
         # Octave supports multiple return values
@@ -1755,7 +1784,7 @@ class RustCodeGen(CodeGen):
         global_vars = set() if global_vars is None else set(global_vars)
 
         # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars - global_vars
+        symbols = expressions.free_symbols - local_vars - global_vars - expressions.atoms(Indexed)
 
         # Rust supports multiple return values
         return_vals = []
@@ -1812,7 +1841,7 @@ class RustCodeGen(CodeGen):
                 raise CodeGenArgumentListError(msg, missing)
 
             # create redundant arguments to produce the requested sequence
-            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            name_arg_dict = {x.name: x for x in arg_list}
             new_args = []
             for symbol in argument_sequence:
                 try:
@@ -1841,7 +1870,7 @@ class RustCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         results = [i.get_datatype('Rust') for i in routine.results]
@@ -1943,7 +1972,7 @@ class RustCodeGen(CodeGen):
 
 
 
-def get_code_generator(language, project=None, standard=None):
+def get_code_generator(language, project=None, standard=None, printer = None):
     if language == 'C':
         if standard is None:
             pass
@@ -1957,7 +1986,7 @@ def get_code_generator(language, project=None, standard=None):
                     "RUST": RustCodeGen}.get(language.upper())
     if CodeGenClass is None:
         raise ValueError("Language '%s' is not supported." % language)
-    return CodeGenClass(project)
+    return CodeGenClass(project, printer)
 
 
 #
@@ -1967,7 +1996,7 @@ def get_code_generator(language, project=None, standard=None):
 
 def codegen(name_expr, language=None, prefix=None, project="project",
             to_files=False, header=True, empty=True, argument_sequence=None,
-            global_vars=None, standard=None, code_gen=None):
+            global_vars=None, standard=None, code_gen=None, printer = None):
     """Generate source code for expressions in a given language.
 
     Parameters
@@ -2012,7 +2041,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
         CodeGenError is raised if required arguments are missing.
         Redundant arguments are used without warning.  If omitted,
         arguments will be ordered alphabetically, but with all input
-        aguments first, and then output or in-out arguments.
+        arguments first, and then output or in-out arguments.
 
     global_vars : iterable, optional
         Sequence of global variables used by the routine.  Variables
@@ -2101,7 +2130,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     else:
         if code_gen is not None:
             raise ValueError("You cannot specify both language and code_gen.")
-        code_gen = get_code_generator(language, project, standard)
+        code_gen = get_code_generator(language, project, standard, printer)
 
     if isinstance(name_expr[0], string_types):
         # single tuple is given, turn it into a singleton list with a tuple.

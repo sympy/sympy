@@ -1,4 +1,4 @@
-'''
+"""
 Parser for FullForm[Downvalues[]] of Mathematica rules.
 
 This parser is customised to parse the output in MatchPy rules format. Multiple
@@ -9,150 +9,139 @@ Parsed output is formatted into readable format by using `sympify` and print the
 expression using `sstr`. This replaces `And`, `Mul`, 'Pow' by their respective
 symbols.
 
+Mathematica
+===========
+
+To get the full form from Wolfram Mathematica, type:
+```
+ShowSteps = False
+Import["RubiLoader.m"]
+Export["output.txt", ToString@FullForm@DownValues@Int]
+```
+
+The file ``output.txt`` will then contain the rules in parseable format.
+
 References
 ==========
 [1] http://reference.wolfram.com/language/ref/FullForm.html
 [2] http://reference.wolfram.com/language/ref/DownValues.html
 [3] https://gist.github.com/Upabjojr/bc07c49262944f9c1eb0
-'''
-
+"""
 import re
-from sympy import sympify
-from sympy.printing import sstr
+import os
+import inspect
+from sympy import sympify, Function, Set, Symbol
+from sympy.core.compatibility import string_types
+from sympy.printing import StrPrinter
+from sympy.utilities.misc import debug
 
-replacements = dict(
+
+class RubiStrPrinter(StrPrinter):
+    def _print_Not(self, expr):
+        return "Not(%s)" % self._print(expr.args[0])
+
+
+def rubi_printer(expr, **settings):
+    return RubiStrPrinter(settings).doprint(expr)
+
+
+replacements = dict(  # Mathematica equivalent functions in SymPy
         Times="Mul",
         Plus="Add",
         Power="Pow",
-        Sum="_Sum" # Temporarily replace `Sum` because it can raise errors while sympifying
+        Log='log',
+        Exp='exp',
+        Sqrt='sqrt',
+        Cos='cos',
+        Sin='sin',
+        Tan='tan',
+        Cot='1/tan',
+        cot='1/tan',
+        Sec='1/cos',
+        sec='1/cos',
+        Csc='1/sin',
+        csc='1/sin',
+        ArcSin='asin',
+        ArcCos='acos',
+        # ArcTan='atan',
+        ArcCot='acot',
+        ArcSec='asec',
+        ArcCsc='acsc',
+        Sinh='sinh',
+        Cosh='cosh',
+        Tanh='tanh',
+        Coth='1/tanh',
+        coth='1/tanh',
+        Sech='1/cosh',
+        sech='1/cosh',
+        Csch='1/sinh',
+        csch='1/sinh',
+        ArcSinh='asinh',
+        ArcCosh='acosh',
+        ArcTanh='atanh',
+        ArcCoth='acoth',
+        ArcSech='asech',
+        ArcCsch='acsch',
+        Expand='expand',
+        Im='im',
+        Re='re',
+        Flatten='flatten',
+        Polylog='polylog',
+        Cancel='cancel',
+        #Gamma='gamma',
+        TrigExpand='expand_trig',
+        Sign='sign',
+        Simplify='simplify',
+        Defer='UnevaluatedExpr',
+        Identity = 'S',
+        Sum = 'Sum_doit',
+        Module = 'With',
+        Block = 'With',
+        Null = 'None'
 )
 
-parsed = '''
-from sympy.external import import_module
-matchpy = import_module("matchpy")
-from sympy.utilities.decorator import doctest_depends_on
+temporary_variable_replacement = {  # Temporarily rename because it can raise errors while sympifying
+    'gcd' : "_gcd",
+    'jn' : "_jn",
+}
 
-if matchpy:
-    Pattern, ReplacementRule, ManyToOneReplacer = matchpy.Pattern, matchpy.ReplacementRule, matchpy.ManyToOneReplacer
-    from matchpy import Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, CustomConstraint
-    from matchpy.expressions.functions import register_operation_iterator, register_operation_factory
+permanent_variable_replacement = {  # Permamenely rename these variables
+    r"\[ImaginaryI]" : 'ImaginaryI',
+    "$UseGamma": '_UseGamma',
+}
 
-    from sympy import Pow, Add, Integral, Basic, Mul, S, Or, And, symbols
-    from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf)
-    from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
-    from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
-    from sympy.integrals.rubi.symbol import WC
-    from sympy.integrals.rubi.utility_function import (Int, Set, With, Scan, MapAnd, FalseQ, ZeroQ, NegativeQ, NonzeroQ, FreeQ, List, Log, PositiveQ, PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ, ComplexNumberQ, PureComplexNumberQ, RealNumericQ, PositiveOrZeroQ, NegativeOrZeroQ, FractionOrNegativeQ, NegQ, Equal, Unequal, IntPart, FracPart, RationalQ, ProductQ, SumQ, NonsumQ, Subst, First, Rest, SqrtNumberQ, SqrtNumberSumQ, LinearQ, Sqrt, ArcCosh, Coefficient, Denominator, Hypergeometric2F1, Not, Simplify, FractionalPart, IntegerPart, AppellF1, EllipticPi, EllipticE, EllipticF, ArcTan, ArcTanh, ArcSin, ArcSinh, ArcCos, ArcCsc, ArcCsch, Sinh, Tanh, Cosh, Sech, Csch, Coth, LessEqual, Less, Greater, GreaterEqual, FractionQ, IntLinearcQ, Expand, IndependentQ, PowerQ, IntegerPowerQ, PositiveIntegerPowerQ, FractionalPowerQ, AtomQ, ExpQ, LogQ, Head, MemberQ, TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, HyperbolicQ, SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, InverseTrigQ, SinCosQ, SinhCoshQ, LeafCount, Numerator, NumberQ, NumericQ, Length, ListQ, Im, Re, InverseHyperbolicQ, InverseFunctionQ, TrigHyperbolicFreeQ, InverseFunctionFreeQ, RealQ, EqQ, FractionalPowerFreeQ, ComplexFreeQ, PolynomialQ, FactorSquareFree, PowerOfLinearQ, Exponent, QuadraticQ, LinearPairQ, BinomialParts, TrinomialParts, PolyQ, EvenQ, OddQ, PerfectSquareQ, NiceSqrtAuxQ, NiceSqrtQ, Together, FixSimplify, PosAux, PosQ, CoefficientList, ReplaceAll, ExpandLinearProduct, GCD, ContentFactor, NumericFactor, NonnumericFactors, MakeAssocList, GensymSubst, KernelSubst, ExpandExpression, Apart, SmartApart, MatchQ, PolynomialQuotientRemainder, FreeFactors, NonfreeFactors, RemoveContentAux, RemoveContent, FreeTerms, NonfreeTerms, ExpandAlgebraicFunction, CollectReciprocals, ExpandCleanup, AlgebraicFunctionQ, Coeff, LeadTerm, RemainingTerms, LeadFactor, RemainingFactors, LeadBase, LeadDegree, Numer, Denom, hypergeom, Expon, MergeMonomials, PolynomialDivide, BinomialQ, TrinomialQ, GeneralizedBinomialQ, GeneralizedTrinomialQ, FactorSquareFreeList, PerfectPowerTest, SquareFreeFactorTest, RationalFunctionQ, RationalFunctionFactors, NonrationalFunctionFactors, Reverse, RationalFunctionExponents, RationalFunctionExpand, ExpandIntegrand, SimplerQ, SimplerSqrtQ, SumSimplerQ, BinomialDegree, TrinomialDegree, CancelCommonFactors, SimplerIntegrandQ, GeneralizedBinomialDegree, GeneralizedBinomialParts, GeneralizedTrinomialDegree, GeneralizedTrinomialParts, MonomialQ, MonomialSumQ, MinimumMonomialExponent, MonomialExponent, LinearMatchQ, PowerOfLinearMatchQ, QuadraticMatchQ, CubicMatchQ, BinomialMatchQ, TrinomialMatchQ, GeneralizedBinomialMatchQ, GeneralizedTrinomialMatchQ, QuotientOfLinearsMatchQ, PolynomialTermQ, PolynomialTerms, NonpolynomialTerms, PseudoBinomialParts, NormalizePseudoBinomial, PseudoBinomialPairQ, PseudoBinomialQ, PolynomialGCD, PolyGCD, AlgebraicFunctionFactors, NonalgebraicFunctionFactors, QuotientOfLinearsP, QuotientOfLinearsParts, QuotientOfLinearsQ, Flatten, Sort, AbsurdNumberQ, AbsurdNumberFactors, NonabsurdNumberFactors, SumSimplerAuxQ, Prepend, Drop, CombineExponents, FactorInteger, FactorAbsurdNumber, SubstForInverseFunction, SubstForFractionalPower, SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears, SubstForFractionalPowerQ, SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ, FractionalPowerSubexpressionQ, Apply, FactorNumericGcd, MergeableFactorQ, MergeFactor, MergeFactors, TrigSimplifyQ, TrigSimplify, Order, FactorOrder, Smallest, OrderedQ, MinimumDegree, PositiveFactors, Sign, NonpositiveFactors, PolynomialInAuxQ, PolynomialInQ, ExponentInAux, ExponentIn, PolynomialInSubstAux, PolynomialInSubst, Distrib, DistributeDegree, FunctionOfPower, DivideDegreesOfFactors, MonomialFactor, FullSimplify, FunctionOfLinearSubst, FunctionOfLinear, NormalizeIntegrand, NormalizeIntegrandAux, NormalizeIntegrandFactor, NormalizeIntegrandFactorBase, NormalizeTogether, NormalizeLeadTermSigns, AbsorbMinusSign, NormalizeSumFactors, SignOfFactor, NormalizePowerOfLinear, SimplifyIntegrand, SimplifyTerm, TogetherSimplify, SmartSimplify, SubstForExpn, ExpandToSum, UnifySum, UnifyTerms, UnifyTerm, CalculusQ, FunctionOfInverseLinear, PureFunctionOfSinhQ, PureFunctionOfTanhQ, PureFunctionOfCoshQ, IntegerQuotientQ, OddQuotientQ, EvenQuotientQ, FindTrigFactor, FunctionOfSinhQ, FunctionOfCoshQ, OddHyperbolicPowerQ, FunctionOfTanhQ, FunctionOfTanhWeight, FunctionOfHyperbolicQ, SmartNumerator, SmartDenominator, SubstForAux, ActivateTrig, ExpandTrig, TrigExpand, SubstForTrig, SubstForHyperbolic, InertTrigFreeQ, LCM, SubstForFractionalPowerOfLinear, FractionalPowerOfLinear, InverseFunctionOfLinear, InertTrigQ, InertReciprocalQ, DeactivateTrig, FixInertTrigFunction, DeactivateTrigAux, PowerOfInertTrigSumQ, PiecewiseLinearQ, KnownTrigIntegrandQ, KnownSineIntegrandQ, KnownTangentIntegrandQ, KnownCotangentIntegrandQ, KnownSecantIntegrandQ, TryPureTanSubst, TryTanhSubst, TryPureTanhSubst, AbsurdNumberGCD, AbsurdNumberGCDList, ExpandTrigExpand, ExpandTrigReduce, ExpandTrigReduceAux, NormalizeTrig, TrigToExp, ExpandTrigToExp, TrigReduce, FunctionOfTrig, AlgebraicTrigFunctionQ, FunctionOfHyperbolic, FunctionOfQ, FunctionOfExpnQ, PureFunctionOfSinQ, PureFunctionOfCosQ, PureFunctionOfTanQ, PureFunctionOfCotQ, FunctionOfCosQ, FunctionOfSinQ, OddTrigPowerQ, FunctionOfTanQ, FunctionOfTanWeight, FunctionOfTrigQ, FunctionOfDensePolynomialsQ, FunctionOfLog, PowerVariableExpn, PowerVariableDegree, PowerVariableSubst, EulerIntegrandQ, FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst, Divides, EasyDQ, ProductOfLinearPowersQ, Rt, NthRoot, AtomBaseQ, SumBaseQ, NegSumBaseQ, AllNegTermQ, SomeNegTermQ, TrigSquareQ, RtAux, TrigSquare, IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors, MostMainFactorPosition, FunctionOfExponentialQ, FunctionOfExponential, FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux, FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, rubi_test, If, IntQuadraticQ, IntBinomialQ, RectifyTangent, RectifyCotangent, Inequality, Condition, SimpFixFactor, Simp, SimpHelp, SplitProduct, SplitSum)
+# These functions have different return type in different cases. So better to use a try and except in the constraints, when any of these appear
+f_diff_return_type = ['BinomialParts', 'BinomialDegree', 'TrinomialParts', 'GeneralizedBinomialParts', 'GeneralizedTrinomialParts', 'PseudoBinomialParts', 'PerfectPowerTest',
+    'SquareFreeFactorTest', 'SubstForFractionalPowerOfQuotientOfLinears', 'FractionalPowerOfQuotientOfLinears', 'InverseFunctionOfQuotientOfLinears',
+    'FractionalPowerOfSquareQ', 'FunctionOfLinear', 'FunctionOfInverseLinear', 'FunctionOfTrig', 'FindTrigFactor', 'FunctionOfLog',
+    'PowerVariableExpn', 'FunctionOfSquareRootOfQuadratic', 'SubstForFractionalPowerOfLinear', 'FractionalPowerOfLinear', 'InverseFunctionOfLinear',
+    'Divides', 'DerivativeDivides', 'TrigSquare', 'SplitProduct', 'SubstForFractionalPowerOfQuotientOfLinears', 'InverseFunctionOfQuotientOfLinears',
+    'FunctionOfHyperbolic', 'SplitSum']
 
-    Operation.register(Integral)
-    register_operation_iterator(Integral, lambda a: (a._args[0],) + a._args[1], lambda a: len((a._args[0],) + a._args[1]))
 
-    Operation.register(Pow)
-    OneIdentityOperation.register(Pow)
-    register_operation_iterator(Pow, lambda a: a._args, lambda a: len(a._args))
+def contains_diff_return_type(a):
+    """
+    This function returns whether an expression contains functions which have different return types in
+    diiferent cases.
+    """
+    if isinstance(a, list):
+        for i in a:
+            if contains_diff_return_type(i):
+                return True
+    elif type(a) == Function('With') or type(a) == Function('Module'):
+        for i in f_diff_return_type:
+            if a.has(Function(i)):
+                return True
+    else:
+        if a in f_diff_return_type:
+            return True
+    return False
 
-    Operation.register(Add)
-    OneIdentityOperation.register(Add)
-    CommutativeOperation.register(Add)
-    AssociativeOperation.register(Add)
-    register_operation_iterator(Add, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(Mul)
-    OneIdentityOperation.register(Mul)
-    CommutativeOperation.register(Mul)
-    AssociativeOperation.register(Mul)
-    register_operation_iterator(Mul, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(sin)
-    register_operation_iterator(sin, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(cos)
-    register_operation_iterator(cos, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(tan)
-    register_operation_iterator(tan, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(cot)
-    register_operation_iterator(cot, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(csc)
-    register_operation_iterator(csc, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(sec)
-    register_operation_iterator(sec, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(sinh)
-    register_operation_iterator(sinh, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(cosh)
-    register_operation_iterator(cosh, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(tanh)
-    register_operation_iterator(tanh, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(coth)
-    register_operation_iterator(coth, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(csch)
-    register_operation_iterator(csch, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(sech)
-    register_operation_iterator(sech, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(asin)
-    register_operation_iterator(asin, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(acos)
-    register_operation_iterator(acos, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(atan)
-    register_operation_iterator(atan, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(acot)
-    register_operation_iterator(acot, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(acsc)
-    register_operation_iterator(acsc, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(asec)
-    register_operation_iterator(asec, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(asinh)
-    register_operation_iterator(asinh, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(acosh)
-    register_operation_iterator(acosh, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(atanh)
-    register_operation_iterator(atanh, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(acoth)
-    register_operation_iterator(acoth, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(acsch)
-    register_operation_iterator(acsch, lambda a: a._args, lambda a: len(a._args))
-
-    Operation.register(asech)
-    register_operation_iterator(asech, lambda a: a._args, lambda a: len(a._args))
-
-    def sympy_op_factory(old_operation, new_operands, variable_name):
-         return type(old_operation)(*new_operands)
-
-    register_operation_factory(Basic, sympy_op_factory)
-
-    A_, B_, C_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, z_ = [WC(i) for i in 'ABCabcdefghijklmnpqrtuvswxz']
-    a1_, a2_, b1_, b2_, c1_, c2_, d1_, d2_, n1_, n2_, e1_, e2_, f1_, f2_, n1_, n2_, n3_, Pq_, Pm_, Px_, Qm_, Qr_, jn_, mn_, non2_ = [WC(i) for i in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'n1', 'n2', 'e1', 'e2', 'f1', 'f2', 'n1', 'n2', 'n3',' Pq', 'Pm', ' Px', 'Qm', 'Qr', 'jn', 'mn', 'non2']]
-    p, q = symbols('p q')
-
-def rubi_object():
-    rubi = ManyToOneReplacer()
-
-'''
 
 def parse_full_form(wmexpr):
-    '''
+    """
     Parses FullForm[Downvalues[]] generated by Mathematica
-    '''
+    """
     out = []
     stack = [out]
     generator = re.finditer(r'[\[\],]', wmexpr)
@@ -177,25 +166,25 @@ def parse_full_form(wmexpr):
         last_pos = match.end()
     return out[0]
 
-def get_default_values(parsed, default_values={}):
-    '''
-    Returns Optional variables and their values in the pattern.
-    '''
 
+def get_default_values(parsed, default_values={}):
+    """
+    Returns Optional variables and their values in the pattern
+    """
     if not isinstance(parsed, list):
         return default_values
 
-    if parsed[0] == "Times": # find Default arguments for "Times"
+    if parsed[0] == "Times":  # find Default arguments for "Times"
         for i in parsed[1:]:
             if i[0] == "Optional":
                 default_values[(i[1][1])] = 1
 
-    if parsed[0] == "Plus": # find Default arguments for "Plus"
+    if parsed[0] == "Plus":  # find Default arguments for "Plus"
         for i in parsed[1:]:
             if i[0] == "Optional":
                 default_values[(i[1][1])] = 0
 
-    if parsed[0] == "Power": # find Default arguments for "Power"
+    if parsed[0] == "Power":  # find Default arguments for "Power"
         for i in parsed[1:]:
             if i[0] == "Optional":
                 default_values[(i[1][1])] = 1
@@ -208,13 +197,13 @@ def get_default_values(parsed, default_values={}):
 
     return default_values
 
+
 def add_wildcards(string, optional={}):
-    '''
+    """
     Replaces `Pattern(variable)` by `variable` in `string`.
     Returns the free symbols present in the string.
-    '''
-
-    symbols = [] # stores symbols present in the expression
+    """
+    symbols = []  # stores symbols present in the expression
 
     p = r'(Optional\(Pattern\((\w+), Blank\)\))'
     matches = re.findall(p, string)
@@ -236,10 +225,11 @@ def add_wildcards(string, optional={}):
 
     return string, symbols
 
+
 def seperate_freeq(s, variables=[], x=None):
-    '''
-    Helper function for parse_freeq().
-    '''
+    """
+    Returns list of symbols in FreeQ.
+    """
     if s[0] == 'FreeQ':
         if len(s[1]) == 1:
             variables = [s[1]]
@@ -249,33 +239,71 @@ def seperate_freeq(s, variables=[], x=None):
     else:
         for i in s[1:]:
             variables, x = seperate_freeq(i, variables, x)
+            return variables, x
     return variables, x
 
-def parse_freeq(l, x):
-    '''
-    Divies FreeQ() constraint into smaller constraints.
-    '''
+
+def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
+    """
+    Converts FreeQ constraints into MatchPy constraint
+    """
     res = []
+    cons = ''
     for i in l:
-        res.append(('CustomConstraint(lambda {}, {}: FreeQ({}, {}))').format(i, x, i, x))
+        if isinstance(i, string_types):
+            r = '        return FreeQ({}, {})'.format(i, x)
+            # First it checks if a constraint is already present in `cons_dict`, If yes, use it else create a new one.
+            if r not in cons_dict.values():
+                cons_index += 1
+                c = '\n    def cons_f{}({}, {}):\n'.format(cons_index, i, x)
+                c += r
+                c += '\n\n    cons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+                cons_name = 'cons{}'.format(cons_index)
+                cons_dict[cons_name] = r
+            else:
+                c = ''
+                cons_name = next(key for key, value in sorted(cons_dict.items()) if value == r)
+
+        elif isinstance(i, list):
+            s = sorted(set(get_free_symbols(i, symbols)))
+            s = ', '.join(s)
+            r = '        return FreeQ({}, {})'.format(generate_sympy_from_parsed(i), x)
+            if r not in cons_dict.values():
+                cons_index += 1
+                c = '\n    def cons_f{}({}):\n'.format(cons_index, s)
+                c += r
+                c += '\n\n    cons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+                cons_name = 'cons{}'.format(cons_index)
+                cons_dict[cons_name] = r
+            else:
+                c = ''
+                cons_name = next(key for key, value in cons_dict.items() if value == r)
+
+        if cons_name not in cons_import:
+            cons_import.append(cons_name)
+
+        res.append(cons_name)
+        cons += c
+
     if res != []:
-        return ', ' + ', '.join(res)
-    return ''
+        return ', ' + ', '.join(res), cons, cons_index
+    return '', cons, cons_index
+
 
 def generate_sympy_from_parsed(parsed, wild=False, symbols=[], replace_Int=False):
-    '''
+    """
     Parses list into Python syntax.
 
     Parameters
     ==========
     wild : When set to True, the symbols are replaced as wild symbols.
     symbols : Symbols already present in the pattern.
-    replace_Int : When set to True, `Int` is replaced by `Integral`(used to parse pattern in the rule).
-    '''
+    replace_Int: when set to True, `Int` is replaced by `Integral`(used to parse pattern).
+    """
     out = ""
 
     if not isinstance(parsed, list):
-        try: #return S(number) if parsed is Number
+        try:  # return S(number) if parsed is Number
             float(parsed)
             return "S({})".format(parsed)
         except:
@@ -287,32 +315,33 @@ def generate_sympy_from_parsed(parsed, wild=False, symbols=[], replace_Int=False
 
     if parsed[0] == 'Rational':
         return 'S({})/S({})'.format(generate_sympy_from_parsed(parsed[1], wild=wild, symbols=symbols, replace_Int=replace_Int), generate_sympy_from_parsed(parsed[2], wild=wild, symbols=symbols, replace_Int=replace_Int))
-    elif parsed[0] != 'FreeQ': # FreeQ is parsed seperately
-        if parsed[0] in replacements:
-            out += replacements[parsed[0]]
-        else:
-            if parsed[0] == 'Int' and replace_Int:
-                out += 'Integral'
-            else:
-                out += parsed[0]
 
-        if len(parsed) == 1:
-            return out
+    if parsed[0] in replacements:
+        out += replacements[parsed[0]]
+    elif parsed[0] == 'Int' and replace_Int:
+        out += 'Integral'
+    else:
+        out += parsed[0]
 
-        result = [generate_sympy_from_parsed(i, wild=wild, symbols=symbols, replace_Int=replace_Int) for i in parsed[1:]]
-        if '' in result:
-            result.remove('')
+    if len(parsed) == 1:
+        return out
 
-        out += "("
-        out += ", ".join(result)
-        out += ")"
+    result = [generate_sympy_from_parsed(i, wild=wild, symbols=symbols, replace_Int=replace_Int) for i in parsed[1:]]
+    if '' in result:
+        result.remove('')
+
+    out += "("
+    out += ", ".join(result)
+    out += ")"
 
     return out
 
-def get_free_symbols(s, symbols, free_symbols=[]):
-    '''
-    Returns free symbols present in `s`.
-    '''
+
+def get_free_symbols(s, symbols, free_symbols=None):
+    """
+    Returns free_symbols present in `s`.
+    """
+    free_symbols = free_symbols or []
     if not isinstance(s, list):
         if s in symbols:
             free_symbols.append(s)
@@ -323,33 +352,112 @@ def get_free_symbols(s, symbols, free_symbols=[]):
 
     return free_symbols
 
-def _divide_constriant(s, symbols):
-    # Creates a CustomConstraint of the form `CustomConstraint(lambda a, x: FreeQ(a, x))`
-    if s[0] == 'FreeQ':
-        return ''
-    lambda_symbols = list(set(get_free_symbols(s, symbols, [])))
-    return 'CustomConstraint(lambda {}: {})'.format(', '.join(lambda_symbols), sstr(sympify(generate_sympy_from_parsed(s)), sympy_integers=True))
 
-def divide_constraint(s, symbols):
-    '''
-    Divides multiple constraints into smaller constraints.
-    '''
-    if s[0] == 'And':
-        result = [_divide_constriant(i, symbols) for i in s[1:]]
+def set_matchq_in_constraint(a, cons_index):
+    """
+    Takes care of the case, when a pattern matching has to be done inside a constraint.
+    """
+    lst = []
+    res = ''
+    if isinstance(a, list):
+        if a[0] == 'MatchQ':
+            s = a
+            optional = get_default_values(s, {})
+            r = generate_sympy_from_parsed(s, replace_Int=True)
+            r, free_symbols = add_wildcards(r, optional=optional)
+            free_symbols = sorted(set(free_symbols))  # remove common symbols
+            r = sympify(r, locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not")})
+            pattern = r.args[1].args[0]
+            cons = r.args[1].args[1]
+            pattern = rubi_printer(pattern, sympy_integers=True)
+            pattern = setWC(pattern)
+            res = '        def _cons_f_{}({}):\n            return {}\n'.format(cons_index, ', '.join(free_symbols), cons)
+            res += '        _cons_{} = CustomConstraint(_cons_f_{})\n'.format(cons_index, cons_index)
+            res += '        pat = Pattern(UtilityOperator({}, x), _cons_{})\n'.format(pattern, cons_index)
+            res += '        result_matchq = is_match(UtilityOperator({}, x), pat)'.format(r.args[0])
+            return "result_matchq", res
+
+        else:
+            for i in a:
+                if isinstance(i, list):
+                    r = set_matchq_in_constraint(i, cons_index)
+                    lst.append(r[0])
+                    res = r[1]
+                else:
+                    lst.append(i)
+    return lst, res
+
+
+def _divide_constriant(s, symbols, cons_index, cons_dict, cons_import):
+    # Creates a CustomConstraint of the form `CustomConstraint(lambda a, x: FreeQ(a, x))`
+    lambda_symbols = sorted(set(get_free_symbols(s, symbols, [])))
+    r = generate_sympy_from_parsed(s)
+    r = sympify(r, locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not")})
+    if r.has(Function('MatchQ')):
+        match_res = set_matchq_in_constraint(s, cons_index)
+        res = match_res[1]
+        res += '\n        return {}'.format(rubi_printer(sympify(generate_sympy_from_parsed(match_res[0]), locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not")}), sympy_integers = True))
+
+    elif contains_diff_return_type(s):
+        res = '        try:\n            return {}\n        except (TypeError, AttributeError):\n            return False'.format(rubi_printer(r, sympy_integers=True))
     else:
-        result = [_divide_constriant(s, symbols)]
+        res = '        return {}'.format(rubi_printer(r, sympy_integers=True))
+
+    # First it checks if a constraint is already present in `cons_dict`, If yes, use it else create a new one.
+    if not res in cons_dict.values():
+        cons_index += 1
+        cons = '\n    def cons_f{}({}):\n'.format(cons_index, ', '.join(lambda_symbols))
+        if 'x' in lambda_symbols:
+            cons += '        if isinstance(x, (int, Integer, float, Float)):\n            return False\n'
+        cons += res
+        cons += '\n\n    cons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+        cons_name = 'cons{}'.format(cons_index)
+        cons_dict[cons_name] = res
+    else:
+        cons = ''
+        cons_name = next(key for key, value in cons_dict.items() if value == res)
+
+    if cons_name not in cons_import:
+        cons_import.append(cons_name)
+    return cons_name, cons, cons_index
+
+
+def divide_constraint(s, symbols, cons_index, cons_dict, cons_import):
+    """
+    Divides multiple constraints into smaller constraints.
+
+    Parameters
+    ==========
+    s : constraint as list
+    symbols : all the symbols present in the expression
+    """
+    result =[]
+    cons = ''
+    if s[0] == 'And':
+        for i in s[1:]:
+            if i[0]!= 'FreeQ':
+                a = _divide_constriant(i, symbols, cons_index, cons_dict, cons_import)
+                result.append(a[0])
+                cons += a[1]
+                cons_index = a[2]
+    else:
+        a = _divide_constriant(s, symbols, cons_index, cons_dict, cons_import)
+        result.append(a[0])
+        cons += a[1]
+        cons_index = a[2]
 
     r = ['']
     for i in result:
         if i != '':
             r.append(i)
 
-    return ', '.join(r)
+    return ', '.join(r),cons, cons_index
+
 
 def setWC(string):
-    '''
+    """
     Replaces `WC(a, b)` by `WC('a', S(b))`
-    '''
+    """
     p = r'(WC\((\w+), S\(([-+]?\d)\)\))'
     matches = re.findall(p, string)
     for i in matches:
@@ -357,17 +465,152 @@ def setWC(string):
 
     return string
 
-def downvalues_rules(r, parsed):
-    '''
+
+def process_return_type(a1, L):
+    """
+    Functions like `Set`, `With` and `CompoundExpression` has to be taken special care.
+    """
+    a = sympify(a1[1])
+    x = ''
+    processed = False
+    return_value = ''
+    if type(a) == Function('With') or type(a) == Function('Module'):
+        for i in a.args:
+            for s in i.args:
+                if isinstance(s, Set) and not s in L:
+                    x += '\n        {} = {}'.format(s.args[0], rubi_printer(s.args[1], sympy_integers=True))
+
+            if not type(i) in (Function('List'),  Function('CompoundExpression')) and not i.has(Function('CompoundExpression')):
+                return_value = i
+                processed = True
+
+            elif type(i) == Function('CompoundExpression'):
+                return_value = i.args[-1]
+                processed = True
+
+            elif type(i.args[0]) == Function('CompoundExpression'):
+                C = i.args[0]
+                return_value = '{}({}, {})'.format(i.func, C.args[-1], i.args[1])
+                processed = True
+    return x, return_value, processed
+
+
+def extract_set(s, L):
+    """
+    this function extracts all `Set` functions
+    """
+    lst = []
+    if isinstance(s, Set) and not s in L:
+        lst.append(s)
+    else:
+        try:
+            for i in s.args:
+                lst += extract_set(i, L)
+        except:  # when s has no attribute args (like `bool`)
+            pass
+    return lst
+
+
+def replaceWith(s, symbols, index):
+    """
+    Replaces `With` and `Module by python functions`
+    """
+    return_type = None
+    with_value = ''
+    if type(s) == Function('With') or type(s) == Function('Module'):
+        constraints = ' '
+        result = '\n\n\ndef With{}({}):'.format(index, ', '.join(symbols))
+        if type(s.args[0]) == Function('List'):  # get all local variables of With and Module
+            L = list(s.args[0].args)
+        else:
+            L = [s.args[0]]
+        lst = []
+        for i in s.args[1:]:
+            lst += extract_set(i, L)
+
+        L += lst
+        for i in L:  # define local variables
+            if isinstance(i, Set):
+                with_value += '\n    {} = {}'.format(i.args[0], rubi_printer(i.args[1], sympy_integers=True))
+
+            elif isinstance(i, Symbol):
+                with_value += "\n    {} = Symbol('{}')".format(i, i)
+        #result += with_value
+        if type(s.args[1]) == Function('CompoundExpression'):  # Expand CompoundExpression
+            C = s.args[1]
+            result += with_value
+            if isinstance(C.args[0], Set):
+                result += '\n    {} = {}'.format(C.args[0].args[0], C.args[0].args[1])
+            result += '\n    return {}'.format(rubi_printer(C.args[1], sympy_integers=True))
+            return result, constraints, return_type
+
+        elif type(s.args[1]) == Function('Condition'):
+            C = s.args[1]
+            if len(C.args) == 2:
+                if all(j in symbols for j in [str(i) for i in C.free_symbols]):
+                    result += with_value
+                    #constraints += 'CustomConstraint(lambda {}: {})'.format(', '.join([str(i) for i in C.free_symbols]), sstr(C.args[1], sympy_integers=True))
+                    result += '\n    return {}'.format(rubi_printer(C.args[0], sympy_integers=True))
+                else:
+                    if 'x' in symbols:
+                        result += '\n    if isinstance(x, (int, Integer, float, Float)):\n        return False'
+
+                    if contains_diff_return_type(s):
+                        n_with_value = with_value.replace('\n', '\n    ')
+                        result += '\n    try:{}\n        res = {}'.format(n_with_value, rubi_printer(C.args[1], sympy_integers=True))
+                        result += '\n    except (TypeError, AttributeError):\n        return False'
+                        result += '\n    if res:'
+
+                    else:
+                        result+=with_value
+                        result += '\n    if {}:'.format(rubi_printer(C.args[1], sympy_integers=True))
+                    return_type = (with_value, rubi_printer(C.args[0], sympy_integers=True))
+                    return_type1 = process_return_type(return_type, L)
+                    if return_type1[2]:
+                        return_type = (with_value+return_type1[0], rubi_printer(return_type1[1]))
+                    result += '\n        return True'
+                    result += '\n    return False'
+            constraints = ', CustomConstraint(With{})'.format(index)
+            return result, constraints, return_type
+
+        elif type(s.args[1]) == Function('Module') or type(s.args[1]) == Function('With'):
+            C = s.args[1]
+            result += with_value
+            return_type = (with_value, rubi_printer(C, sympy_integers=True))
+            return_type1 = process_return_type(return_type, L)
+            if return_type1[2]:
+                return_type = (with_value+return_type1[0], rubi_printer(return_type1[1]))
+            result += return_type1[0]
+            result += '\n    return {}'.format(rubi_printer(return_type1[1]))
+            return result, constraints, None
+
+        elif s.args[1].has(Function("CompoundExpression")):
+            C = s.args[1].args[0]
+            result += with_value
+            if isinstance(C.args[0], Set):
+                result += '\n    {} = {}'.format(C.args[0].args[0], C.args[0].args[1])
+            result += '\n    return {}({}, {})'.format(s.args[1].func, C.args[-1], s.args[1].args[1])
+            return result, constraints, None
+
+        result += with_value
+        result += '\n    return {}'.format(rubi_printer(s.args[1], sympy_integers=True))
+        return result, constraints, return_type
+    else:
+        return rubi_printer(s, sympy_integers=True), '', return_type
+
+
+def downvalues_rules(r, header, cons_dict, cons_index, index):
+    """
     Function which generates parsed rules by substituting all possible
     combinations of default values.
-    '''
-    res = []
-
-    index = 0
+    """
+    rules = '['
+    parsed = '\n\n'
+    repl_funcs = '\n\n'
+    cons = ''
+    cons_import = [] # it contains name of constraints that need to be imported for rules.
     for i in r:
-        #print('parsing rule {}'.format(r.index(i) + 1)) # uncomment to display number of rules parsed
-
+        debug('parsing rule {}'.format(r.index(i) + 1))
         # Parse Pattern
         if i[1][1][0] == 'Condition':
             p = i[1][1][1].copy()
@@ -377,60 +620,103 @@ def downvalues_rules(r, parsed):
         optional = get_default_values(p, {})
         pattern = generate_sympy_from_parsed(p.copy(), replace_Int=True)
         pattern, free_symbols = add_wildcards(pattern, optional=optional)
-        free_symbols = list(set(free_symbols)) #remove common symbols
-
+        free_symbols = sorted(set(free_symbols)) #remove common symbols
         # Parse Transformed Expression and Constraints
-        if i[2][0] == 'Condition': # parse rules without constraints seperately
-            constriant = divide_constraint(i[2][2], free_symbols) # seperate And constraints into indivdual constraints
-            FreeQ_vars, FreeQ_x = seperate_freeq(i[2][2].copy()) # seperate FreeQ into indivdual constraints
+        if i[2][0] == 'Condition':  # parse rules without constraints separately
+            constriant, constraint_def, cons_index = divide_constraint(i[2][2], free_symbols, cons_index, cons_dict, cons_import) # separate And constraints into individual constraints
+            FreeQ_vars, FreeQ_x = seperate_freeq(i[2][2].copy()) # separate FreeQ into individual constraints
             transformed = generate_sympy_from_parsed(i[2][1].copy(), symbols=free_symbols)
         else:
             constriant = ''
+            constraint_def = ''
             FreeQ_vars, FreeQ_x = [], []
             transformed = generate_sympy_from_parsed(i[2].copy(), symbols=free_symbols)
+        FreeQ_constraint, free_cons_def, cons_index = parse_freeq(FreeQ_vars, FreeQ_x, cons_index, cons_dict, cons_import, free_symbols)
+        pattern = sympify(pattern, locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not") })
+        pattern = rubi_printer(pattern, sympy_integers=True)
 
-        FreeQ_constraint = parse_freeq(FreeQ_vars, FreeQ_x)
-        pattern = sympify(pattern)
-        pattern = sstr(pattern, sympy_integers=True)
         pattern = setWC(pattern)
-        transformed = sympify(transformed)
-        transformed = sstr(transformed, sympy_integers=True)
-
+        transformed = sympify(transformed, locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not") })
+        constraint_def = constraint_def + free_cons_def
+        cons += constraint_def
         index += 1
-        parsed = parsed + '    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
-        parsed = parsed + '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', lambda ' + ', '.join(free_symbols) + ' : ' + transformed + ')\n    '
-        parsed = parsed + 'rubi.add(rule'+ str(index) +')\n\n'
 
-    parsed = parsed + '    return rubi\n'
+        # below are certain if - else condition depending on various situation that may be encountered
+        if type(transformed) == Function('With') or type(transformed) == Function('Module'): # define separate function when With appears
+            transformed, With_constraints, return_type = replaceWith(transformed, free_symbols, index)
+            if return_type is None:
+                repl_funcs += '{}'.format(transformed)
+                parsed += '\n    pattern' + str(index) + ' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
+                parsed += '\n    ' + 'rule' + str(index) + ' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', With{}'.format(index) + ')\n'
+            else:
+                repl_funcs += '{}'.format(transformed)
+                parsed += '\n    pattern' + str(index) + ' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + With_constraints + ')'
+                repl_funcs += '\n\n\ndef replacement{}({}):\n'.format(
+                    index, ', '.join(free_symbols)
+                ) + return_type[0] + '\n    return '.format(index) + return_type[1]
+                parsed += '\n    ' + 'rule' + str(index) + ' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
 
-    # Replace modified functions such as `_Sum`
-    parsed = parsed.replace('_Sum', 'Sum')
+        else:
+            transformed = rubi_printer(transformed, sympy_integers=True)
+            parsed += '\n    pattern' + str(index) + ' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
+            repl_funcs += '\n\n\ndef replacement{}({}):\n    return '.format(index, ', '.join(free_symbols), index) + transformed
+            parsed += '\n    ' + 'rule' + str(index) + ' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
+        rules += 'rule{}, '.format(index)
+    rules += ']'
+    parsed += '    return ' + rules +'\n'
 
-    return parsed
+    header += '    from sympy.integrals.rubi.constraints import ' + ', '.join(word for word in cons_import)
+    parsed = header + parsed + repl_funcs
+    return parsed, cons_index, cons, index
 
-def rubi_rule_parser(fullform, header=None):
-    '''
+
+def rubi_rule_parser(fullform, header=None, module_name='rubi_object'):
+    """
     Parses rules in MatchPy format.
 
     Parameters
     ==========
     fullform : FullForm of the rule as string.
     header : Header imports for the file. Uses default imports if None.
+    module_name : name of RUBI module
 
     References
     ==========
     [1] http://reference.wolfram.com/language/ref/FullForm.html
     [2] http://reference.wolfram.com/language/ref/DownValues.html
     [3] https://gist.github.com/Upabjojr/bc07c49262944f9c1eb0
-    '''
-    if not header: # use default header values
-        header = parsed
+    """
 
-    res = parse_full_form(fullform)
+    if header is None:  # use default header values
+        path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        header = open(os.path.join(path_header, "header.py.txt"), "r").read()
+        header = header.format(module_name)
+
+    cons_dict = {}  # dict keeps track of constraints that has been encountered, thus avoids repetition of constraints.
+    cons_index = 0  # for index of a constraint
+    index = 0  # indicates the number of a rule.
+    cons = ''
+
+    # Temporarily rename these variables because it
+    # can raise errors while sympifying
+    for i in temporary_variable_replacement:
+        fullform = fullform.replace(i, temporary_variable_replacement[i])
+    # Permanently rename these variables
+    for i in permanent_variable_replacement:
+        fullform = fullform.replace(i, permanent_variable_replacement[i])
+
     rules = []
-
-    for i in res: # separate all rules
+    for i in parse_full_form(fullform): # separate all rules
         if i[0] == 'RuleDelayed':
             rules.append(i)
-
-    return downvalues_rules(rules, header).strip()
+    parsed = downvalues_rules(rules, header, cons_dict, cons_index, index)
+    result = parsed[0].strip() + '\n'
+    cons_index = parsed[1]
+    cons += parsed[2]
+    index = parsed[3]
+    # Replace temporary variables by actual values
+    for i in temporary_variable_replacement:
+        cons = cons.replace(temporary_variable_replacement[i], i)
+        result = result.replace(temporary_variable_replacement[i], i)
+    cons = "\n".join(header.split("\n")[:-2]) + '\n' + cons
+    return result, cons

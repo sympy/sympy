@@ -1,8 +1,9 @@
-import warnings
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    from sympy.matrices.densetools import trace, transpose
-    from sympy.matrices.densetools import eye
+from sympy.utilities.pytest import ignore_warnings
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+with ignore_warnings(SymPyDeprecationWarning):
+    from sympy.matrices.densetools import trace, transpose, eye
+
 from sympy import ZZ
 
 def test_trace():

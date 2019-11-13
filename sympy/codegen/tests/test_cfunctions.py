@@ -2,6 +2,7 @@ from sympy import symbols, Symbol, exp, log, pi, Rational, S
 from sympy.codegen.cfunctions import (
     expm1, log1p, exp2, log2, fma, log10, Sqrt, Cbrt, hypot
 )
+from sympy.core.function import expand_log
 
 
 def test_expm1():
@@ -32,7 +33,7 @@ def test_log1p():
     # Eval
     assert log1p(0) == 0
     d = S(10)
-    assert log1p(d**-1000) - log(d**1000 + 1) + log(d**1000) == 0
+    assert expand_log(log1p(d**-1000) - log(d**1000 + 1) + log(d**1000)) == 0
 
     x = Symbol('x', real=True, finite=True)
 
@@ -43,10 +44,10 @@ def test_log1p():
 
     # Precision
     assert not abs(log(1e-99 + 1).evalf() - 1e-99) < 1e-100  # for comparison
-    assert abs(log1p(1e-99).evalf() - 1e-99) < 1e-100
+    assert abs(expand_log(log1p(1e-99)).evalf() - 1e-99) < 1e-100
 
     # Properties
-    assert log1p(-2**(-S(1)/2)).is_real
+    assert log1p(-2**Rational(-1, 2)).is_real
 
     assert not log1p(-1).is_finite
     assert log1p(pi).is_finite
@@ -140,10 +141,10 @@ def test_Sqrt():
     x = Symbol('x')
 
     # Expand
-    assert Sqrt(x).expand(func=True) - x**Rational(1, 2) == 0
+    assert Sqrt(x).expand(func=True) - x**S.Half == 0
 
     # Diff
-    assert Sqrt(42*x).diff(x) - 42*(42*x)**(Rational(1, 2) - 1)/2 == 0
+    assert Sqrt(42*x).diff(x) - 42*(42*x)**(S.Half - 1)/2 == 0
     assert Sqrt(42*x).diff(x) - Sqrt(42*x).expand(func=True).diff(x) == 0
 
 
@@ -151,7 +152,7 @@ def test_hypot():
     x, y = symbols('x y')
 
     # Expand
-    assert hypot(x, y).expand(func=True) - (x**2 + y**2)**Rational(1, 2) == 0
+    assert hypot(x, y).expand(func=True) - (x**2 + y**2)**S.Half == 0
 
     # Diff
     assert hypot(17*x, 42*y).diff(x).expand(func=True) - hypot(17*x, 42*y).expand(func=True).diff(x) == 0

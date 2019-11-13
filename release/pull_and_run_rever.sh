@@ -11,6 +11,7 @@ set -x
 if [[ -z $2 ]]; then
     $2=$1
 fi
+git pull
 git checkout $1
 git pull
 

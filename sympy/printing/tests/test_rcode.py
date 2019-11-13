@@ -1,7 +1,7 @@
-from sympy.core import (pi, oo, Symbol, symbols, Rational, Integer,
+from sympy.core import (S, pi, oo, Symbol, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, sign, Max)
+                             gamma, sign, Max, Min, factorial, beta)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
@@ -82,6 +82,8 @@ def test_rcode_Integer():
 
 def test_rcode_functions():
     assert rcode(sin(x) ** cos(x)) == "sin(x)^cos(x)"
+    assert rcode(factorial(x) + gamma(y)) == "factorial(x) + gamma(y)"
+    assert rcode(beta(Min(x, y), Max(x, y))) == "beta(min(x, y), max(x, y))"
 
 
 def test_rcode_inline_function():
@@ -122,8 +124,13 @@ def test_rcode_user_functions():
 
 
 def test_rcode_boolean():
+    assert rcode(True) == "True"
+    assert rcode(S.true) == "True"
+    assert rcode(False) == "False"
+    assert rcode(S.false) == "False"
     assert rcode(x & y) == "x & y"
     assert rcode(x | y) == "x | y"
+    assert rcode(~x) == "!x"
     assert rcode(x & y & z) == "x & y & z"
     assert rcode(x | y | z) == "x | y | z"
     assert rcode((x & y) | z) == "z | x & y"
@@ -183,9 +190,9 @@ def test_rcode_Piecewise_deep():
 
 
 def test_rcode_ITE():
-    expr = ITE(x < 1, x, x**2)
+    expr = ITE(x < 1, y, z)
     p = rcode(expr)
-    ref="ifelse(x < 1,x,x^2)"
+    ref="ifelse(x < 1,y,z)"
     assert p == ref
 
 
@@ -481,4 +488,4 @@ def test_MatrixElement_printing():
     assert(rcode(3 * A[0, 0]) == "3*A[0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(rcode(F) == "((-1)*B + A)[0]")
+    assert(rcode(F) == "(A - B)[0]")

@@ -1,8 +1,9 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy
-)
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy)
+from sympy.core.symbol import _uniquely_named_symbol, _symbol
 
 from sympy.utilities.pytest import raises
+from sympy.core.symbol import disambiguate
 
 
 def test_Symbol():
@@ -43,18 +44,6 @@ def test_Dummy_force_dummy_index():
     d3 = Dummy('d', dummy_index=3)
     assert d1 == d3
     assert Dummy()._count == Dummy('d', dummy_index=3)._count
-
-
-def test_as_dummy():
-    x = Symbol('x')
-    x1 = x.as_dummy()
-    assert x1 != x
-    assert x1 != x.as_dummy()
-
-    x = Symbol('x', commutative=False)
-    x1 = x.as_dummy()
-    assert x1 != x
-    assert x1.is_commutative is False
 
 
 def test_lt_gt():
@@ -179,7 +168,7 @@ def test_Wild_properties():
     integerp = lambda k: k.is_integer
     positivep = lambda k: k.is_positive
     symbolp = lambda k: k.is_Symbol
-    realp = lambda k: k.is_real
+    realp = lambda k: k.is_extended_real
 
     S = Wild("S", properties=[symbolp])
     R = Wild("R", properties=[realp])
@@ -330,10 +319,14 @@ def test_symbols():
     raises(ValueError, lambda: symbols('::a'))
 
 
-def test_call():
-    f = Symbol('f')
-    assert f(2)
-    raises(TypeError, lambda: Wild('x')(1))
+def test_symbols_become_functions_issue_3539():
+    from sympy.abc import alpha, phi, beta, t
+    raises(TypeError, lambda: beta(2))
+    raises(TypeError, lambda: beta(2.5))
+    raises(TypeError, lambda: phi(2.5))
+    raises(TypeError, lambda: alpha(2.5))
+    raises(TypeError, lambda: phi(t))
+
 
 def test_unicode():
     xu = Symbol(u'x')
@@ -341,3 +334,50 @@ def test_unicode():
     assert x == xu
 
     raises(TypeError, lambda: Symbol(1))
+
+
+def test__uniquely_named_symbol_and__symbol():
+    F = _uniquely_named_symbol
+    x = Symbol('x')
+    assert F(x) == x
+    assert F('x') == x
+    assert str(F('x', x)) == '_x'
+    assert str(F('x', (x + 1, 1/x))) == '_x'
+    _x = Symbol('x', real=True)
+    assert F(('x', _x)) == _x
+    assert F((x, _x)) == _x
+    assert F('x', real=True).is_real
+    y = Symbol('y')
+    assert F(('x', y), real=True).is_real
+    r = Symbol('x', real=True)
+    assert F(('x', r)).is_real
+    assert F(('x', r), real=False).is_real
+    assert F('x1', Symbol('x1'),
+        compare=lambda i: str(i).rstrip('1')).name == 'x1'
+    assert F('x1', Symbol('x1'),
+        modify=lambda i: i + '_').name == 'x1_'
+    assert _symbol(x, _x) == x
+
+
+def test_disambiguate():
+    x, y, y_1, _x, x_1, x_2 = symbols('x y y_1 _x x_1 x_2')
+    t1 = Dummy('y'), _x, Dummy('x'), Dummy('x')
+    t2 = Dummy('x'), Dummy('x')
+    t3 = Dummy('x'), Dummy('y')
+    t4 = x, Dummy('x')
+    t5 = Symbol('x', integer=True), x, Symbol('x_1')
+
+    assert disambiguate(*t1) == (y, x_2, x, x_1)
+    assert disambiguate(*t2) == (x, x_1)
+    assert disambiguate(*t3) == (x, y)
+    assert disambiguate(*t4) == (x_1, x)
+    assert disambiguate(*t5) == (t5[0], x_2, x_1)
+    assert disambiguate(*t5)[0] != x  # assumptions are retained
+
+    t6 = _x, Dummy('x')/y
+    t7 = y*Dummy('y'), y
+
+    assert disambiguate(*t6) == (x_1, x/y)
+    assert disambiguate(*t7) == (y*y_1, y_1)
+    assert disambiguate(Dummy('x_1'), Dummy('x_1')
+        ) == (x_1, Symbol('x_1_1'))
