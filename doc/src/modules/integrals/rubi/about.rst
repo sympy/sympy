@@ -17,7 +17,7 @@ Python3.6 so RUBI is not supported by Python versions less than 3.6.
 Note
 ----
 
-Please note that this module is experimental. Therefor, API may change unexpectedly
+Please note that this module is experimental. Therefore, API may change unexpectedly
 between SymPy versions.
 
 References
