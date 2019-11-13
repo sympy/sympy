@@ -302,6 +302,7 @@ def test_Cycle():
 
 def test_Permutation():
     import_stmt = "from sympy.combinatorics import Permutation"
+    print_cyclic = Permutation.print_cyclic
     Permutation.print_cyclic = True
     sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
-    Permutation.print_cyclic = False
+    Permutation.print_cyclic = print_cyclic
