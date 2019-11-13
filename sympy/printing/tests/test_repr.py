@@ -305,6 +305,6 @@ def test_Permutation():
     print_cyclic = Permutation.print_cyclic
     Permutation.print_cyclic = True
     try:
-    	sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
+        sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
     finally:
-    	Permutation.print_cyclic = print_cyclic
+        Permutation.print_cyclic = print_cyclic
