@@ -58,7 +58,7 @@ class jacobi(OrthogonalPolynomial):
     Explanation
     ===========
 
-    ``jacobi`` (n, alpha, beta, x) gives the nth Jacobi polynomial
+    ``jacobi(n, alpha, beta, x)`` gives the nth Jacobi polynomial
     in x, $P_n^{\left(\alpha, \beta\right)}(x)$.
 
     The Jacobi polynomials are orthogonal on $[-1, 1]$ with respect
@@ -220,7 +220,7 @@ def jacobi_normalized(n, a, b, x):
     Explanation
     ===========
 
-    ``jacobi_normalized`` (*n*, *alpha*, *beta*, *x*) gives the nth
+    ``jacobi_normalized(n, alpha, beta, x)`` gives the nth
     Jacobi polynomial in *x*, $P_n^{\left(\alpha, \beta\right)}(x)$.
 
     The Jacobi polynomials are orthogonal on $[-1, 1]$ with respect
@@ -287,7 +287,7 @@ class gegenbauer(OrthogonalPolynomial):
     Explanation
     ===========
 
-    ``gegenbauer`` (n, alpha, x) gives the nth Gegenbauer polynomial
+    ``gegenbauer(n, alpha, x)`` gives the nth Gegenbauer polynomial
     in x, $C_n^{\left(\alpha\right)}(x)$.
 
     The Gegenbauer polynomials are orthogonal on $[-1, 1]$ with
@@ -434,7 +434,7 @@ class chebyshevt(OrthogonalPolynomial):
     Explanation
     ===========
 
-    ``chebyshevt`` (n, x) gives the nth Chebyshev polynomial (of the first
+    ``chebyshevt(n, x)`` gives the nth Chebyshev polynomial (of the first
     kind) in x, $T_n(x)$.
 
     The Chebyshev polynomials of the first kind are orthogonal on
@@ -546,7 +546,7 @@ class chebyshevu(OrthogonalPolynomial):
     Explanation
     ===========
 
-    ``chebyshevu`` (n, x) gives the nth Chebyshev polynomial of the second
+    ``chebyshevu(n, x)`` gives the nth Chebyshev polynomial of the second
     kind in x, $U_n(x)$.
 
     The Chebyshev polynomials of the second kind are orthogonal on
@@ -661,9 +661,9 @@ class chebyshevu(OrthogonalPolynomial):
 
 class chebyshevt_root(Function):
     r"""
-    ``chebyshev_root`` (n, k) returns the kth root (indexed from zero) of
+    ``chebyshev_root(n, k)`` returns the kth root (indexed from zero) of
     the nth Chebyshev polynomial of the first kind; that is, if
-    0 <= k < n, ``chebyshevt`` (n, chebyshevt_root(n, k)) == 0.
+    0 <= k < n, ``chebyshevt(n, chebyshevt_root(n, k)) == 0``.
 
     Examples
     ========
@@ -701,9 +701,9 @@ class chebyshevt_root(Function):
 
 class chebyshevu_root(Function):
     r"""
-    ``chebyshevu_root`` (n, k) returns the kth root (indexed from zero) of the
+    ``chebyshevu_root(n, k)`` returns the kth root (indexed from zero) of the
     nth Chebyshev polynomial of the second kind; that is, if 0 <= k < n,
-    ``chebyshevu`` (n, chebyshevu_root(n, k)) == 0.
+    ``chebyshevu(n, chebyshevu_root(n, k)) == 0``.
 
     Examples
     ========
@@ -745,7 +745,7 @@ class chebyshevu_root(Function):
 
 class legendre(OrthogonalPolynomial):
     r"""
-    ``legendre`` (n, x) gives the nth Legendre polynomial of x, $P_n(x)$
+    ``legendre(n, x)`` gives the nth Legendre polynomial of x, $P_n(x)$
 
     Explanation
     ===========
@@ -855,7 +855,7 @@ class legendre(OrthogonalPolynomial):
 
 class assoc_legendre(Function):
     r"""
-    ``assoc_legendre`` (n, m, x) gives $P_n^m(x)$, where n and m are
+    ``assoc_legendre(n, m, x)`` gives $P_n^m(x)$, where n and m are
     the degree and order or an expression which is related to the nth
     order Legendre polynomial, $P_n(x)$ in the following manner:
 
@@ -966,7 +966,7 @@ class assoc_legendre(Function):
 
 class hermite(OrthogonalPolynomial):
     r"""
-    ``hermite`` (n, x) gives the nth Hermite polynomial in x, $H_n(x)$
+    ``hermite(n, x)`` gives the nth Hermite polynomial in x, $H_n(x)$
 
     Explanation
     ===========
