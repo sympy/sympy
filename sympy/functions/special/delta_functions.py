@@ -17,7 +17,7 @@ from sympy.utilities import filldedent
 
 
 class DiracDelta(Function):
-    """
+    r"""
     The DiracDelta function and its derivatives.
 
     Explanation
@@ -43,19 +43,19 @@ class DiracDelta(Function):
 
     DiracDelta function has the following properties:
 
-    1) ``diff(Heaviside(x), x) = DiracDelta(x)``
-    2) ``integrate(DiracDelta(x - a)*f(x),(x, -oo, oo)) = f(a)`` and
-       ``integrate(DiracDelta(x - a)*f(x),(x, a - e, a + e)) = f(a)``
-    3) ``DiracDelta(x) = 0`` for all ``x != 0``
-    4) ``DiracDelta(g(x)) = Sum_i(DiracDelta(x - x_i)/abs(g'(x_i)))``
-       Where ``x_i``-s are the roots of ``g``
-    5) ``DiracDelta(-x) = DiracDelta(x)``
+    1) $\frac{d}{d x} \theta(x) = \delta(x)$
+    2) $\int_{-\infty}^\infty \delta(x - a)f(x)\, dx = f(a)$ and $\int_{a-
+       \epsilon}^{a+\epsilon} \delta(x - a)f(x)\, dx = f(a)$
+    3) $\delta(x) = 0$ for all $x \neq 0$
+    4) $\delta(g(x)) = \sum_i \frac{\delta(x - x_i)}{\|g'(x_i)\|}$ where $x_i$
+       are the roots of $g$
+    5) $\delta(-x) = \delta(x)$
 
     Derivatives of ``k``-th order of DiracDelta have the following properties:
 
-    6) ``DiracDelta(x, k) = 0``, for all ``x != 0``
-    7) ``DiracDelta(-x, k) = -DiracDelta(x, k)`` for odd ``k``
-    8) ``DiracDelta(-x, k) = DiracDelta(x, k)`` for even ``k``
+    6) $\delta(x, k) = 0$ for all $x \neq 0$
+    7) $\delta(-x, k) = -\delta(x, k)$ for odd $k$
+    8) $\delta(-x, k) = \delta(x, k)$ for even $k$
 
     Examples
     ========
@@ -85,7 +85,6 @@ class DiracDelta(Function):
     False
     >>> DiracDelta((x**2 - 1)*y).expand(diracdelta=True, wrt=x)
     DiracDelta(x - 1)/(2*Abs(y)) + DiracDelta(x + 1)/(2*Abs(y))
-
 
     See Also
     ========
@@ -393,7 +392,7 @@ class DiracDelta(Function):
 
 
 class Heaviside(Function):
-    """
+    r"""
     Heaviside Piecewise function.
 
     Explanation
@@ -401,16 +400,17 @@ class Heaviside(Function):
 
     Heaviside function has the following properties:
 
-    1) ``diff(Heaviside(x),x) = DiracDelta(x)``
-                        ``( 0, if x < 0``
-    2) ``Heaviside(x) = < ( undefined if x==0 [1]``
-                        ``( 1, if x > 0``
-    3) ``Max(0,x).diff(x) = Heaviside(x)``
+    1) $\frac{d}{d x} \theta(x) = \delta(x)$
+    2) $\theta(x) = \begin{cases} 0 & \text{for}\: x < 0 \\ \text{undefined} &
+       \text{for}\: x = 0 \\1 & \text{for}\: x > 0 \end{cases}$
+    3) $\frac{d}{d x} \max(x, 0) = \theta(x)$
 
-    Regarding to the value at 0, Mathematica defines ``H(0) = 1``, but Maple
-    uses ``H(0) = undefined``. Different application areas may have specific
-    conventions. For example, in control theory, it is common practice to
-    assume ``H(0) == 0`` to match the Laplace transform of a DiracDelta
+    Heaviside(x) is printed as $\theta(x)$ with the SymPy LaTeX printer.
+
+    Regarding to the value at 0, Mathematica defines $\theta(0)=1$, but Maple
+    uses $\theta(0) = \text{undefined}$. Different application areas may have
+    specific conventions. For example, in control theory, it is common practice
+    to assume $\theta(0) = 0$ to match the Laplace transform of a DiracDelta
     distribution.
 
     To specify the value of Heaviside at ``x=0``, a second argument can be
