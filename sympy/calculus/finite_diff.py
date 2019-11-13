@@ -472,7 +472,7 @@ def differentiate_finite(expr, *symbols,
     To make finite difference with non-constant discretization step use
     undefined functions:
 
-    >>> dx = Function(dx)
+    >>> dx = Function('dx')
     >>> differentiate_finite(f(x)*g(x).diff(x), points=dx(x))
     -(-g(x - dx(x)/2 - dx(x - dx(x)/2)/2)/dx(x - dx(x)/2) \
 + g(x - dx(x)/2 + dx(x - dx(x)/2)/2)/dx(x - dx(x)/2))*f(x - dx(x)/2)/dx(x) \
