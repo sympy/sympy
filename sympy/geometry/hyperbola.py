@@ -424,7 +424,7 @@ class Hyperbola(GeometrySet):
         Circle(Point2D(1, 2), Max(a, b))
         """
 
-        return Circle(self.center, Max(self.hradius, self.vradius))
+        return Circle(self.center, self.hradius)
 
     @property
     def director_circle(self):
