@@ -253,7 +253,7 @@ class Hyperbola(GeometrySet):
         >>> p1 = Point(0, 0)
         >>> h1 = Hyperbola(p1, 3, 1)
         >>> h1.foci
-        (Point2D(-sqrt(10), 0), Point2D(-sqrt(10), 0))
+        (Point2D(-sqrt(10), 0), Point2D(sqrt(10), 0))
 
         """
         c = self.center
@@ -421,7 +421,7 @@ class Hyperbola(GeometrySet):
         >>> a, b = symbols('a b')
         >>> h2 = Hyperbola(c, a, b)
         >>> h2.auxilary_circle()
-        Circle(Point2D(1, 2), Max(a, b))
+        Circle(Point2D(1, 2), a)
         """
 
         return Circle(self.center, self.hradius)

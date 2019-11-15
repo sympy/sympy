@@ -4189,6 +4189,11 @@ def test_sympy__geometry__ellipse__Circle():
     assert _test_args(Circle((0, 1), 2))
 
 
+def test_sympy__geometry__hyperbola__Hyperbola():
+    from sympy.geometry.hyperbola import Hyperbola
+    assert _test_args(Hyperbola((0, 0), 4, 5))
+
+
 def test_sympy__geometry__parabola__Parabola():
     from sympy.geometry.parabola import Parabola
     from sympy.geometry.line import Line
