@@ -96,7 +96,7 @@ def wheel():
 
 @activity(deps={'_version'})
 def build_docs():
-    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath', 'matplotlib'],
+    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath', 'matplotlib', 'sphinx-math-dollar'],
         envname='sympy-release-docs'):
 
         cd doc
