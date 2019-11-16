@@ -1035,10 +1035,14 @@ git_whitelist = {
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
     '.ci/blacklisted.json',
+    '.ci/README.rst',
+    '.github/FUNDING.yml',
     '.editorconfig',
     '.coveragerc',
+    'coveragerc_travis',
     'codecov.yml',
     'pytest.ini',
+    'MANIFEST.in',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Pull request template
@@ -1130,4 +1134,6 @@ tarball_whitelist = {
     'sympy.egg-info/top_level.txt',
     'sympy.egg-info/not-zip-safe',
     'sympy.egg-info/entry_points.txt',
+    # Not sure where this is generated from...
+    'doc/commit_hash.txt',
     }
