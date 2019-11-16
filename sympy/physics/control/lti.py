@@ -1,7 +1,4 @@
 """
-Usage
-=====
-
 Creating models
 ===============
 
@@ -11,11 +8,9 @@ You can create a 'StateSpaceModel' object using four matrices (state space repre
 or a or 'TransferFunctionModel' using a transfer matrix:
 
 >>> from sympy import Matrix, var, StateSpaceModel, TransferFunctionModel
->>> var('a:d')
-(a, b, c, d)
+>>> a, b, c, d = symbols('a:d')
 >>> A, B, C, D = Matrix([a]), Matrix([b]), Matrix([c]), Matrix([d])
->>> var('s')
-s
+>>> s = symbols('s')
 >>> T = Matrix([1 / s, s / (1 + s**2)])
 >>> ssm = StateSpaceModel(A, B, C, D)
 >>> ssm
@@ -32,12 +27,13 @@ TransferFunctionModel(Matrix([
 
 One can also just use only one, two or three matrices. The missing ones will be filled with a minimum of zeros.
 
->>> var('a:2, b:2')
+>>> a0, a1, b0, b1 = symbols('a:2, b:2')
 (a0, a1, b0, b1)
 >>> ssm = StateSpaceModel(Matrix([a0, a1]), Matrix([b0, b1]))
 >>> ssm
 StateSpaceModel(
-Matrix([
+Matri
+x([
 [a0],
 [a1]]),
 Matrix([
@@ -60,7 +56,7 @@ TransferFunctionModel(Matrix([
 
 Or connect two system to create a new one:
 
->>> var('a:3, b:3')
+>>> a0, a1, a2, b0, b1, b2 = symbols('a:3, b:3')
 (a0, a1, a2, b0, b1, b2)
 >>> ssm1 = StateSpaceModel(
 ...         Matrix([[0, 1],
@@ -132,8 +128,7 @@ Matrix([
 Matrix([[b0, b1, b2, b0, b1, b2]]),
 Matrix([[0]]))
 
->>> var('a, b, s')
-(a, b, s)
+>>> a, b, s = symbols('a, b, s')
 >>> tfm1 = TransferFunctionModel(Matrix([1 / (a * s)]))
 >>> tfm1
 TransferFunctionModel(Matrix([[1/(a*s)]]))
@@ -156,7 +151,7 @@ Models are always evaluated using the `evaluate` method.
 It is done numercialy or symbolicaly, depending on the parameters of the call:
 
 >>> from sympy import Heaviside
->>> var('t') # symbolic evaluation
+>>> t = symbols('t') # symbolic evaluation
 >>> u = Matrix([Heaviside(t)])
 >>> x0 = zeros(3, 1)
 >>> t0 = 0
@@ -179,7 +174,7 @@ For details on syntax and additional methods, see the docstings of each class an
 from __future__ import division
 
 from sympy import (
-    Symbol, var, simplify, oo, exp,
+    Symbol, symbols, simplify, oo, exp,
     Poly, lcm, LC, degree, Integral, integrate,
     Matrix, BlockMatrix, eye, zeros,
     latex, ShapeError, ImmutableMatrix, MutableMatrix,
@@ -324,38 +319,30 @@ class StateSpaceModel(object):
             self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
                                                [self.represent[2], self.represent[3]]])
 
-        try:
-            if len(arg) == 0:
-                self.represent = [None] * 4
-                zero()
+        if len(arg) == 0:
+            self.represent = [None] * 4
+            zero()
+        else:
+            if isinstance(arg[0], TransferFunctionModel):
+                transferfunction()
+
             else:
-                if isinstance(arg[0], TransferFunctionModel):
-                    transferfunction()
+                # store the argument as representation of the system, fill
+                # in noneset args with None
+                self.represent = [None] * 4
+                for i, a in enumerate(arg):
+                    self.represent[i] = a
 
-                else:
-                    # store the argument as representation of the system, fill
-                    # in noneset args with None
-                    self.represent = [None] * 4
-                    for i, a in enumerate(arg):
-                        self.represent[i] = a
+                {
+                    1: one,
+                    2: two,
+                    3: three
+                }.get(len(arg), default)()
 
-                    {
-                        1: one,
-                        2: two,
-                        3: three
-                    }.get(len(arg), default)()
-
-            # create a block matrix [[A,B], [C,D]] for visual representation
-            self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
-                                                [self.represent[2], self.represent[3]]])
-            return None
-
-        except TypeError:
-            raise TypeError("entries of 'representation' must be matrices")
-        except AttributeError:
-            raise TypeError("entries of 'representation' must be matrices")
-        except IndexError:
-            raise TypeError("'representation' must have at least 4 matrix-valued entries")
+        # create a block matrix [[A,B], [C,D]] for visual representation
+        self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
+                                            [self.represent[2], self.represent[3]]])
+        return None
 
     def _find_realization(self, G, s):
         """ Representation [A, B, C, D] of the state space model
@@ -383,15 +370,13 @@ class StateSpaceModel(object):
 
         A, B, C, D = 4 * [None]
 
-        try:
-            m, k = G.shape
+        if not isinstance(G, Matrix):
+            raise TypeError('%s is not a Matrix'%(G))
 
-        except AttributeError:
-            raise TypeError("G must be a matrix")
-
-        # test if G is proper
         if not _is_proper(G, s, strict=False):
             raise ValueError("G must be proper!")
+
+        m, k = G.shape
 
         # define D as the limit of G for s to infinity
         D = G.limit(s, oo)
@@ -448,7 +433,7 @@ class StateSpaceModel(object):
             C = C.row_join(G_sp_coeff[i])
 
         # return the state space representation
-        return [A, B, C, D]
+        return (A, B, C, D)
 
     #
     # evaluate(self, u, t)
@@ -563,27 +548,25 @@ class StateSpaceModel(object):
             if x not in valid_flags:
                 raise ValueError('Unknown keyword argument: %s' % x)
 
-        try:
-            # assert right shape of u
-            if not u.shape[1] == 1:
-                raise ShapeError("u must not have more that one column, but has shape", u.shape)
+        if not isinstance(u, Matrix):
+            raise TypeError('%s is not a Matrix'%(u))
 
-            if not self.represent[3].shape[1] == u.shape[0]:
-                raise ShapeError("u must have length", self.represent[3].shape[1])
+        if not isinstance(x0, Matrix):
+            raise TypeError('%s is not a Matrix'%(x0))
 
-            # assert right shape of x0
-            if not x0.shape[1] == 1:
-                raise ShapeError("x0 must not have more than one column, but has shape", x0.shape)
+        # assert right shape of u
+        if not u.shape[1] == 1:
+            raise ShapeError("u must not have more that one column, but has shape", u.shape)
 
-            if not self.represent[0].shape[1] == x0.shape[0]:
-                raise ShapeError("x0 must have length", self.represent[0].shape[1])
+        if not self.represent[3].shape[1] == u.shape[0]:
+            raise ShapeError("u must have length", self.represent[3].shape[1])
 
-        #
-        # Error handling
-        #
-        # if .shape goes wrong, a AttributeError is thrown
-        except AttributeError:
-            raise TypeError("u and x0 must be matrices!")
+        # assert right shape of x0
+        if not x0.shape[1] == 1:
+            raise ShapeError("x0 must not have more than one column, but has shape", x0.shape)
+
+        if not self.represent[0].shape[1] == x0.shape[0]:
+            raise ShapeError("x0 must have length", self.represent[0].shape[1])
 
         #
         # find out if t is symbol, tuple or given wrong and call subroutines accordingly to that
@@ -967,18 +950,13 @@ class StateSpaceModel(object):
             raise AttributeError("%r object has no attribute %r" %
                                  (self.__class__, name))
 
-        try:
-            def handler(*args, **kwargs):
+        def handler(*args, **kwargs):
 
-                new_represent = []
-                for r in self.represent:
-                    methodToCall = getattr(r, name)
-                    new_represent.append(methodToCall(*args, **kwargs))
-                return StateSpaceModel(*new_represent)
-
-        except AttributeError:
-            raise AttributeError("%r object has no attribute %r" %
-                                 (self.__class__, name))
+            new_represent = []
+            for r in self.represent:
+                methodToCall = getattr(r, name)
+                new_represent.append(methodToCall(*args, **kwargs))
+            return StateSpaceModel(*new_represent)
 
         return handler
 
@@ -1033,24 +1011,18 @@ class TransferFunctionModel(object):
         if s:
             self.s = s
         else:
-            self.s = var('s')
+            self.s = symbols('s')
 
         # constructor from a given state space model
         if isinstance(arg, StateSpaceModel):
 
-            try:
-                # define G as transfer function for the given state space model via the definition
-                self.G = arg.represent[2] * \
-                    (self.s * eye(arg.represent[0].shape[0]) - arg.represent[0]).inv() * \
-                    arg.represent[1] + arg.represent[3]
+            # define G as transfer function for the given state space model via the definition
+            self.G = arg.represent[2] * \
+                (self.s * eye(arg.represent[0].shape[0]) - arg.represent[0]).inv() * \
+                arg.represent[1] + arg.represent[3]
 
-                # try to simplify
-                self.G = simplify(self.G)
-
-            except ValueError as err:
-                raise ValueError(err.args, "Matrix (s*I -A) must be invertible")
-            except AttributeError:
-                raise TypeError("Only explicit Matrix Type supported for A,B,C,D (.inv() must work)")
+            # try to simplify
+            self.G = simplify(self.G)
 
         # constructor from a given transfer function
         elif isinstance(arg, (Matrix, ImmutableMatrix, MutableMatrix)):
@@ -1211,14 +1183,10 @@ class TransferFunctionModel(object):
             raise AttributeError("%r object has no attribute %r" %
                                  (self.__class__, name))
 
-        try:
-            def handler(*args, **kwargs):
-                methodToCall = getattr(self.G, name)
-                return TransferFunctionModel(methodToCall(*args, **kwargs))
+        def handler(*args, **kwargs):
+            methodToCall = getattr(self.G, name)
+            return TransferFunctionModel(methodToCall(*args, **kwargs))
 
-        except AttributeError:
-            raise AttributeError("%r object has no attribute %r" %
-                                 (self.__class__, name))
         return handler
 
     #

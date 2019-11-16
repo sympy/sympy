@@ -3,6 +3,6 @@ A module that helps solving problems in physics
 """
 
 from . import units
-from . import controlsys
+from . import control
 from .matrices import mgamma, msigma, minkowski_tensor, mdft
 
