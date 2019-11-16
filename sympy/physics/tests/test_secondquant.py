@@ -135,28 +135,6 @@ def test_basic_state():
     assert s.up(0) == BosonState([n + 1, m])
 
 
-# 2019-07-24: No method move in the whole of SymPy
-@XFAIL
-def test_move1():
-    assert False
-    #i, j = symbols('i,j')
-    #A, C = symbols('A,C', cls=Function)
-    #o = A(i)*C(j)
-    ## This almost works, but has a minus sign wrong
-    # assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
-
-
-# 2019-07-24: No method move in the whole of SymPy
-@XFAIL
-def test_move2():
-    assert False
-    #i, j = symbols('i,j')
-    #A, C = symbols('A,C', cls=Function)
-    #o = C(j)*A(i)
-    ## This almost works, but has a minus sign wrong
-    # assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
-
-
 def test_basic_apply():
     n = symbols("n")
     e = B(0)*BKet([n])
