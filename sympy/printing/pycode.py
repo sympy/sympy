@@ -846,7 +846,7 @@ _known_functions_scipy_special = {
     'laguerre': 'eval_laguerre',
     'assoc_laguerre': 'eval_genlaguerre',
     'beta': 'beta',
-    'LambertW' : 'lambertw'
+    'LambertW' : 'lambertw',
 }
 
 _known_constants_scipy_constants = {
