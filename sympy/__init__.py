@@ -83,7 +83,6 @@ from .algebras import *
 from .plotting import plot, textplot, plot_backends, plot_implicit, plot_parametric
 from .printing import *
 from .interactive import init_session, init_printing
-from .controlsys import *
 
 evalf._create_evalf_table()
 
