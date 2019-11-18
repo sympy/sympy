@@ -866,7 +866,7 @@ def legendre_symbol(a, p):
     a = a % p
     if not a:
         return 0
-    if is_quad_residue(a, p):
+    if pow(a, (p - 1) // 2, p) == 1:
         return 1
     return -1
 
