@@ -170,18 +170,14 @@ Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
 methods. Don't mix and match symbols representing time.
 
 Point
---------------
+-----
 Multiple instances of ``Point`` can also be created in a single step, using the 
-``symbols()`` function. An example of this is shown below. :
+``symbols()`` function. An example of this is shown below. ::
 
   >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
   >>> from sympy import symbols
   >>> N = ReferenceFrame('N')
-  >>> u1, u2 = dynamicsymbols('u1 u2')
   >>> A, B = symbols('A B', cls=Point)
   >>> type(A)
   <class 'sympy.physics.vector.point.Point'>
-  >>> A.set_vel(N, u1 * N.x + u2 * N.y)
-  >>> B.set_vel(N, u2 * N.x + u1 * N.y)
-  >>> A.acc(N) - B.acc(N)
-  (u1' - u2')*N.x + (-u1' + u2')*N.y
+  
