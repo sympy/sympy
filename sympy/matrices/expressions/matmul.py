@@ -352,6 +352,8 @@ def combine_powers(mul):
                 new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
             else:
                 new_args.append(B)
+        else:
+            new_args.append(B)
 
     return newmul(factor, *new_args)
 
