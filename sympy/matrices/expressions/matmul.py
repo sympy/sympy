@@ -296,13 +296,37 @@ def remove_ids(mul):
     c_scalars, others = mul._as_commutative_scalars_others()
     factor = Mul(*c_scalars)
     others_as_mmul = MatMul(*others)
-    # Apply standard rm_id for MatMuls
-    result = rm_id(
-        lambda x: x.is_Matrix and x.is_Identity is True)(others_as_mmul)
 
-    if result != others_as_mmul:
-        return newmul(factor, *result.args)  # Recombine and return
-    return mul
+    args_1, args_id, args_2 = [], [], []
+    has_identity_matrix = False
+    has_nonidentity_matrix = False
+    for arg in others:
+        if not has_identity_matrix:
+            if arg.is_Matrix:
+                if arg.is_Identity:
+                    args_id.append(arg)
+                    has_identity_matrix = True
+                else:
+                    args_1.append(arg)
+                    has_nonidentity_matrix = True
+            else:
+                args_1.append(arg)
+        else:
+            if arg.is_Matrix:
+                if arg.is_Identity:
+                    continue
+                else:
+                    args_2.append(arg)
+                    has_nonidentity_matrix = True
+            else:
+                args_2.append(arg)
+
+    if has_nonidentity_matrix:
+        newargs = args_1 + args_2
+    else:
+        newargs = args_1 + args_id + args_2
+
+    return newmul(factor, *newargs)
 
 def factor_in_front(mul):
     c_scalars, others = mul._as_commutative_scalars_others()
@@ -354,7 +378,6 @@ def combine_powers(mul):
                 new_args.append(B)
         else:
             new_args.append(B)
-
     return newmul(factor, *new_args)
 
 rules = (
