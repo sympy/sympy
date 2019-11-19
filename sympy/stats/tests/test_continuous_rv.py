@@ -977,7 +977,6 @@ def test_uniformsum():
     x = Symbol("x")
 
     X = UniformSum('x', n)
-    # This should be fixed so it doesn't use a string test
     res = Sum((-1)**_k*(-_k + x)**(n - 1)*binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1)
     assert density(X)(x).dummy_eq(res)
 
