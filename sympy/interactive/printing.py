@@ -170,6 +170,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             # to use here, than these explicit imports.
             elif isinstance(o, sympy_latex_types):
                 return True
+            elif hasattr(type(o), '_repr_latex_'):
+                return True
             elif isinstance(o, (float, int)) and print_builtin:
                 return True
             return False

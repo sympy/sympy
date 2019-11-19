@@ -2571,6 +2571,15 @@ class LatexPrinter(Printer):
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
     def emptyPrinter(self, expr):
+        # support any objects which implement the ipython hook
+        try:
+            repr_latex_method = getattr(type(expr), '_repr_latex_')
+        except AttributeError:
+            pass
+        else:
+            # _repr_latex_ returns text mode, but we return math mode.
+            return r"\text{" + repr_latex_method(expr) + "}"
+
         # Checks what type of decimal separator to print.
         expr = super().emptyPrinter(expr)
         if self._settings['decimal_separator'] == 'comma':
