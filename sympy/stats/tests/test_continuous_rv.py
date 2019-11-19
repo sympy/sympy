@@ -3,7 +3,8 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re,
-                   im, lambdify, hyper, diff, Or, Mul, sign)
+                   im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
+                   factorial, binomial)
 from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
@@ -386,7 +387,7 @@ def test_beta():
 def test_beta_noncentral():
     a, b = symbols('a b', positive=True)
     c = Symbol('c', nonnegative=True)
-    _k = Symbol('k')
+    _k = Dummy('k')
 
     X = BetaNoncentral('x', a, b, c)
 
@@ -395,8 +396,9 @@ def test_beta_noncentral():
     dens = density(X)
     z = Symbol('z')
 
-    assert str(dens(z)) == ("Sum(z**(_k + a - 1)*(c/2)**_k*(1 - z)**(b - 1)*exp(-c/2)/"
-    "(beta(_k + a, b)*factorial(_k)), (_k, 0, oo))")
+    res = Sum( z**(_k + a - 1)*(c/2)**_k*(1 - z)**(b - 1)*exp(-c/2)/
+               (beta(_k + a, b)*factorial(_k)), (_k, 0, oo))
+    assert dens(z).dummy_eq(res)
 
     # BetaCentral should not raise if the assumptions
     # on the symbols can not be determined
@@ -971,12 +973,12 @@ def test_uniform_P():
 
 def test_uniformsum():
     n = Symbol("n", integer=True)
-    _k = Symbol("k")
+    _k = Dummy("k")
     x = Symbol("x")
 
     X = UniformSum('x', n)
-    assert str(density(X)(x)) == ("Sum((-1)**_k*(-_k + x)**(n - 1)"
-    "*binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1)")
+    res = Sum((-1)**_k*(-_k + x)**(n - 1)*binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1)
+    assert density(X)(x).dummy_eq(res)
 
 
 def test_von_mises():

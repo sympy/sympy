@@ -6,7 +6,6 @@ from sympy.core import S, Rational, Symbol, Basic, Add
 from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.printing.pretty.pretty import pretty
 from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorIndex, tensor_mul, TensAdd, \
