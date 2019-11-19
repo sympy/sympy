@@ -1,29 +1,28 @@
 from __future__ import print_function, division
 
 from sympy.core import S, sympify, Dummy, Mod
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import reduce, range, HAS_GMPY
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
 from sympy.core.relational import Eq
-
 from sympy.ntheory import sieve
+from sympy.polys.polytools import Poly
 
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, range, HAS_GMPY
-from sympy.core.cache import cacheit
-
-from sympy.polys.polytools import Poly
 
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.combsimp import combsimp
         # combinatorial function with non-integer arguments is
         # automatically passed to gammasimp
         expr = combsimp(self)
-        if measure(expr) <= ratio*measure(self):
+        measure = kwargs['measure']
+        if measure(expr) <= kwargs['ratio']*measure(self):
             return expr
         return self
 
@@ -145,7 +144,7 @@ class factorial(CombinatorialFunction):
         n = sympify(n)
 
         if n.is_Number:
-            if n is S.Zero:
+            if n.is_zero:
                 return S.One
             elif n is S.Infinity:
                 return S.Infinity
@@ -267,6 +266,25 @@ class factorial(CombinatorialFunction):
         if x.is_nonnegative or x.is_noninteger:
             return True
 
+    def _eval_as_leading_term(self, x):
+        from sympy import Order
+        arg = self.args[0]
+        arg_1 = arg.as_leading_term(x)
+        if Order(x, x).contains(arg_1):
+            return S.One
+        if Order(1, x).contains(arg_1):
+            return self.func(arg_1)
+        ####################################################
+        # The correct result here should be 'None'.        #
+        # Indeed arg in not bounded as x tends to 0.       #
+        # Consequently the series expansion does not admit #
+        # the leading term.                                #
+        # For compatibility reasons, the return value here #
+        # is the original function, i.e. factorial(arg),   #
+        # instead of None.                                 #
+        ####################################################
+        return self.func(arg)
+
 class MultiFactorial(CombinatorialFunction):
     pass
 
@@ -293,7 +311,7 @@ class subfactorial(CombinatorialFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Subfactorial
+    .. [1] https://en.wikipedia.org/wiki/Subfactorial
     .. [2] http://mathworld.wolfram.com/Subfactorial.html
 
     Examples
@@ -535,7 +553,7 @@ class RisingFactorial(CombinatorialFunction):
         elif x is S.One:
             return factorial(k)
         elif k.is_Integer:
-            if k is S.Zero:
+            if k.is_zero:
                 return S.One
             else:
                 if k.is_positive:
@@ -579,6 +597,10 @@ class RisingFactorial(CombinatorialFunction):
                             return 1/reduce(lambda r, i:
                                             r*(x - i),
                                             range(1, abs(int(k)) + 1), 1)
+
+        if k.is_integer == False:
+            if x.is_integer and x.is_negative:
+                return S.Zero
 
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma
@@ -670,7 +692,7 @@ class FallingFactorial(CombinatorialFunction):
         elif k.is_integer and x == k:
             return factorial(x)
         elif k.is_Integer:
-            if k is S.Zero:
+            if k.is_zero:
                 return S.One
             else:
                 if k.is_positive:
@@ -842,8 +864,6 @@ class binomial(CombinatorialFunction):
     @classmethod
     def _eval(self, n, k):
         # n.is_Number and k.is_Integer and k != 1 and n != k
-        from sympy.functions.elementary.exponential import log
-        from sympy.core import N
 
         if k.is_Integer:
             if n.is_Integer and n >= 0:
@@ -990,9 +1010,9 @@ class binomial(CombinatorialFunction):
             k = n - k
 
         if k.is_Integer:
-            if k == S.Zero:
+            if k.is_zero:
                 return S.One
-            elif k < 0:
+            elif k.is_negative:
                 return S.Zero
             else:
                 n, result = self.args[0], 1

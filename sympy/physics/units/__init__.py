@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # isort:skip_file
 """
 Dimensional analysis and unit systems.
@@ -35,7 +34,7 @@ from .unitsystem import UnitSystem
 from .util import convert_to
 from .quantities import Quantity
 
-from .dimensions import (
+from .definitions.dimension_definitions import (
     amount_of_substance, acceleration, action,
     capacitance, charge, conductance, current, energy,
     force, frequency, impedance, inductance, length,
@@ -151,6 +150,7 @@ from .definitions import (
     year, years, tropical_year,
     G, gravitational_constant,
     c, speed_of_light,
+    elementary_charge,
     Z0,
     hbar,
     planck,
@@ -210,8 +210,12 @@ from .definitions import (
     exbibyte, exbibytes,
 )
 
+from .systems import (
+    mks, mksa, si
+)
 
-def find_unit(quantity):
+
+def find_unit(quantity, unit_system="SI"):
     """
     Return a list of matching units or dimension names.
 
@@ -225,9 +229,9 @@ def find_unit(quantity):
 
     >>> from sympy.physics import units as u
     >>> u.find_unit('charge')
-    ['C', 'coulomb', 'coulombs', 'planck_charge']
+    ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit(u.charge)
-    ['C', 'coulomb', 'coulombs', 'planck_charge']
+    ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit("ampere")
     ['ampere', 'amperes']
     >>> u.find_unit('volt')
@@ -235,6 +239,8 @@ def find_unit(quantity):
     >>> u.find_unit(u.inch**3)[:5]
     ['l', 'cl', 'dl', 'ml', 'liter']
     """
+    unit_system = UnitSystem.get_unit_system(unit_system)
+
     import sympy.physics.units as u
     rv = []
     if isinstance(quantity, string_types):
@@ -253,7 +259,7 @@ def find_unit(quantity):
             elif isinstance(quantity, Dimension):
                 if other.dimension == quantity:
                     rv.append(str(i))
-            elif other.dimension == Dimension(Quantity.get_dimensional_expr(quantity)):
+            elif other.dimension == Dimension(unit_system.get_dimensional_expr(quantity)):
                 rv.append(str(i))
     return sorted(set(rv), key=lambda x: (len(x), x))
 

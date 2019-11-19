@@ -226,7 +226,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             D = p.subs(n, a + k)
 
             for i in range(1, k + 1):
-                B *= -Rational(k - i + 1, i)
+                B *= Rational(i - k - 1, i)
                 D += B * p.subs(n, a + k - i)
 
             return D
@@ -498,7 +498,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     >>> from sympy.abc import x
 
     >>> rsolve_hyper([-1, -1, 1], 0, x)
-    C0*(1/2 + sqrt(5)/2)**x + C1*(-sqrt(5)/2 + 1/2)**x
+    C0*(1/2 - sqrt(5)/2)**x + C1*(1/2 + sqrt(5)/2)**x
 
     >>> rsolve_hyper([-1, 1], 1 + x, x)
     C0 + x*(x + 1)/2

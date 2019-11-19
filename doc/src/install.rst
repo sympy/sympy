@@ -9,7 +9,7 @@ recommended method of installation is through Anaconda, which includes
 mpmath, as well as several other useful libraries.  Alternatively, some Linux
 distributions have SymPy packages available.
 
-SymPy officially supports Python 2.7, 3.4, 3.5, 3.6 and PyPy.
+SymPy officially supports Python 2.7, 3.5, 3.6, 3.7, and PyPy.
 
 Anaconda
 ========
@@ -34,7 +34,7 @@ If you wish to contribute to SymPy or like to get the latest updates as they
 come, install SymPy from git. To download the repository, execute the
 following from the command line::
 
-    git clone git://github.com/sympy/sympy.git
+    git clone https://github.com/sympy/sympy.git
 
 To update to the latest version, go into your repository and execute::
 

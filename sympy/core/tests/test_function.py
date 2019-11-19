@@ -2,20 +2,24 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
-        Matrix, Basic)
-from sympy.utilities.pytest import XFAIL, raises
-from sympy.abc import t, w, x, y, z
+        Matrix, Basic, Dict, oo, zoo, nan, Pow)
 from sympy.core.basic import _aresame
-from sympy.core.function import PoleError, _mexpand
-from sympy.core.sympify import sympify
-from sympy.sets.sets import FiniteSet
-from sympy.solvers.solveset import solveset
-from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
+from sympy.core.function import (PoleError, _mexpand, arity,
+        BadSignatureError, BadArgumentsError)
+from sympy.core.sympify import sympify
+from sympy.matrices import MutableMatrix, ImmutableMatrix
+from sympy.sets.sets import FiniteSet
+from sympy.solvers.solveset import solveset
+from sympy.tensor.array import NDimArray
+from sympy.utilities.iterables import subsets, variations
+from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
 
+from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
-
+_xi_1, _xi_2, _xi_3 = [Dummy() for i in range(3)]
 
 def test_f_expand_complex():
     x = Symbol('x', real=True)
@@ -91,6 +95,7 @@ def test_derivative_evaluate():
 
     assert Derivative(Derivative(f(x), x), x) == diff(f(x), x, x)
     assert Derivative(sin(x), x, 0) == sin(x)
+    assert Derivative(sin(x), (x, y), (x, -y)) == sin(x)
 
 
 def test_diff_symbols():
@@ -107,6 +112,9 @@ def test_diff_symbols():
         Derivative(f(x, y, z), x, y, z, z)
     assert Derivative(Derivative(f(x, y, z), x), y)._eval_derivative(z) == \
         Derivative(f(x, y, z), x, y, z)
+
+    raises(TypeError, lambda: cos(x).diff((x, y)).variables)
+    assert cos(x).diff((x, y))._wrt_variables == [x]
 
 
 def test_Function():
@@ -153,6 +161,16 @@ def test_nargs():
     raises(ValueError, lambda: Function('f', nargs=()))
 
 
+def test_arity():
+    f = lambda x, y: 1
+    assert arity(f) == 2
+    def f(x, y, z=None):
+        pass
+    assert arity(f) == (2, 3)
+    assert arity(lambda *x: x) is None
+    assert arity(log) == (1, 2)
+
+
 def test_Lambda():
     e = Lambda(x, x**2)
     assert e(4) == 16
@@ -160,12 +178,13 @@ def test_Lambda():
     assert e(y) == y**2
 
     assert Lambda((), 42)() == 42
-    assert Lambda((), 42) == Lambda((), 42)
+    assert unchanged(Lambda, (), 42)
     assert Lambda((), 42) != Lambda((), 43)
     assert Lambda((), f(x))() == f(x)
     assert Lambda((), 42).nargs == FiniteSet(0)
 
-    assert Lambda(x, x**2) == Lambda(x, x**2)
+    assert unchanged(Lambda, (x,), x**2)
+    assert Lambda(x, x**2) == Lambda((x,), x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
     assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
@@ -189,8 +208,39 @@ def test_Lambda():
 
     assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
-    raises(TypeError, lambda: Lambda(1, x))
+    raises(BadSignatureError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
+
+    raises(BadSignatureError, lambda: Lambda((x, x), x + 2))
+    raises(BadSignatureError, lambda: Lambda(((x, x), y), x))
+    raises(BadSignatureError, lambda: Lambda(((y, x), x), x))
+    raises(BadSignatureError, lambda: Lambda(((y, 1), 2), x))
+
+    with warns_deprecated_sympy():
+        assert Lambda([x, y], x+y) == Lambda((x, y), x+y)
+
+    flam = Lambda( ((x, y),) , x + y)
+    assert flam((2, 3)) == 5
+    flam = Lambda( ((x, y), z) , x + y + z)
+    assert flam((2, 3), 1) == 6
+    flam = Lambda( (((x,y),z),) , x+y+z)
+    assert flam(    ((2,3),1) ) == 6
+    raises(BadArgumentsError, lambda: flam(1, 2, 3))
+    flam = Lambda( (x,), (x, x))
+    assert flam(1,) == (1, 1)
+    assert flam((1,)) == ((1,), (1,))
+    flam = Lambda( ((x,),) , (x, x))
+    raises(BadArgumentsError, lambda: flam(1))
+    assert flam((1,)) == (1, 1)
+
+    # Previously TypeError was raised so this is potentially needed for
+    # backwards compatibility.
+    assert issubclass(BadSignatureError, TypeError)
+    assert issubclass(BadArgumentsError, TypeError)
+
+    # These are tested to see they don't raise:
+    hash(Lambda(x, 2*x))
+    hash(Lambda(x, x))  # IdentityFunction subclass
 
 
 def test_IdentityFunction():
@@ -204,6 +254,10 @@ def test_Lambda_symbols():
     assert Lambda(x, x*y).free_symbols == {y}
     assert Lambda((), 42).free_symbols == set()
     assert Lambda((), x*y).free_symbols == {x,y}
+
+
+def test_functionclas_symbols():
+    assert f.free_symbols == set()
 
 
 def test_Lambda_arguments():
@@ -225,6 +279,8 @@ def test_Subs():
     assert Subs(1, (), ()) is S.One
     # check null subs influence on hashing
     assert Subs(x, y, z) != Subs(x, y, 1)
+    # neutral subs works
+    assert Subs(x, x, 1).subs(x, y).has(y)
     # self mapping var/point
     assert Subs(Derivative(f(x), (x, 2)), x, x).doit() == f(x).diff(x, x)
     assert Subs(x, x, 0).has(x)  # it's a structural answer
@@ -279,13 +335,24 @@ def test_Subs():
     assert Subs(z*f(x + 1), x, 1) not in [ e1, e2 ]
     assert Derivative(f(x), x).subs(x, g(x)) == Derivative(f(g(x)), g(x))
     assert Derivative(f(x), x).subs(x, x + y) == Subs(Derivative(f(x), x),
-        (x,), (x + y))
+        x, x + y)
     assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(2) == \
         Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).evalf(2) == \
         z + Rational('1/2').n(2)*f(0)
 
     assert f(x).diff(x).subs(x, 0).subs(x, y) == f(x).diff(x).subs(x, 0)
     assert (x*f(x).diff(x).subs(x, 0)).subs(x, y) == y*f(x).diff(x).subs(x, 0)
+    assert Subs(Derivative(g(x)**2, g(x), x), g(x), exp(x)
+        ).doit() == 2*exp(x)
+    assert Subs(Derivative(g(x)**2, g(x), x), g(x), exp(x)
+        ).doit(deep=False) == 2*Derivative(exp(x), x)
+    assert Derivative(f(x, g(x)), x).doit() == Derivative(
+        f(x, g(x)), g(x))*Derivative(g(x), x) + Subs(Derivative(
+        f(y, g(x)), y), y, x)
+
+def test_doitdoit():
+    done = Derivative(f(x, g(x)), x, g(x)).doit()
+    assert done == done.doit()
 
 
 @XFAIL
@@ -314,7 +381,6 @@ def test_function_comparable():
     assert cos(Rational(1, 3)).is_comparable is True
 
 
-@XFAIL
 def test_function_comparable_infinities():
     assert sin(oo).is_comparable is False
     assert sin(-oo).is_comparable is False
@@ -323,7 +389,7 @@ def test_function_comparable_infinities():
 
 
 def test_deriv1():
-    # These all requre derivatives evaluated at a point (issue 4719) to work.
+    # These all require derivatives evaluated at a point (issue 4719) to work.
     # See issue 4624
     assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), x, 2*x)
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
@@ -343,6 +409,8 @@ def test_deriv1():
     assert f(x, x**2).diff(x) == (
         2*x*Subs(Derivative(f(x, y), y), y, x**2) +
         Subs(Derivative(f(y, x**2), y), y, x))
+    # but Subs is not always necessary
+    assert f(x, g(y)).diff(g(y)) == Derivative(f(x, g(y)), g(y))
 
 
 def test_deriv2():
@@ -410,14 +478,16 @@ def test_function_non_commutative():
 
 def test_function_complex():
     x = Symbol('x', complex=True)
+    xzf = Symbol('x', complex=True, zero=False)
     assert f(x).is_commutative is True
     assert sin(x).is_commutative is True
     assert exp(x).is_commutative is True
     assert log(x).is_commutative is True
-    assert f(x).is_complex is True
+    assert f(x).is_complex is None
     assert sin(x).is_complex is True
     assert exp(x).is_complex is True
-    assert log(x).is_complex is True
+    assert log(x).is_complex is None
+    assert log(xzf).is_complex is True
 
 
 def test_function__eval_nseries():
@@ -437,10 +507,10 @@ def test_function__eval_nseries():
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
 
     # issue 6725:
-    assert expint(S(3)/2, -x)._eval_nseries(x, 5, None) == \
+    assert expint(Rational(3, 2), -x)._eval_nseries(x, 5, None) == \
         2 - 2*sqrt(pi)*sqrt(-x) - 2*x - x**2/3 - x**3/15 - x**4/84 + O(x**5)
     assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
-        sqrt(x) - x**(S(3)/2)/6 + x**(S(5)/2)/120 + O(x**3)
+        sqrt(x) - x**Rational(3, 2)/6 + x**Rational(5, 2)/120 + O(x**3)
 
 
 def test_doit():
@@ -482,7 +552,7 @@ def test_issue_5399():
     for a in subsets(args):
         for v in variations(a, len(a)):
             if ok(v):
-                noraise = eq.diff(*v)
+                eq.diff(*v) # does not raise
             else:
                 raises(ValueError, lambda: eq.diff(*v))
 
@@ -562,14 +632,14 @@ def test_diff_wrt():
 
     # Chain rule cases
     assert f(g(x)).diff(x) == \
-        Derivative(g(x), x)*Subs(Derivative(f(y), y), y, g(x))
+        Derivative(g(x), x)*Derivative(f(g(x)), g(x))
     assert diff(f(g(x), h(y)), x) == \
-        Derivative(g(x), x)*Subs(Derivative(f(x, h(y)), x), x, g(x))
+        Derivative(g(x), x)*Derivative(f(g(x), h(y)), g(x))
     assert diff(f(g(x), h(x)), x) == (
         Subs(Derivative(f(y, h(x)), y), y, g(x))*Derivative(g(x), x) +
         Subs(Derivative(f(g(x), y), y), y, h(x))*Derivative(h(x), x))
     assert f(
-        sin(x)).diff(x) == Subs(Derivative(f(x), x), x, sin(x))*cos(x)
+        sin(x)).diff(x) == cos(x)*Subs(Derivative(f(x), x), x, sin(x))
 
     assert diff(f(g(x)), g(x)) == Derivative(f(g(x)), g(x))
 
@@ -582,31 +652,65 @@ def test_subs_in_derivative():
     expr = sin(x*exp(y))
     u = Function('u')
     v = Function('v')
+    assert Derivative(expr, y).subs(expr, y) == Derivative(y, y)
     assert Derivative(expr, y).subs(y, x).doit() == \
         Derivative(expr, y).doit().subs(y, x)
     assert Derivative(f(x, y), y).subs(y, x) == Subs(Derivative(f(x, y), y), y, x)
     assert Derivative(f(x, y), y).subs(x, y) == Subs(Derivative(f(x, y), y), x, y)
-    assert Derivative(f(x, y), y).subs(y, g(x, y)) == Subs(Derivative(f(x, y), y), y, g(x, y))
+    assert Derivative(f(x, y), y).subs(y, g(x, y)) == Subs(Derivative(f(x, y), y), y, g(x, y)).doit()
     assert Derivative(f(x, y), y).subs(x, g(x, y)) == Subs(Derivative(f(x, y), y), x, g(x, y))
+    assert Derivative(f(x, y), g(y)).subs(x, g(x, y)) == Derivative(f(g(x, y), y), g(y))
     assert Derivative(f(u(x), h(y)), h(y)).subs(h(y), g(x, y)) == \
-        Subs(Derivative(f(u(x), h(y)), h(y)), h(y), g(x, y))
+        Subs(Derivative(f(u(x), h(y)), h(y)), h(y), g(x, y)).doit()
     assert Derivative(f(x, y), y).subs(y, z) == Derivative(f(x, z), z)
     assert Derivative(f(x, y), y).subs(y, g(y)) == Derivative(f(x, g(y)), g(y))
     assert Derivative(f(g(x), h(y)), h(y)).subs(h(y), u(y)) == \
         Derivative(f(g(x), u(y)), u(y))
+    assert Derivative(f(x, f(x, x)), f(x, x)).subs(
+        f, Lambda((x, y), x + y)) == Subs(
+        Derivative(z + x, z), z, 2*x)
+    assert Subs(Derivative(f(f(x)), x), f, cos).doit() == sin(x)*sin(cos(x))
+    assert Subs(Derivative(f(f(x)), f(x)), f, cos).doit() == -sin(cos(x))
     # Issue 13791. No comparison (it's a long formula) but this used to raise an exception.
     assert isinstance(v(x, y, u(x, y)).diff(y).diff(x).diff(y), Expr)
-    # This is also related to issues 13791 and 13795
+    # This is also related to issues 13791 and 13795; issue 15190
     F = Lambda((x, y), exp(2*x + 3*y))
     abstract = f(x, f(x, x)).diff(x, 2)
     concrete = F(x, F(x, x)).diff(x, 2)
-    assert (abstract.replace(f, F).doit() - concrete).simplify() == 0
+    assert (abstract.subs(f, F).doit() - concrete).simplify() == 0
+    # don't introduce a new symbol if not necessary
+    assert x in f(x).diff(x).subs(x, 0).atoms()
+    # case (4)
+    assert Derivative(f(x,f(x,y)), x, y).subs(x, g(y)
+        ) == Subs(Derivative(f(x, f(x, y)), x, y), x, g(y))
+
+    assert Derivative(f(x, x), x).subs(x, 0
+        ) == Subs(Derivative(f(x, x), x), x, 0)
+    # issue 15194
+    assert Derivative(f(y, g(x)), (x, z)).subs(z, x
+        ) == Derivative(f(y, g(x)), (x, x))
+
+    df = f(x).diff(x)
+    assert df.subs(df, 1) is S.One
+    assert df.diff(df) is S.One
+    dxy = Derivative(f(x, y), x, y)
+    dyx = Derivative(f(x, y), y, x)
+    assert dxy.subs(Derivative(f(x, y), y, x), 1) is S.One
+    assert dxy.diff(dyx) is S.One
+    assert Derivative(f(x, y), x, 2, y, 3).subs(
+        dyx, g(x, y)) == Derivative(g(x, y), x, 1, y, 2)
+    assert Derivative(f(x, x - y), y).subs(x, x + y) == Subs(
+        Derivative(f(x, x - y), y), x, x + y)
 
 
 def test_diff_wrt_not_allowed():
-    raises(ValueError, lambda: diff(sin(x**2), x**2))
-    raises(ValueError, lambda: diff(exp(x*y), x*y))
-    raises(ValueError, lambda: diff(1 + x, 1 + x))
+    # issue 7027 included
+    for wrt in (
+            cos(x), re(x), x**2, x*y, 1 + x,
+            Derivative(cos(x), x), Derivative(f(f(x)), x)):
+        raises(ValueError, lambda: diff(f(x), wrt))
+    # if we don't differentiate wrt then don't raise error
+    assert diff(exp(x*y), x*y, 0) == exp(x*y)
 
 
 def test_klein_gordon_lagrangian():
@@ -730,9 +834,11 @@ def test_unhandled():
             else:
                 return None
 
-    expr = MyExpr(x, y, z)
-    assert diff(expr, x, y, f(x), z) == Derivative(expr, z, f(x))
-    assert diff(expr, f(x), x) == Derivative(expr, x, f(x))
+    eq = MyExpr(f(x), y, z)
+    assert diff(eq, x, y, f(x), z) == Derivative(eq, f(x))
+    assert diff(eq, f(x), x) == Derivative(eq, f(x))
+    assert f(x, y).diff(x,(y, z)) == Derivative(f(x, y), x, (y, z))
+    assert f(x, y).diff(x,(y, 0)) == Derivative(f(x, y), x)
 
 
 def test_nfloat():
@@ -740,19 +846,17 @@ def test_nfloat():
     from sympy.polys.rootoftools import rootof
 
     x = Symbol("x")
-    eq = x**(S(4)/3) + 4*x**(S(1)/3)/3
-    assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(S(1)/3))
+    eq = x**Rational(4, 3) + 4*x**(S.One/3)/3
+    assert _aresame(nfloat(eq), x**Rational(4, 3) + (4.0/3)*x**(S.One/3))
     assert _aresame(nfloat(eq, exponent=True), x**(4.0/3) + (4.0/3)*x**(1.0/3))
-    eq = x**(S(4)/3) + 4*x**(x/3)/3
-    assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(x/3))
+    eq = x**Rational(4, 3) + 4*x**(x/3)/3
+    assert _aresame(nfloat(eq), x**Rational(4, 3) + (4.0/3)*x**(x/3))
     big = 12345678901234567890
     # specify precision to match value used in nfloat
     Float_big = Float(big, 15)
     assert _aresame(nfloat(big), Float_big)
     assert _aresame(nfloat(big*x), Float_big*x)
     assert _aresame(nfloat(x**big, exponent=True), x**Float_big)
-    assert nfloat({x: sqrt(2)}) == {x: nfloat(sqrt(2))}
-    assert nfloat({sqrt(2): x}) == {sqrt(2): x}
     assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
 
     # issue 6342
@@ -766,6 +870,40 @@ def test_nfloat():
     # issue 7122
     eq = cos(3*x**4 + y)*rootof(x**5 + 3*x**3 + 1, 0)
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
+
+    # issue 10933
+    for ti in (dict, Dict):
+        d = ti({S.Half: S.Half})
+        n = nfloat(d)
+        assert isinstance(n, ti)
+        assert _aresame(list(n.items()).pop(), (S.Half, Float(.5)))
+    for ti in (dict, Dict):
+        d = ti({S.Half: S.Half})
+        n = nfloat(d, dkeys=True)
+        assert isinstance(n, ti)
+        assert _aresame(list(n.items()).pop(), (Float(.5), Float(.5)))
+    d = [S.Half]
+    n = nfloat(d)
+    assert type(n) is list
+    assert _aresame(n[0], Float(.5))
+    assert _aresame(nfloat(Eq(x, S.Half)).rhs, Float(.5))
+    assert _aresame(nfloat(S(True)), S(True))
+    assert _aresame(nfloat(Tuple(S.Half))[0], Float(.5))
+    assert nfloat(Eq((3 - I)**2/2 + I, 0)) == S.false
+    # pass along kwargs
+    assert nfloat([{S.Half: x}], dkeys=True) == [{Float(0.5): x}]
+
+    # Issue 17706
+    A = MutableMatrix([[1, 2], [3, 4]])
+    B = MutableMatrix(
+        [[Float('1.0', precision=53), Float('2.0', precision=53)],
+        [Float('3.0', precision=53), Float('4.0', precision=53)]])
+    assert _aresame(nfloat(A), B)
+    A = ImmutableMatrix([[1, 2], [3, 4]])
+    B = ImmutableMatrix(
+        [[Float('1.0', precision=53), Float('2.0', precision=53)],
+        [Float('3.0', precision=53), Float('4.0', precision=53)]])
+    assert _aresame(nfloat(A), B)
 
 
 def test_issue_7068():
@@ -838,7 +976,8 @@ def test_issue_8469():
 
     ws = symbols(['w%i'%i for i in range(N)])
     import functools
-    expr = functools.reduce(g,ws)
+    expr = functools.reduce(g, ws)
+    assert isinstance(expr, Pow)
 
 
 def test_issue_12996():
@@ -857,31 +996,31 @@ def test_Derivative_as_finite_difference():
     x, h = symbols('x h', real=True)
     dfdx = f(x).diff(x)
     assert (dfdx.as_finite_difference([x-2, x-1, x, x+1, x+2]) -
-            (S(1)/12*(f(x-2)-f(x+2)) + S(2)/3*(f(x+1)-f(x-1)))).simplify() == 0
+            (S.One/12*(f(x-2)-f(x+2)) + Rational(2, 3)*(f(x+1)-f(x-1)))).simplify() == 0
 
     # Central 1st derivative "half-way"
     assert (dfdx.as_finite_difference() -
-            (f(x + S(1)/2)-f(x - S(1)/2))).simplify() == 0
+            (f(x + S.Half)-f(x - S.Half))).simplify() == 0
     assert (dfdx.as_finite_difference(h) -
             (f(x + h/S(2))-f(x - h/S(2)))/h).simplify() == 0
     assert (dfdx.as_finite_difference([x - 3*h, x-h, x+h, x + 3*h]) -
             (S(9)/(8*2*h)*(f(x+h) - f(x-h)) +
-             S(1)/(24*2*h)*(f(x - 3*h) - f(x + 3*h)))).simplify() == 0
+             S.One/(24*2*h)*(f(x - 3*h) - f(x + 3*h)))).simplify() == 0
 
     # One sided 1st derivative at gridpoint
     assert (dfdx.as_finite_difference([0, 1, 2], 0) -
-            (-S(3)/2*f(0) + 2*f(1) - f(2)/2)).simplify() == 0
+            (Rational(-3, 2)*f(0) + 2*f(1) - f(2)/2)).simplify() == 0
     assert (dfdx.as_finite_difference([x, x+h], x) -
             (f(x+h) - f(x))/h).simplify() == 0
     assert (dfdx.as_finite_difference([x-h, x, x+h], x-h) -
             (-S(3)/(2*h)*f(x-h) + 2/h*f(x) -
-             S(1)/(2*h)*f(x+h))).simplify() == 0
+             S.One/(2*h)*f(x+h))).simplify() == 0
 
     # One sided 1st derivative "half-way"
     assert (dfdx.as_finite_difference([x-h, x+h, x + 3*h, x + 5*h, x + 7*h])
             - 1/(2*h)*(-S(11)/(12)*f(x-h) + S(17)/(24)*f(x+h)
-                       + S(3)/8*f(x + 3*h) - S(5)/24*f(x + 5*h)
-                       + S(1)/24*f(x + 7*h))).simplify() == 0
+                       + Rational(3, 8)*f(x + 3*h) - Rational(5, 24)*f(x + 5*h)
+                       + S.One/24*f(x + 7*h))).simplify() == 0
 
     d2fdx2 = f(x).diff(x, 2)
     # Central 2nd derivative at gridpoint
@@ -889,13 +1028,13 @@ def test_Derivative_as_finite_difference():
             h**-2 * (f(x-h) + f(x+h) - 2*f(x))).simplify() == 0
 
     assert (d2fdx2.as_finite_difference([x - 2*h, x-h, x, x+h, x + 2*h]) -
-            h**-2 * (-S(1)/12*(f(x - 2*h) + f(x + 2*h)) +
-                     S(4)/3*(f(x+h) + f(x-h)) - S(5)/2*f(x))).simplify() == 0
+            h**-2 * (Rational(-1, 12)*(f(x - 2*h) + f(x + 2*h)) +
+                     Rational(4, 3)*(f(x+h) + f(x-h)) - Rational(5, 2)*f(x))).simplify() == 0
 
     # Central 2nd derivative "half-way"
     assert (d2fdx2.as_finite_difference([x - 3*h, x-h, x+h, x + 3*h]) -
-            (2*h)**-2 * (S(1)/2*(f(x - 3*h) + f(x + 3*h)) -
-                         S(1)/2*(f(x+h) + f(x-h)))).simplify() == 0
+            (2*h)**-2 * (S.Half*(f(x - 3*h) + f(x + 3*h)) -
+                         S.Half*(f(x+h) + f(x-h)))).simplify() == 0
 
     # One sided 2nd derivative at gridpoint
     assert (d2fdx2.as_finite_difference([x, x+h, x + 2*h, x + 3*h]) -
@@ -904,19 +1043,19 @@ def test_Derivative_as_finite_difference():
 
     # One sided 2nd derivative at "half-way"
     assert (d2fdx2.as_finite_difference([x-h, x+h, x + 3*h, x + 5*h]) -
-            (2*h)**-2 * (S(3)/2*f(x-h) - S(7)/2*f(x+h) + S(5)/2*f(x + 3*h) -
-                         S(1)/2*f(x + 5*h))).simplify() == 0
+            (2*h)**-2 * (Rational(3, 2)*f(x-h) - Rational(7, 2)*f(x+h) + Rational(5, 2)*f(x + 3*h) -
+                         S.Half*f(x + 5*h))).simplify() == 0
 
     d3fdx3 = f(x).diff(x, 3)
     # Central 3rd derivative at gridpoint
     assert (d3fdx3.as_finite_difference() -
-            (-f(x - 3/S(2)) + 3*f(x - 1/S(2)) -
-             3*f(x + 1/S(2)) + f(x + 3/S(2)))).simplify() == 0
+            (-f(x - Rational(3, 2)) + 3*f(x - S.Half) -
+             3*f(x + S.Half) + f(x + Rational(3, 2)))).simplify() == 0
 
     assert (d3fdx3.as_finite_difference(
         [x - 3*h, x - 2*h, x-h, x, x+h, x + 2*h, x + 3*h]) -
-        h**-3 * (S(1)/8*(f(x - 3*h) - f(x + 3*h)) - f(x - 2*h) +
-                 f(x + 2*h) + S(13)/8*(f(x-h) - f(x+h)))).simplify() == 0
+        h**-3 * (S.One/8*(f(x - 3*h) - f(x + 3*h)) - f(x - 2*h) +
+                 f(x + 2*h) + Rational(13, 8)*(f(x-h) - f(x+h)))).simplify() == 0
 
     # Central 3rd derivative at "half-way"
     assert (d3fdx3.as_finite_difference([x - 3*h, x-h, x+h, x + 3*h]) -
@@ -936,10 +1075,10 @@ def test_Derivative_as_finite_difference():
     y = Symbol('y', real=True)
     d2fdxdy = f(x, y).diff(x, y)
 
-    ref0 = Derivative(f(x + S(1)/2, y), y) - Derivative(f(x - S(1)/2, y), y)
+    ref0 = Derivative(f(x + S.Half, y), y) - Derivative(f(x - S.Half, y), y)
     assert (d2fdxdy.as_finite_difference(wrt=x) - ref0).simplify() == 0
 
-    half = S(1)/2
+    half = S.Half
     xm, xp, ym, yp = x-half, x+half, y-half, y+half
     ref2 = f(xm, ym) + f(xp, yp) - f(xp, ym) - f(xm, yp)
     assert (d2fdxdy.as_finite_difference() - ref2).simplify() == 0
@@ -961,7 +1100,7 @@ def test_issue_12005():
     e3 = Subs(Derivative(f(x) + y**2 - y, y), y, y**2)
     assert e3.diff(y) == 4*y
     e4 = Subs(Derivative(f(x + y), y), y, (x**2))
-    assert e4.diff(y) == S.Zero
+    assert e4.diff(y) is S.Zero
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
     assert f(g(x)).diff(g(x), g(x)) == Derivative(f(g(x)), g(x), g(x))
@@ -977,18 +1116,13 @@ def test_issue_13843():
     assert Derivative(f(x), (x, n)).doit() == Derivative(f(x), (x, n))
 
 
-def test_issue_13873():
-    from sympy.abc import x
-    assert sin(x).diff((x, -1)).is_Derivative
-
-
 def test_order_could_be_zero():
     x, y = symbols('x, y')
     n = symbols('n', integer=True, nonnegative=True)
     m = symbols('m', integer=True, positive=True)
     assert diff(y, (x, n)) == Piecewise((y, Eq(n, 0)), (0, True))
-    assert diff(y, (x, n + 1)) == S.Zero
-    assert diff(y, (x, m)) == S.Zero
+    assert diff(y, (x, n + 1)) is S.Zero
+    assert diff(y, (x, m)) is S.Zero
 
 
 def test_undefined_function_eq():
@@ -1011,15 +1145,20 @@ def test_function_assumptions():
     x = Symbol('x')
     f = Function('f')
     f_real = Function('f', real=True)
+    f_real1 = Function('f', real=1)
+    f_real_inherit = Function(Symbol('f', real=True))
 
+    assert f_real == f_real1  # assumptions are sanitized
     assert f != f_real
     assert f(x) != f_real(x)
 
     assert f(x).is_real is None
     assert f_real(x).is_real is True
+    assert f_real_inherit(x).is_real is True and f_real_inherit.name == 'f'
 
     # Can also do it this way, but it won't be equal to f_real because of the
-    # way UndefinedFunction.__new__ works.
+    # way UndefinedFunction.__new__ works. Any non-recognized assumptions
+    # are just added literally as something which is used in the hash
     f_real2 = Function('f', is_real=True)
     assert f_real2(x).is_real is True
 
@@ -1032,6 +1171,7 @@ def test_undef_fcn_float_issue_6938():
     assert not f(pi).evalf().is_number
     x = Symbol('x')
     assert not f(x).evalf(subs={x:1.2}).is_number
+
 
 def test_undefined_function_eval():
     # Issue 15170. Make sure UndefinedFunction with eval defined works
@@ -1068,3 +1208,112 @@ def test_issue_15241():
     assert (G + y*Gy).diff(Gy, y) == 1
     assert (y*G + y*Gy*G).diff(G, y) == y*Gy.diff(y) + Gy + 1
     assert (y*G + y*Gy*G).diff(y, G) == y*Gy.diff(y) + Gy + 1
+
+
+def test_issue_15226():
+    assert Subs(Derivative(f(y), x, y), y, g(x)).doit() != 0
+
+
+def test_issue_7027():
+    for wrt in (cos(x), re(x), Derivative(cos(x), x)):
+        raises(ValueError, lambda: diff(f(x), wrt))
+
+
+def test_derivative_quick_exit():
+    assert f(x).diff(y) == 0
+    assert f(x).diff(y, f(x)) == 0
+    assert f(x).diff(x, f(y)) == 0
+    assert f(f(x)).diff(x, f(x), f(y)) == 0
+    assert f(f(x)).diff(x, f(x), y) == 0
+    assert f(x).diff(g(x)) == 0
+    assert f(x).diff(x, f(x).diff(x)) == 1
+    df = f(x).diff(x)
+    assert f(x).diff(df) == 0
+    dg = g(x).diff(x)
+    assert dg.diff(df).doit() == 0
+
+
+def test_issue_15084_13166():
+    eq = f(x, g(x))
+    assert eq.diff((g(x), y)) == Derivative(f(x, g(x)), (g(x), y))
+    # issue 13166
+    assert eq.diff(x, 2).doit() == (
+        (Derivative(f(x, g(x)), (g(x), 2))*Derivative(g(x), x) +
+        Subs(Derivative(f(x, _xi_2), _xi_2, x), _xi_2, g(x)))*Derivative(g(x),
+        x) + Derivative(f(x, g(x)), g(x))*Derivative(g(x), (x, 2)) +
+        Derivative(g(x), x)*Subs(Derivative(f(_xi_1, g(x)), _xi_1, g(x)),
+        _xi_1, x) + Subs(Derivative(f(_xi_1, g(x)), (_xi_1, 2)), _xi_1, x))
+    # issue 6681
+    assert diff(f(x, t, g(x, t)), x).doit() == (
+        Derivative(f(x, t, g(x, t)), g(x, t))*Derivative(g(x, t), x) +
+        Subs(Derivative(f(_xi_1, t, g(x, t)), _xi_1), _xi_1, x))
+    # make sure the order doesn't matter when using diff
+    assert eq.diff(x, g(x)) == eq.diff(g(x), x)
+
+
+def test_negative_counts():
+    # issue 13873
+    raises(ValueError, lambda: sin(x).diff(x, -1))
+
+
+def test_Derivative__new__():
+    raises(TypeError, lambda: f(x).diff((x, 2), 0))
+    assert f(x, y).diff([(x, y), 0]) == f(x, y)
+    assert f(x, y).diff([(x, y), 1]) == NDimArray([
+        Derivative(f(x, y), x), Derivative(f(x, y), y)])
+    assert f(x,y).diff(y, (x, z), y, x) == Derivative(
+        f(x, y), (x, z + 1), (y, 2))
+    assert Matrix([x]).diff(x, 2) == Matrix([0])  # is_zero exit
+
+
+def test_issue_14719_10150():
+    class V(Expr):
+        _diff_wrt = True
+        is_scalar = False
+    assert V().diff(V()) == Derivative(V(), V())
+    assert (2*V()).diff(V()) == 2*Derivative(V(), V())
+    class X(Expr):
+        _diff_wrt = True
+    assert X().diff(X()) == 1
+    assert (2*X()).diff(X()) == 2
+
+
+def test_noncommutative_issue_15131():
+    x = Symbol('x', commutative=False)
+    t = Symbol('t', commutative=False)
+    fx = Function('Fx', commutative=False)(x)
+    ft = Function('Ft', commutative=False)(t)
+    A = Symbol('A', commutative=False)
+    eq = fx * A * ft
+    eqdt = eq.diff(t)
+    assert eqdt.args[-1] == ft.diff(t)
+
+
+def test_Subs_Derivative():
+    a = Derivative(f(g(x), h(x)), g(x), h(x),x)
+    b = Derivative(Derivative(f(g(x), h(x)), g(x), h(x)),x)
+    c = f(g(x), h(x)).diff(g(x), h(x), x)
+    d = f(g(x), h(x)).diff(g(x), h(x)).diff(x)
+    e = Derivative(f(g(x), h(x)), x)
+    eqs = (a, b, c, d, e)
+    subs = lambda arg: arg.subs(f, Lambda((x, y), exp(x + y))
+        ).subs(g(x), 1/x).subs(h(x), x**3)
+    ans = 3*x**2*exp(1/x)*exp(x**3) - exp(1/x)*exp(x**3)/x**2
+    assert all(subs(i).doit().expand() == ans for i in eqs)
+    assert all(subs(i.doit()).doit().expand() == ans for i in eqs)
+
+def test_issue_15360():
+    f = Function('f')
+    assert f.name == 'f'
+
+
+def test_issue_15947():
+    assert f._diff_wrt is False
+    raises(TypeError, lambda: f(f))
+    raises(TypeError, lambda: f(x).diff(f))
+
+
+def test_Derivative_free_symbols():
+    f = Function('f')
+    n = Symbol('n', integer=True, positive=True)
+    assert diff(f(x), (x, n)).free_symbols == {n, x}

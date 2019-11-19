@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 MKS unit system.
 
@@ -8,18 +6,16 @@ MKS stands for "meter, kilogram, second".
 
 from __future__ import division
 
-from sympy.physics.units import DimensionSystem, UnitSystem
+from sympy.physics.units import UnitSystem, DimensionSystem
 from sympy.physics.units.definitions import G, Hz, J, N, Pa, W, c, g, kg, m, s
-from sympy.physics.units.dimensions import (
-    acceleration, action, energy, force, frequency, length, mass, momentum,
-    power, pressure, time, velocity, dimsys_MKS)
+from sympy.physics.units.definitions.dimension_definitions import (
+    acceleration, action, energy, force, frequency, momentum,
+    power, pressure, velocity, length, mass, time)
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
+from sympy.physics.units.systems.length_weight_time import dimsys_length_weight_time
 
 dims = (velocity, acceleration, momentum, force, energy, power, pressure,
         frequency, action)
-
-# dimension system
-_mks_dim = dimsys_MKS
 
 units = [m, g, s, J, N, W, Pa, Hz]
 all_units = []
@@ -33,4 +29,4 @@ for u in units:
 all_units.extend([G, c])
 
 # unit system
-MKS = UnitSystem(base=(m, kg, s), units=all_units, name="MKS")
+MKS = UnitSystem(base_units=(m, kg, s), units=all_units, name="MKS", dimension_system=dimsys_length_weight_time)

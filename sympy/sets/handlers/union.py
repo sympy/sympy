@@ -1,9 +1,8 @@
-from sympy import (Interval, Intersection, Set, EmptySet,
-        FiniteSet, Union, ComplexRegion, ProductSet)
-from sympy.sets.fancysets import Integers, Naturals, Reals
-from sympy.sets.sets import UniversalSet
-from sympy import S, sympify
+from sympy import (Interval, Intersection, Set, EmptySet, S, sympify,
+                   FiniteSet, Union, ComplexRegion, ProductSet)
 from sympy.multipledispatch import dispatch
+from sympy.sets.fancysets import Integers
+from sympy.sets.sets import UniversalSet
 
 
 @dispatch(Integers, Set)
@@ -29,7 +28,7 @@ def union_sets(a, b):
             return ComplexRegion(Union(a.sets, b.sets), polar=True)
     return None
 
-@dispatch(EmptySet, Set)
+@dispatch(type(EmptySet), Set)
 def union_sets(a, b):
     return b
 
@@ -42,14 +41,15 @@ def union_sets(a, b):
 def union_sets(a, b):
     if b.is_subset(a):
         return a
-    if len(b.args) != len(a.args):
+    if len(b.sets) != len(a.sets):
         return None
-    if a.args[0] == b.args[0]:
-        return a.args[0] * Union(ProductSet(a.args[1:]),
-                                    ProductSet(b.args[1:]))
-    if a.args[-1] == b.args[-1]:
-        return Union(ProductSet(a.args[:-1]),
-                     ProductSet(b.args[:-1])) * a.args[-1]
+    if len(a.sets) == 2:
+        a1, a2 = a.sets
+        b1, b2 = b.sets
+        if a1 == b1:
+            return a1 * Union(a2, b2)
+        if a2 == b2:
+            return Union(a1, b1) * a2
     return None
 
 @dispatch(ProductSet, Set)
@@ -110,7 +110,7 @@ def union_sets(a, b):
     # If `b` set contains one of my elements, remove it from `a`
     if any(b.contains(x) == True for x in a):
         return set((
-            FiniteSet(*[x for x in a if b.contains(x) != True]), b))
+            FiniteSet(*[x for x in a if not b.contains(x)]), b))
     return None
 
 @dispatch(Set, Set)

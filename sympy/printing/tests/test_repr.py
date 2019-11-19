@@ -1,7 +1,8 @@
 from sympy.utilities.pytest import raises
 from sympy import (symbols, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
-    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild)
+    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
+from sympy.combinatorics import Cycle, Permutation
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
@@ -17,15 +18,21 @@ ENV = {}
 exec_("from sympy import *", ENV)
 
 
-def sT(expr, string):
+def sT(expr, string, import_stmt=None):
     """
     sT := sreprTest
 
     Tests that srepr delivers the expected string and that
     the condition eval(srepr(expr))==expr holds.
     """
+    if import_stmt is None:
+        ENV2 = ENV
+    else:
+        ENV2 = ENV.copy()
+        exec_(import_stmt, ENV2)
+
     assert srepr(expr) == string
-    assert eval(string, ENV) == expr
+    assert eval(string, ENV2) == expr
 
 
 def test_printmethod():
@@ -174,9 +181,8 @@ def test_Dummy_from_Symbol():
     # should not get the full dictionary of assumptions
     n = Symbol('n', integer=True)
     d = n.as_dummy()
-    s1 = "Dummy('n', dummy_index=%s, integer=True)" % str(d.dummy_index)
-    s2 = "Dummy('n', integer=True, dummy_index=%s)" % str(d.dummy_index)
-    assert srepr(d) in (s1, s2)
+    assert srepr(d
+        ) == "Dummy('n', dummy_index=%s)" % str(d.dummy_index)
 
 
 def test_tuple():
@@ -244,15 +250,61 @@ def test_DMP():
     assert srepr(ZZ.old_poly_ring(x)([1, 2])) == \
         "DMP([1, 2], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x')))"
 
+
 def test_FiniteExtension():
     assert srepr(FiniteExtension(Poly(x**2 + 1, x))) == \
         "FiniteExtension(Poly(x**2 + 1, x, domain='ZZ'))"
+
 
 def test_ExtensionElement():
     A = FiniteExtension(Poly(x**2 + 1, x))
     assert srepr(A.generator) == \
         "ExtElem(DMP([1, 0], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x'))), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
 
+
 def test_BooleanAtom():
     assert srepr(true) == "true"
     assert srepr(false) == "false"
+
+
+def test_Integers():
+    sT(S.Integers, "Integers")
+
+
+def test_Naturals():
+    sT(S.Naturals, "Naturals")
+
+
+def test_Naturals0():
+    sT(S.Naturals0, "Naturals0")
+
+
+def test_Reals():
+    sT(S.Reals, "Reals")
+
+
+def test_matrix_expressions():
+    n = symbols('n', integer=True)
+    A = MatrixSymbol("A", n, n)
+    B = MatrixSymbol("B", n, n)
+    sT(A, "MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True))")
+    sT(A*B, "MatMul(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
+    sT(A + B, "MatAdd(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
+
+
+def test_Cycle():
+    # FIXME: sT fails because Cycle is not immutable and calling srepr(Cycle(1, 2))
+    # adds keys to the Cycle dict (GH-17661)
+    #import_stmt = "from sympy.combinatorics import Cycle"
+    #sT(Cycle(1, 2), "Cycle(1, 2)", import_stmt)
+    assert srepr(Cycle(1, 2)) == "Cycle(1, 2)"
+
+
+def test_Permutation():
+    import_stmt = "from sympy.combinatorics import Permutation"
+    print_cyclic = Permutation.print_cyclic
+    Permutation.print_cyclic = True
+    try:
+        sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
+    finally:
+        Permutation.print_cyclic = print_cyclic

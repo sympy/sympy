@@ -1,15 +1,36 @@
+"""
+
+Contains
+========
+Geometric
+Logarithmic
+NegativeBinomial
+Poisson
+Skellam
+YuleSimon
+Zeta
+"""
+
+
 from __future__ import print_function, division
 
-from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
-from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta, hyper, binomial,
-                   Piecewise, floor)
-from sympy.stats.rv import _value_check, RandomSymbol
-from sympy.stats.joint_rv_types import JointRV
-from sympy.stats.joint_rv import MarginalDistribution, JointPSpace, CompoundDistribution
-from sympy.stats import density
 import random
 
-__all__ = ['Geometric', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'YuleSimon', 'Zeta']
+from sympy import (factorial, exp, S, sympify, I, zeta, polylog, log, beta,
+                   hyper, binomial, Piecewise, floor, besseli, sqrt)
+from sympy.stats import density
+from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
+from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
+from sympy.stats.rv import _value_check, RandomSymbol
+
+__all__ = ['Geometric',
+'Logarithmic',
+'NegativeBinomial',
+'Poisson',
+'Skellam',
+'YuleSimon',
+'Zeta'
+]
 
 
 def rv(symbol, cls, *args):
@@ -31,7 +52,7 @@ class GeometricDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        _value_check(And(0 < p, p <= 1), "p must be between 0 and 1")
+        _value_check((0 < p, p <= 1), "p must be between 0 and 1")
 
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p
@@ -86,8 +107,9 @@ def Geometric(name, p):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Geometric_distribution
-    [2] http://mathworld.wolfram.com/GeometricDistribution.html
+    .. [1] https://en.wikipedia.org/wiki/Geometric_distribution
+    .. [2] http://mathworld.wolfram.com/GeometricDistribution.html
+
     """
     return rv(name, GeometricDistribution, p)
 
@@ -102,7 +124,7 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        _value_check(And(p > 0, p < 1), "p should be between 0 and 1")
+        _value_check((p > 0, p < 1), "p should be between 0 and 1")
 
     def pdf(self, k):
         p = self.p
@@ -159,6 +181,13 @@ def Logarithmic(name, p):
 
     >>> variance(X)
     -1/((-4*log(5) + 8*log(2))*(-2*log(5) + 4*log(2))) + 1/(-64*log(2)*log(5) + 64*log(2)**2 + 16*log(5)**2) - 10/(-32*log(5) + 64*log(2))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Logarithmic_distribution
+    .. [2] http://mathworld.wolfram.com/LogarithmicDistribution.html
+
     """
     return rv(name, LogarithmicDistribution, p)
 
@@ -173,7 +202,7 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
     @staticmethod
     def check(r, p):
         _value_check(r > 0, 'r should be positive')
-        _value_check(And(p > 0, p < 1), 'p should be between 0 and 1')
+        _value_check((p > 0, p < 1), 'p should be between 0 and 1')
 
     def pdf(self, k):
         r = self.r
@@ -238,6 +267,13 @@ def NegativeBinomial(name, r, p):
 
     >>> variance(X)
     25/16
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Negative_binomial_distribution
+    .. [2] http://mathworld.wolfram.com/NegativeBinomialDistribution.html
+
     """
     return rv(name, NegativeBinomialDistribution, r, p)
 
@@ -326,10 +362,99 @@ def Poisson(name, lamda):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Poisson_distribution
-    [2] http://mathworld.wolfram.com/PoissonDistribution.html
+    .. [1] https://en.wikipedia.org/wiki/Poisson_distribution
+    .. [2] http://mathworld.wolfram.com/PoissonDistribution.html
+
     """
     return rv(name, PoissonDistribution, lamda)
+
+
+# -----------------------------------------------------------------------------
+# Skellam distribution --------------------------------------------------------
+
+
+class SkellamDistribution(SingleDiscreteDistribution):
+    _argnames = ('mu1', 'mu2')
+    set = S.Integers
+
+    @staticmethod
+    def check(mu1, mu2):
+        _value_check(mu1 >= 0, 'Parameter mu1 must be >= 0')
+        _value_check(mu2 >= 0, 'Parameter mu2 must be >= 0')
+
+    def pdf(self, k):
+        (mu1, mu2) = (self.mu1, self.mu2)
+        term1 = exp(-(mu1 + mu2)) * (mu1 / mu2) ** (k / 2)
+        term2 = besseli(k, 2 * sqrt(mu1 * mu2))
+        return term1 * term2
+
+    def _cdf(self, x):
+        raise NotImplementedError(
+            "Skellam doesn't have closed form for the CDF.")
+
+    def _characteristic_function(self, t):
+        (mu1, mu2) = (self.mu1, self.mu2)
+        return exp(-(mu1 + mu2) + mu1 * exp(I * t) + mu2 * exp(-I * t))
+
+    def _moment_generating_function(self, t):
+        (mu1, mu2) = (self.mu1, self.mu2)
+        return exp(-(mu1 + mu2) + mu1 * exp(t) + mu2 * exp(-t))
+
+
+def Skellam(name, mu1, mu2):
+    r"""
+    Create a discrete random variable with a Skellam distribution.
+
+    The Skellam is the distribution of the difference N1 - N2
+    of two statistically independent random variables N1 and N2
+    each Poisson-distributed with respective expected values mu1 and mu2.
+
+    The density of the Skellam distribution is given by
+
+    .. math::
+        f(k) := e^{-(\mu_1+\mu_2)}(\frac{\mu_1}{\mu_2})^{k/2}I_k(2\sqrt{\mu_1\mu_2})
+
+    Parameters
+    ==========
+
+    mu1: A non-negative value
+    mu2: A non-negative value
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Skellam, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> z = Symbol("z", integer=True)
+    >>> mu1 = Symbol("mu1", positive=True)
+    >>> mu2 = Symbol("mu2", positive=True)
+    >>> X = Skellam("x", mu1, mu2)
+
+    >>> pprint(density(X)(z), use_unicode=False)
+         z
+         -
+         2
+    /mu1\   -mu1 - mu2        /       _____   _____\
+    |---| *e          *besseli\z, 2*\/ mu1 *\/ mu2 /
+    \mu2/
+    >>> E(X)
+    mu1 - mu2
+    >>> variance(X).expand()
+    mu1 + mu2
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Skellam_distribution
+
+    """
+    return rv(name, SkellamDistribution, mu1, mu2)
 
 
 #-------------------------------------------------------------------------------
@@ -401,6 +526,12 @@ def YuleSimon(name, rho):
 
     >>> simplify(variance(X))
     25/48
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Yule%E2%80%93Simon_distribution
+
     """
     return rv(name, YuleSimonDistribution, rho)
 
@@ -469,5 +600,11 @@ def Zeta(name, s):
 
     >>> variance(X)
     -pi**8/(8100*zeta(5)**2) + zeta(3)/zeta(5)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Zeta_distribution
+
     """
     return rv(name, ZetaDistribution, s)

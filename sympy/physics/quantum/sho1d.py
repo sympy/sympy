@@ -134,7 +134,6 @@ class RaisingOp(SHOOp):
     def _represent_NumberOp(self, basis, **options):
         ndim_info = options.get('ndim', 4)
         format = options.get('format','sympy')
-        spmatrix = options.get('spmatrix', 'csr')
         matrix = matrix_zeros(ndim_info, ndim_info, **options)
         for i in range(ndim_info - 1):
             value = sqrt(i + 1)
@@ -276,7 +275,6 @@ class LoweringOp(SHOOp):
     def _represent_NumberOp(self, basis, **options):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
-        spmatrix = options.get('spmatrix', 'csr')
         matrix = matrix_zeros(ndim_info, ndim_info, **options)
         for i in range(ndim_info - 1):
             value = sqrt(i + 1)
@@ -397,7 +395,6 @@ class NumberOp(SHOOp):
     def _represent_NumberOp(self, basis, **options):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
-        spmatrix = options.get('spmatrix', 'csr')
         matrix = matrix_zeros(ndim_info, ndim_info, **options)
         for i in range(ndim_info):
             value = i
@@ -504,7 +501,6 @@ class Hamiltonian(SHOOp):
     def _represent_NumberOp(self, basis, **options):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
-        spmatrix = options.get('spmatrix', 'csr')
         matrix = matrix_zeros(ndim_info, ndim_info, **options)
         for i in range(ndim_info):
             value = i + Integer(1)/Integer(2)
@@ -599,7 +595,6 @@ class SHOKet(SHOState, Ket):
         if isinstance(self.n, Integer):
             if self.n >= ndim_info:
                 return ValueError("N-Dimension too small")
-            value = Integer(1)
             if format == 'scipy.sparse':
                 vector[int(self.n), 0] = 1.0
                 vector = vector.tocsr()

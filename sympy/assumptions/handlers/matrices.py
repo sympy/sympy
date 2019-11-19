@@ -522,6 +522,14 @@ class AskDiagonalHandler(CommonHandler):
     def DiagonalMatrix(expr, assumptions):
         return True
 
+    @staticmethod
+    def DiagMatrix(expr, assumptions):
+        return True
+
+    @staticmethod
+    def Identity(expr, assumptions):
+        return True
+
     Factorization = staticmethod(partial(_Factorization, Q.diagonal))
 
 

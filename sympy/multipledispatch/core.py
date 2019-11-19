@@ -79,7 +79,7 @@ def ismethod(func):
     """
     if hasattr(inspect, "signature"):
         signature = inspect.signature(func)
-        return signature.parameters.get('self', None) != None
+        return signature.parameters.get('self', None) is not None
     else:
         spec = inspect.getargspec(func)
         return spec and spec.args and spec.args[0] == 'self'

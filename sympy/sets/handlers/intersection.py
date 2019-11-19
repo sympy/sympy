@@ -1,10 +1,10 @@
-from sympy import (Interval, Intersection, Set, EmptySet,
-        FiniteSet, Union, ComplexRegion, ProductSet)
-from sympy.sets.fancysets import Integers, Naturals, Reals, Range, ImageSet
-from sympy.sets.sets import UniversalSet, imageset
-from sympy.sets.conditionset import ConditionSet
-from sympy import S, sympify, Dummy, Lambda, symbols
+from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
+                   EmptySet, FiniteSet, Union, ComplexRegion, ProductSet)
 from sympy.multipledispatch import dispatch
+from sympy.sets.conditionset import ConditionSet
+from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
+    ImageSet, Rationals)
+from sympy.sets.sets import UniversalSet, imageset, ProductSet
 
 
 @dispatch(ConditionSet, ConditionSet)
@@ -15,21 +15,17 @@ def intersection_sets(a, b):
 def intersection_sets(a, b):
     return ConditionSet(a.sym, a.condition, Intersection(a.base_set, b))
 
-@dispatch(Naturals, Interval)
+@dispatch(Naturals, Integers)
 def intersection_sets(a, b):
-    return Intersection(S.Integers, b, Interval(a._inf, S.Infinity))
+    return a
+
+@dispatch(Naturals, Naturals)
+def intersection_sets(a, b):
+    return a if a is S.Naturals else b
 
 @dispatch(Interval, Naturals)
 def intersection_sets(a, b):
     return intersection_sets(b, a)
-
-@dispatch(Integers, Interval)
-def intersection_sets(a, b):
-    from sympy.functions.elementary.integers import floor, ceiling
-    if b._inf == S.NegativeInfinity and b._sup == S.Infinity:
-        return a
-    s = Range(ceiling(b.left), floor(b.right) + 1)
-    return intersection_sets(s, b)  # take out endpoints if open interval
 
 @dispatch(ComplexRegion, Set)
 def intersection_sets(self, other):
@@ -85,7 +81,6 @@ def intersection_sets(a, b):
 @dispatch(Range, Interval)
 def intersection_sets(a, b):
     from sympy.functions.elementary.integers import floor, ceiling
-    from sympy.functions.elementary.miscellaneous import Min, Max
     if not all(i.is_number for i in b.args[:2]):
         return
 
@@ -105,11 +100,7 @@ def intersection_sets(a, b):
 
 @dispatch(Range, Naturals)
 def intersection_sets(a, b):
-    return intersection_sets(a, Interval(1, S.Infinity))
-
-@dispatch(Naturals, Range)
-def intersection_sets(a, b):
-    return intersection_sets(b, a)
+    return intersection_sets(a, Interval(b.inf, S.Infinity))
 
 @dispatch(Range, Range)
 def intersection_sets(a, b):
@@ -142,7 +133,7 @@ def intersection_sets(a, b):
     # we want to know when the two equations might
     # have integer solutions so we use the diophantine
     # solver
-    va, vb = diop_linear(eq(r1, Dummy()) - eq(r2, Dummy()))
+    va, vb = diop_linear(eq(r1, Dummy('a')) - eq(r2, Dummy('b')))
 
     # check for no solution
     no_solution = va is None and vb is None
@@ -225,40 +216,42 @@ def intersection_sets(a, b):
 @dispatch(ImageSet, Set)
 def intersection_sets(self, other):
     from sympy.solvers.diophantine import diophantine
-    if self.base_set is S.Integers:
-        g = None
-        if isinstance(other, ImageSet) and other.base_set is S.Integers:
-            g = other.lamda.expr
+
+    # Only handle the straight-forward univariate case
+    if (len(self.lamda.variables) > 1
+            or self.lamda.signature != self.lamda.variables):
+        return None
+    base_set = self.base_sets[0]
+
+    # Intersection between ImageSets with Integers as base set
+    # For {f(n) : n in Integers} & {g(m) : m in Integers} we solve the
+    # diophantine equations f(n)=g(m).
+    # If the solutions for n are {h(t) : t in Integers} then we return
+    # {f(h(t)) : t in integers}.
+    if base_set is S.Integers:
+        gm = None
+        if isinstance(other, ImageSet) and other.base_sets == (S.Integers,):
+            gm = other.lamda.expr
             m = other.lamda.variables[0]
         elif other is S.Integers:
-            m = g = Dummy('x')
-        if g is not None:
-            f = self.lamda.expr
+            m = gm = Dummy('x')
+        if gm is not None:
+            fn = self.lamda.expr
             n = self.lamda.variables[0]
-            # Diophantine sorts the solutions according to the alphabetic
-            # order of the variable names, since the result should not depend
-            # on the variable name, they are replaced by the dummy variables
-            # below
-            a, b = Dummy('a'), Dummy('b')
-            f, g = f.subs(n, a), g.subs(m, b)
-            solns_set = diophantine(f - g)
-            if solns_set == set():
-                return EmptySet()
-            solns = list(diophantine(f - g))
-
-            if len(solns) != 1:
+            solns = list(diophantine(fn - gm, syms=(n, m)))
+            if len(solns) == 0:
+                return EmptySet
+            elif len(solns) != 1:
                 return
-
-            # since 'a' < 'b', select soln for n
-            nsol = solns[0][0]
-            t = nsol.free_symbols.pop()
-            return imageset(Lambda(n, f.subs(a, nsol.subs(t, n))), S.Integers)
+            else:
+                soln, solm = solns[0]
+                (t,) = soln.free_symbols
+                expr = fn.subs(n, soln.subs(t, n))
+                return imageset(Lambda(n, expr), S.Integers)
 
     if other == S.Reals:
         from sympy.solvers.solveset import solveset_real
         from sympy.core.function import expand_complex
-        if len(self.lamda.variables) > 1:
-            return None
 
         f = self.lamda.expr
         n = self.lamda.variables[0]
@@ -269,9 +262,23 @@ def intersection_sets(self, other):
         re, im = f_.as_real_imag()
         im = expand_complex(im)
 
-        return imageset(Lambda(n_, re),
-                        self.base_set.intersect(
-                            solveset_real(im, n_)))
+        re = re.subs(n_, n)
+        im = im.subs(n_, n)
+        ifree = im.free_symbols
+        lam = Lambda(n, re)
+        if not im:
+            # allow re-evaluation
+            # of self in this case to make
+            # the result canonical
+            pass
+        elif im.is_zero is False:
+            return S.EmptySet
+        elif ifree != {n}:
+            return None
+        else:
+            # univarite imaginary part in same variable
+            base_set = base_set.intersect(solveset_real(im, n))
+        return imageset(lam, base_set)
 
     elif isinstance(other, Interval):
         from sympy.solvers.solveset import (invert_real, invert_complex,
@@ -279,7 +286,6 @@ def intersection_sets(self, other):
 
         f = self.lamda.expr
         n = self.lamda.variables[0]
-        base_set = self.base_set
         new_inf, new_sup = None, None
         new_lopen, new_ropen = other.left_open, other.right_open
 
@@ -339,8 +345,8 @@ def intersection_sets(self, other):
 def intersection_sets(a, b):
     if len(b.args) != len(a.args):
         return S.EmptySet
-    return ProductSet(i.intersect(j)
-            for i, j in zip(a.sets, b.sets))
+    return ProductSet(*(i.intersect(j) for i, j in zip(a.sets, b.sets)))
+
 
 @dispatch(Interval, Interval)
 def intersection_sets(a, b):
@@ -389,7 +395,7 @@ def intersection_sets(a, b):
 
     return Interval(start, end, left_open, right_open)
 
-@dispatch(EmptySet, Set)
+@dispatch(type(EmptySet), Set)
 def intersection_sets(a, b):
     return S.EmptySet
 
@@ -411,3 +417,33 @@ def intersection_sets(a, b):
 @dispatch(Set, Set)
 def intersection_sets(a, b):
     return None
+
+@dispatch(Integers, Rationals)
+def intersection_sets(a, b):
+    return a
+
+@dispatch(Naturals, Rationals)
+def intersection_sets(a, b):
+    return a
+
+@dispatch(Rationals, Reals)
+def intersection_sets(a, b):
+    return a
+
+def _intlike_interval(a, b):
+    try:
+        from sympy.functions.elementary.integers import floor, ceiling
+        if b._inf is S.NegativeInfinity and b._sup is S.Infinity:
+            return a
+        s = Range(max(a.inf, ceiling(b.left)), floor(b.right) + 1)
+        return intersection_sets(s, b)  # take out endpoints if open interval
+    except ValueError:
+        return None
+
+@dispatch(Integers, Interval)
+def intersection_sets(a, b):
+    return _intlike_interval(a, b)
+
+@dispatch(Naturals, Interval)
+def intersection_sets(a, b):
+    return _intlike_interval(a, b)
