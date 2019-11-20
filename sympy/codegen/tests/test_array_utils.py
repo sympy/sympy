@@ -1,4 +1,4 @@
-from sympy import symbols, IndexedBase, HadamardProduct, Identity, cos
+from sympy import symbols, IndexedBase, Identity, cos
 from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayTensorProduct, CodegenArrayDiagonal,
         CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
@@ -6,13 +6,13 @@ from sympy.codegen.array_utils import (CodegenArrayContraction,
         _RecognizeMatMulLines, _unfold_recognized_expr,
         parse_indexed_expression, recognize_matrix_expression,
         _parse_matrix_expression)
-from sympy import (MatrixSymbol, Sum)
+from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy.matrices import (Trace, MatAdd, MatMul, Transpose)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.matrices import Trace, MatAdd, MatMul, Transpose
+from sympy.utilities.pytest import raises
 
 
 A, B = symbols("A B", cls=IndexedBase)
@@ -323,7 +323,6 @@ def test_codegen_permutedims_sink():
     cg = CodegenArrayPermuteDims(CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P), (1, 2), (3, 4)), [1, 0])
     sunk = cg.nest_permutation()
     assert sunk == CodegenArrayContraction(CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N, P), [[0, 5]]), (1, 2), (3, 4))
-    sunk2 = sunk.expr.nest_permutation()
 
 
 def test_parsing_of_matrix_expressions():

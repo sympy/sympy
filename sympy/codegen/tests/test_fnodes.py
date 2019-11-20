@@ -36,7 +36,7 @@ def test_size_assumed_shape():
     body = [Return((sum_(a**2)/size(a))**.5)]
     arr = array(a, dim=[':'], intent='in')
     fd = FunctionDefinition(real, 'rms', [arr], body)
-    f_mod = render_as_module([fd], 'mod_rms')
+    render_as_module([fd], 'mod_rms')
 
     (stdout, stderr), info = compile_run_strings([
         ('rms.f90', render_as_module([fd], 'mod_rms')),
