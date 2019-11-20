@@ -257,7 +257,7 @@ class Vector(BasisDependent):
 
         from sympy.vector.operators import _get_coord_sys_from_expr
         if isinstance(self, VectorZero):
-            return (S(0), S(0), S(0))
+            return (S.Zero, S.Zero, S.Zero)
         base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
         return tuple([self.dot(i) for i in base_vec])
 
@@ -347,8 +347,8 @@ class BaseVector(Vector, AtomicExpr):
         obj = super(BaseVector, cls).__new__(cls, S(index), system)
         # Assign important attributes
         obj._base_instance = obj
-        obj._components = {obj: S(1)}
-        obj._measure_number = S(1)
+        obj._components = {obj: S.One}
+        obj._measure_number = S.One
         obj._name = system._name + '.' + name
         obj._pretty_form = u'' + pretty_str
         obj._latex_form = latex_str

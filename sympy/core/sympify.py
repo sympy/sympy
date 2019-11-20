@@ -53,7 +53,7 @@ class CantSympify(object):
 
 def _convert_numpy_types(a, **sympify_args):
     """
-    Converts a numpy datatype input to an appropriate sympy type.
+    Converts a numpy datatype input to an appropriate SymPy type.
     """
     import numpy as np
     if not isinstance(a, np.floating):
@@ -85,11 +85,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     with SAGE.
 
     It currently accepts as arguments:
-       - any object defined in sympy
+       - any object defined in SymPy
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
        - booleans, including ``None`` (will leave ``None`` unchanged)
-       - lists, sets or tuples containing any of the above
+       - dict, lists, sets or tuples containing any of the above
 
     .. warning::
         Note that this function uses ``eval``, and thus shouldn't be used on
@@ -242,6 +242,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Notes
     =====
 
+    The keywords ``rational`` and ``convert_xor`` are only used
+    when the input is a string.
+
     Sometimes autosimplification during sympification results in expressions
     that are very different in structure than what was entered. Until such
     autosimplification is no longer done, the ``kernS`` function might be of
@@ -259,26 +262,36 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     """
-    if evaluate is None:
-        if global_evaluate[0] is False:
-            evaluate = global_evaluate[0]
-        else:
-            evaluate = True
-    try:
-        if a in sympy_classes:
-            return a
-    except TypeError: # Type of a is unhashable
-        pass
+    is_sympy = getattr(a, '__sympy__', None)
+    if is_sympy is not None:
+        return a
+
+    if isinstance(a, CantSympify):
+        raise SympifyError(a)
     cls = getattr(a, "__class__", None)
     if cls is None:
-        cls = type(a) # Probably an old-style class
-    if cls in sympy_classes:
-        return a
+        cls = type(a)  # Probably an old-style class
+    conv = converter.get(cls, None)
+    if conv is not None:
+        return conv(a)
+
+    for superclass in getmro(cls):
+        try:
+            return converter[superclass](a)
+        except KeyError:
+            continue
+
     if cls is type(None):
         if strict:
             raise SympifyError(a)
         else:
             return a
+
+    if evaluate is None:
+        if global_evaluate[0] is False:
+            evaluate = global_evaluate[0]
+        else:
+            evaluate = True
 
     # Support for basic numpy datatypes
     # Note that this check exists to avoid importing NumPy when not necessary
@@ -288,18 +301,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             return _convert_numpy_types(a, locals=locals,
                 convert_xor=convert_xor, strict=strict, rational=rational,
                 evaluate=evaluate)
-
-    try:
-        return converter[cls](a)
-    except KeyError:
-        for superclass in getmro(cls):
-            try:
-                return converter[superclass](a)
-            except KeyError:
-                continue
-
-    if isinstance(a, CantSympify):
-        raise SympifyError(a)
 
     _sympy_ = getattr(a, "_sympy_", None)
     if _sympy_ is not None:

@@ -55,7 +55,10 @@ class AssocOp(Basic):
 
     @classmethod
     def _from_args(cls, args, is_commutative=None):
-        """Create new instance with already-processed args"""
+        """Create new instance with already-processed args.
+        If the args are not in canonical order, then a non-canonical
+        result will be returned, so use with caution. The order of
+        args may change if the sign of the args is changed."""
         if len(args) == 0:
             return cls.identity
         elif len(args) == 1:
@@ -298,7 +301,7 @@ class AssocOp(Basic):
         was a number with no functions it would have been evaluated, but
         it wasn't so we must judiciously extract the numbers and reconstruct
         the object. This is *not* simply replacing numbers with evaluated
-        numbers. Nunmbers should be handled in the largest pure-number
+        numbers. Numbers should be handled in the largest pure-number
         expression as possible. So the code below separates ``self`` into
         number and non-number parts and evaluates the number parts and
         walks the args of the non-number part recursively (doing the same

@@ -1,7 +1,7 @@
-from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
+from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log, Rational,
                    cos, sqrt, symbols, oo, Derivative, gamma, O, appellf1)
-from sympy.series.limits import limit
 from sympy.abc import x, z, k
+from sympy.series.limits import limit
 from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import (
     random_complex_number as randcplx,
@@ -47,6 +47,10 @@ def test_hyper():
     assert hyper([polar_lift(z)], [polar_lift(k)], polar_lift(x)) == \
         hyper([z], [k], polar_lift(x))
 
+    # hyper does not automatically evaluate anyway, but the test is to make
+    # sure that the evaluate keyword is accepted
+    assert hyper((1, 2), (1,), z, evaluate=False).func is hyper
+
 
 def test_expand_func():
     # evaluation at 1 of Gauss' hypergeometric function:
@@ -88,16 +92,16 @@ def test_hyper_rewrite_sum():
 
 def test_radius_of_convergence():
     assert hyper((1, 2), [3], z).radius_of_convergence == 1
-    assert hyper((1, 2), [3, 4], z).radius_of_convergence == oo
+    assert hyper((1, 2), [3, 4], z).radius_of_convergence is oo
     assert hyper((1, 2, 3), [4], z).radius_of_convergence == 0
-    assert hyper((0, 1, 2), [4], z).radius_of_convergence == oo
+    assert hyper((0, 1, 2), [4], z).radius_of_convergence is oo
     assert hyper((-1, 1, 2), [-4], z).radius_of_convergence == 0
-    assert hyper((-1, -2, 2), [-1], z).radius_of_convergence == oo
+    assert hyper((-1, -2, 2), [-1], z).radius_of_convergence is oo
     assert hyper((-1, 2), [-1, -2], z).radius_of_convergence == 0
     assert hyper([-1, 1, 3], [-2, 2], z).radius_of_convergence == 1
-    assert hyper([-1, 1], [-2, 2], z).radius_of_convergence == oo
+    assert hyper([-1, 1], [-2, 2], z).radius_of_convergence is oo
     assert hyper([-1, 1, 3], [-2], z).radius_of_convergence == 0
-    assert hyper((-1, 2, 3, 4), [], z).radius_of_convergence == oo
+    assert hyper((-1, 2, 3, 4), [], z).radius_of_convergence is oo
 
     assert hyper([1, 1], [3], 1).convergence_statement == True
     assert hyper([1, 1], [2], 1).convergence_statement == False
@@ -125,14 +129,14 @@ def test_meijer():
     assert g.is_commutative is True
     assert g.is_number is False
     #issue 13071
-    assert meijerg([[],[]], [[S(1)/2],[0]], 1).is_number is True
+    assert meijerg([[],[]], [[S.Half],[0]], 1).is_number is True
 
-    assert meijerg([1, 2], [3], [4], [5], z).delta == S(1)/2
+    assert meijerg([1, 2], [3], [4], [5], z).delta == S.Half
 
     # just a few checks to make sure that all arguments go where they should
     assert tn(meijerg(Tuple(), Tuple(), Tuple(0), Tuple(), -z), exp(z), z)
     assert tn(sqrt(pi)*meijerg(Tuple(), Tuple(),
-                               Tuple(0), Tuple(S(1)/2), z**2/4), cos(z), z)
+                               Tuple(0), Tuple(S.Half), z**2/4), cos(z), z)
     assert tn(meijerg(Tuple(1, 1), Tuple(), Tuple(1), Tuple(0), z),
               log(1 + z), z)
 
@@ -188,7 +192,7 @@ def test_meijerg_derivative():
     assert td(meijerg([x], [a + 1], [a], [], y), x)
     assert td(meijerg([x, a], [], [], [a + 1], y), x)
     assert td(meijerg([x, a + 1], [], [], [a], y), x)
-    b = S(3)/2
+    b = Rational(3, 2)
     assert td(meijerg([a + 2], [b], [b - 3, x], [a], y), x)
 
 
@@ -197,10 +201,10 @@ def test_meijerg_period():
     assert meijerg([1], [], [], [0], x).get_period() == 2*pi
     assert meijerg([], [], [0], [], x).get_period() == 2*pi  # exp(x)
     assert meijerg(
-        [], [], [0], [S(1)/2], x).get_period() == 2*pi  # cos(sqrt(x))
+        [], [], [0], [S.Half], x).get_period() == 2*pi  # cos(sqrt(x))
     assert meijerg(
-        [], [], [S(1)/2], [0], x).get_period() == 4*pi  # sin(sqrt(x))
-    assert meijerg([1, 1], [], [1], [0], x).get_period() == oo  # log(1 + x)
+        [], [], [S.Half], [0], x).get_period() == 4*pi  # sin(sqrt(x))
+    assert meijerg([1, 1], [], [1], [0], x).get_period() is oo  # log(1 + x)
 
 
 def test_hyper_unpolarify():
@@ -258,14 +262,14 @@ def test_hyperrep():
         """ Test that func is a valid representation of hyp. """
         # First test that func agrees with hyp for small z
         if not tn(func.rewrite('nonrepsmall'), hyp, z,
-                  a=S(-1)/2, b=S(-1)/2, c=S(1)/2, d=S(1)/2):
+                  a=Rational(-1, 2), b=Rational(-1, 2), c=S.Half, d=S.Half):
             return False
         # Next check that the two small representations agree.
         if not tn(
             func.rewrite('nonrepsmall').subs(
                 z, exp_polar(I*pi)*z).replace(exp_polar, exp),
             func.subs(z, exp_polar(I*pi)*z).rewrite('nonrepsmall'),
-                z, a=S(-1)/2, b=S(-1)/2, c=S(1)/2, d=S(1)/2):
+                z, a=Rational(-1, 2), b=Rational(-1, 2), c=S.Half, d=S.Half):
             return False
         # Next check continuity along exp_polar(I*pi)*t
         expr = func.subs(z, exp_polar(I*pi)*z).rewrite('nonrep')
@@ -288,19 +292,19 @@ def test_hyperrep():
         return True
 
     # Now test the various representatives.
-    a = S(1)/3
-    assert t(HyperRep_atanh(z), hyper([S(1)/2, 1], [S(3)/2], z), z)
+    a = Rational(1, 3)
+    assert t(HyperRep_atanh(z), hyper([S.Half, 1], [Rational(3, 2)], z), z)
     assert t(HyperRep_power1(a, z), hyper([-a], [], z), z)
-    assert t(HyperRep_power2(a, z), hyper([a, a - S(1)/2], [2*a], z), z)
+    assert t(HyperRep_power2(a, z), hyper([a, a - S.Half], [2*a], z), z)
     assert t(HyperRep_log1(z), -z*hyper([1, 1], [2], z), z)
-    assert t(HyperRep_asin1(z), hyper([S(1)/2, S(1)/2], [S(3)/2], z), z)
-    assert t(HyperRep_asin2(z), hyper([1, 1], [S(3)/2], z), z)
-    assert t(HyperRep_sqrts1(a, z), hyper([-a, S(1)/2 - a], [S(1)/2], z), z)
+    assert t(HyperRep_asin1(z), hyper([S.Half, S.Half], [Rational(3, 2)], z), z)
+    assert t(HyperRep_asin2(z), hyper([1, 1], [Rational(3, 2)], z), z)
+    assert t(HyperRep_sqrts1(a, z), hyper([-a, S.Half - a], [S.Half], z), z)
     assert t(HyperRep_sqrts2(a, z),
-             -2*z/(2*a + 1)*hyper([-a - S(1)/2, -a], [S(1)/2], z).diff(z), z)
-    assert t(HyperRep_log2(z), -z/4*hyper([S(3)/2, 1, 1], [2, 2], z), z)
-    assert t(HyperRep_cosasin(a, z), hyper([-a, a], [S(1)/2], z), z)
-    assert t(HyperRep_sinasin(a, z), 2*a*z*hyper([1 - a, 1 + a], [S(3)/2], z), z)
+             -2*z/(2*a + 1)*hyper([-a - S.Half, -a], [S.Half], z).diff(z), z)
+    assert t(HyperRep_log2(z), -z/4*hyper([Rational(3, 2), 1, 1], [2, 2], z), z)
+    assert t(HyperRep_cosasin(a, z), hyper([-a, a], [S.Half], z), z)
+    assert t(HyperRep_sinasin(a, z), 2*a*z*hyper([1 - a, 1 + a], [Rational(3, 2)], z), z)
 
 
 @slow
@@ -322,7 +326,7 @@ def test_meijerg_eval():
     eps = 1e-13
     expr2 = expr1.subs(k, l)
     for x_ in [0.5, 1.5]:
-        for k_ in [0.5, S(1)/3, 0.25, 0.75, S(2)/3, 1.0, 1.5]:
+        for k_ in [0.5, Rational(1, 3), 0.25, 0.75, Rational(2, 3), 1.0, 1.5]:
             assert abs((expr1 - expr2).n(
                        subs={x: x_, k: k_ + eps, l: k_ - eps})) < 1e-10
             assert abs((expr1 - expr2).n(
@@ -336,10 +340,10 @@ def test_meijerg_eval():
 
 def test_limits():
     k, x = symbols('k, x')
-    assert hyper((1,), (S(4)/3, S(5)/3), k**2).series(k) == \
-           hyper((1,), (S(4)/3, S(5)/3), 0) + \
-           9*k**2*hyper((2,), (S(7)/3, S(8)/3), 0)/20 + \
-           81*k**4*hyper((3,), (S(10)/3, S(11)/3), 0)/1120 + \
+    assert hyper((1,), (Rational(4, 3), Rational(5, 3)), k**2).series(k) == \
+           hyper((1,), (Rational(4, 3), Rational(5, 3)), 0) + \
+           9*k**2*hyper((2,), (Rational(7, 3), Rational(8, 3)), 0)/20 + \
+           81*k**4*hyper((3,), (Rational(10, 3), Rational(11, 3)), 0)/1120 + \
            O(k**6) # issue 6350
     assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
             meijerg(((), ()), ((1,), (0,)), 0) # issue 6052
@@ -348,7 +352,12 @@ def test_appellf1():
     a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
     assert appellf1(a, b2, b1, c, y, x) == appellf1(a, b1, b2, c, x, y)
     assert appellf1(a, b1, b1, c, y, x) == appellf1(a, b1, b1, c, x, y)
-    assert appellf1(a, b1, b2, c, S(0), S(0)) == S(1)
+    assert appellf1(a, b1, b2, c, S.Zero, S.Zero) is S.One
+
+    f = appellf1(a, b1, b2, c, S.Zero, S.Zero, evaluate=False)
+    assert f.func is appellf1
+    assert f.doit() is S.One
+
 
 def test_derivative_appellf1():
     from sympy import diff

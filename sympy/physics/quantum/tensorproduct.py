@@ -243,7 +243,6 @@ class TensorProduct(Expr):
         """Distribute TensorProducts across addition."""
         args = self.args
         add_args = []
-        stop = False
         for i in range(len(args)):
             if isinstance(args[i], Add):
                 for aa in args[i].args:

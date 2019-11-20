@@ -177,6 +177,8 @@ def test_Lambda():
     # issue 2908
     assert str(Lambda((), 1)) == "Lambda((), 1)"
     assert str(Lambda((), x)) == "Lambda((), x)"
+    assert str(Lambda((x, y), x+y)) == "Lambda((x, y), x + y)"
+    assert str(Lambda(((x, y),), x+y)) == "Lambda(((x, y),), x + y)"
 
 
 def test_Limit():
@@ -512,7 +514,7 @@ def test_Float():
     assert str(pi.evalf(1 + 14)) == '3.14159265358979'
     assert str(pi.evalf(1 + 64)) == ('3.141592653589793238462643383279'
                                      '5028841971693993751058209749445923')
-    assert str(pi.round(-1)) == '0.'
+    assert str(pi.round(-1)) == '0.0'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
 
 
@@ -705,8 +707,12 @@ def test_RandomDomain():
 
 
 def test_FiniteSet():
-    assert str(FiniteSet(*range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
-    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*range(1, 51))) == (
+        'FiniteSet(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,'
+        ' 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,'
+        ' 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50)'
+    )
+    assert str(FiniteSet(*range(1, 6))) == 'FiniteSet(1, 2, 3, 4, 5)'
 
 
 def test_UniversalSet():
@@ -768,10 +774,10 @@ def test_Equivalent():
     assert str(Equivalent(y, x)) == "Equivalent(x, y)"
 
 def test_Xor():
-    assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
+    assert str(Xor(y, x, evaluate=False)) == "x ^ y"
 
 def test_Complement():
-    assert str(Complement(S.Reals, S.Naturals)) == 'Reals \\ Naturals'
+    assert str(Complement(S.Reals, S.Naturals)) == 'Complement(Reals, Naturals)'
 
 def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2, 3), Interval(3, 4),evaluate=False)) == \
@@ -811,8 +817,18 @@ def test_Subs_printing():
     assert str(Subs(x, (x,), (1,))) == 'Subs(x, x, 1)'
     assert str(Subs(x + y, (x, y), (1, 2))) == 'Subs(x + y, (x, y), (1, 2))'
 
+
 def test_issue_15716():
-    x = Symbol('x')
-    e = -3**x*exp(-3)*log(3**x*exp(-3)/factorial(x))/factorial(x)
-    assert str(Integral(e, (x, -oo, oo)).doit()) ==  '-(Integral(-3*3**x/factorial(x), (x, -oo, oo))' \
-    ' + Integral(3**x*log(3**x/factorial(x))/factorial(x), (x, -oo, oo)))*exp(-3)'
+    e = Integral(factorial(x), (x, -oo, oo))
+    assert e.as_terms() == ([(e, ((1.0, 0.0), (1,), ()))], [e])
+
+
+def test_str_special_matrices():
+    from sympy.matrices import Identity, ZeroMatrix, OneMatrix
+    assert str(Identity(4)) == 'I'
+    assert str(ZeroMatrix(2, 2)) == '0'
+    assert str(OneMatrix(2, 2)) == '1'
+
+
+def test_issue_14567():
+    assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error

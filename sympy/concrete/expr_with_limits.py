@@ -12,9 +12,9 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
 from sympy.logic.boolalg import BooleanFunction
-from sympy.matrices import Matrix
 from sympy.tensor.indexed import Idx
 from sympy.sets.sets import Interval
+from sympy.sets.fancysets import Range
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 
@@ -36,6 +36,10 @@ def _common_new(cls, function, *symbols, **assumptions):
 
     if symbols:
         limits, orientation = _process_limits(*symbols)
+        for i, li in enumerate(limits):
+            if len(li) == 4:
+                function = function.subs(li[0], li[-1])
+                limits[i] = Tuple(*li[:-1])
     else:
         # symbol not provided -- we can still try to compute a general form
         free = function.free_symbols
@@ -90,35 +94,54 @@ def _process_limits(*symbols):
                 limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
-            V = sympify(flatten(V))
+            if len(V) == 2 and isinstance(V[1], Range):
+                lo = V[1].inf
+                hi = V[1].sup
+                dx = abs(V[1].step)
+                V = [V[0]] + [0, (hi - lo)//dx, dx*V[0] + lo]
+            V = sympify(flatten(V))  # a list of sympified elements
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
-                if len(V) == 2 and isinstance(V[1], Interval):
+                if len(V) == 2 and isinstance(V[1], Interval):  # 2 -> 3
+                    # Interval
                     V[1:] = [V[1].start, V[1].end]
-
-                if len(V) == 3:
-                    if V[1] is None and V[2] is not None:
-                        nlim = [V[2]]
-                    elif V[1] is not None and V[2] is None:
+                elif len(V) == 3:
+                    # general case
+                    if V[2] is None and not V[1] is None:
                         orientation *= -1
-                        nlim = [V[1]]
-                    elif V[1] is None and V[2] is None:
-                        nlim = []
-                    else:
-                        nlim = V[1:]
-                    limits.append(Tuple(newsymbol, *nlim))
-                    if isinstance(V[0], Idx):
-                        if V[0].lower is not None and not bool(nlim[0] >= V[0].lower):
-                            raise ValueError("Summation exceeds Idx lower range.")
-                        if V[0].upper is not None and not bool(nlim[1] <= V[0].upper):
-                            raise ValueError("Summation exceeds Idx upper range.")
-                    continue
-                elif len(V) == 1 or (len(V) == 2 and V[1] is None):
-                    limits.append(Tuple(newsymbol))
-                    continue
-                elif len(V) == 2:
-                    limits.append(Tuple(newsymbol, V[1]))
-                    continue
+                    V = [newsymbol] + [i for i in V[1:] if i is not None]
+
+                if not isinstance(newsymbol, Idx) or len(V) == 3:
+                    if len(V) == 4:
+                        limits.append(Tuple(*V))
+                        continue
+                    if len(V) == 3:
+                        if isinstance(newsymbol, Idx):
+                            # Idx represents an integer which may have
+                            # specified values it can take on; if it is
+                            # given such a value, an error is raised here
+                            # if the summation would try to give it a larger
+                            # or smaller value than permitted. None and Symbolic
+                            # values will not raise an error.
+                            lo, hi = newsymbol.lower, newsymbol.upper
+                            try:
+                                if lo is not None and not bool(V[1] >= lo):
+                                    raise ValueError("Summation will set Idx value too low.")
+                            except TypeError:
+                                pass
+                            try:
+                                if hi is not None and not bool(V[2] <= hi):
+                                    raise ValueError("Summation will set Idx value too high.")
+                            except TypeError:
+                                pass
+                        limits.append(Tuple(*V))
+                        continue
+                    if len(V) == 1 or (len(V) == 2 and V[1] is None):
+                        limits.append(Tuple(newsymbol))
+                        continue
+                    elif len(V) == 2:
+                        limits.append(Tuple(newsymbol, V[1]))
+                        continue
 
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
@@ -200,7 +223,7 @@ class ExprWithLimits(Expr):
 
         function, limits, free_symbols
         as_dummy : Rename dummy variables
-        transform : Perform mapping on the dummy variable
+        sympy.integrals.integrals.Integral.transform : Perform mapping on the dummy variable
         """
         return [l[0] for l in self.limits]
 
@@ -221,7 +244,7 @@ class ExprWithLimits(Expr):
 
         function, limits, free_symbols
         as_dummy : Rename dummy variables
-        transform : Perform mapping on the dummy variable
+        sympy.integrals.integrals.Integral.transform : Perform mapping on the dummy variable
         """
         return [l[0] for l in self.limits if len(l) != 1]
 
@@ -346,6 +369,111 @@ class ExprWithLimits(Expr):
 
         return self.func(func, *limits)
 
+    @property
+    def has_finite_limits(self):
+        """
+        Returns True if the limits are known to be finite, either by the
+        explicit bounds, assumptions on the bounds, or assumptions on the
+        variables.  False if known to be infinite, based on the bounds.
+        None if not enough information is available to determine.
+
+        Examples
+        ========
+
+        >>> from sympy import Sum, Integral, Product, oo, Symbol
+        >>> x = Symbol('x')
+        >>> Sum(x, (x, 1, 8)).has_finite_limits
+        True
+
+        >>> Integral(x, (x, 1, oo)).has_finite_limits
+        False
+
+        >>> M = Symbol('M')
+        >>> Sum(x, (x, 1, M)).has_finite_limits
+
+        >>> N = Symbol('N', integer=True)
+        >>> Product(x, (x, 1, N)).has_finite_limits
+        True
+
+        See Also
+        ========
+
+        has_reversed_limits
+
+        """
+
+        ret_None = False
+        for lim in self.limits:
+            if len(lim) == 3:
+                if any(l.is_infinite for l in lim[1:]):
+                    # Any of the bounds are +/-oo
+                    return False
+                elif any(l.is_infinite is None for l in lim[1:]):
+                    # Maybe there are assumptions on the variable?
+                    if lim[0].is_infinite is None:
+                        ret_None = True
+            else:
+                if lim[0].is_infinite is None:
+                    ret_None = True
+
+        if ret_None:
+            return None
+        return True
+
+    @property
+    def has_reversed_limits(self):
+        """
+        Returns True if the limits are known to be in reversed order, either
+        by the explicit bounds, assumptions on the bounds, or assumptions on the
+        variables.  False if known to be in normal order, based on the bounds.
+        None if not enough information is available to determine.
+
+        Examples
+        ========
+
+        >>> from sympy import Sum, Integral, Product, oo, Symbol
+        >>> x = Symbol('x')
+        >>> Sum(x, (x, 8, 1)).has_reversed_limits
+        True
+
+        >>> Sum(x, (x, 1, oo)).has_reversed_limits
+        False
+
+        >>> M = Symbol('M')
+        >>> Integral(x, (x, 1, M)).has_reversed_limits
+
+        >>> N = Symbol('N', integer=True, positive=True)
+        >>> Sum(x, (x, 1, N)).has_reversed_limits
+        False
+
+        >>> Product(x, (x, 2, N)).has_reversed_limits
+
+        >>> Product(x, (x, 2, N)).subs(N, N + 2).has_reversed_limits
+        False
+
+        See Also
+        ========
+
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.has_empty_sequence
+
+        """
+        ret_None = False
+        for lim in self.limits:
+            if len(lim) == 3:
+                var, a, b = lim
+                dif = b - a
+                if dif.is_extended_negative:
+                    return True
+                elif dif.is_extended_nonnegative:
+                    continue
+                else:
+                    ret_None = True
+            else:
+                return None
+        if ret_None:
+            return None
+        return False
+
 
 class AddWithLimits(ExprWithLimits):
     r"""Represents unevaluated oriented additions.
@@ -399,12 +527,13 @@ class AddWithLimits(ExprWithLimits):
         return self
 
     def _eval_expand_basic(self, **hints):
+        from sympy.matrices.matrices import MatrixBase
+
         summand = self.function.expand(**hints)
         if summand.is_Add and summand.is_commutative:
             return Add(*[self.func(i, *self.limits) for i in summand.args])
-        elif summand.is_Matrix:
-            return Matrix._new(summand.rows, summand.cols,
-                [self.func(i, *self.limits) for i in summand._mat])
+        elif isinstance(summand, MatrixBase):
+            return summand.applyfunc(lambda x: self.func(x, *self.limits))
         elif summand != self.function:
             return self.func(summand, *self.limits)
         return self

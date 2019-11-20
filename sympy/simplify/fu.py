@@ -500,6 +500,8 @@ def _TR56(rv, f, g, h, max, pow):
         # change is not going to allow a simplification as far as I can tell.
         if not (rv.is_Pow and rv.base.func == f):
             return rv
+        if not rv.exp.is_real:
+            return rv
 
         if (rv.exp < 0) == True:
             return rv
@@ -1286,9 +1288,12 @@ def TRmorrie(rv):
 
     """
 
-    def f(rv):
+    def f(rv, first=True):
         if not rv.is_Mul:
             return rv
+        if first:
+            n, d = rv.as_numer_denom()
+            return f(n, 0)/f(d, 0)
 
         args = defaultdict(list)
         coss = {}

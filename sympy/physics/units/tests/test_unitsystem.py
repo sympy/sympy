@@ -1,9 +1,11 @@
+from sympy.physics.units import DimensionSystem, joule, second, ampere, electronvolt, convert_to, coulomb
+from sympy.physics.units.systems import cgs
 from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import Rational, S
 from sympy.physics.units.definitions import c, kg, m, s
-from sympy.physics.units.dimensions import (
-    Dimension, DimensionSystem, action, current, length, mass, time, velocity)
+from sympy.physics.units.definitions.dimension_definitions import (
+    action, current, length, mass, time, velocity)
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.unitsystem import UnitSystem
 from sympy.utilities.pytest import raises
@@ -12,26 +14,17 @@ from sympy.utilities.pytest import raises
 def test_definition():
     # want to test if the system can have several units of the same dimension
     dm = Quantity("dm")
-    dm.set_dimension(length)
-
-    dm.set_scale_factor(Rational(1, 10))
-
     base = (m, s)
     base_dim = (m.dimension, s.dimension)
     ms = UnitSystem(base, (c, dm), "MS", "MS system")
+    ms.set_quantity_dimension(dm, length)
+    ms.set_quantity_scale_factor(dm, Rational(1, 10))
 
     assert set(ms._base_units) == set(base)
-    assert set(ms._units) == set((m, s, c, dm))
-    #assert ms._units == DimensionSystem._sort_dims(base + (velocity,))
+    assert set(ms._units) == {m, s, c, dm}
+    # assert ms._units == DimensionSystem._sort_dims(base + (velocity,))
     assert ms.name == "MS"
     assert ms.descr == "MS system"
-
-    assert ms._system.base_dims == base_dim
-    assert ms._system.derived_dims == (velocity,)
-
-
-def test_error_definition():
-    raises(ValueError, lambda: UnitSystem((m, s, c)))
 
 
 def test_str_repr():
@@ -43,12 +36,10 @@ def test_str_repr():
 
 def test_print_unit_base():
     A = Quantity("A")
-    A.set_dimension(current)
-    A.set_scale_factor(S.One)
+    A.set_global_relative_scale_factor(S.One, ampere)
 
     Js = Quantity("Js")
-    Js.set_dimension(action)
-    Js.set_scale_factor(S.One)
+    Js.set_global_relative_scale_factor(S.One, joule*second)
 
     mksa = UnitSystem((m, kg, s, A), (Js,))
     with warns_deprecated_sympy():
@@ -58,8 +49,7 @@ def test_print_unit_base():
 def test_extend():
     ms = UnitSystem((m, s), (c,))
     Js = Quantity("Js")
-    Js.set_dimension(action)
-    Js.set_scale_factor(1)
+    Js.set_global_relative_scale_factor(1, joule*second)
     mks = ms.extend((kg,), (Js,))
 
     res = UnitSystem((m, s, kg), (c, Js))
@@ -73,4 +63,6 @@ def test_dim():
 
 
 def test_is_consistent():
-    assert UnitSystem((m, s)).is_consistent is True
+    dimension_system = DimensionSystem([length, time])
+    us = UnitSystem([m, s], dimension_system=dimension_system)
+    assert us.is_consistent == True

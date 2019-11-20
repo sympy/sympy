@@ -1,7 +1,7 @@
 from sympy import (
     symbols, powsimp, symbols, MatrixSymbol, sqrt, pi, Mul, gamma, Function,
     S, I, exp, simplify, sin, E, log, hyper, Symbol, Dummy, powdenest, root,
-    Rational, oo)
+    Rational, oo, signsimp)
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -81,9 +81,9 @@ def test_powsimp():
     ex = w**e*n**e*m**e
     assert powsimp(ex) == (-1)**(3*e)*(-m*n*w)**e
 
-    eq = x**(2*a/3)
+    eq = x**(a*Rational(2, 3))
     # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
-    assert powsimp(eq).exp == eq.exp == 2*a/3
+    assert powsimp(eq).exp == eq.exp == a*Rational(2, 3)
     # powdenest goes the other direction
     assert powsimp(2**(2*x)) == 4**x
 
@@ -109,19 +109,24 @@ def test_powsimp():
     assert powsimp(eq) == eq
 
     # issue 14615
-    assert powsimp(x**2*y**3*(x*y**2)**(S(3)/2)
-        ) == x*y*(x*y**2)**(S(5)/2)
+    assert powsimp(x**2*y**3*(x*y**2)**Rational(3, 2)
+        ) == x*y*(x*y**2)**Rational(5, 2)
 
 
 def test_powsimp_negated_base():
     assert powsimp((-x + y)/sqrt(x - y)) == -sqrt(x - y)
     assert powsimp((-x + y)*(-z + y)/sqrt(x - y)/sqrt(z - y)) == sqrt(x - y)*sqrt(z - y)
     p = symbols('p', positive=True)
-    assert powsimp((-p)**a/p**a) == (-1)**a
+    reps = {p: 2, a: S.Half}
+    assert powsimp((-p)**a/p**a).subs(reps) == ((-1)**a).subs(reps)
+    assert powsimp((-p)**a*p**a).subs(reps) == ((-p**2)**a).subs(reps)
     n = symbols('n', negative=True)
-    assert powsimp((-n)**a/n**a) == (-1)**a
+    reps = {p: -2, a: S.Half}
+    assert powsimp((-n)**a/n**a).subs(reps) == (-1)**(-a).subs(a, S.Half)
+    assert powsimp((-n)**a*n**a).subs(reps) == ((-n**2)**a).subs(reps)
     # if x is 0 then the lhs is 0**a*oo**a which is not (-1)**a
-    assert powsimp((-x)**a/x**a) != (-1)**a
+    eq = (-x)**a/x**a
+    assert powsimp(eq) == eq
 
 
 def test_powsimp_nc():
@@ -164,12 +169,11 @@ def test_powdenest():
     i, j = symbols('i,j', integer=True)
 
     assert powdenest(x) == x
-    assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == (x + 2*(x**(2*a/3))**(3*x))
-    assert powdenest((exp(2*a/3))**(3*x))  # -X-> (exp(a/3))**(6*x)
-    assert powdenest((x**(2*a/3))**(3*x)) == ((x**(2*a/3))**(3*x))
+    assert powdenest(x + 2*(x**(a*Rational(2, 3)))**(3*x)) == (x + 2*(x**(a*Rational(2, 3)))**(3*x))
+    assert powdenest((exp(a*Rational(2, 3)))**(3*x))  # -X-> (exp(a/3))**(6*x)
+    assert powdenest((x**(a*Rational(2, 3)))**(3*x)) == ((x**(a*Rational(2, 3)))**(3*x))
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p
-    i, j = symbols('i,j', integer=True)
     eq = p**(2*i)*q**(4*i)
     assert powdenest(eq) == (p*q**2)**(2*i)
     # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
@@ -179,8 +183,8 @@ def test_powdenest():
     assert powdenest(exp(3*(log(a) + log(b)))) == a**3*b**3
     assert powdenest(((x**(2*i))**(3*y))**x) == ((x**(2*i))**(3*y))**x
     assert powdenest(((x**(2*i))**(3*y))**x, force=True) == x**(6*i*x*y)
-    assert powdenest(((x**(2*a/3))**(3*y/i))**x) == \
-        (((x**(2*a/3))**(3*y/i))**x)
+    assert powdenest(((x**(a*Rational(2, 3)))**(3*y/i))**x) == \
+        (((x**(a*Rational(2, 3)))**(3*y/i))**x)
     assert powdenest((x**(2*i)*y**(4*i))**z, force=True) == (x*y**2)**(2*i*z)
     assert powdenest((p**(2*i)*q**(4*i))**j) == (p*q**2)**(2*i*j)
     e = ((p**(2*a))**(3*y))**x
@@ -197,7 +201,7 @@ def test_powdenest():
     x, y = symbols('x,y', positive=True)
     assert powdenest((x**2*y**6)**i) == (x*y**3)**(2*i)
 
-    assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**(S(4)/3)*y)**(i**2)
+    assert powdenest((x**(i*Rational(2, 3))*y**(i/2))**(2*i)) == (x**Rational(4, 3)*y)**(i**2)
     assert powdenest(sqrt(x**(2*i)*y**(6*i))) == (x*y**3)**i
 
     assert powdenest(4**x) == 2**(2*x)
@@ -227,7 +231,7 @@ def test_issue_9324_powsimp_on_matrix_symbol():
 
 
 def test_issue_6367():
-    z = -5*sqrt(2)/(2*sqrt(2*sqrt(29) + 29)) + sqrt(-sqrt(29)/29 + S(1)/2)
+    z = -5*sqrt(2)/(2*sqrt(2*sqrt(29) + 29)) + sqrt(-sqrt(29)/29 + S.Half)
     assert Mul(*[powsimp(a) for a in Mul.make_args(z.normal())]) == 0
     assert powsimp(z.normal()) == 0
     assert simplify(z) == 0
@@ -283,7 +287,7 @@ def test_issue_5728():
     assert powsimp(a) == sqrt(b)**3
 
     # as does exp
-    a = x*exp(2*y/3)
+    a = x*exp(y*Rational(2, 3))
     assert powsimp(a*sqrt(a)) == sqrt(a)**3
     assert powsimp(a**2*sqrt(a)) == sqrt(a)**5
     assert powsimp(a**2*sqrt(sqrt(a))) == sqrt(sqrt(a))**9
@@ -294,26 +298,33 @@ def test_issue_from_PR1599():
     assert (powsimp(sqrt(n1)*sqrt(n2)*sqrt(n3)) ==
         -I*sqrt(-n1)*sqrt(-n2)*sqrt(-n3))
     assert (powsimp(root(n1, 3)*root(n2, 3)*root(n3, 3)*root(n4, 3)) ==
-        -(-1)**(S(1)/3)*
-        (-n1)**(S(1)/3)*(-n2)**(S(1)/3)*(-n3)**(S(1)/3)*(-n4)**(S(1)/3))
+        -(-1)**Rational(1, 3)*
+        (-n1)**Rational(1, 3)*(-n2)**Rational(1, 3)*(-n3)**Rational(1, 3)*(-n4)**Rational(1, 3))
 
 
 def test_issue_10195():
     a = Symbol('a', integer=True)
     l = Symbol('l', even=True, nonzero=True)
     n = Symbol('n', odd=True)
-    e_x = (-1)**(n/2 - Rational(1, 2)) - (-1)**(3*n/2 - Rational(1, 2))
+    e_x = (-1)**(n/2 - S.Half) - (-1)**(n*Rational(3, 2) - S.Half)
     assert powsimp((-1)**(l/2)) == I**l
     assert powsimp((-1)**(n/2)) == I**n
-    assert powsimp((-1)**(3*n/2)) == -I**n
-    assert powsimp(e_x) == (-1)**(n/2 - Rational(1, 2)) + (-1)**(3*n/2 +
-            Rational(1,2))
-    assert powsimp((-1)**(3*a/2)) == (-I)**a
+    assert powsimp((-1)**(n*Rational(3, 2))) == -I**n
+    assert powsimp(e_x) == (-1)**(n/2 - S.Half) + (-1)**(n*Rational(3, 2) +
+            S.Half)
+    assert powsimp((-1)**(a*Rational(3, 2))) == (-I)**a
 
 def test_issue_15709():
+    assert powsimp(3**x*Rational(2, 3)) == 2*3**(x-1)
     assert powsimp(2*3**x/3) == 2*3**(x-1)
 
 
 def test_issue_11981():
     x, y = symbols('x y', commutative=False)
     assert powsimp((x*y)**2 * (y*x)**2) == (x*y)**2 * (y*x)**2
+
+
+def test_issue_17524():
+    a = symbols("a", real=True)
+    e = (-1 - a**2)*sqrt(1 + a**2)
+    assert signsimp(powsimp(e)) == signsimp(e) == -(a**2 + 1)**(S(3)/2)

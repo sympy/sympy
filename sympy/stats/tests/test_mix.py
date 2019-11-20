@@ -1,8 +1,12 @@
-from sympy import Symbol, Eq, Ne, simplify, sqrt, exp, pi
-from sympy.stats import Poisson, Beta, Exponential, P
+from sympy import (Symbol, Eq, Ne, simplify, sqrt, exp, pi, symbols,
+                Piecewise, factorial, gamma, IndexedBase, Add, Pow, Mul,
+                Indexed, Integer)
+from sympy.functions.elementary.piecewise import ExprCondPair
+from sympy.stats import (Poisson, Beta, Exponential, P,
+                        Multinomial, MultivariateBeta)
 from sympy.stats.crv_types import Normal
 from sympy.stats.drv_types import PoissonDistribution
-from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
+from sympy.stats.joint_rv import JointPSpace, CompoundDistribution, MarginalDistribution
 from sympy.stats.rv import pspace, density
 
 def test_density():
@@ -17,6 +21,29 @@ def test_density():
     assert density(N2)(0).doit() == sqrt(10)/(10*sqrt(pi))
     assert simplify(density(N2, Eq(N1, 1))(x)) == \
         sqrt(2)*exp(-(x - 1)**2/8)/(4*sqrt(pi))
+
+def test_MarginalDistribution():
+    a1, p1, p2 = symbols('a1 p1 p2', positive=True)
+    C = Multinomial('C', 2, p1, p2)
+    B = MultivariateBeta('B', a1, C[0])
+    MGR = MarginalDistribution(B, (C[0],))
+    mgrc = Mul(Symbol('B'), Piecewise(ExprCondPair(Mul(Integer(2),
+    Pow(Symbol('p1', positive=True), Indexed(IndexedBase(Symbol('C')),
+    Integer(0))), Pow(Symbol('p2', positive=True),
+    Indexed(IndexedBase(Symbol('C')), Integer(1))),
+    Pow(factorial(Indexed(IndexedBase(Symbol('C')), Integer(0))), Integer(-1)),
+    Pow(factorial(Indexed(IndexedBase(Symbol('C')), Integer(1))), Integer(-1))),
+    Eq(Add(Indexed(IndexedBase(Symbol('C')), Integer(0)),
+    Indexed(IndexedBase(Symbol('C')), Integer(1))), Integer(2))),
+    ExprCondPair(Integer(0), True)), Pow(gamma(Symbol('a1', positive=True)),
+    Integer(-1)), gamma(Add(Symbol('a1', positive=True),
+    Indexed(IndexedBase(Symbol('C')), Integer(0)))),
+    Pow(gamma(Indexed(IndexedBase(Symbol('C')), Integer(0))), Integer(-1)),
+    Pow(Indexed(IndexedBase(Symbol('B')), Integer(0)),
+    Add(Symbol('a1', positive=True), Integer(-1))),
+    Pow(Indexed(IndexedBase(Symbol('B')), Integer(1)),
+    Add(Indexed(IndexedBase(Symbol('C')), Integer(0)), Integer(-1))))
+    assert MGR(C) == mgrc
 
 def test_compound_distribution():
     Y = Poisson('Y', 1)

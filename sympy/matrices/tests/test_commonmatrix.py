@@ -1,20 +1,15 @@
-import collections
-import random
-
 from sympy.assumptions import Q
 from sympy.core.add import Add
 from sympy.core.compatibility import range
 from sympy.core.function import (Function, diff)
-from sympy.core.numbers import (E, Float, I, Integer, oo, pi)
+from sympy.core.numbers import (E, Float, I, Integer, oo, pi, Rational)
 from sympy.core.relational import (Eq, Lt)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
-from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, sin, tan)
-from sympy.logic.boolalg import (And, Or)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import (ShapeError, MatrixError, NonSquareMatrixError,
     _MinimalMatrix, MatrixShaping, MatrixProperties, MatrixOperations, MatrixArithmetic,
     MatrixSpecial)
@@ -24,12 +19,10 @@ from sympy.matrices import (Matrix, diag, eye,
     matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded)
 from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
-from sympy.simplify.trigsimp import trigsimp
 from sympy.utilities.iterables import flatten
-from sympy.utilities.pytest import (raises, XFAIL, slow, skip,
-    warns_deprecated_sympy)
+from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
-from sympy.abc import a, b, c, d, x, y, z
+from sympy.abc import x, y, z
 
 # classes to test the basic matrix classes
 class ShapingOnlyMatrix(_MinimalMatrix, MatrixShaping):
@@ -307,7 +300,7 @@ def test_vstack():
 # PropertiesOnlyMatrix tests
 def test_atoms():
     m = PropertiesOnlyMatrix(2, 2, [1, 2, x, 1 - 1/x])
-    assert m.atoms() == {S(1), S(2), S(-1), x}
+    assert m.atoms() == {S.One, S(2), S.NegativeOne, x}
     assert m.atoms(Symbol) == {x}
 
 
@@ -779,7 +772,7 @@ def test_sub():
 
 def test_div():
     n = ArithmeticOnlyMatrix(1, 2, [1, 2])
-    assert n/2 == ArithmeticOnlyMatrix(1, 2, [S(1)/2, S(2)/2])
+    assert n/2 == ArithmeticOnlyMatrix(1, 2, [S.Half, S(2)/2])
 
 
 # DeterminantOnlyMatrix tests
@@ -1029,11 +1022,11 @@ def test_echelon_form():
 
     a = ReductionsOnlyMatrix(3, 3, [2, 1, 3, 0, 0, 0, 2, 1, 3])
     nulls = [Matrix([
-             [-S(1)/2],
+             [Rational(-1, 2)],
              [   1],
              [   0]]),
              Matrix([
-             [-S(3)/2],
+             [Rational(-3, 2)],
              [   0],
              [   1]])]
     rows = [a[i, :] for i in range(a.rows)]
@@ -1124,20 +1117,20 @@ def test_rref():
                      [0,  0, 0, 0, 0,  0,  0]])
     assert pivot_offsets == (0, 2, 3)
 
-    a = ReductionsOnlyMatrix([[S(1)/19,  S(1)/5,    2,    3],
+    a = ReductionsOnlyMatrix([[Rational(1, 19),  Rational(1, 5),    2,    3],
                         [   4,    5,    6,    7],
                         [   8,    9,   10,   11],
                         [  12,   13,   14,   15]])
     assert a.rref(pivots=False) == Matrix([
-                                         [1, 0, 0, -S(76)/157],
-                                         [0, 1, 0,  -S(5)/157],
-                                         [0, 0, 1, S(238)/157],
+                                         [1, 0, 0, Rational(-76, 157)],
+                                         [0, 1, 0,  Rational(-5, 157)],
+                                         [0, 0, 1, Rational(238, 157)],
                                          [0, 0, 0,       0]])
 
     x = Symbol('x')
     a = ReductionsOnlyMatrix(2, 3, [x, 1, 1, sqrt(x), x, 1])
     for i, j in zip(a.rref(pivots=False),
-            [1, 0, sqrt(x)*(-x + 1)/(-x**(S(5)/2) + x),
+            [1, 0, sqrt(x)*(-x + 1)/(-x**Rational(5, 2) + x),
                 0, 1, 1/(sqrt(x) + x + 1)]):
         assert simplify(i - j).is_zero
 
@@ -1369,7 +1362,7 @@ def test_orthogonalize():
     assert m.orthogonalize(Matrix([[2], [1]]), normalize=True) == \
         [Matrix([[2*sqrt(5)/5], [sqrt(5)/5]])]
     assert m.orthogonalize(Matrix([[1], [2]]), Matrix([[-1], [4]])) == \
-        [Matrix([[1], [2]]), Matrix([[-S(12)/5], [S(6)/5]])]
+        [Matrix([[1], [2]]), Matrix([[Rational(-12, 5)], [Rational(6, 5)]])]
     assert m.orthogonalize(Matrix([[0], [0]]), Matrix([[-1], [4]])) == \
         [Matrix([[-1], [4]])]
     assert m.orthogonalize(Matrix([[0], [0]])) == []
@@ -1377,7 +1370,7 @@ def test_orthogonalize():
     n = Matrix([[9, 1, 9], [3, 6, 10], [8, 5, 2]])
     vecs = [Matrix([[-5], [1]]), Matrix([[-5], [2]]), Matrix([[-5], [-2]])]
     assert n.orthogonalize(*vecs) == \
-        [Matrix([[-5], [1]]), Matrix([[S(5)/26], [S(25)/26]])]
+        [Matrix([[-5], [1]]), Matrix([[Rational(5, 26)], [Rational(25, 26)]])]
 
     vecs = [Matrix([0, 0, 0]), Matrix([1, 2, 3]), Matrix([1, 4, 5])]
     raises(ValueError, lambda: Matrix.orthogonalize(*vecs, rankcheck=True))
@@ -1521,7 +1514,7 @@ def test_singular_values():
 
     A = EigenOnlyMatrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
     vals = [sv.trigsimp() for sv in A.singular_values()]
-    assert vals == [S(1), S(1)]
+    assert vals == [S.One, S.One]
 
     A = EigenOnlyMatrix([
         [2, 4],
@@ -1570,7 +1563,7 @@ def test_jacobian2():
 def test_limit():
     x, y = symbols('x y')
     m = CalculusOnlyMatrix(2, 1, [1/x, y])
-    assert m.limit(x, 5) == Matrix(2, 1, [S(1)/5, y])
+    assert m.limit(x, 5) == Matrix(2, 1, [Rational(1, 5), y])
 
 
 def test_issue_13774():

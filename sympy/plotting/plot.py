@@ -162,6 +162,10 @@ class Plot(object):
         self.legend = False
         self.autoscale = True
         self.margin = 0
+        self.annotations = None
+        self.markers = None
+        self.rectangles = None
+        self.fill = None
 
         # Contains the data objects to be plotted. The backend should be smart
         # enough to iterate over this list.
@@ -579,7 +583,6 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.depth = kwargs.get('depth', 12)
         self.line_color = kwargs.get('line_color', None)
         self.xscale = kwargs.get('xscale', 'linear')
-        self.flag = 0
 
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
@@ -623,13 +626,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 ynew = f(xnew)
                 new_point = np.array([xnew, ynew])
 
-                if self.flag == 1:
-                    return
                 # Maximum depth
                 if depth > self.depth:
-                    if p[1] is None or q[1] is None:
-                        self.flag = 1
-                        return
                     list_segments.append([p, q])
 
                 # Sample irrespective of whether the line is flat till the
@@ -642,7 +640,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 # at both ends. If there is a real value in between, then
                 # sample those points further.
                 elif p[1] is None and q[1] is None:
-                    if self.xscale is 'log':
+                    if self.xscale == 'log':
                         xarray = np.logspace(p[0], q[0], 10)
                     else:
                         xarray = np.linspace(p[0], q[0], 10)
@@ -664,21 +662,22 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
             f_start = f(self.start)
             f_end = f(self.end)
-            sample([self.start, f_start], [self.end, f_end], 0)
+            sample(np.array([self.start, f_start]),
+                   np.array([self.end, f_end]), 0)
 
             return list_segments
 
     def get_points(self):
         np = import_module('numpy')
         if self.only_integers is True:
-            if self.xscale is 'log':
+            if self.xscale == 'log':
                 list_x = np.logspace(int(self.start), int(self.end),
                         num=int(self.end) - int(self.start) + 1)
             else:
                 list_x = np.linspace(int(self.start), int(self.end),
                     num=int(self.end) - int(self.start) + 1)
         else:
-            if self.xscale is 'log':
+            if self.xscale == 'log':
                 list_x = np.logspace(self.start, self.end, num=self.nb_of_points)
             else:
                 list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
@@ -1147,34 +1146,6 @@ class MatplotlibBackend(BaseBackend):
             ax.set_xscale(parent.xscale)
         if parent.yscale and not isinstance(ax, Axes3D):
             ax.set_yscale(parent.yscale)
-        if parent.xlim:
-            from sympy.core.basic import Basic
-            xlim = parent.xlim
-            if any(isinstance(i, Basic) and not i.is_real for i in xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be real".format(xlim))
-            if any(isinstance(i, Basic) and not i.is_finite for i in xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be finite".format(xlim))
-            xlim = (float(i) for i in xlim)
-            ax.set_xlim(xlim)
-        else:
-            if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
-                starts = [s.start for s in parent._series]
-                ends = [s.end for s in parent._series]
-                ax.set_xlim(min(starts), max(ends))
-
-        if parent.ylim:
-            from sympy.core.basic import Basic
-            ylim = parent.ylim
-            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be real".format(ylim))
-            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be finite".format(ylim))
-            ylim = (float(i) for i in ylim)
-            ax.set_ylim(ylim)
         if not isinstance(ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
             ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
@@ -1208,6 +1179,54 @@ class MatplotlibBackend(BaseBackend):
             ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
             ax.set_ylabel(parent.ylabel, position=(0, 1))
+        if parent.annotations:
+            for a in parent.annotations:
+                ax.annotate(**a)
+        if parent.markers:
+            for marker in parent.markers:
+                # make a copy of the marker dictionary
+                # so that it doesn't get altered
+                m = marker.copy()
+                args = m.pop('args')
+                ax.plot(*args, **m)
+        if parent.rectangles:
+            for r in parent.rectangles:
+                rect = self.matplotlib.patches.Rectangle(**r)
+                ax.add_patch(rect)
+        if parent.fill:
+            ax.fill_between(**parent.fill)
+
+        # xlim and ylim shoulld always be set at last so that plot limits
+        # doesn't get altered during the process.
+        if parent.xlim:
+            from sympy.core.basic import Basic
+            xlim = parent.xlim
+            if any(isinstance(i, Basic) and not i.is_real for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be real".format(xlim))
+            if any(isinstance(i, Basic) and not i.is_finite for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be finite".format(xlim))
+            xlim = (float(i) for i in xlim)
+            ax.set_xlim(xlim)
+        else:
+            if parent._series and all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
+                starts = [s.start for s in parent._series]
+                ends = [s.end for s in parent._series]
+                ax.set_xlim(min(starts), max(ends))
+
+        if parent.ylim:
+            from sympy.core.basic import Basic
+            ylim = parent.ylim
+            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be real".format(ylim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be finite".format(ylim))
+            ylim = (float(i) for i in ylim)
+            ax.set_ylim(ylim)
+
 
     def process_series(self):
         """
@@ -1395,7 +1414,7 @@ def plot(*args, **kwargs):
     the plot by calling the ``save()`` and ``show()`` methods
     respectively.
 
-    Arguments for ``LineOver1DRangeSeries`` class:
+    Arguments for :obj:`LineOver1DRangeSeries` class:
 
     ``adaptive``: Boolean. The default value is set to True. Set adaptive to False and
     specify ``nb_of_points`` if uniform sampling is required.
@@ -1434,6 +1453,23 @@ def plot(*args, **kwargs):
     ``xlim`` : tuple of two floats, denoting the x-axis limits.
 
     ``ylim`` : tuple of two floats, denoting the y-axis limits.
+
+    ``annotations``: list. A list of dictionaries specifying the type of
+    annotation required. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's annotate() function.
+
+    ``markers``: list. A list of dictionaries specifying the type the
+    markers required. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's plot() function along with the
+    marker related keyworded arguments.
+
+    ``rectangles``: list. A list of dictionaries specifying the dimensions
+    of the rectangles to be plotted. The keys in the dictionary should be
+    equivalent to the arguments of the matplotlib's patches.Rectangle class.
+
+    ``fill``: dict. A dictionary specifying the type of color filling
+    required in the plot. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's fill_between() function.
 
     Examples
     ========
@@ -1497,7 +1533,7 @@ def plot(*args, **kwargs):
     See Also
     ========
 
-    Plot, LineOver1DRangeSeries.
+    Plot, LineOver1DRangeSeries
 
     """
     args = list(map(sympify, args))
@@ -2122,6 +2158,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
        >>> check_arguments([x, x**2], 1, 1)
            [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
     """
+    if not args:
+        return []
     if expr_len > 1 and isinstance(args[0], Expr):
         # Multiple expressions same range.
         # The arguments are tuples when the expression length is

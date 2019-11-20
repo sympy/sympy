@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core.assumptions import StdFactKB
+from sympy.core.assumptions import StdFactKB, _assume_defined
 from sympy.core.compatibility import (string_types, range, is_sequence,
     ordered)
 from .basic import Basic
@@ -11,13 +11,24 @@ from .cache import cacheit
 from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.iterables import cartes
+from sympy.utilities.iterables import cartes, sift
 from sympy.core.containers import Tuple
 
 import string
 import re as _re
 import random
 
+
+def _filter_assumptions(kwargs):
+    """Split the given dict into assumptions and non-assumptions.
+    Keys are taken as assumptions if they correspond to an
+    entry in ``_assume_defined``.
+    """
+    assumptions, nonassumptions = map(dict, sift(kwargs.items(),
+        lambda i: i[0] in _assume_defined,
+        binary=True))
+    Symbol._sanitize(assumptions)
+    return assumptions, nonassumptions
 
 def _symbol(s, matching_symbol=None, **assumptions):
     """Return s if s is a Symbol, else if s is a string, return either
@@ -102,7 +113,7 @@ def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumpti
             is printed, e.g. this includes underscores that appear on
             Dummy symbols)
         modify : a single arg function that changes its string argument
-            in some way (the default is to preppend underscores)
+            in some way (the default is to prepend underscores)
 
     Examples
     ========
@@ -198,6 +209,17 @@ class Symbol(AtomicExpr, Boolean):
                 assumptions.pop(key)
                 continue
             assumptions[key] = bool(v)
+
+    def _merge(self, assumptions):
+        base = self.assumptions0
+        for k in set(assumptions) & set(base):
+            if assumptions[k] != base[k]:
+                raise ValueError(filldedent('''
+                    non-matching assumptions for %s: existing value
+                    is %s and new value is %s''' % (
+                    k, base[k], assumptions[k])))
+        base.update(assumptions)
+        return base
 
     def __new__(cls, name, **assumptions):
         """Symbols are identified by name and assumptions::
@@ -724,7 +746,7 @@ def var(names, **args):
     >>> x.is_real and y.is_real
     True
 
-    See :func:`symbol` documentation for more details on what kinds of
+    See :func:`symbols` documentation for more details on what kinds of
     arguments can be passed to :func:`var`.
 
     """
@@ -806,9 +828,9 @@ def disambiguate(*iter):
     for k in mapping:
         # the first or only symbol doesn't get subscripted but make
         # sure that it's a Symbol, not a Dummy
-        k0 = Symbol("%s" % (k), **mapping[k][0].assumptions0)
-        if k != k0:
-            reps[mapping[k][0]] = k0
+        mapk0 = Symbol("%s" % (k), **mapping[k][0].assumptions0)
+        if mapping[k][0] != mapk0:
+            reps[mapping[k][0]] = mapk0
         # the others get subscripts (and are made into Symbols)
         skip = 0
         for i in range(1, len(mapping[k])):

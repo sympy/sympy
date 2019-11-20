@@ -70,13 +70,14 @@ class DifferentialOperatorAlgebra(object):
     An Ore Algebra is a set of noncommutative polynomials in the
     intermediate ``Dx`` and coefficients in a base polynomial ring :math:`A`.
     It follows the commutation rule:
+
     .. math ::
-        Dxa = \sigma(a)Dx + \delta(a)
+       Dxa = \sigma(a)Dx + \delta(a)
 
     for :math:`a \subset A`.
 
-    Where :math:`\sigma: A --> A` is an endomorphism and :math:`\delta: A --> A`
-    is a skew-derivation i.e. :math:`\delta(ab) = \delta(a) * b + \sigma(a) * \delta(b)`.
+    Where :math:`\sigma: A \Rightarrow A` is an endomorphism and :math:`\delta: A \rightarrow A`
+    is a skew-derivation i.e. :math:`\delta(ab) = \delta(a) b + \sigma(a) \delta(b)`.
 
     If one takes the sigma as identity map and delta as the standard derivation
     then it becomes the algebra of Differential Operators also called
@@ -541,7 +542,7 @@ class HolonomicFunction(object):
             y0 = []
             a = int(a)
             for i in range(a):
-                y0.append(S(0))
+                y0.append(S.Zero)
             y0 += [j * factorial(a + i) for i, j in enumerate(b)]
 
             return HolonomicFunction(self.annihilator, self.x, self.x0, y0)
@@ -587,7 +588,7 @@ class HolonomicFunction(object):
 
         r = NewMatrix(r).transpose()
 
-        homosys = [[S(0) for q in range(dim + 1)]]
+        homosys = [[S.Zero for q in range(dim + 1)]]
         homosys = NewMatrix(homosys).transpose()
 
         # solving the linear system using gauss jordan solver
@@ -612,7 +613,7 @@ class HolonomicFunction(object):
                 p = []
                 for i in range(dim + 1):
                     if i >= len(expr.listofpoly):
-                        p.append(S(0))
+                        p.append(S.Zero)
                     else:
 
                         p.append(K.new(expr.listofpoly[i].rep))
@@ -620,7 +621,7 @@ class HolonomicFunction(object):
 
             r = NewMatrix(r).transpose()
 
-            homosys = [[S(0) for q in range(dim + 1)]]
+            homosys = [[S.Zero for q in range(dim + 1)]]
             homosys = NewMatrix(homosys).transpose()
 
             solcomp = r.gauss_jordan_solve(homosys)
@@ -681,12 +682,12 @@ class HolonomicFunction(object):
         if self.is_singularics() == False and other.is_singularics() == True:
             # convert the ordinary initial condition to singular.
             _y0 = [j / factorial(i) for i, j in enumerate(self.y0)]
-            y1 = {S(0): _y0}
+            y1 = {S.Zero: _y0}
             y2 = other.y0
         elif self.is_singularics() == True and other.is_singularics() == False:
             _y0 = [j / factorial(i) for i, j in enumerate(other.y0)]
             y1 = self.y0
-            y2 = {S(0): _y0}
+            y2 = {S.Zero: _y0}
         elif self.is_singularics() == True and other.is_singularics() == True:
             y1 = self.y0
             y2 = other.y0
@@ -742,7 +743,7 @@ class HolonomicFunction(object):
                 c2 = []
                 for j in range(len(c)):
                     if c[j] == 0:
-                        c2.append(S(0))
+                        c2.append(S.Zero)
 
                     # if power on `x` is -1, the integration becomes log(x)
                     # TODO: Implement this case
@@ -760,7 +761,7 @@ class HolonomicFunction(object):
         # if no initial conditions are available for the function
         if not self._have_init_cond():
             if initcond:
-                return HolonomicFunction(self.annihilator * D, self.x, self.x0, [S(0)])
+                return HolonomicFunction(self.annihilator * D, self.x, self.x0, [S.Zero])
             return HolonomicFunction(self.annihilator * D, self.x)
 
         # definite integral
@@ -777,7 +778,7 @@ class HolonomicFunction(object):
         else:
             definite = False
 
-        y0 = [S(0)]
+        y0 = [S.Zero]
         y0 += self.y0
 
         indefinite_integral = HolonomicFunction(self.annihilator * D, self.x, self.x0, y0)
@@ -858,7 +859,7 @@ class HolonomicFunction(object):
         kwargs.setdefault('evaluate', True)
         if args:
             if args[0] != self.x:
-                return S(0)
+                return S.Zero
             elif len(args) == 2:
                 sol = self
                 for i in range(args[1]):
@@ -869,7 +870,7 @@ class HolonomicFunction(object):
 
         # if the function is constant.
         if ann.listofpoly[0] == ann.parent.base.zero and ann.order == 1:
-            return S(0)
+            return S.Zero
 
         # if the coefficient of y in the differential equation is zero.
         # a shifting is done to compute the answer in this case.
@@ -972,13 +973,13 @@ class HolonomicFunction(object):
         other_red = [-list_other[i] / list_other[b] for i in range(b)]
 
         # coeff_mull[i][j] is the coefficient of Dx^i(f).Dx^j(g)
-        coeff_mul = [[S(0) for i in range(b + 1)] for j in range(a + 1)]
-        coeff_mul[0][0] = S(1)
+        coeff_mul = [[S.Zero for i in range(b + 1)] for j in range(a + 1)]
+        coeff_mul[0][0] = S.One
 
         # making the ansatz
         lin_sys = [[coeff_mul[i][j] for i in range(a) for j in range(b)]]
 
-        homo_sys = [[S(0) for q in range(a * b)]]
+        homo_sys = [[S.Zero for q in range(a * b)]]
         homo_sys = NewMatrix(homo_sys).transpose()
 
         sol = (NewMatrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
@@ -998,11 +999,11 @@ class HolonomicFunction(object):
 
             # reduce the terms to lower power using annihilators of f, g
             for i in range(a + 1):
-                if not coeff_mul[i][b] == S(0):
+                if not coeff_mul[i][b].is_zero:
                     for j in range(b):
                         coeff_mul[i][j] += other_red[j] * \
                             coeff_mul[i][b]
-                    coeff_mul[i][b] = S(0)
+                    coeff_mul[i][b] = S.Zero
 
             # not d2 + 1, as that is already covered in previous loop
             for j in range(b):
@@ -1010,7 +1011,7 @@ class HolonomicFunction(object):
                     for i in range(a):
                         coeff_mul[i][j] += self_red[i] * \
                             coeff_mul[a][j]
-                    coeff_mul[a][j] = S(0)
+                    coeff_mul[a][j] = S.Zero
 
             lin_sys.append([coeff_mul[i][j] for i in range(a)
                             for j in range(b)])
@@ -1082,12 +1083,12 @@ class HolonomicFunction(object):
 
         if self.is_singularics() == False and other.is_singularics() == True:
             _y0 = [j / factorial(i) for i, j in enumerate(self.y0)]
-            y1 = {S(0): _y0}
+            y1 = {S.Zero: _y0}
             y2 = other.y0
         elif self.is_singularics() == True and other.is_singularics() == False:
             _y0 = [j / factorial(i) for i, j in enumerate(other.y0)]
             y1 = self.y0
-            y2 = {S(0): _y0}
+            y2 = {S.Zero: _y0}
         elif self.is_singularics() == True and other.is_singularics() == True:
             y1 = self.y0
             y2 = other.y0
@@ -1099,7 +1100,7 @@ class HolonomicFunction(object):
                 k = min(len(y1[i]), len(y2[j]))
                 c = []
                 for a in range(k):
-                    s = S(0)
+                    s = S.Zero
                     for b in range(a + 1):
                         s += y1[i][b] * y2[j][a - b]
                     c.append(s)
@@ -1148,7 +1149,7 @@ class HolonomicFunction(object):
             raise NotHolonomicError("Negative Power on a Holonomic Function")
         if n == 0:
             Dx = self.annihilator.parent.derivative_operator
-            return HolonomicFunction(Dx, self.x, S(0), [S(1)])
+            return HolonomicFunction(Dx, self.x, S.Zero, [S.One])
         if n == 1:
             return self
         else:
@@ -1203,11 +1204,11 @@ class HolonomicFunction(object):
 
         r = listofpoly[a].subs({self.x:expr})
         subs = [-listofpoly[i].subs({self.x:expr}) / r for i in range (a)]
-        coeffs = [S(0) for i in range(a)]  # coeffs[i] == coeff of (D^i f)(a) in D^k (f(a))
-        coeffs[0] = S(1)
+        coeffs = [S.Zero for i in range(a)]  # coeffs[i] == coeff of (D^i f)(a) in D^k (f(a))
+        coeffs[0] = S.One
         system = [coeffs]
-        homogeneous = Matrix([[S(0) for i in range(a)]]).transpose()
-        sol = S(0)
+        homogeneous = Matrix([[S.Zero for i in range(a)]]).transpose()
+        sol = S.Zero
 
         while sol.is_zero:
             coeffs_next = [p.diff(self.x) for p in coeffs]
@@ -1330,13 +1331,13 @@ class HolonomicFunction(object):
         # an appropriate shift of the recurrence
         for j in range(lower, upper + 1):
             if j in keylist:
-                temp = S(0)
+                temp = S.Zero
                 for k in dict1.keys():
                     if k[0] == j:
                         temp += dict1[k].subs(n, n - lower)
                 sol.append(temp)
             else:
-                sol.append(S(0))
+                sol.append(S.Zero)
 
         # the recurrence relation
         sol = RecurrenceOperator(sol, R)
@@ -1365,12 +1366,12 @@ class HolonomicFunction(object):
         if len(u0) < order:
 
             for i in range(degree):
-                eq = S(0)
+                eq = S.Zero
 
                 for j in dict1:
 
                     if i + j[0] < 0:
-                        dummys[i + j[0]] = S(0)
+                        dummys[i + j[0]] = S.Zero
 
                     elif i + j[0] < len(u0):
                         dummys[i + j[0]] = u0[i + j[0]]
@@ -1536,13 +1537,13 @@ class HolonomicFunction(object):
 
             for j in range(lower, upper + 1):
                 if j in keylist:
-                    temp = S(0)
+                    temp = S.Zero
                     for k in dict1.keys():
                         if k[0] == j:
                             temp += dict1[k].subs(n, n - lower)
                     sol.append(temp)
                 else:
-                    sol.append(S(0))
+                    sol.append(S.Zero)
 
             # the recurrence relation
             sol = RecurrenceOperator(sol, R)
@@ -1572,11 +1573,11 @@ class HolonomicFunction(object):
             if len(u0) < order:
 
                 for i in range(degree2, degree):
-                    eq = S(0)
+                    eq = S.Zero
 
                     for j in dict1:
                         if i + j[0] < 0:
-                            dummys[i + j[0]] = S(0)
+                            dummys[i + j[0]] = S.Zero
 
                         elif i + j[0] < len(u0):
                             dummys[i + j[0]] = u0[i + j[0]]
@@ -1707,7 +1708,7 @@ class HolonomicFunction(object):
         else:
             # use the initial conditions to find the next term
             for i in range(l + 1 - k, n - k):
-                coeff = S(0)
+                coeff = S.Zero
                 for j in range(k):
                     if i + j >= 0:
                         coeff += DMFsubs(sub[j], i) * sol[i + j]
@@ -1716,7 +1717,7 @@ class HolonomicFunction(object):
         if coefficient:
             return sol
 
-        ser = S(0)
+        ser = S.Zero
         for i, j in enumerate(sol):
             ser += x**(i + constantpower) * j
         if order:
@@ -1939,7 +1940,7 @@ class HolonomicFunction(object):
         if m == 0:
             nonzeroterms = roots(r.parent.base.to_sympy(r.listofpoly[0]), recurrence.n, filter='R')
 
-            sol = S(0)
+            sol = S.Zero
             for j, i in enumerate(nonzeroterms):
 
                 if i < 0 or int(i) != i:
@@ -1994,7 +1995,7 @@ class HolonomicFunction(object):
         arg1 = roots(r.parent.base.to_sympy(a), recurrence.n)
         arg2 = roots(r.parent.base.to_sympy(b), recurrence.n)
 
-        # iterate thorugh the initial conditions to find
+        # iterate through the initial conditions to find
         # the hypergeometric representation of the given
         # function.
         # The answer will be a linear combination
@@ -2127,7 +2128,7 @@ class HolonomicFunction(object):
 
         # convert to hypergeometric first
         rep = self.to_hyper(as_list=True)
-        sol = S(0)
+        sol = S.Zero
 
         for i in rep:
             if len(i) == 1:
@@ -2203,7 +2204,7 @@ def from_hyper(func, x0=0, evalf=False):
 
     if isinstance(simp, hyper):
         x0 = 1
-        # use evalf if the function can't be simpified
+        # use evalf if the function can't be simplified
         y0 = _find_conditions(simp, x, x0, sol.order, evalf)
         while not y0:
             x0 += 1
@@ -2340,7 +2341,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
     See Also
     ========
 
-    meijerint._rewrite1, _convert_poly_rat_alg, _create_table
+    sympy.integrals.meijerint._rewrite1, _convert_poly_rat_alg, _create_table
     """
     func = sympify(func)
     syms = func.free_symbols
@@ -2448,7 +2449,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
     if sol.annihilator.is_singular(x0):
         r = sol._indicial()
         l = list(r)
-        if len(r) == 1 and r[l[0]] == S(1):
+        if len(r) == 1 and r[l[0]] == S.One:
             r = l[0]
             g = func / (x - x0)**r
             singular_ics = _find_conditions(g, x, x0, lenics)
@@ -2475,7 +2476,7 @@ def _normalize(list_of, parent, negative=True):
     denom = []
     base = parent.base
     K = base.get_field()
-    lcm_denom = base.from_sympy(S(1))
+    lcm_denom = base.from_sympy(S.One)
     list_of_coeff = []
 
     # convert polynomials to the elements of associated
@@ -2559,10 +2560,10 @@ def _hyper_to_meijerg(func):
     # parameters of the `meijerg` function.
     an = (1 - i for i in ap)
     anp = ()
-    bm = (S(0), )
+    bm = (S.Zero, )
     bmq = (1 - i for i in bq)
 
-    k = S(1)
+    k = S.One
 
     for i in bq:
         k = k * gamma(i)
@@ -2650,8 +2651,8 @@ def DMFsubs(frac, x0, mpm=False):
 
     p = frac.num
     q = frac.den
-    sol_p = S(0)
-    sol_q = S(0)
+    sol_p = S.Zero
+    sol_q = S.Zero
 
     if mpm:
         from mpmath import mp
@@ -2765,7 +2766,7 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
     if sol.is_singular(x0):
         r = HolonomicFunction(sol, x, x0)._indicial()
         l = list(r)
-        if len(r) == 1 and r[l[0]] == S(1):
+        if len(r) == 1 and r[l[0]] == S.One:
             r = l[0]
             g = func / (x - x0)**r
             singular_ics = _find_conditions(g, x, x0, lenics)
@@ -2792,7 +2793,7 @@ def _convert_meijerint(func, x, initcond=True, domain=QQ):
     # lists for sum of meijerg functions
     fac_list = [fac * i[0] for i in g]
     t = po.as_base_exp()
-    s = t[1] if t[0] is x else S(0)
+    s = t[1] if t[0] is x else S.Zero
     po_list = [s + i[1] for i in g]
     G_list = [i[2] for i in g]
 
@@ -2807,7 +2808,7 @@ def _convert_meijerint(func, x, initcond=True, domain=QQ):
         a = d[b]
 
         t = b.as_base_exp()
-        b = t[1] if t[0] is x else S(0)
+        b = t[1] if t[0] is x else S.Zero
         r = s / b
         an = (i + r for i in func.args[0][0])
         ap = (i + r for i in func.args[0][1])

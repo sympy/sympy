@@ -146,7 +146,7 @@ class CoordSys3D(Basic):
             trname = transformation.name
             lambda_transformation = CoordSys3D._get_transformation_lambdas(trname)
             if parent is not None:
-                if parent.lame_coefficients() != (S(1), S(1), S(1)):
+                if parent.lame_coefficients() != (S.One, S.One, S.One):
                     raise ValueError('Parent for pre-defined coordinate '
                                  'system should be Cartesian.')
             lambda_lame = CoordSys3D._get_lame_coeff(trname)
@@ -167,9 +167,9 @@ class CoordSys3D(Basic):
             if isinstance(transformation, Lambda):
                 variable_names = ["x1", "x2", "x3"]
             elif isinstance(transformation, Symbol):
-                if transformation.name is 'spherical':
+                if transformation.name == 'spherical':
                     variable_names = ["r", "theta", "phi"]
-                elif transformation.name is 'cylindrical':
+                elif transformation.name == 'cylindrical':
                     variable_names = ["r", "theta", "z"]
                 else:
                     variable_names = ["x", "y", "z"]

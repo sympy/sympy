@@ -102,15 +102,22 @@ def test_infinity():
     assert oo.is_rational is False
     assert oo.is_algebraic is False
     assert oo.is_transcendental is False
-    assert oo.is_real is True
-    assert oo.is_complex is True
+    assert oo.is_extended_real is True
+    assert oo.is_real is False
+    assert oo.is_complex is False
     assert oo.is_noninteger is True
     assert oo.is_irrational is False
     assert oo.is_imaginary is False
-    assert oo.is_positive is True
+    assert oo.is_nonzero is False
+    assert oo.is_positive is False
     assert oo.is_negative is False
     assert oo.is_nonpositive is False
-    assert oo.is_nonnegative is True
+    assert oo.is_nonnegative is False
+    assert oo.is_extended_nonzero is True
+    assert oo.is_extended_positive is True
+    assert oo.is_extended_negative is False
+    assert oo.is_extended_nonpositive is False
+    assert oo.is_extended_nonnegative is True
     assert oo.is_even is False
     assert oo.is_odd is False
     assert oo.is_finite is False
@@ -129,15 +136,22 @@ def test_neg_infinity():
     assert mm.is_rational is False
     assert mm.is_algebraic is False
     assert mm.is_transcendental is False
-    assert mm.is_real is True
-    assert mm.is_complex is True
+    assert mm.is_extended_real is True
+    assert mm.is_real is False
+    assert mm.is_complex is False
     assert mm.is_noninteger is True
     assert mm.is_irrational is False
     assert mm.is_imaginary is False
+    assert mm.is_nonzero is False
     assert mm.is_positive is False
-    assert mm.is_negative is True
-    assert mm.is_nonpositive is True
+    assert mm.is_negative is False
+    assert mm.is_nonpositive is False
     assert mm.is_nonnegative is False
+    assert mm.is_extended_nonzero is True
+    assert mm.is_extended_positive is False
+    assert mm.is_extended_negative is True
+    assert mm.is_extended_nonpositive is True
+    assert mm.is_extended_nonnegative is False
     assert mm.is_even is False
     assert mm.is_odd is False
     assert mm.is_finite is False
@@ -150,7 +164,7 @@ def test_neg_infinity():
 
 def test_zoo():
     zoo = S.ComplexInfinity
-    assert zoo.is_complex
+    assert zoo.is_complex is False
     assert zoo.is_real is False
     assert zoo.is_prime is False
 
@@ -321,17 +335,46 @@ def test_I():
     assert z.is_composite is False
 
 
-def test_symbol_real():
+def test_symbol_real_false():
     # issue 3848
     a = Symbol('a', real=False)
 
     assert a.is_real is False
     assert a.is_integer is False
+    assert a.is_zero is False
+
     assert a.is_negative is False
     assert a.is_positive is False
     assert a.is_nonnegative is False
     assert a.is_nonpositive is False
+    assert a.is_nonzero is False
+
+    assert a.is_extended_negative is None
+    assert a.is_extended_positive is None
+    assert a.is_extended_nonnegative is None
+    assert a.is_extended_nonpositive is None
+    assert a.is_extended_nonzero is None
+
+
+def test_symbol_extended_real_false():
+    # issue 3848
+    a = Symbol('a', extended_real=False)
+
+    assert a.is_real is False
+    assert a.is_integer is False
     assert a.is_zero is False
+
+    assert a.is_negative is False
+    assert a.is_positive is False
+    assert a.is_nonnegative is False
+    assert a.is_nonpositive is False
+    assert a.is_nonzero is False
+
+    assert a.is_extended_negative is False
+    assert a.is_extended_positive is False
+    assert a.is_extended_nonnegative is False
+    assert a.is_extended_nonpositive is False
+    assert a.is_extended_nonzero is False
 
 
 def test_symbol_imaginary():
@@ -422,6 +465,12 @@ def test_symbol_falsepositive_mul():
     assert x.is_nonzero is None
 
 
+@XFAIL
+def test_symbol_infinitereal_mul():
+    ix = Symbol('ix', infinite=True, extended_real=True)
+    assert (-ix).is_extended_positive is None
+
+
 def test_neg_symbol_falsepositive():
     x = -Symbol('x', positive=False)
     assert x.is_positive is None
@@ -506,21 +555,21 @@ def test_neg_symbol_falsenonnegative_real():
 
 
 def test_prime():
-    assert S(-1).is_prime is False
+    assert S.NegativeOne.is_prime is False
     assert S(-2).is_prime is False
     assert S(-4).is_prime is False
-    assert S(0).is_prime is False
-    assert S(1).is_prime is False
+    assert S.Zero.is_prime is False
+    assert S.One.is_prime is False
     assert S(2).is_prime is True
     assert S(17).is_prime is True
     assert S(4).is_prime is False
 
 
 def test_composite():
-    assert S(-1).is_composite is False
+    assert S.NegativeOne.is_composite is False
     assert S(-2).is_composite is False
     assert S(-4).is_composite is False
-    assert S(0).is_composite is False
+    assert S.Zero.is_composite is False
     assert S(2).is_composite is False
     assert S(17).is_composite is False
     assert S(4).is_composite is True
@@ -704,30 +753,30 @@ def test_hash_vs_eq():
 
 def test_Add_is_pos_neg():
     # these cover lines not covered by the rest of tests in core
-    n = Symbol('n', negative=True, infinite=True)
-    nn = Symbol('n', nonnegative=True, infinite=True)
-    np = Symbol('n', nonpositive=True, infinite=True)
-    p = Symbol('p', positive=True, infinite=True)
-    r = Dummy(real=True, finite=False)
+    n = Symbol('n', extended_negative=True, infinite=True)
+    nn = Symbol('n', extended_nonnegative=True, infinite=True)
+    np = Symbol('n', extended_nonpositive=True, infinite=True)
+    p = Symbol('p', extended_positive=True, infinite=True)
+    r = Dummy(extended_real=True, finite=False)
     x = Symbol('x')
-    xf = Symbol('xb', finite=True)
-    assert (n + p).is_positive is None
-    assert (n + x).is_positive is None
-    assert (p + x).is_positive is None
-    assert (n + p).is_negative is None
-    assert (n + x).is_negative is None
-    assert (p + x).is_negative is None
+    xf = Symbol('xf', finite=True)
+    assert (n + p).is_extended_positive is None
+    assert (n + x).is_extended_positive is None
+    assert (p + x).is_extended_positive is None
+    assert (n + p).is_extended_negative is None
+    assert (n + x).is_extended_negative is None
+    assert (p + x).is_extended_negative is None
 
-    assert (n + xf).is_positive is False
-    assert (p + xf).is_positive is True
-    assert (n + xf).is_negative is True
-    assert (p + xf).is_negative is False
+    assert (n + xf).is_extended_positive is False
+    assert (p + xf).is_extended_positive is True
+    assert (n + xf).is_extended_negative is True
+    assert (p + xf).is_extended_negative is False
 
-    assert (x - S.Infinity).is_negative is None  # issue 7798
+    assert (x - S.Infinity).is_extended_negative is None  # issue 7798
     # issue 8046, 16.2
-    assert (p + nn).is_positive
-    assert (n + np).is_negative
-    assert (p + r).is_positive is None
+    assert (p + nn).is_extended_positive
+    assert (n + np).is_extended_negative
+    assert (p + r).is_extended_positive is None
 
 
 def test_Add_is_imaginary():
@@ -750,12 +799,12 @@ def test_Add_is_algebraic():
 
 def test_Mul_is_algebraic():
     a = Symbol('a', algebraic=True)
-    b = Symbol('a', algebraic=True)
+    b = Symbol('b', algebraic=True)
     na = Symbol('na', algebraic=False)
     an = Symbol('an', algebraic=True, nonzero=True)
     nb = Symbol('nb', algebraic=False)
     x = Symbol('x')
-    assert (a*b).is_algebraic
+    assert (a*b).is_algebraic is True
     assert (na*nb).is_algebraic is None
     assert (a*na).is_algebraic is None
     assert (an*na).is_algebraic is False
@@ -770,15 +819,18 @@ def test_Pow_is_algebraic():
     assert Pow(0, e, evaluate=False).is_algebraic
 
     a = Symbol('a', algebraic=True)
+    azf = Symbol('azf', algebraic=True, zero=False)
     na = Symbol('na', algebraic=False)
     ia = Symbol('ia', algebraic=True, irrational=True)
     ib = Symbol('ib', algebraic=True, irrational=True)
     r = Symbol('r', rational=True)
     x = Symbol('x')
-    assert (a**r).is_algebraic
+    assert (a**2).is_algebraic is True
+    assert (a**r).is_algebraic is None
+    assert (azf**r).is_algebraic is True
     assert (a**x).is_algebraic is None
     assert (na**r).is_algebraic is None
-    assert (ia**r).is_algebraic
+    assert (ia**r).is_algebraic is True
     assert (ia**ib).is_algebraic is False
 
     assert (a**e).is_algebraic is None
@@ -800,7 +852,6 @@ def test_Pow_is_algebraic():
 
 
 def test_Mul_is_prime_composite():
-    from sympy import Mul
     x = Symbol('x', positive=True, integer=True)
     y = Symbol('y', positive=True, integer=True)
     assert (x*y).is_prime is None
@@ -816,10 +867,10 @@ def test_Pow_is_pos_neg():
     z = Symbol('z', real=True)
     w = Symbol('w', nonpositive=True)
 
-    assert (S(-1)**S(2)).is_positive is True
-    assert (S(1)**z).is_positive is True
-    assert (S(-1)**S(3)).is_positive is False
-    assert (S(0)**S(0)).is_positive is True  # 0**0 is 1
+    assert (S.NegativeOne**S(2)).is_positive is True
+    assert (S.One**z).is_positive is True
+    assert (S.NegativeOne**S(3)).is_positive is False
+    assert (S.Zero**S.Zero).is_positive is True  # 0**0 is 1
     assert (w**S(3)).is_positive is False
     assert (w**S(2)).is_positive is None
     assert (I**2).is_positive is False
@@ -838,7 +889,6 @@ def test_Pow_is_pos_neg():
     assert (x**y).is_negative is False
 
 def test_Pow_is_prime_composite():
-    from sympy import Pow
     x = Symbol('x', positive=True, integer=True)
     y = Symbol('y', positive=True, integer=True)
     assert (x**y).is_prime is None
@@ -860,13 +910,13 @@ def test_Mul_is_infinite():
     from sympy import Mul
     assert (x*f).is_finite is None
     assert (x*i).is_finite is None
-    assert (f*i).is_finite is False
+    assert (f*i).is_finite is None
     assert (x*f*i).is_finite is None
-    assert (z*i).is_finite is False
+    assert (z*i).is_finite is None
     assert (nzf*i).is_finite is False
     assert (z*f).is_finite is True
     assert Mul(0, f, evaluate=False).is_finite is True
-    assert Mul(0, i, evaluate=False).is_finite is False
+    assert Mul(0, i, evaluate=False).is_finite is None
 
     assert (x*f).is_infinite is None
     assert (x*i).is_infinite is None
@@ -877,6 +927,37 @@ def test_Mul_is_infinite():
     assert (z*f).is_infinite is False
     assert Mul(0, f, evaluate=False).is_infinite is False
     assert Mul(0, i, evaluate=False).is_infinite is S.NaN.is_infinite
+
+
+def test_Add_is_infinite():
+    x = Symbol('x')
+    f = Symbol('f', finite=True)
+    i = Symbol('i', infinite=True)
+    i2 = Symbol('i2', infinite=True)
+    z = Dummy(zero=True)
+    nzf = Dummy(finite=True, zero=False)
+    from sympy import Add
+    assert (x+f).is_finite is None
+    assert (x+i).is_finite is None
+    assert (f+i).is_finite is False
+    assert (x+f+i).is_finite is None
+    assert (z+i).is_finite is False
+    assert (nzf+i).is_finite is False
+    assert (z+f).is_finite is True
+    assert (i+i2).is_finite is None
+    assert Add(0, f, evaluate=False).is_finite is True
+    assert Add(0, i, evaluate=False).is_finite is False
+
+    assert (x+f).is_infinite is None
+    assert (x+i).is_infinite is None
+    assert (f+i).is_infinite is True
+    assert (x+f+i).is_infinite is None
+    assert (z+i).is_infinite is True
+    assert (nzf+i).is_infinite is True
+    assert (z+f).is_infinite is False
+    assert (i+i2).is_infinite is None
+    assert Add(0, f, evaluate=False).is_infinite is False
+    assert Add(0, i, evaluate=False).is_infinite is True
 
 
 def test_special_is_rational():
@@ -1051,9 +1132,9 @@ def test_issue_9115_9150():
 def test_issue_9165():
     z = Symbol('z', zero=True)
     f = Symbol('f', finite=False)
-    assert 0/z == S.NaN
-    assert 0*(1/z) == S.NaN
-    assert 0*f == S.NaN
+    assert 0/z is S.NaN
+    assert 0*(1/z) is S.NaN
+    assert 0*f is S.NaN
 
 def test_issue_10024():
     x = Dummy('x')
@@ -1079,7 +1160,7 @@ def test_complex_reciprocal_imaginary():
     assert (1 / (4 + 3*I)).is_imaginary is False
 
 def test_issue_16313():
-    x = Symbol('x', real=False)
+    x = Symbol('x', extended_real=False)
     k = Symbol('k', real=True)
     l = Symbol('l', real=True, zero=False)
     assert (-x).is_real is False
@@ -1089,10 +1170,13 @@ def test_issue_16313():
     assert (-x).is_positive is False
 
 def test_issue_16579():
-    # complex -> finite | infinite
-    # with work on PR 16603 it may be changed in future to complex -> finite
-    x = Symbol('x', complex=True, finite=False)
-    y = Symbol('x', real=True, infinite=False)
+    # extended_real -> finite | infinite
+    x = Symbol('x', extended_real=True, infinite=False)
+    y = Symbol('y', extended_real=True, finite=False)
+    assert x.is_finite is True
+    assert y.is_infinite is True
 
-    assert x.is_infinite
-    assert y.is_finite
+    # With PR 16978, complex now implies finite
+    c = Symbol('c', complex=True)
+    assert c.is_finite is True
+    raises(InconsistentAssumptions, lambda: Dummy(complex=True, finite=False))

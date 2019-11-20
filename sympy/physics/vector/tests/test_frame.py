@@ -163,27 +163,64 @@ def test_dcm():
         sin(q2)*cos(q1)*cos(q3), - sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),
          cos(q1)*cos(q2)]])
 
+def test_w_diff_dcm1():
+    # Ref:
+    # Dynamics Theory and Applications, Kane 1985
+    # Sec. 2.1 ANGULAR VELOCITY
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
 
-# This test has been added to test the _w_diff_dcm() function
-# for which a test was previously not included.
-# Also note that the _w_diff_dcm() function was changed as part of
-# PR #14758 as it was observed to be giving incorrect results
-# when compared with Autolev results.
-def test_w_diff_dcm():
-    a = ReferenceFrame('a')
-    b = ReferenceFrame('b')
-    c11, c12, c13, c21, c22, c23, c31, c32, c33 = dynamicsymbols('c11 c12 c13 c21 c22 c23 c31 c32 c33')
-    c11d, c12d, c13d, c21d, c22d, c23d, c31d, c32d, c33d = dynamicsymbols('c11 c12 c13 c21 c22 c23 c31 c32 c33', 1)
-    b.orient(a, 'DCM', Matrix([c11,c12,c13,c21,c22,c23,c31,c32,c33]).reshape(3, 3))
-    b1a=(b.x).express(a)
-    b2a=(b.y).express(a)
-    b3a=(b.z).express(a)
-    b.set_ang_vel(a, b.x*(dot((b3a).dt(a), b.y)) + b.y*(dot((b1a).dt(a), b.z)) +
-                     b.z*(dot((b2a).dt(a), b.x)))
-    expr = ((c12*c13d + c22*c23d + c32*c33d)*b.x + (c13*c11d + c23*c21d + c33*c31d)*b.y +
-           (c11*c12d + c21*c22d + c31*c32d)*b.z)
-    assert b.ang_vel_in(a) - expr == 0
+    c11, c12, c13 = dynamicsymbols('C11 C12 C13')
+    c21, c22, c23 = dynamicsymbols('C21 C22 C23')
+    c31, c32, c33 = dynamicsymbols('C31 C32 C33')
 
+    c11d, c12d, c13d = dynamicsymbols('C11 C12 C13', level=1)
+    c21d, c22d, c23d = dynamicsymbols('C21 C22 C23', level=1)
+    c31d, c32d, c33d = dynamicsymbols('C31 C32 C33', level=1)
+
+    DCM = Matrix([
+        [c11, c12, c13],
+        [c21, c22, c23],
+        [c31, c32, c33]
+    ])
+
+    B.orient(A, 'DCM', DCM)
+    b1a = (B.x).express(A)
+    b2a = (B.y).express(A)
+    b3a = (B.z).express(A)
+
+    # Equation (2.1.1)
+    B.set_ang_vel(A, B.x*(dot((b3a).dt(A), B.y))
+                   + B.y*(dot((b1a).dt(A), B.z))
+                   + B.z*(dot((b2a).dt(A), B.x)))
+
+    # Equation (2.1.21)
+    expr = (  (c12*c13d + c22*c23d + c32*c33d)*B.x
+            + (c13*c11d + c23*c21d + c33*c31d)*B.y
+            + (c11*c12d + c21*c22d + c31*c32d)*B.z)
+    assert B.ang_vel_in(A) - expr == 0
+
+def test_w_diff_dcm2():
+    q1, q2, q3 = dynamicsymbols('q1:4')
+    N = ReferenceFrame('N')
+    A = N.orientnew('A', 'axis', [q1, N.x])
+    B = A.orientnew('B', 'axis', [q2, A.y])
+    C = B.orientnew('C', 'axis', [q3, B.z])
+
+    DCM = C.dcm(N).T
+    D = N.orientnew('D', 'DCM', DCM)
+
+    # Frames D and C are the same ReferenceFrame,
+    # since they have equal DCM respect to frame N.
+    # Therefore, D and C should have same angle velocity in N.
+    assert D.dcm(N) == C.dcm(N) == Matrix([
+        [cos(q2)*cos(q3), sin(q1)*sin(q2)*cos(q3) +
+        sin(q3)*cos(q1), sin(q1)*sin(q3) -
+        sin(q2)*cos(q1)*cos(q3)], [-sin(q3)*cos(q2),
+        -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3),
+        sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1)],
+        [sin(q2), -sin(q1)*cos(q2), cos(q1)*cos(q2)]])
+    assert (D.ang_vel_in(N) - C.ang_vel_in(N)).express(N).simplify() == 0
 
 def test_orientnew_respects_parent_class():
     class MyReferenceFrame(ReferenceFrame):

@@ -12,7 +12,8 @@ from sympy.core import Basic
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, default_sort_key, is_sequence, iterable, ordered, range, string_types
+    as_int, default_sort_key, is_sequence, iterable, ordered, range,
+    string_types, PY3
 )
 
 from sympy.utilities.enumerative import (
@@ -55,6 +56,7 @@ def flatten(iterable, levels=None, cls=None):
 
     adapted from https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
     """
+    from sympy.tensor.array import NDimArray
     if levels is not None:
         if not levels:
             return iterable
@@ -73,7 +75,7 @@ def flatten(iterable, levels=None, cls=None):
 
     for el in iterable:
         if reducible(el):
-            if hasattr(el, 'args'):
+            if hasattr(el, 'args') and not isinstance(el, NDimArray):
                 el = el.args
             result.extend(flatten(el, levels=levels, cls=cls))
         else:
@@ -194,6 +196,75 @@ def group(seq, multiple=True):
     return groups
 
 
+def _iproduct2(iterable1, iterable2):
+    '''Cartesian product of two possibly infinite iterables'''
+
+    it1 = iter(iterable1)
+    it2 = iter(iterable2)
+
+    elems1 = []
+    elems2 = []
+
+    sentinel = object()
+    def append(it, elems):
+        e = next(it, sentinel)
+        if e is not sentinel:
+            elems.append(e)
+
+    n = 0
+    append(it1, elems1)
+    append(it2, elems2)
+
+    while n <= len(elems1) + len(elems2):
+        for m in range(n-len(elems1)+1, len(elems2)):
+            yield (elems1[n-m], elems2[m])
+        n += 1
+        append(it1, elems1)
+        append(it2, elems2)
+
+
+def iproduct(*iterables):
+    '''
+    Cartesian product of iterables.
+
+    Generator of the cartesian product of iterables. This is analogous to
+    itertools.product except that it works with infinite iterables and will
+    yield any item from the infinite product eventually.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import iproduct
+    >>> sorted(iproduct([1,2], [3,4]))
+    [(1, 3), (1, 4), (2, 3), (2, 4)]
+
+    With an infinite iterator:
+
+    >>> from sympy import S
+    >>> (3,) in iproduct(S.Integers)
+    True
+    >>> (3, 4) in iproduct(S.Integers, S.Integers)
+    True
+
+    .. seealso::
+
+       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
+    '''
+    if len(iterables) == 0:
+        yield ()
+        return
+    elif len(iterables) == 1:
+        for e in iterables[0]:
+            yield (e,)
+    elif len(iterables) == 2:
+        for e12 in _iproduct2(*iterables):
+            yield e12
+    else:
+        first, others = iterables[0], iterables[1:]
+        for ef, eo in _iproduct2(first, iproduct(*others)):
+            yield (ef,) + eo
+
+
 def multiset(seq):
     """Return the hashable sequence in multiset form with values being the
     multiplicity of the item in the sequence.
@@ -280,10 +351,10 @@ def interactive_traversal(expr):
 
     RED, BRED = '\033[0;31m', '\033[1;31m'
     GREEN, BGREEN = '\033[0;32m', '\033[1;32m'
-    YELLOW, BYELLOW = '\033[0;33m', '\033[1;33m'
-    BLUE, BBLUE = '\033[0;34m', '\033[1;34m'
-    MAGENTA, BMAGENTA = '\033[0;35m', '\033[1;35m'
-    CYAN, BCYAN = '\033[0;36m', '\033[1;36m'
+    YELLOW, BYELLOW = '\033[0;33m', '\033[1;33m'  # noqa
+    BLUE, BBLUE = '\033[0;34m', '\033[1;34m'      # noqa
+    MAGENTA, BMAGENTA = '\033[0;35m', '\033[1;35m'# noqa
+    CYAN, BCYAN = '\033[0;36m', '\033[1;36m'      # noqa
     END = '\033[0m'
 
     def cprint(*args):
@@ -326,7 +397,7 @@ def interactive_traversal(expr):
             choices = '0-%d' % (n_args - 1)
 
         try:
-            choice = raw_input("Your choice [%s,f,l,r,d,?]: " % choices)
+            choice = input("Your choice [%s,f,l,r,d,?]: " % choices)
         except EOFError:
             result = expr
             print()
@@ -455,11 +526,10 @@ def variations(seq, n, repetition=False):
         >>> list(variations([0, 1], 3, repetition=True))[:4]
         [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1)]
 
-    See Also
-    ========
+    .. seealso::
 
-    sympy.core.compatibility.permutations
-    sympy.core.compatibility.product
+       `itertools.permutations <https://docs.python.org/3/library/itertools.html#itertools.permutations>`_,
+       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
     """
     if not repetition:
         seq = tuple(seq)
@@ -686,10 +756,11 @@ def sift(seq, keyfunc, binary=False):
 
     If you need to sort the sifted items it might be better to use
     ``ordered`` which can economically apply multiple sort keys
-    to a squence while sorting.
+    to a sequence while sorting.
 
     See Also
     ========
+
     ordered
     """
     if not binary:
@@ -873,7 +944,7 @@ def topological_sort(graph, key=None):
         [7, 5, 11, 3, 10, 8, 9, 2]
 
     Only acyclic graphs can be sorted. If the input graph has a cycle,
-    then :py:exc:`ValueError` will be raised::
+    then ``ValueError`` will be raised::
 
         >>> topological_sort((V, E + [(10, 7)]))
         Traceback (most recent call last):
@@ -997,7 +1068,7 @@ def strongly_connected_components(G):
     See Also
     ========
 
-    utilities.iterables.connected_components()
+    sympy.utilities.iterables.connected_components()
 
     """
     # Map from a vertex to its neighbours
@@ -1111,7 +1182,7 @@ def connected_components(G):
     See Also
     ========
 
-    utilities.iterables.strongly_connected_components()
+    sympy.utilities.iterables.strongly_connected_components()
 
     """
     # Duplicate edges both ways so that the graph is effectively undirected
@@ -1475,15 +1546,8 @@ def multiset_partitions(multiset, m=None):
     The number of partitions of length k from a set of size n is given by the
     Stirling Number of the 2nd kind:
 
-    >>> def S2(n, k):
-    ...     from sympy import Dummy, binomial, factorial, Sum
-    ...     if k > n:
-    ...         return 0
-    ...     j = Dummy()
-    ...     arg = (-1)**(k-j)*j**n*binomial(k,j)
-    ...     return 1/factorial(k)*Sum(arg,(j,0,k)).doit()
-    ...
-    >>> S2(5, 2) == len(list(multiset_partitions(5, 2))) == 15
+    >>> from sympy.functions.combinatorial.numbers import stirling
+    >>> stirling(5, 2) == len(list(multiset_partitions(5, 2))) == 15
     True
 
     These comments on counting apply to *sets*, not multisets.
@@ -1498,6 +1562,7 @@ def multiset_partitions(multiset, m=None):
 
     See Also
     ========
+
     partitions
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
@@ -2065,7 +2130,7 @@ def generate_bell(n):
 
     See Also
     ========
-    sympy.combinatorics.Permutation.next_trotterjohnson
+    sympy.combinatorics.permutations.Permutation.next_trotterjohnson
 
     References
     ==========
@@ -2584,3 +2649,28 @@ def rotations(s, dir=1):
     for i in range(len(seq)):
         yield seq
         seq = rotate_left(seq, dir)
+
+
+def roundrobin(*iterables):
+    """roundrobin recipe taken from itertools documentation:
+    https://docs.python.org/2/library/itertools.html#recipes
+
+    roundrobin('ABC', 'D', 'EF') --> A D E B F C
+
+    Recipe credited to George Sakkis
+    """
+    import itertools
+
+    if PY3:
+        nexts = itertools.cycle(iter(it).__next__ for it in iterables)
+    else:
+        nexts = itertools.cycle(iter(it).next for it in iterables)
+
+    pending = len(iterables)
+    while pending:
+        try:
+            for next in nexts:
+                yield next()
+        except StopIteration:
+            pending -= 1
+            nexts = itertools.cycle(itertools.islice(nexts, pending))

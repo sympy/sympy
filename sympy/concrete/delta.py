@@ -24,7 +24,7 @@ def _expand_delta(expr, index):
         return expr
     delta = None
     func = Add
-    terms = [S(1)]
+    terms = [S.One]
     for h in expr.args:
         if delta is None and h.is_Add and _has_simple_delta(h, index):
             delta = True
@@ -69,7 +69,7 @@ def _extract_delta(expr, index):
     if not _has_simple_delta(expr, index):
         return (None, expr)
     if isinstance(expr, KroneckerDelta):
-        return (expr, S(1))
+        return (expr, S.One)
     if not expr.is_Mul:
         raise ValueError("Incorrect expr")
     delta = None
@@ -220,8 +220,6 @@ def deltaproduct(f, limit):
                 return deltaproduct(g, limit)
         return product(f, limit)
 
-    from sympy import Eq
-    c = Eq(limit[2], limit[1] - 1)
     return _remove_multiple_delta(f.subs(limit[0], limit[1])*KroneckerDelta(limit[2], limit[1])) + \
         S.One*_simplify_delta(KroneckerDelta(limit[2], limit[1] - 1))
 
@@ -309,6 +307,11 @@ def deltasummation(f, limit, no_piecewise=False):
 
     # try to extract a simple KroneckerDelta term
     delta, expr = _extract_delta(g, x)
+
+    if (delta is not None) and (delta.delta_range is not None):
+        dinf, dsup = delta.delta_range
+        if (limit[1] - dinf <= 0) == True and (limit[2] - dsup >= 0) == True:
+            no_piecewise = True
 
     if not delta:
         return summation(f, limit)

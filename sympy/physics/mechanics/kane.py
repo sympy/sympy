@@ -126,7 +126,7 @@ class KanesMethod(object):
             kd_eqs = [dynamicsymbols('dummy_kd')]
 
         if not isinstance(frame, ReferenceFrame):
-            raise TypeError('An intertial ReferenceFrame must be supplied')
+            raise TypeError('An inertial ReferenceFrame must be supplied')
         self._inertial = frame
 
         self._fr = None
@@ -279,6 +279,7 @@ class KanesMethod(object):
         # pull out relevant velocities for constructing partial velocities
         vel_list, f_list = _f_list_parser(fl, N)
         vel_list = [msubs(i, self._qdot_u_map) for i in vel_list]
+        f_list = [msubs(i, self._qdot_u_map) for i in f_list]
 
         # Fill Fr with dot product of partial velocities and forces
         o = len(self.u)

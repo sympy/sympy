@@ -8,10 +8,10 @@ Suggested Usage:    python -i pyglet_plotting.py
 
 
 from sympy import symbols, sin, cos, pi, sqrt
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, clock
 from sympy.plotting.pygletplot import PygletPlot
 
-from time import sleep, clock
+from time import sleep
 
 
 def main():

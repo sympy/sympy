@@ -1,16 +1,18 @@
 from __future__ import print_function, division
 
 from sympy import Number
-from sympy.core import Mul, Basic, sympify
+from sympy.core import Mul, Basic, sympify, S
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
-from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
-from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-        Identity, ZeroMatrix, GenericIdentity)
-from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.matrices import MatrixBase
+
+from .inverse import Inverse
+from .matexpr import \
+    MatrixExpr, ShapeError, Identity, ZeroMatrix, GenericIdentity
+from .matpow import MatPow
+from .transpose import transpose
 
 # XXX: MatMul should perhaps not subclass directly from Mul
 class MatMul(MatrixExpr, Mul):
@@ -29,15 +31,17 @@ class MatMul(MatrixExpr, Mul):
     """
     is_MatMul = True
 
+    identity = GenericIdentity()
+
     def __new__(cls, *args, **kwargs):
         check = kwargs.get('check', True)
 
         if not args:
-            return GenericIdentity()
+            return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericIdentity().shape
-        args = filter(lambda i: GenericIdentity() != i, args)
+        args = filter(lambda i: cls.identity != i, args)
         args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
@@ -109,7 +113,27 @@ class MatMul(MatrixExpr, Mul):
         return coeff, MatMul(*matrices)
 
     def _eval_transpose(self):
-        return MatMul(*[transpose(arg) for arg in self.args[::-1]]).doit()
+        """Transposition of matrix multiplication.
+
+        Notes
+        =====
+
+        The following rules are applied.
+
+        Transposition for matrix multiplied with another matrix:
+        `\\left(A B\\right)^{T} = B^{T} A^{T}`
+
+        Transposition for matrix multiplied with scalar:
+        `\\left(c A\\right)^{T} = c A^{T}`
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Transpose
+        """
+        coeff, matrices = self.as_coeff_matrices()
+        return MatMul(
+            coeff, *[transpose(arg) for arg in matrices[::-1]]).doit()
 
     def _eval_adjoint(self):
         return MatMul(*[adjoint(arg) for arg in self.args[::-1]]).doit()
@@ -243,29 +267,6 @@ def merge_explicit(matmul):
 
     return MatMul(*newargs)
 
-def xxinv(mul):
-    """ Y * X * X.I -> Y """
-    from sympy.matrices.expressions.inverse import Inverse
-    factor, matrices = mul.as_coeff_matrices()
-    for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
-        try:
-            if X.is_square and Y.is_square:
-                _X, x_exp = X, 1
-                _Y, y_exp = Y, 1
-                if isinstance(X, MatPow) and not isinstance(X, Inverse):
-                    _X, x_exp = X.args
-                if isinstance(Y, MatPow) and not isinstance(Y, Inverse):
-                    _Y, y_exp = Y.args
-                if _X == _Y.inverse():
-                    if x_exp - y_exp > 0:
-                        I = _X**(x_exp-y_exp)
-                    else:
-                        I = _Y**(y_exp-x_exp)
-                    return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
-        except ValueError:  # Y might not be invertible
-            pass
-    return mul
-
 def remove_ids(mul):
     """ Remove Identities from a MatMul
 
@@ -294,39 +295,49 @@ def factor_in_front(mul):
     return mul
 
 def combine_powers(mul):
-    # combine consecutive powers with the same base into one
-    # e.g. A*A**2 -> A**3
-    from sympy.matrices.expressions import MatPow
-    factor, mmul = mul.as_coeff_mmul()
-    args = []
-    base = None
-    exp = 0
-    for arg in mmul.args:
-        if isinstance(arg, MatPow):
-            current_base = arg.args[0]
-            current_exp = arg.args[1]
-        else:
-            current_base = arg
-            current_exp = 1
-        if current_base == base:
-            exp += current_exp
-        else:
-            if not base is None:
-                if exp == 1:
-                    args.append(base)
-                else:
-                    args.append(base**exp)
-            exp = current_exp
-            base = current_base
-    if exp == 1:
-        args.append(base)
-    else:
-        args.append(base**exp)
+    """Combine consecutive powers with the same base into one
 
-    return newmul(factor, *args)
+    e.g. A*A**2 -> A**3
 
-rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
-         merge_explicit, factor_in_front, flatten, combine_powers)
+    This also cancels out the possible matrix inverses using the
+    knowledgebase of ``Inverse``.
+
+    e.g. Y * X * X.I -> Y
+    """
+    factor, args = mul.as_coeff_matrices()
+    new_args = [args[0]]
+
+    for B in args[1:]:
+        A = new_args[-1]
+        if A.is_square == False or B.is_square == False:
+            new_args.append(B)
+            continue
+
+        if isinstance(A, MatPow):
+            A_base, A_exp = A.args
+        else:
+            A_base, A_exp = A, S.One
+
+        if isinstance(B, MatPow):
+            B_base, B_exp = B.args
+        else:
+            B_base, B_exp = B, S.One
+
+        if A_base == B_base:
+            new_exp = A_exp + B_exp
+            new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
+        elif not isinstance(B_base, MatrixBase) and \
+            A_base == B_base.inverse():
+            new_exp = A_exp - B_exp
+            new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
+        else:
+            new_args.append(B)
+
+    return newmul(factor, *new_args)
+
+rules = (
+    any_zeros, remove_ids, combine_powers, unpack, rm_id(lambda x: x == 1),
+    merge_explicit, factor_in_front, flatten,)
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
 def only_squares(*matrices):

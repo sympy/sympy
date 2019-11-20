@@ -65,7 +65,7 @@ def _monotonic_sign(self):
     2
     >>> F(nn - 1)  # could be negative, zero or positive
     """
-    if not self.is_real:
+    if not self.is_extended_real:
         return
 
     if (-self).is_Symbol:
@@ -94,14 +94,14 @@ def _monotonic_sign(self):
                 return S.One
             else:
                 return _eps
-        elif s.is_negative:
+        elif s.is_extended_negative:
             if s.is_even:
                 return S(-2)
             elif s.is_integer:
                 return S.NegativeOne
             else:
                 return -_eps
-        if s.is_zero or s.is_nonpositive or s.is_nonnegative:
+        if s.is_zero or s.is_extended_nonpositive or s.is_extended_nonnegative:
             return S.Zero
         return None
 
@@ -124,7 +124,7 @@ def _monotonic_sign(self):
                     try:
                         currentroots = real_roots(d)
                     except (PolynomialError, NotImplementedError):
-                        currentroots = [r for r in roots(d, x) if r.is_real]
+                        currentroots = [r for r in roots(d, x) if r.is_extended_real]
                 y = self.subs(x, x0)
                 if x.is_nonnegative and all(r <= x0 for r in currentroots):
                     if y.is_nonnegative and d.is_positive:
@@ -181,7 +181,7 @@ def _monotonic_sign(self):
                 a.is_rational and \
                 all(p.exp.is_Integer for p in a.atoms(Pow) if p.is_Pow) and \
                 (a.is_positive or a.is_negative):
-            v = S(1)
+            v = S.One
             for ai in Mul.make_args(a):
                 if ai.is_number:
                     v *= ai
@@ -973,7 +973,7 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
                 numers.append(term.coeff*numer.as_expr())
         else:
             numers = [t.as_expr() for t in terms]
-            denom = Term(S(1)).numer
+            denom = Term(S.One).numer
 
         cont = cont.as_expr()
         numer = Add(*numers)

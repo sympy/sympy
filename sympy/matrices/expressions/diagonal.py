@@ -155,7 +155,7 @@ class DiagonalOf(MatrixExpr):
         return self.arg._entry(i, i, **kwargs)
 
 
-class DiagonalizeVector(MatrixExpr):
+class DiagMatrix(MatrixExpr):
     """
     Turn a vector into a diagonal matrix.
     """
@@ -195,19 +195,25 @@ class DiagonalizeVector(MatrixExpr):
     def doit(self, **hints):
         from sympy.assumptions import ask, Q
         from sympy import Transpose, Mul, MatMul
+        from sympy import MatrixBase, eye
         vector = self._vector
         # This accounts for shape (1, 1) and identity matrices, among others:
         if ask(Q.diagonal(vector)):
             return vector
+        if isinstance(vector, MatrixBase):
+            ret = eye(max(vector.shape))
+            for i in range(ret.shape[0]):
+                ret[i, i] = vector[i]
+            return type(vector)(ret)
         if vector.is_MatMul:
             matrices = [arg for arg in vector.args if arg.is_Matrix]
             scalars = [arg for arg in vector.args if arg not in matrices]
             if scalars:
-                return Mul.fromiter(scalars)*DiagonalizeVector(MatMul.fromiter(matrices).doit()).doit()
+                return Mul.fromiter(scalars)*DiagMatrix(MatMul.fromiter(matrices).doit()).doit()
         if isinstance(vector, Transpose):
             vector = vector.arg
-        return DiagonalizeVector(vector)
+        return DiagMatrix(vector)
 
 
 def diagonalize_vector(vector):
-    return DiagonalizeVector(vector).doit()
+    return DiagMatrix(vector).doit()

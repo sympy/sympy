@@ -94,7 +94,7 @@ class Vector(object):
         if isinstance(other, Dyadic):
             return NotImplemented
         other = _check_vector(other)
-        out = S(0)
+        out = S.Zero
         for i, v1 in enumerate(self.args):
             for j, v2 in enumerate(other.args):
                 out += ((v2[0].T)
@@ -385,7 +385,7 @@ class Vector(object):
         return outstr
 
     def __sub__(self, other):
-        """The subraction operator. """
+        """The subtraction operator. """
         return self.__add__(other * -1)
 
     def __xor__(self, other):

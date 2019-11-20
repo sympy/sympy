@@ -33,7 +33,10 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # arithmetic.
 from __future__ import print_function, division
 
+from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.simplify.simplify import nsimplify
+
+from .interval_membership import intervalMembership
 
 
 class interval(object):
@@ -49,18 +52,9 @@ class interval(object):
             the function's argument interval is partly in the domain of the
             function
 
-    The comparison of two intervals returns a tuple of two 3-valued logic
-    values.
-
-    The first value determines the comparison as follows:
-    - True: If the comparison is True throughout the intervals.
-    - False: If the comparison is False throughout the intervals.
-    - None: If the comparison is True for some part of the intervals.
-
-    The second value is determined as follows:
-    - True: If both the intervals in comparison are valid.
-    - False: If at least one of the intervals is False, else
-    - None
+    A comparison between an interval and a real number, or a
+    comparison between two intervals may return ``intervalMembership``
+    of two 3-valued logic values.
     """
 
     def __init__(self, *args, **kwargs):
@@ -100,35 +94,30 @@ class interval(object):
     def __lt__(self, other):
         if isinstance(other, (int, float)):
             if self.end < other:
-                return (True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
             elif self.start > other:
-                return (False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
             else:
-                return (None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
 
         elif isinstance(other, interval):
-            if self.is_valid is False or other.is_valid is False:
-                valid = False
-            elif self.is_valid is None or other.is_valid is None:
-                valid = None
-            else:
-                valid = True
+            valid = fuzzy_and([self.is_valid, other.is_valid])
             if self.end < other. start:
-                return (True, valid)
+                return intervalMembership(True, valid)
             if self.start > other.end:
-                return (False, valid)
-            return (None, valid)
+                return intervalMembership(False, valid)
+            return intervalMembership(None, valid)
         else:
             return NotImplemented
 
     def __gt__(self, other):
         if isinstance(other, (int, float)):
             if self.start > other:
-                return (True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
             elif self.end < other:
-                return (False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
             else:
-                return (None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
         elif isinstance(other, interval):
             return other.__lt__(self)
         else:
@@ -137,84 +126,69 @@ class interval(object):
     def __eq__(self, other):
         if isinstance(other, (int, float)):
             if self.start == other and self.end == other:
-                return (True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
             if other in self:
-                return (None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
             else:
-                return (False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
 
         if isinstance(other, interval):
-            if self.is_valid is False or other.is_valid is False:
-                valid = False
-            elif self.is_valid is None or other.is_valid is None:
-                valid = None
-            else:
-                valid = True
+            valid = fuzzy_and([self.is_valid, other.is_valid])
             if self.start == other.start and self.end == other.end:
-                return (True, valid)
+                return intervalMembership(True, valid)
             elif self.__lt__(other)[0] is not None:
-                return (False, valid)
+                return intervalMembership(False, valid)
             else:
-                return (None, valid)
+                return intervalMembership(None, valid)
         else:
             return NotImplemented
 
     def __ne__(self, other):
         if isinstance(other, (int, float)):
             if self.start == other and self.end == other:
-                return (False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
             if other in self:
-                return (None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
             else:
-                return (True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
 
         if isinstance(other, interval):
-            if self.is_valid is False or other.is_valid is False:
-                valid = False
-            elif self.is_valid is None or other.is_valid is None:
-                valid = None
-            else:
-                valid = True
+            valid = fuzzy_and([self.is_valid, other.is_valid])
             if self.start == other.start and self.end == other.end:
-                return (False, valid)
+                return intervalMembership(False, valid)
             if not self.__lt__(other)[0] is None:
-                return (True, valid)
-            return (None, valid)
+                return intervalMembership(True, valid)
+            return intervalMembership(None, valid)
         else:
             return NotImplemented
 
     def __le__(self, other):
         if isinstance(other, (int, float)):
             if self.end <= other:
-                return (True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
             if self.start > other:
-                return (False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
             else:
-                return (None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
 
         if isinstance(other, interval):
-            if self.is_valid is False or other.is_valid is False:
-                valid = False
-            elif self.is_valid is None or other.is_valid is None:
-                valid = None
-            else:
-                valid = True
+            valid = fuzzy_and([self.is_valid, other.is_valid])
             if self.end <= other.start:
-                return (True, valid)
+                return intervalMembership(True, valid)
             if self.start > other.end:
-                return (False, valid)
-            return (None, valid)
+                return intervalMembership(False, valid)
+            return intervalMembership(None, valid)
         else:
             return NotImplemented
 
     def __ge__(self, other):
         if isinstance(other, (int, float)):
             if self.start >= other:
-                return (True, self.is_valid)
+                return intervalMembership(True, self.is_valid)
             elif self.end < other:
-                return (False, self.is_valid)
+                return intervalMembership(False, self.is_valid)
             else:
-                return (None, self.is_valid)
+                return intervalMembership(None, self.is_valid)
         elif isinstance(other, interval):
             return other.__le__(self)
 
@@ -230,12 +204,8 @@ class interval(object):
         elif isinstance(other, interval):
             start = self.start + other.start
             end = self.end + other.end
-            if self.is_valid and other.is_valid:
-                return interval(start, end)
-            elif self.is_valid is False or other.is_valid is False:
-                return interval(start, end, is_valid=False)
-            else:
-                return interval(start, end, is_valid=None)
+            valid = fuzzy_and([self.is_valid, other.is_valid])
+            return interval(start, end, is_valid=valid)
         else:
             return NotImplemented
 
@@ -250,12 +220,8 @@ class interval(object):
         elif isinstance(other, interval):
             start = self.start - other.end
             end = self.end - other.start
-            if self.is_valid and other.is_valid:
-                return interval(self.start - other.end, self.end - other.start)
-            elif self.is_valid is False or other.is_valid is False:
-                return interval(start, end, is_valid=False)
-            else:
-                return interval(start, end, is_valid=None)
+            valid = fuzzy_and([self.is_valid, other.is_valid])
+            return interval(start, end, is_valid=valid)
         else:
             return NotImplemented
 

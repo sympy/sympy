@@ -25,7 +25,7 @@ def test_trigsimp1():
     assert trigsimp(1/sin(x)**2 - cot(x)**2) == 1
 
     assert trigsimp(5*cos(x)**2 + 5*sin(x)**2) == 5
-    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 3*cos(x)/2 + S(7)/2
+    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 3*cos(x)/2 + Rational(7, 2)
 
     assert trigsimp(sin(x)/cos(x)) == tan(x)
     assert trigsimp(2*tan(x)*cos(x)) == 2*sin(x)
@@ -268,7 +268,7 @@ def test_hyperbolic_simp():
     assert trigsimp(coth(x)**2 - 1/sinh(x)**2) == 1
 
     assert trigsimp(5*cosh(x)**2 - 5*sinh(x)**2) == 5
-    assert trigsimp(5*cosh(x/2)**2 - 2*sinh(x/2)**2) == 3*cosh(x)/2 + S(7)/2
+    assert trigsimp(5*cosh(x/2)**2 - 2*sinh(x/2)**2) == 3*cosh(x)/2 + Rational(7, 2)
 
     assert trigsimp(sinh(x)/cosh(x)) == tanh(x)
     assert trigsimp(tanh(x)) == trigsimp(sinh(x)/cosh(x))
@@ -364,8 +364,8 @@ def test_issue_15129_trigsimp_methods():
     t3 = Matrix([cos(Rational(1, 25)), sin(Rational(1, 25)), 0])
     r1 = t1.dot(t2)
     r2 = t1.dot(t3)
-    assert trigsimp(r1) == cos(S(1)/50)
-    assert trigsimp(r2) == sin(S(3)/50)
+    assert trigsimp(r1) == cos(Rational(1, 50))
+    assert trigsimp(r2) == sin(Rational(3, 50))
 
 def test_exptrigsimp():
     def valid(a, b):
@@ -418,7 +418,7 @@ def test_exptrigsimp_noncommutative():
     assert p == exptrigsimp(p) != 0
 
 def test_powsimp_on_numbers():
-    assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
+    assert 2**(Rational(1, 3) - 2) == 2**Rational(1, 3)/4
 
 
 @XFAIL

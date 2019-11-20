@@ -15,16 +15,19 @@ from sympy.functions.special.delta_functions import Heaviside
 
 class SingularityFunction(Function):
     r"""
-    The Singularity functions are a class of discontinuous functions. They take a
-    variable, an offset and an exponent as arguments. These functions are
-    represented using Macaulay brackets as :
+    Singularity functions are a class of discontinuous functions.
+
+    Explanation
+    ===========
+
+    Singularity functions take a variable, an offset, and an exponent as
+    arguments. These functions are represented using Macaulay brackets as:
 
     SingularityFunction(x, a, n) := <x - a>^n
 
     The singularity function will automatically evaluate to
     ``Derivative(DiracDelta(x - a), x, -n - 1)`` if ``n < 0``
     and ``(x - a)**n*Heaviside(x - a)`` if ``n >= 0``.
-
 
     Examples
     ========
@@ -58,8 +61,9 @@ class SingularityFunction(Function):
     >>> expr.subs({x: y, a: -10, n: n})
     (y + 10)**n
 
-    The methods ``rewrite(DiracDelta)``, ``rewrite(Heaviside)`` and ``rewrite('HeavisideDiracDelta')``
-    returns the same output. One can use any of these methods according to their choice.
+    The methods ``rewrite(DiracDelta)``, ``rewrite(Heaviside)``, and
+    ``rewrite('HeavisideDiracDelta')`` returns the same output. One can use any
+    of these methods according to their choice.
 
     >>> expr = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
     >>> expr.rewrite(Heaviside)
@@ -74,26 +78,31 @@ class SingularityFunction(Function):
 
     DiracDelta, Heaviside
 
-    Reference
-    =========
+    References
+    ==========
 
     .. [1] https://en.wikipedia.org/wiki/Singularity_function
+
     """
 
     is_real = True
 
     def fdiff(self, argindex=1):
-        '''
+        """
         Returns the first derivative of a DiracDelta Function.
 
-        The difference between ``diff()`` and ``fdiff()`` is:-
-        ``diff()`` is the user-level function and ``fdiff()`` is an object method.
-        ``fdiff()`` is just a convenience method available in the ``Function`` class.
-        It returns the derivative of the function without considering the chain rule.
-        ``diff(function, x)`` calls ``Function._eval_derivative`` which in turn calls
-        ``fdiff()`` internally to compute the derivative of the function.
+        Explanation
+        ===========
 
-        '''
+        The difference between ``diff()`` and ``fdiff()`` is: ``diff()`` is the
+        user-level function and ``fdiff()`` is an object method. ``fdiff()`` is
+        a convenience method available in the ``Function`` class. It returns
+        the derivative of the function without considering the chain rule.
+        ``diff(function, x)`` calls ``Function._eval_derivative`` which in turn
+        calls ``fdiff()`` internally to compute the derivative of the function.
+
+        """
+
         if argindex == 1:
             x = sympify(self.args[0])
             a = sympify(self.args[1])
@@ -108,17 +117,22 @@ class SingularityFunction(Function):
     @classmethod
     def eval(cls, variable, offset, exponent):
         """
-        Returns a simplified form or a value of Singularity Function depending on the
-        argument passed by the object.
+        Returns a simplified form or a value of Singularity Function depending
+        on the argument passed by the object.
 
-        The ``eval()`` method is automatically called when the ``SingularityFunction`` class
-        is about to be instantiated and it returns either some simplified instance
-        or the unevaluated instance depending on the argument passed. In other words,
-        ``eval()`` method is not needed to be called explicitly, it is being called
-        and evaluated once the object is called.
+        Explanation
+        ===========
+
+        The ``eval()`` method is automatically called when the
+        ``SingularityFunction`` class is about to be instantiated and it
+        returns either some simplified instance or the unevaluated instance
+        depending on the argument passed. In other words, ``eval()`` method is
+        not needed to be called explicitly, it is being called and evaluated
+        once the object is called.
 
         Examples
         ========
+
         >>> from sympy import SingularityFunction, Symbol, nan
         >>> from sympy.abc import x, a, n
         >>> SingularityFunction(x, a, n)
@@ -158,12 +172,12 @@ class SingularityFunction(Function):
             return S.NaN
         if (n + 2).is_negative:
             raise ValueError("Singularity Functions are not defined for exponents less than -2.")
-        if shift.is_negative:
+        if shift.is_extended_negative:
             return S.Zero
-        if n.is_nonnegative and shift.is_nonnegative:
+        if n.is_nonnegative and shift.is_extended_nonnegative:
             return (x - a)**n
         if n == -1 or n == -2:
-            if shift.is_negative or shift.is_positive:
+            if shift.is_negative or shift.is_extended_positive:
                 return S.Zero
             if shift.is_zero:
                 return S.Infinity

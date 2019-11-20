@@ -281,6 +281,12 @@ class GLSLPrinter(CodePrinter):
     def _print_Rational(self, expr):
         return "%s.0/%s.0" % (expr.p, expr.q)
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+
     def _print_Add(self, expr, order=None):
         if self._settings['use_operators']:
             return CodePrinter._print_Add(self, expr, order=order)

@@ -1,7 +1,10 @@
-from sympy import (Piecewise, lambdify, Equality, Unequality, Sum, Mod, cbrt,
-        sqrt, MatrixSymbol)
+from sympy import (
+    Piecewise, lambdify, Equality, Unequality, Sum, Mod, cbrt, sqrt,
+    MatrixSymbol, BlockMatrix, Identity
+)
 from sympy import eye
 from sympy.abc import x, i, j, a, b, c, d
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Cbrt, Sqrt
 from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayTensorProduct, CodegenArrayDiagonal,
@@ -9,10 +12,11 @@ from sympy.codegen.array_utils import (CodegenArrayContraction,
 from sympy.printing.lambdarepr import NumPyPrinter
 
 from sympy.utilities.pytest import warns_deprecated_sympy
-from sympy.utilities.pytest import skip
+from sympy.utilities.pytest import skip, raises
 from sympy.external import import_module
 
 np = import_module('numpy')
+
 
 def test_numpy_piecewise_regression():
     """
@@ -20,8 +24,11 @@ def test_numpy_piecewise_regression():
     breaking compatibility with numpy 1.8. This is not necessary in numpy 1.9+.
     See gh-9747 and gh-9749 for details.
     """
+    printer = NumPyPrinter()
     p = Piecewise((1, x < 0), (0, True))
-    assert NumPyPrinter().doprint(p) == 'numpy.select([numpy.less(x, 0),True], [1,0], default=numpy.nan)'
+    assert printer.doprint(p) == \
+        'numpy.select([numpy.less(x, 0),True], [1,0], default=numpy.nan)'
+    assert printer.module_imports == {'numpy': {'select', 'less', 'nan'}}
 
 
 def test_sum():
@@ -224,6 +231,28 @@ def test_sqrt():
         skip("NumPy not installed")
     assert abs(lambdify((a,), sqrt(a), 'numpy')(4) - 2) < 1e-16
 
+
+def test_matsolve():
+    if not np:
+        skip("NumPy not installed")
+
+    M = MatrixSymbol("M", 3, 3)
+    x = MatrixSymbol("x", 3, 1)
+
+    expr = M**(-1) * x + x
+    matsolve_expr = MatrixSolve(M, x) + x
+
+    f = lambdify((M, x), expr)
+    f_matsolve = lambdify((M, x), matsolve_expr)
+
+    m0 = np.array([[1, 2, 3], [3, 2, 5], [5, 6, 7]])
+    assert np.linalg.matrix_rank(m0) == 3
+
+    x0 = np.array([3, 4, 5])
+
+    assert np.allclose(f_matsolve(m0, x0), f(m0, x0))
+
+
 def test_issue_15601():
     if not np:
         skip("Numpy not installed")
@@ -236,3 +265,35 @@ def test_issue_15601():
     with warns_deprecated_sympy():
         ans = f(eye(3), eye(3))
         assert np.array_equal(ans, np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]))
+
+def test_16857():
+    if not np:
+        skip("NumPy not installed")
+
+    a_1 = MatrixSymbol('a_1', 10, 3)
+    a_2 = MatrixSymbol('a_2', 10, 3)
+    a_3 = MatrixSymbol('a_3', 10, 3)
+    a_4 = MatrixSymbol('a_4', 10, 3)
+    A = BlockMatrix([[a_1, a_2], [a_3, a_4]])
+    assert A.shape == (20, 6)
+
+    printer = NumPyPrinter()
+    assert printer.doprint(A) == 'numpy.block([[a_1, a_2], [a_3, a_4]])'
+
+
+def test_issue_17006():
+    if not np:
+        skip("NumPy not installed")
+
+    M = MatrixSymbol("M", 2, 2)
+
+    f = lambdify(M, M + Identity(2))
+    ma = np.array([[1, 2], [3, 4]])
+    mr = np.array([[2, 2], [3, 5]])
+
+    assert (f(ma) == mr).all()
+
+    from sympy import symbols
+    n = symbols('n', integer=True)
+    N = MatrixSymbol("M", n, n)
+    raises(NotImplementedError, lambda: lambdify(N, N + Identity(n)))

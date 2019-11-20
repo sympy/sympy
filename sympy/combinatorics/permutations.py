@@ -3,8 +3,10 @@ from __future__ import print_function, division
 import random
 from collections import defaultdict
 
-from sympy.core import Basic
+from sympy.core.basic import Atom
 from sympy.core.compatibility import is_sequence, reduce, range, as_int
+from sympy.core.sympify import _sympify
+from sympy.logic.boolalg import as_Boolean
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
@@ -466,7 +468,7 @@ class Cycle(dict):
         return Cycle(self)
 
 
-class Permutation(Basic):
+class Permutation(Atom):
     """
     A permutation, alternatively known as an 'arrangement number' or 'ordering'
     is an arrangement of the elements of an ordered list into a one-to-one
@@ -948,6 +950,16 @@ class Permutation(Basic):
 
         return cls._af_new(aform)
 
+    def _eval_Eq(self, other):
+        other = _sympify(other)
+        if not isinstance(other, Permutation):
+            return None
+
+        if self._size != other._size:
+            return None
+
+        return as_Boolean(self._array_form == other._array_form)
+
     @classmethod
     def _af_new(cls, perm):
         """A method to produce a Permutation object from a list;
@@ -968,7 +980,7 @@ class Permutation(Basic):
         Permutation([2, 1, 3, 0])
 
         """
-        p = Basic.__new__(cls, perm)
+        p = super(Permutation, cls).__new__(cls)
         p._array_form = perm
         p._size = len(perm)
         return p

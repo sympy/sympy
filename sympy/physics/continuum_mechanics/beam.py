@@ -13,6 +13,13 @@ from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
+from sympy.geometry.entity import GeometryEntity
+from sympy.external import import_module
+from sympy import lambdify, Add
+from sympy.core.compatibility import iterable
+from sympy.utilities.decorator import doctest_depends_on
+
+numpy = import_module('numpy', __import__kwargs={'fromlist':['arange']})
 
 class Beam(object):
     """
@@ -70,21 +77,32 @@ class Beam(object):
 
         Parameters
         ==========
+
         length : Sympifyable
             A Symbol or value representing the Beam's length.
+
         elastic_modulus : Sympifyable
             A SymPy expression representing the Beam's Modulus of Elasticity.
             It is a measure of the stiffness of the Beam material. It can
             also be a continuous function of position along the beam.
-        second_moment : Sympifyable
-            A SymPy expression representing the Beam's Second moment of area.
-            It is a geometrical property of an area which reflects how its
-            points are distributed with respect to its neutral axis. It can
-            also be a continuous function of position along the beam.
+
+        second_moment : Sympifyable or Geometry object
+            Describes the cross-section of the beam via a SymPy expression
+            representing the Beam's second moment of area. It is a geometrical
+            property of an area which reflects how its points are distributed
+            with respect to its neutral axis. It can also be a continuous
+            function of position along the beam. Alternatively ``second_moment``
+            can be a shape object such as a ``Polygon`` from the geometry module
+            representing the shape of the cross-section of the beam. In such cases,
+            it is assumed that the x-axis of the shape object is aligned with the
+            bending axis of the beam. The second moment of area will be computed
+            from the shape object internally.
+
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
+
         base_char : String, optional
             A String that will be used as base character to generate sequential
             symbols for integration constants in cases where boundary conditions
@@ -92,18 +110,25 @@ class Beam(object):
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
-        self.second_moment = second_moment
+        if isinstance(second_moment, GeometryEntity):
+            self.cross_section = second_moment
+        else:
+            self.cross_section = None
+            self.second_moment = second_moment
         self.variable = variable
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
+        self._applied_supports = []
+        self._support_as_loads = []
         self._applied_loads = []
         self._reaction_loads = {}
         self._composite_type = None
         self._hinge_position = None
 
     def __str__(self):
-        str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
+        shape_description = self._cross_section if self._cross_section else self._second_moment
+        str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(shape_description))
         return str_sol
 
     @property
@@ -170,15 +195,30 @@ class Beam(object):
 
     @second_moment.setter
     def second_moment(self, i):
-        self._second_moment = sympify(i)
+        self._cross_section = None
+        if isinstance(i, GeometryEntity):
+            raise ValueError("To update cross-section geometry use `cross_section` attribute")
+        else:
+            self._second_moment = sympify(i)
+
+    @property
+    def cross_section(self):
+        """Cross-section of the beam"""
+        return self._cross_section
+
+    @cross_section.setter
+    def cross_section(self, s):
+        if s:
+            self._second_moment = s.second_moment_of_area()[0]
+        self._cross_section = s
 
     @property
     def boundary_conditions(self):
         """
         Returns a dictionary of boundary conditions applied on the beam.
-        The dictionary has three kewwords namely moment, slope and deflection.
+        The dictionary has three keywords namely moment, slope and deflection.
         The value of each keyword is a list of tuple, where each tuple
-        contains loaction and value of a boundary condition in the format
+        contains location and value of a boundary condition in the format
         (location, value).
 
         Examples
@@ -324,6 +364,8 @@ class Beam(object):
         (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
         """
+        loc = sympify(loc)
+        self._applied_supports.append((loc, type))
         if type == "pin" or type == "roller":
             reaction_load = Symbol('R_'+str(loc))
             self.apply_load(reaction_load, loc, -1)
@@ -335,6 +377,9 @@ class Beam(object):
             self.apply_load(reaction_moment, loc, -2)
             self.bc_deflection.append((loc, 0))
             self.bc_slope.append((loc, 0))
+            self._support_as_loads.append((reaction_moment, loc, -2, None))
+
+        self._support_as_loads.append((reaction_load, loc, -1, None))
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -635,10 +680,10 @@ class Beam(object):
         C2 = Symbol('C2')
         C3 = Symbol('C3')
         C4 = Symbol('C4')
-        slope_1 = S(1)/(E*I1)*(integrate(bending_1, x) + C1)
-        def_1 = S(1)/(E*I1)*(integrate((E*I)*slope_1, x) + C1*x + C2)
-        slope_2 = S(1)/(E*I2)*(integrate(integrate(integrate(load_2, x), x), x) + C3)
-        def_2 = S(1)/(E*I2)*(integrate((E*I)*slope_2, x) + C4)
+        slope_1 = S.One/(E*I1)*(integrate(bending_1, x) + C1)
+        def_1 = S.One/(E*I1)*(integrate((E*I)*slope_1, x) + C1*x + C2)
+        slope_2 = S.One/(E*I2)*(integrate(integrate(integrate(load_2, x), x), x) + C3)
+        def_2 = S.One/(E*I2)*(integrate((E*I)*slope_2, x) + C4)
 
         for position, value in self.bc_slope:
             if position<l:
@@ -998,7 +1043,7 @@ class Beam(object):
             for i in range(len(args)):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
-                slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                 if i != len(args) - 1:
                     slope += (prev_slope + slope_value)*SingularityFunction(x, prev_end, 0) - \
                         (prev_slope + slope_value)*SingularityFunction(x, args[i][1].args[1], 0)
@@ -1008,7 +1053,7 @@ class Beam(object):
             return slope
 
         C3 = Symbol('C3')
-        slope_curve = integrate(S(1)/(E*I)*self.bending_moment(), x) + C3
+        slope_curve = integrate(S.One/(E*I)*self.bending_moment(), x) + C3
 
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
@@ -1065,7 +1110,7 @@ class Beam(object):
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1078,7 +1123,7 @@ class Beam(object):
                 return deflection
             base_char = self._base_char
             constants = symbols(base_char + '3:5')
-            return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
+            return S.One/(E*I)*integrate(integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
         elif not self._boundary_conditions['deflection']:
             base_char = self._base_char
             constant = symbols(base_char + '4')
@@ -1093,7 +1138,7 @@ class Beam(object):
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1114,7 +1159,7 @@ class Beam(object):
                 bc_eqs.append(eqs)
             constants = list(linsolve(bc_eqs, (C3, C4)))
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
-            return S(1)/(E*I)*deflection_curve
+            return S.One/(E*I)*deflection_curve
 
         if isinstance(I, Piecewise) and self._composite_type == "fixed":
             args = I.args
@@ -1125,7 +1170,7 @@ class Beam(object):
             for i in range(len(args)):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
-                slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                 recent_segment_slope = prev_slope + slope_value
                 deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                 if i != len(args) - 1:
@@ -1151,7 +1196,7 @@ class Beam(object):
 
     def max_deflection(self):
         """
-        Returns point of max deflection and its coresponding deflection value
+        Returns point of max deflection and its corresponding deflection value
         in a Beam object.
         """
         from sympy import solve, Piecewise
@@ -1479,6 +1524,181 @@ class Beam(object):
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
 
+    @doctest_depends_on(modules=('numpy',))
+    def draw(self, pictorial=True):
+        """Returns a plot object representing the beam diagram of the beam.
+
+        Parameters
+        ==========
+
+        pictorial: Boolean (default=True)
+            Setting ``pictorial=True`` would simply create a pictorial (scaled) view
+            of the beam diagram not with the exact dimensions.
+            Although setting ``pictorial=False`` would create a beam diagram with
+            the exact dimensions on the plot
+
+        Examples
+        ========
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> R1, R2 = symbols('R1, R2')
+            >>> E, I = symbols('E, I')
+            >>> b = Beam(50, 20, 30)
+            >>> b.apply_load(10, 2, -1)
+            >>> b.apply_load(R1, 10, -1)
+            >>> b.apply_load(R2, 30, -1)
+            >>> b.apply_load(90, 5, 0, 23)
+            >>> b.apply_load(10, 30, 1, 50)
+            >>> b.apply_support(50, "pin")
+            >>> b.apply_support(0, "fixed")
+            >>> b.apply_support(20, "roller")
+            >>> b.draw()
+            Plot object containing:
+            [0]: cartesian line: 25*SingularityFunction(x, 5, 0)
+            - 25*SingularityFunction(x, 23, 0) + SingularityFunction(x, 30, 1)
+            - 20*SingularityFunction(x, 50, 0) - SingularityFunction(x, 50, 1)
+            + 5 for x over (0.0, 50.0)
+        """
+        if not numpy:
+            raise ImportError("To use this function numpy module is required")
+
+        x = self.variable
+
+        # checking whether length is an expression in terms of any Symbol.
+        from sympy import Expr
+        if isinstance(self.length, Expr):
+            l = list(self.length.atoms(Symbol))
+            # assigning every Symbol a default value of 10
+            l = {i:10 for i in l}
+            length = self.length.subs(l)
+        else:
+            l = {}
+            length = self.length
+        height = length/10
+
+        rectangles = []
+        rectangles.append({'xy':(0, 0), 'width':length, 'height': height, 'facecolor':"brown"})
+        annotations, markers, load_eq, fill = self._draw_load(pictorial, length, l)
+        support_markers, support_rectangles = self._draw_supports(length, l)
+
+        rectangles += support_rectangles
+        markers += support_markers
+
+        sing_plot = plot(height + load_eq, (x, 0, length),
+         xlim=(-height, length + height), ylim=(-length, 1.25*length), annotations=annotations,
+          markers=markers, rectangles=rectangles, fill=fill, axis=False, show=False)
+
+        return sing_plot
+
+
+    def _draw_load(self, pictorial, length, l):
+        loads = list(set(self.applied_loads) - set(self._support_as_loads))
+        height = length/10
+        x = self.variable
+
+        annotations = []
+        markers = []
+        load_args = []
+        scaled_load = 0
+        load_eq = 0
+        higher_order = False
+        fill = None
+
+        for load in loads:
+            # check if the position of load is in terms of the beam length.
+            if l:
+                pos =  load[1].subs(l)
+            else:
+                pos = load[1]
+
+            # point loads
+            if load[2] == -1:
+                if isinstance(load[0], Symbol) or load[0].is_negative:
+                    annotations.append({'s':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
+                else:
+                    annotations.append({'s':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
+            # moment loads
+            elif load[2] == -2:
+                if load[0].is_negative:
+                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
+                else:
+                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
+            # higher order loads
+            elif load[2] >= 0:
+                higher_order = True
+                # if pictorial is True we remake the load equation again with
+                # some constant magnitude values.
+                if pictorial:
+                    value, start, order, end = load
+                    value = 10**(1-order) if order > 0 else length/2
+
+                    scaled_load += value*SingularityFunction(x, start, order)
+                    if end:
+                        f2 = 10**(1-order)*x**order if order > 0 else length/2*x**order
+                        for i in range(0, order + 1):
+                            scaled_load -= (f2.diff(x, i).subs(x, end - start)*
+                                           SingularityFunction(x, end, i) / factorial(i))
+
+        # `fill` will be assigned only when higher order loads are present
+        if higher_order:
+            if pictorial:
+                if isinstance(scaled_load, Add):
+                    load_args = scaled_load.args
+                else:
+                    # when the load equation consists of only a single term
+                    load_args = (scaled_load,)
+                load_eq = [i.subs(l) for i in load_args]
+            else:
+                if isinstance(self.load, Add):
+                    load_args = self.load.args
+                else:
+                    load_args = (self.load,)
+                load_eq = [i.subs(l) for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
+
+            load_eq = Add(*load_eq)
+
+            # filling higher order loads with colour
+            y = numpy.arange(0, float(length), 0.001)
+            expr = height + load_eq.rewrite(Piecewise)
+            y1 = lambdify(x, expr, 'numpy')
+            y2 = float(height)
+            fill = {'x': y, 'y1': y1(y), 'y2': y2, 'color':'darkkhaki'}
+
+        return annotations, markers, load_eq, fill
+
+
+    def _draw_supports(self, length, l):
+        height = float(length/10)
+
+        support_markers = []
+        support_rectangles = []
+        for support in self._applied_supports:
+            if l:
+                pos =  support[0].subs(l)
+            else:
+                pos = support[0]
+
+            if support[1] == "pin":
+                support_markers.append({'args':[pos, [0]], 'marker':6, 'markersize':13, 'color':"black"})
+
+            elif support[1] == "roller":
+                support_markers.append({'args':[pos, [-height/2.5]], 'marker':'o', 'markersize':11, 'color':"black"})
+
+            elif support[1] == "fixed":
+                if pos == 0:
+                    support_rectangles.append({'xy':(0, -3*height), 'width':-length/20, 'height':6*height + height, 'fill':False, 'hatch':'/////'})
+                else:
+                    support_rectangles.append({'xy':(length, -3*height), 'width':length/20, 'height': 6*height + height, 'fill':False, 'hatch':'/////'})
+
+        return support_markers, support_rectangles
+
+
 class Beam3D(Beam):
     """
     This class handles loads applied in any direction of a 3D space along
@@ -1514,8 +1734,8 @@ class Beam3D(Beam):
     >>> b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.solve_slope_deflection()
     >>> b.slope()
-    [0, 0, l*x*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
-        + x**2*(-3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - 3*m + q*x)/(6*E*I)]
+    [0, 0, x*(l*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/6
+        + q*x**2/6 + x*(-l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - m)/2)/(E*I)]
     >>> dx, dy, dz = b.deflection()
     >>> dy = collect(simplify(dy), x)
     >>> dx == dz == 0
@@ -1620,7 +1840,7 @@ class Beam3D(Beam):
         Returns a dictionary of boundary conditions applied on the beam.
         The dictionary has two keywords namely slope and deflection.
         The value of each keyword is a list of tuple, where each tuple
-        contains loaction and value of a boundary condition in the format
+        contains location and value of a boundary condition in the format
         (location, value). Further each value is a list corresponding to
         slope or deflection(s) values along three axes at that location.
 
@@ -1644,6 +1864,29 @@ class Beam3D(Beam):
         along y and z axis at ``0``.
         """
         return self._boundary_conditions
+
+    def polar_moment(self):
+        """
+        Returns the polar moment of area of the beam
+        about the X axis with respect to the centroid.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+        >>> from sympy import symbols
+        >>> l, E, G, I, A = symbols('l, E, G, I, A')
+        >>> b = Beam3D(l, E, G, I, A)
+        >>> b.polar_moment()
+        2*I
+        >>> I1 = [9, 15]
+        >>> b = Beam3D(l, E, G, I1, A)
+        >>> b.polar_moment()
+        24
+        """
+        if not iterable(self.second_moment):
+            return 2*self.second_moment
+        return sum(self.second_moment)
 
     def apply_load(self, value, start, order, dir="y"):
         """

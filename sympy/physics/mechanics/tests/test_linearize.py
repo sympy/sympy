@@ -1,5 +1,5 @@
-from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, S
-from sympy import solve, simplify
+from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, S, Rational
+from sympy import solve, simplify, sympify
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
@@ -83,7 +83,7 @@ def test_linearize_rolling_disc_kane():
     assert linearizer.f_v == f_v
     assert linearizer.f_a == f_v.diff(t)
     sol = solve(linearizer.f_0 + linearizer.f_1, qd)
-    for qi in qd:
+    for qi in qdots.keys():
         assert sol[qi] == qdots[qi]
     assert simplify(linearizer.f_2 + linearizer.f_3 - fr - fr_star) == Matrix([0, 0, 0])
 
@@ -117,7 +117,7 @@ def test_linearize_rolling_disc_kane():
                     [0, 0, 0, 0, 0, 0, 1, 0],
                     [sin(q1)*q3d, 0, 0, 0, 0, -sin(q1), -cos(q1), 0],
                     [-cos(q1)*q3d, 0, 0, 0, 0, cos(q1), -sin(q1), 0],
-                    [0, S(4)/5, 0, 0, 0, 0, 0, 6*q3d/5],
+                    [0, Rational(4, 5), 0, 0, 0, 0, 0, 6*q3d/5],
                     [0, 0, 0, 0, 0, 0, 0, 0],
                     [0, 0, 0, 0, 0, -2*q3d, 0, 0]])
     B_sol = Matrix([])
@@ -127,7 +127,7 @@ def test_linearize_rolling_disc_kane():
     assert B.subs(upright_nominal) == B_sol
 
     # Check eigenvalues at critical speed are all zero:
-    assert A.subs(upright_nominal).subs(q3d, 1/sqrt(3)).eigenvals() == {0: 8}
+    assert sympify(A.subs(upright_nominal).subs(q3d, 1/sqrt(3))).eigenvals() == {0: 8}
 
 def test_linearize_pendulum_kane_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum

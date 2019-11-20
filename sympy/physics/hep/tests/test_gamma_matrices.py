@@ -1,6 +1,7 @@
 from sympy import Matrix
 
-from sympy.tensor.tensor import tensor_indices, tensorhead, TensExpr, canon_bp
+from sympy.tensor.tensor import tensor_indices, TensorHead, tensor_heads, \
+    TensExpr, canon_bp
 from sympy import eye
 from sympy.physics.hep.gamma_matrices import GammaMatrix as G, LorentzIndex, \
     kahane_simplify, gamma_trace, _simplify_single_line, simplify_gamma_expression
@@ -267,7 +268,7 @@ def test_gamma_matrix_class():
     i, j, k = tensor_indices('i,j,k', LorentzIndex)
 
     # define another type of TensorHead to see if exprs are correctly handled:
-    A = tensorhead('A', [LorentzIndex], [[1]])
+    A = TensorHead('A', [LorentzIndex])
 
     t = A(k)*G(i)*G(-i)
     ts = simplify_gamma_expression(t)
@@ -380,7 +381,7 @@ def test_gamma_matrix_trace():
     assert _is_tensor_eq(t1, c1*g(n1, n4)*g(n2, n3) + c2*g(n1, n2)*g(n3, n4) + \
             (-c1)*g(n1, n3)*g(n2, n4))
 
-    p, q = tensorhead('p,q', [LorentzIndex], [[1]])
+    p, q = tensor_heads('p,q', [LorentzIndex])
     ps = p(m0)*G(-m0)
     qs = q(m0)*G(-m0)
     p2 = p(m0)*p(-m0)

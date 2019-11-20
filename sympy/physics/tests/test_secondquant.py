@@ -10,8 +10,8 @@ from sympy.physics.secondquant import (
     ContractionAppliesOnlyToFermions
 )
 
-from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
-                   Symbol, symbols, srepr)
+from sympy import (Dummy, expand, Function, I, S, simplify, sqrt, Sum,
+                   Symbol, symbols, srepr, Rational)
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow, raises
@@ -68,7 +68,7 @@ def test_dagger():
     assert Dagger(1) == 1
     assert Dagger(1.0) == 1.0
     assert Dagger(2*I) == -2*I
-    assert Dagger(Rational(1, 2)*I/3.0) == -Rational(1, 2)*I/3.0
+    assert Dagger(S.Half*I/3.0) == I*Rational(-1, 2)/3.0
     assert Dagger(BKet([n])) == BBra([n])
     assert Dagger(B(0)) == Bd(0)
     assert Dagger(Bd(0)) == B(0)
@@ -135,6 +135,7 @@ def test_basic_state():
     assert s.up(0) == BosonState([n + 1, m])
 
 
+# 2019-07-24: No method move in the whole of SymPy
 @XFAIL
 def test_move1():
     i, j = symbols('i,j')
@@ -144,6 +145,7 @@ def test_move1():
     assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
 
 
+# 2019-07-24: No method move in the whole of SymPy
 @XFAIL
 def test_move2():
     i, j = symbols('i,j')
@@ -225,7 +227,7 @@ def test_fixed_bosonic_basis():
 @slow
 def test_sho():
     n, m = symbols('n,m')
-    h_n = Bd(n)*B(n)*(n + Rational(1, 2))
+    h_n = Bd(n)*B(n)*(n + S.Half)
     H = Sum(h_n, (n, 0, 5))
     o = H.doit(deep=False)
     b = FixedBosonicBasis(2, 6)
@@ -666,7 +668,7 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1():
         # dummy order.  That is because the proximity to external indices
         # has higher influence on the canonical dummy ordering than the
         # position of a dummy on the factors.  In fact, the terms here are
-        # similar in structure as the result of the dummy substitions above.
+        # similar in structure as the result of the dummy substitutions above.
         v(k, l, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
         v(l, k, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
         v(k, l, d, c)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
@@ -687,6 +689,13 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1():
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
+
+def test_get_subNO():
+    p, q, r = symbols('p,q,r')
+    assert NO(F(p)*F(q)*F(r)).get_subNO(1) == NO(F(p)*F(r))
+    assert NO(F(p)*F(q)*F(r)).get_subNO(0) == NO(F(q)*F(r))
+    assert NO(F(p)*F(q)*F(r)).get_subNO(2) == NO(F(p)*F(q))
 
 
 def test_equivalent_internal_lines_VT1T1():
@@ -828,7 +837,7 @@ def test_equivalent_internal_lines_VT2():
         #
         # This test show that the dummy order may not be sensitive to all
         # index permutations.  The following expressions have identical
-        # structure as the resulting terms from of the dummy subsitutions
+        # structure as the resulting terms from of the dummy substitutions
         # in the test above.  Here, all expressions have the same dummy
         # order, so they cannot be simplified by means of dummy
         # substitution.  In order to simplify further, it is necessary to

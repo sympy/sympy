@@ -54,6 +54,11 @@ class LambdaPrinter(PythonCodePrinter):
     def _print_NumberSymbol(self, expr):
         return str(expr)
 
+    def _print_Pow(self, expr, **kwargs):
+        # XXX Temporary workaround. Should python math printer be
+        # isolated from PythonCodePrinter?
+        return super(PythonCodePrinter, self)._print_Pow(expr, **kwargs)
+
 
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...
@@ -112,6 +117,31 @@ class NumExprPrinter(LambdaPrinter):
                 raise TypeError("numexpr does not support function '%s'" %
                                 func_name)
         return "%s(%s)" % (nstr, self._print_seq(e.args))
+
+    def _print_Piecewise(self, expr):
+        "Piecewise function printer"
+        exprs = [self._print(arg.expr) for arg in expr.args]
+        conds = [self._print(arg.cond) for arg in expr.args]
+        # If [default_value, True] is a (expr, cond) sequence in a Piecewise object
+        #     it will behave the same as passing the 'default' kwarg to select()
+        #     *as long as* it is the last element in expr.args.
+        # If this is not the case, it may be triggered prematurely.
+        ans = []
+        parenthesis_count = 0
+        is_last_cond_True = False
+        for cond, expr in zip(conds, exprs):
+            if cond == 'True':
+                ans.append(expr)
+                is_last_cond_True = True
+                break
+            else:
+                ans.append('where(%s, %s, ' % (cond, expr))
+                parenthesis_count += 1
+        if not is_last_cond_True:
+            # simplest way to put a nan but raises
+            # 'RuntimeWarning: invalid value encountered in log'
+            ans.append('log(-1)')
+        return ''.join(ans) + ')' * parenthesis_count
 
     def blacklisted(self, expr):
         raise TypeError("numexpr cannot be used with %s" %

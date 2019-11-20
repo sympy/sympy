@@ -226,11 +226,12 @@ class fibonacci(Function):
             return S.Infinity
 
         if n.is_Integer:
-            n = int(n)
-            if n < 0:
-                return S.NegativeOne**(n + 1) * fibonacci(-n)
             if sym is None:
-                return Integer(cls._fib(n))
+                n = int(n)
+                if n < 0:
+                    return S.NegativeOne**(n + 1) * fibonacci(-n)
+                else:
+                    return Integer(cls._fib(n))
             else:
                 if n < 1:
                     raise ValueError("Fibonacci polynomials are defined "
@@ -480,11 +481,11 @@ class bernoulli(Function):
     def eval(cls, n, sym=None):
         if n.is_Number:
             if n.is_Integer and n.is_nonnegative:
-                if n is S.Zero:
+                if n.is_zero:
                     return S.One
                 elif n is S.One:
                     if sym is None:
-                        return -S.Half
+                        return Rational(-1, 2)
                     else:
                         return sym - S.Half
                 # Bernoulli numbers
@@ -1039,7 +1040,7 @@ class euler(Function):
             return Em
         if x:
             k = Dummy("k", integer=True)
-            return Sum(binomial(n, k)*euler(k)/2**k*(x-S.Half)**(n-k), (k, 0, n))
+            return Sum(binomial(n, k)*euler(k)/2**k*(x - S.Half)**(n - k), (k, 0, n))
 
     def _eval_evalf(self, prec):
         m, x = (self.args[0], None) if len(self.args) == 1 else self.args
@@ -1106,7 +1107,7 @@ class catalan(Function):
     For some non-integer values of n we can get closed form
     expressions by rewriting in terms of gamma functions:
 
-    >>> catalan(Rational(1,2)).rewrite(gamma)
+    >>> catalan(Rational(1, 2)).rewrite(gamma)
     8/(3*pi)
 
     We can differentiate the Catalan numbers C(n) interpreted as a
@@ -1158,12 +1159,12 @@ class catalan(Function):
             if (n + 1).is_negative:
                 return S.Zero
             if (n + 1).is_zero:
-                return -S.Half
+                return Rational(-1, 2)
 
     def fdiff(self, argindex=1):
         from sympy import polygamma, log
         n = self.args[0]
-        return catalan(n)*(polygamma(0, n + Rational(1, 2)) - polygamma(0, n + 2) + log(4))
+        return catalan(n)*(polygamma(0, n + S.Half) - polygamma(0, n + 2) + log(4))
 
     def _eval_rewrite_as_binomial(self, n, **kwargs):
         return binomial(2*n, n)/(n + 1)
@@ -1447,9 +1448,12 @@ def _multiset_histogram(n):
 def nP(n, k=None, replacement=False):
     """Return the number of permutations of ``n`` items taken ``k`` at a time.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - set of length ``n``
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     If ``k`` is None then the total of all permutations of length 0
@@ -1618,9 +1622,12 @@ def _AOP_product(n):
 def nC(n, k=None, replacement=False):
     """Return the number of combinations of ``n`` items taken ``k`` at a time.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - set of length ``n``
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     If ``k`` is None then the total of all combinations of length 0
@@ -1708,72 +1715,85 @@ def nC(n, k=None, replacement=False):
         return nC(_multiset_histogram(n), k, replacement)
 
 
-@cacheit
-def _stirling1(n, k):
+def _eval_stirling1(n, k):
     if n == k == 0:
         return S.One
     if 0 in (n, k):
         return S.Zero
-    n1 = n - 1
 
     # some special values
     if n == k:
         return S.One
-    elif k == 1:
-        return factorial(n1)
-    elif k == n1:
+    elif k == n - 1:
         return binomial(n, 2)
     elif k == n - 2:
         return (3*n - 1)*binomial(n, 3)/4
     elif k == n - 3:
         return binomial(n, 2)*binomial(n, 4)
 
-    # general recurrence
-    return n1*_stirling1(n1, k) + _stirling1(n1, k - 1)
+    return _stirling1(n, k)
 
 
 @cacheit
-def _stirling2(n, k):
+def _stirling1(n, k):
+    row = [0, 1]+[0]*(k-1) # for n = 1
+    for i in range(2, n+1):
+        for j in range(min(k,i), 0, -1):
+            row[j] = (i-1) * row[j] + row[j-1]
+    return Integer(row[k])
+
+
+def _eval_stirling2(n, k):
     if n == k == 0:
         return S.One
     if 0 in (n, k):
         return S.Zero
-    n1 = n - 1
 
     # some special values
-    if k == n1:
+    if n == k:
+        return S.One
+    elif k == n - 1:
         return binomial(n, 2)
+    elif k == 1:
+        return S.One
     elif k == 2:
-        return 2**n1 - 1
+        return Integer(2**(n - 1) - 1)
 
-    # general recurrence
-    return k*_stirling2(n1, k) + _stirling2(n1, k - 1)
+    return _stirling2(n, k)
+
+
+@cacheit
+def _stirling2(n, k):
+    row = [0, 1]+[0]*(k-1) # for n = 1
+    for i in range(2, n+1):
+        for j in range(min(k,i), 0, -1):
+            row[j] = j * row[j] + row[j-1]
+    return Integer(row[k])
 
 
 def stirling(n, k, d=None, kind=2, signed=False):
-    r"""Return Stirling number `S(n, k)` of the first or second (default) kind.
+    r"""Return Stirling number $S(n, k)$ of the first or second (default) kind.
 
-    The sum of all Stirling numbers of the second kind for `k = 1`
-    through `n` is ``bell(n)``. The recurrence relationship for these numbers
+    The sum of all Stirling numbers of the second kind for $k = 1$
+    through $n$ is ``bell(n)``. The recurrence relationship for these numbers
     is:
 
     .. math :: {0 \brace 0} = 1; {n \brace 0} = {0 \brace k} = 0;
 
     .. math :: {{n+1} \brace k} = j {n \brace k} + {n \brace {k-1}}
 
-    where `j` is:
-        `n` for Stirling numbers of the first kind
-        `-n` for signed Stirling numbers of the first kind
-        `k` for Stirling numbers of the second kind
+    where $j$ is:
+        $n$ for Stirling numbers of the first kind,
+        $-n$ for signed Stirling numbers of the first kind,
+        $k$ for Stirling numbers of the second kind.
 
     The first kind of Stirling number counts the number of permutations of
     ``n`` distinct items that have ``k`` cycles; the second kind counts the
     ways in which ``n`` distinct items can be partitioned into ``k`` parts.
     If ``d`` is given, the "reduced Stirling number of the second kind" is
-    returned: ``S^{d}(n, k) = S(n - d + 1, k - d + 1)`` with ``n >= k >= d``.
-    (This counts the ways to partition ``n`` consecutive integers into
-    ``k`` groups with no pairwise difference less than ``d``. See example
-    below.)
+    returned: $S^{d}(n, k) = S(n - d + 1, k - d + 1)$ with $n \ge k \ge d$.
+    (This counts the ways to partition $n$ consecutive integers into $k$
+    groups with no pairwise difference less than $d$. See example below.)
 
     To obtain the signed Stirling numbers of the first kind, use keyword
     ``signed=True``. Using this keyword automatically sets ``kind`` to 1.
@@ -1846,15 +1866,15 @@ def stirling(n, k, d=None, kind=2, signed=False):
     if d:
         # assert k >= d
         # kind is ignored -- only kind=2 is supported
-        return _stirling2(n - d + 1, k - d + 1)
+        return _eval_stirling2(n - d + 1, k - d + 1)
     elif signed:
         # kind is ignored -- only kind=1 is supported
-        return (-1)**(n - k)*_stirling1(n, k)
+        return (-1)**(n - k)*_eval_stirling1(n, k)
 
     if kind == 1:
-        return _stirling1(n, k)
+        return _eval_stirling1(n, k)
     elif kind == 2:
-        return _stirling2(n, k)
+        return _eval_stirling2(n, k)
     else:
         raise ValueError('kind must be 1 or 2, not %s' % k)
 
@@ -1906,9 +1926,12 @@ def _nT(n, k):
 def nT(n, k=None):
     """Return the number of ``k``-sized partitions of ``n`` items.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - ``n`` identical items
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     Note: the convention for ``nT`` is different than that of ``nC`` and

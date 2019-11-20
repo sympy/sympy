@@ -1,4 +1,4 @@
-from sympy import Identity, OneMatrix, ZeroMatrix
+from sympy import Identity, OneMatrix, ZeroMatrix, Matrix, MatAdd
 from sympy.core import symbols
 from sympy.utilities.pytest import raises
 
@@ -10,6 +10,7 @@ Z = MatrixSymbol('Z', n, n)
 A = MatrixSymbol('A', n, m)
 B = MatrixSymbol('B', n, m)
 C = MatrixSymbol('C', m, k)
+
 
 def test_HadamardProduct():
     assert HadamardProduct(A, B, A).shape == A.shape
@@ -26,8 +27,10 @@ def test_HadamardProduct():
 
     assert set(HadamardProduct(A, B, A).T.args) == set((A.T, A.T, B.T))
 
+
 def test_HadamardProduct_isnt_commutative():
     assert HadamardProduct(A, B) != HadamardProduct(B, A)
+
 
 def test_mixed_indexing():
     X = MatrixSymbol('X', 2, 2)
@@ -53,6 +56,7 @@ def test_canonicalize():
     assert HadamardProduct(X, Z, U, Y).doit() == Z
 
 
+
 def test_hadamard():
     m, n, p = symbols('m, n, p', integer=True)
     A = MatrixSymbol('A', m, n)
@@ -71,12 +75,26 @@ def test_hadamard():
     assert hadamard_product(X, I) == X
     assert isinstance(hadamard_product(X, I), MatrixSymbol)
 
+    a = MatrixSymbol("a", k, 1)
+    expr = MatAdd(ZeroMatrix(k, 1), OneMatrix(k, 1))
+    expr = HadamardProduct(expr, a)
+    assert expr.doit() == a
+
+
+def test_hadamard_product_with_explicit_mat():
+    A = MatrixSymbol("A", 3, 3).as_explicit()
+    B = MatrixSymbol("B", 3, 3).as_explicit()
+    X = MatrixSymbol("X", 3, 3)
+    expr = hadamard_product(A, B)
+    ret = Matrix([i*j for i, j in zip(A, B)]).reshape(3, 3)
+    assert expr == ret
+    expr = hadamard_product(A, X, B)
+    assert expr == HadamardProduct(ret, X)
+
 
 def test_hadamard_power():
     m, n, p = symbols('m, n, p', integer=True)
     A = MatrixSymbol('A', m, n)
-    B = MatrixSymbol('B', m, n)
-    C = MatrixSymbol('C', m, p)
 
     assert hadamard_power(A, 1) == A
     assert isinstance(hadamard_power(A, 2), HadamardPower)
@@ -85,7 +103,26 @@ def test_hadamard_power():
     assert hadamard_power(m, n) == m**n
     raises(ValueError, lambda: hadamard_power(A, A))
 
-    # Testing printer:
-    assert str(hadamard_power(A, n)) == "A.**n"
-    assert str(hadamard_power(A, 1+n)) == "A.**(n + 1)"
-    assert str(hadamard_power(A*B.T, 1+n)) == "(A*B.T).**(n + 1)"
+
+def test_hadamard_power_explicit():
+    from sympy.matrices import Matrix
+    A = MatrixSymbol('A', 2, 2)
+    B = MatrixSymbol('B', 2, 2)
+    a, b = symbols('a b')
+
+    assert HadamardPower(a, b) == a**b
+
+    assert HadamardPower(a, B).as_explicit() == \
+        Matrix([
+            [a**B[0, 0], a**B[0, 1]],
+            [a**B[1, 0], a**B[1, 1]]])
+
+    assert HadamardPower(A, b).as_explicit() == \
+        Matrix([
+            [A[0, 0]**b, A[0, 1]**b],
+            [A[1, 0]**b, A[1, 1]**b]])
+
+    assert HadamardPower(A, B).as_explicit() == \
+        Matrix([
+            [A[0, 0]**B[0, 0], A[0, 1]**B[0, 1]],
+            [A[1, 0]**B[1, 0], A[1, 1]**B[1, 1]]])

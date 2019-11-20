@@ -358,6 +358,12 @@ class RustCodePrinter(CodePrinter):
         p, q = int(expr.p), int(expr.q)
         return '%d_f64/%d.0' % (p, q)
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape
@@ -448,7 +454,6 @@ class RustCodePrinter(CodePrinter):
     # method from higher up the class hierarchy (see _print_NumberSymbol).
     # Then subclasses like us would not need to repeat all this.
     _print_Matrix = \
-        _print_MatrixElement = \
         _print_DenseMatrix = \
         _print_MutableDenseMatrix = \
         _print_ImmutableMatrix = \
