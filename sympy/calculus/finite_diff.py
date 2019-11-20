@@ -424,13 +424,13 @@ as_finite_diff.__doc__ = """
 def differentiate_finite(expr, *symbols,
                          # points=1, x0=None, wrt=None, evaluate=True, #Py2:
                          **kwargs):
-    r""" Differentiate expr and replace Derivatives with finite differences.
+    """ Differentiate expr and replace Derivatives with finite differences.
 
     Parameters
     ==========
 
     expr : expression
-    \*symbols : differentiate with respect to symbols
+    symbols : differentiate with respect to symbols
     points: sequence, coefficient or undefined function, optional
         see ``Derivative.as_finite_difference``
     x0: number or Symbol, optional
@@ -474,10 +474,10 @@ def differentiate_finite(expr, *symbols,
 
     >>> dx = Function('dx')
     >>> differentiate_finite(f(x)*g(x).diff(x), points=dx(x))
-    -(-g(x - dx(x)/2 - dx(x - dx(x)/2)/2)/dx(x - dx(x)/2)
-+ g(x - dx(x)/2 + dx(x - dx(x)/2)/2)/dx(x - dx(x)/2))*f(x - dx(x)/2)/dx(x)
-+ (-g(x + dx(x)/2 - dx(x + dx(x)/2)/2)/dx(x + dx(x)/2)
-+ g(x + dx(x)/2 + dx(x + dx(x)/2)/2)/dx(x + dx(x)/2))*f(x + dx(x)/2)/dx(x)
+    -(-g(x - dx(x)/2 - dx(x - dx(x)/2)/2)/dx(x - dx(x)/2) + \
+g(x - dx(x)/2 + dx(x - dx(x)/2)/2)/dx(x - dx(x)/2))*f(x - dx(x)/2)/dx(x) + \
+(-g(x + dx(x)/2 - dx(x + dx(x)/2)/2)/dx(x + dx(x)/2) + \
+g(x + dx(x)/2 + dx(x + dx(x)/2)/2)/dx(x + dx(x)/2))*f(x + dx(x)/2)/dx(x)
 
     """
     # Key-word only arguments only available in Python 3
