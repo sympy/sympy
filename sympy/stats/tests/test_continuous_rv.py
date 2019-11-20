@@ -974,8 +974,8 @@ def test_triangular():
     "(2/(-a + b), Eq(c, x)), ((2*b - 2*x)/((-a + b)*(b - c)), (b >= x) & (c < x)), (0, True))")
 
     #Tests moment_generating_function
-    assert moment_generating_function(X)(x) == \
-    (-2*(-a + b)*exp(c*x) + 2*(a + c)*exp(b*x) + 2*(b - c)*exp(a*x))/(x**2*(-a + b)*(-a + c)*(b - c))
+    assert moment_generating_function(X)(x).expand() == \
+    ((-2*(-a + b)*exp(c*x) + 2*(-a + c)*exp(b*x) + 2*(b - c)*exp(a*x))/(x**2*(-a + b)*(-a + c)*(b - c))).expand()
 
 def test_quadratic_u():
     a = Symbol("a", real=True)
@@ -1042,7 +1042,7 @@ def test_uniformsum():
     assert density(X)(x).dummy_eq(res)
 
     #Tests set functions
-    assert set(X) in Interval(0, X.n)
+    assert X.pspace.domain.set == Interval(0, n)
 
     #Tests the characteristic_function
     assert characteristic_function(X)(x) == (-I*(exp(I*x) - 1)/x)**n

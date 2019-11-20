@@ -13,6 +13,7 @@ from sympy.core.compatibility import range
 from sympy.core.numbers import comp
 from sympy.abc import x
 from sympy.stats import Normal, DiscreteUniform, Poisson, characteristic_function, moment_generating_function, sample_iter
+from sympy.stats.frv_types import BernoulliDistribution
 
 def test_where():
     X, Y = Die('X'), Die('Y')
