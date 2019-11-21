@@ -128,7 +128,7 @@ def _simple_dens(f, symbols):
 def denoms(eq, *symbols):
     """
     Return (recursively) set of all denominators that appear in *eq*
-    that contain any symbol in ``symbols``; if ``symbols`` are not
+    that contain any symbol in *symbols*; if *symbols* are not
     provided then all denominators will be returned.
 
     Examples
@@ -150,8 +150,8 @@ def denoms(eq, *symbols):
     >>> denoms(x/2 + y/z)
     {2, z}
 
-    If `symbols` are provided then only denominators containing
-    those symbols will be returned
+    If *symbols* are provided then only denominators containing
+    those symbols will be returned:
 
     >>> denoms(1/x + 1/y + 1/z, y, z)
     {y, z}
@@ -391,7 +391,7 @@ def failing_assumptions(expr, **assumptions):
     >>> failing_assumptions(x**2 - 1, positive=True)
     {'positive': None}
 
-    If all assumptions satisfy the *expr*, an empty dictionary is returned.
+    If *expr* satisfies all of the assumptions, an empty dictionary is returned.
 
     >>> failing_assumptions(x**2, positive=True)
     {}
@@ -481,79 +481,6 @@ def solve(f, *symbols, **flags):
         - systems of linear and polynomial equations
         - systems containing relational expressions
 
-    Input is formed as:
-
-    * *f*
-        - a single Expr or Poly that must be zero
-        - an Equality
-        - a Relational expression
-        - a Boolean
-        - iterable of one or more of the above
-
-    * *symbols* (object(s) to solve for) specified as
-        - none given (other non-numeric objects will be used)
-        - single symbol
-        - denested list of symbols
-          (e.g., ``solve(f, x, y)``)
-        - ordered iterable of symbols
-          (e.g., ``solve(f, [x, y])``)
-
-    * *flags*
-        'dict'=True (default is False)
-            Return list (perhaps empty) of solution mappings.
-        'set'=True (default is False)
-            Return list of symbols and set of tuple(s) of solution(s).
-        'exclude=[] (default)'
-            Do not try to solve for any of the free symbols in exclude;
-            if expressions are given, the free symbols in them will
-            be extracted automatically.
-        'check=True (default)'
-            If False, do not do any testing of solutions. This can be
-            useful if you want to include solutions that make any
-            denominator zero.
-        'numerical=True (default)'
-            Do a fast numerical check if *f* has only one symbol.
-        'minimal=True (default is False)'
-            A very fast, minimal testing.
-        'warn=True (default is False)'
-            Show a warning if ``checksol()`` could not conclude.
-        'simplify=True (default)'
-            Simplify all but polynomials of order 3 or greater before
-            returning them and (if check is not False) use the
-            general simplify function on the solutions and the
-            expression obtained when they are substituted into the
-            function which should be zero.
-        'force=True (default is False)'
-            Make positive all symbols without assumptions regarding sign.
-        'rational=True (default)'
-            Recast Floats as Rational; if this option is not used, the
-            system containing Floats may fail to solve because of issues
-            with polys. If rational=None, Floats will be recast as
-            rationals but the answer will be recast as Floats. If the
-            flag is False then nothing will be done to the Floats.
-        'manual=True (default is False)'
-            Do not use the polys/matrix method to solve a system of
-            equations, solve them one at a time as you might "manually."
-        'implicit=True (default is False)'
-            Allows ``solve`` to return a solution for a pattern in terms of
-            other functions that contain that pattern; this is only
-            needed if the pattern is inside of some invertible function
-            like cos, exp, ect.
-        'particular=True (default is False)'
-            Instructs ``solve`` to try to find a particular solution to a linear
-            system with as many zeros as possible; this is very expensive.
-        'quick=True (default is False)'
-            When using particular=True, use a fast heuristic to find a
-            solution with many zeros (instead of using the very slow method
-            guaranteed to find the largest number of zeros possible).
-        'cubics=True (default)'
-            Return explicit solutions when cubic expressions are encountered.
-        'quartics=True (default)'
-            Return explicit solutions when quartic expressions are encountered.
-        'quintics=True (default)'
-            Return explicit solutions (if possible) when quintic expressions
-            are encountered.
-
     Examples
     ========
 
@@ -613,8 +540,8 @@ def solve(f, *symbols, **flags):
     Single expression with no *symbol* given. In this case, all free symbols
     will be selected as potential symbols to solve for. If the equation is
     univariate then a list of solutions is returned; otherwise — as is the case
-    when symbols are given as an iterable of length > 1 — a list of mappings
-    will be returned:
+    when symbols are given as an iterable of length greater than 1 — a list of
+    mappings will be returned:
 
         >>> solve(x - 3)
         [3]
@@ -793,7 +720,7 @@ def solve(f, *symbols, **flags):
         [pi]
 
     If check=False, then a solution to the numerator being zero is found: x = 0.
-    In this case, this is a spurious solution since $\sin(x)/x has the well
+    In this case, this is a spurious solution since $\sin(x)/x$ has the well
     known limit (without dicontinuity) of 1 at x = 0:
 
         >>> solve(sin(x)/x, check=False)
@@ -912,6 +839,80 @@ def solve(f, *symbols, **flags):
         >>> z1 = expr1 - v
         >>> [xi.n(chop=1e-9) for xi in xvals if abs(z1.subs(x, xi).n()) < 1e-9]
         [-3.0]
+
+    Parameters
+    ==========
+
+    f :
+        - a single Expr or Poly that must be zero
+        - an Equality
+        - a Relational expression
+        - a Boolean
+        - iterable of one or more of the above
+
+    symbols : (object(s) to solve for) specified as
+        - none given (other non-numeric objects will be used)
+        - single symbol
+        - denested list of symbols
+          (e.g., ``solve(f, x, y)``)
+        - ordered iterable of symbols
+          (e.g., ``solve(f, [x, y])``)
+
+    flags :
+        'dict'=True (default is False)
+            Return list (perhaps empty) of solution mappings.
+        'set'=True (default is False)
+            Return list of symbols and set of tuple(s) of solution(s).
+        'exclude=[] (default)'
+            Do not try to solve for any of the free symbols in exclude;
+            if expressions are given, the free symbols in them will
+            be extracted automatically.
+        'check=True (default)'
+            If False, do not do any testing of solutions. This can be
+            useful if you want to include solutions that make any
+            denominator zero.
+        'numerical=True (default)'
+            Do a fast numerical check if *f* has only one symbol.
+        'minimal=True (default is False)'
+            A very fast, minimal testing.
+        'warn=True (default is False)'
+            Show a warning if ``checksol()`` could not conclude.
+        'simplify=True (default)'
+            Simplify all but polynomials of order 3 or greater before
+            returning them and (if check is not False) use the
+            general simplify function on the solutions and the
+            expression obtained when they are substituted into the
+            function which should be zero.
+        'force=True (default is False)'
+            Make positive all symbols without assumptions regarding sign.
+        'rational=True (default)'
+            Recast Floats as Rational; if this option is not used, the
+            system containing Floats may fail to solve because of issues
+            with polys. If rational=None, Floats will be recast as
+            rationals but the answer will be recast as Floats. If the
+            flag is False then nothing will be done to the Floats.
+        'manual=True (default is False)'
+            Do not use the polys/matrix method to solve a system of
+            equations, solve them one at a time as you might "manually."
+        'implicit=True (default is False)'
+            Allows ``solve`` to return a solution for a pattern in terms of
+            other functions that contain that pattern; this is only
+            needed if the pattern is inside of some invertible function
+            like cos, exp, ect.
+        'particular=True (default is False)'
+            Instructs ``solve`` to try to find a particular solution to a linear
+            system with as many zeros as possible; this is very expensive.
+        'quick=True (default is False)'
+            When using particular=True, use a fast heuristic to find a
+            solution with many zeros (instead of using the very slow method
+            guaranteed to find the largest number of zeros possible).
+        'cubics=True (default)'
+            Return explicit solutions when cubic expressions are encountered.
+        'quartics=True (default)'
+            Return explicit solutions when quartic expressions are encountered.
+        'quintics=True (default)'
+            Return explicit solutions (if possible) when quintic expressions
+            are encountered.
 
     See Also
     ========
@@ -2010,20 +2011,20 @@ def _solve_system(exprs, symbols, **flags):
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     r"""
     Return a tuple derived from ``f = lhs - rhs`` that is one of
-    the following: (0, 1), (0, 0), (symbol, solution), ``(n, d)``.
+    the following: ``(0, 1)``, ``(0, 0)``, ``(symbol, solution)``, ``(n, d)``.
 
     Explanation
     ===========
 
-    (0, 1) meaning that ``f`` is independent of the symbols in *symbols* that
-    are not in *exclude*.
+    ``(0, 1)`` meaning that ``f`` is independent of the symbols in *symbols*
+    that are not in *exclude*.
 
-    (0, 0) meaning that there is no solution to the equation amongst the
+    ``(0, 0)`` meaning that there is no solution to the equation amongst the
     symbols given. If the first element of the tuple is not zero, then the
     function is guaranteed to be dependent on a symbol in *symbols*.
 
-    (symbol, solution) where symbol appears linearly in the numerator of ``f``,
-    is in *symbols* (if given), and is not in *exclude* (if given). No
+    ``(symbol, solution)`` where symbol appears linearly in the numerator of
+    ``f``, is in *symbols* (if given), and is not in *exclude* (if given). No
     simplification is done to ``f`` other than a ``mul=True`` expansion, so the
     solution will correspond strictly to a unique solution.
 
@@ -2067,7 +2068,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     >>> solve_linear(x**2/y**2 - 3)
     (x**2 - 3*y**2, y**2)
 
-    If the numerator of the expression is a symbol, then (0, 0) is
+    If the numerator of the expression is a symbol, then ``(0, 0)`` is
     returned if the solution for that symbol would have set any
     denominator to 0:
 
@@ -2289,7 +2290,7 @@ def solve_linear_system(system, *symbols, **flags):
     This may cause a situation in which an empty dictionary is returned.
     In that case, all symbols can be assigned arbitrary values.
 
-    Input to this function is a $Nx(M+1)$ matrix, which means it has
+    Input to this function is a $N\times M + 1$ matrix, which means it has
     to be in augmented form. If you prefer to enter $N$ equations and $M$
     unknowns then use ``solve(Neqs, *Msymbols)`` instead. Note: a local
     copy of the matrix is made by this routine so the matrix that is
@@ -2482,15 +2483,14 @@ def solve_linear_system(system, *symbols, **flags):
 
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     """
-    Solve equation of a type ``p(x; a_1, ..., a_k) == q(x)`` where both
-    ``p``, ``q`` are univariate polynomials and ``f`` depends on ``k``
-    parameters.
+    Solve equation of a type $p(x; a_1, \ldots, a_k) = q(x)$ where both
+    $p$ and $q$ are univariate polynomials that depend on $k$ parameters.
 
     Explanation
     ===========
 
     The result of this function is a dictionary with symbolic values of those
-    parameters with respect to coefficients in ``q``.
+    parameters with respect to coefficients in $q$.
 
     This function accepts both equations class instances and ordinary
     SymPy expressions. Specification of parameters and variables is
@@ -2570,7 +2570,7 @@ def solve_linear_system_LU(matrix, syms):
 
 def det_perm(M):
     """
-    Return the det *M* by using permutations to select factors.
+    Return the determinant of *M* by using permutations to select factors.
 
     Explanation
     ===========
@@ -3166,7 +3166,7 @@ def _invert(eq, *symbols, **kwargs):
     (0, sqrt(x) + y)
 
     If there is more than one symbol in a power's base and the exponent
-    is not an integer, then the principal root will be used for the
+    is not an Integer, then the principal root will be used for the
     inversion:
 
     >>> invert(sqrt(x + y) - 2)
@@ -3174,7 +3174,7 @@ def _invert(eq, *symbols, **kwargs):
     >>> invert(sqrt(x + y) - 2)
     (4, x + y)
 
-    If the exponent is an integer, setting ``integer_power`` to True
+    If the exponent is an Integer, setting ``integer_power`` to True
     will force the principal root to be selected:
 
     >>> invert(x**2 - 4, integer_power=True)
