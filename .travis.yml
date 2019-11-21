@@ -46,6 +46,7 @@ matrix:
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
     - python: 3.7
+      dist: xenial
       # At the time of writing this is Python 3.7 but it will become 3.8 when
       # all of the dependencies are supported on 3.8.
       env:
