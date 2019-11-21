@@ -859,58 +859,58 @@ def solve(f, *symbols, **flags):
           (e.g., ``solve(f, [x, y])``)
 
     flags :
-        'dict'=True (default is False)
+        dict=True (default is False)
             Return list (perhaps empty) of solution mappings.
-        'set'=True (default is False)
+        set=True (default is False)
             Return list of symbols and set of tuple(s) of solution(s).
-        'exclude=[] (default)'
+        exclude=[] (default)
             Do not try to solve for any of the free symbols in exclude;
             if expressions are given, the free symbols in them will
             be extracted automatically.
-        'check=True (default)'
+        check=True (default)
             If False, do not do any testing of solutions. This can be
             useful if you want to include solutions that make any
             denominator zero.
-        'numerical=True (default)'
+        numerical=True (default)
             Do a fast numerical check if *f* has only one symbol.
-        'minimal=True (default is False)'
+        minimal=True (default is False)
             A very fast, minimal testing.
-        'warn=True (default is False)'
+        warn=True (default is False)
             Show a warning if ``checksol()`` could not conclude.
-        'simplify=True (default)'
+        simplify=True (default)
             Simplify all but polynomials of order 3 or greater before
             returning them and (if check is not False) use the
             general simplify function on the solutions and the
             expression obtained when they are substituted into the
             function which should be zero.
-        'force=True (default is False)'
+        force=True (default is False)
             Make positive all symbols without assumptions regarding sign.
-        'rational=True (default)'
+        rational=True (default)
             Recast Floats as Rational; if this option is not used, the
             system containing Floats may fail to solve because of issues
             with polys. If rational=None, Floats will be recast as
             rationals but the answer will be recast as Floats. If the
             flag is False then nothing will be done to the Floats.
-        'manual=True (default is False)'
+        manual=True (default is False)
             Do not use the polys/matrix method to solve a system of
             equations, solve them one at a time as you might "manually."
-        'implicit=True (default is False)'
+        implicit=True (default is False)
             Allows ``solve`` to return a solution for a pattern in terms of
             other functions that contain that pattern; this is only
             needed if the pattern is inside of some invertible function
             like cos, exp, ect.
-        'particular=True (default is False)'
+        particular=True (default is False)
             Instructs ``solve`` to try to find a particular solution to a linear
             system with as many zeros as possible; this is very expensive.
-        'quick=True (default is False)'
+        quick=True (default is False)
             When using particular=True, use a fast heuristic to find a
             solution with many zeros (instead of using the very slow method
             guaranteed to find the largest number of zeros possible).
-        'cubics=True (default)'
+        cubics=True (default)
             Return explicit solutions when cubic expressions are encountered.
-        'quartics=True (default)'
+        quartics=True (default)
             Return explicit solutions when quartic expressions are encountered.
-        'quintics=True (default)'
+        quintics=True (default)
             Return explicit solutions (if possible) when quintic expressions
             are encountered.
 
@@ -2482,7 +2482,7 @@ def solve_linear_system(system, *symbols, **flags):
 
 
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
-    """
+    r"""
     Solve equation of a type $p(x; a_1, \ldots, a_k) = q(x)$ where both
     $p$ and $q$ are univariate polynomials that depend on $k$ parameters.
 
@@ -2944,7 +2944,7 @@ def nsolve(*args, **kwargs):
     that supports matrices. For more information on the syntax, please see the
     docstring of ``lambdify``.
 
-    If the keyword arguments contain 'dict'=True (default is False) ``nsolve``
+    If the keyword arguments contain ``dict=True`` (default is False) ``nsolve``
     will return a list (perhaps empty) of solution mappings. This might be
     especially useful if you want to use ``nsolve`` as a fallback to solve since
     using the dict argument for both methods produces return values of
