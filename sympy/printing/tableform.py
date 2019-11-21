@@ -1,13 +1,13 @@
 from __future__ import print_function, division
 
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import range
+from sympy.core.containers import Tuple
 
 from types import FunctionType
 
 
 class TableForm(object):
-    """
+    r"""
     Create a nice table representation of data.
 
     Examples
@@ -24,10 +24,10 @@ class TableForm(object):
     format (ascii, latex, html, ...).
 
     >>> print(t.as_latex())
-    \\begin{tabular}{l l}
-    $5$ & $7$ \\\\
-    $4$ & $2$ \\\\
-    $10$ & $3$ \\\\
+    \begin{tabular}{l l}
+    $5$ & $7$ \\
+    $4$ & $2$ \\
+    $10$ & $3$ \\
     \end{tabular}
 
     """
@@ -52,7 +52,7 @@ class TableForm(object):
                                 - "automatic" ... labels are 1, 2, 3, ...
 
                             Can be a list of labels for rows and columns:
-                            The lables for each dimension can be given
+                            The labels for each dimension can be given
                             as None, "automatic", or [l1, l2, ...] e.g.
                             ["automatic", None] will number the rows
 
@@ -121,7 +121,6 @@ class TableForm(object):
         # We only support 2D data. Check the consistency:
         if isinstance(data, Matrix):
             data = data.tolist()
-        _w = len(data[0])
         _h = len(data)
 
         # fill out any short lines

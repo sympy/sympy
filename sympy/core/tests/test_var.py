@@ -1,83 +1,60 @@
-# Tests for var are in their own file, because var pollutes global namespace.
-
 from sympy import Symbol, var, Function, FunctionClass
 from sympy.utilities.pytest import raises
 
-# make z1 with call-depth = 1
-
-
-def _make_z1():
-    var("z1")
-
-# make z2 with call-depth = 2
-
-
-def __make_z2():
-    var("z2")
-
-
-def _make_z2():
-    __make_z2()
-
-
 def test_var():
-    var("a")
-    assert a == Symbol("a")
+    ns = {"var": var, "raises": raises}
+    eval("var('a')", ns)
+    assert ns["a"] == Symbol("a")
 
-    var("b bb cc zz _x")
-    assert b == Symbol("b")
-    assert bb == Symbol("bb")
-    assert cc == Symbol("cc")
-    assert zz == Symbol("zz")
-    assert _x == Symbol("_x")
+    eval("var('b bb cc zz _x')", ns)
+    assert ns["b"] == Symbol("b")
+    assert ns["bb"] == Symbol("bb")
+    assert ns["cc"] == Symbol("cc")
+    assert ns["zz"] == Symbol("zz")
+    assert ns["_x"] == Symbol("_x")
 
-    v = var(['d', 'e', 'fg'])
-    assert d == Symbol('d')
-    assert e == Symbol('e')
-    assert fg == Symbol('fg')
+    v = eval("var(['d', 'e', 'fg'])", ns)
+    assert ns['d'] == Symbol('d')
+    assert ns['e'] == Symbol('e')
+    assert ns['fg'] == Symbol('fg')
 
-    # check return value
-    assert v == [d, e, fg]
-
-    # see if var() really injects into global namespace
-    raises(NameError, lambda: z1)
-    _make_z1()
-    assert z1 == Symbol("z1")
-
-    raises(NameError, lambda: z2)
-    _make_z2()
-    assert z2 == Symbol("z2")
+# check return value
+    assert v == ['d', 'e', 'fg']
 
 
 def test_var_return():
-    raises(ValueError, lambda: var(''))
-    v2 = var('q')
-    v3 = var('q p')
+    ns = {"var": var, "raises": raises}
+    "raises(ValueError, lambda: var(''))"
+    v2 = eval("var('q')", ns)
+    v3 = eval("var('q p')", ns)
 
     assert v2 == Symbol('q')
     assert v3 == (Symbol('q'), Symbol('p'))
 
 
 def test_var_accepts_comma():
-    v1 = var('x y z')
-    v2 = var('x,y,z')
-    v3 = var('x,y z')
+    ns = {"var": var}
+    v1 = eval("var('x y z')", ns)
+    v2 = eval("var('x,y,z')", ns)
+    v3 = eval("var('x,y z')", ns)
 
     assert v1 == v2
     assert v1 == v3
 
 
 def test_var_keywords():
-    var('x y', real=True)
-    assert x.is_real and y.is_real
+    ns = {"var": var}
+    eval("var('x y', real=True)", ns)
+    assert ns['x'].is_real and ns['y'].is_real
 
 
 def test_var_cls():
-    f = var('f', cls=Function)
+    ns = {"var": var, "Function": Function}
+    f = eval("var('f', cls=Function)", ns)
 
-    assert isinstance(f, FunctionClass)
+    assert isinstance(ns['f'], FunctionClass)
 
-    g, h = var('g,h', cls=Function)
+    g, h = eval("var('g,h', cls=Function)", ns)
 
-    assert isinstance(g, FunctionClass)
-    assert isinstance(h, FunctionClass)
+    assert isinstance(ns['g'], FunctionClass)
+    assert isinstance(ns['h'], FunctionClass)

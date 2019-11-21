@@ -1,5 +1,5 @@
 from .cartan_type import Standard_Cartan
-from sympy.matrices import eye
+from sympy.core.backend import eye
 from sympy.core.compatibility import range
 
 class TypeD(Standard_Cartan):
@@ -28,7 +28,7 @@ class TypeD(Standard_Cartan):
         """
         This is a method just to generate roots
         with a 1 iin the ith position and a -1
-        in the jth postion.
+        in the jth position.
 
         """
 

@@ -5,7 +5,7 @@ from sympy.utilities.pytest import raises
 
 
 # http://www.herongyang.com/Cryptography/Blowfish-First-8366-Hex-Digits-of-PI.html
-# There are actually 8336 listed there; with the preppended 3 there are 8337
+# There are actually 8336 listed there; with the prepended 3 there are 8337
 # below
 dig=''.join('''
 3243f6a8885a308d313198a2e03707344a4093822299f31d0082efa98ec4e6c89452821e638d013

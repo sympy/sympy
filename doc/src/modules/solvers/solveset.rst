@@ -1,3 +1,5 @@
+.. _solveset:
+
 Solveset
 ========
 
@@ -180,14 +182,14 @@ For example:
 
  >>> from sympy import FiniteSet
  >>> FiniteSet(1, 2, 3)   # Unordered
- {1, 2, 3}
+ FiniteSet(1, 2, 3)
  >>> FiniteSet((1, 2, 3))  # Ordered
- {(1, 2, 3)}
+ FiniteSet((1, 2, 3))
 
 
 Why not use dicts as output?
 
-  Dictionary are easy to deal with programatically but mathematically they are
+  Dictionary are easy to deal with programmatically but mathematically they are
   not very precise and use of them can quickly lead to inconsistency and a lot
   of confusion. For example:
 
@@ -254,9 +256,9 @@ What is this domain argument about?
     >>> from sympy import solveset, S
     >>> from sympy.abc import x
     >>> solveset(x**2 + 1, x) # domain=S.Complexes is default
-    {-I, I}
+    FiniteSet(I, -I)
     >>> solveset(x**2 + 1, x, domain=S.Reals)
-    EmptySet()
+    EmptySet
 
 
 What are the general methods employed by solveset to solve an equation?
@@ -293,7 +295,7 @@ What are the general methods employed by solveset to solve an equation?
 
 
  * The function is now checked if there is any instance of a ``Piecewise``
-   expression, if it is, then it's converted to explict expression and
+   expression, if it is, then it's converted to explicit expression and
    set pairs and then solved recursively.
 
 
@@ -308,7 +310,7 @@ What are the general methods employed by solveset to solve an equation?
 
  * After the invert, the equations are checked for radical or Abs (Modulus),
    then the method ``_solve_radical`` tries to simplify the radical, by
-   removing it using techniques like squarring, cubing etc, and ``_solve_abs``
+   removing it using techniques like squaring, cubing etc, and ``_solve_abs``
    solves nested Modulus by considering the positive and negative variants,
    iteratively.
 
@@ -398,7 +400,7 @@ How does ``solveset`` ensure that it is not returning any wrong solution?
     >>> from sympy import symbols, S, pprint, solveset
     >>> x, n = symbols('x, n')
     >>> pprint(solveset(abs(x) - n, x, domain=S.Reals), use_unicode=True)
-    ([0, ∞) ∩ {n}) ∪ ((-∞, 0] ∩ {-n})
+    {x | x ∊ {-n, n} ∧ (n ∈ [0, ∞))}
 
  Though, there still a lot of work needs to be done in this regard.
 
@@ -520,9 +522,9 @@ How are symbolic parameters handled in solveset?
     >>> from sympy import Symbol, FiniteSet, Interval, not_empty_in, sqrt, oo
     >>> from sympy.abc import x
     >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
-    [0, 2]
+    Interval(0, 2)
     >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
-    [-sqrt(2), -1] U [1, 2]
+    Union(Interval(1, 2), Interval(-sqrt(2), -1))
 
 
 References
@@ -550,12 +552,12 @@ Solving an equation like `x^2 == 1` can be done as follows::
     >>> from sympy import Symbol, Eq
     >>> x = Symbol('x')
     >>> solveset(Eq(x**2, 1), x)
-    {-1, 1}
+    FiniteSet(-1, 1)
 
 Or one may manually rewrite the equation as an expression equal to 0::
 
     >>> solveset(x**2 - 1, x)
-    {-1, 1}
+    FiniteSet(-1, 1)
 
 The first argument for :func:`solveset` is an expression (equal to zero) or an equation and the second argument
 is the symbol that we want to solve the equation for.
@@ -572,6 +574,7 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solveset.domain_check
 
+.. autofunction:: sympy.solvers.solveset.solvify
 
 linear_eq_to_matrix
 -------------------
@@ -589,6 +592,20 @@ nonlinsolve
 -----------
 
 .. autofunction:: sympy.solvers.solveset.nonlinsolve
+
+
+transolve
+---------
+
+.. autofunction:: sympy.solvers.solveset._transolve
+
+.. autofunction:: sympy.solvers.solveset._is_exponential
+
+.. autofunction:: sympy.solvers.solveset._solve_exponential
+
+.. autofunction:: sympy.solvers.solveset._solve_logarithm
+
+.. autofunction:: sympy.solvers.solveset._is_logarithmic
 
 
 Diophantine Equations (DEs)

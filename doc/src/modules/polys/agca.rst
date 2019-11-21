@@ -52,7 +52,7 @@ All code examples assume::
 
     >>> from sympy import *
     >>> x, y, z = symbols('x,y,z')
-    >>> init_printing(use_unicode=True, wrap_line=False, no_global=True)
+    >>> init_printing(use_unicode=True, wrap_line=False)
 
 Reference
 =========
@@ -187,6 +187,8 @@ and submodules:
 .. autoclass:: FreeModule
    :members:
 
+.. autoclass:: FreeModuleElement
+
 .. autoclass:: SubModule
    :members:
 
@@ -227,6 +229,8 @@ subquotient modules:
 
 .. autoclass:: QuotientModule
    :members:
+
+.. autoclass:: QuotientModuleElement
 
 .. autoclass:: SubQuotientModule
    :members:

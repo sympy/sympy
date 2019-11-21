@@ -3,11 +3,12 @@ from __future__ import print_function, division
 
 from sympy.utilities import public
 
-from sympy.core.compatibility import range
 from sympy.core import Function, Symbol
+from sympy.core.compatibility import range
 from sympy.core.numbers import Zero
 from sympy import (sympify, floor, lcm, denom, Integer, Rational,
-                   exp, integrate)
+                   exp, integrate, symbols, Product, product)
+from sympy.polys.polyfuncs import rational_interpolate as rinterp
 
 @public
 def find_simple_recurrence_vector(l):
@@ -37,7 +38,7 @@ def find_simple_recurrence_vector(l):
     >>> find_simple_recurrence_vector([fibonacci(k) for k in range(12)])
     [1, -1, -1]
 
-    See also
+    See Also
     ========
 
     See the function sympy.concrete.guess.find_simple_recurrence which is more
@@ -58,21 +59,17 @@ def find_simple_recurrence_vector(l):
                 for k in range(len(q2)):
                     q2[k] = int(q2[k]*c)
                 return q2
-        m = [Integer(1)/l[b]]
+        a = Integer(1)/l[b]
+        m = [a]
         for k in range(b+1, len(l)):
-            s = 0
-            for j in range(b, k):
-                s -= l[j+1] * m[b-j-1]
-            m.append(s/l[b])
-        l = m
-        a = l[0]
-        q = [0] * max(len(q2), b+len(q1))
+            m.append(-sum(l[j+1]*m[b-j-1] for j in range(b, k))*a)
+        l, m = m, [0] * max(len(q2), b+len(q1))
         for k in range(len(q2)):
-            q[k] = a*q2[k]
+            m[k] = a*q2[k]
         for k in range(b, b+len(q1)):
-            q[k] += q1[k-b]
-        while q[-1]==0: q.pop() # because trailing zeros can occur
-        q1, q2, b = q2, q, 1
+            m[k] += q1[k-b]
+        while m[-1]==0: m.pop() # because trailing zeros can occur
+        q1, q2, b = q2, m, 1
     return [0]
 
 @public
@@ -135,7 +132,7 @@ def rationalize(x, maxcoeff=10000):
     >>> rationalize(pi, maxcoeff = 250)
     355/113
 
-    See also
+    See Also
     ========
     Several other methods can approximate a real number as a rational, like:
 
@@ -185,9 +182,11 @@ def guess_generating_function_rational(v, X=Symbol('x')):
     >>> guess_generating_function_rational(l)
     (3*x + 5)/(-x**2 - x + 1)
 
-    See also
+    See Also
     ========
-    See function sympy.series.approximants and mpmath.pade
+
+    sympy.series.approximants
+    mpmath.pade
 
     """
     #   a) compute the denominator as q
@@ -196,7 +195,7 @@ def guess_generating_function_rational(v, X=Symbol('x')):
     if n <= 1: return None
     #   b) compute the numerator as p
     p = [sum(v[i-k]*q[k] for k in range(min(i+1, n)))
-            for i in range(len(v))] # TODO: maybe better with:  len(v)>>1
+            for i in range(len(v)>>1)]
     return (sum(p[k]*X**k for k in range(len(p)))
             / sum(q[k]*X**k for k in range(n)))
 
@@ -240,7 +239,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
     >>> ggf([k+1 for k in range(12)], types=['ogf', 'lgf', 'hlgf'])
-    {'hlgf': 1/(-x + 1), 'lgf': 1/(x + 1), 'ogf': 1/(x**2 - 2*x + 1)}
+    {'hlgf': 1/(1 - x), 'lgf': 1/(x + 1), 'ogf': 1/(x**2 - 2*x + 1)}
 
     >>> from sympy import sympify
     >>> l = sympify("[3/2, 11/2, 0, -121/2, -363/2, 121]")
@@ -253,7 +252,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     >>> from sympy import simplify, factorial
     >>> ggf([factorial(k) for k in range(12)], types=['ogf', 'egf', 'lgf'])
-    {'egf': 1/(-x + 1)}
+    {'egf': 1/(1 - x)}
 
     >>> ggf([k+1 for k in range(12)], types=['egf'])
     {'egf': (x + 1)*exp(x), 'lgdegf': (x + 2)/(x + 1)}
@@ -267,8 +266,9 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     References
     ==========
-    "Concrete Mathematics", R.L. Graham, D.E. Knuth, O. Patashnik
-    https://oeis.org/wiki/Generating_functions
+
+    .. [1] "Concrete Mathematics", R.L. Graham, D.E. Knuth, O. Patashnik
+    .. [2] https://oeis.org/wiki/Generating_functions
 
     """
     # List of all types of all g.f. known by the algorithm
@@ -381,3 +381,81 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
                 break
 
     return result
+
+
+@public
+def guess(l, all=False, evaluate=True, niter=2, variables=None):
+    """
+    This function is adapted from the Rate.m package for Mathematica
+    written by Christian Krattenthaler.
+    It tries to guess a formula from a given sequence of rational numbers.
+
+    In order to speed up the process, the 'all' variable is set to False by
+    default, stopping the computation as some results are returned during an
+    iteration; the variable can be set to True if more iterations are needed
+    (other formulas may be found; however they may be equivalent to the first
+    ones).
+
+    Another option is the 'evaluate' variable (default is True); setting it
+    to False will leave the involved products unevaluated.
+
+    By default, the number of iterations is set to 2 but a greater value (up
+    to len(l)-1) can be specified with the optional 'niter' variable.
+    More and more convoluted results are found when the order of the
+    iteration gets higher:
+
+      * first iteration returns polynomial or rational functions;
+      * second iteration returns products of rising factorials and their
+        inverses;
+      * third iteration returns products of products of rising factorials
+        and their inverses;
+      * etc.
+
+    The returned formulas contain symbols i0, i1, i2, ... where the main
+    variables is i0 (and auxiliary variables are i1, i2, ...). A list of
+    other symbols can be provided in the 'variables' option; the length of
+    the least should be the value of 'niter' (more is acceptable but only
+    the first symbols will be used); in this case, the main variable will be
+    the first symbol in the list.
+
+    Examples
+    ========
+
+    >>> from sympy.concrete.guess import guess
+    >>> guess([1,2,6,24,120], evaluate=False)
+    [Product(i1 + 1, (i1, 1, i0 - 1))]
+
+    >>> from sympy import symbols
+    >>> r = guess([1,2,7,42,429,7436,218348,10850216], niter=4)
+    >>> i0 = symbols("i0")
+    >>> [r[0].subs(i0,n).doit() for n in range(1,10)]
+    [1, 2, 7, 42, 429, 7436, 218348, 10850216, 911835460]
+    """
+    if any(a==0 for a in l[:-1]):
+        return []
+    N = len(l)
+    niter = min(N-1, niter)
+    myprod = product if evaluate else Product
+    g = []
+    res = []
+    if variables is None:
+        symb = symbols('i:'+str(niter))
+    else:
+        symb = variables
+    for k, s in enumerate(symb):
+        g.append(l)
+        n, r = len(l), []
+        for i in range(n-2-1, -1, -1):
+            ri = rinterp(enumerate(g[k][:-1], start=1), i, X=s)
+            if ((denom(ri).subs({s:n}) != 0)
+                    and (ri.subs({s:n}) - g[k][-1] == 0)
+                    and ri not in r):
+              r.append(ri)
+        if r:
+            for i in range(k-1, -1, -1):
+                r = list(map(lambda v: g[i][0]
+                      * myprod(v, (symb[i+1], 1, symb[i]-1)), r))
+            if not all: return r
+            res += r
+        l = [Rational(l[i+1], l[i]) for i in range(N-k-1)]
+    return res

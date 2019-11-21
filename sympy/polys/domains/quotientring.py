@@ -2,10 +2,9 @@
 
 from __future__ import print_function, division
 
+from sympy.polys.agca.modules import FreeModuleQuotientRing
 from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import NotReversible, CoercionFailed
-from sympy.polys.agca.modules import FreeModuleQuotientRing
-
 from sympy.utilities import public
 
 # TODO
@@ -85,7 +84,7 @@ class QuotientRingElement(object):
         return self.ring.is_zero(self - om)
 
     def __ne__(self, om):
-        return not self.__eq__(om)
+        return not self == om
 
 
 class QuotientRing(Ring):
