@@ -45,10 +45,9 @@ matrix:
       sudo: true
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
-    - python: 3.6
-      # This is actually 3.7 (once all the dependencies support it). We use
-      # python: 3.6 here because 3.7 requires the slower xenial/sudo: true container,
-      # and we aren't actually using the Travis Python anyway.
+    - python: 3.7
+      # At the time of writing this is Python 3.7 but it will become 3.8 when
+      # all of the dependencies are supported on 3.8.
       env:
         - TEST_ASCII="true"
         - TEST_OPT_DEPENDENCY="matchpy numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.5.1 tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang lxml"
@@ -84,7 +83,7 @@ matrix:
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.5.1 tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7 pyglet pycosat python-clang"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.5.1 tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7 pyglet pycosat python-clang lxml"
         - SYMPY_STRICT_COMPILER_CHECKS=1
       addons:
         apt:
