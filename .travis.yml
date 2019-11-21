@@ -99,7 +99,8 @@ matrix:
     - python: 3.6
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="tensorflow<2"
+        - TEST_OPT_DEPENDENCY="tensorflow<2 python=3"
+        - TEST_TENSORFLOW_1=true
 
     - python: 3.8
       dist: xenial
