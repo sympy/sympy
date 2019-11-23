@@ -5,6 +5,7 @@ from sympy.core.compatibility import string_types
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import GoldenRatio
 from sympy.core.symbol import Dummy
+from sympy.core.logic import fuzzy_and
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.special.gamma_functions import gamma
@@ -252,12 +253,11 @@ class Limit(Expr):
             k = e.exp/z
             if k.is_Number and k > 0:
                 a = abs(e.base)
-                if not a.has(z):
-                    try:
-                        if (a < 1 and z0 is S.Infinity) or (a > 1 and z0 is S.NegativeInfinity):
-                            return 0
-                    except TypeError:
-                        pass
+                if ((not a.has(z)) and
+                    (fuzzy_and([a < 1, z0 is S.Infinity]) or
+                     fuzzy_and([a > 1, z0 is S.NegativeInfinity]))):
+                        return 0
+
         l = None
 
         try:
