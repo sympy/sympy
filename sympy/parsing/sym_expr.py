@@ -53,8 +53,10 @@ else:
         ... '''
         >>> a = SymPyExpression(src, 'c')
         >>> a.return_expr()
-        [Declaration(Variable(Symbol('a'), type=IntBaseType(String('integer')), value=Integer(0))), Declaration(Variable(Symbol('b'), type=IntBaseType(String('integer')), value=Integer(0))), Declaration(Variable(Symbol('c'), type=IntBaseType(String('integer')), value=Integer(2))), Declaration(Variable(Symbol('d'),     type=IntBaseType(String('integer')), value=Integer(4)))]
-
+        [Declaration(Variable(a, type=integer, value=0)),
+        Declaration(Variable(b, type=integer, value=0)),
+        Declaration(Variable(c, type=integer, value=2)),
+        Declaration(Variable(d, type=integer, value=4))]
 
         An example of variable definiton:
 
