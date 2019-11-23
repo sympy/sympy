@@ -123,9 +123,7 @@ class Polygon(GeometrySet):
         vertices = [Point(a, dim=2, **kwargs) for a in args]
 
         # remove consecutive duplicates
-        for vertex in vertices:
-            if len(vertices) > 1 and vertex[-1] == vertex[0]:
-                vertices.remove(vertex)  # last point was same as first
+        vertices = list(set(vertices))
 
         # remove collinear points
         i = -3
