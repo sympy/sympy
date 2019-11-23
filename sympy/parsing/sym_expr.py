@@ -16,7 +16,7 @@ else:
     if cin:
         from sympy.parsing.c.c_parser import parse_c
 
-    @doctest_depends_on(modules=['lfortran', 'cin'])
+    @doctest_depends_on(modules=['lfortran', 'clang.cindex'])
     class SymPyExpression(object):
         """Class to store and handle SymPy expressions
 
@@ -46,6 +46,7 @@ else:
 
         Example of parsing C code:
 
+        >>> from sympy.parsing.sym_expr import SymPyExpression
         >>> src = '''
         ... int a,b;
         ... float c = 2, d =4;
