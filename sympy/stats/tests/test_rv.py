@@ -95,7 +95,8 @@ def test_sample_iter():
     def is_iterator(obj):
         if (
             hasattr(obj, '__iter__') and
-            hasattr(obj, 'next') and      # or __next__ in Python 3
+            (hasattr(obj, 'next') or
+            hasattr(obj, '__next__')) and
             callable(obj.__iter__) and
             obj.__iter__() is obj
            ):
@@ -103,17 +104,9 @@ def test_sample_iter():
         else:
             return False
 
-    # Passes in python2 but fails in python3
-    # assert is_iterator(iterator)
-    # assert is_iterator(iterator2)
-    # assert is_iterator(iterator3)
-
-    # For testing value error in case of free symbols in condition
-    # raises(ValueError)
-    # Find an expression thta breaks lambdify and use it to test TypeError
-    # if Exception:
-    #    raises(TypeError)
-
+    assert is_iterator(iterator)
+    assert is_iterator(iterator2)
+    assert is_iterator(iterator3)
 
 def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)

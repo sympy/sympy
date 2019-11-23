@@ -455,12 +455,12 @@ def test_chi():
     assert density(X)(x) == 2**(-k/2 + 1)*x**(k - 1)*exp(-x**2/2)/gamma(k/2)
 
     # Tests the characteristic function
-    # Passes in python3 but fails in python2
-    # C = sqrt(2)*I*x*gamma(k/2 + 1/2)*hyper((k/2 + 1/2,), (3/2,), -x**2/2)/gamma(k/2) + hyper((k/2,), (1/2,), -x**2/2)
-    # assert characteristic_function(X)(x) == C
+    assert characteristic_function(X)(x) == sqrt(2)*I*x*gamma(k/2 + S(1)/2)*hyper((k/2 + S(1)/2,),
+                                            (S(3)/2,), -x**2/2)/gamma(k/2) + hyper((k/2,), (S(1)/2,), -x**2/2)
+
     # Tests the moment generating function
-    # M = sqrt(2)*x*gamma(k/2 + 1/2)*hyper((k/2 + 1/2,), (3/2,), x**2/2)/gamma(k/2) + hyper((k/2,), (1/2,), x**2/2)
-    # assert moment_generating_function(X)(x) == M
+    assert moment_generating_function(X)(x) == sqrt(2)*x*gamma(k/2 + S(1)/2)*hyper((k/2 + S(1)/2,),
+                                                (S(3)/2,), x**2/2)/gamma(k/2) + hyper((k/2,), (S(1)/2,), x**2/2)
 
     k = Symbol("k", integer=True, positive=False)
     raises(ValueError, lambda: Chi('x', k))
@@ -781,9 +781,6 @@ def test_lognormal():
     #assert variance(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
     # Right now, only density function and sampling works
-    # Test sampling: Only e^mean in sample std of 0
-
-
 
     for i in range(3):
         X = LogNormal('x', i, 1)
@@ -798,9 +795,9 @@ def test_lognormal():
     assert density(X)(x) == (sqrt(2)*exp(-(-mu + log(x))**2
                                     /(2*sigma**2))/(2*x*sqrt(pi)*sigma))
     # Tests cdf
-    # Passes in python3 but fails in python2
-    # assert cdf(X)(x) == \
-    #        Piecewise((erf(sqrt(2)*(-mu + log(x))/(2*sigma))/2 + 1/2, x > 0), (0, True))
+    assert cdf(X)(x) == Piecewise(
+                        (erf(sqrt(2)*(-mu + log(x))/(2*sigma))/2
+                        + S(1)/2, x > 0), (0, True))
 
     X = LogNormal('x', 0, 1)  # Mean 0, standard deviation 1
     assert density(X)(x) == sqrt(2)*exp(-log(x)**2/2)/(2*x*sqrt(pi))
