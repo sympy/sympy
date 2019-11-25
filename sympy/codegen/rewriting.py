@@ -38,7 +38,6 @@ from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.mul import Mul
-from sympy.core.power import Pow
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.utilities.iterables import sift
 
