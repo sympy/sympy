@@ -629,7 +629,6 @@ class tanh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        from sympy import cos, sinh
         arg = self.args[0]
         if arg.is_real:
             return True

@@ -257,7 +257,6 @@ def test_autowrap_custom_printer():
     from sympy import pi
     from sympy.utilities.codegen import C99CodeGen
     from sympy.printing.ccode import C99CodePrinter
-    from sympy.functions.elementary.exponential import exp
 
     class PiPrinter(C99CodePrinter):
         def _print_Pi(self, expr):
