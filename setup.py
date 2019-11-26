@@ -69,12 +69,8 @@ except ImportError:
               % min_mpmath_version)
         sys.exit(-1)
 
-PY3 = sys.version_info[0] > 2
-
-# Make sure I have the right Python version.
-if ((sys.version_info[0] == 2 and sys.version_info[1] < 7) or
-    (sys.version_info[0] == 3 and sys.version_info[1] < 5)):
-    print("SymPy requires Python 2.7 or 3.5 or newer. Python %d.%d detected"
+if sys.version_info < (3, 5):
+    print("SymPy requires Python 3.5 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
 
@@ -450,7 +446,7 @@ if __name__ == '__main__':
                     'antlr': antlr,
                     'sdist': sdist_sympy,
                     },
-          python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
+          python_requires='>=3.5',
           classifiers=[
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',
@@ -458,13 +454,12 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Mathematics',
             'Topic :: Scientific/Engineering :: Physics',
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3 :: Only',
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',
             ],
