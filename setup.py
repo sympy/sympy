@@ -73,8 +73,8 @@ PY3 = sys.version_info[0] > 2
 
 # Make sure I have the right Python version.
 if ((sys.version_info[0] == 2 and sys.version_info[1] < 7) or
-    (sys.version_info[0] == 3 and sys.version_info[1] < 4)):
-    print("SymPy requires Python 2.7 or 3.4 or newer. Python %d.%d detected"
+    (sys.version_info[0] == 3 and sys.version_info[1] < 5)):
+    print("SymPy requires Python 2.7 or 3.5 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
 
