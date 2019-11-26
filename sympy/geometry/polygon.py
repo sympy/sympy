@@ -124,7 +124,7 @@ class Polygon(GeometrySet):
 
         # remove consecutive duplicates
         if len(vertices) > 1 and vertices[-1] == vertices[0]:
-            nodup.pop()  # last point was same as first
+            vertices.pop()  # last point was same as first
 
         # remove collinear points
         i = -3
@@ -2063,26 +2063,22 @@ class Triangle(Polygon):
         vertices = [Point(a, dim=2, **kwargs) for a in args]
 
         # remove consecutive duplicates
-        nodup = []
-        for p in vertices:
-            if nodup and p == nodup[-1]:
-                continue
-            nodup.append(p)
-        if len(nodup) > 1 and nodup[-1] == nodup[0]:
-            nodup.pop()  # last point was same as first
+        
+        if len(vertices) > 1 and vertices[-1] == vertices[0]:
+            vertices.pop()  # last point was same as first
 
         # remove collinear points
         i = -3
-        while i < len(nodup) - 3 and len(nodup) > 2:
+        while i < len(vertices) - 3 and len(vertices) > 2:
             a, b, c = sorted(
-                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
+                [vertices[i], vertices[i + 1], vertices[i + 2]], key=default_sort_key)
             if Point.is_collinear(a, b, c):
-                nodup[i] = a
-                nodup[i + 1] = None
-                nodup.pop(i + 1)
+                vertices[i] = a
+                vertices[i + 1] = None
+                vertices.pop(i + 1)
             i += 1
 
-        vertices = list(filter(lambda x: x is not None, nodup))
+        vertices = list(filter(lambda x: x is not None, vertices))
 
         if len(vertices) == 3:
             return GeometryEntity.__new__(cls, *vertices, **kwargs)
