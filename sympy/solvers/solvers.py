@@ -496,7 +496,7 @@ def solve(f, *symbols, **flags):
         (-oo < x) & (x < 3)
 
 
-    To always get a list of solution mappings, use *flag* dict=True:
+    To always get a list of solution mappings, use flag dict=True:
 
         >>> solve(x - 3, dict=True)
         [{x: 3}]
@@ -509,13 +509,13 @@ def solve(f, *symbols, **flags):
         1
 
 
-    To get a list of symbols and set of solution(s) use *flag* set=True:
+    To get a list of *symbols* and set of solution(s) use flag set=True:
 
         >>> solve([x**2 - 3, y - 1], set=True)
         ([x, y], {(-sqrt(3), 1), (sqrt(3), 1)})
 
 
-    Single expression and single *symbol* that is in the expression:
+    Single expression and single symbol that is in the expression:
 
         >>> solve(x - y, x)
         [y]
@@ -530,17 +530,17 @@ def solve(f, *symbols, **flags):
         >>> solve(x**4 - 1, x, set=True)
         ([x], {(-1,), (1,), (-I,), (I,)})
 
-    Single expression with no *symbol* that is in the expression:
+    Single expression with no symbol that is in the expression:
 
         >>> solve(3, x)
         []
         >>> solve(x - 3, y)
         []
 
-    Single expression with no *symbol* given. In this case, all free symbols
-    will be selected as potential symbols to solve for. If the equation is
+    Single expression with no symbol given. In this case, all free *symbols*
+    will be selected as potential *symbols* to solve for. If the equation is
     univariate then a list of solutions is returned; otherwise — as is the case
-    when symbols are given as an iterable of length greater than 1 — a list of
+    when *symbols* are given as an iterable of length greater than 1 — a list of
     mappings will be returned:
 
         >>> solve(x - 3)
@@ -552,7 +552,7 @@ def solve(f, *symbols, **flags):
         >>> solve(z**2*x - z**2*y**2)
         [{x: y**2}, {z: 0}]
 
-    When an object other than a Symbol is given as a *symbol*, it is
+    When an object other than a Symbol is given as a symbol, it is
     isolated algebraically and an implicit solution may be obtained.
     This is mostly provided as a convenience to save you from replacing
     the object with a Symbol and solving for that Symbol. It will only
@@ -574,7 +574,7 @@ def solve(f, *symbols, **flags):
     >>> solve(eqs, eqs.atoms(Indexed))
     {A[1]: 1, A[2]: 2}
 
-        * To solve for a *symbol* implicitly, use 'implicit=True':
+        * To solve for a symbol implicitly, use implicit=True:
 
             >>> solve(x + exp(x), x)
             [-LambertW(1)]
@@ -590,7 +590,7 @@ def solve(f, *symbols, **flags):
             {y: -2 + sqrt(3), x + 2: -sqrt(3)}
 
         * Nothing heroic is done in this implicit solving so you may end up
-          with a *symbol* still in the solution:
+          with a symbol still in the solution:
 
             >>> eqs = (x*y + 3*y + sqrt(3), x + 4 + y)
             >>> solve(eqs, y, x + 2)
@@ -611,7 +611,7 @@ def solve(f, *symbols, **flags):
 
         * To solve for a function within a derivative, use ``dsolve``.
 
-    Single expression and more than one *symbol*:
+    Single expression and more than one symbol:
 
         * When there is a linear solution:
 
