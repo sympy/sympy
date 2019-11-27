@@ -309,9 +309,7 @@ class Cycle(dict):
     """
     def __missing__(self, arg):
         """Enter arg into dictionary and return arg."""
-        arg = as_int(arg)
-        self[arg] = arg
-        return arg
+        return as_int(arg)
 
     def __iter__(self):
         for i in self.list():
