@@ -465,3 +465,11 @@ def test_printing_non_cyclic():
     assert str(p3) == 'Permutation([0, 2, 1])'
     p4 = Permutation([0, 1, 3, 2, 4, 5, 6, 7])
     assert repr(p4) == 'Permutation([0, 1, 3, 2], size=8)'
+
+
+def test_issue_17661():
+    c1 = Cycle(1,2)
+    c2 = Cycle(1,2)
+    assert c1 == c2
+    assert repr(c1) == 'Cycle(1, 2)'
+    assert c1 == c2
