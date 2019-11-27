@@ -10,7 +10,7 @@ system has common roots. That is when the resultant is equal to zero.
 """
 
 from sympy import IndexedBase, Matrix, Mul, Poly
-from sympy import rem, prod, degree_list, diag
+from sympy import rem, prod, degree_list, diag, simplify
 from sympy.core.compatibility import range
 from sympy.polys.monomials import itermonomials, monomial_deg
 from sympy.polys.orderings import monomial_key
@@ -159,7 +159,7 @@ class DixonResultant():
 
     def get_dixon_matrix(self, polynomial):
         r"""
-        Construct the Dixon matrix from the coefficients of polynomial
+        Constructs the Dixon matrix from the coefficients of polynomial
         \alpha. Each coefficient is viewed as a polynomial of x_1, ...,
         x_n.
         """
@@ -184,6 +184,65 @@ class DixonResultant():
             dixon_matrix = dixon_matrix[:, keep]
 
         return dixon_matrix
+
+    def KSY_precondition(self, matrix):
+        r"""
+        Tests for the validity of the Kapur-Saxena-Yang precondition.
+        The precondition requires the column corresponding to the monomial
+        1 = x_1 ^ 0 * x_2 ^ 0 * ... * x_n ^ 0 is not a linear combination
+        of the remaining ones. In sympy notation this is the last column.
+        """
+
+        if matrix.is_zero:
+            return False
+
+        m, n = matrix.shape
+
+        # simplify the matrix and keep only its non-zero rows
+        matrix = simplify(matrix.rref()[0])
+        rows = [i for i in range(m) if any(matrix[i, j] != 0 for j in range(n))]
+        matrix = matrix[rows,:]
+
+        condition = Matrix([[0 for i in range(n-1)] + [1]])
+
+        if matrix[-1,:] == condition:
+            return True
+        else:
+            return False
+
+    def delete_zero_rows_and_columns(self, matrix):
+        """
+        Removes the zero rows and columns of the matrix.
+        """
+
+        rows = [i for i in range(matrix.rows) if not matrix.row(i).is_zero]
+        cols = [j for j in range(matrix.cols) if not matrix.col(j).is_zero]
+
+        return matrix[rows, cols]
+
+    def product_leading_entries(self, matrix):
+        """
+        Returns the product of the leading entries of the matrix.
+        """
+        res = 1
+        for row in range(matrix.rows):
+            for el in matrix.row(row):
+                if el != 0:
+                    res = res * el
+                    break
+        return res
+
+    def get_KSY_Dixon_resultant(self, matrix):
+        """
+        Computes the Kapur-Saxena-Yang approach of the Dixon Resultant
+        and returns the product of the leading entries of the resulting matrix.
+        """
+
+        matrix = self.delete_zero_rows_and_columns(matrix)
+        _, U, _ = matrix.LUdecomposition()
+        matrix = self.delete_zero_rows_and_columns(simplify(U))
+
+        return self.product_leading_entries(matrix)
 
 class MacaulayResultant():
     """
