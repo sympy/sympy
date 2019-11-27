@@ -2830,6 +2830,8 @@ def _tsolve(eq, sym, **flags):
     if flags.pop('force', True):
         flags['force'] = False
         pos, reps = posify(lhs - rhs)
+        if rhs == S.ComplexInfinity:
+            return []
         for u, s in reps.items():
             if s == sym:
                 break

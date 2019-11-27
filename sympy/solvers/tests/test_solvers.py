@@ -2121,3 +2121,10 @@ def test_issue_17799():
 def test_issue_17650():
     x = Symbol('x', real=True)
     assert solve(abs((abs(x**2 - 1) - x)) - x) == [1, -1 + sqrt(2), 1 + sqrt(2)]
+
+
+def test_issue_17949():
+    assert solve(exp(+x+x**2), x) == []
+    assert solve(exp(-x+x**2), x) == []
+    assert solve(exp(+x-x**2), x) == []
+    assert solve(exp(-x-x**2), x) == []
