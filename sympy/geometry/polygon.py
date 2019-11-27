@@ -2063,7 +2063,6 @@ class Triangle(Polygon):
         vertices = [Point(a, dim=2, **kwargs) for a in args]
 
         # remove consecutive duplicates
-        
         if len(vertices) > 1 and vertices[-1] == vertices[0]:
             vertices.pop()  # last point was same as first
 
