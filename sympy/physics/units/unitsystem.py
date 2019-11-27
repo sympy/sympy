@@ -4,7 +4,7 @@ Unit system for physical quantities; include definition of constants.
 
 from __future__ import division
 
-from sympy.core.sympify import _sympify, sympify
+from sympy.core.sympify import sympify
 
 from sympy import S, Number, Mul, Pow, Add, Function, Derivative
 from sympy.physics.units.dimensions import _QuantityMapper
@@ -131,9 +131,6 @@ class UnitSystem(_QuantityMapper):
         That is return the number of units forming the basis.
         """
         return len(self._base_units)
-
-    def get_dimension_system(self):
-        return self._dimension_system
 
     @property
     def is_consistent(self):

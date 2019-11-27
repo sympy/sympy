@@ -1,4 +1,4 @@
-from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, S, Rational
+from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, Rational
 from sympy import solve, simplify, sympify
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
