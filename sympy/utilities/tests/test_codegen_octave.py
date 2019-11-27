@@ -1,12 +1,10 @@
-from sympy.core import (S, symbols, Eq, pi, Catalan, EulerGamma, Lambda,
-                        Dummy, Function)
+from sympy.core import S, symbols, Eq, pi, Catalan, EulerGamma, Function
 from sympy.core.compatibility import StringIO
-from sympy import erf, Integral, Piecewise
+from sympy import Piecewise
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import OctaveCodeGen, codegen, make_routine
 from sympy.utilities.pytest import raises
-from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import XFAIL
 import sympy
 
@@ -189,7 +187,7 @@ def test_complicated_m_codegen():
 
 def test_m_output_arg_mixed_unordered():
     # named outputs are alphabetical, unnamed output appear in the given order
-    from sympy import sin, cos, tan
+    from sympy import sin, cos
     a = symbols("a")
     name_expr = ("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
     result, = codegen(name_expr, "Octave", header=False, empty=False)

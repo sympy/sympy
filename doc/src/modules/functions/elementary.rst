@@ -332,6 +332,14 @@ log
    :members:
 
 
+exp_polar
+---------
+
+.. autoclass:: sympy.functions.elementary.exponential.exp_polar
+
+   :members:
+
+
 sympy.functions.elementary.piecewise
 ====================================
 

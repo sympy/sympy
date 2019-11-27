@@ -292,14 +292,14 @@ def test_polygamma():
     assert polygamma(2, 2.5).is_positive == False
     assert polygamma(2, -2.5).is_positive == False
     assert polygamma(3, 2.5).is_positive == True
-    assert polygamma(3, -2.5).is_positive is None
+    assert polygamma(3, -2.5).is_positive is True
     assert polygamma(-2, -2.5).is_positive is None
     assert polygamma(-3, -2.5).is_positive is None
 
     assert polygamma(2, 2.5).is_negative == True
     assert polygamma(3, 2.5).is_negative == False
     assert polygamma(3, -2.5).is_negative == False
-    assert polygamma(2, -2.5).is_negative is None
+    assert polygamma(2, -2.5).is_negative is True
     assert polygamma(-2, -2.5).is_negative is None
     assert polygamma(-3, -2.5).is_negative is None
 

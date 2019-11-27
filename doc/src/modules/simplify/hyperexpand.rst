@@ -2,6 +2,8 @@
 Hypergeometric Expansion
 ========================
 
+.. currentmodule:: sympy.simplify.hyperexpand
+
 This page describes how the function :func:`hyperexpand` and related code
 work. For usage, see the documentation of the symplify module.
 
@@ -362,7 +364,7 @@ Extending The Hypergeometric Tables
 
 Adding new formulae to the tables is straightforward. At the top of the file
 ``sympy/simplify/hyperexpand.py``, there is a function called
-:func:`add_formulae`. Nested in it are defined two helpers,
+``add_formulae()``. Nested in it are defined two helpers,
 ``add(ap, bq, res)`` and ``addb(ap, bq, B, C, M)``, as well as dummys
 ``a``, ``b``, ``c``, and ``z``.
 
@@ -375,7 +377,7 @@ line: ``add((-a, ), (), (1-z)**a)``.
 From the information provided, the matrices `B`, `C` and `M` will be computed,
 and the formula is now available when expanding hypergeometric functions.
 Next the test file ``sympy/simplify/tests/test_hyperexpand.py`` should be run,
-in particular the test :func:`test_formulae`. This will test the newly added
+in particular the test ``test_formulae()``. This will test the newly added
 formula numerically. If it fails, there is (presumably) a typo in what was
 entered.
 
@@ -433,12 +435,12 @@ we proceed by computing `f(g(w))` (and simplifying naively)
            &= -\exp\left(i \pi\right) w \\
            &= w
 
-and indeed get back `w`. (In case of branched functions we have to be
-aware of branch cuts. In that case we take `w` to be a positive real
-number and check the formula. If what we have found works for positive
-`w`, then just replace :func:`exp` inside any branched function by
-:func:`exp\_polar` and what we get is right for `all` `w`.) Hence
-we can write the formula as
+and indeed get back `w`. (In case of branched functions we have to be aware of
+branch cuts. In that case we take `w` to be a positive real number and check
+the formula. If what we have found works for positive `w`, then just replace
+:class:`~sympy.functions.elementary.exponential.exp` inside any branched
+function by :class:`~sympy.functions.elementary.exponential.exp_polar` and what
+we get is right for `all` `w`.) Hence we can write the formula as
 
 .. math ::
    C(g(w)) = g(w) \cdot {}_{1}F_{2}\left.\left(

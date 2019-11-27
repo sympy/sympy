@@ -263,7 +263,6 @@ class NDimArray(object):
     def _eval_derivative_array(self, arg):
         from sympy import derive_by_array
         from sympy import Tuple
-        from sympy import SparseNDimArray
         from sympy.matrices.common import MatrixCommon
 
         if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):

@@ -16,3 +16,8 @@ TODO:
 
 from .compilation import compile_link_import_strings, compile_run_strings
 from .availability import has_fortran, has_c, has_cxx
+
+__all__ = [
+    'compile_link_import_strings', 'compile_run_strings',
+    'has_fortran', 'has_c', 'has_cxx',
+]

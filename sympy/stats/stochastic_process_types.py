@@ -553,7 +553,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     >>> YS = DiscreteMarkovChain("Y")
     >>> Y.state_space
-    {0, 1, 2}
+    FiniteSet(0, 1, 2)
     >>> Y.transition_probabilities
     Matrix([
     [0.5, 0.2, 0.3],

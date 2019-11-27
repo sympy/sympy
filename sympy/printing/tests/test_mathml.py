@@ -1897,3 +1897,10 @@ def test_mathml_piecewise():
         '<piecewise><piece><ci>x</ci><apply><leq/><ci>x</ci><cn>1</cn></apply></piece><otherwise><apply><power/><ci>x</ci><cn>2</cn></apply></otherwise></piecewise>'
 
     raises(ValueError, lambda: mathml(Piecewise((x, x <= 1))))
+
+
+def test_issue_17857():
+    assert mathml(Range(-oo, oo), printer='presentation') == \
+        '<mfenced close="}" open="{"><mi>&#8230;</mi><mn>-1</mn><mn>0</mn><mn>1</mn><mi>&#8230;</mi></mfenced>'
+    assert mathml(Range(oo, -oo, -1), printer='presentation') == \
+        '<mfenced close="}" open="{"><mi>&#8230;</mi><mn>1</mn><mn>0</mn><mn>-1</mn><mi>&#8230;</mi></mfenced>'

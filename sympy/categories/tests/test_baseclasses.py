@@ -92,7 +92,7 @@ def test_diagram():
     id_A = IdentityMorphism(A)
     id_B = IdentityMorphism(B)
 
-    empty = EmptySet()
+    empty = EmptySet
 
     # Test the addition of identities.
     d1 = Diagram([f])

@@ -284,7 +284,7 @@ class MatrixDeterminant(MatrixCommon):
         ========
 
         cofactor_matrix
-        transpose
+        sympy.matrices.common.MatrixCommon.transpose
         """
         return self.cofactor_matrix(method).transpose()
 
@@ -602,13 +602,16 @@ class MatrixReductions(MatrixDeterminant):
             raise ValueError("Unknown {} operation '{}'. Valid col operations "
                              "are 'n->kn', 'n<->m', 'n->n+km'".format(error_str, op))
 
+        # define self_col according to error_str
+        self_cols = self.cols if error_str == 'col' else self.rows
+
         # normalize and validate the arguments
         if op == "n->kn":
             col = col if col is not None else col1
             if col is None or k is None:
                 raise ValueError("For a {0} operation 'n->kn' you must provide the "
                                  "kwargs `{0}` and `k`".format(error_str))
-            if not 0 <= col <= self.cols:
+            if not 0 <= col < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
 
         if op == "n<->m":
@@ -623,9 +626,9 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("For a {0} operation 'n<->m' you must provide the "
                                  "kwargs `{0}1` and `{0}2`".format(error_str))
             col1, col2 = cols
-            if not 0 <= col1 <= self.cols:
+            if not 0 <= col1 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col1))
-            if not 0 <= col2 <= self.cols:
+            if not 0 <= col2 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
 
         if op == "n->n+km":
@@ -637,9 +640,9 @@ class MatrixReductions(MatrixDeterminant):
             if col == col2:
                 raise ValueError("For a {0} operation 'n->n+km' `{0}` and `{0}2` must "
                                  "be different.".format(error_str))
-            if not 0 <= col <= self.cols:
+            if not 0 <= col < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
-            if not 0 <= col2 <= self.cols:
+            if not 0 <= col2 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
 
         return op, col, k, col1, col2
@@ -2957,8 +2960,8 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        conjugate: By-element conjugation
-        H: Hermite conjugation
+        sympy.matrices.common.MatrixCommon.conjugate: By-element conjugation
+        sympy.matrices.common.MatrixCommon.H: Hermite conjugation
         """
         from sympy.physics.matrices import mgamma
         if self.rows != 4:
@@ -3444,6 +3447,8 @@ class MatrixBase(MatrixDeprecated,
         """
         from sympy.matrices import Matrix, zeros
 
+        cls = self.__class__
+
         aug = self.hstack(self.copy(), B.copy())
         B_cols = B.cols
         row, col = aug[:, :-B_cols].shape
@@ -3479,9 +3484,7 @@ class MatrixBase(MatrixDeprecated,
             col - rank, B_cols)
 
         # Full parametric solution
-        V = A[:rank,:]
-        for c in reversed(pivots):
-            V.col_del(c)
+        V = A[:rank, [c for c in range(A.cols) if c not in pivots]]
         vt = v[:rank, :]
         free_sol = tau.vstack(vt - V * tau, tau)
 
@@ -3490,6 +3493,7 @@ class MatrixBase(MatrixDeprecated,
         for k in range(col):
             sol[permutation[k], :] = free_sol[k,:]
 
+        sol, tau = cls(sol), cls(tau)
         if freevar:
             return sol, tau, free_var_index
         else:

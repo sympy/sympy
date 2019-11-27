@@ -137,6 +137,7 @@ modules = [
     'sympy.physics.optics',
     'sympy.physics.quantum',
     'sympy.physics.units',
+    'sympy.physics.units.definitions',
     'sympy.physics.units.systems',
     'sympy.physics.vector',
     'sympy.plotting',

@@ -12,7 +12,7 @@ def bench_R1():
     "real(f(f(f(f(f(f(f(f(f(f(i/2)))))))))))"
     def f(z):
         return sqrt(Integer(1)/3)*z**2 + I/3
-    e = f(f(f(f(f(f(f(f(f(f(I/2)))))))))).as_real_imag()[0]
+    f(f(f(f(f(f(f(f(f(f(I/2)))))))))).as_real_imag()[0]
 
 
 def bench_R2():
@@ -24,13 +24,13 @@ def bench_R2():
             return 1
         return (2*y*hermite(n - 1, y) - 2*(n - 1)*hermite(n - 2, y)).expand()
 
-    a = hermite(15, y)
+    hermite(15, y)
 
 
 def bench_R3():
     "a = [bool(f==f) for _ in range(10)]"
     f = x + y + z
-    a = [bool(f == f) for _ in range(10)]
+    [bool(f == f) for _ in range(10)]
 
 
 def bench_R4():
@@ -54,13 +54,13 @@ def bench_R5():
 
 def bench_R6():
     "sum(simplify((x+sin(i))/x+(x-sin(i))/x) for i in range(100))"
-    s = sum(simplify((x + sin(i))/x + (x - sin(i))/x) for i in range(100))
+    sum(simplify((x + sin(i))/x + (x - sin(i))/x) for i in range(100))
 
 
 def bench_R7():
     "[f.subs(x, random()) for _ in range(10**4)]"
     f = x**24 + 34*x**12 + 45*x**3 + 9*x**18 + 34*x**10 + 32*x**21
-    a = [f.subs(x, random()) for _ in range(10**4)]
+    [f.subs(x, random()) for _ in range(10**4)]
 
 
 def bench_R8():
@@ -78,7 +78,7 @@ def bench_R8():
             est += f.subs(x, c)
         return est*Deltax
 
-    a = right(x**2, 0, 5, 10**4)
+    right(x**2, 0, 5, 10**4)
 
 
 def _bench_R9():
@@ -93,19 +93,19 @@ def bench_R10():
         while (max - v[-1]).evalf() > 0:
             v.append(v[-1] + step)
         return v[:-1]
-    v = srange(-pi, pi, sympify(1)/10)
+    srange(-pi, pi, sympify(1)/10)
 
 
 def bench_R11():
     "a = [random() + random()*I for w in [0..1000]]"
-    a = [random() + random()*I for w in range(1000)]
+    [random() + random()*I for w in range(1000)]
 
 
 def bench_S1():
     "e=(x+y+z+1)**7;f=e*(e+1);f.expand()"
     e = (x + y + z + 1)**7
     f = e*(e + 1)
-    f = f.expand()
+    f.expand()
 
 
 if __name__ == '__main__':

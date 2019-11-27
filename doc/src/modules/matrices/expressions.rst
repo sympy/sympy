@@ -56,7 +56,7 @@ Block Matrices
 
 Block matrices allow you to construct larger matrices out of smaller
 sub-blocks. They can work with :class:`MatrixExpr` or
-:class:`ImmutableMatrix` objects.
+:obj:`~.ImmutableMatrix` objects.
 
 .. module:: sympy.matrices.expressions.blockmatrix
 

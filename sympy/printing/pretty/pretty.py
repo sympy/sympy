@@ -165,6 +165,8 @@ class PrettyPrinter(Printer):
     _print_Rationals = _print_Atom
     _print_Complexes = _print_Atom
 
+    _print_EmptySequence = _print_Atom
+
     def _print_Reals(self, e):
         if self._use_unicode:
             return self._print_Atom(e)
@@ -1912,7 +1914,12 @@ class PrettyPrinter(Printer):
         else:
             dots = '...'
 
-        if s.start.is_infinite:
+        if s.start.is_infinite and s.stop.is_infinite:
+            if s.step.is_positive:
+                printset = dots, -1, 0, 1, dots
+            else:
+                printset = dots, 1, 0, -1, dots
+        elif s.start.is_infinite:
             printset = dots, s[-1] - s.step, s[-1]
         elif s.stop.is_infinite:
             it = iter(s)

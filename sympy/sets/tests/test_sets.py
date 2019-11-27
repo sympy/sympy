@@ -1,5 +1,5 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    LessThan, Max, Min, And, Or, Eq, Le, Lt, Float,
+    Max, Min, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
@@ -8,8 +8,7 @@ from mpmath import mpi
 
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
-from sympy.core.relational import \
-    Eq, Ne, Le, Lt, LessThan
+from sympy.core.relational import Eq, Ne, Le, Lt, LessThan
 from sympy.logic import And, Or, Xor
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
@@ -260,8 +259,8 @@ def test_Complement():
     assert -1 in Complement(S.Reals, S.Naturals, evaluate=False)
     assert not 1 in Complement(S.Reals, S.Naturals, evaluate=False)
 
-    assert Complement(S.Integers, S.UniversalSet) == EmptySet()
-    assert S.UniversalSet.complement(S.Integers) == EmptySet()
+    assert Complement(S.Integers, S.UniversalSet) == EmptySet
+    assert S.UniversalSet.complement(S.Integers) == EmptySet
 
     assert (not 0 in S.Reals.intersect(S.Integers - FiniteSet(0)))
 
@@ -440,7 +439,7 @@ def test_issue_9623():
     c = FiniteSet(n)
 
     assert Intersection(a, b, c) == Intersection(b, c)
-    assert Intersection(Interval(1, 2), Interval(3, 4), FiniteSet(n)) == EmptySet()
+    assert Intersection(Interval(1, 2), Interval(3, 4), FiniteSet(n)) == EmptySet
 
 
 def test_is_disjoint():
@@ -863,7 +862,7 @@ def test_finite_basic():
     assert FiniteSet((1, 2, 3)) != FiniteSet(1, 2, 3)
 
     # Ensure a variety of types can exist in a FiniteSet
-    s = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
+    assert FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
 
     assert (A > B) is False
     assert (A >= B) is False
@@ -876,23 +875,6 @@ def test_finite_basic():
     assert A > AandB and B > AandB
 
     assert FiniteSet(1.0) == FiniteSet(1)
-
-
-def test_powerset():
-    # EmptySet
-    A = FiniteSet()
-    pset = A.powerset()
-    assert len(pset) == 1
-    assert pset ==  FiniteSet(S.EmptySet)
-
-    # FiniteSets
-    A = FiniteSet(1, 2)
-    pset = A.powerset()
-    assert len(pset) == 2**len(A)
-    assert pset == FiniteSet(FiniteSet(), FiniteSet(1),
-                             FiniteSet(2), A)
-    # Not finite sets
-    I = Interval(0, 1)
 
 
 def test_product_basic():
@@ -1280,7 +1262,7 @@ def test_issue_10337():
 
 def test_issue_10326():
     bad = [
-        EmptySet(),
+        EmptySet,
         FiniteSet(1),
         Interval(1, 2),
         S.ComplexInfinity,
@@ -1329,8 +1311,8 @@ def test_issue_8257():
 
 
 def test_issue_10931():
-    assert S.Integers - S.Integers == EmptySet()
-    assert S.Integers - S.Reals == EmptySet()
+    assert S.Integers - S.Integers == EmptySet
+    assert S.Integers - S.Reals == EmptySet
 
 
 def test_issue_11174():

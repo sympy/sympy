@@ -32,7 +32,6 @@ import subprocess
 import signal
 import stat
 import tempfile
-import sympy
 
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import exec_, PY3, string_types, range, unwrap
@@ -957,8 +956,7 @@ def split_list(l, split, density=None):
     return l[int(lower_frac*len(l)) : int(higher_frac*len(l))]
 
 from collections import namedtuple
-SymPyTestResults = namedtuple('TestResults', 'failed attempted')
-
+SymPyTestResults = namedtuple('SymPyTestResults', 'failed attempted')
 
 def sympytestfile(filename, module_relative=True, name=None, package=None,
              globs=None, verbose=None, report=True, optionflags=0,

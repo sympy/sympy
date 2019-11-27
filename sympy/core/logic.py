@@ -186,7 +186,14 @@ def fuzzy_or(args):
     None
 
     """
-    return fuzzy_not(fuzzy_and(fuzzy_not(i) for i in args))
+    rv = False
+    for ai in args:
+        ai = fuzzy_bool(ai)
+        if ai is True:
+            return True
+        if rv is False:  # this will stop updating if a None is ever trapped
+            rv = ai
+    return rv
 
 
 def fuzzy_xor(args):

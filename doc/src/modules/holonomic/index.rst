@@ -17,3 +17,4 @@ Contents
    operations.rst
    convert.rst
    uses.rst
+   internal.rst

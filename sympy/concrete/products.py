@@ -404,7 +404,7 @@ class Product(ExprWithIntLimits):
 
     def is_convergent(self):
         r"""
-        See docs of Sum.is_convergent() for explanation of convergence
+        See docs of :obj:`.Sum.is_convergent()` for explanation of convergence
         in SymPy.
 
         The infinite product:
@@ -518,7 +518,9 @@ class Product(ExprWithIntLimits):
         See Also
         ========
 
-        index, reorder_limit, reorder
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.index,
+        reorder_limit,
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.reorder
 
         References
         ==========
@@ -526,6 +528,7 @@ class Product(ExprWithIntLimits):
         .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
                Volume 28 Issue 2, April 1981, Pages 305-350
                http://dl.acm.org/citation.cfm?doid=322248.322255
+
         """
         l_indices = list(indices)
 
