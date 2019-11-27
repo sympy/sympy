@@ -101,7 +101,7 @@ DAMAGE.
 The files under the directory sympy/parsing/autolev/tests/pydy-example-repo
 are directly copied from PyDy project and are licensed as:
 
-Copyright (c) 2009-2017, PyDy Authors
+Copyright (c) 2009-2019, PyDy Authors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
