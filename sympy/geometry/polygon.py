@@ -24,38 +24,53 @@ import warnings
 
 class Polygon(GeometrySet):
     """A two-dimensional polygon.
+
     A simple polygon in space. Can be constructed from a sequence of points
     or from a center, radius, number of sides and rotation angle.
+
     Parameters
     ==========
+
     vertices : sequence of Points
+
     Attributes
     ==========
+
     area
     angles
     perimeter
     vertices
     centroid
     sides
+
     Raises
     ======
+
     GeometryError
         If all parameters are not Points.
+
     See Also
     ========
+
     sympy.geometry.point.Point, sympy.geometry.line.Segment, Triangle
+
     Notes
     =====
+
     Polygons are treated as closed paths rather than 2D areas so
     some calculations can be be negative or positive (e.g., area)
     based on the orientation of the points.
+
     Any consecutive identical points are reduced to a single point
     and any points collinear and between two points will be removed
     unless they are needed to define an explicit intersection (see examples).
+
     A Triangle, Segment or Point will be returned when there are 3 or
     fewer points provided.
+
     Examples
     ========
+
     >>> from sympy import Point, Polygon, pi
     >>> p1, p2, p3, p4, p5 = [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)]
     >>> Polygon(p1, p2, p3, p4)
@@ -64,19 +79,23 @@ class Polygon(GeometrySet):
     Segment2D(Point2D(0, 0), Point2D(1, 0))
     >>> Polygon(p1, p2, p5)
     Segment2D(Point2D(0, 0), Point2D(3, 0))
+
     The area of a polygon is calculated as positive when vertices are
     traversed in a ccw direction. When the sides of a polygon cross the
     area will have positive and negative contributions. The following
     defines a Z shape where the bottom right connects back to the top
     left.
+
     >>> Polygon((0, 2), (2, 2), (0, 0), (2, 0)).area
     0
+
     When the the keyword `n` is used to define the number of sides of the
     Polygon then a RegularPolygon is created and the other arguments are
     interpreted as center, radius and rotation. The unrotated RegularPolygon
     will always have a vertex at Point(r, 0) where `r` is the radius of the
     circle that circumscribes the RegularPolygon. Its method `spin` can be
     used to increment that angle.
+
     >>> p = Polygon((0,0), 1, n=3)
     >>> p
     RegularPolygon(Point2D(0, 0), 1, 3, 0)
@@ -87,6 +106,7 @@ class Polygon(GeometrySet):
     >>> p.spin(pi/2)
     >>> p.vertices[0]
     Point2D(0, 1)
+
     """
 
     def __new__(cls, *args, **kwargs):
