@@ -99,7 +99,7 @@ class Polygon(GeometrySet):
             elif len(args) == 3:  # center, radius, rotation
                 args.insert(2, n)
             return RegularPolygon(*args, **kwargs)
-        
+
         vertices = []
         for a in args:
             if isinstance(a, Point):
@@ -110,7 +110,7 @@ class Polygon(GeometrySet):
                     vertices.append(a)
                 else:
                     print("3D")
-        
+
         # remove consecutive duplicates
         if len(vertices) > 1 and vertices[-1] == vertices[0]:
             vertices.pop()  # last point was same as first
