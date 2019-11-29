@@ -159,7 +159,7 @@ class DixonResultant():
 
     def get_dixon_matrix(self, polynomial):
         r"""
-        Constructs the Dixon matrix from the coefficients of polynomial
+        Construct the Dixon matrix from the coefficients of polynomial
         \alpha. Each coefficient is viewed as a polynomial of x_1, ...,
         x_n.
         """
@@ -186,13 +186,15 @@ class DixonResultant():
         return dixon_matrix
 
     def KSY_precondition(self, matrix):
-        r"""
-        Tests for the validity of the Kapur-Saxena-Yang precondition.
-        The precondition requires the column corresponding to the monomial
-        1 = x_1 ^ 0 * x_2 ^ 0 * ... * x_n ^ 0 is not a linear combination
-        of the remaining ones. In sympy notation this is the last column.
         """
+        Test for the validity of the Kapur-Saxena-Yang precondition.
 
+        The precondition requires that the column corresponding to the
+        monomial 1 = x_1 ^ 0 * x_2 ^ 0 * ... * x_n ^ 0 is not a linear
+        combination of the remaining ones. In sympy notation this is
+        the last column. For the precondition to hold the last non-zero
+        row of the rref matrix should be of the form [0, 0, ..., 1].
+        """
         if matrix.is_zero:
             return False
 
@@ -211,19 +213,14 @@ class DixonResultant():
             return False
 
     def delete_zero_rows_and_columns(self, matrix):
-        """
-        Removes the zero rows and columns of the matrix.
-        """
-
+        """Remove the zero rows and columns of the matrix."""
         rows = [i for i in range(matrix.rows) if not matrix.row(i).is_zero]
         cols = [j for j in range(matrix.cols) if not matrix.col(j).is_zero]
 
         return matrix[rows, cols]
 
     def product_leading_entries(self, matrix):
-        """
-        Returns the product of the leading entries of the matrix.
-        """
+        """Calculate the product of the leading entries of the matrix."""
         res = 1
         for row in range(matrix.rows):
             for el in matrix.row(row):
@@ -233,11 +230,7 @@ class DixonResultant():
         return res
 
     def get_KSY_Dixon_resultant(self, matrix):
-        """
-        Computes the Kapur-Saxena-Yang approach of the Dixon Resultant
-        and returns the product of the leading entries of the resulting matrix.
-        """
-
+        """Calculate the Kapur-Saxena-Yang approach to the Dixon Resultant."""
         matrix = self.delete_zero_rows_and_columns(matrix)
         _, U, _ = matrix.LUdecomposition()
         matrix = self.delete_zero_rows_and_columns(simplify(U))
