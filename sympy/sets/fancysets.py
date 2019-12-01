@@ -713,6 +713,7 @@ class Range(Set):
         from sympy.functions.elementary.integers import ceiling
         ooslice = "cannot slice from the end with an infinite value"
         zerostep = "slice step cannot be zero"
+        infinite = "slicing not possible on range with infinite start"
         # if we had to take every other element in the following
         # oo, ..., 6, 4, 2, 0
         # we might get oo, ..., 4, 0 or oo, ..., 6, 2
@@ -735,6 +736,12 @@ class Range(Set):
                     raise ValueError(zerostep)
                 step = i.step or 1
                 ss = step*self.step
+                #---------------------
+                # handle infinite Range
+                #   i.e. Range(-oo, oo) or Range(oo, -oo, -1)
+                # --------------------
+                if self.start.is_infinite and self.stop.is_infinite:
+                    raise ValueError(infinite)
                 #---------------------
                 # handle infinite on right
                 #   e.g. Range(0, oo) or Range(0, -oo, -1)
