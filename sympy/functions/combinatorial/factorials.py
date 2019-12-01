@@ -339,7 +339,11 @@ class subfactorial(CombinatorialFunction):
             return S.One
         elif n == 1:
             return S.Zero
-        return (n - 1)*(self._eval(n - 1) + self._eval(n - 2))
+        else:
+            z1, z2 = 1, 0
+            for i in range(2, n + 1):
+                z1, z2 = z2, (i - 1)*(z2 + z1)
+            return z2
 
     @classmethod
     def eval(cls, arg):
