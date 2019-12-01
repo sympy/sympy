@@ -55,7 +55,34 @@ def test_imageset():
 def test_is_empty():
     for s in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals,
             S.UniversalSet]:
-        assert s.is_empty == False
+        assert s.is_empty is False
+
+    assert S.EmptySet.is_empty is True
+
+
+def test_is_finiteset():
+    for s in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals,
+            S.UniversalSet]:
+        assert s.is_finite_set is False
+
+    assert S.EmptySet.is_finite_set is True
+
+    assert FiniteSet(1, 2).is_finite_set is True
+    assert Interval(1, 2).is_finite_set is False
+    assert Interval(x, y).is_finite_set is None
+    assert ProductSet(FiniteSet(1), FiniteSet(2)).is_finite_set is True
+    assert ProductSet(FiniteSet(1), Interval(1, 2)).is_finite_set is False
+    assert ProductSet(FiniteSet(1), Interval(x, y)).is_finite_set is None
+    assert Union(Interval(0, 1), Interval(2, 3)).is_finite_set is False
+    assert Union(FiniteSet(1), Interval(2, 3)).is_finite_set is False
+    assert Union(FiniteSet(1), FiniteSet(2)).is_finite_set is True
+    assert Union(FiniteSet(1), Interval(x, y)).is_finite_set is None
+    assert Intersection(Interval(x, y), FiniteSet(1)).is_finite_set is True
+    assert Intersection(Interval(x, y), Interval(1, 2)).is_finite_set is None
+    assert Intersection(FiniteSet(x), FiniteSet(y)).is_finite_set is True
+    assert Complement(FiniteSet(1), Interval(x, y)).is_finite_set is True
+    assert Complement(Interval(x, y), FiniteSet(1)).is_finite_set is None
+    assert Complement(Interval(1, 2), FiniteSet(x)).is_finite_set is False
 
 
 def test_deprecated_is_EmptySet():
@@ -615,6 +642,9 @@ def test_is_subset():
     assert FiniteSet(x).is_subset(FiniteSet(y)) is None
     assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x)) is True
     assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x+1)) is False
+
+    assert Interval(0, 1).is_subset(Interval(0, 1, left_open=True)) is False
+    assert Interval(-2, 3).is_subset(Union(Interval(-oo, -2), Interval(3, oo))) is False
 
 
 def test_is_proper_subset():

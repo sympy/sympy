@@ -40,6 +40,7 @@ class Rationals(with_metaclass(Singleton, Set)):
     _inf = S.NegativeInfinity
     _sup = S.Infinity
     is_empty = False
+    is_finite_set = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -101,6 +102,7 @@ class Naturals(with_metaclass(Singleton, Set)):
     _inf = S.One
     _sup = S.Infinity
     is_empty = False
+    is_finite_set = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -109,6 +111,12 @@ class Naturals(with_metaclass(Singleton, Set)):
             return True
         elif other.is_integer is False or other.is_positive is False:
             return False
+
+    def _eval_is_subset(self, other):
+        return Range(1, oo).is_subset(other)
+
+    def _eval_is_superset(self, other):
+        return Range(1, oo).is_superset(other)
 
     def __iter__(self):
         i = self._inf
@@ -136,7 +144,6 @@ class Naturals0(Naturals):
     Integers : also includes the negative integers
     """
     _inf = S.Zero
-    is_empty = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -145,6 +152,12 @@ class Naturals0(Naturals):
             return S.true
         elif other.is_integer is False or other.is_nonnegative is False:
             return S.false
+
+    def _eval_is_subset(self, other):
+        return Range(oo).is_subset(other)
+
+    def _eval_is_superset(self, other):
+        return Range(oo).is_superset(other)
 
 
 class Integers(with_metaclass(Singleton, Set)):
@@ -180,6 +193,7 @@ class Integers(with_metaclass(Singleton, Set)):
 
     is_iterable = True
     is_empty = False
+    is_finite_set = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -209,6 +223,12 @@ class Integers(with_metaclass(Singleton, Set)):
     def as_relational(self, x):
         from sympy.functions.elementary.integers import floor
         return And(Eq(floor(x), x), -oo < x, x < oo)
+
+    def _eval_is_subset(self, other):
+        return Range(-oo, oo).is_subset(other)
+
+    def _eval_is_superset(self, other):
+        return Range(-oo, oo).is_superset(other)
 
 
 class Reals(with_metaclass(Singleton, Interval)):
@@ -1379,6 +1399,9 @@ class Complexes(with_metaclass(Singleton, CartesianComplexRegion)):
     ComplexRegion
 
     """
+
+    is_empty = False
+    is_finite_set = False
 
     # Override property from superclass since Complexes has no args
     sets = ProductSet(S.Reals, S.Reals)
