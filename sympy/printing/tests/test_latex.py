@@ -2015,6 +2015,15 @@ def test_greek_symbols():
     assert latex(Symbol('vartheta')) == r'\vartheta'
 
 
+def test_fancyset_symbols():
+    assert latex(S.Rationals) == '\\mathbb{Q}'
+    assert latex(S.Naturals) == '\\mathbb{N}'
+    assert latex(S.Naturals0) == '\\mathbb{N}_0'
+    assert latex(S.Integers) == '\\mathbb{Z}'
+    assert latex(S.Reals) == '\\mathbb{R}'
+    assert latex(S.Complexes) == '\\mathbb{C}'
+
+
 @XFAIL
 def test_builtin_without_args_mismatched_names():
     assert latex(CosineTransform) == r'\mathcal{COS}'
