@@ -113,8 +113,9 @@ def integer_nthroot(y, n):
 
 
 def integer_log(y, x):
-    """Returns (e, bool) where e is the largest nonnegative integer
-    such that |y| >= |x**e| and bool is True if y == x**e
+    r"""
+    Returns ``(e, bool)`` where e is the largest nonnegative integer
+    such that :math:`|y| \geq |x^e|` and ``bool`` is True if $y = x^e$.
 
     Examples
     ========
@@ -582,16 +583,16 @@ class Pow(Expr):
         if real_b and real_e:
             if self.base.is_extended_positive:
                 return True
-            elif self.base.is_extended_nonnegative:
-                if self.exp.is_extended_nonnegative:
-                    return True
-            else:
-                if self.exp.is_integer:
-                    return True
-                elif self.base.is_extended_negative:
-                    if self.exp.is_Rational:
-                        return False
-        if real_e and self.exp.is_extended_negative:
+            elif self.base.is_extended_nonnegative and self.exp.is_extended_nonnegative:
+                return True
+            elif self.exp.is_integer and self.base.is_extended_nonzero:
+                return True
+            elif self.exp.is_integer and self.exp.is_nonnegative:
+                return True
+            elif self.base.is_extended_negative:
+                if self.exp.is_Rational:
+                    return False
+        if real_e and self.exp.is_extended_negative and self.base.is_zero is False:
             return Pow(self.base, -self.exp).is_extended_real
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary
@@ -628,7 +629,8 @@ class Pow(Expr):
             return i.is_integer
 
     def _eval_is_complex(self):
-        if all(a.is_complex for a in self.args):
+
+        if all(a.is_complex for a in self.args) and self._eval_is_finite():
             return True
 
     def _eval_is_imaginary(self):
@@ -880,7 +882,7 @@ class Pow(Expr):
 
     def _eval_transpose(self):
         from sympy.functions.elementary.complexes import transpose
-        i, p = self.exp.is_integer, self.base.is_complex
+        i, p = self.exp.is_integer, (self.base.is_complex or self.base.is_infinite)
         if p:
             return self.base**self.exp
         if i:
@@ -1147,12 +1149,12 @@ class Pow(Expr):
 
         if self.exp.is_Integer:
             exp = self.exp
-            re, im = self.base.as_real_imag(deep=deep)
-            if not im:
+            re_e, im_e = self.base.as_real_imag(deep=deep)
+            if not im_e:
                 return self, S.Zero
             a, b = symbols('a b', cls=Dummy)
             if exp >= 0:
-                if re.is_Number and im.is_Number:
+                if re_e.is_Number and im_e.is_Number:
                     # We can be more efficient in this case
                     expr = expand_multinomial(self.base**exp)
                     if expr != self:
@@ -1161,11 +1163,11 @@ class Pow(Expr):
                 expr = poly(
                     (a + b)**exp)  # a = re, b = im; expr = (a + b*I)**exp
             else:
-                mag = re**2 + im**2
-                re, im = re/mag, -im/mag
-                if re.is_Number and im.is_Number:
+                mag = re_e**2 + im_e**2
+                re_e, im_e = re_e/mag, -im_e/mag
+                if re_e.is_Number and im_e.is_Number:
                     # We can be more efficient in this case
-                    expr = expand_multinomial((re + im*S.ImaginaryUnit)**-exp)
+                    expr = expand_multinomial((re_e + im_e*S.ImaginaryUnit)**-exp)
                     if expr != self:
                         return expr.as_real_imag()
 
@@ -1180,23 +1182,23 @@ class Pow(Expr):
             r = [i for i in expr.terms() if i[0][1] % 4 == 3]
             im_part3 = Add(*[cc*a**aa*b**bb for (aa, bb), cc in r])
 
-            return (re_part.subs({a: re, b: S.ImaginaryUnit*im}),
-            im_part1.subs({a: re, b: im}) + im_part3.subs({a: re, b: -im}))
+            return (re_part.subs({a: re_e, b: S.ImaginaryUnit*im_e}),
+            im_part1.subs({a: re_e, b: im_e}) + im_part3.subs({a: re_e, b: -im_e}))
 
         elif self.exp.is_Rational:
-            re, im = self.base.as_real_imag(deep=deep)
+            re_e, im_e = self.base.as_real_imag(deep=deep)
 
-            if im.is_zero and self.exp is S.Half:
-                if re.is_extended_nonnegative:
+            if im_e.is_zero and self.exp is S.Half:
+                if re_e.is_extended_nonnegative:
                     return self, S.Zero
-                if re.is_extended_nonpositive:
+                if re_e.is_extended_nonpositive:
                     return S.Zero, (-self.base)**self.exp
 
             # XXX: This is not totally correct since for x**(p/q) with
             #      x being imaginary there are actually q roots, but
             #      only a single one is returned from here.
-            r = self.func(self.func(re, 2) + self.func(im, 2), S.Half)
-            t = atan2(im, re)
+            r = self.func(self.func(re_e, 2) + self.func(im_e, 2), S.Half)
+            t = atan2(im_e, re_e)
 
             rp, tp = self.func(r, self.exp), t*self.exp
 
@@ -1278,7 +1280,13 @@ class Pow(Expr):
         elif self.exp.is_rational:
             if self.base.is_algebraic is False:
                 return self.exp.is_zero
-            return self.base.is_algebraic
+            if self.base.is_zero is False:
+                if self.exp.is_nonzero:
+                    return self.base.is_algebraic
+                elif self.base.is_algebraic:
+                    return True
+            if self.exp.is_positive:
+                return self.base.is_algebraic
         elif self.base.is_algebraic and self.exp.is_algebraic:
             if ((fuzzy_not(self.base.is_zero)
                 and fuzzy_not(_is_one(self.base)))

@@ -99,8 +99,9 @@ class SparseMatrix(MatrixBase):
 
     See Also
     ========
-    sympy.matrices.common.diag
-    sympy.matrices.dense.Matrix
+    DenseMatrix
+    MutableSparseMatrix
+    ImmutableSparseMatrix
     """
 
     def __new__(cls, *args, **kwargs):
@@ -719,8 +720,8 @@ class SparseMatrix(MatrixBase):
 
         See Also
         ========
-        col_op
-        row_list
+        sympy.matrices.sparse.MutableSparseMatrix.col_op
+        sympy.matrices.sparse.SparseMatrix.row_list
         """
         return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(reversed(k)))]
 
@@ -832,8 +833,8 @@ class SparseMatrix(MatrixBase):
 
         See Also
         ========
-        row_op
-        col_list
+        sympy.matrices.sparse.MutableSparseMatrix.row_op
+        sympy.matrices.sparse.SparseMatrix.col_list
         """
         return [tuple(k + (self[k],)) for k in
             sorted(list(self._smat.keys()), key=lambda k: list(k))]

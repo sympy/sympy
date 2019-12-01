@@ -542,3 +542,6 @@ class Domain(object):
     def characteristic(self):
         """Return the characteristic of this domain. """
         raise NotImplementedError('characteristic()')
+
+
+__all__ = ['Domain']

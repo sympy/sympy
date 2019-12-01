@@ -1,6 +1,5 @@
 from sympy import sqrt, pi, E, exp, Rational
-from sympy.core import S, Symbol, symbols, I
-from sympy.core.compatibility import range
+from sympy.core import S, symbols, I
 from sympy.discrete.convolutions import (
     convolution, convolution_fft, convolution_ntt, convolution_fwht,
     convolution_subset, covering_product, intersecting_product)
@@ -181,7 +180,7 @@ def test_convolution_ntt():
     p = 7*17*2**23 + 1
     q = 19*2**10 + 1
     r = 2*500000003 + 1 # only for sequences of length 1 or 2
-    s = 2*3*5*7 # composite modulus
+    # s = 2*3*5*7 # composite modulus
 
     assert all(convolution_ntt([], x, prime=y) == [] for x in ([], [1]) for y in (p, q, r))
     assert convolution_ntt([2], [3], r) == [6]

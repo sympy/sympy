@@ -528,6 +528,10 @@ def test_infinitely_indexed_set_1():
     assert imageset(x, x/2 + Rational(1, 3), S.Integers).intersect(S.Integers) is S.EmptySet
     assert imageset(x, x/2 + S.Half, S.Integers).intersect(S.Integers) is S.Integers
 
+    # https://github.com/sympy/sympy/issues/17355
+    S53 = ImageSet(Lambda(n, 5*n + 3), S.Integers)
+    assert S53.intersect(S.Integers) == S53
+
 
 def test_infinitely_indexed_set_2():
     from sympy.abc import n
@@ -941,3 +945,10 @@ def test_imageset_intersection():
         log(Abs(sqrt(-I))))), S.Integers)
     assert s.intersect(S.Reals) == ImageSet(
         Lambda(n, 2*pi*n + pi*Rational(7, 4)), S.Integers)
+
+
+def test_issue_17858():
+    assert 1 in Range(-oo, oo)
+    assert 0 in Range(oo, -oo, -1)
+    assert oo not in Range(-oo, oo)
+    assert -oo not in Range(-oo, oo)

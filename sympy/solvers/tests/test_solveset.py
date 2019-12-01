@@ -19,6 +19,7 @@ from sympy.functions.special.error_functions import (erf, erfc,
     erfcinv, erfinv)
 from sympy.logic.boolalg import And
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import CRootOf
 from sympy.sets.contains import Contains
@@ -273,7 +274,10 @@ def test_garbage_input():
 
 def test_solve_mul():
     assert solveset_real((a*x + b)*(exp(x) - 3), x) == \
-        FiniteSet(-b/a, log(3))
+        Union({log(3)}, Intersection({-b/a}, S.Reals))
+    anz = Symbol('anz', nonzero=True)
+    assert solveset_real((anz*x + b)*(exp(x) - 3), x) == \
+        FiniteSet(-b/anz, log(3))
     assert solveset_real((2*x + 8)*(8 + exp(x)), x) == FiniteSet(S(-4))
     assert solveset_real(x/log(x), x) == EmptySet()
 
@@ -1236,6 +1240,16 @@ def test_linsolve():
     assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
 
 
+def test_linsolve_immutable():
+    A = ImmutableDenseMatrix([[1, 1, 2], [0, 1, 2], [0, 0, 1]])
+    B = ImmutableDenseMatrix([2, 1, -1])
+    c = symbols('c1 c2 c3')
+    assert linsolve([A, B], c) == FiniteSet((1, 3, -1))
+
+    A = ImmutableDenseMatrix([[1, 1, 7], [1, -1, 3]])
+    assert linsolve(A) == FiniteSet((5, 2))
+
+
 def test_solve_decomposition():
     x = Symbol('x')
     n = Dummy('n')
@@ -1707,6 +1721,12 @@ def test_issue_14987():
 def test_simplification():
     eq = x + (a - b)/(-2*a + 2*b)
     assert solveset(eq, x) == FiniteSet(S.Half)
+    assert solveset(eq, x, S.Reals) == Intersection({-((a - b)/(-2*a + 2*b))}, S.Reals)
+    # So that ap - bn is not zero:
+    ap = Symbol('ap', positive=True)
+    bn = Symbol('bn', negative=True)
+    eq = x + (ap - bn)/(-2*ap + 2*bn)
+    assert solveset(eq, x) == FiniteSet(S.Half)
     assert solveset(eq, x, S.Reals) == FiniteSet(S.Half)
 
 
@@ -1970,11 +1990,10 @@ def test_exponential_symbols():
     w = symbols('w')
     f1 = 2*x**w - 4*y**w
     f2 = (x/y)**w - 2
-    ans1 = solveset(f1, w, S.Reals)
-    ans2 = solveset(f2, w, S.Reals)
-    assert len(ans1) == len(ans2) == 1
-    a1, a2 = [list(i)[0] for i in (ans1, ans2)]
-    assert a1.equals(a2)
+    sol1 = Intersection({log(2)/(log(x) - log(y))}, S.Reals)
+    sol2 = Intersection({log(2)/log(x/y)}, S.Reals)
+    assert solveset(f1, w, S.Reals) == sol1
+    assert solveset(f2, w, S.Reals) == sol2
 
     assert solveset(x**x, x, S.Reals) == S.EmptySet
     assert solveset(x**y - 1, y, S.Reals) == FiniteSet(0)
@@ -2092,6 +2111,7 @@ def test_linear_coeffs():
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
     assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
+    assert linear_coeffs(1.0, x, y) == [0, 0, 1.0]
 
 # modular tests
 def test_is_modular():

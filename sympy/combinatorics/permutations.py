@@ -5,6 +5,8 @@ from collections import defaultdict
 
 from sympy.core.basic import Atom
 from sympy.core.compatibility import is_sequence, reduce, range, as_int
+from sympy.core.sympify import _sympify
+from sympy.logic.boolalg import as_Boolean
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
@@ -309,9 +311,7 @@ class Cycle(dict):
     """
     def __missing__(self, arg):
         """Enter arg into dictionary and return arg."""
-        arg = as_int(arg)
-        self[arg] = arg
-        return arg
+        return as_int(arg)
 
     def __iter__(self):
         for i in self.list():
@@ -947,6 +947,16 @@ class Permutation(Atom):
             aform.extend(list(range(len(aform), size)))
 
         return cls._af_new(aform)
+
+    def _eval_Eq(self, other):
+        other = _sympify(other)
+        if not isinstance(other, Permutation):
+            return None
+
+        if self._size != other._size:
+            return None
+
+        return as_Boolean(self._array_form == other._array_form)
 
     @classmethod
     def _af_new(cls, perm):

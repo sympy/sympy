@@ -48,9 +48,7 @@ def test_mul_trunc():
     p1 = rs_mul(p, p, t, 2)
     assert p1 == 1 + 2*t*x + 2*t*y
     R1, z = ring('z', QQ)
-    def test1(p):
-        p2 = rs_mul(p, z, x, 2)
-    raises(ValueError, lambda: test1(p))
+    raises(ValueError, lambda: rs_mul(p, z, x, 2))
 
     p1 = 2 + 2*x + 3*x**2
     p2 = 3 + x**2
@@ -106,13 +104,9 @@ def test_inversion():
 
     R, x, y = ring('x, y', QQ)
     p = 1 + x + y
-    def test2(p):
-        p1 = rs_series_inversion(p, x, 4)
-    raises(NotImplementedError, lambda: test2(p))
+    raises(NotImplementedError, lambda: rs_series_inversion(p, x, 4))
     p = R.zero
-    def test3(p):
-        p1 = rs_series_inversion(p, x, 3)
-    raises(ZeroDivisionError, lambda: test3(p))
+    raises(ZeroDivisionError, lambda: rs_series_inversion(p, x, 3))
 
 
 def test_series_reversion():

@@ -183,7 +183,7 @@ class PermutationGroup(Basic):
         return self._generators[i]
 
     def __contains__(self, i):
-        """Return ``True`` if `i` is contained in PermutationGroup.
+        """Return ``True`` if *i* is contained in PermutationGroup.
 
         Examples
         ========
@@ -246,13 +246,14 @@ class PermutationGroup(Basic):
         return super(PermutationGroup, self).__hash__()
 
     def __mul__(self, other):
-        """Return the direct product of two permutation groups as a permutation
+        """
+        Return the direct product of two permutation groups as a permutation
         group.
 
         This implementation realizes the direct product by shifting the index
-        set for the generators of the second group: so if we have `G` acting
-        on `n1` points and `H` acting on `n2` points, `G*H` acts on `n1 + n2`
-        points.
+        set for the generators of the second group: so if we have ``G`` acting
+        on ``n1`` points and ``H`` acting on ``n2`` points, ``G*H`` acts on
+        ``n1 + n2`` points.
 
         Examples
         ========
@@ -830,7 +831,7 @@ class PermutationGroup(Basic):
 
     def _coset_representative(self, g, H):
         """Return the representative of Hg from the transversal that
-        would be computed by `self.coset_transversal(H)`.
+        would be computed by ``self.coset_transversal(H)``.
 
         """
         if H.order() == 1:
@@ -1149,7 +1150,7 @@ class PermutationGroup(Basic):
         See Also
         ========
 
-        util._strip
+        sympy.combinatorics.util._strip
 
         """
         if isinstance(g, (Cycle, Permutation)):
@@ -1707,7 +1708,7 @@ class PermutationGroup(Basic):
         See Also
         ========
 
-        coset_factor, has, in
+        coset_factor, sympy.core.basic.Basic.has, __contains__
 
         """
         if not isinstance(g, Permutation):
@@ -2991,9 +2992,21 @@ class PermutationGroup(Basic):
 
         return self._eval_is_alt_sym_naive(only_alt=True)
 
+    @classmethod
+    def _distinct_primes_lemma(cls, primes):
+        """Subroutine to test if there is only one cyclic group for the
+        order."""
+        primes = sorted(primes)
+        l = len(primes)
+        for i in range(l):
+            for j in range(i+1, l):
+                if primes[j] % primes[i] == 1:
+                    return None
+        return True
+
     @property
     def is_cyclic(self):
-        """
+        r"""
         Return ``True`` if the group is Cyclic.
 
         Examples
@@ -3007,25 +3020,77 @@ class PermutationGroup(Basic):
         >>> G.is_cyclic
         False
 
+        Notes
+        =====
+
+        If the order of a group $n$ can be factored into the distinct
+        primes $p_1, p_2, ... , p_s$ and if
+
+        .. math::
+            \forall i, j \in \{1, 2, \ldots, s \}:
+            p_i \not \equiv 1 \pmod {p_j}
+
+        holds true, there is only one group of the order $n$ which
+        is a cyclic group. [1]_ This is a generalization of the lemma
+        that the group of order $15, 35, ...$ are cyclic.
+
+        And also, these additional lemmas can be used to test if a
+        group is cyclic if the order of the group is already found.
+
+        - If the group is abelian and the order of the group is
+          square-free, the group is cyclic.
+        - If the order of the group is less than $6$ and is not $4$, the
+          group is cyclic.
+        - If the order of the group is prime, the group is cyclic.
+
+        References
+        ==========
+
+        .. [1] 1978: John S. Rose: A Course on Group Theory,
+            Introduction to Finite Group Theory: 1.4
         """
         if self._is_cyclic is not None:
             return self._is_cyclic
-        self._is_cyclic = True
 
         if len(self.generators) == 1:
+            self._is_cyclic = True
+            self._is_abelian = True
             return True
-        if not self._is_abelian:
+
+        if self._is_abelian is False:
             self._is_cyclic = False
             return False
-        for p in primefactors(self.order()):
+
+        order = self.order()
+
+        if order < 6:
+            self._is_abelian == True
+            if order != 4:
+                self._is_cyclic == True
+                return True
+
+        factors = factorint(order)
+        if all(v == 1 for v in factors.values()):
+            if self._is_abelian:
+                self._is_cyclic = True
+                return True
+
+            primes = list(factors.keys())
+            if PermutationGroup._distinct_primes_lemma(primes) is True:
+                self._is_cyclic = True
+                self._is_abelian = True
+                return True
+
+        for p in factors:
             pgens = []
             for g in self.generators:
                 pgens.append(g**p)
             if self.index(self.subgroup(pgens)) != p:
                 self._is_cyclic = False
                 return False
-            else:
-                continue
+
+        self._is_cyclic = True
+        self._is_abelian = True
         return True
 
     def pointwise_stabilizer(self, points, incremental=True):
@@ -4042,13 +4107,13 @@ class PermutationGroup(Basic):
         the interval [0..n-1] into p equal parts, each of length p^(i-1):
         [0..p^(i-1)-1], [p^(i-1)..2*p^(i-1)-1]...[(p-1)*p^(i-1)..p^i-1].
         Find a p-Sylow subgroup of Sym(p^(i-1)) (treated as a subgroup
-        of `self`) acting on each of the parts. Call the subgroups
+        of ``self``) acting on each of the parts. Call the subgroups
         P_1, P_2...P_p. The generators for the subgroups P_2...P_p
         can be obtained from those of P_1 by applying a "shifting"
         permutation to them, that is, a permutation mapping [0..p^(i-1)-1]
         to the second part (the other parts are obtained by using the shift
         multiple times). The union of this permutation and the generators
-        of P_1 is a p-Sylow subgroup of `self`.
+        of P_1 is a p-Sylow subgroup of ``self``.
 
         For n not equal to a power of p, partition
         [0..n-1] in accordance with how n would be written in base p.
@@ -4333,15 +4398,15 @@ class PermutationGroup(Basic):
 
     def _verify(H, K, phi, z, alpha):
         '''
-        Return a list of relators `rels` in generators `gens_h` that
-        are mapped to `H.generators` by `phi` so that given a finite
-        presentation <gens_k | rels_k> of `K` on a subset of `gens_h`
-        <gens_h | rels_k + rels> is a finite presentation of `H`.
+        Return a list of relators ``rels`` in generators ``gens`_h` that
+        are mapped to ``H.generators`` by ``phi`` so that given a finite
+        presentation <gens_k | rels_k> of ``K`` on a subset of ``gens_h``
+        <gens_h | rels_k + rels> is a finite presentation of ``H``.
 
-        `H` should be generated by the union of `K.generators` and `z`
-        (a single generator), and `H.stabilizer(alpha) == K`; `phi` is a
+        ``H`` should be generated by the union of ``K.generators`` and ``z``
+        (a single generator), and ``H.stabilizer(alpha) == K``; ``phi`` is a
         canonical injection from a free group into a permutation group
-        containing `H`.
+        containing ``H``.
 
         The algorithm is described in [1], Chapter 6.
 

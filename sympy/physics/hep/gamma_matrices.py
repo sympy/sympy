@@ -31,10 +31,10 @@ from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
 from sympy.core.compatibility import range
 
 
-# DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_fmt="S")
+# DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_name="S")
 
 
-LorentzIndex = TensorIndexType('LorentzIndex', dim=4, dummy_fmt="L")
+LorentzIndex = TensorIndexType('LorentzIndex', dim=4, dummy_name="L")
 
 
 GammaMatrix = TensorHead("GammaMatrix", [LorentzIndex],

@@ -778,7 +778,7 @@ class LinearEntity(GeometrySet):
         See Also
         ========
 
-        is_perpendicular, perpendicular_segment
+        sympy.geometry.line.LinearEntity.is_perpendicular, perpendicular_segment
 
         Examples
         ========
@@ -1843,7 +1843,7 @@ class LinearEntity2D(LinearEntity):
         See Also
         ========
 
-        is_perpendicular, perpendicular_segment
+        sympy.geometry.line.LinearEntity.is_perpendicular, perpendicular_segment
 
         Examples
         ========
@@ -2005,7 +2005,7 @@ class Line2D(LinearEntity2D, Line):
         See Also
         ========
 
-        sympy.geometry.line.Line.equation
+        sympy.geometry.line.Line2D.equation
 
         Examples
         ========
@@ -2052,7 +2052,7 @@ class Line2D(LinearEntity2D, Line):
         See Also
         ========
 
-        LinearEntity.coefficients
+        sympy.geometry.line.Line2D.coefficients
 
         Examples
         ========
@@ -2388,7 +2388,7 @@ class LinearEntity3D(LinearEntity):
         See Also
         ========
 
-        sympy.geometry.line.Line.equation
+        sympy.geometry.line.Line3D.equation
 
         Examples
         ========
@@ -2409,7 +2409,7 @@ class LinearEntity3D(LinearEntity):
         See Also
         ========
 
-        sympy.geometry.line.Line.equation
+        sympy.geometry.line.Line3D.equation
 
         Examples
         ========

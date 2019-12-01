@@ -1,13 +1,8 @@
-from sympy.core import (S, symbols, Eq, pi, Catalan, EulerGamma, Lambda,
-                        Dummy, Function)
+from sympy.core import S, symbols, pi, Catalan, EulerGamma, Function
 from sympy.core.compatibility import StringIO
-from sympy import erf, Integral, Piecewise
+from sympy import Piecewise
 from sympy import Equality
-from sympy.matrices import Matrix, MatrixSymbol
-from sympy.printing.codeprinter import Assignment
 from sympy.utilities.codegen import RustCodeGen, codegen, make_routine
-from sympy.utilities.pytest import raises
-from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import XFAIL
 import sympy
 
@@ -207,7 +202,7 @@ def test_complicated_rs_codegen():
 
 def test_output_arg_mixed_unordered():
     # named outputs are alphabetical, unnamed output appear in the given order
-    from sympy import sin, cos, tan
+    from sympy import sin, cos
     a = symbols("a")
     name_expr = ("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
     result, = codegen(name_expr, "Rust", header=False, empty=False)

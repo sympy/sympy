@@ -143,7 +143,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     ========
 
     summation
-    Product, product
+    Product, sympy.concrete.products.product
 
     References
     ==========
@@ -414,7 +414,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ========
 
         Sum.is_absolutely_convergent()
-        Product.is_convergent()
+        sympy.concrete.products.Product.is_convergent()
         """
         from sympy import Interval, Integral, log, symbols, simplify
         p, q, r = symbols('p q r', cls=Wild)
@@ -802,7 +802,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         See Also
         ========
 
-        index, reorder_limit, reorder
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.index, reorder_limit,
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.reorder
 
         References
         ==========
@@ -870,7 +871,7 @@ def summation(f, *symbols, **kwargs):
     ========
 
     Sum
-    Product, product
+    Product, sympy.concrete.products.product
 
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)

@@ -246,10 +246,9 @@ def iproduct(*iterables):
     >>> (3, 4) in iproduct(S.Integers, S.Integers)
     True
 
-    See Also
-    ========
+    .. seealso::
 
-    sympy.iterables.cartes (itertools.product)
+       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
     '''
     if len(iterables) == 0:
         yield ()
@@ -352,10 +351,10 @@ def interactive_traversal(expr):
 
     RED, BRED = '\033[0;31m', '\033[1;31m'
     GREEN, BGREEN = '\033[0;32m', '\033[1;32m'
-    YELLOW, BYELLOW = '\033[0;33m', '\033[1;33m'
-    BLUE, BBLUE = '\033[0;34m', '\033[1;34m'
-    MAGENTA, BMAGENTA = '\033[0;35m', '\033[1;35m'
-    CYAN, BCYAN = '\033[0;36m', '\033[1;36m'
+    YELLOW, BYELLOW = '\033[0;33m', '\033[1;33m'  # noqa
+    BLUE, BBLUE = '\033[0;34m', '\033[1;34m'      # noqa
+    MAGENTA, BMAGENTA = '\033[0;35m', '\033[1;35m'# noqa
+    CYAN, BCYAN = '\033[0;36m', '\033[1;36m'      # noqa
     END = '\033[0m'
 
     def cprint(*args):
@@ -527,11 +526,10 @@ def variations(seq, n, repetition=False):
         >>> list(variations([0, 1], 3, repetition=True))[:4]
         [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1)]
 
-    See Also
-    ========
+    .. seealso::
 
-    sympy.core.compatibility.permutations
-    sympy.core.compatibility.product
+       `itertools.permutations <https://docs.python.org/3/library/itertools.html#itertools.permutations>`_,
+       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
     """
     if not repetition:
         seq = tuple(seq)
@@ -762,6 +760,7 @@ def sift(seq, keyfunc, binary=False):
 
     See Also
     ========
+
     ordered
     """
     if not binary:
@@ -945,7 +944,7 @@ def topological_sort(graph, key=None):
         [7, 5, 11, 3, 10, 8, 9, 2]
 
     Only acyclic graphs can be sorted. If the input graph has a cycle,
-    then :py:exc:`ValueError` will be raised::
+    then ``ValueError`` will be raised::
 
         >>> topological_sort((V, E + [(10, 7)]))
         Traceback (most recent call last):
@@ -1069,7 +1068,7 @@ def strongly_connected_components(G):
     See Also
     ========
 
-    utilities.iterables.connected_components()
+    sympy.utilities.iterables.connected_components()
 
     """
     # Map from a vertex to its neighbours
@@ -1183,7 +1182,7 @@ def connected_components(G):
     See Also
     ========
 
-    utilities.iterables.strongly_connected_components()
+    sympy.utilities.iterables.strongly_connected_components()
 
     """
     # Duplicate edges both ways so that the graph is effectively undirected
@@ -1563,6 +1562,7 @@ def multiset_partitions(multiset, m=None):
 
     See Also
     ========
+
     partitions
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
@@ -2130,7 +2130,7 @@ def generate_bell(n):
 
     See Also
     ========
-    sympy.combinatorics.Permutation.next_trotterjohnson
+    sympy.combinatorics.permutations.Permutation.next_trotterjohnson
 
     References
     ==========

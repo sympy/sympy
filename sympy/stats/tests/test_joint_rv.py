@@ -215,9 +215,9 @@ def test_JointPSpace_marginal_distribution():
     assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
         8*polar_lift(x**2/2 + 1)**Rational(5, 2))
     assert integrate(marginal_distribution(T, 1)(x), (x, -oo, oo)) == 1
+
     t = MultivariateT('T', [0, 0, 0], [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 3)
     assert comp(marginal_distribution(t, 0)(1).evalf(), 0.2, .01)
-
 
 def test_JointRV():
     from sympy.stats.joint_rv import JointDistributionHandmade

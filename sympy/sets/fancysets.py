@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from functools import reduce
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, with_metaclass, range, PY3
+from sympy.core.compatibility import with_metaclass, range, PY3
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
@@ -278,7 +278,7 @@ class ImageSet(Set):
     False
 
     >>> FiniteSet(0, 1, 2, 3, 4, 5, 6, 7, 9, 10).intersect(squares)
-    {1, 4, 9}
+    FiniteSet(1, 4, 9)
 
     >>> square_iterable = iter(squares)
     >>> for i in range(4):
@@ -300,7 +300,7 @@ class ImageSet(Set):
     >>> solutions = ImageSet(Lambda(n, n*pi), S.Integers) # solutions of sin(x) = 0
     >>> dom = Interval(-1, 1)
     >>> dom.intersect(solutions)
-    {0}
+    FiniteSet(0)
 
     See Also
     ========
@@ -411,7 +411,6 @@ class ImageSet(Set):
         def get_equations(expr, candidate):
             '''Find the equations relating symbols in expr and candidate.'''
             queue = [(expr, candidate)]
-            equations = []
             for e, c in queue:
                 if not isinstance(e, Tuple):
                     yield Eq(e, c)
@@ -534,9 +533,9 @@ class Range(Set):
         >>> Range(3)[:0]
         Range(0, 0, 1)
         >>> Range(3).intersect(Interval(4, oo))
-        EmptySet()
+        EmptySet
         >>> Range(3).intersect(Range(4, oo))
-        EmptySet()
+        EmptySet
 
     Range will accept symbolic arguments but has very limited support
     for doing anything other than displaying the Range:
@@ -565,7 +564,7 @@ class Range(Set):
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
         if len(args) == 1:
-            if isinstance(args[0], range if PY3 else xrange):
+            if isinstance(args[0], range):
                 raise TypeError(
                     'use sympify(%s) to convert range to Range' % args[0])
 
@@ -660,7 +659,12 @@ class Range(Set):
                 _ = self.size  # validate
             except ValueError:
                 return
-        ref = self.start if self.start.is_finite else self.stop
+        if self.start.is_finite:
+            ref = self.start
+        elif self.stop.is_finite:
+            ref = self.stop
+        else:
+            return other.is_Integer
         if (ref - other) % self.step:  # off sequence
             return S.false
         return _sympify(other >= self.inf and other <= self.sup)
@@ -922,7 +926,7 @@ def normalize_theta_set(theta):
     >>> normalize_theta_set(Interval(-3*pi/2, -pi/2))
     Interval(pi/2, 3*pi/2)
     >>> normalize_theta_set(FiniteSet(0, pi, 3*pi))
-    {0, pi}
+    FiniteSet(0, pi)
 
     """
     from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
@@ -1201,7 +1205,7 @@ class ComplexRegion(Set):
         >>> from sympy import Interval, ComplexRegion
         >>> unit = Interval(0,1)
         >>> ComplexRegion.from_real(unit)
-        CartesianComplexRegion(ProductSet(Interval(0, 1), {0}))
+        CartesianComplexRegion(ProductSet(Interval(0, 1), FiniteSet(0)))
 
         """
         if not sets.is_subset(S.Reals):
