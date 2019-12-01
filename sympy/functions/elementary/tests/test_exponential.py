@@ -2,11 +2,12 @@ from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
-    AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product)
+    AccumBounds, Pow, gcd, Sum, Product)
 from sympy.functions.elementary.exponential import match_real_imag
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
+from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.pytest import raises, XFAIL
 
 
@@ -648,3 +649,29 @@ def test_issue_9116():
 
     assert ln(n).is_nonnegative is True
     assert log(n).is_nonnegative is True
+
+
+def test_lambertw_identities():
+    def entry(i, j, simp=False, k=0):
+        x = (i - 5) / 2
+        y = (j - 5) / 2
+        z = (x + y*I)
+        ret = LambertW(z*exp(z), k, evaluate=False)
+        if not simp:
+            return ret
+        return ret._extract_identity()
+
+    def numerically_close(m1, m2):
+        return all(abs((a-b).evalf()) < 10**-15 for a, b in zip(m1, m2))
+
+    m1 = Matrix(11, 11, lambda i, j: entry(i, j, simp=False, k=0))
+    m2 = Matrix(11, 11, lambda i, j: entry(i, j, simp=True, k=0))
+    assert numerically_close(m1, m2)
+
+    m1 = Matrix(11, 11, lambda i, j: entry(i, j, simp=False, k=1))
+    m2 = Matrix(11, 11, lambda i, j: entry(i, j, simp=True, k=1))
+    assert numerically_close(m1, m2)
+
+    m1 = Matrix(11, 11, lambda i, j: entry(i, j, simp=False, k=-1))
+    m2 = Matrix(11, 11, lambda i, j: entry(i, j, simp=True, k=-1))
+    assert numerically_close(m1, m2)

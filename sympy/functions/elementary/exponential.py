@@ -1097,20 +1097,24 @@ class LambertW(Function):
             return self
 
         var = match[z]
+
+        # Skip non-numeric cases
+        if not var.is_number and not k.is_Integer:
+            return self
+
         re_part = re(var)
         im_part = im(var)
 
-        # XXX Workaround for some invalid comparison error.
-        if re_part.is_zero or im_part.is_zero:
-            return self
-
         if k == 0:
-            if im_part == 0 and (re_part >= -1) == True:
-                return var
-            elif (im_part > -S.Pi) == True and \
-                (im_part < S.Pi) == True and \
-                (re_part > -im_part*cot(im_part)) == True:
+            if im_part == 0:
+                if (re_part >= -1) == True:
                     return var
+
+            else:
+                if (im_part > -S.Pi) == True and \
+                    (im_part < S.Pi) == True and \
+                    (re_part > -im_part*cot(im_part)) == True:
+                        return var
 
         elif k.is_integer:
             if k.is_positive:
