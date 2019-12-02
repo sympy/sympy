@@ -1519,12 +1519,9 @@ def equivalence_hypergeometric(A, B, func):
 
     # This method for finding the equivalence is only for 2F1 type.
     # We can extend it for 1F1 and 0F1 type also.
-    f = func
     x = func.args[0]
-    df = f.diff(x)
 
     # making given equation in normal form
-    from sympy.core.logic import fuzzy_not
     I1 = factor(cancel(A.diff(x)/2 + A**2/4 - B))
 
     # computing shifted invariant(J1) of the equation
@@ -1590,14 +1587,13 @@ def ode_2nd_hypergeometric(eq, func, order, match):
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy import factor
     x = func.args[0]
-    f = func
     C0, C1 = get_numbered_constants(eq, num=2)
     a = match['a']
     b = match['b']
     c = match['c']
 
     A = match['A']
-    B = match['B']
+    # B = match['B']
 
     sol = None
     if match['type'] == "2F1":
@@ -3392,8 +3388,8 @@ def _ode_factorable_match(eq, func, x0):
     r = None
     if isinstance(eqs, Pow):
         # if f(x)**p=0 then f(x)=0 (p>0)
-        if (expr.exp).is_positive:
-            eq = expr.base
+        if eqs.exp.is_positive:
+            eq = eqs.base
         if isinstance(eq, Pow):
             return None
         else:
@@ -6395,7 +6391,6 @@ def ode_lie_group(eq, func, order, match):
 
     """
 
-    f = func.func
     x = func.args[0]
     df = func.diff(x)
 

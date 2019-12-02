@@ -535,11 +535,13 @@ def cross(vect1, vect2):
             n3 = ({0,1,2}.difference({n1, n2})).pop()
             sign = 1 if ((n1 + 1) % 3 == n2) else -1
             return sign*vect1._sys.base_vectors()[n3]
+        from .functions import express
         try:
-            from .functions import express
-            return cross(express(vect1, vect2._sys), vect2)
-        except:
+            v = express(vect1, vect2._sys)
+        except ValueError:
             return Cross(vect1, vect2)
+        else:
+            return cross(v, vect2)
     if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
         return Vector.zero
     if isinstance(vect1, VectorMul):
@@ -575,11 +577,13 @@ def dot(vect1, vect2):
     if isinstance(vect1, BaseVector) and isinstance(vect2, BaseVector):
         if vect1._sys == vect2._sys:
             return S.One if vect1 == vect2 else S.Zero
+        from .functions import express
         try:
-            from .functions import express
-            return dot(vect1, express(vect2, vect1._sys))
-        except:
+            v = express(vect2, vect1._sys)
+        except ValueError:
             return Dot(vect1, vect2)
+        else:
+            return dot(vect1, v)
     if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
         return S.Zero
     if isinstance(vect1, VectorMul):

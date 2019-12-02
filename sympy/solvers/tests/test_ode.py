@@ -3650,6 +3650,13 @@ def test_dsolve_remove_redundant_solutions():
 
 
 def test_factorable():
+    # Unable to get coverage on this without explicit testing because _desolve
+    # already handles Pow before we get there but that should be disabled in
+    # future so that factorable gets the raw ODE.
+    from sympy.solvers.ode import _ode_factorable_match
+    eq = f(x).diff(x)-1
+    assert _ode_factorable_match(eq**3, f(x), 1) == {'eqns':[eq], 'x0': 1}
+
     eq = f(x) + f(x)*f(x).diff(x)
     sols = [Eq(f(x), C1 - x), Eq(f(x), 0)]
     assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
