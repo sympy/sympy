@@ -925,16 +925,38 @@ def solve(f, *symbols, **flags):
     # a dictionary of results will be returned.
     ###########################################################################
 
+    # The output format is different depending on whether f is a single
+    # expr/Eq or a list of expr/Eq so we will keep track of that in bare_f.
+    if iterable(f):
+        bare_f = False
+    else:
+        f = [f]
+        bare_f = True
+
+    # Some output formats only make sense if the user has provided the symbols
+    # in some way that defines an order on the symbols. Specifically solutions
+    # can be represented as tuples (x1, y1) rather than dicts {x: x1, y:y1}
+    # only if the user supplied some ordering on the symbols. Here we keep
+    # track of whether the symbols have been given in some order in
+    # ordered_symbols.
+
+    if len(symbols) == 1 and iterable(symbols[0]):
+        symbols = symbols[0]
+        if isinstance(symbols, GeneratorType):
+            symbols = list(symbols)
+
+    if symbols and is_sequence(symbols):
+        # The user supplied symbols as *args or as an arg that is an ordered
+        # sequence (tuple, set, list, or generator).
+        ordered_symbols = True
+    else:
+        # The user hasn't supplied symbols or has provided them as an
+        # unordered collection such as a set.
+        ordered_symbols = False
+
     def _sympified_list(w):
         return list(map(sympify, w if iterable(w) else [w]))
-    bare_f = not iterable(f)
-    ordered_symbols = (symbols and
-                       symbols[0] and
-                       (isinstance(symbols[0], Symbol) or
-                        is_sequence(symbols[0],
-                        include=GeneratorType)
-                       )
-                      )
+
     f, symbols = (_sympified_list(w) for w in [f, symbols])
     if isinstance(f, list):
         f = [s for s in f if s is not S.true and s is not True]
@@ -1215,6 +1237,19 @@ def solve(f, *symbols, **flags):
     #
     # postprocessing
     ###########################################################################
+
+    # undo the dictionary solutions returned when the system was only partially
+    # solved with poly-system if all symbols are present
+    if (
+            not flags.get('dict', False) and
+            solution and
+            ordered_symbols and
+            not isinstance(solution, dict) and
+            all(isinstance(sol, dict) for sol in solution)
+    ):
+        solution = [tuple([r.get(s, s).subs(r) for s in symbols])
+                    for r in solution]
+
     # Restore masked-off objects
     if non_inverts:
 
@@ -1260,18 +1295,6 @@ def solve(f, *symbols, **flags):
             for i, sol in enumerate(solution):
                 solution[i] = {swap_sym.get(k, k): v.subs(swap_sym)
                               for k, v in sol.items()}
-
-    # undo the dictionary solutions returned when the system was only partially
-    # solved with poly-system if all symbols are present
-    if (
-            not flags.get('dict', False) and
-            solution and
-            ordered_symbols and
-            not isinstance(solution, dict) and
-            all(isinstance(sol, dict) for sol in solution)
-    ):
-        solution = [tuple([r.get(s, s).subs(r) for s in symbols])
-                    for r in solution]
 
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still

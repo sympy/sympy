@@ -173,6 +173,10 @@ def test_solve_args():
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
     assert solve([x-1, False], [x], set=True) == ([], set())
+    # When a symbol is not a Symbol
+    f = Function('f')
+    assert solve([f(x)-1, f(x)**2-1-y], f(x), y) == [(1, 0)]
+    assert solve([f(x)-1, f(x)**2-1-y], y, f(x)) == [(0, 1)]
 
 
 def test_solve_dict():
@@ -1247,6 +1251,7 @@ def test_issue_5901():
     a = Symbol('a')
     D = Derivative(f(x), x)
     G = Derivative(g(a), a)
+
     assert solve(f(x) + f(x).diff(x), f(x)) == \
         [-D]
     assert solve(f(x) - 3, f(x)) == \
@@ -1256,15 +1261,22 @@ def test_issue_5901():
     assert solve([f(x) - 3*f(x).diff(x)], f(x)) == \
         {f(x): 3*D}
     assert solve([f(x) - 3*f(x).diff(x), f(x)**2 - y + 4], f(x), y) == \
-        [{f(x): 3*D, y: 9*D**2 + 4}]
-    assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
-                h(a), g(a), set=True) == \
-        ([g(a)], set([
-        (-sqrt(h(a)**2*f(a)**2 + G)/f(a),),
-        (sqrt(h(a)**2*f(a)**2+ G)/f(a),)]))
+        [(3*D, 9*D**2 + 4)]
+
+    eq = -f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a)
+    syms = [g(a), h(a)]
+    syms_found, sols_found = solve(eq, h(a), g(a), set=True)
+    assert syms_found == syms
+    # For these expressions dummy_eq doesn't work so we extract the dummy
+    X1 = list(sols_found)[0][0]
+    sols = { (X1, +sqrt(X1**2*f(a)**2 - G)/f(a)),
+             (X1, -sqrt(X1**2*f(a)**2 - G)/f(a)) }
+    assert sols == sols_found
+
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert set(solve(*args)) == \
         set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))])
+
     eqs = [f(x)**2 + g(x) - 2*f(x).diff(x), g(x)**2 - 4]
     assert solve(eqs, f(x), g(x), set=True) == \
         ([f(x), g(x)], set([
