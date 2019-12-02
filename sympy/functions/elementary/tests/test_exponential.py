@@ -652,26 +652,16 @@ def test_issue_9116():
 
 
 def test_lambertw_identities():
-    def entry(i, j, simp=False, k=0):
-        x = (i - 5) / 2
-        y = (j - 5) / 2
-        z = (x + y*I)
-        ret = LambertW(z*exp(z), k, evaluate=False)
-        if not simp:
-            return ret
-        return ret._extract_identity()
+    k_list = [-1, 0, 1]
+    x_list = [
+        -S(5)/2, -S(2), -S(3)/2, -S(1), -S(1)/2, S(0),
+        S(1)/2, S(1), S(3)/2, S(2), S(5)/2]
+    y_list = x_list
 
-    def numerically_close(m1, m2):
-        return all(abs((a-b).evalf()) < 10**-15 for a, b in zip(m1, m2))
-
-    m1 = Matrix(11, 11, lambda i, j: entry(i, j, simp=False, k=0))
-    m2 = Matrix(11, 11, lambda i, j: entry(i, j, simp=True, k=0))
-    assert numerically_close(m1, m2)
-
-    m1 = Matrix(11, 11, lambda i, j: entry(i, j, simp=False, k=1))
-    m2 = Matrix(11, 11, lambda i, j: entry(i, j, simp=True, k=1))
-    assert numerically_close(m1, m2)
-
-    m1 = Matrix(11, 11, lambda i, j: entry(i, j, simp=False, k=-1))
-    m2 = Matrix(11, 11, lambda i, j: entry(i, j, simp=True, k=-1))
-    assert numerically_close(m1, m2)
+    for k in k_list:
+        for x in x_list:
+            for y in y_list:
+                z = x + y*I
+                ans = LambertW(z*exp(z), k, evaluate=False)
+                diff = ans - ans._extract_identity()
+                assert abs(diff.evalf()) < 10**-15
