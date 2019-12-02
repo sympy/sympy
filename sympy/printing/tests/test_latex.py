@@ -7,7 +7,7 @@ from sympy import (
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, Mod,
-    assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling, Complement,
+    assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, jacobi, laguerre, legendre, lerchphi, log, frac,
@@ -37,7 +37,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
-from sympy.physics.units import degree, radian, kg, meter, gibibyte, microgram, second
+from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
@@ -2347,7 +2347,7 @@ def test_multiline_latex():
     raises(ValueError, lambda: multiline_latex(f, expr, environment="foo"))
 
 def test_issue_15353():
-    from sympy import ConditionSet, Tuple, FiniteSet, S, sin, cos
+    from sympy import ConditionSet, Tuple, S, sin, cos
     a, x = symbols('a x')
     # Obtained from nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
     sol = ConditionSet(

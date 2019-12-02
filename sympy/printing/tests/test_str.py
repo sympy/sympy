@@ -4,7 +4,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, log, MatrixSymbol)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex

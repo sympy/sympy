@@ -187,8 +187,8 @@ def test_TR10i():
     h = sin(y)
     r = cos(y)
     for si in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
-        for a in ((c*r, s*h), (c*h, s*r)): # explicit 2-args
-            args = zip(si, a)
+        for argsi in ((c*r, s*h), (c*h, s*r)): # explicit 2-args
+            args = zip(si, argsi)
             ex = Add(*[Mul(*ai) for ai in args])
             t = TR10i(ex)
             assert not (ex - t.expand(trig=True) or t.is_Add)
@@ -198,8 +198,8 @@ def test_TR10i():
     h = sin(pi/6)
     r = cos(pi/6)
     for si in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
-        for a in ((c*r, s*h), (c*h, s*r)): # induced
-            args = zip(si, a)
+        for argsi in ((c*r, s*h), (c*h, s*r)): # induced
+            args = zip(si, argsi)
             ex = Add(*[Mul(*ai) for ai in args])
             t = TR10i(ex)
             assert not (ex - t.expand(trig=True) or t.is_Add)

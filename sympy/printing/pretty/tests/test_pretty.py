@@ -41,7 +41,7 @@ from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
@@ -3898,7 +3898,7 @@ def test_ProductSet_exponent():
 def test_ProductSet_parenthesis():
     ucode_str = u'([4, 7] × {1, 2}) ∪ ([2, 3] × [4, 7])'
 
-    a, b, c = Interval(2, 3), Interval(4, 7), Interval(1, 9)
+    a, b = Interval(2, 3), Interval(4, 7)
     assert upretty(Union(a*b, b*FiniteSet(1, 2))) == ucode_str
 
 def test_ProductSet_prod_char_issue_10413():
@@ -6582,7 +6582,6 @@ def test_pretty_print_tensor_partial_deriv():
 
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
-    i0 = tensor_indices("i0", L)
 
     A, B, C, D = tensor_heads("A B C D", [L])
 
@@ -6854,7 +6853,6 @@ def test_hadamard_power():
     m, n, p = symbols('m, n, p', integer=True)
     A = MatrixSymbol('A', m, n)
     B = MatrixSymbol('B', m, n)
-    C = MatrixSymbol('C', m, p)
 
     # Testing printer:
     expr = hadamard_power(A, n)
