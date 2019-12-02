@@ -933,17 +933,28 @@ def solve(f, *symbols, **flags):
         f = [f]
         bare_f = True
 
+    # We need to remember whether the user has specified symbols or not. This
+    # is important to distinguish the case where no symbols are specified from
+    # the case where an empty set of symbols is specified e.g.
+    #   solve(eq)      --  solve should guess the symbols
+    #   solve(eq, [])  --  solve should solve for no symbols
+    if symbols:
+        specified_symbols = True
+    else:
+        specified_symbols = False
+
+    # Has the user given an iterable of symbols?
+    if len(symbols) == 1 and iterable(symbols[0]):
+        symbols = symbols[0]
+        if isinstance(symbols, GeneratorType):
+            symbols = list(symbols)
+
     # Some output formats only make sense if the user has provided the symbols
     # in some way that defines an order on the symbols. Specifically solutions
     # can be represented as tuples (x1, y1) rather than dicts {x: x1, y:y1}
     # only if the user supplied some ordering on the symbols. Here we keep
     # track of whether the symbols have been given in some order in
     # ordered_symbols.
-
-    if len(symbols) == 1 and iterable(symbols[0]):
-        symbols = symbols[0]
-        if isinstance(symbols, GeneratorType):
-            symbols = list(symbols)
 
     if symbols and is_sequence(symbols):
         # The user supplied symbols as *args or as an arg that is an ordered
@@ -964,7 +975,7 @@ def solve(f, *symbols, **flags):
 
     # preprocess symbol(s)
     ###########################################################################
-    if not symbols:
+    if not specified_symbols:
         # get symbols from equations
         symbols = set().union(*[fi.free_symbols for fi in f])
         if len(symbols) < len(f):

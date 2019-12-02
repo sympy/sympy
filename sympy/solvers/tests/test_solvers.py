@@ -177,6 +177,10 @@ def test_solve_args():
     f = Function('f')
     assert solve([f(x)-1, f(x)**2-1-y], f(x), y) == [(1, 0)]
     assert solve([f(x)-1, f(x)**2-1-y], y, f(x)) == [(0, 1)]
+    # When asked to solve for no symbols:
+    assert solve([x-1]) == {x: 1}
+    assert solve([x-1], []) == []
+    assert solve([x-1], set()) == []
 
 
 def test_solve_dict():
