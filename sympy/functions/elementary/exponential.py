@@ -1099,7 +1099,7 @@ class LambertW(Function):
         var = match[z]
 
         # Skip non-numeric cases
-        if not var.is_number and not k.is_Integer:
+        if not (var.is_number or k.is_Integer):
             return self
 
         re_part = re(var)
