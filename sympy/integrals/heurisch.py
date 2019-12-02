@@ -5,7 +5,7 @@ from itertools import permutations
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Wild, Dummy, symbols
+from sympy.core.symbol import Wild, Dummy
 from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne

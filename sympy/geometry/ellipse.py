@@ -1586,7 +1586,7 @@ class Circle(Ellipse):
                 # this will prohibit imaginary radius
                 try:
                     r = Point(r, 0, evaluate=evaluate).x
-                except:
+                except ValueError:
                     raise GeometryError("Circle with imaginary radius is not permitted")
 
             if not (c is None or r is None):
