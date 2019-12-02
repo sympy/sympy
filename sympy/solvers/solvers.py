@@ -921,33 +921,25 @@ def solve(f, *symbols, **flags):
     dsolve: For solving differential equations
 
     """
-    # keeping track of how f was passed since if it is a list
-    # a dictionary of results will be returned.
-    ###########################################################################
+    implicit = flags.get('implicit', False)
+    exclude = flags.pop('exclude', set())
 
     # The output format is different depending on whether f is a single
     # expr/Eq or a list of expr/Eq so we will keep track of that in bare_f.
+    ###########################################################################
+
     if iterable(f):
         bare_f = False
     else:
         f = [f]
         bare_f = True
+    f = [sympify(fi) for fi in f]
 
-    # We need to remember whether the user has specified symbols or not. This
-    # is important to distinguish the case where no symbols are specified from
-    # the case where an empty set of symbols is specified e.g.
-    #   solve(eq)      --  solve should guess the symbols
-    #   solve(eq, [])  --  solve should solve for no symbols
-    if symbols:
-        specified_symbols = True
-    else:
-        specified_symbols = False
+    # XXX: This should be handled later:
+    f = [s for s in f if s is not S.true and s is not True]
 
-    # Has the user given an iterable of symbols?
-    if len(symbols) == 1 and iterable(symbols[0]):
-        symbols = symbols[0]
-        if isinstance(symbols, GeneratorType):
-            symbols = list(symbols)
+    # preprocess symbol(s)
+    ###########################################################################
 
     # Some output formats only make sense if the user has provided the symbols
     # in some way that defines an order on the symbols. Specifically solutions
@@ -956,26 +948,7 @@ def solve(f, *symbols, **flags):
     # track of whether the symbols have been given in some order in
     # ordered_symbols.
 
-    if symbols and is_sequence(symbols):
-        # The user supplied symbols as *args or as an arg that is an ordered
-        # sequence (tuple, set, list, or generator).
-        ordered_symbols = True
-    else:
-        # The user hasn't supplied symbols or has provided them as an
-        # unordered collection such as a set.
-        ordered_symbols = False
-
-    def _sympified_list(w):
-        return list(map(sympify, w if iterable(w) else [w]))
-
-    f, symbols = (_sympified_list(w) for w in [f, symbols])
-    if isinstance(f, list):
-        f = [s for s in f if s is not S.true and s is not True]
-    implicit = flags.get('implicit', False)
-
-    # preprocess symbol(s)
-    ###########################################################################
-    if not specified_symbols:
+    if not symbols:
         # get symbols from equations
         symbols = set().union(*[fi.free_symbols for fi in f])
         if len(symbols) < len(f):
@@ -987,19 +960,24 @@ def solve(f, *symbols, **flags):
                         symbols.add(p)
                         pot.skip()  # don't go any deeper
         symbols = list(symbols)
-
         ordered_symbols = False
-    elif len(symbols) == 1 and iterable(symbols[0]):
-        symbols = symbols[0]
+    else:
+        # User has given symbols as *args or as an iterable arg
+        if len(symbols) == 1 and iterable(symbols[0]):
+            symbols = symbols[0]
+            if isinstance(symbols, GeneratorType):
+                symbols = list(symbols)
+        # Has the user given an unordered collection like a set?
+        ordered_symbols = is_sequence(symbols)
+        symbols = [sympify(sym) for sym in symbols]
 
-    # remove symbols the user is not interested in
-    exclude = flags.pop('exclude', set())
+    # Remove symbols the user is not interested in. This removes symbols even
+    # if they were explicitly specified.
     if exclude:
-        if isinstance(exclude, Expr):
+        if not iterable(exclude):
             exclude = [exclude]
         exclude = set().union(*[e.free_symbols for e in sympify(exclude)])
-    symbols = [s for s in symbols if s not in exclude]
-
+        symbols = [s for s in symbols if s not in exclude]
 
     # preprocess equation(s)
     ###########################################################################
