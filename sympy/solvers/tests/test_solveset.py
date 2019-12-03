@@ -625,6 +625,9 @@ def test_issue_10069():
     u = Union(Interval.open(0, 1), Interval.open(1, 2))
     assert solveset_real(eq, x) == u
 
+def test_solve_issue_17994():
+    assert solveset_real(sinh(x), x) == FiniteSet(0)
+
 
 @XFAIL
 def test_rewrite_trigh():
