@@ -9,7 +9,7 @@ from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
-    atanh, sinh, tanh)
+    atanh, sinh, tanh, cosh)
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
@@ -625,8 +625,13 @@ def test_issue_10069():
     u = Union(Interval.open(0, 1), Interval.open(1, 2))
     assert solveset_real(eq, x) == u
 
-def test_solve_issue_17994():
-    assert solveset_real(sinh(x), x) == FiniteSet(0)
+def test_issue_17994():
+    n = Dummy('n')
+    assert solveset(sinh(x), x) == ImageSet(Lambda(n, n*pi*I), S.Integers)
+    assert solveset(sinh(x), x, S.Complexes) == ImageSet(Lambda(n, n*pi*I), S.Integers)
+    assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
+    assert solveset(sinh(x)+cosh(x), x) == S.EmptySet
+    assert solveset(sinh(x)+cos(x), x) == ConditionSet(x, Eq(cos(x) + sinh(x), 0), S.Complexes)
 
 
 @XFAIL

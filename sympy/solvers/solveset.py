@@ -528,7 +528,7 @@ def _solve_hyperbolic(f, symbol, domain):
 
     f = trigsimp(f)
     f = f.rewrite(exp)
-    return solveset(f,symbol,domain)
+    return _solveset(f, symbol, domain)
 
 
 def _solve_trig(f, symbol, domain):
