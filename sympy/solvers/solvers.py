@@ -923,6 +923,7 @@ def solve(f, *symbols, **flags):
     """
     implicit = flags.get('implicit', False)
     exclude = flags.pop('exclude', set())
+    as_set = flags.get('set', False)
 
     # The output format is different depending on whether f is a single
     # expr/Eq or a list of expr/Eq so we will keep track of that in bare_f.
@@ -934,9 +935,6 @@ def solve(f, *symbols, **flags):
         f = [f]
         bare_f = True
     f = [sympify(fi) for fi in f]
-
-    # XXX: This should be handled later:
-    f = [s for s in f if s is not S.true and s is not True]
 
     # preprocess symbol(s)
     ###########################################################################
@@ -1065,6 +1063,13 @@ def solve(f, *symbols, **flags):
     # Eq to Expr and by extracting scalar equations from matrices and
     # expressions from Poly etc.
 
+    # This should be handled later:
+    f = [fi for fi in f if fi is not S.true]
+    if any(fi is S.false for fi in f):
+        if as_set:
+            return [], set()
+        return []
+
     def collapse_eq_to_expr(fi):
         if not isinstance(fi, Equality):
             return fi
@@ -1105,10 +1110,6 @@ def solve(f, *symbols, **flags):
                 f[i: i + 1] = [fr, fi]
 
     # real/imag handling -----------------------------
-    if any(isinstance(fi, (bool, BooleanAtom)) for fi in f):
-        if flags.get('set', False):
-            return [], set()
-        return []
 
     # rewrite hyperbolics in terms of exp
     f = [fi.rewrite(HyperbolicFunction, exp) for fi in f]
@@ -1422,7 +1423,6 @@ def solve(f, *symbols, **flags):
     ###########################################################################
 
     as_dict = flags.get('dict', False)
-    as_set = flags.get('set', False)
 
     if not as_set and isinstance(solution, list):
         # Make sure that a list of solutions is ordered in a canonical way.
