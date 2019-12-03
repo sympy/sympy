@@ -522,12 +522,10 @@ def _solve_as_rational(f, symbol, domain):
         return valid_solns - invalid_solns
 
 def _solve_hyperbolic(f, symbol, domain):
-
-    # transform the hyperbolic functions into non hyperbolic
-    # redo the calulcations from the beginning
+    """rewrite hyperbolic functions as exp and redoes the calculations"""
 
     f = trigsimp(f)
-    f = f.rewrite(exp)
+    f = f.rewrite(HyperbolicFunction, exp)
     return _solveset(f, symbol, domain)
 
 
