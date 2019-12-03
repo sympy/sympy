@@ -525,7 +525,7 @@ def _solve_hyperbolic(f, symbol, domain):
 
     # transform the hyperbolic functions into non hyperbolic
     # redo the calulcations from the beginning
-    
+
     f = trigsimp(f)
     f = f.rewrite(exp)
     return solveset(f,symbol,domain)
