@@ -46,3 +46,8 @@ def test_funcmatrix():
     assert X.rows == X.cols == 3
     assert Matrix(X) == Matrix(3, 3, lambda i, j: i - j)
     assert isinstance(X*X + X, MatrixExpr)
+
+
+def test_replace_issue():
+    X = FunctionMatrix(3, 3, KroneckerDelta)
+    assert X.replace(lambda x: True, lambda x: x) == X
