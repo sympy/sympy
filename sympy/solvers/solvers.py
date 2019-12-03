@@ -1059,32 +1059,39 @@ def solve(f, *symbols, **flags):
     # preprocess equation(s)
     ###########################################################################
 
-    # At this point f consists only of Eq and Expr since any other relational
-    # (inequality or unequality) would have been passed to reduce_inequalities
-    # above. We now try to canonicalise this by converting Eq to Expr and by
-    # extracting scalar equations from matrices and expressions from Poly etc.
+    # At this point f consists only of Eq, Expr and Boolean since any other
+    # relational (inequality or unequality) would have been passed to
+    # reduce_inequalities above. We now try to canonicalise this by converting
+    # Eq to Expr and by extracting scalar equations from matrices and
+    # expressions from Poly etc.
+
+    def collapse_eq_to_expr(fi):
+        if not isinstance(fi, Equality):
+            return fi
+        elif 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
+            return fi.lhs - fi.rhs
+        else:
+            return fi.rewrite(Add, evaluate=False)
+
+    # Canonicalise Eqs
+    f = [collapse_eq_to_expr(fi) for fi in f]
+
+    # XXX: Why is this changing bare_f?
+    if any(fi.is_Matrix for fi in f):
+        bare_f = False
+
+    def extract_scalar_equations(fi):
+        if isinstance(fi, Poly):
+            return [fi.as_expr()]
+        elif fi.is_Matrix:
+            return list(fi)
+        else:
+            return [fi]
+
+    # Extract equations from polys and matrices
+    f = [fi for fj in f for fi in extract_scalar_equations(fj)]
 
     for i, fi in enumerate(f):
-        if isinstance(fi, Equality):
-            if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
-                fi = fi.lhs - fi.rhs
-            else:
-                fi = fi.rewrite(Add, evaluate=False)
-            f[i] = fi
-
-        if isinstance(fi, Poly):
-            f[i] = fi.as_expr()
-
-        # rewrite hyperbolics in terms of exp
-        f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction),
-                lambda w: w.rewrite(exp))
-
-        # if we have a Matrix, we need to iterate over its elements again
-        if f[i].is_Matrix:
-            bare_f = False
-            f.extend(list(f[i]))
-            f[i] = S.Zero
-
         # if we can split it into real and imaginary parts then do so
         freei = f[i].free_symbols
         if freei and all(s.is_extended_real or s.is_imaginary for s in freei):
@@ -1102,6 +1109,9 @@ def solve(f, *symbols, **flags):
         if flags.get('set', False):
             return [], set()
         return []
+
+    # rewrite hyperbolics in terms of exp
+    f = [fi.rewrite(HyperbolicFunction, exp) for fi in f]
 
     for i, fi in enumerate(f):
         # Abs
