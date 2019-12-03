@@ -1001,7 +1001,7 @@ def solve(f, *symbols, **flags):
                 if isinstance(fi, Unequality):
                     L = ~L
                 if R.is_Relational:
-                    fi = ~R if L is S.false else R
+                    pass
                 elif R.is_Symbol:
                     return L
                 elif R.is_Boolean and (~R).is_Symbol:
@@ -1011,7 +1011,17 @@ def solve(f, *symbols, **flags):
                         Unanticipated argument of Eq when other arg
                         is True or False.
                     '''))
-            f[i] = fi
+
+    def invert_eq_bool(fi):
+        if isinstance(fi, (Equality, Unequality)):
+            lhs, rhs = fi.args
+            if lhs in (S.false, S.true) and rhs.is_Relational:
+                return ~rhs if lhs is S.false else rhs
+            if rhs in (S.false, S.true) and lhs.is_Relational:
+                return ~lhs if rhs is S.false else lhs
+        return fi
+
+    f = [invert_eq_bool(fi) for fi in f]
 
     # preprocess equation(s)
     ###########################################################################
