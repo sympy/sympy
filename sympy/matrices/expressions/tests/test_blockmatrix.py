@@ -3,9 +3,9 @@ from sympy.matrices.expressions.blockmatrix import (
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
     blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (MatrixSymbol, Identity,
-        Inverse, trace, Transpose, det)
+        Inverse, trace, Transpose, det, ZeroMatrix)
 from sympy.matrices import (
-    Matrix, ImmutableMatrix, ImmutableSparseMatrix, ones)
+    Matrix, ImmutableMatrix, ImmutableSparseMatrix)
 from sympy.core import Tuple, symbols, Expr
 from sympy.core.compatibility import range
 from sympy.functions import transpose
@@ -104,6 +104,13 @@ def test_block_collapse_explicit_matrices():
     A = ImmutableSparseMatrix([[1, 2], [3, 4]])
     assert block_collapse(BlockMatrix([[A]])) == A
 
+def test_issue_17624():
+    a = MatrixSymbol("a", 2, 2)
+    z = ZeroMatrix(2, 2)
+    b = BlockMatrix([[a, z], [z, z]])
+    assert block_collapse(b * b) == BlockMatrix([[a**2, z], [z, z]])
+    assert block_collapse(b * b * b) == BlockMatrix([[a**3, z], [z, z]])
+
 def test_BlockMatrix_trace():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
     X = BlockMatrix([[A, B], [C, D]])
@@ -128,9 +135,9 @@ def test_squareBlockMatrix():
 
     assert X.is_square
 
-    assert (block_collapse(X + Identity(m + n)) ==
-        BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
     Q = X + Identity(m + n)
+    assert (block_collapse(Q) ==
+        BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
 
     assert (X + MatrixSymbol('Q', n + m, n + m)).is_MatAdd
     assert (X * MatrixSymbol('Q', n + m, n + m)).is_MatMul

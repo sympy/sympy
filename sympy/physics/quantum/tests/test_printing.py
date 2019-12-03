@@ -24,10 +24,7 @@ from sympy.core.compatibility import exec_
 from sympy.utilities.pytest import XFAIL
 
 # Imports used in srepr strings
-from sympy.physics.quantum.constants import HBar
-from sympy.physics.quantum.hilbert import DirectSumHilbertSpace, TensorProductHilbertSpace, TensorPowerHilbertSpace
-from sympy.physics.quantum.spin import JzOp, J2Op
-from sympy import Add, Integer, Mul, Rational, Tuple, true, false
+from sympy.physics.quantum.spin import JzOp
 
 from sympy.printing import srepr
 from sympy.printing.pretty import pretty as xpretty
@@ -37,8 +34,17 @@ from sympy.core.compatibility import u_decode as u
 
 MutableDenseMatrix = Matrix
 
+
 ENV = {}
-exec_("from sympy import *", ENV)
+exec_('from sympy import *', ENV)
+exec_('from sympy.physics.quantum import *', ENV)
+exec_('from sympy.physics.quantum.cg import *', ENV)
+exec_('from sympy.physics.quantum.spin import *', ENV)
+exec_('from sympy.physics.quantum.hilbert import *', ENV)
+exec_('from sympy.physics.quantum.qubit import *', ENV)
+exec_('from sympy.physics.quantum.qexpr import *', ENV)
+exec_('from sympy.physics.quantum.gate import *', ENV)
+exec_('from sympy.physics.quantum.constants import *', ENV)
 
 
 def sT(expr, string):
@@ -47,7 +53,7 @@ def sT(expr, string):
     from sympy/printing/tests/test_repr.py
     """
     assert srepr(expr) == string
-    assert eval(string) == expr
+    assert eval(string, ENV) == expr
 
 
 def pretty(expr):
@@ -505,7 +511,7 @@ u("""\
 
 def test_operator():
     a = Operator('A')
-    b = Operator('B', Symbol('t'), S(1)/2)
+    b = Operator('B', Symbol('t'), S.Half)
     inv = a.inv()
     f = Function('f')
     x = symbols('x')

@@ -6,7 +6,7 @@ from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, range, reduce
 from sympy.core.expr import Expr
-from sympy.core.function import count_ops, expand_mul
+from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -174,7 +174,7 @@ class DenseMatrix(MatrixBase):
     def _eval_matrix_mul(self, other):
         from sympy import Add
         # cache attributes for faster access
-        self_rows, self_cols = self.rows, self.cols
+        self_cols = self.cols
         other_rows, other_cols = other.rows, other.cols
         other_len = other_rows * other_cols
         new_mat_rows = self.rows
@@ -392,7 +392,7 @@ class DenseMatrix(MatrixBase):
 
         See Also
         ========
-        sympy.core.expr.equals
+        sympy.core.expr.Expr.equals
         """
         self_shape = getattr(self, 'shape', None)
         other_shape = getattr(other, 'shape', None)
@@ -1219,7 +1219,7 @@ def hessian(f, varlist, constraints=[]):
     See Also
     ========
 
-    sympy.matrices.mutable.Matrix.jacobian
+    sympy.matrices.matrices.MatrixCalculus.jacobian
     wronskian
     """
     # f is the expression representing a function f, return regular matrix
@@ -1291,7 +1291,7 @@ def matrix_multiply_elementwise(A, B):
     See Also
     ========
 
-    __mul__
+    sympy.matrices.common.MatrixCommon.__mul__
     """
     return A.multiply_elementwise(B)
 
@@ -1325,11 +1325,11 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     following way.
 
     * If ``prng`` is supplied, it will be used as random number generator.
-      It should be an instance of :class:`random.Random`, or at least have
+      It should be an instance of ``random.Random``, or at least have
       ``randint`` and ``shuffle`` methods with same signatures.
     * if ``prng`` is not supplied but ``seed`` is supplied, then new
-      :class:`random.Random` with given ``seed`` will be created;
-    * otherwise, a new :class:`random.Random` with default seed will be used.
+      ``random.Random`` with given ``seed`` will be created;
+    * otherwise, a new ``random.Random`` with default seed will be used.
 
     Examples
     ========
@@ -1353,7 +1353,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     [29, 43, 57]
     >>> A = randMatrix(3, seed=1)
     >>> B = randMatrix(3, seed=2)
-    >>> A == B # doctest:+SKIP
+    >>> A == B
     False
     >>> A == randMatrix(3, seed=1)
     True
@@ -1410,7 +1410,7 @@ def wronskian(functions, var, method='bareiss'):
     See Also
     ========
 
-    sympy.matrices.mutable.Matrix.jacobian
+    sympy.matrices.matrices.MatrixCalculus.jacobian
     hessian
     """
 

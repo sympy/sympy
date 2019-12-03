@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from .matexpr import MatrixExpr
-from sympy.core.basic import Basic
 from sympy.core.function import FunctionClass, Lambda
 from sympy.core.sympify import _sympify, sympify
 from sympy.matrices import Matrix
@@ -15,9 +14,9 @@ class FunctionMatrix(MatrixExpr):
     Parameters
     ==========
 
-    rows : nonnegative integer
+    rows : nonnegative integer. Can be symbolic.
 
-    cols : nonnegative integer
+    cols : nonnegative integer. Can be symbolic.
 
     lamda : Function, Lambda or str
         If it is a SymPy ``Function`` or ``Lambda`` instance,
@@ -34,13 +33,9 @@ class FunctionMatrix(MatrixExpr):
     Creating a ``FunctionMatrix`` from ``Lambda``:
 
     >>> from sympy import FunctionMatrix, symbols, Lambda, MatPow, Matrix
-    >>> i, j = symbols('i,j')
-    >>> X = FunctionMatrix(3, 3, Lambda((i, j), i + j))
-    >>> Matrix(X)
-    Matrix([
-    [0, 1, 2],
-    [1, 2, 3],
-    [2, 3, 4]])
+    >>> i, j, n, m = symbols('i,j,n,m')
+    >>> FunctionMatrix(n, m, Lambda((i, j), i + j))
+    FunctionMatrix(n, m, Lambda((i, j), i + j))
 
     Creating a ``FunctionMatrix`` from a sympy function:
 
@@ -65,8 +60,8 @@ class FunctionMatrix(MatrixExpr):
 
     Creating a ``FunctionMatrix`` from python ``lambda``:
 
-    >>> FunctionMatrix(3, 3, 'lambda i, j: i + j')
-    FunctionMatrix(3, 3, Lambda((i, j), i + j))
+    >>> FunctionMatrix(n, m, 'lambda i, j: i + j')
+    FunctionMatrix(n, m, Lambda((i, j), i + j))
 
     Example of lazy evaluation of matrix product:
 

@@ -32,7 +32,6 @@ import subprocess
 import signal
 import stat
 import tempfile
-import sympy
 
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import exec_, PY3, string_types, range, unwrap
@@ -53,7 +52,8 @@ ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 # This list can be generated with the code:
 #     from time import time
 #     import sympy
-#
+#     import os
+#     os.environ["TRAVIS_BUILD_NUMBER"] = '2' # Mock travis to get more correct densities
 #     delays, num_splits = [], 30
 #     for i in range(1, num_splits + 1):
 #         tic = time()
@@ -61,8 +61,8 @@ ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 #         delays.append(time() - tic)
 #     tot = sum(delays)
 #     print([round(x / tot, 4) for x in delays])
-SPLIT_DENSITY = [0.0801, 0.0099, 0.0429, 0.0103, 0.0122, 0.0055, 0.0533, 0.0191, 0.0977, 0.0878, 0.0026, 0.0028, 0.0147, 0.0118, 0.0358, 0.0063, 0.0026, 0.0351, 0.0084, 0.0027, 0.0158, 0.0156, 0.0024, 0.0416, 0.0566, 0.0425, 0.2123, 0.0042, 0.0099, 0.0576]
-SPLIT_DENSITY_SLOW = [0.1525, 0.0342, 0.0092, 0.0004, 0.0005, 0.0005, 0.0379, 0.0353, 0.0637, 0.0801, 0.0005, 0.0004, 0.0133, 0.0021, 0.0098, 0.0108, 0.0005, 0.0076, 0.0005, 0.0004, 0.0056, 0.0093, 0.0005, 0.0264, 0.0051, 0.0956, 0.2983, 0.0005, 0.0005, 0.0981]
+SPLIT_DENSITY = [0.0185, 0.0047, 0.0155, 0.02, 0.0311, 0.0098, 0.0045, 0.0102, 0.0127, 0.0532, 0.0171, 0.097, 0.0906, 0.0007, 0.0086, 0.0013, 0.0143, 0.0068, 0.0252, 0.0128, 0.0043, 0.0043, 0.0118, 0.016, 0.0073, 0.0476, 0.0042, 0.0102, 0.012, 0.002, 0.0019, 0.0409, 0.054, 0.0237, 0.1236, 0.0973, 0.0032, 0.0047, 0.0081, 0.0685]
+SPLIT_DENSITY_SLOW = [0.0086, 0.0004, 0.0568, 0.0003, 0.0032, 0.0005, 0.0004, 0.0013, 0.0016, 0.0648, 0.0198, 0.1285, 0.098, 0.0005, 0.0064, 0.0003, 0.0004, 0.0026, 0.0007, 0.0051, 0.0089, 0.0024, 0.0033, 0.0057, 0.0005, 0.0003, 0.001, 0.0045, 0.0091, 0.0006, 0.0005, 0.0321, 0.0059, 0.1105, 0.216, 0.1489, 0.0004, 0.0003, 0.0006, 0.0483]
 
 class Skipped(Exception):
     pass
@@ -656,19 +656,18 @@ def _get_doctest_blacklist():
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
+        "sympy/galgebra.py", # no longer part of SymPy
+        "sympy/this.py", # prints text
         "sympy/physics/gaussopt.py", # raises deprecation warning
-        "sympy/galgebra.py", # raises ImportError
-        "sympy/this.py", # Prints text to the terminal
         "sympy/matrices/densearith.py", # raises deprecation warning
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
-        "sympy/physics/unitsystems.py", # raises deprecation warning
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
         "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
         "sympy/parsing/latex/_antlr/latexparser.py", # generated code
-        "sympy/integrals/rubi/rubi.py"
+        "sympy/integrals/rubi/rubi.py",
     ])
     # autolev parser tests
     num = 12
@@ -731,7 +730,7 @@ def _get_doctest_blacklist():
 
     # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
-        "sympy/conftest.py",
+        "sympy/conftest.py", # Python 2.7 issues
         "sympy/utilities/benchmarking.py"
     ])
 
@@ -957,8 +956,7 @@ def split_list(l, split, density=None):
     return l[int(lower_frac*len(l)) : int(higher_frac*len(l))]
 
 from collections import namedtuple
-SymPyTestResults = namedtuple('TestResults', 'failed attempted')
-
+SymPyTestResults = namedtuple('SymPyTestResults', 'failed attempted')
 
 def sympytestfile(filename, module_relative=True, name=None, package=None,
              globs=None, verbose=None, report=True, optionflags=0,
@@ -1111,7 +1109,7 @@ class SymPyTests(object):
         if fast_threshold:
             self._fast_threshold = float(fast_threshold)
         else:
-            self._fast_threshold = 5
+            self._fast_threshold = 8
         if slow_threshold:
             self._slow_threshold = float(slow_threshold)
         else:

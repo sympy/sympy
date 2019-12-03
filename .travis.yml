@@ -4,11 +4,13 @@ stages:
 - quality
 - baseline
 - test
+- allowed_failures
+
 env:
   matrix:
   - SPLIT="1/2" TEST_SYMPY="true"
   - SPLIT="2/2" TEST_SYMPY="true"
-  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
   global:
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
 dist: trusty
@@ -18,68 +20,40 @@ python:
   - 3.5
 
 matrix:
+  fast_finish: true
   include:
     - stage: quality
-      python: 3.7
+      python: 3.8
       dist: xenial
       sudo: true
       script: bin/test quality
       env:
 
     - stage: baseline
-      python: 3.7
+      python: 3.8
       dist: xenial
       sudo: true
       env:
-        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env:
-        - SPLIT="1/2" TEST_SYMPY="true"
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env:
-        - SPLIT="2/2" TEST_SYMPY="true"
-
-    - stage: test
-      python: 3.8-dev
-      dist: xenial
-      sudo: true
-      env:
-        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
-    - python: 3.8-dev
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
         - SPLIT="1/2" TEST_SYMPY="true"
-    - python: 3.8-dev
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
-    - python: 2.7
+    - python: 3.7
+      dist: xenial
+      # At the time of writing this is Python 3.7 but it will become 3.8 when
+      # all of the dependencies are supported on 3.8.
       env:
         - TEST_ASCII="true"
-        # space separated list of optional dependencies(conda packages) to install and test
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7 pyglet python-clang"
-      addons:
-        apt:
-          packages:
-            # for theano
-            - libatlas-dev
-            - libatlas-base-dev
-            - liblapack-dev
-            - gfortran
-    - python: 3.6
-      # This is actually 3.7 (once all the dependencies support it). We use
-      # python: 3.6 here because 3.7 requires the slower xenial/sudo: true container,
-      # and we aren't actually using the Travis Python anyway.
-      env:
-        - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet lfortran python-clang"
+        - TEST_OPT_DEPENDENCY="matchpy numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.5.1 tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang lxml"
         - TEST_SAGE="true"
+        - SYMPY_STRICT_COMPILER_CHECKS=1
       addons:
         apt:
           packages:
@@ -90,7 +64,44 @@ matrix:
             - gfortran
             - python-scipy
 
+    - stage: test
+      python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
     - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="1/2" TEST_SYMPY="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="2/2" TEST_SYMPY="true"
+    - python: 2.7
+      env:
+        - TEST_ASCII="true"
+        # space separated list of optional dependencies(conda packages) to install and test
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.5.1 tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7 pyglet pycosat python-clang lxml"
+        - SYMPY_STRICT_COMPILER_CHECKS=1
+      addons:
+        apt:
+          packages:
+            # for theano
+            - libatlas-dev
+            - libatlas-base-dev
+            - liblapack-dev
+            - gfortran
+
+    # Tensorflow 1 support
+    - python: 3.6
+      env:
+        - TEST_OPT_DEPENDENCY="tensorflow<2 python=3"
+        - TEST_TENSORFLOW_1=true
+
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
@@ -119,13 +130,13 @@ matrix:
       env:
         - TEST_SLOW="true"
         - SPLIT="2/2"
-    - python: 3.7
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
         - TEST_SLOW="true"
         - SPLIT="1/2"
-    - python: 3.7
+    - python: 3.8
       dist: xenial
       sudo: true
       env:
@@ -162,18 +173,18 @@ matrix:
         - TEST_COVERAGE="true"
         - SPLIT="4/4"
 
-    # Everything here and below is in the allow_failures. The need to be
-    # duplicated here and in that section below.
+    # PyPy randomly fails because of some PyPy bugs
+    # (Fatal RPython error: AssertionError)
     - python: "pypy"
       env:
-        - TEST_DOCTESTS="true"
+        - TEST_DOCTESTS="true" TEST_EXAMPLES="true"
         - FASTCACHE="false"
       addons:
         apt:
           sources:
             - pypy
           packages:
-            - pypy
+            - pypy3
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
@@ -184,7 +195,7 @@ matrix:
           sources:
             - pypy
           packages:
-            - pypy
+            - pypy3
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
@@ -195,44 +206,25 @@ matrix:
           sources:
             - pypy
           packages:
-            - pypy
+            - pypy3
 
-  fast_finish: true
+    - stage: allowed_failures
+      python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_FLAKE8="true"
+    - python: 3.6
+      dist: xenial
+      sudo: true
+      env:
+        - BENCHMARK="true"
 
   allow_failures:
-    # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
-    - python: "pypy"
-      env:
-        - TEST_DOCTESTS="true"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="1/2"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="2/2"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy
+    - env:
+        - TEST_FLAKE8="true"
+    - env:
+        - BENCHMARK="true"
 
 before_install:
   - set -e
@@ -244,7 +236,11 @@ before_install:
       pip install coverage;
       coverage debug sys;
     fi
-  - if [ "$TRAVIS_PYTHON_VERSION" == "3.8-dev" ]; then
+  - if [[ "${TEST_FLAKE8}" == "true" ]]; then
+      pip install flake8;
+      flake8 sympy;
+    fi
+  - if [ "$TRAVIS_PYTHON_VERSION" == "3.8" ]; then
         pip uninstall -y Cython;
     fi
   - |
@@ -270,28 +266,28 @@ before_install:
         export CPATH=$CONDA_PREFIX/include;
         export LIBRARY_PATH=$CONDA_PREFIX/lib;
         export LD_LIBRARY_PATH=$CONDA_PREFIX/lib;
-        export SYMPY_STRICT_COMPILER_CHECKS=1;
         conda clean --all;
         if [[ "$TEST_SAGE" == "true" ]]; then
             # Use a separate environment because sage downgrades matplotlib
             conda create -c conda-forge/label/cf201901 -n sage sagelib mpmath "ipython>=5.5.0,<6";
             conda clean --all;
         fi
-        if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-            conda install matchpy;
-        fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list | grep "numpy" && pip uninstall -y numpy;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr matplotlib;
+      pip install "sphinx" "docutils" doctr matplotlib sphinx-math-dollar;
+    fi
+  - if [[ "${BENCHMARK}" == "true" ]]; then
+      pip install asv;
+      git submodule add https://github.com/sympy/sympy_benchmarks.git;
     fi
 
 install:
   # If a command fails, fail the build.
   - set -e
   - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
-      then virtualenv -p /usr/bin/pypy ~/.venv;
+      then virtualenv -p /usr/bin/pypy3 ~/.venv;
            . ~/.venv/bin/activate;
     fi
   # Once https://github.com/fredrik-johansson/mpmath/pull/403 is in a released
@@ -324,6 +320,11 @@ script:
     fi
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
         bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports";
+    fi
+  - if [[ "${BENCHMARK}" == "true" ]]; then
+        asv machine --yes --config asv.conf.travis.json;
+        asv run --config asv.conf.travis.json;
+        asv compare master HEAD --config asv.conf.travis.json --factor 1.5;
     fi
 notifications:
   email: false

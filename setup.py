@@ -33,6 +33,10 @@ import sys
 import os
 import shutil
 import glob
+import subprocess
+
+from distutils.command.sdist import sdist
+
 
 min_mpmath_version = '0.19'
 
@@ -133,6 +137,7 @@ modules = [
     'sympy.physics.optics',
     'sympy.physics.quantum',
     'sympy.physics.units',
+    'sympy.physics.units.definitions',
     'sympy.physics.units.systems',
     'sympy.physics.vector',
     'sympy.plotting',
@@ -306,6 +311,37 @@ class antlr(Command):
             sys.exit(-1)
 
 
+class sdist_sympy(sdist):
+    def run(self):
+        # Fetch git commit hash and write down to commit_hash.txt before
+        # shipped in tarball.
+        commit_hash = None
+        commit_hash_filepath = 'doc/commit_hash.txt'
+        try:
+            commit_hash = \
+                subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+            commit_hash = commit_hash.decode('ascii')
+            commit_hash = commit_hash.rstrip()
+            print('Commit hash found : {}.'.format(commit_hash))
+            print('Writing it to {}.'.format(commit_hash_filepath))
+        except:
+            pass
+
+        if commit_hash:
+            with open(commit_hash_filepath, 'w') as f:
+                f.write(commit_hash)
+
+        super(sdist_sympy, self).run()
+
+        try:
+            os.remove(commit_hash_filepath)
+            print(
+                'Successfully removed temporary file {}.'
+                .format(commit_hash_filepath))
+        except OSError as e:
+            print("Error deleting %s - %s." % (e.filename, e.strerror))
+
+
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
 tests = [
@@ -411,6 +447,7 @@ if __name__ == '__main__':
                     'clean': clean,
                     'audit': audit,
                     'antlr': antlr,
+                    'sdist': sdist_sympy,
                     },
           classifiers=[
             'License :: OSI Approved :: BSD License',

@@ -124,7 +124,7 @@ def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tu
     See Also
     ========
 
-    sympy.codegen.ast.newtons_method
+    sympy.codegen.algorithms.newtons_method
 
     """
     if params is None:

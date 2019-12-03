@@ -25,7 +25,6 @@ def test_dixon_resultant_init():
     assert dixon.n == 2
     assert dixon.m == 2
     assert dixon.dummy_variables == [a[0], a[1]]
-    assert dixon.max_degrees == [1, 1]
 
 def test_get_dixon_polynomial_numerical():
     """Test Dixon's polynomial for a numerical example."""
@@ -43,12 +42,17 @@ def test_get_dixon_polynomial_numerical():
 
     assert dixon.get_dixon_polynomial().factor() == polynomial
 
-def test_get_upper_degree():
-    """Tests upper degree function."""
-    h = c * x ** 2 + y
-    dixon = DixonResultant(polynomials=[h, q], variables=[x, y])
+def test_get_max_degrees():
+    """Tests max degrees function."""
 
-    assert dixon.get_upper_degree() == 3
+    p = x + y
+    q = x ** 2 + y **3
+    h = x ** 2 + y
+
+    dixon = DixonResultant(polynomials=[p, q, h], variables=[x, y])
+    dixon_polynomial = dixon.get_dixon_polynomial()
+
+    assert dixon.get_max_degrees(dixon_polynomial) == [1, 2]
 
 def test_get_dixon_matrix_example_two():
     """Test Dixon's matrix for example from [Palancz08]_."""
@@ -81,7 +85,6 @@ def test_get_dixon_matrix():
 
 def test_macaulay_resultant_init():
     """Test init method of MacaulayResultant."""
-    a = IndexedBase("alpha")
 
     assert macaulay.polynomials == [p, q]
     assert macaulay.variables == [x, y]

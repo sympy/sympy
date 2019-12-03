@@ -177,6 +177,8 @@ def test_Lambda():
     # issue 2908
     assert str(Lambda((), 1)) == "Lambda((), 1)"
     assert str(Lambda((), x)) == "Lambda((), x)"
+    assert str(Lambda((x, y), x+y)) == "Lambda((x, y), x + y)"
+    assert str(Lambda(((x, y),), x+y)) == "Lambda(((x, y),), x + y)"
 
 
 def test_Limit():
@@ -705,8 +707,12 @@ def test_RandomDomain():
 
 
 def test_FiniteSet():
-    assert str(FiniteSet(*range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
-    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*range(1, 51))) == (
+        'FiniteSet(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,'
+        ' 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,'
+        ' 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50)'
+    )
+    assert str(FiniteSet(*range(1, 6))) == 'FiniteSet(1, 2, 3, 4, 5)'
 
 
 def test_UniversalSet():
@@ -768,7 +774,7 @@ def test_Equivalent():
     assert str(Equivalent(y, x)) == "Equivalent(x, y)"
 
 def test_Xor():
-    assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
+    assert str(Xor(y, x, evaluate=False)) == "x ^ y"
 
 def test_Complement():
     assert str(Complement(S.Reals, S.Naturals)) == 'Complement(Reals, Naturals)'

@@ -14,8 +14,6 @@ from sympy.core.basic import Atom
 from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
-from sympy.core.expr import Expr
-from sympy.core.function import count_ops
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -88,7 +86,6 @@ class MatrixShaping(MatrixRequired):
         return self._new(self.rows, self.cols - 1, entry)
 
     def _eval_col_insert(self, pos, other):
-        cols = self.cols
 
         def entry(i, j):
             if j < pos:
@@ -275,8 +272,8 @@ class MatrixShaping(MatrixRequired):
         ========
 
         row
-        col_op
-        col_swap
+        sympy.matrices.dense.MutableDenseMatrix.col_op
+        sympy.matrices.dense.MutableDenseMatrix.col_swap
         col_del
         col_join
         col_insert
@@ -559,8 +556,8 @@ class MatrixShaping(MatrixRequired):
         ========
 
         col
-        row_op
-        row_swap
+        sympy.matrices.dense.MutableDenseMatrix.row_op
+        sympy.matrices.dense.MutableDenseMatrix.row_swap
         row_del
         row_join
         row_insert
@@ -1320,7 +1317,7 @@ class MatrixProperties(MatrixRequired):
 
         is_lower
         is_upper
-        is_diagonalizable
+        sympy.matrices.matrices.MatrixEigen.is_diagonalizable
         diagonalize
         """
         return self._eval_is_diagonal()
@@ -1756,7 +1753,7 @@ class MatrixOperations(MatrixRequired):
 
         transpose: Matrix transposition
         H: Hermite conjugation
-        D: Dirac conjugation
+        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
         """
         return self._eval_conjugate()
 
@@ -1808,7 +1805,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         conjugate: By-element conjugation
-        D: Dirac conjugation
+        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
         """
         return self.T.C
 
@@ -2335,8 +2332,8 @@ class MatrixArithmetic(MatrixRequired):
         See Also
         ========
 
-        cross
-        dot
+        sympy.matrices.matrices.MatrixBase.cross
+        sympy.matrices.matrices.MatrixBase.dot
         multiply
         """
         if self.shape != other.shape:

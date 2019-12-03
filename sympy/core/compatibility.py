@@ -612,9 +612,9 @@ def ordered(seq, keys=None, default=True, warn=False):
     then no other keys will be computed.
 
     Two default keys will be applied if 1) keys are not provided or 2) the
-    given keys don't resolve all ties (but only if `default` is True). The
-    two keys are `_nodes` (which places smaller expressions before large) and
-    `default_sort_key` which (if the `sort_key` for an object is defined
+    given keys don't resolve all ties (but only if ``default`` is True). The
+    two keys are ``_nodes`` (which places smaller expressions before large) and
+    ``default_sort_key`` which (if the ``sort_key`` for an object is defined
     properly) should resolve any ties.
 
     If ``warn`` is True then an error will be raised if there were no
@@ -911,7 +911,6 @@ def lru_cache(maxsize=100, typed=False):
                         # empty the oldest link and make it the new root
                         root = nonlocal_root[0] = oldroot[NEXT]
                         oldkey = root[KEY]
-                        oldvalue = root[RESULT]
                         root[KEY] = root[RESULT] = None
                         # now update the cache dictionary for the new links
                         del cache[oldkey]

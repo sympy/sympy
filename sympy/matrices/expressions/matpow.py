@@ -77,7 +77,7 @@ class MatPow(MatrixExpr):
             return base**exp
         # Note: just evaluate cases we know, return unevaluated on others.
         # E.g., MatrixSymbol('x', n, m) to power 0 is not an error.
-        elif exp is S(-1) and base.is_square:
+        elif exp is S.NegativeOne and base.is_square:
             return Inverse(base).doit(**kwargs)
         elif exp is S.One:
             return base

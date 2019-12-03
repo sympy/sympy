@@ -11,7 +11,7 @@ from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, n
 from sympy.core.numbers import Float, I, pi, Rational, Integer
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
-from sympy.functions import gamma, exp, sqrt, log, exp_polar, piecewise_fold, re
+from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.exponential import ExpBase
@@ -95,7 +95,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     >>> eq = 2*x + y*sin(x)
     >>> separatevars(eq) == eq
     True
-    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) == None
+    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) is None
     True
 
     """
@@ -431,7 +431,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     single argument as an expression and return a number such that if
     expression ``a`` is more complex than expression ``b``, then
     ``measure(a) > measure(b)``.  The default measure function is
-    :func:`count_ops`, which returns the total number of operations in the
+    :func:`~.count_ops`, which returns the total number of operations in the
     expression.
 
     For example, if ``ratio=1``, ``simplify`` output can't be longer
@@ -549,7 +549,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         inverse=kwargs.get('inverse', inverse),
         doit=kwargs.get('doit', doit))
     # no routine for Expr needs to check for is_zero
-    if isinstance(expr, Expr) and expr.is_zero and expr*0 is S.Zero:
+    if isinstance(expr, Expr) and expr.is_zero and expr*0 == S.Zero:
         return S.Zero
 
     _eval_simplify = getattr(expr, '_eval_simplify', None)
@@ -614,9 +614,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product, Integral
 
-    # hyperexpand automatically only works on hypergeometric terms
-    expr = hyperexpand(expr)
-
     # Deal with Piecewise separately to avoid recursive growth of expressions
     if expr.has(Piecewise):
         # Fold into a single Piecewise
@@ -644,6 +641,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
                     # As all expressions have been simplified above with the
                     # complete simplify, nothing more needs to be done here
                     return expr
+
+    # hyperexpand automatically only works on hypergeometric terms
+    # Do this after the Piecewise part to avoid recursive expansion
+    expr = hyperexpand(expr)
 
     if expr.has(KroneckerDelta):
         expr = kroneckersimp(expr)
@@ -1277,7 +1278,7 @@ def besselsimp(expr):
 
     def expander(fro):
         def repl(nu, z):
-            if (nu % 1) == S(1)/2:
+            if (nu % 1) == S.Half:
                 return simplify(trigsimp(unpolarify(
                         fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
                             func=True)).subs(z0, z)))

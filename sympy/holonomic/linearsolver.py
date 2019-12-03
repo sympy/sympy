@@ -73,7 +73,7 @@ class NewMatrix(MutableDenseMatrix):
         free_var_index = permutation[len(pivots):]  # non-pivots columns are free variables
 
         # Free parameters
-        tau = NewMatrix([S(1) for k in range(col - rank)]).reshape(col - rank, 1)
+        tau = NewMatrix([S.One for k in range(col - rank)]).reshape(col - rank, 1)
 
         # Full parametric solution
         V = A[:rank, rank:]

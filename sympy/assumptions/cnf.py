@@ -6,7 +6,7 @@ please refer to sympy.logic classes And, Or, Not, etc.
 """
 from itertools import combinations, product
 from sympy import S, Nor, Nand, Xor, Implies, Equivalent, ITE
-from sympy.logic.boolalg import BooleanFunction, Or, And, Not, Xnor
+from sympy.logic.boolalg import Or, And, Not, Xnor
 from sympy.core.compatibility import zip_longest
 
 
@@ -16,10 +16,12 @@ class Literal(object):
     """
 
     def __new__(cls, lit, is_Not=False):
-        obj = super(Literal, cls).__new__(cls)
         if isinstance(lit, Not):
             lit = lit.args[0]
             is_Not = True
+        elif isinstance(lit, (AND, OR, Literal)):
+            return ~lit if is_Not else lit
+        obj = super(Literal, cls).__new__(cls)
         obj.lit = lit
         obj.is_Not = is_Not
         return obj
@@ -27,6 +29,16 @@ class Literal(object):
     @property
     def arg(self):
         return self.lit
+
+    def rcall(self, expr):
+        if callable(self.lit):
+            lit = self.lit(expr)
+        else:
+            try:
+                lit = self.lit.apply(expr)
+            except AttributeError:
+                lit = self.lit.rcall(expr)
+        return type(self)(lit, self.is_Not)
 
     def __invert__(self):
         is_Not = not self.is_Not
@@ -55,6 +67,11 @@ class OR(object):
     @property
     def args(self):
         return sorted(self._args, key=str)
+
+    def rcall(self, expr):
+        return type(self)(*[arg.rcall(expr)
+                            for arg in self._args
+                            ])
 
     def __invert__(self):
         return AND(*[~arg for arg in self._args])
@@ -86,6 +103,11 @@ class AND(object):
     def args(self):
         return sorted(self._args, key=str)
 
+    def rcall(self, expr):
+        return type(self)(*[arg.rcall(expr)
+                            for arg in self._args
+                            ])
+
     def __hash__(self):
         return hash((type(self).__name__,) + tuple(self.args))
 
@@ -104,8 +126,6 @@ def to_NNF(expr):
     Generates the Negation Normal Form of any boolean expression in terms
     of AND, OR, and Literal objects.
     """
-    if not isinstance(expr, BooleanFunction):
-        return Literal(expr)
 
     if isinstance(expr, Not):
         arg = expr.args[0]
@@ -163,7 +183,7 @@ def to_NNF(expr):
         return AND(OR(~L, M), OR(L, R))
 
     else:
-        raise NotImplementedError('NNF conversion not implemented for %s class' % type(expr).__name__)
+        return Literal(expr)
 
 
 def distribute_AND_over_OR(expr):
@@ -261,6 +281,16 @@ class CNF(object):
                 p.add(frozenset((~x,)))
             ll = ll._or(CNF(p))
         return ll
+
+    def rcall(self, expr):
+        clause_list = list()
+        for clause in self.clauses:
+            lits = [arg.rcall(expr) for arg in clause]
+            clause_list.append(OR(*lits))
+        expr = AND(*clause_list)
+        return distribute_AND_over_OR(expr)
+
+
 
     @classmethod
     def all_or(cls, *cnfs):

@@ -1,4 +1,4 @@
-from sympy import Sieve, sieve, Symbol, S, limit, I, zoo, nan
+from sympy import Sieve, sieve, Symbol, S, limit, I, zoo, nan, Rational
 from sympy.core.compatibility import range
 
 from sympy.ntheory import isprime, totient, mobius, randprime, nextprime, prevprime, \
@@ -28,7 +28,7 @@ def test_primepi():
     assert primepi(-1) == 0
     assert primepi(1) == 0
     assert primepi(2) == 1
-    assert primepi(S(7)/2) == 2
+    assert primepi(Rational(7, 2)) == 2
     assert primepi(3.5) == 2
     assert primepi(5) == 3
     assert primepi(11) == 5
@@ -51,8 +51,8 @@ def test_primepi():
     r = Symbol('r', real=True)
     assert primepi(r).subs(r, 2) == 1
 
-    assert primepi(S.Infinity) == S.Infinity
-    assert primepi(-S.Infinity) == 0
+    assert primepi(S.Infinity) is S.Infinity
+    assert primepi(S.NegativeInfinity) == 0
 
     assert limit(primepi(n), n, 100) == 25
 

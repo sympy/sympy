@@ -103,7 +103,7 @@ class JavascriptCodePrinter(CodePrinter):
             return '1/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             return 'Math.sqrt(%s)' % self._print(expr.base)
-        elif expr.exp == S(1)/3:
+        elif expr.exp == S.One/3:
             return 'Math.cbrt(%s)' % self._print(expr.base)
         else:
             return 'Math.pow(%s, %s)' % (self._print(expr.base),

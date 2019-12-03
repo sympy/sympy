@@ -18,7 +18,7 @@ def test_find_substitutions():
         [(cot(x), 1, -u**6 - 2*u**4 - u**2)]
     assert find_substitutions((sec(x)**2 + tan(x) * sec(x)) / (sec(x) + tan(x)),
                               x, u) == [(sec(x) + tan(x), 1, 1/u)]
-    assert find_substitutions(x * exp(-x**2), x, u) == [(-x**2, -S.Half, exp(u))]
+    assert find_substitutions(x * exp(-x**2), x, u) == [(-x**2, Rational(-1, 2), exp(u))]
 
 
 def test_manualintegrate_polynomials():
@@ -130,7 +130,7 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1/sqrt(1-x**2), x) == asin(x)
     assert manualintegrate(1/sqrt(4-4*x**2), x) == asin(x)/2
     assert manualintegrate(3/sqrt(1-9*x**2), x) == asin(3*x)
-    assert manualintegrate(1/sqrt(4-9*x**2), x) == asin(3*x/2)/3
+    assert manualintegrate(1/sqrt(4-9*x**2), x) == asin(x*Rational(3, 2))/3
 
     # asinh
     assert manualintegrate(1/sqrt(x**2 + 1), x) == \
@@ -174,7 +174,7 @@ def test_manualintegrate_inversetrig():
 def test_manualintegrate_trig_substitution():
     assert manualintegrate(sqrt(16*x**2 - 9)/x, x) == \
         Piecewise((sqrt(16*x**2 - 9) - 3*acos(3/(4*x)),
-                   And(x < 3*S.One/4, x > -3*S.One/4)))
+                   And(x < Rational(3, 4), x > Rational(-3, 4))))
     assert manualintegrate(1/(x**4 * sqrt(25-x**2)), x) == \
         Piecewise((-sqrt(-x**2/25 + 1)/(125*x) -
                    (-x**2/25 + 1)**(3*S.Half)/(15*x**3), And(x < 5, x > -5)))
@@ -198,7 +198,7 @@ def test_manualintegrate_special():
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
     f, F = 3*exp(4*x**2), 3*sqrt(pi)*erfi(2*x)/4
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
-    f, F = x**(S(1)/3)*exp(-x/8), -16*uppergamma(S(4)/3, x/8)
+    f, F = x**Rational(1, 3)*exp(-x/8), -16*uppergamma(Rational(4, 3), x/8)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
     f, F = exp(2*x)/x, Ei(2*x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
@@ -224,9 +224,9 @@ def test_manualintegrate_special():
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
     f, F = polylog(2, 5*x)/x, polylog(3, 5*x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
-    f, F = 5/sqrt(3 - 2*sin(x)**2), 5*sqrt(3)*elliptic_f(x, S(2)/3)/3
+    f, F = 5/sqrt(3 - 2*sin(x)**2), 5*sqrt(3)*elliptic_f(x, Rational(2, 3))/3
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
-    f, F = sqrt(4 + 9*sin(x)**2), 2*elliptic_e(x, -S(9)/4)
+    f, F = sqrt(4 + 9*sin(x)**2), 2*elliptic_e(x, Rational(-9, 4))
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
 
 
@@ -248,19 +248,19 @@ def test_manualintegrate_Heaviside():
     assert manualintegrate(Heaviside(2*x + 4), x) == (x+2)*Heaviside(2*x + 4)
     assert manualintegrate(x*Heaviside(x), x) == x**2*Heaviside(x)/2
     assert manualintegrate(Heaviside(x + 1)*Heaviside(1 - x)*x**2, x) == \
-        ((x**3/3 + S(1)/3)*Heaviside(x + 1) - S(2)/3)*Heaviside(-x + 1)
+        ((x**3/3 + Rational(1, 3))*Heaviside(x + 1) - Rational(2, 3))*Heaviside(-x + 1)
 
     y = Symbol('y')
     assert manualintegrate(sin(7 + x)*Heaviside(3*x - 7), x) == \
-            (- cos(x + 7) + cos(S(28)/3))*Heaviside(3*x - S(7))
+            (- cos(x + 7) + cos(Rational(28, 3)))*Heaviside(3*x - S(7))
 
     assert manualintegrate(sin(y + x)*Heaviside(3*x - y), x) == \
-            (cos(4*y/3) - cos(x + y))*Heaviside(3*x - y)
+            (cos(y*Rational(4, 3)) - cos(x + y))*Heaviside(3*x - y)
 
 
 def test_manualintegrate_orthogonal_poly():
     n = symbols('n')
-    a, b = 7, S(5)/3
+    a, b = 7, Rational(5, 3)
     polys = [jacobi(n, a, b, x), gegenbauer(n, a, x), chebyshevt(n, x),
         chebyshevu(n, x), legendre(n, x), hermite(n, x), laguerre(n, x),
         assoc_laguerre(n, a, x)]
@@ -402,18 +402,18 @@ def test_issue_10847():
                      (-atanh(x/sqrt(rc))/sqrt(rc), And(-rc < 0, x**2 < rc))) + x
 
     assert manualintegrate(sqrt(x - y) * log(z / x), x) == \
-        4*y**(S(3)/2)*atan(sqrt(x - y)/sqrt(y))/3 - 4*y*sqrt(x - y)/3 +\
-        2*(x - y)**(S(3)/2)*log(z/x)/3 + 4*(x - y)**(S(3)/2)/9
+        4*y**Rational(3, 2)*atan(sqrt(x - y)/sqrt(y))/3 - 4*y*sqrt(x - y)/3 +\
+        2*(x - y)**Rational(3, 2)*log(z/x)/3 + 4*(x - y)**Rational(3, 2)/9
     ry = Symbol('y', real=True)
     rz = Symbol('z', real=True)
     assert manualintegrate(sqrt(x - ry) * log(rz / x), x) == \
         4*ry**2*Piecewise((atan(sqrt(x - ry)/sqrt(ry))/sqrt(ry), ry > 0),
                          (-acoth(sqrt(x - ry)/sqrt(-ry))/sqrt(-ry), And(x - ry > -ry, ry < 0)),
                          (-atanh(sqrt(x - ry)/sqrt(-ry))/sqrt(-ry), And(x - ry < -ry, ry < 0)))/3 \
-                         - 4*ry*sqrt(x - ry)/3 + 2*(x - ry)**(S(3)/2)*log(rz/x)/3 \
-                         + 4*(x - ry)**(S(3)/2)/9
+                         - 4*ry*sqrt(x - ry)/3 + 2*(x - ry)**Rational(3, 2)*log(rz/x)/3 \
+                         + 4*(x - ry)**Rational(3, 2)/9
 
-    assert manualintegrate(sqrt(x) * log(x), x) == 2*x**(S(3)/2)*log(x)/3 - 4*x**(S(3)/2)/9
+    assert manualintegrate(sqrt(x) * log(x), x) == 2*x**Rational(3, 2)*log(x)/3 - 4*x**Rational(3, 2)/9
     assert manualintegrate(sqrt(a*x + b) / x, x) == \
         2*b*atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b) + 2*sqrt(a*x + b)
     ra = Symbol('a', real=True)
@@ -432,7 +432,7 @@ def test_issue_10847():
         (-atanh(sqrt(ra*x + rb)/sqrt(-ra*rc + rb))/sqrt(-ra*rc + rb), And(ra*rc - rb < 0, ra*x + rb < -ra*rc + rb))) + 2*sqrt(ra*x + rb)
 
     assert manualintegrate(sqrt(2*x + 3) / (x + 1), x) == 2*sqrt(2*x + 3) - log(sqrt(2*x + 3) + 1) + log(sqrt(2*x + 3) - 1)
-    assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**(S(5)/2)/20 - (2*x + 3)**(S(3)/2)/4
+    assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**Rational(5, 2)/20 - (2*x + 3)**Rational(3, 2)/4
     assert manualintegrate(x**Rational(3,2) * log(x), x) == 2*x**Rational(5,2)*log(x)/5 - 4*x**Rational(5,2)/25
     assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
     assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == \
@@ -500,12 +500,12 @@ def test_manual_subs():
 
 
 def test_issue_15471():
-    f = log(x)*cos(log(x))/x**(S(3)/4)
-    F = -128*x**(S(1)/4)*sin(log(x))/289 + 240*x**(S(1)/4)*cos(log(x))/289 + (16*x**(S(1)/4)*sin(log(x))/17 + 4*x**(S(1)/4)*cos(log(x))/17)*log(x)
+    f = log(x)*cos(log(x))/x**Rational(3, 4)
+    F = -128*x**Rational(1, 4)*sin(log(x))/289 + 240*x**Rational(1, 4)*cos(log(x))/289 + (16*x**Rational(1, 4)*sin(log(x))/17 + 4*x**Rational(1, 4)*cos(log(x))/17)*log(x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
 
 def test_quadratic_denom():
     f = (5*x + 2)/(3*x**2 - 2*x + 8)
-    assert manualintegrate(f, x) == 5*log(3*x**2 - 2*x + 8)/6 + 11*sqrt(23)*atan(3*sqrt(23)*(x - S(1)/3)/23)/69
+    assert manualintegrate(f, x) == 5*log(3*x**2 - 2*x + 8)/6 + 11*sqrt(23)*atan(3*sqrt(23)*(x - Rational(1, 3))/23)/69
     g = 3/(2*x**2 + 3*x + 1)
     assert manualintegrate(g, x) == 3*log(4*x + 2) - 3*log(4*x + 4)

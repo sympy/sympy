@@ -1,5 +1,5 @@
 from sympy import sqrt
-from sympy.core import S, Symbol, symbols, I
+from sympy.core import S, Symbol, symbols, I, Rational
 from sympy.core.compatibility import range
 from sympy.discrete import (fft, ifft, ntt, intt, fwht, ifwht,
     mobius_transform, inverse_mobius_transform)
@@ -8,7 +8,7 @@ from sympy.utilities.pytest import raises
 
 def test_fft_ifft():
     assert all(tf(ls) == ls for tf in (fft, ifft)
-                            for ls in ([], [S(5)/3]))
+                            for ls in ([], [Rational(5, 3)]))
 
     ls = list(range(6))
     fls = [15, -7*sqrt(2)/2 - 4 - sqrt(2)*I/2 + 2*I, 2 + 3*I,
@@ -20,7 +20,7 @@ def test_fft_ifft():
     assert ifft(fls) == ls + [S.Zero]*2
 
     ls = [1 + 2*I, 3 + 4*I, 5 + 6*I]
-    ifls = [S(9)/4 + 3*I, -7*I/4, S(3)/4 + I, -2 - I/4]
+    ifls = [Rational(9, 4) + 3*I, I*Rational(-7, 4), Rational(3, 4) + I, -2 - I/4]
 
     assert ifft(ls) == ifls
     assert fft(ifls) == ls + [S.Zero]
@@ -61,7 +61,7 @@ def test_ntt_intt():
 
 def test_fwht_ifwht():
     assert all(tf(ls) == ls for tf in (fwht, ifwht) \
-                        for ls in ([], [S(7)/4]))
+                        for ls in ([], [Rational(7, 4)]))
 
     ls = [213, 321, 43235, 5325, 312, 53]
     fls = [49459, 38061, -47661, -37759, 48729, 37543, -48391, -38277]
@@ -69,9 +69,9 @@ def test_fwht_ifwht():
     assert fwht(ls) == fls
     assert ifwht(fls) == ls + [S.Zero]*2
 
-    ls = [S(1)/2 + 2*I, S(3)/7 + 4*I, S(5)/6 + 6*I, S(7)/3, S(9)/4]
-    ifls = [S(533)/672 + 3*I/2, S(23)/224 + I/2, S(1)/672, S(107)/224 - I,
-        S(155)/672 + 3*I/2, -S(103)/224 + I/2, -S(377)/672, -S(19)/224 - I]
+    ls = [S.Half + 2*I, Rational(3, 7) + 4*I, Rational(5, 6) + 6*I, Rational(7, 3), Rational(9, 4)]
+    ifls = [Rational(533, 672) + I*Rational(3, 2), Rational(23, 224) + I/2, Rational(1, 672), Rational(107, 224) - I,
+        Rational(155, 672) + I*Rational(3, 2), Rational(-103, 224) + I/2, Rational(-377, 672), Rational(-19, 224) - I]
 
     assert ifwht(ls) == ifls
     assert fwht(ifls) == ls + [S.Zero]*3
@@ -81,9 +81,9 @@ def test_fwht_ifwht():
     raises(TypeError, lambda: fwht(x))
 
     ls = [x, 2*x, 3*x**2, 4*x**3]
-    ifls = [x**3 + 3*x**2/4 + 3*x/4,
+    ifls = [x**3 + 3*x**2/4 + x*Rational(3, 4),
         -x**3 + 3*x**2/4 - x/4,
-        -x**3 - 3*x**2/4 + 3*x/4,
+        -x**3 - 3*x**2/4 + x*Rational(3, 4),
         x**3 - 3*x**2/4 - x/4]
 
     assert ifwht(ls) == ifls
@@ -109,7 +109,7 @@ def test_fwht_ifwht():
 
 def test_mobius_transform():
     assert all(tf(ls, subset=subset) == ls
-                for ls in ([], [S(7)/4]) for subset in (True, False)
+                for ls in ([], [Rational(7, 4)]) for subset in (True, False)
                 for tf in (mobius_transform, inverse_mobius_transform))
 
     w, x, y, z = symbols('w x y z')
@@ -127,26 +127,26 @@ def test_mobius_transform():
     assert inverse_mobius_transform([w + x + y + z, x + z, y + z, z], subset=False) == \
             [w, x, y, z]
 
-    ls = [S(2)/3, S(6)/7, S(5)/8, 9, S(5)/3 + 7*I]
-    mls = [S(2)/3, S(32)/21, S(31)/24, S(1873)/168,
-            S(7)/3 + 7*I, S(67)/21 + 7*I, S(71)/24 + 7*I,
-            S(2153)/168 + 7*I]
+    ls = [Rational(2, 3), Rational(6, 7), Rational(5, 8), 9, Rational(5, 3) + 7*I]
+    mls = [Rational(2, 3), Rational(32, 21), Rational(31, 24), Rational(1873, 168),
+            Rational(7, 3) + 7*I, Rational(67, 21) + 7*I, Rational(71, 24) + 7*I,
+            Rational(2153, 168) + 7*I]
 
     assert mobius_transform(ls) == mls
     assert inverse_mobius_transform(mls) == ls + [S.Zero]*3
 
-    mls = [S(2153)/168 + 7*I, S(69)/7, S(77)/8, 9, S(5)/3 + 7*I, 0, 0, 0]
+    mls = [Rational(2153, 168) + 7*I, Rational(69, 7), Rational(77, 8), 9, Rational(5, 3) + 7*I, 0, 0, 0]
 
     assert mobius_transform(ls, subset=False) == mls
     assert inverse_mobius_transform(mls, subset=False) == ls + [S.Zero]*3
 
     ls = ls[:-1]
-    mls = [S(2)/3, S(32)/21, S(31)/24, S(1873)/168]
+    mls = [Rational(2, 3), Rational(32, 21), Rational(31, 24), Rational(1873, 168)]
 
     assert mobius_transform(ls) == mls
     assert inverse_mobius_transform(mls) == ls
 
-    mls = [S(1873)/168, S(69)/7, S(77)/8, 9]
+    mls = [Rational(1873, 168), Rational(69, 7), Rational(77, 8), 9]
 
     assert mobius_transform(ls, subset=False) == mls
     assert inverse_mobius_transform(mls, subset=False) == ls

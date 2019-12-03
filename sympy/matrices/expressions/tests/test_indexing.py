@@ -1,6 +1,6 @@
 from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, KroneckerDelta,
-        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, Dummy, MatMul, trace,
-        Symbol, Mul)
+        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, Dummy, trace,
+        Symbol)
 from sympy.utilities.pytest import raises
 from sympy.matrices.expressions.matexpr import MatrixElement, MatrixExpr
 

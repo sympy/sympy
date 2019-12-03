@@ -259,7 +259,7 @@ def test_MatrixSymbol():
     assert mcode(A*(B + 3*Identity(n))) == "A*(3*eye(n) + B)"
     assert mcode(A**(x**2)) == "A^(x.^2)"
     assert mcode(A**3) == "A^3"
-    assert mcode(A**(S.Half)) == "A^(1/2)"
+    assert mcode(A**S.Half) == "A^(1/2)"
 
 
 def test_MatrixSolve():

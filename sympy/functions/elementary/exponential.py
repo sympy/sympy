@@ -6,9 +6,9 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import range
 from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
         expand_mul)
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
@@ -81,9 +81,9 @@ class ExpBase(Function):
     def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_infinite:
-            if arg.is_negative:
+            if arg.is_extended_negative:
                 return True
-            if arg.is_positive:
+            if arg.is_extended_positive:
                 return False
         if arg.is_finite:
             return True
@@ -91,9 +91,10 @@ class ExpBase(Function):
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if s.exp is S.Zero:
+            z = s.exp.is_zero
+            if z:
                 return True
-            elif s.exp.is_rational and fuzzy_not(s.exp.is_zero):
+            elif s.exp.is_rational and fuzzy_not(z):
                 return False
         else:
             return s.is_rational
@@ -143,10 +144,10 @@ class exp_polar(ExpBase):
     See Also
     ========
 
-    sympy.simplify.simplify.powsimp
-    sympy.functions.elementary.complexes.polar_lift
-    sympy.functions.elementary.complexes.periodic_argument
-    sympy.functions.elementary.complexes.principal_branch
+    sympy.simplify.powsimp.powsimp
+    polar_lift
+    periodic_argument
+    principal_branch
     """
 
     is_polar = True
@@ -182,7 +183,7 @@ class exp_polar(ExpBase):
     def as_base_exp(self):
         # XXX exp_polar(0) is special!
         if self.args[0] == 0:
-            return self, S(1)
+            return self, S.One
         return ExpBase.as_base_exp(self)
 
 
@@ -227,7 +228,6 @@ class exp(ExpBase):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.assumptions import ask, Q
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
@@ -235,7 +235,7 @@ class exp(ExpBase):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Zero:
+            elif arg.is_zero:
                 return S.One
             elif arg is S.One:
                 return S.Exp1
@@ -319,6 +319,9 @@ class exp(ExpBase):
         elif isinstance(arg, MatrixBase):
             return arg.exp()
 
+        if arg.is_zero:
+            return S.One
+
     @property
     def base(self):
         """
@@ -397,6 +400,12 @@ class exp(ExpBase):
         elif self.args[0].is_imaginary:
             arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
+
+    def _eval_is_complex(self):
+        def complex_extended_negative(arg):
+            yield arg.is_complex
+            yield arg.is_extended_negative
+        return fuzzy_or(complex_extended_negative(self.args[0]))
 
     def _eval_is_algebraic(self):
         s = self.func(*self.args)
@@ -574,7 +583,7 @@ class log(Function):
         from sympy import unpolarify
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
-        from sympy.functions.elementary.complexes import Abs, re, im
+        from sympy.functions.elementary.complexes import Abs
 
         arg = sympify(arg)
 
@@ -601,7 +610,7 @@ class log(Function):
                 return cls(arg)
 
         if arg.is_Number:
-            if arg is S.Zero:
+            if arg.is_zero:
                 return S.ComplexInfinity
             elif arg is S.One:
                 return S.Zero
@@ -642,6 +651,9 @@ class log(Function):
             elif arg is S.Exp1:
                 return S.One
 
+        if arg.is_zero:
+            return S.ComplexInfinity
+
         # don't autoexpand Pow or Mul (see the issue 3351):
         if not arg.is_Add:
             coeff = arg.as_coefficient(I)
@@ -672,8 +684,6 @@ class log(Function):
                         return S.Pi * I * S.Half + cls(coeff * i_)
                     elif i_.is_negative:
                         return -S.Pi * I * S.Half + cls(coeff * -i_)
-                    elif i_.is_zero:
-                        return zoo
                 else:
                     from sympy.simplify import ratsimp
                     # Check for arguments involving rational multiples of pi
@@ -684,21 +694,21 @@ class log(Function):
                         1: S.Pi/4,
                         sqrt(5 - 2*sqrt(5)): S.Pi/5,
                         sqrt(2)*sqrt(5 - sqrt(5))/(1 + sqrt(5)): S.Pi/5,
-                        sqrt(5 + 2*sqrt(5)): 2*S.Pi/5,
-                        sqrt(2)*sqrt(sqrt(5) + 5)/(-1 + sqrt(5)): 2*S.Pi/5,
+                        sqrt(5 + 2*sqrt(5)): S.Pi*Rational(2, 5),
+                        sqrt(2)*sqrt(sqrt(5) + 5)/(-1 + sqrt(5)): S.Pi*Rational(2, 5),
                         sqrt(3)/3: S.Pi/6,
                         sqrt(2) - 1: S.Pi/8,
                         sqrt(2 - sqrt(2))/sqrt(sqrt(2) + 2): S.Pi/8,
-                        sqrt(2) + 1: 3*S.Pi/8,
-                        sqrt(sqrt(2) + 2)/sqrt(2 - sqrt(2)): 3*S.Pi/8,
+                        sqrt(2) + 1: S.Pi*Rational(3, 8),
+                        sqrt(sqrt(2) + 2)/sqrt(2 - sqrt(2)): S.Pi*Rational(3, 8),
                         sqrt(1 - 2*sqrt(5)/5): S.Pi/10,
                         (-sqrt(2) + sqrt(10))/(2*sqrt(sqrt(5) + 5)): S.Pi/10,
-                        sqrt(1 + 2*sqrt(5)/5): 3*S.Pi/10,
-                        (sqrt(2) + sqrt(10))/(2*sqrt(5 - sqrt(5))): 3*S.Pi/10,
+                        sqrt(1 + 2*sqrt(5)/5): S.Pi*Rational(3, 10),
+                        (sqrt(2) + sqrt(10))/(2*sqrt(5 - sqrt(5))): S.Pi*Rational(3, 10),
                         2 - sqrt(3): S.Pi/12,
                         (-1 + sqrt(3))/(1 + sqrt(3)): S.Pi/12,
-                        2 + sqrt(3): 5*S.Pi/12,
-                        (1 + sqrt(3))/(-1 + sqrt(3)): 5*S.Pi/12
+                        2 + sqrt(3): S.Pi*Rational(5, 12),
+                        (1 + sqrt(3))/(-1 + sqrt(3)): S.Pi*Rational(5, 12)
                     }
                     if t in atan_table:
                         modulus = ratsimp(coeff * Abs(arg_))
@@ -853,6 +863,10 @@ class log(Function):
     def _eval_is_extended_real(self):
         return self.args[0].is_extended_positive
 
+    def _eval_is_complex(self):
+        z = self.args[0]
+        return fuzzy_and([z.is_complex, fuzzy_not(z.is_zero)])
+
     def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_zero:
@@ -942,13 +956,13 @@ class LambertW(Function):
 
     @classmethod
     def eval(cls, x, k=None):
-        if k is S.Zero:
+        if k == S.Zero:
             return cls(x)
         elif k is None:
             k = S.Zero
 
-        if k is S.Zero:
-            if x is S.Zero:
+        if k.is_zero:
+            if x.is_zero:
                 return S.Zero
             if x is S.Exp1:
                 return S.One
@@ -964,9 +978,11 @@ class LambertW(Function):
                 return S.Exp1
             if x is S.Infinity:
                 return S.Infinity
+            if x.is_zero:
+                return S.Zero
 
         if fuzzy_not(k.is_zero):
-            if x is S.Zero:
+            if x.is_zero:
                 return S.NegativeInfinity
         if k is S.NegativeOne:
             if x == -S.Pi/2:
@@ -1040,3 +1056,12 @@ class LambertW(Function):
 
             return s + Order(x**n, x)
         return super(LambertW, self)._eval_nseries(x, n, logx)
+
+    def _eval_is_zero(self):
+        x = self.args[0]
+        if len(self.args) == 1:
+            k = S.Zero
+        else:
+            k = self.args[1]
+        if x.is_zero and k.is_zero:
+            return True

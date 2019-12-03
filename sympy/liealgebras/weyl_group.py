@@ -279,9 +279,9 @@ class WeylGroup(Basic):
                     gen1 = Matrix([[1, 0, 0], [0, 0, 1], [0, 1, 0]])
                     matrixform *= gen1
                 else:
-                    gen2 = Matrix([[Rational(2, 3), Rational(2, 3), -Rational(1, 3)],
-                        [Rational(2, 3), Rational(-1, 3), Rational(2, 3)], [Rational(-1, 3),
-                            Rational(2, 3), Rational(2, 3)]])
+                    gen2 = Matrix([[Rational(2, 3), Rational(2, 3), Rational(-1, 3)],
+                                   [Rational(2, 3), Rational(-1, 3), Rational(2, 3)],
+                                   [Rational(-1, 3), Rational(2, 3), Rational(2, 3)]])
                     matrixform *= gen2
             return matrixform
 

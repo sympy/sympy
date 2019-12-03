@@ -32,16 +32,16 @@ from sympy.utilities.pytest import raises
 
 def test_systematic_basic():
     def s(sympy_object, numpy_array):
-        x = sympy_object + numpy_array
-        x = numpy_array + sympy_object
-        x = sympy_object - numpy_array
-        x = numpy_array - sympy_object
-        x = sympy_object * numpy_array
-        x = numpy_array * sympy_object
-        x = sympy_object / numpy_array
-        x = numpy_array / sympy_object
-        x = sympy_object ** numpy_array
-        x = numpy_array ** sympy_object
+        sympy_object + numpy_array
+        numpy_array + sympy_object
+        sympy_object - numpy_array
+        numpy_array - sympy_object
+        sympy_object * numpy_array
+        numpy_array * sympy_object
+        sympy_object / numpy_array
+        numpy_array / sympy_object
+        sympy_object ** numpy_array
+        numpy_array ** sympy_object
     x = Symbol("x")
     y = Symbol("y")
     sympy_objs = [

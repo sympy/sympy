@@ -19,8 +19,6 @@ from .point import Point
 from .ellipse import Circle
 from .line import Line, Segment, Ray
 
-from sympy import sqrt
-
 import warnings
 
 
@@ -2615,6 +2613,69 @@ class Triangle(Polygon):
                    self.sides[2]: simplify(area/(s-c))}
 
         return exradii
+
+    @property
+    def excenters(self):
+        """Excenters of the triangle.
+
+        An excenter is the center of a circle that is tangent to a side of the
+        triangle and the extensions of the other two sides.
+
+        Returns
+        =======
+
+        excenters : dict
+
+
+        Examples
+        ========
+
+        The excenters are keyed to the side of the triangle to which their corresponding
+        excircle is tangent: The center is keyed, e.g. the excenter of a circle touching
+        side 0 is:
+
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.excenters[t.sides[0]]
+        Point2D(12*sqrt(10), 2/3 + sqrt(10)/3)
+
+        See Also
+        ========
+
+        sympy.geometry.polygon.Triangle.exradii
+
+        References
+        ==========
+
+        .. [1] http://mathworld.wolfram.com/Excircles.html
+
+        """
+
+        s = self.sides
+        v = self.vertices
+        a = s[0].length
+        b = s[1].length
+        c = s[2].length
+        x = [v[0].x, v[1].x, v[2].x]
+        y = [v[0].y, v[1].y, v[2].y]
+
+        exc_coords = {
+            "x1": simplify(-a*x[0]+b*x[1]+c*x[2]/(-a+b+c)),
+            "x2": simplify(a*x[0]-b*x[1]+c*x[2]/(a-b+c)),
+            "x3": simplify(a*x[0]+b*x[1]-c*x[2]/(a+b-c)),
+            "y1": simplify(-a*y[0]+b*y[1]+c*y[2]/(-a+b+c)),
+            "y2": simplify(a*y[0]-b*y[1]+c*y[2]/(a-b+c)),
+            "y3": simplify(a*y[0]+b*y[1]-c*y[2]/(a+b-c))
+        }
+
+        excenters = {
+            s[0]: Point(exc_coords["x1"], exc_coords["y1"]),
+            s[1]: Point(exc_coords["x2"], exc_coords["y2"]),
+            s[2]: Point(exc_coords["x3"], exc_coords["y3"])
+        }
+
+        return excenters
 
     @property
     def medians(self):

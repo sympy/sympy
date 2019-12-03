@@ -224,15 +224,12 @@ if cin:
             """
             try:
                 children = node.get_children()
-                prev_child = None
                 child = next(children)
                 #ignoring namespace and type details for the variable
                 while child.kind == cin.CursorKind.NAMESPACE_REF:
-                    prev_child = child
                     child = next(children)
 
                 while child.kind == cin.CursorKind.TYPE_REF:
-                    prev_child = child
                     child = next(children)
 
                 args = self.transform(child)

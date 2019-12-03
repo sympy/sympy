@@ -15,8 +15,8 @@ def groebner(seq, ring, method=None):
 
     Wrapper around the (default) improved Buchberger and the other algorithms
     for computing Groebner bases. The choice of algorithm can be changed via
-    ``method`` argument or :func:`setup` from :mod:`sympy.polys.polyconfig`,
-    where ``method`` can be either ``buchberger`` or ``f5b``.
+    ``method`` argument or :func:`sympy.polys.polyconfig.setup`, where
+    ``method`` can be either ``buchberger`` or ``f5b``.
 
     """
     if method is None:

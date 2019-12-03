@@ -1,6 +1,6 @@
-from sympy.combinatorics.pc_groups import PolycyclicGroup, Collector
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup
+
 
 def test_pc_presentation():
     Groups = [SymmetricGroup(3), SymmetricGroup(4), SymmetricGroup(9).sylow_subgroup(3),
@@ -62,7 +62,7 @@ def test_exponent_vector():
         collector = PcGroup.collector
 
         pcgs = PcGroup.pcgs
-        free_group = collector.free_group
+        # free_group = collector.free_group
 
         for gen in G.generators:
             exp = collector.exponent_vector(gen)

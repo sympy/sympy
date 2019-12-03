@@ -4,7 +4,7 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,
       check_and_join, encipher_vigenere, decipher_vigenere,
       encipher_hill, decipher_hill, encipher_bifid5, encipher_bifid6,
-      bifid5_square, bifid6_square, bifid5, bifid6, bifid10,
+      bifid5_square, bifid6_square, bifid5, bifid6,
       decipher_bifid5, decipher_bifid6, encipher_kid_rsa,
       decipher_kid_rsa, kid_rsa_private_key, kid_rsa_public_key,
       decipher_rsa, rsa_private_key, rsa_public_key, encipher_rsa,
@@ -15,14 +15,25 @@ from sympy.crypto.crypto import (cycle_list,
       decipher_bifid, bifid_square, padded_key, uniq, decipher_gm,
       encipher_gm, gm_public_key, gm_private_key, encipher_bg, decipher_bg,
       bg_private_key, bg_public_key, encipher_rot13, decipher_rot13,
-      encipher_atbash, decipher_atbash, NonInvertibleCipherWarning)
+      encipher_atbash, decipher_atbash, NonInvertibleCipherWarning,
+      encipher_railfence, decipher_railfence)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
-from sympy.utilities.pytest import raises, slow, warns
+from sympy.utilities.pytest import raises, warns
 
 from random import randrange
+
+def test_encipher_railfence():
+    assert encipher_railfence("hello world",2) == "hlowrdel ol"
+    assert encipher_railfence("hello world",3) == "horel ollwd"
+    assert encipher_railfence("hello world",4) == "hwe olordll"
+
+def test_decipher_railfence():
+    assert decipher_railfence("hlowrdel ol",2) == "hello world"
+    assert decipher_railfence("horel ollwd",3) == "hello world"
+    assert decipher_railfence("hwe olordll",4) == "hello world"
 
 
 def test_cycle_list():

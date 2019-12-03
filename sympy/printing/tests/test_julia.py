@@ -196,7 +196,7 @@ def test_MatrixSymbol():
     assert julia_code(A*(B + 3*Identity(n))) == "A*(3*eye(n) + B)"
     assert julia_code(A**(x**2)) == "A^(x.^2)"
     assert julia_code(A**3) == "A^3"
-    assert julia_code(A**(S.Half)) == "A^(1/2)"
+    assert julia_code(A**S.Half) == "A^(1/2)"
 
 
 def test_special_matrices():

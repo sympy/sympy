@@ -146,7 +146,7 @@ class CoordSys3D(Basic):
             trname = transformation.name
             lambda_transformation = CoordSys3D._get_transformation_lambdas(trname)
             if parent is not None:
-                if parent.lame_coefficients() != (S(1), S(1), S(1)):
+                if parent.lame_coefficients() != (S.One, S.One, S.One):
                     raise ValueError('Parent for pre-defined coordinate '
                                  'system should be Cartesian.')
             lambda_lame = CoordSys3D._get_lame_coeff(trname)
@@ -339,15 +339,12 @@ class CoordSys3D(Basic):
 
         equations = self._transformation(x1, x2, x3)
 
-        try:
-            solved = solve([equations[0] - x,
-                            equations[1] - y,
-                            equations[2] - z], (x1, x2, x3), dict=True)[0]
-            solved = solved[x1], solved[x2], solved[x3]
-            self._transformation_from_parent_lambda = \
-                lambda x1, x2, x3: tuple(i.subs(list(zip((x, y, z), (x1, x2, x3)))) for i in solved)
-        except:
-            raise ValueError('Wrong set of parameters.')
+        solved = solve([equations[0] - x,
+                        equations[1] - y,
+                        equations[2] - z], (x1, x2, x3), dict=True)[0]
+        solved = solved[x1], solved[x2], solved[x3]
+        self._transformation_from_parent_lambda = \
+            lambda x1, x2, x3: tuple(i.subs(list(zip((x, y, z), (x1, x2, x3)))) for i in solved)
 
     @staticmethod
     def _get_lame_coeff(curv_coord_name):

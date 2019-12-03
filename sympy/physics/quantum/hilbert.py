@@ -18,6 +18,9 @@ from sympy.core.compatibility import reduce
 __all__ = [
     'HilbertSpaceError',
     'HilbertSpace',
+    'TensorProductHilbertSpace',
+    'TensorPowerHilbertSpace',
+    'DirectSumHilbertSpace',
     'ComplexSpace',
     'L2',
     'FockSpace'
@@ -623,7 +626,7 @@ class TensorPowerHilbertSpace(HilbertSpace):
 
     @property
     def dimension(self):
-        if self.base.dimension == oo:
+        if self.base.dimension is oo:
             return oo
         else:
             return self.base.dimension**self.exp

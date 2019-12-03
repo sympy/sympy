@@ -1,14 +1,16 @@
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect)
+    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper)
 from sympy.solvers.ode import (_undetermined_coefficients_match,
     checkodesol, classify_ode, classify_sysode, constant_renumber,
     constantsimp, homogeneous_order, infinitesimals, checkinfsol,
     checksysodesol, solve_ics, dsolve, get_numbered_constants)
+
+from sympy.functions import airyai, airybi, besselj, bessely
+
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
-from sympy.functions import besselj, bessely
 from sympy.utilities.misc import filldedent
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -37,43 +39,43 @@ def test_linear_2eq_order1():
     assert checksysodesol(eq1, sol1) == (True, [0, 0])
 
     eq2 = (Eq(diff(x(t),t), 2*x(t) + 4*y(t)), Eq(diff(y(t),t), 12*x(t) + 41*y(t)))
-    sol2 = [Eq(x(t), 4*C1*exp(t*(sqrt(1713)/2 + S(43)/2)) + 4*C2*exp(t*(-sqrt(1713)/2 + S(43)/2))), \
-    Eq(y(t), C1*(S(39)/2 + sqrt(1713)/2)*exp(t*(sqrt(1713)/2 + S(43)/2)) + \
-    C2*(-sqrt(1713)/2 + S(39)/2)*exp(t*(-sqrt(1713)/2 + S(43)/2)))]
+    sol2 = [Eq(x(t), 4*C1*exp(t*(sqrt(1713)/2 + Rational(43, 2))) + 4*C2*exp(t*(-sqrt(1713)/2 + Rational(43, 2)))), \
+    Eq(y(t), C1*(Rational(39, 2) + sqrt(1713)/2)*exp(t*(sqrt(1713)/2 + Rational(43, 2))) + \
+    C2*(-sqrt(1713)/2 + Rational(39, 2))*exp(t*(-sqrt(1713)/2 + Rational(43, 2))))]
     assert checksysodesol(eq2, sol2) == (True, [0, 0])
 
     eq3 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
-    sol3 = [Eq(x(t), (C1*cos(sqrt(7)*t/2) + C2*sin(sqrt(7)*t/2))*exp(3*t/2)), \
+    sol3 = [Eq(x(t), (C1*cos(sqrt(7)*t/2) + C2*sin(sqrt(7)*t/2))*exp(t*Rational(3, 2))), \
     Eq(y(t), (C1*(-sqrt(7)*sin(sqrt(7)*t/2)/2 + cos(sqrt(7)*t/2)/2) + \
-    C2*(sin(sqrt(7)*t/2)/2 + sqrt(7)*cos(sqrt(7)*t/2)/2))*exp(3*t/2))]
+    C2*(sin(sqrt(7)*t/2)/2 + sqrt(7)*cos(sqrt(7)*t/2)/2))*exp(t*Rational(3, 2)))]
     assert checksysodesol(eq3, sol3) == (True, [0, 0])
 
     eq4 = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
-    sol4 = [Eq(x(t), C1*exp(t*(sqrt(6) + 3)) + C2*exp(t*(-sqrt(6) + 3)) - S(22)/3), \
-    Eq(y(t), C1*(2 + sqrt(6))*exp(t*(sqrt(6) + 3)) + C2*(-sqrt(6) + 2)*exp(t*(-sqrt(6) + 3)) - S(5)/3)]
+    sol4 = [Eq(x(t), C1*exp(t*(sqrt(6) + 3)) + C2*exp(t*(-sqrt(6) + 3)) - Rational(22, 3)), \
+    Eq(y(t), C1*(2 + sqrt(6))*exp(t*(sqrt(6) + 3)) + C2*(-sqrt(6) + 2)*exp(t*(-sqrt(6) + 3)) - Rational(5, 3))]
     assert checksysodesol(eq4, sol4) == (True, [0, 0])
 
     eq5 = (Eq(diff(x(t),t), x(t) + y(t) + 81), Eq(diff(y(t),t), -2*x(t) + y(t) + 23))
-    sol5 = [Eq(x(t), (C1*cos(sqrt(2)*t) + C2*sin(sqrt(2)*t))*exp(t) - S(58)/3), \
-    Eq(y(t), (-sqrt(2)*C1*sin(sqrt(2)*t) + sqrt(2)*C2*cos(sqrt(2)*t))*exp(t) - S(185)/3)]
+    sol5 = [Eq(x(t), (C1*cos(sqrt(2)*t) + C2*sin(sqrt(2)*t))*exp(t) - Rational(58, 3)), \
+    Eq(y(t), (-sqrt(2)*C1*sin(sqrt(2)*t) + sqrt(2)*C2*cos(sqrt(2)*t))*exp(t) - Rational(185, 3))]
     assert checksysodesol(eq5, sol5) == (True, [0, 0])
 
     eq6 = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
-    sol6 = [Eq(x(t), (C1*exp(2*t) + C2*exp(-2*t))*exp(S(5)/2*t**2)), \
-    Eq(y(t), (C1*exp(2*t) - C2*exp(-2*t))*exp(S(5)/2*t**2))]
+    sol6 = [Eq(x(t), (C1*exp(2*t) + C2*exp(-2*t))*exp(Rational(5, 2)*t**2)), \
+    Eq(y(t), (C1*exp(2*t) - C2*exp(-2*t))*exp(Rational(5, 2)*t**2))]
     s = dsolve(eq6)
     assert checksysodesol(eq6, sol6) == (True, [0, 0])
 
     eq7 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
-    sol7 = [Eq(x(t), (C1*cos((t**3)/3) + C2*sin((t**3)/3))*exp(S(5)/2*t**2)), \
-    Eq(y(t), (-C1*sin((t**3)/3) + C2*cos((t**3)/3))*exp(S(5)/2*t**2))]
+    sol7 = [Eq(x(t), (C1*cos((t**3)/3) + C2*sin((t**3)/3))*exp(Rational(5, 2)*t**2)), \
+    Eq(y(t), (-C1*sin((t**3)/3) + C2*cos((t**3)/3))*exp(Rational(5, 2)*t**2))]
     assert checksysodesol(eq7, sol7) == (True, [0, 0])
 
     eq8 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + (5*t+9*t**2)*y(t)))
-    sol8 = [Eq(x(t), (C1*exp((sqrt(77)/2 + S(9)/2)*(t**3)/3) + \
-    C2*exp((-sqrt(77)/2 + S(9)/2)*(t**3)/3))*exp(S(5)/2*t**2)), \
-    Eq(y(t), (C1*(sqrt(77)/2 + S(9)/2)*exp((sqrt(77)/2 + S(9)/2)*(t**3)/3) + \
-    C2*(-sqrt(77)/2 + S(9)/2)*exp((-sqrt(77)/2 + S(9)/2)*(t**3)/3))*exp(S(5)/2*t**2))]
+    sol8 = [Eq(x(t), (C1*exp((sqrt(77)/2 + Rational(9, 2))*(t**3)/3) + \
+    C2*exp((-sqrt(77)/2 + Rational(9, 2))*(t**3)/3))*exp(Rational(5, 2)*t**2)), \
+    Eq(y(t), (C1*(sqrt(77)/2 + Rational(9, 2))*exp((sqrt(77)/2 + Rational(9, 2))*(t**3)/3) + \
+    C2*(-sqrt(77)/2 + Rational(9, 2))*exp((-sqrt(77)/2 + Rational(9, 2))*(t**3)/3))*exp(Rational(5, 2)*t**2))]
     assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
     eq10 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), (1-t**2)*x(t) + (5*t+9*t**2)*y(t)))
@@ -209,18 +211,18 @@ def test_linear_2eq_order2():
 
     eq2 = (Eq(diff(x(t),t,t), 8*x(t)+3*y(t)+31), Eq(diff(y(t),t,t), 9*x(t)+7*y(t)+12))
     sol2 = [Eq(x(t), 3*C1*exp(t*rootof(l**4 - 15*l**2 + 29, 0)) + 3*C2*exp(t*rootof(l**4 - 15*l**2 + 29, 1)) + \
-    3*C3*exp(t*rootof(l**4 - 15*l**2 + 29, 2)) + 3*C4*exp(t*rootof(l**4 - 15*l**2 + 29, 3)) - S(181)/29), \
+    3*C3*exp(t*rootof(l**4 - 15*l**2 + 29, 2)) + 3*C4*exp(t*rootof(l**4 - 15*l**2 + 29, 3)) - Rational(181, 29)), \
     Eq(y(t), C1*(rootof(l**4 - 15*l**2 + 29, 0)**2 - 8)*exp(t*rootof(l**4 - 15*l**2 + 29, 0)) + \
     C2*(rootof(l**4 - 15*l**2 + 29, 1)**2 - 8)*exp(t*rootof(l**4 - 15*l**2 + 29, 1)) + \
     C3*(rootof(l**4 - 15*l**2 + 29, 2)**2 - 8)*exp(t*rootof(l**4 - 15*l**2 + 29, 2)) + \
-    C4*(rootof(l**4 - 15*l**2 + 29, 3)**2 - 8)*exp(t*rootof(l**4 - 15*l**2 + 29, 3)) + S(183)/29)]
+    C4*(rootof(l**4 - 15*l**2 + 29, 3)**2 - 8)*exp(t*rootof(l**4 - 15*l**2 + 29, 3)) + Rational(183, 29))]
     assert dsolve(eq2) == sol2
     # FIXME: assert checksysodesol(eq2, sol2) == (True, [0, 0])  # this one fails
 
     eq3 = (Eq(diff(x(t),t,t) - 9*diff(y(t),t) + 7*x(t),0), Eq(diff(y(t),t,t) + 9*diff(x(t),t) + 7*y(t),0))
-    sol3 = [Eq(x(t), C1*cos(t*(S(9)/2 + sqrt(109)/2)) + C2*sin(t*(S(9)/2 + sqrt(109)/2)) + C3*cos(t*(-sqrt(109)/2 + S(9)/2)) + \
-    C4*sin(t*(-sqrt(109)/2 + S(9)/2))), Eq(y(t), -C1*sin(t*(S(9)/2 + sqrt(109)/2)) + C2*cos(t*(S(9)/2 + sqrt(109)/2)) - \
-    C3*sin(t*(-sqrt(109)/2 + S(9)/2)) + C4*cos(t*(-sqrt(109)/2 + S(9)/2)))]
+    sol3 = [Eq(x(t), C1*cos(t*(Rational(9, 2) + sqrt(109)/2)) + C2*sin(t*(Rational(9, 2) + sqrt(109)/2)) + C3*cos(t*(-sqrt(109)/2 + Rational(9, 2))) + \
+    C4*sin(t*(-sqrt(109)/2 + Rational(9, 2)))), Eq(y(t), -C1*sin(t*(Rational(9, 2) + sqrt(109)/2)) + C2*cos(t*(Rational(9, 2) + sqrt(109)/2)) - \
+    C3*sin(t*(-sqrt(109)/2 + Rational(9, 2))) + C4*cos(t*(-sqrt(109)/2 + Rational(9, 2))))]
     assert dsolve(eq3) == sol3
     assert checksysodesol(eq3, sol3) == (True, [0, 0])
 
@@ -258,18 +260,26 @@ def test_linear_2eq_order2():
     # FIXME: assert checksysodesol(eq7, sol7) == (True, [0, 0])
 
     eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
+    sol8 = [Eq(x(t), -sqrt(133)*(-4*C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + 4*C1*airyai(-t*(1 + \
+    sqrt(133))**(S(1)/3)) - 4*C2*airybi(t*(-1 + sqrt(133))**(S(1)/3)) + 4*C2*airybi(-t*(1 + sqrt(133))**(S(1)/3)) +\
+    (-sqrt(133) - 1)*(C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + C2*airybi(t*(-1 + sqrt(133))**(S(1)/3))) - (-1 +\
+    sqrt(133))*(C1*airyai(-t*(1 + sqrt(133))**(S(1)/3)) + C2*airybi(-t*(1 + sqrt(133))**(S(1)/3))))/3192), \
+    Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + C1*airyai(-t*(1 + sqrt(133))**(S(1)/3)) -\
+    C2*airybi(t*(-1 + sqrt(133))**(S(1)/3)) + C2*airybi(-t*(1 + sqrt(133))**(S(1)/3)))/266)]
+    assert dsolve(eq8) == sol8
+    assert checksysodesol(eq8, sol8) == (True, [0, 0])
     assert filldedent(dsolve(eq8)) == filldedent('''
-        [Eq(x(t), -sqrt(133)*(-(-1 + sqrt(133))*(C2*(-sqrt(133)*t**3/6 -
-        t**3/6 + 1) + C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6)) +
-        (-sqrt(133) - 1)*(C2*(-t**3/6 + sqrt(133)*t**3/6 + 1) + C1*t*(-t**3/12
-        + sqrt(133)*t**3/12 + 1) + O(t**6)) + 4*C2*(-sqrt(133)*t**3/6 - t**3/6
-        + 1) - 4*C2*(-t**3/6 + sqrt(133)*t**3/6 + 1) +
-        4*C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) - 4*C1*t*(-t**3/12 +
-        sqrt(133)*t**3/12 + 1) + O(t**6))/3192), Eq(y(t),
-        -sqrt(133)*(C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - C2*(-t**3/6 +
-        sqrt(133)*t**3/6 + 1) + C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) -
-        C1*t*(-t**3/12 + sqrt(133)*t**3/12 + 1) + O(t**6))/266)]''')
-    # FIXME: assert checksysodesol(eq8, sol8) == (True, [0, 0])
+        [Eq(x(t), -sqrt(133)*(-4*C1*airyai(t*(-1 + sqrt(133))**(1/3)) +
+        4*C1*airyai(-t*(1 + sqrt(133))**(1/3)) - 4*C2*airybi(t*(-1 +
+        sqrt(133))**(1/3)) + 4*C2*airybi(-t*(1 + sqrt(133))**(1/3)) +
+        (-sqrt(133) - 1)*(C1*airyai(t*(-1 + sqrt(133))**(1/3)) +
+        C2*airybi(t*(-1 + sqrt(133))**(1/3))) - (-1 +
+        sqrt(133))*(C1*airyai(-t*(1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 +
+        sqrt(133))**(1/3))))/3192), Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 +
+        sqrt(133))**(1/3)) + C1*airyai(-t*(1 + sqrt(133))**(1/3)) -
+        C2*airybi(t*(-1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 +
+        sqrt(133))**(1/3)))/266)]''')
+    assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
     eq9 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
     sol9 = [Eq(x(t), -sqrt(133)*(4*C1*Integral(exp((-sqrt(133) - 1)*Integral(t, t)), t) + 4*C2 - \
@@ -282,68 +292,68 @@ def test_linear_2eq_order2():
 
     eq10 = (t**2*diff(x(t),t,t) + 3*t*diff(x(t),t) + 4*t*diff(y(t),t) + 12*x(t) + 9*y(t), \
     t**2*diff(y(t),t,t) + 2*t*diff(x(t),t) - 5*t*diff(y(t),t) + 15*x(t) + 8*y(t))
-    sol10 = [Eq(x(t), -C1*(-2*sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 13 + 2*sqrt(-284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + \
-    4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) - 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + \
-    346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3))))*exp((-sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + \
-    4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3))/2 + 1 + sqrt(-284/sqrt(-346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) - 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)))/2)*log(t)) - \
-    C2*(-2*sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + \
-    13 - 2*sqrt(-284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) - 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3))))*exp((-sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + \
-    2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3))/2 + 1 - sqrt(-284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + \
-    4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) - 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)))/2)*log(t)) - C3*t**(1 + sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + \
-    2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3))/2 + sqrt(-2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)))/2)*(2*sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 13 + 2*sqrt(-2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)))) - C4*t**(-sqrt(-2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)))/2 + 1 + sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3))/2)*(-2*sqrt(-2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3))) + 2*sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 13)), Eq(y(t), C1*(-sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + \
-    2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 14 + (-sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + \
-    2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3))/2 + 1 + sqrt(-284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + \
-    4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) - 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)))/2)**2 + sqrt(-284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + \
-    2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) - 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3))))*exp((-sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3))/2 + 1 + sqrt(-284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + \
-    2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) - 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)))/2)*log(t)) + C2*(-sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + \
-    2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 14 - sqrt(-284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + \
-    4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) - 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3))) + (-sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3))/2 + 1 - sqrt(-284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + \
-    2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) - 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)))/2)**2)*exp((-sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3))/2 + 1 - sqrt(-284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + \
-    2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) - 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)))/2)*log(t)) + C3*t**(1 + sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + \
-    2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3))/2 + sqrt(-2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)))/2)*(sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + sqrt(-2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3))) + 14 + (1 + sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3))/2 + sqrt(-2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + 346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)))/2)**2) + C4*t**(-sqrt(-2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + \
-    346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + \
-    4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)))/2 + 1 + sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + \
-    4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3))/2)*(-sqrt(-2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + \
-    8 + 346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + \
-    4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3))) + (-sqrt(-2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3) + 8 + \
-    346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 284/sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + \
-    4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)))/2 + 1 + sqrt(-346/(3*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + \
-    4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3))/2)**2 + sqrt(-346/(3*(S(4333)/4 + \
-    5*sqrt(70771857)/36)**(S(1)/3)) + 4 + 2*(S(4333)/4 + 5*sqrt(70771857)/36)**(S(1)/3)) + 14))]
+    sol10 = [Eq(x(t), -C1*(-2*sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 13 + 2*sqrt(-284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + \
+    4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) - 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + \
+    346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3))))*exp((-sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + \
+    4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3))/2 + 1 + sqrt(-284/sqrt(-346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) - 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)))/2)*log(t)) - \
+    C2*(-2*sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + \
+    13 - 2*sqrt(-284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) - 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3))))*exp((-sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + \
+    2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3))/2 + 1 - sqrt(-284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + \
+    4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) - 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)))/2)*log(t)) - C3*t**(1 + sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + \
+    2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3))/2 + sqrt(-2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)))/2)*(2*sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 13 + 2*sqrt(-2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)))) - C4*t**(-sqrt(-2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)))/2 + 1 + sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3))/2)*(-2*sqrt(-2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3))) + 2*sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 13)), Eq(y(t), C1*(-sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + \
+    2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 14 + (-sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + \
+    2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3))/2 + 1 + sqrt(-284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + \
+    4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) - 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)))/2)**2 + sqrt(-284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + \
+    2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) - 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3))))*exp((-sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3))/2 + 1 + sqrt(-284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + \
+    2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) - 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)))/2)*log(t)) + C2*(-sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + \
+    2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 14 - sqrt(-284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + \
+    4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) - 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3))) + (-sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3))/2 + 1 - sqrt(-284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + \
+    2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) - 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)))/2)**2)*exp((-sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3))/2 + 1 - sqrt(-284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + \
+    2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) - 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)))/2)*log(t)) + C3*t**(1 + sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + \
+    2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3))/2 + sqrt(-2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)))/2)*(sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + sqrt(-2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3))) + 14 + (1 + sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3))/2 + sqrt(-2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + 346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)))/2)**2) + C4*t**(-sqrt(-2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + \
+    346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + \
+    4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)))/2 + 1 + sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + \
+    4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3))/2)*(-sqrt(-2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + \
+    8 + 346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + \
+    4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3))) + (-sqrt(-2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3) + 8 + \
+    346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 284/sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + \
+    4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)))/2 + 1 + sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + \
+    4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3))/2)**2 + sqrt(-346/(3*(Rational(4333, 4) + \
+    5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 14))]
     assert dsolve(eq10) == sol10
     # FIXME: assert checksysodesol(eq10, sol10) == (True, [0, 0]) # this hangs or at least takes a while...
 
@@ -418,32 +428,32 @@ def test_nonlinear_2eq_order1():
     t = Symbol('t')
     eq1 = (Eq(diff(x(t),t),x(t)*y(t)**3), Eq(diff(y(t),t),y(t)**5))
     sol1 = [
-        Eq(x(t), C1*exp((-1/(4*C2 + 4*t))**(-S(1)/4))),
-        Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)),
-        Eq(x(t), C1*exp(-1/(-1/(4*C2 + 4*t))**(S(1)/4))),
-        Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)),
-        Eq(x(t), C1*exp(-I/(-1/(4*C2 + 4*t))**(S(1)/4))),
-        Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)),
-        Eq(x(t), C1*exp(I/(-1/(4*C2 + 4*t))**(S(1)/4))),
-        Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
+        Eq(x(t), C1*exp((-1/(4*C2 + 4*t))**(Rational(-1, 4)))),
+        Eq(y(t), -(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), C1*exp(-1/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), (-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), C1*exp(-I/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), -I*(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), C1*exp(I/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), I*(-1/(4*C2 + 4*t))**Rational(1, 4))]
     assert dsolve(eq1) == sol1
     assert checksysodesol(eq1, sol1) == (True, [0, 0])
 
     eq2 = (Eq(diff(x(t),t), exp(3*x(t))*y(t)**3),Eq(diff(y(t),t), y(t)**5))
     sol2 = [
-        Eq(x(t), -log(C1 - 3/(-1/(4*C2 + 4*t))**(S(1)/4))/3),
-        Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)),
-        Eq(x(t), -log(C1 + 3/(-1/(4*C2 + 4*t))**(S(1)/4))/3),
-        Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)),
-        Eq(x(t), -log(C1 + 3*I/(-1/(4*C2 + 4*t))**(S(1)/4))/3),
-        Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)),
-        Eq(x(t), -log(C1 - 3*I/(-1/(4*C2 + 4*t))**(S(1)/4))/3),
-        Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
+        Eq(x(t), -log(C1 - 3/(-1/(4*C2 + 4*t))**Rational(1, 4))/3),
+        Eq(y(t), -(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), -log(C1 + 3/(-1/(4*C2 + 4*t))**Rational(1, 4))/3),
+        Eq(y(t), (-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), -log(C1 + 3*I/(-1/(4*C2 + 4*t))**Rational(1, 4))/3),
+        Eq(y(t), -I*(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), -log(C1 - 3*I/(-1/(4*C2 + 4*t))**Rational(1, 4))/3),
+        Eq(y(t), I*(-1/(4*C2 + 4*t))**Rational(1, 4))]
     assert dsolve(eq2) == sol2
     assert checksysodesol(eq2, sol2) == (True, [0, 0])
 
     eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
-    tt = S(2)/3
+    tt = Rational(2, 3)
     sol3 = [
         Eq(x(t), 6**tt/(6*(-sinh(sqrt(C1)*(C2 + t)/2)/sqrt(C1))**tt)),
         Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1)*(C2 + t)/2)**2)/3)]
@@ -462,14 +472,14 @@ def test_nonlinear_2eq_order1():
 
     eq6 = (Eq(diff(x(t),t),x(t)**2*y(t)**3), Eq(diff(y(t),t),y(t)**5))
     sol6 = [
-        Eq(x(t), 1/(C1 - 1/(-1/(4*C2 + 4*t))**(S(1)/4))),
-        Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)),
-        Eq(x(t), 1/(C1 + (-1/(4*C2 + 4*t))**(-S(1)/4))),
-        Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)),
-        Eq(x(t), 1/(C1 + I/(-1/(4*C2 + 4*t))**(S(1)/4))),
-        Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)),
-        Eq(x(t), 1/(C1 - I/(-1/(4*C2 + 4*t))**(S(1)/4))),
-        Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
+        Eq(x(t), 1/(C1 - 1/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), -(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), 1/(C1 + (-1/(4*C2 + 4*t))**(Rational(-1, 4)))),
+        Eq(y(t), (-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), 1/(C1 + I/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), -I*(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), 1/(C1 - I/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), I*(-1/(4*C2 + 4*t))**Rational(1, 4))]
     assert dsolve(eq6) == sol6
     assert checksysodesol(eq6, sol6) == (True, [0, 0])
 
@@ -483,26 +493,26 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t), 2*x(t) + 4*y(t)), Eq(diff(y(t),t), 12*x(t) + 41*y(t)))
-    sol = [Eq(x(t), 4*C1*exp(t*(-sqrt(1713)/2 + S(43)/2)) + 4*C2*exp(t*(sqrt(1713)/2 + \
-    S(43)/2))), Eq(y(t), C1*(-sqrt(1713)/2 + S(39)/2)*exp(t*(-sqrt(1713)/2 + \
-    S(43)/2)) + C2*(S(39)/2 + sqrt(1713)/2)*exp(t*(sqrt(1713)/2 + S(43)/2)))]
+    sol = [Eq(x(t), 4*C1*exp(t*(-sqrt(1713)/2 + Rational(43, 2))) + 4*C2*exp(t*(sqrt(1713)/2 + \
+    Rational(43, 2)))), Eq(y(t), C1*(-sqrt(1713)/2 + Rational(39, 2))*exp(t*(-sqrt(1713)/2 + \
+    Rational(43, 2))) + C2*(Rational(39, 2) + sqrt(1713)/2)*exp(t*(sqrt(1713)/2 + Rational(43, 2))))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
-    sol = [Eq(x(t), (C1*sin(sqrt(7)*t/2) + C2*cos(sqrt(7)*t/2))*exp(3*t/2)), \
+    sol = [Eq(x(t), (C1*sin(sqrt(7)*t/2) + C2*cos(sqrt(7)*t/2))*exp(t*Rational(3, 2))), \
     Eq(y(t), ((C1/2 - sqrt(7)*C2/2)*sin(sqrt(7)*t/2) + (sqrt(7)*C1/2 + \
-    C2/2)*cos(sqrt(7)*t/2))*exp(3*t/2))]
+    C2/2)*cos(sqrt(7)*t/2))*exp(t*Rational(3, 2)))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
     sol = [Eq(x(t), C1*exp(t*(-sqrt(6) + 3)) + C2*exp(t*(sqrt(6) + 3)) - \
-    S(22)/3), Eq(y(t), C1*(-sqrt(6) + 2)*exp(t*(-sqrt(6) + 3)) + C2*(2 + \
-    sqrt(6))*exp(t*(sqrt(6) + 3)) - S(5)/3)]
+    Rational(22, 3)), Eq(y(t), C1*(-sqrt(6) + 2)*exp(t*(-sqrt(6) + 3)) + C2*(2 + \
+    sqrt(6))*exp(t*(sqrt(6) + 3)) - Rational(5, 3))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t), x(t) + y(t) + 81), Eq(diff(y(t),t), -2*x(t) + y(t) + 23))
-    sol = [Eq(x(t), (C1*sin(sqrt(2)*t) + C2*cos(sqrt(2)*t))*exp(t) - S(58)/3), \
-    Eq(y(t), (sqrt(2)*C1*cos(sqrt(2)*t) - sqrt(2)*C2*sin(sqrt(2)*t))*exp(t) - S(185)/3)]
+    sol = [Eq(x(t), (C1*sin(sqrt(2)*t) + C2*cos(sqrt(2)*t))*exp(t) - Rational(58, 3)), \
+    Eq(y(t), (sqrt(2)*C1*cos(sqrt(2)*t) - sqrt(2)*C2*sin(sqrt(2)*t))*exp(t) - Rational(185, 3))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
@@ -518,10 +528,10 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + (5*t+9*t**2)*y(t)))
-    sol = [Eq(x(t), (C1*exp((-sqrt(77)/2 + S(9)/2)*(Integral(t**2, t)).doit()) + \
-    C2*exp((sqrt(77)/2 + S(9)/2)*(Integral(t**2, t)).doit()))*exp((Integral(5*t, t)).doit())), \
-    Eq(y(t), (C1*(-sqrt(77)/2 + S(9)/2)*exp((-sqrt(77)/2 + S(9)/2)*(Integral(t**2, t)).doit()) + \
-    C2*(sqrt(77)/2 + S(9)/2)*exp((sqrt(77)/2 + S(9)/2)*(Integral(t**2, t)).doit()))*exp((Integral(5*t, t)).doit()))]
+    sol = [Eq(x(t), (C1*exp((-sqrt(77)/2 + Rational(9, 2))*(Integral(t**2, t)).doit()) + \
+    C2*exp((sqrt(77)/2 + Rational(9, 2))*(Integral(t**2, t)).doit()))*exp((Integral(5*t, t)).doit())), \
+    Eq(y(t), (C1*(-sqrt(77)/2 + Rational(9, 2))*exp((-sqrt(77)/2 + Rational(9, 2))*(Integral(t**2, t)).doit()) + \
+    C2*(sqrt(77)/2 + Rational(9, 2))*exp((sqrt(77)/2 + Rational(9, 2))*(Integral(t**2, t)).doit()))*exp((Integral(5*t, t)).doit()))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t,t), 5*x(t) + 43*y(t)), Eq(diff(y(t),t,t), x(t) + 9*y(t)))
@@ -535,24 +545,24 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t,t), 8*x(t)+3*y(t)+31), Eq(diff(y(t),t,t), 9*x(t)+7*y(t)+12))
-    root0 = -sqrt(-sqrt(109)/2 + S(15)/2)
-    root1 = sqrt(-sqrt(109)/2 + S(15)/2)
-    root2 = -sqrt(sqrt(109)/2 + S(15)/2)
-    root3 = sqrt(sqrt(109)/2 + S(15)/2)
-    sol = [Eq(x(t), 3*C1*exp(t*root0) + 3*C2*exp(t*root1) + 3*C3*exp(t*root2) + 3*C4*exp(t*root3) - S(181)/29), \
+    root0 = -sqrt(-sqrt(109)/2 + Rational(15, 2))
+    root1 = sqrt(-sqrt(109)/2 + Rational(15, 2))
+    root2 = -sqrt(sqrt(109)/2 + Rational(15, 2))
+    root3 = sqrt(sqrt(109)/2 + Rational(15, 2))
+    sol = [Eq(x(t), 3*C1*exp(t*root0) + 3*C2*exp(t*root1) + 3*C3*exp(t*root2) + 3*C4*exp(t*root3) - Rational(181, 29)), \
     Eq(y(t), C1*(root0**2 - 8)*exp(t*root0) + C2*(root1**2 - 8)*exp(t*root1) + \
-    C3*(root2**2 - 8)*exp(t*root2) + C4*(root3**2 - 8)*exp(t*root3) + S(183)/29)]
+    C3*(root2**2 - 8)*exp(t*root2) + C4*(root3**2 - 8)*exp(t*root3) + Rational(183, 29))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t,t) - 9*diff(y(t),t) + 7*x(t),0), Eq(diff(y(t),t,t) + 9*diff(x(t),t) + 7*y(t),0))
-    sol = [Eq(x(t), C1*cos(t*(S(9)/2 + sqrt(109)/2)) + C2*sin(t*(S(9)/2 + sqrt(109)/2)) + \
-    C3*cos(t*(-sqrt(109)/2 + S(9)/2)) + C4*sin(t*(-sqrt(109)/2 + S(9)/2))), Eq(y(t), -C1*sin(t*(S(9)/2 + sqrt(109)/2)) \
-    + C2*cos(t*(S(9)/2 + sqrt(109)/2)) - C3*sin(t*(-sqrt(109)/2 + S(9)/2)) + C4*cos(t*(-sqrt(109)/2 + S(9)/2)))]
+    sol = [Eq(x(t), C1*cos(t*(Rational(9, 2) + sqrt(109)/2)) + C2*sin(t*(Rational(9, 2) + sqrt(109)/2)) + \
+    C3*cos(t*(-sqrt(109)/2 + Rational(9, 2))) + C4*sin(t*(-sqrt(109)/2 + Rational(9, 2)))), Eq(y(t), -C1*sin(t*(Rational(9, 2) + sqrt(109)/2)) \
+    + C2*cos(t*(Rational(9, 2) + sqrt(109)/2)) - C3*sin(t*(-sqrt(109)/2 + Rational(9, 2))) + C4*cos(t*(-sqrt(109)/2 + Rational(9, 2))))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t,t), 9*t*diff(y(t),t)-9*y(t)), Eq(diff(y(t),t,t),7*t*diff(x(t),t)-7*x(t)))
-    I1 = sqrt(6)*7**(S(1)/4)*sqrt(pi)*erfi(sqrt(6)*7**(S(1)/4)*t/2)/2 - exp(3*sqrt(7)*t**2/2)/t
-    I2 = -sqrt(6)*7**(S(1)/4)*sqrt(pi)*erf(sqrt(6)*7**(S(1)/4)*t/2)/2 - exp(-3*sqrt(7)*t**2/2)/t
+    I1 = sqrt(6)*7**Rational(1, 4)*sqrt(pi)*erfi(sqrt(6)*7**Rational(1, 4)*t/2)/2 - exp(3*sqrt(7)*t**2/2)/t
+    I2 = -sqrt(6)*7**Rational(1, 4)*sqrt(pi)*erf(sqrt(6)*7**Rational(1, 4)*t/2)/2 - exp(-3*sqrt(7)*t**2/2)/t
     sol = [Eq(x(t), C3*t + t*(9*C1*I1 + 9*C2*I2)), Eq(y(t), C4*t + t*(3*sqrt(7)*C1*I1 - 3*sqrt(7)*C2*I2))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
@@ -585,17 +595,17 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0, 0])
 
     eq = (Eq(diff(x(t),t),x(t)*y(t)**3), Eq(diff(y(t),t),y(t)**5))
-    sol = [Eq(x(t), C1*exp((-1/(4*C2 + 4*t))**(-S(1)/4))), Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), C1*exp(-1/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), C1*exp(-I/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), C1*exp(I/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
+    sol = [Eq(x(t), C1*exp((-1/(4*C2 + 4*t))**(Rational(-1, 4)))), Eq(y(t), -(-1/(4*C2 + 4*t))**Rational(1, 4)), \
+    Eq(x(t), C1*exp(-1/(-1/(4*C2 + 4*t))**Rational(1, 4))), Eq(y(t), (-1/(4*C2 + 4*t))**Rational(1, 4)), \
+    Eq(x(t), C1*exp(-I/(-1/(4*C2 + 4*t))**Rational(1, 4))), Eq(y(t), -I*(-1/(4*C2 + 4*t))**Rational(1, 4)), \
+    Eq(x(t), C1*exp(I/(-1/(4*C2 + 4*t))**Rational(1, 4))), Eq(y(t), I*(-1/(4*C2 + 4*t))**Rational(1, 4))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t), exp(3*x(t))*y(t)**3),Eq(diff(y(t),t), y(t)**5))
-    sol = [Eq(x(t), -log(C1 - 3/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), -log(C1 + 3/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), -log(C1 + 3*I/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)), \
-    Eq(x(t), -log(C1 - 3*I/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
+    sol = [Eq(x(t), -log(C1 - 3/(-1/(4*C2 + 4*t))**Rational(1, 4))/3), Eq(y(t), -(-1/(4*C2 + 4*t))**Rational(1, 4)), \
+    Eq(x(t), -log(C1 + 3/(-1/(4*C2 + 4*t))**Rational(1, 4))/3), Eq(y(t), (-1/(4*C2 + 4*t))**Rational(1, 4)), \
+    Eq(x(t), -log(C1 + 3*I/(-1/(4*C2 + 4*t))**Rational(1, 4))/3), Eq(y(t), -I*(-1/(4*C2 + 4*t))**Rational(1, 4)), \
+    Eq(x(t), -log(C1 - 3*I/(-1/(4*C2 + 4*t))**Rational(1, 4))/3), Eq(y(t), I*(-1/(4*C2 + 4*t))**Rational(1, 4))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
@@ -754,7 +764,7 @@ def test_classify_ode():
         'nth_algebraic_Integral',
         'Liouville_Integral',
         )
-    assert classify_ode(f(x), f(x)) == ()
+    assert classify_ode(f(x), f(x)) == ('nth_algebraic', 'nth_algebraic_Integral')
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == (
         'nth_algebraic',
         'separable',
@@ -769,10 +779,21 @@ def test_classify_ode():
         '1st_linear_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
-    assert classify_ode(f(x).diff(x)**2, f(x)) == (
-        'nth_algebraic',
-        'lie_group',
-        'nth_algebraic_Integral')
+    assert classify_ode(f(x).diff(x)**2, f(x)) == ('nth_algebraic',
+         'separable',
+         '1st_linear',
+         '1st_homogeneous_coeff_best',
+         '1st_homogeneous_coeff_subs_indep_div_dep',
+         '1st_homogeneous_coeff_subs_dep_div_indep',
+         '1st_power_series',
+         'lie_group',
+         'nth_linear_constant_coeff_homogeneous',
+         'nth_linear_euler_eq_homogeneous',
+         'nth_algebraic_Integral',
+         'separable_Integral',
+         '1st_linear_Integral',
+         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
+         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     # issue 4749: f(x) should be cleared from highest derivative before classifying
     a = classify_ode(Eq(f(x).diff(x) + f(x), x), f(x))
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
@@ -787,7 +808,26 @@ def test_classify_ode():
         'Bernoulli_Integral',
         'almost_linear_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
-    assert b == c != ()
+    assert b == ('factorable',
+         '1st_linear',
+         'Bernoulli',
+         '1st_power_series',
+         'lie_group',
+         'nth_linear_constant_coeff_undetermined_coefficients',
+         'nth_linear_constant_coeff_variation_of_parameters',
+         '1st_linear_Integral',
+         'Bernoulli_Integral',
+         'nth_linear_constant_coeff_variation_of_parameters_Integral')
+    assert c == ('1st_linear',
+         'Bernoulli',
+         '1st_power_series',
+         'lie_group',
+         'nth_linear_constant_coeff_undetermined_coefficients',
+         'nth_linear_constant_coeff_variation_of_parameters',
+         '1st_linear_Integral',
+         'Bernoulli_Integral',
+         'nth_linear_constant_coeff_variation_of_parameters_Integral')
+
     assert classify_ode(
         2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
     ) == ('Bernoulli', 'almost_linear', 'lie_group',
@@ -827,13 +867,14 @@ def test_classify_ode():
                         prep=True) == ans
 
     assert classify_ode(Eq(2*x**3*f(x).diff(x), 0), f(x)) == \
-        ('nth_algebraic', 'separable', '1st_linear', '1st_power_series',
+        ('factorable', 'nth_algebraic', 'separable', '1st_linear', '1st_power_series',
          'lie_group', 'nth_linear_euler_eq_homogeneous',
          'nth_algebraic_Integral', 'separable_Integral',
          '1st_linear_Integral')
 
+
     assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
-        ('nth_algebraic', 'separable', '1st_power_series', 'lie_group',
+        ('factorable', 'nth_algebraic', 'separable', '1st_power_series', 'lie_group',
                 'nth_algebraic_Integral', 'separable_Integral')
     # test issue 13864
     assert classify_ode(Eq(diff(f(x), x) - f(x)**x, 0), f(x)) == \
@@ -949,7 +990,7 @@ def test_classify_sysode():
     x, y, z = symbols('x, y, z', cls=Function)
     t = symbols('t')
     x1 = diff(x(t),t) ; y1 = diff(y(t),t) ; z1 = diff(z(t),t)
-    x2 = diff(x(t),t,t) ; y2 = diff(y(t),t,t) ; z2 = diff(z(t),t,t)
+    x2 = diff(x(t),t,t) ; y2 = diff(y(t),t,t)
 
     eq1 = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
     sol1 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): -5*t, (1, x(t), 1): 0, (0, x(t), 1): 1, \
@@ -1098,13 +1139,13 @@ def test_solve_ics():
     assert dsolve(eq, f(x), ics={f(1): 0}) == [Eq(f(x),
         -sqrt(x - 1)/x), Eq(f(x), sqrt(x - 1)/x)]
     assert dsolve(eq, f(x), ics={f(x).diff(x).subs(x, 1): 0}) == [Eq(f(x),
-        -sqrt(x - S(1)/2)/x), Eq(f(x), sqrt(x - S(1)/2)/x)]
+        -sqrt(x - S.Half)/x), Eq(f(x), sqrt(x - S.Half)/x)]
 
     eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
     assert dsolve(eq, f(x),
-        ics={f(0):1}, hint='1st_exact', simplify=False) == Eq(x*cos(f(x)) + f(x)**3/3, S(1)/3)
+        ics={f(0):1}, hint='1st_exact', simplify=False) == Eq(x*cos(f(x)) + f(x)**3/3, Rational(1, 3))
     assert dsolve(eq, f(x),
-        ics={f(0):1}, hint='1st_exact', simplify=True) == Eq(x*cos(f(x)) + f(x)**3/3, S(1)/3)
+        ics={f(0):1}, hint='1st_exact', simplify=True) == Eq(x*cos(f(x)) + f(x)**3/3, Rational(1, 3))
 
     assert solve_ics([Eq(f(x), C1*exp(x))], [f(x)], [C1], {f(0): 1}) == {C1: 1}
     assert solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2],
@@ -1118,10 +1159,10 @@ def test_solve_ics():
 
     # Some more complicated tests Refer to PR #16098
 
-    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0, f(x).diff(x).subs(x, 1):0}) == \
-        [Eq(f(x), 0), Eq(f(x), x ** 3 / 6 - x / 2)]
-    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0}) == \
-        [Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)]
+    assert set(dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0, f(x).diff(x).subs(x, 1):0})) == \
+        {Eq(f(x), 0), Eq(f(x), x ** 3 / 6 - x / 2)}
+    assert set(dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0})) == \
+        {Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)}
 
     K, r, f0 = symbols('K r f0')
     sol = Eq(f(x), K*f0*exp(r*x)/((-K + f0)*(f0*exp(r*x)/(-K + f0) - 1)))
@@ -1129,10 +1170,10 @@ def test_solve_ics():
 
 
     #Order dependent issues Refer to PR #16098
-    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(x).diff(x).subs(x,0):0, f(0):0}) == \
-        [Eq(f(x), 0), Eq(f(x), x ** 3 / 6)]
-    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0, f(x).diff(x).subs(x,0):0}) == \
-        [Eq(f(x), 0), Eq(f(x), x ** 3 / 6)]
+    assert set(dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(x).diff(x).subs(x,0):0, f(0):0})) == \
+        {Eq(f(x), 0), Eq(f(x), x ** 3 / 6)}
+    assert set(dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0, f(x).diff(x).subs(x,0):0})) == \
+        {Eq(f(x), 0), Eq(f(x), x ** 3 / 6)}
 
     # XXX: Ought to be ValueError
     raises(ValueError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1, f(pi): 1}))
@@ -1214,8 +1255,8 @@ def test_old_ode_tests():
     eq10 = Eq(3*f(x).diff(x) - 1, 0)
     eq11 = Eq(x*f(x).diff(x) - 1, 0)
     sol1 = Eq(f(x), C1)
-    sol2 = Eq(f(x), C1 + 5*x/3)
-    sol3 = Eq(f(x), C1 + 5*x/3)
+    sol2 = Eq(f(x), C1 + x*Rational(5, 3))
+    sol3 = Eq(f(x), C1 + x*Rational(5, 3))
     sol4 = Eq(f(x), C1*sin(x/3) + C2*cos(x/3))
     sol5 = Eq(f(x), C1*exp(-x/3) + C2*exp(x/3))
     sol6 = Eq(f(x), (C1 - cos(x))/x**3)
@@ -1657,7 +1698,7 @@ def test_nth_linear_constant_coeff_homogeneous():
     sol2 = Eq(f(x), (C1 + C2*exp(x))*exp(x))
     sol3 = Eq(f(x), C1*exp(x) + C2*exp(-x))
     sol4 = Eq(f(x), C1 + C2*exp(-3*x) + C3*exp(2*x))
-    sol5 = Eq(f(x), C1*exp(x/2) + C2*exp(4*x/3))
+    sol5 = Eq(f(x), C1*exp(x/2) + C2*exp(x*Rational(4, 3)))
     sol6 = Eq(f(x), C1*exp(x*(-1 + sqrt(2))) + C2*exp(x*(-sqrt(2) - 1)))
     sol7 = Eq(f(x),
         C1*exp(3*x) + C2*exp(x*(-2 - sqrt(2))) + C3*exp(x*(-2 + sqrt(2))))
@@ -1679,7 +1720,7 @@ def test_nth_linear_constant_coeff_homogeneous():
     sol18 = Eq(f(x), C1 + C2*x + C3*x**2 + C4*exp(-3*x))
     sol19 = Eq(f(x), C1 + C2*x + C3*exp(x*sqrt(2)) + C4*exp(-x*sqrt(2)))
     sol20 = Eq(f(x), (C1 + C2*x)*exp(-3*x) + (C3 + C4*x)*exp(2*x))
-    sol21 = Eq(f(x), C1*exp(x/2) + C2*exp(-x) + C3*exp(-x/3) + C4*exp(5*x/6))
+    sol21 = Eq(f(x), C1*exp(x/2) + C2*exp(-x) + C3*exp(-x/3) + C4*exp(x*Rational(5, 6)))
     sol22 = Eq(f(x), (C1 + C2*x)*exp(-2*x) + (C3 + C4*x)*exp(2*x))
     sol23 = Eq(f(x), (C1*sin(2*x) + C2*cos(2*x))*exp(x))
     sol24 = Eq(f(x), (C1*sin(x*sqrt(3)/2) + C2*cos(x*sqrt(3)/2))*exp(x/2))
@@ -1855,7 +1896,7 @@ def test_nth_linear_constant_coeff_homogeneous_irrational():
     our_hint='nth_linear_constant_coeff_homogeneous'
 
     eq = Eq(sqrt(2) * f(x).diff(x,x,x) + f(x).diff(x), 0)
-    sol = Eq(f(x), C1 + C2*sin(2**(S(3)/4)*x/2) + C3*cos(2**(S(3)/4)*x/2))
+    sol = Eq(f(x), C1 + C2*sin(2**Rational(3, 4)*x/2) + C3*cos(2**Rational(3, 4)*x/2))
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint) == sol
     assert dsolve(eq, f(x)) == sol
@@ -1909,7 +1950,6 @@ def test_noncircularized_real_imaginary_parts():
     assert not (i.has(atan2) and r.has(atan2))
 
 
-@XFAIL
 def test_collect_respecting_exponentials():
     # If this test passes, lines 1306-1311 (at the time of this commit)
     # of sympy/solvers/ode.py should be removed.
@@ -1954,7 +1994,7 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(
         x**2*sin(x)*exp(x) + x*sin(x) + x, x
     ) == {
-        'test': True, 'trialset': set([x**2*cos(x)*exp(x), x, cos(x), S(1),
+        'test': True, 'trialset': set([x**2*cos(x)*exp(x), x, cos(x), S.One,
         exp(x)*sin(x), sin(x), x*exp(x)*sin(x), x*cos(x), x*cos(x)*exp(x),
         x*sin(x), cos(x)*exp(x), x**2*exp(x)*sin(x)])}
     assert _undetermined_coefficients_match(4*x*sin(x - 2), x) == {
@@ -1970,7 +2010,7 @@ def test_undetermined_coefficients_match():
     # Below are from Ordinary Differential Equations,
     #                Tenenbaum and Pollard, pg. 231
     assert _undetermined_coefficients_match(S(4), x) == \
-        {'test': True, 'trialset': set([S(1)])}
+        {'test': True, 'trialset': set([S.One])}
     assert _undetermined_coefficients_match(12*exp(x), x) == \
         {'test': True, 'trialset': set([exp(x)])}
     assert _undetermined_coefficients_match(exp(I*x), x) == \
@@ -1980,17 +2020,17 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(cos(x), x) == \
         {'test': True, 'trialset': set([cos(x), sin(x)])}
     assert _undetermined_coefficients_match(8 + 6*exp(x) + 2*sin(x), x) == \
-        {'test': True, 'trialset': set([S(1), cos(x), sin(x), exp(x)])}
+        {'test': True, 'trialset': set([S.One, cos(x), sin(x), exp(x)])}
     assert _undetermined_coefficients_match(x**2, x) == \
-        {'test': True, 'trialset': set([S(1), x, x**2])}
+        {'test': True, 'trialset': set([S.One, x, x**2])}
     assert _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x) == \
         {'test': True, 'trialset': set([x*exp(x), exp(x), exp(-x)])}
     assert _undetermined_coefficients_match(2*exp(2*x)*sin(x), x) == \
         {'test': True, 'trialset': set([exp(2*x)*sin(x), cos(x)*exp(2*x)])}
     assert _undetermined_coefficients_match(x - sin(x), x) == \
-        {'test': True, 'trialset': set([S(1), x, cos(x), sin(x)])}
+        {'test': True, 'trialset': set([S.One, x, cos(x), sin(x)])}
     assert _undetermined_coefficients_match(x**2 + 2*x, x) == \
-        {'test': True, 'trialset': set([S(1), x, x**2])}
+        {'test': True, 'trialset': set([S.One, x, x**2])}
     assert _undetermined_coefficients_match(4*x*sin(x), x) == \
         {'test': True, 'trialset': set([x*cos(x), x*sin(x), cos(x), sin(x)])}
     assert _undetermined_coefficients_match(x*sin(2*x), x) == \
@@ -2001,26 +2041,26 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(2*exp(-x) - x**2*exp(-x), x) == \
         {'test': True, 'trialset': set([x*exp(-x), x**2*exp(-x), exp(-x)])}
     assert _undetermined_coefficients_match(exp(-2*x) + x**2, x) == \
-        {'test': True, 'trialset': set([S(1), x, x**2, exp(-2*x)])}
+        {'test': True, 'trialset': set([S.One, x, x**2, exp(-2*x)])}
     assert _undetermined_coefficients_match(x*exp(-x), x) == \
         {'test': True, 'trialset': set([x*exp(-x), exp(-x)])}
     assert _undetermined_coefficients_match(x + exp(2*x), x) == \
-        {'test': True, 'trialset': set([S(1), x, exp(2*x)])}
+        {'test': True, 'trialset': set([S.One, x, exp(2*x)])}
     assert _undetermined_coefficients_match(sin(x) + exp(-x), x) == \
         {'test': True, 'trialset': set([cos(x), sin(x), exp(-x)])}
     assert _undetermined_coefficients_match(exp(x), x) == \
         {'test': True, 'trialset': set([exp(x)])}
     # converted from sin(x)**2
-    assert _undetermined_coefficients_match(S(1)/2 - cos(2*x)/2, x) == \
-        {'test': True, 'trialset': set([S(1), cos(2*x), sin(2*x)])}
+    assert _undetermined_coefficients_match(S.Half - cos(2*x)/2, x) == \
+        {'test': True, 'trialset': set([S.One, cos(2*x), sin(2*x)])}
     # converted from exp(2*x)*sin(x)**2
     assert _undetermined_coefficients_match(
-        exp(2*x)*(S(1)/2 + cos(2*x)/2), x
+        exp(2*x)*(S.Half + cos(2*x)/2), x
     ) == {
         'test': True, 'trialset': set([exp(2*x)*sin(2*x), cos(2*x)*exp(2*x),
         exp(2*x)])}
     assert _undetermined_coefficients_match(2*x + sin(x) + cos(x), x) == \
-        {'test': True, 'trialset': set([S(1), x, cos(x), sin(x)])}
+        {'test': True, 'trialset': set([S.One, x, cos(x), sin(x)])}
     # converted from sin(2*x)*sin(x)
     assert _undetermined_coefficients_match(cos(x)/2 - cos(3*x)/2, x) == \
         {'test': True, 'trialset': set([cos(x), cos(3*x), sin(x), sin(3*x)])}
@@ -2061,9 +2101,9 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     eq22 = f2 + f(x) - sin(x) - exp(-x)
     eq23 = f(x).diff(x, 3) - 3*f2 + 3*f(x).diff(x) - f(x) - exp(x)
     # sin(x)**2
-    eq24 = f2 + f(x) - S(1)/2 - cos(2*x)/2
+    eq24 = f2 + f(x) - S.Half - cos(2*x)/2
     # exp(2*x)*sin(x)**2
-    eq25 = f(x).diff(x, 3) - f(x).diff(x) - exp(2*x)*(S(1)/2 - cos(2*x)/2)
+    eq25 = f(x).diff(x, 3) - f(x).diff(x) - exp(2*x)*(S.Half - cos(2*x)/2)
     eq26 = (f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x -
         sin(x) - cos(x))
     # sin(2*x)*sin(x), skip 3127 for now, match bug
@@ -2090,12 +2130,12 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol16 = Eq(f(x), (C1 + x/16)*sin(2*x) + (C2 - x**2/8)*cos(2*x))
     sol17 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
     sol18 = Eq(f(x), (C1 + C2*x + C3*x**2 - x**5/60 + x**3/3)*exp(-x))
-    sol19 = Eq(f(x), S(7)/4 - 3*x/2 + x**2/2 + C1*exp(-x) + (C2 - x)*exp(-2*x))
+    sol19 = Eq(f(x), Rational(7, 4) - x*Rational(3, 2) + x**2/2 + C1*exp(-x) + (C2 - x)*exp(-2*x))
     sol20 = Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)
-    sol21 = Eq(f(x), -S(1)/36 - x/6 + C1*exp(-3*x) + (C2 + x/5)*exp(2*x))
+    sol21 = Eq(f(x), Rational(-1, 36) - x/6 + C1*exp(-3*x) + (C2 + x/5)*exp(2*x))
     sol22 = Eq(f(x), C1*sin(x) + (C2 - x/2)*cos(x) + exp(-x)/2)
     sol23 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
-    sol24 = Eq(f(x), S(1)/2 - cos(2*x)/6 + C1*sin(x) + C2*cos(x))
+    sol24 = Eq(f(x), S.Half - cos(2*x)/6 + C1*sin(x) + C2*cos(x))
     sol25 = Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) +
                (-21*sin(2*x) + 27*cos(2*x) + 130)*exp(2*x)/1560)
     sol26 = Eq(f(x),
@@ -2190,7 +2230,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
 def test_issue_5787():
     # This test case is to show the classification of imaginary constants under
     # nth_linear_constant_coeff_undetermined_coefficients
-    eq = Eq(diff(f(x), x), I*f(x) + S(1)/2 - I)
+    eq = Eq(diff(f(x), x), I*f(x) + S.Half - I)
     our_hint = 'nth_linear_constant_coeff_undetermined_coefficients'
     assert our_hint in classify_ode(eq)
 
@@ -2358,7 +2398,6 @@ def test_unexpanded_Liouville_ODE():
     assert dsolve(eq2) in (sol2, sol2s)
     assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
 
-
 def test_issue_4785():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
@@ -2382,17 +2421,15 @@ def test_issue_4785():
 def test_issue_4825():
     raises(ValueError, lambda: dsolve(f(x, y).diff(x) - y*f(x, y), f(x)))
     assert classify_ode(f(x, y).diff(x) - y*f(x, y), f(x), dict=True) == \
-        {'default': None, 'order': 0}
+        {'order': 0, 'default': None, 'ordered_hints': ()}
     # See also issue 3793, test Z13.
     raises(ValueError, lambda: dsolve(f(x).diff(x), f(y)))
     assert classify_ode(f(x).diff(x), f(y), dict=True) == \
-        {'default': None, 'order': 0}
+        {'order': 0, 'default': None, 'ordered_hints': ()}
 
 
 def test_constant_renumber_order_issue_5308():
     from sympy.utilities.iterables import variations
-
-    eq = f(x).diff(x) - y - x
 
     assert constant_renumber(C1*x + C2*y) == \
         constant_renumber(C1*y + C2*x) == \
@@ -2565,7 +2602,7 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x)
-    sol = C1*x + C2*x**2 + log(x)/2 + S(3)/4
+    sol = C1*x + C2*x**2 + log(x)/2 + Rational(3, 4)
     sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
@@ -2580,7 +2617,6 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
 
 def test_issue_5095():
     f = Function('f')
-    raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'separable'))
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
 
 
@@ -2592,12 +2628,15 @@ def test_almost_linear():
     d = f(x).diff(x)
     eq = x**2*f(x)**2*d + f(x)**3 + 1
     sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol[0].rhs == (C1*exp(3/x) - 1)**(S(1)/3)
+    assert sol[0].rhs == (C1*exp(3/x) - 1)**Rational(1, 3)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x*f(x)*d + 2*x*f(x)**2 + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol[0].rhs == -sqrt(C1 - 2*Ei(4*x))*exp(-2*x)
+    sol = [
+        Eq(f(x), -sqrt((C1 - 2*Ei(4*x))*exp(-4*x))),
+        Eq(f(x), sqrt((C1 - 2*Ei(4*x))*exp(-4*x)))
+    ]
+    assert set(dsolve(eq, f(x), hint = 'almost_linear')) == set(sol)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x*d + x*f(x) + 1
@@ -2608,7 +2647,7 @@ def test_almost_linear():
 
     eq = x*exp(f(x))*d + exp(f(x)) + 3*x
     sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == log(C1/x - 3*x/2)
+    assert sol.rhs == log(C1/x - x*Rational(3, 2))
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
@@ -2652,7 +2691,7 @@ def test_separable_reduced():
     assert classify_ode(eq) == ('separable_reduced', 'lie_group',
         'separable_reduced_Integral')
     sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
-    assert sol.lhs ==  log(x**2*f(x))/3 + log(x**2*f(x) - S(3)/2)/6
+    assert sol.lhs ==  log(x**2*f(x))/3 + log(x**2*f(x) - Rational(3, 2))/6
     assert sol.rhs == C1 + log(x)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
@@ -2674,7 +2713,7 @@ def test_homogeneous_function():
     f = Function('f')
     eq1 = tan(x + f(x))
     eq2 = sin((3*x)/(4*f(x)))
-    eq3 = cos(3*x/4*f(x))
+    eq3 = cos(x*f(x)*Rational(3, 4))
     eq4 = log((3*x + 4*f(x))/(5*f(x) + 7*x))
     eq5 = exp((2*x**2)/(3*f(x)**2))
     eq6 = log((3*x + 4*f(x))/(5*f(x) + 7*x) + exp((2*x**2)/(3*f(x)**2)))
@@ -2695,7 +2734,7 @@ def test_linear_coeff_match():
     eq1 = sin(rat) + cos(rat.expand())
     eq2 = rat
     eq3 = log(sin(rat))
-    ans = (4, -S(13)/3)
+    ans = (4, Rational(-13, 3))
     assert _linear_coeff_match(eq1, f(x)) == ans
     assert _linear_coeff_match(eq2, f(x)) == ans
     assert _linear_coeff_match(eq3, f(x)) == ans
@@ -2716,7 +2755,7 @@ def test_linear_coeff_match():
 
 def test_linear_coefficients():
     f = Function('f')
-    sol = Eq(f(x), C1/(x**2 + 6*x + 9) - S(3)/2)
+    sol = Eq(f(x), C1/(x**2 + 6*x + 9) - Rational(3, 2))
     eq = f(x).diff(x) + (3 + 2*f(x))/(x + 3)
     assert dsolve(eq, hint='linear_coefficients') == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
@@ -2768,7 +2807,7 @@ def test_heuristic1():
     eq1 = f(x).diff(x) + a*f(x) - c*exp(b*x)
     eq2 = f(x).diff(x) + 2*x*f(x) - x*exp(-x**2)
     eq3 = (1 + 2*x)*df + 2 - 4*exp(-f(x))
-    eq4 = f(x).diff(x) - (a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(S(-1)/2)
+    eq4 = f(x).diff(x) - (a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**Rational(-1, 2)
     eq5 = x**2*df - f(x) + x**2*exp(x - (1/x))
     eqlist = [eq, eq1, eq2, eq3, eq4, eq5]
 
@@ -2893,12 +2932,14 @@ def test_heuristic_abaco2_unique_unknown():
     i = infinitesimals(eq, hint='abaco2_unique_unknown')
     assert checkinfsol(eq, i)[0]
 
+
 def test_heuristic_linear():
     a, b, m, n = symbols("a b m n")
 
     eq = x**(n*(m + 1) - m)*(f(x).diff(x)) - a*f(x)**n -b*x**(n*(m + 1))
     i = infinitesimals(eq, hint='linear')
     assert checkinfsol(eq, i)[0]
+
 
 @XFAIL
 def test_kamke():
@@ -2909,19 +2950,25 @@ def test_kamke():
 
 
 def test_series():
-    # FIXME: Maybe there should be a way to check series solutions
-    # checkodesol doesn't work with them.
     C1 = Symbol("C1")
     eq = f(x).diff(x) - f(x)
-    assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
-        C1 + C1*x + C1*x**2/2 + C1*x**3/6 + C1*x**4/24 +
-        C1*x**5/120 + O(x**6))
+    sol = Eq(f(x), C1 + C1*x + C1*x**2/2 + C1*x**3/6 + C1*x**4/24 +
+            C1*x**5/120 + O(x**6))
+    assert dsolve(eq, hint='1st_power_series') == sol
+    assert checkodesol(eq, sol, order=1)[0]
+
     eq = f(x).diff(x) - x*f(x)
-    assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
-        C1*x**4/8 + C1*x**2/2 + C1 + O(x**6))
+    sol = Eq(f(x), C1*x**4/8 + C1*x**2/2 + C1 + O(x**6))
+    assert dsolve(eq, hint='1st_power_series') == sol
+    assert checkodesol(eq, sol, order=1)[0]
+
     eq = f(x).diff(x) - sin(x*f(x))
     sol = Eq(f(x), (x - 2)**2*(1+ sin(4))*cos(4) + (x - 2)*sin(4) + 2 + O(x**3))
     assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == sol
+    # FIXME: The solution here should be O((x-2)**3) so is incorrect
+    #assert checkodesol(eq, sol, order=1)[0]
+
+
 
 @XFAIL
 @SKIP
@@ -2954,7 +3001,7 @@ def test_lie_group():
 
     eq = Eq(f(x).diff(x), x**2*f(x))
     sol = dsolve(eq, f(x), hint='lie_group')
-    assert sol == Eq(f(x), C1*exp(x**3)**(S(1)/3))
+    assert sol == Eq(f(x), C1*exp(x**3)**Rational(1, 3))
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x) + a*f(x) - c*exp(b*x)
@@ -3007,10 +3054,24 @@ def test_lie_group():
     assert sol == dsolve(eq, hint='lie_group')
     assert checkodesol(eq, sol) == (True, 0)
 
+    eq = (f(x).diff(x)-f(x)) * (f(x).diff(x)+f(x))
+    sol = [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
+    assert set(sol) == set(dsolve(eq, hint='lie_group'))
+    assert checkodesol(eq, sol[0]) == (True, 0)
+    assert checkodesol(eq, sol[1]) == (True, 0)
+
+    eq = f(x).diff(x) * (f(x).diff(x) - f(x))
+    sol = [Eq(f(x), C1*exp(x)), Eq(f(x), C1)]
+    assert set(sol) == set(dsolve(eq, hint='lie_group'))
+    assert checkodesol(eq, sol[0]) == (True, 0)
+    assert checkodesol(eq, sol[1]) == (True, 0)
+
+
 @XFAIL
 def test_lie_group_issue15219():
     eqn = exp(f(x).diff(x)-f(x))
     assert 'lie_group' not in classify_ode(eqn, f(x))
+
 
 def test_user_infinitesimals():
     x = Symbol("x") # assuming x is real generates an error
@@ -3019,8 +3080,6 @@ def test_user_infinitesimals():
     infinitesimals = {'xi':sqrt(f(x) - 1)/sqrt(f(x) + 1), 'eta':0}
     assert dsolve(eq, hint='lie_group', **infinitesimals) == sol
     assert checkodesol(eq, sol) == (True, 0)
-
-    raises(ValueError, lambda: dsolve(eq, hint='lie_group', xi=0, eta=f(x)))
 
 
 def test_issue_7081():
@@ -3032,66 +3091,165 @@ def test_issue_7081():
 
 @slow
 def test_2nd_power_series_ordinary():
-    # FIXME: Maybe there should be a way to check series solutions
-    # checkodesol doesn't work with them.
     C1, C2 = symbols("C1 C2")
+
     eq = f(x).diff(x, 2) - x*f(x)
-    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    assert dsolve(eq) == Eq(f(x),
-        C2*(x**3/6 + 1) + C1*x*(x**3/12 + 1) + O(x**6))
-    assert dsolve(eq, x0=-2) == Eq(f(x),
-        C2*((x + 2)**4/6 + (x + 2)**3/6 - (x + 2)**2 + 1)
+    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary')
+    sol = Eq(f(x), C2*(x**3/6 + 1) + C1*x*(x**3/12 + 1) + O(x**6))
+    assert dsolve(eq, hint='2nd_power_series_ordinary') == sol
+    assert checkodesol(eq, sol) == (True, 0)
+
+    sol = Eq(f(x), C2*((x + 2)**4/6 + (x + 2)**3/6 - (x + 2)**2 + 1)
         + C1*(x + (x + 2)**4/12 - (x + 2)**3/3 + S(2))
         + O(x**6))
-    assert dsolve(eq, n=2) == Eq(f(x), C2*x + C1 + O(x**2))
+    assert dsolve(eq, hint='2nd_power_series_ordinary', x0=-2) == sol
+    # FIXME: Solution should be O((x+2)**6)
+    # assert checkodesol(eq, sol) == (True, 0)
+
+    sol = Eq(f(x), C2*x + C1 + O(x**2))
+    assert dsolve(eq, hint='2nd_power_series_ordinary', n=2) == sol
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    assert dsolve(eq) == Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x
-        + O(x**6))
+    sol = Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x + O(x**6))
+    assert dsolve(eq) == sol
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    assert dsolve(eq) == Eq(f(x), C2*(
-        x**4/8 - x**2/2 + 1) + C1*x*(-x**2/3 + 1) + O(x**6))
+    sol = Eq(f(x), C2*(x**4/8 - x**2/2 + 1) + C1*x*(-x**2/3 + 1) + O(x**6))
+    assert dsolve(eq) == sol
+    # FIXME: checkodesol fails for this solution...
+    # assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + f(x).diff(x) - x*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    assert dsolve(eq) == Eq(f(x), C2*(
-        -x**4/24 + x**3/6 + 1) + C1*x*(x**3/24 + x**2/6 - x/2
-        + 1) + O(x**6))
+    sol = Eq(f(x), C2*(-x**4/24 + x**3/6 + 1)
+            + C1*x*(x**3/24 + x**2/6 - x/2 + 1) + O(x**6))
+    assert dsolve(eq) == sol
+    # FIXME: checkodesol fails for this solution...
+    # assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*f(x)
-    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    assert dsolve(eq, n=7) == Eq(f(x), C2*(
-        x**6/180 - x**3/6 + 1) + C1*x*(-x**3/12 + 1) + O(x**7))
+    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary')
+    sol = Eq(f(x), C2*(x**6/180 - x**3/6 + 1) + C1*x*(-x**3/12 + 1) + O(x**7))
+    assert dsolve(eq, hint='2nd_power_series_ordinary', n=7) == sol
+    assert checkodesol(eq, sol) == (True, 0)
 
+def test_Airy_equation():
+    eq = f(x).diff(x, 2) - x*f(x)
+    sol = Eq(f(x), C1*airyai(x) + C2*airybi(x))
+    sols = constant_renumber(sol)
+    assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
+    assert checkodesol(eq, sol) == (True, 0)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_airy') in (sol, sols)
+
+    eq = f(x).diff(x, 2) + 2*x*f(x)
+    sol = Eq(f(x), C1*airyai(-2**(S(1)/3)*x) + C2*airybi(-2**(S(1)/3)*x))
+    sols = constant_renumber(sol)
+    assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
+    assert checkodesol(eq, sol) == (True, 0)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_airy') in (sol, sols)
 
 def test_2nd_power_series_regular():
-    # FIXME: Maybe there should be a way to check series solutions
-    # checkodesol doesn't work with them.
     C1, C2 = symbols("C1 C2")
     eq = x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*x**2*(-16*x**3/9 +
-        4*x**2 - 4*x + 1) + O(x**6))
+    sol = Eq(f(x), C1*x**2*(-16*x**3/9 + 4*x**2 - 4*x + 1) + O(x**6))
+    assert dsolve(eq, hint='2nd_power_series_regular') == sol
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = 4*x**2*(f(x).diff(x, 2)) -8*x**2*(f(x).diff(x)) + (4*x**2 +
         1)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*sqrt(x)*(
-        x**4/24 + x**3/6 + x**2/2 + x + 1) + O(x**6))
+    sol = Eq(f(x), C1*sqrt(x)*(x**4/24 + x**3/6 + x**2/2 + x + 1) + O(x**6))
+    assert dsolve(eq, hint='2nd_power_series_regular') == sol
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = x**2*(f(x).diff(x, 2)) - x**2*(f(x).diff(x)) + (
         x**2 - 2)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*(-x**6/720 - 3*x**5/80 - x**4/8 +
-        x**2/2 + x/2 + 1)/x + C2*x**2*(-x**3/60 + x**2/20 + x/2 + 1)
-        + O(x**6))
+    sol = Eq(f(x), C1*(-x**6/720 - 3*x**5/80 - x**4/8 + x**2/2 + x/2 + 1)/x +
+            C2*x**2*(-x**3/60 + x**2/20 + x/2 + 1) + O(x**6))
+    assert dsolve(eq) == sol
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - Rational(1, 4))*f(x)
+    sol = Eq(f(x), C1*(x**4/24 - x**2/2 + 1)/sqrt(x) +
+        C2*sqrt(x)*(x**4/120 - x**2/6 + 1) + O(x**6))
+    assert dsolve(eq, hint='2nd_power_series_regular') == sol
+    assert checkodesol(eq, sol) == (True, 0)
+
+def test_2nd_linear_bessel_equation():
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 4)*f(x)
+    sol = Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))
+    sols = constant_renumber(sol)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 +25)*f(x)
+    sol = Eq(f(x), C1*besselj(5*I, x) + C2*bessely(5*I, x))
+    sols = constant_renumber(sol)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2)*f(x)
+    sol = Eq(f(x), C1*besselj(0, x) + C2*bessely(0, x))
+    sols = constant_renumber(sol)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (81*x**2 -S(1)/9)*f(x)
+    sol = Eq(f(x), C1*besselj(S(1)/3, 9*x) + C2*bessely(S(1)/3, 9*x))
+    sols = constant_renumber(sol)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**4 - 4)*f(x)
+    sol = Eq(f(x), C1*besselj(1, x**2/2) + C2*bessely(1, x**2/2))
+    sols = constant_renumber(sol)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = x**2*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) + (x**4 - 4)*f(x)
+    sol = Eq(f(x), (C1*besselj(sqrt(17)/4, x**2/2) + C2*bessely(sqrt(17)/4, x**2/2))/sqrt(x))
+    sols = constant_renumber(sol)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - S(1)/4)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*(x**4/24 - x**2/2 + 1)/sqrt(x) +
-        C2*sqrt(x)*(x**4/120 - x**2/6 + 1) + O(x**6))
+    sol = Eq(f(x), C1*besselj(S(1)/2, x) + C2*bessely(S(1)/2, x))
+    sols = constant_renumber(sol)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x)
+    sol = Eq(f(x), x**2*(C1*besselj(0, 4*sqrt(x)) + C2*bessely(0, 4*sqrt(x))))
+    sols = constant_renumber(sol)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
     eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
-    assert dsolve(eq) == Eq(f(x), C2*(-x**4/2 + 1) + C1*x**2 + O(x**6))
+    sol = Eq(f(x), x*(C1*besselj(S(1)/2, x**2) + C2*bessely(S(1)/2, x**2)))
+    sols = constant_renumber(sol)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = (x-2)**2*(f(x).diff(x, 2)) - (x-2)*f(x).diff(x) + 4*(x-2)**2*f(x)
+    sol = Eq(f(x), (x - 2)*(C1*besselj(1, 2*x - 4) + C2*bessely(1, 2*x - 4)))
+    sols = constant_renumber(sol)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
 def test_issue_7093():
     x = Symbol("x") # assuming x is real leads to an error
@@ -3101,12 +3259,14 @@ def test_issue_7093():
     assert set(dsolve(eq)) == set(sol)
     assert checkodesol(eq, sol) == [(True, 0)] * 2
 
+
 def test_dsolve_linsystem_symbol():
     eps = Symbol('epsilon', positive=True)
     eq1 = (Eq(diff(f(x), x), -eps*g(x)), Eq(diff(g(x), x), eps*f(x)))
     sol1 = [Eq(f(x), -C1*eps*cos(eps*x) - C2*eps*sin(eps*x)),
             Eq(g(x), -C1*eps*sin(eps*x) + C2*eps*cos(eps*x))]
     assert checksysodesol(eq1, sol1) == (True, [0, 0])
+
 
 def test_C1_function_9239():
     t = Symbol('t')
@@ -3118,6 +3278,7 @@ def test_C1_function_9239():
     sol = [Eq(C1(t), 9*C3*exp(6*sqrt(3)*t) + 9*C4*exp(-6*sqrt(3)*t)),
            Eq(C2(t), 6*sqrt(3)*C3*exp(6*sqrt(3)*t) - 6*sqrt(3)*C4*exp(-6*sqrt(3)*t))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
+
 
 def test_issue_15056():
     t = Symbol('t')
@@ -3237,7 +3398,7 @@ def test_nth_order_reducible():
     assert sol == dsolve(eqn, f(x), hint='nth_order_reducible')
 
     eqn = Eq(sqrt(2) * f(x).diff(x,x,x) + f(x).diff(x), 0)
-    sol = Eq(f(x), C1 + C2*sin(2**(S(3)/4)*x/2) + C3*cos(2**(S(3)/4)*x/2))
+    sol = Eq(f(x), C1 + C2*sin(2**Rational(3, 4)*x/2) + C3*cos(2**Rational(3, 4)*x/2))
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert sol == dsolve(eqn, f(x))
     assert sol == dsolve(eqn, f(x), hint='nth_order_reducible')
@@ -3316,8 +3477,8 @@ def test_nth_algebraic():
     eqn = (diff(f(x)) - x)*(diff(f(x)) + x)
     sol = [Eq(f(x), C1 - x**2/2), Eq(f(x), C1 + x**2/2)]
     assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
-    assert sol == dsolve(eqn, f(x))
+    assert set(sol) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
+    assert set(sol) == set(dsolve(eqn, f(x)))
 
     eqn = (1 - sin(f(x))) * f(x).diff(x)
     sol = Eq(f(x), C1)
@@ -3378,19 +3539,16 @@ def test_nth_algebraic_redundant_solutions():
     assert set(sol) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
     assert set(sol) == set(dsolve(eqn, f(x)))
 
-    # This one doesn't work with dsolve at the time of writing but the
-    # redundancy checking code should not remove the algebraic solution.
-    from sympy.solvers.ode import _nth_algebraic_remove_redundant_solutions
     eqn = f(x) + f(x)*f(x).diff(x)
     solns = [Eq(f(x), 0),
              Eq(f(x), C1 - x)]
-    solns_final =  _nth_algebraic_remove_redundant_solutions(eqn, solns, 1, x)
     assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
-    assert set(solns) == set(solns_final)
+    assert set(solns) == set(dsolve(eqn, f(x)))
 
+    from sympy.solvers.ode import _remove_redundant_solutions
     solns = [Eq(f(x), exp(x)),
              Eq(f(x), C1*exp(C2*x))]
-    solns_final =  _nth_algebraic_remove_redundant_solutions(eqn, solns, 2, x)
+    solns_final =  _remove_redundant_solutions(eqn, solns, 2, x)
     assert solns_final == [Eq(f(x), C1*exp(C2*x))]
 
     # This one needs a substitution f' = g.
@@ -3404,16 +3562,6 @@ def test_nth_algebraic_redundant_solutions():
 # These tests can be combined with the above test if they get fixed
 # so that dsolve actually works in all these cases.
 #
-
-# Fails due to division by f(x) eliminating the solution before nth_algebraic
-# is called.
-@XFAIL
-def test_nth_algebraic_find_multiple1():
-    eqn = f(x) + f(x)*f(x).diff(x)
-    solns = [Eq(f(x), 0),
-             Eq(f(x), C1 - x)]
-    assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
-    assert set(solns) == set(dsolve(eqn, f(x)))
 
 
 # prep = True breaks this
@@ -3450,22 +3598,12 @@ def test_nth_algebraic_prep2():
     assert sol == dsolve(eqn, f(x))
 
 
-# This needs a combination of solutions from nth_algebraic and some other
-# method from dsolve
-@XFAIL
-def test_nth_algebraic_find_multiple2():
-    eqn = f(x)**2 + f(x)*f(x).diff(x)
-    solns = [Eq(f(x), 0),
-             Eq(f(x), C1*exp(-x))]
-    assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
-    assert set(solns) == dsolve(eqn, f(x))
-
-
 # Needs to be a way to know how to combine derivatives in the expression
-@XFAIL
 def test_factoring_ode():
+    from sympy import Mul
     eqn = Derivative(x*f(x), x, x, x) + Derivative(f(x), x, x, x)
-    soln = Eq(f(x), (C1*x**2/2 + C2*x + C3 - x)/(1 + x))
+    # 2-arg Mul!
+    soln = Eq(f(x), C1 + C2*x + C3/Mul(2, (x + 1), evaluate=False))
     assert checkodesol(eqn, soln, order=2, solve_for_func=False)[0]
     assert soln == dsolve(eqn, f(x))
 
@@ -3494,3 +3632,139 @@ def test_issue_15913():
 def test_issue_16146():
     raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x), g(x), h(x)]))
     raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x)]))
+
+
+def test_dsolve_remove_redundant_solutions():
+
+    eq = (f(x)-2)*f(x).diff(x)
+    sol = Eq(f(x), C1)
+    assert dsolve(eq) == sol
+
+    eq = (f(x)-sin(x))*(f(x).diff(x, 2))
+    sol = {Eq(f(x), C1 + C2*x), Eq(f(x), sin(x))}
+    assert set(dsolve(eq)) == sol
+
+    eq = (f(x)**2-2*f(x)+1)*f(x).diff(x, 3)
+    sol = Eq(f(x), C1 + C2*x + C3*x**2)
+    assert dsolve(eq) == sol
+
+
+def test_factorable():
+    # Unable to get coverage on this without explicit testing because _desolve
+    # already handles Pow before we get there but that should be disabled in
+    # future so that factorable gets the raw ODE.
+    from sympy.solvers.ode import _ode_factorable_match
+    eq = f(x).diff(x)-1
+    assert _ode_factorable_match(eq**3, f(x), 1) == {'eqns':[eq], 'x0': 1}
+
+    eq = f(x) + f(x)*f(x).diff(x)
+    sols = [Eq(f(x), C1 - x), Eq(f(x), 0)]
+    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sols) == 2*[(True, 0)]
+
+    eq = f(x)*(f(x).diff(x)+f(x)*x+2)
+    sols = [Eq(f(x), (C1 - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2))
+            *exp(-x**2/2)), Eq(f(x), 0)]
+    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sols) == 2*[(True, 0)]
+
+    eq = (f(x).diff(x)+f(x)*x**2)*(f(x).diff(x, 2) + x*f(x))
+    sols = [Eq(f(x), C1*airyai(-x) + C2*airybi(-x)),
+            Eq(f(x), C1*exp(-x**3/3))]
+    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sols[1]) == (True, 0)
+
+    eq = (f(x).diff(x)+f(x)*x**2)*(f(x).diff(x, 2) + f(x))
+    sols = [Eq(f(x), C1*exp(-x**3/3)), Eq(f(x), C1*sin(x) + C2*cos(x))]
+    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sols) == 2*[(True, 0)]
+
+    eq = (f(x).diff(x)**2-1)*(f(x).diff(x)**2-4)
+    sols = [Eq(f(x), C1 - x), Eq(f(x), C1 + x), Eq(f(x), C1 + 2*x), Eq(f(x), C1 - 2*x)]
+    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sols) == 4*[(True, 0)]
+
+    eq = (f(x).diff(x, 2)-exp(f(x)))*f(x).diff(x)
+    sol = Eq(f(x), C1)
+    assert sol == dsolve(eq, f(x), hint='factorable')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = (f(x).diff(x)**2-1)*(f(x)*f(x).diff(x)-1)
+    sol = [Eq(f(x), C1 - x), Eq(f(x), -sqrt(C1 + 2*x)),
+           Eq(f(x), sqrt(C1 + 2*x)), Eq(f(x), C1 + x)]
+    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sol) == 4*[(True, 0)]
+
+    eq = Derivative(f(x), x)**4 - 2*Derivative(f(x), x)**2 + 1
+    sol = [Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
+    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+    eq = f(x)**2*Derivative(f(x), x)**6 - 2*f(x)**2*Derivative(f(x),
+         x)**4 + f(x)**2*Derivative(f(x), x)**2 - 2*f(x)*Derivative(f(x),
+         x)**5 + 4*f(x)*Derivative(f(x), x)**3 - 2*f(x)*Derivative(f(x),
+         x) + Derivative(f(x), x)**4 - 2*Derivative(f(x), x)**2 + 1
+    sol = [Eq(f(x), C1 - x), Eq(f(x), -sqrt(C1 + 2*x)),
+           Eq(f(x), sqrt(C1 + 2*x)), Eq(f(x), C1 + x)]
+    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sol) == 4*[(True, 0)]
+
+    eq = (f(x).diff(x, 2)-exp(f(x)))*(f(x).diff(x, 2)+exp(f(x)))
+    raises(NotImplementedError, lambda: dsolve(eq, hint = 'factorable'))
+
+    eq = x**4*f(x)**2 + 2*x**4*f(x)*Derivative(f(x), (x, 2)) + x**4*Derivative(f(x),
+         (x, 2))**2  + 2*x**3*f(x)*Derivative(f(x), x) + 2*x**3*Derivative(f(x),
+         x)*Derivative(f(x), (x, 2)) - 7*x**2*f(x)**2 - 7*x**2*f(x)*Derivative(f(x),
+         (x, 2)) + x**2*Derivative(f(x), x)**2 - 7*x*f(x)*Derivative(f(x), x) + 12*f(x)**2
+
+    sol = [Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x)), Eq(f(x), C1*besselj(sqrt(3),
+           x) + C2*bessely(sqrt(3), x))]
+
+    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
+    assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+
+def test_issue_17322():
+    eq = (f(x).diff(x)-f(x)) * (f(x).diff(x)+f(x))
+    sol = [Eq(f(x), C1*exp(-x)), Eq(f(x), C1*exp(x))]
+    assert set(sol) == set(dsolve(eq, hint='lie_group'))
+    assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+    eq = f(x).diff(x)*(f(x).diff(x)+f(x))
+    sol = [Eq(f(x), C1), Eq(f(x), C1*exp(-x))]
+    assert set(sol) == set(dsolve(eq, hint='lie_group'))
+    assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+def test_2nd_2F1_hypergeometric():
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (S(3)/2 -2*x)*f(x).diff(x) + 2*f(x)
+    sol = Eq(f(x), C1*x**(S(5)/2)*hyper((S(3)/2, S(1)/2), (S(7)/2,), x) + C2*hyper((-1, -2), (-S(3)/2,), x))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (S(7)/2*x)*f(x).diff(x) + f(x)
+    sol = Eq(f(x), (C1*(1 - x)**(S(5)/2)*hyper((S(1)/2, 2), (S(7)/2,), 1 - x) +
+          C2*hyper((-S(1)/2, -2), (-S(3)/2,), 1 - x))/(x - 1)**(S(5)/2))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (S(3)+ S(7)/2*x)*f(x).diff(x) + f(x)
+    sol = Eq(f(x), (C1*(1 - x)**(S(11)/2)*hyper((S(1)/2, 2), (S(13)/2,), 1 - x) +
+          C2*hyper((-S(7)/2, -5), (-S(9)/2,), 1 - x))/(x - 1)**(S(11)/2))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*(x-1)*f(x).diff(x, 2) + (-1+ S(7)/2*x)*f(x).diff(x) + f(x)
+    sol = Eq(f(x), (C1 + C2*Integral(exp(Integral((1 - x/2)/(x*(x - 1)), x))/(1 -
+          x/2)**2, x))*exp(Integral(1/(x - 1), x)/4)*exp(-Integral(7/(x -
+          1), x)/4)*hyper((S(1)/2, -1), (1,), x))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric_Integral')
+    assert checkodesol(eq, sol) == (True, 0)
+
+
+    eq = -x**(S(5)/7)*(-416*x**(S(9)/7)/9 - 2385*x**(S(5)/7)/49 + S(298)*x/3)*f(x)/(196*(-x**(S(6)/7) +
+         x)**2*(x**(S(6)/7) + x)**2) + Derivative(f(x), (x, 2))
+    sol = Eq(f(x), x**(S(45)/98)*(C1*x**(S(4)/49)*hyper((S(1)/3, -S(1)/2), (S(9)/7,), x**(S(2)/7)) +
+          C2*hyper((S(1)/21, -S(11)/14), (S(5)/7,), x**(S(2)/7)))/(x**(S(2)/7) - 1)**(S(19)/84))
+    assert sol == dsolve(eq, hint='2nd_hypergeometric')
+    # assert checkodesol(eq, sol) == (True, 0) #issue-https://github.com/sympy/sympy/issues/17702

@@ -8,10 +8,9 @@ from sympy.core.add import Add
 from sympy.core.numbers import (I, Integer, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
-from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.elementary.complexes import (Abs, im, re, sign, conjugate)
+from sympy.functions.elementary.complexes import (Abs, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (
@@ -570,6 +569,7 @@ def test_I():
     assert ask(Q.real(z)) is True
 
 
+
 def test_bounded():
     x, y, z = symbols('x,y,z')
     assert ask(Q.finite(x)) is None
@@ -800,7 +800,6 @@ def test_bounded():
         Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.positive(z)) is None
     assert ask(Q.finite(a), Q.finite(x) & Q.positive(y) &
         ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-
     assert ask(Q.finite(a), Q.finite(x) &
         Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
     assert ask(
@@ -1033,9 +1032,9 @@ def test_bounded():
     assert ask(Q.finite(2**x)) is None
     assert ask(Q.finite(2**x), Q.finite(x)) is True
     assert ask(Q.finite(x**x)) is None
-    assert ask(Q.finite(Rational(1, 2) ** x)) is None
-    assert ask(Q.finite(Rational(1, 2) ** x), Q.positive(x)) is True
-    assert ask(Q.finite(Rational(1, 2) ** x), Q.negative(x)) is None
+    assert ask(Q.finite(S.Half ** x)) is None
+    assert ask(Q.finite(S.Half ** x), Q.positive(x)) is True
+    assert ask(Q.finite(S.Half ** x), Q.negative(x)) is None
     assert ask(Q.finite(2**x), Q.negative(x)) is True
     assert ask(Q.finite(sqrt(x))) is None
     assert ask(Q.finite(2**x), ~Q.finite(x)) is False
@@ -1501,7 +1500,7 @@ def test_imaginary():
     assert ask(Q.imaginary(exp(pi*I/2, evaluate=False))) is True
 
     # issue 7886
-    assert ask(Q.imaginary(Pow(x, S.One/4)), Q.real(x) & Q.negative(x)) is False
+    assert ask(Q.imaginary(Pow(x, Rational(1, 4))), Q.real(x) & Q.negative(x)) is False
 
 
 def test_integer():
@@ -1919,8 +1918,8 @@ def test_algebraic():
     assert ask(Q.algebraic(I*sqrt(3))) is True
     assert ask(Q.algebraic(sqrt(1 + I*sqrt(3)))) is True
 
-    assert ask(Q.algebraic((1 + I*sqrt(3)**(S(17)/31)))) is True
-    assert ask(Q.algebraic((1 + I*sqrt(3)**(S(17)/pi)))) is False
+    assert ask(Q.algebraic((1 + I*sqrt(3)**Rational(17, 31)))) is True
+    assert ask(Q.algebraic((1 + I*sqrt(3)**(17/pi)))) is False
 
     for f in [exp, sin, tan, asin, atan, cos]:
         assert ask(Q.algebraic(f(7))) is False
@@ -2081,7 +2080,7 @@ def test_compute_known_facts():
                       Implies(Q.real, Q.complex))
     known_facts_keys = {Q.integer, Q.rational, Q.real, Q.complex}
 
-    s = compute_known_facts(known_facts, known_facts_keys)
+    compute_known_facts(known_facts, known_facts_keys)
 
 
 @slow

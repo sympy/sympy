@@ -144,7 +144,7 @@ class factorial(CombinatorialFunction):
         n = sympify(n)
 
         if n.is_Number:
-            if n is S.Zero:
+            if n.is_zero:
                 return S.One
             elif n is S.Infinity:
                 return S.Infinity
@@ -266,6 +266,25 @@ class factorial(CombinatorialFunction):
         if x.is_nonnegative or x.is_noninteger:
             return True
 
+    def _eval_as_leading_term(self, x):
+        from sympy import Order
+        arg = self.args[0]
+        arg_1 = arg.as_leading_term(x)
+        if Order(x, x).contains(arg_1):
+            return S.One
+        if Order(1, x).contains(arg_1):
+            return self.func(arg_1)
+        ####################################################
+        # The correct result here should be 'None'.        #
+        # Indeed arg in not bounded as x tends to 0.       #
+        # Consequently the series expansion does not admit #
+        # the leading term.                                #
+        # For compatibility reasons, the return value here #
+        # is the original function, i.e. factorial(arg),   #
+        # instead of None.                                 #
+        ####################################################
+        return self.func(arg)
+
 class MultiFactorial(CombinatorialFunction):
     pass
 
@@ -320,7 +339,11 @@ class subfactorial(CombinatorialFunction):
             return S.One
         elif n == 1:
             return S.Zero
-        return (n - 1)*(self._eval(n - 1) + self._eval(n - 2))
+        else:
+            z1, z2 = 1, 0
+            for i in range(2, n + 1):
+                z1, z2 = z2, (i - 1)*(z2 + z1)
+            return z2
 
     @classmethod
     def eval(cls, arg):
@@ -534,7 +557,7 @@ class RisingFactorial(CombinatorialFunction):
         elif x is S.One:
             return factorial(k)
         elif k.is_Integer:
-            if k is S.Zero:
+            if k.is_zero:
                 return S.One
             else:
                 if k.is_positive:
@@ -673,7 +696,7 @@ class FallingFactorial(CombinatorialFunction):
         elif k.is_integer and x == k:
             return factorial(x)
         elif k.is_Integer:
-            if k is S.Zero:
+            if k.is_zero:
                 return S.One
             else:
                 if k.is_positive:
@@ -991,9 +1014,9 @@ class binomial(CombinatorialFunction):
             k = n - k
 
         if k.is_Integer:
-            if k == S.Zero:
+            if k.is_zero:
                 return S.One
-            elif k < 0:
+            elif k.is_negative:
                 return S.Zero
             else:
                 n, result = self.args[0], 1

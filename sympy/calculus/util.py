@@ -162,7 +162,7 @@ def function_range(f, symbol, domain):
         return S.EmptySet
 
     period = periodicity(f, symbol)
-    if period is S.Zero:
+    if period == S.Zero:
         # the expression is constant wrt symbol
         return FiniteSet(f.expand())
 
@@ -411,7 +411,6 @@ def periodicity(f, symbol, check=False):
     pi
     >>> periodicity(exp(x), x)
     """
-    from sympy.core.function import diff
     from sympy.core.mod import Mod
     from sympy.core.relational import Relational
     from sympy.functions.elementary.exponential import exp
@@ -420,7 +419,7 @@ def periodicity(f, symbol, check=False):
         TrigonometricFunction, sin, cos, csc, sec)
     from sympy.simplify.simplify import simplify
     from sympy.solvers.decompogen import decompogen
-    from sympy.polys.polytools import degree, lcm_list
+    from sympy.polys.polytools import degree
 
     temp = Dummy('x', real=True)
     f = f.subs(symbol, temp)
@@ -737,7 +736,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     >>> x = Symbol('x')
 
     >>> stationary_points(1/x, x, S.Reals)
-    EmptySet()
+    EmptySet
 
     >>> pprint(stationary_points(sin(x), x), use_unicode=False)
               pi                              3*pi
@@ -745,7 +744,7 @@ def stationary_points(f, symbol, domain=S.Reals):
               2                                2
 
     >>> stationary_points(sin(x),x, Interval(0, 4*pi))
-    {pi/2, 3*pi/2, 5*pi/2, 7*pi/2}
+    FiniteSet(pi/2, 3*pi/2, 5*pi/2, 7*pi/2)
 
     """
     from sympy import solveset, diff
@@ -1252,12 +1251,12 @@ class AccumulationBounds(AtomicExpr):
                 if other.is_zero:
                     return S.Zero
                 if S.Zero in self:
-                    if self.min == S.Zero:
+                    if self.min.is_zero:
                         if other.is_extended_positive:
                             return AccumBounds(Mul(other, 1 / self.max), oo)
                         if other.is_extended_negative:
                             return AccumBounds(-oo, Mul(other, 1 / self.max))
-                    if self.max == S.Zero:
+                    if self.max.is_zero:
                         if other.is_extended_positive:
                             return AccumBounds(-oo, Mul(other, 1 / self.min))
                         if other.is_extended_negative:
@@ -1332,7 +1331,7 @@ class AccumulationBounds(AtomicExpr):
                         return AccumBounds(self.min**other, self.max**other)
 
                 num, den = other.as_numer_denom()
-                if num == S(1):
+                if num == S.One:
                     if den % 2 == 0:
                         if S.Zero in self:
                             if self.min.is_extended_negative:
@@ -1548,10 +1547,10 @@ class AccumulationBounds(AtomicExpr):
         AccumBounds(2, 3)
 
         >>> AccumBounds(1, 3).intersection(AccumBounds(4, 6))
-        EmptySet()
+        EmptySet
 
         >>> AccumBounds(1, 4).intersection(FiniteSet(1, 2, 5))
-        {1, 2}
+        FiniteSet(1, 2)
 
         """
         if not isinstance(other, (AccumBounds, FiniteSet)):

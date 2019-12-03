@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 r"""
 Wigner, Clebsch-Gordan, Racah, and Gaunt coefficients
 
@@ -12,9 +13,19 @@ details and examples.
 References
 ~~~~~~~~~~
 
+.. [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
+  T. Regge, Nuovo Cimento, Volume 10, pp. 544 (1958)
+.. [Regge59] 'Symmetry Properties of Racah Coefficients',
+  T. Regge, Nuovo Cimento, Volume 11, pp. 116 (1959)
+.. [Edmonds74] A. R. Edmonds. Angular momentum in quantum mechanics.
+  Investigations in physics, 4.; Investigations in physics, no. 4.
+  Princeton, N.J., Princeton University Press, 1957.
 .. [Rasch03] J. Rasch and A. C. H. Yu, 'Efficient Storage Scheme for
   Pre-calculated Wigner 3j, 6j and Gaunt Coefficients', SIAM
   J. Sci. Comput. Volume 25, Issue 4, pp. 1416-1428 (2003)
+.. [Liberatodebrito82] 'FORTRAN program for the integral of three
+  spherical harmonics', A. Liberato de Brito,
+  Comput. Phys. Commun., Volume 25, pp. 81-85 (1982)
 
 Credits and Copyright
 ~~~~~~~~~~~~~~~~~~~~~
@@ -29,12 +40,16 @@ AUTHORS:
 
 - Jens Rasch (2009-05-31): updated to sage-4.0
 
+- Oscar Gerardo Lazo Arjona (2017-06-18): added Wigner D matrices
+
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
+
 """
 from __future__ import print_function, division
 
-from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm,
-        Function)
+from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm, zeros,
+                   Function, sin, cos, exp, I, factorial, binomial,
+                   Add, ImmutableMatrix)
 from sympy.core.compatibility import range
 
 # This list of precomputed factorials is needed to massively
@@ -146,14 +161,6 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
 
-    REFERENCES:
-
-    .. [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
-      T. Regge, Nuovo Cimento, Volume 10, pp. 544 (1958)
-
-    .. [Edmonds74] 'Angular Momentum in Quantum Mechanics',
-      A. R. Edmonds, Princeton University Press (1974)
-
     AUTHORS:
 
     - Jens Rasch (2009-03-24): initial version
@@ -196,7 +203,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
         _Factlist[int(j_1 + j_2 + j_3 + 1)]
 
     ressqrt = sqrt(argsqrt)
-    if ressqrt.is_complex:
+    if ressqrt.is_complex or ressqrt.is_infinite:
         ressqrt = ressqrt.as_real_imag()[0]
 
     imin = max(-j_3 + j_1 + m_2, -j_3 + j_2 - m_1, 0)
@@ -479,10 +486,6 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
 
-    REFERENCES:
-
-    .. [Regge59] 'Symmetry Properties of Racah Coefficients',
-      T. Regge, Nuovo Cimento, Volume 11, pp. 116 (1959)
     """
     res = (-1) ** int(j_1 + j_2 + j_4 + j_5) * \
         racah(j_1, j_2, j_5, j_4, j_3, j_6, prec)
@@ -638,12 +641,6 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     therefore unsuitable for finite precision arithmetic and only
     useful for a computer algebra system [Rasch03]_.
 
-    REFERENCES:
-
-    .. [Liberatodebrito82] 'FORTRAN program for the integral of three
-      spherical harmonics', A. Liberato de Brito,
-      Comput. Phys. Commun., Volume 25, pp. 81-85 (1982)
-
     AUTHORS:
 
     - Jens Rasch (2009-03-24): initial version for Sage
@@ -749,7 +746,201 @@ def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
 
     def alpha(l,m,j,p,k):
         return sqrt((2*l+1)*(2*j+1)*(2*k+1)/(4*pi)) * \
-                Wigner3j(j, l, k, S(0), S(0), S(0)) * Wigner3j(j, l, k, p, m, -m-p)
+                Wigner3j(j, l, k, S.Zero, S.Zero, S.Zero) * \
+                Wigner3j(j, l, k, p, m, -m-p)
 
-    return (-S(1))**(m+p) * Sum(Ynm(k, m+p, theta, phi) * alpha(l,m,j,p,k) / 2 \
+    return (S.NegativeOne)**(m+p) * Sum(Ynm(k, m+p, theta, phi) * alpha(l,m,j,p,k) / 2 \
         *(k**2-j**2-l**2+k-j-l), (k, abs(l-j), l+j))
+
+
+def wigner_d_small(J, beta):
+    u"""Return the small Wigner d matrix for angular momentum J.
+
+    INPUT:
+
+    -  ``J`` - An integer, half-integer, or sympy symbol for the total angular
+        momentum of the angular momentum space being rotated.
+
+    -  ``beta`` - A real number representing the Euler angle of rotation about
+        the so-called line of nodes. See [Edmonds74]_.
+
+    OUTPUT:
+
+    A matrix representing the corresponding Euler angle rotation( in the basis
+    of eigenvectors of `J_z`).
+
+    .. math ::
+        \\mathcal{d}_{\\beta} = \\exp\\big( \\frac{i\\beta}{\\hbar} J_y\\big)
+
+    The components are calculated using the general form [Edmonds74]_,
+    equation 4.1.15.
+
+    Examples
+    ========
+
+    >>> from sympy import Integer, symbols, pi, pprint
+    >>> from sympy.physics.wigner import wigner_d_small
+    >>> half = 1/Integer(2)
+    >>> beta = symbols("beta", real=True)
+    >>> pprint(wigner_d_small(half, beta), use_unicode=True)
+    ⎡   ⎛β⎞      ⎛β⎞⎤
+    ⎢cos⎜─⎟   sin⎜─⎟⎥
+    ⎢   ⎝2⎠      ⎝2⎠⎥
+    ⎢               ⎥
+    ⎢    ⎛β⎞     ⎛β⎞⎥
+    ⎢-sin⎜─⎟  cos⎜─⎟⎥
+    ⎣    ⎝2⎠     ⎝2⎠⎦
+
+    >>> pprint(wigner_d_small(2*half, beta), use_unicode=True)
+    ⎡        2⎛β⎞              ⎛β⎞    ⎛β⎞           2⎛β⎞     ⎤
+    ⎢     cos ⎜─⎟        √2⋅sin⎜─⎟⋅cos⎜─⎟        sin ⎜─⎟     ⎥
+    ⎢         ⎝2⎠              ⎝2⎠    ⎝2⎠            ⎝2⎠     ⎥
+    ⎢                                                        ⎥
+    ⎢       ⎛β⎞    ⎛β⎞       2⎛β⎞      2⎛β⎞        ⎛β⎞    ⎛β⎞⎥
+    ⎢-√2⋅sin⎜─⎟⋅cos⎜─⎟  - sin ⎜─⎟ + cos ⎜─⎟  √2⋅sin⎜─⎟⋅cos⎜─⎟⎥
+    ⎢       ⎝2⎠    ⎝2⎠        ⎝2⎠       ⎝2⎠        ⎝2⎠    ⎝2⎠⎥
+    ⎢                                                        ⎥
+    ⎢        2⎛β⎞               ⎛β⎞    ⎛β⎞          2⎛β⎞     ⎥
+    ⎢     sin ⎜─⎟        -√2⋅sin⎜─⎟⋅cos⎜─⎟       cos ⎜─⎟     ⎥
+    ⎣         ⎝2⎠               ⎝2⎠    ⎝2⎠           ⎝2⎠     ⎦
+
+    From table 4 in [Edmonds74]_
+
+    >>> pprint(wigner_d_small(half, beta).subs({beta:pi/2}), use_unicode=True)
+    ⎡ √2   √2⎤
+    ⎢ ──   ──⎥
+    ⎢ 2    2 ⎥
+    ⎢        ⎥
+    ⎢-√2   √2⎥
+    ⎢────  ──⎥
+    ⎣ 2    2 ⎦
+
+    >>> pprint(wigner_d_small(2*half, beta).subs({beta:pi/2}),
+    ... use_unicode=True)
+    ⎡       √2      ⎤
+    ⎢1/2    ──   1/2⎥
+    ⎢       2       ⎥
+    ⎢               ⎥
+    ⎢-√2         √2 ⎥
+    ⎢────   0    ── ⎥
+    ⎢ 2          2  ⎥
+    ⎢               ⎥
+    ⎢      -√2      ⎥
+    ⎢1/2   ────  1/2⎥
+    ⎣       2       ⎦
+
+    >>> pprint(wigner_d_small(3*half, beta).subs({beta:pi/2}),
+    ... use_unicode=True)
+    ⎡ √2    √6    √6   √2⎤
+    ⎢ ──    ──    ──   ──⎥
+    ⎢ 4     4     4    4 ⎥
+    ⎢                    ⎥
+    ⎢-√6   -√2    √2   √6⎥
+    ⎢────  ────   ──   ──⎥
+    ⎢ 4     4     4    4 ⎥
+    ⎢                    ⎥
+    ⎢ √6   -√2   -√2   √6⎥
+    ⎢ ──   ────  ────  ──⎥
+    ⎢ 4     4     4    4 ⎥
+    ⎢                    ⎥
+    ⎢-√2    √6   -√6   √2⎥
+    ⎢────   ──   ────  ──⎥
+    ⎣ 4     4     4    4 ⎦
+
+    >>> pprint(wigner_d_small(4*half, beta).subs({beta:pi/2}),
+    ... use_unicode=True)
+    ⎡             √6            ⎤
+    ⎢1/4   1/2    ──   1/2   1/4⎥
+    ⎢             4             ⎥
+    ⎢                           ⎥
+    ⎢-1/2  -1/2   0    1/2   1/2⎥
+    ⎢                           ⎥
+    ⎢ √6                     √6 ⎥
+    ⎢ ──    0    -1/2   0    ── ⎥
+    ⎢ 4                      4  ⎥
+    ⎢                           ⎥
+    ⎢-1/2  1/2    0    -1/2  1/2⎥
+    ⎢                           ⎥
+    ⎢             √6            ⎥
+    ⎢1/4   -1/2   ──   -1/2  1/4⎥
+    ⎣             4             ⎦
+
+    """
+    M = [J-i for i in range(2*J+1)]
+    d = zeros(2*J+1)
+    for i, Mi in enumerate(M):
+        for j, Mj in enumerate(M):
+
+            # We get the maximum and minimum value of sigma.
+            sigmamax = max([-Mi-Mj, J-Mj])
+            sigmamin = min([0, J-Mi])
+
+            dij = sqrt(factorial(J+Mi)*factorial(J-Mi) /
+                       factorial(J+Mj)/factorial(J-Mj))
+            terms = [(-1)**(J-Mi-s) *
+                     binomial(J+Mj, J-Mi-s) *
+                     binomial(J-Mj, s) *
+                     cos(beta/2)**(2*s+Mi+Mj) *
+                     sin(beta/2)**(2*J-2*s-Mj-Mi)
+                     for s in range(sigmamin, sigmamax+1)]
+
+            d[i, j] = dij*Add(*terms)
+
+    return ImmutableMatrix(d)
+
+
+def wigner_d(J, alpha, beta, gamma):
+    u"""Return the Wigner D matrix for angular momentum J.
+
+    INPUT:
+
+    -  ``J`` - An integer, half-integer, or sympy symbol for the total angular
+        momentum of the angular momentum space being rotated.
+
+    -  ``alpha``, ``beta``, ``gamma`` - Real numbers representing the Euler
+        angles of rotation about the so-called vertical, line of nodes, and
+        figure axes. See [Edmonds74]_.
+
+    OUTPUT:
+
+    A matrix representing the corresponding Euler angle rotation( in the basis
+    of eigenvectors of `J_z`).
+
+    .. math ::
+        \\mathcal{D}_{\\alpha \\beta \\gamma} =
+        \\exp\\big( \\frac{i\\alpha}{\\hbar} J_z\\big)
+        \\exp\\big( \\frac{i\\beta}{\\hbar} J_y\\big)
+        \\exp\\big( \\frac{i\\gamma}{\\hbar} J_z\\big)
+
+    The components are calculated using the general form [Edmonds74]_,
+    equation 4.1.12.
+
+    Examples
+    ========
+
+    The simplest possible example:
+
+    >>> from sympy.physics.wigner import wigner_d
+    >>> from sympy import Integer, symbols, pprint
+    >>> from sympy.physics.wigner import wigner_d_small
+    >>> half = 1/Integer(2)
+    >>> alpha, beta, gamma = symbols("alpha, beta, gamma", real=True)
+    >>> pprint(wigner_d(half, alpha, beta, gamma), use_unicode=True)
+    ⎡  ⅈ⋅α  ⅈ⋅γ             ⅈ⋅α  -ⅈ⋅γ         ⎤
+    ⎢  ───  ───             ───  ─────        ⎥
+    ⎢   2    2     ⎛β⎞       2     2      ⎛β⎞ ⎥
+    ⎢ ℯ   ⋅ℯ   ⋅cos⎜─⎟     ℯ   ⋅ℯ     ⋅sin⎜─⎟ ⎥
+    ⎢              ⎝2⎠                    ⎝2⎠ ⎥
+    ⎢                                         ⎥
+    ⎢  -ⅈ⋅α   ⅈ⋅γ          -ⅈ⋅α   -ⅈ⋅γ        ⎥
+    ⎢  ─────  ───          ─────  ─────       ⎥
+    ⎢    2     2     ⎛β⎞     2      2      ⎛β⎞⎥
+    ⎢-ℯ     ⋅ℯ   ⋅sin⎜─⎟  ℯ     ⋅ℯ     ⋅cos⎜─⎟⎥
+    ⎣                ⎝2⎠                   ⎝2⎠⎦
+
+    """
+    d = wigner_d_small(J, beta)
+    M = [J-i for i in range(2*J+1)]
+    D = [[exp(I*Mi*alpha)*d[i, j]*exp(I*Mj*gamma)
+          for j, Mj in enumerate(M)] for i, Mi in enumerate(M)]
+    return ImmutableMatrix(D)

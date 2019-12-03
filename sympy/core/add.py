@@ -211,7 +211,7 @@ class Add(Expr, AssocOp):
         noncommutative = False
         for s, c in terms.items():
             # 0*s
-            if c is S.Zero:
+            if c.is_zero:
                 continue
             # 1*s
             elif c is S.One:
@@ -385,20 +385,19 @@ class Add(Expr, AssocOp):
                         r - i*S.ImaginaryUnit,
                         1/(r**2 + i**2))
         elif e.is_Number and abs(e) != 1:
-            # handle the Float case: (2.0 + 4*x)**e -> 2.**e*(1 + 2.0*x)**e
+            # handle the Float case: (2.0 + 4*x)**e -> 4**e*(0.5 + x)**e
             c, m = zip(*[i.as_coeff_Mul() for i in self.args])
-            big = 0
-            float = False
-            for i in c:
-                float = float or i.is_Float
-                if abs(i) > big:
-                    big = 1.0*abs(i)
-                    s = -1 if i < 0 else 1
-            if float and big and big != 1:
-                addpow = Add(*[(s if abs(c[i]) == big else c[i]/big)*m[i]
-                             for i in range(len(c))])**e
-                return big**e*addpow
-
+            if any(i.is_Float for i in c):  # XXX should this always be done?
+                big = -1
+                for i in c:
+                    if abs(i) >= big:
+                        big = abs(i)
+                if big > 0 and big != 1:
+                    from sympy.functions.elementary.complexes import sign
+                    bigs = (big, -big)
+                    c = [sign(i) if i in bigs else i/big for i in c]
+                    addpow = Add(*[c*m for c, m in zip(c, m)])**e
+                    return big**e*addpow
     @cacheit
     def _eval_derivative(self, s):
         return self.func(*[a.diff(s) for a in self.args])
@@ -423,7 +422,7 @@ class Add(Expr, AssocOp):
         Returns lhs - rhs, but treats oo like a symbol so oo - oo
         returns 0, instead of a nan.
         """
-        from sympy.core.function import expand_mul
+        from sympy.simplify.simplify import signsimp
         from sympy.core.symbol import Dummy
         inf = (S.Infinity, S.NegativeInfinity)
         if lhs.has(*inf) or rhs.has(*inf):
@@ -432,14 +431,14 @@ class Add(Expr, AssocOp):
                 S.Infinity: oo,
                 S.NegativeInfinity: -oo}
             ireps = {v: k for k, v in reps.items()}
-            eq = expand_mul(lhs.xreplace(reps) - rhs.xreplace(reps))
+            eq = signsimp(lhs.xreplace(reps) - rhs.xreplace(reps))
             if eq.has(oo):
                 eq = eq.replace(
-                    lambda x: x.is_Pow and x.base == oo,
+                    lambda x: x.is_Pow and x.base is oo,
                     lambda x: x.base)
             return eq.xreplace(ireps)
         else:
-            return expand_mul(lhs - rhs)
+            return signsimp(lhs - rhs)
 
     @cacheit
     def as_two_terms(self):
@@ -523,6 +522,19 @@ class Add(Expr, AssocOp):
         (a.is_algebraic for a in self.args), quick_exit=True)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
+
+    def _eval_is_infinite(self):
+        sawinf = False
+        for a in self.args:
+            ainf = a.is_infinite
+            if ainf is None:
+                return None
+            elif ainf is True:
+                # infinite+infinite might not be infinite
+                if sawinf is True:
+                    return None
+                sawinf = True
+        return sawinf
 
     def _eval_is_imaginary(self):
         nz = []

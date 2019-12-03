@@ -27,13 +27,13 @@ def _set_add(x, y):
 
 @dispatch(Interval, Infinity)
 def _set_add(x, y):
-    if x.start == S.NegativeInfinity:
+    if x.start is S.NegativeInfinity:
         return Interval(-oo, oo)
     return FiniteSet({S.Infinity})
 
 @dispatch(Interval, NegativeInfinity)
 def _set_add(x, y):
-    if x.end == S.Infinity:
+    if x.end is S.Infinity:
         return Interval(-oo, oo)
     return FiniteSet({S.NegativeInfinity})
 

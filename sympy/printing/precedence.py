@@ -18,6 +18,7 @@ PRECEDENCE = {
     "Not": 100,
     "Atom": 1000,
     "BitwiseOr": 36,
+    "BitwiseXor": 37,
     "BitwiseAnd": 38
 }
 
@@ -136,6 +137,28 @@ def precedence(item):
     return PRECEDENCE["Atom"]
 
 
+PRECEDENCE_TRADITIONAL = PRECEDENCE.copy()
+PRECEDENCE_TRADITIONAL['Integral'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['Sum'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['Product'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['Limit'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['Derivative'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['TensorProduct'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['Transpose'] = PRECEDENCE["Pow"]
+PRECEDENCE_TRADITIONAL['Adjoint'] = PRECEDENCE["Pow"]
+PRECEDENCE_TRADITIONAL['Dot'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Cross'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Gradient'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Divergence'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Curl'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Laplacian'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Union'] = PRECEDENCE['Xor']
+PRECEDENCE_TRADITIONAL['Intersection'] = PRECEDENCE['Xor']
+PRECEDENCE_TRADITIONAL['Complement'] = PRECEDENCE['Xor']
+PRECEDENCE_TRADITIONAL['SymmetricDifference'] = PRECEDENCE['Xor']
+PRECEDENCE_TRADITIONAL['ProductSet'] = PRECEDENCE['Xor']
+
+
 def precedence_traditional(item):
     """Returns the precedence of a given object according to the
     traditional rules of mathematics.
@@ -148,14 +171,11 @@ def precedence_traditional(item):
     from sympy.core.expr import UnevaluatedExpr
     from sympy.tensor.functions import TensorProduct
 
-    if isinstance(item, (Integral, Sum, Product, Limit, Derivative, TensorProduct)):
-        return PRECEDENCE["Mul"]
-    elif isinstance(item, (Transpose, Adjoint)):
-        return PRECEDENCE["Pow"]
-    elif (item.__class__.__name__ in ("Dot", "Cross", "Gradient", "Divergence",
-                                    "Curl", "Laplacian")):
-        return PRECEDENCE["Mul"]-1
-    elif isinstance(item, UnevaluatedExpr):
+    if isinstance(item, UnevaluatedExpr):
         return precedence_traditional(item.args[0])
-    else:
-        return precedence(item)
+
+    n = item.__class__.__name__
+    if n in PRECEDENCE_TRADITIONAL:
+        return PRECEDENCE_TRADITIONAL[n]
+
+    return precedence(item)

@@ -8,7 +8,8 @@ from sympy import sympify, S, Mul
 from sympy.core.compatibility import range, string_types, default_sort_key
 from sympy.core.function import _coeff_isneg
 from sympy.printing.conventions import split_super_sub, requires_partial
-from sympy.printing.precedence import precedence_traditional, PRECEDENCE
+from sympy.printing.precedence import \
+    precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer
 
@@ -1272,28 +1273,36 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             mrow.appendChild(self._print(arg))
         return mrow
 
-    def _print_SetOp(self, expr, symbol):
+    def _print_SetOp(self, expr, symbol, prec):
         mrow = self.dom.createElement('mrow')
-        mrow.appendChild(self._print(expr.args[0]))
+        mrow.appendChild(self.parenthesize(expr.args[0], prec))
         for arg in expr.args[1:]:
             x = self.dom.createElement('mo')
             x.appendChild(self.dom.createTextNode(symbol))
-            y = self._print(arg)
+            y = self.parenthesize(arg, prec)
             mrow.appendChild(x)
             mrow.appendChild(y)
         return mrow
 
     def _print_Union(self, expr):
-        return self._print_SetOp(expr, '&#x222A;')
+        prec = PRECEDENCE_TRADITIONAL['Union']
+        return self._print_SetOp(expr, '&#x222A;', prec)
 
     def _print_Intersection(self, expr):
-        return self._print_SetOp(expr, '&#x2229;')
+        prec = PRECEDENCE_TRADITIONAL['Intersection']
+        return self._print_SetOp(expr, '&#x2229;', prec)
 
     def _print_Complement(self, expr):
-        return self._print_SetOp(expr, '&#x2216;')
+        prec = PRECEDENCE_TRADITIONAL['Complement']
+        return self._print_SetOp(expr, '&#x2216;', prec)
 
     def _print_SymmetricDifference(self, expr):
-        return self._print_SetOp(expr, '&#x2206;')
+        prec = PRECEDENCE_TRADITIONAL['SymmetricDifference']
+        return self._print_SetOp(expr, '&#x2206;', prec)
+
+    def _print_ProductSet(self, expr):
+        prec = PRECEDENCE_TRADITIONAL['ProductSet']
+        return self._print_SetOp(expr, '&#x00d7;', prec)
 
     def _print_FiniteSet(self, s):
         return self._print_set(s.args)
@@ -1422,7 +1431,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         brac.setAttribute('close', '}')
         brac.setAttribute('open', '{')
 
-        if s.start.is_infinite:
+        if s.start.is_infinite and s.stop.is_infinite:
+            if s.step.is_positive:
+                printset = dots, -1, 0, 1, dots
+            else:
+                printset = dots, 1, 0, -1, dots
+        elif s.start.is_infinite:
             printset = dots, s[-1] - s.step, s[-1]
         elif s.stop.is_infinite:
             it = iter(s)

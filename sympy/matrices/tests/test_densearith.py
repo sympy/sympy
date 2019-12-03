@@ -41,6 +41,7 @@ def test_mulmatmat():
     d = [[ZZ(6)], [ZZ(7)]]
 
     assert mulmatmat(a, b, ZZ) == [[ZZ(31), ZZ(38)], [ZZ(47), ZZ(58)]]
+    assert mulmatmat(a, c, ZZ) == [[ZZ(3), ZZ(4)], [ZZ(5), ZZ(6)]]
     assert mulmatmat(b, d, ZZ) == [[ZZ(20)], [ZZ(98)]]
 
 

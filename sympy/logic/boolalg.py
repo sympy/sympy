@@ -10,7 +10,7 @@ from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (ordered, range, with_metaclass,
     as_int)
-from sympy.core.function import Application, Derivative, count_ops
+from sympy.core.function import Application, Derivative
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
@@ -131,7 +131,7 @@ class Boolean(Basic):
         >>> from sympy import Symbol, Eq, Or, And
         >>> x = Symbol('x', real=True)
         >>> Eq(x, 0).as_set()
-        {0}
+        FiniteSet(0)
         >>> (x > 0).as_set()
         Interval.open(0, oo)
         >>> And(-2 < x, x < 2).as_set()
@@ -405,7 +405,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
 
         >>> from sympy import false
         >>> false.as_set()
-        EmptySet()
+        EmptySet
         """
         return S.EmptySet
 
@@ -679,6 +679,26 @@ class And(LatticeOp, BooleanFunction):
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
+    def _eval_subs(self, old, new):
+        args = []
+        bad = None
+        for i in self.args:
+            try:
+                i = i.subs(old, new)
+            except TypeError:
+                # store TypeError
+                if bad is None:
+                    bad = i
+                continue
+            if i == False:
+                return S.false
+            elif i != True:
+                args.append(i)
+        if bad is not None:
+            # let it raise
+            bad.subs(old, new)
+        return self.func(*args)
+
     def _eval_simplify(self, **kwargs):
         from sympy.core.relational import Equality, Relational
         from sympy.solvers.solveset import linear_coeffs
@@ -796,6 +816,26 @@ class Or(LatticeOp, BooleanFunction):
                 rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
+
+    def _eval_subs(self, old, new):
+        args = []
+        bad = None
+        for i in self.args:
+            try:
+                i = i.subs(old, new)
+            except TypeError:
+                # store TypeError
+                if bad is None:
+                    bad = i
+                continue
+            if i == True:
+                return S.true
+            elif i != False:
+                args.append(i)
+        if bad is not None:
+            # let it raise
+            bad.subs(old, new)
+        return self.func(*args)
 
     def _eval_as_set(self):
         from sympy.sets.sets import Union
@@ -963,7 +1003,7 @@ class Xor(BooleanFunction):
     >>> Xor(True, False, True, False)
     False
     >>> x ^ y
-    Xor(x, y)
+    x ^ y
 
     Notes
     =====
@@ -2533,7 +2573,7 @@ def simplify_patterns_and():
                      (And(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
                      (And(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
                      # Sign
-                     (And(Eq(a, b), Eq(a, -b)), And(Eq(a, S(0)), Eq(b, S(0)))),
+                     (And(Eq(a, b), Eq(a, -b)), And(Eq(a, S.Zero), Eq(b, S.Zero))),
                      )
     return _matchers_and
 

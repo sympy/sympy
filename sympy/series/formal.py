@@ -25,20 +25,21 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp
-from sympy.series.sequences import sequence, SeqMul
+from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
 
 
 def rational_algorithm(f, x, k, order=4, full=False):
-    """Rational algorithm for computing
+    """
+    Rational algorithm for computing
     formula of coefficients of Formal Power Series
     of a function.
 
     Applicable when f(x) or some derivative of f(x)
     is a rational function in x.
 
-    :func:`rational_algorithm` uses :func:`apart` function for partial fraction
-    decomposition. :func:`apart` by default uses 'undetermined coefficients
+    :func:`rational_algorithm` uses :func:`~.apart` function for partial fraction
+    decomposition. :func:`~.apart` by default uses 'undetermined coefficients
     method'. By setting ``full=True``, 'Bronstein's algorithm' can be used
     instead.
 
@@ -74,8 +75,8 @@ def rational_algorithm(f, x, k, order=4, full=False):
     By setting ``full=True``, range of admissible functions to be solved using
     ``rational_algorithm`` can be increased. This option should be used
     carefully as it can significantly slow down the computation as ``doit`` is
-    performed on the :class:`RootSum` object returned by the ``apart`` function.
-    Use ``full=False`` whenever possible.
+    performed on the :class:`~.RootSum` object returned by the :func:`~.apart`
+    function. Use ``full=False`` whenever possible.
 
     See Also
     ========
@@ -87,6 +88,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
 
     .. [1] Formal Power Series - Dominik Gruntz, Wolfram Koepf
     .. [2] Power Series in Computer Algebra - Wolfram Koepf
+
     """
     from sympy.polys import RootSum, apart
     from sympy.integrals import integrate
@@ -135,7 +137,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
                     coeff += ak
 
             # Hacky, better way?
-            if coeff is S.Zero:
+            if coeff.is_zero:
                 return None
             if (coeff.has(x) or coeff.has(zoo) or coeff.has(oo) or
                     coeff.has(nan)):
@@ -370,7 +372,7 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
         if (i < 0) == True:
             continue
         r = f.diff(x, i).limit(x, 0) / factorial(i)
-        if r is S.Zero:
+        if r.is_zero:
             continue
 
         kterm = m*k + i
@@ -758,7 +760,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
 
     See :func:`compute_fps` for details.
     """
-    if x0 in [S.Infinity, -S.Infinity]:
+    if x0 in [S.Infinity, S.NegativeInfinity]:
         dir = S.One if x0 is S.Infinity else -S.One
         temp = f.subs(x, 1/x)
         result = _compute_fps(temp, x, 0, dir, hyper, order, rational, full)
@@ -821,7 +823,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     # Otherwise symb is being set to S.One
     syms = f.free_symbols.difference({x})
     (f, symb) = expand(f).as_independent(*syms)
-    if symb is S.Zero:
+    if symb.is_zero:
         symb = S.One
     symb = powsimp(symb)
 
@@ -1365,7 +1367,7 @@ class FormalPowerSeries(SeriesBase):
         if n is None:
             return iter(self)
 
-        if self._eval_term(0) is S.Zero:
+        if self._eval_term(0).is_zero:
             raise ValueError("Constant coefficient should exist for an inverse of a formal"
                 " power series to exist.")
 
@@ -1495,8 +1497,8 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
     No computation is performed. Terms are calculated using a term by term logic,
     instead of a point by point logic.
 
-    There are two differences between a `FormalPowerSeries` object and a
-    `FormalPowerSeriesProduct` object. The first argument contains the two
+    There are two differences between a :obj:`FormalPowerSeries` object and a
+    :obj:`FormalPowerSeriesProduct` object. The first argument contains the two
     functions involved in the product. Also, the coefficient sequence contains
     both the coefficient sequence of the formal power series of the involved functions.
 
@@ -1562,11 +1564,11 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
     No computation is performed. Terms are calculated using a term by term logic,
     instead of a point by point logic.
 
-    There are two differences between a `FormalPowerSeries` object and a
-    `FormalPowerSeriesCompose` object. The first argument contains the outer
+    There are two differences between a :obj:`FormalPowerSeries` object and a
+    :obj:`FormalPowerSeriesCompose` object. The first argument contains the outer
     function and the inner function involved in the omposition. Also, the
     coefficient sequence contains the generic sequence which is to be multiplied
-    by a custom `bell_seq` finite sequence. The finite terms will then be added up to
+    by a custom ``bell_seq`` finite sequence. The finite terms will then be added up to
     get the final terms.
 
     See Also
@@ -1588,8 +1590,8 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
         Returns the first `n` terms of the composed formal power series.
         Term by term logic is implemented here.
 
-        The coefficient sequence of the `FormalPowerSeriesCompose` object is the generic sequence.
-        It is multiplied by `bell_seq` to get a sequence, whose terms are added up to get
+        The coefficient sequence of the :obj:`FormalPowerSeriesCompose` object is the generic sequence.
+        It is multiplied by ``bell_seq`` to get a sequence, whose terms are added up to get
         the final terms for the polynomial.
 
         Examples
@@ -1614,7 +1616,6 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
         sympy.series.formal.FormalPowerSeries.coeff_bell
 
         """
-        f, g = self.f, self.g
 
         ffps, gfps = self.ffps, self.gfps
         terms = [ffps.zero_coeff()]
@@ -1633,9 +1634,9 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
     No computation is performed. Terms are calculated using a term by term logic,
     instead of a point by point logic.
 
-    There is a single difference between a `FormalPowerSeries` object and a
-    `FormalPowerSeriesInverse` object. The coefficient sequence contains the
-    generic sequence which is to be multiplied by a custom `bell_seq` finite sequence.
+    There is a single difference between a :obj:`FormalPowerSeries` object and a
+    :obj:`FormalPowerSeriesInverse` object. The coefficient sequence contains the
+    generic sequence which is to be multiplied by a custom ``bell_seq`` finite sequence.
     The finite terms will then be added up to get the final terms.
 
     See Also
@@ -1675,7 +1676,7 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
         Term by term logic is implemented here.
 
         The coefficient sequence of the `FormalPowerSeriesInverse` object is the generic sequence.
-        It is multiplied by `bell_seq` to get a sequence, whose terms are added up to get
+        It is multiplied by ``bell_seq`` to get a sequence, whose terms are added up to get
         the final terms for the polynomial.
 
         Examples
@@ -1700,7 +1701,6 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
         sympy.series.formal.FormalPowerSeries.coeff_bell
 
         """
-        f = self.f
         ffps = self.ffps
         terms = [ffps.zero_coeff()]
 

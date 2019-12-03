@@ -257,7 +257,7 @@ class Vector(BasisDependent):
 
         from sympy.vector.operators import _get_coord_sys_from_expr
         if isinstance(self, VectorZero):
-            return (S(0), S(0), S(0))
+            return (S.Zero, S.Zero, S.Zero)
         base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
         return tuple([self.dot(i) for i in base_vec])
 
@@ -347,8 +347,8 @@ class BaseVector(Vector, AtomicExpr):
         obj = super(BaseVector, cls).__new__(cls, S(index), system)
         # Assign important attributes
         obj._base_instance = obj
-        obj._components = {obj: S(1)}
-        obj._measure_number = S(1)
+        obj._components = {obj: S.One}
+        obj._measure_number = S.One
         obj._name = system._name + '.' + name
         obj._pretty_form = u'' + pretty_str
         obj._latex_form = latex_str
@@ -535,11 +535,13 @@ def cross(vect1, vect2):
             n3 = ({0,1,2}.difference({n1, n2})).pop()
             sign = 1 if ((n1 + 1) % 3 == n2) else -1
             return sign*vect1._sys.base_vectors()[n3]
+        from .functions import express
         try:
-            from .functions import express
-            return cross(express(vect1, vect2._sys), vect2)
-        except:
+            v = express(vect1, vect2._sys)
+        except ValueError:
             return Cross(vect1, vect2)
+        else:
+            return cross(v, vect2)
     if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
         return Vector.zero
     if isinstance(vect1, VectorMul):
@@ -575,11 +577,13 @@ def dot(vect1, vect2):
     if isinstance(vect1, BaseVector) and isinstance(vect2, BaseVector):
         if vect1._sys == vect2._sys:
             return S.One if vect1 == vect2 else S.Zero
+        from .functions import express
         try:
-            from .functions import express
-            return dot(vect1, express(vect2, vect1._sys))
-        except:
+            v = express(vect2, vect1._sys)
+        except ValueError:
             return Dot(vect1, vect2)
+        else:
+            return dot(vect1, v)
     if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
         return S.Zero
     if isinstance(vect1, VectorMul):

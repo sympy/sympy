@@ -194,7 +194,6 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy.series.limitseq import limit_seq
         from sympy.functions import RisingFactorial
 
         e, z, z0, dir = self.args

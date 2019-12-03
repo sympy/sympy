@@ -143,7 +143,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     ========
 
     summation
-    Product, product
+    Product, sympy.concrete.products.product
 
     References
     ==========
@@ -171,7 +171,24 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # cancel out. This only answers whether the summand is zero; if
         # not then None is returned since we don't analyze whether all
         # terms cancel out.
-        if self.function.is_zero:
+        if self.function.is_zero or self.has_empty_sequence:
+            return True
+
+    def _eval_is_extended_real(self):
+        if self.has_empty_sequence:
+            return True
+        return self.function.is_extended_real
+
+    def _eval_is_positive(self):
+        if self.has_finite_limits and self.has_reversed_limits is False:
+            return self.function.is_positive
+
+    def _eval_is_negative(self):
+        if self.has_finite_limits and self.has_reversed_limits is False:
+            return self.function.is_negative
+
+    def _eval_is_finite(self):
+        if self.has_finite_limits and self.function.is_finite:
             return True
 
     def doit(self, **hints):
@@ -208,6 +225,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
+            if dif == -1:
+                # Any summation over an empty set is zero
+                return S.Zero
             if dif.is_integer and dif.is_negative:
                 a, b = b + 1, a - 1
                 f = -f
@@ -241,7 +261,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         i, a, b = limits
         w, y, z = Wild('w', exclude=[i]), Wild('y', exclude=[i]), Wild('z', exclude=[i])
         result = f.match((w * i + y) ** (-z))
-        if result is not None and b == S.Infinity:
+        if result is not None and b is S.Infinity:
             coeff = 1 / result[w] ** result[z]
             s = result[z]
             q = result[y] / result[w] + a
@@ -394,7 +414,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ========
 
         Sum.is_absolutely_convergent()
-        Product.is_convergent()
+        sympy.concrete.products.Product.is_convergent()
         """
         from sympy import Interval, Integral, log, symbols, simplify
         p, q, r = symbols('p q r', cls=Wild)
@@ -782,7 +802,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         See Also
         ========
 
-        index, reorder_limit, reorder
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.index, reorder_limit,
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.reorder
 
         References
         ==========
@@ -850,7 +871,7 @@ def summation(f, *symbols, **kwargs):
     ========
 
     Sum
-    Product, product
+    Product, sympy.concrete.products.product
 
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)
@@ -926,7 +947,7 @@ def eval_sum(f, limits):
     from sympy.functions import KroneckerDelta
 
     (i, a, b) = limits
-    if f is S.Zero:
+    if f.is_zero:
         return S.Zero
     if i not in f.free_symbols:
         return f*(b - a + 1)
@@ -1183,7 +1204,7 @@ def _eval_sum_hyper(f, i, a):
 
     if f.subs(i, 0) == 0:
         if simplify(f.subs(i, Dummy('i', integer=True, positive=True))) == 0:
-            return S(0), True
+            return S.Zero, True
         return _eval_sum_hyper(f.subs(i, i + 1), i, 0)
 
     hs = hypersimp(f, i)
@@ -1237,7 +1258,7 @@ def eval_sum_hyper(f, i_a_b):
     old_sum = Sum(f, (i, a, b))
 
     if b != S.Infinity:
-        if a == S.NegativeInfinity:
+        if a is S.NegativeInfinity:
             res = _eval_sum_hyper(f.subs(i, -i), i, -b)
             if res is not None:
                 return Piecewise(res, (old_sum, True))
@@ -1252,7 +1273,7 @@ def eval_sum_hyper(f, i_a_b):
                 return None
             return Piecewise((res1 - res2, cond), (old_sum, True))
 
-    if a == S.NegativeInfinity:
+    if a is S.NegativeInfinity:
         res1 = _eval_sum_hyper(f.subs(i, -i), i, 1)
         res2 = _eval_sum_hyper(f, i, 0)
         if res1 is None or res2 is None:

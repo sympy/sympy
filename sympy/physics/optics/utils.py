@@ -30,7 +30,7 @@ __all__ = ['refraction_angle',
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin,\
 cos, sin, tan, I, cancel, pi, Float
 from sympy.core.compatibility import is_sequence
-from sympy.geometry.line import Ray3D, Point3D
+from sympy.geometry.line import Ray3D
 from sympy.geometry.util import intersection
 from sympy.geometry.plane import Plane
 from .medium import Medium
@@ -117,12 +117,12 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     # check if an incidence angle was supplied instead of a ray
     try:
         angle_of_incidence = float(incident)
-    except TypeError as e:
+    except TypeError:
         angle_of_incidence = None
 
     try:
         critical_angle_ = critical_angle(medium1, medium2)
-    except (ValueError, TypeError) as e:
+    except (ValueError, TypeError):
         critical_angle_ = None
 
     if angle_of_incidence is not None:
@@ -339,7 +339,7 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
                                  plane=plane)
     try:
         angle_of_incidence = Float(incident)
-    except TypeError as e:
+    except TypeError:
         angle_of_incidence = None
 
     if angle_of_incidence is not None:
@@ -521,34 +521,34 @@ def mirror_formula(focal_length=None, u=None, v=None):
     focal_length = sympify(focal_length)
     u = sympify(u)
     v = sympify(v)
-    if u == oo:
+    if u is oo:
         _u = Symbol('u')
-    if v == oo:
+    if v is oo:
         _v = Symbol('v')
-    if focal_length == oo:
+    if focal_length is oo:
         _f = Symbol('f')
     if focal_length is None:
-        if u == oo and v == oo:
+        if u is oo and v is oo:
             return Limit(Limit(_v*_u/(_v + _u), _u, oo), _v, oo).doit()
-        if u == oo:
+        if u is oo:
             return Limit(v*_u/(v + _u), _u, oo).doit()
-        if v == oo:
+        if v is oo:
             return Limit(_v*u/(_v + u), _v, oo).doit()
         return v*u/(v + u)
     if u is None:
-        if v == oo and focal_length == oo:
+        if v is oo and focal_length is oo:
             return Limit(Limit(_v*_f/(_v - _f), _v, oo), _f, oo).doit()
-        if v == oo:
+        if v is oo:
             return Limit(_v*focal_length/(_v - focal_length), _v, oo).doit()
-        if focal_length == oo:
+        if focal_length is oo:
             return Limit(v*_f/(v - _f), _f, oo).doit()
         return v*focal_length/(v - focal_length)
     if v is None:
-        if u == oo and focal_length == oo:
+        if u is oo and focal_length is oo:
             return Limit(Limit(_u*_f/(_u - _f), _u, oo), _f, oo).doit()
-        if u == oo:
+        if u is oo:
             return Limit(_u*focal_length/(_u - focal_length), _u, oo).doit()
-        if focal_length == oo:
+        if focal_length is oo:
             return Limit(u*_f/(u - _f), _f, oo).doit()
         return u*focal_length/(u - focal_length)
 
@@ -590,34 +590,34 @@ def lens_formula(focal_length=None, u=None, v=None):
     focal_length = sympify(focal_length)
     u = sympify(u)
     v = sympify(v)
-    if u == oo:
+    if u is oo:
         _u = Symbol('u')
-    if v == oo:
+    if v is oo:
         _v = Symbol('v')
-    if focal_length == oo:
+    if focal_length is oo:
         _f = Symbol('f')
     if focal_length is None:
-        if u == oo and v == oo:
+        if u is oo and v is oo:
             return Limit(Limit(_v*_u/(_u - _v), _u, oo), _v, oo).doit()
-        if u == oo:
+        if u is oo:
             return Limit(v*_u/(_u - v), _u, oo).doit()
-        if v == oo:
+        if v is oo:
             return Limit(_v*u/(u - _v), _v, oo).doit()
         return v*u/(u - v)
     if u is None:
-        if v == oo and focal_length == oo:
+        if v is oo and focal_length is oo:
             return Limit(Limit(_v*_f/(_f - _v), _v, oo), _f, oo).doit()
-        if v == oo:
+        if v is oo:
             return Limit(_v*focal_length/(focal_length - _v), _v, oo).doit()
-        if focal_length == oo:
+        if focal_length is oo:
             return Limit(v*_f/(_f - v), _f, oo).doit()
         return v*focal_length/(focal_length - v)
     if v is None:
-        if u == oo and focal_length == oo:
+        if u is oo and focal_length is oo:
             return Limit(Limit(_u*_f/(_u + _f), _u, oo), _f, oo).doit()
-        if u == oo:
+        if u is oo:
             return Limit(_u*focal_length/(_u + focal_length), _u, oo).doit()
-        if focal_length == oo:
+        if focal_length is oo:
             return Limit(u*_f/(u + _f), _f, oo).doit()
         return u*focal_length/(u + focal_length)
 

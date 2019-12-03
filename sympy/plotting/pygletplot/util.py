@@ -103,9 +103,9 @@ def billboard_matrix():
 
 
 def create_bounds():
-    return [[S.Infinity, -S.Infinity, 0],
-            [S.Infinity, -S.Infinity, 0],
-            [S.Infinity, -S.Infinity, 0]]
+    return [[S.Infinity, S.NegativeInfinity, 0],
+            [S.Infinity, S.NegativeInfinity, 0],
+            [S.Infinity, S.NegativeInfinity, 0]]
 
 
 def update_bounds(b, v):

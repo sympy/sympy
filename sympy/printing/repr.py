@@ -56,6 +56,9 @@ class ReprPrinter(Printer):
     def _print_Cycle(self, expr):
         return expr.__repr__()
 
+    def _print_Permutation(self, expr):
+        return expr.__repr__()
+
     def _print_Function(self, expr):
         r = self._print(expr.func)
         r += '(%s)' % ', '.join([self._print(a) for a in expr.args])
@@ -93,6 +96,12 @@ class ReprPrinter(Printer):
 
     def _print_Reals(self, expr):
         return 'Reals'
+
+    def _print_EmptySet(self, expr):
+        return 'EmptySet'
+
+    def _print_EmptySequence(self, expr):
+        return 'EmptySequence'
 
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
