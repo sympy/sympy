@@ -1,11 +1,10 @@
 from sympy.assumptions import Q
 from sympy.core.add import Add
 from sympy.core.compatibility import range
-from sympy.core.function import (Function, diff)
-from sympy.core.numbers import (E, Float, I, Integer, oo, pi, Rational)
-from sympy.core.relational import (Eq, Lt)
+from sympy.core.function import Function
+from sympy.core.numbers import Float, I, Integer, oo, pi, Rational
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
