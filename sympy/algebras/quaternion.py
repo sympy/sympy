@@ -42,7 +42,7 @@ class Quaternion(Expr):
 
     is_commutative = False
 
-    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True):
+    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True, assume_unit=False):
         a = sympify(a)
         b = sympify(b)
         c = sympify(c)
@@ -57,6 +57,7 @@ class Quaternion(Expr):
             obj._c = c
             obj._d = d
             obj._real_field = real_field
+            obj._assume_unit = assume_unit
             return obj
 
     @property
@@ -113,8 +114,7 @@ class Quaternion(Expr):
         b = x * s
         c = y * s
         d = z * s
-
-        return cls(a, b, c, d).normalize()
+        return cls(a, b, c, d, assume_unit=True)
 
     @classmethod
     def from_rotation_matrix(cls, M):
@@ -192,7 +192,8 @@ class Quaternion(Expr):
         return self.pow(p)
 
     def __neg__(self):
-        return Quaternion(-self._a, -self._b, -self._c, -self.d)
+        return Quaternion(
+            -self._a, -self._b, -self._c, -self.d, assume_unit=self._assume_unit)
 
     def __truediv__(self, other):
         return self * sympify(other)**-1
@@ -374,12 +375,17 @@ class Quaternion(Expr):
         return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
                           q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
                           -q1.b*q2.d + q1.c*q2.a + q1.d*q2.b + q1.a*q2.c,
-                          q1.b*q2.c - q1.c*q2.b + q1.d*q2.a + q1.a * q2.d)
+                          q1.b*q2.c - q1.c*q2.b + q1.d*q2.a + q1.a * q2.d,
+                          assume_unit=q1._assume_unit and q2._assume_unit)
 
     def _eval_conjugate(self):
         """Returns the conjugate of the quaternion."""
         q = self
-        return Quaternion(q.a, -q.b, -q.c, -q.d)
+        return Quaternion(q.a, -q.b, -q.c, -q.d, assume_unit=q._assume_unit)
+
+    def assume_unit(self):
+        """Returns a copy which is assumed to have unit norm."""
+        return self.func(*self.args, assume_unit=True)
 
     def norm(self):
         """Returns the norm of the quaternion."""
@@ -391,14 +397,17 @@ class Quaternion(Expr):
     def normalize(self):
         """Returns the normalized form of the quaternion."""
         q = self
-        return q * (1/q.norm())
+        return (q * (1/q.norm())).assume_unit()
 
     def inverse(self):
         """Returns the inverse of the quaternion."""
         q = self
         if not q.norm():
             raise ValueError("Cannot compute inverse for a quaternion with zero norm")
-        return conjugate(q) * (1/q.norm()**2)
+        if q._assume_unit:
+            return conjugate(q)
+        else:
+            return conjugate(q) * (1/q.norm()**2)
 
     def pow(self, p):
         """Finds the pth power of the quaternion.
@@ -426,9 +435,9 @@ class Quaternion(Expr):
         """
         p = sympify(p)
         q = self
-        if p == -1:
-            return q.inverse()
-        res = 1
+        if p == 0:
+            return 1
+        res = Quaternion(1, 0, 0, 0, assume_unit=True)
 
         if not p.is_Integer:
             return NotImplemented
@@ -530,7 +539,7 @@ class Quaternion(Expr):
         # q^p = ||q||^p * (cos(p*a) + u*sin(p*a))
 
         q = self
-        (v, angle) = q.to_axis_angle()
+        (v, angle) = q.normalize().to_axis_angle()
         q2 = Quaternion.from_axis_angle(v, p * angle)
         return q2 * (q.norm()**p)
 
@@ -574,13 +583,16 @@ class Quaternion(Expr):
         >>> trigsimp(Quaternion.rotate_point((1, 1, 1), (axis, angle)))
         (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
         """
-        if isinstance(r, tuple):
+        x, y, z = pin
+        if not isinstance(r, Quaternion):
             # if r is of the form (vector, angle)
-            q = Quaternion.from_axis_angle(r[0], r[1])
+            axis, angle = r
+            q = Quaternion.from_axis_angle(axis, angle)
+        elif not r._assume_unit and r.norm() != 1:
+            raise ValueError('A unit quaternion is required')
         else:
-            # if r is a quaternion
-            q = r.normalize()
-        pout = q * Quaternion(0, pin[0], pin[1], pin[2]) * conjugate(q)
+            q = r
+        pout = q * Quaternion(0, x, y, z) * conjugate(q)
         return (pout.b, pout.c, pout.d)
 
     def to_axis_angle(self):
@@ -596,7 +608,8 @@ class Quaternion(Expr):
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion(1, 1, 1, 1)
+        >>> from sympy import S
+        >>> q = Quaternion(S.Half, S.Half, S.Half, S.Half)
         >>> (axis, angle) = q.to_axis_angle()
         >>> axis
         (sqrt(3)/3, sqrt(3)/3, sqrt(3)/3)
@@ -604,10 +617,11 @@ class Quaternion(Expr):
         2*pi/3
         """
         q = self
+        if not q._assume_unit and q.norm() != 1:
+            raise ValueError('A unit quaternion is required')
+
         if q.a.is_negative:
             q = q * -1
-
-        q = q.normalize()
         angle = trigsimp(2 * acos(q.a))
 
         # Since quaternion is normalised, q.a is less than 1.
@@ -668,21 +682,22 @@ class Quaternion(Expr):
         [sin(x),  cos(x), 0, -sin(x) - cos(x) + 1],
         [     0,       0, 1,                    0],
         [     0,       0, 0,                    1]])
+
         """
-
         q = self
-        s = q.norm()**-2
-        m00 = 1 - 2*s*(q.c**2 + q.d**2)
-        m01 = 2*s*(q.b*q.c - q.d*q.a)
-        m02 = 2*s*(q.b*q.d + q.c*q.a)
+        if not q._assume_unit and q.norm() != 1:
+            raise ValueError('A unit quaternion is required')
+        m00 = 1 - 2*(q.c**2 + q.d**2)
+        m01 = 2*(q.b*q.c - q.d*q.a)
+        m02 = 2*(q.b*q.d + q.c*q.a)
 
-        m10 = 2*s*(q.b*q.c + q.d*q.a)
-        m11 = 1 - 2*s*(q.b**2 + q.d**2)
-        m12 = 2*s*(q.c*q.d - q.b*q.a)
+        m10 = 2*(q.b*q.c + q.d*q.a)
+        m11 = 1 - 2*(q.b**2 + q.d**2)
+        m12 = 2*(q.c*q.d - q.b*q.a)
 
-        m20 = 2*s*(q.b*q.d - q.c*q.a)
-        m21 = 2*s*(q.c*q.d + q.b*q.a)
-        m22 = 1 - 2*s*(q.b**2 + q.c**2)
+        m20 = 2*(q.b*q.d - q.c*q.a)
+        m21 = 2*(q.c*q.d + q.b*q.a)
+        m22 = 1 - 2*(q.b**2 + q.c**2)
 
         if not v:
             return Matrix([[m00, m01, m02], [m10, m11, m12], [m20, m21, m22]])

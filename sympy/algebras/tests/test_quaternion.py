@@ -97,7 +97,7 @@ def test_quaternion_functions():
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
 
-    assert Quaternion.rotate_point((1, 1, 1), q1) == (S.One / 5, 1, S(7) / 5)
+    assert Quaternion.rotate_point((1, 1, 1), q1.normalize()) == (S.One / 5, 1, S(7) / 5)
     n = Symbol('n')
     raises(TypeError, lambda: q1**n)
     n = Symbol('n', integer=True)
@@ -105,7 +105,7 @@ def test_quaternion_functions():
 
 
 def test_quaternion_conversions():
-    q1 = Quaternion(1, 2, 3, 4)
+    q1 = Quaternion(1, 2, 3, 4).normalize()
 
     assert q1.to_axis_angle() == ((2 * sqrt(29)/29,
                                    3 * sqrt(29)/29,
