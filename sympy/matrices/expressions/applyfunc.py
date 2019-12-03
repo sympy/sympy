@@ -1,5 +1,7 @@
 from sympy.matrices.expressions import MatrixExpr
 from sympy import MatrixBase, Dummy, Lambda, Function, FunctionClass
+from sympy.core.basic import Basic
+from sympy.core.sympify import sympify, _sympify
 
 
 class ElementwiseApplyFunction(MatrixExpr):
@@ -17,14 +19,14 @@ class ElementwiseApplyFunction(MatrixExpr):
     >>> from sympy import exp
     >>> X = MatrixSymbol("X", 3, 3)
     >>> X.applyfunc(exp)
-    exp(X...)
+    Lambda(_d, exp(_d))(X...)
 
     Otherwise using the class constructor:
 
     >>> from sympy import eye
     >>> expr = ElementwiseApplyFunction(exp, eye(3))
     >>> expr
-    exp(Matrix([
+    Lambda(_d, exp(_d))(Matrix([
     [1, 0, 0],
     [0, 1, 0],
     [0, 0, 1]])...)
@@ -44,39 +46,42 @@ class ElementwiseApplyFunction(MatrixExpr):
     """
 
     def __new__(cls, function, expr):
-        obj = MatrixExpr.__new__(cls, expr)
-        if not isinstance(function, FunctionClass):
-            d = Dummy("d")
-            function = Lambda(d, function(d))
-        obj._function = function
-        obj._expr = expr
-        return obj
+        expr = _sympify(expr)
+        if not expr.is_Matrix:
+            raise ValueError("{} must be a matrix instance.".format(expr))
 
-    def _hashable_content(self):
-        return (self.function, self.expr)
+        if not isinstance(function, FunctionClass):
+            d = Dummy('d')
+            function = Lambda(d, function(d))
+
+        function = sympify(function)
+        if not isinstance(function, (FunctionClass, Lambda)):
+            raise ValueError(
+                "{} should be compatible with SymPy function classes."
+                .format(function))
+
+        if 1 not in function.nargs:
+            raise ValueError(
+                '{} should be able to accept 1 arguments.'.format(function))
+
+        if not isinstance(function, Lambda):
+            d = Dummy('d')
+            function = Lambda(d, function(d))
+
+        obj = MatrixExpr.__new__(cls, function, expr)
+        return obj
 
     @property
     def function(self):
-        return self._function
+        return self.args[0]
 
     @property
     def expr(self):
-        return self._expr
+        return self.args[1]
 
     @property
     def shape(self):
         return self.expr.shape
-
-    @property
-    def func(self):
-        # This strange construction is required by the assumptions:
-        # (.func needs to be a class)
-
-        class _(ElementwiseApplyFunction):
-            def __new__(cls, expr):
-                return ElementwiseApplyFunction(self.function, expr)
-
-        return _
 
     def doit(self, **kwargs):
         deep = kwargs.get("deep", True)

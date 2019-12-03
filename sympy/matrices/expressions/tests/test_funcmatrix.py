@@ -25,8 +25,9 @@ def test_funcmatrix_creation():
     assert FunctionMatrix(2, 2, "lambda i, j: 0") == \
         FunctionMatrix(2, 2, Lambda((i, j), 0))
 
-    assert FunctionMatrix(2, 2, KroneckerDelta).as_explicit() == \
-        Identity(2).as_explicit()
+    m = FunctionMatrix(2, 2, KroneckerDelta)
+    assert m.as_explicit() == Identity(2).as_explicit()
+    assert m.args[2] == Lambda((i, j), KroneckerDelta(i, j))
 
     n = symbols('n')
     assert FunctionMatrix(n, n, Lambda((i, j), 0))
