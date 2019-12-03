@@ -173,6 +173,7 @@ def test_solve_args():
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
     assert solve([x-1, False], [x], set=True) == ([], set())
+    assert solve(Ne(x, 2), x) == (x > -oo) & (x < oo) & Ne(x, 2)
     # When a symbol is not a Symbol
     f = Function('f')
     assert solve([f(x)-1, f(x)**2-1-y], f(x), y) == [(1, 0)]
@@ -613,6 +614,8 @@ def test_solve_inequalities():
     assert solve(Eq(True, x < 1)) == (-oo < x) & (x < 1)
     assert solve(Eq(x < 1, False)) == (S.One <= x) & (x < oo)
     assert solve(Eq(x < 1, True)) == (-oo < x) & (x < 1)
+    assert solve(Ne(x < 1, False)) == (-oo < x) & (x < 1)
+    assert solve(Ne(x < 1, True)) == (S.One <= x) & (x < oo)
 
     assert solve(Eq(False, x)) == False
     assert solve(Eq(True, x)) == True

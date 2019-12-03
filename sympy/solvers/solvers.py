@@ -1015,18 +1015,19 @@ def solve(f, *symbols, **flags):
     def invert_eq_bool(fi):
         if isinstance(fi, (Equality, Unequality)):
             lhs, rhs = fi.args
+            unequal = S.true if isinstance(fi, Unequality) else S.false
             if lhs in (S.false, S.true) and rhs.is_Relational:
-                return ~rhs if lhs is S.false else rhs
+                return ~rhs if lhs is unequal else rhs
             if rhs in (S.false, S.true) and lhs.is_Relational:
-                return ~lhs if rhs is S.false else lhs
+                return ~lhs if rhs is unequal else lhs
         return fi
 
     f_relational = [invert_eq_bool(fi) for fi in f]
 
-    def is_inequality(fi):
-        return fi.is_Relational and not isinstance(fi, (Equality, Unequality))
+    def is_relational(fi):
+        return fi.is_Relational and not isinstance(fi, Equality)
 
-    if any(is_inequality(fi) for fi in f_relational):
+    if any(is_relational(fi) for fi in f_relational):
         f = [invert_eq_bool(fi) for fi in f_relational]
         if flags.get('dict', False):
             solution = reduce_inequalities(f_relational, symbols=symbols)
@@ -1058,8 +1059,13 @@ def solve(f, *symbols, **flags):
     # preprocess equation(s)
     ###########################################################################
 
+    # At this point f consists only of Eq and Expr since any other relational
+    # (inequality or unequality) would have been passed to reduce_inequalities
+    # above. We now try to canonicalise this by converting Eq to Expr and by
+    # extracting scalar equations from matrices and expressions from Poly etc.
+
     for i, fi in enumerate(f):
-        if isinstance(fi, (Equality, Unequality)):
+        if isinstance(fi, Equality):
             if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
                 fi = fi.lhs - fi.rhs
             else:
