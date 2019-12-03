@@ -979,6 +979,40 @@ def solve(f, *symbols, **flags):
         exclude = set().union(*[e.free_symbols for e in sympify(exclude)])
         symbols = [s for s in symbols if s not in exclude]
 
+    # alternate exits...
+    ###########################################################################
+
+    def is_eq_bool(eq):
+        if isinstance(eq, (Equality, Unequality)):
+            lhs, rhs = eq.args
+            for lhs, rhs in [(lhs, rhs), (rhs, lhs)]:
+                if (lhs.is_Symbol or ~lhs.is_Symbol) and rhs in (S.false, S.true):
+                    return True
+
+    if any(is_eq_bool(fi) for fi in f):
+        for i, fi in enumerate(f):
+            if not isinstance(fi, (Equality, Unequality)):
+                continue
+            args = fi.args
+            if args[1] in (S.true, S.false):
+                args = args[1], args[0]
+            L, R = args
+            if L in (S.false, S.true):
+                if isinstance(fi, Unequality):
+                    L = ~L
+                if R.is_Relational:
+                    fi = ~R if L is S.false else R
+                elif R.is_Symbol:
+                    return L
+                elif R.is_Boolean and (~R).is_Symbol:
+                    return ~L
+                else:
+                    raise NotImplementedError(filldedent('''
+                        Unanticipated argument of Eq when other arg
+                        is True or False.
+                    '''))
+            f[i] = fi
+
     # preprocess equation(s)
     ###########################################################################
     for i, fi in enumerate(f):
@@ -986,26 +1020,7 @@ def solve(f, *symbols, **flags):
             if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
                 fi = fi.lhs - fi.rhs
             else:
-                args = fi.args
-                if args[1] in (S.true, S.false):
-                    args = args[1], args[0]
-                L, R = args
-                if L in (S.false, S.true):
-                    if isinstance(fi, Unequality):
-                        L = ~L
-                    if R.is_Relational:
-                        fi = ~R if L is S.false else R
-                    elif R.is_Symbol:
-                        return L
-                    elif R.is_Boolean and (~R).is_Symbol:
-                        return ~L
-                    else:
-                        raise NotImplementedError(filldedent('''
-                            Unanticipated argument of Eq when other arg
-                            is True or False.
-                        '''))
-                else:
-                    fi = fi.rewrite(Add, evaluate=False)
+                fi = fi.rewrite(Add, evaluate=False)
             f[i] = fi
 
         if fi.is_Relational:
