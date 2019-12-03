@@ -521,6 +521,15 @@ def _solve_as_rational(f, symbol, domain):
         invalid_solns = _solveset(h, symbol, domain)
         return valid_solns - invalid_solns
 
+def _solve_hyperbolic(f, symbol, domain):
+
+    # transform the hyperbolic functions into non hyperbolic
+    # redo the calulcations from the beginning
+    
+    f = trigsimp(f)
+    f = f.rewrite(exp)
+    return solveset(f,symbol,domain)
+
 
 def _solve_trig(f, symbol, domain):
     """Function to call other helpers to solve trigonometric equations """
@@ -908,9 +917,10 @@ def _solveset(f, symbol, domain, _check=False):
         # wrong solutions we are using this technique only if both f and g are
         # finite for a finite input.
         result = Union(*[solver(m, symbol) for m in f.args])
-    elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
-            _is_function_class_equation(HyperbolicFunction, f, symbol):
+    elif _is_function_class_equation(TrigonometricFunction, f, symbol):
         result = _solve_trig(f, symbol, domain)
+    elif _is_function_class_equation(HyperbolicFunction, f, symbol):
+        result = _solve_hyperbolic(f, symbol, domain)
     elif isinstance(f, arg):
         a = f.args[0]
         result = solveset_real(a > 0, symbol)
