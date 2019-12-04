@@ -1321,6 +1321,7 @@ def integral_steps(integrand, symbol, **options):
             null_safe(trig_substitution_rule)
         ),
         fallback_rule)(integral)
+    _parts_u_cache.clear()
     del _integral_cache[cachekey]
     return result
 
