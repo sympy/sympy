@@ -70,6 +70,8 @@ encoding_header_re = re.compile(
 # Whitelist pattern for files which can have unicode.
 unicode_whitelist = [
     r'*/bin/authors_update.py',
+
+    # TODO Delete unicode in these files.
     r'*/physics/quantum/tests/test_printing.py',
     r'*/sympy/physics/vector/tests/test_printing.py',
     r'*/sympy/vector/tests/test_printing.py',
@@ -78,10 +80,6 @@ unicode_whitelist = [
     r'*/sympy/physics/optics/polarization.py',
     r'*/sympy/printing/pretty/tests/test_pretty.py',
     r'*/sympy/printing/tests/test_preview.py',
-    # Ignore junk files
-    r'*/.ipynb_checkpoints/*',
-
-    # TODO Delete unicode in these files.
     r'*/combinatorics/free_groups.py',
     r'*/combinatorics/tests/test_coset_table.py',
     r'*/crypto/crypto.py',
