@@ -45,7 +45,6 @@ unicode_whitelist = [
     r'*/sympy/physics/optics/polarization.py',
     r'*/sympy/printing/pretty/tests/test_pretty.py',
     r'*/sympy/printing/tests/test_preview.py',
-    r'*/combinatorics/free_groups.py',
     # These 3 files in liealgebras have functions that return unicode strings
     # and tests for those functions.
     r'*/liealgebras/type_g.py',
