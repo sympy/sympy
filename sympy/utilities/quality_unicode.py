@@ -33,23 +33,28 @@ encoding_header_re = re.compile(
 
 # Whitelist pattern for files which can have unicode.
 unicode_whitelist = [
+    # Author names can include non-ASCII characters
     r'*/bin/authors_update.py',
-    r'*/sympy/utilities/tests/test_code_quality.py',
 
-    # TODO Delete unicode in these files.
-    r'*/physics/quantum/tests/test_printing.py',
+    # These files have functions and test functions for unicode input and
+    # output.
+    r'*/sympy/utilities/tests/test_code_quality.py',
     r'*/sympy/physics/vector/tests/test_printing.py',
+    r'*/physics/quantum/tests/test_printing.py',
     r'*/sympy/vector/tests/test_printing.py',
     r'*/sympy/parsing/tests/test_sympy_parser.py',
-    r'*/sympy/physics/wigner.py',
-    r'*/sympy/physics/optics/polarization.py',
     r'*/sympy/printing/pretty/tests/test_pretty.py',
     r'*/sympy/printing/tests/test_preview.py',
-    # These 3 files in liealgebras have functions that return unicode strings
-    # and tests for those functions.
     r'*/liealgebras/type_g.py',
     r'*/liealgebras/weyl_group.py',
     r'*/liealgebras/tests/test_type_G.py',
+
+    # wigner.py and polarization.py have unicode doctests. These probably
+    # don't need to be there but some of the examples that are there are
+    # pretty ugly without use_unicode (matrices need to be wrapped across
+    # multiple lines etc)
+    r'*/sympy/physics/wigner.py',
+    r'*/sympy/physics/optics/polarization.py',
 ]
 
 unicode_strict_whitelist = [
