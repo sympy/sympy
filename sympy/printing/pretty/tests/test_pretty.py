@@ -3210,12 +3210,12 @@ def test_MatrixExpressions():
     expr = (X.T*X).applyfunc(sin)
 
     ascii_str = """\
-    / T  \\\n\
-sin.\\X *X/\
+              / T  \\\n\
+(d -> sin(d)).\X *X/\
 """
     ucode_str = u("""\
-    ⎛ T  ⎞\n\
-sin˳⎝X ⋅X⎠\
+             ⎛ T  ⎞\n\
+(d ↦ sin(d))˳⎝X ⋅X⎠\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
