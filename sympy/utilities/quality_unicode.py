@@ -49,7 +49,8 @@ unicode_whitelist = [
     r'*/combinatorics/tests/test_coset_table.py',
     r'*/crypto/crypto.py',
     r'*/discrete/transforms.py',
-    r'*/liealgebras/root_system.py',
+    # These 3 files in liealgebras have functions that return unicode strings
+    # and tests for those functions.
     r'*/liealgebras/type_g.py',
     r'*/liealgebras/weyl_group.py',
     r'*/liealgebras/tests/test_type_G.py',
