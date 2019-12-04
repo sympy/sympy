@@ -54,8 +54,6 @@ unicode_whitelist = [
     r'*/liealgebras/weyl_group.py',
     r'*/liealgebras/tests/test_type_G.py',
     r'*/ntheory/residue_ntheory.py',
-    r'*/physics/mechanics/rigidbody.py',
-    #r'*/polys/subresultants_qq_zz.py'
 ]
 
 unicode_strict_whitelist = [
