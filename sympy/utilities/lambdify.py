@@ -81,7 +81,9 @@ MPMATH_TRANSLATIONS = {
     "FallingFactorial": "ff",
 }
 
-NUMPY_TRANSLATIONS = {}
+NUMPY_TRANSLATIONS = {
+    "Heaviside": "heaviside"
+}
 SCIPY_TRANSLATIONS = {}
 
 TENSORFLOW_TRANSLATIONS = {}
