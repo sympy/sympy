@@ -982,10 +982,7 @@ def solve(f, *symbols, **flags):
 
     def is_eq_bool(eq):
         if isinstance(eq, (Equality, Unequality)):
-            lhs, rhs = eq.args
-            for lhs, rhs in [(lhs, rhs), (rhs, lhs)]:
-                if (lhs.is_Symbol or ~lhs.is_Symbol) and rhs in (S.false, S.true):
-                    return True
+            return any(side in (S.false, S.true) for side in eq.args)
 
     if any(is_eq_bool(fi) for fi in f):
         for i, fi in enumerate(f):
