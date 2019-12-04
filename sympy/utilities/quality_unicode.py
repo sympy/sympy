@@ -53,7 +53,6 @@ unicode_whitelist = [
     r'*/liealgebras/type_g.py',
     r'*/liealgebras/weyl_group.py',
     r'*/liealgebras/tests/test_type_G.py',
-    r'*/ntheory/residue_ntheory.py',
 ]
 
 unicode_strict_whitelist = [
