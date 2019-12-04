@@ -539,8 +539,8 @@ def solve(f, *symbols, **flags):
 
     Single expression with no symbol given. In this case, all free *symbols*
     will be selected as potential *symbols* to solve for. If the equation is
-    univariate then a list of solutions is returned; otherwise — as is the case
-    when *symbols* are given as an iterable of length greater than 1 — a list of
+    univariate then a list of solutions is returned; otherwise - as is the case
+    when *symbols* are given as an iterable of length greater than 1 - a list of
     mappings will be returned:
 
         >>> solve(x - 3)
