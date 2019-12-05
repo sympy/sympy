@@ -1182,7 +1182,7 @@ def derivative_rule(integral):
 
 def rewrites_rule(integral):
     integrand, symbol = integral
-
+    _parts_u_cache.clear()
     if integrand.match(1/sympy.cos(symbol)):
         rewritten = integrand.subs(1/sympy.cos(symbol), sympy.sec(symbol))
         return RewriteRule(rewritten, integral_steps(rewritten, symbol), integrand, symbol)
@@ -1321,7 +1321,6 @@ def integral_steps(integrand, symbol, **options):
             null_safe(trig_substitution_rule)
         ),
         fallback_rule)(integral)
-    _parts_u_cache.clear()
     del _integral_cache[cachekey]
     return result
 
