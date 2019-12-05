@@ -998,30 +998,6 @@ def solve(f, *symbols, **flags):
             f[i] = fi
 
         if fi.is_Relational:
-            if flags.get('dict', False):
-                solution = reduce_inequalities(f, symbols=symbols)
-                if isinstance(solution, Equality):
-                    return [{solution.lhs: solution.rhs}]
-                solution = list(solution.args)
-                for sol in solution:
-                    # Behavior for types like StrictLessThan is not defined
-                    if not isinstance(sol, (Or, Equality)):
-                        warnings.warn(filldedent('''
-                            Warning: Ignoring dict=True due to
-                            incompatible type of %s.''' % sol))
-                        return reduce_inequalities(f, symbols=symbols)
-                intermediate = [sol for sol in solution
-                                if isinstance(sol, Equality)]
-                solution[:] = [sol.args for sol in solution
-                               if sol not in intermediate]
-                solutions = [intermediate + list(sol)
-                             for sol in itertools.product(*solution)]
-                for i in range(len(solutions)):
-                    ele = {}
-                    for sol in solutions[i]:
-                        ele[sol.lhs] = sol.rhs
-                    solutions[i] = ele
-                return [] if solutions == [{}] else solutions
             return reduce_inequalities(f, symbols=symbols)
 
         if isinstance(fi, Poly):
@@ -2907,6 +2883,8 @@ def _tsolve(eq, sym, **flags):
     if flags.pop('force', True):
         flags['force'] = False
         pos, reps = posify(lhs - rhs)
+        if rhs == S.ComplexInfinity:
+            return []
         for u, s in reps.items():
             if s == sym:
                 break

@@ -668,6 +668,8 @@ def _get_doctest_blacklist():
         "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
         "sympy/parsing/latex/_antlr/latexparser.py", # generated code
         "sympy/integrals/rubi/rubi.py",
+        "sympy/plotting/pygletplot/__init__.py", # crashes on some systems
+        "sympy/plotting/pygletplot/plot.py", # crashes on some systems
     ])
     # autolev parser tests
     num = 12

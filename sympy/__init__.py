@@ -36,8 +36,8 @@ if 'dev' in __version__:
 
 import sys
 if ((sys.version_info[0] == 2 and sys.version_info[1] < 7) or
-    (sys.version_info[0] == 3 and sys.version_info[1] < 4)):
-    raise ImportError("Python version 2.7 or 3.4 or above "
+    (sys.version_info[0] == 3 and sys.version_info[1] < 5)):
+    raise ImportError("Python version 2.7 or 3.5 or above "
                       "is required for SymPy.")
 
 del sys

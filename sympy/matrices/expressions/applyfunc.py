@@ -17,17 +17,17 @@ class ElementwiseApplyFunction(MatrixExpr):
     >>> from sympy import exp
     >>> X = MatrixSymbol("X", 3, 3)
     >>> X.applyfunc(exp)
-    exp(X...)
+    exp.(X)
 
     Otherwise using the class constructor:
 
     >>> from sympy import eye
     >>> expr = ElementwiseApplyFunction(exp, eye(3))
     >>> expr
-    exp(Matrix([
+    exp.(Matrix([
     [1, 0, 0],
     [0, 1, 0],
-    [0, 0, 1]])...)
+    [0, 0, 1]]))
     >>> expr.doit()
     Matrix([
     [E, 1, 1],
