@@ -3211,7 +3211,7 @@ def test_MatrixExpressions():
 
     ascii_str = """\
               / T  \\\n\
-(d -> sin(d)).\X *X/\
+(d -> sin(d)).\\X *X/\
 """
     ucode_str = u("""\
              ⎛ T  ⎞\n\
