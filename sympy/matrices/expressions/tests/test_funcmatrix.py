@@ -25,8 +25,9 @@ def test_funcmatrix_creation():
     assert FunctionMatrix(2, 2, "lambda i, j: 0") == \
         FunctionMatrix(2, 2, Lambda((i, j), 0))
 
-    assert FunctionMatrix(2, 2, KroneckerDelta).as_explicit() == \
-        Identity(2).as_explicit()
+    m = FunctionMatrix(2, 2, KroneckerDelta)
+    assert m.as_explicit() == Identity(2).as_explicit()
+    assert m.args[2] == Lambda((i, j), KroneckerDelta(i, j))
 
     n = symbols('n')
     assert FunctionMatrix(n, n, Lambda((i, j), 0))
@@ -45,3 +46,8 @@ def test_funcmatrix():
     assert X.rows == X.cols == 3
     assert Matrix(X) == Matrix(3, 3, lambda i, j: i - j)
     assert isinstance(X*X + X, MatrixExpr)
+
+
+def test_replace_issue():
+    X = FunctionMatrix(3, 3, KroneckerDelta)
+    assert X.replace(lambda x: True, lambda x: x) == X
