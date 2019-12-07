@@ -25,6 +25,11 @@ matrix:
       sudo: true
       script: bin/test quality
       env:
+    - python: 2.7
+      dist: xenial
+      sudo: true
+      script: bin/test quality
+      env:
 
     - stage: baseline
       python: 3.8
