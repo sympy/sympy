@@ -278,53 +278,6 @@ class cosh(HyperbolicFunction):
     sinh, tanh, acosh
     """
 
-    def _eval_is_positive(self):
-        arg = self.args[0]
-
-        if arg.is_real:
-            return True
-
-        re, im = arg.as_real_imag()
-        im_mod = im % (2*pi)
-
-        if im_mod == 0:
-            return True
-
-        if re == 0:
-            if im_mod < pi/2 or im_mod > 3*pi/2:
-                return True
-            elif im_mod >= pi/2 or im_mod <= 3*pi/2:
-                return False
-
-        return fuzzy_or([fuzzy_and([fuzzy_bool(Eq(re, 0)),
-                         fuzzy_or([fuzzy_bool(im_mod < pi/2),
-                                   fuzzy_bool(im_mod > 3*pi/2)])]),
-                         fuzzy_bool(Eq(im_mod, 0))])
-
-
-    def _eval_is_nonnegative(self):
-        arg = self.args[0]
-
-        if arg.is_real:
-            return True
-
-        re, im = arg.as_real_imag()
-        im_mod = im % (2*pi)
-
-        if im_mod == 0:
-            return True
-
-        if re == 0:
-            if im_mod <= pi/2 or im_mod >= 3*pi/2:
-                return True
-            elif im_mod > pi/2 or im_mod < 3*pi/2:
-                return False
-
-        return fuzzy_or([fuzzy_and([fuzzy_bool(Eq(re, 0)),
-                         fuzzy_or([fuzzy_bool(im_mod <= pi/2), fuzzy_bool(im_mod >= 3*pi/2)])]),
-                         fuzzy_bool(Eq(im_mod, 0))])
-
-
     def fdiff(self, argindex=1):
         if argindex == 1:
             return sinh(self.args[0])
@@ -472,6 +425,64 @@ class cosh(HyperbolicFunction):
         re, im = arg.as_real_imag()
         return (im%pi).is_zero
 
+    def _eval_is_positive(self):
+        # cosh(x+I*y) = cos(y)*cosh(x) + I*sin(y)*sinh(x)
+        # cosh(z) is positive iff it is real and the real part is positive.
+        # So we need sin(y)*sinh(x) = 0 which gives x=0 or y=n*pi
+        # Case 1 (y=n*pi): cosh(z) = (-1)**n * cosh(x) -> positive for n even
+        # Case 2 (x=0): cosh(z) = cos(y) -> positive when cos(y) is positive
+        z = self.args[0]
+
+        x, y = z.as_real_imag()
+        ymod = y % (2*pi)
+
+        yzero = ymod.is_zero
+        # shortcut if ymod is zero
+        if yzero:
+            return True
+
+        xzero = x.is_zero
+        # shortcut x is not zero
+        if xzero is False:
+            return yzero
+
+        return fuzzy_or([
+                # Case 1:
+                yzero,
+                # Case 2:
+                fuzzy_and([
+                    xzero,
+                    fuzzy_or([ymod < pi/2, ymod > 3*pi/2])
+                ])
+            ])
+
+
+    def _eval_is_nonnegative(self):
+        z = self.args[0]
+
+        x, y = z.as_real_imag()
+        ymod = y % (2*pi)
+
+        yzero = ymod.is_zero
+        # shortcut if ymod is zero
+        if yzero:
+            return True
+
+        xzero = x.is_zero
+        # shortcut x is not zero
+        if xzero is False:
+            return yzero
+
+        return fuzzy_or([
+                # Case 1:
+                yzero,
+                # Case 2:
+                fuzzy_and([
+                    xzero,
+                    fuzzy_or([ymod <= pi/2, ymod >= 3*pi/2])
+                ])
+            ])
+
     def _eval_is_finite(self):
         arg = self.args[0]
         return arg.is_finite
@@ -618,7 +629,6 @@ class tanh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        from sympy import cos, sinh
         arg = self.args[0]
         if arg.is_real:
             return True

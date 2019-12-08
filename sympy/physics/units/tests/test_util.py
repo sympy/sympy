@@ -1,8 +1,4 @@
-from sympy.physics.units.systems.si import dimsys_SI
-from sympy.utilities.pytest import warns_deprecated_sympy
-
-from sympy import (Add, Mul, Pow, Tuple, pi, sin, sqrt, sstr, sympify,
-    symbols)
+from sympy import Pow, Tuple, pi, sstr, sympify, symbols
 from sympy.physics.units import (
     G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
     kilogram, kilometer, length, meter, mile, minute, newton, planck,
@@ -90,11 +86,8 @@ def test_convert_to_tuples_of_quantities():
 
 
 def test_eval_simplify():
-    from sympy.physics.units import cm, mm, km, m, K, Quantity, kilo, foot
-    from sympy.simplify.simplify import simplify
+    from sympy.physics.units import cm, mm, km, m, K, kilo
     from sympy.core.symbol import symbols
-    from sympy.utilities.pytest import raises
-    from sympy.core.function import Lambda
 
     x, y = symbols('x y')
 

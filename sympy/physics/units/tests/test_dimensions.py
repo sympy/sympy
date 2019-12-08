@@ -1,5 +1,4 @@
 from sympy.physics.units.systems.si import dimsys_SI
-from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import S, Symbol, sqrt
 from sympy.physics.units.dimensions import Dimension

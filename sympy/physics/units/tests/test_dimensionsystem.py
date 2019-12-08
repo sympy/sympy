@@ -1,4 +1,3 @@
-from sympy.physics.units.systems import SI
 from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import Matrix, eye, symbols

@@ -15,7 +15,6 @@ def test_twave():
     n = Symbol('n')  # Refractive index
     t = Symbol('t')  # Time
     x = Symbol('x')  # Spatial variable
-    k = Symbol('k')  # Wavenumber
     E = Function('E')
     w1 = TWave(A1, f, phi1)
     w2 = TWave(A2, f, phi2)

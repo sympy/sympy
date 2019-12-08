@@ -43,7 +43,7 @@ __all__ = [
 ]
 
 
-from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
+from sympy import (atan2, Expr, I, im, Matrix, pi, re, sqrt, sympify,
     together)
 from sympy.utilities.misc import filldedent
 

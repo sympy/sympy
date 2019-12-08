@@ -4,8 +4,7 @@ Physical quantities.
 
 from __future__ import division
 
-from sympy import (Abs, Add, AtomicExpr, Derivative, Function, Mul,
-                   Pow, S, Symbol, sympify, deprecated)
+from sympy import Abs, AtomicExpr, Symbol, sympify
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
 from sympy.physics.units.dimensions import _QuantityMapper
@@ -105,7 +104,6 @@ class Quantity(AtomicExpr):
         """
         Setting a scale factor that is valid across all unit system.
         """
-        from sympy.physics.units.prefixes import Prefix
         from sympy.physics.units import UnitSystem
         scale_factor = sympify(scale_factor)
         # replace all prefixes by their ratio to canonical units:

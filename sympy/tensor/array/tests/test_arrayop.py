@@ -8,8 +8,12 @@ from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate, di
 from sympy.tensor.array import Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableSparseNDimArray
 
 from sympy.tensor.array.arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims, Flatten
-# Test import although not used in file
-from sympy.tensor.array import NDimArray
+
+
+def test_import_NDimArray():
+    from sympy.tensor.array import NDimArray
+    del NDimArray
+
 
 def test_tensorproduct():
     x,y,z,t = symbols('x y z t')

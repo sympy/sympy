@@ -126,6 +126,13 @@ def intersection_sets(a, b):
     if r2.start.is_infinite:
         r2 = r2.reversed
 
+    # If both ends are infinite then it means that one Range is just the set
+    # of all integers (the step must be 1).
+    if r1.start.is_infinite:
+        return b
+    if r2.start.is_infinite:
+        return a
+
     # this equation represents the values of the Range;
     # it's a linear equation
     eq = lambda r, i: r.start + i*r.step

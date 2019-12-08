@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.functions import SingularityFunction, DiracDelta, Heaviside
+from sympy.functions import SingularityFunction, DiracDelta
 from sympy.core import sympify
 from sympy.integrals import integrate
 

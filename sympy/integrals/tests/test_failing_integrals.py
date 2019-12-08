@@ -1,7 +1,7 @@
 # A collection of failing integrals from the issues.
 
 from sympy import (
-    integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
+    integrate, I, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
     tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, Rational
 )
 

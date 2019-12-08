@@ -2044,7 +2044,7 @@ def meijerint_inversion(f, x, t):
     >>> meijerint_inversion(1/x, x, t)
     Heaviside(t)
     """
-    from sympy import I, Integral, exp, expand, log, Add, Mul, Heaviside
+    from sympy import exp, expand, log, Add, Mul, Heaviside
     f_ = f
     t_ = t
     t = Dummy('t', polar=True)  # We don't want sqrt(t**2) = abs(t) etc

@@ -1211,6 +1211,13 @@ def test_issue_16930():
     f_ = lambdify(x, f(x), modules='scipy')
     assert f_(1) == scipy.constants.golden_ratio
 
+def test_issue_17898():
+    if not scipy:
+        skip("scipy not installed")
+    x = symbols("x")
+    f_ = lambdify([x], sympy.LambertW(x,-1), modules='scipy')
+    assert f_(0.1) == mpmath.lambertw(0.1, -1)
+
 def test_single_e():
     f = lambdify(x, E)
     assert f(23) == exp(1.0)

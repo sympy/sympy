@@ -477,6 +477,7 @@ def test_Reals():
     assert S.Reals == Interval(-oo, oo)
     assert S.Reals != Interval(0, oo)
     assert S.Reals.is_subset(Interval(-oo, oo))
+    assert S.Reals.intersect(Range(-oo, oo)) == Range(-oo, oo)
 
 
 def test_Complex():
