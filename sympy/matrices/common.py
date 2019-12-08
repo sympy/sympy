@@ -1936,18 +1936,8 @@ class MatrixOperations(MatrixRequired):
         if perm and not isinstance(perm, Permutation) and \
             isinstance(perm[0], Iterable):
             if direction == 'forward':
-                perm = reversed(perm)
-
-            perm_obj = Permutation(size=max_index)
-            for item in perm:
-                if not isinstance(item, Iterable):
-                    raise ValueError(
-                        "{} is expected to be a list of lists " \
-                        "representing cycles, but {} is not consistent."
-                        .format(perm, item))
-
-                perm_obj = perm_obj(*item)
-            perm = perm_obj
+                perm = list(reversed(perm))
+            perm = Permutation(perm, size=max_index)
         else:
             perm = Permutation(perm, size=max_index)
 
