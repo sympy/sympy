@@ -99,7 +99,7 @@ def represent(expr, **options):
     ========
 
     Here we subclass ``Operator`` and ``Ket`` to create the z-spin operator
-    and its spin 1/2 up eigenstate. By definining the ``_represent_SzOp``
+    and its spin 1/2 up eigenstate. By defining the ``_represent_SzOp``
     method, the ket can be represented in the z-spin basis.
 
     >>> from sympy.physics.quantum import Operator, represent, Ket
@@ -171,7 +171,14 @@ def represent(expr, **options):
         base, exp = expr.as_base_exp()
         if format == 'numpy' or format == 'scipy.sparse':
             exp = _sympy_to_scalar(exp)
-        return represent(base, **options)**exp
+        base = represent(base, **options)
+        # scipy.sparse doesn't support negative exponents
+        # and warns when inverting a matrix in csr format.
+        if format == 'scipy.sparse' and exp < 0:
+            from scipy.sparse.linalg import inv
+            exp = - exp
+            base = inv(base.tocsc()).tocsr()
+        return base ** exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
         return TensorProduct(*new_args)

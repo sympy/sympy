@@ -1,15 +1,12 @@
 """Tests for dense recursive polynomials' tools. """
 
 from sympy.polys.densebasic import (
-    dup_LC, dmp_LC, dup_normal, dmp_normal,
-    dup_from_raw_dict, dmp_from_dict,
-    dmp_convert, dmp_swap, dmp_one_p,
+    dup_normal, dmp_normal,
+    dup_from_raw_dict,
+    dmp_convert, dmp_swap,
 )
 
-from sympy.polys.densearith import (
-    dup_add, dup_mul, dup_exquo,
-    dmp_neg, dmp_sub, dmp_mul_ground, dmp_mul, dmp_sqr,
-)
+from sympy.polys.densearith import dmp_mul_ground
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -32,7 +29,7 @@ from sympy.polys.densetools import (
     dup_revert, dmp_revert,
 )
 
-from sympy.polys.polyclasses import DMP, ANP
+from sympy.polys.polyclasses import ANP
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -41,12 +38,7 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
-from sympy.polys.specialpolys import (
-    f_polys,
-    dmp_fateman_poly_F_1,
-    dmp_fateman_poly_F_2,
-    dmp_fateman_poly_F_3,
-)
+from sympy.polys.specialpolys import f_polys
 
 from sympy.polys.domains import FF, ZZ, QQ, EX
 from sympy.polys.rings import ring
@@ -128,7 +120,7 @@ def test_dup_diff():
     f = dup_normal([17, 34, 56, -345, 23, 76, 0, 0, 12, 3, 7], ZZ)
 
     assert dup_diff(f, 0, ZZ) == f
-    assert dup_diff(f, 1, ZZ) == dup_diff(f, 1, ZZ)
+    assert dup_diff(f, 1, ZZ) == [170, 306, 448, -2415, 138, 380, 0, 0, 24, 3]
     assert dup_diff(f, 2, ZZ) == dup_diff(dup_diff(f, 1, ZZ), 1, ZZ)
     assert dup_diff(
         f, 3, ZZ) == dup_diff(dup_diff(dup_diff(f, 1, ZZ), 1, ZZ), 1, ZZ)
@@ -141,7 +133,6 @@ def test_dup_diff():
     assert dup_diff(f, 3, K) == dup_normal([], K)
 
     assert dup_diff(f, 0, K) == f
-    assert dup_diff(f, 1, K) == dup_diff(f, 1, K)
     assert dup_diff(f, 2, K) == dup_diff(dup_diff(f, 1, K), 1, K)
     assert dup_diff(
         f, 3, K) == dup_diff(dup_diff(dup_diff(f, 1, K), 1, K), 1, K)
@@ -161,7 +152,10 @@ def test_dmp_diff():
         dup_diff([1, -1, 0, 0, 2], 1, ZZ)
 
     assert dmp_diff(f_6, 0, 3, ZZ) == f_6
-    assert dmp_diff(f_6, 1, 3, ZZ) == dmp_diff(f_6, 1, 3, ZZ)
+    assert dmp_diff(f_6, 1, 3, ZZ) == [[[[8460]], [[]]],
+                       [[[135, 0, 0], [], [], [-135, 0, 0]]],
+                       [[[]]],
+                       [[[-423]], [[-47]], [[]], [[141], [], [94, 0], []], [[]]]]
     assert dmp_diff(
         f_6, 2, 3, ZZ) == dmp_diff(dmp_diff(f_6, 1, 3, ZZ), 1, 3, ZZ)
     assert dmp_diff(f_6, 3, 3, ZZ) == dmp_diff(

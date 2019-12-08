@@ -1,7 +1,7 @@
 """Heuristic polynomial GCD algorithm (HEUGCD). """
 
 from __future__ import print_function, division
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 from .polyerrors import HeuristicGCDFailed
 
 HEU_GCD_MAX = 6
@@ -23,7 +23,7 @@ def heugcd(f, g):
     The algorithm computes the polynomial GCD by evaluating polynomials
     ``f`` and ``g`` at certain points and computing (fast) integer GCD
     of those evaluations. The polynomial GCD is recovered from the integer
-    image by interpolation. The evaluation proces reduces f and g variable
+    image by interpolation. The evaluation process reduces f and g variable
     by variable into a large integer. The final step is to verify if the
     interpolated polynomial is the correct GCD. This gives cofactors of
     the input polynomials as a side effect.
@@ -51,7 +51,7 @@ def heugcd(f, g):
     References
     ==========
 
-    1. [Liao95]_
+    .. [1] [Liao95]_
 
     """
     assert f.ring == g.ring and f.ring.domain.is_ZZ
@@ -71,7 +71,7 @@ def heugcd(f, g):
             2*min(f_norm // abs(f.LC),
                   g_norm // abs(g.LC)) + 2)
 
-    for i in xrange(0, HEU_GCD_MAX):
+    for i in range(0, HEU_GCD_MAX):
         ff = f.evaluate(x0, x)
         gg = g.evaluate(x0, x)
 

@@ -2,21 +2,21 @@
 
 """Quantum field theory example
 
-* http://en.wikipedia.org/wiki/Quantum_field_theory
+* https://en.wikipedia.org/wiki/Quantum_field_theory
 
 This particular example is a work in progress. Currently it calculates the
 scattering amplitude of the process:
 
     electron + positron -> photon -> electron + positron
 
-in QED (http://en.wikipedia.org/wiki/Quantum_electrodynamics). The aim
+in QED (https://en.wikipedia.org/wiki/Quantum_electrodynamics). The aim
 is to be able to do any kind of calculations in QED or standard model in
 SymPy, but that's a long journey.
 
 """
 
-from sympy import Basic, exp, Symbol, sin, Rational, I, Mul, Matrix, \
-    ones, sqrt, pprint, simplify, Eq, sympify
+from sympy import Basic, Symbol, Matrix, \
+    ones, sqrt, pprint, Eq, sympify
 
 from sympy.physics import msigma, mgamma
 
@@ -109,9 +109,7 @@ def main():
     f = pslash(p) + m*ones(4)
     g = pslash(p) - m*ones(4)
 
-    # pprint(e)
     xprint('Tr(f*g)', Tr(f*g))
-    # print Tr(pslash(p)*pslash(k)).expand()
 
     M0 = [(v(pp, 1).D*mgamma(mu)*u(p, 1))*(u(k, 1).D*mgamma(mu, True) *
                                                  v(kp, 1)) for mu in range(4)]
@@ -119,8 +117,6 @@ def main():
     M = M[0]
     if not isinstance(M, Basic):
         raise TypeError("Invalid type of variable")
-    # print M
-    # print simplify(M)
 
     d = Symbol("d", real=True)  # d=E+m
 
@@ -136,10 +132,6 @@ def main():
     xprint('abs(M)**2', e)
     print("-"*40)
     xprint('Expand(abs(M)**2)', e.expand())
-
-    # print Pauli(1)*Pauli(1)
-    # print Pauli(1)**2
-    # print Pauli(1)*2*Pauli(1)
 
 if __name__ == "__main__":
     main()

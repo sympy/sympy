@@ -19,9 +19,10 @@ def test_Add():
 
 
 def test_Function():
-    assert precedence(sin(x)) == PRECEDENCE["Atom"]
-    assert precedence(Derivative(x, y)) == PRECEDENCE["Atom"]
+    assert precedence(sin(x)) == PRECEDENCE["Func"]
 
+def test_Derivative():
+    assert precedence(Derivative(x, y)) == PRECEDENCE["Atom"]
 
 def test_Integral():
     assert precedence(Integral(x, y)) == PRECEDENCE["Atom"]
@@ -72,7 +73,7 @@ def test_Symbol():
 
 
 def test_And_Or():
-    # precendence relations between logical operators, ...
+    # precedence relations between logical operators, ...
     assert precedence(x & y) > precedence(x | y)
     assert precedence(~y) > precedence(x & y)
     # ... and with other operators (cfr. other programming languages)

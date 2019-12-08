@@ -1,14 +1,36 @@
+from sympy.core import Rational
 from sympy.simplify import simplify, trigsimp
 from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
-     sin, cos, Function, Integral, Derivative, diff, integrate
+     sin, cos, Function, Integral, Derivative, diff
 from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
      VectorMul, VectorZero
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
+from sympy.vector.vector import Cross, Dot, cross
+from sympy.utilities.pytest import raises
 
-C = CoordSysCartesian('C')
+C = CoordSys3D('C')
 
 i, j, k = C.base_vectors()
 a, b, c = symbols('a b c')
+
+
+def test_cross():
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
+    assert Cross(v1, v2) == Cross(C.x*C.i + C.z**2*C.j, C.x*C.i + C.y*C.j + C.z*C.k)
+    assert Cross(v1, v2).doit() == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
+    assert cross(v1, v2) == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
+    assert Cross(v1, v2) == -Cross(v2, v1)
+    assert Cross(v1, v2) + Cross(v2, v1) == Vector.zero
+
+
+def test_dot():
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
+    assert Dot(v1, v2) == Dot(C.x*C.i + C.z**2*C.j, C.x*C.i + C.y*C.j + C.z*C.k)
+    assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
+    assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
+    assert Dot(v1, v2) == Dot(v2, v1)
 
 
 def test_vector_sympy():
@@ -16,9 +38,6 @@ def test_vector_sympy():
     Test whether the Vector framework confirms to the hashing
     and equality testing properties of SymPy.
     """
-    i1 = BaseVector('i1', 0, C, ' ', ' ')
-    assert i1 == i
-    assert i1.__hash__() == i.__hash__()
     v1 = 3*j
     assert v1 == j*3
     assert v1.components == {j: 3}
@@ -83,6 +102,8 @@ def test_vector():
     assert VectorMul(1, i) == i
     assert VectorAdd(v1, Vector.zero) == v1
     assert VectorMul(0, Vector.zero) == Vector.zero
+    raises(TypeError, lambda: v1.outer(1))
+    raises(TypeError, lambda: v1.dot(1))
 
 
 def test_vector_magnitude_normalize():
@@ -162,6 +183,8 @@ def test_vector_dot():
     assert k & j == 0
     assert k & k == 1
 
+    raises(TypeError, lambda: k.dot(1))
+
 
 def test_vector_cross():
     assert i.cross(Vector.zero) == Vector.zero
@@ -188,6 +211,19 @@ def test_vector_cross():
     assert k ^ j == -i
     assert k ^ k == Vector.zero
 
+    assert k.cross(1) == Cross(k, 1)
+
+
+def test_projection():
+    v1 = i + j + k
+    v2 = 3*i + 4*j
+    v3 = 0*i + 0*j
+    assert v1.projection(v1) == i + j + k
+    assert v1.projection(v2) == Rational(7, 3)*C.i + Rational(7, 3)*C.j + Rational(7, 3)*C.k
+    assert v1.projection(v1, scalar=True) == 1
+    assert v1.projection(v2, scalar=True) == Rational(7, 3)
+    assert v3.projection(v1) == Vector.zero
+
 
 def test_vector_diff_integrate():
     f = Function('f')
@@ -198,3 +234,8 @@ def test_vector_diff_integrate():
             (Derivative(f(a), a))*C.i + 2*a*C.j)
     assert (Integral(v, a) == (Integral(f(a), a))*C.i +
             (Integral(a**2, a))*C.j + (Integral(-1, a))*C.k)
+
+
+def test_vector_args():
+    raises(ValueError, lambda: BaseVector(3, C))
+    raises(TypeError, lambda: BaseVector(0, Vector.zero))

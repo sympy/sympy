@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S, pi, Rational
-from sympy.functions import hermite, sqrt, exp, factorial
+from sympy.functions import hermite, sqrt, exp, factorial, Abs
 from sympy.physics.quantum.constants import hbar
 
 
@@ -35,7 +35,7 @@ def psi_n(n, x, m, omega):
     n, x, m, omega = map(S, [n, x, m, omega])
     nu = m * omega / hbar
     # normalization coefficient
-    C = (nu/pi)**(S(1)/4) * sqrt(1/(2**n*factorial(n)))
+    C = (nu/pi)**Rational(1, 4) * sqrt(1/(2**n*factorial(n)))
 
     return C * exp(-nu* x**2 /2) * hermite(n, sqrt(nu)*x)
 
@@ -65,4 +65,18 @@ def E_n(n, omega):
     hbar*omega*(x + 1/2)
     """
 
-    return hbar * omega*(n + Rational(1, 2))
+    return hbar * omega * (n + S.Half)
+
+
+def coherent_state(n, alpha):
+    """
+    Returns <n|alpha> for the coherent states of 1D harmonic oscillator.
+    See https://en.wikipedia.org/wiki/Coherent_states
+
+    ``n``
+        the "nodal" quantum number
+    ``alpha``
+        the eigen value of annihilation operator
+    """
+
+    return exp(- Abs(alpha)**2/2)*(alpha**n)/sqrt(factorial(n))

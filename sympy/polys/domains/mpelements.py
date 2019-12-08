@@ -1,16 +1,17 @@
-"""Real and complex elements with built-in truncation. """
+"""Real and complex elements. """
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import string_types
 from sympy.polys.domains.domainelement import DomainElement
+from sympy.utilities import public
 
 from mpmath.ctx_mp_python import PythonMPContext, _mpf, _mpc, _constant
 from mpmath.libmp import (MPZ_ONE, fzero, fone, finf, fninf, fnan,
-    round_nearest, mpf_mul, mpf_abs, mpf_lt, mpc_abs, repr_dps, int_types,
+    round_nearest, mpf_mul, repr_dps, int_types,
     from_int, from_float, from_str, to_rational)
 from mpmath.rational import mpq
 
-from sympy.utilities import public
 
 @public
 class RealElement(_mpf, DomainElement):
@@ -19,13 +20,7 @@ class RealElement(_mpf, DomainElement):
     __slots__ = ['__mpf__']
 
     def _set_mpf(self, val):
-        prec, rounding = self.context._prec_rounding
-        tol = self.context.tol
-
-        if mpf_lt(mpf_abs(val, prec, rounding), tol):
-            self.__mpf__ = fzero
-        else:
-            self.__mpf__ = val
+        self.__mpf__ = val
 
     _mpf_ = property(lambda self: self.__mpf__, _set_mpf)
 
@@ -39,20 +34,7 @@ class ComplexElement(_mpc, DomainElement):
     __slots__ = ['__mpc__']
 
     def _set_mpc(self, val):
-        prec, rounding = self.context._prec_rounding
-        tol = self.context.tol
-
-        # norm = mpc_abs(val, prec, rounding)
-        # tol = mpf_max(tol, mpf_mul(norm, tol))
-
-        re, im = val
-
-        if mpf_lt(mpf_abs(re, prec, rounding), tol):
-            re = fzero
-        if mpf_lt(mpf_abs(im, prec, rounding), tol):
-            im = fzero
-
-        self.__mpc__ = (re, im)
+        self.__mpc__ = val
 
     _mpc_ = property(lambda self: self.__mpc__, _set_mpc)
 
@@ -72,13 +54,13 @@ class MPContext(PythonMPContext):
         else:
             ctx._set_dps(dps)
 
-        ctx.mpf = type('RealElement', (RealElement,), {})
-        ctx.mpc = type('ComplexElement', (ComplexElement,), {})
+        ctx.mpf = RealElement
+        ctx.mpc = ComplexElement
         ctx.mpf._ctxdata = [ctx.mpf, new, ctx._prec_rounding]
         ctx.mpc._ctxdata = [ctx.mpc, new, ctx._prec_rounding]
         ctx.mpf.context = ctx
         ctx.mpc.context = ctx
-        ctx.constant = type('constant', (_constant,), {})
+        ctx.constant = _constant
         ctx.constant._ctxdata = [ctx.mpf, new, ctx._prec_rounding]
         ctx.constant.context = ctx
 
@@ -123,7 +105,7 @@ class MPContext(PythonMPContext):
         if hasattr(tol, "_mpf_"):
             return tol._mpf_
         prec, rounding = ctx._prec_rounding
-        if isinstance(tol, basestring):
+        if isinstance(tol, string_types):
             return from_str(tol, prec, rounding)
         raise ValueError("expected a real number, got %s" % tol)
 

@@ -5,14 +5,20 @@ The dense matrix is stored as a list of lists.
 
 """
 
-from sympy.matrices.densetools import trace
-from sympy.matrices.densetools import col, row, eye, augment
-from sympy.matrices.densetools import rowadd, rowmul, conjugate_transpose
-from sympy import Dummy, sqrt, var
-from sympy.matrices.densetools import isHermitian
-from sympy.core.compatibility import xrange
-from sympy import QQ
 import copy
+
+from sympy.core.compatibility import range
+from sympy.core.power import isqrt
+from sympy.core.symbol import symbols
+from sympy.matrices.densetools import (
+    augment, col, conjugate_transpose, eye, rowadd, rowmul)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+SymPyDeprecationWarning(
+    feature="densesolve",
+    issue=12695,
+    deprecated_since_version="1.1").warn()
+
 
 def row_echelon(matlist, K):
     """
@@ -103,8 +109,8 @@ def LU(matlist, K, reverse = 0):
     """
     nrow = len(matlist)
     new_matlist1, new_matlist2 = eye(nrow, K), copy.deepcopy(matlist)
-    for i in xrange(nrow):
-        for j in xrange(i + 1, nrow):
+    for i in range(nrow):
+        for j in range(i + 1, nrow):
             if (new_matlist2[j][i] != 0):
                 new_matlist1[j][i] = new_matlist2[j][i]/new_matlist2[i][i]
                 rowadd(new_matlist2, j, i, -new_matlist2[j][i]/new_matlist2[i][i], K)
@@ -138,7 +144,7 @@ def cholesky(matlist, K):
             for k in range(j):
                 a += L[i][k]*L[j][k]
             if i == j:
-                L[i][j] = int(sqrt(new_matlist[i][j] - a))
+                L[i][j] = isqrt(new_matlist[i][j] - a)
             else:
                 L[i][j] = (new_matlist[i][j] - a)/L[j][j]
     return L, conjugate_transpose(L, K)
@@ -307,10 +313,8 @@ def LU_solve(matlist, variable, constant, K):
     """
     new_matlist = copy.deepcopy(matlist)
     nrow = len(new_matlist)
-    y = []
     L, U = LU(new_matlist, K)
-    for i in range(nrow):
-        y.append([var('y' + str(i))])
+    y = [[i] for i in symbols('y:%i' % nrow)]
     forward_substitution(L, y, constant, K)
     backward_substitution(U, variable, y, K)
     return variable
@@ -352,10 +356,8 @@ def cholesky_solve(matlist, variable, constant, K):
     """
     new_matlist = copy.deepcopy(matlist)
     nrow = len(new_matlist)
-    y = []
     L, Lstar = cholesky(new_matlist, K)
-    for i in range(nrow):
-        y.append([var('y' + str(i))])
+    y = [[i] for i in symbols('y:%i' % nrow)]
     forward_substitution(L, y, constant, K)
     backward_substitution(Lstar, variable, y, K)
     return variable
@@ -396,7 +398,6 @@ def forward_substitution(lower_triangle, variable, constant, K):
     """
     copy_lower_triangle = copy.deepcopy(lower_triangle)
     nrow = len(copy_lower_triangle)
-    result = []
     for i in range(nrow):
         a = K.zero
         for j in range(i):
@@ -440,7 +441,6 @@ def backward_substitution(upper_triangle, variable, constant, K):
     """
     copy_upper_triangle = copy.deepcopy(upper_triangle)
     nrow = len(copy_upper_triangle)
-    result = []
     for i in reversed(range(nrow)):
         a = K.zero
         for j in reversed(range(i + 1, nrow)):

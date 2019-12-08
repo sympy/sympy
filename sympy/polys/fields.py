@@ -4,16 +4,23 @@ from __future__ import print_function, division
 
 from operator import add, mul, lt, le, gt, ge
 
-from sympy.core.compatibility import reduce, string_types
+from sympy.core.compatibility import is_sequence, reduce, string_types
 from sympy.core.expr import Expr
+from sympy.core.mod import Mod
+from sympy.core.numbers import Exp1
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
-from sympy.polys.rings import PolyElement
-from sympy.polys.orderings import lex
-from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed
+from sympy.functions.elementary.exponential import ExpBase
 from sympy.polys.domains.domainelement import DomainElement
-from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.fractionfield import FractionField
+from sympy.polys.domains.polynomialring import PolynomialRing
+from sympy.polys.constructor import construct_domain
+from sympy.polys.orderings import lex
+from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyoptions import build_options
+from sympy.polys.polyutils import _parallel_dict_from_expr
+from sympy.polys.rings import PolyElement
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
@@ -39,8 +46,56 @@ def vfield(symbols, domain, order=lex):
 
 @public
 def sfield(exprs, *symbols, **options):
-    """Construct a field deriving generators and domain from options and input expressions. """
-    raise NotImplementedError
+    """Construct a field deriving generators and domain
+    from options and input expressions.
+
+    Parameters
+    ==========
+
+    exprs : :class:`Expr` or sequence of :class:`Expr` (sympifiable)
+    symbols : sequence of :class:`Symbol`/:class:`Expr`
+    options : keyword arguments understood by :class:`Options`
+
+    Examples
+    ========
+
+    >>> from sympy.core import symbols
+    >>> from sympy.functions import exp, log
+    >>> from sympy.polys.fields import sfield
+
+    >>> x = symbols("x")
+    >>> K, f = sfield((x*log(x) + 4*x**2)*exp(1/x + log(x)/3)/x**2)
+    >>> K
+    Rational function field in x, exp(1/x), log(x), x**(1/3) over ZZ with lex order
+    >>> f
+    (4*x**2*(exp(1/x)) + x*(exp(1/x))*(log(x)))/((x**(1/3))**5)
+    """
+    single = False
+    if not is_sequence(exprs):
+        exprs, single = [exprs], True
+
+    exprs = list(map(sympify, exprs))
+    opt = build_options(symbols, options)
+    numdens = []
+    for expr in exprs:
+        numdens.extend(expr.as_numer_denom())
+    reps, opt = _parallel_dict_from_expr(numdens, opt)
+
+    if opt.domain is None:
+        # NOTE: this is inefficient because construct_domain() automatically
+        # performs conversion to the target domain. It shouldn't do this.
+        coeffs = sum([list(rep.values()) for rep in reps], [])
+        opt.domain, _ = construct_domain(coeffs, opt=opt)
+
+    _field = FracField(opt.gens, opt.domain, opt.order)
+    fracs = []
+    for i in range(0, len(reps), 2):
+        fracs.append(_field(tuple(reps[i:i+2])))
+
+    if single:
+        return (_field, fracs[0])
+    else:
+        return (_field, fracs)
 
 _field_cache = {}
 
@@ -55,12 +110,13 @@ class FracField(DefaultPrinting):
         domain = ring.domain
         order = ring.order
 
-        _hash = hash((cls.__name__, symbols, ngens, domain, order))
-        obj = _field_cache.get(_hash)
+        _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
+        obj = _field_cache.get(_hash_tuple)
 
         if obj is None:
             obj = object.__new__(cls)
-            obj._hash = _hash
+            obj._hash_tuple = _hash_tuple
+            obj._hash = hash(_hash_tuple)
             obj.ring = ring
             obj.dtype = type("FracElement", (FracElement,), {"field": obj})
             obj.symbols = symbols
@@ -80,7 +136,7 @@ class FracField(DefaultPrinting):
                     if not hasattr(obj, name):
                         setattr(obj, name, generator)
 
-            _field_cache[_hash] = obj
+            _field_cache[_hash_tuple] = obj
 
         return obj
 
@@ -95,10 +151,12 @@ class FracField(DefaultPrinting):
         return self._hash
 
     def __eq__(self, other):
-        return self is other
+        return isinstance(other, FracField) and \
+            (self.symbols, self.ngens, self.domain, self.order) == \
+            (other.symbols, other.ngens, other.domain, other.order)
 
     def __ne__(self, other):
-        return self is not other
+        return not self == other
 
     def raw_new(self, numer, denom=None):
         return self.dtype(numer, denom)
@@ -116,7 +174,7 @@ class FracField(DefaultPrinting):
         except CoercionFailed:
             domain = self.domain
 
-            if not domain.has_Field and domain.has_assoc_Field:
+            if not domain.is_Field and domain.has_assoc_Field:
                 ring = self.ring
                 ground_field = domain.get_field()
                 element = ground_field.convert(element)
@@ -151,6 +209,8 @@ class FracField(DefaultPrinting):
 
     def _rebuild_expr(self, expr, mapping):
         domain = self.domain
+        powers = tuple((gen, gen.as_base_exp()) for gen in mapping.keys()
+            if gen.is_Pow or isinstance(gen, ExpBase))
 
         def _rebuild(expr):
             generator = mapping.get(expr)
@@ -161,16 +221,22 @@ class FracField(DefaultPrinting):
                 return reduce(add, list(map(_rebuild, expr.args)))
             elif expr.is_Mul:
                 return reduce(mul, list(map(_rebuild, expr.args)))
-            elif expr.is_Pow and expr.exp.is_Integer:
-                return _rebuild(expr.base)**int(expr.exp)
-            else:
-                try:
-                    return domain.convert(expr)
-                except CoercionFailed:
-                    if not domain.has_Field and domain.has_assoc_Field:
-                        return domain.get_field().convert(expr)
-                    else:
-                        raise
+            elif expr.is_Pow or isinstance(expr, (ExpBase, Exp1)):
+                b, e = expr.as_base_exp()
+                # look for bg**eg whose integer power may be b**e
+                for gen, (bg, eg) in powers:
+                    if bg == b and Mod(e, eg) == 0:
+                        return mapping.get(gen)**int(e/eg)
+                if e.is_Integer and e is not S.One:
+                    return _rebuild(b)**int(e)
+
+            try:
+                return domain.convert(expr)
+            except CoercionFailed:
+                if not domain.is_Field and domain.has_assoc_Field:
+                    return domain.get_field().convert(expr)
+                else:
+                    raise
 
         return _rebuild(sympify(expr))
 
@@ -243,13 +309,13 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         return self.numer.as_expr(*symbols)/self.denom.as_expr(*symbols)
 
     def __eq__(f, g):
-        if isinstance(g, f.field.dtype):
+        if isinstance(g, FracElement) and f.field == g.field:
             return f.numer == g.numer and f.denom == g.denom
         else:
             return f.numer == g and f.denom == f.field.ring.one
 
     def __ne__(f, g):
-        return not f.__eq__(g)
+        return not f == g
 
     def __nonzero__(f):
         return bool(f.numer)
@@ -288,7 +354,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         try:
             element = domain.convert(element)
         except CoercionFailed:
-            if not domain.has_Field and domain.has_assoc_Field:
+            if not domain.is_Field and domain.has_assoc_Field:
                 ground_field = domain.get_field()
 
                 try:
@@ -501,7 +567,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         """Computes partial derivative in ``x``.
 
         Examples
-        --------
+        ========
+
         >>> from sympy.polys.fields import field
         >>> from sympy.polys.domains import ZZ
 

@@ -9,13 +9,13 @@ def identity(x):
 def exhaust(brule):
     """ Apply a branching rule repeatedly until it has no effect """
     def exhaust_brl(expr):
-        seen = set([expr])
+        seen = {expr}
         for nexpr in brule(expr):
             if nexpr not in seen:
                 seen.add(nexpr)
                 for nnexpr in exhaust_brl(nexpr):
                     yield nnexpr
-        if seen == set([expr]):
+        if seen == {expr}:
             yield expr
     return exhaust_brl
 
@@ -85,7 +85,7 @@ def do_one(*brules):
                 yielded = True
                 yield nexpr
             if yielded:
-                raise StopIteration()
+                return
     return do_one_brl
 
 def chain(*brules):
@@ -95,7 +95,7 @@ def chain(*brules):
     def chain_brl(expr):
         if not brules:
             yield expr
-            raise StopIteration()
+            return
 
         head, tail = brules[0], brules[1:]
         for nexpr in head(expr):

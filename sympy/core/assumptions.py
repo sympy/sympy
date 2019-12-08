@@ -4,10 +4,22 @@ This module contains the machinery handling assumptions.
 All symbolic objects have assumption attributes that can be accessed via
 .is_<assumption name> attribute.
 
-Assumptions determine certain properties of symbolic objects. Assumptions
-can have 3 possible values: True, False, None.  None is returned when it is
-impossible to say something about the property. For example, a generic Symbol
-is not known beforehand to be positive.
+Assumptions determine certain properties of symbolic objects and can
+have 3 possible values: True, False, None.  True is returned if the
+object has the property and False is returned if it doesn't or can't
+(i.e. doesn't make sense):
+
+    >>> from sympy import I
+    >>> I.is_algebraic
+    True
+    >>> I.is_real
+    False
+    >>> I.is_prime
+    False
+
+When the property cannot be determined (or when a method is not
+implemented) None will be returned, e.g. a generic symbol, x, may or
+may not be positive so a value of None is returned for x.is_positive.
 
 By default, all symbolic values are in the largest set in the given context
 without specifying the property. For example, a symbol that has a property
@@ -54,8 +66,10 @@ Here follows a list of possible assumption names:
         divisor other than ``1`` or the number itself.  See [4]_.
 
     zero
+        object has the value of ``0``.
+
     nonzero
-        object is zero (not zero).
+        object is a real number that is not zero.
 
     rational
         object can have only values from the set
@@ -74,13 +88,13 @@ Here follows a list of possible assumption names:
 
     finite
     infinite
-        object absolute value is bounded (is value is
-        arbitrarily large).  See [7]_, [8]_, [9]_.
+        object absolute value is bounded (arbitrarily large).
+        See [7]_, [8]_, [9]_.
 
     negative
     nonnegative
-        object can have only negative (only
-        nonnegative) values [1]_.
+        object can have only negative (nonnegative)
+        values [1]_.
 
     positive
     nonpositive
@@ -96,7 +110,7 @@ Examples
 ========
 
     >>> from sympy import Symbol
-    >>> x = Symbol('x', real = True); x
+    >>> x = Symbol('x', real=True); x
     x
     >>> x.is_real
     True
@@ -123,24 +137,25 @@ attributes of objects/classes.
 References
 ==========
 
-.. [1] http://en.wikipedia.org/wiki/Negative_number
-.. [2] http://en.wikipedia.org/wiki/Parity_%28mathematics%29
-.. [3] http://en.wikipedia.org/wiki/Imaginary_number
-.. [4] http://en.wikipedia.org/wiki/Composite_number
-.. [5] http://en.wikipedia.org/wiki/Irrational_number
-.. [6] http://en.wikipedia.org/wiki/Prime_number
-.. [7] http://en.wikipedia.org/wiki/Finite
+.. [1] https://en.wikipedia.org/wiki/Negative_number
+.. [2] https://en.wikipedia.org/wiki/Parity_%28mathematics%29
+.. [3] https://en.wikipedia.org/wiki/Imaginary_number
+.. [4] https://en.wikipedia.org/wiki/Composite_number
+.. [5] https://en.wikipedia.org/wiki/Irrational_number
+.. [6] https://en.wikipedia.org/wiki/Prime_number
+.. [7] https://en.wikipedia.org/wiki/Finite
 .. [8] https://docs.python.org/3/library/math.html#math.isfinite
 .. [9] http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
-.. [10] http://en.wikipedia.org/wiki/Transcendental_number
-.. [11] http://en.wikipedia.org/wiki/Algebraic_number
+.. [10] https://en.wikipedia.org/wiki/Transcendental_number
+.. [11] https://en.wikipedia.org/wiki/Algebraic_number
 
 """
 from __future__ import print_function, division
 
 from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta
-from sympy.core.compatibility import integer_types, with_metaclass
+from sympy.core.compatibility import integer_types
+
 
 from random import shuffle
 
@@ -151,37 +166,57 @@ _assume_rules = FactRules([
     'rational       ->  real',
     'rational       ->  algebraic',
     'algebraic      ->  complex',
-    'real           ->  complex',
+    'transcendental ==  complex & !algebraic',
     'real           ->  hermitian',
     'imaginary      ->  complex',
     'imaginary      ->  antihermitian',
+    'extended_real  ->  commutative',
     'complex        ->  commutative',
+    'complex        ->  finite',
 
     'odd            ==  integer & !even',
     'even           ==  integer & !odd',
 
-    'real           ==  negative | zero | positive',
-    'transcendental ==  complex & !algebraic',
+    'real           ->  complex',
+    'extended_real  ->  real | infinite',
+    'real           ==  extended_real & finite',
 
+    'extended_real        ==  extended_negative | zero | extended_positive',
+    'extended_negative    ==  extended_nonpositive & extended_nonzero',
+    'extended_positive    ==  extended_nonnegative & extended_nonzero',
+
+    'extended_nonpositive ==  extended_real & !extended_positive',
+    'extended_nonnegative ==  extended_real & !extended_negative',
+
+    'real           ==  negative | zero | positive',
     'negative       ==  nonpositive & nonzero',
     'positive       ==  nonnegative & nonzero',
-    'zero           ==  nonnegative & nonpositive',
 
     'nonpositive    ==  real & !positive',
     'nonnegative    ==  real & !negative',
 
+    'positive       ==  extended_positive & finite',
+    'negative       ==  extended_negative & finite',
+    'nonpositive    ==  extended_nonpositive & finite',
+    'nonnegative    ==  extended_nonnegative & finite',
+    'nonzero        ==  extended_nonzero & finite',
+
     'zero           ->  even & finite',
+    'zero           ==  extended_nonnegative & extended_nonpositive',
+    'zero           ==  nonnegative & nonpositive',
+    'nonzero        ->  real',
 
     'prime          ->  integer & positive',
-    'composite      ==  integer & positive & !prime',
+    'composite      ->  integer & positive & !prime',
+    '!composite     ->  !positive | !even | prime',
 
     'irrational     ==  real & !rational',
 
-    'imaginary      ->  !real',
+    'imaginary      ->  !extended_real',
 
     'infinite       ->  !finite',
-    'noninteger     ==  real & !integer',
-    'nonzero        ==  !zero',
+    'noninteger     ==  extended_real & !integer',
+    'extended_nonzero == extended_real & !zero',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
@@ -194,14 +229,24 @@ class StdFactKB(FactKB):
 
     This is the only kind of FactKB that Basic objects should use.
     """
-    rules = _assume_rules
-
     def __init__(self, facts=None):
+        super(StdFactKB, self).__init__(_assume_rules)
+        # save a copy of the facts dict
+        if not facts:
+            self._generator = {}
+        elif not isinstance(facts, FactKB):
+            self._generator = facts.copy()
+        else:
+            self._generator = facts.generator
         if facts:
             self.deduce_all_facts(facts)
 
     def copy(self):
         return self.__class__(self)
+
+    @property
+    def generator(self):
+        return self._generator.copy()
 
 
 def as_property(fact):
@@ -284,7 +329,7 @@ def _ask(fact, obj):
     return None
 
 
-class ManagedProperties(with_metaclass(BasicMeta, BasicMeta)):
+class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)
@@ -300,10 +345,9 @@ class ManagedProperties(with_metaclass(BasicMeta, BasicMeta)):
 
         defs = {}
         for base in reversed(cls.__bases__):
-            try:
-                defs.update(base._explicit_class_assumptions)
-            except AttributeError:
-                pass
+            assumptions = getattr(base, '_explicit_class_assumptions', None)
+            if assumptions is not None:
+                defs.update(assumptions)
         defs.update(local_defs)
 
         cls._explicit_class_assumptions = defs
@@ -311,10 +355,9 @@ class ManagedProperties(with_metaclass(BasicMeta, BasicMeta)):
 
         cls._prop_handler = {}
         for k in _assume_defined:
-            try:
-                cls._prop_handler[k] = getattr(cls, '_eval_is_%s' % k)
-            except AttributeError:
-                pass
+            eval_is_meth = getattr(cls, '_eval_is_%s' % k, None)
+            if eval_is_meth is not None:
+                cls._prop_handler[k] = eval_is_meth
 
         # Put definite results directly into the class dict, for speed
         for k, v in cls.default_assumptions.items():
@@ -323,10 +366,11 @@ class ManagedProperties(with_metaclass(BasicMeta, BasicMeta)):
         # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
         derived_from_bases = set()
         for base in cls.__bases__:
-            try:
-                derived_from_bases |= set(base.default_assumptions)
-            except AttributeError:
-                continue  # not an assumption-aware class
+            default_assumptions = getattr(base, 'default_assumptions', None)
+            # is an assumption-aware class
+            if default_assumptions is not None:
+                derived_from_bases.update(default_assumptions)
+
         for fact in derived_from_bases - set(cls.default_assumptions):
             pname = as_property(fact)
             if pname not in cls.__dict__:

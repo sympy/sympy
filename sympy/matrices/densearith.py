@@ -3,8 +3,14 @@ Fundamental arithmetic of dense matrices. The dense matrix is stored
 as a list of lists.
 
 """
+from sympy.core.compatibility import range
 
-from sympy.core.compatibility import xrange
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+SymPyDeprecationWarning(
+    feature="densearith",
+    issue=12695,
+    deprecated_since_version="1.1").warn()
 
 def add(matlist1, matlist2, K):
     """
@@ -242,6 +248,6 @@ def mulrowcol(row, col, K):
 
     """
     result = K.zero
-    for i in xrange(len(row)):
+    for i in range(len(row)):
         result += row[i]*col[i]
     return result

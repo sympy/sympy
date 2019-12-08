@@ -135,10 +135,9 @@ Compute `\int(e^x\sin{(x)} + e^x\cos{(x)})\,dx`.
 Compute `\int_{-\infty}^\infty \sin{(x^2)}\,dx`.
 
  >>> integrate(sin(x**2), (x, -oo, oo))
-   ___   ___
- ╲╱ 2 ⋅╲╱ π
- ───────────
-      2
+ √2⋅√π
+ ─────
+   2
 
 Find :math:`\lim_{x\to 0}\frac{\sin{(x)}}{x}`.
 
@@ -148,8 +147,7 @@ Find :math:`\lim_{x\to 0}\frac{\sin{(x)}}{x}`.
 Solve `x^2 - 2 = 0`.
 
  >>> solve(x**2 - 2, x)
- ⎡   ___    ___⎤
- ⎣-╲╱ 2 , ╲╱ 2 ⎦
+ [-√2, √2]
 
 Solve the differential equation `y'' - y = e^t`.
 
@@ -163,32 +161,28 @@ Find the eigenvalues of `\left[\begin{smallmatrix}1 & 2\\2 &
 2\end{smallmatrix}\right]`.
 
  >>> Matrix([[1, 2], [2, 2]]).eigenvals()
- ⎧      ____         ____       ⎫
- ⎪3   ╲╱ 17        ╲╱ 17    3   ⎪
- ⎨─ + ──────: 1, - ────── + ─: 1⎬
- ⎪2     2            2      2   ⎪
- ⎩                              ⎭
+ ⎧3   √17     3   √17   ⎫
+ ⎨─ - ───: 1, ─ + ───: 1⎬
+ ⎩2    2      2    2    ⎭
 
 Rewrite the Bessel function `J_{\nu}\left(z\right)` in terms of the
 spherical Bessel function `j_\nu(z)`.
 
   >>> besselj(nu, z).rewrite(jn)
-    ___   ___
-  ╲╱ 2 ⋅╲╱ z ⋅jn(ν - 1/2, z)
-  ──────────────────────────
-              ___
-            ╲╱ π
+  √2⋅√z⋅jn(ν - 1/2, z)
+  ────────────────────
+           √π
 
-Print `\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx` using `\LaTeX`.
+Print `\int_{0}^{\pi} \cos^{2}{\left(x \right)}\, dx` using `\LaTeX`.
 
   >>> latex(Integral(cos(x)**2, (x, 0, pi)))
-  \int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx
+  \int\limits_{0}^{\pi} \cos^{2}{\left(x \right)}\, dx
 
 Why SymPy?
 ==========
 
 There are many computer algebra systems out there.  `This
-<http://en.wikipedia.org/wiki/List_of_computer_algebra_systems>`_ Wikipedia
+<https://en.wikipedia.org/wiki/List_of_computer_algebra_systems>`_ Wikipedia
 article lists many of them.  What makes SymPy a better choice than the
 alternatives?
 

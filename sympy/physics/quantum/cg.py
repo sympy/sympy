@@ -8,6 +8,7 @@ from __future__ import print_function, division
 
 from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
                    symbols, sympify, Wild)
+from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -44,7 +45,7 @@ class Wigner3j(Expr):
     Examples
     ========
 
-    Declare a Wigner-3j coefficient and calcualte its value
+    Declare a Wigner-3j coefficient and calculate its value
 
         >>> from sympy.physics.quantum.cg import Wigner3j
         >>> w3j = Wigner3j(6,0,4,0,2,0)
@@ -147,7 +148,7 @@ class Wigner3j(Expr):
 
 
 class CG(Wigner3j):
-    """Class for Clebsch-Gordan coefficient
+    r"""Class for Clebsch-Gordan coefficient
 
     Clebsch-Gordan coefficients describe the angular momentum coupling between
     two systems. The coefficients give the expansion of a coupled total angular
@@ -155,7 +156,7 @@ class CG(Wigner3j):
     coefficients are defined as [1]_:
 
     .. math ::
-        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \langle j_1,m_1;j_2,m_2 | j_3,m_3\\rangle
+        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \left\langle j_1,m_1;j_2,m_2 | j_3,m_3\right\rangle
 
     Parameters
     ==========
@@ -303,7 +304,7 @@ class Wigner6j(Expr):
     def doit(self, **hints):
         if self.is_symbolic:
             raise ValueError("Coefficients must be numerical")
-        return wigner_6j(self.j1, self.j2, self.j12, self.j3, self.j, self.j3)
+        return wigner_6j(self.j1, self.j2, self.j12, self.j3, self.j, self.j23)
 
 
 class Wigner9j(Expr):
@@ -593,7 +594,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
 
     dep_variables: list
         A list of the variables that must match for all the terms in the sum,
-        i.e. the dependant variables
+        i.e. the dependent variables
 
     build_index_expr: expression
         Expression with Wild terms giving the number of elements in cg_index
@@ -624,10 +625,10 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             cg_index[index_expr.subs(sub_dep).subs(sub_2)] = j, expr.subs(lt, 1).subs(sub_dep).subs(sub_2), lt.subs(sub_2), sign.subs(sub_dep).subs(sub_2)
         if all(i is not None for i in cg_index):
             min_lt = min(*[ abs(term[2]) for term in cg_index ])
-            indicies = [ term[0] for term in cg_index]
-            indicies.sort()
-            indicies.reverse()
-            [ term_list.pop(i) for i in indicies ]
+            indices = [ term[0] for term in cg_index]
+            indices.sort()
+            indices.reverse()
+            [ term_list.pop(j) for j in indices ]
             for term in cg_index:
                 if abs(term[2]) > min_lt:
                     term_list.append( (term[2] - min_lt*term[3]) * term[1] )

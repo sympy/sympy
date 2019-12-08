@@ -1,15 +1,17 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, C, Dict, sympify
-from sympy.core.compatibility import as_int, default_sort_key, xrange
+from sympy.core import Basic, Dict, sympify
+from sympy.core.compatibility import as_int, default_sort_key, range
+from sympy.core.sympify import _sympify
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
-from sympy.utilities.iterables import has_dups, flatten, group
+from sympy.sets.sets import FiniteSet, Union
+from sympy.utilities.iterables import flatten, group
 
 from collections import defaultdict
 
 
-class Partition(C.FiniteSet):
+class Partition(FiniteSet):
     """
     This class represents an abstract partition.
 
@@ -35,10 +37,12 @@ class Partition(C.FiniteSet):
         Examples
         ========
 
+        Creating Partition from Python lists:
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([1, 2], [3])
         >>> a
-        {{3}, {1, 2}}
+        Partition(FiniteSet(1, 2), FiniteSet(3))
         >>> a.partition
         [[1, 2], [3]]
         >>> len(a)
@@ -46,20 +50,43 @@ class Partition(C.FiniteSet):
         >>> a.members
         (1, 2, 3)
 
+        Creating Partition from Python sets:
+
+        >>> Partition({1, 2, 3}, {4, 5})
+        Partition(FiniteSet(1, 2, 3), FiniteSet(4, 5))
+
+        Creating Partition from SymPy finite sets:
+
+        >>> from sympy.sets.sets import FiniteSet
+        >>> a = FiniteSet(1, 2, 3)
+        >>> b = FiniteSet(4, 5)
+        >>> Partition(a, b)
+        Partition(FiniteSet(1, 2, 3), FiniteSet(4, 5))
         """
-        args = partition
-        if not all(isinstance(part, (list, C.FiniteSet)) for part in args):
+        args = []
+        dups = False
+        for arg in partition:
+            if isinstance(arg, list):
+                as_set = set(arg)
+                if len(as_set) < len(arg):
+                    dups = True
+                    break  # error below
+                arg = as_set
+            args.append(_sympify(arg))
+
+        if not all(isinstance(part, FiniteSet) for part in args):
             raise ValueError(
-                "Each argument to Partition should be a list or a FiniteSet")
+                "Each argument to Partition should be " \
+                "a list, set, or a FiniteSet")
 
         # sort so we have a canonical reference for RGS
-        partition = sorted(sum(partition, []), key=default_sort_key)
-        if has_dups(partition):
-            raise ValueError("Partition contained duplicated elements.")
+        U = Union(*args)
+        if dups or len(U) < sum(len(arg) for arg in args):
+            raise ValueError("Partition contained duplicate elements.")
 
-        obj = C.FiniteSet.__new__(cls, *list(map(lambda x: C.FiniteSet(*x), args)))
-        obj.members = tuple(partition)
-        obj.size = len(partition)
+        obj = FiniteSet.__new__(cls, *args)
+        obj.members = tuple(U)
+        obj.size = len(U)
         return obj
 
     def sort_key(self, order=None):
@@ -80,14 +107,14 @@ class Partition(C.FiniteSet):
         >>> d = Partition(list(range(4)))
         >>> l = [d, b, a + 1, a, c]
         >>> l.sort(key=default_sort_key); l
-        [{{1, 2}}, {{1}, {2}}, {{1, x}}, {{3, 4}}, {{0, 1, 2, 3}}]
+        [Partition(FiniteSet(1, 2)), Partition(FiniteSet(1), FiniteSet(2)), Partition(FiniteSet(1, x)), Partition(FiniteSet(3, 4)), Partition(FiniteSet(0, 1, 2, 3))]
         """
         if order is None:
             members = self.members
         else:
             members = tuple(sorted(self.members,
                              key=lambda w: default_sort_key(w, order)))
-        return list(map(default_sort_key, (self.size, members, self.rank)))
+        return tuple(map(default_sort_key, (self.size, members, self.rank)))
 
     @property
     def partition(self):
@@ -223,7 +250,7 @@ class Partition(C.FiniteSet):
         >>> a.RGS
         (0, 0, 1, 2, 2)
         >>> a + 1
-        {{3}, {4}, {5}, {1, 2}}
+        Partition(FiniteSet(1, 2), FiniteSet(3), FiniteSet(4), FiniteSet(5))
         >>> _.RGS
         (0, 0, 1, 2, 3)
         """
@@ -251,17 +278,17 @@ class Partition(C.FiniteSet):
 
         >>> from sympy.combinatorics.partitions import Partition
         >>> Partition.from_rgs([0, 1, 2, 0, 1], list('abcde'))
-        {{c}, {a, d}, {b, e}}
+        Partition(FiniteSet(c), FiniteSet(a, d), FiniteSet(b, e))
         >>> Partition.from_rgs([0, 1, 2, 0, 1], list('cbead'))
-        {{e}, {a, c}, {b, d}}
+        Partition(FiniteSet(e), FiniteSet(a, c), FiniteSet(b, d))
         >>> a = Partition([1, 4], [2], [3, 5])
         >>> Partition.from_rgs(a.RGS, a.members)
-        {{2}, {1, 4}, {3, 5}}
+        Partition(FiniteSet(1, 4), FiniteSet(2), FiniteSet(3, 5))
         """
         if len(rgs) != len(elements):
             raise ValueError('mismatch in rgs and element lengths')
         max_elem = max(rgs) + 1
-        partition = [[] for i in xrange(max_elem)]
+        partition = [[] for i in range(max_elem)]
         j = 0
         for i in rgs:
             partition[i].append(elements[j])
@@ -290,7 +317,10 @@ class IntegerPartition(Basic):
     sympy.utilities.iterables.partitions,
     sympy.utilities.iterables.multiset_partitions
 
-    Reference: http://en.wikipedia.org/wiki/Partition_%28number_theory%29
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/Partition_%28number_theory%29
     """
 
     _dict = None
@@ -302,7 +332,7 @@ class IntegerPartition(Basic):
 
         The partition can be given as a list of positive integers or a
         dictionary of (integer, multiplicity) items. If the partition is
-        preceeded by an integer an error will be raised if the partition
+        preceded by an integer an error will be raised if the partition
         does not sum to that given integer.
 
         Examples
@@ -317,8 +347,9 @@ class IntegerPartition(Basic):
         >>> IntegerPartition({1:3, 2:1})
         IntegerPartition(5, (2, 1, 1, 1))
 
-        If the value that the partion should sum to is given first, a check
+        If the value that the partition should sum to is given first, a check
         will be made to see n error will be raised if there is a discrepancy:
+
         >>> IntegerPartition(10, [5, 4, 3, 1])
         Traceback (most recent call last):
         ...
@@ -594,11 +625,11 @@ def RGS_generalized(m):
     [203,   0,   0,  0,  0, 0, 0]])
     """
     d = zeros(m + 1)
-    for i in xrange(0, m + 1):
+    for i in range(0, m + 1):
         d[0, i] = 1
 
-    for i in xrange(1, m + 1):
-        for j in xrange(m):
+    for i in range(1, m + 1):
+        for j in range(m):
             if j <= m - i:
                 d[i, j] = j * d[i - 1, j] + d[i - 1, j + 1]
             else:
@@ -665,7 +696,7 @@ def RGS_unrank(rank, m):
     L = [1] * (m + 1)
     j = 1
     D = RGS_generalized(m)
-    for i in xrange(2, m + 1):
+    for i in range(2, m + 1):
         v = D[m - i, j]
         cr = j*v
         if cr <= rank:
@@ -694,7 +725,7 @@ def RGS_rank(rgs):
     rgs_size = len(rgs)
     rank = 0
     D = RGS_generalized(rgs_size)
-    for i in xrange(1, rgs_size):
+    for i in range(1, rgs_size):
         n = len(rgs[(i + 1):])
         m = max(rgs[0:i])
         rank += D[n, m + 1] * rgs[i]

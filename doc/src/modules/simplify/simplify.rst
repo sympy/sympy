@@ -1,5 +1,6 @@
+========
 Simplify
-********
+========
 
 .. currentmodule:: sympy.simplify.simplify
 
@@ -7,54 +8,21 @@ simplify
 --------
 .. autofunction:: simplify
 
-collect
--------
-.. autofunction:: collect
-
-.. autofunction:: rcollect
-
 separatevars
 ------------
-
 .. autofunction:: separatevars
 
 nthroot
 -------
 .. autofunction:: nthroot
 
-
-rad_rationalize
----------------
-.. autofunction:: rad_rationalize
-
-
-radsimp
--------
-.. autofunction:: radsimp
-
-ratsimp
--------
-.. autofunction:: ratsimp
-
-fraction
---------
-.. autofunction:: fraction
-
-trigsimp
---------
-.. autofunction:: trigsimp
+kroneckersimp
+-------------
+.. autofunction:: kroneckersimp
 
 besselsimp
 ----------
 .. autofunction:: besselsimp
-
-powsimp
--------
-.. autofunction:: powsimp
-
-combsimp
---------
-.. autofunction:: combsimp
 
 hypersimp
 ---------
@@ -68,37 +36,90 @@ nsimplify
 ---------
 .. autofunction:: nsimplify
 
-collect_sqrt
-------------
-.. autofunction:: collect_sqrt
-
-collect_const
--------------
-.. autofunction:: collect_const
-
 posify
 ------
 .. autofunction:: posify
-
-powdenest
----------
-.. autofunction:: powdenest
 
 logcombine
 ----------
 .. autofunction:: logcombine
 
+Radsimp
+-------
+.. module:: sympy.simplify.radsimp
 
-Square Root Denest
-------------------
+radsimp
+^^^^^^^
+.. autofunction:: radsimp
+
+rad_rationalize
+^^^^^^^^^^^^^^^
+.. autofunction:: rad_rationalize
+
+collect
+^^^^^^^
+.. autofunction:: collect
+
+.. autofunction:: rcollect
+
+collect_sqrt
+^^^^^^^^^^^^
+.. autofunction:: collect_sqrt
+
+collect_const
+^^^^^^^^^^^^^
+.. autofunction:: collect_const
+
+fraction
+^^^^^^^^
+.. autofunction:: fraction
+
+Ratsimp
+-------
+.. module:: sympy.simplify.ratsimp
+
+ratsimp
+^^^^^^^
+.. autofunction:: ratsimp
+
+Trigonometric simplification
+----------------------------
+.. module:: sympy.simplify.trigsimp
+
+trigsimp
+^^^^^^^^
+.. autofunction:: trigsimp
+
+Power simplification
+--------------------
+.. module:: sympy.simplify.powsimp
+
+powsimp
+^^^^^^^
+.. autofunction:: powsimp
+
+powdenest
+^^^^^^^^^
+.. autofunction:: powdenest
+
+Combinatorial simplification
+----------------------------
+.. module:: sympy.simplify.combsimp
+
+combsimp
+^^^^^^^^
+.. autofunction:: combsimp
+
+Square Root Denesting
+---------------------
 .. module:: sympy.simplify.sqrtdenest
 
 sqrtdenest
 ^^^^^^^^^^
 .. autofunction:: sqrtdenest
 
-Common Subexpresion Elimination
--------------------------------
+Common Subexpression Elimination
+--------------------------------
 .. module:: sympy.simplify.cse_main
 
 cse

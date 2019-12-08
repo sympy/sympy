@@ -1,5 +1,6 @@
 from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
-    count_ops, S, And, I, pi, Eq, Or, Not, Xor ,Nand ,Nor, Implies,Equivalent, ITE
+    count_ops, S, And, I, pi, Eq, Or, Not, Xor, Nand, Nor, Implies, \
+    Equivalent, MatrixSymbol, Symbol, ITE, Rel, Rational
 from sympy.core.containers import Tuple
 
 x, y, z = symbols('x,y,z')
@@ -15,6 +16,7 @@ def test_count_ops_non_visual():
     assert count(x + y*x + 2*y) == 4
     assert count({x + y: x}) == 1
     assert count({x + y: S(2) + x}) is not S.One
+    assert count(x < y) == 1
     assert count(Or(x,y)) == 1
     assert count(And(x,y)) == 1
     assert count(Not(x)) == 1
@@ -26,11 +28,13 @@ def test_count_ops_non_visual():
     assert count(ITE(x,y,z)) == 1
     assert count(ITE(True,x,y)) == 0
 
+
 def test_count_ops_visual():
     ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(
         'Add Mul Pow sin cos exp And Derivative Integral'.upper())
     DIV, SUB, NEG = symbols('DIV SUB NEG')
-    NOT, OR, AND, XOR, IMPLIES, EQUIVALENT, ITE, BASIC, TUPLE = symbols(
+    LT, LE, GT, GE, EQ, NE = symbols('LT LE GT GE EQ NE')
+    NOT, OR, AND, XOR, IMPLIES, EQUIVALENT, _ITE, BASIC, TUPLE = symbols(
         'Not Or And Xor Implies Equivalent ITE Basic Tuple'.upper())
 
     def count(val):
@@ -41,6 +45,7 @@ def test_count_ops_visual():
     assert count(-1) == NEG
     assert count(-2) == NEG
     assert count(S(2)/3) == DIV
+    assert count(Rational(2, 3)) == DIV
     assert count(pi/3) == DIV
     assert count(-pi/3) == DIV + NEG
     assert count(I - 1) == SUB
@@ -50,6 +55,7 @@ def test_count_ops_visual():
     assert count(x) is S.Zero
     assert count(-x) == NEG
     assert count(-2*x/3) == NEG + DIV + MUL
+    assert count(Rational(-2, 3)*x) == NEG + DIV + MUL
     assert count(1/x) == DIV
     assert count(1/(x*y)) == DIV + MUL
     assert count(-1/x) == NEG + DIV
@@ -62,7 +68,8 @@ def test_count_ops_visual():
     assert count(-2*x**2) == POW + MUL + NEG
 
     assert count(x + pi/3) == ADD + DIV
-    assert count(x + S(1)/3) == ADD + DIV
+    assert count(x + S.One/3) == ADD + DIV
+    assert count(x + Rational(1, 3)) == ADD + DIV
     assert count(x + y) == ADD
     assert count(x - y) == SUB
     assert count(y - x) == SUB
@@ -93,19 +100,37 @@ def test_count_ops_visual():
     assert count(Basic()) == 0
     assert count(Basic(Basic(),Basic(x,x+y))) == ADD + 2*BASIC
     assert count(Basic(x, x + y)) == ADD + BASIC
-    assert count(Or(x,y)) == OR
-    assert count(And(x,y)) == AND
-    assert count(And(x**y,z)) == AND + POW
-    assert count(Or(x,Or(y,And(z,a)))) == AND + OR
-    assert count(Nor(x,y)) == NOT + OR
-    assert count(Nand(x,y)) == NOT + AND
-    assert count(Xor(x,y)) == XOR
-    assert count(Implies(x,y)) == IMPLIES
-    assert count(Equivalent(x,y)) == EQUIVALENT
-    assert count(ITE(x,y,z)) == ITE
-    assert count([Or(x,y), And(x,y), Basic(x+y)]) == ADD + AND + BASIC + OR
+    assert [count(Rel(x, y, op)) for op in '< <= > >= == <> !='.split()
+        ] == [LT, LE, GT, GE, EQ, NE, NE]
+    assert count(Or(x, y)) == OR
+    assert count(And(x, y)) == AND
+    assert count(Or(x, Or(y, And(z, a)))) == AND + OR
+    assert count(Nor(x, y)) == NOT + OR
+    assert count(Nand(x, y)) == NOT + AND
+    assert count(Xor(x, y)) == XOR
+    assert count(Implies(x, y)) == IMPLIES
+    assert count(Equivalent(x, y)) == EQUIVALENT
+    assert count(ITE(x, y, z)) == _ITE
+    assert count([Or(x, y), And(x, y), Basic(x + y)]
+        ) == ADD + AND + BASIC + OR
 
     assert count(Basic(Tuple(x))) == BASIC + TUPLE
     #It checks that TUPLE is counted as an operation.
 
-    assert count(Eq(x + y, S(2))) == ADD
+    assert count(Eq(x + y, S(2))) == ADD + EQ
+
+
+def test_issue_9324():
+    def count(val):
+        return count_ops(val, visual=False)
+
+    M = MatrixSymbol('M', 10, 10)
+    assert count(M[0, 0]) == 0
+    assert count(2 * M[0, 0] + M[5, 7]) == 2
+    P = MatrixSymbol('P', 3, 3)
+    Q = MatrixSymbol('Q', 3, 3)
+    assert count(P + Q) == 1
+    m = Symbol('m', integer=True)
+    n = Symbol('n', integer=True)
+    M = MatrixSymbol('M', m + n, m * m)
+    assert count(M[0, 1]) == 2

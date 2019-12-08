@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from sympy.core import Basic, Rational
-from sympy.core.numbers import igcd
+from sympy.core.compatibility import range
 from .cartan_type import CartanType
 from mpmath import fac
-from operator import itemgetter
-from itertools import groupby
-from sympy.matrices import Matrix, eye
+from sympy.core.backend import Matrix, eye, Rational, Basic, igcd
 
 class WeylGroup(Basic):
 
@@ -31,8 +28,9 @@ class WeylGroup(Basic):
         different generating reflections.  This function returns them as
         a list.
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> c = WeylGroup("F4")
         >>> c.generators()
@@ -52,8 +50,9 @@ class WeylGroup(Basic):
         the rank of the Lie algebra.  For types F and G,
         the order is fixed.
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> c = WeylGroup("D4")
         >>> c.group_order()
@@ -124,8 +123,9 @@ class WeylGroup(Basic):
         the specified element, and then finding what power of the matrix is the
         identity.  It then returns this power.
 
-        Example
+        Examples
         ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> b = WeylGroup("B4")
         >>> b.element_order('r1*r4*r2')
@@ -173,7 +173,7 @@ class WeylGroup(Basic):
                 if len(reflections) == 1:
                     return 2
                 else:
-                    m = len(reflections) / 2
+                    m = len(reflections) // 2
                     lcm = (6 * m)/ igcd(m, 6)
                 order = lcm / m
                 return order
@@ -224,8 +224,9 @@ class WeylGroup(Basic):
         This method uses the standard representation for all the generating
         reflections.
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> f = WeylGroup("F4")
         >>> f.matrix_form('r2*r3')
@@ -278,9 +279,9 @@ class WeylGroup(Basic):
                     gen1 = Matrix([[1, 0, 0], [0, 0, 1], [0, 1, 0]])
                     matrixform *= gen1
                 else:
-                    gen2 = Matrix([[Rational(2, 3), Rational(2, 3), -Rational(1, 3)],
-                        [Rational(2, 3), Rational(-1, 3), Rational(2, 3)], [Rational(-1, 3),
-                            Rational(2, 3), Rational(2, 3)]])
+                    gen2 = Matrix([[Rational(2, 3), Rational(2, 3), Rational(-1, 3)],
+                                   [Rational(2, 3), Rational(-1, 3), Rational(2, 3)],
+                                   [Rational(-1, 3), Rational(2, 3), Rational(2, 3)]])
                     matrixform *= gen2
             return matrixform
 
@@ -374,8 +375,9 @@ class WeylGroup(Basic):
         m(i, j) is 3.  If there are two edges, the order m(i, j) is 4, and if there
         are three edges, the order m(i, j) is 6.
 
-        Example
+        Examples
         ========
+
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> c = WeylGroup("B3")
         >>> print(c.coxeter_diagram())

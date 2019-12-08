@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core import S
 from sympy.polys import Poly
-from sympy.polys.polytools import factor_list
 
 
 def dispersionset(p, q=None, *gens, **args):
@@ -72,10 +71,10 @@ def dispersionset(p, q=None, *gens, **args):
     References
     ==========
 
-    1. [ManWright94]_
-    2. [Koepf98]_
-    3. [Abramov71]_
-    4. [Man93]_
+    .. [1] [ManWright94]_
+    .. [2] [Koepf98]_
+    .. [3] [Abramov71]_
+    .. [4] [Man93]_
     """
     # Check for valid input
     same = False if q is not None else True
@@ -201,10 +200,10 @@ def dispersion(p, q=None, *gens, **args):
     References
     ==========
 
-    1. [ManWright94]_
-    2. [Koepf98]_
-    3. [Abramov71]_
-    4. [Man93]_
+    .. [1] [ManWright94]_
+    .. [2] [Koepf98]_
+    .. [3] [Abramov71]_
+    .. [4] [Man93]_
     """
     J = dispersionset(p, q, *gens, **args)
     if not J:

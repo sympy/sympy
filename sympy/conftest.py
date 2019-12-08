@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 import sys
 sys._running_pytest = True
+from distutils.version import LooseVersion as V
 
 import pytest
 from sympy.core.cache import clear_cache
@@ -9,7 +10,7 @@ import re
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
 
-def process_split(session, config, items):
+def process_split(config, items):
     split = config.getoption("--split")
     if not split:
         return
@@ -55,10 +56,10 @@ def pytest_addoption(parser):
         help="split tests")
 
 
-def pytest_collection_modifyitems(session, config, items):
+def pytest_collection_modifyitems(config, items):
     """ pytest hook. """
     # handle splits
-    process_split(session, config, items)
+    process_split(config, items)
 
 
 @pytest.fixture(autouse=True, scope='module')
@@ -71,6 +72,6 @@ def check_disabled(request):
         pytest.skip("test requirements not met.")
     elif getattr(request.module, 'ipython', False):
         # need to check version and options for ipython tests
-        if (pytest.__version__ < '2.6.3' and
+        if (V(pytest.__version__) < '2.6.3' and
             pytest.config.getvalue('-s') != 'no'):
             pytest.skip("run py.test with -s or upgrade to newer version.")

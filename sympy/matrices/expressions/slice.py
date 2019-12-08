@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from sympy.matrices.expressions.matexpr  import MatrixExpr
 from sympy import Tuple, Basic
 from sympy.functions.elementary.integers import floor
-from sympy.assumptions import Q, ask
 
 def normalize(i, parentsize):
     if isinstance(i, slice):
@@ -17,7 +16,7 @@ def normalize(i, parentsize):
         i.append(1)
     start, stop, step = i
     start = start or 0
-    if stop == None:
+    if stop is None:
         stop = parentsize
     if (start < 0) == True:
         start += parentsize
@@ -34,10 +33,11 @@ class MatrixSlice(MatrixExpr):
     """ A MatrixSlice of a Matrix Expression
 
     Examples
+    ========
 
     >>> from sympy import MatrixSlice, ImmutableMatrix
     >>> M = ImmutableMatrix(4, 4, range(16))
-    >>> print(M)
+    >>> M
     Matrix([
     [ 0,  1,  2,  3],
     [ 4,  5,  6,  7],
@@ -45,7 +45,7 @@ class MatrixSlice(MatrixExpr):
     [12, 13, 14, 15]])
 
     >>> B = MatrixSlice(M, (0, 2), (2, 4))
-    >>> print(ImmutableMatrix(B))
+    >>> ImmutableMatrix(B)
     Matrix([
     [2, 3],
     [6, 7]])
@@ -76,9 +76,10 @@ class MatrixSlice(MatrixExpr):
         cols = cols if self.colslice[2] == 1 else floor(cols/self.colslice[2])
         return rows, cols
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         return self.parent._entry(i*self.rowslice[2] + self.rowslice[0],
-                                  j*self.colslice[2] + self.colslice[0])
+                                  j*self.colslice[2] + self.colslice[0],
+                                  **kwargs)
 
     @property
     def on_diag(self):

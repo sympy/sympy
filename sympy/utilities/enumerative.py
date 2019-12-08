@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 """
 Algorithms and classes to support enumerative combinatorics.
@@ -36,7 +36,7 @@ partition A is greater than partition B if A's leftmost/greatest
 part is greater than B's leftmost part.  If the leftmost parts are
 equal, compare the second parts, and so on.
 
-In this ordering, the greatest partion of a given multiset has only
+In this ordering, the greatest partition of a given multiset has only
 one part.  The least partition is the one in which the components
 are spread out, one per part.
 
@@ -59,7 +59,7 @@ Decrement - change the part so that it is smaller in the
   decrement to [4, 2, 0], while [4, 0, 0] would decrement to [3, 3,
   1].  A singleton part is never decremented -- [1, 0, 0] is not
   decremented to [0, 3, 1].  Instead, the decrement operator needs
-  to fail for this case.  In Knuth's psuedocode, the decrement
+  to fail for this case.  In Knuth's pseudocode, the decrement
   operator is step m5.
 
 Spread unallocated multiplicity - Once a part has been decremented,
@@ -74,7 +74,7 @@ Spread unallocated multiplicity - Once a part has been decremented,
   spread operation will add a new part so that the stack becomes
   [[5, 3, 0], [0, 0, 1]].  If the most significant part (for the
   same multiset) has been decremented to [2, 0, 0] the stack becomes
-  [[2, 0, 0], [2, 0, 0], [1, 3, 1]].  In the psuedocode, the spread
+  [[2, 0, 0], [2, 0, 0], [1, 3, 1]].  In the pseudocode, the spread
   operation for one part is step m2.  The complete spread operation
   is a loop of steps m2 and m3.
 
@@ -101,7 +101,7 @@ class PartComponent(object):
     A stack of these, plus an auxiliary frame array, f, represents a
     partition of the multiset.
 
-    Knuth's psuedocode makes c, u, and v separate arrays.
+    Knuth's pseudocode makes c, u, and v separate arrays.
     """
 
     __slots__ = ('c', 'u', 'v')
@@ -129,7 +129,7 @@ class PartComponent(object):
 
     def __ne__(self, other):
         """Defined for consistency with __eq__"""
-        return not self.__eq__(other)
+        return not self == other
 
 
 # This function tries to be a faithful implementation of algorithm
@@ -138,7 +138,7 @@ class PartComponent(object):
 # (mostly) the same variable names, etc.  This makes for rather
 # low-level Python.
 
-# Changes from Knuth's psuedocode include
+# Changes from Knuth's pseudocode include
 # - use PartComponent struct/object instead of 3 arrays
 # - make the function a generator
 # - map (with some difficulty) the GOTOs to Python control structures.
@@ -147,7 +147,7 @@ class PartComponent(object):
 # - flag variable x takes on values True/False instead of 1/0
 #
 def multiset_partitions_taocp(multiplicities):
-    """Enumerates partions of a multiset.
+    """Enumerates partitions of a multiset.
 
     Parameters
     ==========
@@ -204,7 +204,7 @@ def multiset_partitions_taocp(multiplicities):
     See Also
     ========
 
-    sympy.utilities.iterables.multiset_partititions: Takes a multiset
+    sympy.utilities.iterables.multiset_partitions: Takes a multiset
         as input and directly yields multiset partitions.  It
         dispatches to a number of functions, including this one, for
         implementation.  Most users will find it more convenient to
@@ -225,12 +225,12 @@ def multiset_partitions_taocp(multiplicities):
     # Note: allocation of space for stack is conservative.  Knuth's
     # exercise 7.2.1.5.68 gives some indication of how to tighten this
     # bound, but this is not implemented.
-    pstack = [PartComponent() for i in xrange(n * m + 1)]
+    pstack = [PartComponent() for i in range(n * m + 1)]
     f = [0] * (n + 1)
 
     # Step M1 in Knuth (Initialize)
     # Initial state - entire multiset in one part.
-    for j in xrange(m):
+    for j in range(m):
         ps = pstack[j]
         ps.c = j
         ps.u = multiplicities[j]
@@ -294,7 +294,7 @@ def multiset_partitions_taocp(multiplicities):
                 # Return to M5
             else:
                 pstack[j].v = pstack[j].v - 1
-                for k in xrange(j + 1, b):
+                for k in range(j + 1, b):
                     pstack[k].v = pstack[k].u
                 break  # GOTO M2
 
@@ -332,7 +332,7 @@ def factoring_visitor(state, primes):
     """
     f, lpart, pstack = state
     factoring = []
-    for i in xrange(lpart + 1):
+    for i in range(lpart + 1):
         factor = 1
         for ps in pstack[f[i]: f[i + 1]]:
             if ps.v > 0:
@@ -360,7 +360,7 @@ def list_visitor(state, components):
     f, lpart, pstack = state
 
     partition = []
-    for i in xrange(lpart+1):
+    for i in range(lpart+1):
         part = []
         for ps in pstack[f[i]:f[i+1]]:
             if ps.v > 0:
@@ -381,11 +381,6 @@ class MultisetPartitionTraverser():
     data structures which can be interpreted by the same visitor
     functions used for the output of ``multiset_partitions_taocp``.
 
-    See Also
-    ========
-    multiset_partitions_taocp
-    sympy.utilities.iterables.multiset_partititions
-
     Examples
     ========
 
@@ -395,6 +390,12 @@ class MultisetPartitionTraverser():
     127750
     >>> m.count_partitions([3,3,3])
     686
+
+    See Also
+    ========
+
+    multiset_partitions_taocp
+    sympy.utilities.iterables.multiset_partitions
 
     References
     ==========
@@ -448,11 +449,11 @@ class MultisetPartitionTraverser():
         # pstack is the partition stack, which is segmented by
         # f into parts.
         self.pstack = [PartComponent() for i in
-                       xrange(num_components * cardinality + 1)]
+                       range(num_components * cardinality + 1)]
         self.f = [0] * (cardinality + 1)
 
         # Initial state - entire multiset in one part.
-        for j in xrange(num_components):
+        for j in range(num_components):
             ps = self.pstack[j]
             ps.c = j
             ps.u = multiplicities[j]
@@ -484,12 +485,12 @@ class MultisetPartitionTraverser():
 
         """
         plen = len(part)
-        for j in xrange(plen - 1, -1, -1):
-            if (j == 0 and part[j].v > 1) or (j > 0 and part[j].v > 0):
+        for j in range(plen - 1, -1, -1):
+            if j == 0 and part[j].v > 1 or j > 0 and part[j].v > 0:
                 # found val to decrement
                 part[j].v -= 1
                 # Reset trailing parts back to maximum
-                for k in xrange(j + 1, plen):
+                for k in range(j + 1, plen):
                     part[k].v = part[k].u
                 return True
         return False
@@ -549,17 +550,17 @@ class MultisetPartitionTraverser():
             self.p1 += 1  # increment to keep track of usefulness of tests
             return False
         plen = len(part)
-        for j in xrange(plen - 1, -1, -1):
+        for j in range(plen - 1, -1, -1):
             # Knuth's mod, (answer to problem 7.2.1.5.69)
-            if (j == 0) and (part[0].v - 1)*(ub - self.lpart) < part[0].u:
+            if j == 0 and (part[0].v - 1)*(ub - self.lpart) < part[0].u:
                 self.k1 += 1
                 return False
 
-            if (j == 0 and part[j].v > 1) or (j > 0 and part[j].v > 0):
+            if j == 0 and part[j].v > 1 or j > 0 and part[j].v > 0:
                 # found val to decrement
                 part[j].v -= 1
                 # Reset trailing parts back to maximum
-                for k in xrange(j + 1, plen):
+                for k in range(j + 1, plen):
                     part[k].v = part[k].u
 
                 # Have now decremented part, but are we doomed to
@@ -567,7 +568,7 @@ class MultisetPartitionTraverser():
                 # that turns out to be surprisingly common - exactly
                 # enough room to expand the leading component, but no
                 # room for the second component, which has v=0.
-                if (plen > 1 and (part[1].v == 0) and
+                if (plen > 1 and part[1].v == 0 and
                     (part[0].u - part[0].v) ==
                         ((ub - self.lpart - 1) * part[0].v)):
                     self.k2 += 1
@@ -628,7 +629,7 @@ class MultisetPartitionTraverser():
         if deficit <= 0:
             return True
 
-        for i in xrange(len(part) - 1, -1, -1):
+        for i in range(len(part) - 1, -1, -1):
             if i == 0:
                 if part[0].v > deficit:
                     part[0].v -= deficit
@@ -702,7 +703,7 @@ class MultisetPartitionTraverser():
         changed = False  # Set to true when the new part (so far) is
                          # strictly less than (as opposed to less than
                          # or equal) to the old.
-        for j in xrange(self.f[self.lpart], self.f[self.lpart + 1]):
+        for j in range(self.f[self.lpart], self.f[self.lpart + 1]):
             self.pstack[k].u = self.pstack[j].u - self.pstack[j].v
             if self.pstack[k].u == 0:
                 changed = True
@@ -730,7 +731,7 @@ class MultisetPartitionTraverser():
         """
         return self.pstack[self.f[self.lpart]:self.f[self.lpart + 1]]
 
-    # Same interface and funtionality as multiset_partitions_taocp(),
+    # Same interface and functionality as multiset_partitions_taocp(),
     # but some might find this refactored version easier to follow.
     def enum_all(self, multiplicities):
         """Enumerate the partitions of a multiset.
@@ -753,7 +754,7 @@ class MultisetPartitionTraverser():
         [['a'], ['a'], ['b', 'b']],
         [['a'], ['a'], ['b'], ['b']]]
 
-        See also
+        See Also
         ========
 
         multiset_partitions_taocp():
@@ -784,10 +785,6 @@ class MultisetPartitionTraverser():
 
         Equivalent to enum_range(multiplicities, 0, ub)
 
-        See also
-        ========
-        enum_all, enum_large, enum_range
-
         Parameters
         ==========
 
@@ -813,6 +810,11 @@ class MultisetPartitionTraverser():
 
         The implementation is based, in part, on the answer given to
         exercise 69, in Knuth [AOCP]_.
+
+        See Also
+        ========
+
+        enum_all, enum_large, enum_range
 
         """
 
@@ -853,10 +855,6 @@ class MultisetPartitionTraverser():
 
         Equivalent to enum_range(multiplicities, lb, sum(multiplicities))
 
-        See also
-        ========
-        enum_all, enum_small, enum_range
-
         Parameters
         ==========
 
@@ -880,6 +878,11 @@ class MultisetPartitionTraverser():
         [['a', 'b'], ['a'], ['b']],
         [['a'], ['a'], ['b', 'b']],
         [['a'], ['a'], ['b'], ['b']]]
+
+        See Also
+        ========
+
+        enum_all, enum_small, enum_range
 
         """
         self.discarded = 0
@@ -1010,7 +1013,7 @@ class MultisetPartitionTraverser():
         programming to cut down on the number of nodes actually
         explored.  The dictionary used in order to accelerate the
         counting process is stored in the ``MultisetPartitionTraverser``
-        object and persists across calls.  If the the user does not
+        object and persists across calls.  If the user does not
         expect to call ``count_partitions`` for any additional
         multisets, the object should be cleared to save memory.  On
         the other hand, the cache built up from one count run can

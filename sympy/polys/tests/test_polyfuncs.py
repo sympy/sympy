@@ -1,14 +1,14 @@
 """Tests for high-level polynomials manipulation functions. """
 
 from sympy.polys.polyfuncs import (
-    symmetrize, horner, interpolate, viete,
+    symmetrize, horner, interpolate, rational_interpolate, viete,
 )
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
 )
 
-from sympy import symbols
+from sympy import symbols, S
 from sympy.utilities.pytest import raises
 
 from sympy.abc import a, b, c, d, e, x, y, z
@@ -20,7 +20,6 @@ def test_symmetrize():
 
     s1 = x + y + z
     s2 = x*y + x*z + y*z
-    s3 = x*y*z
 
     assert symmetrize(1) == (1, 0)
     assert symmetrize(1, formal=True) == (1, 0, [])
@@ -77,9 +76,36 @@ def test_horner():
 
 def test_interpolate():
     assert interpolate([1, 4, 9, 16], x) == x**2
+    assert interpolate([1, 4, 9, 25], x) == S(3)*x**3/2 - S(8)*x**2 + S(33)*x/2 - 9
     assert interpolate([(1, 1), (2, 4), (3, 9)], x) == x**2
     assert interpolate([(1, 2), (2, 5), (3, 10)], x) == 1 + x**2
     assert interpolate({1: 2, 2: 5, 3: 10}, x) == 1 + x**2
+    assert interpolate({5: 2, 7: 5, 8: 10, 9: 13}, x) == \
+        -S(13)*x**3/24 + S(12)*x**2 - S(2003)*x/24 + 187
+    assert interpolate([(1, 3), (0, 6), (2, 5), (5, 7), (-2, 4)], x) == \
+        S(-61)*x**4/280 + S(247)*x**3/210 + S(139)*x**2/280 - S(1871)*x/420 + 6
+
+
+def test_rational_interpolate():
+    x, y = symbols('x,y')
+    xdata = [1, 2, 3, 4, 5, 6]
+    ydata1 = [120, 150, 200, 255, 312, 370]
+    ydata2 = [-210, -35, 105, 231, 350, 465]
+    assert rational_interpolate(list(zip(xdata, ydata1)), 2) == (
+      (60*x**2 + 60)/x )
+    assert rational_interpolate(list(zip(xdata, ydata1)), 3) == (
+      (60*x**2 + 60)/x )
+    assert rational_interpolate(list(zip(xdata, ydata2)), 2, X=y) == (
+      (105*y**2 - 525)/(y + 1) )
+    xdata = list(range(1,11))
+    ydata = [-1923885361858460, -5212158811973685, -9838050145867125,
+      -15662936261217245, -22469424125057910, -30073793365223685,
+      -38332297297028735, -47132954289530109, -56387719094026320,
+      -66026548943876885]
+    assert rational_interpolate(list(zip(xdata, ydata)), 5) == (
+      (-12986226192544605*x**4 +
+      8657484128363070*x**3 - 30301194449270745*x**2 + 4328742064181535*x
+      - 4328742064181535)/(x**3 + 9*x**2 - 3*x + 11))
 
 
 def test_viete():

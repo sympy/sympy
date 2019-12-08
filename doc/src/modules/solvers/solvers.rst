@@ -1,14 +1,25 @@
+.. _solvers:
+
 Solvers
-==========
+=======
 
 .. module:: sympy.solvers
 
 The *solvers* module in SymPy implements methods for solving equations.
 
+.. note::
+
+   It is recommended to use :func:`solveset` to solve univariate equations,
+   :func:`~.linsolve` to solve system of linear equations
+   instead of :func:`~sympy.solvers.solvers.solve` and :func:`~.nonlinsolve` to
+   solve system of non linear equations since sooner or later the :func:`~.solveset`
+   will take over :func:`~sympy.solvers.solvers.solve` either internally or externally.
+
+
 Algebraic equations
 --------------------
 
-Use :func:`solve` to solve algebraic equations. We suppose all equations are equaled to 0,
+Use :func:`~sympy.solvers.solvers.solve` to solve algebraic equations. We suppose all equations are equaled to 0,
 so solving x**2 == 1 translates into the following code::
 
     >>> from sympy.solvers import solve
@@ -17,7 +28,7 @@ so solving x**2 == 1 translates into the following code::
     >>> solve(x**2 - 1, x)
     [-1, 1]
 
-The first argument for :func:`solve` is an equation (equaled to zero) and the second argument
+The first argument for :func:`~sympy.solvers.solvers.solve` is an equation (equaled to zero) and the second argument
 is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solvers.solve
@@ -34,7 +45,11 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solvers.check_assumptions
 
+.. autofunction:: sympy.solvers.solvers.failing_assumptions
+
 .. autofunction:: sympy.solvers.solvers.checksol
+
+.. autofunction:: sympy.solvers.solvers.unrad
 
 Ordinary Differential equations (ODEs)
 --------------------------------------

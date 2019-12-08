@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 """
 Gaussian optics.
 
@@ -44,7 +43,7 @@ __all__ = [
 ]
 
 
-from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
+from sympy import (atan2, Expr, I, im, Matrix, pi, re, sqrt, sympify,
     together)
 from sympy.utilities.misc import filldedent
 
@@ -105,7 +104,7 @@ class RayTransferMatrix(Matrix):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
+    .. [1] https://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
     """
 
     def __new__(cls, *args):
@@ -387,7 +386,7 @@ class GeometricRay(Matrix):
     matrix : a 2x1 matrix (Matrix(2, 1, [height, angle]))
 
     Examples
-    =======
+    ========
 
     >>> from sympy.physics.optics import GeometricRay, FreeSpace
     >>> from sympy import symbols, Matrix
@@ -509,7 +508,8 @@ class BeamParameter(Expr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Complex_beam_parameter
+    .. [1] https://en.wikipedia.org/wiki/Complex_beam_parameter
+    .. [2] https://en.wikipedia.org/wiki/Gaussian_beam
     """
     #TODO A class Complex may be implemented. The BeamParameter may
     # subclass it. See:
@@ -558,9 +558,9 @@ class BeamParameter(Expr):
         >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.radius
-        0.2809/pi**2 + 1
+        1 + 3.55998576005696*pi**2
         """
-        return self.z*(1 + (self.z/self.z_r)**2)
+        return self.z*(1 + (self.z_r/self.z)**2)
 
     @property
     def w(self):
@@ -720,8 +720,8 @@ def geometric_conj_ab(a, b):
     a*b/(a + b)
     """
     a, b = map(sympify, (a, b))
-    if abs(a) == oo or abs(b) == oo:
-        return a if abs(b) == oo else b
+    if a.is_infinite or b.is_infinite:
+        return a if b.is_infinite else b
     else:
         return a*b/(a + b)
 
@@ -825,7 +825,7 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     >>> l, w_i, w_o, f = symbols('l w_i w_o f')
 
     >>> conjugate_gauss_beams(l, w_i, w_o, f=f)[0]
-    f*(-sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)) + 1)
+    f*(1 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))
 
     >>> factor(conjugate_gauss_beams(l, w_i, w_o, f=f)[1])
     f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 -

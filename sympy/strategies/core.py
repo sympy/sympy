@@ -1,7 +1,6 @@
 """ Generic SymPy-Independent Strategies """
 from __future__ import print_function, division
 
-from functools import partial
 from sympy.core.compatibility import get_function_name
 
 identity = lambda x: x
@@ -10,7 +9,7 @@ def exhaust(rule):
     """ Apply a rule repeatedly until it has no effect """
     def exhaustive_rl(expr):
         new, old = rule(expr), expr
-        while(new != old):
+        while new != old:
             new, old = rule(new), new
         return new
     return exhaustive_rl
@@ -33,7 +32,7 @@ def condition(cond, rule):
         if cond(expr):
             return rule(expr)
         else:
-            return      expr
+            return expr
     return conditioned_rl
 
 def chain(*rules):
@@ -95,8 +94,6 @@ def switch(key, ruledict):
         rl = ruledict.get(key(expr), identity)
         return rl(expr)
     return switch_rl
-
-identity = lambda x: x
 
 def minimize(*rules, **kwargs):
     """ Select result of rules that minimizes objective

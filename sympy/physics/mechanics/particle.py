@@ -1,9 +1,10 @@
 from __future__ import print_function, division
 
-__all__ = ['Particle']
-
-from sympy import sympify
+from sympy.core.backend import sympify
+from sympy.core.compatibility import string_types
 from sympy.physics.vector import Point
+
+__all__ = ['Particle']
 
 
 class Particle(object):
@@ -39,37 +40,37 @@ class Particle(object):
     """
 
     def __init__(self, name, point, mass):
-        if not isinstance(name, str):
+        if not isinstance(name, string_types):
             raise TypeError('Supply a valid name.')
         self._name = name
-        self.set_mass(mass)
-        self.set_point(point)
-        self._pe = sympify(0)
+        self.mass = mass
+        self.point = point
+        self.potential_energy = 0
 
     def __str__(self):
         return self._name
 
     __repr__ = __str__
 
-    def get_mass(self):
+    @property
+    def mass(self):
         """Mass of the particle."""
         return self._mass
 
-    def set_mass(self, mass):
-        self._mass = sympify(mass)
+    @mass.setter
+    def mass(self, value):
+        self._mass = sympify(value)
 
-    mass = property(get_mass, set_mass)
-
-    def get_point(self):
+    @property
+    def point(self):
         """Point of the particle."""
         return self._point
 
-    def set_point(self, p):
+    @point.setter
+    def point(self, p):
         if not isinstance(p, Point):
             raise TypeError("Particle point attribute must be a Point object.")
         self._point = p
-
-    point = property(get_point, set_point)
 
     def linear_momentum(self, frame):
         """Linear momentum of the particle.
@@ -180,7 +181,28 @@ class Particle(object):
         return (self.mass / sympify(2) * self.point.vel(frame) &
                 self.point.vel(frame))
 
-    def set_potential_energy(self, scalar):
+    @property
+    def potential_energy(self):
+        """The potential energy of the Particle.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Particle, Point
+        >>> from sympy import symbols
+        >>> m, g, h = symbols('m g h')
+        >>> O = Point('O')
+        >>> P = Particle('P', O, m)
+        >>> P.potential_energy = m * g * h
+        >>> P.potential_energy
+        g*h*m
+
+        """
+
+        return self._pe
+
+    @potential_energy.setter
+    def potential_energy(self, scalar):
         """Used to set the potential energy of the Particle.
 
         Parameters
@@ -197,28 +219,40 @@ class Particle(object):
         >>> m, g, h = symbols('m g h')
         >>> O = Point('O')
         >>> P = Particle('P', O, m)
-        >>> P.set_potential_energy(m * g * h)
+        >>> P.potential_energy = m * g * h
 
         """
 
         self._pe = sympify(scalar)
 
-    @property
-    def potential_energy(self):
-        """The potential energy of the Particle.
+    def set_potential_energy(self, scalar):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "Particle.set_potential_energy(self, scalar)",
+                useinstead="property sympy.physics.mechanics." +
+                    "Particle.potential_energy",
+                deprecated_since_version="1.5", issue=9800).warn()
+        self.potential_energy = scalar
 
-        Examples
-        ========
+    def parallel_axis(self, point, frame):
+        """Returns an inertia dyadic of the particle with respect to another
+        point and frame.
 
-        >>> from sympy.physics.mechanics import Particle, Point
-        >>> from sympy import symbols
-        >>> m, g, h = symbols('m g h')
-        >>> O = Point('O')
-        >>> P = Particle('P', O, m)
-        >>> P.set_potential_energy(m * g * h)
-        >>> P.potential_energy
-        g*h*m
+        Parameters
+        ==========
+        point : sympy.physics.vector.Point
+            The point to express the inertia dyadic about.
+        frame : sympy.physics.vector.ReferenceFrame
+            The reference frame used to construct the dyadic.
+
+        Returns
+        =======
+        inertia : sympy.physics.vector.Dyadic
+            The inertia dyadic of the particle expressed about the provided
+            point and frame.
 
         """
-
-        return self._pe
+        # circular import issue
+        from sympy.physics.mechanics import inertia_of_point_mass
+        return inertia_of_point_mass(self.mass, self.point.pos_from(point),
+                                     frame)

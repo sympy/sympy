@@ -1,8 +1,7 @@
-from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Permutation, Perm
 from sympy.combinatorics.tensor_can import (perm_af_direct_product, dummy_sgs,
-    riemann_bsgs, get_symmetric_group_sgs, gens_products, canonicalize,
-    bsgs_direct_product)
+    riemann_bsgs, get_symmetric_group_sgs, canonicalize, bsgs_direct_product)
 from sympy.combinatorics.testutil import canonicalize_naive, graph_certificate
 from sympy.utilities.pytest import skip, XFAIL
 
@@ -246,10 +245,7 @@ def test_canonical_free():
     # ord = [a0,a1,d0,-d0];  g = [2,1,3,0,4,5]; dummies = [[2,3]]
     # t_c = A_d0^a0*A^{d0 a1}
     # can = [3,0, 2,1, 4,5]
-    base = [0]
-    gens = [Permutation(5)(0,2)(1,3)]
     g = Permutation([2,1,3,0,4,5])
-    num_free = 2
     dummies = [[2,3]]
     can = canonicalize(g, dummies, [None], ([], [Permutation(3)], 2, 0))
     assert can == [3,0, 2,1, 4,5]

@@ -1,6 +1,10 @@
-from sympy.matrices.densetools import trace, transpose, conjugate
-from sympy.matrices.densetools import eye
-from sympy import ZZ, QQ
+from sympy.utilities.pytest import ignore_warnings
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+with ignore_warnings(SymPyDeprecationWarning):
+    from sympy.matrices.densetools import trace, transpose, eye
+
+from sympy import ZZ
 
 def test_trace():
     a = [[ZZ(3), ZZ(7), ZZ(4)], [ZZ(2), ZZ(4), ZZ(5)], [ZZ(6), ZZ(2), ZZ(3)]]

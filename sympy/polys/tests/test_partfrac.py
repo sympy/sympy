@@ -3,15 +3,13 @@ functions. """
 
 from sympy.polys.partfrac import (
     apart_undetermined_coeffs,
-    apart_full_decomposition,
     apart,
-    apart_list_full_decomposition,
     apart_list, assemble_partfrac_list
 )
 
 from sympy import (S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda,
-                   Symbol, Dummy, factor, together, sqrt, Expr)
-from sympy.utilities.pytest import raises
+                   Symbol, Dummy, factor, together, sqrt, Expr, Rational)
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.abc import x, y, a, b, c
 
 
@@ -39,6 +37,18 @@ def test_apart():
 
     assert apart(Eq((x**2 + 1)/(x + 1), x), x) == Eq(x - 1 + 2/(x + 1), x)
 
+    assert apart(x/2, y) == x/2
+
+    f, g = (x+y)/(2*x - y), Rational(3, 2)*y/((2*x - y)) + S.Half
+
+    assert apart(f, x, full=False) == g
+    assert apart(f, x, full=True) == g
+
+    f, g = (x+y)/(2*x - y), 3*x/(2*x - y) - 1
+
+    assert apart(f, y, full=False) == g
+    assert apart(f, y, full=True) == g
+
     raises(NotImplementedError, lambda: apart(1/(x + 1)/(y + 2)))
 
 
@@ -47,7 +57,7 @@ def test_apart_matrix():
 
     assert apart(M) == Matrix([
         [1/x - 1/(x + 1), (x + 1)**(-2)],
-        [1/(2*x) - (S(1)/2)/(x + 2), 1/(x + 1) - 1/(x + 2)],
+        [1/(2*x) - (S.Half)/(x + 2), 1/(x + 1) - 1/(x + 2)],
     ])
 
 
@@ -73,7 +83,7 @@ def test_apart_extension():
 
     f = x/((x - 2)*(x + I))
 
-    assert factor(together(apart(f))) == f
+    assert factor(together(apart(f)).expand()) == f
 
 
 def test_apart_full():
@@ -88,16 +98,16 @@ def test_apart_full():
     assert apart(f, full=False) == f
     assert apart(f, full=True) == \
         RootSum(x**3 + x + 1,
-        Lambda(a, (6*a**2/31 - 9*a/31 + S(4)/31)/(x - a)), auto=False)
+        Lambda(a, (a**2*Rational(6, 31) - a*Rational(9, 31) + Rational(4, 31))/(x - a)), auto=False)
 
     f = 1/(x**5 + 1)
 
     assert apart(f, full=False) == \
-        (-S(1)/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 -
-         x + 1)) + (S(1)/5)/(x + 1)
+        (Rational(-1, 5))*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 -
+         x + 1)) + (Rational(1, 5))/(x + 1)
     assert apart(f, full=True) == \
         -RootSum(x**4 - x**3 + x**2 - x + 1,
-        Lambda(a, a/(x - a)), auto=False)/5 + (S(1)/5)/(x + 1)
+        Lambda(a, a/(x - a)), auto=False)/5 + (Rational(1, 5))/(x + 1)
 
 
 def test_apart_undetermined_coeffs():
@@ -122,7 +132,7 @@ def test_apart_list():
 
     f = (-2*x - 2*x**2) / (3*x**2 - 6*x)
     assert apart_list(f, x, dummies=numbered_symbols("w")) == (-1,
-        Poly(S(2)/3, x, domain='QQ'),
+        Poly(Rational(2, 3), x, domain='QQ'),
         [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
 
     assert apart_list(2/(x**2-2), x, dummies=numbered_symbols("w")) == (1,
@@ -149,7 +159,9 @@ def test_assemble_partfrac_list():
     assert assemble_partfrac_list(pfd) == -1/(sqrt(2)*(x + sqrt(2))) + 1/(sqrt(2)*(x - sqrt(2)))
 
 
+@XFAIL
 def test_noncommutative_pseudomultivariate():
+    # apart doesn't go inside noncommutative expressions
     class foo(Expr):
         is_commutative=False
     e = x/(x + x*y)
@@ -157,6 +169,12 @@ def test_noncommutative_pseudomultivariate():
     assert apart(e + foo(e)) == c + foo(c)
     assert apart(e*foo(e)) == c*foo(c)
 
+def test_noncommutative():
+    class foo(Expr):
+        is_commutative=False
+    e = x/(x + x*y)
+    c = 1/(1 + y)
+    assert apart(e + foo()) == c + foo()
 
 def test_issue_5798():
     assert apart(

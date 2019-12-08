@@ -5,13 +5,13 @@ from __future__ import print_function, division
 from random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
 
-from sympy.core.compatibility import SYMPY_INTS, xrange
+from sympy.core.compatibility import SYMPY_INTS, range
 from sympy.core.mul import prod
-from sympy.polys.polyutils import _sort_factors
+from sympy.ntheory import factorint
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
+from sympy.polys.polyutils import _sort_factors
 
-from sympy.ntheory import factorint
 
 def gf_crt(U, M, K=None):
     """
@@ -21,7 +21,10 @@ def gf_crt(U, M, K=None):
     co-prime integer moduli ``m_0,...,m_n``, returns an integer
     ``u``, such that ``u = u_i mod m_i`` for ``i = ``0,...,n``.
 
-    As an example consider a set of residues ``U = [49, 76, 65]``
+    Examples
+    ========
+
+    Consider a set of residues ``U = [49, 76, 65]``
     and a set of moduli ``M = [99, 97, 95]``. Then we have::
 
        >>> from sympy.polys.domains import ZZ
@@ -265,12 +268,12 @@ def gf_from_dict(f, p, K):
     n, h = max(f.keys()), []
 
     if isinstance(n, SYMPY_INTS):
-        for k in xrange(n, -1, -1):
+        for k in range(n, -1, -1):
             h.append(f.get(k, K.zero) % p)
     else:
         (n,) = n
 
-        for k in xrange(n, -1, -1):
+        for k in range(n, -1, -1):
             h.append(f.get((k,), K.zero) % p)
 
     return gf_trunc(h, p)
@@ -293,7 +296,7 @@ def gf_to_dict(f, p, symmetric=True):
     """
     n, result = gf_degree(f), {}
 
-    for k in xrange(0, n + 1):
+    for k in range(0, n + 1):
         if symmetric:
             a = gf_int(f[n - k], p)
         else:
@@ -544,10 +547,10 @@ def gf_mul(f, g, p, K):
     dh = df + dg
     h = [0]*(dh + 1)
 
-    for i in xrange(0, dh + 1):
+    for i in range(0, dh + 1):
         coeff = K.zero
 
-        for j in xrange(max(0, i - dg), min(i, df) + 1):
+        for j in range(max(0, i - dg), min(i, df) + 1):
             coeff += f[j]*g[i - j]
 
         h[i] = coeff % p
@@ -574,7 +577,7 @@ def gf_sqr(f, p, K):
     dh = 2*df
     h = [0]*(dh + 1)
 
-    for i in xrange(0, dh + 1):
+    for i in range(0, dh + 1):
         coeff = K.zero
 
         jmin = max(0, i - df)
@@ -584,7 +587,7 @@ def gf_sqr(f, p, K):
 
         jmax = jmin + n // 2 - 1
 
-        for j in xrange(jmin, jmax + 1):
+        for j in range(jmin, jmax + 1):
             coeff += f[j]*f[i - j]
 
         coeff += coeff
@@ -632,7 +635,7 @@ def gf_sub_mul(f, g, h, p, K):
 
 def gf_expand(F, p, K):
     """
-    Expand results of :func:`factor` in ``GF(p)[x]``.
+    Expand results of :func:`~.factor` in ``GF(p)[x]``.
 
     Examples
     ========
@@ -682,8 +685,8 @@ def gf_div(f, g, p, K):
     References
     ==========
 
-    1. [Monagan93]_
-    2. [Gathen99]_
+    .. [1] [Monagan93]_
+    .. [2] [Gathen99]_
 
     """
     df = gf_degree(f)
@@ -698,10 +701,10 @@ def gf_div(f, g, p, K):
 
     h, dq, dr = list(f), df - dg, dg - 1
 
-    for i in xrange(0, df + 1):
+    for i in range(0, df + 1):
         coeff = h[i]
 
-        for j in xrange(max(0, dg - i), min(df - i, dr) + 1):
+        for j in range(max(0, dg - i), min(df - i, dr) + 1):
             coeff -= h[i + j - dg] * g[dg - j]
 
         if i <= dq:
@@ -757,10 +760,10 @@ def gf_quo(f, g, p, K):
 
     h, dq, dr = f[:], df - dg, dg - 1
 
-    for i in xrange(0, dq + 1):
+    for i in range(0, dq + 1):
         coeff = h[i]
 
-        for j in xrange(max(0, dg - i), min(df - i, dr) + 1):
+        for j in range(max(0, dg - i), min(df - i, dr) + 1):
             coeff -= h[i + j - dg] * g[dg - j]
 
         h[i] = (coeff * inv) % p
@@ -978,7 +981,7 @@ def gf_pow_mod(f, n, g, p, K):
     References
     ==========
 
-    1. [Gathen99]_
+    .. [1] [Gathen99]_
 
     """
     if not n:
@@ -1103,7 +1106,7 @@ def gf_gcdex(f, g, p, K):
     References
     ==========
 
-    1. [Gathen99]_
+    .. [1] [Gathen99]_
 
     """
     if not (f or g):
@@ -1319,7 +1322,7 @@ def gf_trace_map(a, b, c, n, f, p, K):
     References
     ==========
 
-    1. [Gathen92]_
+    .. [1] [Gathen92]_
 
     """
     u = gf_compose_mod(a, b, f, p, K)
@@ -1373,7 +1376,7 @@ def gf_random(n, p, K):
     [1, 2, 3, 2, 1, 1, 1, 2, 0, 4, 2]
 
     """
-    return [K.one] + [ K(int(uniform(0, p))) for i in xrange(0, n) ]
+    return [K.one] + [ K(int(uniform(0, p))) for i in range(0, n) ]
 
 
 def gf_irreducible(n, p, K):
@@ -1420,7 +1423,7 @@ def gf_irred_p_ben_or(f, p, K):
     if n < 5:
         H = h = gf_pow_mod([K.one, K.zero], p, f, p, K)
 
-        for i in xrange(0, n//2):
+        for i in range(0, n//2):
             g = gf_sub(h, [K.one, K.zero], p, K)
 
             if gf_gcd(f, g, p, K) == [K.one]:
@@ -1430,7 +1433,7 @@ def gf_irred_p_ben_or(f, p, K):
     else:
         b = gf_frobenius_monomial_base(f, p, K)
         H = h = gf_frobenius_map([K.one, K.zero], f, b, p, K)
-        for i in xrange(0, n//2):
+        for i in range(0, n//2):
             g = gf_sub(h, [K.one, K.zero], p, K)
             if gf_gcd(f, g, p, K) == [K.one]:
                 h = gf_frobenius_map(h, f, b, p, K)
@@ -1465,12 +1468,12 @@ def gf_irred_p_rabin(f, p, K):
 
     x = [K.one, K.zero]
 
-    indices = set([ n//d for d in factorint(n) ])
+    indices = { n//d for d in factorint(n) }
 
     b = gf_frobenius_monomial_base(f, p, K)
     h = b[1]
 
-    for i in xrange(1, n):
+    for i in range(1, n):
         if i in indices:
             g = gf_sub(h, x, p, K)
 
@@ -1601,7 +1604,7 @@ def gf_sqf_list(f, p, K, all=False):
     References
     ==========
 
-    1. [Geddes92]_
+    .. [1] [Geddes92]_
 
     """
     n, sqf, factors, r = 1, False, [], int(p)
@@ -1637,7 +1640,7 @@ def gf_sqf_list(f, p, K, all=False):
         if not sqf:
             d = gf_degree(f) // r
 
-            for i in xrange(0, d + 1):
+            for i in range(0, d + 1):
                 f[i] = f[i*r]
 
             f, n = f[:d + 1], n*r
@@ -1676,10 +1679,10 @@ def gf_Qmatrix(f, p, K):
     q = [K.one] + [K.zero]*(n - 1)
     Q = [list(q)] + [[]]*(n - 1)
 
-    for i in xrange(1, (n - 1)*r + 1):
+    for i in range(1, (n - 1)*r + 1):
         qq, c = [(-q[-1]*f[-1]) % p], q[-1]
 
-        for j in xrange(1, n):
+        for j in range(1, n):
             qq.append((q[j - 1] - c*f[-j - 1]) % p)
 
         if not (i % r):
@@ -1709,11 +1712,11 @@ def gf_Qbasis(Q, p, K):
     """
     Q, n = [ list(q) for q in Q ], len(Q)
 
-    for k in xrange(0, n):
+    for k in range(0, n):
         Q[k][k] = (Q[k][k] - K.one) % p
 
-    for k in xrange(0, n):
-        for i in xrange(k, n):
+    for k in range(0, n):
+        for i in range(k, n):
             if Q[k][i]:
                 break
         else:
@@ -1721,23 +1724,23 @@ def gf_Qbasis(Q, p, K):
 
         inv = K.invert(Q[k][i], p)
 
-        for j in xrange(0, n):
+        for j in range(0, n):
             Q[j][i] = (Q[j][i]*inv) % p
 
-        for j in xrange(0, n):
+        for j in range(0, n):
             t = Q[j][k]
             Q[j][k] = Q[j][i]
             Q[j][i] = t
 
-        for i in xrange(0, n):
+        for i in range(0, n):
             if i != k:
                 q = Q[k][i]
 
-                for j in xrange(0, n):
+                for j in range(0, n):
                     Q[j][i] = (Q[j][i] - Q[j][k]*q) % p
 
-    for i in xrange(0, n):
-        for j in xrange(0, n):
+    for i in range(0, n):
+        for j in range(0, n):
             if i == j:
                 Q[i][j] = (K.one - Q[i][j]) % p
             else:
@@ -1774,7 +1777,7 @@ def gf_berlekamp(f, p, K):
 
     factors = [f]
 
-    for k in xrange(1, len(V)):
+    for k in range(1, len(V)):
         for f in list(factors):
             s = K.zero
 
@@ -1827,8 +1830,8 @@ def gf_ddf_zassenhaus(f, p, K):
     References
     ==========
 
-    1. [Gathen99]_
-    2. [Geddes92]_
+    .. [1] [Gathen99]_
+    .. [2] [Geddes92]_
 
     """
     i, g, factors = 1, [K.one, K.zero], []
@@ -1874,11 +1877,11 @@ def gf_edf_zassenhaus(f, n, p, K):
     References
     ==========
 
-    1. [Gathen99]_
-    2. [Geddes92]_
+    .. [1] [Gathen99]_
+    .. [2] [Geddes92]_
 
     """
-    factors, q = [f], int(p)
+    factors = [f]
 
     if gf_degree(f) <= n:
         return factors
@@ -1893,7 +1896,7 @@ def gf_edf_zassenhaus(f, n, p, K):
         if p == 2:
             h = r
 
-            for i in xrange(0, 2**(n*N - 1)):
+            for i in range(0, 2**(n*N - 1)):
                 r = gf_pow_mod(r, 2, f, p, K)
                 h = gf_add(h, r, p, K)
 
@@ -1936,9 +1939,9 @@ def gf_ddf_shoup(f, p, K):
     References
     ==========
 
-    1. [Kaltofen98]_
-    2. [Shoup95]_
-    3. [Gathen92]_
+    .. [1] [Kaltofen98]_
+    .. [2] [Shoup95]_
+    .. [3] [Gathen92]_
 
     """
     n = gf_degree(f)
@@ -1948,14 +1951,14 @@ def gf_ddf_shoup(f, p, K):
     # U[i] = x**(p**i)
     U = [[K.one, K.zero], h] + [K.zero]*(k - 1)
 
-    for i in xrange(2, k + 1):
+    for i in range(2, k + 1):
         U[i] = gf_frobenius_map(U[i-1], f, b, p, K)
 
     h, U = U[k], U[:k]
     # V[i] = x**(p**(k*(i+1)))
     V = [h] + [K.zero]*(k - 1)
 
-    for i in xrange(1, k):
+    for i in range(1, k):
         V[i] = gf_compose_mod(V[i - 1], h, f, p, K)
 
     factors = []
@@ -2009,8 +2012,8 @@ def gf_edf_shoup(f, n, p, K):
     References
     ==========
 
-    1. [Shoup91]_
-    2. [Gathen92]_
+    .. [1] [Shoup91]_
+    .. [2] [Gathen92]_
 
     """
     N, q = gf_degree(f), int(p)
@@ -2174,7 +2177,7 @@ def gf_factor(f, p, K):
     References
     ==========
 
-    1. [Gathen99]_
+    .. [1] [Gathen99]_
 
     """
     lc, f = gf_monic(f, p, K)
@@ -2228,8 +2231,10 @@ def linear_congruence(a, b, m):
 
     There are 3 solutions distinct mod(15) since gcd(a, m) = gcd(3, 15) = 3.
 
-    **Reference**
-    1) Wikipedia http://en.wikipedia.org/wiki/Linear_congruence_theorem
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Linear_congruence_theorem
 
     """
     from sympy.polys.polytools import gcdex
@@ -2338,8 +2343,8 @@ def gf_csolve(f, n):
     References
     ==========
 
-    [1] 'An introduction to the Theory of Numbers' 5th Edition by Ivan Niven,
-        Zuckerman and Montgomery.
+    .. [1] 'An introduction to the Theory of Numbers' 5th Edition by Ivan Niven,
+           Zuckerman and Montgomery.
 
     """
     from sympy.polys.domains import ZZ

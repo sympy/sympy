@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
-from sympy import Symbol, Integer, sympify
+from sympy import Symbol, sympify
+from sympy.core.compatibility import range, string_types
+from sympy.core.numbers import Integer
 
 
 class PlotInterval(object):
@@ -21,7 +23,7 @@ class PlotInterval(object):
             if isinstance(args[0], PlotInterval):
                 self.fill_from(args[0])
                 return
-            elif isinstance(args[0], str):
+            elif isinstance(args[0], string_types):
                 try:
                     args = eval(args[0])
                 except TypeError:
@@ -158,7 +160,7 @@ class PlotInterval(object):
         v_min to v_max.
         """
         d = (self.v_max - self.v_min) / self.v_steps
-        for i in xrange(self.v_steps + 1):
+        for i in range(self.v_steps + 1):
             a = self.v_min + (d * Integer(i))
             yield a
 
@@ -170,7 +172,7 @@ class PlotInterval(object):
         """
         d = (self.v_max - self.v_min) / self.v_steps
         a = self.v_min + (d * Integer(0))
-        for i in xrange(self.v_steps):
+        for i in range(self.v_steps):
             b = self.v_min + (d * Integer(i + 1))
             yield a, b
             a = b

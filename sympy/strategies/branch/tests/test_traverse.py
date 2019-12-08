@@ -1,4 +1,4 @@
-from sympy import Basic, symbols, Symbol, S
+from sympy import Basic
 from sympy.strategies.branch.traverse import top_down, sall
 from sympy.strategies.branch.core import do_one, identity
 
@@ -11,14 +11,14 @@ def test_top_down_easy():
     expected = Basic(2, 3)
     brl = top_down(inc)
 
-    assert set(brl(expr)) == set([expected])
+    assert set(brl(expr)) == {expected}
 
 def test_top_down_big_tree():
     expr     = Basic(1, Basic(2), Basic(3, Basic(4), 5))
     expected = Basic(2, Basic(3), Basic(4, Basic(5), 6))
     brl = top_down(inc)
 
-    assert set(brl(expr)) == set([expected])
+    assert set(brl(expr)) == {expected}
 
 def test_top_down_harder_function():
     def split5(x):
@@ -27,7 +27,7 @@ def test_top_down_harder_function():
             yield x + 1
 
     expr     = Basic(Basic(5, 6), 1)
-    expected = set([Basic(Basic(4, 6), 1), Basic(Basic(6, 6), 1)])
+    expected = {Basic(Basic(4, 6), 1), Basic(Basic(6, 6), 1)}
     brl = top_down(split5)
 
     assert set(brl(expr)) == expected

@@ -1,10 +1,7 @@
 """Bosonic quantum operators."""
 
-from warnings import warn
-
-from sympy.core.compatibility import u
-from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
-from sympy.physics.quantum import Operator, Commutator, AntiCommutator, Dagger
+from sympy import Mul, Integer, exp, sqrt, conjugate
+from sympy.physics.quantum import Operator
 from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra, IdentityOperator
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
@@ -109,7 +106,7 @@ class BosonOp(Operator):
         if self.is_annihilation:
             return r'{%s}' % str(self.name)
         else:
-            return r'{{%s}^\dag}' % str(self.name)
+            return r'{{%s}^\dagger}' % str(self.name)
 
     def _print_contents(self, printer, *args):
         if self.is_annihilation:
@@ -123,7 +120,7 @@ class BosonOp(Operator):
         if self.is_annihilation:
             return pform
         else:
-            return pform**prettyForm(u('\N{DAGGER}'))
+            return pform**prettyForm(u'\N{DAGGER}')
 
 
 class BosonFockKet(Ket):

@@ -6,15 +6,15 @@ on the example of Schwarzschild solution.
 
 If you want to derive this by hand, follow the wiki page here:
 
-http://en.wikipedia.org/wiki/Deriving_the_Schwarzschild_solution
+https://en.wikipedia.org/wiki/Deriving_the_Schwarzschild_solution
 
 Also read the above wiki and follow the references from there if
 something is not clear, like what the Ricci tensor is, etc.
 
 """
 
-from sympy import (exp, Symbol, sin, Rational, Derivative, dsolve, Function,
-                  Matrix, Eq, pprint, Pow, classify_ode, solve)
+from sympy import (exp, Symbol, sin, dsolve, Function,
+                  Matrix, Eq, pprint, solve)
 
 
 def grad(f, X):
@@ -97,15 +97,6 @@ class Ricci(object):
 def curvature(Rmn):
     return Rmn.ud(0, 0) + Rmn.ud(1, 1) + Rmn.ud(2, 2) + Rmn.ud(3, 3)
 
-# class nu(Function):
-#    def getname(self):
-#        return r"\nu"
-#        return r"nu"
-
-# class lam(Function):
-#    def getname(self):
-#        return r"\lambda"
-#        return r"lambda"
 nu = Function("nu")
 lam = Function("lambda")
 
@@ -121,27 +112,6 @@ gdd = Matrix((
     (0, 0, r**2, 0),
     (0, 0, 0, r**2*sin(theta)**2)
 ))
-# spherical - flat
-# gdd=Matrix((
-#    (-1, 0, 0, 0),
-#    (0, 1, 0, 0),
-#    (0, 0, r**2, 0),
-#    (0, 0, 0, r**2*sin(theta)**2)
-#    ))
-# polar - flat
-# gdd=Matrix((
-#    (-1, 0, 0, 0),
-#    (0, 1, 0, 0),
-#    (0, 0, 1, 0),
-#    (0, 0, 0, r**2)
-#    ))
-# polar - on the sphere, on the north pole
-# gdd=Matrix((
-#    (-1, 0, 0, 0),
-#    (0, 1, 0, 0),
-#    (0, 0, r**2*sin(theta)**2, 0),
-#    (0, 0, 0, r**2)
-#    ))
 g = MT(gdd)
 X = (t, r, theta, phi)
 Gamma = G(g, X)
@@ -216,9 +186,6 @@ def main():
     pprint_Rmn_dd(1, 1)
     pprint_Rmn_dd(2, 2)
     pprint_Rmn_dd(3, 3)
-    # print()
-    # print "scalar curvature:"
-    # print curvature(Rmn)
     print("-"*40)
     print("Solve Einstein's equations:")
     e = e.subs(nu(r), -lam(r)).doit()

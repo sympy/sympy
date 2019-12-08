@@ -2,20 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.densebasic import (
-    dup_strip, dmp_strip,
-    dup_convert, dmp_convert,
-    dup_degree, dmp_degree,
-    dmp_to_dict,
-    dmp_from_dict,
-    dup_LC, dmp_LC, dmp_ground_LC,
-    dup_TC, dmp_TC,
-    dmp_zero, dmp_ground,
-    dmp_zero_p,
-    dup_to_raw_dict, dup_from_raw_dict,
-    dmp_zeros
-)
-
+from sympy.core.compatibility import range
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
     dup_lshift,
@@ -30,16 +17,26 @@ from sympy.polys.densearith import (
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
 )
-
+from sympy.polys.densebasic import (
+    dup_strip, dmp_strip,
+    dup_convert, dmp_convert,
+    dup_degree, dmp_degree,
+    dmp_to_dict,
+    dmp_from_dict,
+    dup_LC, dmp_LC, dmp_ground_LC,
+    dup_TC, dmp_TC,
+    dmp_zero, dmp_ground,
+    dmp_zero_p,
+    dup_to_raw_dict, dup_from_raw_dict,
+    dmp_zeros
+)
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError
 )
-
 from sympy.utilities import variations
 
 from math import ceil as _ceil, log as _log
-from sympy.core.compatibility import xrange
 
 def dup_integrate(f, m, K):
     """
@@ -65,7 +62,7 @@ def dup_integrate(f, m, K):
     for i, c in enumerate(reversed(f)):
         n = i + 1
 
-        for j in xrange(1, m):
+        for j in range(1, m):
             n *= i + j + 1
 
         g.insert(0, K.exquo(c, K(n)))
@@ -100,7 +97,7 @@ def dmp_integrate(f, m, u, K):
     for i, c in enumerate(reversed(f)):
         n = i + 1
 
-        for j in xrange(1, m):
+        for j in range(1, m):
             n *= i + j + 1
 
         g.insert(0, dmp_quo_ground(c, K(n), v, K))
@@ -135,7 +132,7 @@ def dmp_integrate_in(f, m, j, u, K):
 
     """
     if j < 0 or j > u:
-        raise IndexError("0 <= j <= u expected, got %s" % (u, j))
+        raise IndexError("0 <= j <= u expected, got u = %d, j = %d" % (u, j))
 
     return _rec_integrate_in(f, m, u, 0, j, K)
 
@@ -174,7 +171,7 @@ def dup_diff(f, m, K):
         for coeff in f[:-m]:
             k = n
 
-            for i in xrange(n - 1, n - m, -1):
+            for i in range(n - 1, n - m, -1):
                 k *= i
 
             deriv.append(K(k)*coeff)
@@ -221,7 +218,7 @@ def dmp_diff(f, m, u, K):
         for coeff in f[:-m]:
             k = n
 
-            for i in xrange(n - 1, n - m, -1):
+            for i in range(n - 1, n - m, -1):
                 k *= i
 
             deriv.append(dmp_mul_ground(coeff, K(k), v, K))
@@ -842,10 +839,10 @@ def dup_mirror(f, K):
     -x**3 + 2*x**2 + 4*x + 2
 
     """
-    f, n, a = list(f), len(f) - 1, -K.one
+    f = list(f)
 
-    for i in xrange(n - 1, -1, -1):
-        f[i], a = a*f[i], -a
+    for i in range(len(f) - 2, -1, -2):
+        f[i] = -f[i]
 
     return f
 
@@ -866,7 +863,7 @@ def dup_scale(f, a, K):
     """
     f, n, b = list(f), len(f) - 1, a
 
-    for i in xrange(n - 1, -1, -1):
+    for i in range(n - 1, -1, -1):
         f[i], b = b*f[i], b*a
 
     return f
@@ -888,8 +885,8 @@ def dup_shift(f, a, K):
     """
     f, n = list(f), len(f) - 1
 
-    for i in xrange(n, 0, -1):
-        for j in xrange(0, i):
+    for i in range(n, 0, -1):
+        for j in range(0, i):
             f[j + 1] += a*f[j]
 
     return f
@@ -915,7 +912,7 @@ def dup_transform(f, p, q, K):
     n = len(f) - 1
     h, Q = [f[0]], [[K.one]]
 
-    for i in xrange(0, n):
+    for i in range(0, n):
         Q.append(dup_mul(Q[-1], q, K))
 
     for c, q in zip(f[1:], Q[1:]):
@@ -994,10 +991,10 @@ def _dup_right_decompose(f, s, K):
 
     r = n // s
 
-    for i in xrange(1, s):
+    for i in range(1, s):
         coeff = K.zero
 
-        for j in xrange(0, i):
+        for j in range(0, i):
             if not n + j - i in f:
                 continue
 
@@ -1032,7 +1029,7 @@ def _dup_decompose(f, K):
     """Helper function for :func:`dup_decompose`."""
     df = len(f) - 1
 
-    for s in xrange(2, df):
+    for s in range(2, df):
         if df % s != 0:
             continue
 
@@ -1080,7 +1077,7 @@ def dup_decompose(f, K):
     References
     ==========
 
-    1. [Kozen89]_
+    .. [1] [Kozen89]_
 
     """
     F = []
@@ -1283,7 +1280,7 @@ def dup_revert(f, n, K):
 
     N = int(_ceil(_log(n, 2)))
 
-    for i in xrange(1, N + 1):
+    for i in range(1, N + 1):
         a = dup_mul_ground(g, K(2), K)
         b = dup_mul(f, dup_sqr(g, K), K)
         g = dup_rem(dup_sub(a, b, K), h, K)

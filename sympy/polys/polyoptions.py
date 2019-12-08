@@ -1,4 +1,4 @@
-"""Options manager for :class:`Poly` and public API functions. """
+"""Options manager for :class:`~.Poly` and public API functions. """
 
 from __future__ import print_function, division
 
@@ -6,9 +6,9 @@ __all__ = ["Options"]
 
 from sympy.core import S, Basic, sympify
 from sympy.core.compatibility import string_types, with_metaclass
+from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
 from sympy.utilities.iterables import has_dups
-from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 
 import sympy.polys
 
@@ -117,6 +117,7 @@ class Options(dict):
     * Include --- boolean flag
     * All --- boolean flag
     * Gen --- flag
+    * Series --- boolean flag
 
     """
 
@@ -401,12 +402,12 @@ class Domain(with_metaclass(OptionType, Option)):
 
     after = ['gens']
 
-    _re_realfield = re.compile("^(R|RR)(_(\d+))?$")
-    _re_complexfield = re.compile("^(C|CC)(_(\d+))?$")
-    _re_finitefield = re.compile("^(FF|GF)\((\d+)\)$")
-    _re_polynomial = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
-    _re_fraction = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
-    _re_algebraic = re.compile("^(Q|QQ)\<(.+)\>$")
+    _re_realfield = re.compile(r"^(R|RR)(_(\d+))?$")
+    _re_complexfield = re.compile(r"^(C|CC)(_(\d+))?$")
+    _re_finitefield = re.compile(r"^(FF|GF)\((\d+)\)$")
+    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ|R|RR|C|CC)\[(.+)\]$")
+    _re_fraction = re.compile(r"^(Z|ZZ|Q|QQ)\((.+)\)$")
+    _re_algebraic = re.compile(r"^(Q|QQ)\<(.+)\>$")
 
     @classmethod
     def preprocess(cls, domain):
@@ -458,8 +459,12 @@ class Domain(with_metaclass(OptionType, Option)):
 
                 if ground in ['Z', 'ZZ']:
                     return sympy.polys.domains.ZZ.poly_ring(*gens)
-                else:
+                elif ground in ['Q', 'QQ']:
                     return sympy.polys.domains.QQ.poly_ring(*gens)
+                elif ground in ['R', 'RR']:
+                    return sympy.polys.domains.RR.poly_ring(*gens)
+                else:
+                    return sympy.polys.domains.CC.poly_ring(*gens)
 
             r = cls._re_fraction.match(domain)
 
@@ -679,6 +684,16 @@ class Gen(with_metaclass(OptionType, Flag)):
             return gen
         else:
             raise OptionError("invalid argument for 'gen' option")
+
+
+class Series(with_metaclass(OptionType, BooleanOption, Flag)):
+    """``series`` flag to polynomial manipulation functions. """
+
+    option = 'series'
+
+    @classmethod
+    def default(cls):
+        return False
 
 
 class Symbols(with_metaclass(OptionType, Flag)):

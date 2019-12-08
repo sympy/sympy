@@ -4,9 +4,11 @@ from __future__ import print_function, division
 
 import sys
 import warnings
+from string import ascii_lowercase, ascii_uppercase
+
 unicode_warnings = ''
 
-from sympy.core.compatibility import u, unicode
+from sympy.core.compatibility import unicode, range
 
 # first, setup unicodedate environment
 try:
@@ -31,7 +33,6 @@ except ImportError:
 from sympy.printing.conventions import split_super_sub
 from sympy.core.alphabets import greeks
 
-
 # prefix conventions when constructing tables
 # L   - LATIN     i
 # G   - GREEK     beta
@@ -52,6 +53,15 @@ def pretty_use_unicode(flag=None):
     global unicode_warnings
     if flag is None:
         return _use_unicode
+
+    # we know that some letters are not supported in Python 2.X so
+    # ignore those warnings. Remove this when 2.X support is dropped.
+    if unicode_warnings:
+        known = ['LATIN SUBSCRIPT SMALL LETTER %s' % i for i in 'HKLMNPST']
+        unicode_warnings = '\n'.join([
+            l for l in unicode_warnings.splitlines() if not any(
+            i in l for i in known)])
+    # ------------ end of 2.X warning filtering
 
     if flag and unicode_warnings:
         # print warnings (if any) on first unicode usage
@@ -111,14 +121,37 @@ greek_letters = list(greeks) # make a copy
 greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_unicode = dict([(l, (g(l), G(l))) for l in greek_letters])
+greek_unicode = {l: (g(l), G(l)) for l in greek_letters}
 greek_unicode = dict((L, g(L)) for L in greek_letters)
 greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 
 # aliases
 greek_unicode['lambda'] = greek_unicode['lamda']
 greek_unicode['Lambda'] = greek_unicode['Lamda']
-greek_unicode['varsigma'] = u('\N{GREEK SMALL LETTER FINAL SIGMA}')
+greek_unicode['varsigma'] = u'\N{GREEK SMALL LETTER FINAL SIGMA}'
+
+# BOLD
+b = lambda l: U('MATHEMATICAL BOLD SMALL %s' % l.upper())
+B = lambda l: U('MATHEMATICAL BOLD CAPITAL %s' % l.upper())
+
+bold_unicode = dict((l, b(l)) for l in ascii_lowercase)
+bold_unicode.update((L, B(L)) for L in ascii_uppercase)
+
+# GREEK BOLD
+gb = lambda l: U('MATHEMATICAL BOLD SMALL %s' % l.upper())
+GB = lambda l: U('MATHEMATICAL BOLD CAPITAL  %s' % l.upper())
+
+greek_bold_letters = list(greeks) # make a copy, not strictly required here
+# deal with Unicode's funny spelling of lambda
+greek_bold_letters[greek_bold_letters.index('lambda')] = 'lamda'
+
+# {}  greek letter -> (g,G)
+greek_bold_unicode = {l: (g(l), G(l)) for l in greek_bold_letters}
+greek_bold_unicode = dict((L, g(L)) for L in greek_bold_letters)
+greek_bold_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_bold_letters)
+greek_bold_unicode['lambda'] = greek_unicode['lamda']
+greek_bold_unicode['Lambda'] = greek_unicode['Lamda']
+greek_bold_unicode['varsigma'] = u'\N{MATHEMATICAL BOLD SMALL FINAL SIGMA}'
 
 digit_2txt = {
     '0':    'ZERO',
@@ -164,7 +197,7 @@ sub = {}    # symb -> subscript symbol
 sup = {}    # symb -> superscript symbol
 
 # latin subscripts
-for l in 'aeioruvx':
+for l in 'aeioruvxhklmnpst':
     sub[l] = LSUB(l)
 
 for l in 'in':
@@ -182,25 +215,24 @@ for s in '+-=()':
     sup[s] = SSUP(s)
 
 # Variable modifiers
-# TODO: Is it worth trying to handle faces with, e.g., 'MATHEMATICAL BOLD CAPITAL A'?
 # TODO: Make brackets adjust to height of contents
 modifier_dict = {
     # Accents
-    'mathring': lambda s: s+u('\N{COMBINING RING ABOVE}'),
-    'ddddot': lambda s: s+u('\N{COMBINING DIAERESIS}\N{COMBINING DIAERESIS}'),
-    'dddot': lambda s: s+u('\N{COMBINING DIAERESIS}\N{COMBINING DOT ABOVE}'),
-    'ddot': lambda s: s+u('\N{COMBINING DIAERESIS}'),
-    'dot': lambda s: s+u('\N{COMBINING DOT ABOVE}'),
-    'check': lambda s: s+u('\N{COMBINING CARON}'),
-    'breve': lambda s: s+u('\N{COMBINING BREVE}'),
-    'acute': lambda s: s+u('\N{COMBINING ACUTE ACCENT}'),
-    'grave': lambda s: s+u('\N{COMBINING GRAVE ACCENT}'),
-    'tilde': lambda s: s+u('\N{COMBINING TILDE}'),
-    'hat': lambda s: s+u('\N{COMBINING CIRCUMFLEX ACCENT}'),
-    'bar': lambda s: s+u('\N{COMBINING OVERLINE}'),
-    'vec': lambda s: s+u('\N{COMBINING RIGHT ARROW ABOVE}'),
-    'prime': lambda s: s+u(' \N{COMBINING VERTICAL LINE ABOVE}'),
-    'prm': lambda s: s+u(' \N{COMBINING VERTICAL LINE ABOVE}'),
+    'mathring': lambda s: center_accent(s, u'\N{COMBINING RING ABOVE}'),
+    'ddddot': lambda s: center_accent(s, u'\N{COMBINING FOUR DOTS ABOVE}'),
+    'dddot': lambda s: center_accent(s, u'\N{COMBINING THREE DOTS ABOVE}'),
+    'ddot': lambda s: center_accent(s, u'\N{COMBINING DIAERESIS}'),
+    'dot': lambda s: center_accent(s, u'\N{COMBINING DOT ABOVE}'),
+    'check': lambda s: center_accent(s, u'\N{COMBINING CARON}'),
+    'breve': lambda s: center_accent(s, u'\N{COMBINING BREVE}'),
+    'acute': lambda s: center_accent(s, u'\N{COMBINING ACUTE ACCENT}'),
+    'grave': lambda s: center_accent(s, u'\N{COMBINING GRAVE ACCENT}'),
+    'tilde': lambda s: center_accent(s, u'\N{COMBINING TILDE}'),
+    'hat': lambda s: center_accent(s, u'\N{COMBINING CIRCUMFLEX ACCENT}'),
+    'bar': lambda s: center_accent(s, u'\N{COMBINING OVERLINE}'),
+    'vec': lambda s: center_accent(s, u'\N{COMBINING RIGHT ARROW ABOVE}'),
+    'prime': lambda s: s+u'\N{PRIME}',
+    'prm': lambda s: s+u'\N{PRIME}',
     # # Faces -- these are here for some compatibility with latex printing
     # 'bold': lambda s: s,
     # 'bm': lambda s: s,
@@ -208,10 +240,10 @@ modifier_dict = {
     # 'scr': lambda s: s,
     # 'frak': lambda s: s,
     # Brackets
-    'norm': lambda s: u('\N{DOUBLE VERTICAL LINE}')+s+u('\N{DOUBLE VERTICAL LINE}'),
-    'avg': lambda s: u('\N{MATHEMATICAL LEFT ANGLE BRACKET}')+s+u('\N{MATHEMATICAL RIGHT ANGLE BRACKET}'),
-    'abs': lambda s: u('\N{VERTICAL LINE}')+s+u('\N{VERTICAL LINE}'),
-    'mag': lambda s: u('\N{VERTICAL LINE}')+s+u('\N{VERTICAL LINE}'),
+    'norm': lambda s: u'\N{DOUBLE VERTICAL LINE}'+s+u'\N{DOUBLE VERTICAL LINE}',
+    'avg': lambda s: u'\N{MATHEMATICAL LEFT ANGLE BRACKET}'+s+u'\N{MATHEMATICAL RIGHT ANGLE BRACKET}',
+    'abs': lambda s: u'\N{VERTICAL LINE}'+s+u'\N{VERTICAL LINE}',
+    'mag': lambda s: u'\N{VERTICAL LINE}'+s+u'\N{VERTICAL LINE}',
 }
 
 # VERTICAL OBJECTS
@@ -422,6 +454,12 @@ _xsym = {
     '<=':  ('<=', U('LESS-THAN OR EQUAL TO')),
     '>=':  ('>=', U('GREATER-THAN OR EQUAL TO')),
     '!=':  ('!=', U('NOT EQUAL TO')),
+    ':=':  (':=', ':='),
+    '+=':  ('+=', '+='),
+    '-=':  ('-=', '-='),
+    '*=':  ('*=', '*='),
+    '/=':  ('/=', '/='),
+    '%=':  ('%=', '%='),
     '*':   ('*', U('DOT OPERATOR')),
     '-->': ('-->', U('EM DASH') + U('EM DASH') +
             U('BLACK RIGHT-POINTING TRIANGLE') if U('EM DASH')
@@ -449,28 +487,39 @@ def xsym(sym):
 # SYMBOLS
 
 atoms_table = {
-    # class             how-to-display
-    'Exp1':             U('SCRIPT SMALL E'),
-    'Pi':               U('GREEK SMALL LETTER PI'),
-    'Infinity':         U('INFINITY'),
-    'NegativeInfinity': U('INFINITY') and ('-' + U('INFINITY')),  # XXX what to do here
-    #'ImaginaryUnit':    U('GREEK SMALL LETTER IOTA'),
-    #'ImaginaryUnit':    U('MATHEMATICAL ITALIC SMALL I'),
-    'ImaginaryUnit':    U('DOUBLE-STRUCK ITALIC SMALL I'),
-    'EmptySet':         U('EMPTY SET'),
-    'Naturals':         U('DOUBLE-STRUCK CAPITAL N'),
-    'Integers':         U('DOUBLE-STRUCK CAPITAL Z'),
-    'Reals':            U('DOUBLE-STRUCK CAPITAL R'),
-    'Union':            U('UNION'),
-    'Intersection':     U('INTERSECTION'),
-    'Ring':             U('RING OPERATOR')
+    # class                    how-to-display
+    'Exp1':                    U('SCRIPT SMALL E'),
+    'Pi':                      U('GREEK SMALL LETTER PI'),
+    'Infinity':                U('INFINITY'),
+    'NegativeInfinity':        U('INFINITY') and ('-' + U('INFINITY')),  # XXX what to do here
+    #'ImaginaryUnit':          U('GREEK SMALL LETTER IOTA'),
+    #'ImaginaryUnit':          U('MATHEMATICAL ITALIC SMALL I'),
+    'ImaginaryUnit':           U('DOUBLE-STRUCK ITALIC SMALL I'),
+    'EmptySet':                U('EMPTY SET'),
+    'Naturals':                U('DOUBLE-STRUCK CAPITAL N'),
+    'Naturals0':               (U('DOUBLE-STRUCK CAPITAL N') and
+                                (U('DOUBLE-STRUCK CAPITAL N') +
+                                 U('SUBSCRIPT ZERO'))),
+    'Integers':                U('DOUBLE-STRUCK CAPITAL Z'),
+    'Rationals':               U('DOUBLE-STRUCK CAPITAL Q'),
+    'Reals':                   U('DOUBLE-STRUCK CAPITAL R'),
+    'Complexes':               U('DOUBLE-STRUCK CAPITAL C'),
+    'Union':                   U('UNION'),
+    'SymmetricDifference':     U('INCREMENT'),
+    'Intersection':            U('INTERSECTION'),
+    'Ring':                    U('RING OPERATOR'),
+    'Modifier Letter Low Ring':U('Modifier Letter Low Ring'),
+    'EmptySequence':           'EmptySequence',
 }
 
 
-def pretty_atom(atom_name, default=None):
+def pretty_atom(atom_name, default=None, printer=None):
     """return pretty representation of an atom"""
     if _use_unicode:
-        return atoms_table[atom_name]
+        if printer is not None and atom_name == 'ImaginaryUnit' and printer._settings['imaginary_unit'] == 'j':
+            return U('DOUBLE-STRUCK ITALIC SMALL J')
+        else:
+            return atoms_table[atom_name]
     else:
         if default is not None:
             return default
@@ -478,7 +527,7 @@ def pretty_atom(atom_name, default=None):
         raise KeyError('only unicode')  # send it default printer
 
 
-def pretty_symbol(symb_name):
+def pretty_symbol(symb_name, bold_name=False):
     """return pretty representation of a symbol"""
     # let's split symb_name into symbol + index
     # UC: beta1
@@ -489,16 +538,21 @@ def pretty_symbol(symb_name):
 
     name, sups, subs = split_super_sub(symb_name)
 
-    def translate(s) :
-        gG = greek_unicode.get(s)
+    def translate(s, bold_name) :
+        if bold_name:
+            gG = greek_bold_unicode.get(s)
+        else:
+            gG = greek_unicode.get(s)
         if gG is not None:
             return gG
         for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True) :
             if s.lower().endswith(key) and len(s)>len(key):
-                return modifier_dict[key](translate(s[:-len(key)]))
+                return modifier_dict[key](translate(s[:-len(key)], bold_name))
+        if bold_name:
+            return ''.join([bold_unicode[c] for c in s])
         return s
 
-    name = translate(name)
+    name = translate(name, bold_name)
 
     # Let's prettify sups/subs. If it fails at one of them, pretty sups/subs are
     # not used at all.
@@ -509,7 +563,7 @@ def pretty_symbol(symb_name):
             if pretty is None:
                 try:  # match by separate characters
                     pretty = ''.join([mapping[c] for c in s])
-                except KeyError:
+                except (TypeError, KeyError):
                     return None
             result.append(pretty)
         return result
@@ -523,9 +577,9 @@ def pretty_symbol(symb_name):
     # glue the results into one string
     if pretty_subs is None:  # nice formatting of sups/subs did not work
         if subs:
-            name += '_'+'_'.join([translate(s) for s in subs])
+            name += '_'+'_'.join([translate(s, bold_name) for s in subs])
         if sups:
-            name += '__'+'__'.join([translate(s) for s in sups])
+            name += '__'+'__'.join([translate(s, bold_name) for s in sups])
         return name
     else:
         sups_result = ' '.join(pretty_sups)
@@ -544,20 +598,59 @@ def annotated(letter):
     information.
     """
     ucode_pics = {
-        'F': (2, 0, 2, 0, u('\N{BOX DRAWINGS LIGHT DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
-                            '\N{BOX DRAWINGS LIGHT VERTICAL AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
-                            '\N{BOX DRAWINGS LIGHT UP}')),
-        'G': (3, 0, 3, 1,
-              u('\N{BOX DRAWINGS LIGHT ARC DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC DOWN AND LEFT}\n'
-                '\N{BOX DRAWINGS LIGHT VERTICAL}\N{BOX DRAWINGS LIGHT RIGHT}\N{BOX DRAWINGS LIGHT DOWN AND LEFT}\n'
-                '\N{BOX DRAWINGS LIGHT ARC UP AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC UP AND LEFT}'))
+        'F': (2, 0, 2, 0, u'\N{BOX DRAWINGS LIGHT DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
+                          u'\N{BOX DRAWINGS LIGHT VERTICAL AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
+                          u'\N{BOX DRAWINGS LIGHT UP}'),
+        'G': (3, 0, 3, 1, u'\N{BOX DRAWINGS LIGHT ARC DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC DOWN AND LEFT}\n'
+                          u'\N{BOX DRAWINGS LIGHT VERTICAL}\N{BOX DRAWINGS LIGHT RIGHT}\N{BOX DRAWINGS LIGHT DOWN AND LEFT}\n'
+                          u'\N{BOX DRAWINGS LIGHT ARC UP AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC UP AND LEFT}')
     }
     ascii_pics = {
         'F': (3, 0, 3, 0, ' _\n|_\n|\n'),
-        'G': (3, 0, 3, 1, ' __\n/__\n\_|')
+        'G': (3, 0, 3, 1, ' __\n/__\n\\_|')
     }
 
     if _use_unicode:
         return ucode_pics[letter]
     else:
         return ascii_pics[letter]
+
+def is_combining(sym):
+    """Check whether symbol is a unicode modifier.
+
+    See stringPict.width on usage.
+    """
+    return True if (u'\N{COMBINING GRAVE ACCENT}' <= sym <=
+                    u'\N{COMBINING LATIN SMALL LETTER X}' or
+
+                    u'\N{COMBINING LEFT HARPOON ABOVE}' <= sym <=
+                    u'\N{COMBINING ASTERISK ABOVE}') else False
+
+
+def center_accent(string, accent):
+    """
+    Returns a string with accent inserted on the middle character. Useful to
+    put combining accents on symbol names, including multi-character names.
+
+    Parameters
+    ==========
+
+    string : string
+        The string to place the accent in.
+    accent : string
+        The combining accent to insert
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Combining_character
+    .. [2] https://en.wikipedia.org/wiki/Combining_Diacritical_Marks
+
+    """
+
+    # Accent is placed on the previous character, although it may not always look
+    # like that depending on console
+    midpoint = len(string) // 2 + 1
+    firstpart = string[:midpoint]
+    secondpart = string[midpoint:]
+    return firstpart + accent + secondpart

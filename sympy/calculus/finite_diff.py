@@ -7,38 +7,42 @@ difference weights for ordinary differentials of functions for
 derivatives from 0 (interpolation) up to arbitrary order.
 
 The core algorithm is provided in the finite difference weight generating
-function (finite_diff_weights), and two convenience functions are provided
+function (``finite_diff_weights``), and two convenience functions are provided
 for:
 
 - estimating a derivative (or interpolate) directly from a series of points
     is also provided (``apply_finite_diff``).
-- making a finite difference approximation of a Derivative instance
-    (``as_finite_diff``).
+- differentiating by using finite difference approximations
+    (``differentiate_finite``).
 
 """
 
-from sympy import S
-from sympy.core.compatibility import iterable
+from sympy import Derivative, S
+from sympy.core.compatibility import iterable, range
+from sympy.core.decorators import deprecated
 
 
-def finite_diff_weights(order, x_list, x0):
+def finite_diff_weights(order, x_list, x0=S.One):
     """
-    Calculates the finite difference weights for an arbitrarily
-    spaced one-dimensional grid (x_list) for derivatives at 'x0'
-    of order 0, 1, ..., up to 'order' using a recursive formula.
+    Calculates the finite difference weights for an arbitrarily spaced
+    one-dimensional grid (``x_list``) for derivatives at ``x0`` of order
+    0, 1, ..., up to ``order`` using a recursive formula. Order of accuracy
+    is at least ``len(x_list) - order``, if ``x_list`` is defined correctly.
+
 
     Parameters
     ==========
 
-    order : int
+    order: int
         Up to what derivative order weights should be calculated.
         0 corresponds to interpolation.
     x_list: sequence
-        Strictly monotonically increasing sequence of values for
-        the independent variable.
+        Sequence of (unique) values for the independent variable.
+        It is useful (but not necessary) to order ``x_list`` from
+        nearest to furthest from ``x0``; see examples below.
     x0: Number or Symbol
-        At what value of the independent variable the finite difference
-        weights should be generated.
+        Root or value of the independent variable for which the finite
+        difference weights should be generated. Default is ``S.One``.
 
     Returns
     =======
@@ -46,45 +50,78 @@ def finite_diff_weights(order, x_list, x0):
     list
         A list of sublists, each corresponding to coefficients for
         increasing derivative order, and each containing lists of
-        coefficients for increasing accuracy.
+        coefficients for increasing subsets of x_list.
 
     Examples
     ========
 
     >>> from sympy import S
     >>> from sympy.calculus import finite_diff_weights
-    >>> finite_diff_weights(1, [-S(1)/2, S(1)/2, S(3)/2, S(5)/2], 0)
+    >>> res = finite_diff_weights(1, [-S(1)/2, S(1)/2, S(3)/2, S(5)/2], 0)
+    >>> res
     [[[1, 0, 0, 0],
-    [1/2, 1/2, 0, 0],
-    [3/8, 3/4, -1/8, 0],
-    [5/16, 15/16, -5/16, 1/16]],
-    [[0, 0, 0, 0], [-1, 1, 0, 0], [-1, 1, 0, 0], [-23/24, 7/8, 1/8, -1/24]]]
+      [1/2, 1/2, 0, 0],
+      [3/8, 3/4, -1/8, 0],
+      [5/16, 15/16, -5/16, 1/16]],
+     [[0, 0, 0, 0],
+      [-1, 1, 0, 0],
+      [-1, 1, 0, 0],
+      [-23/24, 7/8, 1/8, -1/24]]]
+    >>> res[0][-1]  # FD weights for 0th derivative, using full x_list
+    [5/16, 15/16, -5/16, 1/16]
+    >>> res[1][-1]  # FD weights for 1st derivative
+    [-23/24, 7/8, 1/8, -1/24]
+    >>> res[1][-2]  # FD weights for 1st derivative, using x_list[:-1]
+    [-1, 1, 0, 0]
+    >>> res[1][-1][0]  # FD weight for 1st deriv. for x_list[0]
+    -23/24
+    >>> res[1][-1][1]  # FD weight for 1st deriv. for x_list[1], etc.
+    7/8
 
-    the result is two subslists, the first is for the 0:th derivative
-    (interpolation) and the second for the first derivative (we gave
-    1 as the parameter of order so this is why we get no list for
-    a higher order derivative). Each sublist contains the most accurate
-    formula in the end (all points used).
-
-    Beware of the offset in the lower accuracy formulae when looking at a
-    centered difference:
+    Each sublist contains the most accurate formula at the end.
+    Note, that in the above example ``res[1][1]`` is the same as ``res[1][2]``.
+    Since res[1][2] has an order of accuracy of
+    ``len(x_list[:3]) - order = 3 - 1 = 2``, the same is true for ``res[1][1]``!
 
     >>> from sympy import S
     >>> from sympy.calculus import finite_diff_weights
-    >>> finite_diff_weights(1, [-S(5)/2, -S(3)/2, -S(1)/2, S(1)/2,
-    ...    S(3)/2, S(5)/2], 0) #doctest: +NORMALIZE_WHITESPACE
-    [[[1, 0, 0, 0, 0, 0],
-      [-3/2, 5/2, 0, 0, 0, 0],
-      [3/8, -5/4, 15/8, 0, 0, 0],
-      [1/16, -5/16, 15/16, 5/16, 0, 0],
-      [3/128, -5/32, 45/64, 15/32, -5/128, 0],
-      [3/256, -25/256, 75/128, 75/128, -25/256, 3/256]],
-     [[0, 0, 0, 0, 0, 0],
-      [-1, 1, 0, 0, 0, 0],
-      [1, -3, 2, 0, 0, 0],
-      [1/24, -1/8, -7/8, 23/24, 0, 0],
-      [0, 1/24, -9/8, 9/8, -1/24, 0],
-      [-3/640, 25/384, -75/64, 75/64, -25/384, 3/640]]]
+    >>> res = finite_diff_weights(1, [S(0), S(1), -S(1), S(2), -S(2)], 0)[1]
+    >>> res
+    [[0, 0, 0, 0, 0],
+     [-1, 1, 0, 0, 0],
+     [0, 1/2, -1/2, 0, 0],
+     [-1/2, 1, -1/3, -1/6, 0],
+     [0, 2/3, -2/3, -1/12, 1/12]]
+    >>> res[0]  # no approximation possible, using x_list[0] only
+    [0, 0, 0, 0, 0]
+    >>> res[1]  # classic forward step approximation
+    [-1, 1, 0, 0, 0]
+    >>> res[2]  # classic centered approximation
+    [0, 1/2, -1/2, 0, 0]
+    >>> res[3:]  # higher order approximations
+    [[-1/2, 1, -1/3, -1/6, 0], [0, 2/3, -2/3, -1/12, 1/12]]
+
+    Let us compare this to a differently defined ``x_list``. Pay attention to
+    ``foo[i][k]`` corresponding to the gridpoint defined by ``x_list[k]``.
+
+    >>> from sympy import S
+    >>> from sympy.calculus import finite_diff_weights
+    >>> foo = finite_diff_weights(1, [-S(2), -S(1), S(0), S(1), S(2)], 0)[1]
+    >>> foo
+    [[0, 0, 0, 0, 0],
+     [-1, 1, 0, 0, 0],
+     [1/2, -2, 3/2, 0, 0],
+     [1/6, -1, 1/2, 1/3, 0],
+     [1/12, -2/3, 0, 2/3, -1/12]]
+    >>> foo[1]  # not the same and of lower accuracy as res[1]!
+    [-1, 1, 0, 0, 0]
+    >>> foo[2]  # classic double backward step approximation
+    [1/2, -2, 3/2, 0, 0]
+    >>> foo[4]  # the same as res[4]
+    [1/12, -2/3, 0, 2/3, -1/12]
+
+    Note that, unless you plan on using approximations based on subsets of
+    ``x_list``, the order of gridpoints does not matter.
 
 
     The capability to generate weights at arbitrary points can be
@@ -107,11 +144,13 @@ def finite_diff_weights(order, x_list, x0):
     Notes
     =====
 
-    If weights for a finite difference approximation
-    of the 3rd order derivative is wanted, weights for 0th, 1st
-    and 2nd order are calculated "for free", so are formulae using
-    fewer and fewer of the parameters. This is something one can
-    take advantage of to save computational cost.
+    If weights for a finite difference approximation of 3rd order
+    derivative is wanted, weights for 0th, 1st and 2nd order are
+    calculated "for free", so are formulae using subsets of ``x_list``.
+    This is something one can take advantage of to save computational cost.
+    Be aware that one should define ``x_list`` from nearest to furthest from
+    ``x0``. If not, subsets of ``x_list`` will yield poorer approximations,
+    which might not grand an order of accuracy of ``len(x_list) - order``.
 
     See also
     ========
@@ -128,6 +167,9 @@ def finite_diff_weights(order, x_list, x0):
 
     """
     # The notation below closely corresponds to the one used in the paper.
+    order = S(order)
+    if not order.is_number:
+        raise ValueError("Cannot handle symbolic order.")
     if order < 0:
         raise ValueError("Negative derivative order illegal.")
     if int(order) != order:
@@ -136,10 +178,10 @@ def finite_diff_weights(order, x_list, x0):
     N = len(x_list) - 1
     delta = [[[0 for nu in range(N+1)] for n in range(N+1)] for
              m in range(M+1)]
-    delta[0][0][0] = S(1)
-    c1 = S(1)
+    delta[0][0][0] = S.One
+    c1 = S.One
     for n in range(1, N+1):
-        c2 = S(1)
+        c2 = S.One
         for nu in range(0, n):
             c3 = x_list[n]-x_list[nu]
             c2 = c2 * c3
@@ -156,11 +198,11 @@ def finite_diff_weights(order, x_list, x0):
     return delta
 
 
-def apply_finite_diff(order, x_list, y_list, x0):
+def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     """
     Calculates the finite difference approximation of
-    the derivative of requested order at x0 from points
-    provided in x_list and y_list.
+    the derivative of requested order at ``x0`` from points
+    provided in ``x_list`` and ``y_list``.
 
     Parameters
     ==========
@@ -168,21 +210,20 @@ def apply_finite_diff(order, x_list, y_list, x0):
     order: int
         order of derivative to approximate. 0 corresponds to interpolation.
     x_list: sequence
-        Strictly monotonically increasing sequence of values for
-        the independent variable.
+        Sequence of (unique) values for the independent variable.
     y_list: sequence
         The function value at corresponding values for the independent
         variable in x_list.
     x0: Number or Symbol
         At what value of the independent variable the derivative should be
-        evaluated.
+        evaluated. Defaults to 0.
 
     Returns
     =======
 
     sympy.core.add.Add or sympy.core.numbers.Number
         The finite difference expression approximating the requested
-        derivative order at x0.
+        derivative order at ``x0``.
 
     Examples
     ========
@@ -202,10 +243,9 @@ def apply_finite_diff(order, x_list, y_list, x0):
     >>> i = Idx('i')
     >>> x_list, y_list = zip(*[(x[i+j], y[i+j]) for j in range(-1,2)])
     >>> apply_finite_diff(1, x_list, y_list, x[i])
-    (-1 + (x[i + 1] - x[i])/(-x[i - 1] + x[i]))*y[i]/(x[i + 1] - x[i]) + \
-(-x[i - 1] + x[i])*y[i + 1]/((-x[i - 1] + x[i + 1])*(x[i + 1] - x[i])) - \
-(x[i + 1] - x[i])*y[i - 1]/((-x[i - 1] + x[i + 1])*(-x[i - 1] + x[i]))
-
+    ((x[i + 1] - x[i])/(-x[i - 1] + x[i]) - 1)*y[i]/(x[i + 1] - x[i]) - \
+(x[i + 1] - x[i])*y[i - 1]/((x[i + 1] - x[i - 1])*(-x[i - 1] + x[i])) + \
+(-x[i - 1] + x[i])*y[i + 1]/((x[i + 1] - x[i - 1])*(x[i + 1] - x[i]))
 
     Notes
     =====
@@ -246,7 +286,7 @@ def apply_finite_diff(order, x_list, y_list, x0):
     return derivative
 
 
-def as_finite_diff(derivative, points=1, x0=None, wrt=None):
+def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
     """
     Returns an approximation of a derivative of a function in
     the form of a finite difference formula. The expression is a
@@ -256,8 +296,7 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     Parameters
     ==========
 
-    derivative: a Derivative instance (needs to have an variables
-        and expr attribute).
+    derivative: a Derivative instance
 
     points: sequence or coefficient, optional
         If sequence: discrete values (length >= order+1) of the
@@ -265,22 +304,25 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
         difference weights.
         If it is a coefficient, it will be used as the step-size
         for generating an equidistant sequence of length order+1
-        centered around x0. default: 1 (step-size 1)
+        centered around ``x0``. default: 1 (step-size 1)
 
     x0: number or Symbol, optional
-        the value of the independent variable (wrt) at which the
-        derivative is to be approximated. default: same as wrt
+        the value of the independent variable (``wrt``) at which the
+        derivative is to be approximated. Default: same as ``wrt``.
 
     wrt: Symbol, optional
         "with respect to" the variable for which the (partial)
         derivative is to be approximated for. If not provided it
-        is required that the Derivative is ordinary. default: None
+        is required that the Derivative is ordinary. Default: ``None``.
 
 
     Examples
     ========
 
     >>> from sympy import symbols, Function, exp, sqrt, Symbol, as_finite_diff
+    >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
+    >>> import warnings
+    >>> warnings.simplefilter("ignore", SymPyDeprecationWarning)
     >>> x, h = symbols('x h')
     >>> f = Function('f')
     >>> as_finite_diff(f(x).diff(x))
@@ -299,7 +341,7 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     -3*f(x)/(2*h) + 2*f(h + x)/h - f(2*h + x)/(2*h)
 
     The algorithm is not restricted to use equidistant spacing, nor
-    do we need to make the approximation around x0, but we can get
+    do we need to make the approximation around ``x0``, but we can get
     an expression estimating the derivative at an offset:
 
     >>> e, sq2 = exp(1), sqrt(2)
@@ -315,7 +357,7 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     >>> y = Symbol('y')
     >>> d2fdxdy=f(x,y).diff(x,y)
     >>> as_finite_diff(d2fdxdy, wrt=x)
-    -f(x - 1/2, y) + f(x + 1/2, y)
+    -Derivative(f(x - 1/2, y), y) + Derivative(f(x + 1/2, y), y)
 
     See also
     ========
@@ -324,12 +366,23 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     sympy.calculus.finite_diff.finite_diff_weights
 
     """
+    if derivative.is_Derivative:
+        pass
+    elif derivative.is_Atom:
+        return derivative
+    else:
+        return derivative.fromiter(
+            [_as_finite_diff(ar, points, x0, wrt) for ar
+             in derivative.args], **derivative.assumptions0)
+
     if wrt is None:
-        wrt = derivative.variables[0]
-        # we need Derivative to be univariate to guess wrt
-        if any(v != wrt for v in derivative.variables):
-            raise ValueError('if the function is not univariate' +
-                             ' then `wrt` must be given')
+        old = None
+        for v in derivative.variables:
+            if old is v:
+                continue
+            derivative = _as_finite_diff(derivative, points, x0, v)
+            old = v
+        return derivative
 
     order = derivative.variables.count(wrt)
 
@@ -337,6 +390,8 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
         x0 = wrt
 
     if not iterable(points):
+        if getattr(points, 'is_Function', False) and wrt in points.args:
+            points = points.subs(wrt, x0)
         # points is simply the step-size, let's make it a
         # equidistant sequence centered around x0
         if order % 2 == 0:
@@ -345,10 +400,84 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
                       in range(-order//2, order//2 + 1)]
         else:
             # odd order => even number of points, half-way wrt grid point
-            points = [x0 + points*i/S(2) for i
+            points = [x0 + points*S(i)/2 for i
                       in range(-order, order + 1, 2)]
-
+    others = [wrt, 0]
+    for v in set(derivative.variables):
+        if v == wrt:
+            continue
+        others += [v, derivative.variables.count(v)]
     if len(points) < order+1:
         raise ValueError("Too few points for order %d" % order)
     return apply_finite_diff(order, points, [
-        derivative.expr.subs({wrt: x}) for x in points], x0)
+        Derivative(derivative.expr.subs({wrt: x}), *others) for
+        x in points], x0)
+
+
+as_finite_diff = deprecated(
+    useinstead="Derivative.as_finite_difference",
+    deprecated_since_version="1.1", issue=11410)(_as_finite_diff)
+
+as_finite_diff.__doc__ = """
+    Deprecated function. Use Diff.as_finite_difference instead.
+    """
+
+
+def differentiate_finite(expr, *symbols,
+                         # points=1, x0=None, wrt=None, evaluate=True, #Py2:
+                         **kwargs):
+    r""" Differentiate expr and replace Derivatives with finite differences.
+
+    Parameters
+    ==========
+    expr : expression
+    \*symbols : differentiate with respect to symbols
+    points: sequence or coefficient, optional
+        see ``Derivative.as_finite_difference``
+    x0: number or Symbol, optional
+        see ``Derivative.as_finite_difference``
+    wrt: Symbol, optional
+        see ``Derivative.as_finite_difference``
+    evaluate : bool
+        kwarg passed on to ``diff``, whether or not to
+        evaluate the Derivative intermediately (default: ``False``).
+
+
+    Examples
+    ========
+
+    >>> from sympy import cos, sin, Function, differentiate_finite
+    >>> from sympy.abc import x, y, h
+    >>> f, g = Function('f'), Function('g')
+    >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h])
+    -f(-h + x)*g(-h + x)/(2*h) + f(h + x)*g(h + x)/(2*h)
+
+    Note that the above form preserves the product rule in discrete form.
+    If we want we can pass ``evaluate=True`` to get another form (which is
+    usually not what we want):
+
+    >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h], evaluate=True).simplify()
+    -((f(-h + x) - f(h + x))*g(x) + (g(-h + x) - g(h + x))*f(x))/(2*h)
+
+    ``differentiate_finite`` works on any expression:
+
+    >>> differentiate_finite(f(x) + sin(x), x, 2)
+    -2*f(x) + f(x - 1) + f(x + 1) - 2*sin(x) + sin(x - 1) + sin(x + 1)
+    >>> differentiate_finite(f(x) + sin(x), x, 2, evaluate=True)
+    -2*f(x) + f(x - 1) + f(x + 1) - sin(x)
+    >>> differentiate_finite(f(x, y), x, y)
+    f(x - 1/2, y - 1/2) - f(x - 1/2, y + 1/2) - f(x + 1/2, y - 1/2) + f(x + 1/2, y + 1/2)
+
+    """
+    # Key-word only arguments only available in Python 3
+    points = kwargs.pop('points', 1)
+    x0 = kwargs.pop('x0', None)
+    wrt = kwargs.pop('wrt', None)
+    evaluate = kwargs.pop('evaluate', False)
+    if kwargs:
+        raise ValueError("Unknown kwargs: %s" % kwargs)
+
+    Dexpr = expr.diff(*symbols, evaluate=evaluate)
+    return Dexpr.replace(
+        lambda arg: arg.is_Derivative,
+        lambda arg: arg.as_finite_difference(points=points, x0=x0, wrt=wrt))

@@ -41,6 +41,12 @@ factorial
 .. autoclass:: sympy.functions.combinatorial.factorials.factorial
    :members:
 
+subfactorial
+------------
+
+.. autoclass:: sympy.functions.combinatorial.factorials.subfactorial
+   :members:
+
 factorial2 / double factorial
 -----------------------------
 
@@ -60,12 +66,18 @@ fibonacci
 .. autoclass:: sympy.functions.combinatorial.numbers.fibonacci
    :members:
 
+tribonacci
+----------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.tribonacci
+   :members:
+
+
 harmonic
 --------
 
 .. autoclass:: sympy.functions.combinatorial.numbers.harmonic
    :members:
-
 
 lucas
 -----
@@ -73,6 +85,17 @@ lucas
 .. autoclass:: sympy.functions.combinatorial.numbers.lucas
    :members:
 
+genocchi
+--------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.genocchi
+   :members:
+
+partition
+---------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.partition
+   :members:
 
 MultiFactorial
 --------------
@@ -112,44 +135,14 @@ set.
 nC
 --
 
-Calculate the number of combinations of length ``k``.
-
->>> [nC(items, k) for k in range(len(items) + 1)], nC(items)
-([1, 3, 4, 3, 1], 12)
->>> nC('aaa', 2)
-1
->>> nC('abc', 2)
-3
->>> nC(3, 2)
-3
+.. autofunction:: sympy.functions.combinatorial.numbers.nC
 
 nP
 --
 
-Calculate the number of permutations of length ``k``.
-
->>> [nP(items, k) for k in range(len(items) + 1)], nP(items)
-([1, 3, 7, 12, 12], 35)
->>> nC('aaa', 2)
-1
->>> nC('abc', 2)
-3
->>> nC(3, 2)
-3
+.. autofunction:: sympy.functions.combinatorial.numbers.nP
 
 nT
 --
 
-Calculate the number of partitions that have ``k`` parts.
-
->>> [nT(items, k) for k in range(len(items) + 1)], nT(items)
-([0, 1, 5, 4, 1], 11)
->>> nT('aaa', 2)
-1
->>> nT('abc', 2)
-3
->>> nT(3, 2)
-1
-
-Note that the integer for ``n`` indicates *identical* items for ``nT`` but
-indicates ``n`` *different* items for ``nC`` and ``nP``.
+.. autofunction:: sympy.functions.combinatorial.numbers.nT

@@ -94,8 +94,8 @@ class Operator(QExpr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Operator_%28physics%29
-    .. [2] http://en.wikipedia.org/wiki/Observable
+    .. [1] https://en.wikipedia.org/wiki/Operator_%28physics%29
+    .. [2] https://en.wikipedia.org/wiki/Observable
     """
 
     @classmethod
@@ -175,6 +175,13 @@ class Operator(QExpr):
 
     def _eval_inverse(self):
         return self**(-1)
+
+    def __mul__(self, other):
+
+        if isinstance(other, IdentityOperator):
+            return self
+
+        return Mul(self, other)
 
 
 class HermitianOperator(Operator):
@@ -305,13 +312,6 @@ class IdentityOperator(Operator):
 
         return Mul(self, other)
 
-    def __rmul__(self, other):
-
-        if isinstance(other, Operator):
-            return other
-
-        return Mul(other, self)
-
     def _represent_default_basis(self, **options):
         if not self.N or self.N == oo:
             raise NotImplementedError('Cannot represent infinite dimensional' +
@@ -384,7 +384,7 @@ class OuterProduct(Operator):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Outer_product
+    .. [1] https://en.wikipedia.org/wiki/Outer_product
     """
     is_commutative = False
 
@@ -579,7 +579,7 @@ class DifferentialOperator(Operator):
     @property
     def expr(self):
         """
-        Returns the arbitary expression which is to have the Wavefunction
+        Returns the arbitrary expression which is to have the Wavefunction
         substituted into it
 
         Examples

@@ -1,16 +1,13 @@
-from sympy import pprint, latex, symbols, S, log
-from sympy.matrices import Matrix
+from sympy import symbols, S, log, Rational
 from sympy.core.trace import Tr
 from sympy.external import import_module
 from sympy.physics.quantum.density import Density, entropy, fidelity
-from sympy.physics.quantum.state import Ket, Bra, TimeDepKet
+from sympy.physics.quantum.state import Ket, TimeDepKet
 from sympy.physics.quantum.qubit import Qubit
-from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.gate import HadamardGate
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp, XOp
-from sympy.physics.quantum.spin import JzKet, Jz
+from sympy.physics.quantum.spin import JzKet
 from sympy.physics.quantum.operator import OuterProduct
 from sympy.functions import sqrt
 from sympy.utilities.pytest import raises
@@ -89,7 +86,7 @@ def test_doit():
     assert t.doit() == JzKet(1, 1) * Dagger(JzKet(1, 1))
 
     # with another spin state
-    tp2 = TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, -S(1)/2))
+    tp2 = TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))
     d = Density([tp2, 1])
 
     #full trace
@@ -98,9 +95,9 @@ def test_doit():
 
     #Partial trace on density operators with spin states
     t = Tr(d, [0])
-    assert t.doit() == JzKet(S(1)/2, -S(1)/2) * Dagger(JzKet(S(1)/2, -S(1)/2))
+    assert t.doit() == JzKet(S.Half, Rational(-1, 2)) * Dagger(JzKet(S.Half, Rational(-1, 2)))
     t = Tr(d, [1])
-    assert t.doit() == JzKet(S(1)/2, S(1)/2) * Dagger(JzKet(S(1)/2, S(1)/2))
+    assert t.doit() == JzKet(S.Half, S.Half) * Dagger(JzKet(S.Half, S.Half))
 
 
 def test_apply_op():
@@ -160,14 +157,14 @@ def test_get_prob():
 
 
 def test_entropy():
-    up = JzKet(S(1)/2, S(1)/2)
-    down = JzKet(S(1)/2, -S(1)/2)
-    d = Density((up, 0.5), (down, 0.5))
+    up = JzKet(S.Half, S.Half)
+    down = JzKet(S.Half, Rational(-1, 2))
+    d = Density((up, S.Half), (down, S.Half))
 
     # test for density object
     ent = entropy(d)
-    assert entropy(d) == 0.5*log(2)
-    assert d.entropy() == 0.5*log(2)
+    assert entropy(d) == log(2)/2
+    assert d.entropy() == log(2)/2
 
     np = import_module('numpy', min_module_version='1.4.0')
     if np:
@@ -188,8 +185,8 @@ def test_entropy():
 
 
 def test_eval_trace():
-    up = JzKet(S(1)/2, S(1)/2)
-    down = JzKet(S(1)/2, -S(1)/2)
+    up = JzKet(S.Half, S.Half)
+    down = JzKet(S.Half, Rational(-1, 2))
     d = Density((up, 0.5), (down, 0.5))
 
     t = Tr(d)
@@ -213,9 +210,9 @@ def test_eval_trace():
 
 def test_fidelity():
     #test with kets
-    up = JzKet(S(1)/2, S(1)/2)
-    down = JzKet(S(1)/2, -S(1)/2)
-    updown = (S(1)/sqrt(2))*up + (S(1)/sqrt(2))*down
+    up = JzKet(S.Half, S.Half)
+    down = JzKet(S.Half, Rational(-1, 2))
+    updown = (S.One/sqrt(2))*up + (S.One/sqrt(2))*down
 
     #check with matrices
     up_dm = represent(up * Dagger(up))
@@ -224,8 +221,8 @@ def test_fidelity():
 
     assert abs(fidelity(up_dm, up_dm) - 1) < 1e-3
     assert fidelity(up_dm, down_dm) < 1e-3
-    assert abs(fidelity(up_dm, updown_dm) - (S(1)/sqrt(2))) < 1e-3
-    assert abs(fidelity(updown_dm, down_dm) - (S(1)/sqrt(2))) < 1e-3
+    assert abs(fidelity(up_dm, updown_dm) - (S.One/sqrt(2))) < 1e-3
+    assert abs(fidelity(updown_dm, down_dm) - (S.One/sqrt(2))) < 1e-3
 
     #check with density
     up_dm = Density([up, 1.0])
@@ -234,11 +231,11 @@ def test_fidelity():
 
     assert abs(fidelity(up_dm, up_dm) - 1) < 1e-3
     assert abs(fidelity(up_dm, down_dm)) < 1e-3
-    assert abs(fidelity(up_dm, updown_dm) - (S(1)/sqrt(2))) < 1e-3
-    assert abs(fidelity(updown_dm, down_dm) - (S(1)/sqrt(2))) < 1e-3
+    assert abs(fidelity(up_dm, updown_dm) - (S.One/sqrt(2))) < 1e-3
+    assert abs(fidelity(updown_dm, down_dm) - (S.One/sqrt(2))) < 1e-3
 
     #check mixed states with density
-    updown2 = (sqrt(3)/2)*up + (S(1)/2)*down
+    updown2 = sqrt(3)/2*up + S.Half*down
     d1 = Density([updown, 0.25], [updown2, 0.75])
     d2 = Density([updown, 0.75], [updown2, 0.25])
     assert abs(fidelity(d1, d2) - 0.991) < 1e-3
@@ -247,8 +244,8 @@ def test_fidelity():
     #using qubits/density(pure states)
     state1 = Qubit('0')
     state2 = Qubit('1')
-    state3 = (S(1)/sqrt(2))*state1 + (S(1)/sqrt(2))*state2
-    state4 = (sqrt(S(2)/3))*state1 + (S(1)/sqrt(3))*state2
+    state3 = S.One/sqrt(2)*state1 + S.One/sqrt(2)*state2
+    state4 = sqrt(Rational(2, 3))*state1 + S.One/sqrt(3)*state2
 
     state1_dm = Density([state1, 1])
     state2_dm = Density([state2, 1])

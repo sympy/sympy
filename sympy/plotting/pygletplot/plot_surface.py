@@ -1,9 +1,10 @@
 from __future__ import print_function, division
 
-from pyglet.gl import *
-from plot_mode_base import PlotModeBase
+import pyglet.gl as pgl
+
 from sympy.core import S
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
+from sympy.plotting.pygletplot.plot_mode_base import PlotModeBase
 
 
 class PlotSurface(PlotModeBase):
@@ -15,9 +16,9 @@ class PlotSurface(PlotModeBase):
         self.u_set = list(self.u_interval.frange())
         self.v_interval = self.intervals[1]
         self.v_set = list(self.v_interval.frange())
-        self.bounds = [[S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0]]
+        self.bounds = [[S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0]]
         evaluate = self._get_evaluator()
 
         self._calculating_verts_pos = 0.0
@@ -75,14 +76,14 @@ class PlotSurface(PlotModeBase):
 
     def draw_verts(self, use_cverts, use_solid_color):
         def f():
-            for u in xrange(1, len(self.u_set)):
-                glBegin(GL_QUAD_STRIP)
-                for v in xrange(len(self.v_set)):
+            for u in range(1, len(self.u_set)):
+                pgl.glBegin(pgl.GL_QUAD_STRIP)
+                for v in range(len(self.v_set)):
                     pa = self.verts[u - 1][v]
                     pb = self.verts[u][v]
                     if pa is None or pb is None:
-                        glEnd()
-                        glBegin(GL_QUAD_STRIP)
+                        pgl.glEnd()
+                        pgl.glBegin(pgl.GL_QUAD_STRIP)
                         continue
                     if use_cverts:
                         ca = self.cverts[u - 1][v]
@@ -96,9 +97,9 @@ class PlotSurface(PlotModeBase):
                             ca = cb = self.default_solid_color
                         else:
                             ca = cb = self.default_wireframe_color
-                    glColor3f(*ca)
-                    glVertex3f(*pa)
-                    glColor3f(*cb)
-                    glVertex3f(*pb)
-                glEnd()
+                    pgl.glColor3f(*ca)
+                    pgl.glVertex3f(*pa)
+                    pgl.glColor3f(*cb)
+                    pgl.glVertex3f(*pb)
+                pgl.glEnd()
         return f

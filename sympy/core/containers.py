@@ -8,10 +8,14 @@
 
 from __future__ import print_function, division
 
+from collections import OrderedDict, defaultdict
+
+from sympy.core import S
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, range, MutableSet
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
+
 
 
 class Tuple(Basic):
@@ -21,6 +25,17 @@ class Tuple(Basic):
     The Tuple is a subclass of Basic, so that it works well in the
     SymPy framework.  The wrapped tuple is available as self.args, but
     you can also access elements or slices with [:] syntax.
+
+    Parameters
+    ==========
+
+    sympify : bool
+        If ``False``, ``sympify`` is not called on ``args``. This
+        can be used for speedups for very large tuples where the
+        elements are known to already be sympy objects.
+
+    Example
+    =======
 
     >>> from sympy import symbols
     >>> from sympy.core.containers import Tuple
@@ -32,15 +47,16 @@ class Tuple(Basic):
 
     """
 
-    def __new__(cls, *args, **assumptions):
-        args = [ sympify(arg) for arg in args ]
-        obj = Basic.__new__(cls, *args, **assumptions)
+    def __new__(cls, *args, **kwargs):
+        if kwargs.get('sympify', True):
+            args = ( sympify(arg) for arg in args )
+        obj = Basic.__new__(cls, *args)
         return obj
 
     def __getitem__(self, i):
         if isinstance(i, slice):
             indices = i.indices(len(self))
-            return Tuple(*[self.args[j] for j in range(*indices)])
+            return Tuple(*(self.args[j] for j in range(*indices)))
         return self.args[i]
 
     def __len__(self):
@@ -91,7 +107,7 @@ class Tuple(Basic):
         return hash(self.args)
 
     def _to_mpmath(self, prec):
-        return tuple([a._to_mpmath(prec) for a in self.args])
+        return tuple(a._to_mpmath(prec) for a in self.args)
 
     def __lt__(self, other):
         return sympify(self.args < other.args)
@@ -127,6 +143,24 @@ class Tuple(Basic):
             return self.args.index(value, start)
         else:
             return self.args.index(value, start, stop)
+
+    def _eval_Eq(self, other):
+        from sympy.core.function import AppliedUndef
+        from sympy.core.logic import fuzzy_and, fuzzy_bool
+        from sympy.core.relational import Eq
+
+        if other.is_Symbol or isinstance(other, AppliedUndef):
+            return None
+
+        if not isinstance(other, Tuple) or len(self) != len(other):
+            return S.false
+
+        r = fuzzy_and(fuzzy_bool(Eq(s, o)) for s, o in zip(self, other))
+        if r is True:
+            return S.true
+        elif r is False:
+            return S.false
+
 
 converter[tuple] = lambda tup: Tuple(*tup)
 
@@ -194,8 +228,7 @@ class Dict(Basic):
     """
 
     def __new__(cls, *args):
-        if len(args) == 1 and ((args[0].__class__ is dict) or
-                             (args[0].__class__ is Dict)):
+        if len(args) == 1 and isinstance(args[0], (dict, Dict)):
             items = [Tuple(k, v) for k, v in args[0].items()]
         elif iterable(args) and all(len(arg) == 2 for arg in args):
             items = [Tuple(k, v) for k, v in args]
@@ -253,3 +286,56 @@ class Dict(Basic):
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
+
+
+# this handles dict, defaultdict, OrderedDict
+converter[dict] = lambda d: Dict(*d.items())
+
+class OrderedSet(MutableSet):
+    def __init__(self, iterable=None):
+        if iterable:
+            self.map = OrderedDict((item, None) for item in iterable)
+        else:
+            self.map = OrderedDict()
+
+    def __len__(self):
+        return len(self.map)
+
+    def __contains__(self, key):
+        return key in self.map
+
+    def add(self, key):
+        self.map[key] = None
+
+    def discard(self, key):
+        self.map.pop(key)
+
+    def pop(self, last=True):
+        return self.map.popitem(last=last)[0]
+
+    def __iter__(self):
+        for key in self.map.keys():
+            yield key
+
+    def __repr__(self):
+        if not self.map:
+            return '%s()' % (self.__class__.__name__,)
+        return '%s(%r)' % (self.__class__.__name__, list(self.map.keys()))
+
+    def intersection(self, other):
+        result = []
+        for val in self:
+            if val in other:
+                result.append(val)
+        return self.__class__(result)
+
+    def difference(self, other):
+        result = []
+        for val in self:
+            if val not in other:
+                result.append(val)
+        return self.__class__(result)
+
+    def update(self, iterable):
+        for val in iterable:
+            self.add(val)

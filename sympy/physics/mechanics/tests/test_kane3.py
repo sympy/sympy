@@ -1,7 +1,9 @@
-from sympy import evalf, symbols, zeros, pi, sin, cos, sqrt, acos, Matrix
+from sympy.core.compatibility import range
+from sympy import evalf, symbols, pi, sin, cos, sqrt, acos, Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
-                                     KanesMethod, RigidBody, Point, dot)
-from sympy.utilities.pytest import slow, ON_TRAVIS, skip
+                                     KanesMethod, RigidBody, Point, dot, msubs)
+from sympy.utilities.pytest import slow, ON_TRAVIS, skip, warns_deprecated_sympy
+
 
 @slow
 def test_bicycle():
@@ -123,7 +125,6 @@ def test_bicycle():
     BodyWR = RigidBody('BodyWR', WR_mc, WR, mwr, WR_I)
     BodyWF = RigidBody('BodyWF', WF_mc, WF, mwf, WF_I)
 
-
     # The kinematic differential equations; they are defined quite simply. Each
     # entry in this list is equal to zero.
     kd = [q1d - u1, q2d - u2, q4d - u4, q5d - u5]
@@ -171,7 +172,8 @@ def test_bicycle():
             u_ind=[u2, u3, u5],
             u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,
             kd_eqs=kd)
-    (fr, frstar) = KM.kanes_equations(FL, BL)
+    with warns_deprecated_sympy():
+        (fr, frstar) = KM.kanes_equations(FL, BL)
 
     # This is the start of entering in the numerical values from the benchmark
     # paper to validate the eigen values of the linearized equations from this
@@ -260,9 +262,8 @@ def test_bicycle():
     # for future reference.
     MM_full = KM.mass_matrix_full
 
-    MM_full_s = MM_full.subs(val_dict)
-    forcing_lin_s = forcing_lin.subs(KM.kindiffdict()).subs(val_dict)
-
+    MM_full_s = msubs(MM_full, val_dict)
+    forcing_lin_s = msubs(forcing_lin, KM.kindiffdict(), val_dict)
 
     MM_full_s = MM_full_s.evalf()
     forcing_lin_s = forcing_lin_s.evalf()

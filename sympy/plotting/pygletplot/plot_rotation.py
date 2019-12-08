@@ -1,6 +1,11 @@
 from __future__ import print_function, division
 
-from pyglet.gl import *
+try:
+    from ctypes import c_float
+except ImportError:
+    pass
+
+import pyglet.gl as pgl
 from math import sqrt as _sqrt, acos as _acos
 
 
@@ -28,7 +33,6 @@ def get_sphere_mapping(x, y, width, height):
     y = min([max([y, 0]), height])
 
     sr = _sqrt((width/2)**2 + (height/2)**2)
-    #sr *= 1.5
     sx = ((x - width / 2) / sr)
     sy = ((y - height / 2) / sr)
 
@@ -55,13 +59,12 @@ def get_spherical_rotatation(p1, p2, width, height, theta_multiplier):
 
     raxis = norm( cross(v1, v2) )
     rtheta = theta_multiplier * rad2deg * _acos(d)
-    #rtheta = 2.0 * rad2deg * _acos(d)
 
-    glPushMatrix()
-    glLoadIdentity()
-    glRotatef(rtheta, *raxis)
+    pgl.glPushMatrix()
+    pgl.glLoadIdentity()
+    pgl.glRotatef(rtheta, *raxis)
     mat = (c_float*16)()
-    glGetFloatv(GL_MODELVIEW_MATRIX, mat)
-    glPopMatrix()
+    pgl.glGetFloatv(pgl.GL_MODELVIEW_MATRIX, mat)
+    pgl.glPopMatrix()
 
     return mat

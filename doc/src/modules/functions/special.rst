@@ -11,6 +11,13 @@ Heaviside
 .. autoclass:: sympy.functions.special.delta_functions.Heaviside
    :members:
 
+Singularity Function
+--------------------
+.. module:: sympy.functions.special.singularity_functions
+
+.. autoclass:: sympy.functions.special.singularity_functions.SingularityFunction
+   :members:
+
 Gamma, Beta and related Functions
 ---------------------------------
 .. module:: sympy.functions.special.gamma_functions
@@ -21,12 +28,13 @@ Gamma, Beta and related Functions
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.polygamma
    :members:
-.. autofunction:: sympy.functions.special.gamma_functions.digamma
-.. autofunction:: sympy.functions.special.gamma_functions.trigamma
+.. autoclass:: sympy.functions.special.gamma_functions.digamma
+.. autoclass:: sympy.functions.special.gamma_functions.trigamma
 .. autoclass:: sympy.functions.special.gamma_functions.uppergamma
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.lowergamma
    :members:
+.. autoclass:: sympy.functions.special.gamma_functions.multigamma
 .. module:: sympy.functions.special.beta_functions
 .. autoclass:: sympy.functions.special.beta_functions.beta
    :members:
@@ -82,6 +90,8 @@ Bessel Type Functions
 
 .. autofunction:: sympy.functions.special.bessel.jn_zeros
 
+.. autoclass:: sympy.functions.special.bessel.marcumq
+
 Airy Functions
 --------------
 
@@ -98,6 +108,7 @@ B-Splines
 
 .. autofunction:: sympy.functions.special.bsplines.bspline_basis
 .. autofunction:: sympy.functions.special.bsplines.bspline_basis_set
+.. autofunction:: sympy.functions.special.bsplines.interpolating_spline
 
 Riemann Zeta and Related Functions
 ----------------------------------
@@ -107,6 +118,7 @@ Riemann Zeta and Related Functions
 .. autoclass:: dirichlet_eta
 .. autoclass:: polylog
 .. autoclass:: lerchphi
+.. autoclass:: stieltjes
 
 Hypergeometric Functions
 ------------------------
@@ -114,6 +126,9 @@ Hypergeometric Functions
    :members:
 
 .. autoclass:: sympy.functions.special.hyper.meijerg
+   :members:
+
+.. autoclass:: sympy.functions.special.hyper.appellf1
    :members:
 
 Elliptic integrals
@@ -124,6 +139,18 @@ Elliptic integrals
 .. autoclass:: elliptic_f
 .. autoclass:: elliptic_e
 .. autoclass:: elliptic_pi
+
+Mathieu Functions
+-----------------
+.. module:: sympy.functions.special.mathieu_functions
+
+.. autoclass:: sympy.functions.special.mathieu_functions.MathieuBase
+   :members:
+
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieus
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieuc
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieusprime
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieucprime
 
 Orthogonal Polynomials
 ----------------------

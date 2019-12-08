@@ -1,5 +1,4 @@
-from sympy import (symbols, integrate, Integral, diff, sin, cos, pi, E, ln,
-        sympify, Curve, line_integrate, sqrt)
+from sympy import symbols, E, ln, Curve, line_integrate, sqrt
 
 s, t, x, y, z = symbols('s,t,x,y,z')
 

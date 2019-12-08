@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, Tuple
-from sympy.sets import FiniteSet
-from sympy.core.compatibility import as_int
 from sympy.combinatorics import Permutation as Perm
 from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.core import Basic, Tuple
+from sympy.core.compatibility import as_int, range
+from sympy.sets import FiniteSet
 from sympy.utilities.iterables import (minlex, unflatten, flatten)
 
 rmul = Perm.rmul
@@ -47,9 +47,9 @@ class Polyhedron(Basic):
 
             >>> from sympy.combinatorics.polyhedron import Polyhedron
             >>> Polyhedron(list('abc'), [(1, 2, 0)]).faces
-            {(0, 1, 2)}
+            FiniteSet((0, 1, 2))
             >>> Polyhedron(list('abc'), [(1, 0, 2)]).faces
-            {(0, 1, 2)}
+            FiniteSet((0, 1, 2))
 
         The allowed transformations are entered as allowable permutations
         of the vertices for the polyhedron. Instance of Permutations
@@ -66,7 +66,7 @@ class Polyhedron(Basic):
         Here we construct the Polyhedron object for a tetrahedron.
 
         >>> corners = [w, x, y, z]
-        >>> faces = [(0,1,2), (0,2,3), (0,3,1), (1,2,3)]
+        >>> faces = [(0, 1, 2), (0, 2, 3), (0, 3, 1), (1, 2, 3)]
 
         Next, allowed transformations of the polyhedron must be given. This
         is given as permutations of vertices.
@@ -78,13 +78,13 @@ class Polyhedron(Basic):
         permutation, Permutation(range(4)), is not included since it does
         not change the orientation of the vertices.)
 
-        >>> pgroup = [Permutation([[0,1,2], [3]]), \
-                      Permutation([[0,1,3], [2]]), \
-                      Permutation([[0,2,3], [1]]), \
-                      Permutation([[1,2,3], [0]]), \
-                      Permutation([[0,1], [2,3]]), \
-                      Permutation([[0,2], [1,3]]), \
-                      Permutation([[0,3], [1,2]])]
+        >>> pgroup = [Permutation([[0, 1, 2], [3]]), \
+                      Permutation([[0, 1, 3], [2]]), \
+                      Permutation([[0, 2, 3], [1]]), \
+                      Permutation([[1, 2, 3], [0]]), \
+                      Permutation([[0, 1], [2, 3]]), \
+                      Permutation([[0, 2], [1, 3]]), \
+                      Permutation([[0, 3], [1, 2]])]
 
         The Polyhedron is now constructed and demonstrated:
 
@@ -92,7 +92,7 @@ class Polyhedron(Basic):
         >>> tetra.size
         4
         >>> tetra.edges
-        {(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)}
+        FiniteSet((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3))
         >>> tetra.corners
         (w, x, y, z)
 
@@ -176,7 +176,7 @@ class Polyhedron(Basic):
         ---------------------------
 
         It is not necessary to enter any permutations, nor is necessary to
-        enter a complete set of transforations. In fact, for a polyhedron,
+        enter a complete set of transformations. In fact, for a polyhedron,
         all configurations can be constructed from just two permutations.
         For example, the orientations of a tetrahedron can be generated from
         an axis passing through a vertex and face and another axis passing
@@ -234,15 +234,17 @@ class Polyhedron(Basic):
 
         To rotate the square with a single permutation we can do:
 
-        >>> square.rotate(square.pgroup[0]); square.corners
+        >>> square.rotate(square.pgroup[0])
+        >>> square.corners
         (1, 3, 2, 4)
 
         To use more than one permutation (or to use one permutation more
         than once) it is more convenient to use the make_perm method:
 
-        >>> p011 = square.pgroup.make_perm([0,1,1]) # diag flip + 2 rotations
+        >>> p011 = square.pgroup.make_perm([0, 1, 1]) # diag flip + 2 rotations
         >>> square.reset() # return to initial orientation
-        >>> square.rotate(p011); square.corners
+        >>> square.rotate(p011)
+        >>> square.corners
         (4, 2, 3, 1)
 
         Thinking outside the box
@@ -294,7 +296,7 @@ class Polyhedron(Basic):
 
             4 faces:
 
-            (0,1,2) (0,2,3) (0,3,1) (1,2,3)
+            (0, 1, 2) (0, 2, 3) (0, 3, 1) (1, 2, 3)
 
         cube, cube_faces
         ----------------
@@ -306,9 +308,9 @@ class Polyhedron(Basic):
 
             6 faces:
 
-            (0,1,2,3)
-            (0,1,5,4) (1,2,6,5) (2,3,7,6) (0,3,7,4)
-            (4,5,6,7)
+            (0, 1, 2, 3)
+            (0, 1, 5, 4) (1, 2, 6, 5) (2, 3, 7, 6) (0, 3, 7, 4)
+            (4, 5, 6, 7)
 
         octahedron, octahedron_faces
         ----------------------------
@@ -321,8 +323,8 @@ class Polyhedron(Basic):
 
             8 faces:
 
-            (0,1,2) (0,2,3) (0,3,4) (0,1,4)
-            (1,2,5) (2,3,5) (3,4,5) (1,4,5)
+            (0, 1, 2) (0, 2, 3) (0, 3, 4) (0, 1, 4)
+            (1, 2, 5) (2, 3, 5) (3, 4, 5) (1, 4, 5)
 
         dodecahedron, dodecahedron_faces
         --------------------------------
@@ -336,11 +338,10 @@ class Polyhedron(Basic):
 
             12 faces:
 
-            (0,1,2,3,4)
-            (0,1,6,10,5) (1,2,7,11,6) (2,3,8,12,7) (3,4,9,13,8) (0,4,9,14,5)
-            (5,10,16,15,14) (
-                6,10,16,17,11) (7,11,17,18,12) (8,12,18,19,13) (9,13,19,15,14)
-            (15,16,17,18,19)
+            (0, 1, 2, 3, 4) (0, 1, 6, 10, 5) (1, 2, 7, 11, 6)
+            (2, 3, 8, 12, 7) (3, 4, 9, 13, 8) (0, 4, 9, 14, 5)
+            (5, 10, 16, 15, 14) (6, 10, 16, 17, 11) (7, 11, 17, 18, 12)
+            (8, 12, 18, 19, 13) (9, 13, 19, 15, 14)(15, 16, 17, 18, 19)
 
         icosahedron, icosahedron_faces
         ------------------------------
@@ -354,14 +355,17 @@ class Polyhedron(Basic):
 
             20 faces:
 
-            (0,1,2) (0,2,3) (0,3,4) (0,4,5) (0,1,5)
-            (1,2,6) (2,3,7) (3,4,8) (4,5,9) (1,5,10)
-            (2,6,7) (3,7,8) (4,8,9) (5,9,10) (1,6,10)
-            (6,7,11,) (7,8,11) (8,9,11) (9,10,11) (6,10,11)
+            (0, 1, 2) (0, 2, 3) (0, 3, 4)
+            (0, 4, 5) (0, 1, 5) (1, 2, 6)
+            (2, 3, 7) (3, 4, 8) (4, 5, 9)
+            (1, 5, 10) (2, 6, 7) (3, 7, 8)
+            (4, 8, 9) (5, 9, 10) (1, 6, 10)
+            (6, 7, 11) (7, 8, 11) (8, 9, 11)
+            (9, 10, 11) (6, 10, 11)
 
         >>> from sympy.combinatorics.polyhedron import cube
         >>> cube.edges
-        {(0, 1), (0, 3), (0, 4), '...', (4, 7), (5, 6), (6, 7)}
+        FiniteSet((0, 1), (0, 3), (0, 4), (1, 2), (1, 5), (2, 3), (2, 6), (3, 7), (4, 5), (4, 7), (5, 6), (6, 7))
 
         If you want to use letters or other names for the corners you
         can still use the pre-calculated faces:
@@ -373,7 +377,7 @@ class Polyhedron(Basic):
         References
         ==========
 
-        [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
+        .. [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
 
         """
         faces = [minlex(f, directed=False, is_set=True) for f in faces]
@@ -424,6 +428,7 @@ class Polyhedron(Basic):
 
         >>> from sympy.combinatorics import Permutation, Cycle
         >>> from sympy.combinatorics.polyhedron import tetrahedron
+        >>> tetrahedron = tetrahedron.copy()
         >>> tetrahedron.array_form
         [0, 1, 2, 3]
 
@@ -488,7 +493,7 @@ class Polyhedron(Basic):
         >>> corners = (a, b, c)
         >>> faces = [(0, 1, 2)]
         >>> Polyhedron(corners, faces).edges
-        {(0, 1), (0, 2), (1, 2)}
+        FiniteSet((0, 1), (0, 2), (1, 2))
 
         """
         if self._edges is None:
@@ -529,6 +534,7 @@ class Polyhedron(Basic):
 
         >>> from sympy.combinatorics import Polyhedron, Permutation
         >>> from sympy.combinatorics.polyhedron import cube
+        >>> cube = cube.copy()
         >>> cube.corners
         (0, 1, 2, 3, 4, 5, 6, 7)
         >>> cube.rotate(0)
@@ -538,7 +544,7 @@ class Polyhedron(Basic):
         A non-physical "rotation" that is not prohibited by this method:
 
         >>> cube.reset()
-        >>> cube.rotate(Permutation([[1,2]], size=8))
+        >>> cube.rotate(Permutation([[1, 2]], size=8))
         >>> cube.corners
         (0, 2, 1, 3, 4, 5, 6, 7)
 
@@ -574,6 +580,7 @@ class Polyhedron(Basic):
         ========
 
         >>> from sympy.combinatorics.polyhedron import tetrahedron as T
+        >>> T = T.copy()
         >>> T.corners
         (0, 1, 2, 3)
         >>> T.rotate(0)
@@ -633,9 +640,9 @@ def _pgroup_calcs():
     ... tetrahedron, cube, octahedron, dodecahedron, icosahedron)
     ...
     >>> polyhedra = (tetrahedron, cube, octahedron, dodecahedron, icosahedron)
-    >>> [h.pgroup.is_group() for h in polyhedra]
+    >>> [h.pgroup.is_group for h in polyhedra]
     ...
-    [False, False, False, False, False]
+    [True, True, True, True, True]
 
     Although tests in polyhedron's test suite check that powers of the
     permutations in the groups generate all permutations of the vertices
@@ -652,7 +659,7 @@ def _pgroup_calcs():
     ...             perms.add(p)
     ...
     ...     perms = [Permutation(p) for p in perms]
-    ...     assert PermutationGroup(perms).is_group()
+    ...     assert PermutationGroup(perms).is_group
 
     In addition to doing the above, the tests in the suite confirm that the
     faces are all present after the application of each permutation.
@@ -800,10 +807,10 @@ def _pgroup_calcs():
         _dodeca_pgroup)
 
     icosahedron_faces = [
-        [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 5], [0, 1, 5],
-        [1, 6, 7], [1, 2, 7], [2, 7, 8], [2, 3, 8], [3, 8, 9 ],
-        [3, 4, 9], [4, 9, 10 ], [4, 5, 10], [5, 6, 10], [1, 5, 6 ],
-        [6, 7, 11], [7, 8, 11], [8, 9, 11], [9, 10, 11], [6, 10, 11]]
+        (0, 1, 2), (0, 2, 3), (0, 3, 4), (0, 4, 5), (0, 1, 5),
+        (1, 6, 7), (1, 2, 7), (2, 7, 8), (2, 3, 8), (3, 8, 9),
+        (3, 4, 9), (4, 9, 10), (4, 5, 10), (5, 6, 10), (1, 5, 6),
+        (6, 7, 11), (7, 8, 11), (8, 9, 11), (9, 10, 11), (6, 10, 11)]
 
     icosahedron = Polyhedron(
         range(12),
@@ -815,6 +822,190 @@ def _pgroup_calcs():
         tetrahedron_faces, cube_faces, octahedron_faces,
         dodecahedron_faces, icosahedron_faces)
 
-(tetrahedron, cube, octahedron, dodecahedron, icosahedron,
-tetrahedron_faces, cube_faces, octahedron_faces,
-dodecahedron_faces, icosahedron_faces) = _pgroup_calcs()
+# -----------------------------------------------------------------------
+#   Standard Polyhedron groups
+#
+#   These are generated using _pgroup_calcs() above. However to save
+#   import time we encode them explicitly here.
+# -----------------------------------------------------------------------
+
+tetrahedron = Polyhedron(
+    Tuple(0, 1, 2, 3),
+    Tuple(
+        Tuple(0, 1, 2),
+        Tuple(0, 2, 3),
+        Tuple(0, 1, 3),
+        Tuple(1, 2, 3)),
+    Tuple(
+        Perm(1, 2, 3),
+        Perm(3)(0, 1, 2),
+        Perm(0, 3, 2),
+        Perm(0, 3, 1),
+        Perm(0, 1)(2, 3),
+        Perm(0, 2)(1, 3),
+        Perm(0, 3)(1, 2)
+    ))
+
+cube = Polyhedron(
+    Tuple(0, 1, 2, 3, 4, 5, 6, 7),
+    Tuple(
+        Tuple(0, 1, 2, 3),
+        Tuple(0, 1, 5, 4),
+        Tuple(1, 2, 6, 5),
+        Tuple(2, 3, 7, 6),
+        Tuple(0, 3, 7, 4),
+        Tuple(4, 5, 6, 7)),
+    Tuple(
+        Perm(0, 1, 2, 3)(4, 5, 6, 7),
+        Perm(0, 4, 5, 1)(2, 3, 7, 6),
+        Perm(0, 4, 7, 3)(1, 5, 6, 2),
+        Perm(0, 1)(2, 4)(3, 5)(6, 7),
+        Perm(0, 6)(1, 2)(3, 5)(4, 7),
+        Perm(0, 6)(1, 7)(2, 3)(4, 5),
+        Perm(0, 3)(1, 7)(2, 4)(5, 6),
+        Perm(0, 4)(1, 7)(2, 6)(3, 5),
+        Perm(0, 6)(1, 5)(2, 4)(3, 7),
+        Perm(1, 3, 4)(2, 7, 5),
+        Perm(7)(0, 5, 2)(3, 4, 6),
+        Perm(0, 5, 7)(1, 6, 3),
+        Perm(0, 7, 2)(1, 4, 6)))
+
+octahedron = Polyhedron(
+    Tuple(0, 1, 2, 3, 4, 5),
+    Tuple(
+        Tuple(0, 1, 2),
+        Tuple(0, 2, 3),
+        Tuple(0, 3, 4),
+        Tuple(0, 1, 4),
+        Tuple(1, 2, 5),
+        Tuple(2, 3, 5),
+        Tuple(3, 4, 5),
+        Tuple(1, 4, 5)),
+    Tuple(
+        Perm(5)(1, 2, 3, 4),
+        Perm(0, 4, 5, 2),
+        Perm(0, 1, 5, 3),
+        Perm(0, 1)(2, 4)(3, 5),
+        Perm(0, 2)(1, 3)(4, 5),
+        Perm(0, 3)(1, 5)(2, 4),
+        Perm(0, 4)(1, 3)(2, 5),
+        Perm(0, 5)(1, 4)(2, 3),
+        Perm(0, 5)(1, 2)(3, 4),
+        Perm(0, 4, 1)(2, 3, 5),
+        Perm(0, 1, 2)(3, 4, 5),
+        Perm(0, 2, 3)(1, 5, 4),
+        Perm(0, 4, 3)(1, 5, 2)))
+
+dodecahedron = Polyhedron(
+    Tuple(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
+    Tuple(
+        Tuple(0, 1, 2, 3, 4),
+        Tuple(0, 1, 6, 10, 5),
+        Tuple(1, 2, 7, 11, 6),
+        Tuple(2, 3, 8, 12, 7),
+        Tuple(3, 4, 9, 13, 8),
+        Tuple(0, 4, 9, 14, 5),
+        Tuple(5, 10, 16, 15, 14),
+        Tuple(6, 10, 16, 17, 11),
+        Tuple(7, 11, 17, 18, 12),
+        Tuple(8, 12, 18, 19, 13),
+        Tuple(9, 13, 19, 15, 14),
+        Tuple(15, 16, 17, 18, 19)),
+    Tuple(
+        Perm(0, 1, 2, 3, 4)(5, 6, 7, 8, 9)(10, 11, 12, 13, 14)(15, 16, 17, 18, 19),
+        Perm(0, 5, 10, 6, 1)(2, 4, 14, 16, 11)(3, 9, 15, 17, 7)(8, 13, 19, 18, 12),
+        Perm(0, 10, 17, 12, 3)(1, 6, 11, 7, 2)(4, 5, 16, 18, 8)(9, 14, 15, 19, 13),
+        Perm(0, 6, 17, 19, 9)(1, 11, 18, 13, 4)(2, 7, 12, 8, 3)(5, 10, 16, 15, 14),
+        Perm(0, 2, 12, 19, 14)(1, 7, 18, 15, 5)(3, 8, 13, 9, 4)(6, 11, 17, 16, 10),
+        Perm(0, 4, 9, 14, 5)(1, 3, 13, 15, 10)(2, 8, 19, 16, 6)(7, 12, 18, 17, 11),
+        Perm(0, 1)(2, 5)(3, 10)(4, 6)(7, 14)(8, 16)(9, 11)(12, 15)(13, 17)(18, 19),
+        Perm(0, 7)(1, 2)(3, 6)(4, 11)(5, 12)(8, 10)(9, 17)(13, 16)(14, 18)(15, 19),
+        Perm(0, 12)(1, 8)(2, 3)(4, 7)(5, 18)(6, 13)(9, 11)(10, 19)(14, 17)(15, 16),
+        Perm(0, 8)(1, 13)(2, 9)(3, 4)(5, 12)(6, 19)(7, 14)(10, 18)(11, 15)(16, 17),
+        Perm(0, 4)(1, 9)(2, 14)(3, 5)(6, 13)(7, 15)(8, 10)(11, 19)(12, 16)(17, 18),
+        Perm(0, 5)(1, 14)(2, 15)(3, 16)(4, 10)(6, 9)(7, 19)(8, 17)(11, 13)(12, 18),
+        Perm(0, 11)(1, 6)(2, 10)(3, 16)(4, 17)(5, 7)(8, 15)(9, 18)(12, 14)(13, 19),
+        Perm(0, 18)(1, 12)(2, 7)(3, 11)(4, 17)(5, 19)(6, 8)(9, 16)(10, 13)(14, 15),
+        Perm(0, 18)(1, 19)(2, 13)(3, 8)(4, 12)(5, 17)(6, 15)(7, 9)(10, 16)(11, 14),
+        Perm(0, 13)(1, 19)(2, 15)(3, 14)(4, 9)(5, 8)(6, 18)(7, 16)(10, 12)(11, 17),
+        Perm(0, 16)(1, 15)(2, 19)(3, 18)(4, 17)(5, 10)(6, 14)(7, 13)(8, 12)(9, 11),
+        Perm(0, 18)(1, 17)(2, 16)(3, 15)(4, 19)(5, 12)(6, 11)(7, 10)(8, 14)(9, 13),
+        Perm(0, 15)(1, 19)(2, 18)(3, 17)(4, 16)(5, 14)(6, 13)(7, 12)(8, 11)(9, 10),
+        Perm(0, 17)(1, 16)(2, 15)(3, 19)(4, 18)(5, 11)(6, 10)(7, 14)(8, 13)(9, 12),
+        Perm(0, 19)(1, 18)(2, 17)(3, 16)(4, 15)(5, 13)(6, 12)(7, 11)(8, 10)(9, 14),
+        Perm(1, 4, 5)(2, 9, 10)(3, 14, 6)(7, 13, 16)(8, 15, 11)(12, 19, 17),
+        Perm(19)(0, 6, 2)(3, 5, 11)(4, 10, 7)(8, 14, 17)(9, 16, 12)(13, 15, 18),
+        Perm(0, 11, 8)(1, 7, 3)(4, 6, 12)(5, 17, 13)(9, 10, 18)(14, 16, 19),
+        Perm(0, 7, 13)(1, 12, 9)(2, 8, 4)(5, 11, 19)(6, 18, 14)(10, 17, 15),
+        Perm(0, 3, 9)(1, 8, 14)(2, 13, 5)(6, 12, 15)(7, 19, 10)(11, 18, 16),
+        Perm(0, 14, 10)(1, 9, 16)(2, 13, 17)(3, 19, 11)(4, 15, 6)(7, 8, 18),
+        Perm(0, 16, 7)(1, 10, 11)(2, 5, 17)(3, 14, 18)(4, 15, 12)(8, 9, 19),
+        Perm(0, 16, 13)(1, 17, 8)(2, 11, 12)(3, 6, 18)(4, 10, 19)(5, 15, 9),
+        Perm(0, 11, 15)(1, 17, 14)(2, 18, 9)(3, 12, 13)(4, 7, 19)(5, 6, 16),
+        Perm(0, 8, 15)(1, 12, 16)(2, 18, 10)(3, 19, 5)(4, 13, 14)(6, 7, 17)))
+
+icosahedron = Polyhedron(
+    Tuple(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
+    Tuple(
+        Tuple(0, 1, 2),
+        Tuple(0, 2, 3),
+        Tuple(0, 3, 4),
+        Tuple(0, 4, 5),
+        Tuple(0, 1, 5),
+        Tuple(1, 6, 7),
+        Tuple(1, 2, 7),
+        Tuple(2, 7, 8),
+        Tuple(2, 3, 8),
+        Tuple(3, 8, 9),
+        Tuple(3, 4, 9),
+        Tuple(4, 9, 10),
+        Tuple(4, 5, 10),
+        Tuple(5, 6, 10),
+        Tuple(1, 5, 6),
+        Tuple(6, 7, 11),
+        Tuple(7, 8, 11),
+        Tuple(8, 9, 11),
+        Tuple(9, 10, 11),
+        Tuple(6, 10, 11)),
+    Tuple(
+        Perm(11)(1, 2, 3, 4, 5)(6, 7, 8, 9, 10),
+        Perm(0, 5, 6, 7, 2)(3, 4, 10, 11, 8),
+        Perm(0, 1, 7, 8, 3)(4, 5, 6, 11, 9),
+        Perm(0, 2, 8, 9, 4)(1, 7, 11, 10, 5),
+        Perm(0, 3, 9, 10, 5)(1, 2, 8, 11, 6),
+        Perm(0, 4, 10, 6, 1)(2, 3, 9, 11, 7),
+        Perm(0, 1)(2, 5)(3, 6)(4, 7)(8, 10)(9, 11),
+        Perm(0, 2)(1, 3)(4, 7)(5, 8)(6, 9)(10, 11),
+        Perm(0, 3)(1, 9)(2, 4)(5, 8)(6, 11)(7, 10),
+        Perm(0, 4)(1, 9)(2, 10)(3, 5)(6, 8)(7, 11),
+        Perm(0, 5)(1, 4)(2, 10)(3, 6)(7, 9)(8, 11),
+        Perm(0, 6)(1, 5)(2, 10)(3, 11)(4, 7)(8, 9),
+        Perm(0, 7)(1, 2)(3, 6)(4, 11)(5, 8)(9, 10),
+        Perm(0, 8)(1, 9)(2, 3)(4, 7)(5, 11)(6, 10),
+        Perm(0, 9)(1, 11)(2, 10)(3, 4)(5, 8)(6, 7),
+        Perm(0, 10)(1, 9)(2, 11)(3, 6)(4, 5)(7, 8),
+        Perm(0, 11)(1, 6)(2, 10)(3, 9)(4, 8)(5, 7),
+        Perm(0, 11)(1, 8)(2, 7)(3, 6)(4, 10)(5, 9),
+        Perm(0, 11)(1, 10)(2, 9)(3, 8)(4, 7)(5, 6),
+        Perm(0, 11)(1, 7)(2, 6)(3, 10)(4, 9)(5, 8),
+        Perm(0, 11)(1, 9)(2, 8)(3, 7)(4, 6)(5, 10),
+        Perm(0, 5, 1)(2, 4, 6)(3, 10, 7)(8, 9, 11),
+        Perm(0, 1, 2)(3, 5, 7)(4, 6, 8)(9, 10, 11),
+        Perm(0, 2, 3)(1, 8, 4)(5, 7, 9)(6, 11, 10),
+        Perm(0, 3, 4)(1, 8, 10)(2, 9, 5)(6, 7, 11),
+        Perm(0, 4, 5)(1, 3, 10)(2, 9, 6)(7, 8, 11),
+        Perm(0, 10, 7)(1, 5, 6)(2, 4, 11)(3, 9, 8),
+        Perm(0, 6, 8)(1, 7, 2)(3, 5, 11)(4, 10, 9),
+        Perm(0, 7, 9)(1, 11, 4)(2, 8, 3)(5, 6, 10),
+        Perm(0, 8, 10)(1, 7, 6)(2, 11, 5)(3, 9, 4),
+        Perm(0, 9, 6)(1, 3, 11)(2, 8, 7)(4, 10, 5)))
+
+tetrahedron_faces = list(tuple(arg) for arg in tetrahedron.faces)
+
+cube_faces = list(tuple(arg) for arg in cube.faces)
+
+octahedron_faces = list(tuple(arg) for arg in octahedron.faces)
+
+dodecahedron_faces = list(tuple(arg) for arg in dodecahedron.faces)
+
+icosahedron_faces = list(tuple(arg) for arg in icosahedron.faces)

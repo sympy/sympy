@@ -5,6 +5,7 @@ qasm.py - Functions to parse a set of qasm commands into a Sympy Circuit.
 Examples taken from Chuang's page: http://www.media.mit.edu/quanta/qasm2circ/
 
 The code returns a circuit and an associated list of labels.
+
 >>> from sympy.physics.quantum.qasm import Qasm
 >>> q = Qasm('qubit q0', 'qubit q1', 'h q0', 'cnot q0,q1')
 >>> q.get_circuit()

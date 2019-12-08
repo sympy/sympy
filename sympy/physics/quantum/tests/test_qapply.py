@@ -1,20 +1,18 @@
-from sympy import I, Integer, sqrt, symbols, Matrix
+from sympy import I, Integer, sqrt, symbols, S, Mul, Rational
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.gate import H
-from sympy.physics.quantum.operator import Operator, UnitaryOperator
+from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.spin import Jx, Jy, Jz, Jplus, Jminus, J2, JzKet
+from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.state import Ket
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit
-from sympy.physics.quantum.gate import UGate
 from sympy.physics.quantum.boson import BosonOp, BosonFockKet, BosonFockBra
-from sympy.physics.quantum.tensorproduct import TensorProduct
 
 
 j, jp, m, mp = symbols("j j' m m'")
@@ -119,3 +117,10 @@ def test_issue_6073():
 def test_density():
     d = Density([Jz*mo, 0.5], [Jz*po, 0.5])
     assert qapply(d) == Density([-hbar*mo, 0.5], [hbar*po, 0.5])
+
+
+def test_issue3044():
+    expr1 = TensorProduct(Jz*JzKet(S(2),S.NegativeOne)/sqrt(2), Jz*JzKet(S.Half,S.Half))
+    result = Mul(S.NegativeOne, Rational(1, 4), 2**S.Half, hbar**2)
+    result *= TensorProduct(JzKet(2,-1), JzKet(S.Half,S.Half))
+    assert qapply(expr1) == result

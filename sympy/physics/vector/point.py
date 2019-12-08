@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+from sympy.core.compatibility import range, string_types
 from .vector import Vector, _check_vector
 from .frame import _check_frame
 
@@ -11,6 +12,38 @@ class Point(object):
     It stores the: position, velocity, and acceleration of a point.
     The position is a vector defined as the vector distance from a parent
     point to this point.
+
+    Parameters
+    ==========
+
+    name : string
+        The display name of the Point
+
+    Examples
+    ========
+
+    >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> O = Point('O')
+    >>> P = Point('P')
+    >>> u1, u2, u3 = dynamicsymbols('u1 u2 u3')
+    >>> O.set_vel(N, u1 * N.x + u2 * N.y + u3 * N.z)
+    >>> O.acc(N)
+    u1'*N.x + u2'*N.y + u3'*N.z
+
+    symbols() can be used to create multiple Points in a single step, for example:
+
+    >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+    >>> from sympy import symbols
+    >>> N = ReferenceFrame('N')
+    >>> u1, u2 = dynamicsymbols('u1 u2')
+    >>> A, B = symbols('A B', cls=Point)
+    >>> type(A)
+    <class 'sympy.physics.vector.point.Point'>
+    >>> A.set_vel(N, u1 * N.x + u2 * N.y)
+    >>> B.set_vel(N, u2 * N.x + u1 * N.y)
+    >>> A.acc(N) - B.acc(N)
+    (u1' - u2')*N.x + (-u1' + u2')*N.y
 
     """
 
@@ -204,7 +237,7 @@ class Point(object):
 
         """
 
-        if not isinstance(name, str):
+        if not isinstance(name, string_types):
             raise TypeError('Must supply a valid name')
         if value == 0:
             value = Vector(0)
@@ -248,10 +281,10 @@ class Point(object):
         Parameters
         ==========
 
-        value : Vector
-            The vector value of this point's acceleration in the frame
         frame : ReferenceFrame
             The frame in which this point's acceleration is defined
+        value : Vector
+            The vector value of this point's acceleration in the frame
 
         Examples
         ========
@@ -277,10 +310,10 @@ class Point(object):
         Parameters
         ==========
 
+        otherpoint : Point
+            The other point which this point's location is defined relative to
         value : Vector
             The vector which defines the location of this point
-        point : Point
-            The other point which this point's location is defined relative to
 
         Examples
         ========
@@ -308,10 +341,10 @@ class Point(object):
         Parameters
         ==========
 
-        value : Vector
-            The vector value of this point's velocity in the frame
         frame : ReferenceFrame
             The frame in which this point's velocity is defined
+        value : Vector
+            The vector value of this point's velocity in the frame
 
         Examples
         ========
@@ -453,3 +486,45 @@ class Point(object):
             raise ValueError('Velocity of point ' + self.name + ' has not been'
                              ' defined in ReferenceFrame ' + frame.name)
         return self._vel_dict[frame]
+
+    def partial_velocity(self, frame, *gen_speeds):
+        """Returns the partial velocities of the linear velocity vector of this
+        point in the given frame with respect to one or more provided
+        generalized speeds.
+
+        Parameters
+        ==========
+        frame : ReferenceFrame
+            The frame with which the velocity is defined in.
+        gen_speeds : functions of time
+            The generalized speeds.
+
+        Returns
+        =======
+        partial_velocities : tuple of Vector
+            The partial velocity vectors corresponding to the provided
+            generalized speeds.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.vector import ReferenceFrame, Point
+        >>> from sympy.physics.vector import dynamicsymbols
+        >>> N = ReferenceFrame('N')
+        >>> A = ReferenceFrame('A')
+        >>> p = Point('p')
+        >>> u1, u2 = dynamicsymbols('u1, u2')
+        >>> p.set_vel(N, u1 * N.x + u2 * A.y)
+        >>> p.partial_velocity(N, u1)
+        N.x
+        >>> p.partial_velocity(N, u1, u2)
+        (N.x, A.y)
+
+        """
+        partials = [self.vel(frame).diff(speed, frame, var_in_dcm=False) for
+                    speed in gen_speeds]
+
+        if len(partials) == 1:
+            return partials[0]
+        else:
+            return tuple(partials)

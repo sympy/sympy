@@ -5,9 +5,10 @@ from __future__ import print_function, division
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
-from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import pi
-from sympy import I, S, C, denom
+from sympy.core.logic import fuzzy_bool
+from sympy.functions.elementary.exponential import exp, log
+from sympy import I, Eq, conjugate, MatrixBase
 
 
 class AskIntegerHandler(CommonHandler):
@@ -15,6 +16,10 @@ class AskIntegerHandler(CommonHandler):
     Handler for Q.integer
     Test that an expression belongs to the field of integer numbers
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_integer
 
     @staticmethod
     def _number(expr, assumptions):
@@ -63,25 +68,21 @@ class AskIntegerHandler(CommonHandler):
                         return
                 else:
                     return
-        else:
-            return _output
+
+        return _output
 
     Pow = Add
 
     int, Integer = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
-    Pi, Exp1, GoldenRatio, Infinity, NegativeInfinity, ImaginaryUnit = \
-        [staticmethod(CommonHandler.AlwaysFalse)]*6
+    Pi, Exp1, GoldenRatio, TribonacciConstant, Infinity, NegativeInfinity, ImaginaryUnit = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*7
 
     @staticmethod
     def Rational(expr, assumptions):
         # rationals with denominator one get
         # evaluated to Integers
         return False
-
-    @staticmethod
-    def Float(expr, assumptions):
-        return int(expr) == expr
 
     @staticmethod
     def Abs(expr, assumptions):
@@ -99,6 +100,11 @@ class AskRationalHandler(CommonHandler):
     Handler for Q.rational
     Test that an expression belongs to the field of rational numbers
     """
+
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_rational
 
     @staticmethod
     def Add(expr, assumptions):
@@ -127,11 +133,13 @@ class AskRationalHandler(CommonHandler):
             if ask(Q.prime(expr.base), assumptions):
                 return False
 
-    Rational, Float = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*2 # Float is finite-precision
 
-    ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio = \
-        [staticmethod(CommonHandler.AlwaysFalse)]*6
+    Rational = staticmethod(CommonHandler.AlwaysTrue)
+
+    Float = staticmethod(CommonHandler.AlwaysNone)
+
+    ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio, TribonacciConstant = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*7
 
     @staticmethod
     def exp(expr, assumptions):
@@ -157,6 +165,11 @@ class AskRationalHandler(CommonHandler):
 
 class AskIrrationalHandler(CommonHandler):
 
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_irrational
+
     @staticmethod
     def Basic(expr, assumptions):
         _real = ask(Q.real(expr), assumptions)
@@ -174,6 +187,10 @@ class AskRealHandler(CommonHandler):
     Handler for Q.real
     Test that an expression belongs to the field of real numbers
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_real
 
     @staticmethod
     def _number(expr, assumptions):
@@ -231,7 +248,7 @@ class AskRealHandler(CommonHandler):
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
 
-        if expr.base.func == C.exp:
+        if expr.base.func == exp:
             if ask(Q.imaginary(expr.base.args[0]), assumptions):
                 if ask(Q.imaginary(expr.exp), assumptions):
                     return True
@@ -252,7 +269,7 @@ class AskRealHandler(CommonHandler):
                 return
 
         if ask(Q.imaginary(expr.exp), assumptions):
-            imlog = ask(Q.imaginary(C.log(expr.base)), assumptions)
+            imlog = ask(Q.imaginary(log(expr.base)), assumptions)
             if imlog is not None:
                 # I**i -> real, log(I) is imag;
                 # (2*I)**i -> complex, log(2*I) is not imag
@@ -270,8 +287,8 @@ class AskRealHandler(CommonHandler):
                 elif ask(Q.negative(expr.base), assumptions):
                     return False
 
-    Rational, Float, Pi, Exp1, GoldenRatio, Abs, re, im = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*8
+    Rational, Float, Pi, Exp1, GoldenRatio, TribonacciConstant, Abs, re, im = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*9
 
     ImaginaryUnit, Infinity, NegativeInfinity = \
         [staticmethod(CommonHandler.AlwaysFalse)]*3
@@ -319,6 +336,12 @@ class AskHermitianHandler(AskRealHandler):
     Handler for Q.hermitian
     Test that an expression belongs to the field of Hermitian operators
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        if isinstance(expr, MatrixBase):
+            return None
+        return AskRealHandler.Expr(expr, assumptions)
 
     @staticmethod
     def Add(expr, assumptions):
@@ -372,12 +395,28 @@ class AskHermitianHandler(AskRealHandler):
 
     cos, exp = [sin]*2
 
+    @staticmethod
+    def MatrixBase(mat, assumptions):
+        rows, cols = mat.shape
+        ret_val = True
+        for i in range(rows):
+            for j in range(i, cols):
+                cond = fuzzy_bool(Eq(mat[i, j], conjugate(mat[j, i])))
+                if cond == None:
+                    ret_val = None
+                if cond == False:
+                    return False
+        return ret_val
 
 class AskComplexHandler(CommonHandler):
     """
     Handler for Q.complex
     Test that an expression belongs to the field of complex numbers
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_complex
 
     @staticmethod
     def Add(expr, assumptions):
@@ -403,6 +442,10 @@ class AskImaginaryHandler(CommonHandler):
     Test that an expression belongs to the field of imaginary numbers,
     that is, numbers in the form x*I, where x is real
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_imaginary
 
     @staticmethod
     def _number(expr, assumptions):
@@ -474,7 +517,7 @@ class AskImaginaryHandler(CommonHandler):
         if expr.is_number:
             return AskImaginaryHandler._number(expr, assumptions)
 
-        if expr.base.func == C.exp:
+        if expr.base.func == exp:
             if ask(Q.imaginary(expr.base.args[0]), assumptions):
                 if ask(Q.imaginary(expr.exp), assumptions):
                     return False
@@ -490,7 +533,7 @@ class AskImaginaryHandler(CommonHandler):
                 return
 
         if ask(Q.imaginary(expr.exp), assumptions):
-            imlog = ask(Q.imaginary(C.log(expr.base)), assumptions)
+            imlog = ask(Q.imaginary(log(expr.base)), assumptions)
             if imlog is not None:
                 return False  # I**i -> real; (2*I)**i -> complex ==> not imaginary
 
@@ -514,13 +557,13 @@ class AskImaginaryHandler(CommonHandler):
     def log(expr, assumptions):
         if ask(Q.real(expr.args[0]), assumptions):
             if ask(Q.positive(expr.args[0]), assumptions):
-               return False
+                return False
             return
         # XXX it should be enough to do
         # return ask(Q.nonpositive(expr.args[0]), assumptions)
         # but ask(Q.nonpositive(exp(x)), Q.imaginary(x)) -> None;
         # it should return True since exp(x) will be either 0 or complex
-        if expr.args[0].func == C.exp:
+        if expr.args[0].func == exp:
             if expr.args[0].args[0] in [I, -I]:
                 return True
         im = ask(Q.imaginary(expr.args[0]), assumptions)
@@ -621,8 +664,8 @@ class AskAlgebraicHandler(CommonHandler):
     def Rational(expr, assumptions):
         return expr.q != 0
 
-    Float, GoldenRatio, ImaginaryUnit, AlgebraicNumber = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*4
+    Float, GoldenRatio, TribonacciConstant, ImaginaryUnit, AlgebraicNumber = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*5
 
     Infinity, NegativeInfinity, ComplexInfinity, Pi, Exp1 = \
         [staticmethod(CommonHandler.AlwaysFalse)]*5

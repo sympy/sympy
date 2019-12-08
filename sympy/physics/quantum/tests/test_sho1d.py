@@ -1,6 +1,7 @@
 """Tests for sho1d.py"""
 
 from sympy import Integer, Symbol, sqrt, I, S
+from sympy.core.compatibility import range
 from sympy.physics.quantum import Dagger
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum import Commutator
@@ -65,8 +66,6 @@ def test_RaisingOp():
         skip("numpy not installed.")
     if not scipy:
         skip("scipy not installed.")
-    else:
-        sparse = scipy.sparse
 
     ad_rep_scipy = represent(ad, basis=N, ndim=4, format='scipy.sparse', spmatrix='lil')
     for i in range(ndim - 1):

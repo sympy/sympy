@@ -19,6 +19,10 @@ class CommonHandler(AskHandler):
     def AlwaysFalse(expr, assumptions):
         return False
 
+    @staticmethod
+    def AlwaysNone(expr, assumptions):
+        return None
+
     NaN = AlwaysFalse
 
 
@@ -31,6 +35,8 @@ class AskCommutativeHandler(CommonHandler):
     def Symbol(expr, assumptions):
         """Objects are expected to be commutative unless otherwise stated"""
         assumps = conjuncts(assumptions)
+        if expr.is_commutative is not None:
+            return expr.is_commutative and not ~Q.commutative(expr) in assumps
         if Q.commutative(expr) in assumps:
             return True
         elif ~Q.commutative(expr) in assumps:

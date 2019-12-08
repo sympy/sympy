@@ -15,6 +15,7 @@ import random
 from sympy import Mul, S
 from sympy import log, sqrt
 from sympy.core.numbers import igcd
+from sympy.core.compatibility import range
 from sympy.ntheory import continued_fraction_periodic as continued_fraction
 from sympy.utilities.iterables import variations
 
@@ -153,16 +154,12 @@ def period_find(a, N):
     print("controlled Mod'd")
     for i in range(t):
         circuit = measure_partial_oneshot(circuit, i)
-        # circuit = measure(i)*circuit
-    # circuit = qapply(circuit)
     print("measured 1")
     #Now apply Inverse Quantum Fourier Transform on the second half of the register
     circuit = qapply(QFT(t, t*2).decompose()*circuit, floatingPoint=True)
     print("QFT'd")
     for i in range(t):
         circuit = measure_partial_oneshot(circuit, i + t)
-        # circuit = measure(i+t)*circuit
-    # circuit = qapply(circuit)
     print(circuit)
     if isinstance(circuit, Qubit):
         register = circuit
