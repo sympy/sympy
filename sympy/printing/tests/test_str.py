@@ -830,7 +830,7 @@ def test_MatrixExpressions():
     # Apply function elementwise (`ElementwiseApplyFunc`):
 
     expr = (X.T*X).applyfunc(sin)
-    assert str(expr) == 'sin.(X.T*X)'
+    assert str(expr) == 'Lambda(_d, sin(_d)).(X.T*X)'
 
     lamda = Lambda(x, 1/x)
     expr = (n*X).applyfunc(lamda)
