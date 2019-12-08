@@ -124,7 +124,7 @@ def test_as_finite_diff():
 
 
 def test_differentiate_finite():
-    x, y = symbols('x y')
+    x, y, h = symbols('x y h')
     f = Function('f')
     res0 = differentiate_finite(f(x, y) + exp(42), x, y, evaluate=True)
     xm, xp, ym, yp = [v + sign*S.Half for v, sign in product([x, y], [-1, 1])]
@@ -148,6 +148,12 @@ def test_differentiate_finite():
     assert (res3 - ref3).simplify() == 0
 
     res4 = differentiate_finite(f(x)*g(x).diff(x).diff(x), x)
-    ref4 = -(g(x - Rational(3, 2)) - 2*g(x - S.Half) + g(x + S.Half))*f(x - S.Half) \
+    ref4 = -((g(x - Rational(3, 2)) - 2*g(x - S.Half) + g(x + S.Half))*f(x - S.Half)) \
            + (g(x - S.Half) - 2*g(x + S.Half) + g(x + Rational(3, 2)))*f(x + S.Half)
-    assert (res4 - ref4).simplify() == 0
+    assert res4 - ref4 == 0
+
+    res5_expr = f(x).diff(x)*g(x).diff(x)
+    res5 = diff(res5_expr, x)
+    ref5_ = differentiate_finite(res5_expr, points=[x-h, x, x+h])
+    ref5 = ref5_.limit(h, 0).doit()
+    assert res5 - ref5 == 0
