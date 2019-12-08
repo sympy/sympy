@@ -1,7 +1,4 @@
-import sympy.physics.mechanics as me
 import sympy as sm
-import math as m
-import numpy as np
 
 f = sm.S(3)
 g = sm.S(9.81)

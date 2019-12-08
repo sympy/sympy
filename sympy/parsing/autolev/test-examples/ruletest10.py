@@ -1,7 +1,5 @@
 import sympy.physics.mechanics as me
 import sympy as sm
-import math as m
-import numpy as np
 
 x, y = me.dynamicsymbols('x y')
 a, b = sm.symbols('a b', real=True)
