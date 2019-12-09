@@ -1,7 +1,5 @@
 import sympy.physics.mechanics as me
 import sympy as sm
-import math as m
-import numpy as np
 
 frame_n = me.ReferenceFrame('n')
 frame_a = me.ReferenceFrame('a')
