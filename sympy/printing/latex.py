@@ -405,6 +405,10 @@ class LatexPrinter(Printer):
         return r"\begin{pmatrix} %s \end{pmatrix}" % mat
 
 
+    def _print_AppliedPermutation(self, expr):
+        perm, var = expr.args
+        return r"\sigma_{%s}(%s)" % (self._print(perm), self._print(var))
+
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)

@@ -2,11 +2,12 @@ from itertools import permutations
 
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
+from sympy.core.numbers import Integer
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.core.singleton import S
-from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_rmul, _af_rmuln, Cycle)
+from sympy.combinatorics.permutations import \
+    Permutation, _af_parity, _af_rmul, _af_rmuln, AppliedPermutation, Cycle
 from sympy.printing import sstr, srepr, pretty, latex
 from sympy.utilities.pytest import raises, SymPyDeprecationWarning, \
     warns_deprecated_sympy
@@ -522,3 +523,12 @@ def test_issue_17661():
     assert c1 == c2
     assert repr(c1) == 'Cycle(1, 2)'
     assert c1 == c2
+
+
+def test_permutation_apply():
+    x = Symbol('x')
+    p = Permutation(0, 1, 2)
+    assert p.apply(0) == 1
+    assert isinstance(p.apply(0), Integer)
+    assert p.apply(x) == AppliedPermutation(p, x)
+    assert AppliedPermutation(p, x).subs(x, 0) == 1
