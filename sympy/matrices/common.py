@@ -1923,15 +1923,15 @@ class MatrixOperations(MatrixRequired):
             raise TypeError("orientation='{}' is an invalid kwarg. "
                             "Try 'rows' or 'cols'".format(orientation))
 
-        # ensure all swaps are in range
-        max_index = self.rows if orientation == 'rows' else self.cols
-        if not all(0 <= t <= max_index for t in flatten(list(perm))):
-            raise IndexError("`swap` indices out of range.")
-
         if not isinstance(perm, (Permutation, Iterable)):
             raise ValueError(
                 "{} must be a list, a list of lists, "
                 "or a SymPy permutation object.".format(perm))
+
+        # ensure all swaps are in range
+        max_index = self.rows if orientation == 'rows' else self.cols
+        if not all(0 <= t <= max_index for t in flatten(list(perm))):
+            raise IndexError("`swap` indices out of range.")
 
         if perm and not isinstance(perm, Permutation) and \
             isinstance(perm[0], Iterable):
