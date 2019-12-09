@@ -1,4 +1,5 @@
 import collections
+import sys
 import warnings
 
 from sympy.external import import_module
