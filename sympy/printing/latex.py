@@ -376,19 +376,33 @@ class LatexPrinter(Printer):
         return term_tex
 
     def _print_Permutation(self, expr):
-        if self._settings.get("perm_cyclic",True):
-            return self._print_Cycle(expr)
+        from sympy.combinatorics.permutations import Permutation
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+        perm_cyclic = Permutation.print_cyclic
+        if perm_cyclic is not None:
+            SymPyDeprecationWarning(
+                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
+                useinstead="init_printing(perm_cyclic={})"
+                .format(perm_cyclic),
+                issue=15201,
+                deprecated_since_version="1.6").warn()
         else:
-            s = expr.support()
-            if not s:
-                if expr.size < 5:
-                    return 'Permutation(%s)' % self._print(expr.array_form)
-                return 'Permutation([], size=%s)' % self._print(expr.size)
-            trim = self._print(expr.array_form[:s[-1] + 1]) + ', size=%s' % self._print(expr.size)
-            use = full = self._print(expr.array_form)
-            if len(trim) < len(full):
-                use = trim
-            return 'Permutation(%s)' % use
+            perm_cyclic = self._settings.get("perm_cyclic", True)
+
+        if perm_cyclic:
+            return self._print_Cycle(expr)
+
+        if expr.size == 0:
+            return r"\left( \right)"
+
+        lower = [self._print(arg) for arg in expr.array_form]
+        upper = [self._print(arg) for arg in range(len(lower))]
+
+        row1 = " & ".join(upper)
+        row2 = " & ".join(lower)
+        mat = r" \\ ".join((row1, row2))
+        return r"\begin{pmatrix} %s \end{pmatrix}" % mat
 
 
     def _print_Float(self, expr):

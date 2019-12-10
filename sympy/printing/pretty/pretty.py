@@ -17,6 +17,7 @@ from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_variety
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import xstr, hobj, vobj, xobj, \
@@ -42,7 +43,7 @@ class PrettyPrinter(Printer):
         "root_notation": True,
         "mat_symbol_style": "plain",
         "imaginary_unit": "i",
-        "perm_cyclic": True,
+        "perm_cyclic": True
     }
 
     def __init__(self, settings=None):
@@ -388,34 +389,40 @@ class PrettyPrinter(Printer):
             cyc = prettyForm(*cyc.right(l))
         return cyc
 
-    def _print_Permutation(self,expr):
-        if self._settings.get("perm_cyclic",True):
-            return self._print_Cycle(expr)
+    def _print_Permutation(self, expr):
+        from ..str import sstr
+        from sympy.combinatorics.permutations import Permutation, Cycle
+
+        perm_cyclic = Permutation.print_cyclic
+        if perm_cyclic is not None:
+            SymPyDeprecationWarning(
+                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
+                useinstead="init_printing(perm_cyclic={})"
+                .format(perm_cyclic),
+                issue=15201,
+                deprecated_since_version="1.6").warn()
         else:
-            s = expr.support()
-            if not s:
-                if expr.size < 5:
-                    return 'Permutation(%s)' % self._print(expr.array_form)
-                return 'Permutation([], size=%s)' % self._print(expr.size)
-            use = self._print(expr.array_form)
-            return prettyForm('Permutation(%s)' % use)
+            perm_cyclic = self._settings.get("perm_cyclic", True)
 
-    def _print_PDF(self, pdf):
-        lim = self._print(pdf.pdf.args[0])
-        lim = prettyForm(*lim.right(', '))
-        lim = prettyForm(*lim.right(self._print(pdf.domain[0])))
-        lim = prettyForm(*lim.right(', '))
-        lim = prettyForm(*lim.right(self._print(pdf.domain[1])))
-        lim = prettyForm(*lim.parens())
+        if perm_cyclic:
+            return self._print_Cycle(Cycle(expr))
 
-        f = self._print(pdf.pdf.args[1])
-        f = prettyForm(*f.right(', '))
-        f = prettyForm(*f.right(lim))
-        f = prettyForm(*f.parens())
+        lower = expr.array_form
+        upper = list(range(len(lower)))
 
-        pform = prettyForm('PDF')
-        pform = prettyForm(*pform.right(f))
-        return pform
+        result = stringPict('')
+        first = True
+        for u, l in zip(upper, lower):
+            s1 = self._print(u)
+            s2 = self._print(l)
+            col = prettyForm(*s1.below(s2))
+            if first:
+                first = False
+            else:
+                col = prettyForm(*col.left(" "))
+            result = prettyForm(*result.right(col))
+        return prettyForm(*result.parens())
+
 
     def _print_Integral(self, integral):
         f = integral.function
@@ -2643,10 +2650,7 @@ def pretty(expr, **settings):
         pretty_use_unicode(uflag)
 
 
-def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
-                 full_prec="auto", order=None, use_unicode_sqrt_char=True,
-                 root_notation = True, mat_symbol_style="plain",
-                 imaginary_unit="i", perm_cyclic=True):
+def pretty_print(expr, **kwargs):
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
@@ -2689,11 +2693,7 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
         Letter to use for imaginary unit when use_unicode is True.
         Can be "i" (default) or "j".
     """
-    print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
-                 use_unicode=use_unicode, full_prec=full_prec, order=order,
-                 use_unicode_sqrt_char=use_unicode_sqrt_char,
-                 root_notation=root_notation, mat_symbol_style=mat_symbol_style,
-                 imaginary_unit=imaginary_unit, perm_cyclic=perm_cyclic))
+    print(pretty(expr, **kwargs))
 
 pprint = pretty_print
 
