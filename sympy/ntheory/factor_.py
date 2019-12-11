@@ -1677,7 +1677,7 @@ class totient(Function):
     1
     >>> totient(25)
     20
-    >>> assert totient(420378134765625) == totient(43046721)*totient(9765625) == 224201671875000
+    >>> totient(45) == totient(5)*totient(9)
 
     See Also
     ========
