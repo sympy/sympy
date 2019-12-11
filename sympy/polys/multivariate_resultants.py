@@ -205,7 +205,7 @@ class DixonResultant():
         rows = [i for i in range(m) if any(matrix[i, j] != 0 for j in range(n))]
         matrix = matrix[rows,:]
 
-        condition = Matrix([[0 for i in range(n-1)] + [1]])
+        condition = Matrix([[0]*(n-1) + [1]])
 
         if matrix[-1,:] == condition:
             return True
