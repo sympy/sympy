@@ -12,6 +12,7 @@ from sympy.utilities.iterables import postorder_traversal
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei, expint, li, Si, Ci, Shi, Chi
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
+from sympy import (Basic, Mul, Add, Pow, Integral, UnevaluatedExpr, exp)
 from sympy.functions.special.hyper import TupleArg
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
 from sympy.utilities.iterables import flatten
