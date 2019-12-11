@@ -1,31 +1,15 @@
 from sympy.external import import_module
-from sympy.utilities.decorator import doctest_depends_on
-from sympy.functions.elementary.integers import floor, frac
-from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, gamma, uppergamma, polygamma, digamma,
-    loggamma, factorial, zeta, LambertW)
+from sympy.functions import (log, sin, cos, tan, cot, csc, sec, erf, gamma, uppergamma)
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
-from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec, atan2
-from sympy.polys.polytools import Poly, quo, rem, total_degree, degree
-from sympy.simplify.simplify import fraction, simplify, cancel, powsimp
-from sympy.core.sympify import sympify
-from sympy.utilities.iterables import postorder_traversal
-from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei, expint, li, Si, Ci, Shi, Chi
-from sympy.functions.elementary.complexes import im, re, Abs
-from sympy.core.exprtools import factor_terms
+from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
+from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei
 from sympy import (Basic, Mul, Add, Pow, Integral, UnevaluatedExpr, exp)
-from sympy.functions.special.hyper import TupleArg
-from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
-from sympy.utilities.iterables import flatten
-from random import randint
-from sympy.logic.boolalg import Or
 
 matchpy = import_module("matchpy")
 
 if matchpy:
-    from matchpy import Arity, Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer
+    from matchpy import Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation
     from matchpy.expressions.functions import op_iter, create_operation_expression, op_len
-    from sympy.integrals.rubi.symbol import WC
-    from matchpy import is_match, replace_all
 
     Operation.register(Integral)
     Operation.register(Pow)
