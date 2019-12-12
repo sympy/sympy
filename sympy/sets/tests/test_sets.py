@@ -1423,24 +1423,24 @@ def test_subset_ProuctSet_ProductSet():
 
     c = ProductSet(a, a)
     d = ProductSet(b, b)
-    assert c.is_subset(d)
-    assert d.is_subset(c)
+    assert c.is_subset(d) is True
+    assert d.is_subset(c) is False
 
     a = S.Integers
     b = S.Reals
 
     c = ProductSet(a, a)
     d = ProductSet(b, b)
-    assert c.is_subset(d)
-    assert d.is_subset(c)
+    assert c.is_subset(d) is True
+    assert d.is_subset(c) is False
 
     a = FiniteSet(1, 2)
     b = S.Reals
 
     c = ProductSet(a, a)
     d = ProductSet(b, b)
-    assert c.is_subset(d)
-    assert d.is_subset(c)
+    assert c.is_subset(d) is True
+    assert d.is_subset(c) is False
 
 
 def test_finite_set_product_set_subset():
