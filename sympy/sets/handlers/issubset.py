@@ -115,8 +115,19 @@ def is_subset_sets(a, b):
 
 @dispatch(FiniteSet, ProductSet)
 def is_subset_sets(a, b):
-    return a.is_subset(b.rewrite(FiniteSet))
+    def gen():
+        for x in a:
+            yield fuzzy_bool(b.contains(x))
+    return fuzzy_and(gen())
 
 @dispatch(ProductSet, FiniteSet)
 def is_subset_sets(a, b):
-    return a.rewrite(FiniteSet).is_subset(b)
+    is_finite_set = a.is_finite_set
+    if is_finite_set is True:
+        def gen():
+            for x in a:
+                yield fuzzy_bool(b.contains(x))
+        return fuzzy_and(gen())
+
+    elif a.is_finite_set is False:
+        return False
