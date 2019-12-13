@@ -789,22 +789,21 @@ from SymPy 0.6.5:
 
 Be careful about substituting for derivatives! 
 ==============================================
-.. code-block:: python
 
-    In [1]: import sympy as sm
-            import sympy.physics.mechanics as
-    In [2]: q1, q2 = me.dynamicsymbols('q1, q2')
-    In [3]: a, b, c = sm.symbols('a, b, c')
-    In [4]: expr = q1.diff().diff()**2*q1 + q1.diff()*q2.diff()
-            expr
-    Out[4]: 
+    >>> import sympy as sm
+    >>> import sympy.physics.mechanics as
+    >>> q1, q2 = me.dynamicsymbols('q1, q2')
+    >>> a, b, c = sm.symbols('a, b, c')
+    >>> expr = q1.diff().diff()**2*q1 + q1.diff()*q2.diff()
+    expr
+     
 .. math::
     \displaystyle \operatorname{q_{1}}{\left(t \right)} \left(\frac{d^{2}}{d t^{2}} \operatorname{q_{1}}{\left(t \right)}\right)^{2} + \frac{d}{d t} \operatorname{q_{1}}{\left(t \right)} \frac{d}{d t} \operatorname{q_{2}}{\left(t \right)}
 
 It is worth looking at the raw form (the non-rendered form) to see what is going on:
-::
-    In [5]: repr(expr)
-    Out[5]: q1(t)*Derivative(q1(t), (t, 2))**2 + Derivative(q1(t), t)*Derivative(q2(t), t)
+
+    >>> repr(expr)
+    q1(t)*Derivative(q1(t), (t, 2))**2 + Derivative(q1(t), t)*Derivative(q2(t), t)
 
 We are going to be substiting expressions for :math:`q`'s, :math:`\dot{q}`'s, and :math:`\dot{u}`'s. There are a couple of key things to be aware of:
 
@@ -812,35 +811,34 @@ We are going to be substiting expressions for :math:`q`'s, :math:`\dot{q}`'s, an
     * If you have a dynamicsymbol and its deritivate in an expression and substitute something for the symbol, it will get replaced inside the derivative too.
 
 Notice how :math:`c` is not replaced first below and thus derivatives are left in the expression:
-::
-    In [6]: expr.subs({q1: a, q1.diff(): a*b*c, q1.diff().diff(): c})
-    Out[6]: 
-.. math::
-    \displaystyle a b c \frac{d}{d t} \operatorname{q_{2}}{\left(t \right)} + a \left(\frac{\partial}{\partial t} a b c\right)^{2}
-.. code-block:: python
 
-    In [7]: repr(expr.subs({q1: a, q1.diff(): a*b*c, q1.diff().diff(): c}))
-    Out[7]: a*b*c*Derivative(q2(t), t) + a*Derivative(a*b*c, t)**2
+    >>> expr.subs({q1: a, q1.diff(): a*b*c, q1.diff().diff(): c}) 
+
+    .. math::
+    
+         \displaystyle a b c \frac{d}{d t} \operatorname{q_{2}}{\left(t \right)} + a \left(\frac{\partial}{\partial t} a b c\right)^{2}
+
+    >>> repr(expr.subs({q1: a, q1.diff(): a*b*c, q1.diff().diff(): c}))
+    a*b*c*Derivative(q2(t), t) + a*Derivative(a*b*c, t)**2
 
 Notice how all the :math:`q_1` are replaced with :math:`a`, even "inside" the derivatives:
-::
-    In [8]: expr.subs({q1: a})
-    Out[8]: 
-.. math::
-    \displaystyle a \left(\frac{d^{2}}{d t^{2}} a\right)^{2} + \frac{d}{d t} a \frac{d}{d t} \operatorname{q_{2}}{\left(t \right)}
-.. code-block:: python
 
-    In [9]: repr(expr.subs({q1: a}))
-    Out[9]: a*Derivative(a, (t, 2))**2 + Derivative(a, t)*Derivative(q2(t), t)
+    >>> expr.subs({q1: a}) 
+  
+    .. math::
+         \displaystyle a \left(\frac{d^{2}}{d t^{2}} a\right)^{2} + \frac{d}{d t} a \frac{d}{d t} \operatorname{q_{2}}{\left(t \right)}
+
+
+    >>> repr(expr.subs({q1: a}))
+    a*Derivative(a, (t, 2))**2 + Derivative(a, t)*Derivative(q2(t), t)
 
 To ensure proper substitution make sure to substitute the highest order deriavtives first in a chain of subs() calls:
-::
-    In [10]: expr.subs({q1.diff().diff(): c}).subs({q1.diff(): b}).subs({q1: a})
-    Out[10]: 
-.. math::
-    \displaystyle a c^{2} + b \frac{d}{d t} \operatorname{q_{2}}{\left(t \right)}
-.. code-block:: python
-             
-    In [11]: repr(expr.subs({q1.diff().diff(): c}).subs({q1.diff(): b}).subs({q1: a}))
-    Out[11]: a*c**2 + b*Derivative(q2(t), t)
+
+    >>> expr.subs({q1.diff().diff(): c}).subs({q1.diff(): b}).subs({q1: a}) 
+
+        .. math::
+         \displaystyle a c^{2} + b \frac{d}{d t} \operatorname{q_{2}}{\left(t \right)}
+
+    >>> repr(expr.subs({q1.diff().diff(): c}).subs({q1.diff(): b}).subs({q1: a}))
+    a*c**2 + b*Derivative(q2(t), t)
 
