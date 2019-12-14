@@ -7,8 +7,10 @@ from sympy.core.symbol import Symbol
 from sympy.core.singleton import S
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_rmul, _af_rmuln, Cycle)
-from sympy.printing import sstr, srepr, pprint, latex
-from sympy.utilities.pytest import raises, SymPyDeprecationWarning
+from sympy.printing import sstr, srepr, pretty, latex
+from sympy.utilities.pytest import raises, SymPyDeprecationWarning, \
+    warns_deprecated_sympy
+
 
 rmul = Permutation.rmul
 a = Symbol('a', integer=True)
@@ -474,17 +476,18 @@ def test_deprecated_print_cyclic():
     p = Permutation(0, 1, 2)
     try:
         Permutation.print_cyclic = True
-        raises(SymPyDeprecationWarning, lambda: sstr(p))
-        raises(SymPyDeprecationWarning, lambda: srepr(p))
-        raises(SymPyDeprecationWarning, lambda: pprint(p))
-        raises(SymPyDeprecationWarning, lambda: latex(p))
+        with warns_deprecated_sympy():
+            assert sstr(p) == '(0 1 2)'
+            assert srepr(p) == 'Permutation(0, 1, 2)'
+            assert pretty(p) == '(0 1 2)'
+            assert latex(p) == r'\left( 0\; 1\; 2\right)'
         Permutation.print_cyclic = False
-        raises(SymPyDeprecationWarning, lambda: sstr(p))
-        raises(SymPyDeprecationWarning, lambda: srepr(p))
-        raises(SymPyDeprecationWarning, lambda: pprint(p))
-        raises(SymPyDeprecationWarning, lambda: latex(p))
-    except:
-        raise AssertionError
+        with warns_deprecated_sympy():
+            assert sstr(p) == 'Permutation([1, 2, 0])'
+            assert srepr(p) == 'Permutation([1, 2, 0])'
+            assert pretty(p, use_unicode=False) == '/0 1 2\\\n\\1 2 0/'
+            assert latex(p) == \
+                r'\begin{pmatrix} 0 & 1 & 2 \\ 1 & 2 & 0 \end{pmatrix}'
     finally:
         Permutation.print_cyclic = None
 
