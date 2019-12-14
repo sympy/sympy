@@ -791,7 +791,7 @@ Be careful about substituting for derivatives!
 ==============================================
 
     >>> import sympy as sm
-    >>> import sympy.physics.mechanics as
+    >>> import sympy.physics.mechanics as me
     >>> q1, q2 = me.dynamicsymbols('q1, q2')
     >>> a, b, c = sm.symbols('a, b, c')
     >>> expr = q1.diff().diff()**2*q1 + q1.diff()*q2.diff()
