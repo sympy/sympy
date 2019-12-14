@@ -174,17 +174,6 @@ def test_solve_args():
     assert solve(True, x) == []
     assert solve([x-1, False], [x], set=True) == ([], set())
 
-
-def test_solve_dict():
-    assert solve(Eq(2*x,1), dict=True) == [{x: S(1)/2}]
-    assert solve([Eq(x**2-1, 0), Gt(x, 0)], (x,), dict=True) == [{x: 1}]
-    assert solve([Eq(x**3-6*x**2+11*x-6, 0), Eq(y**2, 1), Eq(z, 1)],
-            (x, y, z,), dict=True) == [{x: 1, y: -1, z: 1}, {x: 1, y: 1, z: 1},
-                                       {x: 2, y: -1, z: 1}, {x: 2, y: 1, z: 1},
-                                       {x: 3, y: -1, z: 1}, {x: 3, y: 1, z: 1}]
-    assert solve(Gt(x, 0), (x,), dict=True) == And(Lt(0, x), Lt(x, oo))
-
-
 def test_solve_polynomial1():
     assert solve(3*x - 2, x) == [Rational(2, 3)]
     assert solve(Eq(3*x, 2), x) == [Rational(2, 3)]
@@ -2132,3 +2121,10 @@ def test_issue_17799():
 def test_issue_17650():
     x = Symbol('x', real=True)
     assert solve(abs((abs(x**2 - 1) - x)) - x) == [1, -1 + sqrt(2), 1 + sqrt(2)]
+
+
+def test_issue_17949():
+    assert solve(exp(+x+x**2), x) == []
+    assert solve(exp(-x+x**2), x) == []
+    assert solve(exp(+x-x**2), x) == []
+    assert solve(exp(-x-x**2), x) == []

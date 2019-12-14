@@ -1593,6 +1593,7 @@ def ode_2nd_hypergeometric(eq, func, order, match):
     c = match['c']
 
     A = match['A']
+    # B = match['B']
 
     sol = None
     if match['type'] == "2F1":

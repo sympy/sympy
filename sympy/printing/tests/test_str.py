@@ -813,6 +813,30 @@ def test_MatrixSymbol_printing():
     assert str(A**3) == "A**3"
 
 
+def test_MatrixExpressions():
+    n = Symbol('n', integer=True)
+    X = MatrixSymbol('X', n, n)
+
+    assert str(X) == "X"
+
+    Y = X[1:2:3, 4:5:6]
+
+    assert str(Y) == "X[1:3, 4:6]"
+
+    Z = X[1:10:2]
+
+    assert str(Z) == "X[1:10:2, :n]"
+
+    # Apply function elementwise (`ElementwiseApplyFunc`):
+
+    expr = (X.T*X).applyfunc(sin)
+    assert str(expr) == 'Lambda(_d, sin(_d)).(X.T*X)'
+
+    lamda = Lambda(x, 1/x)
+    expr = (n*X).applyfunc(lamda)
+    assert str(expr) == 'Lambda(_d, 1/_d).(n*X)'
+
+
 def test_Subs_printing():
     assert str(Subs(x, (x,), (1,))) == 'Subs(x, x, 1)'
     assert str(Subs(x + y, (x, y), (1, 2))) == 'Subs(x + y, (x, y), (1, 2))'

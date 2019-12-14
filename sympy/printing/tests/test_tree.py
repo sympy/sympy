@@ -1,5 +1,3 @@
-# coding=utf-8
-
 from sympy.printing.tree import tree
 from sympy.utilities.pytest import XFAIL
 
