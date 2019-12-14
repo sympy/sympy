@@ -15,7 +15,6 @@ def symmetric(n):
     ========
 
     >>> from sympy.combinatorics.permutations import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import symmetric
     >>> list(symmetric(3))
     [(2), (1 2), (2)(0 1), (0 1 2), (0 2 1), (0 2)]
@@ -32,7 +31,6 @@ def cyclic(n):
     ========
 
     >>> from sympy.combinatorics.permutations import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import cyclic
     >>> list(cyclic(5))
     [(4), (0 1 2 3 4), (0 2 4 1 3),
@@ -57,7 +55,6 @@ def alternating(n):
     ========
 
     >>> from sympy.combinatorics.permutations import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import alternating
     >>> list(alternating(3))
     [(2), (0 1 2), (0 2 1)]
@@ -80,7 +77,6 @@ def dihedral(n):
     ========
 
     >>> from sympy.combinatorics.permutations import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import dihedral
     >>> list(dihedral(3))
     [(2), (0 2), (0 1 2), (1 2), (0 2 1), (2)(0 1)]

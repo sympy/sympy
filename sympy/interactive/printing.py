@@ -550,13 +550,16 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         _stringify_func = stringify_func
 
         if pretty_print:
-            stringify_func = lambda expr: \
+            stringify_func = lambda expr, **settings: \
                              _stringify_func(expr, order=order,
                                              use_unicode=use_unicode,
                                              wrap_line=wrap_line,
-                                             num_columns=num_columns)
+                                             num_columns=num_columns,
+                                             **settings)
         else:
-            stringify_func = lambda expr: _stringify_func(expr, order=order)
+            stringify_func = \
+                lambda expr, **settings: _stringify_func(
+                    expr, order=order, **settings)
 
     if in_ipython:
         mode_in_settings = settings.pop("mode", None)

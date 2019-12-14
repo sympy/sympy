@@ -198,6 +198,13 @@ def test_latex_permutation():
         r"\left( 2\; 4\right)\left( 5\right)"
     assert latex(Permutation(5)) == r"\left( 5\right)"
 
+    assert latex(Permutation(0, 1), perm_cyclic=False) == \
+        r"\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}"
+    assert latex(Permutation(0, 1)(2, 3), perm_cyclic=False) == \
+        r"\begin{pmatrix} 0 & 1 & 2 & 3 \\ 1 & 0 & 3 & 2 \end{pmatrix}"
+    assert latex(Permutation(), perm_cyclic=False) == \
+        r"\left( \right)"
+
 
 def test_latex_Float():
     assert latex(Float(1.0e100)) == r"1.0 \cdot 10^{100}"
