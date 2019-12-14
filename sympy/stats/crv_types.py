@@ -3757,10 +3757,28 @@ class WeibullDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         alpha, beta = self.alpha, self.beta
-        return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
+        return beta * (x/alpha)**(beta - S.one) * exp(-(x/alpha)**beta) / alpha
 
     def sample(self):
         return random.weibullvariate(self.alpha, self.beta)
+
+    def _cdf(self,x):
+        alpha, beta = self.alpha, self.beta
+        return S.one-exp(-(x/beta)**alpha)
+
+    def _quantile(self,p):
+        alpha, beta = self.alpha, self.beta
+        return beta(-log(S.one-p)**(S.one/alpha))
+
+    def _characteristic_function(self,t):
+        n=Symbol("n")
+        alpha, beta = self.alpha, self.beta
+        return Sum(((I*t*alpha)**n)*(gamma(S.one+n/beta))/factorial(n),(n,0,oo)).doit()
+
+    def _moment_generating_function(self,t):
+        n=Symbol("n")
+        alpha, beta = self.alpha, self.beta
+        return Sum(((t*alpha)**n)*(gamma(S.one+n/beta))/factorial(n),(n,0,oo)).doit()
 
 def Weibull(name, alpha, beta):
     r"""
