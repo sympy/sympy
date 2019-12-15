@@ -3,12 +3,14 @@ from __future__ import division, print_function
 import copy
 from collections import defaultdict
 
-from sympy.core.compatibility import Callable, as_int, is_sequence, range
+from sympy.core import SympifyError
+from sympy.core.compatibility import Callable, as_int, is_sequence, range, reduce
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.common import dotprodsimp
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 
@@ -459,10 +461,10 @@ class SparseMatrix(MatrixBase):
         diff = (self - self.T).applyfunc(simpfunc)
         return len(diff.values()) == 0
 
-    def _eval_matrix_mul(self, other):
+    def _eval_matrix_mul(self, other, mulsimp=None):
         """Fast multiplication exploiting the sparsity of the matrix."""
         if not isinstance(other, SparseMatrix):
-            return self*self._new(other)
+            return self.mul(self._new(other), mulsimp=mulsimp)
 
         # if we made it here, we're both sparse matrices
         # create quick lookups for rows and cols
@@ -480,8 +482,9 @@ class SparseMatrix(MatrixBase):
                 # these are the only things that need to be multiplied.
                 indices = set(col_lookup[col].keys()) & set(row_lookup[row].keys())
                 if indices:
-                    val = sum(row_lookup[row][k]*col_lookup[col][k] for k in indices)
-                    smat[row, col] = val
+                    smat[row, col] = dotprodsimp((row_lookup[row][k] for k in indices), \
+                            (col_lookup[col][k] for k in indices), simplify=mulsimp)
+
         return self._new(self.rows, other.cols, smat)
 
     def _eval_row_insert(self, irow, other):

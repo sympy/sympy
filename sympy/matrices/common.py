@@ -10,15 +10,20 @@ from collections import defaultdict
 from inspect import isfunction
 
 from sympy.assumptions.refine import refine
+from sympy.core import SympifyError
 from sympy.core.basic import Atom
 from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
+from sympy.core.expr import Expr
+from sympy.core.function import count_ops
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
+from sympy.polys import cancel, together
 from sympy.simplify import simplify as _simplify
+from sympy.simplify.simplify import count_ops
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -2137,22 +2142,10 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, self.cols,
                          lambda i, j: self[i, j] + other[i, j])
 
-    def _eval_matrix_mul(self, other):
-        def entry(i, j):
-            try:
-                return sum(self[i,k]*other[k,j] for k in range(self.cols))
-            except TypeError:
-                # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
-                # They don't work with `sum` because `sum` tries to add `0`
-                # initially, and for a matrix, that is a mix of a scalar and
-                # a matrix, which raises a TypeError. Fall back to a
-                # block-matrix-safe way to multiply if the `sum` fails.
-                ret = self[i, 0]*other[0, j]
-                for k in range(1, self.cols):
-                    ret += self[i, k]*other[k, j]
-                return ret
-
-        return self._new(self.rows, other.cols, entry)
+    def _eval_matrix_mul(self, other, mulsimp=None):
+        return self._new(self.rows, other.cols, lambda i, j: \
+                dotprodsimp((self[i,k] for k in range(self.cols)), \
+                            (other[k,j] for k in range(self.cols)), simplify=mulsimp))
 
     def _eval_matrix_mul_elementwise(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other[i,j])
@@ -2162,13 +2155,13 @@ class MatrixArithmetic(MatrixRequired):
             return sum(other[i,k]*self[k,j] for k in range(other.cols))
         return self._new(other.rows, self.cols, entry)
 
-    def _eval_pow_by_recursion(self, num):
+    def _eval_pow_by_recursion(self, num, mulsimp=False):
         if num == 1:
             return self
         if num % 2 == 1:
-            return self * self._eval_pow_by_recursion(num - 1)
-        ret = self._eval_pow_by_recursion(num // 2)
-        return ret * ret
+            return self * self._eval_pow_by_recursion(num - 1, mulsimp=mulsimp)
+        ret = self._eval_pow_by_recursion(num // 2, mulsimp=mulsimp)
+        return ret.mul(ret, mulsimp=mulsimp)
 
     def _eval_scalar_mul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other)
@@ -2226,6 +2219,9 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
+        return self.mul(other)
+
+    def mul(self, other, mulsimp=None):
         """Return self*other where other is either a scalar or a matrix
         of compatible dimensions.
 
@@ -2247,6 +2243,13 @@ class MatrixArithmetic(MatrixRequired):
         ShapeError: Matrices size mismatch.
         >>>
 
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            to control expression blowup during multiplication.
+
         See Also
         ========
 
@@ -2262,10 +2265,10 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return self._eval_matrix_mul(other)
+            return self._eval_matrix_mul(other, mulsimp=mulsimp)
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
-            return MatrixArithmetic._eval_matrix_mul(self, other)
+            return MatrixArithmetic._eval_matrix_mul(self, other, mulsimp=mulsimp)
 
         # if 'other' is not iterable then scalar multiplication.
         if not isinstance(other, Iterable):
@@ -2281,6 +2284,25 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rpow__')
     def __pow__(self, exp):
+        return self.pow(exp)
+
+    def pow(self, exp, mulsimp=None, jordan=None):
+        """Return self**exp a scalar or symbol.
+
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during recursive power evaluations to control expression blowup.
+
+        jordan : bool, optional
+            If left as None then Jordan form exponentiation will be used under
+            certain conditions, True specifies that jordan_pow should always
+            be used if possible and False means it should not be used unless
+            it is the only way to calculate the power.
+        """
+
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
@@ -2305,16 +2327,17 @@ class MatrixArithmetic(MatrixRequired):
             # When certain conditions are met,
             # Jordan block algorithm is faster than
             # computation by recursion.
-            elif a.rows == 2 and exp > 100000 and jordan_pow is not None:
+            elif jordan_pow is not None and (jordan or \
+                    (jordan is not False and a.rows == 2 and exp > 100000)):
                 try:
-                    return jordan_pow(exp)
+                    return jordan_pow(exp, mulsimp=mulsimp)
                 except MatrixError:
                     pass
-            return a._eval_pow_by_recursion(exp)
+            return a._eval_pow_by_recursion(exp, mulsimp=mulsimp)
 
         if jordan_pow:
             try:
-                return jordan_pow(exp)
+                return jordan_pow(exp, mulsimp=mulsimp)
             except NonInvertibleMatrixError:
                 # Raised by jordan_pow on zero determinant matrix unless exp is
                 # definitely known to be a non-negative integer.
@@ -2597,3 +2620,75 @@ def classof(A, B):
             return A.__class__
 
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
+
+
+def dotprodsimp(a, b, simplify=True):
+    """Sum-of-products with optional intermediate product simplification
+    targeted at the kind of blowup that occurs during summation of products.
+    Intended to reduce expression blowup during matrix multiplication or other
+    similar operations.
+
+    Parameters
+    ==========
+
+    a, b : iterable
+        These will be multiplied then summed together either normally or
+        using simplification on the intermediate products and cancelling at
+        the end according to the 'simplify' flag. The elements must already be
+        sympyfied and the sequences need not be of the same length, the shorter
+        will be used.
+
+    simplify : bool
+        When set intermediate and final simplification will be used, not set
+        will indicate a normal sum of products.
+    """
+
+    itra = iter(a)
+    itrb = iter(b)
+
+    try: # check for zero length
+        prod = next(itra)*next(itrb)
+    except StopIteration:
+        return S.Zero
+
+    # simple non-simplified sum of products
+    if not simplify:
+        return reduce (lambda e, z: e + z[0]*z[1], zip(itra, itrb), prod)
+
+    # part 1, the expanded summation
+    _expand = getattr(prod, 'expand', None)
+    expr    = _expand(power_base=False, power_exp=False, log=False, \
+            multinomial=False, basic=False) if _expand else prod
+
+    for a, b in zip(itra, itrb):
+        prod     = a*b
+        _expand  = getattr(prod, 'expand', None)
+        expr    += _expand(power_base=False, power_exp=False, log=False, \
+                multinomial=False, basic=False) if _expand else prod
+
+    # part 2, the cancelation and grouping
+    exprops  = count_ops(expr)
+    expr2    = expr.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
+    expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
+
+    if exprops < 6: # empirically tested cutoff for expensive simplification
+        return expr
+
+    expr2    = cancel(expr)
+    expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
+
+    expr3    = together(expr2, deep=True)
+    expr3ops = count_ops(expr3)
+
+    if expr3ops < exprops:
+        return expr3
+
+    return expr

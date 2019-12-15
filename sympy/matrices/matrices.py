@@ -2366,7 +2366,7 @@ class MatrixBase(MatrixDeprecated,
         return self._new(
             rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
 
-    def _matrix_pow_by_jordan_blocks(self, num):
+    def _matrix_pow_by_jordan_blocks(self, num, mulsimp=None):
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
 
@@ -2397,7 +2397,9 @@ class MatrixBase(MatrixDeprecated,
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
-        return self._new(P*diag(*jordan_cells)*P.inv())
+        # return self._new(P*diag(*jordan_cells)*P.inv())
+        return self._new(P.mul(diag(*jordan_cells), mulsimp=mulsimp).mul(
+                P.inv(), mulsimp=mulsimp))
 
     def __repr__(self):
         return sstr(self)
@@ -3186,7 +3188,7 @@ class MatrixBase(MatrixDeprecated,
         from .sparsetools import banded
         return self.__class__(banded(size, bands))
 
-    def exp(self):
+    def exp(self, mulsimp=None):
         """Return the exponential of a square matrix
 
         Examples
@@ -3200,6 +3202,13 @@ class MatrixBase(MatrixDeprecated,
         Matrix([
         [    exp(I*t)/2 + exp(-I*t)/2, -I*exp(I*t)/2 + I*exp(-I*t)/2],
         [I*exp(I*t)/2 - I*exp(-I*t)/2,      exp(I*t)/2 + exp(-I*t)/2]])
+
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during recursive power evaluations to control expression blowup.
         """
         if not self.is_square:
             raise NonSquareMatrixError(
@@ -3216,7 +3225,7 @@ class MatrixBase(MatrixDeprecated,
         from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
-        ret = P * eJ * P.inv()
+        ret = P.mul(eJ, mulsimp=mulsimp).mul(P.inv(), mulsimp=mulsimp)
         if all(value.is_real for value in self.values()):
             return type(self)(re(ret))
         else:
