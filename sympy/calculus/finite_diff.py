@@ -242,9 +242,9 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     >>> i = Idx('i')
     >>> x_list, y_list = zip(*[(x[i+j], y[i+j]) for j in range(-1,2)])
     >>> apply_finite_diff(1, x_list, y_list, x[i])
-    ((x[i + 1] - x[i])/(-x[i - 1] + x[i]) - 1)*y[i]/(x[i + 1] - x[i]) - \
-(x[i + 1] - x[i])*y[i - 1]/((x[i + 1] - x[i - 1])*(-x[i - 1] + x[i])) + \
-(-x[i - 1] + x[i])*y[i + 1]/((x[i + 1] - x[i - 1])*(x[i + 1] - x[i]))
+    ((x[i + 1] - x[i])/(-x[i - 1] + x[i]) - 1)*y[i]/(x[i + 1] - x[i]) -
+    (x[i + 1] - x[i])*y[i - 1]/((x[i + 1] - x[i - 1])*(-x[i - 1] + x[i])) +
+    (-x[i - 1] + x[i])*y[i + 1]/((x[i + 1] - x[i - 1])*(x[i + 1] - x[i]))
 
     Notes
     =====
@@ -345,10 +345,10 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
     >>> e, sq2 = exp(1), sqrt(2)
     >>> xl = [x-h, x+h, x+e*h]
     >>> as_finite_diff(f(x).diff(x, 1), xl, x+h*sq2)
-    2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/\
-((-h + E*h)*(h + E*h)) + (-(-sqrt(2)*h + h)/(2*h) - \
-(-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) + \
-(-(h + sqrt(2)*h)/(2*h) + (-sqrt(2)*h + E*h)/(2*h))*f(h + x)/(-h + E*h)
+    2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/
+    ((-h + E*h)*(h + E*h)) + (-(-sqrt(2)*h + h)/(2*h) -
+    (-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) +
+    (-(h + sqrt(2)*h)/(2*h) + (-sqrt(2)*h + E*h)/(2*h))*f(h + x)/(-h + E*h)
 
     Partial derivatives are also supported:
 
