@@ -2219,9 +2219,6 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return self.mul(other)
-
-    def mul(self, other, mulsimp=None):
         """Return self*other where other is either a scalar or a matrix
         of compatible dimensions.
 
@@ -2243,18 +2240,25 @@ class MatrixArithmetic(MatrixRequired):
         ShapeError: Matrices size mismatch.
         >>>
 
+        See Also
+        ========
+
+        matrix_multiply_elementwise
+        """
+
+        return self.mul(other)
+
+    def mul(self, other, mulsimp=None):
+        """Same as __mul__() but with optional simplification.
+
         Parameters
         ==========
 
         mulsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             to control expression blowup during multiplication.
-
-        See Also
-        ========
-
-        matrix_multiply_elementwise
         """
+
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
         # our first sanity check.
@@ -2284,6 +2288,8 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rpow__')
     def __pow__(self, exp):
+        """Return self**exp a scalar or symbol."""
+
         return self.pow(exp)
 
     def pow(self, exp, mulsimp=None, jordan=None):
@@ -2651,20 +2657,28 @@ def dotprodsimp(a, b, simplify=True):
     except StopIteration:
         return S.Zero
 
+    itrab = iter(zip(a, b))
+
     # simple non-simplified sum of products
     if not simplify:
-        return reduce (lambda e, z: e + z[0]*z[1], zip(itra, itrb), prod)
+        for a, b in itrab:
+            prod += a*b
+
+        return prod
 
     # part 1, the expanded summation
-    _expand = getattr(prod, 'expand', None)
-    expr    = _expand(power_base=False, power_exp=False, log=False, \
-            multinomial=False, basic=False) if _expand else prod
+    expr = 0
 
-    for a, b in zip(itra, itrb):
-        prod     = a*b
-        _expand  = getattr(prod, 'expand', None)
-        expr    += _expand(power_base=False, power_exp=False, log=False, \
-                multinomial=False, basic=False) if _expand else prod
+    try:
+        while 1:
+            _expand  = getattr(prod, 'expand', None)
+            expr    += _expand(power_base=False, power_exp=False, log=False,
+                    multinomial=False, basic=False) if _expand else prod
+            a, b     = next(itrab)
+            prod     = a*b
+
+    except StopIteration:
+        pass
 
     # part 2, the cancelation and grouping
     exprops  = count_ops(expr)
