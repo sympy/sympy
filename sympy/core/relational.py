@@ -4,6 +4,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .add import _unevaluated_Add, Add
 from .basic import S
 from .compatibility import ordered
+from .basic import Basic
 from .expr import Expr
 from .evalf import EvalfMixin
 from .sympify import _sympify
@@ -30,7 +31,7 @@ def _canonical(cond):
     # the tests so I've removed it...
 
 
-class Relational(Boolean, Expr, EvalfMixin):
+class Relational(Boolean, EvalfMixin):
     """Base class for all relation types.
 
     Subclasses of Relational should generally be instantiated directly, but
@@ -60,37 +61,42 @@ class Relational(Boolean, Expr, EvalfMixin):
     #   have not yet been defined
 
     def __new__(cls, lhs, rhs, rop=None, **assumptions):
-        # If called by a subclass, do nothing special and pass on to Expr.
+        # If called by a subclass, do nothing special and pass on to Basic.
         if cls is not Relational:
-            return Expr.__new__(cls, lhs, rhs, **assumptions)
+            return Basic.__new__(cls, lhs, rhs, **assumptions)
+
+        # XXX: Why do this? There should be a separate function to make a
+        # particular subclass of Relational from a string.
+        #
         # If called directly with an operator, look up the subclass
         # corresponding to that operator and delegate to it
-        try:
-            cls = cls.ValidRelationOperator[rop]
-            rv = cls(lhs, rhs, **assumptions)
-            # /// drop when Py2 is no longer supported
+        cls = cls.ValidRelationOperator.get(rop, None)
+        if cls is None:
+            raise ValueError("Invalid relational operator symbol: %r" % rop)
+
+        # XXX: Why should the below be removed when Py2 is not supported?
+        #
+        # /// drop when Py2 is no longer supported
+        if not issubclass(cls, (Eq, Ne)):
             # validate that Booleans are not being used in a relational
             # other than Eq/Ne;
-            if isinstance(rv, (Eq, Ne)):
-                pass
-            elif isinstance(rv, Relational):  # could it be otherwise?
-                from sympy.core.symbol import Symbol
-                from sympy.logic.boolalg import Boolean
-                for a in rv.args:
-                    if isinstance(a, Symbol):
-                        continue
-                    if isinstance(a, Boolean):
-                        from sympy.utilities.misc import filldedent
-                        raise TypeError(filldedent('''
-                            A Boolean argument can only be used in
-                            Eq and Ne; all other relationals expect
-                            real expressions.
-                        '''))
-            # \\\
-            return rv
-        except KeyError:
-            raise ValueError(
-                "Invalid relational operator symbol: %r" % rop)
+            # Note: Symbol is a subclass of Boolean but is considered
+            # acceptable here.
+            from sympy.core.symbol import Symbol
+            from sympy.logic.boolalg import Boolean
+            def unacceptable(side):
+                return isinstance(side, Boolean) and not isinstance(side, Symbol)
+
+            if unacceptable(lhs) or unacceptable(rhs):
+                from sympy.utilities.misc import filldedent
+                raise TypeError(filldedent('''
+                    A Boolean argument can only be used in
+                    Eq and Ne; all other relationals expect
+                    real expressions.
+                '''))
+        # \\\
+
+        return cls(lhs, rhs, **assumptions)
 
     @property
     def lhs(self):
@@ -284,6 +290,13 @@ class Relational(Boolean, Expr, EvalfMixin):
                 if left is True:
                     return right
                 return left
+
+    # XXX: This is copied from Expr. Maybe it should be defined on Basic or in
+    # a mixin instead.
+    def simplify(self, **kwargs):
+        """See the simplify function in sympy.simplify"""
+        from sympy.simplify import simplify
+        return simplify(self, **kwargs)
 
     def _eval_simplify(self, **kwargs):
         r = self
