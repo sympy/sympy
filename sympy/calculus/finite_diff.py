@@ -22,6 +22,7 @@ from sympy.core.basic import preorder_traversal
 from sympy.core.compatibility import iterable, range
 from sympy.core.decorators import deprecated
 from sympy.core.function import Subs
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def finite_diff_weights(order, x_list, x0=S.One):
@@ -437,9 +438,6 @@ def differentiate_finite(expr, *symbols,
         see ``Derivative.as_finite_difference``
     wrt: Symbol, optional
         see ``Derivative.as_finite_difference``
-    evaluate : bool
-        kwarg passed on to ``diff``, whether or not to
-        evaluate the Derivative intermediately (default: ``False``).
 
     Examples
     ========
@@ -450,20 +448,11 @@ def differentiate_finite(expr, *symbols,
     >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h])
     -f(-h + x)*g(-h + x)/(2*h) + f(h + x)*g(h + x)/(2*h)
 
-    Note that the above form preserves the product rule in discrete form. If we
-    want we can pass ``evaluate=True`` to get another form (which is usually
-    not what we want):
-
-    >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h], evaluate=True).simplify()
-    -((f(-h + x) - f(h + x))*g(x) + (g(-h + x) - g(h + x))*f(x))/(2*h)
-
-    ``differentiate_finite`` works on any expression, including expressions
-    with embedded derivatives that don't support ``evaluate=True``:
+    ``differentiate_finite`` works on any expression, including the expressions
+    with embedded derivatives:
 
     >>> differentiate_finite(f(x) + sin(x), x, 2)
     -2*f(x) + f(x - 1) + f(x + 1) - 2*sin(x) + sin(x - 1) + sin(x + 1)
-    >>> differentiate_finite(f(x) + sin(x), x, 2, evaluate=True)
-    -2*f(x) + f(x - 1) + f(x + 1) - sin(x)
     >>> differentiate_finite(f(x, y), x, y)
     f(x - 1/2, y - 1/2) - f(x - 1/2, y + 1/2) - f(x + 1/2, y - 1/2) + f(x + 1/2, y + 1/2)
     >>> differentiate_finite(f(x)*g(x).diff(x), x)
@@ -492,6 +481,9 @@ def differentiate_finite(expr, *symbols,
 
     Dexpr = expr.diff(*symbols, evaluate=evaluate)
     if evaluate:
+        SymPyDeprecationWarning(feature="``evaluate`` flag",
+                                issue=17881,
+                                deprecated_since_version="1.5").warn()
         return Dexpr.replace(
             lambda arg: arg.is_Derivative,
             lambda arg: arg.as_finite_difference(points=points, x0=x0, wrt=wrt))
