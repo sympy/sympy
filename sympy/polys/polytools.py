@@ -5497,7 +5497,11 @@ def terms_gcd(f, *gens, **args):
     from sympy.core.relational import Equality
 
     orig = sympify(f)
-    if not isinstance(f, Expr) or f.is_Atom:
+
+    # XXX: Should any Relational be accepted here? Why does this accept
+    # any Relational at all? Perhaps it should not and any code that calls
+    # this with Relational should be changed.
+    if not isinstance(f, (Expr, Relational)) or f.is_Atom:
         return orig
 
     if args.get('deep', False):
