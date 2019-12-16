@@ -398,6 +398,24 @@ class Relational(Boolean, EvalfMixin):
     def as_numer_denom(self):
         return (self, S.One)
 
+    # XXX: This method should be removed. All places that call it should be
+    # fixed...
+    def as_expr(self):
+        return self
+
+    # XXX: This method should be removed. All places that call it should be
+    # fixed...
+    def as_coeff_Mul(self, *deps, **kwargs):
+        if deps:
+            if not self.has(*deps):
+                return self, tuple()
+        return S.One, (self,)
+
+    def integrate(self, *args, **kwargs):
+        """See the integrate function in sympy.integrals"""
+        from sympy.integrals import integrate
+        return integrate(self, *args, **kwargs)
+
     def __nonzero__(self):
         raise TypeError("cannot determine truth value of Relational")
 
