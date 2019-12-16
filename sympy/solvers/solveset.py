@@ -1004,8 +1004,11 @@ def _solveset(f, symbol, domain, _check=False):
 
         # whittle away all but the symbol-containing core
         # to use this for testing
-        fx = orig_f.as_independent(symbol, as_Add=True)[1]
-        fx = fx.as_independent(symbol, as_Add=False)[1]
+        if isinstance(orig_f, Expr):
+            fx = orig_f.as_independent(symbol, as_Add=True)[1]
+            fx = fx.as_independent(symbol, as_Add=False)[1]
+        else:
+            fx = orig_f
 
         if isinstance(result, FiniteSet):
             # check the result for invalid solutions

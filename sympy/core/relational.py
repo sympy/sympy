@@ -390,11 +390,6 @@ class Relational(Boolean, EvalfMixin):
 
     # XXX: This method should be removed. All places that call it should be
     # fixed...
-    def as_independent(self, *args, **kwargs):
-        return Expr.as_independent(self, *args, **kwargs)
-
-    # XXX: This method should be removed. All places that call it should be
-    # fixed...
     def as_numer_denom(self):
         return (self, S.One)
 
