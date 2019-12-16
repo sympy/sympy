@@ -22,7 +22,7 @@ from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand)
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
@@ -1960,10 +1960,10 @@ def solveset(f, symbol=None, domain=S.Complexes):
     if f is S.false:
         return S.EmptySet
 
-    if not isinstance(f, (Expr, Number)):
+    if not isinstance(f, (Expr, Relational, Number)):
         raise ValueError("%s is not a valid SymPy expression" % f)
 
-    if not isinstance(symbol, Expr) and  symbol is not None:
+    if not isinstance(symbol, (Expr, Relational)) and  symbol is not None:
         raise ValueError("%s is not a valid SymPy symbol" % symbol)
 
     if not isinstance(domain, Set):
@@ -2326,7 +2326,7 @@ def linear_eq_to_matrix(equations, *symbols):
     equations = sympify(equations)
     if isinstance(equations, MatrixBase):
         equations = list(equations)
-    elif isinstance(equations, Expr):
+    elif isinstance(equations, (Expr, Eq)):
         equations = [equations]
     elif not is_sequence(equations):
         raise ValueError(filldedent('''

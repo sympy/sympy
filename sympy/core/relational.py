@@ -384,6 +384,19 @@ class Relational(Boolean, EvalfMixin):
         from sympy.simplify import trigsimp
         return self.func(trigsimp(self.lhs, **opts), trigsimp(self.rhs, **opts))
 
+    def expand(self, **kwargs):
+        args = (arg.expand(**kwargs) for arg in self.args)
+        return self.func(*args)
+
+    # XXX: This method should be removed. All places that call it should be
+    # fixed...
+    def as_independent(self, *args, **kwargs):
+        return Expr.as_independent(self, *args, **kwargs)
+
+    # XXX: This method should be removed. All places that call it should be
+    # fixed...
+    def as_numer_denom(self):
+        return (self, S.One)
 
     def __nonzero__(self):
         raise TypeError("cannot determine truth value of Relational")
