@@ -70,7 +70,9 @@ You can generate everything at the above site in your local copy of SymPy by::
 Then the docs will be in `_build/html`. If you don't want to read that, here
 is a short usage:
 
-From this directory, start Python and::
+From this directory, start Python and:
+
+.. code-block:: python
 
     >>> from sympy import Symbol, cos
     >>> x = Symbol('x')
@@ -246,7 +248,7 @@ To cite SymPy in publications use
 
 A BibTeX entry for LaTeX users is
 
-.. code-block:: none
+.. code-block:: bibtex
 
     @article{10.7717/peerj-cs.103,
      title = {SymPy: symbolic computing in Python},
