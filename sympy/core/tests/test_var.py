@@ -19,7 +19,8 @@ def test_var():
     assert ns['fg'] == Symbol('fg')
 
 # check return value
-    assert v == ['d', 'e', 'fg']
+    assert v != ['d', 'e', 'fg']
+    assert v == [Symbol('d'), Symbol('e'), Symbol('fg')]
 
 
 def test_var_return():
