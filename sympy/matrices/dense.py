@@ -183,9 +183,9 @@ class DenseMatrix(MatrixBase):
                 row, col = i // other.cols, i % other.cols
                 row_indices = range(self.cols*row, self.cols*(row+1))
                 col_indices = range(col, other_len, other.cols)
-                new_mat[i] = dotprodsimp( \
-                        (self._mat[a] for a in row_indices), \
-                        (other._mat[b] for b in col_indices), \
+                new_mat[i] = dotprodsimp(
+                        (self._mat[a] for a in row_indices),
+                        (other._mat[b] for b in col_indices),
                         simplify=mulsimp)
 
         return classof(self, other)._new(self.rows, other.cols, new_mat, copy=False)
