@@ -388,19 +388,6 @@ class Relational(Boolean, EvalfMixin):
         args = (arg.expand(**kwargs) for arg in self.args)
         return self.func(*args)
 
-    # XXX: This method should be removed. All places that call it should be
-    # fixed...
-    def as_numer_denom(self):
-        return (self, S.One)
-
-    # XXX: This method should be removed. All places that call it should be
-    # fixed...
-    def as_coeff_Mul(self, *deps, **kwargs):
-        if deps:
-            if not self.has(*deps):
-                return self, tuple()
-        return S.One, (self,)
-
     def integrate(self, *args, **kwargs):
         """See the integrate function in sympy.integrals"""
         from sympy.integrals import integrate
