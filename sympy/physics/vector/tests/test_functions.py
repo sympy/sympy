@@ -489,7 +489,7 @@ def test_partial_velocity():
     raises(TypeError, lambda: partial_velocity(Dmc.vel(N), u_list, N))
     raises(TypeError, lambda: partial_velocity(vel_list, u1, N))
 
- def test_dynamicsymbols():
+def test_dynamicsymbols():
     #tests to check the assumptions applied to dynamicsymbols
     f1=dynamicsymbols('f1')
     f2=dynamicsymbols('f2',real=True)
