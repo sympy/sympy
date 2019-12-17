@@ -395,11 +395,6 @@ class Relational(Boolean, EvalfMixin):
 
     # XXX: This method should be removed. All places that call it should be
     # fixed...
-    def as_expr(self):
-        return self
-
-    # XXX: This method should be removed. All places that call it should be
-    # fixed...
     def as_coeff_Mul(self, *deps, **kwargs):
         if deps:
             if not self.has(*deps):

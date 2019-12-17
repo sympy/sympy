@@ -989,7 +989,10 @@ def _solveset(f, symbol, domain, _check=False):
             result = ConditionSet(symbol, Eq(f, 0), domain)
 
     if isinstance(result, ConditionSet):
-        num, den = f.as_numer_denom()
+        if isinstance(f, Expr):
+            num, den = f.as_numer_denom()
+        else:
+            num, den = f, S.One
         if den.has(symbol):
             _result = _solveset(num, symbol, domain)
             if not isinstance(_result, ConditionSet):

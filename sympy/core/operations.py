@@ -31,6 +31,11 @@ class AssocOp(Basic):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
+        # XXX: Maybe only Expr should be allowed here...
+        from sympy.core.relational import Relational
+        if any(isinstance(arg, Relational) for arg in args):
+            raise ValueError("Relational can not be used in %s" % cls.__name__)
+
         evaluate = options.get('evaluate')
         if evaluate is None:
             evaluate = global_evaluate[0]
