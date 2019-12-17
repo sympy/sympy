@@ -266,7 +266,7 @@ class Pow(Expr):
         # XXX: Maybe only Expr should be allowed...
         from sympy.core.relational import Relational
         if isinstance(b, Relational) or isinstance(e, Relational):
-            raise ValueError('Relational can not be used in Pow')
+            raise TypeError('Relational can not be used in Pow')
 
         if evaluate:
             if e is S.ComplexInfinity:

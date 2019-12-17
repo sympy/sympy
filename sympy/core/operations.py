@@ -34,7 +34,7 @@ class AssocOp(Basic):
         # XXX: Maybe only Expr should be allowed here...
         from sympy.core.relational import Relational
         if any(isinstance(arg, Relational) for arg in args):
-            raise ValueError("Relational can not be used in %s" % cls.__name__)
+            raise TypeError("Relational can not be used in %s" % cls.__name__)
 
         evaluate = options.get('evaluate')
         if evaluate is None:

@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
-    log, cos, sin, Add, floor, ceiling, trigsimp)
+    log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp)
 from sympy.core.compatibility import range, PY3
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -362,6 +362,19 @@ def test_new_relational():
     assert all(Relational(x, 0, op).rel_op == '<' for op in ('lt', '<'))
     assert all(Relational(x, 0, op).rel_op == '>=' for op in ('ge', '>='))
     assert all(Relational(x, 0, op).rel_op == '<=' for op in ('le', '<='))
+
+
+def test_relational_arithmetic():
+    for cls in [Eq, Ne, Le, Lt, Ge, Gt]:
+        rel = cls(x, y)
+        raises(TypeError, lambda: 0+rel)
+        raises(TypeError, lambda: 1*rel)
+        raises(TypeError, lambda: 1**rel)
+        raises(TypeError, lambda: rel**1)
+        raises(TypeError, lambda: Add(0, rel))
+        raises(TypeError, lambda: Mul(1, rel))
+        raises(TypeError, lambda: Pow(1, rel))
+        raises(TypeError, lambda: Pow(rel, 1))
 
 
 def test_relational_bool_output():
