@@ -587,6 +587,11 @@ def dynamicsymbols(names, level=0,**assumptions):
     level : int
         Level of differentiation of the returned function; d/dt once of t,
         twice of t, etc.
+    Assumptions :
+        real = False
+        positive = False
+        
+        You can override the default assumptions as real = True or positive = True 
 
     Examples
     ========
