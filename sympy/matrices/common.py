@@ -23,7 +23,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import Abs
 from sympy.polys import cancel, together
 from sympy.simplify import simplify as _simplify
-from sympy.simplify.simplify import count_ops
+from sympy.simplify.simplify import count_ops, dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -2143,9 +2143,26 @@ class MatrixArithmetic(MatrixRequired):
                          lambda i, j: self[i, j] + other[i, j])
 
     def _eval_matrix_mul(self, other, mulsimp=None):
-        return self._new(self.rows, other.cols, lambda i, j: \
-                dotprodsimp((self[i,k] for k in range(self.cols)), \
-                            (other[k,j] for k in range(self.cols)), simplify=mulsimp))
+        def entry(i, j):
+            try:
+                return sum(self[i,k]*other[k,j] for k in range(self.cols))
+            except TypeError:
+                # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+                # They don't work with `sum` because `sum` tries to add `0`
+                # initially, and for a matrix, that is a mix of a scalar and
+                # a matrix, which raises a TypeError. Fall back to a
+                # block-matrix-safe way to multiply if the `sum` fails.
+                ret = self[i, 0]*other[0, j]
+                for k in range(1, self.cols):
+                    ret += self[i, k]*other[k, j]
+                return ret
+
+        if mulsimp:
+            return self._new(self.rows, other.cols, lambda i, j:
+                    dotprodsimp((self[i,k] for k in range(self.cols)),
+                                (other[k,j] for k in range(self.cols))))
+
+        return self._new(self.rows, other.cols, entry)
 
     def _eval_matrix_mul_elementwise(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other[i,j])
@@ -2626,83 +2643,3 @@ def classof(A, B):
             return A.__class__
 
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
-
-
-def dotprodsimp(a, b, simplify=True):
-    """Sum-of-products with optional intermediate product simplification
-    targeted at the kind of blowup that occurs during summation of products.
-    Intended to reduce expression blowup during matrix multiplication or other
-    similar operations.
-
-    Parameters
-    ==========
-
-    a, b : iterable
-        These will be multiplied then summed together either normally or
-        using simplification on the intermediate products and cancelling at
-        the end according to the 'simplify' flag. The elements must already be
-        sympyfied and the sequences need not be of the same length, the shorter
-        will be used.
-
-    simplify : bool
-        When set intermediate and final simplification will be used, not set
-        will indicate a normal sum of products.
-    """
-
-    itra = iter(a)
-    itrb = iter(b)
-
-    try: # check for zero length
-        prod = next(itra)*next(itrb)
-    except StopIteration:
-        return S.Zero
-
-    itrab = iter(zip(a, b))
-
-    # simple non-simplified sum of products
-    if not simplify:
-        for a, b in itrab:
-            prod += a*b
-
-        return prod
-
-    # part 1, the expanded summation
-    expr = 0
-
-    try:
-        while 1:
-            _expand  = getattr(prod, 'expand', None)
-            expr    += _expand(power_base=False, power_exp=False, log=False,
-                    multinomial=False, basic=False) if _expand else prod
-            a, b     = next(itrab)
-            prod     = a*b
-
-    except StopIteration:
-        pass
-
-    # part 2, the cancelation and grouping
-    exprops  = count_ops(expr)
-    expr2    = expr.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
-    expr2ops = count_ops(expr2)
-
-    if expr2ops < exprops:
-        expr    = expr2
-        exprops = expr2ops
-
-    if exprops < 6: # empirically tested cutoff for expensive simplification
-        return expr
-
-    expr2    = cancel(expr)
-    expr2ops = count_ops(expr2)
-
-    if expr2ops < exprops:
-        expr    = expr2
-        exprops = expr2ops
-
-    expr3    = together(expr2, deep=True)
-    expr3ops = count_ops(expr3)
-
-    if expr3ops < exprops:
-        return expr3
-
-    return expr
