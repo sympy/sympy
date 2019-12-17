@@ -777,7 +777,7 @@ def is_reduced(G, ring):
         if g.LC != domain.one:
             return False
 
-        for term in g:
+        for term in g.terms():
             for h in G[:i] + G[i + 1:]:
                 if monomial_divides(h.LM, term[0]):
                     return False
