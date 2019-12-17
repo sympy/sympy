@@ -490,10 +490,10 @@ def test_partial_velocity():
     raises(TypeError, lambda: partial_velocity(vel_list, u1, N))
 
 def test_dynamicsymbols():
-    #tests to check the assumptions applied to dynamicsymbols
-    f1=dynamicsymbols('f1')
-    f2=dynamicsymbols('f2',real=True)
-    f3=dynamicsymbols('f3',positive=True)
-    assert f1.is_real==None
+    #Tests to check the assumptions applied to dynamicsymbols
+    f1 = dynamicsymbols('f1')
+    f2 = dynamicsymbols('f2', real=True)
+    f3 = dynamicsymbols('f3', positive=True)
+    assert f1.is_real is None
     assert f2.is_real
     assert f3.is_positive
