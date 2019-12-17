@@ -233,8 +233,6 @@ def _scipy_sparse_zeros(m, n, **options):
 def matrix_zeros(m, n, **options):
     """"Get a zeros matrix for a given format."""
     format = options.get('format', 'sympy')
-    dtype = options.get('dtype', 'float64')
-    spmatrix = options.get('spmatrix', 'csr')
     if format == 'sympy':
         return zeros(m, n)
     elif format == 'numpy':

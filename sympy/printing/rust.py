@@ -54,21 +54,21 @@ from sympy.printing.codeprinter import CodePrinter
 
 # f64 method in Rust
 known_functions = {
-    "": "is_nan",
-    "": "is_infinite",
-    "": "is_finite",
-    "": "is_normal",
-    "": "classify",
+    # "": "is_nan",
+    # "": "is_infinite",
+    # "": "is_finite",
+    # "": "is_normal",
+    # "": "classify",
     "floor": "floor",
     "ceiling": "ceil",
-    "": "round",
-    "": "trunc",
-    "": "fract",
+    # "": "round",
+    # "": "trunc",
+    # "": "fract",
     "Abs": "abs",
     "sign": "signum",
-    "": "is_sign_positive",
-    "": "is_sign_negative",
-    "": "mul_add",
+    # "": "is_sign_positive",
+    # "": "is_sign_negative",
+    # "": "mul_add",
     "Pow": [(lambda base, exp: exp == -S.One, "recip", 2),           # 1.0/x
             (lambda base, exp: exp == S.Half, "sqrt", 2),            # x ** 0.5
             (lambda base, exp: exp == -S.Half, "sqrt().recip", 2),   # 1/(x ** 0.5)
@@ -78,14 +78,14 @@ known_functions = {
             (lambda base, exp: not exp.is_integer, "powf", 1)],      # x ** y, for f64
     "exp": [(lambda exp: True, "exp", 2)],   # e ** x
     "log": "ln",
-    "": "log",          # number.log(base)
-    "": "log2",
-    "": "log10",
-    "": "to_degrees",
-    "": "to_radians",
+    # "": "log",          # number.log(base)
+    # "": "log2",
+    # "": "log10",
+    # "": "to_degrees",
+    # "": "to_radians",
     "Max": "max",
     "Min": "min",
-    "": "hypot",        # (x**2 + y**2) ** 0.5
+    # "": "hypot",        # (x**2 + y**2) ** 0.5
     "sin": "sin",
     "cos": "cos",
     "tan": "tan",
@@ -93,9 +93,9 @@ known_functions = {
     "acos": "acos",
     "atan": "atan",
     "atan2": "atan2",
-    "": "sin_cos",
-    "": "exp_m1",       # e ** x - 1
-    "": "ln_1p",        # ln(1 + x)
+    # "": "sin_cos",
+    # "": "exp_m1",       # e ** x - 1
+    # "": "ln_1p",        # ln(1 + x)
     "sinh": "sinh",
     "cosh": "cosh",
     "tanh": "tanh",
@@ -358,6 +358,12 @@ class RustCodePrinter(CodePrinter):
         p, q = int(expr.p), int(expr.q)
         return '%d_f64/%d.0' % (p, q)
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape
@@ -430,10 +436,6 @@ class RustCodePrinter(CodePrinter):
         _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
         return self._print(_piecewise)
 
-    def _print_Matrix(self, expr):
-        return "%s[%s]" % (expr.parent,
-                           expr.j + expr.i*expr.parent.shape[1])
-
     def _print_MatrixBase(self, A):
         if A.cols == 1:
             return "[%s]" % ", ".join(self._print(a) for a in A)
@@ -448,7 +450,6 @@ class RustCodePrinter(CodePrinter):
     # method from higher up the class hierarchy (see _print_NumberSymbol).
     # Then subclasses like us would not need to repeat all this.
     _print_Matrix = \
-        _print_MatrixElement = \
         _print_DenseMatrix = \
         _print_MutableDenseMatrix = \
         _print_ImmutableMatrix = \

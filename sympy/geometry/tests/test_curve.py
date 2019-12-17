@@ -1,4 +1,4 @@
-from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh
+from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh, Rational
 from sympy.geometry import Curve, Line, Point, Ellipse, Ray, Segment, Circle, Polygon, RegularPolygon
 from sympy.utilities.pytest import raises, slow
 
@@ -74,14 +74,14 @@ def test_transform():
     y = Symbol('y', real=True)
     c = Curve((x, x**2), (x, 0, 1))
     cout = Curve((2*x - 4, 3*x**2 - 10), (x, 0, 1))
-    pts = [Point(0, 0), Point(S(1)/2, S(1)/4), Point(1, 1)]
-    pts_out = [Point(-4, -10), Point(-3, -S(37)/4), Point(-2, -7)]
+    pts = [Point(0, 0), Point(S.Half, Rational(1, 4)), Point(1, 1)]
+    pts_out = [Point(-4, -10), Point(-3, Rational(-37, 4)), Point(-2, -7)]
 
     assert c.scale(2, 3, (4, 5)) == cout
     assert [c.subs(x, xi/2) for xi in Tuple(0, 1, 2)] == pts
     assert [cout.subs(x, xi/2) for xi in Tuple(0, 1, 2)] == pts_out
     assert Curve((x + y, 3*x), (x, 0, 1)).subs(y, S.Half) == \
-        Curve((x + S(1)/2, 3*x), (x, 0, 1))
+        Curve((x + S.Half, 3*x), (x, 0, 1))
     assert Curve((x, 3*x), (x, 0, 1)).translate(4, 5) == \
         Curve((x + 4, 3*x + 5), (x, 0, 1))
 

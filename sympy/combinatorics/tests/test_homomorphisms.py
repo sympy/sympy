@@ -4,6 +4,7 @@ from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism, i
 from sympy.combinatorics.free_groups import free_group
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.named_groups import AlternatingGroup, DihedralGroup, CyclicGroup
+from sympy.utilities.pytest import raises
 
 def test_homomorphism():
     # FpGroup -> PermutationGroup
@@ -99,3 +100,10 @@ def test_isomorphisms():
     H = CyclicGroup(5)
     assert G.order() == H.order()
     assert is_isomorphic(G, H)
+
+
+def test_check_homomorphism():
+    a = Permutation(1,2,3,4)
+    b = Permutation(1,3)
+    G = PermutationGroup([a, b])
+    raises(ValueError, lambda: homomorphism(G, G, [a], [a]))

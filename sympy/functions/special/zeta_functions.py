@@ -17,12 +17,15 @@ class lerchphi(Function):
     r"""
     Lerch transcendent (Lerch phi function).
 
-    For :math:`\operatorname{Re}(a) > 0`, `|z| < 1` and `s \in \mathbb{C}`, the
+    Explanation
+    ===========
+
+    For $\operatorname{Re}(a) > 0$, $|z| < 1$ and $s \in \mathbb{C}$, the
     Lerch transcendent is defined as
 
     .. math :: \Phi(z, s, a) = \sum_{n=0}^\infty \frac{z^n}{(n + a)^s},
 
-    where the standard branch of the argument is used for :math:`n + a`,
+    where the standard branch of the argument is used for $n + a$,
     and by analytic continuation for other values of the parameters.
 
     A commonly used related function is the Lerch zeta function, defined by
@@ -35,27 +38,71 @@ class lerchphi(Function):
 
     .. math:: \Phi(z, s, a) = z\Phi(z, s, a+1) + a^{-s}.
 
-    This provides the analytic continuation to `\operatorname{Re}(a) \le 0`.
+    This provides the analytic continuation to $\operatorname{Re}(a) \le 0$.
 
-    Assume now `\operatorname{Re}(a) > 0`. The integral representation
+    Assume now $\operatorname{Re}(a) > 0$. The integral representation
 
     .. math:: \Phi_0(z, s, a) = \int_0^\infty \frac{t^{s-1} e^{-at}}{1 - ze^{-t}}
                                 \frac{\mathrm{d}t}{\Gamma(s)}
 
-    provides an analytic continuation to :math:`\mathbb{C} - [1, \infty)`.
-    Finally, for :math:`x \in (1, \infty)` we find
+    provides an analytic continuation to $\mathbb{C} - [1, \infty)$.
+    Finally, for $x \in (1, \infty)$ we find
 
     .. math:: \lim_{\epsilon \to 0^+} \Phi_0(x + i\epsilon, s, a)
              -\lim_{\epsilon \to 0^+} \Phi_0(x - i\epsilon, s, a)
              = \frac{2\pi i \log^{s-1}{x}}{x^a \Gamma(s)},
 
-    using the standard branch for both :math:`\log{x}` and
-    :math:`\log{\log{x}}` (a branch of :math:`\log{\log{x}}` is needed to
-    evaluate :math:`\log{x}^{s-1}`).
+    using the standard branch for both $\log{x}$ and
+    $\log{\log{x}}$ (a branch of $\log{\log{x}}$ is needed to
+    evaluate $\log{x}^{s-1}$).
     This concludes the analytic continuation. The Lerch transcendent is thus
-    branched at :math:`z \in \{0, 1, \infty\}` and
-    :math:`a \in \mathbb{Z}_{\le 0}`. For fixed :math:`z, a` outside these
-    branch points, it is an entire function of :math:`s`.
+    branched at $z \in \{0, 1, \infty\}$ and
+    $a \in \mathbb{Z}_{\le 0}$. For fixed $z, a$ outside these
+    branch points, it is an entire function of $s$.
+
+    Examples
+    ========
+
+    The Lerch transcendent is a fairly general function, for this reason it does
+    not automatically evaluate to simpler functions. Use ``expand_func()`` to
+    achieve this.
+
+    If $z=1$, the Lerch transcendent reduces to the Hurwitz zeta function:
+
+    >>> from sympy import lerchphi, expand_func
+    >>> from sympy.abc import z, s, a
+    >>> expand_func(lerchphi(1, s, a))
+    zeta(s, a)
+
+    More generally, if $z$ is a root of unity, the Lerch transcendent
+    reduces to a sum of Hurwitz zeta functions:
+
+    >>> expand_func(lerchphi(-1, s, a))
+    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, a/2 + 1/2)
+
+    If $a=1$, the Lerch transcendent reduces to the polylogarithm:
+
+    >>> expand_func(lerchphi(z, s, 1))
+    polylog(s, z)/z
+
+    More generally, if $a$ is rational, the Lerch transcendent reduces
+    to a sum of polylogarithms:
+
+    >>> from sympy import S
+    >>> expand_func(lerchphi(z, s, S(1)/2))
+    2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) -
+                polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))
+    >>> expand_func(lerchphi(z, s, S(3)/2))
+    -2**s/z + 2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) -
+                          polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))/z
+
+    The derivatives with respect to $z$ and $a$ can be computed in
+    closed form:
+
+    >>> lerchphi(z, s, a).diff(z)
+    (-a*lerchphi(z, s, a) + lerchphi(z, s - 1, a))/z
+    >>> lerchphi(z, s, a).diff(a)
+    -s*lerchphi(z, s + 1, a)
 
     See Also
     ========
@@ -70,49 +117,6 @@ class lerchphi(Function):
     .. [2] http://dlmf.nist.gov/25.14
     .. [3] https://en.wikipedia.org/wiki/Lerch_transcendent
 
-    Examples
-    ========
-
-    The Lerch transcendent is a fairly general function, for this reason it does
-    not automatically evaluate to simpler functions. Use expand_func() to
-    achieve this.
-
-    If :math:`z=1`, the Lerch transcendent reduces to the Hurwitz zeta function:
-
-    >>> from sympy import lerchphi, expand_func
-    >>> from sympy.abc import z, s, a
-    >>> expand_func(lerchphi(1, s, a))
-    zeta(s, a)
-
-    More generally, if :math:`z` is a root of unity, the Lerch transcendent
-    reduces to a sum of Hurwitz zeta functions:
-
-    >>> expand_func(lerchphi(-1, s, a))
-    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, a/2 + 1/2)
-
-    If :math:`a=1`, the Lerch transcendent reduces to the polylogarithm:
-
-    >>> expand_func(lerchphi(z, s, 1))
-    polylog(s, z)/z
-
-    More generally, if :math:`a` is rational, the Lerch transcendent reduces
-    to a sum of polylogarithms:
-
-    >>> from sympy import S
-    >>> expand_func(lerchphi(z, s, S(1)/2))
-    2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) -
-                polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))
-    >>> expand_func(lerchphi(z, s, S(3)/2))
-    -2**s/z + 2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) -
-                          polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))/z
-
-    The derivatives with respect to :math:`z` and :math:`a` can be computed in
-    closed form:
-
-    >>> lerchphi(z, s, a).diff(z)
-    (-a*lerchphi(z, s, a) + lerchphi(z, s - 1, a))/z
-    >>> lerchphi(z, s, a).diff(a)
-    -s*lerchphi(z, s + 1, a)
     """
 
     def _eval_expand_func(self, **hints):
@@ -124,7 +128,7 @@ class lerchphi(Function):
             t = Dummy('t')
             p = Poly((t + a)**(-s), t)
             start = 1/(1 - t)
-            res = S(0)
+            res = S.Zero
             for c in reversed(p.all_coeffs()):
                 res += c*start
                 start = t*start.diff(t)
@@ -136,8 +140,8 @@ class lerchphi(Function):
             #   In: Proceedings of the 1997 International Symposium on Symbolic and
             #   Algebraic Computation, pages 205-211, New York, 1997. ACM.
             # TODO should something be polarified here?
-            add = S(0)
-            mul = S(1)
+            add = S.Zero
+            mul = S.One
             # First reduce a to the interaval (0, 1]
             if a > 1:
                 n = floor(a)
@@ -207,16 +211,19 @@ class polylog(Function):
     r"""
     Polylogarithm function.
 
-    For :math:`|z| < 1` and :math:`s \in \mathbb{C}`, the polylogarithm is
+    Explanation
+    ===========
+
+    For $|z| < 1$ and $s \in \mathbb{C}$, the polylogarithm is
     defined by
 
     .. math:: \operatorname{Li}_s(z) = \sum_{n=1}^\infty \frac{z^n}{n^s},
 
-    where the standard branch of the argument is used for :math:`n`. It admits
-    an analytic continuation which is branched at :math:`z=1` (notably not on the
-    sheet of initial definition), :math:`z=0` and :math:`z=\infty`.
+    where the standard branch of the argument is used for $n$. It admits
+    an analytic continuation which is branched at $z=1$ (notably not on the
+    sheet of initial definition), $z=0$ and $z=\infty$.
 
-    The name polylogarithm comes from the fact that for :math:`s=1`, the
+    The name polylogarithm comes from the fact that for $s=1$, the
     polylogarithm is related to the ordinary logarithm (see examples), and that
 
     .. math:: \operatorname{Li}_{s+1}(z) =
@@ -224,17 +231,12 @@ class polylog(Function):
 
     The polylogarithm is a special case of the Lerch transcendent:
 
-    .. math:: \operatorname{Li}_{s}(z) = z \Phi(z, s, 1)
-
-    See Also
-    ========
-
-    zeta, lerchphi
+    .. math:: \operatorname{Li}_{s}(z) = z \Phi(z, s, 1).
 
     Examples
     ========
 
-    For :math:`z \in \{0, 1, -1\}`, the polylogarithm is automatically expressed
+    For $z \in \{0, 1, -1\}$, the polylogarithm is automatically expressed
     using other functions:
 
     >>> from sympy import polylog
@@ -246,9 +248,9 @@ class polylog(Function):
     >>> polylog(s, -1)
     -dirichlet_eta(s)
 
-    If :math:`s` is a negative integer, :math:`0` or :math:`1`, the
-    polylogarithm can be expressed using elementary functions. This can be
-    done using expand_func():
+    If $s$ is a negative integer, $0$ or $1$, the polylogarithm can be
+    expressed using elementary functions. This can be done using
+    ``expand_func()``:
 
     >>> from sympy import expand_func
     >>> from sympy.abc import z
@@ -257,7 +259,7 @@ class polylog(Function):
     >>> expand_func(polylog(0, z))
     z/(1 - z)
 
-    The derivative with respect to :math:`z` can be computed in closed form:
+    The derivative with respect to $z$ can be computed in closed form:
 
     >>> polylog(s, z).diff(z)
     polylog(s - 1, z)/z
@@ -267,16 +269,22 @@ class polylog(Function):
     >>> from sympy import lerchphi
     >>> polylog(s, z).rewrite(lerchphi)
     z*lerchphi(z, s, 1)
+
+    See Also
+    ========
+
+    zeta, lerchphi
+
     """
 
     @classmethod
     def eval(cls, s, z):
         s, z = sympify((s, z))
-        if z == 1:
+        if z is S.One:
             return zeta(s)
-        elif z == -1:
+        elif z is S.NegativeOne:
             return -dirichlet_eta(s)
-        elif z == 0:
+        elif z is S.Zero:
             return S.Zero
         elif s == 2:
             if z == S.Half:
@@ -291,17 +299,32 @@ class polylog(Function):
                 return pi**2/15 - log((sqrt(5)-1)/2)**2
             elif z == (sqrt(5) - 1)/2:
                 return pi**2/10 - log((sqrt(5)-1)/2)**2
-        # For s = 0 or -1 use explicit formulas to evaluate, but
-        # automatically expanding polylog(1, z) to -log(1-z) seems undesirable
-        # for summation methods based on hypergeometric functions
-        elif s == 0:
-            return z/(1 - z)
-        elif s == -1:
-            return z/(1 - z)**2
+
+        if z.is_zero:
+            return S.Zero
+
+        # Make an effort to determine if z is 1 to avoid replacing into
+        # expression with singularity
+        zone = z.equals(S.One)
+
+        if zone:
+            return zeta(s)
+        elif zone is False:
+            # For s = 0 or -1 use explicit formulas to evaluate, but
+            # automatically expanding polylog(1, z) to -log(1-z) seems
+            # undesirable for summation methods based on hypergeometric
+            # functions
+            if s is S.Zero:
+                return z/(1 - z)
+            elif s is S.NegativeOne:
+                return z/(1 - z)**2
+            if s.is_zero:
+                return z/(1 - z)
+
         # polylog is branched, but not over the unit disk
         from sympy.functions.elementary.complexes import (Abs, unpolarify,
-            polar_lift)
-        if z.has(exp_polar, polar_lift) and (Abs(z) <= S.One) == True:
+                                                          polar_lift)
+        if z.has(exp_polar, polar_lift) and (zone or (Abs(z) <= S.One) == True):
             return cls(s, unpolarify(z))
 
     def fdiff(self, argindex=1):
@@ -326,6 +349,11 @@ class polylog(Function):
             return expand_mul(start).subs(u, z)
         return polylog(s, z)
 
+    def _eval_is_zero(self):
+        z = self.args[1]
+        if z.is_zero:
+            return True
+
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
 ###############################################################################
@@ -335,16 +363,20 @@ class zeta(Function):
     r"""
     Hurwitz zeta function (or Riemann zeta function).
 
-    For `\operatorname{Re}(a) > 0` and `\operatorname{Re}(s) > 1`, this function is defined as
+    Explanation
+    ===========
+
+    For $\operatorname{Re}(a) > 0$ and $\operatorname{Re}(s) > 1$, this
+    function is defined as
 
     .. math:: \zeta(s, a) = \sum_{n=0}^\infty \frac{1}{(n + a)^s},
 
-    where the standard choice of argument for :math:`n + a` is used. For fixed
-    :math:`a` with `\operatorname{Re}(a) > 0` the Hurwitz zeta function admits a
-    meromorphic continuation to all of :math:`\mathbb{C}`, it is an unbranched
-    function with a simple pole at :math:`s = 1`.
+    where the standard choice of argument for $n + a$ is used. For fixed
+    $a$ with $\operatorname{Re}(a) > 0$ the Hurwitz zeta function admits a
+    meromorphic continuation to all of $\mathbb{C}$, it is an unbranched
+    function with a simple pole at $s = 1$.
 
-    Analytic continuation to other :math:`a` is possible under some circumstances,
+    Analytic continuation to other $a$ is possible under some circumstances,
     but this is not typically done.
 
     The Hurwitz zeta function is a special case of the Lerch transcendent:
@@ -352,27 +384,16 @@ class zeta(Function):
     .. math:: \zeta(s, a) = \Phi(1, s, a).
 
     This formula defines an analytic continuation for all possible values of
-    :math:`s` and :math:`a` (also `\operatorname{Re}(a) < 0`), see the documentation of
+    $s$ and $a$ (also $\operatorname{Re}(a) < 0$), see the documentation of
     :class:`lerchphi` for a description of the branching behavior.
 
-    If no value is passed for :math:`a`, by this function assumes a default value
-    of :math:`a = 1`, yielding the Riemann zeta function.
-
-    See Also
-    ========
-
-    dirichlet_eta, lerchphi, polylog
-
-    References
-    ==========
-
-    .. [1] http://dlmf.nist.gov/25.11
-    .. [2] https://en.wikipedia.org/wiki/Hurwitz_zeta_function
+    If no value is passed for $a$, by this function assumes a default value
+    of $a = 1$, yielding the Riemann zeta function.
 
     Examples
     ========
 
-    For :math:`a = 1` the Hurwitz zeta function reduces to the famous Riemann
+    For $a = 1$ the Hurwitz zeta function reduces to the famous Riemann
     zeta function:
 
     .. math:: \zeta(s, 1) = \zeta(s) = \sum_{n=1}^\infty \frac{1}{n^s}.
@@ -417,25 +438,35 @@ class zeta(Function):
     >>> zeta(3).n()
     1.20205690315959
 
-    The derivative of :math:`\zeta(s, a)` with respect to :math:`a` is easily
-    computed:
+    The derivative of $\zeta(s, a)$ with respect to $a$ can be computed:
 
     >>> from sympy.abc import a
     >>> zeta(s, a).diff(a)
     -s*zeta(s + 1, a)
 
-    However the derivative with respect to :math:`s` has no useful closed form
+    However the derivative with respect to $s$ has no useful closed form
     expression:
 
     >>> zeta(s, a).diff(s)
     Derivative(zeta(s, a), s)
 
-    The Hurwitz zeta function can be expressed in terms of the Lerch transcendent,
-    :class:`sympy.functions.special.lerchphi`:
+    The Hurwitz zeta function can be expressed in terms of the Lerch
+    transcendent, :class:`~.lerchphi`:
 
     >>> from sympy import lerchphi
     >>> zeta(s, a).rewrite(lerchphi)
     lerchphi(1, s, a)
+
+    See Also
+    ========
+
+    dirichlet_eta, lerchphi, polylog
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/25.11
+    .. [2] https://en.wikipedia.org/wiki/Hurwitz_zeta_function
 
     """
 
@@ -458,7 +489,7 @@ class zeta(Function):
                 return S.NaN
             elif z is S.Infinity:
                 return S.One
-            elif z is S.Zero:
+            elif z.is_zero:
                 return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity
@@ -476,7 +507,8 @@ class zeta(Function):
                     return zeta + harmonic(abs(a), z)
                 else:
                     return zeta - harmonic(a - 1, z)
-
+        if z.is_zero:
+            return S.Half - a
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1, **kwargs):
         if a != 1:
@@ -507,22 +539,15 @@ class dirichlet_eta(Function):
     r"""
     Dirichlet eta function.
 
-    For `\operatorname{Re}(s) > 0`, this function is defined as
+    Explanation
+    ===========
+
+    For $\operatorname{Re}(s) > 0$, this function is defined as
 
     .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^{n-1}}{n^s}.
 
-    It admits a unique analytic continuation to all of :math:`\mathbb{C}`.
+    It admits a unique analytic continuation to all of $\mathbb{C}$.
     It is an entire, unbranched function.
-
-    See Also
-    ========
-
-    zeta
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Dirichlet_eta_function
 
     Examples
     ========
@@ -533,6 +558,16 @@ class dirichlet_eta(Function):
     >>> from sympy.abc import s
     >>> dirichlet_eta(s).rewrite(zeta)
     (1 - 2**(1 - s))*zeta(s)
+
+    See Also
+    ========
+
+    zeta
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Dirichlet_eta_function
 
     """
 
@@ -549,7 +584,8 @@ class dirichlet_eta(Function):
 
 
 class stieltjes(Function):
-    r"""Represents Stieltjes constants, :math:`\gamma_{k}` that occur in
+    r"""
+    Represents Stieltjes constants, $\gamma_{k}$ that occur in
     Laurent Series expansion of the Riemann zeta function.
 
     Examples
@@ -560,19 +596,19 @@ class stieltjes(Function):
     >>> stieltjes(n)
     stieltjes(n)
 
-    zero'th stieltjes constant
+    The zero'th stieltjes constant:
 
     >>> stieltjes(0)
     EulerGamma
     >>> stieltjes(0, 1)
     EulerGamma
 
-    For generalized stieltjes constants
+    For generalized stieltjes constants:
 
     >>> stieltjes(n, m)
     stieltjes(n, m)
 
-    Constants are only defined for integers >= 0
+    Constants are only defined for integers >= 0:
 
     >>> stieltjes(-1)
     zoo
@@ -581,6 +617,7 @@ class stieltjes(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Stieltjes_constants
+
     """
 
     @classmethod
@@ -601,5 +638,14 @@ class stieltjes(Function):
                 return S.ComplexInfinity
             elif not n.is_Integer:
                 return S.ComplexInfinity
-            elif n == 0 and a in [None, 1]:
+            elif n is S.Zero and a in [None, 1]:
                 return S.EulerGamma
+
+        if n.is_extended_negative:
+            return S.ComplexInfinity
+
+        if n.is_zero and a in [None, 1]:
+            return S.EulerGamma
+
+        if n.is_integer == False:
+            return S.ComplexInfinity

@@ -501,12 +501,15 @@ atoms_table = {
                                 (U('DOUBLE-STRUCK CAPITAL N') +
                                  U('SUBSCRIPT ZERO'))),
     'Integers':                U('DOUBLE-STRUCK CAPITAL Z'),
+    'Rationals':               U('DOUBLE-STRUCK CAPITAL Q'),
     'Reals':                   U('DOUBLE-STRUCK CAPITAL R'),
     'Complexes':               U('DOUBLE-STRUCK CAPITAL C'),
     'Union':                   U('UNION'),
     'SymmetricDifference':     U('INCREMENT'),
     'Intersection':            U('INTERSECTION'),
-    'Ring':                    U('RING OPERATOR')
+    'Ring':                    U('RING OPERATOR'),
+    'Modifier Letter Low Ring':U('Modifier Letter Low Ring'),
+    'EmptySequence':           'EmptySequence',
 }
 
 
@@ -611,6 +614,17 @@ def annotated(letter):
         return ucode_pics[letter]
     else:
         return ascii_pics[letter]
+
+def is_combining(sym):
+    """Check whether symbol is a unicode modifier.
+
+    See stringPict.width on usage.
+    """
+    return True if (u'\N{COMBINING GRAVE ACCENT}' <= sym <=
+                    u'\N{COMBINING LATIN SMALL LETTER X}' or
+
+                    u'\N{COMBINING LEFT HARPOON ABOVE}' <= sym <=
+                    u'\N{COMBINING ASTERISK ABOVE}') else False
 
 
 def center_accent(string, accent):

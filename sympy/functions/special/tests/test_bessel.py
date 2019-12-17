@@ -3,10 +3,11 @@ from itertools import product
 from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
                    bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
                    expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
-                   Abs, I, O, oo, conjugate)
+                   Abs, I, O, oo, conjugate, uppergamma, exp, Integral, Sum,
+                   Rational)
 from sympy.functions.special.bessel import fn
 from sympy.functions.special.bessel import (airyai, airybi,
-                                            airyaiprime, airybiprime)
+                                            airyaiprime, airybiprime, marcumq)
 from sympy.utilities.randtest import (random_complex_number as randcplx,
                                       verify_numerically as tn,
                                       test_derivative_numerically as td,
@@ -44,8 +45,8 @@ def test_diff():
 def test_rewrite():
     from sympy import polar_lift, exp, I
 
-    assert besselj(n, z).rewrite(jn) == sqrt(2*z/pi)*jn(n - S(1)/2, z)
-    assert bessely(n, z).rewrite(yn) == sqrt(2*z/pi)*yn(n - S(1)/2, z)
+    assert besselj(n, z).rewrite(jn) == sqrt(2*z/pi)*jn(n - S.Half, z)
+    assert bessely(n, z).rewrite(yn) == sqrt(2*z/pi)*yn(n - S.Half, z)
     assert besseli(n, z).rewrite(besselj) == \
         exp(-I*n*pi/2)*besselj(n, polar_lift(I)*z)
     assert besselj(n, z).rewrite(besseli) == \
@@ -84,8 +85,8 @@ def test_rewrite():
         assert hn1(order, z) == hn1(order, z).rewrite(f)
         assert hn2(order, z) == hn2(order, z).rewrite(f)
 
-    assert jn(order, z).rewrite(besselj) == sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(order + S(1)/2, z)/2
-    assert jn(order, z).rewrite(bessely) == (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-order - S(1)/2, z)/2
+    assert jn(order, z).rewrite(besselj) == sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(order + S.Half, z)/2
+    assert jn(order, z).rewrite(bessely) == (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-order - S.Half, z)/2
 
     # for integral orders rewriting SBFs w.r.t bessel[jy] is allowed
     N = Symbol('n', integer=True)
@@ -105,41 +106,41 @@ def test_rewrite():
 def test_expand():
     from sympy import besselsimp, Symbol, exp, exp_polar, I
 
-    assert expand_func(besselj(S(1)/2, z).rewrite(jn)) == \
+    assert expand_func(besselj(S.Half, z).rewrite(jn)) == \
         sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
-    assert expand_func(bessely(S(1)/2, z).rewrite(yn)) == \
+    assert expand_func(bessely(S.Half, z).rewrite(yn)) == \
         -sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
 
     # XXX: teach sin/cos to work around arguments like
     # x*exp_polar(I*pi*n/2).  Then change besselsimp -> expand_func
-    assert besselsimp(besselj(S(1)/2, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(besselj(S(-1)/2, z)) == sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(besselj(S(5)/2, z)) == \
-        -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**(S(5)/2))
-    assert besselsimp(besselj(-S(5)/2, z)) == \
-        -sqrt(2)*(z**2*cos(z) - 3*z*sin(z) - 3*cos(z))/(sqrt(pi)*z**(S(5)/2))
+    assert besselsimp(besselj(S.Half, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besselj(Rational(-1, 2), z)) == sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besselj(Rational(5, 2), z)) == \
+        -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**Rational(5, 2))
+    assert besselsimp(besselj(Rational(-5, 2), z)) == \
+        -sqrt(2)*(z**2*cos(z) - 3*z*sin(z) - 3*cos(z))/(sqrt(pi)*z**Rational(5, 2))
 
-    assert besselsimp(bessely(S(1)/2, z)) == \
+    assert besselsimp(bessely(S.Half, z)) == \
         -(sqrt(2)*cos(z))/(sqrt(pi)*sqrt(z))
-    assert besselsimp(bessely(S(-1)/2, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(bessely(S(5)/2, z)) == \
-        sqrt(2)*(z**2*cos(z) - 3*z*sin(z) - 3*cos(z))/(sqrt(pi)*z**(S(5)/2))
-    assert besselsimp(bessely(S(-5)/2, z)) == \
-        -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**(S(5)/2))
+    assert besselsimp(bessely(Rational(-1, 2), z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(bessely(Rational(5, 2), z)) == \
+        sqrt(2)*(z**2*cos(z) - 3*z*sin(z) - 3*cos(z))/(sqrt(pi)*z**Rational(5, 2))
+    assert besselsimp(bessely(Rational(-5, 2), z)) == \
+        -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**Rational(5, 2))
 
-    assert besselsimp(besseli(S(1)/2, z)) == sqrt(2)*sinh(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(besseli(S(-1)/2, z)) == \
+    assert besselsimp(besseli(S.Half, z)) == sqrt(2)*sinh(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besseli(Rational(-1, 2), z)) == \
         sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
-    assert besselsimp(besseli(S(5)/2, z)) == \
-        sqrt(2)*(z**2*sinh(z) - 3*z*cosh(z) + 3*sinh(z))/(sqrt(pi)*z**(S(5)/2))
-    assert besselsimp(besseli(S(-5)/2, z)) == \
-        sqrt(2)*(z**2*cosh(z) - 3*z*sinh(z) + 3*cosh(z))/(sqrt(pi)*z**(S(5)/2))
+    assert besselsimp(besseli(Rational(5, 2), z)) == \
+        sqrt(2)*(z**2*sinh(z) - 3*z*cosh(z) + 3*sinh(z))/(sqrt(pi)*z**Rational(5, 2))
+    assert besselsimp(besseli(Rational(-5, 2), z)) == \
+        sqrt(2)*(z**2*cosh(z) - 3*z*sinh(z) + 3*cosh(z))/(sqrt(pi)*z**Rational(5, 2))
 
-    assert besselsimp(besselk(S(1)/2, z)) == \
-        besselsimp(besselk(S(-1)/2, z)) == sqrt(pi)*exp(-z)/(sqrt(2)*sqrt(z))
-    assert besselsimp(besselk(S(5)/2, z)) == \
-        besselsimp(besselk(S(-5)/2, z)) == \
-        sqrt(2)*sqrt(pi)*(z**2 + 3*z + 3)*exp(-z)/(2*z**(S(5)/2))
+    assert besselsimp(besselk(S.Half, z)) == \
+        besselsimp(besselk(Rational(-1, 2), z)) == sqrt(pi)*exp(-z)/(sqrt(2)*sqrt(z))
+    assert besselsimp(besselk(Rational(5, 2), z)) == \
+        besselsimp(besselk(Rational(-5, 2), z)) == \
+        sqrt(2)*sqrt(pi)*(z**2 + 3*z + 3)*exp(-z)/(2*z**Rational(5, 2))
 
     def check(eq, ans):
         return tn(eq, ans) and eq == ans
@@ -181,10 +182,10 @@ def test_expand():
     assert expand_func(bessely(n + 2, z)) == \
         -bessely(n, z) + (2*n + 2)*(2*n*bessely(n, z)/z - bessely(n - 1, z))/z
 
-    assert expand_func(besseli(n + S(1)/2, z).rewrite(jn)) == \
-        (sqrt(2)*sqrt(z)*exp(-I*pi*(n + S(1)/2)/2) *
+    assert expand_func(besseli(n + S.Half, z).rewrite(jn)) == \
+        (sqrt(2)*sqrt(z)*exp(-I*pi*(n + S.Half)/2) *
          exp_polar(I*pi/4)*jn(n, z*exp_polar(I*pi/2))/sqrt(pi))
-    assert expand_func(besselj(n + S(1)/2, z).rewrite(jn)) == \
+    assert expand_func(besselj(n + S.Half, z).rewrite(jn)) == \
         sqrt(2)*sqrt(z)*jn(n, z)/sqrt(pi)
 
     r = Symbol('r', real=True)
@@ -192,14 +193,14 @@ def test_expand():
     i = Symbol('i', integer=True)
 
     for besselx in [besselj, bessely, besseli, besselk]:
-        assert besselx(i, p).is_real
-        assert besselx(i, x).is_real is None
-        assert besselx(x, z).is_real is None
+        assert besselx(i, p).is_extended_real is True
+        assert besselx(i, x).is_extended_real is None
+        assert besselx(x, z).is_extended_real is None
 
     for besselx in [besselj, besseli]:
-        assert besselx(i, r).is_real
+        assert besselx(i, r).is_extended_real is True
     for besselx in [bessely, besselk]:
-        assert besselx(i, r).is_real is None
+        assert besselx(i, r).is_extended_real is None
 
 
 def test_fn():
@@ -220,6 +221,13 @@ def myn(n, z):
 
 def test_jn():
     z = symbols("z")
+    assert jn(0, 0) == 1
+    assert jn(1, 0) == 0
+    assert jn(-1, 0) == S.ComplexInfinity
+    assert jn(z, 0) == jn(z, 0, evaluate=False)
+    assert jn(0, oo) == 0
+    assert jn(0, -oo) == 0
+
     assert mjn(0, z) == sin(z)/z
     assert mjn(1, z) == sin(z)/z**2 - cos(z)/z
     assert mjn(2, z) == (3/z**3 - 1/z)*sin(z) - (3/z**2) * cos(z)
@@ -260,8 +268,8 @@ def test_sympify_yn():
 
 
 def eq(a, b, tol=1e-6):
-    for x, y in zip(a, b):
-        if not (abs(x - y) < tol):
+    for u, v in zip(a, b):
+        if not (abs(u - v) < tol):
             return False
     return True
 
@@ -279,30 +287,30 @@ def test_bessel_eval():
     n, m, k = Symbol('n', integer=True), Symbol('m'), Symbol('k', integer=True, zero=False)
 
     for f in [besselj, besseli]:
-        assert f(0, 0) == S.One
-        assert f(2.1, 0) == S.Zero
-        assert f(-3, 0) == S.Zero
-        assert f(-10.2, 0) == S.ComplexInfinity
-        assert f(1 + 3*I, 0) == S.Zero
-        assert f(-3 + I, 0) == S.ComplexInfinity
-        assert f(-2*I, 0) == S.NaN
+        assert f(0, 0) is S.One
+        assert f(2.1, 0) is S.Zero
+        assert f(-3, 0) is S.Zero
+        assert f(-10.2, 0) is S.ComplexInfinity
+        assert f(1 + 3*I, 0) is S.Zero
+        assert f(-3 + I, 0) is S.ComplexInfinity
+        assert f(-2*I, 0) is S.NaN
         assert f(n, 0) != S.One and f(n, 0) != S.Zero
         assert f(m, 0) != S.One and f(m, 0) != S.Zero
-        assert f(k, 0) == S.Zero
+        assert f(k, 0) is S.Zero
 
-    assert bessely(0, 0) == S.NegativeInfinity
-    assert besselk(0, 0) == S.Infinity
+    assert bessely(0, 0) is S.NegativeInfinity
+    assert besselk(0, 0) is S.Infinity
     for f in [bessely, besselk]:
-        assert f(1 + I, 0) == S.ComplexInfinity
-        assert f(I, 0) == S.NaN
+        assert f(1 + I, 0) is S.ComplexInfinity
+        assert f(I, 0) is S.NaN
 
     for f in [besselj, bessely]:
-        assert f(m, S.Infinity) == S.Zero
-        assert f(m, S.NegativeInfinity) == S.Zero
+        assert f(m, S.Infinity) is S.Zero
+        assert f(m, S.NegativeInfinity) is S.Zero
 
     for f in [besseli, besselk]:
-        assert f(m, I*S.Infinity) == S.Zero
-        assert f(m, I*S.NegativeInfinity) == S.Zero
+        assert f(m, I*S.Infinity) is S.Zero
+        assert f(m, I*S.NegativeInfinity) is S.Zero
 
     for f in [besseli, besselk]:
         assert f(-4, z) == f(4, z)
@@ -338,8 +346,11 @@ def test_bessel_nan():
 
 def test_conjugate():
     from sympy import conjugate, I, Symbol
-    n, z, x = Symbol('n'), Symbol('z', real=False), Symbol('x', real=True)
-    y, t = Symbol('y', real=True, positive=True), Symbol('t', negative=True)
+    n = Symbol('n')
+    z = Symbol('z', extended_real=False)
+    x = Symbol('x', extended_real=True)
+    y = Symbol('y', real=True, positive=True)
+    t = Symbol('t', negative=True)
 
     for f in [besseli, besselj, besselk, bessely, hankel1, hankel2]:
         assert f(n, -1).conjugate() != f(conjugate(n), -1)
@@ -407,12 +418,11 @@ def test_airy_base():
     y = Symbol('y', real=True)
 
     assert conjugate(airyai(z)) == airyai(conjugate(z))
-    assert airyai(x).is_real
+    assert airyai(x).is_extended_real
 
     assert airyai(x+I*y).as_real_imag() == (
-        airyai(x - I*x*Abs(y)/Abs(x))/2 + airyai(x + I*x*Abs(y)/Abs(x))/2,
-        I*x*(airyai(x - I*x*Abs(y)/Abs(x)) -
-             airyai(x + I*x*Abs(y)/Abs(x)))*Abs(y)/(2*y*Abs(x)))
+            airyai(x - I*y)/2 + airyai(x + I*y)/2,
+            I*(airyai(x - I*y) - airyai(x + I*y))/2)
 
 
 def test_airyai():
@@ -422,33 +432,33 @@ def test_airyai():
 
     assert isinstance(airyai(z), airyai)
 
-    assert airyai(0) == 3**(S(1)/3)/(3*gamma(S(2)/3))
+    assert airyai(0) == 3**Rational(1, 3)/(3*gamma(Rational(2, 3)))
     assert airyai(oo) == 0
     assert airyai(-oo) == 0
 
     assert diff(airyai(z), z) == airyaiprime(z)
 
     assert series(airyai(z), z, 0, 3) == (
-        3**(S(5)/6)*gamma(S(1)/3)/(6*pi) - 3**(S(1)/6)*z*gamma(S(2)/3)/(2*pi) + O(z**3))
+        3**Rational(5, 6)*gamma(Rational(1, 3))/(6*pi) - 3**Rational(1, 6)*z*gamma(Rational(2, 3))/(2*pi) + O(z**3))
 
     assert airyai(z).rewrite(hyper) == (
-        -3**(S(2)/3)*z*hyper((), (S(4)/3,), z**S(3)/9)/(3*gamma(S(1)/3)) +
-         3**(S(1)/3)*hyper((), (S(2)/3,), z**S(3)/9)/(3*gamma(S(2)/3)))
+        -3**Rational(2, 3)*z*hyper((), (Rational(4, 3),), z**3/9)/(3*gamma(Rational(1, 3))) +
+         3**Rational(1, 3)*hyper((), (Rational(2, 3),), z**3/9)/(3*gamma(Rational(2, 3))))
 
     assert isinstance(airyai(z).rewrite(besselj), airyai)
     assert airyai(t).rewrite(besselj) == (
-        sqrt(-t)*(besselj(-S(1)/3, 2*(-t)**(S(3)/2)/3) +
-                  besselj(S(1)/3, 2*(-t)**(S(3)/2)/3))/3)
+        sqrt(-t)*(besselj(Rational(-1, 3), 2*(-t)**Rational(3, 2)/3) +
+                  besselj(Rational(1, 3), 2*(-t)**Rational(3, 2)/3))/3)
     assert airyai(z).rewrite(besseli) == (
-        -z*besseli(S(1)/3, 2*z**(S(3)/2)/3)/(3*(z**(S(3)/2))**(S(1)/3)) +
-         (z**(S(3)/2))**(S(1)/3)*besseli(-S(1)/3, 2*z**(S(3)/2)/3)/3)
+        -z*besseli(Rational(1, 3), 2*z**Rational(3, 2)/3)/(3*(z**Rational(3, 2))**Rational(1, 3)) +
+         (z**Rational(3, 2))**Rational(1, 3)*besseli(Rational(-1, 3), 2*z**Rational(3, 2)/3)/3)
     assert airyai(p).rewrite(besseli) == (
-        sqrt(p)*(besseli(-S(1)/3, 2*p**(S(3)/2)/3) -
-                 besseli(S(1)/3, 2*p**(S(3)/2)/3))/3)
+        sqrt(p)*(besseli(Rational(-1, 3), 2*p**Rational(3, 2)/3) -
+                 besseli(Rational(1, 3), 2*p**Rational(3, 2)/3))/3)
 
-    assert expand_func(airyai(2*(3*z**5)**(S(1)/3))) == (
-        -sqrt(3)*(-1 + (z**5)**(S(1)/3)/z**(S(5)/3))*airybi(2*3**(S(1)/3)*z**(S(5)/3))/6 +
-         (1 + (z**5)**(S(1)/3)/z**(S(5)/3))*airyai(2*3**(S(1)/3)*z**(S(5)/3))/2)
+    assert expand_func(airyai(2*(3*z**5)**Rational(1, 3))) == (
+        -sqrt(3)*(-1 + (z**5)**Rational(1, 3)/z**Rational(5, 3))*airybi(2*3**Rational(1, 3)*z**Rational(5, 3))/6 +
+         (1 + (z**5)**Rational(1, 3)/z**Rational(5, 3))*airyai(2*3**Rational(1, 3)*z**Rational(5, 3))/2)
 
 
 def test_airybi():
@@ -458,33 +468,33 @@ def test_airybi():
 
     assert isinstance(airybi(z), airybi)
 
-    assert airybi(0) == 3**(S(5)/6)/(3*gamma(S(2)/3))
-    assert airybi(oo) == oo
+    assert airybi(0) == 3**Rational(5, 6)/(3*gamma(Rational(2, 3)))
+    assert airybi(oo) is oo
     assert airybi(-oo) == 0
 
     assert diff(airybi(z), z) == airybiprime(z)
 
     assert series(airybi(z), z, 0, 3) == (
-        3**(S(1)/3)*gamma(S(1)/3)/(2*pi) + 3**(S(2)/3)*z*gamma(S(2)/3)/(2*pi) + O(z**3))
+        3**Rational(1, 3)*gamma(Rational(1, 3))/(2*pi) + 3**Rational(2, 3)*z*gamma(Rational(2, 3))/(2*pi) + O(z**3))
 
     assert airybi(z).rewrite(hyper) == (
-        3**(S(1)/6)*z*hyper((), (S(4)/3,), z**S(3)/9)/gamma(S(1)/3) +
-        3**(S(5)/6)*hyper((), (S(2)/3,), z**S(3)/9)/(3*gamma(S(2)/3)))
+        3**Rational(1, 6)*z*hyper((), (Rational(4, 3),), z**3/9)/gamma(Rational(1, 3)) +
+        3**Rational(5, 6)*hyper((), (Rational(2, 3),), z**3/9)/(3*gamma(Rational(2, 3))))
 
     assert isinstance(airybi(z).rewrite(besselj), airybi)
     assert airyai(t).rewrite(besselj) == (
-        sqrt(-t)*(besselj(-S(1)/3, 2*(-t)**(S(3)/2)/3) +
-                  besselj(S(1)/3, 2*(-t)**(S(3)/2)/3))/3)
+        sqrt(-t)*(besselj(Rational(-1, 3), 2*(-t)**Rational(3, 2)/3) +
+                  besselj(Rational(1, 3), 2*(-t)**Rational(3, 2)/3))/3)
     assert airybi(z).rewrite(besseli) == (
-        sqrt(3)*(z*besseli(S(1)/3, 2*z**(S(3)/2)/3)/(z**(S(3)/2))**(S(1)/3) +
-                 (z**(S(3)/2))**(S(1)/3)*besseli(-S(1)/3, 2*z**(S(3)/2)/3))/3)
+        sqrt(3)*(z*besseli(Rational(1, 3), 2*z**Rational(3, 2)/3)/(z**Rational(3, 2))**Rational(1, 3) +
+                 (z**Rational(3, 2))**Rational(1, 3)*besseli(Rational(-1, 3), 2*z**Rational(3, 2)/3))/3)
     assert airybi(p).rewrite(besseli) == (
-        sqrt(3)*sqrt(p)*(besseli(-S(1)/3, 2*p**(S(3)/2)/3) +
-                         besseli(S(1)/3, 2*p**(S(3)/2)/3))/3)
+        sqrt(3)*sqrt(p)*(besseli(Rational(-1, 3), 2*p**Rational(3, 2)/3) +
+                         besseli(Rational(1, 3), 2*p**Rational(3, 2)/3))/3)
 
-    assert expand_func(airybi(2*(3*z**5)**(S(1)/3))) == (
-        sqrt(3)*(1 - (z**5)**(S(1)/3)/z**(S(5)/3))*airyai(2*3**(S(1)/3)*z**(S(5)/3))/2 +
-        (1 + (z**5)**(S(1)/3)/z**(S(5)/3))*airybi(2*3**(S(1)/3)*z**(S(5)/3))/2)
+    assert expand_func(airybi(2*(3*z**5)**Rational(1, 3))) == (
+        sqrt(3)*(1 - (z**5)**Rational(1, 3)/z**Rational(5, 3))*airyai(2*3**Rational(1, 3)*z**Rational(5, 3))/2 +
+        (1 + (z**5)**Rational(1, 3)/z**Rational(5, 3))*airybi(2*3**Rational(1, 3)*z**Rational(5, 3))/2)
 
 
 def test_airyaiprime():
@@ -494,31 +504,31 @@ def test_airyaiprime():
 
     assert isinstance(airyaiprime(z), airyaiprime)
 
-    assert airyaiprime(0) == -3**(S(2)/3)/(3*gamma(S(1)/3))
+    assert airyaiprime(0) == -3**Rational(2, 3)/(3*gamma(Rational(1, 3)))
     assert airyaiprime(oo) == 0
 
     assert diff(airyaiprime(z), z) == z*airyai(z)
 
     assert series(airyaiprime(z), z, 0, 3) == (
-        -3**(S(2)/3)/(3*gamma(S(1)/3)) + 3**(S(1)/3)*z**2/(6*gamma(S(2)/3)) + O(z**3))
+        -3**Rational(2, 3)/(3*gamma(Rational(1, 3))) + 3**Rational(1, 3)*z**2/(6*gamma(Rational(2, 3))) + O(z**3))
 
     assert airyaiprime(z).rewrite(hyper) == (
-        3**(S(1)/3)*z**2*hyper((), (S(5)/3,), z**S(3)/9)/(6*gamma(S(2)/3)) -
-        3**(S(2)/3)*hyper((), (S(1)/3,), z**S(3)/9)/(3*gamma(S(1)/3)))
+        3**Rational(1, 3)*z**2*hyper((), (Rational(5, 3),), z**3/9)/(6*gamma(Rational(2, 3))) -
+        3**Rational(2, 3)*hyper((), (Rational(1, 3),), z**3/9)/(3*gamma(Rational(1, 3))))
 
     assert isinstance(airyaiprime(z).rewrite(besselj), airyaiprime)
     assert airyai(t).rewrite(besselj) == (
-        sqrt(-t)*(besselj(-S(1)/3, 2*(-t)**(S(3)/2)/3) +
-                  besselj(S(1)/3, 2*(-t)**(S(3)/2)/3))/3)
+        sqrt(-t)*(besselj(Rational(-1, 3), 2*(-t)**Rational(3, 2)/3) +
+                  besselj(Rational(1, 3), 2*(-t)**Rational(3, 2)/3))/3)
     assert airyaiprime(z).rewrite(besseli) == (
-        z**2*besseli(S(2)/3, 2*z**(S(3)/2)/3)/(3*(z**(S(3)/2))**(S(2)/3)) -
-        (z**(S(3)/2))**(S(2)/3)*besseli(-S(1)/3, 2*z**(S(3)/2)/3)/3)
+        z**2*besseli(Rational(2, 3), 2*z**Rational(3, 2)/3)/(3*(z**Rational(3, 2))**Rational(2, 3)) -
+        (z**Rational(3, 2))**Rational(2, 3)*besseli(Rational(-1, 3), 2*z**Rational(3, 2)/3)/3)
     assert airyaiprime(p).rewrite(besseli) == (
-        p*(-besseli(-S(2)/3, 2*p**(S(3)/2)/3) + besseli(S(2)/3, 2*p**(S(3)/2)/3))/3)
+        p*(-besseli(Rational(-2, 3), 2*p**Rational(3, 2)/3) + besseli(Rational(2, 3), 2*p**Rational(3, 2)/3))/3)
 
-    assert expand_func(airyaiprime(2*(3*z**5)**(S(1)/3))) == (
-        sqrt(3)*(z**(S(5)/3)/(z**5)**(S(1)/3) - 1)*airybiprime(2*3**(S(1)/3)*z**(S(5)/3))/6 +
-        (z**(S(5)/3)/(z**5)**(S(1)/3) + 1)*airyaiprime(2*3**(S(1)/3)*z**(S(5)/3))/2)
+    assert expand_func(airyaiprime(2*(3*z**5)**Rational(1, 3))) == (
+        sqrt(3)*(z**Rational(5, 3)/(z**5)**Rational(1, 3) - 1)*airybiprime(2*3**Rational(1, 3)*z**Rational(5, 3))/6 +
+        (z**Rational(5, 3)/(z**5)**Rational(1, 3) + 1)*airyaiprime(2*3**Rational(1, 3)*z**Rational(5, 3))/2)
 
 
 def test_airybiprime():
@@ -528,29 +538,70 @@ def test_airybiprime():
 
     assert isinstance(airybiprime(z), airybiprime)
 
-    assert airybiprime(0) == 3**(S(1)/6)/gamma(S(1)/3)
-    assert airybiprime(oo) == oo
+    assert airybiprime(0) == 3**Rational(1, 6)/gamma(Rational(1, 3))
+    assert airybiprime(oo) is oo
     assert airybiprime(-oo) == 0
 
     assert diff(airybiprime(z), z) == z*airybi(z)
 
     assert series(airybiprime(z), z, 0, 3) == (
-        3**(S(1)/6)/gamma(S(1)/3) + 3**(S(5)/6)*z**2/(6*gamma(S(2)/3)) + O(z**3))
+        3**Rational(1, 6)/gamma(Rational(1, 3)) + 3**Rational(5, 6)*z**2/(6*gamma(Rational(2, 3))) + O(z**3))
 
     assert airybiprime(z).rewrite(hyper) == (
-        3**(S(5)/6)*z**2*hyper((), (S(5)/3,), z**S(3)/9)/(6*gamma(S(2)/3)) +
-        3**(S(1)/6)*hyper((), (S(1)/3,), z**S(3)/9)/gamma(S(1)/3))
+        3**Rational(5, 6)*z**2*hyper((), (Rational(5, 3),), z**3/9)/(6*gamma(Rational(2, 3))) +
+        3**Rational(1, 6)*hyper((), (Rational(1, 3),), z**3/9)/gamma(Rational(1, 3)))
 
     assert isinstance(airybiprime(z).rewrite(besselj), airybiprime)
     assert airyai(t).rewrite(besselj) == (
-        sqrt(-t)*(besselj(-S(1)/3, 2*(-t)**(S(3)/2)/3) +
-                  besselj(S(1)/3, 2*(-t)**(S(3)/2)/3))/3)
+        sqrt(-t)*(besselj(Rational(-1, 3), 2*(-t)**Rational(3, 2)/3) +
+                  besselj(Rational(1, 3), 2*(-t)**Rational(3, 2)/3))/3)
     assert airybiprime(z).rewrite(besseli) == (
-        sqrt(3)*(z**2*besseli(S(2)/3, 2*z**(S(3)/2)/3)/(z**(S(3)/2))**(S(2)/3) +
-                 (z**(S(3)/2))**(S(2)/3)*besseli(-S(2)/3, 2*z**(S(3)/2)/3))/3)
+        sqrt(3)*(z**2*besseli(Rational(2, 3), 2*z**Rational(3, 2)/3)/(z**Rational(3, 2))**Rational(2, 3) +
+                 (z**Rational(3, 2))**Rational(2, 3)*besseli(Rational(-2, 3), 2*z**Rational(3, 2)/3))/3)
     assert airybiprime(p).rewrite(besseli) == (
-        sqrt(3)*p*(besseli(-S(2)/3, 2*p**(S(3)/2)/3) + besseli(S(2)/3, 2*p**(S(3)/2)/3))/3)
+        sqrt(3)*p*(besseli(Rational(-2, 3), 2*p**Rational(3, 2)/3) + besseli(Rational(2, 3), 2*p**Rational(3, 2)/3))/3)
 
-    assert expand_func(airybiprime(2*(3*z**5)**(S(1)/3))) == (
-        sqrt(3)*(z**(S(5)/3)/(z**5)**(S(1)/3) - 1)*airyaiprime(2*3**(S(1)/3)*z**(S(5)/3))/2 +
-        (z**(S(5)/3)/(z**5)**(S(1)/3) + 1)*airybiprime(2*3**(S(1)/3)*z**(S(5)/3))/2)
+    assert expand_func(airybiprime(2*(3*z**5)**Rational(1, 3))) == (
+        sqrt(3)*(z**Rational(5, 3)/(z**5)**Rational(1, 3) - 1)*airyaiprime(2*3**Rational(1, 3)*z**Rational(5, 3))/2 +
+        (z**Rational(5, 3)/(z**5)**Rational(1, 3) + 1)*airybiprime(2*3**Rational(1, 3)*z**Rational(5, 3))/2)
+
+
+def test_marcumq():
+    m = Symbol('m')
+    a = Symbol('a')
+    b = Symbol('b')
+
+    assert marcumq(0, 0, 0) == 0
+    assert marcumq(m, 0, b) == uppergamma(m, b**2/2)/gamma(m)
+    assert marcumq(2, 0, 5) == 27*exp(Rational(-25, 2))/2
+    assert marcumq(0, a, 0) == 1 - exp(-a**2/2)
+    assert marcumq(0, pi, 0) == 1 - exp(-pi**2/2)
+    assert marcumq(1, a, a) == S.Half + exp(-a**2)*besseli(0, a**2)/2
+    assert marcumq(2, a, a) == S.Half + exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2)
+
+    assert diff(marcumq(1, a, 3), a) == a*(-marcumq(1, a, 3) + marcumq(2, a, 3))
+    assert diff(marcumq(2, 3, b), b) == -b**2*exp(-b**2/2 - Rational(9, 2))*besseli(1, 3*b)/3
+
+    x = Symbol('x')
+    assert marcumq(2, 3, 4).rewrite(Integral, x=x) == \
+           Integral(x**2*exp(-x**2/2 - Rational(9, 2))*besseli(1, 3*x), (x, 4, oo))/3
+    assert eq([marcumq(5, -2, 3).rewrite(Integral).evalf(10)],
+              [0.7905769565])
+
+    k = Symbol('k')
+    assert marcumq(-3, -5, -7).rewrite(Sum, k=k) == \
+           exp(-37)*Sum((Rational(5, 7))**k*besseli(k, 35), (k, 4, oo))
+    assert eq([marcumq(1, 3, 1).rewrite(Sum).evalf(10)],
+              [0.9891705502])
+
+    assert marcumq(1, a, a, evaluate=False).rewrite(besseli) == S.Half + exp(-a**2)*besseli(0, a**2)/2
+    assert marcumq(2, a, a, evaluate=False).rewrite(besseli) == S.Half + exp(-a**2)*besseli(0, a**2)/2 + \
+           exp(-a**2)*besseli(1, a**2)
+    assert marcumq(3, a, a).rewrite(besseli) == (besseli(1, a**2) + besseli(2, a**2))*exp(-a**2) + \
+           S.Half + exp(-a**2)*besseli(0, a**2)/2
+    assert marcumq(5, 8, 8).rewrite(besseli) == exp(-64)*besseli(0, 64)/2 + \
+           (besseli(4, 64) + besseli(3, 64) + besseli(2, 64) + besseli(1, 64))*exp(-64) + S.Half
+    assert marcumq(m, a, a).rewrite(besseli) == marcumq(m, a, a)
+
+    x = Symbol('x', integer=True)
+    assert marcumq(x, a, a).rewrite(besseli) == marcumq(x, a, a)

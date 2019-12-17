@@ -143,7 +143,6 @@ def _distribute_gens_by_base(base, gens):
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> from sympy.combinatorics.util import _distribute_gens_by_base
     >>> D = DihedralGroup(3)
@@ -211,7 +210,6 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> from sympy.combinatorics.util import _handle_precomputed_bsgs
     >>> D = DihedralGroup(3)
@@ -223,7 +221,7 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
     See Also
     ========
 
-    _orbits_transversals_from_bsgs, distribute_gens_by_base
+    _orbits_transversals_from_bsgs, _distribute_gens_by_base
 
     """
     if strong_gens_distr is None:
@@ -271,7 +269,6 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> from sympy.combinatorics.util import _orbits_transversals_from_bsgs
     >>> from sympy.combinatorics.util import (_orbits_transversals_from_bsgs,
@@ -415,7 +412,6 @@ def _strip(g, base, orbits, transversals):
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> from sympy.combinatorics.permutations import Permutation
     >>> from sympy.combinatorics.util import _strip
@@ -509,7 +505,6 @@ def _strong_gens_from_distr(strong_gens_distr):
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> from sympy.combinatorics.util import (_strong_gens_from_distr,
     ... _distribute_gens_by_base)

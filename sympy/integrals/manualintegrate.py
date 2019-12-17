@@ -22,7 +22,7 @@ from collections import namedtuple, defaultdict
 
 import sympy
 
-from sympy.core.compatibility import reduce, Mapping
+from sympy.core.compatibility import reduce, Mapping, iterable
 from sympy.core.containers import Dict
 from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -32,6 +32,7 @@ from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.core.relational import Eq, Ne
 from sympy.polys.polytools import degree
 from sympy.ntheory.factor_ import divisors
+from sympy.utilities.misc import debug
 
 ZERO = sympy.S.Zero
 
@@ -161,10 +162,10 @@ def manual_subs(expr, *args):
             # that is, x**a = exp(a*y). Replace nontrivial powers of x
             # before subs turns them into `exp(y)**a`, but
             # do not replace x itself yet, to avoid `log(exp(y))`.
-            a = sympy.Wild('a')
-            expr = expr.replace(old.args[0]**(1 + a),
-                sympy.exp((1 + a)*new), exact=True)
-            new_subs.append((old.args[0], sympy.exp(new)))
+            x0 = old.args[0]
+            expr = expr.replace(lambda x: x.is_Pow and x.base == x0,
+                lambda x: sympy.exp(x.exp*new))
+            new_subs.append((x0, sympy.exp(new)))
 
     return expr.subs(list(sequence) + new_subs)
 
@@ -175,11 +176,13 @@ def find_substitutions(integrand, symbol, u_var):
     results = []
 
     def test_subterm(u, u_diff):
+        if u_diff == 0:
+            return False
         substituted = integrand / u_diff
         if symbol not in substituted.free_symbols:
             # replaced everything already
             return False
-
+        debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
         if symbol not in substituted.free_symbols:
@@ -264,6 +267,7 @@ def rewriter(condition, rewrite):
     """Strategy that rewrites an integrand."""
     def _rewriter(integral):
         integrand, symbol = integral
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewrite, symbol))
         if condition(*integral):
             rewritten = rewrite(*integral)
             if rewritten != integrand:
@@ -280,6 +284,7 @@ def proxy_rewriter(condition, rewrite):
     def _proxy_rewriter(criteria):
         criteria, integral = criteria
         integrand, symbol = integral
+        debug("Integral: {} is rewritten with {} on symbol: {} and criteria: {}".format(integrand, rewrite, symbol, criteria))
         args = criteria + list(integral)
         if condition(*args):
             rewritten = rewrite(*args)
@@ -302,7 +307,12 @@ def alternatives(*rules):
     """Strategy that makes an AlternativeRule out of multiple possible results."""
     def _alternatives(integral):
         alts = []
+        count = 0
+        debug("List of Alternative Rules")
         for rule in rules:
+            count = count + 1
+            debug("Rule {}: {}".format(count, rule))
+
             result = rule(integral)
             if (result and not isinstance(result, DontKnowRule) and
                 result != integral and result not in alts):
@@ -487,7 +497,6 @@ def add_rule(integral):
 
 def mul_rule(integral):
     integrand, symbol = integral
-    args = integrand.args
 
     # Constant times function case
     coeff, f = integrand.as_independent(symbol)
@@ -599,6 +608,7 @@ def parts_rule(integral):
     steps = []
     if result:
         u, dv, v, du, v_step = result
+        debug("u : {}, dv : {}, v : {}, du : {}, v_step: {}".format(u, dv, v, du, v_step))
         steps.append(result)
 
         if isinstance(v, sympy.Integral):
@@ -613,6 +623,7 @@ def parts_rule(integral):
 
         # Try cyclic integration by parts a few times
         for _ in range(4):
+            debug("Cyclic integration {} with v: {}, du: {}, integrand: {}".format(_, v, du, integrand))
             coefficient = ((v * du) / integrand).cancel()
             if coefficient == 1:
                 break
@@ -733,16 +744,64 @@ def quadratic_denom_rule(integral):
     a = sympy.Wild('a', exclude=[symbol])
     b = sympy.Wild('b', exclude=[symbol])
     c = sympy.Wild('c', exclude=[symbol])
+
     match = integrand.match(a / (b * symbol ** 2 + c))
 
-    if not match:
-        return
+    if match:
+        a, b, c = match[a], match[b], match[c]
+        if b.is_extended_real and c.is_extended_real:
+            return PiecewiseRule([(ArctanRule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
+                                (ArccothRule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+                                (ArctanhRule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+            ], integrand, symbol)
+        else:
+            return ArctanRule(a, b, c, integrand, symbol)
 
-    a, b, c = match[a], match[b], match[c]
-    return PiecewiseRule([(ArctanRule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
-                          (ArccothRule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
-                          (ArctanhRule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
-    ], integrand, symbol)
+    d = sympy.Wild('d', exclude=[symbol])
+    match2 = integrand.match(a / (b * symbol ** 2 + c * symbol + d))
+    if match2:
+        b, c =  match2[b], match2[c]
+        if b.is_zero:
+            return
+        u = sympy.Dummy('u')
+        u_func = symbol + c/(2*b)
+        integrand2 = integrand.subs(symbol, u - c / (2*b))
+        next_step = integral_steps(integrand2, u)
+        if next_step:
+            return URule(u, u_func, None, next_step, integrand2, symbol)
+        else:
+            return
+    e = sympy.Wild('e', exclude=[symbol])
+    match3 = integrand.match((a* symbol + b) / (c * symbol ** 2 + d * symbol + e))
+    if match3:
+        a, b, c, d, e = match3[a], match3[b], match3[c], match3[d], match3[e]
+        if c.is_zero:
+            return
+        denominator = c * symbol**2 + d * symbol + e
+        const =  a/(2*c)
+        numer1 =  (2*c*symbol+d)
+        numer2 = - const*d + b
+        u = sympy.Dummy('u')
+        step1 = URule(u,
+                      denominator,
+                      const,
+                      integral_steps(u**(-1), u),
+                      integrand,
+                      symbol)
+        if const != 1:
+            step1 = ConstantTimesRule(const,
+                                      numer1/denominator,
+                                      step1,
+                                      const*numer1/denominator,
+                                      symbol)
+        if numer2.is_zero:
+            return step1
+        step2 = integral_steps(numer2/denominator, symbol)
+        substeps = AddRule([step1, step2], integrand, symbol)
+        rewriten = const*numer1/denominator+numer2/denominator
+        return RewriteRule(rewriten, substeps, integrand, symbol)
+
+    return
 
 def root_mul_rule(integral):
     integrand, symbol = integral
@@ -1026,10 +1085,15 @@ def substitution_rule(integral):
 
     u_var = sympy.Dummy("u")
     substitutions = find_substitutions(integrand, symbol, u_var)
+    count = 0
     if substitutions:
+        debug("List of Substitution Rules")
         ways = []
         for u_func, c, substituted in substitutions:
             subrule = integral_steps(substituted, u_var)
+            count = count + 1
+            debug("Rule {}: {}".format(count, subrule))
+
             if contains_dont_know(subrule):
                 continue
 
@@ -1480,11 +1544,15 @@ def eval_shi(a, b, integrand, symbol):
 
 @evaluates(ErfRule)
 def eval_erf(a, b, c, integrand, symbol):
-    return Piecewise(
-        (sympy.sqrt(sympy.pi/(-a))/2 * sympy.exp(c - b**2/(4*a)) *
-            sympy.erf((-2*a*symbol - b)/(2*sympy.sqrt(-a))), a < 0),
-        (sympy.sqrt(sympy.pi/a)/2 * sympy.exp(c - b**2/(4*a)) *
-            sympy.erfi((2*a*symbol + b)/(2*sympy.sqrt(a))), True))
+    if a.is_extended_real:
+        return Piecewise(
+            (sympy.sqrt(sympy.pi/(-a))/2 * sympy.exp(c - b**2/(4*a)) *
+                sympy.erf((-2*a*symbol - b)/(2*sympy.sqrt(-a))), a < 0),
+            (sympy.sqrt(sympy.pi/a)/2 * sympy.exp(c - b**2/(4*a)) *
+                sympy.erfi((2*a*symbol + b)/(2*sympy.sqrt(a))), True))
+    else:
+        return sympy.sqrt(sympy.pi/a)/2 * sympy.exp(c - b**2/(4*a)) * \
+                sympy.erfi((2*a*symbol + b)/(2*sympy.sqrt(a)))
 
 @evaluates(FresnelCRule)
 def eval_fresnelc(a, b, c, integrand, symbol):
@@ -1535,7 +1603,7 @@ def manualintegrate(f, var):
     Compute indefinite integral of a single variable using an algorithm that
     resembles what a student would do by hand.
 
-    Unlike ``integrate``, var can only be a single symbol.
+    Unlike :func:`~.integrate`, var can only be a single symbol.
 
     Examples
     ========

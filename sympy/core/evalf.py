@@ -324,7 +324,10 @@ def get_integer_part(expr, no, options, return_ints=False):
         gap = fastlog(iim) - iim_acc
     else:
         # ... or maybe the expression was exactly zero
-        return None, None, None, None
+        if return_ints:
+            return 0, 0
+        else:
+            return None, None, None, None
 
     margin = 10
 
@@ -1185,7 +1188,7 @@ def evalf_sum(expr, prec, options):
     limits = expr.limits
     if len(limits) != 1 or len(limits[0]) != 3:
         raise NotImplementedError
-    if func is S.Zero:
+    if func.is_zero:
         return None, None, prec, None
     prec2 = prec + 10
     try:
@@ -1445,6 +1448,8 @@ class EvalfMixin(object):
             v = self._eval_evalf(prec)
             if v is None:
                 return self
+            elif not v.is_number:
+                return v
             try:
                 # If the result is numerical, normalize it
                 result = evalf(v, prec, options)
@@ -1534,4 +1539,6 @@ def N(x, n=15, **options):
     1.291
 
     """
-    return sympify(x).evalf(n, **options)
+    # by using rational=True, any evaluation of a string
+    # will be done using exact values for the Floats
+    return sympify(x, rational=True).evalf(n, **options)

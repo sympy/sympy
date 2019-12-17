@@ -9,12 +9,8 @@ if not pyglet_gl or not pyglet_window:
     disabled = True
 
 
-from sympy import symbols, sin, cos
+from sympy import symbols, sin, cos, log
 x, y, z = symbols('x, y, z')
-
-
-def test_import():
-    from sympy.plotting.pygletplot import PygletPlot
 
 
 def test_plot_2d():

@@ -405,7 +405,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         # y = d1*f1 for f1 = 1 and any d1 in Const(k) = k.
 
         f = [Poly(1, t, field=True)]  # r = 1
-        B = Matrix([[qi.TC() for qi in Q] + [S(0)]])
+        B = Matrix([[qi.TC() for qi in Q] + [S.Zero]])
         # The condition for solvability is
         # B*Matrix([c1, ..., cm, d1]) == 0
         # There are no constraints on d1.
@@ -796,7 +796,7 @@ def limited_integrate(fa, fd, G, DE):
     Solves the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
     """
     fa, fd = fa*Poly(1/fd.LC(), DE.t), fd.monic()
-    # interpretting limited integration problem as a
+    # interpreting limited integration problem as a
     # parametric Risch DE problem
     Fa = Poly(0, DE.t)
     Fd = Poly(1, DE.t)
@@ -1092,7 +1092,6 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     is_log_deriv_k_t_radical_in_field, is_deriv_k
 
     """
-    H = []
     if Df:
         dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)).cancel(fd**2,
             include=True)
@@ -1247,7 +1246,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
             return None
         # Note: if residueterms = [], returns (1, 1)
         # f had better be 0 in that case.
-        n = reduce(ilcm, [i.as_numer_denom()[1] for _, i in residueterms], S(1))
+        n = reduce(ilcm, [i.as_numer_denom()[1] for _, i in residueterms], S.One)
         u = Mul(*[Pow(i, j*n) for i, j in residueterms])
         return (n, u)
 
@@ -1264,7 +1263,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         "'base', 'auto'}, not %s" % case)
 
     common_denom = reduce(ilcm, [i.as_numer_denom()[1] for i in [j for _, j in
-        residueterms]] + [n], S(1))
+        residueterms]] + [n], S.One)
     residueterms = [(i, j*common_denom) for i, j in residueterms]
     m = common_denom//n
     if common_denom != n*m:  # Verify exact division

@@ -5,7 +5,7 @@ from sympy import (
     Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
     AccumBounds, Matrix, zeros, ZeroMatrix)
 from sympy.core.basic import _aresame
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL
 from sympy.abc import a, x, y, z
 
 
@@ -205,9 +205,9 @@ def test_mul():
     assert (x*y/z).subs(y/z, a) == a*x
     assert (x*y/z).subs(x/z, 1/a) == y/a
     assert (x*y/z).subs(x, 1/a) == y/(z*a)
-    assert (2*x*y).subs(5*x*y, z) != 2*z/5
+    assert (2*x*y).subs(5*x*y, z) != z*Rational(2, 5)
     assert (x*y*A).subs(x*y, a) == a*A
-    assert (x**2*y**(3*x/2)).subs(x*y**(x/2), 2) == 4*y**(x/2)
+    assert (x**2*y**(x*Rational(3, 2))).subs(x*y**(x/2), 2) == 4*y**(x/2)
     assert (x*exp(x*2)).subs(x*exp(x), 2) == 2*exp(x)
     assert ((x**(2*y))**3).subs(x**y, 2) == 64
     assert (x*A*B).subs(x*A, y) == y*B
@@ -220,8 +220,8 @@ def test_mul():
     assert (b*A**3/(a**3*c**3)).subs(a**4*c**3*A**3/b**4, z) == \
         b*A**3/(a**3*c**3)
     assert (6*x).subs(2*x, y) == 3*y
-    assert (y*exp(3*x/2)).subs(y*exp(x), 2) == 2*exp(x/2)
-    assert (y*exp(3*x/2)).subs(y*exp(x), 2) == 2*exp(x/2)
+    assert (y*exp(x*Rational(3, 2))).subs(y*exp(x), 2) == 2*exp(x/2)
+    assert (y*exp(x*Rational(3, 2))).subs(y*exp(x), 2) == 2*exp(x/2)
     assert (A**2*B*A**2*B*A**2).subs(A*B*A, C) == A*C**2*A
     assert (x*A**3).subs(x*A, y) == y*A**2
     assert (x**2*A**3).subs(x*A, y) == y**2*A
@@ -246,7 +246,7 @@ def test_mul():
     assert (-2*x**3/9).subs(-x/3, z) == -2*x*z**2
     assert (-2*x**3/9).subs(-2*x, z) == z*x**2/9
     assert (-2*x**3/9).subs(2*x, z) == -z*x**2/9
-    assert (2*(3*x/5/7)**2).subs(3*x/5, z) == 2*(S(1)/7)**2*z**2
+    assert (2*(3*x/5/7)**2).subs(3*x/5, z) == 2*(Rational(1, 7))**2*z**2
     assert (4*x).subs(-2*x, z) == 4*x  # try keep subs literal
 
 
@@ -322,10 +322,10 @@ def test_subs_noncommutative():
     for p in range(1, 5):
         for k in range(10):
             assert (y * x**k).subs(x**p, L) == y * L**(k//p) * x**(k % p)
-    assert (x**(S(3)/2)).subs(x**(S(1)/2), L) == x**(S(3)/2)
-    assert (x**(S(1)/2)).subs(x**(S(1)/2), L) == L
-    assert (x**(-S(1)/2)).subs(x**(S(1)/2), L) == x**(-S(1)/2)
-    assert (x**(-S(1)/2)).subs(x**(-S(1)/2), L) == L
+    assert (x**Rational(3, 2)).subs(x**S.Half, L) == x**Rational(3, 2)
+    assert (x**S.Half).subs(x**S.Half, L) == L
+    assert (x**Rational(-1, 2)).subs(x**S.Half, L) == x**Rational(-1, 2)
+    assert (x**Rational(-1, 2)).subs(x**Rational(-1, 2), L) == L
 
     assert (x**(2*someint)).subs(x**someint, L) == L**2
     assert (x**(2*someint + 3)).subs(x**someint, L) == L**2*x**3
@@ -421,15 +421,15 @@ def test_division():
     assert (1/a).subs(a, c) == 1/c
     assert (1/a**2).subs(a, c) == 1/c**2
     assert (1/a**2).subs(a, -2) == Rational(1, 4)
-    assert (-(1/a**2)).subs(a, -2) == -Rational(1, 4)
+    assert (-(1/a**2)).subs(a, -2) == Rational(-1, 4)
 
     assert (1/x).subs(x, z) == 1/z
     assert (1/x**2).subs(x, z) == 1/z**2
     assert (1/x**2).subs(x, -2) == Rational(1, 4)
-    assert (-(1/x**2)).subs(x, -2) == -Rational(1, 4)
+    assert (-(1/x**2)).subs(x, -2) == Rational(-1, 4)
 
     #issue 5360
-    assert (1/x).subs(x, 0) == 1/S(0)
+    assert (1/x).subs(x, 0) == 1/S.Zero
 
 
 def test_add():
@@ -608,7 +608,7 @@ def test_issue_6079():
     assert not _aresame(x + 2, x + 2.0)
     assert not _aresame(Basic(cos, 1), Basic(cos, 1.))
     assert _aresame(cos, cos)
-    assert not _aresame(1, S(1))
+    assert not _aresame(1, S.One)
     assert not _aresame(x, symbols('x', positive=True))
 
 
@@ -708,11 +708,11 @@ def test_issue_2877():
 
 def test_issue_5910():
     t = Symbol('t')
-    assert (1/(1 - t)).subs(t, 1) == zoo
+    assert (1/(1 - t)).subs(t, 1) is zoo
     n = t
     d = t - 1
-    assert (n/d).subs(t, 1) == zoo
-    assert (-n/-d).subs(t, 1) == zoo
+    assert (n/d).subs(t, 1) is zoo
+    assert (-n/-d).subs(t, 1) is zoo
 
 
 def test_issue_5217():
@@ -824,10 +824,10 @@ def test_issue_6976():
     assert (x**4 + x**3 + x**2 + x + sqrt(x)).subs(x**2, y) == \
         sqrt(x) + x**3 + x + y**2 + y
     assert x.subs(x**3, y) == x
-    assert x.subs(x**(S(1)/3), y) == y**3
+    assert x.subs(x**Rational(1, 3), y) == y**3
 
     # More substitutions are possible with nonnegative symbols
     x, y = symbols('x y', nonnegative=True)
     assert (x**4 + x**3 + x**2 + x + sqrt(x)).subs(x**2, y) == \
-        y**(S(1)/4) + y**(S(3)/2) + sqrt(y) + y**2 + y
-    assert x.subs(x**3, y) == y**(S(1)/3)
+        y**Rational(1, 4) + y**Rational(3, 2) + sqrt(y) + y**2 + y
+    assert x.subs(x**3, y) == y**Rational(1, 3)

@@ -3,7 +3,7 @@ import itertools
 from functools import reduce
 from collections import defaultdict
 
-from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagonalizeVector
+from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagMatrix
 from sympy.combinatorics import Permutation
 from sympy.core.basic import Basic
 from sympy.core.compatibility import accumulate, default_sort_key
@@ -137,7 +137,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
             #
             # Examples:
             #
-            # * `A_ij b_j0 C_jk` ===> `A*DiagonalizeVector(b)*C`
+            # * `A_ij b_j0 C_jk` ===> `A*DiagMatrix(b)*C`
             #
             # Care for:
             # - matrix being diagonalized (i.e. `A_ii`)
@@ -231,7 +231,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
     def _get_index_shifts(expr):
         """
         Get the mapping of indices at the positions before the contraction
-        occures.
+        occurs.
 
         Examples
         ========
@@ -541,7 +541,7 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         from sympy.combinatorics import Permutation
         expr = _sympify(expr)
         permutation = Permutation(permutation)
-        plist = permutation.args[0]
+        plist = permutation.array_form
         if plist == sorted(plist):
             return expr
         obj = Basic.__new__(cls, expr, permutation)
@@ -571,7 +571,6 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         >>> from sympy.codegen.array_utils import (CodegenArrayPermuteDims, CodegenArrayTensorProduct, nest_permutation)
         >>> from sympy import MatrixSymbol
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
 
         >>> M = MatrixSymbol("M", 3, 3)
         >>> N = MatrixSymbol("N", 3, 3)
@@ -784,7 +783,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
             for arg_ind, arg_pos in tuple_links:
                 mat = args[arg_ind]
                 if 1 in mat.shape and mat.shape != (1, 1):
-                    args_updates[arg_ind] = DiagonalizeVector(mat)
+                    args_updates[arg_ind] = DiagMatrix(mat)
                     last = arg_ind
                 else:
                     expression_is_square = True
@@ -1055,7 +1054,6 @@ def parse_indexed_expression(expr, first_indices=None):
     >>> from sympy.codegen.array_utils import parse_indexed_expression
     >>> from sympy import MatrixSymbol, Sum, symbols
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
 
     >>> i, j, k, d = symbols("i j k d")
     >>> M = MatrixSymbol("M", d, d)
@@ -1336,7 +1334,7 @@ def _recognize_matrix_expression(expr):
     elif isinstance(expr, (MatrixSymbol, IndexedBase)):
         return expr
     elif isinstance(expr, CodegenArrayPermuteDims):
-        if expr.permutation.args[0] == [1, 0]:
+        if expr.permutation.array_form == [1, 0]:
             return _RecognizeMatOp(Transpose, [_recognize_matrix_expression(expr.expr)])
         elif isinstance(expr.expr, CodegenArrayTensorProduct):
             ranks = expr.expr.subranks
@@ -1389,7 +1387,6 @@ def _suppress_trivial_dims_in_tensor_product(mat_list):
     # That is, add contractions over trivial dimensions:
     mat_11 = []
     mat_k1 = []
-    last_dim = mat_list[0].shape[0]
     for mat in mat_list:
         if mat.shape == (1, 1):
             mat_11.append(mat)

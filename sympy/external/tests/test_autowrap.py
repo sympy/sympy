@@ -143,6 +143,7 @@ def runtest_issue_10274(language, backend):
 
 
 def runtest_issue_15337(language, backend):
+    has_module('numpy')
     # NOTE : autowrap was originally designed to only accept an iterable for
     # the kwarg "helpers", but in issue 10274 the user mistakenly thought that
     # if there was only a single helper it did not need to be passed via an
@@ -256,7 +257,6 @@ def test_autowrap_custom_printer():
     from sympy import pi
     from sympy.utilities.codegen import C99CodeGen
     from sympy.printing.ccode import C99CodePrinter
-    from sympy.functions.elementary.exponential import exp
 
     class PiPrinter(C99CodePrinter):
         def _print_Pi(self, expr):

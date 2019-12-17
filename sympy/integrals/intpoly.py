@@ -18,12 +18,12 @@ from __future__ import print_function, division
 
 from functools import cmp_to_key
 
-from sympy.core import S, diff, Expr, Symbol
-from sympy.simplify.simplify import nsimplify
-from sympy.geometry import Segment2D, Polygon, Point, Point2D
 from sympy.abc import x, y, z
-
+from sympy.core import S, diff, Expr, Symbol
+from sympy.core.sympify import _sympify
+from sympy.geometry import Segment2D, Polygon, Point, Point2D
 from sympy.polys.polytools import LC, gcd_list, degree_list
+from sympy.simplify.simplify import nsimplify
 
 
 def polytope_integrate(poly, expr=None, **kwargs):
@@ -115,8 +115,9 @@ def polytope_integrate(poly, expr=None, **kwargs):
             return result_dict
 
         for poly in expr:
+            poly = _sympify(poly)
             if poly not in result:
-                if poly is S.Zero:
+                if poly.is_zero:
                     result[S.Zero] = S.Zero
                     continue
                 integral_value = S.Zero
@@ -136,7 +137,7 @@ def polytope_integrate(poly, expr=None, **kwargs):
 
 
 def strip(monom):
-    if monom == S.Zero:
+    if monom.is_zero:
         return 0, 0
     elif monom.is_number:
         return monom, 1
@@ -199,7 +200,7 @@ def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
                 #  (term, x_degree, y_degree, z_degree, value over boundary)
                 expr, x_d, y_d, z_d, z_index, y_index, x_index, _ = monom
                 degree = x_d + y_d + z_d
-                if b is S.Zero:
+                if b.is_zero:
                     value_over_face = S.Zero
                 else:
                     value_over_face = \
@@ -220,7 +221,7 @@ def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
             facet_count = 0
             for i, facet in enumerate(facets):
                 hp = hp_params[i]
-                if hp[1] == S.Zero:
+                if hp[1].is_zero:
                     continue
                 pi = polygon_integrate(facet, hp, i, facets, vertices, expr, deg)
                 poly_contribute += pi *\
@@ -275,7 +276,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
                 m, x_d, y_d, _ = monom
                 value = result.get(m, None)
                 degree = S.Zero
-                if b is S.Zero:
+                if b.is_zero:
                     value_over_boundary = S.Zero
                 else:
                     degree = x_d + y_d
@@ -340,7 +341,7 @@ def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
     -25
     """
     expr = S(expr)
-    if expr == S.Zero:
+    if expr.is_zero:
         return S.Zero
     result = S.Zero
     x0 = vertices[facet[0]]
@@ -406,7 +407,8 @@ def lineseg_integrate(polygon, index, line_seg, expr, degree):
     >>> lineseg_integrate(polygon, 0, line_seg, 1, 0)
     5
     """
-    if expr == S.Zero:
+    expr = _sympify(expr)
+    if expr.is_zero:
         return S.Zero
     result = S.Zero
     x0 = line_seg[0]
@@ -457,7 +459,8 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     >>> integration_reduction(facets, 0, a, b, 1, (x, y), 0)
     5
     """
-    if expr == S.Zero:
+    expr = _sympify(expr)
+    if expr.is_zero:
         return expr
 
     value = S.Zero
@@ -743,7 +746,7 @@ def hyperplane_parameters(poly, vertices=None):
             normal = cross_product(v1, v2, v3)
             b = sum([normal[j] * v1[j] for j in range(0, 3)])
             fac = gcd_list(normal)
-            if fac is S.Zero:
+            if fac.is_zero:
                 fac = 1
             normal = [j / fac for j in normal]
             b = b / fac
@@ -820,9 +823,9 @@ def best_origin(a, b, lineseg, expr):
         ls : Line segment
         """
         p, q = ls.points
-        if p.y == S.Zero:
+        if p.y.is_zero:
             return tuple(p)
-        elif q.y == S.Zero:
+        elif q.y.is_zero:
             return tuple(q)
         elif p.y/q.y < S.Zero:
             return p.y * (p.x - q.x)/(q.y - p.y) + p.x, S.Zero
@@ -837,9 +840,9 @@ def best_origin(a, b, lineseg, expr):
         ls : Line segment
         """
         p, q = ls.points
-        if p.x == S.Zero:
+        if p.x.is_zero:
             return tuple(p)
-        elif q.x == S.Zero:
+        elif q.x.is_zero:
             return tuple(q)
         elif p.x/q.x < S.Zero:
             return S.Zero, p.x * (p.y - q.y)/(q.x - p.x) + p.y
@@ -855,12 +858,12 @@ def best_origin(a, b, lineseg, expr):
     if len(gens) > 1:
         # Special case for vertical and horizontal lines
         if len(gens) == 2:
-            if a[0] == S.Zero:
+            if a[0] == 0:
                 if y_axis_cut(lineseg):
                     return S.Zero, b/a[1]
                 else:
                     return a1, b1
-            elif a[1] == S.Zero:
+            elif a[1] == 0:
                 if x_axis_cut(lineseg):
                     return b/a[0], S.Zero
                 else:
@@ -1014,7 +1017,7 @@ def point_sort(poly, normal=None, clockwise=True):
     if n < 2:
         return list(pts)
 
-    order = S(1) if clockwise else S(-1)
+    order = S.One if clockwise else S.NegativeOne
     dim = len(pts[0])
     if dim == 2:
         center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
@@ -1027,18 +1030,18 @@ def point_sort(poly, normal=None, clockwise=True):
     def compare(a, b):
         if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
             return -order
-        elif a.x - center.x < S.Zero and b.x - center.x >= S.Zero:
+        elif a.x - center.x < 0 and b.x - center.x >= 0:
             return order
-        elif a.x - center.x == S.Zero and b.x - center.x == S.Zero:
-            if a.y - center.y >= S.Zero or b.y - center.y >= S.Zero:
+        elif a.x - center.x == 0 and b.x - center.x == 0:
+            if a.y - center.y >= 0 or b.y - center.y >= 0:
                 return -order if a.y > b.y else order
             return -order if b.y > a.y else order
 
         det = (a.x - center.x) * (b.y - center.y) -\
               (b.x - center.x) * (a.y - center.y)
-        if det < S.Zero:
+        if det < 0:
             return -order
-        elif det > S.Zero:
+        elif det > 0:
             return order
 
         first = (a.x - center.x) * (a.x - center.x) +\
@@ -1050,9 +1053,9 @@ def point_sort(poly, normal=None, clockwise=True):
     def compare3d(a, b):
         det = cross_product(center, a, b)
         dot_product = sum([det[i] * normal[i] for i in range(0, 3)])
-        if dot_product < S.Zero:
+        if dot_product < 0:
             return -order
-        elif dot_product > S.Zero:
+        elif dot_product > 0:
             return order
 
     return sorted(pts, key=cmp_to_key(compare if dim==2 else compare3d))
@@ -1074,7 +1077,7 @@ def norm(point):
     >>> norm(Point(2, 7))
     sqrt(53)
     """
-    half = S(1)/2
+    half = S.Half
     if isinstance(point, (list, tuple)):
         return sum([coord ** 2 for coord in point]) ** half
     elif isinstance(point, Point):

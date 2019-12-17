@@ -1,14 +1,16 @@
 from __future__ import print_function, division
 
+from sympy import sqrt, log, exp, FallingFactorial
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
-        characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
-        sampling_density, moment_generating_function)
-from sympy import sqrt, log, Piecewise, Symbol, Eq, Lambda, exp
+                 characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
+                 sampling_density, moment_generating_function, quantile)
 
-__all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
-        'sample_iter', 'variance', 'std', 'skewness', 'covariance',
-        'dependent', 'independent', 'random_symbols', 'correlation',
-        'moment', 'cmoment', 'sampling_density', 'moment_generating_function']
+__all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
+        'characteristic_function', 'pspace', 'sample_iter', 'variance', 'std',
+        'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy',
+        'independent', 'random_symbols', 'correlation', 'factorial_moment',
+        'moment', 'cmoment', 'sampling_density', 'moment_generating_function',
+        'smoment', 'quantile']
 
 
 
@@ -90,7 +92,7 @@ def entropy(expr, condition=None, **kwargs):
     b: base of the logarithm, optional
        By default, it is taken as Euler's number
 
-    Retruns
+    Returns
     =======
 
     result : Entropy of the expression, a constant
@@ -116,8 +118,8 @@ def entropy(expr, condition=None, **kwargs):
     """
     pdf = density(expr, condition, **kwargs)
     base = kwargs.get('b', exp(1))
-    if isinstance(pdf, dict):
-            return sum([-prob*log(prob, base) for prob in pdf.values()])
+    if hasattr(pdf, 'dict'):
+            return sum([-prob*log(prob, base) for prob in pdf.dict.values()])
     return expectation(-log(pdf(expr), base))
 
 def covariance(X, Y, condition=None, **kwargs):
@@ -206,7 +208,7 @@ def cmoment(X, n, condition=None, **kwargs):
 def smoment(X, n, condition=None, **kwargs):
     """
     Return the nth Standardized moment of a random expression i.e.
-    E( ((X - mu)/sigma(X))**n )
+    E(((X - mu)/sigma(X))**n)
 
     Examples
     ========
@@ -227,12 +229,18 @@ def smoment(X, n, condition=None, **kwargs):
 
 def skewness(X, condition=None, **kwargs):
     """
-    Measure of the asymmetry of the probability distribution
+    Measure of the asymmetry of the probability distribution.
 
     Positive skew indicates that most of the values lie to the right of
-    the mean
+    the mean.
 
-    skewness(X) = E( ((X - E(X))/sigma)**3 )
+    skewness(X) = E(((X - E(X))/sigma)**3)
+
+    Parameters
+    ==========
+
+    condition : Expr containing RandomSymbols
+            A conditional expression. skewness(X, X>0) is skewness of X given X > 0
 
     Examples
     ========
@@ -242,12 +250,94 @@ def skewness(X, condition=None, **kwargs):
     >>> X = Normal('X', 0, 1)
     >>> skewness(X)
     0
+    >>> skewness(X, X > 0) # find skewness given X > 0
+    (-sqrt(2)/sqrt(pi) + 4*sqrt(2)/pi**(3/2))/(1 - 2/pi)**(3/2)
+
     >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
     >>> Y = Exponential('Y', rate)
     >>> skewness(Y)
     2
     """
-    return smoment(X, 3, condition, **kwargs)
+    return smoment(X, 3, condition=condition, **kwargs)
+
+def kurtosis(X, condition=None, **kwargs):
+    """
+    Characterizes the tails/outliers of a probability distribution.
+
+    Kurtosis of any univariate normal distribution is 3. Kurtosis less than
+    3 means that the distribution produces fewer and less extreme outliers
+    than the normal distribution.
+
+    kurtosis(X) = E(((X - E(X))/sigma)**4)
+
+    Parameters
+    ==========
+
+    condition : Expr containing RandomSymbols
+            A conditional expression. kurtosis(X, X>0) is kurtosis of X given X > 0
+
+    Examples
+    ========
+
+    >>> from sympy.stats import kurtosis, Exponential, Normal
+    >>> from sympy import Symbol
+    >>> X = Normal('X', 0, 1)
+    >>> kurtosis(X)
+    3
+    >>> kurtosis(X, X > 0) # find kurtosis given X > 0
+    (-4/pi - 12/pi**2 + 3)/(1 - 2/pi)**2
+
+    >>> rate = Symbol('lamda', positive=True, real=True, finite=True)
+    >>> Y = Exponential('Y', rate)
+    >>> kurtosis(Y)
+    9
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Kurtosis
+    .. [2] http://mathworld.wolfram.com/Kurtosis.html
+    """
+    return smoment(X, 4, condition=condition, **kwargs)
+
+
+def factorial_moment(X, n, condition=None, **kwargs):
+    """
+    The factorial moment is a mathematical quantity defined as the expectation
+    or average of the falling factorial of a random variable.
+
+    factorial_moment(X, n) = E(X*(X - 1)*(X - 2)*...*(X - n + 1))
+
+    Parameters
+    ==========
+
+    n: A natural number, n-th factorial moment.
+
+    condition : Expr containing RandomSymbols
+            A conditional expression.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import factorial_moment, Poisson, Binomial
+    >>> from sympy import Symbol, S
+    >>> lamda = Symbol('lamda')
+    >>> X = Poisson('X', lamda)
+    >>> factorial_moment(X, 2)
+    lamda**2
+    >>> Y = Binomial('Y', 2, S.Half)
+    >>> factorial_moment(Y, 2)
+    1/2
+    >>> factorial_moment(Y, 2, Y > 1) # find factorial moment for Y > 1
+    2
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Factorial_moment
+    .. [2] http://mathworld.wolfram.com/FactorialMoment.html
+    """
+    return expectation(FallingFactorial(X, n), condition=condition, **kwargs)
 
 
 P = probability

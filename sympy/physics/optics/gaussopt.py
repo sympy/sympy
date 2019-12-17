@@ -43,7 +43,7 @@ __all__ = [
 ]
 
 
-from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
+from sympy import (atan2, Expr, I, im, Matrix, pi, re, sqrt, sympify,
     together)
 from sympy.utilities.misc import filldedent
 
@@ -720,8 +720,8 @@ def geometric_conj_ab(a, b):
     a*b/(a + b)
     """
     a, b = map(sympify, (a, b))
-    if abs(a) == oo or abs(b) == oo:
-        return a if abs(b) == oo else b
+    if a.is_infinite or b.is_infinite:
+        return a if b.is_infinite else b
     else:
         return a*b/(a + b)
 

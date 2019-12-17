@@ -10,7 +10,7 @@ from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (ordered, range, with_metaclass,
     as_int)
-from sympy.core.function import Application, Derivative, count_ops
+from sympy.core.function import Application, Derivative
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
@@ -37,6 +37,7 @@ def as_Boolean(e):
     Traceback (most recent call last):
     ...
     TypeError: expecting bool or Boolean, not `2`.
+
     """
     from sympy.core.symbol import Symbol
     if e == True:
@@ -106,6 +107,7 @@ class Boolean(Basic):
         False
         >>> Not(And(A, Not(A))).equals(Or(B, Not(B)))
         False
+
         """
         from sympy.logic.inference import satisfiable
         from sympy.core.relational import Relational
@@ -129,13 +131,14 @@ class Boolean(Basic):
         >>> from sympy import Symbol, Eq, Or, And
         >>> x = Symbol('x', real=True)
         >>> Eq(x, 0).as_set()
-        {0}
+        FiniteSet(0)
         >>> (x > 0).as_set()
         Interval.open(0, oo)
         >>> And(-2 < x, x < 2).as_set()
         Interval.open(-2, 2)
         >>> Or(x < -2, 2 < x).as_set()
         Union(Interval.open(-oo, -2), Interval.open(2, oo))
+
         """
         from sympy.calculus.util import periodicity
         from sympy.core.relational import Relational
@@ -307,6 +310,7 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
 
     See Also
     ========
+
     sympy.logic.boolalg.BooleanFalse
 
     """
@@ -331,7 +335,8 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
 
         >>> from sympy import true
         >>> true.as_set()
-        UniversalSet()
+        UniversalSet
+
         """
         return S.UniversalSet
 
@@ -348,6 +353,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
 
     Notes
     ======
+
     See note in :py:class`sympy.logic.boolalg.BooleanTrue`
 
     Examples
@@ -374,6 +380,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
 
     See Also
     ========
+
     sympy.logic.boolalg.BooleanTrue
 
     """
@@ -398,7 +405,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
 
         >>> from sympy import false
         >>> false.as_set()
-        EmptySet()
+        EmptySet
         """
         return S.EmptySet
 
@@ -421,15 +428,14 @@ class BooleanFunction(Application, Boolean):
     """
     is_Boolean = True
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
-        rv = self.func(*[a._eval_simplify(ratio=ratio, measure=measure,
-                                          rational=rational, inverse=inverse)
-                         for a in self.args])
+    def _eval_simplify(self, **kwargs):
+        rv = self.func(*[
+            a._eval_simplify(**kwargs) for a in self.args])
         return simplify_logic(rv)
 
-    def simplify(self, ratio=1.7, measure=count_ops, rational=False,
-                 inverse=False):
-        return self._eval_simplify(ratio, measure, rational, inverse)
+    def simplify(self, **kwargs):
+        from sympy.simplify.simplify import simplify
+        return simplify(self, **kwargs)
 
     # /// drop when Py2 is no longer supported
     def __lt__(self, other):
@@ -538,6 +544,7 @@ class BooleanFunction(Application, Boolean):
             the resulting value is S.true. Default is None. If replacementvalue
             is None and dominatingvalue is not None,
             replacementvalue = dominatingvalue
+
         """
         from sympy.core.relational import Relational, _canonical
         if replacementvalue is None and dominatingvalue is not None:
@@ -548,7 +555,7 @@ class BooleanFunction(Application, Boolean):
                            binary=True)
         if len(Rel) <= 1:
             return rv
-        Rel, nonRealRel = sift(rv.args, lambda i: all(s.is_real is not False
+        Rel, nonRealRel = sift(Rel, lambda i: all(s.is_real is not False
                                                       for s in i.free_symbols),
                                binary=True)
         Rel = [i.canonical for i in Rel]
@@ -672,14 +679,34 @@ class And(LatticeOp, BooleanFunction):
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_subs(self, old, new):
+        args = []
+        bad = None
+        for i in self.args:
+            try:
+                i = i.subs(old, new)
+            except TypeError:
+                # store TypeError
+                if bad is None:
+                    bad = i
+                continue
+            if i == False:
+                return S.false
+            elif i != True:
+                args.append(i)
+        if bad is not None:
+            # let it raise
+            bad.subs(old, new)
+        return self.func(*args)
+
+    def _eval_simplify(self, **kwargs):
         from sympy.core.relational import Equality, Relational
         from sympy.solvers.solveset import linear_coeffs
         # standard simplify
-        rv = super(And, self)._eval_simplify(
-            ratio, measure, rational, inverse)
+        rv = super(And, self)._eval_simplify(**kwargs)
         if not isinstance(rv, And):
             return rv
+
         # simplify args that are equalities involving
         # symbols so x == 0 & x == y -> x==0 & y == 0
         Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational),
@@ -689,6 +716,8 @@ class And(LatticeOp, BooleanFunction):
         eqs, other = sift(Rel, lambda i: isinstance(i, Equality), binary=True)
         if not eqs:
             return rv
+
+        measure, ratio = kwargs['measure'], kwargs['ratio']
         reps = {}
         sifted = {}
         if eqs:
@@ -735,6 +764,9 @@ class And(LatticeOp, BooleanFunction):
     def _eval_as_set(self):
         from sympy.sets.sets import Intersection
         return Intersection(*[arg.as_set() for arg in self.args])
+
+    def _eval_rewrite_as_Nor(self, *args, **kwargs):
+        return Nor(*[Not(arg) for arg in self.args])
 
 
 class Or(LatticeOp, BooleanFunction):
@@ -785,19 +817,41 @@ class Or(LatticeOp, BooleanFunction):
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
 
+    def _eval_subs(self, old, new):
+        args = []
+        bad = None
+        for i in self.args:
+            try:
+                i = i.subs(old, new)
+            except TypeError:
+                # store TypeError
+                if bad is None:
+                    bad = i
+                continue
+            if i == True:
+                return S.true
+            elif i != False:
+                args.append(i)
+        if bad is not None:
+            # let it raise
+            bad.subs(old, new)
+        return self.func(*args)
+
     def _eval_as_set(self):
         from sympy.sets.sets import Union
         return Union(*[arg.as_set() for arg in self.args])
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_rewrite_as_Nand(self, *args, **kwargs):
+        return Nand(*[Not(arg) for arg in self.args])
+
+    def _eval_simplify(self, **kwargs):
         # standard simplify
-        rv = super(Or, self)._eval_simplify(
-            ratio, measure, rational, inverse)
+        rv = super(Or, self)._eval_simplify(**kwargs)
         if not isinstance(rv, Or):
             return rv
         patterns = simplify_patterns_or()
         return self._apply_patternbased_simplification(rv, patterns,
-                                                       measure, S.true)
+            kwargs['measure'], S.true)
 
 
 class Not(BooleanFunction):
@@ -949,7 +1003,7 @@ class Xor(BooleanFunction):
     >>> Xor(True, False, True, False)
     False
     >>> x ^ y
-    Xor(x, y)
+    x ^ y
 
     Notes
     =====
@@ -1024,18 +1078,26 @@ class Xor(BooleanFunction):
                 args.append(Or(*clause))
         return And._to_nnf(*args, simplify=simplify)
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_rewrite_as_Or(self, *args, **kwargs):
+        a = self.args
+        return Or(*[_convert_to_varsSOP(x, self.args)
+                    for x in _get_odd_parity_terms(len(a))])
+
+    def _eval_rewrite_as_And(self, *args, **kwargs):
+        a = self.args
+        return And(*[_convert_to_varsPOS(x, self.args)
+                     for x in _get_even_parity_terms(len(a))])
+
+    def _eval_simplify(self, **kwargs):
         # as standard simplify uses simplify_logic which writes things as
         # And and Or, we only simplify the partial expressions before using
         # patterns
-        rv = self.func(*[a._eval_simplify(ratio=ratio, measure=measure,
-                                          rational=rational, inverse=inverse)
-                       for a in self.args])
+        rv = self.func(*[a._eval_simplify(**kwargs) for a in self.args])
         if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
         patterns = simplify_patterns_xor()
         return self._apply_patternbased_simplification(rv, patterns,
-                                                       measure, None)
+            kwargs['measure'], None)
 
 
 class Nand(BooleanFunction):
@@ -1231,6 +1293,7 @@ class Equivalent(BooleanFunction):
     False
     >>> Equivalent(x, And(x, True))
     True
+
     """
     def __new__(cls, *args, **options):
         from sympy.core.relational import Relational
@@ -1446,6 +1509,7 @@ def distribute_and_over_or(expr):
     >>> from sympy.abc import A, B, C
     >>> distribute_and_over_or(Or(A, And(Not(B), Not(C))))
     (A | ~B) & (A | ~C)
+
     """
     return _distribute((expr, And, Or))
 
@@ -1464,6 +1528,7 @@ def distribute_or_over_and(expr):
     >>> from sympy.abc import A, B, C
     >>> distribute_or_over_and(And(Or(Not(A), B), C))
     (B & C) | (C & ~A)
+
     """
     return _distribute((expr, Or, And))
 
@@ -1507,6 +1572,7 @@ def to_nnf(expr, simplify=True):
     (A | B) & (~C | ~D)
     >>> to_nnf(Equivalent(A >> B, B >> A))
     (A | ~B | (A & ~B)) & (B | ~A | (B & ~A))
+
     """
     if is_nnf(expr, simplify):
         return expr
@@ -1543,7 +1609,9 @@ def to_cnf(expr, simplify=False):
         return expr
 
     expr = eliminate_implications(expr)
-    return distribute_and_over_or(expr)
+    res = distribute_and_over_or(expr)
+
+    return res
 
 
 def to_dnf(expr, simplify=False):
@@ -1584,7 +1652,7 @@ def is_nnf(expr, simplified=True):
     Checks if expr is in Negation Normal Form.
     A logical expression is in Negation Normal Form (NNF) if it
     contains only And, Or and Not, and Not is applied only to literals.
-    If simpified is True, checks if result contains no redundant clauses.
+    If simplified is True, checks if result contains no redundant clauses.
 
     Examples
     ========
@@ -1601,6 +1669,7 @@ def is_nnf(expr, simplified=True):
     False
     >>> is_nnf((A >> B) & (B >> A))
     False
+
     """
 
     expr = sympify(expr)
@@ -1674,44 +1743,23 @@ def _is_form(expr, function1, function2):
     """
     expr = sympify(expr)
 
-    # Special case of an Atom
-    if expr.is_Atom:
-        return True
-
-    # Special case of a single expression of function2
-    if isinstance(expr, function2):
-        for lit in expr.args:
-            if isinstance(lit, Not):
-                if not lit.args[0].is_Atom:
-                    return False
-            else:
-                if not lit.is_Atom:
-                    return False
-        return True
-
-    # Special case of a single negation
-    if isinstance(expr, Not):
-        if not expr.args[0].is_Atom:
-            return False
-
-    if not isinstance(expr, function1):
+    def is_a_literal(lit):
+        if isinstance(lit, Not) \
+                and lit.args[0].is_Atom:
+            return True
+        elif lit.is_Atom:
+            return True
         return False
 
-    for cls in expr.args:
-        if cls.is_Atom:
-            continue
-        if isinstance(cls, Not):
-            if not cls.args[0].is_Atom:
-                return False
-        elif not isinstance(cls, function2):
+    vals = function1.make_args(expr) if isinstance(expr, function1) else [expr]
+    for lit in vals:
+        if isinstance(lit, function2):
+            vals2 = function2.make_args(lit) if isinstance(lit, function2) else [lit]
+            for l in vals2:
+                if is_a_literal(l) is False:
+                    return False
+        elif is_a_literal(lit) is False:
             return False
-        for lit in cls.args:
-            if isinstance(lit, Not):
-                if not lit.args[0].is_Atom:
-                    return False
-            else:
-                if not lit.is_Atom:
-                    return False
 
     return True
 
@@ -1734,6 +1782,7 @@ def eliminate_implications(expr):
     (A | ~B) & (B | ~A)
     >>> eliminate_implications(Equivalent(A, B, C))
     (A | ~C) & (B | ~A) & (C | ~B)
+
     """
     return to_nnf(expr, simplify=False)
 
@@ -1758,6 +1807,7 @@ def is_literal(expr):
     True
     >>> is_literal(Or(A, B))
     False
+
     """
     if isinstance(expr, Not):
         return not isinstance(expr.args[0], BooleanFunction)
@@ -1956,6 +2006,32 @@ def _convert_to_varsPOS(maxterm, variables):
     return Or(*temp)
 
 
+def _get_odd_parity_terms(n):
+    """
+    Returns a list of lists, with all possible combinations of n zeros and ones
+    with an odd number of ones.
+    """
+    op = []
+    for i in range(1, 2**n):
+        e = ibin(i, n)
+        if sum(e) % 2 == 1:
+            op.append(e)
+    return op
+
+
+def _get_even_parity_terms(n):
+    """
+    Returns a list of lists, with all possible combinations of n zeros and ones
+    with an even number of ones.
+    """
+    op = []
+    for i in range(2**n):
+        e = ibin(i, n)
+        if sum(e) % 2 == 0:
+            op.append(e)
+    return op
+
+
 def _simplified_pairs(terms):
     """
     Reduces a set of minterms, if possible, to a simplified set of minterms
@@ -2126,7 +2202,7 @@ def SOPform(variables, minterms, dontcares=None):
     References
     ==========
 
-    .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
+    .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
     variables = [sympify(v) for v in variables]
@@ -2200,7 +2276,7 @@ def POSform(variables, minterms, dontcares=None):
     References
     ==========
 
-    .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
+    .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
     variables = [sympify(v) for v in variables]
@@ -2316,28 +2392,42 @@ def _finger(eq):
     """
     Assign a 5-item fingerprint to each symbol in the equation:
     [
-    # of times it appeared as a Symbol,
-    # of times it appeared as a Not(symbol),
-    # of times it appeared as a Symbol in an And or Or,
-    # of times it appeared as a Not(Symbol) in an And or Or,
-    sum of the number of arguments with which it appeared
-    as a Symbol, counting Symbol as 1 and Not(Symbol) as 2
-    and counting self as 1
+    # of times it appeared as a Symbol;
+    # of times it appeared as a Not(symbol);
+    # of times it appeared as a Symbol in an And or Or;
+    # of times it appeared as a Not(Symbol) in an And or Or;
+    a sorted tuple of tuples, (i, j, k), where i is the number of arguments
+    in an And or Or with which it appeared as a Symbol, and j is
+    the number of arguments that were Not(Symbol); k is the number
+    of times that (i, j) was seen.
     ]
 
+    Examples
+    ========
+
     >>> from sympy.logic.boolalg import _finger as finger
-    >>> from sympy import And, Or, Not
+    >>> from sympy import And, Or, Not, Xor, to_cnf, symbols
     >>> from sympy.abc import a, b, x, y
     >>> eq = Or(And(Not(y), a), And(Not(y), b), And(x, y))
     >>> dict(finger(eq))
-    {(0, 0, 1, 0, 2): [x], (0, 0, 1, 0, 3): [a, b], (0, 0, 1, 2, 2): [y]}
+    {(0, 0, 1, 0, ((2, 0, 1),)): [x],
+    (0, 0, 1, 0, ((2, 1, 1),)): [a, b],
+    (0, 0, 1, 2, ((2, 0, 1),)): [y]}
     >>> dict(finger(x & ~y))
-    {(0, 1, 0, 0, 0): [y], (1, 0, 0, 0, 0): [x]}
+    {(0, 1, 0, 0, ()): [y], (1, 0, 0, 0, ()): [x]}
+
+    In the following, the (5, 2, 6) means that there were 6 Or
+    functions in which a symbol appeared as itself amongst 5 arguments in
+    which there were also 2 negated symbols, e.g. ``(a0 | a1 | a2 | ~a3 | ~a4)``
+    is counted once for a0, a1 and a2.
+
+    >>> dict(finger(to_cnf(Xor(*symbols('a:5')))))
+    {(0, 0, 8, 8, ((5, 0, 1), (5, 2, 6), (5, 4, 1))): [a0, a1, a2, a3, a4]}
 
     The equation must not have more than one level of nesting:
 
     >>> dict(finger(And(Or(x, y), y)))
-    {(0, 0, 1, 0, 2): [x], (1, 0, 1, 0, 2): [y]}
+    {(0, 0, 1, 0, ((2, 0, 1),)): [x], (1, 0, 1, 0, ((2, 0, 1),)): [y]}
     >>> dict(finger(And(Or(x, And(a, x)), y)))
     Traceback (most recent call last):
     ...
@@ -2346,24 +2436,25 @@ def _finger(eq):
     So y and x have unique fingerprints, but a and b do not.
     """
     f = eq.free_symbols
-    d = dict(list(zip(f, [[0] * 5 for fi in f])))
+    d = dict(list(zip(f, [[0]*4 + [defaultdict(int)] for fi in f])))
     for a in eq.args:
         if a.is_Symbol:
             d[a][0] += 1
         elif a.is_Not:
             d[a.args[0]][1] += 1
         else:
-            o = len(a.args) + sum(isinstance(ai, Not) for ai in a.args)
+            o = len(a.args), sum(isinstance(ai, Not) for ai in a.args)
             for ai in a.args:
                 if ai.is_Symbol:
                     d[ai][2] += 1
-                    d[ai][-1] += o
+                    d[ai][-1][o] += 1
                 elif ai.is_Not:
                     d[ai.args[0]][3] += 1
                 else:
                     raise NotImplementedError('unexpected level of nesting')
     inv = defaultdict(list)
     for k, v in ordered(iter(d.items())):
+        v[-1] = tuple(sorted([i + (j,) for i, j in v[-1].items()]))
         inv[tuple(v)].append(k)
     return inv
 
@@ -2482,7 +2573,7 @@ def simplify_patterns_and():
                      (And(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
                      (And(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
                      # Sign
-                     (And(Eq(a, b), Eq(a, -b)), And(Eq(a, S(0)), Eq(b, S(0)))),
+                     (And(Eq(a, b), Eq(a, -b)), And(Eq(a, S.Zero), Eq(b, S.Zero))),
                      )
     return _matchers_and
 

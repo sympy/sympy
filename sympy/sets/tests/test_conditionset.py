@@ -1,8 +1,8 @@
 from sympy.sets import (ConditionSet, Intersection, FiniteSet,
-    EmptySet, Union)
+    EmptySet, Union, Contains)
 from sympy import (Symbol, Eq, S, Abs, sin, pi, Interval,
     And, Mod, oo, Function)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
 
 w = Symbol('w')
@@ -69,8 +69,8 @@ def test_issue_9849():
 
 def test_simplified_FiniteSet_in_CondSet():
     assert ConditionSet(x, And(x < 1, x > -3), FiniteSet(0, 1, 2)) == FiniteSet(0)
-    assert ConditionSet(x, x < 0, FiniteSet(0, 1, 2)) == EmptySet()
-    assert ConditionSet(x, And(x < -3), EmptySet()) == EmptySet()
+    assert ConditionSet(x, x < 0, FiniteSet(0, 1, 2)) == EmptySet
+    assert ConditionSet(x, And(x < -3), EmptySet) == EmptySet
     y = Symbol('y')
     assert (ConditionSet(x, And(x > 0), FiniteSet(-1, 0, 1, y)) ==
         Union(FiniteSet(1), ConditionSet(x, And(x > 0), FiniteSet(y))))
@@ -131,8 +131,11 @@ def test_subs_CondSet():
 
 
 def test_subs_CondSet_tebr():
-    # to eventually be removed
-    c = ConditionSet((x, y), {x + 1, x + y}, S.Reals)
+    with warns_deprecated_sympy():
+        assert ConditionSet((x, y), {x + 1, x + y}, S.Reals) == \
+            ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
+
+    c = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
     assert c.subs(x, z) == c
 
 
@@ -145,10 +148,9 @@ def test_dummy_eq():
     assert c.dummy_eq(C(x, x < 1, S.Reals)) == False
     raises(ValueError, lambda: c.dummy_eq(C(x, x < 1, S.Reals), z))
 
-    # to eventually be removed
-    c1 = ConditionSet((x, y), {x + 1, x + y}, S.Reals)
-    c2 = ConditionSet((x, y), {x + 1, x + y}, S.Reals)
-    c3 = ConditionSet((x, y), {x + 1, x + y}, S.Complexes)
+    c1 = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
+    c2 = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
+    c3 = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Complexes)
     assert c1.dummy_eq(c2)
     assert c1.dummy_eq(c3) is False
     assert c.dummy_eq(c1) is False
@@ -167,4 +169,13 @@ def test_contains():
     assert ConditionSet(x, y > 5, Interval(1, 7)
         ).contains(8) is S.false
     assert ConditionSet(x, y > 5, Interval(1, 7)
-        ).contains(w) == And(w >= 1, w <= 7, y > 5)
+        ).contains(w) == And(Contains(w, Interval(1, 7)), y > 5)
+
+@XFAIL
+def test_failing_contains():
+    # XXX This may have to return unevaluated Contains object
+    # because 1/0 should not be defined for 1 and 0 in the context of
+    # reals, but there is a nonsensical evaluation to ComplexInfinity
+    # and the comparison is giving an error.
+    assert ConditionSet(x, 1/x >= 0, S.Reals).contains(0) == \
+        Contains(0, ConditionSet(x, 1/x >= 0, S.Reals), evaluate=False)

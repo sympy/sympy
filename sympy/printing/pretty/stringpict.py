@@ -14,9 +14,8 @@ TODO:
 
 from __future__ import print_function, division
 
-from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
+from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, is_combining
 from sympy.core.compatibility import string_types, range, unicode
-
 
 class stringPict(object):
     """An ASCII picture.
@@ -37,12 +36,19 @@ class stringPict(object):
         self.binding = None
 
     @staticmethod
+    def line_width(line):
+        """Unicode combining symbols (modifiers) are not ever displayed as
+        separate symbols and thus shouldn't be counted
+        """
+        return sum(1 for sym in line if not is_combining(sym))
+
+    @staticmethod
     def equalLengths(lines):
         # empty lines
         if not lines:
             return ['']
 
-        width = max(len(line) for line in lines)
+        width = max(stringPict.line_width(line) for line in lines)
         return [line.center(width) for line in lines]
 
     def height(self):
@@ -51,7 +57,7 @@ class stringPict(object):
 
     def width(self):
         """The width of the picture in characters."""
-        return len(self.picture[0])
+        return stringPict.line_width(self.picture[0])
 
     @staticmethod
     def next(*args):

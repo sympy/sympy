@@ -8,6 +8,7 @@ import math
 
 from sympy.core import sympify
 from sympy.core.compatibility import as_int, SYMPY_INTS, range, string_types
+from sympy.core.containers import Dict
 from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
 from sympy.core.function import Function
@@ -285,20 +286,22 @@ def multiplicity(p, n):
 def perfect_power(n, candidates=None, big=True, factor=True):
     """
     Return ``(b, e)`` such that ``n`` == ``b**e`` if ``n`` is a
-    perfect power; otherwise return ``False``.
+    perfect power with ``e > 1``, else ``False``. A ValueError is
+    raised if ``n`` is not an integer or is not positive.
 
     By default, the base is recursively decomposed and the exponents
     collected so the largest possible ``e`` is sought. If ``big=False``
     then the smallest possible ``e`` (thus prime) will be chosen.
 
-    If ``candidates`` for exponents are given, they are assumed to be sorted
-    and the first one that is larger than the computed maximum will signal
-    failure for the routine.
+    If ``factor=True`` then simultaneous factorization of ``n`` is
+    attempted since finding a factor indicates the only possible root
+    for ``n``. This is True by default since only a few small factors will
+    be tested in the course of searching for the perfect power.
 
-    If ``factor=True`` then simultaneous factorization of n is attempted
-    since finding a factor indicates the only possible root for n. This
-    is True by default since only a few small factors will be tested in
-    the course of searching for the perfect power.
+    The use of ``candidates`` is primarily for internal use; if provided,
+    False will be returned if ``n`` cannot be written as a power with one
+    of the candidates as an exponent and factoring (beyond testing for
+    a factor of 2) will not be attempted.
 
     Examples
     ========
@@ -306,67 +309,99 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     >>> from sympy import perfect_power
     >>> perfect_power(16)
     (2, 4)
-    >>> perfect_power(16, big = False)
+    >>> perfect_power(16, big=False)
     (4, 2)
+
+    Notes
+    =====
+
+    To know whether an integer is a perfect power of 2 use
+
+        >>> is2pow = lambda n: bool(n and not n & (n - 1))
+        >>> [(i, is2pow(i)) for i in range(5)]
+        [(0, False), (1, True), (2, True), (3, False), (4, True)]
+
+    It is not necessary to provide ``candidates``. When provided
+    it will be assumed that they are ints. The first one that is
+    larger than the computed maximum possible exponent will signal
+    failure for the routine.
+
+        >>> perfect_power(3**8, [9])
+        False
+        >>> perfect_power(3**8, [2, 4, 8])
+        (3, 8)
+        >>> perfect_power(3**8, [4, 8], big=False)
+        (9, 4)
+
+    See Also
+    ========
+    sympy.core.power.integer_nthroot
+    sympy.ntheory.primetest.is_square
     """
-    n = int(n)
+    from sympy.core.power import integer_nthroot
+    n = as_int(n)
     if n < 3:
+        if n < 1:
+            raise ValueError('expecting positive n')
         return False
     logn = math.log(n, 2)
     max_possible = int(logn) + 2  # only check values less than this
     not_square = n % 10 in [2, 3, 7, 8]  # squares cannot end in 2, 3, 7, 8
+    min_possible = 2 + not_square
     if not candidates:
-        candidates = primerange(2 + not_square, max_possible)
+        candidates = primerange(min_possible, max_possible)
+    else:
+        candidates = sorted([i for i in candidates
+            if min_possible <= i < max_possible])
+        if n%2 == 0:
+            e = trailing(n)
+            candidates = [i for i in candidates if e%i == 0]
+        if big:
+            candidates = reversed(candidates)
+        for e in candidates:
+            r, ok = integer_nthroot(n, e)
+            if ok:
+                return (r, e)
+        return False
 
-    afactor = 2 + n % 2
-    for e in candidates:
-        if e < 3:
-            if e == 1 or e == 2 and not_square:
-                continue
-        if e > max_possible:
-            return False
+    def _factors():
+        rv = 2 + n % 2
+        while True:
+            yield rv
+            rv = nextprime(rv)
 
+    for fac, e in zip(_factors(), candidates):
         # see if there is a factor present
-        if factor:
-            if n % afactor == 0:
-                # find what the potential power is
-                if afactor == 2:
-                    e = trailing(n)
-                else:
-                    e = multiplicity(afactor, n)
-                # if it's a trivial power we are done
-                if e == 1:
-                    return False
-
-                # maybe the bth root of n is exact
-                r, exact = integer_nthroot(n, e)
-                if not exact:
-                    # then remove this factor and check to see if
-                    # any of e's factors are a common exponent; if
-                    # not then it's not a perfect power
-                    n //= afactor**e
-                    m = perfect_power(n, candidates=primefactors(e), big=big)
-                    if m is False:
-                        return False
-                    else:
-                        r, m = m
-                        # adjust the two exponents so the bases can
-                        # be combined
-                        g = igcd(m, e)
-                        if g == 1:
-                            return False
-                        m //= g
-                        e //= g
-                        r, e = r**m*afactor**e, g
-                if not big:
-                    e0 = primefactors(e)
-                    if len(e0) > 1 or e0[0] != e:
-                        e0 = e0[0]
-                        r, e = r**(e//e0), e0
-                return r, e
+        if factor and n % fac == 0:
+            # find what the potential power is
+            if fac == 2:
+                e = trailing(n)
             else:
-                # get the next factor ready for the next pass through the loop
-                afactor = nextprime(afactor)
+                e = multiplicity(fac, n)
+            # if it's a trivial power we are done
+            if e == 1:
+                return False
+
+            # maybe the e-th root of n is exact
+            r, exact = integer_nthroot(n, e)
+            if not exact:
+                # Having a factor, we know that e is the maximal
+                # possible value for a root of n.
+                # If n = fac**e*m can be written as a perfect
+                # power then see if m can be written as r**E where
+                # gcd(e, E) != 1 so n = (fac**(e//E)*r)**E
+                m = n//fac**e
+                rE = perfect_power(m, candidates=divisors(e, generator=True))
+                if not rE:
+                    return False
+                else:
+                    r, E = rE
+                    r, e = fac**(e//E)*r, E
+            if not big:
+                e0 = primefactors(e)
+                if e0[0] != e:
+                    r, e = r**(e//e0[0]), e0[0]
+            return r, e
 
         # Weed out downright impossible candidates
         if logn/e < 40:
@@ -379,7 +414,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         if exact:
             if big:
                 m = perfect_power(r, big=big, factor=factor)
-                if m is not False:
+                if m:
                     r, e = m[0], e*m[1]
             return int(r), e
 
@@ -973,11 +1008,13 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     smoothness, smoothness_p, divisors
 
     """
+    if isinstance(n, Dict):
+        n = dict(n)
     if multiple:
         fac = factorint(n, limit=limit, use_trial=use_trial,
                            use_rho=use_rho, use_pm1=use_pm1,
                            verbose=verbose, visual=False, multiple=False)
-        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S.One/p]*(-fac[p])
                                for p in sorted(fac)), [])
         return factorlist
 
@@ -1141,7 +1178,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                     facs = factorint(r, limit=limit, use_trial=use_trial,
                                      use_rho=use_rho, use_pm1=use_pm1,
                                      verbose=verbose)
-                    factors.update(facs)
+                    for k, v in facs.items():
+                        factors[k] = factors.get(k, 0) + v
                 raise StopIteration
 
             # ...see if factorization can be terminated
@@ -1264,7 +1302,7 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         fac = factorrat(rat, limit=limit, use_trial=use_trial,
                   use_rho=use_rho, use_pm1=use_pm1,
                   verbose=verbose, visual=False, multiple=False)
-        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S.One/p]*(-fac[p])
                                for p, _ in sorted(fac.items(),
                                                         key=lambda elem: elem[0]
                                                         if elem[1] > 0
@@ -1639,6 +1677,8 @@ class totient(Function):
     1
     >>> totient(25)
     20
+    >>> totient(45) == totient(5)*totient(9)
+    True
 
     See Also
     ========
@@ -1659,15 +1699,43 @@ class totient(Function):
             if n < 1:
                 raise ValueError("n must be a positive integer")
             factors = factorint(n)
-            t = 1
-            for p, k in factors.items():
-                t *= (p - 1) * p**(k - 1)
-            return t
+            return cls._from_factors(factors)
         elif not isinstance(n, Expr) or (n.is_integer is False) or (n.is_positive is False):
             raise ValueError("n must be a positive integer")
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
+
+    @classmethod
+    def _from_distinct_primes(self, *args):
+        """Subroutine to compute totient from the list of assumed
+        distinct primes
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory.factor_ import totient
+        >>> totient._from_distinct_primes(5, 7)
+        24
+        """
+        from functools import reduce
+        return reduce(lambda i, j: i * (j-1), args, 1)
+
+    @classmethod
+    def _from_factors(self, factors):
+        """Subroutine to compute totient from already-computed factors
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory.factor_ import totient
+        >>> totient._from_factors({5: 2})
+        20
+        """
+        t = 1
+        for p, k in factors.items():
+            t *= (p - 1) * p**(k - 1)
+        return t
 
 
 class reduced_totient(Function):
@@ -1707,13 +1775,27 @@ class reduced_totient(Function):
             if n < 1:
                 raise ValueError("n must be a positive integer")
             factors = factorint(n)
-            t = 1
-            for p, k in factors.items():
-                if p == 2 and k > 2:
-                    t = ilcm(t, 2**(k - 2))
-                else:
-                    t = ilcm(t, (p - 1) * p**(k - 1))
-            return t
+            return cls._from_factors(factors)
+
+    @classmethod
+    def _from_factors(self, factors):
+        """Subroutine to compute totient from already-computed factors
+        """
+        t = 1
+        for p, k in factors.items():
+            if p == 2 and k > 2:
+                t = ilcm(t, 2**(k - 2))
+            else:
+                t = ilcm(t, (p - 1) * p**(k - 1))
+        return t
+
+    @classmethod
+    def _from_distinct_primes(self, *args):
+        """Subroutine to compute totient from the list of assumed
+        distinct primes
+        """
+        args = [p - 1 for p in args]
+        return ilcm(*args)
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])

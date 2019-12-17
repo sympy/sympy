@@ -383,7 +383,7 @@ class FpGroup(DefaultPrinting):
         '''
         from sympy.combinatorics import Permutation, PermutationGroup
         from sympy.combinatorics.homomorphisms import homomorphism
-        if self.order() == S.Infinity:
+        if self.order() is S.Infinity:
             raise NotImplementedError("Permutation presentation of infinite "
                                                   "groups is not implemented")
         if self._perm_isomorphism:
@@ -526,6 +526,28 @@ class FpGroup(DefaultPrinting):
             raise NotImplementedError("Check for infinite Cyclic group "
                                       "is not implemented")
         return P.is_cyclic
+
+    def abelian_invariants(self):
+        """
+        Return Abelian Invariants of a group.
+        """
+        try:
+            P, T = self._to_perm_group()
+        except NotImplementedError:
+            raise NotImplementedError("abelian invariants is not implemented"
+                                      "for infinite group")
+        return P.abelian_invariants()
+
+    def composition_series(self):
+        """
+        Return subnormal series of maximum length for a group.
+        """
+        try:
+            P, T = self._to_perm_group()
+        except NotImplementedError:
+            raise NotImplementedError("composition series is not implemented"
+                                      "for infinite group")
+        return P.composition_series()
 
 
 class FpSubgroup(DefaultPrinting):

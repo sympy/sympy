@@ -6,14 +6,15 @@ from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, range, reduce
 from sympy.core.expr import Expr
-from sympy.core.function import count_ops, expand_mul
+from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.matrices.common import a2idx, classof
-from sympy.matrices.matrices import MatrixBase, ShapeError
+from sympy.matrices.common import \
+    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
+from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
@@ -145,7 +146,8 @@ class DenseMatrix(MatrixBase):
                 Lii2 = expand_mul(self[i, i] -
                     sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
                 if Lii2.is_positive is False:
-                    raise ValueError("Matrix must be positive-definite")
+                    raise NonPositiveDefiniteMatrixError(
+                        "Matrix must be positive-definite")
                 L[i, i] = sqrt(Lii2)
         else:
             for i in range(self.rows):
@@ -155,12 +157,6 @@ class DenseMatrix(MatrixBase):
                 L[i, i] = sqrt(self[i, i] -
                     sum(L[i, k]**2 for k in range(i)))
         return self._new(L)
-
-    def _diagonal_solve(self, rhs):
-        """Helper function of function diagonal_solve,
-        without the error checks, to be used privately.
-        """
-        return self._new(rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
 
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
@@ -178,14 +174,14 @@ class DenseMatrix(MatrixBase):
     def _eval_matrix_mul(self, other):
         from sympy import Add
         # cache attributes for faster access
-        self_rows, self_cols = self.rows, self.cols
+        self_cols = self.cols
         other_rows, other_cols = other.rows, other.cols
         other_len = other_rows * other_cols
         new_mat_rows = self.rows
         new_mat_cols = other.cols
 
         # preallocate the array
-        new_mat = [S.Zero]*new_mat_rows*new_mat_cols
+        new_mat = [self.zero]*new_mat_rows*new_mat_cols
 
         # if we multiply an n x 0 with a 0 x m, the
         # expected behavior is to produce an n x m matrix of zeros
@@ -308,7 +304,8 @@ class DenseMatrix(MatrixBase):
                 D[i, i] = expand_mul(self[i, i] -
                     sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
                 if D[i, i].is_positive is False:
-                    raise ValueError("Matrix must be positive-definite")
+                    raise NonPositiveDefiniteMatrixError(
+                        "Matrix must be positive-definite")
         else:
             for i in range(self.rows):
                 for j in range(i):
@@ -395,7 +392,7 @@ class DenseMatrix(MatrixBase):
 
         See Also
         ========
-        sympy.core.expr.equals
+        sympy.core.expr.Expr.equals
         """
         self_shape = getattr(self, 'shape', None)
         other_shape = getattr(other, 'shape', None)
@@ -752,7 +749,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         for k in range(0, self.cols):
             self[i, k], self[j, k] = self[j, k], self[i, k]
 
-    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+    def simplify(self, **kwargs):
         """Applies simplify to the elements of a matrix in place.
 
         This is a shortcut for M.applyfunc(lambda x: simplify(x, ratio, measure))
@@ -763,8 +760,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         sympy.simplify.simplify.simplify
         """
         for i in range(len(self._mat)):
-            self._mat[i] = _simplify(self._mat[i], ratio=ratio, measure=measure,
-                                     rational=rational, inverse=inverse)
+            self._mat[i] = _simplify(self._mat[i], **kwargs)
 
     def zip_row_op(self, i, k, f):
         """In-place operation on row ``i`` using two-arg functor whose args are
@@ -1223,7 +1219,7 @@ def hessian(f, varlist, constraints=[]):
     See Also
     ========
 
-    sympy.matrices.mutable.Matrix.jacobian
+    sympy.matrices.matrices.MatrixCalculus.jacobian
     wronskian
     """
     # f is the expression representing a function f, return regular matrix
@@ -1295,7 +1291,7 @@ def matrix_multiply_elementwise(A, B):
     See Also
     ========
 
-    __mul__
+    sympy.matrices.common.MatrixCommon.__mul__
     """
     return A.multiply_elementwise(B)
 
@@ -1329,11 +1325,11 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     following way.
 
     * If ``prng`` is supplied, it will be used as random number generator.
-      It should be an instance of :class:`random.Random`, or at least have
+      It should be an instance of ``random.Random``, or at least have
       ``randint`` and ``shuffle`` methods with same signatures.
     * if ``prng`` is not supplied but ``seed`` is supplied, then new
-      :class:`random.Random` with given ``seed`` will be created;
-    * otherwise, a new :class:`random.Random` with default seed will be used.
+      ``random.Random`` with given ``seed`` will be created;
+    * otherwise, a new ``random.Random`` with default seed will be used.
 
     Examples
     ========
@@ -1357,7 +1353,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     [29, 43, 57]
     >>> A = randMatrix(3, seed=1)
     >>> B = randMatrix(3, seed=2)
-    >>> A == B # doctest:+SKIP
+    >>> A == B
     False
     >>> A == randMatrix(3, seed=1)
     True
@@ -1414,7 +1410,7 @@ def wronskian(functions, var, method='bareiss'):
     See Also
     ========
 
-    sympy.matrices.mutable.Matrix.jacobian
+    sympy.matrices.matrices.MatrixCalculus.jacobian
     hessian
     """
 

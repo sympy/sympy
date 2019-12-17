@@ -5,7 +5,7 @@ import collections
 import sys
 
 from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
-    _atomic)
+    _atomic, _aresame)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol
 from sympy.core.function import Function, Lambda
@@ -20,6 +20,12 @@ b1 = Basic()
 b2 = Basic(b1)
 b3 = Basic(b2)
 b21 = Basic(b2, b1)
+
+
+def test__aresame():
+    assert not _aresame(Basic([]), Basic())
+    assert not _aresame(Basic([]), Basic(()))
+    assert not _aresame(Basic(2), Basic(2.))
 
 
 def test_structure():

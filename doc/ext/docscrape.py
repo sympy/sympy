@@ -228,6 +228,8 @@ class NumpyDocString(Mapping):
             if not name:
                 return
             name, role = parse_item_name(name)
+            if '.' not in name:
+                name = '~.' + name
             items.append((name, list(rest), role))
             del rest[:]
 

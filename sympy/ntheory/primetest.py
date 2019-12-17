@@ -63,6 +63,15 @@ def is_square(n, prep=True):
     If n is suspected of *not* being a square then this is a
     quick method of confirming that it is not.
 
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_square
+    >>> is_square(25)
+    True
+    >>> is_square(2)
+    False
+
     References
     ==========
 
@@ -82,9 +91,8 @@ def is_square(n, prep=True):
     if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
         m = n % 63
         if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
-            from sympy.ntheory import perfect_power
-            if perfect_power(n, [2]):
-                return True
+            from sympy.core.power import integer_nthroot
+            return integer_nthroot(n, 2)[1]
     return False
 
 

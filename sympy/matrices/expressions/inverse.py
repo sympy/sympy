@@ -32,9 +32,9 @@ class Inverse(MatPow):
 
     """
     is_Inverse = True
-    exp = S(-1)
+    exp = S.NegativeOne
 
-    def __new__(cls, mat, exp=S(-1)):
+    def __new__(cls, mat, exp=S.NegativeOne):
         # exp is there to make it consistent with
         # inverse.func(*inverse.args) == inverse
         mat = _sympify(mat)
@@ -62,10 +62,15 @@ class Inverse(MatPow):
     def doit(self, **hints):
         if 'inv_expand' in hints and hints['inv_expand'] == False:
             return self
+
+        arg = self.arg
         if hints.get('deep', True):
-            return self.arg.doit(**hints).inverse()
-        else:
-            return self.arg.inverse()
+            arg = arg.doit(**hints)
+
+        if isinstance(arg, MatPow):
+            return MatPow(arg.base, self.exp * arg.exp)
+        return arg.inverse()
+
 
     def _eval_derivative_matrix_lines(self, x):
         arg = self.args[0]

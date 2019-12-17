@@ -99,8 +99,9 @@ class SparseMatrix(MatrixBase):
 
     See Also
     ========
-    sympy.matrices.common.diag
-    sympy.matrices.dense.Matrix
+    DenseMatrix
+    MutableSparseMatrix
+    ImmutableSparseMatrix
     """
 
     def __new__(cls, *args, **kwargs):
@@ -314,10 +315,6 @@ class SparseMatrix(MatrixBase):
                     C[j, j] = sqrt(C[j, j])
 
         return C
-
-    def _diagonal_solve(self, rhs):
-        "Diagonal solve."
-        return self._new(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
 
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using Cholesky or LDL (default)
@@ -548,7 +545,7 @@ class SparseMatrix(MatrixBase):
         return L.T._upper_triangular_solve(Y)
 
     def _LDL_sparse(self):
-        """Algorithm for numeric LDL factization, exploiting sparse structure.
+        """Algorithm for numeric LDL factorization, exploiting sparse structure.
         """
         Lrowstruc = self.row_structure_symbolic_cholesky()
         L = self.eye(self.rows)
@@ -591,11 +588,12 @@ class SparseMatrix(MatrixBase):
         for i, j, v in self.row_list():
             if i > j:
                 rows[i].append((j, v))
-        X = rhs.copy()
-        for i in range(self.rows):
-            for j, v in rows[i]:
-                X[i, 0] -= v*X[j, 0]
-            X[i, 0] /= self[i, i]
+        X = rhs.as_mutable().copy()
+        for j in range(rhs.cols):
+            for i in range(rhs.rows):
+                for u, v in rows[i]:
+                    X[i, j] -= v*X[u, j]
+                X[i, j] /= self[i, i]
         return self._new(X)
 
     @property
@@ -612,12 +610,12 @@ class SparseMatrix(MatrixBase):
         for i, j, v in self.row_list():
             if i < j:
                 rows[i].append((j, v))
-        X = rhs.copy()
-        for i in range(self.rows - 1, -1, -1):
-            rows[i].reverse()
-            for j, v in rows[i]:
-                X[i, 0] -= v*X[j, 0]
-            X[i, 0] /= self[i, i]
+        X = rhs.as_mutable().copy()
+        for j in range(rhs.cols):
+            for i in reversed(range(rhs.rows)):
+                for u, v in reversed(rows[i]):
+                    X[i, j] -= v*X[u, j]
+                X[i, j] /= self[i, i]
         return self._new(X)
 
 
@@ -722,8 +720,8 @@ class SparseMatrix(MatrixBase):
 
         See Also
         ========
-        col_op
-        row_list
+        sympy.matrices.sparse.MutableSparseMatrix.col_op
+        sympy.matrices.sparse.SparseMatrix.row_list
         """
         return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(reversed(k)))]
 
@@ -835,8 +833,8 @@ class SparseMatrix(MatrixBase):
 
         See Also
         ========
-        row_op
-        col_list
+        sympy.matrices.sparse.MutableSparseMatrix.row_op
+        sympy.matrices.sparse.SparseMatrix.col_list
         """
         return [tuple(k + (self[k],)) for k in
             sorted(list(self._smat.keys()), key=lambda k: list(k))]

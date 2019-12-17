@@ -1,14 +1,15 @@
 from sympy.core import (
     Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
-    Basic, I, nan, pi, E, symbols, oo, zoo)
+    Basic, I, nan, pi, symbols, oo, zoo, Rational, N)
 from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
     sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
 from sympy.series.order import O
-from sympy.utilities.pytest import XFAIL
 
 
 def test_rational():
@@ -18,7 +19,7 @@ def test_rational():
     assert sqrt(a) == r
     assert 2*sqrt(a) == 2*r
 
-    r = a*a**Rational(1, 2)
+    r = a*a**S.Half
     assert a**Rational(3, 2) == r
     assert 2*a**Rational(3, 2) == 2*r
 
@@ -41,7 +42,7 @@ def test_negative_real():
 
 def test_expand():
     x = Symbol('x')
-    assert (2**(-1 - x)).expand() == Rational(1, 2)*2**(-x)
+    assert (2**(-1 - x)).expand() == S.Half*2**(-x)
 
 
 def test_issue_3449():
@@ -73,7 +74,7 @@ def test_issue_3449():
     a = Symbol('a', positive=True)
     assert (a**3)**Rational(2, 5) == a**Rational(6, 5)
     assert (a**2)**b == (a**b)**2
-    assert (a**Rational(2, 3))**x == (a**(2*x/3)) != (a**x)**Rational(2, 3)
+    assert (a**Rational(2, 3))**x == a**(x*Rational(2, 3)) != (a**x)**Rational(2, 3)
 
 
 def test_issue_3866():
@@ -211,11 +212,11 @@ def test_power_rewrite_exp():
     assert (I**I).rewrite(exp) == exp(-pi/2)
 
     expr = (2 + 3*I)**(4 + 5*I)
-    assert expr.rewrite(exp) == exp((4 + 5*I)*(log(sqrt(13)) + I*atan(S(3)/2)))
+    assert expr.rewrite(exp) == exp((4 + 5*I)*(log(sqrt(13)) + I*atan(Rational(3, 2))))
     assert expr.rewrite(exp).expand() == \
-        169*exp(5*I*log(13)/2)*exp(4*I*atan(S(3)/2))*exp(-5*atan(S(3)/2))
+        169*exp(5*I*log(13)/2)*exp(4*I*atan(Rational(3, 2)))*exp(-5*atan(Rational(3, 2)))
 
-    assert ((6 + 7*I)**5).rewrite(exp) == 7225*sqrt(85)*exp(5*I*atan(S(7)/6))
+    assert ((6 + 7*I)**5).rewrite(exp) == 7225*sqrt(85)*exp(5*I*atan(Rational(7, 6)))
 
     expr = 5**(6 + 7*I)
     assert expr.rewrite(exp) == exp((6 + 7*I)*log(5))
@@ -234,7 +235,7 @@ def test_power_rewrite_exp():
     x, y = symbols('x y')
     assert (x**y).rewrite(exp) == exp(y*log(x))
     assert (7**x).rewrite(exp) == exp(x*log(7), evaluate=False)
-    assert ((2 + 3*I)**x).rewrite(exp) == exp(x*(log(sqrt(13)) + I*atan(S(3)/2)))
+    assert ((2 + 3*I)**x).rewrite(exp) == exp(x*(log(sqrt(13)) + I*atan(Rational(3, 2))))
     assert (y**(5 + 6*I)).rewrite(exp) == exp(log(y)*(5 + 6*I))
 
     assert all((1/func(x)).rewrite(exp) == 1/(func(x).rewrite(exp)) for func in
@@ -261,10 +262,10 @@ def test_pow_as_base_exp():
     p = S.Half**x
     assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
     # issue 8344:
-    assert Pow(1, 2, evaluate=False).as_base_exp() == (S(1), S(2))
+    assert Pow(1, 2, evaluate=False).as_base_exp() == (S.One, S(2))
 
 
-def test_issue_6100_12942():
+def test_issue_6100_12942_4473():
     x = Symbol('x')
     y = Symbol('y')
     assert x**1.0 != x
@@ -273,8 +274,9 @@ def test_issue_6100_12942():
     assert x**1.0 is not True
     assert x is not True
     assert x*y != (x*y)**1.0
+    # Pow != Symbol
     assert (x**1.0)**1.0 != x
-    assert (x**1.0)**2.0 == x**2
+    assert (x**1.0)**2.0 != x**2
     b = Basic()
     assert Pow(b, 1.0, evaluate=False) != b
     # if the following gets distributed as a Mul (x**1.0*y**1.0 then
@@ -286,12 +288,12 @@ def test_issue_6100_12942():
 def test_issue_6208():
     from sympy import root, Rational
     I = S.ImaginaryUnit
-    assert sqrt(33**(9*I/10)) == -33**(9*I/20)
+    assert sqrt(33**(I*Rational(9, 10))) == -33**(I*Rational(9, 20))
     assert root((6*I)**(2*I), 3).as_base_exp()[1] == Rational(1, 3)  # != 2*I/3
     assert root((6*I)**(I/3), 3).as_base_exp()[1] == I/9
-    assert sqrt(exp(3*I)) == exp(3*I/2)
+    assert sqrt(exp(3*I)) == exp(I*Rational(3, 2))
     assert sqrt(-sqrt(3)*(1 + 2*I)) == sqrt(sqrt(3))*sqrt(-1 - 2*I)
-    assert sqrt(exp(5*I)) == -exp(5*I/2)
+    assert sqrt(exp(5*I)) == -exp(I*Rational(5, 2))
     assert root(exp(5*I), 3).exp == Rational(1, 3)
 
 
@@ -301,27 +303,27 @@ def test_issue_6990():
     b = Symbol('b')
     assert (sqrt(a + b*x + x**2)).series(x, 0, 3).removeO() == \
         b*x/(2*sqrt(a)) + x**2*(1/(2*sqrt(a)) - \
-        b**2/(8*a**(S(3)/2))) + sqrt(a)
+        b**2/(8*a**Rational(3, 2))) + sqrt(a)
 
 
 def test_issue_6068():
     x = Symbol('x')
     assert sqrt(sin(x)).series(x, 0, 7) == \
-        sqrt(x) - x**(S(5)/2)/12 + x**(S(9)/2)/1440 - \
-        x**(S(13)/2)/24192 + O(x**7)
+        sqrt(x) - x**Rational(5, 2)/12 + x**Rational(9, 2)/1440 - \
+        x**Rational(13, 2)/24192 + O(x**7)
     assert sqrt(sin(x)).series(x, 0, 9) == \
-        sqrt(x) - x**(S(5)/2)/12 + x**(S(9)/2)/1440 - \
-        x**(S(13)/2)/24192 - 67*x**(S(17)/2)/29030400 + O(x**9)
+        sqrt(x) - x**Rational(5, 2)/12 + x**Rational(9, 2)/1440 - \
+        x**Rational(13, 2)/24192 - 67*x**Rational(17, 2)/29030400 + O(x**9)
     assert sqrt(sin(x**3)).series(x, 0, 19) == \
-        x**(S(3)/2) - x**(S(15)/2)/12 + x**(S(27)/2)/1440 + O(x**19)
+        x**Rational(3, 2) - x**Rational(15, 2)/12 + x**Rational(27, 2)/1440 + O(x**19)
     assert sqrt(sin(x**3)).series(x, 0, 20) == \
-        x**(S(3)/2) - x**(S(15)/2)/12 + x**(S(27)/2)/1440 - \
-        x**(S(39)/2)/24192 + O(x**20)
+        x**Rational(3, 2) - x**Rational(15, 2)/12 + x**Rational(27, 2)/1440 - \
+        x**Rational(39, 2)/24192 + O(x**20)
 
 
 def test_issue_6782():
     x = Symbol('x')
-    assert sqrt(sin(x**3)).series(x, 0, 7) == x**(S(3)/2) + O(x**7)
+    assert sqrt(sin(x**3)).series(x, 0, 7) == x**Rational(3, 2) + O(x**7)
     assert sqrt(sin(x**4)).series(x, 0, 3) == x**2 + O(x**3)
 
 
@@ -346,23 +348,24 @@ def test_issue_7638():
     # if 1/3 -> 1.0/3 this should fail since it cannot be shown that the
     # sign will be +/-1; for the previous "small arg" case, it didn't matter
     # that this could not be proved
-    assert (1 + I)**(4*I*f) == ((1 + I)**(12*I*f))**(S(1)/3)
+    assert (1 + I)**(4*I*f) == ((1 + I)**(12*I*f))**Rational(1, 3)
 
-    assert (((1 + I)**(I*(1 + 7*f)))**(S(1)/3)).exp == S(1)/3
+    assert (((1 + I)**(I*(1 + 7*f)))**Rational(1, 3)).exp == Rational(1, 3)
     r = symbols('r', real=True)
     assert sqrt(r**2) == abs(r)
     assert cbrt(r**3) != r
-    assert sqrt(Pow(2*I, 5*S.Half)) != (2*I)**(5/S(4))
+    assert sqrt(Pow(2*I, 5*S.Half)) != (2*I)**Rational(5, 4)
     p = symbols('p', positive=True)
-    assert cbrt(p**2) == p**(2/S(3))
+    assert cbrt(p**2) == p**Rational(2, 3)
     assert NS(((0.2 + 0.7*I)**(0.7 + 1.0*I))**(0.5 - 0.1*I), 1) == '0.4 + 0.2*I'
     assert sqrt(1/(1 + I)) == sqrt(1 - I)/sqrt(2)  # or 1/sqrt(1 + I)
     e = 1/(1 - sqrt(2))
     assert sqrt(e) == I/sqrt(-1 + sqrt(2))
-    assert e**-S.Half == -I*sqrt(-1 + sqrt(2))
-    assert sqrt((cos(1)**2 + sin(1)**2 - 1)**(3 + I)).exp == S.Half
-    assert sqrt(r**(4/S(3))) != r**(2/S(3))
-    assert sqrt((p + I)**(4/S(3))) == (p + I)**(2/S(3))
+    assert e**Rational(-1, 2) == -I*sqrt(-1 + sqrt(2))
+    assert sqrt((cos(1)**2 + sin(1)**2 - 1)**(3 + I)).exp in [S.Half,
+                                                              Rational(3, 2) + I/2]
+    assert sqrt(r**Rational(4, 3)) != r**Rational(2, 3)
+    assert sqrt((p + I)**Rational(4, 3)) == (p + I)**Rational(2, 3)
     assert sqrt((p - p**2*I)**2) == p - p**2*I
     assert sqrt((p + r*I)**2) != p + r*I
     e = (1 + I/5)
@@ -433,8 +436,8 @@ def test_better_sqrt():
     assert sqrt(3/i) == Mul(sqrt(3), sqrt(-i)/abs(i), evaluate=False)
     # multiples of 1/2; don't make this too automatic
     assert sqrt((3 + 4*I))**3 == (2 + I)**3
-    assert Pow(3 + 4*I, S(3)/2) == 2 + 11*I
-    assert Pow(6 + 8*I, S(3)/2) == 2*sqrt(2)*(2 + 11*I)
+    assert Pow(3 + 4*I, Rational(3, 2)) == 2 + 11*I
+    assert Pow(6 + 8*I, Rational(3, 2)) == 2*sqrt(2)*(2 + 11*I)
     n, d = (3 + 4*I), (3 - 4*I)**3
     a = n/d
     assert a.args == (1/d, n)
@@ -451,4 +454,53 @@ def test_better_sqrt():
     # neg im part
     assert sqrt(-I/2) == Mul(S.Half, 1 - I, evaluate=False)
     # fractional im part
-    assert Pow(-9*I/2, 3/S(2)) == 27*(1 - I)**3/8
+    assert Pow(Rational(-9, 2)*I, Rational(3, 2)) == 27*(1 - I)**3/8
+
+
+def test_issue_2993():
+    x = Symbol('x')
+    assert str((2.3*x - 4)**0.3) == '1.5157165665104*(0.575*x - 1)**0.3'
+    assert str((2.3*x + 4)**0.3) == '1.5157165665104*(0.575*x + 1)**0.3'
+    assert str((-2.3*x + 4)**0.3) == '1.5157165665104*(1 - 0.575*x)**0.3'
+    assert str((-2.3*x - 4)**0.3) == '1.5157165665104*(-0.575*x - 1)**0.3'
+    assert str((2.3*x - 2)**0.3) == '1.28386201800527*(x - 0.869565217391304)**0.3'
+    assert str((-2.3*x - 2)**0.3) == '1.28386201800527*(-x - 0.869565217391304)**0.3'
+    assert str((-2.3*x + 2)**0.3) == '1.28386201800527*(0.869565217391304 - x)**0.3'
+    assert str((2.3*x + 2)**0.3) == '1.28386201800527*(x + 0.869565217391304)**0.3'
+    assert str((2.3*x - 4)**Rational(1, 3)) == '2**(2/3)*(0.575*x - 1)**(1/3)'
+    eq = (2.3*x + 4)
+    assert eq**2 == 16*(0.575*x + 1)**2
+    assert (1/eq).args == (eq, -1)  # don't change trivial power
+    # issue 17735
+    q=.5*exp(x) - .5*exp(-x) + 0.1
+    assert int((q**2).subs(x, 1)) == 1
+    # issue 17756
+    y = Symbol('y')
+    assert len(sqrt(x/(x + y)**2 + Float('0.008', 30)).subs(y, pi.n(25)).atoms(Float)) == 2
+    # issue 17756
+    a, b, c, d, e, f, g = symbols('a:g')
+    expr = sqrt(1 + a*(c**4 + g*d - 2*g*e - f*(-g + d))**2/
+        (c**3*b**2*(d - 3*e + 2*f)**2))/2
+    r = [
+    (a, N('0.0170992456333788667034850458615', 30)),
+    (b, N('0.0966594956075474769169134801223', 30)),
+    (c, N('0.390911862903463913632151616184', 30)),
+    (d, N('0.152812084558656566271750185933', 30)),
+    (e, N('0.137562344465103337106561623432', 30)),
+    (f, N('0.174259178881496659302933610355', 30)),
+    (g, N('0.220745448491223779615401870086', 30))]
+    tru = expr.n(30, subs=dict(r))
+    seq = expr.subs(r)
+    # although `tru` is the right way to evaluate
+    # expr with numerical values, `seq` will have
+    # significant loss of precision if extraction of
+    # the largest coefficient of a power's base's terms
+    # is done improperly
+    assert seq == tru
+
+def test_issue_17450():
+    assert (erf(cosh(1)**7)**I).is_real is None
+    assert (erf(cosh(1)**7)**I).is_imaginary is False
+    assert (Pow(exp(1+sqrt(2)), ((1-sqrt(2))*I*pi), evaluate=False)).is_real is None
+    assert ((-10)**(10*I*pi/3)).is_real is False
+    assert ((-5)**(4*I*pi)).is_real is False

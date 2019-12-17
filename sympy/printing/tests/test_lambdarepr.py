@@ -1,4 +1,5 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify,Expr
+from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify, \
+                  Expr, sqrt
 from sympy.utilities.pytest import raises
 
 from sympy.printing.tensorflow import TensorflowPrinter
@@ -190,6 +191,14 @@ def test_multiple_sums():
     assert f_res == f_ref
 
 
+def test_sqrt():
+    prntr = LambdaPrinter({'standard' : 'python2'})
+    assert prntr._print_Pow(sqrt(x), rational=False) == 'sqrt(x)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1./2.)'
+    prntr = LambdaPrinter({'standard' : 'python3'})
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
+
+
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
 
@@ -219,3 +228,6 @@ def test_printmethod():
     assert LambdaPrinter().doprint(obj) == 'lambda'
     assert TensorflowPrinter().doprint(obj) == 'tensorflow'
     assert NumExprPrinter().doprint(obj) == "evaluate('numexpr', truediv=True)"
+
+    assert NumExprPrinter().doprint(Piecewise((y, x >= 0), (z, x < 0))) == \
+            "evaluate('where((x >= 0), y, z)', truediv=True)"

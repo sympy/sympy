@@ -146,8 +146,8 @@ class Plot(object):
     def __init__(self, *args, **kwargs):
         super(Plot, self).__init__()
 
-        #  Options for the graph as a whole.
-        #  The possible values for each option are described in the docstring of
+        # Options for the graph as a whole.
+        # The possible values for each option are described in the docstring of
         # Plot. They are based purely on convention, no checking is done.
         self.title = None
         self.xlabel = None
@@ -162,6 +162,10 @@ class Plot(object):
         self.legend = False
         self.autoscale = True
         self.margin = 0
+        self.annotations = None
+        self.markers = None
+        self.rectangles = None
+        self.fill = None
 
         # Contains the data objects to be plotted. The backend should be smart
         # enough to iterate over this list.
@@ -235,6 +239,7 @@ class Plot(object):
 
         See Also
         ========
+
         extend
 
         """
@@ -467,8 +472,8 @@ class BaseSeries(object):
     #   - get_meshes returning mesh_x (1D array), mesh_y(1D array,
     #     mesh_z (2D np.arrays)
     #   - get_points an alias for get_meshes
-    #Different from is_contour as the colormap in backend will be
-    #different
+    # Different from is_contour as the colormap in backend will be
+    # different
 
     is_parametric = False
     # The calculation of aesthetics expects:
@@ -577,12 +582,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.adaptive = kwargs.get('adaptive', True)
         self.depth = kwargs.get('depth', 12)
         self.line_color = kwargs.get('line_color', None)
-        self.xscale=kwargs.get('xscale','linear')
-        self.flag=0
-
-
-
-
+        self.xscale = kwargs.get('xscale', 'linear')
 
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
@@ -598,8 +598,9 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
         References
         ==========
-        [1] Adaptive polygonal approximation of parametric curves,
-            Luiz Henrique de Figueiredo.
+
+        .. [1] Adaptive polygonal approximation of parametric curves,
+               Luiz Henrique de Figueiredo.
 
         """
 
@@ -608,41 +609,39 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         else:
             f = lambdify([self.var], self.expr)
             list_segments = []
-            np=import_module('numpy')
+            np = import_module('numpy')
             def sample(p, q, depth):
                 """ Samples recursively if three points are almost collinear.
                 For depth < 6, points are added irrespective of whether they
                 satisfy the collinearity condition or not. The maximum depth
                 allowed is 12.
                 """
-                np = import_module('numpy')
-                #Randomly sample to avoid aliasing.
+                # Randomly sample to avoid aliasing.
                 random = 0.45 + np.random.rand() * 0.1
-                xnew = p[0] + random * (q[0] - p[0])
+                if self.xscale == 'log':
+                    xnew = 10**(np.log10(p[0]) + random * (np.log10(q[0]) -
+                                                           np.log10(p[0])))
+                else:
+                    xnew = p[0] + random * (q[0] - p[0])
                 ynew = f(xnew)
                 new_point = np.array([xnew, ynew])
 
-                if self.flag==1:
-                    return
-                #Maximum depth
+                # Maximum depth
                 if depth > self.depth:
-                    if p[1] is None or q[1] is None:
-                        self.flag=1
-                        return
                     list_segments.append([p, q])
 
-                #Sample irrespective of whether the line is flat till the
-                #depth of 6. We are not using linspace to avoid aliasing.
+                # Sample irrespective of whether the line is flat till the
+                # depth of 6. We are not using linspace to avoid aliasing.
                 elif depth < 6:
                     sample(p, new_point, depth + 1)
                     sample(new_point, q, depth + 1)
 
-                #Sample ten points if complex values are encountered
-                #at both ends. If there is a real value in between, then
-                #sample those points further.
+                # Sample ten points if complex values are encountered
+                # at both ends. If there is a real value in between, then
+                # sample those points further.
                 elif p[1] is None and q[1] is None:
-                    if self.xscale is 'log':
-                        xarray = np.logspace(p[0],q[0], 10)
+                    if self.xscale == 'log':
+                        xarray = np.logspace(p[0], q[0], 10)
                     else:
                         xarray = np.linspace(p[0], q[0], 10)
                     yarray = list(map(f, xarray))
@@ -652,8 +651,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                                 sample([xarray[i], yarray[i]],
                                     [xarray[i + 1], yarray[i + 1]], depth + 1)
 
-                #Sample further if one of the end points in None( i.e. a complex
-                #value) or the three points are not almost collinear.
+                # Sample further if one of the end points in None (i.e. a
+                # complex value) or the three points are not almost collinear.
                 elif (p[1] is None or q[1] is None or new_point[1] is None
                         or not flat(p, new_point, q)):
                     sample(p, new_point, depth + 1)
@@ -661,34 +660,30 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 else:
                     list_segments.append([p, q])
 
-            if self.xscale is 'log':
-                self.start=np.log10(self.start)
-                self.end=np.log10(self.end)
-
             f_start = f(self.start)
             f_end = f(self.end)
-            sample([self.start, f_start], [self.end, f_end], 0)
+            sample(np.array([self.start, f_start]),
+                   np.array([self.end, f_end]), 0)
 
             return list_segments
 
     def get_points(self):
         np = import_module('numpy')
         if self.only_integers is True:
-            if self.xscale is 'log':
+            if self.xscale == 'log':
                 list_x = np.logspace(int(self.start), int(self.end),
                         num=int(self.end) - int(self.start) + 1)
             else:
                 list_x = np.linspace(int(self.start), int(self.end),
                     num=int(self.end) - int(self.start) + 1)
         else:
-            if self.xscale is 'log':
+            if self.xscale == 'log':
                 list_x = np.logspace(self.start, self.end, num=self.nb_of_points)
             else:
                 list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
         f = vectorized_lambdify([self.var], self.expr)
         list_y = f(list_x)
         return (list_x, list_y)
-
 
 class Parametric2DLineSeries(Line2DBaseSeries):
     """Representation for a line consisting of two parametric sympy expressions
@@ -753,7 +748,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             satisfy the collinearity condition or not. The maximum depth
             allowed is 12.
             """
-            #Randomly sample to avoid aliasing.
+            # Randomly sample to avoid aliasing.
             np = import_module('numpy')
             random = 0.45 + np.random.rand() * 0.1
             param_new = param_p + random * (param_q - param_p)
@@ -761,19 +756,19 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             ynew = f_y(param_new)
             new_point = np.array([xnew, ynew])
 
-            #Maximum depth
+            # Maximum depth
             if depth > self.depth:
                 list_segments.append([p, q])
 
-            #Sample irrespective of whether the line is flat till the
-            #depth of 6. We are not using linspace to avoid aliasing.
+            # Sample irrespective of whether the line is flat till the
+            # depth of 6. We are not using linspace to avoid aliasing.
             elif depth < 6:
                 sample(param_p, param_new, p, new_point, depth + 1)
                 sample(param_new, param_q, new_point, q, depth + 1)
 
-            #Sample ten points if complex values are encountered
-            #at both ends. If there is a real value in between, then
-            #sample those points further.
+            # Sample ten points if complex values are encountered
+            # at both ends. If there is a real value in between, then
+            # sample those points further.
             elif ((p[0] is None and q[1] is None) or
                     (p[1] is None and q[1] is None)):
                 param_array = np.linspace(param_p, param_q, 10)
@@ -789,8 +784,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                             sample(param_array[i], param_array[i], point_a,
                                    point_b, depth + 1)
 
-            #Sample further if one of the end points in None( ie a complex
-            #value) or the three points are not almost collinear.
+            # Sample further if one of the end points in None (i.e. a complex
+            # value) or the three points are not almost collinear.
             elif (p[0] is None or p[1] is None
                     or q[1] is None or q[0] is None
                     or not flat(p, new_point, q)):
@@ -1027,8 +1022,8 @@ class BaseBackend(object):
         self.parent = parent
 
 
-## don't have to check for the success of importing matplotlib in each case;
-## we will only be using this backend if we can successfully import matploblib
+# Don't have to check for the success of importing matplotlib in each case;
+# we will only be using this backend if we can successfully import matploblib
 class MatplotlibBackend(BaseBackend):
     def __init__(self, parent):
         super(MatplotlibBackend, self).__init__(parent)
@@ -1057,7 +1052,7 @@ class MatplotlibBackend(BaseBackend):
             elif all(are_3D):
                 # mpl_toolkits.mplot3d is necessary for
                 # projection='3d'
-                mpl_toolkits = import_module('mpl_toolkits',
+                mpl_toolkits = import_module('mpl_toolkits', # noqa
                                      __import__kwargs={'fromlist': ['mplot3d']})
                 self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d'))
 
@@ -1151,33 +1146,6 @@ class MatplotlibBackend(BaseBackend):
             ax.set_xscale(parent.xscale)
         if parent.yscale and not isinstance(ax, Axes3D):
             ax.set_yscale(parent.yscale)
-        if parent.xlim:
-            from sympy.core.basic import Basic
-            xlim = parent.xlim
-            if any(isinstance(i,Basic) and not i.is_real for i in xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be real".format(xlim))
-            if any(isinstance(i,Basic) and not i.is_finite for i in xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be finite".format(xlim))
-            xlim = (float(i) for i in xlim)
-            ax.set_xlim(xlim)
-        else:
-            if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
-                starts = [s.start for s in parent._series]
-                ends = [s.end for s in parent._series]
-                ax.set_xlim(min(starts), max(ends))
-        if parent.ylim:
-            from sympy.core.basic import Basic
-            ylim = parent.ylim
-            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be real".format(ylim))
-            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be finite".format(ylim))
-            ylim = (float(i) for i in ylim)
-            ax.set_ylim(ylim)
         if not isinstance(ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
             ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
@@ -1211,6 +1179,54 @@ class MatplotlibBackend(BaseBackend):
             ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
             ax.set_ylabel(parent.ylabel, position=(0, 1))
+        if parent.annotations:
+            for a in parent.annotations:
+                ax.annotate(**a)
+        if parent.markers:
+            for marker in parent.markers:
+                # make a copy of the marker dictionary
+                # so that it doesn't get altered
+                m = marker.copy()
+                args = m.pop('args')
+                ax.plot(*args, **m)
+        if parent.rectangles:
+            for r in parent.rectangles:
+                rect = self.matplotlib.patches.Rectangle(**r)
+                ax.add_patch(rect)
+        if parent.fill:
+            ax.fill_between(**parent.fill)
+
+        # xlim and ylim shoulld always be set at last so that plot limits
+        # doesn't get altered during the process.
+        if parent.xlim:
+            from sympy.core.basic import Basic
+            xlim = parent.xlim
+            if any(isinstance(i, Basic) and not i.is_real for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be real".format(xlim))
+            if any(isinstance(i, Basic) and not i.is_finite for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be finite".format(xlim))
+            xlim = (float(i) for i in xlim)
+            ax.set_xlim(xlim)
+        else:
+            if parent._series and all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
+                starts = [s.start for s in parent._series]
+                ends = [s.end for s in parent._series]
+                ax.set_xlim(min(starts), max(ends))
+
+        if parent.ylim:
+            from sympy.core.basic import Basic
+            ylim = parent.ylim
+            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be real".format(ylim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be finite".format(ylim))
+            ylim = (float(i) for i in ylim)
+            ax.set_ylim(ylim)
+
 
     def process_series(self):
         """
@@ -1296,10 +1312,10 @@ def centers_of_segments(array):
 def centers_of_faces(array):
     np = import_module('numpy')
     return np.mean(np.dstack((array[:-1, :-1],
-                                 array[1:, :-1],
-                                 array[:-1, 1: ],
-                                 array[:-1, :-1],
-                                 )), 2)
+                             array[1:, :-1],
+                             array[:-1, 1:],
+                             array[:-1, :-1],
+                             )), 2)
 
 
 def flat(x, y, z, eps=1e-3):
@@ -1316,7 +1332,6 @@ def flat(x, y, z, eps=1e-3):
     vector_b_norm = np.linalg.norm(vector_b)
     cos_theta = dot_product / (vector_a_norm * vector_b_norm)
     return abs(cos_theta + 1) < eps
-
 
 def _matplotlib_list(interval_list):
     """
@@ -1399,7 +1414,7 @@ def plot(*args, **kwargs):
     the plot by calling the ``save()`` and ``show()`` methods
     respectively.
 
-    Arguments for ``LineOver1DRangeSeries`` class:
+    Arguments for :obj:`LineOver1DRangeSeries` class:
 
     ``adaptive``: Boolean. The default value is set to True. Set adaptive to False and
     specify ``nb_of_points`` if uniform sampling is required.
@@ -1438,6 +1453,23 @@ def plot(*args, **kwargs):
     ``xlim`` : tuple of two floats, denoting the x-axis limits.
 
     ``ylim`` : tuple of two floats, denoting the y-axis limits.
+
+    ``annotations``: list. A list of dictionaries specifying the type of
+    annotation required. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's annotate() function.
+
+    ``markers``: list. A list of dictionaries specifying the type the
+    markers required. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's plot() function along with the
+    marker related keyworded arguments.
+
+    ``rectangles``: list. A list of dictionaries specifying the dimensions
+    of the rectangles to be plotted. The keys in the dictionary should be
+    equivalent to the arguments of the matplotlib's patches.Rectangle class.
+
+    ``fill``: dict. A dictionary specifying the type of color filling
+    required in the plot. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's fill_between() function.
 
     Examples
     ========
@@ -1501,7 +1533,7 @@ def plot(*args, **kwargs):
     See Also
     ========
 
-    Plot, LineOver1DRangeSeries.
+    Plot, LineOver1DRangeSeries
 
     """
     args = list(map(sympify, args))
@@ -1903,6 +1935,7 @@ def plot3d(*args, **kwargs):
 
     See Also
     ========
+
     Plot, SurfaceOver2DRangeSeries
 
     """
@@ -2007,6 +2040,7 @@ def plot3d_parametric_surface(*args, **kwargs):
 
     See Also
     ========
+
     Plot, ParametricSurfaceSeries
 
     """
@@ -2086,7 +2120,9 @@ def plot_contour(*args, **kwargs):
 
     See Also
     ========
+
     Plot, ContourSeries
+
     """
 
     args = list(map(sympify, args))
@@ -2122,6 +2158,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
        >>> check_arguments([x, x**2], 1, 1)
            [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
     """
+    if not args:
+        return []
     if expr_len > 1 and isinstance(args[0], Expr):
         # Multiple expressions same range.
         # The arguments are tuples when the expression length is
@@ -2178,7 +2216,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             plots = [expr + ranges for expr in exprs]
             return plots
         else:
-            #Use default ranges.
+            # Use default ranges.
             default_range = Tuple(-10, 10)
             ranges = []
             for symbol in free_symbols:
@@ -2191,7 +2229,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             return plots
 
     elif isinstance(args[0], Tuple) and len(args[0]) == expr_len + nb_of_free_symbols:
-        #Multiple plots with different ranges.
+        # Multiple plots with different ranges.
         for arg in args:
             for i in range(expr_len):
                 if not isinstance(arg[i], Expr):

@@ -1,8 +1,8 @@
 from sympy.assumptions.satask import satask
 
-from sympy import symbols, Q, assuming, Implies, MatrixSymbol, I, pi, Rational
+from sympy import S, symbols, Q, assuming, Implies, MatrixSymbol, I, pi
 
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.utilities.pytest import raises, XFAIL
 
 
 x, y, z = symbols('x y z')
@@ -200,7 +200,7 @@ def test_odd_satask():
 
 def test_integer():
     assert satask(Q.integer(1)) is True
-    assert satask(Q.integer(Rational(1, 2))) is False
+    assert satask(Q.integer(S.Half)) is False
 
     assert satask(Q.integer(x + y), Q.integer(x) & Q.integer(y)) is True
     assert satask(Q.integer(x + y), Q.integer(x)) is None
@@ -264,7 +264,6 @@ def test_pos_neg():
     assert satask(Q.negative(x + y), Q.positive(x) & Q.positive(y)) is False
 
 
-@slow
 def test_pow_pos_neg():
     assert satask(Q.nonnegative(x**2), Q.positive(x)) is True
     assert satask(Q.nonpositive(x**2), Q.positive(x)) is False
@@ -323,3 +322,16 @@ def test_pow_pos_neg():
 
     # We could deduce things for negative powers if x is nonzero, but it
     # isn't implemented yet.
+
+
+def test_prime_composite():
+    assert satask(Q.prime(x), Q.composite(x)) is False
+    assert satask(Q.composite(x), Q.prime(x)) is False
+    assert satask(Q.composite(x), ~Q.prime(x)) is None
+    assert satask(Q.prime(x), ~Q.composite(x)) is None
+    # since 1 is neither prime nor composite the following should hold
+    assert satask(Q.prime(x), Q.integer(x) & Q.positive(x) & ~Q.composite(x)) is None
+    assert satask(Q.prime(2)) is True
+    assert satask(Q.prime(4)) is False
+    assert satask(Q.prime(1)) is False
+    assert satask(Q.composite(1)) is False

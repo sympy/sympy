@@ -103,7 +103,7 @@ class JavascriptCodePrinter(CodePrinter):
             return '1/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             return 'Math.sqrt(%s)' % self._print(expr.base)
-        elif expr.exp == S(1)/3:
+        elif expr.exp == S.One/3:
             return 'Math.cbrt(%s)' % self._print(expr.base)
         else:
             return 'Math.pow(%s, %s)' % (self._print(expr.base),
@@ -112,6 +112,12 @@ class JavascriptCodePrinter(CodePrinter):
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
         return '%d/%d' % (p, q)
+
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array

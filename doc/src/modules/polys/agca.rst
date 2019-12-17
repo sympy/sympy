@@ -187,6 +187,8 @@ and submodules:
 .. autoclass:: FreeModule
    :members:
 
+.. autoclass:: FreeModuleElement
+
 .. autoclass:: SubModule
    :members:
 
@@ -227,6 +229,8 @@ subquotient modules:
 
 .. autoclass:: QuotientModule
    :members:
+
+.. autoclass:: QuotientModuleElement
 
 .. autoclass:: SubQuotientModule
    :members:

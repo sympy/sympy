@@ -30,6 +30,8 @@ __all__ = [
     'FockStateKet',
     'FockStateBosonKet',
     'FockStateBosonBra',
+    'FockStateFermionKet',
+    'FockStateFermionBra',
     'BBra',
     'BKet',
     'FBra',
@@ -1249,7 +1251,7 @@ class FockStateFermionKet(FermionState, FockStateKet):
     ========
 
     >>> from sympy.physics.secondquant import FKet
-    >>> FKet([1, 2]) #doctest: +SKIP
+    >>> FKet([1, 2])
     FockStateFermionKet((1, 2))
     """
     def _dagger_(self):
@@ -1267,7 +1269,7 @@ class FockStateFermionBra(FermionState, FockStateBra):
     ========
 
     >>> from sympy.physics.secondquant import FBra
-    >>> FBra([1, 2]) #doctest: +SKIP
+    >>> FBra([1, 2])
     FockStateFermionBra((1, 2))
     """
     def _dagger_(self):
@@ -2039,14 +2041,14 @@ class NO(Expr):
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import F, NO
-        >>> p,q,r = symbols('p,q,r')
+        >>> p, q, r = symbols('p,q,r')
 
-        >>> NO(F(p)*F(q)*F(r)).get_subNO(1)  # doctest: +SKIP
+        >>> NO(F(p)*F(q)*F(r)).get_subNO(1)
         NO(AnnihilateFermion(p)*AnnihilateFermion(r))
 
         """
         arg0 = self.args[0]  # it's a Mul by definition of how it's created
-        mul = arg0._new_rawargs(arg0.args[:i] + arg0.args[i + 1:])
+        mul = arg0._new_rawargs(*(arg0.args[:i] + arg0.args[i + 1:]))
         return NO(mul)
 
     def _latex(self, printer):
@@ -2308,7 +2310,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     the structure of the term.  For each term, we obtain a sequence of all
     dummy variables, where the order is determined by the index range, what
     factors the index belongs to and its position in each factor.  See
-    _get_ordered_dummies() for more inforation about the sorting of dummies.
+    _get_ordered_dummies() for more information about the sorting of dummies.
     The index sequence is then substituted consistently in each term.
 
     Examples
@@ -2773,15 +2775,14 @@ def wicks(e, **kw_args):
 
     >>> from sympy import symbols, Function, Dummy
     >>> from sympy.physics.secondquant import wicks, F, Fd, NO
-    >>> p,q,r = symbols('p,q,r')
-    >>> wicks(Fd(p)*F(q))  # doctest: +SKIP
-    d(p, q)*d(q, _i) + NO(CreateFermion(p)*AnnihilateFermion(q))
+    >>> p, q, r = symbols('p,q,r')
+    >>> wicks(Fd(p)*F(q))
+    KroneckerDelta(_i, q)*KroneckerDelta(p, q) + NO(CreateFermion(p)*AnnihilateFermion(q))
 
     By default, the expression is expanded:
 
-    >>> wicks(F(p)*(F(q)+F(r))) # doctest: +SKIP
-    NO(AnnihilateFermion(p)*AnnihilateFermion(q)) + NO(
-        AnnihilateFermion(p)*AnnihilateFermion(r))
+    >>> wicks(F(p)*(F(q)+F(r)))
+    NO(AnnihilateFermion(p)*AnnihilateFermion(q)) + NO(AnnihilateFermion(p)*AnnihilateFermion(r))
 
     With the keyword 'keep_only_fully_contracted=True', only fully contracted
     terms are returned.
@@ -2791,9 +2792,8 @@ def wicks(e, **kw_args):
      -- Dummy variables are substituted consistently across terms
 
     >>> p, q, r = symbols('p q r', cls=Dummy)
-    >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True) # doctest: +SKIP
-    KroneckerDelta(_i, _q)*KroneckerDelta(
-        _p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
+    >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True)
+    KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
 
     """
 

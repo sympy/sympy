@@ -11,8 +11,11 @@ import re
 import textwrap
 import linecache
 
+from types import FunctionType
+
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, PY3)
+from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
@@ -81,15 +84,7 @@ MPMATH_TRANSLATIONS = {
 NUMPY_TRANSLATIONS = {}
 SCIPY_TRANSLATIONS = {}
 
-TENSORFLOW_TRANSLATIONS = {
-    "Abs": "abs",
-    "ceiling": "ceil",
-    "im": "imag",
-    "ln": "log",
-    "Mod": "mod",
-    "conjugate": "conj",
-    "re": "real",
-}
+TENSORFLOW_TRANSLATIONS = {}
 
 NUMEXPR_TRANSLATIONS = {}
 
@@ -99,7 +94,7 @@ MODULES = {
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
-    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
+    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -484,10 +479,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     But if we try to pass in a SymPy expression, it fails
 
-    >>> g(x + 1)
+    >>> try:
+    ...     g(x + 1)
+    ... # NumPy release after 1.17 raises TypeError instead of
+    ... # AttributeError
+    ... except (AttributeError, TypeError):
+    ...     raise AttributeError() # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
-    AttributeError: 'Add' object has no attribute 'sin'
+    AttributeError:
 
     Now, let's look at what happened. The reason this fails is that ``g``
     calls ``numpy.sin`` on the input expression, and ``numpy.sin`` does not
@@ -582,21 +582,45 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     Usage with Tensorflow:
 
     >>> import tensorflow as tf
-    >>> from sympy import Max, sin
+    >>> from sympy import Max, sin, lambdify
+    >>> from sympy.abc import x
+
     >>> f = Max(x, sin(x))
     >>> func = lambdify(x, f, 'tensorflow')
+
+    After tensorflow v2, eager execution is enabled by default.
+    If you want to get the compatible result across tensorflow v1 and v2
+    as same as this tutorial, run this line.
+
+    >>> tf.compat.v1.enable_eager_execution()
+
+    If you have eager execution enabled, you can get the result out
+    immediately as you can use numpy.
+
+    If you pass tensorflow objects, you may get an ``EagerTensor``
+    object instead of value.
+
     >>> result = func(tf.constant(1.0))
-    >>> print(result) # a tf.Tensor representing the result of the calculation
-    Tensor("Maximum:0", shape=(), dtype=float32)
-    >>> sess = tf.Session()
-    >>> sess.run(result) # compute result
+    >>> print(result)
+    tf.Tensor(1.0, shape=(), dtype=float32)
+    >>> print(result.__class__)
+    <class 'tensorflow.python.framework.ops.EagerTensor'>
+
+    You can use ``.numpy()`` to get the numpy value of the tensor.
+
+    >>> result.numpy()
     1.0
-    >>> var = tf.Variable(1.0)
-    >>> sess.run(tf.global_variables_initializer())
-    >>> sess.run(func(var)) # also works for tf.Variable and tf.Placeholder
-    1.0
-    >>> tensor = tf.constant([[1.0, 2.0], [3.0, 4.0]]) # works with any shape tensor
-    >>> sess.run(func(tensor))
+
+    >>> var = tf.Variable(2.0)
+    >>> result = func(var) # also works for tf.Variable and tf.Placeholder
+    >>> result.numpy()
+    2.0
+
+    And it works with any shape array.
+
+    >>> tensor = tf.constant([[1.0, 2.0], [3.0, 4.0]])
+    >>> result = func(tensor)
+    >>> result.numpy()
     [[1. 2.]
      [3. 4.]]
 
@@ -744,27 +768,32 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 # Cannot infer name with certainty. arg_# will have to do.
                 names.append('arg_' + str(n))
 
-    imp_mod_lines = []
-    for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
-        for k in keys:
-            if k not in namespace:
-                imp_mod_lines.append("from %s import %s" % (mod, k))
-    for ln in imp_mod_lines:
-        exec_(ln, {}, namespace)
-
-    # Provide lambda expression with builtins, and compatible implementation of range
-    namespace.update({'builtins':builtins, 'range':range})
-
     # Create the function definition code and execute it
-
     funcname = '_lambdifygenerated'
-
     if _module_present('tensorflow', namespaces):
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
-
     funcstr = funcprinter.doprint(funcname, args, expr)
+
+    # Collect the module imports from the code printers.
+    imp_mod_lines = []
+    for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
+        for k in keys:
+            if k not in namespace:
+                ln = "from %s import %s" % (mod, k)
+                try:
+                    exec_(ln, {}, namespace)
+                except ImportError:
+                    # Tensorflow 2.0 has issues with importing a specific
+                    # function from its submodule.
+                    # https://github.com/tensorflow/tensorflow/issues/33022
+                    ln = "%s = %s.%s" % (k, mod, k)
+                    exec_(ln, {}, namespace)
+                imp_mod_lines.append(ln)
+
+    # Provide lambda expression with builtins, and compatible implementation of range
+    namespace.update({'builtins':builtins, 'range':range})
 
     funclocals = {}
     global _lambdify_generated_counter
@@ -956,11 +985,11 @@ class _EvaluatorPrinter(object):
 
             self._exprrepr = printer.doprint
 
-            if hasattr(printer, '_print_Symbol'):
-                symbolrepr = printer._print_Symbol
+            #if hasattr(printer, '_print_Symbol'):
+            #    symbolrepr = printer._print_Symbol
 
-            if hasattr(printer, '_print_Dummy'):
-                dummyrepr = printer._print_Dummy
+            #if hasattr(printer, '_print_Dummy'):
+            #    dummyrepr = printer._print_Dummy
 
         # Used to print the generated function arguments in a standard way
         self._argrepr = LambdaPrinter().doprint
@@ -1022,6 +1051,8 @@ class _EvaluatorPrinter(object):
         """
         from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
         from sympy.matrices import DeferredVector
+        from sympy.core.symbol import _uniquely_named_symbol
+        from sympy.core.expr import Expr
 
         # Args of type Dummy can cause name collisions with args
         # of type Symbol.  Force dummify of everything in this
@@ -1039,6 +1070,8 @@ class _EvaluatorPrinter(object):
                 s = self._argrepr(arg)
                 if dummify or not self._is_safe_ident(s):
                     dummy = Dummy()
+                    if isinstance(expr, Expr):
+                        dummy = _uniquely_named_symbol(dummy.name, expr)
                     s = self._argrepr(dummy)
                     expr = self._subexpr(expr, {arg: dummy})
             elif dummify or isinstance(arg, (Function, Derivative)):
@@ -1228,15 +1261,17 @@ def implemented_function(symfunc, implementation):
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
     # if name, create function to hold implementation
-    _extra_kwargs = {}
+    kwargs = {}
     if isinstance(symfunc, UndefinedFunction):
-        _extra_kwargs = symfunc._extra_kwargs
+        kwargs = symfunc._kwargs
         symfunc = symfunc.__name__
     if isinstance(symfunc, string_types):
         # Keyword arguments to UndefinedFunction are added as attributes to
         # the created class.
-        symfunc = UndefinedFunction(symfunc, _imp_=staticmethod(implementation), **_extra_kwargs)
+        symfunc = UndefinedFunction(
+            symfunc, _imp_=staticmethod(implementation), **kwargs)
     elif not isinstance(symfunc, UndefinedFunction):
-        raise ValueError('symfunc should be either a string or'
-                         ' an UndefinedFunction instance.')
+        raise ValueError(filldedent('''
+            symfunc should be either a string or
+            an UndefinedFunction instance.'''))
     return symfunc

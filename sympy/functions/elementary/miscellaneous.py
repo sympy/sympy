@@ -46,12 +46,9 @@ class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
 
     def __new__(cls):
-        from sympy.sets.sets import FiniteSet
         x = Dummy('x')
         #construct "by hand" to avoid infinite loop
-        obj = Expr.__new__(cls, Tuple(x), x)
-        obj.nargs = FiniteSet(1)
-        return obj
+        return Expr.__new__(cls, Tuple(x), x)
 
 Id = S.IdentityFunction
 
@@ -516,7 +513,7 @@ class MinMaxBase(Expr, LatticeOp):
         for arg in arg_sequence:
 
             # pre-filter, checking comparability of arguments
-            if not isinstance(arg, Expr) or arg.is_real is False or (
+            if not isinstance(arg, Expr) or arg.is_extended_real is False or (
                     arg.is_number and
                     not arg.is_comparable):
                 raise ValueError("The argument '%s' is not comparable." % arg)
@@ -596,7 +593,7 @@ class MinMaxBase(Expr, LatticeOp):
         for a in self.args:
             i += 1
             da = a.diff(s)
-            if da is S.Zero:
+            if da.is_zero:
                 continue
             try:
                 df = self.fdiff(i)
@@ -638,6 +635,7 @@ class MinMaxBase(Expr, LatticeOp):
     _eval_is_prime = lambda s: _torf(i.is_prime for i in s.args)
     _eval_is_rational = lambda s: _torf(i.is_rational for i in s.args)
     _eval_is_real = lambda s: _torf(i.is_real for i in s.args)
+    _eval_is_extended_real = lambda s: _torf(i.is_extended_real for i in s.args)
     _eval_is_transcendental = lambda s: _torf(i.is_transcendental for i in s.args)
     _eval_is_zero = lambda s: _torf(i.is_zero for i in s.args)
 
@@ -670,12 +668,12 @@ class Max(MinMaxBase, Application):
     ========
 
     >>> from sympy import Max, Symbol, oo
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x, y, z
     >>> p = Symbol('p', positive=True)
     >>> n = Symbol('n', negative=True)
 
-    >>> Max(x, -2)                  #doctest: +SKIP
-    Max(x, -2)
+    >>> Max(x, -2)
+    Max(-2, x)
     >>> Max(x, -2).subs(x, 3)
     3
     >>> Max(p, -2)
@@ -684,9 +682,9 @@ class Max(MinMaxBase, Application):
     Max(x, y)
     >>> Max(x, y) == Max(y, x)
     True
-    >>> Max(x, Max(y, z))           #doctest: +SKIP
+    >>> Max(x, Max(y, z))
     Max(x, y, z)
-    >>> Max(n, 8, p, 7, -oo)        #doctest: +SKIP
+    >>> Max(n, 8, p, 7, -oo)
     Max(8, p)
     >>> Max (1, x, oo)
     oo
@@ -773,16 +771,16 @@ class Min(MinMaxBase, Application):
     >>> p = Symbol('p', positive=True)
     >>> n = Symbol('n', negative=True)
 
-    >>> Min(x, -2)                  #doctest: +SKIP
-    Min(x, -2)
+    >>> Min(x, -2)
+    Min(-2, x)
     >>> Min(x, -2).subs(x, 3)
     -2
     >>> Min(p, -3)
     -3
-    >>> Min(x, y)                   #doctest: +SKIP
+    >>> Min(x, y)
     Min(x, y)
-    >>> Min(n, 8, p, -7, p, oo)     #doctest: +SKIP
-    Min(n, -7)
+    >>> Min(n, 8, p, -7, p, oo)
+    Min(-7, n)
 
     See Also
     ========
