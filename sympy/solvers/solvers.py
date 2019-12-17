@@ -3442,7 +3442,12 @@ def unrad(eq, *syms, **flags):
 
     # preconditioning
     eq = powdenest(factor_terms(eq, radical=True, clear=True))
-    eq, d = eq.as_numer_denom()
+
+    if isinstance(eq, Relational):
+        eq, d = eq, 1
+    else:
+        eq, d = eq.as_numer_denom()
+
     eq = _mexpand(eq, recursive=True)
     if eq.is_number:
         return
