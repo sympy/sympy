@@ -592,10 +592,18 @@ def dynamicsymbols(names, level=0,**assumptions):
     ========
 
     >>> from sympy.physics.vector import dynamicsymbols
-    >>> from sympy import diff, Symbol
+    >>> from sympy import diff, Symbol, sqrt
     >>> q1 = dynamicsymbols('q1')
     >>> q1
     q1(t)
+    >>> q2= dynamicsymbols('q2', real=True)
+    q2(t)
+    >>> q2.is_real
+    True
+    >>> q3= dynamicsymbols('q3', positive=True)
+    q3(t)
+    >>> q3.is_positive
+    True
     >>> diff(q1, Symbol('t'))
     Derivative(q1(t), t)
 
