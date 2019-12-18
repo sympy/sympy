@@ -492,6 +492,13 @@ def test_partial_velocity():
     raises(TypeError, lambda: partial_velocity(vel_list, u1, N))
 
 
+def test_different_time_symbol_old():
+    x = Symbol('x')
+    dynamicsymbols._t = x
+    q = dynamicsymbols('q')
+    assert q.diff(x) == Derivative(Function('q')(x), x)
+
+
 def test_different_time_symbol():
     import sympy.physics.vector.functions
     t = sympy.physics.vector.functions.TIME
