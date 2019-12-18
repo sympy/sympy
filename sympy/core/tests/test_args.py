@@ -936,7 +936,6 @@ def test_sympy__sets__fancysets__ComplexRegion():
 
 def test_sympy__sets__fancysets__CartesianComplexRegion():
     from sympy.sets.fancysets import CartesianComplexRegion
-    from sympy import S
     from sympy.sets import Interval
     a = Interval(0, 1)
     b = Interval(2, 3)
@@ -1572,7 +1571,6 @@ def test_sympy__stats__joint_rv_types__NegativeMultinomialDistribution():
 
 def test_sympy__stats__rv__RandomIndexedSymbol():
     from sympy.stats.rv import RandomIndexedSymbol, pspace
-    from sympy.tensor import Indexed
     from sympy.stats.stochastic_process_types import DiscreteMarkovChain
     X = DiscreteMarkovChain("X")
     assert _test_args(RandomIndexedSymbol(X[0].symbol, pspace(X[0])))
@@ -1619,7 +1617,6 @@ def test_sympy__stats__stochastic_process_types__GeneratorMatrixOf():
 
 def test_sympy__stats__stochastic_process_types__StochasticStateSpaceOf():
     from sympy.stats.stochastic_process_types import StochasticStateSpaceOf, DiscreteMarkovChain
-    from sympy import MatrixSymbol
     DMC = DiscreteMarkovChain("Y")
     assert _test_args(StochasticStateSpaceOf(DMC, [0, 1, 2]))
 
@@ -2918,11 +2915,11 @@ def test_sympy__matrices__expressions__diagonal__DiagonalOf():
     X = MatrixSymbol('x', 10, 10)
     assert _test_args(DiagonalOf(X))
 
-def test_sympy__matrices__expressions__diagonal__DiagonalizeVector():
-    from sympy.matrices.expressions.diagonal import DiagonalizeVector
+def test_sympy__matrices__expressions__diagonal__DiagMatrix():
+    from sympy.matrices.expressions.diagonal import DiagMatrix
     from sympy.matrices.expressions import MatrixSymbol
     x = MatrixSymbol('x', 10, 1)
-    assert _test_args(DiagonalizeVector(x))
+    assert _test_args(DiagMatrix(x))
 
 def test_sympy__matrices__expressions__hadamard__HadamardProduct():
     from sympy.matrices.expressions.hadamard import HadamardProduct
@@ -3856,13 +3853,12 @@ def test_sympy__physics__units__dimensions__Dimension():
 
 def test_sympy__physics__units__dimensions__DimensionSystem():
     from sympy.physics.units.dimensions import DimensionSystem
-    from sympy.physics.units.dimensions import length, time, velocity
+    from sympy.physics.units.definitions.dimension_definitions import length, time, velocity
     assert _test_args(DimensionSystem((length, time), (velocity,)))
 
 
 def test_sympy__physics__units__quantities__Quantity():
     from sympy.physics.units.quantities import Quantity
-    from sympy.physics.units import length
     assert _test_args(Quantity("dam"))
 
 
@@ -3922,8 +3918,10 @@ def test_sympy__series__sequences__SeqBase():
 
 
 def test_sympy__series__sequences__EmptySequence():
-    from sympy.series.sequences import EmptySequence
-    assert _test_args(EmptySequence())
+    # Need to imort the instance from series not the class from
+    # series.sequence
+    from sympy.series import EmptySequence
+    assert _test_args(EmptySequence)
 
 
 @SKIP('Abstract Class')
@@ -4087,7 +4085,7 @@ def test_sympy__tensor__indexed__IndexedBase():
 
 def test_sympy__tensor__tensor__TensorIndexType():
     from sympy.tensor.tensor import TensorIndexType
-    assert _test_args(TensorIndexType('Lorentz', metric=False))
+    assert _test_args(TensorIndexType('Lorentz'))
 
 
 @SKIP("deprecated class")
@@ -4102,14 +4100,14 @@ def test_sympy__tensor__tensor__TensorSymmetry():
 
 def test_sympy__tensor__tensor__TensorHead():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, TensorHead
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     assert _test_args(TensorHead('p', [Lorentz], sym, 0))
 
 
 def test_sympy__tensor__tensor__TensorIndex():
     from sympy.tensor.tensor import TensorIndexType, TensorIndex
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     assert _test_args(TensorIndex('i', Lorentz))
 
 @SKIP("abstract class")
@@ -4118,7 +4116,7 @@ def test_sympy__tensor__tensor__TensExpr():
 
 def test_sympy__tensor__tensor__TensAdd():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, TensAdd, tensor_heads
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     p, q = tensor_heads('p,q', [Lorentz], sym)
@@ -4129,7 +4127,7 @@ def test_sympy__tensor__tensor__TensAdd():
 
 def test_sympy__tensor__tensor__Tensor():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, TensorHead
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     p = TensorHead('p', [Lorentz], sym)
@@ -4138,7 +4136,7 @@ def test_sympy__tensor__tensor__Tensor():
 
 def test_sympy__tensor__tensor__TensMul():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, tensor_indices, tensor_heads
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     p, q = tensor_heads('p, q', [Lorentz], sym)
@@ -4156,7 +4154,7 @@ def test_sympy__tensor__tensor__TensorElement():
 def test_sympy__tensor__toperators__PartialDerivative():
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead
     from sympy.tensor.toperators import PartialDerivative
-    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     a, b = tensor_indices('a,b', Lorentz)
     A = TensorHead("A", [Lorentz])
     assert _test_args(PartialDerivative(A(a), A(b)))

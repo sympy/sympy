@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import print_function, division
 
 from sympy.core.compatibility import as_int, range
@@ -866,7 +864,7 @@ def legendre_symbol(a, p):
     a = a % p
     if not a:
         return 0
-    if is_quad_residue(a, p):
+    if pow(a, (p - 1) // 2, p) == 1:
         return 1
     return -1
 
@@ -961,7 +959,7 @@ def jacobi_symbol(m, n):
 
 class mobius(Function):
     """
-    Möbius function maps natural number to {-1, 0, 1}
+    Mobius function maps natural number to {-1, 0, 1}
 
     It is defined as follows:
         1) `1` if `n = 1`.
@@ -972,7 +970,7 @@ class mobius(Function):
     It is an important multiplicative function in number theory
     and combinatorics.  It has applications in mathematical series,
     algebraic number theory and also physics (Fermion operator has very
-    concrete realization with Möbius Function model).
+    concrete realization with Mobius Function model).
 
     Parameters
     ==========

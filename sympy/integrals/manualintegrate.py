@@ -1603,7 +1603,7 @@ def manualintegrate(f, var):
     Compute indefinite integral of a single variable using an algorithm that
     resembles what a student would do by hand.
 
-    Unlike ``integrate``, var can only be a single symbol.
+    Unlike :func:`~.integrate`, var can only be a single symbol.
 
     Examples
     ========

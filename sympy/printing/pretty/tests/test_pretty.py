@@ -9,11 +9,11 @@ from sympy import (
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio,
     LambertW, airyai, airybi, airyaiprime, airybiprime, fresnelc, fresnels,
-    Heaviside, dirichlet_eta)
+    Heaviside, dirichlet_eta, diag)
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
-from sympy.core.compatibility import range, u_decode as u, PY3
+from sympy.core.compatibility import range, u_decode as u, unicode, PY3
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.trace import Tr
 
@@ -31,7 +31,7 @@ from sympy.matrices.expressions import hadamard_power
 from sympy.physics import mechanics
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
-from sympy.printing.pretty.pretty_symbology import center_accent
+from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
 
 from sympy.sets import ImageSet, ProductSet
 from sympy.sets.setexpr import SetExpr
@@ -41,7 +41,7 @@ from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
@@ -364,6 +364,18 @@ def test_pretty_Cycle():
     assert pretty(Cycle(1, 3)(4, 5)) == '(1 3)(4 5)'
     assert pretty(Cycle()) == '()'
 
+
+def test_pretty_Permutation():
+    from sympy.combinatorics.permutations import Permutation
+    p1 = Permutation(1, 2)(3, 4)
+    assert xpretty(p1, perm_cyclic=True, use_unicode=True) == "(1 2)(3 4)"
+    assert xpretty(p1, perm_cyclic=True, use_unicode=False) == "(1 2)(3 4)"
+    assert xpretty(p1, perm_cyclic=False, use_unicode=True) == \
+    u'⎛0 1 2 3 4⎞\n'\
+    u'⎝0 2 1 4 3⎠'
+    assert xpretty(p1, perm_cyclic=False, use_unicode=False) == \
+    "/0 1 2 3 4\\\n"\
+    "\\0 2 1 4 3/"
 
 def test_pretty_basic():
     assert pretty( -Rational(1)/2 ) == '-1/2'
@@ -2913,6 +2925,17 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    unicode_str = \
+u("""\
+⎡v̇_msc_00     0         0    ⎤
+⎢                            ⎥
+⎢   0      v̇_msc_01     0    ⎥
+⎢                            ⎥
+⎣   0         0      v̇_msc_02⎦\
+""")
+
+    expr = diag(*MatrixSymbol('vdot_msc',1,3))
+    assert upretty(expr) == unicode_str
 
 def test_pretty_ndim_arrays():
     x, y, z, w = symbols("x y z w")
@@ -3199,12 +3222,12 @@ def test_MatrixExpressions():
     expr = (X.T*X).applyfunc(sin)
 
     ascii_str = """\
-    / T  \\\n\
-sin.\\X *X/\
+              / T  \\\n\
+(d -> sin(d)).\\X *X/\
 """
     ucode_str = u("""\
-    ⎛ T  ⎞\n\
-sin˳⎝X ⋅X⎠\
+             ⎛ T  ⎞\n\
+(d ↦ sin(d))˳⎝X ⋅X⎠\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3848,7 +3871,7 @@ def test_pretty_ConditionSet():
     assert pretty(ConditionSet(x, Contains(x, S.Reals, evaluate=False), FiniteSet(1))) == '{1}'
     assert upretty(ConditionSet(x, Contains(x, S.Reals, evaluate=False), FiniteSet(1))) == u'{1}'
 
-    assert pretty(ConditionSet(x, And(x > 1, x < -1), FiniteSet(1, 2, 3))) == "EmptySet()"
+    assert pretty(ConditionSet(x, And(x > 1, x < -1), FiniteSet(1, 2, 3))) == "EmptySet"
     assert upretty(ConditionSet(x, And(x > 1, x < -1), FiniteSet(1, 2, 3))) == u"∅"
 
     assert pretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == '{2}'
@@ -3887,7 +3910,7 @@ def test_ProductSet_exponent():
 def test_ProductSet_parenthesis():
     ucode_str = u'([4, 7] × {1, 2}) ∪ ([2, 3] × [4, 7])'
 
-    a, b, c = Interval(2, 3), Interval(4, 7), Interval(1, 9)
+    a, b = Interval(2, 3), Interval(4, 7)
     assert upretty(Union(a*b, b*FiniteSet(1, 2))) == ucode_str
 
 def test_ProductSet_prod_char_issue_10413():
@@ -5813,21 +5836,21 @@ def test_categories():
 
     # Test how diagrams are printed.
     d = Diagram()
-    assert pretty(d) == "EmptySet()"
+    assert pretty(d) == "EmptySet"
     assert upretty(d) == u"∅"
 
     d = Diagram({f1: "unique", f2: S.EmptySet})
-    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
-        "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
-        "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
+    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet, id:A1-->A1: " \
+        "EmptySet, id:A2-->A2: EmptySet, id:A3-->A3: " \
+        "EmptySet, f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet}"
 
     assert upretty(d) == u("{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
         "id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}")
 
     d = Diagram({f1: "unique", f2: S.EmptySet}, {f2 * f1: "unique"})
-    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
-        "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
-        "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \
+    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet, id:A1-->A1: " \
+        "EmptySet, id:A2-->A2: EmptySet, id:A3-->A3: " \
+        "EmptySet, f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet}" \
         " ==> {f2*f1:A1-->A3: {unique}}"
     assert upretty(d) == u("{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
         "∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
@@ -6571,7 +6594,6 @@ def test_pretty_print_tensor_partial_deriv():
 
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
-    i0 = tensor_indices("i0", L)
 
     A, B, C, D = tensor_heads("A B C D", [L])
 
@@ -6843,7 +6865,6 @@ def test_hadamard_power():
     m, n, p = symbols('m, n, p', integer=True)
     A = MatrixSymbol('A', m, n)
     B = MatrixSymbol('B', m, n)
-    C = MatrixSymbol('C', m, p)
 
     # Testing printer:
     expr = hadamard_power(A, n)
@@ -6912,3 +6933,13 @@ u("""\
  ‾‾‾    \n\
 n = -∞  \
 """)
+
+def test_is_combining():
+    line = u("v̇_m")
+    assert [is_combining(sym) for sym in line] == \
+        [False, True, False, False]
+
+
+def test_issue_17857():
+    assert pretty(Range(-oo, oo)) == '{..., -1, 0, 1, ...}'
+    assert pretty(Range(oo, -oo, -1)) == '{..., 1, 0, -1, ...}'

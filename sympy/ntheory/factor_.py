@@ -336,7 +336,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     See Also
     ========
     sympy.core.power.integer_nthroot
-    primetest.is_square
+    sympy.ntheory.primetest.is_square
     """
     from sympy.core.power import integer_nthroot
     n = as_int(n)
@@ -1677,6 +1677,8 @@ class totient(Function):
     1
     >>> totient(25)
     20
+    >>> totient(45) == totient(5)*totient(9)
+    True
 
     See Also
     ========

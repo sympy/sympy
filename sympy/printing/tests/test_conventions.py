@@ -3,7 +3,7 @@ from sympy.functions.special.bessel import besselj
 from sympy.functions.special.polynomials import legendre
 from sympy.functions.combinatorial.numbers import bell
 from sympy.printing.conventions import split_super_sub, requires_partial
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import XFAIL
 
 def test_super_sub():
     assert split_super_sub("beta_13_2") == ("beta", [], ["13", "2"])

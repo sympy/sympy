@@ -869,7 +869,7 @@ def convert_equals_signs(result, local_dict, global_dict):
 
 
 #: Standard transformations for :func:`parse_expr`.
-#: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
+#: Inserts calls to :class:`~.Symbol`, :class:`~.Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
 standard_transformations = (lambda_notation, auto_symbol, repeated_decimals, auto_number,
     factorial_notation)
@@ -1035,8 +1035,14 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
     def flatten(self, args, func):
         result = []
         for arg in args:
-            if isinstance(arg, ast.Call) and arg.func.id == func:
-                result.extend(self.flatten(arg.args, func))
+            if isinstance(arg, ast.Call):
+                arg_func = arg.func
+                if isinstance(arg_func, ast.Call):
+                    arg_func = arg_func.func
+                if arg_func.id == func:
+                    result.extend(self.flatten(arg.args, func))
+                else:
+                    result.append(arg)
             else:
                 result.append(arg)
         return result

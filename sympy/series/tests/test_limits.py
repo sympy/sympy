@@ -12,7 +12,7 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, nocache_fail
 
 from sympy.abc import x, y, z, k
 n = Symbol('n', integer=True, positive=True)
@@ -36,7 +36,7 @@ def test_basic1():
     assert limit((1 + x)**oo, x, 0) is oo
     assert limit((1 + x)**oo, x, 0, dir='-') == 0
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
-    assert limit(y/x/log(x), x, 0) is -oo*sign(y)
+    assert limit(y/x/log(x), x, 0) == -oo*sign(y)
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) is S.NaN
@@ -547,7 +547,9 @@ def test_issue_15984():
     assert limit((-x + log(exp(x) + 1))/x, x, oo, dir='-').doit() == 0
 
 
+@nocache_fail
 def test_issue_13575():
+    # This fails with infinite recursion when run without the cache:
     result = limit(acos(erfi(x)), x, 1)
     assert isinstance(result, Add)
 

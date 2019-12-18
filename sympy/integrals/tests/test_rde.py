@@ -1,5 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, S, symbols, oo, I, Rational
+from sympy import Poly, symbols, oo, I, Rational
 from sympy.core.compatibility import PY3
 from sympy.integrals.risch import (DifferentialExtension,
     NonElementaryIntegralException)

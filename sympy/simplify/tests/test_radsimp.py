@@ -7,7 +7,7 @@ from sympy.core.expr import unchanged
 from sympy.core.mul import _unevaluated_Mul as umul
 from sympy.simplify.radsimp import (_unevaluated_Add,
     collect_sqrt, fraction_expand, collect_abs)
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 from sympy.abc import x, y, z, a, b, c, d
 
@@ -435,3 +435,7 @@ def test_collect_abs():
     assert isinstance(ans, Abs)
     assert collect_abs(abs(x)*abs(y)) == ans
     assert collect_abs(1 + exp(abs(x)*abs(y))) == 1 + exp(ans)
+
+    # See https://github.com/sympy/sympy/issues/12910
+    p = Symbol('p', positive=True)
+    assert collect_abs(p/abs(1-p)).is_commutative is True

@@ -1324,8 +1324,8 @@ class DiagramGrid(object):
         >>> diagram = Diagram([f, g])
         >>> grid = DiagramGrid(diagram)
         >>> grid.morphisms
-        {NamedMorphism(Object("A"), Object("B"), "f"): EmptySet(),
-        NamedMorphism(Object("B"), Object("C"), "g"): EmptySet()}
+        {NamedMorphism(Object("A"), Object("B"), "f"): EmptySet,
+        NamedMorphism(Object("B"), Object("C"), "g"): EmptySet}
 
         """
         return self._morphisms
@@ -1502,7 +1502,7 @@ class ArrowStringDescription(object):
 
 class XypicDiagramDrawer(object):
     r"""
-    Given a :class:`Diagram` and the corresponding
+    Given a :class:`~.Diagram` and the corresponding
     :class:`DiagramGrid`, produces the Xy-pic representation of the
     diagram.
 
@@ -2580,7 +2580,7 @@ def preview_diagram(diagram, masked=None, diagram_format="", groups=None,
     See Also
     ========
 
-    xypic_diagram_drawer
+    XypicDiagramDrawer
     """
     from sympy.printing import preview
     latex_output = xypic_draw_diagram(diagram, masked, diagram_format,

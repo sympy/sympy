@@ -6,9 +6,8 @@ from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
                    TribonacciConstant, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
                    AlgebraicNumber, simplify, sin, fibonacci, RealField,
-                   sympify, srepr)
+                   sympify, srepr, Dummy, Sum)
 from sympy.core.compatibility import long
-from sympy.core.expr import unchanged
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
@@ -1274,9 +1273,9 @@ def test_bug_sqrt():
 
 def test_pi_Pi():
     "Test that pi (instance) is imported, but Pi (class) is not"
-    from sympy import pi
+    from sympy import pi  # noqa
     with raises(ImportError):
-        from sympy import Pi
+        from sympy import Pi  # noqa
 
 
 def test_no_len():
@@ -1674,6 +1673,11 @@ def test_Catalan_EulerGamma_prec():
     assert f._prec == 20
     assert n._as_mpf_val(20) == f._mpf_
 
+def test_Catalan_rewrite():
+    k = Dummy('k', integer=True, nonnegative=True)
+    assert Catalan.rewrite(Sum).dummy_eq(
+            Sum((-1)**k/(2*k + 1)**2, (k, 0, oo)))
+    assert Catalan.rewrite() == Catalan
 
 def test_bool_eq():
     assert 0 == False

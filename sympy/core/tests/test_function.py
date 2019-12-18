@@ -478,14 +478,16 @@ def test_function_non_commutative():
 
 def test_function_complex():
     x = Symbol('x', complex=True)
+    xzf = Symbol('x', complex=True, zero=False)
     assert f(x).is_commutative is True
     assert sin(x).is_commutative is True
     assert exp(x).is_commutative is True
     assert log(x).is_commutative is True
-    assert f(x).is_complex is True
+    assert f(x).is_complex is None
     assert sin(x).is_complex is True
     assert exp(x).is_complex is True
-    assert log(x).is_complex is True
+    assert log(x).is_complex is None
+    assert log(xzf).is_complex is True
 
 
 def test_function__eval_nseries():
@@ -870,15 +872,15 @@ def test_nfloat():
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
 
     # issue 10933
-    for t in (dict, Dict):
-        d = t({S.Half: S.Half})
+    for ti in (dict, Dict):
+        d = ti({S.Half: S.Half})
         n = nfloat(d)
-        assert isinstance(n, t)
+        assert isinstance(n, ti)
         assert _aresame(list(n.items()).pop(), (S.Half, Float(.5)))
-    for t in (dict, Dict):
-        d = t({S.Half: S.Half})
+    for ti in (dict, Dict):
+        d = ti({S.Half: S.Half})
         n = nfloat(d, dkeys=True)
-        assert isinstance(n, t)
+        assert isinstance(n, ti)
         assert _aresame(list(n.items()).pop(), (Float(.5), Float(.5)))
     d = [S.Half]
     n = nfloat(d)

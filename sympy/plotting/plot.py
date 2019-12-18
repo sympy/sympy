@@ -1052,7 +1052,7 @@ class MatplotlibBackend(BaseBackend):
             elif all(are_3D):
                 # mpl_toolkits.mplot3d is necessary for
                 # projection='3d'
-                mpl_toolkits = import_module('mpl_toolkits',
+                mpl_toolkits = import_module('mpl_toolkits', # noqa
                                      __import__kwargs={'fromlist': ['mplot3d']})
                 self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d'))
 
@@ -1414,7 +1414,7 @@ def plot(*args, **kwargs):
     the plot by calling the ``save()`` and ``show()`` methods
     respectively.
 
-    Arguments for ``LineOver1DRangeSeries`` class:
+    Arguments for :obj:`LineOver1DRangeSeries` class:
 
     ``adaptive``: Boolean. The default value is set to True. Set adaptive to False and
     specify ``nb_of_points`` if uniform sampling is required.
@@ -1533,7 +1533,7 @@ def plot(*args, **kwargs):
     See Also
     ========
 
-    Plot, LineOver1DRangeSeries.
+    Plot, LineOver1DRangeSeries
 
     """
     args = list(map(sympify, args))

@@ -102,10 +102,29 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
-# lambdify with tensorflow and numexpr is tested here
 
-# TODO: Generate these tests automatically
-if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
+# Test tensorflow 1 support (which is a separate conda environment)
+if [[ "${TEST_TENSORFLOW_1}" == "true" ]]; then
+    cat << EOF | python
+print('Testing optional dependencies')
+
+import sympy
+test_list = [
+    "tensorflow",
+]
+
+doctest_list = [
+    "tensorflow",
+]
+
+if not (sympy.test(*test_list) and sympy.doctest(*doctest_list)):
+    raise Exception('Tests failed')
+EOF
+
+    # lambdify with tensorflow and numexpr is tested here
+
+    # TODO: Generate these tests automatically
+elif [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     cat << EOF | python
 print('Testing optional dependencies')
 

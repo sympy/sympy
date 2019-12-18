@@ -272,8 +272,8 @@ class MatrixShaping(MatrixRequired):
         ========
 
         row
-        col_op
-        col_swap
+        sympy.matrices.dense.MutableDenseMatrix.col_op
+        sympy.matrices.dense.MutableDenseMatrix.col_swap
         col_del
         col_join
         col_insert
@@ -556,8 +556,8 @@ class MatrixShaping(MatrixRequired):
         ========
 
         col
-        row_op
-        row_swap
+        sympy.matrices.dense.MutableDenseMatrix.row_op
+        sympy.matrices.dense.MutableDenseMatrix.row_swap
         row_del
         row_join
         row_insert
@@ -1317,7 +1317,7 @@ class MatrixProperties(MatrixRequired):
 
         is_lower
         is_upper
-        is_diagonalizable
+        sympy.matrices.matrices.MatrixEigen.is_diagonalizable
         diagonalize
         """
         return self._eval_is_diagonal()
@@ -1753,7 +1753,7 @@ class MatrixOperations(MatrixRequired):
 
         transpose: Matrix transposition
         H: Hermite conjugation
-        D: Dirac conjugation
+        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
         """
         return self._eval_conjugate()
 
@@ -1805,23 +1805,52 @@ class MatrixOperations(MatrixRequired):
         ========
 
         conjugate: By-element conjugation
-        D: Dirac conjugation
+        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
         """
         return self.T.C
 
     def permute(self, perm, orientation='rows', direction='forward'):
-        """Permute the rows or columns of a matrix by the given list of swaps.
+        r"""Permute the rows or columns of a matrix by the given list of
+        swaps.
 
         Parameters
         ==========
 
-        perm : a permutation.  This may be a list swaps (e.g., `[[1, 2], [0, 3]]`),
-            or any valid input to the `Permutation` constructor, including a `Permutation()`
-            itself.  If `perm` is given explicitly as a list of indices or a `Permutation`,
-            `direction` has no effect.
-        orientation : ('rows' or 'cols') whether to permute the rows or the columns
-        direction : ('forward', 'backward') whether to apply the permutations from
-            the start of the list first, or from the back of the list first
+        perm : Permutation, list, or list of lists
+            A representation for the permutation.
+
+            If it is ``Permutation``, it is used directly with some
+            resizing with respect to the matrix size.
+
+            If it is specified as list of lists,
+            (e.g., ``[[0, 1], [0, 2]]``), then the permutation is formed
+            from applying the product of cycles. The direction how the
+            cyclic product is applied is described in below.
+
+            If it is specified as a list, the list should represent
+            an array form of a permutation. (e.g., ``[1, 2, 0]``) which
+            would would form the swapping function
+            `0 \mapsto 1, 1 \mapsto 2, 2\mapsto 0`.
+
+        orientation : 'rows', 'cols'
+            A flag to control whether to permute the rows or the columns
+
+        direction : 'forward', 'backward'
+            A flag to control whether to apply the permutations from
+            the start of the list first, or from the back of the list
+            first.
+
+            For example, if the permutation specification is
+            ``[[0, 1], [0, 2]]``,
+
+            If the flag is set to ``'forward'``, the cycle would be
+            formed as `0 \mapsto 2, 2 \mapsto 1, 1 \mapsto 0`.
+
+            If the flag is set to ``'backward'``, the cycle would be
+            formed as `0 \mapsto 1, 1 \mapsto 2, 2 \mapsto 0`.
+
+            If the argument ``perm`` is not in a form of list of lists,
+            this flag takes no effect.
 
         Examples
         ========
@@ -1842,7 +1871,42 @@ class MatrixOperations(MatrixRequired):
         [0, 0, 1],
         [1, 0, 0]])
 
+        Notes
+        =====
+
+        If a bijective function
+        `\sigma : \mathbb{N}_0 \rightarrow \mathbb{N}_0` denotes the
+        permutation.
+
+        If the matrix `A` is the matrix to permute, represented as
+        a horizontal or a vertical stack of vectors:
+
+        .. math::
+            A =
+            \begin{bmatrix}
+            a_0 \\ a_1 \\ \vdots \\ a_{n-1}
+            \end{bmatrix} =
+            \begin{bmatrix}
+            \alpha_0 & \alpha_1 & \cdots & \alpha_{n-1}
+            \end{bmatrix}
+
+        If the matrix `B` is the result, the permutation of matrix rows
+        is defined as:
+
+        .. math::
+            B := \begin{bmatrix}
+            a_{\sigma(0)} \\ a_{\sigma(1)} \\ \vdots \\ a_{\sigma(n-1)}
+            \end{bmatrix}
+
+        And the permutation of matrix columns is defined as:
+
+        .. math::
+            B := \begin{bmatrix}
+            \alpha_{\sigma(0)} & \alpha_{\sigma(1)} &
+            \cdots & \alpha_{\sigma(n-1)}
+            \end{bmatrix}
         """
+        from sympy.combinatorics import Permutation
 
         # allow british variants and `columns`
         if direction == 'forwards':
@@ -1859,29 +1923,23 @@ class MatrixOperations(MatrixRequired):
             raise TypeError("orientation='{}' is an invalid kwarg. "
                             "Try 'rows' or 'cols'".format(orientation))
 
+        if not isinstance(perm, (Permutation, Iterable)):
+            raise ValueError(
+                "{} must be a list, a list of lists, "
+                "or a SymPy permutation object.".format(perm))
+
         # ensure all swaps are in range
         max_index = self.rows if orientation == 'rows' else self.cols
         if not all(0 <= t <= max_index for t in flatten(list(perm))):
             raise IndexError("`swap` indices out of range.")
 
-        # see if we are a list of pairs
-        try:
-            assert len(perm[0]) == 2
-            # we are a list of swaps, so `direction` matters
-            if direction == 'backward':
-                perm = reversed(perm)
-
-            # since Permutation doesn't let us have non-disjoint cycles,
-            # we'll construct the explicit mapping ourselves XXX Bug #12479
-            mapping = list(range(max_index))
-            for (i, j) in perm:
-                mapping[i], mapping[j] = mapping[j], mapping[i]
-            perm = mapping
-        except (TypeError, AssertionError, IndexError):
-            pass
-
-        from sympy.combinatorics import Permutation
-        perm = Permutation(perm, size=max_index)
+        if perm and not isinstance(perm, Permutation) and \
+            isinstance(perm[0], Iterable):
+            if direction == 'forward':
+                perm = list(reversed(perm))
+            perm = Permutation(perm, size=max_index)
+        else:
+            perm = Permutation(perm, size=max_index)
 
         if orientation == 'rows':
             return self._eval_permute_rows(perm)
@@ -1889,7 +1947,8 @@ class MatrixOperations(MatrixRequired):
             return self._eval_permute_cols(perm)
 
     def permute_cols(self, swaps, direction='forward'):
-        """Alias for `self.permute(swaps, orientation='cols', direction=direction)`
+        """Alias for
+        ``self.permute(swaps, orientation='cols', direction=direction)``
 
         See Also
         ========
@@ -1899,7 +1958,8 @@ class MatrixOperations(MatrixRequired):
         return self.permute(swaps, orientation='cols', direction=direction)
 
     def permute_rows(self, swaps, direction='forward'):
-        """Alias for `self.permute(swaps, orientation='rows', direction=direction)`
+        """Alias for
+        ``self.permute(swaps, orientation='rows', direction=direction)``
 
         See Also
         ========
@@ -2332,8 +2392,8 @@ class MatrixArithmetic(MatrixRequired):
         See Also
         ========
 
-        cross
-        dot
+        sympy.matrices.matrices.MatrixBase.cross
+        sympy.matrices.matrices.MatrixBase.dot
         multiply
         """
         if self.shape != other.shape:

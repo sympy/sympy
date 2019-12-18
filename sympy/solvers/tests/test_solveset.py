@@ -9,7 +9,7 @@ from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
-    atanh, sinh, tanh)
+    atanh, sinh, tanh, cosh, sech, coth)
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
@@ -19,6 +19,7 @@ from sympy.functions.special.error_functions import (erf, erfc,
     erfcinv, erfinv)
 from sympy.logic.boolalg import And
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import CRootOf
 from sympy.sets.contains import Contains
@@ -29,7 +30,8 @@ from sympy.sets.sets import (Complement, EmptySet, FiniteSet,
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
 
-from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
+from sympy.utilities.pytest import (XFAIL, raises, skip, slow, SKIP,
+    nocache_fail)
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
@@ -273,7 +275,10 @@ def test_garbage_input():
 
 def test_solve_mul():
     assert solveset_real((a*x + b)*(exp(x) - 3), x) == \
-        FiniteSet(-b/a, log(3))
+        Union({log(3)}, Intersection({-b/a}, S.Reals))
+    anz = Symbol('anz', nonzero=True)
+    assert solveset_real((anz*x + b)*(exp(x) - 3), x) == \
+        FiniteSet(-b/anz, log(3))
     assert solveset_real((2*x + 8)*(8 + exp(x)), x) == FiniteSet(S(-4))
     assert solveset_real(x/log(x), x) == EmptySet()
 
@@ -622,17 +627,6 @@ def test_issue_10069():
     assert solveset_real(eq, x) == u
 
 
-@XFAIL
-def test_rewrite_trigh():
-    # if this import passes then the test below should also pass
-    from sympy import sech
-    assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
-        2*atanh(Rational(-1, 2) + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(Rational(-1, 2) + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(-sqrt(5)/2 - S.Half + sqrt(2 + 2*sqrt(5))/2),
-        2*atanh(-sqrt(2 + 2*sqrt(5))/2 - sqrt(5)/2 - S.Half))
-
-
 def test_real_imag_splitting():
     a, b = symbols('a b', real=True)
     assert solveset_real(sqrt(a**2 - b**2) - 3, a) == \
@@ -768,6 +762,7 @@ def test_solveset_complex_tan():
         imageset(Lambda(n, pi*n + pi/2), S.Integers)
 
 
+@nocache_fail
 def test_solve_trig():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
@@ -787,6 +782,7 @@ def test_solve_trig():
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
+    # This fails when running with the cache off:
     assert solveset_complex(cos(x) - S.Half, x) == \
         Union(imageset(Lambda(n, 2*n*pi + pi*Rational(5, 3)), S.Integers),
               imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
@@ -819,6 +815,41 @@ def test_solve_trig():
 
     assert solveset_real(cos(2*x)*cos(4*x) - 1, x) == \
                             ImageSet(Lambda(n, n*pi), S.Integers)
+
+
+def test_solve_hyperbolic():
+    # actual solver: _solve_trig1
+    n = Dummy('n')
+    assert solveset(sinh(x) + cosh(x), x) == S.EmptySet
+    assert solveset(sinh(x) + cos(x), x) == ConditionSet(x,
+        Eq(cos(x) + sinh(x), 0), S.Complexes)
+    assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
+        log(sqrt(sqrt(5) - 2)))
+    assert solveset_real(3*cosh(2*x) - 5, x) == FiniteSet(
+        log(sqrt(3)/3), log(sqrt(3)))
+    assert solveset_real(sinh(x - 3) - 2, x) == FiniteSet(
+        log((2 + sqrt(5))*exp(3)))
+    assert solveset_real(cosh(2*x) + 2*sinh(x) - 5, x) == FiniteSet(
+        log(-2 + sqrt(5)), log(1 + sqrt(2)))
+    assert solveset_real((coth(x) + sinh(2*x))/cosh(x) - 3, x) == FiniteSet(
+        log(S.Half + sqrt(5)/2), log(1 + sqrt(2)))
+    assert solveset_real(cosh(x)*sinh(x) - 2, x) == FiniteSet(
+        log(sqrt(4 + sqrt(17))))
+    assert solveset_real(sinh(x) + tanh(x) - 1, x) == FiniteSet(
+        log(sqrt(2)/2 + sqrt(-S(1)/2 + sqrt(2))))
+    assert solveset_complex(sinh(x) - I/2, x) == Union(
+        ImageSet(Lambda(n, I*(2*n*pi + 5*pi/6)), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi + pi/6)), S.Integers))
+    assert solveset_complex(sinh(x) + sech(x), x) == Union(
+        ImageSet(Lambda(n, 2*n*I*pi + log(sqrt(-2 + sqrt(5)))), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi + pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sqrt(-2 + sqrt(5)))), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi - pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers))
+    # issues #9606 / #9531:
+    assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
+    assert solveset(sinh(x), x, S.Complexes) == Union(
+        ImageSet(Lambda(n, I*(2*n*pi + pi)), S.Integers),
+        ImageSet(Lambda(n, 2*n*I*pi), S.Integers))
 
 
 def test_solve_invalid_sol():
@@ -1234,6 +1265,16 @@ def test_linsolve():
     assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
     assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
     assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
+
+
+def test_linsolve_immutable():
+    A = ImmutableDenseMatrix([[1, 1, 2], [0, 1, 2], [0, 0, 1]])
+    B = ImmutableDenseMatrix([2, 1, -1])
+    c = symbols('c1 c2 c3')
+    assert linsolve([A, B], c) == FiniteSet((1, 3, -1))
+
+    A = ImmutableDenseMatrix([[1, 1, 7], [1, -1, 3]])
+    assert linsolve(A) == FiniteSet((5, 2))
 
 
 def test_solve_decomposition():
@@ -1707,6 +1748,12 @@ def test_issue_14987():
 def test_simplification():
     eq = x + (a - b)/(-2*a + 2*b)
     assert solveset(eq, x) == FiniteSet(S.Half)
+    assert solveset(eq, x, S.Reals) == Intersection({-((a - b)/(-2*a + 2*b))}, S.Reals)
+    # So that ap - bn is not zero:
+    ap = Symbol('ap', positive=True)
+    bn = Symbol('bn', negative=True)
+    eq = x + (ap - bn)/(-2*ap + 2*bn)
+    assert solveset(eq, x) == FiniteSet(S.Half)
     assert solveset(eq, x, S.Reals) == FiniteSet(S.Half)
 
 
@@ -1970,11 +2017,10 @@ def test_exponential_symbols():
     w = symbols('w')
     f1 = 2*x**w - 4*y**w
     f2 = (x/y)**w - 2
-    ans1 = solveset(f1, w, S.Reals)
-    ans2 = solveset(f2, w, S.Reals)
-    assert len(ans1) == len(ans2) == 1
-    a1, a2 = [list(i)[0] for i in (ans1, ans2)]
-    assert a1.equals(a2)
+    sol1 = Intersection({log(2)/(log(x) - log(y))}, S.Reals)
+    sol2 = Intersection({log(2)/log(x/y)}, S.Reals)
+    assert solveset(f1, w, S.Reals) == sol1
+    assert solveset(f2, w, S.Reals) == sol2
 
     assert solveset(x**x, x, S.Reals) == S.EmptySet
     assert solveset(x**y - 1, y, S.Reals) == FiniteSet(0)
@@ -2092,6 +2138,7 @@ def test_linear_coeffs():
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
     assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
+    assert linear_coeffs(1.0, x, y) == [0, 0, 1.0]
 
 # modular tests
 def test_is_modular():

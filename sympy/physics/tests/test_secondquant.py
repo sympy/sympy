@@ -6,7 +6,7 @@ from sympy.physics.secondquant import (
     evaluate_deltas, AntiSymmetricTensor, contraction, NO, wicks,
     PermutationOperator, simplify_index_permutations,
     _sort_anticommuting_fermions, _get_ordered_dummies,
-    substitute_dummies, FockState, FockStateBosonKet,
+    substitute_dummies, FockStateBosonKet,
     ContractionAppliesOnlyToFermions
 )
 
@@ -133,26 +133,6 @@ def test_basic_state():
     s = BosonState([n, m])
     assert s.down(0) == BosonState([n - 1, m])
     assert s.up(0) == BosonState([n + 1, m])
-
-
-# 2019-07-24: No method move in the whole of SymPy
-@XFAIL
-def test_move1():
-    i, j = symbols('i,j')
-    A, C = symbols('A,C', cls=Function)
-    o = A(i)*C(j)
-    # This almost works, but has a minus sign wrong
-    assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
-
-
-# 2019-07-24: No method move in the whole of SymPy
-@XFAIL
-def test_move2():
-    i, j = symbols('i,j')
-    A, C = symbols('A,C', cls=Function)
-    o = C(j)*A(i)
-    # This almost works, but has a minus sign wrong
-    assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
 
 
 def test_basic_apply():
@@ -1278,8 +1258,6 @@ def test_internal_external_pqrs_AT():
 
 def test_canonical_ordering_AntiSymmetricTensor():
     v = symbols("v")
-    virtual_indices = ('c', 'd')
-    occupied_indices = ('k', 'l')
 
     c, d = symbols(('c','d'), above_fermi=True,
                                    cls=Dummy)

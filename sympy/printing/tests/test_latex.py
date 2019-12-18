@@ -7,7 +7,7 @@ from sympy import (
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, Mod,
-    assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling, Complement,
+    assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, jacobi, laguerre, legendre, lerchphi, log, frac,
@@ -37,7 +37,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
-from sympy.physics.units import degree, radian, kg, meter, gibibyte, microgram, second
+from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
@@ -197,6 +197,13 @@ def test_latex_permutation():
     assert latex(Permutation(2, 4)*Permutation(5)) == \
         r"\left( 2\; 4\right)\left( 5\right)"
     assert latex(Permutation(5)) == r"\left( 5\right)"
+
+    assert latex(Permutation(0, 1), perm_cyclic=False) == \
+        r"\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}"
+    assert latex(Permutation(0, 1)(2, 3), perm_cyclic=False) == \
+        r"\begin{pmatrix} 0 & 1 & 2 & 3 \\ 1 & 0 & 3 & 2 \end{pmatrix}"
+    assert latex(Permutation(), perm_cyclic=False) == \
+        r"\left( \right)"
 
 
 def test_latex_Float():
@@ -1798,7 +1805,7 @@ def test_ElementwiseApplyFunction():
     from sympy.matrices import MatrixSymbol
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
-    assert latex(expr) == r"{\sin}_{\circ}\left({X^{T} X}\right)"
+    assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
     expr = X.applyfunc(Lambda(x, 1/x))
     assert latex(expr) == r'{\left( d \mapsto \frac{1}{d} \right)}_{\circ}\left({X}\right)'
 
@@ -2013,6 +2020,15 @@ def test_greek_symbols():
     assert latex(Symbol('varrho')) == r'\varrho'
     assert latex(Symbol('varsigma')) == r'\varsigma'
     assert latex(Symbol('vartheta')) == r'\vartheta'
+
+
+def test_fancyset_symbols():
+    assert latex(S.Rationals) == '\\mathbb{Q}'
+    assert latex(S.Naturals) == '\\mathbb{N}'
+    assert latex(S.Naturals0) == '\\mathbb{N}_0'
+    assert latex(S.Integers) == '\\mathbb{Z}'
+    assert latex(S.Reals) == '\\mathbb{R}'
+    assert latex(S.Complexes) == '\\mathbb{C}'
 
 
 @XFAIL
@@ -2347,7 +2363,7 @@ def test_multiline_latex():
     raises(ValueError, lambda: multiline_latex(f, expr, environment="foo"))
 
 def test_issue_15353():
-    from sympy import ConditionSet, Tuple, FiniteSet, S, sin, cos
+    from sympy import ConditionSet, Tuple, S, sin, cos
     a, x = symbols('a x')
     # Obtained from nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
     sol = ConditionSet(
@@ -2507,3 +2523,8 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex([1,2.3,4.5], decimal_separator='non_existing_decimal_separator_in_list'))
     raises(ValueError, lambda: latex(FiniteSet(1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_set'))
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
+
+
+def test_issue_17857():
+    assert latex(Range(-oo, oo)) == r'\left\{\ldots, -1, 0, 1, \ldots\right\}'
+    assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'

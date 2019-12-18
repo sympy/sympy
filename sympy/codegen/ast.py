@@ -169,7 +169,7 @@ class Token(Basic):
     Subclasses should not need to override the ``__new__()`` method. They may
     define a class or static method named ``_construct_<attr>`` for each
     attribute to process the value passed to ``__new__()``. Attributes listed
-    in the class attribute ``not_in_args`` are not passed to :class:`sympy.Basic`.
+    in the class attribute ``not_in_args`` are not passed to :class:`~.Basic`.
     """
 
     __slots__ = []
@@ -1047,7 +1047,6 @@ class Type(Token):
             Absolute tolerance (in addition to ``rtol``).
         limits : dict
             Values given by ``limits.h``, x86/IEEE754 defaults if not given.
-            Default: :attr:`default_limits`.
         type_aliases : dict
             Maps substitutions for Type, e.g. {integer: int64, real: float32}
 

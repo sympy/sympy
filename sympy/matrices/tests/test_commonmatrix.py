@@ -1,11 +1,10 @@
 from sympy.assumptions import Q
 from sympy.core.add import Add
 from sympy.core.compatibility import range
-from sympy.core.function import (Function, diff)
-from sympy.core.numbers import (E, Float, I, Integer, oo, pi, Rational)
-from sympy.core.relational import (Eq, Lt)
+from sympy.core.function import Function
+from sympy.core.numbers import Float, I, Integer, oo, pi, Rational
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -603,6 +602,7 @@ def test_permute():
     a = OperationsOnlyMatrix(3, 4, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
     raises(IndexError, lambda: a.permute([[0, 5]]))
+    raises(ValueError, lambda: a.permute(Symbol('x')))
     b = a.permute_rows([[0, 2], [0, 1]])
     assert a.permute([[0, 2], [0, 1]]) == b == Matrix([
                                             [5,  6,  7,  8],

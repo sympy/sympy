@@ -141,6 +141,7 @@ class LatexPrinter(Printer):
         "imaginary_unit": "i",
         "gothic_re_im": False,
         "decimal_separator": "period",
+        "perm_cyclic": True,
     }
 
     def __init__(self, settings=None):
@@ -374,7 +375,35 @@ class LatexPrinter(Printer):
         term_tex = term_tex.replace(']', r"\right)")
         return term_tex
 
-    _print_Permutation = _print_Cycle
+    def _print_Permutation(self, expr):
+        from sympy.combinatorics.permutations import Permutation
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+        perm_cyclic = Permutation.print_cyclic
+        if perm_cyclic is not None:
+            SymPyDeprecationWarning(
+                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
+                useinstead="init_printing(perm_cyclic={})"
+                .format(perm_cyclic),
+                issue=15201,
+                deprecated_since_version="1.6").warn()
+        else:
+            perm_cyclic = self._settings.get("perm_cyclic", True)
+
+        if perm_cyclic:
+            return self._print_Cycle(expr)
+
+        if expr.size == 0:
+            return r"\left( \right)"
+
+        lower = [self._print(arg) for arg in expr.array_form]
+        upper = [self._print(arg) for arg in range(len(lower))]
+
+        row1 = " & ".join(upper)
+        row2 = " & ".join(lower)
+        mat = r" \\ ".join((row1, row2))
+        return r"\begin{pmatrix} %s \end{pmatrix}" % mat
+
 
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
@@ -1903,7 +1932,12 @@ class LatexPrinter(Printer):
     def _print_Range(self, s):
         dots = r'\ldots'
 
-        if s.start.is_infinite:
+        if s.start.is_infinite and s.stop.is_infinite:
+            if s.step.is_positive:
+                printset = dots, -1, 0, 1, dots
+            else:
+                printset = dots, 1, 0, -1, dots
+        elif s.start.is_infinite:
             printset = dots, s[-1] - s.step, s[-1]
         elif s.stop.is_infinite:
             it = iter(s)
@@ -2047,6 +2081,9 @@ class LatexPrinter(Printer):
 
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
+
+    def _print_Rationals(self, i):
+        return r"\mathbb{Q}"
 
     def _print_Reals(self, i):
         return r"\mathbb{R}"
@@ -2493,7 +2530,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
           mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
           order=None, symbol_names=None, root_notation=True,
           mat_symbol_style="plain", imaginary_unit="i", gothic_re_im=False,
-          decimal_separator="period" ):
+          decimal_separator="period", perm_cyclic=True):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2694,6 +2731,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'imaginary_unit': imaginary_unit,
         'gothic_re_im': gothic_re_im,
         'decimal_separator': decimal_separator,
+        'perm_cyclic' : perm_cyclic,
     }
 
     return LatexPrinter(settings).doprint(expr)

@@ -903,7 +903,7 @@ class Piecewise(Function):
          (3, Interval(4, oo))]
         >>> p.as_expr_set_pairs(Interval(0, 3))
         [(1, Interval.Ropen(0, 2)),
-         (2, Interval(2, 3)), (3, EmptySet())]
+         (2, Interval(2, 3)), (3, EmptySet)]
         """
         exp_sets = []
         U = domain

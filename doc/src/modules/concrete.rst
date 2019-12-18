@@ -88,6 +88,9 @@ Concrete Class Reference
 .. autoclass:: sympy.concrete.products.Product
    :members:
 
+.. autoclass:: sympy.concrete.expr_with_intlimits.ExprWithIntLimits
+   :members:
+
 Concrete Functions Reference
 ----------------------------
 

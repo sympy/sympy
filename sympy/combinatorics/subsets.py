@@ -606,6 +606,6 @@ def ksubsets(superset, k):
     See Also
     ========
 
-    class:Subset
+    Subset
     """
     return combinations(superset, k)

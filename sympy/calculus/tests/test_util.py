@@ -155,7 +155,7 @@ def test_periodicity():
         cos, sin, sec, csc, tan, cot))
     assert periodicity(Abs(sin(tan(x))), x) == pi
     assert periodicity(Abs(sin(sin(x) + tan(x))), x) == 2*pi
-    assert periodicity(sin(x) > S.Half, x) is 2*pi
+    assert periodicity(sin(x) > S.Half, x) == 2*pi
 
     assert periodicity(x > 2, x) is None
     assert periodicity(x**3 - x**2 + 1, x) is None

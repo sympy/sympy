@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
 from sympy.codegen import Assignment
@@ -6,6 +5,7 @@ from sympy.codegen.ast import none
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
 from sympy.core.numbers import pi
+from sympy.core.singleton import S
 from sympy.functions import acos, Piecewise, sign, sqrt
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
@@ -65,6 +65,15 @@ def test_MpmathPrinter():
     assert p.doprint(sign(x)) == 'mpmath.sign(x)'
     assert p.doprint(Rational(1, 2)) == 'mpmath.mpf(1)/mpmath.mpf(2)'
 
+    assert p.doprint(S.Exp1) == 'mpmath.e'
+    assert p.doprint(S.Pi) == 'mpmath.pi'
+    assert p.doprint(S.GoldenRatio) == 'mpmath.phi'
+    assert p.doprint(S.EulerGamma) == 'mpmath.euler'
+    assert p.doprint(S.NaN) == 'mpmath.nan'
+    assert p.doprint(S.Infinity) == 'mpmath.inf'
+    assert p.doprint(S.NegativeInfinity) == 'mpmath.ninf'
+
+
 def test_NumPyPrinter():
     p = NumPyPrinter()
     assert p.doprint(sign(x)) == 'numpy.sign(x)'
@@ -81,6 +90,13 @@ def test_NumPyPrinter():
     assert p.doprint(x**-1) == 'x**(-1.0)'
     assert p.doprint(x**-2) == 'x**(-2.0)'
 
+    assert p.doprint(S.Exp1) == 'numpy.e'
+    assert p.doprint(S.Pi) == 'numpy.pi'
+    assert p.doprint(S.EulerGamma) == 'numpy.euler_gamma'
+    assert p.doprint(S.NaN) == 'numpy.nan'
+    assert p.doprint(S.Infinity) == 'numpy.PINF'
+    assert p.doprint(S.NegativeInfinity) == 'numpy.NINF'
+
 
 def test_SciPyPrinter():
     p = SciPyPrinter()
@@ -92,6 +108,10 @@ def test_SciPyPrinter():
     smat = SparseMatrix(2, 5, {(0, 1): 3})
     assert p.doprint(smat) == 'scipy.sparse.coo_matrix([3], ([0], [1]), shape=(2, 5))'
     assert 'scipy.sparse' in p.module_imports
+
+    assert p.doprint(S.GoldenRatio) == 'scipy.constants.golden_ratio'
+    assert p.doprint(S.Pi) == 'scipy.constants.pi'
+    assert p.doprint(S.Exp1) == 'numpy.e'
 
 
 def test_pycode_reserved_words():

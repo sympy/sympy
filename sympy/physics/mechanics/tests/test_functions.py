@@ -1,6 +1,6 @@
-from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, zeros, S
+from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, S
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
-                                     RigidBody, Vector)
+                                     RigidBody)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      inertia, inertia_of_point_mass,
                                      kinetic_energy, linear_momentum,

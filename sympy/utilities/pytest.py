@@ -138,7 +138,7 @@ if not USE_PYTEST:
         raise Skipped(str)
 
     def SKIP(reason):
-        """Similar to :func:`skip`, but this is a decorator. """
+        """Similar to ``skip()``, but this is a decorator. """
         def wrapper(func):
             def func_wrapper():
                 raise Skipped(reason)
@@ -157,6 +157,10 @@ if not USE_PYTEST:
         func_wrapper = functools.update_wrapper(func_wrapper, func)
         func_wrapper.__wrapped__ = func
         return func_wrapper
+
+    def nocache_fail(func):
+        "Dummy decorator for marking tests that fail when cache is disabled"
+        return func
 
     @contextlib.contextmanager
     def warns(warningcls, **kwargs):
@@ -200,6 +204,7 @@ else:
     XFAIL = py.test.mark.xfail
     SKIP = py.test.mark.skip
     slow = py.test.mark.slow
+    nocache_fail = py.test.mark.nocache_fail
 
 
 @contextlib.contextmanager

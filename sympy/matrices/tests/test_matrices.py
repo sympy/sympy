@@ -29,13 +29,13 @@ classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
 
 
 def test_args():
-    for c, cls in enumerate(classes):
+    for n, cls in enumerate(classes):
         m = cls.zeros(3, 2)
         # all should give back the same type of arguments, e.g. ints for shape
         assert m.shape == (3, 2) and all(type(i) is int for i in m.shape)
         assert m.rows == 3 and type(m.rows) is int
         assert m.cols == 2 and type(m.cols) is int
-        if not c % 2:
+        if not n % 2:
             assert type(m._mat) in (list, tuple, Tuple)
         else:
             assert type(m._smat) is dict
@@ -3447,6 +3447,16 @@ def test_gauss_jordan_solve():
     b = Matrix([1, 1, 1])
     raises(ValueError, lambda: A.gauss_jordan_solve(b))
 
+    # Test for immutable matrix
+    A = ImmutableMatrix([[1, 0], [0, 1]])
+    B = ImmutableMatrix([1, 2])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == ImmutableMatrix([1, 2])
+    assert params == ImmutableMatrix(0, 1, [])
+    assert sol.__class__ == ImmutableDenseMatrix
+    assert params.__class__ == ImmutableDenseMatrix
+
+
 def test_solve():
     A = Matrix([[1,2], [2,4]])
     b = Matrix([[3], [4]])
@@ -3812,3 +3822,24 @@ def test_gramschmidt_conjugate_dot():
     mat = Matrix([[1, I], [1, -I]])
     Q, R = mat.QRdecomposition()
     assert Q * Q.H == Matrix.eye(2)
+
+def test_issue_17827():
+    C = Matrix([
+        [3, 4, -1, 1],
+        [9, 12, -3, 3],
+        [0, 2, 1, 3],
+        [2, 3, 0, -2],
+        [0, 3, 3, -5],
+        [8, 15, 0, 6]
+    ])
+    # Tests for row/col within valid range
+    D = C.elementary_row_op('n<->m', row1=2, row2=5)
+    E = C.elementary_row_op('n->n+km', row1=5, row2=3, k=-4)
+    F = C.elementary_row_op('n->kn', row=5, k=2)
+    assert(D[5, :] == Matrix([[0, 2, 1, 3]]))
+    assert(E[5, :] == Matrix([[0, 3, 0, 14]]))
+    assert(F[5, :] == Matrix([[16, 30, 0, 12]]))
+    # Tests for row/col out of range
+    raises(ValueError, lambda: C.elementary_row_op('n<->m', row1=2, row2=6))
+    raises(ValueError, lambda: C.elementary_row_op('n->kn', row=7, k=2))
+    raises(ValueError, lambda: C.elementary_row_op('n->n+km', row1=-1, row2=5, k=2))

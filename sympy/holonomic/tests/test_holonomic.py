@@ -193,7 +193,7 @@ def test_from_hyper():
     assert r == q
     p = from_hyper(hyper([1], [Rational(3, 2)], x**2/4))
     q = HolonomicFunction(-x + (-x**2/2 + 2)*Dx + x*Dx**2, x)
-    x0 = 1
+    # x0 = 1
     y0 = '[sqrt(pi)*exp(1/4)*erf(1/2), -sqrt(pi)*exp(1/4)*erf(1/2)/2 + 1]'
     assert sstr(p.y0) == y0
     assert q.annihilator == p.annihilator

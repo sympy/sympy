@@ -44,7 +44,7 @@ clean:
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
 
-html: SPHINXOPTS += -W
+html: SPHINXOPTS += -W --keep-going
 html: _build/logo/sympy-notailtext-favicon.ico
 	mkdir -p src/.static
 	mkdir -p _build/html

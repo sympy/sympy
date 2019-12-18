@@ -1,5 +1,4 @@
-from sympy import (Mul, S, Pow, Symbol, summation, Dict,
-                   factorial as fac, sqrt)
+from sympy import Mul, S, Pow, Symbol, summation, Dict, factorial as fac
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 from sympy.core.compatibility import long, range

@@ -550,6 +550,7 @@ def test_subfactorial():
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
     assert subfactorial(oo) is oo
     assert subfactorial(nan) is nan
+    assert subfactorial(23) == 9510425471055777937262
     assert unchanged(subfactorial, 2.2)
 
     x = Symbol('x')

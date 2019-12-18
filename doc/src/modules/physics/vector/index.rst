@@ -7,9 +7,11 @@ The Physics Vector Module
 .. topic:: Abstract
 
    In this documentation the components of the sympy.physics.vector module
-   have been discussed. :mod:`vector` has been written to facilitate the
-   operations pertaining to 3-dimensional vectors, as functions of time or
-   otherwise, in sympy.physics.
+   have been discussed. :mod:`sympy.physics.vector` has been written to
+   facilitate the operations pertaining to 3-dimensional vectors, as functions
+   of time or otherwise, in :mod:`sympy.physics`.
+
+.. module:: sympy.physics.vector
 
 
 References for Physics/Vector

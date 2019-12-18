@@ -4,7 +4,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, log, MatrixSymbol)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -274,9 +274,8 @@ def test_Permutation_Cycle():
         (Cycle(3, 4)(1, 2)(3, 4),
         '(1 2)(4)'),
     ]:
-        assert str(p) == s
+        assert sstr(p) == s
 
-    Permutation.print_cyclic = False
     for p, s in [
         (Permutation([]),
         'Permutation([])'),
@@ -293,9 +292,8 @@ def test_Permutation_Cycle():
         (Permutation([1, 0, 2, 3, 4, 5], size=10),
         'Permutation([1, 0], size=10)'),
     ]:
-        assert str(p) == s
+        assert sstr(p, perm_cyclic=False) == s
 
-    Permutation.print_cyclic = True
     for p, s in [
         (Permutation([]),
         '()'),
@@ -314,7 +312,7 @@ def test_Permutation_Cycle():
         (Permutation([0, 1, 3, 2, 4, 5], size=10),
         '(9)(2 3)'),
     ]:
-        assert str(p) == s
+        assert sstr(p) == s
 
 
 def test_Pi():
@@ -707,8 +705,12 @@ def test_RandomDomain():
 
 
 def test_FiniteSet():
-    assert str(FiniteSet(*range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
-    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*range(1, 51))) == (
+        'FiniteSet(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,'
+        ' 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,'
+        ' 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50)'
+    )
+    assert str(FiniteSet(*range(1, 6))) == 'FiniteSet(1, 2, 3, 4, 5)'
 
 
 def test_UniversalSet():
@@ -807,6 +809,30 @@ def test_MatrixSymbol_printing():
     assert str(A*B - (A+B)) == "-(A + B) + A*B"
     assert str(A**(-1)) == "A**(-1)"
     assert str(A**3) == "A**3"
+
+
+def test_MatrixExpressions():
+    n = Symbol('n', integer=True)
+    X = MatrixSymbol('X', n, n)
+
+    assert str(X) == "X"
+
+    Y = X[1:2:3, 4:5:6]
+
+    assert str(Y) == "X[1:3, 4:6]"
+
+    Z = X[1:10:2]
+
+    assert str(Z) == "X[1:10:2, :n]"
+
+    # Apply function elementwise (`ElementwiseApplyFunc`):
+
+    expr = (X.T*X).applyfunc(sin)
+    assert str(expr) == 'Lambda(_d, sin(_d)).(X.T*X)'
+
+    lamda = Lambda(x, 1/x)
+    expr = (n*X).applyfunc(lamda)
+    assert str(expr) == 'Lambda(_d, 1/_d).(n*X)'
 
 
 def test_Subs_printing():

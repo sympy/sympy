@@ -174,7 +174,6 @@ def test_solve_args():
     assert solve(True, x) == []
     assert solve([x-1, False], [x], set=True) == ([], set())
 
-
 def test_solve_polynomial1():
     assert solve(3*x - 2, x) == [Rational(2, 3)]
     assert solve(Eq(3*x, 2), x) == [Rational(2, 3)]
@@ -2113,3 +2112,19 @@ def test_issue_17452():
     assert solve((7**x)**x + pi, x) == [-sqrt(log(pi) + I*pi)/sqrt(log(7)),
                                         sqrt(log(pi) + I*pi)/sqrt(log(7))]
     assert solve(x**(x/11) + pi/11, x) == [exp(LambertW(-11*log(11) + 11*log(pi) + 11*I*pi))]
+
+
+def test_issue_17799():
+    assert solve(-erf(x**(S(1)/3))**pi + I, x) == []
+
+
+def test_issue_17650():
+    x = Symbol('x', real=True)
+    assert solve(abs((abs(x**2 - 1) - x)) - x) == [1, -1 + sqrt(2), 1 + sqrt(2)]
+
+
+def test_issue_17949():
+    assert solve(exp(+x+x**2), x) == []
+    assert solve(exp(-x+x**2), x) == []
+    assert solve(exp(+x-x**2), x) == []
+    assert solve(exp(-x-x**2), x) == []
