@@ -588,9 +588,10 @@ def dynamicsymbols(names, level=0,**assumptions):
         Level of differentiation of the returned function; d/dt once of t,
         twice of t, etc.
     assumptions :
-        real = False
-        positive = False
-        You can override the default assumptions as real = True or positive = True 
+        real(bool) : This is used to set the dynamicsymbol as real, by default is False
+        positive(bool) : This is used to set the dynamicsymbol as positive, by default is False
+        commutative(bool) : This is used to set the commutative property of a dynamicsymbol, by default is True
+        integer(bool) : This is used to set the dynamicsymbol as integer , by default is False
 
     Examples
     ========
@@ -600,13 +601,17 @@ def dynamicsymbols(names, level=0,**assumptions):
     >>> q1 = dynamicsymbols('q1')
     >>> q1
     q1(t)
-    >>> q2= dynamicsymbols('q2', real=True)
-    q2(t)
+    >>> q2 = dynamicsymbols('q2', real=True)
     >>> q2.is_real
     True
-    >>> q3= dynamicsymbols('q3', positive=True)
-    q3(t)
+    >>> q3 = dynamicsymbols('q3', positive=True)
     >>> q3.is_positive
+    True
+    >>> q4, q5 = dynamicsymbols('q4,q5', commutative=False)
+    >>> bool(q4*q5 != q5*q4)
+    True
+    >>> q6 = dynamicsymbols('q6', integer=True)
+    >>> q6.is_integer
     True
     >>> diff(q1, Symbol('t'))
     Derivative(q1(t), t)
