@@ -3,7 +3,7 @@ import itertools
 from functools import reduce
 from collections import defaultdict
 
-from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagonalizeVector
+from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagMatrix
 from sympy.combinatorics import Permutation
 from sympy.core.basic import Basic
 from sympy.core.compatibility import accumulate, default_sort_key
@@ -137,7 +137,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
             #
             # Examples:
             #
-            # * `A_ij b_j0 C_jk` ===> `A*DiagonalizeVector(b)*C`
+            # * `A_ij b_j0 C_jk` ===> `A*DiagMatrix(b)*C`
             #
             # Care for:
             # - matrix being diagonalized (i.e. `A_ii`)
@@ -571,7 +571,6 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         >>> from sympy.codegen.array_utils import (CodegenArrayPermuteDims, CodegenArrayTensorProduct, nest_permutation)
         >>> from sympy import MatrixSymbol
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
 
         >>> M = MatrixSymbol("M", 3, 3)
         >>> N = MatrixSymbol("N", 3, 3)
@@ -784,7 +783,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
             for arg_ind, arg_pos in tuple_links:
                 mat = args[arg_ind]
                 if 1 in mat.shape and mat.shape != (1, 1):
-                    args_updates[arg_ind] = DiagonalizeVector(mat)
+                    args_updates[arg_ind] = DiagMatrix(mat)
                     last = arg_ind
                 else:
                     expression_is_square = True
@@ -1055,7 +1054,6 @@ def parse_indexed_expression(expr, first_indices=None):
     >>> from sympy.codegen.array_utils import parse_indexed_expression
     >>> from sympy import MatrixSymbol, Sum, symbols
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
 
     >>> i, j, k, d = symbols("i j k d")
     >>> M = MatrixSymbol("M", d, d)

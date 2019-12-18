@@ -21,8 +21,8 @@ until the next SymPy upgrade, where ``sympy`` may contain a different set of
 names.
 
 2. This module does not define symbol names on demand, i.e.
-```from sympy.abc import foo``` will be reported as an error because
-``sympy.abc`` does not contain the name ``foo``. To get a symbol named `'foo'`,
+``from sympy.abc import foo`` will be reported as an error because
+``sympy.abc`` does not contain the name ``foo``. To get a symbol named ``foo``,
 you still need to use ``Symbol('foo')`` or ``symbols('foo')``.
 You can freely mix usage of ``sympy.abc`` and ``Symbol``/``symbols``, though
 sticking with one and only one way to get the symbols does tend to make the code

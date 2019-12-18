@@ -126,6 +126,13 @@ def intersection_sets(a, b):
     if r2.start.is_infinite:
         r2 = r2.reversed
 
+    # If both ends are infinite then it means that one Range is just the set
+    # of all integers (the step must be 1).
+    if r1.start.is_infinite:
+        return b
+    if r2.start.is_infinite:
+        return a
+
     # this equation represents the values of the Range;
     # it's a linear equation
     eq = lambda r, i: r.start + i*r.step
@@ -216,45 +223,42 @@ def intersection_sets(a, b):
 @dispatch(ImageSet, Set)
 def intersection_sets(self, other):
     from sympy.solvers.diophantine import diophantine
-    if self.base_set is S.Integers:
-        g = None
-        if isinstance(other, ImageSet) and other.base_set is S.Integers:
-            g = other.lamda.expr
+
+    # Only handle the straight-forward univariate case
+    if (len(self.lamda.variables) > 1
+            or self.lamda.signature != self.lamda.variables):
+        return None
+    base_set = self.base_sets[0]
+
+    # Intersection between ImageSets with Integers as base set
+    # For {f(n) : n in Integers} & {g(m) : m in Integers} we solve the
+    # diophantine equations f(n)=g(m).
+    # If the solutions for n are {h(t) : t in Integers} then we return
+    # {f(h(t)) : t in integers}.
+    if base_set is S.Integers:
+        gm = None
+        if isinstance(other, ImageSet) and other.base_sets == (S.Integers,):
+            gm = other.lamda.expr
             m = other.lamda.variables[0]
         elif other is S.Integers:
-            m = g = Dummy('x')
-        if g is not None:
-            f = self.lamda.expr
+            m = gm = Dummy('x')
+        if gm is not None:
+            fn = self.lamda.expr
             n = self.lamda.variables[0]
-            # Diophantine sorts the solutions according to the alphabetic
-            # order of the variable names, since the result should not depend
-            # on the variable name, they are replaced by the dummy variables
-            # below
-            a, b = Dummy('a'), Dummy('b')
-            fa, ga = f.subs(n, a), g.subs(m, b)
-            solns = list(diophantine(fa - ga))
-            if not solns:
-                return EmptySet()
-
-            if len(solns) != 1:
+            solns = list(diophantine(fn - gm, syms=(n, m)))
+            if len(solns) == 0:
+                return EmptySet
+            elif len(solns) != 1:
                 return
-            nsol = solns[0][0]  # since 'a' < 'b', nsol is first
-            t = nsol.free_symbols.pop()  # diophantine supplied symbol
-            nsol = nsol.subs(t, n)
-            if nsol != n:
-                # if nsol == n and we know were are working with
-                # a base_set of Integers then this was an unevaluated
-                # ImageSet representation of Integers, otherwise
-                # it is a new ImageSet intersection with a subset
-                # of integers
-                nsol = f.subs(n, nsol)
-            return imageset(Lambda(n, nsol), S.Integers)
+            else:
+                soln, solm = solns[0]
+                (t,) = soln.free_symbols
+                expr = fn.subs(n, soln.subs(t, n))
+                return imageset(Lambda(n, expr), S.Integers)
 
     if other == S.Reals:
         from sympy.solvers.solveset import solveset_real
         from sympy.core.function import expand_complex
-        if len(self.lamda.variables) > 1:
-            return None
 
         f = self.lamda.expr
         n = self.lamda.variables[0]
@@ -269,7 +273,6 @@ def intersection_sets(self, other):
         im = im.subs(n_, n)
         ifree = im.free_symbols
         lam = Lambda(n, re)
-        base = self.base_set
         if not im:
             # allow re-evaluation
             # of self in this case to make
@@ -281,8 +284,8 @@ def intersection_sets(self, other):
             return None
         else:
             # univarite imaginary part in same variable
-            base = base.intersect(solveset_real(im, n))
-        return imageset(lam, base)
+            base_set = base_set.intersect(solveset_real(im, n))
+        return imageset(lam, base_set)
 
     elif isinstance(other, Interval):
         from sympy.solvers.solveset import (invert_real, invert_complex,
@@ -290,7 +293,6 @@ def intersection_sets(self, other):
 
         f = self.lamda.expr
         n = self.lamda.variables[0]
-        base_set = self.base_set
         new_inf, new_sup = None, None
         new_lopen, new_ropen = other.left_open, other.right_open
 
@@ -400,7 +402,7 @@ def intersection_sets(a, b):
 
     return Interval(start, end, left_open, right_open)
 
-@dispatch(EmptySet, Set)
+@dispatch(type(EmptySet), Set)
 def intersection_sets(a, b):
     return S.EmptySet
 

@@ -73,8 +73,8 @@ PY3 = sys.version_info[0] > 2
 
 # Make sure I have the right Python version.
 if ((sys.version_info[0] == 2 and sys.version_info[1] < 7) or
-    (sys.version_info[0] == 3 and sys.version_info[1] < 4)):
-    print("SymPy requires Python 2.7 or 3.4 or newer. Python %d.%d detected"
+    (sys.version_info[0] == 3 and sys.version_info[1] < 5)):
+    print("SymPy requires Python 2.7 or 3.5 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
 
@@ -137,6 +137,7 @@ modules = [
     'sympy.physics.optics',
     'sympy.physics.quantum',
     'sympy.physics.units',
+    'sympy.physics.units.definitions',
     'sympy.physics.units.systems',
     'sympy.physics.vector',
     'sympy.plotting',
@@ -439,6 +440,7 @@ if __name__ == '__main__':
               'sympy.parsing.autolev.test-examples.pydy-example-repo': ['*.al'],
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.integrals.rubi.parsetools': ['header.py.txt'],
+              'sympy.plotting.tests': ['test_region_*.png'],
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
@@ -448,6 +450,7 @@ if __name__ == '__main__':
                     'antlr': antlr,
                     'sdist': sdist_sympy,
                     },
+          python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
           classifiers=[
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',

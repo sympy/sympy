@@ -1213,8 +1213,8 @@ def test_as_leading_term_issue_5272():
 
 def test_leading_terms():
     for func in [sin, cos, tan, cot, asin, acos, atan, acot]:
-        for arg in (1/x, S.Half):
-            eq = func(arg)
+        for a in (1/x, S.Half):
+            eq = func(a)
             assert eq.as_leading_term(x) == eq
 
 

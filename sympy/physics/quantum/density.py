@@ -201,7 +201,7 @@ class Density(HermitianOperator):
         return printer._print(r'\rho', *args)
 
     def _print_operator_name_pretty(self, printer, *args):
-        return prettyForm(unichr('\N{GREEK SMALL LETTER RHO}'))
+        return prettyForm('\N{GREEK SMALL LETTER RHO}')
 
     def _eval_trace(self, **kwargs):
         indices = kwargs.get('indices', [])

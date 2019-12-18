@@ -1,7 +1,7 @@
-from sympy import Symbol, symbols, S, simplify, Interval, pi, Rational
+from sympy import Symbol, symbols, S, Interval, pi, Rational
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
 from sympy.geometry import Circle, Polygon, Point2D, Triangle

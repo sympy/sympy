@@ -4,9 +4,6 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Integer, Rational, Float
-from sympy.core.compatibility import default_sort_key
-from sympy.core.add import Add
-from sympy.core.mul import Mul
 from sympy.printing.repr import srepr
 
 __all__ = ['dotprint']
@@ -155,7 +152,6 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True)
     "Add(Integer(2), Symbol('x'))_()" -> "Integer(2)_(0,)";
     "Add(Integer(2), Symbol('x'))_()" -> "Symbol('x')_(1,)";
     """
-    from sympy.utilities.misc import func_name
     if atom(expr):
         return []
     else:

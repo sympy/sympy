@@ -10,6 +10,7 @@ from sympy.core.expr import unchanged
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
 from sympy.core.sympify import sympify
+from sympy.matrices import MutableMatrix, ImmutableMatrix
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
@@ -477,14 +478,16 @@ def test_function_non_commutative():
 
 def test_function_complex():
     x = Symbol('x', complex=True)
+    xzf = Symbol('x', complex=True, zero=False)
     assert f(x).is_commutative is True
     assert sin(x).is_commutative is True
     assert exp(x).is_commutative is True
     assert log(x).is_commutative is True
-    assert f(x).is_complex is True
+    assert f(x).is_complex is None
     assert sin(x).is_complex is True
     assert exp(x).is_complex is True
-    assert log(x).is_complex is True
+    assert log(x).is_complex is None
+    assert log(xzf).is_complex is True
 
 
 def test_function__eval_nseries():
@@ -869,15 +872,15 @@ def test_nfloat():
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
 
     # issue 10933
-    for t in (dict, Dict):
-        d = t({S.Half: S.Half})
+    for ti in (dict, Dict):
+        d = ti({S.Half: S.Half})
         n = nfloat(d)
-        assert isinstance(n, t)
+        assert isinstance(n, ti)
         assert _aresame(list(n.items()).pop(), (S.Half, Float(.5)))
-    for t in (dict, Dict):
-        d = t({S.Half: S.Half})
+    for ti in (dict, Dict):
+        d = ti({S.Half: S.Half})
         n = nfloat(d, dkeys=True)
-        assert isinstance(n, t)
+        assert isinstance(n, ti)
         assert _aresame(list(n.items()).pop(), (Float(.5), Float(.5)))
     d = [S.Half]
     n = nfloat(d)
@@ -889,6 +892,18 @@ def test_nfloat():
     assert nfloat(Eq((3 - I)**2/2 + I, 0)) == S.false
     # pass along kwargs
     assert nfloat([{S.Half: x}], dkeys=True) == [{Float(0.5): x}]
+
+    # Issue 17706
+    A = MutableMatrix([[1, 2], [3, 4]])
+    B = MutableMatrix(
+        [[Float('1.0', precision=53), Float('2.0', precision=53)],
+        [Float('3.0', precision=53), Float('4.0', precision=53)]])
+    assert _aresame(nfloat(A), B)
+    A = ImmutableMatrix([[1, 2], [3, 4]])
+    B = ImmutableMatrix(
+        [[Float('1.0', precision=53), Float('2.0', precision=53)],
+        [Float('3.0', precision=53), Float('4.0', precision=53)]])
+    assert _aresame(nfloat(A), B)
 
 
 def test_issue_7068():

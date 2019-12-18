@@ -57,14 +57,15 @@ done.** You can set a different symbol for time like so::
 Inertia (Dyadics)
 =================
 
-A dyadic tensor is a second order tensor formed by the juxtaposition of a
-pair of vectors. There are various operations defined with respect to dyadics,
-which have been implemented in :mod:`vector` in the form of class
-:mod:`Dyadic`. To know more, refer to the :mod:`Dyadic` and :mod:`Vector`
-class APIs.
-Dyadics are used to define the inertia of bodies within :mod:`mechanics`.
-Inertia dyadics can be defined explicitly but the ``inertia`` function is
-typically much more convenient for the user::
+A dyadic tensor is a second order tensor formed by the juxtaposition of a pair
+of vectors. There are various operations defined with respect to dyadics,
+which have been implemented in :obj:`~.sympy.physics.vector` in the form of
+class :obj:`sympy.physics.vector.dyadic.Dyadic`. To know more, refer to the
+:obj:`sympy.physics.vector.dyadic.Dyadic` and
+:obj:`sympy.physics.vector.vector.Vector` class APIs. Dyadics are used to
+define the inertia of bodies within :mod:`sympy.physics.mechanics`. Inertia
+dyadics can be defined explicitly but the ``inertia`` function is typically
+much more convenient for the user::
 
   >>> from sympy.physics.mechanics import ReferenceFrame, inertia
   >>> N = ReferenceFrame('N')
@@ -83,7 +84,7 @@ typically much more convenient for the user::
 
 Notice that the ``inertia`` function returns a dyadic with each component
 represented as two unit vectors separated by a ``|``. Refer to the
-:ref:`Dyadic` section for more information about dyadics.
+:obj:`sympy.physics.vector.dyadic.Dyadic` section for more information about dyadics.
 
 Inertia is often expressed in a matrix, or tensor, form, especially for
 numerical purposes. Since the matrix form does not contain any information

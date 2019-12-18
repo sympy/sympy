@@ -5,7 +5,7 @@ various operations on them.
 
 from __future__ import print_function, division
 
-from sympy import (Symbol, S, Dummy, Order, rf, meijerint, I,
+from sympy import (Symbol, S, Dummy, Order, rf, I,
     solve, limit, Float, nsimplify, gamma)
 from sympy.core.compatibility import range, ordered, string_types
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
@@ -13,6 +13,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import exp_polar, exp
 from sympy.functions.special.hyper import hyper, meijerg
+from sympy.integrals import meijerint
 from sympy.matrices import Matrix
 from sympy.polys.rings import PolyElement
 from sympy.polys.fields import FracElement
@@ -70,13 +71,14 @@ class DifferentialOperatorAlgebra(object):
     An Ore Algebra is a set of noncommutative polynomials in the
     intermediate ``Dx`` and coefficients in a base polynomial ring :math:`A`.
     It follows the commutation rule:
+
     .. math ::
-        Dxa = \sigma(a)Dx + \delta(a)
+       Dxa = \sigma(a)Dx + \delta(a)
 
     for :math:`a \subset A`.
 
-    Where :math:`\sigma: A --> A` is an endomorphism and :math:`\delta: A --> A`
-    is a skew-derivation i.e. :math:`\delta(ab) = \delta(a) * b + \sigma(a) * \delta(b)`.
+    Where :math:`\sigma: A \Rightarrow A` is an endomorphism and :math:`\delta: A \rightarrow A`
+    is a skew-derivation i.e. :math:`\delta(ab) = \delta(a) b + \sigma(a) \delta(b)`.
 
     If one takes the sigma as identity map and delta as the standard derivation
     then it becomes the algebra of Differential Operators also called
@@ -2340,7 +2342,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
     See Also
     ========
 
-    meijerint._rewrite1, _convert_poly_rat_alg, _create_table
+    sympy.integrals.meijerint._rewrite1, _convert_poly_rat_alg, _create_table
     """
     func = sympify(func)
     syms = func.free_symbols

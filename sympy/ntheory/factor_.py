@@ -336,7 +336,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     See Also
     ========
     sympy.core.power.integer_nthroot
-    primetest.is_square
+    sympy.ntheory.primetest.is_square
     """
     from sympy.core.power import integer_nthroot
     n = as_int(n)
@@ -1178,7 +1178,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                     facs = factorint(r, limit=limit, use_trial=use_trial,
                                      use_rho=use_rho, use_pm1=use_pm1,
                                      verbose=verbose)
-                    factors.update(facs)
+                    for k, v in facs.items():
+                        factors[k] = factors.get(k, 0) + v
                 raise StopIteration
 
             # ...see if factorization can be terminated
@@ -1676,6 +1677,8 @@ class totient(Function):
     1
     >>> totient(25)
     20
+    >>> totient(45) == totient(5)*totient(9)
+    True
 
     See Also
     ========

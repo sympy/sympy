@@ -11,6 +11,8 @@ Permutations
 .. autoclass:: Cycle
    :members:
 
+.. autofunction:: _af_parity
+
 .. _combinatorics-generators:
 
 Generators

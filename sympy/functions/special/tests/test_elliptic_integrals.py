@@ -1,5 +1,5 @@
 from sympy import (S, Symbol, pi, I, oo, zoo, sin, sqrt, tan, gamma,
-    atanh, hyper, meijerg, O, Rational)
+    atanh, hyper, meijerg, O, Dummy, Integral, Rational)
 from sympy.functions.special.elliptic_integrals import (elliptic_k as K,
     elliptic_f as F, elliptic_e as E, elliptic_pi as P)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
@@ -9,6 +9,7 @@ from sympy.abc import z, m, n
 
 i = Symbol('i', integer=True)
 j = Symbol('k', integer=True, positive=True)
+t = Dummy('t')
 
 def test_K():
     assert K(0) == pi/2
@@ -39,6 +40,8 @@ def test_K():
     assert K(z).series(z) == pi/2 + pi*z/8 + 9*pi*z**2/128 + \
         25*pi*z**3/512 + 1225*pi*z**4/32768 + 3969*pi*z**5/131072 + O(z**6)
 
+    assert K(m).rewrite(Integral).dummy_eq(
+        Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2)))
 
 def test_F():
     assert F(z, 0) == z
@@ -64,6 +67,8 @@ def test_F():
     assert F(z, m).series(z) == \
         z + z**5*(3*m**2/40 - m/30) + m*z**3/6 + O(z**6)
 
+    assert F(z, m).rewrite(Integral).dummy_eq(
+        Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, z)))
 
 def test_E():
     assert E(z, 0) == z
@@ -105,6 +110,10 @@ def test_E():
     assert E(z).series(z) == pi/2 - pi*z/8 - 3*pi*z**2/128 - \
         5*pi*z**3/512 - 175*pi*z**4/32768 - 441*pi*z**5/131072 + O(z**6)
 
+    assert E(z, m).rewrite(Integral).dummy_eq(
+        Integral(sqrt(1 - m*sin(t)**2), (t, 0, z)))
+    assert E(m).rewrite(Integral).dummy_eq(
+        Integral(sqrt(1 - m*sin(t)**2), (t, 0, pi/2)))
 
 def test_P():
     assert P(0, z, m) == F(z, m)
@@ -150,3 +159,8 @@ def test_P():
 
     assert P(n, z, m).series(z) == z + z**3*(m/6 + n/3) + \
         z**5*(3*m**2/40 + m*n/10 - m/30 + n**2/5 - n/15) + O(z**6)
+
+    assert P(n, z, m).rewrite(Integral).dummy_eq(
+        Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z)))
+    assert P(n, m).rewrite(Integral).dummy_eq(
+        Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, pi/2)))

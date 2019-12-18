@@ -1,16 +1,17 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
-                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational)
+                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational, erf, beta,
+                   floor)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
 from sympy.sets.fancysets import Range
 from sympy.stats import (P, E, variance, density, characteristic_function,
-                         where, moment_generating_function, skewness)
+                         where, moment_generating_function, skewness, cdf)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    Poisson, Geometric, Logarithmic, NegativeBinomial, Skellam,
                                    YuleSimon, Zeta)
 from sympy.stats.rv import sample
-from sympy.utilities.pytest import slow
+from sympy.utilities.pytest import slow, nocache_fail
 
 x = Symbol('x')
 
@@ -50,11 +51,13 @@ def test_Logarithmic():
     assert isinstance(E(x, evaluate=False), Sum)
 
 
+@nocache_fail
 def test_negative_binomial():
     r = 5
     p = S.One / 3
     x = NegativeBinomial('x', r, p)
     assert E(x) == p*r / (1-p)
+    # This hangs when run with the cache disabled:
     assert variance(x) == p*r / (1-p)**2
     assert E(x**5 + 2*x + 3) == Rational(9207, 4)
     assert isinstance(E(x, evaluate=False), Sum)
@@ -79,11 +82,14 @@ def test_skellam():
 
 
 def test_yule_simon():
+    from sympy import S
     rho = S(3)
     x = YuleSimon('x', rho)
     assert simplify(E(x)) == rho / (rho - 1)
     assert simplify(variance(x)) == rho**2 / ((rho - 1)**2 * (rho - 2))
     assert isinstance(E(x, evaluate=False), Sum)
+    # To test the cdf function
+    assert cdf(x)(x) == Piecewise((-beta(floor(x), 4)*floor(x) + 1, x >= 1), (0, True))
 
 
 def test_zeta():

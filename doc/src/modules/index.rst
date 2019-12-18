@@ -16,6 +16,7 @@ access any SymPy module, or use the list below:
 .. toctree::
    :maxdepth: 2
 
+   abc.rst
    algebras.rst
    assumptions/index.rst
    calculus/index.rst
@@ -34,6 +35,8 @@ access any SymPy module, or use the list below:
    simplify/hyperexpand.rst
    solvers/inequalities.rst
    integrals/integrals.rst
+   integrals/g-functions.rst
+   interactive.rst
    liealgebras/index.rst
    logic.rst
    matrices/index.rst

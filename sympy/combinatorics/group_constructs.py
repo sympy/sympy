@@ -31,7 +31,7 @@ def DirectProduct(*groups):
     See Also
     ========
 
-    __mul__
+    sympy.combinatorics.perm_groups.PermutationGroup.__mul__
 
     """
     degrees = []

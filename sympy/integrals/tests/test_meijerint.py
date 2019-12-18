@@ -330,12 +330,12 @@ def test_lookup_table():
     for _, l in sorted(table.items()):
         for formula, terms, cond, hint in sorted(l, key=default_sort_key):
             subs = {}
-            for a in list(formula.free_symbols) + [z_dummy]:
-                if hasattr(a, 'properties') and a.properties:
+            for ai in list(formula.free_symbols) + [z_dummy]:
+                if hasattr(ai, 'properties') and ai.properties:
                     # these Wilds match positive integers
-                    subs[a] = randrange(1, 10)
+                    subs[ai] = randrange(1, 10)
                 else:
-                    subs[a] = uniform(1.5, 2.0)
+                    subs[ai] = uniform(1.5, 2.0)
             if not isinstance(terms, list):
                 terms = terms(subs)
 

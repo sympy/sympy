@@ -1,5 +1,5 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    LessThan, Max, Min, And, Or, Eq, Le, Lt, Float,
+    Max, Min, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
@@ -8,8 +8,7 @@ from mpmath import mpi
 
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
-from sympy.core.relational import \
-    Eq, Ne, Le, Lt, LessThan
+from sympy.core.relational import Eq, Ne, Le, Lt, LessThan
 from sympy.logic import And, Or, Xor
 from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
 
@@ -34,6 +33,7 @@ def test_imageset():
     raises(TypeError, lambda: imageset(x, ints))
     raises(ValueError, lambda: imageset(x, y, z, ints))
     raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))
+    assert (1, 2) in imageset(Lambda((x, y), (x, y)), ints, ints)
     raises(ValueError, lambda: imageset(Lambda(x, x), ints, ints))
     assert imageset(cos, ints) == ImageSet(Lambda(x, cos(x)), ints)
     def f(x):
@@ -43,19 +43,46 @@ def test_imageset():
     assert imageset(f, ints) == ImageSet(Lambda(x, cos(x)), ints)
     assert imageset(x, 1, ints) == FiniteSet(1)
     assert imageset(x, y, ints) == {y}
-    assert imageset((x, y), (1, z), ints*S.Reals) == {(1, z)}
+    assert imageset((x, y), (1, z), ints, S.Reals) == {(1, z)}
     clash = Symbol('x', integer=true)
     assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
     x1, x2 = symbols("x1, x2")
-    assert imageset(lambda x,y: Add(x,y), Interval(1,2), Interval(2, 3)) == \
-        ImageSet(Lambda((x1, x2), x1+x2), Interval(1,2), Interval(2,3))
+    assert imageset(lambda x, y: Add(x, y), Interval(1, 2), Interval(2, 3)) == \
+        ImageSet(Lambda((x1, x2), x1+x2), Interval(1, 2), Interval(2, 3))
 
 
 def test_is_empty():
     for s in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals,
             S.UniversalSet]:
-        assert s.is_empty == False
+        assert s.is_empty is False
+
+    assert S.EmptySet.is_empty is True
+
+
+def test_is_finiteset():
+    for s in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals,
+            S.UniversalSet]:
+        assert s.is_finite_set is False
+
+    assert S.EmptySet.is_finite_set is True
+
+    assert FiniteSet(1, 2).is_finite_set is True
+    assert Interval(1, 2).is_finite_set is False
+    assert Interval(x, y).is_finite_set is None
+    assert ProductSet(FiniteSet(1), FiniteSet(2)).is_finite_set is True
+    assert ProductSet(FiniteSet(1), Interval(1, 2)).is_finite_set is False
+    assert ProductSet(FiniteSet(1), Interval(x, y)).is_finite_set is None
+    assert Union(Interval(0, 1), Interval(2, 3)).is_finite_set is False
+    assert Union(FiniteSet(1), Interval(2, 3)).is_finite_set is False
+    assert Union(FiniteSet(1), FiniteSet(2)).is_finite_set is True
+    assert Union(FiniteSet(1), Interval(x, y)).is_finite_set is None
+    assert Intersection(Interval(x, y), FiniteSet(1)).is_finite_set is True
+    assert Intersection(Interval(x, y), Interval(1, 2)).is_finite_set is None
+    assert Intersection(FiniteSet(x), FiniteSet(y)).is_finite_set is True
+    assert Complement(FiniteSet(1), Interval(x, y)).is_finite_set is True
+    assert Complement(Interval(x, y), FiniteSet(1)).is_finite_set is None
+    assert Complement(Interval(1, 2), FiniteSet(x)).is_finite_set is False
 
 
 def test_deprecated_is_EmptySet():
@@ -259,8 +286,8 @@ def test_Complement():
     assert -1 in Complement(S.Reals, S.Naturals, evaluate=False)
     assert not 1 in Complement(S.Reals, S.Naturals, evaluate=False)
 
-    assert Complement(S.Integers, S.UniversalSet) == EmptySet()
-    assert S.UniversalSet.complement(S.Integers) == EmptySet()
+    assert Complement(S.Integers, S.UniversalSet) == EmptySet
+    assert S.UniversalSet.complement(S.Integers) == EmptySet
 
     assert (not 0 in S.Reals.intersect(S.Integers - FiniteSet(0)))
 
@@ -439,7 +466,7 @@ def test_issue_9623():
     c = FiniteSet(n)
 
     assert Intersection(a, b, c) == Intersection(b, c)
-    assert Intersection(Interval(1, 2), Interval(3, 4), FiniteSet(n)) == EmptySet()
+    assert Intersection(Interval(1, 2), Interval(3, 4), FiniteSet(n)) == EmptySet
 
 
 def test_is_disjoint():
@@ -486,9 +513,9 @@ def test_ProductSet():
 
     # See GH-17458
 
-    for n in range(5):
-        Rn = ProductSet(*(S.Reals,) * n)
-        assert (1,) * n in Rn
+    for ni in range(5):
+        Rn = ProductSet(*(S.Reals,) * ni)
+        assert (1,) * ni in Rn
         assert 1 not in Rn
 
     assert (S.Reals * S.Reals) * S.Reals != S.Reals * (S.Reals * S.Reals)
@@ -615,6 +642,9 @@ def test_is_subset():
     assert FiniteSet(x).is_subset(FiniteSet(y)) is None
     assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x)) is True
     assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x+1)) is False
+
+    assert Interval(0, 1).is_subset(Interval(0, 1, left_open=True)) is False
+    assert Interval(-2, 3).is_subset(Union(Interval(-oo, -2), Interval(3, oo))) is False
 
 
 def test_is_proper_subset():
@@ -862,7 +892,7 @@ def test_finite_basic():
     assert FiniteSet((1, 2, 3)) != FiniteSet(1, 2, 3)
 
     # Ensure a variety of types can exist in a FiniteSet
-    s = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
+    assert FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
 
     assert (A > B) is False
     assert (A >= B) is False
@@ -875,24 +905,6 @@ def test_finite_basic():
     assert A > AandB and B > AandB
 
     assert FiniteSet(1.0) == FiniteSet(1)
-
-
-def test_powerset():
-    # EmptySet
-    A = FiniteSet()
-    pset = A.powerset()
-    assert len(pset) == 1
-    assert pset ==  FiniteSet(S.EmptySet)
-
-    # FiniteSets
-    A = FiniteSet(1, 2)
-    pset = A.powerset()
-    assert len(pset) == 2**len(A)
-    assert pset == FiniteSet(FiniteSet(), FiniteSet(1),
-                             FiniteSet(2), A)
-    # Not finite sets
-    I = Interval(0, 1)
-    raises(NotImplementedError, I.powerset)
 
 
 def test_product_basic():
@@ -1280,7 +1292,7 @@ def test_issue_10337():
 
 def test_issue_10326():
     bad = [
-        EmptySet(),
+        EmptySet,
         FiniteSet(1),
         Interval(1, 2),
         S.ComplexInfinity,
@@ -1329,8 +1341,8 @@ def test_issue_8257():
 
 
 def test_issue_10931():
-    assert S.Integers - S.Integers == EmptySet()
-    assert S.Integers - S.Reals == EmptySet()
+    assert S.Integers - S.Integers == EmptySet
+    assert S.Integers - S.Reals == EmptySet
 
 
 def test_issue_11174():

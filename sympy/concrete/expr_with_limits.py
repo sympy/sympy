@@ -223,7 +223,7 @@ class ExprWithLimits(Expr):
 
         function, limits, free_symbols
         as_dummy : Rename dummy variables
-        transform : Perform mapping on the dummy variable
+        sympy.integrals.integrals.Integral.transform : Perform mapping on the dummy variable
         """
         return [l[0] for l in self.limits]
 
@@ -244,7 +244,7 @@ class ExprWithLimits(Expr):
 
         function, limits, free_symbols
         as_dummy : Rename dummy variables
-        transform : Perform mapping on the dummy variable
+        sympy.integrals.integrals.Integral.transform : Perform mapping on the dummy variable
         """
         return [l[0] for l in self.limits if len(l) != 1]
 
@@ -454,7 +454,7 @@ class ExprWithLimits(Expr):
         See Also
         ========
 
-        ExprWithIntLimits.has_empty_sequence
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.has_empty_sequence
 
         """
         ret_None = False

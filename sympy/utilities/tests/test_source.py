@@ -2,7 +2,7 @@ import sys
 
 from sympy.utilities.source import get_mod_func, get_class, source
 from sympy.utilities.pytest import warns_deprecated_sympy
-from sympy import point
+from sympy.geometry import point
 
 def test_source():
     # Dummy stdout

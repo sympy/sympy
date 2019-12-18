@@ -1,5 +1,5 @@
 from sympy.core import symbols, S
-from sympy.matrices.expressions import MatrixSymbol, Inverse
+from sympy.matrices.expressions import MatrixSymbol, Inverse, MatPow
 from sympy.matrices import eye, Identity, ShapeError
 from sympy.utilities.pytest import raises
 from sympy import refine, Q
@@ -44,3 +44,8 @@ def test_inverse():
 
 def test_refine():
     assert refine(C.I, Q.orthogonal(C)) == C.T
+
+
+def test_inverse_matpow_canonicalization():
+    A = MatrixSymbol('A', 3, 3)
+    assert Inverse(MatPow(A, 3)).doit() == MatPow(Inverse(A), 3).doit()

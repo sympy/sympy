@@ -5,7 +5,7 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate, gammasimp, Gt, cot)
+                   integrate, gammasimp, Gt)
 from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range, round, PY3
@@ -132,9 +132,9 @@ all_objs = basic_objs + [
 
 
 def dotest(s):
-    for x in all_objs:
-        for y in all_objs:
-            s(x, y)
+    for xo in all_objs:
+        for yo in all_objs:
+            s(xo, yo)
     return True
 
 
@@ -148,6 +148,7 @@ def test_basic():
         x = a*b
         x = a/b
         x = a**b
+        del x
     assert dotest(j)
 
 
@@ -215,13 +216,14 @@ def test_relational_assumptions():
     assert (m4 >= 0) is S.false
 
 
-def test_relational_noncommutative():
-    from sympy import Lt, Gt, Le, Ge
-    A, B = symbols('A,B', commutative=False)
-    assert (A < B) == Lt(A, B)
-    assert (A <= B) == Le(A, B)
-    assert (A > B) == Gt(A, B)
-    assert (A >= B) == Ge(A, B)
+# See https://github.com/sympy/sympy/issues/17708
+#def test_relational_noncommutative():
+#    from sympy import Lt, Gt, Le, Ge
+#    A, B = symbols('A,B', commutative=False)
+#    assert (A < B) == Lt(A, B)
+#    assert (A <= B) == Le(A, B)
+#    assert (A > B) == Gt(A, B)
+#    assert (A >= B) == Ge(A, B)
 
 
 def test_basic_nostr():
@@ -1341,7 +1343,7 @@ def test_issue_5226():
 def test_free_symbols():
     # free_symbols should return the free symbols of an object
     assert S.One.free_symbols == set()
-    assert (x).free_symbols == {x}
+    assert x.free_symbols == {x}
     assert Integral(x, (x, 1, y)).free_symbols == {y}
     assert (-Integral(x, (x, 1, y))).free_symbols == {y}
     assert meter.free_symbols == set()
@@ -1577,7 +1579,7 @@ def test_is_constant():
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
 
-    assert Poly(3,x).is_constant() is True
+    assert Poly(3, x).is_constant() is True
 
 
 def test_equals():
@@ -1901,3 +1903,24 @@ def test_ExprBuilder():
     eb = ExprBuilder(Mul)
     eb.args.extend([x, x])
     assert eb.build() == x**2
+
+def test_non_string_equality():
+    # Expressions should not compare equal to strings
+    x = symbols('x')
+    one = sympify(1)
+    assert (x == 'x') is False
+    assert (x != 'x') is True
+    assert (one == '1') is False
+    assert (one != '1') is True
+    assert (x + 1 == 'x + 1') is False
+    assert (x + 1 != 'x + 1') is True
+
+    # Make sure == doesn't try to convert the resulting expression to a string
+    # (e.g., by calling sympify() instead of _sympify())
+
+    class BadRepr(object):
+        def __repr__(self):
+            raise RuntimeError
+
+    assert (x == BadRepr()) is False
+    assert (x != BadRepr()) is True

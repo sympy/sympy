@@ -934,7 +934,7 @@ class Point2D(Point):
         See Also
         ========
 
-        rotate, scale
+        translate, scale
 
         Examples
         ========
@@ -995,9 +995,9 @@ class Point2D(Point):
 
         See Also
         ========
-        geometry.entity.rotate
-        geometry.entity.scale
-        geometry.entity.translate
+        sympy.geometry.point.Point2D.rotate
+        sympy.geometry.point.Point2D.scale
+        sympy.geometry.point.Point2D.translate
         """
         if not (matrix.is_Matrix and matrix.shape == (3, 3)):
             raise ValueError("matrix must be a 3x3 matrix")
@@ -1012,7 +1012,7 @@ class Point2D(Point):
         See Also
         ========
 
-        rotate, scale
+        sympy.geometry.point.Point2D.rotate, scale
 
         Examples
         ========
@@ -1273,9 +1273,8 @@ class Point3D(Point):
 
         See Also
         ========
-        geometry.entity.rotate
-        geometry.entity.scale
-        geometry.entity.translate
+        sympy.geometry.point.Point3D.scale
+        sympy.geometry.point.Point3D.translate
         """
         if not (matrix.is_Matrix and matrix.shape == (4, 4)):
             raise ValueError("matrix must be a 4x4 matrix")
@@ -1292,7 +1291,7 @@ class Point3D(Point):
         See Also
         ========
 
-        rotate, scale
+        scale
 
         Examples
         ========

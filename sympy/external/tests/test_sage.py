@@ -15,10 +15,6 @@
 # Python (without Sage). Here we test everything, that a user may need when
 # using SymPy with Sage.
 
-import os
-import re
-import sys
-
 from sympy.external import import_module
 
 sage = import_module('sage.all', __import__kwargs={'fromlist': ['all']})
@@ -62,7 +58,7 @@ def check_expression(expr, var_symbols, only_from_sympy=False):
 
     # evaluate the expression in the context of SymPy:
     if var_symbols:
-        sympy_vars = sympy.var(var_symbols)
+        sympy.var(var_symbols)
     b = globals().copy()
     b.update(sympy.__dict__)
     assert "sin" in b

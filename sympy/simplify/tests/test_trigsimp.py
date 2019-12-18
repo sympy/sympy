@@ -1,6 +1,6 @@
 from sympy import (
-    symbols, sin, simplify, cos, trigsimp, rad, tan, exptrigsimp,sinh,
-    cosh, diff, cot, Subs, exp, tanh, exp, S, integrate, I,Matrix,
+    symbols, sin, simplify, cos, trigsimp, tan, exptrigsimp,sinh,
+    cosh, diff, cot, Subs, exp, tanh, S, integrate, I,Matrix,
     Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise , Rational
     )
 
@@ -436,9 +436,9 @@ def test_Piecewise():
     e1 = x*(x + y) - y*(x + y)
     e2 = sin(x)**2 + cos(x)**2
     e3 = expand((x + y)*y/x)
-    s1 = simplify(e1)
+    # s1 = simplify(e1)
     s2 = simplify(e2)
-    s3 = simplify(e3)
+    # s3 = simplify(e3)
 
     # trigsimp tries not to touch non-trig containing args
     assert trigsimp(Piecewise((e1, e3 < e2), (e3, True))) == \

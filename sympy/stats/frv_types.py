@@ -482,6 +482,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         return S(binomial(m, k) * binomial(N - m, n - k))/binomial(N, n)
 
     def _sample_scipy(self, size):
+        import scipy.stats # Make sure that stats is imported
         N, m, n = int(self.N), int(self.m), int(self.n)
         return scipy.stats.hypergeom.rvs(M=m, n=n, N=N, size=size)
 

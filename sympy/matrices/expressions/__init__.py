@@ -14,6 +14,40 @@ from .determinant import Determinant, det
 from .transpose import Transpose
 from .adjoint import Adjoint
 from .hadamard import hadamard_product, HadamardProduct, hadamard_power, HadamardPower
-from .diagonal import DiagonalMatrix, DiagonalOf, DiagonalizeVector, diagonalize_vector
+from .diagonal import DiagonalMatrix, DiagonalOf, DiagMatrix, diagonalize_vector
 from .dotproduct import DotProduct
 from .kronecker import kronecker_product, KroneckerProduct, combine_kronecker
+
+__all__ = [
+    'MatrixSlice',
+
+    'BlockMatrix', 'BlockDiagMatrix', 'block_collapse', 'blockcut',
+    'FunctionMatrix',
+
+    'Inverse',
+
+    'MatAdd',
+
+    'Identity', 'MatrixExpr', 'MatrixSymbol', 'ZeroMatrix', 'OneMatrix',
+    'matrix_symbols',
+
+    'MatMul',
+
+    'MatPow',
+
+    'Trace', 'trace',
+
+    'Determinant', 'det',
+
+    'Transpose',
+
+    'Adjoint',
+
+    'hadamard_product', 'HadamardProduct', 'hadamard_power', 'HadamardPower',
+
+    'DiagonalMatrix', 'DiagonalOf', 'DiagonalizeVector', 'diagonalize_vector',
+
+    'DotProduct',
+
+    'kronecker_product', 'KroneckerProduct', 'combine_kronecker',
+]

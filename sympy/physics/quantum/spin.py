@@ -38,6 +38,8 @@ __all__ = [
     'JyBra',
     'JzKet',
     'JzBra',
+    'JzOp',
+    'J2Op',
     'JxKetCoupled',
     'JxBraCoupled',
     'JyKetCoupled',
@@ -1276,7 +1278,7 @@ class JzKet(SpinState, Ket):
     ========
 
     JzKetCoupled: Coupled eigenstates
-    TensorProduct: Used to specify uncoupled states
+    sympy.physics.quantum.tensorproduct.TensorProduct: Used to specify uncoupled states
     uncouple: Uncouples states given coupling parameters
     couple: Couples uncoupled states
 
