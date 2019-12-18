@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Distutils based setup script for SymPy.
 
 This uses Distutils (https://python.org/sigs/distutils-sig/) the standard
