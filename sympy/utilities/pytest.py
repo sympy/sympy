@@ -158,6 +158,10 @@ if not USE_PYTEST:
         func_wrapper.__wrapped__ = func
         return func_wrapper
 
+    def nocache_fail(func):
+        "Dummy decorator for marking tests that fail when cache is disabled"
+        return func
+
     @contextlib.contextmanager
     def warns(warningcls, **kwargs):
         '''Like raises but tests that warnings are emitted.
@@ -200,6 +204,7 @@ else:
     XFAIL = py.test.mark.xfail
     SKIP = py.test.mark.skip
     slow = py.test.mark.slow
+    nocache_fail = py.test.mark.nocache_fail
 
 
 @contextlib.contextmanager
