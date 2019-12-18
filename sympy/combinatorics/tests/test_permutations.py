@@ -7,7 +7,10 @@ from sympy.core.symbol import Symbol
 from sympy.core.singleton import S
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_rmul, _af_rmuln, Cycle)
-from sympy.utilities.pytest import raises
+from sympy.printing import sstr, srepr, pretty, latex
+from sympy.utilities.pytest import raises, SymPyDeprecationWarning, \
+    warns_deprecated_sympy
+
 
 rmul = Permutation.rmul
 a = Symbol('a', integer=True)
@@ -443,7 +446,6 @@ def test_from_sequence():
 
 
 def test_printing_cyclic():
-    Permutation.print_cyclic = True
     p1 = Permutation([0, 2, 1])
     assert repr(p1) == 'Permutation(1, 2)'
     assert str(p1) == '(1 2)'
@@ -455,19 +457,46 @@ def test_printing_cyclic():
 
 
 def test_printing_non_cyclic():
-    Permutation.print_cyclic = False
+    from sympy.printing import sstr, srepr
     p1 = Permutation([0, 1, 2, 3, 4, 5])
-    assert repr(p1) == 'Permutation([], size=6)'
-    assert str(p1) == 'Permutation([], size=6)'
+    assert srepr(p1, perm_cyclic=False) == 'Permutation([], size=6)'
+    assert sstr(p1, perm_cyclic=False) == 'Permutation([], size=6)'
     p2 = Permutation([0, 1, 2])
-    assert repr(p2) == 'Permutation([0, 1, 2])'
-    assert str(p2) == 'Permutation([0, 1, 2])'
+    assert srepr(p2, perm_cyclic=False) == 'Permutation([0, 1, 2])'
+    assert sstr(p2, perm_cyclic=False) == 'Permutation([0, 1, 2])'
 
     p3 = Permutation([0, 2, 1])
-    assert repr(p3) == 'Permutation([0, 2, 1])'
-    assert str(p3) == 'Permutation([0, 2, 1])'
+    assert srepr(p3, perm_cyclic=False) == 'Permutation([0, 2, 1])'
+    assert sstr(p3, perm_cyclic=False) == 'Permutation([0, 2, 1])'
     p4 = Permutation([0, 1, 3, 2, 4, 5, 6, 7])
-    assert repr(p4) == 'Permutation([0, 1, 3, 2], size=8)'
+    assert srepr(p4, perm_cyclic=False) == 'Permutation([0, 1, 3, 2], size=8)'
+
+
+def test_deprecated_print_cyclic():
+    p = Permutation(0, 1, 2)
+    try:
+        Permutation.print_cyclic = True
+        with warns_deprecated_sympy():
+            assert sstr(p) == '(0 1 2)'
+        with warns_deprecated_sympy():
+            assert srepr(p) == 'Permutation(0, 1, 2)'
+        with warns_deprecated_sympy():
+            assert pretty(p) == '(0 1 2)'
+        with warns_deprecated_sympy():
+            assert latex(p) == r'\left( 0\; 1\; 2\right)'
+
+        Permutation.print_cyclic = False
+        with warns_deprecated_sympy():
+            assert sstr(p) == 'Permutation([1, 2, 0])'
+        with warns_deprecated_sympy():
+            assert srepr(p) == 'Permutation([1, 2, 0])'
+        with warns_deprecated_sympy():
+            assert pretty(p, use_unicode=False) == '/0 1 2\\\n\\1 2 0/'
+        with warns_deprecated_sympy():
+            assert latex(p) == \
+                r'\begin{pmatrix} 0 & 1 & 2 \\ 1 & 2 & 0 \end{pmatrix}'
+    finally:
+        Permutation.print_cyclic = None
 
 
 def test_permutation_equality():

@@ -905,10 +905,11 @@ class Range(Set):
             x <= self.sup if self.sup in self else x < self.sup)
 
 
+# Using range from compatibility above (xrange on Py2)
 if PY3:
     converter[range] = lambda r: Range(r.start, r.stop, r.step)
 else:
-    converter[xrange] = lambda r: Range(*r.__reduce__()[1])
+    converter[range] = lambda r: Range(*r.__reduce__()[1])
 
 
 def normalize_theta_set(theta):

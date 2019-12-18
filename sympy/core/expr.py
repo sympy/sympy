@@ -121,7 +121,7 @@ class Expr(Basic, EvalfMixin):
 
     def __eq__(self, other):
         try:
-            other = sympify(other)
+            other = _sympify(other)
             if not isinstance(other, Expr):
                 return False
         except (SympifyError, SyntaxError):

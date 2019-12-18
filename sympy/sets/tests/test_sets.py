@@ -513,9 +513,9 @@ def test_ProductSet():
 
     # See GH-17458
 
-    for n in range(5):
-        Rn = ProductSet(*(S.Reals,) * n)
-        assert (1,) * n in Rn
+    for ni in range(5):
+        Rn = ProductSet(*(S.Reals,) * ni)
+        assert (1,) * ni in Rn
         assert 1 not in Rn
 
     assert (S.Reals * S.Reals) * S.Reals != S.Reals * (S.Reals * S.Reals)

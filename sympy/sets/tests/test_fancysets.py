@@ -321,7 +321,7 @@ def test_Range_set():
     if PY3:
         builtin_range = range
     else:
-        builtin_range = xrange
+        builtin_range = xrange # noqa
 
     raises(TypeError, lambda: Range(builtin_range(1)))
     assert S(builtin_range(10)) == Range(10)

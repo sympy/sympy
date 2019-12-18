@@ -60,8 +60,9 @@ class Polyhedron(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
         >>> from sympy.abc import w, x, y, z
+        >>> init_printing(pretty_print=False, perm_cyclic=False)
 
         Here we construct the Polyhedron object for a tetrahedron.
 
