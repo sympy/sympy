@@ -597,7 +597,7 @@ def dynamicsymbols(names, level=0,**assumptions):
     ========
 
     >>> from sympy.physics.vector import dynamicsymbols
-    >>> from sympy import diff, Symbol, sqrt
+    >>> from sympy import diff, Symbol
     >>> q1 = dynamicsymbols('q1')
     >>> q1
     q1(t)
