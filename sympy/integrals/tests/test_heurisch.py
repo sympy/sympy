@@ -1,7 +1,7 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-    I, erf, tan, asin, asinh, acos, Function, Derivative, diff, simplify, \
+    I, erf, tan, asin, asinh, acos, atan, Function, Derivative, diff, simplify, \
     LambertW, Ne, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
-    besselj, besselk, bessely, jn
+    besselj, besselk, bessely, jn, tanh
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
 from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
 from sympy.integrals.integrals import integrate
@@ -33,6 +33,8 @@ def test_heurisch_polynomials():
     assert heurisch(1, x) == x
     assert heurisch(x, x) == x**2/2
     assert heurisch(x**17, x) == x**18/18
+    # For coverage
+    assert heurisch_wrapper(y, x) == y*x
 
 
 def test_heurisch_fractions():
@@ -40,7 +42,7 @@ def test_heurisch_fractions():
     assert heurisch(1/(2 + x), x) == log(x + 2)
     assert heurisch(1/(x + sin(y)), x) == log(x + sin(y))
 
-    # Up to a constant, where C = 5*pi*I/12, Mathematica gives identical
+    # Up to a constant, where C = pi*I*Rational(5, 12), Mathematica gives identical
     # result in the first case. The difference is because sympy changes
     # signs of expressions without any care.
     # XXX ^ ^ ^ is this still correct?
@@ -98,6 +100,12 @@ def test_heurisch_trigonometric():
     assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - (sqrt(16 - x**2))*asin(x/4) \
         + (sqrt(16 - x**2))*acos(x/4) + x*asin(x/4)*acos(x/4)
 
+    assert heurisch(sin(x)/(cos(x)**2+1), x) == -atan(cos(x)) #fixes issue 13723
+    assert heurisch(1/(cos(x)+2), x) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3
+    assert heurisch(2*sin(x)*cos(x)/(sin(x)**4 + 1), x) == atan(sqrt(2)*sin(x)
+        - 1) - atan(sqrt(2)*sin(x) + 1)
+
+    assert heurisch(1/cosh(x), x) == 2*atan(tanh(x/2))
 
 def test_heurisch_hyperbolic():
     assert heurisch(sinh(x), x) == cosh(x)
@@ -149,9 +157,7 @@ def test_heurisch_symbolic_coeffs_1130():
          + I*log(x + I*sqrt(y))/(2*sqrt(y)), Ne(y, 0)),
         (-1/x, True))
     y = Symbol('y', positive=True)
-    assert heurisch_wrapper(1/(x**2 + y), x) in [I/sqrt(y)*log(x + sqrt(-y))/2 -
-    I/sqrt(y)*log(x - sqrt(-y))/2, I*log(x + I*sqrt(y)) /
-        (2*sqrt(y)) - I*log(x - I*sqrt(y))/(2*sqrt(y))]
+    assert heurisch_wrapper(1/(x**2 + y), x) == (atan(x/sqrt(y))/sqrt(y))
 
 
 def test_heurisch_hacking():
@@ -169,10 +175,10 @@ def test_heurisch_hacking():
         sqrt(7*pi)*erf(sqrt(7)*x)/14
 
     assert heurisch(1/sqrt(9 - 4*x**2), x, hints=[]) == \
-        asin(2*x/3)/2
+        asin(x*Rational(2, 3))/2
 
     assert heurisch(1/sqrt(9 + 4*x**2), x, hints=[]) == \
-        asinh(2*x/3)/2
+        asinh(x*Rational(2, 3))/2
 
 def test_heurisch_function():
     assert heurisch(f(x), x) is None
@@ -203,8 +209,7 @@ def test_heurisch_wrapper():
         - y**2*sqrt(x**2)*sqrt(1/(-x**2 + y**2))/x
 
 def test_issue_3609():
-    assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
-        I*log(log(x) - I)/2
+    assert heurisch(1/(x * (1 + log(x)**2)), x) == atan(log(x))
 
 ### These are examples from the Poor Man's Integrator
 ### http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/examples/
@@ -241,7 +246,7 @@ def test_pmint_logexp():
 
     assert ratsimp(heurisch(f, x)) == g
 
-@slow # 8 seconds on 3.4 GHz
+
 @XFAIL  # there's a hash dependent failure lurking here
 def test_pmint_erf():
     f = exp(-x**2)*erf(x)/(erf(x)**3 - erf(x)**2 - erf(x) + 1)

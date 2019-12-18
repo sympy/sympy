@@ -3,12 +3,14 @@ from __future__ import print_function, division
 import random
 from collections import defaultdict
 
-from sympy.core import Basic
+from sympy.core.basic import Atom
 from sympy.core.compatibility import is_sequence, reduce, range, as_int
+from sympy.core.sympify import _sympify
+from sympy.logic.boolalg import as_Boolean
+from sympy.matrices import zeros
+from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
-from sympy.polys.polytools import lcm
-from sympy.matrices import zeros
 from mpmath.libmp.libintmath import ifac
 
 
@@ -21,7 +23,6 @@ def _af_rmul(a, b):
     ========
 
     >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
-    >>> Permutation.print_cyclic = False
 
     >>> a, b = [1, 0, 2], [0, 2, 1]
     >>> _af_rmul(a, b)
@@ -40,6 +41,7 @@ def _af_rmul(a, b):
 
     See Also
     ========
+
     rmul, _af_rmuln
     """
     return [a[i] for i in b]
@@ -54,7 +56,6 @@ def _af_rmuln(*abc):
     ========
 
     >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
-    >>> Permutation.print_cyclic = False
 
     >>> a, b = [1, 0, 2], [0, 2, 1]
     >>> _af_rmul(a, b)
@@ -72,6 +73,7 @@ def _af_rmuln(*abc):
 
     See Also
     ========
+
     rmul, _af_rmul
     """
     a = abc
@@ -175,7 +177,6 @@ def _af_pow(a, n):
     ========
 
     >>> from sympy.combinatorics.permutations import Permutation, _af_pow
-    >>> Permutation.print_cyclic = False
     >>> p = Permutation([2, 0, 3, 1])
     >>> p.order()
     4
@@ -307,9 +308,7 @@ class Cycle(dict):
     """
     def __missing__(self, arg):
         """Enter arg into dictionary and return arg."""
-        arg = as_int(arg)
-        self[arg] = arg
-        return arg
+        return as_int(arg)
 
     def __iter__(self):
         for i in self.list():
@@ -356,7 +355,6 @@ class Cycle(dict):
 
         >>> from sympy.combinatorics.permutations import Cycle
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
         >>> p = Cycle(2, 3)(4, 5)
         >>> p.list()
         [0, 1, 3, 2, 5, 4]
@@ -464,7 +462,7 @@ class Cycle(dict):
         return Cycle(self)
 
 
-class Permutation(Basic):
+class Permutation(Atom):
     """
     A permutation, alternatively known as an 'arrangement number' or 'ordering'
     is an arrangement of the elements of an ordered list into a one-to-one
@@ -477,7 +475,8 @@ class Permutation(Basic):
     original ordering, not the elements (a, b, etc...) themselves.
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = False
+    >>> from sympy.interactive import init_printing
+    >>> init_printing(perm_cyclic=False, pretty_print=False)
 
     Permutations Notation
     =====================
@@ -660,17 +659,17 @@ class Permutation(Basic):
 
     There are a few things to note about how Permutations are printed.
 
-    1) If you prefer one form (array or cycle) over another, you can set that
-    with the print_cyclic flag.
+    1) If you prefer one form (array or cycle) over another, you can set
+    ``init_printing`` with the ``perm_cyclic`` flag.
 
-    >>> Permutation(1, 2)(4, 5)(3, 4)
+    >>> from sympy import init_printing
+    >>> p = Permutation(1, 2)(4, 5)(3, 4)
+    >>> p
     Permutation([0, 2, 1, 4, 5, 3])
-    >>> p = _
 
-    >>> Permutation.print_cyclic = True
+    >>> init_printing(perm_cyclic=True, pretty_print=False)
     >>> p
     (1 2)(3 4 5)
-    >>> Permutation.print_cyclic = False
 
     2) Regardless of the setting, a list of elements in the array for cyclic
     form can be obtained and either of those can be copied and supplied as
@@ -686,6 +685,7 @@ class Permutation(Basic):
     3) Printing is economical in that as little as possible is printed while
     retaining all information about the size of the permutation:
 
+    >>> init_printing(perm_cyclic=False, pretty_print=False)
     >>> Permutation([1, 0, 2, 3])
     Permutation([1, 0, 2, 3])
     >>> Permutation([1, 0, 2, 3], size=20)
@@ -694,10 +694,10 @@ class Permutation(Basic):
     Permutation([1, 0, 2, 4, 3], size=20)
 
     >>> p = Permutation([1, 0, 2, 3])
-    >>> Permutation.print_cyclic = True
+    >>> init_printing(perm_cyclic=True, pretty_print=False)
     >>> p
     (3)(0 1)
-    >>> Permutation.print_cyclic = False
+    >>> init_printing(perm_cyclic=False, pretty_print=False)
 
     The 2 was not printed but it is still there as can be seen with the
     array_form and size methods:
@@ -774,7 +774,7 @@ class Permutation(Basic):
     Permutations:
 
     >>> p(['zero', 'one', 'four', 'two'])
-     ['one', 'zero', 'four', 'two']
+    ['one', 'zero', 'four', 'two']
     >>> p('zo42')
     ['o', 'z', '4', '2']
 
@@ -810,9 +810,9 @@ class Permutation(Basic):
            Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
            Reading, MA: Addison-Wesley, 1994.
 
-    .. [6] http://en.wikipedia.org/wiki/Permutation#Product_and_inverse
+    .. [6] https://en.wikipedia.org/wiki/Permutation#Product_and_inverse
 
-    .. [7] http://en.wikipedia.org/wiki/Lehmer_code
+    .. [7] https://en.wikipedia.org/wiki/Lehmer_code
 
     """
 
@@ -834,7 +834,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
 
         Permutations entered in array-form are left unaltered:
 
@@ -946,6 +947,16 @@ class Permutation(Basic):
 
         return cls._af_new(aform)
 
+    def _eval_Eq(self, other):
+        other = _sympify(other)
+        if not isinstance(other, Permutation):
+            return None
+
+        if self._size != other._size:
+            return None
+
+        return as_Boolean(self._array_form == other._array_form)
+
     @classmethod
     def _af_new(cls, perm):
         """A method to produce a Permutation object from a list;
@@ -959,14 +970,15 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Perm
-        >>> Perm.print_cyclic = False
-        >>> a = [2,1,3,0]
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
+        >>> a = [2, 1, 3, 0]
         >>> p = Perm._af_new(a)
         >>> p
         Permutation([2, 1, 3, 0])
 
         """
-        p = Basic.__new__(cls, perm)
+        p = super(Permutation, cls).__new__(cls)
         p._array_form = perm
         p._size = len(perm)
         return p
@@ -984,7 +996,6 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
         >>> p = Permutation([[2, 0], [3, 1]])
         >>> p.array_form
         [2, 3, 0, 1]
@@ -997,30 +1008,6 @@ class Permutation(Basic):
         """
         return self._array_form[:]
 
-    def __repr__(self):
-        from sympy.combinatorics.permutations import Permutation, Cycle
-        if Permutation.print_cyclic:
-            if not self.size:
-                return 'Permutation()'
-            # before taking Cycle notation, see if the last element is
-            # a singleton and move it to the head of the string
-            s = Cycle(self)(self.size - 1).__repr__()[len('Cycle'):]
-            last = s.rfind('(')
-            if not last == 0 and ',' not in s[last:]:
-                s = s[last:] + s[:last]
-            return 'Permutation%s' %s
-        else:
-            s = self.support()
-            if not s:
-                if self.size < 5:
-                    return 'Permutation(%s)' % str(self.array_form)
-                return 'Permutation([], size=%s)' % self.size
-            trim = str(self.array_form[:s[-1] + 1]) + ', size=%s' % self.size
-            use = full = str(self.array_form)
-            if len(trim) < len(full):
-                use = trim
-            return 'Permutation(%s)' % use
-
     def list(self, size=None):
         """Return the permutation as an explicit list, possibly
         trimming unmoved elements if size is less than the maximum
@@ -1031,7 +1018,6 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
         >>> p = Permutation(2, 3)(4, 5)
         >>> p.list()
         [0, 1, 3, 2, 5, 4]
@@ -1072,7 +1058,6 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
         >>> p = Permutation([0, 3, 1, 2])
         >>> p.cyclic_form
         [[1, 3, 2]]
@@ -1168,7 +1153,6 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
         >>> I = Permutation([0, 1, 2, 3])
         >>> a = Permutation([2, 1, 3, 0])
         >>> I + a.rank() == a
@@ -1207,7 +1191,6 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
-        >>> Permutation.print_cyclic = False
 
         >>> a, b = [1, 0, 2], [0, 2, 1]
         >>> a = Permutation(a); b = Permutation(b)
@@ -1272,7 +1255,6 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
-        >>> Permutation.print_cyclic = False
 
         >>> a, b = [1, 0, 2], [0, 2, 1]
         >>> a = Permutation(a); b = Permutation(b)
@@ -1292,6 +1274,8 @@ class Permutation(Basic):
         It is acceptable for the arrays to have different lengths; the shorter
         one will be padded to match the longer one:
 
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> b*Permutation([1, 0])
         Permutation([1, 2, 0])
         >>> Permutation([1, 0])*b
@@ -1353,8 +1337,9 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
-        >>> p = Permutation([2,0,3,1])
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
+        >>> p = Permutation([2, 0, 3, 1])
         >>> p.order()
         4
         >>> p**4
@@ -1393,7 +1378,6 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = True
         >>> p = Permutation(1, 2, 9)
         >>> q = Permutation(6, 9, 8)
         >>> p*q != q*p
@@ -1484,7 +1468,7 @@ class Permutation(Basic):
         References
         ==========
 
-        1. http://en.wikipedia.org/wiki/Transposition_%28mathematics%29#Properties
+        .. [1] https://en.wikipedia.org/wiki/Transposition_%28mathematics%29#Properties
 
         """
         a = self.cyclic_form
@@ -1508,7 +1492,6 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
 
         >>> Permutation.from_sequence('SymPy')
         (4)(0 1 3)
@@ -1534,7 +1517,9 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([[2,0], [3,1]])
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
+        >>> p = Permutation([[2, 0], [3, 1]])
         >>> ~p
         Permutation([2, 3, 0, 1])
         >>> _ == p**-1
@@ -1556,6 +1541,10 @@ class Permutation(Basic):
         """
         for i in self.array_form:
             yield i
+
+    def __repr__(self):
+        from sympy.printing.repr import srepr
+        return srepr(self)
 
     def __call__(self, *i):
         """
@@ -1664,7 +1653,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> Permutation.unrank_nonlex(4, 5)
         Permutation([2, 0, 3, 1])
         >>> Permutation.unrank_nonlex(4, -1)
@@ -1731,7 +1721,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> p = Permutation([2, 0, 3, 1]); p.rank_nonlex()
         5
         >>> p = p.next_nonlex(); p
@@ -2061,11 +2052,6 @@ class Permutation(Basic):
         For large length of p, it uses a variation of merge
         sort to calculate the number of inversions.
 
-        References
-        ==========
-
-        [1] http://www.cp.eng.chula.ac.th/~piak/teaching/algo/algo2008/count-inv.htm
-
         Examples
         ========
 
@@ -2080,6 +2066,12 @@ class Permutation(Basic):
         ========
 
         descents, ascents, min, max
+
+        References
+        ==========
+
+        .. [1] http://www.cp.eng.chula.ac.th/~piak/teaching/algo/algo2008/count-inv.htm
+
         """
         inversions = 0
         a = self.array_form
@@ -2116,7 +2108,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> p = Permutation([0, 2, 3, 1])
         >>> x = Permutation([2, 0, 3, 1])
         >>> c = p.commutator(x); c
@@ -2138,7 +2131,7 @@ class Permutation(Basic):
         References
         ==========
 
-        http://en.wikipedia.org/wiki/Commutator
+        https://en.wikipedia.org/wiki/Commutator
         """
 
         a = self.array_form
@@ -2196,7 +2189,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> p = Permutation([3, 1, 5, 2, 4, 0])
         >>> p.order()
         4
@@ -2241,7 +2235,6 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> Permutation(3).cycle_structure
         {1: 4}
         >>> Permutation(0, 4, 3)(1, 2)(5, 6).cycle_structure
@@ -2350,16 +2343,16 @@ class Permutation(Basic):
         >>> while p:
         ...     print('%s %s %s' % (p, p.inversion_vector(), p.rank()))
         ...     p = p.next_lex()
-        ...
-        Permutation([0, 1, 2]) [0, 0] 0
-        Permutation([0, 2, 1]) [0, 1] 1
-        Permutation([1, 0, 2]) [1, 0] 2
-        Permutation([1, 2, 0]) [1, 1] 3
-        Permutation([2, 0, 1]) [2, 0] 4
-        Permutation([2, 1, 0]) [2, 1] 5
+        (2) [0, 0] 0
+        (1 2) [0, 1] 1
+        (2)(0 1) [1, 0] 2
+        (0 1 2) [1, 1] 3
+        (0 2 1) [2, 0] 4
+        (0 2) [2, 1] 5
 
         See Also
         ========
+
         from_inversion_vector
         """
         self_array_form = self.array_form
@@ -2425,6 +2418,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> Permutation.unrank_trotterjohnson(5, 10)
         Permutation([0, 3, 1, 2, 4])
 
@@ -2464,7 +2459,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> p = Permutation([3, 0, 2, 1])
         >>> p.rank_trotterjohnson()
         4
@@ -2515,6 +2511,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> p = Permutation.josephus(3, 6, 1)
         >>> p
         Permutation([2, 5, 3, 1, 4, 0])
@@ -2720,9 +2718,9 @@ class Permutation(Basic):
         References
         ==========
 
-        1. http://en.wikipedia.org/wiki/Flavius_Josephus
-        2. http://en.wikipedia.org/wiki/Josephus_problem
-        3. http://www.wou.edu/~burtonl/josephus.html
+        .. [1] https://en.wikipedia.org/wiki/Flavius_Josephus
+        .. [2] https://en.wikipedia.org/wiki/Josephus_problem
+        .. [3] http://www.wou.edu/~burtonl/josephus.html
 
         """
         from collections import deque
@@ -2745,7 +2743,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> Permutation.from_inversion_vector([3, 2, 1, 0, 0])
         Permutation([3, 2, 1, 0, 4, 5])
 
@@ -2791,7 +2790,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> a = Permutation.unrank_lex(5, 10)
         >>> a.rank()
         10
@@ -2816,10 +2816,8 @@ class Permutation(Basic):
             psize = new_psize
         return cls._af_new(perm_array)
 
-    # global flag to control how permutations are printed
-    # when True, Permutation([0, 2, 1, 3]) -> Cycle(1, 2)
-    # when False, Permutation([0, 2, 1, 3]) -> Permutation([0, 2, 1])
-    print_cyclic = True
+    # XXX Deprecated flag
+    print_cyclic = None
 
 
 def _merge(arr, temp, left, mid, right):

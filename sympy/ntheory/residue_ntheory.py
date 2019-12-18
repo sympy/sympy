@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import print_function, division
 
-from sympy.core.singleton import S
-from sympy.core.numbers import igcd, igcdex, mod_inverse
-from sympy.core.power import isqrt
 from sympy.core.compatibility import as_int, range
 from sympy.core.function import Function
+from sympy.core.numbers import igcd, igcdex, mod_inverse
+from sympy.core.power import isqrt
+from sympy.core.singleton import S
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
 from random import randint, Random
@@ -60,17 +58,18 @@ def _primitive_root_prime_iter(p):
     """
     Generates the primitive roots for a prime ``p``
 
-    References
-    ==========
-
-    .. [1] W. Stein "Elementary Number Theory" (2011), page 44
-
     Examples
     ========
 
     >>> from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
     >>> list(_primitive_root_prime_iter(19))
     [2, 3, 10, 13, 14, 15]
+
+    References
+    ==========
+
+    .. [1] W. Stein "Elementary Number Theory" (2011), page 44
+
     """
     # it is assumed that p is an int
     v = [(p - 1) // i for i in factorint(p - 1).keys()]
@@ -89,12 +88,6 @@ def primitive_root(p):
     """
     Returns the smallest primitive root or None
 
-    References
-    ==========
-
-    .. [1] W. Stein "Elementary Number Theory" (2011), page 44
-    .. [2] P. Hackman "Elementary Number Theory" (2009), Chapter C
-
     Parameters
     ==========
 
@@ -106,6 +99,13 @@ def primitive_root(p):
     >>> from sympy.ntheory.residue_ntheory import primitive_root
     >>> primitive_root(19)
     2
+
+    References
+    ==========
+
+    .. [1] W. Stein "Elementary Number Theory" (2011), page 44
+    .. [2] P. Hackman "Elementary Number Theory" (2009), Chapter C
+
     """
     p = as_int(p)
     if p < 1:
@@ -370,19 +370,19 @@ def _sqrt_mod_prime_power(a, p, k):
     p : prime number
     k : positive integer
 
-    References
-    ==========
-
-    .. [1] P. Hackman "Elementary Number Theory" (2009), page 160
-    .. [2] http://www.numbertheory.org/php/squareroot.html
-    .. [3] [Gathen99]_
-
     Examples
     ========
 
     >>> from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
     >>> _sqrt_mod_prime_power(11, 43, 1)
     [21, 22]
+
+    References
+    ==========
+
+    .. [1] P. Hackman "Elementary Number Theory" (2009), page 160
+    .. [2] http://www.numbertheory.org/php/squareroot.html
+    .. [3] [Gathen99]_
     """
     from sympy.core.numbers import igcdex
     from sympy.polys.domains import ZZ
@@ -720,10 +720,8 @@ def _nthroot_mod1(s, q, p, all_roots):
         f1 = igcdex(-f, q)[0] % q
         z = f*f1
         x = (1 + z) // q
-        w = pow(g, z, p)
         r1 = pow(s, x, p)
         s1 = pow(s, f, p)
-        y = pow(g, f, p)
         h = pow(g, f*q, p)
         t = discrete_log(p, s1, h)
         g2 = pow(g, z*t, p)
@@ -770,11 +768,10 @@ def nthroot_mod(a, n, p, all_roots=False):
     a, n, p = as_int(a), as_int(n), as_int(p)
     if n == 2:
         return sqrt_mod(a, p, all_roots)
-    f = totient(p)
     # see Hackman "Elementary Number Theory" (2009), page 76
     if not is_nthpow_residue(a, n, p):
         return None
-    if primitive_root(p) == None:
+    if primitive_root(p) is None:
         raise NotImplementedError("Not Implemented for m without primitive root")
 
     if (p - 1) % n == 0:
@@ -867,7 +864,7 @@ def legendre_symbol(a, p):
     a = a % p
     if not a:
         return 0
-    if is_quad_residue(a, p):
+    if pow(a, (p - 1) // 2, p) == 1:
         return 1
     return -1
 
@@ -962,7 +959,7 @@ def jacobi_symbol(m, n):
 
 class mobius(Function):
     """
-    Möbius function maps natural number to {-1, 0, 1}
+    Mobius function maps natural number to {-1, 0, 1}
 
     It is defined as follows:
         1) `1` if `n = 1`.
@@ -973,7 +970,7 @@ class mobius(Function):
     It is an important multiplicative function in number theory
     and combinatorics.  It has applications in mathematical series,
     algebraic number theory and also physics (Fermion operator has very
-    concrete realization with Möbius Function model).
+    concrete realization with Mobius Function model).
 
     Parameters
     ==========
@@ -996,7 +993,7 @@ class mobius(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/M%C3%B6bius_function
+    .. [1] https://en.wikipedia.org/wiki/M%C3%B6bius_function
     .. [2] Thomas Koshy "Elementary Number Theory with Applications"
 
     """
@@ -1027,12 +1024,6 @@ def _discrete_log_trial_mul(n, a, b, order=None):
     naive method is used as fallback algorithm of ``discrete_log`` when the
     group order is very small.
 
-    References
-    ==========
-
-    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
-        Vanstone, S. A. (1997).
-
     Examples
     ========
 
@@ -1040,17 +1031,22 @@ def _discrete_log_trial_mul(n, a, b, order=None):
     >>> _discrete_log_trial_mul(41, 15, 7)
     3
 
-    See also
+    See Also
     ========
 
     discrete_log
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
     """
     a %= n
     b %= n
     if order is None:
         order = n
     x = 1
-    k = 1
     for i in range(order):
         if x == a:
             return i
@@ -1066,12 +1062,6 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     The algorithm is a time-memory trade-off of the method of exhaustive
     search. It uses `O(sqrt(m))` memory, where `m` is the group order.
 
-    References
-    ==========
-
-    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
-        Vanstone, S. A. (1997).
-
     Examples
     ========
 
@@ -1079,10 +1069,16 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     >>> _discrete_log_shanks_steps(41, 15, 7)
     3
 
-    See also
+    See Also
     ========
 
     discrete_log
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
     """
     a %= n
     b %= n
@@ -1112,12 +1108,6 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
     It is a randomized algorithm with the same expected running time as
     ``_discrete_log_shanks_steps``, but requires a negligible amount of memory.
 
-    References
-    ==========
-
-    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
-        Vanstone, S. A. (1997).
-
     Examples
     ========
 
@@ -1125,17 +1115,22 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
     >>> _discrete_log_pollard_rho(227, 3**7, 3)
     7
 
-    See also
+    See Also
     ========
 
     discrete_log
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
     """
     a %= n
     b %= n
 
     if order is None:
         order = n_order(b, n)
-
     prng = Random()
     if rseed is not None:
         prng.seed(rseed)
@@ -1198,10 +1193,13 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
             if xa == xb:
                 r = (ba - bb) % order
-                if r != 0:
-                    return mod_inverse(r, order) * (ab - aa) % order
+                try:
+                    e = mod_inverse(r, order) * (ab - aa) % order
+                    if (pow(b, e, n) - a) % n == 0:
+                        return e
+                except ValueError:
+                    pass
                 break
-
     raise ValueError("Pollard's Rho failed to find logarithm")
 
 
@@ -1214,12 +1212,6 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None):
     of the factorization of the group order. It is more efficient when the
     group order factors into many small primes.
 
-    References
-    ==========
-
-    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
-        Vanstone, S. A. (1997).
-
     Examples
     ========
 
@@ -1227,10 +1219,16 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None):
     >>> _discrete_log_pohlig_hellman(251, 210, 71)
     197
 
-    See also
+    See Also
     ========
 
     discrete_log
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
     """
     from .modular import crt
     a %= n
@@ -1270,19 +1268,19 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         * Pollard's Rho
         * Pohlig-Hellman
 
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/DiscreteLogarithm.html
-    .. [2] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
-        Vanstone, S. A. (1997).
-
     Examples
     ========
 
     >>> from sympy.ntheory import discrete_log
     >>> discrete_log(41, 15, 7)
     3
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/DiscreteLogarithm.html
+    .. [2] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
 
     """
     n, a, b = as_int(n), as_int(a), as_int(b)

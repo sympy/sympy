@@ -1,3 +1,5 @@
+.. _kane_method:
+
 =============
 Kane's Method
 =============
@@ -220,6 +222,37 @@ the following fashion:
    \begin{bmatrix}
      \mathbf{M}_{d}(\mathbf{q}, t) & \mathbf{0}_{m \times p} \\
      \mathbf{0}_{p \times m} & \mathbf{M}_{\dot{n}r}(\mathbf{q}, t) \end{bmatrix}\\
+=======
+In :mod:`sympy.physics.mechanics` we are assuming there are 5 basic sets of equations needed
+to describe a system. They are: holonomic constraints, non-holonomic
+constraints, kinematic differential equations, dynamic equations, and
+differentiated non-holonomic equations.
+
+.. math::
+  \mathbf{f_h}(q, t) &= 0\\
+  \mathbf{k_{nh}}(q, t) u + \mathbf{f_{nh}}(q, t) &= 0\\
+  \mathbf{k_{k\dot{q}}}(q, t) \dot{q} + \mathbf{k_{ku}}(q, t) u +
+  \mathbf{f_k}(q, t) &= 0\\
+  \mathbf{k_d}(q, t) \dot{u} + \mathbf{f_d}(q, \dot{q}, u, t) &= 0\\
+  \mathbf{k_{dnh}}(q, t) \dot{u} + \mathbf{f_{dnh}}(q, \dot{q}, u, t) &= 0\\
+
+In :mod:`sympy.physics.mechanics` holonomic constraints are only used for the linearization
+process; it is assumed that they will be too complicated to solve for the
+dependent coordinate(s).  If you are able to easily solve a holonomic
+constraint, you should consider redefining your problem in terms of a smaller
+set of coordinates. Alternatively, the time-differentiated holonomic
+constraints can be supplied.
+
+Kane's method forms two expressions, :math:`F_r` and :math:`F_r^*`, whose sum
+is zero. In this module, these expressions are rearranged into the following
+form:
+
+ :math:`\mathbf{M}(q, t) \dot{u} = \mathbf{f}(q, \dot{q}, u, t)`
+
+For a non-holonomic system with `o` total speeds and `m` motion constraints, we
+will get o - m equations. The mass-matrix/forcing equations are then augmented
+in the following fashion:
+>>>>>>> master
 
 .. math::
 
@@ -285,6 +318,11 @@ The formulation of the equations of motion in
 object. Upon initialization of the ``KanesMethod`` object, an inertial
 reference frame needs to be supplied. along with some basic system information,
 such as coordinates and speeds::
+
+The formulation of the equations of motion in :mod:`sympy.physics.mechanics` starts with
+creation of a ``KanesMethod`` object. Upon initialization of the
+``KanesMethod`` object, an inertial reference frame needs to be supplied. along
+with some basic system information, such as coordinates and speeds ::
 
   >>> from sympy.physics.mechanics import *
   >>> N = ReferenceFrame('N')

@@ -6,7 +6,7 @@ SymPy
 .. |pypi version| image:: https://img.shields.io/pypi/v/sympy.svg
    :target: https://pypi.python.org/pypi/sympy
 .. |Build status| image:: https://secure.travis-ci.org/sympy/sympy.svg?branch=master
-   :target: http://travis-ci.org/sympy/sympy
+   :target: https://travis-ci.org/sympy/sympy
 .. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Join the chat at https://gitter.im/sympy/sympy
    :target: https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
@@ -15,7 +15,7 @@ SymPy
 
 A Python library for symbolic mathematics.
 
-http://sympy.org/
+https://sympy.org/
 
 See the AUTHORS file for the list of authors.
 
@@ -36,7 +36,10 @@ to ask us anything there. We have a very welcoming and helpful community.
 Download
 --------
 
-Get the latest version of SymPy from
+The recommended installation method is through Anaconda,
+https://www.anaconda.com/download/
+
+You can also get the latest version of SymPy from
 https://pypi.python.org/pypi/sympy/
 
 To get the git version do
@@ -46,14 +49,18 @@ To get the git version do
     $ git clone git://github.com/sympy/sympy.git
 
 For other options (tarballs, debs, etc.), see
-http://docs.sympy.org/dev/install.html.
+https://docs.sympy.org/dev/install.html.
 
-Documentation and usage
+Documentation and Usage
 -----------------------
+
+For in-depth instructions on installation and building the documentation, see
+the `SymPy Documentation Style Guide
+<https://docs.sympy.org/dev/documentation-style-guide.html>`_.
 
 Everything is at:
 
-http://docs.sympy.org/
+https://docs.sympy.org/
 
 You can generate everything at the above site in your local copy of SymPy by::
 
@@ -63,7 +70,9 @@ You can generate everything at the above site in your local copy of SymPy by::
 Then the docs will be in `_build/html`. If you don't want to read that, here
 is a short usage:
 
-From this directory, start python and::
+From this directory, start Python and:
+
+.. code-block:: python
 
     >>> from sympy import Symbol, cos
     >>> x = Symbol('x')
@@ -73,13 +82,13 @@ From this directory, start python and::
 
 SymPy also comes with a console that is a simple wrapper around the
 classic python console (or IPython when available) that loads the
-sympy namespace and executes some common commands for you.
+SymPy namespace and executes some common commands for you.
 
 To start it, issue::
 
     $ bin/isympy
 
-from this directory if SymPy is not installed or simply::
+from this directory, if SymPy is not installed or simply::
 
     $ isympy
 
@@ -88,7 +97,7 @@ if SymPy is installed.
 Installation
 ------------
 
-SymPy has a hard dependency on the `mpmath <http://mpmath.org/>`
+SymPy has a hard dependency on the `mpmath <http://mpmath.org/>`_
 library (version >= 0.19).  You should install it first, please refer to
 the mpmath installation guide:
 
@@ -102,16 +111,18 @@ If you install it system-wide, you may need to prefix the previous command with 
 
     $ sudo python setup.py install
 
-See http://docs.sympy.org/dev/install.html for more information.
+See https://docs.sympy.org/dev/install.html for more information.
 
 Contributing
 ------------
 
-We welcome contributions from anyone, even if you are new to open
-source. Please read our `introduction to contributing
-<https://github.com/sympy/sympy/wiki/Introduction-to-contributing>`_. If you
-are new and looking for some way to contribute a good place to start is to
-look at the issues tagged `Easy to Fix
+We welcome contributions from anyone, even if you are new to open source. Please
+read our `Introduction to Contributing
+<https://github.com/sympy/sympy/wiki/Introduction-to-contributing>`_ page and
+the `SymPy Documentation Style Guide
+<https://docs.sympy.org/dev/documentation-style-guide.html>`_. If you are new
+and looking for some way to contribute, a good place to start is to look at the
+issues tagged `Easy to Fix
 <https://github.com/sympy/sympy/issues?q=is%3Aopen+is%3Aissue+label%3A%22Easy+to+Fix%22>`_.
 
 Please note that all participants of this project are expected to follow our
@@ -135,7 +146,8 @@ To test pull requests, use `sympy-bot <https://github.com/sympy/sympy-bot>`_.
 
 Regenerate Experimental `\LaTeX` Parser/Lexer
 ---------------------------------------------
-The parser and lexer generated with the `ANTLR4 <http://antlr4.org`_ toolchain
+
+The parser and lexer generated with the `ANTLR4 <http://antlr4.org>`_ toolchain
 in `sympy/parsing/latex/_antlr` and checked into the repo. Presently, most
 users should not need to regenerate these files, but if you plan to work on
 this feature, you will need the `antlr4` command line tool available. One way
@@ -146,16 +158,6 @@ to get it is::
 After making changes to `sympy/parsing/latex/LaTeX.g4`, run::
 
     $ ./setup.py antlr
-
-Usage in Python 3
------------------
-
-SymPy also supports Python 3. If you want to install the latest version in
-Python 3, get the Python 3 tarball from
-https://pypi.python.org/pypi/sympy/
-
-To install the SymPy for Python 3, simply run the above commands with a Python
-3 interpreter.
 
 Clean
 -----
@@ -194,11 +196,11 @@ Brief History
 -------------
 
 SymPy was started by Ondřej Čertík in 2005, he wrote some code during the
-summer, then he wrote some more code during the summer 2006. In February 2007,
+summer, then he wrote some more code during summer 2006. In February 2007,
 Fabian Pedregosa joined the project and helped fixed many things, contributed
 documentation and made it alive again. 5 students (Mateusz Paprocki, Brian
-Jorgensen, Jason Gedge, Robert Schwarz and Chris Wu) improved SymPy incredibly
-during the summer 2007 as part of the Google Summer of Code. Pearu Peterson
+Jorgensen, Jason Gedge, Robert Schwarz, and Chris Wu) improved SymPy incredibly
+during summer 2007 as part of the Google Summer of Code. Pearu Peterson
 joined the development during the summer 2007 and he has made SymPy much more
 competitive by rewriting the core from scratch, that has made it from 10x to
 100x faster. Jurjen N.E. Bos has contributed pretty printing and other patches.
@@ -211,16 +213,16 @@ from Google Summer of Code students.
 
 In 2011, Ondřej Čertík stepped down as lead developer, with Aaron Meurer, who
 also started as a Google Summer of Code student, taking his place. Ondřej
-Čertík is still active in the community, but is too busy with work and family
+Čertík is still active in the community but is too busy with work and family
 to play a lead development role.
 
 Since then, a lot more people have joined the development and some people have
 also left. You can see the full list in doc/src/aboutus.rst, or online at:
 
-http://docs.sympy.org/dev/aboutus.html#sympy-development-team
+https://docs.sympy.org/dev/aboutus.html#sympy-development-team
 
-The git history goes back to 2007, when development moved from svn to hg.  To
-see the history before that point, look at http://github.com/sympy/sympy-old.
+The git history goes back to 2007 when development moved from svn to hg.  To
+see the history before that point, look at https://github.com/sympy/sympy-old.
 
 You can use git to see the biggest developers.  The command::
 
@@ -246,16 +248,16 @@ To cite SymPy in publications use
 
 A BibTeX entry for LaTeX users is
 
-.. code-block:: none
+.. code-block:: bibtex
 
     @article{10.7717/peerj-cs.103,
      title = {SymPy: symbolic computing in Python},
-     author = {Meurer, Aaron and Smith, Christopher P. and Paprocki, Mateusz and \v{C}ert\'{i}k, Ond\v{r}ej and Kirpichev, Sergey B. and Rocklin, Matthew and Kumar, AMiT and Ivanov, Sergiu and Moore, Jason K. and Singh, Sartaj and Rathnayake, Thilina and Vig, Sean and Granger, Brian E. and Muller, Richard P. and Bonazzi, Francesco and Gupta, Harsh and Vats, Shivam and Johansson, Fredrik and Pedregosa, Fabian and Curry, Matthew J. and Terrel, Andy R. and Rou\v{c}ka, \v{S}t\v{e}p\'{a}n and Saboo, Ashutosh and Fernando, Isuru and Kulal, Sumith and Cimrman, Robert and Scopatz, Anthony},
+     author = {Meurer, Aaron and Smith, Christopher P. and Paprocki, Mateusz and \v{C}ert\'{i}k, Ond\v{r}ej and Kirpichev, Sergey B. and Rocklin, Matthew and Kumar, Amit and Ivanov, Sergiu and Moore, Jason K. and Singh, Sartaj and Rathnayake, Thilina and Vig, Sean and Granger, Brian E. and Muller, Richard P. and Bonazzi, Francesco and Gupta, Harsh and Vats, Shivam and Johansson, Fredrik and Pedregosa, Fabian and Curry, Matthew J. and Terrel, Andy R. and Rou\v{c}ka, \v{S}t\v{e}p\'{a}n and Saboo, Ashutosh and Fernando, Isuru and Kulal, Sumith and Cimrman, Robert and Scopatz, Anthony},
      year = 2017,
      month = jan,
      keywords = {Python, Computer algebra system, Symbolics},
      abstract = {
-                SymPy is an open source computer algebra system written in pure Python. It is built with a focus on extensibility and ease of use, through both interactive and programmatic applications. These characteristics have led SymPy to become a popular symbolic library for the scientific Python ecosystem. This paper presents the architecture of SymPy, a description of its features, and a discussion of select submodules. The supplementary material provide additional examples and further outline details of the architecture and features of SymPy.
+                SymPy is an open source computer algebra system written in pure Python. It is built with a focus on extensibility and ease of use, through both interactive and programmatic applications. These characteristics have led SymPy to become a popular symbolic library for the scientific Python ecosystem. This paper presents the architecture of SymPy, a description of its features, and a discussion of select submodules. The supplementary material provides additional examples and further outline details of the architecture and features of SymPy.
              },
      volume = 3,
      pages = {e103},

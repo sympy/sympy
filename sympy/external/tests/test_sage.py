@@ -15,19 +15,11 @@
 # Python (without Sage). Here we test everything, that a user may need when
 # using SymPy with Sage.
 
-import os
-import re
-import sys
-
 from sympy.external import import_module
 
 sage = import_module('sage.all', __import__kwargs={'fromlist': ['all']})
 if not sage:
     #bin/test will not execute any tests now
-    disabled = True
-
-if sys.version_info[0] == 3:
-    # Sage does not support Python 3 currently
     disabled = True
 
 import sympy
@@ -66,7 +58,7 @@ def check_expression(expr, var_symbols, only_from_sympy=False):
 
     # evaluate the expression in the context of SymPy:
     if var_symbols:
-        sympy_vars = sympy.var(var_symbols)
+        sympy.var(var_symbols)
     b = globals().copy()
     b.update(sympy.__dict__)
     assert "sin" in b
@@ -174,6 +166,7 @@ def test_functions():
     check_expression("atanh(x)", "x")
     check_expression("acoth(x)", "x")
     check_expression("exp(x)", "x")
+    check_expression("gamma(x)", "x")
     check_expression("log(x)", "x")
     check_expression("re(x)", "x")
     check_expression("im(x)", "x")
@@ -197,6 +190,7 @@ def test_functions():
     check_expression("loggamma(x)", "x")
     check_expression("Ynm(n,m,x,y)", "n, m, x, y")
     check_expression("hyper((n,m),(m,n),x)", "n, m, x")
+    check_expression("uppergamma(y, x)", "x, y")
 
 def test_issue_4023():
     sage.var("a x")
@@ -229,6 +223,8 @@ def test_undefined_function():
     x = sympy.symbols('x')
     sx = sage.var('x')
     is_trivially_equal(sf(sx), f(x)._sage_())
+    assert f(x) == sympy.sympify(sf(sx))
+    assert sf == f._sage_()
     #assert bool(f == sympy.sympify(sf))
 
 def test_abstract_function():

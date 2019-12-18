@@ -1,12 +1,12 @@
 from __future__ import print_function, division
 
-from collections import defaultdict
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, as_int
 
 
 def binomial_coefficients(n):
     """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where
     :math:`C_kn` are binomial coefficients and :math:`n=k1+k2`.
+
     Examples
     ========
 
@@ -20,6 +20,7 @@ def binomial_coefficients(n):
 
     binomial_coefficients_list, multinomial_coefficients
     """
+    n = as_int(n)
     d = {(0, n): 1, (n, 0): 1}
     a = 1
     for k in range(1, n//2 + 1):
@@ -44,6 +45,7 @@ def binomial_coefficients_list(n):
 
     binomial_coefficients, multinomial_coefficients
     """
+    n = as_int(n)
     d = [1] * (n + 1)
     a = 1
     for k in range(1, n//2 + 1):
@@ -52,74 +54,20 @@ def binomial_coefficients_list(n):
     return d
 
 
-def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
-    """Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
-    where ``C_kn`` are multinomial coefficients such that
-    ``n=k1+k2+..+km``.
-
-    For example:
-
-    >>> from sympy import multinomial_coefficients
-    >>> multinomial_coefficients(2, 5) # indirect doctest
-    {(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}
-
-    The algorithm is based on the following result:
-
-       Consider a polynomial and its ``n``-th exponent::
-
-         P(x) = sum_{i=0}^m p_i x^i
-         P(x)^n = sum_{k=0}^{m n} a(n,k) x^k
-
-       The coefficients ``a(n,k)`` can be computed using the
-       J.C.P. Miller Pure Recurrence [see D.E.Knuth, Seminumerical
-       Algorithms, The art of Computer Programming v.2, Addison
-       Wesley, Reading, 1981;]::
-
-         a(n,k) = 1/(k p_0) sum_{i=1}^m p_i ((n+1)i-k) a(n,k-i),
-
-       where ``a(n,0) = p_0^n``.
-    """
-
-    if not m:
-        if n:
-            return {}
-        return {(): 1}
-    if m == 2:
-        return binomial_coefficients(n)
-    symbols = [(0,)*i + (1,) + (0,)*(m - i - 1) for i in range(m)]
-    s0 = symbols[0]
-    p0 = [_tuple(aa - bb for aa, bb in _zip(s, s0)) for s in symbols]
-    r = {_tuple(aa*n for aa in s0): 1}
-    l = [0] * (n*(m - 1) + 1)
-    l[0] = r.items()
-    for k in range(1, n*(m - 1) + 1):
-        d = defaultdict(int)
-        for i in range(1, min(m, k + 1)):
-            nn = (n + 1)*i - k
-            if not nn:
-                continue
-            t = p0[i]
-            for t2, c2 in l[k - i]:
-                tt = _tuple([aa + bb for aa, bb in _zip(t2, t)])
-                d[tt] += nn*c2
-                if not d[tt]:
-                    del d[tt]
-        r1 = [(t, c//k) for (t, c) in d.items()]
-        l[k] = r1
-        r.update(r1)
-    return r
-
-
 def multinomial_coefficients(m, n):
     r"""Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
     where ``C_kn`` are multinomial coefficients such that
     ``n=k1+k2+..+km``.
 
-    For example:
+    Examples
+    ========
 
     >>> from sympy.ntheory import multinomial_coefficients
     >>> multinomial_coefficients(2, 5) # indirect doctest
     {(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}
+
+    Notes
+    =====
 
     The algorithm is based on the following result:
 
@@ -135,6 +83,8 @@ def multinomial_coefficients(m, n):
 
     binomial_coefficients_list, binomial_coefficients
     """
+    m = as_int(m)
+    n = as_int(n)
     if not m:
         if n:
             return {}
@@ -200,6 +150,8 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
     >>> next(it)
     ((3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), 1)
     """
+    m = as_int(m)
+    n = as_int(n)
     if m < 2*n or n == 1:
         mc = multinomial_coefficients(m, n)
         for k, v in mc.items():

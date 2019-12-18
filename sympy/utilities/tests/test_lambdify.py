@@ -1,20 +1,28 @@
 from distutils.version import LooseVersion as V
 from itertools import product
 import math
+import inspect
 
 import mpmath
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
-    Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
+    Float, Matrix, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy)
+    DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
+    digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
+    MatrixSymbol, fresnelc, fresnels)
+from sympy.functions.elementary.complexes import re, im, Abs, arg
+from sympy.functions.special.polynomials import \
+    chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
+    assoc_legendre, assoc_laguerre, jacobi
 from sympy.printing.lambdarepr import LambdaPrinter
-from sympy.utilities.lambdify import implemented_function
+from sympy.printing.pycode import NumPyPrinter
+from sympy.utilities.lambdify import implemented_function, lambdastr
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
-from sympy.functions.special.gamma_functions import uppergamma,lowergamma
+from sympy.functions.special.gamma_functions import uppergamma, lowergamma
 
 import sympy
 
@@ -22,8 +30,14 @@ import sympy
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
+scipy = import_module('scipy')
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
+
+if tensorflow:
+    # Hide Tensorflow warnings
+    import os
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 w, x, y, z = symbols('w,x,y,z')
 
@@ -44,6 +58,19 @@ def test_single_arg():
 def test_list_args():
     f = lambdify([x, y], x + y)
     assert f(1, 2) == 3
+
+
+def test_nested_args():
+    f1 = lambdify([[w, x]], [w, x])
+    assert f1([91, 2]) == [91, 2]
+    raises(TypeError, lambda: f1(1, 2))
+
+    f2 = lambdify([(w, x), (y, z)], [w, x, y, z])
+    assert f2((18, 12), (73, 4)) == [18, 12, 73, 4]
+    raises(TypeError, lambda: f2(3, 4))
+
+    f3 = lambdify([w, [[[x]], y], z], [w, x, y, z])
+    assert f3(10, [[[52]], 31], 44) == [10, 52, 31, 44]
 
 
 def test_str_args():
@@ -102,7 +129,8 @@ def test_sympy_lambda():
     prec = 1e-15
     assert -prec < f(Rational(1, 5)).evalf() - Float(str(sin02)) < prec
     # arctan is in numpy module and should not be available
-    raises(NameError, lambda: lambdify(x, arctan(x), "sympy"))
+    # The arctan below gives NameError. What is this supposed to test?
+    # raises(NameError, lambda: lambdify(x, arctan(x), "sympy"))
 
 
 @conserve_mpmath_dps
@@ -168,14 +196,16 @@ def test_numpy_transl():
         assert sym in sympy.__dict__
         assert nump in numpy.__dict__
 
-def test_tensorflow_transl():
-    if not tensorflow:
-        skip("tensorflow not installed")
 
-    from sympy.utilities.lambdify import TENSORFLOW_TRANSLATIONS
-    for sym, tens in TENSORFLOW_TRANSLATIONS.items():
+def test_scipy_transl():
+    if not scipy:
+        skip("scipy not installed.")
+
+    from sympy.utilities.lambdify import SCIPY_TRANSLATIONS
+    for sym, scip in SCIPY_TRANSLATIONS.items():
         assert sym in sympy.__dict__
-        assert tens in tensorflow.__dict__
+        assert scip in scipy.__dict__ or scip in scipy.special.__dict__
+
 
 def test_numpy_translation_abs():
     if not numpy:
@@ -185,6 +215,7 @@ def test_numpy_translation_abs():
     assert f(-1) == 1
     assert f(1) == 1
 
+
 def test_numexpr_printer():
     if not numexpr:
         skip("numexpr not installed.")
@@ -192,7 +223,6 @@ def test_numexpr_printer():
     # if translation/printing is done incorrectly then evaluating
     # a lambdified numexpr expression will throw an exception
     from sympy.printing.lambdarepr import NumExprPrinter
-    from sympy import S
 
     blacklist = ('where', 'complex', 'contains')
     arg_tuple = (x, y, z) # some functions take more than one argument
@@ -208,16 +238,27 @@ def test_numexpr_printer():
         f = lambdify(args, ssym(*args), modules='numexpr')
         assert f(*(1, )*nargs) is not None
 
+
 def test_issue_9334():
     if not numexpr:
         skip("numexpr not installed.")
     if not numpy:
         skip("numpy not installed.")
-    expr = sympy.S('b*a - sqrt(a**2)')
+    expr = S('b*a - sqrt(a**2)')
     a, b = sorted(expr.free_symbols, key=lambda s: s.name)
     func_numexpr = lambdify((a,b), expr, modules=[numexpr], dummify=False)
     foo, bar = numpy.random.random((2, 4))
     func_numexpr(foo, bar)
+
+def test_issue_12984():
+    import warnings
+    if not numexpr:
+        skip("numexpr not installed.")
+    func_numexpr = lambdify((x,y,z), Piecewise((y, x >= 0), (z, x > -1)), numexpr)
+    assert func_numexpr(1, 24, 42) == 24
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        assert str(func_numexpr(-1, 24, 42)) == 'nan'
 
 #================== Test some functions ============================
 
@@ -321,6 +362,7 @@ def test_matrix():
     assert lambdify(v, J, modules='sympy')(1, 2) == sol
     assert lambdify(v.T, J, modules='sympy')(1, 2) == sol
 
+
 def test_numpy_matrix():
     if not numpy:
         skip("numpy not installed.")
@@ -332,12 +374,31 @@ def test_numpy_matrix():
     #Check that the types are arrays and matrices
     assert isinstance(f(1, 2, 3), numpy.ndarray)
 
+    # gh-15071
+    class dot(Function):
+        pass
+    x_dot_mtx = dot(x, Matrix([[2], [1], [0]]))
+    f_dot1 = lambdify(x, x_dot_mtx)
+    inp = numpy.zeros((17, 3))
+    assert numpy.all(f_dot1(inp) == 0)
+
+    strict_kw = dict(allow_unknown_functions=False, inline=True, fully_qualified_modules=False)
+    p2 = NumPyPrinter(dict(user_functions={'dot': 'dot'}, **strict_kw))
+    f_dot2 = lambdify(x, x_dot_mtx, printer=p2)
+    assert numpy.all(f_dot2(inp) == 0)
+
+    p3 = NumPyPrinter(strict_kw)
+    # The line below should probably fail upon construction (before calling with "(inp)"):
+    raises(Exception, lambda: lambdify(x, x_dot_mtx, printer=p3)(inp))
+
+
 def test_numpy_transpose():
     if not numpy:
         skip("numpy not installed.")
     A = Matrix([[1, x], [0, 1]])
     f = lambdify((x), A.T, modules="numpy")
     numpy.testing.assert_array_equal(f(2), numpy.array([[1, 0], [2, 1]]))
+
 
 def test_numpy_dotproduct():
     if not numpy:
@@ -354,12 +415,14 @@ def test_numpy_dotproduct():
            f4(1, 2, 3) == \
            numpy.array([14])
 
+
 def test_numpy_inverse():
     if not numpy:
         skip("numpy not installed.")
     A = Matrix([[1, x], [0, 1]])
     f = lambdify((x), A**-1, modules="numpy")
     numpy.testing.assert_array_equal(f(2), numpy.array([[1, -2], [0,  1]]))
+
 
 def test_numpy_old_matrix():
     if not numpy:
@@ -370,14 +433,17 @@ def test_numpy_old_matrix():
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
+
 def test_python_div_zero_issue_11306():
     if not numpy:
         skip("numpy not installed.")
     p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
     f = lambdify([x, y], p, modules='numpy')
     numpy.seterr(divide='ignore')
-    assert str(float(f(0,1))) == 'inf'
+    assert float(f(numpy.array([0]),numpy.array([0.5]))) == 0
+    assert str(float(f(numpy.array([0]),numpy.array([1])))) == 'inf'
     numpy.seterr(divide='warn')
+
 
 def test_issue9474():
     mods = [None, 'math']
@@ -386,9 +452,9 @@ def test_issue9474():
     if mpmath:
         mods.append('mpmath')
     for mod in mods:
-        f = lambdify(x, sympy.S(1)/x, modules=mod)
+        f = lambdify(x, S.One/x, modules=mod)
         assert f(2) == 0.5
-        f = lambdify(x, floor(sympy.S(1)/x), modules=mod)
+        f = lambdify(x, floor(S.One/x), modules=mod)
         assert f(2) == 0
 
     for absfunc, modules in product([Abs, abs], mods):
@@ -429,6 +495,7 @@ def test_numpy_piecewise():
     numpy.testing.assert_array_equal(nodef_func(numpy.array([-1, 0, 1])),
                                      numpy.array([1, numpy.nan, 1]))
 
+
 def test_numpy_logical_ops():
     if not numpy:
         skip("numpy not installed.")
@@ -446,6 +513,7 @@ def test_numpy_logical_ops():
     numpy.testing.assert_array_equal(or_func_3(arr1, arr2, arr3), numpy.array([True, True]))
     numpy.testing.assert_array_equal(not_func(arr2), numpy.array([True, False]))
 
+
 def test_numpy_matmul():
     if not numpy:
         skip("numpy not installed.")
@@ -459,6 +527,7 @@ def test_numpy_matmul():
     numpy.testing.assert_array_equal(f(0.5, 3, 4), numpy.array([[72.125, 119.25],
                                                                 [159, 251]]))
 
+
 def test_numpy_numexpr():
     if not numpy:
         skip("numpy not installed.")
@@ -471,6 +540,7 @@ def test_numpy_numexpr():
     npfunc = lambdify((x, y, z), expr, modules='numpy')
     nefunc = lambdify((x, y, z), expr, modules='numexpr')
     assert numpy.allclose(npfunc(a, b, c), nefunc(a, b, c))
+
 
 def test_numexpr_userfunctions():
     if not numpy:
@@ -487,91 +557,138 @@ def test_numexpr_userfunctions():
     func = lambdify((x, y), uf(x, y), modules='numexpr')
     assert numpy.allclose(func(a, b), 2*a*b+1)
 
+
 def test_tensorflow_basic_math():
     if not tensorflow:
         skip("tensorflow not installed.")
     expr = Max(sin(x), Abs(1/(x+2)))
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.constant(0, dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s) == 0.5
+
+    with tensorflow.compat.v1.Session() as s:
+        a = tensorflow.constant(0, dtype=tensorflow.float32)
+        assert func(a).eval(session=s) == 0.5
+
 
 def test_tensorflow_placeholders():
     if not tensorflow:
         skip("tensorflow not installed.")
     expr = Max(sin(x), Abs(1/(x+2)))
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
+
+    with tensorflow.compat.v1.Session() as s:
+        a = tensorflow.compat.v1.placeholder(dtype=tensorflow.float32)
+        assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
+
 
 def test_tensorflow_variables():
     if not tensorflow:
         skip("tensorflow not installed.")
     expr = Max(sin(x), Abs(1/(x+2)))
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.Variable(0, dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    if V(tensorflow.__version__) < '1.0':
-        s.run(tensorflow.initialize_all_variables())
-    else:
-        s.run(tensorflow.global_variables_initializer())
-    assert func(a).eval(session=s) == 0.5
+
+    with tensorflow.compat.v1.Session() as s:
+        a = tensorflow.Variable(0, dtype=tensorflow.float32)
+        s.run(a.initializer)
+        assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
+
 
 def test_tensorflow_logical_operations():
     if not tensorflow:
         skip("tensorflow not installed.")
     expr = Not(And(Or(x, y), y))
     func = lambdify([x, y], expr, modules="tensorflow")
-    a = tensorflow.constant(False)
-    b = tensorflow.constant(True)
-    s = tensorflow.Session()
-    assert func(a, b).eval(session=s) == 0
+
+    with tensorflow.compat.v1.Session() as s:
+        assert func(False, True).eval(session=s) == False
+
 
 def test_tensorflow_piecewise():
     if not tensorflow:
         skip("tensorflow not installed.")
     expr = Piecewise((0, Eq(x,0)), (-1, x < 0), (1, x > 0))
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s, feed_dict={a: -1}) == -1
-    assert func(a).eval(session=s, feed_dict={a: 0}) == 0
-    assert func(a).eval(session=s, feed_dict={a: 1}) == 1
+
+    with tensorflow.compat.v1.Session() as s:
+        assert func(-1).eval(session=s) == -1
+        assert func(0).eval(session=s) == 0
+        assert func(1).eval(session=s) == 1
+
 
 def test_tensorflow_multi_max():
     if not tensorflow:
         skip("tensorflow not installed.")
     expr = Max(x, -x, x**2)
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s, feed_dict={a: -2}) == 4
+
+    with tensorflow.compat.v1.Session() as s:
+        assert func(-2).eval(session=s) == 4
+
 
 def test_tensorflow_multi_min():
     if not tensorflow:
         skip("tensorflow not installed.")
     expr = Min(x, -x, x**2)
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s, feed_dict={a: -2}) == -2
+
+    with tensorflow.compat.v1.Session() as s:
+        assert func(-2).eval(session=s) == -2
+
 
 def test_tensorflow_relational():
     if not tensorflow:
         skip("tensorflow not installed.")
     expr = x >= 0
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
-    assert func(a).eval(session=s, feed_dict={a: 1})
+
+    with tensorflow.compat.v1.Session() as s:
+        assert func(1).eval(session=s) == True
+
+
+def test_tensorflow_complexes():
+    if not tensorflow:
+        skip("tensorflow not installed")
+
+    func1 = lambdify(x, re(x), modules="tensorflow")
+    func2 = lambdify(x, im(x), modules="tensorflow")
+    func3 = lambdify(x, Abs(x), modules="tensorflow")
+    func4 = lambdify(x, arg(x), modules="tensorflow")
+
+    with tensorflow.compat.v1.Session() as s:
+        # For versions before
+        # https://github.com/tensorflow/tensorflow/issues/30029
+        # resolved, using python numeric types may not work
+        a = tensorflow.constant(1+2j)
+        assert func1(a).eval(session=s) == 1
+        assert func2(a).eval(session=s) == 2
+
+        tensorflow_result = func3(a).eval(session=s)
+        sympy_result = Abs(1 + 2j).evalf()
+        assert abs(tensorflow_result-sympy_result) < 10**-6
+
+        tensorflow_result = func4(a).eval(session=s)
+        sympy_result = arg(1 + 2j).evalf()
+        assert abs(tensorflow_result-sympy_result) < 10**-6
+
+
+def test_tensorflow_array_arg():
+    # Test for issue 14655 (tensorflow part)
+    if not tensorflow:
+        skip("tensorflow not installed.")
+
+    f = lambdify([[x, y]], x*x + y, 'tensorflow')
+
+    with tensorflow.compat.v1.Session() as s:
+        fcall = f(tensorflow.constant([2.0, 1.0]))
+        assert fcall.eval(session=s) == 5.0
+
+
+#================== Test symbolic ==================================
+
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
     l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
     assert l(x) == Integral(exp(-x**2), (x, -oo, oo))
-
-#================== Test symbolic ==================================
 
 
 def test_sym_single_arg():
@@ -608,6 +725,14 @@ def test_namespace_order():
     # previously gave 'second f'
     assert if1(1) == 'first f'
 
+    assert if2(1) == 'function g'
+
+def test_namespace_type():
+    # lambdify had a bug where it would reject modules of type unicode
+    # on Python 2.
+    x = sympy.Symbol('x')
+    lambdify(x, x, modules=u'math')
+
 
 def test_imps():
     # Here we check if the default returned functions are anonymous - in
@@ -633,8 +758,11 @@ def test_imps_errors():
     # Test errors that implemented functions can return, and still be able to
     # form expressions.
     # See: https://github.com/sympy/sympy/issues/10810
-    for val, error_class in product((0, 0., 2, 2.0),
-                                    (AttributeError, TypeError, ValueError)):
+    #
+    # XXX: Removed AttributeError here. This test was added due to issue 10810
+    # but that issue was about ValueError. It doesn't seem reasonable to
+    # "support" catching AttributeError in the same context...
+    for val, error_class in product((0, 0., 2, 2.0), (TypeError, ValueError)):
 
         def myfunc(a):
             if a == 0:
@@ -683,6 +811,7 @@ def test_lambdify_imps():
     lam = lambdify(x, f(x), d, use_imps=False)
     assert lam(3) == 102
 
+
 def test_dummification():
     t = symbols('t')
     F = Function('F')
@@ -702,6 +831,16 @@ def test_dummification():
     raises(SyntaxError, lambda: lambdify(F(t) * G(t), F(t) * G(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 2 * F(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
+
+
+def test_curly_matrix_symbol():
+    # Issue #15009
+    curlyv = sympy.MatrixSymbol("{v}", 2, 1)
+    lam = lambdify(curlyv, curlyv)
+    assert lam(1)==1
+    lam = lambdify(curlyv, curlyv, dummify=True)
+    assert lam(1)==1
+
 
 def test_python_keywords():
     # Test for issue 7452. The automatic dummification should ensure use of
@@ -738,19 +877,12 @@ def test_lambdify_docstring():
 
 
 def test_special_printers():
-    class IntervalPrinter(LambdaPrinter):
-        """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
-
-        def _print_Integer(self, expr):
-            return "mpi('%s')" % super(IntervalPrinter, self)._print_Integer(expr)
-
-        def _print_Rational(self, expr):
-            return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
+    from sympy.polys.numberfields import IntervalPrinter
 
     def intervalrepr(expr):
         return IntervalPrinter().doprint(expr)
 
-    expr = sympy.sqrt(sympy.sqrt(2) + sympy.sqrt(3)) + sympy.S(1)/2
+    expr = sqrt(sqrt(2) + sqrt(3)) + S.Half
 
     func0 = lambdify((), expr, modules="mpmath", printer=intervalrepr)
     func1 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter)
@@ -762,19 +894,37 @@ def test_special_printers():
     assert isinstance(func1(), mpi)
     assert isinstance(func2(), mpi)
 
+
 def test_true_false():
     # We want exact is comparison here, not just ==
     assert lambdify([], true)() is True
     assert lambdify([], false)() is False
+
 
 def test_issue_2790():
     assert lambdify((x, (y, z)), x + y)(1, (2, 4)) == 3
     assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
     assert lambdify(x, x + 1, dummify=False)(1) == 2
 
+
 def test_issue_12092():
     f = implemented_function('f', lambda x: x**2)
     assert f(f(2)).evalf() == Float(16)
+
+
+def test_issue_14911():
+    class Variable(sympy.Symbol):
+        def _sympystr(self, printer):
+            return printer.doprint(self.name)
+
+        _lambdacode = _sympystr
+        _numpycode = _sympystr
+
+    x = Variable('x')
+    y = 2 * x
+    code = LambdaPrinter().doprint(y)
+    assert code.replace(' ', '') == '2*x'
+
 
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
@@ -786,6 +936,7 @@ def test_Min_Max():
     assert lambdify((x, y, z), Min(x, y, z))(1, 2, 3) == 1
     assert lambdify((x, y, z), Max(x, y, z))(1, 2, 3) == 3
 
+
 def test_Indexed():
     # Issue #10934
     if not numpy:
@@ -796,12 +947,26 @@ def test_Indexed():
     b = numpy.array([[1, 2], [3, 4]])
     assert lambdify(a, Sum(a[x, y], (x, 0, 1), (y, 0, 1)))(b) == 10
 
+
 def test_issue_12173():
     #test for issue 12173
     exp1 = lambdify((x, y), uppergamma(x, y),"mpmath")(1, 2)
     exp2 = lambdify((x, y), lowergamma(x, y),"mpmath")(1, 2)
     assert exp1 == uppergamma(1, 2).evalf()
     assert exp2 == lowergamma(1, 2).evalf()
+
+
+def test_issue_13642():
+    if not numpy:
+        skip("numpy not installed")
+    f = lambdify(x, sinc(x))
+    assert Abs(f(1) - sinc(1)).n() < 1e-15
+
+
+def test_sinc_mpmath():
+    f = lambdify(x, sinc(x), "mpmath")
+    assert Abs(f(1) - sinc(1)).n() < 1e-15
+
 
 def test_lambdify_dummy_arg():
     d1 = Dummy()
@@ -812,3 +977,291 @@ def test_lambdify_dummy_arg():
     d2 = Dummy('x')
     f2 = lambdify(d2, d2 + 1)
     assert f2(2) == 3
+    f3 = lambdify([[d2]], d2 + 1)
+    assert f3([2]) == 3
+
+
+def test_lambdify_mixed_symbol_dummy_args():
+    d = Dummy()
+    # Contrived example of name clash
+    dsym = symbols(str(d))
+    f = lambdify([d, dsym], d - dsym)
+    assert f(4, 1) == 3
+
+
+def test_numpy_array_arg():
+    # Test for issue 14655 (numpy part)
+    if not numpy:
+        skip("numpy not installed")
+
+    f = lambdify([[x, y]], x*x + y, 'numpy')
+
+    assert f(numpy.array([2.0, 1.0])) == 5
+
+
+def test_scipy_fns():
+    if not scipy:
+        skip("scipy not installed")
+
+    single_arg_sympy_fns = [erf, erfc, factorial, gamma, loggamma, digamma]
+    single_arg_scipy_fns = [scipy.special.erf, scipy.special.erfc,
+        scipy.special.factorial, scipy.special.gamma, scipy.special.gammaln,
+        scipy.special.psi]
+    numpy.random.seed(0)
+    for (sympy_fn, scipy_fn) in zip(single_arg_sympy_fns, single_arg_scipy_fns):
+        f = lambdify(x, sympy_fn(x), modules="scipy")
+        for i in range(20):
+            tv = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
+            # SciPy thinks that factorial(z) is 0 when re(z) < 0.
+            # SymPy does not think so.
+            if sympy_fn == factorial and numpy.real(tv) < 0:
+                tv = tv + 2*numpy.abs(numpy.real(tv))
+            # SciPy supports gammaln for real arguments only,
+            # and there is also a branch cut along the negative real axis
+            if sympy_fn == loggamma:
+                tv = numpy.abs(tv)
+            # SymPy's digamma evaluates as polygamma(0, z)
+            # which SciPy supports for real arguments only
+            if sympy_fn == digamma:
+                tv = numpy.real(tv)
+            sympy_result = sympy_fn(tv).evalf()
+            assert abs(f(tv) - sympy_result) < 1e-13*(1 + abs(sympy_result))
+            assert abs(f(tv) - scipy_fn(tv)) < 1e-13*(1 + abs(sympy_result))
+
+    double_arg_sympy_fns = [RisingFactorial, besselj, bessely, besseli,
+        besselk]
+    double_arg_scipy_fns = [scipy.special.poch, scipy.special.jv,
+        scipy.special.yv, scipy.special.iv, scipy.special.kv]
+    for (sympy_fn, scipy_fn) in zip(double_arg_sympy_fns, double_arg_scipy_fns):
+        f = lambdify((x, y), sympy_fn(x, y), modules="scipy")
+        for i in range(20):
+            # SciPy supports only real orders of Bessel functions
+            tv1 = numpy.random.uniform(-10, 10)
+            tv2 = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
+            # SciPy supports poch for real arguments only
+            if sympy_fn == RisingFactorial:
+                tv2 = numpy.real(tv2)
+            sympy_result = sympy_fn(tv1, tv2).evalf()
+            assert abs(f(tv1, tv2) - sympy_result) < 1e-13*(1 + abs(sympy_result))
+            assert abs(f(tv1, tv2) - scipy_fn(tv1, tv2)) < 1e-13*(1 + abs(sympy_result))
+
+
+def test_scipy_polys():
+    if not scipy:
+        skip("scipy not installed")
+    numpy.random.seed(0)
+
+    params = symbols('n k a b')
+    # list polynomials with the number of parameters
+    polys = [
+        (chebyshevt, 1),
+        (chebyshevu, 1),
+        (legendre, 1),
+        (hermite, 1),
+        (laguerre, 1),
+        (gegenbauer, 2),
+        (assoc_legendre, 2),
+        (assoc_laguerre, 2),
+        (jacobi, 3)
+    ]
+
+    msg = \
+        "The random test of the function {func} with the arguments " \
+        "{args} had failed because the SymPy result {sympy_result} " \
+        "and SciPy result {scipy_result} had failed to converge " \
+        "within the tolerance {tol} " \
+        "(Actual absolute difference : {diff})"
+
+    for sympy_fn, num_params in polys:
+        args = params[:num_params] + (x,)
+        f = lambdify(args, sympy_fn(*args))
+        for _ in range(10):
+            tn = numpy.random.randint(3, 10)
+            tparams = tuple(numpy.random.uniform(0, 5, size=num_params-1))
+            tv = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
+            # SciPy supports hermite for real arguments only
+            if sympy_fn == hermite:
+                tv = numpy.real(tv)
+            # assoc_legendre needs x in (-1, 1) and integer param at most n
+            if sympy_fn == assoc_legendre:
+                tv = numpy.random.uniform(-1, 1)
+                tparams = tuple(numpy.random.randint(1, tn, size=1))
+
+            vals = (tn,) + tparams + (tv,)
+            scipy_result = f(*vals)
+            sympy_result = sympy_fn(*vals).evalf()
+            atol = 1e-9*(1 + abs(sympy_result))
+            diff = abs(scipy_result - sympy_result)
+            try:
+                assert diff < atol
+            except TypeError:
+                raise AssertionError(
+                    msg.format(
+                        func=repr(sympy_fn),
+                        args=repr(vals),
+                        sympy_result=repr(sympy_result),
+                        scipy_result=repr(scipy_result),
+                        diff=diff,
+                        tol=atol)
+                    )
+
+
+
+def test_lambdify_inspect():
+    f = lambdify(x, x**2)
+    # Test that inspect.getsource works but don't hard-code implementation
+    # details
+    assert 'x**2' in inspect.getsource(f)
+
+
+def test_issue_14941():
+    x, y = Dummy(), Dummy()
+
+    # test dict
+    f1 = lambdify([x, y], {x: 3, y: 3}, 'sympy')
+    assert f1(2, 3) == {2: 3, 3: 3}
+
+    # test tuple
+    f2 = lambdify([x, y], (y, x), 'sympy')
+    assert f2(2, 3) == (3, 2)
+
+    # test list
+    f3 = lambdify([x, y], [y, x], 'sympy')
+    assert f3(2, 3) == [3, 2]
+
+
+def test_lambdify_Derivative_arg_issue_16468():
+    f = Function('f')(x)
+    fx = f.diff()
+    assert lambdify((f, fx), f + fx)(10, 5) == 15
+    assert eval(lambdastr((f, fx), f/fx))(10, 5) == 2
+    raises(SyntaxError, lambda:
+        eval(lambdastr((f, fx), f/fx, dummify=False)))
+    assert eval(lambdastr((f, fx), f/fx, dummify=True))(10, 5) == 2
+    assert eval(lambdastr((fx, f), f/fx, dummify=True))(S(10), 5) == S.Half
+    assert lambdify(fx, 1 + fx)(41) == 42
+    assert eval(lambdastr(fx, 1 + fx, dummify=True))(41) == 42
+
+
+def test_imag_real():
+    f_re = lambdify([z], sympy.re(z))
+    val = 3+2j
+    assert f_re(val) == val.real
+
+    f_im = lambdify([z], sympy.im(z))  # see #15400
+    assert f_im(val) == val.imag
+
+
+def test_MatrixSymbol_issue_15578():
+    if not numpy:
+        skip("numpy not installed")
+    A = MatrixSymbol('A', 2, 2)
+    A0 = numpy.array([[1, 2], [3, 4]])
+    f = lambdify(A, A**(-1))
+    assert numpy.allclose(f(A0), numpy.array([[-2., 1.], [1.5, -0.5]]))
+    g = lambdify(A, A**3)
+    assert numpy.allclose(g(A0), numpy.array([[37, 54], [81, 118]]))
+
+
+def test_issue_15654():
+    if not scipy:
+        skip("scipy not installed")
+    from sympy.abc import n, l, r, Z
+    from sympy.physics import hydrogen
+    nv, lv, rv, Zv = 1, 0, 3, 1
+    sympy_value = hydrogen.R_nl(nv, lv, rv, Zv).evalf()
+    f = lambdify((n, l, r, Z), hydrogen.R_nl(n, l, r, Z))
+    scipy_value = f(nv, lv, rv, Zv)
+    assert abs(sympy_value - scipy_value) < 1e-15
+
+
+def test_issue_15827():
+    if not numpy:
+        skip("numpy not installed")
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 2, 3)
+    C = MatrixSymbol("C", 3, 4)
+    D = MatrixSymbol("D", 4, 5)
+    k=symbols("k")
+    f = lambdify(A, (2*k)*A)
+    g = lambdify(A, (2+k)*A)
+    h = lambdify(A, 2*A)
+    i = lambdify((B, C, D), 2*B*C*D)
+    assert numpy.array_equal(f(numpy.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])), \
+    numpy.array([[2*k, 4*k, 6*k], [2*k, 4*k, 6*k], [2*k, 4*k, 6*k]], dtype=object))
+
+    assert numpy.array_equal(g(numpy.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])), \
+    numpy.array([[k + 2, 2*k + 4, 3*k + 6], [k + 2, 2*k + 4, 3*k + 6], \
+    [k + 2, 2*k + 4, 3*k + 6]], dtype=object))
+
+    assert numpy.array_equal(h(numpy.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])), \
+    numpy.array([[2, 4, 6], [2, 4, 6], [2, 4, 6]]))
+
+    assert numpy.array_equal(i(numpy.array([[1, 2, 3], [1, 2, 3]]), numpy.array([[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]]), \
+    numpy.array([[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]])), numpy.array([[ 120, 240, 360, 480, 600], \
+    [ 120, 240, 360, 480, 600]]))
+
+
+def test_issue_16930():
+    if not scipy:
+        skip("scipy not installed")
+
+    x = symbols("x")
+    f = lambda x:  S.GoldenRatio * x**2
+    f_ = lambdify(x, f(x), modules='scipy')
+    assert f_(1) == scipy.constants.golden_ratio
+
+def test_issue_17898():
+    if not scipy:
+        skip("scipy not installed")
+    x = symbols("x")
+    f_ = lambdify([x], sympy.LambertW(x,-1), modules='scipy')
+    assert f_(0.1) == mpmath.lambertw(0.1, -1)
+
+def test_single_e():
+    f = lambdify(x, E)
+    assert f(23) == exp(1.0)
+
+
+def test_issue_16536():
+    if not scipy:
+        skip("scipy not installed")
+
+    a = symbols('a')
+    f1 = lowergamma(a, x)
+    F = lambdify((a, x), f1, modules='scipy')
+    assert abs(lowergamma(1, 3) - F(1, 3)) <= 1e-10
+
+    f2 = uppergamma(a, x)
+    F = lambdify((a, x), f2, modules='scipy')
+    assert abs(uppergamma(1, 3) - F(1, 3)) <= 1e-10
+
+
+def test_fresnel_integrals_scipy():
+    if not scipy:
+        skip("scipy not installed")
+
+    f1 = fresnelc(x)
+    f2 = fresnels(x)
+    F1 = lambdify(x, f1, modules='scipy')
+    F2 = lambdify(x, f2, modules='scipy')
+
+    assert abs(fresnelc(1.3) - F1(1.3)) <= 1e-10
+    assert abs(fresnels(1.3) - F2(1.3)) <= 1e-10
+
+
+def test_beta_scipy():
+    if not scipy:
+        skip("scipy not installed")
+
+    f = beta(x, y)
+    F = lambdify((x, y), f, modules='scipy')
+
+    assert abs(beta(1.3, 2.3) - F(1.3, 2.3)) <= 1e-10
+
+
+def test_beta_math():
+    f = beta(x, y)
+    F = lambdify((x, y), f, modules='math')
+
+    assert abs(beta(1.3, 2.3) - F(1.3, 2.3)) <= 1e-10

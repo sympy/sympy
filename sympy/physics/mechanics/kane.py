@@ -217,8 +217,13 @@ class KanesMethod(object):
 
         """
 
+        """Please read the online documentation. """
+        if not q_ind:
+            q_ind = [dynamicsymbols('dummy_q')]
+            kd_eqs = [dynamicsymbols('dummy_kd')]
+
         if not isinstance(frame, ReferenceFrame):
-            raise TypeError('A ReferenceFrame must be supplied.')
+            raise TypeError('An inertial ReferenceFrame must be supplied')
 
         self._inertial = frame
 
@@ -446,10 +451,11 @@ class KanesMethod(object):
             raise ValueError('Force pairs must be supplied in an non-empty '
                              'iterable or it should be None.')
 
-        # Pull out relevant velocities for constructing partial velocities.
-        vel_list, f_list = _f_list_parser(forces, self._inertial)
-        # Make sure all velocities are strictly a function of the speeds.
-        vel_list = [msubs(v, self._qdot_u_map) for v in vel_list]
+        N = self._inertial
+        # pull out relevant velocities for constructing partial velocities
+        vel_list, f_list = _f_list_parser(forces, N)
+        vel_list = [msubs(i, self._qdot_u_map) for i in vel_list]
+        f_list = [msubs(i, self._qdot_u_map) for i in f_list]
 
         # Fill Fr with dot product of partial velocities and forces.
         nu = len(f_list)

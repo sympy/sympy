@@ -1,5 +1,6 @@
 from sympy.external import import_module
 from sympy import Mul, Integer
+from sympy.core.compatibility import PY3
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.gate import (X, Y, Z, H, CNOT,
         IdentityGate, CGate, PhaseGate, TGate)
@@ -483,7 +484,6 @@ def test_bfs_identity_search():
     assert bfs_identity_search(gate_list, 1, max_depth=4) == id_set
 
 
-@XFAIL
 def test_bfs_identity_search_xfail():
     s = PhaseGate(0)
     t = TGate(0)

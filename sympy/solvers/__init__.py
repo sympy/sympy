@@ -33,6 +33,37 @@ from .decompogen import decompogen
 
 from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution
 
+# This is here instead of sympy/sets/__init__.py to avoid circular import issues
 from ..core.singleton import S
 Complexes = S.Complexes
-del S
+
+__all__ = [
+    'solve', 'solve_linear_system', 'solve_linear_system_LU',
+    'solve_undetermined_coeffs', 'nsolve', 'solve_linear', 'checksol',
+    'det_quick', 'inv_quick', 'check_assumptions', 'failing_assumptions',
+
+    'diophantine',
+
+    'rsolve', 'rsolve_poly', 'rsolve_ratio', 'rsolve_hyper',
+
+    'checkodesol', 'classify_ode', 'dsolve', 'homogeneous_order',
+
+    'solve_poly_system', 'solve_triangulated',
+
+    'pde_separate', 'pde_separate_add', 'pde_separate_mul', 'pdsolve',
+    'classify_pde', 'checkpdesol',
+
+    'ode_order',
+
+    'reduce_inequalities', 'reduce_abs_inequality', 'reduce_abs_inequalities',
+    'solve_poly_inequality', 'solve_rational_inequalities',
+    'solve_univariate_inequality',
+
+    'decompogen',
+
+    'solveset', 'linsolve', 'linear_eq_to_matrix', 'nonlinsolve',
+    'substitution',
+
+    # This is here instead of sympy/sets/__init__.py to avoid circular import issues
+    'Complexes',
+]

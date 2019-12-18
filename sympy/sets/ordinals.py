@@ -1,6 +1,4 @@
 from sympy.core import Basic, Integer
-from sympy.core.compatibility import with_metaclass
-from sympy.core.singleton import Singleton, S
 import operator
 
 class OmegaPower(Basic):
@@ -243,37 +241,27 @@ class Ordinal(Basic):
             return NotImplemented
         return Ordinal(OmegaPower(other, 1))
 
-class OrdinalZero(with_metaclass(Singleton, Ordinal)):
+class OrdinalZero(Ordinal):
     """The ordinal zero.
 
-    OrdinalZero is a singleton, and can be accessed by ``S.OrdinalZero``
-    or can be imported as ``ord0``.
-
-    Examples
-    ========
-
-    >>> from sympy import ord0, S
-    >>> ord0 is S.OrdinalZero
-    True
+    OrdinalZero can be imported as ``ord0``.
     """
     pass
 
-class OrdinalOmega(with_metaclass(Singleton, Ordinal)):
+class OrdinalOmega(Ordinal):
     """The ordinal omega which forms the base of all ordinals in cantor normal form.
 
-    OrdinalOmega is a singleton, and can be accessed by ``S.OrdinalOmega``
-    or can be imported as ``omega``.
+    OrdinalOmega can be imported as ``omega``.
 
     Examples
     ========
 
     >>> from sympy.sets.ordinals import omega
-    >>> from sympy import S
-    >>> omega is S.OrdinalOmega
-    True
+    >>> omega + omega
+    w*2
     """
     def __new__(cls):
         return Ordinal.__new__(cls, OmegaPower(1, 1))
 
-ord0 = S.OrdinalZero
-omega = S.OrdinalOmega
+ord0 = OrdinalZero()
+omega = OrdinalOmega()

@@ -1,3 +1,5 @@
+.. _g-functions:
+
 Computing Integrals using Meijer G-Functions
 ********************************************
 
@@ -161,7 +163,7 @@ is satisfies `G(\operatorname{Exp}(2 \pi i)z) = G(z)` for all `z \in \mathcal{S}
 be used to exploit the information. This is done transparently by the
 integration code.
 
-.. [BlogPost] http://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/
+.. [BlogPost] https://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/
 
 The G-Function Integration Theorems
 ***********************************
@@ -506,3 +508,10 @@ of deriving new formulae improve. Of course it has to grow whenever a new class
 of special functions is to be dealt with.
 
 .. automodule:: sympy.integrals.meijerint_doc
+
+Internal API Reference
+**********************
+
+.. automodule:: sympy.integrals.meijerint
+   :members:
+   :private-members:

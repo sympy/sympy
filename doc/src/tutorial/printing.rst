@@ -221,6 +221,7 @@ imported from ``sympy.printing.mathml``.
 ``print_mathml()`` prints the output.  If you want the string, use the
 function ``mathml()``.
 
+
 Dot
 ---
 
@@ -229,26 +230,32 @@ format, which can be rendered with Graphviz.  See the
 :ref:`tutorial-manipulation` section for some examples of the output of this
 printer.
 
+Here is an example of the raw output of the ``dotprint()`` function
+
     >>> from sympy.printing.dot import dotprint
     >>> from sympy.abc import x
-    >>> print(dotprint(x+2)) 
+    >>> print(dotprint(x+2))
     digraph{
+    <BLANKLINE>
     # Graph style
     "ordering"="out"
     "rankdir"="TD"
+    <BLANKLINE>
     #########
     # Nodes #
     #########
-    "Add(Integer(2), Symbol(x))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    <BLANKLINE>
+    "Add(Integer(2), Symbol('x'))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
     "Integer(2)_(0,)" ["color"="black", "label"="2", "shape"="ellipse"];
-    "Symbol(x)_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
+    "Symbol('x')_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
+    <BLANKLINE>
     #########
     # Edges #
     #########
-    "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
-    "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
+    <BLANKLINE>
+    "Add(Integer(2), Symbol('x'))_()" -> "Integer(2)_(0,)";
+    "Add(Integer(2), Symbol('x'))_()" -> "Symbol('x')_(1,)";
     }
-
 
 .. rubric:: Footnotes
 

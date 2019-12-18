@@ -56,10 +56,10 @@ class TensorProduct(Expr):
     multiplication that is used primarily with operators and states in quantum
     mechanics.
 
-    Currently, the tensor product distinguishes between commutative and non-
-    commutative arguments.  Commutative arguments are assumed to be scalars and
-    are pulled out in front of the ``TensorProduct``. Non-commutative arguments
-    remain in the resulting ``TensorProduct``.
+    Currently, the tensor product distinguishes between commutative and
+    non-commutative arguments.  Commutative arguments are assumed to be scalars
+    and are pulled out in front of the ``TensorProduct``. Non-commutative
+    arguments remain in the resulting ``TensorProduct``.
 
     Parameters
     ==========
@@ -243,7 +243,6 @@ class TensorProduct(Expr):
         """Distribute TensorProducts across addition."""
         args = self.args
         add_args = []
-        stop = False
         for i in range(len(args)):
             if isinstance(args[i], Add):
                 for aa in args[i].args:

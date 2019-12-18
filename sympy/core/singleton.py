@@ -94,6 +94,9 @@ class SingletonRegistry(Registry):
         # finished).
 
     def register(self, cls):
+        # Make sure a duplicate class overwrites the old one
+        if hasattr(self, cls.__name__):
+            delattr(self, cls.__name__)
         self._classes_to_install[cls.__name__] = cls
 
     def __getattr__(self, name):
@@ -126,7 +129,7 @@ class Singleton(ManagedProperties):
 
     A singleton class has only one instance which is returned every time the
     class is instantiated. Additionally, this instance can be accessed through
-    the global registry object S as S.<class_name>.
+    the global registry object ``S`` as ``S.<class_name>``.
 
     Examples
     ========

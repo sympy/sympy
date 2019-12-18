@@ -1,7 +1,10 @@
 # conceal the implicit import from the code quality tester
 from __future__ import print_function, division
 
-exec("from sympy import *")
+from sympy import (exp, gamma, integrate, oo, pi, sqrt, Symbol, symbols,
+        besseli, laplace_transform, fourier_transform, mellin_transform,
+        inverse_fourier_transform, inverse_laplace_transform,
+        inverse_mellin_transform)
 
 LT = laplace_transform
 FT = fourier_transform
@@ -10,7 +13,7 @@ IFT = inverse_fourier_transform
 ILT = inverse_laplace_transform
 IMT = inverse_mellin_transform
 
-from sympy.abc import t, x, y
+from sympy.abc import x, y
 nu, beta, rho = symbols('nu beta rho')
 
 apos, bpos, cpos, dpos, posk, p = symbols('a b c d k p', positive=True)
@@ -50,9 +53,9 @@ tpos = Symbol('t', positive=True)
 
 
 def E(expr):
-    res1 = integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
+    integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
                      (x, 0, oo), (y, -oo, oo), meijerg=True)
-    res2 = integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
+    integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
                      (y, -oo, oo), (x, 0, oo), meijerg=True)
 
 bench = [
@@ -224,7 +227,7 @@ bench = [
     'integrate(Si(x), x, meijerg=True)',
     'integrate(Ci(u), u, meijerg=True)',
     'integrate(Shi(x), x, meijerg=True)',
-    'integrate(cosint(u), u, meijerg=True)',
+    'integrate(Chi(u), u, meijerg=True)',
     'integrate(Si(x)*exp(-x), (x, 0, oo), meijerg=True)',
     'integrate(expint(1, x)*sin(x), (x, 0, oo), meijerg=True)'
 ]
@@ -250,5 +253,5 @@ if __name__ == '__main__':
 
     timings.sort(key=lambda x: -x[0])
 
-    for t, string in timings:
-        print('%.2fs %s' % (t, string))
+    for ti, string in timings:
+        print('%.2fs %s' % (ti, string))

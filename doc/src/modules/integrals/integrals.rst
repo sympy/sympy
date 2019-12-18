@@ -1,11 +1,12 @@
-Symbolic Integrals
-==================
+=========
+Integrals
+=========
 
 .. module:: sympy.integrals
 
 The ``integrals`` module in SymPy implements methods to calculate definite and indefinite integrals of expressions.
 
-Principal method in this module is :func:`integrate`
+Principal method in this module is :func:`~.integrate`
 
   - ``integrate(f, x)`` returns the indefinite integral :math:`\int f\,dx`
   - ``integrate(f, (x, a, b))`` returns the definite integral :math:`\int_{a}^{b} f\,dx`
@@ -15,7 +16,7 @@ Examples
 SymPy can integrate a vast array of functions. It can integrate polynomial functions::
 
     >>> from sympy import *
-    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
+    >>> init_printing(use_unicode=False, wrap_line=False)
     >>> x = Symbol('x')
     >>> integrate(x**2 + x + 1, x)
      3    2
@@ -25,10 +26,10 @@ SymPy can integrate a vast array of functions. It can integrate polynomial funct
 
 Rational functions::
 
-	>>> integrate(x/(x**2+2*x+1), x)
-	               1
-	log(x + 1) + -----
-	             x + 1
+    >>> integrate(x/(x**2+2*x+1), x)
+    1
+    log(x + 1) + -----
+    x + 1
 
 
 Exponential-polynomial functions. These multiplicative combinations of polynomials and the functions ``exp``, ``cos`` and ``sin`` can be integrated by hand using repeated integration by parts, which is an extremely tedious process. Happily, SymPy will deal with these integrals.
@@ -60,48 +61,126 @@ Integral Transforms
 SymPy has special support for definite integrals, and integral transforms.
 
 .. autofunction:: mellin_transform
+.. autoclass:: MellinTransform
 .. autofunction:: inverse_mellin_transform
+.. autoclass:: InverseMellinTransform
 .. autofunction:: laplace_transform
+.. autoclass:: LaplaceTransform
 .. autofunction:: inverse_laplace_transform
+.. autoclass:: InverseLaplaceTransform
 .. autofunction:: fourier_transform
+.. autofunction:: _fourier_transform
+.. autoclass:: FourierTransform
 .. autofunction:: inverse_fourier_transform
+.. autoclass:: InverseFourierTransform
 .. autofunction:: sine_transform
+.. autoclass:: SineTransform
 .. autofunction:: inverse_sine_transform
+.. autoclass:: InverseSineTransform
 .. autofunction:: cosine_transform
+.. autoclass:: CosineTransform
 .. autofunction:: inverse_cosine_transform
+.. autoclass:: InverseCosineTransform
 .. autofunction:: hankel_transform
+.. autoclass:: HankelTransform
 .. autofunction:: inverse_hankel_transform
-
+.. autoclass:: InverseHankelTransform
+.. autoclass:: IntegralTransform
+   :members:
+.. autoexception:: IntegralTransformError
 
 Internals
 ---------
 
-There is a general method for calculating antiderivatives of elementary functions, called the *Risch algorithm*. The Risch algorithm is a decision procedure that can determine whether an elementary solution exists, and in that case calculate it. It can be extended to handle many nonelementary functions in addition to the elementary ones.
+SymPy uses a number of algorithms to compute integrals. Algorithms are tried
+in order until one produces an answer. Most of these algorithms can be enabled
+or disabled manually using various flags to :func:`~.integrate` or :meth:`~.Integral.doit`.
 
-SymPy currently uses a simplified version of the Risch algorithm, called the *Risch-Norman algorithm*. This algorithm is much faster, but may fail to find an antiderivative, although it is still very powerful. SymPy also uses pattern matching and heuristics to speed up evaluation of some types of integrals, e.g. polynomials.
+SymPy first applies several heuristic algorithms, as these are the fastest:
 
-For non-elementary definite integrals, SymPy uses so-called Meijer G-functions.
-Details are described here:
+1. If the function is a rational function, there is a complete algorithm for
+   integrating rational functions called the Lizard-Rioboo-Trager and the
+   Horowitz-Ostrogradsky algorithms. They are implemented in :func:`.ratint`.
 
-.. toctree::
-   :maxdepth: 1
+   .. autofunction:: sympy.integrals.rationaltools.ratint
+   .. autofunction:: sympy.integrals.rationaltools.ratint_ratpart
+   .. autofunction:: sympy.integrals.rationaltools.ratint_logpart
 
-   g-functions.rst
+2. :func:`.trigintegrate` solves integrals of trigonometric functions using
+   pattern matching
+
+   .. autofunction:: sympy.integrals.trigonometry.trigintegrate
+
+3. :func:`.deltaintegrate` solves integrals with :class:`~.DiracDelta` objects.
+
+   .. autofunction:: sympy.integrals.deltafunctions.deltaintegrate
+
+4. :func:`.singularityintegrate` is applied if the function contains a :class:`~.SingularityFunction`
+
+   .. autofunction:: sympy.integrals.singularityfunctions.singularityintegrate
+
+5. If the heuristic algorithms cannot be applied, :func:`.risch_integrate` is
+   tried next. The *Risch algorithm* is a general method for calculating
+   antiderivatives of elementary functions. The Risch algorithm is a decision
+   procedure that can determine whether an elementary solution exists, and in
+   that case calculate it. It can be extended to handle many nonelementary
+   functions in addition to the elementary ones. However, the version implemented
+   in SymPy only supports a small subset of the full algorithm, particularly, on
+   part of the transcendental algorithm for exponentials and logarithms is
+   implemented. An advantage of :func:`.risch_integrate` over other methods is
+   that if it returns an instance of :class:`.NonElementaryIntegral`, the
+   integral is proven to be nonelementary by the algorithm, meaning the integral
+   cannot be represented using a combination of exponentials, logarithms, trig
+   functions, powers, rational functions, algebraic functions, and function
+   composition.
+
+   .. autofunction:: sympy.integrals.risch.risch_integrate
+   .. autoclass:: sympy.integrals.risch.NonElementaryIntegral
+
+6. For non-elementary definite integrals, SymPy uses so-called Meijer G-functions.
+   Details are described in :ref:`g-functions`.
+
+7. All the algorithms mentioned thus far are either pattern-matching based
+   heuristic, or solve integrals using algorithms that are much different from
+   the way most people are taught in their calculus courses. SymPy also
+   implements a method that can solve integrals in much the same way you would in
+   calculus. The advantage of this method is that it is possible to extract the
+   integration steps from, so that one can see how to compute the integral "by
+   hand". This is used by `SymPy Gamma <https://sympygamma.com>`_. This is
+   implemented in the :func:`.manualintegrate` function. The steps for an integral
+   can be seen with the :func:`.integral_steps` function.
+
+   .. autofunction:: sympy.integrals.manualintegrate.manualintegrate
+   .. autofunction:: sympy.integrals.manualintegrate.integral_steps
+
+8. Finally, if all the above fail, SymPy also uses a simplified version of the
+   Risch algorithm, called the *Risch-Norman algorithm*. This algorithm is tried
+   last because it is often the slowest to compute. This is implemented in
+   :func:`.heurisch`:
+
+   .. autofunction:: sympy.integrals.heurisch.heurisch
+   .. autofunction:: sympy.integrals.heurisch.components
 
 API reference
 -------------
 
-.. autofunction:: sympy.integrals.integrate
+.. autofunction:: sympy.integrals.integrals.integrate
 .. autofunction:: sympy.integrals.line_integrate
 
-The class `Integral` represents an unevaluated integral and has some methods that help in the integration of an expression.
+The class :class:`~.Integral` represents an unevaluated integral and has some methods that help in the integration of an expression.
 
-.. autoclass:: sympy.integrals.Integral
+.. autoclass:: sympy.integrals.integrals.Integral
    :members:
 
    .. data:: is_commutative
 
       Returns whether all the free symbols in the integral are commutative.
+
+:class:`~.Integral` subclasses from :class:`~.ExprWithLimits`, which is a
+common superclass of :class:`~.Integral` and :class:`~.Sum`.
+
+.. autoclass:: sympy.concrete.expr_with_limits.ExprWithLimits
+   :members:
 
 TODO and Bugs
 -------------
@@ -126,6 +205,8 @@ any order and any precision:
 .. autofunction:: sympy.integrals.quadrature.gauss_chebyshev_u
 
 .. autofunction:: sympy.integrals.quadrature.gauss_jacobi
+
+.. autofunction:: sympy.integrals.quadrature.gauss_lobatto
 
 Integration over Polytopes
 ==========================
@@ -170,7 +251,7 @@ For 2D Polygons
 Single Polynomial::
 
     >>> from sympy.integrals.intpoly import *
-    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
+    >>> init_printing(use_unicode=False, wrap_line=False)
     >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), x)
     1/6
     >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), x + x*y + y**2)
@@ -229,4 +310,3 @@ API reference
 -------------
 
 .. autofunction:: sympy.integrals.intpoly.polytope_integrate
-

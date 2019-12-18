@@ -14,7 +14,7 @@ from __future__ import print_function, division
 
 import re
 from sympy import Symbol, NumberSymbol, I, zoo, oo
-from sympy.core.compatibility import exec_
+from sympy.core.compatibility import exec_, string_types
 from sympy.utilities.iterables import numbered_symbols
 
 #  We parse the expression string into a tree that identifies functions. Then
@@ -187,8 +187,9 @@ class lambdify(object):
                                                  use_python_cmath=True)
         self.failure = False
 
-    def __call__(self, args):
-        args = complex(args)
+    def __call__(self, args, kwargs = {}):
+        if not self.lambda_func.use_python_math:
+            args = complex(args)
         try:
             #The result can be sympy.Float. Hence wrap it with complex type.
             result = complex(self.lambda_func(args))
@@ -264,7 +265,7 @@ class Lambdifier(object):
             raise ValueError('The arguments must be Symbols.')
         # - use numbered symbols
         syms = numbered_symbols(exclude=expr.free_symbols)
-        newargs = [next(syms) for i in args]
+        newargs = [next(syms) for _ in args]
         expr = expr.xreplace(dict(zip(args, newargs)))
         argstr = ', '.join([str(a) for a in newargs])
         del syms, newargs, args
@@ -273,9 +274,6 @@ class Lambdifier(object):
         self.dict_str = self.get_dict_str()
         self.dict_fun = self.get_dict_fun()
         exprstr = str(expr)
-        # the & and | operators don't work on tuples, see discussion #12108
-        exprstr = exprstr.replace(" & "," and ").replace(" | "," or ")
-
         newexpr = self.tree2str_translate(self.str2tree(exprstr))
 
         # Constructing the namespaces
@@ -288,6 +286,7 @@ class Lambdifier(object):
         from sympy import sqrt
         namespace.update({'sqrt': sqrt})
         namespace.update({'Eq': lambda x, y: x == y})
+        namespace.update({'Ne': lambda x, y: x != y})
         # End workaround.
         if use_python_math:
             namespace.update({'math': __import__('math')})
@@ -554,7 +553,7 @@ class Lambdifier(object):
         >>> tree2str(str2tree(str(x+y*sin(z)+1)))
         'x + y*sin(z) + 1'
         """
-        if isinstance(tree, str):
+        if isinstance(tree, string_types):
             return tree
         else:
             return ''.join(map(cls.tree2str, tree))
@@ -565,7 +564,7 @@ class Lambdifier(object):
         Function names are translated by translate_func.
         Other strings are translated by translate_str.
         """
-        if isinstance(tree, str):
+        if isinstance(tree, string_types):
             return self.translate_str(tree)
         elif isinstance(tree, tuple) and len(tree) == 2:
             return self.translate_func(tree[0][:-1], tree[1])
@@ -591,6 +590,9 @@ class Lambdifier(object):
             new_name = self.dict_fun[func_name]
             argstr = self.tree2str_translate(argtree)
             return new_name + '(' + argstr
+        elif func_name in ['Eq', 'Ne']:
+            op = {'Eq': '==', 'Ne': '!='}
+            return "(lambda x, y: x {} y)({}".format(op[func_name], self.tree2str_translate(argtree))
         else:
             template = '(%s(%s)).evalf(' if self.use_evalf else '%s(%s'
             if self.float_wrap_evalf:

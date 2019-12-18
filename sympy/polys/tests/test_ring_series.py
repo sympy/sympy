@@ -1,4 +1,3 @@
-from __future__ import division
 from sympy.polys.domains import QQ, EX, RR
 from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
@@ -10,10 +9,10 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
-from sympy.functions import (sin, cos, exp, tan, cot, atan, asin, atanh,
+from sympy.functions import (sin, cos, exp, tan, cot, atan, atanh,
     tanh, log, sqrt)
 from sympy.core.numbers import Rational
-from sympy.core import expand
+from sympy.core import expand, S
 
 def is_close(a, b):
     tol = 10**(-10)
@@ -49,9 +48,7 @@ def test_mul_trunc():
     p1 = rs_mul(p, p, t, 2)
     assert p1 == 1 + 2*t*x + 2*t*y
     R1, z = ring('z', QQ)
-    def test1(p):
-        p2 = rs_mul(p, z, x, 2)
-    raises(ValueError, lambda: test1(p))
+    raises(ValueError, lambda: rs_mul(p, z, x, 2))
 
     p1 = 2 + 2*x + 3*x**2
     p2 = 3 + x**2
@@ -82,7 +79,7 @@ def test_pow_trunc():
     assert rs_pow(p, -2, x, 2) == 1 - 2*x
     p = x + y
     assert rs_pow(p, 3, y, 3) == x**3 + 3*x**2*y + 3*x*y**2
-    assert rs_pow(1 + x, Rational(2, 3), x, 4) == 4*x**3/81 - x**2/9 + 2*x/3 + 1
+    assert rs_pow(1 + x, Rational(2, 3), x, 4) == 4*x**3/81 - x**2/9 + x*Rational(2, 3) + 1
 
 def test_has_constant_term():
     R, x, y, z = ring('x, y, z', QQ)
@@ -107,13 +104,9 @@ def test_inversion():
 
     R, x, y = ring('x, y', QQ)
     p = 1 + x + y
-    def test2(p):
-        p1 = rs_series_inversion(p, x, 4)
-    raises(NotImplementedError, lambda: test2(p))
+    raises(NotImplementedError, lambda: rs_series_inversion(p, x, 4))
     p = R.zero
-    def test3(p):
-        p1 = rs_series_inversion(p, x, 3)
-    raises(ZeroDivisionError, lambda: test3(p))
+    raises(ZeroDivisionError, lambda: rs_series_inversion(p, x, 3))
 
 
 def test_series_reversion():
@@ -153,7 +146,7 @@ def test_log():
     R, x = ring('x', QQ)
     p = 1 + x
     p1 = rs_log(p, x, 4)/x**2
-    assert p1 == 1/3*x - 1/2 + x**(-1)
+    assert p1 == Rational(1, 3)*x - S.Half + x**(-1)
     p = 1 + x +2*x**2/3
     p1 = rs_log(p, x, 9)
     assert p1 == -17*x**8/648 + 13*x**7/189 - 11*x**6/162 - x**5/45 + \
@@ -178,7 +171,7 @@ def test_log():
         EX(1/a)*x + EX(log(a))
 
     p = x + x**2 + 3
-    assert rs_log(p, x, 10).compose(x, 5) == EX(log(3) + 19281291595/9920232)
+    assert rs_log(p, x, 10).compose(x, 5) == EX(log(3) + Rational(19281291595, 9920232))
 
 def test_exp():
     R, x = ring('x', QQ)
@@ -216,7 +209,6 @@ def test_newton():
     R, x = ring('x', QQ)
     p = x**2 - 2
     r = rs_newton(p, x, 4)
-    f = [1, 0, -2]
     assert r == 8*x**4 + 4*x**2 + 2
 
 def test_compose_add():
@@ -233,7 +225,6 @@ def test_fun():
 
 def test_nth_root():
     R, x, y = ring('x, y', QQ)
-    r1 = rs_nth_root(1 + x**2*y, 4, x, 10)
     assert rs_nth_root(1 + x**2*y, 4, x, 10) == -77*x**8*y**4/2048 + \
         7*x**6*y**3/128 - 3*x**4*y**2/32 + x**2*y/4 + 1
     assert rs_nth_root(1 + x*y + x**2*y**3, 3, x, 5) == -x**4*y**6/9 + \
@@ -283,7 +274,7 @@ def test_asin():
 def test_tan():
     R, x, y = ring('x, y', QQ)
     assert rs_tan(x, x, 9)/x**5 == \
-        17/315*x**2 + 2/15 + 1/3*x**(-2) + x**(-4)
+        Rational(17, 315)*x**2 + Rational(2, 15) + Rational(1, 3)*x**(-2) + x**(-4)
     assert rs_tan(x*y + x**2*y**3, x, 9) == 4*x**8*y**11/3 + 17*x**8*y**9/45 + \
         4*x**7*y**9/3 + 17*x**7*y**7/315 + x**6*y**9/3 + 2*x**6*y**7/3 + \
         x**5*y**7 + 2*x**5*y**5/15 + x**4*y**5 + x**3*y**3/3 + x**2*y**3 + x*y
@@ -292,10 +283,10 @@ def test_tan():
     a = symbols('a')
     R, x, y = ring('x, y', QQ[tan(a), a])
     assert rs_tan(x + a, x, 5) == (tan(a)**5 + 5*tan(a)**3/3 +
-        2*tan(a)/3)*x**4 + (tan(a)**4 + 4*tan(a)**2/3 + 1/3)*x**3 + \
+        2*tan(a)/3)*x**4 + (tan(a)**4 + 4*tan(a)**2/3 + Rational(1, 3))*x**3 + \
         (tan(a)**3 + tan(a))*x**2 + (tan(a)**2 + 1)*x + tan(a)
     assert rs_tan(x + x**2*y + a, x, 4) == (2*tan(a)**3 + 2*tan(a))*x**3*y + \
-        (tan(a)**4 + 4/3*tan(a)**2 + 1/3)*x**3 + (tan(a)**2 + 1)*x**2*y + \
+        (tan(a)**4 + Rational(4, 3)*tan(a)**2 + Rational(1, 3))*x**3 + (tan(a)**2 + 1)*x**2*y + \
         (tan(a)**3 + tan(a))*x**2 + (tan(a)**2 + 1)*x + tan(a)
 
     R, x, y = ring('x, y', EX)
@@ -308,7 +299,7 @@ def test_tan():
         EX(tan(a)**2 + 1)*x + EX(tan(a))
 
     p = x + x**2 + 5
-    assert rs_atan(p, x, 10).compose(x, 10) == EX(atan(5) + 67701870330562640 / \
+    assert rs_atan(p, x, 10).compose(x, 10) == EX(atan(5) + S(67701870330562640) / \
         668083460499)
 
 def test_cot():
@@ -322,7 +313,7 @@ def test_cot():
 def test_sin():
     R, x, y = ring('x, y', QQ)
     assert rs_sin(x, x, 9)/x**5 == \
-        -1/5040*x**2 + 1/120 - 1/6*x**(-2) + x**(-4)
+        Rational(-1, 5040)*x**2 + Rational(1, 120) - Rational(1, 6)*x**(-2) + x**(-4)
     assert rs_sin(x*y + x**2*y**3, x, 9) == x**8*y**11/12 - \
         x**8*y**9/720 + x**7*y**9/12 - x**7*y**7/5040 - x**6*y**9/6 + \
         x**6*y**7/24 - x**5*y**7/2 + x**5*y**5/120 - x**4*y**5/2 - \
@@ -348,7 +339,7 @@ def test_sin():
 def test_cos():
     R, x, y = ring('x, y', QQ)
     assert rs_cos(x, x, 9)/x**5 == \
-        1/40320*x**3 - 1/720*x + 1/24*x**(-1) - 1/2*x**(-3) + x**(-5)
+        Rational(1, 40320)*x**3 - Rational(1, 720)*x + Rational(1, 24)*x**(-1) - S.Half*x**(-3) + x**(-5)
     assert rs_cos(x*y + x**2*y**3, x, 9) == x**8*y**12/24 - \
         x**8*y**10/48 + x**8*y**8/40320 + x**7*y**10/6 - \
         x**7*y**8/120 + x**6*y**8/4 - x**6*y**6/720 + x**5*y**6/6 - \
@@ -382,7 +373,7 @@ def test_cos_sin():
 
 def test_atanh():
     R, x, y = ring('x, y', QQ)
-    assert rs_atanh(x, x, 9)/x**5 == 1/7*x**2 + 1/5 + 1/3*x**(-2) + x**(-4)
+    assert rs_atanh(x, x, 9)/x**5 == Rational(1, 7)*x**2 + Rational(1, 5) + Rational(1, 3)*x**(-2) + x**(-4)
     assert rs_atanh(x*y + x**2*y**3, x, 9) == 2*x**8*y**11 + x**8*y**9 + \
         2*x**7*y**9 + x**7*y**7/7 + x**6*y**9/3 + x**6*y**7 + x**5*y**7 + \
         x**5*y**5/5 + x**4*y**5 + x**3*y**3/3 + x**2*y**3 + x*y
@@ -400,12 +391,12 @@ def test_atanh():
         EX(1/(a**2 - 1))*x + EX(atanh(a))
 
     p = x + x**2 + 5
-    assert rs_atanh(p, x, 10).compose(x, 10) == EX(-733442653682135/5079158784 \
+    assert rs_atanh(p, x, 10).compose(x, 10) == EX(Rational(-733442653682135, 5079158784) \
         + atanh(5))
 
 def test_sinh():
     R, x, y = ring('x, y', QQ)
-    assert rs_sinh(x, x, 9)/x**5 == 1/5040*x**2 + 1/120 + 1/6*x**(-2) + x**(-4)
+    assert rs_sinh(x, x, 9)/x**5 == Rational(1, 5040)*x**2 + Rational(1, 120) + Rational(1, 6)*x**(-2) + x**(-4)
     assert rs_sinh(x*y + x**2*y**3, x, 9) == x**8*y**11/12 + \
         x**8*y**9/720 + x**7*y**9/12 + x**7*y**7/5040 + x**6*y**9/6 + \
         x**6*y**7/24 + x**5*y**7/2 + x**5*y**5/120 + x**4*y**5/2 + \
@@ -413,8 +404,8 @@ def test_sinh():
 
 def test_cosh():
     R, x, y = ring('x, y', QQ)
-    assert rs_cosh(x, x, 9)/x**5 == 1/40320*x**3 + 1/720*x + 1/24*x**(-1) + \
-        1/2*x**(-3) + x**(-5)
+    assert rs_cosh(x, x, 9)/x**5 == Rational(1, 40320)*x**3 + Rational(1, 720)*x + Rational(1, 24)*x**(-1) + \
+        S.Half*x**(-3) + x**(-5)
     assert rs_cosh(x*y + x**2*y**3, x, 9) == x**8*y**12/24 + \
         x**8*y**10/48 + x**8*y**8/40320 + x**7*y**10/6 + \
         x**7*y**8/120 + x**6*y**8/4 + x**6*y**6/720 + x**5*y**6/6 + \
@@ -422,7 +413,7 @@ def test_cosh():
 
 def test_tanh():
     R, x, y = ring('x, y', QQ)
-    assert rs_tanh(x, x, 9)/x**5 == -17/315*x**2 + 2/15 - 1/3*x**(-2) + x**(-4)
+    assert rs_tanh(x, x, 9)/x**5 == Rational(-17, 315)*x**2 + Rational(2, 15) - Rational(1, 3)*x**(-2) + x**(-4)
     assert rs_tanh(x*y + x**2*y**3, x, 9) == 4*x**8*y**11/3 - \
         17*x**8*y**9/45 + 4*x**7*y**9/3 - 17*x**7*y**7/315 - x**6*y**9/3 + \
         2*x**6*y**7/3 - x**5*y**7 + 2*x**5*y**5/15 - x**4*y**5 - \

@@ -14,10 +14,10 @@ from .compatibility import reduce, range
 from .expr import Expr
 from .evaluate import global_distribute
 
+
+
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
-
-
 class NC_Marker:
     is_Order = False
     is_Mul = False
@@ -93,6 +93,20 @@ class Mul(Expr, AssocOp):
     __slots__ = []
 
     is_Mul = True
+
+    def __neg__(self):
+        c, args = self.as_coeff_mul()
+        c = -c
+        if c is not S.One:
+            if args[0].is_Number:
+                args = list(args)
+                if c is S.NegativeOne:
+                    args[0] = -args[0]
+                else:
+                    args[0] *= c
+            else:
+                args = (c,) + args
+        return self._from_args(args, self.is_commutative)
 
     @classmethod
     def flatten(cls, seq):
@@ -180,6 +194,7 @@ class Mul(Expr, AssocOp):
             a, b = seq
             if b.is_Rational:
                 a, b = b, a
+                seq = [a, b]
             assert not a is S.One
             if not a.is_zero and a.is_Rational:
                 r, b = b.as_coeff_Mul()
@@ -258,10 +273,10 @@ class Mul(Expr, AssocOp):
 
             # 3
             elif o.is_Number:
-                if o is S.NaN or coeff is S.ComplexInfinity and o is S.Zero:
+                if o is S.NaN or coeff is S.ComplexInfinity and o.is_zero:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
-                elif coeff.is_Number:  # it could be zoo
+                elif coeff.is_Number or isinstance(coeff, AccumBounds):  # it could be zoo
                     coeff *= o
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
@@ -269,10 +284,6 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif isinstance(o, AccumBounds):
-                coeff = o.__mul__(coeff)
-                continue
-
-            elif isinstance(o, MatrixExpr):
                 coeff = o.__mul__(coeff)
                 continue
 
@@ -319,10 +330,6 @@ class Mul(Expr, AssocOp):
                         elif b.is_positive or e.is_integer:
                             num_exp.append((b, e))
                             continue
-
-                    elif b is S.ImaginaryUnit and e.is_Rational:
-                        neg1e += e/2
-                        continue
 
                 c_powers.append((b, e))
 
@@ -569,9 +576,9 @@ class Mul(Expr, AssocOp):
             def _handle_for_oo(c_part, coeff_sign):
                 new_c_part = []
                 for t in c_part:
-                    if t.is_positive:
+                    if t.is_extended_positive:
                         continue
-                    if t.is_negative:
+                    if t.is_extended_negative:
                         coeff_sign *= -1
                         continue
                     new_c_part.append(t)
@@ -588,14 +595,16 @@ class Mul(Expr, AssocOp):
             #   infinite_real + infinite_im
             # and non-zero real or imaginary will not change that status.
             c_part = [c for c in c_part if not (fuzzy_not(c.is_zero) and
-                                                c.is_real is not None)]
+                                                c.is_extended_real is not None)]
             nc_part = [c for c in nc_part if not (fuzzy_not(c.is_zero) and
-                                                  c.is_real is not None)]
+                                                  c.is_extended_real is not None)]
 
         # 0
-        elif coeff is S.Zero:
+        elif coeff.is_zero:
             # we know for sure the result will be 0 except the multiplicand
-            # is infinity
+            # is infinity or a matrix
+            if any(isinstance(c, MatrixExpr) for c in nc_part):
+                return [coeff], nc_part, order_symbols
             if any(c.is_finite == False for c in c_part):
                 return [S.NaN], [], order_symbols
             return [coeff], [], order_symbols
@@ -617,8 +626,8 @@ class Mul(Expr, AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if (global_distribute[0] and not nc_part and len(c_part) == 2 and c_part[0].is_Number and
-                c_part[1].is_Add):
+        if (global_distribute[0] and not nc_part and len(c_part) == 2 and
+                c_part[0].is_Number and c_part[0].is_finite and c_part[1].is_Add):
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
@@ -746,26 +755,23 @@ class Mul(Expr, AssocOp):
 
     @cacheit
     def as_coeff_mul(self, *deps, **kwargs):
-        rational = kwargs.pop('rational', True)
         if deps:
-            l1 = []
-            l2 = []
-            for f in self.args:
-                if f.has(*deps):
-                    l2.append(f)
-                else:
-                    l1.append(f)
-            return self._new_rawargs(*l1), tuple(l2)
+            from sympy.utilities.iterables import sift
+            l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
+            return self._new_rawargs(*l2), tuple(l1)
+        rational = kwargs.pop('rational', True)
         args = self.args
         if args[0].is_Number:
             if not rational or args[0].is_Rational:
                 return args[0], args[1:]
-            elif args[0].is_negative:
+            elif args[0].is_extended_negative:
                 return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """
+        Efficiently extract the coefficient of a product.
+        """
         coeff, args = self.args[0], self.args[1:]
 
         if coeff.is_Number:
@@ -774,7 +780,7 @@ class Mul(Expr, AssocOp):
                     return coeff, args[0]
                 else:
                     return coeff, self._new_rawargs(*args)
-            elif coeff.is_negative:
+            elif coeff.is_extended_negative:
                 return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
         return S.One, self
 
@@ -817,7 +823,7 @@ class Mul(Expr, AssocOp):
         r, i = (reco*re(m), reco*im(m))
         if addterms == 1:
             if m == 1:
-                if imco is S.Zero:
+                if imco.is_zero:
                     return (reco, S.Zero)
                 else:
                     return (S.Zero, reco*imco)
@@ -902,45 +908,36 @@ class Mul(Expr, AssocOp):
                 # Note: reduce is used in step of Mul as Mul is unable to
                 # handle subtypes and operation priority:
                 terms.append(reduce(lambda x, y: x*y, (args[:i] + [d] + args[i + 1:]), S.One))
-        return reduce(lambda x, y: x+y, terms, S.Zero)
+        return Add.fromiter(terms)
 
     @cacheit
     def _eval_derivative_n_times(self, s, n):
-        # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
-        from sympy import Integer, factorial, prod, Dummy, symbols, Sum
-        args = [arg for arg in self.args if arg.free_symbols & s.free_symbols]
-        coeff_args = [arg for arg in self.args if arg not in args]
-        m = len(args)
-        if m == 1:
-            return args[0].diff((s, n))*Mul.fromiter(coeff_args)
-
-        if isinstance(n, (int, Integer)):
+        from sympy import Integer, factorial, prod, Sum, Max
+        from sympy.ntheory.multinomial import multinomial_coefficients_iterator
+        from .function import AppliedUndef
+        from .symbol import Symbol, symbols, Dummy
+        if not isinstance(s, AppliedUndef) and not isinstance(s, Symbol):
+            # other types of s may not be well behaved, e.g.
+            # (cos(x)*sin(y)).diff([[x, y, z]])
             return super(Mul, self)._eval_derivative_n_times(s, n)
-
-            # Code not yet activated:
-            def sum_to_n(n, m):
-                if m == 1:
-                    yield (n,)
-                else:
-                    for x in range(n+1):
-                        for y in sum_to_n(n-x, m-1):
-                            yield (x,) + y
-            accum_sum = S.Zero
-            for kvals in sum_to_n(n, m):
-                part1 = factorial(n)/prod([factorial(k) for k in kvals])
-                part2 = prod([arg.diff((s, k)) for k, arg in zip(kvals, args)])
-                accum_sum += part1 * part2
-            return accum_sum * Mul.fromiter(coeff_args)
-
+        args = self.args
+        m = len(args)
+        if isinstance(n, (int, Integer)):
+            # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
+            terms = []
+            for kvals, c in multinomial_coefficients_iterator(m, n):
+                p = prod([arg.diff((s, k)) for k, arg in zip(kvals, args)])
+                terms.append(c * p)
+            return Add(*terms)
         kvals = symbols("k1:%i" % m, cls=Dummy)
         klast = n - sum(kvals)
-        result = Sum(
-            # better to use the multinomial?
-            factorial(n)/prod(map(factorial, kvals))/factorial(klast)*\
+        nfact = factorial(n)
+        e, l = (# better to use the multinomial?
+            nfact/prod(map(factorial, kvals))/factorial(klast)*\
             prod([args[t].diff((s, kvals[t])) for t in range(m-1)])*\
-            args[-1].diff((s, klast)),
-            *[(k, 0, n) for k in kvals])
-        return result*Mul.fromiter(coeff_args)
+            args[-1].diff((s, Max(0, klast))),
+            [(k, 0, n) for k in kvals])
+        return Sum(e, *l)
 
     def _eval_difference_delta(self, n, step):
         from sympy.series.limitseq import difference_delta as dd
@@ -964,88 +961,170 @@ class Mul(Expr, AssocOp):
             return AssocOp._matches_commutative(self, expr, repl_dict, old)
         elif self.is_commutative is not expr.is_commutative:
             return None
+
+        # Proceed only if both both expressions are non-commutative
         c1, nc1 = self.args_cnc()
         c2, nc2 = expr.args_cnc()
-        repl_dict = repl_dict.copy()
-        if c1:
-            if not c2:
-                c2 = [1]
-            a = self.func(*c1)
-            if isinstance(a, AssocOp):
-                repl_dict = a._matches_commutative(self.func(*c2), repl_dict, old)
-            else:
-                repl_dict = a.matches(self.func(*c2), repl_dict)
-        if repl_dict:
-            a = self.func(*nc1)
-            if isinstance(a, self.func):
-                repl_dict = a._matches(self.func(*nc2), repl_dict)
-            else:
-                repl_dict = a.matches(self.func(*nc2), repl_dict)
+        c1, c2 = [c or [1] for c in [c1, c2]]
+
+        # TODO: Should these be self.func?
+        comm_mul_self = Mul(*c1)
+        comm_mul_expr = Mul(*c2)
+
+        repl_dict = comm_mul_self.matches(comm_mul_expr, repl_dict, old)
+
+        # If the commutative arguments didn't match and aren't equal, then
+        # then the expression as a whole doesn't match
+        if repl_dict is None and c1 != c2:
+            return None
+
+        # Now match the non-commutative arguments, expanding powers to
+        # multiplications
+        nc1 = Mul._matches_expand_pows(nc1)
+        nc2 = Mul._matches_expand_pows(nc2)
+
+        repl_dict = Mul._matches_noncomm(nc1, nc2, repl_dict)
+
         return repl_dict or None
 
-    def _matches(self, expr, repl_dict={}):
-        # weed out negative one prefixes#
-        from sympy import Wild
-        sign = 1
-        a, b = self.as_two_terms()
-        if a is S.NegativeOne:
-            if b.is_Mul:
-                sign = -sign
+    @staticmethod
+    def _matches_expand_pows(arg_list):
+        new_args = []
+        for arg in arg_list:
+            if arg.is_Pow and arg.exp > 0:
+                new_args.extend([arg.base] * arg.exp)
             else:
-                # the remainder, b, is not a Mul anymore
-                return b.matches(-expr, repl_dict)
-        expr = sympify(expr)
-        if expr.is_Mul and expr.args[0] is S.NegativeOne:
-            expr = -expr
-            sign = -sign
+                new_args.append(arg)
+        return new_args
 
-        if not expr.is_Mul:
-            # expr can only match if it matches b and a matches +/- 1
-            if len(self.args) == 2:
-                # quickly test for equality
-                if b == expr:
-                    return a.matches(Rational(sign), repl_dict)
-                # do more expensive match
-                dd = b.matches(expr, repl_dict)
-                if dd is None:
-                    return None
-                dd = a.matches(Rational(sign), dd)
-                return dd
-            return None
+    @staticmethod
+    def _matches_noncomm(nodes, targets, repl_dict={}):
+        """Non-commutative multiplication matcher.
 
-        d = repl_dict.copy()
+        `nodes` is a list of symbols within the matcher multiplication
+        expression, while `targets` is a list of arguments in the
+        multiplication expression being matched against.
+        """
+        # List of possible future states to be considered
+        agenda = []
+        # The current matching state, storing index in nodes and targets
+        state = (0, 0)
+        node_ind, target_ind = state
+        # Mapping between wildcard indices and the index ranges they match
+        wildcard_dict = {}
+        repl_dict = repl_dict.copy()
 
-        # weed out identical terms
-        pp = list(self.args)
-        ee = list(expr.args)
-        for p in self.args:
-            if p in expr.args:
-                ee.remove(p)
-                pp.remove(p)
+        while target_ind < len(targets) and node_ind < len(nodes):
+            node = nodes[node_ind]
 
-        # only one symbol left in pattern -> match the remaining expression
-        if len(pp) == 1 and isinstance(pp[0], Wild):
-            if len(ee) == 1:
-                d[pp[0]] = sign * ee[0]
-            else:
-                d[pp[0]] = sign * expr.func(*ee)
-            return d
+            if node.is_Wild:
+                Mul._matches_add_wildcard(wildcard_dict, state)
 
-        if len(ee) != len(pp):
-            return None
-
-        for p, e in zip(pp, ee):
-            d = p.xreplace(d).matches(e, d)
-            if d is None:
+            states_matches = Mul._matches_new_states(wildcard_dict, state,
+                                                     nodes, targets)
+            if states_matches:
+                new_states, new_matches = states_matches
+                agenda.extend(new_states)
+                if new_matches:
+                    for match in new_matches:
+                        repl_dict[match] = new_matches[match]
+            if not agenda:
                 return None
-        return d
+            else:
+                state = agenda.pop()
+                node_ind, target_ind = state
+
+        return repl_dict
+
+    @staticmethod
+    def _matches_add_wildcard(dictionary, state):
+        node_ind, target_ind = state
+        if node_ind in dictionary:
+            begin, end = dictionary[node_ind]
+            dictionary[node_ind] = (begin, target_ind)
+        else:
+            dictionary[node_ind] = (target_ind, target_ind)
+
+    @staticmethod
+    def _matches_new_states(dictionary, state, nodes, targets):
+        node_ind, target_ind = state
+        node = nodes[node_ind]
+        target = targets[target_ind]
+
+        # Don't advance at all if we've exhausted the targets but not the nodes
+        if target_ind >= len(targets) - 1 and node_ind < len(nodes) - 1:
+            return None
+
+        if node.is_Wild:
+            match_attempt = Mul._matches_match_wilds(dictionary, node_ind,
+                                                     nodes, targets)
+            if match_attempt:
+                # If the same node has been matched before, don't return
+                # anything if the current match is diverging from the previous
+                # match
+                other_node_inds = Mul._matches_get_other_nodes(dictionary,
+                                                               nodes, node_ind)
+                for ind in other_node_inds:
+                    other_begin, other_end = dictionary[ind]
+                    curr_begin, curr_end = dictionary[node_ind]
+
+                    other_targets = targets[other_begin:other_end + 1]
+                    current_targets = targets[curr_begin:curr_end + 1]
+
+                    for curr, other in zip(current_targets, other_targets):
+                        if curr != other:
+                            return None
+
+                # A wildcard node can match more than one target, so only the
+                # target index is advanced
+                new_state = [(node_ind, target_ind + 1)]
+                # Only move on to the next node if there is one
+                if node_ind < len(nodes) - 1:
+                    new_state.append((node_ind + 1, target_ind + 1))
+                return new_state, match_attempt
+        else:
+            # If we're not at a wildcard, then make sure we haven't exhausted
+            # nodes but not targets, since in this case one node can only match
+            # one target
+            if node_ind >= len(nodes) - 1 and target_ind < len(targets) - 1:
+                return None
+
+            match_attempt = node.matches(target)
+
+            if match_attempt:
+                return [(node_ind + 1, target_ind + 1)], match_attempt
+            elif node == target:
+                return [(node_ind + 1, target_ind + 1)], None
+            else:
+                return None
+
+    @staticmethod
+    def _matches_match_wilds(dictionary, wildcard_ind, nodes, targets):
+        """Determine matches of a wildcard with sub-expression in `target`."""
+        wildcard = nodes[wildcard_ind]
+        begin, end = dictionary[wildcard_ind]
+        terms = targets[begin:end + 1]
+        # TODO: Should this be self.func?
+        mul = Mul(*terms) if len(terms) > 1 else terms[0]
+        return wildcard.matches(mul)
+
+    @staticmethod
+    def _matches_get_other_nodes(dictionary, nodes, node_ind):
+        """Find other wildcards that may have already been matched."""
+        other_node_inds = []
+        for ind in dictionary:
+            if nodes[ind] == nodes[node_ind]:
+                other_node_inds.append(ind)
+        return other_node_inds
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
         """
-        Returns lhs/rhs, but treats arguments like symbols, so things like
-        oo/oo return 1, instead of a nan.
+        Returns lhs/rhs, but treats arguments like symbols, so things
+        like oo/oo return 1 (instead of a nan) and ``I`` behaves like
+        a symbol instead of sqrt(-1).
         """
+        from .symbol import Dummy
         if lhs == rhs:
             return S.One
 
@@ -1058,25 +1137,30 @@ class Mul(Expr, AssocOp):
             return False
         if check(lhs, rhs) or check(rhs, lhs):
             return S.One
-        if lhs.is_Mul and rhs.is_Mul:
-            a = list(lhs.args)
-            b = [1]
-            for x in rhs.args:
-                if x in a:
-                    a.remove(x)
-                elif -x in a:
-                    a.remove(-x)
-                    b.append(-1)
-                else:
-                    b.append(x)
-            return lhs.func(*a)/rhs.func(*b)
+        if any(i.is_Pow or i.is_Mul for i in (lhs, rhs)):
+            # gruntz and limit wants a literal I to not combine
+            # with a power of -1
+            d = Dummy('I')
+            _i = {S.ImaginaryUnit: d}
+            i_ = {d: S.ImaginaryUnit}
+            a = lhs.xreplace(_i).as_powers_dict()
+            b = rhs.xreplace(_i).as_powers_dict()
+            blen = len(b)
+            for bi in tuple(b.keys()):
+                if bi in a:
+                    a[bi] -= b.pop(bi)
+                    if not a[bi]:
+                        a.pop(bi)
+            if len(b) != blen:
+                lhs = Mul(*[k**v for k, v in a.items()]).xreplace(i_)
+                rhs = Mul(*[k**v for k, v in b.items()]).xreplace(i_)
         return lhs/rhs
 
     def as_powers_dict(self):
         d = defaultdict(int)
         for term in self.args:
-            b, e = term.as_base_exp()
-            d[b] += e
+            for b, e in term.as_powers_dict().items():
+                d[b] += e
         return d
 
     def as_numer_denom(self):
@@ -1110,12 +1194,24 @@ class Mul(Expr, AssocOp):
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
-    _eval_is_finite = lambda self: _fuzzy_group(
-        a.is_finite for a in self.args)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
-    _eval_is_complex = lambda self: _fuzzy_group(
-        (a.is_complex for a in self.args), quick_exit=True)
+
+    def _eval_is_complex(self):
+        comp = _fuzzy_group((a.is_complex for a in self.args))
+        if comp is False:
+            if any(a.is_infinite for a in self.args):
+                if any(a.is_zero is not False for a in self.args):
+                    return None
+                return False
+        return comp
+
+    def _eval_is_finite(self):
+        if all(a.is_finite for a in self.args):
+            return True
+        if any(a.is_infinite for a in self.args):
+            if all(a.is_zero is False for a in self.args):
+                return False
 
     def _eval_is_infinite(self):
         if any(a.is_infinite for a in self.args):
@@ -1163,7 +1259,7 @@ class Mul(Expr, AssocOp):
             n, d = self.as_numer_denom()
             if d is S.One:
                 return True
-            elif d is S(2):
+            elif d == S(2):
                 return n.is_even
         elif is_rational is False:
             return False
@@ -1173,7 +1269,7 @@ class Mul(Expr, AssocOp):
         return has_polar and \
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         return self._eval_real_imag(True)
 
     def _eval_real_imag(self, real):
@@ -1181,11 +1277,11 @@ class Mul(Expr, AssocOp):
         t_not_re_im = None
 
         for t in self.args:
-            if not t.is_complex:
-                return t.is_complex
+            if (t.is_complex or t.is_infinite) is False and t.is_extended_real is False:
+                return False
             elif t.is_imaginary:  # I
                 real = not real
-            elif t.is_real:  # 2
+            elif t.is_extended_real:  # 2
                 if not zero:
                     z = t.is_zero
                     if not z and zero is False:
@@ -1194,7 +1290,7 @@ class Mul(Expr, AssocOp):
                         if all(a.is_finite for a in self.args):
                             return True
                         return
-            elif t.is_real is False:
+            elif t.is_extended_real is False:
                 # symbolic or literal like `2 + I` or symbolic imaginary
                 if t_not_re_im:
                     return  # complex terms might cancel
@@ -1207,7 +1303,7 @@ class Mul(Expr, AssocOp):
                 return
 
         if t_not_re_im:
-            if t_not_re_im.is_real is False:
+            if t_not_re_im.is_extended_real is False:
                 if real:  # like 3
                     return zero  # 3*(smthng like 2 + I or i) is not real
             if t_not_re_im.is_imaginary is False:  # symbolic 2 or 2 + I
@@ -1281,7 +1377,7 @@ class Mul(Expr, AssocOp):
                 return
         return False
 
-    def _eval_is_positive(self):
+    def _eval_is_extended_positive(self):
         """Return True if self is positive, False if not, and None if it
         cannot be determined.
 
@@ -1299,19 +1395,22 @@ class Mul(Expr, AssocOp):
     def _eval_pos_neg(self, sign):
         saw_NON = saw_NOT = False
         for t in self.args:
-            if t.is_positive:
+            if t.is_extended_positive:
                 continue
-            elif t.is_negative:
+            elif t.is_extended_negative:
                 sign = -sign
             elif t.is_zero:
                 if all(a.is_finite for a in self.args):
                     return False
                 return
-            elif t.is_nonpositive:
+            elif t.is_extended_nonpositive:
                 sign = -sign
                 saw_NON = True
-            elif t.is_nonnegative:
+            elif t.is_extended_nonnegative:
                 saw_NON = True
+            # FIXME: is_positive/is_negative is False doesn't take account of
+            # Symbol('x', infinite=True, extended_real=True) which has
+            # e.g. is_positive is False but has uncertain sign.
             elif t.is_positive is False:
                 sign = -sign
                 if saw_NOT:
@@ -1328,9 +1427,7 @@ class Mul(Expr, AssocOp):
         if sign < 0:
             return False
 
-    def _eval_is_negative(self):
-        if self.args[0] == -1:
-            return (-self).is_positive  # remove -1
+    def _eval_is_extended_negative(self):
         return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):
@@ -1367,20 +1464,21 @@ class Mul(Expr, AssocOp):
             return False
 
     def _eval_is_composite(self):
-        if self.is_integer and self.is_positive:
-            """
-            Here we count the number of arguments that have a minimum value
-            greater than two.
-            If there are more than one of such a symbol then the result is composite.
-            Else, the result cannot be determined.
-            """
-            number_of_args = 0 # count of symbols with minimum value greater than one
-            for arg in self.args:
-                if (arg-1).is_positive:
-                    number_of_args += 1
+        """
+        Here we count the number of arguments that have a minimum value
+        greater than two.
+        If there are more than one of such a symbol then the result is composite.
+        Else, the result cannot be determined.
+        """
+        number_of_args = 0 # count of symbols with minimum value greater than one
+        for arg in self.args:
+            if not (arg.is_integer and arg.is_positive):
+                return None
+            if (arg-1).is_positive:
+                number_of_args += 1
 
-            if number_of_args > 1:
-                return True
+        if number_of_args > 1:
+            return True
 
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
@@ -1681,7 +1779,7 @@ class Mul(Expr, AssocOp):
 
         >>> from sympy import sqrt
         >>> (-3*sqrt(2)*(2 - 2*sqrt(2))).as_content_primitive()
-        (6, -sqrt(2)*(-sqrt(2) + 1))
+        (6, -sqrt(2)*(1 - sqrt(2)))
 
         See docstring of Expr.as_content_primitive for more examples.
         """
@@ -1791,7 +1889,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
                 r = c/q
                 if r == int(r):
                     return coeff*factors
-        return Mul._from_args((coeff, factors))
+        return Mul(coeff, factors, evaluate=False)
     elif factors.is_Mul:
         margs = list(factors.args)
         if margs[0].is_Number:

@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 """
 Definition of physical dimensions.
 
@@ -19,7 +17,73 @@ import collections
 from sympy import Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict, default_sort_key
 from sympy.core.compatibility import reduce, string_types
 from sympy.core.expr import Expr
+from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+
+class _QuantityMapper(object):
+
+    _quantity_scale_factors_global = {}
+    _quantity_dimensional_equivalence_map_global = {}
+    _quantity_dimension_global = {}
+
+    def __init__(self, *args, **kwargs):
+        self._quantity_dimension_map = {}
+        self._quantity_scale_factors = {}
+
+    def set_quantity_dimension(self, unit, dimension):
+        from sympy.physics.units import Quantity
+        dimension = sympify(dimension)
+        if not isinstance(dimension, Dimension):
+            if dimension == 1:
+                dimension = Dimension(1)
+            else:
+                raise ValueError("expected dimension or 1")
+        elif isinstance(dimension, Quantity):
+            dimension = self.get_quantity_dimension(dimension)
+        self._quantity_dimension_map[unit] = dimension
+
+    def set_quantity_scale_factor(self, unit, scale_factor):
+        from sympy.physics.units import Quantity
+        from sympy.physics.units.prefixes import Prefix
+        scale_factor = sympify(scale_factor)
+        # replace all prefixes by their ratio to canonical units:
+        scale_factor = scale_factor.replace(
+            lambda x: isinstance(x, Prefix),
+            lambda x: x.scale_factor
+        )
+        # replace all quantities by their ratio to canonical units:
+        scale_factor = scale_factor.replace(
+            lambda x: isinstance(x, Quantity),
+            lambda x: self.get_quantity_scale_factor(x)
+        )
+        self._quantity_scale_factors[unit] = scale_factor
+
+    def get_quantity_dimension(self, unit):
+        from sympy.physics.units import Quantity
+        # First look-up the local dimension map, then the global one:
+        if unit in self._quantity_dimension_map:
+            return self._quantity_dimension_map[unit]
+        if unit in self._quantity_dimension_global:
+            return self._quantity_dimension_global[unit]
+        if unit in self._quantity_dimensional_equivalence_map_global:
+            dep_unit = self._quantity_dimensional_equivalence_map_global[unit]
+            if isinstance(dep_unit, Quantity):
+                return self.get_quantity_dimension(dep_unit)
+            else:
+                return Dimension(self.get_dimensional_expr(dep_unit))
+        if isinstance(unit, Quantity):
+            return Dimension(unit.name)
+        else:
+            return Dimension(1)
+
+    def get_quantity_scale_factor(self, unit):
+        if unit in self._quantity_scale_factors:
+            return self._quantity_scale_factors[unit]
+        if unit in self._quantity_scale_factors_global:
+            mul_factor, other_unit = self._quantity_scale_factors_global[unit]
+            return mul_factor*self.get_quantity_scale_factor(other_unit)
+        return S.One
 
 
 class Dimension(Expr):
@@ -53,7 +117,7 @@ class Dimension(Expr):
     dependencies of a dimension, for example the dimension system used by the
     SI units convention can be used:
 
-        >>> from sympy.physics.units.dimensions import dimsys_SI
+        >>> from sympy.physics.units.systems.si import dimsys_SI
         >>> dimsys_SI.get_dimensional_dependencies(velocity)
         {'length': 1, 'time': -1}
         >>> length + length
@@ -131,41 +195,26 @@ class Dimension(Expr):
     def __neg__(self):
         return self
 
-    def _register_as_base_dim(self):
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.2",
-            issue=13336,
-            feature="do not call ._register_as_base_dim()",
-            useinstead="DimensionSystem"
-        ).warn()
-        if not self.name.is_Symbol:
-            raise TypeError("Base dimensions need to have symbolic name")
-
-        name = self.name
-        if name in dimsys_default.dimensional_dependencies:
-            raise IndexError("already in dependencies dict")
-        # Horrible code:
-        d = dict(dimsys_default.dimensional_dependencies)
-        d[name] = Dict({name: 1})
-        dimsys_default._args = (dimsys_default.args[:2] + (Dict(d),))
-
     def __add__(self, other):
-        """Define the addition for Dimension.
-
-        Addition of dimension has a sense only if the second object is
-        the same dimension (we don't add length to time).
-        """
-
-        if not isinstance(other, Dimension):
-            raise TypeError("Only dimension can be added; '%s' is not valid"
-                            % type(other))
-        elif isinstance(other, Dimension) and self != other:
-            raise ValueError("Only dimension which are equal can be added; "
-                             "'%s' and '%s' are different" % (self, other))
-
+        from sympy.physics.units.quantities import Quantity
+        other = sympify(other)
+        if isinstance(other, Basic):
+            if other.has(Quantity):
+                raise TypeError("cannot sum dimension and quantity")
+            if isinstance(other, Dimension) and self == other:
+                return self
+            return super(Dimension, self).__add__(other)
         return self
 
+    def __radd__(self, other):
+        return self.__add__(other)
+
     def __sub__(self, other):
+        # there is no notion of ordering (or magnitude) among dimension,
+        # subtraction is equivalent to addition when the operation is legal
+        return self + other
+
+    def __rsub__(self, other):
         # there is no notion of ordering (or magnitude) among dimension,
         # subtraction is equivalent to addition when the operation is legal
         return self + other
@@ -178,35 +227,28 @@ class Dimension(Expr):
         return Dimension(self.name**other)
 
     def __mul__(self, other):
-        if not isinstance(other, Dimension):
-            return self
+        from sympy.physics.units.quantities import Quantity
+        if isinstance(other, Basic):
+            if other.has(Quantity):
+                raise TypeError("cannot sum dimension and quantity")
+            if isinstance(other, Dimension):
+                return Dimension(self.name*other.name)
+            if not other.free_symbols:  # other.is_number cannot be used
+                return self
+            return super(Dimension, self).__mul__(other)
+        return self
 
-        return Dimension(self.name*other.name)
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     def __div__(self, other):
-        if not isinstance(other, Dimension):
-            return self
-
-        return Dimension(self.name/other.name)
+        return self*Pow(other, -1)
 
     def __rdiv__(self, other):
         return other * pow(self, -1)
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
-
-    def get_dimensional_dependencies(self, mark_dimensionless=False):
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.2",
-            issue=13336,
-            feature="do not call",
-            useinstead="DimensionSystem"
-        ).warn()
-        name = self.name
-        dimdep = dimsys_default.get_dimensional_dependencies(name)
-        if mark_dimensionless and dimdep == {}:
-            return {'dimensionless': 1}
-        return {str(i): j for i, j in dimdep.items()}
 
     @classmethod
     def _from_dimensional_dependencies(cls, dependencies):
@@ -216,6 +258,7 @@ class Dimension(Expr):
 
     @classmethod
     def _get_dimensional_dependencies_for_name(cls, name):
+        from sympy.physics.units.unitsystem.si import dimsys_default
         SymPyDeprecationWarning(
             deprecated_since_version="1.2",
             issue=13336,
@@ -234,6 +277,7 @@ class Dimension(Expr):
         if self.name == 1:
             return True
         if dimensional_dependencies is None:
+            from sympy.physics.units.unitsystem.si import dimsys_default
             SymPyDeprecationWarning(
                 deprecated_since_version="1.2",
                 issue=13336,
@@ -254,54 +298,16 @@ class Dimension(Expr):
         for dpow in dim_sys.get_dimensional_dependencies(self).values():
             if not isinstance(dpow, (int, Integer)):
                 return False
-        else:
-            return True
 
+        return True
 
-# base dimensions (MKS)
-length = Dimension(name="length", symbol="L")
-mass = Dimension(name="mass", symbol="M")
-time = Dimension(name="time", symbol="T")
-
-# base dimensions (MKSA not in MKS)
-current = Dimension(name='current', symbol='I')
-
-# other base dimensions:
-temperature = Dimension("temperature", "T")
-amount_of_substance = Dimension("amount_of_substance")
-luminous_intensity = Dimension("luminous_intensity")
-
-# derived dimensions (MKS)
-velocity = Dimension(name="velocity")
-acceleration = Dimension(name="acceleration")
-momentum = Dimension(name="momentum")
-force = Dimension(name="force", symbol="F")
-energy = Dimension(name="energy", symbol="E")
-power = Dimension(name="power")
-pressure = Dimension(name="pressure")
-frequency = Dimension(name="frequency", symbol="f")
-action = Dimension(name="action", symbol="A")
-volume = Dimension("volume")
-
-# derived dimensions (MKSA not in MKS)
-voltage = Dimension(name='voltage', symbol='U')
-impedance = Dimension(name='impedance', symbol='Z')
-conductance = Dimension(name='conductance', symbol='G')
-capacitance = Dimension(name='capacitance')
-inductance = Dimension(name='inductance')
-charge = Dimension(name='charge', symbol='Q')
-magnetic_density = Dimension(name='magnetic_density', symbol='B')
-magnetic_flux = Dimension(name='magnetic_flux')
-
-# Dimensions in information theory:
-information = Dimension(name='information')
 
 # Create dimensions according the the base units in MKSA.
 # For other unit systems, they can be derived by transforming the base
 # dimensional dependency dictionary.
 
 
-class DimensionSystem(Basic):
+class DimensionSystem(Basic, _QuantityMapper):
     r"""
     DimensionSystem represents a coherent set of dimensions.
 
@@ -331,7 +337,7 @@ class DimensionSystem(Basic):
             if isinstance(dim, string_types):
                 dim = Dimension(Symbol(dim))
             elif isinstance(dim, Dimension):
-                dim = dim
+                pass
             elif isinstance(dim, Symbol):
                 dim = Dimension(dim)
             else:
@@ -402,33 +408,38 @@ class DimensionSystem(Basic):
     def _get_dimensional_dependencies_for_name(self, name):
 
         if name.is_Symbol:
-            return dict(self.dimensional_dependencies.get(name, {}))
+            # Dimensions not included in the dependencies are considered
+            # as base dimensions:
+            return dict(self.dimensional_dependencies.get(name, {name: 1}))
 
         if name.is_Number:
             return {}
 
+        get_for_name = self._get_dimensional_dependencies_for_name
+
         if name.is_Mul:
             ret = collections.defaultdict(int)
-            dicts = [dimsys_default._get_dimensional_dependencies_for_name(i) for i in name.args]
+            dicts = [get_for_name(i) for i in name.args]
             for d in dicts:
                 for k, v in d.items():
                     ret[k] += v
             return {k: v for (k, v) in ret.items() if v != 0}
 
         if name.is_Pow:
-            dim = dimsys_default._get_dimensional_dependencies_for_name(name.base)
+            dim = get_for_name(name.base)
             return {k: v*name.exp for (k, v) in dim.items()}
 
         if name.is_Function:
             args = (Dimension._from_dimensional_dependencies(
-                dimsys_default._get_dimensional_dependencies_for_name(arg)
-            ) for arg in name.args)
+                get_for_name(arg)) for arg in name.args)
             result = name.func(*args)
 
             if isinstance(result, Dimension):
-                return dimsys_default.get_dimensional_dependencies(result)
-            # TODO shall we consider a result that is not a dimension?
-            # return Dimension._get_dimensional_dependencies_for_name(result)
+                return self.get_dimensional_dependencies(result)
+            elif result.func == name.func:
+                return {}
+            else:
+                return get_for_name(result)
 
     def get_dimensional_dependencies(self, name, mark_dimensionless=False):
         if isinstance(name, Dimension):
@@ -458,11 +469,14 @@ class DimensionSystem(Basic):
         deps = dict(self.dimensional_dependencies)
         deps.update(new_dim_deps)
 
-        return DimensionSystem(
+        new_dim_sys = DimensionSystem(
             tuple(self.base_dims) + tuple(new_base_dims),
             tuple(self.derived_dims) + tuple(new_derived_dims),
             deps
         )
+        new_dim_sys._quantity_dimension_map.update(self._quantity_dimension_map)
+        new_dim_sys._quantity_scale_factors.update(self._quantity_scale_factors)
+        return new_dim_sys
 
     @staticmethod
     def sort_dims(dims):
@@ -541,7 +555,7 @@ class DimensionSystem(Basic):
         """
         dimset = set([])
         for i in self.base_dims:
-            dimset.update(set(dimsys_default.get_dimensional_dependencies(i).keys()))
+            dimset.update(set(self.get_dimensional_dependencies(i).keys()))
         return tuple(sorted(dimset, key=str))
 
     @property
@@ -596,7 +610,7 @@ class DimensionSystem(Basic):
 
         vec = []
         for d in self.list_can_dims:
-            vec.append(dimsys_default.get_dimensional_dependencies(dim).get(d, 0))
+            vec.append(self.get_dimensional_dependencies(dim).get(d, 0))
         return Matrix(vec)
 
     def dim_vector(self, dim):
@@ -648,50 +662,3 @@ class DimensionSystem(Basic):
         # dimensions
         # in vector language: the set of vectors do not form a basis
         return self.inv_can_transf_matrix.is_square
-
-
-dimsys_MKS = DimensionSystem([
-    # Dimensional dependencies for MKS base dimensions
-    length,
-    mass,
-    time,
-], dimensional_dependencies=dict(
-    # Dimensional dependencies for derived dimensions
-    velocity=dict(length=1, time=-1),
-    acceleration=dict(length=1, time=-2),
-    momentum=dict(mass=1, length=1, time=-1),
-    force=dict(mass=1, length=1, time=-2),
-    energy=dict(mass=1, length=2, time=-2),
-    power=dict(length=2, mass=1, time=-3),
-    pressure=dict(mass=1, length=-1, time=-2),
-    frequency=dict(time=-1),
-    action=dict(length=2, mass=1, time=-1),
-    volume=dict(length=3),
-))
-
-dimsys_MKSA = dimsys_MKS.extend([
-    # Dimensional dependencies for base dimensions (MKSA not in MKS)
-    current,
-], new_dim_deps=dict(
-    # Dimensional dependencies for derived dimensions
-    voltage=dict(mass=1, length=2, current=-1, time=-3),
-    impedance=dict(mass=1, length=2, current=-2, time=-3),
-    conductance=dict(mass=-1, length=-2, current=2, time=3),
-    capacitance=dict(mass=-1, length=-2, current=2, time=4),
-    inductance=dict(mass=1, length=2, current=-2, time=-2),
-    charge=dict(current=1, time=1),
-    magnetic_density=dict(mass=1, current=-1, time=-2),
-    magnetic_flux=dict(length=2, mass=1, current=-1, time=-2),
-))
-
-dimsys_SI = dimsys_MKSA.extend(
-    [
-        # Dimensional dependencies for other base dimensions:
-        temperature,
-        amount_of_substance,
-        luminous_intensity,
-    ])
-
-dimsys_default = dimsys_SI.extend(
-    [information],
-)

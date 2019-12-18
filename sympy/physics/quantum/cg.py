@@ -156,7 +156,7 @@ class CG(Wigner3j):
     coefficients are defined as [1]_:
 
     .. math ::
-        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \langle j_1,m_1;j_2,m_2 | j_3,m_3\rangle
+        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \left\langle j_1,m_1;j_2,m_2 | j_3,m_3\right\rangle
 
     Parameters
     ==========
@@ -625,10 +625,10 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             cg_index[index_expr.subs(sub_dep).subs(sub_2)] = j, expr.subs(lt, 1).subs(sub_dep).subs(sub_2), lt.subs(sub_2), sign.subs(sub_dep).subs(sub_2)
         if all(i is not None for i in cg_index):
             min_lt = min(*[ abs(term[2]) for term in cg_index ])
-            indicies = [ term[0] for term in cg_index]
-            indicies.sort()
-            indicies.reverse()
-            [ term_list.pop(j) for j in indicies ]
+            indices = [ term[0] for term in cg_index]
+            indices.sort()
+            indices.reverse()
+            [ term_list.pop(j) for j in indices ]
             for term in cg_index:
                 if abs(term[2]) > min_lt:
                     term_list.append( (term[2] - min_lt*term[3]) * term[1] )
