@@ -2397,7 +2397,7 @@ class MatrixBase(MatrixDeprecated,
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
-        return self._new(P.mul(diag(*jordan_cells), mulsimp=mulsimp).mul(
+        return self._new(P.multiply(diag(*jordan_cells), mulsimp=mulsimp).multiply(
                 P.inv(), mulsimp=mulsimp))
 
     def __repr__(self):
@@ -3224,7 +3224,7 @@ class MatrixBase(MatrixDeprecated,
         from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
-        ret = P.mul(eJ, mulsimp=mulsimp).mul(P.inv(), mulsimp=mulsimp)
+        ret = P.multiply(eJ, mulsimp=mulsimp).multiply(P.inv(), mulsimp=mulsimp)
         if all(value.is_real for value in self.values()):
             return type(self)(re(ret))
         else:
@@ -4273,18 +4273,6 @@ class MatrixBase(MatrixDeprecated,
             scale = A[i, i]
             b.row_op(i, lambda x, _: x / scale)
         return rhs.__class__(b)
-
-    def multiply(self, b):
-        """Returns ``self*b``
-
-        See Also
-        ========
-
-        dot
-        cross
-        multiply_elementwise
-        """
-        return self * b
 
     def normalized(self, iszerofunc=_iszero):
         """Return the normalized version of ``self``.

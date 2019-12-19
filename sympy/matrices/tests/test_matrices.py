@@ -294,7 +294,7 @@ def test_issue_17247_expression_blowup_1():
 def test_issue_17247_expression_blowup_2():
     M = Matrix([[1+x, 1-x], [1-x, 1+x]])
     P, J = M.jordan_form ()
-    assert P.mul(J, mulsimp=True).mul(P.inv(), mulsimp=True)
+    assert P.multiply(J, mulsimp=True).multiply(P.inv(), mulsimp=True)
 
 def test_issue_17247_expression_blowup_3():
     M = Matrix([[1+x, 1-x], [1-x, 1+x]])

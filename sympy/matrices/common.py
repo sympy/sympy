@@ -16,7 +16,7 @@ from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
-from sympy.core.function import count_ops
+from sympy.core.function import count_ops, expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -2173,7 +2173,7 @@ class MatrixArithmetic(MatrixRequired):
         if num % 2 == 1:
             return self * self._eval_pow_by_recursion(num - 1, mulsimp=mulsimp)
         ret = self._eval_pow_by_recursion(num // 2, mulsimp=mulsimp)
-        return ret.mul(ret, mulsimp=mulsimp)
+        return ret.multiply(ret, mulsimp=mulsimp)
 
     def _eval_scalar_mul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other)
@@ -2258,9 +2258,9 @@ class MatrixArithmetic(MatrixRequired):
         matrix_multiply_elementwise
         """
 
-        return self.mul(other)
+        return self.multiply(other)
 
-    def mul(self, other, mulsimp=None):
+    def multiply(self, other, mulsimp=None):
         """Same as __mul__() but with optional simplification.
 
         Parameters
@@ -2294,6 +2294,32 @@ class MatrixArithmetic(MatrixRequired):
                 pass
 
         return NotImplemented
+
+    def multiply_elementwise(self, other):
+        """Return the Hadamard product (elementwise product) of A and B
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+        >>> A.multiply_elementwise(B)
+        Matrix([
+        [  0, 10, 200],
+        [300, 40,   5]])
+
+        See Also
+        ========
+
+        sympy.matrices.matrices.MatrixBase.cross
+        sympy.matrices.matrices.MatrixBase.dot
+        multiply
+        """
+        if self.shape != other.shape:
+            raise ShapeError("Matrix shapes must agree {} != {}".format(self.shape, other.shape))
+
+        return self._eval_matrix_mul_elementwise(other)
 
     def __neg__(self):
         return self._eval_scalar_mul(-1)
@@ -2415,32 +2441,6 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__rtruediv__')
     def __truediv__(self, other):
         return self.__div__(other)
-
-    def multiply_elementwise(self, other):
-        """Return the Hadamard product (elementwise product) of A and B
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
-        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
-        >>> A.multiply_elementwise(B)
-        Matrix([
-        [  0, 10, 200],
-        [300, 40,   5]])
-
-        See Also
-        ========
-
-        sympy.matrices.matrices.MatrixBase.cross
-        sympy.matrices.matrices.MatrixBase.dot
-        multiply
-        """
-        if self.shape != other.shape:
-            raise ShapeError("Matrix shapes must agree {} != {}".format(self.shape, other.shape))
-
-        return self._eval_matrix_mul_elementwise(other)
 
 
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
@@ -2640,7 +2640,6 @@ def classof(A, B):
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
 
 
-from sympy.core.function import expand_mul
 def dotprodsimp(a, b):
     """Sum-of-products with intermediate product simplification targeted at
     the kind of blowup that occurs during summation of products. Intended to

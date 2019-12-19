@@ -465,7 +465,7 @@ class SparseMatrix(MatrixBase):
     def _eval_matrix_mul(self, other, mulsimp=None):
         """Fast multiplication exploiting the sparsity of the matrix."""
         if not isinstance(other, SparseMatrix):
-            return self.mul(self._new(other), mulsimp=mulsimp)
+            return self.multiply(self._new(other), mulsimp=mulsimp)
 
         # if we made it here, we're both sparse matrices
         # create quick lookups for rows and cols
