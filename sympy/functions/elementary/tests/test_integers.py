@@ -269,6 +269,8 @@ def test_frac():
     assert Eq(frac(y), y - floor(y))
     assert Eq(frac(y), y + ceiling(-y))
 
+    assert unchanged(frac, zoo)
+
 
 def test_series():
     x, y = symbols('x,y')
