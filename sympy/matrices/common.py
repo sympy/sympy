@@ -16,7 +16,7 @@ from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
-from sympy.core.function import count_ops, expand_mul
+from sympy.core.function import count_ops, expand_mul, expand_multinomial
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -2145,17 +2145,13 @@ class MatrixArithmetic(MatrixRequired):
         def entry(i, j):
             vec = [self[i,k]*other[k,j] for k in range(self.cols)]
             try:
-                return Add(*vec)
+                e = Add(*vec)
             except (TypeError, SympifyError):
                 # Some matrices don't work with `sum` or `Add`
                 # They don't work with `sum` because `sum` tries to add `0`
                 # Fall back to a safe way to multiply if the `Add` fails.
-                return reduce(lambda a, b: a + b, vec)
-
-        if mulsimp:
-            return self._new(self.rows, other.cols, lambda i, j:
-                    dotprodsimp((self[i,k] for k in range(self.cols)),
-                                (other[k,j] for k in range(self.cols))))
+                e = reduce(lambda a, b: a + b, vec)
+            return dotprodsimp(e) if mulsimp else e
 
         return self._new(self.rows, other.cols, entry)
 
@@ -2640,39 +2636,15 @@ def classof(A, B):
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
 
 
-def dotprodsimp(a, b):
-    """Sum-of-products with intermediate product simplification targeted at
-    the kind of blowup that occurs during summation of products. Intended to
-    reduce expression blowup during matrix multiplication or other similar
-    operations.
-
-    Parameters
-    ==========
-
-    a, b : iterable
-        These will be multiplied then summed together using simplification on
-        the intermediate products and cancelling at the end. The elements must
-        already be sympyfied and the sequences need not be of the same length,
-        the shorter will be used.
+def dotprodsimp(expr):
+    """Simplification for a sum of products targeted at the kind of blowup that
+    occurs during summation of products. Intended to reduce expression blowup
+    during matrix multiplication or other similar operations.
     """
 
-    itra = iter(a)
-    itrb = iter(b)
-
-    try: # check for zero length
-        prod = next(itra)*next(itrb)
-    except StopIteration:
-        return S.Zero
-
-    # part 1, the expanded summation
-    expr = expand_mul(prod) # init first element so all ops remain in domain of matrix elements (not starting with scalar 0)
-
-    for a, b in zip(itra,itrb):
-        expr += expand_mul(a*b)
-
-    # part 2, the cancelation and grouping
+    expr     = expand_mul(expr)
     exprops  = count_ops(expr)
-    expr2    = expr.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
+    expr2    = expand_multinomial(expr)
     expr2ops = count_ops(expr2)
 
     if expr2ops < exprops:

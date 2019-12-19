@@ -483,18 +483,15 @@ class SparseMatrix(MatrixBase):
                 # these are the only things that need to be multiplied.
                 indices = set(col_lookup[col].keys()) & set(row_lookup[row].keys())
                 if indices:
-                    if mulsimp:
-                        smat[row, col] = dotprodsimp((row_lookup[row][k] for k in indices),
-                                (col_lookup[col][k] for k in indices))
-                    else:
-                        vec = [row_lookup[row][k]*col_lookup[col][k] for k in indices]
-                        try:
-                            smat[row, col] = Add(*vec)
-                        except (TypeError, SympifyError):
-                            # Some matrices don't work with `sum` or `Add`
-                            # They don't work with `sum` because `sum` tries to add `0`
-                            # Fall back to a safe way to multiply if the `Add` fails.
-                            smat[row, col] = reduce(lambda a, b: a + b, vec)
+                    vec = [row_lookup[row][k]*col_lookup[col][k] for k in indices]
+                    try:
+                        e = Add(*vec)
+                    except (TypeError, SympifyError):
+                        # Some matrices don't work with `sum` or `Add`
+                        # They don't work with `sum` because `sum` tries to add `0`
+                        # Fall back to a safe way to multiply if the `Add` fails.
+                        e = reduce(lambda a, b: a + b, vec)
+                    smat[row, col] = dotprodsimp(e) if mulsimp else e
 
         return self._new(self.rows, other.cols, smat)
 

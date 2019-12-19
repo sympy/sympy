@@ -186,19 +186,15 @@ class DenseMatrix(MatrixBase):
                 row, col = i // other.cols, i % other.cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
                 col_indices = range(col, other_len, other.cols)
-                if mulsimp:
-                    new_mat[i] = dotprodsimp(
-                            (mat[a] for a in row_indices),
-                            (other_mat[b] for b in col_indices))
-                else:
-                    vec = [mat[a]*other_mat[b] for a, b in zip(row_indices, col_indices)]
-                    try:
-                        new_mat[i] = Add(*vec)
-                    except (TypeError, SympifyError):
-                        # Some matrices don't work with `sum` or `Add`
-                        # They don't work with `sum` because `sum` tries to add `0`
-                        # Fall back to a safe way to multiply if the `Add` fails.
-                        new_mat[i] = reduce(lambda a, b: a + b, vec)
+                vec = [mat[a]*other_mat[b] for a, b in zip(row_indices, col_indices)]
+                try:
+                    e = Add(*vec)
+                except (TypeError, SympifyError):
+                    # Some matrices don't work with `sum` or `Add`
+                    # They don't work with `sum` because `sum` tries to add `0`
+                    # Fall back to a safe way to multiply if the `Add` fails.
+                    e = reduce(lambda a, b: a + b, vec)
+                new_mat[i] = dotprodsimp(e) if mulsimp else e
 
         return classof(self, other)._new(self.rows, other.cols, new_mat, copy=False)
 
