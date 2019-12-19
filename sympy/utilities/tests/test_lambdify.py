@@ -1012,10 +1012,11 @@ def test_scipy_fns():
         f = lambdify(x, sympy_fn(x), modules="scipy")
         for i in range(20):
             tv = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
-            # SciPy thinks that factorial(z) is 0 when re(z) < 0.
+            # SciPy thinks that factorial(z) is 0 when re(z) < 0 and
+            # does not support complex numbers.
             # SymPy does not think so.
-            if sympy_fn == factorial and numpy.real(tv) < 0:
-                tv = tv + 2*numpy.abs(numpy.real(tv))
+            if sympy_fn == factorial:
+                tv = numpy.abs(tv)
             # SciPy supports gammaln for real arguments only,
             # and there is also a branch cut along the negative real axis
             if sympy_fn == loggamma:
