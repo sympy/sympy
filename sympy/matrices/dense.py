@@ -2,7 +2,7 @@ from __future__ import division, print_function
 
 import random
 
-from sympy.core import SympifyError
+from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, range, reduce
 from sympy.core.expr import Expr
@@ -13,10 +13,9 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
+    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, dotprodsimp
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
-from sympy.simplify.simplify import dotprodsimp
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
@@ -173,7 +172,6 @@ class DenseMatrix(MatrixBase):
                          list(mat[i] for i in indices), copy=False)
 
     def _eval_matrix_mul(self, other, mulsimp=None):
-        from sympy import Add
         other_len = other.rows*other.cols
         new_len = self.rows*other.cols
         new_mat = [self.zero]*new_len
@@ -197,12 +195,10 @@ class DenseMatrix(MatrixBase):
                     try:
                         new_mat[i] = Add(*vec)
                     except (TypeError, SympifyError):
-                        # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+                        # Some matrices don't work with `sum` or `Add`
                         # They don't work with `sum` because `sum` tries to add `0`
-                        # initially, and for a matrix, that is a mix of a scalar and
-                        # a matrix, which raises a TypeError. Fall back to a
-                        # block-matrix-safe way to multiply if the `sum` fails.
-                        new_mat[i] = reduce(lambda a,b: a + b, vec)
+                        # Fall back to a safe way to multiply if the `Add` fails.
+                        new_mat[i] = reduce(lambda a, b: a + b, vec)
 
         return classof(self, other)._new(self.rows, other.cols, new_mat, copy=False)
 

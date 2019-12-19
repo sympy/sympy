@@ -3,14 +3,15 @@ from __future__ import division, print_function
 import copy
 from collections import defaultdict
 
-from sympy.core import SympifyError
-from sympy.core.compatibility import Callable, as_int, is_sequence, range, reduce
+from sympy.core import SympifyError, Add
+from sympy.core.compatibility import Callable, as_int, is_sequence, range, \
+    reduce
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.simplify.simplify import dotprodsimp
+from sympy.matrices.common import dotprodsimp
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 
@@ -486,7 +487,14 @@ class SparseMatrix(MatrixBase):
                         smat[row, col] = dotprodsimp((row_lookup[row][k] for k in indices),
                                 (col_lookup[col][k] for k in indices))
                     else:
-                        smat[row, col] = sum(row_lookup[row][k]*col_lookup[col][k] for k in indices)
+                        vec = [row_lookup[row][k]*col_lookup[col][k] for k in indices]
+                        try:
+                            smat[row, col] = Add(*vec)
+                        except (TypeError, SympifyError):
+                            # Some matrices don't work with `sum` or `Add`
+                            # They don't work with `sum` because `sum` tries to add `0`
+                            # Fall back to a safe way to multiply if the `Add` fails.
+                            smat[row, col] = reduce(lambda a, b: a + b, vec)
 
         return self._new(self.rows, other.cols, smat)
 

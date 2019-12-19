@@ -10,7 +10,7 @@ from collections import defaultdict
 from inspect import isfunction
 
 from sympy.assumptions.refine import refine
-from sympy.core import SympifyError
+from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
 from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
@@ -23,7 +23,6 @@ from sympy.core.sympify import sympify
 from sympy.functions import Abs
 from sympy.polys import cancel, together
 from sympy.simplify import simplify as _simplify
-from sympy.simplify.simplify import count_ops, dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -2144,18 +2143,14 @@ class MatrixArithmetic(MatrixRequired):
 
     def _eval_matrix_mul(self, other, mulsimp=None):
         def entry(i, j):
+            vec = [self[i,k]*other[k,j] for k in range(self.cols)]
             try:
-                return sum(self[i,k]*other[k,j] for k in range(self.cols))
-            except TypeError:
-                # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+                return Add(*vec)
+            except (TypeError, SympifyError):
+                # Some matrices don't work with `sum` or `Add`
                 # They don't work with `sum` because `sum` tries to add `0`
-                # initially, and for a matrix, that is a mix of a scalar and
-                # a matrix, which raises a TypeError. Fall back to a
-                # block-matrix-safe way to multiply if the `sum` fails.
-                ret = self[i, 0]*other[0, j]
-                for k in range(1, self.cols):
-                    ret += self[i, k]*other[k, j]
-                return ret
+                # Fall back to a safe way to multiply if the `Add` fails.
+                return reduce(lambda a, b: a + b, vec)
 
         if mulsimp:
             return self._new(self.rows, other.cols, lambda i, j:
@@ -2643,3 +2638,62 @@ def classof(A, B):
             return A.__class__
 
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
+
+
+from sympy.core.function import expand_mul
+def dotprodsimp(a, b):
+    """Sum-of-products with intermediate product simplification targeted at
+    the kind of blowup that occurs during summation of products. Intended to
+    reduce expression blowup during matrix multiplication or other similar
+    operations.
+
+    Parameters
+    ==========
+
+    a, b : iterable
+        These will be multiplied then summed together using simplification on
+        the intermediate products and cancelling at the end. The elements must
+        already be sympyfied and the sequences need not be of the same length,
+        the shorter will be used.
+    """
+
+    itra = iter(a)
+    itrb = iter(b)
+
+    try: # check for zero length
+        prod = next(itra)*next(itrb)
+    except StopIteration:
+        return S.Zero
+
+    # part 1, the expanded summation
+    expr = expand_mul(prod) # init first element so all ops remain in domain of matrix elements (not starting with scalar 0)
+
+    for a, b in zip(itra,itrb):
+        expr += expand_mul(a*b)
+
+    # part 2, the cancelation and grouping
+    exprops  = count_ops(expr)
+    expr2    = expr.expand(power_base=False, power_exp=False, log=False, multinomial=True, basic=False)
+    expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
+
+    if exprops < 6: # empirically tested cutoff for expensive simplification
+        return expr
+
+    expr2    = cancel(expr)
+    expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
+
+    expr3    = together(expr2, deep=True)
+    expr3ops = count_ops(expr3)
+
+    if expr3ops < exprops:
+        return expr3
+
+    return expr
