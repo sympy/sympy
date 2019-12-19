@@ -330,7 +330,9 @@ class frac(Function):
 
         real = _eval(real)
         imag = _eval(imag)
-        return real + S.ImaginaryUnit*imag
+
+        if real is not None and imag is not None:
+            return real + S.ImaginaryUnit*imag
 
     def _eval_rewrite_as_floor(self, arg, **kwargs):
         return arg - floor(arg)
