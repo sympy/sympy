@@ -181,7 +181,7 @@ def _monotonic_sign(self):
                 a.is_rational and \
                 all(p.exp.is_Integer for p in a.atoms(Pow) if p.is_Pow) and \
                 (a.is_positive or a.is_negative):
-            v = S(1)
+            v = S.One
             for ai in Mul.make_args(a):
                 if ai.is_number:
                     v *= ai
@@ -973,7 +973,7 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
                 numers.append(term.coeff*numer.as_expr())
         else:
             numers = [t.as_expr() for t in terms]
-            denom = Term(S(1)).numer
+            denom = Term(S.One).numer
 
         cont = cont.as_expr()
         numer = Add(*numers)

@@ -107,7 +107,6 @@ known_functions = {
     "DiracDelta": [(lambda x: True, "DiracDelta")],
     "Heaviside": [(lambda x: True, "HeavisideTheta")],
     "KroneckerDelta": [(lambda *x: True, "KroneckerDelta")],
-    "LambertW": [(lambda x: True, "ProductLog")],
 }
 
 
@@ -205,7 +204,9 @@ class MCodePrinter(CodePrinter):
         return 'GoldenRatio'
 
     def _print_TribonacciConstant(self, expr):
-        return self.doprint(expr._eval_expand_func())
+        expanded = expr.expand(func=True)
+        PREC = precedence(expr)
+        return self.parenthesize(expanded, PREC)
 
     def _print_EulerGamma(self, expr):
         return 'EulerGamma'
@@ -302,6 +303,12 @@ class MCodePrinter(CodePrinter):
         return expr.func.__name__ + "[%s]" % self.stringify(expr.args, ", ")
 
     _print_MinMaxBase = _print_Function
+
+    def _print_LambertW(self, expr):
+        if len(expr.args) == 1:
+            return "ProductLog[{}]".format(self._print(expr.args[0]))
+        return "ProductLog[{}, {}]".format(
+            self._print(expr.args[1]), self._print(expr.args[0]))
 
     def _print_Integral(self, expr):
         if len(expr.variables) == 1 and not expr.limits[0][1:]:

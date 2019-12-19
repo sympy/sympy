@@ -186,7 +186,35 @@ def fuzzy_or(args):
     None
 
     """
-    return fuzzy_not(fuzzy_and(fuzzy_not(i) for i in args))
+    rv = False
+    for ai in args:
+        ai = fuzzy_bool(ai)
+        if ai is True:
+            return True
+        if rv is False:  # this will stop updating if a None is ever trapped
+            rv = ai
+    return rv
+
+
+def fuzzy_xor(args):
+    """Return None if any element of args is not True or False, else
+    True (if there are an odd number of True elements), else False."""
+    t = f = 0
+    for a in args:
+        ai = fuzzy_bool(a)
+        if ai:
+            t += 1
+        elif ai is False:
+            f += 1
+        else:
+            return
+    return t % 2 == 1
+
+
+def fuzzy_nand(args):
+    """Return False if all args are True, True if they are all False,
+    else None."""
+    return fuzzy_not(fuzzy_and(args))
 
 
 class Logic(object):

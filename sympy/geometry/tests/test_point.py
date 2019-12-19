@@ -1,12 +1,9 @@
-from sympy import I, Rational, Symbol, pi, sqrt
+from sympy import I, Rational, Symbol, pi, sqrt, S
 from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.matrices import Matrix
 from sympy.utilities.iterables import subsets, permutations, cartes
 from sympy.utilities.pytest import raises, warns
-
-import traceback
-import sys
 
 
 def test_point():
@@ -16,20 +13,19 @@ def test_point():
     x2 = Symbol('x2', real=True)
     y1 = Symbol('y1', real=True)
     y2 = Symbol('y2', real=True)
-    half = Rational(1, 2)
+    half = S.Half
     p1 = Point(x1, x2)
     p2 = Point(y1, y2)
     p3 = Point(0, 0)
     p4 = Point(1, 1)
     p5 = Point(0, 1)
-    line = Line(Point(1,0), slope = 1)
+    line = Line(Point(1, 0), slope=1)
 
     assert p1 in p1
     assert p1 not in p2
     assert p2.y == y2
     assert (p3 + p4) == p4
     assert (p2 - p1) == Point(y1 - x1, y2 - x2)
-    assert p4*5 == Point(5, 5)
     assert -p2 == Point(-y1, -y2)
     raises(ValueError, lambda: Point(3, I))
     raises(ValueError, lambda: Point(2*I, I))
@@ -95,13 +91,14 @@ def test_point():
 
     assert p4 * 5 == Point(5, 5)
     assert p4 / 5 == Point(0.2, 0.2)
+    assert 5 * p4 == Point(5, 5)
 
     raises(ValueError, lambda: Point(0, 0) + 10)
 
     # Point differences should be simplified
     assert Point(x*(x - 1), y) - Point(x**2 - x, y + 1) == Point(0, -1)
 
-    a, b = Rational(1, 2), Rational(1, 3)
+    a, b = S.Half, Rational(1, 3)
     assert Point(a, b).evalf(2) == \
         Point(a.n(2), b.n(2), evaluate=False)
     raises(ValueError, lambda: Point(1, 2) + 1)
@@ -131,7 +128,7 @@ def test_point3D():
     y1 = Symbol('y1', real=True)
     y2 = Symbol('y2', real=True)
     y3 = Symbol('y3', real=True)
-    half = Rational(1, 2)
+    half = S.Half
     p1 = Point3D(x1, x2, x3)
     p2 = Point3D(y1, y2, y3)
     p3 = Point3D(0, 0, 0)
@@ -143,7 +140,6 @@ def test_point3D():
     assert p2.y == y2
     assert (p3 + p4) == p4
     assert (p2 - p1) == Point3D(y1 - x1, y2 - x2, y3 - x3)
-    assert p4*5 == Point3D(5, 5, 5)
     assert -p2 == Point3D(-y1, -y2, -y3)
 
     assert Point(34.05, sqrt(3)) == Point(Rational(681, 20), sqrt(3))
@@ -172,6 +168,7 @@ def test_point3D():
 
     assert p4 * 5 == Point3D(5, 5, 5)
     assert p4 / 5 == Point3D(0.2, 0.2, 0.2)
+    assert 5 * p4 == Point3D(5, 5, 5)
 
     raises(ValueError, lambda: Point3D(0, 0, 0) + 10)
 
@@ -179,7 +176,7 @@ def test_point3D():
     assert Point3D(x*(x - 1), y, 2) - Point3D(x**2 - x, y + 1, 1) == \
         Point3D(0, -1, 1)
 
-    a, b, c = Rational(1, 2), Rational(1, 3), Rational(1, 4)
+    a, b, c = S.Half, Rational(1, 3), Rational(1, 4)
     assert Point3D(a, b, c).evalf(2) == \
         Point(a.n(2), b.n(2), c.n(2), evaluate=False)
     raises(ValueError, lambda: Point3D(1, 2, 3) + 1)
@@ -333,7 +330,7 @@ def test_arguments():
         for p in singles3d:
             getattr(p3d, func)(p)
     for func in test_double:
-        for p in doubles2d:
+        for p in doubles3d:
             getattr(p3d, func)(*p)
 
     # test 4D

@@ -9,7 +9,7 @@
  *
  */
 
-@import url("basic.css");
+@import url("classic.css");
 @import url(https://fonts.googleapis.com/css?family=Open+Sans);
 
 /* -- page layout ----------------------------------------------------------- */
@@ -336,4 +336,11 @@ code{
     background-color: #ECF0F3;
     border-radius: 3px;
     padding: 2px;
+}
+
+
+p.rubric {
+    font-size: 18px;
+    color: #2f441e;
+    font-family: "Trebuchet MS", sans-serif;
 }

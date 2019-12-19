@@ -1,7 +1,6 @@
 from sympy.core.backend import Symbol
-from sympy.physics.mechanics import (RigidBody, Particle, ReferenceFrame,
-                                     inertia)
-from sympy.physics.vector import Point, Vector
+from sympy.physics.vector import Point, Vector, ReferenceFrame
+from sympy.physics.mechanics import RigidBody, Particle, inertia
 
 __all__ = ['Body']
 

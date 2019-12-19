@@ -102,10 +102,29 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
-# lambdify with tensorflow and numexpr is tested here
 
-# TODO: Generate these tests automatically
-if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
+# Test tensorflow 1 support (which is a separate conda environment)
+if [[ "${TEST_TENSORFLOW_1}" == "true" ]]; then
+    cat << EOF | python
+print('Testing optional dependencies')
+
+import sympy
+test_list = [
+    "tensorflow",
+]
+
+doctest_list = [
+    "tensorflow",
+]
+
+if not (sympy.test(*test_list) and sympy.doctest(*doctest_list)):
+    raise Exception('Tests failed')
+EOF
+
+    # lambdify with tensorflow and numexpr is tested here
+
+    # TODO: Generate these tests automatically
+elif [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     cat << EOF | python
 print('Testing optional dependencies')
 
@@ -137,9 +156,8 @@ test_list = [
     # ipython
     '*ipython*',
 
-    # antlr
-    'sympy/parsing/tests/test_autolev',
-    'sympy/parsing/tests/test_latex',
+    # antlr, lfortran, clang
+    'sympy/parsing/',
 
     # matchpy
     '*rubi*',
@@ -151,6 +169,11 @@ test_list = [
 
     # cloudpickle
     'pickling',
+
+    # pycosat
+    'sympy/logic',
+    'sympy/assumptions',
+
 ]
 
 blacklist = [
@@ -180,15 +203,19 @@ doctest_list = [
     # ipython
     '*ipython*',
 
-    # antlr
-    'sympy/parsing/autolev',
-    'sympy/parsing/latex',
+    # antlr, lfortran, clang
+    'sympy/parsing/',
 
     # matchpy
     '*rubi*',
 
     # codegen
     'sympy/codegen/',
+
+    # pycosat
+    'sympy/logic',
+    'sympy/assumptions',
+
 ]
 
 if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
@@ -241,4 +268,9 @@ EOF
 fi
 if [[ "${TEST_COVERAGE}" == "true" ]]; then
     unset COVERAGE_PROCESS_START
+fi
+
+if [[ "${TEST_EXAMPLES}" == "true" ]]; then
+    # No need to change directory if executed after the rst doctest
+    examples/all.py -q
 fi

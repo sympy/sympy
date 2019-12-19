@@ -336,7 +336,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     See Also
     ========
     sympy.core.power.integer_nthroot
-    primetest.is_square
+    sympy.ntheory.primetest.is_square
     """
     from sympy.core.power import integer_nthroot
     n = as_int(n)
@@ -1014,7 +1014,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         fac = factorint(n, limit=limit, use_trial=use_trial,
                            use_rho=use_rho, use_pm1=use_pm1,
                            verbose=verbose, visual=False, multiple=False)
-        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S.One/p]*(-fac[p])
                                for p in sorted(fac)), [])
         return factorlist
 
@@ -1178,7 +1178,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                     facs = factorint(r, limit=limit, use_trial=use_trial,
                                      use_rho=use_rho, use_pm1=use_pm1,
                                      verbose=verbose)
-                    factors.update(facs)
+                    for k, v in facs.items():
+                        factors[k] = factors.get(k, 0) + v
                 raise StopIteration
 
             # ...see if factorization can be terminated
@@ -1301,7 +1302,7 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         fac = factorrat(rat, limit=limit, use_trial=use_trial,
                   use_rho=use_rho, use_pm1=use_pm1,
                   verbose=verbose, visual=False, multiple=False)
-        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S.One/p]*(-fac[p])
                                for p, _ in sorted(fac.items(),
                                                         key=lambda elem: elem[0]
                                                         if elem[1] > 0
@@ -1676,6 +1677,8 @@ class totient(Function):
     1
     >>> totient(25)
     20
+    >>> totient(45) == totient(5)*totient(9)
+    True
 
     See Also
     ========
@@ -1696,15 +1699,43 @@ class totient(Function):
             if n < 1:
                 raise ValueError("n must be a positive integer")
             factors = factorint(n)
-            t = 1
-            for p, k in factors.items():
-                t *= (p - 1) * p**(k - 1)
-            return t
+            return cls._from_factors(factors)
         elif not isinstance(n, Expr) or (n.is_integer is False) or (n.is_positive is False):
             raise ValueError("n must be a positive integer")
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
+
+    @classmethod
+    def _from_distinct_primes(self, *args):
+        """Subroutine to compute totient from the list of assumed
+        distinct primes
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory.factor_ import totient
+        >>> totient._from_distinct_primes(5, 7)
+        24
+        """
+        from functools import reduce
+        return reduce(lambda i, j: i * (j-1), args, 1)
+
+    @classmethod
+    def _from_factors(self, factors):
+        """Subroutine to compute totient from already-computed factors
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory.factor_ import totient
+        >>> totient._from_factors({5: 2})
+        20
+        """
+        t = 1
+        for p, k in factors.items():
+            t *= (p - 1) * p**(k - 1)
+        return t
 
 
 class reduced_totient(Function):
@@ -1744,13 +1775,27 @@ class reduced_totient(Function):
             if n < 1:
                 raise ValueError("n must be a positive integer")
             factors = factorint(n)
-            t = 1
-            for p, k in factors.items():
-                if p == 2 and k > 2:
-                    t = ilcm(t, 2**(k - 2))
-                else:
-                    t = ilcm(t, (p - 1) * p**(k - 1))
-            return t
+            return cls._from_factors(factors)
+
+    @classmethod
+    def _from_factors(self, factors):
+        """Subroutine to compute totient from already-computed factors
+        """
+        t = 1
+        for p, k in factors.items():
+            if p == 2 and k > 2:
+                t = ilcm(t, 2**(k - 2))
+            else:
+                t = ilcm(t, (p - 1) * p**(k - 1))
+        return t
+
+    @classmethod
+    def _from_distinct_primes(self, *args):
+        """Subroutine to compute totient from the list of assumed
+        distinct primes
+        """
+        args = [p - 1 for p in args]
+        return ilcm(*args)
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])

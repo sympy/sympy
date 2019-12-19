@@ -324,7 +324,10 @@ def get_integer_part(expr, no, options, return_ints=False):
         gap = fastlog(iim) - iim_acc
     else:
         # ... or maybe the expression was exactly zero
-        return None, None, None, None
+        if return_ints:
+            return 0, 0
+        else:
+            return None, None, None, None
 
     margin = 10
 
@@ -1185,7 +1188,7 @@ def evalf_sum(expr, prec, options):
     limits = expr.limits
     if len(limits) != 1 or len(limits[0]) != 3:
         raise NotImplementedError
-    if func is S.Zero:
+    if func.is_zero:
         return None, None, prec, None
     prec2 = prec + 10
     try:

@@ -204,6 +204,20 @@ from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray, De
 from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray, SparseNDimArray
 from .ndim_array import NDimArray
 from .arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims
-from .array_comprehension import ArrayComprehension
+from .array_comprehension import ArrayComprehension, ArrayComprehensionMap
 
 Array = ImmutableDenseNDimArray
+
+__all__ = [
+    'MutableDenseNDimArray', 'ImmutableDenseNDimArray', 'DenseNDimArray',
+
+    'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'SparseNDimArray',
+
+    'NDimArray',
+
+    'tensorproduct', 'tensorcontraction', 'derive_by_array', 'permutedims',
+
+    'ArrayComprehension', 'ArrayComprehensionMap',
+
+    'Array',
+]

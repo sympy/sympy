@@ -13,9 +13,9 @@ class PlotCurve(PlotModeBase):
     def _on_calculate_verts(self):
         self.t_interval = self.intervals[0]
         self.t_set = list(self.t_interval.frange())
-        self.bounds = [[S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0]]
+        self.bounds = [[S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0]]
         evaluate = self._get_evaluator()
 
         self._calculating_verts_pos = 0.0

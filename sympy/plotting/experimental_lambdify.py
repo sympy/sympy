@@ -274,9 +274,6 @@ class Lambdifier(object):
         self.dict_str = self.get_dict_str()
         self.dict_fun = self.get_dict_fun()
         exprstr = str(expr)
-        # the & and | operators don't work on tuples, see discussion #12108
-        exprstr = exprstr.replace(" & "," and ").replace(" | "," or ")
-
         newexpr = self.tree2str_translate(self.str2tree(exprstr))
 
         # Constructing the namespaces
@@ -289,6 +286,7 @@ class Lambdifier(object):
         from sympy import sqrt
         namespace.update({'sqrt': sqrt})
         namespace.update({'Eq': lambda x, y: x == y})
+        namespace.update({'Ne': lambda x, y: x != y})
         # End workaround.
         if use_python_math:
             namespace.update({'math': __import__('math')})
@@ -592,6 +590,9 @@ class Lambdifier(object):
             new_name = self.dict_fun[func_name]
             argstr = self.tree2str_translate(argtree)
             return new_name + '(' + argstr
+        elif func_name in ['Eq', 'Ne']:
+            op = {'Eq': '==', 'Ne': '!='}
+            return "(lambda x, y: x {} y)({}".format(op[func_name], self.tree2str_translate(argtree))
         else:
             template = '(%s(%s)).evalf(' if self.use_evalf else '%s(%s'
             if self.float_wrap_evalf:

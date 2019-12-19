@@ -143,7 +143,6 @@ class Indexed(Expr):
     is_symbol = True
     is_Atom = True
 
-
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
         from sympy.tensor.array.ndim_array import NDimArray
@@ -438,10 +437,9 @@ class IndexedBase(Expr, NotIterable):
 
         assumptions, kw_args = _filter_assumptions(kw_args)
         if isinstance(label, string_types):
-            label = Symbol(label)
+            label = Symbol(label, **assumptions)
         elif isinstance(label, Symbol):
             assumptions = label._merge(assumptions)
-            label = Symbol(label.name)
         elif isinstance(label, (MatrixBase, NDimArray)):
             return label
         elif isinstance(label, Iterable):

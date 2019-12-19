@@ -1,5 +1,5 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
-    Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
+    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range, Xor)
 from sympy.abc import x, y
 from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
@@ -11,10 +11,9 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.core.compatibility import exec_, HAS_GMPY, PY3
+from sympy.core.compatibility import exec_, HAS_GMPY, range
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-from sympy.external import import_module
 
 import mpmath
 from collections import defaultdict, OrderedDict
@@ -36,7 +35,7 @@ def test_sympify1():
     assert sympify("   x") == Symbol("x")
     assert sympify("   x   ") == Symbol("x")
     # issue 4877
-    n1 = Rational(1, 2)
+    n1 = S.Half
     assert sympify('--.5') == n1
     assert sympify('-1/2') == -n1
     assert sympify('-+--.5') == -n1
@@ -261,7 +260,7 @@ def test_lambda():
     assert sympify('lambda: 1') == Lambda((), 1)
     assert sympify('lambda x: x') == Lambda(x, x)
     assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
-    assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x + y)
+    assert sympify('lambda x, y: 2*x+y') == Lambda((x, y), 2*x + y)
 
 
 def test_lambda_raises():
@@ -509,7 +508,7 @@ def test_kernS():
 
 def test_issue_6540_6552():
     assert S('[[1/3,2], (2/5,)]') == [[Rational(1, 3), 2], (Rational(2, 5),)]
-    assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (Rational(1, 2),)]
+    assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (S.Half,)]
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
 
@@ -542,9 +541,10 @@ def test_issue_10295():
 
     B = numpy.array([-7, x, 3*y**2])
     sB = S(B)
-    assert B[0] == -7
-    assert B[1] == x
-    assert B[2] == 3*y**2
+    assert sB.shape == (3,)
+    assert B[0] == sB[0] == -7
+    assert B[1] == sB[1] == x
+    assert B[2] == sB[2] == 3*y**2
 
     C = numpy.arange(0, 24)
     C.resize(2,3,4)
@@ -561,19 +561,14 @@ def test_issue_10295():
 
 def test_Range():
     # Only works in Python 3 where range returns a range type
-    if PY3:
-        builtin_range = range
-    else:
-        builtin_range = xrange
-
-    assert sympify(builtin_range(10)) == Range(10)
-    assert _sympify(builtin_range(10)) == Range(10)
+    assert sympify(range(10)) == Range(10)
+    assert _sympify(range(10)) == Range(10)
 
 
 def test_sympify_set():
     n = Symbol('n')
     assert sympify({n}) == FiniteSet(n)
-    assert sympify(set()) == EmptySet()
+    assert sympify(set()) == EmptySet
 
 
 def test_sympify_numpy():
@@ -695,3 +690,8 @@ def test_issue_16759():
     assert S.Half not in d
     assert Float(.5) in d
     assert d[.5] is S.One
+
+
+def test_issue_17811():
+    a = Function('a')
+    assert sympify('a(x)*5', evaluate=False) == Mul(a(x), 5, evaluate=False)

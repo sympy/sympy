@@ -1,7 +1,7 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
     integrate, log, Mul, N, oo, pi, Pow, product, Product,
-    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
+    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
@@ -210,17 +210,17 @@ def test_evalf_bugs():
     # >>> n = Some Number
     # n*nan, n/nan, n*inf, n/inf
     # n+nan, n-nan, n+inf, n-inf
-    assert (0*E**(oo)).n() == S.NaN
-    assert (0/E**(oo)).n() == S.Zero
+    assert (0*E**(oo)).n() is S.NaN
+    assert (0/E**(oo)).n() is S.Zero
 
-    assert (0+E**(oo)).n() == S.Infinity
-    assert (0-E**(oo)).n() == S.NegativeInfinity
+    assert (0+E**(oo)).n() is S.Infinity
+    assert (0-E**(oo)).n() is S.NegativeInfinity
 
-    assert (5*E**(oo)).n() == S.Infinity
-    assert (5/E**(oo)).n() == S.Zero
+    assert (5*E**(oo)).n() is S.Infinity
+    assert (5/E**(oo)).n() is S.Zero
 
-    assert (5+E**(oo)).n() == S.Infinity
-    assert (5-E**(oo)).n() == S.NegativeInfinity
+    assert (5+E**(oo)).n() is S.Infinity
+    assert (5-E**(oo)).n() is S.NegativeInfinity
 
     #issue 7416
     assert as_mpmath(0.0, 10, {'chop': True}) == 0
@@ -248,9 +248,9 @@ def test_evalf_integer_parts():
         long(11188719610782480504630258070757734324011354208865721592720336800)
     assert int(ceiling(factorial(50)/E, evaluate=False).evalf(70)) == \
         long(11188719610782480504630258070757734324011354208865721592720336801)
-    assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1, 2)))
+    assert int(floor((GoldenRatio**999 / sqrt(5) + S.Half))
                .evalf(1000)) == fibonacci(999)
-    assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1, 2)))
+    assert int(floor((GoldenRatio**1000 / sqrt(5) + S.Half))
                .evalf(1000)) == fibonacci(1000)
 
     assert ceiling(x).evalf(subs={x: 3}) == 3
@@ -490,8 +490,18 @@ def test_issue_8853():
 
     assert get_integer_part(S.Half, -1, {}, True) == (0, 0)
     assert get_integer_part(S.Half, 1, {}, True) == (1, 0)
-    assert get_integer_part(-S.Half, -1, {}, True) == (-1, 0)
-    assert get_integer_part(-S.Half, 1, {}, True) == (0, 0)
+    assert get_integer_part(Rational(-1, 2), -1, {}, True) == (-1, 0)
+    assert get_integer_part(Rational(-1, 2), 1, {}, True) == (0, 0)
+
+
+def test_issue_17681():
+    class identity_func(Function):
+
+        def _eval_evalf(self, *args, **kwargs):
+            return self.args[0].evalf(*args, **kwargs)
+
+    assert floor(identity_func(S(0))) == 0
+    assert get_integer_part(S(0), 1, {}, True) == (0, 0)
 
 
 def test_issue_9326():
@@ -567,3 +577,7 @@ def test_issue_13425():
     assert N('2**.5', 30) == N('sqrt(2)', 30)
     assert N('x - x', 30) == 0
     assert abs((N('pi*.1', 22)*10 - pi).n()) < 1e-22
+
+
+def test_issue_17421():
+    assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I

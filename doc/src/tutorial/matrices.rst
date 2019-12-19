@@ -461,8 +461,8 @@ by injecting a custom zero test with warnings enabled.
     ...         result = None
     ...
     ...     # Warnings if evaluated into None
-    ...     if result == None:
-    ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
+    ...     if result is None:
+    ...         warnings.warn("Zero testing of {} evaluated into None".format(x))
     ...     return result
     ...
     >>> m.nullspace(iszerofunc=my_iszero) # doctest: +SKIP
@@ -487,8 +487,8 @@ while being harmless to other polynomials or transcendental functions.
     ...         result = None
     ...
     ...     # Warnings if evaluated into None
-    ...     if result == None:
-    ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
+    ...     if result is None:
+    ...         warnings.warn("Zero testing of {} evaluated into None".format(x))
     ...     return result
     ...
     >>> m.nullspace(iszerofunc=my_iszero) # doctest: +SKIP

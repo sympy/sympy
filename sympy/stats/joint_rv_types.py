@@ -2,7 +2,7 @@ from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, I
                    Range, factorial, Mul, Integer,
                    Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
                    Intersection, Matrix, symbols, Product, IndexedBase)
-from sympy.matrices import ImmutableMatrix
+from sympy.matrices import ImmutableMatrix, MatrixSymbol
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
     JointDistributionHandmade, MarginalDistribution)
@@ -59,7 +59,7 @@ def JointRV(symbol, pdf, _set=None):
     symbol = sympify(symbol)
     syms = list(i for i in pdf.free_symbols if isinstance(i, Indexed)
         and i.base == IndexedBase(symbol))
-    syms.sort(key = lambda index: index.args[1])
+    syms = tuple(sorted(syms, key = lambda index: index.args[1]))
     _set = S.Reals**len(syms)
     pdf = Lambda(syms, pdf)
     dist = JointDistributionHandmade(pdf, _set)
@@ -80,37 +80,38 @@ class MultivariateNormalDistribution(JointDistribution):
 
     @property
     def set(self):
-        k = len(self.mu)
+        k = self.mu.shape[0]
         return S.Reals**k
 
     @staticmethod
     def check(mu, sigma):
-        _value_check(len(mu) == len(sigma.col(0)),
+        _value_check(mu.shape[0] == sigma.shape[0],
             "Size of the mean vector and covariance matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
-        _value_check((i > 0 for i in sigma.eigenvals().keys()),
+        if not isinstance(sigma, MatrixSymbol):
+            _value_check(sigma.is_positive_definite,
             "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
-        k = len(mu)
+        k = mu.shape[0]
         args = ImmutableMatrix(args)
         x = args - mu
-        return  S(1)/sqrt((2*pi)**(k)*det(sigma))*exp(
-            -S(1)/2*x.transpose()*(sigma.inv()*\
+        return  S.One/sqrt((2*pi)**(k)*det(sigma))*exp(
+            Rational(-1, 2)*x.transpose()*(sigma.inv()*\
                 x))[0]
 
     def marginal_distribution(self, indices, sym):
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
         _mu, _sigma = self.mu, self.sigma
-        k = len(self.mu)
+        k = self.mu.shape[0]
         for i in range(k):
             if i not in indices:
                 _mu = _mu.row_del(i)
                 _sigma = _sigma.col_del(i)
                 _sigma = _sigma.row_del(i)
-        return Lambda(sym, S(1)/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
-            -S(1)/2*(_mu - sym).transpose()*(_sigma.inv()*\
+        return Lambda(tuple(sym), S.One/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
+            Rational(-1, 2)*(_mu - sym).transpose()*(_sigma.inv()*\
                 (_mu - sym)))[0])
 
 #-------------------------------------------------------------------------------
@@ -122,21 +123,22 @@ class MultivariateLaplaceDistribution(JointDistribution):
 
     @property
     def set(self):
-        k = len(self.mu)
+        k = self.mu.shape[0]
         return S.Reals**k
 
     @staticmethod
     def check(mu, sigma):
-        _value_check(len(mu) == len(sigma.col(0)),
-            "Size of the mean vector and covariance matrix are incorrect.")
-        #check if covariance matrix is positive definite or not.
-        _value_check((i > 0 for i in sigma.eigenvals().keys()),
-            "The covariance matrix must be positive definite. ")
+        _value_check(mu.shape[0] == sigma.shape[0],
+                     "Size of the mean vector and covariance matrix are incorrect.")
+        # check if covariance matrix is positive definite or not.
+        if not isinstance(sigma, MatrixSymbol):
+            _value_check(sigma.is_positive_definite,
+                         "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
         mu_T = mu.transpose()
-        k = S(len(mu))
+        k = S(mu.shape[0])
         sigma_inv = sigma.inv()
         args = ImmutableMatrix(args)
         args_T = args.transpose()
@@ -157,21 +159,22 @@ class MultivariateTDistribution(JointDistribution):
 
     @property
     def set(self):
-        k = len(self.mu)
+        k = self.mu.shape[0]
         return S.Reals**k
 
     @staticmethod
     def check(mu, sigma, v):
-        _value_check(len(mu) == len(sigma.col(0)),
-            "Size of the location vector and shape matrix are incorrect.")
-        #check if covariance matrix is positive definite or not.
-        _value_check((i > 0 for i in sigma.eigenvals().keys()),
-            "The shape matrix must be positive definite. ")
+        _value_check(mu.shape[0] == sigma.shape[0],
+                     "Size of the location vector and shape matrix are incorrect.")
+        # check if covariance matrix is positive definite or not.
+        if not isinstance(sigma, MatrixSymbol):
+            _value_check(sigma.is_positive_definite,
+                         "The shape matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.shape_mat
         v = S(self.dof)
-        k = S(len(mu))
+        k = S(mu.shape[0])
         sigma_inv = sigma.inv()
         args = ImmutableMatrix(args)
         x = args - mu
@@ -222,7 +225,7 @@ class NormalGammaDistribution(JointDistribution):
         mu = self.mu
 
         return beta**alpha*sqrt(lamda)/(gamma(alpha)*sqrt(2*pi))*\
-        tau**(alpha - S(1)/2)*exp(-1*beta*tau)*\
+        tau**(alpha - S.Half)*exp(-1*beta*tau)*\
         exp(-1*(lamda*tau*(x - mu)**2)/S(2))
 
     def marginal_distribution(self, indices, *sym):
@@ -232,7 +235,7 @@ class NormalGammaDistribution(JointDistribution):
             #For marginal over `x`, return non-standardized Student-T's
             #distribution
             x = sym[0]
-            v, mu, sigma = self.alpha - S(1)/2, self.mu, \
+            v, mu, sigma = self.alpha - S.Half, self.mu, \
                 S(self.beta)/(self.lamda * self.alpha)
             return Lambda(sym, gamma((v + 1)/2)/(gamma(v/2)*sqrt(pi*v)*sigma)*\
                 (1 + 1/v*((x - mu)/sigma)**2)**((-v -1)/2))
@@ -358,7 +361,7 @@ class MultivariateEwensDistribution(JointDistribution):
         prod_set = Range(0, self.n + 1)
         for i in range(2, self.n + 1):
             prod_set *= Range(0, self.n//i + 1)
-        return prod_set
+        return prod_set.flatten()
 
     def pdf(self, *syms):
         n, theta = self.n, self.theta

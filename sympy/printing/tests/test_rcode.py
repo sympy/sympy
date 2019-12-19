@@ -12,8 +12,6 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
 from sympy import rcode
-from difflib import Differ
-from pprint import pprint
 
 x, y, z = symbols('x,y,z')
 
@@ -52,7 +50,6 @@ def test_rcode_Max():
     assert rcode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
 
 def test_rcode_constants_mathh():
-    p=rcode(exp(1))
     assert rcode(exp(1)) == "exp(1)"
     assert rcode(pi) == "pi"
     assert rcode(oo) == "Inf"

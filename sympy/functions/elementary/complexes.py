@@ -284,7 +284,6 @@ class sign(Function):
     Abs, conjugate
     """
 
-    is_finite = True
     is_complex = True
 
     def doit(self, **hints):
@@ -392,7 +391,7 @@ class sign(Function):
     def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         from sympy.functions.special.delta_functions import Heaviside
         if arg.is_extended_real:
-            return Heaviside(arg)*2 - 1
+            return Heaviside(arg, H0=S(1)/2) * 2 - 1
 
     def _eval_simplify(self, **kwargs):
         return self.func(self.args[0].factor())  # XXX include doit?
@@ -462,6 +461,7 @@ class Abs(Function):
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
         from sympy.core.function import expand_mul
+        from sympy.core.power import Pow
 
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
@@ -471,15 +471,26 @@ class Abs(Function):
             raise TypeError("Bad argument type for Abs(): %s" % type(arg))
         # handle what we can
         arg = signsimp(arg, evaluate=False)
+        n, d = arg.as_numer_denom()
+        if d.free_symbols and not n.free_symbols:
+            return cls(n)/cls(d)
+
         if arg.is_Mul:
             known = []
             unk = []
             for t in arg.args:
-                tnew = cls(t)
-                if isinstance(tnew, cls):
-                    unk.append(tnew.args[0])
+                if t.is_Pow and t.exp.is_integer and t.exp.is_negative:
+                    bnew = cls(t.base)
+                    if isinstance(bnew, cls):
+                        unk.append(t)
+                    else:
+                        known.append(Pow(bnew, t.exp))
                 else:
-                    known.append(tnew)
+                    tnew = cls(t)
+                    if isinstance(tnew, cls):
+                        unk.append(t)
+                    else:
+                        known.append(tnew)
             known = Mul(*known)
             unk = cls(Mul(*unk), evaluate=False) if unk else S.One
             return known*unk
@@ -495,8 +506,6 @@ class Abs(Function):
                         return arg
                     if base is S.NegativeOne:
                         return S.One
-                    if isinstance(base, cls) and exponent is S.NegativeOne:
-                        return arg
                     return Abs(base)**exponent
                 if base.is_extended_nonnegative:
                     return base**re(exponent)
@@ -508,7 +517,6 @@ class Abs(Function):
                 a, b = log(base).as_real_imag()
                 z = a + I*b
                 return exp(re(exponent*z))
-
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
@@ -613,9 +621,14 @@ class Abs(Function):
     def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
         if arg.is_extended_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
+        elif arg.is_imaginary:
+            return Piecewise((I*arg, I*arg >= 0), (-I*arg, True))
 
     def _eval_rewrite_as_sign(self, arg, **kwargs):
         return arg/sign(arg)
+
+    def _eval_rewrite_as_conjugate(self, arg, **kwargs):
+        return (arg*conjugate(arg))**S.Half
 
 
 class arg(Function):
@@ -941,7 +954,7 @@ class periodic_argument(Function):
         if period == oo:
             return unbranched
         if period != oo:
-            n = ceiling(unbranched/period - S(1)/2)*period
+            n = ceiling(unbranched/period - S.Half)*period
             if not n.has(ceiling):
                 return unbranched - n
 
@@ -953,7 +966,7 @@ class periodic_argument(Function):
                 return self
             return unbranched._eval_evalf(prec)
         ub = periodic_argument(z, oo)._eval_evalf(prec)
-        return (ub - ceiling(ub/period - S(1)/2)*period)._eval_evalf(prec)
+        return (ub - ceiling(ub/period - S.Half)*period)._eval_evalf(prec)
 
 
 def unbranched_argument(arg):

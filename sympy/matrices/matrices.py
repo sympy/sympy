@@ -18,7 +18,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol, symbols
 from sympy.core.sympify import sympify
-from sympy.functions import exp, factorial
+from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import PurePoly, cancel, roots
@@ -284,7 +284,7 @@ class MatrixDeterminant(MatrixCommon):
         ========
 
         cofactor_matrix
-        transpose
+        sympy.matrices.common.MatrixCommon.transpose
         """
         return self.cofactor_matrix(method).transpose()
 
@@ -602,13 +602,16 @@ class MatrixReductions(MatrixDeterminant):
             raise ValueError("Unknown {} operation '{}'. Valid col operations "
                              "are 'n->kn', 'n<->m', 'n->n+km'".format(error_str, op))
 
+        # define self_col according to error_str
+        self_cols = self.cols if error_str == 'col' else self.rows
+
         # normalize and validate the arguments
         if op == "n->kn":
             col = col if col is not None else col1
             if col is None or k is None:
                 raise ValueError("For a {0} operation 'n->kn' you must provide the "
                                  "kwargs `{0}` and `k`".format(error_str))
-            if not 0 <= col <= self.cols:
+            if not 0 <= col < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
 
         if op == "n<->m":
@@ -623,9 +626,9 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("For a {0} operation 'n<->m' you must provide the "
                                  "kwargs `{0}1` and `{0}2`".format(error_str))
             col1, col2 = cols
-            if not 0 <= col1 <= self.cols:
+            if not 0 <= col1 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col1))
-            if not 0 <= col2 <= self.cols:
+            if not 0 <= col2 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
 
         if op == "n->n+km":
@@ -637,9 +640,9 @@ class MatrixReductions(MatrixDeterminant):
             if col == col2:
                 raise ValueError("For a {0} operation 'n->n+km' `{0}` and `{0}2` must "
                                  "be different.".format(error_str))
-            if not 0 <= col <= self.cols:
+            if not 0 <= col < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
-            if not 0 <= col2 <= self.cols:
+            if not 0 <= col2 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
 
         return op, col, k, col1, col2
@@ -1069,7 +1072,7 @@ class MatrixSubspaces(MatrixReductions):
         rankcheck = kwargs.get('rankcheck', False)
 
         def project(a, b):
-            return b * (a.dot(b) / b.dot(b))
+            return b * (a.dot(b, hermitian=True) / b.dot(b, hermitian=True))
 
         def perp_to_subspace(vec, basis):
             """projects vec onto the subspace given
@@ -1351,7 +1354,6 @@ class MatrixEigen(MatrixSubspaces):
         eigenvals
         MatrixSubspaces.nullspace
         """
-        from sympy.matrices import eye
 
         simplify = flags.get('simplify', True)
         if not isinstance(simplify, FunctionType):
@@ -2357,6 +2359,13 @@ class MatrixBase(MatrixDeprecated,
     def __ne__(self, other):
         return not self == other
 
+    def _diagonal_solve(self, rhs):
+        """Helper function of function diagonal_solve, without the error
+        checks, to be used privately.
+        """
+        return self._new(
+            rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
+
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
@@ -2951,8 +2960,8 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        conjugate: By-element conjugation
-        H: Hermite conjugation
+        sympy.matrices.common.MatrixCommon.conjugate: By-element conjugation
+        sympy.matrices.common.MatrixCommon.H: Hermite conjugation
         """
         from sympy.physics.matrices import mgamma
         if self.rows != 4:
@@ -3178,7 +3187,20 @@ class MatrixBase(MatrixDeprecated,
         return self.__class__(banded(size, bands))
 
     def exp(self):
-        """Return the exponentiation of a square matrix."""
+        """Return the exponential of a square matrix
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix
+
+        >>> t = Symbol('t')
+        >>> m = Matrix([[0, 1], [-1, 0]]) * t
+        >>> m.exp()
+        Matrix([
+        [    exp(I*t)/2 + exp(-I*t)/2, -I*exp(I*t)/2 + I*exp(-I*t)/2],
+        [I*exp(I*t)/2 - I*exp(-I*t)/2,      exp(I*t)/2 + exp(-I*t)/2]])
+        """
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Exponentiation is valid only for square matrices")
@@ -3199,6 +3221,127 @@ class MatrixBase(MatrixDeprecated,
             return type(self)(re(ret))
         else:
             return type(self)(ret)
+
+    def _eval_matrix_log_jblock(self):
+        """Helper function to compute logarithm of a jordan block.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix
+        >>> l = Symbol('lamda')
+
+        A trivial example of 1*1 Jordan block:
+
+        >>> m = Matrix.jordan_block(1, l)
+        >>> m._eval_matrix_log_jblock()
+        Matrix([[log(lamda)]])
+
+        An example of 3*3 Jordan block:
+
+        >>> m = Matrix.jordan_block(3, l)
+        >>> m._eval_matrix_log_jblock()
+        Matrix([
+        [log(lamda),    1/lamda, -1/(2*lamda**2)],
+        [         0, log(lamda),         1/lamda],
+        [         0,          0,      log(lamda)]])
+        """
+        size = self.rows
+        l = self[0, 0]
+
+        if l.is_zero:
+            raise MatrixError(
+                'Could not take logarithm or reciprocal for the given '
+                'eigenvalue {}'.format(l))
+
+        bands = {0: log(l)}
+        for i in range(1, size):
+            bands[i] = -((-l) ** -i) / i
+
+        from .sparsetools import banded
+        return self.__class__(banded(size, bands))
+
+    def log(self, simplify=cancel):
+        """Return the logarithm of a square matrix
+
+        Parameters
+        ==========
+
+        simplify : function, bool
+            The function to simplify the result with.
+
+            Default is ``cancel``, which is effective to reduce the
+            expression growing for taking reciprocals and inverses for
+            symbolic matrices.
+
+        Examples
+        ========
+
+        >>> from sympy import S, Matrix
+
+        Examples for positive-definite matrices:
+
+        >>> m = Matrix([[1, 1], [0, 1]])
+        >>> m.log()
+        Matrix([
+        [0, 1],
+        [0, 0]])
+
+        >>> m = Matrix([[S(5)/4, S(3)/4], [S(3)/4, S(5)/4]])
+        >>> m.log()
+        Matrix([
+        [     0, log(2)],
+        [log(2),      0]])
+
+        Examples for non positive-definite matrices:
+
+        >>> m = Matrix([[S(3)/4, S(5)/4], [S(5)/4, S(3)/4]])
+        >>> m.log()
+        Matrix([
+        [         I*pi/2, log(2) - I*pi/2],
+        [log(2) - I*pi/2,          I*pi/2]])
+
+        >>> m = Matrix(
+        ...     [[0, 0, 0, 1],
+        ...      [0, 0, 1, 0],
+        ...      [0, 1, 0, 0],
+        ...      [1, 0, 0, 0]])
+        >>> m.log()
+        Matrix([
+        [ I*pi/2,       0,       0, -I*pi/2],
+        [      0,  I*pi/2, -I*pi/2,       0],
+        [      0, -I*pi/2,  I*pi/2,       0],
+        [-I*pi/2,       0,       0,  I*pi/2]])
+        """
+        if not self.is_square:
+            raise NonSquareMatrixError(
+                "Logarithm is valid only for square matrices")
+
+        try:
+            if simplify:
+                P, J = simplify(self).jordan_form()
+            else:
+                P, J = self.jordan_form()
+
+            cells = J.get_diag_blocks()
+        except MatrixError:
+            raise NotImplementedError(
+                "Logarithm is implemented only for matrices for which "
+                "the Jordan normal form can be computed")
+
+        blocks = [
+            cell._eval_matrix_log_jblock()
+            for cell in cells]
+        from sympy.matrices import diag
+        eJ = diag(*blocks)
+
+        if simplify:
+            ret = simplify(P * eJ * simplify(P.inv()))
+            ret = self.__class__(ret)
+        else:
+            ret = P * eJ * P.inv()
+
+        return ret
 
     def gauss_jordan_solve(self, B, freevar=False):
         """
@@ -3304,6 +3447,8 @@ class MatrixBase(MatrixDeprecated,
         """
         from sympy.matrices import Matrix, zeros
 
+        cls = self.__class__
+
         aug = self.hstack(self.copy(), B.copy())
         B_cols = B.cols
         row, col = aug[:, :-B_cols].shape
@@ -3339,9 +3484,7 @@ class MatrixBase(MatrixDeprecated,
             col - rank, B_cols)
 
         # Full parametric solution
-        V = A[:rank,:]
-        for c in reversed(pivots):
-            V.col_del(c)
+        V = A[:rank, [c for c in range(A.cols) if c not in pivots]]
         vt = v[:rank, :]
         free_sol = tau.vstack(vt - V * tau, tau)
 
@@ -3350,6 +3493,7 @@ class MatrixBase(MatrixDeprecated,
         for k in range(col):
             sol[permutation[k], :] = free_sol[k,:]
 
+        sol, tau = cls(sol), cls(tau)
         if freevar:
             return sol, tau, free_var_index
         else:
@@ -4233,16 +4377,16 @@ class MatrixBase(MatrixDeprecated,
             elif ord == 1:  # sum(abs(x))
                 return Add(*(abs(i) for i in vals))
 
-            elif ord == S.Infinity:  # max(abs(x))
+            elif ord is S.Infinity:  # max(abs(x))
                 return Max(*[abs(i) for i in vals])
 
-            elif ord == S.NegativeInfinity:  # min(abs(x))
+            elif ord is S.NegativeInfinity:  # min(abs(x))
                 return Min(*[abs(i) for i in vals])
 
             # Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
             # Note that while useful this is not mathematically a norm
             try:
-                return Pow(Add(*(abs(i) ** ord for i in vals)), S(1) / ord)
+                return Pow(Add(*(abs(i) ** ord for i in vals)), S.One / ord)
             except (NotImplementedError, TypeError):
                 raise ValueError("Expected order to be Number, Symbol, oo")
 
@@ -4260,7 +4404,7 @@ class MatrixBase(MatrixDeprecated,
                 # Minimum singular value
                 return Min(*self.singular_values())
 
-            elif ord == S.Infinity:   # Infinity Norm - Maximum row sum
+            elif ord is S.Infinity:   # Infinity Norm - Maximum row sum
                 m = self.applyfunc(abs)
                 return Max(*[sum(m.row(i)) for i in range(m.rows)])
 
@@ -4601,7 +4745,7 @@ class MatrixBase(MatrixDeprecated,
             tmp = mat[:, j]  # take original v
             for i in range(j):
                 # subtract the project of mat on new vector
-                R[i, j] = Q[:, i].dot(mat[:, j])
+                R[i, j] = Q[:, i].dot(mat[:, j], hermitian=True)
                 tmp -= Q[:, i] * R[i, j]
                 tmp.expand()
             # normalize it

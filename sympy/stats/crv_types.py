@@ -43,6 +43,7 @@ Triangular
 Uniform
 UniformSum
 VonMises
+Wald
 Weibull
 WignerSemicircle
 """
@@ -56,9 +57,9 @@ from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I,
-                   hyper, uppergamma, sinh, Ne, expint)
+                   hyper, uppergamma, sinh, Ne, expint, Rational)
 from sympy.external import import_module
-from sympy.matrices import MatrixBase
+from sympy.matrices import MatrixBase, MatrixExpr
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
                              ContinuousDistributionHandmade)
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
@@ -109,8 +110,9 @@ __all__ = ['ContinuousRV',
 'Uniform',
 'UniformSum',
 'VonMises',
+'Wald',
 'Weibull',
-'WignerSemicircle'
+'WignerSemicircle',
 ]
 
 
@@ -396,7 +398,7 @@ def Beta(name, alpha, beta):
     >>> simplify(E(X))
     alpha/(alpha + beta)
 
-    >>> factor(simplify(variance(X)))  #doctest: +SKIP
+    >>> factor(simplify(variance(X)))
     alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
 
     References
@@ -484,7 +486,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
 
     Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
     >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
-    exp(-1/2)*Integral(Sum(2**(-_k)*_x**_k/(beta(_k + 1, 1)*factorial(_k)), (_k, 0, oo)), (_x, 0, 2))
+    2*exp(1/2)
 
     The argument evaluate=False prevents an attempt at evaluation
     of the sum for general x, before the argument 2 is passed.
@@ -662,15 +664,15 @@ class ChiDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         k = self.k
 
-        part_1 = hyper((k/2,), (S(1)/2,), -t**2/2)
+        part_1 = hyper((k/2,), (S.Half,), -t**2/2)
         part_2 = I*t*sqrt(2)*gamma((k+1)/2)/gamma(k/2)
-        part_3 = hyper(((k+1)/2,), (S(3)/2,), -t**2/2)
+        part_3 = hyper(((k+1)/2,), (Rational(3, 2),), -t**2/2)
         return part_1 + part_2*part_3
 
     def _moment_generating_function(self, t):
         k = self.k
 
-        part_1 = hyper((k / 2,), (S(1) / 2,), t ** 2 / 2)
+        part_1 = hyper((k / 2,), (S.Half,), t ** 2 / 2)
         part_2 = t * sqrt(2) * gamma((k + 1) / 2) / gamma(k / 2)
         part_3 = hyper(((k + 1) / 2,), (S(3) / 2,), t ** 2 / 2)
         return part_1 + part_2 * part_3
@@ -2651,8 +2653,8 @@ def Normal(name, mean, std):
 
     """
 
-    if isinstance(mean, (list, MatrixBase)) and\
-        isinstance(std, (list, MatrixBase)):
+    if isinstance(mean, (list, MatrixBase, MatrixExpr)) and\
+        isinstance(std, (list, MatrixBase, MatrixExpr)):
         from sympy.stats.joint_rv_types import MultivariateNormalDistribution
         return multivariate_rv(
             MultivariateNormalDistribution, name, mean, std)
@@ -3190,12 +3192,12 @@ class StudentTDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         nu = self.nu
-        return 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
+        return 1/(sqrt(nu)*beta_fn(S.Half, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
 
     def _cdf(self, x):
         nu = self.nu
         return S.Half + x*gamma((nu+1)/2)*hyper((S.Half, (nu+1)/2),
-                                (S(3)/2,), -x**2/nu)/(sqrt(pi*nu)*gamma(nu/2))
+                                (Rational(3, 2),), -x**2/nu)/(sqrt(pi*nu)*gamma(nu/2))
 
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the Student-T distribution is undefined.')
@@ -3546,10 +3548,10 @@ def Uniform(name, left, right):
     >>> density(X)(z)
     Piecewise((1/(-a + b), (b >= z) & (a <= z)), (0, True))
 
-    >>> cdf(X)(z)  # doctest: +SKIP
-    -a/(-a + b) + z/(-a + b)
+    >>> cdf(X)(z)
+    Piecewise((0, a > z), ((-a + z)/(-a + b), b >= z), (1, True))
 
-    >>> simplify(E(X))
+    >>> E(X)
     a/2 + b/2
 
     >>> simplify(variance(X))

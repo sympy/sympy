@@ -65,11 +65,16 @@ def _sorted_tuple(*i):
 def _remove_gcd(*x):
     try:
         g = igcd(*x)
-        return tuple([i//g for i in x])
     except ValueError:
-        return x
+        fx = list(filter(None, x))
+        if len(fx) < 2:
+            return x
+        g = igcd(*[i.as_content_primitive()[0] for i in fx])
     except TypeError:
         raise TypeError('_remove_gcd(a,b,c) or _remove_gcd(*container)')
+    if g == 1:
+        return x
+    return tuple([i//g for i in x])
 
 
 def _rational_pq(a, b):
@@ -102,7 +107,10 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     For example, when solving, `x^2 - y^2 = 0` this is treated as
     `(x + y)(x - y) = 0` and `x + y = 0` and `x - y = 0` are solved
     independently and combined. Each term is solved by calling
-    ``diop_solve()``.
+    ``diop_solve()``. (Although it is possible to call ``diop_solve()``
+    directly, one must be careful to pass an equation in the correct
+    form and to interpret the output correctly; ``diophantine()`` is
+    the public-facing function to use in general.)
 
     Output of ``diophantine()`` is a set of tuples. The elements of the
     tuple are the solutions for each variable in the equation and
@@ -320,7 +328,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         sols.remove(())
     null = tuple([0]*len(var))
     # if there is no solution, return trivial solution
-    if not sols and eq.subs(zip(var, null)) is S.Zero:
+    if not sols and eq.subs(zip(var, null)).is_zero:
         sols.add(null)
     final_soln = set([])
     for sol in sols:
@@ -382,6 +390,10 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     Unlike ``diophantine()``, factoring of ``eq`` is not attempted. Uses
     ``classify_diop()`` to determine the type of the equation and calls
     the appropriate solver function.
+
+    Use of ``diophantine()`` is recommended over other helper functions.
+    ``diop_solve()`` can return either a set or a tuple depending on the
+    nature of the equation.
 
     Usage
     =====
@@ -619,7 +631,6 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     diop_quadratic(), diop_ternary_quadratic(), diop_general_pythagorean(),
     diop_general_sum_of_squares()
     """
-    from sympy.core.function import count_ops
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type == "linear":
@@ -969,7 +980,6 @@ def _diop_quadratic(var, coeff, t):
         else:
             g = sign(A)*igcd(A, C)
             a = A // g
-            b = B // g
             c = C // g
             e = sign(B/A)
 
@@ -1569,8 +1579,6 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     sol = []
     a = diop_DN(D, 1)
     u = a[0][0]
-    v = a[0][1]
-
 
     if abs(N) == 1:
         return diop_DN(D, N)
@@ -1795,7 +1803,7 @@ def _transformation_to_DN(var, coeff):
         # eq_1 = A*B*X**2 + B*(c*T - A*C**2)*Y**2 + d*T*X + (B*e*T - d*T*C)*Y + f*T*B
         coeff = {X**2: A*B, X*Y: 0, Y**2: B*(c*T - A*C**2), X: d*T, Y: B*e*T - d*T*C, 1: f*T*B}
         A_0, B_0 = _transformation_to_DN([X, Y], coeff)
-        return Matrix(2, 2, [S(1)/B, -S(C)/B, 0, 1])*A_0, Matrix(2, 2, [S(1)/B, -S(C)/B, 0, 1])*B_0
+        return Matrix(2, 2, [S.One/B, -S(C)/B, 0, 1])*A_0, Matrix(2, 2, [S.One/B, -S(C)/B, 0, 1])*B_0
 
     else:
         if d:
@@ -1805,7 +1813,7 @@ def _transformation_to_DN(var, coeff):
             # eq_2 = A*X**2 + c*T*Y**2 + e*T*Y + f*T - A*C**2
             coeff = {X**2: A, X*Y: 0, Y**2: c*T, X: 0, Y: e*T, 1: f*T - A*C**2}
             A_0, B_0 = _transformation_to_DN([X, Y], coeff)
-            return Matrix(2, 2, [S(1)/B, 0, 0, 1])*A_0, Matrix(2, 2, [S(1)/B, 0, 0, 1])*B_0 + Matrix([-S(C)/B, 0])
+            return Matrix(2, 2, [S.One/B, 0, 0, 1])*A_0, Matrix(2, 2, [S.One/B, 0, 0, 1])*B_0 + Matrix([-S(C)/B, 0])
 
         else:
             if e:
@@ -1815,13 +1823,13 @@ def _transformation_to_DN(var, coeff):
                 # eq_3 = a*T*X**2 + A*Y**2 + f*T - A*C**2
                 coeff = {X**2: a*T, X*Y: 0, Y**2: A, X: 0, Y: 0, 1: f*T - A*C**2}
                 A_0, B_0 = _transformation_to_DN([X, Y], coeff)
-                return Matrix(2, 2, [1, 0, 0, S(1)/B])*A_0, Matrix(2, 2, [1, 0, 0, S(1)/B])*B_0 + Matrix([0, -S(C)/B])
+                return Matrix(2, 2, [1, 0, 0, S.One/B])*A_0, Matrix(2, 2, [1, 0, 0, S.One/B])*B_0 + Matrix([0, -S(C)/B])
 
             else:
                 # TODO: pre-simplification: Not necessary but may simplify
                 # the equation.
 
-                return Matrix(2, 2, [S(1)/a, 0, 0, 1]), Matrix([0, 0])
+                return Matrix(2, 2, [S.One/a, 0, 0, 1]), Matrix([0, 0])
 
 
 def find_DN(eq):
@@ -1981,13 +1989,13 @@ def _diop_ternary_quadratic(_var, coeff):
                     s = r
                     min_sum = m
 
-            x_0, y_0, z_0 = s[0], -coeff[x*z], s[1]
+            x_0, y_0, z_0 = _remove_gcd(s[0], -coeff[x*z], s[1])
 
         else:
             var[0], var[1] = _var[1], _var[0]
             y_0, x_0, z_0 = _diop_ternary_quadratic(var, coeff)
 
-        return _remove_gcd(x_0, y_0, z_0)
+        return x_0, y_0, z_0
 
     if coeff[x**2] == 0:
         # If the coefficient of x is zero change the variables
@@ -2057,7 +2065,7 @@ def _diop_ternary_quadratic(_var, coeff):
 def transformation_to_normal(eq):
     """
     Returns the transformation Matrix that converts a general ternary
-    quadratic equation `eq` (`ax^2 + by^2 + cz^2 + dxy + eyz + fxz`)
+    quadratic equation ``eq`` (`ax^2 + by^2 + cz^2 + dxy + eyz + fxz`)
     to a form without cross terms: `ax^2 + by^2 + cz^2 = 0`. This is
     not used in solving ternary quadratics; it is only implemented for
     the sake of completeness.
@@ -2163,17 +2171,43 @@ def parametrize_ternary_quadratic(eq):
     Examples
     ========
 
+    >>> from sympy import Tuple, ordered
     >>> from sympy.abc import x, y, z
     >>> from sympy.solvers.diophantine import parametrize_ternary_quadratic
-    >>> parametrize_ternary_quadratic(x**2 + y**2 - z**2)
-    (2*p*q, p**2 - q**2, p**2 + q**2)
 
-    Here `p` and `q` are two co-prime integers.
+    The parametrized solution may be returned with three parameters:
 
-    >>> parametrize_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z)
-    (2*p**2 - 2*p*q - q**2, 2*p**2 + 2*p*q - q**2, 2*p**2 - 2*p*q + 3*q**2)
-    >>> parametrize_ternary_quadratic(124*x**2 - 30*y**2 - 7729*z**2)
-    (-1410*p**2 - 363263*q**2, 2700*p**2 + 30916*p*q - 695610*q**2, -60*p**2 + 5400*p*q + 15458*q**2)
+    >>> parametrize_ternary_quadratic(2*x**2 + y**2 - 2*z**2)
+    (p**2 - 2*q**2, -2*p**2 + 4*p*q - 4*p*r - 4*q**2, p**2 - 4*p*q + 2*q**2 - 4*q*r)
+
+    There might also be only two parameters:
+
+    >>> parametrize_ternary_quadratic(4*x**2 + 2*y**2 - 3*z**2)
+    (2*p**2 - 3*q**2, -4*p**2 + 12*p*q - 6*q**2, 4*p**2 - 8*p*q + 6*q**2)
+
+    Notes
+    =====
+
+    Consider ``p`` and ``q`` in the previous 2-parameter
+    solution and observe that more than one solution can be represented
+    by a given pair of parameters. If `p` and ``q`` are not coprime, this is
+    trivially true since the common factor will also be a common factor of the
+    solution values. But it may also be true even when ``p`` and
+    ``q`` are coprime:
+
+    >>> sol = Tuple(*_)
+    >>> p, q = ordered(sol.free_symbols)
+    >>> sol.subs([(p, 3), (q, 2)])
+    (6, 12, 12)
+    >>> sol.subs([(q, 1), (p, 1)])
+    (-1, 2, 2)
+    >>> sol.subs([(q, 0), (p, 1)])
+    (2, -4, 4)
+    >>> sol.subs([(q, 1), (p, 0)])
+    (-3, -6, 6)
+
+    Except for sign and a common factor, these are equivalent to
+    the solution of (1, 2, 2).
 
     References
     ==========
@@ -2230,7 +2264,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
     y = (A*y_0 - _mexpand(B/r*p))
     z = (A*z_0 - _mexpand(B/r*q))
 
-    return x, y, z
+    return _remove_gcd(x, y, z)
 
 
 def diop_ternary_quadratic_normal(eq):
@@ -2827,7 +2861,8 @@ def diop_general_sum_of_even_powers(eq, limit=1):
 
     See Also
     ========
-    power_representation()
+
+    power_representation
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
@@ -3094,7 +3129,7 @@ def sum_of_four_squares(n):
 
 
 def power_representation(n, p, k, zeros=False):
-    """
+    r"""
     Returns a generator for finding k-tuples of integers,
     `(n_{1}, n_{2}, . . . n_{k})`, such that
     `n = n_{1}^p + n_{2}^p + . . . n_{k}^p`.
@@ -3103,7 +3138,7 @@ def power_representation(n, p, k, zeros=False):
     =====
 
     ``power_representation(n, p, k, zeros)``: Represent non-negative number
-    ``n`` as a sum of ``k`` ``p``th powers. If ``zeros`` is true, then the
+    ``n`` as a sum of ``k`` ``p``\ th powers. If ``zeros`` is true, then the
     solutions is allowed to contain zeros.
 
     Examples
