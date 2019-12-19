@@ -589,11 +589,11 @@ def dynamicsymbols(names, level=0,**assumptions):
         twice of t, etc.
     assumptions :
         - real(bool) : This is used to set the dynamicsymbol as real,
-                    by default is False;
+                    by default is False.
         - positive(bool) : This is used to set the dynamicsymbol as positive,
-                    by default is False;
+                    by default is False.
         - commutative(bool) : This is used to set the commutative property of
-                    a dynamicsymbol, by default is True;
+                    a dynamicsymbol, by default is True.
         - integer(bool) : This is used to set the dynamicsymbol as integer,
                     by default is False.
 
