@@ -540,7 +540,7 @@ class Quaternion(Expr):
                           integrate(self.c, *args), integrate(self.d, *args))
 
     @staticmethod
-    def rotate_point(pin, r):
+    def rotate_point(pin, r, normalize=True):
         """Returns the coordinates of the point pin(a 3 tuple) after rotation.
 
         Parameters
@@ -554,6 +554,9 @@ class Quaternion(Expr):
 
             It's important to note that when r is a tuple, it must be of the form
             (axis, angle)
+        normalize : bool
+            If ``False`` (and r is a quaternion), r is assumed to have
+            unit length.
 
         Returns
         =======
@@ -575,17 +578,24 @@ class Quaternion(Expr):
         (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
         """
         x, y, z = pin
-        if isinstance(r, tuple):
+        if isinstance(r, Quaternion):
+            q = r
+            if normalize:
+                q = q.normalize()
+        else:
             vector, angle = r
             q = Quaternion.from_axis_angle(vector, angle)
-        else:
-            # if r is a quaternion
-            q = r.normalize()
         pout = q * Quaternion(0, x, y, z) * conjugate(q)
         return (pout.b, pout.c, pout.d)
 
-    def to_axis_angle(self):
+    def to_axis_angle(self, normalize=True):
         """Returns the axis and angle of rotation of a quaternion
+
+        Parameters
+        ==========
+
+        normalize : bool
+            If ``False``, the quaternion is assumed to have unit length.
 
         Returns
         =======
@@ -608,7 +618,8 @@ class Quaternion(Expr):
         if q.a.is_negative:
             q = q * -1
 
-        q = q.normalize()
+        if normalize:
+            q = q.normalize()
         angle = trigsimp(2 * acos(q.a))
 
         # Since quaternion is normalised, q.a is less than 1.
@@ -623,7 +634,7 @@ class Quaternion(Expr):
 
         return t
 
-    def to_rotation_matrix(self, v=None):
+    def to_rotation_matrix(self, v=None, normalize=True):
         """Returns the equivalent rotation transformation matrix of the quaternion
         which represents rotation about the origin if v is not passed.
 
@@ -632,6 +643,8 @@ class Quaternion(Expr):
 
         v : tuple or None
             Default value: None
+        normalize : bool
+            If ``False``, the quaternion is assumed to have unit length.
 
         Returns
         =======
@@ -672,7 +685,7 @@ class Quaternion(Expr):
         """
 
         q = self
-        s = q.norm()**-2
+        s = q.norm()**-2 if normalize else 1
         m00 = 1 - 2*s*(q.c**2 + q.d**2)
         m01 = 2*s*(q.b*q.c - q.d*q.a)
         m02 = 2*s*(q.b*q.d + q.c*q.a)
