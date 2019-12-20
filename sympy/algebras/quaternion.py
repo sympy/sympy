@@ -114,7 +114,7 @@ class Quaternion(Expr):
         c = y * s
         d = z * s
 
-        return cls(a, b, c, d).normalize()
+        return cls(a, b, c, d)
 
     @classmethod
     def from_rotation_matrix(cls, M):
