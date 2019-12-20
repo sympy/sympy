@@ -276,6 +276,9 @@ def test_fu():
     expr = Mul(*[cos(2**i) for i in range(10)])
     assert fu(expr) == sin(1024)/(1024*sin(1))
 
+    # issue #18059:
+    assert fu(cos(x) + sqrt(sin(x)**2)) == cos(x) + sqrt(sin(x)**2)
+
 
 def test_objective():
     assert fu(sin(x)/cos(x), measure=lambda x: x.count_ops()) == \

@@ -448,14 +448,12 @@ class Factors(object):
         args = []
         for factor, exp in self.factors.items():
             if exp != 1:
-                b, e = factor.as_base_exp()
                 if isinstance(exp, int):
+                    b, e = factor.as_base_exp()
                     e = _keep_coeff(Integer(exp), e)
-                elif isinstance(exp, Rational):
-                    e = _keep_coeff(exp, e)
+                    args.append(b**e)
                 else:
-                    e *= exp
-                args.append(b**e)
+                    args.append(factor**exp)
             else:
                 args.append(factor)
         return Mul(*args)
