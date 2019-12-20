@@ -697,7 +697,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             else:
                 modules = ["numpy"]
         else:
-            modules = ["scipy", "numpy"]
+            modules = ["numpy", "scipy"]
 
     # Get the needed namespaces.
     namespaces = []
