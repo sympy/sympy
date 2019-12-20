@@ -8,8 +8,13 @@ class Column(object):
     """
     A column is a structural member designed to undertake axial
     compressive loads. A column is characterized by its
-    cross-sectional profile(second moment of area), its length and
+    cross-sectional profile (second moment of area), its length and
     its material.
+
+    References
+    ==========
+
+    https://github.com/sympy/sympy/wiki/Functioning-of-SymPy's-Column-module
 
     Examples
     ========
@@ -183,7 +188,7 @@ class Column(object):
 
     def solve_slope_deflection(self):
         """
-        Solves the differnetial equation of buckling to determine the
+        Solves the differential equation of buckling to determine the
         deflection and slope equations.
 
         Examples
@@ -254,7 +259,7 @@ class Column(object):
 
     def critical_load(self):
         """
-        Detrmines the critical load (for single bow buckling condition) of
+        Determines the critical load (for single bow buckling condition) of
         the given column under the given conditions.
 
         Examples
