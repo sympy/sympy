@@ -1,4 +1,5 @@
 from sympy.core.backend import eye, Matrix, zeros
+from sympy.physics.vector.functions import TIME
 from sympy.physics.mechanics import dynamicsymbols
 from sympy.physics.mechanics.functions import find_dynamicsymbols
 
@@ -424,7 +425,7 @@ class SymbolicSystem(object):
         constants = set()
         for expr in eom_expressions:
             constants = constants.union(expr.free_symbols)
-        constants.remove(dynamicsymbols._t)
+        constants.remove(TIME)
 
         return tuple(constants)
 

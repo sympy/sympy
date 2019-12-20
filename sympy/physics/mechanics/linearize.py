@@ -6,7 +6,7 @@ from sympy.core.backend import Matrix, eye, zeros
 from sympy.core.compatibility import Iterable
 from sympy import Dummy
 from sympy.utilities.iterables import flatten
-from sympy.physics.vector import dynamicsymbols
+from sympy.physics.vector import dynamicsymbols, TIME
 from sympy.physics.mechanics.functions import msubs
 
 from collections import namedtuple
@@ -77,8 +77,8 @@ class Linearizer(object):
         self.lams = none_handler(lams)
 
         # Derivatives of generalized equation variables
-        self._qd = self.q.diff(dynamicsymbols._t)
-        self._ud = self.u.diff(dynamicsymbols._t)
+        self._qd = self.q.diff(TIME)
+        self._ud = self.u.diff(TIME)
         # If the user doesn't actually use generalized variables, and the
         # qd and u vectors have any intersecting variables, this can cause
         # problems. We'll fix this with some hackery, and Dummy variables
