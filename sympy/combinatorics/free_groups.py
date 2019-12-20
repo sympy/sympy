@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import print_function, division
 
 from sympy.core import S
@@ -658,7 +657,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         substituted_word
 
         """
-        if by == None:
+        if by is None:
             by = self.group.identity
         if self.is_independent(gen) or gen == by:
             return self
@@ -960,11 +959,11 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         try:
-            return self.subword_index(word) != None
+            return self.subword_index(word) is not None
         except ValueError:
             pass
         try:
-            return self.subword_index(word**-1) != None
+            return self.subword_index(word**-1) is not None
         except ValueError:
             return False
 
@@ -1181,7 +1180,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         r"""Returns whether the word is cyclically reduced or not.
         A word is cyclically reduced if by forming the cycle of the
         word, the word is not reduced, i.e a word w = `a_1 ... a_n`
-        is called cyclically reduced if `a_1 \ne a_n^{−1}`.
+        is called cyclically reduced if `a_1 \ne a_n^{-1}`.
 
         Examples
         ========

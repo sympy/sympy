@@ -2,7 +2,6 @@ from __future__ import (absolute_import, division, print_function)
 """
 C++ code printer
 """
-from functools import wraps
 from itertools import chain
 from sympy.codegen.ast import Type, none
 from .ccode import C89CodePrinter, C99CodePrinter
@@ -165,5 +164,5 @@ cxx_code_printers = {
 }
 
 def cxxcode(expr, assign_to=None, standard='c++11', **settings):
-    """ C++ equivalent of :func:`sympy.ccode`. """
+    """ C++ equivalent of :func:`~.ccode`. """
     return cxx_code_printers[standard.lower()](settings).doprint(expr, assign_to)

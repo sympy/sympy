@@ -9,7 +9,7 @@ from sympy.core.decorators import deprecated
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
-from sympy.polys.polyutils import _unify_gens
+from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import default_sort_key, public
 
 @public
@@ -103,6 +103,9 @@ class Domain(object):
 
     def convert(self, element, base=None):
         """Convert ``element`` to ``self.dtype``. """
+        if _not_a_coeff(element):
+            raise CoercionFailed('%s is not in any domain' % element)
+
         if base is not None:
             return self.convert_from(element, base)
 
@@ -162,7 +165,9 @@ class Domain(object):
     def __contains__(self, a):
         """Check if ``a`` belongs to this domain. """
         try:
-            self.convert(a)
+            if _not_a_coeff(a):
+                raise CoercionFailed
+            self.convert(a)  # this might raise, too
         except CoercionFailed:
             return False
 
@@ -537,3 +542,6 @@ class Domain(object):
     def characteristic(self):
         """Return the characteristic of this domain. """
         raise NotImplementedError('characteristic()')
+
+
+__all__ = ['Domain']

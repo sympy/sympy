@@ -1,4 +1,4 @@
-from sympy import Q, ask, Symbol
+from sympy import Q, ask, Symbol, DiagMatrix, DiagonalMatrix
 from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
         Trace, MatrixSlice, Determinant)
 from sympy.matrices.expressions.factorizations import LofLU
@@ -141,6 +141,9 @@ def test_diagonal():
     assert ask(Q.diagonal(MatrixSlice(Y, (0, 1), (1, 2)))) is True
     assert ask(Q.diagonal(V1.T*(V1 + V2))) is True
     assert ask(Q.diagonal(X**3), Q.diagonal(X))
+    assert ask(Q.diagonal(Identity(3)))
+    assert ask(Q.diagonal(DiagMatrix(V1)))
+    assert ask(Q.diagonal(DiagonalMatrix(X)))
 
 
 def test_non_atoms():

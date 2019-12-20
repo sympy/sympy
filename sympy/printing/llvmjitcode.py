@@ -448,7 +448,7 @@ def llvm_callable(args, expr, callback_type=None):
 
     arg_ctypes = []
     if callback_type is None:
-        for arg in args:
+        for _ in args:
             arg_ctype = ctypes.c_double
             arg_ctypes.append(arg_ctype)
     elif callback_type == 'scipy.integrate' or callback_type == 'scipy.integrate.test':

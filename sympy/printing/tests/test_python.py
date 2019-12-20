@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
     log, exp, sqrt, pi, Function, sin, Eq, Ge, Le, Gt, Lt, Ne, Abs, conjugate,
     I, Matrix)

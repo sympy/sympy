@@ -1,8 +1,14 @@
-from sympy import sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix
+from sympy import (symbols, sin, cos, pi, zeros, eye, simplify, ImmutableMatrix
+                   as Matrix)
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
-                                  dynamicsymbols, time_derivative, express, dot)
+                                  dynamicsymbols, time_derivative, express,
+                                  dot)
+from sympy.physics.vector.frame import _check_frame
+from sympy.physics.vector.vector import VectorTypeError
+from sympy.utilities.pytest import raises
 
 Vector.simp = True
+
 
 def test_coordinate_vars():
     """Tests the coordinate variables functionality"""
@@ -10,6 +16,7 @@ def test_coordinate_vars():
     assert CoordinateSym('Ax', A, 0) == A[0]
     assert CoordinateSym('Ax', A, 1) == A[1]
     assert CoordinateSym('Ax', A, 2) == A[2]
+    raises(ValueError, lambda: CoordinateSym('Ax', A, 3))
     q = dynamicsymbols('q')
     qd = dynamicsymbols('q', 1)
     assert isinstance(A[0], CoordinateSym) and \
@@ -116,7 +123,7 @@ def test_ang_vel():
         2 * (q2d * q0 + q3d * q1 - q1d * q3 - q0d * q2) * E.y +
         2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3) * E.z)
 
-    F = N.orientnew('F', 'Body', (q1, q2, q3), '313')
+    F = N.orientnew('F', 'Body', (q1, q2, q3), 313)
     assert F.ang_vel_in(N) == ((sin(q2)*sin(q3)*q1d + cos(q3)*q2d)*F.x +
         (sin(q2)*cos(q3)*q1d - sin(q3)*q2d)*F.y + (cos(q2)*q1d + q3d)*F.z)
     G = N.orientnew('G', 'Axis', (q1, N.x + N.y))
@@ -157,27 +164,64 @@ def test_dcm():
         sin(q2)*cos(q1)*cos(q3), - sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),
          cos(q1)*cos(q2)]])
 
+def test_w_diff_dcm1():
+    # Ref:
+    # Dynamics Theory and Applications, Kane 1985
+    # Sec. 2.1 ANGULAR VELOCITY
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
 
-# This test has been added to test the _w_diff_dcm() function
-# for which a test was previously not included.
-# Also note that the _w_diff_dcm() function was changed as part of
-# PR #14758 as it was observed to be giving incorrect results
-# when compared with Autolev results.
-def test_w_diff_dcm():
-    a = ReferenceFrame('a')
-    b = ReferenceFrame('b')
-    c11, c12, c13, c21, c22, c23, c31, c32, c33 = dynamicsymbols('c11 c12 c13 c21 c22 c23 c31 c32 c33')
-    c11d, c12d, c13d, c21d, c22d, c23d, c31d, c32d, c33d = dynamicsymbols('c11 c12 c13 c21 c22 c23 c31 c32 c33', 1)
-    b.orient(a, 'DCM', Matrix([c11,c12,c13,c21,c22,c23,c31,c32,c33]).reshape(3, 3))
-    b1a=(b.x).express(a)
-    b2a=(b.y).express(a)
-    b3a=(b.z).express(a)
-    b.set_ang_vel(a, b.x*(dot((b3a).dt(a), b.y)) + b.y*(dot((b1a).dt(a), b.z)) +
-                     b.z*(dot((b2a).dt(a), b.x)))
-    expr = ((c12*c13d + c22*c23d + c32*c33d)*b.x + (c13*c11d + c23*c21d + c33*c31d)*b.y +
-           (c11*c12d + c21*c22d + c31*c32d)*b.z)
-    assert b.ang_vel_in(a) - expr == 0
+    c11, c12, c13 = dynamicsymbols('C11 C12 C13')
+    c21, c22, c23 = dynamicsymbols('C21 C22 C23')
+    c31, c32, c33 = dynamicsymbols('C31 C32 C33')
 
+    c11d, c12d, c13d = dynamicsymbols('C11 C12 C13', level=1)
+    c21d, c22d, c23d = dynamicsymbols('C21 C22 C23', level=1)
+    c31d, c32d, c33d = dynamicsymbols('C31 C32 C33', level=1)
+
+    DCM = Matrix([
+        [c11, c12, c13],
+        [c21, c22, c23],
+        [c31, c32, c33]
+    ])
+
+    B.orient(A, 'DCM', DCM)
+    b1a = (B.x).express(A)
+    b2a = (B.y).express(A)
+    b3a = (B.z).express(A)
+
+    # Equation (2.1.1)
+    B.set_ang_vel(A, B.x*(dot((b3a).dt(A), B.y))
+                   + B.y*(dot((b1a).dt(A), B.z))
+                   + B.z*(dot((b2a).dt(A), B.x)))
+
+    # Equation (2.1.21)
+    expr = (  (c12*c13d + c22*c23d + c32*c33d)*B.x
+            + (c13*c11d + c23*c21d + c33*c31d)*B.y
+            + (c11*c12d + c21*c22d + c31*c32d)*B.z)
+    assert B.ang_vel_in(A) - expr == 0
+
+def test_w_diff_dcm2():
+    q1, q2, q3 = dynamicsymbols('q1:4')
+    N = ReferenceFrame('N')
+    A = N.orientnew('A', 'axis', [q1, N.x])
+    B = A.orientnew('B', 'axis', [q2, A.y])
+    C = B.orientnew('C', 'axis', [q3, B.z])
+
+    DCM = C.dcm(N).T
+    D = N.orientnew('D', 'DCM', DCM)
+
+    # Frames D and C are the same ReferenceFrame,
+    # since they have equal DCM respect to frame N.
+    # Therefore, D and C should have same angle velocity in N.
+    assert D.dcm(N) == C.dcm(N) == Matrix([
+        [cos(q2)*cos(q3), sin(q1)*sin(q2)*cos(q3) +
+        sin(q3)*cos(q1), sin(q1)*sin(q3) -
+        sin(q2)*cos(q1)*cos(q3)], [-sin(q3)*cos(q2),
+        -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3),
+        sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1)],
+        [sin(q2), -sin(q1)*cos(q2), cos(q1)*cos(q2)]])
+    assert (D.ang_vel_in(N) - C.ang_vel_in(N)).express(N).simplify() == 0
 
 def test_orientnew_respects_parent_class():
     class MyReferenceFrame(ReferenceFrame):
@@ -243,12 +287,12 @@ def test_orientnew_respects_input_variables():
 def test_issue_10348():
     u = dynamicsymbols('u:3')
     I = ReferenceFrame('I')
-    A = I.orientnew('A', 'space', u, 'XYZ')
+    I.orientnew('A', 'space', u, 'XYZ')
 
 
 def test_issue_11503():
     A = ReferenceFrame("A")
-    B = A.orientnew("B", "Axis", [35, A.y])
+    A.orientnew("B", "Axis", [35, A.y])
     C = ReferenceFrame("C")
     A.orient(C, "Axis", [70, C.z])
 
@@ -288,3 +332,87 @@ def test_issue_11498():
     assert B.dcm(A) == Matrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]])
     assert A.dcm(B) == Matrix([[0, 0, -1], [1, 0, 0], [0, -1, 0]])
     assert B.dcm(A).T == A.dcm(B)
+
+
+def test_reference_frame():
+    raises(TypeError, lambda: ReferenceFrame(0))
+    raises(TypeError, lambda: ReferenceFrame('N', 0))
+    raises(ValueError, lambda: ReferenceFrame('N', [0, 1]))
+    raises(TypeError, lambda: ReferenceFrame('N', [0, 1, 2]))
+    raises(TypeError, lambda: ReferenceFrame('N', ['a', 'b', 'c'], 0))
+    raises(ValueError, lambda: ReferenceFrame('N', ['a', 'b', 'c'], [0, 1]))
+    raises(TypeError, lambda: ReferenceFrame('N', ['a', 'b', 'c'], [0, 1, 2]))
+    raises(TypeError, lambda: ReferenceFrame('N', ['a', 'b', 'c'],
+                                                 ['a', 'b', 'c'], 0))
+    raises(ValueError, lambda: ReferenceFrame('N', ['a', 'b', 'c'],
+                                              ['a', 'b', 'c'], [0, 1]))
+    raises(TypeError, lambda: ReferenceFrame('N', ['a', 'b', 'c'],
+                                             ['a', 'b', 'c'], [0, 1, 2]))
+    N = ReferenceFrame('N')
+    assert N[0] == CoordinateSym('N_x', N, 0)
+    assert N[1] == CoordinateSym('N_y', N, 1)
+    assert N[2] == CoordinateSym('N_z', N, 2)
+    raises(ValueError, lambda: N[3])
+    N = ReferenceFrame('N', ['a', 'b', 'c'])
+    assert N['a'] == N.x
+    assert N['b'] == N.y
+    assert N['c'] == N.z
+    raises(ValueError, lambda: N['d'])
+    assert str(N) == 'N'
+
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
+    raises(TypeError, lambda: A.orient(B, 'DCM', 0))
+    raises(TypeError, lambda: B.orient(N, 'Space', [q1, q2, q3], '222'))
+    raises(TypeError, lambda: B.orient(N, 'Axis', [q1, N.x + 2 * N.y], '222'))
+    raises(TypeError, lambda: B.orient(N, 'Axis', q1))
+    raises(TypeError, lambda: B.orient(N, 'Axis', [q1]))
+    raises(TypeError, lambda: B.orient(N, 'Quaternion', [q0, q1, q2, q3], '222'))
+    raises(TypeError, lambda: B.orient(N, 'Quaternion', q0))
+    raises(TypeError, lambda: B.orient(N, 'Quaternion', [q0, q1, q2]))
+    raises(NotImplementedError, lambda: B.orient(N, 'Foo', [q0, q1, q2]))
+    raises(TypeError, lambda: B.orient(N, 'Body', [q1, q2], '232'))
+    raises(TypeError, lambda: B.orient(N, 'Space', [q1, q2], '232'))
+
+    N.set_ang_acc(B, 0)
+    assert N.ang_acc_in(B) == Vector(0)
+    N.set_ang_vel(B, 0)
+    assert N.ang_vel_in(B) == Vector(0)
+
+
+def test_check_frame():
+    raises(VectorTypeError, lambda: _check_frame(0))
+
+
+def test_dcm_diff_16824():
+    # NOTE : This is a regression test for the bug introduced in PR 14758,
+    # identified in 16824, and solved by PR 16828.
+
+    # This is the solution to Problem 2.2 on page 264 in Kane & Lenvinson's
+    # 1985 book.
+
+    q1, q2, q3 = dynamicsymbols('q1:4')
+
+    s1 = sin(q1)
+    c1 = cos(q1)
+    s2 = sin(q2)
+    c2 = cos(q2)
+    s3 = sin(q3)
+    c3 = cos(q3)
+
+    dcm = Matrix([[c2*c3, s1*s2*c3 - s3*c1, c1*s2*c3 + s3*s1],
+                  [c2*s3, s1*s2*s3 + c3*c1, c1*s2*s3 - c3*s1],
+                  [-s2,   s1*c2,            c1*c2]])
+
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient(A, 'DCM', dcm)
+
+    AwB = B.ang_vel_in(A)
+
+    alpha2 = s3*c2*q1.diff() + c3*q2.diff()
+    beta2 = s1*c2*q3.diff() + c1*q2.diff()
+
+    assert simplify(AwB.dot(A.y) - alpha2) == 0
+    assert simplify(AwB.dot(B.y) - beta2) == 0

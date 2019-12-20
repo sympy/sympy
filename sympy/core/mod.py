@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core.numbers import nan, Integer
+from sympy.core.numbers import nan
 from sympy.core.compatibility import integer_types
 from .function import Function
 
@@ -37,11 +37,11 @@ class Mod(Function):
             to be less than or equal q.
             """
 
-            if q == S.Zero:
+            if q.is_zero:
                 raise ZeroDivisionError("Modulo by zero")
             if p.is_infinite or q.is_infinite or p is nan or q is nan:
                 return nan
-            if p == S.Zero or p == q or p == -q or (p.is_integer and q == 1):
+            if p is S.Zero or p == q or p == -q or (p.is_integer and q == 1):
                 return S.Zero
 
             if q.is_Number:
@@ -221,3 +221,7 @@ class Mod(Function):
     def _eval_is_nonpositive(self):
         if self.args[1].is_negative:
             return True
+
+    def _eval_rewrite_as_floor(self, a, b, **kwargs):
+        from sympy.functions.elementary.integers import floor
+        return a - b*floor(a/b)

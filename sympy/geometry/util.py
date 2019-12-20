@@ -12,7 +12,7 @@ are_similar
 """
 from __future__ import division, print_function
 
-from sympy import Function, Symbol, solve
+from sympy import Function, Symbol, solve, sqrt
 from sympy.core.compatibility import (
     is_sequence, range, string_types, ordered)
 from sympy.core.containers import OrderedSet
@@ -27,7 +27,7 @@ def find(x, equation):
     """
 
     free = equation.free_symbols
-    xs = [i for i in free if (i.name if type(x) is str else i) == x]
+    xs = [i for i in free if (i.name if isinstance(x, string_types) else i) == x]
     if not xs:
         raise ValueError('could not find %s' % x)
     if len(xs) != 1:
@@ -66,6 +66,7 @@ def are_coplanar(*e):
 
     """
     from sympy.geometry.line import LinearEntity3D
+    from sympy.geometry.entity import GeometryEntity
     from sympy.geometry.point import Point3D
     from sympy.geometry.plane import Plane
     # XXX update tests for coverage
@@ -103,7 +104,7 @@ def are_coplanar(*e):
                 pt3d.append(i)
             elif isinstance(i, LinearEntity3D):
                 pt3d.extend(i.args)
-            elif isinstance(i, GeometryEntity):  # XXX we should have a GeometryEntity3D class so we can tell the difference between 2D and 3D -- here we just want to deal with 2D objects; if new 3D objects are encountered that we didn't hanlde above, an error should be raised
+            elif isinstance(i, GeometryEntity):  # XXX we should have a GeometryEntity3D class so we can tell the difference between 2D and 3D -- here we just want to deal with 2D objects; if new 3D objects are encountered that we didn't handle above, an error should be raised
                 # all 2D objects have some Point that defines them; so convert those points to 3D pts by making z=0
                 for p in i.args:
                     if isinstance(p, Point):
@@ -161,16 +162,16 @@ def are_similar(e1, e2):
 
     if e1 == e2:
         return True
-    try:
-        return e1.is_similar(e2)
-    except AttributeError:
-        try:
-            return e2.is_similar(e1)
-        except AttributeError:
-            n1 = e1.__class__.__name__
-            n2 = e2.__class__.__name__
-            raise GeometryError(
-                "Cannot test similarity between %s and %s" % (n1, n2))
+    is_similar1 = getattr(e1, 'is_similar', None)
+    if is_similar1:
+        return is_similar1(e2)
+    is_similar2 = getattr(e2, 'is_similar', None)
+    if is_similar2:
+        return is_similar2(e1)
+    n1 = e1.__class__.__name__
+    n2 = e2.__class__.__name__
+    raise GeometryError(
+        "Cannot test similarity between %s and %s" % (n1, n2))
 
 
 def centroid(*args):
@@ -200,7 +201,7 @@ def centroid(*args):
     Point2D(20/3, 40/3)
     >>> p, q = Segment((0, 0), (2, 0)), Segment((0, 0), (2, 2))
     >>> centroid(p, q)
-    Point2D(1, -sqrt(2) + 2)
+    Point2D(1, 2 - sqrt(2))
     >>> centroid(Point(0, 0), Point(2, 0))
     Point2D(1, 0)
 
@@ -284,7 +285,7 @@ def closest_points(*args):
 
     """
     from collections import deque
-    from math import hypot, sqrt as _sqrt
+    from math import sqrt as _sqrt
     from sympy.functions.elementary.miscellaneous import sqrt
 
     p = [Point2D(i) for i in set(args)]
@@ -302,6 +303,8 @@ def closest_points(*args):
             if arg.is_Rational:
                 return _sqrt(arg)
             return sqrt(arg)
+    else:
+        from math import hypot
 
     rv = [(0, 1)]
     best_dist = hypot(p[1].x - p[0].x, p[1].y - p[0].y)
@@ -473,7 +476,7 @@ def farthest_points(*args):
     {(Point2D(0, 0), Point2D(3, 4))}
 
     """
-    from math import hypot, sqrt as _sqrt
+    from math import sqrt as _sqrt
 
     def rotatingCalipers(Points):
         U, L = convex_hull(*Points, **dict(polygon=False))
@@ -508,6 +511,8 @@ def farthest_points(*args):
             if arg.is_Rational:
                 return _sqrt(arg)
             return sqrt(arg)
+    else:
+        from math import hypot
 
     rv = []
     diam = 0
@@ -575,8 +580,8 @@ def idiff(eq, y, x, n=1):
     else:
         raise ValueError("expecting x-dependent symbol(s) or function(s) but got: %s" % y)
 
-    f = dict([(s, Function(
-        s.name)(x)) for s in eq.free_symbols if s != x and s in dep])
+    f = {s: Function(s.name)(x) for s in eq.free_symbols
+        if s != x and s in dep}
 
     if isinstance(y, Symbol):
         dydx = Function(y.name)(x).diff(x)

@@ -56,6 +56,14 @@ class CodePrinter(StrPrinter):
         'allow_unknown_functions': False,
     }
 
+    # Functions which are "simple" to rewrite to other functions that
+    # may be supported
+    _rewriteable_functions = {
+            'erf2': 'erf',
+            'Li': 'li',
+            'beta': 'gamma'
+    }
+
     def __init__(self, settings=None):
 
         super(CodePrinter, self).__init__(settings=settings)
@@ -102,7 +110,7 @@ class CodePrinter(StrPrinter):
         # format the output
         if self._settings["human"]:
             frontlines = []
-            if len(self._not_supported) > 0:
+            if self._not_supported:
                 frontlines.append(self._get_comment(
                         "Not supported in {0}:".format(self.language)))
                 for expr in sorted(self._not_supported, key=str):
@@ -364,7 +372,7 @@ class CodePrinter(StrPrinter):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
             func = None
-            if isinstance(cond_func, str):
+            if isinstance(cond_func, string_types):
                 func = cond_func
             else:
                 for cond, func in cond_func:
@@ -378,6 +386,10 @@ class CodePrinter(StrPrinter):
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
+        elif (expr.func.__name__ in self._rewriteable_functions and
+              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+            # Simple rewrite to supported function possible
+            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
         elif expr.is_Function and self._settings.get('allow_unknown_functions', False):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
@@ -480,7 +492,7 @@ class CodePrinter(StrPrinter):
             if item.base in b:
                 b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
 
-        if len(b) == 0:
+        if not b:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
             return sign + '*'.join(a_str) + "/" + b_str[0]
@@ -510,13 +522,10 @@ class CodePrinter(StrPrinter):
     _print_DeferredVector = _print_not_supported
     _print_NaN = _print_not_supported
     _print_NegativeInfinity = _print_not_supported
-    _print_Normal = _print_not_supported
     _print_Order = _print_not_supported
-    _print_PDF = _print_not_supported
     _print_RootOf = _print_not_supported
     _print_RootsOf = _print_not_supported
     _print_RootSum = _print_not_supported
-    _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
     _print_MutableSparseMatrix = _print_not_supported
     _print_ImmutableSparseMatrix = _print_not_supported
@@ -524,3 +533,4 @@ class CodePrinter(StrPrinter):
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported
     _print_WildFunction = _print_not_supported
+    _print_Relational = _print_not_supported

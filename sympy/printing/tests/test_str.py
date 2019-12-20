@@ -4,7 +4,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -15,8 +15,6 @@ from sympy.core.compatibility import range
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
-from sympy import MatrixSymbol
-from sympy import factorial, log, integrate
 
 x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')
@@ -48,7 +46,7 @@ def test_Add():
     assert str(1 + x + x**2/2 + x**3/3) == "x**3/3 + x**2/2 + x + 1"
     assert str(2*x - 7*x**2 + 2 + 3*y) == "-7*x**2 + 2*x + 3*y + 2"
     assert str(x - y) == "x - y"
-    assert str(2 - x) == "-x + 2"
+    assert str(2 - x) == "2 - x"
     assert str(x - 2) == "x - 2"
     assert str(x - y - z - w) == "-w + x - y - z"
     assert str(x - z*y**2*z*w) == "-w*y**2*z**2 + x"
@@ -179,6 +177,8 @@ def test_Lambda():
     # issue 2908
     assert str(Lambda((), 1)) == "Lambda((), 1)"
     assert str(Lambda((), x)) == "Lambda((), x)"
+    assert str(Lambda((x, y), x+y)) == "Lambda((x, y), x + y)"
+    assert str(Lambda(((x, y),), x+y)) == "Lambda(((x, y),), x + y)"
 
 
 def test_Limit():
@@ -274,9 +274,8 @@ def test_Permutation_Cycle():
         (Cycle(3, 4)(1, 2)(3, 4),
         '(1 2)(4)'),
     ]:
-        assert str(p) == s
+        assert sstr(p) == s
 
-    Permutation.print_cyclic = False
     for p, s in [
         (Permutation([]),
         'Permutation([])'),
@@ -293,9 +292,8 @@ def test_Permutation_Cycle():
         (Permutation([1, 0, 2, 3, 4, 5], size=10),
         'Permutation([1, 0], size=10)'),
     ]:
-        assert str(p) == s
+        assert sstr(p, perm_cyclic=False) == s
 
-    Permutation.print_cyclic = True
     for p, s in [
         (Permutation([]),
         '()'),
@@ -314,7 +312,7 @@ def test_Permutation_Cycle():
         (Permutation([0, 1, 3, 2, 4, 5], size=10),
         '(9)(2 3)'),
     ]:
-        assert str(p) == s
+        assert sstr(p) == s
 
 
 def test_Pi():
@@ -514,10 +512,8 @@ def test_Float():
     assert str(pi.evalf(1 + 14)) == '3.14159265358979'
     assert str(pi.evalf(1 + 64)) == ('3.141592653589793238462643383279'
                                      '5028841971693993751058209749445923')
-    assert str(pi.round(-1)) == '0.'
+    assert str(pi.round(-1)) == '0.0'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
-    assert str(Float(S.Infinity)) == 'inf'
-    assert str(Float(S.NegativeInfinity)) == '-inf'
 
 
 def test_Relational():
@@ -617,7 +613,7 @@ def test_wild_str():
     assert str(3*w + 1) == '3*x_ + 1'
     assert str(1/w + 1) == '1 + 1/x_'
     assert str(w**2 + 1) == 'x_**2 + 1'
-    assert str(1/(1 - w)) == '1/(-x_ + 1)'
+    assert str(1/(1 - w)) == '1/(1 - x_)'
 
 
 def test_zeta():
@@ -709,8 +705,16 @@ def test_RandomDomain():
 
 
 def test_FiniteSet():
-    assert str(FiniteSet(*range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
-    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*range(1, 51))) == (
+        'FiniteSet(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,'
+        ' 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,'
+        ' 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50)'
+    )
+    assert str(FiniteSet(*range(1, 6))) == 'FiniteSet(1, 2, 3, 4, 5)'
+
+
+def test_UniversalSet():
+    assert str(S.UniversalSet) == 'UniversalSet'
 
 
 def test_PrettyPoly():
@@ -768,10 +772,10 @@ def test_Equivalent():
     assert str(Equivalent(y, x)) == "Equivalent(x, y)"
 
 def test_Xor():
-    assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
+    assert str(Xor(y, x, evaluate=False)) == "x ^ y"
 
 def test_Complement():
-    assert str(Complement(S.Reals, S.Naturals)) == 'Reals \\ Naturals'
+    assert str(Complement(S.Reals, S.Naturals)) == 'Complement(Reals, Naturals)'
 
 def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2, 3), Interval(3, 4),evaluate=False)) == \
@@ -807,12 +811,46 @@ def test_MatrixSymbol_printing():
     assert str(A**3) == "A**3"
 
 
+def test_MatrixExpressions():
+    n = Symbol('n', integer=True)
+    X = MatrixSymbol('X', n, n)
+
+    assert str(X) == "X"
+
+    Y = X[1:2:3, 4:5:6]
+
+    assert str(Y) == "X[1:3, 4:6]"
+
+    Z = X[1:10:2]
+
+    assert str(Z) == "X[1:10:2, :n]"
+
+    # Apply function elementwise (`ElementwiseApplyFunc`):
+
+    expr = (X.T*X).applyfunc(sin)
+    assert str(expr) == 'Lambda(_d, sin(_d)).(X.T*X)'
+
+    lamda = Lambda(x, 1/x)
+    expr = (n*X).applyfunc(lamda)
+    assert str(expr) == 'Lambda(_d, 1/_d).(n*X)'
+
+
 def test_Subs_printing():
     assert str(Subs(x, (x,), (1,))) == 'Subs(x, x, 1)'
     assert str(Subs(x + y, (x, y), (1, 2))) == 'Subs(x + y, (x, y), (1, 2))'
 
+
 def test_issue_15716():
-    x = Symbol('x')
-    e = -3**x*exp(-3)*log(3**x*exp(-3)/factorial(x))/factorial(x)
-    assert str(Integral(e, (x, -oo, oo)).doit()) ==  '-(Integral(-3*3**x/factorial(x), (x, -oo, oo))' \
-    ' + Integral(3**x*log(3**x/factorial(x))/factorial(x), (x, -oo, oo)))*exp(-3)'
+    e = Integral(factorial(x), (x, -oo, oo))
+    assert e.as_terms() == ([(e, ((1.0, 0.0), (1,), ()))], [e])
+
+
+def test_str_special_matrices():
+    from sympy.matrices import Identity, ZeroMatrix, OneMatrix
+    assert str(Identity(4)) == 'I'
+    assert str(ZeroMatrix(2, 2)) == '0'
+    assert str(OneMatrix(2, 2)) == '1'
+
+
+def test_issue_14567():
+    assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error

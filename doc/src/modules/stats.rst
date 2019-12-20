@@ -1,5 +1,6 @@
+=====
 Stats
-===========
+=====
 
 .. automodule:: sympy.stats
 
@@ -7,7 +8,7 @@ Random Variable Types
 ^^^^^^^^^^^^^^^^^^^^^
 
 Finite Types
----------------
+------------
 .. autofunction:: DiscreteUniform
 .. autofunction:: Die
 .. autofunction:: Bernoulli
@@ -18,7 +19,7 @@ Finite Types
 .. autofunction:: Rademacher
 
 Discrete Types
------------------
+--------------
 .. autofunction:: Geometric
 .. autofunction:: Poisson
 .. autofunction:: Logarithmic
@@ -27,7 +28,7 @@ Discrete Types
 .. autofunction:: Zeta
 
 Continuous Types
--------------------
+----------------
 
 .. autofunction:: Arcsin
 .. autofunction:: Benini
@@ -45,6 +46,8 @@ Continuous Types
 .. autofunction:: Frechet
 .. autofunction:: Gamma
 .. autofunction:: GammaInverse
+.. autofunction:: Gompertz
+.. autofunction:: Gumbel
 .. autofunction:: Kumaraswamy
 .. autofunction:: Laplace
 .. autofunction:: Logistic
@@ -57,6 +60,8 @@ Continuous Types
 .. autofunction:: RaisedCosine
 .. autofunction:: Rayleigh
 .. autofunction:: StudentT
+.. autofunction:: ShiftedGompertz
+.. autofunction:: Trapezoidal
 .. autofunction:: Triangular
 .. autofunction:: Uniform
 .. autofunction:: UniformSum
@@ -64,6 +69,22 @@ Continuous Types
 .. autofunction:: Weibull
 .. autofunction:: WignerSemicircle
 .. autofunction:: ContinuousRV
+
+Joint Types
+-----------
+.. autofunction:: JointRV
+.. autofunction:: GeneralizedMultivariateLogGamma
+.. autofunction:: GeneralizedMultivariateLogGammaOmega
+.. autofunction:: Multinomial
+.. autofunction:: MultivariateBeta
+.. autofunction:: MultivariateEwens
+.. autofunction:: MultivariateT
+.. autofunction:: NegativeMultinomial
+.. autofunction:: NormalGamma
+
+Stochastic Processes
+--------------------
+.. autofunction:: DiscreteMarkovChain
 
 Interface
 ^^^^^^^^^
@@ -73,6 +94,7 @@ Interface
 .. autofunction:: E
 .. autoclass:: Expectation
 .. autofunction:: density
+.. autofunction:: entropy
 .. autofunction:: given
 .. autofunction:: where
 .. autofunction:: variance
@@ -82,6 +104,11 @@ Interface
 .. autofunction:: std
 .. autofunction:: sample
 .. autofunction:: sample_iter
+.. autofunction:: sympy.stats.rv.sample_iter_lambdify
+.. autofunction:: sympy.stats.rv.sample_iter_subs
+.. autofunction:: sympy.stats.rv.sampling_density
+.. autofunction:: sympy.stats.rv.sampling_P
+.. autofunction:: sympy.stats.rv.sampling_E
 
 Mechanics
 ^^^^^^^^^
@@ -89,15 +116,16 @@ Mechanics
 
 SymPy Stats employs a relatively complex class hierarchy.
 
-``RandomDomain``\s are a mapping of variables to possible values. For example we
-might say that the symbol ``Symbol('x')`` can take on the values
-`\{1,2,3,4,5,6\}`.
+``RandomDomain``\s are a mapping of variables to possible values.
+For example, we might say that the symbol ``Symbol('x')`` can
+take on the values `\{1,2,3,4,5,6\}`.
 
 .. class:: RandomDomain
 
-A ``PSpace``, or Probability Space, combines a ``RandomDomain`` with a density to
-provide probabilistic information. For example the above domain could be
-enhanced by a finite density ``{1:1/6, 2:1/6, 3:1/6, 4:1/6, 5:1/6, 6:1/6}`` to
+A ``PSpace``, or Probability Space, combines a ``RandomDomain``
+with a density to provide probabilistic information. For example
+the above domain could be enhanced by a finite density
+``{1:1/6, 2:1/6, 3:1/6, 4:1/6, 5:1/6, 6:1/6}`` to
 fully define the roll of a fair die named ``x``.
 
 .. class:: PSpace

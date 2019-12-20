@@ -5,7 +5,8 @@ from sympy.polys.groebnertools import (
     lbp, lbp_key, critical_pair,
     cp_key, is_rewritable_or_comparable,
     Sign, Polyn, Num, s_poly, f5_reduce,
-    groebner_lcm, groebner_gcd, is_groebner
+    groebner_lcm, groebner_gcd, is_groebner,
+    is_reduced
 )
 
 from sympy.polys.fglmtools import _representing_matrices
@@ -523,3 +524,11 @@ def test_is_groebner():
     invalid_groebner = [x**3, x*y, -QQ(1,2)*x + y**2]
     assert is_groebner(valid_groebner, R) is True
     assert is_groebner(invalid_groebner, R) is False
+
+def test_is_reduced():
+    R, x, y = ring("x,y", QQ, lex)
+    f = x**2 + 2*x*y**2
+    g = x*y + 2*y**3 - 1
+    assert is_reduced([f, g], R) ==  False
+    G = groebner([f, g], R)
+    assert is_reduced(G, R) == True

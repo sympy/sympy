@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import print_function, division
 
 from sympy.core.compatibility import as_int, range
@@ -773,7 +771,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     # see Hackman "Elementary Number Theory" (2009), page 76
     if not is_nthpow_residue(a, n, p):
         return None
-    if primitive_root(p) == None:
+    if primitive_root(p) is None:
         raise NotImplementedError("Not Implemented for m without primitive root")
 
     if (p - 1) % n == 0:
@@ -866,7 +864,7 @@ def legendre_symbol(a, p):
     a = a % p
     if not a:
         return 0
-    if is_quad_residue(a, p):
+    if pow(a, (p - 1) // 2, p) == 1:
         return 1
     return -1
 
@@ -961,7 +959,7 @@ def jacobi_symbol(m, n):
 
 class mobius(Function):
     """
-    Möbius function maps natural number to {-1, 0, 1}
+    Mobius function maps natural number to {-1, 0, 1}
 
     It is defined as follows:
         1) `1` if `n = 1`.
@@ -972,7 +970,7 @@ class mobius(Function):
     It is an important multiplicative function in number theory
     and combinatorics.  It has applications in mathematical series,
     algebraic number theory and also physics (Fermion operator has very
-    concrete realization with Möbius Function model).
+    concrete realization with Mobius Function model).
 
     Parameters
     ==========
@@ -1133,7 +1131,6 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
     if order is None:
         order = n_order(b, n)
-
     prng = Random()
     if rseed is not None:
         prng.seed(rseed)
@@ -1196,10 +1193,13 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
             if xa == xb:
                 r = (ba - bb) % order
-                if r != 0:
-                    return mod_inverse(r, order) * (ab - aa) % order
+                try:
+                    e = mod_inverse(r, order) * (ab - aa) % order
+                    if (pow(b, e, n) - a) % n == 0:
+                        return e
+                except ValueError:
+                    pass
                 break
-
     raise ValueError("Pollard's Rho failed to find logarithm")
 
 

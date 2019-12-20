@@ -1,5 +1,8 @@
-Parsing input
-=============
+=======
+Parsing
+=======
+
+.. module:: sympy.parsing
 
 Parsing Functions Reference
 ---------------------------
@@ -20,7 +23,7 @@ Parsing Transformations Reference
 
 A transformation is a function that accepts the arguments ``tokens,
 local_dict, global_dict`` and returns a list of transformed tokens. They can
-be used by passing a list of functions to :py:func:`parse_expr` and are
+be used by passing a list of functions to :py:func:`~.parse_expr` and are
 applied in the order given.
 
 .. autodata:: sympy.parsing.sympy_parser.standard_transformations
@@ -89,6 +92,27 @@ change between releases, and become stricter, more relaxed, or some mix.
 -------------------------------------
 
 .. autoclass:: sympy.parsing.latex.LaTeXParsingError
+
+
+SymPy Expression Reference
+--------------------------
+
+.. module:: sympy.parsing.sym_expr
+
+.. autoclass:: SymPyExpression
+  :members:
+
+`Fortran` Parsing Reference
+---------------------------------
+
+.. module:: sympy.parsing.fortran.fortran_parser
+
+.. autoclass:: ASR2PyVisitor
+  :members:
+
+.. autofunction:: call_visitor
+
+.. autofunction:: src_to_sympy
 
 Runtime Installation
 --------------------

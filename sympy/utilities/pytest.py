@@ -8,7 +8,7 @@ import os
 import contextlib
 import warnings
 
-from sympy.core.compatibility import get_function_name
+from sympy.core.compatibility import get_function_name, string_types
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 try:
@@ -84,7 +84,7 @@ if not USE_PYTEST:
             except expectedException:
                 return
             raise Failed("DID NOT RAISE")
-        elif isinstance(code, str):
+        elif isinstance(code, string_types):
             raise TypeError(
                 '\'raises(xxx, "code")\' has been phased out; '
                 'change \'raises(xxx, "expression")\' '
@@ -138,7 +138,7 @@ if not USE_PYTEST:
         raise Skipped(str)
 
     def SKIP(reason):
-        """Similar to :func:`skip`, but this is a decorator. """
+        """Similar to ``skip()``, but this is a decorator. """
         def wrapper(func):
             def func_wrapper():
                 raise Skipped(reason)
@@ -157,6 +157,10 @@ if not USE_PYTEST:
         func_wrapper = functools.update_wrapper(func_wrapper, func)
         func_wrapper.__wrapped__ = func
         return func_wrapper
+
+    def nocache_fail(func):
+        "Dummy decorator for marking tests that fail when cache is disabled"
+        return func
 
     @contextlib.contextmanager
     def warns(warningcls, **kwargs):
@@ -198,16 +202,9 @@ if not USE_PYTEST:
 
 else:
     XFAIL = py.test.mark.xfail
+    SKIP = py.test.mark.skip
     slow = py.test.mark.slow
-
-    def SKIP(reason):
-        def skipping(func):
-            @functools.wraps(func)
-            def inner(*args, **kwargs):
-                skip(reason)
-            return inner
-
-        return skipping
+    nocache_fail = py.test.mark.nocache_fail
 
 
 @contextlib.contextmanager

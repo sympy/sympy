@@ -1,5 +1,5 @@
-from sympy import sqrt, Rational, fibonacci
-from sympy.core import S, symbols, I
+from sympy import Rational, fibonacci
+from sympy.core import S, symbols
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises
 from sympy.discrete.recurrences import linrec
@@ -23,8 +23,8 @@ def test_linrec():
     assert all(linrec(coeffs=[1, 1], init=[1, 1], n=n) == fibonacci(n + 1)
                                                     for n in range(595, 615))
 
-    a = [S(1)/2, S(3)/4, S(5)/6, 7, S(8)/9, S(3)/5]
-    b = [1, 2, 8, S(5)/7, S(3)/7, S(2)/9, 6]
+    a = [S.Half, Rational(3, 4), Rational(5, 6), 7, Rational(8, 9), Rational(3, 5)]
+    b = [1, 2, 8, Rational(5, 7), Rational(3, 7), Rational(2, 9), 6]
     x, y, z = symbols('x y z')
 
     assert linrec(coeffs=a[:5], init=b[:4], n=80) == \
@@ -38,8 +38,8 @@ def test_linrec():
         Rational(97409272177295731943657945116791049305244422833125109,
             814315512679031689453125)
 
-    assert linrec(coeffs=[0]*60 + [S(2)/3, S(4)/5], init=b, n=3000) == \
-        26777668739896791448594650497024/S(48084516708184142230517578125)
+    assert linrec(coeffs=[0]*60 + [Rational(2, 3), Rational(4, 5)], init=b, n=3000) == \
+        Rational(26777668739896791448594650497024, 48084516708184142230517578125)
 
     raises(TypeError, lambda: linrec(coeffs=[11, 13, 15, 17], init=[1, 2, 3, 4, 5], n=1))
     raises(TypeError, lambda: linrec(coeffs=a[:4], init=b[:5], n=10000))
@@ -55,3 +55,4 @@ def test_linrec():
         58516436*x + 56372788*y
     assert linrec(coeffs=[0]*50 + [1, 2, 3], init=[x, y, z], n=1000) == \
         11477135884896*x + 25999077948732*y + 41975630244216*z
+    assert linrec(coeffs=[], init=[1, 1], n=20) == 0

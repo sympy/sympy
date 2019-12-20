@@ -635,7 +635,7 @@ class Poly(Expr):
 
         for monom, coeff in rep.items():
 
-            if any(i for i in monom[:j]):
+            if any(monom[:j]):
                 # some generator is used in the portion to be trimmed
                 raise PolynomialError("can't left trim %s" % f)
 
@@ -4436,7 +4436,8 @@ def degree(f, gen=0):
 
     See also
     ========
-    total_degree
+
+    sympy.polys.polytools.Poly.total_degree
     degree_list
     """
 
@@ -4904,7 +4905,7 @@ def half_gcdex(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> half_gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
-    (-x/5 + 3/5, x + 1)
+    (3/5 - x/5, x + 1)
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -4943,7 +4944,7 @@ def gcdex(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
-    (-x/5 + 3/5, x**2/5 - 6*x/5 + 2, x + 1)
+    (3/5 - x/5, x**2/5 - 6*x/5 + 2, x + 1)
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -4989,7 +4990,7 @@ def invert(f, g, *gens, **args):
     NotInvertible: zero divisor
 
     For more efficient inversion of Rationals,
-    use the ``mod_inverse`` function:
+    use the :obj:`~.mod_inverse` function:
 
     >>> mod_inverse(3, 5)
     2
@@ -4998,7 +4999,9 @@ def invert(f, g, *gens, **args):
 
     See Also
     ========
+
     sympy.core.numbers.mod_inverse
+
     """
     options.allowed_flags(args, ['auto', 'polys'])
 
@@ -5961,7 +5964,7 @@ def _symbolic_factor(expr, opt, method):
     if isinstance(expr, Expr) and not expr.is_Relational:
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
-        coeff, factors = _symbolic_factor_list(together(expr), opt, method)
+        coeff, factors = _symbolic_factor_list(together(expr, fraction=opt['fraction']), opt, method)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
         return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
@@ -6014,8 +6017,10 @@ def _generic_factor_list(expr, gens, args, method):
 
 def _generic_factor(expr, gens, args, method):
     """Helper function for :func:`sqf` and :func:`factor`. """
+    fraction = args.pop('fraction', True)
     options.allowed_flags(args, [])
     opt = options.build_options(gens, args)
+    opt['fraction'] = fraction
     return _symbolic_factor(sympify(expr), opt, method)
 
 
@@ -6049,7 +6054,7 @@ def to_rational_coeffs(f):
     >>> p = Poly(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}), x, domain='EX')
     >>> lc, r, _, g = to_rational_coeffs(p)
     >>> lc, r
-    (7 + 5*sqrt(2), -2*sqrt(2) + 2)
+    (7 + 5*sqrt(2), 2 - 2*sqrt(2))
     >>> g
     Poly(x**3 + x**2 - 1/4*x - 1/4, x, domain='QQ')
     >>> r1 = simplify(1/r)
@@ -6264,7 +6269,7 @@ def factor(f, *gens, **args):
 
     In symbolic mode, :func:`factor` will traverse the expression tree and
     factor its components without any prior expansion, unless an instance
-    of :class:`Add` is encountered (in this case formal factorization is
+    of :class:`~.Add` is encountered (in this case formal factorization is
     used). This way :func:`factor` can handle large or symbolic exponents.
 
     By default, the factorization is computed over the rationals. To factor
@@ -6274,7 +6279,7 @@ def factor(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import factor, sqrt
+    >>> from sympy import factor, sqrt, exp
     >>> from sympy.abc import x, y
 
     >>> factor(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
@@ -6307,6 +6312,14 @@ def factor(f, *gens, **args):
     >>> factor(eq, deep=True)
     2**((x + 1)**2)
 
+    If the ``fraction`` flag is False then rational expressions
+    won't be combined. By default it is True.
+
+    >>> factor(5*x + 3*exp(2 - 7*x), deep=True)
+    (5*x*exp(7*x) + 3*exp(2))*exp(-7*x)
+    >>> factor(5*x + 3*exp(2 - 7*x), deep=True, fraction=False)
+    5*x + 3*exp(2)*exp(-7*x)
+
     See Also
     ========
     sympy.ntheory.factor_.factorint
@@ -6319,7 +6332,7 @@ def factor(f, *gens, **args):
             """
             Factor, but avoid changing the expression when unable to.
             """
-            fac = factor(expr)
+            fac = factor(expr, *gens, **args)
             if fac.is_Mul or fac.is_Pow:
                 return fac
             return expr
@@ -6619,7 +6632,7 @@ def cancel(f, *gens, **args):
                 x.is_commutative is True and not x.has(Piecewise),
                 binary=True)
             nc = [cancel(i) for i in nc]
-            return f.func(cancel(f.func._from_args(c)), *nc)
+            return f.func(cancel(f.func(*c)), *nc)
         else:
             reps = []
             pot = preorder_traversal(f)
@@ -6716,7 +6729,7 @@ def groebner(F, *gens, **args):
     ``grevlex``. If no order is specified, it defaults to ``lex``.
 
     For more information on Groebner bases, see the references and the docstring
-    of `solve_poly_system()`.
+    of :func:`~.solve_poly_system`.
 
     Examples
     ========
@@ -6739,9 +6752,9 @@ def groebner(F, *gens, **args):
                   domain='ZZ', order='grevlex')
 
     By default, an improved implementation of the Buchberger algorithm is
-    used. Optionally, an implementation of the F5B algorithm can be used.
-    The algorithm can be set using ``method`` flag or with the :func:`setup`
-    function from :mod:`sympy.polys.polyconfig`:
+    used. Optionally, an implementation of the F5B algorithm can be used. The
+    algorithm can be set using the ``method`` flag or with the
+    :func:`sympy.polys.polyconfig.setup` function.
 
     >>> F = [x**2 - x - 1, (2*x - 1) * y - (x**10 - (1 - x)**10)]
 

@@ -12,7 +12,7 @@ try:
 except ImportError:
     pass
 
-from sympy.core.compatibility import unicode, u_decode
+from sympy.core.compatibility import unicode, u_decode, string_types
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
@@ -172,12 +172,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 \begin{document}
 """ % (package_includes)
     else:
-        if len(packages) > 0:
+        if packages:
             raise ValueError("The \"packages\" keyword must not be set if a "
                              "custom LaTeX preamble was specified")
     latex_main = preamble + '\n%s\n\n' + r"\end{document}"
 
-    if isinstance(expr, str):
+    if isinstance(expr, string_types):
         latex_string = expr
     else:
         latex_string = ('$\\displaystyle ' +

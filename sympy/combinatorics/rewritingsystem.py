@@ -52,7 +52,7 @@ class RewritingSystem(object):
         Set the maximum number of rules that can be defined
 
         '''
-        if self._max_exceeded and n > self.maxeqns:
+        if n > self.maxeqns:
             self._max_exceeded = False
         self.maxeqns = n
         return
@@ -398,7 +398,7 @@ class RewritingSystem(object):
                     else:
                         self.reduction_automaton.states[state].add_transition(letter, current_state_name)
             elif current_state_type == 'a':
-                # Check if the transition to any new state in posible.
+                # Check if the transition to any new state in possible.
                 for letter in automaton_alphabet:
                     _next = current_state_name*letter
                     while len(_next) and _next not in self.reduction_automaton.states:

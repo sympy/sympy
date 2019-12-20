@@ -1,14 +1,13 @@
 from sympy import (S, Symbol, sqrt, I, Integer, Rational, cos, sin, im, re, Abs,
         exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, symbols,
-        expand_complex)
-
+        expand_complex, Pow)
 
 def test_complex():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
     e = (a + I*b)*(a - I*b)
     assert e.expand() == a**2 + b**2
-    assert sqrt(I) == sqrt(I)
+    assert sqrt(I) == Pow(I, S.Half)
 
 
 def test_conjugate():
@@ -38,7 +37,7 @@ def test_conjugate():
 def test_abs1():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
-    assert abs(a) == abs(a)
+    assert abs(a) == Abs(a)
     assert abs(-a) == abs(a)
     assert abs(a + I*b) == sqrt(a**2 + b**2)
 
@@ -94,7 +93,7 @@ def test_evalc():
 
 def test_pythoncomplex():
     x = Symbol("x")
-    assert 4j*x == 4*x*I
+    assert 4j*x != 4*x*I
     assert 4j*x == 4.0*x*I
     assert 4.1j*x != 4*x*I
 
@@ -196,7 +195,7 @@ def test_real_imag():
 
 
 def test_pow_issue_1724():
-    e = ((-1)**(S(1)/3))
+    e = ((S.NegativeOne)**(S.One/3))
     assert e.conjugate().n() == e.n().conjugate()
     e = S('-2/3 - (-29/54 + sqrt(93)/18)**(1/3) - 1/(9*(-29/54 + sqrt(93)/18)**(1/3))')
     assert e.conjugate().n() == e.n().conjugate()

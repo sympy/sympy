@@ -13,8 +13,8 @@ something is not clear, like what the Ricci tensor is, etc.
 
 """
 
-from sympy import (exp, Symbol, sin, Rational, Derivative, dsolve, Function,
-                  Matrix, Eq, pprint, Pow, classify_ode, solve)
+from sympy import (exp, Symbol, sin, dsolve, Function,
+                  Matrix, Eq, pprint, solve)
 
 
 def grad(f, X):

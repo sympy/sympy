@@ -51,8 +51,12 @@ To get the git version do
 For other options (tarballs, debs, etc.), see
 https://docs.sympy.org/dev/install.html.
 
-Documentation and usage
+Documentation and Usage
 -----------------------
+
+For in-depth instructions on installation and building the documentation, see
+the `SymPy Documentation Style Guide
+<https://docs.sympy.org/dev/documentation-style-guide.html>`_.
 
 Everything is at:
 
@@ -66,7 +70,9 @@ You can generate everything at the above site in your local copy of SymPy by::
 Then the docs will be in `_build/html`. If you don't want to read that, here
 is a short usage:
 
-From this directory, start python and::
+From this directory, start Python and:
+
+.. code-block:: python
 
     >>> from sympy import Symbol, cos
     >>> x = Symbol('x')
@@ -76,7 +82,7 @@ From this directory, start python and::
 
 SymPy also comes with a console that is a simple wrapper around the
 classic python console (or IPython when available) that loads the
-sympy namespace and executes some common commands for you.
+SymPy namespace and executes some common commands for you.
 
 To start it, issue::
 
@@ -110,11 +116,13 @@ See https://docs.sympy.org/dev/install.html for more information.
 Contributing
 ------------
 
-We welcome contributions from anyone, even if you are new to open
-source. Please read our `introduction to contributing
-<https://github.com/sympy/sympy/wiki/Introduction-to-contributing>`_. If you
-are new and looking for some way to contribute a good place to start is to
-look at the issues tagged `Easy to Fix
+We welcome contributions from anyone, even if you are new to open source. Please
+read our `Introduction to Contributing
+<https://github.com/sympy/sympy/wiki/Introduction-to-contributing>`_ page and
+the `SymPy Documentation Style Guide
+<https://docs.sympy.org/dev/documentation-style-guide.html>`_. If you are new
+and looking for some way to contribute, a good place to start is to look at the
+issues tagged `Easy to Fix
 <https://github.com/sympy/sympy/issues?q=is%3Aopen+is%3Aissue+label%3A%22Easy+to+Fix%22>`_.
 
 Please note that all participants of this project are expected to follow our
@@ -240,7 +248,7 @@ To cite SymPy in publications use
 
 A BibTeX entry for LaTeX users is
 
-.. code-block:: none
+.. code-block:: bibtex
 
     @article{10.7717/peerj-cs.103,
      title = {SymPy: symbolic computing in Python},

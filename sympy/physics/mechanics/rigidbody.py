@@ -1,10 +1,11 @@
-# -*- encoding: utf-8 -*-
 from __future__ import print_function, division
 
 from sympy.core.backend import sympify
+from sympy.core.compatibility import string_types
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic
 
 __all__ = ['RigidBody']
+
 
 
 class RigidBody(object):
@@ -49,7 +50,7 @@ class RigidBody(object):
     """
 
     def __init__(self, name, masscenter, frame, mass, inertia):
-        if not isinstance(name, str):
+        if not isinstance(name, string_types):
             raise TypeError('Supply a valid name.')
         self._name = name
         self.masscenter = masscenter
@@ -160,7 +161,7 @@ class RigidBody(object):
         The angular momentum H of a rigid body B about some point O in a frame
         N is given by:
 
-            H = I·w + r×Mv
+            H = I . w + r x Mv
 
         where I is the central inertia dyadic of B, w is the angular velocity
         of body B in the frame, N, r is the position vector from point O to the
@@ -296,3 +297,35 @@ class RigidBody(object):
         """
 
         self._pe = sympify(scalar)
+
+    def set_potential_energy(self, scalar):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "RigidBody.set_potential_energy(self, scalar)",
+                useinstead="property sympy.physics.mechanics." +
+                    "RigidBody.potential_energy",
+                deprecated_since_version="1.5", issue=9800).warn()
+        self.potential_energy = scalar
+
+    def parallel_axis(self, point):
+        """Returns the inertia dyadic of the body with respect to another
+        point.
+
+        Parameters
+        ==========
+        point : sympy.physics.vector.Point
+            The point to express the inertia dyadic about.
+
+        Returns
+        =======
+        inertia : sympy.physics.vector.Dyadic
+            The inertia dyadic of the rigid body expressed about the provided
+            point.
+
+        """
+        # circular import issue
+        from sympy.physics.mechanics.functions import inertia
+        a, b, c = self.masscenter.pos_from(point).to_matrix(self.frame)
+        I = self.mass * inertia(self.frame, b**2 + c**2, c**2 + a**2, a**2 +
+                                b**2, -a * b, -b * c, -a * c)
+        return self.central_inertia + I

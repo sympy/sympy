@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 r"""This is rule-based deduction system for SymPy
 
 The whole thing is split into two parts
