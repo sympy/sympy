@@ -574,13 +574,14 @@ class Quaternion(Expr):
         >>> trigsimp(Quaternion.rotate_point((1, 1, 1), (axis, angle)))
         (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
         """
+        x, y, z = pin
         if isinstance(r, tuple):
-            # if r is of the form (vector, angle)
-            q = Quaternion.from_axis_angle(r[0], r[1])
+            vector, angle = r
+            q = Quaternion.from_axis_angle(vector, angle)
         else:
             # if r is a quaternion
             q = r.normalize()
-        pout = q * Quaternion(0, pin[0], pin[1], pin[2]) * conjugate(q)
+        pout = q * Quaternion(0, x, y, z) * conjugate(q)
         return (pout.b, pout.c, pout.d)
 
     def to_axis_angle(self):
