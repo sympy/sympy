@@ -11,7 +11,6 @@ from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.matrices.common import dotprodsimp
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 
@@ -462,10 +461,11 @@ class SparseMatrix(MatrixBase):
         diff = (self - self.T).applyfunc(simpfunc)
         return len(diff.values()) == 0
 
-    def _eval_matrix_mul(self, other, mulsimp=None):
+    def _eval_matrix_mul(self, other):
         """Fast multiplication exploiting the sparsity of the matrix."""
+
         if not isinstance(other, SparseMatrix):
-            return self.multiply(self._new(other), mulsimp=mulsimp)
+            other = self._new(other)
 
         # if we made it here, we're both sparse matrices
         # create quick lookups for rows and cols
@@ -485,13 +485,12 @@ class SparseMatrix(MatrixBase):
                 if indices:
                     vec = [row_lookup[row][k]*col_lookup[col][k] for k in indices]
                     try:
-                        e = Add(*vec)
+                        smat[row, col] = Add(*vec)
                     except (TypeError, SympifyError):
                         # Some matrices don't work with `sum` or `Add`
                         # They don't work with `sum` because `sum` tries to add `0`
                         # Fall back to a safe way to multiply if the `Add` fails.
-                        e = reduce(lambda a, b: a + b, vec)
-                    smat[row, col] = dotprodsimp(e) if mulsimp else e
+                        smat[row, col] = reduce(lambda a, b: a + b, vec)
 
         return self._new(self.rows, other.cols, smat)
 

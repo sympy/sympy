@@ -16,13 +16,12 @@ from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
-from sympy.core.function import count_ops, expand_mul, expand_multinomial
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
 from sympy.polys import cancel, together
-from sympy.simplify import simplify as _simplify
+from sympy.simplify import simplify as _simplify, dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -2141,17 +2140,16 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, self.cols,
                          lambda i, j: self[i, j] + other[i, j])
 
-    def _eval_matrix_mul(self, other, mulsimp=None):
+    def _eval_matrix_mul(self, other):
         def entry(i, j):
             vec = [self[i,k]*other[k,j] for k in range(self.cols)]
             try:
-                e = Add(*vec)
+                return Add(*vec)
             except (TypeError, SympifyError):
                 # Some matrices don't work with `sum` or `Add`
                 # They don't work with `sum` because `sum` tries to add `0`
                 # Fall back to a safe way to multiply if the `Add` fails.
-                e = reduce(lambda a, b: a + b, vec)
-            return dotprodsimp(e) if mulsimp else e
+                return reduce(lambda a, b: a + b, vec)
 
         return self._new(self.rows, other.cols, entry)
 
@@ -2277,10 +2275,14 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return self._eval_matrix_mul(other, mulsimp=mulsimp)
+            m = self._eval_matrix_mul(other)
+            if mulsimp:
+                return m.applyfunc(dotprodsimp)
+            return m
+
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
-            return MatrixArithmetic._eval_matrix_mul(self, other, mulsimp=mulsimp)
+            return MatrixArithmetic._eval_matrix_mul(self, other)
 
         # if 'other' is not iterable then scalar multiplication.
         if not isinstance(other, Iterable):
@@ -2372,7 +2374,8 @@ class MatrixArithmetic(MatrixRequired):
                 try:
                     return jordan_pow(exp, mulsimp=mulsimp)
                 except MatrixError:
-                    pass
+                    if jordan:
+                        raise
             return a._eval_pow_by_recursion(exp, mulsimp=mulsimp)
 
         if jordan_pow:
@@ -2634,40 +2637,6 @@ def classof(A, B):
             return A.__class__
 
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
-
-
-def dotprodsimp(expr):
-    """Simplification for a sum of products targeted at the kind of blowup that
-    occurs during summation of products. Intended to reduce expression blowup
-    during matrix multiplication or other similar operations.
-    """
-
-    expr     = expand_mul(expr) # this and the following expand should not be combined
-    exprops  = count_ops(expr)
-    expr2    = expand_multinomial(expr)
-    expr2ops = count_ops(expr2)
-
-    if expr2ops < exprops:
-        expr    = expr2
-        exprops = expr2ops
-
-    if exprops < 6: # empirically tested cutoff for expensive simplification
-        return expr
-
-    expr2    = cancel(expr)
-    expr2ops = count_ops(expr2)
-
-    if expr2ops < exprops:
-        expr    = expr2
-        exprops = expr2ops
-
-    expr3    = together(expr2, deep=True)
-    expr3ops = count_ops(expr3)
-
-    if expr3ops < exprops:
-        return expr3
-
-    return expr
 
 
 def matmulsimp(M):

@@ -7,7 +7,8 @@ from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify, expand_mul,
                         expand_power_exp, Eq)
 from sympy.core.compatibility import iterable, ordered, range, as_int
 from sympy.core.evaluate import global_evaluate
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, \
+    nfloat, expand_mul, expand_multinomial
 from sympy.core.numbers import Float, I, pi, Rational, Integer
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
@@ -1960,3 +1961,37 @@ def nc_simplify(expr, deep=True):
     else:
         simp = simp.doit(inv_expand=False)
     return simp
+
+
+def dotprodsimp(expr):
+    """Simplification for a sum of products targeted at the kind of blowup that
+    occurs during summation of products. Intended to reduce expression blowup
+    during matrix multiplication or other similar operations.
+    """
+
+    expr     = expand_mul(expr) # this and the following expand should not be combined
+    exprops  = count_ops(expr)
+    expr2    = expand_multinomial(expr)
+    expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
+
+    if exprops < 6: # empirically tested cutoff for expensive simplification
+        return expr
+
+    expr2    = cancel(expr)
+    expr2ops = count_ops(expr2)
+
+    if expr2ops < exprops:
+        expr    = expr2
+        exprops = expr2ops
+
+    expr3    = together(expr2, deep=True)
+    expr3ops = count_ops(expr3)
+
+    if expr3ops < exprops:
+        return expr3
+
+    return expr

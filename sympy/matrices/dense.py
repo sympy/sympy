@@ -13,7 +13,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError, dotprodsimp
+    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -171,7 +171,7 @@ class DenseMatrix(MatrixBase):
         return self._new(len(rowsList), len(colsList),
                          list(mat[i] for i in indices), copy=False)
 
-    def _eval_matrix_mul(self, other, mulsimp=None):
+    def _eval_matrix_mul(self, other):
         other_len = other.rows*other.cols
         new_len = self.rows*other.cols
         new_mat = [self.zero]*new_len
@@ -188,13 +188,12 @@ class DenseMatrix(MatrixBase):
                 col_indices = range(col, other_len, other.cols)
                 vec = [mat[a]*other_mat[b] for a, b in zip(row_indices, col_indices)]
                 try:
-                    e = Add(*vec)
+                    new_mat[i] = Add(*vec)
                 except (TypeError, SympifyError):
                     # Some matrices don't work with `sum` or `Add`
                     # They don't work with `sum` because `sum` tries to add `0`
                     # Fall back to a safe way to multiply if the `Add` fails.
-                    e = reduce(lambda a, b: a + b, vec)
-                new_mat[i] = dotprodsimp(e) if mulsimp else e
+                    new_mat[i] = reduce(lambda a, b: a + b, vec)
 
         return classof(self, other)._new(self.rows, other.cols, new_mat, copy=False)
 

@@ -6,7 +6,7 @@ the expression (x+x)**2 will be converted into 4*x**2
 """
 from .simplify import (simplify, hypersimp, hypersimilar,
     logcombine, separatevars, posify, besselsimp, kroneckersimp,
-    signsimp, bottom_up, nsimplify)
+    signsimp, bottom_up, nsimplify, dotprodsimp)
 
 from .fu import FU, fu
 
