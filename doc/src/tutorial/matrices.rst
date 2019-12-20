@@ -424,15 +424,15 @@ matrices it is much faster. This can be a problem however for larger matrices
 and can even cause multiplication to never end or may be impossible to simplify
 afterwards.
 
-For this reason two separate functions - ``mul`` and ``pow`` for multiplication
-and exponentiation have been added with a flag which allows you to specify that
-an optimized intermediate simplification step is to be performed at each step of
-calculation. The matrix ``exp`` function has also been modified to take this
-flag. By default these functions have the flag ``mulsimp`` set to None which
-means that intermediate simplification is not done, set this to ``True`` to use
-the simplification. This will leave the matrix in a relatively simplified state
-after the operation and permit calculations on some large matrices which were
-not possible or extremely slow previously.
+For this reason two separate functions - ``multiply`` and ``pow`` for
+multiplication and exponentiation have been added with a flag which allows you
+to specify that an optimized intermediate simplification step is to be performed
+at each step of calculation. The matrix ``exp`` function has also been modified
+to take this flag. By default these functions have the flag ``mulsimp`` set to
+None which means that intermediate simplification is not done, set this to
+``True`` to use the simplification. This will leave the matrix in a relatively
+simplified state after the operation and permit calculations on some large
+matrices which were not possible or extremely slow previously.
 
     >>> x = Symbol('x')
     >>> M = Matrix([[1+x, 1-x], [1-x, 1+x]])
@@ -442,7 +442,7 @@ not possible or extremely slow previously.
     ⎢                                        ⎥
     ⎢                            2          2⎥
     ⎣ 2⋅(1 - x)⋅(x + 1)   (1 - x)  + (x + 1) ⎦
-    >>> M.mul(M, mulsimp=True)
+    >>> M.multiply(M, mulsimp=True)
     ⎡   2             2⎤
     ⎢2⋅x  + 2  2 - 2⋅x ⎥
     ⎢                  ⎥

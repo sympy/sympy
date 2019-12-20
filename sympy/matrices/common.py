@@ -2127,6 +2127,9 @@ class MatrixOperations(MatrixRequired):
         from sympy.simplify import trigsimp
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
+    def mulsimp(self):
+        return self.applyfunc(dotprodsimp)
+
 
 class MatrixArithmetic(MatrixRequired):
     """Provides basic matrix arithmetic operations.
@@ -2642,7 +2645,7 @@ def dotprodsimp(expr):
     during matrix multiplication or other similar operations.
     """
 
-    expr     = expand_mul(expr)
+    expr     = expand_mul(expr) # this and the following expand should not be combined
     exprops  = count_ops(expr)
     expr2    = expand_multinomial(expr)
     expr2ops = count_ops(expr2)
