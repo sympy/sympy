@@ -1963,16 +1963,107 @@ def nc_simplify(expr, deep=True):
     return simp
 
 
+def _count_ops_alg(expr):
+    """Count algebraic operations and do not recurse into non-alg args."""
+
+    from sympy.core.operations import LatticeOp
+
+    ops = []
+    args = [expr]
+    NEG = Symbol('NEG')
+    DIV = Symbol('DIV')
+    SUB = Symbol('SUB')
+    ADD = Symbol('ADD')
+    while args:
+        a = args.pop()
+
+        if a.is_Rational:
+            #-1/3 = NEG + DIV
+            if a is not S.One:
+                if a.p < 0:
+                    ops.append(NEG)
+                if a.q != 1:
+                    ops.append(DIV)
+                continue
+        elif a.is_Mul or a.is_MatMul:
+            if _coeff_isneg(a):
+                ops.append(NEG)
+                if a.args[0] is S.NegativeOne:
+                    a = a.as_two_terms()[1]
+                else:
+                    a = -a
+            n, d = fraction(a)
+            if n.is_Integer:
+                ops.append(DIV)
+                if n < 0:
+                    ops.append(NEG)
+                args.append(d)
+                continue  # won't be -Mul but could be Add
+            elif d is not S.One:
+                if not d.is_Integer:
+                    args.append(d)
+                ops.append(DIV)
+                args.append(n)
+                continue  # could be -Mul
+        elif a.is_Add or a.is_MatAdd:
+            aargs = list(a.args)
+            negs = 0
+            for i, ai in enumerate(aargs):
+                if _coeff_isneg(ai):
+                    negs += 1
+                    args.append(-ai)
+                    if i > 0:
+                        ops.append(SUB)
+                else:
+                    args.append(ai)
+                    if i > 0:
+                        ops.append(ADD)
+            if negs == len(aargs):  # -x - y = NEG + SUB
+                ops.append(NEG)
+            elif _coeff_isneg(aargs[0]):  # -x + y = SUB, but already recorded ADD
+                ops.append(SUB - ADD)
+            continue
+        if a.is_Pow and a.exp is S.NegativeOne:
+            ops.append(DIV)
+            args.append(a.base)  # won't be -Mul but could be Add
+            continue
+        if (a.is_Mul or
+            a.is_Pow or
+            a.is_Function):
+
+            o = Symbol(a.func.__name__.upper())
+            # count the args
+            if (a.is_Mul or isinstance(a, LatticeOp)):
+                ops.append(o*(len(a.args) - 1))
+            else:
+                ops.append(o)
+        if not a.is_Symbol:
+            args.extend(a.args)
+
+    if not ops:
+        return 0
+
+    ops = Add(*ops)
+
+    if ops.is_Number:
+        return int(ops)
+
+    return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
+
+
 def dotprodsimp(expr):
     """Simplification for a sum of products targeted at the kind of blowup that
     occurs during summation of products. Intended to reduce expression blowup
     during matrix multiplication or other similar operations.
     """
 
+    if not isinstance(expr, Expr) or expr.is_Relational:
+        return expr
+
     expr     = expand_mul(expr) # this and the following expand should not be combined
-    exprops  = count_ops(expr)
+    exprops  = _count_ops_alg(expr)
     expr2    = expand_multinomial(expr)
-    expr2ops = count_ops(expr2)
+    expr2ops = _count_ops_alg(expr2)
 
     if expr2ops < exprops:
         expr    = expr2
@@ -1982,14 +2073,14 @@ def dotprodsimp(expr):
         return expr
 
     expr2    = cancel(expr)
-    expr2ops = count_ops(expr2)
+    expr2ops = _count_ops_alg(expr2)
 
     if expr2ops < exprops:
         expr    = expr2
         exprops = expr2ops
 
     expr3    = together(expr2, deep=True)
-    expr3ops = count_ops(expr3)
+    expr3ops = _count_ops_alg(expr3)
 
     if expr3ops < exprops:
         return expr3
