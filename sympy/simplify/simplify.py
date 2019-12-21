@@ -1964,91 +1964,68 @@ def nc_simplify(expr, deep=True):
 
 
 def _count_ops_alg(expr):
-    """Count algebraic operations and do not recurse into non-alg args."""
+    """Optimized count algebraic operations with no recurse into non-alg args."""
 
     from sympy.core.operations import LatticeOp
 
-    ops = []
+    ops  = 0
     args = [expr]
-    NEG = Symbol('NEG')
-    DIV = Symbol('DIV')
-    SUB = Symbol('SUB')
-    ADD = Symbol('ADD')
+
     while args:
         a = args.pop()
 
         if a.is_Rational:
-            #-1/3 = NEG + DIV
-            if a is not S.One:
-                if a.p < 0:
-                    ops.append(NEG)
-                if a.q != 1:
-                    ops.append(DIV)
-                continue
-        elif a.is_Mul or a.is_MatMul:
+            if a is not S.One: # -1/3 = NEG + DIV
+                ops += bool (a.p < 0) + bool (a.q != 1)
+
+        elif a.is_Mul:
             if _coeff_isneg(a):
-                ops.append(NEG)
+                ops += 1
                 if a.args[0] is S.NegativeOne:
                     a = a.as_two_terms()[1]
                 else:
                     a = -a
+
             n, d = fraction(a)
+
             if n.is_Integer:
-                ops.append(DIV)
-                if n < 0:
-                    ops.append(NEG)
-                args.append(d)
-                continue  # won't be -Mul but could be Add
+                ops += 1 + bool (n < 0)
+                args.append(d) # won't be -Mul but could be Add
+
             elif d is not S.One:
                 if not d.is_Integer:
                     args.append(d)
-                ops.append(DIV)
-                args.append(n)
-                continue  # could be -Mul
-        elif a.is_Add or a.is_MatAdd:
-            aargs = list(a.args)
-            negs = 0
-            for i, ai in enumerate(aargs):
+                ops += 1
+                args.append(n) # could be -Mul
+
+            else:
+                ops += len(a.args) - 1
+                args.extend(a.args)
+
+        elif a.is_Add:
+            laargs = len(a.args)
+            negs   = 0
+
+            for ai in a.args:
                 if _coeff_isneg(ai):
                     negs += 1
-                    args.append(-ai)
-                    if i > 0:
-                        ops.append(SUB)
-                else:
-                    args.append(ai)
-                    if i > 0:
-                        ops.append(ADD)
-            if negs == len(aargs):  # -x - y = NEG + SUB
-                ops.append(NEG)
-            elif _coeff_isneg(aargs[0]):  # -x + y = SUB, but already recorded ADD
-                ops.append(SUB - ADD)
-            continue
-        if a.is_Pow and a.exp is S.NegativeOne:
-            ops.append(DIV)
-            args.append(a.base)  # won't be -Mul but could be Add
-            continue
-        if (a.is_Mul or
-            a.is_Pow or
-            a.is_Function):
+                    ai    = -ai
+                args.append(ai)
 
-            o = Symbol(a.func.__name__.upper())
-            # count the args
-            if (a.is_Mul or isinstance(a, LatticeOp)):
-                ops.append(o*(len(a.args) - 1))
+            ops += laargs - (negs != laargs) # -x - y = NEG + SUB
+
+        elif a.is_Pow:
+            ops += 1
+            if a.exp is S.NegativeOne:
+                args.append(a.base) # won't be -Mul but could be Add
             else:
-                ops.append(o)
-        if not a.is_Symbol:
+                args.extend(a.args)
+
+        elif isinstance(a, LatticeOp):
+            ops += len(a.args) - 1
             args.extend(a.args)
 
-    if not ops:
-        return 0
-
-    ops = Add(*ops)
-
-    if ops.is_Number:
-        return int(ops)
-
-    return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
+    return ops
 
 
 def dotprodsimp(expr):
