@@ -38,7 +38,7 @@ unicode_whitelist = [
 
     # These files have functions and test functions for unicode input and
     # output.
-    r'*/sympy/utilities/tests/test_code_quality.py',
+    r'*/sympy/testing/tests/test_code_quality.py',
     r'*/sympy/physics/vector/tests/test_printing.py',
     r'*/physics/quantum/tests/test_printing.py',
     r'*/sympy/vector/tests/test_printing.py',

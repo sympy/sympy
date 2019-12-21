@@ -4,7 +4,7 @@ from sympy.plotting.plot import unset_show
 from tempfile import NamedTemporaryFile, mkdtemp
 from sympy.testing.pytest import skip, warns
 from sympy.external import import_module
-from sympy.utilities.tmpfiles import TmpFileManager
+from sympy.testing.tmpfiles import TmpFileManager
 
 import os
 
