@@ -2538,6 +2538,9 @@ class TensAdd(TensExpr, AssocOp):
     def _eval_rewrite_as_Indexed(self, *args):
         return Add.fromiter(args)
 
+    def _eval_derivative(self, s):
+        # Evaluation like Add
+        return self.func(*[a.diff(s) for a in self.args])
 
 class Tensor(TensExpr):
     """
@@ -2571,6 +2574,10 @@ class Tensor(TensExpr):
     A(L_0, -L_0)
 
     """
+
+    _diff_wrt = True
+    is_scalar = True
+    # TODO: verify whether this does not lead to inconsistencies
 
     is_commutative = False
 
@@ -2911,6 +2918,45 @@ class Tensor(TensExpr):
         index_symbols = [i.args[0] for i in self.get_indices()]
         expr = Indexed(tens.args[0], *index_symbols)
         return self._check_add_Sum(expr, index_symbols)
+
+    def _eval_derivative(self, s):
+
+        (selfhead, selffreeindices) = self.args
+        (otherhead, otherfreeindices) = s.args
+
+        # @a_i/@a_k = delta_i^k
+        # @a_i/@a^k = g_ij delta^j_k
+        # @a^i/@a^k = delta^i_k
+        # @a^i/@a_k = g^ij delta_j^k
+        # TODO: if there is no metric present, the derivative should be zero?
+
+        if selfhead is otherhead:
+            # if heads are the same, provide delta and/or metric products
+            # for every free index pair in the appropriate tensor
+            # assumed that the free indices are in proper order
+            # A contravariante index in the derivative becomes covariant
+            # after performing the derivative and vice versa
+
+            mykroneckerdeltas = []
+            for (iself, iother) in zip(selffreeindices, otherfreeindices):
+                if iself.tensor_index_type is not iother.tensor_index_type:
+                    raise ValueError("index types not compatible")
+                else:
+                    mytensorindextype = iself.tensor_index_type
+                    mytensormetric = mytensorindextype.metric
+                    kroneckerdelta = None
+                    if iself.is_up == iother.is_up:
+                        kroneckerdelta = mytensorindextype.delta(iself, -iother)
+                    else:
+                        dummy = TensorIndex('dummy', mytensorindextype,
+                                            is_up=iself.is_up)
+                        kroneckerdelta = mytensormetric(iself, dummy)\
+                                         * mytensorindextype.delta(-dummy,
+                                                                   -iother)
+                    mykroneckerdeltas.append(kroneckerdelta)
+            return TensMul.fromiter(mykroneckerdeltas)
+        else:
+            return S.Zero
 
 
 class TensMul(TensExpr, AssocOp):
@@ -3668,6 +3714,15 @@ class TensMul(TensExpr, AssocOp):
         expr = Mul.fromiter(args)
         return self._check_add_Sum(expr, index_symbols)
 
+    def _eval_derivative(self, s):
+        # Evaluation like Mul
+        args = list(self.args)
+        terms = []
+        for i in range(len(args)):
+            d = args[i].diff(s)
+            if d:
+                terms.append(TensMul(*(args[:i] + [d] + args[i + 1:])))
+        return TensAdd.fromiter(terms)
 
 class TensorElement(TensExpr):
     """
