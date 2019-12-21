@@ -448,7 +448,7 @@ class Factors(object):
         args = []
         for factor, exp in self.factors.items():
             if exp != 1:
-                if isinstance(exp, int):
+                if isinstance(exp, (int, Integer)):
                     b, e = factor.as_base_exp()
                     e = _keep_coeff(Integer(exp), e)
                     args.append(b**e)
