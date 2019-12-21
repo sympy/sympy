@@ -1963,10 +1963,20 @@ def nc_simplify(expr, deep=True):
     return simp
 
 
-def dotprodsimp(expr):
+def dotprodsimp(expr, withsimp=False):
     """Simplification for a sum of products targeted at the kind of blowup that
     occurs during summation of products. Intended to reduce expression blowup
     during matrix multiplication or other similar operations.
+
+    Parameters
+    ==========
+
+    withsimp : bool, optional
+        Specifies whether a flag should be returned along with the expression
+        to indicate roughly whether simplification was successful. It is used
+        in ``MatrixCommon._eval_pow_by_recursion`` in conjunction with
+        ``MatrixCommon.multiply`` to avoid attempting tosimplify an expression
+        multiple times which does not simplify.
     """
 
     from sympy.core.operations import LatticeOp
@@ -2032,25 +2042,28 @@ def dotprodsimp(expr):
 
         return ops
 
-    if not isinstance(expr, Expr) or expr.is_Relational:
-        return expr
+    simplified = False
 
-    expr     = expand_mul(expr) # this and the following expand should not be combined
-    exprops  = _count_ops_alg(expr)
-    expr2    = expand_multinomial(expr)
-    expr2ops = _count_ops_alg(expr2)
+    if isinstance(expr, Expr) and not expr.is_Relational:
+        expr     = expand_mul(expr) # this and the following expand should not be combined
+        exprops  = _count_ops_alg(expr)
+        expr2    = expand_multinomial(expr)
+        expr2ops = _count_ops_alg(expr2)
 
-    if expr2ops < exprops:
-        expr    = expr2
-        exprops = expr2ops
+        if expr2ops < exprops:
+            expr       = expr2
+            exprops    = expr2ops
+            simplified = True
 
-    if exprops < 6: # empirically tested cutoff for expensive simplification
-        return expr
+        if exprops < 6: # empirically tested cutoff for expensive simplification
+            simplified = True
 
-    expr2    = cancel(expr)
-    expr2ops = _count_ops_alg(expr2)
+        else:
+            expr2    = cancel(expr)
+            expr2ops = _count_ops_alg(expr2)
 
-    if expr2ops < exprops:
-        return expr2
+            if expr2ops < exprops:
+                expr       = expr2
+                simplified = True
 
-    return expr
+    return (expr, simplified) if withsimp else expr

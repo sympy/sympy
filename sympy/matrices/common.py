@@ -2161,12 +2161,18 @@ class MatrixArithmetic(MatrixRequired):
             return sum(other[i,k]*self[k,j] for k in range(other.cols))
         return self._new(other.rows, self.cols, entry)
 
-    def _eval_pow_by_recursion(self, num, mulsimp=False):
+    def _eval_pow_by_recursion(self, num, mulsimp=None):
+        if mulsimp and not isinstance(mulsimp, list):
+            mulsimp = [True]*len(self)
+
         if num == 1:
             return self
         if num % 2 == 1:
-            return self * self._eval_pow_by_recursion(num - 1, mulsimp=mulsimp)
+            return self.multiply(self._eval_pow_by_recursion(num - 1,
+                    mulsimp=mulsimp), mulsimp=mulsimp)
+
         ret = self._eval_pow_by_recursion(num // 2, mulsimp=mulsimp)
+
         return ret.multiply(ret, mulsimp=mulsimp)
 
     def _eval_scalar_mul(self, other):
@@ -2260,9 +2266,16 @@ class MatrixArithmetic(MatrixRequired):
         Parameters
         ==========
 
-        mulsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            to control expression blowup during multiplication.
+        mulsimp : bool or list, optional
+            If a bool, specifies whether intermediate term algebraic
+            simplification is used to control expression blowup during
+            multiplication. If this is a list instead it should contain the same
+            number of True or False entries as the matrix has elements which
+            will contain the status of simplification success or failure in
+            order to short-circuit further attempts at simplification of
+            elements which do not simplify in ``_eval_pow_by_recursion``. NOTE:
+            Behavior undefined if matrix multiplication changes number of
+            elements, only intended for square matrices of same dimensions!
         """
 
         other = _matrixify(other)
@@ -2276,9 +2289,22 @@ class MatrixArithmetic(MatrixRequired):
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_mul(other)
-            if mulsimp:
+
+            if not mulsimp:
+                return m
+            if not isinstance(mulsimp, list):
                 return m.applyfunc(dotprodsimp)
-            return m
+
+            lenm  = len(m)
+            elems = [None]*lenm
+
+            for i in range(lenm):
+                if mulsimp[i]:
+                    elems[i], mulsimp[i] = dotprodsimp(m[i], withsimp=True)
+                else:
+                    elems[i], mulsimp[i] = m[i], False
+
+            return m._new(m.rows, m.cols, elems)
 
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
