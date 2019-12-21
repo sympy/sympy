@@ -40,7 +40,9 @@ from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
-from sympy.combinatorics.permutations import Cycle, Permutation
+from sympy.combinatorics.permutations import \
+    Cycle, Permutation, AppliedPermutation
+from sympy.matrices.expressions.permutation import PermutationMatrix
 from sympy import MatrixSymbol, ln
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 from sympy.sets.setexpr import SetExpr
@@ -2430,6 +2432,21 @@ def test_MatrixSymbol_bold():
 
     A = MatrixSymbol("A_k", 3, 3)
     assert latex(A, mat_symbol_style='bold') == r"\mathbf{A_{k}}"
+
+
+def test_AppliedPermutation():
+    p = Permutation(0, 1, 2)
+    x = Symbol('x')
+    assert latex(AppliedPermutation(p, x)) == \
+        r'\sigma_{\left( 0\; 1\; 2\right)}(x)'
+
+
+def test_PermutationMatrix():
+    p = Permutation(0, 1, 2)
+    assert latex(PermutationMatrix(p)) == r'P_{\left( 0\; 1\; 2\right)}'
+    p = Permutation(0, 3)(1, 2)
+    assert latex(PermutationMatrix(p)) == \
+        r'P_{\left( 0\; 3\right)\left( 1\; 2\right)}'
 
 
 def test_imaginary_unit():

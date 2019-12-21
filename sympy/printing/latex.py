@@ -405,6 +405,10 @@ class LatexPrinter(Printer):
         return r"\begin{pmatrix} %s \end{pmatrix}" % mat
 
 
+    def _print_AppliedPermutation(self, expr):
+        perm, var = expr.args
+        return r"\sigma_{%s}(%s)" % (self._print(perm), self._print(var))
+
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
@@ -1683,6 +1687,10 @@ class LatexPrinter(Printer):
     def _print_Identity(self, I):
         return r"\mathbb{I}" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{I}"
+
+    def _print_PermutationMatrix(self, P):
+        perm_str = self._print(P.args[0])
+        return "P_{%s}" % perm_str
 
     def _print_NDimArray(self, expr):
 

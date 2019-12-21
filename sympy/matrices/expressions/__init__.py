@@ -17,6 +17,7 @@ from .hadamard import hadamard_product, HadamardProduct, hadamard_power, Hadamar
 from .diagonal import DiagonalMatrix, DiagonalOf, DiagMatrix, diagonalize_vector
 from .dotproduct import DotProduct
 from .kronecker import kronecker_product, KroneckerProduct, combine_kronecker
+from .permutation import PermutationMatrix, MatrixPermute
 
 __all__ = [
     'MatrixSlice',
@@ -50,4 +51,6 @@ __all__ = [
     'DotProduct',
 
     'kronecker_product', 'KroneckerProduct', 'combine_kronecker',
+
+    'PermutationMatrix', 'MatrixPermute',
 ]
