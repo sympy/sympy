@@ -14,9 +14,10 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.utilities.pytest import (raises, slow, skip, ON_TRAVIS,
+from sympy.testing.pytest import (raises, slow, skip, ON_TRAVIS,
     warns_deprecated_sympy)
-from sympy.utilities.randtest import verify_numerically
+from sympy.testing.randtest import verify_numerically
+
 
 x, y, a, t, x_1, x_2, z, s, b = symbols('x y a t x_1 x_2 z s b')
 n = Symbol('n', integer=True)

@@ -5,7 +5,7 @@ from sympy.ntheory import isprime, totient, mobius, randprime, nextprime, prevpr
     primerange, primepi, prime, primorial, composite, compositepi, reduced_totient
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_prime():
     assert prime(1) == 2

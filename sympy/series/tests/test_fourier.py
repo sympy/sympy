@@ -1,7 +1,7 @@
 from sympy import (symbols, pi, Piecewise, sin, cos, sinc, Rational, S,
                    oo, fourier_series, Add, log, exp, tan)
 from sympy.series.fourier import FourierSeries
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.cache import lru_cache
 
 x, y, z = symbols('x y z')

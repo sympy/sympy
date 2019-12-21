@@ -1,6 +1,6 @@
 from sympy import Float, I, Integer, Matrix
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.represent import (represent, rep_innerproduct,

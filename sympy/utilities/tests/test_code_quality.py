@@ -8,7 +8,7 @@ import random
 import ast
 
 from sympy.core.compatibility import PY3
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.utilities.quality_unicode import test_this_file_encoding
 
 # System path separator (usually slash or backslash) to be

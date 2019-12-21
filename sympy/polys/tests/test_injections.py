@@ -3,7 +3,7 @@
 from sympy.polys.rings import vring
 from sympy.polys.fields import vfield
 from sympy.polys.domains import QQ
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 # make r1 with call-depth = 1
 

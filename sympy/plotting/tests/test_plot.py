@@ -5,7 +5,7 @@ from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
 from sympy.plotting.plot import unset_show, plot_contour, PlotGrid
 from sympy.utilities import lambdify as lambdify_
-from sympy.utilities.pytest import skip, raises, warns
+from sympy.testing.pytest import skip, raises, warns
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
 

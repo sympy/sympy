@@ -2,7 +2,7 @@ from sympy import (symbols, Symbol, oo, Sum, harmonic, Add, S, binomial,
     factorial, log, fibonacci, sin, cos, pi, I, sqrt, Rational)
 from sympy.series.limitseq import limit_seq
 from sympy.series.limitseq import difference_delta as dd
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.calculus.util import AccumulationBounds
 
 n, m, k = symbols('n m k', integer=True)

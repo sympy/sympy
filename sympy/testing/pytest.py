@@ -50,7 +50,7 @@ else:
         Examples
         ========
 
-        >>> from sympy.utilities.pytest import raises
+        >>> from sympy.testing.pytest import raises
 
         >>> raises(ZeroDivisionError, lambda: 1/0)
         >>> raises(ZeroDivisionError, lambda: 1/2)
@@ -176,7 +176,7 @@ else:
     def warns(warningcls, **kwargs):
         '''Like raises but tests that warnings are emitted.
 
-        >>> from sympy.utilities.pytest import warns
+        >>> from sympy.testing.pytest import warns
         >>> import warnings
 
         >>> with warns(UserWarning):
@@ -219,7 +219,7 @@ def warns_deprecated_sympy():
     ``warns``. To suppress warnings without asserting that they are emitted
     use ``ignore_warnings``.
 
-    >>> from sympy.utilities.pytest import warns_deprecated_sympy
+    >>> from sympy.testing.pytest import warns_deprecated_sympy
     >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
     >>> import warnings
 
@@ -250,7 +250,7 @@ def ignore_warnings(warningcls):
     When the warning is coming (reliably) from SymPy the warns function should
     be preferred to ignore_warnings.
 
-    >>> from sympy.utilities.pytest import ignore_warnings
+    >>> from sympy.testing.pytest import ignore_warnings
     >>> import warnings
 
     Here's a warning:

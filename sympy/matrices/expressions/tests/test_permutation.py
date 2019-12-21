@@ -7,7 +7,7 @@ from sympy.matrices.expressions.matexpr import \
     MatrixSymbol, Identity, ZeroMatrix, OneMatrix
 from sympy.matrices.expressions.permutation import \
     MatrixPermute, PermutationMatrix
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import Symbol
 
 

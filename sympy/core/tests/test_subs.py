@@ -5,7 +5,7 @@ from sympy import (
     Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
     AccumBounds, Matrix, zeros, ZeroMatrix)
 from sympy.core.basic import _aresame
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 from sympy.abc import a, x, y, z
 
 

@@ -2,5 +2,5 @@
 pytest
 ======
 
-.. automodule:: sympy.utilities.pytest
+.. automodule:: sympy.testing.pytest
    :members:

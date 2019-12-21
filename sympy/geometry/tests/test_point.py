@@ -3,7 +3,7 @@ from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.matrices import Matrix
 from sympy.utilities.iterables import subsets, permutations, cartes
-from sympy.utilities.pytest import raises, warns
+from sympy.testing.pytest import raises, warns
 
 
 def test_point():

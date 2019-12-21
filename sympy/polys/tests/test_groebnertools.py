@@ -15,7 +15,7 @@ from sympy.polys.orderings import lex, grlex
 from sympy.polys.rings import ring, xring
 from sympy.polys.domains import ZZ, QQ
 
-from sympy.utilities.pytest import slow
+from sympy.testing.pytest import slow
 from sympy.polys import polyconfig as config
 from sympy.core.compatibility import range
 
