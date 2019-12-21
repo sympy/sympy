@@ -1123,15 +1123,14 @@ class SingleEntryMatrix(MatrixExpr):
     def __new__(cls, m, n, i, j):
         m, n, i, j = _sympify(m), _sympify(n), _sympify(i), _sympify(j)
 
-        if not i.is_integer or not j.is_integer or \
-            not m.is_integer or not n.is_integer:
+        if False in (i.is_integer, j.is_integer, m.is_integer, n.is_integer):
             raise ValueError(
                 "Matrix dimensions ({}, {}) and index specifications "
                 "({}, {}) should be integers or integer symbols."
                 .format(m, n, i, j)
             )
 
-        if not m.is_positive or not n.is_positive:
+        if m.is_positive is False or n.is_positive is False:
             raise ValueError(
                 "Matrix dimensions ({}, {}) should be positives".format(m, n)
             )
