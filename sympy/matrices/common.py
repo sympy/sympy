@@ -2161,7 +2161,18 @@ class MatrixArithmetic(MatrixRequired):
             return sum(other[i,k]*self[k,j] for k in range(other.cols))
         return self._new(other.rows, self.cols, entry)
 
-    def _eval_pow_by_recursion(self, num, mulsimp=None, prevsimp=None):
+    def _eval_pow_by_recursion(self, num):
+        if num == 1:
+            return self
+
+        if num % 2 == 1:
+            a, b = self, self._eval_pow_by_recursion(num - 1)
+        else:
+            a = b = self._eval_pow_by_recursion(num // 2)
+
+        return a.multiply(b)
+
+    def _eval_pow_by_recursion_mulsimp(self, num, mulsimp=None, prevsimp=None):
         if mulsimp and prevsimp is None:
             prevsimp = [True]*len(self)
 
@@ -2169,11 +2180,11 @@ class MatrixArithmetic(MatrixRequired):
             return self
 
         if num % 2 == 1:
-            a, b = self, self._eval_pow_by_recursion(num - 1, mulsimp=mulsimp,
-                    prevsimp=prevsimp)
+            a, b = self, self._eval_pow_by_recursion_mulsimp(num - 1,
+                    mulsimp=mulsimp, prevsimp=prevsimp)
         else:
-            a = b = self._eval_pow_by_recursion(num // 2, mulsimp=mulsimp,
-                    prevsimp=prevsimp)
+            a = b = self._eval_pow_by_recursion_mulsimp(num // 2,
+                    mulsimp=mulsimp, prevsimp=prevsimp)
 
         m = a.multiply(b, mulsimp=False)
 
@@ -2398,7 +2409,11 @@ class MatrixArithmetic(MatrixRequired):
                 except MatrixError:
                     if jordan:
                         raise
-            return a._eval_pow_by_recursion(exp, mulsimp=mulsimp)
+
+            if mulsimp is not None:
+                return a._eval_pow_by_recursion_mulsimp(exp, mulsimp=mulsimp)
+            else:
+                return a._eval_pow_by_recursion(exp)
 
         if jordan_pow:
             try:

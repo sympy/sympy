@@ -89,7 +89,7 @@ class MatrixDeterminant(MatrixCommon):
 
         mulsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
-            to control expression blowup during multiplication.
+            to control expression blowup during matrix multiplication.
         """
 
         # the 0 x 0 case is trivial
@@ -161,7 +161,7 @@ class MatrixDeterminant(MatrixCommon):
 
             mulsimp : bool, optional
                 Specifies whether intermediate term algebraic simplification is
-                used to control expression blowup during multiplication.
+                used to control expression blowup during matrix multiplication.
 
            For more information on the implemented algorithm refer to:
 
@@ -346,7 +346,7 @@ class MatrixDeterminant(MatrixCommon):
 
         mulsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
-            to control expression blowup during multiplication.
+            to control expression blowup during matrix multiplication.
 
         Notes
         =====
@@ -3228,7 +3228,7 @@ class MatrixBase(MatrixDeprecated,
 
         mulsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
-            during recursive power evaluations to control expression blowup.
+            during recursive matrix multiplications to control expression blowup.
         """
         if not self.is_square:
             raise NonSquareMatrixError(
