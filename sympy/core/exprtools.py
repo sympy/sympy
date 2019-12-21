@@ -358,8 +358,8 @@ class Factors(object):
             for f in list(factors.keys()):
                 if isinstance(f, Rational) and not isinstance(f, Integer):
                     p, q = Integer(f.p), Integer(f.q)
-                    factors[p] = (factors[p] if p in factors else 0) + factors[f]
-                    factors[q] = (factors[q] if q in factors else 0) - factors[f]
+                    factors[p] = (factors[p] if p in factors else S.Zero) + factors[f]
+                    factors[q] = (factors[q] if q in factors else S.Zero) - factors[f]
                     factors.pop(f)
             if i:
                 factors[I] = S.One*i
@@ -448,9 +448,9 @@ class Factors(object):
         args = []
         for factor, exp in self.factors.items():
             if exp != 1:
-                if isinstance(exp, (int, Integer)):
+                if isinstance(exp, Integer):
                     b, e = factor.as_base_exp()
-                    e = _keep_coeff(Integer(exp), e)
+                    e = _keep_coeff(exp, e)
                     args.append(b**e)
                 else:
                     args.append(factor**exp)
