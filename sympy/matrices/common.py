@@ -2198,7 +2198,7 @@ class MatrixArithmetic(MatrixRequired):
             if prevsimp[i]:
                 elems[i], prevsimp[i] = dotprodsimp(m[i], withsimp=True)
             else:
-                elems[i], prevsimp[i] = m[i], False
+                elems[i] = m[i]
 
         return m._new(m.rows, m.cols, elems)
 
