@@ -2843,15 +2843,6 @@ class Infinity(with_metaclass(Singleton, Number)):
         return self._eval_evalf(prec)
 
     @_sympifyit('other', NotImplemented)
-    def __add__(self, other):
-        if isinstance(other, Number):
-            if other is S.NegativeInfinity or other is S.NaN:
-                return S.NaN
-            return self
-        return NotImplemented
-    __radd__ = __add__
-
-    @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Number):
             if other is S.Infinity or other is S.NaN:
