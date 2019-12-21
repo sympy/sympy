@@ -766,33 +766,7 @@ class Basic(with_metaclass(ManagedProperties)):
         return self.args
 
 
-    def as_poly(self, *gens, **args):
-        """Converts ``self`` to a polynomial or returns ``None``.
 
-        >>> from sympy import sin
-        >>> from sympy.abc import x, y
-
-        >>> print((x**2 + x*y).as_poly())
-        Poly(x**2 + x*y, x, y, domain='ZZ')
-
-        >>> print((x**2 + x*y).as_poly(x, y))
-        Poly(x**2 + x*y, x, y, domain='ZZ')
-
-        >>> print((x**2 + sin(y)).as_poly(x, y))
-        None
-
-        """
-        from sympy.polys import Poly, PolynomialError
-
-        try:
-            poly = Poly(self, *gens, **args)
-
-            if not poly.is_Poly:
-                return None
-            else:
-                return poly
-        except PolynomialError:
-            return None
 
     def as_content_primitive(self, radical=False, clear=True):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
