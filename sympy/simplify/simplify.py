@@ -2056,10 +2056,10 @@ def dotprodsimp(expr):
         expr    = expr2
         exprops = expr2ops
 
-    expr3    = together(expr2, deep=True)
-    expr3ops = _count_ops_alg(expr3)
+    # expr3    = together(expr2, deep=True)
+    # expr3ops = _count_ops_alg(expr3)
 
-    if expr3ops < exprops:
-        return expr3
+    # if expr3ops < exprops:
+    #     return expr3
 
     return expr
