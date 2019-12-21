@@ -26,6 +26,7 @@ Gumbel
 Gompertz
 Kumaraswamy
 Laplace
+Levy
 Logistic
 LogLogistic
 LogNormal
@@ -92,6 +93,7 @@ __all__ = ['ContinuousRV',
 'Gumbel',
 'Kumaraswamy',
 'Laplace',
+'Levy',
 'Logistic',
 'LogLogistic',
 'LogNormal',
@@ -2104,6 +2106,79 @@ def Laplace(name, mu, b):
             MultivariateLaplaceDistribution, name, mu, b)
 
     return rv(name, LaplaceDistribution, (mu, b))
+
+#-------------------------------------------------------------------------------
+# Levy distribution ---------------------------------------------------------
+
+
+class LevyDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 'c')
+
+    @property
+    def set(self):
+        return Interval(self.mu, oo)
+
+    @staticmethod
+    def check(mu, c):
+        _value_check(c > 0, "c (scale parameter) must be positive")
+
+    def pdf(self, x):
+        mu, c = self.mu, self.c
+        return sqrt(c/(2*pi))*exp(-c/(2*(x - mu)))/((x - mu)**(S.One + S.Half))
+
+    def _cdf(self, x):
+        mu, c = self.mu, self.c
+        return erfc(sqrt(c/(2*(x - mu))))
+
+    def _characteristic_function(self, t):
+        mu, c = self.mu, self.c
+        return exp(I * mu * t - sqrt(-2 * I * c * t))
+
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('The moment generating function of Levy distribution does not exist.')
+
+def Levy(name, mu, c):
+    r"""
+    Create a continuous random variable with a Levy distribution.
+    The density of the Levy distribution is given by
+    .. math::
+        f(x) := \sqrt(\frac{c}{2 \pi}) \frac{\exp -\frac{c}{2 (x - \mu)}}{(x - \mu)^{3/2}}
+
+    Parameters
+    ==========
+
+    mu : Real number, the location parameter
+    c : Real number, `c > 0`, a scale parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Levy, density, cdf
+    >>> from sympy import Symbol, pprint
+    >>> mu = Symbol("mu")
+    >>> c = Symbol("c", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = Levy("x", mu, c)
+
+    >>> density(X)(z)
+    sqrt(2)*sqrt(c)*exp(-c/(-2*mu + 2*z))/(2*sqrt(pi)*(-mu + z)**(3/2))
+
+    >>> cdf(X)(z)
+    erfc(sqrt(c/(-2*mu + 2*z)))
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/L%C3%A9vy_distribution
+    .. [2] http://mathworld.wolfram.com/LevyDistribution.html
+    """
+
+    return rv(name, LevyDistribution, (mu, c))
 
 #-------------------------------------------------------------------------------
 # Logistic distribution --------------------------------------------------------
