@@ -2140,6 +2140,7 @@ class LevyDistribution(SingleContinuousDistribution):
 def Levy(name, mu, c):
     r"""
     Create a continuous random variable with a Levy distribution.
+
     The density of the Levy distribution is given by
     .. math::
         f(x) := \sqrt(\frac{c}{2 \pi}) \frac{\exp -\frac{c}{2 (x - \mu)}}{(x - \mu)^{3/2}}
@@ -2160,6 +2161,7 @@ def Levy(name, mu, c):
 
     >>> from sympy.stats import Levy, density, cdf
     >>> from sympy import Symbol, pprint
+
     >>> mu = Symbol("mu")
     >>> c = Symbol("c", positive=True)
     >>> z = Symbol("z")
