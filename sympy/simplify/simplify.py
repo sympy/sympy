@@ -1974,8 +1974,8 @@ def dotprodsimp(expr, withsimp=False):
     withsimp : bool, optional
         Specifies whether a flag should be returned along with the expression
         to indicate roughly whether simplification was successful. It is used
-        in ``MatrixCommon._eval_pow_by_recursion`` in conjunction with
-        ``MatrixCommon.multiply`` to avoid attempting tosimplify an expression
+        in ``MatrixArithmetic._eval_pow_by_recursion`` in conjunction with
+        ``MatrixArithmetic.multiply`` to avoid attempting tosimplify an expression
         multiple times which does not simplify.
     """
 
