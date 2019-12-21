@@ -88,6 +88,9 @@ def test_PermutationMatrix_rewrite_BlockDiagMatrix():
     assert P.rewrite(BlockDiagMatrix) == \
         BlockDiagMatrix(P0, P3120, P0)
 
+    P = PermutationMatrix(Permutation(0, 3)(1, 4)(2, 5))
+    assert P.rewrite(BlockDiagMatrix) == BlockDiagMatrix(P)
+
 
 def test_MartrixPermute_basic():
     p = Permutation(0, 1)
