@@ -91,3 +91,4 @@ evalf._create_evalf_table()
 #import abc
 
 from .deprecated import *
+from .testing import *

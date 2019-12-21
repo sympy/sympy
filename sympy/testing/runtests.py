@@ -159,7 +159,7 @@ def setup_pprint():
 def run_in_subprocess_with_hash_randomization(
         function, function_args=(),
         function_kwargs=None, command=sys.executable,
-        module='sympy.utilities.runtests', force=False):
+        module='sympy.testing.runtests', force=False):
     """
     Run a function in a Python subprocess with hash randomization enabled.
 
@@ -180,7 +180,7 @@ def run_in_subprocess_with_hash_randomization(
 
     ``function`` should be a string name of a function that is importable from
     the module ``module``, like "_test".  The default for ``module`` is
-    "sympy.utilities.runtests".  ``function_args`` and ``function_kwargs``
+    "sympy.testing.runtests".  ``function_args`` and ``function_kwargs``
     should be a repr-able tuple and dict, respectively.  The default Python
     command is sys.executable, which is the currently running Python command.
 
@@ -196,7 +196,7 @@ def run_in_subprocess_with_hash_randomization(
     Examples
     ========
 
-    >>> from sympy.utilities.runtests import (
+    >>> from sympy.testing.runtests import (
     ... run_in_subprocess_with_hash_randomization)
     >>> # run the core tests in verbose mode
     >>> run_in_subprocess_with_hash_randomization("_test",
@@ -266,7 +266,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
 
     For example, to run the solvers tests with colors turned off:
 
-    >>> from sympy.utilities.runtests import run_all_tests
+    >>> from sympy.testing.runtests import run_all_tests
     >>> run_all_tests(test_args=("solvers",),
     ... test_kwargs={"colors:False"}) # doctest: +SKIP
 
@@ -734,7 +734,7 @@ def _get_doctest_blacklist():
     # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
         "sympy/conftest.py", # Python 2.7 issues
-        "sympy/utilities/benchmarking.py"
+        "sympy/testing/benchmarking.py"
     ])
 
     blacklist = convert_to_native_paths(blacklist)
@@ -915,7 +915,7 @@ def split_list(l, split, density=None):
     tests will be balanced so that each split has as equal-as-possible
     amount of mass according to `density`.
 
-    >>> from sympy.utilities.runtests import split_list
+    >>> from sympy.testing.runtests import split_list
     >>> a = list(range(10))
     >>> split_list(a, '1/3')
     [0, 1, 2]
@@ -2160,7 +2160,7 @@ class PyTestReporter(Reporter):
             implementation += " %s.%s.%s-%s-%s" % sys.pypy_version_info
         self.write("executable:         %s  (%s) [%s]\n" %
             (executable, python_version, implementation))
-        from .misc import ARCH
+        from sympy.utilities.misc import ARCH
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
         self.write("cache:              %s\n" % USE_CACHE)
@@ -2177,7 +2177,7 @@ class PyTestReporter(Reporter):
         self.write("numpy:              %s\n" % (None if not numpy else numpy.__version__))
         if seed is not None:
             self.write("random seed:        %d\n" % seed)
-        from .misc import HASH_RANDOMIZATION
+        from sympy.utilities.misc import HASH_RANDOMIZATION
         self.write("hash randomization: ")
         hash_seed = os.getenv("PYTHONHASHSEED") or '0'
         if HASH_RANDOMIZATION and (hash_seed == "random" or int(hash_seed)):
