@@ -1,6 +1,6 @@
 """Tests for Dixon's and Macaulay's classes. """
 
-from sympy import Matrix
+from sympy import Matrix, factor
 from sympy.core import symbols
 from sympy.tensor.indexed import IndexedBase
 
