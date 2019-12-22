@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import random
 from collections import defaultdict
 
-from sympy.core.basic import Atom, Basic
+from sympy.core.basic import Atom
 from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
 from sympy.core.compatibility import \
