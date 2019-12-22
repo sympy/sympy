@@ -1981,8 +1981,8 @@ def dotprodsimp(expr, withsimp=False):
     from sympy.core.operations import LatticeOp
 
     def _count_ops_alg(expr):
-        """Optimized count algebraic operations with no recursion into non-algebraic
-        args like ``core.function.count_ops`` does.
+        """Optimized count algebraic operations with no recursion into
+        non-algebraic args that ``core.function.count_ops`` does.
         """
 
         ops  = 0
@@ -2041,9 +2041,41 @@ def dotprodsimp(expr, withsimp=False):
 
         return ops
 
-    simplified = False
+    def _nonalg_subs_dummies(expr, dummies):
+        """Substitute dummy variables for non-algebraic expressions to avoid
+        evaluation of non-algebraic terms that ``polys.polytools.cancel`` does.
+        """
+
+        if not expr.args:
+            return expr
+
+        if expr.is_Add or expr.is_Mul or expr.is_Pow:
+            args = None
+
+            for i, a in enumerate(expr.args):
+                c = _nonalg_subs_dummies(a, dummies)
+
+                if c is a:
+                    continue
+
+                if args is None:
+                    args = list(expr.args)
+
+                args[i] = c
+
+            if args is None:
+                return expr
+
+            return expr.func(*args)
+
+        return dummies.setdefault(expr, Dummy())
+
+    simplified = False # doesn't really mean simplified, rather "can simplify again"
 
     if isinstance(expr, Expr) and not expr.is_Relational:
+        # XXX: Should really count ops of initial expression and compare to
+        # expand_mul to see if simplification was done but that can be good bit
+        # slower for large initial expressions and this seems to work.
         expr     = expand_mul(expr) # this and the following expand should not be combined
         exprops  = _count_ops_alg(expr)
         expr2    = expand_multinomial(expr)
@@ -2058,11 +2090,16 @@ def dotprodsimp(expr, withsimp=False):
             simplified = True
 
         else:
-            expr2    = cancel(expr)
-            expr2ops = _count_ops_alg(expr2)
+            dummies = {}
+            expr2   = _nonalg_subs_dummies(expr, dummies)
 
-            if expr2ops < exprops:
-                expr       = expr2
-                simplified = True
+            if expr2 is expr or _count_ops_alg(expr2) >= 6: # check again after substitution
+                expr2    = cancel(expr2)
+                expr2    = expr2.subs([(d, e) for e, d in dummies.items()])
+                expr2ops = _count_ops_alg(expr2)
+
+                if expr2ops < exprops:
+                    expr       = expr2
+                    simplified = True
 
     return (expr, simplified) if withsimp else expr
