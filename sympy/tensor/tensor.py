@@ -1013,10 +1013,10 @@ class TensorIndexType(Basic):
             if metric is not None:
                 if metric in (True, False, 0, 1):
                     metric_name = 'metric'
-                    metric_antisym = metric
+                    #metric_antisym = metric
                 else:
                     metric_name = metric.name
-                    metric_antisym = metric.antisym
+                    #metric_antisym = metric.antisym
 
                 if metric:
                     metric_symmetry = -1
