@@ -636,13 +636,6 @@ class Set(Basic):
         """
         return self - self.boundary
 
-    def simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
-        """See the simplify function in sympy.simplify"""
-        from sympy.simplify import simplify
-        from sympy.core.function import count_ops
-        measure = measure or count_ops
-        return simplify(self, ratio, measure)
-
     @property
     def _boundary(self):
         raise NotImplementedError()
