@@ -4,7 +4,7 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, N, atan, erfi, besselj)
+                   factorial, binomial, erfi, besselj)
 from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
@@ -20,10 +20,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Pareto, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
-from sympy.stats.crv_types import (NormalDistribution, GumbelDistribution, GompertzDistribution, LaplaceDistribution,
-                                  ParetoDistribution, RaisedCosineDistribution, BeniniDistribution, BetaDistribution,
-                                  CauchyDistribution, GammaInverseDistribution, LogNormalDistribution, StudentTDistribution,
-                                  QuadraticUDistribution, WignerSemicircleDistribution, ChiDistribution)
+from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.randtest import verify_numerically as tn
@@ -432,7 +429,6 @@ def test_betaprime():
 def test_cauchy():
     x0 = Symbol("x0")
     gamma = Symbol("gamma", positive=True)
-    t = Symbol('t')
     p = Symbol("p", positive=True)
 
     X = Cauchy('x', x0, gamma)

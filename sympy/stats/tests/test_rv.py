@@ -1,18 +1,16 @@
 from __future__ import unicode_literals
-from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-        DiracDelta, Lambda, log, pi, exp, log, FallingFactorial, Rational)
-from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance, covariance,
-        skewness, density, given, independent, dependent, where, pspace,
+from sympy import (S, Symbol, Interval, exp,
+        symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
+        DiracDelta, Lambda, log, pi, FallingFactorial, Rational)
+from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
+        density, given, independent, dependent, where, pspace,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
-        DiscreteUniform, Poisson, characteristic_function, moment_generating_function, sample_iter)
+        DiscreteUniform, Poisson, characteristic_function, moment_generating_function)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.numbers import comp
-from sympy.abc import x
-from sympy.stats import Normal, DiscreteUniform, Poisson, characteristic_function, moment_generating_function, sample_iter
 from sympy.stats.frv_types import BernoulliDistribution
 
 def test_where():
