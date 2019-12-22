@@ -14,13 +14,24 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 
 try:
-    import py
-    from _pytest.python_api import raises
-    from _pytest.recwarn import warns
-    from _pytest.outcomes import skip, Failed
+    import pytest
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False
+
+
+if USE_PYTEST:
+    raises = pytest.raises
+    warns = pytest.warns
+    skip = pytest.skip
+    XFAIL = pytest.mark.xfail
+    SKIP = pytest.mark.skip
+    slow = pytest.mark.slow
+    nocache_fail = pytest.mark.nocache_fail
+
+else:
+    # Not using pytest so define the things that would have been imported from
+    # there.
 
     def raises(expectedException, code=None):
         """
@@ -197,13 +208,6 @@ except ImportError:
                    ' The list of emitted warnings is: %s.'
                    ) % (warningcls, [w.message for w in warnrec])
             raise Failed(msg)
-
-
-else:
-    XFAIL = py.test.mark.xfail
-    SKIP = py.test.mark.skip
-    slow = py.test.mark.slow
-    nocache_fail = py.test.mark.nocache_fail
 
 
 @contextlib.contextmanager
