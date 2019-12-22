@@ -289,27 +289,16 @@ class Relational(Boolean, Expr, EvalfMixin):
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
         if r.is_Relational:
-            from sympy.sets.sets import Set
-
             dif = r.lhs - r.rhs
-            if isinstance(dif, Set):
-                v = None
-                if dif.equals(S.EmptySet):
-                    v = S.EmptySet
-                if v is not None:
-                    r = r.func._eval_relation(v, S.EmptySet)
-
-            else:
-                # replace dif with a valid Number that will
-                # allow a definitive comparison with 0
-                v = None
-                if dif.is_comparable:
-                    v = dif.n(2)
-                elif dif.equals(0):  # XXX this is expensive
-                    v = S.Zero
-                if v is not None:
-                    r = r.func._eval_relation(v, S.Zero)
-
+            # replace dif with a valid Number that will
+            # allow a definitive comparison with 0
+            v = None
+            if dif.is_comparable:
+                v = dif.n(2)
+            elif dif.equals(0):  # XXX this is expensive
+                v = S.Zero
+            if v is not None:
+                r = r.func._eval_relation(v, S.Zero)
             r = r.canonical
             # If there is only one symbol in the expression,
             # try to write it on a simplified form
