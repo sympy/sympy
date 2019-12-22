@@ -24,7 +24,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import PurePoly, cancel, roots
 from sympy.printing import sstr
 from sympy.simplify import nsimplify
-from sympy.simplify import simplify as _simplify
+from sympy.simplify import simplify as _simplify, dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.misc import filldedent
@@ -182,7 +182,8 @@ class MatrixDeterminant(MatrixCommon):
             return self._new(2, 1, [self.one, -self[0,0]])
 
         submat, toeplitz = self._eval_berkowitz_toeplitz_matrix(mulsimp=mulsimp)
-        return toeplitz.multiply(submat._eval_berkowitz_vector(), mulsimp=mulsimp)
+        return toeplitz.multiply(submat._eval_berkowitz_vector(mulsimp=mulsimp),
+                mulsimp=mulsimp)
 
     def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul):
         """Compute matrix determinant using Bareiss' fraction-free
@@ -521,14 +522,16 @@ class MatrixDeterminant(MatrixCommon):
         elif n == 1:
             return self[0,0]
         elif n == 2:
-            return self[0, 0] * self[1, 1] - self[0, 1] * self[1, 0]
+            m = self[0, 0] * self[1, 1] - self[0, 1] * self[1, 0]
+            return dotprodsimp(m) if mulsimp else m
         elif n == 3:
-            return  (self[0, 0] * self[1, 1] * self[2, 2]
-                   + self[0, 1] * self[1, 2] * self[2, 0]
-                   + self[0, 2] * self[1, 0] * self[2, 1]
-                   - self[0, 2] * self[1, 1] * self[2, 0]
-                   - self[0, 0] * self[1, 2] * self[2, 1]
-                   - self[0, 1] * self[1, 0] * self[2, 2])
+            m =  (self[0, 0] * self[1, 1] * self[2, 2]
+                + self[0, 1] * self[1, 2] * self[2, 0]
+                + self[0, 2] * self[1, 0] * self[2, 1]
+                - self[0, 2] * self[1, 1] * self[2, 0]
+                - self[0, 0] * self[1, 2] * self[2, 1]
+                - self[0, 1] * self[1, 0] * self[2, 2])
+            return dotprodsimp(m) if mulsimp else m
 
         if method == "bareiss":
             return self._eval_det_bareiss(iszerofunc=iszerofunc)
