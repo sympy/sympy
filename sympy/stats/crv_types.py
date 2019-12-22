@@ -2172,7 +2172,7 @@ def Levy(name, mu, c):
     sqrt(2)*sqrt(c)*exp(-c/(-2*mu + 2*z))/(2*sqrt(pi)*(-mu + z)**(3/2))
 
     >>> cdf(X)(z)
-    erfc(sqrt(c/(-2*mu + 2*z)))
+    erfc(sqrt(c)*sqrt(1/(-2*mu + 2*z)))
 
     References
     ==========
