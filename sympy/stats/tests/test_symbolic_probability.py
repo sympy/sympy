@@ -1,4 +1,4 @@
-from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum,
+from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum
 from sympy.core.expr import unchanged
 from sympy.stats import (Normal, Poisson, variance, Covariance, Variance,
                          Probability, Expectation)
