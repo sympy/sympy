@@ -28,7 +28,7 @@ from mpmath.ctx_mp import mpnumeric
 from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
-    prec_to_dps, fone, fnone)
+    prec_to_dps)
 from sympy.utilities.misc import debug, filldedent
 from .evaluate import global_evaluate
 
@@ -1418,7 +1418,6 @@ class Float(Number):
         return not self == other
 
     def _Frel(self, other, op):
-        from sympy.core.evalf import evalf
         from sympy.core.numbers import prec_to_dps
         try:
             other = _sympify(other)

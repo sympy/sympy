@@ -20,7 +20,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from mpmath import mpf
 from mpmath.rational import mpq
 import mpmath
-from sympy import numbers
+from sympy.core import numbers
 t = Symbol('t', real=False)
 
 _ninf = float(-oo)
