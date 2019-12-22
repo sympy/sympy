@@ -2121,6 +2121,7 @@ class LevyDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(mu, c):
         _value_check(c > 0, "c (scale parameter) must be positive")
+        _value_check(mu.is_real, "mu (location paramater) must be real")
 
     def pdf(self, x):
         mu, c = self.mu, self.c
@@ -2162,7 +2163,7 @@ def Levy(name, mu, c):
     >>> from sympy.stats import Levy, density, cdf
     >>> from sympy import Symbol, pprint
 
-    >>> mu = Symbol("mu")
+    >>> mu = Symbol("mu", real=True)
     >>> c = Symbol("c", positive=True)
     >>> z = Symbol("z")
 
