@@ -216,7 +216,7 @@ def test_issue_3560():
 
 
 def test_issue_18038():
-    raises(AttributeError, lambda: integrate((x, x))
+    raises(AttributeError, lambda: integrate((x, x)))
 
 
 def test_integrate_poly():
