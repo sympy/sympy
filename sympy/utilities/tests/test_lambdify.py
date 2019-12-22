@@ -1,4 +1,3 @@
-from distutils.version import LooseVersion as V
 from itertools import product
 import math
 import inspect
@@ -12,7 +11,7 @@ from sympy import (
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
     digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
     MatrixSymbol, fresnelc, fresnels)
-from sympy.functions.elementary.complexes import re, im, Abs, arg
+from sympy.functions.elementary.complexes import re, im, arg
 from sympy.functions.special.polynomials import \
     chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
     assoc_legendre, assoc_laguerre, jacobi

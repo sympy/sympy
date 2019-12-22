@@ -3,7 +3,7 @@ from sympy.functions import (log, sin, cos, tan, cot, csc, sec, erf, gamma, uppe
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei
-from sympy import (Basic, Mul, Add, Pow, Integral, UnevaluatedExpr, exp)
+from sympy import (Basic, Mul, Add, Pow, Integral, exp)
 
 matchpy = import_module("matchpy")
 

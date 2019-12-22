@@ -427,11 +427,13 @@ class MultisetPartitionTraverser():
         """Useful for usderstanding/debugging the algorithms.  Not
         generally activated in end-user code."""
         if self.debug:
-            letters = 'abcdefghijklmnopqrstuvwxyz'
-            state = [self.f, self.lpart, self.pstack]
-            print("DBG:", msg,
-                  ["".join(part) for part in list_visitor(state, letters)],
-                  animation_visitor(state))
+            # XXX: animation_visitor is undefined...
+            raise RuntimeError
+            #letters = 'abcdefghijklmnopqrstuvwxyz'
+            #state = [self.f, self.lpart, self.pstack]
+            #print("DBG:", msg,
+            #      ["".join(part) for part in list_visitor(state, letters)],
+            #      animation_visitor(state))
 
     #
     # Helper methods for enumeration

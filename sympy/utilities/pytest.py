@@ -11,6 +11,8 @@ import warnings
 from sympy.core.compatibility import get_function_name, string_types
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
+
 try:
     import py
     from _pytest.python_api import raises
@@ -20,9 +22,6 @@ try:
 except ImportError:
     USE_PYTEST = False
 
-ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
-
-if not USE_PYTEST:
     def raises(expectedException, code=None):
         """
         Tests that ``code`` raises the exception ``expectedException``.
