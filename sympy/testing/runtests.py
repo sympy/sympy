@@ -735,7 +735,16 @@ def _get_doctest_blacklist():
     blacklist.extend([
         "sympy/conftest.py", # Python 2.7 issues
         "sympy/testing/benchmarking.py",
+    ])
+
+    # These are deprecated stubs to be removed:
+    blacklist.extend([
         "sympy/utilities/benchmarking.py",
+        "sympy/utilities/tmpfiles.py",
+        "sympy/utilities/pytest.py",
+        "sympy/utilities/runtests.py",
+        "sympy/utilities/quality_unicode.py",
+        "sympy/utilities/randtest.py",
     ])
 
     blacklist = convert_to_native_paths(blacklist)
