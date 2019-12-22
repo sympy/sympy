@@ -735,6 +735,7 @@ def _get_doctest_blacklist():
     blacklist.extend([
         "sympy/conftest.py", # Python 2.7 issues
         "sympy/testing/benchmarking.py"
+        "sympy/utilities/benchmarking.py"
     ])
 
     blacklist = convert_to_native_paths(blacklist)
