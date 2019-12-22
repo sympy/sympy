@@ -572,15 +572,6 @@ class MatrixReductions(MatrixDeterminant):
             return self[i, j]
         return self._new(self.rows, self.cols, entry)
 
-    def _eval_echelon_form(self, iszerofunc, simpfunc):
-        """Returns (mat, swaps) where ``mat`` is a row-equivalent matrix
-        in echelon form and ``swaps`` is a list of row-swaps performed."""
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
-                                                      normalize_last=True,
-                                                      normalize=False,
-                                                      zero_above=False)
-        return reduced, pivot_cols, swaps
-
     def _eval_is_echelon(self, iszerofunc):
         if self.rows <= 0 or self.cols <= 0:
             return True
@@ -588,12 +579,6 @@ class MatrixReductions(MatrixDeterminant):
         if iszerofunc(self[0, 0]):
             return zeros_below and self[:, 1:]._eval_is_echelon(iszerofunc)
         return zeros_below and self[1:, 1:]._eval_is_echelon(iszerofunc)
-
-    def _eval_rref(self, iszerofunc, simpfunc, normalize_last=True):
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
-                                                      normalize_last, normalize=True,
-                                                      zero_above=True)
-        return reduced, pivot_cols
 
     def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
         """Validate the arguments for a row/column operation.  ``error_str``
@@ -666,28 +651,45 @@ class MatrixReductions(MatrixDeterminant):
 
         return (self.permute(perm, orientation='cols'), perm)
 
-    def _row_reduce(self, iszerofunc, simpfunc, normalize_last=True,
-                    normalize=True, zero_above=True):
-        """Row reduce ``self`` and return a tuple (rref_matrix,
-        pivot_cols, swaps) where pivot_cols are the pivot columns
-        and swaps are any row swaps that were used in the process
-        of row reduction.
+    def _row_reduce(
+        self, iszerofunc=_iszero, simpfunc=_simplify, normalize_last=True,
+        normalize=True, zero_above=True):
+        """A subroutine used both in the ``rref`` and the
+        ``echelon_form``.
 
         Parameters
         ==========
 
-        iszerofunc : determines if an entry can be used as a pivot
-        simpfunc : used to simplify elements and test if they are
-            zero if ``iszerofunc`` returns `None`
-        normalize_last : indicates where all row reduction should
-            happen in a fraction-free manner and then the rows are
-            normalized (so that the pivots are 1), or whether
-            rows should be normalized along the way (like the naive
-            row reduction algorithm)
-        normalize : whether pivot rows should be normalized so that
-            the pivot value is 1
-        zero_above : whether entries above the pivot should be zeroed.
+        iszerofunc : function
+            See the doc of :meth:`rref` for the same parameter.
+
+        simpfunc : function
+            See the doc of :meth:`rref` for the same parameter.
+
+        normalize_last : bool
+            See the doc of :meth:`rref` for the same parameter.
+
+        normalize : bool
+            See the doc of :meth:`rref` for the same parameter.
+
+        zero_above : bool
+            Whether entries above the pivot should be zeroed.
             If ``zero_above=False``, an echelon matrix will be returned.
+
+        Returns
+        =======
+
+        (matrix, pivot_cols, swaps) : (Matrix, tuple, tuple)
+            ``matrix`` contains the resulting matrix of the
+            row-reduction.
+
+            ``pivot_cols`` contains only the column indices of the
+            pivots.
+            Note that computing the row indices is trivial and can be
+            done easily by ``for r, c in enumerate(pivot_cols)``
+
+            ``swaps`` contains the array-form of the permutation that
+            is used in permuting the rows during the pivoting process.
         """
         rows, cols = self.rows, self.cols
         mat = list(self)
@@ -730,7 +732,7 @@ class MatrixReductions(MatrixDeterminant):
 
             # if we aren't normalizing last, we normalize
             # before we zero the other rows
-            if normalize_last is False:
+            if normalize_last is False and normalize is True:
                 i, j = piv_row, piv_col
                 mat[i*cols + j] = self.one
                 for p in range(i*cols + j + 1, (i + 1)*cols):
@@ -738,14 +740,12 @@ class MatrixReductions(MatrixDeterminant):
                 # after normalizing, the pivot value is 1
                 pivot_val = self.one
 
-            # zero above and below the pivot
+            # zero below the pivot
             for row in range(rows):
-                # don't zero our current row
-                if row == piv_row:
+                # Zero above the pivot after computing the echelon form.
+                if row <= piv_row:
                     continue
-                # don't zero above the pivot unless we're told.
-                if zero_above is False and row < piv_row:
-                    continue
+
                 # if we're already a zero, don't do anything
                 val = mat[row*cols + piv_col]
                 if iszerofunc(val):
@@ -753,6 +753,23 @@ class MatrixReductions(MatrixDeterminant):
 
                 cross_cancel(pivot_val, row, val, piv_row)
             piv_row += 1
+            piv_col += 1
+
+        # Compute RREF after computing echelon form with
+        # backward substitution.
+        prev_col = cols
+        if zero_above:
+            for r, c in reversed(list(enumerate(pivot_cols))):
+                # If the last N pivot columns are attatched each other
+                # from the end, the backward substitution can be
+                # done simply by replacing the elements of the column
+                # into zero.
+                if c == prev_col - 1:
+                    mat[c: c + r*cols: cols] = (self.zero,) * r
+                    prev_col = c
+                else:
+                    for i in reversed(range(r)):
+                        cross_cancel(mat[r*cols + c], i, mat[i*cols + c], r)
 
         # normalize each row
         if normalize_last is True and normalize is True:
@@ -764,15 +781,70 @@ class MatrixReductions(MatrixDeterminant):
 
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
-    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
-        """Returns a matrix row-equivalent to ``self`` that is
-        in echelon form.  Note that echelon form of a matrix
-        is *not* unique, however, properties like the row
-        space and the null space are preserved."""
+    def echelon_form(
+        self, iszerofunc=_iszero, simplify=False, with_pivots=False,
+        normalize_last=True, normalize=False):
+        """Compute the row echelon form of a matrix.
+
+        Parameters
+        ==========
+
+        iszerofunc : function
+            See the doc of :meth:`rref` for the same parameter.
+
+        simplify : function or bool
+            See the doc of :meth:`rref` for the same parameter.
+
+        normalize : bool
+            See the doc of :meth:`rref` for the same parameter.
+
+        normalize_last : bool
+            See the doc of :meth:`rref` for the same parameter.
+
+        pivots : bool
+            See the doc of :meth:`rref` for the parameter
+            ``with_pivots``.
+
+        Returns
+        =======
+
+        (matrix, pivot_cols) : (Matrix, tuple[int])
+            See the doc of :meth:`rref` for the returns.
+
+        matrix : Matrix
+            See the doc of :meth:`rref` for the returns.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix([[1, 2, 1], [-2, -3, 1], [3, 5, 0]])
+        >>> m.echelon_form()
+        Matrix([
+        [1, 2, 1],
+        [0, 1, 3],
+        [0, 0, 0]])
+
+        Notes
+        =====
+
+        Echelon form of a matrix is not unique.
+        However, properties like the row space and the null space are
+        preserved.
+
+        See Also
+        ========
+
+        rref
+        sympy.matrices.matrices.MatrixBase.LUdecomposition
+        """
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
 
-        mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc)
+        mat, pivots, _ = self._row_reduce(
+            iszerofunc=iszerofunc, simpfunc=simpfunc, zero_above=False,
+            normalize_last=normalize_last, normalize=normalize)
+
         if with_pivots:
             return mat, pivots
         return mat
@@ -881,32 +953,71 @@ class MatrixReductions(MatrixDeterminant):
                 return 2
 
         mat, _ = self._permute_complexity_right(iszerofunc=iszerofunc)
-        echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
+        _, pivots = mat.echelon_form(
+            iszerofunc=iszerofunc, simplify=simpfunc, with_pivots=True)
         return len(pivots)
 
-    def rref(self, iszerofunc=_iszero, simplify=False, pivots=True, normalize_last=True):
-        """Return reduced row-echelon form of matrix and indices of pivot vars.
+    def rref(
+        self, iszerofunc=_iszero, simplify=False, pivots=True,
+        normalize_last=True, normalize=True):
+        """Compute the reduced row echelon form of a matrix.
 
         Parameters
         ==========
 
-        iszerofunc : Function
+        iszerofunc : function
             A function used for detecting whether an element can
             act as a pivot.  ``lambda x: x.is_zero`` is used by default.
-        simplify : Function
+
+        simplify : function or bool
             A function used to simplify elements when looking for a pivot.
             By default SymPy's ``simplify`` is used.
-        pivots : True or False
-            If ``True``, a tuple containing the row-reduced matrix and a tuple
-            of pivot columns is returned.  If ``False`` just the row-reduced
-            matrix is returned.
-        normalize_last : True or False
+
+        normalize : bool
+            Whether pivot rows should be normalized so that
+            the pivot value is `1`.
+
+        normalize_last : bool
             If ``True``, no pivots are normalized to `1` until after all
-            entries above and below each pivot are zeroed.  This means the row
-            reduction algorithm is fraction free until the very last step.
+            entries above and below each pivot are zeroed. This means
+            the row reduction algorithm is fraction free until the very
+            last step.
+
             If ``False``, the naive row reduction procedure is used where
             each pivot is normalized to be `1` before row operations are
             used to zero above and below the pivot.
+
+            This keyword won't take any effect if ``normalize`` is set
+            to ``False``.
+
+        pivots : bool
+            If ``True``, it specifies an option to return a 2-tuple
+            containing a row-reduced matrix and a tuple containing the
+            indices of pivot columns.
+
+            If ``False``, it specifies an option only to return the
+            row-reduced matrix.
+
+            See the ``Returns`` section for more information.
+
+        Returns
+        =======
+
+        (matrix, pivot_cols) : (Matrix, tuple[int])
+            ``matrix`` contains the resulting matrix of the
+            row-reduction.
+
+            ``pivot_cols`` contains only the column indices of the
+            pivots.
+            Note that computing the row indices is trivial and can be
+            done easily by ``for r, c in enumerate(pivot_cols)``
+
+            ``swaps`` contains the array-form of the permutation that
+            is used in permuting the rows during the pivoting process.
+
+        matrix : Matrix
+            Return the matrix of above,
+            if the option is specified not to return ``pivot_cols``.
 
         Notes
         =====
@@ -915,7 +1026,6 @@ class MatrixReductions(MatrixDeterminant):
         speedup to row reduction, especially on matrices with symbols.  However,
         if you depend on the form row reduction algorithm leaves entries
         of the matrix, set ``noramlize_last=False``
-
 
         Examples
         ========
@@ -934,15 +1044,23 @@ class MatrixReductions(MatrixDeterminant):
         [0, 1]])
         >>> rref_pivots
         (0, 1)
+
+        See Also
+        ========
+
+        echelon_form
+        sympy.matrices.matrices.MatrixBase.rank_decomposition
         """
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
 
-        ret, pivot_cols = self._eval_rref(iszerofunc=iszerofunc,
-                                          simpfunc=simpfunc,
-                                          normalize_last=normalize_last)
+        ret, pivot_cols, _ = self._row_reduce(
+            iszerofunc=iszerofunc, simpfunc=simpfunc,
+            normalize_last=normalize_last, normalize=normalize,
+            zero_above=True)
+
         if pivots:
-            ret = (ret, pivot_cols)
+            return ret, pivot_cols
         return ret
 
 
