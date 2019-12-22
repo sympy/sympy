@@ -161,7 +161,8 @@ class MatrixDeterminant(MatrixCommon):
 
             mulsimp : bool, optional
                 Specifies whether intermediate term algebraic simplification is
-                used to control expression blowup during matrix multiplication.
+                used during matrix multiplications to control expression blowup
+                and thus speed up calculation.
 
            For more information on the implemented algorithm refer to:
 
@@ -180,7 +181,7 @@ class MatrixDeterminant(MatrixCommon):
         elif self.rows == 1 and self.cols == 1:
             return self._new(2, 1, [self.one, -self[0,0]])
 
-        submat, toeplitz = self._eval_berkowitz_toeplitz_matrix()
+        submat, toeplitz = self._eval_berkowitz_toeplitz_matrix(mulsimp=mulsimp)
         return toeplitz.multiply(submat._eval_berkowitz_vector(), mulsimp=mulsimp)
 
     def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul):
@@ -231,9 +232,19 @@ class MatrixDeterminant(MatrixCommon):
 
         return cancel(bareiss(self))
 
-    def _eval_det_berkowitz(self):
-        """ Use the Berkowitz algorithm to compute the determinant."""
-        berk_vector = self._eval_berkowitz_vector()
+    def _eval_det_berkowitz(self, mulsimp=None):
+        """ Use the Berkowitz algorithm to compute the determinant.
+
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+        """
+
+        berk_vector = self._eval_berkowitz_vector(mulsimp=mulsimp)
         return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
 
     def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None):
@@ -346,7 +357,8 @@ class MatrixDeterminant(MatrixCommon):
 
         mulsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
-            to control expression blowup during matrix multiplication.
+            to control expression blowup during matrix multiplication. If this
+            is true then the simplify function is not used.
 
         Notes
         =====
@@ -365,12 +377,23 @@ class MatrixDeterminant(MatrixCommon):
         if not self.is_square:
             raise NonSquareMatrixError()
 
+        if mulsimp:
+            simplify = lambda e: e
+
         berk_vector = self._eval_berkowitz_vector(mulsimp=mulsimp)
         x = _uniquely_named_symbol(x, berk_vector)
         return PurePoly([simplify(a) for a in berk_vector], x)
 
-    def cofactor(self, i, j, method="berkowitz"):
+    def cofactor(self, i, j, method="berkowitz", mulsimp=None):
         """Calculate the cofactor of an element.
+
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            to control expression blowup during matrix multiplication. If this
+            is true then the simplify function is not used.
 
         See Also
         ========
@@ -383,10 +406,18 @@ class MatrixDeterminant(MatrixCommon):
         if not self.is_square or self.rows < 1:
             raise NonSquareMatrixError()
 
-        return (-1)**((i + j) % 2) * self.minor(i, j, method)
+        return (-1)**((i + j) % 2) * self.minor(i, j, method, mulsimp=mulsimp)
 
-    def cofactor_matrix(self, method="berkowitz"):
+    def cofactor_matrix(self, method="berkowitz", mulsimp=None):
         """Return a matrix containing the cofactor of each element.
+
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            to control expression blowup during matrix multiplication. If this
+            is true then the simplify function is not used.
 
         See Also
         ========
@@ -401,9 +432,9 @@ class MatrixDeterminant(MatrixCommon):
             raise NonSquareMatrixError()
 
         return self._new(self.rows, self.cols,
-                         lambda i, j: self.cofactor(i, j, method))
+                         lambda i, j: self.cofactor(i, j, method, mulsimp=mulsimp))
 
-    def det(self, method="bareiss", iszerofunc=None):
+    def det(self, method="bareiss", iszerofunc=None, mulsimp=None):
         """Computes the determinant of a matrix.
 
         Parameters
@@ -439,6 +470,11 @@ class MatrixDeterminant(MatrixCommon):
             is formatted as a function which accepts a single symbolic argument
             and returns ``True`` if it is tested as zero and ``False`` if it
             tested as non-zero, and also ``None`` if it is undecidable.
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Returns
         =======
@@ -497,14 +533,22 @@ class MatrixDeterminant(MatrixCommon):
         if method == "bareiss":
             return self._eval_det_bareiss(iszerofunc=iszerofunc)
         elif method == "berkowitz":
-            return self._eval_det_berkowitz()
+            return self._eval_det_berkowitz(mulsimp=mulsimp)
         elif method == "lu":
             return self._eval_det_lu(iszerofunc=iszerofunc)
 
-    def minor(self, i, j, method="berkowitz"):
+    def minor(self, i, j, method="berkowitz", mulsimp=None):
         """Return the (i,j) minor of ``self``.  That is,
         return the determinant of the matrix obtained by deleting
         the `i`th row and `j`th column from ``self``.
+
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -517,7 +561,7 @@ class MatrixDeterminant(MatrixCommon):
         if not self.is_square or self.rows < 1:
             raise NonSquareMatrixError()
 
-        return self.minor_submatrix(i, j).det(method=method)
+        return self.minor_submatrix(i, j).det(method=method, mulsimp=mulsimp)
 
     def minor_submatrix(self, i, j):
         """Return the submatrix obtained by removing the `i`th row
@@ -1202,7 +1246,7 @@ class MatrixEigen(MatrixSubspaces):
 
         return self.hstack(*p_cols), self.diag(*diag)
 
-    def eigenvals(self, error_when_incomplete=True, **flags):
+    def eigenvals(self, error_when_incomplete=True, mulsimp=None, **flags):
         r"""Return eigenvalues using the Berkowitz agorithm to compute
         the characteristic polynomial.
 
@@ -1213,6 +1257,11 @@ class MatrixEigen(MatrixSubspaces):
             If it is set to ``True``, it will raise an error if not all
             eigenvalues are computed. This is caused by ``roots`` not returning
             a full list of eigenvalues.
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         simplify : bool or function, optional
             If it is set to ``True``, it attempts to return the most
@@ -1294,9 +1343,10 @@ class MatrixEigen(MatrixSubspaces):
         else:
             flags.pop('simplify', None)  # pop unsupported flag
             if isinstance(simplify, FunctionType):
-                eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify), **flags)
+                eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify,
+                        mulsimp=mulsimp), **flags)
             else:
-                eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
+                eigs = roots(mat.charpoly(x=Dummy('x'), mulsimp=mulsimp), **flags)
 
         # make sure the algebraic multiplicity sums to the
         # size of the matrix
@@ -1317,7 +1367,8 @@ class MatrixEigen(MatrixSubspaces):
         else:
             return [simplify(value) for value in eigs]
 
-    def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero, **flags):
+    def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero,
+            mulsimp=None, **flags):
         """Return list of triples (eigenval, multiplicity, eigenspace).
 
         Parameters
@@ -1337,6 +1388,11 @@ class MatrixEigen(MatrixSubspaces):
             is formatted as a function which accepts a single symbolic argument
             and returns ``True`` if it is tested as zero and ``False`` if it
             is tested as non-zero, and ``None`` if it is undecidable.
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         simplify : bool or function, optional
             If ``True``, ``as_content_primitive()`` will be used to tidy up
@@ -1406,6 +1462,7 @@ class MatrixEigen(MatrixSubspaces):
 
         eigenvals = mat.eigenvals(rational=False,
                                   error_when_incomplete=error_when_incomplete,
+                                  mulsimp=mulsimp,
                                   **flags)
         ret = [(val, mult, eigenspace(val)) for val, mult in
                     sorted(eigenvals.items(), key=default_sort_key)]
@@ -3228,7 +3285,7 @@ class MatrixBase(MatrixDeprecated,
 
         mulsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
-            during recursive matrix multiplications to control expression blowup.
+            during matrix multiplications to control expression blowup.
         """
         if not self.is_square:
             raise NonSquareMatrixError(
