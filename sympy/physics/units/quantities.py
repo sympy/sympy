@@ -4,9 +4,8 @@ Physical quantities.
 
 from __future__ import division
 
-from sympy import Abs, AtomicExpr, Symbol, sympify
+from sympy import AtomicExpr, Symbol, sympify
 from sympy.core.compatibility import string_types
-from sympy.physics.units import Dimension, dimensions
 from sympy.physics.units.dimensions import _QuantityMapper
 from sympy.physics.units.prefixes import Prefix
 from sympy.utilities.exceptions import SymPyDeprecationWarning
