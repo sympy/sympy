@@ -294,9 +294,9 @@ How to create a new function with one variable::
     ...             return S.NaN
     ...         if arg is S.Zero:
     ...             return S.Zero
-    ...         if arg.is_positive:
+    ...         if arg.is_extended_positive:
     ...             return S.One
-    ...         if arg.is_negative:
+    ...         if arg.is_extended_negative:
     ...             return S.NegativeOne
     ...         if isinstance(arg, Mul):
     ...             coeff, terms = arg.as_coeff_mul()
@@ -309,8 +309,9 @@ How to create a new function with one variable::
     ...     def _eval_conjugate(self):
     ...         return self
 
-The applied function ``sign(x)`` is constructed using
+The applied function ``sign(x)`` is constructed using::
 
+    >>> from sympy.abc import x
     >>> sign(x)
     sign(x)
 
@@ -325,7 +326,7 @@ should return either an another SymPy object or ``None``.
 If it returns ``None``, it becomes an unevaluated function.
 (see ``core/function.py`` in ``Function.__new__`` for implementation details)
 
-Here are some examples that how ``eval`` works
+Here are some examples that how ``eval`` works::
 
     >>> sign(S.NaN)
     nan
@@ -347,7 +348,7 @@ Here are some examples that how ``eval`` works
 The ``_eval_*`` functions are automatically called when something is
 needed.
 For example, ``conjugate`` or ``is_finite`` will automatically call
-``_eval_is_finite``, ``_eval_conjugate`` if you have these defined.
+``_eval_is_finite``, ``_eval_conjugate`` if you have these defined::
 
     >>> sign(x).is_finite
     True
