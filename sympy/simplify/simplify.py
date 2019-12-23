@@ -2086,10 +2086,7 @@ def dotprodsimp(expr, withsimp=False):
             exprops    = expr2ops
             simplified = True
 
-        if exprops < 6: # empirically tested cutoff for expensive simplification
-            simplified = True
-
-        else:
+        if exprops >= 6: # empirically tested cutoff for expensive simplification
             dummies = {}
             expr2   = _nonalg_subs_dummies(expr, dummies)
 
@@ -2099,5 +2096,22 @@ def dotprodsimp(expr, withsimp=False):
                 if expr3 != expr2:
                     expr       = expr3.subs([(d, e) for e, d in dummies.items()])
                     simplified = True
+
+        # very special case: x/(x-1) - 1/(x-1) -> 1
+        elif (exprops == 5 and expr.is_Add and expr.args [0].is_Mul and
+                expr.args [1].is_Mul and expr.args [0].args [-1].is_Pow and
+                expr.args [1].args [-1].is_Pow and
+                expr.args [0].args [-1].exp is S.NegativeOne and
+                expr.args [1].args [-1].exp is S.NegativeOne):
+
+            expr2    = together (expr)
+            expr2ops = _count_ops_alg(expr2)
+
+            if expr2ops < exprops:
+                expr       = expr2
+                simplified = True
+
+        else:
+            simplified = True
 
     return (expr, simplified) if withsimp else expr

@@ -1426,6 +1426,7 @@ class MatrixEigen(MatrixSubspaces):
             return eigs
         if not isinstance(simplify, FunctionType):
             simplify = _simplify
+
         # With 'multiple' flag set true, simplify() will be mapped for the list
         # Otherwise, simplify() will be mapped for the keys of the dictionary
         if not multiple:
