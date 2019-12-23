@@ -2844,7 +2844,7 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             return self
@@ -2853,7 +2853,7 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
             return self
@@ -2865,7 +2865,7 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other.is_zero or other is S.NaN:
                 return S.NaN
             if other.is_extended_positive:
@@ -2876,7 +2876,7 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.Infinity or \
                 other is S.NegativeInfinity or \
                     other is S.NaN:
