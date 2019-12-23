@@ -285,9 +285,9 @@ How to create a new function with one variable::
 
         @classmethod
         def eval(cls, arg):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            if isinstance(arg, Basic.Zero):
+            if arg is S.Zero:
                 return S.Zero
             if arg.is_positive:
                 return S.One
