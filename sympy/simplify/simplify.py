@@ -2094,12 +2094,10 @@ def dotprodsimp(expr, withsimp=False):
             expr2   = _nonalg_subs_dummies(expr, dummies)
 
             if expr2 is expr or _count_ops_alg(expr2) >= 6: # check again after substitution
-                expr2    = cancel(expr2)
-                expr2    = expr2.subs([(d, e) for e, d in dummies.items()])
-                expr2ops = _count_ops_alg(expr2)
+                expr3 = cancel(expr2)
 
-                if expr2ops < exprops:
-                    expr       = expr2
+                if expr3 != expr2:
+                    expr       = expr3.subs([(d, e) for e, d in dummies.items()])
                     simplified = True
 
     return (expr, simplified) if withsimp else expr
