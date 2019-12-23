@@ -6651,7 +6651,7 @@ def cancel(f, *gens, **args):
     c, P, Q = F.cancel(G)
 
     if not isinstance(f, (tuple, Tuple)):
-        return c*(P.as_expr()/Q.as_expr())
+        return Mul(c, P.as_expr()/Q.as_expr(), evaluate=False)
     else:
         if not opt.polys:
             return c, P.as_expr(), Q.as_expr()
