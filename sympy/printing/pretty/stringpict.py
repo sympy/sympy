@@ -30,7 +30,7 @@ class stringPict(object):
         """
         self.s = s
         #picture is a string that just can be printed
-        self.picture = stringPict.equalLengths(s.splitlines())
+        self.picture = stringPict.equalLengths(str(s).splitlines())
         #baseline is the line number of the "base line"
         self.baseline = baseline
         self.binding = None

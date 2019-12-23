@@ -440,7 +440,13 @@ def test_innerproduct():
     assert latex(ip3) == r'\left\langle 1,1 \right. {\left|1,1\right\rangle }'
     sT(ip3, "InnerProduct(JzBra(Integer(1),Integer(1)),JzKet(Integer(1),Integer(1)))")
     assert str(ip4) == "<1,1,j1=1,j2=1|1,1,j1=1,j2=1>"
-    assert pretty(ip4) == '<1,1,j1=1,j2=1|1,1,j1=1,j2=1>'
+    ascii_str = \
+"""\
+/             |             \\\n\
+\\1,1,j =1,j =1|1,1,j =1,j =1/\n\
+      1    2        1    2   \
+"""
+    assert pretty(ip4) == ascii_str
     assert upretty(ip4) == u'⟨1,1,j₁=1,j₂=1❘1,1,j₁=1,j₂=1⟩'
     assert latex(ip4) == \
         r'\left\langle 1,1,j_{1}=1,j_{2}=1 \right. {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }'
@@ -658,25 +664,49 @@ J \n\
     assert latex(bra) == r'{\left\langle 1,0\right|}'
     sT(bra, "JzBra(Integer(1),Integer(0))")
     assert str(cket) == '|1,0,j1=1,j2=2>'
-    assert pretty(cket) == '|1,0,j1=1,j2=2>'
+    ascii_str = \
+"""\
+|             \\\n\
+|1,0,j =1,j =2/\n\
+      1    2   \
+"""
+    assert pretty(cket) == ascii_str
     assert upretty(cket) == u'❘1,0,j₁=1,j₂=2⟩'
     assert latex(cket) == r'{\left|1,0,j_{1}=1,j_{2}=2\right\rangle }'
     sT(cket, "JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))")
     assert str(cbra) == '<1,0,j1=1,j2=2|'
-    assert pretty(cbra) == '<1,0,j1=1,j2=2|'
+    ascii_str = \
+"""\
+/             |\n\
+\\1,0,j =1,j =2|\n\
+      1    2   \
+"""
+    assert pretty(cbra) == ascii_str
     assert upretty(cbra) == u'⟨1,0,j₁=1,j₂=2❘'
     assert latex(cbra) == r'{\left\langle 1,0,j_{1}=1,j_{2}=2\right|}'
     sT(cbra, "JzBraCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))")
     assert str(cket_big) == '|1,0,j1=1,j2=2,j3=3,j(1,2)=3>'
     # TODO: Fix non-unicode pretty printing
     # i.e. j1,2 -> j(1,2)
-    assert pretty(cket_big) == '|1,0,j1=1,j2=2,j3=3,j1,2=3>'
+    ascii_str = \
+"""\
+|                           \\\n\
+|1,0,j =1,j =2,j =3,j 1, 2=3/\n\
+      1    2    3            \
+"""
+    assert pretty(cket_big) == ascii_str
     assert upretty(cket_big) == u'❘1,0,j₁=1,j₂=2,j₃=3,j₁,₂=3⟩'
     assert latex(cket_big) == \
         r'{\left|1,0,j_{1}=1,j_{2}=2,j_{3}=3,j_{1,2}=3\right\rangle }'
     sT(cket_big, "JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2), Integer(3)),Tuple(Tuple(Integer(1), Integer(2), Integer(3)), Tuple(Integer(1), Integer(3), Integer(1))))")
     assert str(cbra_big) == '<1,0,j1=1,j2=2,j3=3,j(1,2)=3|'
-    assert pretty(cbra_big) == u'<1,0,j1=1,j2=2,j3=3,j1,2=3|'
+    ascii_str = \
+"""\
+/                           |\n\
+\\1,0,j =1,j =2,j =3,j 1, 2=3|\n\
+      1    2    3            \
+"""
+    assert pretty(cbra_big) == ascii_str
     assert upretty(cbra_big) == u'⟨1,0,j₁=1,j₂=2,j₃=3,j₁,₂=3❘'
     assert latex(cbra_big) == \
         r'{\left\langle 1,0,j_{1}=1,j_{2}=2,j_{3}=3,j_{1,2}=3\right|}'
@@ -852,9 +882,9 @@ u("""\
         "Wigner3j(1, 2, 3, 4, 5, 6)*[Dagger(B) + A,C + D]x(-J2 + Jz)*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x|1,-1,j1=1,j2=1>"
     ascii_str = \
 """\
-          [ +          ]  /   2     \\                                                                 \n\
-/1  3  5\\*[B  + A,C + D]x |- J  + J |*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x |1,-1,j1=1,j2=1>\n\
-|       |                 \\        z/                                                                 \n\
+          [ +          ]  /   2     \\            /|             \\   |             \\\\  |              \\\n\
+/1  3  5\\*[B  + A,C + D]x |- J  + J |*|1,0><1,1|*||1,0,j =1,j =1/ + |1,1,j =1,j =1/|x |1,-1,j =1,j =1/\n\
+|       |                 \\        z/            \\      1    2            1    2   /         1    2   \n\
 \\2  4  6/                                                                                             \
 """
     ucode_str = \

@@ -28,6 +28,8 @@ from sympy.printing.pretty.pretty_symbology import xstr, hobj, vobj, xobj, \
 pprint_use_unicode = pretty_use_unicode
 pprint_try_use_unicode = pretty_try_use_unicode
 
+#checks if expr has a function name
+has_function = False
 
 class PrettyPrinter(Printer):
     """Printer, which converts an expression into 2D ASCII-art figure."""
@@ -79,8 +81,15 @@ class PrettyPrinter(Printer):
 
     def _print_Symbol(self, e, bold_name=False):
         symb = pretty_symbol(e.name, bold_name)
-        return prettyForm(symb)
+        if self._settings.get("use_unicode", True):
+            return prettyForm(symb)
+        else:
+            if has_function:
+                return prettyForm(e.name)
+            else:
+                 return symb
     _print_RandomSymbol = _print_Symbol
+
     def _print_MatrixSymbol(self, e):
         return self._print_Symbol(e, self._settings['mat_symbol_style'] == "bold")
 
@@ -1436,6 +1445,7 @@ class PrettyPrinter(Printer):
         return self._print_Function(e, func_name="S'")
 
     def _helper_print_function(self, func, args, sort=False, func_name=None, delimiter=', ', elementwise=False):
+        global has_function
         if sort:
             args = sorted(args, key=default_sort_key)
 
@@ -1443,8 +1453,10 @@ class PrettyPrinter(Printer):
             func_name = func.__name__
 
         if func_name:
+            has_function = True
             prettyFunc = self._print(Symbol(func_name))
         else:
+            has_function = False
             prettyFunc = prettyForm(*self._print(func).parens())
 
         if elementwise:
@@ -2487,7 +2499,7 @@ class PrettyPrinter(Printer):
         codomain = self._print(morphism.codomain)
         tail = domain.right(arrow, codomain)[0]
 
-        return prettyForm(tail)
+        return tail
 
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(pretty_symbol(morphism.name))
@@ -2505,10 +2517,15 @@ class PrettyPrinter(Printer):
 
         # All components of the morphism have names and it is thus
         # possible to build the name of the composite.
-        component_names_list = [pretty_symbol(component.name) for
-                                component in morphism.components]
+        component_names_list = []
+        for component in morphism.components:
+            component_names_list.append(str(pretty_symbol(component.name)))
+            component_names_list.append(circle)
+
         component_names_list.reverse()
-        component_names = circle.join(component_names_list) + ":"
+        component_names_list.remove(circle)
+        component_names_list.append(":")
+        component_names = prettyForm(*stringPict.next(*component_names_list))
 
         pretty_name = self._print(component_names)
         pretty_morphism = self._print_Morphism(morphism)
@@ -2526,11 +2543,12 @@ class PrettyPrinter(Printer):
         if diagram.conclusions:
             results_arrow = " %s " % xsym("==>")
 
-            pretty_conclusions = self._print(diagram.conclusions)[0]
+            pretty_conclusions = self._print(diagram.conclusions)
             pretty_result = pretty_result.right(
                 results_arrow, pretty_conclusions)
-
-        return prettyForm(pretty_result[0])
+            return prettyForm(pretty_result[0])
+        else:
+            return prettyForm(pretty_result)
 
     def _print_DiagramGrid(self, grid):
         from sympy.matrices import Matrix
@@ -2643,6 +2661,9 @@ def pretty(expr, **settings):
     # XXX: this is an ugly hack, but at least it works
     use_unicode = pp._settings['use_unicode']
     uflag = pretty_use_unicode(use_unicode)
+
+    global has_function
+    has_function = False
 
     try:
         return pp.doprint(expr)
