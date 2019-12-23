@@ -322,7 +322,7 @@ itself::
 
 The ``eval`` is called when the class is about to be instantiated and it
 should return either an another SymPy object or ``None``.
-If it is returned ``None``, it becomes a
+If it returns ``None``, it becomes an unevaluated function.
 (see ``core/function.py`` in ``Function.__new__`` for implementation details)
 
 Here are some examples that how ``eval`` works
