@@ -386,15 +386,23 @@ can be changed in the future.
 
 This is how to create a function with two variables::
 
-    class chebyshevt_root(Function):
-        nargs = 2
+    >>> class chebyshevt_root(Function):
+    ...     nargs = 2
+    ...
+    ...     @classmethod
+    ...     def eval(cls, n, k):
+    ...         if not (0 <= k) & (k < n):
+    ...             raise ValueError("must have 0 <= k < n")
+    ...         return cos(S.Pi*(2*k + 1)/(2*n))
 
-        @classmethod
-        def eval(cls, n, k):
-            if not 0 <= k < n:
-                raise ValueError("must have 0 <= k < n")
-            return cos(S.Pi*(2*k + 1)/(2*n))
-
+    >>> from sympy import symbols
+    >>> n, k = symbols('n k')
+    >>> chebyshevt_root(n, k)
+    cos(pi*(2*k + 1)/(2*n))
+    >>> chebyshevt_root(2, 3)
+    Traceback (most recent call last):
+    ...
+    ValueError: must have 0 <= k < n
 
 .. note:: the first argument of a @classmethod should be ``cls`` (i.e. not
           ``self``).
