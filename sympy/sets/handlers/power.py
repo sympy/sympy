@@ -9,23 +9,23 @@ _x, _y = symbols("x y")
 
 
 @dispatch(Basic, Basic)
-def _set_pow(x, y):
+def _set_pow(x, y): # noqa:F811
     return None
 
 @dispatch(Set, Set)
-def _set_pow(x, y):
+def _set_pow(x, y): # noqa:F811
     return ImageSet(Lambda((_x, _y), (_x ** _y)), x, y)
 
 @dispatch(Expr, Expr)
-def _set_pow(x, y):
+def _set_pow(x, y): # noqa:F811
     return x**y
 
 @dispatch(Interval, Zero)
-def _set_pow(x, z):
+def _set_pow(x, z): # noqa:F811
     return FiniteSet(S.One)
 
 @dispatch(Interval, Integer)
-def _set_pow(x, exponent):
+def _set_pow(x, exponent): # noqa:F811
     """
     Powers in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -73,7 +73,7 @@ def _set_pow(x, exponent):
             return Interval(S.Zero, sleft, S.Zero not in x, left_open)
 
 @dispatch(Interval, Infinity)
-def _set_pow(b, e):
+def _set_pow(b, e): # noqa:F811
     # TODO: add logic for open intervals?
     if b.start.is_nonnegative:
         if b.end < 1:
@@ -95,6 +95,6 @@ def _set_pow(b, e):
         return Interval(-oo, oo)
 
 @dispatch(Interval, NegativeInfinity)
-def _set_pow(b, e):
+def _set_pow(b, e): # noqa:F811
     from sympy.sets.setexpr import set_div
     return _set_pow(set_div(S.One, b), oo)

@@ -544,7 +544,7 @@ class GeometrySet(GeometryEntity, Set):
         return self.__contains__(other)
 
 @dispatch(GeometrySet, Set)
-def union_sets(self, o):
+def union_sets(self, o): # noqa:F811
     """ Returns the union of self and o
     for use with sympy.sets.Set, if possible. """
 
@@ -563,7 +563,7 @@ def union_sets(self, o):
 
 
 @dispatch(GeometrySet, Set)
-def intersection_sets(self, o):
+def intersection_sets(self, o): # noqa:F811
     """ Returns a sympy.sets.Set of intersection objects,
     if possible. """
 

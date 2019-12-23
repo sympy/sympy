@@ -1,7 +1,6 @@
 from sympy import Set, symbols, exp, log, S, Wild, Dummy, oo
 from sympy.core import Expr, Add
 from sympy.core.function import Lambda, _coeff_isneg, FunctionClass
-from sympy.core.mod import Mod
 from sympy.logic.boolalg import true
 from sympy.multipledispatch import dispatch
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
@@ -16,15 +15,15 @@ FunctionUnion = (FunctionClass, Lambda)
 
 
 @dispatch(FunctionClass, Set)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     return None
 
 @dispatch(FunctionUnion, FiniteSet)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     return FiniteSet(*map(f, x))
 
 @dispatch(Lambda, Interval)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.solvers.solveset import solveset
     from sympy.core.function import diff, Lambda
@@ -113,7 +112,7 @@ def _set_function(f, x):
             imageset(f, Interval(sing[-1], x.end, True, x.right_open))
 
 @dispatch(FunctionClass, Interval)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     if f == exp:
         return Interval(exp(x.start), exp(x.end), x.left_open, x.right_open)
     elif f == log:
@@ -121,11 +120,11 @@ def _set_function(f, x):
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, Union)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     return Union(*(imageset(f, arg) for arg in x.args))
 
 @dispatch(FunctionUnion, Intersection)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     from sympy.sets.sets import is_function_invertible_in_set
     # If the function is invertible, intersect the maps of the sets.
     if is_function_invertible_in_set(f, x):
@@ -134,15 +133,15 @@ def _set_function(f, x):
         return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, type(EmptySet))
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     return x
 
 @dispatch(FunctionUnion, Set)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, Range)
-def _set_function(f, self):
+def _set_function(f, self): # noqa:F811
     from sympy.core.function import expand_mul
     if not self:
         return S.EmptySet
@@ -167,7 +166,7 @@ def _set_function(f, self):
         return imageset(x, F, Range(self.size))
 
 @dispatch(FunctionUnion, Integers)
-def _set_function(f, self):
+def _set_function(f, self): # noqa:F811
     expr = f.expr
     if not isinstance(expr, Expr):
         return
@@ -217,7 +216,7 @@ def _set_function(f, self):
 
 
 @dispatch(FunctionUnion, Naturals)
-def _set_function(f, self):
+def _set_function(f, self): # noqa:F811
     expr = f.expr
     if not isinstance(expr, Expr):
         return
@@ -244,7 +243,7 @@ def _set_function(f, self):
 
 
 @dispatch(FunctionUnion, Reals)
-def _set_function(f, self):
+def _set_function(f, self): # noqa:F811
     expr = f.expr
     if not isinstance(expr, Expr):
         return
