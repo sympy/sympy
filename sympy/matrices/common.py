@@ -2295,7 +2295,8 @@ class MatrixArithmetic(MatrixRequired):
 
         mulsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
-            to control expression blowup during multiplication.
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
         """
 
         other = _matrixify(other)
@@ -2369,7 +2370,8 @@ class MatrixArithmetic(MatrixRequired):
 
         mulsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
-            during recursive power evaluations to control expression blowup.
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         jordan : bool, optional
             If left as None then Jordan form exponentiation will be used under

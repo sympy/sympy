@@ -89,7 +89,8 @@ class MatrixDeterminant(MatrixCommon):
 
         mulsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
-            to control expression blowup during matrix multiplication.
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
         """
 
         # the 0 x 0 case is trivial
@@ -641,13 +642,14 @@ class MatrixReductions(MatrixDeterminant):
             return self[i, j]
         return self._new(self.rows, self.cols, entry)
 
-    def _eval_echelon_form(self, iszerofunc, simpfunc):
+    def _eval_echelon_form(self, iszerofunc, simpfunc, mulsimp=None):
         """Returns (mat, swaps) where ``mat`` is a row-equivalent matrix
         in echelon form and ``swaps`` is a list of row-swaps performed."""
         reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
                                                       normalize_last=True,
                                                       normalize=False,
-                                                      zero_above=False)
+                                                      zero_above=False,
+                                                      mulsimp=mulsimp)
         return reduced, pivot_cols, swaps
 
     def _eval_is_echelon(self, iszerofunc):
@@ -658,10 +660,11 @@ class MatrixReductions(MatrixDeterminant):
             return zeros_below and self[:, 1:]._eval_is_echelon(iszerofunc)
         return zeros_below and self[1:, 1:]._eval_is_echelon(iszerofunc)
 
-    def _eval_rref(self, iszerofunc, simpfunc, normalize_last=True):
+    def _eval_rref(self, iszerofunc, simpfunc, normalize_last=True, mulsimp=None):
         reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
                                                       normalize_last, normalize=True,
-                                                      zero_above=True)
+                                                      zero_above=True,
+                                                      mulsimp=mulsimp)
         return reduced, pivot_cols
 
     def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
@@ -736,7 +739,7 @@ class MatrixReductions(MatrixDeterminant):
         return (self.permute(perm, orientation='cols'), perm)
 
     def _row_reduce(self, iszerofunc, simpfunc, normalize_last=True,
-                    normalize=True, zero_above=True):
+                    normalize=True, zero_above=True, mulsimp=None):
         """Row reduce ``self`` and return a tuple (rref_matrix,
         pivot_cols, swaps) where pivot_cols are the pivot columns
         and swaps are any row swaps that were used in the process
@@ -746,20 +749,31 @@ class MatrixReductions(MatrixDeterminant):
         ==========
 
         iszerofunc : determines if an entry can be used as a pivot
+
         simpfunc : used to simplify elements and test if they are
             zero if ``iszerofunc`` returns `None`
+
         normalize_last : indicates where all row reduction should
             happen in a fraction-free manner and then the rows are
             normalized (so that the pivots are 1), or whether
             rows should be normalized along the way (like the naive
             row reduction algorithm)
+
         normalize : whether pivot rows should be normalized so that
             the pivot value is 1
+
         zero_above : whether entries above the pivot should be zeroed.
             If ``zero_above=False``, an echelon matrix will be returned.
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+
         """
         rows, cols = self.rows, self.cols
         mat = list(self)
+        _dotprodsimp = dotprodsimp if mulsimp else lambda e: e
         def get_col(i):
             return mat[i::cols]
 
@@ -771,7 +785,7 @@ class MatrixReductions(MatrixDeterminant):
             """Does the row op row[i] = a*row[i] - b*row[j]"""
             q = (j - i)*cols
             for p in range(i*cols, (i + 1)*cols):
-                mat[p] = a*mat[p] - b*mat[p + q]
+                mat[p] = _dotprodsimp(a*mat[p] - b*mat[p + q])
 
         piv_row, piv_col = 0, 0
         pivot_cols = []
@@ -803,7 +817,7 @@ class MatrixReductions(MatrixDeterminant):
                 i, j = piv_row, piv_col
                 mat[i*cols + j] = self.one
                 for p in range(i*cols + j + 1, (i + 1)*cols):
-                    mat[p] = mat[p] / pivot_val
+                    mat[p] = _dotprodsimp(mat[p] / pivot_val)
                 # after normalizing, the pivot value is 1
                 pivot_val = self.one
 
@@ -829,19 +843,30 @@ class MatrixReductions(MatrixDeterminant):
                 pivot_val = mat[piv_i*cols + piv_j]
                 mat[piv_i*cols + piv_j] = self.one
                 for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
-                    mat[p] = mat[p] / pivot_val
+                    mat[p] = _dotprodsimp(mat[p] / pivot_val)
 
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
-    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
+    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
+            mulsimp=None):
         """Returns a matrix row-equivalent to ``self`` that is
         in echelon form.  Note that echelon form of a matrix
         is *not* unique, however, properties like the row
-        space and the null space are preserved."""
+        space and the null space are preserved.
+
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+        """
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
 
-        mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc)
+        mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc,
+                mulsimp=mulsimp)
         if with_pivots:
             return mat, pivots
         return mat
@@ -953,7 +978,8 @@ class MatrixReductions(MatrixDeterminant):
         echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
         return len(pivots)
 
-    def rref(self, iszerofunc=_iszero, simplify=False, pivots=True, normalize_last=True):
+    def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
+            normalize_last=True, mulsimp=None):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
         Parameters
@@ -962,13 +988,16 @@ class MatrixReductions(MatrixDeterminant):
         iszerofunc : Function
             A function used for detecting whether an element can
             act as a pivot.  ``lambda x: x.is_zero`` is used by default.
+
         simplify : Function
             A function used to simplify elements when looking for a pivot.
             By default SymPy's ``simplify`` is used.
+
         pivots : True or False
             If ``True``, a tuple containing the row-reduced matrix and a tuple
             of pivot columns is returned.  If ``False`` just the row-reduced
             matrix is returned.
+
         normalize_last : True or False
             If ``True``, no pivots are normalized to `1` until after all
             entries above and below each pivot are zeroed.  This means the row
@@ -976,6 +1005,11 @@ class MatrixReductions(MatrixDeterminant):
             If ``False``, the naive row reduction procedure is used where
             each pivot is normalized to be `1` before row operations are
             used to zero above and below the pivot.
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Notes
         =====
@@ -1008,7 +1042,8 @@ class MatrixReductions(MatrixDeterminant):
 
         ret, pivot_cols = self._eval_rref(iszerofunc=iszerofunc,
                                           simpfunc=simpfunc,
-                                          normalize_last=normalize_last)
+                                          normalize_last=normalize_last,
+                                          mulsimp=mulsimp)
         if pivots:
             ret = (ret, pivot_cols)
         return ret
@@ -1018,8 +1053,16 @@ class MatrixSubspaces(MatrixReductions):
     """Provides methods relating to the fundamental subspaces
     of a matrix.  Should not be instantiated directly."""
 
-    def columnspace(self, simplify=False):
+    def columnspace(self, simplify=False, mulsimp=None):
         """Returns a list of vectors (Matrix objects) that span columnspace of ``self``
+
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -1046,12 +1089,21 @@ class MatrixSubspaces(MatrixReductions):
         nullspace
         rowspace
         """
-        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True)
+        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True,
+                mulsimp=mulsimp)
 
         return [self.col(i) for i in pivots]
 
-    def nullspace(self, simplify=False, iszerofunc=_iszero):
+    def nullspace(self, simplify=False, iszerofunc=_iszero, mulsimp=None):
         """Returns list of vectors (Matrix objects) that span nullspace of ``self``
+
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -1076,7 +1128,8 @@ class MatrixSubspaces(MatrixReductions):
         rowspace
         """
 
-        reduced, pivots = self.rref(iszerofunc=iszerofunc, simplify=simplify)
+        reduced, pivots = self.rref(iszerofunc=iszerofunc, simplify=simplify,
+                mulsimp=mulsimp)
 
         free_vars = [i for i in range(self.cols) if i not in pivots]
 
@@ -1092,10 +1145,20 @@ class MatrixSubspaces(MatrixReductions):
 
         return [self._new(self.cols, 1, b) for b in basis]
 
-    def rowspace(self, simplify=False):
-        """Returns a list of vectors that span the row space of ``self``."""
+    def rowspace(self, simplify=False, mulsimp=None):
+        """Returns a list of vectors that span the row space of ``self``.
 
-        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True)
+        Parameters
+        ==========
+
+        mulsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+        """
+
+        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True,
+                mulsimp=mulsimp)
 
         return [reduced.row(i) for i in range(len(pivots))]
 
@@ -3288,7 +3351,8 @@ class MatrixBase(MatrixDeprecated,
 
         mulsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup.
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
         """
         if not self.is_square:
             raise NonSquareMatrixError(
