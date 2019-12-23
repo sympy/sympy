@@ -51,7 +51,7 @@ class MatMul(MatrixExpr, Mul):
         matrices, _ = sift(others, lambda x: x.is_Matrix, binary=True)
 
         if check:
-            validate(*matrices)
+            validate(*others)
         if not matrices:
             # Should it be
             #
@@ -216,12 +216,12 @@ class MatMul(MatrixExpr, Mul):
         return lines
 
 
-def validate(*matrices):
-    """ Checks for valid shapes for args of MatMul """
-    for i in range(len(matrices)-1):
-        A, B = matrices[i:i+2]
-        if A.cols != B.rows:
-            raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
+def validate(*mats_or_ncs):
+    """Screens out some invalid shapes of ``MatMul``"""
+    for i in range(len(mats_or_ncs)-1):
+        A, B = mats_or_ncs[i], mats_or_ncs[i+1]
+        if A.is_Matrix and B.is_Matrix and A.cols != B.rows:
+            raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
 # Rules
 
