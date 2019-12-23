@@ -61,6 +61,10 @@ class MatMul(MatrixExpr, Mul):
 
     @property
     def shape(self):
+        for arg in self.args:
+            if arg.is_Matrix is False and arg.is_commutative is False:
+                raise NotImplementedError
+
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
 
