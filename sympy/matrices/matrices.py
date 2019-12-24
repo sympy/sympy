@@ -1264,7 +1264,8 @@ class MatrixEigen(MatrixSubspaces):
     """Provides basic matrix eigenvalue/vector operations.
     Should not be instantiated directly."""
 
-    def diagonalize(self, reals_only=False, sort=False, normalize=False):
+    def diagonalize(self, reals_only=False, sort=False, normalize=False,
+            dotprodsimp=None):
         """
         Return (P, D), where D is diagonal and
 
@@ -1277,8 +1278,15 @@ class MatrixEigen(MatrixSubspaces):
 
         reals_only : bool. Whether to throw an error if complex numbers are need
                      to diagonalize. (Default: False)
+
         sort : bool. Sort the eigenvalues along the diagonal. (Default: False)
+
         normalize : bool. If True, normalize the columns of P. (Default: False)
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -1317,10 +1325,11 @@ class MatrixEigen(MatrixSubspaces):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        if not self.is_diagonalizable(reals_only=reals_only):
-            raise MatrixError("Matrix is not diagonalizable")
+        is_diagonalizable, eigenvecs = self.is_diagonalizable(
+                    reals_only=reals_only, witheigen=True, dotprodsimp=dotprodsimp)
 
-        eigenvecs = self.eigenvects(simplify=True)
+        if not is_diagonalizable:
+            raise MatrixError("Matrix is not diagonalizable")
 
         if sort:
             eigenvecs = sorted(eigenvecs, key=default_sort_key)
@@ -1568,7 +1577,8 @@ class MatrixEigen(MatrixSubspaces):
             ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
         return ret
 
-    def is_diagonalizable(self, reals_only=False, **kwargs):
+    def is_diagonalizable(self, reals_only=False, witheigen=False,
+            dotprodsimp=None, **kwargs):
         """Returns true if a matrix is diagonalizable.
 
         Parameters
@@ -1576,6 +1586,15 @@ class MatrixEigen(MatrixSubspaces):
 
         reals_only : bool. If reals_only=True, determine whether the matrix can be
                      diagonalized without complex numbers. (Default: False)
+
+        witheigen : bool
+            Return eigenvectors so functions like ``diagonalize`` don't have to
+            calculate them again.
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         kwargs
         ======
@@ -1632,23 +1651,28 @@ class MatrixEigen(MatrixSubspaces):
             ).warn()
 
         if not self.is_square:
-            return False
+            return (False, None) if witheigen else False
 
         if all(e.is_real for e in self) and self.is_symmetric():
             # every real symmetric matrix is real diagonalizable
+            if witheigen:
+                return True, self.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
             return True
 
-        eigenvecs = self.eigenvects(simplify=True)
+        eigenvecs = self.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
+        ret       = False
 
-        ret = True
         for val, mult, basis in eigenvecs:
             # if we have a complex eigenvalue
             if reals_only and not val.is_real:
-                ret = False
+                break
             # if the geometric multiplicity doesn't equal the algebraic
             if mult != len(basis):
-                ret = False
-        return ret
+                break
+        else:
+            ret = True
+
+        return (ret, eigenvecs) if witheigen else ret
 
     def _eval_is_positive_definite(self, method="eigen"):
         """Algorithm dump for computing positive-definiteness of a
@@ -3848,11 +3872,19 @@ class MatrixBase(MatrixDeprecated,
             kwargs['method'] = method
         return self._eval_inverse(**kwargs)
 
-    def is_nilpotent(self):
+    def is_nilpotent(self, dotprodsimp=None):
         """Checks if a matrix is nilpotent.
 
         A matrix B is nilpotent if for some integer k, B**k is
         a zero matrix.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -3872,7 +3904,7 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
         x = _uniquely_named_symbol('x', self)
-        p = self.charpoly(x)
+        p = self.charpoly(x, dotprodsimp=dotprodsimp)
         if p.args[0] == x ** self.rows:
             return True
         return False

@@ -2097,7 +2097,7 @@ def dotprodsimp(expr, withsimp=False):
                     expr       = expr3.subs([(d, e) for e, d in dummies.items()])
                     simplified = True
 
-        # very special case: x/(x-1) - 1/(x-1) -> 1
+        # very special case: x/(x-1)-1/(x-1) -> 1
         elif (exprops == 5 and expr.is_Add and expr.args [0].is_Mul and
                 expr.args [1].is_Mul and expr.args [0].args [-1].is_Pow and
                 expr.args [1].args [-1].is_Pow and
