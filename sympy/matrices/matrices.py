@@ -1587,10 +1587,6 @@ class MatrixEigen(MatrixSubspaces):
 
         eigenvecs = self.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
 
-        if all(e.is_real for e in self) and self.is_symmetric():
-            # every real symmetric matrix is real diagonalizable
-            return True, eigenvecs
-
         for val, mult, basis in eigenvecs:
             # if we have a complex eigenvalue
             if reals_only and not val.is_real:
