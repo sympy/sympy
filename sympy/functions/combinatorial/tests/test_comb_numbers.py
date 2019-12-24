@@ -651,14 +651,14 @@ def test_motzkin():
     assert motzkin.is_motzkin(25) == False
     assert motzkin.is_motzkin(1) == True
     assert motzkin.find_motzkin_numbers_in_range(-10, 40) == [1, 1, 2, 4, 9, 21]
-    assert motzkin.motzkin(1) == 1
-    assert motzkin.motzkin(8) == 127
+    assert motzkin.eval(1) == 1
+    assert motzkin.eval(8) == 127
     assert motzkin.is_motzkin(12.1) == False
     assert motzkin.is_motzkin(x) == False
     assert motzkin.is_motzkin(-8) == False
-    raises(ValueError, lambda: motzkin.motzkin(77.58))
-    raises(ValueError, lambda: motzkin.motzkin(x))
-    raises(ValueError, lambda: motzkin.motzkin(-8))
+    raises(ValueError, lambda: motzkin.eval(77.58))
+    raises(ValueError, lambda: motzkin.eval(x))
+    raises(ValueError, lambda: motzkin.eval(-8))
     raises(ValueError, lambda: motzkin.find_first_n_motzkin(-7))
     raises(ValueError, lambda: motzkin.find_first_n_motzkin(x))
     raises(ValueError, lambda: motzkin.find_first_n_motzkin(112.8))

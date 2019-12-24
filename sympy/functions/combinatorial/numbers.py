@@ -2019,7 +2019,7 @@ class motzkin(Function):
     >>> motzkin.is_motzkin(51)
         True
 
-    >>> motzkin.motzkin(10)
+    >>> motzkin.eval(10)
         835
     """
     @staticmethod
@@ -2035,7 +2035,7 @@ class motzkin(Function):
              m_1 = 1
              i = 2
              while(1):
-                 next_num = int(((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0)
+                 next_num = ((2*i + 1)*m_1 + (3*i - 3)*m_0) // (i + 2)
                  if next_num == n:
                      return True
                  if next_num > n:
@@ -2058,7 +2058,7 @@ class motzkin(Function):
                 motzkin.append(m_1)
             i = 2
             while(1):
-                next_num = int(((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0)
+                next_num = ((2*i + 1)*m_1 + (3*i - 3)*m_0) // (i + 2)
                 m_0 = m_1
                 m_1 = next_num
                 i = i + 1
@@ -2092,7 +2092,7 @@ class motzkin(Function):
             motzkin.append(m_1)
             i = i + 1
         while(i <= n):
-            next_num = int(((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0)
+            next_num = ((2*i + 1)*m_1 + (3*i - 3)*m_0) // (i + 2)
             m_0 = m_1
             m_1 = next_num
             motzkin.append(next_num)
@@ -2100,7 +2100,7 @@ class motzkin(Function):
         return motzkin
 
     @staticmethod
-    def motzkin(n):
+    def eval(n):
         try:
             n = as_int(n)
         except:
@@ -2113,7 +2113,7 @@ class motzkin(Function):
         m_0 = 1
         m_1 = 1
         while(i <= (n-1)):
-            next_num = int(((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0)
+            next_num = ((2*i + 1)*m_1 + (3*i - 3)*m_0) // (i + 2)
             m_0 = m_1
             m_1 = next_num
             i = i + 1
