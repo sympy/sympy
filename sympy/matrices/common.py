@@ -21,7 +21,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
 from sympy.polys import cancel, together
-from sympy.simplify import simplify as _simplify, dotprodsimp
+from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -2172,8 +2172,8 @@ class MatrixArithmetic(MatrixRequired):
 
         return a.multiply(b)
 
-    def _eval_pow_by_recursion_mulsimp(self, num, mulsimp=None, prevsimp=None):
-        if mulsimp and prevsimp is None:
+    def _eval_pow_by_recursion_mulsimp(self, num, dotprodsimp=None, prevsimp=None):
+        if dotprodsimp and prevsimp is None:
             prevsimp = [True]*len(self)
 
         if num == 1:
@@ -2181,14 +2181,14 @@ class MatrixArithmetic(MatrixRequired):
 
         if num % 2 == 1:
             a, b = self, self._eval_pow_by_recursion_mulsimp(num - 1,
-                    mulsimp=mulsimp, prevsimp=prevsimp)
+                    dotprodsimp=dotprodsimp, prevsimp=prevsimp)
         else:
             a = b = self._eval_pow_by_recursion_mulsimp(num // 2,
-                    mulsimp=mulsimp, prevsimp=prevsimp)
+                    dotprodsimp=dotprodsimp, prevsimp=prevsimp)
 
-        m = a.multiply(b, mulsimp=False)
+        m = a.multiply(b, dotprodsimp=False)
 
-        if not mulsimp:
+        if not dotprodsimp:
             return m
 
         lenm  = len(m)
@@ -2196,7 +2196,7 @@ class MatrixArithmetic(MatrixRequired):
 
         for i in range(lenm):
             if prevsimp[i]:
-                elems[i], prevsimp[i] = dotprodsimp(m[i], withsimp=True)
+                elems[i], prevsimp[i] = _dotprodsimp(m[i], withsimp=True)
             else:
                 elems[i] = m[i]
 
@@ -2287,13 +2287,13 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.multiply(other)
 
-    def multiply(self, other, mulsimp=None):
+    def multiply(self, other, dotprodsimp=None):
         """Same as __mul__() but with optional simplification.
 
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -2310,8 +2310,8 @@ class MatrixArithmetic(MatrixRequired):
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_mul(other)
-            if mulsimp:
-                return m.applyfunc(dotprodsimp)
+            if dotprodsimp:
+                return m.applyfunc(_dotprodsimp)
             return m
 
         # Matrix-like objects can be passed to CommonMatrix routines directly.
@@ -2362,13 +2362,13 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.pow(exp)
 
-    def pow(self, exp, mulsimp=None, jordan=None):
+    def pow(self, exp, dotprodsimp=None, jordan=None):
         """Return self**exp a scalar or symbol.
 
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -2407,19 +2407,19 @@ class MatrixArithmetic(MatrixRequired):
             elif jordan_pow is not None and (jordan or \
                     (jordan is not False and a.rows == 2 and exp > 100000)):
                 try:
-                    return jordan_pow(exp, mulsimp=mulsimp)
+                    return jordan_pow(exp, dotprodsimp=dotprodsimp)
                 except MatrixError:
                     if jordan:
                         raise
 
-            if mulsimp is not None:
-                return a._eval_pow_by_recursion_mulsimp(exp, mulsimp=mulsimp)
+            if dotprodsimp is not None:
+                return a._eval_pow_by_recursion_mulsimp(exp, dotprodsimp=dotprodsimp)
             else:
                 return a._eval_pow_by_recursion(exp)
 
         if jordan_pow:
             try:
-                return jordan_pow(exp, mulsimp=mulsimp)
+                return jordan_pow(exp, dotprodsimp=dotprodsimp)
             except NonInvertibleMatrixError:
                 # Raised by jordan_pow on zero determinant matrix unless exp is
                 # definitely known to be a non-negative integer.
@@ -2676,9 +2676,3 @@ def classof(A, B):
             return A.__class__
 
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
-
-
-def matmulsimp(M):
-    """Apply dotprodsimp to whole matrix to clean up after multiplication."""
-
-    return M.applyfunc(dotprodsimp)

@@ -24,7 +24,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import PurePoly, cancel, roots
 from sympy.printing import sstr
 from sympy.simplify import nsimplify
-from sympy.simplify import simplify as _simplify, dotprodsimp
+from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.misc import filldedent
@@ -80,14 +80,14 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations.
     Should not be instantiated directly."""
 
-    def _eval_berkowitz_toeplitz_matrix(self, mulsimp=None):
+    def _eval_berkowitz_toeplitz_matrix(self, dotprodsimp=None):
         """Return (A,T) where T the Toeplitz matrix used in the Berkowitz algorithm
         corresponding to ``self`` and A is the first principal submatrix.
 
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -121,8 +121,8 @@ class MatrixDeterminant(MatrixCommon):
         # compute -R * A**n * C.
         diags = [C]
         for i in range(self.rows - 2):
-            diags.append(A.multiply(diags[i], mulsimp=mulsimp))
-        diags = [(-R).multiply(d, mulsimp=mulsimp)[0, 0] for d in diags]
+            diags.append(A.multiply(diags[i], dotprodsimp=dotprodsimp))
+        diags = [(-R).multiply(d, dotprodsimp=dotprodsimp)[0, 0] for d in diags]
         diags = [self.one, -a] + diags
 
         def entry(i,j):
@@ -133,7 +133,7 @@ class MatrixDeterminant(MatrixCommon):
         toeplitz = self._new(self.cols + 1, self.rows, entry)
         return (A, toeplitz)
 
-    def _eval_berkowitz_vector(self, mulsimp=None):
+    def _eval_berkowitz_vector(self, dotprodsimp=None):
         """ Run the Berkowitz algorithm and return a vector whose entries
             are the coefficients of the characteristic polynomial of ``self``.
 
@@ -160,7 +160,7 @@ class MatrixDeterminant(MatrixCommon):
             Parameters
             ==========
 
-            mulsimp : bool, optional
+            dotprodsimp : bool, optional
                 Specifies whether intermediate term algebraic simplification is
                 used during matrix multiplications to control expression blowup
                 and thus speed up calculation.
@@ -182,17 +182,26 @@ class MatrixDeterminant(MatrixCommon):
         elif self.rows == 1 and self.cols == 1:
             return self._new(2, 1, [self.one, -self[0,0]])
 
-        submat, toeplitz = self._eval_berkowitz_toeplitz_matrix(mulsimp=mulsimp)
-        return toeplitz.multiply(submat._eval_berkowitz_vector(mulsimp=mulsimp),
-                mulsimp=mulsimp)
+        submat, toeplitz = self._eval_berkowitz_toeplitz_matrix(dotprodsimp=dotprodsimp)
+        return toeplitz.multiply(submat._eval_berkowitz_vector(dotprodsimp=dotprodsimp),
+                dotprodsimp=dotprodsimp)
 
-    def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul):
+    def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul,
+            dotprodsimp=None):
         """Compute matrix determinant using Bareiss' fraction-free
         algorithm which is an extension of the well known Gaussian
         elimination method. This approach is best suited for dense
         symbolic matrices and will result in a determinant with
         minimal number of fractions. It means that less term
         rewriting is needed on resulting formulae.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         TODO: Implement algorithm for sparse matrices (SFF),
         http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
@@ -226,30 +235,32 @@ class MatrixDeterminant(MatrixCommon):
 
             def entry(i, j):
                 ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
-                if not ret.is_Atom:
+                if dotprodsimp:
+                    return _dotprodsimp(ret)
+                elif not ret.is_Atom:
                     return cancel(ret)
                 return ret
 
             return sign*bareiss(self._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
 
-        return cancel(bareiss(self))
+        return bareiss(self)
 
-    def _eval_det_berkowitz(self, mulsimp=None):
+    def _eval_det_berkowitz(self, dotprodsimp=None):
         """ Use the Berkowitz algorithm to compute the determinant.
 
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
         """
 
-        berk_vector = self._eval_berkowitz_vector(mulsimp=mulsimp)
+        berk_vector = self._eval_berkowitz_vector(dotprodsimp=dotprodsimp)
         return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
 
-    def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None):
+    def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
         """ Computes the determinant of a matrix from its LU decomposition.
         This function uses the LU decomposition computed by
         LUDecomposition_Simple().
@@ -262,7 +273,16 @@ class MatrixDeterminant(MatrixCommon):
         The default is simpfunc=None, which indicate that the pivot search
         algorithm should not attempt to simplify any candidate pivots.
         If simpfunc fails to simplify its input, then it must return its input
-        instead of a copy."""
+        instead of a copy.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+        """
 
         if self.rows == 0:
             return self.one
@@ -270,7 +290,8 @@ class MatrixDeterminant(MatrixCommon):
             # suggests that the determinant of a 0 x 0 matrix is one, by
             # convention.
 
-        lu, row_swaps = self.LUdecomposition_Simple(iszerofunc=iszerofunc, simpfunc=None)
+        lu, row_swaps = self.LUdecomposition_Simple(iszerofunc=iszerofunc, simpfunc=None,
+                dotprodsimp=dotprodsimp)
         # P*A = L*U => det(A) = det(L)*det(U)/det(P) = det(P)*det(U).
         # Lower triangular factor L encoded in lu has unit diagonal => det(L) = 1.
         # P is a permutation matrix => det(P) in {-1, 1} => 1/det(P) = det(P).
@@ -316,7 +337,7 @@ class MatrixDeterminant(MatrixCommon):
         """
         return self.cofactor_matrix(method).transpose()
 
-    def charpoly(self, x='lambda', simplify=_simplify, mulsimp=None):
+    def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
         """Computes characteristic polynomial det(x*I - self) where I is
         the identity matrix.
 
@@ -357,7 +378,7 @@ class MatrixDeterminant(MatrixCommon):
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             to control expression blowup during matrix multiplication. If this
             is true then the simplify function is not used.
@@ -379,20 +400,20 @@ class MatrixDeterminant(MatrixCommon):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        if mulsimp:
+        if dotprodsimp:
             simplify = lambda e: e
 
-        berk_vector = self._eval_berkowitz_vector(mulsimp=mulsimp)
+        berk_vector = self._eval_berkowitz_vector(dotprodsimp=dotprodsimp)
         x = _uniquely_named_symbol(x, berk_vector)
         return PurePoly([simplify(a) for a in berk_vector], x)
 
-    def cofactor(self, i, j, method="berkowitz", mulsimp=None):
+    def cofactor(self, i, j, method="berkowitz", dotprodsimp=None):
         """Calculate the cofactor of an element.
 
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             to control expression blowup during matrix multiplication. If this
             is true then the simplify function is not used.
@@ -408,15 +429,15 @@ class MatrixDeterminant(MatrixCommon):
         if not self.is_square or self.rows < 1:
             raise NonSquareMatrixError()
 
-        return (-1)**((i + j) % 2) * self.minor(i, j, method, mulsimp=mulsimp)
+        return (-1)**((i + j) % 2) * self.minor(i, j, method, dotprodsimp=dotprodsimp)
 
-    def cofactor_matrix(self, method="berkowitz", mulsimp=None):
+    def cofactor_matrix(self, method="berkowitz", dotprodsimp=None):
         """Return a matrix containing the cofactor of each element.
 
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             to control expression blowup during matrix multiplication. If this
             is true then the simplify function is not used.
@@ -434,9 +455,9 @@ class MatrixDeterminant(MatrixCommon):
             raise NonSquareMatrixError()
 
         return self._new(self.rows, self.cols,
-                         lambda i, j: self.cofactor(i, j, method, mulsimp=mulsimp))
+                         lambda i, j: self.cofactor(i, j, method, dotprodsimp=dotprodsimp))
 
-    def det(self, method="bareiss", iszerofunc=None, mulsimp=None):
+    def det(self, method="bareiss", iszerofunc=None, dotprodsimp=None):
         """Computes the determinant of a matrix.
 
         Parameters
@@ -473,7 +494,7 @@ class MatrixDeterminant(MatrixCommon):
             and returns ``True`` if it is tested as zero and ``False`` if it
             tested as non-zero, and also ``None`` if it is undecidable.
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -524,7 +545,7 @@ class MatrixDeterminant(MatrixCommon):
             return self[0,0]
         elif n == 2:
             m = self[0, 0] * self[1, 1] - self[0, 1] * self[1, 0]
-            return dotprodsimp(m) if mulsimp else m
+            return _dotprodsimp(m) if dotprodsimp else m
         elif n == 3:
             m =  (self[0, 0] * self[1, 1] * self[2, 2]
                 + self[0, 1] * self[1, 2] * self[2, 0]
@@ -532,16 +553,16 @@ class MatrixDeterminant(MatrixCommon):
                 - self[0, 2] * self[1, 1] * self[2, 0]
                 - self[0, 0] * self[1, 2] * self[2, 1]
                 - self[0, 1] * self[1, 0] * self[2, 2])
-            return dotprodsimp(m) if mulsimp else m
+            return _dotprodsimp(m) if dotprodsimp else m
 
         if method == "bareiss":
-            return self._eval_det_bareiss(iszerofunc=iszerofunc)
+            return self._eval_det_bareiss(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
         elif method == "berkowitz":
-            return self._eval_det_berkowitz(mulsimp=mulsimp)
+            return self._eval_det_berkowitz(dotprodsimp=dotprodsimp)
         elif method == "lu":
-            return self._eval_det_lu(iszerofunc=iszerofunc)
+            return self._eval_det_lu(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
 
-    def minor(self, i, j, method="berkowitz", mulsimp=None):
+    def minor(self, i, j, method="berkowitz", dotprodsimp=None):
         """Return the (i,j) minor of ``self``.  That is,
         return the determinant of the matrix obtained by deleting
         the `i`th row and `j`th column from ``self``.
@@ -549,7 +570,7 @@ class MatrixDeterminant(MatrixCommon):
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -565,7 +586,7 @@ class MatrixDeterminant(MatrixCommon):
         if not self.is_square or self.rows < 1:
             raise NonSquareMatrixError()
 
-        return self.minor_submatrix(i, j).det(method=method, mulsimp=mulsimp)
+        return self.minor_submatrix(i, j).det(method=method, dotprodsimp=dotprodsimp)
 
     def minor_submatrix(self, i, j):
         """Return the submatrix obtained by removing the `i`th row
@@ -642,14 +663,14 @@ class MatrixReductions(MatrixDeterminant):
             return self[i, j]
         return self._new(self.rows, self.cols, entry)
 
-    def _eval_echelon_form(self, iszerofunc, simpfunc, mulsimp=None):
+    def _eval_echelon_form(self, iszerofunc, simpfunc, dotprodsimp=None):
         """Returns (mat, swaps) where ``mat`` is a row-equivalent matrix
         in echelon form and ``swaps`` is a list of row-swaps performed."""
         reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
                                                       normalize_last=True,
                                                       normalize=False,
                                                       zero_above=False,
-                                                      mulsimp=mulsimp)
+                                                      dotprodsimp=dotprodsimp)
         return reduced, pivot_cols, swaps
 
     def _eval_is_echelon(self, iszerofunc):
@@ -660,11 +681,11 @@ class MatrixReductions(MatrixDeterminant):
             return zeros_below and self[:, 1:]._eval_is_echelon(iszerofunc)
         return zeros_below and self[1:, 1:]._eval_is_echelon(iszerofunc)
 
-    def _eval_rref(self, iszerofunc, simpfunc, normalize_last=True, mulsimp=None):
+    def _eval_rref(self, iszerofunc, simpfunc, normalize_last=True, dotprodsimp=None):
         reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
                                                       normalize_last, normalize=True,
                                                       zero_above=True,
-                                                      mulsimp=mulsimp)
+                                                      dotprodsimp=dotprodsimp)
         return reduced, pivot_cols
 
     def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
@@ -739,7 +760,7 @@ class MatrixReductions(MatrixDeterminant):
         return (self.permute(perm, orientation='cols'), perm)
 
     def _row_reduce(self, iszerofunc, simpfunc, normalize_last=True,
-                    normalize=True, zero_above=True, mulsimp=None):
+                    normalize=True, zero_above=True, dotprodsimp=None):
         """Row reduce ``self`` and return a tuple (rref_matrix,
         pivot_cols, swaps) where pivot_cols are the pivot columns
         and swaps are any row swaps that were used in the process
@@ -765,7 +786,7 @@ class MatrixReductions(MatrixDeterminant):
         zero_above : whether entries above the pivot should be zeroed.
             If ``zero_above=False``, an echelon matrix will be returned.
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -773,7 +794,6 @@ class MatrixReductions(MatrixDeterminant):
         """
         rows, cols = self.rows, self.cols
         mat = list(self)
-        _dotprodsimp = dotprodsimp if mulsimp else lambda e: e
         def get_col(i):
             return mat[i::cols]
 
@@ -785,7 +805,8 @@ class MatrixReductions(MatrixDeterminant):
             """Does the row op row[i] = a*row[i] - b*row[j]"""
             q = (j - i)*cols
             for p in range(i*cols, (i + 1)*cols):
-                mat[p] = _dotprodsimp(a*mat[p] - b*mat[p + q])
+                m = a*mat[p] - b*mat[p + q]
+                mat[p] = _dotprodsimp(m) if dotprodsimp else m
 
         piv_row, piv_col = 0, 0
         pivot_cols = []
@@ -817,7 +838,8 @@ class MatrixReductions(MatrixDeterminant):
                 i, j = piv_row, piv_col
                 mat[i*cols + j] = self.one
                 for p in range(i*cols + j + 1, (i + 1)*cols):
-                    mat[p] = _dotprodsimp(mat[p] / pivot_val)
+                    m = mat[p] / pivot_val
+                    mat[p] = _dotprodsimp(m) if dotprodsimp else m
                 # after normalizing, the pivot value is 1
                 pivot_val = self.one
 
@@ -843,12 +865,13 @@ class MatrixReductions(MatrixDeterminant):
                 pivot_val = mat[piv_i*cols + piv_j]
                 mat[piv_i*cols + piv_j] = self.one
                 for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
-                    mat[p] = _dotprodsimp(mat[p] / pivot_val)
+                    m = mat[p] / pivot_val
+                    mat[p] = _dotprodsimp(m) if dotprodsimp else m
 
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
     def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
-            mulsimp=None):
+            dotprodsimp=None):
         """Returns a matrix row-equivalent to ``self`` that is
         in echelon form.  Note that echelon form of a matrix
         is *not* unique, however, properties like the row
@@ -857,7 +880,7 @@ class MatrixReductions(MatrixDeterminant):
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -866,7 +889,7 @@ class MatrixReductions(MatrixDeterminant):
             simplify, FunctionType) else _simplify
 
         mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc,
-                mulsimp=mulsimp)
+                dotprodsimp=dotprodsimp)
         if with_pivots:
             return mat, pivots
         return mat
@@ -979,7 +1002,7 @@ class MatrixReductions(MatrixDeterminant):
         return len(pivots)
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
-            normalize_last=True, mulsimp=None):
+            normalize_last=True, dotprodsimp=None):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
         Parameters
@@ -1006,7 +1029,7 @@ class MatrixReductions(MatrixDeterminant):
             each pivot is normalized to be `1` before row operations are
             used to zero above and below the pivot.
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -1043,7 +1066,7 @@ class MatrixReductions(MatrixDeterminant):
         ret, pivot_cols = self._eval_rref(iszerofunc=iszerofunc,
                                           simpfunc=simpfunc,
                                           normalize_last=normalize_last,
-                                          mulsimp=mulsimp)
+                                          dotprodsimp=dotprodsimp)
         if pivots:
             ret = (ret, pivot_cols)
         return ret
@@ -1053,13 +1076,13 @@ class MatrixSubspaces(MatrixReductions):
     """Provides methods relating to the fundamental subspaces
     of a matrix.  Should not be instantiated directly."""
 
-    def columnspace(self, simplify=False, mulsimp=None):
+    def columnspace(self, simplify=False, dotprodsimp=None):
         """Returns a list of vectors (Matrix objects) that span columnspace of ``self``
 
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -1090,17 +1113,17 @@ class MatrixSubspaces(MatrixReductions):
         rowspace
         """
         reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True,
-                mulsimp=mulsimp)
+                dotprodsimp=dotprodsimp)
 
         return [self.col(i) for i in pivots]
 
-    def nullspace(self, simplify=False, iszerofunc=_iszero, mulsimp=None):
+    def nullspace(self, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
         """Returns list of vectors (Matrix objects) that span nullspace of ``self``
 
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -1129,7 +1152,7 @@ class MatrixSubspaces(MatrixReductions):
         """
 
         reduced, pivots = self.rref(iszerofunc=iszerofunc, simplify=simplify,
-                mulsimp=mulsimp)
+                dotprodsimp=dotprodsimp)
 
         free_vars = [i for i in range(self.cols) if i not in pivots]
 
@@ -1145,20 +1168,20 @@ class MatrixSubspaces(MatrixReductions):
 
         return [self._new(self.cols, 1, b) for b in basis]
 
-    def rowspace(self, simplify=False, mulsimp=None):
+    def rowspace(self, simplify=False, dotprodsimp=None):
         """Returns a list of vectors that span the row space of ``self``.
 
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
         """
 
         reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True,
-                mulsimp=mulsimp)
+                dotprodsimp=dotprodsimp)
 
         return [reduced.row(i) for i in range(len(pivots))]
 
@@ -1241,7 +1264,8 @@ class MatrixEigen(MatrixSubspaces):
     """Provides basic matrix eigenvalue/vector operations.
     Should not be instantiated directly."""
 
-    def diagonalize(self, reals_only=False, sort=False, normalize=False):
+    def diagonalize(self, reals_only=False, sort=False, normalize=False,
+            dotprodsimp=None):
         """
         Return (P, D), where D is diagonal and
 
@@ -1254,8 +1278,15 @@ class MatrixEigen(MatrixSubspaces):
 
         reals_only : bool. Whether to throw an error if complex numbers are need
                      to diagonalize. (Default: False)
+
         sort : bool. Sort the eigenvalues along the diagonal. (Default: False)
+
         normalize : bool. If True, normalize the columns of P. (Default: False)
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -1294,10 +1325,11 @@ class MatrixEigen(MatrixSubspaces):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        if not self.is_diagonalizable(reals_only=reals_only):
-            raise MatrixError("Matrix is not diagonalizable")
+        is_diagonalizable, eigenvecs = self.is_diagonalizable(
+                    reals_only=reals_only, witheigen=True, dotprodsimp=dotprodsimp)
 
-        eigenvecs = self.eigenvects(simplify=True)
+        if not is_diagonalizable:
+            raise MatrixError("Matrix is not diagonalizable")
 
         if sort:
             eigenvecs = sorted(eigenvecs, key=default_sort_key)
@@ -1312,7 +1344,7 @@ class MatrixEigen(MatrixSubspaces):
 
         return self.hstack(*p_cols), self.diag(*diag)
 
-    def eigenvals(self, error_when_incomplete=True, mulsimp=None, **flags):
+    def eigenvals(self, error_when_incomplete=True, dotprodsimp=None, **flags):
         r"""Return eigenvalues using the Berkowitz agorithm to compute
         the characteristic polynomial.
 
@@ -1324,7 +1356,7 @@ class MatrixEigen(MatrixSubspaces):
             eigenvalues are computed. This is caused by ``roots`` not returning
             a full list of eigenvalues.
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -1410,9 +1442,9 @@ class MatrixEigen(MatrixSubspaces):
             flags.pop('simplify', None)  # pop unsupported flag
             if isinstance(simplify, FunctionType):
                 eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify,
-                        mulsimp=mulsimp), **flags)
+                        dotprodsimp=dotprodsimp), **flags)
             else:
-                eigs = roots(mat.charpoly(x=Dummy('x'), mulsimp=mulsimp), **flags)
+                eigs = roots(mat.charpoly(x=Dummy('x'), dotprodsimp=dotprodsimp), **flags)
 
         # make sure the algebraic multiplicity sums to the
         # size of the matrix
@@ -1426,6 +1458,7 @@ class MatrixEigen(MatrixSubspaces):
             return eigs
         if not isinstance(simplify, FunctionType):
             simplify = _simplify
+
         # With 'multiple' flag set true, simplify() will be mapped for the list
         # Otherwise, simplify() will be mapped for the keys of the dictionary
         if not multiple:
@@ -1434,7 +1467,7 @@ class MatrixEigen(MatrixSubspaces):
             return [simplify(value) for value in eigs]
 
     def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero,
-            mulsimp=None, **flags):
+            dotprodsimp=None, **flags):
         """Return list of triples (eigenval, multiplicity, eigenspace).
 
         Parameters
@@ -1455,7 +1488,7 @@ class MatrixEigen(MatrixSubspaces):
             and returns ``True`` if it is tested as zero and ``False`` if it
             is tested as non-zero, and ``None`` if it is undecidable.
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -1515,12 +1548,12 @@ class MatrixEigen(MatrixSubspaces):
         def eigenspace(eigenval):
             """Get a basis for the eigenspace for a particular eigenvalue"""
             m = mat - self.eye(mat.rows) * eigenval
-            ret = m.nullspace(iszerofunc=iszerofunc, mulsimp=mulsimp)
+            ret = m.nullspace(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
             # the nullspace for a real eigenvalue should be
             # non-trivial.  If we didn't find an eigenvector, try once
             # more a little harder
             if len(ret) == 0 and simplify:
-                ret = m.nullspace(iszerofunc=iszerofunc, simplify=True, mulsimp=mulsimp)
+                ret = m.nullspace(iszerofunc=iszerofunc, simplify=True, dotprodsimp=dotprodsimp)
             if len(ret) == 0:
                 raise NotImplementedError(
                         "Can't evaluate eigenvector for eigenvalue %s" % eigenval)
@@ -1528,7 +1561,7 @@ class MatrixEigen(MatrixSubspaces):
 
         eigenvals = mat.eigenvals(rational=False,
                                   error_when_incomplete=error_when_incomplete,
-                                  mulsimp=mulsimp,
+                                  dotprodsimp=dotprodsimp,
                                   **flags)
         ret = [(val, mult, eigenspace(val)) for val, mult in
                     sorted(eigenvals.items(), key=default_sort_key)]
@@ -1544,7 +1577,8 @@ class MatrixEigen(MatrixSubspaces):
             ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
         return ret
 
-    def is_diagonalizable(self, reals_only=False, **kwargs):
+    def is_diagonalizable(self, reals_only=False, witheigen=False,
+            dotprodsimp=None, **kwargs):
         """Returns true if a matrix is diagonalizable.
 
         Parameters
@@ -1552,6 +1586,15 @@ class MatrixEigen(MatrixSubspaces):
 
         reals_only : bool. If reals_only=True, determine whether the matrix can be
                      diagonalized without complex numbers. (Default: False)
+
+        witheigen : bool
+            Return eigenvectors so functions like ``diagonalize`` don't have to
+            calculate them again.
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         kwargs
         ======
@@ -1608,23 +1651,28 @@ class MatrixEigen(MatrixSubspaces):
             ).warn()
 
         if not self.is_square:
-            return False
+            return (False, None) if witheigen else False
 
         if all(e.is_real for e in self) and self.is_symmetric():
             # every real symmetric matrix is real diagonalizable
+            if witheigen:
+                return True, self.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
             return True
 
-        eigenvecs = self.eigenvects(simplify=True)
+        eigenvecs = self.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
+        ret       = False
 
-        ret = True
         for val, mult, basis in eigenvecs:
             # if we have a complex eigenvalue
             if reals_only and not val.is_real:
-                ret = False
+                break
             # if the geometric multiplicity doesn't equal the algebraic
             if mult != len(basis):
-                ret = False
-        return ret
+                break
+        else:
+            ret = True
+
+        return (ret, eigenvecs) if witheigen else ret
 
     def _eval_is_positive_definite(self, method="eigen"):
         """Algorithm dump for computing positive-definiteness of a
@@ -2510,7 +2558,7 @@ class MatrixBase(MatrixDeprecated,
         return self._new(
             rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
 
-    def _matrix_pow_by_jordan_blocks(self, num, mulsimp=None):
+    def _matrix_pow_by_jordan_blocks(self, num, dotprodsimp=None):
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
 
@@ -2541,8 +2589,8 @@ class MatrixBase(MatrixDeprecated,
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
-        return self._new(P.multiply(diag(*jordan_cells), mulsimp=mulsimp).multiply(
-                P.inv(), mulsimp=mulsimp))
+        return self._new(P.multiply(diag(*jordan_cells), dotprodsimp=dotprodsimp).multiply(
+                P.inv(), dotprodsimp=dotprodsimp))
 
     def __repr__(self):
         return sstr(self)
@@ -3331,7 +3379,7 @@ class MatrixBase(MatrixDeprecated,
         from .sparsetools import banded
         return self.__class__(banded(size, bands))
 
-    def exp(self, mulsimp=None):
+    def exp(self, dotprodsimp=None):
         """Return the exponential of a square matrix
 
         Examples
@@ -3349,7 +3397,7 @@ class MatrixBase(MatrixDeprecated,
         Parameters
         ==========
 
-        mulsimp : bool, optional
+        dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
@@ -3369,7 +3417,7 @@ class MatrixBase(MatrixDeprecated,
         from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
-        ret = P.multiply(eJ, mulsimp=mulsimp).multiply(P.inv(), mulsimp=mulsimp)
+        ret = P.multiply(eJ, dotprodsimp=dotprodsimp).multiply(P.inv(), dotprodsimp=dotprodsimp)
         if all(value.is_real for value in self.values()):
             return type(self)(re(ret))
         else:
@@ -3824,11 +3872,19 @@ class MatrixBase(MatrixDeprecated,
             kwargs['method'] = method
         return self._eval_inverse(**kwargs)
 
-    def is_nilpotent(self):
+    def is_nilpotent(self, dotprodsimp=None):
         """Checks if a matrix is nilpotent.
 
         A matrix B is nilpotent if for some integer k, B**k is
         a zero matrix.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -3848,7 +3904,7 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
         x = _uniquely_named_symbol('x', self)
-        p = self.charpoly(x)
+        p = self.charpoly(x, dotprodsimp=dotprodsimp)
         if p.args[0] == x ** self.rows:
             return True
         return False
@@ -4111,7 +4167,8 @@ class MatrixBase(MatrixDeprecated,
     def LUdecomposition_Simple(self,
                                iszerofunc=_iszero,
                                simpfunc=None,
-                               rankcheck=False):
+                               rankcheck=False,
+                               dotprodsimp=None):
         """Compute an lu decomposition of m x n matrix A, where P*A = L*U
 
         * L is m x m lower triangular with unit diagonal
@@ -4182,6 +4239,14 @@ class MatrixBase(MatrixDeprecated,
         relies on ``_find_reasonable_pivot()``.
         Future versions of ``LUdecomposition_simple()`` may use
         ``_find_reasonable_pivot()``.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -4287,7 +4352,8 @@ class MatrixBase(MatrixDeprecated,
                 # in sympy/matrices/tests/test_sparse.py.
                 # c = pivot_row + 1 if pivot_row == pivot_col else pivot_col
                 for c in range(start_col, lu.cols):
-                    lu[row, c] = lu[row, c] - lu[row, pivot_row]*lu[pivot_row, c]
+                    e = lu[row, c] - lu[row, pivot_row]*lu[pivot_row, c]
+                    lu[row, c] = _dotprodsimp(e) if dotprodsimp else e
 
             if pivot_row != pivot_col:
                 # matrix rank < min(num rows, num cols),
