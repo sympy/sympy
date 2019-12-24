@@ -6,7 +6,7 @@ from sympy import (
     TribonacciConstant)
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, partition, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, zeta)
 from sympy.functions.combinatorial.numbers import _nT
 
@@ -662,3 +662,23 @@ def test_issue_8601():
     assert str(c1) == '6.93334070531408e-5'
     c2 = catalan(-35.4).evalf()
     assert str(c2) == '-4.14189164517449e-24'
+
+
+def test_motzkin():
+    assert motzkin.find_motzkin_numbers_in_range(100, 10000) == [127, 323, 835, 2188, 5798]
+    assert motzkin.find_first_n_motzkin(7) == [1, 1, 2, 4, 9, 21, 51]
+    assert motzkin.is_motzkin(51) == True
+    assert motzkin.is_motzkin(25) == False
+    assert motzkin.is_motzkin(1) == True
+    assert motzkin.find_motzkin_numbers_in_range(-10, 40) == [1, 1, 2, 4, 9, 21]
+    assert motzkin.motzkin(1) == 1
+    assert motzkin.motzkin(8) == 127
+    assert motzkin.is_motzkin(12.1) == False
+    assert motzkin.is_motzkin(x) == False
+    assert motzkin.is_motzkin(-8) == False
+    raises(ValueError, lambda: motzkin.motzkin(77.58))
+    raises(ValueError, lambda: motzkin.motzkin(x))
+    raises(ValueError, lambda: motzkin.motzkin(-8))
+    raises(ValueError, lambda: motzkin.find_first_n_motzkin(-7))
+    raises(ValueError, lambda: motzkin.find_first_n_motzkin(x))
+    raises(ValueError, lambda: motzkin.find_first_n_motzkin(112.8))

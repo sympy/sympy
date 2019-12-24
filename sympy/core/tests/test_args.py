@@ -1761,6 +1761,11 @@ def test_sympy__functions__combinatorial__numbers__carmichael():
     assert _test_args(carmichael(x))
 
 
+def test_sympy__functions__combinatorial__numbers__motzkin():
+    from sympy.functions.combinatorial.numbers import motzkin
+    assert _test_args(motzkin(x))
+
+
 def test_sympy__functions__combinatorial__numbers__fibonacci():
     from sympy.functions.combinatorial.numbers import fibonacci
     assert _test_args(fibonacci(x))
