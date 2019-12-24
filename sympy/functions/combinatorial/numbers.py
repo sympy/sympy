@@ -2006,7 +2006,7 @@ class motzkin(Function):
     Examples
     ========
 
-    >>> from sympy import motzkin
+    >>> from sympy.functions import motzkin
     >>> motzkin.find_first_n_motzkin(10)
         [1, 1, 2, 4, 9, 21, 51, 127, 323, 835]
 
