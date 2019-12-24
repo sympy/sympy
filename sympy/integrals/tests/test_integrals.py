@@ -215,6 +215,10 @@ def test_issue_3560():
     assert integrate(1/sqrt(x)**3, x) == -2/sqrt(x)
 
 
+def test_issue_18038():
+    raises(AttributeError, lambda: integrate((x, x)))
+
+
 def test_integrate_poly():
     p = Poly(x + x**2*y + y**3, x, y)
 
