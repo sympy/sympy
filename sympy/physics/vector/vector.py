@@ -1,13 +1,14 @@
 from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
     ImmutableMatrix as Matrix)
 from sympy import trigsimp
+from sympy.core.evalf import EvalfMixin
 from sympy.core.compatibility import unicode
 from sympy.utilities.misc import filldedent
 
 __all__ = ['Vector']
 
 
-class Vector(object):
+class Vector(EvalfMixin):
     """The class used to define vectors.
 
     It along with ReferenceFrame are the building blocks of describing a
