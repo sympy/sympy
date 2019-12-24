@@ -419,7 +419,7 @@ def test_MatrixSlice():
     assert all(Yt.owner.inputs[i].equals(Constant(s, i)) for i in range(1, 7))
 
     k = sy.Symbol('k')
-    kt = theano_code_(k, dtypes={k: 'int32'})
+    theano_code_(k, dtypes={k: 'int32'})
     start, stop, step = 4, k, 2
     Y = X[start:stop:step]
     Yt = theano_code_(Y, dtypes={n: 'int32', k: 'int32'})

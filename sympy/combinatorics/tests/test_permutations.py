@@ -2,11 +2,12 @@ from itertools import permutations
 
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
+from sympy.core.numbers import Integer
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.core.singleton import S
-from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_rmul, _af_rmuln, Cycle)
+from sympy.combinatorics.permutations import \
+    Permutation, _af_parity, _af_rmul, _af_rmuln, AppliedPermutation, Cycle
 from sympy.printing import sstr, srepr, pretty, latex
 from sympy.utilities.pytest import raises, SymPyDeprecationWarning, \
     warns_deprecated_sympy
@@ -26,6 +27,8 @@ def test_Permutation():
     assert p(list(range(p.size))) == list(p)
     # call as function
     assert list(p(1, 2)) == [0, 2, 1, 3]
+    raises(TypeError, lambda: p(-1))
+    raises(TypeError, lambda: p(5))
     # conversion to list
     assert list(p) == list(range(4))
     assert Permutation(size=4) == Permutation(3)
@@ -445,6 +448,18 @@ def test_from_sequence():
         Permutation(4)(0, 2)(1, 3)
 
 
+def test_resize():
+    p = Permutation(0, 1, 2)
+    assert p.resize(5) == Permutation(0, 1, 2, size=5)
+    assert p.resize(4) == Permutation(0, 1, 2, size=4)
+    assert p.resize(3) == p
+    raises(ValueError, lambda: p.resize(2))
+
+    p = Permutation(0, 1, 2)(3, 4)(5, 6)
+    assert p.resize(3) == Permutation(0, 1, 2)
+    raises(ValueError, lambda: p.resize(4))
+
+
 def test_printing_cyclic():
     p1 = Permutation([0, 2, 1])
     assert repr(p1) == 'Permutation(1, 2)'
@@ -522,3 +537,26 @@ def test_issue_17661():
     assert c1 == c2
     assert repr(c1) == 'Cycle(1, 2)'
     assert c1 == c2
+
+
+def test_permutation_apply():
+    x = Symbol('x')
+    p = Permutation(0, 1, 2)
+    assert p.apply(0) == 1
+    assert isinstance(p.apply(0), Integer)
+    assert p.apply(x) == AppliedPermutation(p, x)
+    assert AppliedPermutation(p, x).subs(x, 0) == 1
+
+    x = Symbol('x', integer=False)
+    raises(NotImplementedError, lambda: p.apply(x))
+    x = Symbol('x', negative=True)
+    raises(NotImplementedError, lambda: p.apply(x))
+
+
+def test_AppliedPermutation():
+    x = Symbol('x')
+    p = Permutation(0, 1, 2)
+    raises(ValueError, lambda: AppliedPermutation((0, 1, 2), x))
+    assert AppliedPermutation(p, 1, evaluate=True) == 2
+    assert AppliedPermutation(p, 1, evaluate=False).__class__ == \
+        AppliedPermutation

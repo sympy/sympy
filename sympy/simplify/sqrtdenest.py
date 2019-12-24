@@ -33,7 +33,8 @@ def sqrt_depth(p):
     >>> sqrt_depth(1 + sqrt(2)*sqrt(1 + sqrt(3)))
     2
     """
-
+    if p is S.ImaginaryUnit:
+        return 1
     if p.is_Atom:
         return 0
     elif p.is_Add or p.is_Mul:

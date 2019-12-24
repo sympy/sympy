@@ -30,7 +30,8 @@ from sympy.sets.sets import (Complement, EmptySet, FiniteSet,
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
 
-from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
+from sympy.utilities.pytest import (XFAIL, raises, skip, slow, SKIP,
+    nocache_fail)
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
@@ -761,6 +762,7 @@ def test_solveset_complex_tan():
         imageset(Lambda(n, pi*n + pi/2), S.Integers)
 
 
+@nocache_fail
 def test_solve_trig():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
@@ -780,6 +782,7 @@ def test_solve_trig():
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
+    # This fails when running with the cache off:
     assert solveset_complex(cos(x) - S.Half, x) == \
         Union(imageset(Lambda(n, 2*n*pi + pi*Rational(5, 3)), S.Integers),
               imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))

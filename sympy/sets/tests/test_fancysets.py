@@ -321,7 +321,7 @@ def test_Range_set():
     if PY3:
         builtin_range = range
     else:
-        builtin_range = xrange
+        builtin_range = xrange # noqa
 
     raises(TypeError, lambda: Range(builtin_range(1)))
     assert S(builtin_range(10)) == Range(10)
@@ -914,9 +914,20 @@ def test_issue_16871b():
     assert ImageSet(Lambda(x, x - 3), S.Integers).is_subset(S.Integers)
 
 
-def test_no_mod_on_imaginary():
+def test_issue_18050():
+    assert imageset(Lambda(x, I*x + 1), S.Integers
+        ) == ImageSet(Lambda(x, I*x + 1), S.Integers)
+    assert imageset(Lambda(x, 3*I*x + 4 + 8*I), S.Integers
+        ) == ImageSet(Lambda(x, 3*I*x + 4 + 2*I), S.Integers)
+    # no 'Mod' for next 2 tests:
     assert imageset(Lambda(x, 2*x + 3*I), S.Integers
-        ) == ImageSet(Lambda(x, 2*x + I), S.Integers)
+        ) == ImageSet(Lambda(x, 2*x + 3*I), S.Integers)
+    r = Symbol('r', positive=True)
+    assert imageset(Lambda(x, r*x + 10), S.Integers
+        ) == ImageSet(Lambda(x, r*x + 10), S.Integers)
+    # reduce real part:
+    assert imageset(Lambda(x, 3*x + 8 + 5*I), S.Integers
+        ) == ImageSet(Lambda(x, 3*x + 2 + 5*I), S.Integers)
 
 
 def test_Rationals():

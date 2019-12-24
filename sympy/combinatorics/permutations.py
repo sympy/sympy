@@ -3,8 +3,12 @@ from __future__ import print_function, division
 import random
 from collections import defaultdict
 
-from sympy.core.basic import Atom
-from sympy.core.compatibility import is_sequence, reduce, range, as_int
+from sympy.core.basic import Atom, Basic
+from sympy.core.evaluate import global_evaluate
+from sympy.core.expr import Expr
+from sympy.core.compatibility import \
+    is_sequence, reduce, range, as_int, Iterable
+from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import as_Boolean
 from sympy.matrices import zeros
@@ -1572,18 +1576,20 @@ class Permutation(Atom):
         # gets called a lot and should be fast
         if len(i) == 1:
             i = i[0]
-            try:
-                # P(1)
+            if not isinstance(i, Iterable):
+                i = as_int(i)
+                if i < 0 or i > self.size:
+                    raise TypeError(
+                        "{} should be an integer between 0 and {}"
+                        .format(i, self.size-1))
                 return self._array_form[i]
-            except TypeError:
-                try:
-                    # P([a, b, c])
-                    return [i[j] for j in self._array_form]
-                except Exception:
-                    raise TypeError('unrecognized argument')
-        else:
-            # P(1, 2, 3)
-            return self*Permutation(Cycle(*i), size=self.size)
+            # P([a, b, c])
+            if len(i) != self.size:
+                raise TypeError(
+                    "{} should have the length {}.".format(i, self.size))
+            return [i[j] for j in self._array_form]
+        # P(1, 2, 3)
+        return self*Permutation(Cycle(*i), size=self.size)
 
     def atoms(self):
         """
@@ -1599,6 +1605,55 @@ class Permutation(Atom):
         {0, 1, 2, 3, 4, 5}
         """
         return set(self.array_form)
+
+    def apply(self, i):
+        r"""Apply the permutation to an expression.
+
+        Parameters
+        ==========
+
+        i : Expr
+            It should be an integer between $0$ and $n-1$ where $n$
+            is the size of the permutation.
+
+            If it is a symbol or a symbolic expression that can
+            have integer values, an ``AppliedPermutation`` object
+            will be returned which can represent an unevaluated
+            function.
+
+        Notes
+        =====
+
+        Any permutation can be defined as a bijective function
+        $\sigma : \{ 0, 1, ..., n-1 \} \rightarrow \{ 0, 1, ..., n-1 \}$
+        where $n$ denotes the size of the permutation.
+
+        The definition may even be extended for any set with distinctive
+        elements, such that the permutation can even be applied for
+        real numbers or such, however, it is not implemented for now for
+        computational reasons and the integrity with the group theory
+        module.
+
+        This function is similar to the ``__call__`` magic, however,
+        ``__call__`` magic already has some other applications like
+        permuting an array or attatching new cycles, which would
+        not always be mathematically consistent.
+
+        This also guarantees that the return type is a SymPy integer,
+        which guarantees the safety to use assumptions.
+        """
+        i = _sympify(i)
+        if i.is_integer is False:
+            raise NotImplementedError("{} should be an integer.".format(i))
+
+        n = self.size
+        if (i < 0) == True or (i >= n) == True:
+            raise NotImplementedError(
+                "{} should be an integer between 0 and {}".format(i, n-1))
+
+        if i.is_Integer:
+            return Integer(self._array_form[i])
+        return AppliedPermutation(self, i)
 
     def next_lex(self):
         """
@@ -2816,6 +2871,73 @@ class Permutation(Atom):
             psize = new_psize
         return cls._af_new(perm_array)
 
+    def resize(self, n):
+        """Resize the permutation to the new size ``n``.
+
+        Parameters
+        ==========
+
+        n : int
+            The new size of the permutation.
+
+        Raises
+        ======
+
+        ValueError
+            If the permutation cannot be resized to the given size.
+            This may only happen when resized to a smaller size than
+            the original.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+
+        Increasing the size of a permutation:
+
+        >>> p = Permutation(0, 1, 2)
+        >>> p = p.resize(5)
+        >>> p
+        (4)(0 1 2)
+
+        Decreasing the size of the permutation:
+
+        >>> p = p.resize(4)
+        >>> p
+        (3)(0 1 2)
+
+        If resizing to the specific size breaks the cycles:
+
+        >>> p.resize(2)
+        Traceback (most recent call last):
+        ...
+        ValueError: The permutation can not be resized to 2 because the
+        cycle (0, 1, 2) may break.
+        """
+        aform = self.array_form
+        l = len(aform)
+        if n > l:
+            aform += list(range(l, n))
+            return Permutation._af_new(aform)
+
+        elif n < l:
+            cyclic_form = self.full_cyclic_form
+            new_cyclic_form = []
+            for cycle in cyclic_form:
+                cycle_min = min(cycle)
+                cycle_max = max(cycle)
+                if cycle_min <= n-1:
+                    if cycle_max > n-1:
+                        raise ValueError(
+                            "The permutation can not be resized to {} "
+                            "because the cycle {} may break."
+                            .format(n, tuple(cycle)))
+
+                    new_cyclic_form.append(cycle)
+            return Permutation(new_cyclic_form)
+
+        return self
+
     # XXX Deprecated flag
     print_cyclic = None
 
@@ -2854,3 +2976,43 @@ def _merge(arr, temp, left, mid, right):
 
 Perm = Permutation
 _af_new = Perm._af_new
+
+
+class AppliedPermutation(Expr):
+    """A permutation applied to a symbolic variable.
+
+    Parameters
+    ==========
+
+    perm : Permutation
+    x : Expr
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.combinatorics import Permutation
+
+    Creating a symbolic permutation function application:
+
+    >>> x = Symbol('x')
+    >>> p = Permutation(0, 1, 2)
+    >>> p.apply(x)
+    AppliedPermutation((0 1 2), x)
+    >>> _.subs(x, 1)
+    2
+    """
+    def __new__(cls, perm, x, evaluate=global_evaluate[0]):
+        perm = _sympify(perm)
+        x = _sympify(x)
+
+        if not isinstance(perm, Permutation):
+            raise ValueError("{} must be a Permutation instance."
+                .format(perm))
+
+        if evaluate:
+            if x.is_Integer:
+                return perm.apply(x)
+
+        obj = super(AppliedPermutation, cls).__new__(cls, perm, x)
+        return obj

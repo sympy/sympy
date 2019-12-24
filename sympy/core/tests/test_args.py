@@ -468,6 +468,11 @@ def test_sympy__combinatorics__permutations__Permutation():
     from sympy.combinatorics.permutations import Permutation
     assert _test_args(Permutation([0, 1, 2, 3]))
 
+def test_sympy__combinatorics__permutations__AppliedPermutation():
+    from sympy.combinatorics.permutations import Permutation
+    from sympy.combinatorics.permutations import AppliedPermutation
+    p = Permutation([0, 1, 2, 3])
+    assert _test_args(AppliedPermutation(p, 1))
 
 def test_sympy__combinatorics__perm_groups__PermutationGroup():
     from sympy.combinatorics.permutations import Permutation
@@ -3040,6 +3045,18 @@ def test_sympy__matrices__expressions__factorizations__SofSVD():
 @SKIP("abstract class")
 def test_sympy__matrices__expressions__factorizations__Factorization():
     pass
+
+def test_sympy__matrices__expressions__permutation__PermutationMatrix():
+    from sympy.combinatorics import Permutation
+    from sympy.matrices.expressions.permutation import PermutationMatrix
+    assert _test_args(PermutationMatrix(Permutation([2, 0, 1])))
+
+def test_sympy__matrices__expressions__permutation__MatrixPermute():
+    from sympy.combinatorics import Permutation
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
+    from sympy.matrices.expressions.permutation import MatrixPermute
+    A = MatrixSymbol('A', 3, 3)
+    assert _test_args(MatrixPermute(A, Permutation([2, 0, 1])))
 
 def test_sympy__physics__vector__frame__CoordinateSym():
     from sympy.physics.vector import CoordinateSym

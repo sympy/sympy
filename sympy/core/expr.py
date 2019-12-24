@@ -121,7 +121,7 @@ class Expr(Basic, EvalfMixin):
 
     def __eq__(self, other):
         try:
-            other = sympify(other)
+            other = _sympify(other)
             if not isinstance(other, Expr):
                 return False
         except (SympifyError, SyntaxError):
@@ -1075,6 +1075,34 @@ class Expr(Basic, EvalfMixin):
     def as_ordered_factors(self, order=None):
         """Return list of ordered factors (if Mul) else [self]."""
         return [self]
+
+    def as_poly(self, *gens, **args):
+        """Converts ``self`` to a polynomial or returns ``None``.
+
+        >>> from sympy import sin
+        >>> from sympy.abc import x, y
+
+        >>> print((x**2 + x*y).as_poly())
+        Poly(x**2 + x*y, x, y, domain='ZZ')
+
+        >>> print((x**2 + x*y).as_poly(x, y))
+        Poly(x**2 + x*y, x, y, domain='ZZ')
+
+        >>> print((x**2 + sin(y)).as_poly(x, y))
+        None
+
+        """
+        from sympy.polys import Poly, PolynomialError
+
+        try:
+            poly = Poly(self, *gens, **args)
+
+            if not poly.is_Poly:
+                return None
+            else:
+                return poly
+        except PolynomialError:
+            return None
 
     def as_ordered_terms(self, order=None, data=False):
         """

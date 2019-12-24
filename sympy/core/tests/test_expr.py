@@ -934,6 +934,9 @@ def test_as_poly_as_expr():
 
     assert p.as_poly() == p
 
+    raises(AttributeError, lambda: Tuple(x, x).as_poly(x))
+    raises(AttributeError, lambda: Tuple(x ** 2, x, y).as_poly(x))
+
 
 def test_nonzero():
     assert bool(S.Zero) is False
@@ -1903,3 +1906,24 @@ def test_ExprBuilder():
     eb = ExprBuilder(Mul)
     eb.args.extend([x, x])
     assert eb.build() == x**2
+
+def test_non_string_equality():
+    # Expressions should not compare equal to strings
+    x = symbols('x')
+    one = sympify(1)
+    assert (x == 'x') is False
+    assert (x != 'x') is True
+    assert (one == '1') is False
+    assert (one != '1') is True
+    assert (x + 1 == 'x + 1') is False
+    assert (x + 1 != 'x + 1') is True
+
+    # Make sure == doesn't try to convert the resulting expression to a string
+    # (e.g., by calling sympify() instead of _sympify())
+
+    class BadRepr(object):
+        def __repr__(self):
+            raise RuntimeError
+
+    assert (x == BadRepr()) is False
+    assert (x != BadRepr()) is True

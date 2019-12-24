@@ -64,7 +64,8 @@ def textplot_str(expr, a, b, W=55, H=18):
     for val in x:
         try:
             y.append(f(val))
-        except:
+        # Not sure what exceptions to catch here or why...
+        except (ValueError, TypeError, ZeroDivisionError):
             y.append(None)
 
     # Normalize height to screen space

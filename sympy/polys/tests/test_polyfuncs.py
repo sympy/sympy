@@ -84,6 +84,11 @@ def test_interpolate():
         -S(13)*x**3/24 + S(12)*x**2 - S(2003)*x/24 + 187
     assert interpolate([(1, 3), (0, 6), (2, 5), (5, 7), (-2, 4)], x) == \
         S(-61)*x**4/280 + S(247)*x**3/210 + S(139)*x**2/280 - S(1871)*x/420 + 6
+    assert interpolate((9, 4, 9), 3) == 9
+    assert interpolate((1, 9, 16), 1) is S.One
+    assert interpolate(((x, 1), (2, 3)), x) is S.One
+    assert interpolate(dict([(x, 1), (2, 3)]), x) is S.One
+    assert interpolate(((2, x), (1, 3)), x) == x**2 - 4*x + 6
 
 
 def test_rational_interpolate():

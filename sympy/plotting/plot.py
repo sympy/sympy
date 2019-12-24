@@ -1052,7 +1052,7 @@ class MatplotlibBackend(BaseBackend):
             elif all(are_3D):
                 # mpl_toolkits.mplot3d is necessary for
                 # projection='3d'
-                mpl_toolkits = import_module('mpl_toolkits',
+                mpl_toolkits = import_module('mpl_toolkits', # noqa
                                      __import__kwargs={'fromlist': ['mplot3d']})
                 self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d'))
 

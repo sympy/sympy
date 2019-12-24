@@ -99,7 +99,7 @@ or disabled manually using various flags to :func:`~.integrate` or :meth:`~.Inte
 SymPy first applies several heuristic algorithms, as these are the fastest:
 
 1. If the function is a rational function, there is a complete algorithm for
-   integrating rational functions called the Lizard-Rioboo-Trager and the
+   integrating rational functions called the Lazard-Rioboo-Trager and the
    Horowitz-Ostrogradsky algorithms. They are implemented in :func:`.ratint`.
 
    .. autofunction:: sympy.integrals.rationaltools.ratint

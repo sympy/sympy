@@ -4,6 +4,7 @@ from __future__ import print_function, division
 
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
 from sympy.core.compatibility import range, string_types
+from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import nextprime
@@ -19,7 +20,7 @@ from sympy.polys.factortools import dup_zz_cyclotomic_poly
 from sympy.polys.polyclasses import DMP
 from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.polyutils import _analyze_gens
-from sympy.utilities import subsets, public
+from sympy.utilities import subsets, public, filldedent
 
 
 @public
@@ -142,15 +143,29 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
 
 @public
 def interpolating_poly(n, x, X='x', Y='y'):
-    """Construct Lagrange interpolating polynomial for ``n`` data points. """
+    """Construct Lagrange interpolating polynomial for ``n``
+    data points. If a sequence of values are given for ``X`` and ``Y``
+    then the first ``n`` values will be used.
+    """
+    ok = getattr(x, 'free_symbols', None)
+
     if isinstance(X, string_types):
         X = symbols("%s:%s" % (X, n))
+    elif ok and ok & Tuple(*X).free_symbols:
+        ok = False
 
     if isinstance(Y, string_types):
         Y = symbols("%s:%s" % (Y, n))
+    elif ok and ok & Tuple(*Y).free_symbols:
+        ok = False
+
+    if not ok:
+        raise ValueError(filldedent('''
+            Expecting symbol for x that does not appear in X or Y.
+            Use `interpolate(list(zip(X, Y)), x)` instead.'''))
 
     coeffs = []
-    numert = Mul(*[(x - u) for u in X])
+    numert = Mul(*[x - X[i] for i in range(n)])
 
     for i in range(n):
         numer = numert/(x - X[i])

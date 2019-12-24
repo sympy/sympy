@@ -1,9 +1,8 @@
 from sympy.sets.setexpr import SetExpr
 from sympy.sets import Interval, FiniteSet, Intersection, ImageSet, Union
-from sympy import (Expr, Set, exp, log, cos, Symbol, Min, Max, S, oo,
+from sympy import (Expr, Set, exp, log, cos, Symbol, Min, Max, S, oo, I,
         symbols, Lambda, Dummy, Rational)
 
-I = Interval(0, 2)
 a, x = symbols("a, x")
 _d = Dummy("d")
 
@@ -285,3 +284,17 @@ def test_SetExpr_Interval_pow():
     assert SetExpr(Interval(2, 3))**(-oo) == SetExpr(FiniteSet(0))
     assert SetExpr(Interval(0, 2))**(-oo) == SetExpr(Interval(0, oo))
     assert (SetExpr(Interval(-1, 2))**(-oo)).dummy_eq(SetExpr(ImageSet(Lambda(_d, _d**(-oo)), Interval(-1, 2))))
+
+
+def test_SetExpr_Integers():
+    assert SetExpr(S.Integers) + 1 == SetExpr(S.Integers)
+    assert SetExpr(S.Integers) + I == SetExpr(ImageSet(Lambda(_d, _d + I), S.Integers))
+    assert SetExpr(S.Integers)*(-1) == SetExpr(S.Integers)
+    assert SetExpr(S.Integers)*2 == SetExpr(ImageSet(Lambda(_d, 2*_d), S.Integers))
+    assert SetExpr(S.Integers)*I == SetExpr(ImageSet(Lambda(_d, I*_d), S.Integers))
+    # issue #18050:
+    assert SetExpr(S.Integers)._eval_func(Lambda(x, I*x + 1)) == SetExpr(
+            ImageSet(Lambda(_d, I*_d + 1), S.Integers))
+    # needs improvement:
+    assert SetExpr(S.Integers)*I + 1 == SetExpr(
+            ImageSet(Lambda(x, x + 1), ImageSet(Lambda(_d, _d*I), S.Integers)))

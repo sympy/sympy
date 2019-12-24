@@ -572,7 +572,7 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
     return vec_partials
 
 
-def dynamicsymbols(names, level=0):
+def dynamicsymbols(names, level=0,**assumptions):
     """Uses symbols and Function for functions of time.
 
     Creates a SymPy UndefinedFunction, which is then initialized as a function
@@ -587,6 +587,15 @@ def dynamicsymbols(names, level=0):
     level : int
         Level of differentiation of the returned function; d/dt once of t,
         twice of t, etc.
+    assumptions :
+        - real(bool) : This is used to set the dynamicsymbol as real,
+                    by default is False.
+        - positive(bool) : This is used to set the dynamicsymbol as positive,
+                    by default is False.
+        - commutative(bool) : This is used to set the commutative property of
+                    a dynamicsymbol, by default is True.
+        - integer(bool) : This is used to set the dynamicsymbol as integer,
+                    by default is False.
 
     Examples
     ========
@@ -596,11 +605,23 @@ def dynamicsymbols(names, level=0):
     >>> q1 = dynamicsymbols('q1')
     >>> q1
     q1(t)
+    >>> q2 = dynamicsymbols('q2', real=True)
+    >>> q2.is_real
+    True
+    >>> q3 = dynamicsymbols('q3', positive=True)
+    >>> q3.is_positive
+    True
+    >>> q4, q5 = dynamicsymbols('q4,q5', commutative=False)
+    >>> bool(q4*q5 != q5*q4)
+    True
+    >>> q6 = dynamicsymbols('q6', integer=True)
+    >>> q6.is_integer
+    True
     >>> diff(q1, Symbol('t'))
     Derivative(q1(t), t)
 
     """
-    esses = symbols(names, cls=Function)
+    esses = symbols(names, cls=Function,**assumptions)
     t = dynamicsymbols._t
     if iterable(esses):
         esses = [reduce(diff, [t] * level, e(t)) for e in esses]

@@ -1382,7 +1382,7 @@ class Intersection(Set, LatticeOp):
             length = None
             try:
                 length = len(candidate)
-            except:
+            except TypeError:
                 others.append(candidate)
 
             if length is not None:
@@ -2065,7 +2065,7 @@ def imageset(*args):
         nargs = getattr(f, 'nargs', {})
         if nargs:
             if len(nargs) != 1:
-                raise NotImplemented(filldedent('''
+                raise NotImplementedError(filldedent('''
                     This function can take more than 1 arg
                     but the potentially complicated set input
                     has not been analyzed at this point to
