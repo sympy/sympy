@@ -350,20 +350,121 @@ def test_issue_17247_expression_blowup_5():
     assert M.charpoly('x', dotprodsimp=True) == PurePoly(x**6 + (-6 - 6*I)*x**5 + 36*I*x**4, x, domain='EX')
 
 def test_issue_17247_expression_blowup_6():
-    M = Matrix(6, 6, lambda i, j: 1 + (-1)**(i+j)*I)
-    assert M.eigenvals(dotprodsimp=True) == {6: 1, 6*I: 1, 0: 4}
+    M = Matrix(8, 8, [x+i for i in range (64)])
+    assert M.det('bareiss', dotprodsimp=True) == 0
 
 def test_issue_17247_expression_blowup_7():
     M = Matrix(6, 6, lambda i, j: 1 + (-1)**(i+j)*I)
     assert M.det('berkowitz', dotprodsimp=True) == 0
 
 def test_issue_17247_expression_blowup_8():
+    M = Matrix(8, 8, [x+i for i in range (64)])
+    assert M.det('lu', dotprodsimp=True) == 0
+
+def test_issue_17247_expression_blowup_9():
+    M = Matrix(8, 8, [x+i for i in range (64)])
+    assert M.rref(dotprodsimp=True) == (Matrix([
+        [1, 0, -1, -2, -3, -4, -5, -6],
+        [0, 1,  2,  3,  4,  5,  6,  7],
+        [0, 0,  0,  0,  0,  0,  0,  0],
+        [0, 0,  0,  0,  0,  0,  0,  0],
+        [0, 0,  0,  0,  0,  0,  0,  0],
+        [0, 0,  0,  0,  0,  0,  0,  0],
+        [0, 0,  0,  0,  0,  0,  0,  0],
+        [0, 0,  0,  0,  0,  0,  0,  0]]), (0, 1))
+
+def test_issue_17247_expression_blowup_10():
     M = Matrix(6, 6, lambda i, j: 1 + (-1)**(i+j)*I)
     assert M.cofactor(0, 0, dotprodsimp=True) == 0
 
-def test_issue_17247_expression_blowup_9():
+def test_issue_17247_expression_blowup_11():
     M = Matrix(6, 6, lambda i, j: 1 + (-1)**(i+j)*I)
     assert M.cofactor_matrix(dotprodsimp=True) == Matrix(6, 6, [0]*36)
+
+def test_issue_17247_expression_blowup_12():
+    M = Matrix(6, 6, lambda i, j: 1 + (-1)**(i+j)*I)
+    assert M.eigenvals(dotprodsimp=True) == {6: 1, 6*I: 1, 0: 4}
+
+def test_issue_17247_expression_blowup_13():
+    M = Matrix([
+        [    0, 1 - x, x + 1, 1 - x],
+        [1 - x, x + 1,     0, x + 1],
+        [    0, 1 - x, x + 1, 1 - x],
+        [    0,     0,     1 - x, 0]])
+    ev = M.eigenvects(dotprodsimp=True)
+    assert ev[0][:2] == (0, 2)
+    assert ev[0][2][0] == Matrix([[0],[-1],[0],[1]])
+    assert ev[1][:2] == (x - sqrt(2)*(x - 1) + 1, 1)
+    assert (ev[1][2][0] - Matrix([
+        [-(-17*x**4 + 12*sqrt(2)*x**4 - 4*sqrt(2)*x**3 + 6*x**3 - 6*x - 4*sqrt(2)*x + 12*sqrt(2) + 17)/(-7*x**4 + 5*sqrt(2)*x**4 - 6*sqrt(2)*x**3 + 8*x**3 - 2*x**2 + 8*x + 6*sqrt(2)*x - 5*sqrt(2) - 7)],
+        [                      (-7*x**3 + 5*sqrt(2)*x**3 - x**2 + sqrt(2)*x**2 - sqrt(2)*x - x - 5*sqrt(2) - 7)/(-3*x**3 + 2*sqrt(2)*x**3 - 2*sqrt(2)*x**2 + 3*x**2 + 2*sqrt(2)*x + 3*x - 3 - 2*sqrt(2))],
+        [                                                                                           -(-3*x**2 + 2*sqrt(2)*x**2 + 2*x - 3 - 2*sqrt(2))/(-x**2 + sqrt(2)*x**2 - 2*sqrt(2)*x + 1 + sqrt(2))],
+        [                                                                                                                                                                                              1]])).expand() == Matrix([[0],[0],[0],[0]])
+    assert ev[2][:2] == (x + sqrt(2)*(x - 1) + 1, 1)
+    assert (ev[2][2][0] - Matrix([
+        [-(12*sqrt(2)*x**4 + 17*x**4 - 6*x**3 - 4*sqrt(2)*x**3 - 4*sqrt(2)*x + 6*x - 17 + 12*sqrt(2))/(7*x**4 + 5*sqrt(2)*x**4 - 6*sqrt(2)*x**3 - 8*x**3 + 2*x**2 - 8*x + 6*sqrt(2)*x - 5*sqrt(2) + 7)],
+        [                      (7*x**3 + 5*sqrt(2)*x**3 + x**2 + sqrt(2)*x**2 - sqrt(2)*x + x - 5*sqrt(2) + 7)/(2*sqrt(2)*x**3 + 3*x**3 - 3*x**2 - 2*sqrt(2)*x**2 - 3*x + 2*sqrt(2)*x - 2*sqrt(2) + 3)],
+        [                                                                                           -(2*sqrt(2)*x**2 + 3*x**2 - 2*x - 2*sqrt(2) + 3)/(x**2 + sqrt(2)*x**2 - 2*sqrt(2)*x - 1 + sqrt(2))],
+        [                                                                                                                                                                                            1]])).expand() == Matrix([[0],[0],[0],[0]])
+
+def test_issue_17247_expression_blowup_14():
+    M = Matrix(8, 8, ([1+x, 1-x]*4 + [1-x, 1+x]*4)*4)
+    assert M.echelon_form(dotprodsimp=True) == Matrix([
+        [x + 1, 1 - x, x + 1, 1 - x, x + 1, 1 - x, x + 1, 1 - x],
+        [    0,   4*x,     0,   4*x,     0,   4*x,     0,   4*x],
+        [    0,     0,     0,     0,     0,     0,     0,     0],
+        [    0,     0,     0,     0,     0,     0,     0,     0],
+        [    0,     0,     0,     0,     0,     0,     0,     0],
+        [    0,     0,     0,     0,     0,     0,     0,     0],
+        [    0,     0,     0,     0,     0,     0,     0,     0],
+        [    0,     0,     0,     0,     0,     0,     0,     0]])
+
+def test_issue_17247_expression_blowup_15():
+    M = Matrix(8, 8, ([1+x, 1-x]*4 + [1-x, 1+x]*4)*4)
+    assert M.rowspace(dotprodsimp=True) == [Matrix([[x + 1, 1 - x, x + 1, 1 - x, x + 1, 1 - x, x + 1, 1 - x]]), Matrix([[0, 4*x, 0, 4*x, 0, 4*x, 0, 4*x]])]
+
+def test_issue_17247_expression_blowup_16():
+    M = Matrix(8, 8, ([1+x, 1-x]*4 + [1-x, 1+x]*4)*4)
+    assert M.columnspace(dotprodsimp=True) == [Matrix([[x + 1],[1 - x],[x + 1],[1 - x],[x + 1],[1 - x],[x + 1],[1 - x]]), Matrix([[1 - x],[x + 1],[1 - x],[x + 1],[1 - x],[x + 1],[1 - x],[x + 1]])]
+
+def test_issue_17247_expression_blowup_17():
+    M = Matrix(8, 8, [x+i for i in range (64)])
+    assert M.nullspace(dotprodsimp=True) == [
+        Matrix([[1],[-2],[1],[0],[0],[0],[0],[0]]),
+        Matrix([[2],[-3],[0],[1],[0],[0],[0],[0]]),
+        Matrix([[3],[-4],[0],[0],[1],[0],[0],[0]]),
+        Matrix([[4],[-5],[0],[0],[0],[1],[0],[0]]),
+        Matrix([[5],[-6],[0],[0],[0],[0],[1],[0]]),
+        Matrix([[6],[-7],[0],[0],[0],[0],[0],[1]])]
+
+def test_issue_17247_expression_blowup_18():
+    M = Matrix(6, 6, ([1+x, 1-x]*3 + [1-x, 1+x]*3)*3)
+    assert not M.is_nilpotent(dotprodsimp=True)
+
+def test_issue_17247_expression_blowup_19():
+    M = Matrix(S('''[
+        [             -3/4,                     0,         1/4 + I/2,                     0],
+        [                0, -177/128 - 1369*I/128,                 0, -2063/256 + 541*I/128],
+        [          1/2 - I,                     0,                 0,                     0],
+        [                0,                     0,                 0, -177/128 - 1369*I/128]]'''))
+    assert not M.is_diagonalizable(dotprodsimp=True)
+
+def test_issue_17247_expression_blowup_20():
+    M = Matrix([
+    [x + 1,  1 - x,      0,      0],
+    [1 - x,  x + 1,      0,  x + 1],
+    [    0,  1 - x,  x + 1,      0],
+    [    0,      0,      0,  x + 1]])
+    assert M.diagonalize(dotprodsimp=True) == (Matrix([
+        [1,  1, 0, (x + 1)/(x - 1)],
+        [1, -1, 0,               0],
+        [1,  1, 1,               0],
+        [0,  0, 0,               1]]),
+        Matrix([
+        [2,   0,     0,     0],
+        [0, 2*x,     0,     0],
+        [0,   0, x + 1,     0],
+        [0,   0,     0, x + 1]]))
 
 
 def test_creation():

@@ -1325,8 +1325,8 @@ class MatrixEigen(MatrixSubspaces):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        is_diagonalizable, eigenvecs = self.is_diagonalizable(
-                    reals_only=reals_only, witheigen=True, dotprodsimp=dotprodsimp)
+        is_diagonalizable, eigenvecs = self._is_diagonalizable(
+                    reals_only=reals_only, dotprodsimp=dotprodsimp)
 
         if not is_diagonalizable:
             raise MatrixError("Matrix is not diagonalizable")
@@ -1577,8 +1577,44 @@ class MatrixEigen(MatrixSubspaces):
             ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
         return ret
 
-    def is_diagonalizable(self, reals_only=False, witheigen=False,
-            dotprodsimp=None, **kwargs):
+    def _is_diagonalizable(self, reals_only=False, dotprodsimp=None, **kwargs):
+        """See is_diagonalizable. This function returns the bool along with the
+        eigenvectors to avoid calculating them again in functions like
+        ``diagonalize``."""
+
+        if 'clear_cache' in kwargs:
+            SymPyDeprecationWarning(
+                feature='clear_cache',
+                deprecated_since_version=1.4,
+                issue=15887
+            ).warn()
+        if 'clear_subproducts' in kwargs:
+            SymPyDeprecationWarning(
+                feature='clear_subproducts',
+                deprecated_since_version=1.4,
+                issue=15887
+            ).warn()
+
+        if not self.is_square:
+            return False, []
+
+        eigenvecs = self.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
+
+        if all(e.is_real for e in self) and self.is_symmetric():
+            # every real symmetric matrix is real diagonalizable
+            return True, eigenvecs
+
+        for val, mult, basis in eigenvecs:
+            # if we have a complex eigenvalue
+            if reals_only and not val.is_real:
+                return False, eigenvecs
+            # if the geometric multiplicity doesn't equal the algebraic
+            if mult != len(basis):
+                return False, eigenvecs
+
+        return True, eigenvecs
+
+    def is_diagonalizable(self, reals_only=False, dotprodsimp=None, **kwargs):
         """Returns true if a matrix is diagonalizable.
 
         Parameters
@@ -1586,10 +1622,6 @@ class MatrixEigen(MatrixSubspaces):
 
         reals_only : bool. If reals_only=True, determine whether the matrix can be
                      diagonalized without complex numbers. (Default: False)
-
-        witheigen : bool
-            Return eigenvectors so functions like ``diagonalize`` don't have to
-            calculate them again.
 
         dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
@@ -1637,42 +1669,9 @@ class MatrixEigen(MatrixSubspaces):
         is_diagonal
         diagonalize
         """
-        if 'clear_cache' in kwargs:
-            SymPyDeprecationWarning(
-                feature='clear_cache',
-                deprecated_since_version=1.4,
-                issue=15887
-            ).warn()
-        if 'clear_subproducts' in kwargs:
-            SymPyDeprecationWarning(
-                feature='clear_subproducts',
-                deprecated_since_version=1.4,
-                issue=15887
-            ).warn()
 
-        if not self.is_square:
-            return (False, None) if witheigen else False
-
-        if all(e.is_real for e in self) and self.is_symmetric():
-            # every real symmetric matrix is real diagonalizable
-            if witheigen:
-                return True, self.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
-            return True
-
-        eigenvecs = self.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
-        ret       = False
-
-        for val, mult, basis in eigenvecs:
-            # if we have a complex eigenvalue
-            if reals_only and not val.is_real:
-                break
-            # if the geometric multiplicity doesn't equal the algebraic
-            if mult != len(basis):
-                break
-        else:
-            ret = True
-
-        return (ret, eigenvecs) if witheigen else ret
+        return self._is_diagonalizable(reals_only=reals_only,
+                dotprodsimp=dotprodsimp, **kwargs)[0]
 
     def _eval_is_positive_definite(self, method="eigen"):
         """Algorithm dump for computing positive-definiteness of a
