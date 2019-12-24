@@ -86,6 +86,15 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         obj._shape = shape
         return obj
 
+    # XXX: Maybe __mul__ and __rmul__ should have some type checking. These
+    # methods were added because Expr no longer accepts non-Expr in __mul__.
+
+    def __mul__(self, other):
+        return Mul(self, other)
+
+    def __rmul__(self, other):
+        return Mul(other, self)
+
     @staticmethod
     def _validate(expr, *contraction_indices):
         shape = expr.shape
