@@ -173,36 +173,50 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Add(self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Add(other, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Add(self, -other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Add(other, -self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Mul(self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Mul(other, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
     def _pow(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Pow(self, other)
 
     def __pow__(self, other, mod=None):
@@ -225,16 +239,22 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Pow(other, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Mul(self, Pow(other, S.NegativeOne))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Mul(other, Pow(self, S.NegativeOne))
 
     __truediv__ = __div__
@@ -243,11 +263,15 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmod__')
     def __mod__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Mod(self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mod__')
     def __rmod__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         return Mod(other, self)
 
     @_sympifyit('other', NotImplemented)
@@ -259,6 +283,8 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__floordiv__')
     def __rfloordiv__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         from sympy.functions.elementary.integers import floor
         return floor(other / self)
 
@@ -266,12 +292,16 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdivmod__')
     def __divmod__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         from sympy.functions.elementary.integers import floor
         return floor(self / other), Mod(self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__divmod__')
     def __rdivmod__(self, other):
+        if not isinstance(other, Expr):
+            return NotImplemented
         from sympy.functions.elementary.integers import floor
         return floor(other / self), Mod(other, self)
 
@@ -335,6 +365,10 @@ class Expr(Basic, EvalfMixin):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s %s %s" % (self, op, other))
+
+        if not isinstance(other, Expr):
+            return NotImplemented
+
         for me in (self, other):
             if me.is_extended_real is False:
                 raise TypeError("Invalid comparison of non-real %s" % me)
