@@ -1577,23 +1577,10 @@ class MatrixEigen(MatrixSubspaces):
             ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
         return ret
 
-    def is_diagonalizable_with_eigen(self, reals_only=False, dotprodsimp=None, **kwargs):
+    def is_diagonalizable_with_eigen(self, reals_only=False, dotprodsimp=None):
         """See is_diagonalizable. This function returns the bool along with the
         eigenvectors to avoid calculating them again in functions like
         ``diagonalize``."""
-
-        if 'clear_cache' in kwargs:
-            SymPyDeprecationWarning(
-                feature='clear_cache',
-                deprecated_since_version=1.4,
-                issue=15887
-            ).warn()
-        if 'clear_subproducts' in kwargs:
-            SymPyDeprecationWarning(
-                feature='clear_subproducts',
-                deprecated_since_version=1.4,
-                issue=15887
-            ).warn()
 
         if not self.is_square:
             return False, []
@@ -1670,8 +1657,21 @@ class MatrixEigen(MatrixSubspaces):
         diagonalize
         """
 
+        if 'clear_cache' in kwargs:
+            SymPyDeprecationWarning(
+                feature='clear_cache',
+                deprecated_since_version=1.4,
+                issue=15887
+            ).warn()
+        if 'clear_subproducts' in kwargs:
+            SymPyDeprecationWarning(
+                feature='clear_subproducts',
+                deprecated_since_version=1.4,
+                issue=15887
+            ).warn()
+
         return self.is_diagonalizable_with_eigen(reals_only=reals_only,
-                dotprodsimp=dotprodsimp, **kwargs)[0]
+                dotprodsimp=dotprodsimp)[0]
 
     def _eval_is_positive_definite(self, method="eigen"):
         """Algorithm dump for computing positive-definiteness of a
