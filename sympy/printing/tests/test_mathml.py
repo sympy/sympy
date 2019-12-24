@@ -625,8 +625,9 @@ def test_content_finite_sets():
         '<ci>c</ci></set><set><ci>d</ci></set></apply></apply>'
 
     assert mathml(ProductSet(A, P2)) == \
-        '<apply><cartesianproduct/><set><ci>a</ci></set><set>' \
-        '<ci>c</ci></set><set><ci>d</ci></set></apply>'
+        '<apply><cartesianproduct/><set><ci>a</ci></set>' \
+        '<apply><cartesianproduct/><set><ci>c</ci></set>' \
+        '<set><ci>d</ci></set></apply></apply>'
     assert mathml(ProductSet(U1, U2)) == \
         '<apply><cartesianproduct/><apply><union/><set><ci>a</ci></set>' \
         '<set><ci>b</ci></set></apply><apply><union/><set><ci>c</ci></set>' \
