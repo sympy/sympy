@@ -322,10 +322,17 @@ class MatrixDeterminant(MatrixCommon):
         MatrixDeterminant, we can fully evaluate determinants."""
         return self.det()
 
-    def adjugate(self, method="berkowitz"):
+    def adjugate(self, method="berkowitz", dotprodsimp=None):
         """Returns the adjugate, or classical adjoint, of
         a matrix.  That is, the transpose of the matrix of cofactors.
 
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            to control expression blowup during matrix multiplication. If this
+            is true then the simplify function is not used.
 
         https://en.wikipedia.org/wiki/Adjugate
 
@@ -335,7 +342,7 @@ class MatrixDeterminant(MatrixCommon):
         cofactor_matrix
         sympy.matrices.common.MatrixCommon.transpose
         """
-        return self.cofactor_matrix(method).transpose()
+        return self.cofactor_matrix(method, dotprodsimp=dotprodsimp).transpose()
 
     def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
         """Computes characteristic polynomial det(x*I - self) where I is
@@ -808,6 +815,7 @@ class MatrixReductions(MatrixDeterminant):
                 m = a*mat[p] - b*mat[p + q]
                 mat[p] = _dotprodsimp(m) if dotprodsimp else m
 
+        dps = _dotprodsimp if dotprodsimp else lambda e: e
         piv_row, piv_col = 0, 0
         pivot_cols = []
         swaps = []
@@ -838,8 +846,7 @@ class MatrixReductions(MatrixDeterminant):
                 i, j = piv_row, piv_col
                 mat[i*cols + j] = self.one
                 for p in range(i*cols + j + 1, (i + 1)*cols):
-                    m = mat[p] / pivot_val
-                    mat[p] = _dotprodsimp(m) if dotprodsimp else m
+                    mat[p] = dps(mat[p] / pivot_val)
                 # after normalizing, the pivot value is 1
                 pivot_val = self.one
 
@@ -865,8 +872,7 @@ class MatrixReductions(MatrixDeterminant):
                 pivot_val = mat[piv_i*cols + piv_j]
                 mat[piv_i*cols + piv_j] = self.one
                 for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
-                    m = mat[p] / pivot_val
-                    mat[p] = _dotprodsimp(m) if dotprodsimp else m
+                    mat[p] = dps(mat[p] / pivot_val)
 
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
@@ -3743,8 +3749,16 @@ class MatrixBase(MatrixDeprecated,
                                 j in range(N)])
         return K_inv
 
-    def inverse_ADJ(self, iszerofunc=_iszero):
+    def inverse_ADJ(self, iszerofunc=_iszero, dotprodsimp=None):
         """Calculates the inverse using the adjugate matrix and a determinant.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -3756,19 +3770,27 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
-        d = self.det(method='berkowitz')
+        d = self.det(method='berkowitz', dotprodsimp=dotprodsimp)
         zero = d.equals(0)
         if zero is None:
             # if equals() can't decide, will rref be able to?
-            ok = self.rref(simplify=True)[0]
+            ok = self.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
             zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
         if zero:
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-        return self.adjugate() / d
+        return self.adjugate(dotprodsimp=dotprodsimp) / d
 
-    def inverse_GE(self, iszerofunc=_iszero):
+    def inverse_GE(self, iszerofunc=_iszero, dotprodsimp=None):
         """Calculates the inverse using Gaussian elimination.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -3782,14 +3804,22 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
         big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
+        red = big.rref(iszerofunc=iszerofunc, simplify=True, dotprodsimp=dotprodsimp)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
         return self._new(red[:, big.rows:])
 
-    def inverse_LU(self, iszerofunc=_iszero):
+    def inverse_LU(self, iszerofunc=_iszero, dotprodsimp=None):
         """Calculates the inverse using LU decomposition.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -3801,13 +3831,14 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        ok = self.rref(simplify=True)[0]
+        ok = self.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
         if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-        return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
+        return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero,
+                dotprodsimp=dotprodsimp)
 
-    def inv(self, method=None, **kwargs):
+    def inv(self, method=None, dotprodsimp=None, **kwargs):
         """
         Return the inverse of a matrix.
 
@@ -3819,7 +3850,13 @@ class MatrixBase(MatrixDeprecated,
         Parameters
         ==========
 
-        method : ('GE', 'LU', or 'ADJ')
+        method : ('GE', 'LU', or 'ADJ') for dense matrices,
+                 ('LDL', 'CH') for sparse
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Notes
         =====
@@ -3869,6 +3906,8 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError()
         if method is not None:
             kwargs['method'] = method
+        if dotprodsimp is not None:
+            kwargs['dotprodsimp'] = dotprodsimp
         return self._eval_inverse(**kwargs)
 
     def is_nilpotent(self, dotprodsimp=None):
@@ -4264,6 +4303,7 @@ class MatrixBase(MatrixDeprecated,
             # of the same dimensions with all zero entries.
             return self.zeros(self.rows, self.cols), []
 
+        dps = _dotprodsimp if dotprodsimp else lambda e: e
         lu = self.as_mutable()
         row_swaps = []
 
@@ -4341,8 +4381,8 @@ class MatrixBase(MatrixDeprecated,
             for row in range(pivot_row + 1, lu.rows):
                 # Store factors of L in the subcolumn below
                 # (pivot_row, pivot_row).
-                lu[row, pivot_row] =\
-                    lu[row, pivot_col]/lu[pivot_row, pivot_col]
+                lu[row, pivot_row] = \
+                    dps(lu[row, pivot_col]/lu[pivot_row, pivot_col])
 
                 # Form the linear combination of the pivot row and the current
                 # row below the pivot row that zeros the entries below the pivot.
@@ -4351,8 +4391,7 @@ class MatrixBase(MatrixDeprecated,
                 # in sympy/matrices/tests/test_sparse.py.
                 # c = pivot_row + 1 if pivot_row == pivot_col else pivot_col
                 for c in range(start_col, lu.cols):
-                    e = lu[row, c] - lu[row, pivot_row]*lu[pivot_row, c]
-                    lu[row, c] = _dotprodsimp(e) if dotprodsimp else e
+                    lu[row, c] = dps(lu[row, c] - lu[row, pivot_row]*lu[pivot_row, c])
 
             if pivot_row != pivot_col:
                 # matrix rank < min(num rows, num cols),
@@ -4428,11 +4467,19 @@ class MatrixBase(MatrixDeprecated,
         DD[n - 1, n - 1] = oldpivot
         return P, L, DD, U
 
-    def LUsolve(self, rhs, iszerofunc=_iszero):
+    def LUsolve(self, rhs, iszerofunc=_iszero, dotprodsimp=None):
         """Solve the linear system ``Ax = rhs`` for ``x`` where ``A = self``.
 
         This is for symbolic matrices, for real or complex ones use
         mpmath.lu_solve or mpmath.qr_solve.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -4458,16 +4505,17 @@ class MatrixBase(MatrixDeprecated,
 
         try:
             A, perm = self.LUdecomposition_Simple(
-                iszerofunc=_iszero, rankcheck=True)
+                iszerofunc=_iszero, rankcheck=True, dotprodsimp=dotprodsimp)
         except ValueError:
             raise NotImplementedError("Underdetermined systems not supported.")
 
+        dps = _dotprodsimp if dotprodsimp else lambda e: e
         b = rhs.permute_rows(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
         for i in range(m):
             for j in range(min(i, n)):
                 scale = A[i, j]
-                b.zip_row_op(i, j, lambda x, y: x - y * scale)
+                b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
         # consistency check for overdetermined systems
         if m > n:
             for i in range(n, m):
@@ -4479,9 +4527,9 @@ class MatrixBase(MatrixDeprecated,
         for i in range(n - 1, -1, -1):
             for j in range(i + 1, n):
                 scale = A[i, j]
-                b.zip_row_op(i, j, lambda x, y: x - y * scale)
+                b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
             scale = A[i, i]
-            b.row_op(i, lambda x, _: x / scale)
+            b.row_op(i, lambda x, _: dps(x / scale))
         return rhs.__class__(b)
 
     def normalized(self, iszerofunc=_iszero):

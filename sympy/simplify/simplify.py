@@ -1980,7 +1980,7 @@ def dotprodsimp(expr, withsimp=False):
 
     from sympy.core.operations import LatticeOp
 
-    def _count_ops_alg(expr):
+    def count_ops_alg(expr):
         """Optimized count algebraic operations with no recursion into
         non-algebraic args that ``core.function.count_ops`` does.
         """
@@ -2041,7 +2041,7 @@ def dotprodsimp(expr, withsimp=False):
 
         return ops
 
-    def _nonalg_subs_dummies(expr, dummies):
+    def nonalg_subs_dummies(expr, dummies):
         """Substitute dummy variables for non-algebraic expressions to avoid
         evaluation of non-algebraic terms that ``polys.polytools.cancel`` does.
         """
@@ -2053,7 +2053,7 @@ def dotprodsimp(expr, withsimp=False):
             args = None
 
             for i, a in enumerate(expr.args):
-                c = _nonalg_subs_dummies(a, dummies)
+                c = nonalg_subs_dummies(a, dummies)
 
                 if c is a:
                     continue
@@ -2077,9 +2077,9 @@ def dotprodsimp(expr, withsimp=False):
         # expand_mul to see if simplification was done but that can be good bit
         # slower for large initial expressions and this seems to work.
         expr     = expand_mul(expr) # this and the following expand should not be combined
-        exprops  = _count_ops_alg(expr)
+        exprops  = count_ops_alg(expr)
         expr2    = expand_multinomial(expr)
-        expr2ops = _count_ops_alg(expr2)
+        expr2ops = count_ops_alg(expr2)
 
         if expr2ops < exprops:
             expr       = expr2
@@ -2088,9 +2088,9 @@ def dotprodsimp(expr, withsimp=False):
 
         if exprops >= 6: # empirically tested cutoff for expensive simplification
             dummies = {}
-            expr2   = _nonalg_subs_dummies(expr, dummies)
+            expr2   = nonalg_subs_dummies(expr, dummies)
 
-            if expr2 is expr or _count_ops_alg(expr2) >= 6: # check again after substitution
+            if expr2 is expr or count_ops_alg(expr2) >= 6: # check again after substitution
                 expr3 = cancel(expr2)
 
                 if expr3 != expr2:
@@ -2105,7 +2105,7 @@ def dotprodsimp(expr, withsimp=False):
                 expr.args [1].args [-1].exp is S.NegativeOne):
 
             expr2    = together (expr)
-            expr2ops = _count_ops_alg(expr2)
+            expr2ops = count_ops_alg(expr2)
 
             if expr2ops < exprops:
                 expr       = expr2

@@ -244,20 +244,22 @@ class DenseMatrix(MatrixBase):
 
         method = kwargs.get('method', 'GE')
         iszerofunc = kwargs.get('iszerofunc', _iszero)
+        dotprodsimp = kwargs.get('dotprodsimp', None)
         if kwargs.get('try_block_diag', False):
             blocks = self.get_diag_blocks()
             r = []
             for block in blocks:
-                r.append(block.inv(method=method, iszerofunc=iszerofunc))
+                r.append(block.inv(method=method, iszerofunc=iszerofunc,
+                        dotprodsimp=dotprodsimp))
             return diag(*r)
 
         M = self.as_mutable()
         if method == "GE":
-            rv = M.inverse_GE(iszerofunc=iszerofunc)
+            rv = M.inverse_GE(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
         elif method == "LU":
-            rv = M.inverse_LU(iszerofunc=iszerofunc)
+            rv = M.inverse_LU(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
         elif method == "ADJ":
-            rv = M.inverse_ADJ(iszerofunc=iszerofunc)
+            rv = M.inverse_ADJ(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
         else:
             # make sure to add an invertibility check (as in inverse_LU)
             # if a new method is added.
