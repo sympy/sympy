@@ -1310,7 +1310,7 @@ def evalf(x, prec, options):
     try:
         rf = evalf_table[x.func]
         r = rf(x, prec, options)
-    except KeyError:
+    except (AttributeError, KeyError) as e:
         # Fall back to ordinary evalf if possible
         if 'subs' in options:
             x = x.subs(evalf_subs(prec, options['subs']))
