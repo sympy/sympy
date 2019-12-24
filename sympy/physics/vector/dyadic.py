@@ -1,5 +1,6 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
 from sympy.core.compatibility import unicode
+from sympy.core.evalf import EvalfMixin
 from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
                        VectorStrPrinter)
 
