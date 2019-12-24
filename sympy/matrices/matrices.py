@@ -1325,7 +1325,7 @@ class MatrixEigen(MatrixSubspaces):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        is_diagonalizable, eigenvecs = self._is_diagonalizable(
+        is_diagonalizable, eigenvecs = self.is_diagonalizable_with_eigen(
                     reals_only=reals_only, dotprodsimp=dotprodsimp)
 
         if not is_diagonalizable:
@@ -1577,7 +1577,7 @@ class MatrixEigen(MatrixSubspaces):
             ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
         return ret
 
-    def _is_diagonalizable(self, reals_only=False, dotprodsimp=None, **kwargs):
+    def is_diagonalizable_with_eigen(self, reals_only=False, dotprodsimp=None, **kwargs):
         """See is_diagonalizable. This function returns the bool along with the
         eigenvectors to avoid calculating them again in functions like
         ``diagonalize``."""
@@ -1670,7 +1670,7 @@ class MatrixEigen(MatrixSubspaces):
         diagonalize
         """
 
-        return self._is_diagonalizable(reals_only=reals_only,
+        return self.is_diagonalizable_with_eigen(reals_only=reals_only,
                 dotprodsimp=dotprodsimp, **kwargs)[0]
 
     def _eval_is_positive_definite(self, method="eigen"):

@@ -428,11 +428,16 @@ For this reason two separate functions - ``multiply`` and ``pow`` for
 multiplication and exponentiation have been added with a flag which allows you
 to specify that an optimized intermediate simplification step is to be performed
 at each step of calculation. The matrix ``exp`` function has also been modified
-to take this flag. By default these functions have the flag ``mulsimp`` set to
-None which means that intermediate simplification is not done, set this to
+to take this flag. By default these functions have the flag ``dotprodsimp`` set
+to None which means that intermediate simplification is not done, set this to
 ``True`` to use the simplification. This will leave the matrix in a relatively
 simplified state after the operation and permit calculations on some large
 matrices which were not possible or extremely slow previously.
+
+This flag has also been added to the majority of matrix functions to enable
+this intermedate simplification in order to speed up calculation in many
+instances and return a simplified result. NOTE: It does not work in all cases,
+but so far testing has shown that it helps with the majority.
 
     >>> x = Symbol('x')
     >>> M = Matrix([[1+x, 1-x], [1-x, 1+x]])
@@ -442,7 +447,7 @@ matrices which were not possible or extremely slow previously.
     ⎢                                        ⎥
     ⎢                            2          2⎥
     ⎣ 2⋅(1 - x)⋅(x + 1)   (1 - x)  + (x + 1) ⎦
-    >>> M.multiply(M, mulsimp=True)
+    >>> M.multiply(M, dotprodsimp=True)
     ⎡   2             2⎤
     ⎢2⋅x  + 2  2 - 2⋅x ⎥
     ⎢                  ⎥
@@ -454,7 +459,7 @@ matrices which were not possible or extremely slow previously.
     ⎢                                        ⎥
     ⎢                            2          2⎥
     ⎣ 2⋅(1 - x)⋅(x + 1)   (1 - x)  + (x + 1) ⎦
-    >>> M.pow(8, mulsimp=True)
+    >>> M.pow(8, dotprodsimp=True)
     ⎡     8                   8⎤
     ⎢128⋅x  + 128  128 - 128⋅x ⎥
     ⎢                          ⎥
@@ -471,7 +476,7 @@ matrices which were not possible or extremely slow previously.
     ⎢      ℯ      ℯ             (1 - x)⋅ℯ      ⎛  1 - x      ⎞  2    ⎥
     ⎢    - ──── + ──          - ──────────── + ⎜───────── + 1⎟⋅ℯ     ⎥
     ⎣       2     2              2⋅(x - 1)     ⎝2⋅(x - 1)    ⎠       ⎦
-    >>> M.exp(mulsimp=True)
+    >>> M.exp(dotprodsimp=True)
     ⎡  2⋅x    2      2⋅x    2⎤
     ⎢ ℯ      ℯ      ℯ      ℯ ⎥
     ⎢ ──── + ──   - ──── + ──⎥
