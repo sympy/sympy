@@ -34,7 +34,7 @@ why I call it that way)::
 
     e = x + y + x
 
-    print e
+    print(e)
 
 And I try if it works
 
@@ -147,10 +147,12 @@ and ``__rdiv__`` is replaced by ``__rtruediv__``.)
 
 So, you can write normal expressions using python arithmetics like this::
 
-    a = Symbol("a")
-    b = Symbol("b")
-    e = (a + b)**2
-    print e
+    >>> from sympy import Symbol
+    >>> a = Symbol("a")
+    >>> b = Symbol("b")
+    >>> e = (a + b)**2
+    >>> e
+    (a + b)**2
 
 but from the SymPy point of view, we just need the classes ``Add``, ``Mul``,
 ``Pow``, ``Rational``, ``Integer``.
@@ -238,8 +240,11 @@ need.
 
 You can define the ``cos`` class like this::
 
-    class cos(Function):
-        pass
+    >>> from sympy import Function
+    >>> class cos(Function):
+    ...     pass
+    >>> 1 + cos(x)
+    cos(x) + 1
 
 and use it like ``1 + cos(x)``, but if you don't implement the ``fdiff()`` method,
 you will not be able to call ``(1 + cos(x)).series()``.
@@ -279,52 +284,87 @@ Functions
 
 How to create a new function with one variable::
 
-    class sign(Function):
+    >>> from sympy import Mul, S
+    >>> class sign(Function):
+    ...     nargs = 1
+    ...
+    ...     @classmethod
+    ...     def eval(cls, arg):
+    ...         if arg is S.NaN:
+    ...             return S.NaN
+    ...         if arg is S.Zero:
+    ...             return S.Zero
+    ...         if arg.is_extended_positive:
+    ...             return S.One
+    ...         if arg.is_extended_negative:
+    ...             return S.NegativeOne
+    ...         if isinstance(arg, Mul):
+    ...             coeff, terms = arg.as_coeff_mul()
+    ...             if coeff is not S.One:
+    ...                 return cls(coeff) * cls(Mul(*terms))
+    ...
+    ...     def _eval_is_finite(self):
+    ...         return True
+    ...
+    ...     def _eval_conjugate(self):
+    ...         return self
 
-        nargs = 1
+The applied function ``sign(x)`` is constructed using::
 
-        @classmethod
-        def eval(cls, arg):
-            if arg is S.NaN:
-                return S.NaN
-            if arg is S.Zero:
-                return S.Zero
-            if arg.is_positive:
-                return S.One
-            if arg.is_negative:
-                return S.NegativeOne
-            if isinstance(arg, Basic.Mul):
-                coeff, terms = arg.as_coeff_mul()
-                if not isinstance(coeff, Basic.One):
-                    return cls(coeff) * cls(Basic.Mul(*terms))
-
-        is_finite = True
-
-        def _eval_conjugate(self):
-            return self
-
-        def _eval_is_zero(self):
-            return isinstance(self[0], Basic.Zero)
-
-and that's it. The ``_eval_*`` functions are called when something is needed.
-The ``eval`` is called when the class is about to be instantiated and it
-should return either some simplified instance of some other class or if the
-class should be unmodified, return ``None`` (see ``core/function.py`` in
-``Function.__new__`` for implementation details). See also tests in
-`sympy/functions/elementary/tests/test_interface.py
-<https://github.com/sympy/sympy/blob/master/sympy/functions/elementary/tests/test_interface.py>`_ that test this interface. You can use them to create your own new functions.
-
-The applied function ``sign(x)`` is constructed using
-::
-
+    >>> from sympy.abc import x
+    >>> sign(x)
     sign(x)
 
 both inside and outside of SymPy. Unapplied functions ``sign`` is just the class
 itself::
 
+    >>> sign
     sign
 
-both inside and outside of SymPy. This is the current structure of classes in
+The ``eval`` is called when the class is about to be instantiated and it
+should return either an another SymPy object or ``None``.
+If it returns ``None``, it becomes an unevaluated function.
+(see ``core/function.py`` in ``Function.__new__`` for implementation details)
+
+Here are some examples that how ``eval`` works::
+
+    >>> sign(S.NaN)
+    nan
+    >>> sign(S.Zero)
+    0
+
+    >>> x = Symbol('x')
+    >>> sign(2*x)
+    sign(x)
+
+    >>> x = Symbol('x', positive=True)
+    >>> sign(x)
+    1
+
+    >>> x = Symbol('x', negative=True)
+    >>> sign(x)
+    -1
+
+The ``_eval_*`` functions are automatically called when something is
+needed.
+For example, ``conjugate`` or ``is_finite`` will automatically call
+``_eval_is_finite``, ``_eval_conjugate`` if you have these defined::
+
+    >>> sign(x).is_finite
+    True
+
+    >>> from sympy.functions import conjugate
+    >>> x = Symbol('x')
+    >>> conjugate(sign(x))
+    sign(x)
+
+If you want to check out some other examples of implementing custom
+SymPy functions, see the tests in
+`sympy/functions/elementary/tests/test_interface.py
+<https://github.com/sympy/sympy/blob/master/sympy/functions/elementary/tests/test_interface.py>`_
+that test this interface. You can use them to create your own new functions.
+
+Both inside and outside of SymPy. This is the current structure of classes in
 SymPy::
 
     class BasicType(type):
@@ -347,15 +387,23 @@ can be changed in the future.
 
 This is how to create a function with two variables::
 
-    class chebyshevt_root(Function):
-        nargs = 2
+    >>> class chebyshevt_root(Function):
+    ...     nargs = 2
+    ...
+    ...     @classmethod
+    ...     def eval(cls, n, k):
+    ...         if not (0 <= k) & (k < n):
+    ...             raise ValueError("must have 0 <= k < n")
+    ...         return cos(S.Pi*(2*k + 1)/(2*n))
 
-        @classmethod
-        def eval(cls, n, k):
-            if not 0 <= k < n:
-                raise ValueError("must have 0 <= k < n")
-            return cos(S.Pi*(2*k + 1)/(2*n))
-
+    >>> from sympy import symbols
+    >>> n, k = symbols('n k')
+    >>> chebyshevt_root(n, k)
+    cos(pi*(2*k + 1)/(2*n))
+    >>> chebyshevt_root(2, 3)
+    Traceback (most recent call last):
+    ...
+    ValueError: must have 0 <= k < n
 
 .. note:: the first argument of a @classmethod should be ``cls`` (i.e. not
           ``self``).
