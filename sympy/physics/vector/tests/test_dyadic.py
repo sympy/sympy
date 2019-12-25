@@ -96,5 +96,5 @@ def test_dyadic_subs():
 def test_check_dyadic():
     raises(TypeError, lambda: _check_dyadic(0))
 
-def test_Dyadic_Evalf():
-    assert (A.x**2).evalf(subs={A.x: 0}) == 0
+
+    

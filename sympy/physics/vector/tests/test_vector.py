@@ -12,6 +12,7 @@ def test_Vector():
     assert A.x != A.y
     assert A.y != A.z
     assert A.z != A.x
+    assert (A.x**2).evalf(subs={A.x: 0}) == 0
 
     assert A.x + 0 == A.x
 
@@ -173,5 +174,4 @@ def test_vector_simplify():
     test4 = test4.simplify()
     assert (test4 & N.x) == -2 * y
 
-def test_Vector_Evalf():
-    assert (A.x**2).evalf(subs={A.x: 0}) == 0
+
