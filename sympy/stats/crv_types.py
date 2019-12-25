@@ -37,6 +37,7 @@ Pareto
 QuadraticU
 RaisedCosine
 Rayleigh
+Reciprocal
 ShiftedGompertz
 StudentT
 Trapezoidal
@@ -105,6 +106,7 @@ __all__ = ['ContinuousRV',
 'QuadraticU',
 'RaisedCosine',
 'Rayleigh',
+'Reciprocal',
 'StudentT',
 'ShiftedGompertz',
 'Trapezoidal',
@@ -3193,6 +3195,49 @@ def Rayleigh(name, sigma):
 
     return rv(name, RayleighDistribution, (sigma, ))
 
+#-------------------------------------------------------------------------------
+# Reciprocal distribution --------------------------------------------------------
+
+class ReciprocalDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 'b')
+
+    @property
+    def set(self):
+        return Interval(self.a, self.b)
+
+    @staticmethod
+    def check(a, b):
+        _value_check(a > 0, "Parameter > 0. a = %s"%a)
+        _value_check((a < b),
+        "Parameter b must be in range (%s, +oo]. b = %s"%(a, b))
+
+    def pdf(self, x):
+        a, b = self.a, self.b
+        return Piecewise(
+            (S.Zero, (x < a)),
+            (1 / (x * (log(b) - log(a))), And(a <= x, x <= b)),
+            (S.One, (x > b)))
+        
+    def _cdf(self, x):
+        a, b = self.a, self.b
+        return (log(x) - log(a)) / (log(b) - log(a))
+
+def Reciprocal(name, a, b):
+    r"""Creates a continuous random variable with a reciprocal distribution.
+    
+    
+    Parameters
+    ==========
+    
+    a : Real number, :math:`0 < a`
+    b : Real number, :math:`a < b`
+    
+    Returns
+    =======
+    
+    A RandomSymbol
+    """
+    return rv(name, ReciprocalDistribution, (a, b))
 #-------------------------------------------------------------------------------
 # Shifted Gompertz distribution ------------------------------------------------
 
