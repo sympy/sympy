@@ -3217,24 +3217,24 @@ class ReciprocalDistribution(SingleContinuousDistribution):
             (S.Zero, (x < a)),
             (1 / (x * (log(b) - log(a))), And(a <= x, x <= b)),
             (S.One, (x > b)))
-        
+
     def _cdf(self, x):
         a, b = self.a, self.b
         return (log(x) - log(a)) / (log(b) - log(a))
 
 def Reciprocal(name, a, b):
     r"""Creates a continuous random variable with a reciprocal distribution.
-    
-    
+
+
     Parameters
     ==========
-    
+
     a : Real number, :math:`0 < a`
     b : Real number, :math:`a < b`
-    
+
     Returns
     =======
-    
+
     A RandomSymbol
 
     Examples
