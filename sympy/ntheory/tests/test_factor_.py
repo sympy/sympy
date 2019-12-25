@@ -8,11 +8,16 @@ from sympy.ntheory import (totient,
     primerange, pollard_rho, perfect_power, multiplicity,
     trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
-from sympy.ntheory.factor_ import (smoothness, smoothness_p,
+from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
-    udivisor_count, primenu, primeomega, small_trailing, mersenne_prime_exponent,
-    is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable, is_semiperfect,
-    is_weird)
+    udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
+    mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
+    is_deficient, is_amicable, is_semiperfect, is_weird)
+from sympy.ntheory.generate import cycle_length
+from sympy.ntheory.multinomial import (
+    multinomial_coefficients, multinomial_coefficients_iterator)
+from sympy.ntheory.bbp_pi import pi_hex_digits
+from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 
 from sympy.utilities.pytest import raises
 
@@ -295,6 +300,24 @@ def test_divisors_and_divisor_count():
     assert divisor_count(2*3*5, 7) == 0
 
 
+def test_proper_divisors_and_proper_divisor_count():
+    assert proper_divisors(-1) == []
+    assert proper_divisors(0) == []
+    assert proper_divisors(1) == []
+    assert proper_divisors(2) == [1]
+    assert proper_divisors(3) == [1]
+    assert proper_divisors(17) == [1]
+    assert proper_divisors(10) == [1, 2, 5]
+    assert proper_divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50]
+    assert proper_divisors(1000000007) == [1]
+
+    assert proper_divisor_count(0) == 0
+    assert proper_divisor_count(-1) == 0
+    assert proper_divisor_count(1) == 0
+    assert proper_divisor_count(36) == 8
+    assert proper_divisor_count(2*3*5) == 7
+
+
 def test_udivisors_and_udivisor_count():
     assert udivisors(-1) == [1]
     assert udivisors(0) == []
@@ -421,6 +444,17 @@ def test_divisors():
 def test_divisor_count():
     assert divisor_count(0) == 0
     assert divisor_count(6) == 4
+
+
+def test_proper_divisors():
+    assert proper_divisors(-1) == []
+    assert proper_divisors(28) == [1, 2, 4, 7, 14]
+    assert [x for x in proper_divisors(3*5*7, True)] == [1, 3, 5, 15, 7, 21, 35]
+
+
+def test_proper_divisor_count():
+    assert proper_divisor_count(6) == 3
+    assert proper_divisor_count(108) == 11
 
 
 def test_antidivisors():
