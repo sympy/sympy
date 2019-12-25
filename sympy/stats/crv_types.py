@@ -3245,6 +3245,7 @@ def Reciprocal(name, a, b):
 
     >>> a = Symbol("a")
     >>> b = Symbol("b")
+    >>> z = Symbol("z")
 
     >>> X = Reciprocal("x", a, b)
 
