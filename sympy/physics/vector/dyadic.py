@@ -7,7 +7,7 @@ from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
 __all__ = ['Dyadic']
 
 
-class Dyadic(object):
+class Dyadic(EvalfMixin):
     """A Dyadic object.
 
     See:
