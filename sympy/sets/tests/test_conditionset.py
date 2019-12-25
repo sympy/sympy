@@ -1,5 +1,5 @@
 from sympy.sets import (ConditionSet, Intersection, FiniteSet,
-    EmptySet, Union, Contains)
+    EmptySet, Union, Contains, Range)
 from sympy import (Symbol, Eq, S, Abs, sin, pi, Interval,
     And, Mod, oo, Function)
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
@@ -179,3 +179,11 @@ def test_failing_contains():
     # and the comparison is giving an error.
     assert ConditionSet(x, 1/x >= 0, S.Reals).contains(0) == \
         Contains(0, ConditionSet(x, 1/x >= 0, S.Reals), evaluate=False)
+
+def test_eval_rewrite_as_Intersection():
+    assert ConditionSet(x, x**3 > x**2, S.Naturals).rewrite(Intersection) == Range(2, oo, 1)
+    assert ConditionSet(x, Eq(x**2 - x, 0), S.Integers).rewrite(Intersection) == FiniteSet(0, 1)
+    assert ConditionSet(x, x / 12 <= 4, S.Integers).rewrite(Intersection) == Range(-oo, 49, 1)
+    assert ConditionSet(x, x**2 >= 4, Range(-2, 3, 1)).rewrite(Intersection) == Union(Range(-2, -1, 1), Range(2, 3, 1))  # or FiniteSet(-2, 2)
+    # Not implemented:
+    assert ConditionSet((x, y), x > y).rewrite(Intersection) == ConditionSet((x, y), x > y).rewrite(Intersection)

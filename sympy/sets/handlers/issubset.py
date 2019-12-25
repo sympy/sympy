@@ -1,8 +1,9 @@
 from sympy import S, Symbol
 from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
 from sympy.core.relational import Eq
-from sympy.sets.sets import FiniteSet, Interval, Set, Union
+from sympy.sets.sets import FiniteSet, Interval, Set, Union, Intersection
 from sympy.sets.fancysets import Complexes, Reals, Range, Rationals
+from sympy.sets.conditionset import ConditionSet
 from sympy.multipledispatch import dispatch
 
 
@@ -133,3 +134,24 @@ def is_subset_sets(a, b): # noqa:F811
 @dispatch(Rationals, Range)
 def is_subset_sets(a, b): # noqa:F811
     return False
+
+@dispatch(ConditionSet, ConditionSet)
+def is_subset_sets(a, b):  # noqa:F811
+    if a.condition == b.condition and a.base_set.is_subset(b.base_set):
+        return True
+    a_i = a.rewrite(Intersection)
+    b_i = b.rewrite(Intersection)
+    if (type(a_i), type(b_i)) != (ConditionSet, ConditionSet):
+        return a_i.is_subset(b_i)
+
+@dispatch(Set, ConditionSet)
+def is_subset_sets(a, b):  # noqa:F811
+    b_i = b.rewrite(Intersection)
+    if type(b_i) != ConditionSet:
+        return a.is_subset(b_i)
+
+@dispatch(ConditionSet, Set)
+def is_subset_sets(a, b):  # noqa:F811
+    a_i = a.rewrite(Intersection)
+    if type(a_i) != ConditionSet:
+        return a_i.is_subset(b)

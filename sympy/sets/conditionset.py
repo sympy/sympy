@@ -246,6 +246,30 @@ class ConditionSet(Set):
             return ConditionSet(new, Contains(new, base), base)
         return self.func(self.sym, cond, base)
 
+    def _eval_rewrite_as_Intersection(self, *args, **kwargs):
+        """
+        Try to convert the ConditionSet to an Intersection set.
+
+        Examples
+        ========
+
+        >>> from sympy import  S, ConditionSet, Intersection
+        >>> from sympy.abc import x
+
+        >>> ConditionSet(x, x<1, S.Reals).rewrite(Intersection)
+        Interval.open(-oo, 1)
+
+        >>> ConditionSet(x, x**2 > x, S.Integers).rewrite(Intersection)
+        Union(Range(-oo, 0, 1), Range(2, oo, 1))
+
+        Notes
+        =====
+        Currently this is only implemented for ConditionSets which have a single variable and where the base set
+        is a subset of `Reals`.
+        """
+        if not isinstance(self.sym, Tuple) and self.base_set.is_subset(S.Reals):
+            return self.condition.as_set().intersect(self.base_set)
+
     def dummy_eq(self, other, symbol=None):
         if not isinstance(other, self.func):
             return False

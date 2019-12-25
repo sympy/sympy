@@ -3,7 +3,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, Range, Add, symbols, zoo, Rational)
+    Matrix, Range, Add, symbols, zoo, Rational, ConditionSet)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -712,6 +712,34 @@ def test_is_subset():
     assert Range(3).is_subset(FiniteSet(0, 1, n)) is None
     assert Range(n, n + 2).is_subset(FiniteSet(n, n + 1)) is True
     assert Range(5).is_subset(Interval(0, 4, right_open=True)) is False
+
+    assert ConditionSet(x, x**2 < 15, S.Naturals).is_subset(
+        ConditionSet(x, x**2 < 15, S.Integers)
+    ) is True
+    assert ConditionSet(x, x < 0, FiniteSet(y)).is_subset(ConditionSet(x, x < 0, FiniteSet(y))) is True
+    assert ConditionSet(x, x < 0, FiniteSet(y)).is_subset(ConditionSet(x, x < 0, FiniteSet(y, z))) is True
+    assert Range(-3, 4, 1).is_subset(ConditionSet(x, x**2 <= 9, S.Integers)) is True
+    assert ConditionSet(x, x**2 < 15, S.Integers).is_subset(
+        Interval(-10, 10)
+    ) is True
+    assert ConditionSet(x, x**2 < 15, S.Integers).is_subset(
+        FiniteSet(-10, 10)
+    ) is False
+    assert ConditionSet(x, x**2 > 16, S.Integers).is_subset(
+        ConditionSet(x, 2*x > 0, S.Integers)
+    ) is False
+    assert ConditionSet(x, x**2 <= 4, S.Reals).is_subset(ConditionSet(x, x <= 4, S.Reals)) is True
+    assert ConditionSet(x, x**2 <= 4, S.Reals).is_subset(ConditionSet(x, x <= 4, S.Naturals)) is False
+
+    assert ConditionSet(x, x ** 2 < 0, S.UniversalSet).is_subset(
+        ConditionSet(x, x ** 2 < 0, S.Reals)
+    ) is not True
+    assert ConditionSet((x, y), x < 1, S.Reals * S.Reals).is_subset(
+        ConditionSet((x, y), x > 1, S.Reals * S.Reals)
+    ) is not True
+    assert ConditionSet((x, y), x ** 2 + y ** 2 >= 0, S.Reals * S.Reals).is_subset(
+        ConditionSet((x, y), x ** 2 + y ** 2 > 10, S.Reals * S.Reals)
+    ) is not True
 
 
 def test_is_proper_subset():
