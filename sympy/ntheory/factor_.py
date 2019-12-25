@@ -2307,3 +2307,72 @@ def is_amicable(m, n):
         return False
     a, b = map(lambda i: divisor_sigma(i), (m, n))
     return a == b == (m + n)
+
+
+def is_semiperfect(n):
+    """Returns True if the number 'n' is "semi-perfect", else returns False
+
+    Semiperfect number is a natural number that is equal to the sum of all
+    or some of its proper devisors
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_semiperfect
+    >>> is_semiperfect(40)
+    True
+    >>> is_semiperfect(38)
+    False
+
+    Reference
+    =========
+
+    .. [1] https://en.wikipedia.org/wiki/Semiperfect_number
+
+    """
+
+    factors = divisors(n)
+    factors = factors[:-1]
+    num_factors = len(factors)
+
+    subset = [[0 for i in range(n + 1)]for j in range(num_factors + 1)]
+    for i in range(num_factors + 1):
+        subset[0][i]= True
+    for i in range(1, n + 1):
+        subset[0][i] = False
+
+    for i in range(1, num_factors + 1):
+        for j in range(1, n + 1):
+            if j < factors[i-1]:
+                subset[i][j] = subset[i - 1][j]
+            else:
+                subset[i][j] = subset[i - 1][j] or subset[i - 1][j - factors[i - 1]]
+    if subset[num_factors][n] == 0:
+        return False
+    return True
+
+
+def is_weird(n):
+    """Returns True if the number 'n' is "weird", else returns False
+
+    Weird number is a natural number taht is abundant but not semiperfect.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_weird
+    >>> is_weird(70)
+    True
+    >>> is_weird(50)
+    False
+
+    Reference
+    =========
+
+    .. [1] https://en.wikipedia.org/wiki/Weird_number
+
+    """
+
+    if is_abundant(n) == True and is_semiperfect(n) == False:
+        return True
+    return False

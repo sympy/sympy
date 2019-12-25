@@ -11,7 +11,8 @@ from sympy.ntheory import (totient,
 from sympy.ntheory.factor_ import (smoothness, smoothness_p,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
     udivisor_count, primenu, primeomega, small_trailing, mersenne_prime_exponent,
-    is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable)
+    is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable, is_semiperfect,
+    is_weird)
 
 from sympy.utilities.pytest import raises
 
@@ -623,3 +624,15 @@ def test_is_amicable():
     assert is_amicable(173, 129) is False
     assert is_amicable(220, 284) is True
     assert is_amicable(8756, 8756) is False
+
+
+def test_is_semiperfect():
+    assert is_semiperfect(260) is True
+    assert is_semiperfect(38) is False
+    assert is_semiperfect(70) is False
+
+
+def test_is_weird():
+    assert is_weird(13930) is True
+    assert is_weird(7192) is True
+    assert is_weird(100) is False
