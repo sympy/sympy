@@ -659,5 +659,4 @@ def test_motzkin():
     raises(ValueError, lambda: motzkin.eval(x))
     raises(ValueError, lambda: motzkin.eval(-8))
     raises(ValueError, lambda: motzkin.find_first_n_motzkin(-7))
-    raises(ValueError, lambda: motzkin.find_first_n_motzkin(x))
     raises(ValueError, lambda: motzkin.find_first_n_motzkin(112.8))
