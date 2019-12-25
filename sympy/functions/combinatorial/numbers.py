@@ -2100,22 +2100,16 @@ class motzkin(Function):
         return motzkin
 
     @staticmethod
-    def eval(n):
+    @recurrence_memo([S.One, S.One])
+    def _motzkin(n, prev):
+        return ((2*n + 1)*prev[-1] + (3*n - 3)*prev[-2]) // (n + 2)
+
+    @classmethod
+    def eval(cls, n):
         try:
             n = as_int(n)
         except:
             raise ValueError('The provided number must be a positive integer')
         if n < 0:
             raise ValueError('The provided number must be a positive integer')
-        if n == 1 or n == 2:
-            return 1
-        i = 2
-        m_0 = 1
-        m_1 = 1
-        while(i <= (n-1)):
-            next_num = ((2*i + 1)*m_1 + (3*i - 3)*m_0) // (i + 2)
-            m_0 = m_1
-            m_1 = next_num
-            i = i + 1
-            if i > (n-1):
-                return next_num
+        return Integer(cls._motzkin(n - 1))

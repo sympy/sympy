@@ -654,7 +654,6 @@ def test_motzkin():
     assert motzkin.eval(1) == 1
     assert motzkin.eval(8) == 127
     assert motzkin.is_motzkin(12.1) == False
-    assert motzkin.is_motzkin(x) == False
     assert motzkin.is_motzkin(-8) == False
     raises(ValueError, lambda: motzkin.eval(77.58))
     raises(ValueError, lambda: motzkin.eval(x))
