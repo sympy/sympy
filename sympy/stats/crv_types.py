@@ -3250,7 +3250,6 @@ def Reciprocal(name, a, b):
     >>> X = Reciprocal("x", a, b)
 
     >>> pprint(density(X)(z), use_unicode=False)
-
     /         0            for a > z 
     |                                
     |         1                      
