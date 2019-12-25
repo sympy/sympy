@@ -15,7 +15,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          ContinuousRV, sample, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
-                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
+                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Nakagami, Normal, GaussianInverse,
                          Pareto, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
@@ -169,6 +169,11 @@ def test_characteristic_function():
     cf = characteristic_function(X)
     assert cf(0) == 1
     assert cf(1) == (1 + I)*exp(Rational(-1, 2))/2
+
+    L = Levy('x', 0, 1)
+    cf = characteristic_function(L)
+    assert cf(0) == 1
+    assert cf(1) == exp(-sqrt(2)*sqrt(-I))
 
 
 def test_moment_generating_function():
@@ -732,6 +737,24 @@ def test_laplace():
     assert density(X)(x) == exp(-Abs(x - mu)/b)/(2*b)
     assert cdf(X)(x) == Piecewise((exp((-mu + x)/b)/2, mu > x),
                             (-exp((mu - x)/b)/2 + 1, True))
+
+def test_levy():
+    mu = Symbol("mu", real=True)
+    c = Symbol("c", positive=True)
+
+    X = Levy('x', mu, c)
+    assert X.pspace.domain.set == Interval(mu, oo)
+    assert density(X)(x) == sqrt(c/(2*pi))*exp(-c/(2*(x - mu)))/((x - mu)**(S.One + S.Half))
+    assert cdf(X)(x) == erfc(sqrt(c/(2*(x - mu))))
+
+    mu = Symbol("mu", real=False)
+    raises(ValueError, lambda: Levy('x',mu,c))
+
+    c = Symbol("c", nonpositive=True)
+    raises(ValueError, lambda: Levy('x',mu,c))
+
+    mu = Symbol("mu", real=True)
+    raises(ValueError, lambda: Levy('x',mu,c))
 
 def test_logistic():
     mu = Symbol("mu", real=True)
