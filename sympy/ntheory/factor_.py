@@ -2315,11 +2315,13 @@ def is_semiperfect(n):
     or some of its proper devisors
     Examples
     ========
+
     >>> from sympy.ntheory.factor_ import is_semiperfect
     >>> is_semiperfect(40)
     True
     >>> is_semiperfect(38)
     False
+
     Reference
     =========
     .. [1] https://en.wikipedia.org/wiki/Semiperfect_number
@@ -2351,11 +2353,13 @@ def is_weird(n):
     Weird number is a natural number taht is abundant but not semiperfect.
     Examples
     ========
+
     >>> from sympy.ntheory.factor_ import is_weird
     >>> is_weird(70)
     True
     >>> is_weird(50)
     False
+
     Reference
     =========
     .. [1] https://en.wikipedia.org/wiki/Weird_number
