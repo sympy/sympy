@@ -66,6 +66,18 @@ def is_subset_sets(a_range, b_interval): # noqa:F811
             cond_right = a_range.sup <= b_interval.right
         return fuzzy_and([cond_left, cond_right])
 
+@dispatch(Range, FiniteSet)
+def is_subset_sets(a_range, b_finiteset): # noqa:F811
+    try:
+        a_size = a_range.size
+    except ValueError:
+        # symbolic Range of unknown size
+        return None
+    if a_size > len(b_finiteset):
+        return False
+    else:
+        return fuzzy_and(b_finiteset.contains(x) for x in a_range)
+
 @dispatch(Interval, Range)
 def is_subset_sets(a_interval, b_range): # noqa:F811
     if a_interval.measure.is_extended_nonzero:
