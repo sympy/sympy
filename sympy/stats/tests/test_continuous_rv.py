@@ -23,7 +23,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
 from sympy.stats.crv_types import (NormalDistribution, GumbelDistribution, GompertzDistribution, LaplaceDistribution,
                                   ParetoDistribution, RaisedCosineDistribution, BeniniDistribution, BetaDistribution,
                                   CauchyDistribution, GammaInverseDistribution, LogNormalDistribution, StudentTDistribution,
-                                  QuadraticUDistribution, WignerSemicircleDistribution, ChiDistribution)
+                                  QuadraticUDistribution, WignerSemicircleDistribution, ChiDistribution, ReciprocalDistribution)
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.randtest import verify_numerically as tn
