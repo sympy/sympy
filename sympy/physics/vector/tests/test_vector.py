@@ -63,6 +63,9 @@ def test_Vector():
     raises(TypeError, lambda: v3.applyfunc(v1))
 
 
+
+
+
 def test_Vector_diffs():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
     q1d, q2d, q3d, q4d = dynamicsymbols('q1 q2 q3 q4', 1)
@@ -169,3 +172,6 @@ def test_vector_simplify():
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * N.x
     test4 = test4.simplify()
     assert (test4 & N.x) == -2 * y
+
+def test_Vector_Evalf():
+    assert (A.x**2).evalf(subs={A.x: 0}) == 0
