@@ -1004,7 +1004,7 @@ def _diop_quadratic(var, coeff, t):
                 for z0 in range(0, abs(_c)):
                     # Check if the coefficients of y and x obtained are integers or not
                     if (divisible(sqa*g*z0**2 + D*z0 + sqa*F, _c) and
-                            divisible(e*sqc**g*z0**2 + E*z0 + e*sqc*F, _c)):
+                            divisible(e*sqc*g*z0**2 + E*z0 + e*sqc*F, _c)):
                         sol.add((solve_x(z0), solve_y(z0)))
 
     # (3) Method used when B**2 - 4*A*C is a square, is described in p. 6 of the below paper
