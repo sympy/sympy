@@ -613,6 +613,7 @@ def test_measure():
 def test_is_subset():
     assert Interval(0, 1).is_subset(Interval(0, 2)) is True
     assert Interval(0, 3).is_subset(Interval(0, 2)) is False
+    assert Interval(0, 1).is_subset(FiniteSet(0, 1)) is False
 
     assert FiniteSet(1, 2).is_subset(FiniteSet(1, 2, 3, 4))
     assert FiniteSet(4, 5).is_subset(FiniteSet(1, 2, 3, 4)) is False
@@ -653,6 +654,8 @@ def test_is_subset():
     assert Range(-oo, 1).is_subset(FiniteSet(1)) is False
     assert Range(3).is_subset(FiniteSet(0, 1, n)) is None
     assert Range(n, n + 2).is_subset(FiniteSet(n, n + 1)) is None
+
+    assert Range(5).is_subset(Interval(0, 4, right_open=True)) is False
 
 
 def test_is_proper_subset():
