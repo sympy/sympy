@@ -3250,18 +3250,18 @@ def Reciprocal(name, a, b):
     >>> X = Reciprocal("x", a, b)
 
     >>> pprint(density(X)(z), use_unicode=False)
-    /         0            for a > z 
-    |                                
-    |         1                      
+    /         0            for a > z
+    |
+    |         1
     <--------------------  for b >= z
-    |z*(-log(a) + log(b))            
-    |                                
-    \         1            otherwise 
+    |z*(-log(a) + log(b))
+    |
+    \         1            otherwise
 
 
     Reference
     =========
-    
+
     .. [1] https://en.wikipedia.org/wiki/Reciprocal_distribution
 
     """
