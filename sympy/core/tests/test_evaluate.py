@@ -6,7 +6,13 @@ from sympy import sqrt, oo, pretty, nan
 def test_add():
     with evaluate(False):
         assert pretty(oo-oo) is not nan
-        
+        assert pretty(oo-5) is not nan
+        assert pretty(oo+5) is not nan
+        assert pretty(5+oo) is not nan
+        assert pretty(-oo+5) is not nan
+        assert pretty(-5-oo) is not nan
+        assert pretty(5-oo) is not nan
+
     with evaluate(False):
         expr = x + x
         assert isinstance(expr, Add)
