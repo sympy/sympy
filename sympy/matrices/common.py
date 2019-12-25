@@ -40,6 +40,10 @@ class NonSquareMatrixError(ShapeError):
     pass
 
 
+class NonHermitianMatrixError(MatrixError):
+    pass
+
+
 class NonInvertibleMatrixError(ValueError, MatrixError):
     """The matrix in not invertible (division by multidimensional zero error)."""
     pass

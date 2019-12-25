@@ -30,9 +30,10 @@ from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.misc import filldedent
 
 from .common import (
-    MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError, NonPositiveDefiniteMatrixError)
+    MatrixCommon, MatrixError, NonSquareMatrixError, NonHermitianMatrixError,
+    NonInvertibleMatrixError, ShapeError, NonPositiveDefiniteMatrixError)
 
+import sympy.matrices
 
 def _iszero(x):
     """Returns True if x is zero."""
@@ -1532,8 +1533,8 @@ class MatrixEigen(MatrixSubspaces):
         """
 
         simplify = flags.get('simplify', True)
-        if not isinstance(simplify, FunctionType):
-            simpfunc = _simplify if simplify else lambda x: x
+        simpfunc = simplify if isinstance(simplify, FunctionType) else \
+                _simplify if simplify else lambda x: x
         primitive = flags.get('simplify', False)
         chop = flags.pop('chop', False)
 
@@ -1576,6 +1577,248 @@ class MatrixEigen(MatrixSubspaces):
             # if we had floats to start with, turn the eigenvectors to floats
             ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
         return ret
+
+    def eigenvects_mod_square_elementwise(self, simplify=False, dotprodsimp=None):
+        """Return list of triples (eigenval, multiplicity, eigenspace).
+
+        ``eigenspace`` contains a single ``eigenvector`` with the elements being
+        the squares of the absolute values of the elements of the actual
+        eigenvector. This only works for hermitian matrices with eigenvalues
+        of multiplicity 1.
+
+        Parameters
+        ==========
+
+        simplify : bool or function, optional
+            If it is set to ``True``, it attempts to return the most
+            simplified form of expressions returned by applying default
+            simplification method in every routine.
+
+            If it is set to ``False``, it will skip simplification in this
+            particular routine to save computation resources.
+
+            If a function is passed to, it will attempt to apply
+            the particular function as simplification method.
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+
+        Returns
+        =======
+
+        ret : [(eigenval, multiplicity, eigenspace), ...]
+            A ragged list containing tuples of data obtained by ``eigenvals``
+            and ``nullspace``.
+
+            ``eigenspace`` is a list containing the single elementwise mod
+            squared ``eigenvector`` for each eigenvalue.
+
+            ``eigenvector`` is a vector in the form of a ``Matrix``. e.g.
+            a vector of length 3 is returned as ``Matrix([a_1, a_2, a_3])``.
+
+        Raises
+        ======
+
+        MatrixError
+            If not enough roots had got computed or if any eigenvalue has
+            multiplicity greater than 1.
+
+        NonSquareMatrixError
+            If attempted to compute eigenvectors from a non-square matrix.
+
+        NonHermitianMatrixError
+            If attempted to compute eigenvectors from a non-hermitian matrix.
+
+        See Also
+        ========
+
+        eigenvals
+        eigenvects
+        """
+
+        if not self:
+            return []
+
+        if not self.is_square:
+            raise NonSquareMatrixError()
+
+        if self.is_hermitian is False:
+            raise NonHermitianMatrixError()
+
+        evals = self.eigenvals(simplify=simplify, dotprodsimp=dotprodsimp)
+
+        if any(m > 1 for m in evals.values()):
+            raise MatrixError('Matrix has an eigenvalue with multiplicity greater than 1')
+
+        if not isinstance(simplify, FunctionType):
+            simplify = _simplify if simplify else lambda x: x
+
+        dps         = _dotprodsimp if dotprodsimp else lambda x: x
+        rows        = self.rows
+        evals       = list(evals.keys())
+        evecs       = []
+        minors      = [self.minor_submatrix(i, i) for i in range(rows)]
+        minor_evals = [list(m.eigenvals().keys()) for m in minors]
+
+        for i in range(rows):
+            evec  = [self.zero] * rows
+            evali = evals[i]
+
+            for j in range(rows):
+                minor_evalj = minor_evals[j]
+                numer       = S.One
+                denom       = evali - evals[rows - 1] if i != rows - 1 else S.One
+
+                for k in range(rows - 1):
+                    numer = dps(numer * (evali - minor_evalj[k]))
+
+                    if k != i:
+                        denom = dps(denom * (evali - evals[k]))
+
+                evec[j] = simplify(numer/denom)
+
+            evecs.append((evals[i], 1, [sympy.matrices.Matrix(rows, 1, evec)]))
+
+        return evecs
+
+    def eigenvects_by_minors(self, iszerofunc=_iszero, simplify=False,
+            dotprodsimp=None):
+        """Return list of triples (eigenval, multiplicity, eigenspace).
+
+        Calculate eigenvectors from eigenvalues by the minor matrix method.
+        This only works for real summetric matrices with eigenvalues of
+        multiplicity 1.
+
+        Parameters
+        ==========
+
+        iszerofunc : function, optional
+            Specifies a zero testing function to be used when discarding mod
+            square elements from eigenvector search.
+
+            Default value is ``_iszero``, which uses SymPy's naive and fast
+            default assumption handler.
+
+            It can also accept any user-specified zero testing function, if it
+            is formatted as a function which accepts a single symbolic argument
+            and returns ``True`` if it is tested as zero and ``False`` if it
+            is tested as non-zero, and ``None`` if it is undecidable.
+
+        simplify : bool or function, optional
+            If it is set to ``True``, it attempts to return the most
+            simplified form of expressions returned by applying default
+            simplification method in every routine.
+
+            If it is set to ``False``, it will skip simplification in this
+            particular routine to save computation resources.
+
+            If a function is passed to, it will attempt to apply
+            the particular function as simplification method.
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+
+        Raises
+        ======
+
+        MatrixError
+            If not enough roots had got computed, if any eigenvalue has
+            multiplicity greater than 1 or if the matrix is not real symmetric.
+
+        NonSquareMatrixError
+            If attempted to compute eigenvectors from a non-square matrix.
+
+        NonHermitianMatrixError
+            If attempted to compute eigenvectors from a non-hermitian matrix.
+
+        Returns
+        =======
+        ret : [(eigenval, multiplicity, eigenspace), ...]
+            A ragged list containing tuples of data obtained by ``eigenvals``
+            and ``nullspace``.
+
+            ``eigenspace`` is a list containing the ``eigenvector`` for each
+            eigenvalue.
+
+            ``eigenvector`` is a vector in the form of a ``Matrix``. e.g.
+            a vector of length 3 is returned as ``Matrix([a_1, a_2, a_3])``.
+
+        See Also
+        ========
+
+        eigenvals
+        eigenvects
+        eigenvects_mod_square_elementwise
+        """
+
+        def zerocheck(expr):
+            iszero = iszerofunc(expr)
+
+            if iszero is not None:
+                return iszero, expr
+
+            expr = _simplify(expr)
+
+            return iszerofunc(expr), expr
+
+        def test_eigenvect(eval, evec):
+            return zerocheck(self.multiply(evec, dotprodsimp=dotprodsimp) -
+                    dps(eval * evec))[0]
+
+        def determine_eigenvect(rows, eval, emvec):
+            zeros   = [None] * rows
+            elems   = [None] * rows
+            indices = []
+
+            for i, ems in enumerate(emvec):
+                iszero, e = zerocheck(ems)
+                zeros[i]  = iszero
+                elems[i]  = e
+
+                if iszero is not True:
+                    indices.append((i, len(indices)))
+
+            evec     = sympy.matrices.Matrix(rows, 1, elems)
+            lindices = len(indices)
+
+            if not lindices:
+                return evec
+
+            for negs in range(2**rows):
+                for i, bit in indices:
+                    evec[i] = -elems[i] if negs & (1 << bit) else elems[i]
+
+                if test_eigenvect(eval, evec):
+                    return evec
+
+            raise MatrixError('Could not determine eigenvector')
+
+        if not self.is_symmetric:
+            return MatrixError('Matrix is not symmetric')
+
+        if any(e.is_real is False for e in self):
+            raise MatrixError('Matrix is not real (sorry Keanu)')
+
+        emsvecs = self.eigenvects_mod_square_elementwise(simplify=simplify,
+                dotprodsimp=dotprodsimp)
+
+        if not isinstance(simplify, FunctionType):
+            simplify = _simplify if simplify else lambda x: x
+
+        dps   = _dotprodsimp if dotprodsimp else lambda x: x
+        rows  = self.rows
+        evals = []
+        evecs = []
+
+        for eval, _, emsvec in emsvecs:
+            evals.append(eval)
+            evecs.append(determine_eigenvect(rows, eval, (sqrt(e) for e in emsvec[0])))
+
+        return [(eval, 1, [evec]) for eval, evec in zip(evals, evecs)]
 
     def is_diagonalizable_with_eigen(self, reals_only=False, dotprodsimp=None):
         """See is_diagonalizable. This function returns the bool along with the
