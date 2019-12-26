@@ -15,7 +15,7 @@ from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
     _remove_gcd, check_param, parametrize_ternary_quadratic,
     diop_ternary_quadratic, diop_linear, diop_quadratic,
     diop_general_sum_of_squares, sum_of_powers, sum_of_squares,
-    diop_general_sum_of_even_powers, _can_do_sum_of_squares)
+    diop_general_sum_of_even_powers, _can_do_sum_of_squares, DiopKnown)
 from sympy.utilities import default_sort_key
 
 from sympy.utilities.pytest import slow, raises, XFAIL
@@ -50,21 +50,21 @@ def test_classify_diop():
     raises(NotImplementedError, lambda: classify_diop(w*x*y*z - 1))
     raises(NotImplementedError, lambda: classify_diop(x**3 + y**3 + z**4 - 90))
     assert classify_diop(14*x**2 + 15*x - 42) == (
-        [x], {1: -42, x: 15, x**2: 14}, 'univariate')
+        [x], {1: -42, x: 15, x**2: 14}, DiopKnown.univariate)
     assert classify_diop(x*y + z) == (
-        [x, y, z], {x*y: 1, z: 1}, 'inhomogeneous_ternary_quadratic')
+        [x, y, z], {x*y: 1, z: 1}, DiopKnown.inhomogeneous_ternary_quadratic)
     assert classify_diop(x*y + z + w + x**2) == (
-        [w, x, y, z], {x*y: 1, w: 1, x**2: 1, z: 1}, 'inhomogeneous_general_quadratic')
+        [w, x, y, z], {x*y: 1, w: 1, x**2: 1, z: 1}, DiopKnown.inhomogeneous_general_quadratic)
     assert classify_diop(x*y + x*z + x**2 + 1) == (
-        [x, y, z], {x*y: 1, x*z: 1, x**2: 1, 1: 1}, 'inhomogeneous_general_quadratic')
+        [x, y, z], {x*y: 1, x*z: 1, x**2: 1, 1: 1}, DiopKnown.inhomogeneous_general_quadratic)
     assert classify_diop(x*y + z + w + 42) == (
-        [w, x, y, z], {x*y: 1, w: 1, 1: 42, z: 1}, 'inhomogeneous_general_quadratic')
+        [w, x, y, z], {x*y: 1, w: 1, 1: 42, z: 1}, DiopKnown.inhomogeneous_general_quadratic)
     assert classify_diop(x*y + z*w) == (
-        [w, x, y, z], {x*y: 1, w*z: 1}, 'homogeneous_general_quadratic')
+        [w, x, y, z], {x*y: 1, w*z: 1}, DiopKnown.homogeneous_general_quadratic)
     assert classify_diop(x*y**2 + 1) == (
-        [x, y], {x*y**2: 1, 1: 1}, 'cubic_thue')
+        [x, y], {x*y**2: 1, 1: 1}, DiopKnown.cubic_thue)
     assert classify_diop(x**4 + y**4 + z**4 - (1 + 16 + 81)) == (
-        [x, y, z], {1: -98, x**4: 1, z**4: 1, y**4: 1}, 'general_sum_of_even_powers')
+        [x, y, z], {1: -98, x**4: 1, z**4: 1, y**4: 1}, DiopKnown.general_sum_of_even_powers)
 
 
 def test_linear():
