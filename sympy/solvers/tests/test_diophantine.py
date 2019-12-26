@@ -540,6 +540,12 @@ def test_diophantine():
     assert diophantine(x**2 + y**2 +3*x- 5, permute=True) == \
         set([(-1, 1), (-4, -1), (1, -1), (1, 1), (-4, 1), (-1, -1), (4, 1), (4, -1)])
 
+    # issue 18122
+    assert check_solutions(x**2-y)
+    assert check_solutions(y**2-x)
+    assert diophantine((x**2-y), t) == set([(t, t**2)])
+    assert diophantine((y**2-x), t) == set([(t**2, -t)])
+
 
 def test_general_pythagorean():
     from sympy.abc import a, b, c, d, e
