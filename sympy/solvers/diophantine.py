@@ -27,7 +27,7 @@ from sympy.solvers.solvers import check_assumptions
 from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
-
+from enum import Enum
 
 
 # these are imported with 'from sympy.solvers.diophantine import *
@@ -35,19 +35,19 @@ __all__ = ['diophantine', 'classify_diop']
 
 
 # these types are known (but not necessarily handled)
-diop_known = {
-    "binary_quadratic",
-    "cubic_thue",
-    "general_pythagorean",
-    "general_sum_of_even_powers",
-    "general_sum_of_squares",
-    "homogeneous_general_quadratic",
-    "homogeneous_ternary_quadratic",
-    "homogeneous_ternary_quadratic_normal",
-    "inhomogeneous_general_quadratic",
-    "inhomogeneous_ternary_quadratic",
-    "linear",
-    "univariate"}
+class DiopKnown(Enum):
+    binary_quadratic = "binary_quadratic"
+    cubic_thue = "cubic_thue"
+    general_pythagorean = "general_pythagorean"
+    general_sum_of_even_powers = "general_sum_of_even_powers"
+    general_sum_of_squares = "general_sum_of_squares"
+    homogeneous_general_quadratic = "homogeneous_general_quadratic"
+    homogeneous_ternary_quadratic = "homogeneous_ternary_quadratic"
+    homogeneous_ternary_quadratic_normal = "homogeneous_ternary_quadratic_normal"
+    inhomogeneous_general_quadratic = "inhomogeneous_general_quadratic"
+    inhomogeneous_ternary_quadratic = "inhomogeneous_ternary_quadratic"
+    linear = "linear"
+    univariate = "univariate"
 
 
 def _is_int(i):
@@ -218,12 +218,12 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         if permute:
             len_var = len(v)
             permute_signs_for = [
-                'general_sum_of_squares',
-                'general_sum_of_even_powers']
+                DiopKnown.general_sum_of_squares,
+                DiopKnown.general_sum_of_even_powers]
             permute_signs_check = [
-                'homogeneous_ternary_quadratic',
-                'homogeneous_ternary_quadratic_normal',
-                'binary_quadratic']
+                DiopKnown.homogeneous_ternary_quadratic,
+                DiopKnown.homogeneous_ternary_quadratic_normal,
+                DiopKnown.binary_quadratic]
             if t in permute_signs_for:
                 do_permute_signs_var = True
             elif t in permute_signs_check:
@@ -288,7 +288,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                         # e.g 1. (x_val,y_val)=> (x_val,y_val), (-x_val,-y_val)
                         # 2. (-x_vall, y_val)=> (-x_val,y_val), (x_val,-y_val)
                         permute_few_signs = True
-        if t == 'general_sum_of_squares':
+        if t == DiopKnown.general_sum_of_squares:
             # trying to factor such expressions will sometimes hang
             terms = [(eq, 1)]
         else:
@@ -306,17 +306,17 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         solution = diop_solve(base, param)
 
         if eq_type in [
-                "linear",
-                "homogeneous_ternary_quadratic",
-                "homogeneous_ternary_quadratic_normal",
-                "general_pythagorean"]:
+                DiopKnown.linear,
+                DiopKnown.homogeneous_ternary_quadratic,
+                DiopKnown.homogeneous_ternary_quadratic_normal,
+                DiopKnown.general_pythagorean]:
             sols.add(merge_solution(var, var_t, solution))
 
         elif eq_type in [
-                "binary_quadratic",
-                "general_sum_of_squares",
-                "general_sum_of_even_powers",
-                "univariate"]:
+                DiopKnown.binary_quadratic,
+                DiopKnown.general_sum_of_squares,
+                DiopKnown.general_sum_of_even_powers,
+                DiopKnown.univariate]:
             for sol in solution:
                 sols.add(merge_solution(var, var_t, sol))
 
@@ -429,42 +429,42 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     """
     var, coeff, eq_type = classify_diop(eq, _dict=False)
 
-    if eq_type == "linear":
+    if eq_type == DiopKnown.linear:
         return _diop_linear(var, coeff, param)
 
-    elif eq_type == "binary_quadratic":
+    elif eq_type == DiopKnown.binary_quadratic:
         return _diop_quadratic(var, coeff, param)
 
-    elif eq_type == "homogeneous_ternary_quadratic":
+    elif eq_type == DiopKnown.homogeneous_ternary_quadratic:
         x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
         return _parametrize_ternary_quadratic(
             (x_0, y_0, z_0), var, coeff)
 
-    elif eq_type == "homogeneous_ternary_quadratic_normal":
+    elif eq_type == DiopKnown.homogeneous_ternary_quadratic_normal:
         x_0, y_0, z_0 = _diop_ternary_quadratic_normal(var, coeff)
         return _parametrize_ternary_quadratic(
             (x_0, y_0, z_0), var, coeff)
 
-    elif eq_type == "general_pythagorean":
+    elif eq_type == DiopKnown.general_pythagorean:
         return _diop_general_pythagorean(var, coeff, param)
 
-    elif eq_type == "univariate":
+    elif eq_type == DiopKnown.univariate:
         return set([(int(i),) for i in solveset_real(
             eq, var[0]).intersect(S.Integers)])
 
-    elif eq_type == "general_sum_of_squares":
+    elif eq_type == DiopKnown.general_sum_of_squares:
         return _diop_general_sum_of_squares(var, -int(coeff[1]), limit=S.Infinity)
 
-    elif eq_type == "general_sum_of_even_powers":
+    elif eq_type == DiopKnown.general_sum_of_even_powers:
         for k in coeff.keys():
             if k.is_Pow and coeff[k]:
                 p = k.exp
         return _diop_general_sum_of_even_powers(var, p, -int(coeff[1]), limit=S.Infinity)
 
-    if eq_type is not None and eq_type not in diop_known:
+    if eq_type is not None and eq_type not in DiopKnown:
             raise ValueError(filldedent('''
     Alhough this type of equation was identified, it is not yet
-    handled. It should, however, be listed in `diop_known` at the
+    handled. It should, however, be listed in `DiopKnown` at the
     top of this file. Developers should see comments at the end of
     `classify_diop`.
             '''))  # pragma: no cover
@@ -490,51 +490,51 @@ def classify_diop(eq, _dict=True):
     total_degree = Poly(eq).total_degree()
     homogeneous = 1 not in coeff
     if total_degree == 1:
-        diop_type = "linear"
+        diop_type = DiopKnown.linear
 
     elif len(var) == 1:
-        diop_type = "univariate"
+        diop_type = DiopKnown.univariate
 
     elif total_degree == 2 and len(var) == 2:
-        diop_type = "binary_quadratic"
+        diop_type = DiopKnown.binary_quadratic
 
     elif total_degree == 2 and len(var) == 3 and homogeneous:
         if set(coeff) & set(var):
-            diop_type = "inhomogeneous_ternary_quadratic"
+            diop_type = DiopKnown.inhomogeneous_ternary_quadratic
         else:
             nonzero = [k for k in coeff if coeff[k]]
             if len(nonzero) == 3 and all(i**2 in nonzero for i in var):
-                diop_type = "homogeneous_ternary_quadratic_normal"
+                diop_type = DiopKnown.homogeneous_ternary_quadratic_normal
             else:
-                diop_type = "homogeneous_ternary_quadratic"
+                diop_type = DiopKnown.homogeneous_ternary_quadratic
 
     elif total_degree == 2 and len(var) >= 3:
         if set(coeff) & set(var):
-            diop_type = "inhomogeneous_general_quadratic"
+            diop_type = DiopKnown.inhomogeneous_general_quadratic
         else:
             # there may be Pow keys like x**2 or Mul keys like x*y
             if any(k.is_Mul for k in coeff):  # cross terms
                 if not homogeneous:
-                    diop_type = "inhomogeneous_general_quadratic"
+                    diop_type = DiopKnown.inhomogeneous_general_quadratic
                 else:
-                    diop_type = "homogeneous_general_quadratic"
+                    diop_type = DiopKnown.homogeneous_general_quadratic
             else:  # all squares: x**2 + y**2 + ... + constant
                 if all(coeff[k] == 1 for k in coeff if k != 1):
-                    diop_type = "general_sum_of_squares"
+                    diop_type = DiopKnown.general_sum_of_squares
                 elif all(is_square(abs(coeff[k])) for k in coeff):
                     if abs(sum(sign(coeff[k]) for k in coeff)) == \
                             len(var) - 2:
                         # all but one has the same sign
                         # e.g. 4*x**2 + y**2 - 4*z**2
-                        diop_type = "general_pythagorean"
+                        diop_type = DiopKnown.general_pythagorean
 
     elif total_degree == 3 and len(var) == 2:
-        diop_type = "cubic_thue"
+        diop_type = DiopKnown.cubic_thue
 
     elif (total_degree > 3 and total_degree % 2 == 0 and
             all(k.is_Pow and k.exp == total_degree for k in coeff if k != 1)):
         if all(coeff[k] == 1 for k in coeff if k != 1):
-            diop_type = 'general_sum_of_even_powers'
+            diop_type = DiopKnown.general_sum_of_even_powers
 
     if diop_type is not None:
         return var, dict(coeff) if _dict else coeff, diop_type
@@ -543,7 +543,7 @@ def classify_diop(eq, _dict=True):
     # --------------------------
     # if this error raises and the equation *can* be classified,
     #  * it should be identified in the if-block above
-    #  * the type should be added to the diop_known
+    #  * the type should be added to the DiopKnown
     # if a solver can be written for it,
     #  * a dedicated handler should be written (e.g. diop_linear)
     #  * it should be passed to that handler in diop_solve
@@ -588,7 +588,7 @@ classify_diop.func_doc = '''
     ([x, y, z], {1: 5, x: 1, y: 3, z: -4}, 'linear')
     >>> classify_diop(x**2 + y**2 - x*y + x + 5)
     ([x, y], {1: 5, x: 1, x**2: 1, y**2: 1, x*y: -1}, 'binary_quadratic')
-    ''' % ('\n    * '.join(sorted(diop_known)))
+    ''' % ('\n    * '.join(sorted(map(str, DiopKnown))))
 
 
 def diop_linear(eq, param=symbols("t", integer=True)):
@@ -633,7 +633,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
-    if diop_type == "linear":
+    if diop_type == DiopKnown.linear:
         return _diop_linear(var, coeff, param)
 
 
@@ -920,7 +920,7 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
-    if diop_type == "binary_quadratic":
+    if diop_type == DiopKnown.binary_quadratic:
         return _diop_quadratic(var, coeff, param)
 
 
@@ -1777,7 +1777,7 @@ def transformation_to_DN(eq):
     """
 
     var, coeff, diop_type = classify_diop(eq, _dict=False)
-    if diop_type == "binary_quadratic":
+    if diop_type == DiopKnown.binary_quadratic:
         return _transformation_to_DN(var, coeff)
 
 
@@ -1872,7 +1872,7 @@ def find_DN(eq):
            http://www.jpr2718.org/ax2p.pdf
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
-    if diop_type == "binary_quadratic":
+    if diop_type == DiopKnown.binary_quadratic:
         return _find_DN(var, coeff)
 
 
@@ -1958,8 +1958,8 @@ def diop_ternary_quadratic(eq):
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type in (
-            "homogeneous_ternary_quadratic",
-            "homogeneous_ternary_quadratic_normal"):
+            DiopKnown.homogeneous_ternary_quadratic,
+            DiopKnown.homogeneous_ternary_quadratic_normal):
         return _diop_ternary_quadratic(var, coeff)
 
 
@@ -2073,8 +2073,8 @@ def transformation_to_normal(eq):
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type in (
-            "homogeneous_ternary_quadratic",
-            "homogeneous_ternary_quadratic_normal"):
+            DiopKnown.homogeneous_ternary_quadratic,
+            DiopKnown.homogeneous_ternary_quadratic_normal):
         return _transformation_to_normal(var, coeff)
 
 
@@ -2220,8 +2220,8 @@ def parametrize_ternary_quadratic(eq):
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type in (
-            "homogeneous_ternary_quadratic",
-            "homogeneous_ternary_quadratic_normal"):
+            DiopKnown.homogeneous_ternary_quadratic,
+            DiopKnown.homogeneous_ternary_quadratic_normal):
         x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
         return _parametrize_ternary_quadratic(
             (x_0, y_0, z_0), var, coeff)
@@ -2296,7 +2296,7 @@ def diop_ternary_quadratic_normal(eq):
     (4, 9, 1)
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
-    if diop_type == "homogeneous_ternary_quadratic_normal":
+    if diop_type == DiopKnown.homogeneous_ternary_quadratic_normal:
         return _diop_ternary_quadratic_normal(var, coeff)
 
 
@@ -2734,7 +2734,7 @@ def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
     """
     var, coeff, diop_type  = classify_diop(eq, _dict=False)
 
-    if diop_type == "general_pythagorean":
+    if diop_type == DiopKnown.general_pythagorean:
         return _diop_general_pythagorean(var, coeff, param)
 
 
@@ -2807,7 +2807,7 @@ def diop_general_sum_of_squares(eq, limit=1):
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
-    if diop_type == "general_sum_of_squares":
+    if diop_type == DiopKnown.general_sum_of_squares:
         return _diop_general_sum_of_squares(var, -coeff[1], limit)
 
 
@@ -2866,7 +2866,7 @@ def diop_general_sum_of_even_powers(eq, limit=1):
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
-    if diop_type == "general_sum_of_even_powers":
+    if diop_type == DiopKnown.general_sum_of_even_powers:
         for k in coeff.keys():
             if k.is_Pow and coeff[k]:
                 p = k.exp
