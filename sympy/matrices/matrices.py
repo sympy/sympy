@@ -1727,7 +1727,8 @@ class MatrixEigen(MatrixSubspaces):
 
         MatrixError
             If not enough roots had got computed, if any eigenvalue has
-            multiplicity greater than 1 or if the matrix is not real symmetric.
+            multiplicity greater than 1, if the matrix is not real symmetric or
+            if any eigenvector could not be determined for some other reason.
 
         NonSquareMatrixError
             If attempted to compute eigenvectors from a non-square matrix.
@@ -1765,14 +1766,12 @@ class MatrixEigen(MatrixSubspaces):
 
             return iszerofunc(expr), expr
 
-        def test_eigenvect(eval, evec):
-            return zerocheck(self.multiply(evec, dotprodsimp=dotprodsimp) -
-                    dps(eval * evec))[0]
-
         def determine_eigenvect(rows, eval, emvec):
             zeros   = [None] * rows
             elems   = [None] * rows
+            indvec  = [None] * rows
             indices = []
+            bit     = 0
 
             for i, ems in enumerate(emvec):
                 iszero, e = zerocheck(ems)
@@ -1780,20 +1779,43 @@ class MatrixEigen(MatrixSubspaces):
                 elems[i]  = e
 
                 if iszero is not True:
-                    indices.append((i, len(indices)))
+                    indices.append((i, bit))
 
-            evec     = sympy.matrices.Matrix(rows, 1, elems)
+                    indvec[i] = bit
+                    bit       = bit + 1
+
             lindices = len(indices)
 
             if not lindices:
-                return evec
+                return sympy.matrices.Matrix(rows, 1, elems)
+
+            mxev = [[self[r, c] * elems[c] for c in range(rows)] + \
+                    [eval * elems[r]] for r in range(rows)]
+            test = [row[:] for row in mxev]
 
             for negs in range(2**rows):
-                for i, bit in indices:
-                    evec[i] = -elems[i] if negs & (1 << bit) else elems[i]
+                for r in range(rows):
+                    mxevr = mxev[r]
+                    testr = test[r]
+                    evbit = indvec[r]
 
-                if test_eigenvect(eval, evec):
-                    return evec
+                    if evbit is not None:
+                        testr[-1] = mxevr[-1] if negs & (1 << evbit) else -mxevr[-1]
+
+                    for c, bit in indices:
+                        testr[c] = -mxevr[c] if negs & (1 << bit) else mxevr[c]
+
+                    if not zerocheck(dps(Add(*testr)))[0]:
+                        break
+
+                else:
+                    for r in range(rows):
+                        evbit = indvec[r]
+
+                        if evbit is not None and negs & (1 << evbit):
+                            elems[r] = -elems[r]
+
+                    return sympy.matrices.Matrix(rows, 1, elems)
 
             raise MatrixError('Could not determine eigenvector')
 
