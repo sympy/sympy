@@ -7,7 +7,7 @@ from sympy import symbols, MatrixBase, ImmutableDenseMatrix
 from sympy.solvers import solve
 from sympy.vector.scalar import BaseScalar
 from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos,\
-    sqrt, diff, Tuple, acos, atan2, simplify, Mul
+    sqrt, diff, Tuple, acos, atan2, simplify
 import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
@@ -261,15 +261,6 @@ class CoordSys3D(Basic):
 
     def __iter__(self):
         return iter(self.base_vectors())
-
-    # XXX: Not sure if __mul__ and __rmul__ make sense but they are needed for
-    # some operations now that Expr__mul__ doesn't accept non-Expr
-
-    def __mul__(self, other):
-        return Mul(self, other)
-
-    def __rmul__(self, other):
-        return Mul(self, other)
 
     @staticmethod
     def _check_orthogonality(equations):
