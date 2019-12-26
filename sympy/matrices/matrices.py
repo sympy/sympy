@@ -968,7 +968,7 @@ class MatrixReductions(MatrixDeterminant):
 
         return self._eval_is_echelon(iszerofunc)
 
-    def rank(self, iszerofunc=_iszero, simplify=False):
+    def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
         """
         Returns the rank of a matrix
 
@@ -997,14 +997,15 @@ class MatrixReductions(MatrixDeterminant):
             zeros = [iszerofunc(x) for x in self]
             if not False in zeros and not None in zeros:
                 return 0
-            det = self.det()
+            det = self.det(dotprodsimp=dotprodsimp)
             if iszerofunc(det) and False in zeros:
                 return 1
             if iszerofunc(det) is False:
                 return 2
 
         mat, _ = self._permute_complexity_right(iszerofunc=iszerofunc)
-        echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
+        echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc,
+                simpfunc=simpfunc, dotprodsimp=dotprodsimp)
         return len(pivots)
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
@@ -1858,18 +1859,23 @@ class MatrixEigen(MatrixSubspaces):
     is_indefinite = \
         property(fget=is_indefinite, doc=_doc_positive_definite)
 
-    def jordan_form(self, calc_transform=True, **kwargs):
+    def jordan_form(self, calc_transform=True, dotprodsimp=None, **kwargs):
         """Return ``(P, J)`` where `J` is a Jordan block
         matrix and `P` is a matrix such that
 
             ``self == P*J*P**-1``
-
 
         Parameters
         ==========
 
         calc_transform : bool
             If ``False``, then only `J` is returned.
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+
         chop : bool
             All matrices are converted to exact types when computing
             eigenvalues and eigenvectors.  As a result, there may be
@@ -1929,9 +1935,11 @@ class MatrixEigen(MatrixSubspaces):
             if (val, pow) in mat_cache:
                 return mat_cache[(val, pow)]
             if (val, pow - 1) in mat_cache:
-                mat_cache[(val, pow)] = mat_cache[(val, pow - 1)] * mat_cache[(val, 1)]
+                mat_cache[(val, pow)] = mat_cache[(val, pow - 1)].multiply(
+                        mat_cache[(val, 1)], dotprodsimp=dotprodsimp)
             else:
-                mat_cache[(val, pow)] = (mat - val*self.eye(self.rows))**pow
+                mat_cache[(val, pow)] = (mat - val*self.eye(self.rows)).pow(pow,
+                        dotprodsimp=dotprodsimp)
             return mat_cache[(val, pow)]
 
         # helper functions
@@ -1942,13 +1950,13 @@ class MatrixEigen(MatrixSubspaces):
             # so use the rank-nullity theorem
             cols = self.cols
             ret = [0]
-            nullity = cols - eig_mat(val, 1).rank()
+            nullity = cols - eig_mat(val, 1).rank(dotprodsimp=dotprodsimp)
             i = 2
             while nullity != ret[-1]:
                 ret.append(nullity)
                 if nullity == algebraic_multiplicity:
                     break
-                nullity = cols - eig_mat(val, i).rank()
+                nullity = cols - eig_mat(val, i).rank(dotprodsimp=dotprodsimp)
                 i += 1
 
                 # Due to issues like #7146 and #15872, SymPy sometimes
@@ -1981,7 +1989,8 @@ class MatrixEigen(MatrixSubspaces):
             if len(small_basis) == 0:
                 return big_basis[0]
             for v in big_basis:
-                _, pivots = self.hstack(*(small_basis + [v])).echelon_form(with_pivots=True)
+                _, pivots = self.hstack(*(small_basis + [v])).echelon_form(
+                        with_pivots=True, dotprodsimp=dotprodsimp)
                 if pivots[-1] == len(small_basis):
                     return v
 
@@ -1990,7 +1999,7 @@ class MatrixEigen(MatrixSubspaces):
             mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
         # first calculate the jordan block structure
-        eigs = mat.eigenvals()
+        eigs = mat.eigenvals(dotprodsimp=dotprodsimp)
 
         # make sure that we found all the roots by counting
         # the algebraic multiplicity
@@ -2005,7 +2014,8 @@ class MatrixEigen(MatrixSubspaces):
             jordan_mat = mat.diag(*blocks)
             if not calc_transform:
                 return restore_floats(jordan_mat)
-            jordan_basis = [eig_mat(eig, 1).nullspace()[0] for eig in blocks]
+            jordan_basis = [eig_mat(eig, 1).nullspace(dotprodsimp=dotprodsimp)[0]
+                    for eig in blocks]
             basis_mat = mat.hstack(*jordan_basis)
             return restore_floats(basis_mat, jordan_mat)
 
@@ -2056,8 +2066,8 @@ class MatrixEigen(MatrixSubspaces):
             for block_eig, size in block_structure:
                 if block_eig != eig:
                     continue
-                null_big = (eig_mat(eig, size)).nullspace()
-                null_small = (eig_mat(eig, size - 1)).nullspace()
+                null_big = (eig_mat(eig, size)).nullspace(dotprodsimp=dotprodsimp)
+                null_small = (eig_mat(eig, size - 1)).nullspace(dotprodsimp=dotprodsimp)
                 # we want to pick something that is in the big basis
                 # and not the small, but also something that is independent
                 # of any other generalized eigenvectors from a different
