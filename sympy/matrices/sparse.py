@@ -11,6 +11,7 @@ from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 
@@ -273,19 +274,20 @@ class SparseMatrix(MatrixBase):
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
-    def _cholesky_solve(self, rhs):
+    def _cholesky_solve(self, rhs, dotprodsimp=None):
         # for speed reasons, this is not uncommented, but if you are
         # having difficulties, try uncommenting to make sure that the
         # input matrix is symmetric
 
         #assert self.is_symmetric()
-        L = self._cholesky_sparse()
-        Y = L._lower_triangular_solve(rhs)
-        rv = L.T._upper_triangular_solve(Y)
+        L = self._cholesky_sparse(dotprodsimp=dotprodsimp)
+        Y = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
+        rv = L.T._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
         return rv
 
-    def _cholesky_sparse(self):
+    def _cholesky_sparse(self, dotprodsimp=None):
         """Algorithm for numeric Cholesky factorization of a sparse matrix."""
+        dps = _dotprodsimp if dotprodsimp else lambda x: x
         Crowstruc = self.row_structure_symbolic_cholesky()
         C = self.zeros(self.rows)
         for i in range(len(Crowstruc)):
@@ -303,8 +305,7 @@ class SparseMatrix(MatrixBase):
                                     break
                             else:
                                 break
-                    C[i, j] -= summ
-                    C[i, j] /= C[j, j]
+                    C[i, j] = dps((C[i, j] - summ) / C[j, j])
                 else:
                     C[j, j] = self[j, j]
                     summ = 0
@@ -313,15 +314,23 @@ class SparseMatrix(MatrixBase):
                             summ += C[j, k]**2
                         else:
                             break
-                    C[j, j] -= summ
+                    C[j, j] = dps(C[j, j] - summ)
                     C[j, j] = sqrt(C[j, j])
 
         return C
 
-    def _eval_inverse(self, **kwargs):
+    def _eval_inverse(self, dotprodsimp=None, **kwargs):
         """Return the matrix inverse using Cholesky or LDL (default)
         decomposition as selected with the ``method`` keyword: 'CH' or 'LDL',
         respectively.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -348,6 +357,7 @@ class SparseMatrix(MatrixBase):
         [0, 0, 1]])
 
         """
+        dps = _dotprodsimp if dotprodsimp else lambda x: x
         sym = self.is_symmetric()
         M = self.as_mutable()
         I = M.eye(M.rows)
@@ -357,16 +367,16 @@ class SparseMatrix(MatrixBase):
             M = t*M
             I = t*I
         method = kwargs.get('method', 'LDL')
-        if method in "LDL":
+        if method == "LDL":
             solve = M._LDL_solve
         elif method == "CH":
             solve = M._cholesky_solve
         else:
             raise NotImplementedError(
                 'Method may be "CH" or "LDL", not %s.' % method)
-        rv = M.hstack(*[solve(I[:, i]) for i in range(I.cols)])
+        rv = M.hstack(*[solve(I[:, i], dotprodsimp=dotprodsimp) for i in range(I.cols)])
         if not sym:
-            scale = (r1*rv[:, 0])[0, 0]
+            scale = dps((r1*rv[:, 0])[0, 0])
             rv /= scale
         return self._new(rv)
 
@@ -543,20 +553,21 @@ class SparseMatrix(MatrixBase):
     def _eval_zeros(cls, rows, cols):
         return cls._new(rows, cols, {})
 
-    def _LDL_solve(self, rhs):
+    def _LDL_solve(self, rhs, dotprodsimp=None):
         # for speed reasons, this is not uncommented, but if you are
         # having difficulties, try uncommenting to make sure that the
         # input matrix is symmetric
 
         #assert self.is_symmetric()
-        L, D = self._LDL_sparse()
-        Z = L._lower_triangular_solve(rhs)
+        L, D = self._LDL_sparse(dotprodsimp=dotprodsimp)
+        Z = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
         Y = D._diagonal_solve(Z)
-        return L.T._upper_triangular_solve(Y)
+        return L.T._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
 
-    def _LDL_sparse(self):
+    def _LDL_sparse(self, dotprodsimp=None):
         """Algorithm for numeric LDL factorization, exploiting sparse structure.
         """
+        dps = _dotprodsimp if dotprodsimp else lambda x: x
         Lrowstruc = self.row_structure_symbolic_cholesky()
         L = self.eye(self.rows)
         D = self.zeros(self.rows, self.cols)
@@ -576,8 +587,7 @@ class SparseMatrix(MatrixBase):
                                     break
                         else:
                             break
-                    L[i, j] -= summ
-                    L[i, j] /= D[j, j]
+                    L[i, j] = dps((L[i, j] - summ) / D[j, j])
                 else: # i == j
                     D[i, i] = self[i, i]
                     summ = 0
@@ -586,14 +596,15 @@ class SparseMatrix(MatrixBase):
                             summ += L[i, k]**2*D[k, k]
                         else:
                             break
-                    D[i, i] -= summ
+                    D[i, i] = dps(D[i, i] - summ)
 
         return L, D
 
-    def _lower_triangular_solve(self, rhs):
+    def _lower_triangular_solve(self, rhs, dotprodsimp=None):
         """Fast algorithm for solving a lower-triangular system,
         exploiting the sparsity of the given matrix.
         """
+        dps = _dotprodsimp if dotprodsimp else lambda x: x
         rows = [[] for i in range(self.rows)]
         for i, j, v in self.row_list():
             if i > j:
@@ -603,7 +614,7 @@ class SparseMatrix(MatrixBase):
             for i in range(rhs.rows):
                 for u, v in rows[i]:
                     X[i, j] -= v*X[u, j]
-                X[i, j] /= self[i, i]
+                X[i, j] = dps(X[i, j] / self[i, i])
         return self._new(X)
 
     @property
@@ -612,10 +623,11 @@ class SparseMatrix(MatrixBase):
         in DenseMatrix use `_mat` directly to speed up operations."""
         return list(self)
 
-    def _upper_triangular_solve(self, rhs):
+    def _upper_triangular_solve(self, rhs, dotprodsimp=None):
         """Fast algorithm for solving an upper-triangular system,
         exploiting the sparsity of the given matrix.
         """
+        dps = _dotprodsimp if dotprodsimp else lambda x: x
         rows = [[] for i in range(self.rows)]
         for i, j, v in self.row_list():
             if i < j:
@@ -625,7 +637,7 @@ class SparseMatrix(MatrixBase):
             for i in reversed(range(rhs.rows)):
                 for u, v in reversed(rows[i]):
                     X[i, j] -= v*X[u, j]
-                X[i, j] /= self[i, i]
+                X[i, j] = dps(X[i, j] / self[i, i])
         return self._new(X)
 
 
