@@ -693,7 +693,7 @@ class SparseMatrix(MatrixBase):
         """
         return MutableSparseMatrix(self)
 
-    def cholesky(self):
+    def cholesky(self, dotprodsimp=None):
         """
         Returns the Cholesky decomposition L of a matrix A
         such that L * L.T = A
@@ -719,7 +719,7 @@ class SparseMatrix(MatrixBase):
         if not self.is_symmetric():
             raise ValueError('Cholesky decomposition applies only to '
                 'symmetric matrices.')
-        M = self.as_mutable()._cholesky_sparse()
+        M = self.as_mutable()._cholesky_sparse(dotprodsimp=dotprodsimp)
         if M.has(nan) or M.has(oo):
             raise ValueError('Cholesky decomposition applies only to '
                 'positive-definite matrices')
@@ -750,7 +750,7 @@ class SparseMatrix(MatrixBase):
     def copy(self):
         return self._new(self.rows, self.cols, self._smat)
 
-    def LDLdecomposition(self):
+    def LDLdecomposition(self, dotprodsimp=None):
         """
         Returns the LDL Decomposition (matrices ``L`` and ``D``) of matrix
         ``A``, such that ``L * D * L.T == A``. ``A`` must be a square,
@@ -783,7 +783,7 @@ class SparseMatrix(MatrixBase):
         if not self.is_symmetric():
             raise ValueError('LDL decomposition applies only to '
                 'symmetric matrices.')
-        L, D = self.as_mutable()._LDL_sparse()
+        L, D = self.as_mutable()._LDL_sparse(dotprodsimp=dotprodsimp)
         if L.has(nan) or L.has(oo) or D.has(nan) or D.has(oo):
             raise ValueError('LDL decomposition applies only to '
                 'positive-definite matrices')

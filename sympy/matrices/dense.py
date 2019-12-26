@@ -15,7 +15,7 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
 from sympy.matrices.matrices import MatrixBase
-from sympy.simplify import simplify as _simplify
+from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
@@ -129,7 +129,7 @@ class DenseMatrix(MatrixBase):
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
-    def _cholesky(self, hermitian=True):
+    def _cholesky(self, hermitian=True, dotprodsimp=None):
         """Helper function of cholesky.
         Without the error checks.
         To be used privately.
@@ -152,10 +152,10 @@ class DenseMatrix(MatrixBase):
         else:
             for i in range(self.rows):
                 for j in range(i):
-                    L[i, j] = (1 / L[j, j])*(self[i, j] -
+                    L[i, j] = (1 / L[j, j])*expand_mul(self[i, j] -
                         sum(L[i, k]*L[j, k] for k in range(j)))
-                L[i, i] = sqrt(self[i, i] -
-                    sum(L[i, k]**2 for k in range(i)))
+                L[i, i] = sqrt(expand_mul(self[i, i] -
+                    sum(L[i, k]**2 for k in range(i))))
         return self._new(L)
 
     def _eval_add(self, other):
@@ -302,9 +302,9 @@ class DenseMatrix(MatrixBase):
         else:
             for i in range(self.rows):
                 for j in range(i):
-                    L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
+                    L[i, j] = (1 / D[j, j])*expand_mul(self[i, j] - sum(
                         L[i, k]*L[j, k]*D[k, k] for k in range(j)))
-                D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i))
+                D[i, i] = expand_mul(self[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i)))
         return self._new(L), self._new(D)
 
     def _lower_triangular_solve(self, rhs):

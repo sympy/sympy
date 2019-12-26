@@ -1680,12 +1680,17 @@ class MatrixEigen(MatrixSubspaces):
         return self.is_diagonalizable_with_eigen(reals_only=reals_only,
                 dotprodsimp=dotprodsimp)[0]
 
-    def _eval_is_positive_definite(self, method="eigen"):
+    def _eval_is_positive_definite(self, method="eigen", dotprodsimp=None):
         """Algorithm dump for computing positive-definiteness of a
         matrix.
 
         Parameters
         ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         method : str, optional
             Specifies the method for computing positive-definiteness of
@@ -1702,7 +1707,7 @@ class MatrixEigen(MatrixSubspaces):
         """
         if self.is_hermitian:
             if method == 'eigen':
-                eigen = self.eigenvals()
+                eigen = self.eigenvals(dotprodsimp=dotprodsimp)
                 args = [x.is_positive for x in eigen.keys()]
                 return fuzzy_and(args)
 
@@ -1725,7 +1730,8 @@ class MatrixEigen(MatrixSubspaces):
 
         elif self.is_square:
             M_H = (self + self.H) / 2
-            return M_H._eval_is_positive_definite(method=method)
+            return M_H._eval_is_positive_definite(method=method,
+                    dotprodsimp=dotprodsimp)
 
     def is_positive_definite(self):
         return self._eval_is_positive_definite()
@@ -4018,6 +4024,11 @@ class MatrixBase(MatrixDeprecated,
         Further this ensures that all the diagonal entries of L are 1.
         A must be a Hermitian positive-definite matrix if hermitian is True,
         or a symmetric matrix otherwise.
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
