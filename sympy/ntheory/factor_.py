@@ -2397,13 +2397,13 @@ def is_semiperfect(n):
 
     subset = [[0 for i in range(n + 1)]for j in range(num_factors + 1)]
     for i in range(num_factors + 1):
-        subset[0][i]= True
+        subset[i][0]= True
     for i in range(1, n + 1):
         subset[0][i] = False
 
     for i in range(1, num_factors + 1):
         for j in range(1, n + 1):
-            if j < factors[i-1]:
+            if j < factors[i - 1]:
                 subset[i][j] = subset[i - 1][j]
             else:
                 subset[i][j] = subset[i - 1][j] or subset[i - 1][j - factors[i - 1]]
