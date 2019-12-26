@@ -1660,7 +1660,7 @@ class MatrixEigen(MatrixSubspaces):
         evals       = list(evals.keys())
         evecs       = []
         minors      = [self.minor_submatrix(i, i) for i in range(rows)]
-        minor_evals = [list(m.eigenvals().keys()) for m in minors]
+        minor_evals = [list(m.eigenvals(dotprodsimp=dotprodsimp).keys()) for m in minors]
 
         for i in range(rows):
             evec  = [self.zero] * rows
@@ -1672,12 +1672,12 @@ class MatrixEigen(MatrixSubspaces):
                 denom       = evali - evals[rows - 1] if i != rows - 1 else S.One
 
                 for k in range(rows - 1):
-                    numer = dps(numer * (evali - minor_evalj[k]))
+                    numer = numer * (evali - minor_evalj[k])
 
                     if k != i:
-                        denom = dps(denom * (evali - evals[k]))
+                        denom = denom * (evali - evals[k])
 
-                evec[j] = simplify(numer/denom)
+                evec[j] = simplify(numer / denom)
 
             evecs.append((evals[i], 1, [sympy.matrices.Matrix(rows, 1, evec)]))
 

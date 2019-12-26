@@ -467,6 +467,38 @@ def test_issue_17247_expression_blowup_20():
         [0,   0,     0, x + 1]]))
 
 
+def test_issue_18132_eigenvects_by_minors_1():
+    M = Matrix ([[1, 1, -1], [1, 3, 1], [-1, 1, 3]])
+    assert M.eigenvects_by_minors(dotprodsimp=True) == [(4, 1, [Matrix([
+        [                                    0],
+        [sqrt(2 - sqrt(2))*sqrt(sqrt(2) + 2)/2],
+        [sqrt(2 - sqrt(2))*sqrt(sqrt(2) + 2)/2]])]), (3, 1, [Matrix([
+        [                                     -sqrt(3)/3],
+        [-sqrt(3)*sqrt(-1 + sqrt(2))*sqrt(1 + sqrt(2))/3],
+        [ sqrt(3)*sqrt(-1 + sqrt(2))*sqrt(1 + sqrt(2))/3]])]), (0, 1, [Matrix([
+        [                                     sqrt(6)/3],
+        [-sqrt(3)*sqrt(2 - sqrt(2))*sqrt(sqrt(2) + 2)/6],
+        [ sqrt(3)*sqrt(2 - sqrt(2))*sqrt(sqrt(2) + 2)/6]])])]
+
+def test_issue_18132_eigenvects_by_minors_2():
+    M = Matrix ([[x, x, -x], [x, 3*x, x], [-x, x, 3*x]])
+    assert M.eigenvects_by_minors(dotprodsimp=True) == [(4*x, 1, [Matrix([
+        [        0],
+        [sqrt(2)/2],
+        [sqrt(2)/2]])]), (3*x, 1, [Matrix([
+        [-sqrt(3)/3],
+        [-sqrt(3)/3],
+        [ sqrt(3)/3]])]), (0, 1, [Matrix([
+        [                                     sqrt(6)/3],
+        [-sqrt(3)*sqrt(2 - sqrt(2))*sqrt(sqrt(2) + 2)/6],
+        [ sqrt(3)*sqrt(2 - sqrt(2))*sqrt(sqrt(2) + 2)/6]])])]
+
+@XFAIL
+def test_issue_18132_eigenvects_by_minors_3():
+    M = Matrix ([[1, 1, -1], [1, x, 1], [-1, 1, x]])
+    M.eigenvects_by_minors(dotprodsimp=True)
+
+
 def test_creation():
     raises(ValueError, lambda: Matrix(5, 5, range(20)))
     raises(ValueError, lambda: Matrix(5, -1, []))
