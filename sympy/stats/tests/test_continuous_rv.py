@@ -957,12 +957,13 @@ def test_reciprocal():
 
     X = Reciprocal('x', a, b)
     assert density(X)(x) == Piecewise((0, a > x), (1/(x*(-log(a) + log(b))), b >= x), (1, True))
+    assert cdf(X)(x) == (log(x) - log(a)) / (log(b) - log(a))
     X = Reciprocal('x', 5, 30)
 
     assert E(X) == 25/(log(30) - log(5))
     assert P(X < 4) == S.Zero
     assert P(X < 20) == log(20) / (log(30) - log(5)) - log(5) / (log(30) - log(5))
-
+    assert cdf(X)(10) == (log(10) - log(5)) / (log(30) - log(5))
 
 def test_shiftedgompertz():
     b = Symbol("b", positive=True)
