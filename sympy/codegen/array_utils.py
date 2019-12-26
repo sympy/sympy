@@ -86,14 +86,17 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         obj._shape = shape
         return obj
 
-    # XXX: Maybe __mul__ and __rmul__ should have some type checking. These
-    # methods were added because Expr no longer accepts non-Expr in __mul__.
-
     def __mul__(self, other):
-        return Mul(self, other)
+        if other == 1:
+            return self
+        else:
+            raise NotImplementedError("Product of N-dim arrays is not uniquely defined. Use another method.")
 
     def __rmul__(self, other):
-        return Mul(other, self)
+        if other == 1:
+            return self
+        else:
+            raise NotImplementedError("Product of N-dim arrays is not uniquely defined. Use another method.")
 
     @staticmethod
     def _validate(expr, *contraction_indices):
