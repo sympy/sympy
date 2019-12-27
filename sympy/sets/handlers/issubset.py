@@ -76,7 +76,27 @@ def is_subset_sets(a_range, b_finiteset): # noqa:F811
     if a_size > len(b_finiteset):
         return False
     else:
-        return fuzzy_and(b_finiteset.contains(x) for x in a_range)
+        # Checking A \ B == EmptySet is more efficient than repeated naïve
+        # membership checks on an arbitrary FiniteSet.
+        a_set = set([*a_range])
+        b_remaining = len(b_finiteset)
+        # Symbolic expressions and numbers of unknown type (integer or not) are
+        # all counted as "candidates", i.e. *potentially* matching some a in
+        # a_range.
+        cnt_candidate = 0
+        for b in b_finiteset:
+            if b.is_Integer:
+                a_set.discard(b)
+            elif fuzzy_not(b.is_integer):
+                pass
+            else:
+                cnt_candidate += 1
+            b_remaining -= 1
+            if len(a_set) > b_remaining + cnt_candidate:
+                return False
+            if len(a_set) == 0:
+                return True
+        return None
 
 @dispatch(Interval, Range)
 def is_subset_sets(a_interval, b_range): # noqa:F811
