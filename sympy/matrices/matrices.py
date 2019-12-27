@@ -1679,7 +1679,8 @@ class MatrixEigen(MatrixSubspaces):
 
                 evec[j] = simplify(numer / denom)
 
-            evecs.append((evals[i], 1, [sympy.matrices.Matrix(rows, 1, evec)]))
+            evecs.append((evali, 1, [sympy.matrices.ImmutableDenseMatrix(rows,
+                    1, evec)]))
 
         return evecs
 
@@ -1815,7 +1816,7 @@ class MatrixEigen(MatrixSubspaces):
                         if evbit is not None and negs & (1 << evbit):
                             elems[r] = -elems[r]
 
-                    return sympy.matrices.Matrix(rows, 1, elems)
+                    return sympy.matrices.ImmutableDenseMatrix(rows, 1, elems)
 
             raise MatrixError('Could not determine eigenvector')
 
