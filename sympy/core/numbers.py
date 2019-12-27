@@ -53,8 +53,6 @@ def comp(z1, z2, tol=None):
     >>> from sympy.core.numbers import comp, pi
     >>> pi4 = pi.n(4); pi4
     3.142
-    >>> comp(_, 3.142)
-    True
     >>> comp(pi4, 3.141)
     False
     >>> comp(pi4, 3.143)
