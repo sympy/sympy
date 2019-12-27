@@ -2120,7 +2120,7 @@ class MatrixEigen(MatrixSubspaces):
 
         return [(val, mult, [l.transpose() for l in basis]) for val, mult, basis in eigs]
 
-    def singular_values(self):
+    def singular_values(self, dotprodsimp=None):
         """Compute the singular values of a Matrix
 
         Examples
@@ -2139,9 +2139,11 @@ class MatrixEigen(MatrixSubspaces):
         """
         mat = self
         if self.rows >= self.cols:
-            valmultpairs = (mat.H * mat).eigenvals()
+            valmultpairs = mat.H.multiply(mat, dotprodsimp=dotprodsimp) \
+                    .eigenvals(dotprodsimp=dotprodsimp)
         else:
-            valmultpairs = (mat * mat.H).eigenvals()
+            valmultpairs = mat.multiply(mat.H, dotprodsimp=dotprodsimp) \
+                    .eigenvals(dotprodsimp=dotprodsimp)
 
         # Expands result from eigenvals into a simple list
         vals = []
