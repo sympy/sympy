@@ -375,7 +375,6 @@ def test_issue_13749():
 
 def test_issue_18133():
     assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
-    assert str(integrate(exp(x)/(1 + x)**2, x)) == Integral(exp(x)/(x + 1)**2, x)
 
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
