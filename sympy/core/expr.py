@@ -278,6 +278,8 @@ class Expr(Basic, EvalfMixin):
     @call_highest_priority('__rfloordiv__')
     def __floordiv__(self, other):
         from sympy.functions.elementary.integers import floor
+        if not isinstance(other, Expr):
+            return NotImplemented
         return floor(self / other)
 
     @_sympifyit('other', NotImplemented)
