@@ -1830,8 +1830,9 @@ class FiniteSet(Set, EvalfMixin):
         """
         Tests whether an element, other, is in the set.
 
-        Relies on Python's set class. This tests for object equality
-        All inputs are sympified
+        This tests for mathematical equality. (In the worst case
+        all elements of the set must be checked. The implementation
+        is not hash-based.)
 
         Examples
         ========
