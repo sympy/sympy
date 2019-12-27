@@ -76,7 +76,7 @@ def is_subset_sets(a_range, b_finiteset): # noqa:F811
     if a_size > len(b_finiteset):
         return False
     else:
-        # Checking A \ B == EmptySet is more efficient than repeated naïve
+        # Checking A \ B == EmptySet is more efficient than repeated naive
         # membership checks on an arbitrary FiniteSet.
         a_set = set([*a_range])
         b_remaining = len(b_finiteset)
