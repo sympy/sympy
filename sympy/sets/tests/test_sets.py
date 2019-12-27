@@ -311,6 +311,37 @@ def test_Complement():
     assert B3 - A2 == B3
 
 
+def test_set_operations_nonsets():
+    '''Tests that e.g. FiniteSet(1) * 2 raises TypeError'''
+    ops = [
+        lambda a, b: a + b,
+        lambda a, b: a - b,
+        lambda a, b: a * b,
+        lambda a, b: a / b,
+        lambda a, b: a // b,
+        # FiniteSet(1) ** 2 gives a ProductSet
+        #lambda a, b: a ** b,
+    ]
+    Sx = FiniteSet(x)
+    Sy = FiniteSet(y)
+    sets = [
+        FiniteSet(1),
+        Interval(1, 2),
+        Union(Sx, Interval(1, 2)),
+        Intersection(Sx, Sy),
+        Complement(Sx, Sy),
+        ProductSet(Sx, Sy),
+        S.EmptySet,
+    ]
+    nums = [0, 1, 2, S(0), S(1), S(2)]
+
+    for s in sets:
+        for n in nums:
+            for op in ops:
+                raises(TypeError, lambda : op(s, n))
+                raises(TypeError, lambda : op(n, s))
+
+
 def test_complement():
     assert Interval(0, 1).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))

@@ -8,7 +8,7 @@ from sympy.core.compatibility import (iterable, with_metaclass,
     ordered, range, PY3, reduce)
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
-from sympy.core.decorators import deprecated
+from sympy.core.decorators import deprecated, _sympifyit
 from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
@@ -625,31 +625,52 @@ class Set(Basic):
     def _measure(self):
         raise NotImplementedError("(%s)._measure" % self)
 
+    @_sympifyit('other', NotImplemented)
     def __add__(self, other):
+        if not isinstance(other, Set):
+            return NotImplemented
         return self.union(other)
 
+    @_sympifyit('other', NotImplemented)
     def __or__(self, other):
+        if not isinstance(other, Set):
+            return NotImplemented
         return self.union(other)
 
+    @_sympifyit('other', NotImplemented)
     def __and__(self, other):
+        if not isinstance(other, Set):
+            return NotImplemented
         return self.intersect(other)
 
+    @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
+        if not isinstance(other, Set):
+            return NotImplemented
         return ProductSet(self, other)
 
+    @_sympifyit('other', NotImplemented)
     def __xor__(self, other):
+        if not isinstance(other, Set):
+            return NotImplemented
         return SymmetricDifference(self, other)
 
+    @_sympifyit('exp', NotImplemented)
     def __pow__(self, exp):
-        if not (sympify(exp).is_Integer and exp >= 0):
+        if not isinstance(exp, Expr):
+            return NotImplemented
+        if not (exp.is_Integer and exp >= 0):
             raise ValueError("%s: Exponent must be a positive Integer" % exp)
         return ProductSet(*[self]*exp)
 
+    @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
+        if not isinstance(other, Set):
+            return NotImplemented
         return Complement(self, other)
 
     def __contains__(self, other):
-        other = sympify(other)
+        other = _sympify(other)
         c = self._contains(other)
         b = tfn[c]
         if b is None:
