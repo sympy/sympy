@@ -5338,8 +5338,7 @@ class MatrixBase(MatrixDeprecated,
                     raise NonInvertibleMatrixError("Matrix det == 0; not invertible. "
                     "Try ``self.gauss_jordan_solve(rhs)`` to obtain a parametric solution.")
             except ValueError:
-                # raise same error as in inv:
-                self.zeros(1).inv()
+                raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
             return soln
         elif method == 'LU':
             return self.LUsolve(rhs)
