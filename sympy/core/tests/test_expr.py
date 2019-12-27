@@ -165,6 +165,94 @@ def test_ibasic():
     assert dotest(s)
 
 
+class NonBasic(object):
+    '''This class represents an object that knows how to implement binary
+    operations like +, -, etc with Expr but is not a subclass of Basic itself.
+    The NonExpr subclass below does subclass Basic but not Expr.
+
+    For both NonBasic and NonExpr it should be possible for them to override
+    Expr.__add__ etc because Expr.__add__ should be returning NotImplemented
+    for non Expr classes. Otherwise Expr.__add__ would create meaningless
+    objects like Add(Integer(1), FiniteSet(2)) and it wouldn't be possible for
+    other classes to override these operations when interacting with Expr.
+    '''
+    def __add__(self, other):
+        return SpecialOp('+', self, other)
+
+    def __radd__(self, other):
+        return SpecialOp('+', other, self)
+
+    def __sub__(self, other):
+        return SpecialOp('-', self, other)
+
+    def __rsub__(self, other):
+        return SpecialOp('-', other, self)
+
+    def __mul__(self, other):
+        return SpecialOp('*', self, other)
+
+    def __rmul__(self, other):
+        return SpecialOp('*', other, self)
+
+    def __div__(self, other):
+        return SpecialOp('/', self, other)
+
+    def __rdiv__(self, other):
+        return SpecialOp('/', other, self)
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
+    def __floordiv__(self, other):
+        return SpecialOp('//', self, other)
+
+    def __rfloordiv__(self, other):
+        return SpecialOp('//', other, self)
+
+    def __pow__(self, other):
+        return SpecialOp('**', self, other)
+
+    def __rpow__(self, other):
+        return SpecialOp('**', other, self)
+
+
+class NonExpr(Basic, NonBasic):
+    '''Like NonBasic above except this is a subclass of Basic but not Expr'''
+    pass
+
+
+class SpecialOp(Basic):
+    '''Represents the results of operations with NonBasic and NonExpr'''
+    def __new__(cls, op, arg1, arg2):
+        return Basic.__new__(cls, op, arg1, arg2)
+
+
+def test_cooperative_operations():
+    '''Tests that Expr allows binary operations to be overridden by non-Expr
+    objects when interacting with Expr instances.'''
+    e = Expr()
+    for ne in [NonBasic(), NonExpr()]:
+        ne = NonExpr()
+
+        results = [
+            (ne + e, ('+', ne, e)),
+            (e + ne, ('+', e, ne)),
+            (ne - e, ('-', ne, e)),
+            (e - ne, ('-', e, ne)),
+            (ne * e, ('*', ne, e)),
+            (e * ne, ('*', e, ne)),
+            (ne / e, ('/', ne, e)),
+            (e / ne, ('/', e, ne)),
+            (ne // e, ('//', ne, e)),
+            (e // ne, ('//', e, ne)),
+            (ne ** e, ('**', ne, e)),
+            (e ** ne, ('**', e, ne)),
+        ]
+
+        for res, args in results:
+            assert type(res) is SpecialOp and res.args == args
+
+
 def test_relational():
     from sympy import Lt
     assert (pi < 3) is S.false
