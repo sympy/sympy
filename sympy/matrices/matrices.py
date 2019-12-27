@@ -2137,12 +2137,12 @@ class MatrixEigen(MatrixSubspaces):
 
         condition_number
         """
-        mat = self
+
         if self.rows >= self.cols:
-            valmultpairs = mat.H.multiply(mat, dotprodsimp=dotprodsimp) \
+            valmultpairs = self.H.multiply(self, dotprodsimp=dotprodsimp) \
                     .eigenvals(dotprodsimp=dotprodsimp)
         else:
-            valmultpairs = mat.multiply(mat.H, dotprodsimp=dotprodsimp) \
+            valmultpairs = self.multiply(self.H, dotprodsimp=dotprodsimp) \
                     .eigenvals(dotprodsimp=dotprodsimp)
 
         # Expands result from eigenvals into a simple list
@@ -3073,10 +3073,18 @@ class MatrixBase(MatrixDeprecated,
             raise ValueError("Matrix must be symmetric.")
         return self._cholesky(hermitian=hermitian)
 
-    def condition_number(self):
+    def condition_number(self, dotprodsimp=None):
         """Returns the condition number of a matrix.
 
         This is the maximum singular value divided by the minimum singular value
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -3091,9 +3099,10 @@ class MatrixBase(MatrixDeprecated,
 
         singular_values
         """
+
         if not self:
             return self.zero
-        singularvalues = self.singular_values()
+        singularvalues = self.singular_values(dotprodsimp=dotprodsimp)
         return Max(*singularvalues) / Min(*singularvalues)
 
     def copy(self):
