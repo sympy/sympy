@@ -209,11 +209,35 @@ class NonBasic(object):
     def __rfloordiv__(self, other):
         return SpecialOp('//', other, self)
 
+    def __mod__(self, other):
+        return SpecialOp('%', self, other)
+
+    def __rmod__(self, other):
+        return SpecialOp('%', other, self)
+
+    def __divmod__(self, other):
+        return SpecialOp('divmod', self, other)
+
+    def __rdivmod__(self, other):
+        return SpecialOp('divmod', other, self)
+
     def __pow__(self, other):
         return SpecialOp('**', self, other)
 
     def __rpow__(self, other):
         return SpecialOp('**', other, self)
+
+    def __lt__(self, other):
+        return SpecialOp('<', self, other)
+
+    def __gt__(self, other):
+        return SpecialOp('>', self, other)
+
+    def __le__(self, other):
+        return SpecialOp('<=', self, other)
+
+    def __ge__(self, other):
+        return SpecialOp('>=', self, other)
 
 
 class NonExpr(Basic, NonBasic):
@@ -227,30 +251,94 @@ class SpecialOp(Basic):
         return Basic.__new__(cls, op, arg1, arg2)
 
 
+class NonArithmetic(Basic):
+    '''Represents a Basic subclass that does not support arithmetic operations'''
+    pass
+
+
 def test_cooperative_operations():
     '''Tests that Expr allows binary operations to be overridden by non-Expr
     objects when interacting with Expr instances.'''
-    e = Expr()
-    for ne in [NonBasic(), NonExpr()]:
-        ne = NonExpr()
+    exprs = [
+        Expr(),
+        S.Zero,
+        S.One,
+        S.Infinity,
+        S.NegativeInfinity,
+        S.ComplexInfinity,
+        S.Half,
+        Float(0.5),
+        Integer(2),
+        Symbol('x'),
+        Mul(2, Symbol('x')),
+        Add(2, Symbol('x')),
+        Pow(2, Symbol('x')),
+    ]
 
-        results = [
-            (ne + e, ('+', ne, e)),
-            (e + ne, ('+', e, ne)),
-            (ne - e, ('-', ne, e)),
-            (e - ne, ('-', e, ne)),
-            (ne * e, ('*', ne, e)),
-            (e * ne, ('*', e, ne)),
-            (ne / e, ('/', ne, e)),
-            (e / ne, ('/', e, ne)),
-            (ne // e, ('//', ne, e)),
-            (e // ne, ('//', e, ne)),
-            (ne ** e, ('**', ne, e)),
-            (e ** ne, ('**', e, ne)),
-        ]
+    for e in exprs:
+        # Test that these classes can override airthmetic operations in
+        # combination with various Expr types.
+        for ne in [NonBasic(), NonExpr()]:
+            ne = NonExpr()
 
-        for res, args in results:
-            assert type(res) is SpecialOp and res.args == args
+            results = [
+                (ne + e, ('+', ne, e)),
+                (e + ne, ('+', e, ne)),
+                (ne - e, ('-', ne, e)),
+                (e - ne, ('-', e, ne)),
+                (ne * e, ('*', ne, e)),
+                (e * ne, ('*', e, ne)),
+                (ne / e, ('/', ne, e)),
+                (e / ne, ('/', e, ne)),
+                (ne // e, ('//', ne, e)),
+                (e // ne, ('//', e, ne)),
+                (ne % e, ('%', ne, e)),
+                (e % ne, ('%', e, ne)),
+                (divmod(ne, e), ('divmod', ne, e)),
+                (divmod(e, ne), ('divmod', e, ne)),
+                (ne ** e, ('**', ne, e)),
+                (e ** ne, ('**', e, ne)),
+                (e < ne, ('>', ne, e)),
+                (ne < e, ('<', ne, e)),
+                (e > ne, ('<', ne, e)),
+                (ne > e, ('>', ne, e)),
+                (e <= ne, ('>=', ne, e)),
+                (ne <= e, ('<=', ne, e)),
+                (e >= ne, ('<=', ne, e)),
+                (ne >= e, ('>=', ne, e)),
+            ]
+
+            for res, args in results:
+                assert type(res) is SpecialOp and res.args == args
+
+        # This class does not support arithmetic operations. Every operation
+        # should raise in combination with any of the Expr types.
+        na = NonArithmetic()
+
+        raises(TypeError, lambda : e + na)
+        raises(TypeError, lambda : na + e)
+        raises(TypeError, lambda : e - na)
+        raises(TypeError, lambda : na - e)
+        raises(TypeError, lambda : e * na)
+        raises(TypeError, lambda : na * e)
+        raises(TypeError, lambda : e / na)
+        raises(TypeError, lambda : na / e)
+        raises(TypeError, lambda : e // na)
+        raises(TypeError, lambda : na // e)
+        raises(TypeError, lambda : e % na)
+        raises(TypeError, lambda : na % e)
+        raises(TypeError, lambda : divmod(e, na))
+        raises(TypeError, lambda : divmod(na, e))
+        raises(TypeError, lambda : e ** na)
+        raises(TypeError, lambda : na ** e)
+        raises(TypeError, lambda : e > na)
+        raises(TypeError, lambda : na > e)
+        raises(TypeError, lambda : e < na)
+        raises(TypeError, lambda : na < e)
+        raises(TypeError, lambda : e >= na)
+        raises(TypeError, lambda : na >= e)
+        raises(TypeError, lambda : e <= na)
+        raises(TypeError, lambda : na <= e)
 
 
 def test_relational():
