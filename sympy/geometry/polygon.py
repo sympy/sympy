@@ -108,7 +108,7 @@ class Polygon(GeometrySet):
     Point2D(0, 1)
 
     """
-	
+
     def __new__(cls, *args, **kwargs):
         if len(args) == 0:
             msg = "No points provided"
