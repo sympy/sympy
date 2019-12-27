@@ -799,8 +799,7 @@ class MatrixReductions(MatrixDeterminant):
             speed up calculation.
 
         """
-        rows, cols = self.rows, self.cols
-        mat = list(self)
+
         def get_col(i):
             return mat[i::cols]
 
@@ -812,13 +811,15 @@ class MatrixReductions(MatrixDeterminant):
             """Does the row op row[i] = a*row[i] - b*row[j]"""
             q = (j - i)*cols
             for p in range(i*cols, (i + 1)*cols):
-                m = a*mat[p] - b*mat[p + q]
-                mat[p] = _dotprodsimp(m) if dotprodsimp else m
+                mat[p] = dps(a*mat[p] - b*mat[p + q])
 
         dps = _dotprodsimp if dotprodsimp else lambda e: e
+        rows, cols = self.rows, self.cols
+        mat = list(self)
         piv_row, piv_col = 0, 0
         pivot_cols = []
         swaps = []
+
         # use a fraction free method to zero above and below each pivot
         while piv_col < cols and piv_row < rows:
             pivot_offset, pivot_val, \
@@ -2079,7 +2080,8 @@ class MatrixEigen(MatrixSubspaces):
                 # of any other generalized eigenvectors from a different
                 # generalized eigenspace sharing the same eigenvalue.
                 vec = pick_vec(null_small + eig_basis, null_big)
-                new_vecs = [(eig_mat(eig, i))*vec for i in range(size)]
+                new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=dotprodsimp)
+                        for i in range(size)]
                 eig_basis.extend(new_vecs)
                 jordan_basis.extend(reversed(new_vecs))
 
