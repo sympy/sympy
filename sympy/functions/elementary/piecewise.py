@@ -19,6 +19,8 @@ class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
     def __new__(cls, expr, cond):
+        if expr is None:
+            return
         expr = as_Basic(expr)
         if cond == True:
             return Tuple.__new__(cls, expr, true)
@@ -128,6 +130,8 @@ class Piecewise(Function):
         for ec in args:
             # ec could be a ExprCondPair or a tuple
             pair = ExprCondPair(*getattr(ec, 'args', ec))
+            if pair is None:
+                continue
             cond = pair.cond
             if cond is false:
                 continue
