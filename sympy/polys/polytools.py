@@ -4043,7 +4043,7 @@ class Poly(Expr):
             try:
                 g = f.__class__(g, *f.gens)
             except PolynomialError:
-                return f.as_expr()*g
+                return NotImplemented
 
         return f.mul(g)
 
