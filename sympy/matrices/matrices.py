@@ -5325,7 +5325,7 @@ class MatrixBase(MatrixDeprecated,
             t = self.H
             return (t * self).solve(t * rhs, method=method)
 
-    def solve(self, rhs, method='GJ'):
+    def solve(self, rhs, method='GJ', dotprodsimp=None):
         """Solves linear equation where the unique solution exists.
 
         Parameters
@@ -5355,6 +5355,11 @@ class MatrixBase(MatrixDeprecated,
            To use a different method and to compute the solution via the
            inverse, use a method defined in the .inv() docstring.
 
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+
         Returns
         =======
 
@@ -5374,7 +5379,7 @@ class MatrixBase(MatrixDeprecated,
 
         if method == 'GJ':
             try:
-                soln, param = self.gauss_jordan_solve(rhs)
+                soln, param = self.gauss_jordan_solve(rhs, dotprodsimp=dotprodsimp)
                 if param:
                     raise NonInvertibleMatrixError("Matrix det == 0; not invertible. "
                     "Try ``self.gauss_jordan_solve(rhs)`` to obtain a parametric solution.")
@@ -5382,17 +5387,18 @@ class MatrixBase(MatrixDeprecated,
                 raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
             return soln
         elif method == 'LU':
-            return self.LUsolve(rhs)
+            return self.LUsolve(rhs, dotprodsimp=dotprodsimp)
         elif method == 'CH':
-            return self.cholesky_solve(rhs)
+            return self.cholesky_solve(rhs, dotprodsimp=dotprodsimp)
         elif method == 'QR':
             return self.QRsolve(rhs)
         elif method == 'LDL':
-            return self.LDLsolve(rhs)
+            return self.LDLsolve(rhs, dotprodsimp=dotprodsimp)
         elif method == 'PINV':
             return self.pinv_solve(rhs)
         else:
-            return self.inv(method=method)*rhs
+            return self.inv(method=method, dotprodsimp=dotprodsimp) \
+                    .multiply(rhs, dotprodsimp=dotprodsimp)
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
               colsep=', ', align='right'):

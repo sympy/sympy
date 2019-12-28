@@ -966,7 +966,7 @@ class SparseMatrix(MatrixBase):
         t = self.T
         return (t*self).inv(method=method)*t*rhs
 
-    def solve(self, rhs, method='LDL'):
+    def solve(self, rhs, method='LDL', dotprodsimp=None):
         """Return solution to self*soln = rhs using given inversion method.
 
         For a list of possible inversion methods, see the .inv() docstring.
@@ -978,7 +978,8 @@ class SparseMatrix(MatrixBase):
                 raise ValueError('For over-determined system, M, having '
                     'more rows than columns, try M.solve_least_squares(rhs).')
         else:
-            return self.inv(method=method)*rhs
+            return self.inv(method=method, dotprodsimp=dotprodsimp) \
+                    .multiply(rhs, dotprodsimp=dotprodsimp)
 
     RL = property(row_list, None, None, "Alternate faster representation")
 
