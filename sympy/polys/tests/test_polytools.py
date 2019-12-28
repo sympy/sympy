@@ -61,7 +61,7 @@ from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
-from sympy import MatrixSymbol
+from sympy import MatrixSymbol, Matrix
 
 def _epsilon_eq(a, b):
     for u, v in zip(a, b):
@@ -3313,3 +3313,9 @@ def test_issue_15669():
     expr = (16*x**3/(-x**2 + sqrt(8*x**2 + (x**2 - 2)**2) + 2)**2 -
         2*2**Rational(4, 5)*x*(-x**2 + sqrt(8*x**2 + (x**2 - 2)**2) + 2)**Rational(3, 5) + 10*x)
     assert factor(expr, deep=True) == x*(x**2 + 2)
+
+def test_issue_17988():
+    x = Symbol('x')
+    p = poly(x - 1)
+    M = Matrix([[poly(x + 1), poly(x + 1)]])
+    assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])    
