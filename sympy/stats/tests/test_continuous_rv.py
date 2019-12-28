@@ -916,13 +916,14 @@ def test_PowerFunction():
     assert density(X)(z) == (-2*a + 2*z)/(-a + b)**2
     assert cdf(X)(z) == Piecewise((a**2/(a**2 - 2*a*b + b**2) -
         2*a*z/(a**2 - 2*a*b + b**2) + z**2/(a**2 - 2*a*b + b**2), a <= z), (0, True))
+    assert simplify(variance(X)) == a**2/18 - a*b/9 + b**2/18
+    assert simplify(E(X)) == a/3 + 2*b/3
 
     X = PowerFunction('X', 2, 0, 1)
     assert density(X)(z) == 2*z
     assert cdf(X)(z) == Piecewise((z**2, z >= 0), (0,True))
     assert E(X) == Rational(2,3)
     assert P(X < 0) == 0
-    assert P(X < 1/2) == Rational(1,4)
     assert P(X < 1) == 1
 
 
