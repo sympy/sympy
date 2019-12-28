@@ -10,6 +10,7 @@ from __future__ import print_function, division
 from functools import wraps
 from .sympify import SympifyError, sympify
 from sympy.core.compatibility import get_function_code
+from sympy.core import Basic
 
 
 def deprecated(**decorator_kwargs):
@@ -86,7 +87,7 @@ def __sympifyit(func, arg, retval=None):
             try:
                 # If an external class has _op_priority, it knows how to deal
                 # with sympy objects. Otherwise, it must be converted.
-                if not hasattr(b, '_op_priority'):
+                if not isinstance(b, Basic):
                     b = sympify(b, strict=True)
                 return func(a, b)
             except SympifyError:
