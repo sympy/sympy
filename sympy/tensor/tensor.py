@@ -2538,9 +2538,14 @@ class TensAdd(TensExpr, AssocOp):
     def _eval_rewrite_as_Indexed(self, *args):
         return Add.fromiter(args)
 
-    def _eval_derivative(self, s):
+    def _eval_partial_derivative(self, s):
         # Evaluation like Add
-        return self.func(*[a.diff(s) for a in self.args])
+        # TODO: what about if s is a tensor and a no tensor expression?
+        my_diffs = [a._eval_partial_derivative(s)
+                    if isinstance(a, TensExpr) else a.diff(s)
+                    for a in self.args]
+
+        return self.func(*my_diffs) #self.func(*[a._eval_partial_derivative(s) for a in self.args])
 
 class Tensor(TensExpr):
     """
@@ -2919,44 +2924,48 @@ class Tensor(TensExpr):
         expr = Indexed(tens.args[0], *index_symbols)
         return self._check_add_Sum(expr, index_symbols)
 
-    def _eval_derivative(self, s):
-
-        (selfhead, selffreeindices) = self.args
-        (otherhead, otherfreeindices) = s.args
-
-        # @a_i/@a_k = delta_i^k
-        # @a_i/@a^k = g_ij delta^j_k
-        # @a^i/@a^k = delta^i_k
-        # @a^i/@a_k = g^ij delta_j^k
-        # TODO: if there is no metric present, the derivative should be zero?
-
-        if selfhead is otherhead:
-            # if heads are the same, provide delta and/or metric products
-            # for every free index pair in the appropriate tensor
-            # assumed that the free indices are in proper order
-            # A contravariante index in the derivative becomes covariant
-            # after performing the derivative and vice versa
-
-            mykroneckerdeltas = []
-            for (iself, iother) in zip(selffreeindices, otherfreeindices):
-                if iself.tensor_index_type is not iother.tensor_index_type:
-                    raise ValueError("index types not compatible")
-                else:
-                    mytensorindextype = iself.tensor_index_type
-                    mytensormetric = mytensorindextype.metric
-                    kroneckerdelta = None
-                    if iself.is_up == iother.is_up:
-                        kroneckerdelta = mytensorindextype.delta(iself, -iother)
-                    else:
-                        dummy = TensorIndex('dummy', mytensorindextype,
-                                            is_up=iself.is_up)
-                        kroneckerdelta = mytensormetric(iself, dummy)\
-                                         * mytensorindextype.delta(-dummy,
-                                                                   -iother)
-                    mykroneckerdeltas.append(kroneckerdelta)
-            return TensMul.fromiter(mykroneckerdeltas)
-        else:
+    def _eval_partial_derivative(self, s):
+        if not isinstance(s, Tensor):
+            # at this stage, `s` should be tensor or the
+            # derivative vanishes
             return S.Zero
+        else:
+            (selfhead, selffreeindices) = self.args
+            (otherhead, otherfreeindices) = s.args
+
+            # @a_i/@a_k = delta_i^k
+            # @a_i/@a^k = g_ij delta^j_k
+            # @a^i/@a^k = delta^i_k
+            # @a^i/@a_k = g^ij delta_j^k
+            # TODO: if there is no metric present, the derivative should be zero?
+
+            if selfhead is otherhead:
+                # if heads are the same, provide delta and/or metric products
+                # for every free index pair in the appropriate tensor
+                # assumed that the free indices are in proper order
+                # A contravariante index in the derivative becomes covariant
+                # after performing the derivative and vice versa
+
+                mykroneckerdeltas = []
+                for (iself, iother) in zip(selffreeindices, otherfreeindices):
+                    if iself.tensor_index_type is not iother.tensor_index_type:
+                        raise ValueError("index types not compatible")
+                    else:
+                        mytensorindextype = iself.tensor_index_type
+                        mytensormetric = mytensorindextype.metric
+                        kroneckerdelta = None
+                        if iself.is_up == iother.is_up:
+                            kroneckerdelta = mytensorindextype.delta(iself, -iother)
+                        else:
+                            dummy = TensorIndex('dummy', mytensorindextype,
+                                                is_up=iself.is_up)
+                            kroneckerdelta = mytensormetric(iself, dummy)\
+                                             * mytensorindextype.delta(-dummy,
+                                                                       -iother)
+                        mykroneckerdeltas.append(kroneckerdelta)
+                return TensMul.fromiter(mykroneckerdeltas)
+            else:
+                return S.Zero
 
 
 class TensMul(TensExpr, AssocOp):
@@ -3714,12 +3723,19 @@ class TensMul(TensExpr, AssocOp):
         expr = Mul.fromiter(args)
         return self._check_add_Sum(expr, index_symbols)
 
-    def _eval_derivative(self, s):
+    def _eval_partial_derivative(self, s):
         # Evaluation like Mul
         args = list(self.args)
         terms = []
         for i in range(len(args)):
-            d = args[i].diff(s)
+            myarg = args[i]
+            d = S.Zero
+            # checking whether some tensor instance is differentiated
+            # or some other thing is necessary, but ugly
+            if isinstance(myarg, TensExpr):
+                d = args[i]._eval_partial_derivative(s)
+            else:
+                d = args[i].diff(s)
             if d:
                 terms.append(TensMul(*(args[:i] + [d] + args[i + 1:])))
         return TensAdd.fromiter(terms)
@@ -3800,6 +3816,38 @@ class TensorElement(TensExpr):
         ret_indices = [i for i in ret_indices if i not in index_map]
         array = array.__getitem__(slice_tuple)
         return ret_indices, array
+
+
+class TensPartialDerivative(TensExpr):
+    def __new__(cls, expr, v):
+        obj = TensExpr.__new__(cls, expr, v)
+        obj._expr = expr
+        obj._v = v
+        return obj
+
+    @property
+    def expr(self):
+        return self._expr
+
+    @property
+    def v(self):
+        return self._v
+
+    def get_indices(self):
+        pass
+
+    def doit(self, **kwargs):
+        expr, v = self.expr, self.v
+        #if isinstance(expr, TensMul):
+        #    ... code for TensMul expr being derived by v ...
+        #    return result
+        #elif isinstance(expr, TensAdd):
+        #    ... code for TensAdd expr being derived by v ...
+        #    return result
+        #elif isinstance(expr, Tensor):
+        #    ... code for TensAdd expr being derived by v ...
+        #    return result
+        return expr._eval_partial_derivative(v)
 
 
 def canon_bp(p):
