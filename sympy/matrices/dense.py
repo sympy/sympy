@@ -129,7 +129,7 @@ class DenseMatrix(MatrixBase):
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
-    def _cholesky(self, hermitian=True):
+    def _cholesky(self, hermitian=True, dotprodsimp=None):
         """Helper function of cholesky.
         Without the error checks.
         To be used privately.
@@ -137,13 +137,14 @@ class DenseMatrix(MatrixBase):
         Returns L such that L*L.H == self if hermitian flag is True,
         or L*L.T == self if hermitian is False.
         """
+        dps = _dotprodsimp if dotprodsimp else expand_mul
         L = zeros(self.rows, self.rows)
         if hermitian:
             for i in range(self.rows):
                 for j in range(i):
-                    L[i, j] = (1 / L[j, j])*expand_mul(self[i, j] -
-                        sum(L[i, k]*L[j, k].conjugate() for k in range(j)))
-                Lii2 = expand_mul(self[i, i] -
+                    L[i, j] = dps((1 / L[j, j])*(self[i, j] -
+                        sum(L[i, k]*L[j, k].conjugate() for k in range(j))))
+                Lii2 = dps(self[i, i] -
                     sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
                 if Lii2.is_positive is False:
                     raise NonPositiveDefiniteMatrixError(
@@ -152,9 +153,9 @@ class DenseMatrix(MatrixBase):
         else:
             for i in range(self.rows):
                 for j in range(i):
-                    L[i, j] = (1 / L[j, j])*expand_mul(self[i, j] -
-                        sum(L[i, k]*L[j, k] for k in range(j)))
-                L[i, i] = sqrt(expand_mul(self[i, i] -
+                    L[i, j] = dps((1 / L[j, j])*(self[i, j] -
+                        sum(L[i, k]*L[j, k] for k in range(j))))
+                L[i, i] = sqrt(dps(self[i, i] -
                     sum(L[i, k]**2 for k in range(i))))
         return self._new(L)
 

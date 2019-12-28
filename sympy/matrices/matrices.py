@@ -2974,11 +2974,19 @@ class MatrixBase(MatrixDeprecated,
         """Return self + b """
         return self + b
 
-    def cholesky_solve(self, rhs):
+    def cholesky_solve(self, rhs, dotprodsimp=None):
         """Solves ``Ax = B`` using Cholesky decomposition,
         for a general square non-singular matrix.
         For a non-square matrix with rows > cols,
         the least squares solution is returned.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -2995,28 +3003,36 @@ class MatrixBase(MatrixDeprecated,
         hermitian = True
         if self.is_symmetric():
             hermitian = False
-            L = self._cholesky(hermitian=hermitian)
+            L = self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
         elif self.is_hermitian:
-            L = self._cholesky(hermitian=hermitian)
+            L = self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
         elif self.rows >= self.cols:
-            L = (self.H * self)._cholesky(hermitian=hermitian)
+            L = (self.H * self)._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
             rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs)
+        Y = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
         if hermitian:
-            return (L.H)._upper_triangular_solve(Y)
+            return (L.H)._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
         else:
-            return (L.T)._upper_triangular_solve(Y)
+            return (L.T)._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
 
-    def cholesky(self, hermitian=True):
+    def cholesky(self, hermitian=True, dotprodsimp=None):
         """Returns the Cholesky-type decomposition L of a matrix A
         such that L * L.H == A if hermitian flag is True,
         or L * L.T == A if hermitian is False.
 
         A must be a Hermitian positive-definite matrix if hermitian is True,
         or a symmetric matrix if it is False.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -3073,7 +3089,7 @@ class MatrixBase(MatrixDeprecated,
             raise ValueError("Matrix must be Hermitian.")
         if not hermitian and not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
-        return self._cholesky(hermitian=hermitian)
+        return self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
 
     def condition_number(self, dotprodsimp=None):
         """Returns the condition number of a matrix.

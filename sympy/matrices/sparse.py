@@ -8,6 +8,7 @@ from sympy.core.compatibility import Callable, as_int, is_sequence, range, \
     reduce
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
+from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -287,7 +288,7 @@ class SparseMatrix(MatrixBase):
 
     def _cholesky_sparse(self, dotprodsimp=None):
         """Algorithm for numeric Cholesky factorization of a sparse matrix."""
-        dps = _dotprodsimp if dotprodsimp else lambda x: x
+        dps = _dotprodsimp if dotprodsimp else expand_mul
         Crowstruc = self.row_structure_symbolic_cholesky()
         C = self.zeros(self.rows)
         for i in range(len(Crowstruc)):
