@@ -257,8 +257,15 @@ class NonArithmetic(Basic):
 
 
 def test_cooperative_operations():
-    '''Tests that Expr allows binary operations to be overridden by non-Expr
-    objects when interacting with Expr instances.'''
+    '''Tests that Expr uses binary operations cooperatively.
+
+    In particular it should be possible for non-Expr classes to override
+    binary operators like +, - etc when used with Expr instances. This should
+    work for non-Expr classes whether they are Basic subclasses or not. Also
+    non-Expr classes that do not define binary operators with Expr should give
+    TypeError.
+    '''
+    # A bunch of instances of Expr subclasses
     exprs = [
         Expr(),
         S.Zero,
@@ -276,7 +283,7 @@ def test_cooperative_operations():
     ]
 
     for e in exprs:
-        # Test that these classes can override airthmetic operations in
+        # Test that these classes can override arithmetic operations in
         # combination with various Expr types.
         for ne in [NonBasic(), NonExpr()]:
             ne = NonExpr()
@@ -311,36 +318,36 @@ def test_cooperative_operations():
             for res, args in results:
                 assert type(res) is SpecialOp and res.args == args
 
-        # This class does not support arithmetic operations. Every operation
-        # should raise in combination with any of the Expr types.
-        na = NonArithmetic()
+        # These classes do not support binary operators with Expr. Every
+        # operation should raise in combination with any of the Expr types.
+        for na in [NonArithmetic(), object()]:
 
-        raises(TypeError, lambda : e + na)
-        raises(TypeError, lambda : na + e)
-        raises(TypeError, lambda : e - na)
-        raises(TypeError, lambda : na - e)
-        raises(TypeError, lambda : e * na)
-        raises(TypeError, lambda : na * e)
-        raises(TypeError, lambda : e / na)
-        raises(TypeError, lambda : na / e)
-        raises(TypeError, lambda : e // na)
-        raises(TypeError, lambda : na // e)
-        raises(TypeError, lambda : e % na)
-        raises(TypeError, lambda : na % e)
-        raises(TypeError, lambda : divmod(e, na))
-        raises(TypeError, lambda : divmod(na, e))
-        raises(TypeError, lambda : e ** na)
-        raises(TypeError, lambda : na ** e)
-        # XXX: Remove the if when PY2 support is dropped:
-        if PY3:
-            raises(TypeError, lambda : e > na)
-            raises(TypeError, lambda : na > e)
-            raises(TypeError, lambda : e < na)
-            raises(TypeError, lambda : na < e)
-            raises(TypeError, lambda : e >= na)
-            raises(TypeError, lambda : na >= e)
-            raises(TypeError, lambda : e <= na)
-            raises(TypeError, lambda : na <= e)
+            raises(TypeError, lambda : e + na)
+            raises(TypeError, lambda : na + e)
+            raises(TypeError, lambda : e - na)
+            raises(TypeError, lambda : na - e)
+            raises(TypeError, lambda : e * na)
+            raises(TypeError, lambda : na * e)
+            raises(TypeError, lambda : e / na)
+            raises(TypeError, lambda : na / e)
+            raises(TypeError, lambda : e // na)
+            raises(TypeError, lambda : na // e)
+            raises(TypeError, lambda : e % na)
+            raises(TypeError, lambda : na % e)
+            raises(TypeError, lambda : divmod(e, na))
+            raises(TypeError, lambda : divmod(na, e))
+            raises(TypeError, lambda : e ** na)
+            raises(TypeError, lambda : na ** e)
+            # XXX: Remove the if when PY2 support is dropped:
+            if PY3:
+                raises(TypeError, lambda : e > na)
+                raises(TypeError, lambda : na > e)
+                raises(TypeError, lambda : e < na)
+                raises(TypeError, lambda : na < e)
+                raises(TypeError, lambda : e >= na)
+                raises(TypeError, lambda : na >= e)
+                raises(TypeError, lambda : e <= na)
+                raises(TypeError, lambda : na <= e)
 
 
 def test_relational():
