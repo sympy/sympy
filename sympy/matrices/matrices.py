@@ -3578,7 +3578,7 @@ class MatrixBase(MatrixDeprecated,
 
         return ret
 
-    def gauss_jordan_solve(self, B, freevar=False):
+    def gauss_jordan_solve(self, B, freevar=False, dotprodsimp=None):
         """
         Solves ``Ax = B`` using Gauss Jordan elimination.
 
@@ -3600,6 +3600,11 @@ class MatrixBase(MatrixDeprecated,
             values of free variables. Then the index of the free variables
             in the solutions (column Matrix) will be returned by freevar, if
             the flag `freevar` is set to `True`.
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Returns
         =======
@@ -3689,7 +3694,7 @@ class MatrixBase(MatrixDeprecated,
         row, col = aug[:, :-B_cols].shape
 
         # solve by reduced row echelon form
-        A, pivots = aug.rref(simplify=True)
+        A, pivots = aug.rref(simplify=True, dotprodsimp=dotprodsimp)
         A, v = A[:, :-B_cols], A[:, -B_cols:]
         pivots = list(filter(lambda p: p < col, pivots))
         rank = len(pivots)
