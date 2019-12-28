@@ -364,7 +364,7 @@ class SparseMatrix(MatrixBase):
         if not sym:
             t = M.T
             r1 = M[0, :]
-            M = t*M
+            M = t.multiply(M, dotprodsimp=dotprodsimp)
             I = t*I
         method = kwargs.get('method', 'LDL')
         if method == "LDL":
