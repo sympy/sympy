@@ -366,7 +366,7 @@ class Expr(Basic, EvalfMixin):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s %s %s" % (self, op, other))
+            return NotImplemented
 
         if not isinstance(other, Expr):
             return NotImplemented

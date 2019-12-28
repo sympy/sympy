@@ -286,7 +286,6 @@ def test_cooperative_operations():
         # Test that these classes can override arithmetic operations in
         # combination with various Expr types.
         for ne in [NonBasic(), NonExpr()]:
-            ne = NonExpr()
 
             results = [
                 (ne + e, ('+', ne, e)),

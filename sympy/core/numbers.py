@@ -1421,7 +1421,7 @@ class Float(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
+            return NotImplemented
         if other.is_Rational:
             # test self*other.q <?> other.p without losing precision
             '''
@@ -1916,7 +1916,7 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
+            return NotImplemented
         if other.is_Number:
             op = None
             s, o = self, other
@@ -2252,7 +2252,7 @@ class Integer(Rational):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
+            return NotImplemented
         if other.is_Integer:
             return _sympify(self.p > other.p)
         return Rational.__gt__(self, other)
@@ -2261,7 +2261,7 @@ class Integer(Rational):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
+            return NotImplemented
         if other.is_Integer:
             return _sympify(self.p < other.p)
         return Rational.__lt__(self, other)
@@ -2270,7 +2270,7 @@ class Integer(Rational):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
+            return NotImplemented
         if other.is_Integer:
             return _sympify(self.p >= other.p)
         return Rational.__ge__(self, other)
@@ -2279,7 +2279,7 @@ class Integer(Rational):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
+            return NotImplemented
         if other.is_Integer:
             return _sympify(self.p <= other.p)
         return Rational.__le__(self, other)
