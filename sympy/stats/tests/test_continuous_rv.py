@@ -914,7 +914,7 @@ def test_PowerFunction():
 
     X = PowerFunction('X', 2, a, b)
     assert density(X)(z) == (-2*a + 2*z)/(-a + b)**2
-    assert cdf(X)(z) == Piecewise((a**2/(a**2 - 2*a*b + b**2) - 
+    assert cdf(X)(z) == Piecewise((a**2/(a**2 - 2*a*b + b**2) -
         2*a*z/(a**2 - 2*a*b + b**2) + z**2/(a**2 - 2*a*b + b**2), a <= z), (0, True))
 
     X = PowerFunction('X', 2, 0, 1)
@@ -937,7 +937,7 @@ def test_raised_cosine():
            Piecewise((exp(-I*pi*mu/s)/2, Eq(x, -pi/s)), (exp(I*pi*mu/s)/2, Eq(x, pi/s)), (pi**2*exp(I*mu*x)*sin(s*x)/(s*x*(-s**2*x**2 + pi**2)), True))
 
     assert density(X)(x) == (Piecewise(((cos(pi*(x - mu)/s) + 1)/(2*s),
-                          And(x <= mu + s, mu - s <= x)), (0, True)))
+                                        And(x <= mu + s, mu - s <= x)), (0, True)))
 
 
 def test_rayleigh():
