@@ -3318,4 +3318,4 @@ def test_issue_17988():
     x = Symbol('x')
     p = poly(x - 1)
     M = Matrix([[poly(x + 1), poly(x + 1)]])
-    assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])    
+    assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])
