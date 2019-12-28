@@ -2608,14 +2608,14 @@ class MatrixBase(MatrixDeprecated,
                 for j in range(1, N-i):
                     jc[j,i+j] = jc [j-1,i+j-1]
 
-        P, J = self.jordan_form()
+        P, J = self.jordan_form(dotprodsimp=dotprodsimp)
         jordan_cells = J.get_diag_blocks()
         # Make sure jordan_cells matrices are mutable:
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
-        return self._new(P.multiply(diag(*jordan_cells), dotprodsimp=dotprodsimp).multiply(
-                P.inv(), dotprodsimp=dotprodsimp))
+        return self._new(P.multiply(diag(*jordan_cells), dotprodsimp=dotprodsimp)
+                .multiply(P.inv(dotprodsimp=dotprodsimp), dotprodsimp=dotprodsimp))
 
     def __repr__(self):
         return sstr(self)
@@ -4034,7 +4034,7 @@ class MatrixBase(MatrixDeprecated,
         else:
             return divmod(a2idx_(key, len(self)), self.cols)
 
-    def LDLdecomposition(self, hermitian=True):
+    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
         """Returns the LDL Decomposition (L, D) of matrix A,
         such that L * D * L.H == A if hermitian flag is True, or
         L * D * L.T == A if hermitian is False.
@@ -4042,6 +4042,9 @@ class MatrixBase(MatrixDeprecated,
         Further this ensures that all the diagonal entries of L are 1.
         A must be a Hermitian positive-definite matrix if hermitian is True,
         or a symmetric matrix otherwise.
+
+        Parameters
+        ==========
 
         dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
@@ -4096,14 +4099,22 @@ class MatrixBase(MatrixDeprecated,
             raise ValueError("Matrix must be Hermitian.")
         if not hermitian and not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
-        return self._LDLdecomposition(hermitian=hermitian)
+        return self._LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
 
-    def LDLsolve(self, rhs):
+    def LDLsolve(self, rhs, dotprodsimp=None):
         """Solves ``Ax = B`` using LDL decomposition,
         for a general square and non-singular matrix.
 
         For a non-square matrix with rows > cols,
         the least squares solution is returned.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -4130,24 +4141,33 @@ class MatrixBase(MatrixDeprecated,
         hermitian = True
         if self.is_symmetric():
             hermitian = False
-            L, D = self.LDLdecomposition(hermitian=hermitian)
+            L, D = self.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
         elif self.is_hermitian:
-            L, D = self.LDLdecomposition(hermitian=hermitian)
+            L, D = self.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
         elif self.rows >= self.cols:
-            L, D = (self.H * self).LDLdecomposition(hermitian=hermitian)
-            rhs = self.H * rhs
+            L, D = self.H.multiply(self, dotprodsimp=dotprodsimp) \
+                    .LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
+            rhs = self.H.multiply(rhs, dotprodsimp=dotprodsimp)
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs)
+        Y = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
         Z = D._diagonal_solve(Y)
         if hermitian:
-            return (L.H)._upper_triangular_solve(Z)
+            return (L.H)._upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
         else:
-            return (L.T)._upper_triangular_solve(Z)
+            return (L.T)._upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
 
-    def lower_triangular_solve(self, rhs):
+    def lower_triangular_solve(self, rhs, dotprodsimp=None):
         """Solves ``Ax = B``, where A is a lower triangular matrix.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -4168,7 +4188,7 @@ class MatrixBase(MatrixDeprecated,
             raise ShapeError("Matrices size mismatch.")
         if not self.is_lower:
             raise ValueError("Matrix must be lower triangular.")
-        return self._lower_triangular_solve(rhs)
+        return self._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
 
     def LUdecomposition(self,
                         iszerofunc=_iszero,
@@ -5436,7 +5456,7 @@ class MatrixBase(MatrixDeprecated,
             res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
 
-    def upper_triangular_solve(self, rhs):
+    def upper_triangular_solve(self, rhs, dotprodsimp=None):
         """Solves ``Ax = B``, where A is an upper triangular matrix.
 
         See Also
@@ -5457,7 +5477,7 @@ class MatrixBase(MatrixDeprecated,
             raise TypeError("Matrix size mismatch.")
         if not self.is_upper:
             raise TypeError("Matrix is not upper triangular.")
-        return self._upper_triangular_solve(rhs)
+        return self._upper_triangular_solve(rhs, dotprodsimp=dotprodsimp)
 
     def vech(self, diagonal=True, check_symmetry=True):
         """Return the unique elements of a symmetric Matrix as a one column matrix
