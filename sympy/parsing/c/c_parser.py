@@ -232,13 +232,16 @@ if cin:
                 while child.kind == cin.CursorKind.TYPE_REF:
                     child = next(children)
 
+                val = self.transform(child)
                 if (node.type.kind == cin.TypeKind.INT):
                     type = IntBaseType(String('integer'))
+                    value = Integer(val)
                 elif (node.type.kind == cin.TypeKind.FLOAT):
                     type = FloatBaseType(String('real'))
+                    value = Float(val)
                 else:
                     raise NotImplementedError()
-                value = self.transform(child)
+
                 # List in case of variable assignment, FunctionCall node in case of a funcion call
                 if (child.kind == cin.CursorKind.INTEGER_LITERAL
                     or child.kind == cin.CursorKind.UNEXPOSED_EXPR):
@@ -382,7 +385,12 @@ if cin:
                     child = next(children)
 
                 # If there is a child, it is the default value of the parameter.
-                val = self.transform(child)
+                lit = self.transform(child)
+                if (node.type.kind == cin.TypeKind.INT):
+                    val = Integer(lit)
+                elif (node.type.kind == cin.TypeKind.FLOAT):
+                    val = Float(lit)
+
                 param = Variable(
                     node.spelling
                 ).as_Declaration(
