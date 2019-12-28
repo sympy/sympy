@@ -3213,14 +3213,8 @@ class ReciprocalDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, b = self.a, self.b
-        return Piecewise(
-            (S.Zero, (x < a)),
-            (1 / (x * (log(b) - log(a))), And(a <= x, x <= b)),
-            (S.One, (x > b)))
+        return 1/(x*(log(b) - log(a)))
 
-    def _cdf(self, x):
-        a, b = self.a, self.b
-        return (log(x) - log(a)) / (log(b) - log(a))
 
 def Reciprocal(name, a, b):
     r"""Creates a continuous random variable with a reciprocal distribution.
@@ -3240,24 +3234,15 @@ def Reciprocal(name, a, b):
     Examples
     ========
 
-    >>> from sympy.stats import Reciprocal, density, E
-    >>> from sympy import Symbol, pprint
+    >>> from sympy.stats import Reciprocal, density, cdf
+    >>> from sympy import symbols
+    >>> a, b, x = symbols('a, b, x', positive=True)
+    >>> R = Reciprocal('R', a, b)
 
-    >>> a = Symbol("a")
-    >>> b = Symbol("b")
-    >>> z = Symbol("z")
-
-    >>> X = Reciprocal("x", a, b)
-
-    >>> pprint(density(X)(z), use_unicode=False)
-    /         0            for a > z
-    |
-    |         1
-    <--------------------  for b >= z
-    |z*(-log(a) + log(b))
-    |
-    \         1            otherwise
-
+    >>> density(R)(x)
+    1/(x*(-log(a) + log(b)))
+    >>> cdf(R)(x)
+    Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
 
     Reference
     =========
