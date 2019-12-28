@@ -331,14 +331,16 @@ def test_cooperative_operations():
         raises(TypeError, lambda : divmod(na, e))
         raises(TypeError, lambda : e ** na)
         raises(TypeError, lambda : na ** e)
-        raises(TypeError, lambda : e > na)
-        raises(TypeError, lambda : na > e)
-        raises(TypeError, lambda : e < na)
-        raises(TypeError, lambda : na < e)
-        raises(TypeError, lambda : e >= na)
-        raises(TypeError, lambda : na >= e)
-        raises(TypeError, lambda : e <= na)
-        raises(TypeError, lambda : na <= e)
+        # XXX: Remove the if when PY2 support is dropped:
+        if PY3:
+            raises(TypeError, lambda : e > na)
+            raises(TypeError, lambda : na > e)
+            raises(TypeError, lambda : e < na)
+            raises(TypeError, lambda : na < e)
+            raises(TypeError, lambda : e >= na)
+            raises(TypeError, lambda : na >= e)
+            raises(TypeError, lambda : e <= na)
+            raises(TypeError, lambda : na <= e)
 
 
 def test_relational():
