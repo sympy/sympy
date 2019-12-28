@@ -1966,7 +1966,8 @@ def nc_simplify(expr, deep=True):
 def dotprodsimp(expr, withsimp=False):
     """Simplification for a sum of products targeted at the kind of blowup that
     occurs during summation of products. Intended to reduce expression blowup
-    during matrix multiplication or other similar operations.
+    during matrix multiplication or other similar operations. Only works with
+    algebraic expressions and does not recurse into non.
 
     Parameters
     ==========
@@ -1978,8 +1979,6 @@ def dotprodsimp(expr, withsimp=False):
         simplify an expression repetitively which does not simplify.
     """
 
-    from sympy.core.operations import LatticeOp
-
     def count_ops_alg(expr):
         """Optimized count algebraic operations with no recursion into
         non-algebraic args that ``core.function.count_ops`` does.
@@ -1990,6 +1989,9 @@ def dotprodsimp(expr, withsimp=False):
 
         while args:
             a = args.pop()
+
+            if not isinstance(a, Basic):
+                continue
 
             if a.is_Rational:
                 if a is not S.One: # -1/3 = NEG + DIV
@@ -2035,10 +2037,6 @@ def dotprodsimp(expr, withsimp=False):
                 ops += 1
                 args.append(a.base)
 
-            elif isinstance(a, LatticeOp):
-                ops += len(a.args) - 1
-                args.extend(a.args)
-
         return ops
 
     def nonalg_subs_dummies(expr, dummies):
@@ -2072,25 +2070,9 @@ def dotprodsimp(expr, withsimp=False):
 
     simplified = False # doesn't really mean simplified, rather "can simplify again"
 
-    if isinstance(expr, Expr) and not expr.is_Relational:
-        # # XXX: Should really count ops of initial expression and compare to
-        # # expand_mul to see if simplification was done but that can be good bit
-        # # slower for large initial expressions and this seems to work.
-        # expr     = expand_mul(expr) # this and the following expand should not be combined
-        # exprops  = count_ops_alg(expr)
-        # expr2    = expand_multinomial(expr)
-        # expr2ops = count_ops_alg(expr2)
-
-        # if expr2ops < exprops:
-        #     expr       = expr2
-        #     exprops    = expr2ops
-        #     simplified = True
-
+    if isinstance(expr, Basic) and (expr.is_Add or expr.is_Mul or expr.is_Pow):
         expr2 = expr.expand(deep=True, modulus=None, power_base=False,
             power_exp=False, mul=True, log=False, multinomial=True, basic=False)
-
-        # expr2 = expand_mul(expr)
-        # expr2 = expand_multinomial(expr2)
 
         if expr2 != expr:
             expr       = expr2
