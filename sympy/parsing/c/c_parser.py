@@ -232,21 +232,27 @@ if cin:
                 while child.kind == cin.CursorKind.TYPE_REF:
                     child = next(children)
 
-                args = self.transform(child)
+                if (node.type.kind == cin.TypeKind.INT):
+                    type = IntBaseType(String('integer'))
+                elif (node.type.kind == cin.TypeKind.FLOAT):
+                    type = FloatBaseType(String('real'))
+                else:
+                    raise NotImplementedError()
+                value = self.transform(child)
                 # List in case of variable assignment, FunctionCall node in case of a funcion call
                 if (child.kind == cin.CursorKind.INTEGER_LITERAL
                     or child.kind == cin.CursorKind.UNEXPOSED_EXPR):
                     return Variable(
                         node.spelling
                     ).as_Declaration(
-                        type = args[0],
-                        value = args[1]
+                        type = type,
+                        value = value
                     )
                 elif (child.kind == cin.CursorKind.CALL_EXPR):
                     return Variable(
                         node.spelling
                     ).as_Declaration(
-                        value = args
+                        value = value
                     )
                 else:
                     raise NotImplementedError()
@@ -376,12 +382,12 @@ if cin:
                     child = next(children)
 
                 # If there is a child, it is the default value of the parameter.
-                args = self.transform(child)
+                val = self.transform(child)
                 param = Variable(
                     node.spelling
                 ).as_Declaration(
-                    type = args[0],
-                    value = args[1]
+                    type = type,
+                    value = val
                 )
             except StopIteration:
                 param = Variable(
@@ -418,14 +424,12 @@ if cin:
             Only Base Integer type supported for now
 
             """
-            type = IntBaseType(String('integer'))
             try:
                 value = next(node.get_tokens()).spelling
             except StopIteration:
                 # No tokens
                 value = Integer(node.literal)
-            val = [type, value]
-            return val
+            return value
 
         def transform_floating_literal(self, node):
             """Transformation function for floating literal
@@ -446,14 +450,12 @@ if cin:
             Only Base Float type supported for now
 
             """
-            type = FloatBaseType(String('real'))
             try:
                 value = next(node.get_tokens()).spelling
             except (StopIteration, ValueError):
                 # No tokens
                 value = Float(node.literal)
-            val = [type, value]
-            return val
+            return value
 
 
         def transform_string_literal(self, node):
@@ -552,9 +554,9 @@ if cin:
                 for child in children:
                     arg = self.transform(child)
                     if (child.kind == cin.CursorKind.INTEGER_LITERAL):
-                        param.append(Integer(arg[1]))
+                        param.append(Integer(arg))
                     elif (child.kind == cin.CursorKind.FLOATING_LITERAL):
-                        param.append(Float(arg[1]))
+                        param.append(Float(arg))
                     else:
                         param.append(arg)
                 return FunctionCall(first_child, param)
