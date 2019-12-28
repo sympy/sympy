@@ -2073,18 +2073,30 @@ def dotprodsimp(expr, withsimp=False):
     simplified = False # doesn't really mean simplified, rather "can simplify again"
 
     if isinstance(expr, Expr) and not expr.is_Relational:
-        # XXX: Should really count ops of initial expression and compare to
-        # expand_mul to see if simplification was done but that can be good bit
-        # slower for large initial expressions and this seems to work.
-        expr     = expand_mul(expr) # this and the following expand should not be combined
-        exprops  = count_ops_alg(expr)
-        expr2    = expand_multinomial(expr)
-        expr2ops = count_ops_alg(expr2)
+        # # XXX: Should really count ops of initial expression and compare to
+        # # expand_mul to see if simplification was done but that can be good bit
+        # # slower for large initial expressions and this seems to work.
+        # expr     = expand_mul(expr) # this and the following expand should not be combined
+        # exprops  = count_ops_alg(expr)
+        # expr2    = expand_multinomial(expr)
+        # expr2ops = count_ops_alg(expr2)
 
-        if expr2ops < exprops:
+        # if expr2ops < exprops:
+        #     expr       = expr2
+        #     exprops    = expr2ops
+        #     simplified = True
+
+        expr2 = expr.expand(deep=True, modulus=None, power_base=False,
+            power_exp=False, mul=True, log=False, multinomial=True, basic=False)
+
+        # expr2 = expand_mul(expr)
+        # expr2 = expand_multinomial(expr2)
+
+        if expr2 != expr:
             expr       = expr2
-            exprops    = expr2ops
             simplified = True
+
+        exprops = count_ops_alg(expr)
 
         if exprops >= 6: # empirically tested cutoff for expensive simplification
             dummies = {}
