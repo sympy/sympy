@@ -111,7 +111,7 @@ class Poly(Expr):
         if 'order' in opt:
             raise NotImplementedError("'order' keyword is not implemented yet")
 
-        if iterable(rep, exclude=str):
+        if iterable(rep, exclude=str) and not isinstance(rep, Basic):
             if isinstance(rep, dict):
                 return cls._from_dict(rep, opt)
             else:
@@ -121,8 +121,10 @@ class Poly(Expr):
 
             if rep.is_Poly:
                 return cls._from_poly(rep, opt)
-            else:
+            elif isinstance(rep, Expr):
                 return cls._from_expr(rep, opt)
+            else:
+                raise PolynomialError
 
     @classmethod
     def new(cls, rep, *gens):
