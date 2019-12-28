@@ -1,13 +1,47 @@
 import itertools
+from functools import singledispatch
 
-from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol
+from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol, MatrixBase, MatMul, ZeroMatrix, MatrixExpr
 from sympy.core.compatibility import default_sort_key
 from sympy.core.evaluate import global_evaluate
 from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
-from sympy.stats.rv import RandomSymbol, probability, expectation
+from sympy.stats.rv import RandomSymbol, probability, expectation, RandomMatrixSymbol
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
+
+
+@singledispatch
+def is_random(x):
+    return False
+
+@is_random.register(RandomSymbol)
+def _(x):
+    return True
+
+@is_random.register(Expr)
+def _(x):
+    atoms = x.free_symbols
+    if len(atoms) == 1 and next(iter(atoms)) == x:
+        return False
+    return any([is_random(i) for i in atoms])
+
+@is_random.register(Mul)
+def _(x):
+    return any([is_random(arg) for arg in x.args])
+
+@is_random.register(Add)
+def _(x):
+    return any([is_random(arg) for arg in x.args])
+
+@is_random.register(MatrixBase)
+def _(x):
+    return any([is_random(i) for i in x])
+
+
+@is_random.register(RandomMatrixSymbol)
+def _(x):
+    return True
 
 
 class Probability(Expr):
@@ -101,6 +135,11 @@ class Expectation(Expr):
 
     def __new__(cls, expr, condition=None, **kwargs):
         expr = _sympify(expr)
+
+        if expr.is_Matrix:
+            from .symbolic_multivariate_probability import ExpectationMatrix
+            return ExpectationMatrix(expr, condition)
+
         if condition is None:
             if not expr.has(RandomSymbol):
                 return expr
@@ -115,20 +154,34 @@ class Expectation(Expr):
         expr = self.args[0]
         condition = self._condition
 
-        if not expr.has(RandomSymbol):
+        if not is_random(expr):
             return expr
 
         if isinstance(expr, Add):
             return Add(*[Expectation(a, condition=condition).doit() for a in expr.args])
-        elif isinstance(expr, Mul):
+        elif isinstance(expr, (Mul, MatMul)):
             rv = []
             nonrv = []
+            postnon = []
+
             for a in expr.args:
-                if isinstance(a, RandomSymbol) or a.has(RandomSymbol):
+                if is_random(a):
+                    if rv:
+                        rv.extend(postnon)
+                    else:
+                        nonrv.extend(postnon)
+                    postnon = []
                     rv.append(a)
+                elif a.is_Matrix:
+                    postnon.append(a)
                 else:
                     nonrv.append(a)
-            return Mul(*nonrv)*Expectation(Mul(*rv), condition=condition)
+
+            # In order to avoid infinite-looping (MatMul may call .doit() again),
+            # do not rebuild
+            if len(nonrv) == 0:
+                return self
+            return Mul.fromiter(nonrv)*Expectation(Mul.fromiter(rv), condition=condition)*Mul.fromiter(postnon)
 
         return self
 
@@ -217,6 +270,11 @@ class Variance(Expr):
     """
     def __new__(cls, arg, condition=None, **kwargs):
         arg = _sympify(arg)
+
+        if arg.is_Matrix:
+            from .symbolic_multivariate_probability import VarianceMatrix
+            return VarianceMatrix(arg, condition)
+
         if condition is None:
             obj = Expr.__new__(cls, arg)
         else:
@@ -229,7 +287,7 @@ class Variance(Expr):
         arg = self.args[0]
         condition = self._condition
 
-        if not arg.has(RandomSymbol):
+        if not is_random(arg):
             return S.Zero
 
         if isinstance(arg, RandomSymbol):
@@ -247,13 +305,13 @@ class Variance(Expr):
             nonrv = []
             rv = []
             for a in arg.args:
-                if a.has(RandomSymbol):
+                if is_random(a):
                     rv.append(a)
                 else:
                     nonrv.append(a**2)
             if len(rv) == 0:
                 return S.Zero
-            return Mul(*nonrv)*Variance(Mul(*rv), condition)
+            return Mul.fromiter(nonrv)*Variance(Mul.fromiter(rv), condition)
 
         # this expression contains a RandomSymbol somehow:
         return self
@@ -323,6 +381,10 @@ class Covariance(Expr):
     def __new__(cls, arg1, arg2, condition=None, **kwargs):
         arg1 = _sympify(arg1)
         arg2 = _sympify(arg2)
+
+        if arg1.is_Matrix or arg2.is_Matrix:
+            from .symbolic_multivariate_probability import CovarianceMatrix
+            return CovarianceMatrix(arg1, arg2, condition)
 
         if kwargs.pop('evaluate', global_evaluate[0]):
             arg1, arg2 = sorted([arg1, arg2], key=default_sort_key)

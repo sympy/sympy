@@ -78,4 +78,4 @@ if matchpy:
 
     @create_operation_expression.register(Basic)
     def sympy_op_factory(old_operation, new_operands, variable_name=True):
-         return type(old_operation)(*new_operands)
+        return type(old_operation)(*new_operands)

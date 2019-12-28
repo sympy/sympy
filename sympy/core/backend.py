@@ -1,6 +1,5 @@
 import os
-USE_SYMENGINE = os.getenv('USE_SYMENGINE', '0')
-USE_SYMENGINE = USE_SYMENGINE.lower() in ('1', 't', 'true')
+USE_SYMENGINE = os.getenv('USE_SYMENGINE', '0') in ('1', 't', 'true')
 
 if USE_SYMENGINE:
     from symengine import (Symbol, Integer, sympify, S,

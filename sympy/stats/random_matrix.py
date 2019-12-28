@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy import Basic
 from sympy.stats.rv import PSpace, _symbol_converter, RandomMatrixSymbol
 
+
 class RandomMatrixPSpace(PSpace):
     """
     Represents probability space for

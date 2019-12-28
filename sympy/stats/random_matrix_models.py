@@ -23,6 +23,7 @@ __all__ = [
     'level_spacing_distribution'
 ]
 
+
 class RandomMatrixEnsemble(Basic):
     """
     Base class for random matrix ensembles.
@@ -44,6 +45,7 @@ class RandomMatrixEnsemble(Basic):
 
     def density(self, expr):
         return Density(expr)
+
 
 class GaussianEnsemble(RandomMatrixEnsemble):
     """
@@ -94,6 +96,7 @@ class GaussianEnsemble(RandomMatrixEnsemble):
         syms = ArrayComprehension(l[k], (k, 1, n)).doit()
         return Lambda(tuple(syms), (term1 * term2)/Zbn)
 
+
 class GaussianUnitaryEnsemble(GaussianEnsemble):
     """
     Represents Gaussian Unitary Ensembles.
@@ -124,6 +127,7 @@ class GaussianUnitaryEnsemble(GaussianEnsemble):
         s = Dummy('s')
         f = (32/pi**2)*(s**2)*exp((-4/pi)*s**2)
         return Lambda(s, f)
+
 
 class GaussianOrthogonalEnsemble(GaussianEnsemble):
     """
@@ -157,6 +161,7 @@ class GaussianOrthogonalEnsemble(GaussianEnsemble):
         f = (pi/2)*s*exp((-pi/4)*s**2)
         return Lambda(s, f)
 
+
 class GaussianSymplecticEnsemble(GaussianEnsemble):
     """
     Represents Gaussian Symplectic Ensembles.
@@ -188,6 +193,7 @@ class GaussianSymplecticEnsemble(GaussianEnsemble):
         s = Dummy('s')
         f = ((S(2)**18)/((S(3)**6)*(pi**3)))*(s**4)*exp((-64/(9*pi))*s**2)
         return Lambda(s, f)
+
 
 class CircularEnsemble(RandomMatrixEnsemble):
     """
@@ -223,6 +229,7 @@ class CircularEnsemble(RandomMatrixEnsemble):
                     (k, 1, n - 1)).doit()
         return Lambda(tuple(syms), f/Zbn)
 
+
 class CircularUnitaryEnsemble(CircularEnsemble):
     """
     Represents Cicular Unitary Ensembles.
@@ -246,6 +253,7 @@ class CircularUnitaryEnsemble(CircularEnsemble):
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_distribution(S(2))
 
+
 class CircularOrthogonalEnsemble(CircularEnsemble):
     """
     Represents Cicular Orthogonal Ensembles.
@@ -268,6 +276,7 @@ class CircularOrthogonalEnsemble(CircularEnsemble):
     """
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_distribution(S.One)
+
 
 class CircularSymplecticEnsemble(CircularEnsemble):
     """

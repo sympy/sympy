@@ -2,8 +2,24 @@ from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum, sqrt, pi, exp
 from sympy.core.expr import unchanged
 from sympy.stats import (Normal, Poisson, variance, Covariance, Variance,
                          Probability, Expectation)
+from sympy.stats.symbolic_probability import is_random
 from sympy.utilities.pytest import raises
 from sympy.stats.rv import probability, expectation
+
+
+def test_is_random():
+    X = Normal("X", 2, 3)
+    a = symbols("a")
+
+    assert not is_random(a)
+    assert not is_random(a*2)
+    assert not is_random(a**2)
+    assert not is_random(a + 2)
+
+    assert is_random(X)
+    assert is_random(X*2)
+    assert is_random(X**2)
+    assert is_random(X + 2)
 
 
 def test_literal_probability():

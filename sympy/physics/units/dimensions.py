@@ -23,9 +23,9 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 class _QuantityMapper(object):
 
-    _quantity_scale_factors_global = {}
-    _quantity_dimensional_equivalence_map_global = {}
-    _quantity_dimension_global = {}
+    _quantity_scale_factors_global = {}  # type: Dict[Quantity, Tuple[Expr, Quantity]]
+    _quantity_dimensional_equivalence_map_global = {}  # type: Dict[Quantity, Union[Quantity, Dimension]]
+    _quantity_dimension_global = {}  # type: Dict[Quantity, Dimension]
 
     def __init__(self, *args, **kwargs):
         self._quantity_dimension_map = {}

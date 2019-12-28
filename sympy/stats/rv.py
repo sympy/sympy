@@ -17,7 +17,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, MatrixExpr)
 from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
@@ -273,6 +273,7 @@ class RandomSymbol(Expr):
     def free_symbols(self):
         return {self}
 
+
 class RandomIndexedSymbol(RandomSymbol):
 
     def __new__(cls, idx_obj, pspace=None):
@@ -289,6 +290,7 @@ class RandomIndexedSymbol(RandomSymbol):
             return self.symbol.args[1]
         elif isinstance(self.symbol, Function):
             return self.symbol.args[0]
+
 
 class RandomMatrixSymbol(MatrixSymbol):
     def __new__(cls, symbol, n, m, pspace=None):
