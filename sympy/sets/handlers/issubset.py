@@ -78,7 +78,7 @@ def is_subset_sets(a_range, b_finiteset): # noqa:F811
     else:
         # Checking A \ B == EmptySet is more efficient than repeated naive
         # membership checks on an arbitrary FiniteSet.
-        a_set = set([*a_range])
+        a_set = set(a_range)
         b_remaining = len(b_finiteset)
         # Symbolic expressions and numbers of unknown type (integer or not) are
         # all counted as "candidates", i.e. *potentially* matching some a in

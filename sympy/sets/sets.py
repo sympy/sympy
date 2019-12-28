@@ -1761,8 +1761,10 @@ class FiniteSet(Set, EvalfMixin):
         else:
             args = list(map(sympify, args))
 
-        args = list(ordered(set(args), Set._infimum_key))
+        _args_set = set(args)
+        args = list(ordered(_args_set, Set._infimum_key))
         obj = Basic.__new__(cls, *args)
+        obj._args_set = _args_set
         return obj
 
     def _eval_Eq(self, other):
@@ -1830,9 +1832,9 @@ class FiniteSet(Set, EvalfMixin):
         """
         Tests whether an element, other, is in the set.
 
-        This tests for mathematical equality. (In the worst case
-        all elements of the set must be checked. The implementation
-        is not hash-based.)
+        The actual test is for mathematical equality (as opposed to
+        syntactical equality). In the worst case all elements of the
+        set must be checked.
 
         Examples
         ========
@@ -1844,9 +1846,13 @@ class FiniteSet(Set, EvalfMixin):
         False
 
         """
-        # evaluate=True is needed to override evaluate=False context;
-        # we need Eq to do the evaluation
-        return fuzzy_or(fuzzy_bool(Eq(e, other, evaluate=True)) for e in self.args)
+        if other in self._args_set:
+            return True
+        else:
+            # evaluate=True is needed to override evaluate=False context;
+            # we need Eq to do the evaluation
+            return fuzzy_or(fuzzy_bool(Eq(e, other, evaluate=True))
+                for e in self.args)
 
     def _eval_is_subset(self, other):
         return fuzzy_and(other._contains(e) for e in self.args)
