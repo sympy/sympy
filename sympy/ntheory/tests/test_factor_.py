@@ -662,14 +662,14 @@ def test_is_amicable():
 
 def test_dra():
     assert dra(789) == 6
-    assert dra(1234) == 1
+    assert dra(1234) == dra(-1234) == 1
     assert dra(23456789) == 8
     assert dra(1000) == 1
 
 
 def test_drm():
     assert drm(345) == 0
-    assert drm(1234) == 8
+    assert drm(1234) == drm(-1234) == 8
     assert drm(23456789) == 0
     assert drm(10000) == 0
     assert drm(234161) == 6

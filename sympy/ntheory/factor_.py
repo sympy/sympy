@@ -2398,7 +2398,7 @@ def dra(n):
 
 def drm(n):
     """Return the multiplicative digital root of integer n which is
-    a value < 10 obtained by mutiplying the digits of n together
+    a value < 10 obtained by multiplying the digits of n together
     (and repeating with the product) until a single digit is obtained.
     e.g. 345 -> 3*4*5 = 60 -> 6*0 = 0.
 
