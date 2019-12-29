@@ -933,7 +933,7 @@ def _diop_quadratic(var, coeff, t):
     C = coeff[y**2]
     D = coeff[x]
     E = coeff[y]
-    F = coeff[1]
+    F = coeff[S.One]
 
     A, B, C, D, E, F = [as_int(i) for i in _remove_gcd(A, B, C, D, E, F)]
 
