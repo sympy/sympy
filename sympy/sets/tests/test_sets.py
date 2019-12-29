@@ -1124,16 +1124,16 @@ def test_boundary_ProductSet_line():
 
 
 def test_is_open():
-    assert not Interval(0, 1, False, False).is_open
-    assert not Interval(0, 1, True, False).is_open
-    assert Interval(0, 1, True, True).is_open
-    assert not FiniteSet(1, 2, 3).is_open
+    assert Interval(0, 1, False, False).is_open is False
+    assert Interval(0, 1, True, False).is_open is False
+    assert Interval(0, 1, True, True).is_open is True
+    assert FiniteSet(1, 2, 3).is_open is False
 
 
 def test_is_closed():
-    assert Interval(0, 1, False, False).is_closed
-    assert not Interval(0, 1, True, False).is_closed
-    assert FiniteSet(1, 2, 3).is_closed
+    assert Interval(0, 1, False, False).is_closed is True
+    assert Interval(0, 1, True, False).is_closed is False
+    assert FiniteSet(1, 2, 3).is_closed is True
 
 
 def test_closure():
