@@ -235,7 +235,8 @@ class _SympifyWrapper(object):
             raise RuntimeError('sympify_return can only be used with 2 argument functions')
         # only b is _sympified
         if get_function_code(func).co_varnames[1] != parameter:
-            raise RuntimeError('parameter name mismatch %s' % parameter)
+            raise RuntimeError('parameter name mismatch "%s" in %s' %
+                    (parameter, func.__name__))
 
         @wraps(func)
         def _func(self, other):
@@ -247,7 +248,7 @@ class _SympifyWrapper(object):
                     other = sympify(other, strict=True)
                 except SympifyError:
                     return retval
-            if not isinstance(other, cls):
+            if not isinstance(other, expectedcls):
                 return retval
             return func(self, other)
 
