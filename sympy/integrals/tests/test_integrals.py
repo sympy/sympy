@@ -864,6 +864,15 @@ def test_issue_4884():
             4*I*sqrt(-x)/15, True))
     assert integrate(x**x*(1 + log(x))) == x**x
 
+def test_issue_18153():
+    assert integrate(x**n*log(x),x) == \
+    Piecewise(
+        (n*x*x**n*log(x)/(n**2 + 2*n + 1) +
+    x*x**n*log(x)/(n**2 + 2*n + 1) - x*x**n/(n**2 + 2*n + 1)
+    , Ne(n, -1)), (log(x)**2/2, True)
+    )
+
+
 
 def test_is_number():
     from sympy.abc import x, y, z
