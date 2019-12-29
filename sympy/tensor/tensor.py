@@ -2545,7 +2545,6 @@ class TensAdd(TensExpr, AssocOp):
         return Add.fromiter(args)
 
 
-
 class Tensor(TensExpr):
     """
     Base tensor class, i.e. this represents a tensor, the single unit to be
