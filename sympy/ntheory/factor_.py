@@ -2371,3 +2371,49 @@ def is_amicable(m, n):
         return False
     a, b = map(lambda i: divisor_sigma(i), (m, n))
     return a == b == (m + n)
+
+
+def dra(n):
+    """Return the additive digital root of integer n which is
+    a value < 10 obtained by adding the digits of n together
+    (and repeating with the sum) until a single digit is obtained.
+    e.g. 789 -> 7 + 8 + 9 = 24 -> 2 + 4 = 6
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import dra
+    >>> dra(789)
+    6
+    """
+    a = abs(as_int(n))
+    while a > 9:
+        s = 0
+        while a:
+            a, d = divmod(a, 10)
+            s += d
+        a = s
+    return a
+
+
+def drm(n):
+    """Return the multiplicative digital root of integer n which is
+    a value < 10 obtained by mutiplying the digits of n together
+    (and repeating with the product) until a single digit is obtained.
+    e.g. 345 -> 3*4*5 = 60 -> 6*0 = 0.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import drm
+    >>> drm(345)
+    0
+    """
+    m = abs(as_int(n))
+    while m > 9:
+        p = 1
+        while m:
+            m, d = divmod(m, 10)
+            p *= d
+        m = p
+    return m
