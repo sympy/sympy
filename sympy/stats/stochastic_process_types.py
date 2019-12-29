@@ -96,7 +96,7 @@ class StochasticProcess(Basic):
     @property
     def state_space(self):
         return self.args[1]
-    
+
     @property
     def distribution(self):
         return self.args[2]
