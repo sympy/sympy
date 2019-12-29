@@ -4,7 +4,7 @@ from .sympify import sympify, _sympify, SympifyError
 from .basic import Basic, Atom
 from .singleton import S
 from .evalf import EvalfMixin, pure_complex
-from .decorators import _sympifyit, call_highest_priority
+from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, range, Iterable
 from sympy.utilities.misc import func_name
@@ -12,6 +12,8 @@ from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 
+
+@sympify_method_args
 class Expr(Basic, EvalfMixin):
     """
     Base class for algebraic expressions.
@@ -170,53 +172,39 @@ class Expr(Basic, EvalfMixin):
         from sympy import Abs
         return Abs(self)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Add(self, other)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Add(other, self)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Add(self, -other)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Add(other, -self)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Mul(self, other)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Mul(other, self)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rpow__')
     def _pow(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Pow(self, other)
 
     def __pow__(self, other, mod=None):
@@ -236,74 +224,56 @@ class Expr(Basic, EvalfMixin):
             except TypeError:
                 return NotImplemented
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Pow(other, self)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Mul(self, Pow(other, S.NegativeOne))
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Mul(other, Pow(self, S.NegativeOne))
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmod__')
     def __mod__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Mod(self, other)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__mod__')
     def __rmod__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         return Mod(other, self)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rfloordiv__')
     def __floordiv__(self, other):
         from sympy.functions.elementary.integers import floor
-        if not isinstance(other, Expr):
-            return NotImplemented
         return floor(self / other)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__floordiv__')
     def __rfloordiv__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         from sympy.functions.elementary.integers import floor
         return floor(other / self)
 
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rdivmod__')
     def __divmod__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         from sympy.functions.elementary.integers import floor
         return floor(self / other), Mod(self, other)
 
-    @_sympifyit('other', NotImplemented)
+    @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__divmod__')
     def __rdivmod__(self, other):
-        if not isinstance(other, Expr):
-            return NotImplemented
         from sympy.functions.elementary.integers import floor
         return floor(other / self), Mod(other, self)
 
