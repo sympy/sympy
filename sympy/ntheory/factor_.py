@@ -2432,9 +2432,7 @@ def drm(n, b):
     n = abs(as_int(n))
     if b <= 1:
         raise ValueError("Base should be an integer greater than 1")
-    seen = []
-    while n not in seen:
-        seen.append(n)
+    while n > b:
         if n == 0:
             return 0
         mul = 1
