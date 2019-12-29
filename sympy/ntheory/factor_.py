@@ -2375,10 +2375,11 @@ def is_amicable(m, n):
 
 def dra(n, b):
     """
-    Returns the additive digital root of a natural number 'n' in base 'b'
-    which is a single digit value obatained by an iterative process of summing
+    Returns the additive digital root of a natural number ``n`` in base ``b``
+    which is a single digit value obtained by an iterative process of summing
     digits, on each iteration using the result from the previous iteration to
     compute a digit sum.
+
     Examples
     ========
 
@@ -2392,6 +2393,7 @@ def dra(n, b):
     .. [1] https://en.wikipedia.org/wiki/Digital_root
 
     """
+
     num = abs(as_int(n))
     b = (as_int(b))
     if b <= 1:
@@ -2405,10 +2407,11 @@ def dra(n, b):
 
 def drm(n, b):
     """
-    Returns the multiplicative digital root of a natural number 'n' in a given
-    base b which is a single digit value obtained bu an iterative process of
+    Returns the multiplicative digital root of a natural number ``n`` in a given
+    base ``b`` which is a single digit value obtained bu an iterative process of
     multiplying digits, on each iteration using the result from the previous
     iteration to compute the digit multiplication.
+
     Examples
     ========
 
@@ -2425,6 +2428,7 @@ def drm(n, b):
     .. [1] http://mathworld.wolfram.com/MultiplicativeDigitalRoot.html
 
     """
+
     n = abs(as_int(n))
     if b <= 1:
         raise ValueError("Base should be an integer greater than 1")
