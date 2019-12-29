@@ -111,7 +111,7 @@ class Poly(Expr):
         if 'order' in opt:
             raise NotImplementedError("'order' keyword is not implemented yet")
 
-        if iterable(rep, exclude=str) and not isinstance(rep, Basic):
+        if iterable(rep, exclude=str):
             if isinstance(rep, dict):
                 return cls._from_dict(rep, opt)
             else:
@@ -121,10 +121,8 @@ class Poly(Expr):
 
             if rep.is_Poly:
                 return cls._from_poly(rep, opt)
-            elif isinstance(rep, Expr):
-                return cls._from_expr(rep, opt)
             else:
-                raise PolynomialError
+                return cls._from_expr(rep, opt)
 
     @classmethod
     def new(cls, rep, *gens):
@@ -4039,11 +4037,13 @@ class Poly(Expr):
 
     @_sympifyit('g', NotImplemented)
     def __mul__(f, g):
+        if not isinstance(g, Expr):
+            return NotImplemented
         if not g.is_Poly:
             try:
                 g = f.__class__(g, *f.gens)
             except PolynomialError:
-                return NotImplemented
+                return f.as_expr()*g
 
         return f.mul(g)
 
