@@ -157,7 +157,7 @@ def sympify_method_args(cls):
     In the above it is important that we return NotImplemented when other is
     not sympifiable and also when the sympified result is not of the expected
     type. This allows the MyTuple class to be used cooperatively with other
-    classes that overload __add__ and want to do something else in bombination
+    classes that overload __add__ and want to do something else in combination
     with instance of Tuple.
 
     Using this decorator the above can be written as
