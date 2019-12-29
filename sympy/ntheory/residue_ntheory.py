@@ -72,7 +72,7 @@ def _primitive_root_prime_iter(p):
 
     """
     # it is assumed that p is an int
-    v = [(p - 1) // i for i in factorint(p - 1).keys()]
+    v = [(totient(p)) // i for i in factorint(totient(p)).keys()]
     a = 2
     while a < p:
         for pw in v:
@@ -191,11 +191,11 @@ def _sqrt_mod_tonelli_shanks(a, p):
     .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nt Ed., page 101
 
     """
-    s = trailing(p - 1)
+    s = trailing(totient(p))
     t = p >> s
     # find a non-quadratic residue
     while 1:
-        d = randint(2, p - 1)
+        d = randint(2, totient(p))
         r = legendre_symbol(d, p)
         if r == -1:
             break
@@ -206,7 +206,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
     for i in range(s):
         adm = A*pow(D, m, p) % p
         adm = pow(adm, 2**(s - 1 - i), p)
-        if adm % p == p - 1:
+        if adm % p == totient(p):
             m += 2**i
     #assert A*pow(D, m, p) % p == 1
     x = pow(a, (t + 1)//2, p)*pow(D, m//2, p) % p
@@ -399,7 +399,7 @@ def _sqrt_mod_prime_power(a, p, k):
         if p % 4 == 3:
             res = pow(a, (p + 1) // 4, p)
         elif p % 8 == 5:
-            sign = pow(a, (p - 1) // 4, p)
+            sign = pow(a, (totient(p)) // 4, p)
             if sign == 1:
                 res = pow(a, (p + 3) // 8, p)
             else:
@@ -614,7 +614,7 @@ def is_quad_residue(a, p):
         else:
             return True
 
-    return pow(a, (p - 1) // 2, p) == 1
+    return pow(a, (totient(p)) // 2, p) == 1
 
 
 def is_nthpow_residue(a, n, m):
@@ -699,7 +699,7 @@ def _nthroot_mod2(s, q, p):
 
 def _nthroot_mod1(s, q, p, all_roots):
     """
-    Root of ``x**q = s mod p``, ``p`` prime and ``q`` divides ``p - 1``
+    Root of ``x**q = s mod p``, ``p`` prime and ``q`` divides ``totient(p)``
 
     References
     ==========
@@ -711,8 +711,8 @@ def _nthroot_mod1(s, q, p, all_roots):
     if not isprime(q):
         r = _nthroot_mod2(s, q, p)
     else:
-        f = p - 1
-        assert (p - 1) % q == 0
+        f = totient(p)
+        assert (totient(p)) % q == 0
         # determine k
         k = 0
         while f % q == 0:
@@ -731,7 +731,7 @@ def _nthroot_mod1(s, q, p, all_roots):
         r = r1*g3 % p
         #assert pow(r, q, p) == s
     res = [r]
-    h = pow(g, (p - 1) // q, p)
+    h = pow(g, (totient(p)) // q, p)
     #assert pow(h, q, p) == 1
     hx = r
     for i in range(q - 1):
@@ -776,12 +776,12 @@ def nthroot_mod(a, n, p, all_roots=False):
     if primitive_root(p) is None:
         raise NotImplementedError("Not Implemented for m without primitive root")
 
-    if (p - 1) % n == 0:
+    if (totient(p)) % n == 0:
         return _nthroot_mod1(a, n, p, all_roots)
     # The roots of ``x**n - a = 0 (mod p)`` are roots of
-    # ``gcd(x**n - a, x**(p - 1) - 1) = 0 (mod p)``
+    # ``gcd(x**n - a, x**(totient(p)) - 1) = 0 (mod p)``
     pa = n
-    pb = p - 1
+    pb = totient(p)
     b = 1
     if pa < pb:
         a, pa, b, pb = b, pb, a, pa
@@ -866,7 +866,7 @@ def legendre_symbol(a, p):
     a = a % p
     if not a:
         return 0
-    if pow(a, (p - 1) // 2, p) == 1:
+    if pow(a, (totient(p)) // 2, p) == 1:
         return 1
     return -1
 
