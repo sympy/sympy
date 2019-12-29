@@ -81,6 +81,9 @@ class PartialDerivative(TensExpr):
     def get_indices(self):
         return self._indices
 
+    def get_free_indices(self):
+        return [i[0] for i in self._free]
+
     @property
     def expr(self):
         return self.args[0]
@@ -106,9 +109,7 @@ class PartialDerivative(TensExpr):
                 array[tuple(coeff_index)] /= coeff
             if -varindex in indices:
                 pos = indices.index(-varindex)
-                metric = replacement_dict[varindex.tensor_index_type]
-                # TODO: not valid for spinors (or non-symmetric metrics):
-                array = tensorcontraction(tensorproduct(metric, array), (0, 2), (1, pos+3))
+                array = tensorcontraction(array, (0, pos+1))
                 indices.pop(pos)
             else:
                 indices.append(varindex)

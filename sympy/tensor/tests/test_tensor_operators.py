@@ -54,17 +54,41 @@ def test_tensor_partial_deriv():
 def test_replace_arrays_partial_derivative():
     x, y, z, t = symbols("x y z t")
 
+    # d(A^i)/d(A_j) = d(g^ik A_k)/d(A_j) = g^ik delta_jk
     expr = PartialDerivative(A(i), A(-j))
-    assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, 1)}, [i, j]) == Array([[1, 0], [0, 1]])
-
-    expr = PartialDerivative(A(i), A(j))
+    assert expr.get_free_indices() == [i, j]
+    assert expr.get_indices() == [i, j]
     assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, 1)}, [i, j]) == Array([[1, 0], [0, 1]])
     assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, -1)}, [i, j]) == Array([[1, 0], [0, -1]])
+    assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, 1)}, [i, j]) == Array([[1, 0], [0, 1]])
+    assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, -1)}, [i, j]) == Array([[1, 0], [0, -1]])
+
+    expr = PartialDerivative(A(i), A(j))
+    assert expr.get_free_indices() == [i, -j]
+    assert expr.get_indices() == [i, -j]
+    assert expr.replace_with_arrays({A(i): [x, y]}, [i, -j]) == Array([[1, 0], [0, 1]])
+    assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, 1)}, [i, -j]) == Array([[1, 0], [0, 1]])
+    assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, -1)}, [i, -j]) == Array([[1, 0], [0, 1]])
+    assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, 1)}, [i, -j]) == Array([[1, 0], [0, 1]])
+    assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, -1)}, [i, -j]) == Array([[1, 0], [0, 1]])
+
+    expr = PartialDerivative(A(-i), A(-j))
+    expr.get_free_indices() == [-i, j]
+    expr.get_indices() == [-i, j]
+    assert expr.replace_with_arrays({A(-i): [x, y]}, [-i, j]) == Array([[1, 0], [0, 1]])
+    assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, 1)}, [-i, j]) == Array([[1, 0], [0, 1]])
+    assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, -1)}, [-i, j]) == Array([[1, 0], [0, 1]])
+    assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, 1)}, [-i, j]) == Array([[1, 0], [0, 1]])
+    assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, -1)}, [-i, j]) == Array([[1, 0], [0, 1]])
 
     expr = PartialDerivative(A(i), A(i))
+    assert expr.get_free_indices() == []
+    assert expr.get_indices() == [L_0, -L_0]
     assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, 1)}, []) == 2
-    assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, -1)}, []) == 0
+    assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, -1)}, []) == 2
 
     expr = PartialDerivative(A(-i), A(-i))
+    assert expr.get_free_indices() == []
+    assert expr.get_indices() == [-L_0, L_0]
     assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, 1)}, []) == 2
-    assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, -1)}, []) == 0
+    assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, -1)}, []) == 2
