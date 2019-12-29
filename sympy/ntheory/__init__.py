@@ -33,8 +33,8 @@ __all__ = [
     'pollard_pm1', 'pollard_rho', 'primefactors', 'totient', 'trailing',
     'divisor_count', 'proper_divisor_count', 'divisor_sigma', 'factorrat',
     'reduced_totient', 'primenu', 'primeomega', 'mersenne_prime_exponent',
-    'is_perfect', 'is_mersenne_prime', 'is_abundant', 'is_deficient', 'is_amicable',
-    'abundance', 'dra', 'drm', 
+    'is_perfect', 'is_mersenne_prime', 'is_abundant', 'is_deficient', 'is_amicable', 'abundance',
+    'dra', 'drm',
 
     'npartitions',
 
