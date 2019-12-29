@@ -117,7 +117,7 @@ if cin:
 
         assert res4[3] == Declaration(
             Variable(
-                Symbol('1'),
+                Symbol('q'),
                 type=FloatBaseType(String('real')),
                 value=Float('9.67', precision=53)
             )
@@ -131,7 +131,7 @@ if cin:
             'int b = 2;' + '\n'
         )
         c_src3 = 'int a = 2.345, b = 5.67;'
-        c_src4 = 'int p = 6, q = 7.89;'
+        c_src4 = 'int p = 6, q = 23.45;'
 
         res1 = SymPyExpression(c_src1, 'c').return_expr()
         res2 = SymPyExpression(c_src2, 'c').return_expr()
@@ -190,7 +190,7 @@ if cin:
             Variable(
                 Symbol('q'),
                 type=IntBaseType(String('integer')),
-                value=Integer(7)
+                value=Integer(23)
             )
         )
 
@@ -259,7 +259,7 @@ if cin:
 
         assert res4[1] == Declaration(
             Variable(
-                Symbol('1'),
+                Symbol('e'),
                 type=FloatBaseType(String('real')),
                 value=Float('7.89', precision=53)
             )
