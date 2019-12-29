@@ -82,7 +82,8 @@ class PartialDerivative(TensExpr):
         return self._indices
 
     def get_free_indices(self):
-        return [i[0] for i in self._free]
+        free = sorted(self._free, key=lambda x: x[1])
+        return [i[0] for i in free]
 
     @property
     def expr(self):
