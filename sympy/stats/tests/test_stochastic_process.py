@@ -2,7 +2,8 @@ from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda,
                    Naturals, binomial, Piecewise)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
-                         StochasticStateSpaceOf, variance, ContinuousMarkovChain)
+                         StochasticStateSpaceOf, variance, ContinuousMarkovChain,
+                         BernoulliProcess)
 from sympy.stats.joint_rv import JointDistribution, JointDistributionHandmade
 from sympy.stats.drv import DiscreteDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
