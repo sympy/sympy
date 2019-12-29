@@ -239,10 +239,14 @@ class _SympifyWrapper(object):
 
         @wraps(func)
         def _func(self, other):
-            try:
-                other = sympify(other, strict=True)
-            except SympifyError:
-                return retval
+            # XXX: The check for _op_priority here should be removed. It is
+            # needed to stop mutable matrices from being sympified to
+            # immutable matrices which breaks things in quantum...
+            if not hasattr(other, '_op_priority'):
+                try:
+                    other = sympify(other, strict=True)
+                except SympifyError:
+                    return retval
             if not isinstance(other, cls):
                 return retval
             return func(self, other)
