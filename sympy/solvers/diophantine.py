@@ -27,7 +27,7 @@ from sympy.solvers.solvers import check_assumptions
 from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
-import Expr
+from sympy.core.expr import Expr
 
 
 # these are imported with 'from sympy.solvers.diophantine import *
