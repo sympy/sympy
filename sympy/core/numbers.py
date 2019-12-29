@@ -2844,20 +2844,20 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             return self
-        return NotImplemented
+        return Number.__add__(self, other)
     __radd__ = __add__
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
             return self
-        return NotImplemented
+        return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
@@ -2865,18 +2865,18 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other.is_zero or other is S.NaN:
                 return S.NaN
             if other.is_extended_positive:
                 return self
             return S.NegativeInfinity
-        return NotImplemented
+        return Number.__mul__(self, other)
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.Infinity or \
                 other is S.NegativeInfinity or \
                     other is S.NaN:
@@ -2884,7 +2884,7 @@ class Infinity(with_metaclass(Singleton, Number)):
             if other.is_extended_nonnegative:
                 return self
             return S.NegativeInfinity
-        return NotImplemented
+        return Number.__div__(self, other)
 
     __truediv__ = __div__
 
@@ -3009,20 +3009,20 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
             return self
-        return NotImplemented
+        return Number.__add__(self, other)
     __radd__ = __add__
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             return self
-        return NotImplemented
+        return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
@@ -3030,18 +3030,18 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other.is_zero or other is S.NaN:
                 return S.NaN
             if other.is_extended_positive:
                 return self
             return S.Infinity
-        return NotImplemented
+        return Number.__mul__(self, other)
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.Infinity or \
                 other is S.NegativeInfinity or \
                     other is S.NaN:
@@ -3049,7 +3049,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             if other.is_extended_nonnegative:
                 return self
             return S.Infinity
-        return NotImplemented
+        return Number.__div__(self, other)
 
     __truediv__ = __div__
 
