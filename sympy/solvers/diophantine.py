@@ -933,7 +933,7 @@ def _diop_quadratic(var, coeff, t):
     C = coeff[y**2]
     D = coeff[x]
     E = coeff[y]
-    F = coeff[S.One]
+    F = coeff[1]
 
     A, B, C, D, E, F = [as_int(i) for i in _remove_gcd(A, B, C, D, E, F)]
 
@@ -1114,7 +1114,7 @@ def is_solution_quad(var, coeff, u, v):
     Not intended for use by normal users.
     """
     reps = dict(zip(var, (u, v)))
-    eq = Add(*[j*i.xreplace(reps) for i, j in coeff.items()])
+    eq = Add(*[j*(i.xreplace(reps) if isinstance(i, Expr) else i) for i, j in coeff.items()])
     return _mexpand(eq) == 0
 
 
