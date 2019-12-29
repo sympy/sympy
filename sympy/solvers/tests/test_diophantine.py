@@ -169,6 +169,13 @@ def test_issue_9106():
         assert not diop_simplify(eq.xreplace(dict(zip(v, sol))))
 
 
+def test_issue_18138():
+    eq = x**2 - x - y**2
+    v = (x, y)
+    for sol in diophantine(eq):
+        assert not diop_simplify(eq.xreplace(dict(zip(v, sol))))
+
+
 @slow
 def test_quadratic_non_perfect_slow():
     assert check_solutions(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23)
