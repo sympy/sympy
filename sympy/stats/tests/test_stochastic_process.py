@@ -1,8 +1,10 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
-                   ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational)
+                   ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda,
+                   Naturals, binomial, Piecewise)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain)
-from sympy.stats.joint_rv import JointDistribution
+from sympy.stats.joint_rv import JointDistribution, JointDistributionHandmade
+from sympy.stats.drv import DiscreteDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.utilities.pytest import raises
@@ -134,3 +136,35 @@ def test_ContinuousMarkovChain():
     CS1 = ContinuousMarkovChain('C', [0, 1, 2], TS1)
     A = CS1.generator_matrix
     assert CS1.transition_probabilities(A)(t) == exp(t*A)
+
+def test_BernoulliProcess():
+
+    B = BernoulliProcess("B", 0.6)
+    assert B.state_space == FiniteSet(0, 1)
+    assert B.index_set == S.Naturals0
+    t = symbols('t', positive=True, integer=True)
+    assert isinstance(B[t], RandomIndexedSymbol)
+
+    raises (ValueError, lambda: BernoulliProcess("X", 1.1))
+    raises(NotImplementedError, lambda: B(t))
+
+    assert B.joint_distribution(B[3], B[9]) == JointDistributionHandmade(Lambda((B[3], B[9]),
+                Piecewise((0.6, Eq(B[3], 1)), (0.4, Eq(B[3], 0)), (0, True))
+                *Piecewise((0.6, Eq(B[9], 1)), (0.4, Eq(B[9], 0)), (0, True))))
+
+    assert B.joint_distribution(2, B[4]) == JointDistributionHandmade(Lambda((B[2], B[4]),
+                Piecewise((0.6, Eq(B[2], 1)), (0.4, Eq(B[2], 0)), (0, True))
+                *Piecewise((0.6, Eq(B[4], 1)), (0.4, Eq(B[4], 0)), (0, True))))
+
+    assert B.probability_r_success(5, 3).round(3) == Float(0.346, 3)
+    r = symbols('r', natural=True)
+    assert B.probability_r_success(5, 3, evaluate=False) == DiscreteDistributionHandmade(0.4**(5 - r)
+                                                                *0.6**r*binomial(5, r), Naturals)
+
+    assert B.probability_of_rth_success(5, 1).round(3)==Float(0.015, 3)
+
+    assert E(2 * B[1] + B[2]).round(2) == Float(1.80, 3)
+    assert E(2 * B[1] + B[2] + 5).round(2) == Float(6.80, 3)
+    assert P(B[1] > 0).round(2) == Float(0.60, 2)
+    assert P(B[1] < 1).round(2) == Float(0.40, 2)
+    assert P(B[1] > 0, B[2] <= 1).round(2) == Float(0.60, 2)
