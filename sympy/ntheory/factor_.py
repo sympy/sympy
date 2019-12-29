@@ -2307,3 +2307,62 @@ def is_amicable(m, n):
         return False
     a, b = map(lambda i: divisor_sigma(i), (m, n))
     return a == b == (m + n)
+
+
+def eva(number, operation):
+    """Generates digits of a number."""
+    if operation == '*':
+        next_num = 1
+    else:
+        next_num = 0
+    while number > 0:
+        if operation == '*':
+            next_num = next_num * (number % 10)
+        else:
+            next_num = next_num + (number % 10)
+        number = int(number / 10)
+    return next_num
+
+
+def persistence(n,operation='*'):
+    """
+    The persistence of a number is the number of times one must apply
+    a given operation to an integer before reaching a fixed point at
+    which the operation no longer alters the number.
+    Usually, this involves additive or multiplicative persistence of an
+    integer, which is how often one has to replace the number by the
+    sum or product of its digits until one reaches a single digit.
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import persistence, eva
+    >>> persistence(9876, '+')
+    '9876 -> 30 -> 3   ::   Additive Persistence = 2'
+
+    >>> persistence(679, '*')
+    '679 -> 378 -> 168 -> 48 -> 32 -> 6   ::   Multiplicative Persistence = 5'
+
+    >>> persistence(2677889)
+    '2677889 -> 338688 -> 27648 -> 2688 -> 768 -> 336 -> 54 -> 20 -> 0   ::   Multiplicative Persistence = 8'
+    """
+    operation =  operation.strip()
+    if operation != '+' and operation != '*':
+        raise ValueError('The operation is INVALID')
+    op = ''
+    if operation == '+':
+        op = 'Additive'
+    else:
+        op = 'Multiplicative'
+    count = 0;
+    s = ''
+    if n < 10:
+        return count
+    while 1:
+        s = s  + ' -> ' + str(n)
+        n = eva(n, operation)
+        count = count + 1
+        if n < 10:
+            s = s + ' -> ' + str(n)
+            break
+    s = s[4:] + '   ::   ' + op + ' Persistence = ' + str(count)
+    return s
