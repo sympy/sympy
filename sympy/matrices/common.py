@@ -2656,7 +2656,7 @@ def _matrixify(mat):
             try: # test indexing behavior of matrix-like object
                 e = mat[0][0]
                 return _MatrixWrapperRowIndexing(mat)
-            except:
+            except (TypeError, IndexError, KeyError, ValueError):
                 return _MatrixWrapper(mat)
     return mat
 
