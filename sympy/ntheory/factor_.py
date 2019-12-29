@@ -2309,60 +2309,71 @@ def is_amicable(m, n):
     return a == b == (m + n)
 
 
-def eva(number, operation):
-    """Generates digits of a number."""
-    if operation == '*':
-        next_num = 1
-    else:
-        next_num = 0
-    while number > 0:
-        if operation == '*':
-            next_num = next_num * (number % 10)
-        else:
-            next_num = next_num + (number % 10)
-        number = int(number / 10)
-    return next_num
-
-
-def persistence(n,operation='*'):
+def dra(n, b):
     """
-    The persistence of a number is the number of times one must apply
-    a given operation to an integer before reaching a fixed point at
-    which the operation no longer alters the number.
-    Usually, this involves additive or multiplicative persistence of an
-    integer, which is how often one has to replace the number by the
-    sum or product of its digits until one reaches a single digit.
+    Returns the additive digital root of a natural number 'n' in base 'b'
+    which is a single digit value obatained by an iterative process of summing
+    digits, on each iteration using the result from the previous iteration to
+    compute a digit sum.
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import persistence, eva
-    >>> persistence(9876, '+')
-    '9876 -> 30 -> 3   ::   Additive Persistence = 2'
+    >>> from sympy.ntheory.factor_ import dra
+    >>> dra(3110, 12)
+    8
 
-    >>> persistence(679, '*')
-    '679 -> 378 -> 168 -> 48 -> 32 -> 6   ::   Multiplicative Persistence = 5'
+    References
+    ==========
 
-    >>> persistence(2677889)
-    '2677889 -> 338688 -> 27648 -> 2688 -> 768 -> 336 -> 54 -> 20 -> 0   ::   Multiplicative Persistence = 8'
+    .. [1] https://en.wikipedia.org/wiki/Digital_root
+
     """
-    operation =  operation.strip()
-    if operation != '+' and operation != '*':
-        raise ValueError('The operation is INVALID')
-    op = ''
-    if operation == '+':
-        op = 'Additive'
-    else:
-        op = 'Multiplicative'
-    count = 0;
-    s = ''
-    if n < 10:
-        return count
-    while 1:
-        s = s  + ' -> ' + str(n)
-        n = eva(n, operation)
-        count = count + 1
-        if n < 10:
-            s = s + ' -> ' + str(n)
-            break
-    s = s[4:] + '   ::   ' + op + ' Persistence = ' + str(count)
-    return s
+    num = abs(as_int(n))
+    b = (as_int(b))
+    if b <= 1:
+        raise ValueError("Base should be an integer greater than 1")
+
+    if num == 0:
+        return 0
+
+    return (1 + (num - 1) % (b - 1))
+
+
+def drm(n, b):
+    """
+    Returns the multiplicative digital root of a natural number 'n' in a given
+    base b which is a single digit value obtained bu an iterative process of
+    multiplying digits, on each iteration using the result from the previous
+    iteration to compute the digit multiplication.
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import drm
+    >>> drm(9876, 10)
+    0
+
+    >>> drm(49, 10)
+    8
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/MultiplicativeDigitalRoot.html
+
+    """
+    n = abs(as_int(n))
+    if b <= 1:
+        raise ValueError("Base should be an integer greater than 1")
+    seen = []
+    while n not in seen:
+        seen.append(n)
+        if n == 0:
+            return 0
+        mul = 1
+        while n > 1:
+            if n % b == 0:
+                return 0
+            mul = mul * (n % b)
+            n = n // b
+        n = mul
+    return n
