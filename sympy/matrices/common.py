@@ -8,6 +8,7 @@ from __future__ import division, print_function
 
 from collections import defaultdict
 from inspect import isfunction
+from itertools import chain
 
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
@@ -2592,11 +2593,11 @@ class _MinimalMatrix(object):
 
 
 class _MatrixWrapper(object):
-    """Wrapper class providing the minimum functionality
-    for a matrix-like object: .rows, .cols, .shape, indexability,
-    and iterability.  CommonMatrix math operations should work
-    on matrix-like objects.  For example, wrapping a numpy
-    matrix in a MatrixWrapper allows it to be passed to CommonMatrix.
+    """Wrapper class providing the minimum functionality for a matrix-like
+    object: .rows, .cols, .shape, indexability, and iterability. CommonMatrix
+    math operations should work on matrix-like objects. This one is intended for
+    matrix-like objects which use the same indexing format as SymPy with respect
+    to returning matrix elements instead of rows for non-tuple indexes.
     """
     is_MatrixLike = True
 
@@ -2613,6 +2614,37 @@ class _MatrixWrapper(object):
         return self.mat.__getitem__(key)
 
 
+class _MatrixWrapperRowIndexing(object):
+    """Wrapper class providing the minimum functionality for a matrix-like
+    object: .rows, .cols, .shape, indexability, and iterability. CommonMatrix
+    math operations should work on matrix-like objects. This one is intended for
+    matrix-like objects which return entire rows when indexed by a non-tuple
+    index. For example, wrapping a numpy matrix in a MatrixWrapper allows it to
+    be passed to CommonMatrix.
+    """
+    is_MatrixLike = True
+
+    def __init__(self, mat, shape=None):
+        self.mat = mat
+        self.rows, self.cols = mat.shape if shape is None else shape
+
+    def __getattr__(self, attr):
+        """Most attribute access is passed straight through
+        to the stored matrix"""
+        return getattr(self.mat, attr)
+
+    def __getitem__(self, key):
+        if isinstance(key, tuple):
+            return self.mat.__getitem__(key)
+
+        return self.mat.__getitem__((key // self.rows, key % self.cols))
+
+    def __iter__(self): # supports numpy.matrix and numpy.array
+        mat = self.mat
+        cols = self.cols
+
+        return iter(mat[r, c] for r in range(self.rows) for c in range(cols))
+
 def _matrixify(mat):
     """If `mat` is a Matrix or is matrix-like,
     return a Matrix or MatrixWrapper object.  Otherwise
@@ -2621,7 +2653,11 @@ def _matrixify(mat):
         return mat
     if hasattr(mat, 'shape'):
         if len(mat.shape) == 2:
-            return _MatrixWrapper(mat)
+            try: # test indexing behavior of matrix-like object
+                e = mat[0][0]
+                return _MatrixWrapperRowIndexing(mat)
+            except:
+                return _MatrixWrapper(mat)
     return mat
 
 
