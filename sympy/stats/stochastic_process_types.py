@@ -5,7 +5,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Lambda, Mul, Dummy, IndexedBase, symbols,
                    linsolve, eye, Or, Not, Intersection,
                    Union, Expr, Function, exp, cacheit,
-                   Ge, binomial)
+                   Ge, binomial, sympify)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -156,8 +156,12 @@ class StochasticProcess(Basic):
             return JointDistribution(*args)
         # TODO: Add tests for the below part of the method, when implementation of Bernoulli Process
         # is completed
-        pdf = Lambda(args,
-                expr=Mul.fromiter(arg.pspace.process._pdf(arg) for arg in args))
+        try:
+            pdf = Lambda(args,
+                    expr=Mul.fromiter(arg.pspace.process._pdf(arg) for arg in args))
+        except AttributeError:
+            pdf = Lambda(args,
+                    expr=Mul.fromiter(arg.pspace.distribution.pdf(arg) for arg in args))
         return JointDistributionHandmade(pdf)
 
     def expectation(self, condition, given_condition):
