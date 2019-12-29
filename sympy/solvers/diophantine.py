@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.add import Add
 from sympy.core.compatibility import as_int, is_sequence, range
+from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
@@ -27,7 +28,7 @@ from sympy.solvers.solvers import check_assumptions
 from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
-from sympy.core.expr import Expr
+
 
 
 # these are imported with 'from sympy.solvers.diophantine import *
