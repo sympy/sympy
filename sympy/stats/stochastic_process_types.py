@@ -822,7 +822,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     """
 
     index_set = S.Naturals0
-    
+
     @property
     def p(self):
         return self.args[3]
