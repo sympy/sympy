@@ -647,14 +647,14 @@ def test_is_subset():
     assert Interval(0, 1).is_subset(Interval(0, 1, left_open=True)) is False
     assert Interval(-2, 3).is_subset(Union(Interval(-oo, -2), Interval(3, oo))) is False
 
+    n = Symbol('n', integer=True)
     assert Range(-3, 4, 1).is_subset(FiniteSet(-10, 10)) is False
     assert Range(S(10)**100).is_subset(FiniteSet(0, 1, 2)) is False
     assert Range(6, 0, -2).is_subset(FiniteSet(2, 4, 6)) is True
     assert Range(1, oo).is_subset(FiniteSet(1, 2)) is False
     assert Range(-oo, 1).is_subset(FiniteSet(1)) is False
     assert Range(3).is_subset(FiniteSet(0, 1, n)) is None
-    assert Range(n, n + 2).is_subset(FiniteSet(n, n + 1)) is None
-
+    assert Range(n, n + 2).is_subset(FiniteSet(n, n + 1)) is True
     assert Range(5).is_subset(Interval(0, 4, right_open=True)) is False
 
 

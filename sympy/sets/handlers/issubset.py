@@ -1,4 +1,4 @@
-from sympy import S
+from sympy import S, Symbol
 from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
 from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union
@@ -75,6 +75,8 @@ def is_subset_sets(a_range, b_finiteset): # noqa:F811
         return None
     if a_size > len(b_finiteset):
         return False
+    elif any(arg.has(Symbol) for arg in a_range.args):
+        return fuzzy_and(b_finiteset.contains(x) for x in a_range)
     else:
         # Checking A \ B == EmptySet is more efficient than repeated naive
         # membership checks on an arbitrary FiniteSet.
