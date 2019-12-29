@@ -12,7 +12,7 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
     udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
-    is_deficient, is_amicable)
+    is_deficient, is_amicable, dra, drm)
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.multinomial import (
     multinomial_coefficients, multinomial_coefficients_iterator)
@@ -658,3 +658,18 @@ def test_is_amicable():
     assert is_amicable(173, 129) is False
     assert is_amicable(220, 284) is True
     assert is_amicable(8756, 8756) is False
+
+
+def test_dra():
+    assert dra(789) == 6
+    assert dra(1234) == 1
+    assert dra(23456789) == 8
+    assert dra(1000) == 1
+
+
+def test_drm():
+    assert drm(345) == 0
+    assert drm(1234) == 8
+    assert drm(23456789) == 0
+    assert drm(10000) == 0
+    assert drm(234161) == 6
