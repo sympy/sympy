@@ -638,6 +638,8 @@ def is_nthpow_residue(a, n, m):
         if m == 1:
             return False
         return a == 1
+    if a % m == 0:
+        return True
     if n == 1:
         return True
     if n == 2:

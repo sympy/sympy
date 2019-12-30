@@ -51,9 +51,9 @@ __all__ = [
     'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
     'ExGaussian', 'Exponential', 'ExponentialPower', 'FDistribution',
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
-    'Kumaraswamy', 'Laplace', 'Logistic', 'LogLogistic', 'LogNormal',
+    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic', 'LogLogistic', 'LogNormal',
     'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto',
-    'QuadraticU', 'RaisedCosine', 'Rayleigh', 'StudentT', 'ShiftedGompertz',
+    'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'StudentT', 'ShiftedGompertz',
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle',
 
@@ -92,8 +92,8 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
         ExGaussian, Exponential, ExponentialPower, FDistribution, FisherZ,
         Frechet, Gamma, GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace,
-        Logistic, LogLogistic, LogNormal, Maxwell, Nakagami, Normal,
-        GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, StudentT,
+        Levy, Logistic, LogLogistic, LogNormal, Maxwell, Nakagami, Normal,
+        GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, StudentT,
         ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
         VonMises, Wald, Weibull, WignerSemicircle)
 
