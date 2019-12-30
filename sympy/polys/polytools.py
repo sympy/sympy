@@ -5498,10 +5498,12 @@ def terms_gcd(f, *gens, **args):
 
     orig = sympify(f)
 
-    # XXX: Should any Relational be accepted here? Why does this accept
-    # any Relational at all? Perhaps it should not and any code that calls
-    # this with Relational should be changed.
-    if not isinstance(f, (Expr, Relational)) or f.is_Atom:
+    if isinstance(f, Equality):
+        return Equality(*(terms_gcd(s, *gens, **args) for s in [f.lhs, f.rhs]))
+    elif isinstance(f, Relational):
+        raise TypeError("Inequalities can not be used with terms_gcd. Found: %s" %(f,))
+
+    if not isinstance(f, Expr) or f.is_Atom:
         return orig
 
     if args.get('deep', False):
@@ -5509,9 +5511,6 @@ def terms_gcd(f, *gens, **args):
         args.pop('deep')
         args['expand'] = False
         return terms_gcd(new, *gens, **args)
-
-    if isinstance(f, Equality):
-        return f
 
     clear = args.pop('clear', True)
     options.allowed_flags(args, ['polys'])
