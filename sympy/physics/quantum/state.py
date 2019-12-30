@@ -18,6 +18,8 @@ __all__ = [
     'TimeDepState',
     'TimeDepBra',
     'TimeDepKet',
+    'OrthogonalKet',
+    'OrthogonalBra',
     'Wavefunction'
 ]
 
@@ -615,6 +617,56 @@ class TimeDepBra(TimeDepState, BraBase):
     @classmethod
     def dual_class(self):
         return TimeDepKet
+
+
+
+class OrthogonalKet(Ket):
+    """Orthogonal Ket in quantum mechanics.
+
+    The inner product of two states with different labels will give zero,
+    states with the same label will give one.
+
+        >>> from sympy.physics.quantum import OrthogonalBra, OrthogonalKet
+        >>> OrthogonalBra(n)*OrthogonalKet(n)
+        1
+        >>> OrthogonalBra(n)*OrthogonalKet(n+1)
+        0
+        >>> OrthogonalBra(n)*OrthogonalKet(m)
+        <n|m>
+    """
+
+    @classmethod
+    def dual_class(self):
+        return OrthogonalBra
+
+    def _eval_innerproduct(self, bra, **hints):
+
+        if len(self.args) != len(bra.args):
+            raise ValueError('Cannot multiply a ket that has a different number of labels.')
+
+        for i in range(len(self.args)):
+            diff = self.args[i] - bra.args[i]
+            diff.simplify()
+
+            if diff.is_nonzero:
+                return 0
+
+            if not diff.is_zero:
+                return None
+
+        return 1
+
+    
+class OrthogonalBra(Bra):
+    """Orthogonal Bra in quantum mechanics.
+    """
+
+    @classmethod
+    def dual_class(self):
+        return OrthogonalKet
+
+
+
 
 
 class Wavefunction(Function):
