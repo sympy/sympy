@@ -1442,6 +1442,9 @@ def test_sympy__stats__crv_types__ParetoDistribution():
     from sympy.stats.crv_types import ParetoDistribution
     assert _test_args(ParetoDistribution(1, 1))
 
+def test_sympy__stats__crv_types__PowerFunctionDistribution():
+    from sympy.stats.crv_types import PowerFunctionDistribution
+    assert _test_args(PowerFunctionDistribution(2,0,1))
 
 def test_sympy__stats__crv_types__QuadraticUDistribution():
     from sympy.stats.crv_types import QuadraticUDistribution
