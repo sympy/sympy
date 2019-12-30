@@ -236,7 +236,7 @@ class Relational(Boolean, Expr, EvalfMixin):
                 return r.reversed.reversedsign
 
         return r
-    
+
     def do(self, op):
         """Do the same operation on both sides of the equation."""
         return self.__class__(op(self.lhs), op(self.rhs))
