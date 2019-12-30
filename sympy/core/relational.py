@@ -665,6 +665,19 @@ class Equality(Relational):
                 pass
         return e.canonical
 
+    def as_poly(self, *gens, **kwargs):
+        '''Returns lhs-rhs as a Poly
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x, y
+        >>> Eq(x**2, 1).as_poly(x)
+        Poly(x**2 - 1, x, domain='ZZ')
+        '''
+        return (self.lhs - self.rhs).as_poly(*gens, **kwargs)
+
 
 Eq = Equality
 
