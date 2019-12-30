@@ -243,6 +243,8 @@ def sqrt_mod(a, p, all_roots=False):
     >>> sqrt_mod(17, 32, True)
     [7, 9, 23, 25]
     """
+    if isprime(p) == True and legendre_symbol(a, p) == -1:
+        return None
     if all_roots:
         return sorted(list(sqrt_mod_iter(a, p)))
     try:
