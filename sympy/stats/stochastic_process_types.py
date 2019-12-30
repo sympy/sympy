@@ -175,10 +175,9 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
         if time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         idx_obj = Indexed(self.symbol, time)
-        try:
+        distribution = None
+        if hasattr(self, 'distribution'):
             distribution = self.distribution
-        except AttributeError:
-            distribution = None
         pspace_obj = StochasticPSpace(self.symbol, self, distribution)
         return RandomIndexedSymbol(idx_obj, pspace_obj)
 
@@ -857,14 +856,14 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         Probability that `rth` success occurs on `nth` trial.
 
         """
-        if S(rsuccess).is_Integer and S(ntrial).is_Integer:
-            if rsuccess <= ntrial and rsuccess >= 1 and ntrial > 1:
-                return (binomial(ntrial - 1, rsuccess - 1) * self.p**rsuccess
-                        * (1 - self.p)**(ntrial - rsuccess))
-            else:
-                raise ValueError("0 =< rth-success <= nth-trial, nth-trial > 1 and ")
-        else:
+        if not (S(rsuccess).is_Integer and S(ntrial).is_Integer):
             raise ValueError("nth-trial and rth-success must be Positive Integers.")
+
+        if not (rsuccess <= ntrial and rsuccess >= 1 and ntrial > 1):
+            raise ValueError("0 =< rth-success <= nth-trial, nth-trial > 1. ")
+
+        return (binomial(ntrial - 1, rsuccess - 1) * self.p**rsuccess
+                * (1 - self.p)**(ntrial - rsuccess))
 
 
     def probability_r_success(self, ntrials, rsuccess, evaluate=True):
@@ -883,27 +882,29 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
         Returns
         =======
-        Proability of getting `r` success in `n` trials.
+        Proability of getting `r` success in `n` trials
             If evaluate is True
-        Distribution of getting `r` success in `n` trials.
+        Distribution of getting `r` success in `n` trials
             If evaluate is False
 
         """
         if evaluate:
-            if S(ntrials).is_Integer and S(rsuccess).is_Integer:
-                if rsuccess <= ntrials and rsuccess >= 0:
-                    return (binomial(ntrials, rsuccess) * self.p**rsuccess
-                            * (1 - self.p)**(ntrials - rsuccess))
-                else:
-                    raise ValueError("rsuccess <= ntrials and  ntrials, \
-                                     rsuccess must be positive Integers.")
-            else:
+            if not (S(ntrials).is_Integer and S(rsuccess).is_Integer):
                 raise ValueError("ntrials and rsuccess must be postive Integers.")
+
+            if not (rsuccess <= ntrials and rsuccess >= 0):
+                raise ValueError("rsuccess <= ntrials and  ntrials, \
+                                     rsuccess must be positive Integers.")
+
+            return (binomial(ntrials, rsuccess) * self.p**rsuccess
+                    * (1 - self.p)**(ntrials - rsuccess))
+
         else:
-            if S(ntrials).is_Integer and ntrials > 0:
-                r = symbols('r', natural=True)
-                pmf = binomial(ntrials, r) * (self.p**r) * (1 - self.p)**(ntrials - r)
-                return DiscreteDistributionHandmade(pmf, set = S.Naturals)
+            if not (S(ntrials).is_Integer and ntrials > 0):
+                raise ValueError("ntrials must be a positive Integer.")
+            r = symbols('r', natural=True)
+            pmf = binomial(ntrials, r) * (self.p**r) * (1 - self.p)**(ntrials - r)
+            return DiscreteDistributionHandmade(pmf, set = S.Naturals)
 
     def _rvindexed_subs(self, expr, condition):
         """
