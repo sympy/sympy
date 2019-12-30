@@ -29,6 +29,8 @@ def test_naturals():
     assert N.intersect(Interval(-5, 5, True, True)) == Range(1, 5)
 
     assert N.boundary == N
+    assert N.is_open == False
+    assert N.is_closed == True
 
     assert N.inf == 1
     assert N.sup is oo
@@ -71,6 +73,8 @@ def test_integers():
     assert Z.sup is oo
 
     assert Z.boundary == Z
+    assert Z.is_open == False
+    assert Z.is_closed == True
 
     assert Z.as_relational(x) == And(Eq(floor(x), x), -oo < x, x < oo)
 
@@ -914,9 +918,20 @@ def test_issue_16871b():
     assert ImageSet(Lambda(x, x - 3), S.Integers).is_subset(S.Integers)
 
 
-def test_no_mod_on_imaginary():
+def test_issue_18050():
+    assert imageset(Lambda(x, I*x + 1), S.Integers
+        ) == ImageSet(Lambda(x, I*x + 1), S.Integers)
+    assert imageset(Lambda(x, 3*I*x + 4 + 8*I), S.Integers
+        ) == ImageSet(Lambda(x, 3*I*x + 4 + 2*I), S.Integers)
+    # no 'Mod' for next 2 tests:
     assert imageset(Lambda(x, 2*x + 3*I), S.Integers
-        ) == ImageSet(Lambda(x, 2*x + I), S.Integers)
+        ) == ImageSet(Lambda(x, 2*x + 3*I), S.Integers)
+    r = Symbol('r', positive=True)
+    assert imageset(Lambda(x, r*x + 10), S.Integers
+        ) == ImageSet(Lambda(x, r*x + 10), S.Integers)
+    # reduce real part:
+    assert imageset(Lambda(x, 3*x + 8 + 5*I), S.Integers
+        ) == ImageSet(Lambda(x, 3*x + 2 + 5*I), S.Integers)
 
 
 def test_Rationals():
@@ -937,7 +952,19 @@ def test_Rationals():
     r = symbols('r', rational=True)
     assert r in S.Rationals
     raises(TypeError, lambda: x in S.Rationals)
-    assert S.Rationals.boundary == S.Rationals
+    # issue #18134:
+    assert S.Rationals.boundary == S.Reals
+    assert S.Rationals.closure == S.Reals
+    assert S.Rationals.is_open == False
+    assert S.Rationals.is_closed == False
+
+
+def test_NZQRC_unions():
+    # check that all trivial number set unions are simplified:
+    nbrsets = (S.Naturals, S.Naturals0, S.Integers, S.Rationals,
+        S.Reals, S.Complexes)
+    unions = (Union(a, b) for a in nbrsets for b in nbrsets)
+    assert all(u.is_Union is False for u in unions)
 
 
 def test_imageset_intersection():

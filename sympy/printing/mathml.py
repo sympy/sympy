@@ -185,6 +185,8 @@ class MathMLContentPrinter(MathMLPrinterBase):
             'LessThan': 'leq',
             'StrictGreaterThan': 'gt',
             'StrictLessThan': 'lt',
+            'Union': 'union',
+            'Intersection': 'intersect',
         }
 
         for cls in e.__class__.__mro__:
@@ -544,6 +546,28 @@ class MathMLContentPrinter(MathMLPrinterBase):
     _print_Implies = _print_AssocOp
     _print_Not = _print_AssocOp
     _print_Xor = _print_AssocOp
+
+    def _print_FiniteSet(self, e):
+        x = self.dom.createElement('set')
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        return x
+
+    def _print_Complement(self, e):
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement('setdiff'))
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        return x
+
+    def _print_ProductSet(self, e):
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement('cartesianproduct'))
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        return x
+
+    # XXX Symmetric difference is not supported for MathML content printers.
 
 
 class MathMLPresentationPrinter(MathMLPrinterBase):

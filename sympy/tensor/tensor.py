@@ -2100,12 +2100,18 @@ class TensExpr(Expr):
 
         # Raise indices:
         for pos in pos2up:
-            metric = replacement_dict[index_types1[pos]]
+            index_type_pos = index_types1[pos]  # type: TensorIndexType
+            if index_type_pos not in replacement_dict:
+                raise ValueError("No metric provided to lower index")
+            metric = replacement_dict[index_type_pos]
             metric_inverse = _TensorDataLazyEvaluator.inverse_matrix(metric)
             array = contract_and_permute(metric_inverse, array, pos)
         # Lower indices:
         for pos in pos2down:
-            metric = replacement_dict[index_types1[pos]]
+            index_type_pos = index_types1[pos]  # type: TensorIndexType
+            if index_type_pos not in replacement_dict:
+                raise ValueError("No metric provided to lower index")
+            metric = replacement_dict[index_type_pos]
             array = contract_and_permute(metric, array, pos)
 
         if free_ind1:

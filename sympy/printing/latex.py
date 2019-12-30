@@ -405,6 +405,10 @@ class LatexPrinter(Printer):
         return r"\begin{pmatrix} %s \end{pmatrix}" % mat
 
 
+    def _print_AppliedPermutation(self, expr):
+        perm, var = expr.args
+        return r"\sigma_{%s}(%s)" % (self._print(perm), self._print(var))
+
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
@@ -1684,6 +1688,10 @@ class LatexPrinter(Printer):
         return r"\mathbb{I}" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{I}"
 
+    def _print_PermutationMatrix(self, P):
+        perm_str = self._print(P.args[0])
+        return "P_{%s}" % perm_str
+
     def _print_NDimArray(self, expr):
 
         if expr.rank() == 0:
@@ -1802,6 +1810,19 @@ class LatexPrinter(Printer):
             "^" if expr.is_up else "_",
             self._print(expr.args[0])
         )
+
+    def _print_PartialDerivative(self, expr):
+        if len(expr.variables) == 1:
+            return r"\frac{\partial}{\partial {%s}}{%s}" % (
+                self._print(expr.variables[0]),
+                self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
+            )
+        else:
+            return r"\frac{\partial^{%s}}{%s}{%s}" % (
+                len(expr.variables),
+                " ".join([r"\partial {%s}" % self._print(i) for i in expr.variables]),
+                self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
+            )
 
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"

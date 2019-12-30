@@ -15,15 +15,15 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          ContinuousRV, sample, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
-                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
+                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Nakagami, Normal, GaussianInverse,
-                         Pareto, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz, StudentT,
+                         Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import (NormalDistribution, GumbelDistribution, GompertzDistribution, LaplaceDistribution,
                                   ParetoDistribution, RaisedCosineDistribution, BeniniDistribution, BetaDistribution,
                                   CauchyDistribution, GammaInverseDistribution, LogNormalDistribution, StudentTDistribution,
-                                  QuadraticUDistribution, WignerSemicircleDistribution, ChiDistribution)
+                                  QuadraticUDistribution, WignerSemicircleDistribution, ChiDistribution, ReciprocalDistribution)
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.randtest import verify_numerically as tn
@@ -169,6 +169,11 @@ def test_characteristic_function():
     cf = characteristic_function(X)
     assert cf(0) == 1
     assert cf(1) == (1 + I)*exp(Rational(-1, 2))/2
+
+    L = Levy('x', 0, 1)
+    cf = characteristic_function(L)
+    assert cf(0) == 1
+    assert cf(1) == exp(-sqrt(2)*sqrt(-I))
 
 
 def test_moment_generating_function():
@@ -733,6 +738,24 @@ def test_laplace():
     assert cdf(X)(x) == Piecewise((exp((-mu + x)/b)/2, mu > x),
                             (-exp((mu - x)/b)/2 + 1, True))
 
+def test_levy():
+    mu = Symbol("mu", real=True)
+    c = Symbol("c", positive=True)
+
+    X = Levy('x', mu, c)
+    assert X.pspace.domain.set == Interval(mu, oo)
+    assert density(X)(x) == sqrt(c/(2*pi))*exp(-c/(2*(x - mu)))/((x - mu)**(S.One + S.Half))
+    assert cdf(X)(x) == erfc(sqrt(c/(2*(x - mu))))
+
+    mu = Symbol("mu", real=False)
+    raises(ValueError, lambda: Levy('x',mu,c))
+
+    c = Symbol("c", nonpositive=True)
+    raises(ValueError, lambda: Levy('x',mu,c))
+
+    mu = Symbol("mu", real=True)
+    raises(ValueError, lambda: Levy('x',mu,c))
+
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
@@ -928,6 +951,26 @@ def test_rayleigh():
     assert cdf(X)(x) == 1 - exp(-x**2/(2*sigma**2))
     assert diff(cdf(X)(x), x) == density(X)(x)
 
+def test_reciprocal():
+    a = Symbol("a", real=True)
+    b = Symbol("b", real=True)
+
+    X = Reciprocal('x', a, b)
+    assert density(X)(x) == 1/(x*(-log(a) + log(b)))
+    assert cdf(X)(x) == Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
+    X = Reciprocal('x', 5, 30)
+
+    assert E(X) == 25/(log(30) - log(5))
+    assert P(X < 4) == S.Zero
+    assert P(X < 20) == log(20) / (log(30) - log(5)) - log(5) / (log(30) - log(5))
+    assert cdf(X)(10) == log(10) / (log(30) - log(5)) - log(5) / (log(30) - log(5))
+
+    a = symbols('a', nonpositive=True)
+    raises(ValueError, lambda: Reciprocal('x', a, b))
+
+    a = symbols('a', positive=True)
+    b = symbols('b', positive=True)
+    raises(ValueError, lambda: Reciprocal('x', a + b, a))
 
 def test_shiftedgompertz():
     b = Symbol("b", positive=True)

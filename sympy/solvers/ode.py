@@ -1466,7 +1466,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         if r is not None:
             coeff = r[order]
             factor = x**order / coeff
-            r_rescaled = {i: factor*r[i] for i in r}
+            r_rescaled = {i: factor*r[i] for i in r if i != 'trialset'}
+
+        # XXX: Mixing up the trialset with the coefficients is error-prone.
+        # These should be separated as something like r['coeffs'] and
+        # r['trialset']
 
         if r_rescaled and not any(not _test_term(r_rescaled[i], i) for i in
                 r_rescaled if i != 'trialset' and i >= 0):

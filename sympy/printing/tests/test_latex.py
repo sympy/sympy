@@ -1,3 +1,5 @@
+from sympy.tensor.toperators import PartialDerivative
+
 from sympy import (
     Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
     FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
@@ -40,7 +42,9 @@ from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
-from sympy.combinatorics.permutations import Cycle, Permutation
+from sympy.combinatorics.permutations import \
+    Cycle, Permutation, AppliedPermutation
+from sympy.matrices.expressions.permutation import PermutationMatrix
 from sympy import MatrixSymbol, ln
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 from sympy.sets.setexpr import SetExpr
@@ -2309,6 +2313,21 @@ def test_latex_printer_tensor():
     expr = TensorElement(K(i, j, -k, -l), {i: 3})
     assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'
 
+    expr = PartialDerivative(A(i), A(i))
+    assert latex(expr) == r"\frac{\partial}{\partial {A{}^{L_{0}}}}{A{}^{L_{0}}}"
+
+    expr = PartialDerivative(A(-i), A(-j))
+    assert latex(expr) == r"\frac{\partial}{\partial {A{}_{j}}}{A{}_{i}}"
+
+    expr = PartialDerivative(K(i, j, -k, -l), A(m), A(-n))
+    assert latex(expr) == r"\frac{\partial^{2}}{\partial {A{}^{m}} \partial {A{}_{n}}}{K{}^{ij}{}_{kl}}"
+
+    expr = PartialDerivative(B(-i) + A(-i), A(-j), A(-n))
+    assert latex(expr) == r"\frac{\partial^{2}}{\partial {A{}_{j}} \partial {A{}_{n}}}{\left(A{}_{i} + B{}_{i}\right)}"
+
+    expr = PartialDerivative(3*A(-i), A(-j), A(-n))
+    assert latex(expr) == r"\frac{\partial^{2}}{\partial {A{}_{j}} \partial {A{}_{n}}}{\left(3A{}_{i}\right)}"
+
 
 def test_multiline_latex():
     a, b, c, d, e, f = symbols('a b c d e f')
@@ -2430,6 +2449,21 @@ def test_MatrixSymbol_bold():
 
     A = MatrixSymbol("A_k", 3, 3)
     assert latex(A, mat_symbol_style='bold') == r"\mathbf{A_{k}}"
+
+
+def test_AppliedPermutation():
+    p = Permutation(0, 1, 2)
+    x = Symbol('x')
+    assert latex(AppliedPermutation(p, x)) == \
+        r'\sigma_{\left( 0\; 1\; 2\right)}(x)'
+
+
+def test_PermutationMatrix():
+    p = Permutation(0, 1, 2)
+    assert latex(PermutationMatrix(p)) == r'P_{\left( 0\; 1\; 2\right)}'
+    p = Permutation(0, 3)(1, 2)
+    assert latex(PermutationMatrix(p)) == \
+        r'P_{\left( 0\; 3\right)\left( 1\; 2\right)}'
 
 
 def test_imaginary_unit():

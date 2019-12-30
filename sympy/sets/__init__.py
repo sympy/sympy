@@ -1,4 +1,4 @@
-from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
+from .sets import (Set, Interval, Union, FiniteSet, ProductSet,
         Intersection, imageset, Complement, SymmetricDifference)
 from .fancysets import ImageSet, Range, ComplexRegion
 from .contains import Contains

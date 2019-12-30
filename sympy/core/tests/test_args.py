@@ -468,6 +468,11 @@ def test_sympy__combinatorics__permutations__Permutation():
     from sympy.combinatorics.permutations import Permutation
     assert _test_args(Permutation([0, 1, 2, 3]))
 
+def test_sympy__combinatorics__permutations__AppliedPermutation():
+    from sympy.combinatorics.permutations import Permutation
+    from sympy.combinatorics.permutations import AppliedPermutation
+    p = Permutation([0, 1, 2, 3])
+    assert _test_args(AppliedPermutation(p, 1))
 
 def test_sympy__combinatorics__perm_groups__PermutationGroup():
     from sympy.combinatorics.permutations import Permutation
@@ -1396,6 +1401,9 @@ def test_sympy__stats__crv_types__LaplaceDistribution():
     from sympy.stats.crv_types import LaplaceDistribution
     assert _test_args(LaplaceDistribution(0, 1))
 
+def test_sympy__stats__crv_types__LevyDistribution():
+    from sympy.stats.crv_types import LevyDistribution
+    assert _test_args(LevyDistribution(0, 1))
 
 def test_sympy__stats__crv_types__LogisticDistribution():
     from sympy.stats.crv_types import LogisticDistribution
@@ -1446,6 +1454,10 @@ def test_sympy__stats__crv_types__RaisedCosineDistribution():
 def test_sympy__stats__crv_types__RayleighDistribution():
     from sympy.stats.crv_types import RayleighDistribution
     assert _test_args(RayleighDistribution(1))
+
+def test_sympy__stats__crv_types__ReciprocalDistribution():
+    from sympy.stats.crv_types import ReciprocalDistribution
+    assert _test_args(ReciprocalDistribution(5, 30))
 
 def test_sympy__stats__crv_types__ShiftedGompertzDistribution():
     from sympy.stats.crv_types import ShiftedGompertzDistribution
@@ -3040,6 +3052,18 @@ def test_sympy__matrices__expressions__factorizations__SofSVD():
 @SKIP("abstract class")
 def test_sympy__matrices__expressions__factorizations__Factorization():
     pass
+
+def test_sympy__matrices__expressions__permutation__PermutationMatrix():
+    from sympy.combinatorics import Permutation
+    from sympy.matrices.expressions.permutation import PermutationMatrix
+    assert _test_args(PermutationMatrix(Permutation([2, 0, 1])))
+
+def test_sympy__matrices__expressions__permutation__MatrixPermute():
+    from sympy.combinatorics import Permutation
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
+    from sympy.matrices.expressions.permutation import MatrixPermute
+    A = MatrixSymbol('A', 3, 3)
+    assert _test_args(MatrixPermute(A, Permutation([2, 0, 1])))
 
 def test_sympy__physics__vector__frame__CoordinateSym():
     from sympy.physics.vector import CoordinateSym

@@ -311,6 +311,43 @@ def test_Complement():
     assert B3 - A2 == B3
 
 
+def test_set_operations_nonsets():
+    '''Tests that e.g. FiniteSet(1) * 2 raises TypeError'''
+    ops = [
+        lambda a, b: a + b,
+        lambda a, b: a - b,
+        lambda a, b: a * b,
+        lambda a, b: a / b,
+        lambda a, b: a // b,
+        lambda a, b: a | b,
+        lambda a, b: a & b,
+        lambda a, b: a ^ b,
+        # FiniteSet(1) ** 2 gives a ProductSet
+        #lambda a, b: a ** b,
+    ]
+    Sx = FiniteSet(x)
+    Sy = FiniteSet(y)
+    sets = [
+        {1},
+        FiniteSet(1),
+        Interval(1, 2),
+        Union(Sx, Interval(1, 2)),
+        Intersection(Sx, Sy),
+        Complement(Sx, Sy),
+        ProductSet(Sx, Sy),
+        S.EmptySet,
+    ]
+    nums = [0, 1, 2, S(0), S(1), S(2)]
+
+    for s in sets:
+        for n in nums:
+            for op in ops:
+                raises(TypeError, lambda : op(s, n))
+                raises(TypeError, lambda : op(n, s))
+        raises(TypeError, lambda: s ** object())
+        raises(TypeError, lambda: s ** {1})
+
+
 def test_complement():
     assert Interval(0, 1).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
@@ -1124,16 +1161,16 @@ def test_boundary_ProductSet_line():
 
 
 def test_is_open():
-    assert not Interval(0, 1, False, False).is_open
-    assert not Interval(0, 1, True, False).is_open
-    assert Interval(0, 1, True, True).is_open
-    assert not FiniteSet(1, 2, 3).is_open
+    assert Interval(0, 1, False, False).is_open is False
+    assert Interval(0, 1, True, False).is_open is False
+    assert Interval(0, 1, True, True).is_open is True
+    assert FiniteSet(1, 2, 3).is_open is False
 
 
 def test_is_closed():
-    assert Interval(0, 1, False, False).is_closed
-    assert not Interval(0, 1, True, False).is_closed
-    assert FiniteSet(1, 2, 3).is_closed
+    assert Interval(0, 1, False, False).is_closed is True
+    assert Interval(0, 1, True, False).is_closed is False
+    assert FiniteSet(1, 2, 3).is_closed is True
 
 
 def test_closure():
