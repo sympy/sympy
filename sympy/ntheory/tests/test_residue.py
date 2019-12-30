@@ -78,6 +78,8 @@ def test_residue():
     assert sqrt_mod(3, -13) == 4
     assert sqrt_mod(6, 23) == 11
     assert sqrt_mod(345, 690) == 345
+    assert sqrt_mod(67, 101) == None
+    assert sqrt_mod(1020, 104729) == None
 
     for p in range(3, 100):
         d = defaultdict(list)
