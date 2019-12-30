@@ -37,6 +37,7 @@ Pareto
 QuadraticU
 RaisedCosine
 Rayleigh
+Reciprocal
 ShiftedGompertz
 StudentT
 Trapezoidal
@@ -105,6 +106,7 @@ __all__ = ['ContinuousRV',
 'QuadraticU',
 'RaisedCosine',
 'Rayleigh',
+'Reciprocal',
 'StudentT',
 'ShiftedGompertz',
 'Trapezoidal',
@@ -3192,6 +3194,64 @@ def Rayleigh(name, sigma):
     """
 
     return rv(name, RayleighDistribution, (sigma, ))
+
+#-------------------------------------------------------------------------------
+# Reciprocal distribution --------------------------------------------------------
+
+class ReciprocalDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 'b')
+
+    @property
+    def set(self):
+        return Interval(self.a, self.b)
+
+    @staticmethod
+    def check(a, b):
+        _value_check(a > 0, "Parameter > 0. a = %s"%a)
+        _value_check((a < b),
+        "Parameter b must be in range (%s, +oo]. b = %s"%(a, b))
+
+    def pdf(self, x):
+        a, b = self.a, self.b
+        return 1/(x*(log(b) - log(a)))
+
+
+def Reciprocal(name, a, b):
+    r"""Creates a continuous random variable with a reciprocal distribution.
+
+
+    Parameters
+    ==========
+
+    a : Real number, :math:`0 < a`
+    b : Real number, :math:`a < b`
+
+    Returns
+    =======
+
+    A RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Reciprocal, density, cdf
+    >>> from sympy import symbols
+    >>> a, b, x = symbols('a, b, x', positive=True)
+    >>> R = Reciprocal('R', a, b)
+
+    >>> density(R)(x)
+    1/(x*(-log(a) + log(b)))
+    >>> cdf(R)(x)
+    Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
+
+    Reference
+    =========
+
+    .. [1] https://en.wikipedia.org/wiki/Reciprocal_distribution
+
+    """
+    return rv(name, ReciprocalDistribution, (a, b))
+
 
 #-------------------------------------------------------------------------------
 # Shifted Gompertz distribution ------------------------------------------------
