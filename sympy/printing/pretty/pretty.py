@@ -1193,6 +1193,9 @@ class PrettyPrinter(Printer):
 
         pform = prettyForm(deriv_symbol)
 
+        if len(deriv.variables) > 1:
+            pform = pform**self._print(len(deriv.variables))
+
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1
         pform = prettyForm(*stringPict.next(pform, f))
