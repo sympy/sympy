@@ -384,14 +384,16 @@ def test_Range_symbolic():
     assert Range(ip).inf == 0
     assert Range(ip).sup == ip - 1
     raises(ValueError, lambda: Range(i).inf)
+    # as_relational
     raises(ValueError, lambda: sr.as_relational(x))
     assert ir.as_relational(x) == (
         x >= i) & Eq(x, floor(x)) & (x <= i + 18)
+    assert Range(i, i + 1).as_relational(x) == Eq(x, i)
     # contains() for symbolic values (issue #18146)
     e = Symbol('e', integer=True, even=True)
     o = Symbol('o', integer=True, odd=True)
     assert Range(5).contains(i) == And(i >= 0, i <= 4)
-    # assert Range(1).contains(i) == Eq(i, 0) (unsimplified relational)
+    assert Range(1).contains(i) == Eq(i, 0)
     assert Range(-oo, 5, 1).contains(i) == (i <= 4)
     assert Range(-oo, oo).contains(i) == True
     assert Range(0, 8, 2).contains(i) == Contains(i, Range(0, 8, 2))
