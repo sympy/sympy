@@ -655,7 +655,7 @@ def given(expr, condition=None, **kwargs):
             if temp == True:
                 return True
             if temp != False:
-                # XXX: This seems nonsensical but preserves existing behavoiur
+                # XXX: This seems nonsensical but preserves existing behaviour
                 # after the change that Relational is no longer a subclass of
                 # Expr. Here expr is sometimes Relational and sometimes Expr
                 # but we are trying to add them with +=. This needs to be
