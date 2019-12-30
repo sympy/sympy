@@ -152,7 +152,7 @@ class StochasticProcess(Basic):
             return JointDistribution(*args)
         # TODO: Add tests for the below part of the method, when implementation of Bernoulli Process
         # is completed
-        pdf = Lambda(args,
+        pdf = Lambda(tuple(args),
                     expr=Mul.fromiter(arg.pspace.process._pdf(arg) for arg in args))
         return JointDistributionHandmade(pdf)
 
