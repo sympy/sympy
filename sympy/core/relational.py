@@ -236,6 +236,10 @@ class Relational(Boolean, Expr, EvalfMixin):
                 return r.reversed.reversedsign
 
         return r
+    
+    def do(self, op):
+        """Do the same operation on both sides of the equation."""
+        return self.__class__(op(self.lhs), op(self.rhs))
 
     def equals(self, other, failing_expression=False):
         """Return True if the sides of the relationship are mathematically
