@@ -53,9 +53,9 @@ __all__ = [
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
     'Kumaraswamy', 'Laplace', 'Logistic', 'LogLogistic', 'LogNormal',
     'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto',
-    'PowerFunction', 'QuadraticU', 'RaisedCosine', 'Rayleigh', 'StudentT',
-    'ShiftedGompertz', 'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum',
-    'VonMises', 'Wald', 'Weibull', 'WignerSemicircle',
+    'PowerFunction', 'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal',
+    'StudentT', 'ShiftedGompertz', 'Trapezoidal', 'Triangular', 'Uniform',
+    'UniformSum', 'VonMises', 'Wald', 'Weibull', 'WignerSemicircle',
 
     'Geometric', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
     'YuleSimon', 'Zeta',
@@ -93,7 +93,7 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         ExGaussian, Exponential, ExponentialPower, FDistribution, FisherZ,
         Frechet, Gamma, GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace,
         Logistic, LogLogistic, LogNormal, Maxwell, Nakagami, Normal,
-        GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, StudentT,
+        GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, StudentT,
         PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
         VonMises, Wald, Weibull, WignerSemicircle)
 
