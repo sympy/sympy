@@ -5,7 +5,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Lambda, Mul, Dummy, IndexedBase, symbols,
                    linsolve, eye, Or, Not, Intersection,
                    Union, Expr, Function, exp, cacheit,
-                   Ge, binomial, sympify)
+                   Ge, binomial, sympify, Piecewise)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -84,10 +84,10 @@ class StochasticProcess(Basic):
 
     index_set = S.Reals
 
-    def __new__(cls, sym, state_space=S.Reals, distribution=None, **kwargs):
+    def __new__(cls, sym, state_space=S.Reals, **kwargs):
         sym = _symbol_converter(sym)
         state_space = _set_converter(state_space)
-        return Basic.__new__(cls, sym, state_space, distribution)
+        return Basic.__new__(cls, sym, state_space)
 
     @property
     def symbol(self):
@@ -96,10 +96,6 @@ class StochasticProcess(Basic):
     @property
     def state_space(self):
         return self.args[1]
-
-    @property
-    def distribution(self):
-        return self.args[2]
 
     def __call__(self, time):
         """
@@ -156,12 +152,8 @@ class StochasticProcess(Basic):
             return JointDistribution(*args)
         # TODO: Add tests for the below part of the method, when implementation of Bernoulli Process
         # is completed
-        try:
-            pdf = Lambda(args,
+        pdf = Lambda(args,
                     expr=Mul.fromiter(arg.pspace.process._pdf(arg) for arg in args))
-        except AttributeError:
-            pdf = Lambda(args,
-                    expr=Mul.fromiter(arg.pspace.distribution.pdf(arg) for arg in args))
         return JointDistributionHandmade(pdf)
 
     def expectation(self, condition, given_condition):
@@ -183,7 +175,11 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
         if time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         idx_obj = Indexed(self.symbol, time)
-        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
+        try:
+            distribution = self.distribution
+        except AttributeError:
+            distribution = None
+        pspace_obj = StochasticPSpace(self.symbol, self, distribution)
         return RandomIndexedSymbol(idx_obj, pspace_obj)
 
 class ContinuousTimeStochasticProcess(StochasticProcess):
@@ -830,6 +826,10 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     @property
     def p(self):
         return self.args[3]
+
+    @property
+    def distribution(self):
+        return self.args[2]
 
     def __new__(cls, sym, p):
         if p > 1 or p < 0:
