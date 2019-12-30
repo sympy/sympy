@@ -29,6 +29,8 @@ def test_naturals():
     assert N.intersect(Interval(-5, 5, True, True)) == Range(1, 5)
 
     assert N.boundary == N
+    assert N.is_open == False
+    assert N.is_closed == True
 
     assert N.inf == 1
     assert N.sup is oo
@@ -71,6 +73,8 @@ def test_integers():
     assert Z.sup is oo
 
     assert Z.boundary == Z
+    assert Z.is_open == False
+    assert Z.is_closed == True
 
     assert Z.as_relational(x) == And(Eq(floor(x), x), -oo < x, x < oo)
 
@@ -948,7 +952,19 @@ def test_Rationals():
     r = symbols('r', rational=True)
     assert r in S.Rationals
     raises(TypeError, lambda: x in S.Rationals)
-    assert S.Rationals.boundary == S.Rationals
+    # issue #18134:
+    assert S.Rationals.boundary == S.Reals
+    assert S.Rationals.closure == S.Reals
+    assert S.Rationals.is_open == False
+    assert S.Rationals.is_closed == False
+
+
+def test_NZQRC_unions():
+    # check that all trivial number set unions are simplified:
+    nbrsets = (S.Naturals, S.Naturals0, S.Integers, S.Rationals,
+        S.Reals, S.Complexes)
+    unions = (Union(a, b) for a in nbrsets for b in nbrsets)
+    assert all(u.is_Union is False for u in unions)
 
 
 def test_imageset_intersection():

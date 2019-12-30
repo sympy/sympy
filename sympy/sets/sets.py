@@ -558,25 +558,30 @@ class Set(Basic):
     def is_open(self):
         """
         Property method to check whether a set is open.
+
         A set is open if and only if it has an empty intersection with its
-        boundary.
+        boundary. In particular, a subset A of the reals is open if and only
+        if each one of its points is contained in an open interval that is a
+        subset of A.
 
         Examples
         ========
         >>> from sympy import S
         >>> S.Reals.is_open
         True
+        >>> S.Rationals.is_open
+        False
         """
-        if not Intersection(self, self.boundary):
-            return True
-        # We can't confidently claim that an intersection exists
-        return None
+        return Intersection(self, self.boundary).is_empty
 
     @property
     def is_closed(self):
         """
-        A property method to check whether a set is closed. A set is closed
-        if its complement is an open set.
+        A property method to check whether a set is closed.
+
+        A set is closed if its complement is an open set. The closedness of a
+        subset of the reals is determined with respect to R and its standard
+        topology.
 
         Examples
         ========

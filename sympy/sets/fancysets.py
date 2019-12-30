@@ -66,7 +66,7 @@ class Rationals(with_metaclass(Singleton, Set)):
 
     @property
     def _boundary(self):
-        return self
+        return S.Reals
 
 
 class Naturals(with_metaclass(Singleton, Set)):
