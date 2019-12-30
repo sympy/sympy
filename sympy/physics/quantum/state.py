@@ -656,7 +656,7 @@ class OrthogonalKet(Ket):
 
         return 1
 
-    
+
 class OrthogonalBra(Bra):
     """Orthogonal Bra in quantum mechanics.
     """
