@@ -1,5 +1,4 @@
-from sympy.physics.units import DimensionSystem, joule, second, ampere, electronvolt, convert_to, coulomb
-from sympy.physics.units.systems import cgs
+from sympy.physics.units import DimensionSystem, joule, second, ampere
 from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import Rational, S

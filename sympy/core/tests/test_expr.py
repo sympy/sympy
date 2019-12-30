@@ -934,6 +934,9 @@ def test_as_poly_as_expr():
 
     assert p.as_poly() == p
 
+    raises(AttributeError, lambda: Tuple(x, x).as_poly(x))
+    raises(AttributeError, lambda: Tuple(x ** 2, x, y).as_poly(x))
+
 
 def test_nonzero():
     assert bool(S.Zero) is False
