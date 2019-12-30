@@ -683,11 +683,15 @@ class Range(Set):
             ref = self.start
         elif self.stop.is_finite:
             ref = self.stop
-        else:
-            return other.is_Integer
-        if (ref - other) % self.step:  # off sequence
+        else:  # both infinite; step is +/- 1 (enforced by __new__)
+            return S.true
+        res = (ref - other) % self.step
+        if res == S.Zero:
+            return And(other >= self.inf, other <= self.sup)
+        elif res.is_Integer:  # off sequence
             return S.false
-        return _sympify(other >= self.inf and other <= self.sup)
+        else:  # symbolic/unsimplified residue modulo step
+            return None
 
     def __iter__(self):
         if self.has(Symbol):
