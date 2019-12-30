@@ -619,8 +619,11 @@ class TimeDepBra(TimeDepState, BraBase):
         return TimeDepKet
 
 
+class OrthogonalState(State, StateBase):
+    """General abstract quantum state used as a base class for Ket and Bra."""
+    pass
 
-class OrthogonalKet(Ket):
+class OrthogonalKet(OrthogonalState, KetBase):
     """Orthogonal Ket in quantum mechanics.
 
     The inner product of two states with different labels will give zero,
@@ -657,7 +660,7 @@ class OrthogonalKet(Ket):
         return 1
 
 
-class OrthogonalBra(Bra):
+class OrthogonalBra(OrthogonalState, BraBase):
     """Orthogonal Bra in quantum mechanics.
     """
 
