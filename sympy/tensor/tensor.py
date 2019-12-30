@@ -3824,38 +3824,6 @@ class TensorElement(TensExpr):
         return ret_indices, array
 
 
-class TensPartialDerivative(TensExpr):
-    def __new__(cls, expr, v):
-        obj = TensExpr.__new__(cls, expr, v)
-        obj._expr = expr
-        obj._v = v
-        return obj
-
-    @property
-    def expr(self):
-        return self._expr
-
-    @property
-    def v(self):
-        return self._v
-
-    def get_indices(self):
-        pass
-
-    def doit(self, **kwargs):
-        expr, v = self.expr, self.v
-        #if isinstance(expr, TensMul):
-        #    ... code for TensMul expr being derived by v ...
-        #    return result
-        #elif isinstance(expr, TensAdd):
-        #    ... code for TensAdd expr being derived by v ...
-        #    return result
-        #elif isinstance(expr, Tensor):
-        #    ... code for TensAdd expr being derived by v ...
-        #    return result
-        return expr._eval_partial_derivative(v)
-
-
 def canon_bp(p):
     """
     Butler-Portugal canonicalization. See ``tensor_can.py`` from the
@@ -3864,6 +3832,7 @@ def canon_bp(p):
     if isinstance(p, TensExpr):
         return p.canon_bp()
     return p
+
 
 def tensor_mul(*a):
     """

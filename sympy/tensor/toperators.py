@@ -41,8 +41,6 @@ class PartialDerivative(TensExpr):
             variables = expr.variables + variables
             expr = expr.expr
 
-        # TODO: check that all variables have rank 1.
-
         args, indices, free, dum = cls._contract_indices_for_derivative(
             expr, variables)
 
@@ -76,7 +74,10 @@ class PartialDerivative(TensExpr):
         obj._indices = indices
         obj._free = free
         obj._dum = dum
-        return obj
+        result = self.expr
+        for v in self.variables:
+            result = result._eval_partial_derivative(v)
+        return result
 
     def get_indices(self):
         return self._indices
