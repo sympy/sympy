@@ -533,10 +533,23 @@ def pretty_symbol(symb_name, bold_name=False):
     # UC: beta1
     # UC: f_beta
 
-    if not _use_unicode:
-        return symb_name
+    # imported here to avoid circular ImportError
+    from .stringpict import prettyForm
+    from .pretty import PrettyPrinter
 
     name, sups, subs = split_super_sub(symb_name)
+
+    if not _use_unicode:
+        # glue all items together:
+        ascii_pretty = PrettyPrinter()
+        pform_sym = ascii_pretty._print(name)
+        pform = ascii_pretty._print(' ' * max(len(sups), len(subs)))
+        if len(sups) > 0:
+            pform = prettyForm(*pform.above(ascii_pretty._print(''.join(sups))))
+        if len(subs) > 0:
+            pform = prettyForm(*pform.below(ascii_pretty._print(''.join(subs))))
+
+        return prettyForm(*pform_sym.right(pform))
 
     def translate(s, bold_name) :
         if bold_name:

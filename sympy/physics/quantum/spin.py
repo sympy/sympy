@@ -1427,8 +1427,8 @@ class CoupledSpinState(SpinState):
         label = [self.j, self.m]
         for i, ji in enumerate(self.jn, start=1):
             symb = 'j%d' % i
-            symb = pretty_symbol(symb)
-            symb = prettyForm(symb + '=')
+            symb = prettyForm(pretty_symbol(symb))
+            symb = prettyForm(*symb.right("="))
             item = prettyForm(*symb.right(printer._print(ji)))
             label.append(item)
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):

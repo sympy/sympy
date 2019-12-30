@@ -5800,12 +5800,6 @@ u("""\
     assert pretty(1/sqrt(x)) == ascii_str
     assert upretty(1/sqrt(x)) == ucode_str
 
-
-def test_complicated_symbol_unchanged():
-    for symb_name in ["dexpr2_d1tau", "dexpr2^d1tau"]:
-        assert pretty(Symbol(symb_name)) == symb_name
-
-
 def test_categories():
     from sympy.categories import (Object, IdentityMorphism,
         NamedMorphism, Category, Diagram, DiagramGrid)
@@ -5819,19 +5813,44 @@ def test_categories():
     id_A1 = IdentityMorphism(A1)
 
     K1 = Category("K1")
-
-    assert pretty(A1) == "A1"
+    ascii_str = \
+"""\
+A \n\
+ 1\
+"""
+    assert pretty(A1) == ascii_str
     assert upretty(A1) == u"A₁"
 
-    assert pretty(f1) == "f1:A1-->A2"
+    ascii_str = \
+"""\
+f :A -->A \n\
+ 1  1    2\
+"""
+    assert pretty(f1) == ascii_str
     assert upretty(f1) == u"f₁:A₁——▶A₂"
-    assert pretty(id_A1) == "id:A1-->A1"
+
+    ascii_str = \
+"""\
+id:A -->A \n\
+    1    1\
+"""
+    assert pretty(id_A1) == ascii_str
     assert upretty(id_A1) == u"id:A₁——▶A₁"
 
-    assert pretty(f2*f1) == "f2*f1:A1-->A3"
+    ascii_str = \
+"""\
+f *f :A -->A \n\
+ 2  1  1    3\
+"""
+    assert pretty(f2*f1) == ascii_str
     assert upretty(f2*f1) == u"f₂∘f₁:A₁——▶A₃"
 
-    assert pretty(K1) == "K1"
+    ascii_str = \
+"""\
+K \n\
+ 1\
+"""
+    assert pretty(K1) == ascii_str
     assert upretty(K1) == u"K₁"
 
     # Test how diagrams are printed.
@@ -5840,24 +5859,38 @@ def test_categories():
     assert upretty(d) == u"∅"
 
     d = Diagram({f1: "unique", f2: S.EmptySet})
-    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet, id:A1-->A1: " \
-        "EmptySet, id:A2-->A2: EmptySet, id:A3-->A3: " \
-        "EmptySet, f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet}"
 
+    ascii_str = \
+"""\
+{f *f :A -->A : EmptySet, id:A -->A : EmptySet, id:A -->A : EmptySet, id:A -->A : EmptySet, f :A -->A : {unique}, f :A -->A : EmptySet}\n\
+  2  1  1    3                1    1                2    2                3    3             1  1    2             2  2    3           \
+"""
+    assert pretty(d) == ascii_str
     assert upretty(d) == u("{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
         "id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}")
 
     d = Diagram({f1: "unique", f2: S.EmptySet}, {f2 * f1: "unique"})
-    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet, id:A1-->A1: " \
-        "EmptySet, id:A2-->A2: EmptySet, id:A3-->A3: " \
-        "EmptySet, f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet}" \
-        " ==> {f2*f1:A1-->A3: {unique}}"
+
+    ascii_str = \
+"""\
+{f *f :A -->A : EmptySet, id:A -->A : EmptySet, id:A -->A : EmptySet, id:A -->A : EmptySet, f :A -->A : {unique}, f :A -->A : EmptySet} ==> {f *f :A -->A : {unique}}\n\
+  2  1  1    3                1    1                2    2                3    3             1  1    2             2  2    3                  2  1  1    3           \
+"""
+    assert pretty(d) == ascii_str
     assert upretty(d) == u("{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
         "∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
         " ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}")
 
     grid = DiagramGrid(d)
-    assert pretty(grid) == "A1  A2\n      \nA3    "
+    ascii_str = \
+"""\
+A   A \n\
+ 1   2\n\
+      \n\
+A     \n\
+ 3    \
+"""
+    assert pretty(grid) == ascii_str
     assert upretty(grid) == u"A₁  A₂\n      \nA₃    "
 
 
@@ -6338,12 +6371,20 @@ def test_MatrixElement_printing():
     B = MatrixSymbol("B", 1, 3)
     C = MatrixSymbol("C", 1, 3)
 
-    ascii_str1 = "A_00"
+    ascii_str1 = \
+'''\
+A  \n\
+ 00\
+'''
     ucode_str1 = u("A₀₀")
     assert pretty(A[0, 0])  == ascii_str1
     assert upretty(A[0, 0]) == ucode_str1
 
-    ascii_str1 = "3*A_00"
+    ascii_str1 = \
+'''\
+3*A  \n\
+   00\
+'''
     ucode_str1 = u("3⋅A₀₀")
     assert pretty(3*A[0, 0])  == ascii_str1
     assert upretty(3*A[0, 0]) == ucode_str1
@@ -6376,6 +6417,24 @@ u("""\
 """)
     assert upretty((1/y)*e.j) == ucode_str
 
+
+def test_issue_12158():
+    sym1 = Symbol('x_2__i')
+    ascii_str1 = \
+'''\
+ i\n\
+x \n\
+ 2\
+'''
+    assert pretty(sym1) == ascii_str1
+    sym2 = Symbol('x^k^t_j_i')
+    ascii_str2 = \
+'''\
+ kt\n\
+x  \n\
+ ji\
+'''
+    assert pretty(sym2) == ascii_str2
 
 def test_MatrixSymbol_printing():
     # test cases for issue #14237
@@ -6462,9 +6521,10 @@ A \n\
     expr = A(i0)
     ascii_str = \
 """\
- i_0\n\
-A   \n\
-    \
+ i \n\
+  0\n\
+A  \n\
+   \
 """
     ucode_str = \
 u("""\
@@ -6526,9 +6586,11 @@ H  \n\
     expr = H(i, -i)
     ascii_str = \
 """\
- L_0   \n\
-H      \n\
-    L_0\
+ L   \n\
+  0  \n\
+H    \n\
+   L \n\
+    0\
 """
     ucode_str = \
 u("""\
@@ -6542,9 +6604,11 @@ H    \n\
     expr = H(i, -j)*A(j)*B(k)
     ascii_str = \
 """\
- i     L_0  k\n\
-H    *A   *B \n\
-  L_0        \
+      L    \n\
+ i     0  k\n\
+H   *A  *B \n\
+  L        \n\
+   0       \
 """
     ucode_str = \
 u("""\
@@ -6622,12 +6686,14 @@ u("""\
     expr = A(i)*PartialDerivative(H(k, -i), A(j))
     ascii_str = \
 """\
- L_0  d / k   \\\n\
-A   *---|H    |\n\
-       j\\  L_0/\n\
-     dA        \n\
-               \
+ L           \n\
+  0  d / k  \\\n\
+A  *---|H   |\n\
+      j|  L |\n\
+    dA \\   0/\n\
+             \
 """
+
     ucode_str = \
 u("""\
  L₀  ∂ ⎛ k  ⎞\n\
@@ -6642,11 +6708,12 @@ A  ⋅───⎜H   ⎟\n\
     expr = A(i)*PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j))
     ascii_str = \
 """\
- L_0  d / k           k   \\\n\
-A   *---|B *C    + 3*H    |\n\
-       j\\    L_0       L_0/\n\
-     dA                    \n\
-                           \
+ L                      \n\
+  0  d / k          k  \\\n\
+A  *---|B *C   + 3*H   |\n\
+      j|    L        L |\n\
+    dA \\     0        0/\n\
+                        \
 """
     ucode_str = \
 u("""\
@@ -6662,11 +6729,12 @@ A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
     expr = (A(i) + B(i))*PartialDerivative(C(-j), D(j))
     ascii_str = \
 """\
-/ i    i\\   d  /    \\\n\
-|A  + B |*-----|C   |\n\
-\\       /   L_0\\ L_0/\n\
-          dD         \n\
-                     \
+/ i    i\\  d  /   \\\n\
+|A  + B |*----|C  |\n\
+\\       /   L | L |\n\
+             0\\  0/\n\
+          dD       \n\
+                   \
 """
     ucode_str = \
 u("""\
@@ -6682,11 +6750,12 @@ u("""\
     expr = (A(i) + B(i))*PartialDerivative(C(-i), D(j))
     ascii_str = \
 """\
-/ L_0    L_0\\  d /    \\\n\
-|A    + B   |*---|C   |\n\
-\\           /   j\\ L_0/\n\
-              dD       \n\
-                       \
+/ L     L \\         \n\
+|  0     0|  d /   \\\n\
+|A   + B  |*---|C  |\n\
+\\         /   j| L |\n\
+            dD \\  0/\n\
+                    \
 """
     ucode_str = \
 u("""\
