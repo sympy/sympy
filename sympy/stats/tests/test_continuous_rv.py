@@ -17,11 +17,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Nakagami, Normal, GaussianInverse,
-
-                         Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
-                         
-                         Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz, StudentT,
-
+                         Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import (NormalDistribution, GumbelDistribution, GompertzDistribution, LaplaceDistribution,
