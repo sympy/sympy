@@ -3009,11 +3009,16 @@ def PowerFunction(name, alpha, a, b):
     Piecewise((a**2/(a**2 - 2*a*b + b**2) - 2*a*z/(a**2 - 2*a*b + b**2) +
     z**2/(a**2 - 2*a*b + b**2), a <= z), (0, True))
 
-    >>> simplify(E(X))
-    a/3 + 2*b/3
+    >>> alpha = 2
+    >>> a = 0
+    >>> b = 1
+    >>> Y = PowerFunction("Y", alpha, a, b)
 
-    >>> simplify(variance(X))
-    a**2/18 - a*b/9 + b**2/18
+    >>> E(Y)
+    2/3
+
+    >>> variance(Y)
+    1/18
 
     References
     ==========
