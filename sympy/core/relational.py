@@ -388,11 +388,6 @@ class Relational(Boolean, EvalfMixin):
         args = (arg.expand(**kwargs) for arg in self.args)
         return self.func(*args)
 
-    def integrate(self, *args, **kwargs):
-        """See the integrate function in sympy.integrals"""
-        from sympy.integrals import integrate
-        return integrate(self, *args, **kwargs)
-
     def __nonzero__(self):
         raise TypeError("cannot determine truth value of Relational")
 
@@ -664,6 +659,11 @@ class Equality(Relational):
             except ValueError:
                 pass
         return e.canonical
+
+    def integrate(self, *args, **kwargs):
+        """See the integrate function in sympy.integrals"""
+        from sympy.integrals import integrate
+        return integrate(self, *args, **kwargs)
 
     def as_poly(self, *gens, **kwargs):
         '''Returns lhs-rhs as a Poly
