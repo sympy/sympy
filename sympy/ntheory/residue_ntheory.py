@@ -393,7 +393,7 @@ def _sqrt_mod_prime_power(a, p, k):
     if k == 1:
         if p == 2:
             return [ZZ(a)]
-        if not (pow(a, (p - 1) // 2, p) == 1 or p < 3 or a % p < 2):
+        if not (pow(a, (p - 1) // 2, p) == 1 or a % p < 2):
             return None
 
         if p % 4 == 3:
