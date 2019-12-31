@@ -504,3 +504,7 @@ def test_issue_17450():
     assert (Pow(exp(1+sqrt(2)), ((1-sqrt(2))*I*pi), evaluate=False)).is_real is None
     assert ((-10)**(10*I*pi/3)).is_real is False
     assert ((-5)**(4*I*pi)).is_real is False
+
+
+def test_issue_18190():
+    assert sqrt(1 / tan(1 + I)) == 1 / sqrt(tan(1 + I))
