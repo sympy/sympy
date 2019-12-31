@@ -164,8 +164,18 @@ def test_BernoulliProcess():
 
     assert B.probability_of_rth_success(5, 1).round(3)==Float(0.015, 3)
 
+    raises (ValueError, lambda: B.probability_r_success(ntrials=5, rsuccess=6))
+    raises (ValueError, lambda: B.probability_r_success(ntrials=5.5, rsuccess=2))
+    raises (ValueError, lambda: B.probability_r_success(ntrials=2.5, rsuccess=None, evaluate=False))
+    raises (ValueError, lambda: B.probability_of_rth_success(ntrial=5, rsuccess=6))
+    raises (ValueError, lambda: B.probability_of_rth_success(ntrial=5.5, rsuccess=2))
+
     assert E(2 * B[1] + B[2]).round(2) == Float(1.80, 3)
     assert E(2 * B[1] + B[2] + 5).round(2) == Float(6.80, 3)
+    assert E(B[2] * B[4] + B[10]).round(2) == Float(0.96, 2)
     assert P(B[1] > 0).round(2) == Float(0.60, 2)
     assert P(B[1] < 1).round(2) == Float(0.40, 2)
     assert P(B[1] > 0, B[2] <= 1).round(2) == Float(0.60, 2)
+    #Below two tests show that each trial is an independent event
+    assert P(B[12] * B[5] > 0).round(2) == Float(0.36, 2)
+    assert P(B[12] * B[5] > 0, B[4] < 1).round(2) == Float(0.36, 2)
