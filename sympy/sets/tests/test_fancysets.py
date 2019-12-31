@@ -1001,3 +1001,11 @@ def test_issue_17858():
     assert 0 in Range(oo, -oo, -1)
     assert oo not in Range(-oo, oo)
     assert -oo not in Range(-oo, oo)
+
+def test_issue_17859():
+    r = Range(-oo,oo)
+    raises(ValueError,lambda: r[::2])
+    raises(ValueError, lambda: r[::-2])
+    r = Range(oo,-oo,-1)
+    raises(ValueError,lambda: r[::2])
+    raises(ValueError, lambda: r[::-2])
