@@ -6659,20 +6659,20 @@ A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = (A(i) + B(i))*PartialDerivative(C(-j), D(j))
+    expr = (A(i) + B(i))*PartialDerivative(C(j), D(j))
     ascii_str = \
 """\
-/ i    i\\   d  /    \\\n\
+/ i    i\\   d  / L_0\\\n\
 |A  + B |*-----|C   |\n\
-\\       /   L_0\\ L_0/\n\
+\\       /   L_0\\    /\n\
           dD         \n\
                      \
 """
     ucode_str = \
 u("""\
-⎛ i    i⎞  ∂  ⎛   ⎞\n\
+⎛ i    i⎞  ∂  ⎛ L₀⎞\n\
 ⎜A  + B ⎟⋅────⎜C  ⎟\n\
-⎝       ⎠   L₀⎝ L₀⎠\n\
+⎝       ⎠   L₀⎝   ⎠\n\
           ∂D       \n\
                    \
 """)
@@ -6699,6 +6699,28 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = PartialDerivative(B(-i) + A(-i), A(-j), A(-n))
+    ucode_str = u("""\
+    2           \n\
+   ∂   ⎛       ⎞\n\
+───────⎜A  + B ⎟\n\
+       ⎝ i    i⎠\n\
+∂A  ∂A          \n\
+  n   j         \
+""")
+    assert upretty(expr) == ucode_str
+
+    expr = PartialDerivative(3*A(-i), A(-j), A(-n))
+    ucode_str = u("""\
+    2        \n\
+   ∂   ⎛    ⎞\n\
+───────⎜3⋅A ⎟\n\
+       ⎝   i⎠\n\
+∂A  ∂A       \n\
+  n   j      \
+""")
+    assert upretty(expr) == ucode_str
+
     expr = TensorElement(H(i, j), {i:1})
     ascii_str = \
 """\
@@ -6710,7 +6732,7 @@ H     \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = TensorElement(H(i, j), {i:1, j:1})
+    expr = TensorElement(H(i, j), {i: 1, j: 1})
     ascii_str = \
 """\
  i=1,j=1\n\
@@ -6721,7 +6743,7 @@ H       \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = TensorElement(H(i, j), {j:1})
+    expr = TensorElement(H(i, j), {j: 1})
     ascii_str = \
 """\
  i,j=1\n\
@@ -6730,7 +6752,7 @@ H     \n\
 """
     ucode_str = ascii_str
 
-    expr = TensorElement(H(-i, j), {-i:1})
+    expr = TensorElement(H(-i, j), {-i: 1})
     ascii_str = \
 """\
     j\n\

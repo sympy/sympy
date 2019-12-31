@@ -17,13 +17,13 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Nakagami, Normal, GaussianInverse,
-                         Pareto, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz, StudentT,
+                         Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import (NormalDistribution, GumbelDistribution, GompertzDistribution, LaplaceDistribution,
                                   ParetoDistribution, RaisedCosineDistribution, BeniniDistribution, BetaDistribution,
                                   CauchyDistribution, GammaInverseDistribution, LogNormalDistribution, StudentTDistribution,
-                                  QuadraticUDistribution, WignerSemicircleDistribution, ChiDistribution)
+                                  QuadraticUDistribution, WignerSemicircleDistribution, ChiDistribution, ReciprocalDistribution)
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.randtest import verify_numerically as tn
@@ -951,6 +951,26 @@ def test_rayleigh():
     assert cdf(X)(x) == 1 - exp(-x**2/(2*sigma**2))
     assert diff(cdf(X)(x), x) == density(X)(x)
 
+def test_reciprocal():
+    a = Symbol("a", real=True)
+    b = Symbol("b", real=True)
+
+    X = Reciprocal('x', a, b)
+    assert density(X)(x) == 1/(x*(-log(a) + log(b)))
+    assert cdf(X)(x) == Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
+    X = Reciprocal('x', 5, 30)
+
+    assert E(X) == 25/(log(30) - log(5))
+    assert P(X < 4) == S.Zero
+    assert P(X < 20) == log(20) / (log(30) - log(5)) - log(5) / (log(30) - log(5))
+    assert cdf(X)(10) == log(10) / (log(30) - log(5)) - log(5) / (log(30) - log(5))
+
+    a = symbols('a', nonpositive=True)
+    raises(ValueError, lambda: Reciprocal('x', a, b))
+
+    a = symbols('a', positive=True)
+    b = symbols('b', positive=True)
+    raises(ValueError, lambda: Reciprocal('x', a + b, a))
 
 def test_shiftedgompertz():
     b = Symbol("b", positive=True)

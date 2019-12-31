@@ -377,6 +377,8 @@ def test_issue_13749():
     assert integrate(1 / (2 + cos(x)), (x, 0, pi)) == pi/sqrt(3)
     assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 - pi/2)/pi))/3
 
+def test_issue_18133():
+    assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
 
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
@@ -861,6 +863,15 @@ def test_issue_4884():
             (2*I*sqrt(-x)*(x + 1)**2/5 - 2*I*sqrt(-x)*(x + 1)/15 -
             4*I*sqrt(-x)/15, True))
     assert integrate(x**x*(1 + log(x))) == x**x
+
+def test_issue_18153():
+    assert integrate(x**n*log(x),x) == \
+    Piecewise(
+        (n*x*x**n*log(x)/(n**2 + 2*n + 1) +
+    x*x**n*log(x)/(n**2 + 2*n + 1) - x*x**n/(n**2 + 2*n + 1)
+    , Ne(n, -1)), (log(x)**2/2, True)
+    )
+
 
 
 def test_is_number():

@@ -210,8 +210,11 @@ class KanesMethod(object):
             self._k_nh = (vel - self._f_nh).jacobian(self.u)
             # If no acceleration constraints given, calculate them.
             if not acc:
-                self._f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
-                               self._f_nh.diff(dynamicsymbols._t))
+                _f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
+                          self._f_nh.diff(dynamicsymbols._t))
+                if self._qdot_u_map is not None:
+                    _f_dnh = msubs(_f_dnh, self._qdot_u_map)
+                self._f_dnh = _f_dnh
                 self._k_dnh = self._k_nh
             else:
                 if self._qdot_u_map is not None:

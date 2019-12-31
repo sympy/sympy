@@ -311,6 +311,43 @@ def test_Complement():
     assert B3 - A2 == B3
 
 
+def test_set_operations_nonsets():
+    '''Tests that e.g. FiniteSet(1) * 2 raises TypeError'''
+    ops = [
+        lambda a, b: a + b,
+        lambda a, b: a - b,
+        lambda a, b: a * b,
+        lambda a, b: a / b,
+        lambda a, b: a // b,
+        lambda a, b: a | b,
+        lambda a, b: a & b,
+        lambda a, b: a ^ b,
+        # FiniteSet(1) ** 2 gives a ProductSet
+        #lambda a, b: a ** b,
+    ]
+    Sx = FiniteSet(x)
+    Sy = FiniteSet(y)
+    sets = [
+        {1},
+        FiniteSet(1),
+        Interval(1, 2),
+        Union(Sx, Interval(1, 2)),
+        Intersection(Sx, Sy),
+        Complement(Sx, Sy),
+        ProductSet(Sx, Sy),
+        S.EmptySet,
+    ]
+    nums = [0, 1, 2, S(0), S(1), S(2)]
+
+    for s in sets:
+        for n in nums:
+            for op in ops:
+                raises(TypeError, lambda : op(s, n))
+                raises(TypeError, lambda : op(n, s))
+        raises(TypeError, lambda: s ** object())
+        raises(TypeError, lambda: s ** {1})
+
+
 def test_complement():
     assert Interval(0, 1).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
@@ -613,6 +650,7 @@ def test_measure():
 def test_is_subset():
     assert Interval(0, 1).is_subset(Interval(0, 2)) is True
     assert Interval(0, 3).is_subset(Interval(0, 2)) is False
+    assert Interval(0, 1).is_subset(FiniteSet(0, 1)) is False
 
     assert FiniteSet(1, 2).is_subset(FiniteSet(1, 2, 3, 4))
     assert FiniteSet(4, 5).is_subset(FiniteSet(1, 2, 3, 4)) is False
@@ -645,6 +683,16 @@ def test_is_subset():
 
     assert Interval(0, 1).is_subset(Interval(0, 1, left_open=True)) is False
     assert Interval(-2, 3).is_subset(Union(Interval(-oo, -2), Interval(3, oo))) is False
+
+    n = Symbol('n', integer=True)
+    assert Range(-3, 4, 1).is_subset(FiniteSet(-10, 10)) is False
+    assert Range(S(10)**100).is_subset(FiniteSet(0, 1, 2)) is False
+    assert Range(6, 0, -2).is_subset(FiniteSet(2, 4, 6)) is True
+    assert Range(1, oo).is_subset(FiniteSet(1, 2)) is False
+    assert Range(-oo, 1).is_subset(FiniteSet(1)) is False
+    assert Range(3).is_subset(FiniteSet(0, 1, n)) is None
+    assert Range(n, n + 2).is_subset(FiniteSet(n, n + 1)) is True
+    assert Range(5).is_subset(Interval(0, 4, right_open=True)) is False
 
 
 def test_is_proper_subset():
@@ -1124,16 +1172,16 @@ def test_boundary_ProductSet_line():
 
 
 def test_is_open():
-    assert not Interval(0, 1, False, False).is_open
-    assert not Interval(0, 1, True, False).is_open
-    assert Interval(0, 1, True, True).is_open
-    assert not FiniteSet(1, 2, 3).is_open
+    assert Interval(0, 1, False, False).is_open is False
+    assert Interval(0, 1, True, False).is_open is False
+    assert Interval(0, 1, True, True).is_open is True
+    assert FiniteSet(1, 2, 3).is_open is False
 
 
 def test_is_closed():
-    assert Interval(0, 1, False, False).is_closed
-    assert not Interval(0, 1, True, False).is_closed
-    assert FiniteSet(1, 2, 3).is_closed
+    assert Interval(0, 1, False, False).is_closed is True
+    assert Interval(0, 1, True, False).is_closed is False
+    assert FiniteSet(1, 2, 3).is_closed is True
 
 
 def test_closure():
