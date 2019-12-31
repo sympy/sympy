@@ -243,9 +243,7 @@ def sqrt_mod(a, p, all_roots=False):
     >>> sqrt_mod(17, 32, True)
     [7, 9, 23, 25]
     """
-    if isprime(p) == True and p != 2:
-        if legendre_symbol(a, p) == -1:
-            return None
+
     if all_roots:
         return sorted(list(sqrt_mod_iter(a, p)))
     try:
@@ -320,11 +318,15 @@ def sqrt_mod_iter(a, p, domain=int):
     >>> list(sqrt_mod_iter(11, 43))
     [21, 22]
     """
+
     from sympy.polys.galoistools import gf_crt1, gf_crt2
     from sympy.polys.domains import ZZ
     a, p = as_int(a), abs(as_int(p))
     if isprime(p):
         a = a % p
+        if p != 2:
+            if a and pow(a, (p - 1) // 2, p) != 1:
+                return None
         if a == 0:
             res = _sqrt_mod1(a, p, 1)
         else:
