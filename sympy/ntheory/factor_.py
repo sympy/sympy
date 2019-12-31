@@ -2439,6 +2439,5 @@ def drm(n, b):
             if r == 0:
                 return 0
             mul *= r
-            n = n // b
         n = mul
     return n
