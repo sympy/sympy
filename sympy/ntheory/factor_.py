@@ -2433,13 +2433,12 @@ def drm(n, b):
     if b <= 1:
         raise ValueError("Base should be an integer greater than 1")
     while n > b:
-        if n == 0:
-            return 0
         mul = 1
         while n > 1:
-            if n % b == 0:
+            n, r = divmod(n, b)
+            if r == 0:
                 return 0
-            mul = mul * (n % b)
+            mul *= r
             n = n // b
         n = mul
     return n

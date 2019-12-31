@@ -10,7 +10,7 @@ from .factor_ import divisors, proper_divisors, factorint, multiplicity, \
     divisor_count, proper_divisor_count, divisor_sigma, factorrat, \
     reduced_totient, primenu, primeomega, mersenne_prime_exponent, \
     is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable, \
-    abundance,dra , drm
+    abundance, dra, drm
 
 from .partitions_ import npartitions
 from .residue_ntheory import is_primitive_root, is_quad_residue, \
