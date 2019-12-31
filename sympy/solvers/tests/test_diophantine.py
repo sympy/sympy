@@ -547,8 +547,6 @@ def test_diophantine():
         set([(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)])
 
 
-
-
 def test_general_pythagorean():
     from sympy.abc import a, b, c, d, e
 
