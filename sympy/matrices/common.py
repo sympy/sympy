@@ -2600,6 +2600,7 @@ class _MatrixWrapper(object):
     to returning matrix elements instead of rows for non-tuple indexes.
     """
 
+    is_Matrix     = False # needs to be here because of __getattr__
     is_MatrixLike = True
 
     def __init__(self, mat, shape):
@@ -2611,21 +2612,6 @@ class _MatrixWrapper(object):
         import sympy.matrices
         return getattr(sympy.matrices.ImmutableDenseMatrix(self.rows, self.cols,
                 lambda r, c: self[r, c]), attr)
-
-    def __getitem__(self, key):
-        return sympify(self.mat.__getitem__(key))
-
-    def __iter__(self):
-        return iter(sympify(e) for e in self)
-
-class _MatrixWrapperRowIndexing(_MatrixWrapper):
-    """Wrapper class providing the minimum functionality for a matrix-like
-    object: .rows, .cols, .shape, indexability, and iterability. CommonMatrix
-    math operations should work on matrix-like objects. This one is intended for
-    matrix-like objects which return entire rows when indexed by a non-tuple
-    index. For example, wrapping a numpy matrix in a MatrixWrapper allows it to
-    be passed to CommonMatrix.
-    """
 
     def __getitem__(self, key):
         if isinstance(key, tuple):
@@ -2645,7 +2631,7 @@ def _matrixify(mat):
     return a Matrix or MatrixWrapper object.  Otherwise
     `mat` is passed through without modification."""
 
-    if getattr(mat, 'is_Matrix', False):
+    if getattr(mat, 'is_Matrix', False) or getattr(mat, 'is_MatrixLike', False):
         return mat
 
     shape = None
@@ -2656,25 +2642,10 @@ def _matrixify(mat):
     elif hasattr(mat, 'rows') and hasattr(mat, 'cols'): # mpmath
         shape = (mat.rows, mat.cols)
 
-    if shape is None:
-        return mat
-
-    try: # make sure [row, col] indexing actually works
-        mat[0, 0]
-    except (TypeError, IndexError, ValueError):
-        return mat
-
-    try: # if single indexing fails then only [row, col] indexing allowed (mpmath)
-        mat[0]
-    except (TypeError, IndexError, ValueError):
-        return _MatrixWrapperRowIndexing(mat, shape)
-
-    try: # if [row][col] indexing fails then is SymPy-like
-        mat[0][0]
-    except (TypeError, IndexError, KeyError, ValueError):
+    if shape:
         return _MatrixWrapper(mat, shape)
 
-    return _MatrixWrapperRowIndexing(mat, shape)
+    return mat
 
 
 def a2idx(j, n=None):
