@@ -2599,22 +2599,26 @@ class _MatrixWrapper(object):
     matrix-like objects which use the same indexing format as SymPy with respect
     to returning matrix elements instead of rows for non-tuple indexes.
     """
+
     is_MatrixLike = True
 
-    def __init__(self, mat, shape=None):
+    def __init__(self, mat, shape):
         self.mat = mat
-        self.rows, self.cols = mat.shape if shape is None else shape
+        self.shape = shape
+        self.rows, self.cols = shape
 
     def __getattr__(self, attr):
-        """Most attribute access is passed straight through
-        to the stored matrix"""
-        return getattr(self.mat, attr)
+        import sympy.matrices
+        return getattr(sympy.matrices.ImmutableDenseMatrix(self.rows, self.cols,
+                lambda r, c: self[r, c]), attr)
 
     def __getitem__(self, key):
-        return self.mat.__getitem__(key)
+        return sympify(self.mat.__getitem__(key))
 
+    def __iter__(self):
+        return iter(sympify(e) for e in self)
 
-class _MatrixWrapperRowIndexing(object):
+class _MatrixWrapperRowIndexing(_MatrixWrapper):
     """Wrapper class providing the minimum functionality for a matrix-like
     object: .rows, .cols, .shape, indexability, and iterability. CommonMatrix
     math operations should work on matrix-like objects. This one is intended for
@@ -2622,43 +2626,55 @@ class _MatrixWrapperRowIndexing(object):
     index. For example, wrapping a numpy matrix in a MatrixWrapper allows it to
     be passed to CommonMatrix.
     """
-    is_MatrixLike = True
-
-    def __init__(self, mat, shape=None):
-        self.mat = mat
-        self.rows, self.cols = mat.shape if shape is None else shape
-
-    def __getattr__(self, attr):
-        """Most attribute access is passed straight through
-        to the stored matrix"""
-        return getattr(self.mat, attr)
 
     def __getitem__(self, key):
         if isinstance(key, tuple):
-            return self.mat.__getitem__(key)
+            return sympify(self.mat.__getitem__(key))
 
-        return self.mat.__getitem__((key // self.rows, key % self.cols))
+        return sympify(self.mat.__getitem__((key // self.rows, key % self.cols)))
 
     def __iter__(self): # supports numpy.matrix and numpy.array
         mat = self.mat
         cols = self.cols
 
-        return iter(mat[r, c] for r in range(self.rows) for c in range(cols))
+        return iter(sympify(mat[r, c]) for r in range(self.rows) for c in range(cols))
+
 
 def _matrixify(mat):
     """If `mat` is a Matrix or is matrix-like,
     return a Matrix or MatrixWrapper object.  Otherwise
     `mat` is passed through without modification."""
+
     if getattr(mat, 'is_Matrix', False):
         return mat
-    if hasattr(mat, 'shape'):
+
+    shape = None
+
+    if hasattr(mat, 'shape'): # numpy, scipy.sparse
         if len(mat.shape) == 2:
-            try: # test indexing behavior of matrix-like object
-                e = mat[0][0]
-                return _MatrixWrapperRowIndexing(mat)
-            except (TypeError, IndexError, KeyError, ValueError):
-                return _MatrixWrapper(mat)
-    return mat
+            shape = mat.shape
+    elif hasattr(mat, 'rows') and hasattr(mat, 'cols'): # mpmath
+        shape = (mat.rows, mat.cols)
+
+    if shape is None:
+        return mat
+
+    try: # make sure [row, col] indexing actually works
+        mat[0, 0]
+    except (TypeError, IndexError, ValueError):
+        return mat
+
+    try: # if single indexing fails then only [row, col] indexing allowed (mpmath)
+        mat[0]
+    except (TypeError, IndexError, ValueError):
+        return _MatrixWrapperRowIndexing(mat, shape)
+
+    try: # if [row][col] indexing fails then is SymPy-like
+        mat[0][0]
+    except (TypeError, IndexError, KeyError, ValueError):
+        return _MatrixWrapper(mat, shape)
+
+    return _MatrixWrapperRowIndexing(mat, shape)
 
 
 def a2idx(j, n=None):
