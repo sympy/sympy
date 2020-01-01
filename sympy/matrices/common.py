@@ -2608,11 +2608,6 @@ class _MatrixWrapper(object):
         self.shape = shape
         self.rows, self.cols = shape
 
-    def __getattr__(self, attr):
-        import sympy.matrices
-        return getattr(sympy.matrices.ImmutableDenseMatrix(self.rows, self.cols,
-                lambda r, c: self[r, c]), attr)
-
     def __getitem__(self, key):
         if isinstance(key, tuple):
             return sympify(self.mat.__getitem__(key))
