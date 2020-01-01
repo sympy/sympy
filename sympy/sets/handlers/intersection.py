@@ -235,26 +235,44 @@ def intersection_sets(self, other): # noqa:F811
     # diophantine equations f(n)=g(m).
     # If the solutions for n are {h(t) : t in Integers} then we return
     # {f(h(t)) : t in integers}.
+    # If the solutions for n are {n_1, n_2, ..., n_k} then we return
+    # {f(n_i) : 1 <= i <= k}.
     if base_set is S.Integers:
         gm = None
         if isinstance(other, ImageSet) and other.base_sets == (S.Integers,):
             gm = other.lamda.expr
-            m = other.lamda.variables[0]
+            var = other.lamda.variables[0]
+            # Symbol of second ImageSet lambda must be distinct from first
+            m = Dummy('m')
+            gm = gm.subs(var, m)
         elif other is S.Integers:
-            m = gm = Dummy('x')
+            m = gm = Dummy('m')
         if gm is not None:
             fn = self.lamda.expr
             n = self.lamda.variables[0]
-            solns = list(diophantine(fn - gm, syms=(n, m)))
+            try:
+                solns = list(diophantine(fn - gm, syms=(n, m), permute=True))
+            except (TypeError, NotImplementedError):
+                return
+            # 3 cases are possible for solns:
+            # - empty set,
+            # - one or more parametric (infinite) solutions,
+            # - a finite number of (non-parametric) solution couples.
+            # Among those, there is one type of solution set that is
+            # not helpful here: multiple parametric solutions.
             if len(solns) == 0:
                 return EmptySet
-            elif len(solns) != 1:
-                return
+            elif any(not isinstance(s, int) and s.free_symbols
+                     for tupl in solns for s in tupl):
+                if len(solns) == 1:
+                    soln, solm = solns[0]
+                    (t,) = soln.free_symbols
+                    expr = fn.subs(n, soln.subs(t, n)).expand()
+                    return imageset(Lambda(n, expr), S.Integers)
+                else:
+                    return
             else:
-                soln, solm = solns[0]
-                (t,) = soln.free_symbols
-                expr = fn.subs(n, soln.subs(t, n))
-                return imageset(Lambda(n, expr), S.Integers)
+                return FiniteSet(*(fn.subs(n, s[0]) for s in solns))
 
     if other == S.Reals:
         from sympy.solvers.solveset import solveset_real
