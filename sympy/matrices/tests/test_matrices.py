@@ -3628,12 +3628,10 @@ def test_17522_numpy():
     m = _matrixify(array([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
-    assert m.pow(2) == Matrix([[7, 10], [15, 22]])
 
     m = _matrixify(matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
-    assert m.pow(2) == Matrix([[7, 10], [15, 22]])
 
 def test_17522_mpmath():
     from sympy.matrices.common import _matrixify
@@ -3645,7 +3643,6 @@ def test_17522_mpmath():
     m = _matrixify(matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
-    assert m.pow(2) == Matrix([[7, 10], [15, 22]])
 
 def test_17522_scipy():
     from sympy.matrices.common import _matrixify
@@ -3657,7 +3654,6 @@ def test_17522_scipy():
     m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
-    assert m.pow(2) == Matrix([[7, 10], [15, 22]])
 
 def test_hermitian():
     a = Matrix([[1, I], [-I, 1]])
