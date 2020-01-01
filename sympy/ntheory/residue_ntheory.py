@@ -72,8 +72,6 @@ def _primitive_root_prime_iter(p):
 
     """
     # it is assumed that p is an int
-    if isprime(p) is False:
-        raise NotImplementedError("Not implemented for composite p")
     v = [(p - 1) // i for i in factorint(p - 1).keys()]
     a = 2
     while a < p:
@@ -112,8 +110,6 @@ def primitive_root(p):
     p = as_int(p)
     if p < 1:
         raise ValueError('p is required to be positive')
-    if isprime(p) is False:
-        raise NotImplementedError("Not implemented for composite p")
     if p <= 2:
         return 1
     f = factorint(p)
@@ -777,7 +773,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     # see Hackman "Elementary Number Theory" (2009), page 76
     if not is_nthpow_residue(a, n, p):
         return None
-    if isprime(p) is False:
+    if not isprime(p):
         raise NotImplementedError("Not implemented for composite p")
     if primitive_root(p) is None:
         raise NotImplementedError("Not Implemented for m without primitive root")
