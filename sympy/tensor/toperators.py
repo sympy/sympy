@@ -74,6 +74,9 @@ class PartialDerivative(TensExpr):
         obj._indices = indices
         obj._free = free
         obj._dum = dum
+        return obj
+
+    def perform(self):
         result = self.expr
         for v in self.variables:
             result = result._eval_partial_derivative(v)
