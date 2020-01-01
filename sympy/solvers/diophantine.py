@@ -294,7 +294,10 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         else:
             raise TypeError
     except (TypeError, NotImplementedError):
-        terms = factor_list(eq)[1]
+        fl = factor_list(eq)
+        if fl[0].is_Rational and fl[0] != 1:
+            return diophantine(eq/fl[0], param=param, syms=syms, permute=permute)
+        terms = fl[1]
 
     sols = set([])
 
