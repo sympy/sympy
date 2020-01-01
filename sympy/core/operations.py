@@ -5,7 +5,7 @@ from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, range
 from sympy.core.logic import fuzzy_and
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.utilities.iterables import sift
 
 
@@ -33,7 +33,7 @@ class AssocOp(Basic):
 
         evaluate = options.get('evaluate')
         if evaluate is None:
-            evaluate = global_evaluate[0]
+            evaluate = global_parameters.evaluate
         if not evaluate:
             obj = cls._from_args(args)
             obj = cls._exec_constructor_postprocessors(obj)

@@ -6,7 +6,7 @@ from inspect import getmro
 
 from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
-from .evaluate import global_evaluate
+from .parameters import global_parameters
 
 
 class SympifyError(ValueError):
@@ -288,10 +288,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             return a
 
     if evaluate is None:
-        if global_evaluate[0] is False:
-            evaluate = global_evaluate[0]
-        else:
-            evaluate = True
+        evaluate = global_parameters.evaluate
 
     # Support for basic numpy datatypes
     # Note that this check exists to avoid importing NumPy when not necessary
