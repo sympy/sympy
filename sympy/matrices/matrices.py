@@ -1660,7 +1660,8 @@ class MatrixEigen(MatrixSubspaces):
         evals       = list(evals.keys())
         evecs       = []
         minors      = [self.minor_submatrix(i, i) for i in range(rows)]
-        minor_evals = [list(m.eigenvals(dotprodsimp=dotprodsimp).keys()) for m in minors]
+        minor_evals = [sum(([e] * m for e, m in \
+                m.eigenvals(dotprodsimp=dotprodsimp).items()), []) for m in minors]
 
         for i in range(rows):
             evec  = [self.zero] * rows
@@ -1682,7 +1683,7 @@ class MatrixEigen(MatrixSubspaces):
             evecs.append((evali, 1, [sympy.matrices.ImmutableDenseMatrix(rows,
                     1, evec)]))
 
-        return evecs
+        return sorted(evecs, key=default_sort_key)
 
     def eigenvects_by_minors(self, iszerofunc=_iszero, simplify=False,
             dotprodsimp=None):
