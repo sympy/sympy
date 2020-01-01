@@ -33,14 +33,16 @@ def test_residue():
         it = _primitive_root_prime_iter(p)
         assert len(list(it)) == totient(totient(p))
     assert primitive_root(97) == 5
-    raises(NotImplementedError, lambda: primitive_root(97**2))
+    assert primitive_root(97**2) == 5
     assert primitive_root(40487) == 5
     # note that primitive_root(40487) + 40487 = 40492 is a primitive root
     # of 40487**2, but it is not the smallest
-    raises(NotImplementedError, lambda: primitive_root(40487**2))
-    raises(NotImplementedError, lambda: primitive_root(82))
+    assert primitive_root(40487**2) == 10
+    assert primitive_root(82) == 7
     p = 10**50 + 151
     assert primitive_root(p) == 11
+    assert primitive_root(2*p) == 11
+    assert primitive_root(p**2) == 11
     raises(ValueError, lambda: primitive_root(-3))
 
     assert is_quad_residue(3, 7) is False
