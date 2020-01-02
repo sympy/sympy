@@ -1664,6 +1664,11 @@ class Basic(with_metaclass(ManagedProperties)):
         else:
             return self
 
+    def simplify(self, **kwargs):
+        """See the simplify function in sympy.simplify"""
+        from sympy.simplify import simplify
+        return simplify(self, **kwargs)
+
     def _eval_rewrite(self, pattern, rule, **hints):
         if self.is_Atom:
             if hasattr(self, rule):

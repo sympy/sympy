@@ -65,7 +65,7 @@ is not able to find solutions then a ``ConditionSet`` is returned.
     >>> solveset(exp(x), x)     # No solution exists
     ∅
     >>> solveset(cos(x) - x, x)  # Not able to find solution
-    {x | x ∊ ℂ ∧ -x + cos(x) = 0}
+    {x | x ∊ ℂ ∧ (-x + cos(x) = 0)}
 
 
 In the ``solveset`` module, the linear system of equations is solved using ``linsolve``.

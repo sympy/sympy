@@ -1547,7 +1547,7 @@ class Circle(Ellipse):
         from sympy.geometry.util import find
         from .polygon import Triangle
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
-        if len(args) == 1 and isinstance(args[0], Expr):
+        if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
             equation = args[0]
