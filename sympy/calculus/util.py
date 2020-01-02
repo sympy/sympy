@@ -395,12 +395,18 @@ def periodicity(f, symbol, check=False):
     due to internal simplification of the given expression. Hence, it is set
     to `False` by default.
 
+    If `f` has `period` attribute as trigonometric functions do, it will be used
+    to determine the periodicity.
+
+
     Examples
     ========
-    >>> from sympy import Symbol, sin, cos, tan, exp
+    >>> from sympy import Symbol, sin, cos, tan, exp, Function, pi
+    >>> from sympy.functions.elementary.trigonometric import TrigonometricFunction
     >>> from sympy.calculus.util import periodicity
     >>> x = Symbol('x')
     >>> f = sin(x) + sin(2*x) + sin(3*x)
+
     >>> periodicity(f, x)
     2*pi
     >>> periodicity(sin(x)*cos(x), x)
@@ -410,6 +416,14 @@ def periodicity(f, symbol, check=False):
     >>> periodicity(sin(4*x)**cos(2*x), x)
     pi
     >>> periodicity(exp(x), x)
+
+    >>> class g(Function):
+    ...     nargs = 1
+    ...     _period = TrigonometricFunction._period
+    ...     def period(self, symbol=None):
+    ...         return self._period(2*pi, symbol)
+    >>> periodicity(g(x), x)
+    2*pi
     """
     from sympy.core.mod import Mod
     from sympy.core.relational import Relational
@@ -420,6 +434,8 @@ def periodicity(f, symbol, check=False):
     from sympy.simplify.simplify import simplify
     from sympy.solvers.decompogen import decompogen
     from sympy.polys.polytools import degree
+
+    f = _sympify(f)
 
     temp = Dummy('x', real=True)
     f = f.subs(symbol, temp)
@@ -452,7 +468,7 @@ def periodicity(f, symbol, check=False):
     if symbol not in f.free_symbols:
         return S.Zero
 
-    if isinstance(f, TrigonometricFunction):
+    if hasattr(f, 'period'):
         try:
             period = f.period(symbol)
         except NotImplementedError:
@@ -481,7 +497,11 @@ def periodicity(f, symbol, check=False):
             # checked below
 
     if isinstance(f, exp):
-        if im(f) != 0:
+
+        if re(f).has(f) or im(f).has(f): # Avoid infinite loop
+            period = periodicity(f.args[0], symbol)
+
+        elif im(f) != 0:
             period_real = periodicity(re(f), symbol)
             period_imag = periodicity(im(f), symbol)
             if period_real is not None and period_imag is not None:
@@ -505,7 +525,6 @@ def periodicity(f, symbol, check=False):
         coeff, g = f.as_independent(symbol, as_Add=False)
         if isinstance(g, TrigonometricFunction) or coeff is not S.One:
             period = periodicity(g, symbol)
-
         else:
             period = _periodicity(g.args, symbol)
 
@@ -523,6 +542,11 @@ def periodicity(f, symbol, check=False):
             period = n
         elif isinstance(a, TrigonometricFunction):
             period = periodicity(a, symbol)
+        elif hasattr(a, 'period'):
+            try:
+                period = periodicity(a, symbol)
+            except NotImplementedError:
+                pass
         #check if 'f' is linear in 'symbol'
         elif (a.is_polynomial(symbol) and degree(a, symbol) == 1 and
             symbol not in n.free_symbols):

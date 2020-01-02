@@ -1,10 +1,11 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols, I, re, simplify,
-                   expint, Rational)
+                   expint, Rational, Function)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
 from sympy.core import Add, Mul, Pow
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union)
 from sympy.utilities.pytest import raises
@@ -177,6 +178,26 @@ def test_periodicity_check():
     assert periodicity(sec(x), x) == 2*pi
     assert periodicity(sin(x*y), x) == 2*pi/abs(y)
     assert periodicity(Abs(sec(sec(x))), x) == pi
+
+
+def test_periodicity_customclass():
+    x = Symbol('x')
+    y = Symbol('y')
+    class f(Function):
+        nargs = 1
+        _period = TrigonometricFunction._period
+        def period(self, symbol=None):
+            return self._period(2*pi, symbol)
+
+    assert periodicity(f(x), x) == 2*pi
+    assert periodicity(f(2*x), x) == pi
+    assert periodicity(2*f(x), x) == 2*pi
+    assert periodicity(x*f(2*x), x) is None
+    assert periodicity(f(x)*f(x), x) == 2*pi
+    assert periodicity(exp(f(x)), x) == 2*pi
+    assert periodicity(sin(x/2)*f(x), x) == 4*pi
+
+
 
 
 def test_lcim():
