@@ -870,6 +870,9 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         """
         Computes the probability of `r` success events among the `n` trials.
 
+        P(Eq(B[1], x[1]), Eq(B[2], x[2]), Eq(B[3], x[3]), . . . , Eq(B[n], x[n]))
+                                                = p**r * (1-p)**(n-r)
+
         Parameters
         ==========
 
@@ -896,15 +899,14 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
                 raise ValueError("rsuccess <= ntrials and  ntrials, \
                                      rsuccess must be positive Integers.")
 
-            return (binomial(ntrials, rsuccess) * self.p**rsuccess
-                    * (1 - self.p)**(ntrials - rsuccess))
+            return self.p**rsuccess * (1 - self.p)**(ntrials - rsuccess)
 
         else:
             if not (S(ntrials).is_Integer and ntrials > 0):
                 raise ValueError("ntrials must be a positive Integer.")
             r = symbols('r', natural=True)
-            pmf = binomial(ntrials, r) * (self.p**r) * (1 - self.p)**(ntrials - r)
-            return DiscreteDistributionHandmade(pmf, set = S.Naturals)
+            pmf = (self.p**r) * (1 - self.p)**(ntrials - r)
+            return DiscreteDistributionHandmade(pmf, set = FiniteSet(*range(ntrials+1)))
 
     def _rvindexed_subs(self, expr, condition):
         """
