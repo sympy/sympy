@@ -88,9 +88,11 @@ def evaluate(x):
 
     old = global_parameters.evaluate
 
-    global_parameters.evaluate = x
-    yield
-    global_parameters.evaluate = old
+    try:
+        global_parameters.evaluate = x
+        yield
+    finally:
+        global_parameters.evaluate = old
 
 
 @contextmanager
@@ -115,6 +117,8 @@ def distribute(x):
 
     old = global_parameters.distribute
 
-    global_parameters.distribute = x
-    yield
-    global_parameters.distribute = old
+    try:
+        global_parameters.distribute = x
+        yield
+    finally:
+        global_parameters.distribute = old

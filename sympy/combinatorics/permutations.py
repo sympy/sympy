@@ -3002,7 +3002,10 @@ class AppliedPermutation(Expr):
     >>> _.subs(x, 1)
     2
     """
-    def __new__(cls, perm, x, evaluate=global_parameters.evaluate):
+    def __new__(cls, perm, x, evaluate=None):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
+
         perm = _sympify(perm)
         x = _sympify(x)
 
