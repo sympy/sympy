@@ -773,8 +773,8 @@ def nthroot_mod(a, n, p, all_roots=False):
     # see Hackman "Elementary Number Theory" (2009), page 76
     if not is_nthpow_residue(a, n, p):
         return None
-    if primitive_root(p) is None:
-        raise NotImplementedError("Not Implemented for m without primitive root")
+    if not isprime(p):
+        raise NotImplementedError("Not implemented for composite p")
 
     if (p - 1) % n == 0:
         return _nthroot_mod1(a, n, p, all_roots)
