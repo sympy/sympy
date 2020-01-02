@@ -11,10 +11,10 @@ from inspect import isfunction
 
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
-from sympy.core.basic import Atom
+from sympy.core.basic import Atom, Basic
 from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
-from sympy.core.decorators import call_highest_priority
+from sympy.core.decorators import call_highest_priority, wraps
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -25,6 +25,8 @@ from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
+
+import sympy.matrices
 
 
 class MatrixError(Exception):
@@ -2680,3 +2682,47 @@ def classof(A, B):
             return A.__class__
 
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
+
+
+def _memoize_matmethod(method):
+    """Special Matrix method decorator that caches the value of a potentially
+    expensive method after the first evaluation. The value is cached for each
+    individual permutation of `args` and `kwargs`. The restrictions are that all
+    method `args` and `kwargs` must be immutable and the method must return an
+    immutable value or a list or dict of immutable values."""
+
+    methmem = '_' + method.__name__
+
+    @wraps(method)
+    def wrapper(*args, **kwargs):
+        obj = args[0] # method self
+        key = args[1:] + tuple(kwargs.items())
+        mem = getattr(obj, methmem, None)
+
+        if isinstance(obj, Basic):
+            sig = True # don't need sig check, memoization lives in object and object is immutable
+        if isinstance(obj, sympy.matrices.MutableDenseMatrix):
+            sig = tuple(obj._mat)
+        elif isinstance(obj, sympy.matrices.MutableSparseMatrix):
+            sig = tuple(obj._smat.items())
+        else:
+            return method(*args, **kwargs)
+
+        if mem is None:
+            mem = {}
+            setattr(obj, methmem, mem)
+
+        msig, mret = mem.get(key, (None, None))
+
+        if msig is not None and msig == sig:
+            ret = mret
+        else:
+            ret = method(*args, **kwargs)
+            mem[key] = (sig, ret)
+
+        if isinstance(ret, (list, dict)):
+            ret = ret.copy()
+
+        return ret
+
+    return wrapper

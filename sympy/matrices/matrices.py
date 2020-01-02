@@ -31,7 +31,8 @@ from sympy.utilities.misc import filldedent
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonHermitianMatrixError,
-    NonInvertibleMatrixError, ShapeError, NonPositiveDefiniteMatrixError)
+    NonInvertibleMatrixError, ShapeError, NonPositiveDefiniteMatrixError,
+    _memoize_matmethod)
 
 import sympy.matrices
 
@@ -1326,11 +1327,10 @@ class MatrixEigen(MatrixSubspaces):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        is_diagonalizable, eigenvecs = self.is_diagonalizable_with_eigen(
-                    reals_only=reals_only, dotprodsimp=dotprodsimp)
-
-        if not is_diagonalizable:
+        if not self.is_diagonalizable(reals_only=reals_only, dotprodsimp=dotprodsimp):
             raise MatrixError("Matrix is not diagonalizable")
+
+        eigenvecs = self.eigenvects(simplify=True, dotprodsimp=True)
 
         if sort:
             eigenvecs = sorted(eigenvecs, key=default_sort_key)
@@ -1345,6 +1345,7 @@ class MatrixEigen(MatrixSubspaces):
 
         return self.hstack(*p_cols), self.diag(*diag)
 
+    @_memoize_matmethod
     def eigenvals(self, error_when_incomplete=True, dotprodsimp=None, **flags):
         r"""Return eigenvalues using the Berkowitz agorithm to compute
         the characteristic polynomial.
@@ -1532,20 +1533,6 @@ class MatrixEigen(MatrixSubspaces):
         MatrixSubspaces.nullspace
         """
 
-        simplify = flags.get('simplify', True)
-        simpfunc = simplify if isinstance(simplify, FunctionType) else \
-                _simplify if simplify else lambda x: x
-        primitive = flags.get('simplify', False)
-        chop = flags.pop('chop', False)
-
-        flags.pop('multiple', None)  # remove this if it's there
-
-        mat = self
-        # roots doesn't like Floats, so replace them with Rationals
-        has_floats = self.has(Float)
-        if has_floats:
-            mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
-
         def eigenspace(eigenval):
             """Get a basis for the eigenspace for a particular eigenvalue"""
             m = mat - self.eye(mat.rows) * eigenval
@@ -1554,18 +1541,43 @@ class MatrixEigen(MatrixSubspaces):
             # non-trivial.  If we didn't find an eigenvector, try once
             # more a little harder
             if len(ret) == 0 and simplify:
-                ret = m.nullspace(iszerofunc=iszerofunc, simplify=True, dotprodsimp=dotprodsimp)
+                ret = m.nullspace(iszerofunc=iszerofunc, simplify=True,
+                        dotprodsimp=dotprodsimp)
             if len(ret) == 0:
                 raise NotImplementedError(
                         "Can't evaluate eigenvector for eigenvalue %s" % eigenval)
             return ret
 
+        simplify   = flags.get('simplify', True)
+        simpfunc   = simplify if isinstance(simplify, FunctionType) else \
+                _simplify if simplify else lambda x: x
+        primitive  = flags.get('simplify', False)
+        chop       = flags.pop('chop', False)
+        mat        = self
+        has_floats = self.has(Float)
+
+        flags.pop('multiple', None)  # remove this if it's there
+
+        # roots doesn't like Floats, so replace them with Rationals
+        if has_floats:
+            mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
         eigenvals = mat.eigenvals(rational=False,
                                   error_when_incomplete=error_when_incomplete,
                                   dotprodsimp=dotprodsimp,
                                   **flags)
+
+        # if (mat.rows > 3 and all(m == 1 for m in eigenvals.values()) and
+        #         all(e.is_real is True for e in mat) and
+        #         mat.is_symmetric()):
+        #     # real symmetric matrices larger than order 3 with multiplicity 1
+        #     # eigenvalues can be evaluated faster via ``_eigenvects_by_minors``
+        #     return self._eigenvects_by_minors(iszerofunc=iszerofunc, simplify=simplify,
+        #             dotprodsimp=dotprodsimp, chop=chop, has_floats=has_floats)
+
         ret = [(val, mult, eigenspace(val)) for val, mult in
                     sorted(eigenvals.items(), key=default_sort_key)]
+
         if primitive:
             # if the primitive flag is set, get rid of any common
             # integer denominators
@@ -1573,12 +1585,16 @@ class MatrixEigen(MatrixSubspaces):
                 from sympy import gcd
                 return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
             ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
+
         if has_floats:
             # if we had floats to start with, turn the eigenvectors to floats
-            ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
+            ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es])
+                    for val, mult, es in ret]
+
         return ret
 
-    def eigenvects_mod_square_elementwise(self, simplify=False, dotprodsimp=None):
+    def eigenvects_mod_square_elementwise(self, simplify=False, rational=True,
+            dotprodsimp=None):
         """Return list of triples (eigenval, multiplicity, eigenspace).
 
         ``eigenspace`` contains a single ``eigenvector`` with the elements being
@@ -1599,6 +1615,11 @@ class MatrixEigen(MatrixSubspaces):
 
             If a function is passed to, it will attempt to apply
             the particular function as simplification method.
+
+        rational : bool, optional
+            If it is set to ``True``, every floating point numbers would be
+            replaced with rationals before computation. It can solve some
+            issues of ``roots`` routine not working well with floats.
 
         dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
@@ -1647,7 +1668,8 @@ class MatrixEigen(MatrixSubspaces):
         if self.is_hermitian is False:
             raise NonHermitianMatrixError()
 
-        evals = self.eigenvals(simplify=simplify, dotprodsimp=dotprodsimp)
+        evals = self.eigenvals(simplify=simplify, error_when_incomplete=True,
+                rational=rational, dotprodsimp=dotprodsimp)
 
         if any(m > 1 for m in evals.values()):
             raise MatrixError('Matrix has an eigenvalue with multiplicity greater than 1')
@@ -1655,13 +1677,13 @@ class MatrixEigen(MatrixSubspaces):
         if not isinstance(simplify, FunctionType):
             simplify = _simplify if simplify else lambda x: x
 
-        dps         = _dotprodsimp if dotprodsimp else lambda x: x
         rows        = self.rows
         evals       = list(evals.keys())
         evecs       = []
         minors      = [self.minor_submatrix(i, i) for i in range(rows)]
-        minor_evals = [sum(([e] * m for e, m in \
-                m.eigenvals(dotprodsimp=dotprodsimp).items()), []) for m in minors]
+        minor_evals = [sum(([e] * m for e, m in
+                m.eigenvals(rational=rational, dotprodsimp=dotprodsimp).items()),
+                []) for m in minors]
 
         for i in range(rows):
             evec  = [self.zero] * rows
@@ -1685,8 +1707,8 @@ class MatrixEigen(MatrixSubspaces):
 
         return sorted(evecs, key=default_sort_key)
 
-    def eigenvects_by_minors(self, iszerofunc=_iszero, simplify=False,
-            dotprodsimp=None):
+    def _eigenvects_by_minors(self, iszerofunc=_iszero, simplify=False,
+            dotprodsimp=None, has_floats=None, chop=False):
         """Return list of triples (eigenval, multiplicity, eigenspace).
 
         Calculate eigenvectors from eigenvalues by the minor matrix method.
@@ -1723,6 +1745,17 @@ class MatrixEigen(MatrixSubspaces):
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
             speed up calculation.
+
+        has_floats : bool, optional
+            Specifies whether floats have already been converted to rationals if
+            ``True`` and need to be converted back to floats, there were no
+            floats present if ``False`` so no conversion back to rationals
+            needed or to check and do conversion here if ``None``. This exists
+            to cooperate with ``eigenvects`` if it calls into this function.
+
+        chop : bool, optional
+            ``chop`` argument to ``evalf.chop`` for converting rationals to
+            floats.
 
         Raises
         ======
@@ -1821,14 +1854,20 @@ class MatrixEigen(MatrixSubspaces):
 
             raise MatrixError('Could not determine eigenvector')
 
-        if not self.is_symmetric:
+        if not self.is_symmetric():
             return MatrixError('Matrix is not symmetric')
 
-        if any(e.is_real is False for e in self):
+        if not all(e.is_real is True for e in self):
             raise MatrixError('Matrix is not real (sorry Keanu)')
 
+        if has_floats is None:
+            has_floats = self.has(Float)
+
+            if has_floats:
+                mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
         emsvecs = self.eigenvects_mod_square_elementwise(simplify=simplify,
-                dotprodsimp=dotprodsimp)
+                rational=False, dotprodsimp=dotprodsimp)
 
         if not isinstance(simplify, FunctionType):
             simplify = _simplify if simplify else lambda x: x
@@ -1842,31 +1881,14 @@ class MatrixEigen(MatrixSubspaces):
             evals.append(eval)
             evecs.append(determine_eigenvect(rows, eval, (sqrt(e) for e in emsvec[0])))
 
-        return [(eval, 1, [evec]) for eval, evec in zip(evals, evecs)]
+        ret = [(eval, 1, [evec]) for eval, evec in zip(evals, evecs)]
 
-    def is_diagonalizable_with_eigen(self, reals_only=False, dotprodsimp=None):
-        """See is_diagonalizable. This function returns the bool along with the
-        eigenvectors to avoid calculating them again in functions like
-        ``diagonalize``."""
+        if has_floats:
+            # if we had floats to start with, turn the eigenvectors to floats
+            ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es])
+                    for val, mult, es in ret]
 
-        if not self.is_square:
-            return False, []
-
-        eigenvecs = self.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
-
-        if all(e.is_real for e in self) and self.is_symmetric():
-            # every real symmetric matrix is real diagonalizable
-            return True, eigenvecs
-
-        for val, mult, basis in eigenvecs:
-            # if we have a complex eigenvalue
-            if reals_only and not val.is_real:
-                return False, eigenvecs
-            # if the geometric multiplicity doesn't equal the algebraic
-            if mult != len(basis):
-                return False, eigenvecs
-
-        return True, eigenvecs
+        return ret
 
     def is_diagonalizable(self, reals_only=False, dotprodsimp=None, **kwargs):
         """Returns true if a matrix is diagonalizable.
@@ -1937,8 +1959,24 @@ class MatrixEigen(MatrixSubspaces):
                 issue=15887
             ).warn()
 
-        return self.is_diagonalizable_with_eigen(reals_only=reals_only,
-                dotprodsimp=dotprodsimp)[0]
+        if not self.is_square:
+            return []
+
+        if all(e.is_real for e in self) and self.is_symmetric():
+            # every real symmetric matrix is real diagonalizable
+            return True
+
+        eigenvecs = self.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
+
+        for val, mult, basis in eigenvecs:
+            # if we have a complex eigenvalue
+            if reals_only and not val.is_real:
+                return False
+            # if the geometric multiplicity doesn't equal the algebraic
+            if mult != len(basis):
+                return False
+
+        return True
 
     def _eval_is_positive_definite(self, method="eigen"):
         """Algorithm dump for computing positive-definiteness of a
