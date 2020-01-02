@@ -253,6 +253,8 @@ def intersection_sets(self, other): # noqa:F811
             try:
                 solns = list(diophantine(fn - gm, syms=(n, m), permute=True))
             except (TypeError, NotImplementedError):
+                # TypeError if equation not polynomial with rational coeff.
+                # NotImplementedError if correct format but no solver.
                 return
             # 3 cases are possible for solns:
             # - empty set,
