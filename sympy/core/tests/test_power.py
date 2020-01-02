@@ -433,7 +433,7 @@ def test_better_sqrt():
     assert sqrt(1/(3 - I)) == sqrt(10)*sqrt(3 + I)/10
     # symbolic
     i = symbols('i', imaginary=True)
-    assert sqrt(3/i) == Mul(sqrt(3), sqrt(-i)/abs(i), evaluate=False)
+    assert sqrt(3/i) == Mul(sqrt(3), 1/sqrt(i), evaluate=False)
     # multiples of 1/2; don't make this too automatic
     assert sqrt((3 + 4*I))**3 == (2 + I)**3
     assert Pow(3 + 4*I, Rational(3, 2)) == 2 + 11*I
