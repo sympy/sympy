@@ -5,7 +5,6 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
 from sympy.core import Add, Mul, Pow
-from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union)
 from sympy.utilities.pytest import raises
@@ -185,8 +184,25 @@ def test_periodicity_customclass():
     y = Symbol('y')
     class f(Function):
         nargs = 1
-        _period = TrigonometricFunction._period
-        def period(self, symbol=None):
+        def _period(self, general_period, symbol):
+            arg = self.args[0]
+            if not arg.has(symbol):
+                return S.Zero
+            if arg == symbol:
+                return general_period
+            if symbol in arg.free_symbols:
+                if arg.is_Mul:
+                    g, h = arg.as_independent(symbol)
+                    if h == symbol:
+                        return general_period/abs(g)
+
+                if arg.is_Add:
+                    a, h = arg.as_independent(symbol)
+                    g, h = h.as_independent(symbol, as_Add=False)
+                    if h == symbol:
+                        return general_period/abs(g)
+            raise NotImplementedError("Use the periodicity function instead.")
+        def period(self, symbol):
             return self._period(2*pi, symbol)
 
     assert periodicity(f(x), x) == 2*pi
