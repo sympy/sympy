@@ -391,7 +391,7 @@ def iter_numbered_constants(eq, start=1, prefix='C'):
     in eq already.
     """
 
-    if isinstance(eq, Expr):
+    if isinstance(eq, (Expr, Eq)):
         eq = [eq]
     elif not iterable(eq):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
@@ -702,10 +702,10 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         # attempt to solve for func, and apply any other hint specific
         # simplifications
         sols = solvefunc(eq, func, order, match)
-        if isinstance(sols, Expr):
-            rv =  odesimp(eq, sols, func, hint)
-        else:
+        if iterable(sols):
             rv = [odesimp(eq, s, func, hint) for s in sols]
+        else:
+            rv =  odesimp(eq, sols, func, hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
         match['simplify'] = False  # Some hints can take advantage of this option
@@ -720,7 +720,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         if len(rv) == 1:
             rv = rv[0]
     if ics and not 'power_series' in hint:
-        if isinstance(rv, Expr):
+        if isinstance(rv, (Expr, Eq)):
             solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
             rv = rv.subs(solved_constants)
         else:

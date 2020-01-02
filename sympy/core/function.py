@@ -3251,6 +3251,10 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
         return rv
     elif rv.is_Atom:
         return rv
+    elif rv.is_Relational:
+        args_nfloat = (nfloat(arg, **kw) for arg in rv.args)
+        return rv.func(*args_nfloat)
+
 
     # watch out for RootOf instances that don't like to have
     # their exponents replaced with Dummies and also sometimes have

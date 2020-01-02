@@ -14,7 +14,8 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.utilities.pytest import raises, slow, skip, ON_TRAVIS
+from sympy.utilities.pytest import (raises, slow, skip, ON_TRAVIS,
+    warns_deprecated_sympy)
 from sympy.utilities.randtest import verify_numerically
 
 x, y, a, t, x_1, x_2, z, s, b = symbols('x y a t x_1 x_2 z s b')
@@ -1504,9 +1505,18 @@ def test_issue_15124():
 
 
 def test_issue_15218():
-    assert Eq(x, y).integrate(x) == Eq(x**2/2, x*y)
-    assert Integral(Eq(x, y), x) == Eq(Integral(x, x), Integral(y, x))
-    assert Integral(Eq(x, y), x).doit() == Eq(x**2/2, x*y)
+    with warns_deprecated_sympy():
+        Integral(Eq(x, y))
+    with warns_deprecated_sympy():
+        assert Integral(Eq(x, y), x) == Eq(Integral(x, x), Integral(y, x))
+    with warns_deprecated_sympy():
+        assert Integral(Eq(x, y), x).doit() == Eq(x**2/2, x*y)
+    with warns_deprecated_sympy():
+        assert Eq(x, y).integrate(x) == Eq(x**2/2, x*y)
+
+    # These are not deprecated because they are definite integrals
+    assert integrate(Eq(x, y), (x, 0, 1)) == Eq(S.Half, y)
+    assert Eq(x, y).integrate((x, 0, 1)) == Eq(S.Half, y)
 
 
 def test_issue_15292():
