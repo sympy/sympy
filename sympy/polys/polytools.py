@@ -4037,6 +4037,8 @@ class Poly(Expr):
 
     @_sympifyit('g', NotImplemented)
     def __mul__(f, g):
+        if not isinstance(g, Expr):
+            return NotImplemented
         if not g.is_Poly:
             try:
                 g = f.__class__(g, *f.gens)

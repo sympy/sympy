@@ -182,7 +182,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
             if syms != var:
                 dict_sym_index = dict(zip(syms, range(len(syms))))
                 return {tuple([t[dict_sym_index[i]] for i in var])
-                            for t in diophantine(eq, param)}
+                            for t in diophantine(eq, param, permute=permute)}
         n, d = eq.as_numer_denom()
         if n.is_number:
             return set()
@@ -933,7 +933,7 @@ def _diop_quadratic(var, coeff, t):
     C = coeff[y**2]
     D = coeff[x]
     E = coeff[y]
-    F = coeff[1]
+    F = coeff[S.One]
 
     A, B, C, D, E, F = [as_int(i) for i in _remove_gcd(A, B, C, D, E, F)]
 

@@ -1,9 +1,34 @@
 from sympy import (Interval, Intersection, Set, EmptySet, S, sympify,
                    FiniteSet, Union, ComplexRegion, ProductSet)
 from sympy.multipledispatch import dispatch
-from sympy.sets.fancysets import Integers
+from sympy.sets.fancysets import (Naturals, Naturals0, Integers, Rationals,
+                                  Reals)
 from sympy.sets.sets import UniversalSet
 
+
+@dispatch(Naturals0, Naturals)
+def union_sets(a, b): # noqa:F811
+    return a
+
+@dispatch(Rationals, Naturals)
+def union_sets(a, b): # noqa:F811
+    return a
+
+@dispatch(Rationals, Naturals0)
+def union_sets(a, b): # noqa:F811
+    return a
+
+@dispatch(Reals, Naturals)
+def union_sets(a, b): # noqa:F811
+    return a
+
+@dispatch(Reals, Naturals0)
+def union_sets(a, b): # noqa:F811
+    return a
+
+@dispatch(Reals, Rationals)
+def union_sets(a, b): # noqa:F811
+    return a
 
 @dispatch(Integers, Set)
 def union_sets(a, b): # noqa:F811

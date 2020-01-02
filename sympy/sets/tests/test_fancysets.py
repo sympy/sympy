@@ -29,6 +29,8 @@ def test_naturals():
     assert N.intersect(Interval(-5, 5, True, True)) == Range(1, 5)
 
     assert N.boundary == N
+    assert N.is_open == False
+    assert N.is_closed == True
 
     assert N.inf == 1
     assert N.sup is oo
@@ -71,6 +73,8 @@ def test_integers():
     assert Z.sup is oo
 
     assert Z.boundary == Z
+    assert Z.is_open == False
+    assert Z.is_closed == True
 
     assert Z.as_relational(x) == And(Eq(floor(x), x), -oo < x, x < oo)
 
@@ -333,11 +337,14 @@ def test_Range_set():
     assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3) & Eq(x, floor(x))
     assert Range(oo, 1, -2).as_relational(x) == (x >= 3) & (x < oo) & Eq(x, floor(x))
 
+
+def test_Range_symbolic():
     # symbolic Range
     sr = Range(x, y, t)
     i = Symbol('i', integer=True)
     ip = Symbol('i', integer=True, positive=True)
     ir = Range(i, i + 20, 2)
+    inf = symbols('inf', infinite=True)
     # args
     assert sr.args == (x, y, t)
     assert ir.args == (i, i + 20, 2)
@@ -381,9 +388,27 @@ def test_Range_set():
     assert Range(ip).inf == 0
     assert Range(ip).sup == ip - 1
     raises(ValueError, lambda: Range(i).inf)
+    # as_relational
     raises(ValueError, lambda: sr.as_relational(x))
     assert ir.as_relational(x) == (
         x >= i) & Eq(x, floor(x)) & (x <= i + 18)
+    assert Range(i, i + 1).as_relational(x) == Eq(x, i)
+    # contains() for symbolic values (issue #18146)
+    e = Symbol('e', integer=True, even=True)
+    o = Symbol('o', integer=True, odd=True)
+    assert Range(5).contains(i) == And(i >= 0, i <= 4)
+    assert Range(1).contains(i) == Eq(i, 0)
+    assert Range(-oo, 5, 1).contains(i) == (i <= 4)
+    assert Range(-oo, oo).contains(i) == True
+    assert Range(0, 8, 2).contains(i) == Contains(i, Range(0, 8, 2))
+    assert Range(0, 8, 2).contains(e) == And(e >= 0, e <= 6)
+    assert Range(0, 8, 2).contains(2*i) == And(2*i >= 0, 2*i <= 6)
+    assert Range(0, 8, 2).contains(o) == False
+    assert Range(1, 9, 2).contains(e) == False
+    assert Range(1, 9, 2).contains(o) == And(o >= 1, o <= 7)
+    assert Range(8, 0, -2).contains(o) == False
+    assert Range(9, 1, -2).contains(o) == And(o >= 3, o <= 9)
+    assert Range(-oo, 8, 2).contains(i) == Contains(i, Range(-oo, 8, 2))
 
 
 def test_range_range_intersection():
@@ -948,7 +973,19 @@ def test_Rationals():
     r = symbols('r', rational=True)
     assert r in S.Rationals
     raises(TypeError, lambda: x in S.Rationals)
-    assert S.Rationals.boundary == S.Rationals
+    # issue #18134:
+    assert S.Rationals.boundary == S.Reals
+    assert S.Rationals.closure == S.Reals
+    assert S.Rationals.is_open == False
+    assert S.Rationals.is_closed == False
+
+
+def test_NZQRC_unions():
+    # check that all trivial number set unions are simplified:
+    nbrsets = (S.Naturals, S.Naturals0, S.Integers, S.Rationals,
+        S.Reals, S.Complexes)
+    unions = (Union(a, b) for a in nbrsets for b in nbrsets)
+    assert all(u.is_Union is False for u in unions)
 
 
 def test_imageset_intersection():
@@ -964,3 +1001,11 @@ def test_issue_17858():
     assert 0 in Range(oo, -oo, -1)
     assert oo not in Range(-oo, oo)
     assert -oo not in Range(-oo, oo)
+
+def test_issue_17859():
+    r = Range(-oo,oo)
+    raises(ValueError,lambda: r[::2])
+    raises(ValueError, lambda: r[::-2])
+    r = Range(oo,-oo,-1)
+    raises(ValueError,lambda: r[::2])
+    raises(ValueError, lambda: r[::-2])
