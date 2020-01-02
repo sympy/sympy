@@ -291,13 +291,6 @@ class Relational(Boolean, EvalfMixin):
                     return right
                 return left
 
-    # XXX: This is copied from Expr. Maybe it should be defined on Basic or in
-    # a mixin instead.
-    def simplify(self, **kwargs):
-        """See the simplify function in sympy.simplify"""
-        from sympy.simplify import simplify
-        return simplify(self, **kwargs)
-
     def _eval_simplify(self, **kwargs):
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
