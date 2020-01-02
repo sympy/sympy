@@ -29,10 +29,6 @@ def test_residue():
     assert is_primitive_root(12, 17) == is_primitive_root(29, 17)
     raises(ValueError, lambda: is_primitive_root(3, 6))
 
-    assert [primitive_root(i) for i in range(2, 31)] == [1, 2, 3, 2, 5, 3, \
-       None, 2, 3, 2, None, 2, 3, None, None, 3, 5, 2, None, None, 7, 5, \
-       None, 2, 7, 2, None, 2, None]
-
     for p in primerange(3, 100):
         it = _primitive_root_prime_iter(p)
         assert len(list(it)) == totient(totient(p))
@@ -78,6 +74,8 @@ def test_residue():
     assert sqrt_mod(3, -13) == 4
     assert sqrt_mod(6, 23) == 11
     assert sqrt_mod(345, 690) == 345
+    assert sqrt_mod(67, 101) == None
+    assert sqrt_mod(1020, 104729) == None
 
     for p in range(3, 100):
         d = defaultdict(list)
@@ -134,7 +132,7 @@ def test_residue():
     assert is_nthpow_residue(1, 0, 2) is True
     assert is_nthpow_residue(3, 0, 2) is False
     assert is_nthpow_residue(0, 1, 8) is True
-    assert is_nthpow_residue(2, 3, 2) is False
+    assert is_nthpow_residue(2, 3, 2) is True
     assert is_nthpow_residue(2, 3, 9) is False
     assert is_nthpow_residue(3, 5, 30) is True
     assert is_nthpow_residue(21, 11, 20) is True
@@ -164,8 +162,7 @@ def test_residue():
     assert is_nthpow_residue(31, 4, 41)
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
-    assert nthroot_mod(29, 31, 74) == 31
-    assert nthroot_mod(*Tuple(29, 31, 74)) == 31
+    raises(NotImplementedError, lambda: nthroot_mod(29, 31, 74))
     assert nthroot_mod(1801, 11, 2663) == 44
     for a, q, p in [(51922, 2, 203017), (43, 3, 109), (1801, 11, 2663),
           (26118163, 1303, 33333347), (1499, 7, 2663), (595, 6, 2663),

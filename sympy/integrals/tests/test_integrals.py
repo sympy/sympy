@@ -14,7 +14,8 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.utilities.pytest import raises, slow, skip, ON_TRAVIS
+from sympy.utilities.pytest import (raises, slow, skip, ON_TRAVIS,
+    warns_deprecated_sympy)
 from sympy.utilities.randtest import verify_numerically
 
 x, y, a, t, x_1, x_2, z, s, b = symbols('x y a t x_1 x_2 z s b')
@@ -377,6 +378,8 @@ def test_issue_13749():
     assert integrate(1 / (2 + cos(x)), (x, 0, pi)) == pi/sqrt(3)
     assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 - pi/2)/pi))/3
 
+def test_issue_18133():
+    assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
 
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
@@ -861,6 +864,15 @@ def test_issue_4884():
             (2*I*sqrt(-x)*(x + 1)**2/5 - 2*I*sqrt(-x)*(x + 1)/15 -
             4*I*sqrt(-x)/15, True))
     assert integrate(x**x*(1 + log(x))) == x**x
+
+def test_issue_18153():
+    assert integrate(x**n*log(x),x) == \
+    Piecewise(
+        (n*x*x**n*log(x)/(n**2 + 2*n + 1) +
+    x*x**n*log(x)/(n**2 + 2*n + 1) - x*x**n/(n**2 + 2*n + 1)
+    , Ne(n, -1)), (log(x)**2/2, True)
+    )
+
 
 
 def test_is_number():
@@ -1493,9 +1505,18 @@ def test_issue_15124():
 
 
 def test_issue_15218():
-    assert Eq(x, y).integrate(x) == Eq(x**2/2, x*y)
-    assert Integral(Eq(x, y), x) == Eq(Integral(x, x), Integral(y, x))
-    assert Integral(Eq(x, y), x).doit() == Eq(x**2/2, x*y)
+    with warns_deprecated_sympy():
+        Integral(Eq(x, y))
+    with warns_deprecated_sympy():
+        assert Integral(Eq(x, y), x) == Eq(Integral(x, x), Integral(y, x))
+    with warns_deprecated_sympy():
+        assert Integral(Eq(x, y), x).doit() == Eq(x**2/2, x*y)
+    with warns_deprecated_sympy():
+        assert Eq(x, y).integrate(x) == Eq(x**2/2, x*y)
+
+    # These are not deprecated because they are definite integrals
+    assert integrate(Eq(x, y), (x, 0, 1)) == Eq(S.Half, y)
+    assert Eq(x, y).integrate((x, 0, 1)) == Eq(S.Half, y)
 
 
 def test_issue_15292():

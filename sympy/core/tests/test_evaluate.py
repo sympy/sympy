@@ -1,9 +1,25 @@
 from sympy.abc import x, y
 from sympy.core.evaluate import evaluate
 from sympy.core import Mul, Add, Pow, S
-from sympy import sqrt
+from sympy import sqrt, oo
 
 def test_add():
+    with evaluate(False):
+        p = oo - oo
+        assert isinstance(p, Add) and p.args == (oo, -oo)
+        p = 5 - oo
+        assert isinstance(p, Add) and p.args == (-oo, 5)
+        p = oo - 5
+        assert isinstance(p, Add) and p.args == (oo, -5)
+        p = oo + 5
+        assert isinstance(p, Add) and p.args == (oo, 5)
+        p = 5 + oo
+        assert isinstance(p, Add) and p.args == (oo, 5)
+        p = -oo + 5
+        assert isinstance(p, Add) and p.args == (-oo, 5)
+        p = -5 - oo
+        assert isinstance(p, Add) and p.args == (-oo, -5)
+
     with evaluate(False):
         expr = x + x
         assert isinstance(expr, Add)

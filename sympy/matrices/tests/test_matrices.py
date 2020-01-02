@@ -2013,6 +2013,9 @@ def test_diagonal_symmetrical():
 
 
 def test_diagonalization():
+    m = Matrix([[1, 2+I], [2-I, 3]])
+    assert m.is_diagonalizable()
+
     m = Matrix(3, 2, [-3, 1, -3, 20, 3, 10])
     assert not m.is_diagonalizable()
     assert not m.is_symmetric()
