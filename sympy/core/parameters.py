@@ -31,16 +31,19 @@ class _global_parameters(local):
     Since SymPy's cache is not thread-local, it must be cleared when the thread
     begins and ends.
 
+    >>> log = []
     >>> def f():
     ...     clear_cache()
     ...     gp.evaluate = False
-    ...     print(x+x)
+    ...     log.append(x+x)
     ...     clear_cache()
     >>> import threading
     >>> thread = threading.Thread(target=f)
     >>> thread.start()
-    x + x
     >>> thread.join()
+
+    >>> print(log)
+    [x + x]
 
     >>> gp.evaluate
     True
