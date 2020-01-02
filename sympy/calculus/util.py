@@ -424,7 +424,7 @@ def periodicity(f, symbol, check=False):
     ...             return S.Zero
     ...         if arg == symbol:
     ...             return general_period
-    ...         if symbol is arg.free_symbols:
+    ...         if symbol in arg.free_symbols:
     ...             if arg.is_Mul:
     ...                 g, h = arg.as_independent(symbol)
     ...                 if h == symbol:
