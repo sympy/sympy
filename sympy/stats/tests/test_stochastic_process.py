@@ -157,7 +157,7 @@ def test_BernoulliProcess():
                 Piecewise((0.6, Eq(B[2], 1)), (0.4, Eq(B[2], 0)), (0, True))
                 *Piecewise((0.6, Eq(B[4], 1)), (0.4, Eq(B[4], 0)), (0, True))))
 
-    assert B.probability_r_success(5, 3).round(3) == Float(0.035, 3)
+    assert B.probability_r_success(5, 3).round(3) == Float(0.035, 2)
     r = symbols('r', natural=True)
     assert B.probability_r_success(5, 3, evaluate=False) == DiscreteDistributionHandmade(0.4**(5 - r)*0.6**r,
                                                                             FiniteSet(0, 1, 2, 3, 4, 5))
