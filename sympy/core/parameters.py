@@ -16,6 +16,10 @@ class _global_parameters(local):
     its instance.
     A variable, `global_parameters` is provided as default instance for this class.
 
+    WARNING! Although the global parameters are thread-local, SymPy's cache is not
+    by now.
+    This may lead to undesired result in multi-threading operations.
+
     Examples
     ========
 
@@ -27,9 +31,6 @@ class _global_parameters(local):
     True
     >>> x+x
     2*x
-
-    Since SymPy's cache is not thread-local, it must be cleared when the thread
-    begins and ends.
 
     >>> log = []
     >>> def f():
