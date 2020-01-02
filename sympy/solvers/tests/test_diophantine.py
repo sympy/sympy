@@ -35,9 +35,12 @@ def diop_simplify(eq):
 
 def test_input_format():
     raises(TypeError, lambda: diophantine(sin(x)))
-    raises(TypeError, lambda: diophantine(3))
     raises(TypeError, lambda: diophantine(x/pi - 3))
 
+def test_nosols():
+    # diophantine should sympify eq so that these are equivalent
+    assert diophantine(3) == set()
+    assert diophantine(S(3)) == set()
 
 def test_univariate():
     assert diop_solve((x - 1)*(x - 2)**2) == set([(1,), (2,)])
