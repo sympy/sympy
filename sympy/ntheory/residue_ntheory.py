@@ -393,7 +393,7 @@ def _sqrt_mod_prime_power(a, p, k):
     if k == 1:
         if p == 2:
             return [ZZ(a)]
-        if not is_quad_residue(a, p):
+        if not (a % p < 2 or pow(a, (p - 1) // 2, p) == 1):
             return None
 
         if p % 4 == 3:
