@@ -424,10 +424,11 @@ class MultisetPartitionTraverser():
         self.p1 = 0
 
     def db_trace(self, msg):
-        """Useful for usderstanding/debugging the algorithms.  Not
+        """Useful for understanding/debugging the algorithms.  Not
         generally activated in end-user code."""
         if self.debug:
-            # XXX: animation_visitor is undefined...
+            # XXX: animation_visitor is undefined... Clearly this does not
+            # work and was not tested. Previous code in comments below.
             raise RuntimeError
             #letters = 'abcdefghijklmnopqrstuvwxyz'
             #state = [self.f, self.lpart, self.pstack]
