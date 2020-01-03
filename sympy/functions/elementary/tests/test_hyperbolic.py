@@ -1100,7 +1100,6 @@ def test_cosh_expansion():
 def test_cosh_positive():
     # See issue 11721
     # cosh(x) is positive for real values of x
-    x = symbols('x')
     k = symbols('k', real=True)
     n = symbols('n', integer=True)
 
@@ -1110,7 +1109,6 @@ def test_cosh_positive():
     assert cosh(3*I*pi/4, evaluate=False).is_positive is False
 
 def test_cosh_nonnegative():
-    x = symbols('x')
     k = symbols('k', real=True)
     n = symbols('n', integer=True)
 

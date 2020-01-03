@@ -6,10 +6,11 @@ from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify, expand_mul,
                         expand_func, Function, Dummy, Expr, factor_terms,
                         expand_power_exp, Eq)
 from sympy.core.compatibility import iterable, ordered, range, as_int
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, \
     nfloat, expand_mul, expand_multinomial
 from sympy.core.numbers import Float, I, pi, Rational, Integer
+from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
@@ -377,12 +378,12 @@ def signsimp(expr, evaluate=None):
 
     """
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        evaluate = global_parameters.evaluate
     expr = sympify(expr)
-    if not isinstance(expr, Expr) or expr.is_Atom:
+    if not isinstance(expr, (Expr, Relational)) or expr.is_Atom:
         return expr
     e = sub_post(sub_pre(expr))
-    if not isinstance(e, Expr) or e.is_Atom:
+    if not isinstance(e, (Expr, Relational)) or e.is_Atom:
         return e
     if e.is_Add:
         return e.func(*[signsimp(a, evaluate) for a in e.args])

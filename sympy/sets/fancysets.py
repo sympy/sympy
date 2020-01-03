@@ -683,11 +683,17 @@ class Range(Set):
             ref = self.start
         elif self.stop.is_finite:
             ref = self.stop
-        else:
-            return other.is_Integer
-        if (ref - other) % self.step:  # off sequence
+        else:  # both infinite; step is +/- 1 (enforced by __new__)
+            return S.true
+        if self.size == 1:
+            return Eq(other, self[0])
+        res = (ref - other) % self.step
+        if res == S.Zero:
+            return And(other >= self.inf, other <= self.sup)
+        elif res.is_Integer:  # off sequence
             return S.false
-        return _sympify(other >= self.inf and other <= self.sup)
+        else:  # symbolic/unsimplified residue modulo step
+            return None
 
     def __iter__(self):
         if self.has(Symbol):
@@ -733,6 +739,7 @@ class Range(Set):
         from sympy.functions.elementary.integers import ceiling
         ooslice = "cannot slice from the end with an infinite value"
         zerostep = "slice step cannot be zero"
+        infinite = "slicing not possible on range with infinite start"
         # if we had to take every other element in the following
         # oo, ..., 6, 4, 2, 0
         # we might get oo, ..., 4, 0 or oo, ..., 6, 2
@@ -755,6 +762,12 @@ class Range(Set):
                     raise ValueError(zerostep)
                 step = i.step or 1
                 ss = step*self.step
+                #---------------------
+                # handle infinite Range
+                #   i.e. Range(-oo, oo) or Range(oo, -oo, -1)
+                # --------------------
+                if self.start.is_infinite and self.stop.is_infinite:
+                    raise ValueError(infinite)
                 #---------------------
                 # handle infinite on right
                 #   e.g. Range(0, oo) or Range(0, -oo, -1)
@@ -899,10 +912,13 @@ class Range(Set):
     def as_relational(self, x):
         """Rewrite a Range in terms of equalities and logic operators. """
         from sympy.functions.elementary.integers import floor
-        return And(
-            Eq(x, floor(x)),
-            x >= self.inf if self.inf in self else x > self.inf,
-            x <= self.sup if self.sup in self else x < self.sup)
+        if self.size == 1:
+            return Eq(x, self[0])
+        else:
+            return And(
+                Eq(x, floor(x)),
+                x >= self.inf if self.inf in self else x > self.inf,
+                x <= self.sup if self.sup in self else x < self.sup)
 
 
 # Using range from compatibility above (xrange on Py2)

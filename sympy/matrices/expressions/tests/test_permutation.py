@@ -1,4 +1,4 @@
-from sympy.combinatorics import Permutation, SymmetricGroup
+from sympy.combinatorics import Permutation
 from sympy.core.expr import unchanged
 from sympy.matrices import Matrix
 from sympy.matrices.expressions import \

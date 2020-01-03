@@ -1,4 +1,4 @@
-from sympy import (Rational, Float, S, Symbol, cos, oo, pi, simplify,
+from sympy import (Eq, Rational, Float, S, Symbol, cos, oo, pi, simplify,
     sin, sqrt, symbols, acos)
 from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import tan
@@ -29,6 +29,7 @@ def test_object_from_equation():
     assert Line(3*a + b + 18, x='a', y='b') == Line2D(Point2D(0, -18), Point2D(1, -21))
     assert Line(3*x + y) == Line2D(Point2D(0, 0), Point2D(1, -3))
     assert Line(x + y) == Line2D(Point2D(0, 0), Point2D(1, -1))
+    assert Line(Eq(3*a + b, -18), x='a', y=b) == Line2D(Point2D(0, -18), Point2D(1, -21))
     raises(ValueError, lambda: Line(x))
     raises(ValueError, lambda: Line(y))
     raises(ValueError, lambda: Line(x/y))

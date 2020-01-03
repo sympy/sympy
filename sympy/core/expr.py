@@ -3525,11 +3525,6 @@ class Expr(Basic, EvalfMixin):
         from sympy.integrals import integrate
         return integrate(self, *args, **kwargs)
 
-    def simplify(self, **kwargs):
-        """See the simplify function in sympy.simplify"""
-        from sympy.simplify import simplify
-        return simplify(self, **kwargs)
-
     def nsimplify(self, constants=[], tolerance=None, full=False):
         """See the nsimplify function in sympy.simplify"""
         from sympy.simplify import nsimplify

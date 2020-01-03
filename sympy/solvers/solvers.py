@@ -58,7 +58,6 @@ from sympy.solvers.inequalities import reduce_inequalities
 
 from types import GeneratorType
 from collections import defaultdict
-import itertools
 import warnings
 
 
@@ -161,6 +160,9 @@ def denoms(eq, *symbols):
     pot = preorder_traversal(eq)
     dens = set()
     for p in pot:
+        # lhs and rhs will be traversed after anyway
+        if isinstance(p, Relational):
+            continue
         den = denom(p)
         if den is S.One:
             continue
@@ -3439,7 +3441,12 @@ def unrad(eq, *syms, **flags):
 
     # preconditioning
     eq = powdenest(factor_terms(eq, radical=True, clear=True))
-    eq, d = eq.as_numer_denom()
+
+    if isinstance(eq, Relational):
+        eq, d = eq, 1
+    else:
+        eq, d = eq.as_numer_denom()
+
     eq = _mexpand(eq, recursive=True)
     if eq.is_number:
         return
