@@ -1030,6 +1030,21 @@ class Point2D(Point):
         return Point(self.x + x, self.y + y)
 
     @property
+    def coordinates(self):
+        """
+        Returns the two coordinates of the Point.
+        
+        Examples
+        ========
+        
+        >>> from sympy import Point2D
+        >>> p = Point2D(0, 1)
+        >>> p.coordinates
+        (0, 1)
+        """
+        return self.args[0], self.args[1]
+
+    @property
     def x(self):
         """
         Returns the X coordinate of the Point.
@@ -1307,6 +1322,21 @@ class Point3D(Point):
 
         """
         return Point3D(self.x + x, self.y + y, self.z + z)
+
+    @property
+    def coordinates(self):
+        """
+        Returns the three coordinates of the Point.
+        
+        Examples
+        ========
+        
+        >>> from sympy import Point3D
+        >>> p = Point3D(0, 1, 2)
+        >>> p.coordinates
+        (0, 1, 2)
+        """
+        return self.args[0], self.args[1], self.args[2]
 
     @property
     def x(self):
