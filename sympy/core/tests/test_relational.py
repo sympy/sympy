@@ -961,10 +961,9 @@ def test_issues_13081_12583_12534():
 def test_issue_18188():
     from sympy.sets.conditionset import ConditionSet
     result1 = Eq(x*cos(x) - 3*sin(x), 0)
-    assert isinstance(result1.as_set(), ConditionSet)
     assert result1.as_set() == ConditionSet(x, Eq(x*cos(x) - 3*sin(x), 0), Reals)
+
     result2 = Eq(x**2 + sqrt(x*2) + sin(x), 0)
-    assert isinstance(result2.as_set(), ConditionSet)
     assert result2.as_set() == ConditionSet(x, Eq(sqrt(2)*sqrt(x) + x**2 + sin(x), 0), Reals)
 
 def test_binary_symbols():
