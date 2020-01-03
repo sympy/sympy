@@ -387,7 +387,7 @@ class Relational(Boolean, EvalfMixin):
     __bool__ = __nonzero__
 
     def _eval_as_set(self):
-       # self is univariate and periodicity(self, x) in (0, None)
+        # self is univariate and periodicity(self, x) in (0, None)
         from sympy.solvers.inequalities import solve_univariate_inequality
         from sympy.sets.conditionset import ConditionSet
         syms = self.free_symbols
