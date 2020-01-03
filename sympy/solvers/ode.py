@@ -3384,12 +3384,16 @@ def _handle_Integral(expr, func, hint):
     return sol
 
 def _ode_factorable_match(eq, func, x0):
-
+    from sympy.abc import x
     from sympy.polys.polytools import factor
     eqs = factor(eq)
     eqs = fraction(eqs)[0] # p/q =0, So we need to solve only p=0
     eqns = []
     r = None
+    f = Function('f')
+    roots = solve(eq,Derivative(f(x), x))
+    for i in roots:
+      eqns.append(Derivative(f(x), x)-i)
     if isinstance(eqs, Pow):
         # if f(x)**p=0 then f(x)=0 (p>0)
         if eqs.exp.is_positive:
