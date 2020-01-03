@@ -10,15 +10,18 @@ from collections import defaultdict
 from inspect import isfunction
 
 from sympy.assumptions.refine import refine
+from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
 from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
+from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
-from sympy.simplify import simplify as _simplify
+from sympy.polys import cancel, together
+from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -2139,18 +2142,14 @@ class MatrixArithmetic(MatrixRequired):
 
     def _eval_matrix_mul(self, other):
         def entry(i, j):
+            vec = [self[i,k]*other[k,j] for k in range(self.cols)]
             try:
-                return sum(self[i,k]*other[k,j] for k in range(self.cols))
-            except TypeError:
-                # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+                return Add(*vec)
+            except (TypeError, SympifyError):
+                # Some matrices don't work with `sum` or `Add`
                 # They don't work with `sum` because `sum` tries to add `0`
-                # initially, and for a matrix, that is a mix of a scalar and
-                # a matrix, which raises a TypeError. Fall back to a
-                # block-matrix-safe way to multiply if the `sum` fails.
-                ret = self[i, 0]*other[0, j]
-                for k in range(1, self.cols):
-                    ret += self[i, k]*other[k, j]
-                return ret
+                # Fall back to a safe way to multiply if the `Add` fails.
+                return reduce(lambda a, b: a + b, vec)
 
         return self._new(self.rows, other.cols, entry)
 
@@ -2165,10 +2164,43 @@ class MatrixArithmetic(MatrixRequired):
     def _eval_pow_by_recursion(self, num):
         if num == 1:
             return self
+
         if num % 2 == 1:
-            return self * self._eval_pow_by_recursion(num - 1)
-        ret = self._eval_pow_by_recursion(num // 2)
-        return ret * ret
+            a, b = self, self._eval_pow_by_recursion(num - 1)
+        else:
+            a = b = self._eval_pow_by_recursion(num // 2)
+
+        return a.multiply(b)
+
+    def _eval_pow_by_recursion_mulsimp(self, num, dotprodsimp=None, prevsimp=None):
+        if dotprodsimp and prevsimp is None:
+            prevsimp = [True]*len(self)
+
+        if num == 1:
+            return self
+
+        if num % 2 == 1:
+            a, b = self, self._eval_pow_by_recursion_mulsimp(num - 1,
+                    dotprodsimp=dotprodsimp, prevsimp=prevsimp)
+        else:
+            a = b = self._eval_pow_by_recursion_mulsimp(num // 2,
+                    dotprodsimp=dotprodsimp, prevsimp=prevsimp)
+
+        m = a.multiply(b, dotprodsimp=False)
+
+        if not dotprodsimp:
+            return m
+
+        lenm  = len(m)
+        elems = [None]*lenm
+
+        for i in range(lenm):
+            if prevsimp[i]:
+                elems[i], prevsimp[i] = _dotprodsimp(m[i], withsimp=True)
+            else:
+                elems[i] = m[i]
+
+        return m._new(m.rows, m.cols, elems)
 
     def _eval_scalar_mul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other)
@@ -2252,6 +2284,21 @@ class MatrixArithmetic(MatrixRequired):
 
         matrix_multiply_elementwise
         """
+
+        return self.multiply(other)
+
+    def multiply(self, other, dotprodsimp=None):
+        """Same as __mul__() but with optional simplification.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+        """
+
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
         # our first sanity check.
@@ -2262,7 +2309,11 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return self._eval_matrix_mul(other)
+            m = self._eval_matrix_mul(other)
+            if dotprodsimp:
+                return m.applyfunc(_dotprodsimp)
+            return m
+
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_mul(self, other)
@@ -2276,11 +2327,59 @@ class MatrixArithmetic(MatrixRequired):
 
         return NotImplemented
 
+    def multiply_elementwise(self, other):
+        """Return the Hadamard product (elementwise product) of A and B
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+        >>> A.multiply_elementwise(B)
+        Matrix([
+        [  0, 10, 200],
+        [300, 40,   5]])
+
+        See Also
+        ========
+
+        sympy.matrices.matrices.MatrixBase.cross
+        sympy.matrices.matrices.MatrixBase.dot
+        multiply
+        """
+        if self.shape != other.shape:
+            raise ShapeError("Matrix shapes must agree {} != {}".format(self.shape, other.shape))
+
+        return self._eval_matrix_mul_elementwise(other)
+
     def __neg__(self):
         return self._eval_scalar_mul(-1)
 
     @call_highest_priority('__rpow__')
     def __pow__(self, exp):
+        """Return self**exp a scalar or symbol."""
+
+        return self.pow(exp)
+
+    def pow(self, exp, dotprodsimp=None, jordan=None):
+        """Return self**exp a scalar or symbol.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+
+        jordan : bool, optional
+            If left as None then Jordan form exponentiation will be used under
+            certain conditions, True specifies that jordan_pow should always
+            be used if possible and False means it should not be used unless
+            it is the only way to calculate the power.
+        """
+
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
@@ -2305,16 +2404,22 @@ class MatrixArithmetic(MatrixRequired):
             # When certain conditions are met,
             # Jordan block algorithm is faster than
             # computation by recursion.
-            elif a.rows == 2 and exp > 100000 and jordan_pow is not None:
+            elif jordan_pow is not None and (jordan or \
+                    (jordan is not False and a.rows == 2 and exp > 100000)):
                 try:
-                    return jordan_pow(exp)
+                    return jordan_pow(exp, dotprodsimp=dotprodsimp)
                 except MatrixError:
-                    pass
-            return a._eval_pow_by_recursion(exp)
+                    if jordan:
+                        raise
+
+            if dotprodsimp is not None:
+                return a._eval_pow_by_recursion_mulsimp(exp, dotprodsimp=dotprodsimp)
+            else:
+                return a._eval_pow_by_recursion(exp)
 
         if jordan_pow:
             try:
-                return jordan_pow(exp)
+                return jordan_pow(exp, dotprodsimp=dotprodsimp)
             except NonInvertibleMatrixError:
                 # Raised by jordan_pow on zero determinant matrix unless exp is
                 # definitely known to be a non-negative integer.
@@ -2374,32 +2479,6 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__rtruediv__')
     def __truediv__(self, other):
         return self.__div__(other)
-
-    def multiply_elementwise(self, other):
-        """Return the Hadamard product (elementwise product) of A and B
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
-        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
-        >>> A.multiply_elementwise(B)
-        Matrix([
-        [  0, 10, 200],
-        [300, 40,   5]])
-
-        See Also
-        ========
-
-        sympy.matrices.matrices.MatrixBase.cross
-        sympy.matrices.matrices.MatrixBase.dot
-        multiply
-        """
-        if self.shape != other.shape:
-            raise ShapeError("Matrix shapes must agree {} != {}".format(self.shape, other.shape))
-
-        return self._eval_matrix_mul_elementwise(other)
 
 
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,

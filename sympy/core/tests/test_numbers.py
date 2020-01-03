@@ -7,7 +7,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
                    AlgebraicNumber, simplify, sin, fibonacci, RealField,
                    sympify, srepr, Dummy, Sum)
-from sympy.core.compatibility import long
+from sympy.core.compatibility import long, PY3
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
@@ -1901,14 +1901,15 @@ def test_comparisons_with_unknown_type():
         assert foo != n
         assert not n == foo
         assert not foo == n
-        raises(TypeError, lambda: n < foo)
-        raises(TypeError, lambda: foo > n)
-        raises(TypeError, lambda: n > foo)
-        raises(TypeError, lambda: foo < n)
-        raises(TypeError, lambda: n <= foo)
-        raises(TypeError, lambda: foo >= n)
-        raises(TypeError, lambda: n >= foo)
-        raises(TypeError, lambda: foo <= n)
+        if PY3:
+            raises(TypeError, lambda: n < foo)
+            raises(TypeError, lambda: foo > n)
+            raises(TypeError, lambda: n > foo)
+            raises(TypeError, lambda: foo < n)
+            raises(TypeError, lambda: n <= foo)
+            raises(TypeError, lambda: foo >= n)
+            raises(TypeError, lambda: n >= foo)
+            raises(TypeError, lambda: foo <= n)
 
     class Bar(object):
         """
@@ -1942,14 +1943,15 @@ def test_comparisons_with_unknown_type():
         assert not bar == n
 
     for n in ni, nf, nr, oo, -oo, zoo, nan:
-        raises(TypeError, lambda: n < bar)
-        raises(TypeError, lambda: bar > n)
-        raises(TypeError, lambda: n > bar)
-        raises(TypeError, lambda: bar < n)
-        raises(TypeError, lambda: n <= bar)
-        raises(TypeError, lambda: bar >= n)
-        raises(TypeError, lambda: n >= bar)
-        raises(TypeError, lambda: bar <= n)
+        if PY3:
+            raises(TypeError, lambda: n < bar)
+            raises(TypeError, lambda: bar > n)
+            raises(TypeError, lambda: n > bar)
+            raises(TypeError, lambda: bar < n)
+            raises(TypeError, lambda: n <= bar)
+            raises(TypeError, lambda: bar >= n)
+            raises(TypeError, lambda: n >= bar)
+            raises(TypeError, lambda: bar <= n)
 
 def test_NumberSymbol_comparison():
     from sympy.core.tests.test_relational import rel_check
@@ -2018,11 +2020,12 @@ def test_NegativeInfinity():
     assert (-oo)**12 is oo
 
 def test_issue_6133():
-    raises(TypeError, lambda: (-oo < None))
-    raises(TypeError, lambda: (S(-2) < None))
-    raises(TypeError, lambda: (oo < None))
-    raises(TypeError, lambda: (oo > None))
-    raises(TypeError, lambda: (S(2) < None))
+    if PY3:
+        raises(TypeError, lambda: (-oo < None))
+        raises(TypeError, lambda: (S(-2) < None))
+        raises(TypeError, lambda: (oo < None))
+        raises(TypeError, lambda: (oo > None))
+        raises(TypeError, lambda: (S(2) < None))
 
 def test_abc():
     x = numbers.Float(5)

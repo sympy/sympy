@@ -4,7 +4,7 @@ import random
 from collections import defaultdict
 
 from sympy.core.basic import Atom, Basic
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.expr import Expr
 from sympy.core.compatibility import \
     is_sequence, reduce, range, as_int, Iterable
@@ -3002,7 +3002,10 @@ class AppliedPermutation(Expr):
     >>> _.subs(x, 1)
     2
     """
-    def __new__(cls, perm, x, evaluate=global_evaluate[0]):
+    def __new__(cls, perm, x, evaluate=None):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
+
         perm = _sympify(perm)
         x = _sympify(x)
 

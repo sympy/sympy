@@ -393,7 +393,7 @@ def _sqrt_mod_prime_power(a, p, k):
     if k == 1:
         if p == 2:
             return [ZZ(a)]
-        if not is_quad_residue(a, p):
+        if not (a % p < 2 or pow(a, (p - 1) // 2, p) == 1):
             return None
 
         if p % 4 == 3:
@@ -638,6 +638,8 @@ def is_nthpow_residue(a, n, m):
         if m == 1:
             return False
         return a == 1
+    if a % m == 0:
+        return True
     if n == 1:
         return True
     if n == 2:
@@ -771,8 +773,8 @@ def nthroot_mod(a, n, p, all_roots=False):
     # see Hackman "Elementary Number Theory" (2009), page 76
     if not is_nthpow_residue(a, n, p):
         return None
-    if primitive_root(p) is None:
-        raise NotImplementedError("Not Implemented for m without primitive root")
+    if not isprime(p):
+        raise NotImplementedError("Not implemented for composite p")
 
     if (p - 1) % n == 0:
         return _nthroot_mod1(a, n, p, all_roots)

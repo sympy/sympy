@@ -1811,6 +1811,19 @@ class LatexPrinter(Printer):
             self._print(expr.args[0])
         )
 
+    def _print_PartialDerivative(self, expr):
+        if len(expr.variables) == 1:
+            return r"\frac{\partial}{\partial {%s}}{%s}" % (
+                self._print(expr.variables[0]),
+                self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
+            )
+        else:
+            return r"\frac{\partial^{%s}}{%s}{%s}" % (
+                len(expr.variables),
+                " ".join([r"\partial {%s}" % self._print(i) for i in expr.variables]),
+                self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
+            )
+
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
 
@@ -2110,7 +2123,7 @@ class LatexPrinter(Printer):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
         if s.base_set is S.UniversalSet:
             return r"\left\{%s \mid %s \right\}" % \
-                (vars_print, self._print(s.condition.as_expr()))
+                (vars_print, self._print(s.condition))
 
         return r"\left\{%s \mid %s \in %s \wedge %s \right\}" % (
             vars_print,
