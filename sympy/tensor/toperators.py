@@ -1,6 +1,7 @@
 from sympy import Symbol
 from sympy import tensorproduct, MutableDenseNDimArray
-from sympy.tensor.tensor import (Tensor, TensExpr, TensMul, TensorIndex)
+from sympy.tensor.tensor import (Tensor, TensExpr, TensAdd,
+                                 TensMul, TensorIndex)
 
 
 class PartialDerivative(TensExpr):
@@ -76,13 +77,48 @@ class PartialDerivative(TensExpr):
         return args, indices, free, dum
 
     def doit(self):
+        """
+        The idea is that the method just performs expansion of a
+        PartialDerivative to end up with first order derivatives
+        of tensors by tensors, tensors by symbols, or non-tensors by symbols
+        (what about non-tensors by tensors?)
+        """
         args, indices, free, dum = self._contract_indices_for_derivative(self.expr, self.variables)
 
         obj = self.func(*args)
         obj._indices = indices
         obj._free = free
         obj._dum = dum
-        return obj
+
+        result = obj
+
+        if isinstance(obj.expr, TensAdd):
+            # take care of sums of multi PDs
+            result = obj.expr.func(*[
+                    self.func(a, *obj.variables).doit()
+                    for a in result.expr.args])
+        elif isinstance(obj.expr, TensMul):
+            # take care of products of multi PDs
+            if len(obj.variables) == 1:
+                # derivative with respect to single variable
+                terms = []
+                mulargs = list(obj.expr.args)
+                for ind in range(len(mulargs)):
+                    d = self.func(mulargs[ind], *obj.variables).doit()
+                    terms.append(TensMul(*(mulargs[:ind]
+                                           + [d]
+                                           + mulargs[(ind + 1):])))
+                result = TensAdd.fromiter(terms)
+            else:
+                # derivative with respect to multiple variables
+                # decompose:
+                # partial(expr, (u, v))
+                # = partial(partial(expr, u).doit(), v).doit()
+                result = obj.expr  # init with expr
+                for v in obj.variables:
+                    result = self.func(result, v).doit()  # then throw PD on it
+
+        return result
 
     def perform(self):
         result = self.expr
