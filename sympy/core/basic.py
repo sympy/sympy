@@ -1771,10 +1771,10 @@ class Basic(with_metaclass(ManagedProperties)):
             if isinstance(args[-1], string_types):
                 rule = '_eval_rewrite_as_' + args[-1]
             else:
-                try:
-                    rule = '_eval_rewrite_as_' + args[-1].__name__
-                except:
-                    rule = '_eval_rewrite_as_' + args[-1].__class__.__name__
+                name = getattr(args[-1], '__name__', None)
+                if name is None:
+                    name = args[-1].__class__.__name__
+                rule = '_eval_rewrite_as_' + name
 
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)

@@ -3,8 +3,8 @@ from __future__ import print_function, division
 import random
 from collections import defaultdict
 
-from sympy.core.basic import Atom, Basic
 from sympy.core.parameters import global_parameters
+from sympy.core.basic import Atom
 from sympy.core.expr import Expr
 from sympy.core.compatibility import \
     is_sequence, reduce, range, as_int, Iterable

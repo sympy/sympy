@@ -390,7 +390,6 @@ class PrettyPrinter(Printer):
         return cyc
 
     def _print_Permutation(self, expr):
-        from ..str import sstr
         from sympy.combinatorics.permutations import Permutation, Cycle
 
         perm_cyclic = Permutation.print_cyclic

@@ -12,7 +12,6 @@ from mpmath.libmp import repr_dps, to_str as mlib_to_str
 from sympy.core.compatibility import range, string_types
 
 from .printer import Printer
-from .str import sstr
 
 
 class ReprPrinter(Printer):

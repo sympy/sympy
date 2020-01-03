@@ -1,9 +1,8 @@
 from sympy.core import (
     Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
-    Basic, I, nan, pi, symbols, oo, zoo, Rational, N)
+    Basic, I, nan, pi, symbols, oo, zoo, N)
 from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
-from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.error_functions import erf

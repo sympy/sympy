@@ -58,7 +58,6 @@ from sympy.solvers.inequalities import reduce_inequalities
 
 from types import GeneratorType
 from collections import defaultdict
-import itertools
 import warnings
 
 

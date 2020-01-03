@@ -1,5 +1,5 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
-                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational, erf, beta,
+                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational, beta,
                    floor)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
