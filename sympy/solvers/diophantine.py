@@ -11,6 +11,7 @@ from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
+from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -168,6 +169,8 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     from sympy.utilities.iterables import (
         subsets, permute_signs, signed_permutations)
 
+    eq = _sympify(eq)
+
     if isinstance(eq, Eq):
         eq = eq.lhs - eq.rhs
 
@@ -182,7 +185,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
             if syms != var:
                 dict_sym_index = dict(zip(syms, range(len(syms))))
                 return {tuple([t[dict_sym_index[i]] for i in var])
-                            for t in diophantine(eq, param)}
+                            for t in diophantine(eq, param, permute=permute)}
         n, d = eq.as_numer_denom()
         if n.is_number:
             return set()
@@ -199,7 +202,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         assert not any(g.is_number for g in p.gens)
         eq = p.as_expr()
         assert eq.is_polynomial()
-    except (GeneratorsNeeded, AssertionError, AttributeError):
+    except (GeneratorsNeeded, AssertionError):
         raise TypeError(filldedent('''
     Equation should be a polynomial with Rational coefficients.'''))
 
@@ -294,7 +297,10 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         else:
             raise TypeError
     except (TypeError, NotImplementedError):
-        terms = factor_list(eq)[1]
+        fl = factor_list(eq)
+        if fl[0].is_Rational and fl[0] != 1:
+            return diophantine(eq/fl[0], param=param, syms=syms, permute=permute)
+        terms = fl[1]
 
     sols = set([])
 

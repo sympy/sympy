@@ -1587,10 +1587,6 @@ class MatrixEigen(MatrixSubspaces):
 
         eigenvecs = self.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
 
-        if all(e.is_real for e in self) and self.is_symmetric():
-            # every real symmetric matrix is real diagonalizable
-            return True, eigenvecs
-
         for val, mult, basis in eigenvecs:
             # if we have a complex eigenvalue
             if reals_only and not val.is_real:
@@ -1602,50 +1598,44 @@ class MatrixEigen(MatrixSubspaces):
         return True, eigenvecs
 
     def is_diagonalizable(self, reals_only=False, dotprodsimp=None, **kwargs):
-        """Returns true if a matrix is diagonalizable.
+        """Returns ``True`` if a matrix is diagonalizable.
 
         Parameters
         ==========
 
-        reals_only : bool. If reals_only=True, determine whether the matrix can be
-                     diagonalized without complex numbers. (Default: False)
+        reals_only : bool, optional
+            If ``True``, it tests whether the matrix can be diagonalized
+            without complex numbers. (Orthogonally diagonalizable)
+
+            If ``False``, it tests whether the matrix can be unitarily
+            diagonalizable.
 
         dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        kwargs
-        ======
-
-        clear_cache : bool. If True, clear the result of any computations when finished.
-                      (Default: True)
+            Specifies whether intermediate term algebraic simplification
+            is used during matrix multiplications to control expression
+            blowup and thus speed up calculation.
 
         Examples
         ========
 
+        Example of a diagonalizable matrix:
+
         >>> from sympy import Matrix
-        >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
-        >>> m
-        Matrix([
-        [1,  2, 0],
-        [0,  3, 0],
-        [2, -4, 2]])
+        >>> m = Matrix([[1, 2, 0], [0, 3, 0], [2, -4, 2]])
         >>> m.is_diagonalizable()
         True
-        >>> m = Matrix(2, 2, [0, 1, 0, 0])
-        >>> m
-        Matrix([
-        [0, 1],
-        [0, 0]])
+
+        Example of a non-diagonalizable matrix:
+
+        >>> m = Matrix([[0, 1], [0, 0]])
         >>> m.is_diagonalizable()
         False
-        >>> m = Matrix(2, 2, [0, 1, -1, 0])
-        >>> m
-        Matrix([
-        [ 0, 1],
-        [-1, 0]])
-        >>> m.is_diagonalizable()
+
+        Example of a unitarily diagonalizable, but not orthogonally
+        diagonalizable:
+
+        >>> m = Matrix([[0, 1], [-1, 0]])
+        >>> m.is_diagonalizable(reals_only=False)
         True
         >>> m.is_diagonalizable(reals_only=True)
         False
@@ -1669,6 +1659,16 @@ class MatrixEigen(MatrixSubspaces):
                 deprecated_since_version=1.4,
                 issue=15887
             ).warn()
+
+        if not self.is_square:
+            return False
+
+        if all(e.is_real for e in self) and self.is_symmetric():
+            return True
+
+        if all(e.is_complex for e in self) and self.is_hermitian \
+            and not reals_only:
+            return True
 
         return self.is_diagonalizable_with_eigen(reals_only=reals_only,
                 dotprodsimp=dotprodsimp)[0]

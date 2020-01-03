@@ -11,7 +11,7 @@ from .function import (_coeff_isneg, expand_complex, expand_multinomial,
     expand_mul)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and
 from .compatibility import as_int, range
-from .evaluate import global_evaluate
+from .parameters import global_parameters
 from sympy.utilities.iterables import sift
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
@@ -257,11 +257,17 @@ class Pow(Expr):
     @cacheit
     def __new__(cls, b, e, evaluate=None):
         if evaluate is None:
-            evaluate = global_evaluate[0]
+            evaluate = global_parameters.evaluate
         from sympy.functions.elementary.exponential import exp_polar
 
         b = _sympify(b)
         e = _sympify(e)
+
+        # XXX: Maybe only Expr should be allowed...
+        from sympy.core.relational import Relational
+        if isinstance(b, Relational) or isinstance(e, Relational):
+            raise TypeError('Relational can not be used in Pow')
+
         if evaluate:
             if e is S.ComplexInfinity:
                 return S.NaN
