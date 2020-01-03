@@ -402,9 +402,9 @@ def test_euler_maclaurin():
     # Not exact
     assert Sum(k**6, (k, a, b)).euler_maclaurin(0, 2)[1] != 0
     # Numerical test
-    for mi, n in [(2, 4), (2, 20), (10, 20), (18, 20)]:
+    for mi, ni in [(2, 4), (2, 20), (10, 20), (18, 20)]:
         A = Sum(1/k**3, (k, 1, oo))
-        s, e = A.euler_maclaurin(mi, n)
+        s, e = A.euler_maclaurin(mi, ni)
         assert abs((s - zeta(3)).evalf()) < e.evalf()
 
     raises(ValueError, lambda: Sum(1, (x, 0, 1), (k, 0, 1)).euler_maclaurin())
