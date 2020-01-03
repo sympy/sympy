@@ -1,5 +1,6 @@
+from sympy import Symbol
 from sympy import tensorproduct, MutableDenseNDimArray
-from sympy.tensor.tensor import (TensExpr, TensMul, TensorIndex)
+from sympy.tensor.tensor import (Tensor, TensExpr, TensMul, TensorIndex)
 
 
 class PartialDerivative(TensExpr):
@@ -54,16 +55,23 @@ class PartialDerivative(TensExpr):
     @classmethod
     def _contract_indices_for_derivative(cls, expr, variables):
         variables_opposite_valence = []
+
         for i in variables:
-            i_free_indices = i.get_free_indices()
-            variables_opposite_valence.append(i.xreplace({k: -k for k in i_free_indices}))
+            if isinstance(i, Tensor):
+                i_free_indices = i.get_free_indices()
+                variables_opposite_valence.append(
+                        i.xreplace({k: -k for k in i_free_indices}))
+            elif isinstance(i, Symbol):
+                variables_opposite_valence.append(i)
 
         args, indices, free, dum = TensMul._tensMul_contract_indices(
             [expr] + variables_opposite_valence, replace_indices=True)
 
         for i in range(1, len(args)):
-            i_indices = args[i].get_free_indices()
-            args[i] = args[i].xreplace({k: -k for k in i_indices})
+            args_i = args[i]
+            if isinstance(args_i, Tensor):
+                i_indices = args[i].get_free_indices()
+                args[i] = args[i].xreplace({k: -k for k in i_indices})
 
         return args, indices, free, dum
 
