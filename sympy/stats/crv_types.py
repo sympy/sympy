@@ -2970,11 +2970,10 @@ def PowerFunction(name, alpha, a, b):
     r"""
     Creates a continuous random variable with a Power Function Distribution
 
+    The density of PowerFunction distribution is given by
+
     .. math::
-        f(x) := \begin{cases}
-                 \frac{{\alpha}(x - a)^{\alpha - 1}}{(b - a)^{\alpha}} & \text{for } x \in [a,b]  \\
-                  0               & \text{otherwise}
-                \end{cases}
+        f(x) := \frac{{\alpha}(x - a)^{\alpha - 1}}{(b - a)^{\alpha}}
 
     with :math:`x \in [a,b]`.
 
