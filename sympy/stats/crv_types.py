@@ -2972,7 +2972,7 @@ def PowerFunction(name, alpha, a, b):
 
     .. math::
         f(x) := \begin{cases}
-                 \frac{(alpha)(x - a)^{\alpha - \1}}{(b - a)^{\alpha}} & \text{for } x \in [a,b]  \\
+                 \frac{{\alpha}(x - a)^{\alpha - 1}}{(b - a)^{\alpha}} & \text{for } x \in [a,b]  \\
                   0               & \text{otherwise}
                 \end{cases}
 
