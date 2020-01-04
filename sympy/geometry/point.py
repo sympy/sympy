@@ -1042,7 +1042,7 @@ class Point2D(Point):
         >>> p.coordinates
         (0, 1)
         """
-        return self.args[0], self.args[1]
+        return self.args
 
     @property
     def x(self):
@@ -1336,7 +1336,7 @@ class Point3D(Point):
         >>> p.coordinates
         (0, 1, 2)
         """
-        return self.args[0], self.args[1], self.args[2]
+        return self.args
 
     @property
     def x(self):
