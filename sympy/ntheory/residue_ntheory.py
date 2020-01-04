@@ -1318,34 +1318,33 @@ def quadratic_congruence(a, b, c, p):
     p = as_int(p)
     a = a % p
     b = b % p
-    c = (c % p)
+    c = c % p
 
     if a == 0:
-        return linear_congruence(b, -1 * c, p)
+        return linear_congruence(b, -c, p)
     if p == 2:
-        roots = set()
+        roots = []
         if c % 2 == 0:
-            roots.add(0)
+            roots.append(0)
         if (a + b + c) % 2 == 0:
-            roots.add(1)
+            roots.append(1)
         return roots
-    elif isprime(p):
+    if isprime(p):
         inv_a = mod_inverse(a, p)
-        b = (b * inv_a)
-        c = (c * inv_a)
+        b *= inv_a
+        c *= inv_a
         if b % 2 == 1:
             b = b + p
         d = ((b * b) // 4 - c) % p
-        y = (sqrt_mod(d, p, all_roots=True))
+        y = sqrt_mod(d, p, all_roots=True)
         res = set()
         for i in y:
             res.add((i - b // 2) % p)
-        return res
-    else :
-        y = sqrt_mod(b * b - 4 * a * c , 4 * a * p, all_roots=True)
+        return sorted(res)
+    y = sqrt_mod(b * b - 4 * a * c , 4 * a * p, all_roots=True)
     res = set()
     for i in y:
         root = linear_congruence(2 * a, i - b, 4 * a * p)
         for j in root:
             res.add(j % p)
-    return res
+    return sorted(res)
