@@ -162,7 +162,9 @@ def test_residue():
     assert is_nthpow_residue(31, 4, 41)
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
-    raises(NotImplementedError, lambda: nthroot_mod(29, 31, 74))
+
+    assert nthroot_mod(29, 31, 74) == [45]
+
     assert nthroot_mod(1801, 11, 2663) == 44
     for a, q, p in [(51922, 2, 203017), (43, 3, 109), (1801, 11, 2663),
           (26118163, 1303, 33333347), (1499, 7, 2663), (595, 6, 2663),
@@ -170,8 +172,12 @@ def test_residue():
         r = nthroot_mod(a, q, p)
         assert pow(r, q, p) == a
     assert nthroot_mod(11, 3, 109) is None
-    raises(NotImplementedError, lambda: nthroot_mod(16, 5, 36))
-    raises(NotImplementedError, lambda: nthroot_mod(9, 16, 36))
+    assert nthroot_mod(16, 5, 36, True) == [4, 22]
+    assert nthroot_mod(9, 16, 36, True) == [3, 9, 15, 21, 27, 33]
+    assert nthroot_mod(4, 3, 3249000) == []
+    assert nthroot_mod(36010, 8, 87382, True) == [40208, 47174]
+    assert nthroot_mod(0, 12, 37, True) == [0]
+    assert nthroot_mod(0, 7, 100, True) == [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
 
     for p in primerange(5, 100):
         qv = range(3, p, 4)
