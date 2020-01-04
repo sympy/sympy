@@ -1,8 +1,10 @@
 from sympy.utilities.pytest import raises
 
 from sympy.tensor.toperators import PartialDerivative
-from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, \
-    tensor_heads
+from sympy.tensor.tensor import (TensorIndexType,
+                                 tensor_indices,
+                                 TensorHead, tensor_heads,
+                                 TensMul)
 from sympy import symbols, diag
 from sympy import Array
 
@@ -38,8 +40,16 @@ def test_tensor_partial_deriv():
     expr2b = A(i)*PartialDerivative(H(k, -i), A(-j))
     assert expr2b.get_indices() == [L_0, k, -L_0, j]
 
-    expr3 = A(i)*PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j))
-    assert expr3.get_indices() == [L_0, k, -L_0, -j]
+    expr3a = TensMul(A(i), PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j)))
+    # TensMul prevents doit() execution to check the exact index structure
+    # as intended with PartialDerivative
+    assert expr3a.get_indices() == [i, k, -i, -j]
+
+    # Perform doit() explicitly
+    expr3b = expr3a.doit()
+    # Since this changes the order of the indices, it is only useful to check
+    # whether j is still a lower index and k is still upper
+    assert (-j in expr3b.get_indices()) and (k in expr3b.get_indices())
 
     expr4 = (A(i) + B(i))*PartialDerivative(C(j), D(j))
     assert expr4.get_indices() == [i, L_0, -L_0]
