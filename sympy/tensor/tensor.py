@@ -31,7 +31,7 @@ lowered when the tensor is put in canonical form.
 
 from __future__ import print_function, division
 
-from abc import abstractmethod, ABCMeta
+from abc import abstractmethod
 from collections import defaultdict
 import operator
 import itertools
@@ -41,7 +41,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
-from sympy.core.compatibility import string_types, reduce, range, SYMPY_INTS, with_metaclass
+from sympy.core.compatibility import string_types, reduce, range, SYMPY_INTS
 from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
@@ -1846,11 +1846,7 @@ def tensor_heads(s, index_types, symmetry=None, comm=0):
     return thlist
 
 
-class _TensorMetaclass(ManagedProperties, ABCMeta):
-    pass
-
-
-class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
+class TensExpr(Expr):
     """
     Abstract base class for tensor expressions
 

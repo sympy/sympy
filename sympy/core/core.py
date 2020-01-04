@@ -4,6 +4,8 @@ from __future__ import print_function, division
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:
 # FIXME this is *so* irrelevant and outdated!
+from abc import ABCMeta
+
 ordering_of_classes = [
     # singleton numbers
     'Zero', 'One', 'Half', 'Infinity', 'NaN', 'NegativeOne', 'NegativeInfinity',
@@ -65,7 +67,7 @@ class Registry(object):
 all_classes = set()
 
 
-class BasicMeta(type):
+class BasicMeta(ABCMeta):
 
     def __init__(cls, *args, **kws):
         all_classes.add(cls)
