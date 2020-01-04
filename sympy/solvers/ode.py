@@ -1198,8 +1198,12 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
         # This match is used for several cases below; we now collect on
         # f(x) so the matching works.
+        roots = solve(reduced_eq,df)
+        r1 = collect(df-roots[0], df, exact=True).match(d + e*df)
         r = collect(reduced_eq, df, exact=True).match(d + e*df)
-        if r:
+        if r or r1:
+            if r is None:
+              r=r1
             # Using r[d] and r[e] without any modification for hints
             # linear-coefficients and separable-reduced.
             num, den = r[d], r[e]  # ODE = d/e + df
@@ -3384,16 +3388,12 @@ def _handle_Integral(expr, func, hint):
     return sol
 
 def _ode_factorable_match(eq, func, x0):
-    from sympy.abc import x
+
     from sympy.polys.polytools import factor
     eqs = factor(eq)
     eqs = fraction(eqs)[0] # p/q =0, So we need to solve only p=0
     eqns = []
     r = None
-    f = Function('f')
-    roots = solve(eq,Derivative(f(x), x))
-    for i in roots:
-      eqns.append(Derivative(f(x), x)-i)
     if isinstance(eqs, Pow):
         # if f(x)**p=0 then f(x)=0 (p>0)
         if eqs.exp.is_positive:
