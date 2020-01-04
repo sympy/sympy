@@ -57,7 +57,7 @@ __all__ = [
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle',
 
-    'Geometric','Hermite' 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
+    'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
     'YuleSimon', 'Zeta',
 
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
