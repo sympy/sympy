@@ -2945,7 +2945,7 @@ class Tensor(TensExpr):
             # @a^i/@a_k = g^ij delta_j^k
             # TODO: if there is no metric present, the derivative should be zero?
 
-            if selfhead is otherhead:
+            if selfhead == otherhead:
                 # if heads are the same, provide delta and/or metric products
                 # for every free index pair in the appropriate tensor
                 # assumed that the free indices are in proper order
