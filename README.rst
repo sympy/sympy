@@ -138,7 +138,7 @@ To execute all tests, run::
 
 in the current directory.
 
-For the more fine-grained running of tests or Doctest, use ``bin/test`` or
+For the more fine-grained running of tests or doctests, use ``bin/test`` or
 respectively ``bin/doctest``. The master branch is automatically tested by
 Travis CI.
 
