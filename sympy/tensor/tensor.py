@@ -31,6 +31,7 @@ lowered when the tensor is put in canonical form.
 
 from __future__ import print_function, division
 
+from abc import abstractmethod, ABCMeta
 from collections import defaultdict
 import operator
 import itertools
@@ -39,7 +40,8 @@ from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
-from sympy.core.compatibility import string_types, reduce, range, SYMPY_INTS
+from sympy.core.assumptions import ManagedProperties
+from sympy.core.compatibility import string_types, reduce, range, SYMPY_INTS, with_metaclass
 from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
@@ -226,7 +228,7 @@ class _IndexStructure(CantSympify):
             new_indices[ipos2] = TensorIndex(indname, typ1, False)
         return new_indices
 
-    def get_free_indices(self):
+    def get_free_indices(self):  # type: () -> List[TensorIndex]
         """
         Get a list of free indices.
         """
@@ -1844,7 +1846,11 @@ def tensor_heads(s, index_types, symmetry=None, comm=0):
     return thlist
 
 
-class TensExpr(Expr):
+class _TensorMetaclass(ManagedProperties, ABCMeta):
+    pass
+
+
+class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
     """
     Abstract base class for tensor expressions
 
@@ -1948,6 +1954,24 @@ class TensExpr(Expr):
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
+
+    @property
+    @abstractmethod
+    def nocoeff(self):
+        raise NotImplemented("abstract method")
+
+    @property
+    @abstractmethod
+    def coeff(self):
+        raise NotImplemented("abstract method")
+
+    @abstractmethod
+    def get_indices(self):
+        raise NotImplemented("abstract method")
+
+    @abstractmethod
+    def get_free_indices(self):  # type: () -> List[TensorIndex]
+        raise NotImplemented("abstract method")
 
     def fun_eval(self, *index_tuples):
         deprecate_fun_eval()
@@ -2210,13 +2234,6 @@ class TensExpr(Expr):
         ret_indices, array = self._extract_data(replacement_dict)
 
         last_indices, array = self._match_indices_with_other_tensor(array, indices, ret_indices, replacement_dict)
-        #permutation = self._get_indices_permutation(indices, ret_indices)
-        #if not hasattr(array, "rank"):
-            #return array
-        #if array.rank() == 0:
-            #array = array[()]
-            #return array
-        #array = permutedims(array, permutation)
         return array
 
     def _check_add_Sum(self, expr, index_symbols):
@@ -2282,6 +2299,17 @@ class TensAdd(TensExpr, AssocOp):
 
         return Basic.__new__(cls, *args, **kw_args)
 
+    @property
+    def coeff(self):
+        return S.One
+
+    @property
+    def nocoeff(self):
+        return self
+
+    def get_free_indices(self):  # type: () -> List[TensorIndex]
+        return self.free_indices
+
     @memoize_property
     def rank(self):
         if isinstance(self.args[0], TensExpr):
@@ -2299,7 +2327,7 @@ class TensAdd(TensExpr, AssocOp):
     @memoize_property
     def free_indices(self):
         if isinstance(self.args[0], TensExpr):
-            return self.args[0].free_indices
+            return self.args[0].get_free_indices()
         else:
             return set()
 
@@ -2339,10 +2367,12 @@ class TensAdd(TensExpr, AssocOp):
 
         # collect canonicalized terms
         def sort_key(t):
-            x = get_index_structure(t)
             if not isinstance(t, TensExpr):
-                return ([], [], [])
-            return (t.components, x.free, x.dum)
+                return [], [], []
+            if hasattr(t, "_index_structure"):
+                x = get_index_structure(t)
+                return t.components, x.free, x.dum
+            return [], [], []
         args.sort(key=sort_key)
 
         if not args:
@@ -2369,8 +2399,14 @@ class TensAdd(TensExpr, AssocOp):
     @staticmethod
     def _tensAdd_check(args):
         # check that all addends have the same free indices
-        indices0 = set([x[0] for x in get_index_structure(args[0]).free])
-        list_indices = [set([y[0] for y in get_index_structure(x).free]) for x in args[1:]]
+
+        def get_indices_set(x):  # type: (Expr) -> Set[TensorIndex]
+            if isinstance(x, TensExpr):
+                return set(x.get_free_indices())
+            return set()
+
+        indices0 = get_indices_set(args[0])  # type: Set[TensorIndex]
+        list_indices = [get_indices_set(arg) for arg in args[1:]]  # type: List[Set[TensorIndex]]
         if not all(x == indices0 for x in list_indices):
             raise ValueError('all tensors must have the same indices')
 
@@ -2585,18 +2621,46 @@ class Tensor(TensExpr):
         indices = cls._parse_indices(tensor_head, indices)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
         obj._index_structure = _IndexStructure.from_indices(*indices)
-        obj.free = obj._index_structure.free[:]
-        obj.dum = obj._index_structure.dum[:]
-        obj.ext_rank = obj._index_structure._ext_rank
-        obj.coeff = S.One
-        obj.nocoeff = obj
-        obj.component = tensor_head
-        obj.components = [tensor_head]
+        obj._free = obj._index_structure.free[:]
+        obj._dum = obj._index_structure.dum[:]
+        obj._ext_rank = obj._index_structure._ext_rank
+        obj._coeff = S.One
+        obj._nocoeff = obj
+        obj._component = tensor_head
+        obj._components = [tensor_head]
         if tensor_head.rank != len(indices):
             raise ValueError("wrong number of indices")
         obj.is_canon_bp = is_canon_bp
         obj._index_map = Tensor._build_index_map(indices, obj._index_structure)
         return obj
+
+    @property
+    def free(self):
+        return self._free
+
+    @property
+    def dum(self):
+        return self._dum
+
+    @property
+    def ext_rank(self):
+        return self._ext_rank
+
+    @property
+    def coeff(self):
+        return self._coeff
+
+    @property
+    def nocoeff(self):
+        return self._nocoeff
+
+    @property
+    def component(self):
+        return self._component
+
+    @property
+    def components(self):
+        return self._components
 
     @property
     def head(self):
@@ -2721,13 +2785,13 @@ class Tensor(TensExpr):
     def sorted_components(self):
         return self
 
-    def get_indices(self):
+    def get_indices(self):  # type: () -> List[TensorIndex]
         """
         Get a list of indices, corresponding to those of the tensor.
         """
         return list(self.args[1])
 
-    def get_free_indices(self):
+    def get_free_indices(self):  # type: () -> List[TensorIndex]
         """
         Get a list of free indices, corresponding to those of the tensor.
         """
@@ -2975,16 +3039,23 @@ class TensMul(TensExpr, AssocOp):
 
         obj = TensExpr.__new__(cls, *args)
         obj._indices = indices
-        obj.index_types = index_types[:]
+        obj._index_types = index_types[:]
         obj._index_structure = index_structure
-        obj.free = index_structure.free[:]
-        obj.dum = index_structure.dum[:]
-        obj.free_indices = set([x[0] for x in obj.free])
-        obj.rank = len(obj.free)
-        obj.ext_rank = len(obj._index_structure.free) + 2*len(obj._index_structure.dum)
-        obj.coeff = S.One
+        obj._free = index_structure.free[:]
+        obj._dum = index_structure.dum[:]
+        obj._free_indices = set([x[0] for x in obj.free])
+        obj._rank = len(obj.free)
+        obj._ext_rank = len(obj._index_structure.free) + 2*len(obj._index_structure.dum)
+        obj._coeff = S.One
         obj._is_canon_bp = is_canon_bp
         return obj
+
+    index_types = property(lambda self: self._index_types)
+    free = property(lambda self: self._free)
+    dum = property(lambda self: self._dum)
+    free_indices = property(lambda self: self._free_indices)
+    rank = property(lambda self: self._rank)
+    ext_rank = property(lambda self: self._ext_rank)
 
     @staticmethod
     def _indices_to_free_dum(args_indices):
@@ -3131,8 +3202,8 @@ class TensMul(TensExpr, AssocOp):
         obj = self.func(*args)
         obj._index_types = index_types
         obj._index_structure = index_structure
-        obj.ext_rank = len(obj._index_structure.free) + 2*len(obj._index_structure.dum)
-        obj.coeff = coeff
+        obj._ext_rank = len(obj._index_structure.free) + 2*len(obj._index_structure.dum)
+        obj._coeff = coeff
         obj._is_canon_bp = is_canon_bp
         return obj
 
@@ -3192,6 +3263,11 @@ class TensMul(TensExpr, AssocOp):
         return [(ind, pos-arg_offset[pos], argpos[pos]) for (ind, pos) in self.free]
 
     @property
+    def coeff(self):
+        # return Mul.fromiter([c for c in self.args if not isinstance(c, TensExpr)])
+        return self._coeff
+
+    @property
     def nocoeff(self):
         return self.func(*[t for t in self.args if isinstance(t, TensExpr)]).doit()
 
@@ -3237,7 +3313,7 @@ class TensMul(TensExpr, AssocOp):
         """
         return self._indices
 
-    def get_free_indices(self):
+    def get_free_indices(self):  # type: () -> List[TensorIndex]
         """
         Returns the list of free indices of the tensor
 
@@ -3737,6 +3813,14 @@ class TensorElement(TensExpr):
     @property
     def index_map(self):
         return self._args[1]
+
+    @property
+    def coeff(self):
+        return S.One
+
+    @property
+    def nocoeff(self):
+        return self
 
     def get_free_indices(self):
         return self._free_indices
