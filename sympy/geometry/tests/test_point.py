@@ -249,7 +249,7 @@ def test_point3D():
     with warns(UserWarning):
         assert p - p_4d3d == Point(1, 1, 0, 0)
 
-	# Test coordinate properties
+    # Test coordinate properties
     assert p1.coordinates == (x1, x2, x3)
     assert p2.coordinates == (y1, y2, y3)
     assert p3.coordinates == (0, 0, 0)
