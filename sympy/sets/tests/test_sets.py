@@ -251,6 +251,16 @@ def test_difference():
     assert Interval(0, 2) - FiniteSet(1) == \
         Union(Interval(0, 1, False, True), Interval(1, 2, True, False))
 
+    # issue #18119
+    assert S.Reals - FiniteSet(I) == S.Reals
+    assert S.Reals - FiniteSet(-I, I) == S.Reals
+    assert Interval(0, 10) - FiniteSet(-I, I) == Interval(0, 10)
+    assert Interval(0, 10) - FiniteSet(1, I) == Union(
+        Interval.Ropen(0, 1), Interval.Lopen(1, 10))
+    assert S.Reals - FiniteSet(1, 2 + I, x, y**2) == Complement(
+        Union(Interval.open(-oo, 1), Interval.open(1, oo)), FiniteSet(x, y**2),
+        evaluate=False)
+
     assert FiniteSet(1, 2, 3) - FiniteSet(2) == FiniteSet(1, 3)
     assert FiniteSet('ham', 'eggs') - FiniteSet('eggs') == FiniteSet('ham')
     assert FiniteSet(1, 2, 3, 4) - Interval(2, 10, True, False) == \
