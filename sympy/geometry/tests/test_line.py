@@ -747,3 +747,9 @@ def test_parameter_value():
     l = Line(p1, p2)
     assert l.parameter_value((5, 6), t) == {t: 1}
     raises(ValueError, lambda: l.parameter_value((0, 0), t))
+
+
+def test_issue_8615():
+    a = Line3D(Point3D(6, 5, 0), Point3D(6, -6, 0))
+    b = Line3D(Point3D(6, -1, 19/10), Point3D(6, -1, 0))
+    assert a.intersection(b) == [Point3D(6, -1, 0)]
