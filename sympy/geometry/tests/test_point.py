@@ -269,13 +269,13 @@ def test_Point2D():
     assert p1.distance(p2) == sqrt(61)/2
     assert p2.distance(p3) == sqrt(17)/2
 
-	# Test coordinates
-	assert p1.x == 1
-	assert p1.y == 5
-	assert p2.x == 4
-	assert p2.y == 2.5
-	assert p1.coordinates == (1, 5)
-	assert p2.coordinates == (4, 2.5)
+    # Test coordinates
+    assert p1.x == 1
+    assert p1.y == 5
+    assert p2.x == 4
+    assert p2.y == 2.5
+    assert p1.coordinates == (1, 5)
+    assert p2.coordinates == (4, 2.5)
 
 def test_issue_9214():
     p1 = Point3D(4, -2, 6)
