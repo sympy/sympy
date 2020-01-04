@@ -77,12 +77,6 @@ class PartialDerivative(TensExpr):
         return args, indices, free, dum
 
     def doit(self):
-        """
-        The idea is that the method just performs expansion of a
-        PartialDerivative to end up with first order derivatives
-        of tensors by tensors, tensors by symbols, or non-tensors by symbols
-        (what about non-tensors by tensors?)
-        """
         args, indices, free, dum = self._contract_indices_for_derivative(self.expr, self.variables)
 
         obj = self.func(*args)
