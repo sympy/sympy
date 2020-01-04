@@ -1198,12 +1198,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
         # This match is used for several cases below; we now collect on
         # f(x) so the matching works.
-        roots = solve(reduced_eq,df)
-        r1 = collect(df-roots[0], df, exact=True).match(d + e*df)
         r = collect(reduced_eq, df, exact=True).match(d + e*df)
-        if r or r1:
-            if r is None:
-              r=r1
+        if r is None and 'factorable' not in matching_hints:
+            roots = solve(reduced_eq, df)
+            if roots:
+                meq = Mul(*[(df - i) for i in roots])
+                m = _ode_factorable_match(meq, func, kwargs.get('x0', 0))
+                matching_hints['factorable'] = m
+        if r:
             # Using r[d] and r[e] without any modification for hints
             # linear-coefficients and separable-reduced.
             num, den = r[d], r[e]  # ODE = d/e + df
