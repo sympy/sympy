@@ -12,7 +12,7 @@ from sympy import Array
 L = TensorIndexType("L")
 i, j, k = tensor_indices("i j k", L)
 i0 = tensor_indices("i0", L)
-L_0 = tensor_indices("L_0", L)
+L_0, L_1 = tensor_indices("L_0 L_1", L)
 
 A, B, C, D = tensor_heads("A B C D", [L])
 
@@ -102,3 +102,19 @@ def test_replace_arrays_partial_derivative():
     assert expr.get_indices() == [-L_0, L_0]
     assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, 1)}, []) == 2
     assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, -1)}, []) == 2
+
+    expr = PartialDerivative(H(i, j) + H(j, i), A(i))
+    assert expr.get_indices() == [L_0, j, -L_0]
+    assert expr.get_free_indices() == [j]
+
+    expr = PartialDerivative(H(i, j) + H(j, i), A(k))*B(-i)
+    assert expr.get_indices() == [L_0, j, -k, -L_0]
+    assert expr.get_free_indices() == [j, -k]
+
+    expr = PartialDerivative(A(i)*(H(-i, j) + H(j, -i)), A(j))
+    assert expr.get_indices() == [L_0, -L_0, L_1, -L_1]
+    assert expr.get_free_indices() == []
+
+    expr = A(j)*A(-j) + expr
+    assert expr.get_indices() == [L_0, -L_0, L_1, -L_1]
+    assert expr.get_free_indices() == []

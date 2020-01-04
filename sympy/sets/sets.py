@@ -1806,24 +1806,34 @@ class FiniteSet(Set, EvalfMixin):
 
     def _complement(self, other):
         if isinstance(other, Interval):
-            nums = sorted(m for m in self.args if m.is_number)
+            # Splitting in sub-intervals is only done for S.Reals;
+            # other cases that need splitting will first pass through
+            # Set._complement().
+            nums, syms = [], []
+            for m in self.args:
+                if m.is_number and m.is_real:
+                    nums.append(m)
+                elif m.is_real == False:
+                    pass  # drop non-reals
+                else:
+                    syms.append(m)  # various symbolic expressions
             if other == S.Reals and nums != []:
-                syms = [m for m in self.args if m.is_Symbol]
-                # Reals cannot contain elements other than numbers and symbols.
-
+                nums.sort()
                 intervals = []  # Build up a list of intervals between the elements
                 intervals += [Interval(S.NegativeInfinity, nums[0], True, True)]
                 for a, b in zip(nums[:-1], nums[1:]):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
-
                 if syms != []:
                     return Complement(Union(*intervals, evaluate=False),
                             FiniteSet(*syms), evaluate=False)
                 else:
                     return Union(*intervals, evaluate=False)
-            elif nums == []:
-                return None
+            elif nums == []:  # no splitting necessary or possible:
+                if syms:
+                    return Complement(other, FiniteSet(*syms), evaluate=False)
+                else:
+                    return other
 
         elif isinstance(other, FiniteSet):
             unk = []
