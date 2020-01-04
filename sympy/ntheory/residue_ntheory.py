@@ -1300,3 +1300,52 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         return _discrete_log_pollard_rho(n, a, b, order)
 
     return _discrete_log_pohlig_hellman(n, a, b, order)
+
+
+
+def quadratic_congruence(a, b, c, p):
+    """
+    Find the solutions to ``a x**2 + b x + c = 0 mod p
+    a : integer
+    b : integer
+    c : integer
+    p : positive integer
+    """
+    from sympy.polys.galoistools import linear_congruence
+    a = as_int(a)
+    b = as_int(b)
+    c = as_int(c)
+    p = as_int(p)
+    a = a % p
+    b = b % p
+    c = (c % p)
+
+    if a == 0:
+        return linear_congruence(b, -1 * c, p)
+    if p == 2:
+        roots = set()
+        if c % 2 == 0:
+            roots.add(0)
+        if (a + b + c) % 2 == 0:
+            roots.add(1)
+        return roots
+    elif isprime(p):
+        inv_a = mod_inverse(a, p)
+        b = (b * inv_a)
+        c = (c * inv_a)
+        if b % 2 == 1:
+            b = b + p
+        d = ((b * b) // 4 - c) % p
+        y = (sqrt_mod(d, p, all_roots=True))
+        res = set()
+        for i in y:
+            res.add((i - b // 2) % p)
+        return res
+    else :
+        y = sqrt_mod(b * b - 4 * a * c , 4 * a * p, all_roots=True)
+    res = set()
+    for i in y:
+        root = linear_congruence(2 * a, i - b, 4 * a * p)
+        for j in root:
+            res.add(j % p)
+    return res
