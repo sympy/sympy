@@ -19,6 +19,7 @@ from functools import reduce
 import warnings
 
 from itertools import cycle
+from random import randint
 
 from sympy import nextprime
 from sympy.core import Rational, Symbol
@@ -3324,3 +3325,139 @@ def decipher_bg(message, key):
         orig_msg += (m ^ b)
 
     return orig_msg
+
+################# Columnar Transposition Cipher #################
+
+def encipher_columnar(message, key):
+    """
+    Performs Regular Columnar Encryption on plaintext and returns ciphertext
+
+    Examples
+    ========
+
+    >> from sympy.crypto.crypto import encipher_columnar
+    >> message = "HELLO WORLD"
+    >> encipher_columnar(message,"SYM")
+    "LWLEHLODEORY"
+
+    Parameters
+    ==========
+
+    message : string, the message to be encrypted.
+    key : string, the key to be used for encryption.
+
+    Returns
+    =======
+
+    The Encrypted message.
+
+    References
+    ==========
+    https://en.wikipedia.org/wiki/Transposition_cipher#Columnar_transposition
+
+    """
+    message =  ''.join(alphabet for alphabet in message if alphabet.isalpha())
+    key =  ''.join(alphabet for alphabet in key if alphabet.isalpha())
+    row_length = len(key)
+    words = len(message)
+    col_length = -(-words//row_length)          # Ceil Function
+    remainder = words%row_length
+
+    for i in range(row_length - remainder):
+        message = message + str(chr(randint(0,25)+97))      # Padding message for regular columnar transposition
+    
+    rows = [ord(word) for word in key.lower()]
+    temp = sorted(rows)
+    index_list = [temp.index(v)+1 for v in rows]        # List of ranks of words of key
+    matrix = [message[i:i+row_length] for i in range(0,words,row_length)]
+
+    # Modification for keys with repetitive words
+    if len(index_list) != len(set(index_list)):
+        curr_index = -1
+        add = 0
+        for i in range(row_length):
+            if index_list.count(i) > 1:
+                while index_list.count(i) > 1:
+                    curr_index = index_list.index(i,curr_index + 1)
+                    index_list[curr_index] += add
+                    add += 1
+            curr_index = -1
+            add = 0
+
+    cipher = ""
+    # print(index_list)
+    for i in range(row_length):
+        column = index_list.index(i + 1)
+        for col in range(col_length):
+            cipher = cipher + matrix[col][column].upper()
+    return cipher
+
+def decipher_columnar(cipher, key):
+    """
+    Performs Regular Columnar Dncryption on ciphertext and returns plaintext
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decipher_columnar
+    >>> cipher = "LWLEHLODEORY"
+    >>> decipher_columnar(cipher,"SYM")
+    'HELLOWORLDYE'
+    
+    Where in HELLOWORLDYE, YE are the random words padded on the original message as per the algorithm
+    and are to be ignored
+
+    Parameters
+    ==========
+
+    cipher : string, the cipher text to be decrypted.
+    key : string, the key to be used for decryption.
+
+    Returns
+    =======
+
+    The Decrypted message.
+
+    References
+    ==========
+    https://en.wikipedia.org/wiki/Transposition_cipher#Columnar_transposition
+
+    """
+
+    cipher =  ''.join(alphabet for alphabet in cipher if alphabet.isalpha())
+    key =  ''.join(alphabet for alphabet in key if alphabet.isalpha())
+    row_length = len(key)
+    words = len(cipher)
+    col_length = -(-words//row_length)          # Ceil Function
+    remainder = words%row_length
+
+    rows = [ord(word) for word in key.lower()]
+    temp = sorted(rows)
+    index_list = [temp.index(v)+1 for v in rows]        # List of ranks of words of key
+
+    # Modification for keys with repetitive words
+    if len(index_list) != len(set(index_list)):
+        curr_index = -1
+        add = 0
+        for i in range(row_length):
+            if index_list.count(i) > 1:
+                while index_list.count(i) > 1:
+                    curr_index = index_list.index(i,curr_index + 1)
+                    index_list[curr_index] += add
+                    add += 1
+            curr_index = -1
+            add = 0
+    
+    matrix = [ ['x' for i in range(row_length)] for j in range(col_length) ]
+    message = ""
+    for i in range(row_length):
+        column = index_list.index(i + 1)
+        for col in range(col_length):
+            matrix[col][column] = cipher[:1]
+            cipher = cipher[1:]
+
+    for i in range(col_length):
+        for j in range(row_length):
+            message = message + matrix[i][j]
+
+    return message
