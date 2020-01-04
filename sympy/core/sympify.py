@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from inspect import getmro
 
-from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
 from .parameters import global_parameters
 
@@ -495,6 +494,9 @@ def kernS(s):
         try:
             expr = sympify(s)
             break
+        # XXX: What exception can be caught here? Broad except should not be
+        # used without a clear reason. Running the test suite does not lead to
+        # any errors at this point...
         except:  # the kern might cause unknown errors, so use bare except
             if hit:
                 s = olds  # maybe it didn't like the kern; use un-kerned s

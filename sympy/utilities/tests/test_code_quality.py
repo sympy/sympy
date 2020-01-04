@@ -4,7 +4,6 @@ from os import walk, sep, pardir
 from os.path import split, join, abspath, exists, isfile
 from glob import glob
 import re
-import fnmatch
 import random
 import ast
 

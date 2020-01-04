@@ -376,8 +376,8 @@ class Pow(Expr):
                     if _half(other):
                         if b.is_negative is True:
                             return S.NegativeOne**other*Pow(-b, e*other)
-                        if b.is_extended_real is False:
-                            return Pow(b.conjugate()/Abs(b)**2, other)
+                        elif b.is_negative is False:
+                            return Pow(b, -other)
                 elif e.is_even:
                     if b.is_extended_real:
                         b = abs(b)

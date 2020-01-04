@@ -1,6 +1,6 @@
 """Tests for Dixon's and Macaulay's classes. """
 
-from sympy import Matrix
+from sympy import Matrix, factor
 from sympy.core import symbols
 from sympy.tensor.indexed import IndexedBase
 
@@ -211,7 +211,6 @@ def test_get_KSY_Dixon_resultant_example_two():
     dixon = DixonResultant([p, q, h], [x, y])
     dixon_poly = dixon.get_dixon_polynomial()
     dixon_matrix = dixon.get_dixon_matrix(dixon_poly)
-    from sympy import factor, simplify
     D = factor(dixon.get_KSY_Dixon_resultant(dixon_matrix))
 
     assert D == -8*A*(A - 1)*(A + 2)*(2*A - 1)**2
