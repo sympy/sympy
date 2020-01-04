@@ -249,6 +249,15 @@ def test_point3D():
     with warns(UserWarning):
         assert p - p_4d3d == Point(1, 1, 0, 0)
 
+	# Test coordinate properties
+    assert p1.coordinates == (x1, x2, x3)
+    assert p2.coordinates == (y1, y2, y3)
+    assert p3.coordinates == (0, 0, 0)
+    assert p4.coordinates == (1, 1, 1)
+    assert p5.coordinates == (0, 1, 2)
+    assert p5.x == 0
+    assert p5.y == 1
+    assert p5.z == 2
 
 def test_Point2D():
 
@@ -259,6 +268,13 @@ def test_Point2D():
     assert p1.distance(p2) == sqrt(61)/2
     assert p2.distance(p3) == sqrt(17)/2
 
+	# Test coordinates
+	assert p1.x == 1
+	assert p1.y == 5
+	assert p2.x == 4
+	assert p2.y == 2.5
+	assert p1.coordinates == (1, 5)
+	assert p2.coordinates == (4, 2.5)
 
 def test_issue_9214():
     p1 = Point3D(4, -2, 6)
