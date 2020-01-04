@@ -91,12 +91,22 @@ class PartialDerivative(TensExpr):
         obj._free = free
         obj._dum = dum
 
+        return obj
+
+    def _expand_partial_derivative(self):
+        args, indices, free, dum = self._contract_indices_for_derivative(self.expr, self.variables)
+
+        obj = self.func(*args)
+        obj._indices = indices
+        obj._free = free
+        obj._dum = dum
+
         result = obj
 
         if isinstance(obj.expr, TensAdd):
             # take care of sums of multi PDs
             result = obj.expr.func(*[
-                    self.func(a, *obj.variables).doit()
+                    self.func(a, *obj.variables)._expand_partial_derivative()
                     for a in result.expr.args])
         elif isinstance(obj.expr, TensMul):
             # take care of products of multi PDs
@@ -105,7 +115,7 @@ class PartialDerivative(TensExpr):
                 terms = []
                 mulargs = list(obj.expr.args)
                 for ind in range(len(mulargs)):
-                    d = self.func(mulargs[ind], *obj.variables).doit()
+                    d = self.func(mulargs[ind], *obj.variables)._expand_partial_derivative()
                     terms.append(TensMul(*(mulargs[:ind]
                                            + [d]
                                            + mulargs[(ind + 1):])))
@@ -117,11 +127,12 @@ class PartialDerivative(TensExpr):
                 # = partial(partial(expr, u).doit(), v).doit()
                 result = obj.expr  # init with expr
                 for v in obj.variables:
-                    result = self.func(result, v).doit()  # then throw PD on it
+                    result = self.func(result, v)._expand_partial_derivative()
+                    # then throw PD on it
 
         return result
 
-    def perform(self):
+    def _eval_partial_derivative(self):
         result = self.expr
         for v in self.variables:
             result = result._eval_partial_derivative(v)
