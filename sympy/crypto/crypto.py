@@ -3365,7 +3365,7 @@ def encipher_columnar(message, key):
 
     for i in range(row_length - remainder):
         message = message + str(chr(randint(0,25)+97))      # Padding message for regular columnar transposition
-    
+
     rows = [ord(word) for word in key.lower()]
     temp = sorted(rows)
     index_list = [temp.index(v)+1 for v in rows]        # List of ranks of words of key
@@ -3403,7 +3403,7 @@ def decipher_columnar(cipher, key):
     >>> cipher = "LWLEHLODEORY"
     >>> decipher_columnar(cipher,"SYM")
     'HELLOWORLDYE'
-    
+
     Where in HELLOWORLDYE, YE are the random words padded on the original message as per the algorithm
     and are to be ignored
 
@@ -3447,7 +3447,7 @@ def decipher_columnar(cipher, key):
                     add += 1
             curr_index = -1
             add = 0
-    
+
     matrix = [ ['x' for i in range(row_length)] for j in range(col_length) ]
     message = ""
     for i in range(row_length):
