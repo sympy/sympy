@@ -564,4 +564,3 @@ def test_bg_public_key():
 
 def test_decipher_xor():
     assert decipher_xor("123b2e34380b3010292701213236", "ABCD") == "SympyIsTheBest"
-
