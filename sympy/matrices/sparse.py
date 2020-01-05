@@ -12,7 +12,7 @@ from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.simplify import dotprodsimp as _dotprodsimp
+from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 
