@@ -3429,7 +3429,6 @@ def decipher_columnar(cipher, key):
     row_length = len(key)
     words = len(cipher)
     col_length = -(-words//row_length)          # Ceil Function
-    remainder = words%row_length
 
     rows = [ord(word) for word in key.lower()]
     temp = sorted(rows)
