@@ -150,7 +150,7 @@ class HermiteDistribution(SingleDiscreteDistribution):
         return exp(term1 + term2)
 
 def Hermite(name, a1, a2):
-    """
+    r"""
     Create a discrete random variable with a Hermite distribution.
 
     The density of the Hermite distribution is given by
