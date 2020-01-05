@@ -24,7 +24,8 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import PurePoly, cancel, roots
 from sympy.printing import sstr
 from sympy.simplify import nsimplify
-from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
+from sympy.simplify import simplify as _simplify
+from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.misc import filldedent

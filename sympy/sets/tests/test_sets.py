@@ -349,13 +349,13 @@ def test_set_operations_nonsets():
     ]
     nums = [0, 1, 2, S(0), S(1), S(2)]
 
-    for s in sets:
-        for n in nums:
+    for si in sets:
+        for ni in nums:
             for op in ops:
-                raises(TypeError, lambda : op(s, n))
-                raises(TypeError, lambda : op(n, s))
-        raises(TypeError, lambda: s ** object())
-        raises(TypeError, lambda: s ** {1})
+                raises(TypeError, lambda : op(si, ni))
+                raises(TypeError, lambda : op(ni, si))
+        raises(TypeError, lambda: si ** object())
+        raises(TypeError, lambda: si ** {1})
 
 
 def test_complement():
