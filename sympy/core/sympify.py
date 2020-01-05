@@ -497,7 +497,7 @@ def kernS(s):
         # XXX: What exception can be caught here? Broad except should not be
         # used without a clear reason. Running the test suite does not lead to
         # any errors at this point...
-        except:  # the kern might cause unknown errors, so use bare except
+        except TypeError  # the kern might cause unknown errors...
             if hit:
                 s = olds  # maybe it didn't like the kern; use un-kerned s
                 hit = False
