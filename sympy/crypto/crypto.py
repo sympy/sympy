@@ -3371,7 +3371,7 @@ def encipher_columnar(message, key):
     low = key.lower()
     for i,c in enumerate(low):
         d[c].append(i)
-    index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(row_length)))]   
+    index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(row_length)))]
     matrix = [message[i:i+row_length] for i in range(0,words,row_length)]
 
     cipher = list()
@@ -3424,7 +3424,7 @@ def decipher_columnar(cipher, key):
     low = key.lower()
     for i,c in enumerate(low):
         d[c].append(i)
-    index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(row_length)))]   
+    index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(row_length)))]
 
     matrix = [ ['x' for i in range(row_length)] for j in range(col_length) ]
     message = list()
