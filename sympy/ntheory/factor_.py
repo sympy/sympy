@@ -2395,7 +2395,7 @@ def dra(n, b):
     """
 
     num = abs(as_int(n))
-    b = (as_int(b))
+    b = as_int(b)
     if b <= 1:
         raise ValueError("Base should be an integer greater than 1")
 
@@ -2408,7 +2408,7 @@ def dra(n, b):
 def drm(n, b):
     """
     Returns the multiplicative digital root of a natural number ``n`` in a given
-    base ``b`` which is a single digit value obtained bu an iterative process of
+    base ``b`` which is a single digit value obtained by an iterative process of
     multiplying digits, on each iteration using the result from the previous
     iteration to compute the digit multiplication.
 
@@ -2430,6 +2430,7 @@ def drm(n, b):
     """
 
     n = abs(as_int(n))
+    b = as_int(b)
     if b <= 1:
         raise ValueError("Base should be an integer greater than 1")
     while n > b:
