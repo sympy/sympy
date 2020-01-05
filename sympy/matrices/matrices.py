@@ -322,10 +322,17 @@ class MatrixDeterminant(MatrixCommon):
         MatrixDeterminant, we can fully evaluate determinants."""
         return self.det()
 
-    def adjugate(self, method="berkowitz"):
+    def adjugate(self, method="berkowitz", dotprodsimp=None):
         """Returns the adjugate, or classical adjoint, of
         a matrix.  That is, the transpose of the matrix of cofactors.
 
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            to control expression blowup during matrix multiplication. If this
+            is true then the simplify function is not used.
 
         https://en.wikipedia.org/wiki/Adjugate
 
@@ -335,7 +342,7 @@ class MatrixDeterminant(MatrixCommon):
         cofactor_matrix
         sympy.matrices.common.MatrixCommon.transpose
         """
-        return self.cofactor_matrix(method).transpose()
+        return self.cofactor_matrix(method, dotprodsimp=dotprodsimp).transpose()
 
     def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
         """Computes characteristic polynomial det(x*I - self) where I is
@@ -792,8 +799,7 @@ class MatrixReductions(MatrixDeterminant):
             speed up calculation.
 
         """
-        rows, cols = self.rows, self.cols
-        mat = list(self)
+
         def get_col(i):
             return mat[i::cols]
 
@@ -805,12 +811,15 @@ class MatrixReductions(MatrixDeterminant):
             """Does the row op row[i] = a*row[i] - b*row[j]"""
             q = (j - i)*cols
             for p in range(i*cols, (i + 1)*cols):
-                m = a*mat[p] - b*mat[p + q]
-                mat[p] = _dotprodsimp(m) if dotprodsimp else m
+                mat[p] = dps(a*mat[p] - b*mat[p + q])
 
+        dps = _dotprodsimp if dotprodsimp else lambda e: e
+        rows, cols = self.rows, self.cols
+        mat = list(self)
         piv_row, piv_col = 0, 0
         pivot_cols = []
         swaps = []
+
         # use a fraction free method to zero above and below each pivot
         while piv_col < cols and piv_row < rows:
             pivot_offset, pivot_val, \
@@ -838,8 +847,7 @@ class MatrixReductions(MatrixDeterminant):
                 i, j = piv_row, piv_col
                 mat[i*cols + j] = self.one
                 for p in range(i*cols + j + 1, (i + 1)*cols):
-                    m = mat[p] / pivot_val
-                    mat[p] = _dotprodsimp(m) if dotprodsimp else m
+                    mat[p] = dps(mat[p] / pivot_val)
                 # after normalizing, the pivot value is 1
                 pivot_val = self.one
 
@@ -865,8 +873,7 @@ class MatrixReductions(MatrixDeterminant):
                 pivot_val = mat[piv_i*cols + piv_j]
                 mat[piv_i*cols + piv_j] = self.one
                 for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
-                    m = mat[p] / pivot_val
-                    mat[p] = _dotprodsimp(m) if dotprodsimp else m
+                    mat[p] = dps(mat[p] / pivot_val)
 
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
@@ -962,7 +969,7 @@ class MatrixReductions(MatrixDeterminant):
 
         return self._eval_is_echelon(iszerofunc)
 
-    def rank(self, iszerofunc=_iszero, simplify=False):
+    def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
         """
         Returns the rank of a matrix
 
@@ -991,14 +998,15 @@ class MatrixReductions(MatrixDeterminant):
             zeros = [iszerofunc(x) for x in self]
             if not False in zeros and not None in zeros:
                 return 0
-            det = self.det()
+            det = self.det(dotprodsimp=dotprodsimp)
             if iszerofunc(det) and False in zeros:
                 return 1
             if iszerofunc(det) is False:
                 return 2
 
         mat, _ = self._permute_complexity_right(iszerofunc=iszerofunc)
-        echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
+        echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc,
+                simpfunc=simpfunc, dotprodsimp=dotprodsimp)
         return len(pivots)
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
@@ -1673,12 +1681,17 @@ class MatrixEigen(MatrixSubspaces):
         return self.is_diagonalizable_with_eigen(reals_only=reals_only,
                 dotprodsimp=dotprodsimp)[0]
 
-    def _eval_is_positive_definite(self, method="eigen"):
+    def _eval_is_positive_definite(self, method="eigen", dotprodsimp=None):
         """Algorithm dump for computing positive-definiteness of a
         matrix.
 
         Parameters
         ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         method : str, optional
             Specifies the method for computing positive-definiteness of
@@ -1695,7 +1708,7 @@ class MatrixEigen(MatrixSubspaces):
         """
         if self.is_hermitian:
             if method == 'eigen':
-                eigen = self.eigenvals()
+                eigen = self.eigenvals(dotprodsimp=dotprodsimp)
                 args = [x.is_positive for x in eigen.keys()]
                 return fuzzy_and(args)
 
@@ -1718,7 +1731,8 @@ class MatrixEigen(MatrixSubspaces):
 
         elif self.is_square:
             M_H = (self + self.H) / 2
-            return M_H._eval_is_positive_definite(method=method)
+            return M_H._eval_is_positive_definite(method=method,
+                    dotprodsimp=dotprodsimp)
 
     def is_positive_definite(self):
         return self._eval_is_positive_definite()
@@ -1852,18 +1866,23 @@ class MatrixEigen(MatrixSubspaces):
     is_indefinite = \
         property(fget=is_indefinite, doc=_doc_positive_definite)
 
-    def jordan_form(self, calc_transform=True, **kwargs):
+    def jordan_form(self, calc_transform=True, dotprodsimp=None, **kwargs):
         """Return ``(P, J)`` where `J` is a Jordan block
         matrix and `P` is a matrix such that
 
             ``self == P*J*P**-1``
-
 
         Parameters
         ==========
 
         calc_transform : bool
             If ``False``, then only `J` is returned.
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+
         chop : bool
             All matrices are converted to exact types when computing
             eigenvalues and eigenvectors.  As a result, there may be
@@ -1923,9 +1942,11 @@ class MatrixEigen(MatrixSubspaces):
             if (val, pow) in mat_cache:
                 return mat_cache[(val, pow)]
             if (val, pow - 1) in mat_cache:
-                mat_cache[(val, pow)] = mat_cache[(val, pow - 1)] * mat_cache[(val, 1)]
+                mat_cache[(val, pow)] = mat_cache[(val, pow - 1)].multiply(
+                        mat_cache[(val, 1)], dotprodsimp=dotprodsimp)
             else:
-                mat_cache[(val, pow)] = (mat - val*self.eye(self.rows))**pow
+                mat_cache[(val, pow)] = (mat - val*self.eye(self.rows)).pow(pow,
+                        dotprodsimp=dotprodsimp)
             return mat_cache[(val, pow)]
 
         # helper functions
@@ -1936,13 +1957,13 @@ class MatrixEigen(MatrixSubspaces):
             # so use the rank-nullity theorem
             cols = self.cols
             ret = [0]
-            nullity = cols - eig_mat(val, 1).rank()
+            nullity = cols - eig_mat(val, 1).rank(dotprodsimp=dotprodsimp)
             i = 2
             while nullity != ret[-1]:
                 ret.append(nullity)
                 if nullity == algebraic_multiplicity:
                     break
-                nullity = cols - eig_mat(val, i).rank()
+                nullity = cols - eig_mat(val, i).rank(dotprodsimp=dotprodsimp)
                 i += 1
 
                 # Due to issues like #7146 and #15872, SymPy sometimes
@@ -1975,7 +1996,8 @@ class MatrixEigen(MatrixSubspaces):
             if len(small_basis) == 0:
                 return big_basis[0]
             for v in big_basis:
-                _, pivots = self.hstack(*(small_basis + [v])).echelon_form(with_pivots=True)
+                _, pivots = self.hstack(*(small_basis + [v])).echelon_form(
+                        with_pivots=True, dotprodsimp=dotprodsimp)
                 if pivots[-1] == len(small_basis):
                     return v
 
@@ -1984,7 +2006,7 @@ class MatrixEigen(MatrixSubspaces):
             mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
         # first calculate the jordan block structure
-        eigs = mat.eigenvals()
+        eigs = mat.eigenvals(dotprodsimp=dotprodsimp)
 
         # make sure that we found all the roots by counting
         # the algebraic multiplicity
@@ -1999,7 +2021,8 @@ class MatrixEigen(MatrixSubspaces):
             jordan_mat = mat.diag(*blocks)
             if not calc_transform:
                 return restore_floats(jordan_mat)
-            jordan_basis = [eig_mat(eig, 1).nullspace()[0] for eig in blocks]
+            jordan_basis = [eig_mat(eig, 1).nullspace(dotprodsimp=dotprodsimp)[0]
+                    for eig in blocks]
             basis_mat = mat.hstack(*jordan_basis)
             return restore_floats(basis_mat, jordan_mat)
 
@@ -2050,14 +2073,15 @@ class MatrixEigen(MatrixSubspaces):
             for block_eig, size in block_structure:
                 if block_eig != eig:
                     continue
-                null_big = (eig_mat(eig, size)).nullspace()
-                null_small = (eig_mat(eig, size - 1)).nullspace()
+                null_big = (eig_mat(eig, size)).nullspace(dotprodsimp=dotprodsimp)
+                null_small = (eig_mat(eig, size - 1)).nullspace(dotprodsimp=dotprodsimp)
                 # we want to pick something that is in the big basis
                 # and not the small, but also something that is independent
                 # of any other generalized eigenvectors from a different
                 # generalized eigenspace sharing the same eigenvalue.
                 vec = pick_vec(null_small + eig_basis, null_big)
-                new_vecs = [(eig_mat(eig, i))*vec for i in range(size)]
+                new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=dotprodsimp)
+                        for i in range(size)]
                 eig_basis.extend(new_vecs)
                 jordan_basis.extend(reversed(new_vecs))
 
@@ -2098,7 +2122,7 @@ class MatrixEigen(MatrixSubspaces):
 
         return [(val, mult, [l.transpose() for l in basis]) for val, mult, basis in eigs]
 
-    def singular_values(self):
+    def singular_values(self, dotprodsimp=None):
         """Compute the singular values of a Matrix
 
         Examples
@@ -2115,11 +2139,13 @@ class MatrixEigen(MatrixSubspaces):
 
         condition_number
         """
-        mat = self
+
         if self.rows >= self.cols:
-            valmultpairs = (mat.H * mat).eigenvals()
+            valmultpairs = self.H.multiply(self, dotprodsimp=dotprodsimp) \
+                    .eigenvals(dotprodsimp=dotprodsimp)
         else:
-            valmultpairs = (mat * mat.H).eigenvals()
+            valmultpairs = self.multiply(self.H, dotprodsimp=dotprodsimp) \
+                    .eigenvals(dotprodsimp=dotprodsimp)
 
         # Expands result from eigenvals into a simple list
         vals = []
@@ -2582,14 +2608,14 @@ class MatrixBase(MatrixDeprecated,
                 for j in range(1, N-i):
                     jc[j,i+j] = jc [j-1,i+j-1]
 
-        P, J = self.jordan_form()
+        P, J = self.jordan_form(dotprodsimp=dotprodsimp)
         jordan_cells = J.get_diag_blocks()
         # Make sure jordan_cells matrices are mutable:
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
-        return self._new(P.multiply(diag(*jordan_cells), dotprodsimp=dotprodsimp).multiply(
-                P.inv(), dotprodsimp=dotprodsimp))
+        return self._new(P.multiply(diag(*jordan_cells), dotprodsimp=dotprodsimp)
+                .multiply(P.inv(dotprodsimp=dotprodsimp), dotprodsimp=dotprodsimp))
 
     def __repr__(self):
         return sstr(self)
@@ -2948,11 +2974,19 @@ class MatrixBase(MatrixDeprecated,
         """Return self + b """
         return self + b
 
-    def cholesky_solve(self, rhs):
+    def cholesky_solve(self, rhs, dotprodsimp=None):
         """Solves ``Ax = B`` using Cholesky decomposition,
         for a general square non-singular matrix.
         For a non-square matrix with rows > cols,
         the least squares solution is returned.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -2969,28 +3003,36 @@ class MatrixBase(MatrixDeprecated,
         hermitian = True
         if self.is_symmetric():
             hermitian = False
-            L = self._cholesky(hermitian=hermitian)
+            L = self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
         elif self.is_hermitian:
-            L = self._cholesky(hermitian=hermitian)
+            L = self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
         elif self.rows >= self.cols:
-            L = (self.H * self)._cholesky(hermitian=hermitian)
+            L = (self.H * self)._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
             rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs)
+        Y = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
         if hermitian:
-            return (L.H)._upper_triangular_solve(Y)
+            return (L.H)._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
         else:
-            return (L.T)._upper_triangular_solve(Y)
+            return (L.T)._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
 
-    def cholesky(self, hermitian=True):
+    def cholesky(self, hermitian=True, dotprodsimp=None):
         """Returns the Cholesky-type decomposition L of a matrix A
         such that L * L.H == A if hermitian flag is True,
         or L * L.T == A if hermitian is False.
 
         A must be a Hermitian positive-definite matrix if hermitian is True,
         or a symmetric matrix if it is False.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -3047,12 +3089,20 @@ class MatrixBase(MatrixDeprecated,
             raise ValueError("Matrix must be Hermitian.")
         if not hermitian and not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
-        return self._cholesky(hermitian=hermitian)
+        return self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
 
-    def condition_number(self):
+    def condition_number(self, dotprodsimp=None):
         """Returns the condition number of a matrix.
 
         This is the maximum singular value divided by the minimum singular value
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -3067,9 +3117,10 @@ class MatrixBase(MatrixDeprecated,
 
         singular_values
         """
+
         if not self:
             return self.zero
-        singularvalues = self.singular_values()
+        singularvalues = self.singular_values(dotprodsimp=dotprodsimp)
         return Max(*singularvalues) / Min(*singularvalues)
 
     def copy(self):
@@ -3543,7 +3594,7 @@ class MatrixBase(MatrixDeprecated,
 
         return ret
 
-    def gauss_jordan_solve(self, B, freevar=False):
+    def gauss_jordan_solve(self, B, freevar=False, dotprodsimp=None):
         """
         Solves ``Ax = B`` using Gauss Jordan elimination.
 
@@ -3565,6 +3616,11 @@ class MatrixBase(MatrixDeprecated,
             values of free variables. Then the index of the free variables
             in the solutions (column Matrix) will be returned by freevar, if
             the flag `freevar` is set to `True`.
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Returns
         =======
@@ -3654,7 +3710,7 @@ class MatrixBase(MatrixDeprecated,
         row, col = aug[:, :-B_cols].shape
 
         # solve by reduced row echelon form
-        A, pivots = aug.rref(simplify=True)
+        A, pivots = aug.rref(simplify=True, dotprodsimp=dotprodsimp)
         A, v = A[:, :-B_cols], A[:, -B_cols:]
         pivots = list(filter(lambda p: p < col, pivots))
         rank = len(pivots)
@@ -3743,8 +3799,16 @@ class MatrixBase(MatrixDeprecated,
                                 j in range(N)])
         return K_inv
 
-    def inverse_ADJ(self, iszerofunc=_iszero):
+    def inverse_ADJ(self, iszerofunc=_iszero, dotprodsimp=None):
         """Calculates the inverse using the adjugate matrix and a determinant.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -3756,19 +3820,27 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
-        d = self.det(method='berkowitz')
+        d = self.det(method='berkowitz', dotprodsimp=dotprodsimp)
         zero = d.equals(0)
         if zero is None:
             # if equals() can't decide, will rref be able to?
-            ok = self.rref(simplify=True)[0]
+            ok = self.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
             zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
         if zero:
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-        return self.adjugate() / d
+        return self.adjugate(dotprodsimp=dotprodsimp) / d
 
-    def inverse_GE(self, iszerofunc=_iszero):
+    def inverse_GE(self, iszerofunc=_iszero, dotprodsimp=None):
         """Calculates the inverse using Gaussian elimination.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -3782,14 +3854,22 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
         big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
+        red = big.rref(iszerofunc=iszerofunc, simplify=True, dotprodsimp=dotprodsimp)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
         return self._new(red[:, big.rows:])
 
-    def inverse_LU(self, iszerofunc=_iszero):
+    def inverse_LU(self, iszerofunc=_iszero, dotprodsimp=None):
         """Calculates the inverse using LU decomposition.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -3801,13 +3881,14 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        ok = self.rref(simplify=True)[0]
+        ok = self.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
         if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-        return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
+        return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero,
+                dotprodsimp=dotprodsimp)
 
-    def inv(self, method=None, **kwargs):
+    def inv(self, method=None, dotprodsimp=None, **kwargs):
         """
         Return the inverse of a matrix.
 
@@ -3819,7 +3900,13 @@ class MatrixBase(MatrixDeprecated,
         Parameters
         ==========
 
-        method : ('GE', 'LU', or 'ADJ')
+        method : ('GE', 'LU', or 'ADJ') for dense matrices,
+                 ('LDL', 'CH') for sparse
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Notes
         =====
@@ -3869,6 +3956,8 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError()
         if method is not None:
             kwargs['method'] = method
+        if dotprodsimp is not None:
+            kwargs['dotprodsimp'] = dotprodsimp
         return self._eval_inverse(**kwargs)
 
     def is_nilpotent(self, dotprodsimp=None):
@@ -3961,7 +4050,7 @@ class MatrixBase(MatrixDeprecated,
         else:
             return divmod(a2idx_(key, len(self)), self.cols)
 
-    def LDLdecomposition(self, hermitian=True):
+    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
         """Returns the LDL Decomposition (L, D) of matrix A,
         such that L * D * L.H == A if hermitian flag is True, or
         L * D * L.T == A if hermitian is False.
@@ -3969,6 +4058,14 @@ class MatrixBase(MatrixDeprecated,
         Further this ensures that all the diagonal entries of L are 1.
         A must be a Hermitian positive-definite matrix if hermitian is True,
         or a symmetric matrix otherwise.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -4018,14 +4115,22 @@ class MatrixBase(MatrixDeprecated,
             raise ValueError("Matrix must be Hermitian.")
         if not hermitian and not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
-        return self._LDLdecomposition(hermitian=hermitian)
+        return self._LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
 
-    def LDLsolve(self, rhs):
+    def LDLsolve(self, rhs, dotprodsimp=None):
         """Solves ``Ax = B`` using LDL decomposition,
         for a general square and non-singular matrix.
 
         For a non-square matrix with rows > cols,
         the least squares solution is returned.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         Examples
         ========
@@ -4052,24 +4157,33 @@ class MatrixBase(MatrixDeprecated,
         hermitian = True
         if self.is_symmetric():
             hermitian = False
-            L, D = self.LDLdecomposition(hermitian=hermitian)
+            L, D = self.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
         elif self.is_hermitian:
-            L, D = self.LDLdecomposition(hermitian=hermitian)
+            L, D = self.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
         elif self.rows >= self.cols:
-            L, D = (self.H * self).LDLdecomposition(hermitian=hermitian)
-            rhs = self.H * rhs
+            L, D = self.H.multiply(self, dotprodsimp=dotprodsimp) \
+                    .LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
+            rhs = self.H.multiply(rhs, dotprodsimp=dotprodsimp)
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs)
+        Y = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
         Z = D._diagonal_solve(Y)
         if hermitian:
-            return (L.H)._upper_triangular_solve(Z)
+            return (L.H)._upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
         else:
-            return (L.T)._upper_triangular_solve(Z)
+            return (L.T)._upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
 
-    def lower_triangular_solve(self, rhs):
+    def lower_triangular_solve(self, rhs, dotprodsimp=None):
         """Solves ``Ax = B``, where A is a lower triangular matrix.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -4090,7 +4204,7 @@ class MatrixBase(MatrixDeprecated,
             raise ShapeError("Matrices size mismatch.")
         if not self.is_lower:
             raise ValueError("Matrix must be lower triangular.")
-        return self._lower_triangular_solve(rhs)
+        return self._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
 
     def LUdecomposition(self,
                         iszerofunc=_iszero,
@@ -4264,6 +4378,7 @@ class MatrixBase(MatrixDeprecated,
             # of the same dimensions with all zero entries.
             return self.zeros(self.rows, self.cols), []
 
+        dps = _dotprodsimp if dotprodsimp else lambda e: e
         lu = self.as_mutable()
         row_swaps = []
 
@@ -4341,8 +4456,8 @@ class MatrixBase(MatrixDeprecated,
             for row in range(pivot_row + 1, lu.rows):
                 # Store factors of L in the subcolumn below
                 # (pivot_row, pivot_row).
-                lu[row, pivot_row] =\
-                    lu[row, pivot_col]/lu[pivot_row, pivot_col]
+                lu[row, pivot_row] = \
+                    dps(lu[row, pivot_col]/lu[pivot_row, pivot_col])
 
                 # Form the linear combination of the pivot row and the current
                 # row below the pivot row that zeros the entries below the pivot.
@@ -4351,8 +4466,7 @@ class MatrixBase(MatrixDeprecated,
                 # in sympy/matrices/tests/test_sparse.py.
                 # c = pivot_row + 1 if pivot_row == pivot_col else pivot_col
                 for c in range(start_col, lu.cols):
-                    e = lu[row, c] - lu[row, pivot_row]*lu[pivot_row, c]
-                    lu[row, c] = _dotprodsimp(e) if dotprodsimp else e
+                    lu[row, c] = dps(lu[row, c] - lu[row, pivot_row]*lu[pivot_row, c])
 
             if pivot_row != pivot_col:
                 # matrix rank < min(num rows, num cols),
@@ -4428,11 +4542,19 @@ class MatrixBase(MatrixDeprecated,
         DD[n - 1, n - 1] = oldpivot
         return P, L, DD, U
 
-    def LUsolve(self, rhs, iszerofunc=_iszero):
+    def LUsolve(self, rhs, iszerofunc=_iszero, dotprodsimp=None):
         """Solve the linear system ``Ax = rhs`` for ``x`` where ``A = self``.
 
         This is for symbolic matrices, for real or complex ones use
         mpmath.lu_solve or mpmath.qr_solve.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
 
         See Also
         ========
@@ -4458,16 +4580,17 @@ class MatrixBase(MatrixDeprecated,
 
         try:
             A, perm = self.LUdecomposition_Simple(
-                iszerofunc=_iszero, rankcheck=True)
+                iszerofunc=_iszero, rankcheck=True, dotprodsimp=dotprodsimp)
         except ValueError:
             raise NotImplementedError("Underdetermined systems not supported.")
 
+        dps = _dotprodsimp if dotprodsimp else lambda e: e
         b = rhs.permute_rows(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
         for i in range(m):
             for j in range(min(i, n)):
                 scale = A[i, j]
-                b.zip_row_op(i, j, lambda x, y: x - y * scale)
+                b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
         # consistency check for overdetermined systems
         if m > n:
             for i in range(n, m):
@@ -4479,9 +4602,9 @@ class MatrixBase(MatrixDeprecated,
         for i in range(n - 1, -1, -1):
             for j in range(i + 1, n):
                 scale = A[i, j]
-                b.zip_row_op(i, j, lambda x, y: x - y * scale)
+                b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
             scale = A[i, i]
-            b.row_op(i, lambda x, _: x / scale)
+            b.row_op(i, lambda x, _: dps(x / scale))
         return rhs.__class__(b)
 
     def normalized(self, iszerofunc=_iszero):
@@ -5202,7 +5325,7 @@ class MatrixBase(MatrixDeprecated,
             t = self.H
             return (t * self).solve(t * rhs, method=method)
 
-    def solve(self, rhs, method='GJ'):
+    def solve(self, rhs, method='GJ', dotprodsimp=None):
         """Solves linear equation where the unique solution exists.
 
         Parameters
@@ -5232,6 +5355,11 @@ class MatrixBase(MatrixDeprecated,
            To use a different method and to compute the solution via the
            inverse, use a method defined in the .inv() docstring.
 
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+
         Returns
         =======
 
@@ -5251,26 +5379,26 @@ class MatrixBase(MatrixDeprecated,
 
         if method == 'GJ':
             try:
-                soln, param = self.gauss_jordan_solve(rhs)
+                soln, param = self.gauss_jordan_solve(rhs, dotprodsimp=dotprodsimp)
                 if param:
                     raise NonInvertibleMatrixError("Matrix det == 0; not invertible. "
                     "Try ``self.gauss_jordan_solve(rhs)`` to obtain a parametric solution.")
             except ValueError:
-                # raise same error as in inv:
-                self.zeros(1).inv()
+                raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
             return soln
         elif method == 'LU':
-            return self.LUsolve(rhs)
+            return self.LUsolve(rhs, dotprodsimp=dotprodsimp)
         elif method == 'CH':
-            return self.cholesky_solve(rhs)
+            return self.cholesky_solve(rhs, dotprodsimp=dotprodsimp)
         elif method == 'QR':
             return self.QRsolve(rhs)
         elif method == 'LDL':
-            return self.LDLsolve(rhs)
+            return self.LDLsolve(rhs, dotprodsimp=dotprodsimp)
         elif method == 'PINV':
             return self.pinv_solve(rhs)
         else:
-            return self.inv(method=method)*rhs
+            return self.inv(method=method, dotprodsimp=dotprodsimp) \
+                    .multiply(rhs, dotprodsimp=dotprodsimp)
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
               colsep=', ', align='right'):
@@ -5350,7 +5478,7 @@ class MatrixBase(MatrixDeprecated,
             res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
 
-    def upper_triangular_solve(self, rhs):
+    def upper_triangular_solve(self, rhs, dotprodsimp=None):
         """Solves ``Ax = B``, where A is an upper triangular matrix.
 
         See Also
@@ -5371,7 +5499,7 @@ class MatrixBase(MatrixDeprecated,
             raise TypeError("Matrix size mismatch.")
         if not self.is_upper:
             raise TypeError("Matrix is not upper triangular.")
-        return self._upper_triangular_solve(rhs)
+        return self._upper_triangular_solve(rhs, dotprodsimp=dotprodsimp)
 
     def vech(self, diagonal=True, check_symmetry=True):
         """Return the unique elements of a symmetric Matrix as a one column matrix
