@@ -1,8 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S
+from sympy.core import S
 from sympy.core.sympify import _sympify
-from sympy.core.compatibility import iterable
 from sympy.functions import KroneckerDelta
 
 from .matexpr import MatrixExpr, Identity, ZeroMatrix, OneMatrix
@@ -288,7 +287,6 @@ class MatrixPermute(MatrixExpr):
 
     def _eval_rewrite_as_MatMul(self, *args, **kwargs):
         from .matmul import MatMul
-        from .inverse import Inverse
 
         mat, perm, axis = self.args
 

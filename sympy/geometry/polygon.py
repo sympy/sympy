@@ -475,7 +475,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Polygon, symbol
+        >>> from sympy import Point, Polygon
         >>> a, b = 50, 10
         >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
         >>> p = Polygon(p1, p2, p3, p4)

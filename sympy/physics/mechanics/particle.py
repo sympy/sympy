@@ -4,6 +4,8 @@ from sympy.core.backend import sympify
 from sympy.core.compatibility import string_types
 from sympy.physics.vector import Point
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
 __all__ = ['Particle']
 
 

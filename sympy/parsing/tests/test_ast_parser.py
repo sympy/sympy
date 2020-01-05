@@ -1,4 +1,4 @@
-from sympy import symbols, S, Rational, Lambda
+from sympy import symbols, S
 from sympy.parsing.ast_parser import parse_expr
 from sympy.utilities.pytest import raises
 from sympy.core.sympify import SympifyError

@@ -8,7 +8,7 @@ from .basic import Basic
 from .expr import Expr
 from .evalf import EvalfMixin
 from .sympify import _sympify
-from .evaluate import global_evaluate
+from .parameters import global_parameters
 
 from sympy.logic.boolalg import Boolean, BooleanAtom
 
@@ -389,10 +389,17 @@ class Relational(Boolean, EvalfMixin):
     def _eval_as_set(self):
         # self is univariate and periodicity(self, x) in (0, None)
         from sympy.solvers.inequalities import solve_univariate_inequality
+        from sympy.sets.conditionset import ConditionSet
         syms = self.free_symbols
         assert len(syms) == 1
         x = syms.pop()
-        return solve_univariate_inequality(self, x, relational=False)
+        try:
+            xset = solve_univariate_inequality(self, x, relational=False)
+        except NotImplementedError:
+            # solve_univariate_inequality raises NotImplementedError for
+            # unsolvable equations/inequalities.
+            xset = ConditionSet(x, self, S.Reals)
+        return xset
 
     @property
     def binary_symbols(self):
@@ -464,7 +471,6 @@ class Equality(Relational):
 
     def __new__(cls, lhs, rhs=None, **options):
         from sympy.core.add import Add
-        from sympy.core.containers import Tuple
         from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
         from sympy.core.expr import _n2
         from sympy.functions.elementary.complexes import arg
@@ -483,7 +489,7 @@ class Equality(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
-        evaluate = options.pop('evaluate', global_evaluate[0])
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate:
             # If one expression has an _eval_Eq, return its results.
@@ -713,7 +719,7 @@ class Unequality(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
-        evaluate = options.pop('evaluate', global_evaluate[0])
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate:
             is_equal = Equality(lhs, rhs)
@@ -760,7 +766,7 @@ class _Inequality(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
-        evaluate = options.pop('evaluate', global_evaluate[0])
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate:
             # First we invoke the appropriate inequality method of `lhs`

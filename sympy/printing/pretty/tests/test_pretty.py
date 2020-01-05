@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sympy import (
-    Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
+    And, Basic, Derivative, Dict, Eq, Equivalent, FF,
     FiniteSet, Function, Ge, Gt, I, Implies, Integral, SingularityFunction,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
@@ -13,7 +13,7 @@ from sympy import (
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
-from sympy.core.compatibility import range, u_decode as u, unicode, PY3
+from sympy.core.compatibility import range, u_decode as u, PY3
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.trace import Tr
 
