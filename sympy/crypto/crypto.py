@@ -20,6 +20,7 @@ import warnings
 
 from itertools import cycle
 from random import randint
+from collections import defaultdict
 
 from sympy import nextprime
 from sympy.core import Rational, Symbol
@@ -3366,35 +3367,24 @@ def encipher_columnar(message, key):
     for i in range(row_length - remainder):
         message = message + str(chr(randint(0,25)+97))      # Padding message for regular columnar transposition
 
-    rows = [ord(word) for word in key.lower()]
-    temp = sorted(rows)
-    index_list = [temp.index(v)+1 for v in rows]        # List of ranks of words of key
+    d = defaultdict(list)
+    low = key.lower()
+    for i,c in enumerate(low):
+        d[c].append(i)
+    index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(row_length)))]   
     matrix = [message[i:i+row_length] for i in range(0,words,row_length)]
 
-    # Modification for keys with repetitive words
-    if len(index_list) != len(set(index_list)):
-        curr_index = -1
-        add = 0
-        for i in range(row_length):
-            if index_list.count(i) > 1:
-                while index_list.count(i) > 1:
-                    curr_index = index_list.index(i,curr_index + 1)
-                    index_list[curr_index] += add
-                    add += 1
-            curr_index = -1
-            add = 0
-
-    cipher = ""
-    # print(index_list)
+    cipher = list()
     for i in range(row_length):
-        column = index_list.index(i + 1)
+        column = index_list.index(i)
         for col in range(col_length):
-            cipher = cipher + matrix[col][column].upper()
+            cipher.append(matrix[col][column].upper())
+    cipher = ''.join(cipher)
     return cipher
 
 def decipher_columnar(cipher, key):
     """
-    Performs Regular Columnar Dncryption on ciphertext and returns plaintext
+    Performs Regular Columnar Decryption on ciphertext and returns plaintext
 
     Examples
     ========
@@ -3404,7 +3394,7 @@ def decipher_columnar(cipher, key):
     >>> decipher_columnar(cipher,"SYM")
     'HELLOWORLDYE'
 
-    Where in HELLOWORLDYE, YE are the random words padded on the original message as per the algorithm
+    In HELLOWORLDYE, Y and E are the random letters added to the original message (as per the algorithm)
     and are to be ignored
 
     Parameters
@@ -3430,33 +3420,23 @@ def decipher_columnar(cipher, key):
     words = len(cipher)
     col_length = -(-words//row_length)          # Ceil Function
 
-    rows = [ord(word) for word in key.lower()]
-    temp = sorted(rows)
-    index_list = [temp.index(v)+1 for v in rows]        # List of ranks of words of key
-
-    # Modification for keys with repetitive words
-    if len(index_list) != len(set(index_list)):
-        curr_index = -1
-        add = 0
-        for i in range(row_length):
-            if index_list.count(i) > 1:
-                while index_list.count(i) > 1:
-                    curr_index = index_list.index(i,curr_index + 1)
-                    index_list[curr_index] += add
-                    add += 1
-            curr_index = -1
-            add = 0
+    d = defaultdict(list)
+    low = key.lower()
+    for i,c in enumerate(low):
+        d[c].append(i)
+    index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(row_length)))]   
 
     matrix = [ ['x' for i in range(row_length)] for j in range(col_length) ]
-    message = ""
+    message = list()
     for i in range(row_length):
-        column = index_list.index(i + 1)
+        column = index_list.index(i)
         for col in range(col_length):
             matrix[col][column] = cipher[:1]
             cipher = cipher[1:]
 
     for i in range(col_length):
         for j in range(row_length):
-            message = message + matrix[i][j]
+            message.append(matrix[i][j])
 
+    message = ''.join(message)
     return message
