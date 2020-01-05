@@ -86,6 +86,18 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         obj._shape = shape
         return obj
 
+    def __mul__(self, other):
+        if other == 1:
+            return self
+        else:
+            raise NotImplementedError("Product of N-dim arrays is not uniquely defined. Use another method.")
+
+    def __rmul__(self, other):
+        if other == 1:
+            return self
+        else:
+            raise NotImplementedError("Product of N-dim arrays is not uniquely defined. Use another method.")
+
     @staticmethod
     def _validate(expr, *contraction_indices):
         shape = expr.shape

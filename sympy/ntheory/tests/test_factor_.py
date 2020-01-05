@@ -13,11 +13,6 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
     is_deficient, is_amicable, dra, drm)
-from sympy.ntheory.generate import cycle_length
-from sympy.ntheory.multinomial import (
-    multinomial_coefficients, multinomial_coefficients_iterator)
-from sympy.ntheory.bbp_pi import pi_hex_digits
-from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 
 from sympy.utilities.pytest import raises
 

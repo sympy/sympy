@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sympy import (
-    Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
+    And, Basic, Derivative, Dict, Eq, Equivalent, FF,
     FiniteSet, Function, Ge, Gt, I, Implies, Integral, SingularityFunction,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
@@ -13,7 +13,7 @@ from sympy import (
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
-from sympy.core.compatibility import range, u_decode as u, unicode, PY3
+from sympy.core.compatibility import range, u_decode as u, PY3
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.trace import Tr
 
@@ -1192,37 +1192,6 @@ x %= y\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
-
-def test_issue_7117():
-    # See also issue #5031 (hence the evaluate=False in these).
-    e = Eq(x + 1, x/2)
-    q = Mul(2, e, evaluate=False)
-    assert upretty(q) == u("""\
-  ⎛        x⎞\n\
-2⋅⎜x + 1 = ─⎟\n\
-  ⎝        2⎠\
-""")
-    q = Add(e, 6, evaluate=False)
-    assert upretty(q) == u("""\
-    ⎛        x⎞\n\
-6 + ⎜x + 1 = ─⎟\n\
-    ⎝        2⎠\
-""")
-    q = Pow(e, 2, evaluate=False)
-    assert upretty(q) == u("""\
-           2\n\
-⎛        x⎞ \n\
-⎜x + 1 = ─⎟ \n\
-⎝        2⎠ \
-""")
-    e2 = Eq(x, 2)
-    q = Mul(e, e2, evaluate=False)
-    assert upretty(q) == u("""\
-⎛        x⎞        \n\
-⎜x + 1 = ─⎟⋅(x = 2)\n\
-⎝        2⎠        \
-""")
-
 
 def test_pretty_rational():
     expr = y*x**-2
@@ -3864,7 +3833,7 @@ def test_pretty_ImageSet():
 def test_pretty_ConditionSet():
     from sympy import ConditionSet
     ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
-    ucode_str = u'{x | x ∊ ℝ ∧ sin(x) = 0}'
+    ucode_str = u'{x | x ∊ ℝ ∧ (sin(x) = 0)}'
     assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
     assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
 
@@ -6659,20 +6628,20 @@ A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = (A(i) + B(i))*PartialDerivative(C(-j), D(j))
+    expr = (A(i) + B(i))*PartialDerivative(C(j), D(j))
     ascii_str = \
 """\
-/ i    i\\   d  /    \\\n\
+/ i    i\\   d  / L_0\\\n\
 |A  + B |*-----|C   |\n\
-\\       /   L_0\\ L_0/\n\
+\\       /   L_0\\    /\n\
           dD         \n\
                      \
 """
     ucode_str = \
 u("""\
-⎛ i    i⎞  ∂  ⎛   ⎞\n\
+⎛ i    i⎞  ∂  ⎛ L₀⎞\n\
 ⎜A  + B ⎟⋅────⎜C  ⎟\n\
-⎝       ⎠   L₀⎝ L₀⎠\n\
+⎝       ⎠   L₀⎝   ⎠\n\
           ∂D       \n\
                    \
 """)
@@ -6699,6 +6668,28 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = PartialDerivative(B(-i) + A(-i), A(-j), A(-n))
+    ucode_str = u("""\
+    2           \n\
+   ∂   ⎛       ⎞\n\
+───────⎜A  + B ⎟\n\
+       ⎝ i    i⎠\n\
+∂A  ∂A          \n\
+  n   j         \
+""")
+    assert upretty(expr) == ucode_str
+
+    expr = PartialDerivative(3*A(-i), A(-j), A(-n))
+    ucode_str = u("""\
+    2        \n\
+   ∂   ⎛    ⎞\n\
+───────⎜3⋅A ⎟\n\
+       ⎝   i⎠\n\
+∂A  ∂A       \n\
+  n   j      \
+""")
+    assert upretty(expr) == ucode_str
+
     expr = TensorElement(H(i, j), {i:1})
     ascii_str = \
 """\
@@ -6710,7 +6701,7 @@ H     \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = TensorElement(H(i, j), {i:1, j:1})
+    expr = TensorElement(H(i, j), {i: 1, j: 1})
     ascii_str = \
 """\
  i=1,j=1\n\
@@ -6721,7 +6712,7 @@ H       \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = TensorElement(H(i, j), {j:1})
+    expr = TensorElement(H(i, j), {j: 1})
     ascii_str = \
 """\
  i,j=1\n\
@@ -6730,7 +6721,7 @@ H     \n\
 """
     ucode_str = ascii_str
 
-    expr = TensorElement(H(-i, j), {-i:1})
+    expr = TensorElement(H(-i, j), {-i: 1})
     ascii_str = \
 """\
     j\n\
