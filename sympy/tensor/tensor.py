@@ -2246,6 +2246,13 @@ class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
             expr = Sum(expr, *sum_indices)
         return expr
 
+    def _expand_partial_derivative(self):
+        # simply delegate the _expand_partial_derivative() to
+        # its arguments to expand a possibly found PartialDerivative
+        return self.func(*[
+                    a._expand_partial_derivative()
+                    if isinstance(a, TensExpr) else a
+                    for a in self.args])
 
 class TensAdd(TensExpr, AssocOp):
     """
