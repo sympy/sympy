@@ -753,13 +753,10 @@ def _nthroot_mod_composite(a, n, m):
     for p, e in f.items():
         tot_roots = set()
         if e == 1:
-            root = nthroot_mod(a, n, p, True) or []
-            for num in root:
-                tot_roots.add(num)
+            tot_roots.update(nthroot_mod(a, n, p, True) or [])
         else:
-            roots = nthroot_mod(a, n, p, True) or []
-            for root in roots:
-                diff = (n * pow(root, n-1)) % p
+            for root in nthroot_mod(a, n, p, True) or []:
+                diff = (n * pow(root, n - 1)) % p
                 if diff != 0:
                     for j in range(1, e):
                         root = (root - (pow(root, n) - a)* mod_inverse(diff, p)) % pow(p, j + 1)
@@ -773,7 +770,7 @@ def _nthroot_mod_composite(a, n, m):
                         for k in roots_in_base:
                             if (pow(k, n) - a) % (new_base) != 0:
                                 continue
-                            while(k not in new_roots):
+                            while k not in new_roots:
                                 new_roots.add(k)
                                 k = (k + (new_base // p)) % new_base
                         roots_in_base = new_roots
