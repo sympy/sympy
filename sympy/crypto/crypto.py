@@ -19,8 +19,9 @@ from functools import reduce
 import warnings
 
 from itertools import cycle
-from random import randint
+from random import randint, choice
 from collections import defaultdict
+import string
 
 from sympy import nextprime
 from sympy.core import Rational, Symbol
@@ -3361,25 +3362,17 @@ def encipher_columnar(message, key):
     key =  ''.join(alphabet for alphabet in key if alphabet.isalpha())
     row_length = len(key)
     words = len(message)
-    col_length = -(-words//row_length)          # Ceil Function
     remainder = words%row_length
 
-    for i in range(row_length - remainder):
-        message = message + str(chr(randint(0,25)+97))      # Padding message for regular columnar transposition
+    message += ''.join(choice(string.ascii_lowercase) for i in range(row_length - remainder))
 
     d = defaultdict(list)
     low = key.lower()
     for i,c in enumerate(low):
         d[c].append(i)
     index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(row_length)))]
-    matrix = [message[i:i+row_length] for i in range(0,words,row_length)]
 
-    cipher = list()
-    for i in range(row_length):
-        column = index_list.index(i)
-        for col in range(col_length):
-            cipher.append(matrix[col][column].upper())
-    cipher = ''.join(cipher)
+    cipher = ''.join([message[j].upper() for i in range(row_length) for j in range(index_list.index(i), len(message), row_length)])
     return cipher
 
 def decipher_columnar(cipher, key):
@@ -3426,17 +3419,5 @@ def decipher_columnar(cipher, key):
         d[c].append(i)
     index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(row_length)))]
 
-    matrix = [ ['x' for i in range(row_length)] for j in range(col_length) ]
-    message = list()
-    for i in range(row_length):
-        column = index_list.index(i)
-        for col in range(col_length):
-            matrix[col][column] = cipher[:1]
-            cipher = cipher[1:]
-
-    for i in range(col_length):
-        for j in range(row_length):
-            message.append(matrix[i][j])
-
-    message = ''.join(message)
+    message = ''.join([cipher[j*col_length + i] for i in range(col_length) for j in index_list])
     return message
