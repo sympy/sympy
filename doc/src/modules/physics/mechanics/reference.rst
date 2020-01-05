@@ -13,3 +13,6 @@ References for Physics/Mechanics
         Schwab. "Linearized Dynamics Equations for the Balance and Steer of a Bicycle:
         a Benchmark and Review." Proceedings of the Royal Society A: Mathematical,
         Physical and Engineering Sciences 463.2084 (2007): 1955-982. Print.
+.. [Mitiguy1996] Mitiguy, Paul C. and Kane, Thomas R. "Motion Variables Leading
+   to Efficient Equations of Motion." The International Journal of Robotics
+   Research (1996).

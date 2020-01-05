@@ -3,24 +3,68 @@ from sympy.utilities.pytest import warns_deprecated_sympy
 from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros)
 from sympy import simplify
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import raises
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot)
 
 
+def _compare_dict(d1, d2):
+    assert list(ordered(d1.keys())) == list(ordered(d2.keys()))
+    for k, v in d1.items():
+        assert (d2[k] - v).simplify() == 0
+
+
 def test_one_dof():
-    # This is for a 1 dof spring-mass-damper case.
-    # It is described in more detail in the KanesMethod docstring.
-    q, u = dynamicsymbols('q u')
-    qd, ud = dynamicsymbols('q u', 1)
-    m, c, k = symbols('m c k')
+    # This is for a 1 dof spring-mass-damper case. It is described in more
+    # detail in the KanesMethod docstring.
+    q, u = dynamicsymbols('q, u')
+    qd, ud = dynamicsymbols('q, u', 1)
+    m, c, k = symbols('m, c, k')
     N = ReferenceFrame('N')
     P = Point('P')
     P.set_vel(N, u * N.x)
 
     kd = [qd - u]
-    FL = [(P, (-k * q - c * u) * N.x)]
+    loads = [(P, (-k * q - c * u) * N.x)]
     pa = Particle('pa', P, m)
+
+    bodies = [pa]
+
+    kane = KanesMethod(N, [q], [u], kd)
+
+    assert kane.inertial_frame is N
+    assert kane.n == kane.num_coordinates == 1
+    assert kane.num_speeds == kane.p == kane.num_independent_speeds == 1
+    assert kane.q == kane.coordinates == Matrix([q])
+    assert kane.q_s == kane.independent_coordinates == Matrix([q])
+    assert kane.o == kane.num_dependent_coordinates == 0
+    assert kane.q_r == Matrix()
+    assert kane.u == kane.speeds == Matrix([u])
+    assert kane.u_s == kane.independent_speeds == Matrix([u])
+    assert kane.m == kane.num_dependent_speeds == 0
+    assert kane.u_r == kane.dependent_speeds == Matrix()
+    assert kane.holonomic
+    assert not kane.nonholonomic
+    assert kane.kindiffdict() == {qd: u}
+    assert kane.kinematic_differential_equations == {qd: u}
+    assert kane.accelerations == Matrix([u.diff()])
+    assert kane.states == Matrix([q, u])
+
+    raises(AttributeError, lambda: kane.bodies)
+    raises(AttributeError, lambda: kane.bodylist)
+    raises(AttributeError, lambda: kane.loads)
+    raises(AttributeError, lambda: kane.forcelist)
+    raises(AttributeError, lambda: kane.fr)
+    raises(AttributeError, lambda: kane.generalized_active_forces)
+    raises(AttributeError, lambda: kane.frstar)
+    raises(AttributeError, lambda: kane.generalized_inertia_forces)
+    raises(AttributeError, lambda: kane.mass_matrix)
+    raises(AttributeError, lambda: kane.mass_matrix_full)
+    raises(AttributeError, lambda: kane.forcing)
+    raises(AttributeError, lambda: kane.forcing_full)
+
     BL = [pa]
 
     KM = KanesMethod(N, [q], [u], kd)
@@ -160,8 +204,31 @@ def test_rolling_disc():
     # terms, then solve for the u dots (time derivatives of the generalized
     # speeds).
     KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd)
+
+    assert KM.inertial_frame is N
+    assert KM.n == KM.num_coordinates == 3
+    assert KM.num_speeds == KM.p == KM.num_independent_speeds == 3
+    assert KM.q == KM.coordinates == Matrix([q1, q2, q3])
+    assert KM.q_s == KM.independent_coordinates == Matrix([q1, q2, q3])
+    assert KM.o == KM.num_dependent_coordinates == 0
+    assert KM.q_r == Matrix()
+    assert KM.u == KM.speeds == Matrix([u1, u2, u3])
+    assert KM.u_s == KM.independent_speeds == Matrix([u1, u2, u3])
+    assert KM.m == KM.num_dependent_speeds == 0
+    assert KM.u_r == KM.dependent_speeds == Matrix()
+    assert KM.holonomic
+    assert not KM.nonholonomic
+    kdiff_solved = {q1d: -((u2*cos(q2)/sin(q2) - u3)*sin(q2)/cos(q2) - u2)/sin(q2),
+                    q2d: u1,
+                    q3d: (u2*cos(q2)/sin(q2) - u3)*sin(q2)/cos(q2)}
+    _compare_dict(KM.kindiffdict(), kdiff_solved)
+    _compare_dict(KM.kinematic_differential_equations, kdiff_solved)
+    assert KM.accelerations == Matrix([u1, u2, u3]).diff()
+    assert KM.states == Matrix([q1, q2, q3, u1, u2, u3])
+
     with warns_deprecated_sympy():
         KM.kanes_equations(ForceList, BodyList)
+
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
@@ -317,7 +384,6 @@ def test_input_format():
     # test for input format kane.kanes_equations(bodies=(body1, body 2))
     assert KM.kanes_equations(BL)[0] == Matrix([0])
     # test for error raised when a wrong force list (in this case a string) is provided
-    from sympy.utilities.pytest import raises
     raises(ValueError, lambda: KM._form_fr('bad input'))
 
     # 2 dof problem from test_two_dof
