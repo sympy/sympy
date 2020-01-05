@@ -1,6 +1,7 @@
 from sympy import Symbol, Number, sympify
 from sympy import tensorproduct, MutableDenseNDimArray, S
-from sympy.tensor.tensor import (Tensor, TensExpr, TensAdd, TensMul)
+from sympy.tensor.tensor import (Tensor, TensExpr, TensAdd, TensMul,
+                                 TensorIndex)
 
 
 class PartialDerivative(TensExpr):
